@@ -13,11 +13,11 @@
 
 #include "gui/PlatformFont.h"
 #include "gui/PlatformText.h"
-#include "HtmlFormatter.h"
 
 #if OS_WIN
 #include "base/GdiPlusUtil.h"
 #endif
+#include "HtmlFormatter.h"
 
 /*
 Given size of a page, we format html into a set of pages. We handle only a small

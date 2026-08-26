@@ -5,6 +5,7 @@
 
 #include "resource.h"
 #include "Version.h"
+#include "SumatraConfig.h"
 
 #if defined(DEBUG)
 bool gIsDebugBuild = true;

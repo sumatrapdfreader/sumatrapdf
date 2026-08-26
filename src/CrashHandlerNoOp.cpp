@@ -2,6 +2,7 @@
    License: Simplified BSD */
 
 #include "base/Base.h"
+#include "CrashHandler.h"
 
 void _uploadDebugReport(Str /*condStr*/, Str /*fileLine*/, bool /*isCrash*/, bool /*captureCallstack*/) {
 #if OS_WIN

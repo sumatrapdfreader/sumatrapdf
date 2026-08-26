@@ -16,12 +16,12 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Commands.h"
-#include "Canvas.h"
 #include "Menu.h"
 #include "HomePage.h"
 #include "Theme.h"
 #include "FileHistory.h"
 #include "AppSettings.h"
+#include "Canvas.h"
 
 static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();

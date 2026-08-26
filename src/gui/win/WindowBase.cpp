@@ -10,11 +10,11 @@
 #include "gui/UIModels.h"
 
 #include "gui/Layout.h"
-#include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
+#include "gui/win/WinGui.h"
 
 // HwndBase is the win32 plumbing WindowBase and ControlBase share: one window
 // procedure, one subclassing scheme and one HWND -> object list. The two stay

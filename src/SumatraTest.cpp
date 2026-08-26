@@ -41,6 +41,7 @@ extern "C" {
 #include <chm.h>
 #include "EbookBase.h"
 #include "ChmFile.h"
+#include "SumatraTest.h"
 
 // internal LZX test hook, defined in chm.c but not exposed in chm.h
 extern "C" int LZX_test_pretree_make_decode_table(void);

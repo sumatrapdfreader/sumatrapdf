@@ -33,6 +33,7 @@
 #include "Tabs.h"
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
+#include "Favorites.h"
 
 static void RememberFavTreeExpansionStateForAllWindows();
 void LayoutFavoritesContainer(MainWindow* win);

@@ -22,7 +22,6 @@
 #include "AppTools.h"
 #include "ScreenshotCapture.h"
 #include "ShortcutParse.h"
-#include "Screenshot.h"
 #include "Theme.h"
 #include "SumatraConfig.h"
 #include "DarkMode_win.h"
@@ -34,6 +33,7 @@
 #include "MainWindow.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "Screenshot.h"
 
 static bool IsAppFrame(HWND hwnd) {
     for (MainWindow* win : gWindows) {

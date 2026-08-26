@@ -35,6 +35,7 @@
 #include "Theme.h"
 
 #include "DarkMode_win.h"
+#include "PdfTools.h"
 
 extern "C" int pdfbake_main(int argc, char** argv);
 extern "C" int pdfclean_main(int argc, char** argv);

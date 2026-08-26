@@ -25,6 +25,7 @@
 #include "SumatraConfig.h"
 #include "Theme.h"
 #include "DarkMode_win.h"
+#include "TabGroupsManage.h"
 
 constexpr int kPadding = 8;
 

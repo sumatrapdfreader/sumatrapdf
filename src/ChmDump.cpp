@@ -13,6 +13,7 @@
 #include "Flags.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
+#include "ChmDump.h"
 
 static void CliWrite(Str s, int n = 0) {
     if (!s) {

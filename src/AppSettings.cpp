@@ -28,7 +28,6 @@
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "DisplayModel.h"
-#include "AppSettings.h"
 #include "AppTools.h"
 #include "Favorites.h"
 #include "HomePage.h"
@@ -40,6 +39,7 @@
 #include "TextToSpeech.h"
 #include "Notifications.h"
 #include "ExplorerQuickLook.h"
+#include "AppSettings.h"
 
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.

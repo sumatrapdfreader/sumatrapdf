@@ -27,12 +27,12 @@
 #include "Canvas.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
-#include "Selection.h"
 #include "SelectionToolbar.h"
 #include "SelectTextKeyboard.h"
 #include "Toolbar.h"
 #include "Translations.h"
 #include "uia/Provider.h"
+#include "Selection.h"
 
 SelectionOnPage::SelectionOnPage(int pageNo, const RectF* const rect) {
     this->pageNo = pageNo;

@@ -25,10 +25,10 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
-#include "Print.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
+#include "Print.h"
 
 class AbortCookieManager {
     Mutex cookieAccess;

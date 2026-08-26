@@ -5,8 +5,8 @@
 #include "gui/Dpi.h"
 #include "base/Win.h"
 
-#include "OverlayScrollbar.h"
 #include "Theme.h"
+#include "OverlayScrollbar.h"
 
 constexpr const WCHAR* kOverlayScrollbarClass = L"SUMATRA_OVERLAY_SCROLLBAR";
 

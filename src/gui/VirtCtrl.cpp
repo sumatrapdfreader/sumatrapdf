@@ -15,8 +15,11 @@
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
-#include "gui/VirtCtrl.h"
 #include "gui/VirtHost.h"
+#if defined(DEBUG)
+#include "base/UtAssert.h"
+#endif
+#include "gui/VirtCtrl.h"
 
 //--- VirtCtrl
 
@@ -3117,8 +3120,6 @@ VirtLine* AsVirtLine(ILayout* l) {
 }
 
 #if defined(DEBUG)
-// must be last: UtAssert.h over-writes assert()
-#include "base/UtAssert.h"
 
 // Unit tests for Table (ILayout grid). VirtSpacer is the leaf: a fixed
 // ideal size and no HWND, so a whole table can be laid out and its geometry

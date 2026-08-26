@@ -21,8 +21,8 @@
 
 #include "SumatraPDF.h"
 #include "EmbeddedResources.h"
-#include "MarkdownModel.h"
 #include "MarkdownToc.h"
+#include "MarkdownModel.h"
 
 constexpr const char* kMdVirtualHost = "https://sumatrapdf.markdown/";
 constexpr int kMdVirtualHostLen = sizeof("https://sumatrapdf.markdown/") - 1;

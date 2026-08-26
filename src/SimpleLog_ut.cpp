@@ -2,10 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "SumatraLog.h"
-
-// must be last due to assert() over-write
 #include "base/UtAssert.h"
+#include "SumatraLog.h"
 
 void SimpleLogTest() {
     {

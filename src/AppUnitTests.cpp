@@ -11,6 +11,8 @@
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
 #include "Commands.h"
+#include "base/UtAssert.h"
+#include "AppUnitTests.h"
 
 #if defined(DEBUG)
 void TextSelection_UnitTests();
@@ -29,9 +31,6 @@ bool EngineMupdf_UnitTestEbookFontFamilyCss();
 bool EngineMupdf_UnitTestEbookMarginCss();
 bool EngineMupdf_UnitTestMergeEBookUI();
 #endif
-
-// must be last to over-write assert()
-#include "base/UtAssert.h"
 
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
     VirtRichText* tip = ParseTip(input);

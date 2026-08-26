@@ -12,12 +12,13 @@
 #include "AvifReader.h"
 #include "JxlReader.h"
 #include "WebpReader.h"
-#include "ImageReader.h"
 
 #if COMPILER_MSVC
 #pragma warning(disable : 4668)
 #endif
 #include <wincodec.h>
+
+#include "ImageReader.h"
 
 using Gdiplus::Bitmap;
 using Gdiplus::BitmapData;

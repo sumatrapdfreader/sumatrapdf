@@ -12,10 +12,10 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
-#include "uia/PageProvider.h"
 #include "uia/Constants.h"
 #include "uia/DocumentProvider.h"
 #include "uia/Provider.h"
+#include "uia/PageProvider.h"
 
 SumatraUIAutomationPageProvider::SumatraUIAutomationPageProvider(int pageNum, HWND canvasHwnd, DisplayModel* dm,
                                                                  SumatraUIAutomationDocumentProvider* root)

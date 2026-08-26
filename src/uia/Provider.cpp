@@ -4,10 +4,10 @@
 #include "base/Base.h"
 #include "base/WinDynCalls.h"
 #include "base/Win.h"
-#include "uia/Provider.h"
 #include "uia/Constants.h"
 #include "uia/DocumentProvider.h"
 #include "uia/StartPageProvider.h"
+#include "uia/Provider.h"
 
 SumatraUIAutomationProvider::SumatraUIAutomationProvider(HWND hwnd)
     : refCount(1), canvasHwnd(hwnd), startpage(nullptr), document(nullptr) {

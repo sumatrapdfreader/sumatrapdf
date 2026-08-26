@@ -4,6 +4,9 @@
 #include "base/Base.h"
 #include "gui/Dpi.h"
 
+#if defined(DEBUG)
+#include "base/UtAssert.h"
+#endif
 #include "gui/Layout.h"
 
 static bool gEnableDebugLayout = false;
@@ -1816,8 +1819,6 @@ void Wrap::SetBounds(Rect bounds) {
 }
 
 #if defined(DEBUG)
-// must be last: UtAssert.h over-writes assert()
-#include "base/UtAssert.h"
 
 // Unit tests for the core layout engine. They use Spacer as a pure, HWND-free
 // leaf (fixed intrinsic size, and its SetBounds records lastBounds), so whole

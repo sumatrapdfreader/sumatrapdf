@@ -35,7 +35,6 @@ extern "C" {
 #include "MainWindow.h"
 #include "Toolbar.h"
 #include "WindowTab.h"
-#include "EditAnnotations.h"
 #include "FormFields.h"
 #include "SumatraPDF.h"
 #include "Commands.h"
@@ -43,6 +42,7 @@ extern "C" {
 
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
+#include "EditAnnotations.h"
 
 constexpr int kBorderWidthMin = 0;
 constexpr int kBorderWidthMax = 12;

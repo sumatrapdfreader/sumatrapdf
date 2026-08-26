@@ -2,9 +2,9 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "CaptionGlyphs.h"
 
 #include "base/GdiPlusUtil.h"
+#include "CaptionGlyphs.h"
 
 // Segoe Fluent Icons (U+E921, U+E922, U+E923, U+E8BB) outline data extracted once
 // from SegoeIcons.ttf at 2048 em units. Rendered with GDI+ so caption buttons

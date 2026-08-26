@@ -9,8 +9,8 @@ License: GPLv3 */
 #include "Settings.h"
 #include "GlobalPrefs.h"
 #include "FileThumbnails.h"
-#include "FileHistory.h"
 #include "HomePage.h"
+#include "FileHistory.h"
 
 /* Handling of file history list.
 

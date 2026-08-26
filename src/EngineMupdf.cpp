@@ -27,7 +27,6 @@ extern "C" {
 #include "DocProperties.h"
 #include "gui/UIModels.h"
 #include "EngineBase.h"
-#include "EngineMupdf.h"
 #include "PdfCadEnhanceDevice.h"
 #include "PdfDarkMode.h"
 #include "PdfDarkModeInternal.h"
@@ -35,6 +34,7 @@ extern "C" {
 #include "EbookBase.h"
 #include "EbookDoc.h"
 #include "Settings.h"
+#include "EngineMupdf.h"
 
 // A5
 static float layoutA5DxPt = 420.F;
@@ -8805,6 +8805,10 @@ static NO_INLINE void ValidateAnnotationsInSync(EngineMupdf* /*e*/, FzPageInfo* 
 
 // in a function so that we can set a breakpoint or add logging
 // to easily trace all places that modify annotations
+void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot) {
+    MarkNotificationAsModified(e, annot, AnnotationChange::Modify);
+}
+
 NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, AnnotationChange change) {
     e->modifiedAnnotations = true;
     if (!e->pdfdoc) {

@@ -19,6 +19,7 @@
 #include "MainWindow.h"
 #include "Commands.h"
 #include "Translations.h"
+#include "ExternalViewers.h"
 
 struct ExternalViewerInfo {
     Str name; // shown to the user

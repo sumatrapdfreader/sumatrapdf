@@ -48,7 +48,6 @@
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "AnnotPlacement.h"
-#include "Canvas.h"
 #include "Menu.h"
 #include "uia/Provider.h"
 #include "SearchAndDDE.h"
@@ -65,6 +64,7 @@
 #include "Commands.h"
 
 #include "RefHover.h"
+#include "Canvas.h"
 
 // if set instead of trying to render pages we don't have, we simply do nothing
 // this reduces the flickering when going quickly through pages but creates

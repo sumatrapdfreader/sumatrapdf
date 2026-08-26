@@ -38,9 +38,9 @@
 #include "AppTools.h"
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
-#include "Installer.h"
 #include "SumatraConfig.h"
 #include "Translations.h"
+#include "Installer.h"
 #include "SumatraLog.h"
 
 constexpr int kInstallerWinMargin = 8;

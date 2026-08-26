@@ -29,7 +29,6 @@
 #include "WindowTab.h"
 #include "Commands.h"
 #include "AppTools.h"
-#include "Toolbar.h"
 #include "ToolbarInternal.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
@@ -38,6 +37,7 @@
 #include "gui/VirtCtrl.h"
 #include "gui/VirtHost.h"
 #include "Theme.h"
+#include "Toolbar.h"
 
 //--- the frame and the canvas are still plain HWNDs
 

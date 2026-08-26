@@ -7,6 +7,7 @@
 // HWND, or rendering layers.
 
 #include "base/Base.h"
+#include "RefHoverDetect.h"
 
 static constexpr float kAnchorTopMarginPt = 6.f;
 // pt of padding around the detected entry box.

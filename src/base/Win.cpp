@@ -7,7 +7,6 @@
 #include "base/File.h"
 #include "base/WinDynCalls.h"
 #include "base/ScopedWin.h"
-#include "base/Win.h"
 
 #include <aclapi.h>
 #include <bitset>
@@ -16,6 +15,7 @@
 #endif
 #include <float.h> // for _clearfp / _controlfp_s in MaskFpExceptions
 #include <mlang.h>
+#include "base/Win.h"
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IMultiLanguage2
 __CRT_UUID_DECL(IMultiLanguage2, 0xDCCFC164, 0x2B38, 0x11D2, 0xB7, 0xEC, 0x00, 0xC0, 0x4F, 0x8F, 0x5D, 0x9A)

@@ -11,13 +11,13 @@
 #include "Theme.h"
 #include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
-#include "MarkdownToc.h"
 
 extern "C" {
 #include "cmark-gfm.h"
 #include "cmark-gfm-core-extensions.h"
 #include "node.h"
 }
+#include "MarkdownToc.h"
 
 static bool IsMarkdownExt(Str path) {
     return str::EndsWithI(path, StrL(".md")) || str::EndsWithI(path, StrL(".markdown"));

@@ -33,7 +33,6 @@
 #include "Menu.h"
 #include "SearchAndDDE.h"
 #include "EditAnnotations.h"
-#include "Toolbar.h"
 #include "ToolbarInternal.h"
 #include "Tabs.h"
 #include "gui/Layout.h"
@@ -49,6 +48,7 @@
 #include "SvgIcons.h"
 #include "Theme.h"
 #include "TextToSpeech.h"
+#include "Toolbar.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 

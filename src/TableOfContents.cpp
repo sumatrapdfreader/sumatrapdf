@@ -36,6 +36,7 @@
 #include "Accelerators.h"
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
+#include "TableOfContents.h"
 
 static void LayoutTocContainer(MainWindow* win);
 

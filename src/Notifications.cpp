@@ -20,8 +20,8 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 
-#include "Notifications.h"
 #include "Theme.h"
+#include "Notifications.h"
 
 static StrNode* gDelayedNotifications = nullptr;
 

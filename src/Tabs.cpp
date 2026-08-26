@@ -32,10 +32,10 @@
 #include "SelectionToolbar.h"
 #include "Menu.h"
 #include "TableOfContents.h"
-#include "Tabs.h"
 #include "FileHistory.h"
 #include "Theme.h"
 #include "Translations.h"
+#include "Tabs.h"
 
 // always full path (FullPathInTitle only affects tab/window title text).
 // Append size when GetSize succeeds (may fail for offline network paths).

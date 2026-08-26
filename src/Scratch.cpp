@@ -18,6 +18,7 @@
 #include "SimpleBrowserWindow.h"
 #include "PalmDbReader.h"
 #include "EbookBase.h"
+#include "Scratch.h"
 
 // ----------------
 

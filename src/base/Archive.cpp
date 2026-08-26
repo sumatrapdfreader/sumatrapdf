@@ -10,8 +10,6 @@
 #include "base/File.h"
 #include "base/GuessFileType.h"
 
-#include "base/Archive.h"
-
 #include "libarchive/archive.h"
 #include "libarchive/archive_entry.h"
 
@@ -19,6 +17,7 @@
 // TODO: set include path to ext/ dir
 #include "../../ext/unrar/dll.hpp"
 #endif
+#include "base/Archive.h"
 
 // we pad data read with 3 zeros for convenience. That way returned
 // data is a valid null-terminated string or WCHAR*.

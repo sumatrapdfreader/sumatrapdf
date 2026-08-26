@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "gui/Dpi.h"
-#include "base/Win.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -13,6 +12,7 @@
 #include "Theme.h"
 #include "DarkMode_win.h"
 #include "SumatraConfig.h"
+#include "base/Win.h"
 
 struct TextViewWnd : WindowBase {
     Edit* edit = nullptr;

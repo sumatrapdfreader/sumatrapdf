@@ -26,6 +26,7 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "AppSettings.h"
+#include "CrashHandler.h"
 #include "SumatraLog.h"
 
 // logf() is a template that formats with fmt() and routes through log(), so it

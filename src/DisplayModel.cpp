@@ -57,7 +57,6 @@
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
-#include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "PdfSync.h"
@@ -70,6 +69,7 @@
 #include "MainWindow.h"
 #include "Notifications.h"
 #include "SumatraConfig.h"
+#include "DisplayModel.h"
 
 // if true, we pre-render the pages right before and after the visible pages
 bool gPredictiveRender = true;

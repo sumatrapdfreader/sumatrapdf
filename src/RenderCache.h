@@ -18,6 +18,7 @@ constexpr int kMaxBitmapsCached = 128;
 // predictive rendering renders up to this many pages ahead, one at a time
 // (chained), so they don't flood the render queue
 constexpr int kMaxPredictiveRequests = 4;
+constexpr int kRenderCacheAllPages = -1;
 
 struct PageInfo;
 struct Pixmap;
@@ -239,7 +240,7 @@ struct RenderCache {
     void RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
                 const Func1<PageRenderRequest*>& renderFinishedCb, const PredictiveChain* chain = nullptr);
-    void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
+    void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kRenderCacheAllPages, TilePosition* tile = nullptr);
     void AbortCurrentRequest(int threadIdx);
 
     BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom,

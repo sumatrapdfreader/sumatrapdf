@@ -17,11 +17,11 @@ __CRT_UUID_DECL(IAccIdentity, 0x7852B78D, 0x1CFD, 0x41C1, 0xA6, 0x15, 0x9C, 0x0C
 #include "DisplayModel.h"
 #include "TextSelection.h"
 #include "base/File.h"
-#include "uia/DocumentProvider.h"
 #include "uia/Constants.h"
 #include "uia/PageProvider.h"
 #include "uia/Provider.h"
 #include "uia/TextRange.h"
+#include "uia/DocumentProvider.h"
 
 SumatraUIAutomationDocumentProvider::SumatraUIAutomationDocumentProvider(HWND canvasHwnd,
                                                                          SumatraUIAutomationProvider* root)

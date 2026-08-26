@@ -11,10 +11,10 @@
 
 #include "SumatraPDF.h"
 #include "resource.h"
-#include "SumatraDialogs.h"
 #include "Translations.h"
 #include "Theme.h"
 #include "DarkMode_win.h"
+#include "SumatraDialogs.h"
 
 // http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx
 #pragma pack(push, 1)

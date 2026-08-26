@@ -45,9 +45,9 @@
 #include "Accelerators.h"
 #include "ImageSaveCropResize.h"
 #include "CommandAvailability.h"
-#include "Menu.h"
 #include "NavFilesInFolder.h"
 #include "ReadAloudHighlight.h"
+#include "Menu.h"
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {

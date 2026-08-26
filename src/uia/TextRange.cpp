@@ -10,11 +10,11 @@
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "uia/TextRange.h"
 #include "DisplayModel.h"
 #include "uia/DocumentProvider.h"
 #include "uia/PageProvider.h"
 #include "TextSelection.h"
+#include "uia/TextRange.h"
 
 // creates a copy of give range
 // creates range containing the given TextSelection range

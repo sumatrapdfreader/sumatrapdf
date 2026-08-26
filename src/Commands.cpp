@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 
-#include "Commands.h"
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Notifications.h"
@@ -12,6 +11,7 @@
 #include "Accelerators.h"
 #include "GlobalPrefs.h"
 #endif
+#include "Commands.h"
 
 // @gen-start cmd-c
 // clang-format off

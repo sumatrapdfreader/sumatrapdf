@@ -11,7 +11,6 @@ extern "C" {
 
 #include "gui/UIModels.h"
 
-#include "Annotation.h"
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -19,6 +18,7 @@ extern "C" {
 #include "GlobalPrefs.h"
 #include "Commands.h"
 #include "Translations.h"
+#include "Annotation.h"
 
 // spot checks the definitions are the same
 static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);

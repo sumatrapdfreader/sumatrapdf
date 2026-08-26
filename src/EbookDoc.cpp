@@ -15,9 +15,9 @@
 #include "EbookBase.h"
 #include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
-#include "EbookDoc.h"
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
+#include "EbookDoc.h"
 
 #if !OS_WIN
 static uint GuessTextCodepage(Str, uint defVal) {

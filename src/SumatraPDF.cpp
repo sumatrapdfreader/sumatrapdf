@@ -61,7 +61,6 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "SumatraPDF.h"
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "AnnotPlacement.h"
@@ -122,6 +121,7 @@
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
 #include "ExplorerQuickLook.h"
+#include "SumatraPDF.h"
 #include "SumatraLog.h"
 
 using Gdiplus::Graphics;

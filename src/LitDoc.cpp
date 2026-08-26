@@ -19,9 +19,6 @@
 #include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "LitDoc.h"
-
-#include "SumatraLog.h"
 
 extern "C" {
 // public domain d3des, in ext/msdes
@@ -34,6 +31,9 @@ void LZXteardown(struct LZXstate* pState);
 int LZXreset(struct LZXstate* pState);
 int LZXdecompress(struct LZXstate* pState, u8* inpos, u8* outpos, int inlen, int outlen);
 }
+
+#include "LitDoc.h"
+#include "SumatraLog.h"
 
 //--- Microsoft LIT tag / attribute code tables, for reconstructing HTML and
 // OPF from their tokenized binary form. The data comes from calibre's

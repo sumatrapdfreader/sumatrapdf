@@ -2,10 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/FileWatcher.h"
 #include "base/ScopedWin.h"
 #include "base/File.h"
 #include "base/Win.h"
+#include "base/FileWatcher.h"
 
 // Log file path we must not reload-on-change (set by SumatraLog).
 static Str gFileWatcherSkipPath;

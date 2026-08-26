@@ -7,8 +7,8 @@
 
 #include "SumatraConfig.h"
 
-#include "Translations.h"
 #include "resource.h"
+#include "Translations.h"
 
 namespace trans {
 

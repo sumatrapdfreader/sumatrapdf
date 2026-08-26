@@ -19,6 +19,12 @@
 #include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
+#if COMPILER_MSVC
+#pragma warning(disable : 4668)
+#endif
+#include <commctrl.h>
+#include <wincodec.h>
+
 #include "base/ByteReaderWriter.h"
 #include "PngOptimizer.h"
 #include "ImageReader.h"
@@ -54,9 +60,6 @@ static Str Tr(Str s) {
 static Str Tr(const char* s) {
     return Tr(Str(s));
 }
-
-#include <commctrl.h>
-#include <wincodec.h>
 
 using Gdiplus::Bitmap;
 using Gdiplus::Graphics;

@@ -9,8 +9,8 @@
 
 #include "SumatraConfig.h"
 #include "Version.h"
-#include "Installer.h"
 #include "AppTools.h"
+#include "Installer.h"
 
 // All registry manipulation needed for installer / uninstaller
 

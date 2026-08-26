@@ -13,8 +13,8 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "RefHoverInternal.h"
-#include "RefHoverText.h"
 #include "RefHoverTextDetect.h"
+#include "RefHoverText.h"
 
 TempWStr RefHoverPageTextToWStrTemp(Str text) {
     int nCodepoints = Utf8CodepointCount(text);

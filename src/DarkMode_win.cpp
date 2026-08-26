@@ -28,9 +28,9 @@
 #include "AppTools.h"
 #include "Theme.h"
 #include "gui/win/TabsCtrl.h"
-#include "DarkMode_win.h"
 
 #include "DarkModeSubclass.h"
+#include "DarkMode_win.h"
 
 // darkmodelib only supports the architectures we still ship it for; older
 // 32-bit builds run without it

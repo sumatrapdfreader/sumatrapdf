@@ -5,6 +5,9 @@
 
 #include "Commands.h"
 #include "FilterUtil.h"
+#if defined(DEBUG)
+#include "base/UtAssert.h"
+#endif
 #include "gui/CommandPaletteModel.h"
 
 void CommandPaletteModel::SetCommands(const int* commandIds, int count) {
@@ -48,8 +51,6 @@ int CommandPaletteModel::ItemCommandId(int index) const {
 }
 
 #if defined(DEBUG)
-
-#include "base/UtAssert.h"
 
 void CommandPaletteModel_UnitTests() {
     const int commands[] = {CmdOpenFile, CmdRotateLeft, CmdRotateRight, CmdZoomFitWidth};

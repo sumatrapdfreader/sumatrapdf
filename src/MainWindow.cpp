@@ -37,7 +37,6 @@
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 #include "EditAnnotations.h"
-#include "MainWindow.h"
 #include "SelectionToolbar.h"
 #include "FindBar.h"
 #include "FindWindow.h"
@@ -47,14 +46,15 @@
 #include "TableOfContents.h"
 #include "StressTesting.h"
 #include "uia/Provider.h"
+#include "Theme.h"
+#include "Canvas.h"
+#include "HomePage.h"
+#include "MainWindow.h"
 
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
     logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);
     delete tabsCtrl;
 }
-#include "Theme.h"
-#include "Canvas.h"
-#include "HomePage.h"
 
 struct LinkHandler : ILinkHandler {
     MainWindow* win = nullptr;

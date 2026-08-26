@@ -3,6 +3,9 @@
 
 #include "base/Base.h"
 
+#if defined(DEBUG)
+#include "base/UtAssert.h"
+#endif
 #include "PageRenderPolicy.h"
 
 bool PageRenderKey::operator==(const PageRenderKey& other) const {
@@ -58,9 +61,6 @@ int PageRenderPolicyPickEviction(const Vec<PageRenderPolicyCacheEntry>& entries,
 }
 
 #if defined(DEBUG)
-
-// must be last to over-write assert()
-#include "base/UtAssert.h"
 
 void PageRenderPolicy_UnitTests() {
     Vec<PageRenderPolicyRequest> requests;

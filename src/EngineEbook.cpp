@@ -6,10 +6,11 @@
 
 #include "base/Base.h"
 #include "base/Archive.h"
-#include "gui/Dpi.h"
 #include "base/File.h"
+#include "base/GuessFileType.h"
 #include "base/HtmlTags.h"
 #include "base/Pixmap.h"
+#include "gui/Dpi.h"
 
 #include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
@@ -31,7 +32,11 @@
 #include "base/GdiPlusUtil.h"
 #include "base/Win.h"
 #include "base/Zip.h"
+#endif
 
+#include "EngineAll.h"
+
+#if OS_WIN
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
 using Gdiplus::FontFamily;

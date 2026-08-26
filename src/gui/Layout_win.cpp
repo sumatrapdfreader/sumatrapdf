@@ -6,6 +6,9 @@
 #include "base/Win.h"
 
 #include "gui/Layout.h"
+#if defined(DEBUG)
+#include "base/UtAssert.h"
+#endif
 #include "gui/Layout_win.h"
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
@@ -73,8 +76,6 @@ void HwndSlot::SetBounds(Rect bounds) {
 }
 
 #if defined(DEBUG)
-// must be last: UtAssert.h over-writes assert()
-#include "base/UtAssert.h"
 
 void LayoutWin_UnitTests() {
     // A slot without an HWND still records its bounds for lazily-created windows.

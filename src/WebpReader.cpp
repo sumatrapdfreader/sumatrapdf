@@ -5,11 +5,14 @@
 #include "base/Pixmap.h"
 #include "base/GuessFileType.h"
 #include "base/GdiPlusUtil.h"
+
+#ifndef NO_LIBWEBP
+#include <webp/decode.h>
+#endif
+
 #include "WebpReader.h"
 
 #ifndef NO_LIBWEBP
-
-#include <webp/decode.h>
 
 namespace webp {
 

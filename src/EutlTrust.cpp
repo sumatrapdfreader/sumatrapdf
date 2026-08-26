@@ -6,19 +6,19 @@
 #include "base/File.h"
 #include "base/Http.h"
 
-#include "EutlTrust.h"
-
-TempStr GetSumatraDataDirTemp();
-#if OS_WIN
-void SetEutlLookupFn(bool (*fn)(const u8* der, int derLen));
-#endif
-
 #if OS_WIN
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
 #include <wincrypt.h>
+#endif
+
+#include "EutlTrust.h"
+
+TempStr GetSumatraDataDirTemp();
+#if OS_WIN
+void SetEutlLookupFn(bool (*fn)(const u8* der, int derLen));
 #endif
 
 constexpr const char* kLotlUrl = "https://ec.europa.eu/tools/lotl/eu-lotl.xml";

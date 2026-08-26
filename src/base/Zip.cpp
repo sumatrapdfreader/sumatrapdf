@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/Zip.h"
 
 #include "base/ByteReaderWriter.h"
 #include "base/DirScan.h"
@@ -11,6 +10,7 @@
 extern "C" {
 #include <zlib.h>
 }
+#include "base/Zip.h"
 
 /***** ZipCreator *****/
 

@@ -5,7 +5,6 @@
 #include "base/File.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
-#include "base/Http.h"
 
 // MinGW's winhttp.h redefines INTERNET_SCHEME as int after wininet.h (via Base.h)
 // already typedef'd it as an enum, which is a hard error. MSVC headers are fine
@@ -57,6 +56,8 @@ BOOL WINAPI WinHttpCloseHandle(HINTERNET);
 #include <winhttp.h>
 #pragma comment(lib, "winhttp.lib")
 #endif
+
+#include "base/Http.h"
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 constexpr const WCHAR* kUserAgent = L"SumatraPdfHTTP";

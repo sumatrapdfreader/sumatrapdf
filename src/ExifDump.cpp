@@ -7,6 +7,7 @@
 
 #include "Settings.h"
 #include "Flags.h"
+#include "ExifDump.h"
 
 // GUI-subsystem exes lose CRT stdout when spawned with a pipe (issue #5677).
 static void CliWrite(Str s, int n = 0) {

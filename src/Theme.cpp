@@ -15,11 +15,11 @@ License: GPLv3 */
 #include "Settings.h"
 #include "AppSettings.h"
 #include "Commands.h"
-#include "Theme.h"
 #include "DarkMode_win.h"
 #include "GlobalPrefs.h"
 #include "Translations.h"
 #include "PdfDarkMode.h"
+#include "Theme.h"
 
 // The installer and uninstaller never load settings, so CreateThemeCommands()
 // doesn't run and there is no current theme - every Theme*Color() accessor

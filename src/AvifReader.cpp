@@ -4,15 +4,18 @@
 #include "base/Base.h"
 #include "base/Exif.h"
 #include "base/Pixmap.h"
-#include "AvifReader.h"
 
 #if OS_WIN
 #include "base/GdiPlusUtil.h"
 #endif
 
 #ifndef NO_AVIF
-
 #include "heic.h"
+#endif
+
+#include "AvifReader.h"
+
+#ifndef NO_AVIF
 
 // Set pixmap xres/yres from EXIF density. DisplayModel uses xres as fileDPI:
 // zoomReal at 100% is screenDPI/fileDPI, so a missing density (default 96)

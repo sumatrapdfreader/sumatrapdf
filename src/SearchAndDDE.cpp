@@ -29,7 +29,6 @@
 #include "WindowTab.h"
 #include "Commands.h"
 #include "AppTools.h"
-#include "SearchAndDDE.h"
 #include "ExplorerQuickLook.h"
 #include "Selection.h"
 #include "Toolbar.h"
@@ -38,6 +37,7 @@
 #include "Favorites.h"
 #include "Translations.h"
 #include "Version.h"
+#include "SearchAndDDE.h"
 
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;

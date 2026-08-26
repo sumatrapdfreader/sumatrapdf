@@ -18,11 +18,11 @@
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "WindowTab.h"
 #include "Selection.h"
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
 #include "EditAnnotations.h"
+#include "WindowTab.h"
 
 WindowTab::WindowTab(MainWindow* win) {
     this->win = win;

@@ -7,6 +7,7 @@
 
 #include "gui/UIModels.h"
 
+#include "DocProperties.h"
 #include "EngineBase.h"
 
 Kind kindPageElementDest = "dest";
@@ -736,8 +737,6 @@ bool EngineBase::HasToc() {
 TocTree* EngineBase::GetToc() {
     return nullptr;
 }
-
-#include "DocProperties.h"
 
 // default implementation that just sets wanted keys
 // keys are names of properties the caller wants. If given, we append those

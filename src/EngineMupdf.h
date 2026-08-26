@@ -4,6 +4,7 @@
 #include "PdfCadDetect.h"
 
 struct Annotation;
+enum class AnnotationChange;
 struct DarkModePageAnalysis;
 struct DarkModeEngineCache;
 
@@ -250,5 +251,6 @@ EngineMupdf* AsEngineMupdf(EngineBase* engine);
 
 fz_rect ToFzRect(RectF rect);
 RectF ToRectF(fz_rect rect);
-void MarkNotificationAsModified(EngineMupdf*, Annotation*, AnnotationChange = AnnotationChange::Modify);
+void MarkNotificationAsModified(EngineMupdf*, Annotation*);
+void MarkNotificationAsModified(EngineMupdf*, Annotation*, AnnotationChange);
 Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo);

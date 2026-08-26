@@ -32,7 +32,6 @@
 #include "FilterHighlightDraw.h"
 #include "FileThumbnails.h"
 #include "Menu.h"
-#include "HomePage.h"
 #include "Translations.h"
 #include "Version.h"
 #include "Theme.h"
@@ -40,6 +39,7 @@
 #include "AppTools.h"
 #include "DarkMode_win.h"
 #include "SvgIcons.h"
+#include "HomePage.h"
 
 // how the shared tip code (TipText.cpp) opens a url link
 static void OpenTipUrl(Str url) {

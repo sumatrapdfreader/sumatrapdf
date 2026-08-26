@@ -2,9 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "gui/Dpi.h"
 #include "base/WinDynCalls.h"
 #include "base/ScopedWin.h"
+#include "gui/Dpi.h"
 
 /* Info from https://code.msdn.microsoft.com/DPI-Tutorial-sample-64134744
 

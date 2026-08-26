@@ -2,11 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/Crypto.h"
 
 #include <wincrypt.h>
 #include <wintrust.h>
 #include <softpub.h>
+
+#include "base/Crypto.h"
 
 #ifndef DWORD_MAX
 constexpr DWORD DWORD_MAX = 0xffffffffUL;

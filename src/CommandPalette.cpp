@@ -30,8 +30,8 @@
 #include "FileHistory.h"
 #include "Menu.h"
 #include "Translations.h"
-#include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
+#include "CommandPalette.h"
 
 // clang-format off
 static i32 gCommandsNoActivate[] = {

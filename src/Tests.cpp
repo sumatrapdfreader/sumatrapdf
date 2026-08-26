@@ -13,6 +13,7 @@
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "Flags.h"
+#include "Tests.h"
 
 void TestRenderPage(const Flags& i) {
     if (i.showConsole) {

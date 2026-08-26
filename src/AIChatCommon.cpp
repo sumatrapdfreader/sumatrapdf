@@ -26,8 +26,8 @@
 
 #include "base/GuessFileType.h"
 
-#include "AIChatCommon.h"
 #include "EngineAll.h"
+#include "AIChatCommon.h"
 
 bool IsAIChatAvailable() {
     // the chat UI is a WebView

@@ -14,10 +14,10 @@
 #include "SumatraPDF.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "LitDoc.h"
 #include "StressTesting.h"
+#include "EngineAll.h"
 
 static bool gEnableEpubWithPdfEngine = true;
 

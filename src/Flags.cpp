@@ -9,14 +9,14 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
-#include "Flags.h"
 #if OS_WIN
 #include "Print.h"
 #endif
-#include "SumatraLog.h"
 #if OS_WIN && !defined(SUMATRA_TEST_UTIL)
 #include "Translations.h"
 #endif
+#include "Flags.h"
+#include "SumatraLog.h"
 
 // @gen-start flags
 // clang-format off

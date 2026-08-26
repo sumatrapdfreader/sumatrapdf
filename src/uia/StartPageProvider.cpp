@@ -3,9 +3,9 @@
 
 #include "base/Base.h"
 #include <uiautomationcore.h>
-#include "uia/StartPageProvider.h"
 #include "uia/Constants.h"
 #include "uia/Provider.h"
+#include "uia/StartPageProvider.h"
 
 SumatraUIAutomationStartPageProvider::SumatraUIAutomationStartPageProvider(HWND canvasHwnd,
                                                                            SumatraUIAutomationProvider* root)
