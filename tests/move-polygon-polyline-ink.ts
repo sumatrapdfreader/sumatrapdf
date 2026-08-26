@@ -1,6 +1,7 @@
 // Polygon, polyline and ink annotations are stored as Vertices / InkList, not a
 // user-settable /Rect. Other PDF editors still let you drag them; Sumatra now
-// translates that geometry on move.
+// translates that geometry on move. Dragging an annotation is an Edit PDF mode
+// gesture, so the test turns that mode on first.
 //
 // Run: bun tests/move-polygon-polyline-ink.ts [--no-build]
 
@@ -119,6 +120,10 @@ export async function testit(): Promise<void> {
     if (!canvas) {
       throw new Error("move-polygon-polyline-ink: no canvas");
     }
+
+    // outside Edit PDF mode a click on an annotation stays a page click
+    sendCommand(frame, cmdId("CmdToggleEditPDF"));
+    await sleep(300);
 
     const before = await dumpShapes(client);
     for (const type of ["Polygon", "PolyLine", "Ink"]) {
