@@ -5111,13 +5111,24 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         UpdateToolbarFindText(win);
         UpdateFindbox(win);
         UpdateTabWidth(win);
+        win->currPageNo = 0;
+        // NoHomeTab empty window never goes through UpdateUiForCurrentTab
+        // (that path needs a CurrentTab). Drop the last document's page
+        // number and scrollbars (issue #6062).
+        if (win->pageEdit) {
+            win->pageEdit->SetIsEnabled(false);
+            win->pageEdit->SetText({});
+        }
         if (wasntFixed) {
             // restore the full menu and toolbar
             RebuildMenuBarForWindow(win);
             ShowOrHideToolbar(win);
         }
+        OverlayScrollbarShow(win->overlayScrollV, false);
+        OverlayScrollbarShow(win->overlayScrollH, false);
         if (!ScrollbarsAreHidden() && !ScrollbarsUseOverlay()) {
-            ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+            ShowWinScrollBar(win->hwndCanvas, SB_VERT, FALSE);
+            ShowWinScrollBar(win->hwndCanvas, SB_HORZ, FALSE);
         }
         win->RedrawAll();
         HwndSetText(win->hwndFrame, Str(kSumatraWindowTitle));
