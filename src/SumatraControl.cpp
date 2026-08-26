@@ -109,16 +109,17 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
     if (findH <= 0) {
         findH = FindBarFontHeight(win);
     }
+    int findBarDy = FindBarWindowHeight(win);
     out.Append(fmt(
         "frame=%d current=%d home=%d tocLabel=%d tocEdit=%d tocClose=%d favClose=%d aiLabel=%d aiInput=%d "
-        "aiCheckbox=%d aiClose=%d find=%d\n",
+        "aiCheckbox=%d aiClose=%d find=%d findBarDy=%d\n",
         win->frameDpi, DpiGet(), FontHeight(win->homeSearch ? win->homeSearch->GetFont() : nullptr),
         FontHeight(win->tocLabel ? win->tocLabel->font : nullptr),
         FontHeight(win->tocFilterEdit ? win->tocFilterEdit->GetFont() : nullptr),
         win->tocCloseBtn ? win->tocCloseBtn->idealSize.dy : 0, win->favCloseBtn ? win->favCloseBtn->idealSize.dy : 0,
         FontHeight(win->aiChatLabel ? win->aiChatLabel->font : nullptr),
         FontHeight(win->aiChatInput ? win->aiChatInput->GetFont() : nullptr),
-        FontHeight(win->aiChatCheckbox ? win->aiChatCheckbox->GetFont() : nullptr), aiClose, findH));
+        FontHeight(win->aiChatCheckbox ? win->aiChatCheckbox->GetFont() : nullptr), aiClose, findH, findBarDy));
     return finish(0);
 }
 

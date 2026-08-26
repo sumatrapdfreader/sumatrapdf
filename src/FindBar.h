@@ -9,6 +9,7 @@ void DeleteFindBar(MainWindow* win);
 void RecreateFindBar(MainWindow* win);
 void FindBarUpdateDpi(MainWindow* win);
 int FindBarFontHeight(MainWindow* win);
+int FindBarWindowHeight(MainWindow* win);
 void ShowFindBar(MainWindow* win);
 void HideFindBar(MainWindow* win);
 bool IsFindBarVisible(MainWindow* win);

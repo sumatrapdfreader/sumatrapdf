@@ -10,6 +10,7 @@ import { killAndWait, launchControlled, sendCommandSync } from "./win-automation
 type DpiState = {
   frame: number;
   find: number;
+  findBarDy: number;
   raw: string;
 };
 
@@ -32,6 +33,7 @@ async function dpiState(client: ControlClient): Promise<DpiState> {
   return {
     frame: values.frame ?? 0,
     find: values.find ?? 0,
+    findBarDy: values.findBarDy ?? 0,
     raw,
   };
 }
@@ -81,6 +83,7 @@ export async function testit(): Promise<void> {
     sendCommandSync(frame, cmdId("CmdDebugToggleDpiOverride")); // 150% -> 75%
     const low = await waitForDpiState(client, 72, (s) => s.find > 0);
     requireShrank("compact Find bar", high.find, low.find);
+    requireShrank("compact Find bar window", high.findBarDy, low.findBarDy);
 
     // Oscillate the way remote-desktop DPI storms do: many WM_DPICHANGED
     // deliveries, including nested ones from the find bar's own popup.

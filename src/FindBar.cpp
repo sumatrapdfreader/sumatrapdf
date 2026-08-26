@@ -347,7 +347,14 @@ void FindBarWnd::Layout(int forceBarDx) {
         return;
     }
     if (forceBarDx > 0) {
-        DoLayout();
+        Rect wr = HwndWindowRect(hwnd);
+        Rect cr = HwndClientRect(hwnd);
+        int nonClientDx = wr.dx - cr.dx;
+        int clientDx = std::max(forceBarDx - nonClientDx, layout->MinIntrinsicWidth(0));
+        inLayout = true;
+        LayoutAndSizeToContent(layout, clientDx, 0, hwnd);
+        DoLayout(HwndClientRect(hwnd).Size());
+        inLayout = false;
     } else {
         int extra = DpiScale(kFindBarDefaultEditDx - kFindBarMinEditDx);
         int minDx = layout->MinIntrinsicWidth(0) + extra;
@@ -422,6 +429,7 @@ void FindBarWnd::UpdateDpi(int dpi) {
     if (!layout || !edit) {
         return;
     }
+    int prevDpi = layoutDpi > 0 ? layoutDpi : 96;
     PlatformFont* appFont = GetAppFontForDpi(dpi);
     edit->SetFont(appFont);
     if (status) {
@@ -450,10 +458,11 @@ void FindBarWnd::UpdateDpi(int dpi) {
             b->padding = Insets{buttonPad, buttonPad, buttonPad, buttonPad};
         }
     }
+    int newBarDx = barDx > 0 ? MulDiv(barDx, dpi, prevDpi) : 0;
     layoutDpi = dpi;
     UpdateButtonIcons(dpi);
-    if (barDx > 0) {
-        Layout(barDx);
+    if (newBarDx > 0) {
+        Layout(newBarDx);
     } else {
         Layout();
     }
@@ -585,6 +594,14 @@ int FindBarFontHeight(MainWindow* win) {
         return 0;
     }
     return PlatformFontLineHeight(win->findBar->edit->GetFont());
+}
+
+// Physical height of the compact bar, used by the focused DPI regression test.
+int FindBarWindowHeight(MainWindow* win) {
+    if (!win || !win->findBar || !win->findBar->hwnd) {
+        return 0;
+    }
+    return HwndWindowRect(win->findBar->hwnd).dy;
 }
 
 // rebuild the bar so it picks up new theme colors / icons (called on theme change)
