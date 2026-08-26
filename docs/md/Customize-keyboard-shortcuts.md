@@ -59,7 +59,7 @@ Explanation of the first example:
 
 - by default, SumatraPDF uses the `Ctrl + O` shortcut for the `CmdOpen` (open a file) command. This changes the shortcut to `Alt + O`
 - by default, `q` closes the document. Binding it to `CmdNone` disables that built-in shortcut
-- **ver 3.6+:** `CmdCreateAnnotHighlight` takes a color argument (`#00ff00` is green) and a Boolean `openedit` argument. We reassign `a` to create a green highlight annotation (instead of the default yellow) and open the annotation editor
+- **ver 3.6+:** `CmdCreateAnnotHighlight` takes a color argument (`#00ff00` is green) and a Boolean `openedit` argument. We reassign `a` to create a green highlight annotation (instead of the default yellow) and turn on Edit PDF mode
 - **ver 3.6+:** `Name` is optional. If provided, the command will appear in the command palette (`Ctrl + K`)
 
 ## Format of the `Key` section

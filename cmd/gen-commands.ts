@@ -80,7 +80,6 @@ export const commands = [
     "CmdSaveAnnotations", "Save Annotations to existing PDF",
     "CmdSaveAnnotationsNewFile", "Save Annotations to a new PDF...",
     "CmdDiscardChanges", "Discard Changes",
-    "CmdEditAnnotations", "Edit Annotations...",
     "CmdDeleteAnnotation", "Delete Annotation",
     "CmdZoomFitPage", "Zoom: Fit Page",
     "CmdZoomActualSize", "Zoom: Actual Size",

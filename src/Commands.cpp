@@ -88,7 +88,6 @@ static SeqStrings gCommandNames =
     "CmdSaveAnnotations\0"
     "CmdSaveAnnotationsNewFile\0"
     "CmdDiscardChanges\0"
-    "CmdEditAnnotations\0"
     "CmdDeleteAnnotation\0"
     "CmdZoomFitPage\0"
     "CmdZoomActualSize\0"
@@ -383,7 +382,6 @@ static i32 gCommandIds[] = {
     CmdSaveAnnotations,
     CmdSaveAnnotationsNewFile,
     CmdDiscardChanges,
-    CmdEditAnnotations,
     CmdDeleteAnnotation,
     CmdZoomFitPage,
     CmdZoomActualSize,
@@ -678,7 +676,6 @@ SeqStrings gCommandDescriptions =
     "Save Annotations to existing PDF\0"
     "Save Annotations to a new PDF...\0"
     "Discard Changes\0"
-    "Edit Annotations...\0"
     "Delete Annotation\0"
     "Zoom: Fit Page\0"
     "Zoom: Actual Size\0"

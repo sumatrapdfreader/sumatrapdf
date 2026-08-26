@@ -2762,10 +2762,9 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     LoadArgs args(tab->filePath, win);
     args.showWin = true;
     args.placeWindow = false;
-    // EditAnnotationsWindow and canvas interaction state keep non-owning
-    // Annotation* from the engine. Capture editor state and clear those pointers
-    // only after a replacement controller was opened successfully (or a manual
-    // reload is about to replace the document with an error page).
+    // Canvas and compact toolbar keep non-owning Annotation* from the engine.
+    // Clear those pointers before a replacement controller is opened (or a
+    // manual reload is about to replace the document with an error page).
     InvalidateEditAnnotationsOnEngineChange(tab);
     tab->selectedAnnotation = nullptr;
     win->annotationBeingDragged = nullptr;
@@ -5063,9 +5062,10 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     if (currentTab) {
         currentTab->selectedAnnotation = nullptr;
         ResetReadAloudStateForTab(currentTab);
-        // Edit panel holds non-owning Annotation* into the engine about to die.
+        // Compact toolbar / filter list hold non-owning Annotation* into the
+        // engine about to die.
         if (deleteModel) {
-            CloseAndDeleteEditAnnotationsWindow(currentTab);
+            CloseAnnotationUiForTab(currentTab);
         }
     }
     if (deleteModel) {
@@ -5347,9 +5347,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     // Capture selection before the engine (and Annotation*) is torn down.
     SavedAnnotSel sel = CaptureSelectedAnnotation(tab);
-    // have to re-open edit annotations window because the current has
-    // a reference to deleted Engine
-    bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
+    CloseAnnotationUiForTab(tab);
 
     UpdateTabFileDisplayStateForTab(tab);
     CloseDocumentInCurrentTab(win, true, true);
@@ -5364,9 +5362,9 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     LoadDocument(&args);
 
     ShowSavedAnnotationsNotification(win->hwndCanvas, newPath);
-    if (hadEditAnnotations) {
+    if (sel.valid) {
         Annotation* match = FindMatchingAnnotation(tab, sel);
-        ShowEditAnnotationsWindow(tab, match);
+        SetSelectedAnnotation(tab, match);
     }
     return true;
 }
@@ -12428,30 +12426,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
-        case CmdEditAnnotations: {
-            if (!tab) return 0;
-            Annotation* annot = nullptr;
-            Point pt = HwndGetCursorPos(win->hwndCanvas);
-            if (lp != 0) {
-                // when sending from Menu.cpp mouse position is encoded as LPARAM
-                pt.x = GET_X_LPARAM(lp);
-                pt.y = GET_Y_LPARAM(lp);
-                // pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
-            }
-            int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
-            if (pageNoUnderCursor > 0) {
-                annot = dm->GetAnnotationAtPos(pt, nullptr);
-            }
-            ShowEditAnnotationsWindow(tab, annot);
-            return 0;
-        }
-
         case CmdDeleteAnnotation: {
             if (!tab) {
                 return 0;
             }
             // Ctrl+Delete always removes the annot under the cursor, even when
-            // the annotations window is open and has a different list selection.
+            // the annotation list has a different selection.
             Annotation* annot = GetAnnotionUnderCursor(tab, nullptr, lp);
             if (!annot) {
                 annot = tab->selectedAnnotation;
@@ -12497,7 +12477,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // for custom commands must explicitly provide "openedit" argument
                 openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
             } else {
-                // for built-in shortcuts, Shift opens edit window
+                // for built-in shortcuts, Shift enters Edit PDF mode
                 openAnnotationEdit = IsShiftPressed();
             }
         } break;
@@ -12655,35 +12635,22 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
 
-    EditAnnotFocus focusTarget = EditAnnotFocus::Default;
-    if (GetCommandBoolArg(cmd, kCmdArgFocusEdit, false)) {
-        focusTarget = EditAnnotFocus::Edit;
-    } else if (GetCommandBoolArg(cmd, kCmdArgFocusList, false)) {
-        focusTarget = EditAnnotFocus::List;
-    }
-
     if (openAnnotationEdit) {
-        ShowEditAnnotationsWindow(tab, lastCreatedAnnot, focusTarget);
-        return 0;
+        EnablePdfAnnotationsToolbar(win);
     }
 
-    // proper action for a given annotation type
+    // Highlight / underline / squiggly / strike-out stay with the text
+    // selection; other types (including FreeText) are selected so they can
+    // be moved, resized, or edited from the compact property row.
     switch (lastCreatedAnnot->type) {
         case AnnotationType::Highlight:
         case AnnotationType::Squiggly:
         case AnnotationType::StrikeOut:
         case AnnotationType::Underline:
             return 0;
-        case AnnotationType::FreeText: {
-            // for FreeText you want to edit text so show edit window
-            ShowEditAnnotationsWindow(tab, lastCreatedAnnot, focusTarget);
-            return 0;
-        } break;
     }
 
-    // mark as selected so it can be moved / resized
-    // isNew: page was already under the cursor/selection; do not scroll the view
-    SetSelectedAnnotation(tab, lastCreatedAnnot, true);
+    SetSelectedAnnotation(tab, lastCreatedAnnot);
     return 0;
 }
 

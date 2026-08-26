@@ -517,7 +517,7 @@ static void AnnotChanged(WindowTab* tab) {
     if (!tab || !tab->win) {
         return;
     }
-    NotifyAnnotationsChanged(tab->editAnnotsWindow);
+    NotifyAnnotationsChanged(tab);
     ToolbarUpdateStateForWindow(tab->win, false);
     MainWindowRerender(tab->win);
     UpdateAnnotEditToolbar(tab->win);

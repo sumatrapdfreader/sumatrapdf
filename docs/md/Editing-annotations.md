@@ -26,13 +26,11 @@ If you close the dialog or choose `Discard`, annotations will be lost.
 
 `Save changes to a new PDF` will allow you to save as a new file.
 
-## Open annotation editor
+## Edit PDF mode
 
-If you press `A` (uppercase, i.e. `Shift + A`), SumatraPDF creates a highlight annotation (the same as lowercase `a`) and also opens the annotation editor.
+Turn on **Edit PDF** in the main toolbar to add, select, and change annotations. `Shift + A` creates a highlight (the same as lowercase `a`) and also turns on Edit PDF mode.
 
-Another way to open the annotation editor is to use the context menu (right-click or press `Shift + F10`) and select `Edit Annotations`:
-
-![Annotation Context Menu](img/annot-context-menu.png)
+The toolbar search box on the right (`filter N annotations`) lists annotations. Focus it to open the dropdown; an icon after the box pops the list into a floating window.
 
 ## Other annotations for selected text
 
@@ -70,23 +68,11 @@ Pick a PNG (or JPEG, etc.). The image is stamped on the page and you can drag or
 
 ![Context Menu Annotation Under Cursor](img/context-menu-annot-under-cursor.png)
 
-## Annotation editor
+## Changing an annotation
 
-All these commands will open the annotation editor:
+Click an annotation in Edit PDF mode to select it. A compact property row appears under it (color, opacity, border, font, icon, line endings, Contents). The filter list and floating list also select an annotation when you click a row.
 
-![Annotation Editor](img/annotation-editor.png)
-
-Here we have a text annotation in the editor.
-
-You can delete annotations and change their color, text, and other attributes.
-
-## Select annotation from page in editor
-
-When you have many annotations on the page, it's hard to locate the desired annotation in the editor list.
-
-To select an annotation in the editor, place the mouse cursor over an annotation on the page, right-click to open the context menu, and select `Select Annotation in Editor`.
-
-![Context Menu Select Annotation In Editor](img/context-menu-select-in-editor.png)
+Delete the selected annotation with `Delete`, or with **Delete Annotation** in the floating list.
 
 ## Moving annotations
 
@@ -109,7 +95,7 @@ Open **Settings → Advanced Options...** and edit the `Annotations` block:
 | `TextIconColor` / `TextIconType`            | Sticky-note style icons                        |
 | `DefaultAuthor`                             | Author name written into new annotations       |
 
-Highlight, underline, squiggly and strike-out colors accept `#aarrggbb` so you can set a default opacity: `#80ffff00` is a half-transparent yellow highlight. `#rrggbb` (6 digits) is fully opaque. You can still change one annotation's opacity in the annotation editor.
+Highlight, underline, squiggly and strike-out colors accept `#aarrggbb` so you can set a default opacity: `#80ffff00` is a half-transparent yellow highlight. `#rrggbb` (6 digits) is fully opaque. You can still change one annotation's opacity from the compact property row.
 
 Free-text opacity is the separate `FreeTextOpacity` percent (0–100).
 
@@ -132,7 +118,7 @@ Add annotation commands to the toolbar via the `Shortcuts` array — see [Custom
 | Discard unsaved changes  | `CmdDiscardChanges` (tab context menu **Discard changes**, or `Ctrl + K` command palette) — reloads the file from disk |
 | Save when closing        | Prompt dialog — choose existing file, new file, or discard                                                             |
 
-There is **no undo** (`Ctrl + Z`) for annotation edits. Delete an annotation with `Delete` when the cursor is over it, or remove it in the annotation editor.
+There is **no undo** (`Ctrl + Z`) for annotation edits. Delete an annotation with `Delete` when it is selected, or with **Delete Annotation** in the floating list.
 
 To avoid the save prompt on every close, save explicitly with `Ctrl + Shift + S` before closing. To drop unsaved work without closing the tab, use **Discard Changes** (`CmdDiscardChanges`).
 

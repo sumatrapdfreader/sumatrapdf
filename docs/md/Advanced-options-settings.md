@@ -744,7 +744,7 @@ Annotations [
     FreeTextBorderWidth = 1
 
     ; how text is aligned in newly created free text annotations (Text Alignment
-    ; in the annotation editor): left, center or right. Right-to-left scripts
+    ; in the compact property row): left, center or right. Right-to-left scripts
     ; (Arabic, Hebrew, Persian) want right (introduced in version 3.7)
     FreeTextAlignment = left
 
@@ -1033,9 +1033,6 @@ SearchUIWindowPos = 0 0 0 0
 
 ; position/size of the in-app Help: Manual window (introduced in version 3.7)
 HelpWindowPos = 0 0 0 0
-
-; last-used client size of the annotations window (introduced in version 3.7)
-AnnotationsWindowSize = 0 0
 
 ; information about opened files (in most recently used order)
 FileStates [

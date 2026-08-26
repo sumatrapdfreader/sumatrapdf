@@ -1195,10 +1195,6 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefContextReadAloud,
     },
     {
-        _TRN("Edit Annotations"),
-        CmdEditAnnotations,
-    },
-    {
         _TRN("Create Annotation From Selection"),
         (UINT_PTR)menuDefCreateAnnotFromSelection,
     },
@@ -2207,14 +2203,6 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     MenuSetEnabled(popup, CmdFavoriteShowInTab, HasFavorites() && SettingsUseTabs());
     MenuSetChecked(popup, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
 
-    if (ctx->annotationUnderCursor) {
-        // change from generic "Edit Annotations" to more specific
-        // "Edit ${annotType} Annotation"
-        Str t = AnnotationReadableNameTemp(ctx->annotationUnderCursor->type);
-        TempStr s = fmt(_TRA("Edit %s Annotation").s, t);
-        MenuSetText(popup, CmdEditAnnotations, s);
-    }
-
     Str filePath = win->ctrl->GetFilePath();
     bool favsSupported = HasPermission(Perm::SavePreferences) && CanAccessDisk();
     if (favsSupported) {
@@ -2409,8 +2397,7 @@ bool CommandUsesContextMenuPoint(int cmdId) {
     if (CmdIdToAnnotationType(cmdId) != AnnotationType::Unknown) {
         return true;
     }
-    return cmdId == CmdEditAnnotations || cmdId == CmdDeleteAnnotation || cmdId == CmdCreateAnnotImageFromClipboard ||
-           cmdId == CmdInsertImage;
+    return cmdId == CmdDeleteAnnotation || cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdInsertImage;
 }
 
 // so that we can do free everything at exit

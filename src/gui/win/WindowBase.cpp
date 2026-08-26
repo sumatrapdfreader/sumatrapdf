@@ -1209,7 +1209,7 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                 if (hdc && br) {
                     // A virt tree paints the full client through a
                     // double-buffer. Filling here on a full-window erase
-                    // flashes (Edit Annotations arrow-key navigation).
+                    // flashes during arrow-key list navigation.
                     // Still fill when the DC is clipped to a child.
                     bool fill = !vroot;
                     if (!fill) {
@@ -1670,7 +1670,7 @@ void ControlBase::SetBounds(Rect bounds) {
     // copy of old pixels into the new place.
     // SWP_NOREDRAW also skips invalidating the parent where this child
     // used to be, so a dropdown first shown at (0,0) then moved left a
-    // ghost over Contents (Edit Annotations Icon combo).
+    // ghost over nearby contents.
     if (hwnd) {
         HWND parent = GetParent(hwnd);
         RECT oldOnParent{};
@@ -1682,8 +1682,8 @@ void ControlBase::SetBounds(Rect bounds) {
                      SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOREDRAW);
         if (parent && !IsRectEmpty(&oldOnParent)) {
             // Invalidate, don't erase: a parent fill here flashed the
-            // Edit Annotations window on every list selection. WM_PAINT
-            // covers virt leftovers; ALLCHILDREN covers Contents.
+            // window on every list selection. WM_PAINT covers virt
+            // leftovers; ALLCHILDREN covers native child edits.
             RedrawWindow(parent, &oldOnParent, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
         InvalidateRect(hwnd, nullptr, FALSE);

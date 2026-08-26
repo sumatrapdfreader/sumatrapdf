@@ -1529,7 +1529,7 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
         // logf("prev rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", ar.x, ar.y, ar.dx, ar.dy);
         // logf(" new rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", r.x, r.y, r.dx, r.dy);
         SetRect(annot, r);
-        NotifyAnnotationsChanged(win->CurrentTab()->editAnnotsWindow);
+        NotifyAnnotationsChanged(win->CurrentTab());
         MainWindowRerender(win);
         ToolbarUpdateStateForWindow(win, true);
         UpdateAnnotFilterToolbar(win);
@@ -2143,7 +2143,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     }
 
     // Rectangle resizes already wrote the annot during mouse move.
-    NotifyAnnotationsChanged(win->CurrentTab()->editAnnotsWindow);
+    NotifyAnnotationsChanged(win->CurrentTab());
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
     UpdateAnnotFilterToolbar(win);
@@ -2562,7 +2562,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    if (clickedAnnot && tab && (tab->selectedAnnotation || tab->editAnnotsWindow)) {
+    if (clickedAnnot && tab && tab->selectedAnnotation) {
         SetSelectedAnnotation(tab, clickedAnnot);
         return;
     }
@@ -3984,7 +3984,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     }
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, selected);
-    bool annotEditHover = annot && (win->pdfAnnotationsToolbarEnabled || selected || tab->editAnnotsWindow);
+    bool annotEditHover = annot && (win->pdfAnnotationsToolbarEnabled || selected);
 
     int pageNo = 0;
     IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);

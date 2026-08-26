@@ -3,7 +3,6 @@
 
 struct SelectionOnPage;
 struct WatchedFile;
-struct EditAnnotationsWindow;
 struct MainWindow;
 struct LoadArgs;
 namespace str {
@@ -69,8 +68,6 @@ struct WindowTab {
     float prevZoomVirtual{kInvalidZoom};
     DisplayMode prevDisplayMode{DisplayMode::Automatic};
     TocTree* currToc = nullptr; // not owned by us
-    EditAnnotationsWindow* editAnnotsWindow = nullptr;
-    Rect lastEditAnnotsWindowPos;
 
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;

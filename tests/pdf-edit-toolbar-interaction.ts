@@ -26,7 +26,6 @@ type AnnotState = {
   hover: boolean;
   editToolbar: boolean;
   notification: boolean;
-  editor: boolean;
   selectedHover: boolean;
   overlay: {
     visible: boolean;
@@ -60,10 +59,7 @@ async function annotState(client: ControlClient): Promise<AnnotState> {
     const res = await client.request(ControlCommand.TestMarkupAnnots, []);
     raw = String(res[1] ?? "");
     const screen = /screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
-    const state =
-      /state selected=(\d+) hover=(\d+) editToolbar=(\d+) notification=(\d+) editor=(\d+) selectedHover=(\d+)/.exec(
-        raw,
-      );
+    const state = /state selected=(\d+) hover=(\d+) editToolbar=(\d+) notification=(\d+) selectedHover=(\d+)/.exec(raw);
     const overlay =
       /overlay visible=(\d+)(?: rows=(\d+) above=(\d+) rect=(-?\d+),(-?\d+),(\d+),(\d+) anchor=(-?\d+),(-?\d+),(\d+),(\d+))?/.exec(
         raw,
@@ -82,8 +78,7 @@ async function annotState(client: ControlClient): Promise<AnnotState> {
         hover: state[2] === "1",
         editToolbar: state[3] === "1",
         notification: state[4] === "1",
-        editor: state[5] === "1",
-        selectedHover: state[6] === "1",
+        selectedHover: state[5] === "1",
         overlay: {
           visible: overlay[1] === "1",
           rows: +(overlay[2] ?? 0),
@@ -164,10 +159,10 @@ export async function testit(): Promise<void> {
 
     await clickAt(canvas, centerX, centerY, 200, MK_CONTROL);
     state = await annotState(client);
-    if (!state.editToolbar || !state.selected || state.editor || state.notification) {
+    if (!state.editToolbar || !state.selected || state.notification) {
       throw new Error(
         `pdf-edit-toolbar-interaction: Ctrl+click did not enter Edit PDF mode ` +
-          `(edit=${state.editToolbar} selected=${state.selected} editor=${state.editor} notif=${state.notification})`,
+          `(edit=${state.editToolbar} selected=${state.selected} notif=${state.notification})`,
       );
     }
     if (!/annotEditToolbar visible=1 n=\d+ items=.*color.*contents/.test(state.raw)) {
@@ -272,7 +267,7 @@ export async function testit(): Promise<void> {
 
     await clickAt(canvas, editCenterX, editCenterY);
     state = await annotState(client);
-    if (!state.selected || state.editor || !state.selectedHover) {
+    if (!state.selected || !state.selectedHover) {
       throw new Error("pdf-edit-toolbar-interaction: plain click did not select the annotation");
     }
     if (!/annotEditToolbar visible=1 n=\d+ items=.*color.*contents/.test(state.raw)) {
@@ -292,7 +287,7 @@ export async function testit(): Promise<void> {
       bottomAnnot.y + Math.floor(bottomAnnot.dy / 2),
     );
     state = await annotState(client);
-    if (!state.selected || state.editor || !state.selectedHover) {
+    if (!state.selected || !state.selectedHover) {
       throw new Error("pdf-edit-toolbar-interaction: later click did not select the annotation");
     }
   } finally {

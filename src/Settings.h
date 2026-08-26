@@ -326,7 +326,7 @@ struct Annotations {
     // border width of free text annotations, in points
     int freeTextBorderWidth;
     // how text is aligned in newly created free text annotations (Text
-    // Alignment in the annotation editor): left, center or right.
+    // Alignment in the compact property row): left, center or right.
     // Right-to-left scripts (Arabic, Hebrew, Persian) want right
     Str freeTextAlignment;
     // color of newly created text (sticky note) annotations
@@ -1079,8 +1079,6 @@ struct GlobalPrefs {
     Rect searchUIWindowPos;
     // position/size of the in-app Help: Manual window
     Rect helpWindowPos;
-    // last-used client size of the annotations window
-    Size annotationsWindowSize;
     // information about opened files (in most recently used order)
     Vec<FileState*>* fileStates;
     // state of the last session, usage depends on RestoreSession
@@ -1443,8 +1441,8 @@ static const StructInfo gAnnotationsInfo = {
     "newly created free text annotations\0opacity of free text annotation in percent (0-100); 0 - fully transparent "
     "(invisible), 50 - half transparent, 100 - fully opaque\0font size of free text annotations, in points\0border "
     "width of free text annotations, in points\0how text is aligned in newly created free text annotations (Text "
-    "Alignment in the annotation editor): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) want "
-    "right\0color of newly created text (sticky note) annotations\0icon shown for text (sticky note) annotations: "
+    "Alignment in the compact property row): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) "
+    "want right\0color of newly created text (sticky note) annotations\0icon shown for text (sticky note) annotations: "
     "comment, help, insert, key, new paragraph, note or paragraph. If not set, note is used\0author recorded on newly "
     "created annotations. If not set, the Windows user name is used; set it to (none) to leave the author out entirely",
     false};
@@ -1676,13 +1674,6 @@ static const StructInfo gRect_2_Info = {
     "x coordinate of the top-left corner, in screen pixels\0y coordinate of the top-left corner, in screen "
     "pixels\0width, in screen pixels\0height, in screen pixels",
     false};
-
-static const FieldInfo gSize_2_Fields[] = {
-    {offsetof(Size, dx), SettingType::Int, 0},
-    {offsetof(Size, dy), SettingType::Int, 0},
-};
-static const StructInfo gSize_2_Info = {
-    sizeof(Size), 2, gSize_2_Fields, "Dx\0Dy", "width, in screen pixels\0height, in screen pixels", false};
 
 static const FieldInfo gPointFFields[] = {
     {offsetof(PointF, x), SettingType::Float, (intptr_t)"-1"},
@@ -2038,7 +2029,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, windowPos), SettingType::Compact, (intptr_t)&gRectInfo, true},
     {offsetof(GlobalPrefs, searchUIWindowPos), SettingType::Compact, (intptr_t)&gRect_1_Info, true},
     {offsetof(GlobalPrefs, helpWindowPos), SettingType::Compact, (intptr_t)&gRect_2_Info, true},
-    {offsetof(GlobalPrefs, annotationsWindowSize), SettingType::Compact, (intptr_t)&gSize_2_Info, true},
     {offsetof(GlobalPrefs, fileStates), SettingType::Array, (intptr_t)&gFileStateInfo, true},
     {offsetof(GlobalPrefs, sessionData), SettingType::Array, (intptr_t)&gSessionDataInfo, true},
     {offsetof(GlobalPrefs, reopenOnce), SettingType::StringArray, 0, true},
@@ -2051,7 +2041,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs),
-    147,
+    146,
     gGlobalPrefsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
@@ -2069,8 +2059,8 @@ static const StructInfo gGlobalPrefsInfo = {
     "ild\0\0CodexBuild\0\0AntiGravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Anno"
     "tations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0"
     "Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0S"
-    "earchUIWindowPos\0HelpWindowPos\0AnnotationsWindowSize\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck"
-    "\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "earchUIWindowPos\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWi"
+    "nPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view, page aspect. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file "
     "uses page 1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered "
@@ -2191,11 +2181,11 @@ static const StructInfo gGlobalPrefsInfo = {
     "language\0SumatraPDF won't offer to update to this version again\0default state of the window. 1 is normal, 2 is "
     "maximized, 3 is fullscreen, 4 is minimized\0default position (x, y) and size (width, height) of the "
     "window\0position/size of the floating find window (see SearchUIFloating)\0position/size of the in-app Help: "
-    "Manual window\0last-used client size of the annotations window\0information about opened files (in most recently "
-    "used order)\0state of the last session, usage depends on RestoreSession\0data required for reloading documents "
-    "after an auto-update\0data required to determine when SumatraPDF last checked for updates\0value required to "
-    "determine recency for the OpenCount value in FileStates\0position of the document properties window\0if true, "
-    "check once a day whether an update is available\0\0Settings below are not recognized by the current version",
+    "Manual window\0information about opened files (in most recently used order)\0state of the last session, usage "
+    "depends on RestoreSession\0data required for reloading documents after an auto-update\0data required to determine "
+    "when SumatraPDF last checked for updates\0value required to determine recency for the OpenCount value in "
+    "FileStates\0position of the document properties window\0if true, check once a day whether an update is "
+    "available\0\0Settings below are not recognized by the current version",
     false};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},

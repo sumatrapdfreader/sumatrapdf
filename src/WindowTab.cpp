@@ -91,7 +91,7 @@ WindowTab::~WindowTab() {
         DestroyWindow(hwndPDFOutline);
         hwndPDFOutline = nullptr;
     }
-    CloseAndDeleteEditAnnotationsWindow(this);
+    CloseAnnotationUiForTab(this);
     FileWatcherUnsubscribe(watcher);
     delete selectionOnPage;
     // technically we only need to clear ctrl == gMostRecentlyOpenedDoc

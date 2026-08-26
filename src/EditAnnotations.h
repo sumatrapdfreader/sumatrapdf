@@ -1,28 +1,19 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct EditAnnotationsWindow;
 struct MainWindow;
-
-enum class EditAnnotFocus {
-    Default,
-    Edit,
-    List,
-};
-
+struct WindowTab;
+struct Annotation;
 struct Gfx;
 struct PlatformFont;
 struct StrVec;
 template <typename T>
 struct Vec;
 
-void ShowEditAnnotationsWindow(WindowTab*, Annotation*, EditAnnotFocus focus = EditAnnotFocus::Default);
-bool CloseAndDeleteEditAnnotationsWindow(WindowTab*);
 void DeleteAnnotationAndUpdateUI(WindowTab*, Annotation*);
-void SetSelectedAnnotation(WindowTab*, Annotation*, bool isNew = false, EditAnnotFocus focus = EditAnnotFocus::Default);
-void UpdateAnnotationsList(EditAnnotationsWindow*);
+void SetSelectedAnnotation(WindowTab*, Annotation*);
 void RefreshAnnotationLists(WindowTab*);
-void NotifyAnnotationsChanged(EditAnnotationsWindow*);
+void NotifyAnnotationsChanged(WindowTab*);
 void StartLoadingAnnotationsForUi(WindowTab*);
 bool AnnotMatchesFilter(Annotation*, const StrVec& words);
 void DrawAnnotationListRow(Gfx*, PlatformFont*, Rect, Annotation*, const StrVec& filterWords, Vec<u8>& hlScratch,
@@ -30,6 +21,7 @@ void DrawAnnotationListRow(Gfx*, PlatformFont*, Rect, Annotation*, const StrVec&
 void DetachAnnotationFromUI(Annotation*);
 void InvalidateEditAnnotationsOnEngineChange(WindowTab*);
 void RefreshEditAnnotationsAfterEngineChange(WindowTab*);
+void CloseAnnotationUiForTab(WindowTab*);
 void UpdateAnnotationHoverOverlay(MainWindow*);
 void RepositionAnnotationHoverOverlay(MainWindow*);
 void HideAnnotationHoverOverlay(MainWindow*);

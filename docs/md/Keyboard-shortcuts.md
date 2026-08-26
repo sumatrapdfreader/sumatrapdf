@@ -141,7 +141,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 **Ver 3.3+**, some in **ver 3.4+**:
 
 - `a` create highlight annotation from selected text
-- `A` like `a` plus opens annotation editor
+- `A` like `a` plus turns on Edit PDF mode
 - `u` create underline annotation from selected text
 - `Delete` delete annotation under mouse cursor
 - `Ctrl-Shift-S` save annotations to current PDF file

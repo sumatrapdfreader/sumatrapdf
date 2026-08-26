@@ -51,15 +51,14 @@ function pressVKey(hwnd: number, vk: number): void {
   postMessage(hwnd, WM_KEYUP, vk, 0);
 }
 
-async function annotationEditorLayout(client: ControlClient): Promise<{ listDy: number; count: number; raw: string }> {
+async function annotationCount(client: ControlClient): Promise<{ count: number; raw: string }> {
   const res = await client.request(ControlCommand.TestAnnotEditorLayout, [0, 0]);
   const raw = String(res[1] ?? "").trim();
-  const list = / listDy=(\d+)/.exec(raw);
   const count = / n=(\d+)/.exec(raw);
-  if (res[0] !== 0 || !list || !count) {
-    throw new Error(`could not read annotation editor layout: ${raw}`);
+  if (res[0] !== 0 || !count) {
+    throw new Error(`could not read annotation count: ${raw}`);
   }
-  return { listDy: +list[1]!, count: +count[1]!, raw };
+  return { count: +count[1]!, raw };
 }
 
 function parseMarkupDump(
@@ -96,8 +95,7 @@ export async function testit(): Promise<void> {
       await client.waitForRenderIdle();
       await client.setNotificationsEnabled(false);
 
-      sendCommandSync(frame, cmdId("CmdEditAnnotations"));
-      const layoutBefore = await annotationEditorLayout(client);
+      const layoutBefore = await annotationCount(client);
       if (layoutBefore.count !== 1) {
         throw new Error(`expected one initial annotation: ${layoutBefore.raw}`);
       }
@@ -141,7 +139,7 @@ export async function testit(): Promise<void> {
       }
 
       sendCommandSync(frame, cmdId("CmdCreateAnnotUnderline"));
-      const layoutAfter = await annotationEditorLayout(client);
+      const layoutAfter = await annotationCount(client);
       if (layoutAfter.count !== 2) {
         const message = `annotation list did not add underline: before=${layoutBefore.raw} after=${layoutAfter.raw}`;
         sendCommandSync(frame, cmdId("CmdDiscardChanges"));

@@ -121,7 +121,7 @@ import { testit as issue3560 } from "./issue-3560.ts";
 import { testit as issue3591 } from "./issue-3591.ts";
 import { testit as issue4576 } from "./issue-4576.ts";
 import { testit as issue5850 } from "./issue-5850.ts";
-import { testit as overlayScrollbarAnnotZorder } from "./overlay-scrollbar-annot-zorder.ts";
+
 import { testit as issue6028 } from "./issue-6028.ts";
 import { testit as issue6062 } from "./issue-6062.ts";
 import { testit as issue5969 } from "./issue-5969.ts";
@@ -143,7 +143,7 @@ import { testit as issue6053 } from "./issue-6053.ts";
 import { testit as issue6054 } from "./issue-6054.ts";
 import { testit as favoritesTabAfterDocumentClose } from "./favorites-tab-after-document-close.ts";
 import { testit as movePolygonPolylineInk } from "./move-polygon-polyline-ink.ts";
-import { testit as annotEditor } from "./annot-editor.ts";
+
 import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interaction.ts";
 import { testit as annotFilterToolbar } from "./annot-filter-toolbar.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
@@ -156,7 +156,7 @@ import { testit as inkAnnotationPlacement } from "./ink-annotation-placement.ts"
 import { testit as issue5956 } from "./issue-5956.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as commandPaletteShortcutFilter } from "./command-palette-shortcut-filter.ts";
-import { testit as annotationEditorReload } from "./annotation-editor-reload.ts";
+
 import { testit as issue5968 } from "./issue-5968.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
 import { testit as issue5963 } from "./issue-5963.ts";
@@ -176,7 +176,7 @@ import { testit as issue5988 } from "./issue-5988.ts";
 import { testit as issue5989 } from "./issue-5989.ts";
 import { testit as issue5995 } from "./issue-5995.ts";
 import { testit as issue5997 } from "./issue-5997.ts";
-import { testit as issue4494 } from "./issue-4494.ts";
+
 import { testit as issue6001 } from "./issue-6001.ts";
 import { testit as issue6000 } from "./issue-6000.ts";
 import { testit as issue4157 } from "./issue-4157.ts";
@@ -237,7 +237,6 @@ export const tests: NamedTest[] = [
   ["issue-5875", issue5875],
 
   // --- default session: -for-testing + quadrant window + -dbg-control ----
-  ["annot-editor", annotEditor],
   ["issue-6037", issue6037],
   ["issue-6040", issue6040],
   ["issue-6043", issue6043],
@@ -350,7 +349,6 @@ export const tests: NamedTest[] = [
   ["issue-3591", issue3591],
   ["issue-4576", issue4576],
   ["issue-5850", issue5850],
-  ["overlay-scrollbar-annot-zorder", overlayScrollbarAnnotZorder],
   ["issue-6028", issue6028],
   ["issue-6062", issue6062],
   ["issue-5969", issue5969],
@@ -361,7 +359,6 @@ export const tests: NamedTest[] = [
   ["issue-5970", issue5970],
   ["issue-5971", issue5971],
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
-  ["annotation-editor-reload", annotationEditorReload],
   ["issue-5968", issue5968],
   ["issue-5980", issue5980],
   ["issue-5982", issue5982],
@@ -373,7 +370,6 @@ export const tests: NamedTest[] = [
   ["issue-5988", issue5988],
   ["issue-5995", issue5995],
   ["issue-5997", issue5997],
-  ["issue-4494", issue4494],
   ["issue-6001", issue6001],
   ["issue-6000", issue6000],
   ["issue-4157", issue4157],

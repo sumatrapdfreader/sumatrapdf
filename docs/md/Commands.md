@@ -214,7 +214,6 @@ CmdCreateAnnotStrikeOut,,Create Strike Out Annotation,
 CmdCreateAnnotText,,Create Text Annotation,
 CmdCreateAnnotUnderline,"u, U",Create Underline Annotation,
 CmdDeleteAnnotation,Delete,Delete Annotation,
-CmdEditAnnotations,,Edit Annotations,
 CmdSaveAnnotations,Shift + Ctrl + S,Save Annotations to existing PDF,
 CmdSaveAnnotationsNewFile,,Save Annotations to new PDF,ver 3.6+
 CmdSignDocument,,Sign Document...,"digitally sign a PDF with a certificate from the Windows store or a .pfx / .p12 file; choose which name/date/labels to draw and optionally a PNG/JPEG; a new signature is placed by clicking or dragging on the page, ver 3.7+"
@@ -417,7 +416,7 @@ Shortcuts [
 
 By default, `a` invokes `CmdCreateAnnotHighlight` with the default yellow color.
 
-You can override the `a` shortcut to create a green (`#00ff00`) highlight annotation and automatically open the annotation editor (`openedit` Boolean argument).
+You can override the `a` shortcut to create a green (`#00ff00`) highlight annotation and turn on Edit PDF mode (`openedit` Boolean argument).
 
 You can create multiple keyboard shortcuts for multiple colors.
 
@@ -494,7 +493,7 @@ Use case: if you want to go forward or back by more than one page.
 Arguments:
 
 - `color` : default, color
-- `openedit` : boolean, `false` if not given
+- `openedit` : boolean, `false` if not given. Turns on Edit PDF mode after creating the annotation
 - `copytoclipboard` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, copies the selection (the annotation's text) to the clipboard. This used to be the default behavior for built-in keyboard shortcuts such as `a`, but now it has to be chosen explicitly.
 - `setcontent` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, sets the annotation's content to the selection (the annotation's text)
 
@@ -527,8 +526,6 @@ Arguments for `CmdCreateAnnotHighlight` plus:
 - `alignment` : **ver 3.7+**, how free text is aligned in its box: `left`, `center`, or `right`. Left if not given
 - `opacity` : opacity of annotation, 0 = fully transparent (i.e. invisible), 100 = fully opaque (default if not given)
 - `interiorcolor` : interior color for circle, square, etc. annotations, fully transparent if not given
-- `focusedit` : Boolean, when the annotation editor opens, focus the contents edit control
-- `focuslist` : Boolean, when the annotation editor opens, focus the annotations list
 
 ## `CmdToggleBoolSetting`
 

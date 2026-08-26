@@ -814,8 +814,8 @@ const annotations: Field[] = [
     "FreeTextAlignment",
     Str,
     "left",
-    "how text is aligned in newly created free text annotations (Text Alignment in the annotation " +
-      "editor): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) want right",
+    "how text is aligned in newly created free text annotations (Text Alignment in the compact " +
+      "property row): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) want right",
   ).ver("3.7"),
   field("TextIconColor", Color, "", "color of newly created text (sticky note) annotations"),
   field(
@@ -1652,10 +1652,6 @@ const globalPrefs: Field[] = [
   ).structName("Rect"),
   compactStruct("HelpWindowPos", windowPos, "position/size of the in-app Help: Manual window")
     .structName("Rect")
-    .ver("3.7")
-    .internal(),
-  compactStruct("AnnotationsWindowSize", windowSize, "last-used client size of the annotations window")
-    .structName("Size")
     .ver("3.7")
     .internal(),
 
