@@ -31,7 +31,6 @@ import { testit as issue5941 } from "./issue-5941.ts";
 import { testit as issue2447 } from "./issue-2447.ts";
 import { testit as issue476 } from "./issue-476.ts";
 import { testit as issue5875 } from "./issue-5875.ts";
-import { testit as issue3769 } from "./issue-3769.ts";
 import { testit as issue3744 } from "./issue-3744.ts";
 import { testit as issue4986 } from "./issue-4986.ts";
 import { testit as issue4973 } from "./issue-4973.ts";
@@ -58,7 +57,6 @@ import { testit as issue5874 } from "./issue-5874.ts";
 import { testit as issue6055 } from "./issue-6055.ts";
 import { testit as sessionRestoreSearch } from "./session-restore-search.ts";
 import { testit as issue2252 } from "./issue-2252.ts";
-import { testit as issue5834 } from "./issue-5834.ts";
 import { testit as issue5869 } from "./issue-5869.ts";
 import { testit as issue5881 } from "./issue-5881.ts";
 import { testit as rectSelectionDrag } from "./rect-selection-drag.ts";
@@ -144,8 +142,7 @@ import { testit as issue6053 } from "./issue-6053.ts";
 import { testit as issue6054 } from "./issue-6054.ts";
 import { testit as favoritesTabAfterDocumentClose } from "./favorites-tab-after-document-close.ts";
 import { testit as movePolygonPolylineInk } from "./move-polygon-polyline-ink.ts";
-import { testit as annotDeleteRedraw } from "./annot-delete-redraw.ts";
-import { testit as annotIconOverContents } from "./annot-icon-over-contents.ts";
+import { testit as annotEditor } from "./annot-editor.ts";
 import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interaction.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
 import { testit as stampCaretAnnotationPlacement } from "./stamp-caret-annotation-placement.ts";
@@ -158,10 +155,6 @@ import { testit as issue5956 } from "./issue-5956.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as commandPaletteShortcutFilter } from "./command-palette-shortcut-filter.ts";
 import { testit as annotationEditorReload } from "./annotation-editor-reload.ts";
-import { testit as issue5974 } from "./issue-5974.ts";
-import { testit as issue5975 } from "./issue-5975.ts";
-import { testit as issue6033 } from "./issue-6033.ts";
-import { testit as issue6036 } from "./issue-6036.ts";
 import { testit as issue5968 } from "./issue-5968.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
 import { testit as issue5963 } from "./issue-5963.ts";
@@ -215,7 +208,6 @@ export const tests: NamedTest[] = [
   ["issue-2252", issue2252],
   ["issue-5944", issue5944],
   ["issue-5993", issue5993],
-  ["issue-6036", issue6036],
   ["issue-6039", issue6039],
   ["issue-5933", issue5933],
   ["issue-4398", issue4398],
@@ -243,8 +235,7 @@ export const tests: NamedTest[] = [
   ["issue-5875", issue5875],
 
   // --- default session: -for-testing + quadrant window + -dbg-control ----
-  ["issue-5975", issue5975],
-  ["issue-6033", issue6033],
+  ["annot-editor", annotEditor],
   ["issue-6037", issue6037],
   ["issue-6040", issue6040],
   ["issue-6043", issue6043],
@@ -253,8 +244,6 @@ export const tests: NamedTest[] = [
   ["issue-6053", issue6053],
   ["issue-6054", issue6054],
   ["move-polygon-polyline-ink", movePolygonPolylineInk],
-  ["annot-delete-redraw", annotDeleteRedraw],
-  ["annot-icon-over-contents", annotIconOverContents],
   ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
   ["text-annotation-placement", textAnnotationPlacement],
   ["stamp-caret-annotation-placement", stampCaretAnnotationPlacement],
@@ -263,7 +252,6 @@ export const tests: NamedTest[] = [
   ["shape-annotation-placement", shapeAnnotationPlacement],
   ["redact-annotations", redactAnnotations],
   ["ink-annotation-placement", inkAnnotationPlacement],
-  ["issue-3769", issue3769],
   ["issue-1315", issue1315],
   ["issue-5581", issue5581],
   ["issue-5991", issue5991],
@@ -290,7 +278,6 @@ export const tests: NamedTest[] = [
   ["issue-5874", issue5874],
   ["issue-6055", issue6055],
   ["session-restore-search", sessionRestoreSearch],
-  ["issue-5834", issue5834],
   ["issue-5869", issue5869],
   ["issue-5881", issue5881],
   ["rect-selection-drag", rectSelectionDrag],
@@ -371,7 +358,6 @@ export const tests: NamedTest[] = [
   ["issue-5971", issue5971],
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
   ["annotation-editor-reload", annotationEditorReload],
-  ["issue-5974", issue5974],
   ["issue-5968", issue5968],
   ["issue-5980", issue5980],
   ["issue-5982", issue5982],
