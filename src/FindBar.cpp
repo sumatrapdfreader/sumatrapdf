@@ -611,19 +611,24 @@ void RecreateFindBar(MainWindow* win) {
     }
     // stop any in-flight find/count that captured the old bar's state
     AbortFinding(win, true);
-    bool wasVisible = HwndIsVisible(win->findBar->hwnd);
-    TempStr text = wasVisible && win->findEdit ? str::DupTemp(win->findEdit->GetTextTemp()) : TempStr();
+    FindBarWnd* oldBar = win->findBar;
+    bool wasVisible = HwndIsVisible(oldBar->hwnd);
+    bool wasActive = win->findEdit == oldBar->edit;
+    TempStr text = wasActive ? str::DupTemp(oldBar->edit->GetTextTemp()) : TempStr();
     DeleteFindBar(win);
     win->findBar = CreateFindBar(win);
-    if (win->findBar && wasVisible) {
+    if (!win->findBar) {
+        return;
+    }
+    if (wasActive && win->findEdit == win->findBar->edit) {
+        // Preserve the compact term even while the bar is hidden. F3 uses that
+        // edit after a theme change, so dropping it silently changes searches.
+        win->findBar->suppressTextChanged = true;
+        win->findEdit->SetText(text);
+        win->findBar->suppressTextChanged = false;
+    }
+    if (wasVisible) {
         ShowFindBar(win);
-        if (len(text) > 0 && win->findEdit) {
-            // restore the text without re-running the search (the existing
-            // document highlight is preserved across the recreate)
-            win->findBar->suppressTextChanged = true;
-            win->findEdit->SetText(text);
-            win->findBar->suppressTextChanged = false;
-        }
     }
 }
 
@@ -836,6 +841,11 @@ TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
         if (gWindows[0]->findEdit) {
             gWindows[0]->findEdit->SetText(StrL(""));
         }
+    } else if (str::Eq(action, StrL("hide-first"))) {
+        HideFindBar(gWindows[0]);
+    } else if (str::Eq(action, StrL("theme-recreate-first"))) {
+        // RecreateFindBar is the compact bar's theme-change path.
+        RecreateFindBar(gWindows[0]);
     } else if (!str::Eq(action, StrL("state"))) {
         out.Append(StrL("ERROR invalid action\n"));
         return finish(1);

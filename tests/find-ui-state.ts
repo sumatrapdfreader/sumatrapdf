@@ -90,6 +90,19 @@ export async function testit(): Promise<void> {
     if (state.firstTextLen !== 0) {
       throw new Error(`find-ui-state: empty term was replaced after switching: ${state.raw.trim()}`);
     }
+
+    // Return to compact mode, hide the first bar, and recreate it through the
+    // same path used by theme changes. Its hidden term still backs F3.
+    expectState(await findUiRequest(client, "toggle-first"), 0, 2, 0);
+    state = await findUiRequest(client, "set-first-text");
+    if (state.firstTextLen !== "stale-term".length) {
+      throw new Error(`find-ui-state: failed to seed hidden-term test: ${state.raw.trim()}`);
+    }
+    expectState(await findUiRequest(client, "hide-first"), 0, 1, 0);
+    state = await findUiRequest(client, "theme-recreate-first");
+    if (state.firstTextLen !== "stale-term".length) {
+      throw new Error(`find-ui-state: hidden term was lost during theme recreation: ${state.raw.trim()}`);
+    }
     console.log("find-ui-state: OK");
   } finally {
     client.close();
