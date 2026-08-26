@@ -67,7 +67,7 @@ void VecTest() {
     {
         int buf[4];
         Vec<int> v;
-        VecUseInline(v, buf);
+        VecUseExternalBuffer(v, buf);
         utassert(v.Cap() == 4);
         utassert(v.els == buf);
         for (int i = 0; i < 4; i++) {

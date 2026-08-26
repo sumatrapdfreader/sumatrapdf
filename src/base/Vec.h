@@ -28,7 +28,7 @@ template <typename T>
 struct Vec {
     int len = 0;
     // Negative means the elements sit in storage this vec does not own —
-    // VecUseInline put them in an array on the caller's stack — and the
+    // VecUseExternalBuffer put them in an array on the caller's stack — and the
     // capacity is `-cap`. Cap() is the one to read; the sign is only for
     // the two places that have to tell owned from borrowed, growing and
     // freeing. A vec that borrows leaves the borrowed block alone forever:
@@ -41,7 +41,7 @@ struct Vec {
     // Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
     // not useful for other types, the code is simpler if we always do it
     // (rather than have it an optional behavior). Borrowed storage is not
-    // padded; VecUseInline is for POD, not C-string Vec<char>.
+    // padded; VecUseExternalBuffer is for POD, not C-string Vec<char>.
 
     int Cap() const { return cap < 0 ? -cap : cap; }
 
@@ -356,14 +356,14 @@ bool VecReserve(Arena* arena, T& v, int wantedSize) {
 //
 //     int buf[4];
 //     Vec<int> v;
-//     VecUseInline(v, buf);
+//     VecUseExternalBuffer(v, buf);
 //
 // It appends into buf until buf is full, and the append past that allocates
 // and copies, leaving buf alone. Nothing frees buf, so it must outlive the
 // vec. The vec must not then have its storage taken over by hand
 // (other.els = v.els), since the sign is what says the block is not the heap's.
 template <typename T, int N>
-inline void VecUseInline(Vec<T>& v, T (&buf)[N]) {
+inline void VecUseExternalBuffer(Vec<T>& v, T (&buf)[N]) {
     v.els = buf;
     v.cap = -N;
     v.len = 0;
