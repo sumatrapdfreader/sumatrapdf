@@ -266,6 +266,7 @@ export const VK_RETURN = 0x0d;
 export const VK_ESCAPE = 0x1b;
 export const VK_SPACE = 0x20;
 export const VK_END = 0x23;
+export const VK_HOME = 0x24;
 export const VK_LEFT = 0x25;
 export const VK_UP = 0x26;
 export const VK_RIGHT = 0x27;

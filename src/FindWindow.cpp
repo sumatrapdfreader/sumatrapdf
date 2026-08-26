@@ -924,6 +924,9 @@ void FindWindowWnd::OnClose(WindowBase::CloseEvent* /*ev*/) {
 }
 
 void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
+    HWND editHwnd = edit ? edit->EditHwnd() : nullptr;
+    bool editFocused = edit && (ev->hwnd == edit->hwnd || ev->hwnd == editHwnd);
+    bool historyDropped = editFocused && ComboBox_GetDroppedState(edit->hwnd);
     switch (ev->vkey) {
         case 'F':
             if (ev->isCtrl && !ev->isAlt) {
@@ -932,10 +935,24 @@ void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
             }
             break;
         case VK_ESCAPE:
+            // Give an open history dropdown the first Escape so it closes
+            // without also hiding the Find window.
+            if (historyDropped) {
+                break;
+            }
             HideFindWindow(win);
             ev->didHandle = true;
             break;
-        case VK_RETURN:
+        case VK_RETURN: {
+            // The combo owns Enter while its history is open (accepting the
+            // highlighted entry also closes the dropdown).
+            if (historyDropped) {
+                break;
+            }
+            FindNextOrPrev(!ev->isShift);
+            ev->didHandle = true;
+            break;
+        }
         case VK_F3: {
             FindNextOrPrev(!ev->isShift);
             ev->didHandle = true;
@@ -945,15 +962,19 @@ void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
         case VK_UP:
         case VK_NEXT:
         case VK_PRIOR:
-            // let the combo walk its own history list while dropped
-            if (edit && ComboBox_GetDroppedState(edit->hwnd)) {
+            // Only borrow navigation keys from the search edit. The page-range
+            // edit, results list, and open history dropdown handle their own.
+            if (!editFocused || historyDropped || ev->isCtrl || ev->isAlt) {
                 break;
             }
-            // walk the results list from the search edit
             ev->didHandle = MoveResultSelection(ev->vkey);
             break;
         case VK_HOME:
         case VK_END: {
+            // Home/End in the page-range edit or results list remain native.
+            if (!editFocused || ev->isAlt) {
+                break;
+            }
             // Ctrl+Home / Ctrl+End: always jump to first/last result (#5797)
             if (ev->isCtrl) {
                 ev->didHandle = MoveResultSelection(ev->vkey);
@@ -963,12 +984,6 @@ void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
             // text, move the results list; otherwise let the combo move
             // the caret (same idea as the two-press pattern in the request).
             // Focus is on the combo's child edit, not the combo HWND.
-            bool editFocused = edit && (ev->hwnd == edit->hwnd || (edit->EditHwnd() && ev->hwnd == edit->EditHwnd()));
-            if (!editFocused) {
-                // focus is on the list itself: Home/End jump first/last
-                ev->didHandle = MoveResultSelection(ev->vkey);
-                break;
-            }
             int selStart = 0, selEnd = 0;
             edit->GetSelection(selStart, selEnd);
             int textLen = edit->GetTextLen();
