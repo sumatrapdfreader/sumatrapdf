@@ -1027,19 +1027,25 @@ FindWindowWnd* CreateFindWindow(MainWindow* win) {
 }
 
 void DeleteFindWindow(MainWindow* win) {
-    if (!win->findWindow) {
+    FindWindowWnd* w = win->findWindow;
+    if (!w) {
         return;
     }
+    // Null first so a nested WM_DPICHANGED during DestroyWindow cannot
+    // delete the same window twice (mirrors DeleteFindBar).
+    win->findWindow = nullptr;
     // only if this window is the active find UI; the compact bar's edit must
     // survive us (mirrors DeleteFindBar)
-    if (win->findEdit == win->findWindow->edit) {
+    if (win->findEdit == w->edit) {
         win->findEdit = nullptr;
     }
-    if (win->findPagesEdit == win->findWindow->editPages) {
+    if (win->findPagesEdit == w->editPages) {
         win->findPagesEdit = nullptr;
     }
-    delete win->findWindow;
-    win->findWindow = nullptr;
+    if (w->hwnd) {
+        ShowWindow(w->hwnd, SW_HIDE);
+    }
+    delete w;
 }
 
 static void PositionFindWindow(FindWindowWnd* w) {

@@ -173,6 +173,7 @@ import { testit as issue5982 } from "./issue-5982.ts";
 import { testit as issue6035 } from "./issue-6035.ts";
 import { testit as issue5984 } from "./issue-5984.ts";
 import { testit as issue5979 } from "./issue-5979.ts";
+import { testit as findBarDpi } from "./find-bar-dpi.ts";
 import { testit as issue6032 } from "./issue-6032.ts";
 import { testit as issue5988 } from "./issue-5988.ts";
 import { testit as issue5989 } from "./issue-5989.ts";
@@ -373,6 +374,7 @@ export const tests: NamedTest[] = [
   ["issue-6035", issue6035],
   ["issue-5984", issue5984],
   ["issue-5979", issue5979],
+  ["find-bar-dpi", findBarDpi],
   ["issue-6032", issue6032],
   ["issue-5988", issue5988],
   ["issue-5995", issue5995],

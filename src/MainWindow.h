@@ -331,6 +331,7 @@ struct MainWindow {
     // finish on WM_EXITSIZEMOVE via a uitask
     bool deferDpiChromeRefresh = false;
     bool dpiChromeRefreshPending = false;
+    bool dpiChromeRefreshPosted = false;
     // keeps the sequence of tab selection. This is needed for restoration
     // of the previous tab when the current one is closed. (Points into tabs.)
     Vec<WindowTab*>* tabSelectionHistory = nullptr;

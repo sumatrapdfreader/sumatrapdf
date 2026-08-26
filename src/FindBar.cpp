@@ -112,6 +112,11 @@ struct FindBarWnd : WindowBase {
     // the only HWND child. Owned by `layout` once BuildLayout() runs
     DropDown* edit = nullptr;
     VirtText* status = nullptr;
+    FindMinDx* statusBox = nullptr;
+    Spacer* gapAfterEdit = nullptr;
+    Spacer* gapAfterStatus = nullptr;
+    Padding* padLayout = nullptr;
+    int layoutDpi = 96;
     // prev / next / match-case / match-whole-word / pop-out / close
     VirtIconButton* btns[6]{};
 
@@ -130,8 +135,9 @@ struct FindBarWnd : WindowBase {
 
     bool Create(MainWindow* win);
     void CreateButtons();
-    void UpdateButtonIcons();
+    void UpdateButtonIcons(int dpi = 0);
     void BuildLayout();
+    void UpdateDpi(int dpi);
     // forceBarDx > 0: fit the bar into exactly that window width, giving the
     // slack to the edit box. 0: the default edit width.
     void Layout(int forceBarDx = 0);
@@ -143,6 +149,7 @@ struct FindBarWnd : WindowBase {
     void OnSize(WindowBase::SizeEvent* ev);
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
     void OnNcHitTest(WindowBase::NcHitTestEvent* ev);
+    void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCommand(WindowBase::CommandEvent* ev);
 };
@@ -184,10 +191,13 @@ FindBarWnd::~FindBarWnd() {
 
 // the icons come from the shared cache, which renders them for the current
 // theme and size
-void FindBarWnd::UpdateButtonIcons() {
+void FindBarWnd::UpdateButtonIcons(int dpi) {
     static const char* icons[6] = {gIconChevronUp,      gIconChevronDown,    gIconMatchCase,
                                    gIconMatchWholeWord, gIconArrowsDiagonal, gIconClose};
-    int isz = RoundUp(DpiScale(16), 4);
+    if (dpi <= 0) {
+        dpi = GetDpi();
+    }
+    int isz = RoundUp(DpiScaleByDpi(dpi, 16), 4);
     for (int i = 0; i < 6; i++) {
         if (btns[i]) {
             btns[i]->pixmap = GetCachedPixmapForSvg(Str(icons[i]), isz, isz);
@@ -306,14 +316,19 @@ void FindBarWnd::BuildLayout() {
     auto* row = new HBox();
     row->alignCross = CrossAxisAlign::CrossCenter;
     row->AddChild(edit, 1);
-    row->AddChild(new Spacer(gap, 0));
+    gapAfterEdit = new Spacer(gap, 0);
+    row->AddChild(gapAfterEdit);
     int statusMinDx = PlatformFontMeasureText(status->font, StrL("1 / 999")).dx;
-    row->AddChild(new FindMinDx(status, statusMinDx));
-    row->AddChild(new Spacer(gap, 0));
+    statusBox = new FindMinDx(status, statusMinDx);
+    row->AddChild(statusBox);
+    gapAfterStatus = new Spacer(gap, 0);
+    row->AddChild(gapAfterStatus);
     for (VirtIconButton* b : btns) {
         row->AddChild(b);
     }
-    layout = new Padding(row, Insets{p, p, p, p});
+    padLayout = new Padding(row, Insets{p, p, p, p});
+    layout = padLayout;
+    layoutDpi = DpiGet();
 }
 
 int FindBarWnd::MinBarDx() const {
@@ -397,6 +412,67 @@ void FindBarWnd::OnNcHitTest(WindowBase::NcHitTestEvent* ev) {
     }
 }
 
+// Keep the HWND. RecreateFindBar on every WM_DPICHANGED double-freed the
+// layout tree when a nested DPI change arrived during DestroyWindow
+// (DameWare / RDP oscillating 96 vs 120).
+void FindBarWnd::UpdateDpi(int dpi) {
+    if (dpi <= 0) {
+        dpi = GetDpi();
+    }
+    if (!layout || !edit) {
+        return;
+    }
+    PlatformFont* appFont = GetAppFontForDpi(dpi);
+    edit->SetFont(appFont);
+    if (status) {
+        status->font = appFont;
+    }
+    int p = DpiScaleByDpi(dpi, kFindBarPadding);
+    int gap = DpiScaleByDpi(dpi, kFindBarGap);
+    int minEditDx = DpiScaleByDpi(dpi, kFindBarMinEditDx);
+    edit->idealDx = minEditDx;
+    edit->maxDx = minEditDx;
+    if (gapAfterEdit) {
+        gapAfterEdit->dx = gap;
+    }
+    if (gapAfterStatus) {
+        gapAfterStatus->dx = gap;
+    }
+    if (padLayout) {
+        padLayout->insets = Insets{p, p, p, p};
+    }
+    if (statusBox && status) {
+        statusBox->dx = PlatformFontMeasureText(status->font, StrL("1 / 999")).dx;
+    }
+    int buttonPad = DpiScaleByDpi(dpi, 4);
+    for (VirtIconButton* b : btns) {
+        if (b) {
+            b->padding = Insets{buttonPad, buttonPad, buttonPad, buttonPad};
+        }
+    }
+    layoutDpi = dpi;
+    UpdateButtonIcons(dpi);
+    if (barDx > 0) {
+        Layout(barDx);
+    } else {
+        Layout();
+    }
+}
+
+void FindBarWnd::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
+    // Don't apply the suggested rect: we pin ourselves to the frame. A hidden
+    // popup is parked on the primary and WM_DPICHANGED would move it (#5998).
+    if (!layout) {
+        ev->didHandle = true;
+        return;
+    }
+    UpdateDpi((int)ev->dpiX);
+    if (win) {
+        FindBarReposition(win);
+    }
+    ev->didHandle = true;
+}
+
 void FindBarWnd::OnKeyDown(KeyEvent* ev) {
     // the find edit lives in this owned popup, not as a child of the frame, so
     // the frame's edit accelerator table doesn't reach it; handle the find keys
@@ -467,6 +543,7 @@ FindBarWnd* CreateFindBar(MainWindow* win) {
     bar->onSize = MkMethod1<FindBarWnd, WindowBase::SizeEvent*, &FindBarWnd::OnSize>(bar);
     bar->onGetMinMaxInfo = MkMethod1<FindBarWnd, WindowBase::GetMinMaxInfoEvent*, &FindBarWnd::OnGetMinMaxInfo>(bar);
     bar->onNcHitTest = MkMethod1<FindBarWnd, WindowBase::NcHitTestEvent*, &FindBarWnd::OnNcHitTest>(bar);
+    bar->onDpiChanged = MkMethod1<FindBarWnd, WindowBase::DpiChangedEvent*, &FindBarWnd::OnDpiChanged>(bar);
     bar->onKeyDown = MkMethod1<FindBarWnd, KeyEvent*, &FindBarWnd::OnKeyDown>(bar);
     if (!bar->Create(win)) {
         delete bar;
@@ -476,16 +553,38 @@ FindBarWnd* CreateFindBar(MainWindow* win) {
 }
 
 void DeleteFindBar(MainWindow* win) {
-    if (!win->findBar) {
+    FindBarWnd* bar = win->findBar;
+    if (!bar) {
         return;
     }
+    // Null first: DestroyWindow can re-enter RecreateFindBar / DeleteFindBar
+    // (nested WM_DPICHANGED) and would otherwise double-free the bar.
+    win->findBar = nullptr;
     // only if this bar is the active find UI; the floating find window's edit
     // must survive us (see ShowFindWindow)
-    if (win->findEdit == win->findBar->edit) {
+    if (win->findEdit == bar->edit) {
         win->findEdit = nullptr;
     }
-    delete win->findBar;
-    win->findBar = nullptr;
+    if (bar->hwnd) {
+        ShowWindow(bar->hwnd, SW_HIDE);
+    }
+    delete bar;
+}
+
+void FindBarUpdateDpi(MainWindow* win) {
+    if (!win || !win->findBar) {
+        return;
+    }
+    int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGet();
+    win->findBar->UpdateDpi(dpi);
+    FindBarReposition(win);
+}
+
+int FindBarFontHeight(MainWindow* win) {
+    if (!win || !win->findBar || !win->findBar->edit) {
+        return 0;
+    }
+    return PlatformFontLineHeight(win->findBar->edit->GetFont());
 }
 
 // rebuild the bar so it picks up new theme colors / icons (called on theme change)

@@ -42,6 +42,7 @@
 #include "ImageSaveCropResize.h"
 #include "base/GuessFileType.h"
 #include "FindWindow.h"
+#include "FindBar.h"
 #include "Toolbar.h"
 #include "LinkFollow.h"
 #include "SelectTextKeyboard.h"
@@ -104,6 +105,10 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
             aiClose = b->idealSize.dy;
         }
     }
+    int findH = FindWindowFontHeight(win);
+    if (findH <= 0) {
+        findH = FindBarFontHeight(win);
+    }
     out.Append(fmt(
         "frame=%d current=%d home=%d tocLabel=%d tocEdit=%d tocClose=%d favClose=%d aiLabel=%d aiInput=%d "
         "aiCheckbox=%d aiClose=%d find=%d\n",
@@ -113,8 +118,7 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
         win->tocCloseBtn ? win->tocCloseBtn->idealSize.dy : 0, win->favCloseBtn ? win->favCloseBtn->idealSize.dy : 0,
         FontHeight(win->aiChatLabel ? win->aiChatLabel->font : nullptr),
         FontHeight(win->aiChatInput ? win->aiChatInput->GetFont() : nullptr),
-        FontHeight(win->aiChatCheckbox ? win->aiChatCheckbox->GetFont() : nullptr), aiClose,
-        FindWindowFontHeight(win)));
+        FontHeight(win->aiChatCheckbox ? win->aiChatCheckbox->GetFont() : nullptr), aiClose, findH));
     return finish(0);
 }
 

@@ -7,6 +7,8 @@ struct FindBarWnd;
 FindBarWnd* CreateFindBar(MainWindow* win);
 void DeleteFindBar(MainWindow* win);
 void RecreateFindBar(MainWindow* win);
+void FindBarUpdateDpi(MainWindow* win);
+int FindBarFontHeight(MainWindow* win);
 void ShowFindBar(MainWindow* win);
 void HideFindBar(MainWindow* win);
 bool IsFindBarVisible(MainWindow* win);

@@ -7871,10 +7871,9 @@ static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
 // Full chrome refresh after a DPI change (or when drag settles). Ported from
 // sumatrapdf-plus multi-monitor DPI handling: rebuild toolbar/menu fonts and
 // icons, re-apply sidebar tree metrics, relayout caption/tabs/frame.
+// Posted from WM_DPICHANGED so a nested DPI message cannot run this on the
+// same stack (DameWare / RDP 96 vs 120 used to heap-corrupt RecreateFindBar).
 static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
-    if (!win || !hwnd) {
-        return;
-    }
     int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(hwnd);
     win->frameDpi = dpi;
     logf("ApplyMainWindowDpiChromeRefresh: dpi=%d\n", dpi);
@@ -7882,15 +7881,18 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     HideSelectionToolbar(win);
     HideAnnotationHoverOverlay(win);
     DestroySvgPixmapIconsCache();
-    for (MainWindow* other : gWindows) {
-        if (other == win) {
+    // Refresh find-bar icons before anything can paint: the cache wipe leaves
+    // the existing buttons holding freed pixmaps. Update in place — destroying
+    // the bar here nested into another WM_DPICHANGED and heap-corrupted.
+    for (MainWindow* w : gWindows) {
+        DpiScope dpiScope(w->hwndFrame);
+        FindBarUpdateDpi(w);
+        if (w == win) {
             continue;
         }
-        DpiScope dpiScope(other->hwndFrame);
-        UpdateToolbarAfterThemeChange(other);
-        RecreateFindBar(other);
-        UpdateFindWindowTheme(other);
-        RefreshSelectionToolbarIcons(other);
+        UpdateToolbarAfterThemeChange(w);
+        UpdateFindWindowTheme(w);
+        RefreshSelectionToolbarIcons(w);
     }
 
     bool menuRebarVisible = IsShowingMenuBarRebar(win);
@@ -7900,7 +7902,6 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
 
     RebuildMenuBarForWindow(win);
     ReCreateToolbar(win);
-    RecreateFindBar(win);
 
     if (menuRebarVisible && IsMenubarVisible()) {
         CreateMenuBarRebar(win);
@@ -7937,6 +7938,25 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     }
 }
 
+static void RunPostedDpiChromeRefresh(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win) || !win->hwndFrame) {
+        return;
+    }
+    // clear first so a WM_DPICHANGED during Apply can queue a follow-up
+    win->dpiChromeRefreshPosted = false;
+    ApplyMainWindowDpiChromeRefresh(win, win->hwndFrame);
+}
+
+static void ScheduleDpiChromeRefresh(MainWindow* win) {
+    if (!win || !win->hwndFrame || win->dpiChromeRefreshPosted) {
+        return;
+    }
+    win->dpiChromeRefreshPosted = true;
+    // Post, not PostOptimized: we are already on the UI thread inside
+    // WM_DPICHANGED; running now would re-enter on this stack.
+    uitask::Post(MkFunc0(RunPostedDpiChromeRefresh, win), "DpiChromeRefresh");
+}
+
 // WM_DPICHANGED: frame moved to a different DPI (or scaling changed).
 // explicitDpi: LOWORD(wParam) from WM_DPICHANGED — trust it during cross-monitor
 // drag when GetDpiForWindow can lag (sumatrapdf-plus / issue #5827).
@@ -7964,20 +7984,23 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi, bool
     }
 
     bool dpiChanged = dpi != win->frameDpi;
-    if (!force && dpi == win->frameDpi && !suggested) {
+    win->frameDpi = dpi;
+    logf("OnDpiChanged: dpi=%d force=%d defer=%d dpiChanged=%d\n", dpi, (int)force, (int)win->deferDpiChromeRefresh,
+         (int)dpiChanged);
+    // Suggested rect is already applied. A same-DPI WM_DPICHANGED (DameWare
+    // floods these) must not rebuild chrome — that was RecreateFindBar in a loop.
+    if (!force && !dpiChanged) {
         return;
     }
-    win->frameDpi = dpi;
-    logf("OnDpiChanged: dpi=%d force=%d defer=%d\n", dpi, (int)force, (int)win->deferDpiChromeRefresh);
 
     if (win->deferDpiChromeRefresh && !force) {
         win->dpiChromeRefreshPending = true;
         if (dpiChanged) {
-            ApplyMainWindowDpiChromeRefresh(win, hwnd);
+            ScheduleDpiChromeRefresh(win);
         }
         return;
     }
-    ApplyMainWindowDpiChromeRefresh(win, hwnd);
+    ScheduleDpiChromeRefresh(win);
 }
 
 // RDP connect/disconnect and some display-mode changes update the session DPI
