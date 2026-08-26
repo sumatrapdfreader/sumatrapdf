@@ -42,6 +42,7 @@ extern "C" {
 
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
+#include "AnnotEditToolbar.h"
 #include "EditAnnotations.h"
 
 constexpr int kBorderWidthMin = 0;
@@ -218,6 +219,7 @@ void DetachAnnotationFromUI(Annotation* annot) {
             WindowTab* t = win->GetTab(i);
             if (t && t->selectedAnnotation == annot) {
                 t->selectedAnnotation = nullptr;
+                HideAnnotEditToolbar(win);
             }
         }
     }
@@ -875,6 +877,37 @@ static void DropDownFillColors(DropDown* w, PdfColor col, str::Builder& customCo
     w->SetCurrentSelection(idx);
 }
 
+SeqStrings AnnotEditorColorNames() {
+    return gColors;
+}
+
+int AnnotEditorColorCount() {
+    return dimofi(gColorsValues);
+}
+
+PdfColor AnnotEditorColorAt(int i) {
+    if (i < 0 || i >= dimofi(gColorsValues)) {
+        return 0;
+    }
+    return gColorsValues[i];
+}
+
+Str AnnotEditorColorNameAt(int i) {
+    return SeqStrByIndex(gColors, i);
+}
+
+SeqStrings AnnotEditorLineEndingStyles() {
+    return gLineEndingStyles;
+}
+
+SeqStrings AnnotEditorFontNames() {
+    return gFontNames;
+}
+
+SeqStrings AnnotEditorFontReadableNames() {
+    return gFontReadableNames;
+}
+
 static PdfColor GetDropDownColor(Str sv) {
     int idx = SeqStrIndex(gColors, sv);
     if (idx >= 0) {
@@ -1194,7 +1227,7 @@ static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
     MainWindowRerender(ew->tab->win);
 }
 
-static SeqStrings AnnotationIconNames(Annotation* annot) {
+SeqStrings AnnotationIconNames(Annotation* annot) {
     SeqStrings items = nullptr;
     if (annot) {
         switch (Type(annot)) {
@@ -1623,8 +1656,9 @@ void HideAnnotationHoverOverlay(MainWindow* win) {
 
 void UpdateAnnotationHoverOverlay(MainWindow* win) {
     Annotation* annot = win ? win->annotationUnderCursor : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
     if (!win || !win->pdfAnnotationsToolbarEnabled || win->mouseAction != MouseAction::None ||
-        !AnnotationIsLive(annot)) {
+        !AnnotationIsLive(annot) || (tab && annot == tab->selectedAnnotation)) {
         HideAnnotationHoverOverlay(win);
         return;
     }
@@ -1975,6 +2009,7 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
             UpdateUIForSelectedAnnotation(ew, annot, isNew, focus);
         }
         ToolbarUpdateStateForWindow(win, false);
+        UpdateAnnotEditToolbar(win);
         return;
     }
     // Commit contents of the previous selection before switching away.
@@ -1988,6 +2023,7 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
         HwndShowWithoutActivate(ew->hwnd);
     }
     ScheduleShowSelectedAnnotationView(tab);
+    UpdateAnnotEditToolbar(win);
 }
 
 static void AddAnnotPage(Vec<int>& pages, int pageNo, int pageCount) {

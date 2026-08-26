@@ -55,6 +55,7 @@
 #include "LinkFollow.h"
 #include "SelectTextKeyboard.h"
 #include "SelectionToolbar.h"
+#include "AnnotEditToolbar.h"
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
 #include "TextToSpeech.h"
@@ -2216,11 +2217,7 @@ static void OpenOrSelectEditAnnotation(WindowTab* tab, Annotation* annot) {
     if (!tab || !annot) {
         return;
     }
-    if (tab->editAnnotsWindow) {
-        SetSelectedAnnotation(tab, annot);
-    } else {
-        ShowEditAnnotationsWindow(tab, annot);
-    }
+    SetSelectedAnnotation(tab, annot);
     HideAnnotationHoverOverlay(tab->win);
 }
 
@@ -3838,6 +3835,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     PaintAnnotationPlacement(win, hdc, dm);
     PaintHoveredAnnotationMark(win, hdc, dm);
     RepositionAnnotationHoverOverlay(win);
+    RepositionAnnotEditToolbar(win);
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
     if (ShowPageGrid() && win->presentation == PM_DISABLED) {
         PaintPageGrid(dm, hdc);

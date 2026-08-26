@@ -38,6 +38,7 @@
 #include "AIChatPanel.h"
 #include "EditAnnotations.h"
 #include "SelectionToolbar.h"
+#include "AnnotEditToolbar.h"
 #include "FindBar.h"
 #include "FindWindow.h"
 #include "SearchAndDDE.h"
@@ -194,6 +195,7 @@ MainWindow::~MainWindow() {
     ClearFindMatches(this);
 
     DeleteSelectionToolbar(this);
+    DeleteAnnotEditToolbar(this);
     DeleteAnnotationHoverOverlay(this);
 
     delete linkHandler;

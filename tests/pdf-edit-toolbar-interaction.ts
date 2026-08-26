@@ -1,6 +1,6 @@
 // Edit PDF mode makes annotations directly interactive: hover outlines them,
-// a plain click opens/selects them in the editor, and the normal Ctrl+click
-// hint stays hidden.
+// a plain click selects them and shows a compact property row, and the normal
+// Ctrl+click hint stays hidden.
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -262,8 +262,11 @@ export async function testit(): Promise<void> {
 
     await clickAt(canvas, editCenterX, editCenterY);
     state = await annotState(client);
-    if (!state.selected || !state.editor || !state.selectedHover) {
-      throw new Error("pdf-edit-toolbar-interaction: plain click did not open the editor on the annotation");
+    if (!state.selected || state.editor || !state.selectedHover) {
+      throw new Error("pdf-edit-toolbar-interaction: plain click did not select the annotation");
+    }
+    if (!/annotEditToolbar visible=1 n=\d+ items=.*color.*contents/.test(state.raw)) {
+      throw new Error(`pdf-edit-toolbar-interaction: compact property row did not appear\n${state.raw}`);
     }
 
     state = await moveAndWaitForHover(
@@ -279,8 +282,8 @@ export async function testit(): Promise<void> {
       bottomAnnot.y + Math.floor(bottomAnnot.dy / 2),
     );
     state = await annotState(client);
-    if (!state.editor || !state.selectedHover) {
-      throw new Error("pdf-edit-toolbar-interaction: later click did not select the annotation in the open editor");
+    if (!state.selected || state.editor || !state.selectedHover) {
+      throw new Error("pdf-edit-toolbar-interaction: later click did not select the annotation");
     }
   } finally {
     client.close();

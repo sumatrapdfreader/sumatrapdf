@@ -19,6 +19,7 @@ struct Tooltip;
 struct AnnotationHoverOverlay;
 struct TreeView;
 struct SelectionToolbar;
+struct AnnotEditToolbar;
 struct ILayout;
 struct Spacer;
 struct HwndSlot;
@@ -682,6 +683,9 @@ struct MainWindow {
     SelectionToolbar* selectionToolbar = nullptr;
     // a debounced show of the selection toolbar is waiting on its timer
     bool selectionToolbarShowPending = false;
+
+    // compact property row under the selected annotation in Edit PDF mode
+    AnnotEditToolbar* annotEditToolbar = nullptr;
 
     // annotation details shown next to a hovered annotation in Edit PDF mode
     AnnotationHoverOverlay* annotationHoverOverlay = nullptr;

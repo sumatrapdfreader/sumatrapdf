@@ -52,6 +52,7 @@
 #include "AIChatCommon.h"
 #include "SumatraDialogs.h"
 #include "EditAnnotations.h"
+#include "AnnotEditToolbar.h"
 #include "Annotation.h"
 #include "Menu.h"
 #include "EngineAll.h"
@@ -628,6 +629,7 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
                    tab->selectedAnnotation ? 1 : 0, gWindows[0]->annotationUnderCursor ? 1 : 0,
                    gWindows[0]->pdfAnnotationsToolbarEnabled ? 1 : 0, hasNotification ? 1 : 0,
                    tab->editAnnotsWindow ? 1 : 0, selectedHover ? 1 : 0));
+    out.Append(AnnotEditToolbarStateTemp(gWindows[0]));
     out.Append(AnnotationHoverOverlayStateTemp(gWindows[0]));
     out.Append(AnnotationPlacementStateTemp(gWindows[0]));
     return finish({}, 0);

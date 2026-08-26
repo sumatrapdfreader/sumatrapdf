@@ -88,6 +88,7 @@
 #include "SelectTextKeyboard.h"
 #include "KeyboardHelp.h"
 #include "SelectionToolbar.h"
+#include "AnnotEditToolbar.h"
 #include "ScreenshotCapture.h"
 #include "Screenshot.h"
 #include "ImageSaveCropResize.h"
@@ -3390,6 +3391,7 @@ void UpdateAfterThemeChange() {
         RecreateFindBar(win);
         UpdateFindWindowTheme(win);
         RefreshSelectionToolbarIcons(win);
+        RefreshAnnotEditToolbar(win);
         RefreshAnnotationHoverOverlay(win);
         UpdateAIChatTheme(win);
         DarkModeApplyToFrameAfterThemeChange(win);
@@ -7743,6 +7745,7 @@ static void FrameUpdateUi(MainWindow* win) {
         // re-anchor the floating find bar over the (possibly moved) search icon
         FindBarReposition(win);
         RepositionSelectionToolbar(win);
+        RepositionAnnotEditToolbar(win);
         if (win->presentation || win->isFullScreen) {
             Rect fullscreen = HwndGetFullscreenRect(win->hwndFrame);
             Rect rect = HwndWindowRect(win->hwndFrame);
@@ -7893,6 +7896,7 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
         UpdateToolbarAfterThemeChange(w);
         UpdateFindWindowTheme(w);
         RefreshSelectionToolbarIcons(w);
+        RefreshAnnotEditToolbar(w);
     }
 
     bool menuRebarVisible = IsShowingMenuBarRebar(win);
@@ -7928,6 +7932,7 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     UpdateOverlayScrollbarPositions(win);
     FindBarReposition(win);
     RepositionSelectionToolbar(win);
+    RepositionAnnotEditToolbar(win);
 
     MainWindowRerender(win, true);
     uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
