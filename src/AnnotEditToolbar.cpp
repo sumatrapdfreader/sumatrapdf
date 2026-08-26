@@ -833,6 +833,24 @@ static void LayoutToolbar(AnnotEditToolbar* tb, const Vec<AnnotEditItem>& items)
     tb->size = tb->host->SetLayoutSizedToContent(content);
 }
 
+// tb->annot is non-owning. Save/reload frees the wrapper and only
+// tab->selectedAnnotation is cleared in that path, so compare that first
+// and never call AnnotationIsLive on tb->annot alone.
+static Annotation* LiveToolbarAnnot(AnnotEditToolbar* tb) {
+    if (!tb || !tb->win) {
+        return nullptr;
+    }
+    WindowTab* tab = tb->win->CurrentTab();
+    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
+    if (!annot || annot != tb->annot || tab != tb->tab) {
+        return nullptr;
+    }
+    if (!AnnotationIsLive(annot)) {
+        return nullptr;
+    }
+    return annot;
+}
+
 static bool GetAnnotScreenBounds(MainWindow* win, Annotation* annot, Rect& out) {
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     if (!dm || !AnnotationIsLive(annot) || !dm->PageVisible(PageNo(annot))) {
@@ -925,15 +943,15 @@ static void EndContentsEdit(AnnotEditToolbar* tb, bool accept) {
         return;
     }
     WindowTab* tab = tb->tab;
-    Annotation* annot = tb->annot;
+    Annotation* annot = LiveToolbarAnnot(tb);
     TempStr newText{};
-    if (accept && tb->contentsEdit && AnnotationIsLive(annot)) {
+    if (accept && tb->contentsEdit && annot) {
         newText = tb->contentsEdit->GetTextTemp();
         newText = str::ReplaceTemp(newText, StrL("\r\n"), StrL("\n"));
     }
     RestoreCanvasFocus(tb);
     DestroyContentsEditor(tb);
-    if (accept && AnnotationIsLive(annot)) {
+    if (accept && annot) {
         SetContents(annot, newText);
         AnnotChanged(tab);
         return;
@@ -1075,7 +1093,8 @@ static void PostedStartContentsEdit(MainWindow* win) {
 }
 
 static void StartContentsEdit(AnnotEditToolbar* tb) {
-    if (!tb || !tb->host || !AnnotationIsLive(tb->annot) || tb->editingContents) {
+    Annotation* annot = LiveToolbarAnnot(tb);
+    if (!tb || !tb->host || !annot || tb->editingContents) {
         return;
     }
     Edit::CreateArgs args;
@@ -1094,7 +1113,7 @@ static void StartContentsEdit(AnnotEditToolbar* tb) {
         delete edit;
         return;
     }
-    Str s = Contents(tb->annot);
+    Str s = Contents(annot);
     s = str::ReplaceTemp(s, StrL("\r\n"), StrL("\n"));
     s = str::ReplaceTemp(s, StrL("\n"), StrL("\r\n"));
     edit->SetText(s);
@@ -1223,8 +1242,9 @@ void RepositionAnnotEditToolbar(MainWindow* win) {
     if (!tb || !tb->host || !tb->host->IsVisible()) {
         return;
     }
+    Annotation* annot = LiveToolbarAnnot(tb);
     Rect bounds;
-    if (!GetAnnotScreenBounds(win, tb->annot, bounds)) {
+    if (!annot || !GetAnnotScreenBounds(win, annot, bounds)) {
         HideAnnotEditToolbar(win);
         return;
     }

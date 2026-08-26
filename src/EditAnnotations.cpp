@@ -228,7 +228,16 @@ void DetachAnnotationFromUI(Annotation* annot) {
 // Preserve enough UI state to rematch the selection after reload, then clear
 // every non-owning Annotation* before the old engine is destroyed.
 void InvalidateEditAnnotationsOnEngineChange(WindowTab* tab) {
-    if (!tab || !tab->editAnnotsWindow) {
+    if (!tab) {
+        return;
+    }
+    // The compact toolbar keeps a non-owning Annotation*. Hide it before the
+    // engine (and those wrappers) are destroyed on save/reload.
+    MainWindow* win = tab->win;
+    if (win && win->CurrentTab() == tab) {
+        HideAnnotEditToolbar(win);
+    }
+    if (!tab->editAnnotsWindow) {
         return;
     }
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
@@ -415,6 +424,7 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
         tab->selectedAnnotation = nullptr;
         // tab->win can be null (SafeDeleteEditAnnotationsWindow checks it too)
         if (IsMainWindowValidAndNotClosing(tab->win)) {
+            HideAnnotEditToolbar(tab->win);
             MainWindowRerender(tab->win);
             ToolbarUpdateStateForWindow(tab->win, false);
         }
