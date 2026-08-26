@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
+#include "base/UITask.h"
 #include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
@@ -80,6 +81,11 @@ struct AnnotEditChip : VirtCustom {
     void Paint(VirtPaintCtx&) override;
 };
 
+static void StartContentsEdit(AnnotEditToolbar*);
+static void EndContentsEdit(AnnotEditToolbar*, bool accept);
+static void DestroyContentsEditor(AnnotEditToolbar*);
+static void PostedStartContentsEdit(MainWindow*);
+
 struct AnnotEditToolbar {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr;
@@ -91,6 +97,30 @@ struct AnnotEditToolbar {
     Rect lastAnnotBounds;
     Vec<AnnotEditKind> kinds;
     Func1List<MainWindow*> onWindowMoved;
+    bool editingContents = false;
+    bool contentsEditClosing = false;
+    Edit* contentsEdit = nullptr;
+};
+
+// Native multiline edit hosted in the VirtHost; its HWND is positioned from
+// the layout slot so the card can keep the floating rounded-rect look.
+struct ContentsEditSlot : VirtCustom {
+    Edit* edit = nullptr;
+    Size GetIdealSize() override {
+        if (!edit) {
+            return idealSize;
+        }
+        Size s = edit->GetIdealSize();
+        s.dx = std::max(s.dx, idealSize.dx);
+        s.dy = std::max(s.dy, idealSize.dy);
+        return s;
+    }
+    void SetBounds(Rect r) override {
+        VirtCtrl::SetBounds(r);
+        if (edit) {
+            edit->SetBounds(r);
+        }
+    }
 };
 
 static bool BarIsDark() {
@@ -740,7 +770,9 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             break;
         }
         case AnnotEditKind::Contents:
-            ShowEditAnnotationsWindow(tab, annot, EditAnnotFocus::Edit);
+            // the chip lives in the layout tree we replace; wait until this click
+            // has finished bubbling
+            uitask::Post(MkFunc0(PostedStartContentsEdit, tb->win), "StartAnnotContentsEdit");
             break;
     }
 }
@@ -849,6 +881,238 @@ static bool PositionToolbar(AnnotEditToolbar* tb, const Rect& annot) {
     return true;
 }
 
+static void SetHostNoActivate(VirtHost* host, bool noActivate) {
+    if (!host || !host->native) {
+        return;
+    }
+    host->noActivate = noActivate;
+    HWND hwnd = host->native;
+    LONG_PTR ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    if (noActivate) {
+        ex |= WS_EX_NOACTIVATE;
+    } else {
+        ex &= ~WS_EX_NOACTIVATE;
+    }
+    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex);
+    UINT flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED;
+    if (noActivate) {
+        flags |= SWP_NOACTIVATE;
+    }
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, flags);
+}
+
+static void DestroyContentsEditor(AnnotEditToolbar* tb) {
+    if (!tb) {
+        return;
+    }
+    tb->editingContents = false;
+    tb->contentsEditClosing = false;
+    delete tb->contentsEdit;
+    tb->contentsEdit = nullptr;
+    if (tb->host) {
+        SetHostNoActivate(tb->host, true);
+    }
+}
+
+static void RestoreCanvasFocus(AnnotEditToolbar* tb) {
+    if (tb && tb->win && tb->win->hwndCanvas) {
+        HwndSetFocus(tb->win->hwndCanvas);
+    }
+}
+
+static void EndContentsEdit(AnnotEditToolbar* tb, bool accept) {
+    if (!tb || !tb->editingContents) {
+        return;
+    }
+    WindowTab* tab = tb->tab;
+    Annotation* annot = tb->annot;
+    TempStr newText{};
+    if (accept && tb->contentsEdit && AnnotationIsLive(annot)) {
+        newText = tb->contentsEdit->GetTextTemp();
+        newText = str::ReplaceTemp(newText, StrL("\r\n"), StrL("\n"));
+    }
+    RestoreCanvasFocus(tb);
+    DestroyContentsEditor(tb);
+    if (accept && AnnotationIsLive(annot)) {
+        SetContents(annot, newText);
+        AnnotChanged(tab);
+        return;
+    }
+    if (tab && tab->win) {
+        UpdateAnnotEditToolbar(tab->win);
+    }
+}
+
+static void PostedAcceptContents(MainWindow* win) {
+    if (!win || !win->annotEditToolbar) {
+        return;
+    }
+    EndContentsEdit(win->annotEditToolbar, true);
+}
+
+static void PostedCancelContents(MainWindow* win) {
+    if (!win || !win->annotEditToolbar) {
+        return;
+    }
+    EndContentsEdit(win->annotEditToolbar, false);
+}
+
+static void QueueEndContentsEdit(AnnotEditToolbar* tb, bool accept) {
+    if (!tb || tb->contentsEditClosing || !tb->win) {
+        return;
+    }
+    tb->contentsEditClosing = true;
+    if (accept) {
+        uitask::Post(MkFunc0(PostedAcceptContents, tb->win), "AcceptAnnotContents");
+    } else {
+        uitask::Post(MkFunc0(PostedCancelContents, tb->win), "CancelAnnotContents");
+    }
+}
+
+static void OnAcceptContentsClick(AnnotEditToolbar* tb, VirtMouseEvent*) {
+    QueueEndContentsEdit(tb, true);
+}
+
+static void OnCancelContentsClick(AnnotEditToolbar* tb, VirtMouseEvent*) {
+    QueueEndContentsEdit(tb, false);
+}
+
+static void OnContentsEditWndProc(AnnotEditToolbar* tb, ControlBase::WndProcEvent* ev) {
+    if (!tb || !tb->contentsEdit) {
+        return;
+    }
+    if (ev->msg == WM_CHAR) {
+        // Ctrl+Enter is LF; Esc also arrives as WM_CHAR. Eat both so they
+        // don't insert text after KEYDOWN queued accept/cancel.
+        if (ev->wparam == VK_ESCAPE || ev->wparam == 0x0A) {
+            ev->didHandle = true;
+            ev->result = 0;
+            return;
+        }
+    }
+    if (ev->msg == WM_KEYDOWN) {
+        if (ev->wparam == VK_ESCAPE) {
+            ev->didHandle = true;
+            ev->result = 0;
+            QueueEndContentsEdit(tb, false);
+            return;
+        }
+        if (ev->wparam == VK_RETURN && IsCtrlPressed()) {
+            ev->didHandle = true;
+            ev->result = 0;
+            QueueEndContentsEdit(tb, true);
+            return;
+        }
+    }
+    tb->contentsEdit->WndProc(ev);
+}
+
+static void OnHostNativeMsg(AnnotEditToolbar* tb, VirtHostNativeMsg* ev) {
+    if (!tb || !tb->contentsEdit || !tb->contentsEdit->hwnd) {
+        return;
+    }
+    HWND child = nullptr;
+    if (ev->msg == WM_COMMAND) {
+        child = (HWND)ev->lp;
+        if (child == tb->contentsEdit->hwnd) {
+            tb->contentsEdit->DispatchCommand(ev->wp, ev->lp);
+            ev->didHandle = true;
+            ev->res = 0;
+        }
+        return;
+    }
+    if (ev->msg == WM_CTLCOLOREDIT || ev->msg == WM_CTLCOLORSTATIC) {
+        child = (HWND)ev->lp;
+        if (child == tb->contentsEdit->hwnd) {
+            ev->res = tb->contentsEdit->DispatchMessageReflect(ev->msg, ev->wp, ev->lp);
+            ev->didHandle = ev->res != 0;
+        }
+    }
+}
+
+static void LayoutContentsEditor(AnnotEditToolbar* tb) {
+    int margin = DpiScale(kMargin);
+    int gap = DpiScale(kBtnGap);
+    Rect canvas = HwndClientRect(tb->win->hwndCanvas);
+    int wantDx = std::max(tb->lastAnnotBounds.dx, DpiScale(320));
+    wantDx = std::min(wantDx, std::max(canvas.dx - DpiScale(24), DpiScale(200)));
+
+    tb->contentsEdit->idealDx = wantDx;
+    auto* slot = new ContentsEditSlot();
+    slot->edit = tb->contentsEdit;
+    slot->idealSize = {wantDx, tb->contentsEdit->GetIdealSize().dy};
+
+    auto* buttons = new HBox();
+    buttons->alignMain = MainAxisAlign::MainStart;
+    buttons->alignCross = CrossAxisAlign::CrossCenter;
+    buttons->gap = gap;
+    auto* btnAccept = NewThemedButton(tb->host->native, _TRA("Accept (Ctrl+Enter)"), tb->font, true);
+    btnAccept->textPadding = DpiScaledInsets(2, 10);
+    btnAccept->onClick = MkFunc1(OnAcceptContentsClick, tb);
+    auto* btnCancel = NewThemedButton(tb->host->native, _TRA("Cancel (Esc)"), tb->font, false);
+    btnCancel->textPadding = DpiScaledInsets(2, 10);
+    btnCancel->onClick = MkFunc1(OnCancelContentsClick, tb);
+    buttons->AddChild(btnAccept);
+    buttons->AddChild(btnCancel);
+
+    auto* vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    vbox->gap = gap;
+    vbox->AddChild(slot);
+    vbox->AddChild(buttons);
+
+    auto* content = new Padding(vbox, Insets{margin, margin, margin, margin});
+    tb->size = tb->host->SetLayoutSizedToContent(content);
+    tb->kinds.Reset();
+}
+
+static void PostedStartContentsEdit(MainWindow* win) {
+    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    if (tb) {
+        StartContentsEdit(tb);
+    }
+}
+
+static void StartContentsEdit(AnnotEditToolbar* tb) {
+    if (!tb || !tb->host || !AnnotationIsLive(tb->annot) || tb->editingContents) {
+        return;
+    }
+    Edit::CreateArgs args;
+    args.parent = tb->host->native;
+    args.isMultiLine = true;
+    args.withFrame = true;
+    args.idealSizeLines = 5;
+    args.textPadding = 3;
+    args.font = tb->font;
+    args.isRtl = IsUIRtl();
+    auto* edit = new Edit();
+    Color bg = BarIsDark() ? ThemeWindowControlBackgroundColor() : MkRgb(255, 255, 255);
+    edit->SetColors(BarTextColor(), bg);
+    HWND hwnd = edit->Create(args);
+    if (!hwnd) {
+        delete edit;
+        return;
+    }
+    Str s = Contents(tb->annot);
+    s = str::ReplaceTemp(s, StrL("\r\n"), StrL("\n"));
+    s = str::ReplaceTemp(s, StrL("\n"), StrL("\r\n"));
+    edit->SetText(s);
+    edit->onWndProc = MkFunc1(OnContentsEditWndProc, tb);
+
+    tb->contentsEdit = edit;
+    tb->editingContents = true;
+    tb->contentsEditClosing = false;
+    SetHostNoActivate(tb->host, false);
+    LayoutContentsEditor(tb);
+    PositionToolbar(tb, tb->lastAnnotBounds);
+    tb->host->Show(true);
+    tb->host->Invalidate(false);
+    SetActiveWindow(tb->host->native);
+    edit->SetFocus();
+    edit->SetCursorPositionAtEnd();
+}
+
 static AnnotEditToolbar* GetOrCreateToolbar(MainWindow* win) {
     if (win->annotEditToolbar) {
         return win->annotEditToolbar;
@@ -869,7 +1133,11 @@ static AnnotEditToolbar* GetOrCreateToolbar(MainWindow* win) {
         delete tb;
         return nullptr;
     }
+    HWND hwnd = tb->host->native;
+    LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+    SetWindowLongPtrW(hwnd, GWL_STYLE, style | WS_CLIPCHILDREN);
     tb->host->onPaintBackground = MkFunc1(PaintToolbarBg, tb);
+    tb->host->onNativeMsg = MkFunc1(OnHostNativeMsg, tb);
     tb->font = GetScaledPlatformFont(GetAppFont(), kToolbarFontPct);
     tb->onWindowMoved = MkFunc1Void(RepositionAnnotEditToolbar);
     win->RegisterOnWindowMoved(&tb->onWindowMoved);
@@ -881,6 +1149,10 @@ void HideAnnotEditToolbar(MainWindow* win) {
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
     if (!tb || !tb->host) {
         return;
+    }
+    if (tb->editingContents) {
+        RestoreCanvasFocus(tb);
+        DestroyContentsEditor(tb);
     }
     if (tb->host->IsVisible()) {
         tb->host->Show(false);
@@ -902,6 +1174,22 @@ void UpdateAnnotEditToolbar(MainWindow* win) {
     }
     WindowTab* tab = win->CurrentTab();
     Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
+    AnnotEditToolbar* tb = win->annotEditToolbar;
+    if (tb && tb->editingContents) {
+        if (!win->pdfAnnotationsToolbarEnabled || !AnnotationIsLive(annot) || annot != tb->annot) {
+            RestoreCanvasFocus(tb);
+            DestroyContentsEditor(tb);
+        } else {
+            Rect bounds;
+            if (!GetAnnotScreenBounds(win, annot, bounds)) {
+                HideAnnotEditToolbar(win);
+                return;
+            }
+            tb->lastAnnotBounds = bounds;
+            PositionToolbar(tb, bounds);
+            return;
+        }
+    }
     if (!win->pdfAnnotationsToolbarEnabled || !AnnotationIsLive(annot)) {
         HideAnnotEditToolbar(win);
         return;
@@ -911,7 +1199,7 @@ void UpdateAnnotEditToolbar(MainWindow* win) {
         HideAnnotEditToolbar(win);
         return;
     }
-    AnnotEditToolbar* tb = GetOrCreateToolbar(win);
+    tb = GetOrCreateToolbar(win);
     if (!tb) {
         return;
     }
@@ -957,6 +1245,7 @@ void DeleteAnnotEditToolbar(MainWindow* win) {
     if (!tb) {
         return;
     }
+    DestroyContentsEditor(tb);
     win->UnregisterOnWindowMoved(&tb->onWindowMoved);
     delete tb->host;
     delete tb;
@@ -967,7 +1256,7 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
     bool visible = tb && tb->host && tb->host->IsVisible();
     if (!visible) {
-        return fmt("annotEditToolbar visible=0 n=0 items=\n");
+        return fmt("annotEditToolbar visible=0 n=0 items= editing=0\n");
     }
     str::Builder items;
     for (int i = 0; i < len(tb->kinds); i++) {
@@ -977,6 +1266,6 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
         items.Append(KindName(tb->kinds[i]));
     }
     Rect r = tb->host->ScreenRect();
-    return fmt("annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d\n", len(tb->kinds), ToStrTemp(items), r.x,
-               r.y, r.dx, r.dy);
+    return fmt("annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d\n", len(tb->kinds),
+               ToStrTemp(items), r.x, r.y, r.dx, r.dy, tb->editingContents ? 1 : 0);
 }
