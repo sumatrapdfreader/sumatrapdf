@@ -44,7 +44,6 @@
 #include "SumatraConfig.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
-#include "EditAnnotations.h"
 #include "AnnotFilterToolbar.h"
 #include "Notifications.h"
 #include "MainWindow.h"

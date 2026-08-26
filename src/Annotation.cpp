@@ -306,7 +306,7 @@ static Str MupdfCStrTemp(const char* s) {
     return str::DupTemp(Str(s));
 }
 
-// EditAnnotations.cpp
+// AnnotEditToolbar.cpp
 Str Author(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return {};

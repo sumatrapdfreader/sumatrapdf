@@ -21,7 +21,7 @@
 #include "Selection.h"
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
-#include "EditAnnotations.h"
+#include "AnnotEditToolbar.h"
 #include "WindowTab.h"
 
 WindowTab::WindowTab(MainWindow* win) {

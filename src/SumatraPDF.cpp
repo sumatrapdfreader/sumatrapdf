@@ -105,7 +105,6 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 #include "SumatraConfig.h"
-#include "EditAnnotations.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 #include "SelectionTranslate.h"

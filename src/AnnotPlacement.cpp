@@ -25,7 +25,7 @@
 #include "TextSelection.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
-#include "EditAnnotations.h"
+#include "AnnotEditToolbar.h"
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "Canvas.h"

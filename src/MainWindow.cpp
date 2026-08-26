@@ -36,7 +36,6 @@
 #include "SumatraPDF.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
-#include "EditAnnotations.h"
 #include "SelectionToolbar.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"

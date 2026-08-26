@@ -32,7 +32,6 @@
 #include "CommandAvailability.h"
 #include "Menu.h"
 #include "SearchAndDDE.h"
-#include "EditAnnotations.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
 #include "ToolbarInternal.h"

@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 // TODO: not quite happy how those functions are split among
-// Annotation.cpp, EngineMupdf.cpp and EditAnnotations.cpp
+// Annotation.cpp, EngineMupdf.cpp and AnnotEditToolbar.cpp
 
 struct Pixmap;
 

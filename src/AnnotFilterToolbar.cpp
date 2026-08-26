@@ -34,7 +34,7 @@
 #include "Commands.h"
 #include "Toolbar.h"
 #include "FilterUtil.h"
-#include "EditAnnotations.h"
+#include "AnnotEditToolbar.h"
 #include "ToolbarInternal.h"
 #include "DarkMode_win.h"
 

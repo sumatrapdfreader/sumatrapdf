@@ -349,7 +349,6 @@ const sumatraFiles: FileGroup[] = [
       "PageRenderPolicy.*",
       "PageRenderService.*",
       "ReaderModel.*",
-      "EditAnnotations.*",
       "EmbeddedResources.*",
       "EngineDump.cpp",
       "ExternalViewers.*",

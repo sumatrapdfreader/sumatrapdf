@@ -51,7 +51,6 @@
 #include "Notifications.h"
 #include "AIChatCommon.h"
 #include "SumatraDialogs.h"
-#include "EditAnnotations.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
 #include "Annotation.h"
