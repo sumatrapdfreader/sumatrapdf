@@ -38,6 +38,7 @@ struct ToolbarVirt {
     ILayout* annotationRow = nullptr;
     VirtText* pageLabel = nullptr;
     VirtText* pageTotal = nullptr;
+    Edit* annotFilterEdit = nullptr;
     PlatformFont* platformFont = nullptr;
     int iconSize = 0;
     int rowDy = 0;

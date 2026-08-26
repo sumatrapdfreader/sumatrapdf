@@ -39,6 +39,7 @@
 #include "EditAnnotations.h"
 #include "SelectionToolbar.h"
 #include "AnnotEditToolbar.h"
+#include "AnnotFilterToolbar.h"
 #include "FindBar.h"
 #include "FindWindow.h"
 #include "SearchAndDDE.h"
@@ -196,6 +197,7 @@ MainWindow::~MainWindow() {
 
     DeleteSelectionToolbar(this);
     DeleteAnnotEditToolbar(this);
+    DeleteAnnotFilterToolbar(this);
     DeleteAnnotationHoverOverlay(this);
 
     delete linkHandler;

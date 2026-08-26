@@ -621,6 +621,7 @@ function sumatrapdf_files()
     "Canvas.*",
     "AnnotPlacement.*",
     "AnnotEditToolbar.*",
+    "AnnotFilterToolbar.*",
     "CanvasAboutUI.*",
     "CaptionGlyphs.*",
     "ChmDump.*",

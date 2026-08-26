@@ -43,6 +43,7 @@ extern "C" {
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
 #include "AnnotEditToolbar.h"
+#include "AnnotFilterToolbar.h"
 #include "EditAnnotations.h"
 
 constexpr int kBorderWidthMin = 0;
@@ -236,6 +237,7 @@ void InvalidateEditAnnotationsOnEngineChange(WindowTab* tab) {
     MainWindow* win = tab->win;
     if (win && win->CurrentTab() == tab) {
         HideAnnotEditToolbar(win);
+        HideAnnotFilterList(win);
     }
     if (!tab->editAnnotsWindow) {
         return;
@@ -271,10 +273,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     // Clear all UI holders before DeleteAnnotation frees the wrapper.
     DetachAnnotationFromUI(annot);
     DeleteAnnotation(annot);
-    if (ew != nullptr) {
-        // can be null if called from Menu.cpp and annotations window is not visible
-        UpdateAnnotationsList(ew);
-    }
+    RefreshAnnotationLists(tab);
     SetSelectedAnnotation(tab, keepSelected);
     // SetSelectedAnnotation only ScheduleRepaint (overlay handles). The page
     // bitmap still has the deleted annot until we re-render.
@@ -474,7 +473,7 @@ void NotifyAnnotationsChanged(EditAnnotationsWindow* ew) {
     EnableSaveIfAnnotationsChanged(ew);
 }
 
-static bool AnnotMatchesFilter(Annotation* annot, const StrVec& words) {
+bool AnnotMatchesFilter(Annotation* annot, const StrVec& words) {
     if (len(words) == 0) {
         return true;
     }
@@ -559,24 +558,18 @@ static void FilterAnnotationsChanged(EditAnnotationsWindow* ew) {
 
 // Type on the left, optional contents in muted color, page number on the right.
 // Contents is clipped so it cannot paint over the page column.
-static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawItemEvent* ev) {
-    Annotation* annot = VisibleAnnotAt(ew, ev->itemIndex);
-    if (!annot) {
+void DrawAnnotationListRow(Gfx* gfx, PlatformFont* font, Rect rc, Annotation* annot, const StrVec& filterWords,
+                           Vec<u8>& hlScratch, Color colBg, Color colText, bool selected) {
+    if (!gfx || !annot) {
         return;
     }
-    VirtListBox* lb = ev->listBox;
-    Gfx* gfx = ev->gfx;
-    Rect rc = ev->itemRect;
-
-    Color colBg = lb->GetColor(kColListBg);
-    Color colText = lb->GetColor(kColListText);
     if (IsSpecialColor(colBg)) {
         colBg = GetSysColor(COLOR_WINDOW);
     }
     if (IsSpecialColor(colText)) {
         colText = GetSysColor(COLOR_WINDOWTEXT);
     }
-    if (ev->selected) {
+    if (selected) {
         colBg = AccentColor(colBg, 30);
     }
     gfx->FillRect(rc, colBg);
@@ -591,18 +584,18 @@ static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawI
 
     TempStr pageStr = fmt("%d", annot->pageNo);
     int pageGap = DpiScale(10);
-    int pageColDx = gfx->MeasureText(pageStr, lb->font).dx;
+    int pageColDx = gfx->MeasureText(pageStr, font).dx;
     Rect rcPage = rcText;
     rcPage.x = std::max(rcText.x, rcText.x + rcText.dx - pageColDx);
     rcPage.dx = rcText.x + rcText.dx - rcPage.x;
 
     Str typeName = AnnotationReadableNameTemp(annot->type);
-    int typeDx = gfx->MeasureText(typeName, lb->font).dx;
+    int typeDx = gfx->MeasureText(typeName, font).dx;
     int typeMaxDx = std::max(0, rcPage.x - pageGap - rcText.x);
     Rect rcType = rcText;
     rcType.dx = std::min(typeDx, typeMaxDx);
     if (rcType.dx > 0) {
-        gfx->DrawText(typeName, rcType, gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, lb->font, colText);
+        gfx->DrawText(typeName, rcType, gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, font, colText);
     }
 
     Str contents = Contents(annot);
@@ -615,8 +608,8 @@ static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawI
             rcContents.dx = rcPage.x - pageGap - rcContents.x;
             if (rcContents.dx > 0) {
                 gfx->PushClip(rcContents);
-                DrawMaybeHighlightedText(gfx, rcContents, oneLine, ew->filterWords, ew->filterHlScratch, colBg, false,
-                                         false, gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, lb->font,
+                DrawMaybeHighlightedText(gfx, rcContents, oneLine, filterWords, hlScratch, colBg, false, false,
+                                         gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, font,
                                          ThemeWindowTextDisabledColor());
                 gfx->PopClip();
             }
@@ -624,7 +617,16 @@ static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawI
     }
 
     gfx->FillRect(rcPage, colBg);
-    gfx->DrawText(pageStr, rcPage, gfxTextEllipsis | gfxTextVCenter | gfxTextRight, lb->font, colText);
+    gfx->DrawText(pageStr, rcPage, gfxTextEllipsis | gfxTextVCenter | gfxTextRight, font, colText);
+}
+
+static void DrawAnnotationListItem(EditAnnotationsWindow* ew, VirtListBox::DrawItemEvent* ev) {
+    Annotation* annot = VisibleAnnotAt(ew, ev->itemIndex);
+    if (!annot || !ev->listBox) {
+        return;
+    }
+    DrawAnnotationListRow(ev->gfx, ev->listBox->font, ev->itemRect, annot, ew->filterWords, ew->filterHlScratch,
+                          ev->listBox->GetColor(kColListBg), ev->listBox->GetColor(kColListText), ev->selected);
 }
 
 // Delete off the stack of WM_CLOSE / WM_DESTROY (same pattern as
@@ -2033,6 +2035,7 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
         }
         ToolbarUpdateStateForWindow(win, false);
         UpdateAnnotEditToolbar(win);
+        UpdateAnnotFilterToolbar(win);
         return;
     }
     // Commit contents of the previous selection before switching away.
@@ -2047,6 +2050,7 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
     }
     ScheduleShowSelectedAnnotationView(tab);
     UpdateAnnotEditToolbar(win);
+    UpdateAnnotFilterToolbar(win);
 }
 
 static void AddAnnotPage(Vec<int>& pages, int pageNo, int pageCount) {
@@ -2075,12 +2079,12 @@ static void LoadAnnotsForPage(EngineMupdf* e, int pageNo) {
 // Pages the background loader should finish first: current page (toolbar page
 // even when visibleRatio is still 0), every page overlapping the viewport, and
 // a context-menu annotation's page.
-static void CollectPriorityAnnotPages(EditAnnotationsWindow* ew, Annotation* extra, Vec<int>& pages) {
+static void CollectPriorityAnnotPages(WindowTab* tab, Annotation* extra, Vec<int>& pages) {
     pages.Reset();
-    if (!ew || !ew->tab) {
+    if (!tab) {
         return;
     }
-    DisplayModel* dm = ew->tab->AsFixed();
+    DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return;
     }
@@ -2102,25 +2106,43 @@ static void CollectPriorityAnnotPages(EditAnnotationsWindow* ew, Annotation* ext
 }
 
 static void OnAnnotsProgress(WindowTab* tab) {
-    if (!tab || !tab->editAnnotsWindow) {
-        return;
-    }
-    if (!IsMainWindowValidAndNotClosing(tab->win)) {
+    if (!tab || !IsMainWindowValidAndNotClosing(tab->win)) {
         return;
     }
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
-    EngineMupdf* engine = GetEngineMupdf(ew);
+    if (ew) {
+        EngineMupdf* engine = GetEngineMupdf(ew);
+        if (engine) {
+            int nBefore = len(ew->annotations);
+            EngineMupdfGetLoadedAnnotations(engine, ew->annotations);
+            logf("OnAnnotsProgress: nAnnots=%d (was %d)\n", len(ew->annotations), nBefore);
+            if (len(ew->annotations) != nBefore) {
+                RebuildAnnotationsListBox(ew);
+                LayoutAnnotWindowInPlace(ew);
+            }
+        }
+    }
+    RefreshAnnotFilterAnnotations(tab->win);
+}
+
+void StartLoadingAnnotationsForUi(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        return;
+    }
+    EngineMupdf* engine = AsEngineMupdf(dm->GetEngine());
     if (!engine) {
         return;
     }
-    int nBefore = len(ew->annotations);
-    EngineMupdfGetLoadedAnnotations(engine, ew->annotations);
-    logf("OnAnnotsProgress: nAnnots=%d (was %d)\n", len(ew->annotations), nBefore);
-    if (len(ew->annotations) == nBefore) {
-        return;
+    Vec<int> firstPages;
+    CollectPriorityAnnotPages(tab, tab->selectedAnnotation, firstPages);
+    for (int pageNo : firstPages) {
+        LoadAnnotsForPage(engine, pageNo);
     }
-    RebuildAnnotationsListBox(ew);
-    LayoutAnnotWindowInPlace(ew);
+    EngineMupdfStartLoadAllAnnotations(engine, firstPages, MkFunc0(OnAnnotsProgress, tab));
 }
 
 void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
@@ -2133,7 +2155,7 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
     }
     Annotation* extra = ew->tab ? ew->tab->selectedAnnotation : nullptr;
     Vec<int> firstPages;
-    CollectPriorityAnnotPages(ew, extra, firstPages);
+    CollectPriorityAnnotPages(ew->tab, extra, firstPages);
     if (ew->reloadSelectionValid) {
         AddAnnotPage(firstPages, ew->reloadSelectionPageNo, engine->pageCount);
     }
@@ -2148,12 +2170,36 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
     RebuildAnnotationsListBox(ew);
     LayoutAnnotWindowInPlace(ew);
     EngineMupdfStartLoadAllAnnotations(engine, firstPages, MkFunc0(OnAnnotsProgress, ew->tab));
+    if (ew->tab && ew->tab->win) {
+        RefreshAnnotFilterAnnotations(ew->tab->win);
+    }
+}
+
+void RefreshAnnotationLists(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    if (tab->editAnnotsWindow) {
+        UpdateAnnotationsList(tab->editAnnotsWindow);
+        return;
+    }
+    if (tab->win) {
+        StartLoadingAnnotationsForUi(tab);
+        RefreshAnnotFilterAnnotations(tab->win);
+    }
 }
 
 // Repopulate an existing editor from the replacement engine and restore its
 // logical selection without recreating or activating the window.
 void RefreshEditAnnotationsAfterEngineChange(WindowTab* tab) {
-    if (!tab || !tab->editAnnotsWindow) {
+    if (!tab) {
+        return;
+    }
+    if (!tab->editAnnotsWindow) {
+        if (tab->win) {
+            StartLoadingAnnotationsForUi(tab);
+            RefreshAnnotFilterAnnotations(tab->win);
+        }
         return;
     }
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;

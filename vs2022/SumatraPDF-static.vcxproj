@@ -1153,6 +1153,7 @@
     <ClInclude Include="..\src\AIChatPanel.h" />
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\AnnotEditToolbar.h" />
+    <ClInclude Include="..\src\AnnotFilterToolbar.h" />
     <ClInclude Include="..\src\AnnotPlacement.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppSettings.h" />
@@ -1349,6 +1350,7 @@
     <ClCompile Include="..\src\AddFavoriteDialog.cpp" />
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp" />
     <ClCompile Include="..\src\AnnotEditToolbar.cpp" />
+    <ClCompile Include="..\src\AnnotFilterToolbar.cpp" />
     <ClCompile Include="..\src\AnnotPlacement.cpp" />
     <ClCompile Include="..\src\Annotation.cpp" />
     <ClCompile Include="..\src\AppSettings.cpp" />

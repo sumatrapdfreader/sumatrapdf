@@ -34,6 +34,7 @@
 #include "SearchAndDDE.h"
 #include "EditAnnotations.h"
 #include "AnnotEditToolbar.h"
+#include "AnnotFilterToolbar.h"
 #include "ToolbarInternal.h"
 #include "Tabs.h"
 #include "gui/Layout.h"
@@ -580,10 +581,15 @@ static void SetPdfAnnotationsToolbarVisible(MainWindow* win, bool visible) {
         return;
     }
     tb->annotationRow->SetVisibility(want);
+    SetAnnotFilterEditVisible(win, visible);
     SetToolbarButtonCheckedState(win, CmdTogglePdfAnnotationsToolbar, visible);
     ToolbarSetHeight(win, tb->rowDy * (visible ? 2 : 1));
     tb->host->Relayout();
     tb->host->Invalidate(true);
+    if (visible) {
+        StartLoadingAnnotationsForUi(win->CurrentTab());
+        RefreshAnnotFilterAnnotations(win);
+    }
     ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty);
 }
 
@@ -866,7 +872,7 @@ static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
     bool inBand = band.Contains(Point(ptFrame.x, ptFrame.y));
 
     // also keep shown while the cursor is over the toolbar window itself
-    return inBand || ToolbarHost(win)->ContainsScreenPoint(pt);
+    return inBand || ToolbarHost(win)->ContainsScreenPoint(pt) || AnnotFilterListContainsScreenPoint(win, pt);
 }
 
 // the overlay toolbar must not vanish while it owns the keyboard focus (e.g.
@@ -897,6 +903,9 @@ static void SetOverlayShown(MainWindow* win, bool shown) {
     }
     win->toolbarOverlayShown = shown;
     PositionOverlayToolbar(win);
+    if (!shown) {
+        HideAnnotFilterList(win);
+    }
 }
 
 // re-evaluate overlay toolbar visibility based on the cursor's screen position
@@ -965,9 +974,11 @@ void ShowOrHideToolbar(MainWindow* win) {
     }
     if (!show && !overlay) {
         // Move the focus out of the toolbar
-        if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused())) {
+        if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused()) ||
+            (win->toolbarVirt && win->toolbarVirt->annotFilterEdit && win->toolbarVirt->annotFilterEdit->IsFocused())) {
             ToolbarFocusFrame(win);
         }
+        HideAnnotFilterList(win);
         if (win->hwndToolbar) {
             ShowWindow(win->hwndToolbar, SW_HIDE);
         }
@@ -1207,6 +1218,9 @@ static void RefreshToolbarIcons(MainWindow* win) {
     if (win->pageEdit) {
         win->pageEdit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
     }
+    if (tb->annotFilterEdit) {
+        tb->annotFilterEdit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
+    }
 }
 
 void UpdateToolbarAfterThemeChange(MainWindow* win) {
@@ -1216,6 +1230,7 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
         host->bgColor = TbBgColor();
         host->Invalidate(true);
     }
+    UpdateAnnotFilterToolbar(win);
 }
 
 // bounds of a button in the toolbar's client coords, empty if it has none
@@ -1302,6 +1317,7 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
         out.Append(fmt("annotation-idx=%d cmd=%d hidden=%d enabled=%d rect=%d,%d,%d,%d text=%s\n", i, w ? w->id : 0,
                        hidden ? 1 : 0, w && w->IsEnabled() ? 1 : 0, r.x, r.y, r.x + r.dx, r.y + r.dy, bi.toolTip));
     }
+    out.Append(AnnotFilterToolbarStateTemp(win));
     *exitCodeOut = 0;
     return ToStrTemp(out);
 }
@@ -1373,11 +1389,13 @@ static void BuildToolbarLayout(MainWindow* win) {
     PopulateCustomToolbarButtons();
 
     ToolbarVirt* tb = win->toolbarVirt;
+    UnbindAnnotFilterEdit(win);
     tb->items.Reset();
     tb->annotationItems.Reset();
     tb->annotationRow = nullptr;
     tb->pageLabel = nullptr;
     tb->pageTotal = nullptr;
+    tb->annotFilterEdit = nullptr;
     win->pageEdit = nullptr;
 
     int cyPad = ToolbarCyPad();
@@ -1450,6 +1468,10 @@ static void BuildToolbarLayout(MainWindow* win) {
         box->AddChild(w);
     }
 
+    Edit* annotFilter = CreateAnnotFilterEdit(win, tb->platformFont, tb->iconSize);
+    annotFilter->SetVisibility(Visibility::Collapse);
+    tb->annotFilterEdit = annotFilter;
+
     auto* annotationBox = new HBox();
     annotationBox->alignMain = MainAxisAlign::MainCenter;
     annotationBox->alignCross = CrossAxisAlign::CrossCenter;
@@ -1477,9 +1499,15 @@ static void BuildToolbarLayout(MainWindow* win) {
         annotationBox->AddChild(w);
     }
 
+    auto* mainRow = new HBox();
+    mainRow->alignCross = CrossAxisAlign::CrossCenter;
+    mainRow->gap = DpiScale(kButtonSpacingX);
+    mainRow->AddChild(box, 1);
+    mainRow->AddChild(annotFilter);
+
     auto* root = new VBox();
     root->alignCross = CrossAxisAlign::Stretch;
-    root->AddChild(new Padding(box, Insets{0, DpiScale(4), 0, DpiScale(4)}));
+    root->AddChild(new Padding(mainRow, Insets{0, DpiScale(4), 0, DpiScale(4)}));
     tb->annotationRow = new Padding(annotationBox, Insets{0, DpiScale(4), 0, DpiScale(4)});
     tb->annotationRow->SetVisibility(Visibility::Collapse);
     root->AddChild(tb->annotationRow);
@@ -1571,6 +1599,7 @@ void DestroyToolbar(MainWindow* win) {
         win->hwndToolbar = nullptr;
         return;
     }
+    DeleteAnnotFilterToolbar(win);
     win->pageEdit = nullptr;
     win->toolbarVirt = nullptr;
     win->hwndToolbar = nullptr;

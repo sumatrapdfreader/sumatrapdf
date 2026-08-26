@@ -10,12 +10,23 @@ enum class EditAnnotFocus {
     List,
 };
 
+struct Gfx;
+struct PlatformFont;
+struct StrVec;
+template <typename T>
+struct Vec;
+
 void ShowEditAnnotationsWindow(WindowTab*, Annotation*, EditAnnotFocus focus = EditAnnotFocus::Default);
 bool CloseAndDeleteEditAnnotationsWindow(WindowTab*);
 void DeleteAnnotationAndUpdateUI(WindowTab*, Annotation*);
 void SetSelectedAnnotation(WindowTab*, Annotation*, bool isNew = false, EditAnnotFocus focus = EditAnnotFocus::Default);
 void UpdateAnnotationsList(EditAnnotationsWindow*);
+void RefreshAnnotationLists(WindowTab*);
 void NotifyAnnotationsChanged(EditAnnotationsWindow*);
+void StartLoadingAnnotationsForUi(WindowTab*);
+bool AnnotMatchesFilter(Annotation*, const StrVec& words);
+void DrawAnnotationListRow(Gfx*, PlatformFont*, Rect, Annotation*, const StrVec& filterWords, Vec<u8>& hlScratch,
+                           Color colBg, Color colText, bool selected);
 void DetachAnnotationFromUI(Annotation*);
 void InvalidateEditAnnotationsOnEngineChange(WindowTab*);
 void RefreshEditAnnotationsAfterEngineChange(WindowTab*);

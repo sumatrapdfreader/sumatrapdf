@@ -111,6 +111,9 @@
     <ClInclude Include="..\src\AnnotEditToolbar.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\AnnotFilterToolbar.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\AnnotPlacement.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -621,6 +624,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AnnotEditToolbar.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\AnnotFilterToolbar.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AnnotPlacement.cpp">

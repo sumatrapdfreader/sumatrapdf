@@ -9221,7 +9221,7 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         annot->bounds = GetBounds(annot);
         created.Append(annot);
     }
-    UpdateAnnotationsList(tab->editAnnotsWindow);
+    RefreshAnnotationLists(tab);
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
     if (args->copyToClipboard) {
@@ -10889,7 +10889,7 @@ static void ApplyRedactionsInTab(WindowTab* tab) {
         DeleteAnnotation(a);
     }
     DeleteOldSelectionInfo(win, true);
-    UpdateAnnotationsList(tab->editAnnotsWindow);
+    RefreshAnnotationLists(tab);
     ToolbarUpdateStateForWindow(win, true);
     if (!ok) {
         ShowWarningNotification(win->hwndCanvas, _TRA("Failed to apply redactions"), kNotif5SecsTimeOut);
@@ -12648,7 +12648,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if (!lastCreatedAnnot) {
         return 0;
     }
-    UpdateAnnotationsList(tab->editAnnotsWindow);
+    RefreshAnnotationLists(tab);
     // Drop the cached page bitmap. SetSelectedAnnotation only ScheduleRepaint
     // (selection handles); without this the new annot is invisible until a
     // later click re-selects it and forces a re-render (issue #6037).

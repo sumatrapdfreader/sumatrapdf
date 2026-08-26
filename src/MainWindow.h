@@ -20,6 +20,7 @@ struct AnnotationHoverOverlay;
 struct TreeView;
 struct SelectionToolbar;
 struct AnnotEditToolbar;
+struct AnnotFilterToolbar;
 struct ILayout;
 struct Spacer;
 struct HwndSlot;
@@ -686,6 +687,8 @@ struct MainWindow {
 
     // compact property row under the selected annotation in Edit PDF mode
     AnnotEditToolbar* annotEditToolbar = nullptr;
+    // filter box on the Edit PDF toolbar and its dropdown list
+    AnnotFilterToolbar* annotFilterToolbar = nullptr;
 
     // annotation details shown next to a hovered annotation in Edit PDF mode
     AnnotationHoverOverlay* annotationHoverOverlay = nullptr;
