@@ -88,7 +88,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {nullptr, 0, {}}, // separator
     {gIconSearch, CmdFindFirst, _TRN("Find")},
     {nullptr, 0, {}}, // separator
-    {gIconEditAnnotations, CmdTogglePdfAnnotationsToolbar, _TRN("Edit PDF")},
+    {gIconEditAnnotations, CmdToggleEditPDF, _TRN("Edit PDF")},
 };
 // unicode chars: https://www.compart.com/en/unicode/U+25BC
 
@@ -586,7 +586,7 @@ static void SetPdfAnnotationsToolbarVisible(MainWindow* win, bool visible) {
     }
     tb->annotationRow->SetVisibility(want);
     SetAnnotFilterEditVisible(win, visible);
-    SetToolbarButtonCheckedState(win, CmdTogglePdfAnnotationsToolbar, visible);
+    SetToolbarButtonCheckedState(win, CmdToggleEditPDF, visible);
     ToolbarSetHeight(win, tb->rowDy * (visible ? 2 : 1));
     tb->host->Relayout();
     tb->host->Invalidate(true);

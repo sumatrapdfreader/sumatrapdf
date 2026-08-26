@@ -145,7 +145,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    sendCommand(frame, cmdId("CmdTogglePdfAnnotationsToolbar"));
+    sendCommand(frame, cmdId("CmdToggleEditPDF"));
 
     let st = await waitFilter(client, (s) => !s.hidden);
     if (st.rect.dx < 40 || st.rect.dy < 10) {

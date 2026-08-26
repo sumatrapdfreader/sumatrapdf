@@ -297,7 +297,7 @@ enum {
     CmdToggleTransparencyGrid = 486,
     CmdTogglePageGrid = 487,
     CmdConfigurePageGrid = 488,
-    CmdTogglePdfAnnotationsToolbar = 489,
+    CmdToggleEditPDF = 489,
     CmdApplyRedactions = 490,
     CmdNone = 491,
 

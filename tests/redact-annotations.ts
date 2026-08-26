@@ -155,7 +155,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
 
-    sendCommand(frame, cmdId("CmdTogglePdfAnnotationsToolbar"));
+    sendCommand(frame, cmdId("CmdToggleEditPDF"));
     await sleep(200);
 
     sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));

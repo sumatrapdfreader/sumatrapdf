@@ -284,7 +284,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     const canvas = findCanvas(frame);
-    sendCommand(frame, cmdId("CmdTogglePdfAnnotationsToolbar"));
+    sendCommand(frame, cmdId("CmdToggleEditPDF"));
     await sleep(300);
 
     let n = await testKind(client, frame, canvas, "stamp", 0);

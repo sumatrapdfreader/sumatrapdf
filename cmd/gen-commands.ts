@@ -297,7 +297,7 @@ export const commands = [
     "CmdToggleTransparencyGrid", "Toggle Transparency Grid",
     "CmdTogglePageGrid", "Toggle Page Grid",
     "CmdConfigurePageGrid", "Configure Page Grid...",
-    "CmdTogglePdfAnnotationsToolbar", "Toggle PDF Annotations Toolbar",
+    "CmdToggleEditPDF", "Toggle Edit PDF",
     "CmdApplyRedactions", "Apply Redactions",
     "CmdNone", "Do nothing",
 ];

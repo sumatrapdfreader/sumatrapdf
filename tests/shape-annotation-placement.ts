@@ -255,7 +255,7 @@ export async function testit(): Promise<void> {
     const circleEnd = { x: center.x + 70, y: center.y + 10 };
     const outside = { x: 2, y: center.y };
 
-    sendCommand(frame, cmdId("CmdTogglePdfAnnotationsToolbar"));
+    sendCommand(frame, cmdId("CmdToggleEditPDF"));
     await sleep(300);
     const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
     const squareButton = toolbarButtonRect(toolbarDump, "CmdCreateAnnotSquare");

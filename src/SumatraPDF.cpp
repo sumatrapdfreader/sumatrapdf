@@ -12609,7 +12609,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ScheduleSaveSettings();
             break;
 
-        case CmdTogglePdfAnnotationsToolbar:
+        case CmdToggleEditPDF:
             TogglePdfAnnotationsToolbar(win);
             break;
 

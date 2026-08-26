@@ -221,7 +221,7 @@ CmdDiscardChanges,,Discard Changes,"reloads the document from disk, discarding u
 CmdShowAnnotations,,Show Annotations,"ver 3.6+, for current document"
 CmdHideAnnotations,,Hide Annotations,"ver 3.6+, for current document"
 CmdToggleShowAnnotations,,Toggle Showing Annotations,"ver 3.6+, for current document"
-CmdTogglePdfAnnotationsToolbar,,Toggle PDF Annotations Toolbar,"shows or hides the PDF annotation toolbar below the standard toolbar, ver 3.7+"
+CmdToggleEditPDF,,Toggle Edit PDF,"shows or hides Edit PDF mode (the annotation-tools row), ver 3.7+ (renamed from `CmdTogglePdfAnnotationsToolbar`)"
 ```
 
 ## Zoom
@@ -398,6 +398,8 @@ CmdDebugToggleDpiOverride,,internal,"debug builds only: cycles a pretend DPI (12
 ```
 
 `CmdFindMatch` is an old name for `CmdFindToggleMatchCase`. It is not a generated command ID, but SumatraPDF still accepts it in old shortcut settings for compatibility.
+
+`CmdTogglePdfAnnotationsToolbar` is an old name for `CmdToggleEditPDF`. SumatraPDF still accepts it in old shortcut and `ToolbarCustomLayout` settings.
 
 # Commands with arguments
 

@@ -178,7 +178,7 @@ export async function testit(): Promise<void> {
     const canvasRect = getClientRect(canvas);
     const pagePoint = { x: Math.floor(canvasRect.right / 2), y: Math.floor(canvasRect.bottom / 2) };
 
-    sendCommand(frame, cmdId("CmdTogglePdfAnnotationsToolbar"));
+    sendCommand(frame, cmdId("CmdToggleEditPDF"));
     await sleep(300);
     const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
     const textButton = textToolbarRect(toolbarDump);
