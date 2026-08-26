@@ -158,6 +158,43 @@ static bool IsOrIsParentOf(HWND hwnd, HWND child) {
     return false;
 }
 
+// Sit just above the owner frame. HWND_TOP covers other Sumatra windows that
+// overlap the canvas (edit annotations, command palette).
+static HWND ScrollbarZOrderAfter(OverlayScrollbar* sb) {
+    if (!sb->hwndOwner) {
+        return HWND_TOP;
+    }
+    HWND root = GetAncestor(sb->hwndOwner, GA_ROOT);
+    return root ? root : HWND_TOP;
+}
+
+static void ShowScrollbarHwnd(OverlayScrollbar* sb) {
+    SetWindowPos(sb->hwnd, ScrollbarZOrderAfter(sb), 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_NOOWNERZORDER);
+}
+
+// Cursor is over the owner canvas, not over another top-level window covering it
+static bool MouseOverOwnerSurface(OverlayScrollbar* sb, Point pt) {
+    Rect ownerRc = HwndWindowRect(sb->hwndOwner);
+    if (!ownerRc.Contains(pt)) {
+        return false;
+    }
+    POINT p{pt.x, pt.y};
+    HWND hit = WindowFromPoint(p);
+    if (!hit) {
+        return false;
+    }
+    if (hit == sb->hwnd) {
+        return true;
+    }
+    HWND ownerRoot = GetAncestor(sb->hwndOwner, GA_ROOT);
+    HWND hitRoot = GetAncestor(hit, GA_ROOT);
+    if (ownerRoot && hitRoot && hitRoot != ownerRoot) {
+        return false;
+    }
+    return true;
+}
+
 // Update the layered window with the current appearance
 static void PaintScrollbar(OverlayScrollbar* sb) {
     if (!sb->hwnd || !HwndIsVisible(sb->hwnd)) {
@@ -383,8 +420,7 @@ static void SetState(OverlayScrollbar* sb, State newState) {
     OverlayScrollbarUpdatePos(sb);
     if (nowVisible) {
         if (!wasVisible) {
-            SetWindowPos(sb->hwnd, HWND_TOP, 0, 0, 0, 0,
-                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_NOOWNERZORDER);
+            ShowScrollbarHwnd(sb);
         }
         PaintScrollbar(sb);
     } else {
@@ -471,15 +507,15 @@ static void CALLBACK MouseTrackTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_PTR /
             continue;
         }
 
-        // Check if mouse is over the owner window's client area
-        Rect ownerRc = HwndWindowRect(sb->hwndOwner);
-        bool overOwner = ownerRc.Contains(pt);
+        // Check if mouse is over the owner window's client area, and not over a
+        // different top-level window covering it (edit annotations, etc.)
+        bool overOwner = MouseOverOwnerSurface(sb, pt);
 
         // Is the mouse over the band the thick scrollbar occupies? Being merely
         // near it isn't enough: the thick bar used to pop out while the mouse
         // was still over the page, which is distracting while reading
         Rect sbRect = GetScrollbarScreenRect(sb);
-        bool overScrollbar = sbRect.Contains(pt);
+        bool overScrollbar = sbRect.Contains(pt) && overOwner;
 
         if (sb->isDragging) {
             // Don't change state while dragging
@@ -933,8 +969,8 @@ void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
     }
     SetWindowLongPtrW(sb->hwnd, GWL_EXSTYLE, exStyle);
 
-    // SWP_NOOWNERZORDER: HWND_TOP on an owned popup otherwise raises the
-    // owner frame over other top-level windows (command palette, annotations).
+    // SWP_NOOWNERZORDER: raising an owned popup otherwise raises the owner
+    // frame over other top-level windows (command palette, annotations).
     UINT swpFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER;
     HWND insertAfter = nullptr;
     // re-show the window if the state says it should be visible
@@ -942,7 +978,7 @@ void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
     // to prevent them from appearing at stale positions)
     if (IsVisible(sb) && !HwndIsVisible(sb->hwnd)) {
         swpFlags |= SWP_SHOWWINDOW;
-        insertAfter = HWND_TOP;
+        insertAfter = ScrollbarZOrderAfter(sb);
     } else {
         swpFlags |= SWP_NOZORDER;
     }
@@ -984,8 +1020,7 @@ void OverlayScrollbarShow(OverlayScrollbar* sb, bool show) {
     }
     // re-show if window was temporarily hidden (e.g. during relayout)
     OverlayScrollbarUpdatePos(sb);
-    SetWindowPos(sb->hwnd, HWND_TOP, 0, 0, 0, 0,
-                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_NOOWNERZORDER);
+    ShowScrollbarHwnd(sb);
     PaintScrollbar(sb);
 }
 

@@ -780,10 +780,31 @@ export function isWindowEnabled(hwnd: number): boolean {
   return user32.symbols.IsWindowEnabled(hwnd);
 }
 
+export const GW_HWNDFIRST = 0;
+export const GW_HWNDNEXT = 2;
 const GW_OWNER = 4;
+
+export function getWindow(hwnd: number, cmd: number): number {
+  return Number(user32.symbols.GetWindow(hwnd, cmd));
+}
 
 export function getWindowOwner(hwnd: number): number {
   return Number(user32.symbols.GetWindow(hwnd, GW_OWNER));
+}
+
+// true if a is higher in the top-level Z order than b
+export function isWindowAbove(a: number, b: number): boolean {
+  let h = getWindow(a, GW_HWNDFIRST);
+  while (h) {
+    if (h === a) {
+      return true;
+    }
+    if (h === b) {
+      return false;
+    }
+    h = getWindow(h, GW_HWNDNEXT);
+  }
+  return false;
 }
 
 // The top-level window that owns whatever is drawn at this screen point, i.e.
@@ -791,9 +812,13 @@ export function getWindowOwner(hwnd: number): number {
 // to read pixels from is really the one on screen at that spot -- another
 // (possibly always-on-top) window covering it is otherwise indistinguishable
 // from your window not painting.
-export function topLevelWindowFromPoint(x: number, y: number): number {
+export function windowFromPoint(x: number, y: number): number {
   const pt = (BigInt(y >>> 0) << 32n) | BigInt(x >>> 0);
-  const h = Number(user32.symbols.WindowFromPoint(pt));
+  return Number(user32.symbols.WindowFromPoint(pt));
+}
+
+export function topLevelWindowFromPoint(x: number, y: number): number {
+  const h = windowFromPoint(x, y);
   if (!h) {
     return 0;
   }
