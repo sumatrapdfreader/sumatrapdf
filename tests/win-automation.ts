@@ -200,12 +200,12 @@ export async function waitForFormEditor(canvas: number, timeoutMs = 1500): Promi
 // The cursor is moved to the click first: SetCapture (from a drag start) injects
 // WM_MOUSEMOVE at the real cursor, and if that is far from (x,y) the app treats
 // the click as a drag (ClickEdgeToTurnPage and similar then no-op).
-export async function clickAt(hwnd: number, x: number, y: number, settleMs = 350): Promise<void> {
+export async function clickAt(hwnd: number, x: number, y: number, settleMs = 350, extraMk = 0): Promise<void> {
   const screen = clientToScreen(hwnd, x, y);
   setCursorPos(screen.x, screen.y);
   const lp = packCoords(x, y);
-  sendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
-  sendMessage(hwnd, WM_LBUTTONUP, 0, lp);
+  sendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON | extraMk, lp);
+  sendMessage(hwnd, WM_LBUTTONUP, extraMk, lp);
   await sleep(settleMs);
 }
 

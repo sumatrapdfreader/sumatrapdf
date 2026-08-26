@@ -33,6 +33,7 @@
 #include "Menu.h"
 #include "SearchAndDDE.h"
 #include "EditAnnotations.h"
+#include "AnnotEditToolbar.h"
 #include "ToolbarInternal.h"
 #include "Tabs.h"
 #include "gui/Layout.h"
@@ -723,7 +724,7 @@ void SetToolbarButtonEnableState(MainWindow* win, int cmdId, bool isEnabled) {
     }
 }
 
-void TogglePdfAnnotationsToolbar(MainWindow* win) {
+static void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
     if (!win) {
         return;
     }
@@ -731,18 +732,33 @@ void TogglePdfAnnotationsToolbar(MainWindow* win) {
     if (!ctx.isPdf || !ctx.supportsAnnots) {
         return;
     }
+    if (win->pdfAnnotationsToolbarEnabled == enabled) {
+        return;
+    }
     if (win->pdfAnnotationsToolbarEnabled) {
         FinishInkAnnotationPlacement(win);
     }
-    win->pdfAnnotationsToolbarEnabled = !win->pdfAnnotationsToolbarEnabled;
+    win->pdfAnnotationsToolbarEnabled = enabled;
     ToolbarUpdateStateForWindow(win, true);
-    if (win->pdfAnnotationsToolbarEnabled) {
+    if (enabled) {
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
         UpdateAnnotationHoverOverlay(win);
     } else {
         HideAnnotationHoverOverlay(win);
+        HideAnnotEditToolbar(win);
     }
     ScheduleRepaint(win, 0);
+}
+
+void TogglePdfAnnotationsToolbar(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    SetPdfAnnotationsToolbarEnabled(win, !win->pdfAnnotationsToolbarEnabled);
+}
+
+void EnablePdfAnnotationsToolbar(MainWindow* win) {
+    SetPdfAnnotationsToolbarEnabled(win, true);
 }
 
 // toolbar mode for this window: Fullscreen.Toolbar in fullscreen, else Toolbar

@@ -1864,41 +1864,13 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
             if (el && el->Is(kindPageElementDest) && gGlobalPrefs->disableLinks) {
                 el = nullptr;
             }
-            // the annotation notification below is suppressed in favor of
-            // the citation hover popup, but only when that feature is on
             int hoverDelayMs = gGlobalPrefs->citationHoverDelay;
-            bool citationHoverEnabled = hoverDelayMs >= 0;
-            bool hasInternalLink = citationHoverEnabled && RefHoverIsInternalLink(el, dm);
             if (annot != prev) {
                 if (editPdf) {
                     ScheduleRepaint(win, 0);
                 }
-#if 0
-                Str name = annot ? AnnotationReadableNameTemp(annot->type) : StrL("none");
-                Str prevName = prev ? AnnotationReadableNameTemp(prev->type) : StrL("none");
-                logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
-#endif
-                if (gGlobalPrefs->showAnnotationNotification && !hasInternalLink && !editPdf) {
-                    if (annot) {
-                        // auto r = annot->bounds;
-                        // logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
-                        RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
-                        NotificationCreateArgs args;
-                        args.hwndParent = win->hwndCanvas;
-                        args.groupId = kNotifAnnotation;
-                        args.timeoutMs = 3000;
-                        args.delayInMs = 1000;
-                        args.noClose = true;
-                        Str name = annot ? AnnotationReadableNameTemp(annot->type) : StrL("none");
-                        Str fmtStr = _TRA("%s annotation. Ctrl+click to edit.");
-                        args.msg = fmt(fmtStr.s, name);
-                        ShowNotification(args);
-                    }
-                }
             }
-            if (!annot || hasInternalLink || !gGlobalPrefs->showAnnotationNotification || editPdf) {
-                RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
-            }
+            RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
             win->annotationUnderCursor = annot;
             if (editPdf) {
                 UpdateAnnotationHoverOverlay(win);
@@ -2213,6 +2185,10 @@ static bool IsFullPageImage(DisplayModel* dm, IPageElement* el, int pageNo) {
     return imgArea >= 0.8f * pageArea;
 }
 
+static bool MouseHasCtrl(WPARAM key) {
+    return IsCtrlPressed() || bit::IsMaskSet(key, (WPARAM)MK_CONTROL);
+}
+
 static void OpenOrSelectEditAnnotation(WindowTab* tab, Annotation* annot) {
     if (!tab || !annot) {
         return;
@@ -2329,6 +2305,9 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     }
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
+    if (MouseHasCtrl(key) && annot && tab) {
+        EnablePdfAnnotationsToolbar(win);
+    }
     bool editPdf = win->pdfAnnotationsToolbarEnabled;
     if (editPdf && annot && !AnnotationCanBeMoved(annot->type)) {
         OpenOrSelectEditAnnotation(tab, annot);
@@ -2570,12 +2549,10 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // dragStartPending was still set from the create gesture). Using it
     // re-selected the new stamp when clicking empty page (issue #5933).
     Annotation* clickedAnnot = dm->GetAnnotationAtPos(pt, tab ? tab->selectedAnnotation : nullptr);
-    bool editPdf = win->pdfAnnotationsToolbarEnabled;
-
-    if (!editPdf && IsCtrlPressed() && clickedAnnot) {
-        ShowEditAnnotationsWindow(tab, clickedAnnot);
-        return;
+    if (MouseHasCtrl(key) && clickedAnnot && tab) {
+        EnablePdfAnnotationsToolbar(win);
     }
+    bool editPdf = win->pdfAnnotationsToolbarEnabled;
 
     if (clickedAnnot && tab && editPdf) {
         OpenOrSelectEditAnnotation(tab, clickedAnnot);

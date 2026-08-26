@@ -1,20 +1,20 @@
 // Edit PDF mode makes annotations directly interactive: hover outlines them,
-// a plain click selects them and shows a compact property row, and the normal
-// Ctrl+click hint stays hidden.
+// Ctrl+click enters Edit PDF mode and selects the annotation, and a plain
+// click in that mode shows a compact property row.
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util";
+import { assemblePdf, runStandalone, tmpPath } from "./util";
 import {
   captureWindowToPng,
   clientToScreen,
   getClientRect,
+  MK_CONTROL,
   packCoords,
   sendMessage,
   setCursorPos,
   sleep,
-  WM_COMMAND,
   WM_MOUSEMOVE,
 } from "./winapi";
 import { clickAt, findCanvas, killAndWait, launchControlled } from "./win-automation";
@@ -158,22 +158,32 @@ export async function testit(): Promise<void> {
     const centerX = state.screen.x + Math.floor(state.screen.dx / 2);
     const centerY = state.screen.y + Math.floor(state.screen.dy / 2);
     state = await moveAndWaitForHover(client, canvas, centerX, centerY, true);
-    if (!state.hover || !state.notification || state.overlay.visible) {
-      throw new Error(`pdf-edit-toolbar-interaction: normal hover did not show the annotation hint`);
+    if (!state.hover || state.notification || state.overlay.visible) {
+      throw new Error(`pdf-edit-toolbar-interaction: hover showed a Ctrl+click hint or hover card\n${state.raw}`);
     }
 
-    sendMessage(frame, WM_COMMAND, cmdId("CmdTogglePdfAnnotationsToolbar"), 0);
-    await sleep(300);
-    await client.waitForRenderIdle();
+    await clickAt(canvas, centerX, centerY, 200, MK_CONTROL);
     state = await annotState(client);
-    if (!state.editToolbar || state.notification) {
+    if (!state.editToolbar || !state.selected || state.editor || state.notification) {
       throw new Error(
-        `pdf-edit-toolbar-interaction: Edit PDF mode state is wrong ` +
-          `(edit=${state.editToolbar} notification=${state.notification} overlay=${state.overlay.visible})`,
+        `pdf-edit-toolbar-interaction: Ctrl+click did not enter Edit PDF mode ` +
+          `(edit=${state.editToolbar} selected=${state.selected} editor=${state.editor} notif=${state.notification})`,
       );
+    }
+    if (!/annotEditToolbar visible=1 n=\d+ items=.*color.*contents/.test(state.raw)) {
+      throw new Error(`pdf-edit-toolbar-interaction: Ctrl+click did not show the compact property row\n${state.raw}`);
     }
 
     const cr = getClientRect(canvas);
+    await clickAt(canvas, Math.max(5, cr.right - 10), Math.max(5, cr.bottom - 10));
+    state = await annotState(client);
+    if (state.selected || !state.editToolbar) {
+      throw new Error(
+        `pdf-edit-toolbar-interaction: empty-page click did not deselect while staying in Edit PDF ` +
+          `(selected=${state.selected} edit=${state.editToolbar})`,
+      );
+    }
+
     await moveAndWaitForHover(client, canvas, Math.max(5, cr.right - 10), Math.max(5, cr.bottom - 10), false);
     state = await annotState(client);
     if (state.overlay.visible) {
