@@ -12,6 +12,7 @@ type FindUiState = {
   pref: number;
   compact: number;
   floating: number;
+  firstTextLen: number;
   raw: string;
 };
 
@@ -32,6 +33,7 @@ async function findUiRequest(client: ControlClient, action: string): Promise<Fin
     pref: values.pref ?? -1,
     compact: values.compact ?? 0,
     floating: values.floating ?? 0,
+    firstTextLen: values.firstTextLen ?? -1,
     raw,
   };
 }
@@ -74,6 +76,20 @@ export async function testit(): Promise<void> {
 
     expectState(await findUiRequest(client, "show-all"), 0, 2, 0);
     expectState(await findUiRequest(client, "toggle-first"), 1, 0, 2);
+
+    let state = await findUiRequest(client, "set-first-text");
+    if (state.firstTextLen !== "stale-term".length) {
+      throw new Error(`find-ui-state: failed to seed floating term: ${state.raw.trim()}`);
+    }
+    await findUiRequest(client, "toggle-first");
+    state = await findUiRequest(client, "clear-first");
+    if (state.firstTextLen !== 0) {
+      throw new Error(`find-ui-state: failed to clear compact term: ${state.raw.trim()}`);
+    }
+    state = await findUiRequest(client, "toggle-first");
+    if (state.firstTextLen !== 0) {
+      throw new Error(`find-ui-state: empty term was replaced after switching: ${state.raw.trim()}`);
+    }
     console.log("find-ui-state: OK");
   } finally {
     client.close();

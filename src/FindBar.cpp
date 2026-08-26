@@ -751,6 +751,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
         Str pages;
         int selStart = 0;
         int selEnd = 0;
+        bool hasText = false;
     };
     Vec<FindUiSwitchState> states;
     for (MainWindow* w : gWindows) {
@@ -760,6 +761,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
         FindUiSwitchState state;
         state.win = w;
         if (w->findEdit) {
+            state.hasText = true;
             state.text = str::Dup(w->findEdit->GetTextTemp());
             w->findEdit->GetSelection(state.selStart, state.selEnd);
         }
@@ -779,7 +781,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
     auto restore = [](FindUiSwitchState& state) {
         MainWindow* w = state.win;
         ShowFindBar(w); // shows the now-active UI and repoints win->findEdit
-        if (len(state.text) > 0 && w->findEdit) {
+        if (state.hasText && w->findEdit) {
             w->findEdit->SetText(state.text); // restore text (re-runs the search)
         }
         if (len(state.pages) > 0 && w->findPagesEdit) {
@@ -826,8 +828,16 @@ TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
         }
     } else if (str::Eq(action, StrL("toggle-first"))) {
         ToggleFloatingFindUI(gWindows[0]);
+    } else if (str::Eq(action, StrL("set-first-text"))) {
+        if (gWindows[0]->findEdit) {
+            gWindows[0]->findEdit->SetText(StrL("stale-term"));
+        }
+    } else if (str::Eq(action, StrL("clear-first"))) {
+        if (gWindows[0]->findEdit) {
+            gWindows[0]->findEdit->SetText(StrL(""));
+        }
     } else if (!str::Eq(action, StrL("state"))) {
-        out.Append(StrL("ERROR expected state, show-all or toggle-first\n"));
+        out.Append(StrL("ERROR invalid action\n"));
         return finish(1);
     }
     int docs = 0;
@@ -838,8 +848,9 @@ TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
         compact += IsFindBarVisible(w) ? 1 : 0;
         floating += IsFindWindowVisible(w) ? 1 : 0;
     }
-    out.Append(fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d\n", len(gWindows), docs,
-                   gGlobalPrefs->searchUIFloating ? 1 : 0, compact, floating));
+    int firstTextLen = gWindows[0]->findEdit ? gWindows[0]->findEdit->GetTextLen() : -1;
+    out.Append(fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d firstTextLen=%d\n", len(gWindows), docs,
+                   gGlobalPrefs->searchUIFloating ? 1 : 0, compact, floating, firstTextLen));
     return finish(0);
 }
 
