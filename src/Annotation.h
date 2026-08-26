@@ -46,6 +46,7 @@ enum class AnnotationChange {
     Modify,
 };
 
+class EngineBase;
 class EngineMupdf;
 extern "C" struct pdf_annot;
 
@@ -173,8 +174,14 @@ bool AnnotationIsLive(Annotation*);
 void DeleteAnnotation(Annotation*);
 bool AnnotationCanBeMoved(AnnotationType);
 bool AnnotationCanBeResized(AnnotationType);
+bool AnnotationCanBeCopied(AnnotationType);
 bool AnnotationSupportsColor(AnnotationType);
 bool AnnotationSupportsBorder(AnnotationType);
 bool AnnotationSupportsInteriorColor(AnnotationType);
+
+bool CopyAnnotation(Annotation*);
+bool HasCopiedAnnotation();
+void FreeAnnotationClipboard();
+Annotation* PasteCopiedAnnotation(EngineBase*, int pageNo, PointF topLeft);
 
 AnnotationType CmdIdToAnnotationType(int cmdId);

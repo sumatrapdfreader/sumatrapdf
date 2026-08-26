@@ -1114,6 +1114,8 @@ EXPORTS
 
 	pdf_set_annot_stamp_image
 
+	pdf_annot_stamp_image_obj
+
 	pdf_annot_flags
 
 	pdf_set_annot_flags

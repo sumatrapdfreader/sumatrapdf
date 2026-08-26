@@ -299,7 +299,9 @@ enum {
     CmdConfigurePageGrid = 488,
     CmdToggleEditPDF = 489,
     CmdApplyRedactions = 490,
-    CmdNone = 491,
+    CmdCopyAnnotation = 491,
+    CmdPasteAnnotation = 492,
+    CmdNone = 493,
 
     /* range for file history */
     CmdFileHistoryFirst,

@@ -44,6 +44,7 @@
 #include "TextSearch.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "Annotation.h"
 #include "AnnotPlacement.h"
 #include "WindowTab.h"
 #include "UpdateCheck.h"
@@ -3160,6 +3161,7 @@ Exit:
     CleanUpSettings();
 
     FreeAllMenuDrawInfos();
+    FreeAnnotationClipboard();
 
     ShutdownCleanup();
     EngineEbookCleanup();

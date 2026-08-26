@@ -1475,6 +1475,35 @@ void SetVertices(Annotation* annot, const Vec<PointF>& points) {
     MarkNotificationAsModified(e, annot);
 }
 
+static void GetInkList(Annotation* annot, Vec<int>& strokeCounts, Vec<PointF>& points) {
+    strokeCounts.Reset();
+    points.Reset();
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Ink) {
+        return;
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    fz_try(ctx) {
+        int nStrokes = pdf_annot_ink_list_count(ctx, a);
+        for (int i = 0; i < nStrokes; i++) {
+            int nv = pdf_annot_ink_list_stroke_count(ctx, a, i);
+            strokeCounts.Append(nv);
+            for (int k = 0; k < nv; k++) {
+                fz_point p = pdf_annot_ink_list_stroke_vertex(ctx, a, i, k);
+                points.Append({p.x, p.y});
+            }
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("GetInkList: pdf_annot_ink_list() failed\n");
+        strokeCounts.Reset();
+        points.Reset();
+    }
+}
+
 int BorderWidth(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return 0;
@@ -1628,6 +1657,32 @@ static bool IsAnnotationInList(AnnotationType tp, AnnotationType* allowed, int n
 
 bool AnnotationCanBeMoved(AnnotationType tp) {
     return IsAnnotationInList(tp, moveableAnnotations, dimofi(moveableAnnotations));
+}
+
+// Paste puts the copy wherever the mouse is, so copying only makes sense for
+// annotations that can be moved. That rules out text markup (highlight,
+// underline, squiggly, strike-out): those are anchored to the text they cover
+// and a copy dropped elsewhere would mark unrelated text.
+// Of the moveable types we also skip Popup, Sound, Movie and Widget, which we
+// can't recreate from a snapshot, and FileAttachment, whose embedded file
+// stream we don't copy (the paste would be a paperclip with no file).
+bool AnnotationCanBeCopied(AnnotationType tp) {
+    switch (tp) {
+        case AnnotationType::Text:
+        case AnnotationType::FreeText:
+        case AnnotationType::Line:
+        case AnnotationType::Square:
+        case AnnotationType::Circle:
+        case AnnotationType::Polygon:
+        case AnnotationType::PolyLine:
+        case AnnotationType::Redact:
+        case AnnotationType::Stamp:
+        case AnnotationType::Caret:
+        case AnnotationType::Ink:
+            return true;
+        default:
+            return false;
+    }
 }
 
 bool AnnotationCanBeResized(AnnotationType tp) {
@@ -1798,18 +1853,18 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                                                   : fz_point{pos.x + 100, pos.y + 50};
                     pdf_set_annot_line(ctx, annot, a, b);
                 } break;
-                case AnnotationType::Polygon: {
-                    fz_point points[] = {
-                        {pos.x + 50, pos.y},
-                        {pos.x + 100, pos.y + 50},
-                        {pos.x + 50, pos.y + 90},
-                        {pos.x, pos.y + 50},
-                    };
-                    pdf_set_annot_vertices(ctx, annot, dimof(points), points);
-                } break;
+                case AnnotationType::Polygon:
                 case AnnotationType::PolyLine: {
                     if (len(polyLinePoints) >= 2) {
                         pdf_set_annot_vertices(ctx, annot, len(polyLinePoints), polyLinePoints.els);
+                    } else if (typ == AnnotationType::Polygon) {
+                        fz_point points[] = {
+                            {pos.x + 50, pos.y},
+                            {pos.x + 100, pos.y + 50},
+                            {pos.x + 50, pos.y + 90},
+                            {pos.x, pos.y + 50},
+                        };
+                        pdf_set_annot_vertices(ctx, annot, dimof(points), points);
                     } else {
                         fz_point points[] = {
                             {pos.x, pos.y + 70},
@@ -1915,7 +1970,10 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 if (bgCol.parsedOk) {
                     float bgColor[3]{};
                     PdfColorToFloat(bgCol.pdfCol, bgColor);
-                    pdf_set_annot_color(ctx, annot, 3, bgColor);
+                    // PdfColor 0 is "no color"; asking for 3 components would
+                    // give the annotation a black background instead
+                    int nBgCol = (bgCol.pdfCol == 0) ? 0 : 3;
+                    pdf_set_annot_color(ctx, annot, nBgCol, bgColor);
                 }
                 // 100 is fuly opaque, the default
                 if (args->opacity < 100) {
@@ -1927,7 +1985,9 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
             if (interiorCol.parsedOk && AnnotationSupportsInteriorColor(typ)) {
                 float interiorColor[3]{};
                 PdfColorToFloat(interiorCol.pdfCol, interiorColor);
-                pdf_set_annot_interior_color(ctx, annot, 3, interiorColor);
+                // PdfColor 0 is "no fill"; 3 components would fill it black
+                int nInteriorCol = (interiorCol.pdfCol == 0) ? 0 : 3;
+                pdf_set_annot_interior_color(ctx, annot, nInteriorCol, interiorColor);
             }
             pdf_update_annot(ctx, annot);
         }
@@ -1965,6 +2025,351 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     }
     pdf_drop_annot(ctx, annot);
     return res;
+}
+
+struct AnnotationClipboard {
+    bool valid = false;
+    AnnotationType type = AnnotationType::Unknown;
+    // the annotation's /Rect, not GetBounds(): the bound is expanded by the
+    // border width, so a copy -> paste -> copy round trip would grow it
+    RectF rect{};
+    Str contents;
+    Str iconName;
+    Str fontName;
+    PdfColor color = 0;
+    bool hasColor = false;
+    PdfColor interiorColor = 0;
+    bool hasInteriorColor = false;
+    PdfColor textColor = 0;
+    bool hasTextColor = false;
+    int opacity = 255;
+    int borderWidth = -1;
+    int quadding = -1;
+    int textSize = -1;
+    int lineStartStyle = 0;
+    int lineEndStyle = 0;
+    bool hasLine = false;
+    PointF lineStart{};
+    PointF lineEnd{};
+    Vec<PointF> vertices;
+    Vec<RectF> quads;
+    Vec<int> inkStrokeCounts;
+    Vec<PointF> inkPoints;
+    Pixmap* stampImage = nullptr;
+};
+
+static AnnotationClipboard gAnnotClipboard;
+
+static void ClearAnnotationClipboard() {
+    str::FreePtr(&gAnnotClipboard.contents);
+    str::FreePtr(&gAnnotClipboard.iconName);
+    str::FreePtr(&gAnnotClipboard.fontName);
+    FreePixmap(gAnnotClipboard.stampImage);
+    gAnnotClipboard.stampImage = nullptr;
+    gAnnotClipboard.valid = false;
+    gAnnotClipboard.type = AnnotationType::Unknown;
+    gAnnotClipboard.rect = {};
+    gAnnotClipboard.color = 0;
+    gAnnotClipboard.hasColor = false;
+    gAnnotClipboard.interiorColor = 0;
+    gAnnotClipboard.hasInteriorColor = false;
+    gAnnotClipboard.textColor = 0;
+    gAnnotClipboard.hasTextColor = false;
+    gAnnotClipboard.opacity = 255;
+    gAnnotClipboard.borderWidth = -1;
+    gAnnotClipboard.quadding = -1;
+    gAnnotClipboard.textSize = -1;
+    gAnnotClipboard.lineStartStyle = 0;
+    gAnnotClipboard.lineEndStyle = 0;
+    gAnnotClipboard.hasLine = false;
+    gAnnotClipboard.lineStart = {};
+    gAnnotClipboard.lineEnd = {};
+    gAnnotClipboard.vertices.Reset();
+    gAnnotClipboard.quads.Reset();
+    gAnnotClipboard.inkStrokeCounts.Reset();
+    gAnnotClipboard.inkPoints.Reset();
+}
+
+static Pixmap* PixmapFromRgbFzPixmap(fz_context* ctx, fz_pixmap* src) {
+    if (!src || src->w <= 0 || src->h <= 0 || !src->samples) {
+        return nullptr;
+    }
+    fz_pixmap* rgb = nullptr;
+    fz_try(ctx) {
+        rgb = fz_convert_pixmap(ctx, src, fz_device_rgb(ctx), nullptr, nullptr, fz_default_color_params, 1);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        rgb = nullptr;
+    }
+    fz_pixmap* use = rgb ? rgb : src;
+    int n = use->n;
+    if (n < 3 || !use->samples) {
+        fz_drop_pixmap(ctx, rgb);
+        return nullptr;
+    }
+    Pixmap* p = AllocPixmap(use->w, use->h, PixmapFormat::RGBA8);
+    if (!p) {
+        fz_drop_pixmap(ctx, rgb);
+        return nullptr;
+    }
+    p->xres = (float)use->xres;
+    p->yres = (float)use->yres;
+    p->hasAlpha = true;
+    int alphaOff = use->alpha ? n - 1 : -1;
+    for (int y = 0; y < use->h; y++) {
+        const u8* s = use->samples + y * use->stride;
+        u8* d = p->data + y * p->stride;
+        for (int x = 0; x < use->w; x++) {
+            d[0] = s[0];
+            d[1] = s[1];
+            d[2] = s[2];
+            d[3] = alphaOff >= 0 ? s[alphaOff] : 255;
+            s += n;
+            d += 4;
+        }
+    }
+    fz_drop_pixmap(ctx, rgb);
+    return p;
+}
+
+static Pixmap* GetStampImage(Annotation* annot) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Stamp) {
+        return nullptr;
+    }
+    EngineMupdf* e = annot->engine;
+    if (!e || !e->pdfdoc) {
+        return nullptr;
+    }
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    fz_image* img = nullptr;
+    fz_pixmap* pix = nullptr;
+    fz_var(img);
+    fz_var(pix);
+    fz_try(ctx) {
+        pdf_obj* obj = pdf_annot_stamp_image_obj(ctx, annot->pdfannot);
+        if (obj) {
+            img = pdf_load_image(ctx, e->pdfdoc, obj);
+            if (img) {
+                pix = fz_get_pixmap_from_image(ctx, img, nullptr, nullptr, nullptr, nullptr);
+            }
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_image(ctx, img);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        fz_drop_pixmap(ctx, pix);
+        pix = nullptr;
+    }
+    if (!pix) {
+        return nullptr;
+    }
+    Pixmap* res = PixmapFromRgbFzPixmap(ctx, pix);
+    fz_drop_pixmap(ctx, pix);
+    return res;
+}
+
+bool HasCopiedAnnotation() {
+    return gAnnotClipboard.valid;
+}
+
+// gAnnotClipboard owns strings, Vecs and a stamp bitmap; free them at exit
+void FreeAnnotationClipboard() {
+    ClearAnnotationClipboard();
+}
+
+// The annotation's /Rect. GetBounds() is pdf_bound_annot(), which is expanded
+// by the border width and would grow the annotation on every copy -> paste.
+static RectF GetAnnotRect(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return annot ? annot->bounds : RectF{};
+    }
+    EngineMupdf* e = annot->engine;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    fz_rect rc = {};
+    bool ok = true;
+    fz_try(ctx) {
+        rc = pdf_annot_rect(ctx, annot->pdfannot);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        ok = false;
+    }
+    if (!ok) {
+        return GetBounds(annot);
+    }
+    return ToRectF(rc);
+}
+
+// Snapshot a live annotation so PasteCopiedAnnotation can recreate it.
+bool CopyAnnotation(Annotation* annot) {
+    if (!AnnotationIsLive(annot) || !AnnotationCanBeCopied(annot->type)) {
+        return false;
+    }
+    ClearAnnotationClipboard();
+    gAnnotClipboard.valid = true;
+    gAnnotClipboard.type = annot->type;
+    gAnnotClipboard.rect = GetAnnotRect(annot);
+    gAnnotClipboard.contents = str::Dup(Contents(annot));
+    gAnnotClipboard.iconName = str::Dup(IconName(annot));
+    gAnnotClipboard.opacity = Opacity(annot);
+    if (AnnotationSupportsBorder(annot->type)) {
+        gAnnotClipboard.borderWidth = BorderWidth(annot);
+    }
+    if (annot->type == AnnotationType::FreeText) {
+        gAnnotClipboard.quadding = Quadding(annot);
+        gAnnotClipboard.textSize = DefaultAppearanceTextSize(annot);
+        gAnnotClipboard.fontName = str::Dup(DefaultAppearanceTextFont(annot));
+        gAnnotClipboard.textColor = DefaultAppearanceTextColor(annot);
+        gAnnotClipboard.hasTextColor = true;
+        gAnnotClipboard.color = GetColor(annot);
+        gAnnotClipboard.hasColor = true;
+    } else if (AnnotationSupportsColor(annot->type)) {
+        gAnnotClipboard.color = GetColor(annot);
+        gAnnotClipboard.hasColor = true;
+    }
+    if (AnnotationSupportsInteriorColor(annot->type)) {
+        gAnnotClipboard.interiorColor = InteriorColor(annot);
+        gAnnotClipboard.hasInteriorColor = true;
+    }
+    GetLineEndingStyles(annot, &gAnnotClipboard.lineStartStyle, &gAnnotClipboard.lineEndStyle);
+    gAnnotClipboard.hasLine = GetLinePoints(annot, gAnnotClipboard.lineStart, gAnnotClipboard.lineEnd);
+    gAnnotClipboard.vertices = GetVertices(annot);
+    gAnnotClipboard.quads = GetQuadPointsAsRect(annot);
+    GetInkList(annot, gAnnotClipboard.inkStrokeCounts, gAnnotClipboard.inkPoints);
+    gAnnotClipboard.stampImage = GetStampImage(annot);
+    return true;
+}
+
+static void OffsetPoints(Vec<PointF>& pts, float dx, float dy) {
+    for (int i = 0; i < len(pts); i++) {
+        pts[i].x += dx;
+        pts[i].y += dy;
+    }
+}
+
+static void OffsetRects(Vec<RectF>& rects, float dx, float dy) {
+    for (int i = 0; i < len(rects); i++) {
+        rects[i].x += dx;
+        rects[i].y += dy;
+    }
+}
+
+// Recreate the copied annotation so its rect's top-left sits at topLeft.
+Annotation* PasteCopiedAnnotation(EngineBase* engine, int pageNo, PointF topLeft) {
+    if (!gAnnotClipboard.valid || !engine) {
+        return nullptr;
+    }
+    AnnotationClipboard& clip = gAnnotClipboard;
+    float dx = topLeft.x - clip.rect.x;
+    float dy = topLeft.y - clip.rect.y;
+    RectF newRect{topLeft.x, topLeft.y, clip.rect.dx, clip.rect.dy};
+
+    Vec<PointF> vertices = clip.vertices;
+    OffsetPoints(vertices, dx, dy);
+    Vec<PointF> inkPoints = clip.inkPoints;
+    OffsetPoints(inkPoints, dx, dy);
+    Vec<RectF> quads = clip.quads;
+    OffsetRects(quads, dx, dy);
+
+    AnnotCreateArgs args{clip.type};
+    args.content = clip.contents;
+    if (clip.type == AnnotationType::FreeText) {
+        if (clip.hasTextColor) {
+            args.col.parsedOk = true;
+            args.col.pdfCol = clip.textColor;
+        }
+        if (clip.hasColor) {
+            args.bgCol.parsedOk = true;
+            args.bgCol.pdfCol = clip.color;
+        }
+        args.textSize = clip.textSize;
+        args.borderWidth = clip.borderWidth;
+        args.quadding = clip.quadding;
+    } else if (clip.hasColor) {
+        args.col.parsedOk = true;
+        args.col.pdfCol = clip.color;
+    }
+    if (clip.hasInteriorColor) {
+        args.interiorCol.parsedOk = true;
+        args.interiorCol.pdfCol = clip.interiorColor;
+    }
+    args.stampImage = clip.stampImage;
+    if (clip.hasLine) {
+        args.hasLineEnd = true;
+        args.lineEnd = {clip.lineEnd.x + dx, clip.lineEnd.y + dy};
+    }
+    if (len(vertices) >= 2) {
+        args.polyLinePoints = &vertices;
+    }
+    if (len(clip.inkStrokeCounts) > 0) {
+        args.inkStrokeCounts = &clip.inkStrokeCounts;
+        args.inkPoints = &inkPoints;
+    }
+    bool useRect = clip.type == AnnotationType::Square || clip.type == AnnotationType::Circle ||
+                   (clip.type == AnnotationType::Redact && len(quads) == 0);
+    if (useRect) {
+        args.hasRect = true;
+        args.rect = newRect;
+    }
+
+    PointF pos = topLeft;
+    if (clip.hasLine) {
+        pos = {clip.lineStart.x + dx, clip.lineStart.y + dy};
+    }
+    Annotation* annot = EngineMupdfCreateAnnotation(engine, pageNo, pos, &args);
+    if (!annot) {
+        return nullptr;
+    }
+    if (clip.iconName) {
+        SetIconName(annot, clip.iconName);
+    }
+    if (clip.fontName) {
+        SetDefaultAppearanceTextFont(annot, clip.fontName);
+    }
+    if (clip.hasLine || clip.type == AnnotationType::PolyLine || clip.type == AnnotationType::Line) {
+        SetLineStartStyles(annot, clip.lineStartStyle);
+        SetLineEndStyles(annot, clip.lineEndStyle);
+    }
+    if (clip.type == AnnotationType::FreeText) {
+        SetContents(annot, clip.contents);
+        if (clip.hasTextColor) {
+            SetDefaultAppearanceTextColor(annot, clip.textColor);
+        }
+        if (clip.textSize > 0) {
+            SetDefaultAppearanceTextSize(annot, clip.textSize);
+        }
+        if (clip.quadding >= 0) {
+            SetQuadding(annot, clip.quadding);
+        }
+    } else if (clip.contents) {
+        SetContents(annot, clip.contents);
+    }
+    if (clip.opacity < 255) {
+        SetOpacity(annot, clip.opacity);
+    }
+    if (AnnotationSupportsBorder(clip.type) && clip.borderWidth >= 0) {
+        SetBorderWidth(annot, clip.borderWidth);
+    }
+    if (len(quads) > 0) {
+        SetQuadPointsAsRect(annot, quads);
+    }
+    switch (clip.type) {
+        case AnnotationType::Text:
+        case AnnotationType::FreeText:
+        case AnnotationType::Stamp:
+        case AnnotationType::Caret:
+        case AnnotationType::FileAttachment:
+            SetRect(annot, newRect);
+            break;
+        default:
+            break;
+    }
+    return annot;
 }
 
 AnnotationType CmdIdToAnnotationType(int cmdId) {

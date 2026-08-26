@@ -14,6 +14,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - Creating a highlight, underline, squiggly, or strike-out annotation from a text selection leaves the selection and the floating selection toolbar in place, so you can copy the same span or apply another markup without selecting again
 - Text selection uses the font’s height for the highlight box and a 1-pixel outline, as in 3.6.1, instead of a tight glyph-ink box that left little padding above words such as “compass”
 - **Ctrl+Delete** deletes the annotation under the cursor, even while a different annotation is selected in the list
+- In Edit PDF mode, **Ctrl + C** copies the selected annotation and **Ctrl + V** pastes a copy with its top-left at the mouse. Also on the page context menu and in the command palette as **Copy Annotation** / **Paste Annotation**. Text markup (highlight, underline, squiggly, strike-out) can't be copied because it's anchored to the text it covers
 - A SelectionHandlers entry can put a search / translate / helper button on the main toolbar with `ToolbarText` or `ToolbarSvgIcon`, the same as ExternalViewers (discussion #6015)
 - The annotation list loads annotations from the pages currently on screen first; annotations from the rest of a large document load in the background without losing the current selection
 - Update available notification shows the build date when the update-check file has a `BuiltOn` date, e.g. **Version 3.7.21539 available (built on 2026-08-21). Update**
@@ -238,6 +239,8 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 - `CmdApplyRedactions` : "Apply Redactions" — permanently removes content marked with the Redact tool
 - `CmdToggleEditPDF` : "Toggle Edit PDF" — shows or hides Edit PDF mode
+- `CmdCopyAnnotation` : "Copy Annotation" — copies the selected annotation in Edit PDF mode (`Ctrl + C`)
+- `CmdPasteAnnotation` : "Paste Annotation" — pastes the copied annotation with its top-left at the mouse (`Ctrl + V` in Edit PDF mode)
 - `CmdToggleUniformPageWidth` : "Toggle Uniform Page Width"
 - `CmdAIChatWithClaudeCode` : "AI Chat"
 - `CmdChangeBackgroundColor` : "Change Background Color"

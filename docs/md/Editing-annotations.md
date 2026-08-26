@@ -74,6 +74,10 @@ Click an annotation in Edit PDF mode to select it. A compact property row appear
 
 Delete the selected annotation with `Delete`, or with **Delete Annotation** in the floating list.
 
+`Ctrl + C` copies the selected annotation. `Ctrl + V` pastes a copy with its top-left corner at the mouse. You can paste on another page, or into another PDF. Copy and Paste are also on the page context menu and in the command palette.
+
+Only annotations that can be moved can be copied. Text markup (highlight, underline, squiggly, strike-out) is anchored to the text it covers, so it can't be copied and pasted elsewhere. Neither can file attachments, whose embedded file isn't copied.
+
 ## Moving annotations
 
 To move an annotation on the page, left-click it and drag it in Edit PDF mode.

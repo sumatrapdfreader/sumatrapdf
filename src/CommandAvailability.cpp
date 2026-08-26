@@ -175,6 +175,8 @@ static UINT_PTR removeIfNoCopyPerms[] = {
     CmdCopyLinkTarget,
     CmdCopyComment,
     CmdCopyImage,
+    CmdCopyAnnotation,
+    CmdPasteAnnotation,
     0,
 };
 
@@ -230,6 +232,8 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
     // range check doesn't catch it
     CmdCreateAnnotImageFromClipboard,
     CmdInsertImage,
+    CmdCopyAnnotation,
+    CmdPasteAnnotation,
     0,
 };
 
@@ -715,6 +719,20 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if (!ctx.annotationUnderCursor && cmdId == CmdDeleteAnnotation) {
         return CommandVisibility::Disable;
+    }
+
+    if (cmdId == CmdCopyAnnotation) {
+        // same targeting as CmdDeleteAnnotation: the annotation under the cursor
+        // (right-click doesn't select), otherwise the selected one
+        Annotation* annot = ctx.annotationUnderCursor;
+        if (!annot || !AnnotationCanBeCopied(annot->type)) {
+            annot = ctx.tab ? ctx.tab->selectedAnnotation : nullptr;
+        }
+        bool can = AnnotationIsLive(annot) && AnnotationCanBeCopied(annot->type);
+        return can ? CommandVisibility::Show : CommandVisibility::Disable;
+    }
+    if (cmdId == CmdPasteAnnotation) {
+        return HasCopiedAnnotation() ? CommandVisibility::Show : CommandVisibility::Disable;
     }
 
     if ((cmdId == CmdSaveAnnotations) || (cmdId == CmdSaveAnnotationsNewFile)) {

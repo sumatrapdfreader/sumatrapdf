@@ -145,6 +145,7 @@ import { testit as favoritesTabAfterDocumentClose } from "./favorites-tab-after-
 import { testit as movePolygonPolylineInk } from "./move-polygon-polyline-ink.ts";
 
 import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interaction.ts";
+import { testit as annotCopyPaste } from "./annot-copy-paste.ts";
 import { testit as annotFilterToolbar } from "./annot-filter-toolbar.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
 import { testit as stampCaretAnnotationPlacement } from "./stamp-caret-annotation-placement.ts";
@@ -246,6 +247,7 @@ export const tests: NamedTest[] = [
   ["issue-6054", issue6054],
   ["move-polygon-polyline-ink", movePolygonPolylineInk],
   ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
+  ["annot-copy-paste", annotCopyPaste],
   ["annot-filter-toolbar", annotFilterToolbar],
   ["text-annotation-placement", textAnnotationPlacement],
   ["stamp-caret-annotation-placement", stampCaretAnnotationPlacement],

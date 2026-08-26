@@ -9575,15 +9575,55 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     LaunchBrowser(uri);
 }
 
+static bool CopyFromFocusedEditControl() {
+    HWND focus = GetFocus();
+    if (!focus) {
+        return false;
+    }
+    WCHAR cls[64];
+    int n = GetClassNameW(focus, cls, dimof(cls));
+    if (n <= 0) {
+        return false;
+    }
+    if (!wstr::EqI(cls, WC_EDITW) && !wstr::EqI(cls, WC_COMBOBOX) && !wstr::EqI(cls, L"ComboLBox")) {
+        return false;
+    }
+    SendMessageW(focus, WM_COPY, 0, 0);
+    return true;
+}
+
+// Value of GetClipboardSequenceNumber() right after the last CopyAnnotation().
+// If it still matches, our annotation is the most recent copy and Ctrl+V should
+// paste it; if something else copied since, that wins instead.
+static DWORD gAnnotClipboardSeqNo = 0;
+
+static bool CopyAnnotationToClipboard(Annotation* annot) {
+    if (!CopyAnnotation(annot)) {
+        return false;
+    }
+    Str contents = Contents(annot);
+    if (!str::IsEmptyOrWhiteSpace(contents)) {
+        CopyTextToClipboard(contents);
+    }
+    gAnnotClipboardSeqNo = GetClipboardSequenceNumber();
+    return true;
+}
+
+// true if our copied annotation is newer than whatever is on the OS clipboard
+static bool CopiedAnnotationIsFresh() {
+    if (!HasCopiedAnnotation()) {
+        return false;
+    }
+    return GetClipboardSequenceNumber() == gAnnotClipboardSeqNo;
+}
+
 // TODO: rather arbitrary divide of responsibility between this and CopySelectionToClipboard()
 static void CopySelectionInTabToClipboard(WindowTab* tab) {
     // Don't break the shortcut for text boxes
     if (!tab || !tab->win) {
         return;
     }
-    if ((tab->win->findEdit && tab->win->findEdit->IsFocused()) ||
-        (tab->win->pageEdit && tab->win->pageEdit->IsFocused())) {
-        SendMessageW(GetFocus(), WM_COPY, 0, 0);
+    if (CopyFromFocusedEditControl()) {
         return;
     }
     if (!HasPermission(Perm::CopySelection)) {
@@ -9596,7 +9636,11 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
         return;
     }
     if (tab->selectionOnPage) {
+        // an explicit text selection wins over the (sticky) annotation selection
         CopySelectionToClipboard(tab->win);
+        return;
+    }
+    if (tab->win->pdfAnnotationsToolbarEnabled && CopyAnnotationToClipboard(tab->selectedAnnotation)) {
         return;
     }
     if (tab->AsFixed()) {
@@ -10659,6 +10703,29 @@ static bool SetPointToVisiblePage(DisplayModel* dm, Point& pt, int& pageNo) {
     return true;
 }
 
+static Annotation* TryPasteCopiedAnnotation(MainWindow* win, WindowTab* tab, DisplayModel* dm, LPARAM lp) {
+    if (!HasCopiedAnnotation() || !win || !tab || !dm) {
+        return nullptr;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || !EngineSupportsAnnotations(engine)) {
+        return nullptr;
+    }
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    if (lp != 0) {
+        pt.x = GET_X_LPARAM(lp);
+        pt.y = GET_Y_LPARAM(lp);
+    }
+    int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
+    if (pageNoUnderCursor < 0) {
+        if (!SetPointToVisiblePage(dm, pt, pageNoUnderCursor)) {
+            return nullptr;
+        }
+    }
+    PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
+    return PasteCopiedAnnotation(engine, pageNoUnderCursor, ptOnPage);
+}
+
 // Place an image stamp at the canvas click (LPARAM from the context menu) or,
 // when invoked from the File menu / palette, near the top of the visible page.
 static Annotation* CreateImageStampAnnotation(MainWindow* win, WindowTab* tab, DisplayModel* dm, Pixmap* image,
@@ -11248,9 +11315,26 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                                 /* selectPdf */ true);
             break;
 
-        case CmdPasteClipboardImage:
+        case CmdPasteClipboardImage: {
+            // Ctrl+V pastes a copied annotation, but only while ours is the most
+            // recent copy. An image copied in another app since then wins, or the
+            // annotation would hijack Ctrl+V for the rest of the session.
+            bool pasteAnnot = win && win->pdfAnnotationsToolbarEnabled &&
+                              (CopiedAnnotationIsFresh() || !IsClipboardFormatAvailable(CF_BITMAP));
+            if (pasteAnnot) {
+                lastCreatedAnnot = TryPasteCopiedAnnotation(win, tab, dm, lp);
+                if (lastCreatedAnnot) {
+                    openAnnotationEdit = true;
+                    break;
+                }
+            }
             PasteImageFromClipboard(win);
-            break;
+        } break;
+
+        case CmdPasteAnnotation: {
+            lastCreatedAnnot = TryPasteCopiedAnnotation(win, tab, dm, lp);
+            openAnnotationEdit = lastCreatedAnnot != nullptr;
+        } break;
 
         case CmdListPrinters: {
             NotificationCreateArgs nargs;
@@ -12059,6 +12143,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCopySelection:
             CopySelectionInTabToClipboard(tab);
             break;
+
+        case CmdCopyAnnotation: {
+            if (!tab) {
+                return 0;
+            }
+            // from the context menu: the annotation that was right-clicked
+            // (right-click doesn't select), otherwise the selected one
+            Annotation* annot = GetAnnotionUnderCursor(tab, nullptr, lp);
+            if (!CopyAnnotationToClipboard(annot)) {
+                CopyAnnotationToClipboard(tab->selectedAnnotation);
+            }
+        } break;
 
         case CmdSelectAll:
             OnSelectAll(win);

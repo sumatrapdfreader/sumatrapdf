@@ -61,7 +61,7 @@ CmdExtendSelectionWordRight,,Extend Selection One Word Right,"ver 3.7+, no defau
 CmdCopyComment,,Copy Comment,
 CmdCopyImage,,Copy Image,
 CmdCopyLinkTarget,,Copy Link Target,
-CmdCopySelection,"Ctrl + C, Ctrl + Insert",Copy Selection,
+CmdCopySelection,"Ctrl + C, Ctrl + Insert",Copy Selection,"in Edit PDF mode with an annotation selected, copies that annotation instead of text"
 CmdCopyFilePath,,Copy File Path,ver 3.5+
 CmdDeleteFile,,Delete Currently Opened File, ver 3.6+
 CmdDeleteFileAndOpenNext,,Delete File And Open Next,"moves the current file to the Recycle Bin after the next file opens successfully, ver 3.7+"
@@ -213,6 +213,8 @@ CmdCreateAnnotImageFromClipboard,,Create Image Annotation From Clipboard,
 CmdCreateAnnotStrikeOut,,Create Strike Out Annotation,
 CmdCreateAnnotText,,Create Text Annotation,
 CmdCreateAnnotUnderline,"u, U",Create Underline Annotation,
+CmdCopyAnnotation,Ctrl + C,Copy Annotation,"ver 3.7+, copies the selected annotation in Edit PDF mode; Ctrl + C is CmdCopySelection and copies the annotation when one is selected. Only annotations that can be moved can be copied, so text markup (highlight, underline, squiggly, strike-out) and file attachments are excluded"
+CmdPasteAnnotation,Ctrl + V,Paste Annotation,"ver 3.7+, pastes the copied annotation with its top-left at the mouse; Ctrl + V is CmdPasteClipboardImage and pastes the annotation when Edit PDF is on and one has been copied"
 CmdDeleteAnnotation,Delete,Delete Annotation,
 CmdSaveAnnotations,Shift + Ctrl + S,Save Annotations to existing PDF,
 CmdSaveAnnotationsNewFile,,Save Annotations to new PDF,ver 3.6+
@@ -320,7 +322,7 @@ CmdSaveImage,,Save Image,"Save image from context menu, ver 3.7+"
 CmdConvertImageToPdf,,Convert Page To PDF,"Save the image under the cursor (or the current image document page) as a new PDF via the image editor, ver 3.7+"
 CmdConvertToPDF,,Convert To PDF,"Convert a comic book, image folder, or single image to a multi-page PDF (dialog picks a unique .pdf path), ver 3.7+ (fixes #4118, #5532). Docs: Convert-to-PDF.md"
 CmdConvertPdfToImages,,Convert PDF to Images...,"Render PDF pages to PNG, JPEG or BMP (format drop-down updates the extension). Destination path is a template: <N> is replaced by the page number. Pages: current, all, or a custom range. PNGs are optimized in the background, ver 3.7+ (fixes #5991). Docs: Convert-PDF-to-images.md"
-CmdPasteClipboardImage,,Paste Image From Clipboard,"Paste image from clipboard and open it, ver 3.7+"
+CmdPasteClipboardImage,Ctrl + V,Paste Image From Clipboard,"Paste image from clipboard and open it, ver 3.7+. In Edit PDF mode, pastes a copied annotation at the mouse instead"
 CmdShowErrors,,Show Errors,"Show mupdf warnings/errors in right-click context menu, ver 3.7+"
 CmdShowLog,,Show Logs,
 ```

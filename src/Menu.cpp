@@ -1203,6 +1203,14 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefCreateAnnotUnderCursor,
     },
     {
+        _TRN("Copy Annotation"),
+        CmdCopyAnnotation,
+    },
+    {
+        _TRN("Paste Annotation"),
+        CmdPasteAnnotation,
+    },
+    {
         _TRN("Delete Annotation"),
         CmdDeleteAnnotation,
     },
@@ -2397,7 +2405,8 @@ bool CommandUsesContextMenuPoint(int cmdId) {
     if (CmdIdToAnnotationType(cmdId) != AnnotationType::Unknown) {
         return true;
     }
-    return cmdId == CmdDeleteAnnotation || cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdInsertImage;
+    return cmdId == CmdDeleteAnnotation || cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdInsertImage ||
+           cmdId == CmdPasteAnnotation || cmdId == CmdCopyAnnotation;
 }
 
 // so that we can do free everything at exit
