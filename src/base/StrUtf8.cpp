@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include <locale.h>
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 static _locale_t GetUtf8FormatLocale() {
     // wrapped in a struct so the locale is freed at exit (keeps leak
     // detectors quiet); after the destructor runs, callers see nullptr
@@ -26,7 +26,7 @@ static _locale_t GetUtf8FormatLocale() {
 // The format string is a plain const char* because this is a thin wrapper around
 // vsnprintf and is almost always called with a string literal.
 int str::VsnprintfUtf8(Str buf, const char* fmt, va_list args) {
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
     _locale_t loc = GetUtf8FormatLocale();
     if (loc) {
         return _vsnprintf_l(buf.s, (size_t)buf.len, fmt, loc, args);

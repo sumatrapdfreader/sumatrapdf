@@ -44,7 +44,7 @@ extern void ShowCrashHandlerMessage();
 extern void GetProgramInfo(str::Builder& s);
 
 // in DEBUG we don't enable symbols download because they are not uploaded
-#if defined(DEBUG)
+#ifdef DEBUG
 static bool gDisableSymbolsDownload = true;
 #else
 static bool gDisableSymbolsDownload = false;

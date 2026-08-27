@@ -6,7 +6,7 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Notifications.h"
-#if !defined(SUMATRA_TEST_UTIL)
+#ifndef SUMATRA_TEST_UTIL
 #include "ShortcutParse.h"
 #include "Accelerators.h"
 #include "GlobalPrefs.h"
@@ -1186,7 +1186,7 @@ static void NormalizeCommandNameAndKey(Str definition, Str* name, Str* key) {
         *key = {};
         return;
     }
-#if !defined(SUMATRA_TEST_UTIL)
+#ifndef SUMATRA_TEST_UTIL
     if (!IsValidShortcutString(*key)) {
         logf("CreateCustomCommand: '%s' is not a valid shortcut for '%s'\n", *key, definition);
         MaybeDelayedWarningNotification(fmt("'%s' is not a valid shortcut for '%s'", *key, definition));
@@ -1610,7 +1610,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         firstArg->type = CommandArg::Type::Float;
         firstArg->floatVal = zoomVal;
     }
-#if !defined(SUMATRA_TEST_UTIL)
+#ifndef SUMATRA_TEST_UTIL
     if (cmdId == CmdToggleBoolSetting && firstArg) {
         // validate the named boolean setting exists (case-insensitive leaf or path)
         Str settingName = firstArg->strVal;

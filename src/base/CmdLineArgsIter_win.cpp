@@ -8,7 +8,7 @@
 
 #define REMOVE_FIRST_ARG
 
-#if defined(REMOVE_FIRST_ARG)
+#ifdef REMOVE_FIRST_ARG
 void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
     int nArgs;
     WCHAR** argsArr = CommandLineToArgvW(CWStrTemp(cmdLine), &nArgs);
@@ -48,7 +48,7 @@ void ParseCmdLine(Str cmdLine, StrVec& argsOut) {
 CmdLineArgsIter::CmdLineArgsIter(WStr cmdLine) {
     ParseCmdLine(cmdLine, args);
     nArgs = len(args);
-#if defined(REMOVE_FIRST_ARG)
+#ifdef REMOVE_FIRST_ARG
     curr = 1;
 #endif
 }

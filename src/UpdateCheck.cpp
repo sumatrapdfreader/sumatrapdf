@@ -48,7 +48,7 @@ static const Str updateInfoURLs[] = {
 #endif
 
 #ifndef kWebisteDownloadPageURL
-#if defined(PRE_RELEASE_VER)
+#ifdef PRE_RELEASE_VER
 #define kWebisteDownloadPageURL "https://www.sumatrapdfreader.org/prerelease"
 #else
 #define kWebisteDownloadPageURL "https://www.sumatrapdfreader.org/download-free-pdf-viewer"
@@ -192,7 +192,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     // when forcing, we download pre-release, which shows greater version than our build
     // so we don't want to download during automatic check, only when user initiated
 
-#if defined(FORCE_AUTO_UPDATE)
+#ifdef FORCE_AUTO_UPDATE
     if (updateCheckType == UpdateCheck::UserInitiated) {
         logf("CheckForUpdate: checking, user initiated (FORCE_AUTO_UPDATE)\n");
         return true;

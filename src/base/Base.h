@@ -15,7 +15,7 @@
 #define OS_LINUX 0
 #endif
 
-#if defined(_WIN32)
+#ifdef _WIN32
 #define OS_WIN 1
 #else
 #define OS_WIN 0
@@ -45,25 +45,25 @@
 #define OS_POSIX 0
 #endif
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #define COMPILER_MSVC 1
 #else
 #define COMPILER_MSVC 0
 #endif
 
-#if defined(__GNUC__)
+#ifdef __GNUC__
 #define COMPILER_GCC 1
 #else
 #define COMPILER_GCC 0
 #endif
 
-#if defined(__clang__)
+#ifdef __clang__
 #define COMPILER_CLANG 1
 #else
 #define COMPILER_CLANG 0
 #endif
 
-#if defined(__MINGW32__)
+#ifdef __MINGW32__
 #define COMPILER_MINGW 1
 #else
 #define COMPILER_MINGW 0
@@ -346,7 +346,7 @@ char (&DimofSizeHelper(T (&array)[N]))[N];
 #endif
 
 // __analysis_assume is defined by msvc for prefast analysis
-#if !defined(__analysis_assume)
+#ifndef __analysis_assume
 #define __analysis_assume(x)
 #endif
 
@@ -400,7 +400,7 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 
 #define ReportIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)
 #define ReportIfFast(cond) ReportIfCond(cond, #cond, FILE_LINE, false, false)
-#if defined(DEBUG)
+#ifdef DEBUG
 #define ReportDebugIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)
 #else
 // In release the check is gone, but the condition must still be *read*, or a

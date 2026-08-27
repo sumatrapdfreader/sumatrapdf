@@ -30,7 +30,7 @@ struct HwndSlot : ILayout {
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 
-#if defined(DEBUG)
+#ifdef DEBUG
 void LayoutWin_UnitTests();
 #endif
 

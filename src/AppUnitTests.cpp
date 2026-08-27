@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 
-#if defined(DEBUG)
+#ifdef DEBUG
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -14,7 +14,7 @@
 #include "base/UtAssert.h"
 #include "AppUnitTests.h"
 
-#if defined(DEBUG)
+#ifdef DEBUG
 void TextSelection_UnitTests();
 void Layout_UnitTests();
 void VirtCtrl_UnitTests();
@@ -143,7 +143,7 @@ static void ParseTip_UnitTests() {
 
 int RunAppUnitTests() {
     ParseTip_UnitTests();
-#if defined(DEBUG)
+#ifdef DEBUG
     TextSelection_UnitTests();
     Layout_UnitTests();
 #if OS_WIN

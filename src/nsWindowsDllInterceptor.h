@@ -74,7 +74,7 @@ class WindowsDllInterceptor {
         int i;
         byteptr_t p;
         for (i = 0, p = mHookPage; i < mCurHooks; i++, p += kHookSize) {
-#if defined(_M_IX86)
+#ifdef _M_IX86
             size_t nBytes = 1 + sizeof(intptr_t);
 #elif defined(_M_X64)
             size_t nBytes = 2 + sizeof(intptr_t);
@@ -91,7 +91,7 @@ class WindowsDllInterceptor {
             // Remove the hook by making the original function jump directly
             // in the trampoline.
             intptr_t dest = (intptr_t)(p + sizeof(void*));
-#if defined(_M_IX86)
+#ifdef _M_IX86
             *((intptr_t*)(origBytes + 1)) = dest - (intptr_t)(origBytes + 5); // target displacement
 #elif defined(_M_X64)
             *((intptr_t*)(origBytes + 2)) = dest;
@@ -174,7 +174,7 @@ class WindowsDllInterceptor {
         int nBytes = 0;
         int pJmp32 = -1;
 
-#if defined(_M_IX86)
+#ifdef _M_IX86
         while (nBytes < 5) {
             // Understand some simple instructions that might be found in a
             // prologue; we might need to extend this as necessary.
@@ -331,7 +331,7 @@ class WindowsDllInterceptor {
         // OrigFunction+N, the target of the trampoline
         byteptr_t trampDest = origBytes + nBytes;
 
-#if defined(_M_IX86)
+#ifdef _M_IX86
         if (pJmp32 >= 0) {
             // Jump directly to the original target of the jump instead of jumping to the
             // original function.
@@ -376,7 +376,7 @@ class WindowsDllInterceptor {
             return 0;
         }
 
-#if defined(_M_IX86)
+#ifdef _M_IX86
         // now modify the original bytes
         origBytes[0] = 0xE9;                                              // jmp
         *((intptr_t*)(origBytes + 1)) = dest - (intptr_t)(origBytes + 5); // target displacement

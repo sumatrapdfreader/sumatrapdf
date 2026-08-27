@@ -242,11 +242,11 @@ static AboutRow gAboutRows[] = {
     {StrL("forums"), StrL("SumatraPDF forums"), StrL("https://github.com/sumatrapdfreader/sumatrapdf/discussions")},
     {StrL("licenses"), StrL("Various Open Source"),
      StrL("https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS")},
-#if defined(GIT_COMMIT_ID_STR)
+#ifdef GIT_COMMIT_ID_STR
     {StrL("last change"), StrL("git commit " GIT_COMMIT_ID_STR),
      StrL("https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR)},
 #endif
-#if defined(PRE_RELEASE_VER)
+#ifdef PRE_RELEASE_VER
     {StrL("a note"), StrL("Pre-release version, for testing only!"), {}},
 #endif
 #ifdef DEBUG

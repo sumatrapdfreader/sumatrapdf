@@ -942,7 +942,7 @@ bool MarkdownModel::IsHtmlFileType(FileType kind) {
     return kind == FileType::HTML;
 }
 
-#if defined(DEBUG)
+#ifdef DEBUG
 bool MarkdownModel_UnitTestBrowserNavigationUrl() {
     Str url = StrL("https://sumatrapdf.markdown/issue-5842.html#target-heading");
     return str::Eq(MarkdownBrowserNavigationUrl(url), StrL("issue-5842.html#target-heading"));

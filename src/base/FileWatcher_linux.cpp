@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 
-#if defined(DEBUG)
+#ifdef DEBUG
 #include "base/UtAssert.h"
 #endif
 
@@ -276,7 +276,7 @@ void FileWatcherWaitForShutdown(void) {
     gThreadRunning = false;
 }
 
-#if defined(DEBUG)
+#ifdef DEBUG
 
 static void NoteFileWatcherChange(AtomicInt* count) {
     AtomicIntInc(count);

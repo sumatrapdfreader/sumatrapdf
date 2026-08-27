@@ -16,7 +16,7 @@
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
 #include "gui/VirtHost.h"
-#if defined(DEBUG)
+#ifdef DEBUG
 #include "base/UtAssert.h"
 #endif
 #include "gui/VirtCtrl.h"
@@ -3121,7 +3121,7 @@ VirtLine* AsVirtLine(ILayout* l) {
     return nullptr;
 }
 
-#if defined(DEBUG)
+#ifdef DEBUG
 
 // Unit tests for Table (ILayout grid). VirtSpacer is the leaf: a fixed
 // ideal size and no HWND, so a whole table can be laid out and its geometry

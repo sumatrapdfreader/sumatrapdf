@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 
-#if defined(DEBUG)
+#ifdef DEBUG
 #include "base/UtAssert.h"
 #endif
 #include "PageRenderPolicy.h"
@@ -60,7 +60,7 @@ int PageRenderPolicyPickEviction(const Vec<PageRenderPolicyCacheEntry>& entries,
     return oldest;
 }
 
-#if defined(DEBUG)
+#ifdef DEBUG
 
 void PageRenderPolicy_UnitTests() {
     Vec<PageRenderPolicyRequest> requests;

@@ -2010,7 +2010,7 @@ TxtDoc* TxtDoc::CreateFromFile(Str path) {
     return doc;
 }
 
-#if defined(DEBUG)
+#ifdef DEBUG
 // issue #5846: consecutive ../../ must fully resolve
 bool EbookDoc_UnitTestNormalizeURL() {
     auto eq = [](Str url, Str base, Str expected) -> bool { return str::Eq(NormalizeURLTemp(url, base), expected); };

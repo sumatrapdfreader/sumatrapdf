@@ -2437,7 +2437,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         // gRedrawLog = true;
     }
 
-#if defined(DEBUG)
+#ifdef DEBUG
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (flags.tester) {
             extern int TesterMain(); // in Tester.cpp
@@ -2528,7 +2528,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         ::ExitProcess(exitCode);
     }
 
-#if defined(DEBUG)
+#ifdef DEBUG
     if (flags.unitTests) {
         CreateSumatraAcceleratorTable();
         exitCode = RunAppUnitTests();
@@ -2583,7 +2583,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         ::ExitProcess(1);
     }
 
-#if defined(DEBUG)
+#ifdef DEBUG
     if (flags.testExtractPage) {
         TestExtractPage(flags);
         ShutdownCommon();
@@ -2607,7 +2607,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         SetAppDataDir(flags.appdataDir);
     }
 
-#if defined(DEBUG)
+#ifdef DEBUG
     if (flags.testApp) {
         // in TestApp.cpp
         extern void TestApp();

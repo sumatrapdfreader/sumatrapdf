@@ -15,7 +15,7 @@
 #include <shellapi.h>
 #include <stdio.h>
 #include <string.h>
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
 #include <strings.h>
 #define _stricmp strcasecmp
 #endif

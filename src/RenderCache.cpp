@@ -32,7 +32,7 @@
 // keeps more pages resident (higher GDI memory use, fewer re-renders).
 #define CONSERVE_MEMORY
 
-#if defined(CONSERVE_MEMORY)
+#ifdef CONSERVE_MEMORY
 static bool gConserveMemory = true;
 #else
 bool gConserveMemory = false;

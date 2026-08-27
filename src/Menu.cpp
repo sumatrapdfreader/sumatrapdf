@@ -1844,7 +1844,7 @@ static void MenuUpdateZoom(MainWindow* win) {
 
 static void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) {
     bool filePrintEnabled = win->IsDocLoaded();
-#if defined(DISABLE_DOCUMENT_RESTRICTIONS)
+#ifdef DISABLE_DOCUMENT_RESTRICTIONS
     bool filePrintAllowed = true;
 #else
     bool filePrintAllowed = !filePrintEnabled || !win->AsFixed() || win->AsFixed()->GetEngine()->AllowsPrinting();

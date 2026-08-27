@@ -2485,7 +2485,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     }
     delete prevCtrl;
 
-#if defined(ENABLE_REDRAW_ON_RELOAD)
+#ifdef ENABLE_REDRAW_ON_RELOAD
     // TODO: why is this needed?
     if (!args->isNewWindow && win->IsDocLoaded()) {
         win->RedrawAll();
@@ -10237,7 +10237,7 @@ ShowMessage:
 // CmdDebugCorruptMemory, the only caller, is behind #if defined(DEBUG), so
 // defining this in a release build leaves an unreferenced static: C4505, which
 // /WX turns into an error
-#if defined(DEBUG)
+#ifdef DEBUG
 #if 1
 static void DebugCorruptMemory() {}
 #else
@@ -12503,7 +12503,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-#if defined(DEBUG)
+#ifdef DEBUG
         case CmdDebugTestApp:
             extern void TestApp(HINSTANCE hInstance);
             extern void TestBrowser();

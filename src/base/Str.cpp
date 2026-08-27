@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
 #define _strdup strdup
 #define _stricmp strcasecmp
 #define _strnicmp strncasecmp

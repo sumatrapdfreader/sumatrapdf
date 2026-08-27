@@ -11,7 +11,7 @@
 
 // Restart Manager is in the MSVC Windows SDK; mingw-w64 (Wine CI) has no
 // RestartManager.h / Rstrtmgr.lib. Holders listing is best-effort UI only.
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #include <RestartManager.h>
 #pragma comment(lib, "Rstrtmgr.lib")
 #define HAS_RESTART_MANAGER 1

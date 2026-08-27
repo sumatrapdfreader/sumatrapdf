@@ -5,7 +5,7 @@
 
 #include "Commands.h"
 #include "FilterUtil.h"
-#if defined(DEBUG)
+#ifdef DEBUG
 #include "base/UtAssert.h"
 #endif
 #include "gui/CommandPaletteModel.h"
@@ -50,7 +50,7 @@ int CommandPaletteModel::ItemCommandId(int index) const {
     return entry ? entry->commandId : 0;
 }
 
-#if defined(DEBUG)
+#ifdef DEBUG
 
 void CommandPaletteModel_UnitTests() {
     const int commands[] = {CmdOpenFile, CmdRotateLeft, CmdRotateRight, CmdZoomFitWidth};

@@ -87,7 +87,7 @@ void BuildCmdLineArgs(int argc, char** argv, StrVec& argsOut) {
 CmdLineArgsIter::CmdLineArgsIter(int argc, char** argv) {
     BuildCmdLineArgs(argc, argv, args);
     nArgs = len(args);
-#if defined(REMOVE_FIRST_ARG)
+#ifdef REMOVE_FIRST_ARG
     curr = 1;
 #endif
 }

@@ -3662,7 +3662,7 @@ TempStr EbookGeneratedCssTemp(Str fontName, const Vec<float>* margin, float line
     return res;
 }
 
-#if defined(DEBUG)
+#ifdef DEBUG
 bool EngineMupdf_UnitTestEbookLineSpacingCss() {
     return !EbookLineSpacingCssTemp(0) && !EbookLineSpacingCssTemp(0.49f) && !EbookLineSpacingCssTemp(5.01f) &&
            str::Eq(EbookLineSpacingCssTemp(1.5f), StrL("body, body * { line-height: 1.5 !important; }\n"));
@@ -3742,7 +3742,7 @@ static EBookUISettings MergeEBookUI(const EBookUI* global, const FileEBookUI* pe
     return res;
 }
 
-#if defined(DEBUG)
+#ifdef DEBUG
 bool EngineMupdf_UnitTestEbookMarginCss() {
     Vec<float> m;
     // nothing set, and 3 values (not a CSS margin), leave mupdf's default alone

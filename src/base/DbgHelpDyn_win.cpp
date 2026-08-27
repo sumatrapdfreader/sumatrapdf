@@ -313,7 +313,7 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
 }
 
 static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT* ctx, ThreadHandle hThread) {
-#if defined(_WIN64)
+#ifdef _WIN64
     int machineType = IMAGE_FILE_MACHINE_AMD64;
 #else
     int machineType = IMAGE_FILE_MACHINE_I386;
@@ -416,7 +416,7 @@ int GetSuspendedThreadCallstackAddrs(ThreadHandle hThread, u64* addrs, int maxAd
     stackFrame.AddrFrame.Mode = AddrModeFlat;
     stackFrame.AddrStack.Mode = AddrModeFlat;
 
-#if defined(_WIN64)
+#ifdef _WIN64
     int machineType = IMAGE_FILE_MACHINE_AMD64;
 #else
     int machineType = IMAGE_FILE_MACHINE_I386;
