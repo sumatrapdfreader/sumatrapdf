@@ -38,8 +38,8 @@ struct AddFavoriteWnd : WindowBase {
     VirtButton* btnCancel = nullptr;
     VirtButton* btnOk = nullptr;
 
-    bool Create(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
-    void SetTarget(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
+    bool Create(MainWindow* win, Str path, int page, Str labelIn, Str name);
+    void SetTarget(MainWindow* win, Str path, int page, Str labelIn, Str name);
 
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
@@ -60,8 +60,8 @@ static TempStr FavoritePromptTemp(Str pageLabel) {
     return fmt(_TRA("Add page %s to favorites with (optional) name:").s, pageLabel);
 }
 
-void AddFavoriteWnd::SetTarget(MainWindow* mainWin, Str path, int page, Str labelIn, Str name) {
-    win = mainWin;
+void AddFavoriteWnd::SetTarget(MainWindow* win, Str path, int page, Str labelIn, Str name) {
+    this->win = win;
     pageNo = page;
     str::ReplaceWithCopy(&pageLabel, labelIn);
     str::ReplaceWithCopy(&filePath, path);
@@ -100,8 +100,8 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     }
 }
 
-bool AddFavoriteWnd::Create(MainWindow* mainWin, Str path, int page, Str labelIn, Str name) {
-    SetTarget(mainWin, path, page, labelIn, name);
+bool AddFavoriteWnd::Create(MainWindow* win, Str path, int page, Str labelIn, Str name) {
+    SetTarget(win, path, page, labelIn, name);
 
     {
         CreateCustomArgs args;
