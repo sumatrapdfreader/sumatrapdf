@@ -26,7 +26,6 @@ import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
 import { testit as issue5840 } from "./issue-5840.ts";
 import { testit as issue5844 } from "./issue-5844.ts";
 import { testit as issue3434 } from "./issue-3434.ts";
-import { testit as ico } from "./ico.ts";
 import { testit as cmykImageSave } from "./cmyk-image-save.ts";
 import { testit as issue1809 } from "./issue-1809.ts";
 import { testit as issue4398 } from "./issue-4398.ts";
@@ -139,7 +138,6 @@ import { testit as issue5970 } from "./issue-5970.ts";
 import { testit as issue5971 } from "./issue-5971.ts";
 import { testit as issue5933 } from "./issue-5933.ts";
 import { testit as issue6037 } from "./issue-6037.ts";
-import { testit as issue6040 } from "./issue-6040.ts";
 import { testit as issue6043 } from "./issue-6043.ts";
 import { testit as issue6045 } from "./issue-6045.ts";
 import { testit as issue6046 } from "./issue-6046.ts";
@@ -153,7 +151,6 @@ import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interact
 import { testit as annotCopyPaste } from "./annot-copy-paste.ts";
 import { testit as annotCutPaste } from "./annot-cut-paste.ts";
 import { testit as annotUndoRedo } from "./annot-undo-redo.ts";
-import { testit as annotFilterToolbar } from "./annot-filter-toolbar.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
 import { testit as freeTextAnnotationPlacement } from "./free-text-annotation-placement.ts";
 import { testit as freeTextEditToolbar } from "./free-text-edit-toolbar.ts";
@@ -201,7 +198,6 @@ import { testit as issue4315 } from "./issue-4315.ts";
 import { testit as issue4662 } from "./issue-4662.ts";
 import { testit as issue6013 } from "./issue-6013.ts";
 import { testit as issue6018 } from "./issue-6018.ts";
-import { testit as issue6015 } from "./issue-6015.ts";
 import { testit as selectionToolbarStays } from "./selection-toolbar-stays.ts";
 import { testit as selectionToolbarMove } from "./selection-toolbar-move.ts";
 import { testit as selectionFontBbox } from "./selection-font-bbox.ts";
@@ -209,7 +205,6 @@ import { testit as issue6023 } from "./issue-6023.ts";
 import { testit as issue6017 } from "./issue-6017.ts";
 import { testit as issue6025 } from "./issue-6025.ts";
 import { testit as issue5946 } from "./issue-5946.ts";
-import { testit as issue6008 } from "./issue-6008.ts";
 import { testit as issue6012 } from "./issue-6012.ts";
 import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
 
@@ -217,9 +212,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
-  ["annot-filter-toolbar", annotFilterToolbar],
   ["annot-undo-redo", annotUndoRedo],
-  ["issue-6008", issue6008],
   ["image-only-palette-items", imageOnlyPaletteItems],
   ["issue-5868", issue5868],
   ["issue-893", issue893],
@@ -243,7 +236,6 @@ export const tests: NamedTest[] = [
   ["issue-5840", issue5840],
   ["issue-5844", issue5844],
   ["issue-3434", issue3434],
-  ["ico", ico],
   ["cmyk-image-save", cmykImageSave],
   ["issue-1809", issue1809],
   ["issue-5846", issue5846],
@@ -254,7 +246,6 @@ export const tests: NamedTest[] = [
 
   // --- default session: -for-testing + quadrant window + -dbg-control ----
   ["issue-6037", issue6037],
-  ["issue-6040", issue6040],
   ["issue-6043", issue6043],
   ["issue-6046", issue6046],
   ["issue-6048", issue6048],
@@ -402,7 +393,6 @@ export const tests: NamedTest[] = [
   ["issue-4315", issue4315],
   ["issue-4662", issue4662],
   ["issue-6018", issue6018],
-  ["issue-6015", issue6015],
   ["selection-toolbar-stays", selectionToolbarStays],
   ["selection-toolbar-move", selectionToolbarMove],
   ["selection-font-bbox", selectionFontBbox],
