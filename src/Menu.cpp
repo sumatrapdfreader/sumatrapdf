@@ -992,6 +992,57 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Create annot under cursor)
 
+//[ ACCESSKEY_GROUP Context Menu (Annotations)
+// everything annotation-related in the page context menu lives here, so the
+// menu itself stays short
+static MenuDef menuDefContextAnnotations[] = {
+    {
+        _TRN("Create Annotation From Selection"),
+        (UINT_PTR)menuDefCreateAnnotFromSelection,
+    },
+    {
+        _TRN("Create Annotation &Under Cursor"),
+        (UINT_PTR)menuDefCreateAnnotUnderCursor,
+    },
+    {
+        StrL(kMenuSeparator),
+        kMenuSeparatorID,
+    },
+    {
+        _TRN("Cut Annotation"),
+        CmdCutAnnotation,
+    },
+    {
+        _TRN("Copy Annotation"),
+        CmdCopyAnnotation,
+    },
+    {
+        _TRN("Paste Annotation"),
+        CmdPasteAnnotation,
+    },
+    {
+        _TRN("Delete Annotation"),
+        CmdDeleteAnnotation,
+    },
+    {
+        StrL(kMenuSeparator),
+        kMenuSeparatorID,
+    },
+    {
+        _TRN("Save Annotations to existing PDF"),
+        CmdSaveAnnotations,
+    },
+    {
+        _TRN("Apply Redactions"),
+        CmdApplyRedactions,
+    },
+    {
+        {},
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Context Menu (Annotations)
+
 //[ ACCESSKEY_GROUP Context Menu (Image)
 static MenuDef menuDefContextImage[] = {
     {
@@ -1195,36 +1246,8 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefContextReadAloud,
     },
     {
-        _TRN("Create Annotation From Selection"),
-        (UINT_PTR)menuDefCreateAnnotFromSelection,
-    },
-    {
-        _TRN("Create Annotation &Under Cursor"),
-        (UINT_PTR)menuDefCreateAnnotUnderCursor,
-    },
-    {
-        _TRN("Cut Annotation"),
-        CmdCutAnnotation,
-    },
-    {
-        _TRN("Copy Annotation"),
-        CmdCopyAnnotation,
-    },
-    {
-        _TRN("Paste Annotation"),
-        CmdPasteAnnotation,
-    },
-    {
-        _TRN("Delete Annotation"),
-        CmdDeleteAnnotation,
-    },
-    {
-        _TRN("Save Annotations to existing PDF"),
-        CmdSaveAnnotations,
-    },
-    {
-        _TRN("Apply Redactions"),
-        CmdApplyRedactions,
+        _TRN("Annotations"),
+        (UINT_PTR)menuDefContextAnnotations,
     },
     {
         _TRN("Show Errors"),
