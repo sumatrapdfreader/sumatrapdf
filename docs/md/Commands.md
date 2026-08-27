@@ -415,7 +415,7 @@ For example:
 ```
 Shortcuts [
     [
-        Cmd = CmdCreateAnnotHighlight #00ff00 openedit
+        Cmd = CmdCreateAnnotHighlight #00ff00
         Key = a
     ]
 ]
@@ -423,21 +423,21 @@ Shortcuts [
 
 By default, `a` invokes `CmdCreateAnnotHighlight` with the default yellow color.
 
-You can override the `a` shortcut to create a green (`#00ff00`) highlight annotation and turn on Edit PDF mode (`openedit` Boolean argument).
+You can override the `a` shortcut to create a green (`#00ff00`) highlight annotation.
 
 You can create multiple keyboard shortcuts for multiple colors.
 
 Arguments can be strings, numbers, Booleans, or colors (`#rrggbb` or `#aarrggbb` format).
 
-Arguments have names. For example, `CmdCreateAnnotHighlight` has a `color` argument of type color and an optional `openedit` Boolean argument.
+Arguments have names. For example, `CmdCreateAnnotHighlight` has a `color` argument of type color and an optional `copytoclipboard` Boolean argument.
 
-The format for providing arguments is `CmdCreateAnnotHighlight color: #fafafa openedit: true`.
+The format for providing arguments is `CmdCreateAnnotHighlight color: #fafafa copytoclipboard: true`.
 
-For Boolean arguments, using the name alone is the same as setting the value to `true`, i.e. `openedit` is the same as `openedit: true`.
+For Boolean arguments, using the name alone is the same as setting the value to `true`, i.e. `copytoclipboard` is the same as `copytoclipboard: true`.
 
 For default arguments, you can skip the name. For example, `color` is the default `CmdCreateAnnotHighlight` argument, so `CmdCreateAnnotHighlight #fafafa` is the same as `CmdCreateAnnotHighlight color: #fafafa`.
 
-You can combine those rules: `CmdCreateAnnotHighlight #fafafa openedit` is the same as `CmdCreateAnnotHighlight color: #fafafa openedit: true`.
+You can combine those rules: `CmdCreateAnnotHighlight #fafafa copytoclipboard` is the same as `CmdCreateAnnotHighlight color: #fafafa copytoclipboard: true`.
 
 ## `CmdExtendSelectionCharLeft` and other `CmdExtendSelection*`
 
@@ -500,7 +500,7 @@ Use case: if you want to go forward or back by more than one page.
 Arguments:
 
 - `color` : default, color
-- `openedit` : boolean, `false` if not given. Turns on Edit PDF mode after creating the annotation
+- `openedit` : Boolean, `false` if not given. **Ver 3.7+:** creating an annotation always turns on Edit PDF mode, so this argument no longer does anything. It is still accepted, so existing shortcuts keep working
 - `copytoclipboard` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, copies the selection (the annotation's text) to the clipboard. This used to be the default behavior for built-in keyboard shortcuts such as `a`, but now it has to be chosen explicitly.
 - `setcontent` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, sets the annotation's content to the selection (the annotation's text)
 
@@ -514,7 +514,7 @@ Example: change `a` to create a green highlight annotation:
 ```
 Shortcuts [
     [
-        Cmd = CmdCreateAnnotHighlight #00ff00 openedit
+        Cmd = CmdCreateAnnotHighlight #00ff00
         Key = a
     ]
 ]

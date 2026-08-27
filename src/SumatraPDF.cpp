@@ -11119,7 +11119,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     int cmdId = LOWORD(wp);
     int invokedCmdId = cmdId;
     bool isAnnotationPlacementCommit = HIWORD(wp) == kAnnotationPlacementCommandCode;
-    bool openAnnotationEdit = false;
 
     if (cmdId >= 0xF000) {
         // handle system menu messages for the Window menu (needed for Tabs in Titlebar)
@@ -11475,7 +11474,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (pasteAnnot) {
                 lastCreatedAnnot = TryPasteCopiedAnnotation(win, tab, dm, lp);
                 if (lastCreatedAnnot) {
-                    openAnnotationEdit = true;
                     break;
                 }
             }
@@ -11484,7 +11482,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdPasteAnnotation: {
             lastCreatedAnnot = TryPasteCopiedAnnotation(win, tab, dm, lp);
-            openAnnotationEdit = lastCreatedAnnot != nullptr;
         } break;
 
         case CmdListPrinters: {
@@ -12731,13 +12728,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             AnnotCreateArgs args{annotType};
             SetAnnotCreateArgs(args, cmd);
             lastCreatedAnnot = MakeAnnotationsFromSelection(tab, &args);
-            if (cmd) {
-                // for custom commands must explicitly provide "openedit" argument
-                openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
-            } else {
-                // for built-in shortcuts, Shift enters Edit PDF mode
-                openAnnotationEdit = IsShiftPressed();
-            }
         } break;
 
             // Note: duplicated in OnWindowContextMenu because slightly different handling
@@ -12770,7 +12760,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     SetAnnotCreateArgs(selArgs, cmd);
                     lastCreatedAnnot = MakeAnnotationsFromSelection(tab, &selArgs);
                     if (lastCreatedAnnot) {
-                        openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
                         break;
                     }
                 }
@@ -12817,7 +12806,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
-            openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
         } break;
 
         case CmdCreateAnnotImageFromClipboard: {
@@ -12886,16 +12874,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if (!lastCreatedAnnot) {
         return 0;
     }
+    // Creating an annotation by any means turns on Edit PDF mode: that is
+    // where it can be selected, moved, resized and edited from the property
+    // row, and it is what the user just said they are doing. Enable it before
+    // the re-render so the second toolbar row is accounted for in the layout.
+    EnablePdfAnnotationsToolbar(win);
     RefreshAnnotationLists(tab);
     // Drop the cached page bitmap. SetSelectedAnnotation only ScheduleRepaint
     // (selection handles); without this the new annot is invisible until a
     // later click re-selects it and forces a re-render (issue #6037).
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
-
-    if (openAnnotationEdit) {
-        EnablePdfAnnotationsToolbar(win);
-    }
 
     // Highlight / underline / squiggly / strike-out stay with the text
     // selection; other types (including FreeText) are selected so they can
