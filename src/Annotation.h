@@ -52,6 +52,13 @@ extern "C" struct pdf_annot;
 
 SeqStrings AnnotationTextIcons();
 
+// The annotation a cut is waiting to delete once its copy is pasted (see
+// CutAnnotation). ~Annotation clears it, so it can never dangle. Both are
+// inline: EngineMupdf.cpp deletes annotations in the mupdf-only targets
+// (PdfFilter / PdfPreview), which don't link Annotation.cpp.
+struct Annotation;
+inline Annotation* gPendingCutAnnotation = nullptr;
+
 // an user annotation on page
 // It abstracts over pdf_annot so that we don't have to
 // inlude mupdf to include Annotation
@@ -67,7 +74,11 @@ struct Annotation {
     pdf_annot* pdfannot = nullptr; // not owned
 
     Annotation() = default;
-    ~Annotation() = default;
+    ~Annotation() {
+        if (this == gPendingCutAnnotation) {
+            gPendingCutAnnotation = nullptr;
+        }
+    }
 };
 
 struct AnnotCreateArgs {
@@ -180,6 +191,9 @@ bool AnnotationSupportsBorder(AnnotationType);
 bool AnnotationSupportsInteriorColor(AnnotationType);
 
 bool CopyAnnotation(Annotation*);
+bool CutAnnotation(Annotation*);
+Annotation* TakeCutAnnotation();
+bool EngineOwnsAnnotation(EngineBase*, Annotation*);
 bool HasCopiedAnnotation();
 void FreeAnnotationClipboard();
 Annotation* PasteCopiedAnnotation(EngineBase*, int pageNo, PointF topLeft);

@@ -2061,6 +2061,7 @@ struct AnnotationClipboard {
 static AnnotationClipboard gAnnotClipboard;
 
 static void ClearAnnotationClipboard() {
+    gPendingCutAnnotation = nullptr;
     str::FreePtr(&gAnnotClipboard.contents);
     str::FreePtr(&gAnnotClipboard.iconName);
     str::FreePtr(&gAnnotClipboard.fontName);
@@ -2203,6 +2204,34 @@ static RectF GetAnnotRect(Annotation* annot) {
         return GetBounds(annot);
     }
     return ToRectF(rc);
+}
+
+// Snapshot the annotation and remember it as the one to delete on paste. A cut
+// is a copy plus a delete of the original once the copy lands, so nothing is
+// lost if the paste fails.
+bool CutAnnotation(Annotation* annot) {
+    if (!CopyAnnotation(annot)) {
+        return false;
+    }
+    gPendingCutAnnotation = annot;
+    return true;
+}
+
+// The annotation a cut is waiting to delete, if it is still around. Clears it:
+// only the first paste of a cut removes the original, later ones are copies.
+Annotation* TakeCutAnnotation() {
+    Annotation* res = gPendingCutAnnotation;
+    gPendingCutAnnotation = nullptr;
+    return res;
+}
+
+// True if annot belongs to engine. Used to find the tab showing the document a
+// cut annotation lives in, which can be a different one than we paste into.
+bool EngineOwnsAnnotation(EngineBase* engine, Annotation* annot) {
+    if (!engine || !annot) {
+        return false;
+    }
+    return AsEngineMupdf(engine) == annot->engine;
 }
 
 // Snapshot a live annotation so PasteCopiedAnnotation can recreate it.

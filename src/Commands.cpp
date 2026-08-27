@@ -306,6 +306,7 @@ static SeqStrings gCommandNames =
     "CmdConfigurePageGrid\0"
     "CmdToggleEditPDF\0"
     "CmdApplyRedactions\0"
+    "CmdCutAnnotation\0"
     "CmdCopyAnnotation\0"
     "CmdPasteAnnotation\0"
     "CmdNone\0"
@@ -602,6 +603,7 @@ static i32 gCommandIds[] = {
     CmdConfigurePageGrid,
     CmdToggleEditPDF,
     CmdApplyRedactions,
+    CmdCutAnnotation,
     CmdCopyAnnotation,
     CmdPasteAnnotation,
     CmdNone,
@@ -898,6 +900,7 @@ SeqStrings gCommandDescriptions =
     "Configure Page Grid...\0"
     "Toggle Edit PDF\0"
     "Apply Redactions\0"
+    "Cut Annotation\0"
     "Copy Annotation\0"
     "Paste Annotation\0"
     "Do nothing\0"

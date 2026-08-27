@@ -9580,7 +9580,9 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     LaunchBrowser(uri);
 }
 
-static bool CopyFromFocusedEditControl() {
+// Ctrl+C / Ctrl+X are app accelerators, so they fire even while a text box has
+// the focus. Hand the message to the edit control instead of taking it.
+static bool ForwardClipboardMsgToFocusedEditControl(UINT msg) {
     HWND focus = GetFocus();
     if (!focus) {
         return false;
@@ -9593,7 +9595,7 @@ static bool CopyFromFocusedEditControl() {
     if (!wstr::EqI(cls, WC_EDITW) && !wstr::EqI(cls, WC_COMBOBOX) && !wstr::EqI(cls, L"ComboLBox")) {
         return false;
     }
-    SendMessageW(focus, WM_COPY, 0, 0);
+    SendMessageW(focus, msg, 0, 0);
     return true;
 }
 
@@ -9602,8 +9604,11 @@ static bool CopyFromFocusedEditControl() {
 // paste it; if something else copied since, that wins instead.
 static DWORD gAnnotClipboardSeqNo = 0;
 
-static bool CopyAnnotationToClipboard(Annotation* annot) {
-    if (!CopyAnnotation(annot)) {
+// Snapshot the annotation and put its contents on the OS clipboard. `cut` also
+// marks it as the one to delete once the copy is pasted.
+static bool CopyAnnotationToClipboard(Annotation* annot, bool cut) {
+    bool ok = cut ? CutAnnotation(annot) : CopyAnnotation(annot);
+    if (!ok) {
         return false;
     }
     Str contents = Contents(annot);
@@ -9622,13 +9627,37 @@ static bool CopiedAnnotationIsFresh() {
     return GetClipboardSequenceNumber() == gAnnotClipboardSeqNo;
 }
 
+// Copy or cut the annotation the command targets: the one that was
+// right-clicked when it came from the context menu (right-click doesn't
+// select), otherwise the selected one.
+static bool CopyOrCutAnnotationInTab(WindowTab* tab, LPARAM lp, bool cut) {
+    if (!tab || !HasPermission(Perm::CopySelection)) {
+        return false;
+    }
+    Annotation* annot = GetAnnotionUnderCursor(tab, nullptr, lp);
+    bool ok = CopyAnnotationToClipboard(annot, cut);
+    if (!ok) {
+        ok = CopyAnnotationToClipboard(tab->selectedAnnotation, cut);
+    }
+    if (ok && cut && tab->win) {
+        // a cut annotation stays on the page until the paste removes it, so
+        // without this Ctrl+X looks like it did nothing
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.msg = _TRA("Annotation cut. Paste to move it.");
+        args.timeoutMs = 3000;
+        ShowNotification(args);
+    }
+    return ok;
+}
+
 // TODO: rather arbitrary divide of responsibility between this and CopySelectionToClipboard()
 static void CopySelectionInTabToClipboard(WindowTab* tab) {
     // Don't break the shortcut for text boxes
     if (!tab || !tab->win) {
         return;
     }
-    if (CopyFromFocusedEditControl()) {
+    if (ForwardClipboardMsgToFocusedEditControl(WM_COPY)) {
         return;
     }
     if (!HasPermission(Perm::CopySelection)) {
@@ -9645,7 +9674,7 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
         CopySelectionToClipboard(tab->win);
         return;
     }
-    if (tab->win->pdfAnnotationsToolbarEnabled && CopyAnnotationToClipboard(tab->selectedAnnotation)) {
+    if (tab->win->pdfAnnotationsToolbarEnabled && CopyAnnotationToClipboard(tab->selectedAnnotation, false)) {
         return;
     }
     if (tab->AsFixed()) {
@@ -10708,6 +10737,36 @@ static bool SetPointToVisiblePage(DisplayModel* dm, Point& pt, int& pageNo) {
     return true;
 }
 
+// The tab showing the document that owns `annot`. A cut annotation can live in
+// a different tab (or window) than the one being pasted into.
+static WindowTab* FindTabForAnnotation(Annotation* annot) {
+    if (!annot) {
+        return nullptr;
+    }
+    for (MainWindow* w : gWindows) {
+        for (WindowTab* t : w->Tabs()) {
+            DisplayModel* dm = t->AsFixed();
+            EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+            if (EngineOwnsAnnotation(engine, annot)) {
+                return t;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// A cut removes the original only after its copy has landed, so a failed paste
+// can't lose the annotation (issue #5222). The annotation is gone already if
+// its document was closed in between; TakeCutAnnotation() returns null then.
+static void DeleteCutAnnotationAfterPaste() {
+    Annotation* cut = TakeCutAnnotation();
+    WindowTab* tab = FindTabForAnnotation(cut);
+    if (!tab) {
+        return;
+    }
+    DeleteAnnotationAndUpdateUI(tab, cut);
+}
+
 static Annotation* TryPasteCopiedAnnotation(MainWindow* win, WindowTab* tab, DisplayModel* dm, LPARAM lp) {
     if (!HasCopiedAnnotation() || !win || !tab || !dm) {
         return nullptr;
@@ -10728,7 +10787,11 @@ static Annotation* TryPasteCopiedAnnotation(MainWindow* win, WindowTab* tab, Dis
         }
     }
     PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
-    return PasteCopiedAnnotation(engine, pageNoUnderCursor, ptOnPage);
+    Annotation* pasted = PasteCopiedAnnotation(engine, pageNoUnderCursor, ptOnPage);
+    if (pasted) {
+        DeleteCutAnnotationAfterPaste();
+    }
+    return pasted;
 }
 
 // Place an image stamp at the canvas click (LPARAM from the context menu) or,
@@ -12149,17 +12212,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             CopySelectionInTabToClipboard(tab);
             break;
 
-        case CmdCopyAnnotation: {
-            if (!tab) {
+        case CmdCopyAnnotation:
+            CopyOrCutAnnotationInTab(tab, lp, /* cut */ false);
+            break;
+
+        case CmdCutAnnotation:
+            // Ctrl+X in a text box is that box's cut, not ours
+            if (ForwardClipboardMsgToFocusedEditControl(WM_CUT)) {
                 return 0;
             }
-            // from the context menu: the annotation that was right-clicked
-            // (right-click doesn't select), otherwise the selected one
-            Annotation* annot = GetAnnotionUnderCursor(tab, nullptr, lp);
-            if (!CopyAnnotationToClipboard(annot)) {
-                CopyAnnotationToClipboard(tab->selectedAnnotation);
-            }
-        } break;
+            CopyOrCutAnnotationInTab(tab, lp, /* cut */ true);
+            break;
 
         case CmdSelectAll:
             OnSelectAll(win);
