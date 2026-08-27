@@ -6,17 +6,34 @@
 //
 // Run: bun tests/issue-4662.ts [--no-build]
 
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { getScrollInfo, sendMessage, sleep } from "./winapi.ts";
 import { findCanvas, sendCommandSync, waitForFrame } from "./win-automation.ts";
-import { cmdId, EXE, ROOT, runStandalone } from "./util.ts";
+import { cmdId, EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
 const WM_VSCROLL = 0x0115;
 const SB_TOP = 6;
 
 export async function testit(): Promise<void> {
+  // SmoothScroll is what this test is about, so don't inherit whoever's
+  // settings the default appdata holds - with it off, every line scroll is an
+  // instant jump and the test fails for a reason that isn't a regression.
+  const dir = tmpPath("issue-4662");
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    join(dir, "SumatraPDF-settings.txt"),
+    `SmoothScroll = true
+UiLanguage = en
+RestoreSession = false
+ShowStartPage = false
+CheckForUpdates = false
+`,
+  );
+
   await withControlledSumatra(
     EXE,
     async (client, proc) => {
@@ -48,29 +65,42 @@ export async function testit(): Promise<void> {
         throw new Error(`issue-4662: document is not vertically scrollable: ${JSON.stringify(si)}`);
       }
 
-      const start = getScrollInfo(canvas).pos;
-      sendCommandSync(frame, cmdId("CmdScrollDown"));
-      const immediate = getScrollInfo(canvas).pos;
-      await sleep(40);
-      const mid = getScrollInfo(canvas).pos;
-      await client.waitForRenderIdle();
-      const settled = getScrollInfo(canvas).pos;
-      const line = settled - start;
-      if (line < 1) {
-        throw new Error(`issue-4662: arrow key did not scroll (start=${start} settled=${settled})`);
+      // The chase takes ~230ms, and reading it means sampling from another
+      // process: on a loaded machine this one can be starved past the end of
+      // the animation, and the sample then looks exactly like an instant jump.
+      // A broken SmoothScroll jumps on every try, a scheduling hiccup doesn't.
+      const kTries = 3;
+      let line = 0;
+      let chased = false;
+      let lastTry = "";
+      let afterOne = 0;
+      for (let i = 0; i < kTries && !chased; i++) {
+        const start = getScrollInfo(canvas).pos;
+        sendCommandSync(frame, cmdId("CmdScrollDown"));
+        const immediate = getScrollInfo(canvas).pos;
+        await sleep(40);
+        const mid = getScrollInfo(canvas).pos;
+        await client.waitForRenderIdle();
+        const settled = getScrollInfo(canvas).pos;
+        line = settled - start;
+        afterOne = settled;
+        if (line < 1) {
+          throw new Error(`issue-4662: arrow key did not scroll (start=${start} settled=${settled})`);
+        }
+        if (mid > settled) {
+          throw new Error(`issue-4662: overshot during chase: mid=${mid} settled=${settled}`);
+        }
+        // Instant jump would already be at `settled` when SendMessage returns.
+        // Smooth scroll leaves the thumb on the old pos until the timer ticks.
+        chased = immediate !== settled || immediate - start !== line;
+        lastTry = `immediate=${immediate} mid=${mid} settled=${settled}`;
       }
-      // Instant jump would already be at `settled` when SendMessage returns.
-      // Smooth scroll leaves the thumb on the old pos until the timer ticks.
-      if (immediate === settled && immediate - start === line) {
+      if (!chased) {
         throw new Error(
-          `issue-4662: arrow key jumped instantly by ${line}px (want SmoothScroll chase; immediate=${immediate} mid=${mid})`,
+          `issue-4662: arrow key jumped instantly by ${line}px on all ${kTries} tries (want SmoothScroll chase; ${lastTry})`,
         );
       }
-      if (mid > settled) {
-        throw new Error(`issue-4662: overshot during chase: mid=${mid} settled=${settled}`);
-      }
 
-      const afterOne = settled;
       for (let i = 0; i < 8; i++) {
         sendCommandSync(frame, cmdId("CmdScrollDown"));
       }
@@ -83,7 +113,7 @@ export async function testit(): Promise<void> {
         );
       }
     },
-    [PDF],
+    ["-appdata", dir, PDF],
   );
 }
 
