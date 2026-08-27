@@ -32,387 +32,6 @@ constexpr float kInvalidZoom = -99.0F;
 
 // NOLINTBEGIN(modernize-use-designated-initializers)
 
-// top, right, bottom and left margin (in that order) between window and
-// document
-struct WindowMargin {
-    // space between the top of the window and the document, in pixels at
-    // 100% display scaling
-    int top;
-    // space between the right of the window and the document, in pixels at
-    // 100% display scaling
-    int right;
-    // space between the bottom of the window and the document, in pixels
-    // at 100% display scaling
-    int bottom;
-    // space between the left of the window and the document, in pixels at
-    // 100% display scaling
-    int left;
-};
-
-// measurement grid overlay (View > Page Grid). Spacing and style are
-// saved; showing the grid is session-only
-struct PageGrid {
-    // distance between major vertical grid lines, in PDF points (1/72
-    // inch)
-    float width;
-    // distance between major horizontal grid lines, in PDF points
-    float height;
-    // minor lines per major cell
-    int subdivisions;
-    // horizontal origin offset from the left of the page, in PDF points
-    float offsetX;
-    // vertical origin offset from the bottom of the page, in PDF points
-    float offsetY;
-    // color of the page grid overlay
-    ParsedColor color;
-    // grid overlay style: dots (marks at intersections), dotted (dotted
-    // lines), or solid
-    Str style;
-    // units shown in the Configure Page Grid dialog: pt, in, mm, or cm
-    Str units;
-};
-
-// customization options for PDF, XPS, DjVu and PostScript UI
-struct FixedPageUI {
-    // color used instead of black for the document's text
-    ParsedColor textColor;
-    // color used instead of white for the document's page background
-    ParsedColor backgroundColor;
-    // color value for the text selection rectangle (also used to highlight
-    // found text). Use an #aarrggbb value to control opacity: a smaller
-    // alpha (e.g. #40ffff00) makes the selection more transparent so the
-    // selected text stays crisp; #rrggbb uses the default opacity
-    ParsedColor selectionColor;
-    // top, right, bottom and left margin (in that order) between window
-    // and document
-    WindowMargin windowMargin;
-    // horizontal and vertical gap between pages (between columns in
-    // facing/book view, between rows in continuous view)
-    Size pageSpacing;
-    // experimental: instead of a single background color, fade through
-    // these colors from the top of the document to the bottom (stops are
-    // spread evenly, at most 3 colors). The shifting background is meant
-    // to give a subconscious sense of reading progress. Suggested values:
-    // #2828aa #28aa28 #aa2828
-    Vec<Str>* gradientColors;
-    // if given, sets the canvas background color for PDF files
-    ParsedColor windowBgCol;
-    // measurement grid overlay (View > Page Grid). Spacing and style are
-    // saved; showing the grid is session-only
-    PageGrid pageGrid;
-};
-
-// customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
-// plain text)
-struct EBookUI {
-    // default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft
-    // YaHei). empty uses the engine default (typically a serif). applied
-    // as user CSS with !important, which beats the document's own
-    // font-family even when it comes from an inline style attribute; leave
-    // empty to keep the publisher's fonts. wrapping quotes are stripped. a
-    // name that can't be loaded is reported with a notification when the
-    // document opens
-    Str fontName;
-    // font size in points; 0 means the default (8.0)
-    float fontSize;
-    // white space around the text, in points (not screen pixels), like
-    // LayoutDx. one number sets all four sides, two are top/bottom and
-    // left/right, four are top, right, bottom, left - the same order as in
-    // CSS. empty keeps the default (3 em above and below, 2 em left and
-    // right, so it follows the font size); 0 leaves no margin at all. each
-    // value can be up to 200
-    Vec<float>* margin;
-    // line-height multiplier for ebook text (e.g. 1.5); 0 keeps the
-    // document or engine default. values from 0.5 to 5 are accepted
-    float lineSpacing;
-    // width of the page the ebook is laid out into, in points (not screen
-    // pixels); 0 means the default (420)
-    float layoutDx;
-    // height of the page the ebook is laid out into, in points (not screen
-    // pixels); 0 derives it from the window's shape when the document is
-    // opened, so Fit Width shows a whole page
-    float layoutDy;
-    // if true, the CSS in the ebook is ignored and only CustomCSS applies
-    bool ignoreDocumentCSS;
-    // additional CSS applied to ebooks; set IgnoreDocumentCSS = true if
-    // the document's own CSS overrides it
-    Str customCSS;
-    // if given, sets the canvas background color for ebook documents
-    // (epub, mobi etc.)
-    ParsedColor windowBgCol;
-    // default page layout for ebooks; empty uses the global
-    // DefaultDisplayMode. valid values: automatic, single page, facing,
-    // book view, continuous, continuous facing, continuous book view
-    Str defaultDisplayMode;
-};
-
-// customization options for Comic Book UI
-struct ComicBookUI {
-    // top, right, bottom and left margin (in that order) between window
-    // and document
-    WindowMargin windowMargin;
-    // horizontal and vertical gap between pages (between columns in
-    // facing/book view, between rows in continuous view)
-    Size pageSpacing;
-    // if true, documents that don't state their own reading direction
-    // default to manga mode, i.e. right to left. A document that states a
-    // direction (PDF ViewerPreferences/Direction, or an EPUB with
-    // page-progression-direction) is shown the way it asks for
-    bool cbxMangaMode;
-    // if given, sets the canvas background color for comic book files
-    ParsedColor windowBgCol;
-    // if true, absolute zoom never makes a page wider than the window
-    // (each page is capped at Fit Width). Useful for comics/manga with
-    // double-page spreads that are much wider than regular pages (issue
-    // #2197)
-    bool limitToWindowWidth;
-    // if true, absolute zoom never makes a page taller than the window
-    // (each page is capped at Fit Height)
-    bool limitToWindowHeight;
-    // default page layout for comic books; empty uses the global
-    // DefaultDisplayMode. valid values: automatic, single page, facing,
-    // book view, continuous, continuous facing, continuous book view
-    Str defaultDisplayMode;
-    // default zoom for comic books; empty uses fit page. valid values: fit
-    // page, fit width, fit height, fit content, shrink to fit or percent
-    // like 100%
-    Str defaultZoom;
-    // value of DefaultZoom for internal usage
-    float defaultZoomFloat;
-    // if true, in facing and book view a landscape page (wider than tall)
-    // occupies the whole two-page row instead of pairing with the next
-    // page. For comics that store double-page spreads as one image (issues
-    // #1324, #872)
-    bool landscapeAsSpread;
-};
-
-// customization options for image files UI
-struct ImageUI {
-    // if given, sets the canvas background color for image files
-    ParsedColor windowBgCol;
-    // default zoom for image files. valid values: fit page, fit width, fit
-    // height, fit content, shrink to fit or percent like 100%
-    Str defaultZoom;
-    // value of DefaultZoom for internal usage
-    float defaultZoomFloat;
-    // if true, absolute zoom never makes a page wider than the window
-    // (each page is capped at Fit Width). Useful for image folders with
-    // mixed aspect ratios (issue #2197)
-    bool limitToWindowWidth;
-    // if true, absolute zoom never makes a page taller than the window
-    // (each page is capped at Fit Height)
-    bool limitToWindowHeight;
-    // if true, in facing and book view a landscape page (wider than tall)
-    // occupies the whole two-page row instead of pairing with the next
-    // page (issues #1324, #872)
-    bool landscapeAsSpread;
-};
-
-// customization options for CHM UI. UseFixedPageUI switches to the
-// PDF-style view; FontName applies to that view
-struct ChmUI {
-    // if true, the UI used for PDF documents will be used for CHM
-    // documents as well
-    bool useFixedPageUI;
-    // font family for the CHM fixed-page view (e.g. Segoe UI, Georgia,
-    // Microsoft YaHei). empty uses EBookUI.FontName or the engine default.
-    // overrides fonts specified by the document; wrapping quotes are
-    // stripped
-    Str fontName;
-};
-
-// customization options for Markdown UI. If UseFixedPageUI is true,
-// MuPDF is used; otherwise WebView2 browser view is used when available
-struct MarkdownUI {
-    // if true, use MuPDF (cmark-gfm) to render markdown; if false, use
-    // WebView2 browser view when available
-    bool useFixedPageUI;
-};
-
-// customization options for HTML UI. If UseFixedPageUI is true, MuPDF
-// is used; otherwise WebView2 browser view is used when available
-struct HtmlUI {
-    // if true, use MuPDF to render HTML; if false, use WebView2 browser
-    // view when available
-    bool useFixedPageUI;
-};
-
-// settings for the Claude Code chat sidebar
-struct ClaudeCode {
-    // Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus
-    // if not in the model list
-    Str model;
-    // extra Claude model aliases for the dropdown, comma-separated;
-    // documented Claude Code aliases are always included
-    Str models;
-    // Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max
-    int effort;
-    // if true, pass --dangerously-skip-permissions to Claude Code
-    bool skipPermissions;
-    // background color of the Claude Code chat panel
-    ParsedColor bgColor;
-};
-
-// settings for the Grok Build chat sidebar
-struct GrokBuild {
-    // Grok model ID for --model (e.g. grok-4.5)
-    Str model;
-    // extra Grok model IDs for the dropdown, comma-separated; used in
-    // addition to models reported by Grok
-    Str models;
-    // Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max
-    int effort;
-    // if true, pass --always-approve to Grok Build (auto-approve tool
-    // executions)
-    bool alwaysApprove;
-    // background color of the Grok Build chat panel
-    ParsedColor bgColor;
-};
-
-// settings for the OpenAI Codex chat sidebar
-struct CodexBuild {
-    // Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)
-    Str model;
-    // extra Codex model IDs for the dropdown, comma-separated; used in
-    // addition to models reported by Codex
-    Str models;
-    // Codex sandbox mode: 0=read-only, 1=workspace-write,
-    // 2=danger-full-access
-    int sandbox;
-    // if true, pass --dangerously-bypass-approvals-and-sandbox to Codex
-    bool skipSandbox;
-    // background color of the OpenAI Codex chat panel
-    ParsedColor bgColor;
-};
-
-// settings for the Antigravity chat sidebar
-struct AntiGravity {
-    // Antigravity model ID for --model (e.g. gemini-3.6-flash)
-    Str model;
-    // extra Antigravity model IDs for the dropdown, comma-separated
-    Str models;
-    // Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max
-    int effort;
-    // if true, pass --dangerously-skip-permissions to Antigravity CLI so
-    // it can read the current file etc. in headless print mode (agy cannot
-    // prompt for permissions with -p)
-    bool autoApprove;
-    // background color of the Antigravity chat panel
-    ParsedColor bgColor;
-};
-
-// default values for annotations in PDF documents
-struct Annotations {
-    // color of newly created highlight annotations. Use an #aarrggbb value
-    // to set default opacity (00 = transparent, FF = opaque); #rrggbb is
-    // fully opaque
-    ParsedColor highlightColor;
-    // color of newly created underline annotations. #aarrggbb sets default
-    // opacity the same way as HighlightColor
-    ParsedColor underlineColor;
-    // color of newly created squiggly underline annotations. #aarrggbb
-    // sets default opacity the same way as HighlightColor
-    ParsedColor squigglyColor;
-    // color of newly created strike out annotations. #aarrggbb sets
-    // default opacity the same way as HighlightColor
-    ParsedColor strikeOutColor;
-    // text color of newly created free text annotations
-    ParsedColor freeTextColor;
-    // background color of newly created free text annotations
-    ParsedColor freeTextBackgroundColor;
-    // opacity of free text annotation in percent (0-100); 0 - fully
-    // transparent (invisible), 50 - half transparent, 100 - fully opaque
-    int freeTextOpacity;
-    // font size of free text annotations, in points
-    int freeTextSize;
-    // border width of free text annotations, in points
-    int freeTextBorderWidth;
-    // how text is aligned in newly created free text annotations (Text
-    // Alignment in the compact property row): left, center or right.
-    // Right-to-left scripts (Arabic, Hebrew, Persian) want right
-    Str freeTextAlignment;
-    // color of newly created text (sticky note) annotations
-    ParsedColor textIconColor;
-    // icon shown for text (sticky note) annotations: comment, help,
-    // insert, key, new paragraph, note or paragraph. If not set, note is
-    // used
-    Str textIconType;
-    // author recorded on newly created annotations. If not set, the
-    // Windows user name is used; set it to (none) to leave the author out
-    // entirely
-    Str defaultAuthor;
-};
-
-// list of additional external viewers for various file types. See [docs
-// for more
-// information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
-struct ExternalViewer {
-    // command line with which to call the external viewer, may contain %p
-    // for page number and "%1" for the file name (add quotation marks
-    // around paths containing spaces)
-    Str commandLine;
-    // name of the external viewer to be shown in the menu (implied by
-    // CommandLine if missing)
-    Str name;
-    // optional filter for which file types the menu item is to be shown;
-    // separate multiple entries using ';' and don't include any spaces
-    // (e.g. *.pdf;*.xps for all PDF and XPS documents)
-    Str filter;
-    // optional: keyboard shortcut e.g. Alt + 7
-    Str key;
-    // if given, shows in toolbar
-    Str toolbarText;
-    // optional SVG icon for toolbar button; if both ToolbarSvgIcon and
-    // ToolbarText are set, the icon is used
-    Str toolbarSvgIcon;
-};
-
-// customization options for how forward search results are shown (used
-// from LaTeX editors)
-struct ForwardSearch {
-    // if greater than 0, the forward search result is marked with a bar
-    // down the left side of the page instead of highlighting the matched
-    // text. The value is how far the bar sits from the left edge of the
-    // page, in document units
-    int highlightOffset;
-    // width of that bar in document units (only used when HighlightOffset
-    // is greater than 0)
-    int highlightWidth;
-    // color used for the forward search highlight
-    ParsedColor highlightColor;
-    // if true, the highlight stays visible until the next mouse click
-    // instead of fading away after a few seconds
-    bool highlightPermanent;
-};
-
-// these override the default settings in the Print dialog
-struct PrinterDefaults {
-    // default value for scaling (shrink, fit, none)
-    Str printScale;
-    // default value for collate in the print dialog (default, collate,
-    // nocollate)
-    Str collate;
-};
-
-// options for fullscreen mode
-struct Fullscreen {
-    // legacy bool for fullscreen toolbar; if Fullscreen.Toolbar is empty,
-    // derived as show/hide (internal; use Fullscreen.Toolbar instead)
-    bool showToolbar;
-    // toolbar mode in fullscreen: show (pinned), hide (no toolbar),
-    // overlay (toolbar floats over the page, only shown when the mouse is
-    // near it). if empty, derived from Fullscreen.ShowToolbar
-    Str toolbar;
-    // if true, show the menu bar in fullscreen mode
-    bool showMenubar;
-    // page layout in presentation (Ctrl+L) and windowed fullscreen
-    // (Shift+Ctrl+L / F11). empty keeps the current behavior: presentation
-    // uses single page, windowed fullscreen keeps the existing layout.
-    // valid values: automatic, single page, facing, book view, continuous,
-    // continuous facing, continuous book view
-    Str displayMode;
-};
-
 // list of handlers for selected text, shown in context menu when text
 // selection is active. See [docs for more
 // information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
@@ -462,6 +81,30 @@ struct SelectionHandler {
     Str toolbarText;
     // optional SVG icon for that main-toolbar button; if both
     // ToolbarSvgIcon and ToolbarText are set, the icon is used
+    Str toolbarSvgIcon;
+};
+
+// list of additional external viewers for various file types. See [docs
+// for more
+// information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
+struct ExternalViewer {
+    // command line with which to call the external viewer, may contain %p
+    // for page number and "%1" for the file name (add quotation marks
+    // around paths containing spaces)
+    Str commandLine;
+    // name of the external viewer to be shown in the menu (implied by
+    // CommandLine if missing)
+    Str name;
+    // optional filter for which file types the menu item is to be shown;
+    // separate multiple entries using ';' and don't include any spaces
+    // (e.g. *.pdf;*.xps for all PDF and XPS documents)
+    Str filter;
+    // optional: keyboard shortcut e.g. Alt + 7
+    Str key;
+    // if given, shows in toolbar
+    Str toolbarText;
+    // optional SVG icon for toolbar button; if both ToolbarSvgIcon and
+    // ToolbarText are set, the icon is used
     Str toolbarSvgIcon;
 };
 
@@ -718,8 +361,396 @@ struct SessionData {
     int sidebarDx;
 };
 
+// customization options for CHM UI. UseFixedPageUI switches to the
+// PDF-style view; FontName applies to that view
+struct ChmUI {
+    // if true, the UI used for PDF documents will be used for CHM
+    // documents as well
+    bool useFixedPageUI;
+    // font family for the CHM fixed-page view (e.g. Segoe UI, Georgia,
+    // Microsoft YaHei). empty uses EBookUI.FontName or the engine default.
+    // overrides fonts specified by the document; wrapping quotes are
+    // stripped
+    Str fontName;
+};
+
+// these override the default settings in the Print dialog
+struct PrinterDefaults {
+    // default value for scaling (shrink, fit, none)
+    Str printScale;
+    // default value for collate in the print dialog (default, collate,
+    // nocollate)
+    Str collate;
+};
+
+// customization options for how forward search results are shown (used
+// from LaTeX editors)
+struct ForwardSearch {
+    // if greater than 0, the forward search result is marked with a bar
+    // down the left side of the page instead of highlighting the matched
+    // text. The value is how far the bar sits from the left edge of the
+    // page, in document units
+    int highlightOffset;
+    // width of that bar in document units (only used when HighlightOffset
+    // is greater than 0)
+    int highlightWidth;
+    // color used for the forward search highlight
+    ParsedColor highlightColor;
+    // if true, the highlight stays visible until the next mouse click
+    // instead of fading away after a few seconds
+    bool highlightPermanent;
+};
+
+// options for fullscreen mode
+struct Fullscreen {
+    // legacy bool for fullscreen toolbar; if Fullscreen.Toolbar is empty,
+    // derived as show/hide (internal; use Fullscreen.Toolbar instead)
+    bool showToolbar;
+    // toolbar mode in fullscreen: show (pinned), hide (no toolbar),
+    // overlay (toolbar floats over the page, only shown when the mouse is
+    // near it). if empty, derived from Fullscreen.ShowToolbar
+    Str toolbar;
+    // if true, show the menu bar in fullscreen mode
+    bool showMenubar;
+    // page layout in presentation (Ctrl+L) and windowed fullscreen
+    // (Shift+Ctrl+L / F11). empty keeps the current behavior: presentation
+    // uses single page, windowed fullscreen keeps the existing layout.
+    // valid values: automatic, single page, facing, book view, continuous,
+    // continuous facing, continuous book view
+    Str displayMode;
+};
+
+// customization options for image files UI
+struct ImageUI {
+    // if given, sets the canvas background color for image files
+    ParsedColor windowBgCol;
+    // default zoom for image files. valid values: fit page, fit width, fit
+    // height, fit content, shrink to fit or percent like 100%
+    Str defaultZoom;
+    // value of DefaultZoom for internal usage
+    float defaultZoomFloat;
+    // if true, absolute zoom never makes a page wider than the window
+    // (each page is capped at Fit Width). Useful for image folders with
+    // mixed aspect ratios (issue #2197)
+    bool limitToWindowWidth;
+    // if true, absolute zoom never makes a page taller than the window
+    // (each page is capped at Fit Height)
+    bool limitToWindowHeight;
+    // if true, in facing and book view a landscape page (wider than tall)
+    // occupies the whole two-page row instead of pairing with the next
+    // page (issues #1324, #872)
+    bool landscapeAsSpread;
+};
+
+// settings for the Claude Code chat sidebar
+struct ClaudeCode {
+    // Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus
+    // if not in the model list
+    Str model;
+    // extra Claude model aliases for the dropdown, comma-separated;
+    // documented Claude Code aliases are always included
+    Str models;
+    // Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max
+    int effort;
+    // if true, pass --dangerously-skip-permissions to Claude Code
+    bool skipPermissions;
+    // background color of the Claude Code chat panel
+    ParsedColor bgColor;
+};
+
+// settings for the Grok Build chat sidebar
+struct GrokBuild {
+    // Grok model ID for --model (e.g. grok-4.5)
+    Str model;
+    // extra Grok model IDs for the dropdown, comma-separated; used in
+    // addition to models reported by Grok
+    Str models;
+    // Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max
+    int effort;
+    // if true, pass --always-approve to Grok Build (auto-approve tool
+    // executions)
+    bool alwaysApprove;
+    // background color of the Grok Build chat panel
+    ParsedColor bgColor;
+};
+
+// settings for the OpenAI Codex chat sidebar
+struct CodexBuild {
+    // Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)
+    Str model;
+    // extra Codex model IDs for the dropdown, comma-separated; used in
+    // addition to models reported by Codex
+    Str models;
+    // Codex sandbox mode: 0=read-only, 1=workspace-write,
+    // 2=danger-full-access
+    int sandbox;
+    // if true, pass --dangerously-bypass-approvals-and-sandbox to Codex
+    bool skipSandbox;
+    // background color of the OpenAI Codex chat panel
+    ParsedColor bgColor;
+};
+
+// settings for the Antigravity chat sidebar
+struct AntiGravity {
+    // Antigravity model ID for --model (e.g. gemini-3.6-flash)
+    Str model;
+    // extra Antigravity model IDs for the dropdown, comma-separated
+    Str models;
+    // Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max
+    int effort;
+    // if true, pass --dangerously-skip-permissions to Antigravity CLI so
+    // it can read the current file etc. in headless print mode (agy cannot
+    // prompt for permissions with -p)
+    bool autoApprove;
+    // background color of the Antigravity chat panel
+    ParsedColor bgColor;
+};
+
+// customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
+// plain text)
+struct EBookUI {
+    // default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft
+    // YaHei). empty uses the engine default (typically a serif). applied
+    // as user CSS with !important, which beats the document's own
+    // font-family even when it comes from an inline style attribute; leave
+    // empty to keep the publisher's fonts. wrapping quotes are stripped. a
+    // name that can't be loaded is reported with a notification when the
+    // document opens
+    Str fontName;
+    // font size in points; 0 means the default (8.0)
+    float fontSize;
+    // white space around the text, in points (not screen pixels), like
+    // LayoutDx. one number sets all four sides, two are top/bottom and
+    // left/right, four are top, right, bottom, left - the same order as in
+    // CSS. empty keeps the default (3 em above and below, 2 em left and
+    // right, so it follows the font size); 0 leaves no margin at all. each
+    // value can be up to 200
+    Vec<float>* margin;
+    // line-height multiplier for ebook text (e.g. 1.5); 0 keeps the
+    // document or engine default. values from 0.5 to 5 are accepted
+    float lineSpacing;
+    // width of the page the ebook is laid out into, in points (not screen
+    // pixels); 0 means the default (420)
+    float layoutDx;
+    // height of the page the ebook is laid out into, in points (not screen
+    // pixels); 0 derives it from the window's shape when the document is
+    // opened, so Fit Width shows a whole page
+    float layoutDy;
+    // if true, the CSS in the ebook is ignored and only CustomCSS applies
+    bool ignoreDocumentCSS;
+    // additional CSS applied to ebooks; set IgnoreDocumentCSS = true if
+    // the document's own CSS overrides it
+    Str customCSS;
+    // if given, sets the canvas background color for ebook documents
+    // (epub, mobi etc.)
+    ParsedColor windowBgCol;
+    // default page layout for ebooks; empty uses the global
+    // DefaultDisplayMode. valid values: automatic, single page, facing,
+    // book view, continuous, continuous facing, continuous book view
+    Str defaultDisplayMode;
+};
+
+// top, right, bottom and left margin (in that order) between window and
+// document
+struct WindowMargin {
+    // space between the top of the window and the document, in pixels at
+    // 100% display scaling
+    int top;
+    // space between the right of the window and the document, in pixels at
+    // 100% display scaling
+    int right;
+    // space between the bottom of the window and the document, in pixels
+    // at 100% display scaling
+    int bottom;
+    // space between the left of the window and the document, in pixels at
+    // 100% display scaling
+    int left;
+};
+
+// customization options for Comic Book UI
+struct ComicBookUI {
+    // top, right, bottom and left margin (in that order) between window
+    // and document
+    WindowMargin windowMargin;
+    // horizontal and vertical gap between pages (between columns in
+    // facing/book view, between rows in continuous view)
+    Size pageSpacing;
+    // if true, documents that don't state their own reading direction
+    // default to manga mode, i.e. right to left. A document that states a
+    // direction (PDF ViewerPreferences/Direction, or an EPUB with
+    // page-progression-direction) is shown the way it asks for
+    bool cbxMangaMode;
+    // if given, sets the canvas background color for comic book files
+    ParsedColor windowBgCol;
+    // if true, absolute zoom never makes a page wider than the window
+    // (each page is capped at Fit Width). Useful for comics/manga with
+    // double-page spreads that are much wider than regular pages (issue
+    // #2197)
+    bool limitToWindowWidth;
+    // if true, absolute zoom never makes a page taller than the window
+    // (each page is capped at Fit Height)
+    bool limitToWindowHeight;
+    // default page layout for comic books; empty uses the global
+    // DefaultDisplayMode. valid values: automatic, single page, facing,
+    // book view, continuous, continuous facing, continuous book view
+    Str defaultDisplayMode;
+    // default zoom for comic books; empty uses fit page. valid values: fit
+    // page, fit width, fit height, fit content, shrink to fit or percent
+    // like 100%
+    Str defaultZoom;
+    // value of DefaultZoom for internal usage
+    float defaultZoomFloat;
+    // if true, in facing and book view a landscape page (wider than tall)
+    // occupies the whole two-page row instead of pairing with the next
+    // page. For comics that store double-page spreads as one image (issues
+    // #1324, #872)
+    bool landscapeAsSpread;
+};
+
+// measurement grid overlay (View > Page Grid). Spacing and style are
+// saved; showing the grid is session-only
+struct PageGrid {
+    // distance between major vertical grid lines, in PDF points (1/72
+    // inch)
+    float width;
+    // distance between major horizontal grid lines, in PDF points
+    float height;
+    // minor lines per major cell
+    int subdivisions;
+    // horizontal origin offset from the left of the page, in PDF points
+    float offsetX;
+    // vertical origin offset from the bottom of the page, in PDF points
+    float offsetY;
+    // color of the page grid overlay
+    ParsedColor color;
+    // grid overlay style: dots (marks at intersections), dotted (dotted
+    // lines), or solid
+    Str style;
+    // units shown in the Configure Page Grid dialog: pt, in, mm, or cm
+    Str units;
+};
+
+// customization options for PDF, XPS, DjVu and PostScript UI
+struct FixedPageUI {
+    // color used instead of black for the document's text
+    ParsedColor textColor;
+    // color used instead of white for the document's page background
+    ParsedColor backgroundColor;
+    // color value for the text selection rectangle (also used to highlight
+    // found text). Use an #aarrggbb value to control opacity: a smaller
+    // alpha (e.g. #40ffff00) makes the selection more transparent so the
+    // selected text stays crisp; #rrggbb uses the default opacity
+    ParsedColor selectionColor;
+    // top, right, bottom and left margin (in that order) between window
+    // and document
+    WindowMargin windowMargin;
+    // horizontal and vertical gap between pages (between columns in
+    // facing/book view, between rows in continuous view)
+    Size pageSpacing;
+    // experimental: instead of a single background color, fade through
+    // these colors from the top of the document to the bottom (stops are
+    // spread evenly, at most 3 colors). The shifting background is meant
+    // to give a subconscious sense of reading progress. Suggested values:
+    // #2828aa #28aa28 #aa2828
+    Vec<Str>* gradientColors;
+    // if given, sets the canvas background color for PDF files
+    ParsedColor windowBgCol;
+    // measurement grid overlay (View > Page Grid). Spacing and style are
+    // saved; showing the grid is session-only
+    PageGrid pageGrid;
+};
+
+// default values for annotations in PDF documents
+struct Annotations {
+    // color of newly created highlight annotations. Use an #aarrggbb value
+    // to set default opacity (00 = transparent, FF = opaque); #rrggbb is
+    // fully opaque
+    ParsedColor highlightColor;
+    // color of newly created underline annotations. #aarrggbb sets default
+    // opacity the same way as HighlightColor
+    ParsedColor underlineColor;
+    // color of newly created squiggly underline annotations. #aarrggbb
+    // sets default opacity the same way as HighlightColor
+    ParsedColor squigglyColor;
+    // color of newly created strike out annotations. #aarrggbb sets
+    // default opacity the same way as HighlightColor
+    ParsedColor strikeOutColor;
+    // text color of newly created free text annotations
+    ParsedColor freeTextColor;
+    // background color of newly created free text annotations
+    ParsedColor freeTextBackgroundColor;
+    // opacity of free text annotation in percent (0-100); 0 - fully
+    // transparent (invisible), 50 - half transparent, 100 - fully opaque
+    int freeTextOpacity;
+    // font size of free text annotations, in points
+    int freeTextSize;
+    // border width of free text annotations, in points
+    int freeTextBorderWidth;
+    // how text is aligned in newly created free text annotations (Text
+    // Alignment in the compact property row): left, center or right.
+    // Right-to-left scripts (Arabic, Hebrew, Persian) want right
+    Str freeTextAlignment;
+    // color of newly created text (sticky note) annotations
+    ParsedColor textIconColor;
+    // icon shown for text (sticky note) annotations: comment, help,
+    // insert, key, new paragraph, note or paragraph. If not set, note is
+    // used
+    Str textIconType;
+    // author recorded on newly created annotations. If not set, the
+    // Windows user name is used; set it to (none) to leave the author out
+    // entirely
+    Str defaultAuthor;
+};
+
+// customization options for Markdown UI. If UseFixedPageUI is true,
+// MuPDF is used; otherwise WebView2 browser view is used when available
+struct MarkdownUI {
+    // if true, use MuPDF (cmark-gfm) to render markdown; if false, use
+    // WebView2 browser view when available
+    bool useFixedPageUI;
+};
+
+// customization options for HTML UI. If UseFixedPageUI is true, MuPDF
+// is used; otherwise WebView2 browser view is used when available
+struct HtmlUI {
+    // if true, use MuPDF to render HTML; if false, use WebView2 browser
+    // view when available
+    bool useFixedPageUI;
+};
+
 // Preferences are persisted in SumatraPDF-settings.txt
 struct GlobalPrefs {
+    // list of handlers for selected text, shown in context menu when text
+    // selection is active. See [docs for more
+    // information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
+    Vec<SelectionHandler*>* selectionHandlers;
+    // zoom levels which zooming steps through in addition to Fit Page and
+    // Fit Width. The largest value is also the highest zoom that can be
+    // set at all, so listing levels above 6400 (up to 1000000) is how you
+    // zoom further into e.g. a large map
+    Vec<float>* zoomLevels;
+    // command id assigned to each entry of ZoomLevels
+    Vec<int>* zoomLevelsCmdIds;
+    // list of additional external viewers for various file types. See
+    // [docs for more
+    // information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
+    Vec<ExternalViewer*>* externalViewers;
+    // custom keyboard shortcuts
+    Vec<Shortcut*>* shortcuts;
+    // color themes
+    Vec<Theme*>* themes;
+    // saved groups of tabs
+    Vec<TabGroup*>* tabGroups;
+    // passwords to try when opening a password protected document
+    Vec<Str>* defaultPasswords;
+    // information about opened files (in most recently used order)
+    Vec<FileState*>* fileStates;
+    // state of the last session, usage depends on RestoreSession
+    Vec<SessionData*>* sessionData;
+    // a list of paths for files to be reopened at the next start or the
+    // string "SessionData" if this data is saved in SessionData (needed
+    // for auto-updating)
+    Vec<Str>* reopenOnce;
     // how pages are laid out by default. The string is the persisted form
     // of DefaultDisplayModeEnum, so it's parsed after deserialization and
     // written back before serialization
@@ -727,6 +758,184 @@ struct GlobalPrefs {
     // default zoom. valid values: fit page, fit width, fit height, fit
     // content or percent like 100%
     Str defaultZoom;
+    // pattern used to launch the LaTeX editor when doing inverse search
+    Str inverseSearchCmdLine;
+    // how the home page shows the document history: thumbnails (a grid of
+    // page previews) or list (one row per file)
+    Str homePageViewMode;
+    // file open dialog used by Open File: empty or os (standard Windows
+    // file picker), or sumatrapdf (Navigate Files in Folder). Toggled by
+    // Settings / SumatraPDF File Picker
+    Str filePicker;
+    // up to 13 custom colors for the background color picker, separated by
+    // space (e.g. '#ff0000 #00ff00 #0000ff')
+    Str customColors;
+    // toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar
+    // floats over the page, sized to its natural width and centered, only
+    // shown when the mouse is near it). if empty, derived from ShowToolbar
+    Str toolbar;
+    // where the toolbar is placed: top or bottom (applies to both show and
+    // overlay modes)
+    Str toolbarPosition;
+    // scrollbar mode: windows (standard Windows scrollbar), smart (overlay
+    // scrollbar with auto-hide), overlay (always visible overlay
+    // scrollbar), hidden (no scrollbars)
+    Str scrollbars;
+    // voice id for Read Aloud text-to-speech; empty or unset means system
+    // default. Voice ids match those used internally by the Read Aloud
+    // Voice menu (WinRT voice id or SAPI token id)
+    Str readAloudVoiceId;
+    // the name of the theme to use. System follows the Windows light/dark
+    // app mode and switches between LastLightTheme and LastDarkTheme.
+    // Built-in themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal,
+    // Solarized Light, Solarized Dark, Dracula, Nebula, Greeny, Choco,
+    // Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo
+    // Night, Gruvbox, Night Owl, Ayu, Palenight, System (custom Themes[]
+    // entries can add more)
+    Str theme;
+    // the light theme the light/dark toggle and the System theme switch to
+    Str lastLightTheme;
+    // the dark theme the light/dark toggle and the System theme switch to
+    Str lastDarkTheme;
+    // how MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ,
+    // images, etc.) use UI / FixedPageUI colors for the page. Values: off
+    // (document's own colors; default); smart (recolor text and page
+    // background, keep photos/images as-is — best for dark reading);
+    // legacy (also recolor images; pre-3.7 invert-style). Does not change
+    // menus/toolbars — use Theme for UI chrome. Settings / Theme and the
+    // CmdSetDocumentColorsFollowTheme command set all three values.
+    // Shift+I (Invert Colors) is separate: it swaps the page colors for
+    // the session whatever this is set to
+    Str documentColorsFollowTheme;
+    // the toolbar's built-in buttons, in the order you want them, e.g.
+    // CmdOpenFile CmdPrint PageInfo | CmdFindFirst. Leave a button out to
+    // hide it. | is a separator and PageInfo is the page number box. Empty
+    // (the default) means the standard layout. Buttons you added yourself
+    // (see Shortcuts) still come last
+    Str toolbarCustomLayout;
+    // font name for bookmarks and favorites tree views. automatic means
+    // Windows default
+    Str treeFontName;
+    // CAD/engineering PDF line rendering: off, auto (enhance if a CAD
+    // drawing is detected) or on
+    Str engineeringDrawingEnhance;
+    // which built-in buttons the selection toolbar has and in what order,
+    // e.g. CmdCopySelection | CmdCreateAnnotHighlight. | or Separator
+    // inserts a separator. Leave a button out to hide it. Empty (the
+    // default) is the standard set. SelectionHandlers with
+    // SelectToolbarNameOrSvg still come last
+    Str selectionToolbarLayout;
+    // remembered destination language for selection translation; empty
+    // uses OS UI language
+    Str translateToLang;
+    // remembered source language for selection translation; empty means
+    // Auto
+    Str translateFromLang;
+    // remembered engine for Translate Selection: Google, DeepL, Grok
+    // Build, Claude Code, OpenAI Codex or Antigravity
+    Str translateEngine;
+    // ISO code of the current UI language
+    Str uiLanguage;
+    // SumatraPDF won't offer to update to this version again
+    Str versionToSkip;
+    // customization options for CHM UI. UseFixedPageUI switches to the
+    // PDF-style view; FontName applies to that view
+    ChmUI chmUI;
+    // background color of the area around the document, traditionally
+    // yellow. Only applies to the Light theme; the default #80fff200 is a
+    // marker meaning "use the theme's color", so setting any other value
+    // also colorizes the toolbar and sidebars
+    ParsedColor mainWindowBackground;
+    // these override the default settings in the Print dialog
+    PrinterDefaults printerDefaults;
+    // customization options for how forward search results are shown (used
+    // from LaTeX editors)
+    ForwardSearch forwardSearch;
+    // options for fullscreen mode
+    Fullscreen fullscreen;
+    // customization options for image files UI
+    ImageUI imageUI;
+    // settings for the Claude Code chat sidebar
+    ClaudeCode claudeCode;
+    // settings for the Grok Build chat sidebar
+    GrokBuild grokBuild;
+    // settings for the OpenAI Codex chat sidebar
+    CodexBuild codexBuild;
+    // settings for the Antigravity chat sidebar
+    AntiGravity antiGravity;
+    // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
+    // plain text)
+    EBookUI eBookUI;
+    // customization options for Comic Book UI
+    ComicBookUI comicBookUI;
+    // customization options for PDF, XPS, DjVu and PostScript UI
+    FixedPageUI fixedPageUI;
+    // default values for annotations in PDF documents
+    Annotations annotations;
+    // width of the favorites / bookmarks sidebar in screen pixels, as last
+    // resized (0 means the default)
+    int sidebarDx;
+    // distance, in screen pixels at 96 DPI, scrolled by an arrow-key press
+    // or one mouse-wheel line; values below 1 use 16
+    int scrollLineAmount;
+    // how long an internal-document link has to be hovered, in
+    // milliseconds, before a popup rendering the destination region
+    // (citation entry, figure, footnote) appears. -1 (the default)
+    // disables the popup; set a positive value like 300 to enable it
+    int citationHoverDelay;
+    // playback speed multiplier for Read Aloud text-to-speech (0.5 ..
+    // 3.0), 1 is normal speed; can also be changed from the Read Aloud
+    // playback bar
+    float readAloudSpeed;
+    // maximum width of a single tab, in pixels at 100% display scaling (at
+    // least 60)
+    int tabWidth;
+    // if both the favorites and the bookmarks part of the sidebar are
+    // visible, this is the height of the bookmarks (table of contents)
+    // part, in screen pixels
+    int tocDy;
+    // size of the toolbar icons in pixels at 100% display scaling (8-64);
+    // the toolbar itself is a few pixels taller
+    int toolbarSize;
+    // font size for bookmarks and favorites tree views, in pixels; 0 means
+    // the Windows default. Not scaled by the display scaling
+    int treeFontSize;
+    // overrides the font size used for menus, toolbar and dialogs, in
+    // pixels; 0 means the Windows default. Not scaled by the display
+    // scaling
+    int uIFontSize;
+    // how much a single zoom in / zoom out step changes the zoom, as a
+    // percentage of the current zoom level. If 0 or negative, zooming
+    // steps through ZoomLevels instead
+    float zoomIncrement;
+    // width of the AI chat sidebar (0 = use default); shared by Claude
+    // Code, Grok Build, and OpenAI Codex (internal)
+    int aiChatSidebarDx;
+    // actual resolution of the main screen in DPI, used to show documents
+    // at their physical size; if 0 or negative, the resolution reported by
+    // Windows is used
+    int customScreenDPI;
+    // default state of new windows (same as the last closed)
+    int windowState;
+    // week count since 2011-01-01 needed to "age" openCount values in file
+    // history
+    int openCountWeek;
+    // value of DefaultDisplayMode for internal usage
+    DisplayMode defaultDisplayModeEnum;
+    // value of DefaultZoom for internal usage
+    float defaultZoomFloat;
+    // timestamp of the last update check
+    FILETIME timeOfLastUpdateCheck;
+    // modification time of the preferences file when it was last read
+    FILETIME lastPrefUpdate;
+    // position of the document properties window
+    Point propWinPos;
+    // default position (can be on any monitor)
+    Rect windowPos;
+    // position/size of the floating find window (see SearchUIFloating)
+    Rect searchUIWindowPos;
+    // position/size of the in-app Help: Manual window
+    Rect helpWindowPos;
     // if true, JavaScript in PDF documents is disabled (e.g. form-field
     // calculations won't run)
     bool disableJavaScript;
@@ -742,29 +951,15 @@ struct GlobalPrefs {
     bool escToExit;
     // if true, show the full path to the document in the title bar
     bool fullPathInTitle;
-    // pattern used to launch the LaTeX editor when doing inverse search
-    Str inverseSearchCmdLine;
     // if true, restoring a session delays loading each document until its
     // tab is selected
     bool lazyLoading;
-    // background color of the area around the document, traditionally
-    // yellow. Only applies to the Light theme; the default #80fff200 is a
-    // marker meaning "use the theme's color", so setting any other value
-    // also colorizes the toolbar and sidebars
-    ParsedColor mainWindowBackground;
     // if true, doesn't open Home tab
     bool noHomeTab;
     // if true, the home page lists documents by how often they've been
     // opened (the pre-3.6 behavior); if false, the most recently opened
     // come first
     bool homePageSortByFrequentlyRead;
-    // how the home page shows the document history: thumbnails (a grid of
-    // page previews) or list (one row per file)
-    Str homePageViewMode;
-    // file open dialog used by Open File: empty or os (standard Windows
-    // file picker), or sumatrapdf (Navigate Files in Folder). Toggled by
-    // Settings / SumatraPDF File Picker
-    Str filePicker;
     // if true, a document will be reloaded automatically whenever it's
     // changed (currently doesn't work for documents shown in the ebook UI)
     bool reloadModifiedDocuments;
@@ -787,19 +982,9 @@ struct GlobalPrefs {
     bool showMenubarWithTabs;
     // if true, show tips on the home page
     bool showTips;
-    // up to 13 custom colors for the background color picker, separated by
-    // space (e.g. '#ff0000 #00ff00 #0000ff')
-    Str customColors;
     // legacy bool for toolbar; if Toolbar is empty, derived as show/hide
     // (internal; use Toolbar instead)
     bool showToolbar;
-    // toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar
-    // floats over the page, sized to its natural width and centered, only
-    // shown when the mouse is near it). if empty, derived from ShowToolbar
-    Str toolbar;
-    // where the toolbar is placed: top or bottom (applies to both show and
-    // overlay modes)
-    Str toolbarPosition;
     // if true, the find UI is a floating, movable window with a results
     // list instead of the compact toolbar overlay
     bool searchUIFloating;
@@ -858,21 +1043,11 @@ struct GlobalPrefs {
     // if true, show a list of frequently read documents when no document
     // is loaded
     bool showStartPage;
-    // width of the favorites / bookmarks sidebar in screen pixels, as last
-    // resized (0 means the default)
-    int sidebarDx;
-    // scrollbar mode: windows (standard Windows scrollbar), smart (overlay
-    // scrollbar with auto-hide), overlay (always visible overlay
-    // scrollbar), hidden (no scrollbars)
-    Str scrollbars;
     // if true, show a scrollbar in single page mode as well
     bool scrollbarInSinglePage;
     // if true, smooth mouse-wheel and arrow-key scrolling (exponential
     // chase of the target; continuous input stays fluid)
     bool smoothScroll;
-    // distance, in screen pixels at 96 DPI, scrolled by an arrow-key press
-    // or one mouse-wheel line; values below 1 use 16
-    int scrollLineAmount;
     // if true, continuous view has extra scroll room after the last page
     // so you can scroll the end of the document to the top of the window
     bool paddingAfterLastPage;
@@ -888,83 +1063,19 @@ struct GlobalPrefs {
     // ForwardSearch. Off when the destination is only a page with no
     // position
     bool highlightLinkDestination;
-    // how long an internal-document link has to be hovered, in
-    // milliseconds, before a popup rendering the destination region
-    // (citation entry, figure, footnote) appears. -1 (the default)
-    // disables the popup; set a positive value like 300 to enable it
-    int citationHoverDelay;
-    // voice id for Read Aloud text-to-speech; empty or unset means system
-    // default. Voice ids match those used internally by the Read Aloud
-    // Voice menu (WinRT voice id or SAPI token id)
-    Str readAloudVoiceId;
-    // playback speed multiplier for Read Aloud text-to-speech (0.5 ..
-    // 3.0), 1 is normal speed; can also be changed from the Read Aloud
-    // playback bar
-    float readAloudSpeed;
     // if true, mouse wheel scrolling is faster when mouse is over a
     // scrollbar
     bool fastScrollOverScrollbar;
     // if true, prevents the screen from turning off when in fullscreen or
     // presentation mode
     bool preventSleepInFullscreen;
-    // maximum width of a single tab, in pixels at 100% display scaling (at
-    // least 60)
-    int tabWidth;
-    // the name of the theme to use. System follows the Windows light/dark
-    // app mode and switches between LastLightTheme and LastDarkTheme.
-    // Built-in themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal,
-    // Solarized Light, Solarized Dark, Dracula, Nebula, Greeny, Choco,
-    // Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo
-    // Night, Gruvbox, Night Owl, Ayu, Palenight, System (custom Themes[]
-    // entries can add more)
-    Str theme;
-    // the light theme the light/dark toggle and the System theme switch to
-    Str lastLightTheme;
-    // the dark theme the light/dark toggle and the System theme switch to
-    Str lastDarkTheme;
-    // how MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ,
-    // images, etc.) use UI / FixedPageUI colors for the page. Values: off
-    // (document's own colors; default); smart (recolor text and page
-    // background, keep photos/images as-is — best for dark reading);
-    // legacy (also recolor images; pre-3.7 invert-style). Does not change
-    // menus/toolbars — use Theme for UI chrome. Settings / Theme and the
-    // CmdSetDocumentColorsFollowTheme command set all three values.
-    // Shift+I (Invert Colors) is separate: it swaps the page colors for
-    // the session whatever this is set to
-    Str documentColorsFollowTheme;
-    // if both the favorites and the bookmarks part of the sidebar are
-    // visible, this is the height of the bookmarks (table of contents)
-    // part, in screen pixels
-    int tocDy;
-    // the toolbar's built-in buttons, in the order you want them, e.g.
-    // CmdOpenFile CmdPrint PageInfo | CmdFindFirst. Leave a button out to
-    // hide it. | is a separator and PageInfo is the page number box. Empty
-    // (the default) means the standard layout. Buttons you added yourself
-    // (see Shortcuts) still come last
-    Str toolbarCustomLayout;
     // if true, the toolbar has a Read Aloud button (with a drop-down for
     // voice, speed and what to read). Read Aloud is still reachable from
     // the Read Aloud menu when this is false
     bool toolbarShowReadAloud;
-    // size of the toolbar icons in pixels at 100% display scaling (8-64);
-    // the toolbar itself is a few pixels taller
-    int toolbarSize;
-    // font name for bookmarks and favorites tree views. automatic means
-    // Windows default
-    Str treeFontName;
-    // font size for bookmarks and favorites tree views, in pixels; 0 means
-    // the Windows default. Not scaled by the display scaling
-    int treeFontSize;
-    // overrides the font size used for menus, toolbar and dialogs, in
-    // pixels; 0 means the Windows default. Not scaled by the display
-    // scaling
-    int uIFontSize;
     // if true, render MuPDF-based documents (PDF, XPS, DjVu, EPUB etc.)
     // without anti-aliasing, giving sharper but jagged edges
     bool disableAntiAlias;
-    // CAD/engineering PDF line rendering: off, auto (enhance if a CAD
-    // drawing is detected) or on
-    Str engineeringDrawingEnhance;
     // if true, disables auto-linking of URLs and email addresses found in
     // PDF text
     bool disableAutoLinks;
@@ -977,12 +1088,6 @@ struct GlobalPrefs {
     // aloud, highlight etc.) pops up after selecting text. Set to false to
     // disable it
     bool selectionToolbar;
-    // which built-in buttons the selection toolbar has and in what order,
-    // e.g. CmdCopySelection | CmdCreateAnnotHighlight. | or Separator
-    // inserts a separator. Leave a button out to hide it. Empty (the
-    // default) is the standard set. SelectionHandlers with
-    // SelectToolbarNameOrSvg still come last
-    Str selectionToolbarLayout;
     // if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most
     // recently used order instead of tab-strip order
     bool tabsMru;
@@ -990,29 +1095,6 @@ struct GlobalPrefs {
     // / previous tab in tab-strip order (the behavior before version 3.6)
     // instead of showing the tab switcher
     bool ctrlTabSimple;
-    // zoom levels which zooming steps through in addition to Fit Page and
-    // Fit Width. The largest value is also the highest zoom that can be
-    // set at all, so listing levels above 6400 (up to 1000000) is how you
-    // zoom further into e.g. a large map
-    Vec<float>* zoomLevels;
-    // command id assigned to each entry of ZoomLevels
-    Vec<int>* zoomLevelsCmdIds;
-    // how much a single zoom in / zoom out step changes the zoom, as a
-    // percentage of the current zoom level. If 0 or negative, zooming
-    // steps through ZoomLevels instead
-    float zoomIncrement;
-    // customization options for PDF, XPS, DjVu and PostScript UI
-    FixedPageUI fixedPageUI;
-    // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
-    // plain text)
-    EBookUI eBookUI;
-    // customization options for Comic Book UI
-    ComicBookUI comicBookUI;
-    // customization options for image files UI
-    ImageUI imageUI;
-    // customization options for CHM UI. UseFixedPageUI switches to the
-    // PDF-style view; FontName applies to that view
-    ChmUI chmUI;
     // customization options for Markdown UI. If UseFixedPageUI is true,
     // MuPDF is used; otherwise WebView2 browser view is used when
     // available
@@ -1020,88 +1102,6 @@ struct GlobalPrefs {
     // customization options for HTML UI. If UseFixedPageUI is true, MuPDF
     // is used; otherwise WebView2 browser view is used when available
     HtmlUI htmlUI;
-    // settings for the Claude Code chat sidebar
-    ClaudeCode claudeCode;
-    // settings for the Grok Build chat sidebar
-    GrokBuild grokBuild;
-    // settings for the OpenAI Codex chat sidebar
-    CodexBuild codexBuild;
-    // settings for the Antigravity chat sidebar
-    AntiGravity antiGravity;
-    // width of the AI chat sidebar (0 = use default); shared by Claude
-    // Code, Grok Build, and OpenAI Codex (internal)
-    int aiChatSidebarDx;
-    // remembered destination language for selection translation; empty
-    // uses OS UI language
-    Str translateToLang;
-    // remembered source language for selection translation; empty means
-    // Auto
-    Str translateFromLang;
-    // remembered engine for Translate Selection: Google, DeepL, Grok
-    // Build, Claude Code, OpenAI Codex or Antigravity
-    Str translateEngine;
-    // default values for annotations in PDF documents
-    Annotations annotations;
-    // list of additional external viewers for various file types. See
-    // [docs for more
-    // information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
-    Vec<ExternalViewer*>* externalViewers;
-    // customization options for how forward search results are shown (used
-    // from LaTeX editors)
-    ForwardSearch forwardSearch;
-    // these override the default settings in the Print dialog
-    PrinterDefaults printerDefaults;
-    // options for fullscreen mode
-    Fullscreen fullscreen;
-    // list of handlers for selected text, shown in context menu when text
-    // selection is active. See [docs for more
-    // information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
-    Vec<SelectionHandler*>* selectionHandlers;
-    // custom keyboard shortcuts
-    Vec<Shortcut*>* shortcuts;
-    // color themes
-    Vec<Theme*>* themes;
-    // saved groups of tabs
-    Vec<TabGroup*>* tabGroups;
-    // actual resolution of the main screen in DPI, used to show documents
-    // at their physical size; if 0 or negative, the resolution reported by
-    // Windows is used
-    int customScreenDPI;
-    // passwords to try when opening a password protected document
-    Vec<Str>* defaultPasswords;
-    // ISO code of the current UI language
-    Str uiLanguage;
-    // SumatraPDF won't offer to update to this version again
-    Str versionToSkip;
-    // default state of new windows (same as the last closed)
-    int windowState;
-    // default position (can be on any monitor)
-    Rect windowPos;
-    // position/size of the floating find window (see SearchUIFloating)
-    Rect searchUIWindowPos;
-    // position/size of the in-app Help: Manual window
-    Rect helpWindowPos;
-    // information about opened files (in most recently used order)
-    Vec<FileState*>* fileStates;
-    // state of the last session, usage depends on RestoreSession
-    Vec<SessionData*>* sessionData;
-    // a list of paths for files to be reopened at the next start or the
-    // string "SessionData" if this data is saved in SessionData (needed
-    // for auto-updating)
-    Vec<Str>* reopenOnce;
-    // timestamp of the last update check
-    FILETIME timeOfLastUpdateCheck;
-    // week count since 2011-01-01 needed to "age" openCount values in file
-    // history
-    int openCountWeek;
-    // modification time of the preferences file when it was last read
-    FILETIME lastPrefUpdate;
-    // value of DefaultDisplayMode for internal usage
-    DisplayMode defaultDisplayModeEnum;
-    // value of DefaultZoom for internal usage
-    float defaultZoomFloat;
-    // position of the document properties window
-    Point propWinPos;
     // if true, check once a day whether an update is available
     bool checkForUpdates;
 };
