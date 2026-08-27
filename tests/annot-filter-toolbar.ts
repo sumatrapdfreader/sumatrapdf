@@ -3,7 +3,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import {
   captureWindowToPng,
   enumChildWindows,
@@ -120,7 +120,8 @@ async function waitFilter(
   pred: (s: FilterState) => boolean,
   timeoutMs = 4000,
 ): Promise<FilterState> {
-  const deadline = Date.now() + timeoutMs;
+  // an asan build is slow enough that the un-scaled waits ran out
+  const deadline = Date.now() + timeoutMs * SLOW_BUILD_FACTOR;
   let last: FilterState | null = null;
   let raw = "";
   while (Date.now() < deadline) {
@@ -131,7 +132,61 @@ async function waitFilter(
     }
     await sleep(50);
   }
-  throw new Error(`annot-filter-toolbar: filter state never matched\n${raw}`);
+  // the arrow function's source names the condition that never came true
+  throw new Error(`annot-filter-toolbar: filter state never matched: ${pred}\n${raw}`);
+}
+
+// The list caret moves as soon as the arrow key lands, but selecting that
+// annotation on the page is debounced (kSelectionDebounceMs). Poll for it: a
+// fixed wait just past the debounce is not enough on a slow (asan) build.
+async function waitPageSelected(client: ControlClient, what: string): Promise<string> {
+  const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+  let markup = "";
+  for (;;) {
+    markup = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+    if (/state selected=1 /.test(markup)) {
+      return markup;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`annot-filter-toolbar: ${what}\n${markup}`);
+    }
+    await sleep(50);
+  }
+}
+
+// Focus moves on its own schedule, and getFocusedHwnd() reads it across
+// processes: one read right after the key can catch the old owner (or nothing).
+async function waitFocusedClass(frame: number, want: string, what: string): Promise<number> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let cls = "none";
+  for (;;) {
+    const hwnd = getFocusedHwnd(frame);
+    cls = hwnd ? getClassName(hwnd) : "none";
+    if (hwnd && cls === want) {
+      return hwnd;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`annot-filter-toolbar: ${what} (class=${cls})`);
+    }
+    await sleep(50);
+  }
+}
+
+// The filter box specifically: there are other Edits in the window (the page
+// number box), and sending the arrow keys to the wrong one does nothing.
+async function waitFocusedHwnd(frame: number, want: number, what: string): Promise<void> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  for (;;) {
+    const hwnd = getFocusedHwnd(frame);
+    if (hwnd === want) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      const cls = hwnd ? getClassName(hwnd) : "none";
+      throw new Error(`annot-filter-toolbar: ${what} (focus is ${hwnd} class=${cls}, want ${want})`);
+    }
+    await sleep(50);
+  }
 }
 
 export async function testit(): Promise<void> {
@@ -190,20 +245,12 @@ export async function testit(): Promise<void> {
     }
     captureWindowToPng(list, join(dir, "list.png"));
 
-    const edit = getFocusedHwnd(frame);
-    if (!edit || getClassName(edit) !== "Edit") {
-      throw new Error(
-        `annot-filter-toolbar: filter edit did not take focus (class=${edit ? getClassName(edit) : "none"})`,
-      );
-    }
+    await waitFocusedHwnd(frame, filterEdit, "filter edit did not take focus");
+    const edit = filterEdit;
 
     sendMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
     st = await waitFilter(client, (s) => s.sel >= 0);
-    await sleep(400);
-    const markup = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
-    if (!/state selected=1 /.test(markup)) {
-      throw new Error(`annot-filter-toolbar: arrow did not select annotation on the page\n${markup}`);
-    }
+    await waitPageSelected(client, "arrow did not select annotation on the page");
 
     sendText(edit, "unique");
     st = await waitFilter(client, (s) => s.nVisible === 1 && s.listVisible);
@@ -213,12 +260,7 @@ export async function testit(): Promise<void> {
 
     await pressEscape(edit);
     st = await waitFilter(client, (s) => !s.listVisible);
-    const focused = getFocusedHwnd(frame);
-    if (!focused || getClassName(focused) !== CANVAS_CLASS) {
-      throw new Error(
-        `annot-filter-toolbar: Esc with empty filter did not focus canvas (class=${focused ? getClassName(focused) : "none"})`,
-      );
-    }
+    await waitFocusedClass(frame, CANVAS_CLASS, "Esc with empty filter did not focus canvas");
 
     st = await waitFilter(client, (s) => s.floatBtn.dx >= 8 && s.floatBtn.dy >= 8);
     await clickAt(
@@ -253,12 +295,8 @@ export async function testit(): Promise<void> {
     await clickAt(floatEdit, Math.floor(floatEditRc.right / 2), Math.floor(floatEditRc.bottom / 2), 200);
     sendMessage(floatEdit, WM_KEYDOWN, VK_DOWN, 0);
     st = await waitFilter(client, (s) => s.sel >= 0 && s.floatVisible);
-    await sleep(400);
+    await waitPageSelected(client, "floating list arrow did not select annotation");
     st = await waitFilter(client, (s) => s.deleteEnabled);
-    const markup2 = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
-    if (!/state selected=1 /.test(markup2)) {
-      throw new Error(`annot-filter-toolbar: floating list arrow did not select annotation\n${markup2}`);
-    }
 
     sendText(floatEdit, "unique");
     st = await waitFilter(client, (s) => s.nVisible === 1 && s.floatVisible);
@@ -267,12 +305,7 @@ export async function testit(): Promise<void> {
     st = await waitFilter(client, (s) => s.nVisible >= 2 && s.floatVisible);
     await pressEscape(floatEdit);
     st = await waitFilter(client, (s) => s.floatVisible && s.nVisible >= 2);
-    const focusedAfterFloatEsc = getFocusedHwnd(frame);
-    if (!focusedAfterFloatEsc || getClassName(focusedAfterFloatEsc) !== CANVAS_CLASS) {
-      throw new Error(
-        `annot-filter-toolbar: Esc with empty floating filter did not focus canvas (class=${focusedAfterFloatEsc ? getClassName(focusedAfterFloatEsc) : "none"})`,
-      );
-    }
+    await waitFocusedClass(frame, CANVAS_CLASS, "Esc with empty floating filter did not focus canvas");
 
     if (st.dockBtn.dx < 8 || st.dockBtn.dy < 8) {
       throw new Error(`annot-filter-toolbar: dock icon missing ${JSON.stringify(st.dockBtn)}`);
