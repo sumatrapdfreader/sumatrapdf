@@ -1,3 +1,7 @@
+/* Tabler icon source links updated from master/icons to main/icons/outline
+   after https://github.com/tabler/tabler-icons/commit/143d38918613a3e13998713fe7aaa1f246df3e6e
+ */
+
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
@@ -12,14 +16,14 @@ extern "C" {
 #include "Theme.h"
 #include "SvgIcons.h"
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/folder.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/folder.svg
 const char* gIconFileOpen =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
   <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/printer.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/printer.svg
 const char* gIconPrint =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -28,7 +32,7 @@ const char* gIconPrint =
   <rect x="7" y="13" width="10" height="8" rx="2" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/arrow-left.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/arrow-left.svg
 const char* gIconPagePrev =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -37,7 +41,7 @@ const char* gIconPagePrev =
   <line x1="5" y1="12" x2="11" y2="6" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/arrow-right.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/arrow-right.svg
 const char* gIconPageNext =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -46,7 +50,7 @@ const char* gIconPageNext =
   <line x1="13" y1="6" x2="19" y2="12" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/layout-rows.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/layout-rows.svg
 const char* gIconLayoutContinuous =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -54,28 +58,28 @@ const char* gIconLayoutContinuous =
   <line x1="3" y1="12" x2="21" y2="12" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/square.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/square.svg
 const char* gIconLayoutSinglePage =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
   <rect x="4" y="4" width="16" height="16" rx="2" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/chevron-left.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/chevron-left.svg
 const char* gIconSearchPrev =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
   <polyline points="15 6 9 12 15 18" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/chevron-right.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/chevron-right.svg
 const char* gIconSearchNext =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
   <polyline points="9 6 15 12 9 18" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/letter-case.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/letter-case.svg
 const char* gIconMatchCase =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z"/>
@@ -98,7 +102,7 @@ const char* gIconMatchWholeWord =
   <path d="M3 16v3h18v-3" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/zoom-in.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/zoom-in.svg
 const char* gIconZoomIn =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -108,7 +112,7 @@ const char* gIconZoomIn =
   <line x1="21" y1="21" x2="15" y2="15" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/zoom-out.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/zoom-out.svg
 const char* gIconZoomOut =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -117,7 +121,7 @@ const char* gIconZoomOut =
   <line x1="21" y1="21" x2="15" y2="15" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/floppy-disk.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/device-floppy.svg
 const char* gIconSave =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z"/>
@@ -126,7 +130,7 @@ const char* gIconSave =
   <polyline points="4 8 10 8 10 4" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/file-plus.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/file-plus.svg
 // a document with a plus: saving the changes into a new PDF
 const char* gIconSaveToNewFile =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -137,7 +141,7 @@ const char* gIconSaveToNewFile =
   <line x1="9" y1="14" x2="15" y2="14" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/rotate-2.svg - modified
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/rotate-2.svg - modified
 const char* gIconRotateLeft =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -149,7 +153,7 @@ const char* gIconRotateLeft =
   <circle cx="19.94" cy="11" r="0.15"/>
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/rotate-clockwise-2.svg - modified
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/rotate-clockwise-2.svg - modified
 const char* gIconRotateRight =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -161,7 +165,7 @@ const char* gIconRotateRight =
   <circle cx="11" cy="19.94" r="0.15"/>
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/copy.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/copy.svg
 const char* gIconCopy =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -169,7 +173,7 @@ const char* gIconCopy =
   <rect x="8" y="8" width="12" height="12" rx="2" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/language.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/language.svg
 const char* gIconTranslate =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -196,7 +200,7 @@ const char* gIconPauseSpeaking =
   <path d="M18 5v14" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/arrow-back-up.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/arrow-back-up.svg
 const char* gIconNavigateBack =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -204,7 +208,7 @@ const char* gIconNavigateBack =
   <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/arrow-forward-up.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/arrow-forward-up.svg
 const char* gIconNavigateForward =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -228,7 +232,7 @@ const char* gIconRedo =
   <path d="M20 9h-10a5 5 0 0 0 0 10h6" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/search.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/search.svg
 const char* gIconSearch =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -236,28 +240,28 @@ const char* gIconSearch =
   <line x1="21" y1="21" x2="15" y2="15" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/command.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/command.svg
 const char* gIconCommandPalette =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
   <path d="M7 9a2 2 0 1 1 2 -2v10a2 2 0 1 1 -2 -2h10a2 2 0 1 1 -2 2v-10a2 2 0 1 1 2 2h-10" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/chevron-up.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/chevron-up.svg
 const char* gIconChevronUp =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
   <polyline points="6 15 12 9 18 15" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/chevron-down.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/chevron-down.svg
 const char* gIconChevronDown =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
   <polyline points="6 9 12 15 18 9" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/x.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/x.svg
 const char* gIconClose =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -265,7 +269,7 @@ const char* gIconClose =
   <line x1="6" y1="6" x2="18" y2="18" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/pin.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/pin.svg
 // tabler arrows-diagonal: expand the compact find bar into a floating window
 const char* gIconArrowsDiagonal =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -286,7 +290,7 @@ const char* gIconArrowsDiagonalMinimize =
   <path d="M10 14l-6 6" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/list.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/list.svg
 const char* gIconHomeList =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -298,7 +302,7 @@ const char* gIconHomeList =
   <line x1="5" y1="18" x2="5" y2="18.01" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/layout-grid.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/layout-grid.svg
 const char* gIconHomeThumbnails =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
@@ -308,7 +312,7 @@ const char* gIconHomeThumbnails =
   <rect x="14" y="14" width="6" height="6" rx="1" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/pin.svg
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/pin.svg
 const char* gIconPin =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
