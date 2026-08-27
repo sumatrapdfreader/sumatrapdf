@@ -3,9 +3,11 @@
 // Why this exists: driving SumatraPDF for verification means finding its windows
 // and posting real window messages / reading scrollbar state cross-process.
 // Injected mouse-button input is dropped on the test machine, but PostMessage,
-// MoveWindow, SetCursorPos and cross-process GetScrollInfo all work (see the
-// project memory env-gui-automation). These helpers wrap the handful of user32
-// calls those tests need so individual test files don't each re-declare the FFI.
+// MoveWindow and cross-process GetScrollInfo all work (see the project memory
+// env-gui-automation). SetCursorPos only works while the session owns an
+// unlocked desktop -- see hasInteractiveDesktop() below. These helpers wrap
+// the handful of user32 calls those tests need so individual test files don't
+// each re-declare the FFI.
 //
 // Handles (HWND) are represented as JS `number`s here. That's fine for window
 // handles in practice; do not use these helpers for arbitrary 64-bit pointers.
@@ -50,6 +52,8 @@ const user32 = dlopen("user32.dll", {
   GetSystemMetrics: { args: [FFIType.i32], returns: FFIType.i32 },
   SystemParametersInfoW: { args: [FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.u32], returns: FFIType.bool },
   SetProcessDpiAwarenessContext: { args: [FFIType.i64], returns: FFIType.bool },
+  OpenInputDesktop: { args: [FFIType.u32, FFIType.bool, FFIType.u32], returns: FFIType.u64 },
+  CloseDesktop: { args: [FFIType.u64], returns: FFIType.bool },
   GetGUIThreadInfo: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
   GetCursorInfo: { args: [FFIType.ptr], returns: FFIType.bool },
   GetIconInfo: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
@@ -860,6 +864,23 @@ export function getSystemMetrics(index: number): number {
 export function setProcessDpiAware(): boolean {
   // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 == (HANDLE)-4
   return user32.symbols.SetProcessDpiAwarenessContext(-4n as unknown as number);
+}
+
+// True when this session owns an unlocked, interactive desktop. A locked
+// screen or a disconnected RDP session has none: SetCursorPos then returns
+// FALSE and the cursor stays at 0,0, so anything the app reads back with
+// GetCursorPos() (hover, tooltips, WM_SETCURSOR handlers) can never be driven
+// from a test. Reconnect to the console -- `tscon <id> /dest:console` hands an
+// RDP session back to it -- and unlock before running those.
+const DESKTOP_READOBJECTS = 0x0001;
+
+export function hasInteractiveDesktop(): boolean {
+  const desk = user32.symbols.OpenInputDesktop(0, false, DESKTOP_READOBJECTS);
+  if (!desk) {
+    return false;
+  }
+  user32.symbols.CloseDesktop(desk);
+  return true;
 }
 
 // Taskbar auto-hide, via SHAppBarMessage. Takes effect immediately (no Explorer

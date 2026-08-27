@@ -7,7 +7,7 @@
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { enumWindows, getWindowPid, getWindowText } from "./winapi.ts";
+import { enumWindows, getWindowPid, getWindowText, hasInteractiveDesktop } from "./winapi.ts";
 
 export const ROOT = join(import.meta.dir, "..");
 
@@ -415,8 +415,29 @@ export async function runNamedTests(tests: NamedTest[], opts?: SuiteOptions): Pr
   }
 }
 
+// A locked screen or a disconnected RDP session has no interactive desktop, so
+// every test that hovers or drives the real cursor fails for reasons that have
+// nothing to do with the code (the tooltip check in issue-6000 is the usual
+// casualty). Say so up front instead of letting it look like a regression.
+function checkInteractiveDesktop(): void {
+  if (hasInteractiveDesktop() || process.argv.includes("-allow-locked-desktop")) {
+    return;
+  }
+  const msg = [
+    "",
+    "❌ no interactive desktop: this session is locked or disconnected.",
+    "   Tests that move the real cursor cannot pass here.",
+    "   Unlock the console, or hand an RDP session back to it before disconnecting:",
+    "     query session && tscon <id> /dest:console",
+    "   Pass -allow-locked-desktop to run the suite anyway.",
+  ].join("\n");
+  console.error(msg);
+  process.exit(1);
+}
+
 export async function runSuiteMain(testit: (opts: SuiteOptions) => Promise<void>): Promise<void> {
   const silent = isSilentArg();
+  checkInteractiveDesktop();
   // an exe named with -exe is the one to test, so don't build over it
   if (!process.argv.includes("--no-build") && !EXE_FROM_ARGV) {
     buildApp({ silent });
@@ -452,6 +473,11 @@ export function buildApp(opts?: { silent?: boolean }): void {
 // builds (unless --no-build), runs testit(), exits 0 on pass / 1 on failure.
 export async function runStandalone(testit: () => void | Promise<void>, name?: string): Promise<void> {
   const label = name ?? (process.argv[1] ?? "test").replace(/\\/g, "/").split("/").pop()!.replace(/\.ts$/, "");
+  // a single test is worth running locked (most don't touch the cursor), but
+  // say so, or a cursor-driven failure reads as a bug in the code
+  if (!hasInteractiveDesktop()) {
+    console.error("⚠ this session is locked or disconnected: tests that move the real cursor will fail");
+  }
   try {
     if (!process.argv.includes("--no-build") && !EXE_FROM_ARGV) {
       buildApp();
