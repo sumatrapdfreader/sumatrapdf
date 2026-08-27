@@ -18,6 +18,7 @@
 
 import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type SuiteOptions } from "./util.ts";
 import { setTestWindowLayout } from "./winapi.ts";
+import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
 import { testit as buildCli } from "./build-cli.ts";
@@ -208,11 +209,21 @@ import { testit as issue5946 } from "./issue-5946.ts";
 import { testit as issue6012 } from "./issue-6012.ts";
 import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
 
+async function annotationClipboardTests(): Promise<void> {
+  beginSharedControlledSession();
+  try {
+    await annotUndoRedo();
+    await annotCopyPaste();
+    await annotCutPaste();
+  } finally {
+    await endSharedControlledSession();
+  }
+}
+
 export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
-  ["annot-undo-redo", annotUndoRedo],
   ["image-only-palette-items", imageOnlyPaletteItems],
   ["issue-5868", issue5868],
   ["issue-893", issue893],
@@ -253,8 +264,7 @@ export const tests: NamedTest[] = [
   ["issue-6054", issue6054],
   ["move-polygon-polyline-ink", movePolygonPolylineInk],
   ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
-  ["annot-copy-paste", annotCopyPaste],
-  ["annot-cut-paste", annotCutPaste],
+  ["annotation clipboard tests", annotationClipboardTests],
   ["text-annotation-placement", textAnnotationPlacement],
   ["free-text-annotation-placement", freeTextAnnotationPlacement],
   ["free-text-edit-toolbar", freeTextEditToolbar],

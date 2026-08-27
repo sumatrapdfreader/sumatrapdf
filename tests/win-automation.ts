@@ -12,7 +12,7 @@
 // These are for *ad-hoc* tests (not checked in). Put reusable helpers here, not
 // in the individual ad-hoc scripts.
 
-import { EXE } from "./util.ts";
+import { cmdId, EXE } from "./util.ts";
 import {
   testWindowPos,
   waitForWindowIdle,
@@ -42,17 +42,50 @@ import {
   getClientRect,
   clientToScreen,
   setCursorPos,
+  sendCopyDataW,
   getPopupMenuHandle,
   readMenuTree,
   getWindowText,
   getFocusedHwnd,
-  killAndWait,
+  killAndWait as killAndWaitProcess,
   killProcessesNamed,
   type MenuItem,
 } from "./winapi.ts";
 import { ControlClient, uniquePipeName } from "./control.ts";
 
-export { captureWindowToPng, killAndWait, killProcessesNamed };
+export { captureWindowToPng, killProcessesNamed };
+
+type SharedControlledSession = {
+  proc: Bun.Subprocess;
+  pipe: string;
+  frame: number;
+};
+
+let sharedSessionRequested = false;
+let sharedSession: SharedControlledSession | null = null;
+
+export function beginSharedControlledSession(): void {
+  if (sharedSession || sharedSessionRequested) {
+    throw new Error("a shared controlled session is already active");
+  }
+  sharedSessionRequested = true;
+}
+
+export async function endSharedControlledSession(): Promise<void> {
+  sharedSessionRequested = false;
+  if (sharedSession) {
+    const session = sharedSession;
+    sharedSession = null;
+    await killAndWaitProcess(session.proc);
+  }
+}
+
+export async function killAndWait(proc: Bun.Subprocess): Promise<void> {
+  if (sharedSession?.proc === proc) {
+    return;
+  }
+  await killAndWaitProcess(proc);
+}
 
 export const FRAME_CLASS = "SUMATRA_PDF_FRAME";
 export const CANVAS_CLASS = "SUMATRA_PDF_CANVAS";
@@ -84,6 +117,21 @@ export async function launchControlled(
   args: string[],
   opts?: { defaultWindowPos?: boolean; saveSettings?: boolean },
 ): Promise<{ proc: Bun.Subprocess; client: ControlClient; frame: number }> {
+  if (sharedSession) {
+    const path = args[args.length - 1];
+    if (!path || path.startsWith("-")) {
+      throw new Error("shared controlled session needs a document path as its last argument");
+    }
+    sendMessage(sharedSession.frame, WM_COMMAND, cmdId("CmdDiscardChanges"), 0);
+    sendMessage(sharedSession.frame, WM_COMMAND, cmdId("CmdToggleEditPDF"), 0);
+    const command = `[Open("${path}", 0, 1, 0)]`;
+    if (!sendCopyDataW(sharedSession.frame, 0x44646557, command)) {
+      throw new Error("could not open the next document in the shared SumatraPDF process");
+    }
+    const client = await ControlClient.connect(sharedSession.pipe);
+    await client.waitForRenderIdle();
+    return { proc: sharedSession.proc, client, frame: sharedSession.frame };
+  }
   const pipe = uniquePipeName();
   const posArgs = opts?.defaultWindowPos || args.includes("-window-pos") ? [] : windowPosArgs();
   const testing = opts?.saveSettings ? [] : ["-for-testing"];
@@ -98,9 +146,12 @@ export async function launchControlled(
       client.close();
       throw new Error("SumatraPDF main window did not appear");
     }
+    if (sharedSessionRequested) {
+      sharedSession = { proc, pipe, frame };
+    }
     return { proc, client, frame };
   } catch (e) {
-    await killAndWait(proc);
+    await killAndWaitProcess(proc);
     throw e;
   }
 }
