@@ -231,19 +231,6 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         return _TRA("Register Windows Search Filter");
     }
 
-    if (cmdId == CmdAIChatWithClaudeCode) {
-        return _TRA("AI Claude chat with document");
-    }
-    if (cmdId == CmdAIChatWithGrokBuild) {
-        return _TRA("AI Grok chat with document");
-    }
-    if (cmdId == CmdAIChatWithOpenAICodex) {
-        return _TRA("AI Codex chat with document");
-    }
-    if (cmdId == CmdAIChatWithAntiGravity) {
-        return _TRA("AI Antigravity chat with document");
-    }
-
     return s;
 }
 

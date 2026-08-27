@@ -1,0 +1,29 @@
+static LRESULT CALLBACK MinimapBoxWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/, DWORD_PTR data) {
+    Minimap* minimap = (Minimap*)data;
+    if (!minimap) return DefSubclassProc(hwnd, msg, wp, lp);
+
+    LRESULT res = 0;
+    res = TryReflectMessages(hwnd, msg, wp, lp);
+    if (res) return res;
+
+    if (VirtHostOnMessage(hwnd, minimap->root, msg, wp, lp, res, ThemeControlBackgroundColor())) {
+        return res;
+    }
+
+    if (msg == WM_SIZE) {
+        RECT rc;
+        GetClientRect(hwnd, &rc);
+        LayoutTreeToSize(hwnd, minimap->layout, {rc.right - rc.left, rc.bottom - rc.top}, &minimap->root);
+        
+        // Actually move the child minimap window
+        if (minimap->hwnd && minimap->layout) {
+            // Find the slot inside layout
+            if (minimap->layout->childs.len == 2) {
+                HwndSlot* slot = (HwndSlot*)minimap->layout->childs[1];
+                MoveWindow(minimap->hwnd, slot->bounds.x, slot->bounds.y, slot->bounds.dx, slot->bounds.dy, TRUE);
+            }
+        }
+        return 0;
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}

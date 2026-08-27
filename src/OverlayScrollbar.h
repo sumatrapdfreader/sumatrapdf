@@ -1,3 +1,4 @@
+#pragma once
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
@@ -41,6 +42,7 @@ struct OverlayScrollbar {
 
     int thinWidth = 0;
     int thickWidth = 0;
+    int topMargin = 0;
 
     // auto-hide timing (milliseconds)
     int showAfterScrollMs = 5000;    // how long to show thin bar after scroll info update
@@ -79,3 +81,4 @@ void OverlayScrollbarNotifyScroll(OverlayScrollbar* sb);
 void OverlayScrollbarSetMode(OverlayScrollbar* sb, OverlayScrollbar::Mode mode);
 
 bool IsOverlayScrollbarVisible(OverlayScrollbar* sb);
+

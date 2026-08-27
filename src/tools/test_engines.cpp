@@ -438,54 +438,54 @@ static bool BenchReadN(Str dir) {
 }
 
 int main(int argc, char** argv) {
-    if (argc == 4 && str::Eq(argv[2], StrL("-find-text"))) {
+    if (argc == 4 && str::Eq(Str(argv[2]), StrL("-find-text"))) {
         bool ok = FindText(Str(argv[1]), Str(argv[3]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
-    if (argc == 3 && str::Eq(argv[2], StrL("-list-toc"))) {
+    if (argc == 3 && str::Eq(Str(argv[2]), StrL("-list-toc"))) {
         bool ok = ListToc(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
-    if (argc == 3 && str::Eq(argv[2], StrL("-list-properties"))) {
+    if (argc == 3 && str::Eq(Str(argv[2]), StrL("-list-properties"))) {
         bool ok = ListProperties(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
-    if (argc == 3 && str::Eq(argv[2], StrL("-bench-readn"))) {
+    if (argc == 3 && str::Eq(Str(argv[2]), StrL("-bench-readn"))) {
         bool ok = BenchReadN(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
 #if OS_WIN
-    if (argc == 2 && str::Eq(argv[1], StrL("-check-netdrive"))) {
+    if (argc == 2 && str::Eq(Str(argv[1]), StrL("-check-netdrive"))) {
         bool ok = CheckIsOnNetworkDrive();
         DestroyTempArena();
         return ok ? 0 : 1;
     }
 #endif
-    if (argc == 3 && str::Eq(argv[2], StrL("-bench-netdrive"))) {
+    if (argc == 3 && str::Eq(Str(argv[2]), StrL("-bench-netdrive"))) {
         bool ok = BenchIsOnNetworkDrive(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
-    if (argc == 3 && str::Eq(argv[2], StrL("-bench-mediabox"))) {
+    if (argc == 3 && str::Eq(Str(argv[2]), StrL("-bench-mediabox"))) {
         bool ok = BenchMediabox(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
-    if (argc == 3 && str::Eq(argv[2], StrL("-list-links"))) {
+    if (argc == 3 && str::Eq(Str(argv[2]), StrL("-list-links"))) {
         bool ok = ListLinks(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
-    if (argc == 3 && str::Eq(argv[2], StrL("-select-all-text"))) {
+    if (argc == 3 && str::Eq(Str(argv[2]), StrL("-select-all-text"))) {
         bool ok = SelectAllText(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }
-    if (argc == 3 && str::Eq(argv[2], StrL("-clone-after-delete"))) {
+    if (argc == 3 && str::Eq(Str(argv[2]), StrL("-clone-after-delete"))) {
         bool ok = CloneAfterDeleteTest(Str(argv[1]));
         DestroyTempArena();
         return ok ? 0 : 1;

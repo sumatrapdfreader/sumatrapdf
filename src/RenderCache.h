@@ -95,6 +95,7 @@ struct PageRenderRequest {
     AbortCookie* abortCookie = nullptr;
     u32 darkModeEpoch = 0;
     u64 timestamp = 0;
+    bool invertColors = false;
 
     // set by render thread before calling renderFinishedCb
     Pixmap* bmp = nullptr;

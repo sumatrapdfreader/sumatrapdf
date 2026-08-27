@@ -51,6 +51,7 @@
 #include "Theme.h"
 #include "TextToSpeech.h"
 #include "Toolbar.h"
+#include "Minimap.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 
@@ -86,6 +87,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {gIconRotateRight, CmdRotateRight, _TRN("Rotate &Right")},
     {gIconZoomOut, CmdZoomOut, _TRN("Zoom Out")},
     {gIconZoomIn, CmdZoomIn, _TRN("Zoom In")},
+    {nullptr, 0, {}}, // separator
+    {gIconMoon, CmdInvertColors, _TRN("Toggle Night Mode")},
     {nullptr, 0, {}}, // separator
     {gIconSearch, CmdFindFirst, _TRN("Find")},
     {nullptr, 0, {}}, // separator
@@ -649,6 +652,12 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             }
             SetToolbarButtonToolTipByIdx(win, i, cmdId, tip);
         }
+
+        if (cmdId == CmdInvertColors) {
+            bool isNightMode = GetInvertPageColors();
+            SetToolbarButtonImageByIdx(win, i, isNightMode ? gIconSun : gIconMoon);
+            SetToolbarButtonToolTipByIdx(win, i, cmdId, isNightMode ? _TRA("Toggle Day Mode") : _TRA("Toggle Night Mode"));
+        }
     }
 
     bool showPdfAnnotationsToolbar = win->pdfAnnotationsToolbarEnabled && ctx->isPdf && ctx->supportsAnnots;
@@ -1046,6 +1055,8 @@ void UpdateToolbarState(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
+    MinimapUpdate(win->minimap);
+    
     DisplayMode dm = win->ctrl->GetDisplayMode();
     float zoomVirtual = win->ctrl->GetZoomVirtual();
     {

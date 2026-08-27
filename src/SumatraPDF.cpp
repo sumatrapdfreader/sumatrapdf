@@ -22,8 +22,7 @@
 #include "base/LzmaSimpleArchive.h"
 #include "base/CmdLineArgsIter.h"
 
-#include <winhttp.h>
-#pragma comment(lib, "winhttp.lib")
+
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
@@ -57,6 +56,7 @@
 #include "EbookDoc.h"
 #include "MobiDoc.h"
 #include "DisplayModel.h"
+#include "Minimap.h"
 #include "FileHistory.h"
 #include "PdfSync.h"
 #include "RenderCache.h"
@@ -1659,6 +1659,8 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
             OverlayScrollbarShow(win->overlayScrollV, false);
         }
     }
+    
+    MinimapUpdateScrollProportional(win->minimap);
 }
 
 static TempStr BuildZoomString(float zoomLevel) {
@@ -2934,6 +2936,7 @@ static void CreateCaptionLayout(MainWindow* win) {
 // they are simply collapsed.
 static void CreateFrameLayout(MainWindow* win) {
     win->tocSlot = new HwndSlot();
+    win->minimapSlot = new HwndSlot();
     win->favSlot = new HwndSlot();
     win->fullFavSlot = new HwndSlot();
     win->canvasSlot = new HwndSlot();
@@ -2966,6 +2969,7 @@ static void CreateFrameLayout(MainWindow* win) {
     row->alignCross = CrossAxisAlign::Stretch;
     row->AddChild(sidebar);
     row->AddChild(win->sidebarSplitter);
+    row->AddChild(win->minimapSlot);
     row->AddChild(content, 1);
     row->AddChild(win->aiChatSplitter);
     row->AddChild(win->aiChatSlot);
@@ -2999,8 +3003,6 @@ static void CreateSidebar(MainWindow* win) {
     CreateFrameLayout(win);
 
     CreateFavorites(win);
-
-    CreateAIChatPanel(win);
 
     if (win->uiState.tocVisible) {
         HwndRepaintNow(win->hwndTocBox);
@@ -3393,7 +3395,6 @@ void UpdateAfterThemeChange() {
         UpdateFindWindowTheme(win);
         RefreshSelectionToolbarIcons(win);
         RefreshAnnotationHoverOverlay(win);
-        UpdateAIChatTheme(win);
         DarkModeApplyToFrameAfterThemeChange(win);
         UpdateWindowFrameBorderColor(win);
         // TODO: this only rerenders canvas, not frame, even with
@@ -4762,6 +4763,14 @@ void LoadModelIntoTab(WindowTab* tab) {
         win->uiaProvider->OnSelectionChanged();
     }
 
+    if (DisplayModel* fixedDm = tab->AsFixed()) {
+        if (GetInvertPageColors() != fixedDm->invertColors) {
+            SetInvertPageColors(fixedDm->invertColors);
+            UpdateDocumentColors();
+            ToolbarUpdateStateForWindow(win, false);
+        }
+    }
+
     HwndSetFocus(win->hwndFrame);
     if (tab->type == WindowTab::Type::None) {
         logf("LoadModelIntoTab: tab 0x%p has Type::None, skipping reload\n", tab);
@@ -4852,6 +4861,10 @@ void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd
 
 // re-render the document currently displayed in this window
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
+    if (win->minimap) {
+        MinimapClearCache(win->minimap);
+    }
+    
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -4896,7 +4909,7 @@ static void RerenderFixedPage() {
 
 void UpdateDocumentColors() {
     Color bg;
-    Color text = ThemePageRenderColors(bg);
+    Color text = ThemePageRenderColorsNoInvert(bg);
     bool pagesDark = !IsLightColor(bg);
     Color link = pagesDark ? ThemeWindowLinkColor() : 0;
 
@@ -7127,7 +7140,8 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
            s1->tocVisible == s2->tocVisible && s1->showFavorites == s2->showFavorites &&
            s1->favoritesAsTab == s2->favoritesAsTab && s1->showMenuBarRebar == s2->showMenuBarRebar &&
            s1->aiChatVisible == s2->aiChatVisible && s1->aiChatDx == s2->aiChatDx &&
-           s1->sidebarOnRight == s2->sidebarOnRight;
+           s1->sidebarOnRight == s2->sidebarOnRight &&
+           s1->minimapVisible == s2->minimapVisible;
 }
 
 // Favorites-only must not reserve a tab row (issue #5861)
@@ -7277,6 +7291,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.aiChatVisible = win->uiState.aiChatVisible;
     curState.aiChatDx = win->aiChatDx;
     curState.sidebarOnRight = SidebarOnRightLayout();
+    curState.minimapVisible = win->minimap && win->minimap->isVisible;
 
     // A top-level size change is already a live, batched sibling resize.
     // Toggling WM_SETREDRAW on the frame for every step makes Windows discard
@@ -7323,6 +7338,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         if (win->hwndAiChatBox) {
             HwndSetVisible(win->hwndAiChatBox, aiVis);
             win->aiChatSplitter->SetIsVisible(aiVis);
+        }
+        if (win->minimap && win->minimap->hwnd) {
+            HwndSetVisible(win->minimap->hwnd, !favAsTab && win->minimap->isVisible);
         }
     }
 
@@ -7495,9 +7513,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     SetVis(win->sidebarSplitter, sidebarVisible);
     SetVis(win->aiChatSplitter, aiChatVisible);
     SetVis(win->aiChatSlot, aiChatVisible);
+    
+    bool minimapVisible = win->minimap && win->minimap->isVisible;
+    SetVis(win->minimapSlot, minimapVisible);
 
     win->tocSlot->dx = sidebarDxApplied;
     win->tocSlot->dy = tocDy;
+    win->minimapSlot->dx = 250;
     win->favSlot->dx = sidebarDxApplied;
     win->aiChatSlot->dx = aiChatDx;
     if (win->frameLayout) {
@@ -7519,6 +7541,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     BindSlot(win->tocSlot, win->hwndTocBox, &dh, tocVisible && !isFrameResize && !isSplitterDrag);
     BindSlot(win->favSlot, win->hwndFavBox, &dh, sidebarFav && !isFrameResize && !isSplitterDrag);
     BindSlot(win->fullFavSlot, win->hwndFavBox, &dh, favAsTab);
+    BindSlot(win->minimapSlot, win->minimap ? win->minimap->hwnd : nullptr, &dh, minimapVisible && !isFrameResize && !isSplitterDrag);
     BindSlot(win->canvasSlot, win->hwndCanvas, &dh, !discardCanvasBits);
     BindSlot(win->aiChatSlot, win->hwndAiChatBox, &dh, aiChatVisible);
 
@@ -7547,7 +7570,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     HwndSlot* chromeSlots[] = {win->tabsSlot,    win->menuSlot,    win->toolbarTopSlot, win->toolbarBottomSlot,
                                win->capMenuSlot, win->capTabsRow1, win->capTabsRow2,    win->tocSlot,
-                               win->favSlot,     win->fullFavSlot, win->canvasSlot,     win->aiChatSlot};
+                               win->favSlot,     win->fullFavSlot, win->minimapSlot, win->canvasSlot,     win->aiChatSlot};
     for (HwndSlot* s : chromeSlots) {
         ClearSlotDefer(s);
     }
@@ -7612,9 +7635,6 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         // the document showing through the caption row after leaving full screen
         // (issue #5866). Matches EndFrameRedrawSuppression, which has always done this.
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
-    }
-    if (win->uiState.aiChatVisible && win->hwndAiChatBox) {
-        RelayoutAIChatPanel(win);
     }
     // A frame-size drag does not move the splitter; invalidating it paints a
     // 1-2px strip against the TOC and looks like the tree is shimmering.
@@ -7915,8 +7935,6 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     }
     ApplySidebarDpiFonts(win, dpi);
     HomePageOnDpiChanged(win, dpi);
-    UpdateAIChatDpi(win, dpi);
-
     // window margin / page spacing are dpi-scaled, so they change too
     DisplayModel* dm = win->AsFixed();
     if (dm) {
@@ -9543,124 +9561,205 @@ struct GoogleLensTask {
 };
 
 struct GoogleLensResult {
-    Str url; // heap-allocated via str::Dup; freed after launch
+    Str htmlPath; // heap-allocated temp HTML file path; freed after launch
 };
 
+static void NotifyGoogleLensFailure(Str message) {
+    if (len(gWindows) == 0) {
+        return;
+    }
+    NotificationCreateArgs args;
+    args.hwndParent = gWindows[0]->hwndCanvas;
+    args.warning = true;
+    args.timeoutMs = 5000;
+    args.msg = message;
+    ShowNotification(args);
+}
+
 static void GoogleLensLaunchUrl(GoogleLensResult* res) {
-    SumatraLaunchBrowser(res->url);
-    str::Free(res->url);
-    delete res;
+    bool launched = LaunchFileShell(res->htmlPath, {}, StrL("open"));
+    if (!launched) {
+        NotifyGoogleLensFailure(_TRA("Could not open Google Lens in the web browser."));
+        str::Free(res->htmlPath);
+        delete res;
+        return;
+    }
+
+    // Launch a background thread to wait and then delete the temp file
+    RunAsync(MkFunc0<GoogleLensResult>([](GoogleLensResult* r) {
+        Sleep(10000); // Wait 10 seconds for browser to open it
+        file::Delete(r->htmlPath);
+        str::Free(r->htmlPath);
+        delete r;
+    }, res), StrL("GoogleLensCleanup"));
+}
+
+// Standard base64 encoding table.
+static const char kBase64Table[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+// Encode binary data to base64.  Caller must free() the returned string.
+static char* Base64Encode(const u8* data, int dataLen, int* outLen) {
+    int encodedLen = 4 * ((dataLen + 2) / 3);
+    char* out = (char*)malloc(encodedLen + 1);
+    if (!out) {
+        return nullptr;
+    }
+    int j = 0;
+    for (int i = 0; i < dataLen;) {
+        u32 a = (i < dataLen) ? data[i++] : 0;
+        u32 b = (i < dataLen) ? data[i++] : 0;
+        u32 c = (i < dataLen) ? data[i++] : 0;
+        u32 triple = (a << 16) | (b << 8) | c;
+        out[j++] = kBase64Table[(triple >> 18) & 0x3F];
+        out[j++] = kBase64Table[(triple >> 12) & 0x3F];
+        out[j++] = kBase64Table[(triple >> 6) & 0x3F];
+        out[j++] = kBase64Table[triple & 0x3F];
+    }
+    // Add padding.
+    int mod = dataLen % 3;
+    if (mod == 1) {
+        out[j - 1] = '=';
+        out[j - 2] = '=';
+    } else if (mod == 2) {
+        out[j - 1] = '=';
+    }
+    out[j] = '\0';
+    if (outLen) {
+        *outLen = j;
+    }
+    return out;
 }
 
 static void GoogleLensThread(GoogleLensTask* task) {
-    const char* boundary = "----FormBoundaryPager";
-    str::Builder body;
-    char hdrLine[512];
-    snprintf(hdrLine, sizeof(hdrLine),
-        "--%s\r\nContent-Disposition: form-data; name=\"encoded_image\"; filename=\"image.png\"\r\nContent-Type: image/png\r\n\r\n",
-        boundary);
-    body.Append(Str(hdrLine));
-    body.Append(Str(task->imageBytes, task->imageBytesLen));
-    char tailLine[128];
-    snprintf(tailLine, sizeof(tailLine), "\r\n--%s--\r\n", boundary);
-    body.Append(Str(tailLine));
-
-    Str redirectUrl = {};
-
-    // Use google.com/searchbyimage/upload — this is the proven endpoint that
-    // accepts multipart image upload and redirects to Google Lens results.
-    // Must use a real Chrome User-Agent otherwise Google returns 400/CAPTCHA.
-    HINTERNET hSession = WinHttpOpen(
-        L"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-        WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-    if (hSession) {
-        DWORD timeout = 15000;
-        WinHttpSetOption(hSession, WINHTTP_OPTION_CONNECT_TIMEOUT, &timeout, sizeof(timeout));
-        WinHttpSetOption(hSession, WINHTTP_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout));
-
-        HINTERNET hConnect = WinHttpConnect(hSession, L"www.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0);
-        if (hConnect) {
-            // sbisrc=cr_1 tells Google this is coming from Chrome — without it the
-            // upload is treated as bot traffic and returns a blank/error page.
-            HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST",
-                L"/searchbyimage/upload?sbisrc=cr_1",
-                nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
-            if (hRequest) {
-                // Disable auto-redirect so we capture the Location header ourselves
-                DWORD disableFlags = WINHTTP_DISABLE_REDIRECTS;
-                WinHttpSetOption(hRequest, WINHTTP_OPTION_DISABLE_FEATURE, &disableFlags, sizeof(disableFlags));
-
-                char hdrBuf[512];
-                snprintf(hdrBuf, sizeof(hdrBuf),
-                    "Content-Type: multipart/form-data; boundary=%s\r\n"
-                    "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n"
-                    "Accept-Language: en-US,en;q=0.5\r\n"
-                    "Origin: https://www.google.com\r\n"
-                    "Referer: https://www.google.com/\r\n",
-                    boundary);
-                TempWStr hdrsW = ToWStrTemp(Str(hdrBuf));
-
-                if (WinHttpSendRequest(hRequest, hdrsW.s, (DWORD)-1,
-                                       (void*)body.els, (DWORD)body.len, (DWORD)body.len, 0) &&
-                    WinHttpReceiveResponse(hRequest, nullptr)) {
-                    DWORD sc = 0, scSize = sizeof(sc);
-                    WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-                                       WINHTTP_HEADER_NAME_BY_INDEX, &sc, &scSize, WINHTTP_NO_HEADER_INDEX);
-
-                    // Google responds with 303 redirect to the Lens results page
-                    if (sc == 301 || sc == 302 || sc == 303 || sc == 307) {
-                        DWORD locSize = 0;
-                        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_LOCATION, WINHTTP_HEADER_NAME_BY_INDEX,
-                                            nullptr, &locSize, WINHTTP_NO_HEADER_INDEX);
-                        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && locSize > 0) {
-                            WCHAR* locW = (WCHAR*)malloc(locSize + 2);
-                            if (locW) {
-                                if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_LOCATION, WINHTTP_HEADER_NAME_BY_INDEX,
-                                                        locW, &locSize, WINHTTP_NO_HEADER_INDEX)) {
-                                    redirectUrl = str::Dup(ToUtf8Temp(WStr(locW)));
-                                }
-                                free(locW);
-                            }
-                        }
-                    }
-                }
-                WinHttpCloseHandle(hRequest);
-            }
-            WinHttpCloseHandle(hConnect);
+    if (!task || !task->imageBytes || task->imageBytesLen <= 0) {
+        if (task) {
+            free(task->imageBytes);
+            delete task;
         }
-        WinHttpCloseHandle(hSession);
+        return;
     }
 
+    // Encode the PNG image as base64 for embedding in the HTML page.
+    int b64Len = 0;
+    char* b64 = Base64Encode((const u8*)task->imageBytes, task->imageBytesLen, &b64Len);
     free(task->imageBytes);
-    delete task;
+    task->imageBytes = nullptr;
 
-    if (len(redirectUrl) > 0) {
-        GoogleLensResult* res = new GoogleLensResult();
-        res->url = redirectUrl;
-        uitask::Post(MkFunc0<GoogleLensResult>(GoogleLensLaunchUrl, res), "GoogleLensOpen");
-    } else {
-        str::Free(redirectUrl);
-        // Fallback: open Google Lens homepage so user can upload manually
+    if (!b64 || b64Len <= 0) {
+        delete task;
+        if (b64) {
+            free(b64);
+        }
         uitask::Post(MkFunc0Void([] {
-            SumatraLaunchBrowser(StrL("https://lens.google.com/"));
-        }), "GoogleLensFallback");
+            NotifyGoogleLensFailure(_TRA("Google Lens could not process the selected area."));
+        }), "GoogleLensFailure");
+        return;
     }
+
+    // Build a self-submitting HTML page.
+    // The browser will POST the image to Google Lens using its own session,
+    // so cookies, redirects, and the uploaded image all stay in the same context.
+    // This is much faster than the old WinHTTP approach and fixes the issue
+    // where Google Lens would open but not show the captured image.
+    str::Builder html;
+    html.Append(Str(
+        "<!DOCTYPE html>\n"
+        "<html><head><meta charset=\"utf-8\"><title>Google Lens</title></head>\n"
+        "<body style=\"background:#202124;color:#e8eaed;font-family:sans-serif;"
+        "display:flex;align-items:center;justify-content:center;height:100vh;margin:0\">\n"
+        "<p>Opening Google Lens&hellip;</p>\n"
+        "<script>\n"
+        "(function(){\n"
+        "  var b64='"
+    ));
+    html.Append(Str(b64, b64Len));
+    free(b64);
+    html.Append(Str(
+        "';\n"
+        "  var bin=atob(b64);\n"
+        "  var arr=new Uint8Array(bin.length);\n"
+        "  for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);\n"
+        "  var blob=new Blob([arr],{type:'image/png'});\n"
+        "  var file=new File([blob],'image.png',{type:'image/png'});\n"
+        "  var fd=new FormData();\n"
+        "  fd.append('encoded_image',file);\n"
+        "  var st=Date.now();\n"
+        "  var url='https://lens.google.com/v3/upload'"
+        "+'?ep=cntpubb&hl=en&st='+st+'&re=df&s=4';\n"
+        "  var f=document.createElement('form');\n"
+        "  f.method='POST';f.enctype='multipart/form-data';f.action=url;\n"
+        "  var inp=document.createElement('input');\n"
+        "  inp.type='file';inp.name='encoded_image';inp.style.display='none';\n"
+        "  var dt=new DataTransfer();dt.items.add(file);inp.files=dt.files;\n"
+        "  f.appendChild(inp);document.body.appendChild(f);f.submit();\n"
+        "})();\n"
+        "</script></body></html>\n"
+    ));
+
+    // Write the HTML to a temp file.
+    // GetTempFilePathTemp creates a .tmp file; we rename it to .html so the
+    // OS opens it in the default browser.
+    TempStr tmpPath = GetTempFilePathTemp(StrL("lens"));
+    if (!tmpPath) {
+        delete task;
+        uitask::Post(MkFunc0Void([] {
+            NotifyGoogleLensFailure(_TRA("Google Lens could not process the selected area."));
+        }), "GoogleLensFailure");
+        return;
+    }
+
+    // Rename .tmp -> .html
+    Str htmlPathStr = str::JoinTemp(tmpPath, Str(".html"));
+    // Remove the .tmp file that GetTempFilePathTemp created (it's empty).
+    file::Delete(tmpPath);
+
+    bool ok = file::WriteFile(htmlPathStr, Str(html.els, html.len));
+    delete task;
+    if (!ok) {
+        uitask::Post(MkFunc0Void([] {
+            NotifyGoogleLensFailure(_TRA("Google Lens could not process the selected area."));
+        }), "GoogleLensFailure");
+        return;
+    }
+
+    auto* result = new GoogleLensResult();
+    result->htmlPath = str::Dup(htmlPathStr);
+    uitask::Post(
+        MkFunc0<GoogleLensResult>(GoogleLensLaunchUrl, result), "GoogleLensOpen");
 }
 
 static void SearchWithGoogleLens(WindowTab* tab) {
-    if (!tab || !tab->win || !tab->selectionOnPage || len(*tab->selectionOnPage) == 0) return;
+    if (!tab || !tab->win) {
+        return;
+    }
     DisplayModel* dm = tab->win->AsFixed();
-    if (!dm) return;
+    if (!dm) {
+        NotifyGoogleLensFailure(_TRA("Google Lens is only available for document pages."));
+        return;
+    }
 
-    SelectionOnPage* selOnPage = &(*tab->selectionOnPage)[0];
-    float zoom = dm->GetZoomReal(selOnPage->pageNo);
-    int rotation = dm->GetRotation();
-    RenderPageArgs args(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
-    Pixmap* bmp = dm->GetEngine()->RenderPage(args);
-    if (!bmp) return;
-
-    RenderedBitmap* rbmp = RenderedBitmapFromPixmap(bmp);
-    if (!rbmp) return;
+    RenderedBitmap* rbmp = nullptr;
+    if (tab->selectionOnPage && tab->selectionOnPage->len > 0) {
+        rbmp = RenderSelectionsAsRenderedBitmap(dm, *tab->selectionOnPage);
+    } else {
+        // No selection: search the entire current page
+        int pageNo = dm->CurrentPageNo();
+        if (dm->ValidPageNo(pageNo)) {
+            float zoom = dm->GetZoomReal(pageNo);
+            int rotation = dm->GetRotation();
+            RectF pageRect = dm->GetEngine()->PageMediabox(pageNo);
+            RenderPageArgs args(pageNo, zoom, rotation, &pageRect, RenderTarget::Export);
+            Pixmap* bmp = dm->GetEngine()->RenderPage(args);
+            if (bmp) {
+                rbmp = RenderedBitmapFromPixmap(bmp);
+            }
+        }
+    }
+    if (!rbmp) {
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
+        return;
+    }
 
     HBITMAP hbmp = rbmp->GetBitmap();
     Gdiplus::Bitmap gdipBmp(hbmp, nullptr);
@@ -9669,19 +9768,35 @@ static void SearchWithGoogleLens(WindowTab* tab) {
     IStream* stream = nullptr;
     if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream))) {
         delete rbmp;
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
         return;
     }
     if (gdipBmp.Save(stream, &pngClsid, nullptr) != Gdiplus::Ok) {
         stream->Release();
         delete rbmp;
+        NotifyGoogleLensFailure(_TRA("Could not encode the selected area for Google Lens."));
         return;
     }
     STATSTG stat;
     stream->Stat(&stat, STATFLAG_NONAME);
     size_t size = (size_t)stat.cbSize.QuadPart;
     HGLOBAL hMem;
-    GetHGlobalFromStream(stream, &hMem);
+    if (FAILED(GetHGlobalFromStream(stream, &hMem))) {
+        stream->Release();
+        delete rbmp;
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
+        return;
+    }
     void* pData = GlobalLock(hMem);
+    if (!pData || size == 0 || size > INT_MAX) {
+        if (pData) {
+            GlobalUnlock(hMem);
+        }
+        stream->Release();
+        delete rbmp;
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
+        return;
+    }
 
     // Copy image bytes to heap so the background thread owns them
     GoogleLensTask* task = new GoogleLensTask();
@@ -9696,6 +9811,7 @@ static void SearchWithGoogleLens(WindowTab* tab) {
 
     if (!task->imageBytes) {
         delete task;
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
         return;
     }
     RunAsync(MkFunc0<GoogleLensTask>(GoogleLensThread, task), StrL("GoogleLensUpload"));
@@ -11309,26 +11425,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             RunCommandPalette(win, Str(kPalettePrefixFavorites), 0);
             break;
 
-        case CmdAIChatWithClaudeCode:
-            logf("CmdAIChatWithClaudeCode dispatched\n");
-            OnAIChatToggle(win, (int)AIChatBackend::Claude);
-            break;
-
-        case CmdAIChatWithGrokBuild:
-            logf("CmdAIChatWithGrokBuild dispatched\n");
-            OnAIChatToggle(win, (int)AIChatBackend::Grok);
-            break;
-
-        case CmdAIChatWithOpenAICodex:
-            logf("CmdAIChatWithOpenAICodex dispatched\n");
-            OnAIChatToggle(win, (int)AIChatBackend::Codex);
-            break;
-
-        case CmdAIChatWithAntiGravity:
-            logf("CmdAIChatWithAntiGravity dispatched\n");
-            OnAIChatToggle(win, (int)AIChatBackend::AntiGravity);
-            break;
-
         case CmdClearHistory:
             ClearHistory(win);
             break;
@@ -11924,6 +12020,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdToggleMinimap:
+            MinimapToggleVisible(win);
+            break;
+
         case CmdRotateLeft:
         case CmdRotateRight:
             if (win->ctrl && win->CurrentTab()) {
@@ -12464,8 +12564,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             // swaps the page colors for this session, whatever they are and
             // whatever the theme is. Use CmdSetDocumentColorsFollowTheme to
             // change how (or whether) pages follow the theme (issue #5887)
-            SetInvertPageColors(!GetInvertPageColors());
-            UpdateDocumentColors();
+            WindowTab* activeTab = win->CurrentTab();
+            if (activeTab && activeTab->AsFixed()) {
+                DisplayModel* activeDm = activeTab->AsFixed();
+                activeDm->invertColors = !activeDm->invertColors;
+                SetInvertPageColors(activeDm->invertColors); // Keep global sync for legacy uses temporarily
+                if (gRenderCache) {
+                    gRenderCache->FreeForDisplayModel(activeDm);
+                }
+                UpdateDocumentColors();
+                ToolbarUpdateStateForWindow(win, false);
+                MainWindowRerender(win, true);
+            }
             break;
         }
 

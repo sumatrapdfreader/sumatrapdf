@@ -951,9 +951,9 @@ void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
 
     if (IsVert(sb)) {
         x = ownerRc.x + ownerRc.dx - scrollW;
-        y = ownerRc.y;
+        y = ownerRc.y + sb->topMargin;
         w = scrollW;
-        h = ownerRc.dy - siblingInset;
+        h = ownerRc.dy - siblingInset - sb->topMargin;
     } else {
         x = ownerRc.x;
         y = ownerRc.y + ownerRc.dy - scrollW;

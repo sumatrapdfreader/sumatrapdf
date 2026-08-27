@@ -37,10 +37,7 @@
 #include "Translations.h"
 #include "Tabs.h"
 
-// always full path (FullPathInTitle only affects tab/window title text).
-// Append size when GetSize succeeds (may fail for offline network paths).
-// Used by Tabs and Toolbar (toolbar was overwriting tooltips with path-only).
-// full path + size (if available); optional dirty suffix for unsaved annotations
+
 TempStr MakeTabTooltipTemp(Str path, bool dirty) {
     if (!path) {
         return Str{};
@@ -754,7 +751,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     int idx = win->TabCount();
     bool useTabs = SettingsUseTabs();
     bool noHomeTab = gGlobalPrefs->noHomeTab;
-    bool createHomeTab = useTabs && !noHomeTab && (idx == 0);
+    bool createHomeTab = false; // Disabled per user request (no Home tab alongside PDFs)
     if (createHomeTab) {
         WindowTab* homeTab = new WindowTab(win);
         homeTab->type = WindowTab::Type::About;

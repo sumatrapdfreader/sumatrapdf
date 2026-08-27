@@ -2678,7 +2678,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
 
     gCrashOnOpen = flags.crashOnOpen;
 
-    gRenderCache->textColor = ThemePageRenderColors(gRenderCache->backgroundColor);
+    gRenderCache->textColor = ThemePageRenderColorsNoInvert(gRenderCache->backgroundColor);
     // logf("retrieved doc colors in WinMain: 0x%x 0x%x\n", gRenderCache->textColor, gRenderCache->backgroundColor);
 
     gIsStartup = true;

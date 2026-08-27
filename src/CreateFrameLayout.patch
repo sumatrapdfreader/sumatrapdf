@@ -1,0 +1,47 @@
+static void CreateFrameLayout(MainWindow* win) {
+    win->tocSlot = new HwndSlot();
+    win->minimapSlot = new HwndSlot();
+    win->favSlot = new HwndSlot();
+    win->fullFavSlot = new HwndSlot();
+    win->canvasSlot = new HwndSlot();
+    win->aiChatSlot = new HwndSlot();
+    win->tabsSlot = new HwndSlot();
+    win->tabsSlot->mapRtlX = true;
+    win->menuSlot = new HwndSlot();
+    win->menuSlot->mapRtlX = true;
+    win->toolbarTopSlot = new HwndSlot();
+    win->toolbarBottomSlot = new HwndSlot();
+    CreateCaptionLayout(win);
+
+    win->sidebarSplitter = NewFrameSplitter(SplitterType::Vert, false);
+    win->sidebarSplitter->onSplitterDrag = MkFunc1(OnSidebarSplitterDrag, win);
+    win->favSplitter = NewFrameSplitter(SplitterType::Horiz, true);
+    win->minimapSplitter = NewFrameSplitter(SplitterType::Vert, false);
+    // win->minimapSplitter->onSplitterDrag = MkFunc1(OnMinimapSplitterDrag, win); // no drag for minimap yet
+    
+    // the webview is expensive to resize, so this one only moves the panes
+    // when the drag ends
+    win->aiChatSplitter = NewFrameSplitter(SplitterType::Vert, false);
+    win->aiChatSplitter->thickness = kSplitterDx;
+
+    auto* sidebar = new VBox();
+    sidebar->alignCross = CrossAxisAlign::Stretch;
+    sidebar->AddChild(win->tocSlot);
+    sidebar->AddChild(win->favSplitter);
+    sidebar->AddChild(win->favSlot, 1);
+
+    // canvas and the Favorites tab share this box; only one HWND is shown
+    auto* content = new Overlay();
+    content->AddChild(win->canvasSlot);
+    content->AddChild(win->fullFavSlot);
+
+    auto* row = new HBox();
+    row->alignCross = CrossAxisAlign::Stretch;
+    row->AddChild(sidebar);
+    row->AddChild(win->sidebarSplitter);
+    row->AddChild(win->minimapSlot);
+    row->AddChild(win->minimapSplitter);
+    row->AddChild(content, 1);
+    row->AddChild(win->aiChatSplitter);
+    row->AddChild(win->aiChatSlot);
+    win->frameLayout = row;

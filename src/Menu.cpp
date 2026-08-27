@@ -27,6 +27,7 @@
 #include "Theme.h"
 #include "GlobalPrefs.h"
 #include "Annotation.h"
+#include "Minimap.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Canvas.h"
@@ -301,6 +302,10 @@ static MenuDef menuDefView[] = {
         CmdToggleToolbar,
     },
     {
+        _TRN("Show M&inimap"),
+        CmdToggleMinimap,
+    },
+    {
         _TRN("&Highlight Form Fields"),
         CmdToggleHighlightFormFields,
     },
@@ -319,22 +324,6 @@ static MenuDef menuDefView[] = {
     {
         StrL(kMenuSeparator),
         0,
-    },
-    {
-        _TRN("Claude chat"),
-        CmdAIChatWithClaudeCode,
-    },
-    {
-        _TRN("Grok chat"),
-        CmdAIChatWithGrokBuild,
-    },
-    {
-        _TRN("Codex chat"),
-        CmdAIChatWithOpenAICodex,
-    },
-    {
-        _TRN("Antigravity chat"),
-        CmdAIChatWithAntiGravity,
     },
     {
         {},
@@ -1088,31 +1077,6 @@ static MenuDef menuDefContextImage[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Image)
 
-//[ ACCESSKEY_GROUP Context Menu (Document AI chat)
-static MenuDef menuDefDocumentAIChat[] = {
-    {
-        _TRN("Grok Build"),
-        CmdAIChatWithGrokBuild,
-    },
-    {
-        _TRN("OpenAI Codex"),
-        CmdAIChatWithOpenAICodex,
-    },
-    {
-        _TRN("Claude Code"),
-        CmdAIChatWithClaudeCode,
-    },
-    {
-        _TRN("Antigravity"),
-        CmdAIChatWithAntiGravity,
-    },
-    {
-        {},
-        0,
-    },
-};
-//] ACCESSKEY_GROUP Context Menu (Document AI chat)
-
 //[ ACCESSKEY_GROUP Context Menu (Document )
 static MenuDef menuDefDocumentOperations[] = {
     {
@@ -1248,10 +1212,6 @@ static MenuDef menuDefContext[] = {
     {
         StrL(kMenuSeparator),
         kMenuSeparatorID,
-    },
-    {
-        _TRN("AI chat with document using"),
-        (UINT_PTR)menuDefDocumentAIChat,
     },
     {
         _TRN("Document"),
@@ -1964,6 +1924,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
         bool toolbarOn = win->isFullScreen ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
         MenuSetChecked(win->menu, CmdToggleToolbar, toolbarOn);
     }
+    MenuSetChecked(win->menu, CmdToggleMinimap, win->minimap && win->minimap->isVisible);
     MenuSetChecked(win->menu, CmdToggleMenuBar, gGlobalPrefs->showMenubar);
     // CmdChangeScrollbar doesn't need a check mark - it opens a dialog
     MenuUpdateDisplayMode(win);

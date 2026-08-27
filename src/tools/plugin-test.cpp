@@ -69,7 +69,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         HdcFillRect(hDC, ToRect(rcClient), brushBg);
         LOGFONTW lf{};
         lf.lfHeight = -14;
-        str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), "MS Shell Dlg");
+        wstr::BufSet(WStr(lf.lfFaceName, dimof(lf.lfFaceName)), WStrL(L"MS Shell Dlg"));
         HFONT hFont = CreateFontIndirectW(&lf);
         hFont = (HFONT)SelectObject(hDC, hFont);
         SetTextColor(hDC, 0x000000);
@@ -89,14 +89,16 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
 WStr GetSumatraExePath() {
     // run SumatraPDF.exe either from plugin-test.exe's or the current directory
-    TempStr path = GetPathInExeDirTemp("SumatraPDF.exe");
+    TempStr path = GetPathInExeDirTemp(StrL("SumatraPDF.exe"));
     if (!file::Exists(path)) {
         return wstr::Dup(WStrL(L"SumatraPDF.exe"));
     }
     return ToWStr(path);
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
+    (void)hPrevInstance;
+    (void)lpCmdLine;
     StrVec argList;
     ParseCmdLine(GetCommandLineW(), argList);
 
@@ -110,7 +112,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
         argList.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
     }
     if (len(argList) == 3) {
-        argList.InsertAt(2, nullptr);
+        argList.InsertAt(2, Str());
     }
 
     WNDCLASS wc{};

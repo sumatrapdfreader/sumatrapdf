@@ -1,0 +1,81 @@
+static LRESULT CALLBACK MinimapBoxWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/, DWORD_PTR data) {
+    Minimap* minimap = (Minimap*)data;
+    if (!minimap) return DefSubclassProc(hwnd, msg, wp, lp);
+
+    LRESULT res = 0;
+    res = TryReflectMessages(hwnd, msg, wp, lp);
+    if (res) return res;
+
+    if (VirtHostOnMessage(hwnd, minimap->root, msg, wp, lp, res, ThemeControlBackgroundColor())) {
+        return res;
+    }
+
+    if (msg == WM_SIZE) {
+        RECT rc;
+        GetClientRect(hwnd, &rc);
+        LayoutTreeToSize(hwnd, minimap->layout, {rc.right - rc.left, rc.bottom - rc.top}, &minimap->root);
+        return 0;
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+Minimap* MinimapCreate(MainWindow* win) {
+    WNDCLASSEX wcex;
+    ZeroMemory(&wcex, sizeof(wcex));
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    if (!GetClassInfoEx(GetModuleHandle(nullptr), kMinimapClassName, &wcex)) {
+        wcex.style = CS_HREDRAW | CS_VREDRAW;
+        wcex.lpfnWndProc = MinimapWndProc;
+        wcex.hInstance = GetModuleHandle(nullptr);
+        wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+        wcex.hbrBackground = nullptr;
+        wcex.lpszClassName = kMinimapClassName;
+        if (!RegisterClassEx(&wcex)) return nullptr;
+    }
+
+    Minimap* minimap = new Minimap();
+    minimap->win = win;
+
+    minimap->hwndBox = CreateWindowExW(
+        0, WC_STATIC, L"",
+        WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+        0, 0, 250, 100,
+        win->hwndFrame, nullptr, GetModuleHandle(nullptr), nullptr);
+
+    if (!minimap->hwndBox) {
+        delete minimap;
+        return nullptr;
+    }
+
+    PlatformFont* labelFont = GetAppSidebarLabelFont();
+    auto header = NewLabelWithClose(minimap->hwndBox, labelFont, MkFunc0(MinimapToggleVisible, win));
+    minimap->label = header.label;
+    minimap->label->SetText(_TRA("Minimap"));
+
+    auto* layout = new VBox();
+    layout->alignCross = CrossAxisAlign::Stretch;
+    
+    auto* hdrRow = new HBox();
+    hdrRow->alignCross = CrossAxisAlign::Center;
+    hdrRow->AddChild(header.label, 1);
+    hdrRow->AddChild(header.closeBtn);
+    layout->AddChild(hdrRow);
+
+    minimap->hwnd = CreateWindowExW(
+        0, kMinimapClassName, nullptr,
+        WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
+        0, 0, 250, 100,
+        minimap->hwndBox, nullptr, GetModuleHandle(nullptr), minimap);
+
+    auto* host = new HwndSlot();
+    host->hwnd = minimap->hwnd;
+    layout->AddChild(host, 1);
+
+    minimap->layout = layout;
+    minimap->root = new VirtRoot(minimap->hwndBox, layout);
+
+    minimap->subclassId = NextSubclassId();
+    SetWindowSubclass(minimap->hwndBox, MinimapBoxWndProc, minimap->subclassId, (DWORD_PTR)minimap);
+        
+    return minimap;
+}

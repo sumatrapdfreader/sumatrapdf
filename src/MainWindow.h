@@ -93,7 +93,8 @@ struct ChmModel;
 struct MarkdownModel;
 struct DisplayModel;
 struct WindowTab;
-
+struct Minimap;
+struct LoadArgs;
 struct Annotation;
 struct ILinkHandler;
 struct RefHoverState;
@@ -287,6 +288,8 @@ struct MainWindow {
     ILayout* favLayout = nullptr;
     Vec<FileState*> expandedFavorites;
 
+    Minimap* minimap = nullptr;
+
     // AI chat sidebar (right side); a single set of controls shared by all
     // providers (Claude Code, Grok Build, OpenAI Codex), see AIChatPanel.cpp
     HWND hwndAiChatBox = nullptr;
@@ -452,6 +455,7 @@ struct MainWindow {
     // splitter | AI chat
     HBox* frameLayout = nullptr;
     HwndSlot* tocSlot = nullptr;
+    HwndSlot* minimapSlot = nullptr;
     HwndSlot* favSlot = nullptr;
     // same hwndFavBox as favSlot; shown instead of the canvas when the
     // Favorites tab is selected
@@ -538,6 +542,7 @@ struct MainWindow {
             bool aiChatVisible = false;
             int aiChatDx = 0;
             bool sidebarOnRight = false;
+            bool minimapVisible = false;
         };
         Layout layout;    // last applied layout state
         Rect lastFrameRc; // previous frame client size; a change skips WM_SETREDRAW

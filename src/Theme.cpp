@@ -910,7 +910,7 @@ void SetInvertPageColors(bool invert) {
 
 // colors for page bitmap recoloring (render cache)
 // TextColor substitutes black, BackgroundColor substitutes white in rendered pages
-static Color ThemePageRenderColorsNoInvert(Color& bg) {
+Color ThemePageRenderColorsNoInvert(Color& bg) {
     Color text = kColBlack;
     bg = kColWhite;
 

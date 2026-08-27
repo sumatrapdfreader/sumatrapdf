@@ -258,7 +258,7 @@ enum {
     CmdTogglePreservePdfImages = 447,
     CmdToggleLightDarkTheme = 448,
     CmdChangeTheme = 449,
-    CmdSearchGoogleLens = 499,
+    CmdSearchGoogleLens = 1010,
     CmdTranslateSelection = 450,
     CmdFavoriteShowInTab = 451,
     CmdTocExpandToLevel1 = 452,
@@ -301,7 +301,8 @@ enum {
     CmdConfigurePageGrid = 489,
     CmdTogglePdfAnnotationsToolbar = 490,
     CmdApplyRedactions = 491,
-    CmdNone = 492,
+    CmdToggleMinimap = 492,
+    CmdNone = 493,
 
     /* range for file history */
     CmdFileHistoryFirst,

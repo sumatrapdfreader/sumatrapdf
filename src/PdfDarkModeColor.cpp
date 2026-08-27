@@ -20,7 +20,7 @@ static constexpr int kPreservePdfImagesMinSize = 72;
 // Object-level Smart Dark is opt-in until image/color heuristics are ready (Phase 2+).
 static constexpr PdfDarkModeRenderer kPdfDarkModeRenderer = PdfDarkModeRenderer::LegacyBitmapPostProcess;
 
-static bool gPreservePdfImagesInDarkMode = true;
+static bool gPreservePdfImagesInDarkMode = false;
 
 // dark page rendering is active when the effective page background is dark
 // (DocumentColorsFollowTheme or custom dark FixedPageUI colors); master's

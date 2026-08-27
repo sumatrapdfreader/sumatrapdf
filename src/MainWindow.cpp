@@ -21,6 +21,9 @@
 #include "gui/win/TabsCtrl.h"
 #include "gui/win/FrameRateWnd.h"
 
+#include "Menu.h"
+#include "Minimap.h"
+#include "NavFilesInFolder.h"
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -95,6 +98,7 @@ MainWindow::MainWindow(HWND hwnd) {
     cbHandler = CreateControllerCallbackHandler(this);
     overlayScrollOnMoved = MkFunc1Void(OverlayScrollbarsOnWindowMoved);
     RegisterOnWindowMoved(&overlayScrollOnMoved);
+    minimap = MinimapCreate(this);
 }
 
 void MainWindow::RegisterOnWindowMoved(Func1List<MainWindow*>* cb) {
@@ -151,6 +155,9 @@ MainWindow::~MainWindow() {
 
     OverlayScrollbarDestroy(overlayScrollV);
     OverlayScrollbarDestroy(overlayScrollH);
+    if (minimap) {
+        MinimapDestroy(minimap);
+    }
 
     DeleteObject(brMovePattern);
     DeleteObject(bmpMovePattern);
