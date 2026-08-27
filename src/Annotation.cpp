@@ -890,6 +890,25 @@ time_t ModificationDate(Annotation* annot) {
     return res;
 }
 
+// mupdf never touches /M on its own, so whoever changes an annotation has to
+// stamp it. Used by paste, which is a brand new annotation whatever date the
+// one it was copied from carried.
+void SetModificationDateToNow(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    fz_try(ctx) {
+        pdf_set_annot_modification_date(ctx, a, time(nullptr));
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+}
+
 // return empty if no icon
 Str IconName(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
@@ -2408,6 +2427,9 @@ Annotation* PasteCopiedAnnotation(EngineBase* engine, int pageNo, PointF topLeft
         default:
             break;
     }
+    // a pasted annotation is new: it is dated now, not when the one it was
+    // copied from was last touched. Last, so it also covers the writes above.
+    SetModificationDateToNow(annot);
     return annot;
 }
 

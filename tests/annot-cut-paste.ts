@@ -1,7 +1,8 @@
 // Edit PDF mode: Ctrl+X (CmdCutAnnotation) copies an annotation and marks it
 // for deletion; the original goes away when the copy is pasted, so the cut
 // annotation moves instead of being duplicated (issue #5222). A second paste
-// is a plain copy: only the first one consumes the cut.
+// is a plain copy: only the first one consumes the cut, and the copy is dated
+// now rather than inheriting the original's date.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -16,9 +17,11 @@ import {
   readMenuTree,
   sendMessage,
   sleep,
+  setCursorPos,
   VK_ESCAPE,
   WM_COMMAND,
   WM_KEYDOWN,
+  WM_MOUSEMOVE,
   type MenuItem,
 } from "./winapi.ts";
 import {
@@ -27,6 +30,7 @@ import {
   killAndWait,
   launchControlled,
   openContextMenu,
+  pressEscape,
   sendCommand,
   waitForContextMenu,
 } from "./win-automation.ts";
@@ -38,7 +42,8 @@ function makePdf(): string {
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
     "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R] >>",
-    "<< /Type /Annot /Subtype /Square /P 3 0 R /Rect [72 420 192 540] /C [1 0 0] /IC [1 1 0.6] /BS << /W 2 >> >>",
+    "<< /Type /Annot /Subtype /Square /P 3 0 R /Rect [72 420 192 540] /C [1 0 0] /IC [1 1 0.6] /BS << /W 2 >> " +
+      "/T (Ada) /M (D:20200101000000Z) >>",
   ];
   return assemblePdf(objs);
 }
@@ -120,6 +125,29 @@ function findMenuItem(items: MenuItem[], text: string): MenuItem | null {
     }
   }
   return null;
+}
+
+// The hover card shows the annotation's date. It is not shown for the selected
+// annotation, so deselect first.
+async function hoverDate(client: ControlClient, frame: number, canvas: number, x: number, y: number): Promise<string> {
+  await pressEscape(frame);
+  await sleep(150);
+  const s = clientToScreen(canvas, x, y);
+  setCursorPos(s.x, s.y);
+  sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(x, y));
+  const deadline = Date.now() + 5_000;
+  for (;;) {
+    const raw = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+    const m = /date=(\d{4})-\d{2}-\d{2}/.exec(raw);
+    if (m) {
+      return m[1]!;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`annot-cut-paste: no hover card date at ${x},${y}
+${raw}`);
+    }
+    await sleep(60);
+  }
 }
 
 function requireEnabled(items: MenuItem[], text: string): void {
@@ -218,6 +246,24 @@ export async function testit(): Promise<void> {
     sendMessage(frame, WM_COMMAND, cmdId("CmdPasteAnnotation"), packCoords(paste2.x, paste2.y));
     await client.waitForRenderIdle();
     state = await waitForAnnotCount(client, 2, "second paste of a cut must be a copy");
+
+    // the copy is a new annotation, so it carries today's date and not the
+    // 2020 one the square in the file was written with
+    const copy = state.squares.reduce((best, sq) =>
+      Math.hypot(sq.x - paste2.x, sq.y - paste2.y) < Math.hypot(best.x - paste2.x, best.y - paste2.y) ? sq : best,
+    );
+    const copyYear = await hoverDate(
+      client,
+      frame,
+      canvas,
+      copy.x + Math.floor(copy.dx / 2),
+      copy.y + Math.floor(copy.dy / 2),
+    );
+    const thisYear = String(new Date().getFullYear());
+    if (copyYear !== thisYear) {
+      throw new Error(`annot-cut-paste: pasted copy is dated ${copyYear}, want ${thisYear}`);
+    }
+    state = await markupState(client);
 
     // A pending cut must not outlive the annotation it points at. Cut one and
     // delete it by hand: the paste that follows can only be a copy (an asan
