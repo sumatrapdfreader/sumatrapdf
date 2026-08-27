@@ -19,6 +19,7 @@ Checks: >
   -modernize-avoid-c-arrays,
   -modernize-avoid-c-style-cast,
   -modernize-use-nodiscard,
+  -bugprone-derived-method-shadowing-base-method,
   -modernize-use-using,
   -performance-no-int-to-ptr,
   -performance-enum-size,

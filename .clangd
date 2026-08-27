@@ -37,6 +37,7 @@ Diagnostics:
     - readability-qualified-auto
     - modernize-use-auto
     - modernize-use-nodiscard
+    - bugprone-derived-method-shadowing-base-method
     - readability-simplify-boolean-expr
     - readability-use-std-min-max
     - readability-named-parameter
