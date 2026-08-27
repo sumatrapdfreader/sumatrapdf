@@ -1,5 +1,7 @@
-// Copy and underline on the floating selection toolbar must keep the text
-// selection and leave the toolbar visible with it.
+// Copy on the floating selection toolbar must keep the text selection and
+// leave the toolbar visible with it. Underline consumes the selection: it
+// turns it into an annotation, so the selection and its toolbar go away and
+// the new annotation is selected instead.
 //
 // Run: bun tests/selection-toolbar-stays.ts [--no-build]
 
@@ -92,6 +94,19 @@ async function selectedText(client: ControlClient): Promise<string> {
   return parseExpanded(raw);
 }
 
+async function waitForSelectionGone(client: ControlClient): Promise<void> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let got = "";
+  while (Date.now() < deadline) {
+    got = await selectedText(client);
+    if (got === "") {
+      return;
+    }
+    await sleep(25);
+  }
+  throw new Error(`selection-toolbar-stays: selection is still '${got}' after creating the annotation`);
+}
+
 async function waitForSelection(client: ControlClient, want: string): Promise<string> {
   const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
   let got = "";
@@ -179,12 +194,14 @@ export async function testit(): Promise<void> {
 
     await clickToolbar(client, "CmdCreateAnnotUnderline");
     await waitForUnderline(client);
+    await waitForSelectionGone(client);
     const afterUnderline = await toolbarDump(client);
-    if (!toolbarVisible(afterUnderline)) {
-      throw new Error(`selection-toolbar-stays: Underline hid the selection toolbar\n${afterUnderline}`);
+    if (toolbarVisible(afterUnderline)) {
+      throw new Error(`selection-toolbar-stays: Underline left the selection toolbar up\n${afterUnderline}`);
     }
-    if ((await selectedText(client)) !== LINE) {
-      throw new Error(`selection-toolbar-stays: Underline cleared the selection`);
+    const markup = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+    if (!/state selected=1/.test(markup)) {
+      throw new Error(`selection-toolbar-stays: the new underline was not selected\n${markup}`);
     }
 
     sendCommandSync(frame, cmdId("CmdDiscardChanges"));

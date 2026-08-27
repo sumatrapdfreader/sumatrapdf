@@ -12879,6 +12879,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // row, and it is what the user just said they are doing. Enable it before
     // the re-render so the second toolbar row is accounted for in the layout.
     EnablePdfAnnotationsToolbar(win);
+    // The text selection has done its job: it would sit on top of the markup
+    // annotation it just made and keep the selection toolbar open over it.
+    StopSelectTextWithKeyboard(win);
+    DeleteOldSelectionInfo(win, true);
     RefreshAnnotationLists(tab);
     // Drop the cached page bitmap. SetSelectedAnnotation only ScheduleRepaint
     // (selection handles); without this the new annot is invisible until a
@@ -12886,17 +12890,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
 
-    // Highlight / underline / squiggly / strike-out stay with the text
-    // selection; other types (including FreeText) are selected so they can
-    // be moved, resized, or edited from the compact property row.
-    switch (lastCreatedAnnot->type) {
-        case AnnotationType::Highlight:
-        case AnnotationType::Squiggly:
-        case AnnotationType::StrikeOut:
-        case AnnotationType::Underline:
-            return 0;
-    }
-
+    // every new annotation is selected, so it can be moved, resized, or edited
+    // from the compact property row
     SetSelectedAnnotation(tab, lastCreatedAnnot);
     return 0;
 }
