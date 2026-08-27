@@ -5428,6 +5428,12 @@ static fz_stext_page* fz_new_stext_page_from_whole_page(fz_context* ctx, fz_page
 // caller must hold pagesLock and renderLock
 static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuick, fz_cookie* cookie) {
     auto* ctx = e->Ctx();
+    // docLock too: loading a page loads its annotations and has MuPDF generate
+    // their appearance streams, reading the same pdf objects the UI thread
+    // rewrites when an annotation is edited. Without this, editing one while
+    // the annotation-loading or heading-TOC thread walks the pages is a
+    // use-after-free (and trips mupdf's local_xref_nesting assert).
+    ScopedRecursiveMutex docScope(&e->docLock);
     ReportIf(pageNo < 1 || pageNo > e->pageCount);
     if (pageNo < 1 || pageNo > e->pageCount) {
         return nullptr;
@@ -5577,7 +5583,15 @@ FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
         pagesLock.Unlock();
         return nullptr;
     }
+    // GetFzPageInfoLocked() needs docLock; take it here too so this stays the
+    // "give up rather than block the UI thread" path it exists to be
+    if (!docLock.TryLock()) {
+        renderLock.Unlock();
+        pagesLock.Unlock();
+        return nullptr;
+    }
     FzPageInfo* res = GetFzPageInfoLocked(this, pageNo, true, nullptr);
+    docLock.Unlock();
     renderLock.Unlock();
     pagesLock.Unlock();
     return res;
