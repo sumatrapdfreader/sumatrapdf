@@ -232,12 +232,21 @@ ${after}`);
       +chip[1]! - +placed[1]! + Math.floor(+chip[3]! / 2),
       +chip[2]! - +placed[2]! + Math.floor(+chip[4]! / 2),
     );
+    const chipX = +chip[1]! - +placed[1]! + Math.floor(+chip[3]! / 2);
+    const chipY = +chip[2]! - +placed[2]! + Math.floor(+chip[4]! / 2);
     const reopened = await waitForEdit(client, true);
     if (!reopened.text.includes("second line")) {
       throw new Error(`free-text-in-place-edit: the typed text was not written back: "${reopened.text}"`);
     }
 
-    // Esc throws away what was typed since the box opened
+    // ... and the same button ends the edit
+    await clickAt(tb, chipX, chipY);
+    await waitForEdit(client, false);
+    await client.waitForRenderIdle();
+
+    // reopen it to check that Esc throws away what was typed since
+    await clickAt(tb, chipX, chipY);
+    await waitForEdit(client, true);
     const box2 = findChildWindow(canvas, "Edit");
     if (!box2) {
       throw new Error("free-text-in-place-edit: the reopened edit control was not found");

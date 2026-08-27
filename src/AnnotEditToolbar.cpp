@@ -98,6 +98,7 @@ static void EndContentsEdit(AnnotEditToolbar*, bool accept);
 static void DestroyContentsEditor(AnnotEditToolbar*);
 static void PostedStartContentsEdit(MainWindow*);
 static void PostedDeleteSelectedAnnotation(MainWindow*);
+static bool FreeTextInPlaceEditJustEnded();
 
 struct AnnotEditToolbar {
     MainWindow* win = nullptr;
@@ -1282,7 +1283,17 @@ static void PostedStartContentsEdit(MainWindow* win) {
     if (!tb) {
         return;
     }
-    // free text is edited on the page, in the annotation's own box
+    // free text is edited on the page, in the annotation's own box, and the
+    // same button ends it
+    if (IsEditingFreeTextInPlace(win)) {
+        EndFreeTextInPlaceEdit(true);
+        return;
+    }
+    // clicking the button took focus off the box, which already ended the
+    // edit; this click means "done", not "start again"
+    if (FreeTextInPlaceEditJustEnded()) {
+        return;
+    }
     Annotation* annot = LiveToolbarAnnot(tb);
     if (annot && Type(annot) == AnnotationType::FreeText && StartFreeTextInPlaceEdit(win, annot)) {
         return;
@@ -1385,11 +1396,29 @@ struct FreeTextInPlaceEdit {
     Size size;
     Size minSize;
     int padding = 0;
+    // what MuPDF will lay the text out with
+    int textSize = 12;
+    int borderWidth = 0;
+    int fontPx = 0;
+    float scale = 1.f;
 };
+
+// MuPDF stacks free text lines 1.2 * the font size apart and wraps at the
+// rect width less 2 * (2 * border width) (pdf_write_free_text_appearance).
+constexpr float kFreeTextLineHeight = 1.2f;
+// GDI's Arial is not quite MuPDF's Helvetica; leave room rather than let the
+// annotation wrap a line the box showed whole
+constexpr float kInPlaceWidthSlack = 1.03f;
 
 static FreeTextInPlaceEdit gInPlace;
 static WNDPROC gInPlaceDefProc = nullptr;
 static bool gInPlaceEnding = false;
+// so the click that closes the box by taking focus away doesn't reopen it
+static u64 gInPlaceEndedAt = 0;
+
+static bool FreeTextInPlaceEditJustEnded() {
+    return gInPlaceEndedAt != 0 && (GetTickCount64() - gInPlaceEndedAt) < 400;
+}
 
 bool IsEditingFreeTextInPlace(MainWindow* win) {
     if (!gInPlace.hwnd) {
@@ -1432,9 +1461,24 @@ static void SizeInPlaceEditToText() {
     int pad = gInPlace.padding;
     // room for the caret past the last glyph
     int caret = std::max(DpiScale(3), 2);
+    // big enough for the edit control to show the text...
     Size want;
     want.dx = ts.dx + (2 * pad) + caret;
     want.dy = ts.dy + (2 * pad);
+
+    // ...and big enough for MuPDF to lay it out the same way once the box is
+    // gone. It measures in PDF points, so take the pixel measurement back to
+    // ems and re-apply the annotation's own font size: the pixel size is a
+    // rounded version of it, and that rounding alone was enough to make the
+    // annotation wrap a line the box had shown whole.
+    float emDx = gInPlace.fontPx > 0 ? ((float)ts.dx / (float)gInPlace.fontPx) : 0.f;
+    float padPts = 4.f * (float)gInPlace.borderWidth;
+    int nLines = std::max((int)SendMessageW(gInPlace.hwnd, EM_GETLINECOUNT, 0, 0), 1);
+    float dxPts = (emDx * (float)gInPlace.textSize * kInPlaceWidthSlack) + padPts;
+    float dyPts = ((float)nLines * kFreeTextLineHeight * (float)gInPlace.textSize) + padPts;
+    want.dx = std::max(want.dx, (int)(dxPts * gInPlace.scale) + caret);
+    want.dy = std::max(want.dy, (int)(dyPts * gInPlace.scale));
+
     want.dx = std::max(want.dx, gInPlace.minSize.dx);
     want.dy = std::max(want.dy, gInPlace.minSize.dy);
     Rect canvas = HwndClientRect(gInPlace.win->hwndCanvas);
@@ -1543,6 +1587,9 @@ static LRESULT CALLBACK WndProcFreeTextInPlaceEdit(HWND hwnd, UINT msg, WPARAM w
             break;
         case WM_KILLFOCUS:
             EndFreeTextInPlaceEdit(true);
+            // only a click elsewhere gets here, and if that click was on the
+            // Edit text button it means "done", not "start again"
+            gInPlaceEndedAt = GetTickCount64();
             return 0;
     }
     LRESULT res = CallWindowProcW(gInPlaceDefProc, hwnd, msg, wp, lp);
@@ -1589,7 +1636,8 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     if (textSize <= 0) {
         textSize = 12;
     }
-    int fontPx = std::max(6, (int)((float)textSize * scale));
+    int borderWidth = std::max(BorderWidth(annot), 0);
+    int fontPx = std::max(6, (int)(((float)textSize * scale) + 0.5f));
     HFONT font = CreateFontW(-fontPx, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                              CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH,
                              WinFontForPdfFontName(DefaultAppearanceTextFont(annot)));
@@ -1624,6 +1672,10 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     gInPlace.size = rc.Size();
     gInPlace.minSize = rc.Size();
     gInPlace.padding = pad;
+    gInPlace.textSize = textSize;
+    gInPlace.borderWidth = borderWidth;
+    gInPlace.fontPx = fontPx;
+    gInPlace.scale = scale;
 
     HwndSetFocus(hwnd);
     // caret at the end, nothing selected: this is editing what is there, not

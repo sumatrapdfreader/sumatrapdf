@@ -12893,6 +12893,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // every new annotation is selected, so it can be moved, resized, or edited
     // from the compact property row
     SetSelectedAnnotation(tab, lastCreatedAnnot);
+    // a new free text annotation is a box of placeholder text: put the caret
+    // in it rather than make the user find it again. Not for a paste, which
+    // brings the text it was copied from.
+    if (cmdId == CmdCreateAnnotFreeText && lastCreatedAnnot->type == AnnotationType::FreeText) {
+        StartFreeTextInPlaceEdit(win, lastCreatedAnnot);
+    }
     return 0;
 }
 
