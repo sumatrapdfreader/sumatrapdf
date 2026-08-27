@@ -145,7 +145,7 @@ export async function testit(): Promise<void> {
     ]),
   );
 
-  const { proc, client, frame } = await launchControlled([cbz], { defaultWindowPos: true });
+  const { proc, client, frame } = await launchControlled([cbz]);
   try {
     if (isZoomed(frame)) {
       showWindow(frame, SW_RESTORE);

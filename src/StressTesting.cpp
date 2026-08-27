@@ -948,7 +948,7 @@ static void PositionStressWindows(MainWindow** windows, int n) {
     } positions[4];
 
     if (n == 1) {
-        positions[0] = {wa.x, wa.y, halfDx, wa.dy};
+        positions[0] = {wa.x + halfDx, wa.y, wa.dx - halfDx, wa.dy};
     } else if (n == 2) {
         positions[0] = {wa.x, wa.y, halfDx, wa.dy};
         positions[1] = {wa.x + halfDx, wa.y, wa.dx - halfDx, wa.dy};

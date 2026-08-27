@@ -199,7 +199,7 @@ export async function testit(): Promise<void> {
     "Theme = Dark\nRestoreSession = false\nCheckForUpdates = false\n",
   );
 
-  const { proc, client, frame } = await launchControlled(["-appdata", appdata], { defaultWindowPos: true });
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata]);
   try {
     sendCommand(frame, cmdId("CmdHelpOpenManual"));
     if (!(await waitForDarkStartup(proc.pid!, 15000))) {

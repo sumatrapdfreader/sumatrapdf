@@ -57,10 +57,7 @@ export async function testit(): Promise<void> {
   );
 
   const pdf = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
-  const first = await launchControlled(["-appdata", appData, pdf], {
-    saveSettings: true,
-    defaultWindowPos: true,
-  });
+  const first = await launchControlled(["-appdata", appData, pdf], { saveSettings: true });
   try {
     await first.client.waitForRenderIdle(15_000);
     await exitCleanly(first.proc, first.frame, "initial session-saving run");
@@ -71,7 +68,6 @@ export async function testit(): Promise<void> {
 
   const restored = await launchControlled(["-appdata", appData, "-new-window", "-search", SEARCH_TERM, pdf], {
     saveSettings: true,
-    defaultWindowPos: true,
   });
   try {
     const result = await findWindowContents(restored.client);

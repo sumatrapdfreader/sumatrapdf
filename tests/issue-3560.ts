@@ -63,7 +63,7 @@ export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-3560.pdf");
   writeFileSync(pdf, makePdf(), "latin1");
 
-  const { proc, client, frame } = await launchControlled([pdf], { defaultWindowPos: true });
+  const { proc, client, frame } = await launchControlled([pdf]);
   try {
     await client.waitForRenderIdle();
     if (isZoomed(frame)) {

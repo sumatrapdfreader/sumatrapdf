@@ -163,13 +163,7 @@ export async function testit(): Promise<void> {
   );
 
   const zeroDir = writeAppData(tmpPath("issue-6018-zero"), "0 0");
-  const {
-    proc: p0,
-    client: c0,
-    frame: f0,
-  } = await launchControlled(["-appdata", zeroDir, cbz], {
-    defaultWindowPos: true,
-  });
+  const { proc: p0, client: c0, frame: f0 } = await launchControlled(["-appdata", zeroDir, cbz]);
   try {
     await c0.waitForRenderIdle();
     sendCommandSync(f0, cmdId("CmdZoomFitWidthAndContinuous"));
@@ -229,13 +223,7 @@ export async function testit(): Promise<void> {
   }
 
   const gapDir = writeAppData(tmpPath("issue-6018-gap"), "0 40");
-  const {
-    proc: p1,
-    client: c1,
-    frame: f1,
-  } = await launchControlled(["-appdata", gapDir, cbz], {
-    defaultWindowPos: true,
-  });
+  const { proc: p1, client: c1, frame: f1 } = await launchControlled(["-appdata", gapDir, cbz]);
   try {
     await c1.waitForRenderIdle();
     sendCommandSync(f1, cmdId("CmdZoomFitWidthAndContinuous"));

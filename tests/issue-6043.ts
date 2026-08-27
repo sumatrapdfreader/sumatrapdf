@@ -101,7 +101,7 @@ async function testTheme(theme: "Light" | "Dark"): Promise<void> {
     `UiLanguage = en\nTheme = ${theme}\nRestoreSession = false\nShowStartPage = false\nShowFavorites = false\nSidebarDx = 500\n`,
   );
 
-  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf], { defaultWindowPos: true });
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   try {
     moveWindow(frame, 40, 20, 1000, 800);
     await client.waitForRenderIdle();
