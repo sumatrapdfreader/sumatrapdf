@@ -50,6 +50,8 @@ Diagnostics:
     - misc-multiple-inheritance
     - readability-avoid-nested-conditional-operator
     - misc-use-internal-linkage
+    - modernize-use-auto
+    - misc-use-internal-linkage
 ---
 # When editing a header under src/base/, force-include Base.h plus other
 # src/base/*.h not already included by Base.h (headers are not self-sufficient).
