@@ -1940,6 +1940,12 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                             win->annotationVertexPreview[idx] = pagePt;
                         }
                         ScheduleRepaint(win, 0);
+                    } else if (win->annotationResizeOutlineOnly) {
+                        // Outline only: writing the annotation re-lays out its
+                        // text and re-renders the page, far too slow to do on
+                        // every mouse move.
+                        win->annotationResizePreviewRect = CalculateResizedRect(win, x, y);
+                        ScheduleRepaint(win, 0);
                     } else {
                         RectF newRect = CalculateResizedRect(win, x, y);
                         SetRect(annot, newRect);
@@ -2088,6 +2094,11 @@ static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt,
     win->dragStart = pt;
     RectF r = GetRect(annot);
     win->annotationOriginalRect = r;
+    win->annotationResizePreviewRect = r;
+    // free text lays its text out again on every write; keep the drag to the
+    // outline and write the annotation once, when the drag ends
+    win->annotationResizeOutlineOnly =
+        annot->type == AnnotationType::FreeText && !IsLineEndpointHandle(handle) && !IsVertexHandle(handle);
     win->annotationOriginalLineStart = {};
     win->annotationOriginalLineEnd = {};
     win->annotationLinePreviewStart = {};
@@ -2122,7 +2133,10 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     auto handle = (ResizeHandle)win->resizeHandle;
     PointF lineStart = win->annotationLinePreviewStart;
     PointF lineEnd = win->annotationLinePreviewEnd;
+    bool outlineOnly = win->annotationResizeOutlineOnly;
+    RectF previewRect = win->annotationResizePreviewRect;
     win->annotationBeingResized = false;
+    win->annotationResizeOutlineOnly = false;
     win->annotationBeingDragged = nullptr;
     CancelAnnotationResizeRerender(win);
 
@@ -2142,9 +2156,11 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
         SetLinePoints(annot, lineStart, lineEnd);
     } else if (IsVertexHandle(handle)) {
         SetVertices(annot, win->annotationVertexPreview);
+    } else if (outlineOnly) {
+        SetRect(annot, previewRect);
     }
 
-    // Rectangle resizes already wrote the annot during mouse move.
+    // Other rectangle resizes already wrote the annot during mouse move.
     EndPdfEditOperation(win);
     NotifyAnnotationsChanged(win->CurrentTab());
     MainWindowRerender(win);
@@ -3455,8 +3471,12 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
                         annot->type == AnnotationType::Line;
     bool draggingVertices = win && win->annotationBeingResized && IsVertexHandle((ResizeHandle)win->resizeHandle) &&
                             IsPolyVertexType(annot->type);
+    // an outline-only resize hasn't touched the annotation yet, so the marker
+    // and its handles come from the preview rect instead
+    bool draggingOutline =
+        win && win->annotationBeingResized && win->annotationResizeOutlineOnly && win->annotationBeingDragged == annot;
 
-    Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
+    Rect rect = dm->CvtToScreen(pageNo, draggingOutline ? win->annotationResizePreviewRect : GetRect(annot));
     if (!tab->didScrollToSelectedAnnotation) {
         dm->ScrollScreenToRect(pageNo, rect);
         tab->didScrollToSelectedAnnotation = true;

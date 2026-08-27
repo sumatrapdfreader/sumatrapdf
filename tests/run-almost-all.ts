@@ -151,6 +151,7 @@ import { testit as annotUndoRedo } from "./annot-undo-redo.ts";
 import { testit as annotFilterToolbar } from "./annot-filter-toolbar.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
 import { testit as freeTextAnnotationPlacement } from "./free-text-annotation-placement.ts";
+import { testit as freeTextEditToolbar } from "./free-text-edit-toolbar.ts";
 import { testit as stampCaretAnnotationPlacement } from "./stamp-caret-annotation-placement.ts";
 import { testit as lineAnnotationPlacement } from "./line-annotation-placement.ts";
 import { testit as polylineAnnotationPlacement } from "./polyline-annotation-placement.ts";
@@ -256,6 +257,7 @@ export const tests: NamedTest[] = [
   ["annot-filter-toolbar", annotFilterToolbar],
   ["text-annotation-placement", textAnnotationPlacement],
   ["free-text-annotation-placement", freeTextAnnotationPlacement],
+  ["free-text-edit-toolbar", freeTextEditToolbar],
   ["stamp-caret-annotation-placement", stampCaretAnnotationPlacement],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],

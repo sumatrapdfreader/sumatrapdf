@@ -69,6 +69,7 @@ enum class AnnotEditKind {
     Contents,
     LineStart,
     LineEnd,
+    Delete,
 };
 
 struct AnnotEditItem {
@@ -96,6 +97,7 @@ static void StartContentsEdit(AnnotEditToolbar*);
 static void EndContentsEdit(AnnotEditToolbar*, bool accept);
 static void DestroyContentsEditor(AnnotEditToolbar*);
 static void PostedStartContentsEdit(MainWindow*);
+static void PostedDeleteSelectedAnnotation(MainWindow*);
 
 struct AnnotEditToolbar {
     MainWindow* win = nullptr;
@@ -107,6 +109,8 @@ struct AnnotEditToolbar {
     Rect lastPlaced;
     Rect lastAnnotBounds;
     Vec<AnnotEditKind> kinds;
+    // non-owning, for tests; the layout tree owns them and is replaced on relayout
+    Vec<AnnotEditChip*> chips;
     Func1List<MainWindow*> onWindowMoved;
     bool editingContents = false;
     bool contentsEditClosing = false;
@@ -213,6 +217,8 @@ static Str KindName(AnnotEditKind kind) {
             return StrL("lineStart");
         case AnnotEditKind::LineEnd:
             return StrL("lineEnd");
+        case AnnotEditKind::Delete:
+            return StrL("delete");
     }
     return StrL("?");
 }
@@ -318,6 +324,13 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Contents;
         it.tooltip = _TRA("Contents");
+        out.Append(it);
+    }
+    if (type != AnnotationType::Widget) {
+        // last, so a mis-aimed click lands on a harmless chip, not on delete
+        AnnotEditItem it;
+        it.kind = AnnotEditKind::Delete;
+        it.tooltip = _TRA("Delete Annotation");
         out.Append(it);
     }
 }
@@ -544,6 +557,9 @@ void AnnotEditChip::Paint(VirtPaintCtx& ctx) {
             break;
         case AnnotEditKind::Contents:
             PaintSvgChip(ctx.gfx, r, gIconAnnotText, textCol, BarBg());
+            break;
+        case AnnotEditKind::Delete:
+            PaintSvgChip(ctx.gfx, r, gIconTrash, textCol, BarBg());
             break;
         case AnnotEditKind::Opacity:
         case AnnotEditKind::Border:
@@ -867,6 +883,10 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             // has finished bubbling
             uitask::Post(MkFunc0(PostedStartContentsEdit, tb->win), "StartAnnotContentsEdit");
             break;
+        case AnnotEditKind::Delete:
+            // deleting takes the whole toolbar (and this chip) down with it
+            uitask::Post(MkFunc0(PostedDeleteSelectedAnnotation, tb->win), "DeleteSelectedAnnot");
+            break;
     }
 }
 
@@ -882,6 +902,7 @@ static Size ChipSizeFor(const AnnotEditItem& item, PlatformFont* font, int rowDy
         case AnnotEditKind::Alignment:
         case AnnotEditKind::Icon:
         case AnnotEditKind::Contents:
+        case AnnotEditKind::Delete:
             return {rowDy, rowDy};
         case AnnotEditKind::LineStart:
         case AnnotEditKind::LineEnd:
@@ -904,6 +925,7 @@ static void LayoutToolbar(AnnotEditToolbar* tb, const Vec<AnnotEditItem>& items)
     Color hoverBg = BarHoverBg(BarBg());
 
     tb->kinds.Reset();
+    tb->chips.Reset();
     auto* box = new HBox();
     box->alignCross = CrossAxisAlign::Stretch;
     bool isFirst = true;
@@ -916,6 +938,7 @@ static void LayoutToolbar(AnnotEditToolbar* tb, const Vec<AnnotEditItem>& items)
         chip->SetTooltip(item.tooltip);
         chip->onClick = MkFunc1(OnChipClick, chip);
         tb->kinds.Append(item.kind);
+        tb->chips.Append(chip);
         ILayout* child = chip;
         if (!isFirst) {
             child = new Padding(chip, Insets{0, 0, 0, gap});
@@ -1245,6 +1268,14 @@ static void PostedStartContentsEdit(MainWindow* win) {
     }
 }
 
+static void PostedDeleteSelectedAnnotation(MainWindow* win) {
+    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    Annotation* annot = LiveToolbarAnnot(tb);
+    if (annot) {
+        DeleteAnnotationAndUpdateUI(tb->tab, annot);
+    }
+}
+
 static void StartContentsEdit(AnnotEditToolbar* tb) {
     Annotation* annot = LiveToolbarAnnot(tb);
     if (!tb || !tb->host || !annot || tb->editingContents) {
@@ -1443,8 +1474,17 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
         items.Append(KindName(tb->kinds[i]));
     }
     Rect r = tb->host->ScreenRect();
-    return fmt("annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d\n", len(tb->kinds),
-               ToStrTemp(items), r.x, r.y, r.dx, r.dy, tb->editingContents ? 1 : 0);
+    str::Builder chips;
+    for (int i = 0; i < len(tb->chips); i++) {
+        if (i > 0) {
+            chips.AppendChar(';');
+        }
+        Rect cr = tb->chips[i]->BoundsInWindow();
+        Str name = i < len(tb->kinds) ? KindName(tb->kinds[i]) : StrL("?");
+        chips.Append(fmt("%s:%d,%d,%d,%d", name, r.x + cr.x, r.y + cr.y, cr.dx, cr.dy));
+    }
+    return fmt("annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d chips=%s\n", len(tb->kinds),
+               ToStrTemp(items), r.x, r.y, r.dx, r.dy, tb->editingContents ? 1 : 0, ToStrTemp(chips));
 }
 
 // clang-format off
@@ -2276,6 +2316,13 @@ TempStr AnnotEditorLayoutResultTemp(int, int, int* exitCodeOut, int) {
         Rect annotRect = dm->CvtToScreen(annot->pageNo, GetRect(annot));
         out.Append(fmt(" annotType=%d annotRect=%d,%d,%d,%d canResize=%d", (int)annot->type, annotRect.x, annotRect.y,
                        annotRect.dx, annotRect.dy, (int)AnnotationCanBeResized(annot->type)));
+        // the outline the pointer is dragging while the annotation itself is
+        // left alone; empty unless an outline-only resize is in progress
+        Rect outline;
+        if (win->annotationBeingResized && win->annotationResizeOutlineOnly) {
+            outline = dm->CvtToScreen(annot->pageNo, win->annotationResizePreviewRect);
+        }
+        out.Append(fmt(" resizeOutline=%d,%d,%d,%d", outline.x, outline.y, outline.dx, outline.dy));
     }
     return finish({}, 0);
 }

@@ -385,6 +385,11 @@ struct MainWindow {
     int annotationResizeVertexIndex = -1;
     float annotationResizeAspectRatio = 0;
     UINT_PTR annotationResizeRerenderTimer = 0;
+    // free text is re-laid out on every write, which is too slow to do per
+    // mouse move: only the outline follows the pointer and the annotation is
+    // rewritten once, on mouse up
+    bool annotationResizeOutlineOnly = false;
+    RectF annotationResizePreviewRect;
 
     /* when moving the document by middle-click auto-scroll, this keeps track of
        the speed (in pixels per 20ms) at which we should scroll, which depends on
