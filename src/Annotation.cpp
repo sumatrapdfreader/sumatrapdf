@@ -1594,7 +1594,8 @@ void SetOpacity(Annotation* annot, int newOpacity) {
     {
         auto* ctx = e->Ctx();
         ScopedRecursiveMutex cs(&e->docLock);
-        ReportIf(newOpacity < 0 || newOpacity > 255);
+        ReportIf(newOpacity < 0);
+        ReportIf(newOpacity > 255);
         newOpacity = setMinMax(newOpacity, 0, 255);
         float fopacity = (float)newOpacity / 255.f;
 
