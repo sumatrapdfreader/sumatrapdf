@@ -866,6 +866,12 @@ void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
         // autoLayout already reflowed `layout`; erase so snippet pixels
         // don't ghost when the dialog shrinks (#5796)
         HwndInvalidate(hwnd, true);
+        if (ev->type == SIZE_RESTORED) {
+            // Restoring an owned floating window can expose the document
+            // without causing the canvas to repaint. Find-match highlights
+            // are canvas overlays, so redraw them explicitly (#6065).
+            ScheduleRepaint(win, 0);
+        }
         return;
     }
     if (ev->msg == WM_EXITSIZEMOVE) {
