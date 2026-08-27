@@ -220,6 +220,7 @@ static UINT_PTR removeIfNoDiskAccessPerm[] = {
 static UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdSaveAnnotations,
     CmdSaveAnnotationsNewFile,
+    CmdDiscardChanges,
     CmdApplyRedactions,
     // signing writes a signature widget into the PDF, so it needs the same
     // "this engine can be edited and re-saved" support annotations do
@@ -746,7 +747,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return HasCopiedAnnotation() ? CommandVisibility::Show : CommandVisibility::Disable;
     }
 
-    if ((cmdId == CmdSaveAnnotations) || (cmdId == CmdSaveAnnotationsNewFile)) {
+    if ((cmdId == CmdSaveAnnotations) || (cmdId == CmdSaveAnnotationsNewFile) || (cmdId == CmdDiscardChanges)) {
         return ctx.hasUnsavedAnnotations ? CommandVisibility::Show : CommandVisibility::Disable;
     }
 

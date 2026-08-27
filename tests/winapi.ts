@@ -1534,7 +1534,19 @@ export const MF_BYPOSITION = 0x400;
 export const MF_GRAYED = 0x0001;
 export const MF_DISABLED = 0x0002;
 
-export type MenuItem = { text: string; items?: MenuItem[]; disabled?: boolean };
+// the shortcut a menu item advertises (the part after the tab), "" if none
+export function getMenuItemAccel(hmenu: bigint, pos: number): string {
+  const buf = new Uint16Array(512);
+  const n = user32.symbols.GetMenuStringW(hmenu, pos, ptr(buf), 512, MF_BYPOSITION);
+  if (n <= 0) {
+    return "";
+  }
+  const s = Buffer.from(buf.buffer, 0, n * 2).toString("utf16le");
+  const parts = s.split("\t");
+  return parts.length > 1 ? parts[1]!.replace(/&/g, "") : "";
+}
+
+export type MenuItem = { text: string; accel?: string; items?: MenuItem[]; disabled?: boolean };
 
 export function getMenuItemDisabled(hmenu: bigint, pos: number): boolean {
   const st = user32.symbols.GetMenuState(hmenu, pos, MF_BYPOSITION);
@@ -1555,6 +1567,10 @@ export function readMenuTree(hmenu: bigint): MenuItem[] {
       out.push({ text, items: readMenuTree(sub) });
     } else if (text) {
       const item: MenuItem = { text };
+      const accel = getMenuItemAccel(hmenu, i);
+      if (accel) {
+        item.accel = accel;
+      }
       if (getMenuItemDisabled(hmenu, i)) {
         item.disabled = true;
       }

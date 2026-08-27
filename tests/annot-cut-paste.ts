@@ -150,6 +150,19 @@ ${raw}`);
   }
 }
 
+// Ctrl+C / Ctrl+V are bound to CmdCopySelection / CmdPasteClipboardImage,
+// which hand off to the annotation commands; the menu still has to advertise
+// the key the user presses.
+function requireAccel(items: MenuItem[], text: string, accel: string): void {
+  const it = findMenuItem(items, text);
+  if (!it) {
+    throw new Error(`annot-cut-paste: "${text}" is not in the page context menu`);
+  }
+  if (it.accel !== accel) {
+    throw new Error(`annot-cut-paste: "${text}" shows shortcut "${it.accel ?? ""}", want "${accel}"`);
+  }
+}
+
 function requireEnabled(items: MenuItem[], text: string): void {
   const it = findMenuItem(items, text);
   if (!it) {
@@ -202,8 +215,24 @@ export async function testit(): Promise<void> {
       throw new Error(`annot-cut-paste: click did not select the square\n${state.raw}`);
     }
 
-    // the context menu offers Cut for the annotation under the cursor
-    requireEnabled(await contextMenuAt(canvas, mid.x, mid.y), "Cut Annotation");
+    // the context menu offers Cut for the annotation under the cursor, with
+    // the shortcuts that reach these commands
+    const menu = await contextMenuAt(canvas, mid.x, mid.y);
+    requireEnabled(menu, "Cut Annotation");
+    requireAccel(menu, "Cut Annotation", "Ctrl + X");
+    requireAccel(menu, "Copy Annotation", "Ctrl + C");
+    requireAccel(menu, "Paste Annotation", "Ctrl + V");
+    for (const name of ["Apply Redactions", "Save changes", "Save to new file", "Discard changes"]) {
+      if (!findMenuItem(menu, name)) {
+        throw new Error(`annot-cut-paste: "${name}" is not in the Annotations submenu`);
+      }
+    }
+    // nothing has been edited yet and there are no redaction marks
+    for (const name of ["Apply Redactions", "Save changes", "Save to new file", "Discard changes"]) {
+      if (!findMenuItem(menu, name)!.disabled) {
+        throw new Error(`annot-cut-paste: "${name}" must be disabled with nothing to act on`);
+      }
+    }
 
     // cut: the annotation must still be there, it goes away on paste
     sendMessage(frame, WM_COMMAND, cmdId("CmdCutAnnotation"), packCoords(mid.x, mid.y));

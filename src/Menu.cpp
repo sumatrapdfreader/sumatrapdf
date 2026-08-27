@@ -1029,12 +1029,24 @@ static MenuDef menuDefContextAnnotations[] = {
         kMenuSeparatorID,
     },
     {
-        _TRN("Save Annotations to existing PDF"),
+        _TRN("Apply Redactions"),
+        CmdApplyRedactions,
+    },
+    {
+        StrL(kMenuSeparator),
+        kMenuSeparatorID,
+    },
+    {
+        _TRN("Save changes"),
         CmdSaveAnnotations,
     },
     {
-        _TRN("Apply Redactions"),
-        CmdApplyRedactions,
+        _TRN("Save to new file"),
+        CmdSaveAnnotationsNewFile,
+    },
+    {
+        _TRN("Discard changes"),
+        CmdDiscardChanges,
     },
     {
         {},
@@ -1650,7 +1662,17 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             WCHAR* ws = CWStrTemp(title);
             AppendMenuW(menu, flags, (UINT_PTR)subMenu, ws);
         } else {
-            title = AppendAccelKeyToMenuStringTemp(title, cmdId);
+            // Ctrl+C / Ctrl+V are bound to CmdCopySelection and
+            // CmdPasteClipboardImage, which hand off to these when an
+            // annotation is what there is to copy or paste. Show the key the
+            // user actually presses rather than nothing.
+            int accelCmdId = cmdId;
+            if (cmdId == CmdCopyAnnotation) {
+                accelCmdId = CmdCopySelection;
+            } else if (cmdId == CmdPasteAnnotation) {
+                accelCmdId = CmdPasteClipboardImage;
+            }
+            title = AppendAccelKeyToMenuStringTemp(title, accelCmdId);
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
             WCHAR* ws = CWStrTemp(title);
             AppendMenuW(menu, flags, md.idOrSubmenu, ws);
