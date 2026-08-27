@@ -251,8 +251,16 @@ ${after}`);
     if (!box2) {
       throw new Error("free-text-in-place-edit: the reopened edit control was not found");
     }
+    // Ctrl+A is the box's select-all, not the page's. It arrives as
+    // CmdSelectAll on the frame, the way the accelerator table sends it.
+    sendMessage(frame, WM_COMMAND, cmdId("CmdSelectAll"), 0);
+    await sleep(200);
     typeChars(box2, "throw this away");
-    await sleep(250);
+    await sleep(300);
+    const replaced = await editState(client);
+    if (replaced.text !== "throw this away") {
+      throw new Error(`free-text-in-place-edit: Ctrl+A did not select the box's text: "${replaced.text}"`);
+    }
     pressKey(box2, VK_ESCAPE);
     await waitForEdit(client, false);
     await client.waitForRenderIdle();

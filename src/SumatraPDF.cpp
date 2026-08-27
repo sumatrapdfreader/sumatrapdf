@@ -9584,20 +9584,51 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
 
 // Ctrl+C / Ctrl+X / Ctrl+Z are app accelerators, so they fire even while a text
 // box has the focus. Hand the message to the edit control instead of taking it.
-static bool ForwardEditMsgToFocusedEditControl(UINT msg) {
+// The focused window if it is a text box: the page-number box, the annotation
+// filter, the property row's Contents box, the in-place free text editor, a
+// form field. Their own editing keys win over the document's.
+static HWND FocusedEditControl(bool* isComboOut = nullptr) {
     HWND focus = GetFocus();
     if (!focus) {
-        return false;
+        return nullptr;
     }
     WCHAR cls[64];
     int n = GetClassNameW(focus, cls, dimof(cls));
     if (n <= 0) {
-        return false;
+        return nullptr;
     }
-    if (!wstr::EqI(cls, WC_EDITW) && !wstr::EqI(cls, WC_COMBOBOX) && !wstr::EqI(cls, L"ComboLBox")) {
+    bool isCombo = wstr::EqI(cls, WC_COMBOBOX);
+    if (!wstr::EqI(cls, WC_EDITW) && !isCombo && !wstr::EqI(cls, L"ComboLBox")) {
+        return nullptr;
+    }
+    if (isComboOut) {
+        *isComboOut = isCombo;
+    }
+    return focus;
+}
+
+static bool ForwardEditMsgToFocusedEditControl(UINT msg) {
+    HWND focus = FocusedEditControl();
+    if (!focus) {
         return false;
     }
     SendMessageW(focus, msg, 0, 0);
+    return true;
+}
+
+// Ctrl+A in a text box selects that box's text, not the page's. There is no
+// WM_SELECTALL, so this can't go through ForwardEditMsgToFocusedEditControl().
+static bool SelectAllInFocusedEditControl() {
+    bool isCombo = false;
+    HWND focus = FocusedEditControl(&isCombo);
+    if (!focus) {
+        return false;
+    }
+    if (isCombo) {
+        SendMessageW(focus, CB_SETEDITSEL, 0, MAKELPARAM(0, -1));
+    } else {
+        SendMessageW(focus, EM_SETSEL, 0, (LPARAM)-1);
+    }
     return true;
 }
 
@@ -11466,6 +11497,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdPasteClipboardImage: {
+            // Ctrl+V in a text box is that box's paste
+            if (ForwardEditMsgToFocusedEditControl(WM_PASTE)) {
+                return 0;
+            }
             // Ctrl+V pastes a copied annotation, but only while ours is the most
             // recent copy. An image copied in another app since then wins, or the
             // annotation would hijack Ctrl+V for the rest of the session.
@@ -12317,6 +12352,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSelectAll:
+            // Ctrl+A in a text box is that box's select-all, not the page's
+            if (SelectAllInFocusedEditControl()) {
+                return 0;
+            }
             OnSelectAll(win);
             break;
 
