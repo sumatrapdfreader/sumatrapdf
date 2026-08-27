@@ -1543,11 +1543,15 @@ void EndFreeTextInPlaceEdit(bool accept) {
         int pageNo = PageNo(annot);
         if (dm && dm->ValidPageNo(pageNo)) {
             // the box was sized to the text while typing; keep that room so
-            // MuPDF doesn't clip what was just written
+            // MuPDF doesn't clip what was just written. Compare in screen
+            // pixels: converting the box back to page coordinates biases it
+            // half a pixel up and to the left, so a page-space union always
+            // looks bigger and would grow the annotation on every edit.
             RectF cur = GetRect(annot);
-            RectF grown = cur.Union(dm->CvtFromScreen(editRect, pageNo));
-            if (grown != cur) {
-                SetRect(annot, grown);
+            Rect curScreen = dm->CvtToScreen(pageNo, cur);
+            Rect wanted = curScreen.Union(editRect);
+            if (wanted != curScreen) {
+                SetRect(annot, cur.Union(dm->CvtFromScreen(wanted, pageNo)));
             }
         }
         SetContents(annot, text);

@@ -162,7 +162,9 @@ export async function testit(): Promise<void> {
       midDrag = await annotState(client);
     }
     if (!sameRect(midDrag.rect, before.rect)) {
-      throw new Error(`free-text-edit-toolbar: annotation was rewritten during the drag: ${midDrag.raw}`);
+      throw new Error(
+        `free-text-edit-toolbar: annotation was rewritten during the drag: was ${JSON.stringify(before.rect)}\n${midDrag.raw}`,
+      );
     }
     if (!sameRect(midDrag.outline, grown, 2)) {
       throw new Error(`free-text-edit-toolbar: outline did not follow the pointer: ${midDrag.raw}`);
