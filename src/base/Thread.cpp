@@ -104,7 +104,7 @@ void SetThreadName(Str threadName, ThreadId threadId) {
 #if OS_WIN
 
 static DWORD WINAPI ThreadFunc0(void* data) {
-    auto* fn = (Func0*)(data);
+    auto* fn = (Func0*)data;
     fn->Call();
     delete fn;
     DestroyTempArena();

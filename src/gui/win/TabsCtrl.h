@@ -26,7 +26,7 @@ struct TabInfo {
     // document failed to load: the title paints in red
     bool isError = false;
     UINT_PTR userData = 0;
-    Color tabColor = (Color)(0xfeffffff); // kColorUnset; use default tab color
+    Color tabColor = (Color)0xfeffffff; // kColorUnset; use default tab color
 
     TabInfo() = default;
     ~TabInfo();

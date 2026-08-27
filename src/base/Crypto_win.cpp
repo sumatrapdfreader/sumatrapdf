@@ -177,7 +177,7 @@ Str ExtractP7m(Str d) {
         free(content);
         return {};
     }
-    return Str((char*)(content), (int)(cbContent));
+    return Str((char*)content, (int)cbContent);
 }
 
 // Authenticode / PE signature helpers (Windows only; stubs return false/null on POSIX)

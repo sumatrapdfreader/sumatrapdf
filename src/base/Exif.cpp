@@ -998,7 +998,7 @@ bool CopyTiffBlob(const u8* data, int n, int tiffOff, Str& out, u8** ownedOut) {
     }
     memcpy(copy, data + tiffOff, (size_t)blobLen);
     *ownedOut = copy;
-    out = Str((char*)(copy), blobLen);
+    out = Str((char*)copy, blobLen);
     return true;
 }
 
@@ -1035,7 +1035,7 @@ bool ExtractHeifExifFromBytes(Str d, Str& out, u8** ownedOut) {
         }
         memcpy(copy, data + tiffOff, (size_t)blobLen);
         *ownedOut = copy;
-        out = Str((char*)(copy), blobLen);
+        out = Str((char*)copy, blobLen);
         return true;
     }
     for (int i = 0; i + 8 < n; i++) {

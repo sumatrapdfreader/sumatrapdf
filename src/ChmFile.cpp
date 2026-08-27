@@ -83,7 +83,7 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
         return {};
     }
 
-    return Str((char*)(d), n);
+    return Str((char*)d, n);
 }
 
 // Strip a UTF-8 BOM if present; otherwise convert from `codepage` to UTF-8

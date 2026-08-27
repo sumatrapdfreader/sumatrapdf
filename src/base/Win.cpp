@@ -3624,7 +3624,7 @@ double TimeDiffSecs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
     LARGE_INTEGER freq;
     QueryPerformanceFrequency(&freq);
     auto diff = end.QuadPart - start.QuadPart;
-    double res = (double)(diff) / (double)(freq.QuadPart);
+    double res = (double)diff / (double)freq.QuadPart;
     return res;
 }
 
@@ -3632,7 +3632,7 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
     LARGE_INTEGER freq;
     QueryPerformanceFrequency(&freq);
     auto diff = end.QuadPart - start.QuadPart;
-    double res = (double)(diff) / (double)(freq.QuadPart);
+    double res = (double)diff / (double)freq.QuadPart;
     return res * 1000;
 }
 

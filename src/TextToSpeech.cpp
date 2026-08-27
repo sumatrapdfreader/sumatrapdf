@@ -947,7 +947,7 @@ static DWORD WavGetU32(const u8* d) {
 
 // finds "fmt " and "data" chunks in a RIFF WAVE file
 static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** dataOut, DWORD* dataSizeOut) {
-    if (n < 12 + 8 || !str::EqN(Str((char*)(d), 4), StrL("RIFF"), 4) ||
+    if (n < 12 + 8 || !str::EqN(Str((char*)d, 4), StrL("RIFF"), 4) ||
         !str::EqN(Str((char*)(d + 8), 4), StrL("WAVE"), 4)) {
         return false;
     }

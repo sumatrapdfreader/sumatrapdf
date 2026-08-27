@@ -234,7 +234,7 @@ Str StrVecPage::AtStr(int idx) const {
 
 void* StrVecPage::AtDataRaw(int idx) const {
     u32* offsets = OffsetsForString(this, idx) + 2;
-    return (void*)(offsets);
+    return (void*)offsets;
 }
 
 // we don't de-allocate removed strings so we can safely return the string

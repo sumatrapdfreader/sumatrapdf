@@ -210,7 +210,7 @@ void SetCurrentLangByCode(Str langCode) {
         FallbackToEnglish();
         return;
     }
-    Str d = Str((char*)(data), dataSize);
+    Str d = Str((char*)data, dataSize);
     // whitespace-only / header-only with no strings: treat as empty
     bool hasString = false;
     for (int i = 0; i < d.len; i++) {

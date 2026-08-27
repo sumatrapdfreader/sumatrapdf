@@ -12,11 +12,11 @@ using Color = uint32_t;
 
 // a "unset" state for Color value. technically all colors are valid
 // this one is hopefully not used in practice
-constexpr Color kColorUnset = ((Color)(0xfeffffff));
+constexpr Color kColorUnset = (Color)0xfeffffff;
 // kColorNoChange indicates that we shouldn't change the color
-constexpr Color kColorNoChange((Color)(0xfdffffff));
+constexpr Color kColorNoChange((Color)0xfdffffff);
 // explicit "don't paint" / no fill / no border (not inherit/default)
-constexpr Color kColorTransparent = ((Color)(0xfcffffff));
+constexpr Color kColorTransparent = (Color)0xfcffffff;
 
 constexpr bool ColorSkipsPaint(Color c) {
     return c == kColorUnset || c == kColorTransparent;

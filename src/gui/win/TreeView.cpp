@@ -543,7 +543,7 @@ static void InvalidateTreeItemRow(HWND hwnd, HTREEITEM hItem) {
 void TreeView::OnNotifyReflect(ControlBase::NotifyReflectEvent* rev) {
     TreeView* w = this;
     LPARAM lp = rev->lparam;
-    NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
+    NMTREEVIEWW* nmtv = (NMTREEVIEWW*)lp;
 
     auto code = nmtv->hdr.code;
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-getinfotip
@@ -553,7 +553,7 @@ void TreeView::OnNotifyReflect(ControlBase::NotifyReflectEvent* rev) {
         }
         TreeView::GetTooltipEvent ev;
         ev.treeView = w;
-        ev.info = (NMTVGETINFOTIPW*)(nmtv);
+        ev.info = (NMTVGETINFOTIPW*)nmtv;
         ev.treeItem = GetTreeItemByHandle(ev.info->hItem);
         onGetTooltip.Call(&ev);
         rev->result = 0;

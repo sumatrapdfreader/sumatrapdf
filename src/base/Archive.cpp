@@ -193,7 +193,7 @@ bool Archive::Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExt
         char buf[2048 + 1]{};
         int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
         if (n > 0) {
-            Str d = Str((char*)(buf), n);
+            Str d = Str((char*)buf, n);
             ft = GuessFileTypeFromData(d);
         }
     }
@@ -496,7 +496,7 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
             return {};
         }
         memcpy(data, fileInfo->data, (size_t)n);
-        return Str((char*)(data), n);
+        return Str((char*)data, n);
     }
 
     if (LoadedUsingUnrarDll()) {
@@ -525,7 +525,7 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
                 free(data);
                 return {};
             }
-            return Str((char*)(data), (int)n);
+            return Str((char*)data, (int)n);
         }
         archive_read_data_skip(a);
         idx++;
@@ -735,7 +735,7 @@ Str Archive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
             return {};
         }
         memcpy(data, fileInfo->data, (size_t)n);
-        return Str((char*)(data), n);
+        return Str((char*)data, n);
     }
 
     WCHAR* rarPath = CWStrTemp(rarFilePath_);

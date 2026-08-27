@@ -100,7 +100,7 @@ static LRESULT CALLBACK WndBaseWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LP
     HwndBase* w = HwndBaseFromHwnd(hwnd);
 
     if (msg == WM_NCCREATE) {
-        CREATESTRUCT* cs = (CREATESTRUCT*)(lparam);
+        CREATESTRUCT* cs = (CREATESTRUCT*)lparam;
         ReportIf(w);
         // CreateCustomHwnd / CreateControl pass the HwndBase subobject
         w = (HwndBase*)(cs->lpCreateParams);

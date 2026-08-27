@@ -74,7 +74,7 @@ struct StrVecWithData : StrVec {
 
     T* AtData(int i) const {
         void* res = AtDataRaw(i);
-        return (T*)(res);
+        return (T*)res;
     }
 
     int Append(Str s, const T& data) {
