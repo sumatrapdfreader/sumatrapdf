@@ -678,6 +678,10 @@ static void ShowCompactBar(MainWindow* win) {
     ShowWindow(bar->hwnd, SW_SHOW);
     win->findEdit->SetFocus();
     win->findEdit->SelectAll();
+    if (win->findEdit->GetTextLen() > 0 && !win->findThread && !win->findDebouncePending &&
+        len(win->findMatches) == 0) {
+        OnFindBarTextChanged(win);
+    }
 }
 
 // "ShowFindBar" is the entry point used by FindFirst/Ctrl+F; it shows whichever
