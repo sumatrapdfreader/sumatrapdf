@@ -15,6 +15,7 @@ import {
   sleep,
   treeClearSelection,
   treeGetItemHeight,
+  treeGetRoot,
   WM_COMMAND,
 } from "./winapi";
 import { killAndWait, launchControlled } from "./win-automation";
@@ -28,16 +29,18 @@ function makePdf(): string {
   return assemblePdf(objs);
 }
 
-type InkCount = { left: number; right: number; bounds: string };
+type InkCount = { left: number; right: number; span: number; bounds: string };
 
-function countLabelHalves(tree: number): InkCount {
+// Returns null while the tree isn't showing the favorite yet - the caller polls,
+// so "nothing drawn" is a retry, not a failure.
+function countLabelHalves(tree: number): InkCount | null {
   const cap = captureWindowPixels(tree);
   if (!cap) {
-    throw new Error("issue-6043: could not capture the Favorites tree");
+    return null;
   }
   const rowHeight = treeGetItemHeight(tree);
   if (rowHeight <= 0 || rowHeight > cap.h) {
-    throw new Error(`issue-6043: invalid tree row height ${rowHeight}`);
+    return null;
   }
   const { w, data } = cap;
   const bgX = Math.max(0, w - 20);
@@ -61,7 +64,7 @@ function countLabelHalves(tree: number): InkCount {
     }
   }
   if (maxX <= minX) {
-    throw new Error("issue-6043: no favorite label pixels found");
+    return null;
   }
 
   // The two strings have similar widths and are separated by " : ", so the
@@ -82,7 +85,7 @@ function countLabelHalves(tree: number): InkCount {
       }
     }
   }
-  return { left, right, bounds: `${minX}-${maxX}x0-${rowHeight}` };
+  return { left, right, span: maxX - minX, bounds: `${minX}-${maxX}x0-${rowHeight}` };
 }
 
 async function testTheme(theme: "Light" | "Dark"): Promise<void> {
@@ -110,16 +113,26 @@ async function testTheme(theme: "Light" | "Dark"): Promise<void> {
 
     const deadline = Date.now() + 5_000;
     let tree = 0;
-    let ink: InkCount = { left: 0, right: 0, bounds: "" };
+    let ink: InkCount = { left: 0, right: 0, span: 0, bounds: "" };
+    let prev: InkCount | null = null;
     while (Date.now() < deadline) {
       tree = findVisibleChildWindow(frame, "SysTreeView32");
-      if (tree) {
+      if (tree && treeGetRoot(tree)) {
         treeClearSelection(tree);
         await sleep(20);
-        ink = countLabelHalves(tree);
-        if (ink.left > 20 && ink.right > 20) {
-          break;
+        const cur = countLabelHalves(tree);
+        if (cur) {
+          ink = cur;
+          // The row can be captured mid-repaint, with the icon drawn but not
+          // yet the text. Only trust a reading that spans more than the icon
+          // and that repeats, meaning the row is done painting.
+          const wideEnough = cur.span > treeGetItemHeight(tree) * 6;
+          const stable = prev !== null && prev.left === cur.left && prev.right === cur.right;
+          if (wideEnough && stable && cur.left > 20 && cur.right > 20) {
+            break;
+          }
         }
+        prev = cur;
       }
       await sleep(40);
     }
@@ -129,6 +142,9 @@ async function testTheme(theme: "Light" | "Dark"): Promise<void> {
     captureWindowToPng(tree, join(dir, "favorites.png"));
     if (ink.left <= 20 || ink.right <= 20) {
       throw new Error(`issue-6043: expected two copies of the filename (${JSON.stringify(ink)})`);
+    }
+    if (ink.span <= treeGetItemHeight(tree) * 6) {
+      throw new Error(`issue-6043: favorite label never finished painting (${JSON.stringify(ink)})`);
     }
     if (ink.left < ink.right * 1.08) {
       throw new Error(
