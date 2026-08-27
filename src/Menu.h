@@ -5,6 +5,7 @@ struct AppCommandCtx;
 using BuildMenuCtx = AppCommandCtx;
 
 struct MenuOwnerDrawInfo;
+struct MainWindow;
 
 struct MenuDef {
     Str title;

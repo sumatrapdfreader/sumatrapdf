@@ -22,6 +22,7 @@
 #include "base/LzmaSimpleArchive.h"
 #include "base/CmdLineArgsIter.h"
 
+
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
@@ -55,12 +56,14 @@
 #include "EbookDoc.h"
 #include "MobiDoc.h"
 #include "DisplayModel.h"
+#include "Minimap.h"
 #include "FileHistory.h"
 #include "PdfSync.h"
 #include "RenderCache.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "SumatraPDF.h"
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "AnnotPlacement.h"
@@ -88,7 +91,6 @@
 #include "SelectTextKeyboard.h"
 #include "KeyboardHelp.h"
 #include "SelectionToolbar.h"
-#include "AnnotEditToolbar.h"
 #include "ScreenshotCapture.h"
 #include "Screenshot.h"
 #include "ImageSaveCropResize.h"
@@ -105,6 +107,7 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 #include "SumatraConfig.h"
+#include "EditAnnotations.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 #include "SelectionTranslate.h"
@@ -121,7 +124,6 @@
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
 #include "ExplorerQuickLook.h"
-#include "SumatraPDF.h"
 #include "SumatraLog.h"
 
 using Gdiplus::Graphics;
@@ -1657,6 +1659,8 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
             OverlayScrollbarShow(win->overlayScrollV, false);
         }
     }
+    
+    MinimapUpdateScrollProportional(win->minimap);
 }
 
 static TempStr BuildZoomString(float zoomLevel) {
@@ -2761,12 +2765,12 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     LoadArgs args(tab->filePath, win);
     args.showWin = true;
     args.placeWindow = false;
-    // Canvas and compact toolbar keep non-owning Annotation* from the engine.
-    // Clear those pointers before a replacement controller is opened (or a
-    // manual reload is about to replace the document with an error page).
+    // EditAnnotationsWindow and canvas interaction state keep non-owning
+    // Annotation* from the engine. Capture editor state and clear those pointers
+    // only after a replacement controller was opened successfully (or a manual
+    // reload is about to replace the document with an error page).
     InvalidateEditAnnotationsOnEngineChange(tab);
     tab->selectedAnnotation = nullptr;
-    EndPdfEditOperation(win);
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
     win->annotationUnderCursor = nullptr;
@@ -2932,6 +2936,7 @@ static void CreateCaptionLayout(MainWindow* win) {
 // they are simply collapsed.
 static void CreateFrameLayout(MainWindow* win) {
     win->tocSlot = new HwndSlot();
+    win->minimapSlot = new HwndSlot();
     win->favSlot = new HwndSlot();
     win->fullFavSlot = new HwndSlot();
     win->canvasSlot = new HwndSlot();
@@ -2964,6 +2969,7 @@ static void CreateFrameLayout(MainWindow* win) {
     row->alignCross = CrossAxisAlign::Stretch;
     row->AddChild(sidebar);
     row->AddChild(win->sidebarSplitter);
+    row->AddChild(win->minimapSlot);
     row->AddChild(content, 1);
     row->AddChild(win->aiChatSplitter);
     row->AddChild(win->aiChatSlot);
@@ -2997,8 +3003,6 @@ static void CreateSidebar(MainWindow* win) {
     CreateFrameLayout(win);
 
     CreateFavorites(win);
-
-    CreateAIChatPanel(win);
 
     if (win->uiState.tocVisible) {
         HwndRepaintNow(win->hwndTocBox);
@@ -3390,9 +3394,7 @@ void UpdateAfterThemeChange() {
         RecreateFindBar(win);
         UpdateFindWindowTheme(win);
         RefreshSelectionToolbarIcons(win);
-        RefreshAnnotEditToolbar(win);
         RefreshAnnotationHoverOverlay(win);
-        UpdateAIChatTheme(win);
         DarkModeApplyToFrameAfterThemeChange(win);
         UpdateWindowFrameBorderColor(win);
         // TODO: this only rerenders canvas, not frame, even with
@@ -4761,6 +4763,14 @@ void LoadModelIntoTab(WindowTab* tab) {
         win->uiaProvider->OnSelectionChanged();
     }
 
+    if (DisplayModel* fixedDm = tab->AsFixed()) {
+        if (GetInvertPageColors() != fixedDm->invertColors) {
+            SetInvertPageColors(fixedDm->invertColors);
+            UpdateDocumentColors();
+            ToolbarUpdateStateForWindow(win, false);
+        }
+    }
+
     HwndSetFocus(win->hwndFrame);
     if (tab->type == WindowTab::Type::None) {
         logf("LoadModelIntoTab: tab 0x%p has Type::None, skipping reload\n", tab);
@@ -4851,6 +4861,10 @@ void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd
 
 // re-render the document currently displayed in this window
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
+    if (win->minimap) {
+        MinimapClearCache(win->minimap);
+    }
+    
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -4895,7 +4909,7 @@ static void RerenderFixedPage() {
 
 void UpdateDocumentColors() {
     Color bg;
-    Color text = ThemePageRenderColors(bg);
+    Color text = ThemePageRenderColorsNoInvert(bg);
     bool pagesDark = !IsLightColor(bg);
     Color link = pagesDark ? ThemeWindowLinkColor() : 0;
 
@@ -5046,7 +5060,6 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     AbortFinding(win, true);
 
     ClearMouseState(win);
-    EndPdfEditOperation(win);
     win->annotationUnderCursor = nullptr;
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
@@ -5063,10 +5076,9 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     if (currentTab) {
         currentTab->selectedAnnotation = nullptr;
         ResetReadAloudStateForTab(currentTab);
-        // Compact toolbar / filter list hold non-owning Annotation* into the
-        // engine about to die.
+        // Edit panel holds non-owning Annotation* into the engine about to die.
         if (deleteModel) {
-            CloseAnnotationUiForTab(currentTab);
+            CloseAndDeleteEditAnnotationsWindow(currentTab);
         }
     }
     if (deleteModel) {
@@ -5112,24 +5124,13 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         UpdateToolbarFindText(win);
         UpdateFindbox(win);
         UpdateTabWidth(win);
-        win->currPageNo = 0;
-        // NoHomeTab empty window never goes through UpdateUiForCurrentTab
-        // (that path needs a CurrentTab). Drop the last document's page
-        // number and scrollbars (issue #6062).
-        if (win->pageEdit) {
-            win->pageEdit->SetIsEnabled(false);
-            win->pageEdit->SetText({});
-        }
         if (wasntFixed) {
             // restore the full menu and toolbar
             RebuildMenuBarForWindow(win);
             ShowOrHideToolbar(win);
         }
-        OverlayScrollbarShow(win->overlayScrollV, false);
-        OverlayScrollbarShow(win->overlayScrollH, false);
         if (!ScrollbarsAreHidden() && !ScrollbarsUseOverlay()) {
-            ShowWinScrollBar(win->hwndCanvas, SB_VERT, FALSE);
-            ShowWinScrollBar(win->hwndCanvas, SB_HORZ, FALSE);
+            ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         }
         win->RedrawAll();
         HwndSetText(win->hwndFrame, Str(kSumatraWindowTitle));
@@ -5348,7 +5349,9 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     // Capture selection before the engine (and Annotation*) is torn down.
     SavedAnnotSel sel = CaptureSelectedAnnotation(tab);
-    CloseAnnotationUiForTab(tab);
+    // have to re-open edit annotations window because the current has
+    // a reference to deleted Engine
+    bool hadEditAnnotations = CloseAndDeleteEditAnnotationsWindow(tab);
 
     UpdateTabFileDisplayStateForTab(tab);
     CloseDocumentInCurrentTab(win, true, true);
@@ -5363,9 +5366,9 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     LoadDocument(&args);
 
     ShowSavedAnnotationsNotification(win->hwndCanvas, newPath);
-    if (sel.valid) {
+    if (hadEditAnnotations) {
         Annotation* match = FindMatchingAnnotation(tab, sel);
-        SetSelectedAnnotation(tab, match);
+        ShowEditAnnotationsWindow(tab, match);
     }
     return true;
 }
@@ -7137,7 +7140,8 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
            s1->tocVisible == s2->tocVisible && s1->showFavorites == s2->showFavorites &&
            s1->favoritesAsTab == s2->favoritesAsTab && s1->showMenuBarRebar == s2->showMenuBarRebar &&
            s1->aiChatVisible == s2->aiChatVisible && s1->aiChatDx == s2->aiChatDx &&
-           s1->sidebarOnRight == s2->sidebarOnRight;
+           s1->sidebarOnRight == s2->sidebarOnRight &&
+           s1->minimapVisible == s2->minimapVisible;
 }
 
 // Favorites-only must not reserve a tab row (issue #5861)
@@ -7287,6 +7291,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.aiChatVisible = win->uiState.aiChatVisible;
     curState.aiChatDx = win->aiChatDx;
     curState.sidebarOnRight = SidebarOnRightLayout();
+    curState.minimapVisible = win->minimap && win->minimap->isVisible;
 
     // A top-level size change is already a live, batched sibling resize.
     // Toggling WM_SETREDRAW on the frame for every step makes Windows discard
@@ -7333,6 +7338,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         if (win->hwndAiChatBox) {
             HwndSetVisible(win->hwndAiChatBox, aiVis);
             win->aiChatSplitter->SetIsVisible(aiVis);
+        }
+        if (win->minimap && win->minimap->hwnd) {
+            HwndSetVisible(win->minimap->hwnd, !favAsTab && win->minimap->isVisible);
         }
     }
 
@@ -7505,9 +7513,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     SetVis(win->sidebarSplitter, sidebarVisible);
     SetVis(win->aiChatSplitter, aiChatVisible);
     SetVis(win->aiChatSlot, aiChatVisible);
+    
+    bool minimapVisible = win->minimap && win->minimap->isVisible;
+    SetVis(win->minimapSlot, minimapVisible);
 
     win->tocSlot->dx = sidebarDxApplied;
     win->tocSlot->dy = tocDy;
+    win->minimapSlot->dx = 250;
     win->favSlot->dx = sidebarDxApplied;
     win->aiChatSlot->dx = aiChatDx;
     if (win->frameLayout) {
@@ -7529,6 +7541,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     BindSlot(win->tocSlot, win->hwndTocBox, &dh, tocVisible && !isFrameResize && !isSplitterDrag);
     BindSlot(win->favSlot, win->hwndFavBox, &dh, sidebarFav && !isFrameResize && !isSplitterDrag);
     BindSlot(win->fullFavSlot, win->hwndFavBox, &dh, favAsTab);
+    BindSlot(win->minimapSlot, win->minimap ? win->minimap->hwnd : nullptr, &dh, minimapVisible && !isFrameResize && !isSplitterDrag);
     BindSlot(win->canvasSlot, win->hwndCanvas, &dh, !discardCanvasBits);
     BindSlot(win->aiChatSlot, win->hwndAiChatBox, &dh, aiChatVisible);
 
@@ -7557,7 +7570,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     HwndSlot* chromeSlots[] = {win->tabsSlot,    win->menuSlot,    win->toolbarTopSlot, win->toolbarBottomSlot,
                                win->capMenuSlot, win->capTabsRow1, win->capTabsRow2,    win->tocSlot,
-                               win->favSlot,     win->fullFavSlot, win->canvasSlot,     win->aiChatSlot};
+                               win->favSlot,     win->fullFavSlot, win->minimapSlot, win->canvasSlot,     win->aiChatSlot};
     for (HwndSlot* s : chromeSlots) {
         ClearSlotDefer(s);
     }
@@ -7622,9 +7635,6 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         // the document showing through the caption row after leaving full screen
         // (issue #5866). Matches EndFrameRedrawSuppression, which has always done this.
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
-    }
-    if (win->uiState.aiChatVisible && win->hwndAiChatBox) {
-        RelayoutAIChatPanel(win);
     }
     // A frame-size drag does not move the splitter; invalidating it paints a
     // 1-2px strip against the TOC and looks like the tree is shimmering.
@@ -7755,7 +7765,6 @@ static void FrameUpdateUi(MainWindow* win) {
         // re-anchor the floating find bar over the (possibly moved) search icon
         FindBarReposition(win);
         RepositionSelectionToolbar(win);
-        RepositionAnnotEditToolbar(win);
         if (win->presentation || win->isFullScreen) {
             Rect fullscreen = HwndGetFullscreenRect(win->hwndFrame);
             Rect rect = HwndWindowRect(win->hwndFrame);
@@ -7884,9 +7893,10 @@ static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
 // Full chrome refresh after a DPI change (or when drag settles). Ported from
 // sumatrapdf-plus multi-monitor DPI handling: rebuild toolbar/menu fonts and
 // icons, re-apply sidebar tree metrics, relayout caption/tabs/frame.
-// Posted from WM_DPICHANGED so a nested DPI message cannot run this on the
-// same stack (DameWare / RDP 96 vs 120 used to heap-corrupt RecreateFindBar).
 static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
+    if (!win || !hwnd) {
+        return;
+    }
     int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(hwnd);
     win->frameDpi = dpi;
     logf("ApplyMainWindowDpiChromeRefresh: dpi=%d\n", dpi);
@@ -7894,24 +7904,15 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     HideSelectionToolbar(win);
     HideAnnotationHoverOverlay(win);
     DestroySvgPixmapIconsCache();
-    // Refresh the icons before anything can paint: the cache wipe leaves the
-    // existing buttons holding freed pixmaps. Update in place — destroying the
-    // find bar here nested into another WM_DPICHANGED and heap-corrupted.
-    // Everything that keeps a cached pixmap must be refreshed for every window,
-    // `win` included: the rebuild below only covers its toolbar, so its
-    // floating find window painted freed pixmaps after a DPI change.
-    for (MainWindow* w : gWindows) {
-        DpiScope dpiScope(w->hwndFrame);
-        FindBarUpdateDpi(w);
-        UpdateFindWindowTheme(w);
-        RefreshSelectionToolbarIcons(w);
-        RefreshAnnotEditToolbar(w);
-        RefreshAnnotationHoverOverlay(w);
-        if (w == win) {
-            // ReCreateToolbar(win) below re-renders its toolbar icons
+    for (MainWindow* other : gWindows) {
+        if (other == win) {
             continue;
         }
-        UpdateToolbarAfterThemeChange(w);
+        DpiScope dpiScope(other->hwndFrame);
+        UpdateToolbarAfterThemeChange(other);
+        RecreateFindBar(other);
+        UpdateFindWindowTheme(other);
+        RefreshSelectionToolbarIcons(other);
     }
 
     bool menuRebarVisible = IsShowingMenuBarRebar(win);
@@ -7921,6 +7922,7 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
 
     RebuildMenuBarForWindow(win);
     ReCreateToolbar(win);
+    RecreateFindBar(win);
 
     if (menuRebarVisible && IsMenubarVisible()) {
         CreateMenuBarRebar(win);
@@ -7933,8 +7935,6 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     }
     ApplySidebarDpiFonts(win, dpi);
     HomePageOnDpiChanged(win, dpi);
-    UpdateAIChatDpi(win, dpi);
-
     // window margin / page spacing are dpi-scaled, so they change too
     DisplayModel* dm = win->AsFixed();
     if (dm) {
@@ -7947,7 +7947,6 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     UpdateOverlayScrollbarPositions(win);
     FindBarReposition(win);
     RepositionSelectionToolbar(win);
-    RepositionAnnotEditToolbar(win);
 
     MainWindowRerender(win, true);
     uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
@@ -7956,25 +7955,6 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
         RECT r = ToRECT(win->captionRect);
         RedrawWindow(hwnd, &r, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
     }
-}
-
-static void RunPostedDpiChromeRefresh(MainWindow* win) {
-    if (!IsMainWindowValidAndNotClosing(win) || !win->hwndFrame) {
-        return;
-    }
-    // clear first so a WM_DPICHANGED during Apply can queue a follow-up
-    win->dpiChromeRefreshPosted = false;
-    ApplyMainWindowDpiChromeRefresh(win, win->hwndFrame);
-}
-
-static void ScheduleDpiChromeRefresh(MainWindow* win) {
-    if (!win || !win->hwndFrame || win->dpiChromeRefreshPosted) {
-        return;
-    }
-    win->dpiChromeRefreshPosted = true;
-    // Post, not PostOptimized: we are already on the UI thread inside
-    // WM_DPICHANGED; running now would re-enter on this stack.
-    uitask::Post(MkFunc0(RunPostedDpiChromeRefresh, win), "DpiChromeRefresh");
 }
 
 // WM_DPICHANGED: frame moved to a different DPI (or scaling changed).
@@ -8004,23 +7984,20 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi, bool
     }
 
     bool dpiChanged = dpi != win->frameDpi;
-    win->frameDpi = dpi;
-    logf("OnDpiChanged: dpi=%d force=%d defer=%d dpiChanged=%d\n", dpi, (int)force, (int)win->deferDpiChromeRefresh,
-         (int)dpiChanged);
-    // Suggested rect is already applied. A same-DPI WM_DPICHANGED (DameWare
-    // floods these) must not rebuild chrome — that was RecreateFindBar in a loop.
-    if (!force && !dpiChanged) {
+    if (!force && dpi == win->frameDpi && !suggested) {
         return;
     }
+    win->frameDpi = dpi;
+    logf("OnDpiChanged: dpi=%d force=%d defer=%d\n", dpi, (int)force, (int)win->deferDpiChromeRefresh);
 
     if (win->deferDpiChromeRefresh && !force) {
         win->dpiChromeRefreshPending = true;
         if (dpiChanged) {
-            ScheduleDpiChromeRefresh(win);
+            ApplyMainWindowDpiChromeRefresh(win, hwnd);
         }
         return;
     }
-    ScheduleDpiChromeRefresh(win);
+    ApplyMainWindowDpiChromeRefresh(win, hwnd);
 }
 
 // RDP connect/disconnect and some display-mode changes update the session DPI
@@ -8172,12 +8149,8 @@ static void OnMenuViewShowHideToolbar(MainWindow* win) {
         SetToolbarMode(mode == kToolbarHide ? kToolbarShow : kToolbarHide);
     } else {
         int mode = ToolbarModeFromPrefs();
-        int next = kToolbarShow;
-        if (mode == kToolbarShow) {
-            next = kToolbarOverlay;
-        } else if (mode == kToolbarOverlay) {
-            next = kToolbarHide;
-        }
+        // Skip overlay mode: toggle directly between show and hide
+        int next = (mode == kToolbarShow) ? kToolbarHide : kToolbarShow;
         SetToolbarMode(next);
     }
     for (MainWindow* w : gWindows) {
@@ -9225,7 +9198,7 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         annot->bounds = GetBounds(annot);
         created.Append(annot);
     }
-    RefreshAnnotationLists(tab);
+    UpdateAnnotationsList(tab->editAnnotsWindow);
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
     if (args->copyToClipboard) {
@@ -9582,106 +9555,266 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     LaunchBrowser(uri);
 }
 
-// Ctrl+C / Ctrl+X / Ctrl+Z are app accelerators, so they fire even while a text
-// box has the focus. Hand the message to the edit control instead of taking it.
-// The focused window if it is a text box: the page-number box, the annotation
-// filter, the property row's Contents box, the in-place free text editor, a
-// form field. Their own editing keys win over the document's.
-static HWND FocusedEditControl(bool* isComboOut = nullptr) {
-    HWND focus = GetFocus();
-    if (!focus) {
-        return nullptr;
+struct GoogleLensTask {
+    char* imageBytes = nullptr; // heap-allocated PNG bytes (malloc)
+    int imageBytesLen = 0;
+};
+
+struct GoogleLensResult {
+    Str htmlPath; // heap-allocated temp HTML file path; freed after launch
+};
+
+static void NotifyGoogleLensFailure(Str message) {
+    if (len(gWindows) == 0) {
+        return;
     }
-    WCHAR cls[64];
-    int n = GetClassNameW(focus, cls, dimof(cls));
-    if (n <= 0) {
-        return nullptr;
-    }
-    bool isCombo = wstr::EqI(cls, WC_COMBOBOX);
-    if (!wstr::EqI(cls, WC_EDITW) && !isCombo && !wstr::EqI(cls, L"ComboLBox")) {
-        return nullptr;
-    }
-    if (isComboOut) {
-        *isComboOut = isCombo;
-    }
-    return focus;
+    NotificationCreateArgs args;
+    args.hwndParent = gWindows[0]->hwndCanvas;
+    args.warning = true;
+    args.timeoutMs = 5000;
+    args.msg = message;
+    ShowNotification(args);
 }
 
-static bool ForwardEditMsgToFocusedEditControl(UINT msg) {
-    HWND focus = FocusedEditControl();
-    if (!focus) {
-        return false;
+static void GoogleLensLaunchUrl(GoogleLensResult* res) {
+    bool launched = LaunchFileShell(res->htmlPath, {}, StrL("open"));
+    if (!launched) {
+        NotifyGoogleLensFailure(_TRA("Could not open Google Lens in the web browser."));
+        str::Free(res->htmlPath);
+        delete res;
+        return;
     }
-    SendMessageW(focus, msg, 0, 0);
-    return true;
+
+    // Launch a background thread to wait and then delete the temp file
+    RunAsync(MkFunc0<GoogleLensResult>([](GoogleLensResult* r) {
+        Sleep(10000); // Wait 10 seconds for browser to open it
+        file::Delete(r->htmlPath);
+        str::Free(r->htmlPath);
+        delete r;
+    }, res), StrL("GoogleLensCleanup"));
 }
 
-// Ctrl+A in a text box selects that box's text, not the page's. There is no
-// WM_SELECTALL, so this can't go through ForwardEditMsgToFocusedEditControl().
-static bool SelectAllInFocusedEditControl() {
-    bool isCombo = false;
-    HWND focus = FocusedEditControl(&isCombo);
-    if (!focus) {
-        return false;
+// Standard base64 encoding table.
+static const char kBase64Table[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+// Encode binary data to base64.  Caller must free() the returned string.
+static char* Base64Encode(const u8* data, int dataLen, int* outLen) {
+    int encodedLen = 4 * ((dataLen + 2) / 3);
+    char* out = (char*)malloc(encodedLen + 1);
+    if (!out) {
+        return nullptr;
     }
-    if (isCombo) {
-        SendMessageW(focus, CB_SETEDITSEL, 0, MAKELPARAM(0, -1));
+    int j = 0;
+    for (int i = 0; i < dataLen;) {
+        u32 a = (i < dataLen) ? data[i++] : 0;
+        u32 b = (i < dataLen) ? data[i++] : 0;
+        u32 c = (i < dataLen) ? data[i++] : 0;
+        u32 triple = (a << 16) | (b << 8) | c;
+        out[j++] = kBase64Table[(triple >> 18) & 0x3F];
+        out[j++] = kBase64Table[(triple >> 12) & 0x3F];
+        out[j++] = kBase64Table[(triple >> 6) & 0x3F];
+        out[j++] = kBase64Table[triple & 0x3F];
+    }
+    // Add padding.
+    int mod = dataLen % 3;
+    if (mod == 1) {
+        out[j - 1] = '=';
+        out[j - 2] = '=';
+    } else if (mod == 2) {
+        out[j - 1] = '=';
+    }
+    out[j] = '\0';
+    if (outLen) {
+        *outLen = j;
+    }
+    return out;
+}
+
+static void GoogleLensThread(GoogleLensTask* task) {
+    if (!task || !task->imageBytes || task->imageBytesLen <= 0) {
+        if (task) {
+            free(task->imageBytes);
+            delete task;
+        }
+        return;
+    }
+
+    // Encode the PNG image as base64 for embedding in the HTML page.
+    int b64Len = 0;
+    char* b64 = Base64Encode((const u8*)task->imageBytes, task->imageBytesLen, &b64Len);
+    free(task->imageBytes);
+    task->imageBytes = nullptr;
+
+    if (!b64 || b64Len <= 0) {
+        delete task;
+        if (b64) {
+            free(b64);
+        }
+        uitask::Post(MkFunc0Void([] {
+            NotifyGoogleLensFailure(_TRA("Google Lens could not process the selected area."));
+        }), "GoogleLensFailure");
+        return;
+    }
+
+    // Build a self-submitting HTML page.
+    // The browser will POST the image to Google Lens using its own session,
+    // so cookies, redirects, and the uploaded image all stay in the same context.
+    // This is much faster than the old WinHTTP approach and fixes the issue
+    // where Google Lens would open but not show the captured image.
+    str::Builder html;
+    html.Append(Str(
+        "<!DOCTYPE html>\n"
+        "<html><head><meta charset=\"utf-8\"><title>Google Lens</title></head>\n"
+        "<body style=\"background:#202124;color:#e8eaed;font-family:sans-serif;"
+        "display:flex;align-items:center;justify-content:center;height:100vh;margin:0\">\n"
+        "<p>Opening Google Lens&hellip;</p>\n"
+        "<script>\n"
+        "(function(){\n"
+        "  var b64='"
+    ));
+    html.Append(Str(b64, b64Len));
+    free(b64);
+    html.Append(Str(
+        "';\n"
+        "  var bin=atob(b64);\n"
+        "  var arr=new Uint8Array(bin.length);\n"
+        "  for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);\n"
+        "  var blob=new Blob([arr],{type:'image/png'});\n"
+        "  var file=new File([blob],'image.png',{type:'image/png'});\n"
+        "  var fd=new FormData();\n"
+        "  fd.append('encoded_image',file);\n"
+        "  var st=Date.now();\n"
+        "  var url='https://lens.google.com/v3/upload'"
+        "+'?ep=cntpubb&hl=en&st='+st+'&re=df&s=4';\n"
+        "  var f=document.createElement('form');\n"
+        "  f.method='POST';f.enctype='multipart/form-data';f.action=url;\n"
+        "  var inp=document.createElement('input');\n"
+        "  inp.type='file';inp.name='encoded_image';inp.style.display='none';\n"
+        "  var dt=new DataTransfer();dt.items.add(file);inp.files=dt.files;\n"
+        "  f.appendChild(inp);document.body.appendChild(f);f.submit();\n"
+        "})();\n"
+        "</script></body></html>\n"
+    ));
+
+    // Write the HTML to a temp file.
+    // GetTempFilePathTemp creates a .tmp file; we rename it to .html so the
+    // OS opens it in the default browser.
+    TempStr tmpPath = GetTempFilePathTemp(StrL("lens"));
+    if (!tmpPath) {
+        delete task;
+        uitask::Post(MkFunc0Void([] {
+            NotifyGoogleLensFailure(_TRA("Google Lens could not process the selected area."));
+        }), "GoogleLensFailure");
+        return;
+    }
+
+    // Rename .tmp -> .html
+    Str htmlPathStr = str::JoinTemp(tmpPath, Str(".html"));
+    // Remove the .tmp file that GetTempFilePathTemp created (it's empty).
+    file::Delete(tmpPath);
+
+    bool ok = file::WriteFile(htmlPathStr, Str(html.els, html.len));
+    delete task;
+    if (!ok) {
+        uitask::Post(MkFunc0Void([] {
+            NotifyGoogleLensFailure(_TRA("Google Lens could not process the selected area."));
+        }), "GoogleLensFailure");
+        return;
+    }
+
+    auto* result = new GoogleLensResult();
+    result->htmlPath = str::Dup(htmlPathStr);
+    uitask::Post(
+        MkFunc0<GoogleLensResult>(GoogleLensLaunchUrl, result), "GoogleLensOpen");
+}
+
+static void SearchWithGoogleLens(WindowTab* tab) {
+    if (!tab || !tab->win) {
+        return;
+    }
+    DisplayModel* dm = tab->win->AsFixed();
+    if (!dm) {
+        NotifyGoogleLensFailure(_TRA("Google Lens is only available for document pages."));
+        return;
+    }
+
+    RenderedBitmap* rbmp = nullptr;
+    if (tab->selectionOnPage && tab->selectionOnPage->len > 0) {
+        rbmp = RenderSelectionsAsRenderedBitmap(dm, *tab->selectionOnPage);
     } else {
-        SendMessageW(focus, EM_SETSEL, 0, (LPARAM)-1);
+        // No selection: search the entire current page
+        int pageNo = dm->CurrentPageNo();
+        if (dm->ValidPageNo(pageNo)) {
+            float zoom = dm->GetZoomReal(pageNo);
+            int rotation = dm->GetRotation();
+            RectF pageRect = dm->GetEngine()->PageMediabox(pageNo);
+            RenderPageArgs args(pageNo, zoom, rotation, &pageRect, RenderTarget::Export);
+            Pixmap* bmp = dm->GetEngine()->RenderPage(args);
+            if (bmp) {
+                rbmp = RenderedBitmapFromPixmap(bmp);
+            }
+        }
     }
-    return true;
-}
+    if (!rbmp) {
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
+        return;
+    }
 
-// Value of GetClipboardSequenceNumber() right after the last CopyAnnotation().
-// If it still matches, our annotation is the most recent copy and Ctrl+V should
-// paste it; if something else copied since, that wins instead.
-static DWORD gAnnotClipboardSeqNo = 0;
+    HBITMAP hbmp = rbmp->GetBitmap();
+    Gdiplus::Bitmap gdipBmp(hbmp, nullptr);
+    CLSID pngClsid = GetGdiPlusEncoderClsid(L"image/png");
 
-// Snapshot the annotation and put its contents on the OS clipboard. `cut` also
-// marks it as the one to delete once the copy is pasted.
-static bool CopyAnnotationToClipboard(Annotation* annot, bool cut) {
-    bool ok = cut ? CutAnnotation(annot) : CopyAnnotation(annot);
-    if (!ok) {
-        return false;
+    IStream* stream = nullptr;
+    if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream))) {
+        delete rbmp;
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
+        return;
     }
-    Str contents = Contents(annot);
-    if (!str::IsEmptyOrWhiteSpace(contents)) {
-        CopyTextToClipboard(contents);
+    if (gdipBmp.Save(stream, &pngClsid, nullptr) != Gdiplus::Ok) {
+        stream->Release();
+        delete rbmp;
+        NotifyGoogleLensFailure(_TRA("Could not encode the selected area for Google Lens."));
+        return;
     }
-    gAnnotClipboardSeqNo = GetClipboardSequenceNumber();
-    return true;
-}
+    STATSTG stat;
+    stream->Stat(&stat, STATFLAG_NONAME);
+    size_t size = (size_t)stat.cbSize.QuadPart;
+    HGLOBAL hMem;
+    if (FAILED(GetHGlobalFromStream(stream, &hMem))) {
+        stream->Release();
+        delete rbmp;
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
+        return;
+    }
+    void* pData = GlobalLock(hMem);
+    if (!pData || size == 0 || size > INT_MAX) {
+        if (pData) {
+            GlobalUnlock(hMem);
+        }
+        stream->Release();
+        delete rbmp;
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
+        return;
+    }
 
-// true if our copied annotation is newer than whatever is on the OS clipboard
-static bool CopiedAnnotationIsFresh() {
-    if (!HasCopiedAnnotation()) {
-        return false;
+    // Copy image bytes to heap so the background thread owns them
+    GoogleLensTask* task = new GoogleLensTask();
+    task->imageBytes = (char*)malloc(size);
+    task->imageBytesLen = (int)size;
+    if (task->imageBytes) {
+        memcpy(task->imageBytes, pData, size);
     }
-    return GetClipboardSequenceNumber() == gAnnotClipboardSeqNo;
-}
+    GlobalUnlock(hMem);
+    stream->Release();
+    delete rbmp;
 
-// Copy or cut the annotation the command targets: the one that was
-// right-clicked when it came from the context menu (right-click doesn't
-// select), otherwise the selected one.
-static bool CopyOrCutAnnotationInTab(WindowTab* tab, LPARAM lp, bool cut) {
-    if (!tab || !HasPermission(Perm::CopySelection)) {
-        return false;
+    if (!task->imageBytes) {
+        delete task;
+        NotifyGoogleLensFailure(_TRA("Could not prepare the selected area for Google Lens."));
+        return;
     }
-    Annotation* annot = GetAnnotionUnderCursor(tab, nullptr, lp);
-    bool ok = CopyAnnotationToClipboard(annot, cut);
-    if (!ok) {
-        ok = CopyAnnotationToClipboard(tab->selectedAnnotation, cut);
-    }
-    if (ok && cut && tab->win) {
-        // a cut annotation stays on the page until the paste removes it, so
-        // without this Ctrl+X looks like it did nothing
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.msg = _TRA("Annotation cut. Paste to move it.");
-        args.timeoutMs = 3000;
-        ShowNotification(args);
-    }
-    return ok;
+    RunAsync(MkFunc0<GoogleLensTask>(GoogleLensThread, task), StrL("GoogleLensUpload"));
 }
 
 // TODO: rather arbitrary divide of responsibility between this and CopySelectionToClipboard()
@@ -9690,7 +9823,9 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
     if (!tab || !tab->win) {
         return;
     }
-    if (ForwardEditMsgToFocusedEditControl(WM_COPY)) {
+    if ((tab->win->findEdit && tab->win->findEdit->IsFocused()) ||
+        (tab->win->pageEdit && tab->win->pageEdit->IsFocused())) {
+        SendMessageW(GetFocus(), WM_COPY, 0, 0);
         return;
     }
     if (!HasPermission(Perm::CopySelection)) {
@@ -9703,11 +9838,7 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
         return;
     }
     if (tab->selectionOnPage) {
-        // an explicit text selection wins over the (sticky) annotation selection
         CopySelectionToClipboard(tab->win);
-        return;
-    }
-    if (tab->win->pdfAnnotationsToolbarEnabled && CopyAnnotationToClipboard(tab->selectedAnnotation, false)) {
         return;
     }
     if (tab->AsFixed()) {
@@ -10698,7 +10829,7 @@ static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* 
     args.quadding = QuaddingFromName(GetCommandStringArg(cmd, kCmdArgAlignment, {}));
 }
 
-void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
+static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     // note: test the arguments, not `cmd->id != cmd->origId`. A command without
     // arguments usually keeps its original id, but not always: a Shortcuts entry
     // that would collide with an earlier one gets a generated id (#5869).
@@ -10768,67 +10899,6 @@ static bool SetPointToVisiblePage(DisplayModel* dm, Point& pt, int& pageNo) {
     }
     pt = Point(visible.x + (visible.dx / 2), visible.y + (visible.dy / 2));
     return true;
-}
-
-// The tab showing the document that owns `annot`. A cut annotation can live in
-// a different tab (or window) than the one being pasted into.
-static WindowTab* FindTabForAnnotation(Annotation* annot) {
-    if (!annot) {
-        return nullptr;
-    }
-    for (MainWindow* w : gWindows) {
-        for (WindowTab* t : w->Tabs()) {
-            DisplayModel* dm = t->AsFixed();
-            EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-            if (EngineOwnsAnnotation(engine, annot)) {
-                return t;
-            }
-        }
-    }
-    return nullptr;
-}
-
-// A cut removes the original only after its copy has landed, so a failed paste
-// can't lose the annotation (issue #5222). The annotation is gone already if
-// its document was closed in between; TakeCutAnnotation() returns null then.
-static void DeleteCutAnnotationAfterPaste() {
-    Annotation* cut = TakeCutAnnotation();
-    WindowTab* tab = FindTabForAnnotation(cut);
-    if (!tab) {
-        return;
-    }
-    DeleteAnnotationAndUpdateUI(tab, cut);
-}
-
-static Annotation* TryPasteCopiedAnnotation(MainWindow* win, WindowTab* tab, DisplayModel* dm, LPARAM lp) {
-    if (!HasCopiedAnnotation() || !win || !tab || !dm) {
-        return nullptr;
-    }
-    EngineBase* engine = dm->GetEngine();
-    if (!engine || !EngineSupportsAnnotations(engine)) {
-        return nullptr;
-    }
-    Point pt = HwndGetCursorPos(win->hwndCanvas);
-    if (lp != 0) {
-        pt.x = GET_X_LPARAM(lp);
-        pt.y = GET_Y_LPARAM(lp);
-    }
-    int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
-    if (pageNoUnderCursor < 0) {
-        if (!SetPointToVisiblePage(dm, pt, pageNoUnderCursor)) {
-            return nullptr;
-        }
-    }
-    PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
-    // pasting a cut annotation is a move: the new annotation and the delete of
-    // the original make one undo step
-    EngineMupdfBeginOperation(engine, "Paste annotation");
-    Annotation* pasted = PasteCopiedAnnotation(engine, pageNoUnderCursor, ptOnPage);
-    if (pasted) {
-        DeleteCutAnnotationAfterPaste();
-    }
-    EngineMupdfEndOperation(engine);
-    return pasted;
 }
 
 // Place an image stamp at the canvas click (LPARAM from the context menu) or,
@@ -11005,8 +11075,8 @@ static bool ConfirmApplyRedactions(HWND hwndParent) {
     s = _TRA("Permanently remove marked content?");
     dialogConfig.pszMainInstruction = CWStrTemp(s);
     s = _TRA(
-        "Text and images under the marks are deleted from the file. Undo can take this back until you save. Save a "
-        "copy if you need the unredacted document.");
+        "This cannot be undone. Text and images under the marks are deleted from the file. Save a copy if you need "
+        "the unredacted document.");
     dialogConfig.pszContent = CWStrTemp(s);
     dialogConfig.nDefaultButton = IDCANCEL;
     dialogConfig.dwFlags = (TASKDIALOG_FLAGS)flags;
@@ -11021,83 +11091,6 @@ static bool ConfirmApplyRedactions(HWND hwndParent) {
     int buttonPressedId = 0;
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
     return hr == S_OK && buttonPressedId == IDOK;
-}
-
-// A gesture that writes to the document as it goes (a resize drag writes the
-// annotation on every mouse move) should still be a single undo step, so it
-// holds one journal operation open from start to end. Both calls are safe to
-// make when there is nothing open, which keeps the many ways a gesture can end
-// (mouse up, Esc, the annotation deleted, the document closed) from leaking it.
-void BeginPdfEditOperation(MainWindow* win, const char* name) {
-    if (!win || win->pdfEditOperationActive) {
-        return;
-    }
-    DisplayModel* dm = win->AsFixed();
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine || !EngineSupportsAnnotations(engine)) {
-        return;
-    }
-    EngineMupdfBeginOperation(engine, name);
-    win->pdfEditOperationActive = true;
-}
-
-void EndPdfEditOperation(MainWindow* win) {
-    if (!win || !win->pdfEditOperationActive) {
-        return;
-    }
-    win->pdfEditOperationActive = false;
-    DisplayModel* dm = win->AsFixed();
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (engine) {
-        EngineMupdfEndOperation(engine);
-    }
-}
-
-// Step the document's edit history. MuPDF restores the objects; every wrapper,
-// selection and cached rendering that pointed at the old state has to go.
-static void UndoRedoInTab(WindowTab* tab, bool redo) {
-    if (!tab) {
-        return;
-    }
-    MainWindow* win = tab->win;
-    DisplayModel* dm = tab->AsFixed();
-    if (!win || !dm) {
-        return;
-    }
-    EngineBase* engine = dm->GetEngine();
-    if (!engine || !EngineSupportsAnnotations(engine)) {
-        return;
-    }
-    bool can = redo ? EngineMupdfCanRedo(engine) : EngineMupdfCanUndo(engine);
-    if (!can) {
-        return;
-    }
-
-    // an in-flight placement or drag would write to what we are about to undo
-    CancelAnnotationPlacement(win);
-    CancelDrag(win);
-    SetSelectedAnnotation(tab, nullptr);
-    if (gRenderCache) {
-        gRenderCache->AbortRendering(dm);
-    }
-
-    Vec<Annotation*> removed;
-    bool ok = redo ? EngineMupdfRedo(engine, removed) : EngineMupdfUndo(engine, removed);
-    for (Annotation* a : removed) {
-        DetachAnnotationFromUI(a);
-        DeleteAnnotation(a);
-    }
-    // the wrapper deletes above mark the document modified; the journal knows better
-    EngineMupdfRefreshModifiedState(engine);
-    DeleteOldSelectionInfo(win, true);
-    RefreshAnnotationLists(tab);
-    NotifyAnnotationsChanged(tab);
-    ToolbarUpdateStateForWindow(win, true);
-    MainWindowRerender(win, true);
-    if (!ok) {
-        ShowWarningNotification(win->hwndCanvas, redo ? _TRA("Nothing to redo") : _TRA("Nothing to undo"),
-                                kNotif5SecsTimeOut);
-    }
 }
 
 static void ApplyRedactionsInTab(WindowTab* tab) {
@@ -11135,14 +11128,14 @@ static void ApplyRedactionsInTab(WindowTab* tab) {
         DeleteAnnotation(a);
     }
     DeleteOldSelectionInfo(win, true);
-    RefreshAnnotationLists(tab);
+    UpdateAnnotationsList(tab->editAnnotsWindow);
     ToolbarUpdateStateForWindow(win, true);
     if (!ok) {
         ShowWarningNotification(win->hwndCanvas, _TRA("Failed to apply redactions"), kNotif5SecsTimeOut);
         return;
     }
     MainWindowRerender(win);
-    ShowTemporaryNotification(win->hwndCanvas, _TRA("Redactions applied. Saving the file makes them permanent."),
+    ShowTemporaryNotification(win->hwndCanvas, _TRA("Redactions applied. Save the file. This cannot be undone."),
                               kNotif5SecsTimeOut);
 }
 
@@ -11150,6 +11143,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     int cmdId = LOWORD(wp);
     int invokedCmdId = cmdId;
     bool isAnnotationPlacementCommit = HIWORD(wp) == kAnnotationPlacementCommandCode;
+    bool openAnnotationEdit = false;
 
     if (cmdId >= 0xF000) {
         // handle system menu messages for the Window menu (needed for Tabs in Titlebar)
@@ -11431,26 +11425,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             RunCommandPalette(win, Str(kPalettePrefixFavorites), 0);
             break;
 
-        case CmdAIChatWithClaudeCode:
-            logf("CmdAIChatWithClaudeCode dispatched\n");
-            OnAIChatToggle(win, (int)AIChatBackend::Claude);
-            break;
-
-        case CmdAIChatWithGrokBuild:
-            logf("CmdAIChatWithGrokBuild dispatched\n");
-            OnAIChatToggle(win, (int)AIChatBackend::Grok);
-            break;
-
-        case CmdAIChatWithOpenAICodex:
-            logf("CmdAIChatWithOpenAICodex dispatched\n");
-            OnAIChatToggle(win, (int)AIChatBackend::Codex);
-            break;
-
-        case CmdAIChatWithAntiGravity:
-            logf("CmdAIChatWithAntiGravity dispatched\n");
-            OnAIChatToggle(win, (int)AIChatBackend::AntiGravity);
-            break;
-
         case CmdClearHistory:
             ClearHistory(win);
             break;
@@ -11496,28 +11470,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                                 /* selectPdf */ true);
             break;
 
-        case CmdPasteClipboardImage: {
-            // Ctrl+V in a text box is that box's paste
-            if (ForwardEditMsgToFocusedEditControl(WM_PASTE)) {
-                return 0;
-            }
-            // Ctrl+V pastes a copied annotation, but only while ours is the most
-            // recent copy. An image copied in another app since then wins, or the
-            // annotation would hijack Ctrl+V for the rest of the session.
-            bool pasteAnnot = win && win->pdfAnnotationsToolbarEnabled &&
-                              (CopiedAnnotationIsFresh() || !IsClipboardFormatAvailable(CF_BITMAP));
-            if (pasteAnnot) {
-                lastCreatedAnnot = TryPasteCopiedAnnotation(win, tab, dm, lp);
-                if (lastCreatedAnnot) {
-                    break;
-                }
-            }
+        case CmdPasteClipboardImage:
             PasteImageFromClipboard(win);
-        } break;
-
-        case CmdPasteAnnotation: {
-            lastCreatedAnnot = TryPasteCopiedAnnotation(win, tab, dm, lp);
-        } break;
+            break;
 
         case CmdListPrinters: {
             NotificationCreateArgs nargs;
@@ -12065,15 +12020,25 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case CmdRotateLeft:
-            if (dm) {
-                dm->RotateBy(-90);
-            }
+        case CmdToggleMinimap:
+            MinimapToggleVisible(win);
             break;
 
+        case CmdRotateLeft:
         case CmdRotateRight:
+            if (win->ctrl && win->CurrentTab()) {
+                EngineBase* engine = win->CurrentTab()->GetEngine();
+                if (EngineMupdfIsPdf(engine)) {
+                    int angle = (cmdId == CmdRotateLeft) ? -90 : 90;
+                    int pageNo = win->ctrl->CurrentPageNo();
+                    if (EngineMupdfRotatePagePermanently(engine, pageNo, angle)) {
+                        ReloadDocument(win, true);
+                        break;
+                    }
+                }
+            }
             if (dm) {
-                dm->RotateBy(90);
+                dm->RotateBy(cmdId == CmdRotateLeft ? -90 : 90);
             }
             break;
 
@@ -12307,6 +12272,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowSelectionTranslateDialog(tab, TranslateEngine::AntiGravity);
             break;
 
+        case CmdSearchGoogleLens:
+            SearchWithGoogleLens(tab);
+            break;
+
         case CmdSearchSelectionWithGoogle:
             LaunchBrowserWithSelection(tab, StrL("https://www.google.com/search?q=${selection}"));
             break;
@@ -12327,35 +12296,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             CopySelectionInTabToClipboard(tab);
             break;
 
-        case CmdCopyAnnotation:
-            CopyOrCutAnnotationInTab(tab, lp, /* cut */ false);
-            break;
-
-        case CmdUndo:
-            // Ctrl+Z in a text box is that box's undo, not ours
-            if (ForwardEditMsgToFocusedEditControl(WM_UNDO)) {
-                return 0;
-            }
-            UndoRedoInTab(tab, /* redo */ false);
-            break;
-
-        case CmdRedo:
-            UndoRedoInTab(tab, /* redo */ true);
-            break;
-
-        case CmdCutAnnotation:
-            // Ctrl+X in a text box is that box's cut, not ours
-            if (ForwardEditMsgToFocusedEditControl(WM_CUT)) {
-                return 0;
-            }
-            CopyOrCutAnnotationInTab(tab, lp, /* cut */ true);
-            break;
-
         case CmdSelectAll:
-            // Ctrl+A in a text box is that box's select-all, not the page's
-            if (SelectAllInFocusedEditControl()) {
-                return 0;
-            }
             OnSelectAll(win);
             break;
 
@@ -12623,8 +12564,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             // swaps the page colors for this session, whatever they are and
             // whatever the theme is. Use CmdSetDocumentColorsFollowTheme to
             // change how (or whether) pages follow the theme (issue #5887)
-            SetInvertPageColors(!GetInvertPageColors());
-            UpdateDocumentColors();
+            WindowTab* activeTab = win->CurrentTab();
+            if (activeTab && activeTab->AsFixed()) {
+                DisplayModel* activeDm = activeTab->AsFixed();
+                activeDm->invertColors = !activeDm->invertColors;
+                SetInvertPageColors(activeDm->invertColors); // Keep global sync for legacy uses temporarily
+                if (gRenderCache) {
+                    gRenderCache->FreeForDisplayModel(activeDm);
+                }
+                UpdateDocumentColors();
+                ToolbarUpdateStateForWindow(win, false);
+                MainWindowRerender(win, true);
+            }
             break;
         }
 
@@ -12720,12 +12671,30 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdEditAnnotations: {
+            if (!tab) return 0;
+            Annotation* annot = nullptr;
+            Point pt = HwndGetCursorPos(win->hwndCanvas);
+            if (lp != 0) {
+                // when sending from Menu.cpp mouse position is encoded as LPARAM
+                pt.x = GET_X_LPARAM(lp);
+                pt.y = GET_Y_LPARAM(lp);
+                // pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
+            }
+            int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
+            if (pageNoUnderCursor > 0) {
+                annot = dm->GetAnnotationAtPos(pt, nullptr);
+            }
+            ShowEditAnnotationsWindow(tab, annot);
+            return 0;
+        }
+
         case CmdDeleteAnnotation: {
             if (!tab) {
                 return 0;
             }
             // Ctrl+Delete always removes the annot under the cursor, even when
-            // the annotation list has a different selection.
+            // the annotations window is open and has a different list selection.
             Annotation* annot = GetAnnotionUnderCursor(tab, nullptr, lp);
             if (!annot) {
                 annot = tab->selectedAnnotation;
@@ -12767,6 +12736,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             AnnotCreateArgs args{annotType};
             SetAnnotCreateArgs(args, cmd);
             lastCreatedAnnot = MakeAnnotationsFromSelection(tab, &args);
+            if (cmd) {
+                // for custom commands must explicitly provide "openedit" argument
+                openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
+            } else {
+                // for built-in shortcuts, Shift opens edit window
+                openAnnotationEdit = IsShiftPressed();
+            }
         } break;
 
             // Note: duplicated in OnWindowContextMenu because slightly different handling
@@ -12799,6 +12775,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     SetAnnotCreateArgs(selArgs, cmd);
                     lastCreatedAnnot = MakeAnnotationsFromSelection(tab, &selArgs);
                     if (lastCreatedAnnot) {
+                        openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
                         break;
                     }
                 }
@@ -12845,6 +12822,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
+            openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
         } break;
 
         case CmdCreateAnnotImageFromClipboard: {
@@ -12895,7 +12873,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ScheduleSaveSettings();
             break;
 
-        case CmdToggleEditPDF:
+        case CmdTogglePdfAnnotationsToolbar:
             TogglePdfAnnotationsToolbar(win);
             break;
 
@@ -12913,31 +12891,42 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if (!lastCreatedAnnot) {
         return 0;
     }
-    // Creating an annotation by any means turns on Edit PDF mode: that is
-    // where it can be selected, moved, resized and edited from the property
-    // row, and it is what the user just said they are doing. Enable it before
-    // the re-render so the second toolbar row is accounted for in the layout.
-    EnablePdfAnnotationsToolbar(win);
-    // The text selection has done its job: it would sit on top of the markup
-    // annotation it just made and keep the selection toolbar open over it.
-    StopSelectTextWithKeyboard(win);
-    DeleteOldSelectionInfo(win, true);
-    RefreshAnnotationLists(tab);
+    UpdateAnnotationsList(tab->editAnnotsWindow);
     // Drop the cached page bitmap. SetSelectedAnnotation only ScheduleRepaint
     // (selection handles); without this the new annot is invisible until a
     // later click re-selects it and forces a re-render (issue #6037).
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
 
-    // every new annotation is selected, so it can be moved, resized, or edited
-    // from the compact property row
-    SetSelectedAnnotation(tab, lastCreatedAnnot);
-    // a new free text annotation is a box of placeholder text: put the caret
-    // in it rather than make the user find it again. Not for a paste, which
-    // brings the text it was copied from.
-    if (cmdId == CmdCreateAnnotFreeText && lastCreatedAnnot->type == AnnotationType::FreeText) {
-        StartFreeTextInPlaceEdit(win, lastCreatedAnnot);
+    EditAnnotFocus focusTarget = EditAnnotFocus::Default;
+    if (GetCommandBoolArg(cmd, kCmdArgFocusEdit, false)) {
+        focusTarget = EditAnnotFocus::Edit;
+    } else if (GetCommandBoolArg(cmd, kCmdArgFocusList, false)) {
+        focusTarget = EditAnnotFocus::List;
     }
+
+    if (openAnnotationEdit) {
+        ShowEditAnnotationsWindow(tab, lastCreatedAnnot, focusTarget);
+        return 0;
+    }
+
+    // proper action for a given annotation type
+    switch (lastCreatedAnnot->type) {
+        case AnnotationType::Highlight:
+        case AnnotationType::Squiggly:
+        case AnnotationType::StrikeOut:
+        case AnnotationType::Underline:
+            return 0;
+        case AnnotationType::FreeText: {
+            // for FreeText you want to edit text so show edit window
+            ShowEditAnnotationsWindow(tab, lastCreatedAnnot, focusTarget);
+            return 0;
+        } break;
+    }
+
+    // mark as selected so it can be moved / resized
+    // isNew: page was already under the cursor/selection; do not scroll the view
+    SetSelectedAnnotation(tab, lastCreatedAnnot, true);
     return 0;
 }
 

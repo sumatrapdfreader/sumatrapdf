@@ -589,6 +589,67 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
     return s;
 }
 
+RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections) {
+    if (selections.len == 0) return nullptr;
+
+    Vec<Pixmap*> pixmaps;
+    int totalHeight = 0;
+    int maxWidth = 0;
+
+    for (auto sel : selections) {
+        if (!dm->ValidPageNo(sel.pageNo)) continue;
+        float zoom = dm->GetZoomReal(sel.pageNo);
+        int rotation = dm->GetRotation();
+        RenderPageArgs args(sel.pageNo, zoom, rotation, &sel.rect, RenderTarget::Export);
+        Pixmap* bmp = dm->GetEngine()->RenderPage(args);
+        if (!bmp) continue;
+        
+        RenderedBitmap* rbmp = RenderedBitmapFromPixmap(bmp);
+        if (!rbmp) continue;
+        
+        Pixmap* dib = PixmapFromRenderedBitmap(rbmp);
+        if (dib) {
+            pixmaps.Append(dib);
+            totalHeight += dib->height;
+            if (dib->width > maxWidth) {
+                maxWidth = dib->width;
+            }
+        }
+    }
+
+    if (pixmaps.len == 0) return nullptr;
+    if (pixmaps.len == 1) {
+        return RenderedBitmapFromPixmap(pixmaps[0]);
+    }
+
+    Pixmap* combined = AllocPixmapDIB(maxWidth, totalHeight);
+    if (!combined) {
+        for (Pixmap* p : pixmaps) FreePixmap(p);
+        return nullptr;
+    }
+
+    // Initialize with white background in case widths differ
+    for (int i = 0; i < maxWidth * totalHeight * 4; i += 4) {
+        combined->data[i] = 255;   // B
+        combined->data[i+1] = 255; // G
+        combined->data[i+2] = 255; // R
+        combined->data[i+3] = 255; // A
+    }
+
+    int currentY = 0;
+    for (Pixmap* p : pixmaps) {
+        for (int y = 0; y < p->height; ++y) {
+            u8* dstRow = combined->data + (size_t)(currentY + y) * combined->stride;
+            u8* srcRow = p->data + (size_t)y * p->stride;
+            memcpy(dstRow, srcRow, (size_t)p->width * 4);
+        }
+        currentY += p->height;
+        FreePixmap(p);
+    }
+    
+    return RenderedBitmapFromPixmap(combined);
+}
+
 void CopySelectionToClipboard(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     ReportIf(len(*tab->selectionOnPage) == 0 && win->mouseAction != MouseAction::SelectingText);
@@ -622,25 +683,10 @@ void CopySelectionToClipboard(MainWindow* win) {
     if (!dm || !tab->selectionOnPage || len(*tab->selectionOnPage) == 0) {
         return;
     }
-    /* also copy a screenshot of the current selection to the clipboard */
-    SelectionOnPage* selOnPage = &(*tab->selectionOnPage)[0];
-    if (!dm->ValidPageNo(selOnPage->pageNo)) {
-        return;
-    }
-    float zoom = dm->GetZoomReal(selOnPage->pageNo);
-    int rotation = dm->GetRotation();
-    RenderPageArgs args(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
-    Pixmap* bmp = dm->GetEngine()->RenderPage(args);
-    if (!bmp) {
-        logf("CopySelectionToClipboard: RenderPage(page %d) failed\n", selOnPage->pageNo);
-        return;
-    }
-    // EngineImages (image files, cbz/cbr) renders sub-rects through GDI+ and
-    // returns a malloc-backed Pixmap with no DIB section, so bmp->hbmp is null.
-    // RenderedBitmapFromPixmap() makes one when needed (and consumes bmp).
-    RenderedBitmap* rbmp = RenderedBitmapFromPixmap(bmp);
+    
+    RenderedBitmap* rbmp = RenderSelectionsAsRenderedBitmap(dm, *tab->selectionOnPage);
     if (!rbmp) {
-        logf("CopySelectionToClipboard: RenderedBitmapFromPixmap() failed\n");
+        logf("CopySelectionToClipboard: RenderSelectionsAsRenderedBitmap() failed\n");
         return;
     }
     if (!CopyImageToClipboard(rbmp->GetBitmap(), true)) {
