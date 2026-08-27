@@ -2,6 +2,9 @@
 // must not stay white (issue #6000). darkmodelib themes ComboLBox; tooltips
 // strip visual styles so TTM_SETTIP* colors apply.
 //
+// Not in run-almost-all: the tooltip part needs a live pointer, so it only
+// passes on an unlocked console. Run it by hand there.
+//
 // Run: bun tests/issue-6000.ts [--no-build]
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";

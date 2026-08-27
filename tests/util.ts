@@ -417,8 +417,8 @@ export async function runNamedTests(tests: NamedTest[], opts?: SuiteOptions): Pr
 
 // A locked screen or a disconnected RDP session has no interactive desktop, so
 // every test that hovers or drives the real cursor fails for reasons that have
-// nothing to do with the code (the tooltip check in issue-6000 is the usual
-// casualty). Say so up front instead of letting it look like a regression.
+// nothing to do with the code. Say so up front instead of letting it look
+// like a regression.
 function checkInteractiveDesktop(): void {
   if (hasInteractiveDesktop() || process.argv.includes("-allow-locked-desktop")) {
     return;

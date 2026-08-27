@@ -10,6 +10,11 @@
 // Run:  bun tests/run-almost-all.ts [--no-build] [-silent] [-exe <SumatraPDF.exe>]
 //
 // Register a new fast test here. Inherently-slow ones go in tests/run-all.ts.
+//
+// Not here: issue-6000. Its toolbar-tooltip check needs a live pointer (the
+// tooltip is TTF_TRACK and the app places it from GetCursorPos), so it fails
+// whenever the session is locked or an RDP connection is closed. Run it by
+// hand on an unlocked console: bun tests/issue-6000.ts
 
 import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type SuiteOptions } from "./util.ts";
 import { setTestWindowLayout } from "./winapi.ts";
@@ -188,7 +193,6 @@ import { testit as issue5995 } from "./issue-5995.ts";
 import { testit as issue5997 } from "./issue-5997.ts";
 
 import { testit as issue6001 } from "./issue-6001.ts";
-import { testit as issue6000 } from "./issue-6000.ts";
 import { testit as issue4157 } from "./issue-4157.ts";
 import { testit as issue5512 } from "./issue-5512.ts";
 import { testit as issue6005 } from "./issue-6005.ts";
@@ -391,7 +395,6 @@ export const tests: NamedTest[] = [
   ["issue-5995", issue5995],
   ["issue-5997", issue5997],
   ["issue-6001", issue6001],
-  ["issue-6000", issue6000],
   ["issue-4157", issue4157],
   ["issue-5512", issue5512],
   ["issue-6005", issue6005],
