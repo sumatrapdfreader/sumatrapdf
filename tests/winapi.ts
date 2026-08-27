@@ -52,8 +52,7 @@ const user32 = dlopen("user32.dll", {
   GetSystemMetrics: { args: [FFIType.i32], returns: FFIType.i32 },
   SystemParametersInfoW: { args: [FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.u32], returns: FFIType.bool },
   SetProcessDpiAwarenessContext: { args: [FFIType.i64], returns: FFIType.bool },
-  OpenInputDesktop: { args: [FFIType.u32, FFIType.bool, FFIType.u32], returns: FFIType.u64 },
-  CloseDesktop: { args: [FFIType.u64], returns: FFIType.bool },
+  GetCursorPos: { args: [FFIType.ptr], returns: FFIType.bool },
   GetGUIThreadInfo: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
   GetCursorInfo: { args: [FFIType.ptr], returns: FFIType.bool },
   GetIconInfo: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
@@ -866,21 +865,30 @@ export function setProcessDpiAware(): boolean {
   return user32.symbols.SetProcessDpiAwarenessContext(-4n as unknown as number);
 }
 
-// True when this session owns an unlocked, interactive desktop. A locked
-// screen or a disconnected RDP session has none: SetCursorPos then returns
-// FALSE and the cursor stays at 0,0, so anything the app reads back with
-// GetCursorPos() (hover, tooltips, WM_SETCURSOR handlers) can never be driven
-// from a test. Reconnect to the console -- `tscon <id> /dest:console` hands an
-// RDP session back to it -- and unlock before running those.
-const DESKTOP_READOBJECTS = 0x0001;
-
-export function hasInteractiveDesktop(): boolean {
-  const desk = user32.symbols.OpenInputDesktop(0, false, DESKTOP_READOBJECTS);
-  if (!desk) {
-    return false;
+// The real cursor position, in screen (physical, when this process is DPI
+// aware) coordinates.
+export function getCursorPos(): { x: number; y: number } {
+  const buf = new Int32Array(2);
+  if (!user32.symbols.GetCursorPos(ptr(buf))) {
+    return { x: 0, y: 0 };
   }
-  user32.symbols.CloseDesktop(desk);
-  return true;
+  return { x: buf[0]!, y: buf[1]! };
+}
+
+// True when this session can actually move the pointer. A locked screen or a
+// disconnected RDP session cannot: SetCursorPos returns FALSE and the cursor
+// stays at 0,0, so anything the app reads back with GetCursorPos() (hover,
+// tooltips, WM_SETCURSOR handlers) cannot be driven from a test. Reconnect to
+// the console -- `tscon <id> /dest:console` hands an RDP session back to it --
+// and unlock before running those.
+//
+// Ask SetCursorPos itself, with a move to where the cursor already is. Poking
+// at the input desktop is not equivalent: an elevated process opens Winlogon's
+// desktop happily, and a disconnected session still names "Default" as the
+// input desktop while refusing to move the pointer.
+export function hasInteractiveDesktop(): boolean {
+  const at = getCursorPos();
+  return user32.symbols.SetCursorPos(at.x, at.y);
 }
 
 // Taskbar auto-hide, via SHAppBarMessage. Takes effect immediately (no Explorer
