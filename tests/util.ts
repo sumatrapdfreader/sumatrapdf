@@ -5,7 +5,16 @@
 // or call process.exit -- that's the runner's job, so tests compose in
 // run-almost-all.ts / run-all.ts.
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { enumWindows, getWindowPid, getWindowText, hasInteractiveDesktop } from "./winapi.ts";
 
@@ -50,7 +59,28 @@ function exeFromArgv(argv: string[]): string {
 // debug ASan build (out/dbg64_asan/SumatraPDF-static.exe), which is the same app
 // plus ASan. Both are read at import time, before any test runs.
 export const EXE_FROM_ARGV = exeFromArgv(process.argv);
-export const EXE = EXE_FROM_ARGV || process.env.SUMATRA_TEST_EXE || join(ROOT, "out", "dbg64", "SumatraPDF.exe");
+const SOURCE_EXE = EXE_FROM_ARGV || process.env.SUMATRA_TEST_EXE || join(ROOT, "out", "dbg64", "SumatraPDF.exe");
+
+// Keep the executable and its portable settings file in a fresh directory for
+// every test run. This prevents a manual run, or an earlier test that saves
+// settings, from changing the starting state of later tests.
+export const TESTS_TMP_DIR = join(ROOT, ".work", "tests-tmp");
+export let EXE = SOURCE_EXE;
+
+export function prepareTestEnvironment(): void {
+  const sourceExe = resolve(SOURCE_EXE);
+  const exeName = sourceExe.split("\\").pop()!;
+  const sourcePdb = sourceExe.replace(/\.exe$/i, ".pdb");
+  if (!existsSync(sourcePdb)) {
+    throw new Error(`test executable PDB not found: ${sourcePdb}`);
+  }
+  rmSync(TESTS_TMP_DIR, { recursive: true, force: true });
+  mkdirSync(TESTS_TMP_DIR, { recursive: true });
+  const testExe = join(TESTS_TMP_DIR, exeName);
+  copyFileSync(sourceExe, testExe);
+  copyFileSync(sourcePdb, join(TESTS_TMP_DIR, sourcePdb.split("\\").pop()!));
+  EXE = testExe;
+}
 
 // An ASan build renders and starts several times slower than the debug one, so
 // waits sized for a debug build time out against it (a 25600% zoom needs far
@@ -268,10 +298,11 @@ export function requireDpiShrank(name: string, high: number, low: number): void 
   }
 }
 
-// directory for temporary / scratch files produced by tests. It's gitignored
-// (tests/tmp/), so tests must write their runtime output here, never directly
-// into tests/. Use tmpPath() to get a path inside it (dir created on demand).
-export const TMP_DIR = join(import.meta.dir, "tmp");
+// Directory for temporary / scratch files produced by tests. It lives below
+// TESTS_TMP_DIR so explicit -appdata directories are isolated from the user's
+// settings and from the executable used by the test. Use tmpPath() to get a
+// path inside it (dir created on demand).
+export const TMP_DIR = join(TESTS_TMP_DIR, "tmp");
 
 export function tmpPath(name: string): string {
   mkdirSync(TMP_DIR, { recursive: true });
@@ -442,6 +473,7 @@ export async function runSuiteMain(testit: (opts: SuiteOptions) => Promise<void>
   if (!process.argv.includes("--no-build") && !EXE_FROM_ARGV) {
     buildApp({ silent });
   }
+  prepareTestEnvironment();
   const t0 = performance.now();
   try {
     await testit({ silent });
@@ -482,6 +514,7 @@ export async function runStandalone(testit: () => void | Promise<void>, name?: s
     if (!process.argv.includes("--no-build") && !EXE_FROM_ARGV) {
       buildApp();
     }
+    prepareTestEnvironment();
     await runTest(label, testit);
   } catch (e) {
     console.error(`\n❌ ${(e as Error)?.message ?? e}`);
