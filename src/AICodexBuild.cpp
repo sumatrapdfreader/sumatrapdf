@@ -122,8 +122,8 @@ static bool QueryCodexModels(Str exePath, StrVec& models) {
         "\n"
         "{\"method\":\"model/list\",\"id\":2,\"params\":{\"limit\":100,\"includeHidden\":false}}\n");
     DWORD nWritten = 0;
-    bool wroteRequest =
-        WriteFile(hStdinWrite, request.s, (DWORD)request.len, &nWritten, nullptr) && nWritten == (DWORD)request.len;
+    DWORD requestLen = (DWORD)request.len;
+    bool wroteRequest = WriteFile(hStdinWrite, request.s, requestLen, &nWritten, nullptr) && nWritten == requestLen;
     if (!wroteRequest) {
         closeHandle(hStdinWrite);
         TerminateProcess(pi.hProcess, 0);

@@ -38,7 +38,8 @@ Checks: >
   -misc-multiple-inheritance,
   -readability-avoid-nested-conditional-operator,
   -modernize-use-auto,
-  -misc-use-internal-linkage
+  -misc-use-internal-linkage,
+  -modernize-avoid-setjmp-longjmp
 
 # Diagnose our own headers, but not vendored ones. Matching '/src/' positively
 # would misfire: the checkout itself lives under a path containing 'src'
