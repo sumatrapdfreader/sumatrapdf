@@ -194,6 +194,7 @@ bool AnnotationCanBeCopied(AnnotationType);
 bool AnnotationSupportsColor(AnnotationType);
 bool AnnotationSupportsBorder(AnnotationType);
 bool AnnotationSupportsInteriorColor(AnnotationType);
+bool AnnotationSupportsOpacity(AnnotationType);
 
 bool CopyAnnotation(Annotation*);
 bool CutAnnotation(Annotation*);

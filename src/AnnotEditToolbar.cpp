@@ -244,7 +244,7 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         it.tooltip = _TRA("Interior Color");
         out.Append(it);
     }
-    if (type == AnnotationType::Highlight) {
+    if (AnnotationSupportsOpacity(type)) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Opacity;
         it.number = Opacity(annot);
@@ -772,6 +772,14 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             }
             PdfColor col = AnnotEditorColorAt(idx);
             if (kind == AnnotEditKind::Color) {
+                // SetColor() takes the annotation's opacity from the color's
+                // alpha and the palette is all-opaque, so picking a color would
+                // throw away what the Opacity chip set
+                if (col != 0) {
+                    u8 r, g, b, a;
+                    UnpackPdfColor(col, r, g, b, a);
+                    col = MkPdfColor(r, g, b, (u8)Opacity(annot));
+                }
                 SetColor(annot, col);
             } else if (kind == AnnotEditKind::InteriorColor) {
                 SetInteriorColor(annot, col);
@@ -1865,7 +1873,7 @@ static void CollectAnnotationHoverRows(Annotation* annot, AnnotationHoverRows& r
     if (AnnotationSupportsInteriorColor(type)) {
         rows.Add(StrL("interiorColor"), _TRA("Interior Color:"), AnnotationColorNameTemp(InteriorColor(annot)));
     }
-    if (type == AnnotationType::Highlight) {
+    if (AnnotationSupportsOpacity(type)) {
         rows.Add(StrL("opacity"), _TRA("Opacity:"), fmt("%d", Opacity(annot)));
     }
 

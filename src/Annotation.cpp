@@ -1652,6 +1652,16 @@ static AnnotationType supportsBorder[] = {
     AnnotationType::Circle,   AnnotationType::Polygon, AnnotationType::PolyLine,
 };
 
+// /CA is a markup-annotation property, and only a markup annotation's
+// appearance stream is generated with it (pdf_write_opacity). Mirrors mupdf's
+// markup_subtypes minus the ones we can't create or edit.
+static AnnotationType supportsOpacity[] = {
+    AnnotationType::Text,      AnnotationType::FreeText, AnnotationType::Line,      AnnotationType::Square,
+    AnnotationType::Circle,    AnnotationType::Polygon,  AnnotationType::PolyLine,  AnnotationType::Highlight,
+    AnnotationType::Underline, AnnotationType::Squiggly, AnnotationType::StrikeOut, AnnotationType::Redact,
+    AnnotationType::Stamp,     AnnotationType::Caret,    AnnotationType::Ink,       AnnotationType::FileAttachment,
+};
+
 static AnnotationType supportsColor[] = {
     AnnotationType::Stamp,     AnnotationType::Text,      AnnotationType::FileAttachment,
     AnnotationType::Sound,     AnnotationType::Caret,     AnnotationType::FreeText,
@@ -1728,6 +1738,10 @@ bool AnnotationSupportsBorder(AnnotationType tp) {
 
 bool AnnotationSupportsColor(AnnotationType tp) {
     return IsAnnotationInList(tp, supportsColor, dimofi(supportsColor));
+}
+
+bool AnnotationSupportsOpacity(AnnotationType tp) {
+    return IsAnnotationInList(tp, supportsOpacity, dimofi(supportsOpacity));
 }
 
 Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF pos, AnnotCreateArgs* args) {
