@@ -11,7 +11,7 @@ struct PropValue;
 enum class DocProp : u8;
 
 struct ILinkHandler {
-    virtual ~ILinkHandler() {};
+    virtual ~ILinkHandler() = default;
     virtual void GotoLink(IPageDestination*) = 0;
     virtual void GotoNamedDest(Str) = 0;
     virtual void GoToPage(int pageNo, bool addNavPoint) = 0;
@@ -127,7 +127,7 @@ struct IPageDestination : KindBase {
     float zoom = 0.f;
 
     IPageDestination() = default;
-    virtual ~IPageDestination() {};
+    virtual ~IPageDestination() = default;
 
     // rectangle of the destination on the above returned page
     virtual RectF GetRect2() { return rect; }

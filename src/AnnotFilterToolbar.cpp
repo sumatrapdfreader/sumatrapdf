@@ -562,7 +562,8 @@ static bool FilterHomeEndMovesList(AnnotFilterToolbar* f, int vkey, bool isCtrl)
     if (!e) {
         return true;
     }
-    int selStart = 0, selEnd = 0;
+    int selStart = 0;
+    int selEnd = 0;
     e->GetSelection(selStart, selEnd);
     int textLen = e->GetTextLen();
     bool toEnd = (vkey == VK_END);
@@ -779,7 +780,8 @@ static void CopyFilterText(AnnotFilterToolbar* f, Edit* src, Edit* dst) {
     if (!f || !src || !dst || src == dst) {
         return;
     }
-    int a = 0, b = 0;
+    int a = 0;
+    int b = 0;
     src->GetSelection(a, b);
     TempStr t = src->GetTextTemp();
     f->suppressFilterChanged = true;
@@ -1502,7 +1504,12 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     out.Append(fmt("listRect=%d,%d,%d,%d floating=%d floatVisible=%d floatBtn=%d,%d,%d,%d dockBtn=%d,%d,%d,%d\n", lr.x,
                    lr.y, lr.dx, lr.dy, floating ? 1 : 0, floatVisible ? 1 : 0, br.x, br.y, br.dx, br.dy, dr.x, dr.y,
                    dr.dx, dr.dy));
-    int deleteOn = 0, discardOn = 0, saveOn = 0, nSel = 0, itemDy = 0, listY = 0;
+    int deleteOn = 0;
+    int discardOn = 0;
+    int saveOn = 0;
+    int nSel = 0;
+    int itemDy = 0;
+    int listY = 0;
     if (f && f->floatWnd) {
         deleteOn = f->floatWnd->btnDelete && f->floatWnd->btnDelete->IsEnabled() ? 1 : 0;
         discardOn = f->floatWnd->btnDiscard && f->floatWnd->btnDiscard->IsEnabled() ? 1 : 0;

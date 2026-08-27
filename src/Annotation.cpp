@@ -212,7 +212,8 @@ void SetRect(Annotation* annot, RectF r) {
                 // /L is the two endpoints, not a rect. Translate them so a
                 // drag does not rewrite a top-right/bottom-left line as
                 // top-left/bottom-right of the bounds.
-                fz_point p1{}, p2{};
+                fz_point p1{};
+                fz_point p2{};
                 pdf_annot_line(ctx, a, &p1, &p2);
                 p1.x += dx;
                 p1.y += dy;
@@ -998,7 +999,10 @@ void SetLineStartStyles(Annotation* annot, int start) {
 }
 
 static void PdfColorToFloat(PdfColor c, float rgb[3]) {
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackPdfColor(c, r, g, b, a);
     rgb[0] = (float)r / 255.0f;
     rgb[1] = (float)g / 255.0f;
@@ -1382,7 +1386,8 @@ bool GetLinePoints(Annotation* annot, PointF& start, PointF& end) {
     auto* a = annot->pdfannot;
     auto* ctx = e->Ctx();
     ScopedRecursiveMutex cs(&e->docLock);
-    fz_point aPt{}, bPt{};
+    fz_point aPt{};
+    fz_point bPt{};
     bool ok = false;
     fz_try(ctx) {
         pdf_annot_line(ctx, a, &aPt, &bPt);

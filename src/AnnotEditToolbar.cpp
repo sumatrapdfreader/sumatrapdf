@@ -181,13 +181,19 @@ static Color BarHoverBg(Color bg) {
 }
 
 static Color PdfToWinColor(PdfColor c) {
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackPdfColor(c, r, g, b, a);
     return MkRgb(r, g, b);
 }
 
 static bool PdfColorIsTransparent(PdfColor c) {
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackPdfColor(c, r, g, b, a);
     return a == 0;
 }
@@ -666,13 +672,18 @@ static HBITMAP CreateColorSwatchBitmap(PdfColor pdfCol, int dx, int dy) {
         DeleteObject(bmp);
         return nullptr;
     }
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackPdfColor(pdfCol, r, g, b, a);
     auto* px = (u32*)bits;
     int cell = std::max(dx / 4, 2);
     for (int y = 0; y < dy; y++) {
         for (int x = 0; x < dx; x++) {
-            u8 pr, pg, pb;
+            u8 pr;
+            u8 pg;
+            u8 pb;
             if (x == 0 || y == 0 || x == dx - 1 || y == dy - 1) {
                 pr = pg = pb = 80;
             } else if (a == 0) {
@@ -785,7 +796,10 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
                 // alpha and the palette is all-opaque, so picking a color would
                 // throw away what the Opacity chip set
                 if (col != 0) {
-                    u8 r, g, b, a;
+                    u8 r;
+                    u8 g;
+                    u8 b;
+                    u8 a;
                     UnpackPdfColor(col, r, g, b, a);
                     col = MkPdfColor(r, g, b, (u8)Opacity(annot));
                 }

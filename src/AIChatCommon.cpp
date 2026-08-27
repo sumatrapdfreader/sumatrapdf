@@ -521,7 +521,8 @@ bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunch
     sa.lpSecurityDescriptor = nullptr;
     sa.bInheritHandle = TRUE;
 
-    HANDLE hReadPipe, hWritePipe;
+    HANDLE hReadPipe;
+    HANDLE hWritePipe;
     if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
         return false;
     }

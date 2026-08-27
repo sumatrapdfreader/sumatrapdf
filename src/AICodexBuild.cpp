@@ -258,7 +258,8 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
         return;
     }
     Str content = data;
-    Str firstLine, rest;
+    Str firstLine;
+    Str rest;
     if (!str::NextLine(content, firstLine, rest) || len(firstLine) == 0) {
         str::Free(data);
         return;

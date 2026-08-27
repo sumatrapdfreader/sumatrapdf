@@ -839,7 +839,8 @@ static bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str&
 
 TempStr AIChatTestResultTemp(int backend, Str filePath, Str message, int* exitCode) {
     AIChatDebugReset();
-    Str text, err;
+    Str text;
+    Str err;
     bool ok = RunAIChatSync((AIChatBackend)backend, filePath, message, text, err);
     str::Builder res;
     if (ok) {

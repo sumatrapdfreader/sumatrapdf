@@ -679,7 +679,8 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     PlatformFont* nameFont = (item->changed && fontBold) ? fontBold : fontNormal;
     PlatformFont* valFont = (SettingDiffersFromDefault(item) && fontBold) ? fontBold : fontNormal;
 
-    Rect rcName{}, rcVal{};
+    Rect rcName{};
+    Rect rcVal{};
     AdvSettingsItemColumns(rc, rcName, rcVal);
 
     bool isRtl = HwndIsRtl(lb->GetHwnd());
@@ -712,7 +713,8 @@ Rect AdvancedSettingsWnd::ValueRectForItem(int idx) {
     if (rc.IsEmpty()) {
         return {};
     }
-    Rect rcName{}, rcVal{};
+    Rect rcName{};
+    Rect rcVal{};
     AdvSettingsItemColumns(rc, rcName, rcVal);
     return rcVal;
 }
