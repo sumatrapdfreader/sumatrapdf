@@ -151,8 +151,16 @@ export async function testit(): Promise<void> {
     sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(endX, endY));
     await sleep(200);
 
-    const midDrag = await annotState(client);
     const grown = { x: before.rect.x, y: before.rect.y, dx: before.rect.dx + 60, dy: before.rect.dy + 40 };
+    // the drag has mouse capture, so a real mouse move landing on the canvas
+    // moves the outline somewhere else; re-send ours until it settles
+    let midDrag = await annotState(client);
+    const settleBy = Date.now() + 3_000;
+    while (!sameRect(midDrag.outline, grown, 2) && Date.now() < settleBy) {
+      sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(endX, endY));
+      await sleep(60);
+      midDrag = await annotState(client);
+    }
     if (!sameRect(midDrag.rect, before.rect)) {
       throw new Error(`free-text-edit-toolbar: annotation was rewritten during the drag: ${midDrag.raw}`);
     }
@@ -179,6 +187,27 @@ export async function testit(): Promise<void> {
     const dump = await toolbarDump(client);
     if (!/items=.*,contents,delete /.test(dump)) {
       throw new Error(`free-text-edit-toolbar: delete is not the last chip: ${dump}`);
+    }
+    // free text leads with the colour of its text, and its chips say what they
+    // change rather than just "Color" / "Opacity" / "Border"
+    if (!/items=textColor,color,/.test(dump)) {
+      throw new Error(`free-text-edit-toolbar: text color is not the first chip: ${dump}`);
+    }
+    const wantTips: [string, string][] = [
+      ["textColor", "Text Color"],
+      ["color", "Background Color"],
+      ["opacity", "Text Opacity"],
+      ["border", "Border Width"],
+      ["contents", "Edit text"],
+    ];
+    for (const [name, tip] of wantTips) {
+      const m = new RegExp(`[=;]${name}:-?\\d+,-?\\d+,\\d+,\\d+:([^;\\n]*)`).exec(dump);
+      if (!m) {
+        throw new Error(`free-text-edit-toolbar: no "${name}" chip: ${dump}`);
+      }
+      if (m[1] !== tip) {
+        throw new Error(`free-text-edit-toolbar: "${name}" tooltip is "${m[1]}", want "${tip}"`);
+      }
     }
     if ((await annotCount(client)) !== 1) {
       throw new Error("free-text-edit-toolbar: expected one annotation before deleting");

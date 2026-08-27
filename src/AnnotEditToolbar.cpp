@@ -223,18 +223,32 @@ static Str KindName(AnnotEditKind kind) {
     return StrL("?");
 }
 
+// annotation types whose GetColor() is a background, not the ink color
+static bool AnnotationColorIsBackground(AnnotationType tp) {
+    return tp == AnnotationType::FreeText;
+}
+
 static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
     out.Reset();
     if (!AnnotationIsLive(annot)) {
         return;
     }
     AnnotationType type = Type(annot);
+    bool isFreeText = type == AnnotationType::FreeText;
 
+    // free text is about its text, so the text's color leads
+    if (isFreeText) {
+        AnnotEditItem it;
+        it.kind = AnnotEditKind::TextColor;
+        it.color = DefaultAppearanceTextColor(annot);
+        it.tooltip = _TRA("Text Color");
+        out.Append(it);
+    }
     if (AnnotationSupportsColor(type)) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Color;
         it.color = GetColor(annot);
-        it.tooltip = _TRA("Color");
+        it.tooltip = AnnotationColorIsBackground(type) ? _TRA("Background Color") : _TRA("Color");
         out.Append(it);
     }
     if (AnnotationSupportsInteriorColor(type)) {
@@ -248,17 +262,18 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Opacity;
         it.number = Opacity(annot);
-        it.tooltip = _TRA("Opacity");
+        // for free text the whole appearance is the text, background aside
+        it.tooltip = isFreeText ? _TRA("Text Opacity") : _TRA("Opacity");
         out.Append(it);
     }
     if (AnnotationSupportsBorder(type)) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Border;
         it.number = BorderWidth(annot);
-        it.tooltip = _TRA("Border");
+        it.tooltip = _TRA("Border Width");
         out.Append(it);
     }
-    if (type == AnnotationType::FreeText) {
+    if (isFreeText) {
         {
             AnnotEditItem it;
             it.kind = AnnotEditKind::FontName;
@@ -267,13 +282,6 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
             it.number = idx;
             it.text = idx >= 0 ? SeqStrByIndex(AnnotEditorFontReadableNames(), idx) : pdfName;
             it.tooltip = _TRA("Font");
-            out.Append(it);
-        }
-        {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::TextColor;
-            it.color = DefaultAppearanceTextColor(annot);
-            it.tooltip = _TRA("Text Color");
             out.Append(it);
         }
         {
@@ -323,7 +331,7 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
     if (type != AnnotationType::Widget) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Contents;
-        it.tooltip = _TRA("Contents");
+        it.tooltip = _TRA("Edit text");
         out.Append(it);
     }
     if (type != AnnotationType::Widget) {
@@ -1791,7 +1799,7 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
         }
         Rect cr = tb->chips[i]->BoundsInWindow();
         Str name = i < len(tb->kinds) ? KindName(tb->kinds[i]) : StrL("?");
-        chips.Append(fmt("%s:%d,%d,%d,%d", name, r.x + cr.x, r.y + cr.y, cr.dx, cr.dy));
+        chips.Append(fmt("%s:%d,%d,%d,%d:%s", name, r.x + cr.x, r.y + cr.y, cr.dx, cr.dy, tb->chips[i]->tooltip));
     }
     return fmt("annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d chips=%s\n", len(tb->kinds),
                ToStrTemp(items), r.x, r.y, r.dx, r.dy, tb->editingContents ? 1 : 0, ToStrTemp(chips));
@@ -1831,11 +1839,6 @@ static PdfColor gColorsValues[] = {
 	0xffffff00, /* yellow */
 };
 
-// list of annotations where GetColor() returns background color
-// TODO: probably incomplete;
-static AnnotationType gAnnotsIsColorBackground[] = {
-    AnnotationType::FreeText,
-};
 // clang-format on
 
 static bool gShowRect = true;
@@ -1848,15 +1851,6 @@ static TempStr GetKnownColorNameTemp(PdfColor c) {
         }
     }
     return {};
-}
-
-static bool IsAnnotationTypeInArray(AnnotationType* arr, int arrSize, AnnotationType toFind) {
-    for (int i = 0; i < arrSize; i++) {
-        if (toFind == arr[i]) {
-            return true;
-        }
-    }
-    return false;
 }
 
 static void AppendPdfDate(str::Builder& s, time_t secs) {
@@ -2171,8 +2165,7 @@ static void CollectAnnotationHoverRows(Annotation* annot, AnnotationHoverRows& r
         rows.Add(StrL("border"), _TRA("Border:"), fmt("%d", BorderWidth(annot)));
     }
     if (AnnotationSupportsColor(type)) {
-        bool isBackground = IsAnnotationTypeInArray(gAnnotsIsColorBackground, dimofi(gAnnotsIsColorBackground), type);
-        Str label = isBackground ? _TRA("Background Color:") : _TRA("Color:");
+        Str label = AnnotationColorIsBackground(type) ? _TRA("Background Color:") : _TRA("Color:");
         rows.Add(StrL("color"), label, AnnotationColorNameTemp(GetColor(annot)));
     }
     if (AnnotationSupportsInteriorColor(type)) {
