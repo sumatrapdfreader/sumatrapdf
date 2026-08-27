@@ -10667,7 +10667,7 @@ static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* 
     args.quadding = QuaddingFromName(GetCommandStringArg(cmd, kCmdArgAlignment, {}));
 }
 
-static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
+void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     // note: test the arguments, not `cmd->id != cmd->origId`. A command without
     // arguments usually keeps its original id, but not always: a Shortcuts entry
     // that would collide with an earlier one gets a generated id (#5869).

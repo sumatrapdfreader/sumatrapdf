@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct AnnotCreateArgs;
+struct CustomCommand;
 enum class FileType : u8;
 
 #include "OverlayScrollbar.h"
@@ -95,6 +96,7 @@ extern Func1<MainWindow*> gAfterLayout;
 // tells the frame's virtual tree which splitters exist (they are created
 // with their panes)
 void FrameSyncSplitters(MainWindow*);
+void SetAnnotCreateArgs(AnnotCreateArgs&, CustomCommand*);
 void BeginPdfEditOperation(MainWindow*, const char* name);
 void EndPdfEditOperation(MainWindow*);
 struct NotificationWnd;

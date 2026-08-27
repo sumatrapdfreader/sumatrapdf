@@ -54,6 +54,62 @@ constexpr float kCaretAnnotDefaultDy = 15.f;
 constexpr float kFileAttachmentAnnotDefaultDx = 16.f;
 constexpr float kFileAttachmentAnnotDefaultDy = 16.f;
 
+// Free text is placed like a stamp: a preview box the size of the annotation
+// follows the cursor and a click creates it there. MuPDF lays free text out
+// with padding = 2 * border width, a 1.2 * font size line height and a
+// 0.8 * font size baseline (pdf_write_free_text_appearance), so a box that
+// fits one line of the placeholder text is that tall.
+constexpr float kFreeTextLineHeight = 1.2f;
+// MeasureString already includes generous side bearings; a little more keeps
+// MuPDF from wrapping the text we previewed on a single line
+constexpr float kFreeTextWidthSlack = 1.02f;
+// measure at a big size and scale down: GDI+ rounds a lot at 12 px
+constexpr float kFreeTextMeasureSize = 96.f;
+
+// The same values the create path will use, so the preview shows what the
+// click creates.
+static void FreeTextPlacementArgs(int cmdId, AnnotCreateArgs& args) {
+    args.annotType = AnnotationType::FreeText;
+    SetAnnotCreateArgs(args, FindCustomCommand(cmdId));
+}
+
+static int FreeTextFontSize(const AnnotCreateArgs& args) {
+    return args.textSize > 0 ? args.textSize : 12;
+}
+
+static float FreeTextPadding(const AnnotCreateArgs& args) {
+    return args.borderWidth > 0 ? (float)args.borderWidth * 2.f : 0.f;
+}
+
+static Str FreeTextPlacementContent(const AnnotCreateArgs& args) {
+    if (str::IsEmptyOrWhiteSpace(args.content)) {
+        return StrL(kDefaultFreeTextContent);
+    }
+    return args.content;
+}
+
+// Size, in page units, of a box that fits one line of the annotation's text.
+static SizeF FreeTextPlacementPageSize(const AnnotCreateArgs& args) {
+    float fontSize = (float)FreeTextFontSize(args);
+    float pad = FreeTextPadding(args);
+    float dx = 0;
+    HDC hdc = GetDC(nullptr);
+    {
+        Gdiplus::Graphics gs(hdc);
+        // Arial has Helvetica's metrics, which is what MuPDF's "Helv" is
+        Gdiplus::Font font(L"Arial", kFreeTextMeasureSize, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+        WStr text = ToWStrTemp(FreeTextPlacementContent(args));
+        // MeasureString with no layout rect: no wrapping, and its generous
+        // side bearings keep us from under-measuring vs MuPDF's Helvetica
+        RectF measured = MeasureTextStandard(&gs, &font, text);
+        dx = measured.dx * fontSize / kFreeTextMeasureSize;
+    }
+    ReleaseDC(nullptr, hdc);
+    dx = (dx * kFreeTextWidthSlack) + (2 * pad) + 2.f;
+    float dy = (kFreeTextLineHeight * fontSize) + (2 * pad);
+    return {dx, dy};
+}
+
 static HCURSOR gCursorTextAnnotationPlacement = nullptr;
 static int gCursorTextAnnotationPlacementDx = 0;
 static int gCursorTextAnnotationPlacementDy = 0;
@@ -87,6 +143,7 @@ static AnnotPlacementKind KindOf(MainWindow* win) {
 static Kind NotifGroupForKind(AnnotPlacementKind kind) {
     switch (kind) {
         case AnnotPlacementKind::Text:
+        case AnnotPlacementKind::FreeText:
         case AnnotPlacementKind::Stamp:
         case AnnotPlacementKind::Caret:
         case AnnotPlacementKind::FileAttachment:
@@ -113,6 +170,8 @@ AnnotPlacementKind PlacementKindFromCommand(int cmdId) {
     switch (OrigCommandId(cmdId)) {
         case CmdCreateAnnotText:
             return AnnotPlacementKind::Text;
+        case CmdCreateAnnotFreeText:
+            return AnnotPlacementKind::FreeText;
         case CmdCreateAnnotStamp:
             return AnnotPlacementKind::Stamp;
         case CmdCreateAnnotCaret:
@@ -143,7 +202,8 @@ bool IsPlacingAnnotation(MainWindow* win) {
 }
 
 static bool IsPointPlacementKind(AnnotPlacementKind kind) {
-    return kind == AnnotPlacementKind::Text || kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret ||
+    return kind == AnnotPlacementKind::Text || kind == AnnotPlacementKind::FreeText ||
+           kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret ||
            kind == AnnotPlacementKind::FileAttachment;
 }
 
@@ -282,6 +342,7 @@ static void SetPlacementCursor(MainWindow* win) {
         case AnnotPlacementKind::Ink:
             SetInkAnnotationPlacementCursor();
             break;
+        case AnnotPlacementKind::FreeText:
         case AnnotPlacementKind::Stamp:
         case AnnotPlacementKind::Caret:
         case AnnotPlacementKind::FileAttachment:
@@ -296,9 +357,10 @@ static void SetPlacementCursor(MainWindow* win) {
 }
 
 static bool HasPreview(AnnotPlacementKind kind) {
-    return kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret ||
-           kind == AnnotPlacementKind::FileAttachment || kind == AnnotPlacementKind::Line ||
-           kind == AnnotPlacementKind::PolyLine || kind == AnnotPlacementKind::Shape || kind == AnnotPlacementKind::Ink;
+    return kind == AnnotPlacementKind::FreeText || kind == AnnotPlacementKind::Stamp ||
+           kind == AnnotPlacementKind::Caret || kind == AnnotPlacementKind::FileAttachment ||
+           kind == AnnotPlacementKind::Line || kind == AnnotPlacementKind::PolyLine ||
+           kind == AnnotPlacementKind::Shape || kind == AnnotPlacementKind::Ink;
 }
 
 static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId) {
@@ -314,6 +376,8 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
             return _TRA("Place file attachment. **Esc** to cancel.");
         case AnnotPlacementKind::Text:
             return _TRA("Place text annotation. **Esc** to cancel.");
+        case AnnotPlacementKind::FreeText:
+            return _TRA("Place free text annotation. **Esc** to cancel.");
         case AnnotPlacementKind::Line:
             return _TRA("Place line annotation. **Esc** to cancel.");
         case AnnotPlacementKind::PolyLine:
@@ -451,6 +515,14 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
     p.circle = OrigCommandId(cmdId) == CmdCreateAnnotCircle;
     if (IsPointPlacementKind(kind)) {
         p.pos = HwndGetCursorPos(win->hwndCanvas);
+    }
+    if (kind == AnnotPlacementKind::FreeText) {
+        // rect holds the preview box size (page units); the position comes
+        // from the cursor
+        AnnotCreateArgs args;
+        FreeTextPlacementArgs(cmdId, args);
+        SizeF size = FreeTextPlacementPageSize(args);
+        p.rect = {0, 0, size.dx, size.dy};
     }
 
     StopSelectTextWithKeyboard(win);
@@ -719,6 +791,7 @@ bool AnnotationPlacementOnLeftDown(MainWindow* win, Point pt, WPARAM key) {
             HandlePolyLineClick(win, pt);
             return true;
         case AnnotPlacementKind::Text:
+        case AnnotPlacementKind::FreeText:
         case AnnotPlacementKind::Stamp:
         case AnnotPlacementKind::Caret:
         case AnnotPlacementKind::FileAttachment:
@@ -812,6 +885,7 @@ bool AnnotationPlacementOnMouseMove(MainWindow* win, Point pt, WPARAM key) {
             }
             break;
         case AnnotPlacementKind::Text:
+        case AnnotPlacementKind::FreeText:
         case AnnotPlacementKind::Stamp:
         case AnnotPlacementKind::Caret:
         case AnnotPlacementKind::FileAttachment: {
@@ -928,6 +1002,75 @@ static void PaintPointPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
         gs.DrawEllipse(&pin, cx - head, r.y + head, head * 2, head * 2);
         gs.DrawLine(&pin, cx, r.y + head * 3, cx, r.y + r.dy - head);
     }
+}
+
+// Where the free text preview box currently is on screen; empty when the
+// cursor isn't over a visible page.
+static Rect FreeTextPlacementScreenRect(MainWindow* win, DisplayModel* dm) {
+    AnnotPlacement& p = win->annotPlacement;
+    if (!dm || p.rect.dx <= 0 || p.rect.dy <= 0) {
+        return {};
+    }
+    int pageNo = dm->GetPageNoByPoint(p.pos);
+    if (!dm->ValidPageNo(pageNo) || !dm->PageVisible(pageNo)) {
+        return {};
+    }
+    PointF pagePt = dm->CvtFromScreen(p.pos, pageNo);
+    return dm->CvtToScreen(pageNo, RectF{pagePt.x, pagePt.y, p.rect.dx, p.rect.dy});
+}
+
+// White "paper" with the text drawn on it, the size of the annotation that a
+// click will create. An unset background is transparent in the PDF, but a box
+// reads better than floating text while positioning it.
+static void PaintFreeTextPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
+    if (KindOf(win) != AnnotPlacementKind::FreeText) {
+        return;
+    }
+    AnnotPlacement& p = win->annotPlacement;
+    Rect r = FreeTextPlacementScreenRect(win, dm);
+    if (r.IsEmpty()) {
+        return;
+    }
+
+    AnnotCreateArgs args;
+    FreeTextPlacementArgs(p.cmdId, args);
+    float scale = (float)r.dy / p.rect.dy;
+    float pad = FreeTextPadding(args) * scale;
+    float fontDy = std::max((float)FreeTextFontSize(args) * scale, 4.f);
+    Gdiplus::Color textCol = args.col.parsedOk ? GdiRgbFromColor(args.col.col) : Gdiplus::Color(255, 0, 0, 0);
+    Gdiplus::Color bgCol = args.bgCol.parsedOk ? GdiRgbFromColor(args.bgCol.col) : Gdiplus::Color(255, 255, 255, 255);
+
+    Gdiplus::Graphics gs(hdc);
+    gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    Gdiplus::SolidBrush bg(bgCol);
+    gs.FillRectangle(&bg, r.x, r.y, r.dx, r.dy);
+    if (args.borderWidth > 0) {
+        float bw = std::max((float)args.borderWidth * scale, 1.f);
+        Gdiplus::Pen pen(textCol, bw);
+        gs.DrawRectangle(&pen, (Gdiplus::REAL)r.x + bw / 2, (Gdiplus::REAL)r.y + bw / 2, (Gdiplus::REAL)r.dx - bw,
+                         (Gdiplus::REAL)r.dy - bw);
+    } else {
+        // no border on the annotation itself, so mark the extent faintly
+        Gdiplus::Pen pen(Gdiplus::Color(120, 0, 0, 0), 1.f);
+        pen.SetDashStyle(Gdiplus::DashStyleDash);
+        gs.DrawRectangle(&pen, (Gdiplus::REAL)r.x, (Gdiplus::REAL)r.y, (Gdiplus::REAL)r.dx - 1,
+                         (Gdiplus::REAL)r.dy - 1);
+    }
+
+    Gdiplus::Font font(L"Arial", fontDy, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+    Gdiplus::SolidBrush text(textCol);
+    Gdiplus::StringFormat sf(Gdiplus::StringFormat::GenericTypographic());
+    sf.SetFormatFlags(sf.GetFormatFlags() | Gdiplus::StringFormatFlagsNoWrap);
+    if (args.quadding == kQuaddingCenter) {
+        sf.SetAlignment(Gdiplus::StringAlignmentCenter);
+    } else if (args.quadding == kQuaddingRight) {
+        sf.SetAlignment(Gdiplus::StringAlignmentFar);
+    }
+    sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
+    Gdiplus::RectF tr((Gdiplus::REAL)r.x + pad, (Gdiplus::REAL)r.y + pad, (Gdiplus::REAL)r.dx - (2 * pad),
+                      (Gdiplus::REAL)r.dy - (2 * pad));
+    WStr content = ToWStrTemp(FreeTextPlacementContent(args));
+    gs.DrawString(content.s, content.len, &font, tr, &sf, &text);
 }
 
 static void PaintLinePlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
@@ -1052,6 +1195,7 @@ void PaintAnnotationPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
         return;
     }
     PaintPointPlacement(win, hdc, dm);
+    PaintFreeTextPlacement(win, hdc, dm);
     PaintLinePlacement(win, hdc, dm);
     PaintPolyLinePlacement(win, hdc, dm);
     PaintShapePlacement(win, hdc, dm);
@@ -1130,6 +1274,11 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
                 return false;
             }
             break;
+        case AnnotPlacementKind::FreeText:
+            if (type != AnnotationType::FreeText) {
+                return false;
+            }
+            break;
         case AnnotPlacementKind::Stamp:
             if (type != AnnotationType::Stamp) {
                 return false;
@@ -1154,6 +1303,11 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
         return false;
     }
     ptOnPage = dm->CvtFromScreen(pt, pageNo);
+    if (p.kind == AnnotPlacementKind::FreeText && p.rect.dx > 0 && p.rect.dy > 0) {
+        // create the annotation exactly as big as the previewed box
+        args.hasRect = true;
+        args.rect = {ptOnPage.x, ptOnPage.y, p.rect.dx, p.rect.dy};
+    }
     return dm->ValidPageNo(pageNo);
 }
 
@@ -1195,12 +1349,14 @@ static TempStr PointPlacementDumpLineTemp(MainWindow* win, AnnotPlacementKind ki
 TempStr AnnotationPlacementStateTemp(MainWindow* win) {
     str::Builder out;
     out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::Text, StrL("textPlacement"), true));
+    out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::FreeText, StrL("freeTextPlacement"), false));
     out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::Stamp, StrL("stampPlacement"), false));
     out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::Caret, StrL("caretPlacement"), false));
     out.Append(
         PointPlacementDumpLineTemp(win, AnnotPlacementKind::FileAttachment, StrL("fileAttachmentPlacement"), false));
 
     if (!win || !win->hwndCanvas) {
+        out.Append(StrL("freeTextPreview rect=0,0,0,0\n"));
         out.Append(
             StrL("linePlacement active=0 notification=0 cursor=0 started=0 cmd=0 page=-1 start=0,0 end=0,0 "
                  "message=\n"));
@@ -1217,6 +1373,13 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
     }
 
     AnnotPlacement& p = win->annotPlacement;
+    {
+        Rect preview;
+        if (KindOf(win) == AnnotPlacementKind::FreeText) {
+            preview = FreeTextPlacementScreenRect(win, win->AsFixed());
+        }
+        out.Append(fmt("freeTextPreview rect=%d,%d,%d,%d\n", preview.x, preview.y, preview.dx, preview.dy));
+    }
     bool line = IsPlacingLineAnnotation(win);
     bool poly = IsPlacingPolyLineAnnotation(win);
     bool shape = IsPlacingShapeAnnotation(win);

@@ -166,6 +166,7 @@ enum class TouchSelHandle {
 enum class AnnotPlacementKind {
     None = 0,
     Text,
+    FreeText,
     Stamp,
     Caret,
     FileAttachment,

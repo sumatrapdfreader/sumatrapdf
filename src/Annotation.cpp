@@ -1814,6 +1814,12 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 case AnnotationType::FreeText:
                 case AnnotationType::Stamp:
                 case AnnotationType::FileAttachment: {
+                    if (args->hasRect) {
+                        // free text placed from the toolbar: the rect is the
+                        // preview box the user just positioned
+                        pdf_set_annot_rect(ctx, annot, ToFzRect(args->rect));
+                        break;
+                    }
                     fz_rect trect = pdf_annot_rect(ctx, annot);
                     float dx = trect.x1 - trect.x0;
                     trect.x0 = pos.x;
@@ -1955,7 +1961,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 if (!str::IsEmptyOrWhiteSpace(Str(content))) {
                     pdf_set_annot_contents(ctx, annot, content);
                 } else {
-                    pdf_set_annot_contents(ctx, annot, "This is a text...");
+                    pdf_set_annot_contents(ctx, annot, kDefaultFreeTextContent);
                 }
                 int fontSize = args->textSize;
                 if (fontSize <= 0) {

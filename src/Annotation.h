@@ -130,6 +130,10 @@ int DefaultAppearanceTextSize(Annotation*);
 Str Contents(Annotation*);
 PdfColor GetColor(Annotation*);      // kColorUnset if no color
 PdfColor InteriorColor(Annotation*); // kColorUnset if no color
+// placeholder contents of a free text annotation created without explicit
+// content; the placement preview shows it, so both must use this
+// an array, not a const char*, so StrL() can take its compile-time length
+constexpr char kDefaultFreeTextContent[] = "This is a text...";
 // PDF /Q: how free text is aligned in its box ("Text Alignment" in the
 // annotation editor). Right is also what right-to-left scripts want.
 constexpr int kQuaddingLeft = 0;
