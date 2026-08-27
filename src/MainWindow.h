@@ -65,13 +65,13 @@ constexpr int kCaptionTopPadding = 8;
 
 enum CaptionButtons {
     CB_BTN_FIRST = 0,
-    CB_MINIMIZE = CB_BTN_FIRST,
-    CB_MAXIMIZE,
-    CB_RESTORE,
-    CB_CLOSE,
-    CB_MENU,
-    CB_SYSTEM_MENU,
-    CB_BTN_COUNT
+    CB_MINIMIZE = 0,
+    CB_MAXIMIZE = 1,
+    CB_RESTORE = 2,
+    CB_CLOSE = 3,
+    CB_MENU = 4,
+    CB_SYSTEM_MENU = 5,
+    CB_BTN_COUNT = 6
 };
 
 struct ButtonInfo {

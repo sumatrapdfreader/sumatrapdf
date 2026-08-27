@@ -179,7 +179,7 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
     ACCEL a;
     for (int i = 0; i < gAccelsCount; i++) {
         a = gAccels[i];
-        if (a.cmd == cmdId) {
+        if (a.cmd == (WORD)cmdId) {
             TempStr res = AppendAccelKeyToMenuStringTemp(menuStr, a);
             return res;
         }
@@ -197,7 +197,7 @@ TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
     int n = 0;
     for (int i = 0; i < gAccelsCount && n < maxCount; i++) {
         ACCEL a = gAccels[i];
-        if (a.cmd != cmdId) {
+        if (a.cmd != (WORD)cmdId) {
             continue;
         }
         TempStr withTab = AppendAccelKeyToMenuStringTemp(StrL(""), a);
