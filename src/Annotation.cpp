@@ -1637,14 +1637,18 @@ static AnnotationType supportsInteriorColor[] = {
     AnnotationType::Polygon, AnnotationType::Square,
 };
 
-// matches rect_subtypes in pdf-annot.c + Line (endpoints) + Polygon/PolyLine
-// (Vertices) + Ink (InkList). SetRect() translates that geometry.
-// TODO: should include AnnotationType::ThreeD but mupdf doesn't
+// The annotations whose position is theirs to change. /Rect is required on
+// every annotation, but for some it is derived from other geometry; this is
+// mupdf's rect_subtypes in pdf-annot.c (what pdf_annot_has_rect() answers yes
+// to, and what pdf_set_annot_rect() accepts) plus Line (endpoints),
+// Polygon/PolyLine (Vertices) and Ink (InkList), whose geometry SetRect()
+// translates by hand.
 static AnnotationType moveableAnnotations[] = {
-    AnnotationType::Text,           AnnotationType::FreeText, AnnotationType::Square,   AnnotationType::Circle,
-    AnnotationType::Redact,         AnnotationType::Stamp,    AnnotationType::Caret,    AnnotationType::Popup,
-    AnnotationType::FileAttachment, AnnotationType::Sound,    AnnotationType::Movie,    AnnotationType::Widget,
-    AnnotationType::Line,           AnnotationType::Polygon,  AnnotationType::PolyLine, AnnotationType::Ink,
+    AnnotationType::Text,           AnnotationType::FreeText,  AnnotationType::Square, AnnotationType::Circle,
+    AnnotationType::Redact,         AnnotationType::Stamp,     AnnotationType::Caret,  AnnotationType::Popup,
+    AnnotationType::FileAttachment, AnnotationType::Sound,     AnnotationType::Movie,  AnnotationType::Widget,
+    AnnotationType::ThreeD,         AnnotationType::RichMedia, AnnotationType::Line,   AnnotationType::Polygon,
+    AnnotationType::PolyLine,       AnnotationType::Ink,
 };
 
 static AnnotationType supportsBorder[] = {

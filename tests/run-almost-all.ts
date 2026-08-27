@@ -156,6 +156,7 @@ import { testit as createAnnotEntersEditMode } from "./create-annot-enters-edit-
 import { testit as exitEditPdfDeselects } from "./exit-edit-pdf-deselects.ts";
 import { testit as freeTextInPlaceEdit } from "./free-text-in-place-edit.ts";
 import { testit as freeTextEditMatchesRender } from "./free-text-edit-matches-render.ts";
+import { testit as annotMoveableTypes } from "./annot-moveable-types.ts";
 import { testit as stampCaretAnnotationPlacement } from "./stamp-caret-annotation-placement.ts";
 import { testit as lineAnnotationPlacement } from "./line-annotation-placement.ts";
 import { testit as polylineAnnotationPlacement } from "./polyline-annotation-placement.ts";
@@ -266,6 +267,7 @@ export const tests: NamedTest[] = [
   ["exit-edit-pdf-deselects", exitEditPdfDeselects],
   ["free-text-in-place-edit", freeTextInPlaceEdit],
   ["free-text-edit-matches-render", freeTextEditMatchesRender],
+  ["annot-moveable-types", annotMoveableTypes],
   ["stamp-caret-annotation-placement", stampCaretAnnotationPlacement],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
