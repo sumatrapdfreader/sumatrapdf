@@ -404,8 +404,7 @@ int
     if (short_size) {
         symbol_table[1].N.ShortName[1] = '_';
         memcpy(&symbol_table[1].N.ShortName[addUnderscore], label, strlen(label));
-        memcpy(&symbol_table[1].N.ShortName[addUnderscore + strlen(label)], kSizeLabelSuffix,
-               strlen(kSizeLabelSuffix));
+        memcpy(&symbol_table[1].N.ShortName[addUnderscore + strlen(label)], kSizeLabelSuffix, strlen(kSizeLabelSuffix));
     } else {
         symbol_table[1].N.LongName.Zeroes = 0;
         symbol_table[1].N.LongName.Offset =

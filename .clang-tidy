@@ -33,6 +33,8 @@ Checks: >
   -readability-convert-member-functions-to-static,
   -readability-use-anyofallof,
   -readability-named-parameter
+  -modernize-macro-to-enum
+  -bugprone-reserved-identifier
 
 # Diagnose our own headers, but not vendored ones. Matching '/src/' positively
 # would misfire: the checkout itself lives under a path containing 'src'

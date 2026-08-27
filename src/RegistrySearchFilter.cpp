@@ -60,17 +60,14 @@ bool InstallSearchFilter(Str dllPath, bool allUsers) {
 // Note: for compat with pre-3.4 removes HKLM and HKCU keys
 bool UninstallSearchFilter() {
     const char* regKeys[] = {
-        "Software\\Classes\\CLSID\\" kPdfFilterClsid,
-        "Software\\Classes\\CLSID\\" kPdfFilterHandler,
+        "Software\\Classes\\CLSID\\" kPdfFilterClsid,  "Software\\Classes\\CLSID\\" kPdfFilterHandler,
         R"(Software\Classes\.pdf\PersistentHandler)",
 #ifdef BUILD_TEX_IFILTER
-        "Software\\Classes\\CLSID\\" kTexFilterClsid,
-        "Software\\Classes\\CLSID\\" kTexFilterHandler,
+        "Software\\Classes\\CLSID\\" kTexFilterClsid,  "Software\\Classes\\CLSID\\" kTexFilterHandler,
         "Software\\Classes\\.tex\\PersistentHandler",
 #endif
 #ifdef BUILD_EPUB_IFILTER
-        "Software\\Classes\\CLSID\\" kEpubFilterClsid,
-        "Software\\Classes\\CLSID\\" kEpubFilterHandler,
+        "Software\\Classes\\CLSID\\" kEpubFilterClsid, "Software\\Classes\\CLSID\\" kEpubFilterHandler,
         "Software\\Classes\\.epub\\PersistentHandler",
 #endif
     };

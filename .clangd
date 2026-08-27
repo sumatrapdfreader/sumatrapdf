@@ -44,6 +44,9 @@ Diagnostics:
     - readability-non-const-parameter
     - readability-braces-around-statements
     - readability-uppercase-literal-suffix
+    - modernize-macro-to-enum
+    - bugprone-reserved-identifier
+    - readability-named-parameter
 ---
 # When editing a header under src/base/, force-include Base.h plus other
 # src/base/*.h not already included by Base.h (headers are not self-sufficient).
@@ -429,4 +432,3 @@ CompileFlags:
     - WebpReader.h
     - -include
     - WindowTab.h
-

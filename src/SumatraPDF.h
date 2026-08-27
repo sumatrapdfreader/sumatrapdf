@@ -67,22 +67,22 @@ enum class Perm : uint {
     RestrictedUse = 0x1000000,
 };
 
-inline constexpr Perm operator|(Perm lhs, Perm rhs) {
+constexpr Perm operator|(Perm lhs, Perm rhs) {
     using T = std::underlying_type_t<Perm>;
     return static_cast<Perm>(static_cast<T>(lhs) | static_cast<T>(rhs));
 }
 
-inline constexpr Perm operator&(Perm lhs, Perm rhs) {
+constexpr Perm operator&(Perm lhs, Perm rhs) {
     using T = std::underlying_type_t<Perm>;
     return static_cast<Perm>(static_cast<T>(lhs) & static_cast<T>(rhs));
 }
 
-inline constexpr Perm operator<<(Perm lhs, uint rhs) {
+constexpr Perm operator<<(Perm lhs, uint rhs) {
     using T = std::underlying_type_t<Perm>;
     return static_cast<Perm>(static_cast<T>(lhs) << static_cast<T>(rhs));
 }
 
-inline constexpr Perm operator~(Perm lhs) {
+constexpr Perm operator~(Perm lhs) {
     using T = std::underlying_type_t<Perm>;
     T v = static_cast<T>(lhs);
     v = ~v;

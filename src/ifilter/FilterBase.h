@@ -136,7 +136,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
     virtual HRESULT GetNextChunkValue(ChunkValue& chunkValue) = 0;
 
   protected:
-    inline DWORD GetChunkId() const { return m_dwChunkId; }
+    DWORD GetChunkId() const { return m_dwChunkId; }
 
   public:
     FilterBase(AtomicInt* plRefCount) : m_lRef(1), m_plModuleRef(plRefCount), m_dwChunkId(0), m_iText(0) {
