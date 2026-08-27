@@ -14,6 +14,7 @@
 // To get 'A' need explicitly use FSHIFT.
 // https://learn.microsoft.com/en-us/windows/win32/menurc/using-keyboard-accelerators?referrer=grok.com
 // https://grok.com/share/bGVnYWN5_d83c2956-4ce2-4c74-ba4d-9794d1760ccb?rid=746312cc-7d0f-4479-abec-25c394652cac
+// NOLINTBEGIN(modernize-use-designated-initializers)
 static ACCEL gBuiltInAccelerators[] = {
     {FVIRTKEY, 'K', CmdScrollUp},
     {FVIRTKEY, 'J', CmdScrollDown},
@@ -167,6 +168,7 @@ static ACCEL gBuiltInAccelerators[] = {
     {0, '.', CmdPresentationBlackBackground},
     {FVIRTKEY, 'C', CmdToggleContinuousView},
 };
+// NOLINTEND(modernize-use-designated-initializers)
 
 static ACCEL* gAccels = nullptr;
 static int gAccelsCount = 0;

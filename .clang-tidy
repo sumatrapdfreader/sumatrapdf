@@ -30,7 +30,8 @@ Checks: >
   -readability-uppercase-literal-suffix,
   -readability-make-member-function-const,
   -readability-convert-member-functions-to-static,
-  -readability-use-anyofallof
+  -readability-use-anyofallof,
+  -readability-named-parameter
 
 # Diagnose our own headers, but not vendored ones. Matching '/src/' positively
 # would misfire: the checkout itself lives under a path containing 'src'
