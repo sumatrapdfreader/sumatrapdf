@@ -1749,15 +1749,18 @@ void StartSearchFromCommandLine(MainWindow* win, Str text) {
     if (!win || len(text) == 0) {
         return;
     }
-    if (win->findEdit) {
-        win->findEdit->SetText(text);
-    }
     if (!win->IsDocLoaded()) {
         WindowTab* tab = win->CurrentTab();
         if (tab && tab->type == WindowTab::Type::Document) {
             str::ReplaceWithCopy(&tab->pendingFindText, text);
         }
         return;
+    }
+    // Command-line search should leave the same find UI visible as Ctrl+F,
+    // with the search term ready for another search or navigation (#6067).
+    ShowFindBar(win);
+    if (win->findEdit) {
+        win->findEdit->SetText(text);
     }
     if (DocController* browser = BrowserFindCtrl(win)) {
         BrowserFindStartSearch(win, browser);
