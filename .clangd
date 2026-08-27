@@ -47,6 +47,8 @@ Diagnostics:
     - modernize-macro-to-enum
     - bugprone-reserved-identifier
     - readability-named-parameter
+    - misc-multiple-inheritance
+    - readability-avoid-nested-conditional-operator
 ---
 # When editing a header under src/base/, force-include Base.h plus other
 # src/base/*.h not already included by Base.h (headers are not self-sufficient).
