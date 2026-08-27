@@ -197,7 +197,7 @@ struct AnnotPlacement {
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 /* Describes information related to one window with (optional) a document
    on the screen */
-struct MainWindow {
+struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     explicit MainWindow(HWND hwnd);
     MainWindow(const MainWindow&) = delete;
     MainWindow& operator=(const MainWindow&) = delete;
