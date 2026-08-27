@@ -204,7 +204,7 @@ void TabCtrl::SetBounds(Rect r) {
 // like Chrome: only the selected tab shows (and hit-tests) its ✕, so a click
 // on a non-selected tab always selects it and can't accidentally close it
 bool TabCtrl::CloseVisible() {
-    return ti->canClose && IsSelected();
+    return ti->canClose && (IsSelected() || IsUnderMouse());
 }
 
 void TabCtrl::Paint(VirtPaintCtx& ctx) {
@@ -276,10 +276,8 @@ void TabCtrl::OnMouseUp(VirtMouseEvent* ev) {
 // VirtRoot::UpdateTooltip shows this. A second TTF_SUBCLASS tooltip on the
 // tab HWND used to appear as well, so the tip showed twice.
 void TabCtrl::OnGetTooltip(VirtTooltipEvent* ev) {
-    if (!tabsCtrl || !tabsCtrl->withToolTips || !ti) {
-        return;
-    }
-    ev->tip = str::DupTemp(ti->tooltip);
+    // Disabled as per user request: no tooltips for tabs
+    return;
 }
 
 void TabCtrl::OnCloseClick(VirtMouseEvent*) {
