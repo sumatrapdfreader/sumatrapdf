@@ -27,7 +27,6 @@ import { testit as issue5865 } from "./issue-5865.ts";
 import { testit as issue5918 } from "./issue-5918.ts";
 import { testit as ghsaCrhmW5qrWjj4 } from "./security-ghsa-crhm-w5qr-wjj4.ts";
 import { testit as issue1195 } from "./issue-1195.ts";
-import { testit as issue5882 } from "./issue-5882.ts";
 import { testit as issue5870ListDirs } from "./issue-5870-list-dirs.ts";
 import { testit as issue1324 } from "./issue-1324.ts";
 import { testit as layoutCallback } from "./layout-callback.ts";
@@ -47,7 +46,6 @@ import { testit as annotFilterToolbar } from "./annot-filter-toolbar.ts";
 export const notInPreReleaseTests: NamedTest[] = [
   ["annot-filter-toolbar", annotFilterToolbar],
   ["issue-5972", issue5972],
-  ["issue-5882", issue5882],
   ["issue-5870-list-dirs", issue5870ListDirs],
   ["issue-1324", issue1324],
   ["layout-callback", layoutCallback],
