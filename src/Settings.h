@@ -595,70 +595,14 @@ struct FileEBookUI {
 
 // information about opened files (in most recently used order)
 struct FileState {
-    // path of the document
-    Str filePath;
     // pages of this document bookmarked in the Favorites menu
     Vec<Favorite*>* favorites;
-    // if true, the document is "pinned" to the Frequently Read list, so
-    // that recently opened documents don't displace it
-    bool isPinned;
-    // if true, the document can no longer be found. State worth keeping is
-    // still remembered, so the entry is hidden rather than removed
-    bool isMissing;
-    // how often the document was opened, halved every week so that the
-    // Frequently Read list reflects what's relevant now instead of what
-    // used to be opened a lot
-    int openCount;
-    // hex encoded MD5 fingerprint of the file content (32 chars) followed
-    // by the crypt key (64 chars); only applies to PDF documents
-    Str decryptionKey;
     // reflowable (ebook) settings for just this document. The block is
     // absent until you add it; a field left empty or 0 uses the global
     // EBookUI value. The global section's WindowBgCol and
     // DefaultDisplayMode are already per-document as BgCol and DisplayMode
     // below
     FileEBookUI* eBookUI;
-    // if true, this document opens with the global defaults instead of the
-    // values below
-    bool useDefaultState;
-    // how pages are laid out for this document. The string is the
-    // persisted form of DisplayModel::displayMode, so it's parsed after
-    // deserialization and written back before serialization
-    Str displayMode;
-    // how far this document has been scrolled (in x and y direction)
-    PointF scrollPos;
-    // number of the last read page
-    int pageNo;
-    // zoom (in %) or one of those values: fit page, fit width, fit height,
-    // fit content
-    Str zoom;
-    // how far pages have been rotated as a multiple of 90 degrees
-    int rotation;
-    // state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4
-    // is minimized
-    int windowState;
-    // default position (can be on any monitor)
-    Rect windowPos;
-    // if true, show the table of contents (Bookmarks) sidebar when the
-    // document has one
-    bool showToc;
-    // width of the bookmarks / favorites sidebar in screen pixels, as last
-    // resized
-    int sidebarDx;
-    // if true, the document is displayed right-to-left in facing and book
-    // view modes
-    bool displayR2L;
-    // if true, percentage zoom scales every page to the width page 1 has
-    // at that zoom level
-    bool uniformPageWidth;
-    // if given, overrides the background color for this document
-    ParsedColor bgCol;
-    // if given, overrides the tab color for this document
-    ParsedColor tabCol;
-    // index into an ebook's HTML data from which reparsing has to happen
-    // in order to restore the last viewed page (i.e. the equivalent of
-    // PageNo for the ebook UI)
-    int reparseIdx;
     // tocState is an array of ids for ToC items that have been toggled by
     // the user (i.e. aren't in their default expansion state). - Note: We
     // intentionally track toggle state as opposed to expansion state so
@@ -667,12 +611,68 @@ struct FileState {
     Vec<int>* tocState;
     // thumbnails are saved as PNG files in sumatrapdfcache directory
     Pixmap* thumbnail;
-    // temporary value needed for FileHistory::cmpOpenCount
-    int index;
     // image list holding the file's shell icon
     HIMAGELIST himl;
+    // path of the document
+    Str filePath;
+    // hex encoded MD5 fingerprint of the file content (32 chars) followed
+    // by the crypt key (64 chars); only applies to PDF documents
+    Str decryptionKey;
+    // how pages are laid out for this document. The string is the
+    // persisted form of DisplayModel::displayMode, so it's parsed after
+    // deserialization and written back before serialization
+    Str displayMode;
+    // zoom (in %) or one of those values: fit page, fit width, fit height,
+    // fit content
+    Str zoom;
+    // if given, overrides the background color for this document
+    ParsedColor bgCol;
+    // if given, overrides the tab color for this document
+    ParsedColor tabCol;
+    // how often the document was opened, halved every week so that the
+    // Frequently Read list reflects what's relevant now instead of what
+    // used to be opened a lot
+    int openCount;
+    // number of the last read page
+    int pageNo;
+    // how far pages have been rotated as a multiple of 90 degrees
+    int rotation;
+    // state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4
+    // is minimized
+    int windowState;
+    // width of the bookmarks / favorites sidebar in screen pixels, as last
+    // resized
+    int sidebarDx;
+    // index into an ebook's HTML data from which reparsing has to happen
+    // in order to restore the last viewed page (i.e. the equivalent of
+    // PageNo for the ebook UI)
+    int reparseIdx;
+    // temporary value needed for FileHistory::cmpOpenCount
+    int index;
     // index of the file's shell icon in Himl, -1 if not loaded yet
     int iconIdx;
+    // how far this document has been scrolled (in x and y direction)
+    PointF scrollPos;
+    // default position (can be on any monitor)
+    Rect windowPos;
+    // if true, the document is "pinned" to the Frequently Read list, so
+    // that recently opened documents don't displace it
+    bool isPinned;
+    // if true, the document can no longer be found. State worth keeping is
+    // still remembered, so the entry is hidden rather than removed
+    bool isMissing;
+    // if true, this document opens with the global defaults instead of the
+    // values below
+    bool useDefaultState;
+    // if true, show the table of contents (Bookmarks) sidebar when the
+    // document has one
+    bool showToc;
+    // if true, the document is displayed right-to-left in facing and book
+    // view modes
+    bool displayR2L;
+    // if true, percentage zoom scales every page to the width page 1 has
+    // at that zoom level
+    bool uniformPageWidth;
 };
 
 // a subset of FileState required for restoring the state of a single
@@ -1758,54 +1758,54 @@ static const StructInfo gRect_3_Info = {
     false};
 
 static const FieldInfo gFileStateFields[] = {
-    {offsetof(FileState, filePath), SettingType::String, 0},
     {offsetof(FileState, favorites), SettingType::Array, (intptr_t)&gFavoriteInfo},
-    {offsetof(FileState, isPinned), SettingType::Bool, false},
-    {offsetof(FileState, isMissing), SettingType::Bool, false},
-    {offsetof(FileState, openCount), SettingType::Int, 0},
-    {offsetof(FileState, decryptionKey), SettingType::String, 0},
     {offsetof(FileState, eBookUI), SettingType::StructPtr, (intptr_t)&gFileEBookUIInfo},
-    {offsetof(FileState, useDefaultState), SettingType::Bool, false},
+    {offsetof(FileState, tocState), SettingType::IntArray, 0},
+    {offsetof(FileState, filePath), SettingType::String, 0},
+    {offsetof(FileState, decryptionKey), SettingType::String, 0},
     {offsetof(FileState, displayMode), SettingType::String, (intptr_t)"automatic"},
-    {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_1_Info},
-    {offsetof(FileState, pageNo), SettingType::Int, 1},
     {offsetof(FileState, zoom), SettingType::String, (intptr_t)"fit page"},
-    {offsetof(FileState, rotation), SettingType::Int, 0},
-    {offsetof(FileState, windowState), SettingType::Int, 0},
-    {offsetof(FileState, windowPos), SettingType::Compact, (intptr_t)&gRect_3_Info},
-    {offsetof(FileState, showToc), SettingType::Bool, true},
-    {offsetof(FileState, sidebarDx), SettingType::Int, 0},
-    {offsetof(FileState, displayR2L), SettingType::Bool, false},
-    {offsetof(FileState, uniformPageWidth), SettingType::Bool, false},
     {offsetof(FileState, bgCol), SettingType::Color, (intptr_t)""},
     {offsetof(FileState, tabCol), SettingType::Color, (intptr_t)""},
+    {offsetof(FileState, openCount), SettingType::Int, 0},
+    {offsetof(FileState, pageNo), SettingType::Int, 1},
+    {offsetof(FileState, rotation), SettingType::Int, 0},
+    {offsetof(FileState, windowState), SettingType::Int, 0},
+    {offsetof(FileState, sidebarDx), SettingType::Int, 0},
     {offsetof(FileState, reparseIdx), SettingType::Int, 0},
-    {offsetof(FileState, tocState), SettingType::IntArray, 0},
+    {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_1_Info},
+    {offsetof(FileState, windowPos), SettingType::Compact, (intptr_t)&gRect_3_Info},
+    {offsetof(FileState, isPinned), SettingType::Bool, false},
+    {offsetof(FileState, isMissing), SettingType::Bool, false},
+    {offsetof(FileState, useDefaultState), SettingType::Bool, false},
+    {offsetof(FileState, showToc), SettingType::Bool, true},
+    {offsetof(FileState, displayR2L), SettingType::Bool, false},
+    {offsetof(FileState, uniformPageWidth), SettingType::Bool, false},
 };
 static StructInfo gFileStateInfo = {
     sizeof(FileState),
     23,
     gFileStateFields,
-    "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0EBookUI\0UseDefaultState\0DisplayMode\0ScrollP"
-    "os\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0UniformPageWidth\0BgCol\0TabCo"
-    "l\0ReparseIdx\0TocState",
-    "path of the document\0pages of this document bookmarked in the Favorites menu\0if true, the document is "
-    "\"pinned\" to the Frequently Read list, so that recently opened documents don't displace it\0if true, the file is "
-    "considered missing and won't be shown in any list\0number of times this document has been opened recently\0data "
-    "required to open a password protected document without having to ask for the password again\0reflowable (ebook) "
-    "settings for just this document. The block is absent until you add it; a field left empty or 0 uses the global "
-    "EBookUI value. The global section's WindowBgCol and DefaultDisplayMode are already per-document as BgCol and "
-    "DisplayMode below\0if true, this document opens with the global defaults instead of the values below\0layout of "
-    "pages. valid values: automatic, single page, facing, book view, continuous, continuous facing, continuous book "
-    "view\0how far this document has been scrolled (in x and y direction)\0number of the last read page\0zoom (in %) "
-    "or one of those values: fit page, fit width, fit height, fit content\0how far pages have been rotated as a "
-    "multiple of 90 degrees\0state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is "
-    "minimized\0default position (can be on any monitor)\0if true, show the table of contents (Bookmarks) sidebar when "
-    "the document has one\0width of the bookmarks / favorites sidebar in screen pixels, as last resized\0if true, the "
-    "document is displayed right-to-left in facing and book view modes\0if true, percentage zoom scales every page to "
-    "the width page 1 has at that zoom level\0if given, overrides the background color for this document\0if given, "
-    "overrides the tab color for this document\0data required to restore the last read page in the ebook UI\0data "
-    "required to determine which parts of the table of contents have been expanded",
+    "Favorites\0EBookUI\0TocState\0FilePath\0DecryptionKey\0DisplayMode\0Zoom\0BgCol\0TabCol\0OpenCount\0PageNo\0Rotati"
+    "on\0WindowState\0SidebarDx\0ReparseIdx\0ScrollPos\0WindowPos\0IsPinned\0IsMissing\0UseDefaultState\0ShowToc\0Displ"
+    "ayR2L\0UniformPageWidth",
+    "pages of this document bookmarked in the Favorites menu\0reflowable (ebook) settings for just this document. The "
+    "block is absent until you add it; a field left empty or 0 uses the global EBookUI value. The global section's "
+    "WindowBgCol and DefaultDisplayMode are already per-document as BgCol and DisplayMode below\0data required to "
+    "determine which parts of the table of contents have been expanded\0path of the document\0data required to open a "
+    "password protected document without having to ask for the password again\0layout of pages. valid values: "
+    "automatic, single page, facing, book view, continuous, continuous facing, continuous book view\0zoom (in %) or "
+    "one of those values: fit page, fit width, fit height, fit content\0if given, overrides the background color for "
+    "this document\0if given, overrides the tab color for this document\0number of times this document has been opened "
+    "recently\0number of the last read page\0how far pages have been rotated as a multiple of 90 degrees\0state of the "
+    "window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0width of the bookmarks / favorites sidebar "
+    "in screen pixels, as last resized\0data required to restore the last read page in the ebook UI\0how far this "
+    "document has been scrolled (in x and y direction)\0default position (can be on any monitor)\0if true, the "
+    "document is \"pinned\" to the Frequently Read list, so that recently opened documents don't displace it\0if true, "
+    "the file is considered missing and won't be shown in any list\0if true, this document opens with the global "
+    "defaults instead of the values below\0if true, show the table of contents (Bookmarks) sidebar when the document "
+    "has one\0if true, the document is displayed right-to-left in facing and book view modes\0if true, percentage zoom "
+    "scales every page to the width page 1 has at that zoom level",
     false};
 
 static const FieldInfo gPointF_2_Fields[] = {

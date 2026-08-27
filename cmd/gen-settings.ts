@@ -1010,6 +1010,39 @@ const fileSettings: Field[] = [
   field("IconIdx", Int, -1, "index of the file's shell icon in Himl, -1 if not loaded yet").notSaved(),
 ];
 
+// Keep the frequently repeated FileState instances compact: pointers and
+// strings first, followed by scalar values and finally the bools.
+const fileStateLayout = [
+  "Favorites",
+  "EBookUI",
+  "TocState",
+  "Thumbnail",
+  "Himl",
+  "FilePath",
+  "DecryptionKey",
+  "DisplayMode",
+  "Zoom",
+  "BgCol",
+  "TabCol",
+  "OpenCount",
+  "PageNo",
+  "Rotation",
+  "WindowState",
+  "SidebarDx",
+  "ReparseIdx",
+  "Index",
+  "IconIdx",
+  "ScrollPos",
+  "WindowPos",
+  "IsPinned",
+  "IsMissing",
+  "UseDefaultState",
+  "ShowToc",
+  "DisplayR2L",
+  "UniformPageWidth",
+];
+fileSettings.sort((a, b) => fileStateLayout.indexOf(a.Name) - fileStateLayout.indexOf(b.Name));
+
 const tabState: Field[] = [
   field("FilePath", Str, null, "path of the document"),
   field(

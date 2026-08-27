@@ -1037,9 +1037,6 @@ HelpWindowPos = 0 0 0 0
 ; information about opened files (in most recently used order)
 FileStates [
   [
-    ; path of the document
-    FilePath =
-
     ; pages of this document bookmarked in the Favorites menu
     Favorites [
       [
@@ -1062,20 +1059,6 @@ FileStates [
         IsTemporary = false
       ]
     ]
-
-    ; if true, the document is "pinned" to the Frequently Read list, so that
-    ; recently opened documents don't displace it
-    IsPinned = false
-
-    ; if true, the file is considered missing and won't be shown in any list
-    IsMissing = false
-
-    ; number of times this document has been opened recently
-    OpenCount = 0
-
-    ; data required to open a password protected document without having to ask
-    ; for the password again
-    DecryptionKey =
 
     ; reflowable (ebook) settings for just this document. The block is absent
     ; until you add it; a field left empty or 0 uses the global EBookUI value.
@@ -1116,49 +1099,24 @@ FileStates [
         CustomCSS = 
     ]
 
-    ; if true, this document opens with the global defaults instead of the
-    ; values below
-    UseDefaultState = false
+    ; data required to determine which parts of the table of contents have been
+    ; expanded
+    TocState =
+
+    ; path of the document
+    FilePath =
+
+    ; data required to open a password protected document without having to ask
+    ; for the password again
+    DecryptionKey =
 
     ; layout of pages. valid values: automatic, single page, facing, book view,
     ; continuous, continuous facing, continuous book view
     DisplayMode = automatic
 
-    ; how far this document has been scrolled (in x and y direction)
-    ScrollPos = 0 0
-
-    ; number of the last read page
-    PageNo = 1
-
     ; zoom (in %) or one of those values: fit page, fit width, fit height, fit
     ; content
     Zoom = fit page
-
-    ; how far pages have been rotated as a multiple of 90 degrees
-    Rotation = 0
-
-    ; state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is
-    ; minimized
-    WindowState = 0
-
-    ; default position (can be on any monitor)
-    WindowPos = 0 0 0 0
-
-    ; if true, show the table of contents (Bookmarks) sidebar when the document
-    ; has one
-    ShowToc = true
-
-    ; width of the bookmarks / favorites sidebar in screen pixels, as last
-    ; resized
-    SidebarDx = 0
-
-    ; if true, the document is displayed right-to-left in facing and book view
-    ; modes
-    DisplayR2L = false
-
-    ; if true, percentage zoom scales every page to the width page 1 has at that
-    ; zoom level (introduced in version 3.7)
-    UniformPageWidth = false
 
     ; if given, overrides the background color for this document (introduced in
     ; version 3.7)
@@ -1168,12 +1126,54 @@ FileStates [
     ; 3.7)
     TabCol = 
 
+    ; number of times this document has been opened recently
+    OpenCount = 0
+
+    ; number of the last read page
+    PageNo = 1
+
+    ; how far pages have been rotated as a multiple of 90 degrees
+    Rotation = 0
+
+    ; state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is
+    ; minimized
+    WindowState = 0
+
+    ; width of the bookmarks / favorites sidebar in screen pixels, as last
+    ; resized
+    SidebarDx = 0
+
     ; data required to restore the last read page in the ebook UI
     ReparseIdx = 0
 
-    ; data required to determine which parts of the table of contents have been
-    ; expanded
-    TocState =
+    ; how far this document has been scrolled (in x and y direction)
+    ScrollPos = 0 0
+
+    ; default position (can be on any monitor)
+    WindowPos = 0 0 0 0
+
+    ; if true, the document is "pinned" to the Frequently Read list, so that
+    ; recently opened documents don't displace it
+    IsPinned = false
+
+    ; if true, the file is considered missing and won't be shown in any list
+    IsMissing = false
+
+    ; if true, this document opens with the global defaults instead of the
+    ; values below
+    UseDefaultState = false
+
+    ; if true, show the table of contents (Bookmarks) sidebar when the document
+    ; has one
+    ShowToc = true
+
+    ; if true, the document is displayed right-to-left in facing and book view
+    ; modes
+    DisplayR2L = false
+
+    ; if true, percentage zoom scales every page to the width page 1 has at that
+    ; zoom level (introduced in version 3.7)
+    UniformPageWidth = false
   ]
 ]
 
