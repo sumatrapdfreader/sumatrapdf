@@ -115,6 +115,9 @@ static ToolbarButtonInfo gPdfAnnotationButtons[] = {
     {gIconAnnotStamp, CmdCreateAnnotStamp, _TRN("Stamp")},
     {gIconAnnotCaret, CmdCreateAnnotCaret, _TRN("Caret")},
     {gIconAnnotFileAttachment, CmdCreateAnnotFileAttachment, _TRN("File Attachment")},
+    {nullptr, 0, {}},
+    {gIconUndo, CmdUndo, _TRN("Undo")},
+    {gIconRedo, CmdRedo, _TRN("Redo")},
 };
 
 constexpr int kPdfAnnotationButtonsCount = dimof(gPdfAnnotationButtons);

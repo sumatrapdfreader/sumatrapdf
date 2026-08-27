@@ -196,6 +196,12 @@ class EngineMupdf : public EngineBase {
     // the same annotation, we should be back to 0
     bool modifiedAnnotations = false;
 
+    // how many journal operations we have open (see EngineMupdfBeginOperation).
+    // MuPDF can't undo / redo while one is, e.g. during a resize drag
+    int journalNesting = 0;
+    // position in the undo history the file was last saved at
+    int savedUndoPos = 0;
+
     // smart dark mode: engine-level image feature/processed caches
     DarkModeEngineCache* darkModeEngineCache = nullptr;
 
@@ -254,3 +260,16 @@ RectF ToRectF(fz_rect rect);
 void MarkNotificationAsModified(EngineMupdf*, Annotation*);
 void MarkNotificationAsModified(EngineMupdf*, Annotation*, AnnotationChange);
 Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo);
+int EngineMupdfUndoPos(EngineMupdf* e, int* stepsOut);
+void EngineMupdfBeginOperation(EngineBase*, const char* name);
+void EngineMupdfEndOperation(EngineBase*);
+
+// Everything changed while this is alive becomes one undo step. Use it for a
+// gesture that makes several changes (creating an annotation sets its geometry,
+// colors and contents; a resize drag writes on every mouse move).
+struct ScopedEngineOperation {
+    EngineBase* engine = nullptr;
+
+    ScopedEngineOperation(EngineBase* e, const char* name) : engine(e) { EngineMupdfBeginOperation(e, name); }
+    ~ScopedEngineOperation() { EngineMupdfEndOperation(engine); }
+};

@@ -1877,6 +1877,18 @@ EXPORTS
 
 	pdf_count_signatures
 
+	pdf_enable_journal
+
+	pdf_begin_operation
+
+	pdf_end_operation
+
+	pdf_undoredo_state
+
+	pdf_undo
+
+	pdf_redo
+
 	pdf_first_widget
 
 	pdf_next_widget

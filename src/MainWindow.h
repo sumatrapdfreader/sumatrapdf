@@ -639,6 +639,9 @@ struct MainWindow {
     IPageElement* linkOnLastButtonDown = nullptr;
     Str urlOnLastButtonDown;
     Annotation* annotationUnderCursor = nullptr;
+    // a gesture that writes to the PDF as it goes (a resize drag) has a journal
+    // operation open, so Undo takes the whole gesture back in one step
+    bool pdfEditOperationActive = false;
     RefHoverState* refHover = nullptr;
     // highlight rectangle for element under cursor during context menu (in page coordinates)
     RectF contextMenuHighlightRect;

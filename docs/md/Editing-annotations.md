@@ -80,6 +80,12 @@ Delete the selected annotation with `Delete`, or with **Delete Annotation** in t
 
 Only annotations that can be moved can be copied. Text markup (highlight, underline, squiggly, strike-out) is anchored to the text it covers, so it can't be copied and pasted elsewhere. Neither can file attachments, whose embedded file isn't copied.
 
+## Undo and redo
+
+`Ctrl + Z` takes back the last change to the PDF, `Ctrl + Shift + Z` re-applies it. The two buttons at the end of the Edit PDF toolbar do the same and are greyed out when there is nothing to step to.
+
+One gesture is one step: creating an annotation also sets its color, size and contents, and a resize drag rewrites it as the mouse moves, but a single `Ctrl + Z` takes all of it back. The history covers everything that changes the document, not just annotations, and goes back to the state the file was opened (or last saved) in — undoing every change makes the document count as unmodified again.
+
 ## Moving annotations
 
 To move an annotation on the page, left-click it and drag it in Edit PDF mode.

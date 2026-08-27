@@ -623,6 +623,10 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
         }
         out.Append(fmt("page1text=%s\n", ToStrTemp(collapsed)));
     }
+    int canUndo = EngineMupdfCanUndo(engine) ? 1 : 0;
+    int canRedo = EngineMupdfCanRedo(engine) ? 1 : 0;
+    int modified = EngineHasUnsavedAnnotations(engine) ? 1 : 0;
+    out.Append(fmt("undo canUndo=%d canRedo=%d modified=%d\n", canUndo, canRedo, modified));
     bool hasNotification = GetNotificationForGroup(gWindows[0]->hwndCanvas, kNotifAnnotation) != nullptr;
     bool selectedHover = tab->selectedAnnotation && tab->selectedAnnotation == gWindows[0]->annotationUnderCursor;
     out.Append(fmt("state selected=%d hover=%d editToolbar=%d notification=%d selectedHover=%d\n",

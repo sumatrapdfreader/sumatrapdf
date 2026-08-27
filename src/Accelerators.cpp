@@ -75,6 +75,8 @@ static ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, VK_INSERT, CmdCopySelection},
     {FCONTROL | FVIRTKEY, 'V', CmdPasteClipboardImage},
     {FCONTROL | FVIRTKEY, 'X', CmdCutAnnotation},
+    {FCONTROL | FVIRTKEY, 'Z', CmdUndo},
+    {FSHIFT | FCONTROL | FVIRTKEY, 'Z', CmdRedo},
     {FCONTROL | FVIRTKEY, 'D', CmdProperties},
     {FCONTROL | FVIRTKEY, 'F', CmdFindFirst},
     {FCONTROL | FVIRTKEY, 'G', CmdGoToPage},

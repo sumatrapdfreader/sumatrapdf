@@ -236,6 +236,8 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdCutAnnotation,
     CmdCopyAnnotation,
     CmdPasteAnnotation,
+    CmdUndo,
+    CmdRedo,
     0,
 };
 
@@ -422,6 +424,8 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.supportsAnnots = EngineSupportsAnnotations(engine) && !win->isFullScreen;
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
         ctx.hasRedactMarks = EngineHasRedactMarks(engine);
+        ctx.canUndo = EngineMupdfCanUndo(engine);
+        ctx.canRedo = EngineMupdfCanRedo(engine);
         int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
         if (pageNoUnderCursor > 0) {
             ctx.isCursorOnPage = true;
@@ -721,6 +725,11 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if (!ctx.annotationUnderCursor && cmdId == CmdDeleteAnnotation) {
         return CommandVisibility::Disable;
+    }
+
+    if (cmdId == CmdUndo || cmdId == CmdRedo) {
+        bool can = (cmdId == CmdUndo) ? ctx.canUndo : ctx.canRedo;
+        return can ? CommandVisibility::Show : CommandVisibility::Disable;
     }
 
     if (cmdId == CmdCopyAnnotation || cmdId == CmdCutAnnotation) {

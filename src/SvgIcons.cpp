@@ -201,6 +201,22 @@ const char* gIconNavigateForward =
   <path d="M19 10h-11a4 4 0 1 0 0 8h1" />
 </svg>)";
 
+// undo / redo: like tabler arrow-back-up / arrow-forward-up, but with a wider
+// loop and a longer tail so they don't read as the toolbar's Back / Forward
+const char* gIconUndo =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <path d="M9 13l-5 -4l5 -4" />
+  <path d="M4 9h10a5 5 0 0 1 0 10h-6" />
+</svg>)";
+
+const char* gIconRedo =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <path d="M15 13l5 -4l-5 -4" />
+  <path d="M20 9h-10a5 5 0 0 0 0 10h6" />
+</svg>)";
+
 // https://github.com/tabler/tabler-icons/blob/master/icons/search.svg
 const char* gIconSearch =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">

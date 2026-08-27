@@ -95,6 +95,8 @@ extern Func1<MainWindow*> gAfterLayout;
 // tells the frame's virtual tree which splitters exist (they are created
 // with their panes)
 void FrameSyncSplitters(MainWindow*);
+void BeginPdfEditOperation(MainWindow*, const char* name);
+void EndPdfEditOperation(MainWindow*);
 struct NotificationWnd;
 struct RenderCache;
 struct WindowTab;

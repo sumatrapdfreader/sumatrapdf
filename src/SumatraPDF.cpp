@@ -2766,6 +2766,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     // manual reload is about to replace the document with an error page).
     InvalidateEditAnnotationsOnEngineChange(tab);
     tab->selectedAnnotation = nullptr;
+    EndPdfEditOperation(win);
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
     win->annotationUnderCursor = nullptr;
@@ -5045,6 +5046,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     AbortFinding(win, true);
 
     ClearMouseState(win);
+    EndPdfEditOperation(win);
     win->annotationUnderCursor = nullptr;
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
@@ -9580,9 +9582,9 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     LaunchBrowser(uri);
 }
 
-// Ctrl+C / Ctrl+X are app accelerators, so they fire even while a text box has
-// the focus. Hand the message to the edit control instead of taking it.
-static bool ForwardClipboardMsgToFocusedEditControl(UINT msg) {
+// Ctrl+C / Ctrl+X / Ctrl+Z are app accelerators, so they fire even while a text
+// box has the focus. Hand the message to the edit control instead of taking it.
+static bool ForwardEditMsgToFocusedEditControl(UINT msg) {
     HWND focus = GetFocus();
     if (!focus) {
         return false;
@@ -9657,7 +9659,7 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
     if (!tab || !tab->win) {
         return;
     }
-    if (ForwardClipboardMsgToFocusedEditControl(WM_COPY)) {
+    if (ForwardEditMsgToFocusedEditControl(WM_COPY)) {
         return;
     }
     if (!HasPermission(Perm::CopySelection)) {
@@ -10787,10 +10789,14 @@ static Annotation* TryPasteCopiedAnnotation(MainWindow* win, WindowTab* tab, Dis
         }
     }
     PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
+    // pasting a cut annotation is a move: the new annotation and the delete of
+    // the original make one undo step
+    EngineMupdfBeginOperation(engine, "Paste annotation");
     Annotation* pasted = PasteCopiedAnnotation(engine, pageNoUnderCursor, ptOnPage);
     if (pasted) {
         DeleteCutAnnotationAfterPaste();
     }
+    EngineMupdfEndOperation(engine);
     return pasted;
 }
 
@@ -10968,8 +10974,8 @@ static bool ConfirmApplyRedactions(HWND hwndParent) {
     s = _TRA("Permanently remove marked content?");
     dialogConfig.pszMainInstruction = CWStrTemp(s);
     s = _TRA(
-        "This cannot be undone. Text and images under the marks are deleted from the file. Save a copy if you need "
-        "the unredacted document.");
+        "Text and images under the marks are deleted from the file. Undo can take this back until you save. Save a "
+        "copy if you need the unredacted document.");
     dialogConfig.pszContent = CWStrTemp(s);
     dialogConfig.nDefaultButton = IDCANCEL;
     dialogConfig.dwFlags = (TASKDIALOG_FLAGS)flags;
@@ -10984,6 +10990,83 @@ static bool ConfirmApplyRedactions(HWND hwndParent) {
     int buttonPressedId = 0;
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
     return hr == S_OK && buttonPressedId == IDOK;
+}
+
+// A gesture that writes to the document as it goes (a resize drag writes the
+// annotation on every mouse move) should still be a single undo step, so it
+// holds one journal operation open from start to end. Both calls are safe to
+// make when there is nothing open, which keeps the many ways a gesture can end
+// (mouse up, Esc, the annotation deleted, the document closed) from leaking it.
+void BeginPdfEditOperation(MainWindow* win, const char* name) {
+    if (!win || win->pdfEditOperationActive) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine || !EngineSupportsAnnotations(engine)) {
+        return;
+    }
+    EngineMupdfBeginOperation(engine, name);
+    win->pdfEditOperationActive = true;
+}
+
+void EndPdfEditOperation(MainWindow* win) {
+    if (!win || !win->pdfEditOperationActive) {
+        return;
+    }
+    win->pdfEditOperationActive = false;
+    DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (engine) {
+        EngineMupdfEndOperation(engine);
+    }
+}
+
+// Step the document's edit history. MuPDF restores the objects; every wrapper,
+// selection and cached rendering that pointed at the old state has to go.
+static void UndoRedoInTab(WindowTab* tab, bool redo) {
+    if (!tab) {
+        return;
+    }
+    MainWindow* win = tab->win;
+    DisplayModel* dm = tab->AsFixed();
+    if (!win || !dm) {
+        return;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || !EngineSupportsAnnotations(engine)) {
+        return;
+    }
+    bool can = redo ? EngineMupdfCanRedo(engine) : EngineMupdfCanUndo(engine);
+    if (!can) {
+        return;
+    }
+
+    // an in-flight placement or drag would write to what we are about to undo
+    CancelAnnotationPlacement(win);
+    CancelDrag(win);
+    SetSelectedAnnotation(tab, nullptr);
+    if (gRenderCache) {
+        gRenderCache->AbortRendering(dm);
+    }
+
+    Vec<Annotation*> removed;
+    bool ok = redo ? EngineMupdfRedo(engine, removed) : EngineMupdfUndo(engine, removed);
+    for (Annotation* a : removed) {
+        DetachAnnotationFromUI(a);
+        DeleteAnnotation(a);
+    }
+    // the wrapper deletes above mark the document modified; the journal knows better
+    EngineMupdfRefreshModifiedState(engine);
+    DeleteOldSelectionInfo(win, true);
+    RefreshAnnotationLists(tab);
+    NotifyAnnotationsChanged(tab);
+    ToolbarUpdateStateForWindow(win, true);
+    MainWindowRerender(win, true);
+    if (!ok) {
+        ShowWarningNotification(win->hwndCanvas, redo ? _TRA("Nothing to redo") : _TRA("Nothing to undo"),
+                                kNotif5SecsTimeOut);
+    }
 }
 
 static void ApplyRedactionsInTab(WindowTab* tab) {
@@ -11028,7 +11111,7 @@ static void ApplyRedactionsInTab(WindowTab* tab) {
         return;
     }
     MainWindowRerender(win);
-    ShowTemporaryNotification(win->hwndCanvas, _TRA("Redactions applied. Save the file. This cannot be undone."),
+    ShowTemporaryNotification(win->hwndCanvas, _TRA("Redactions applied. Saving the file makes them permanent."),
                               kNotif5SecsTimeOut);
 }
 
@@ -12216,9 +12299,21 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             CopyOrCutAnnotationInTab(tab, lp, /* cut */ false);
             break;
 
+        case CmdUndo:
+            // Ctrl+Z in a text box is that box's undo, not ours
+            if (ForwardEditMsgToFocusedEditControl(WM_UNDO)) {
+                return 0;
+            }
+            UndoRedoInTab(tab, /* redo */ false);
+            break;
+
+        case CmdRedo:
+            UndoRedoInTab(tab, /* redo */ true);
+            break;
+
         case CmdCutAnnotation:
             // Ctrl+X in a text box is that box's cut, not ours
-            if (ForwardClipboardMsgToFocusedEditControl(WM_CUT)) {
+            if (ForwardEditMsgToFocusedEditControl(WM_CUT)) {
                 return 0;
             }
             CopyOrCutAnnotationInTab(tab, lp, /* cut */ true);

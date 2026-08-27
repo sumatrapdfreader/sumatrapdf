@@ -4322,6 +4322,17 @@ bool EngineMupdf::FinishLoading() {
     if (pdfdoc) {
         // allow loading external-file image streams from next to the PDF (#3731)
         pdf_set_load_external_stream_fn(ctx, pdfdoc, EngineMupdfLoadExternalStream, this);
+        // records every change so Undo / Redo can step through them. From here
+        // on MuPDF throws on a change made outside an operation, so anything
+        // that edits the document goes through EngineMupdfBeginOperation()
+        // (MuPDF's own annotation setters begin one themselves).
+        fz_try(ctx) {
+            pdf_enable_journal(ctx, pdfdoc);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("FinishLoading: pdf_enable_journal() failed\n");
+        }
     }
 
     pageCount = 0;
@@ -7907,6 +7918,8 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
     // note: this should be short-lived as we should re-load the file
     if (ok) {
         epdf->modifiedAnnotations = false;
+        // undoing back to here means the file on disk matches again
+        epdf->savedUndoPos = EngineMupdfUndoPos(epdf, nullptr);
     }
     return ok;
 }
@@ -8467,6 +8480,224 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
         e->modifiedAnnotations = true;
     }
     return any;
+}
+
+//--- Undo / redo, on top of MuPDF's journal (see pdf_enable_journal)
+
+// Where we are in the undo history: 0 is the document as it was loaded,
+// *stepsOut is the number of recorded steps. -1 if the document isn't
+// journalled or MuPDF refused to answer (it does while an operation is open).
+int EngineMupdfUndoPos(EngineMupdf* e, int* stepsOut) {
+    if (stepsOut) {
+        *stepsOut = 0;
+    }
+    if (!e || !e->pdfdoc || e->journalNesting > 0) {
+        return -1;
+    }
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex docScope(&e->docLock);
+    int steps = 0;
+    int pos = -1;
+    fz_try(ctx) {
+        pos = pdf_undoredo_state(ctx, e->pdfdoc, &steps);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        pos = -1;
+    }
+    if (stepsOut && pos >= 0) {
+        *stepsOut = steps;
+    }
+    return pos;
+}
+
+// One operation is one undo step. MuPDF's annotation setters open one
+// themselves, so this is for grouping a whole gesture (create, paste, a resize
+// drag that writes on every mouse move) into a single step. Nested operations
+// fold into the outermost one. Must be paired with EngineMupdfEndOperation().
+void EngineMupdfBeginOperation(EngineBase* engine, const char* name) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        return;
+    }
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex docScope(&e->docLock);
+    fz_try(ctx) {
+        pdf_begin_operation(ctx, e->pdfdoc, name);
+        e->journalNesting++;
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+}
+
+void EngineMupdfEndOperation(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc || e->journalNesting <= 0) {
+        return;
+    }
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex docScope(&e->docLock);
+    fz_try(ctx) {
+        pdf_end_operation(ctx, e->pdfdoc);
+        e->journalNesting--;
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        e->journalNesting--;
+    }
+}
+
+bool EngineMupdfCanUndo(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    int pos = EngineMupdfUndoPos(e, nullptr);
+    return pos > 0;
+}
+
+bool EngineMupdfCanRedo(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    int steps = 0;
+    int pos = EngineMupdfUndoPos(e, &steps);
+    return pos >= 0 && pos < steps;
+}
+
+static Annotation* FindWrapperForPdfAnnot(const Vec<Annotation*>& annots, pdf_annot* a) {
+    for (Annotation* w : annots) {
+        if (w && w->pdfannot == a) {
+            return w;
+        }
+    }
+    return nullptr;
+}
+
+// Rebuild `wrappers` so it matches `live`, in page order: keep the wrapper of
+// an annotation that is still there, make one for an annotation that (re)appeared
+// and hand back the ones whose pdf_annot MuPDF freed.
+static void ResyncWrapperList(EngineMupdf* e, int pageNo, Vec<Annotation*>& wrappers, const Vec<pdf_annot*>& live,
+                              Vec<Annotation*>& removedOut) {
+    Vec<Annotation*> res;
+    for (pdf_annot* a : live) {
+        Annotation* w = FindWrapperForPdfAnnot(wrappers, a);
+        if (!w) {
+            w = MakeAnnotationWrapper(e, a, pageNo);
+            if (!w) {
+                continue;
+            }
+        }
+        res.Append(w);
+    }
+    for (Annotation* w : wrappers) {
+        if (!w || res.Contains(w)) {
+            continue;
+        }
+        // its pdf_annot is gone; the wrapper must not reach MuPDF again
+        w->pdfannot = nullptr;
+        removedOut.Append(w);
+    }
+    wrappers = res;
+}
+
+// Undo / redo restores objects under our feet: MuPDF re-syncs each open page,
+// which frees the pdf_annot of an annotation that went away and makes a fresh
+// one for an annotation that came back. Bring our wrappers in line and drop
+// every cached rendering of the page.
+static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut) {
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex pagesScope(&e->pagesLock);
+    ScopedMutex renderScope(&e->renderLock);
+    for (FzPageInfo* pi : e->pages) {
+        if (!pi || !pi->page) {
+            continue;
+        }
+        if (pi->annotsLoaded) {
+            Vec<pdf_annot*> liveAnnots;
+            Vec<pdf_annot*> liveWidgets;
+            {
+                ScopedRecursiveMutex docScope(&e->docLock);
+                fz_try(ctx) {
+                    pdf_page* page = pdf_page_from_fz_page(ctx, pi->page);
+                    for (pdf_annot* a = page ? pdf_first_annot(ctx, page) : nullptr; a; a = pdf_next_annot(ctx, a)) {
+                        liveAnnots.Append(a);
+                    }
+                    for (pdf_annot* a = page ? pdf_first_widget(ctx, page) : nullptr; a; a = pdf_next_widget(ctx, a)) {
+                        liveWidgets.Append(a);
+                    }
+                }
+                fz_catch(ctx) {
+                    fz_report_error(ctx);
+                    continue;
+                }
+            }
+            ResyncWrapperList(e, pi->pageNo, pi->annotations, liveAnnots, removedOut);
+            ResyncWrapperList(e, pi->pageNo, pi->widgets, liveWidgets, removedOut);
+            {
+                ScopedRecursiveMutex docScope(&e->docLock);
+                RebuildCommentsFromAnnotations(ctx, pi);
+            }
+        }
+        InvalidateFzPageAfterContentChange(e, pi);
+        e->InvalidateTextForPage(pi->pageNo);
+    }
+}
+
+// Step one operation back (or forward with redo). Returns false if there was
+// nothing to step to. The wrappers in removedOut are detached from the document
+// already; the caller must take them out of the UI and delete them.
+static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>& removedOut) {
+    removedOut.Reset();
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        return false;
+    }
+    bool can = redo ? EngineMupdfCanRedo(engine) : EngineMupdfCanUndo(engine);
+    if (!can) {
+        return false;
+    }
+    auto* ctx = e->Ctx();
+    bool ok = false;
+    {
+        ScopedRecursiveMutex docScope(&e->docLock);
+        fz_try(ctx) {
+            if (redo) {
+                pdf_redo(ctx, e->pdfdoc);
+            } else {
+                pdf_undo(ctx, e->pdfdoc);
+            }
+            ok = true;
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("EngineMupdfUndoRedo: pdf_%s() failed\n", redo ? StrL("redo") : StrL("undo"));
+        }
+    }
+    if (!ok) {
+        return false;
+    }
+    SyncPagesAfterUndoRedo(e, removedOut);
+    return true;
+}
+
+bool EngineMupdfUndo(EngineBase* engine, Vec<Annotation*>& removedOut) {
+    return EngineMupdfUndoRedo(engine, false, removedOut);
+}
+
+bool EngineMupdfRedo(EngineBase* engine, Vec<Annotation*>& removedOut) {
+    return EngineMupdfUndoRedo(engine, true, removedOut);
+}
+
+// The journal knows exactly whether the document differs from the file, which
+// the modifiedAnnotations flag can only approximate (it stays set after the
+// change that set it is undone). Call after undo / redo.
+void EngineMupdfRefreshModifiedState(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        return;
+    }
+    int pos = EngineMupdfUndoPos(e, nullptr);
+    if (pos < 0) {
+        return;
+    }
+    e->modifiedAnnotations = (pos != e->savedUndoPos);
 }
 
 // the mupdf engine also renders epub, mobi, fb2, xps, svg and more; only a real

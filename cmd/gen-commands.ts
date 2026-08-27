@@ -299,6 +299,8 @@ export const commands = [
     "CmdConfigurePageGrid", "Configure Page Grid...",
     "CmdToggleEditPDF", "Toggle Edit PDF",
     "CmdApplyRedactions", "Apply Redactions",
+    "CmdUndo", "Undo",
+    "CmdRedo", "Redo",
     "CmdCutAnnotation", "Cut Annotation",
     "CmdCopyAnnotation", "Copy Annotation",
     "CmdPasteAnnotation", "Paste Annotation",

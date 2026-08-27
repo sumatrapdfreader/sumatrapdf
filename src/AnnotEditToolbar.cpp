@@ -1527,6 +1527,7 @@ void DetachAnnotationFromUI(Annotation* annot) {
     CancelFormFieldEditIfWidget(annot);
     for (MainWindow* win : gWindows) {
         if (win->annotationBeingDragged == annot) {
+            EndPdfEditOperation(win);
             win->annotationBeingDragged = nullptr;
             win->annotationBeingResized = false;
         }

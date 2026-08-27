@@ -51,6 +51,8 @@ struct AppCommandCtx {
     bool supportsAnnots = false;
     bool hasUnsavedAnnotations = false;
     bool hasRedactMarks = false;
+    bool canUndo = false;
+    bool canRedo = false;
 
     int nTabs = 0;
     bool hasDocTabs = false;

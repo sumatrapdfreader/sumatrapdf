@@ -109,6 +109,14 @@ void EngineMupdfCancelLoadAllAnnotations(EngineBase*);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfHasRedactMarks(EngineBase*);
 bool EngineMupdfApplyRedactions(EngineBase*, Vec<Annotation*>& deletedOut);
+void EngineMupdfBeginOperation(EngineBase*, const char* name);
+void EngineMupdfEndOperation(EngineBase*);
+bool EngineMupdfCanUndo(EngineBase*);
+bool EngineMupdfCanRedo(EngineBase*);
+bool EngineMupdfUndo(EngineBase*, Vec<Annotation*>& removedOut);
+bool EngineMupdfRedo(EngineBase*, Vec<Annotation*>& removedOut);
+void EngineMupdfRefreshModifiedState(EngineBase*);
+
 bool EngineMupdfSupportsAnnotations(EngineBase*);
 bool EngineMupdfIsPdf(EngineBase* engine);
 bool EngineMupdfIsEncrypted(EngineBase* engine);

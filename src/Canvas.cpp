@@ -2076,6 +2076,8 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
 
 static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt, ResizeHandle handle) {
     CancelAnnotationResizeRerender(win);
+    // the drag rewrites the annotation on every mouse move; one undo step
+    BeginPdfEditOperation(win, "Resize annotation");
     win->annotationBeingDragged = annot;
     win->annotationBeingResized = true;
     // A completed right-click leaves dragRightClick set. This is a new
@@ -2131,6 +2133,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     SetCanvasCursor(win, IDC_ARROW);
 
     if (aborted || !annot) {
+        EndPdfEditOperation(win);
         ScheduleRepaint(win, 0);
         return true;
     }
@@ -2142,6 +2145,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     }
 
     // Rectangle resizes already wrote the annot during mouse move.
+    EndPdfEditOperation(win);
     NotifyAnnotationsChanged(win->CurrentTab());
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);

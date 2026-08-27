@@ -213,6 +213,8 @@ CmdCreateAnnotImageFromClipboard,,Create Image Annotation From Clipboard,
 CmdCreateAnnotStrikeOut,,Create Strike Out Annotation,
 CmdCreateAnnotText,,Create Text Annotation,
 CmdCreateAnnotUnderline,"u, U",Create Underline Annotation,
+CmdUndo,Ctrl + Z,Undo,"ver 3.7+, takes back the last change to the PDF (annotations, form fields, applied redactions). One gesture is one step: creating, pasting or resizing an annotation comes back in a single Undo. Disabled when there is nothing to undo; in a text box Ctrl + Z is the text box's undo"
+CmdRedo,Shift + Ctrl + Z,Redo,"ver 3.7+, re-applies the change Undo took back. Disabled when there is nothing to redo"
 CmdCutAnnotation,Ctrl + X,Cut Annotation,"ver 3.7+, copies the annotation under the cursor (or the selected one) and deletes it when the copy is pasted; in a text box Ctrl + X is the text box's cut"
 CmdCopyAnnotation,Ctrl + C,Copy Annotation,"ver 3.7+, copies the selected annotation in Edit PDF mode; Ctrl + C is CmdCopySelection and copies the annotation when one is selected. Only annotations that can be moved can be copied, so text markup (highlight, underline, squiggly, strike-out) and file attachments are excluded"
 CmdPasteAnnotation,Ctrl + V,Paste Annotation,"ver 3.7+, pastes the copied annotation with its top-left at the mouse and deletes the original if it was cut; Ctrl + V is CmdPasteClipboardImage and pastes the annotation when Edit PDF is on and one has been copied"
