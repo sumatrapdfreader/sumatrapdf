@@ -227,7 +227,9 @@ export async function testit(): Promise<void> {
       throw new Error(`free-text-annotation-placement: preview box is not text sized: ${JSON.stringify(preview)}`);
     }
     if (preview.x !== pagePoint.x || preview.y !== pagePoint.y) {
-      throw new Error(`free-text-annotation-placement: preview not at the cursor: ${JSON.stringify(preview)}`);
+      throw new Error(
+        `free-text-annotation-placement: preview not at the cursor ${JSON.stringify(pagePoint)}: ${JSON.stringify(preview)}`,
+      );
     }
 
     await clickAt(canvas, 2, Math.floor(canvasRect.bottom / 2));

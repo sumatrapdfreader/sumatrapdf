@@ -936,6 +936,20 @@ bool AnnotationPlacementSkipAccelerator(MainWindow* win, WPARAM key) {
     return false;
 }
 
+// Screen rect of a preview box anchored at the cursor. The screen -> page ->
+// screen round trip can lose a pixel (both conversions bias by 0.499 and then
+// truncate), which shows as a preview sitting a pixel off the mouse, so shift
+// the box by however much the round trip drifted.
+static Rect PlacementPreviewScreenRect(DisplayModel* dm, int pageNo, Point pt, PointF pagePt, RectF pageRect) {
+    Rect r = dm->CvtToScreen(pageNo, pageRect);
+    if (r.IsEmpty()) {
+        return {};
+    }
+    Point anchor = dm->CvtToScreen(pageNo, pagePt);
+    r.Offset(pt.x - anchor.x, pt.y - anchor.y);
+    return r;
+}
+
 static void PaintPointPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     AnnotPlacementKind kind = KindOf(win);
     bool preview = kind == AnnotPlacementKind::Stamp || kind == AnnotPlacementKind::Caret ||
@@ -958,7 +972,7 @@ static void PaintPointPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     } else {
         pageRect = {pagePt.x, pagePt.y, kFileAttachmentAnnotDefaultDx, kFileAttachmentAnnotDefaultDy};
     }
-    Rect r = dm->CvtToScreen(pageNo, pageRect);
+    Rect r = PlacementPreviewScreenRect(dm, pageNo, pt, pagePt, pageRect);
     if (r.IsEmpty()) {
         return;
     }
@@ -1016,7 +1030,7 @@ static Rect FreeTextPlacementScreenRect(MainWindow* win, DisplayModel* dm) {
         return {};
     }
     PointF pagePt = dm->CvtFromScreen(p.pos, pageNo);
-    return dm->CvtToScreen(pageNo, RectF{pagePt.x, pagePt.y, p.rect.dx, p.rect.dy});
+    return PlacementPreviewScreenRect(dm, pageNo, p.pos, pagePt, RectF{pagePt.x, pagePt.y, p.rect.dx, p.rect.dy});
 }
 
 // White "paper" with the text drawn on it, the size of the annotation that a
