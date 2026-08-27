@@ -8573,6 +8573,27 @@ static Annotation* FindWrapperForPdfAnnot(const Vec<Annotation*>& annots, pdf_an
 // Rebuild `wrappers` so it matches `live`, in page order: keep the wrapper of
 // an annotation that is still there, make one for an annotation that (re)appeared
 // and hand back the ones whose pdf_annot MuPDF freed.
+// A wrapper we keep across an undo / redo caches the bounds the annotation had
+// before the step, and the step may well have been a resize or a move. Nothing
+// else the wrapper holds can change under it: an annotation that went away is
+// dropped, one that came back gets a fresh wrapper.
+static void RefreshWrapperBounds(EngineMupdf* e, Annotation* w) {
+    if (!w || !w->pdfannot) {
+        return;
+    }
+    fz_context* ctx = e->Ctx();
+    ScopedRecursiveMutex docScope(&e->docLock);
+    fz_rect bounds = {};
+    fz_try(ctx) {
+        bounds = pdf_bound_annot(ctx, w->pdfannot);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return;
+    }
+    w->bounds = ToRectF(bounds);
+}
+
 static void ResyncWrapperList(EngineMupdf* e, int pageNo, Vec<Annotation*>& wrappers, const Vec<pdf_annot*>& live,
                               Vec<Annotation*>& removedOut) {
     Vec<Annotation*> res;
@@ -8583,6 +8604,8 @@ static void ResyncWrapperList(EngineMupdf* e, int pageNo, Vec<Annotation*>& wrap
             if (!w) {
                 continue;
             }
+        } else {
+            RefreshWrapperBounds(e, w);
         }
         res.Append(w);
     }
