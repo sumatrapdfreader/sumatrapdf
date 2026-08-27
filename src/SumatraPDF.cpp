@@ -5131,7 +5131,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
             ShowWinScrollBar(win->hwndCanvas, SB_VERT, FALSE);
             ShowWinScrollBar(win->hwndCanvas, SB_HORZ, FALSE);
         }
-        win->RedrawAll();
+        win->RedrawAllIncludingNonClient();
         HwndSetText(win->hwndFrame, Str(kSumatraWindowTitle));
         ReportIf(win->TabCount() != 0 || win->CurrentTab());
     }
