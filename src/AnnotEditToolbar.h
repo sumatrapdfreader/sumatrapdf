@@ -17,6 +17,13 @@ void RefreshAnnotEditToolbar(MainWindow*);
 void DeleteAnnotEditToolbar(MainWindow*);
 TempStr AnnotEditToolbarStateTemp(MainWindow*);
 
+bool StartFreeTextInPlaceEdit(MainWindow*, Annotation*);
+bool StartFreeTextInPlaceEditAt(MainWindow*, Point);
+bool IsEditingFreeTextInPlace(MainWindow*);
+void EndFreeTextInPlaceEdit(bool accept);
+void RepositionFreeTextInPlaceEdit(MainWindow*);
+TempStr FreeTextInPlaceEditStateTemp(MainWindow*);
+
 void DeleteAnnotationAndUpdateUI(WindowTab*, Annotation*);
 void SetSelectedAnnotation(WindowTab*, Annotation*);
 void RefreshAnnotationLists(WindowTab*);

@@ -2691,6 +2691,10 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     if (AnnotationPlacementOnLeftDblClk(win, Point{x, y})) {
         return;
     }
+    // a double-click on free text edits its text where it sits on the page
+    if (StartFreeTextInPlaceEditAt(win, Point{x, y})) {
+        return;
+    }
     auto isLeft = bit::IsMaskSet(key, (WPARAM)MK_LBUTTON);
     if (gGlobalPrefs->enableTeXEnhancements && !gDisableInteractiveInverseSearch && isLeft) {
         bool dontSelect = OnInverseSearch(win, x, y);
@@ -3837,6 +3841,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     PaintHoveredAnnotationMark(win, hdc, dm);
     RepositionAnnotationHoverOverlay(win);
     RepositionAnnotEditToolbar(win);
+    RepositionFreeTextInPlaceEdit(win);
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
     if (ShowPageGrid() && win->presentation == PM_DISABLED) {
         PaintPageGrid(dm, hdc);

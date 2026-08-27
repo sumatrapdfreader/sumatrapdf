@@ -635,6 +635,7 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
     out.Append(AnnotEditToolbarStateTemp(gWindows[0]));
     out.Append(AnnotFilterToolbarStateTemp(gWindows[0]));
     out.Append(AnnotationHoverOverlayStateTemp(gWindows[0]));
+    out.Append(FreeTextInPlaceEditStateTemp(gWindows[0]));
     out.Append(AnnotationPlacementStateTemp(gWindows[0]));
     return finish({}, 0);
 }

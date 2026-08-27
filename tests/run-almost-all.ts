@@ -154,6 +154,7 @@ import { testit as freeTextAnnotationPlacement } from "./free-text-annotation-pl
 import { testit as freeTextEditToolbar } from "./free-text-edit-toolbar.ts";
 import { testit as createAnnotEntersEditMode } from "./create-annot-enters-edit-mode.ts";
 import { testit as exitEditPdfDeselects } from "./exit-edit-pdf-deselects.ts";
+import { testit as freeTextInPlaceEdit } from "./free-text-in-place-edit.ts";
 import { testit as stampCaretAnnotationPlacement } from "./stamp-caret-annotation-placement.ts";
 import { testit as lineAnnotationPlacement } from "./line-annotation-placement.ts";
 import { testit as polylineAnnotationPlacement } from "./polyline-annotation-placement.ts";
@@ -262,6 +263,7 @@ export const tests: NamedTest[] = [
   ["free-text-edit-toolbar", freeTextEditToolbar],
   ["create-annot-enters-edit-mode", createAnnotEntersEditMode],
   ["exit-edit-pdf-deselects", exitEditPdfDeselects],
+  ["free-text-in-place-edit", freeTextInPlaceEdit],
   ["stamp-caret-annotation-placement", stampCaretAnnotationPlacement],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],

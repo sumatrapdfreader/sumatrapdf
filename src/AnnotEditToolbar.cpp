@@ -1271,9 +1271,15 @@ static void LayoutContentsEditor(AnnotEditToolbar* tb) {
 
 static void PostedStartContentsEdit(MainWindow* win) {
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
-    if (tb) {
-        StartContentsEdit(tb);
+    if (!tb) {
+        return;
     }
+    // free text is edited on the page, in the annotation's own box
+    Annotation* annot = LiveToolbarAnnot(tb);
+    if (annot && Type(annot) == AnnotationType::FreeText && StartFreeTextInPlaceEdit(win, annot)) {
+        return;
+    }
+    StartContentsEdit(tb);
 }
 
 static void PostedDeleteSelectedAnnotation(MainWindow* win) {
@@ -1356,7 +1362,303 @@ static AnnotEditToolbar* GetOrCreateToolbar(MainWindow* win) {
     return tb;
 }
 
+//--- in-place free text editing
+
+// A plain edit control sits exactly over the free text annotation while you
+// type: same font and size, on a white background so the text stays readable
+// whatever is underneath. Enter makes a new line; Ctrl+Enter, Esc or clicking
+// away ends it and the rendered annotation comes back.
+struct FreeTextInPlaceEdit {
+    HWND hwnd = nullptr;
+    HFONT font = nullptr;
+    MainWindow* win = nullptr;
+    WindowTab* tab = nullptr;
+    Annotation* annot = nullptr;
+    Size size;
+    Size minSize;
+    int padding = 0;
+};
+
+static FreeTextInPlaceEdit gInPlace;
+static WNDPROC gInPlaceDefProc = nullptr;
+static bool gInPlaceEnding = false;
+
+bool IsEditingFreeTextInPlace(MainWindow* win) {
+    if (!gInPlace.hwnd) {
+        return false;
+    }
+    return !win || gInPlace.win == win;
+}
+
+// Arial / Courier New / Times New Roman have the metrics of the base 14 fonts
+// MuPDF renders free text with.
+static const WCHAR* WinFontForPdfFontName(Str pdfName) {
+    if (str::EqI(pdfName, StrL("Cour"))) {
+        return L"Courier New";
+    }
+    if (str::EqI(pdfName, StrL("TiRo"))) {
+        return L"Times New Roman";
+    }
+    return L"Arial";
+}
+
+static Size MeasureInPlaceText(Str text) {
+    if (!gInPlace.hwnd) {
+        return {};
+    }
+    HDC hdc = GetDC(gInPlace.hwnd);
+    uint format = DT_CALCRECT | DT_NOPREFIX | DT_EDITCONTROL | DT_NOCLIP;
+    Size s = HdcMeasureText(hdc, text, 0, format, gInPlace.font);
+    ReleaseDC(gInPlace.hwnd, hdc);
+    return s;
+}
+
+// The box follows what has been typed. It never shrinks below the annotation's
+// own box, so committing can only ever grow the annotation.
+static void SizeInPlaceEditToText() {
+    if (!gInPlace.hwnd || !gInPlace.win) {
+        return;
+    }
+    TempStr text = HwndGetTextTemp(gInPlace.hwnd);
+    Size ts = MeasureInPlaceText(text);
+    int pad = gInPlace.padding;
+    // room for the caret past the last glyph
+    int caret = std::max(DpiScale(3), 2);
+    Size want;
+    want.dx = ts.dx + (2 * pad) + caret;
+    want.dy = ts.dy + (2 * pad);
+    want.dx = std::max(want.dx, gInPlace.minSize.dx);
+    want.dy = std::max(want.dy, gInPlace.minSize.dy);
+    Rect canvas = HwndClientRect(gInPlace.win->hwndCanvas);
+    Rect cur = ChildPosWithinParent(gInPlace.hwnd);
+    want.dx = std::min(want.dx, std::max(canvas.dx - cur.x, gInPlace.minSize.dx));
+    want.dy = std::min(want.dy, std::max(canvas.dy - cur.y, gInPlace.minSize.dy));
+    if (want == gInPlace.size) {
+        return;
+    }
+    gInPlace.size = want;
+    SetWindowPos(gInPlace.hwnd, nullptr, 0, 0, want.dx, want.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+// Scrolling and zooming move the annotation out from under the box.
+void RepositionFreeTextInPlaceEdit(MainWindow* win) {
+    if (!IsEditingFreeTextInPlace(win)) {
+        return;
+    }
+    DisplayModel* dm = gInPlace.win->AsFixed();
+    Annotation* annot = gInPlace.annot;
+    if (!dm || !AnnotationIsLive(annot) || !dm->PageVisible(PageNo(annot))) {
+        return;
+    }
+    Rect r = dm->CvtToScreen(PageNo(annot), GetRect(annot));
+    Rect cur = ChildPosWithinParent(gInPlace.hwnd);
+    if (cur.x == r.x && cur.y == r.y) {
+        return;
+    }
+    SetWindowPos(gInPlace.hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+void EndFreeTextInPlaceEdit(bool accept) {
+    if (!gInPlace.hwnd || gInPlaceEnding) {
+        return;
+    }
+    gInPlaceEnding = true;
+    HWND hwnd = gInPlace.hwnd;
+    HFONT font = gInPlace.font;
+    MainWindow* win = gInPlace.win;
+    WindowTab* tab = gInPlace.tab;
+    Annotation* annot = gInPlace.annot;
+    Rect editRect = ChildPosWithinParent(hwnd);
+    TempStr text{};
+    if (accept) {
+        text = str::DupTemp(HwndGetTextTemp(hwnd));
+        text = str::ReplaceTemp(text, StrL("\r\n"), StrL("\n"));
+    }
+    // clear the state and unsubclass before destroying, so the destroy-time
+    // WM_KILLFOCUS doesn't come back through the commit path
+    gInPlace = {};
+    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)gInPlaceDefProc);
+    DestroyWindow(hwnd);
+    if (font) {
+        DeleteObject(font);
+    }
+    bool winOk = win && IsMainWindowValidAndNotClosing(win);
+    if (winOk) {
+        HwndSetFocus(win->hwndCanvas);
+    }
+    if (accept && AnnotationIsLive(annot)) {
+        DisplayModel* dm = winOk ? win->AsFixed() : nullptr;
+        int pageNo = PageNo(annot);
+        if (dm && dm->ValidPageNo(pageNo)) {
+            // the box was sized to the text while typing; keep that room so
+            // MuPDF doesn't clip what was just written
+            RectF cur = GetRect(annot);
+            RectF grown = cur.Union(dm->CvtFromScreen(editRect, pageNo));
+            if (grown != cur) {
+                SetRect(annot, grown);
+            }
+        }
+        SetContents(annot, text);
+        AnnotChanged(tab);
+    } else if (winOk) {
+        MainWindowRerender(win);
+    }
+    gInPlaceEnding = false;
+}
+
+static LRESULT CALLBACK WndProcFreeTextInPlaceEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+        case WM_GETDLGCODE:
+            // Enter is a new line and Esc cancels, so we want every key
+            return DLGC_WANTALLKEYS;
+        case WM_KEYDOWN:
+            if (wp == VK_ESCAPE) {
+                EndFreeTextInPlaceEdit(false);
+                return 0;
+            }
+            if (wp == VK_RETURN && IsCtrlPressed()) {
+                EndFreeTextInPlaceEdit(true);
+                return 0;
+            }
+            break;
+        case WM_CHAR:
+            // Ctrl+Enter reaches an edit control as LF. That, not the key-down
+            // above, is what a real keyboard delivers here.
+            if (wp == 0x0A) {
+                EndFreeTextInPlaceEdit(true);
+                return 0;
+            }
+            // Esc was handled on key down; don't also insert it
+            if (wp == VK_ESCAPE) {
+                return 0;
+            }
+            break;
+        case WM_KILLFOCUS:
+            EndFreeTextInPlaceEdit(true);
+            return 0;
+    }
+    LRESULT res = CallWindowProcW(gInPlaceDefProc, hwnd, msg, wp, lp);
+    switch (msg) {
+        case WM_CHAR:
+        case WM_KEYDOWN:
+        case WM_PASTE:
+        case WM_CUT:
+        case WM_CLEAR:
+        case WM_UNDO:
+        case WM_SETTEXT:
+        case EM_REPLACESEL:
+            SizeInPlaceEditToText();
+            break;
+    }
+    return res;
+}
+
+bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
+    if (!win || !win->hwndCanvas || !AnnotationIsLive(annot)) {
+        return false;
+    }
+    if (Type(annot) != AnnotationType::FreeText) {
+        return false;
+    }
+    if (gInPlace.annot == annot) {
+        return true;
+    }
+    EndFreeTextInPlaceEdit(true);
+    DisplayModel* dm = win->AsFixed();
+    int pageNo = PageNo(annot);
+    if (!dm || !dm->ValidPageNo(pageNo) || !dm->PageVisible(pageNo)) {
+        return false;
+    }
+    RectF pageRect = GetRect(annot);
+    Rect rc = dm->CvtToScreen(pageNo, pageRect);
+    if (rc.IsEmpty()) {
+        return false;
+    }
+
+    // screen pixels per PDF point, so the box matches the rendered text
+    float scale = pageRect.dy > 0 ? ((float)rc.dy / pageRect.dy) : 1.f;
+    int textSize = DefaultAppearanceTextSize(annot);
+    if (textSize <= 0) {
+        textSize = 12;
+    }
+    int fontPx = std::max(6, (int)((float)textSize * scale));
+    HFONT font = CreateFontW(-fontPx, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                             CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH,
+                             WinFontForPdfFontName(DefaultAppearanceTextFont(annot)));
+    if (!font) {
+        return false;
+    }
+
+    // lines don't wrap: the box grows to fit them instead
+    DWORD style = WS_CHILD | WS_VISIBLE | WS_BORDER | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL;
+    HMODULE hmod = GetModuleHandleW(nullptr);
+    HWND hwnd =
+        CreateWindowExW(0, WC_EDITW, L"", style, rc.x, rc.y, rc.dx, rc.dy, win->hwndCanvas, nullptr, hmod, nullptr);
+    if (!hwnd) {
+        DeleteObject(font);
+        return false;
+    }
+    SetWindowFont(hwnd, font, TRUE);
+    int pad = std::max(DpiScale(2), 1);
+    SendMessageW(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(pad, pad));
+    TempStr text = str::ReplaceTemp(Contents(annot), StrL("\r\n"), StrL("\n"));
+    text = str::ReplaceTemp(text, StrL("\n"), StrL("\r\n"));
+    HwndSetText(hwnd, text);
+
+    gInPlaceDefProc = (WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC);
+    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProcFreeTextInPlaceEdit);
+
+    gInPlace.hwnd = hwnd;
+    gInPlace.font = font;
+    gInPlace.win = win;
+    gInPlace.tab = win->CurrentTab();
+    gInPlace.annot = annot;
+    gInPlace.size = rc.Size();
+    gInPlace.minSize = rc.Size();
+    gInPlace.padding = pad;
+
+    HwndSetFocus(hwnd);
+    // caret at the end, nothing selected: this is editing what is there, not
+    // replacing it
+    int end = (int)SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
+    Edit_SetSel(hwnd, end, end);
+    SizeInPlaceEditToText();
+    return true;
+}
+
+// Edit the free text annotation under `pt`, if there is one and we are in
+// Edit PDF mode.
+bool StartFreeTextInPlaceEditAt(MainWindow* win, Point pt) {
+    if (!win || !win->pdfAnnotationsToolbarEnabled) {
+        return false;
+    }
+    WindowTab* tab = win->CurrentTab();
+    DisplayModel* dm = win->AsFixed();
+    if (!tab || !dm) {
+        return false;
+    }
+    Annotation* annot = dm->GetAnnotationAtPos(pt, nullptr);
+    if (!annot || Type(annot) != AnnotationType::FreeText) {
+        return false;
+    }
+    SetSelectedAnnotation(tab, annot);
+    return StartFreeTextInPlaceEdit(win, annot);
+}
+
+TempStr FreeTextInPlaceEditStateTemp(MainWindow* win) {
+    if (!IsEditingFreeTextInPlace(win)) {
+        return StrL("freeTextEdit active=0 rect=0,0,0,0 text=\n");
+    }
+    Rect r = ChildPosWithinParent(gInPlace.hwnd);
+    TempStr text = HwndGetTextTemp(gInPlace.hwnd);
+    text = str::ReplaceTemp(text, StrL("\r\n"), StrL("|"));
+    return fmt("freeTextEdit active=1 rect=%d,%d,%d,%d text=%s\n", r.x, r.y, r.dx, r.dy, text);
+}
+
 void HideAnnotEditToolbar(MainWindow* win) {
+    if (IsEditingFreeTextInPlace(win)) {
+        EndFreeTextInPlaceEdit(true);
+    }
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
     if (!tb || !tb->host) {
         return;
@@ -1571,6 +1873,9 @@ static void AppendPdfDate(str::Builder& s, time_t secs) {
 void DetachAnnotationFromUI(Annotation* annot) {
     if (!annot) {
         return;
+    }
+    if (gInPlace.annot == annot) {
+        EndFreeTextInPlaceEdit(false);
     }
     CancelFormFieldEditIfWidget(annot);
     for (MainWindow* win : gWindows) {
