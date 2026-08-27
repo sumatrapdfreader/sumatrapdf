@@ -772,6 +772,9 @@ static void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
     }
     if (win->pdfAnnotationsToolbarEnabled) {
         FinishInkAnnotationPlacement(win);
+        // a half-placed line / shape / stamp is editing UI too: its notification
+        // and cross cursor would outlive the mode it belongs to
+        CancelAnnotationPlacement(win);
     }
     win->pdfAnnotationsToolbarEnabled = enabled;
     ToolbarUpdateStateForWindow(win, true);
@@ -779,6 +782,12 @@ static void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
         UpdateAnnotationHoverOverlay(win);
     } else {
+        // leaving the mode leaves no editing UI behind: without this the
+        // selection marker and its resize handles stay painted on the page
+        WindowTab* tab = win->CurrentTab();
+        if (tab && tab->selectedAnnotation) {
+            SetSelectedAnnotation(tab, nullptr);
+        }
         HideAnnotationHoverOverlay(win);
         HideAnnotEditToolbar(win);
     }
