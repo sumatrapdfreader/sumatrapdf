@@ -13,6 +13,7 @@ extern const char* gIconSearchPrev;
 extern const char* gIconSearchNext;
 extern const char* gIconMatchCase;
 extern const char* gIconSave;
+extern const char* gIconSaveToNewFile;
 extern const char* gIconRotateLeft;
 extern const char* gIconRotateRight;
 extern const char* gIconCopy;

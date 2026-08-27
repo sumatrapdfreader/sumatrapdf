@@ -3,6 +3,10 @@
 // something to step to, and that one gesture is one step: a paste writes the
 // annotation plus a handful of properties, a resize drag rewrites it on every
 // mouse move, and both must come back with a single Undo.
+//
+// Also covers the buttons this state drives at the end of the Edit PDF
+// toolbar: Undo, Redo and the two Save buttons, which are only enabled when
+// there is something to do.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -85,6 +89,35 @@ async function redo(client: ControlClient, frame: number): Promise<State> {
   return state(client);
 }
 
+type Button = { idx: number; enabled: boolean; tip: string };
+
+// the Edit PDF toolbar buttons, by command name
+async function toolbarButtons(client: ControlClient): Promise<Map<string, Button>> {
+  const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+  const res = new Map<string, Button>();
+  const re = /annotation-idx=(\d+) cmd=(\d+) hidden=(\d) enabled=(\d) rect=\S+ text=.*? tip=(.*)/g;
+  for (const m of raw.matchAll(re)) {
+    const cmd = +m[2]!;
+    for (const name of ["CmdUndo", "CmdRedo", "CmdSaveAnnotations", "CmdSaveAnnotationsNewFile"]) {
+      if (cmd === cmdId(name) && m[3] === "0") {
+        res.set(name, { idx: +m[1]!, enabled: m[4] === "1", tip: m[5]!.trim() });
+      }
+    }
+  }
+  return res;
+}
+
+function wantButton(btns: Map<string, Button>, name: string, enabled: boolean): Button {
+  const b = btns.get(name);
+  if (!b) {
+    throw new Error(`annot-undo-redo: ${name} is not on the Edit PDF toolbar`);
+  }
+  if (b.enabled !== enabled) {
+    throw new Error(`annot-undo-redo: ${name} is ${b.enabled ? "enabled" : "disabled"}, want the opposite`);
+  }
+  return b;
+}
+
 function want(s: State, what: string, cond: boolean): void {
   if (!cond) {
     throw new Error(`annot-undo-redo: ${what}\n${s.raw}`);
@@ -123,6 +156,23 @@ export async function testit(): Promise<void> {
     let s = await state(client);
     want(s, "expected one square on the page", s.squares.length === 1);
     want(s, "nothing was edited yet, so there is nothing to undo or redo", !s.canUndo && !s.canRedo);
+
+    // the toolbar buttons, in order, all inert on an unedited document
+    let btns = await toolbarButtons(client);
+    const undoBtn = wantButton(btns, "CmdUndo", false);
+    const redoBtn = wantButton(btns, "CmdRedo", false);
+    const saveBtn = wantButton(btns, "CmdSaveAnnotations", false);
+    const saveNewBtn = wantButton(btns, "CmdSaveAnnotationsNewFile", false);
+    if (!(undoBtn.idx < redoBtn.idx && redoBtn.idx < saveBtn.idx && saveBtn.idx < saveNewBtn.idx)) {
+      throw new Error(
+        `annot-undo-redo: want Undo, Redo, Save, Save-new in that order, got ` +
+          `${undoBtn.idx}, ${redoBtn.idx}, ${saveBtn.idx}, ${saveNewBtn.idx}`,
+      );
+    }
+    if (!/square\.pdf/.test(saveBtn.tip)) {
+      throw new Error(`annot-undo-redo: Save tooltip must name the file, got "${saveBtn.tip}"`);
+    }
+
     const original = s.squares[0]!;
     const mid = { x: original.x + Math.floor(original.dx / 2), y: original.y + Math.floor(original.dy / 2) };
 
@@ -133,11 +183,20 @@ export async function testit(): Promise<void> {
     want(s, "the annotation was not deleted", s.annotations === 0);
     want(s, "a delete must be undoable", s.canUndo && !s.canRedo);
     want(s, "a delete leaves unsaved changes", s.modified);
+    btns = await toolbarButtons(client);
+    wantButton(btns, "CmdUndo", true);
+    wantButton(btns, "CmdRedo", false);
+    wantButton(btns, "CmdSaveAnnotations", true);
+    wantButton(btns, "CmdSaveAnnotationsNewFile", true);
 
     s = await undo(client, frame);
     want(s, "undo did not bring the annotation back", s.annotations === 1 && s.squares.length === 1);
     want(s, "after undoing the only change there is nothing left to undo", !s.canUndo && s.canRedo);
     want(s, "undoing every change leaves the document as it was on disk", !s.modified);
+    btns = await toolbarButtons(client);
+    wantButton(btns, "CmdUndo", false);
+    wantButton(btns, "CmdRedo", true);
+    wantButton(btns, "CmdSaveAnnotations", false);
     const back = s.squares[0]!;
     want(
       s,

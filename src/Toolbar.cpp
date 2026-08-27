@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "gui/Dpi.h"
 #include "base/BitManip.h"
+#include "base/File.h"
 #include "base/Pixmap.h"
 
 #include "gui/UIModels.h"
@@ -118,6 +119,10 @@ static ToolbarButtonInfo gPdfAnnotationButtons[] = {
     {nullptr, 0, {}},
     {gIconUndo, CmdUndo, _TRN("Undo")},
     {gIconRedo, CmdRedo, _TRN("Redo")},
+    {nullptr, 0, {}},
+    // the tooltip of the first one names the file, see ToolbarUpdateStateForWindow
+    {gIconSave, CmdSaveAnnotations, _TRN("Save changes to existing PDF")},
+    {gIconSaveToNewFile, CmdSaveAnnotationsNewFile, _TRN("Save changes to a new PDF")},
 };
 
 constexpr int kPdfAnnotationButtonsCount = dimof(gPdfAnnotationButtons);
@@ -248,6 +253,13 @@ static void SetToolbarButtonEnabledByIdx(MainWindow* win, int idx, bool isEnable
     }
     w->SetIsEnabled(isEnabled);
     w->Invalidate();
+}
+
+static void SetPdfAnnotationButtonToolTipByIdx(MainWindow* win, int idx, Str tip) {
+    VirtCtrl* w = PdfAnnotationToolbarItemAt(win, idx);
+    if (w) {
+        w->SetTooltip(tip);
+    }
 }
 
 static void SetPdfAnnotationButtonEnabledByIdx(MainWindow* win, int idx, bool isEnabled) {
@@ -649,6 +661,16 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         CommandVisibility v = GetCommandVisibility(bi.cmdId, *ctx, CommandSurface::Toolbar);
         SetPdfAnnotationButtonEnabledByIdx(
             win, i, showPdfAnnotationsToolbar && !CommandShouldDisable(v) && !CommandShouldRemove(v));
+        if (bi.cmdId == CmdSaveAnnotations) {
+            // name the file it writes to, like the annotation list's Save button
+            WindowTab* tab = win->CurrentTab();
+            TempStr base = tab ? path::GetBaseNameTemp(tab->filePath) : TempStr{};
+            Str tip = _TRA("Save changes to existing PDF");
+            if (len(base) > 0) {
+                tip = fmt(_TRA("Save changes to %s").s, base);
+            }
+            SetPdfAnnotationButtonToolTipByIdx(win, i, ToolbarTipTemp(bi.cmdId, tip, false));
+        }
     }
 
     if (setButtonsVisibility) {
@@ -1326,8 +1348,10 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
         Rect r = w ? w->BoundsInWindow() : Rect{};
         bool hidden = !annotationsVisible || !w || w->GetVisibility() != Visibility::Visible;
         const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
-        out.Append(fmt("annotation-idx=%d cmd=%d hidden=%d enabled=%d rect=%d,%d,%d,%d text=%s\n", i, w ? w->id : 0,
-                       hidden ? 1 : 0, w && w->IsEnabled() ? 1 : 0, r.x, r.y, r.x + r.dx, r.y + r.dy, bi.toolTip));
+        Str tip = w ? w->tooltip : Str{};
+        out.Append(fmt("annotation-idx=%d cmd=%d hidden=%d enabled=%d rect=%d,%d,%d,%d text=%s tip=%s\n", i,
+                       w ? w->id : 0, hidden ? 1 : 0, w && w->IsEnabled() ? 1 : 0, r.x, r.y, r.x + r.dx, r.y + r.dy,
+                       bi.toolTip, tip));
     }
     out.Append(AnnotFilterToolbarStateTemp(win));
     *exitCodeOut = 0;

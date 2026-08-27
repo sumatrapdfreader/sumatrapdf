@@ -126,6 +126,17 @@ const char* gIconSave =
   <polyline points="4 8 10 8 10 4" />
 </svg>)";
 
+// https://github.com/tabler/tabler-icons/blob/master/icons/file-plus.svg
+// a document with a plus: saving the changes into a new PDF
+const char* gIconSaveToNewFile =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+  <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+  <line x1="12" y1="11" x2="12" y2="17" />
+  <line x1="9" y1="14" x2="15" y2="14" />
+</svg>)";
+
 // https://github.com/tabler/tabler-icons/blob/master/icons/rotate-2.svg - modified
 const char* gIconRotateLeft =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">

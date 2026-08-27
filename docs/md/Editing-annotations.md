@@ -82,7 +82,7 @@ Only annotations that can be moved can be copied. Text markup (highlight, underl
 
 ## Undo and redo
 
-`Ctrl + Z` takes back the last change to the PDF, `Ctrl + Shift + Z` re-applies it. The two buttons at the end of the Edit PDF toolbar do the same and are greyed out when there is nothing to step to.
+`Ctrl + Z` takes back the last change to the PDF, `Ctrl + Shift + Z` re-applies it. The Undo and Redo buttons on the Edit PDF toolbar do the same and are greyed out when there is nothing to step to. The two buttons after them save the changes into the file you are reading or into a new PDF, and are greyed out while there is nothing to save.
 
 One gesture is one step: creating an annotation also sets its color, size and contents, and a resize drag rewrites it as the mouse moves, but a single `Ctrl + Z` takes all of it back. The history covers everything that changes the document, not just annotations, and goes back to the state the file was opened (or last saved) in — undoing every change makes the document count as unmodified again.
 
@@ -125,12 +125,12 @@ Add annotation commands to the toolbar via the `Shortcuts` array — see [Custom
 
 | Action                   | Shortcut / command                                                                                                     |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`)                                                                              |
-| Save to a new PDF        | `CmdSaveAnnotationsNewFile` (tab context menu or command palette)                                                      |
+| Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`), or the save button at the end of the Edit PDF toolbar                       |
+| Save to a new PDF        | `CmdSaveAnnotationsNewFile` (tab context menu, command palette, or the last button of the Edit PDF toolbar)            |
 | Discard unsaved changes  | `CmdDiscardChanges` (tab context menu **Discard changes**, or `Ctrl + K` command palette) — reloads the file from disk |
 | Save when closing        | Prompt dialog — choose existing file, new file, or discard                                                             |
 
-There is **no undo** (`Ctrl + Z`) for annotation edits. Delete an annotation with `Delete` when it is selected, or with **Delete Annotation** in the floating list.
+`Ctrl + Z` undoes the last change and `Ctrl + Shift + Z` redoes it (see **Undo and redo** above). Delete an annotation with `Delete` when it is selected, or with **Delete Annotation** in the floating list.
 
 To avoid the save prompt on every close, save explicitly with `Ctrl + Shift + S` before closing. To drop unsaved work without closing the tab, use **Discard Changes** (`CmdDiscardChanges`).
 
