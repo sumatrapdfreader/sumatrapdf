@@ -456,11 +456,10 @@ const char* gIconAnnotCaret =
   <path d="M8 17l4 -5l4 5" />
 </svg>)";
 
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/paperclip.svg
 const char* gIconAnnotFileAttachment =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M8 12.5l6.5 -6.5a3 3 0 0 1 4.2 4.2l-8.5 8.5a5 5 0 0 1 -7.1 -7.1l8 -8" />
-  <path d="M7 15l8 -8" />
+  <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" />
 </svg>)";
 
 const char* gIconTrash =
