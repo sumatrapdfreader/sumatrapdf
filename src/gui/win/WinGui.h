@@ -220,7 +220,7 @@ struct WindowBase : HwndBase {
     // WM_NCHITTEST: screenPos is from lParam; set result to HT* and didHandle
     struct NcHitTestEvent {
         WindowBase* w = nullptr;
-        Point screenPos{};
+        Point screenPos;
         LRESULT result = HTCLIENT;
         bool didHandle = false;
     };
@@ -271,7 +271,7 @@ struct WindowBase : HwndBase {
         WindowBase* w = nullptr;
         UINT msg = 0;
         UINT type = 0;
-        Size size{};
+        Size size;
     };
     struct TaskbarCallbackEvent {
         WindowBase* w = nullptr;
@@ -482,7 +482,7 @@ struct ControlBase : ILayout, HwndBase {
         ControlBase* w = nullptr;
         UINT msg = 0;
         UINT type = 0;
-        Size size{};
+        Size size;
     };
     struct TimerEvent {
         ControlBase* w = nullptr;

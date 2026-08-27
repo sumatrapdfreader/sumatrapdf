@@ -80,7 +80,7 @@ struct VirtKeyEvent {
 
 struct VirtSetCursorEvent {
     VirtCtrl* w = nullptr;
-    Point ptLocal{};
+    Point ptLocal;
     bool didHandle = false;
 };
 
@@ -97,7 +97,7 @@ struct VirtFocusEvent {
 
 struct VirtTooltipEvent {
     VirtCtrl* w = nullptr;
-    Point ptLocal{};
+    Point ptLocal;
     TempStr tip; // set by handler
 };
 
