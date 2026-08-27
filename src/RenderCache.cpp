@@ -46,8 +46,9 @@ int gMaxRenderThreads = 8;
 // Whether to run the bitmap recolor pass when no dark profile applies.
 // MuPDF, DjVu, and native HTML-layout ebook engines (CHM, EPUB, MOBI, …)
 // are recolored; image/comic collections keep original pixels.
-static bool ShouldUpdateBitmapColorsLegacy(EngineBase* engine, RenderCache* cache) {
+static bool ShouldUpdateBitmapColorsLegacy(EngineBase* engine, RenderCache* cache, bool invertColors) {
     (void)cache;
+    if (invertColors) return true;
     if (EngineUsesReflowThemeCss(engine)) {
         return false;
     }
@@ -680,6 +681,7 @@ void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
         // create a dummy request to notify callback of failure
         PageRenderRequest req;
         req.dm = dm;
+        req.invertColors = dm ? dm->invertColors : false;
         req.pageNo = pageNo;
         req.bmp = nullptr;
         req.errorCode = 1;
@@ -726,6 +728,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     ReportIf(requestCount > kMaxPageRequests);
 
     newRequest->dm = dm;
+    newRequest->invertColors = dm ? dm->invertColors : false;
     newRequest->pageNo = pageNo;
     newRequest->rotation = rotation;
     newRequest->zoom = zoom;
@@ -1138,7 +1141,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
                 // object-level smart dark renders themed output directly
                 recolor = DarkModeProfileUsesLegacyPostProcess(profile);
             } else {
-                recolor = ShouldUpdateBitmapColorsLegacy(engine, cache);
+                recolor = ShouldUpdateBitmapColorsLegacy(engine, cache, req.invertColors);
             }
             if (recolor && !bmp->hasAlpha) {
                 bool preserve = profile && profile->mode == PageColorMode::PreserveImages && profile->preservePdfImages;
@@ -1156,6 +1159,9 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
                 Color textCol = profile ? profile->foreground : cache->textColor;
                 Color bgCol = profile ? profile->pageBackground : cache->backgroundColor;
                 Color linkCol = profile ? profile->linkColor : cache->linkColor;
+                if (!profile && req.invertColors) {
+                    std::swap(textCol, bgCol);
+                }
                 RecolorPixmap(bmp, textCol, bgCol, linkCol, skipRectsPtr);
             }
             if (req.abort || req.darkModeEpoch != cache->darkModeEpoch) {

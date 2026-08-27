@@ -17,6 +17,7 @@ void CreateThemeCommands();
 
 Color ThemeDocumentColors(Color&);
 Color ThemePageRenderColors(Color&);
+Color ThemePageRenderColorsNoInvert(Color&);
 Color ThemeMainWindowBackgroundColor();
 Color ThemeControlBackgroundColor();
 Color ThemeWindowBackgroundColor();

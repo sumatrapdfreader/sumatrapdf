@@ -101,6 +101,8 @@ struct DisplayModel : DocController {
     bool CanNavigate(int dir) const override;
     void Navigate(int dir) override;
 
+    bool invertColors = false;
+
     // view settings
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
     DisplayMode GetDisplayMode() const override;

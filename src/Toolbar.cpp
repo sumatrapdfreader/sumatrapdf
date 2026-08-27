@@ -87,6 +87,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {gIconZoomOut, CmdZoomOut, _TRN("Zoom Out")},
     {gIconZoomIn, CmdZoomIn, _TRN("Zoom In")},
     {nullptr, 0, {}}, // separator
+    {gIconMoon, CmdInvertColors, _TRN("Toggle Night Mode")},
+    {nullptr, 0, {}}, // separator
     {gIconSearch, CmdFindFirst, _TRN("Find")},
     {nullptr, 0, {}}, // separator
     {gIconEditAnnotations, CmdToggleEditPDF, _TRN("Edit PDF")},
@@ -648,6 +650,13 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
                 tip = _TRA("Continue Reading");
             }
             SetToolbarButtonToolTipByIdx(win, i, cmdId, tip);
+        }
+
+        if (cmdId == CmdInvertColors) {
+            DisplayModel* dm = win->AsFixed();
+            bool isNightMode = dm ? dm->invertColors : false;
+            SetToolbarButtonImageByIdx(win, i, isNightMode ? gIconSun : gIconMoon);
+            SetToolbarButtonToolTipByIdx(win, i, cmdId, isNightMode ? _TRA("Toggle Day Mode") : _TRA("Toggle Night Mode"));
         }
     }
 

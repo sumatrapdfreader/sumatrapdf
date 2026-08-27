@@ -12620,11 +12620,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdInvertColors: {
-            // swaps the page colors for this session, whatever they are and
-            // whatever the theme is. Use CmdSetDocumentColorsFollowTheme to
-            // change how (or whether) pages follow the theme (issue #5887)
-            SetInvertPageColors(!GetInvertPageColors());
-            UpdateDocumentColors();
+            DisplayModel* dm = win->AsFixed();
+            if (dm) {
+                dm->invertColors = !dm->invertColors;
+            }
+            MainWindowRerender(win, true);
+            ToolbarUpdateStateForWindow(win, true);
             break;
         }
 

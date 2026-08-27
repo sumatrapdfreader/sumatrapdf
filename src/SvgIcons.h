@@ -59,3 +59,6 @@ struct Pixmap;
 
 Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg = kColorUnset, Color bg = kColorUnset);
 void DestroySvgPixmapIconsCache();
+
+extern const char* gIconSun;
+extern const char* gIconMoon;
