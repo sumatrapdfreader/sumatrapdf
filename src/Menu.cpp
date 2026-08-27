@@ -997,11 +997,11 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
 // menu itself stays short
 static MenuDef menuDefContextAnnotations[] = {
     {
-        _TRN("Create Annotation From Selection"),
+        _TRN("Create From Selection"),
         (UINT_PTR)menuDefCreateAnnotFromSelection,
     },
     {
-        _TRN("Create Annotation &Under Cursor"),
+        _TRN("Create &Under Cursor"),
         (UINT_PTR)menuDefCreateAnnotUnderCursor,
     },
     {
