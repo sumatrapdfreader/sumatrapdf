@@ -477,31 +477,38 @@ const char* gIconTrash =
 // a typo, or the file caught half-written by the settings watcher while the user
 // is editing it. mupdf signals that by throwing, and an uncaught mupdf exception
 // aborts the whole process, so everything here has to be inside fz_try.
-static fz_pixmap* RenderSvgToFzPixmap(fz_context* ctx, Str svgData, int dx, int dy, Color fgCol, Color bgCol) {
+static fz_pixmap* RenderSvgToFzPixmap(fz_context* ctx, Str svgData, int dx, int dy, Color fgCol) {
     TempStr strokeCol = SerializeColorTemp(fgCol);
-    TempStr fillCol = SerializeColorTemp(bgCol);
-    TempStr fillColRepl = str::JoinTemp(StrL("fill=\""), fillCol, StrL("\""));
     TempStr svg = str::ReplaceTemp(svgData, StrL("currentColor"), strokeCol);
-    svg = str::ReplaceTemp(svg, StrL(R"(fill="none")"), fillColRepl);
 
     fz_buffer* buf = nullptr;
-    fz_image* image = nullptr;
+    fz_display_list* list = nullptr;
+    fz_device* dev = nullptr;
     fz_pixmap* pixmap = nullptr;
     fz_var(buf);
-    fz_var(image);
+    fz_var(list);
+    fz_var(dev);
     fz_var(pixmap);
     fz_try(ctx) {
         buf = fz_new_buffer_from_copied_data(ctx, (u8*)svg.s, svg.len);
-        image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
-        image->w = dx;
-        image->h = dy;
-        pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+        float svgWidth = 0;
+        float svgHeight = 0;
+        list = fz_new_display_list_from_svg(ctx, buf, nullptr, nullptr, &svgWidth, &svgHeight);
+        pixmap = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), fz_make_irect(0, 0, dx, dy), nullptr, 1);
+        fz_clear_pixmap(ctx, pixmap);
+        dev = fz_new_draw_device(ctx, fz_scale(dx / svgWidth, dy / svgHeight), pixmap);
+        fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, nullptr);
+        fz_close_device(ctx, dev);
+        fz_drop_device(ctx, dev);
+        dev = nullptr;
     }
     fz_always(ctx) {
-        fz_drop_image(ctx, image);
+        fz_drop_device(ctx, dev);
+        fz_drop_display_list(ctx, list);
         fz_drop_buffer(ctx, buf);
     }
     fz_catch(ctx) {
+        fz_drop_pixmap(ctx, pixmap);
         fz_report_error(ctx);
         logf("GetCachedPixmapForSvg: rendering svg icon failed with: '%s'\n", Str(fz_caught_message(ctx)));
         return nullptr;
@@ -509,22 +516,20 @@ static fz_pixmap* RenderSvgToFzPixmap(fz_context* ctx, Str svgData, int dx, int 
     return pixmap;
 }
 
-static void BlitFzPixmapBgra(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, Color bgCol) {
+static void BlitFzPixmapBgra(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src) {
     int dx = src->w;
     int dy = src->h;
     int srcN = src->n;
+    int srcAlpha = src->alpha;
     auto srcStride = src->stride;
-    u8 r, g, b;
-    UnpackColor(bgCol, r, g, b);
     for (size_t y = 0; y < (size_t)dy; y++) {
         u8* s = src->samples + (srcStride * y);
         u8* d = dstSamples + (dstStride * y);
         for (int x = 0; x < dx; x++) {
-            bool isTransparent = (s[0] == r) && (s[1] == g) && (s[2] == b);
             d[0] = s[2];
             d[1] = s[1];
             d[2] = s[0];
-            d[3] = isTransparent ? 0 : 0xff;
+            d[3] = srcAlpha ? s[srcN - 1] : 0xff;
             d += 4;
             s += srcN;
         }
@@ -532,7 +537,7 @@ static void BlitFzPixmapBgra(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src
 }
 
 // BGRA DIB, alpha-premultiplied, transparent where the SVG left the background.
-static Pixmap* RenderSvgToPixmap(Str svgData, int dx, int dy, Color fgCol, Color bgCol) {
+static Pixmap* RenderSvgToPixmap(Str svgData, int dx, int dy, Color fgCol) {
     Pixmap* px = AllocPixmapDIB(dx, dy);
     if (!px) {
         return nullptr;
@@ -541,9 +546,9 @@ static Pixmap* RenderSvgToPixmap(Str svgData, int dx, int dy, Color fgCol, Color
     px->premultiplied = true;
 
     fz_context* ctx = fz_new_context_windows();
-    fz_pixmap* pixmap = RenderSvgToFzPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
+    fz_pixmap* pixmap = RenderSvgToFzPixmap(ctx, svgData, dx, dy, fgCol);
     if (pixmap) {
-        BlitFzPixmapBgra(px->data, px->stride, pixmap, bgCol);
+        BlitFzPixmapBgra(px->data, px->stride, pixmap);
         u8* row = px->data;
         for (int y = 0; y < dy; y++) {
             u8* d = row;
@@ -597,7 +602,7 @@ Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg, Color bg) {
             return e->pixmap;
         }
     }
-    Pixmap* px = RenderSvgToPixmap(svg, dx, dy, fg, bg);
+    Pixmap* px = RenderSvgToPixmap(svg, dx, dy, fg);
     if (!px) {
         return nullptr;
     }

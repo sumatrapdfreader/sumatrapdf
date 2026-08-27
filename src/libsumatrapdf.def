@@ -303,6 +303,7 @@ EXPORTS
 	pdf_is_embedded_file
 
 	fz_new_image_from_svg
+	fz_new_display_list_from_svg
 
 	destroy_system_font_list
 
