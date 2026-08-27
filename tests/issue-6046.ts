@@ -13,6 +13,7 @@ import {
   getControlText,
   getWindowPid,
   getWindowText,
+  isWindowVisible,
   packCoords,
   sendMessage,
   sendText,
@@ -70,30 +71,6 @@ function buildPdf(): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-function findExtractDialog(pid: number): number {
-  let found = 0;
-  enumWindows((hwnd) => {
-    if (getWindowPid(hwnd) === pid && getWindowText(hwnd) === "Extract Pages From PDF") {
-      found = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
-
-async function waitForExtractDialog(pid: number, timeoutMs = 5000): Promise<number> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const dialog = findExtractDialog(pid);
-    if (dialog) {
-      return dialog;
-    }
-    await sleep(30);
-  }
-  throw new Error("issue-6046: Extract Pages dialog did not appear");
-}
-
 function childWindowsByClass(parent: number, className: string): number[] {
   const children: number[] = [];
   enumChildWindows(parent, (hwnd) => {
@@ -103,6 +80,32 @@ function childWindowsByClass(parent: number, className: string): number[] {
     return true;
   });
   return children;
+}
+
+function findExtractDialog(pid: number): number {
+  let found = 0;
+  enumWindows((hwnd) => {
+    if (getWindowPid(hwnd) === pid && isWindowVisible(hwnd) && getWindowText(hwnd) === "Extract Pages From PDF") {
+      found = hwnd;
+      return false;
+    }
+    return true;
+  });
+  return found;
+}
+
+// the dialog window exists (and is titled) before its controls are added, and is
+// only shown once they all are, so wait for visible *and* for both edits
+async function waitForExtractDialog(pid: number, timeoutMs = 5000): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const dialog = findExtractDialog(pid);
+    if (dialog && childWindowsByClass(dialog, "Edit").length >= 2) {
+      return dialog;
+    }
+    await sleep(30);
+  }
+  throw new Error("issue-6046: Extract Pages dialog did not appear");
 }
 
 async function waitForOutput(path: string, timeoutMs = 10000): Promise<void> {
