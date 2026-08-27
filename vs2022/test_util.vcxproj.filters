@@ -41,7 +41,7 @@
     <ClInclude Include="..\src\base\ByteReaderWriter.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\CmdLineArgsIter.h">
+    <ClInclude Include="..\src\base\CmdLineArgs.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\Color.h">
@@ -178,10 +178,10 @@
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\CmdLineArgsIter.cpp">
+    <ClCompile Include="..\src\base\CmdLineArgs.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp">
+    <ClCompile Include="..\src\base\CmdLineArgs_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Color.cpp">

@@ -456,7 +456,7 @@ void EngineDump(const Flags& flags) {
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 
-    CmdLineArgsIter argList(GetCommandLine());
+    StrNode* argList = ParseCmdLine(GetCommandLine());
     int nArgs = argList.nArgs;
 
     if (nArgs < 2) {

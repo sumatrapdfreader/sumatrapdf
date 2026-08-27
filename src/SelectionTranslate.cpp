@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 #include "base/ScopedWin.h"
 #include "base/UITask.h"
 #include "base/Win.h"

@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
 
@@ -17,17 +17,20 @@ static void QuoteCmdLineArgTest() {
         utassert(quoted.s != nullptr);
         // ParseCmdLine uses CommandLineToArgvW; prefix a dummy argv[0].
         TempStr cmdLine = fmt("exe %s", quoted);
-        StrVec args;
-        ParseCmdLine(cmdLine, args);
-        utassert(len(args) >= 1);
-        utassert(str::Eq(args[0], StrL("exe")));
+        StrNode* args = ParseCmdLine(cmdLine);
+        defer {
+            FreeStrNode(nullptr, args);
+        };
+        utassert(args != nullptr);
+        utassert(str::Eq(args->s, StrL("exe")));
         if (len(input) == 0) {
             // `exe ""` → only "exe" after empty-token skip in ParseCmdLine
-            utassert(len(args) == 1);
+            utassert(args->next == nullptr);
             return;
         }
-        utassert(len(args) == 2);
-        utassert(str::Eq(args[1], input));
+        utassert(args->next != nullptr);
+        utassert(args->next->next == nullptr);
+        utassert(str::Eq(args->next->s, input));
     };
 
     roundTripOne(StrL("hello"));

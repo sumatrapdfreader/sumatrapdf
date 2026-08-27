@@ -4,7 +4,7 @@
 // Antigravity CLI provider for the AI chat sidebar (see AIChatPanel.cpp)
 
 #include "base/Base.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 #include "base/DirScan.h"
 #include "base/File.h"
 #include "base/Win.h"

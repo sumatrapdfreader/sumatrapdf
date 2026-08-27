@@ -20,7 +20,7 @@
 #include "base/Archive.h"
 #include "base/Timer.h"
 #include "base/LzmaSimpleArchive.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"

@@ -11,7 +11,6 @@
 #include <Bra.h>
 #include <zlib.h> // for crc32
 #include "base/ByteReaderWriter.h"
-#include "base/CmdLineArgsIter.h"
 #include "base/File.h"
 #include "base/DirScan.h"
 #include "base/LzmaSimpleArchive.h"

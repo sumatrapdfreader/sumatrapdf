@@ -6,7 +6,7 @@
    driver which dispatches desired test based on cmd-line arguments. */
 
 #include "base/Base.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 #include "base/File.h"
 #include "base/GdiPlusUtil.h"
 #include "gui/PlatformFont.h"
@@ -72,26 +72,40 @@ int TesterMain() {
 
     WCHAR* cmdLine = GetCommandLine();
 
-    CmdLineArgsIter argv(cmdLine);
-    int nArgs = argv.nArgs;
+    StrNode* argv = ParseCmdLine(cmdLine);
+    defer {
+        FreeStrNode(nullptr, argv);
+    };
 
     // InitAllCommonControls();
     // ScopedGdiPlus gdi;
 
+    StrNode* argNode = argv;
+    for (int i = 0; argNode && i < 2; i++) {
+        argNode = argNode->next;
+    }
+    int nArgs = 2;
+    for (StrNode* n = argNode; n; n = n->next) {
+        nArgs++;
+    }
     int i = 2; // skip program name and "/tester"
-    while (i < nArgs) {
-        Str arg = argv.at(i);
+    while (argNode) {
+        Str arg = argNode->s;
         if (str::Eq(arg, StrL("-layout"))) {
             gLayout = true;
+            argNode = argNode->next;
             ++i;
         } else if (str::Eq(arg, StrL("-save-html"))) {
             gSaveHtml = true;
+            argNode = argNode->next;
             ++i;
         } else if (str::Eq(arg, StrL("-save-images"))) {
             gSaveImages = true;
+            argNode = argNode->next;
             ++i;
         } else if (str::Eq(arg, StrL("-zip-create"))) {
             ZipCreateTest();
+            argNode = argNode->next;
             ++i;
         } else {
             // unknown argument

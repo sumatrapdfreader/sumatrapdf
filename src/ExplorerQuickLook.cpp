@@ -4,9 +4,9 @@
 #include "base/Base.h"
 #include "base/ScopedWin.h"
 #include "base/File.h"
+#include "base/CmdLineArgs.h"
 #include "base/Win.h"
 #include "base/GuessFileType.h"
-#include "base/CmdLineArgsIter.h"
 #include "base/UITask.h"
 
 #include <exdisp.h>

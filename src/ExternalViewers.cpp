@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 #include "base/File.h"
 #include "base/Win.h"
 
@@ -255,12 +255,14 @@ static TempStr GetRegisteredOpenExeTemp(Str progId) {
     if (!command) {
         return {};
     }
-    StrVec args;
-    ParseCmdLine(command, args);
-    if (len(args) == 0 || !file::Exists(args[0])) {
+    StrNode* args = ParseCmdLine(command);
+    defer {
+        FreeStrNode(nullptr, args);
+    };
+    if (!args || !file::Exists(args->s)) {
         return {};
     }
-    return str::DupTemp(args[0]);
+    return str::DupTemp(args->s);
 }
 
 static TempStr FindPDFXChangeInProgramDirsTemp(const StrVec& programDirs) {

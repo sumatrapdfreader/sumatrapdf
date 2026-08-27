@@ -7,7 +7,7 @@
 // Only available in debug builds.
 
 #include "base/Base.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 #include "base/GdiPlusUtil.h"
 
 #include "RegistryPreview.h"
@@ -19,24 +19,31 @@ typedef HRESULT DllGetClassObjectFn(REFCLSID rclsid, REFIID riid, void** ppv);
 #define kPdfPreviewDllName StrL("PdfPreview.dll")
 
 void TestPreview(WStr cmdLine) {
-    StrVec argList;
-    ParseCmdLine(cmdLine, argList);
+    StrNode* argList = ParseCmdLine(cmdLine);
+    defer {
+        FreeStrNode(nullptr, argList);
+    };
 
     // find args after -test-preview
     int idx = -1;
-    for (int i = 0; i < len(argList); i++) {
-        if (str::EqI(argList[i], StrL("-test-preview"))) {
+    int i = 0;
+    for (StrNode* n = argList; n; n = n->next, i++) {
+        if (str::EqI(n->s, StrL("-test-preview"))) {
             idx = i;
             break;
         }
     }
 
-    if (idx < 0 || idx + 1 >= len(argList)) {
+    StrNode* fileNode = argList;
+    for (int n = 0; fileNode && n < idx + 1; n++) {
+        fileNode = fileNode->next;
+    }
+    if (idx < 0 || !fileNode) {
         printf("Usage: SumatraPDF.exe -test-preview <filename>\n");
         return;
     }
 
-    Str filePathA = argList[idx + 1];
+    Str filePathA = fileNode->s;
     WCHAR* filePath = CWStrTemp(filePathA);
 
     // use kPdfPreviewClsid by default

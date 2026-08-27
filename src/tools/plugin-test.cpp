@@ -5,7 +5,7 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 #include "base/File.h"
 
 // base expects these from the host app; provide no-ops for this tool
@@ -97,20 +97,26 @@ WStr GetSumatraExePath() {
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
-    StrVec argList;
-    ParseCmdLine(GetCommandLineW(), argList);
+    StrNode* parsedArgs = ParseCmdLine(GetCommandLineW());
+    defer {
+        FreeStrNode(nullptr, parsedArgs);
+    };
+    StrVec args;
+    for (StrNode* n = parsedArgs; n; n = n->next) {
+        args.Append(n->s);
+    }
 
-    if (len(argList) == 1) {
-        TempStr name = path::GetBaseNameTemp(argList[0]);
+    if (len(args) == 1) {
+        TempStr name = path::GetBaseNameTemp(args[0]);
         TempStr msg = fmt("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name);
         MsgBox(nullptr, msg, kPluginTestNameA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }
-    if (len(argList) == 2 || !str::EndsWithI(argList[1], StrL(".exe"))) {
-        argList.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
+    if (len(args) == 2 || !str::EndsWithI(args[1], StrL(".exe"))) {
+        args.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
     }
-    if (len(argList) == 3) {
-        argList.InsertAt(2, nullptr);
+    if (len(args) == 3) {
+        args.InsertAt(2, nullptr);
     }
 
     WNDCLASS wc{};
@@ -120,7 +126,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     wc.hCursor = GetCachedCursor(IDC_ARROW);
     RegisterClass(&wc);
 
-    PluginStartData data = {argList[1], argList[3], argList[2]};
+    PluginStartData data = {args[1], args[3], args[2]};
     HWND hwnd = CreateWindowExW(0, kPluginTestName, kPluginTestName, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
                                 CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, &data);
     ShowWindow(hwnd, nCmdShow);

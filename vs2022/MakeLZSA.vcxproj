@@ -946,7 +946,7 @@
     <ClInclude Include="..\src\base\Arena.h" />
     <ClInclude Include="..\src\base\Base.h" />
     <ClInclude Include="..\src\base\ByteReaderWriter.h" />
-    <ClInclude Include="..\src\base\CmdLineArgsIter.h" />
+    <ClInclude Include="..\src\base\CmdLineArgs.h" />
     <ClInclude Include="..\src\base\Color.h" />
     <ClInclude Include="..\src\base\DirScan.h" />
     <ClInclude Include="..\src\base\File.h" />
@@ -977,8 +977,8 @@
     <ClCompile Include="..\src\base\Base.cpp" />
     <ClCompile Include="..\src\base\Base_win.cpp" />
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp" />
-    <ClCompile Include="..\src\base\CmdLineArgsIter.cpp" />
-    <ClCompile Include="..\src\base\CmdLineArgsIter_win.cpp" />
+    <ClCompile Include="..\src\base\CmdLineArgs.cpp" />
+    <ClCompile Include="..\src\base\CmdLineArgs_win.cpp" />
     <ClCompile Include="..\src\base\Color.cpp" />
     <ClCompile Include="..\src\base\DirScan.cpp" />
     <ClCompile Include="..\src\base\DirScan_win.cpp" />

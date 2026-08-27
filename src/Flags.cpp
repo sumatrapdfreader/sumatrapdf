@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 #if OS_WIN
 #include "base/Win.h"
 #endif
@@ -227,17 +227,33 @@ static void ParseScrollValue(Point* scroll, Str txt) {
 }
 
 // Adobe Reader /t accepts optional driver and port after the printer name; we ignore them.
-static void SkipOptionalAdobePrinterParams(CmdLineArgsIter& args) {
-    Str driver = args.AdditionalParam(1);
+static Str AdditionalParam(StrNode* next) {
+    if (!next || CouldBeArg(next->s)) {
+        return {};
+    }
+    return next->s;
+}
+
+static Str EatParam(StrNode*& next) {
+    if (!next) {
+        return {};
+    }
+    Str s = next->s;
+    next = next->next;
+    return s;
+}
+
+static void SkipOptionalAdobePrinterParams(StrNode*& next) {
+    Str driver = AdditionalParam(next);
     if (!driver || CouldBeArg(driver)) {
         return;
     }
-    args.EatParam();
-    Str port = args.AdditionalParam(1);
+    EatParam(next);
+    Str port = AdditionalParam(next);
     if (!port || CouldBeArg(port)) {
         return;
     }
-    args.EatParam();
+    EatParam(next);
 }
 
 static Arg GetArg(Str s) {
@@ -369,12 +385,15 @@ FileArgs* ParseFileArgs(Str path) {
 void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
     ReportIf(!a);
     // logf("ParseFlags: cmdLine: '%s'\n", ToUtf8Temp(cmdLine));
-    CmdLineArgsIter args(cmdLine);
+    StrNode* root = ParseCmdLine(cmdLine);
+    defer {
+        FreeStrNode(nullptr, root);
+    };
+    StrNode* firstArg = root ? root->next : nullptr;
 
     // if the first argument is a tool name, skip parsing flags entirely
-    if (toolNames && args.curr < args.nArgs) {
-        Str firstArg = args.at(args.curr);
-        if (firstArg && SeqStrIndexIS(toolNames.s, firstArg) >= 0) {
+    if (toolNames && firstArg) {
+        if (SeqStrIndexIS(toolNames.s, firstArg->s) >= 0) {
             return;
         }
     }
@@ -382,7 +401,10 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
     Str param = {};
     int paramInt = 0;
 
-    for (Str argName = args.NextArg(); argName; argName = args.NextArg()) {
+    StrNode* nextArg = firstArg;
+    for (StrNode* argNode = firstArg; argNode; argNode = nextArg) {
+        Str argName = argNode->s;
+        nextArg = argNode->next;
         // we register SumatraPDF with "%1" "%2" "%3" "%4"
         // for some reason that makes Directory Opus "Open With" provide the file twice
         // and gives "%3" and "%4' on cmd-line.
@@ -417,16 +439,16 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         if (arg == Arg::PrintSilent) {
             // Adobe Reader: /t <file> <printer> [<driver> [<port>]]
             // also: <file> /t <printer> when the file is given earlier on the cmd-line
-            Str p1 = args.EatParam();
+            Str p1 = EatParam(nextArg);
             if (!p1) {
                 goto CollectFile;
             }
-            Str p2 = args.AdditionalParam(1);
+            Str p2 = AdditionalParam(nextArg);
             if (p2 && !CouldBeArg(p2)) {
                 if (len(i.fileNames) == 0 || !str::Eq(i.fileNames[len(i.fileNames) - 1], p1)) {
                     i.fileNames.Append(p1);
                 }
-                i.printerName = str::Dup(a, args.EatParam());
+                i.printerName = str::Dup(a, EatParam(nextArg));
             } else if (len(i.fileNames) > 0) {
                 i.printerName = str::Dup(a, p1);
             } else {
@@ -437,7 +459,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
                 }
             }
             i.exitWhenDone = true;
-            SkipOptionalAdobePrinterParams(args);
+            SkipOptionalAdobePrinterParams(nextArg);
             continue;
         }
         if (arg == Arg::Help || arg == Arg::Help2 || arg == Arg::Help3) {
@@ -582,7 +604,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             i.exitImmediately = true;
             continue;
         }
-        param = args.EatParam();
+        param = EatParam(nextArg);
         // following args require at least one param
         // if no params here, assume this is a file
         if (!param) {
@@ -626,11 +648,11 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             i.controlPipeName = str::Dup(a, param);
             continue;
         }
-        if ((arg == Arg::ForwardSearch1 || arg == Arg::ForwardSearch2) && args.AdditionalParam(1)) {
+        if ((arg == Arg::ForwardSearch1 || arg == Arg::ForwardSearch2) && AdditionalParam(nextArg)) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
             i.forwardSearchOrigin = str::Dup(a, param);
-            i.forwardSearchLine = ParseInt(args.EatParam());
+            i.forwardSearchLine = ParseInt(EatParam(nextArg));
             continue;
         }
         if (arg == Arg::NamedDest || arg == Arg::NamedDest2) {
@@ -668,9 +690,9 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // <parent HWND> is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
-            if (args.AdditionalParam(1) && !str::IsDigit(param.s[0])) {
+            if (AdditionalParam(nextArg) && !str::IsDigit(param.s[0])) {
                 i.pluginURL = str::Dup(a, param);
-                i.hwndPluginParent = (HWND)(intptr_t)ParseInt64(args.EatParam());
+                i.hwndPluginParent = (HWND)(intptr_t)ParseInt64(EatParam(nextArg));
             } else {
                 i.hwndPluginParent = (HWND)(intptr_t)ParseInt64(param);
             }
@@ -685,19 +707,19 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             //      -stress-test dir 301-  2x  render all files in dir twice, skipping first 300
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
             i.stressTestPath = str::Dup(a, param);
-            Str s = args.AdditionalParam(1);
+            Str s = AdditionalParam(nextArg);
             if (str::ContainsChar(s, '*')) {
-                i.stressTestFilter = str::Dup(a, args.EatParam());
-                s = args.AdditionalParam(1);
+                i.stressTestFilter = str::Dup(a, EatParam(nextArg));
+                s = AdditionalParam(nextArg);
             }
             if (s && IsValidPageRange(s)) {
-                i.stressTestRanges = str::Dup(a, args.EatParam());
-                s = args.AdditionalParam(1);
+                i.stressTestRanges = str::Dup(a, EatParam(nextArg));
+                s = AdditionalParam(nextArg);
             }
             int num;
             if (s && !str::IsNull(str::Parse(s, "%dx%$", &num)) && num > 0) {
                 i.stressTestCycles = num;
-                args.EatParam();
+                EatParam(nextArg);
             }
             continue;
         }
@@ -726,9 +748,9 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
         if (arg == Arg::Bench) {
             i.pathsToBenchmark.Append(param);
-            Str s = args.AdditionalParam(1);
+            Str s = AdditionalParam(nextArg);
             if (s && IsBenchPagesInfo(s)) {
-                s = args.EatParam();
+                s = EatParam(nextArg);
                 i.pathsToBenchmark.Append(s);
             } else {
                 // pathsToBenchmark are always in pairs
@@ -799,14 +821,14 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             i.globalPrefArgs.Append(param);
             continue;
         }
-        if (arg == Arg::SetColorRange && args.AdditionalParam(1)) {
+        if (arg == Arg::SetColorRange && AdditionalParam(nextArg)) {
             i.globalPrefArgs.Append(argName);
             i.globalPrefArgs.Append(param);
-            i.globalPrefArgs.Append(args.EatParam());
+            i.globalPrefArgs.Append(EatParam(nextArg));
             continue;
         }
         // again, argName is any of the known args, so assume it's a file starting with '-'
-        args.RewindParam();
+        nextArg = argNode->next;
 
     CollectFile:
         // Resolve shell shortcuts so opening a .lnk loads the target document.

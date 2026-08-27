@@ -8,7 +8,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Win.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 
 constexpr const WCHAR* kPluginTestName = L"SumatraPDF Plugin Test";
 
@@ -106,22 +106,29 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
 
 // Parse args after -test-plugin: [<SumatraPDF.exe>] [<URL>] <filename.ext>
 void TestPlugin(WStr cmdLine) {
-    StrVec argList;
-    ParseCmdLine(cmdLine, argList);
+    StrNode* argList = ParseCmdLine(cmdLine);
+    defer {
+        FreeStrNode(nullptr, argList);
+    };
 
     // find the position of -test-plugin and take args after it
     int pluginIdx = -1;
-    for (int i = 0; i < len(argList); i++) {
-        if (str::EqI(argList[i], StrL("-test-plugin"))) {
-            pluginIdx = i;
+    int argIdx = 0;
+    for (StrNode* n = argList; n; n = n->next, argIdx++) {
+        if (str::EqI(n->s, StrL("-test-plugin"))) {
+            pluginIdx = argIdx;
             break;
         }
     }
 
     StrVec args;
+    StrNode* n = argList;
+    for (int i = 0; n && i < pluginIdx + 1; i++) {
+        n = n->next;
+    }
     if (pluginIdx >= 0) {
-        for (int i = pluginIdx + 1; i < len(argList); i++) {
-            args.Append(argList[i]);
+        for (; n; n = n->next) {
+            args.Append(n->s);
         }
     }
 

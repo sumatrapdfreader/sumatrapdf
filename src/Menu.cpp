@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include "base/ScopedWin.h"
-#include "base/CmdLineArgsIter.h"
+#include "base/CmdLineArgs.h"
 #include "base/File.h"
 #include "base/BitManip.h"
 #include "gui/Dpi.h"
@@ -1463,13 +1463,22 @@ static void AppendExternalViewersToMenu(HMENU menuFile, Str filePath) {
         TempStr name = cmd->name;
         if (str::IsEmptyOrWhiteSpace(cmd->name)) {
             if (str::IsEmptyOrWhiteSpace(name)) {
-                CmdLineArgsIter args(ToWStrTemp(commandLine));
-                int nArgs = args.nArgs - 2;
+                StrNode* args = ParseCmdLine(ToWStrTemp(commandLine));
+                defer {
+                    FreeStrNode(nullptr, args);
+                };
+                StrNode* arg0 = args;
+                for (int i = 0; arg0 && i < 2; i++) {
+                    arg0 = arg0->next;
+                }
+                int nArgs = 0;
+                for (StrNode* n = arg0; n; n = n->next) {
+                    nArgs++;
+                }
                 if (nArgs <= 0) {
                     continue;
                 }
-                Str arg0 = args.at(2 + 0);
-                name = path::GetBaseNameTemp(arg0);
+                name = path::GetBaseNameTemp(arg0->s);
                 int dotPos = str::IndexOfChar(name, '.');
                 if (dotPos >= 0) {
                     name = str::DupTemp(Str(name.s, dotPos));
