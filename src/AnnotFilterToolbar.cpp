@@ -216,20 +216,20 @@ static void ApplyVisibleToList(AnnotFilterToolbar* f, VirtListBox* lb, Annotatio
     }
     lb->SetModel(NewAnnotListModel(f));
     lb->ScrollTo(prevScrollY);
-    int caretIdx = caret ? f->visibleAnnots.Find(caret) : -1;
+    int caretIdx = caret ? VecFind(f->visibleAnnots, caret) : -1;
     if (caretIdx < 0) {
         Annotation* keep = FilterTab(f) ? FilterTab(f)->selectedAnnotation : nullptr;
-        caretIdx = keep ? f->visibleAnnots.Find(keep) : -1;
+        caretIdx = keep ? VecFind(f->visibleAnnots, keep) : -1;
     }
     if (lb->multiSelect && len(keepSel) > 0) {
         if (caretIdx < 0) {
-            caretIdx = f->visibleAnnots.Find(keepSel[0]);
+            caretIdx = VecFind(f->visibleAnnots, keepSel[0]);
         }
         if (caretIdx >= 0) {
             lb->SetCurrentSelection(caretIdx);
         }
         for (Annotation* a : keepSel) {
-            int i = f->visibleAnnots.Find(a);
+            int i = VecFind(f->visibleAnnots, a);
             if (i >= 0 && !lb->IsSelected(i)) {
                 lb->ToggleSelected(i);
             }
@@ -607,7 +607,7 @@ static void OnFilterTextChanged(AnnotFilterToolbar* f) {
     if (!lb) {
         return;
     }
-    int idx = keep ? f->visibleAnnots.Find(keep) : -1;
+    int idx = keep ? VecFind(f->visibleAnnots, keep) : -1;
     if (idx >= 0) {
         lb->SetCurrentSelection(idx);
         return;
@@ -1419,7 +1419,7 @@ void UpdateAnnotFilterToolbar(MainWindow* win) {
     if (lb && !filterFocused) {
         WindowTab* tab = FilterTab(f);
         Annotation* keep = tab ? tab->selectedAnnotation : nullptr;
-        int idx = keep ? f->visibleAnnots.Find(keep) : -1;
+        int idx = keep ? VecFind(f->visibleAnnots, keep) : -1;
         if (idx >= 0 && lb->GetCurrentSelection() != idx) {
             lb->SetCurrentSelection(idx);
         }

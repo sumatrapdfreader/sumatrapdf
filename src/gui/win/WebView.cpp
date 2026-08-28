@@ -188,7 +188,7 @@ void FreePendingOps(Vec<PendingWebViewOp>& ops) {
 }
 
 void RemovePendingWebview(WebviewWnd* wv) {
-    int i = gPendingWebviews.Find(wv);
+    int i = VecFind(gPendingWebviews, wv);
     if (i >= 0) {
         gPendingWebviews.RemoveAt(i);
     }

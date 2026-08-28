@@ -85,7 +85,7 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
 
     Gdiplus::RectF bbox;
     g->MeasureString(s.s, n, f, Gdiplus::PointF(0, 0), &bbox);
-    int idx = fontCache.Find(f);
+    int idx = VecFind(fontCache, f);
     if (-1 == idx) {
         LOGFONTW lfw;
         Status ok = f->GetLogFontW(g, &lfw);

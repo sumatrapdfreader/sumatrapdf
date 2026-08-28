@@ -276,7 +276,7 @@ void TabGroupsWnd::OnOk(VirtMouseEvent*) {
 }
 
 static void TeardownTabGroupsWnd(TabGroupsWnd* w) {
-    if (!w || gTabGroupsWnds.Find(w) < 0) {
+    if (!w || VecFind(gTabGroupsWnds, w) < 0) {
         return;
     }
     gTabGroupsWnds.Remove(w);

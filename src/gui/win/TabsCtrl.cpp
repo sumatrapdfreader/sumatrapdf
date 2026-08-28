@@ -107,7 +107,7 @@ TabCtrl::TabCtrl() {
 }
 
 int TabCtrl::Idx() {
-    return tabsCtrl ? tabsCtrl->tabs.Find(ti) : -1;
+    return tabsCtrl ? VecFind(tabsCtrl->tabs, ti) : -1;
 }
 
 bool TabCtrl::IsSelected() {

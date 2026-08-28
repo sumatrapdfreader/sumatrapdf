@@ -48,6 +48,10 @@ T* VecInsertSpace(Vec<T>& v, int idx, int count);
 template <typename T>
 bool VecAppendN(Vec<T>& v, const T* src, int count);
 
+// Index of the first element equal to el at or after startAt, -1 if none.
+template <typename T>
+int VecFind(const Vec<T>& v, const T& el, int startAt = 0);
+
 template <typename T>
 struct Vec {
     int len = 0;
@@ -181,20 +185,11 @@ struct Vec {
 
     T* LendData() const { return els; }
 
-    int Find(const T& el, int startAt = 0) const {
-        for (int i = startAt; i < len; i++) {
-            if (els[i] == el) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    bool Contains(const T& el) const { return -1 != Find(el); }
+    bool Contains(const T& el) const { return -1 != VecFind(*this, el); }
 
     // returns position of removed element or -1 if not removed
     int Remove(const T& el) {
-        int i = Find(el);
+        int i = VecFind(*this, el);
         if (i >= 0) {
             RemoveAt(i);
         }
@@ -203,7 +198,7 @@ struct Vec {
 
     // returns position of removed element or -1 if not removed
     int RemoveFast(const T& el) {
-        int i = Find(el);
+        int i = VecFind(*this, el);
         if (i >= 0) {
             RemoveAtFast(i);
         }
@@ -298,6 +293,16 @@ inline T* VecReserve(Vec<T>& v, int capNeeded) {
 template <typename T>
 T* VecInsertSpace(Vec<T>& v, int idx, int count) {
     return (T*)VecInsertSpaceNonTemplated(v.NT(), (int)sizeof(T), idx, count);
+}
+
+template <typename T>
+int VecFind(const Vec<T>& v, const T& el, int startAt) {
+    for (int i = startAt; i < v.len; i++) {
+        if (v.els[i] == el) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 template <typename T>

@@ -985,7 +985,7 @@ static void OnPropertiesDestroy(WindowBase::DestroyEvent* ev) {
     if (!w || w->deleteScheduled) {
         return;
     }
-    if (gPropertiesWindows.Find(w) >= 0) {
+    if (VecFind(gPropertiesWindows, w) >= 0) {
         SavePropertiesWindowPos(w, ev->e->hwnd);
         gPropertiesWindows.Remove(w);
     }

@@ -8484,7 +8484,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
             if (!w) {
                 continue;
             }
-            bool gone = listedLive ? live.Find(w->pdfannot) < 0 : w->type == AnnotationType::Redact;
+            bool gone = listedLive ? VecFind(live, w->pdfannot) < 0 : w->type == AnnotationType::Redact;
             if (!gone) {
                 continue;
             }
@@ -8983,7 +8983,7 @@ Annotation* EngineMupdfGetAdjacentWidget(EngineBase* engine, Annotation* cur, bo
     }
     Vec<Annotation*>& ws = pi->widgets;
     int n = len(ws);
-    int idx = ws.Find(cur);
+    int idx = VecFind(ws, cur);
     if (n == 0 || idx < 0) {
         return nullptr;
     }
@@ -9118,7 +9118,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
         ValidateAnnotationsInSync(e, pageInfo);
     } else if (change == AnnotationChange::Add) {
         int sizeBefore = len(pageInfo->annotations);
-        int pos = pageInfo->annotations.Find(annot);
+        int pos = VecFind(pageInfo->annotations, annot);
         ReportIf(pos >= 0); // shouldn't exist
         pageInfo->annotations.Append(annot);
         int sizeNow = len(pageInfo->annotations);

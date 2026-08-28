@@ -397,7 +397,7 @@ void VirtCtrl::InsertChild(VirtCtrl* c, int idx) {
 }
 
 void VirtCtrl::RemoveChild(VirtCtrl* c, bool del) {
-    int idx = children.Find(c);
+    int idx = VecFind(children, c);
     if (idx < 0) {
         return;
     }
@@ -833,7 +833,7 @@ bool VirtRoot::TabNavigate(bool backwards) {
     if (n == 0) {
         return false;
     }
-    int idx = focused ? all.Find(focused) : -1;
+    int idx = focused ? VecFind(all, focused) : -1;
     if (idx < 0) {
         idx = backwards ? n - 1 : 0;
     } else {
@@ -910,7 +910,7 @@ void VirtRoot::OnWndDestroyed(VirtCtrl* w) {
     HideTooltip();
     // it can be one of the tops (the tree is rebuilt by deleting nodes and
     // laying out again), and those we must not paint or hit-test any more
-    int idx = tops.Find(w);
+    int idx = VecFind(tops, w);
     if (idx >= 0) {
         tops.RemoveAt(idx);
     }

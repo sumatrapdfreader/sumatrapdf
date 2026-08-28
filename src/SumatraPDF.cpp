@@ -1081,7 +1081,7 @@ static bool ShouldSaveThumbnail(FileState* ds) {
     } else {
         FileHistoryGetRecentlyOpenedOrder(list);
     }
-    int idx = list.Find(ds);
+    int idx = VecFind(list, ds);
     if (idx < 0) {
         return false;
     }
