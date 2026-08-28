@@ -44,6 +44,12 @@ struct ThumbnailNavigationCache {
     // can't be rendered
     Vec<Pixmap*> thumbnails;
     HWND hwnd = nullptr;
+    // the engine clone the render passes draw from, kept for as long as the
+    // grid is on screen. Cloning per pass re-reads the whole document (for a
+    // .cbr that's the archive directory) and starts over on the per-page state
+    // the previous pass built up. Only ever touched by the render thread while
+    // workerRunning, and only by the ui thread while it isn't
+    EngineBase* renderEngine = nullptr;
     AtomicInt cancelRendering = 0;
     int pageCount = 0;
     // what the cached thumbnails were rendered for. A mismatch (document
@@ -92,11 +98,23 @@ static Pixmap* ThumbnailToDraw(ThumbnailNavigationCache* cache, int idx) {
     return thumbnail == kThumbnailFailedToRender ? nullptr : thumbnail;
 }
 
+// the clone holds the document open (and its own decoded-page cache), so it's
+// only worth keeping while the grid is on screen. Must not be called while a
+// render pass is running: that's the thread using it
+static void FreeThumbnailRenderEngine(ThumbnailNavigationCache* cache) {
+    ReportIf(cache->workerRunning);
+    if (cache->renderEngine) {
+        cache->renderEngine->Release();
+        cache->renderEngine = nullptr;
+    }
+}
+
 static void DeleteThumbnailNavigationCache(ThumbnailNavigationCache* cache) {
     for (Pixmap* thumbnail : cache->thumbnails) {
         FreeThumbnail(thumbnail);
     }
     cache->thumbnails.Reset();
+    FreeThumbnailRenderEngine(cache);
     delete cache;
 }
 
@@ -108,6 +126,7 @@ struct ThumbnailRenderTask {
 
 struct ThumbnailRenderWorker {
     ThumbnailNavigationCache* cache = nullptr;
+    // engine to clone into cache->renderEngine, null once we have that clone
     EngineBase* sourceEngine = nullptr;
     // pages to render, most useful first. Picked on the ui thread: the worker
     // must not look at cache->thumbnails, which the ui thread owns
@@ -164,6 +183,9 @@ static void FinishThumbnailWorker(ThumbnailNavigationCache* cache) {
         return;
     }
     if (!cache->hwnd) {
+        // the grid was closed while this pass ran, so WM_NCDESTROY couldn't
+        // drop the clone (we were still using it)
+        FreeThumbnailRenderEngine(cache);
         return;
     }
     // the user may have scrolled to pages this pass didn't cover
@@ -186,8 +208,14 @@ static bool ShouldCancelThumbnailRendering(ThumbnailRenderWorker* worker) {
 }
 
 static void RenderThumbnailsInBackground(ThumbnailRenderWorker* worker) {
-    EngineBase* engine = worker->sourceEngine->Clone();
-    worker->sourceEngine->Release();
+    ThumbnailNavigationCache* cache = worker->cache;
+    if (worker->sourceEngine) {
+        // first pass since the grid opened; later ones reuse this clone
+        cache->renderEngine = worker->sourceEngine->Clone();
+        worker->sourceEngine->Release();
+        worker->sourceEngine = nullptr;
+    }
+    EngineBase* engine = cache->renderEngine;
     if (engine) {
         for (int pageNo : worker->pages) {
             if (ShouldCancelThumbnailRendering(worker)) {
@@ -195,9 +223,8 @@ static void RenderThumbnailsInBackground(ThumbnailRenderWorker* worker) {
             }
             RenderAndPostThumbnail(worker, engine, pageNo);
         }
-        engine->Release();
     }
-    uitask::Post(MkFunc0<ThumbnailNavigationCache>(FinishThumbnailWorker, worker->cache));
+    uitask::Post(MkFunc0<ThumbnailNavigationCache>(FinishThumbnailWorker, cache));
     delete worker;
 }
 
@@ -518,6 +545,11 @@ static LRESULT CALLBACK ThumbnailNavigationWndProc(HWND hwnd, UINT msg, WPARAM w
             // nothing is looking at the thumbnails any more, don't leave a
             // worker rendering the rest of the document in the background
             AtomicIntSet(&state->cache->cancelRendering, 1);
+            if (!state->cache->workerRunning) {
+                // a running pass is still using the clone; FinishThumbnailWorker
+                // drops it when that pass ends
+                FreeThumbnailRenderEngine(state->cache);
+            }
             OverlayScrollbarDestroy(state->scrollbar);
             state->scrollbar = nullptr;
             delete state;
@@ -580,11 +612,15 @@ static void StartThumbnailRendering(ThumbnailNavigationState* state) {
     }
 
     worker->cache = cache;
-    worker->sourceEngine = engine;
     worker->rotation = cache->rotation;
     worker->thumbDx = cache->thumbDx;
     worker->thumbDy = cache->thumbDy;
-    engine->AddRef();
+    if (!cache->renderEngine) {
+        // the worker makes the clone (Clone() re-reads the document, which is
+        // slow for an archive) and hands it back through cache->renderEngine
+        worker->sourceEngine = engine;
+        engine->AddRef();
+    }
     // a previous pass may have been cancelled by closing the overlay
     AtomicIntSet(&cache->cancelRendering, 0);
     cache->workerRunning = true;
