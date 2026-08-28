@@ -857,7 +857,8 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
 
     // i64 with thousand seps is well under 48 bytes (e.g. "9,223,372,036,854,775,807").
     char resScratch[48]{};
-    str::Builder res(Str(resScratch, sizeofi(resScratch)));
+    str::Builder res;
+    str::BuilderUseExternalBuffer(res, Str(resScratch, sizeofi(resScratch)));
     int i = 3 - (buf.len % 3);
     for (int src = 0; src < buf.len; src++) {
         res.AppendChar(buf.s[src]);
@@ -965,7 +966,8 @@ TempStr FormatRomanNumeralTemp(int n) {
 
     // Page numbers in roman are short (e.g. 3999 -> "MMMCMXCIX" = 9 chars).
     char romanScratch[32]{};
-    str::Builder roman(Str(romanScratch, sizeofi(romanScratch)));
+    str::Builder roman;
+    str::BuilderUseExternalBuffer(roman, Str(romanScratch, sizeofi(romanScratch)));
     for (auto& el : romandata) {
         for (; n >= el.value; n -= el.value) {
             roman.Append(el.numeral);

@@ -252,9 +252,7 @@ struct Builder {
 
     int nReallocs = 0;
 
-    // externalBuf: optional scratch (not owned), e.g. stack or temp-arena memory.
-    // Set .a after construction if heap allocs should use an arena.
-    explicit Builder(Str externalBuf = {});
+    Builder() = default;
     explicit Builder(int capHint);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
@@ -292,6 +290,12 @@ bool Contains(const Builder& b, Str sub);
 // Builder does not hold an allocator; like Vec, the arena is passed to the calls
 // that can grow. a == nullptr means the heap. Storage that came from an arena is
 // never freed by the Builder (the arena owns it).
+// Lend b a buffer to start in, instead of its first allocation, the way
+// VecUseExternalBuffer() does. b must be empty and have no storage yet. It
+// appends into buf until buf is full; the append past that allocates and
+// copies, leaving buf alone. Nothing frees buf, so it must outlive b.
+void BuilderUseExternalBuffer(Builder& b, Str buf);
+
 bool BuilderInsertAt(Arena* a, Builder& b, int idx, char el);
 bool BuilderAppendChar(Arena* a, Builder& b, char c);
 bool BuilderAppend(Arena* a, Builder& b, Str s);
@@ -316,9 +320,7 @@ struct Builder {
 
     static constexpr int kElSize = sizeofi(WCHAR);
 
-    // externalBuf: optional scratch (not owned), e.g. stack or temp-arena memory.
-    // Set .a after construction if heap allocs should use an arena.
-    explicit Builder(WStr externalBuf = {});
+    Builder() = default;
     explicit Builder(int capHint);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
@@ -350,6 +352,9 @@ struct Builder {
 } // namespace wstr
 
 namespace wstr {
+
+// see str::BuilderUseExternalBuffer()
+void BuilderUseExternalBuffer(Builder& b, WStr buf);
 
 // the allocator is passed in, see str::BuilderAppend()
 bool BuilderAppendChar(Arena* a, Builder& b, WCHAR c);

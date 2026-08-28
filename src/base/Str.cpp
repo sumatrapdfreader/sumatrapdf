@@ -1838,13 +1838,13 @@ void str::Builder::Reset(Str s) {
     Append(s); // no-op if s is empty
 }
 
-// capHint: preferred capacity after first grow
-str::Builder::Builder(Str externalBuf) {
-    if (externalBuf.s && externalBuf.len > kPadding) {
-        els = externalBuf.s;
-        cap = -externalBuf.len;
+void str::BuilderUseExternalBuffer(Builder& b, Str buf) {
+    ReportIf(b.els || b.len != 0);
+    if (buf.s && buf.len > kPadding) {
+        b.els = buf.s;
+        b.cap = -buf.len;
+        b.els[0] = 0;
     }
-    Reset();
 }
 
 // capHint: preferred capacity after first grow
@@ -2065,13 +2065,13 @@ void wstr::Builder::Reset(WStr s) {
     Append(s); // no-op if s is empty
 }
 
-// capHint: preferred capacity after first grow
-wstr::Builder::Builder(WStr externalBuf) {
-    if (externalBuf.s && externalBuf.len > kPadding) {
-        els = externalBuf.s;
-        cap = -externalBuf.len;
+void wstr::BuilderUseExternalBuffer(Builder& b, WStr buf) {
+    ReportIf(b.els || b.len != 0);
+    if (buf.s && buf.len > kPadding) {
+        b.els = buf.s;
+        b.cap = -buf.len;
+        b.els[0] = 0;
     }
-    Reset();
 }
 
 // capHint: preferred capacity after first grow

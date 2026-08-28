@@ -58,7 +58,8 @@ static Str UnescapeStr(Str s) {
 
     // Unescaped result is never longer than input; TakeStr copies off the temp scratch.
     char* retScratch = (char*)AllocTemp(s.len + 1);
-    str::Builder ret(Str(retScratch, s.len + 1));
+    str::Builder ret;
+    str::BuilderUseExternalBuffer(ret, Str(retScratch, s.len + 1));
     int off = 0;
     if (s.s[0] == '$' && s.len > 1 && str::IsWs(s.s[1])) {
         off = 1; // leading whitespace
@@ -98,7 +99,8 @@ static Str UnescapeStr(Str s) {
 static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
     // Typical open-file history / recent lists fit in a few KB; grow if not.
     char serializedScratch[1024]{};
-    str::Builder serialized(Str(serializedScratch, sizeofi(serializedScratch)));
+    str::Builder serialized;
+    str::BuilderUseExternalBuffer(serialized, Str(serializedScratch, sizeofi(serializedScratch)));
 
     for (int i = 0; i < len(*strArray); i++) {
         if (i > 0) {
@@ -149,7 +151,8 @@ static void DeserializeUtf8StringArray(Vec<Str>* strArray, Str serialized) {
         if ('"' == serialized.s[off]) {
             // One quoted token per loop iteration; most paths fit in 256.
             char partScratch[256]{};
-            str::Builder part(Str(partScratch, sizeofi(partScratch)));
+            str::Builder part;
+            str::BuilderUseExternalBuffer(part, Str(partScratch, sizeofi(partScratch)));
             for (off++; off < serialized.len;) {
                 if (serialized.s[off] == '"' && (off + 1 >= serialized.len || serialized.s[off + 1] != '"')) {
                     break;

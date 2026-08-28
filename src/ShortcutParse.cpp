@@ -366,7 +366,8 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
 
     // "\tCtrl + Shift + Alt + F24" / localized variants fit in ~64 bytes.
     char strScratch[64]{};
-    str::Builder str(Str(strScratch, sizeofi(strScratch)));
+    str::Builder str;
+    str::BuilderUseExternalBuffer(str, Str(strScratch, sizeofi(strScratch)));
     str.Append(StrL("\t")); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
     if ((virt & FALT) && (virt & FCONTROL)) {
