@@ -40,14 +40,17 @@ void VecClearNT(VecNonTemplated* v, int elSize);
 void* VecTakeNT(VecNonTemplated* v, int elSize);
 void VecCopyFromNT(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail);
 
-// Ensure capacity is at least wantedSize for a vec-like {els,len,cap}.
-// Growth: max(cap*2, wantedSize). arena may be null (heap).
+// Ensure capacity is at least n for a vec-like {els,len,cap}. Returns the
+// elements, or null if it couldn't. Growth: max(cap*2, n). arena may be null
+// (heap). T is the vec, so the return type is its element pointer. Note a vec
+// that has never allocated also returns null for n == 0, since there are no
+// elements to point at.
 template <typename T>
-bool VecReserve(Arena* arena, T& v, int wantedSize);
+auto VecReserve(Arena* arena, T& v, int n) -> decltype(v.els);
 
 // Heap Vec: same growth; returns v.els (nullptr on failure).
 template <typename T>
-inline T* VecReserve(Vec<T>& v, int capNeeded);
+inline T* VecReserve(Vec<T>& v, int n);
 
 // Open a hole of `count` elements at `idx`; updates len. Returns &v.els[idx].
 template <typename T>
@@ -221,11 +224,14 @@ void VecReverse(Vec<T>& v) {
 // lead with {len, cap, els}, which the static_asserts hold them to, so the
 // erased view is a cast and this compiles to just the call
 template <typename T>
-bool VecReserve(Arena* arena, T& v, int wantedSize) {
+auto VecReserve(Arena* arena, T& v, int n) -> decltype(v.els) {
     static_assert(offsetof(T, len) == offsetof(VecNonTemplated, len));
     static_assert(offsetof(T, cap) == offsetof(VecNonTemplated, cap));
     static_assert(offsetof(T, els) == offsetof(VecNonTemplated, els));
-    return VecReserveNT(arena, (VecNonTemplated*)&v, (int)sizeof(*v.els), wantedSize);
+    if (!VecReserveNT(arena, (VecNonTemplated*)&v, (int)sizeof(*v.els), n)) {
+        return nullptr;
+    }
+    return v.els;
 }
 
 // Lend v an array to start in, instead of its first allocation. The vec
@@ -257,11 +263,8 @@ inline void VecUseExternalBuffer(Vec<T>& v, T (&buf)[N]) {
 }
 
 template <typename T>
-inline T* VecReserve(Vec<T>& v, int capNeeded) {
-    if (!VecReserve(nullptr, v, capNeeded)) {
-        return nullptr;
-    }
-    return v.els;
+inline T* VecReserve(Vec<T>& v, int n) {
+    return VecReserve(nullptr, v, n);
 }
 
 template <typename T>
@@ -427,8 +430,7 @@ inline void DeleteVecMembers(Vec<T>& v) {
 
 template <typename T, typename E>
 bool VecPush(Arena* arena, T& v, E el) {
-    bool ok = VecReserve(arena, v, v.len + 1);
-    if (!ok) {
+    if (!VecReserve(arena, v, v.len + 1)) {
         return false;
     }
     v.els[v.len] = el;
