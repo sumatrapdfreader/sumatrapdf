@@ -14,7 +14,6 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
-#include "GlobalPrefs.h"
 #include "DocController.h"
 #include "MainWindow.h"
 #include "Theme.h"

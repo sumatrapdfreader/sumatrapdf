@@ -11,7 +11,7 @@
 #include "gui/PlatformFont.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"

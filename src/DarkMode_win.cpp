@@ -22,7 +22,6 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
-#include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "AppTools.h"

@@ -21,7 +21,6 @@
 #include "EngineAll.h"
 #include "Flags.h"
 #include "SumatraConfig.h"
-#include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"

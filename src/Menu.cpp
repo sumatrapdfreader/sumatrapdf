@@ -25,7 +25,6 @@
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "Theme.h"
-#include "GlobalPrefs.h"
 #include "Annotation.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"

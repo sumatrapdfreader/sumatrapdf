@@ -12,7 +12,6 @@
 #include "gui/Gfx.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Commands.h"

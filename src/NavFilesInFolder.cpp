@@ -22,7 +22,6 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "GlobalPrefs.h"
 #include "FileHistory.h"
 #include "SumatraConfig.h"
 #include "AppSettings.h"

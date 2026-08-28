@@ -19,7 +19,6 @@
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "GlobalPrefs.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"
 #include "SumatraPDF.h"

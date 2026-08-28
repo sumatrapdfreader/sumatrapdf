@@ -7,8 +7,6 @@
 #include "Settings.h"
 #include "AppSettings.h"
 
-#include "GlobalPrefs.h"
-
 #include "SumatraPDF.h"
 #include "resource.h"
 #include "Translations.h"

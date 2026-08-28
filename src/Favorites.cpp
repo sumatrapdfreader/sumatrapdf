@@ -19,7 +19,6 @@
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
-#include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"

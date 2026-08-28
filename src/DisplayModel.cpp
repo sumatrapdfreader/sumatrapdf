@@ -57,7 +57,7 @@
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "SumatraPDF.h"
 #include "PdfSync.h"
 #include "ProgressUpdateUI.h"

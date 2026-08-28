@@ -21,7 +21,6 @@
 #include "gui/win/WebView.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
 #include "AppTools.h"
 #include "Version.h"
 #include "SumatraConfig.h"

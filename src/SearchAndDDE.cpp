@@ -15,7 +15,7 @@
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "ChmModel.h"
 #include "MarkdownModel.h"
 #include "DisplayModel.h"

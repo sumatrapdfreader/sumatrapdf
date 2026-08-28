@@ -15,7 +15,6 @@
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
 #include "AppSettings.h"
 #include "DocProperties.h"
 #include "DocController.h"

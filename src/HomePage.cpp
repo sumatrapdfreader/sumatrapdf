@@ -23,7 +23,6 @@
 #include "DocController.h"
 #include "SumatraConfig.h"
 #include "FileHistory.h"
-#include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Commands.h"

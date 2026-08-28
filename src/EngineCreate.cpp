@@ -14,7 +14,7 @@
 #include "SumatraPDF.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "LitDoc.h"
 #include "StressTesting.h"
 #include "EngineAll.h"

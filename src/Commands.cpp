@@ -9,7 +9,7 @@
 #ifndef SUMATRA_TEST_UTIL
 #include "ShortcutParse.h"
 #include "Accelerators.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #endif
 #include "Commands.h"
 

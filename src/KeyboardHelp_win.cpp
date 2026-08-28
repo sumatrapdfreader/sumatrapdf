@@ -6,7 +6,7 @@
 #include "gui/PlatformWindow.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "DocController.h"
 #include "MainWindow.h"
 #include "Commands.h"

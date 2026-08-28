@@ -14,7 +14,6 @@
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"
-#include "GlobalPrefs.h"
 #include "Annotation.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"

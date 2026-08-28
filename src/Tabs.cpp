@@ -21,7 +21,6 @@
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
-#include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "SumatraProperties.h"
 #include "MainWindow.h"

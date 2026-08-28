@@ -16,7 +16,7 @@
 #include "gui/win/WinGui.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "Theme.h"
 #include "DarkMode_win.h"
 #include "SumatraConfig.h"

@@ -28,7 +28,6 @@
 #include "Commands.h"
 #include "Accelerators.h"
 #include "Settings.h"
-#include "GlobalPrefs.h"
 #include "AppSettings.h"
 #include "MainWindow.h"
 #include "SumatraPDF.h"

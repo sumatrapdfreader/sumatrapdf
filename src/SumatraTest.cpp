@@ -12,7 +12,7 @@ extern "C" {
 }
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "gui/UIModels.h"
 #include "DocController.h"
 #include "EngineBase.h"

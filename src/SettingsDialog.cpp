@@ -15,7 +15,6 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "AppSettings.h"
-#include "GlobalPrefs.h"
 #include "MainWindow.h"
 #include "FileHistory.h"
 #include "FileThumbnails.h"

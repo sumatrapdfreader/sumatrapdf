@@ -17,7 +17,7 @@
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "Theme.h"
 #include "ChmModel.h"
 

@@ -17,7 +17,6 @@
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
 #include "AppSettings.h"
 #include "SumatraPDF.h"
 #include "SumatraConfig.h"

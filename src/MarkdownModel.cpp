@@ -17,7 +17,7 @@
 #include "DocController.h"
 #include "DocProperties.h"
 #include "EngineBase.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 
 #include "SumatraPDF.h"
 #include "EmbeddedResources.h"

@@ -15,7 +15,6 @@
 #include "gui/win/WebView.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
 #include "AppTools.h"
 #include "AppSettings.h"
 #include "Version.h"

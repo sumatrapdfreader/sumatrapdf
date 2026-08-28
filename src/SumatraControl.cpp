@@ -25,7 +25,7 @@
 #include "RenderCache.h"
 #include "Commands.h"
 #include "CommandAvailability.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "Flags.h"
 #include "SumatraTest.h"
 #include "SumatraPDF.h"

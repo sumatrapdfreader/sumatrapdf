@@ -6,7 +6,7 @@
 #include "gui/UIModels.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "DocController.h"
 #include "Theme.h"
 #include "EngineBase.h"

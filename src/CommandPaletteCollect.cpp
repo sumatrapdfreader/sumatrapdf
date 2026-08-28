@@ -14,7 +14,6 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
-#include "GlobalPrefs.h"
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"

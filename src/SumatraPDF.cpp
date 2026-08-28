@@ -45,7 +45,6 @@
 #include "Annotation.h"
 #include "FormFields.h"
 #include "PdfTools.h"
-#include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "MarkdownModel.h"
 #include "MarkdownToc.h"

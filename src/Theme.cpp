@@ -16,7 +16,6 @@ License: GPLv3 */
 #include "AppSettings.h"
 #include "Commands.h"
 #include "DarkMode_win.h"
-#include "GlobalPrefs.h"
 #include "Translations.h"
 #include "PdfDarkMode.h"
 #include "Theme.h"

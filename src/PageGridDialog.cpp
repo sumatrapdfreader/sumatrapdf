@@ -16,7 +16,6 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
-#include "GlobalPrefs.h"
 #include "MainWindow.h"
 #include "Theme.h"
 #include "SumatraConfig.h"

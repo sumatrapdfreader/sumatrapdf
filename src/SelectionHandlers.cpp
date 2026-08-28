@@ -48,7 +48,7 @@
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"

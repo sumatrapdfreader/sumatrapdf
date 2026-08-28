@@ -36,7 +36,7 @@
 
 #include "DisplayModel.h"
 #include "Theme.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "RenderCache.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"

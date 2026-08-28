@@ -7,7 +7,7 @@ License: GPLv3 */
 #include "base/UITask.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "FileThumbnails.h"
 #include "HomePage.h"
 #include "FileHistory.h"

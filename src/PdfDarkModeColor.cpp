@@ -8,7 +8,7 @@ extern "C" {
 }
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "Theme.h"
 #include "Translations.h"
 

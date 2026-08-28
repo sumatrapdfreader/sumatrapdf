@@ -14,7 +14,6 @@
 #include "gui/win/WinGui.h"
 
 #include "Settings.h"
-#include "GlobalPrefs.h"
 #include "AppSettings.h"
 #include "Translations.h"
 
