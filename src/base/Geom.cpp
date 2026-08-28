@@ -152,7 +152,6 @@ bool Rect::Contains(Point pt) const {
     return Contains(pt.x, pt.y);
 }
 
-// TODO: check that it's endpoint-exclusive https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
 Rect Rect::Intersect(Rect other) const {
     /* The intersection starts with the larger of the start coordinates
@@ -169,7 +168,6 @@ Rect Rect::Intersect(Rect other) const {
     return {_x, _y, _dx, _dy};
 }
 
-// TODO: check that it's endpoint-exclusive https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 Rect Rect::Union(Rect other) const {
     if (this->dx <= 0 || this->dy <= 0) {
         return other;
@@ -327,7 +325,6 @@ bool RectF::Contains(PointF pt) const {
     return true;
 }
 
-// TODO: check that it's endpoint-exclusive https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
 RectF RectF::Intersect(RectF other) const {
     /* The intersection starts with the larger of the start coordinates
@@ -344,7 +341,6 @@ RectF RectF::Intersect(RectF other) const {
     return {_x, _y, _dx, _dy};
 }
 
-// TODO: check that it's endpoint-exclusive https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
 RectF RectF::Union(RectF other) {
     if (this->dx <= 0 || this->dy <= 0) {
         return other;

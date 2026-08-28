@@ -407,7 +407,6 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     if (!curr || !str::Eq(curr, StrL(kAppName))) {
         // not the default, do nothing
     } else {
-        // TODO: is nullptr valid here?
         LoggedDeleteRegValue(hkey, StrL(kRegClassesPdf), {});
     }
 

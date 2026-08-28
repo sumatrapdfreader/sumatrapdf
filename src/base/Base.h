@@ -338,7 +338,6 @@ char (&DimofSizeHelper(T (&array)[N]))[N];
 #pragma warning(default : 4668)
 #endif
 
-// TODO: is there a better way?
 #if COMPILER_MSVC
 #define IS_UNUSED
 #else

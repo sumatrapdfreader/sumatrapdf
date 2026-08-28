@@ -374,6 +374,6 @@ void Tooltip::Delete(int id) {
 void Tooltip::SetDelayTime(int type, int timeInMs) {
     ReportIf(!IsValidDelayType(type));
     ReportIf(timeInMs < 0);
-    ReportIf(timeInMs > 32767); // TODO: or is it 65535?
+    ReportIf(timeInMs > 32767);
     SendMessageW(hwnd, TTM_SETDELAYTIME, type, (LPARAM)timeInMs);
 }

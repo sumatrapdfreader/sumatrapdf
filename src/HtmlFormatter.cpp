@@ -53,8 +53,6 @@ The information that we need to remember:
 * text color (when/if we support changing text color)
 * more ?
 
-TODO: fix https://code.google.com/archive/p/sumatrapdf/issues/2183
-
 TODO: HtmlFormatter could be split into DrawInstrBuilder which knows pageDx, pageDy
 and generates DrawInstr and splits them into pages and a better named class that
 does the parsing of the document builds pages by invoking methods on DrawInstrBuilders.

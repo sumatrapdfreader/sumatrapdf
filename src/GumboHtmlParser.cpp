@@ -302,7 +302,6 @@ bool HtmlToken::NameIs(Str nameToFind) const {
 
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "opf:content" with name="content" and any value of ns)
-// TODO: add proper namespace support
 bool HtmlToken::NameIsNS(Str nameToCheck, Str /*ns*/) const {
     // ReportIf(!ns);
     return IsNameWithNS(name, nameToCheck);

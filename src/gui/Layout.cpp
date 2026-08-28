@@ -492,7 +492,7 @@ Size VBox::Layout(const Constraints bc) {
 
         // Perform layout of the element.  Track impact on width and height.
         auto size = v.layout->Layout(cbc);
-        v.size = size; // TODO: does that work?
+        v.size = size;
         height += size.dy;
         width = std::max(width, size.dx);
     }
@@ -1425,7 +1425,6 @@ Size LayoutToSize(ILayout* layout, const Size size) {
     return newSize;
 }
 
-// TODO: probably not needed
 Insets DefaultInsets() {
     const int padding = 8;
     return Insets{padding, padding, padding, padding};

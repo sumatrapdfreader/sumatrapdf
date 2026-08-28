@@ -68,7 +68,6 @@ HWND TreeView::Create(const CreateArgs& args) {
 
     SetToolTipsDelayTime(TTDT_AUTOPOP, 32767);
 
-    // TODO:
     // must be done at the end. Doing  HwndSetWindowStyle() sends bogus (?)
     // TVN_ITEMCHANGED notification. As an alternative we could ignore TVN_ITEMCHANGED
     // if hItem doesn't point to an TreeItem
@@ -94,7 +93,7 @@ void TreeView::SetBounds(Rect bounds) {
 void TreeView::SetToolTipsDelayTime(int type, int timeInMs) {
     ReportIf(!IsValidDelayType(type));
     ReportIf(timeInMs < 0);
-    ReportIf(timeInMs > 32767); // TODO: or is it 65535?
+    ReportIf(timeInMs > 32767);
     HWND hwndToolTips = GetToolTipsHwnd();
     SendMessageW(hwndToolTips, TTM_SETDELAYTIME, type, (LPARAM)timeInMs);
 }

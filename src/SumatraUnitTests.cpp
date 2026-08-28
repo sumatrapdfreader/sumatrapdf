@@ -162,7 +162,6 @@ static void BenchRangeTest() {
     utassert(!IsBenchPagesInfo({}));
 }
 
-// TODO: disabled because they bring too many dependencies
 static void versioncheck_test() {
     utassert(IsValidProgramVersion(StrL("1")));
     utassert(IsValidProgramVersion(StrL("1.1")));

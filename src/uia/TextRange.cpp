@@ -344,7 +344,6 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::CompareEndpoints(enum Te
         return E_INVALIDARG;
     }
 
-    // TODO: is range guaranteed to be a SumatraUIAutomationTextRange?
     SumatraUIAutomationTextRange* target = (SumatraUIAutomationTextRange*)range;
 
     int comp_b_page, comp_b_idx;
@@ -862,7 +861,6 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByRange(Text
         return E_POINTER;
     }
 
-    // TODO: is range guaranteed to be a SumatraUIAutomationTextRange?
     SumatraUIAutomationTextRange* target = (SumatraUIAutomationTextRange*)range;
 
     // extract target location

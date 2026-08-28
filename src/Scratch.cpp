@@ -3,9 +3,6 @@
 
 // this is for adding temporary code for testing
 
-// TODO: remove this
-// #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
-
 #include "base/Base.h"
 #include "base/Archive.h"
 

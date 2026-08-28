@@ -2287,8 +2287,6 @@ void MenuRemove(HMENU m, int id) {
     RemoveMenu(m, (UINT)id, MF_BYCOMMAND);
 }
 
-// TODO: this doesn't recognize enum Cmd, why?
-// void Remove(HMENU m, enum Cmd id);
 void MenuEmpty(HMENU m) {
     while (RemoveMenu(m, 0, MF_BYPOSITION)) {
         // no-op

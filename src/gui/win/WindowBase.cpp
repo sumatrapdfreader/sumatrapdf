@@ -1029,7 +1029,6 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         // windows don't support WM_GETFONT / WM_SETFONT
         // only controls do. not sure if we won't interfere
         // with control handling
-        // TODO: maybe when font is nullptr, ask the original proc
         case WM_GETFONT: {
             return (LRESULT)GetHFont();
         }
@@ -1712,7 +1711,6 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
         // windows don't support WM_GETFONT / WM_SETFONT
         // only controls do. not sure if we won't interfere
         // with control handling
-        // TODO: maybe when font is nullptr, ask the original proc
         case WM_GETFONT: {
             return (LRESULT)GetHFont();
         }
@@ -1980,7 +1978,6 @@ HWND ControlBase::CreateControl(const CreateControlArgs& args) {
 
     font = args.font;
     if (!font) {
-        // TODO: need this?
         font = GetDefaultGuiFont();
     }
 

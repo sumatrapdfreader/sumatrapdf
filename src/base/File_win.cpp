@@ -834,7 +834,6 @@ TempWStr GetSelfExePathW() {
 TempStr GetSelfExePathTemp() {
     WCHAR buf[MAX_PATH + 2]{};
     DWORD nChars = dimof(buf) - 1;
-    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
     GetModuleFileNameW((HINSTANCE)&__ImageBase, buf, nChars);
     return ToUtf8Temp(buf);
 }

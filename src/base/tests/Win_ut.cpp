@@ -96,20 +96,4 @@ void WinUtilTest() {
         Rect allScreens = GetVirtualScreenRect();
         utassert(allScreens.Intersect(oneScreen) == oneScreen);
     }
-
-    // TODO: moved AdjustLigthness() to Colors.[h|cpp] which is outside of utils directory
-#if 0
-    {
-        Color c = AdjustLightness(kColRed, 1.0f);
-        utassert(c == kColRed);
-        c = AdjustLightness(kColRed, 2.0f);
-        utassert(c == kColWhite);
-        c = AdjustLightness(kColRed, 0.25f);
-        utassert(c == MkRgb(64, 0, 0));
-        c = AdjustLightness(MkRgb(226, 196, 226), 95 / 255.0f);
-        utassert(c == MkRgb(105, 52, 105));
-        c = AdjustLightness(kColWhite, 0.5f);
-        utassert(c == MkRgb(128, 128, 128));
-    }
-#endif
 }

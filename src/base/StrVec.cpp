@@ -58,7 +58,7 @@ bool StrLessNoCase(Str s1, Str s2) {
 
 bool StrLessNatural(Str s1, Str s2) {
     int n = str::CmpNatural(s1, s2);
-    return n < 0; // TODO: verify it's < and not >
+    return n < 0;
 }
 
 struct PageOpResult {
