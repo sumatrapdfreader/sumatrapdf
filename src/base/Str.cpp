@@ -1735,6 +1735,15 @@ static bool IsExternalOrEmpty(const str::Builder* s) {
     return !s->els || (s->buf.s && s->els == s->buf.s);
 }
 
+// both Builders lead with {len, cap, els}, in that order, so they have Vec<T>'s
+// layout and can be passed to the VecNonTemplated helpers
+static_assert(offsetof(str::Builder, len) == offsetof(VecNonTemplated, len));
+static_assert(offsetof(str::Builder, cap) == offsetof(VecNonTemplated, cap));
+static_assert(offsetof(str::Builder, els) == offsetof(VecNonTemplated, els));
+static_assert(offsetof(wstr::Builder, len) == offsetof(VecNonTemplated, len));
+static_assert(offsetof(wstr::Builder, cap) == offsetof(VecNonTemplated, cap));
+static_assert(offsetof(wstr::Builder, els) == offsetof(VecNonTemplated, els));
+
 static char* EnsureCap(str::Builder* s, int needed) {
     // only use external buf if we haven't moved to the heap yet.
     // RemoveAt() can shrink len enough for needed to fit again and switching
@@ -1965,18 +1974,18 @@ static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
         return s->els;
     }
 
-    int capacityHint = (int)s->cap;
+    int capacityHint = s->cap;
     // tricky: to save space we reuse cap for capacityHint while still on
     // external/empty storage (cap was set from constructor hint)
     if (IsExternalOrEmpty(s)) {
         s->cap = 0;
     }
 
-    if (s->els && (int)s->cap >= needed) {
+    if (s->els && s->cap >= needed) {
         return s->els;
     }
 
-    int newCap = (int)s->cap * 2;
+    int newCap = s->cap * 2;
     newCap = std::max(needed, newCap);
     newCap = std::max(newCap, capacityHint);
 
@@ -2002,25 +2011,25 @@ static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
         return nullptr;
     }
     s->els = newEls;
-    s->cap = (u32)newCap;
+    s->cap = newCap;
     return newEls;
 }
 
 static WCHAR* MakeSpaceAt(wstr::Builder* s, int idx, int count) {
     ReportIf(count == 0);
-    int newLen = std::max((int)s->len, idx) + count;
+    int newLen = std::max(s->len, idx) + count;
     WCHAR* buf = EnsureCap(s, newLen);
     if (!buf) {
         return nullptr;
     }
     buf[newLen] = 0;
     WCHAR* res = &(buf[idx]);
-    if ((int)s->len > idx) {
+    if (s->len > idx) {
         WCHAR* src = buf + idx;
         WCHAR* dst = buf + idx + count;
-        memmove(dst, src, (size_t)((int)s->len - idx) * wstr::Builder::kElSize);
+        memmove(dst, src, (size_t)(s->len - idx) * wstr::Builder::kElSize);
     }
-    s->len = (u32)newLen;
+    s->len = newLen;
     return res;
 }
 
@@ -2065,7 +2074,7 @@ wstr::Builder::Builder(WStr externalBuf) {
 // capHint: preferred capacity after first grow
 wstr::Builder::Builder(int capHint) {
     Reset();
-    cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
+    cap = capHint + kPadding; // + kPadding for terminating 0
 }
 
 wstr::Builder::~Builder() {
@@ -2073,12 +2082,12 @@ wstr::Builder::~Builder() {
 }
 
 WCHAR& wstr::Builder::operator[](int idx) const {
-    ReportIf(idx < 0 || idx >= (int)len);
+    ReportIf(idx < 0 || idx >= len);
     return els[idx];
 }
 
 int len(const wstr::Builder& b) {
-    return (int)b.len;
+    return b.len;
 }
 
 bool wstr::Builder::InsertAt(int idx, const WCHAR& el) {
@@ -2091,14 +2100,14 @@ bool wstr::Builder::InsertAt(int idx, const WCHAR& el) {
 }
 
 bool wstr::Builder::AppendChar(WCHAR c) {
-    return InsertAt((int)len, c);
+    return InsertAt(len, c);
 }
 
 bool wstr::Builder::Append(WStr src) {
     if (wstr::IsNull(src) || 0 == src.len) {
         return true;
     }
-    WCHAR* dst = MakeSpaceAt(this, (int)len, src.len);
+    WCHAR* dst = MakeSpaceAt(this, len, src.len);
     if (!dst) {
         return false;
     }
@@ -2108,12 +2117,12 @@ bool wstr::Builder::Append(WStr src) {
 
 WCHAR wstr::Builder::RemoveAt(int idx, int count) {
     WCHAR res = els[idx];
-    if ((int)len > idx + count) {
+    if (len > idx + count) {
         WCHAR* dst = els + idx;
         WCHAR* src = els + idx + count;
-        memmove(dst, src, (size_t)((int)len - idx - count) * kElSize);
+        memmove(dst, src, (size_t)(len - idx - count) * kElSize);
     }
-    len -= (u32)count;
+    len -= count;
     memset(els + len, 0, (size_t)count * kElSize);
     return res;
 }
@@ -2122,7 +2131,7 @@ WCHAR wstr::Builder::RemoveLast() {
     if (len == 0) {
         return 0;
     }
-    return RemoveAt((int)len - 1);
+    return RemoveAt(len - 1);
 }
 
 // perf hack for using as a buffer: client can get accumulated data
@@ -2130,7 +2139,7 @@ WCHAR wstr::Builder::RemoveLast() {
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
 WStr wstr::Builder::TakeWStr() {
-    int n = (int)len;
+    int n = len;
     WCHAR* res = els;
     if (!els || n == 0) {
         Reset();

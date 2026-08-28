@@ -238,11 +238,13 @@ TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
 
 namespace str {
 struct Builder {
-    // arena is not owned by Builder and must outlive it
-    Arena* a = nullptr;
-    char* els = nullptr;
+    // len/cap/els come first, in that order, so Builder has the same layout as
+    // Vec<T> and can be handed to the VecNonTemplated helpers
     int len = 0;
     int cap = 0;
+    char* els = nullptr;
+    // arena is not owned by Builder and must outlive it
+    Arena* a = nullptr;
     // Optional external scratch (not owned; default empty = allocate on first use).
     // When set, used while needed+NUL fits in buf.len; growth copies to heap/arena.
     Str buf;
@@ -290,11 +292,13 @@ void SeqStrNumFinish(str::Builder* b);
 
 namespace wstr {
 struct Builder {
+    // len/cap/els come first, in that order, so Builder has the same layout as
+    // Vec<T> and can be handed to the VecNonTemplated helpers
+    int len = 0;
+    int cap = 0;
+    WCHAR* els = nullptr;
     // arena is not owned by Builder and must outlive it
     Arena* a = nullptr;
-    WCHAR* els = nullptr;
-    u32 len = 0;
-    u32 cap = 0;
     // Optional external scratch (not owned; default empty = allocate on first use).
     // When set, used while needed+NUL fits in buf.len; growth copies to heap/arena.
     WStr buf;

@@ -239,10 +239,11 @@ DidFinish:
     it->didFinish = true;
 }
 
+// field order matches Vec<T> so VecPush() can hand it to the VecNonTemplated helpers
 struct TempEntryVec {
-    DirEntry* els;
     int len;
     int cap;
+    DirEntry* els;
 };
 
 static const WStr wdot = WStrL(L".");

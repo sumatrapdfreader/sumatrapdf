@@ -260,21 +260,15 @@ void VecReverse(Vec<T>& v) {
     }
 }
 
-// Vec<T> can hand its own storage over directly
-template <typename T>
-bool VecReserve(Arena* arena, Vec<T>& v, int wantedSize) {
-    return VecReserveNonTemplated(arena, v.NT(), (int)sizeof(T), wantedSize);
-}
-
-// str::Builder and friends are vec-shaped but do not have Vec's layout (they
-// put other fields first), so their fields are copied in and out
+// v is a Vec<T> or another vec-shaped struct (VecStr, str::Builder); they all
+// lead with {len, cap, els}, which the static_asserts hold them to, so the
+// erased view is a cast and this compiles to just the call
 template <typename T>
 bool VecReserve(Arena* arena, T& v, int wantedSize) {
-    VecNonTemplated nt{v.len, v.cap, (void*)v.els};
-    bool ok = VecReserveNonTemplated(arena, &nt, (int)sizeof(*v.els), wantedSize);
-    v.els = (decltype(v.els))nt.els;
-    v.cap = nt.cap;
-    return ok;
+    static_assert(offsetof(T, len) == offsetof(VecNonTemplated, len));
+    static_assert(offsetof(T, cap) == offsetof(VecNonTemplated, cap));
+    static_assert(offsetof(T, els) == offsetof(VecNonTemplated, els));
+    return VecReserveNonTemplated(arena, (VecNonTemplated*)&v, (int)sizeof(*v.els), wantedSize);
 }
 
 // Lend v an array to start in, instead of its first allocation. The vec
