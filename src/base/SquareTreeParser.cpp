@@ -162,7 +162,7 @@ SquareTreeNode::~SquareTreeNode() {
 
 void SquareTreeNode::RemoveDataAt(int idx) {
     FreeDataItem(data[idx]);
-    data.RemoveAt(idx);
+    VecRemoveAt(data, idx);
 }
 
 // wantChild: match items with a child node; otherwise match value items (no child).

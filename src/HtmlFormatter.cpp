@@ -559,7 +559,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
         for (int k = len(currLineInstr); k > 0; k--) {
             DrawInstr& i = currLineInstr[k - 1];
             if (DrawInstrType::FixedSpace == i.type || DrawInstrType::ElasticSpace == i.type) {
-                currLineInstr.RemoveAt(k - 1);
+                VecRemoveAt(currLineInstr, k - 1);
             }
         }
         return false;
@@ -624,7 +624,7 @@ void HtmlFormatter::EmitEmptyLine(float lineDy) {
         for (int k = len(currLineInstr); k > 0; k--) {
             DrawInstr& i = currLineInstr[k - 1];
             if (DrawInstrType::FixedSpace == i.type || DrawInstrType::ElasticSpace == i.type) {
-                currLineInstr.RemoveAt(k - 1);
+                VecRemoveAt(currLineInstr, k - 1);
             }
         }
         return;

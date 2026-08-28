@@ -635,7 +635,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
 
     st->maxPagesForFile = kStressTestMaxPagesPerFile;
     st->nPagesRenderedThisFile = 0;
-    st->pagesToRender.Clear();
+    VecClear(st->pagesToRender);
     int nPages = ctrl->PageCount();
     if (IsFullRange(st->pageRanges)) {
         Vec<int> allPages;

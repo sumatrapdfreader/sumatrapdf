@@ -237,13 +237,13 @@ void FileHistoryPurge(bool alwaysUseDefaultState) {
         // NOLINTNEXTLINE(bugprone-branch-clone): each branch documents a different reason to forget
         if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState)) {
             // forget about missing documents without valuable state
-            gStates->RemoveAt(j - 1);
+            VecRemoveAt(*gStates, j - 1);
         } else if (j > kFileHistoryMaxFiles) {
             // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
-            gStates->RemoveAt(j - 1);
+            VecRemoveAt(*gStates, j - 1);
         } else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > kFileHistoryMaxRecent) {
             // forget about files that were hardly used (and without valuable state)
-            gStates->RemoveAt(j - 1);
+            VecRemoveAt(*gStates, j - 1);
         } else {
             continue;
         }

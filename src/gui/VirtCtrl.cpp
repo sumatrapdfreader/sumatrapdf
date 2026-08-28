@@ -401,7 +401,7 @@ void VirtCtrl::RemoveChild(VirtCtrl* c, bool del) {
     if (idx < 0) {
         return;
     }
-    children.RemoveAt(idx);
+    VecRemoveAt(children, idx);
     c->parent = nullptr;
     if (del) {
         delete c;
@@ -420,7 +420,7 @@ void VirtCtrl::RemoveAllChildren(bool del) {
     for (VirtCtrl* c : children) {
         tmp.Append(c);
     }
-    children.Clear();
+    VecClear(children);
     for (VirtCtrl* c : tmp) {
         c->parent = nullptr;
         if (del) {
@@ -912,7 +912,7 @@ void VirtRoot::OnWndDestroyed(VirtCtrl* w) {
     // laying out again), and those we must not paint or hit-test any more
     int idx = VecFind(tops, w);
     if (idx >= 0) {
-        tops.RemoveAt(idx);
+        VecRemoveAt(tops, idx);
     }
 }
 

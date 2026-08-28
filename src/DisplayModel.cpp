@@ -2850,7 +2850,7 @@ void DisplayModel::AddNavPoint(bool rememberZoom) {
     }
     // remove the current and all Forward history entries
     if (navHistoryIdx < len(navHistory)) {
-        navHistory.RemoveAt(navHistoryIdx, len(navHistory) - navHistoryIdx);
+        VecRemoveAt(navHistory, navHistoryIdx, len(navHistory) - navHistoryIdx);
     }
     // don't add another entry for the exact same position
     if (navHistoryIdx > 0 && ss == navHistory[navHistoryIdx - 1]) {
@@ -2859,7 +2859,7 @@ void DisplayModel::AddNavPoint(bool rememberZoom) {
     // make sure that the history doesn't grow overly large
     if (navHistoryIdx >= kMaxNavHistoryLen) {
         ReportIf(navHistoryIdx > kMaxNavHistoryLen);
-        navHistory.RemoveAt(0, navHistoryIdx - kMaxNavHistoryLen + 1);
+        VecRemoveAt(navHistory, 0, navHistoryIdx - kMaxNavHistoryLen + 1);
         navHistoryIdx = kMaxNavHistoryLen - 1;
     }
     // add a new Back history entry
@@ -2903,7 +2903,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig) {
     // remove navigation history entries for all no longer valid pages
     for (int i = len(navHistory); i > 0; i--) {
         if (!ValidPageNo(navHistory[i - 1].page)) {
-            navHistory.RemoveAt(i - 1);
+            VecRemoveAt(navHistory, i - 1);
             if (i - 1 < navHistoryIdx) {
                 navHistoryIdx--;
             }

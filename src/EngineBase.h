@@ -613,7 +613,7 @@ class EngineBase {
         (void)rotation;
         (void)renderPageRect;
         (void)bmpSize;
-        skipRects.Clear();
+        VecClear(skipRects);
     }
 
     void SetFilePath(Str s);

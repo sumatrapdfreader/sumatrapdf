@@ -409,7 +409,7 @@ void PdfDarkModeInvalidatePage(fz_context* ctx, FzPageInfo* pageInfo) {
     pageInfo->darkModeAnalysisHash = 0;
     pageInfo->darkLegacySkipHash = 0;
     pageInfo->darkLegacyArtworkPageBottom = 0.f;
-    pageInfo->darkLegacySkipDevAbs.Clear();
+    VecClear(pageInfo->darkLegacySkipDevAbs);
 }
 
 DarkModePageAnalysis* PdfDarkModeGetOrBuildAnalysis(fz_context* ctx, FzPageInfo* pageInfo, fz_display_list* list,

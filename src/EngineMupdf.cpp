@@ -1843,7 +1843,7 @@ static bool RemoveHeWhoFullyContains(Vec<IPageElement*>& els) {
             auto r2 = els[j]->GetRect();
             if (RectFullyContains(r1, r2)) {
                 // logf("el %d fully obscures %d\n", i, j);
-                els.RemoveAtFast(i);
+                VecRemoveAtFast(els, i);
                 return true;
             }
         }
@@ -1926,7 +1926,7 @@ static void BuildElementsInfo(FzPageInfo* pageInfo) {
     auto& els = pageInfo->allElements;
 
     int total = len(pageInfo->images) + len(pageInfo->links) + len(pageInfo->autoLinks) + len(pageInfo->comments);
-    els.Clear();
+    VecClear(els);
     VecReserve(els, total);
 
     // since all elements lists are in last-to-first order, append
@@ -3156,7 +3156,7 @@ static void ReleasePerThreadContext(EngineMupdf* engine) {
             auto& el = (*gPerThreadContexts)[i];
             if (el.engine == engine && el.threadID == threadID) {
                 ctxToDrop = el.ctx;
-                gPerThreadContexts->RemoveAtFast(i);
+                VecRemoveAtFast(*gPerThreadContexts, i);
                 break;
             }
         }
@@ -3175,7 +3175,7 @@ static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
             auto& el = (*gPerThreadContexts)[i];
             if (el.engine == engine) {
                 ctxsToDrop.Append(el.ctx);
-                gPerThreadContexts->RemoveAtFast(i);
+                VecRemoveAtFast(*gPerThreadContexts, i);
             }
         }
     }
@@ -6089,7 +6089,7 @@ static void DarkLegacySkipKeepLargestArtwork(FzPageInfo* pageInfo) {
         }
     }
     Rect keep = skipRects[bestIdx];
-    skipRects.Clear();
+    VecClear(skipRects);
     skipRects.Append(keep);
     pageInfo->darkLegacyArtworkPageBottom = 0.f;
 }
@@ -6117,8 +6117,8 @@ static int DarkLegacyTileFindRoot(Vec<int>& parent, int i) {
 // that don't group land in a group of their own, so callers see no difference
 // from the ungrouped case.
 static void DarkLegacyGroupImageTiles(const Vec<RectF>& rects, float tol, Vec<int>& groupOf, Vec<RectF>& groupRect) {
-    groupOf.Clear();
-    groupRect.Clear();
+    VecClear(groupOf);
+    VecClear(groupRect);
     int n = len(rects);
     Vec<int> parent;
     for (int i = 0; i < n; i++) {
@@ -6192,7 +6192,7 @@ static void DarkLegacyGroupImageTiles(const Vec<RectF>& rects, float tol, Vec<in
 // should preserve (photos, artwork) and cache their absolute device rects
 static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageInfo, float zoom, int rotation,
                                          u32 hash) {
-    pageInfo->darkLegacySkipDevAbs.Clear();
+    VecClear(pageInfo->darkLegacySkipDevAbs);
     pageInfo->darkLegacyArtworkPageBottom = 0.f;
     pageInfo->darkLegacySkipHash = hash;
     pageInfo->darkLegacySkipZoom = zoom;
@@ -6302,7 +6302,7 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
 
 void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect,
                                             Size bmpSize, Vec<Rect>& skipRects) {
-    skipRects.Clear();
+    VecClear(skipRects);
     if (renderPageRect.IsEmpty() || bmpSize.dx <= 0 || bmpSize.dy <= 0) {
         return;
     }
@@ -8137,7 +8137,7 @@ EngineBase* CreateEngineMupdfFromData(Str data, Str nameHint, PasswordUI* pwdUI)
 }
 
 static void AppendLoadedAnnotations(EngineMupdf* e, Vec<Annotation*>& annotsOut) {
-    annotsOut.Clear();
+    VecClear(annotsOut);
     for (FzPageInfo* pi : e->pages) {
         if (pi && pi->annotsLoaded) {
             annotsOut.Append(pi->annotations);
@@ -8147,7 +8147,7 @@ static void AppendLoadedAnnotations(EngineMupdf* e, Vec<Annotation*>& annotsOut)
 
 // Collect Annotation* already sitting on FzPageInfo. Does not load pages.
 void EngineMupdfGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
-    annotsOut.Clear();
+    VecClear(annotsOut);
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
         return;
@@ -8160,7 +8160,7 @@ void EngineMupdfGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& annot
 bool EngineMupdfTryGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
-        annotsOut.Clear();
+        VecClear(annotsOut);
         return true;
     }
     if (!e->pagesLock.TryLock()) {
@@ -8174,7 +8174,7 @@ bool EngineMupdfTryGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& an
 // Load each page just far enough to read its annots (not stext/links). Callers
 // that need the complete list now (tests, matching after reload) use this.
 void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
-    annotsOut.Clear();
+    VecClear(annotsOut);
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
         return;

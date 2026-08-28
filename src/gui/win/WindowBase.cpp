@@ -66,7 +66,7 @@ static bool HwndListRemove(HwndBase* w) {
     bool removed = false;
     for (int i = 0; i < len(gHwndToWnd);) {
         if (gHwndToWnd[i].wnd == w) {
-            gHwndToWnd.RemoveAtFast(i);
+            VecRemoveAtFast(gHwndToWnd, i);
             removed = true;
         } else {
             i++;

@@ -80,7 +80,7 @@ static void RemoveCacheEntry(PageRenderServiceData* data, int idx) {
     PageRenderCacheEntry& entry = data->cache[idx];
     data->cacheBytes -= entry.policy.bytes;
     FreePixmap(entry.pixmap);
-    data->cache.RemoveAt(idx);
+    VecRemoveAt(data->cache, idx);
 }
 
 static void ClearCache(PageRenderServiceData* data) {
@@ -145,7 +145,7 @@ static void RenderWorker(PageRenderServiceData* data) {
 
         int requestIdx = PageRenderPolicyPickRequest(data->requests);
         PageRenderPolicyRequest request = data->requests[requestIdx];
-        data->requests.RemoveAt(requestIdx);
+        VecRemoveAt(data->requests, requestIdx);
         data->activeKey = request.key;
         data->hasActive = true;
         data->activeCookie = nullptr;

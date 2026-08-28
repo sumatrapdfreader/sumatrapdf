@@ -2366,7 +2366,7 @@ HomeLogoRow::HomeLogoRow() {
 HomeLogoRow::~HomeLogoRow() {
     // the buttons and logo are VirtCtrl children; don't let HBox delete them
     if (box) {
-        box->children.Clear();
+        VecClear(box->children);
         delete box;
         box = nullptr;
     }

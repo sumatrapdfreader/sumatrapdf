@@ -109,7 +109,7 @@ static Graphics* AllocGraphicsForMeasureTextNoLock() {
         GraphicsCacheEntry e = (*gGraphicsCache)[i];
         if (0 == e.refCount) {
             e.Free();
-            gGraphicsCache->RemoveAt(i);
+            VecRemoveAt(*gGraphicsCache, i);
             return ce.gfx;
         }
     }

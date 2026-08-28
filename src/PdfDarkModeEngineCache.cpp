@@ -76,11 +76,11 @@ void PdfDarkModeEngineCacheClear(fz_context* ctx, DarkModeEngineCache* cache) {
             fz_drop_image(ctx, e.image);
         }
     }
-    cache->features.Clear();
+    VecClear(cache->features);
     for (DarkModeProcessedImageEntry& e : cache->processed) {
         dm_free_processed_entry(ctx, e);
     }
-    cache->processed.Clear();
+    VecClear(cache->processed);
     cache->processedBytes = 0;
     cache->accessCounter = 0;
 }
@@ -113,7 +113,7 @@ static void dm_evict_oldest_feature(DarkModeEngineCache* cache, fz_context* ctx)
     if (ctx && e.image) {
         fz_drop_image(ctx, e.image);
     }
-    cache->features.RemoveAt(oldestIdx);
+    VecRemoveAt(cache->features, oldestIdx);
 }
 
 static void dm_evict_oldest_processed(fz_context* ctx, DarkModeEngineCache* cache) {
@@ -131,7 +131,7 @@ static void dm_evict_oldest_processed(fz_context* ctx, DarkModeEngineCache* cach
     DarkModeProcessedImageEntry& e = cache->processed[oldestIdx];
     cache->processedBytes -= e.pixelBytes;
     dm_free_processed_entry(ctx, e);
-    cache->processed.RemoveAt(oldestIdx);
+    VecRemoveAt(cache->processed, oldestIdx);
 }
 
 bool PdfDarkModeEngineCacheLookupFeatures(DarkModeEngineCache* cache, fz_image* image, DarkImageFeatures* outFeatures,

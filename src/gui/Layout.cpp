@@ -1154,13 +1154,13 @@ void Table::SetSize(int nRows, int nCols) {
     RemoveAllCells();
     rows = nRows;
     cols = nCols;
-    cells.Clear();
+    VecClear(cells);
     TableCell empty;
     for (int i = 0; i < rows * cols; i++) {
         cells.Append(empty);
     }
-    colWidths.Clear();
-    rowHeights.Clear();
+    VecClear(colWidths);
+    VecClear(rowHeights);
 }
 
 void Table::MarkCovered(int row, int col, int rowSpan, int colSpan, bool covered) {
@@ -1300,9 +1300,9 @@ static int TracksStart(Vec<int>& tracks, int idx, int gap) {
 // that span several tracks are applied afterwards, so they only stretch the
 // tracks they span when what those already give them isn't enough
 void Table::Measure() {
-    colWidths.Clear();
+    VecClear(colWidths);
     colWidths.AppendBlanks(cols);
-    rowHeights.Clear();
+    VecClear(rowHeights);
     rowHeights.AppendBlanks(rows);
 
     Constraints loose = ExpandInf();

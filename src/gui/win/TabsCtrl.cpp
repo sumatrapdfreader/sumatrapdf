@@ -639,7 +639,7 @@ static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
 
     auto&& tabs = tabsCtrl->tabs;
     TabInfo* moved = tabs[tabIdxFrom];
-    tabs.RemoveAt(tabIdxFrom);
+    VecRemoveAt(tabs, tabIdxFrom);
     if (tabIdxFrom < tabIdxTo) {
         // we moved from left to right e.g. from 1 to 3
         // after removing 1 we insert not at 3 but 2
@@ -1061,7 +1061,7 @@ UINT_PTR TabsCtrl::RemoveTab(int idx) {
     int selectedTab = selectedIdx;
     TabInfo* tab = tabs[idx];
     UINT_PTR userData = tab->userData;
-    tabs.RemoveAt(idx);
+    VecRemoveAt(tabs, idx);
     delete tab;
     RebuildTabCtrls();
     if (TabCount() > 0 && selectedTab >= 0) {

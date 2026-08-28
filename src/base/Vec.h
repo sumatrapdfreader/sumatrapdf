@@ -71,6 +71,19 @@ void VecFreeMembers(Vec<T>& v);
 template <typename T>
 bool VecInsertAt(Vec<T>& v, int idx, const T& el);
 
+// Remove count elements at idx, moving the rest down.
+template <typename T>
+void VecRemoveAt(Vec<T>& v, int idx, int count = 1);
+
+// Cheaper RemoveAt: fills the hole with the last element, so the order changes.
+// Only for elements that can be moved with memcpy().
+template <typename T>
+void VecRemoveAtFast(Vec<T>& v, int idx);
+
+// Empty the vec but keep the storage, for efficient reuse.
+template <typename T>
+void VecClear(Vec<T>& v);
+
 template <typename T>
 struct Vec {
     int len = 0;
@@ -95,10 +108,6 @@ struct Vec {
     // Vec<T>'s layout is the same for every T (see the static_asserts below),
     // so the type-erased view is a cast, not a copy
     VecNonTemplated* NT() { return (VecNonTemplated*)this; }
-
-    // use to empty but don't free els
-    // for efficient reuse
-    void Clear() { VecClearNT(NT(), (int)sizeof(T)); }
 
     explicit Vec() = default;
 
@@ -133,33 +142,24 @@ struct Vec {
     // appends count blank (i.e. zeroed-out) elements at the end
     T* AppendBlanks(int count) { return VecInsertSpace(*this, len, count); }
 
-    void RemoveAt(int idx, int count = 1) { VecRemoveAtNT(NT(), (int)sizeof(T), idx, count); }
-
     void RemoveLast() {
         if (len == 0) {
             return;
         }
-        RemoveAt(len - 1);
+        VecRemoveAt(*this, len - 1);
     }
-
-    // This is a fast version of RemoveAt() which replaces the element we're
-    // removing with the last element, copying less memory.
-    // It can only be used if order of elements doesn't matter and elements
-    // can be copied via memcpy()
-    // TODO: could be extend to take number of elements to remove
-    void RemoveAtFast(int idx) { VecRemoveAtFastNT(NT(), (int)sizeof(T), idx); }
 
     T Pop() {
         ReportIf(0 == len);
         T el = els[len - 1];
-        RemoveAtFast(len - 1);
+        VecRemoveAtFast(*this, len - 1);
         return el;
     }
 
     T PopAt(int idx) {
         ReportIf(idx >= len);
         T el = els[idx];
-        RemoveAt(idx);
+        VecRemoveAt(*this, idx);
         return el;
     }
 
@@ -280,6 +280,21 @@ void VecFreeMembers(Vec<T>& v) {
 }
 
 template <typename T>
+void VecRemoveAt(Vec<T>& v, int idx, int count) {
+    VecRemoveAtNT(v.NT(), (int)sizeof(T), idx, count);
+}
+
+template <typename T>
+void VecRemoveAtFast(Vec<T>& v, int idx) {
+    VecRemoveAtFastNT(v.NT(), (int)sizeof(T), idx);
+}
+
+template <typename T>
+void VecClear(Vec<T>& v) {
+    VecClearNT(v.NT(), (int)sizeof(T));
+}
+
+template <typename T>
 bool VecInsertAt(Vec<T>& v, int idx, const T& el) {
     T* p = VecInsertSpace(v, idx, 1);
     if (!p) {
@@ -308,7 +323,7 @@ template <typename T>
 int VecRemove(Vec<T>& v, const T& el) {
     int i = VecFind(v, el);
     if (i >= 0) {
-        v.RemoveAt(i);
+        VecRemoveAt(v, i);
     }
     return i;
 }
@@ -339,7 +354,7 @@ inline void DeleteVecMembers(Vec<T>& v) {
     for (T& el : v) {
         delete el;
     }
-    v.Clear();
+    VecClear(v);
 }
 
 template <typename T, typename E>

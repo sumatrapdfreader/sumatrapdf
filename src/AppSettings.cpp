@@ -509,7 +509,7 @@ bool LoadSettings() {
         for (int i = len(*fileStates) - 1; i >= 0; i--) {
             FileState* fs = (*fileStates)[i];
             if (len(fs->filePath) == 0) {
-                fileStates->RemoveAt(i);
+                VecRemoveAt(*fileStates, i);
                 DeleteFileState(fs);
             }
         }

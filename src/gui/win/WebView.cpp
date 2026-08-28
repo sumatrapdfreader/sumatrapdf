@@ -190,7 +190,7 @@ void FreePendingOps(Vec<PendingWebViewOp>& ops) {
 void RemovePendingWebview(WebviewWnd* wv) {
     int i = VecFind(gPendingWebviews, wv);
     if (i >= 0) {
-        gPendingWebviews.RemoveAt(i);
+        VecRemoveAt(gPendingWebviews, i);
     }
     // the retry timer lives on a pending webview's hwnd, so move it if this was
     // the one hosting it -- otherwise the timer dies with the window and the
@@ -1448,7 +1448,7 @@ void WebviewWnd::AddInitScriptWithToken(Str js, int token) {
     if (FAILED(hr)) {
         int idx = FindInitScript(token);
         if (idx >= 0) {
-            initScripts.RemoveAt(idx);
+            VecRemoveAt(initScripts, idx);
         }
     }
 }
@@ -1474,7 +1474,7 @@ void WebviewWnd::OnInitScriptAdded(int token, const WCHAR* id) {
         if (webview) {
             webview->RemoveScriptToExecuteOnDocumentCreated(id);
         }
-        initScripts.RemoveAt(idx);
+        VecRemoveAt(initScripts, idx);
         return;
     }
     wstr::Free(script.id);
@@ -1491,7 +1491,7 @@ void WebviewWnd::RemoveInitScript(int token) {
         PendingWebViewOp& op = pendingOps[i];
         if (op.kind == PendingWebViewOp::Init && op.token == token) {
             str::Free(op.text);
-            pendingOps.RemoveAt(i);
+            VecRemoveAt(pendingOps, i);
             return;
         }
     }
@@ -1509,7 +1509,7 @@ void WebviewWnd::RemoveInitScript(int token) {
         webview->RemoveScriptToExecuteOnDocumentCreated(script.id.s);
     }
     wstr::Free(script.id);
-    initScripts.RemoveAt(idx);
+    VecRemoveAt(initScripts, idx);
 }
 
 void WebviewWnd::RemoveAllInitScripts() {
@@ -1527,7 +1527,7 @@ void WebviewWnd::RemoveAllInitScripts() {
     // OnInitScriptAdded() can remove them once it arrives
     for (int i = len(initScripts) - 1; i >= 0; i--) {
         if (!initScripts[i].removePending) {
-            initScripts.RemoveAt(i);
+            VecRemoveAt(initScripts, i);
         }
     }
 }
@@ -1658,7 +1658,7 @@ void WebviewWnd::Unbind(Str name) {
     for (int i = 0; i < n; i++) {
         if (str::Eq(boundNames[i], name)) {
             str::Free(boundNames[i]);
-            boundNames.RemoveAt(i);
+            VecRemoveAt(boundNames, i);
             RebuildBindScript();
             Eval(fmt("if (window.__sumatra__) window.__sumatra__.onUnbind(\"%s\");", json::EscapeStrTemp(name)));
             return;

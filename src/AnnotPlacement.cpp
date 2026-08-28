@@ -128,8 +128,8 @@ void AnnotPlacement::Reset() {
     start = {};
     end = {};
     rect = {};
-    points.Clear();
-    strokeCounts.Clear();
+    VecClear(points);
+    VecClear(strokeCounts);
     circle = false;
     mouseDown = false;
     didDrag = false;

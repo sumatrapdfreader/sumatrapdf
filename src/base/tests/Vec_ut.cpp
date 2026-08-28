@@ -35,7 +35,7 @@ void VecTest() {
     utassert(last == 2);
     utassert(len(ints) == 2);
     ints.Append(3);
-    ints.RemoveAt(0);
+    VecRemoveAt(ints, 0);
     utassert(len(ints) == 2);
     utassert(ints[0] == 1 && ints[1] == 3);
     VecReset(ints);

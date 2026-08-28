@@ -29,7 +29,7 @@ void PageRenderPolicyUpsert(Vec<PageRenderPolicyRequest>& requests, const PageRe
 void PageRenderPolicyDropStale(Vec<PageRenderPolicyRequest>& requests, u32 generation) {
     for (int i = len(requests) - 1; i >= 0; i--) {
         if (requests[i].generation != generation) {
-            requests.RemoveAt(i);
+            VecRemoveAt(requests, i);
         }
     }
 }

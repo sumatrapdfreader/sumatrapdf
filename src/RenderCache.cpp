@@ -71,7 +71,7 @@ static void FinalizeTileSkipRects(Vec<Rect>& skipRects, Size bmpSize) {
         }
     }
     Rect keep = skipRects[bestIdx];
-    skipRects.Clear();
+    VecClear(skipRects);
     skipRects.Append(keep);
 }
 

@@ -950,7 +950,7 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
         ScopedMutex scope(&cacheLock);
         for (int i = 0; i < len(pageCacheLru); i++) {
             if (pageCacheLru[i] == page0) {
-                pageCacheLru.RemoveAt(i);
+                VecRemoveAt(pageCacheLru, i);
                 break;
             }
         }
@@ -978,7 +978,7 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
             if (dropPage == page0) {
                 return;
             }
-            pageCacheLru.RemoveAt(n - 1);
+            VecRemoveAt(pageCacheLru, n - 1);
         }
         djvu_doc_drop_page_cache(doc, dropPage);
     }
