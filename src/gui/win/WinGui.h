@@ -405,6 +405,9 @@ struct WindowBase : HwndBase {
     bool closeOnEsc = false;
     // Close() on Ctrl+W (no Alt). Off by default
     bool closeOnCtrlW = false;
+    // Close() on F1 (no modifiers), so the key that opened the window also
+    // dismisses it. Off by default
+    bool closeOnF1 = false;
     // set by ScheduleDelete(); once set the window must only die via that path
     bool deleteScheduled = false;
 

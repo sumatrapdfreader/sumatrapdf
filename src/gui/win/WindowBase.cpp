@@ -1476,6 +1476,10 @@ bool WindowBase::PreTranslateMessage(MSG& msg) {
         Close();
         return true;
     }
+    if (closeOnF1 && ev.vkey == VK_F1 && !ev.isCtrl && !ev.isShift && !ev.isAlt) {
+        Close();
+        return true;
+    }
     if (ev.vkey == VK_RETURN && !ev.isCtrl && !ev.isAlt) {
         if (ActivateOnEnter()) {
             return true;

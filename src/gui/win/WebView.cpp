@@ -420,6 +420,11 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
                     wb->Close();
                     return S_OK;
                 }
+                if (wb->closeOnF1 && vk == VK_F1 && !ctrl && !shift && !alt) {
+                    args->put_Handled(TRUE);
+                    wb->Close();
+                    return S_OK;
+                }
             }
             if (!m_wnd->events.resolveAccelCmd) {
                 return S_OK;

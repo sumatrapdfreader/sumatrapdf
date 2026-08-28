@@ -10641,6 +10641,8 @@ void LaunchDocumentation(Str docURI) {
         gManualBrowserWindow = SimpleBrowserWindowCreate(args);
         if (gManualBrowserWindow != nullptr) {
             gManualBrowserWindow->closeOnEsc = gGlobalPrefs->escToExit;
+            // F1 opened it, F1 dismisses it (issue #6084)
+            gManualBrowserWindow->closeOnF1 = true;
             gManualBrowserWindow->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnCloseManualBrowserWindow);
             gManualBrowserWindow->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroyManualBrowserWindow);
             gManualBrowserWindow->onPosChanged = MkFunc0Void(SaveManualBrowserPosNow);
@@ -10650,6 +10652,19 @@ void LaunchDocumentation(Str docURI) {
     }
 
     SumatraLaunchBrowser(webUrl);
+}
+
+// What F1 does: open the documentation window, or close it if it's already up,
+// the way ? toggles the keyboard shortcuts window (issue #6084). Only for the
+// F1 / menu entry point -- LaunchDocumentation() itself always navigates,
+// since its other callers open a specific page.
+static void ToggleDocumentationWindow() {
+    DiscardManualBrowserWindowIfClosed();
+    if (IsManualBrowserWindowOpen()) {
+        gManualBrowserWindow->Close();
+        return;
+    }
+    LaunchDocumentation(StrL("/SumatraPDF-documentation"));
 }
 
 // If url is a documentation URL (https://www.sumatrapdfreader.org/docs/<page>),
@@ -12120,7 +12135,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdHelpOpenManual:
-            LaunchDocumentation(StrL("/SumatraPDF-documentation"));
+            ToggleDocumentationWindow();
             break;
 
         case CmdHelpOpenKeyboardShortcuts:
