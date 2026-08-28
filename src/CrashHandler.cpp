@@ -37,10 +37,10 @@ constexpr int kCrashHandlerServerPort = 443;
 
 // The following functions allow crash handler to be used by both installer
 // and sumatra proper. They must be implemented for each app.
-extern void GetStressTestInfo(str::Builder* s);
+extern void GetStressTestInfo();
 extern bool CrashHandlerCanUseNet();
 extern void ShowCrashHandlerMessage();
-extern void GetProgramInfo(Arena* a, str::Builder& s);
+extern void GetProgramInfo();
 
 // in DEBUG we don't enable symbols download because they are not uploaded
 #ifdef DEBUG
@@ -62,6 +62,33 @@ that CRT creates its own heap for malloc()/free() etc. so that while a deadlock
 is still possible, the probability should be greatly reduced. */
 
 static Arena* gCrashHandlerArena = nullptr;
+
+// The report is built here rather than threaded through every helper as a
+// str::Builder&. Lives in the arena so there is no static ctor/dtor.
+static str::Builder* gCrashInfo = nullptr;
+
+void CrashInfoAppend(Str s) {
+    if (!gCrashInfo) {
+        return;
+    }
+    str::BuilderAppend(gCrashHandlerArena, *gCrashInfo, s);
+}
+
+// start a fresh report, keeping the storage already allocated
+static void CrashInfoStart(int cap) {
+    if (!gCrashInfo) {
+        return;
+    }
+    gCrashInfo->Reset();
+    str::BuilderReserve(gCrashHandlerArena, *gCrashInfo, cap);
+}
+
+static Str CrashInfoTake() {
+    if (!gCrashInfo) {
+        return {};
+    }
+    return str::BuilderTakeStr(gCrashHandlerArena, *gCrashInfo);
+}
 
 // exit code for a debug report (ReportIf) in a -for-testing run; test runners
 // (tests/control.ts) treat it as "assertion fired", so keep the value in sync
@@ -114,7 +141,7 @@ static bool TryStartCrashHandling(Str handlerName) {
 }
 
 // returns true if running on wine
-static bool GetModules(str::Builder& s, bool additionalOnly) {
+static bool GetModules(bool additionalOnly) {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (snap == INVALID_HANDLE_VALUE) {
         return true;
@@ -128,14 +155,12 @@ static bool GetModules(str::Builder& s, bool additionalOnly) {
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
             if (!str::ContainsI(gModulesInfo, pathA)) {
-                str::BuilderAppend(gCrashHandlerArena, s,
-                                   str::Format(gCrashHandlerArena, "Module: %p %06X %-16s %s\n", mod.modBaseAddr,
-                                               mod.modBaseSize, nameA, pathA));
+                CrashInfoAppend(str::Format(gCrashHandlerArena, "Module: %p %06X %-16s %s\n", mod.modBaseAddr,
+                                            mod.modBaseSize, nameA, pathA));
             }
         } else {
-            str::BuilderAppend(gCrashHandlerArena, s,
-                               str::Format(gCrashHandlerArena, "Module: %p %06X %-16s %s\n", mod.modBaseAddr,
-                                           mod.modBaseSize, nameA, pathA));
+            CrashInfoAppend(str::Format(gCrashHandlerArena, "Module: %p %06X %-16s %s\n", mod.modBaseAddr,
+                                        mod.modBaseSize, nameA, pathA));
         }
         cont = Module32Next(snap, &mod);
     }
@@ -169,111 +194,106 @@ static const char* LookupUncaughtMupdfError() {
     return nullptr;
 }
 
-static void AppendUncaughtMupdfError(str::Builder& s) {
+static void AppendUncaughtMupdfError() {
     const char* msg = LookupUncaughtMupdfError();
     if (!msg || !msg[0]) {
         return;
     }
     // High-visibility: empty callstacks from the intentional null-write still
     // need to explain the real failure (MuPDF throw with no fz_try).
-    str::BuilderAppend(gCrashHandlerArena, s,
-                       str::Format(gCrashHandlerArena, "Uncaught MuPDF error: %s\n\n", Str(msg)));
+    CrashInfoAppend(str::Format(gCrashHandlerArena, "Uncaught MuPDF error: %s\n\n", Str(msg)));
 }
 
 static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    str::Builder s;
-    str::BuilderReserve(gCrashHandlerArena, s, 16 * 1024);
+    CrashInfoStart(16 * 1024);
     if (!isCrash) {
         captureCallstack = true;
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("Type: debug report (not crash)\n"));
+        CrashInfoAppend(StrL("Type: debug report (not crash)\n"));
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
-        str::BuilderAppend(gCrashHandlerArena, s,
-                           str::Format(gCrashHandlerArena, "Cond: %s @ %s\n", condStr, fileLine));
+        CrashInfoAppend(str::Format(gCrashHandlerArena, "Cond: %s @ %s\n", condStr, fileLine));
     }
-    AppendUncaughtMupdfError(s);
+    AppendUncaughtMupdfError();
     if (gSystemInfo) {
-        str::BuilderAppend(gCrashHandlerArena, s, gSystemInfo);
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
+        CrashInfoAppend(gSystemInfo);
+        CrashInfoAppend(StrL("\n"));
     }
 
-    //    GetStressTestInfo(&s);
+    //    GetStressTestInfo();
 
     if (gMei.ExceptionPointers) {
         // those are only set when we capture exception
-        dbghelp::GetExceptionInfo(gCrashHandlerArena, s, gMei.ExceptionPointers);
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
+        dbghelp::GetExceptionInfo(gCrashHandlerArena, *gCrashInfo, gMei.ExceptionPointers);
+        CrashInfoAppend(StrL("\n"));
     } else {
         // GetExceptionInfo() also adds current thread callstack
         if (captureCallstack) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("\nCrashed thread:\n"));
-            dbghelp::GetCurrentThreadCallstack(gCrashHandlerArena, s);
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
+            CrashInfoAppend(StrL("\nCrashed thread:\n"));
+            dbghelp::GetCurrentThreadCallstack(gCrashHandlerArena, *gCrashInfo);
+            CrashInfoAppend(StrL("\n"));
         }
     }
 
-    str::BuilderAppend(gCrashHandlerArena, s, StrL("\n-------- Log -----------------\n\n"));
+    CrashInfoAppend(StrL("\n-------- Log -----------------\n\n"));
     if (gLogBuf) {
-        str::BuilderAppend(gCrashHandlerArena, s, ToStr(*gLogBuf));
+        CrashInfoAppend(ToStr(*gLogBuf));
     } else {
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("(no log - crashed before initializing logging)\n"));
+        CrashInfoAppend(StrL("(no log - crashed before initializing logging)\n"));
     }
 
     if (gSettingsFile) {
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n\n----- Settings file ----------\n\n"));
-        str::BuilderAppend(gCrashHandlerArena, s, gSettingsFile);
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n\n"));
+        CrashInfoAppend(StrL("\n\n----- Settings file ----------\n\n"));
+        CrashInfoAppend(gSettingsFile);
+        CrashInfoAppend(StrL("\n\n"));
     }
 
-    str::BuilderAppend(gCrashHandlerArena, s, StrL("\n-------- Modules   ----------\n\n"));
-    str::BuilderAppend(gCrashHandlerArena, s, gModulesInfo);
-    str::BuilderAppend(gCrashHandlerArena, s, StrL("\nModules loaded later:\n"));
-    GetModules(s, true);
+    CrashInfoAppend(StrL("\n-------- Modules   ----------\n\n"));
+    CrashInfoAppend(gModulesInfo);
+    CrashInfoAppend(StrL("\nModules loaded later:\n"));
+    GetModules(true);
 
     if (captureCallstack) {
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n-------- All Threads ----------\n\n"));
-        dbghelp::GetAllThreadsCallstacks(gCrashHandlerArena, s);
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
+        CrashInfoAppend(StrL("\n-------- All Threads ----------\n\n"));
+        dbghelp::GetAllThreadsCallstacks(gCrashHandlerArena, *gCrashInfo);
+        CrashInfoAppend(StrL("\n"));
     }
 
-    return str::BuilderTakeStr(gCrashHandlerArena, s);
+    return CrashInfoTake();
 }
 
 static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    str::Builder s;
-    str::BuilderReserve(gCrashHandlerArena, s, 16 * 1024);
+    CrashInfoStart(16 * 1024);
     if (!isCrash) {
         captureCallstack = true;
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("Type: debug report (not crash)\n"));
+        CrashInfoAppend(StrL("Type: debug report (not crash)\n"));
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
-        str::BuilderAppend(gCrashHandlerArena, s,
-                           str::Format(gCrashHandlerArena, "Cond: %s @ %s\n", condStr, fileLine));
+        CrashInfoAppend(str::Format(gCrashHandlerArena, "Cond: %s @ %s\n", condStr, fileLine));
     }
-    AppendUncaughtMupdfError(s);
+    AppendUncaughtMupdfError();
     if (gSystemInfo) {
-        str::BuilderAppend(gCrashHandlerArena, s, gSystemInfo);
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
+        CrashInfoAppend(gSystemInfo);
+        CrashInfoAppend(StrL("\n"));
     }
 
     ThreadId crashedThreadId = gMei.ThreadId;
     if (gMei.ExceptionPointers) {
-        dbghelp::GetExceptionInfo(gCrashHandlerArena, s, gMei.ExceptionPointers);
+        dbghelp::GetExceptionInfo(gCrashHandlerArena, *gCrashInfo, gMei.ExceptionPointers);
     } else if (captureCallstack) {
         crashedThreadId = GetCurrentThreadId();
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\nCrashed thread:\n"));
-        dbghelp::GetCurrentThreadCallstack(gCrashHandlerArena, s);
+        CrashInfoAppend(StrL("\nCrashed thread:\n"));
+        dbghelp::GetCurrentThreadCallstack(gCrashHandlerArena, *gCrashInfo);
     }
 
     if (captureCallstack) {
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\nOther threads:\n"));
-        dbghelp::GetAllThreadsCallstacksExcept(gCrashHandlerArena, s, crashedThreadId);
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
+        CrashInfoAppend(StrL("\nOther threads:\n"));
+        dbghelp::GetAllThreadsCallstacksExcept(gCrashHandlerArena, *gCrashInfo, crashedThreadId);
+        CrashInfoAppend(StrL("\n"));
     }
 
-    return str::BuilderTakeStr(gCrashHandlerArena, s);
+    return CrashInfoTake();
 }
 
 static void SaveCrashInfo(Str d) {
@@ -693,7 +713,7 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-static void GetOsVersion(str::Builder& s) {
+static void GetOsVersion() {
     OSVERSIONINFOEX ver{};
     bool ok = GetOsVersion(ver);
     ver.dwOSVersionInfoSize = sizeof(ver);
@@ -710,18 +730,16 @@ static void GetOsVersion(str::Builder& s) {
         arch = IsRunningInWow64() ? "Wow64" : "32-bit";
     }
     if (0 == servicePackMajor) {
-        str::BuilderAppend(gCrashHandlerArena, s, fmt("OS: Windows %s build %d %s\n", os, buildNumber, Str(arch)));
+        CrashInfoAppend(fmt("OS: Windows %s build %d %s\n", os, buildNumber, Str(arch)));
     } else if (0 == servicePackMinor) {
-        str::BuilderAppend(gCrashHandlerArena, s,
-                           fmt("OS: Windows %s SP%d build %d %s\n", os, servicePackMajor, buildNumber, Str(arch)));
+        CrashInfoAppend(fmt("OS: Windows %s SP%d build %d %s\n", os, servicePackMajor, buildNumber, Str(arch)));
     } else {
-        str::BuilderAppend(
-            gCrashHandlerArena, s,
+        CrashInfoAppend(
             fmt("OS: Windows %s %d.%d build %d %s\n", os, servicePackMajor, servicePackMinor, buildNumber, Str(arch)));
     }
 }
 
-static void GetProcessorName(str::Builder& s) {
+static void GetProcessorName() {
     const auto* key = R"(HARDWARE\DESCRIPTION\System\CentralProcessor)";
     TempStr name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, Str(key), StrL("ProcessorNameString"));
     if (!name) {
@@ -730,13 +748,13 @@ static void GetProcessorName(str::Builder& s) {
         name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, Str(key), StrL("ProcessorNameString"));
     }
     if (name) {
-        str::BuilderAppend(gCrashHandlerArena, s, fmt("Processor: %s\n", name));
+        CrashInfoAppend(fmt("Processor: %s\n", name));
     }
 }
 
 #define kGfxDriverKeyPrefix "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\"
 
-static void GetGraphicsDriverInfo(str::Builder& s) {
+static void GetGraphicsDriverInfo() {
     // the info is in registry in:
     // HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\
     //   Device Description REG_SZ (same as DriverDesc, so we don't read it)
@@ -752,26 +770,26 @@ static void GetGraphicsDriverInfo(str::Builder& s) {
         if (!v) {
             break;
         }
-        str::BuilderAppend(gCrashHandlerArena, s, fmt("Graphics driver %d\n", i));
-        str::BuilderAppend(gCrashHandlerArena, s, fmt("  DriverDesc:         %s\n", v));
+        CrashInfoAppend(fmt("Graphics driver %d\n", i));
+        CrashInfoAppend(fmt("  DriverDesc:         %s\n", v));
 
         v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("DriverVersion"));
         if (v) {
-            str::BuilderAppend(gCrashHandlerArena, s, fmt("  DriverVersion:      %s\n", v));
+            CrashInfoAppend(fmt("  DriverVersion:      %s\n", v));
         }
 
         v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("UserModeDriverName"));
         if (v) {
-            str::BuilderAppend(gCrashHandlerArena, s, fmt("  UserModeDriverName: %s\n", v));
+            CrashInfoAppend(fmt("  UserModeDriverName: %s\n", v));
         }
     }
 }
 
-static void GetSystemInfo(str::Builder& s) {
+static void GetSystemInfo() {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
-    str::BuilderAppend(gCrashHandlerArena, s, fmt("Number Of Processors: %d\n", si.dwNumberOfProcessors));
-    GetProcessorName(s);
+    CrashInfoAppend(fmt("Number Of Processors: %d\n", si.dwNumberOfProcessors));
+    GetProcessorName();
 
     {
         MEMORYSTATUSEX ms;
@@ -781,16 +799,15 @@ static void GetSystemInfo(str::Builder& s) {
         float physMemGB = (float)ms.ullTotalPhys / (float)(1024 * 1024 * 1024);
         float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
         DWORD usedPerc = ms.dwMemoryLoad;
-        str::BuilderAppend(gCrashHandlerArena, s,
-                           fmt("Physical Memory: %.2f GB\nCommit Charge Limit: %.2f GB\nMemory Used: %d%%\n", physMemGB,
-                               totalPageGB, usedPerc));
+        CrashInfoAppend(fmt("Physical Memory: %.2f GB\nCommit Charge Limit: %.2f GB\nMemory Used: %d%%\n", physMemGB,
+                            totalPageGB, usedPerc));
     }
     {
         TempStr ver = GetWebView2VersionTemp();
         if (len(ver) == 0) {
             ver = StrL("no WebView2 installed");
         }
-        str::BuilderAppend(gCrashHandlerArena, s, fmt("WebView2: %s\n", ver));
+        CrashInfoAppend(fmt("WebView2: %s\n", ver));
     }
     {
         // get computer name
@@ -802,11 +819,11 @@ static void GetSystemInfo(str::Builder& s) {
         if (!s1 && !s2) {
             // no-op
         } else if (!s1) {
-            str::BuilderAppend(gCrashHandlerArena, s, fmt("Machine: %s\n", s2));
+            CrashInfoAppend(fmt("Machine: %s\n", s2));
         } else if (!s2 || str::EqI(s1, s2)) {
-            str::BuilderAppend(gCrashHandlerArena, s, fmt("Machine: %s\n", s1));
+            CrashInfoAppend(fmt("Machine: %s\n", s1));
         } else {
-            str::BuilderAppend(gCrashHandlerArena, s, fmt("Machine: %s %s\n", s1, s2));
+            CrashInfoAppend(fmt("Machine: %s %s\n", s1, s2));
         }
     }
     {
@@ -814,67 +831,65 @@ static void GetSystemInfo(str::Builder& s) {
         char country[32] = {}, lang[32]{};
         GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
         GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
-        str::BuilderAppend(gCrashHandlerArena, s, fmt("Lang: %s %s\n", Str(lang), Str(country)));
+        CrashInfoAppend(fmt("Lang: %s %s\n", Str(lang), Str(country)));
     }
-    GetGraphicsDriverInfo(s);
+    GetGraphicsDriverInfo();
     {
         auto cpu = CpuID();
-        str::BuilderAppend(gCrashHandlerArena, s, StrL("CPU: "));
+        CrashInfoAppend(StrL("CPU: "));
         if (cpu & kCpuMMX) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("MMX "));
+            CrashInfoAppend(StrL("MMX "));
         }
         if (cpu & kCpuSSE) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE "));
+            CrashInfoAppend(StrL("SSE "));
         }
         if (cpu & kCpuSSE2) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE2 "));
+            CrashInfoAppend(StrL("SSE2 "));
         }
         if (cpu & kCpuSSE3) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE3 "));
+            CrashInfoAppend(StrL("SSE3 "));
         }
         if (cpu & kCpuSSE41) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE41 "));
+            CrashInfoAppend(StrL("SSE41 "));
         }
         if (cpu & kCpuSSE42) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE42 "));
+            CrashInfoAppend(StrL("SSE42 "));
         }
         if (cpu & kCpuAVX) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("AVX "));
+            CrashInfoAppend(StrL("AVX "));
         }
         if (cpu & kCpuAVX2) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("AVX2 "));
+            CrashInfoAppend(StrL("AVX2 "));
         }
         if (cpu & kCpuNEON) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("NEON "));
+            CrashInfoAppend(StrL("NEON "));
         }
         if (cpu & kCpuArmCrypto) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("Crypto "));
+            CrashInfoAppend(StrL("Crypto "));
         }
         if (cpu & kCpuArmAtomics) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("Atomics "));
+            CrashInfoAppend(StrL("Atomics "));
         }
         if (cpu & kCpuArmDotProd) {
-            str::BuilderAppend(gCrashHandlerArena, s, StrL("DotProd "));
+            CrashInfoAppend(StrL("DotProd "));
         }
     }
 }
 
 // returns true if running on wine
 static bool BuildModulesInfo() {
-    str::Builder s;
-    str::BuilderReserve(gCrashHandlerArena, s, 1024);
-    bool isWine = GetModules(s, false);
-    gModulesInfo = str::BuilderTakeStr(gCrashHandlerArena, s);
+    CrashInfoStart(1024);
+    bool isWine = GetModules(false);
+    gModulesInfo = CrashInfoTake();
     return isWine;
 }
 
 static void BuildSystemInfo() {
-    str::Builder s;
-    str::BuilderReserve(gCrashHandlerArena, s, 1024);
-    GetProgramInfo(gCrashHandlerArena, s);
-    GetOsVersion(s);
-    GetSystemInfo(s);
-    gSystemInfo = str::BuilderTakeStr(gCrashHandlerArena, s);
+    CrashInfoStart(1024);
+    GetProgramInfo();
+    GetOsVersion();
+    GetSystemInfo();
+    gSystemInfo = CrashInfoTake();
 }
 
 bool SetSymbolsDir(Str symDir) {
@@ -963,6 +978,7 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
     gCrashHandlerArena = ArenaNew();
+    gCrashInfo = New<str::Builder>(gCrashHandlerArena);
 
     if (!SetSymbolsDir(symDir)) {
         log(StrL("InstallCrashHandler: skipping because !SetSymbolsDir()\n"));
@@ -1075,6 +1091,7 @@ void UninstallCrashHandler() {
     gModulesInfo = {};
     gCrashFilePath = {};
     ArenaDelete(gCrashHandlerArena);
+    gCrashInfo = nullptr;
     gCrashHandlerArena = nullptr;
     gCrashThreadId = 0;
     gDumpThreadId = 0;

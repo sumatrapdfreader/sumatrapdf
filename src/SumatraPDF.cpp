@@ -15090,53 +15090,52 @@ static TempStr GetFileSizeAsStrTemp(Str path) {
     return str::FormatFileSizeTemp(fileSize);
 }
 
-void GetProgramInfo(Arena* a, str::Builder& s) {
-    str::BuilderAppend(a, s, fmt("Crash file: %s\r\n", gCrashFilePath));
+void GetProgramInfo() {
+    CrashInfoAppend(fmt("Crash file: %s\r\n", gCrashFilePath));
 
     TempStr exePath = GetSelfExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
-    str::BuilderAppend(a, s, fmt("Exe: %s %s\r\n", exePath, fileSizeExe));
+    CrashInfoAppend(fmt("Exe: %s %s\r\n", exePath, fileSizeExe));
     if (IsDllBuild()) {
         // show the size of the dll so that we can verify it's the
         // correct size for the given version
         TempStr dir = path::GetDirTemp(exePath);
         TempStr dllPath = path::JoinTemp(dir, StrL("libsumatrapdf.dll"));
         auto fileSizeDll = GetFileSizeAsStrTemp(dllPath);
-        str::BuilderAppend(a, s, fmt("Dll: %s %s\r\n", dllPath, fileSizeDll));
+        CrashInfoAppend(fmt("Dll: %s %s\r\n", dllPath, fileSizeDll));
     }
     TempStr signer = GetExecutableSignerTemp(exePath);
-    str::BuilderAppend(a, s, fmt("Signer: %s\r\n", signer ? signer : StrL("(not signed)")));
+    CrashInfoAppend(fmt("Signer: %s\r\n", signer ? signer : StrL("(not signed)")));
     if (builtOn) {
-        str::BuilderAppend(a, s, fmt("BuiltOn: %s\n", builtOn));
+        CrashInfoAppend(fmt("BuiltOn: %s\n", builtOn));
     }
     Str exeType = IsDllBuild() ? StrL("dll") : StrL("static");
     Str instType = IsRunningInPortableMode() ? StrL("portable") : StrL("installed");
-    str::BuilderAppend(a, s, fmt("ExeType: %s, %s\r\n", exeType, instType));
-    str::BuilderAppend(a, s, fmt("Ver: %s", currentVersion));
+    CrashInfoAppend(fmt("ExeType: %s, %s\r\n", exeType, instType));
+    CrashInfoAppend(fmt("Ver: %s", currentVersion));
     if (gIsPreReleaseBuild) {
-        str::BuilderAppend(a, s, fmt(" pre-release"));
+        CrashInfoAppend(fmt(" pre-release"));
     }
     if (IsProcess64()) {
-        str::BuilderAppend(a, s, StrL(" 64-bit"));
+        CrashInfoAppend(StrL(" 64-bit"));
     } else {
-        str::BuilderAppend(a, s, StrL(" 32-bit"));
+        CrashInfoAppend(StrL(" 32-bit"));
         if (IsRunningInWow64()) {
-            str::BuilderAppend(a, s, StrL(" Wow64"));
+            CrashInfoAppend(StrL(" Wow64"));
         }
     }
     if (gIsDebugBuild) {
-        if (!str::Contains(ToStr(s), StrL(" (dbg)"))) {
-            str::BuilderAppend(a, s, StrL(" (dbg)"));
+        if (!str::Contains(currentVersion, StrL(" (dbg)"))) {
+            CrashInfoAppend(StrL(" (dbg)"));
         }
     }
     if (gPluginMode) {
-        str::BuilderAppend(a, s, StrL(" [plugin]"));
+        CrashInfoAppend(StrL(" [plugin]"));
     }
-    str::BuilderAppend(a, s, StrL("\r\n"));
+    CrashInfoAppend(StrL("\r\n"));
 
     if (gitCommidId) {
-        str::BuilderAppend(
-            a, s,
+        CrashInfoAppend(
             fmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitCommidId, gitCommidId));
     }
 }

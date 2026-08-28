@@ -32,6 +32,7 @@
 #include "WindowTab.h"
 #include "Flags.h"
 #include "SearchAndDDE.h"
+#include "CrashHandler.h"
 #include "StressTesting.h"
 
 constexpr int kFirstStressTimerID = 101;
@@ -297,20 +298,6 @@ static TempStr FormatTimeTemp(int totalSecs) {
         return fmt("%d mins %d secs", mins, secs);
     }
     return fmt("%d secs", secs);
-}
-
-static void FormatTime(int totalSecs, str::Builder* s) {
-    int secs = totalSecs % 60;
-    int totalMins = totalSecs / 60;
-    int mins = totalMins % 60;
-    int hrs = totalMins / 60;
-    if (hrs > 0) {
-        s->Append(fmt("%d hrs %d mins %d secs", hrs, mins, secs));
-    }
-    if (mins > 0) {
-        s->Append(fmt("%d mins %d secs", mins, secs));
-    }
-    s->Append(fmt("%d secs", secs));
 }
 
 static void MakeRandomSelection(MainWindow* win, int pageNo) {
@@ -903,14 +890,14 @@ Next:
 }
 
 // note: used from CrashHandler, shouldn't allocate memory
-static void GetLogInfo(StressTest* st, str::Builder* s) {
-    s->Append(fmt(", stress test rendered %d files in ", st->nFilesProcessed));
-    FormatTime(SecsSinceSystemTime(st->stressStartTime), s);
-    s->Append(fmt(", currPage: %d", st->currPageNo));
+static void GetLogInfo(StressTest* st) {
+    CrashInfoAppend(fmt(", stress test rendered %d files in ", st->nFilesProcessed));
+    CrashInfoAppend(FormatTimeTemp(SecsSinceSystemTime(st->stressStartTime)));
+    CrashInfoAppend(fmt(", currPage: %d", st->currPageNo));
 }
 
 // note: used from CrashHandler.cpp, should not allocate memory
-void GetStressTestInfo(str::Builder* s) {
+void GetStressTestInfo() {
     // only add paths to files encountered during an explicit stress test
     // (for privacy reasons, users should be able to decide themselves
     // whether they want to share what files they had opened during a crash)
@@ -924,11 +911,11 @@ void GetStressTestInfo(str::Builder* s) {
             continue;
         }
 
-        s->Append(StrL("File: "));
+        CrashInfoAppend(StrL("File: "));
         Str filePath = w->CurrentTab()->filePath;
-        s->Append(filePath);
-        GetLogInfo(w->stressTest, s);
-        s->Append(StrL("\r\n"));
+        CrashInfoAppend(filePath);
+        GetLogInfo(w->stressTest);
+        CrashInfoAppend(StrL("\r\n"));
     }
 }
 
