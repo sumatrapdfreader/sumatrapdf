@@ -241,15 +241,13 @@ struct Builder {
     // len/cap/els come first, in that order, so Builder has the same layout as
     // Vec<T> and can be handed to the VecNonTemplated helpers
     int len = 0;
-    // Negative means the chars sit in scratch this Builder does not own (the
-    // externalBuf ctor arg) and the capacity is `-cap`, exactly like Vec<T>.
-    // Growing past it allocates and copies; nothing frees the scratch, and the
-    // Builder never returns to it.
+    // Negative means the chars sit in storage this Builder does not own and the
+    // capacity is `-cap`, exactly like Vec<T>. That is the externalBuf ctor arg
+    // while nReallocs is 0, and an arena block after that. Growing allocates a
+    // fresh block and copies; nothing frees it.
     int cap = 0;
     char* els = nullptr;
-    // arena is not owned by Builder and must outlive it
-    Arena* a = nullptr;
-    // preferred capacity for the first heap allocation, 0 for none
+    // preferred capacity for the first allocation, 0 for none
     int capHint = 0;
 
     int nReallocs = 0;
@@ -264,11 +262,13 @@ struct Builder {
 
     ~Builder();
 
-    // true while storage is the external buf (or no storage yet)
-    bool UsesExternalBuf() const { return !els || cap < 0; }
+    // true while storage is the caller's scratch (or there is none yet)
+    bool UsesExternalBuf() const { return !els || (cap < 0 && nReallocs == 0); }
 
     void Reset(Str s = {});
     char& operator[](int idx) const;
+    // these grow on the heap; to grow from an arena use the BuilderAppend*()
+    // free functions below, which take the allocator like VecPush() does
     bool InsertAt(int idx, char el);
     bool AppendChar(char c);
     bool Append(Str src);
@@ -288,6 +288,14 @@ struct Builder {
 };
 
 bool Contains(const Builder& b, Str sub);
+
+// Builder does not hold an allocator; like Vec, the arena is passed to the calls
+// that can grow. a == nullptr means the heap. Storage that came from an arena is
+// never freed by the Builder (the arena owns it).
+bool BuilderInsertAt(Arena* a, Builder& b, int idx, char el);
+bool BuilderAppendChar(Arena* a, Builder& b, char c);
+bool BuilderAppend(Arena* a, Builder& b, Str s);
+Str BuilderTakeStr(Arena* a, Builder& b);
 } // namespace str
 
 void SeqStrNumAppend(str::Builder* b, Str s, i64 num);
@@ -298,12 +306,10 @@ struct Builder {
     // len/cap/els come first, in that order, so Builder has the same layout as
     // Vec<T> and can be handed to the VecNonTemplated helpers
     int len = 0;
-    // negative cap means borrowed scratch of capacity -cap, see str::Builder
+    // negative cap means storage we don't own, of capacity -cap; see str::Builder
     int cap = 0;
     WCHAR* els = nullptr;
-    // arena is not owned by Builder and must outlive it
-    Arena* a = nullptr;
-    // preferred capacity for the first heap allocation, 0 for none
+    // preferred capacity for the first allocation, 0 for none
     int capHint = 0;
 
     int nReallocs = 0;
@@ -320,8 +326,8 @@ struct Builder {
 
     ~Builder();
 
-    // true while storage is the external buf (or no storage yet)
-    bool UsesExternalBuf() const { return !els || cap < 0; }
+    // true while storage is the caller's scratch (or there is none yet)
+    bool UsesExternalBuf() const { return !els || (cap < 0 && nReallocs == 0); }
 
     void Reset(WStr s = {});
     WCHAR& operator[](int idx) const;
@@ -344,6 +350,11 @@ struct Builder {
 } // namespace wstr
 
 namespace wstr {
+
+// the allocator is passed in, see str::BuilderAppend()
+bool BuilderAppendChar(Arena* a, Builder& b, WCHAR c);
+bool BuilderAppend(Arena* a, Builder& b, WStr s);
+WStr BuilderTakeWStr(Arena* a, Builder& b);
 
 bool Replace(Builder& s, WStr toReplace, WStr replaceWith);
 bool ContainsChar(const Builder& b, WCHAR el);

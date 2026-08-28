@@ -53,12 +53,12 @@ bool IsUiHangDetectorRunning() {
 // Symbols: prefer a .pdb next to the .exe (what a local build has), then
 // whatever the crash handler downloaded into gSymbolsDir.
 static bool EnsureSymbols() {
+    Arena* a = GetTempArena();
     str::Builder symPath(1024);
-    symPath.a = GetTempArena();
-    symPath.Append(GetSelfExeDirTemp());
+    str::BuilderAppend(a, symPath, GetSelfExeDirTemp());
     if (len(gSymbolsDir) > 0) {
-        symPath.Append(StrL(";"));
-        symPath.Append(gSymbolsDir);
+        str::BuilderAppend(a, symPath, StrL(";"));
+        str::BuilderAppend(a, symPath, gSymbolsDir);
     }
     TempWStr ws = ToWStrTemp(ToStrTemp(symPath));
     if (!dbghelp::Initialize(ws, false)) {
@@ -169,7 +169,7 @@ static void ReportHang(double blockedMs) {
         }
         str::Builder cs(2048);
         for (int j = 0; j < ts.nAddrs; j++) {
-            dbghelp::GetAddressInfo(cs, (DWORD64)ts.addrs[j], false);
+            dbghelp::GetAddressInfo(nullptr, cs, (DWORD64)ts.addrs[j], false);
         }
         Str csStr = ToStr(cs);
         if (!IsOurThread(ts.tid, csStr)) {

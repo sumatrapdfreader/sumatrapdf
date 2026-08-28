@@ -79,7 +79,7 @@ static bool InitSymbolsForAi() {
 static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* exceptionInfo) {
     printf("test_util crash\n");
     str::Builder s;
-    dbghelp::GetExceptionInfo(s, exceptionInfo);
+    dbghelp::GetExceptionInfo(nullptr, s, exceptionInfo);
     PrintStdout(ToStr(s));
     fflush(stdout);
     ExitProcess(7);

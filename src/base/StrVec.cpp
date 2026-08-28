@@ -863,7 +863,7 @@ static int CalcCapForJoin(const StrVec* v, Str joint) {
     return cap + 32; // +32 arbitrary buffer
 }
 
-static void JoinInner(const StrVec* v, Str joint, str::Builder& res) {
+static void JoinInner(Arena* a, const StrVec* v, Str joint, str::Builder& res) {
     int jointLen = joint.len;
     // TODO: possibly not handling null values in the middle. need to add more tests and fix
     int firstForJoint = 0;
@@ -875,9 +875,9 @@ static void JoinInner(const StrVec* v, Str joint, str::Builder& res) {
             continue;
         }
         if (i > firstForJoint && jointLen > 0) {
-            res.Append(joint);
+            str::BuilderAppend(a, res, joint);
         }
-        res.Append(s);
+        str::BuilderAppend(a, res, s);
         i++;
     }
 }
@@ -885,14 +885,14 @@ static void JoinInner(const StrVec* v, Str joint, str::Builder& res) {
 Str Join(StrVec* v, Str sep) {
     int capHint = CalcCapForJoin(v, sep);
     str::Builder tmp(capHint);
-    JoinInner(v, sep, tmp);
+    JoinInner(nullptr, v, sep, tmp);
     return tmp.TakeStr();
 }
 
 TempStr JoinTemp(StrVec* v, Str sep) {
     int capHint = CalcCapForJoin(v, sep);
     str::Builder tmp(capHint);
-    tmp.a = GetTempArena();
-    JoinInner(v, sep, tmp);
+    Arena* a = GetTempArena();
+    JoinInner(a, v, sep, tmp);
     return ToStrTemp(tmp);
 }

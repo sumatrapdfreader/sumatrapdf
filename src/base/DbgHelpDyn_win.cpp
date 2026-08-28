@@ -259,12 +259,12 @@ NO_INLINE static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen,
     return false;
 }
 
-static void AppendAddress(str::Builder& s, DWORD64 addr) {
+static void AppendAddress(Arena* a, str::Builder& s, DWORD64 addr) {
     void* p = reinterpret_cast<void*>(addr);
-    s.Append(fmt("%p", p));
+    str::BuilderAppend(a, s, fmt("%p", p));
 }
 
-void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
+void GetAddressInfo(Arena* a, str::Builder& s, DWORD64 addr, bool compact) {
     char buf[sizeof(SYMBOL_INFO) + (kMaxSymLen * sizeof(char))];
     SYMBOL_INFO* symInfo = (SYMBOL_INFO*)buf;
 
@@ -287,32 +287,32 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
         str::ToLowerInPlace(Str(moduleName));
         TempStr moduleShort = path::GetBaseNameTemp(Str(moduleName));
         if (compact) {
-            s.Append(moduleShort);
+            str::BuilderAppend(a, s, moduleShort);
         } else {
-            AppendAddress(s, addr);
-            s.Append(fmt(" %02X:", section));
-            AppendAddress(s, offset);
-            s.Append(fmt(" %s", moduleShort));
+            AppendAddress(a, s, addr);
+            str::BuilderAppend(a, s, fmt(" %02X:", section));
+            AppendAddress(a, s, offset);
+            str::BuilderAppend(a, s, fmt(" %s", moduleShort));
         }
 
         if (symName) {
-            s.Append(fmt("!%s+0x%x", Str(symName), (int)symDisp));
+            str::BuilderAppend(a, s, fmt("!%s+0x%x", Str(symName), (int)symDisp));
         } else {
-            s.Append(fmt("+0x%x", (int)offset));
+            str::BuilderAppend(a, s, fmt("+0x%x", (int)offset));
         }
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
         DWORD disp;
         if (DynSymGetLineFromAddr64(GetCurrentProcess(), addr, &disp, &line)) {
-            s.Append(fmt(" %s+%d", Str(line.FileName), line.LineNumber));
+            str::BuilderAppend(a, s, fmt(" %s+%d", Str(line.FileName), line.LineNumber));
         }
     } else {
-        AppendAddress(s, addr);
+        AppendAddress(a, s, addr);
     }
-    s.Append(StrL("\n"));
+    str::BuilderAppend(a, s, StrL("\n"));
 }
 
-static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT* ctx, ThreadHandle hThread) {
+static bool GetStackFrameInfo(Arena* a, str::Builder& s, STACKFRAME64* stackFrame, CONTEXT* ctx, ThreadHandle hThread) {
 #ifdef _WIN64
     int machineType = IMAGE_FILE_MACHINE_AMD64;
 #else
@@ -329,17 +329,17 @@ static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT
         return true;
     }
     if (addr == stackFrame->AddrReturn.Offset) {
-        s.Append(StrL("GetStackFrameInfo(): addr == stackFrame->AddrReturn.Offset"));
+        str::BuilderAppend(a, s, StrL("GetStackFrameInfo(): addr == stackFrame->AddrReturn.Offset"));
         return false;
     }
 
-    GetAddressInfo(s, addr, false);
+    GetAddressInfo(a, s, addr, false);
     return true;
 }
 
-static bool GetCallstack(str::Builder& s, CONTEXT& ctx, ThreadHandle hThread) {
+static bool GetCallstack(Arena* a, str::Builder& s, CONTEXT& ctx, ThreadHandle hThread) {
     if (!CanStackWalk()) {
-        s.Append(StrL("GetCallstack(): CanStackWalk() returned false\n"));
+        str::BuilderAppend(a, s, StrL("GetCallstack(): CanStackWalk() returned false\n"));
         return false;
     }
 
@@ -367,13 +367,13 @@ static bool GetCallstack(str::Builder& s, CONTEXT& ctx, ThreadHandle hThread) {
     int framesCount = 0;
     static const int maxFrames = 48;
     while (framesCount < maxFrames) {
-        if (!GetStackFrameInfo(s, &stackFrame, &ctx, hThread)) {
+        if (!GetStackFrameInfo(a, s, &stackFrame, &ctx, hThread)) {
             break;
         }
         framesCount++;
     }
     if (0 == framesCount) {
-        s.Append(StrL("StackWalk64() couldn't get even the first stack frame info\n"));
+        str::BuilderAppend(a, s, StrL("StackWalk64() couldn't get even the first stack frame info\n"));
         return false;
     }
     return true;
@@ -437,31 +437,31 @@ int GetSuspendedThreadCallstackAddrs(ThreadHandle hThread, u64* addrs, int maxAd
     return n;
 }
 
-void GetThreadCallstack(str::Builder& s, ThreadId threadId) {
+void GetThreadCallstack(Arena* a, str::Builder& s, ThreadId threadId) {
     if (threadId == GetCurrentThreadId()) {
         return;
     }
 
-    s.Append(fmt("\nThread: %x\n", threadId));
+    str::BuilderAppend(a, s, fmt("\nThread: %x\n", threadId));
 
     DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
     ThreadHandle hThread = OpenThread(access, false, threadId);
     if (!hThread) {
-        s.Append(StrL("Failed to OpenThread()\n"));
+        str::BuilderAppend(a, s, StrL("Failed to OpenThread()\n"));
         return;
     }
 
     DWORD res = SuspendThread(hThread);
     if ((DWORD)(-1) == res) {
-        s.Append(StrL("Failed to SuspendThread()\n"));
+        str::BuilderAppend(a, s, StrL("Failed to SuspendThread()\n"));
     } else {
         CONTEXT ctx{};
         ctx.ContextFlags = CONTEXT_FULL;
         BOOL ok = GetThreadContext(hThread, &ctx);
         if (ok) {
-            GetCallstack(s, ctx, hThread);
+            GetCallstack(a, s, ctx, hThread);
         } else {
-            s.Append(StrL("Failed to GetThreadContext()\n"));
+            str::BuilderAppend(a, s, StrL("Failed to GetThreadContext()\n"));
         }
 
         ResumeThread(hThread);
@@ -478,14 +478,14 @@ void GetThreadCallstack(str::Builder& s, ThreadId threadId) {
 // from local buffer overrun because optimizations are disabled in function)"
 #pragma warning(push)
 #pragma warning(disable : 4748)
-NO_INLINE bool GetCurrentThreadCallstack(str::Builder& s) {
+NO_INLINE bool GetCurrentThreadCallstack(Arena* a, str::Builder& s) {
     if (!Initialize(nullptr, false)) {
         return false;
     }
 
     CONTEXT ctx;
     RtlCaptureContext(&ctx);
-    return GetCallstack(s, ctx, GetCurrentThread());
+    return GetCallstack(a, s, ctx, GetCurrentThread());
 }
 #pragma optimize("", off)
 
@@ -493,7 +493,7 @@ static str::Builder* gCallstackLogs = nullptr;
 
 TempStr GetCurrentThreadCallstackTemp() {
     str::Builder s(2048);
-    if (!GetCurrentThreadCallstack(s)) {
+    if (!GetCurrentThreadCallstack(nullptr, s)) {
         return StrL("");
     }
     return ToStrTemp(s);
@@ -520,7 +520,7 @@ Str GetCallstacks() {
 
 void LogCallstack() {
     str::Builder s(2048);
-    if (!GetCurrentThreadCallstack(s)) {
+    if (!GetCurrentThreadCallstack(nullptr, s)) {
         return;
     }
 
@@ -530,7 +530,7 @@ void LogCallstack() {
     }
 }
 
-void GetAllThreadsCallstacksExcept(str::Builder& s, ThreadId skipThreadId) {
+void GetAllThreadsCallstacksExcept(Arena* a, str::Builder& s, ThreadId skipThreadId) {
     HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (threadSnap == INVALID_HANDLE_VALUE) {
         return;
@@ -543,7 +543,7 @@ void GetAllThreadsCallstacksExcept(str::Builder& s, ThreadId skipThreadId) {
     BOOL ok = Thread32First(threadSnap, &te32);
     while (ok) {
         if (te32.th32OwnerProcessID == pid && te32.th32ThreadID != skipThreadId) {
-            GetThreadCallstack(s, te32.th32ThreadID);
+            GetThreadCallstack(a, s, te32.th32ThreadID);
         }
         ok = Thread32Next(threadSnap, &te32);
     }
@@ -551,70 +551,75 @@ void GetAllThreadsCallstacksExcept(str::Builder& s, ThreadId skipThreadId) {
     CloseHandle(threadSnap);
 }
 
-void GetAllThreadsCallstacks(str::Builder& s) {
-    GetAllThreadsCallstacksExcept(s, 0);
+void GetAllThreadsCallstacks(Arena* a, str::Builder& s) {
+    GetAllThreadsCallstacksExcept(a, s, 0);
 }
 #pragma warning(pop)
 
-void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {
+void GetExceptionInfo(Arena* a, str::Builder& s, EXCEPTION_POINTERS* excPointers) {
     if (!excPointers) {
         return;
     }
 
     EXCEPTION_RECORD* excRecord = excPointers->ExceptionRecord;
     DWORD excCode = excRecord->ExceptionCode;
-    s.Append(fmt("Exception: %08X %s\n", (int)excCode, ExceptionNameFromCode(excCode)));
+    str::BuilderAppend(a, s, fmt("Exception: %08X %s\n", (int)excCode, ExceptionNameFromCode(excCode)));
 
-    s.Append(fmt("Faulting IP: "));
-    GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress, false);
+    str::BuilderAppend(a, s, fmt("Faulting IP: "));
+    GetAddressInfo(a, s, (DWORD64)excRecord->ExceptionAddress, false);
     if ((EXCEPTION_ACCESS_VIOLATION == excCode) || (EXCEPTION_IN_PAGE_ERROR == excCode)) {
         int readWriteFlag = (int)excRecord->ExceptionInformation[0];
         DWORD64 dataVirtAddr = (DWORD64)excRecord->ExceptionInformation[1];
         if (0 == readWriteFlag) {
-            s.Append(StrL("Fault reading address "));
-            AppendAddress(s, dataVirtAddr);
+            str::BuilderAppend(a, s, StrL("Fault reading address "));
+            AppendAddress(a, s, dataVirtAddr);
         } else if (1 == readWriteFlag) {
-            s.Append(StrL("Fault writing address "));
-            AppendAddress(s, dataVirtAddr);
+            str::BuilderAppend(a, s, StrL("Fault writing address "));
+            AppendAddress(a, s, dataVirtAddr);
         } else if (8 == readWriteFlag) {
-            s.Append(StrL("DEP violation at address "));
-            AppendAddress(s, dataVirtAddr);
+            str::BuilderAppend(a, s, StrL("DEP violation at address "));
+            AppendAddress(a, s, dataVirtAddr);
         } else {
-            s.Append(fmt("unknown readWriteFlag: %d", readWriteFlag));
+            str::BuilderAppend(a, s, fmt("unknown readWriteFlag: %d", readWriteFlag));
         }
-        s.Append(StrL("\n"));
+        str::BuilderAppend(a, s, StrL("\n"));
     }
 
     PCONTEXT ctx = excPointers->ContextRecord;
-    s.Append(fmt("\nRegisters:\n"));
+    str::BuilderAppend(a, s, fmt("\nRegisters:\n"));
 #if IS_INTEL_64 == 1
-    s.Append(
+    str::BuilderAppend(
+        a, s,
         fmt("RAX:%016I64X  RBX:%016I64X  RCX:%016I64X\nRDX:%016I64X  RSI:%016I64X  RDI:%016I64X\n"
             "R8: %016I64X\nR9: "
             "%016I64X\nR10:%016I64X\nR11:%016I64X\nR12:%016I64X\nR13:%016I64X\nR14:%016I64X\nR15:%016I64X\n",
             ctx->Rax, ctx->Rbx, ctx->Rcx, ctx->Rdx, ctx->Rsi, ctx->Rdi, ctx->R8, ctx->R9, ctx->R10, ctx->R11, ctx->R12,
             ctx->R13, ctx->R14, ctx->R15));
-    s.Append(fmt("CS:RIP:%04X:%016I64X\n", ctx->SegCs, ctx->Rip));
+    str::BuilderAppend(a, s, fmt("CS:RIP:%04X:%016I64X\n", ctx->SegCs, ctx->Rip));
     // full 64-bit RSP/RBP (casting to unsigned int truncated high bits, issue #crash-format)
-    s.Append(fmt("SS:RSP:%04X:%016I64X  RBP:%016I64X\n", ctx->SegSs, ctx->Rsp, ctx->Rbp));
-    s.Append(fmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs));
-    s.Append(fmt("Flags:%08X\n", ctx->EFlags));
+    str::BuilderAppend(a, s, fmt("SS:RSP:%04X:%016I64X  RBP:%016I64X\n", ctx->SegSs, ctx->Rsp, ctx->Rbp));
+    str::BuilderAppend(a, s,
+                       fmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs));
+    str::BuilderAppend(a, s, fmt("Flags:%08X\n", ctx->EFlags));
 #elif IS_INTEL_32 == 1
-    s.Append(fmt("EAX:%08X  EBX:%08X  ECX:%08X\nEDX:%08X  ESI:%08X  EDI:%08X\n", ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx,
-                 ctx->Esi, ctx->Edi));
-    s.Append(fmt("CS:EIP:%04X:%08X\n", ctx->SegCs, ctx->Eip));
-    s.Append(fmt("SS:ESP:%04X:%08X  EBP:%08X\n", ctx->SegSs, ctx->Esp, ctx->Ebp));
-    s.Append(fmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs));
-    s.Append(fmt("Flags:%08X\n", ctx->EFlags));
+    str::BuilderAppend(a, s,
+                       fmt("EAX:%08X  EBX:%08X  ECX:%08X\nEDX:%08X  ESI:%08X  EDI:%08X\n", ctx->Eax, ctx->Ebx, ctx->Ecx,
+                           ctx->Edx, ctx->Esi, ctx->Edi));
+    str::BuilderAppend(a, s, fmt("CS:EIP:%04X:%08X\n", ctx->SegCs, ctx->Eip));
+    str::BuilderAppend(a, s, fmt("SS:ESP:%04X:%08X  EBP:%08X\n", ctx->SegSs, ctx->Esp, ctx->Ebp));
+    str::BuilderAppend(a, s,
+                       fmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs));
+    str::BuilderAppend(a, s, fmt("Flags:%08X\n", ctx->EFlags));
 #elif IS_ARM_64 == 1
-    s.Append(fmt("Fp:%016I64X\nLr:%016I64X\nSp:%016I64X\nPc:%016I64X\n", ctx->Fp, ctx->Lr, ctx->Sp, ctx->Pc));
+    str::BuilderAppend(a, s,
+                       fmt("Fp:%016I64X\nLr:%016I64X\nSp:%016I64X\nPc:%016I64X\n", ctx->Fp, ctx->Lr, ctx->Sp, ctx->Pc));
 #else
 #error "Unsupported CPU architecture"
 #endif
 
-    s.Append(StrL("\nCrashed thread:\n"));
+    str::BuilderAppend(a, s, StrL("\nCrashed thread:\n"));
     // it's not really for current thread, but it seems to work
-    GetCallstack(s, *ctx, GetCurrentThread());
+    GetCallstack(a, s, *ctx, GetCurrentThread());
 }
 
 } // namespace dbghelp

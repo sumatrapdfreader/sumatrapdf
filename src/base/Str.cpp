@@ -1730,9 +1730,10 @@ TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
 // kPadding is number of characters needed for terminating character
 static constexpr int kPadding = 1;
 
-// using borrowed scratch, or no storage yet (not heap)
-static bool IsExternalOrEmpty(const str::Builder* s) {
-    return !s->els || s->cap < 0;
+// still on the caller's scratch (or with no storage at all), i.e. there is no
+// block of ours to grow
+static bool IsCallerScratch(const str::Builder* s) {
+    return !s->els || (s->cap < 0 && s->nReallocs == 0);
 }
 
 // both Builders lead with {len, cap, els}, in that order, so they have Vec<T>'s
@@ -1744,12 +1745,12 @@ static_assert(offsetof(wstr::Builder, len) == offsetof(VecNonTemplated, len));
 static_assert(offsetof(wstr::Builder, cap) == offsetof(VecNonTemplated, cap));
 static_assert(offsetof(wstr::Builder, els) == offsetof(VecNonTemplated, els));
 
-static char* EnsureCap(str::Builder* s, int needed) {
+static char* EnsureCap(Arena* a, str::Builder* s, int needed) {
     if (s->cap < 0) {
-        // borrowed scratch, usable while the chars plus the NUL still fit. Once
-        // we grow out of it we never come back: RemoveAt() can shrink len enough
-        // to fit again, and switching back would lose data and leak the heap
-        // allocation.
+        // storage we don't own, usable while the chars plus the NUL still fit.
+        // Once we grow out of the caller's scratch we never go back: RemoveAt()
+        // can shrink len enough to fit again, and switching back would lose data
+        // and leak the allocation.
         if (needed + kPadding <= -s->cap) {
             return s->els;
         }
@@ -1757,9 +1758,9 @@ static char* EnsureCap(str::Builder* s, int needed) {
         return s->els;
     }
 
-    bool fromBorrowed = IsExternalOrEmpty(s);
-    // the borrowed capacity is not ours to double
-    int curCap = fromBorrowed ? 0 : s->cap;
+    bool callerScratch = IsCallerScratch(s);
+    // the caller's scratch is not ours to double; an arena block is
+    int curCap = callerScratch ? 0 : (s->cap < 0 ? -s->cap : s->cap);
     int newCap = curCap * 2;
     newCap = std::max(needed, newCap);
     newCap = std::max(newCap, s->capHint);
@@ -1770,29 +1771,34 @@ static char* EnsureCap(str::Builder* s, int needed) {
 
     int allocSize = newElCount;
     char* newEls;
-    if (fromBorrowed) {
-        newEls = (char*)Alloc(s->a, allocSize);
+    bool ownsHeapBlock = s->els && s->cap > 0;
+    if (ownsHeapBlock && !a) {
+        newEls = (char*)Realloc(nullptr, s->els, (size_t)allocSize, (size_t)s->len + kPadding);
+    } else {
+        // an arena never frees, and realloc() of the caller's scratch would be
+        // undefined, so both go through a fresh block plus a copy
+        newEls = (char*)Alloc(a, allocSize);
         if (newEls && s->els && s->len > 0) {
             memcpy(newEls, s->els, (size_t)s->len + 1);
         } else if (newEls) {
             newEls[0] = 0;
         }
-    } else {
-        newEls = (char*)Realloc(s->a, s->els, (size_t)allocSize, (size_t)s->len + kPadding);
     }
     if (!newEls) {
         ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
         return nullptr;
     }
     s->els = newEls;
-    s->cap = newCap;
+    // an arena block is not ours to free, so it is marked the same way the
+    // caller's scratch is
+    s->cap = a ? -newCap : newCap;
     return newEls;
 }
 
-static char* MakeSpaceAt(str::Builder* s, int idx, int count) {
+static char* MakeSpaceAt(Arena* a, str::Builder* s, int idx, int count) {
     ReportIf(count == 0);
     int newLen = std::max(s->len, idx) + count;
-    char* buf = EnsureCap(s, newLen);
+    char* buf = EnsureCap(a, s, newLen);
     if (!buf) {
         return nullptr;
     }
@@ -1819,7 +1825,8 @@ static void StrBuilderReset(str::Builder* s) {
 
 static void StrBuilderFree(str::Builder* s) {
     if (s->els && s->cap > 0) {
-        Free(s->a, s->els);
+        // cap > 0 is only ever a heap block of ours; arena storage has cap < 0
+        Free(nullptr, s->els);
     }
     s->len = 0;
     s->cap = 0;
@@ -1831,8 +1838,6 @@ void str::Builder::Reset(Str s) {
     Append(s); // no-op if s is empty
 }
 
-// arena is not owned by Builder; set .a after construction if needed
-// capHint: preferred capacity after first grow
 // capHint: preferred capacity after first grow
 str::Builder::Builder(Str externalBuf) {
     if (externalBuf.s && externalBuf.len > kPadding) {
@@ -1862,8 +1867,8 @@ int len(const str::Builder& b) {
     return b.len;
 }
 
-bool str::Builder::InsertAt(int idx, char el) {
-    char* p = MakeSpaceAt(this, idx, 1);
+bool str::BuilderInsertAt(Arena* a, Builder& b, int idx, char el) {
+    char* p = MakeSpaceAt(a, &b, idx, 1);
     if (!p) {
         return false;
     }
@@ -1871,20 +1876,32 @@ bool str::Builder::InsertAt(int idx, char el) {
     return true;
 }
 
-bool str::Builder::AppendChar(char c) {
-    return InsertAt(len, c);
+bool str::BuilderAppendChar(Arena* a, Builder& b, char c) {
+    return BuilderInsertAt(a, b, b.len, c);
 }
 
-bool str::Builder::Append(Str src) {
+bool str::BuilderAppend(Arena* a, Builder& b, Str src) {
     if (str::IsNull(src) || 0 == src.len) {
         return true;
     }
-    char* dst = MakeSpaceAt(this, len, src.len);
+    char* dst = MakeSpaceAt(a, &b, b.len, src.len);
     if (!dst) {
         return false;
     }
     memcpy(dst, src.s, (size_t)src.len);
     return true;
+}
+
+bool str::Builder::InsertAt(int idx, char el) {
+    return str::BuilderInsertAt(nullptr, *this, idx, el);
+}
+
+bool str::Builder::AppendChar(char c) {
+    return str::BuilderInsertAt(nullptr, *this, len, c);
+}
+
+bool str::Builder::Append(Str src) {
+    return str::BuilderAppend(nullptr, *this, src);
 }
 
 char str::Builder::RemoveAt(int idx, int count) {
@@ -1916,25 +1933,29 @@ char& str::Builder::Last() const {
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
-Str str::Builder::TakeStr() {
-    int n = len;
-    char* res = els;
-    if (!els || n == 0) {
-        Reset();
+Str str::BuilderTakeStr(Arena* a, Builder& b) {
+    int n = b.len;
+    char* res = b.els;
+    if (!b.els || n == 0) {
+        b.Reset();
         return Str{};
     }
-    if (cap < 0) {
-        // the chars are in borrowed scratch, so they have to be duplicated and
-        // the Builder keeps using the scratch
-        res = (char*)MemDup(this->a, els, (size_t)n + kPadding);
+    if (IsCallerScratch(&b)) {
+        // the chars are in the caller's scratch, so they have to be duplicated
+        // and the Builder keeps using the scratch
+        res = (char*)MemDup(a, b.els, (size_t)n + kPadding);
     } else {
-        // hand the heap block to the caller and start over with no storage
-        els = nullptr;
-        cap = 0;
+        // hand the block (heap or arena) to the caller and start over
+        b.els = nullptr;
+        b.cap = 0;
     }
 
-    Reset();
+    b.Reset();
     return Str(res, n);
+}
+
+Str str::Builder::TakeStr() {
+    return str::BuilderTakeStr(nullptr, *this);
 }
 
 bool str::Contains(const str::Builder& b, Str sub) {
@@ -1954,13 +1975,13 @@ char str::Builder::LastChar() const {
 }
 
 // using external scratch, or no storage yet (not heap)
-static bool IsExternalOrEmpty(const wstr::Builder* s) {
-    return !s->els || s->cap < 0;
+static bool IsCallerScratch(const wstr::Builder* s) {
+    return !s->els || (s->cap < 0 && s->nReallocs == 0);
 }
 
-static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
+static WCHAR* EnsureCap(Arena* a, wstr::Builder* s, int needed) {
     if (s->cap < 0) {
-        // borrowed scratch, see the str::Builder version
+        // storage we don't own, see the str::Builder version
         if (needed + kPadding <= -s->cap) {
             return s->els;
         }
@@ -1968,9 +1989,9 @@ static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
         return s->els;
     }
 
-    bool fromBorrowed = IsExternalOrEmpty(s);
-    // the borrowed capacity is not ours to double
-    int curCap = fromBorrowed ? 0 : s->cap;
+    bool callerScratch = IsCallerScratch(s);
+    // the caller's scratch is not ours to double; an arena block is
+    int curCap = callerScratch ? 0 : (s->cap < 0 ? -s->cap : s->cap);
     int newCap = curCap * 2;
     newCap = std::max(needed, newCap);
     newCap = std::max(newCap, s->capHint);
@@ -1981,15 +2002,17 @@ static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
 
     int allocSize = newElCount * wstr::Builder::kElSize;
     WCHAR* newEls;
-    if (fromBorrowed) {
-        newEls = (WCHAR*)Alloc(s->a, allocSize);
+    bool ownsHeapBlock = s->els && s->cap > 0;
+    if (ownsHeapBlock && !a) {
+        newEls =
+            (WCHAR*)Realloc(nullptr, s->els, (size_t)allocSize, (size_t)wstr::Builder::kElSize * (s->len + kPadding));
+    } else {
+        newEls = (WCHAR*)Alloc(a, allocSize);
         if (newEls && s->els && s->len > 0) {
             memcpy(newEls, s->els, (size_t)wstr::Builder::kElSize * (s->len + 1));
         } else if (newEls) {
             newEls[0] = 0;
         }
-    } else {
-        newEls = (WCHAR*)Realloc(s->a, s->els, (size_t)allocSize, (size_t)wstr::Builder::kElSize * (s->len + kPadding));
     }
 
     if (!newEls) {
@@ -1997,14 +2020,14 @@ static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
         return nullptr;
     }
     s->els = newEls;
-    s->cap = newCap;
+    s->cap = a ? -newCap : newCap;
     return newEls;
 }
 
-static WCHAR* MakeSpaceAt(wstr::Builder* s, int idx, int count) {
+static WCHAR* MakeSpaceAt(Arena* a, wstr::Builder* s, int idx, int count) {
     ReportIf(count == 0);
     int newLen = std::max(s->len, idx) + count;
-    WCHAR* buf = EnsureCap(s, newLen);
+    WCHAR* buf = EnsureCap(a, s, newLen);
     if (!buf) {
         return nullptr;
     }
@@ -2029,7 +2052,8 @@ static void WStrBuilderReset(wstr::Builder* s) {
 
 static void WStrBuilderFree(wstr::Builder* s) {
     if (s->els && s->cap > 0) {
-        Free(s->a, s->els);
+        // cap > 0 is only ever a heap block of ours; arena storage has cap < 0
+        Free(nullptr, s->els);
     }
     s->len = 0;
     s->cap = 0;
@@ -2041,8 +2065,6 @@ void wstr::Builder::Reset(WStr s) {
     Append(s); // no-op if s is empty
 }
 
-// arena is not owned by Builder; set .a after construction if needed
-// capHint: preferred capacity after first grow
 // capHint: preferred capacity after first grow
 wstr::Builder::Builder(WStr externalBuf) {
     if (externalBuf.s && externalBuf.len > kPadding) {
@@ -2073,7 +2095,7 @@ int len(const wstr::Builder& b) {
 }
 
 bool wstr::Builder::InsertAt(int idx, const WCHAR& el) {
-    WCHAR* p = MakeSpaceAt(this, idx, 1);
+    WCHAR* p = MakeSpaceAt(nullptr, this, idx, 1);
     if (!p) {
         return false;
     }
@@ -2085,16 +2107,29 @@ bool wstr::Builder::AppendChar(WCHAR c) {
     return InsertAt(len, c);
 }
 
-bool wstr::Builder::Append(WStr src) {
+bool wstr::BuilderAppend(Arena* a, Builder& b, WStr src) {
     if (wstr::IsNull(src) || 0 == src.len) {
         return true;
     }
-    WCHAR* dst = MakeSpaceAt(this, len, src.len);
+    WCHAR* dst = MakeSpaceAt(a, &b, b.len, src.len);
     if (!dst) {
         return false;
     }
-    memcpy(dst, src.s, (size_t)src.len * kElSize);
+    memcpy(dst, src.s, (size_t)src.len * wstr::Builder::kElSize);
     return true;
+}
+
+bool wstr::BuilderAppendChar(Arena* a, Builder& b, WCHAR c) {
+    WCHAR* p = MakeSpaceAt(a, &b, b.len, 1);
+    if (!p) {
+        return false;
+    }
+    p[0] = c;
+    return true;
+}
+
+bool wstr::Builder::Append(WStr src) {
+    return wstr::BuilderAppend(nullptr, *this, src);
 }
 
 WCHAR wstr::Builder::RemoveAt(int idx, int count) {
@@ -2120,24 +2155,28 @@ WCHAR wstr::Builder::RemoveLast() {
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
-WStr wstr::Builder::TakeWStr() {
-    int n = len;
-    WCHAR* res = els;
-    if (!els || n == 0) {
-        Reset();
+WStr wstr::BuilderTakeWStr(Arena* a, Builder& b) {
+    int n = b.len;
+    WCHAR* res = b.els;
+    if (!b.els || n == 0) {
+        b.Reset();
         return WStr{};
     }
-    if (cap < 0) {
-        // the chars are in borrowed scratch, so they have to be duplicated and
-        // the Builder keeps using the scratch
-        res = (WCHAR*)MemDup(a, els, (size_t)(n + kPadding) * kElSize);
+    if (IsCallerScratch(&b)) {
+        // the chars are in the caller's scratch, so they have to be duplicated
+        // and the Builder keeps using the scratch
+        res = (WCHAR*)MemDup(a, b.els, (size_t)(n + kPadding) * wstr::Builder::kElSize);
     } else {
-        // hand the heap block to the caller and start over with no storage
-        els = nullptr;
-        cap = 0;
+        // hand the block (heap or arena) to the caller and start over
+        b.els = nullptr;
+        b.cap = 0;
     }
-    Reset();
+    b.Reset();
     return WStr(res, n);
+}
+
+WStr wstr::Builder::TakeWStr() {
+    return wstr::BuilderTakeWStr(nullptr, *this);
 }
 
 bool wstr::ContainsChar(const wstr::Builder& b, WCHAR el) {

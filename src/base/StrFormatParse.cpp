@@ -66,6 +66,10 @@ struct Fmt {
     Fmt() = default;
     ~Fmt() = default;
 
+    // where res grows from; null is the heap. Builder has no allocator of its
+    // own, so it is passed to every BuilderAppend() below
+    Arena* a = nullptr;
+
     bool Eval(const FmtArg** args, int nArgs);
 
     bool isOk = true; // true if mismatch between formatting instruction and args
@@ -350,27 +354,27 @@ static void evalDefault(Fmt& fmt, const FmtArg& arg) {
     Str buf(fmt.buf, dimofi(fmt.buf));
     switch (arg.t) {
         case FmtArg::Kind::Char:
-            fmt.res.AppendChar(arg.c);
+            str::BuilderAppendChar(fmt.a, fmt.res, arg.c);
             break;
         case FmtArg::Kind::Int:
-            fmt.res.Append(bufFmt(buf, "%lld", (long long)arg.i));
+            str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, "%lld", (long long)arg.i));
             break;
         case FmtArg::Kind::Ptr:
-            fmt.res.Append(bufFmt(buf, "%p", arg.ptr));
+            str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, "%p", arg.ptr));
             break;
         case FmtArg::Kind::Float:
             // Note: %G, unlike %f, avoids trailing '0'
-            fmt.res.Append(bufFmt(buf, "%G", (double)arg.f));
+            str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, "%G", (double)arg.f));
             break;
         case FmtArg::Kind::Double:
-            fmt.res.Append(bufFmt(buf, "%G", arg.d));
+            str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, "%G", arg.d));
             break;
         case FmtArg::Kind::Str:
-            fmt.res.Append(arg.str);
+            str::BuilderAppend(fmt.a, fmt.res, arg.str);
             break;
         case FmtArg::Kind::WStr:
             s = ToUtf8Temp(arg.wstr);
-            fmt.res.Append(s);
+            str::BuilderAppend(fmt.a, fmt.res, s);
             break;
         default:
             ReportIf(true);
@@ -408,13 +412,13 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
         pad = std::max(pad, 0);
         if (!inst.leftJust) {
             for (int j = 0; j < pad; j++) {
-                fmt.res.AppendChar(' ');
+                str::BuilderAppendChar(fmt.a, fmt.res, ' ');
             }
         }
-        fmt.res.Append(Str(sv.s, slen));
+        str::BuilderAppend(fmt.a, fmt.res, Str(sv.s, slen));
         if (inst.leftJust) {
             for (int j = 0; j < pad; j++) {
-                fmt.res.AppendChar(' ');
+                str::BuilderAppendChar(fmt.a, fmt.res, ' ');
             }
         }
         return;
@@ -437,11 +441,11 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                fmt.res.Append(bufFmt(buf, fbuf, (long long)ival));
+                str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, fbuf, (long long)ival));
             } else {
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
+                str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, fbuf, (int)ival));
             }
             break;
         case 'u':
@@ -453,17 +457,17 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                fmt.res.Append(bufFmt(buf, fbuf, (unsigned long long)ival));
+                str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, fbuf, (unsigned long long)ival));
             } else {
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                fmt.res.Append(bufFmt(buf, fbuf, (unsigned int)(unsigned long long)ival));
+                str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, fbuf, (unsigned int)(unsigned long long)ival));
             }
             break;
         case 'c':
             fbuf[k++] = 'c';
             fbuf[k] = 0;
-            fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
+            str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, fbuf, (int)ival));
             break;
         case 'f':
         case 'F':
@@ -476,12 +480,12 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
             fbuf[k++] = conv;
             fbuf[k] = 0;
             double dv = (arg.t == FmtArg::Kind::Double) ? arg.d : (double)arg.f;
-            fmt.res.Append(bufFmt(buf, fbuf, dv));
+            str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, fbuf, dv));
         } break;
         case 'p': {
             // flags/width are uncommon (and platform-specific) for %p; emit plain
             const void* pv = (arg.t == FmtArg::Kind::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
-            fmt.res.Append(bufFmt(buf, "%p", pv));
+            str::BuilderAppend(fmt.a, fmt.res, bufFmt(buf, "%p", pv));
         } break;
         default:
             ReportIf(true);
@@ -501,7 +505,7 @@ bool Fmt::Eval(const FmtArg** args, int nArgs) {
         auto& inst = instructions[n];
 
         if (inst.t == FmtArg::Kind::RawStr) {
-            res.Append(Str(format.s + inst.rawOff, inst.sLen));
+            str::BuilderAppend(a, res, Str(format.s + inst.rawOff, inst.sLen));
             continue;
         }
 
@@ -558,7 +562,7 @@ Str FormatArgs(Arena* a, const char* fmt, const FmtArg** args, int nArgs) {
     // format directly into the caller's arena so there are no temp-allocator /
     // heap allocations at all (matters for the crash handler's pre-allocated
     // arena). TakeStr() then returns that arena buffer without a second copy.
-    f.res.a = a;
+    f.a = a;
     bool ok = ParseFormat(f, Str(fmt));
     if (!ok) {
         return {};
@@ -567,7 +571,7 @@ Str FormatArgs(Arena* a, const char* fmt, const FmtArg** args, int nArgs) {
     if (!ok) {
         return {};
     }
-    return f.res.TakeStr();
+    return str::BuilderTakeStr(f.a, f.res);
 }
 
 TempStr FormatTempArgs(const char* fmt, const FmtArg** args, int nArgs) {

@@ -40,7 +40,7 @@ constexpr int kCrashHandlerServerPort = 443;
 extern void GetStressTestInfo(str::Builder* s);
 extern bool CrashHandlerCanUseNet();
 extern void ShowCrashHandlerMessage();
-extern void GetProgramInfo(str::Builder& s);
+extern void GetProgramInfo(Arena* a, str::Builder& s);
 
 // in DEBUG we don't enable symbols download because they are not uploaded
 #ifdef DEBUG
@@ -128,11 +128,14 @@ static bool GetModules(str::Builder& s, bool additionalOnly) {
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
             if (!str::ContainsI(gModulesInfo, pathA)) {
-                s.Append(
-                    str::Format(s.a, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
+                str::BuilderAppend(gCrashHandlerArena, s,
+                                   str::Format(gCrashHandlerArena, "Module: %p %06X %-16s %s\n", mod.modBaseAddr,
+                                               mod.modBaseSize, nameA, pathA));
             }
         } else {
-            s.Append(str::Format(s.a, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
+            str::BuilderAppend(gCrashHandlerArena, s,
+                               str::Format(gCrashHandlerArena, "Module: %p %06X %-16s %s\n", mod.modBaseAddr,
+                                           mod.modBaseSize, nameA, pathA));
         }
         cont = Module32Next(snap, &mod);
     }
@@ -173,101 +176,102 @@ static void AppendUncaughtMupdfError(str::Builder& s) {
     }
     // High-visibility: empty callstacks from the intentional null-write still
     // need to explain the real failure (MuPDF throw with no fz_try).
-    s.Append(str::Format(s.a, "Uncaught MuPDF error: %s\n\n", Str(msg)));
+    str::BuilderAppend(gCrashHandlerArena, s,
+                       str::Format(gCrashHandlerArena, "Uncaught MuPDF error: %s\n\n", Str(msg)));
 }
 
 static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
     str::Builder s(16 * 1024);
-    s.a = gCrashHandlerArena;
     if (!isCrash) {
         captureCallstack = true;
-        s.Append(StrL("Type: debug report (not crash)\n"));
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("Type: debug report (not crash)\n"));
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
-        s.Append(str::Format(s.a, "Cond: %s @ %s\n", condStr, fileLine));
+        str::BuilderAppend(gCrashHandlerArena, s,
+                           str::Format(gCrashHandlerArena, "Cond: %s @ %s\n", condStr, fileLine));
     }
     AppendUncaughtMupdfError(s);
     if (gSystemInfo) {
-        s.Append(gSystemInfo);
-        s.Append(StrL("\n"));
+        str::BuilderAppend(gCrashHandlerArena, s, gSystemInfo);
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
     }
 
     //    GetStressTestInfo(&s);
 
     if (gMei.ExceptionPointers) {
         // those are only set when we capture exception
-        dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
-        s.Append(StrL("\n"));
+        dbghelp::GetExceptionInfo(gCrashHandlerArena, s, gMei.ExceptionPointers);
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
     } else {
         // GetExceptionInfo() also adds current thread callstack
         if (captureCallstack) {
-            s.Append(StrL("\nCrashed thread:\n"));
-            dbghelp::GetCurrentThreadCallstack(s);
-            s.Append(StrL("\n"));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("\nCrashed thread:\n"));
+            dbghelp::GetCurrentThreadCallstack(gCrashHandlerArena, s);
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
         }
     }
 
-    s.Append(StrL("\n-------- Log -----------------\n\n"));
+    str::BuilderAppend(gCrashHandlerArena, s, StrL("\n-------- Log -----------------\n\n"));
     if (gLogBuf) {
-        s.Append(ToStr(*gLogBuf));
+        str::BuilderAppend(gCrashHandlerArena, s, ToStr(*gLogBuf));
     } else {
-        s.Append(StrL("(no log - crashed before initializing logging)\n"));
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("(no log - crashed before initializing logging)\n"));
     }
 
     if (gSettingsFile) {
-        s.Append(StrL("\n\n----- Settings file ----------\n\n"));
-        s.Append(gSettingsFile);
-        s.Append(StrL("\n\n"));
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n\n----- Settings file ----------\n\n"));
+        str::BuilderAppend(gCrashHandlerArena, s, gSettingsFile);
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n\n"));
     }
 
-    s.Append(StrL("\n-------- Modules   ----------\n\n"));
-    s.Append(gModulesInfo);
-    s.Append(StrL("\nModules loaded later:\n"));
+    str::BuilderAppend(gCrashHandlerArena, s, StrL("\n-------- Modules   ----------\n\n"));
+    str::BuilderAppend(gCrashHandlerArena, s, gModulesInfo);
+    str::BuilderAppend(gCrashHandlerArena, s, StrL("\nModules loaded later:\n"));
     GetModules(s, true);
 
     if (captureCallstack) {
-        s.Append(StrL("\n-------- All Threads ----------\n\n"));
-        dbghelp::GetAllThreadsCallstacks(s);
-        s.Append(StrL("\n"));
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n-------- All Threads ----------\n\n"));
+        dbghelp::GetAllThreadsCallstacks(gCrashHandlerArena, s);
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
     }
 
-    return s.TakeStr();
+    return str::BuilderTakeStr(gCrashHandlerArena, s);
 }
 
 static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
     str::Builder s(16 * 1024);
-    s.a = gCrashHandlerArena;
     if (!isCrash) {
         captureCallstack = true;
-        s.Append(StrL("Type: debug report (not crash)\n"));
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("Type: debug report (not crash)\n"));
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
-        s.Append(str::Format(s.a, "Cond: %s @ %s\n", condStr, fileLine));
+        str::BuilderAppend(gCrashHandlerArena, s,
+                           str::Format(gCrashHandlerArena, "Cond: %s @ %s\n", condStr, fileLine));
     }
     AppendUncaughtMupdfError(s);
     if (gSystemInfo) {
-        s.Append(gSystemInfo);
-        s.Append(StrL("\n"));
+        str::BuilderAppend(gCrashHandlerArena, s, gSystemInfo);
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
     }
 
     ThreadId crashedThreadId = gMei.ThreadId;
     if (gMei.ExceptionPointers) {
-        dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
+        dbghelp::GetExceptionInfo(gCrashHandlerArena, s, gMei.ExceptionPointers);
     } else if (captureCallstack) {
         crashedThreadId = GetCurrentThreadId();
-        s.Append(StrL("\nCrashed thread:\n"));
-        dbghelp::GetCurrentThreadCallstack(s);
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\nCrashed thread:\n"));
+        dbghelp::GetCurrentThreadCallstack(gCrashHandlerArena, s);
     }
 
     if (captureCallstack) {
-        s.Append(StrL("\nOther threads:\n"));
-        dbghelp::GetAllThreadsCallstacksExcept(s, crashedThreadId);
-        s.Append(StrL("\n"));
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\nOther threads:\n"));
+        dbghelp::GetAllThreadsCallstacksExcept(gCrashHandlerArena, s, crashedThreadId);
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("\n"));
     }
 
-    return s.TakeStr();
+    return str::BuilderTakeStr(gCrashHandlerArena, s);
 }
 
 static void SaveCrashInfo(Str d) {
@@ -299,12 +303,10 @@ static void UploadCrashReport(Str d) {
     }
 
     str::Builder headers(256);
-    headers.a = gCrashHandlerArena;
-    headers.Append(StrL("Content-Type: text/plain"));
+    str::BuilderAppend(gCrashHandlerArena, headers, StrL("Content-Type: text/plain"));
 
     str::Builder data(16 * 1024);
-    data.a = gCrashHandlerArena;
-    data.Append(d);
+    str::BuilderAppend(gCrashHandlerArena, data, d);
 
     HttpPost(StrL(kCrashHandlerServer), kCrashHandlerServerPort, StrL(kCrashHandlerServerSubmitURL), &headers, &data);
 }
@@ -434,19 +436,19 @@ static bool gAddExeDir = false;
 
 static TempStr BuildSymbolPathTemp(Str symDir) {
     str::Builder path(2048);
-    path.a = GetTempArena();
+    Arena* a = GetTempArena();
 
     bool symDirExists = dir::Exists(symDir);
 
     // at this point symDir might not exist but we add it anyway
-    path.Append(symDir);
-    path.Append(StrL(";"));
+    str::BuilderAppend(a, path, symDir);
+    str::BuilderAppend(a, path, StrL(";"));
 
     // in debug builds the symbols are in the same directory as .exe
     if (gIsDebugBuild || gAddExeDir) {
         TempStr dir = GetSelfExeDirTemp();
-        path.Append(dir);
-        path.Append(StrL(";"));
+        str::BuilderAppend(a, path, dir);
+        str::BuilderAppend(a, path, StrL(";"));
     }
 
     if (gAddNtSymbolPath) {
@@ -459,14 +461,14 @@ static TempStr BuildSymbolPathTemp(Str symDir) {
             ntSymPath = GetEnvVariableTemp(StrL("_NT_ALTERNATE_SYMBOL_PATH"));
         }
         if (len(ntSymPath) > 0) {
-            path.Append(ntSymPath);
-            path.Append(StrL(";"));
+            str::BuilderAppend(a, path, ntSymPath);
+            str::BuilderAppend(a, path, StrL(";"));
         }
     }
     if (gAddSymbolServer && symDirExists) {
         // this probably won't work as it needs symsrv.dll and that's not included with Windows
         // TODO: maybe try to scan system directories for symsrv.dll and somehow add it?
-        path.Append(fmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir));
+        str::BuilderAppend(a, path, fmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir));
     }
 
     // remove ";" from the end
@@ -703,11 +705,13 @@ static void GetOsVersion(str::Builder& s) {
         arch = IsRunningInWow64() ? "Wow64" : "32-bit";
     }
     if (0 == servicePackMajor) {
-        s.Append(fmt("OS: Windows %s build %d %s\n", os, buildNumber, Str(arch)));
+        str::BuilderAppend(gCrashHandlerArena, s, fmt("OS: Windows %s build %d %s\n", os, buildNumber, Str(arch)));
     } else if (0 == servicePackMinor) {
-        s.Append(fmt("OS: Windows %s SP%d build %d %s\n", os, servicePackMajor, buildNumber, Str(arch)));
+        str::BuilderAppend(gCrashHandlerArena, s,
+                           fmt("OS: Windows %s SP%d build %d %s\n", os, servicePackMajor, buildNumber, Str(arch)));
     } else {
-        s.Append(
+        str::BuilderAppend(
+            gCrashHandlerArena, s,
             fmt("OS: Windows %s %d.%d build %d %s\n", os, servicePackMajor, servicePackMinor, buildNumber, Str(arch)));
     }
 }
@@ -721,7 +725,7 @@ static void GetProcessorName(str::Builder& s) {
         name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, Str(key), StrL("ProcessorNameString"));
     }
     if (name) {
-        s.Append(fmt("Processor: %s\n", name));
+        str::BuilderAppend(gCrashHandlerArena, s, fmt("Processor: %s\n", name));
     }
 }
 
@@ -743,17 +747,17 @@ static void GetGraphicsDriverInfo(str::Builder& s) {
         if (!v) {
             break;
         }
-        s.Append(fmt("Graphics driver %d\n", i));
-        s.Append(fmt("  DriverDesc:         %s\n", v));
+        str::BuilderAppend(gCrashHandlerArena, s, fmt("Graphics driver %d\n", i));
+        str::BuilderAppend(gCrashHandlerArena, s, fmt("  DriverDesc:         %s\n", v));
 
         v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("DriverVersion"));
         if (v) {
-            s.Append(fmt("  DriverVersion:      %s\n", v));
+            str::BuilderAppend(gCrashHandlerArena, s, fmt("  DriverVersion:      %s\n", v));
         }
 
         v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("UserModeDriverName"));
         if (v) {
-            s.Append(fmt("  UserModeDriverName: %s\n", v));
+            str::BuilderAppend(gCrashHandlerArena, s, fmt("  UserModeDriverName: %s\n", v));
         }
     }
 }
@@ -761,7 +765,7 @@ static void GetGraphicsDriverInfo(str::Builder& s) {
 static void GetSystemInfo(str::Builder& s) {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
-    s.Append(fmt("Number Of Processors: %d\n", si.dwNumberOfProcessors));
+    str::BuilderAppend(gCrashHandlerArena, s, fmt("Number Of Processors: %d\n", si.dwNumberOfProcessors));
     GetProcessorName(s);
 
     {
@@ -772,15 +776,16 @@ static void GetSystemInfo(str::Builder& s) {
         float physMemGB = (float)ms.ullTotalPhys / (float)(1024 * 1024 * 1024);
         float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
         DWORD usedPerc = ms.dwMemoryLoad;
-        s.Append(fmt("Physical Memory: %.2f GB\nCommit Charge Limit: %.2f GB\nMemory Used: %d%%\n", physMemGB,
-                     totalPageGB, usedPerc));
+        str::BuilderAppend(gCrashHandlerArena, s,
+                           fmt("Physical Memory: %.2f GB\nCommit Charge Limit: %.2f GB\nMemory Used: %d%%\n", physMemGB,
+                               totalPageGB, usedPerc));
     }
     {
         TempStr ver = GetWebView2VersionTemp();
         if (len(ver) == 0) {
             ver = StrL("no WebView2 installed");
         }
-        s.Append(fmt("WebView2: %s\n", ver));
+        str::BuilderAppend(gCrashHandlerArena, s, fmt("WebView2: %s\n", ver));
     }
     {
         // get computer name
@@ -792,11 +797,11 @@ static void GetSystemInfo(str::Builder& s) {
         if (!s1 && !s2) {
             // no-op
         } else if (!s1) {
-            s.Append(fmt("Machine: %s\n", s2));
+            str::BuilderAppend(gCrashHandlerArena, s, fmt("Machine: %s\n", s2));
         } else if (!s2 || str::EqI(s1, s2)) {
-            s.Append(fmt("Machine: %s\n", s1));
+            str::BuilderAppend(gCrashHandlerArena, s, fmt("Machine: %s\n", s1));
         } else {
-            s.Append(fmt("Machine: %s %s\n", s1, s2));
+            str::BuilderAppend(gCrashHandlerArena, s, fmt("Machine: %s %s\n", s1, s2));
         }
     }
     {
@@ -804,47 +809,47 @@ static void GetSystemInfo(str::Builder& s) {
         char country[32] = {}, lang[32]{};
         GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
         GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
-        s.Append(fmt("Lang: %s %s\n", Str(lang), Str(country)));
+        str::BuilderAppend(gCrashHandlerArena, s, fmt("Lang: %s %s\n", Str(lang), Str(country)));
     }
     GetGraphicsDriverInfo(s);
     {
         auto cpu = CpuID();
-        s.Append(StrL("CPU: "));
+        str::BuilderAppend(gCrashHandlerArena, s, StrL("CPU: "));
         if (cpu & kCpuMMX) {
-            s.Append(StrL("MMX "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("MMX "));
         }
         if (cpu & kCpuSSE) {
-            s.Append(StrL("SSE "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE "));
         }
         if (cpu & kCpuSSE2) {
-            s.Append(StrL("SSE2 "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE2 "));
         }
         if (cpu & kCpuSSE3) {
-            s.Append(StrL("SSE3 "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE3 "));
         }
         if (cpu & kCpuSSE41) {
-            s.Append(StrL("SSE41 "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE41 "));
         }
         if (cpu & kCpuSSE42) {
-            s.Append(StrL("SSE42 "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("SSE42 "));
         }
         if (cpu & kCpuAVX) {
-            s.Append(StrL("AVX "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("AVX "));
         }
         if (cpu & kCpuAVX2) {
-            s.Append(StrL("AVX2 "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("AVX2 "));
         }
         if (cpu & kCpuNEON) {
-            s.Append(StrL("NEON "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("NEON "));
         }
         if (cpu & kCpuArmCrypto) {
-            s.Append(StrL("Crypto "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("Crypto "));
         }
         if (cpu & kCpuArmAtomics) {
-            s.Append(StrL("Atomics "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("Atomics "));
         }
         if (cpu & kCpuArmDotProd) {
-            s.Append(StrL("DotProd "));
+            str::BuilderAppend(gCrashHandlerArena, s, StrL("DotProd "));
         }
     }
 }
@@ -852,19 +857,17 @@ static void GetSystemInfo(str::Builder& s) {
 // returns true if running on wine
 static bool BuildModulesInfo() {
     str::Builder s(1024);
-    s.a = gCrashHandlerArena;
     bool isWine = GetModules(s, false);
-    gModulesInfo = s.TakeStr();
+    gModulesInfo = str::BuilderTakeStr(gCrashHandlerArena, s);
     return isWine;
 }
 
 static void BuildSystemInfo() {
     str::Builder s(1024);
-    s.a = gCrashHandlerArena;
-    GetProgramInfo(s);
+    GetProgramInfo(gCrashHandlerArena, s);
     GetOsVersion(s);
     GetSystemInfo(s);
-    gSystemInfo = s.TakeStr();
+    gSystemInfo = str::BuilderTakeStr(gCrashHandlerArena, s);
 }
 
 bool SetSymbolsDir(Str symDir) {
