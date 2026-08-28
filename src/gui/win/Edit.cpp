@@ -51,7 +51,7 @@ static void EditImplementCtrlBack(HWND hwnd) {
     for (; selStart > 0 && !wstr::IsWs(text.s[selStart - 1]); selStart--) {
         ;
     }
-    Edit_SetSel(hwnd, selStart, selEnd);
+    EditSelectText(hwnd, selStart, selEnd);
     SendMessageW(hwnd, WM_CLEAR, 0, 0); // delete selected text
 }
 
@@ -119,7 +119,7 @@ void Edit::SetSelection(int start, int end) {
     if (!hwnd) {
         return;
     }
-    Edit_SetSel(hwnd, start, end);
+    EditSelectText(hwnd, start, end);
 }
 
 void Edit::GetSelection(int& start, int& end) const {

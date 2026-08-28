@@ -536,6 +536,8 @@ struct ControlBase : ILayout, HwndBase {
 
     ControlBase();
 
+    operator HWND() const { return hwnd; }
+
     ControlBase* AsControlBase() override;
     LRESULT OnMessage(HWND, UINT, WPARAM, LPARAM) override;
 

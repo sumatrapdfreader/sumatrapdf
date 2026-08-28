@@ -1699,7 +1699,7 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     // caret at the end, nothing selected: this is editing what is there, not
     // replacing it
     int end = (int)SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
-    Edit_SetSel(hwnd, end, end);
+    EditSelectText(hwnd, end, end);
     SizeInPlaceEditToText();
     return true;
 }

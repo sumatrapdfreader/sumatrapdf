@@ -92,11 +92,11 @@ void EditSelectAll(HWND hwnd) {
     Edit_SetSel(hwnd, 0, -1);
 }
 
-//--- list box
-
-void ListBox_AppendString_NoSort(HWND hwnd, WStr txt) {
-    LbInsertString(hwnd, -1, txt);
+void EditSelectText(HWND hwnd, int start, int end) {
+    Edit_SetSel(hwnd, start, end);
 }
+
+//--- list box
 
 void LbResetContent(HWND hwnd) {
     SendMessageW(hwnd, LB_RESETCONTENT, 0, 0);

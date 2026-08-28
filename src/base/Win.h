@@ -110,10 +110,10 @@ void HwndPostCommand(HWND hwnd, int cmdId, LPARAM lp = 0);
 //--- edit control
 
 void EditSelectAll(HWND);
+void EditSelectText(HWND hwnd, int start, int end);
 
 //--- list box
 
-void ListBox_AppendString_NoSort(HWND, WStr txt);
 void LbResetContent(HWND hwnd);
 int LbAddString(HWND hwnd, WStr text);
 int LbAddString(HWND hwnd, Str text);
