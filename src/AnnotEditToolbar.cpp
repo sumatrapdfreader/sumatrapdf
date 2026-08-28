@@ -801,7 +801,13 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
                     u8 b;
                     u8 a;
                     UnpackPdfColor(col, r, g, b, a);
-                    col = MkPdfColor(r, g, b, (u8)Opacity(annot));
+                    u8 opacity = (u8)Opacity(annot);
+                    if (opacity == 0) {
+                        // coming back from Transparent, which set opacity to 0;
+                        // keeping it would make the color picked here invisible
+                        opacity = 255;
+                    }
+                    col = MkPdfColor(r, g, b, opacity);
                 }
                 SetColor(annot, col);
             } else if (kind == AnnotEditKind::InteriorColor) {

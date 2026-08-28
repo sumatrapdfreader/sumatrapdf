@@ -1071,6 +1071,19 @@ PdfColor GetColor(Annotation* annot) {
     return res;
 }
 
+// Highlight, Underline, StrikeOut and Squiggly: /C is the only thing drawn
+static bool IsTextMarkupAnnot(AnnotationType tp) {
+    switch (tp) {
+        case AnnotationType::Highlight:
+        case AnnotationType::Underline:
+        case AnnotationType::StrikeOut:
+        case AnnotationType::Squiggly:
+            return true;
+        default:
+            return false;
+    }
+}
+
 // return true if color changed
 bool SetColor(Annotation* annot, PdfColor c) {
     if (!AnnotationIsLive(annot)) {
@@ -1116,8 +1129,16 @@ bool SetColor(Annotation* annot, PdfColor c) {
         fz_try(ctx) {
             if (c == 0) {
                 pdf_set_annot_color(ctx, a, 0, newColor);
-                // TODO: set opacity to 1?
-                // pdf_set_annot_opacity(ctx, a, 1.f);
+                // For text markup /C is the only ink, so an empty one doesn't
+                // make the annotation invisible: mupdf synthesizes Acrobat's
+                // default yellow for Highlight and a black line for the rest
+                // (issue #1994). Opacity 0 is what "transparent" has to mean.
+                // Other types keep their opacity: a Square with a transparent
+                // stroke still shows /IC, and a FreeText with a transparent
+                // background still shows its text.
+                if (IsTextMarkupAnnot(Type(annot))) {
+                    pdf_set_annot_opacity(ctx, a, 0.f);
+                }
             } else {
                 pdf_set_annot_color(ctx, a, 3, newColor);
                 if (oldOpacity != opacity) {
