@@ -1730,9 +1730,9 @@ TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
 // kPadding is number of characters needed for terminating character
 static constexpr int kPadding = 1;
 
-// using external scratch, or no storage yet (not heap)
+// using borrowed scratch, or no storage yet (not heap)
 static bool IsExternalOrEmpty(const str::Builder* s) {
-    return !s->els || (s->buf.s && s->els == s->buf.s);
+    return !s->els || s->cap < 0;
 }
 
 // both Builders lead with {len, cap, els}, in that order, so they have Vec<T>'s
@@ -1745,28 +1745,24 @@ static_assert(offsetof(wstr::Builder, cap) == offsetof(VecNonTemplated, cap));
 static_assert(offsetof(wstr::Builder, els) == offsetof(VecNonTemplated, els));
 
 static char* EnsureCap(str::Builder* s, int needed) {
-    // only use external buf if we haven't moved to the heap yet.
-    // RemoveAt() can shrink len enough for needed to fit again and switching
-    // back would lose the data and leak the heap allocation.
-    if (IsExternalOrEmpty(s) && s->buf.s && needed + kPadding <= s->buf.len) {
-        s->els = s->buf.s;
+    if (s->cap < 0) {
+        // borrowed scratch, usable while the chars plus the NUL still fit. Once
+        // we grow out of it we never come back: RemoveAt() can shrink len enough
+        // to fit again, and switching back would lose data and leak the heap
+        // allocation.
+        if (needed + kPadding <= -s->cap) {
+            return s->els;
+        }
+    } else if (s->els && s->cap >= needed) {
         return s->els;
     }
 
-    int capacityHint = s->cap;
-    // tricky: to save space we reuse cap for capacityHint while still on
-    // external/empty storage (cap was set from constructor hint)
-    if (IsExternalOrEmpty(s)) {
-        s->cap = 0;
-    }
-
-    if (s->els && s->cap >= needed) {
-        return s->els;
-    }
-
-    int newCap = s->cap * 2;
+    bool fromBorrowed = IsExternalOrEmpty(s);
+    // the borrowed capacity is not ours to double
+    int curCap = fromBorrowed ? 0 : s->cap;
+    int newCap = curCap * 2;
     newCap = std::max(needed, newCap);
-    newCap = std::max(newCap, capacityHint);
+    newCap = std::max(newCap, s->capHint);
 
     int newElCount = newCap + kPadding;
 
@@ -1774,7 +1770,7 @@ static char* EnsureCap(str::Builder* s, int needed) {
 
     int allocSize = newElCount;
     char* newEls;
-    if (IsExternalOrEmpty(s)) {
+    if (fromBorrowed) {
         newEls = (char*)Alloc(s->a, allocSize);
         if (newEls && s->els && s->len > 0) {
             memcpy(newEls, s->els, (size_t)s->len + 1);
@@ -1813,28 +1809,21 @@ static char* MakeSpaceAt(str::Builder* s, int idx, int count) {
     return res;
 }
 
+// keeps the storage (heap or borrowed) for re-use, only empties it
 static void StrBuilderReset(str::Builder* s) {
     s->len = 0;
-    // keep an existing heap buffer for re-use; only bind external buf when
-    // we have not allocated heap yet
-    if (!s->els || (s->buf.s && s->els == s->buf.s)) {
-        s->els = s->buf.s; // may be null when no external buf
-    }
     if (s->els) {
         s->els[0] = 0;
     }
 }
 
 static void StrBuilderFree(str::Builder* s) {
-    if (s->els && !(s->buf.s && s->els == s->buf.s)) {
+    if (s->els && s->cap > 0) {
         Free(s->a, s->els);
     }
     s->len = 0;
     s->cap = 0;
-    s->els = s->buf.s;
-    if (s->els) {
-        s->els[0] = 0;
-    }
+    s->els = nullptr;
 }
 
 void str::Builder::Reset(Str s) {
@@ -1846,15 +1835,18 @@ void str::Builder::Reset(Str s) {
 // capHint: preferred capacity after first grow
 // capHint: preferred capacity after first grow
 str::Builder::Builder(Str externalBuf) {
-    this->buf = externalBuf;
+    if (externalBuf.s && externalBuf.len > kPadding) {
+        els = externalBuf.s;
+        cap = -externalBuf.len;
+    }
     Reset();
 }
 
 // capHint: preferred capacity after first grow
 // capHint: preferred capacity after first grow
-str::Builder::Builder(int capHint) {
+str::Builder::Builder(int capHintArg) {
     Reset();
-    cap = capHint + kPadding; // + kPadding for terminating 0
+    capHint = capHintArg + kPadding; // + kPadding for terminating 0
 }
 
 str::Builder::~Builder() {
@@ -1931,13 +1923,14 @@ Str str::Builder::TakeStr() {
         Reset();
         return Str{};
     }
-    if (buf.s && els == buf.s) {
-        // data is in the external buffer, so we have to duplicate it
+    if (cap < 0) {
+        // the chars are in borrowed scratch, so they have to be duplicated and
+        // the Builder keeps using the scratch
         res = (char*)MemDup(this->a, els, (size_t)n + kPadding);
-        els = buf.s;
     } else {
-        // we're returning the heap allocation; rebind to external if any
-        els = buf.s;
+        // hand the heap block to the caller and start over with no storage
+        els = nullptr;
+        cap = 0;
     }
 
     Reset();
@@ -1962,32 +1955,25 @@ char str::Builder::LastChar() const {
 
 // using external scratch, or no storage yet (not heap)
 static bool IsExternalOrEmpty(const wstr::Builder* s) {
-    return !s->els || (s->buf.s && s->els == s->buf.s);
+    return !s->els || s->cap < 0;
 }
 
 static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
-    // only use external buf if we haven't moved to the heap yet.
-    // RemoveAt() can shrink len enough for needed to fit again and switching
-    // back would lose the data and leak the heap allocation.
-    if (IsExternalOrEmpty(s) && s->buf.s && needed + kPadding <= s->buf.len) {
-        s->els = s->buf.s;
+    if (s->cap < 0) {
+        // borrowed scratch, see the str::Builder version
+        if (needed + kPadding <= -s->cap) {
+            return s->els;
+        }
+    } else if (s->els && s->cap >= needed) {
         return s->els;
     }
 
-    int capacityHint = s->cap;
-    // tricky: to save space we reuse cap for capacityHint while still on
-    // external/empty storage (cap was set from constructor hint)
-    if (IsExternalOrEmpty(s)) {
-        s->cap = 0;
-    }
-
-    if (s->els && s->cap >= needed) {
-        return s->els;
-    }
-
-    int newCap = s->cap * 2;
+    bool fromBorrowed = IsExternalOrEmpty(s);
+    // the borrowed capacity is not ours to double
+    int curCap = fromBorrowed ? 0 : s->cap;
+    int newCap = curCap * 2;
     newCap = std::max(needed, newCap);
-    newCap = std::max(newCap, capacityHint);
+    newCap = std::max(newCap, s->capHint);
 
     int newElCount = newCap + kPadding;
 
@@ -1995,7 +1981,7 @@ static WCHAR* EnsureCap(wstr::Builder* s, int needed) {
 
     int allocSize = newElCount * wstr::Builder::kElSize;
     WCHAR* newEls;
-    if (IsExternalOrEmpty(s)) {
+    if (fromBorrowed) {
         newEls = (WCHAR*)Alloc(s->a, allocSize);
         if (newEls && s->els && s->len > 0) {
             memcpy(newEls, s->els, (size_t)wstr::Builder::kElSize * (s->len + 1));
@@ -2033,28 +2019,21 @@ static WCHAR* MakeSpaceAt(wstr::Builder* s, int idx, int count) {
     return res;
 }
 
+// keeps the storage (heap or borrowed) for re-use, only empties it
 static void WStrBuilderReset(wstr::Builder* s) {
     s->len = 0;
-    // keep an existing heap buffer for re-use; only bind external buf when
-    // we have not allocated heap yet
-    if (!s->els || (s->buf.s && s->els == s->buf.s)) {
-        s->els = s->buf.s; // may be null when no external buf
-    }
     if (s->els) {
         s->els[0] = 0;
     }
 }
 
 static void WStrBuilderFree(wstr::Builder* s) {
-    if (s->els && !(s->buf.s && s->els == s->buf.s)) {
+    if (s->els && s->cap > 0) {
         Free(s->a, s->els);
     }
     s->len = 0;
     s->cap = 0;
-    s->els = s->buf.s;
-    if (s->els) {
-        s->els[0] = 0;
-    }
+    s->els = nullptr;
 }
 
 void wstr::Builder::Reset(WStr s) {
@@ -2066,15 +2045,18 @@ void wstr::Builder::Reset(WStr s) {
 // capHint: preferred capacity after first grow
 // capHint: preferred capacity after first grow
 wstr::Builder::Builder(WStr externalBuf) {
-    this->buf = externalBuf;
+    if (externalBuf.s && externalBuf.len > kPadding) {
+        els = externalBuf.s;
+        cap = -externalBuf.len;
+    }
     Reset();
 }
 
 // capHint: preferred capacity after first grow
 // capHint: preferred capacity after first grow
-wstr::Builder::Builder(int capHint) {
+wstr::Builder::Builder(int capHintArg) {
     Reset();
-    cap = capHint + kPadding; // + kPadding for terminating 0
+    capHint = capHintArg + kPadding; // + kPadding for terminating 0
 }
 
 wstr::Builder::~Builder() {
@@ -2145,13 +2127,14 @@ WStr wstr::Builder::TakeWStr() {
         Reset();
         return WStr{};
     }
-    if (buf.s && els == buf.s) {
-        // data is in the external buffer, so we have to duplicate it
+    if (cap < 0) {
+        // the chars are in borrowed scratch, so they have to be duplicated and
+        // the Builder keeps using the scratch
         res = (WCHAR*)MemDup(a, els, (size_t)(n + kPadding) * kElSize);
-        els = buf.s;
     } else {
-        // we're returning the heap allocation; rebind to external if any
-        els = buf.s;
+        // hand the heap block to the caller and start over with no storage
+        els = nullptr;
+        cap = 0;
     }
     Reset();
     return WStr(res, n);

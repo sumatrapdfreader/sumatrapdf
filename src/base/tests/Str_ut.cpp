@@ -337,7 +337,7 @@ static void StrBuilderCapHint() {
     // (set .cap after construct — preferred capacity while still on external storage)
     char stack[16];
     str::Builder str2(Str(stack, sizeofi(stack)));
-    str2.cap = 1024 + 1; // +1 NUL padding, same as Builder(1024)
+    str2.capHint = 1024 + 1; // +1 NUL padding, same as Builder(1024)
     heap = 0;
     int reallocsAtHeap = -1;
     for (int i = 0; i < 50; i++) {
@@ -454,7 +454,7 @@ static void WStrBuilderCapHint() {
 
     WCHAR stack[16];
     wstr::Builder str2(WStr(stack, dimofi(stack)));
-    str2.cap = 1024 + 1; // +1 NUL padding, same as Builder(1024)
+    str2.capHint = 1024 + 1; // +1 NUL padding, same as Builder(1024)
     heap = 0;
     int reallocsAtHeap = -1;
     for (int i = 0; i < 50; i++) {

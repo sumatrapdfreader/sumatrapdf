@@ -241,13 +241,16 @@ struct Builder {
     // len/cap/els come first, in that order, so Builder has the same layout as
     // Vec<T> and can be handed to the VecNonTemplated helpers
     int len = 0;
+    // Negative means the chars sit in scratch this Builder does not own (the
+    // externalBuf ctor arg) and the capacity is `-cap`, exactly like Vec<T>.
+    // Growing past it allocates and copies; nothing frees the scratch, and the
+    // Builder never returns to it.
     int cap = 0;
     char* els = nullptr;
     // arena is not owned by Builder and must outlive it
     Arena* a = nullptr;
-    // Optional external scratch (not owned; default empty = allocate on first use).
-    // When set, used while needed+NUL fits in buf.len; growth copies to heap/arena.
-    Str buf;
+    // preferred capacity for the first heap allocation, 0 for none
+    int capHint = 0;
 
     int nReallocs = 0;
 
@@ -262,7 +265,7 @@ struct Builder {
     ~Builder();
 
     // true while storage is the external buf (or no storage yet)
-    bool UsesExternalBuf() const { return !els || (buf.s && els == buf.s); }
+    bool UsesExternalBuf() const { return !els || cap < 0; }
 
     void Reset(Str s = {});
     char& operator[](int idx) const;
@@ -295,13 +298,13 @@ struct Builder {
     // len/cap/els come first, in that order, so Builder has the same layout as
     // Vec<T> and can be handed to the VecNonTemplated helpers
     int len = 0;
+    // negative cap means borrowed scratch of capacity -cap, see str::Builder
     int cap = 0;
     WCHAR* els = nullptr;
     // arena is not owned by Builder and must outlive it
     Arena* a = nullptr;
-    // Optional external scratch (not owned; default empty = allocate on first use).
-    // When set, used while needed+NUL fits in buf.len; growth copies to heap/arena.
-    WStr buf;
+    // preferred capacity for the first heap allocation, 0 for none
+    int capHint = 0;
 
     int nReallocs = 0;
 
@@ -318,7 +321,7 @@ struct Builder {
     ~Builder();
 
     // true while storage is the external buf (or no storage yet)
-    bool UsesExternalBuf() const { return !els || (buf.s && els == buf.s); }
+    bool UsesExternalBuf() const { return !els || cap < 0; }
 
     void Reset(WStr s = {});
     WCHAR& operator[](int idx) const;
