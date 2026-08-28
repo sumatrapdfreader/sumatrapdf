@@ -587,52 +587,40 @@ static int HexDigitVal(char c) {
     return -1;
 }
 
-static TempStr ExtractUntilTemp(Str str, int off, char c, int* endOffOut) {
-    if (off < 0 || off > str.len) {
-        return {};
-    }
-    Str slice = Str(str.s + off, str.len - off);
-    int foundOff = IndexOfChar(slice, c);
+// advance s past n already-consumed bytes
+static void Eat(Str& s, int n) {
+    ReportIf(n < 0 || n > s.len);
+    s.s += n;
+    s.len -= n;
+}
+
+// extract the part of s before the first occurrence of c and eat it
+// (c itself is not eaten). returns {} and doesn't eat if c is not found
+static TempStr ExtractUntilTemp(Str& s, char c) {
+    int foundOff = IndexOfChar(s, c);
     if (foundOff < 0) {
         return {};
     }
-    int endOff = off + foundOff;
-    *endOffOut = endOff;
-    return str::DupTemp(Str(str.s + off, foundOff));
+    TempStr res = str::DupTemp(Str(s.s, foundOff));
+    Eat(s, foundOff);
+    return res;
 }
 
-static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* endOffOut, const ParseArg& valueOut) {
-    unsigned int width;
-    char f2[] = "% ";
-    Str formatAt = Str(format.s + formatOff, format.len - formatOff);
-    Str endF = Parse(formatAt, "%u%c", &width, &f2[1]);
-    if (!str::IsNull(endF) && str::ContainsChar(StrL("udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
-        char limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(Str(limited, std::min((int)width + 1, dimofi(limited))), Str(str.s + p, (int)width));
-        Str end = ParseArgs(Str(limited), f2, &valueOut, 1);
-        if (!str::IsNull(end) && !end.s[0]) {
-            *endOffOut = p + (int)width;
-            return (int)(endF.s - format.s) - 1;
-        }
-    }
-    return -1;
-}
-
-static bool ParseULongAt(Str str, int off, int base, unsigned long* val, int* endOff) {
-    if (off >= str.len) {
+static bool ParseULongAt(Str& s, int base, unsigned long* val) {
+    if (s.len <= 0) {
         return false;
     }
     unsigned long v = 0;
-    int i = off;
-    while (i < str.len && str::IsWs(str.s[i])) {
+    int i = 0;
+    while (i < s.len && str::IsWs(s.s[i])) {
         i++;
     }
-    if (base == 16 && i + 1 < str.len && str.s[i] == '0' && (str.s[i + 1] == 'x' || str.s[i + 1] == 'X')) {
+    if (base == 16 && i + 1 < s.len && s.s[i] == '0' && (s.s[i + 1] == 'x' || s.s[i + 1] == 'X')) {
         i += 2;
     }
     bool any = false;
-    while (i < str.len) {
-        char c = str.s[i];
+    while (i < s.len) {
+        char c = s.s[i];
         int digit = -1;
         if (c >= '0' && c <= '9') {
             digit = c - '0';
@@ -650,59 +638,72 @@ static bool ParseULongAt(Str str, int off, int base, unsigned long* val, int* en
         return false;
     }
     *val = v;
-    *endOff = i;
+    Eat(s, i);
     return true;
 }
 
-static bool ParseLongAt(Str str, int off, int base, long* val, int* endOff) {
-    if (off >= str.len) {
+static bool ParseLongAt(Str& s, int base, long* val) {
+    if (s.len <= 0) {
         return false;
     }
     bool neg = false;
-    int i = off;
-    while (i < str.len && str::IsWs(str.s[i])) {
+    int i = 0;
+    while (i < s.len && str::IsWs(s.s[i])) {
         i++;
     }
-    if (i >= str.len) {
+    if (i >= s.len) {
         return false;
     }
-    if (str.s[i] == '-') {
+    if (s.s[i] == '-') {
         neg = true;
         i++;
-    } else if (str.s[i] == '+') {
+    } else if (s.s[i] == '+') {
         i++;
     }
     unsigned long uv = 0;
-    int end = i;
-    if (!ParseULongAt(Str(str.s + i, str.len - i), 0, base, &uv, &end)) {
+    Str rest = Str(s.s + i, s.len - i);
+    if (!ParseULongAt(rest, base, &uv)) {
         return false;
     }
     *val = neg ? -(long)uv : (long)uv;
-    *endOff = i + end;
+    s = rest;
     return true;
 }
 
-static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
-    if (off >= str.len) {
+static bool ParseDoubleAt(Str& s, double* val) {
+    if (s.len <= 0) {
         return false;
     }
-    char* sliceZ = CStrTemp(Str(str.s + off, str.len - off));
-    ptrdiff_t consumed = 0;
-    {
-        char* endPtr = nullptr;
-        *val = strtod(sliceZ, &endPtr);
-        if (!endPtr || endPtr == sliceZ) {
-            return false;
-        }
-        consumed = endPtr - sliceZ;
+    char* sliceZ = CStrTemp(s);
+    char* endPtr = nullptr;
+    *val = strtod(sliceZ, &endPtr);
+    if (!endPtr || endPtr == sliceZ) {
+        return false;
     }
-    *endOff = off + (int)consumed;
+    Eat(s, (int)(endPtr - sliceZ));
     return true;
+}
+
+static int ParseLimitedNumber(Str& s, int formatOff, Str format, const ParseArg& valueOut) {
+    unsigned int width;
+    char f2[] = "% ";
+    Str formatAt = Str(format.s + formatOff, format.len - formatOff);
+    Str endF = Parse(formatAt, "%u%c", &width, &f2[1]);
+    if (!str::IsNull(endF) && str::ContainsChar(StrL("udx"), f2[1]) && width <= (unsigned)s.len) {
+        char limited[16]; // 32-bit integers are at most 11 characters long
+        str::BufSet(Str(limited, std::min((int)width + 1, dimofi(limited))), Str(s.s, (int)width));
+        Str end = ParseArgs(Str(limited), f2, &valueOut, 1);
+        if (!str::IsNull(end) && !end.s[0]) {
+            Eat(s, (int)width);
+            return (int)(endF.s - format.s) - 1;
+        }
+    }
+    return -1;
 }
 
 /* Parses a string into several variables sscanf-style (i.e. pass in pointers
-   to where the parsed values are to be stored). Returns a pointer to the first
-   character that's not been parsed when successful and nullptr otherwise.
+   to where the parsed values are to be stored). Returns the part of str that
+   hasn't been parsed when successful and {} otherwise.
 
    Supported formats:
      %u - parses an unsigned int
@@ -727,15 +728,15 @@ Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs) {
         return {};
     }
     Str format = Str(fmt);
+    Str s = str; // the not yet parsed part of str
     int argIdx = 0;
-    int p = 0;
     for (int fi = 0; fi < format.len; fi++) {
         char fc = format.s[fi];
         if (fc != '%') {
-            if (p >= str.len || fc != str.s[p]) {
+            if (s.len <= 0 || fc != s.s[0]) {
                 return {};
             }
-            p++;
+            Eat(s, 1);
             continue;
         }
         fi++;
@@ -744,105 +745,102 @@ Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs) {
         }
         char spec = format.s[fi];
 
-        int end = -1;
+        int lenBefore = s.len;
         if ('u' == spec) {
             unsigned long v = 0;
-            if (!ParseULongAt(str, p, 10, &v, &end)) {
+            if (!ParseULongAt(s, 10, &v)) {
                 return {};
             }
             ReportIf(argIdx >= nArgs);
             *(unsigned int*)args[argIdx++].ptr = (unsigned int)v;
         } else if ('d' == spec) {
             long v = 0;
-            if (!ParseLongAt(str, p, 10, &v, &end)) {
+            if (!ParseLongAt(s, 10, &v)) {
                 return {};
             }
             ReportIf(argIdx >= nArgs);
             *(int*)args[argIdx++].ptr = (int)v;
         } else if ('x' == spec) {
             unsigned long v = 0;
-            if (!ParseULongAt(str, p, 16, &v, &end)) {
+            if (!ParseULongAt(s, 16, &v)) {
                 return {};
             }
             ReportIf(argIdx >= nArgs);
             *(unsigned int*)args[argIdx++].ptr = (unsigned int)v;
-        } else if ('f' == spec) {
+        } else if ('f' == spec || 'g' == spec) {
             double v = 0;
-            if (!ParseDoubleAt(str, p, &v, &end)) {
-                return {};
-            }
-            ReportIf(argIdx >= nArgs);
-            *(float*)args[argIdx++].ptr = (float)v;
-        } else if ('g' == spec) {
-            double v = 0;
-            if (!ParseDoubleAt(str, p, &v, &end)) {
+            if (!ParseDoubleAt(s, &v)) {
                 return {};
             }
             ReportIf(argIdx >= nArgs);
             *(float*)args[argIdx++].ptr = (float)v;
         } else if ('c' == spec) {
-            if (p >= str.len) {
+            if (s.len <= 0) {
                 return {};
             }
             ReportIf(argIdx >= nArgs);
-            *(char*)args[argIdx++].ptr = str.s[p];
-            end = p + 1;
+            *(char*)args[argIdx++].ptr = s.s[0];
+            Eat(s, 1);
         } else if ('s' == spec || 'S' == spec) {
             ReportIf(argIdx >= nArgs);
             const ParseArg& arg = args[argIdx++];
             TempStr val;
             if (fi + 1 < format.len) {
-                val = ExtractUntilTemp(str, p, format.s[fi + 1], &end);
+                // parse until the next character in the format string
+                // (eats nothing if that character isn't found)
+                val = ExtractUntilTemp(s, format.s[fi + 1]);
             } else {
-                val = str::DupTemp(Str(str.s + p, str.len - p));
-                end = str.len;
+                val = str::DupTemp(s);
+                Eat(s, s.len);
             }
             if (arg.kind == ParseArg::Kind::WStrOut) {
                 *(WStr*)arg.ptr = ToWStrTemp(val);
             } else {
                 *(Str*)arg.ptr = val;
             }
-        } else if ('$' == spec && p >= str.len) {
+        } else if ('$' == spec && s.len <= 0) {
             continue; // don't fail, if we're indeed at the end of the string
         } else if ('%' == spec) {
-            if (p >= str.len || spec != str.s[p]) {
+            if (s.len <= 0 || spec != s.s[0]) {
                 return {};
             }
-            end = p + 1;
+            Eat(s, 1);
         } else if (' ' == spec) {
-            if (p >= str.len || !str::IsWs(str.s[p])) {
+            if (s.len <= 0 || !str::IsWs(s.s[0])) {
                 return {};
             }
-            end = p + 1;
+            Eat(s, 1);
         } else if ('_' == spec) {
-            if (p >= str.len || !str::IsWs(str.s[p])) {
+            if (s.len <= 0 || !str::IsWs(s.s[0])) {
                 continue; // don't fail, if there's no whitespace at all
             }
-            for (end = p + 1; end < str.len && str::IsWs(str.s[end]); end++) {
-                // do nothing
+            int n = 1;
+            while (n < s.len && str::IsWs(s.s[n])) {
+                n++;
             }
+            Eat(s, n);
         } else if ('?' == spec && fi + 1 < format.len) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
             fi++;
-            if (p >= str.len || str.s[p] != format.s[fi]) {
+            if (s.len <= 0 || s.s[0] != format.s[fi]) {
                 continue;
             }
-            end = p + 1;
+            Eat(s, 1);
         } else if (str::IsDigit(spec)) {
             ReportIf(argIdx >= nArgs);
-            int formatIdx = ParseLimitedNumber(str, p, fi, format, &end, args[argIdx++]);
+            int formatIdx = ParseLimitedNumber(s, fi, format, args[argIdx++]);
             if (formatIdx < 0) {
                 return {};
             }
             fi = formatIdx;
         }
-        if (end < 0 || end == p) {
+        if (s.len >= lenBefore) {
+            // nothing was parsed => failure
             return {};
         }
-        p = end;
     }
-    return Str(str.s + p, str.len - p);
+    return s;
 }
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
