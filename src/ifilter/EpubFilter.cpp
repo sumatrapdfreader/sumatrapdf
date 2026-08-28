@@ -97,7 +97,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
         } else if (t->IsStartTag()) {
             // TODO: force-close tags similar to HtmlFormatter.cpp's AutoCloseOnOpen?
             if (!IsTagSelfClosing(t->tag)) {
-                tagNesting.Append(t->tag);
+                VecAppend(tagNesting, t->tag);
             }
         } else if (t->IsEndTag()) {
             if (!IsInlineTag(t->tag) && text.LastChar() == ' ') {

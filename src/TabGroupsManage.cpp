@@ -41,7 +41,7 @@ struct TabGroupsListBoxModel : ListBoxModel {
         auto* g = gSettings->tabGroups;
         if (g) {
             for (auto* tg : *g) {
-                groups.Append(tg);
+                VecAppend(groups, tg);
             }
         }
     }
@@ -110,13 +110,13 @@ void TabGroupsWnd::SaveTabGroup() {
         }
         auto* tf = AllocStruct<TabFile>();
         str::ReplaceWithCopy(&tf->path, tab->filePath);
-        group->tabFiles->Append(tf);
+        VecAppend(*group->tabFiles, tf);
     }
 
     if (!gSettings->tabGroups) {
         gSettings->tabGroups = new Vec<TabGroup*>();
     }
-    gSettings->tabGroups->Append(group);
+    VecAppend(*gSettings->tabGroups, group);
     SaveSettings();
     Close();
 }
@@ -409,7 +409,7 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
         delete wnd;
         return;
     }
-    gTabGroupsWnds.Append(wnd);
+    VecAppend(gTabGroupsWnds, wnd);
 }
 
 void ShowSaveTabGroupDialog(MainWindow* win) {

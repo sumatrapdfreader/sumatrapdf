@@ -177,7 +177,7 @@ void PdfDarkModeEngineCacheStoreFeatures(fz_context* ctx, DarkModeEngineCache* c
     entry.features = features;
     entry.estimatedBackground = background;
     entry.lastAccess = dm_next_access(cache);
-    cache->features.Append(entry);
+    VecAppend(cache->features, entry);
 }
 
 fz_image* PdfDarkModeEngineCacheLookupProcessed(fz_context* ctx, DarkModeEngineCache* cache, fz_image* src,
@@ -240,6 +240,6 @@ void PdfDarkModeEngineCacheStoreProcessed(fz_context* ctx, DarkModeEngineCache* 
     entry.processed = fz_keep_image(ctx, processed);
     entry.pixelBytes = bytes;
     entry.lastAccess = dm_next_access(cache);
-    cache->processed.Append(entry);
+    VecAppend(cache->processed, entry);
     cache->processedBytes += bytes;
 }

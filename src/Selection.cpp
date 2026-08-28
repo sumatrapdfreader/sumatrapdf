@@ -70,7 +70,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
 
         /* selection intersects with a page <pageNo> on the screen */
         RectF isectD = dm->CvtFromScreen(intersect, pageNo);
-        sel->Append(SelectionOnPage(pageNo, &isectD));
+        VecAppend(*sel, SelectionOnPage(pageNo, &isectD));
     }
     VecReverse(*sel);
 
@@ -87,7 +87,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
 
     for (int i = textSel->len - 1; i >= 0; i--) {
         RectF rect = ToRectF(textSel->rects[i]);
-        sel->Append(SelectionOnPage(textSel->pages[i], &rect));
+        VecAppend(*sel, SelectionOnPage(textSel->pages[i], &rect));
     }
     VecReverse(*sel);
 
@@ -382,7 +382,7 @@ void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color
         }
         rc = rc.Intersect(screenRc);
         if (!rc.IsEmpty()) {
-            paintedRects.Append(rc);
+            VecAppend(paintedRects, rc);
         }
     }
     int outlineWidth = drawBorder ? 1 : 0;
@@ -476,7 +476,7 @@ void PaintSelection(MainWindow* win, Gfx* gfx) {
             selRect.dy *= -1;
         }
 
-        rects.Append(selRect);
+        VecAppend(rects, selRect);
     } else {
         // during text selection or after selection is done
         if (MouseAction::SelectingText == win->mouseAction) {
@@ -501,7 +501,7 @@ void PaintSelection(MainWindow* win, Gfx* gfx) {
         }
 
         for (SelectionOnPage& sel : *win->CurrentTab()->selectionOnPage) {
-            rects.Append(sel.GetRect(win->AsFixed()));
+            VecAppend(rects, sel.GetRect(win->AsFixed()));
         }
     }
 
@@ -626,7 +626,7 @@ RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<Sel
             }
             return nullptr;
         }
-        pixmaps.Append(dib);
+        VecAppend(pixmaps, dib);
         totalHeight += dib->height;
         maxWidth = std::max(maxWidth, dib->width);
     }

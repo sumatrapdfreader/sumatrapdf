@@ -515,10 +515,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetBoundingRectangles(SA
                 continue;
             }
             Point tl = HwndClientToScreen(hwnd, rc.TL());
-            coords.Append((double)tl.x);
-            coords.Append((double)tl.y);
-            coords.Append((double)rc.dx);
-            coords.Append((double)rc.dy);
+            VecAppend(coords, (double)tl.x);
+            VecAppend(coords, (double)tl.y);
+            VecAppend(coords, (double)rc.dx);
+            VecAppend(coords, (double)rc.dy);
         }
     }
 

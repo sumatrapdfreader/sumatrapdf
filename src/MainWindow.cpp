@@ -341,7 +341,7 @@ Vec<WindowTab*> MainWindow::Tabs() const {
     int nTabs = tabsCtrl->TabCount();
     for (int i = 0; i < nTabs; i++) {
         WindowTab* tab = GetTabsUserData<WindowTab*>(tabsCtrl, i);
-        res.Append(tab);
+        VecAppend(res, tab);
     }
     return res;
 }

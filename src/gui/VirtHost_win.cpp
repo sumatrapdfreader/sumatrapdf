@@ -33,7 +33,7 @@ static void RegisterHostClass(WStr className) {
     wc.hCursor = GetCachedCursor(IDC_ARROW);
     wc.lpszClassName = className.s;
     RegisterClassExW(&wc);
-    gRegisteredClasses.Append(className);
+    VecAppend(gRegisteredClasses, className);
 }
 
 static void PaintHost(VirtHost* host, HWND hwnd) {

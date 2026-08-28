@@ -79,7 +79,7 @@ static void HwndListAdd(HwndBase* w) {
     bool report = HwndListRemove(w);
     ReportIfFast(report);
     HwndToWnd e{w->hwnd, w};
-    gHwndToWnd.Append(e);
+    VecAppend(gHwndToWnd, e);
 }
 
 //- Taskbar.cpp
@@ -802,7 +802,7 @@ static void CollectMnemonicStopsVirt(VirtCtrl* w, Vec<MnemonicStop>& out) {
     // parsed once when the control's text was set
     ms.mnemonic = w->mnemonic;
     if (ms.focusable || ms.mnemonic) {
-        out.Append(ms);
+        VecAppend(out, ms);
     }
     for (VirtCtrl* c : w->children) {
         CollectMnemonicStopsVirt(c, out);
@@ -822,7 +822,7 @@ static void CollectMnemonicStops(ILayout* root, Vec<MnemonicStop>& out) {
             ms.mnemonic = MnemonicCharInStr(HwndGetTextTemp(c->hwnd));
         }
         if (ms.focusable || ms.mnemonic) {
-            out.Append(ms);
+            VecAppend(out, ms);
         }
         return;
     }

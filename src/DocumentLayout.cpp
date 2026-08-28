@@ -38,7 +38,7 @@ void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const 
         row.firstPage = 1;
         row.lastPage = 1;
         row.isSpread = PageIsSpread(spreadFlags, 1);
-        out.Append(row);
+        VecAppend(out, row);
         page = 2;
     }
     while (page <= pageCount) {
@@ -57,7 +57,7 @@ void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const 
             row.isSpread = false;
             page++;
         }
-        out.Append(row);
+        VecAppend(out, row);
     }
 }
 

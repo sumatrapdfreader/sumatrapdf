@@ -249,21 +249,21 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         it.kind = AnnotEditKind::TextColor;
         it.color = DefaultAppearanceTextColor(annot);
         it.tooltip = _TRA("Text Color");
-        out.Append(it);
+        VecAppend(out, it);
     }
     if (AnnotationSupportsColor(type)) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Color;
         it.color = GetColor(annot);
         it.tooltip = AnnotationColorIsBackground(type) ? _TRA("Background Color") : _TRA("Color");
-        out.Append(it);
+        VecAppend(out, it);
     }
     if (AnnotationSupportsInteriorColor(type)) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::InteriorColor;
         it.color = InteriorColor(annot);
         it.tooltip = _TRA("Interior Color");
-        out.Append(it);
+        VecAppend(out, it);
     }
     if (AnnotationSupportsOpacity(type)) {
         AnnotEditItem it;
@@ -271,14 +271,14 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         it.number = Opacity(annot);
         // for free text the whole appearance is the text, background aside
         it.tooltip = isFreeText ? _TRA("Text Opacity") : _TRA("Opacity");
-        out.Append(it);
+        VecAppend(out, it);
     }
     if (AnnotationSupportsBorder(type)) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Border;
         it.number = BorderWidth(annot);
         it.tooltip = _TRA("Border Width");
-        out.Append(it);
+        VecAppend(out, it);
     }
     if (isFreeText) {
         {
@@ -289,21 +289,21 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
             it.number = idx;
             it.text = idx >= 0 ? SeqStrByIndex(AnnotEditorFontReadableNames(), idx) : pdfName;
             it.tooltip = _TRA("Font");
-            out.Append(it);
+            VecAppend(out, it);
         }
         {
             AnnotEditItem it;
             it.kind = AnnotEditKind::TextSize;
             it.number = DefaultAppearanceTextSize(annot);
             it.tooltip = _TRA("Text Size");
-            out.Append(it);
+            VecAppend(out, it);
         }
         {
             AnnotEditItem it;
             it.kind = AnnotEditKind::Alignment;
             it.number = Quadding(annot);
             it.tooltip = _TRA("Text Alignment");
-            out.Append(it);
+            VecAppend(out, it);
         }
     }
     SeqStrings icons = AnnotationIconNames(annot);
@@ -312,7 +312,7 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         it.kind = AnnotEditKind::Icon;
         it.iconName = IconName(annot);
         it.tooltip = _TRA("Icon");
-        out.Append(it);
+        VecAppend(out, it);
     }
     if (type == AnnotationType::Line) {
         int start = 0;
@@ -324,7 +324,7 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
             it.lineEnding = start;
             it.lineIsStart = true;
             it.tooltip = _TRA("Line Start");
-            out.Append(it);
+            VecAppend(out, it);
         }
         {
             AnnotEditItem it;
@@ -332,21 +332,21 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
             it.lineEnding = end;
             it.lineIsStart = false;
             it.tooltip = _TRA("Line End");
-            out.Append(it);
+            VecAppend(out, it);
         }
     }
     if (type != AnnotationType::Widget) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Contents;
         it.tooltip = _TRA("Edit text");
-        out.Append(it);
+        VecAppend(out, it);
     }
     if (type != AnnotationType::Widget) {
         // last, so a mis-aimed click lands on a harmless chip, not on delete
         AnnotEditItem it;
         it.kind = AnnotEditKind::Delete;
         it.tooltip = _TRA("Delete Annotation");
-        out.Append(it);
+        VecAppend(out, it);
     }
 }
 
@@ -711,7 +711,7 @@ static int PopupPickColors(MainWindow* win, Point screen, int current, Rect chip
     for (int i = 0; i < n; i++) {
         HBITMAP bmp = CreateColorSwatchBitmap(AnnotEditorColorAt(i), sw, sw);
         if (bmp) {
-            bmps.Append(bmp);
+            VecAppend(bmps, bmp);
         }
         MENUITEMINFOW mii{};
         mii.cbSize = sizeof(mii);
@@ -968,8 +968,8 @@ static void LayoutToolbar(AnnotEditToolbar* tb, const Vec<AnnotEditItem>& items)
         chip->idealSize = ChipSizeFor(item, tb->font, rowDy, padX);
         chip->SetTooltip(item.tooltip);
         chip->onClick = MkFunc1(OnChipClick, chip);
-        tb->kinds.Append(item.kind);
-        tb->chips.Append(chip);
+        VecAppend(tb->kinds, item.kind);
+        VecAppend(tb->chips, chip);
         ILayout* child = chip;
         if (!isFirst) {
             child = new Padding(chip, Insets{0, 0, 0, gap});
@@ -2563,7 +2563,7 @@ static void AddAnnotPage(Vec<int>& pages, int pageNo, int pageCount) {
     if (VecContains(pages, pageNo)) {
         return;
     }
-    pages.Append(pageNo);
+    VecAppend(pages, pageNo);
 }
 
 // Load annot wrappers for one page (page + annot dicts, not stext).

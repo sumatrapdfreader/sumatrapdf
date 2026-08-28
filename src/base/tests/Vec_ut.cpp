@@ -31,9 +31,9 @@ static size_t VecTestAppendFmt() {
 void VecTest() {
     Vec<int> ints;
     utassert(len(ints) == 0);
-    ints.Append(1);
+    VecAppend(ints, 1);
     utassert(VecCap(ints) == 4);
-    ints.Append(2);
+    VecAppend(ints, 2);
     VecInsertAt(ints, 0, -1);
     utassert(len(ints) == 3);
     utassert(ints[0] == -1 && ints[1] == 1 && ints[2] == 2);
@@ -41,7 +41,7 @@ void VecTest() {
     int last = VecPop(ints);
     utassert(last == 2);
     utassert(len(ints) == 2);
-    ints.Append(3);
+    VecAppend(ints, 3);
     VecRemoveAt(ints, 0);
     utassert(len(ints) == 2);
     utassert(ints[0] == 1 && ints[1] == 3);
@@ -49,14 +49,14 @@ void VecTest() {
     utassert(len(ints) == 0);
 
     for (int i = 0; i < 1000; i++) {
-        ints.Append(i);
+        VecAppend(ints, i);
     }
     utassert(len(ints) == 1000 && ints[500] == 500);
     VecRemove(ints, 500);
     utassert(len(ints) == 999 && ints[500] == 501);
     last = VecPop(ints);
     utassert(last == 999);
-    ints.Append(last);
+    VecAppend(ints, last);
 
     for (int& value : ints) {
         utassert(0 <= value && value < 1000);
@@ -65,7 +65,7 @@ void VecTest() {
     {
         Vec<int> ints2(ints);
         utassert(len(ints2) == 999);
-        utassert(ints.LendData() != ints2.LendData());
+        utassert(VecData(ints) != VecData(ints2));
         VecRemove(ints, 600);
         utassert(len(ints) < len(ints2));
         ints2 = ints;
@@ -79,12 +79,12 @@ void VecTest() {
         utassert(VecCap(v) == 4);
         utassert(v.els == buf);
         for (int i = 0; i < 4; i++) {
-            v.Append(i);
+            VecAppend(v, i);
         }
         utassert(len(v) == 4);
         utassert(v.els == buf);
         utassert(v[0] == 0 && v[3] == 3);
-        v.Append(4);
+        VecAppend(v, 4);
         utassert(len(v) == 5);
         utassert(v.els != buf);
         utassert(VecCap(v) >= 5);
@@ -167,7 +167,7 @@ void VecTest() {
         Vec<Point*> v;
         srand((unsigned int)time(nullptr));
         for (int i = 0; i < 128; i++) {
-            v.Append(new Point(i, i));
+            VecAppend(v, new Point(i, i));
             int pos = rand() % len(v);
             VecInsertAt(v, pos, new Point(i, i));
         }
@@ -184,8 +184,8 @@ void VecTest() {
 
     {
         Vec<int> v;
-        v.Append(2);
-        for (int i = 0; i < 500; i++) v.Append(4);
+        VecAppend(v, 2);
+        for (int i = 0; i < 500; i++) VecAppend(v, 4);
         v[250] = 5;
         VecReverse(v);
         utassert(len(v) == 501 && v[0] == 4 && v[249] == v[251] && v[250] == 5 && v[500] == 2);

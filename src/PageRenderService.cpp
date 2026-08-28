@@ -109,14 +109,14 @@ static bool AddToCache(PageRenderServiceData* data, PageRenderKey key, Pixmap* p
     entry.policy.bytes = bytes;
     entry.policy.lastUse = ++data->useSerial;
     entry.pixmap = pixmap;
-    data->cache.Append(entry);
+    VecAppend(data->cache, entry);
     data->cacheBytes += bytes;
 
     int protectedIndex = len(data->cache) - 1;
     while (data->cacheBytes > data->maxBytes) {
         Vec<PageRenderPolicyCacheEntry> policyEntries;
         for (const PageRenderCacheEntry& cached : data->cache) {
-            policyEntries.Append(cached.policy);
+            VecAppend(policyEntries, cached.policy);
         }
         int evict = PageRenderPolicyPickEviction(policyEntries, protectedIndex);
         if (evict < 0) {

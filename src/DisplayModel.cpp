@@ -2541,7 +2541,7 @@ float* GetDefaultZoomLevels(int* nZoomLevelsOut) {
     if (nCustomZooms > 0) {
         // ReportIf(((*defaultZooms)[0] < kZoomMin || defaultZooms->Last() > kZoomMax));
         // ReportIf((*defaultZooms)[0] > defaultZooms->Last());
-        zoomLevels = gSettings->zoomLevels->LendData();
+        zoomLevels = VecData(*gSettings->zoomLevels);
         nZoomLevels = nCustomZooms;
     }
     *nZoomLevelsOut = nZoomLevels;
@@ -2863,7 +2863,7 @@ void DisplayModel::AddNavPoint(bool rememberZoom) {
         navHistoryIdx = kMaxNavHistoryLen - 1;
     }
     // add a new Back history entry
-    navHistory.Append(ss);
+    VecAppend(navHistory, ss);
     navHistoryIdx++;
 }
 
@@ -2886,7 +2886,7 @@ void DisplayModel::Navigate(int dir) {
         ss.zoom = navHistory[navHistoryIdx].zoom;
         navHistory[navHistoryIdx] = ss;
     } else {
-        navHistory.Append(ss);
+        VecAppend(navHistory, ss);
     }
     navHistoryIdx += dir;
     ScrollState target = navHistory[navHistoryIdx];

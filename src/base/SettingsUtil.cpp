@@ -163,13 +163,13 @@ static void DeserializeUtf8StringArray(Vec<Str>* strArray, Str serialized) {
                 part.AppendChar(serialized.s[off]);
                 off++;
             }
-            strArray->Append(part.TakeStr());
+            VecAppend(*strArray, part.TakeStr());
             if (off < serialized.len && '"' == serialized.s[off]) {
                 off++;
             }
         } else {
             int end = SkipNonWhitespaceOff(serialized, off);
-            strArray->Append(str::Dup(Str(serialized.s + off, end - off)));
+            VecAppend(*strArray, str::Dup(Str(serialized.s + off, end - off)));
             off = end;
         }
     }
@@ -396,7 +396,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
                     ReportIf(true);
                 }
                 Str token = Str(src.s + off, src.len - off);
-                deserializeField(info, (u8*)v->AppendBlanks(1), token);
+                deserializeField(info, (u8*)VecAppendBlanks(*v, 1), token);
                 off = SkipNonWhitespaceOff(src, off);
                 off = SkipWhitespaceOff(src, off);
             }
@@ -595,7 +595,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
                         break;
                     }
                     void* v = DeserializeStructRec(GetSubstruct(field), child, nullptr, true);
-                    array->Append(v);
+                    VecAppend(*array, v);
                 }
                 FreeArray(*(Vec<void*>**)fieldPtr, field);
                 *(Vec<void*>**)fieldPtr = array;

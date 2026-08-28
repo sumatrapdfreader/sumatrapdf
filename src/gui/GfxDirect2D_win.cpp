@@ -237,7 +237,7 @@ static IDWriteTextFormat* GetTextFormat(PlatformFont* font, IDWriteInlineObject*
     }
     IDWriteInlineObject* ellipsis = nullptr;
     gDWriteFactory->CreateEllipsisTrimmingSign(format, &ellipsis);
-    gTextFormats->Append({font, format, ellipsis});
+    VecAppend(*gTextFormats, {font, format, ellipsis});
     *ellipsisOut = ellipsis;
     return format;
 }
@@ -699,7 +699,7 @@ void GfxDirect2D::PushClip(const Rect& r) {
     }
     // d2d intersects with what is already pushed, and pops in order
     target->PushAxisAlignedClip(ToD2DRect(r), D2D1_ANTIALIAS_MODE_ALIASED);
-    clipDepth.Append(1);
+    VecAppend(clipDepth, 1);
 }
 
 void GfxDirect2D::PopClip() {

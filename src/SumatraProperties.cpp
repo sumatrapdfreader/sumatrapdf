@@ -1122,7 +1122,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     }
 
     auto* wnd = new PropertiesWnd();
-    gPropertiesWindows.Append(wnd);
+    VecAppend(gPropertiesWindows, wnd);
     DisplayModel* dm = ctrl->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     wnd->showPdfCertActions = EngineMupdfIsPdf(engine);

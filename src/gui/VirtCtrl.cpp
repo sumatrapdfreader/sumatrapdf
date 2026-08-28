@@ -89,7 +89,7 @@ void CollectVirtCtrls(ILayout* root, Vec<VirtCtrl*>& out) {
     VirtCtrl* w = root->AsVirtCtrl();
     if (w) {
         // its children come with it: it paints and hit-tests them itself
-        out.Append(w);
+        VecAppend(out, w);
         return;
     }
     int n = root->LayoutChildCount();
@@ -390,7 +390,7 @@ void VirtCtrl::InsertChild(VirtCtrl* c, int idx) {
     c->parent = this;
     c->SetRoot(root);
     if (idx < 0 || idx >= len(children)) {
-        children.Append(c);
+        VecAppend(children, c);
     } else {
         VecInsertAt(children, idx, c);
     }
@@ -418,7 +418,7 @@ void VirtCtrl::RemoveAllChildren(bool del) {
     // into us via root->OnWndDestroyed()
     Vec<VirtCtrl*> tmp;
     for (VirtCtrl* c : children) {
-        tmp.Append(c);
+        VecAppend(tmp, c);
     }
     VecClear(children);
     for (VirtCtrl* c : tmp) {
@@ -620,7 +620,7 @@ void VirtRoot::SetChild(VirtCtrl* c) {
     if (c) {
         c->parent = nullptr;
         c->SetRoot(this);
-        tops.Append(c);
+        VecAppend(tops, c);
     }
     // the whole window is this one tree, so it can be laid out lazily, from
     // Paint(). A tree that also holds HWND controls can't: laying out would
@@ -639,7 +639,7 @@ void VirtRoot::SetTops(const Vec<VirtCtrl*>& newTops) {
     HideTooltip();
     for (VirtCtrl* w : newTops) {
         w->SetRoot(this);
-        tops.Append(w);
+        VecAppend(tops, w);
     }
     layoutInPaint = false;
 }
@@ -779,7 +779,7 @@ static void CollectFocusable(VirtCtrl* w, Vec<VirtCtrl*>& out) {
         return;
     }
     if (w->HasFlag(vwfFocusable) && !w->HasFlag(vwfSkipTabStop)) {
-        out.Append(w);
+        VecAppend(out, w);
     }
     for (VirtCtrl* c : w->children) {
         CollectFocusable(c, out);
@@ -803,7 +803,7 @@ void CollectTabStops(ILayout* root, Vec<TabStop>& out) {
     ControlBase* c = root->AsControl();
     if (c) {
         if (IsCtrlTabStop(c)) {
-            out.Append(TabStop{c, nullptr});
+            VecAppend(out, TabStop{c, nullptr});
         }
         return;
     }
@@ -814,7 +814,7 @@ void CollectTabStops(ILayout* root, Vec<TabStop>& out) {
         Vec<VirtCtrl*> focusable;
         CollectFocusable(w, focusable);
         for (VirtCtrl* f : focusable) {
-            out.Append(TabStop{nullptr, f});
+            VecAppend(out, TabStop{nullptr, f});
         }
         return;
     }
@@ -1706,7 +1706,7 @@ void VirtListBox::EnsureSelectedSize() {
     if (n <= 0) {
         return;
     }
-    u8* p = selected.AppendBlanks(n);
+    u8* p = VecAppendBlanks(selected, n);
     if (p) {
         memset(p, 0, (size_t)n);
     }
@@ -1744,7 +1744,7 @@ void VirtListBox::GetSelectedIndices(Vec<int>& out) {
     VecReset(out);
     if (!multiSelect) {
         if (selIdx >= 0) {
-            out.Append(selIdx);
+            VecAppend(out, selIdx);
         }
         return;
     }
@@ -1752,7 +1752,7 @@ void VirtListBox::GetSelectedIndices(Vec<int>& out) {
     int n = ItemsCount();
     for (int i = 0; i < n; i++) {
         if (selected[i]) {
-            out.Append(i);
+            VecAppend(out, i);
         }
     }
 }
@@ -1820,7 +1820,7 @@ bool VirtListBox::SetCurrentSelection(int idx) {
         int n = ItemsCount();
         VecReset(selected);
         if (n > 0) {
-            u8* p = selected.AppendBlanks(n);
+            u8* p = VecAppendBlanks(selected, n);
             if (p) {
                 memset(p, 0, (size_t)n);
             }

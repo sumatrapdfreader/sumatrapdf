@@ -11,6 +11,15 @@ Storage is heap (or arena) only; starts empty with no allocation.
 template <typename T>
 struct Vec;
 
+// makes a template parameter non-deduced, so e.g. VecAppend(Vec<Base*>&,
+// Derived*) still picks T from the vec and converts the element
+template <typename T>
+struct VecIdentity {
+    using type = T;
+};
+template <typename T>
+using VecIdentityT = typename VecIdentity<T>::type;
+
 // Vec<T> with the element type erased. Vec<T>'s layout does not depend on T,
 // so Vec<T>::NT() is a cast rather than a copy and the shims below cost
 // nothing beyond passing elSize. The bodies live in Arena.cpp and so are
@@ -44,9 +53,37 @@ inline T* VecReserve(Vec<T>& v, int capNeeded);
 template <typename T>
 T* VecInsertSpace(Vec<T>& v, int idx, int count);
 
+// Vec<T>'s layout is the same for every T (see the static_asserts below), so
+// the type-erased view is a cast, not a copy.
+template <typename T>
+VecNonTemplated* VecNT(Vec<T>& v);
+
+template <typename T>
+bool VecIsValidIndex(const Vec<T>& v, int idx);
+
+template <typename T>
+bool VecAppend(Vec<T>& v, const VecIdentityT<T>& el);
+
+template <typename T>
+bool VecAppend(Vec<T>& v, const Vec<T>& other);
+
 // Append count elements from src.
 template <typename T>
 bool VecAppendN(Vec<T>& v, const T* src, int count);
+
+// Append count blank (i.e. zeroed-out) elements at the end.
+template <typename T>
+T* VecAppendBlanks(Vec<T>& v, int count);
+
+// Perf hack for using a vec as a buffer: hand the storage to the caller
+// without a second allocation. Since a vec over-allocates this is likely to
+// use more memory than strictly necessary, which usually doesn't matter.
+template <typename T>
+T* VecTake(Vec<T>& v);
+
+// The storage, without giving it up.
+template <typename T>
+T* VecData(const Vec<T>& v);
 
 // Index of the first element equal to el at or after startAt, -1 if none.
 template <typename T>
@@ -69,7 +106,7 @@ void VecFreeMembers(Vec<T>& v);
 
 // Insert el at idx, moving the rest up.
 template <typename T>
-bool VecInsertAt(Vec<T>& v, int idx, const T& el);
+bool VecInsertAt(Vec<T>& v, int idx, const VecIdentityT<T>& el);
 
 // Remove count elements at idx, moving the rest down.
 template <typename T>
@@ -118,15 +155,11 @@ struct Vec {
     // (rather than have it an optional behavior). Borrowed storage is not
     // padded; VecUseExternalBuffer is for POD, not C-string Vec<char>.
 
-    // Vec<T>'s layout is the same for every T (see the static_asserts below),
-    // so the type-erased view is a cast, not a copy
-    VecNonTemplated* NT() { return (VecNonTemplated*)this; }
-
     explicit Vec() = default;
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
-    Vec(const Vec& other) { VecCopyFromNT(NT(), (int)sizeof(T), other.len, (const void*)other.els, false); }
+    Vec(const Vec& other) { VecCopyFromNT(VecNT(*this), (int)sizeof(T), other.len, (const void*)other.els, false); }
 
     Vec& operator=(const Vec& other) {
         if (this == &other) {
@@ -134,7 +167,7 @@ struct Vec {
         }
 
         VecReset(*this);
-        VecCopyFromNT(NT(), (int)sizeof(T), other.len, (const void*)other.els, true);
+        VecCopyFromNT(VecNT(*this), (int)sizeof(T), other.len, (const void*)other.els, true);
         return *this;
     }
 
@@ -145,23 +178,6 @@ struct Vec {
         ReportIf(idx >= len);
         return els[idx];
     }
-
-    bool isValidIndex(int idx) const { return (idx >= 0) && (idx < len); }
-
-    bool Append(const T& el) { return VecInsertAt(*this, len, el); }
-
-    bool Append(const Vec& other) { return VecAppendN(*this, other.LendData(), other.len); }
-
-    // appends count blank (i.e. zeroed-out) elements at the end
-    T* AppendBlanks(int count) { return VecInsertSpace(*this, len, count); }
-
-    // perf hack for using as a buffer: client can get accumulated data
-    // without duplicate allocation. Note: since Vec over-allocates, this
-    // is likely to use more memory than strictly necessary, but in most cases
-    // it doesn't matter
-    T* Take() { return (T*)VecTakeNT(NT(), (int)sizeof(T)); }
-
-    T* LendData() const { return els; }
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
@@ -250,12 +266,12 @@ inline T* VecReserve(Vec<T>& v, int capNeeded) {
 
 template <typename T>
 T* VecInsertSpace(Vec<T>& v, int idx, int count) {
-    return (T*)VecInsertSpaceNT(v.NT(), (int)sizeof(T), idx, count);
+    return (T*)VecInsertSpaceNT(VecNT(v), (int)sizeof(T), idx, count);
 }
 
 template <typename T>
 void VecReset(Vec<T>& v) {
-    VecFreeElementsNT(v.NT());
+    VecFreeElementsNT(VecNT(v));
 }
 
 template <typename T>
@@ -267,18 +283,53 @@ void VecFreeMembers(Vec<T>& v) {
 }
 
 template <typename T>
+VecNonTemplated* VecNT(Vec<T>& v) {
+    return (VecNonTemplated*)&v;
+}
+
+template <typename T>
+bool VecIsValidIndex(const Vec<T>& v, int idx) {
+    return (idx >= 0) && (idx < v.len);
+}
+
+template <typename T>
+bool VecAppend(Vec<T>& v, const VecIdentityT<T>& el) {
+    return VecInsertAt(v, v.len, el);
+}
+
+template <typename T>
+bool VecAppend(Vec<T>& v, const Vec<T>& other) {
+    return VecAppendN(v, other.els, other.len);
+}
+
+template <typename T>
+T* VecAppendBlanks(Vec<T>& v, int count) {
+    return VecInsertSpace(v, v.len, count);
+}
+
+template <typename T>
+T* VecTake(Vec<T>& v) {
+    return (T*)VecTakeNT(VecNT(v), (int)sizeof(T));
+}
+
+template <typename T>
+T* VecData(const Vec<T>& v) {
+    return v.els;
+}
+
+template <typename T>
 void VecRemoveAt(Vec<T>& v, int idx, int count) {
-    VecRemoveAtNT(v.NT(), (int)sizeof(T), idx, count);
+    VecRemoveAtNT(VecNT(v), (int)sizeof(T), idx, count);
 }
 
 template <typename T>
 void VecRemoveAtFast(Vec<T>& v, int idx) {
-    VecRemoveAtFastNT(v.NT(), (int)sizeof(T), idx);
+    VecRemoveAtFastNT(VecNT(v), (int)sizeof(T), idx);
 }
 
 template <typename T>
 void VecClear(Vec<T>& v) {
-    VecClearNT(v.NT(), (int)sizeof(T));
+    VecClearNT(VecNT(v), (int)sizeof(T));
 }
 
 template <typename T>
@@ -312,7 +363,7 @@ T VecPopAt(Vec<T>& v, int idx) {
 }
 
 template <typename T>
-bool VecInsertAt(Vec<T>& v, int idx, const T& el) {
+bool VecInsertAt(Vec<T>& v, int idx, const VecIdentityT<T>& el) {
     T* p = VecInsertSpace(v, idx, 1);
     if (!p) {
         return false;
@@ -362,7 +413,7 @@ bool VecAppendN(Vec<T>& v, const T* src, int count) {
 // zeros unused capacity beyond the new length.
 template <typename T>
 bool VecResize(Vec<T>& v, int newSize) {
-    return VecResizeNT(v.NT(), (int)sizeof(T), newSize);
+    return VecResizeNT(VecNT(v), (int)sizeof(T), newSize);
 }
 
 // only suitable for T that are pointers to C++ objects

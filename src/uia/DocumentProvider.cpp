@@ -337,7 +337,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     while (it && len(rangeArray) < (ULONG_MAX / 2)) {
         PageInfo* pi = it->dm->GetPageInfo(it->pageNum);
         if (pi && pi->isShown && pi->visibleRatio > 0.0f) {
-            rangeArray.Append(new SumatraUIAutomationTextRange(this, it->pageNum));
+            VecAppend(rangeArray, new SumatraUIAutomationTextRange(this, it->pageNum));
         }
         it = it->sibling_next;
     }

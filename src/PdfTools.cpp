@@ -661,7 +661,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
                 return false;
             }
             for (int i = start; i <= end; i++) {
-                pagesToDelete.Append(i);
+                VecAppend(pagesToDelete, i);
             }
         } else {
             // single page
@@ -674,7 +674,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
             if (page < 1 || page > pageCount) {
                 return false;
             }
-            pagesToDelete.Append(page);
+            VecAppend(pagesToDelete, page);
         }
     }
     if (len(pagesToDelete) == 0) {
@@ -686,7 +686,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
     Vec<int> unique;
     for (int p : pagesToDelete) {
         if (p != prev) {
-            unique.Append(p);
+            VecAppend(unique, p);
             prev = p;
         }
     }
@@ -769,14 +769,14 @@ static bool KeepOnlyPagesWithAnnotations(EngineBase* engine, Vec<int>& pages) {
     for (Annotation* annotation : annotations) {
         int pageNo = PageNo(annotation);
         if (!VecContains(annotationPages, pageNo)) {
-            annotationPages.Append(pageNo);
+            VecAppend(annotationPages, pageNo);
         }
     }
 
     Vec<int> filteredPages;
     for (int pageNo : pages) {
         if (VecContains(annotationPages, pageNo)) {
-            filteredPages.Append(pageNo);
+            VecAppend(filteredPages, pageNo);
         }
     }
     pages = filteredPages;
@@ -1415,7 +1415,7 @@ static int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePa
 static void CollectAllPages(int pageCount, Vec<int>& pages) {
     VecReset(pages);
     for (int i = 1; i <= pageCount; i++) {
-        pages.Append(i);
+        VecAppend(pages, i);
     }
 }
 
@@ -1442,7 +1442,7 @@ TempStr ConvertPagesToImagesResultTemp(Str templatePath, Str pagesSpec, int* exi
         if (cur < 1 || cur > pageCount) {
             return finish(1, str::DupTemp(StrL("ERROR bad-current")));
         }
-        pages.Append(cur);
+        VecAppend(pages, cur);
     } else if (str::EqI(pagesSpec, StrL("all"))) {
         CollectAllPages(pageCount, pages);
     } else if (!ParseDeletePages(pagesSpec, pageCount, pages)) {
@@ -1630,7 +1630,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
         if (cur < 1 || cur > pageCount) {
             return;
         }
-        pages.Append(cur);
+        VecAppend(pages, cur);
     } else if (radioAll && radioAll->IsChecked()) {
         CollectAllPages(pageCount, pages);
     } else {

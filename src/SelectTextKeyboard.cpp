@@ -599,7 +599,7 @@ void PaintKeyboardTextCaret(MainWindow* win, Gfx* gfx) {
         Rect vis = win->canvasRc.Intersect(band);
         if (!vis.IsEmpty()) {
             Vec<Rect> rects;
-            rects.Append(vis);
+            VecAppend(rects, vis);
             PaintTransparentRectangles(gfx, win->canvasRc, rects, kCaretBandCol, kCaretBandAlpha, 1, false);
         }
     }

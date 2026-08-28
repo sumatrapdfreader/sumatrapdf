@@ -106,7 +106,7 @@ static void StoreAttrsCache(Str path, u64 now, bool ok, const WIN32_FILE_ATTRIBU
     }
     if (freeIdx < 0 && len(gAttrsCache) < kAttrsCacheMaxEntries) {
         freeIdx = len(gAttrsCache);
-        gAttrsCache.AppendBlanks(1);
+        VecAppendBlanks(gAttrsCache, 1);
     }
     if (freeIdx < 0) {
         freeIdx = oldestIdx;

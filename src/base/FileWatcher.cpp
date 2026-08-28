@@ -405,7 +405,7 @@ static void RunManualChecks() {
             // Dup so we can use path after releasing the lock (wf may be freed).
             it.path = str::Dup(wf->filePath);
             it.state = wf->fileState;
-            items.Append(it);
+            VecAppend(items, it);
         }
     }
 

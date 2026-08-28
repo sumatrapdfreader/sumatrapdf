@@ -426,11 +426,11 @@ void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& to
             seenCurrent = true;
             continue;
         }
-        toCloseOther.Append(tab);
+        VecAppend(toCloseOther, tab);
         if (seenCurrent) {
-            toCloseRight.Append(tab);
+            VecAppend(toCloseRight, tab);
         } else {
-            toCloseLeft.Append(tab);
+            VecAppend(toCloseLeft, tab);
         }
     }
 }
@@ -476,7 +476,7 @@ void CloseAllTabs(MainWindow* win) {
         if (t->IsAboutTab()) {
             continue;
         }
-        toClose.Append(t);
+        VecAppend(toClose, t);
     }
     CloseCollectedTabs(win, toClose);
 }
@@ -729,7 +729,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
 
     // update the selection history
     VecRemove(*win->tabSelectionHistory, tab);
-    win->tabSelectionHistory->Append(tab);
+    VecAppend(*win->tabSelectionHistory, tab);
 }
 
 WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {

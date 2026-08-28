@@ -326,7 +326,7 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
                 item->compactInfo = sub;
                 item->strVal = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, false));
                 item->defStr = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, true));
-                items.Append(item);
+                VecAppend(items, item);
                 break;
             }
             case SettingType::Bool:
@@ -364,7 +364,7 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
                         }
                         break;
                 }
-                items.Append(item);
+                VecAppend(items, item);
                 break;
             }
             default:
@@ -571,7 +571,7 @@ static void CollectFilteredSettings(Vec<SettingItem*>& items, const StrVec& word
         for (int i = 0; i < n; i++) {
             SettingItem* item = items[i];
             if (SettingDiffersFromDefault(item) == wantNonDefault && SettingNameMatchesFilter(item->name, words)) {
-                filtered.Append(i);
+                VecAppend(filtered, i);
             }
         }
     }
@@ -1423,7 +1423,7 @@ static Vec<AdvSettingsRowRec>* gAdvSettingsRowRec = nullptr;
 
 static void RecordAdvSettingsRow(VirtListBox::DrawItemEvent* ev) {
     if (gAdvSettingsRowRec) {
-        gAdvSettingsRowRec->Append({ev->itemIndex, ev->itemRect});
+        VecAppend(*gAdvSettingsRowRec, {ev->itemIndex, ev->itemRect});
     }
 }
 

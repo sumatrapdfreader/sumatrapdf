@@ -451,7 +451,7 @@ void ChmModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
     }
 
     htmlScrollUrls.Append(plainUrl);
-    htmlScrollPositions.Append(pos);
+    VecAppend(htmlScrollPositions, pos);
 }
 
 bool ChmModel::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
@@ -552,7 +552,7 @@ struct ChmTocBuilder : EbookTocVisitor {
         Str urlDup = str::Dup(a, url);
         int pageNo = CreatePageNoForURL(urlDup);
         ChmTocTraceItem item{nameDup, urlDup, level, pageNo};
-        tocTrace->Append(item);
+        VecAppend(*tocTrace, item);
     }
 };
 
@@ -768,7 +768,7 @@ Str ChmModel::GetDataForUrl(Str url) {
         Str s = str::Dup(poolAlloc, plainUrl);
         e = new ChmCacheEntry(s);
         e->data = ChmThemeApplyToData(raw);
-        urlDataCache.Append(e);
+        VecAppend(urlDataCache, e);
     }
     return e->data;
 }
@@ -858,7 +858,7 @@ TocTree* ChmModel::GetToc() {
             VecLast(levels)->AddSiblingAtEnd(item);
         } else {
             *nextChild = item;
-            levels.Append(item);
+            VecAppend(levels, item);
             foundRoot = true;
         }
         nextChild = &item->child;
@@ -997,7 +997,7 @@ Str ChmThumbnailTask::GetDataForUrl(Str url) {
     ScopedMutex scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
     Str d = str::Dup(doc->GetDataTemp(plainUrl));
-    data.Append(d);
+    VecAppend(data, d);
     return d;
 }
 

@@ -105,7 +105,7 @@ void EngineMupdfGetUnsignedSignatureFields(EngineBase* engine, StrVec& names, Ve
                 }
                 char* name = pdf_load_field_name(ctx, pdf_annot_obj(ctx, w));
                 names.Append(name ? Str(name) : StrL(""));
-                pageNos.Append(pageIdx + 1);
+                VecAppend(pageNos, pageIdx + 1);
                 fz_free(ctx, name);
             }
             fz_drop_page(ctx, (fz_page*)page);

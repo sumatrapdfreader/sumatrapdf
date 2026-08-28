@@ -475,7 +475,7 @@ static void visitCollectSamePage(CollectSamePageData* d, TreeItemVisitorData* vd
         return;
     }
     if (tocItem->pageNo == d->pageNo) {
-        d->out->Append(tocItem);
+        VecAppend(*d->out, tocItem);
     }
 }
 
@@ -520,7 +520,7 @@ static void SetTocMultiHighlight(MainWindow* win, TreeView* treeView, TocItem* b
         // Ancestor chain (chapter → section → subsection), including bestMatch.
         for (TocItem* p = bestMatch; p; p = p->parent) {
             if (!TocMatchingItemsContains(next, p)) {
-                next.Append(p);
+                VecAppend(next, p);
             }
         }
     }
@@ -639,7 +639,7 @@ static void UpdateDocTocExpansionStateRecur(TreeView* treeView, Vec<int>& tocSta
             bool isExpanded = treeView->IsExpanded((TreeItem)tocItem);
             bool wasToggled = isExpanded != tocItem->isOpenDefault;
             if (wasToggled) {
-                tocState.Append(tocItem->id);
+                VecAppend(tocState, tocItem->id);
             }
             UpdateDocTocExpansionStateRecur(treeView, tocState, tocItem->child);
         }

@@ -975,7 +975,7 @@ static void CollectKindleEmbedRecIndexes(Str html, Vec<int>& out) {
         }
         int n = KindleEmbedToRecIndex(rest);
         if (n > 0) {
-            out.Append(n);
+            VecAppend(out, n);
         }
         p += len(prefix);
     }
@@ -1040,7 +1040,7 @@ void MobiDoc::MaybeSynthesizeImagePages() {
             // MobiFormatter already emits the cover on its own page
             continue;
         }
-        recs.Append(i + 1);
+        VecAppend(recs, i + 1);
     }
     if (len(recs) < 2) {
         return;
@@ -1068,7 +1068,7 @@ static const GumboNode* FindMobiTocReference(const GumboNode* root) {
     // iterative pre-order traversal. Avoids recursion so a deeply nested
     // document (e.g. a huge MOBI dictionary) can't overflow the stack
     Vec<const GumboNode*> toVisit;
-    toVisit.Append(root);
+    VecAppend(toVisit, root);
     while (len(toVisit) > 0) {
         const GumboNode* node = VecPop(toVisit);
         if (!node) {
@@ -1089,7 +1089,7 @@ static const GumboNode* FindMobiTocReference(const GumboNode* root) {
         if (children) {
             // push in reverse so children are visited in document order
             for (unsigned int i = children->length; i > 0; i--) {
-                toVisit.Append((const GumboNode*)children->data[i - 1]);
+                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
             }
         }
     }
@@ -1125,7 +1125,7 @@ bool MobiDoc::HasToc() {
 static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
     // iterative pre-order DFS so a deeply nested element can't overflow the stack
     Vec<const GumboNode*> toVisit;
-    toVisit.Append(root);
+    VecAppend(toVisit, root);
     while (len(toVisit) > 0) {
         const GumboNode* node = VecPop(toVisit);
         if (!node) {
@@ -1141,7 +1141,7 @@ static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
         const GumboVector* children = &node->v.element.children;
         // push in reverse so children are visited (and text appended) in document order
         for (unsigned int i = children->length; i > 0; i--) {
-            toVisit.Append((const GumboNode*)children->data[i - 1]);
+            VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
         }
     }
 }
@@ -1164,7 +1164,7 @@ struct MobiTocWalkItem {
 // the recursive version did.
 void MobiTocWalker::Walk(const GumboNode* root) {
     Vec<MobiTocWalkItem> stack;
-    stack.Append({root, 0});
+    VecAppend(stack, {root, 0});
     while (len(stack) > 0) {
         MobiTocWalkItem it = VecPop(stack);
         const GumboNode* node = it.node;
@@ -1202,7 +1202,7 @@ void MobiTocWalker::Walk(const GumboNode* root) {
         if (children) {
             // push in reverse so children are visited in document order
             for (unsigned int i = children->length; i > 0; i--) {
-                stack.Append({(const GumboNode*)children->data[i - 1], childLevel});
+                VecAppend(stack, {(const GumboNode*)children->data[i - 1], childLevel});
             }
         }
     }

@@ -292,7 +292,7 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
     si.display = GetCodexSessionDescription(sessionId);
     si.project = str::Dup(matchDir);
     si.timestamp = ts;
-    sessions.Append(si);
+    VecAppend(sessions, si);
     str::Free(data);
 }
 

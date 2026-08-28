@@ -23,7 +23,7 @@ void PageRenderPolicyUpsert(Vec<PageRenderPolicyRequest>& requests, const PageRe
         existing = request;
         return;
     }
-    requests.Append(request);
+    VecAppend(requests, request);
 }
 
 void PageRenderPolicyDropStale(Vec<PageRenderPolicyRequest>& requests, u32 generation) {
@@ -83,9 +83,9 @@ void PageRenderPolicy_UnitTests() {
     }
 
     Vec<PageRenderPolicyCacheEntry> cache;
-    cache.Append({10, 20});
-    cache.Append({10, 5});
-    cache.Append({10, 12});
+    VecAppend(cache, {10, 20});
+    VecAppend(cache, {10, 5});
+    VecAppend(cache, {10, 12});
     utassert(PageRenderPolicyPickEviction(cache, 0) == 1);
     utassert(PageRenderPolicyPickEviction(cache, 1) == 2);
 }

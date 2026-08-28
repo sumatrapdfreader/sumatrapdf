@@ -1076,16 +1076,16 @@ static void PaintCropImage(ImageEditWindow* ew, Gfx* gfx, Rect imageArea) {
 
     Vec<Rect> overlay;
     if (cropDispY > iy) {
-        overlay.Append({ix, iy, iw, cropDispY - iy});
+        VecAppend(overlay, {ix, iy, iw, cropDispY - iy});
     }
     if (cropDispB < ib) {
-        overlay.Append({ix, cropDispB, iw, ib - cropDispB});
+        VecAppend(overlay, {ix, cropDispB, iw, ib - cropDispB});
     }
     if (cropDispX > ix) {
-        overlay.Append({ix, cropDispY, cropDispX - ix, cropDispB - cropDispY});
+        VecAppend(overlay, {ix, cropDispY, cropDispX - ix, cropDispB - cropDispY});
     }
     if (cropDispR < ir) {
-        overlay.Append({cropDispR, cropDispY, ir - cropDispR, cropDispB - cropDispY});
+        VecAppend(overlay, {cropDispR, cropDispY, ir - cropDispR, cropDispB - cropDispY});
     }
     gfx->FillRects(overlay.els, len(overlay), kColBlack, 128);
 
@@ -2252,7 +2252,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         ew->newH = imgH;
     }
 
-    gImageEditWindows.Append(ew);
+    VecAppend(gImageEditWindows, ew);
 
     HMODULE h = GetModuleHandleW(nullptr);
     Size winSize = CalcImageEditWindowSizeEx(parent, parent, fromRenderedBitmap, imgW, imgH, nullptr);
@@ -2374,7 +2374,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             if (i == wantFmtIdx) {
                 defaultDdIdx = len(ew->formatIndices);
             }
-            ew->formatIndices.Append(i);
+            VecAppend(ew->formatIndices, i);
             items.Append(gImageFormats[i].label);
         }
         dd->SetItems(items);

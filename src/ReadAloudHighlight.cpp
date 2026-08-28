@@ -64,7 +64,7 @@ static bool ReadAloudHighlightAppendRaw(Vec<ReadAloudRawByte>& raw, char c, cons
     ReadAloudRawByte rb;
     rb.c = c;
     rb.loc = loc;
-    raw.Append(rb);
+    VecAppend(raw, rb);
     return true;
 }
 
@@ -822,7 +822,7 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
         Rect sr = dm->CvtToScreen(pageNo, u);
         sr = sr.Intersect(win->canvasRc);
         if (!sr.IsEmpty()) {
-            screenRects.Append(sr);
+            VecAppend(screenRects, sr);
         }
     }
 

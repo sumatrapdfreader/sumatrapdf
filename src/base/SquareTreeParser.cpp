@@ -278,18 +278,18 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel, i
 
 // Appends one or more child nodes under keyView. off is the first char after '['.
 static void AppendChildNodes(SquareTreeNode* node, Str data, Str keyView, int& off, int depth) {
-    node->data.Append(AllocDataItem(keyView, {}, ParseSquareTreeRec(data, off, false, depth + 1)));
+    VecAppend(node->data, AllocDataItem(keyView, {}, ParseSquareTreeRec(data, off, false, depth + 1)));
     // arrays: reuse key for more children, or concatenate ("[ \n ] [ \n ]")
     while (IsBracketLine(data, (off = SkipWsAndComments(data, off)))) {
         off++;
-        node->data.Append(AllocDataItem(keyView, {}, ParseSquareTreeRec(data, off, false, depth + 1)));
+        VecAppend(node->data, AllocDataItem(keyView, {}, ParseSquareTreeRec(data, off, false, depth + 1)));
     }
 }
 
 static void AppendKeyValue(SquareTreeNode* node, Str data, const LineScan& line) {
     Str keyView = ExtractTrimmed(data, line.keyOff, line.sepOff);
     Str valView = ExtractTrimmed(data, line.valOff, line.lineEnd);
-    node->data.Append(AllocDataItem(keyView, valView, nullptr));
+    VecAppend(node->data, AllocDataItem(keyView, valView, nullptr));
 }
 
 // [Section] at top level becomes Section [ ... ] until the next section or EOF.
@@ -299,7 +299,7 @@ static void AppendIniSection(SquareTreeNode* node, Str data, const LineScan& lin
     int nameEnd = SkipWsRev(data, nameStart, closeOff);
     Str sectionKey = Str(data.s + nameStart, nameEnd - nameStart);
     int sectionChildOff = line.lineEnd;
-    node->data.Append(AllocDataItem(sectionKey, {}, ParseSquareTreeRec(data, sectionChildOff, false, depth + 1)));
+    VecAppend(node->data, AllocDataItem(sectionKey, {}, ParseSquareTreeRec(data, sectionChildOff, false, depth + 1)));
     off = sectionChildOff;
 }
 

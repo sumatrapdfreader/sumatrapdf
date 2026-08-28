@@ -660,7 +660,7 @@ void MarkdownModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
         return;
     }
     htmlScrollUrls.Append(plainUrl);
-    htmlScrollPositions.Append(pos);
+    VecAppend(htmlScrollPositions, pos);
 }
 
 bool MarkdownModel::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
@@ -872,7 +872,7 @@ Str MarkdownModel::GetDataForUrl(Str url) {
 
     Str urlDup = str::Dup(poolAlloc, plainUrl);
     e = new MarkdownCacheEntry{urlDup, str::Dup(poolAlloc, data)};
-    urlDataCache.Append(e);
+    VecAppend(urlDataCache, e);
     return e->data;
 }
 
@@ -973,7 +973,7 @@ static TocTree* BuildTocTreeFromTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
             VecLast(levels)->AddSiblingAtEnd(item);
         } else {
             *nextChild = item;
-            levels.Append(item);
+            VecAppend(levels, item);
             foundRoot = true;
         }
         nextChild = &item->child;
@@ -993,7 +993,7 @@ static void AppendFileTocTraceItem(Vec<MarkdownTocTraceItem>& tocTrace, Str file
     fileItem.url = str::Dup(pageUrl);
     fileItem.level = 1;
     fileItem.pageNo = pageNo;
-    tocTrace.Append(fileItem);
+    VecAppend(tocTrace, fileItem);
 }
 
 // The TOC we can build without reading a single file. Parsing every sibling
@@ -1033,7 +1033,7 @@ static TocTree* BuildFullToc(StrVec& pages, Str baseDir, bool isHtml) {
             hItem.url = str::Dup(destUrl);
             hItem.level = hi.level + 1;
             hItem.pageNo = pageNo;
-            tocTrace.Append(hItem);
+            VecAppend(tocTrace, hItem);
         }
     }
 

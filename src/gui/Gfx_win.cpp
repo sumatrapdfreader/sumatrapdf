@@ -288,7 +288,7 @@ void GfxHdc::DrawPixmap(Pixmap* px, const Rect& r) {
 
 void GfxHdc::PushClip(const Rect& r) {
     int saved = SaveDC(hdc);
-    savedDCs.Append(saved);
+    VecAppend(savedDCs, saved);
     IntersectClipRect(hdc, r.x, r.y, r.Right(), r.Bottom());
 }
 

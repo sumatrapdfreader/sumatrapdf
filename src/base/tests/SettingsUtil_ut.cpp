@@ -265,9 +265,9 @@ Key = Value";
         keep2->pageNo = 9;
         keep2->isTemporary = false;
 
-        root->items->Append(keep);
-        root->items->Append(drop);
-        root->items->Append(keep2);
+        VecAppend(*root->items, keep);
+        VecAppend(*root->items, drop);
+        VecAppend(*root->items, keep2);
 
         Str out = SerializeStruct(&gSutTempRootInfo, root);
         utassert(str::Contains(out, StrL("Name = keep")));

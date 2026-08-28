@@ -69,7 +69,7 @@ static void CacheInsert(RefLookupCache* c, Str surname, int year, int srcPage, i
     e.destPage = destPage;
     e.destX = destX;
     e.destY = destY;
-    c->entries.Append(e);
+    VecAppend(c->entries, e);
 }
 
 static void CacheFree(RefLookupCache* c) {

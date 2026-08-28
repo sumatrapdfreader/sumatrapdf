@@ -593,17 +593,17 @@ static void StartThumbnailRendering(ThumbnailNavigationState* state) {
     // visible pages first, then the rows just off-screen in either direction
     for (int pageNo = firstVisible; pageNo <= lastVisible; pageNo++) {
         if (!cache->thumbnails[pageNo - 1]) {
-            worker->pages.Append(pageNo);
+            VecAppend(worker->pages, pageNo);
         }
     }
     for (int pageNo = firstPage; pageNo < firstVisible; pageNo++) {
         if (!cache->thumbnails[pageNo - 1]) {
-            worker->pages.Append(pageNo);
+            VecAppend(worker->pages, pageNo);
         }
     }
     for (int pageNo = lastVisible + 1; pageNo <= lastPage; pageNo++) {
         if (!cache->thumbnails[pageNo - 1]) {
-            worker->pages.Append(pageNo);
+            VecAppend(worker->pages, pageNo);
         }
     }
     if (worker->pages.len == 0) {
@@ -677,7 +677,7 @@ void ShowThumbnailNavigation(MainWindow* win) {
         cache->rotation = rotation;
         cache->thumbDx = thumbDx;
         cache->thumbDy = thumbDy;
-        cache->thumbnails.AppendBlanks(pageCount);
+        VecAppendBlanks(cache->thumbnails, pageCount);
         tab->thumbnailNavigationCache = cache;
     }
 

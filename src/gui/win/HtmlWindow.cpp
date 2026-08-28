@@ -203,7 +203,7 @@ static HtmlWindow* FindHtmlWindowById(int windowId) {
     // so a crafted document can pass a negative or out-of-range value. Reject it
     // instead of indexing out of bounds (Vec::operator[]'s ReportIf is
     // diagnostic-only and still reads els[idx]). Callers null-check the result.
-    if (!gHtmlWindows.isValidIndex(windowId)) {
+    if (!VecIsValidIndex(gHtmlWindows, windowId)) {
         return nullptr;
     }
     return gHtmlWindows[windowId];
@@ -211,7 +211,7 @@ static HtmlWindow* FindHtmlWindowById(int windowId) {
 
 static int GenNewWindowId(HtmlWindow* htmlWin) {
     int newWindowId = len(gHtmlWindows);
-    gHtmlWindows.Append(htmlWin);
+    VecAppend(gHtmlWindows, htmlWin);
     ReportIf(htmlWin != FindHtmlWindowById(newWindowId));
     return newWindowId;
 }

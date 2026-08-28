@@ -578,7 +578,7 @@ static BOOL CALLBACK EnumCaptureWindowsProc(HWND hwnd, LPARAM lParam) {
     }
     CaptureItem item;
     item.hwnd = hwnd;
-    ctx->items->Append(item);
+    VecAppend(*ctx->items, item);
     return TRUE;
 }
 
@@ -591,7 +591,7 @@ static void CaptureAllScreenshots(ScreenshotOverlayData* data, HWND overlayHwnd)
     Vec<CaptureItem> items;
     {
         CaptureItem item;
-        items.Append(item);
+        VecAppend(items, item);
     }
     EnumCaptureCtx ectx;
     ectx.items = &items;
@@ -633,7 +633,7 @@ static void CaptureAllScreenshots(ScreenshotOverlayData* data, HWND overlayHwnd)
         Vec<ThreadHandle> threads;
         for (int t = 0; t < numThreads; t++) {
             auto fn = MkFunc0(CaptureWorker, &ctx);
-            threads.Append(StartThread(fn, StrL("ScreenshotCapture")));
+            VecAppend(threads, StartThread(fn, StrL("ScreenshotCapture")));
         }
         for (ThreadHandle h : threads) {
             WaitForSingleObject(h, INFINITE);
@@ -644,7 +644,7 @@ static void CaptureAllScreenshots(ScreenshotOverlayData* data, HWND overlayHwnd)
     // keep successful captures, in enumeration order (desktop first)
     for (int i = 0; i < nItems; i++) {
         if (items[i].cs.bmp) {
-            data->captures.Append(items[i].cs);
+            VecAppend(data->captures, items[i].cs);
         }
     }
 

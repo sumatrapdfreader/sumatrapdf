@@ -107,7 +107,7 @@ static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
     VecReset(out);
     auto addDefault = [&out]() {
         for (const SelectionToolbarButton& cand : gCandidateButtons) {
-            out.Append(cand.cmdId);
+            VecAppend(out, cand.cmdId);
         }
     };
     Str setting = gSettings ? gSettings->selectionToolbarLayout : Str{};
@@ -127,7 +127,7 @@ static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
             continue;
         }
         if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
-            out.Append(0);
+            VecAppend(out, 0);
             continue;
         }
         const SelectionToolbarButton* found = FindCandidateButton(GetCommandIdByName(tok));
@@ -143,7 +143,7 @@ static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
             }
         }
         if (!already) {
-            out.Append(found->cmdId);
+            VecAppend(out, found->cmdId);
             nButtons++;
         }
     }
@@ -176,7 +176,7 @@ static void AppendSelectionHandlerButtons(SelectionToolbar* tb, const AppCommand
             b.userLabel = s;
         }
         b.enabled = !CommandShouldDisable(v);
-        tb->buttons.Append(b);
+        VecAppend(tb->buttons, b);
     }
 }
 
@@ -208,7 +208,7 @@ static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
     CollectBuiltInSelectionToolbarCmds(ids);
     for (int i = 0; i < len(ids); i++) {
         if (ids[i] == 0) {
-            tb->buttons.Append({});
+            VecAppend(tb->buttons, {});
             continue;
         }
         const SelectionToolbarButton* cand = FindCandidateButton(ids[i]);
@@ -221,7 +221,7 @@ static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
         }
         SelectionToolbarButton b = *cand;
         b.enabled = !CommandShouldDisable(v);
-        tb->buttons.Append(b);
+        VecAppend(tb->buttons, b);
     }
     AppendSelectionHandlerButtons(tb, ctx);
     NormalizeSelectionToolbarSeparators(tb->buttons);

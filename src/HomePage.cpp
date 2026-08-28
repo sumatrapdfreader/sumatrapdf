@@ -1523,7 +1523,7 @@ static void CollectHomePageFiles(MainWindow* win, Vec<FileState*>& fileStates, S
                 continue;
             }
         }
-        fileStates.Append(fs);
+        VecAppend(fileStates, fs);
     }
 }
 
@@ -1670,7 +1670,7 @@ static void LayoutHomePage(HomePageLayout& l) {
                 continue;
             }
         }
-        fileStates.Append(fs);
+        VecAppend(fileStates, fs);
     }
 
     bool isRtl = IsUIRtl();
@@ -1846,7 +1846,7 @@ static void LayoutHomePage(HomePageLayout& l) {
         // one-row margin so a quick scroll still has measured name/path splits ready
         int listPrefetchY = kHomeListRowDy;
         for (int row = 0; row < nFiles; row++) {
-            ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
+            ThumbnailLayout& thumb = *VecAppendBlanks(l.thumbnails, 1);
             thumb.fileSize = kSizeNotFetched;
             FileState* fs = fileStates[row];
             thumb.fs = fs;
@@ -1894,7 +1894,7 @@ static void LayoutHomePage(HomePageLayout& l) {
                     thumbsRows = col > 0 ? row + 1 : row;
                     break;
                 }
-                ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
+                ThumbnailLayout& thumb = *VecAppendBlanks(l.thumbnails, 1);
                 thumb.fileSize = kSizeNotFetched;
                 FileState* fs = fileStates[(row * thumbsColsForLayout) + col];
                 thumb.fs = fs;

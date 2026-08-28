@@ -712,7 +712,7 @@ boxElementInfo& VBox::AddChild(ILayout* child, int flex) {
     boxElementInfo v{};
     v.layout = child;
     v.flex = flex;
-    children.Append(v);
+    VecAppend(children, v);
     auto n = len(children);
     return children[n - 1];
 }
@@ -1043,7 +1043,7 @@ boxElementInfo& HBox::AddChild(ILayout* child, int flex) {
     boxElementInfo v{};
     v.layout = child;
     v.flex = flex;
-    children.Append(v);
+    VecAppend(children, v);
     auto n = len(children);
     return children[n - 1];
 }
@@ -1157,7 +1157,7 @@ void Table::SetSize(int nRows, int nCols) {
     VecClear(cells);
     TableCell empty;
     for (int i = 0; i < rows * cols; i++) {
-        cells.Append(empty);
+        VecAppend(cells, empty);
     }
     VecClear(colWidths);
     VecClear(rowHeights);
@@ -1301,9 +1301,9 @@ static int TracksStart(Vec<int>& tracks, int idx, int gap) {
 // tracks they span when what those already give them isn't enough
 void Table::Measure() {
     VecClear(colWidths);
-    colWidths.AppendBlanks(cols);
+    VecAppendBlanks(colWidths, cols);
     VecClear(rowHeights);
-    rowHeights.AppendBlanks(rows);
+    VecAppendBlanks(rowHeights, rows);
 
     Constraints loose = ExpandInf();
     for (int row = 0; row < rows; row++) {
@@ -1520,7 +1520,7 @@ OverlayChild& Overlay::AddChild(ILayout* child, CrossAxisAlign alignH, CrossAxis
     v.child = child;
     v.alignH = alignH;
     v.alignV = alignV;
-    children.Append(v);
+    VecAppend(children, v);
     return children[len(children) - 1];
 }
 
@@ -1622,7 +1622,7 @@ boxElementInfo& Wrap::AddChild(ILayout* child, int flex) {
     boxElementInfo v{};
     v.layout = child;
     v.flex = flex;
-    children.Append(v);
+    VecAppend(children, v);
     return children[len(children) - 1];
 }
 
@@ -1643,7 +1643,7 @@ void Wrap::PackRows(int maxWidth) {
         }
         int nextW = have ? (cur.width + colGap + v.size.dx) : v.size.dx;
         if (have && maxWidth < Inf && nextW > maxWidth) {
-            rows.Append(cur);
+            VecAppend(rows, cur);
             cur = {};
             have = false;
         }
@@ -1660,7 +1660,7 @@ void Wrap::PackRows(int maxWidth) {
         }
     }
     if (have) {
-        rows.Append(cur);
+        VecAppend(rows, cur);
     }
 }
 

@@ -182,7 +182,7 @@ static UiFontsAtDpi* GetUiFontsAtDpi(int dpi) {
     }
     UiFontsAtDpi e;
     e.dpi = dpi;
-    gUiFontsAtDpi.Append(e);
+    VecAppend(gUiFontsAtDpi, e);
     return &gUiFontsAtDpi[n];
 }
 
@@ -576,7 +576,7 @@ static SessionData* CloneSessionData(const SessionData* src) {
     dst->windowPos = src->windowPos;
     dst->sidebarDx = src->sidebarDx;
     for (TabState* ts : *src->tabStates) {
-        dst->tabStates->Append(CloneTabState(ts));
+        VecAppend(*dst->tabStates, CloneTabState(ts));
     }
     return dst;
 }
@@ -652,7 +652,7 @@ static void SyncInitialSessionData() {
     }
     FreeSessionDataVec(gInitialSessionData);
     for (SessionData* sd : *gSettings->sessionData) {
-        gInitialSessionData->Append(CloneSessionData(sd));
+        VecAppend(*gInitialSessionData, CloneSessionData(sd));
     }
     RefreshLazyTabStatePointers();
 }
@@ -686,7 +686,7 @@ static void RememberSessionState() {
                     src = FindSessionTabState(fp);
                 }
                 if (src) {
-                    windowState->tabStates->Append(CloneTabState(src));
+                    VecAppend(*windowState->tabStates, CloneTabState(src));
                 } else {
                     logf("RememberSessionState: didn't find state for file '%s'\n", fp ? fp : StrL("(none)"));
                 }
@@ -697,7 +697,7 @@ static void RememberSessionState() {
             fs->showToc = tab->showToc;
             *fs->tocState = tab->tocState;
             TabState* ts = NewTabState(fs);
-            windowState->tabStates->Append(ts);
+            VecAppend(*windowState->tabStates, ts);
             DeleteFileState(fs);
         }
         if (len(*windowState->tabStates) == 0) {
@@ -725,7 +725,7 @@ static void RememberSessionState() {
         windowState->windowState = gSettings->windowState;
         windowState->windowPos = gSettings->windowPos;
         windowState->sidebarDx = gSettings->sidebarDx;
-        sessionState->Append(windowState);
+        VecAppend(*sessionState, windowState);
     }
 }
 
@@ -1176,7 +1176,7 @@ void CollectZoomLevels(Vec<float>& out, bool forChm) {
     if (n > 0) {
         if (!forChm) {
             for (int i = 0; i < 4; i++) {
-                out.Append(gZoomLevels[i]);
+                VecAppend(out, gZoomLevels[i]);
             }
         }
         float maxZoom = forChm ? 800 : kZoomMax;
@@ -1184,7 +1184,7 @@ void CollectZoomLevels(Vec<float>& out, bool forChm) {
         for (int i = 0; i < n; i++) {
             float zl = (*customZoomLevels)[n - i - 1]; // largest first
             if (zl >= minZoom && zl <= maxZoom) {
-                out.Append(zl);
+                VecAppend(out, zl);
             }
         }
         return;
@@ -1192,7 +1192,7 @@ void CollectZoomLevels(Vec<float>& out, bool forChm) {
     float* zoomLevels = forChm ? gZoomLevelsChm : gZoomLevels;
     n = forChm ? dimofi(gZoomLevelsChm) : dimofi(gZoomLevels);
     for (int i = 0; i < n; i++) {
-        out.Append(zoomLevels[i]);
+        VecAppend(out, zoomLevels[i]);
     }
 }
 
@@ -1342,7 +1342,7 @@ Str SerializeSettings(Settings* prefs, Str prevData) {
         for (FileState* fs : *prefs->fileStates) {
             fs->useDefaultState = true;
             if (FileStateWorthKeepingWithoutHistory(fs)) {
-                withFavorites.Append(fs);
+                VecAppend(withFavorites, fs);
             }
         }
         if (dropHistory) {

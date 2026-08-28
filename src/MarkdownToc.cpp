@@ -253,7 +253,7 @@ static void ParseMarkdownHeadings(Str filePath, MarkdownFileToc* toc) {
         item.title = title;
         item.anchor = MarkdownHeadingSlug(nullptr, title);
         item.level = cmark_node_get_heading_level(node);
-        toc->headings.Append(item);
+        VecAppend(toc->headings, item);
     }
     cmark_iter_free(iter);
     cmark_node_free(doc);
@@ -305,7 +305,7 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
                 item.title = str::Dup(title);
                 item.anchor = len(headingId) > 0 ? str::Dup(headingId) : Str{};
                 item.level = headingLevel;
-                headingsOut.Append(item);
+                VecAppend(headingsOut, item);
             }
             str::Free(title);
             str::Free(raw);
@@ -390,7 +390,7 @@ void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc
     Vec<ThreadHandle> threads;
     for (int t = 0; t < numThreads; t++) {
         auto fn = MkFunc0(MdTocParseWorker, &ctx);
-        threads.Append(StartThread(fn, StrL("MdTocParse")));
+        VecAppend(threads, StartThread(fn, StrL("MdTocParse")));
     }
     for (ThreadHandle h : threads) {
 #if OS_WIN

@@ -140,7 +140,7 @@ static void ParseMargin(Str s, Vec<float>& out) {
             ok = false;
             break;
         }
-        out.Append(v);
+        VecAppend(out, v);
     }
     int n = len(out);
     ok = ok && (n == 1 || n == 2 || n == 4);

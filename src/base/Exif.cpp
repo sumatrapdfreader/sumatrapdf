@@ -800,7 +800,7 @@ void AddEntry(ExifParser& parser, IfdGroup group, u16 tag, u16 type, u32 count, 
     entry.count = count;
     entry.dataOff = dataOff;
     entry.group = (u8)group;
-    parser.entries.Append(entry);
+    VecAppend(parser.entries, entry);
 }
 
 static void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndian = 0, int depth = 0);

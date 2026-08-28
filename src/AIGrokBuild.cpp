@@ -213,7 +213,7 @@ static void CollectGrokSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         si.display = desc;
         si.project = str::Dup(dir);
         si.timestamp = AIChatFileTimeToMs(de->modificationTime);
-        sessions.Append(si);
+        VecAppend(sessions, si);
     }
 
     AIChatSortSessionsByTimestampDesc(sessions);

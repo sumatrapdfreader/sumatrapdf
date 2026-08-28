@@ -336,6 +336,6 @@ fz_image* PdfDarkModeGetCachedShade(fz_context* ctx, DarkModePageAnalysis* analy
     entry.alpha = alpha;
     entry.bounds = bounds;
     entry.processedImage = built;
-    cache->shadeCache.Append(entry);
+    VecAppend(cache->shadeCache, entry);
     return fz_keep_image(ctx, built);
 }

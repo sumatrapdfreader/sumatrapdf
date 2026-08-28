@@ -93,8 +93,8 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
                                    wstr::FindFrom(lfw.lfFaceName, L"Consol") ||
                                    wstr::EndsWith(lfw.lfFaceName, WStrL(L"Mono")) ||
                                    wstr::EndsWith(lfw.lfFaceName, WStrL(L"Typewriter"));
-        fontCache.Append(f);
-        fixCache.Append(isItalicOrMonospace);
+        VecAppend(fontCache, f);
+        VecAppend(fixCache, isItalicOrMonospace);
         idx = fontCache.len - 1;
     }
     // most documents look good enough with these adjustments

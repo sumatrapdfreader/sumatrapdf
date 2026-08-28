@@ -158,7 +158,7 @@ static void AddFavoriteSilent(MainWindow* win, int pageNo) {
         ScrollState ss = dm->GetScrollState();
         fn->scrollPos = PointF((float)ss.x, (float)ss.y);
     }
-    fs->favorites->Append(fn);
+    VecAppend(*fs->favorites, fn);
 }
 
 // Drive favorites on the already-open document for tests/issue-3744.ts.
@@ -897,7 +897,7 @@ static bool ParseArgList(PacketReader& r, Vec<ControlArg*>* args, bool explicitC
         if (!arg) {
             return !explicitCount;
         }
-        args->Append(arg);
+        VecAppend(*args, arg);
     }
     return true;
 }

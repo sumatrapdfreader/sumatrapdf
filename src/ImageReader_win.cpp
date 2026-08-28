@@ -287,7 +287,7 @@ static Vec<Pixmap*> PixmapsFromWicFrames(Str bmpData) {
             FreePixmap(px);
             break;
         }
-        res.Append(px);
+        VecAppend(res, px);
     }
     return res;
 }
@@ -315,7 +315,7 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
                 FreePixmap(px);
                 break;
             }
-            res.Append(px);
+            VecAppend(res, px);
         }
     }
     delete bmp;
@@ -373,7 +373,7 @@ Vec<Pixmap*> PixmapsFromData(Str bmpData) {
     Vec<Pixmap*> res;
     Pixmap* px = PixmapFromData(bmpData);
     if (px) {
-        res.Append(px);
+        VecAppend(res, px);
     }
     return res;
 }

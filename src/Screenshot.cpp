@@ -325,7 +325,7 @@ void SetHotkeyWnd::DoSet(VirtMouseEvent*) {
         sc->toolbarText = {};
         sc->toolbarSvgIcon = {};
         sc->cmdId = 0;
-        gSettings->shortcuts->Append(sc);
+        VecAppend(*gSettings->shortcuts, sc);
     }
     SaveSettings();
 

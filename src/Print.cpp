@@ -1558,16 +1558,16 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         } else {
             pr = {(DWORD)dm->CurrentPageNo(), (DWORD)dm->CurrentPageNo()};
         }
-        ranges.Append(pr);
+        VecAppend(ranges, pr);
     } else if (win->CurrentTab()->selectionOnPage && (pdex.Flags & PD_SELECTION)) {
         printSelection = true;
     } else if (!(pdex.Flags & PD_PAGENUMS)) {
         PRINTPAGERANGE pr = {1, (DWORD)nPages};
-        ranges.Append(pr);
+        VecAppend(ranges, pr);
     } else {
         ReportIf(pdex.nPageRanges <= 0);
         for (DWORD i = 0; i < pdex.nPageRanges; i++) {
-            ranges.Append(pdex.lpPageRanges[i]);
+            VecAppend(ranges, pdex.lpPageRanges[i]);
         }
     }
 
@@ -1909,7 +1909,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
         PRINTPAGERANGE pr{};
         if (str::EqI(s, StrL("last"))) {
             pr.nFromPage = pr.nToPage = (DWORD)pageCount;
-            ranges.Append(pr);
+            VecAppend(ranges, pr);
         } else if (!str::IsNull(str::Parse(s, "%d-%d%$", &val, &val2))) {
             int from = val;
             int to = val2;
@@ -1921,13 +1921,13 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             }
             pr.nFromPage = limitValue((DWORD)from, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue((DWORD)to, (DWORD)1, (DWORD)pageCount);
-            ranges.Append(pr);
+            VecAppend(ranges, pr);
         } else if (!str::IsNull(str::Parse(s, "%d%$", &val))) {
             if (val < 0) {
                 val = pageCount + val + 1;
             }
             pr.nFromPage = pr.nToPage = limitValue((DWORD)val, (DWORD)1, (DWORD)pageCount);
-            ranges.Append(pr);
+            VecAppend(ranges, pr);
         } else if (str::EqI(s, StrL("even"))) {
             advanced.range = PrintRangeAdv::Even;
         } else if (str::EqI(s, StrL("odd"))) {
@@ -2025,7 +2025,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
 
     if (len(ranges) == 0) {
         PRINTPAGERANGE pr = {1, (DWORD)pageCount};
-        ranges.Append(pr);
+        VecAppend(ranges, pr);
     }
 }
 

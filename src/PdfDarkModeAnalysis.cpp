@@ -92,7 +92,7 @@ static void dm_analysis_record_image(fz_context* ctx, fz_device* dev, fz_image* 
     } else {
         info.looksLikePhoto = false;
     }
-    d->analysis->images.Append(info);
+    VecAppend(d->analysis->images, info);
 }
 
 static void dm_analysis_fill_path(fz_context* /*ctx*/, fz_device* dev, const fz_path* path, int even_odd, fz_matrix ctm,

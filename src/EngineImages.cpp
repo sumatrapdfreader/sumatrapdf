@@ -204,7 +204,7 @@ fz_context* EngineImages::Ctx() {
     }
     {
         ScopedMutex scope(&threadCtxsLock);
-        threadCtxs.Append({tid, newCtx});
+        VecAppend(threadCtxs, {tid, newCtx});
     }
     return newCtx;
 }
@@ -859,7 +859,7 @@ Vec<IPageElement*> EngineImages::GetElements(int pageNo) {
     pi->imageElement.pageNo = pageNo;
     pi->imageElement.rect = RectF(0, 0, mbox.dx, mbox.dy);
     pi->imageElement.imageID = pageNo;
-    pi->allElements.Append(&pi->imageElement);
+    VecAppend(pi->allElements, &pi->imageElement);
     pi->hasImageElement = true;
     return pi->allElements;
 }
@@ -1199,7 +1199,7 @@ EngineBase* EngineImage::Clone() {
     clone->fileDPI = fileDPI;
     clone->sourceData = str::Dup(sourceData);
     for (Pixmap* px : frames) {
-        clone->frames.Append(ClonePixmap(px));
+        VecAppend(clone->frames, ClonePixmap(px));
     }
     Size fallbackSize;
     if (len(pageInfos) > 0) {
@@ -1295,12 +1295,12 @@ bool EngineImage::FinishLoading(Size fallbackSize) {
     int w = p0 ? p0->width : fallbackSize.dx;
     int h = p0 ? p0->height : fallbackSize.dy;
     pi->mediabox = RectF(0, 0, (float)w, (float)h);
-    pageInfos.Append(pi);
+    VecAppend(pageInfos, pi);
     pi->state = PageInfoState::Known;
 
     // one page per decoded frame (multi-page TIFFs, animated GIFs and ICOs have >1)
     for (int i = 1; i < len(frames); i++) {
-        pageInfos.Append(new ImagePageInfo());
+        VecAppend(pageInfos, new ImagePageInfo());
     }
     pageCount = len(pageInfos);
 
@@ -1901,7 +1901,7 @@ static bool LoadImageDir(EngineImageDir* e, Str dir) {
 
     for (int i = 0; i < nFiles; i++) {
         ImagePageInfo* pi = new ImagePageInfo();
-        e->pageInfos.Append(pi);
+        VecAppend(e->pageInfos, pi);
     }
 
     e->pageCount = nFiles;
@@ -2106,14 +2106,14 @@ void ComicInfoParser::AddBookmark(int imageIdx, Str title) {
     if (!title || imageIdx < 0) {
         return;
     }
-    bookmarkImageIdx.Append(imageIdx);
+    VecAppend(bookmarkImageIdx, imageIdx);
     bookmarkTitles.Append(str::Dup(title));
 }
 
 static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
-    toVisit.Append(root);
+    VecAppend(toVisit, root);
     while (len(toVisit) > 0) {
         const GumboNode* node = VecPop(toVisit);
         if (!node) {
@@ -2182,7 +2182,7 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
         if (children) {
             // push in reverse so children are visited in document order
             for (unsigned int i = children->length; i > 0; i--) {
-                toVisit.Append((const GumboNode*)children->data[i - 1]);
+                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
             }
         }
     }
@@ -2474,8 +2474,8 @@ static TocItem* BuildCbxFolderToc(const Vec<Archive::FileInfo*>& files) {
             folder->isOpenDefault = true;
             folder->id = ++idCounter;
             TocAppendChild(parent, folder);
-            stack.Append(folder);
-            stackNames.Append(parts[k]);
+            VecAppend(stack, folder);
+            VecAppend(stackNames, parts[k]);
         }
 
         TocItem* parent = len(stack) == 0 ? realRoot : VecLast(stack);
@@ -2532,7 +2532,7 @@ bool EngineCbx::FinishLoading() {
         if (IsEngineImageSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseNameTemp(fileName), StrL("."))) {
-            pageFiles.Append(fileInfo);
+            VecAppend(pageFiles, fileInfo);
         }
     }
 
@@ -2590,7 +2590,7 @@ bool EngineCbx::FinishLoading() {
 
     for (int i = 0; i < nFiles; i++) {
         auto* pi = new ImagePageInfo();
-        pageInfos.Append(pi);
+        VecAppend(pageInfos, pi);
     }
     files = std::move(pageFiles);
     pageCount = nFiles;
@@ -2611,7 +2611,7 @@ bool EngineCbx::FinishLoading() {
     if (nBookmarks > 0) {
         Vec<int> order;
         for (int i = 0; i < nBookmarks; i++) {
-            order.Append(i);
+            VecAppend(order, i);
         }
         std::sort(order.begin(), order.end(),
                   [&](int a, int b) { return cip.bookmarkImageIdx[a] < cip.bookmarkImageIdx[b]; });

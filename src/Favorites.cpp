@@ -378,7 +378,7 @@ static void AddOrReplaceFav(Str filePath, int pageNo, Str name, Str pageLabel, P
     } else {
         fn = NewFavorite(pageNo, name, pageLabel);
         fn->scrollPos = scrollPos;
-        fav->favorites->Append(fn);
+        VecAppend(*fav->favorites, fn);
         SortFileFavorites(fav);
     }
 }
@@ -450,7 +450,7 @@ void SetSearchStartFavorite(MainWindow* win) {
         fn = NewFavorite(pageNo, markName, pl);
         fn->isTemporary = true;
         fn->scrollPos = scrollPos;
-        fs->favorites->Append(fn);
+        VecAppend(*fs->favorites, fn);
         SortFileFavorites(fs);
     }
     UpdateFavoritesTreeForAllWindows();
@@ -867,7 +867,7 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
             }
             FavTreeItem* ti = MakeFavTopLevelItem(fs, false);
             if (ti) {
-                res->root->children.Append(ti);
+                VecAppend(res->root->children, ti);
             }
             continue;
         }
@@ -886,9 +886,9 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
                 ti->text = str::Dup(FavReadableNameTemp(fn));
                 ti->parent = parent;
                 ti->favorite = fn;
-                parent->children.Append(ti);
+                VecAppend(parent->children, ti);
             }
-            res->root->children.Append(parent);
+            VecAppend(res->root->children, parent);
             continue;
         }
 
@@ -906,7 +906,7 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
             ti->fileNameOffset = 0;
             ti->fileNameLen = len(baseName);
             ti->isExpanded = false;
-            res->root->children.Append(ti);
+            VecAppend(res->root->children, ti);
         }
     }
     return res;
@@ -1158,7 +1158,7 @@ void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, 
     // expand newly added favorites by default
     FileState* fav = GetFavByFilePath(filePath);
     if (fav && len(*fav->favorites) == 2) {
-        win->expandedFavorites.Append(fav);
+        VecAppend(win->expandedFavorites, fav);
     }
     UpdateFavoritesTreeForAllWindows();
     SaveSettings();
@@ -1223,7 +1223,7 @@ void RememberFavTreeExpansionState(MainWindow* win) {
             FavTreeItem* fti = (FavTreeItem*)ti;
             Favorite* fn = fti->favorite;
             FileState* f = GetByFavorite(fn);
-            win->expandedFavorites.Append(f);
+            VecAppend(win->expandedFavorites, f);
         }
     }
 }

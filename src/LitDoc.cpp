@@ -564,7 +564,7 @@ static bool LitParseHeader(LitFile* lit) {
             if (e.size < 0) {
                 break; // ran off the end of the chunk
             }
-            lit->entries.Append(e);
+            VecAppend(lit->entries, e);
         }
     }
     return len(lit->entries) > 0;
@@ -930,7 +930,7 @@ static bool LitParseManifest(LitFile* lit) {
                     path = str::DupTemp(Str(path.s + 3, len(path) - 3));
                 }
                 item.path = LitNormPathTemp(path);
-                lit->manifest.Append(item);
+                VecAppend(lit->manifest, item);
             }
         }
     }

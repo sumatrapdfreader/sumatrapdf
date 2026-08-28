@@ -310,12 +310,12 @@ bool EngineEbook::ExtractPageAnchors() {
             if (DrawInstrType::Anchor != i->type && DrawInstrType::PageMarkerAnchor != i->type) {
                 continue;
             }
-            anchors.Append(PageAnchor(i, pageNo));
+            VecAppend(anchors, PageAnchor(i, pageNo));
             if (k < 2 && DrawInstrType::PageMarkerAnchor == i->type) {
                 baseAnchor = i;
             }
         }
-        baseAnchors.Append(baseAnchor);
+        VecAppend(baseAnchors, baseAnchor);
     }
 
     ReportIf(len(baseAnchors) != len(*pages));
@@ -465,13 +465,13 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
             case DrawInstrType::String:
                 if (hasCoords && (bbox.x < lastCoord.BR().x || bbox.y > lastCoord.y + (lastCoord.dy * 0.8))) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(len(lineSep));
+                    VecAppendBlanks(coords, len(lineSep));
                     ReportIf(lineSep && !VecLast(coords).IsEmpty());
                 } else if (insertSpace && hasCoords) {
                     int swidth = bbox.x - lastCoord.BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
-                        coords.Append(Rect(bbox.x - swidth, bbox.y, swidth, bbox.dy));
+                        VecAppend(coords, Rect(bbox.x - swidth, bbox.y, swidth, bbox.dy));
                     }
                 }
                 insertSpace = false;
@@ -482,7 +482,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                     if (nCodepoints > 0) {
                         double cwidth = 1.0 * bbox.dx / (double)nCodepoints;
                         for (int k = 0; k < nCodepoints; k++) {
-                            coords.Append(Rect((int)(bbox.x + ((double)k * cwidth)), bbox.y, (int)cwidth, bbox.dy));
+                            VecAppend(coords, Rect((int)(bbox.x + ((double)k * cwidth)), bbox.y, (int)cwidth, bbox.dy));
                         }
                     }
                 }
@@ -490,13 +490,13 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
             case DrawInstrType::RtlString:
                 if (hasCoords && (bbox.BR().x > lastCoord.x || bbox.y > lastCoord.y + (lastCoord.dy * 0.8))) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(len(lineSep));
+                    VecAppendBlanks(coords, len(lineSep));
                     ReportIf(lineSep && !VecLast(coords).IsEmpty());
                 } else if (insertSpace && hasCoords) {
                     int swidth = lastCoord.x - bbox.BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
-                        coords.Append(Rect(bbox.BR().x, bbox.y, swidth, bbox.dy));
+                        VecAppend(coords, Rect(bbox.BR().x, bbox.y, swidth, bbox.dy));
                     }
                 }
                 insertSpace = false;
@@ -507,8 +507,8 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                     if (nCodepoints > 0) {
                         double cwidth = 1.0 * bbox.dx / (double)nCodepoints;
                         for (int k = 0; k < nCodepoints; k++) {
-                            coords.Append(Rect((int)(bbox.x + ((double)(nCodepoints - k - 1) * cwidth)), bbox.y,
-                                               (int)cwidth, bbox.dy));
+                            VecAppend(coords, Rect((int)(bbox.x + ((double)(nCodepoints - k - 1) * cwidth)), bbox.y,
+                                                   (int)cwidth, bbox.dy));
                         }
                     }
                 }
@@ -521,7 +521,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     }
     if (len(content) > 0 && !str::EndsWith(ToStr(content), lineSep)) {
         content.Append(lineSep);
-        coords.AppendBlanks(len(lineSep));
+        VecAppendBlanks(coords, len(lineSep));
     }
     int nCodepoints = Utf8CodepointCount(ToStr(content));
     ReportIf(len(coords) != nCodepoints);
@@ -530,7 +530,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     res.len = len(content);
     res.nCodepoints = nCodepoints;
     res.text = content.TakeStr();
-    res.coords = coords.Take();
+    res.coords = VecTake(coords);
     return res;
 }
 
@@ -570,11 +570,11 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
         if (DrawInstrType::Image == i.type) {
             auto box = GetInstrBbox(i, pageBorder);
             auto el = NewImageDataElement(pageNo, box, idx);
-            els.Append(el);
+            VecAppend(els, el);
         } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmpty()) {
             IPageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
             if (link) {
-                els.Append(link);
+                VecAppend(els, link);
             }
         }
     }
@@ -708,7 +708,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
             if (DrawInstrType::SetFont != i.type || VecContains(seenFonts, i.font)) {
                 continue;
             }
-            seenFonts.Append(i.font);
+            VecAppend(seenFonts, i.font);
 
 #if OS_WIN
             PlatformFont* font = i.font;
@@ -1381,7 +1381,7 @@ class ChmDataCache {
         data.base = str::Dup(tmp);
 
         data.fileName = str::Dup(url);
-        images.Append(data);
+        VecAppend(images, data);
         return VecLast(images).base;
     }
 
@@ -1437,7 +1437,7 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
         RectF bbox(0, currY, pageDx, 0);
         // attr->val is owned by the gumbo parse tree which doesn't outlive
         // the formatter, so copy it into textAllocator
-        currPage->instructions.Append(DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
+        VecAppend(currPage->instructions, DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
         str::ReplaceWithCopy(&pagePath, attr->val);
         // reset CSS style rules for the new document
         VecReset(styleRules);
@@ -1551,7 +1551,7 @@ static uint HttpCharsetFromMetaNode(const GumboNode* node) {
 static uint FindHttpCharsetInNode(const GumboNode* node) {
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
-    toVisit.Append(node);
+    VecAppend(toVisit, node);
     while (len(toVisit) > 0) {
         const GumboNode* n = VecPop(toVisit);
         if (!n) {
@@ -1570,7 +1570,7 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
         if (children) {
             // push in reverse so children are visited in document order
             for (unsigned int i = children->length; i > 0; i--) {
-                toVisit.Append((const GumboNode*)children->data[i - 1]);
+                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
             }
         }
     }

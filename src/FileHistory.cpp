@@ -55,7 +55,7 @@ void FileHistorySetStates(Vec<FileState*>* states) {
 
 void FileHistoryAppend(FileState* fs) {
     ReportIf(!fs->filePath);
-    gStates->Append(fs);
+    VecAppend(*gStates, fs);
 }
 
 // the home page layout cache holds raw FileState* from this list, so it has to
@@ -75,7 +75,7 @@ void FileHistoryClear(bool keepFavorites) {
     for (int i = 0; i < len(*gStates); i++) {
         if (keepFavorites && len(*(*gStates)[i]->favorites) > 0) {
             (*gStates)[i]->openCount = 0;
-            keep.Append((*gStates)[i]);
+            VecAppend(keep, (*gStates)[i]);
         } else {
             DeleteFileState((*gStates)[i]);
         }
@@ -125,7 +125,7 @@ bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
     if (!state) {
         // keep a record so IsMissing can be persisted in settings (fixes #5585)
         state = NewFileState(filePath);
-        gStates->Append(state);
+        VecAppend(*gStates, state);
     }
     // move the file history entry to the end of the list
     // of recently opened documents (if it exists at all),
@@ -137,7 +137,7 @@ bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
     if (idx < newIdx && state != VecLast(*gStates)) {
         VecRemove(*gStates, state);
         if (len(*gStates) <= newIdx) {
-            gStates->Append(state);
+            VecAppend(*gStates, state);
         } else {
             VecInsertAt(*gStates, newIdx, state);
         }
@@ -180,7 +180,7 @@ static void GetSortedStates(Vec<FileState*>& list, VecSortCmp<FileState*>::Fn cm
     for (FileState* ds : *gStates) {
         ds->index = i++;
         if (!ds->isMissing || ds->isPinned) {
-            list.Append(ds);
+            VecAppend(list, ds);
         }
     }
     VecSort(list, cmp);

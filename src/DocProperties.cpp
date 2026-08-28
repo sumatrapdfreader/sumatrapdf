@@ -108,7 +108,7 @@ void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists) {
     int idx = GetPropIdx(props, prop);
     if (idx < 0) {
         // doesn't exsit
-        props.Append({prop, val});
+        VecAppend(props, {prop, val});
         return;
     }
     if (!replaceIfExists) {
@@ -129,7 +129,7 @@ void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists) {
     }
     Str owned = str::Dup(val);
     if (idx < 0) {
-        props.Append({prop, owned});
+        VecAppend(props, {prop, owned});
         return;
     }
     str::Free(props[idx].val);

@@ -177,7 +177,7 @@ static void LoadAnnotations(AnnotFilterToolbar* f) {
 }
 
 static Annotation* VisibleAnnotAt(AnnotFilterToolbar* f, int idx) {
-    if (!f || !f->visibleAnnots.isValidIndex(idx)) {
+    if (!f || !VecIsValidIndex(f->visibleAnnots, idx)) {
         return nullptr;
     }
     return f->visibleAnnots[idx];
@@ -258,7 +258,7 @@ static void RebuildList(AnnotFilterToolbar* f) {
             active->GetSelectedIndices(idxs);
             for (int i : idxs) {
                 if (Annotation* a = VisibleAnnotAt(f, i)) {
-                    keepSel.Append(a);
+                    VecAppend(keepSel, a);
                 }
             }
         }
@@ -266,7 +266,7 @@ static void RebuildList(AnnotFilterToolbar* f) {
     VecReset(f->visibleAnnots);
     for (Annotation* annot : f->annotations) {
         if (AnnotMatchesFilter(annot, f->filterWords)) {
-            f->visibleAnnots.Append(annot);
+            VecAppend(f->visibleAnnots, annot);
         }
     }
     ApplyVisibleToList(f, f->listBox, caret, keepSel, prevScrollY);
@@ -828,18 +828,18 @@ static void DeleteFloatSelected(AnnotFilterWindow* w) {
     if (len(idxs) == 0) {
         int idx = w->listBox->GetCurrentSelection();
         if (idx >= 0) {
-            idxs.Append(idx);
+            VecAppend(idxs, idx);
         }
     }
     Vec<Annotation*> toDelete;
     for (int idx : idxs) {
         if (Annotation* a = VisibleAnnotAt(f, idx)) {
-            toDelete.Append(a);
+            VecAppend(toDelete, a);
         }
     }
     if (len(toDelete) == 0) {
         if (tab->selectedAnnotation) {
-            toDelete.Append(tab->selectedAnnotation);
+            VecAppend(toDelete, tab->selectedAnnotation);
         }
     }
     if (len(toDelete) == 0) {

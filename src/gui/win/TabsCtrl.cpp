@@ -401,7 +401,7 @@ void TabsCtrl::RebuildTabCtrls() {
         auto* w = new TabCtrl();
         w->tabsCtrl = this;
         w->ti = tabs[i];
-        tabCtrls.Append(w);
+        VecAppend(tabCtrls, w);
         AddChild(w);
     }
 }
@@ -996,7 +996,7 @@ HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
     vroot = new VirtRoot(hwnd);
     // non-owning top: MainWindow owns TabsCtrl, TabsCtrl owns vroot
     Vec<VirtCtrl*> tops;
-    tops.Append(this);
+    VecAppend(tops, this);
     vroot->SetTops(tops);
     return hwnd;
 }

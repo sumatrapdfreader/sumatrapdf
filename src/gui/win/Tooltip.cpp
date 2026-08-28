@@ -262,7 +262,7 @@ int Tooltip::Add(Str s, const Rect& rc, bool multiline) {
     }
     bool isRtl = IsTextRtl(ws);
     HwndSetRtl(hwnd, isRtl);
-    tooltipIds.Append(id);
+    VecAppend(tooltipIds, id);
     return id;
 }
 

@@ -72,7 +72,7 @@ static void FinalizeTileSkipRects(Vec<Rect>& skipRects, Size bmpSize) {
     }
     Rect keep = skipRects[bestIdx];
     VecClear(skipRects);
-    skipRects.Append(keep);
+    VecAppend(skipRects, keep);
 }
 
 // RenderCache's verbose per-operation logging (FreePage / Paint / DropCacheEntry
@@ -960,7 +960,7 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm, Str* whyNot) {
         // same subdivision Paint() uses, so we only look at tiles that
         // actually show — at 1000000% a full 2^res grid would be millions
         Vec<TilePosition> queue;
-        queue.Append(TilePosition(0, 0, 0));
+        VecAppend(queue, TilePosition(0, 0, 0));
         bool sawTarget = false;
         while (len(queue) > 0) {
             TilePosition tile = VecPopAt(queue, 0);
@@ -982,11 +982,13 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm, Str* whyNot) {
             if (tile.res >= targetRes) {
                 continue;
             }
-            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2), (USHORT)(tile.col * 2)));
-            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2), (USHORT)((tile.col * 2) + 1)));
-            queue.Append(TilePosition((USHORT)(tile.res + 1), (USHORT)((tile.row * 2) + 1), (USHORT)(tile.col * 2)));
-            queue.Append(
-                TilePosition((USHORT)(tile.res + 1), (USHORT)((tile.row * 2) + 1), (USHORT)((tile.col * 2) + 1)));
+            VecAppend(queue, TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2), (USHORT)(tile.col * 2)));
+            VecAppend(queue,
+                      TilePosition((USHORT)(tile.res + 1), (USHORT)(tile.row * 2), (USHORT)((tile.col * 2) + 1)));
+            VecAppend(queue,
+                      TilePosition((USHORT)(tile.res + 1), (USHORT)((tile.row * 2) + 1), (USHORT)(tile.col * 2)));
+            VecAppend(queue,
+                      TilePosition((USHORT)(tile.res + 1), (USHORT)((tile.row * 2) + 1), (USHORT)((tile.col * 2) + 1)));
         }
         if (!sawTarget) {
             return no(fmt("p%d no-tile-at-res=%d", pageNo, (int)targetRes));
@@ -1300,7 +1302,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
     maxRes = std::max(maxRes, targetRes);
 
     Vec<TilePosition> queue;
-    queue.Append(TilePosition(0, 0, 0));
+    VecAppend(queue, TilePosition(0, 0, 0));
     int renderDelayMin = kRenderDelayUndefined;
     bool neededScaling = false;
 
@@ -1322,10 +1324,10 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         int renderDelay = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, isTargetRes, renderOutOfDateCue,
                                     isTargetRes ? &neededScaling : nullptr);
         if (!(isTargetRes && 0 == renderDelay) && tile.res < maxRes) {
-            queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2));
-            queue.Append(TilePosition(tile.res + 1, tile.row * 2, (tile.col * 2) + 1));
-            queue.Append(TilePosition(tile.res + 1, (tile.row * 2) + 1, tile.col * 2));
-            queue.Append(TilePosition(tile.res + 1, (tile.row * 2) + 1, (tile.col * 2) + 1));
+            VecAppend(queue, TilePosition(tile.res + 1, tile.row * 2, tile.col * 2));
+            VecAppend(queue, TilePosition(tile.res + 1, tile.row * 2, (tile.col * 2) + 1));
+            VecAppend(queue, TilePosition(tile.res + 1, (tile.row * 2) + 1, tile.col * 2));
+            VecAppend(queue, TilePosition(tile.res + 1, (tile.row * 2) + 1, (tile.col * 2) + 1));
         }
         if (isTargetRes && renderDelay != 0) {
             neededScaling = true;

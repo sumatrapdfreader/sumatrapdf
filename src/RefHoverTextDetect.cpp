@@ -161,12 +161,12 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         if (isSpace) {
             if (!lastWasSpace) {
                 chunk.AppendChar(L' ');
-                chunkGlyphs.Append(-1);
+                VecAppend(chunkGlyphs, -1);
                 lastWasSpace = true;
             }
         } else {
             chunk.AppendChar(c);
-            chunkGlyphs.Append(i);
+            VecAppend(chunkGlyphs, i);
             lastWasSpace = false;
         }
         prevY = r.y;

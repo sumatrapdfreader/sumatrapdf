@@ -1120,7 +1120,7 @@ void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind kind, Str text, int token
     op.kind = kind;
     op.text = str::Dup(text ? text : StrL(""));
     op.token = token;
-    pendingOps.Append(op);
+    VecAppend(pendingOps, op);
 }
 
 void WebviewWnd::FlushPendingOps() {
@@ -1439,7 +1439,7 @@ void WebviewWnd::AddInitScriptWithToken(Str js, int token) {
     }
     WebViewInitScript script;
     script.token = token;
-    initScripts.Append(script);
+    VecAppend(initScripts, script);
 
     WCHAR* ws = CWStrTemp(js);
     auto* handler = new webview2_add_script_handler(hwnd, token);
@@ -1647,7 +1647,7 @@ void WebviewWnd::Bind(Str name) {
             return;
         }
     }
-    boundNames.Append(str::Dup(name));
+    VecAppend(boundNames, str::Dup(name));
     RebuildBindScript();
     // also expose it in the document that's already loaded
     Eval(fmt("if (window.__sumatra__) window.__sumatra__.onBind(\"%s\");", json::EscapeStrTemp(name)));
@@ -1774,7 +1774,7 @@ void WebviewWnd::ShowFindUI() {
 
 static BOOL CALLBACK CollectChildHwnds(HWND hwnd, LPARAM lp) {
     auto* hwnds = (Vec<HWND>*)lp;
-    hwnds->Append(hwnd);
+    VecAppend(*hwnds, hwnd);
     return TRUE;
 }
 
@@ -1786,7 +1786,7 @@ static void RegisterDropOn(HWND hwnd, IDropTarget* target, Vec<HWND>& registered
     }
     RevokeDragDrop(hwnd);
     if (SUCCEEDED(RegisterDragDrop(hwnd, target))) {
-        registered.Append(hwnd);
+        VecAppend(registered, hwnd);
     }
 }
 
@@ -1807,7 +1807,7 @@ void WebviewWnd::RegisterForwardingDropTarget() {
         dropTarget = new ForwardingDropTarget(parent);
     }
     Vec<HWND> wnds;
-    wnds.Append(hwnd);
+    VecAppend(wnds, hwnd);
     EnumChildWindows(hwnd, CollectChildHwnds, (LPARAM)&wnds);
     for (HWND h : wnds) {
         RegisterDropOn(h, dropTarget, dropTargetHwnds);
@@ -2061,7 +2061,7 @@ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
         gEnvCreateAttempts = 0;
     }
 
-    gPendingWebviews.Append(this);
+    VecAppend(gPendingWebviews, this);
 
     if (gSharedEnvState == SharedWebViewEnvState::NotStarted) {
         gSharedEnvState = SharedWebViewEnvState::Creating;

@@ -177,7 +177,7 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
         RectF bbox(0, currY, pageDx, 0);
         // attr->val is owned by the gumbo parse tree which doesn't outlive
         // the formatter, so copy it into textAllocator
-        currPage->instructions.Append(DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
+        VecAppend(currPage->instructions, DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
         str::ReplaceWithCopy(&pagePath, attr->val);
         // reset CSS style rules for the new document
         VecReset(styleRules);
@@ -309,7 +309,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         if (!isSubtitle && t->IsStartTag()) {
             // the anchor must outlive the formatter, so not a TempStr
             Str link = str::Dup(textAllocator, fmt(kFb2TocEntryMark "%d", ++titleCount));
-            currPage->instructions.Append(DrawInstr::Anchor(link, RectF(0, currY, pageDx, 0)));
+            VecAppend(currPage->instructions, DrawInstr::Anchor(link, RectF(0, currY, pageDx, 0)));
         }
     } else if (Tag_Section == t->tag) {
         if (t->IsStartTag()) {

@@ -95,10 +95,10 @@ static bool ExtractSignature(Str hexSignature, Str& data, ScopedMem<BYTE>& signa
         if (1 != sscanf_s(hex.s + off, "%02x", &val)) {
             return false;
         }
-        signatureBytes.Append((BYTE)val);
+        VecAppend(signatureBytes, (BYTE)val);
     }
     signatureLen = len(signatureBytes);
-    signature.Set(signatureBytes.Take());
+    signature.Set(VecTake(signatureBytes));
     return true;
 }
 

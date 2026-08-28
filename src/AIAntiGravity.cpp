@@ -174,7 +174,7 @@ static void CollectAntiGravitySessionsFromDir(Str projectDir, Str dir, Vec<AICha
         si.display = desc;
         si.project = str::Dup(dir);
         si.timestamp = AIChatFileTimeToMs(de->modificationTime);
-        sessions.Append(si);
+        VecAppend(sessions, si);
     }
 }
 

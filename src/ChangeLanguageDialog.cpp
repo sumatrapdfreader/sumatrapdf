@@ -70,7 +70,7 @@ void ChangeLanguageWnd::FilterList() {
         if (str::Eq(trans::GetLangCodeByIdxTemp(i), currLangCode)) {
             itemToSelect = len(langIdxByListIdx);
         }
-        langIdxByListIdx.Append(i);
+        VecAppend(langIdxByListIdx, i);
     }
     listBox->SetModel(model);
     if (len(langIdxByListIdx) > 0) {

@@ -515,10 +515,10 @@ static void Start(StressTest* st, TestFileProvider* fileProvider, int cycles) {
     st->cycles = cycles;
 
     if (len(st->pageRanges) == 0) {
-        st->pageRanges.Append(PageRange());
+        VecAppend(st->pageRanges, PageRange());
     }
     if (len(st->fileRanges) == 0) {
-        st->fileRanges.Append(PageRange());
+        VecAppend(st->fileRanges, PageRange());
     }
 
     TickTimer(st);
@@ -640,21 +640,21 @@ static bool OpenFile(StressTest* st, Str fileName) {
     if (IsFullRange(st->pageRanges)) {
         Vec<int> allPages;
         for (int n = 1; n <= nPages; n++) {
-            allPages.Append(n);
+            VecAppend(allPages, n);
         }
         while ((len(st->pagesToRender) < kStressTestMaxPagesPerFile) && (len(allPages) > 0)) {
             int nRandom = RemoveRandomElementFromVec(allPages);
-            st->pagesToRender.Append(nRandom);
+            VecAppend(st->pagesToRender, nRandom);
         }
     } else {
         for (int n = 1; n <= nPages; n++) {
             if (IsInRange(st->pageRanges, n)) {
-                st->pagesToRender.Append(n);
+                VecAppend(st->pagesToRender, n);
             }
         }
         for (auto&& range : st->pageRanges) {
             for (int n = range.start; n <= range.end && n <= nPages; n++) {
-                st->pagesToRender.Append(n);
+                VecAppend(st->pagesToRender, n);
             }
         }
         if (len(st->pagesToRender) == 0) {

@@ -654,7 +654,7 @@ static bool HandlePolyLineClick(MainWindow* win, Point pt) {
     if (!started) {
         p.pageNo = pageNo;
     }
-    p.points.Append(dm->CvtFromScreen(pt, pageNo));
+    VecAppend(p.points, dm->CvtFromScreen(pt, pageNo));
     p.end = pt;
     ScheduleRepaint(win, 0);
     return true;
@@ -729,7 +729,7 @@ static bool AppendInkPoint(MainWindow* win, DisplayModel* dm, Point pt) {
             return false;
         }
     }
-    p.points.Append(dm->CvtFromScreen(pt, pageNo));
+    VecAppend(p.points, dm->CvtFromScreen(pt, pageNo));
     VecLast(p.strokeCounts)++;
     HwndInvalidate(win->hwndCanvas);
     return true;
@@ -754,7 +754,7 @@ static bool HandleInkDown(MainWindow* win, Point pt) {
     if (!started) {
         p.pageNo = pageNo;
     }
-    p.strokeCounts.Append(0);
+    VecAppend(p.strokeCounts, 0);
     p.mouseDown = true;
     AppendInkPoint(win, dm, pt);
     SetCapture(win->hwndCanvas);

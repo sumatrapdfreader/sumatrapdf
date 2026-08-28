@@ -98,7 +98,7 @@ static Graphics* AllocGraphicsForMeasureTextNoLock() {
     }
     GraphicsCacheEntry ce;
     ce.Create();
-    gGraphicsCache->Append(ce);
+    VecAppend(*gGraphicsCache, ce);
     if (len(*gGraphicsCache) < 64) {
         return ce.gfx;
     }

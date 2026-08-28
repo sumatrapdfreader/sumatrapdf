@@ -131,11 +131,11 @@ bool ParsePageRanges(Str ranges, Vec<PageRange>& result) {
     for (Str rangeStr : rangeList) {
         int start, end;
         if (!str::IsNull(str::Parse(rangeStr, "%d-%d%$", &start, &end)) && 0 < start && start <= end) {
-            result.Append(PageRange{start, end});
+            VecAppend(result, PageRange{start, end});
         } else if (!str::IsNull(str::Parse(rangeStr, "%d-%$", &start)) && 0 < start) {
-            result.Append(PageRange{start, INT_MAX});
+            VecAppend(result, PageRange{start, INT_MAX});
         } else if (!str::IsNull(str::Parse(rangeStr, "%d%$", &start)) && 0 < start) {
-            result.Append(PageRange{start, start});
+            VecAppend(result, PageRange{start, start});
         } else {
             return false;
         }

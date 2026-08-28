@@ -250,7 +250,7 @@ void BrowserFindAllResultReceived(MainWindow* win, Str payload) {
         fm.endPage = page;
         fm.endGlyph = idx;
         fm.snippet = str::Dup(snippet);
-        win->findMatches.Append(fm);
+        VecAppend(win->findMatches, fm);
     }
     win->browserFindTotal = total;
     win->findCountHasSnippets = true;
@@ -1236,7 +1236,7 @@ static void CountPartialTask(CountPartialTaskData* d) {
             ClearFindMatches(win);
         }
         for (int i = 0; i < len(*d->matches); i++) {
-            win->findMatches.Append((*d->matches)[i]);
+            VecAppend(win->findMatches, (*d->matches)[i]);
             (*d->matches)[i].snippet = Str(); // transferred to win->findMatches
         }
         VecSort(win->findMatches, CmpFindMatchByPos);
@@ -1253,7 +1253,7 @@ static Vec<FindMatch>* CloneMatchesRange(Vec<FindMatch>* matches, int from, int 
     for (int i = from; i < to; i++) {
         FindMatch fm = (*matches)[i];
         fm.snippet = str::Dup(fm.snippet);
-        res->Append(fm);
+        VecAppend(*res, fm);
     }
     return res;
 }
@@ -1300,7 +1300,7 @@ static void CountThread(CountThreadData* d) {
                 capped = true;
                 break;
             }
-            positions->Append(MatchKey(ts.startPage, ts.startGlyph));
+            VecAppend(*positions, MatchKey(ts.startPage, ts.startGlyph));
             d->nFoundSoFar = len(*positions); // read by CountProgress
             if (matches && len(*matches) < kMaxFindResults) {
                 FindMatch fm;
@@ -1311,7 +1311,7 @@ static void CountThread(CountThreadData* d) {
                 if (d->wantSnippets) {
                     str::ReplaceWithCopy(&fm.snippet, BuildSnippet(engine, fm));
                 }
-                matches->Append(fm);
+                VecAppend(*matches, fm);
             }
             // stream partial results so a slow scan (common word, big doc)
             // shows results and a running count early; the final full list is
@@ -1863,7 +1863,7 @@ static void AppendMatchPageRects(EngineBase* engine, const FindMatch& fm, Vec<Fi
         FindMatchPaintPageRect pr;
         pr.pageNo = ts.result.pages[i];
         pr.rect = ts.result.rects[i];
-        out.Append(pr);
+        VecAppend(out, pr);
     }
 }
 
@@ -1877,7 +1877,7 @@ static void AppendPageRectsToScreen(DisplayModel* dm, const Rect& clipRc, const 
         Rect rc = dm->CvtToScreen(pr.pageNo, ToRectF(pr.rect));
         rc = rc.Intersect(clipRc);
         if (!rc.IsEmpty()) {
-            out.Append(rc);
+            VecAppend(out, rc);
         }
     }
 }
@@ -1908,7 +1908,7 @@ static void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int fi
         entry.key = MatchKey(fm.startPage, fm.startGlyph);
         entry.firstPos = firstPos;
         entry.len = n;
-        gFindMatchPaintCache.entries.Append(entry);
+        VecAppend(gFindMatchPaintCache.entries, entry);
     }
 }
 
@@ -1924,7 +1924,7 @@ static void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, TextS
         Rect rc = dm->CvtToScreen(pageNo, ToRectF(sel->rects[i]));
         rc = rc.Intersect(clipRc);
         if (!rc.IsEmpty()) {
-            out.Append(rc);
+            VecAppend(out, rc);
         }
     }
 }
@@ -2049,7 +2049,7 @@ void PaintForwardSearchMark(MainWindow* win, Gfx* gfx) {
             rect.y -= 4;
             rect.dy += 8;
         }
-        rects.Append(rect);
+        VecAppend(rects, rect);
     }
 
     u8 alpha =
@@ -2260,7 +2260,7 @@ void ShowLinkDestHighlight(MainWindow* win, int pageNo, RectF dest) {
     if (!LinkDestHighlightRect(dm, pageNo, dest, &hl)) {
         return;
     }
-    win->fwdSearchMark.rects.Append(hl);
+    VecAppend(win->fwdSearchMark.rects, hl);
     win->fwdSearchMark.page = pageNo;
     win->fwdSearchMark.show = true;
     win->fwdSearchMark.hideStep = 0;

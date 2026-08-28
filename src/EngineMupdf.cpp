@@ -883,7 +883,7 @@ static bool HasSeenGlyph(const Vec<SeenGlyph>& seen, int rune, const RectF& r) {
 }
 
 static void AddSeenGlyph(Vec<SeenGlyph>& seen, int rune, const RectF& r) {
-    seen.Append({rune, r});
+    VecAppend(seen, {rune, r});
 }
 
 // True Unicode scalar (not surrogate, not out of range). fz_runetochar will still
@@ -955,7 +955,7 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
     // that produces illegal UTF-8 that Utf8CodepointCount splits into multiple units.
     if (!IsUnicodeScalar(rune) || (isNonPrintable && !isWhitespace)) {
         s.AppendChar('?');
-        rects.Append(r);
+        VecAppend(rects, r);
         AddSeenGlyph(seen, rune, rf);
         return;
     }
@@ -966,7 +966,7 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
             return;
         }
         s.AppendChar(' ');
-        rects.Append(r);
+        VecAppend(rects, r);
         AddSeenGlyph(seen, rune, rf);
         return;
     }
@@ -976,7 +976,7 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
     if (n <= 0 || !s.Append(Str(buf, n))) {
         return;
     }
-    rects.Append(r);
+    VecAppend(rects, r);
     AddSeenGlyph(seen, rune, rf);
 }
 
@@ -992,7 +992,7 @@ static void AddLineSepUtf8(str::Builder& s, Vec<Rect>& rects, Str lineSep) {
     }
     s.Append(lineSep);
     for (size_t i = 0; i < lineSepLen; i++) {
-        rects.Append(Rect());
+        VecAppend(rects, Rect());
     }
 }
 
@@ -1165,7 +1165,7 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
 
     if (coordsOut) {
         if (len(rects) > 0) {
-            *coordsOut = rects.Take();
+            *coordsOut = VecTake(rects);
         } else {
             *coordsOut = nullptr;
         }
@@ -1388,7 +1388,7 @@ static int LinkifyMultilineText(LinkRectList* list, Utf8PageText pageText, int s
         Str part = SliceByRuneOff(pageText, nextOff, endOff);
         uri = str::JoinTemp(uri, part);
         Rect bbox = coords[nextOff].Union(coords[endOff - 1]);
-        list->coords.Append(ToFzRect(ToRectF(bbox)));
+        VecAppend(list->coords, ToFzRect(ToRectF(bbox)));
 
         nextOff = endOff + 1;
     } while (multiline);
@@ -1541,7 +1541,7 @@ static LinkRectList* LinkifyText(Utf8PageText pageText, Rect* coords) {
         }
         list->links.Append(uri);
         Rect bbox = coords[startOff].Union(coords[endOff - 1]);
-        list->coords.Append(ToFzRect(ToRectF(bbox)));
+        VecAppend(list->coords, ToFzRect(ToRectF(bbox)));
         if (multiline) {
             endOff = LinkifyMultilineText(list, pageText, startOff, endOff + 1, coords);
         }
@@ -1892,19 +1892,19 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
 
     for (auto* pel : pageInfo->links) {
         if (pel->GetRect().Contains(pt)) {
-            res.Append(pel);
+            VecAppend(res, pel);
         }
     }
 
     for (auto* pel : pageInfo->autoLinks) {
         if (pel->GetRect().Contains(pt)) {
-            res.Append(pel);
+            VecAppend(res, pel);
         }
     }
 
     for (auto* pel : pageInfo->comments) {
         if (pel->GetRect().Contains(pt)) {
-            res.Append(pel);
+            VecAppend(res, pel);
         }
     }
 
@@ -1912,7 +1912,7 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
     for (auto& img : pageInfo->images) {
         fz_rect ir = img->rect;
         if (IsPointInRect(ir, p)) {
-            res.Append(img->imageElement);
+            VecAppend(res, img->imageElement);
         }
     }
     return PickBestElement(res);
@@ -1932,16 +1932,16 @@ static void BuildElementsInfo(FzPageInfo* pageInfo) {
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
     for (auto& img : pageInfo->images) {
-        els.Append(img->imageElement);
+        VecAppend(els, img->imageElement);
     }
     for (auto& pel : pageInfo->links) {
-        els.Append(pel);
+        VecAppend(els, pel);
     }
     for (auto& pel : pageInfo->autoLinks) {
-        els.Append(pel);
+        VecAppend(els, pel);
     }
     for (auto& comment : pageInfo->comments) {
-        els.Append(comment);
+        VecAppend(els, comment);
     }
     VecReverse(els);
 }
@@ -1986,7 +1986,7 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         auto* dest = new PageDestinationURL(uri);
         auto* pel = new PageElementDestination(dest);
         pel->rect = ToRectF(bbox);
-        pageInfo->autoLinks.Append(pel);
+        VecAppend(pageInfo->autoLinks, pel);
     }
     delete list;
     free(coords);
@@ -2015,7 +2015,7 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageI
             pel->rect = ToRectF(block->bbox);
             pel->imageID = len(images);
             img->imageElement = pel;
-            images.Append(img);
+            VecAppend(images, img);
         }
         block = block->next;
     }
@@ -2088,7 +2088,7 @@ static void FzAppendPageImageRect(fz_context* ctx, Vec<FitzPageImageInfo*>& imag
     pel->rect = rf;
     pel->imageID = len(images);
     img->imageElement = pel;
-    images.Append(img);
+    VecAppend(images, img);
 }
 
 // A pass-through-free device that records the page rects of drawn images,
@@ -2735,7 +2735,7 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
         auto* pel = new PageElementDestination(dest);
         pel->pageNo = pageNo;
         pel->rect = dest->rect;
-        links.Append(pel);
+        VecAppend(links, pel);
     }
 }
 
@@ -2975,7 +2975,7 @@ static void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec
         // BuildPageLabelVec computes countFrom + j for j < pageCount: keep the
         // sum representable for an attacker-controlled /St near INT_MAX
         pli.countFrom = limitValue(pli.countFrom, 1, INT_MAX - pageCount);
-        data.Append(pli);
+        VecAppend(data, pli);
     }
 }
 
@@ -3141,7 +3141,7 @@ static fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* c
     {
         ScopedMutex cs(&gPerThreadContextsCs);
         ContextThreadID el{engine, newCtx, threadID};
-        gPerThreadContexts->Append(el);
+        VecAppend(*gPerThreadContexts, el);
     }
     return newCtx;
 }
@@ -3174,7 +3174,7 @@ static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
         for (int i = len(*gPerThreadContexts) - 1; i >= 0; i--) {
             auto& el = (*gPerThreadContexts)[i];
             if (el.engine == engine) {
-                ctxsToDrop.Append(el.ctx);
+                VecAppend(ctxsToDrop, el.ctx);
                 VecRemoveAtFast(*gPerThreadContexts, i);
             }
         }
@@ -3761,21 +3761,21 @@ bool EngineMupdf_UnitTestEbookMarginCss() {
     if (EbookMarginCssTemp(nullptr, 96) || EbookMarginCssTemp(&m, 96)) {
         return false;
     }
-    m.Append(1);
-    m.Append(2);
-    m.Append(3);
+    VecAppend(m, 1);
+    VecAppend(m, 2);
+    VecAppend(m, 3);
     if (EbookMarginCssTemp(&m, 96)) {
         return false;
     }
     // 0 is a real value: no margin at all
     VecReset(m);
-    m.Append(0);
+    VecAppend(m, 0);
     if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 0pt !important; }\n"))) {
         return false;
     }
     // one value for all four sides, and points, so it scales with the display
     VecReset(m);
-    m.Append(24);
+    VecAppend(m, 24);
     if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 24pt !important; }\n"))) {
         return false;
     }
@@ -3784,27 +3784,27 @@ bool EngineMupdf_UnitTestEbookMarginCss() {
     }
     // two and four values pass through in CSS order
     VecReset(m);
-    m.Append(36);
-    m.Append(24);
+    VecAppend(m, 36);
+    VecAppend(m, 24);
     if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 36pt 24pt !important; }\n"))) {
         return false;
     }
     VecReset(m);
-    m.Append(1);
-    m.Append(2);
-    m.Append(3);
-    m.Append(4);
+    VecAppend(m, 1);
+    VecAppend(m, 2);
+    VecAppend(m, 3);
+    VecAppend(m, 4);
     if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 1pt 2pt 3pt 4pt !important; }\n"))) {
         return false;
     }
     // out of range is ignored rather than clamped
     VecReset(m);
-    m.Append(-1);
+    VecAppend(m, -1);
     if (EbookMarginCssTemp(&m, 96)) {
         return false;
     }
     VecReset(m);
-    m.Append(200.1f);
+    VecAppend(m, 200.1f);
     return !EbookMarginCssTemp(&m, 96);
 }
 
@@ -3813,7 +3813,7 @@ bool EngineMupdf_UnitTestMergeEBookUI() {
     g.fontName = StrL("Georgia");
     g.fontSize = 10;
     Vec<float> gMargin;
-    gMargin.Append(24);
+    VecAppend(gMargin, 24);
     g.margin = &gMargin;
     g.lineSpacing = 1.5f;
     g.layoutDx = 400;
@@ -3838,7 +3838,7 @@ bool EngineMupdf_UnitTestMergeEBookUI() {
     f.fontName = StrL("Segoe UI");
     f.fontSize = 14;
     Vec<float> fMargin; // this document has no margin at all, the global one has 24pt
-    fMargin.Append(0);
+    VecAppend(fMargin, 0);
     f.margin = &fMargin;
     f.ignoreDocumentCSS = StrL("false");
     s = MergeEBookUI(&g, &f);
@@ -4382,7 +4382,7 @@ bool EngineMupdf::FinishLoading() {
 
     for (int i = 0; i < pageCount; i++) {
         auto* pi = New<FzPageInfo>(arena);
-        pages.Append(pi);
+        VecAppend(pages, pi);
     }
     if (!pdfdoc) {
         FinishNonPDFLoading(this);
@@ -4810,7 +4810,7 @@ static TocItem* GenerateTocFromHeadings(EngineMupdf* e, int& idCounter) {
         } else {
             AppendTocChild(stack[len(stack) - 1], node);
         }
-        stack.Append(node);
+        VecAppend(stack, node);
     };
 
     auto walkBlocks = [&](auto& self, fz_stext_block* block, int pageNo) -> void {
@@ -5315,7 +5315,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
         el->pageNo = pageNo;
         el->rect = ToRectF(rect);
 
-        comments.Append(el);
+        VecAppend(comments, el);
         // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
         // for saving the attachment to a file
         // TODO: expose /Contents in addition to the file path
@@ -5334,14 +5334,14 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
         if (fz_is_empty_rect(rect)) {
             return;
         }
-        comments.Append(NewFzComment(tu, pageNo, ToRectF(rect)));
+        VecAppend(comments, NewFzComment(tu, pageNo, ToRectF(rect)));
         return;
     }
 
     if (tp == PDF_ANNOT_FREE_TEXT || !isEmpty) {
         auto* comment = MakePdfCommentFromPdfAnnot(ctx, pageNo, annot);
         if (comment) {
-            comments.Append(comment);
+            VecAppend(comments, comment);
         }
     }
 }
@@ -5480,7 +5480,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
             while (annot) {
                 Annotation* a = MakeAnnotationWrapper(e, annot, pageNo);
                 if (a) {
-                    pageInfo->annotations.Append(a);
+                    VecAppend(pageInfo->annotations, a);
                 }
                 annot = pdf_next_annot(ctx, annot);
             }
@@ -5488,7 +5488,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
             while (widget) {
                 Annotation* a = MakeAnnotationWrapper(e, widget, pageNo);
                 if (a) {
-                    pageInfo->widgets.Append(a);
+                    VecAppend(pageInfo->widgets, a);
                 }
                 widget = pdf_next_widget(ctx, widget);
             }
@@ -5557,7 +5557,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
             if (dest && !PageDestGetValue(dest)) {
                 dest->value = PdfLinkContents(ctx, e->pdfdoc, pdfpage, pageNo, link->rect);
             }
-            pageInfo->links.Append(pel);
+            VecAppend(pageInfo->links, pel);
         }
         link = link->next;
     }
@@ -5689,7 +5689,7 @@ void EngineMupdf::GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) {
         if (box.rect.IsEmpty()) {
             continue;
         }
-        out.Append(box);
+        VecAppend(out, box);
     }
 }
 
@@ -6090,7 +6090,7 @@ static void DarkLegacySkipKeepLargestArtwork(FzPageInfo* pageInfo) {
     }
     Rect keep = skipRects[bestIdx];
     VecClear(skipRects);
-    skipRects.Append(keep);
+    VecAppend(skipRects, keep);
     pageInfo->darkLegacyArtworkPageBottom = 0.f;
 }
 
@@ -6122,7 +6122,7 @@ static void DarkLegacyGroupImageTiles(const Vec<RectF>& rects, float tol, Vec<in
     int n = len(rects);
     Vec<int> parent;
     for (int i = 0; i < n; i++) {
-        parent.Append(i);
+        VecAppend(parent, i);
     }
     for (int i = 0; i < n; i++) {
         if (rects[i].IsEmpty()) {
@@ -6146,9 +6146,9 @@ static void DarkLegacyGroupImageTiles(const Vec<RectF>& rects, float tol, Vec<in
     Vec<float> tileArea;
     Vec<int> nTiles;
     for (int i = 0; i < n; i++) {
-        bbox.Append(RectF());
-        tileArea.Append(0.f);
-        nTiles.Append(0);
+        VecAppend(bbox, RectF());
+        VecAppend(tileArea, 0.f);
+        VecAppend(nTiles, 0);
     }
     for (int i = 0; i < n; i++) {
         if (rects[i].IsEmpty()) {
@@ -6171,20 +6171,20 @@ static void DarkLegacyGroupImageTiles(const Vec<RectF>& rects, float tol, Vec<in
 
     Vec<int> rootToGroup;
     for (int i = 0; i < n; i++) {
-        rootToGroup.Append(-1);
+        VecAppend(rootToGroup, -1);
     }
     for (int i = 0; i < n; i++) {
         int r = DarkLegacyTileFindRoot(parent, i);
         if (rects[i].IsEmpty() || nTiles[r] < 2) {
-            groupOf.Append(len(groupRect));
-            groupRect.Append(rects[i]);
+            VecAppend(groupOf, len(groupRect));
+            VecAppend(groupRect, rects[i]);
             continue;
         }
         if (rootToGroup[r] < 0) {
             rootToGroup[r] = len(groupRect);
-            groupRect.Append(bbox[r]);
+            VecAppend(groupRect, bbox[r]);
         }
-        groupOf.Append(rootToGroup[r]);
+        VecAppend(groupOf, rootToGroup[r]);
     }
 }
 
@@ -6230,8 +6230,8 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
         if (image) {
             fz_drop_image(ctx, image);
         }
-        imgPageRects.Append(imgPage);
-        imgOnPageRects.Append(imgPage.Intersect(pageBounds));
+        VecAppend(imgPageRects, imgPage);
+        VecAppend(imgOnPageRects, imgPage.Intersect(pageBounds));
     }
     // tiles of one sliced illustration are judged as the region they form
     float tileTol = std::max(1.0f, std::min(pageBounds.dx, pageBounds.dy) * 0.005f);
@@ -6240,7 +6240,7 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
     DarkLegacyGroupImageTiles(imgOnPageRects, tileTol, groupOf, groupRect);
     Vec<int> groupAppended;
     for (int i = 0; i < len(groupRect); i++) {
-        groupAppended.Append(0);
+        VecAppend(groupAppended, 0);
     }
 
     for (int imgIdx = 0; imgIdx < nImages; imgIdx++) {
@@ -6289,7 +6289,7 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
         // tiles of one sliced illustration share a region - append it once
         if (!r.IsEmpty() && !groupAppended[groupIdx]) {
             groupAppended[groupIdx] = 1;
-            pageInfo->darkLegacySkipDevAbs.Append(r);
+            VecAppend(pageInfo->darkLegacySkipDevAbs, r);
             float bottom = imgOnPage.y + imgOnPage.dy;
             pageInfo->darkLegacyArtworkPageBottom = std::max(bottom, pageInfo->darkLegacyArtworkPageBottom);
         }
@@ -6360,7 +6360,7 @@ void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation
         local.Inflate(3, 3);
         local = local.Intersect(Rect(0, 0, bmpSize.dx, bmpSize.dy));
         if (!local.IsEmpty()) {
-            skipRects.Append(local);
+            VecAppend(skipRects, local);
         }
     }
 }
@@ -7036,13 +7036,13 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
     if (!res || depth >= 64 || VecContains(resList, res)) {
         return;
     }
-    resList.Append(res);
+    VecAppend(resList, res);
 
     pdf_obj* fonts = pdf_dict_gets(ctx, res, "Font");
     for (int k = 0; k < pdf_dict_len(ctx, fonts); k++) {
         pdf_obj* font = pdf_resolve_indirect(ctx, pdf_dict_get_val(ctx, fonts, k));
         if (font && !VecContains(fontList, font)) {
-            fontList.Append(font);
+            VecAppend(fontList, font);
         }
     }
     // also extract fonts for all XObjects (recursively)
@@ -7506,7 +7506,7 @@ struct SigFieldWalk {
 static void OnSigFieldArrive(fz_context* ctx, pdf_obj* node, void* arg, pdf_obj** values) {
     pdf_obj* ft = values && values[0] ? values[0] : pdf_dict_get_inheritable(ctx, node, PDF_NAME(FT));
     if (ft && pdf_name_eq(ctx, ft, PDF_NAME(Sig))) {
-        ((SigFieldWalk*)arg)->fields.Append(pdf_keep_obj(ctx, node));
+        VecAppend(((SigFieldWalk*)arg)->fields, pdf_keep_obj(ctx, node));
     }
 }
 
@@ -7694,7 +7694,7 @@ void EngineMupdfGetSignatureCerts(EngineBase* engine, Vec<PdfSigCert>& out) {
                 PdfSigCert c;
                 c.label = str::Dup(fmt("Signature %d %s", sigNo, Str(who)));
                 c.der = str::Dup(Str((const char*)der, derLen));
-                out.Append(c);
+                VecAppend(out, c);
             };
             add("signer", info.cert_der, info.cert_der_len);
             if (info.has_timestamp) {
@@ -8140,7 +8140,7 @@ static void AppendLoadedAnnotations(EngineMupdf* e, Vec<Annotation*>& annotsOut)
     VecClear(annotsOut);
     for (FzPageInfo* pi : e->pages) {
         if (pi && pi->annotsLoaded) {
-            annotsOut.Append(pi->annotations);
+            VecAppend(annotsOut, pi->annotations);
         }
     }
 }
@@ -8184,7 +8184,7 @@ void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) 
         if (!pi) {
             continue;
         }
-        annotsOut.Append(pi->annotations);
+        VecAppend(annotsOut, pi->annotations);
     }
 }
 
@@ -8471,7 +8471,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
             fz_try(ctx) {
                 pdf_page* page = pdf_page_from_fz_page(ctx, pi->page);
                 for (pdf_annot* a = page ? pdf_first_annot(ctx, page) : nullptr; a; a = pdf_next_annot(ctx, a)) {
-                    live.Append(a);
+                    VecAppend(live, a);
                 }
                 listedLive = true;
             }
@@ -8490,7 +8490,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
             }
             w->pdfannot = nullptr;
             VecRemove(pi->annotations, w);
-            deletedOut.Append(w);
+            VecAppend(deletedOut, w);
         }
 
         {
@@ -8633,7 +8633,7 @@ static void ResyncWrapperList(EngineMupdf* e, int pageNo, Vec<Annotation*>& wrap
         } else {
             RefreshWrapperBounds(e, w);
         }
-        res.Append(w);
+        VecAppend(res, w);
     }
     for (Annotation* w : wrappers) {
         if (!w || VecContains(res, w)) {
@@ -8641,7 +8641,7 @@ static void ResyncWrapperList(EngineMupdf* e, int pageNo, Vec<Annotation*>& wrap
         }
         // its pdf_annot is gone; the wrapper must not reach MuPDF again
         w->pdfannot = nullptr;
-        removedOut.Append(w);
+        VecAppend(removedOut, w);
     }
     wrappers = res;
 }
@@ -8666,10 +8666,10 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
                 fz_try(ctx) {
                     pdf_page* page = pdf_page_from_fz_page(ctx, pi->page);
                     for (pdf_annot* a = page ? pdf_first_annot(ctx, page) : nullptr; a; a = pdf_next_annot(ctx, a)) {
-                        liveAnnots.Append(a);
+                        VecAppend(liveAnnots, a);
                     }
                     for (pdf_annot* a = page ? pdf_first_widget(ctx, page) : nullptr; a; a = pdf_next_widget(ctx, a)) {
-                        liveWidgets.Append(a);
+                        VecAppend(liveWidgets, a);
                     }
                 }
                 fz_catch(ctx) {
@@ -8912,7 +8912,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
         if (!bounds.Contains(pos)) {
             continue;
         }
-        els.Append(annot);
+        VecAppend(els, annot);
     }
     if (len(els) == 0) {
         return nullptr;
@@ -9065,7 +9065,7 @@ void EngineMupdfGetFormFieldHighlightRects(EngineBase* engine, int pageNo, Annot
             highlight = false;
         }
         if (highlight) {
-            out.Append(w->bounds);
+            VecAppend(out, w->bounds);
         }
     }
 }
@@ -9120,7 +9120,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
         int sizeBefore = len(pageInfo->annotations);
         int pos = VecFind(pageInfo->annotations, annot);
         ReportIf(pos >= 0); // shouldn't exist
-        pageInfo->annotations.Append(annot);
+        VecAppend(pageInfo->annotations, annot);
         int sizeNow = len(pageInfo->annotations);
         ReportIf(sizeBefore != sizeNow - 1);
         ValidateAnnotationsInSync(e, pageInfo);

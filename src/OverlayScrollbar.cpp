@@ -821,7 +821,7 @@ OverlayScrollbar* OverlayScrollbarCreate(HWND hwndOwner, OverlayScrollbar::Type 
     SetWindowLongPtrW(sb->hwnd, GWLP_USERDATA, (LONG_PTR)sb);
 
     // Register for global mouse tracking
-    gAllScrollbars.Append(sb);
+    VecAppend(gAllScrollbars, sb);
     StartMouseTracking();
 
     return sb;

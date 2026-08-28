@@ -182,7 +182,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     style.font = GetPlatformFont(defaultFontName, defaultFontSize, PlatformFontStyle::Regular);
     style.align = AlignAttr::Justify;
     style.dirRtl = false;
-    styleStack.Append(style);
+    VecAppend(styleStack, style);
     nextPageStyle = VecLast(styleStack);
 
     textMeasure->SetFont(CurrFont());
@@ -249,12 +249,12 @@ RectF HtmlFormatter::MeasureTextCached(Str s) {
         return mc->vals[existingIdx];
     }
     RectF bbox = textMeasure->Measure(s);
-    mc->vals.Append(bbox);
+    VecAppend(mc->vals, bbox);
     return bbox;
 }
 
 void HtmlFormatter::AppendInstr(const DrawInstr& di) {
-    currLineInstr.Append(di);
+    VecAppend(currLineInstr, di);
     if (-1 == currLineReparseIdx) {
         currLineReparseIdx = currReparseIdx;
         ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
@@ -272,7 +272,7 @@ void HtmlFormatter::SetFont(Str fontName, PlatformFontStyle fs, float fontSize) 
 
     DrawStyle style = VecLast(styleStack);
     style.font = newFont;
-    styleStack.Append(style);
+    VecAppend(styleStack, style);
 }
 
 void HtmlFormatter::SetFontBasedOn(PlatformFont* font, PlatformFontStyle fs, float fontSize) {
@@ -304,7 +304,7 @@ void HtmlFormatter::ChangeFontStyle(PlatformFontStyle fs, bool addStyle) {
 void HtmlFormatter::SetAlignment(AlignAttr align) {
     DrawStyle style = VecLast(styleStack);
     style.align = align;
-    styleStack.Append(style);
+    VecAppend(styleStack, style);
 }
 
 void HtmlFormatter::RevertStyleChange() {
@@ -543,7 +543,7 @@ void HtmlFormatter::ForceNewPage() {
         return;
     }
     UpdateLinkBboxes(currPage);
-    pagesToSend.Append(currPage);
+    VecAppend(pagesToSend, currPage);
 
     EmitNewPage();
     currX = NewLineX();
@@ -577,7 +577,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
         // current line too big to fit in current page,
         // so need to start another page
         UpdateLinkBboxes(currPage);
-        pagesToSend.Append(currPage);
+        VecAppend(pagesToSend, currPage);
         // instructions for each page need to be self-contained
         // so we have to carry over some state (like current font)
         ReportIf(!CurrFont());
@@ -595,7 +595,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
         // TODO: this occasionally leads to empty links
         AppendInstr(DrawInstr(DrawInstrType::LinkEnd));
     }
-    VecAppendN(currPage->instructions, currLineInstr.LendData(), len(currLineInstr));
+    VecAppendN(currPage->instructions, VecData(currLineInstr), len(currLineInstr));
     VecReset(currLineInstr);
     currLineReparseIdx = -1; // mark as not set
     currLineTopPadding = 0;
@@ -611,7 +611,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
 void HtmlFormatter::EmitNewPage() {
     ReportIf(currReparseIdx > INT_MAX);
     currPage = new HtmlPage((int)currReparseIdx);
-    currPage->instructions.Append(DrawInstr::SetFont(nextPageStyle.font));
+    VecAppend(currPage->instructions, DrawInstr::SetFont(nextPageStyle.font));
     currY = 0.f;
 }
 
@@ -909,7 +909,7 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
     // from being flushed to the next page (with wrong currY value)
     // attr->val is owned by the gumbo parse tree which doesn't outlive
     // the formatter, so copy it into textAllocator
-    currPage->instructions.Append(DrawInstr::Anchor(str::Dup(textAllocator, attr->val), bbox));
+    VecAppend(currPage->instructions, DrawInstr::Anchor(str::Dup(textAllocator, attr->val), bbox));
 }
 
 void HtmlFormatter::HandleDirAttr(HtmlToken* t) {
@@ -1151,7 +1151,7 @@ void HtmlFormatter::ParseStyleSheet(Str data) {
             } else {
                 rule.tag = sel->tag;
                 rule.classHash = MurmurHash2(clazz);
-                styleRules.Append(rule);
+                VecAppend(styleRules, rule);
             }
         }
     }
@@ -1239,7 +1239,7 @@ void HtmlFormatter::UpdateTagNesting(HtmlToken* t) {
     bool isInline = IsInlineTag(t->tag);
     if (t->IsStartTag()) {
         if (IsInlineTag(t->tag)) {
-            tagNesting.Append(t->tag);
+            VecAppend(tagNesting, t->tag);
             return;
         }
         // close all tags that can't contain this new block-level tag
@@ -1260,7 +1260,7 @@ void HtmlFormatter::UpdateTagNesting(HtmlToken* t) {
     AutoCloseTags(len(tagNesting) - idx);
 
     if (t->IsStartTag()) {
-        tagNesting.Append(t->tag);
+        VecAppend(tagNesting, t->tag);
     } else {
         ReportIf(!t->IsEndTag() || t->tag != VecLast(tagNesting));
         VecPop(tagNesting);
@@ -1324,7 +1324,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
                     li.nextNum = ParseInt(attr->val);
                 }
             }
-            listInfos.Append(li);
+            VecAppend(listInfos, li);
         } else if (t->IsEndTag() && len(listInfos) > 0) {
             VecRemoveLast(listInfos);
         }
@@ -1512,7 +1512,7 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
     FlushCurrLine(true);
 
     UpdateLinkBboxes(currPage);
-    pagesToSend.Append(currPage);
+    VecAppend(pagesToSend, currPage);
     currPage = nullptr;
     // call ourselves recursively to return accumulated pages
     finishedParsing = true;
@@ -1523,7 +1523,7 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
 Vec<HtmlPage*>* HtmlFormatter::FormatAllPages(bool skipEmptyPages) {
     Vec<HtmlPage*>* pages = new Vec<HtmlPage*>();
     for (HtmlPage* pd = Next(skipEmptyPages); pd; pd = Next(skipEmptyPages)) {
-        pages->Append(pd);
+        VecAppend(*pages, pd);
     }
     return pages;
 }

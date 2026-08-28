@@ -2841,7 +2841,7 @@ void FrameSyncSplitters(MainWindow* win) {
     VirtSplitter* all[] = {win->sidebarSplitter, win->favSplitter, win->aiChatSplitter};
     for (VirtSplitter* s : all) {
         if (s) {
-            tops.Append(s);
+            VecAppend(tops, s);
         }
     }
     win->frameRoot->SetTops(tops);
@@ -3167,7 +3167,7 @@ static MainWindow* CreateMainWindow() {
             RegisterScreenshotHotkey(win->hwndFrame);
         }
     }
-    gWindows.Append(win);
+    VecAppend(gWindows, win);
     ShowMaybeDelayedNotifications(win->hwndCanvas);
     // needed for RTL languages
     UpdateWindowRtlLayout(win);
@@ -3996,7 +3996,7 @@ static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
 
 // start a background load now if a thread slot is free, otherwise queue it
 static void StartOrQueueLoadDocument(LoadDocumentAsyncData* data) {
-    gLoadQueue.Append(data);
+    VecAppend(gLoadQueue, data);
     if (gLoadQueueDispatchPosted) {
         return;
     }
@@ -4501,7 +4501,7 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win) {
         tab->SetFilePath(pathsToLoad[i]);
         tab->loadState = WindowTab::LoadState::Loading;
         bool deferUpdate = i != len(pathsToLoad) - 1;
-        tabs.Append(AddTabToWindow(win, tab, deferUpdate));
+        VecAppend(tabs, AddTabToWindow(win, tab, deferUpdate));
     }
     WindowTab* visibleTab = tabs[0];
     win->tabsCtrl->SetSelected(win->GetTabIdx(visibleTab));
@@ -6461,12 +6461,12 @@ struct OpenFileFilterList {
     void Add(Str name, Str pattern) {
         WStr nw = ToWStr(name);
         WStr pw = ToWStr(pattern);
-        names.Append(nw);
-        patterns.Append(pw);
+        VecAppend(names, nw);
+        VecAppend(patterns, pw);
         COMDLG_FILTERSPEC s{};
         s.pszName = nw.s;
         s.pszSpec = pw.s;
-        specs.Append(s);
+        VecAppend(specs, s);
     }
 };
 
@@ -6540,7 +6540,7 @@ static void OpenFileWithOSFilePicker(MainWindow* win) {
     OpenFileFilterList filters;
     BuildOpenFileFilters(filters);
     ReportIf(len(filters.specs) == 0);
-    dlg->SetFileTypes((UINT)len(filters.specs), filters.specs.LendData());
+    dlg->SetFileTypes((UINT)len(filters.specs), VecData(filters.specs));
     dlg->SetFileTypeIndex(1); // "All supported documents" (1-based)
 
     hr = dlg->Show(win->hwndFrame);
@@ -8070,7 +8070,7 @@ struct CollectTopWindowsCtx {
 static BOOL CALLBACK CollectTopWindowsProc(HWND hwnd, LPARAM lp) {
     auto* ctx = (CollectTopWindowsCtx*)lp;
     if (HwndIsVisible(hwnd)) {
-        ctx->hwnds->Append(hwnd);
+        VecAppend(*ctx->hwnds, hwnd);
     }
     return TRUE;
 }
@@ -8107,8 +8107,8 @@ static void ToggleDpiOverride() {
     Vec<Rect> rects;
     Vec<int> dpis;
     for (HWND hwnd : hwnds) {
-        rects.Append(HwndWindowRect(hwnd));
-        dpis.Append(DpiGetForHwnd(hwnd));
+        VecAppend(rects, HwndWindowRect(hwnd));
+        VecAppend(dpis, DpiGetForHwnd(hwnd));
     }
 
     gDpiOverride = next;
@@ -9163,7 +9163,7 @@ static void AddUniquePageNo(Vec<int>& v, int pageNo) {
             return;
         }
     }
-    v.Append(pageNo);
+    VecAppend(v, pageNo);
 }
 
 // create one or more markup annotations from the current text selection.
@@ -9215,7 +9215,7 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
             if (pageNo != sel.pageNo) {
                 continue;
             }
-            rects.Append(sel.rect);
+            VecAppend(rects, sel.rect);
         }
         annot = EngineMupdfCreateAnnotation(engine, pageNo, PointF{}, args);
         if (!annot) {
@@ -9228,7 +9228,7 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         }
         SetQuadPointsAsRect(annot, rects);
         annot->bounds = GetBounds(annot);
-        created.Append(annot);
+        VecAppend(created, annot);
     }
     RefreshAnnotationLists(tab);
 

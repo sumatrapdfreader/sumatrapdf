@@ -775,7 +775,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
         if (w->findPagesEdit) {
             state.pages = str::Dup(w->findPagesEdit->GetTextTemp());
         }
-        states.Append(state);
+        VecAppend(states, state);
     }
 
     for (FindUiSwitchState& state : states) {

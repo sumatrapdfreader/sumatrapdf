@@ -1718,7 +1718,7 @@ static void DeleteOldPdfPreviewLogs(int keep) {
             continue;
         }
         PreviewLogFile lf{str::Dup(de->filePath), de->modificationTime};
-        files.Append(lf);
+        VecAppend(files, lf);
     }
     int n = len(files);
     if (n > keep) {

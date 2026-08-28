@@ -70,7 +70,7 @@ bool PdbReader::ParseHeader() {
         if ((off < minOffset) || (off > maxOffset)) {
             return false;
         }
-        recInfos.Append(recHdr);
+        VecAppend(recInfos, recHdr);
     }
     if (!dec.IsOk()) {
         return false;

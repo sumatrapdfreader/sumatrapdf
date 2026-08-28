@@ -411,7 +411,7 @@ static void ParseMetadata(Str content, Props& props);
 
 static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
     Vec<const GumboNode*> toVisit;
-    toVisit.Append(root);
+    VecAppend(toVisit, root);
     while (len(toVisit) > 0) {
         const GumboNode* node = VecPop(toVisit);
         if (!node) {
@@ -429,7 +429,7 @@ static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
             continue;
         }
         for (unsigned int i = children->length; i > 0; i--) {
-            toVisit.Append((const GumboNode*)children->data[i - 1]);
+            VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
         }
     }
 }
@@ -516,7 +516,7 @@ bool EpubDoc::Load() {
             ImageData data;
             data.fileName = str::Dup(imgPath);
             data.fileId = archive->GetFileId(data.fileName);
-            images.Append(data);
+            VecAppend(images, data);
         } else if (isHtmlMediaType(mediaType)) {
             TempStr htmlPath = GumboAttributeValueTemp(node, "href");
             if (!htmlPath) {
@@ -727,7 +727,7 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
             data.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
             fi->data = nullptr;
             data.fileName = str::Dup(url);
-            images.Append(data);
+            VecAppend(images, data);
             return VecLast(images).base;
         }
     }
@@ -1252,7 +1252,7 @@ void Fb2Doc::ExtractImage(GumboHtmlParser* parser, HtmlToken* tok) {
     data.base = str::Dup(decoded);
     data.fileName = str::Join(StrL("#"), id);
     data.fileId = len(images);
-    images.Append(data);
+    VecAppend(images, data);
 }
 
 Str Fb2Doc::GetXmlData() const {
@@ -1609,7 +1609,7 @@ Str HtmlDoc::GetImageData(Str fileName) {
         return {};
     }
     data.fileName = str::Dup(url);
-    images.Append(data);
+    VecAppend(images, data);
     return VecLast(images).base;
 }
 
@@ -1967,7 +1967,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
 
     GumboDoc doc(ToStr(htmlData), false);
     Vec<const GumboNode*> toVisit;
-    toVisit.Append(doc.Document());
+    VecAppend(toVisit, doc.Document());
     while (len(toVisit) > 0) {
         const GumboNode* node = VecPop(toVisit);
         if (!node) {
@@ -1976,7 +1976,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
         const GumboVector* children = GumboChildrenOf(node);
         if (children) {
             for (unsigned int i = children->length; i > 0; i--) {
-                toVisit.Append((const GumboNode*)children->data[i - 1]);
+                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
             }
         }
         if (!GumboTagNameIs(node, StrL("b"))) {

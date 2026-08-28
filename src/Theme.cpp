@@ -519,11 +519,11 @@ void CreateThemeCommands() {
     gThemes = new Vec<Theme*>();
     gParsedThemes = ParseThemes(themesTxt);
     for (Theme* theme : *gParsedThemes->themes) {
-        gThemes->Append(theme);
+        VecAppend(*gThemes, theme);
     }
 
     for (Theme* theme : *gSettings->themes) {
-        gThemes->Append(theme);
+        VecAppend(*gThemes, theme);
     }
 
     gThemeCount = len(*gThemes);

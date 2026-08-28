@@ -1149,7 +1149,7 @@ static void PopulateCustomToolbarButtons() {
     // the reverse of the order the user listed them in (#5869)
     Vec<CustomCommand*> customCmds;
     for (auto* cc = gFirstCustomCommand; cc; cc = cc->next) {
-        customCmds.Append(cc);
+        VecAppend(customCmds, cc);
     }
     VecReverse(customCmds);
     for (CustomCommand* cc : customCmds) {
@@ -1481,7 +1481,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             total->id = PageInfoId;
             tb->pageTotal = total;
             box->AddChild(total);
-            tb->items.Append(label);
+            VecAppend(tb->items, label);
             continue;
         }
         if (bi.cmdId == 0 || !HasToolbarButtonContent(bi)) {
@@ -1509,7 +1509,7 @@ static void BuildToolbarLayout(MainWindow* win) {
         if (bi.cmdId != 0 && bi.cmdId != PageInfoId) {
             w->onClick = MkFunc1(OnToolbarButtonClicked, win);
         }
-        tb->items.Append(w);
+        VecAppend(tb->items, w);
         box->AddChild(w);
     }
 
@@ -1544,7 +1544,7 @@ static void BuildToolbarLayout(MainWindow* win) {
         if (bi.cmdId != 0) {
             w->onClick = MkFunc1(OnToolbarButtonClicked, win);
         }
-        tb->annotationItems.Append(w);
+        VecAppend(tb->annotationItems, w);
         annotationBox->AddChild(w);
     }
 

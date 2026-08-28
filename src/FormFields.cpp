@@ -76,7 +76,7 @@ void PaintFormFieldHighlights(MainWindow* win, Gfx* gfx) {
         for (RectF& pr : pageRects) {
             Rect rc = dm->CvtToScreen(pageNo, pr);
             if (!rc.IsEmpty()) {
-                screenRects.Append(rc);
+                VecAppend(screenRects, rc);
             }
         }
     }

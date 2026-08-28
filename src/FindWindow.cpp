@@ -1390,7 +1390,7 @@ TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     FindMatch fm;
     fm.startPage = 1;
     str::ReplaceWithCopy(&fm.snippet, StrL("longprefix testword suffix"));
-    win->findMatches.Append(fm);
+    VecAppend(win->findMatches, fm);
     fw->filterWords.Reset();
     fw->filterWords.Append(StrL("testword"));
 

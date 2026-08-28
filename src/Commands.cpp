@@ -1286,7 +1286,7 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
     CustomCommand* curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == origId) {
-            commands.Append(curr);
+            VecAppend(commands, curr);
         }
         curr = curr->next;
     }

@@ -211,7 +211,7 @@ static void AppendParentEntry(Vec<NavFileEntry>& entries) {
     NavFileEntry e;
     e.name = str::Dup(StrL(".."));
     e.isDir = true;
-    entries.Append(e);
+    VecAppend(entries, e);
 }
 
 // leaf name for display: find-data names are usually basenames, but some network
@@ -269,7 +269,7 @@ static void CollectNavEntriesForDir(Str dir, Vec<NavFileEntry>& out) {
                 }
             }
         }
-        out.Append(e);
+        VecAppend(out, e);
     }
 
     SortNavEntries(out, firstIdx);

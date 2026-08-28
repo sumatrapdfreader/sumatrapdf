@@ -249,13 +249,13 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
     Vec<int> filestack;
     int page = 1;
-    sheetIndex.Append(0);
+    VecAppend(sheetIndex, 0);
 
     // add the initial tex file to the source file stack
-    filestack.Append(len(srcfiles));
+    VecAppend(filestack, len(srcfiles));
     srcfiles.Append(jobName);
     PdfsyncFileIndex findex{};
-    fileIndex.Append(findex);
+    VecAppend(fileIndex, findex);
 
     PdfsyncLine psline;
     PdfsyncPoint pspoint;
@@ -272,17 +272,17 @@ int Pdfsync::RebuildIndexIfNeeded() {
             case 'l':
                 psline.file = VecLast(filestack);
                 if (!str::IsNull(str::Parse(line, "l %u %u %u", &psline.record, &psline.line, &psline.column))) {
-                    lines.Append(psline);
+                    VecAppend(lines, psline);
                 } else if (!str::IsNull(str::Parse(line, "l %u %u", &psline.record, &psline.line))) {
                     psline.column = 0;
-                    lines.Append(psline);
+                    VecAppend(lines, psline);
                 }
                 // else dbg("Bad 'l' line in the pdfsync file");
                 break;
 
             case 's':
                 if (!str::IsNull(str::Parse(line, "s %u", &page))) {
-                    sheetIndex.Append(len(points));
+                    VecAppend(sheetIndex, len(points));
                 }
                 // else dbg("Bad 's' line in the pdfsync file");
                 // if (0 == page || page > maxPageNo)
@@ -295,7 +295,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                     /* ignore point for invalid page number */;
                 } else if (!str::IsNull(str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) ||
                            !str::IsNull(str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
-                    points.Append(pspoint);
+                    VecAppend(points, pspoint);
                 }
                 // else dbg("Bad 'p' line in the pdfsync file");
                 break;
@@ -319,10 +319,10 @@ int Pdfsync::RebuildIndexIfNeeded() {
                     filename = PrependDirTemp(filename);
                 }
 
-                filestack.Append(len(srcfiles));
+                VecAppend(filestack, len(srcfiles));
                 srcfiles.Append(filename);
                 findex.start = findex.end = len(lines);
-                fileIndex.Append(findex);
+                VecAppend(fileIndex, findex);
             } break;
 
             case ')':
@@ -417,7 +417,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
     // We have a record number, we need to find its declaration ('l ...') in the syncfile
     PdfsyncLine cmp;
     cmp.record = selected_record;
-    PdfsyncLine* found = (PdfsyncLine*)bsearch(&cmp, lines.LendData(), len(lines), sizeof(PdfsyncLine), cmpLineRecords);
+    PdfsyncLine* found = (PdfsyncLine*)bsearch(&cmp, VecData(lines), len(lines), sizeof(PdfsyncLine), cmpLineRecords);
     ReportIf(!found);
     if (!found) {
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
@@ -497,7 +497,7 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int /*col*/, Vec<int>& r
 
     // we read all the consecutive records until we reach a record belonging to another line
     for (int i = lineIx; i < len(lines) && lines[i].line == lines[lineIx].line; i++) {
-        records.Append((int)lines[i].record);
+        VecAppend(records, (int)lines[i].record);
     }
 
     return PDFSYNCERR_SUCCESS;
@@ -532,7 +532,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
         // PdfSync coordinates are y-inversed
         RectF mbox = engine->PageMediabox(firstPage);
         rc.y = mbox.dy - (rc.y + rc.dy);
-        rects.Append(rc.Round());
+        VecAppend(rects, rc.Round());
     }
 
     if (len(rects) > 0) {
@@ -971,7 +971,7 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
         rc.y = (float)((double)synctex_node_box_visible_v(node) - (double)synctex_node_box_visible_height(node));
         rc.dx = synctex_node_box_visible_width(node),
         rc.dy = (float)((double)synctex_node_box_visible_height(node) + (double)synctex_node_box_visible_depth(node));
-        rects.Append(rc.Round());
+        VecAppend(rects, rc.Round());
     }
 
     if (firstpage <= 0) {

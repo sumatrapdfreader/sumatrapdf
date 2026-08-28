@@ -227,7 +227,7 @@ void SetRect(Annotation* annot, RectF r) {
                     fz_point p = pdf_annot_vertex(ctx, a, i);
                     p.x += dx;
                     p.y += dy;
-                    pts.Append(p);
+                    VecAppend(pts, p);
                 }
                 if (n > 0) {
                     pdf_set_annot_vertices(ctx, a, n, pts.els);
@@ -247,7 +247,7 @@ void SetRect(Annotation* annot, RectF r) {
                         q.ll.y += dy;
                         q.lr.x += dx;
                         q.lr.y += dy;
-                        redactQuads.Append(q);
+                        VecAppend(redactQuads, q);
                     }
                     pdf_set_annot_quad_points(ctx, a, len(redactQuads), redactQuads.els);
                 } else {
@@ -258,12 +258,12 @@ void SetRect(Annotation* annot, RectF r) {
                 int nStrokes = pdf_annot_ink_list_count(ctx, a);
                 for (int i = 0; i < nStrokes; i++) {
                     int nv = pdf_annot_ink_list_stroke_count(ctx, a, i);
-                    strokeCounts.Append(nv);
+                    VecAppend(strokeCounts, nv);
                     for (int k = 0; k < nv; k++) {
                         fz_point p = pdf_annot_ink_list_stroke_vertex(ctx, a, i, k);
                         p.x += dx;
                         p.y += dy;
-                        pts.Append(p);
+                        VecAppend(pts, p);
                     }
                 }
                 if (nStrokes > 0) {
@@ -438,7 +438,7 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
         int n = pdf_annot_quad_point_count(ctx, annot->pdfannot);
         for (int i = 0; i < n; i++) {
             fz_quad q = pdf_annot_quad_point(ctx, annot->pdfannot, i);
-            res.Append(ToRectF(fz_rect_from_quad(q)));
+            VecAppend(res, ToRectF(fz_rect_from_quad(q)));
         }
     }
     fz_catch(ctx) {
@@ -1450,7 +1450,7 @@ Vec<PointF> GetVertices(Annotation* annot) {
         int n = pdf_annot_vertex_count(ctx, a);
         for (int i = 0; i < n; i++) {
             fz_point p = pdf_annot_vertex(ctx, a, i);
-            res.Append({p.x, p.y});
+            VecAppend(res, {p.x, p.y});
         }
     }
     fz_catch(ctx) {
@@ -1476,7 +1476,7 @@ void SetVertices(Annotation* annot, const Vec<PointF>& points) {
     auto* a = annot->pdfannot;
     Vec<fz_point> pts;
     for (int i = 0; i < len(points); i++) {
-        pts.Append({points[i].x, points[i].y});
+        VecAppend(pts, {points[i].x, points[i].y});
     }
     bool failed = false;
     {
@@ -1513,10 +1513,10 @@ static void GetInkList(Annotation* annot, Vec<int>& strokeCounts, Vec<PointF>& p
         int nStrokes = pdf_annot_ink_list_count(ctx, a);
         for (int i = 0; i < nStrokes; i++) {
             int nv = pdf_annot_ink_list_stroke_count(ctx, a, i);
-            strokeCounts.Append(nv);
+            VecAppend(strokeCounts, nv);
             for (int k = 0; k < nv; k++) {
                 fz_point p = pdf_annot_ink_list_stroke_vertex(ctx, a, i, k);
-                points.Append({p.x, p.y});
+                VecAppend(points, {p.x, p.y});
             }
         }
     }
@@ -1777,7 +1777,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     Vec<fz_point> polyLinePoints;
     if (args->polyLinePoints) {
         for (PointF point : *args->polyLinePoints) {
-            polyLinePoints.Append({point.x, point.y});
+            VecAppend(polyLinePoints, {point.x, point.y});
         }
     }
     Vec<int> inkStrokeCounts;
@@ -1790,13 +1790,13 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 hasInkList = false;
                 break;
             }
-            inkStrokeCounts.Append(count);
+            VecAppend(inkStrokeCounts, count);
             nInkPoints += count;
         }
         hasInkList = hasInkList && nInkPoints == len(*args->inkPoints);
         if (hasInkList) {
             for (PointF point : *args->inkPoints) {
-                inkPoints.Append({point.x, point.y});
+                VecAppend(inkPoints, {point.x, point.y});
             }
         }
     }

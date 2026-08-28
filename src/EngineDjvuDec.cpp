@@ -377,7 +377,7 @@ bool EngineDjvuDec::FinishLoading() {
         }
         pi->mediabox = mbox;
         pi->pageType = djvu_page_get_type(doc, i);
-        pages.Append(pi);
+        VecAppend(pages, pi);
 
         Str title = Str(djvu_doc_page_title(doc, i));
         Str id = Str(djvu_doc_page_id(doc, i));
@@ -728,11 +728,11 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
             djvu_text_zone* c = &z->children[i];
             CollectZonesUtf8(c, dpiF, sb, coords);
             if (c->type == DJVU_ZONE_WORD) {
-                coords.Append(
-                    Rect((int)((float)(c->x + c->w) * dpiF), (int)((float)c->y * dpiF), 2, (int)((float)c->h * dpiF)));
+                VecAppend(coords, Rect((int)((float)(c->x + c->w) * dpiF), (int)((float)c->y * dpiF), 2,
+                                       (int)((float)c->h * dpiF)));
                 sb.AppendChar(' ');
             } else if (c->type == DJVU_ZONE_LINE) {
-                coords.Append(Rect());
+                VecAppend(coords, Rect());
                 sb.AppendChar('\n');
             }
         }
@@ -750,7 +750,7 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
     for (int i = 0; i < n; i++) {
         int xStart = r.x + ((i * r.dx) / n);
         int xEnd = r.x + (((i + 1) * r.dx) / n);
-        coords.Append(Rect(xStart, r.y, xEnd - xStart, r.dy));
+        VecAppend(coords, Rect(xStart, r.y, xEnd - xStart, r.dy));
     }
     sb.Append(Str(z->text));
 }
@@ -778,7 +778,7 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
     res.len = len(sb);
     res.nCodepoints = nCodepoints;
     res.text = sb.TakeStr();
-    res.coords = coords.Take();
+    res.coords = VecTake(coords);
     return res;
 }
 
@@ -826,7 +826,7 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
         }
         auto* el = NewDjvuDecLink(pageNo, rect, link, Str(l.comment));
         if (el) {
-            els.Append(el);
+            VecAppend(els, el);
         }
     }
     djvu_page_links_destroy(ctx, links);

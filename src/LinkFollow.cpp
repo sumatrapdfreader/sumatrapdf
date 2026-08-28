@@ -58,7 +58,7 @@ static void AssignLinkHints(Vec<KeyboardLinkTarget>& targets) {
     }
 
     Vec<LinkHint> hints;
-    hints.Append(LinkHint{});
+    VecAppend(hints, LinkHint{});
     int offset = 0;
     while ((len(hints) - offset < nTargets) || len(hints) == 1) {
         LinkHint hint = hints[offset++];
@@ -71,13 +71,13 @@ static void AssignLinkHints(Vec<KeyboardLinkTarget>& targets) {
             next.s[0] = kLinkHintChars[i];
             memcpy(next.s + 1, hint.s, hint.len);
             next.len = hint.len + 1;
-            hints.Append(next);
+            VecAppend(hints, next);
         }
     }
 
     Vec<LinkHint> selected;
     for (int i = 0; i < nTargets; i++) {
-        selected.Append(hints[offset + i]);
+        VecAppend(selected, hints[offset + i]);
     }
     VecSort(selected, CmpLinkHints);
     for (int i = 0; i < nTargets; i++) {
@@ -196,14 +196,14 @@ void KeyboardLinkFollowingRecompute(MainWindow* win) {
             st.screenRect = screenRect;
             st.target.pageNo = pageNo;
             st.target.rect = el->GetRect();
-            found.Append(st);
+            VecAppend(found, st);
         }
     }
 
     VecSort(found, CmpTargetsInReadingOrder);
 
     for (int i = 0; i < len(found); i++) {
-        win->linkFollowTargets.Append(found[i].target);
+        VecAppend(win->linkFollowTargets, found[i].target);
     }
     AssignLinkHints(win->linkFollowTargets);
 }
@@ -426,7 +426,7 @@ void PaintKeyboardLinkTargets(MainWindow* win, Gfx* gfx) {
         if (!HintStartsWith(t, win->linkFollowInput, win->linkFollowInputLen)) {
             continue;
         }
-        screenRects.Append(dm->CvtToScreen(t.pageNo, t.rect));
+        VecAppend(screenRects, dm->CvtToScreen(t.pageNo, t.rect));
     }
     PaintTransparentRectangles(gfx, win->canvasRc, screenRects, kLinkFollowHighlightCol, 90, 2, false);
 

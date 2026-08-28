@@ -347,7 +347,7 @@ void GfxGdiplus::DrawPixmap(Pixmap* px, const Rect& r) {
 
 void GfxGdiplus::PushClip(const Rect& r) {
     Gdiplus::GraphicsState st = gfx->Save();
-    savedStates.Append((u32)st);
+    VecAppend(savedStates, (u32)st);
     gfx->SetClip(ToGdipRect(r), Gdiplus::CombineModeIntersect);
 }
 

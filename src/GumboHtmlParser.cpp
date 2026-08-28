@@ -453,7 +453,7 @@ void GumboHtmlParser::BuildEvents() {
     };
 
     Vec<Frame> toVisit;
-    toVisit.Append({output->document, false});
+    VecAppend(toVisit, {output->document, false});
     while (len(toVisit) > 0) {
         Frame frame = VecPop(toVisit);
         const GumboNode* node = frame.node;
@@ -465,8 +465,8 @@ void GumboHtmlParser::BuildEvents() {
             Str rawEnd = StrFromPiece(node->v.element.original_end_tag);
             if (len(rawEnd) > 0) {
                 Str inner = EndTagInner(rawEnd);
-                events.Append(
-                    {HtmlToken::EndTag, node, inner, TagNameFromTagInner(inner), rawEnd, PosOfSource(html, rawEnd)});
+                VecAppend(events, {HtmlToken::EndTag, node, inner, TagNameFromTagInner(inner), rawEnd,
+                                   PosOfSource(html, rawEnd)});
             }
             continue;
         }
@@ -476,14 +476,14 @@ void GumboHtmlParser::BuildEvents() {
             if (!text) {
                 text = Str(node->v.text.text);
             }
-            events.Append({HtmlToken::Text, node, text, {}, text, PosOfSource(html, text)});
+            VecAppend(events, {HtmlToken::Text, node, text, {}, text, PosOfSource(html, text)});
             continue;
         }
 
         if (node->type == GUMBO_NODE_CDATA) {
             Str raw = StrFromPiece(node->v.text.original_text);
             Str text = CDataText(raw, node);
-            events.Append({HtmlToken::Text, node, text, {}, text, PosOfSource(html, text)});
+            VecAppend(events, {HtmlToken::Text, node, text, {}, text, PosOfSource(html, text)});
             continue;
         }
 
@@ -496,7 +496,7 @@ void GumboHtmlParser::BuildEvents() {
             Str rawStart = StrFromPiece(node->v.element.original_tag);
             if (len(rawStart) == 0) {
                 for (unsigned int i = children->length; i > 0; i--) {
-                    toVisit.Append({(const GumboNode*)children->data[i - 1], false});
+                    VecAppend(toVisit, {(const GumboNode*)children->data[i - 1], false});
                 }
                 continue;
             }
@@ -504,21 +504,21 @@ void GumboHtmlParser::BuildEvents() {
             bool selfClosing = IsSelfClosingStartTag(rawStart);
             Str inner = StartTagInner(rawStart, selfClosing);
             HtmlToken::TokenType type = selfClosing ? HtmlToken::EmptyElementTag : HtmlToken::StartTag;
-            events.Append({type, node, inner, TagNameFromTagInner(inner), rawStart, PosOfSource(html, rawStart)});
+            VecAppend(events, {type, node, inner, TagNameFromTagInner(inner), rawStart, PosOfSource(html, rawStart)});
 
             if (!selfClosing) {
                 if (len(StrFromPiece(node->v.element.original_end_tag)) > 0) {
-                    toVisit.Append({node, true});
+                    VecAppend(toVisit, {node, true});
                 }
                 for (unsigned int i = children->length; i > 0; i--) {
-                    toVisit.Append({(const GumboNode*)children->data[i - 1], false});
+                    VecAppend(toVisit, {(const GumboNode*)children->data[i - 1], false});
                 }
             }
             continue;
         }
 
         for (unsigned int i = children->length; i > 0; i--) {
-            toVisit.Append({(const GumboNode*)children->data[i - 1], false});
+            VecAppend(toVisit, {(const GumboNode*)children->data[i - 1], false});
         }
     }
 }

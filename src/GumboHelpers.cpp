@@ -75,7 +75,7 @@ static const GumboNode* GumboFindDescendantByTagImpl(const GumboNode* node, Str 
     // iterative pre-order DFS so a deeply nested document can't overflow the
     // stack (gumbo builds the tree iteratively, but recursing over it doesn't)
     Vec<const GumboNode*> toVisit;
-    toVisit.Append(node);
+    VecAppend(toVisit, node);
     while (len(toVisit) > 0) {
         const GumboNode* n = VecPop(toVisit);
         if (!n) {
@@ -94,7 +94,7 @@ static const GumboNode* GumboFindDescendantByTagImpl(const GumboNode* node, Str 
         if (children) {
             // push in reverse so children are visited in document order
             for (unsigned int i = children->length; i > 0; i--) {
-                toVisit.Append((const GumboNode*)children->data[i - 1]);
+                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
             }
         }
     }

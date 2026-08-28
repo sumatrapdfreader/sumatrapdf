@@ -542,7 +542,7 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
     // ToC nesting can't overflow the call stack. Order and levels match the
     // recursive walk exactly (parent frame resumes after its child completes).
     Vec<ChmUlFrame> stack;
-    stack.Append({ulNode, level, 0});
+    VecAppend(stack, {ulNode, level, 0});
     while (len(stack) > 0) {
         ChmUlFrame& top = VecLast(stack);
         const GumboVector* lis = &top.ul->v.element.children;
@@ -557,7 +557,7 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
 
         if (GumboTagNameIs(child, StrL("ul"))) {
             // a bare <ul> among the <li>s holds the children of the preceding <li>
-            stack.Append({child, lvl + 1, 0});
+            VecAppend(stack, {child, lvl + 1, 0});
             continue;
         }
         const GumboNode* li = child;
@@ -574,7 +574,7 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
         }
         const GumboNode* nested = GumboFindChildByTag(li, StrL("ul"));
         if (nested) {
-            stack.Append({nested, lvl + 1, 0});
+            VecAppend(stack, {nested, lvl + 1, 0});
         }
     }
 }
@@ -603,7 +603,7 @@ static void WalkChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* firstUl
 static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* root, bool isIndex, bool* hadOneInOut) {
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
-    toVisit.Append(root);
+    VecAppend(toVisit, root);
     while (len(toVisit) > 0) {
         const GumboNode* node = VecPop(toVisit);
         if (!node) {
@@ -625,7 +625,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
         if (children) {
             // push in reverse so children are visited in document order
             for (unsigned int i = children->length; i > 0; i--) {
-                toVisit.Append((const GumboNode*)children->data[i - 1]);
+                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
             }
         }
     }

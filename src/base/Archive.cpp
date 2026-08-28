@@ -131,7 +131,7 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
         i->name = str::Dup(this->a, entryName);
         i->isDir = (archive_entry_filetype(entry) == AE_IFDIR);
         i->data = nullptr;
-        fileInfos_.Append(i);
+        VecAppend(fileInfos_, i);
 
         if (!eagerLoad) {
             archive_read_data_skip(a);
@@ -847,7 +847,7 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
                 i->failed = true; // OOM
             }
         }
-        fileInfos_.Append(i);
+        VecAppend(fileInfos_, i);
 
         fileId++;
 

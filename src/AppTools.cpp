@@ -401,7 +401,7 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
         if (!e->openFileCmd) {
             continue;
         }
-        res.Append(e);
+        VecAppend(res, e);
     }
 }
 

@@ -15,8 +15,8 @@ struct AppendStoreTestState {
 
 static void OnAppendStoreTestRecord(AppendStoreRecord* rec, Str data, void* userData) {
     auto* state = (AppendStoreTestState*)userData;
-    state->records.Append(rec);
-    state->inlineData.Append(data.s ? str::Dup(data) : Str());
+    VecAppend(state->records, rec);
+    VecAppend(state->inlineData, data.s ? str::Dup(data) : Str());
 }
 
 static void FreeAppendStoreTestState(AppendStoreTestState& state) {

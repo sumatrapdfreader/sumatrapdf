@@ -303,7 +303,7 @@ static void SapiGetVoices(Vec<TtsVoiceInfo>& voices) {
             info.id = str::Dup(ToUtf8Temp(idW));
             info.name = str::Dup(ToUtf8Temp(nameW));
             info.lang = SapiGetVoiceLanguage(token);
-            voices.Append(info);
+            VecAppend(voices, info);
         }
 
         if (idW) {
@@ -744,7 +744,7 @@ static void WinTtsGetVoices(Vec<TtsVoiceInfo>& voices) {
             info.id = HStringToUtf8Dup(id);
             info.name = HStringToUtf8Dup(name);
             info.lang = lang ? HStringToUtf8Dup(lang) : Str();
-            voices.Append(info);
+            VecAppend(voices, info);
         }
 
         if (id) {
@@ -892,7 +892,7 @@ static void WinTtsExtractCues(WMSS::ISpeechSynthesisStream* stream) {
                         WinTtsCue wc;
                         wc.inputPos = (int)pos;
                         wc.timeMs = (int)(ts.Duration / 10000);
-                        gWinCues.Append(wc);
+                        VecAppend(gWinCues, wc);
                     }
                     speechCue->Release();
                 }
