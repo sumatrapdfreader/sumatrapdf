@@ -51,16 +51,6 @@ Gdiplus::Color GdiRgbaFromColor(Color c) {
 }
 #endif
 
-#if 0
-static Gdiplus::Color Unblend(PageAnnotation::Color c, u8 alpha) {
-    alpha = (u8)(alpha * c.a / 255.f);
-    u8 R = (u8)floorf(std::max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    u8 G = (u8)floorf(std::max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    u8 B = (u8)floorf(std::max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    return Gdiplus::Color(alpha, R, G, B);
-}
-#endif
-
 // TODO: use AdjustLightness instead to compensate for the alpha?
 // TODO: not sure if that's the exact translation of the original (above)
 TempStr SerializeColorTemp(Color c) {

@@ -3402,16 +3402,3 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
 
     return FALSE;
 }
-
-#if 0
-bool RegisterDDeServer() {
-    DWORD ddeInst = (DWORD)-1;
-    auto err = DdeInitializeW(&ddeInst, nullptr, APPCMD_CLIENTONLY | CBF_FAIL_ADVISES, 0);
-    if (err != DMLERR_NO_ERROR) {
-        // Handle initialization error
-        logf("RegisterDDeServer: DdeInitializeW() failed with '%d'\n", (int)err);
-        return false;
-    }
-    return true;
-}
-#endif

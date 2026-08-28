@@ -748,25 +748,6 @@ static LetterInfo gLetters[] = {
 };
 // clang-format on
 
-#if 0
-static char RandUppercaseLetter()
-{
-    // note: clearly, not random but seems to work ok anyway
-    static char l = 'A' - 1;
-    l++;
-    if (l > 'Z')
-        l = 'A';
-    return l;
-}
-
-static void RandomizeLetters()
-{
-    for (int i = 0; i < dimof(gLetters); i++) {
-        gLetters[i].c = RandUppercaseLetter();
-    }
-}
-#endif
-
 constexpr int kSumatraLettersCount = dimofi(gLetters);
 
 static void SetLettersSumatraUpTo(size_t n) {

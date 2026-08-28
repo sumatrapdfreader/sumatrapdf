@@ -792,18 +792,6 @@ static void GoToFavForTreeItem(MainWindow* win, TreeItem ti) {
     GoToFavorite(win, f, fn);
 }
 
-#if 0
-static void GoToFavForTVItem(MainWindow* win, TreeCtrl* treeView, HTREEITEM hItem = nullptr) {
-    TreeItem ti = 0;
-    if (nullptr == hItem) {
-        ti = treeView->GetSelection();
-    } else {
-        ti = treeView->GetTreeItemByHandle(hItem);
-    }
-    GoToFavForTreeItem(win, ti);
-}
-#endif
-
 static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
     if (!fs->favorites || len(*fs->favorites) == 0) {
         return nullptr;

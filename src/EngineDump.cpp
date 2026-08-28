@@ -452,58 +452,6 @@ class PasswordHolder : public PasswordUI {
 };
 
 void EngineDump(const Flags& flags) {
-#if 0
-    setlocale(LC_ALL, "C");
-    DisableDataExecution();
-
-    StrNode* argList = ParseCmdLine(GetCommandLine());
-    int nArgs = argList.nArgs;
-
-    if (nArgs < 2) {
-    Usage:
-        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>",
-               path::GetBaseNameTemp(Str(argList.args[0])));
-        return 2;
-    }
-
-    Str filePath = {};
-    Str password = {};
-    bool fullDump = true;
-    Str renderPath = {};
-    float renderZoom = 1.f;
-    bool loadOnly = false, silent = false;
-
-    for (int i = 1; i < nArgs; i++) {
-        if (str::Eq(argList[i], StrL("-pwd")) && i + 1 < nArgs && !password) {
-            password = argList[++i];
-        } else if (str::Eq(argList[i], StrL("-quick"))) {
-            fullDump = false;
-        } else if (str::Eq(argList[i], StrL("-render")) && i + 1 < nArgs && !renderPath) {
-            // optional zoom argument (e.g. -render 50% file.pdf)
-            float zoom;
-            if (i + 2 < nArgs && !str::IsNull(str::Parse(argList[i + 1], "%f%%%$", &zoom)) && zoom > 0.f) {
-                renderZoom = zoom / 100.f;
-                i++;
-            }
-            renderPath = argList[++i];
-        } else if (str::Eq(argList[i], StrL("-loadonly"))) {
-            // -loadonly and -silent are only meant for profiling
-            loadOnly = true;
-        } else if (str::Eq(argList[i], StrL("-silent"))) {
-            silent = true;
-        } else if (str::Eq(argList[i], StrL("-full"))) {
-            // -full is for backward compatibility
-            fullDump = true;
-        } else if (!filePath) {
-            filePath = argList[i];
-        } else {
-            goto Usage;
-        }
-    }
-    if (!filePath) {
-        goto Usage;
-    }
-#endif
     if (flags.silent) {
         FILE* nul;
         freopen_s(&nul, "NUL", "w", stdout);

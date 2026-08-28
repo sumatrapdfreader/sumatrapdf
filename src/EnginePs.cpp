@@ -111,31 +111,6 @@ struct AutoDeleteFile {
     }
 };
 
-#if 0
-static Rect ExtractDSCPageSize(const WCHAR* path) {
-    char header[1024]{};
-    file::ReadN(path, (u8*)header, sizeof(header) - 1);
-    if (!str::StartsWith((char*)header, StrL("%!PS-Adobe-"))) {
-        return {};
-    }
-
-    // PostScript creators are supposed to set the page size
-    // e.g. through a setpagedevice call in PostScript code,
-    // some creators however fail to do so and only indicate
-    // the page size in a DSC BoundingBox comment.
-    char* nl = (char*)header;
-    RectF bbox;
-    while ((nl = strchr(nl + 1, '\n')) != nullptr && '%' == nl[1]) {
-        if (str::StartsWith(nl + 1, StrL("%%BoundingBox:")) &&
-            str::Parse(nl + 1, "%%%%BoundingBox: 0 0 %f %f% ", &bbox.dx, &bbox.dy)) {
-            return ToRect(bbox);
-        }
-    }
-
-    return {};
-}
-#endif
-
 static EngineBase* ps2pdf(Str path) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     TempStr shortPath = path::ShortPathTemp(path);

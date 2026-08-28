@@ -1374,7 +1374,6 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
 
 void ControllerCallbackHandler::SaveDownload(Str url, Str data) {
     TempStr path = url::GetFileNameTemp(url);
-    // LinkSaver linkSaver(win->CurrentTab(), win->hwndFrame, fileName);
     SaveDataToFile(win->hwndFrame, path, data);
 }
 

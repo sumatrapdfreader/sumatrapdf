@@ -229,30 +229,8 @@ static const char* GetObjFileName(IDiaSectionContrib* item) {
 }
 
 // doesn't seem to exit
-#if 0
-static const char *GetLibraryName(IDiaSymbol *symbol)
-{
-    static StrBuilder strTmp;
-    BSTR   name = 0;
-    symbol->get_libraryName(&name);
-    BStrToString(strTmp, name, "<nolibfile>");
-    SysFreeStringSafe(name);
-    return strTmp.Get();
-}
-#endif
 
 // always returns <nosrcfile>
-#if 0
-static const char *GetSourceFileName(IDiaSymbol *symbol)
-{
-    static StrBuilder strTmp;
-    BSTR   name = 0;
-    symbol->get_sourceFileName(&name);
-    BStrToString(strTmp, name, "<nosrcfile>");
-    SysFreeStringSafe(name);
-    return strTmp.Get();
-}
-#endif
 
 // the result doesn't have to be free()d but is only valid until the next call to this function
 static const char* GetTypeName(IDiaSymbol* symbol) {

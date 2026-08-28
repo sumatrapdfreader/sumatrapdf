@@ -75,12 +75,7 @@ void InitDynCalls() {
         DynGetDpiForMonitor = (Sig_GetDpiForMonitor)GetProcAddress(h, "GetDpiForMonitor");
     }
 
-#if 0
-    WCHAR *dbghelpPath = L"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll";
-    h = LoadLibrary(dbghelpPath);
-#else
     h = SafeLoadLibrary(StrL("dbghelp.dll"));
-#endif
     if (h) {
         DBGHELP_API_LIST(API_LOAD)
     }

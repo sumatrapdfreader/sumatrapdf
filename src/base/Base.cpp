@@ -199,16 +199,6 @@ Func0 MkFunc0Void(funcVoidPtr fn) {
     return res;
 }
 
-#if 0
-template <typename T>
-Func0 MkMethod0Void(funcVoidPtr fn, T* self) {
-    UINT_PTR fnTagged = (UINT_PTR)fn;
-    res.fn = (void*)fn;
-    res.userData = Func0::kFuncNoArg;
-    res.self = self;
-}
-#endif
-
 int setMinMax(int& v, int minVal, int maxVal) {
     v = std::max(v, minVal);
     v = std::min(v, maxVal);

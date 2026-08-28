@@ -695,23 +695,6 @@ static void RemoveRandData(StrVecWithData<T>* v) {
     }
 }
 
-#if 0
-static void CheckSortOrder(StrVec* v, StrLessFunc lessFn = nullptr) {
-    int n = v->Size();
-    if (n < 2) {
-        return;
-    }
-    if (lessFn == nullptr) {
-        lessFn = StrLess;
-    }
-    for (int i = 1; i < n; i++) {
-        const char* prev = v->At(i - 1);
-        const char* cur = v->At(i);
-        utassert(lessFn(prev, cur) == true);
-    }
-}
-#endif
-
 static void StrVecTest8() {
     {
         StrVecWithData<Data1> v;

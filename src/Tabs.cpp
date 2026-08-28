@@ -100,14 +100,6 @@ int GetTabbarHeight(HWND hwnd, float factor) {
     return (int)((float)tabDy * factor);
 }
 
-#if 0
-static inline Size GetTabSize(HWND hwnd) {
-    int dx = DpiScale(std::max(gSettings->tabWidth, kTabMinDx));
-    int dy = GetTabbarHeight(hwnd);
-    return Size(dx, dy);
-}
-#endif
-
 static void ShowTabBar(MainWindow* win, bool show) {
     if (show == win->tabsVisible) {
         return;

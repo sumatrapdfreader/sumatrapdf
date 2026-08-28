@@ -1924,40 +1924,6 @@ static void LogWineDpiInfo() {
         GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
 
-#if 0
-static void LogDpiAwareness() {
-    if (!DynGetThreadDpiAwarenessContext) {
-        return;
-    }
-    auto awc = DynGetThreadDpiAwarenessContext();
-    auto aw = DynGetAwarenessFromDpiAwarenessContext(awc);
-
-    char* aws = "unknown";
-    if (aw == DPI_AWARENESS_INVALID) {
-        aws = "DPI_AWARENESS_INVALID";
-    } else if (aw == DPI_AWARENESS_UNAWARE) {
-        aws = "DPI_AWARENESS_UNAWARE";
-    } else if (aw == DPI_AWARENESS_SYSTEM_AWARE) {
-        aws = "DPI_AWARENESS_SYSTEM_AWARE";
-    } else if (aw == DPI_AWARENESS_PER_MONITOR_AWARE) {
-        aws = "DPI_AWARENESS_PER_MONITOR_AWARE";
-    }
-
-    logf("aw: %d %s\n", (int)aw, aws);
-}
-#endif
-
-#if 0
-static void testLogf() {
-    TempStr fileName = path::GetBaseNameTemp(__FILE__);
-    WCHAR* gswin32c = L"this is a path";
-    WCHAR* tmpFile = L"c:\foo\bar.txt";
-    auto gswin = ToUtf8Temp(gswin32c);
-    auto tmpFileName = ToUtf8Temp(path::GetBaseNameTemp(tmpFile));
-    logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin.Get(), tmpFileName.Get());
-}
-#endif
-
 // in mupdf_load_system_font.c
 extern "C" void destroy_system_font_list();
 extern void DeleteManualBrowserWindow();

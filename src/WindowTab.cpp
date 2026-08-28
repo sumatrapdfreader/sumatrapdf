@@ -247,15 +247,6 @@ void WindowTab::ToggleZoom() const {
     ctrl->SetZoomVirtual(NextToggleZoom(), nullptr);
 }
 
-// https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-#if 0
-LinkSaver::LinkSaver(WindowTab* tab, HWND parentHwnd, const WCHAR* fileName) {
-    this->tab = tab;
-    this->parentHwnd = parentHwnd;
-    this->fileName = fileName;
-}
-#endif
-
 bool SaveDataToFile(HWND hwndParent, Str fileName, Str data) {
     if (!CanAccessDisk()) {
         return false;

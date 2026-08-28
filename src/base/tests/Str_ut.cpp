@@ -163,25 +163,6 @@ static void StrIsDigitTest() {
     }
 }
 
-static void StrConvTest() {
-#if 0
-    WCHAR wbuf[4];
-    char cbuf[4];
-    size_t conv = strconv::Utf8ToWcharBuf("testing", 4, wbuf, dimof(wbuf));
-    utassert(conv == 3 && str::Eq(wbuf, L"tes"));
-    conv = strconv::WStrToUtf8Buf(L"abc", cbuf, dimof(cbuf));
-    utassert(conv == 3 && str::Eq(cbuf, StrL("abc")));
-    conv = strconv::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf));
-    utassert(conv == 3 && str::StartsWith(wbuf, L"ab") && wbuf[2] == 0xD800);
-    conv = strconv::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf) - 1);
-    utassert(conv == 1 && str::Eq(wbuf, L"a"));
-    conv = strconv::WStrToUtf8Buf(L"ab\u20AC", cbuf, dimof(cbuf));
-    utassert(conv == 0 && str::Eq(cbuf, StrL("")));
-    conv = strconv::WStrToUtf8Buf(L"abcd", cbuf, dimof(cbuf));
-    utassert(conv == 0 && str::Eq(cbuf, StrL("")));
-#endif
-}
-
 static void StrUrlExtractTest() {
     utassert(!url::GetFileNameTemp(StrL("")));
     utassert(!url::GetFileNameTemp(StrL("#hash_only")));
@@ -1159,7 +1140,6 @@ void StrTest() {
     StrReplaceTest();
     StrSeqTest();
     StrSeqNumTest();
-    StrConvTest();
     StrUrlExtractTest();
     StrFindITest();
     StrCutTest();

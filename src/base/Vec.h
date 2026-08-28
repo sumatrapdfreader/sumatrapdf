@@ -85,8 +85,6 @@ struct Vec {
         }
     }
 
-    // TODO: write Vec(const Vec&& other)
-
     Vec& operator=(const Vec& other) {
         if (this == &other) {
             return *this;

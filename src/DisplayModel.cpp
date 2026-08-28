@@ -2916,19 +2916,6 @@ bool DisplayModel::ShouldCacheRendering(int /*pageNo*/) const {
     return true;
 }
 
-#if 0
-void DisplayModel::ScrollToLink(IPageDestination* dest) {
-    ReportIf(!dest || dest->GetPageNo() <= 0);
-    if (!dest) {
-        return;
-    }
-    int pageNo = dest->GetPageNo();
-    RectF rect = dest->GetRect();
-    float zoom = dest->GetZoom();
-    ScrollTo(pageNo, rect, zoom);
-}
-#endif
-
 void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     Point scroll(-1, 0);
 

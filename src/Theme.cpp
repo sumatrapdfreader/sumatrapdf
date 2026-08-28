@@ -1158,21 +1158,3 @@ bool ThemeColorizeControls() {
     }
     return !IsMenuFontSizeDefault();
 }
-
-#if 0
-void dumpThemes() {
-    logf("Themes [\n");
-    for (ThemeOld* theme : gThemes) {
-        auto w = *theme;
-        logf("    [\n");
-        logf("        Name = %s\n", w.name);
-        logf("        TextColor = %s\n", SerializeColorTemp(w.textColor));
-        logf("        BackgroundColor = %s\n", SerializeColorTemp(w.backgroundColor));
-        logf("        ControlBackgroundColor = %s\n", SerializeColorTemp(w.controlBackgroundColor));
-        logf("        LinkColor = %s\n", SerializeColorTemp(w.linkColor));
-        logf("        ColorizeControls = %s\n", w.colorizeControls ? "true" : "false");
-        logf("    ]\n");
-    }
-    logf("]\n");
-}
-#endif
