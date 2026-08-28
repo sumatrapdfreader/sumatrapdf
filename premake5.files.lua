@@ -686,6 +686,7 @@ function sumatrapdf_files()
     "PdfTools.*",
     "PngOptimizer.*",
     "Print.*",
+    "PrintWin11.*",
     "ProgressUpdateUI.*",
     "ReadAloudHighlight.*",
     "ReadAloudPlaybackBar.*",

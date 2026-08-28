@@ -333,6 +333,9 @@
     <ClInclude Include="..\src\Print.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\PrintWin11.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ProgressUpdateUI.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -939,6 +942,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Print.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PrintWin11.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ReadAloudHighlight.cpp">

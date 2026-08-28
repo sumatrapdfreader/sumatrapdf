@@ -49,6 +49,19 @@ void GetPrintersInfo(str::Builder& out);
 
 class EngineBase;
 struct MainWindow;
+struct Print_Advanced_Data;
+
+struct PrintPageLayout {
+    float zoom = 1.f;
+    int rotation = 0;
+    Point offset;
+    Rect stretch;
+    bool isStretch = false;
+};
+
+bool CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanced_Data& advanced, Size paperSize,
+                              Rect printable, float dpiX, float dpiY, bool printPortrait, Str printerName,
+                              PrintPageLayout& layout);
 
 // result of command-line printing; the numeric values double as the process
 // exit code so an automated caller can tell why printing failed (issue #3478)
