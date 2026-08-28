@@ -153,6 +153,10 @@ void DarkModeApplyToPopupWindow(HWND hwnd) {
     if (IsCurrentThemeDefault()) {
         return;
     }
+    // darkmodelib answers WM_CTLCOLORLISTBOX for a combo's drop-down here (the
+    // combo forwards it to us); without this subclass the list keeps the
+    // system colors and is white in a dark theme (issue #6083)
+    DarkMode::setWindowCtlColorSubclass(hwnd);
     DarkMode::setChildCtrlsSubclassAndTheme(hwnd);
     DarkMode::setWindowNotifyCustomDrawSubclass(hwnd);
 }
