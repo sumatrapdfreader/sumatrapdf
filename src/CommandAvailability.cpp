@@ -579,6 +579,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
+    if (cmdId == CmdNavigateThumbnail && !ctx.isFixedPage) {
+        return CommandVisibility::Hide;
+    }
+
     if (cmdId == CmdShowGeneratedHTML && !ctx.isMarkdown) {
         return CommandVisibility::Hide;
     }

@@ -236,6 +236,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - **Bake PDF** includes annotations created in the current session
 - Find remembers the last 10 search queries for the session (not saved to settings) and offers them from a drop-down on the find field (fixes #893)
 - **Stop Reading** is always in the Read Aloud menu (main menu, context menu, toolbar dropdown), even when the playback bar is not visible, so a session can still be stopped from the top menu (fixes #6053). It is disabled when nothing is being read; the command palette lists it only while a session is active
+- **Navigate Thumbnails** opens a page-thumbnail grid for the current fixed-page document; thumbnails appear as they are rendered in the background, and the grid supports arrow-key navigation, mouse selection, double-click or Enter to open a page, Escape to close, and a scrollbar for long documents
 
 **New commands:**
 
@@ -250,6 +251,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdAIChatWithClaudeCode` : "AI Chat"
 - `CmdChangeBackgroundColor` : "Change Background Color"
 - `CmdChangeTheme` : "Change Theme..." — dialog to pick a UI theme and document-color follow mode
+- `CmdNavigateThumbnail` : "Navigate Thumbnails" — thumbnail grid for choosing a page
 - `CmdChangeScrollbar` : "Change Scrollbar"
 - `CmdCommandPalette %` : command palette table-of-contents mode (`CmdCommandPaletteTOC`, `Shift + F12`)
 - `CmdCommandPalette $` : command palette favorites mode (`CmdCommandPaletteFavorites`)

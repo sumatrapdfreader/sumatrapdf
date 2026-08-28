@@ -237,6 +237,10 @@ static MenuDef menuDefView[] = {
         CmdCommandPalette,
     },
     {
+        _TRN("Navigate Thumbnails"),
+        CmdNavigateThumbnail,
+    },
+    {
         _TRN("&Single Page"),
         CmdSinglePageView,
     },

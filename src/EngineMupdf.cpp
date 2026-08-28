@@ -3299,14 +3299,23 @@ class PasswordCloner : public PasswordUI {
 };
 
 EngineBase* EngineMupdf::Clone() {
-    ScopedRecursiveMutex scope(&docLock);
-    auto* ctx = Ctx();
     // use this document's encryption key (if any) to load the clone
+    u8 cryptKey[32]{};
+    bool hasCryptKey = false;
     PasswordCloner* pwdUI = nullptr;
-    if (pdfdoc) {
-        if (pdf_crypt_key(ctx, pdfdoc->crypt)) {
-            pwdUI = new PasswordCloner(pdf_crypt_key(ctx, pdfdoc->crypt));
+    {
+        ScopedRecursiveMutex scope(&docLock);
+        auto* ctx = Ctx();
+        if (pdfdoc) {
+            u8* key = pdf_crypt_key(ctx, pdfdoc->crypt);
+            if (key) {
+                memcpy(cryptKey, key, sizeof(cryptKey));
+                hasCryptKey = true;
+            }
         }
+    }
+    if (hasCryptKey) {
+        pwdUI = new PasswordCloner(cryptKey);
     }
 
     // prefer re-loading from the file: it streams large documents on demand
@@ -3338,17 +3347,20 @@ EngineBase* EngineMupdf::Clone() {
     }
     delete pwdUI;
 
-    clone->disableAntiAlias = disableAntiAlias;
-    clone->disableAutoLinks = disableAutoLinks;
-    clone->cadDetectDone = cadDetectDone;
-    clone->cadDetectEnable = cadDetectEnable;
-    clone->cadDetectScore = cadDetectScore;
-    clone->cadRasterDominant = cadRasterDominant;
-    clone->cadHairlineVector = cadHairlineVector;
-    clone->cadEnhanceOverride = cadEnhanceOverride;
+    {
+        ScopedRecursiveMutex scope(&docLock);
+        clone->disableAntiAlias = disableAntiAlias;
+        clone->disableAutoLinks = disableAutoLinks;
+        clone->cadDetectDone = cadDetectDone;
+        clone->cadDetectEnable = cadDetectEnable;
+        clone->cadDetectScore = cadDetectScore;
+        clone->cadRasterDominant = cadRasterDominant;
+        clone->cadHairlineVector = cadHairlineVector;
+        clone->cadEnhanceOverride = cadEnhanceOverride;
 
-    if (!decryptionKey.s && pdfdoc && pdfdoc->crypt) {
-        clone->decryptionKey = Str();
+        if (!decryptionKey.s && pdfdoc && pdfdoc->crypt) {
+            clone->decryptionKey = Str();
+        }
     }
 
     return clone;

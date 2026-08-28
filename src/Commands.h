@@ -305,7 +305,8 @@ enum {
     CmdCopyAnnotation = 494,
     CmdPasteAnnotation = 495,
     CmdSearchGoogleLens = 496,
-    CmdNone = 497,
+    CmdNavigateThumbnail = 497,
+    CmdNone = 498,
 
     /* range for file history */
     CmdFileHistoryFirst,

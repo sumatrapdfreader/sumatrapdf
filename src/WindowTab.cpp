@@ -22,6 +22,7 @@
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
 #include "AnnotEditToolbar.h"
+#include "ThumbnailNavigation.h"
 #include "WindowTab.h"
 
 WindowTab::WindowTab(MainWindow* win) {
@@ -36,6 +37,7 @@ void WindowTab::SetFilePath(Str path) {
     }
     if (changed) {
         str::FreePtr(&pendingFindText);
+        FreeThumbnailNavigationCache(this);
     }
     str::ReplaceWithCopy(&filePath, path);
 }
@@ -64,6 +66,7 @@ WindowTab::~WindowTab() {
     // whatever a close path forgot, nothing may be left pointing at a tab that
     // is going away (the read-aloud playback bar holds one)
     ReadAloudForgetTab(this);
+    FreeThumbnailNavigationCache(this);
     // Drop MainWindow pointers into this tab / its controller before we free
     // them: DestroyWindow during WebView teardown can re-enter the canvas
     // WndProc, which reads win->ctrl / CurrentTab().

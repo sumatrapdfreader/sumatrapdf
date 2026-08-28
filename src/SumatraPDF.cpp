@@ -110,6 +110,7 @@
 #include "SelectionTranslate.h"
 #include "SelectionHandlers.h"
 #include "GoogleLens.h"
+#include "ThumbnailNavigation.h"
 #include "CommandPalette.h"
 #include "SumatraDialogs.h"
 #include "NavFilesInFolder.h"
@@ -12314,6 +12315,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSearchGoogleLens:
             SearchWithGoogleLens(tab);
+            break;
+
+        case CmdNavigateThumbnail:
+            ShowThumbnailNavigation(win);
             break;
 
         case CmdSearchSelectionWithBing:
