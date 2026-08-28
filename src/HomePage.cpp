@@ -1411,7 +1411,7 @@ static void ClearHomeLayoutCache() {
     gHomeLayoutCache.valid = false;
     str::Free(gHomeLayoutCache.filterText);
     gHomeLayoutCache.filterText = {};
-    gHomeLayoutCache.thumbs.Reset();
+    VecReset(gHomeLayoutCache.thumbs);
     gHomeLayoutCache.filterWords.Reset();
     gHomeLayoutCache.hasTip = false;
     gHomeLayoutCache.nFiles = 0;

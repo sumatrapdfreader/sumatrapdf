@@ -564,7 +564,7 @@ static bool SettingNameMatchesFilter(Str name, const StrVec& words) {
 // Keep the metadata order within each group, but put customized settings first
 // so the values users are most likely to review are immediately visible.
 static void CollectFilteredSettings(Vec<SettingItem*>& items, const StrVec& words, Vec<int>& filtered) {
-    filtered.Reset();
+    VecReset(filtered);
     for (int group = 0; group < 2; group++) {
         bool wantNonDefault = group == 0;
         int n = len(items);

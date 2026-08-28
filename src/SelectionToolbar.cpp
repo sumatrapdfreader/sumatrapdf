@@ -104,7 +104,7 @@ static const SelectionToolbarButton* FindCandidateButton(int cmdId) {
 // Empty SelectionToolbarLayout is the standard set; otherwise the setting
 // lists command names (discussion #6015).
 static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
-    out.Reset();
+    VecReset(out);
     auto addDefault = [&out]() {
         for (const SelectionToolbarButton& cand : gCandidateButtons) {
             out.Append(cand.cmdId);
@@ -149,7 +149,7 @@ static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
     }
     if (nButtons == 0) {
         logf("SelectionToolbarLayout: nothing usable in '%s', using the standard layout\n", setting);
-        out.Reset();
+        VecReset(out);
         addDefault();
     }
 }
@@ -203,7 +203,7 @@ static void NormalizeSelectionToolbarSeparators(Vec<SelectionToolbarButton>& but
 
 static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
     AppCommandCtx ctx = NewAppCommandCtx(win);
-    tb->buttons.Reset();
+    VecReset(tb->buttons);
     Vec<int> ids;
     CollectBuiltInSelectionToolbarCmds(ids);
     for (int i = 0; i < len(ids); i++) {

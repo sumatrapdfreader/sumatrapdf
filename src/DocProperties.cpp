@@ -142,7 +142,7 @@ void FreeProps(Props& props) {
     for (int i = 0; i < n; i++) {
         str::Free(props[i].val);
     }
-    props.Reset();
+    VecReset(props);
 }
 
 // gPropNames lists the names in DocProp order, so DocProp::Title (value 1) is

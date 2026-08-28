@@ -216,7 +216,7 @@ static Str ExtractHeadingTitle(cmark_node* heading) {
 
 static void ParseMarkdownHeadings(Str filePath, MarkdownFileToc* toc) {
     toc->filePath = str::Dup(filePath);
-    toc->headings.Reset();
+    VecReset(toc->headings);
 
     Str data = file::ReadFile(filePath);
     if (!data) {
@@ -266,7 +266,7 @@ static bool IsHtmlHeadingTag(HtmlTag tag) {
 // Extract <h1>..<h6> headings from HTML source, using each heading's id=""
 // attribute (when present) as the in-page anchor. headingsOut items are heap-owned.
 void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
-    headingsOut.Reset();
+    VecReset(headingsOut);
     if (!data) {
         return;
     }
@@ -319,7 +319,7 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
 // Build a sibling-file TOC from an HTML file's headings.
 static void ParseHtmlHeadings(Str filePath, MarkdownFileToc* toc) {
     toc->filePath = str::Dup(filePath);
-    toc->headings.Reset();
+    VecReset(toc->headings);
     Str data = file::ReadFile(filePath);
     if (!data) {
         return;
@@ -356,13 +356,13 @@ static void InitMarkdownFileToc(MarkdownFileToc* ft) {
     ft->filePath = {};
     ft->relPath = {};
     // MarkdownFileToc contains a nested Vec; Reset() from a zeroed slot is safe.
-    ft->headings.Reset();
+    VecReset(ft->headings);
 }
 
 // Parse headings from all files in parallel (up to CpuCoreCount() - 2 threads).
 void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc>& tocsOut) {
     int n = len(files);
-    tocsOut.Reset();
+    VecReset(tocsOut);
     if (n == 0) {
         return;
     }

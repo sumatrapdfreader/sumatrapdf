@@ -1440,7 +1440,7 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
         currPage->instructions.Append(DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
         str::ReplaceWithCopy(&pagePath, attr->val);
         // reset CSS style rules for the new document
-        styleRules.Reset();
+        VecReset(styleRules);
     }
 }
 

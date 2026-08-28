@@ -2104,7 +2104,7 @@ static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt,
     win->annotationLinePreviewStart = {};
     win->annotationLinePreviewEnd = {};
     win->annotationResizeVertexIndex = -1;
-    win->annotationVertexPreview.Reset();
+    VecReset(win->annotationVertexPreview);
     if (annot->type == AnnotationType::Line) {
         GetLinePoints(annot, win->annotationOriginalLineStart, win->annotationOriginalLineEnd);
         win->annotationLinePreviewStart = win->annotationOriginalLineStart;

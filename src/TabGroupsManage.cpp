@@ -37,7 +37,7 @@ struct TabGroupsListBoxModel : ListBoxModel {
     Vec<TabGroup*> groups;
 
     void Reload() {
-        groups.Reset();
+        VecReset(groups);
         auto* g = gSettings->tabGroups;
         if (g) {
             for (auto* tg : *g) {

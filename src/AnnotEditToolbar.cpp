@@ -236,7 +236,7 @@ static bool AnnotationColorIsBackground(AnnotationType tp) {
 }
 
 static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
-    out.Reset();
+    VecReset(out);
     if (!AnnotationIsLive(annot)) {
         return;
     }
@@ -955,8 +955,8 @@ static void LayoutToolbar(AnnotEditToolbar* tb, const Vec<AnnotEditItem>& items)
     int rowDy = textDy + (2 * padY);
     Color hoverBg = BarHoverBg(BarBg());
 
-    tb->kinds.Reset();
-    tb->chips.Reset();
+    VecReset(tb->kinds);
+    VecReset(tb->chips);
     auto* box = new HBox();
     box->alignCross = CrossAxisAlign::Stretch;
     bool isFirst = true;
@@ -1289,7 +1289,7 @@ static void LayoutContentsEditor(AnnotEditToolbar* tb) {
 
     auto* content = new Padding(vbox, Insets{margin, margin, margin, margin});
     tb->size = tb->host->SetLayoutSizedToContent(content);
-    tb->kinds.Reset();
+    VecReset(tb->kinds);
 }
 
 static void PostedStartContentsEdit(MainWindow* win) {
@@ -1756,7 +1756,7 @@ void HideAnnotEditToolbar(MainWindow* win) {
     tb->annot = nullptr;
     tb->lastPlaced = {};
     tb->lastAnnotBounds = {};
-    tb->kinds.Reset();
+    VecReset(tb->kinds);
 }
 
 void UpdateAnnotEditToolbar(MainWindow* win) {
@@ -2583,7 +2583,7 @@ static void LoadAnnotsForPage(EngineMupdf* e, int pageNo) {
 // even when visibleRatio is still 0), every page overlapping the viewport, and
 // a context-menu annotation's page.
 static void CollectPriorityAnnotPages(WindowTab* tab, Annotation* extra, Vec<int>& pages) {
-    pages.Reset();
+    VecReset(pages);
     if (!tab) {
         return;
     }

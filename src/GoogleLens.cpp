@@ -123,7 +123,7 @@ static bool EncodePng(RenderedBitmap* bitmap, Vec<u8>& out) {
         if (!data) {
             ok = false;
         } else {
-            out.Reset();
+            VecReset(out);
             VecAppendN(out, (u8*)data, (int)size);
             GlobalUnlock(global);
         }

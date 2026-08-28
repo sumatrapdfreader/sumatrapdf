@@ -162,7 +162,7 @@ static int CmpTargetsInReadingOrder(const ScreenTarget* a, const ScreenTarget* b
 }
 
 void KeyboardLinkFollowingRecompute(MainWindow* win) {
-    win->linkFollowTargets.Reset();
+    VecReset(win->linkFollowTargets);
     win->linkFollowInputLen = 0;
     if (!KeyboardLinkFollowingActive(win) || !CanFollowLinksWithKeyboard(win)) {
         return;
@@ -215,7 +215,7 @@ bool StopKeyboardLinkFollowing(MainWindow* win) {
         return false;
     }
     win->linkFollowActive = false;
-    win->linkFollowTargets.Reset();
+    VecReset(win->linkFollowTargets);
     win->linkFollowInputLen = 0;
     KillTimer(win->hwndCanvas, kLinkFollowTimerID);
     ScheduleRepaint(win, 0);

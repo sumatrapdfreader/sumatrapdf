@@ -99,7 +99,7 @@ bool DecodeJpegToCmyk(Str jpeg, int& w, int& h, int& stride, Vec<u8>& samples) {
     w = 0;
     h = 0;
     stride = 0;
-    samples.Reset();
+    VecReset(samples);
     if (len(jpeg) < 4) {
         return false;
     }
@@ -158,7 +158,7 @@ bool DecodeJpegToCmyk(Str jpeg, int& w, int& h, int& stride, Vec<u8>& samples) {
     fz_catch(ctx) {
         fz_report_error(ctx);
         ok = false;
-        samples.Reset();
+        VecReset(samples);
         w = 0;
         h = 0;
         stride = 0;

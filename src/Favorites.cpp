@@ -484,7 +484,7 @@ static void RemoveAllFavForFile(Str filePath) {
     for (int i = 0; i < len(*fav->favorites); i++) {
         DeleteFavorite((*fav->favorites)[i]);
     }
-    fav->favorites->Reset();
+    VecReset(*fav->favorites);
 
     if (!SettingsRememberOpenedFiles()) {
         FileHistoryRemove(fav);
@@ -1207,7 +1207,7 @@ void DelFavorite(Str filePath, int pageNo) {
 }
 
 void RememberFavTreeExpansionState(MainWindow* win) {
-    win->expandedFavorites.Reset();
+    VecReset(win->expandedFavorites);
     TreeView* treeView = win->favTreeView;
     TreeModel* tm = treeView ? treeView->treeModel : nullptr;
     if (!tm) {

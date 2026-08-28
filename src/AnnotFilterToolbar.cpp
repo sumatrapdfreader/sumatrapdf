@@ -164,7 +164,7 @@ static void LoadAnnotations(AnnotFilterToolbar* f) {
         return;
     }
     WindowTab* tab = FilterTab(f);
-    f->annotations.Reset();
+    VecReset(f->annotations);
     if (!tab) {
         return;
     }
@@ -263,7 +263,7 @@ static void RebuildList(AnnotFilterToolbar* f) {
             }
         }
     }
-    f->visibleAnnots.Reset();
+    VecReset(f->visibleAnnots);
     for (Annotation* annot : f->annotations) {
         if (AnnotMatchesFilter(annot, f->filterWords)) {
             f->visibleAnnots.Append(annot);

@@ -693,7 +693,7 @@ const char* PdfPageBoxName(PdfPageBoxKind kind) {
 
 // Non-PDF engines have no page boxes.
 void EngineBase::GetPdfPageBoxes(int /*pageNo*/, Vec<PdfPageBox>& out) {
-    out.Reset();
+    VecReset(out);
 }
 
 // the layout type this document's author suggests (if the user doesn't care)

@@ -339,7 +339,7 @@ void TabsCtrl::Destroy() {
     }
     if (vroot) {
         // tops do not own us; clear root pointer before deleting
-        vroot->tops.Reset();
+        VecReset(vroot->tops);
         delete vroot;
         vroot = nullptr;
     }
@@ -395,7 +395,7 @@ bool TabsCtrl::IsVisible() const {
 // and it keeps the tree and the list impossible to get out of step
 void TabsCtrl::RebuildTabCtrls() {
     RemoveAllChildren(true);
-    tabCtrls.Reset();
+    VecReset(tabCtrls);
     int n = TabCount();
     for (int i = 0; i < n; i++) {
         auto* w = new TabCtrl();
@@ -645,7 +645,7 @@ static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
         // after removing 1 we insert not at 3 but 2
         tabIdxTo -= 1;
     }
-    tabs.InsertAt(tabIdxTo, moved);
+    VecInsertAt(tabs, tabIdxTo, moved);
     tabsCtrl->RebuildTabCtrls();
     tabsCtrl->SetSelected(tabIdxTo);
     tabsCtrl->LayoutTabs();
@@ -1009,7 +1009,7 @@ Size TabsCtrl::GetIdealSize() {
 // takes ownership of tab
 int TabsCtrl::InsertTab(int idx, TabInfo* tab, bool update) {
     ReportIf(idx < 0);
-    tabs.InsertAt(idx, tab);
+    VecInsertAt(tabs, idx, tab);
     RebuildTabCtrls();
     if (update) {
         // LayoutTabs() must be before SetSelected() because SetSelected()
@@ -1089,7 +1089,7 @@ void TabsCtrl::SwapTabs(int idx1, int idx2) {
 // Note: the caller should take care of deleting userData
 void TabsCtrl::RemoveAllTabs() {
     DeleteVecMembers(tabs);
-    tabs.Reset();
+    VecReset(tabs);
     selectedIdx = -1;
     RebuildTabCtrls();
     LayoutTabs();

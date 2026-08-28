@@ -640,7 +640,7 @@ static const u8* PixmapAsPremulBgra(Pixmap* px, Vec<u8>& scratch, int* strideOut
     }
     int w = src->width, h = src->height;
     int stride = w * 4;
-    scratch.Reset();
+    VecReset(scratch);
     u8* dst = VecReserve(scratch, stride * h);
     int srcBpp = PixmapBytesPerPixel(src->format);
     bool isRgba = src->format == PixmapFormat::RGBA8;

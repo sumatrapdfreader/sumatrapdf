@@ -87,7 +87,7 @@ static void ClearCache(PageRenderServiceData* data) {
     for (PageRenderCacheEntry& entry : data->cache) {
         FreePixmap(entry.pixmap);
     }
-    data->cache.Reset();
+    VecReset(data->cache);
     data->cacheBytes = 0;
 }
 
@@ -207,7 +207,7 @@ PageRenderService::~PageRenderService() {
 
     serviceData->mutex.Lock();
     serviceData->stopping = true;
-    serviceData->requests.Reset();
+    VecReset(serviceData->requests);
     if (serviceData->activeCookie) {
         serviceData->activeCookie->Abort();
     }
@@ -230,7 +230,7 @@ void PageRenderService::NewGeneration() {
     auto* serviceData = ServiceData(this);
     ScopedMutex lock(&serviceData->mutex);
     serviceData->generation++;
-    serviceData->requests.Reset();
+    VecReset(serviceData->requests);
     ClearCache(serviceData);
     if (serviceData->activeCookie) {
         serviceData->activeCookie->Abort();

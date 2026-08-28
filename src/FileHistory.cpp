@@ -114,7 +114,7 @@ FileState* FileHistoryMarkFileLoaded(Str filePath) {
         gStates->Remove(fs);
         fs->isMissing = false;
     }
-    gStates->InsertAt(0, fs);
+    VecInsertAt(*gStates, 0, fs);
     fs->openCount++;
     return fs;
 }
@@ -139,7 +139,7 @@ bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
         if (len(*gStates) <= newIdx) {
             gStates->Append(state);
         } else {
-            gStates->InsertAt(newIdx, state);
+            VecInsertAt(*gStates, newIdx, state);
         }
     }
     // also delete the thumbnail and move the link towards the

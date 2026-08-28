@@ -1089,7 +1089,7 @@ ExifParser::~ExifParser() {
 
 void ExifParser::Reset() {
     dumpLines.Reset();
-    entries.Reset();
+    VecReset(entries);
     free(ownedExif);
     ownedExif = nullptr;
     data = {};

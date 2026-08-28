@@ -58,7 +58,7 @@ void ChangeLanguageWnd::FilterList() {
     }
     TempStr filter = editSearch ? editSearch->GetTextTemp() : Str{};
     model->strings.Reset();
-    langIdxByListIdx.Reset();
+    VecReset(langIdxByListIdx);
     int itemToSelect = 0;
     Str currLangCode = trans::GetCurrentLangCode();
     for (int i = 0; i < trans::GetLangsCount(); i++) {

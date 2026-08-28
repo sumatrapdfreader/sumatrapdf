@@ -357,7 +357,7 @@ void Tooltip::Delete(int id) {
     str::Free(lastText);
     lastText = {};
     if (!hwnd) {
-        tooltipIds.Reset();
+        VecReset(tooltipIds);
         return;
     }
     if (len(tooltipIds) > 0) {
@@ -365,7 +365,7 @@ void Tooltip::Delete(int id) {
     }
     SendMessageW(hwnd, TTM_POP, 0, 0);
     TooltipRemoveAll(hwnd);
-    tooltipIds.Reset();
+    VecReset(tooltipIds);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/ttm-setdelaytime

@@ -1632,7 +1632,7 @@ boxElementInfo& Wrap::AddChild(ILayout* child) {
 
 // greedy wrap of already-measured children into rows that fit maxWidth
 void Wrap::PackRows(int maxWidth) {
-    rows.Reset();
+    VecReset(rows);
     int n = ChildrenCount();
     Row cur{};
     bool have = false;
@@ -1665,7 +1665,7 @@ void Wrap::PackRows(int maxWidth) {
 }
 
 Size Wrap::Layout(const Constraints bc) {
-    rows.Reset();
+    VecReset(rows);
     int n = ChildrenCount();
     if (n == 0) {
         return bc.Constrain(Size{});

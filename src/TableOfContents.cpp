@@ -390,7 +390,7 @@ void ClearTocBox(MainWindow* win) {
     win->tocLoaded = false;
 
     win->tocTreeView->Clear();
-    win->tocMatchingItems.Reset();
+    VecReset(win->tocMatchingItems);
 
     // clear filter state
     delete win->tocFilteredTree;
@@ -652,7 +652,7 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeView* treeView, TocTree* do
         // CrashMe();
         return;
     }
-    tocState.Reset();
+    VecReset(tocState);
     TocItem* tocItem = docTree->root->child;
     UpdateDocTocExpansionStateRecur(treeView, tocState, tocItem);
 }

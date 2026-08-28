@@ -225,7 +225,7 @@ void TextSearch::SetPageRange(int first, int last) {
         last = 0;
     }
     if (first == 0 && last == 0) {
-        pageAllowed.Reset();
+        VecReset(pageAllowed);
         markAllPagesNonSkip(pagesToSkip);
         return;
     }

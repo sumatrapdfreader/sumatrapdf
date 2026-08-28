@@ -27,7 +27,7 @@ void VecTest() {
     ints.Append(1);
     utassert(ints.Cap() == 4);
     ints.Append(2);
-    ints.InsertAt(0, -1);
+    VecInsertAt(ints, 0, -1);
     utassert(len(ints) == 3);
     utassert(ints[0] == -1 && ints[1] == 1 && ints[2] == 2);
     utassert(ints[0] == -1 && ints.Last() == 2);
@@ -38,7 +38,7 @@ void VecTest() {
     ints.RemoveAt(0);
     utassert(len(ints) == 2);
     utassert(ints[0] == 1 && ints[1] == 3);
-    ints.Reset();
+    VecReset(ints);
     utassert(len(ints) == 0);
 
     for (int i = 0; i < 1000; i++) {
@@ -82,7 +82,7 @@ void VecTest() {
         utassert(v.els != buf);
         utassert(v.Cap() >= 5);
         utassert(v[0] == 0 && v[4] == 4);
-        v.Reset();
+        VecReset(v);
         utassert(v.els == nullptr);
     }
 
@@ -162,7 +162,7 @@ void VecTest() {
         for (int i = 0; i < 128; i++) {
             v.Append(new Point(i, i));
             int pos = rand() % len(v);
-            v.InsertAt(pos, new Point(i, i));
+            VecInsertAt(v, pos, new Point(i, i));
         }
         utassert(len(v) == 128 * 2);
 
@@ -189,7 +189,7 @@ void VecTest() {
 
     {
         Vec<int> v;
-        v.InsertAt(2, 2);
+        VecInsertAt(v, 2, 2);
         auto size = len(v);
         utassert(size == 3);
         auto el0 = v[0];

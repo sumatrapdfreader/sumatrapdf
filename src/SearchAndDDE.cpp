@@ -122,8 +122,8 @@ static struct {
 } gFindMatchPaintCache;
 
 static void FreeFindMatchPaintCacheEntries() {
-    gFindMatchPaintCache.entries.Reset();
-    gFindMatchPaintCache.positions.Reset();
+    VecReset(gFindMatchPaintCache.entries);
+    VecReset(gFindMatchPaintCache.positions);
 }
 
 void InvalidateFindMatchPaintCache() {
@@ -444,7 +444,7 @@ static void StartIncrementalFind(MainWindow* win) {
 // comma-separated list such as "3,4-6,18-". Whitespace around tokens is
 // allowed. Invalid input returns false (caller treats that as all pages).
 bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut) {
-    allowedOut.Reset();
+    VecReset(allowedOut);
     if (!s || len(s) == 0 || nPages < 1) {
         return true;
     }
@@ -506,11 +506,11 @@ bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut) {
         bool haveLast = parseNum(last);
         skipWs();
         if (p < end && *p != ',') {
-            allowedOut.Reset();
+            VecReset(allowedOut);
             return false;
         }
         if (!haveFirst && !haveDash && !haveLast) {
-            allowedOut.Reset();
+            VecReset(allowedOut);
             return false;
         }
         if (haveFirst && !haveDash && !haveLast) {
@@ -520,7 +520,7 @@ bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut) {
         } else if (haveFirst && haveDash && !haveLast) {
             last = nPages;
         } else if (!haveFirst && haveDash && !haveLast) {
-            allowedOut.Reset();
+            VecReset(allowedOut);
             return false;
         }
         if (first > last) {
@@ -549,7 +549,7 @@ bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut) {
         }
     }
     if (!any) {
-        allowedOut.Reset();
+        VecReset(allowedOut);
     }
     return true;
 }
@@ -563,7 +563,7 @@ static bool ApplyFindPageRange(MainWindow* win) {
         Vec<bool> allowed;
         int nPages = dm->PageCount();
         if (!ParseFindPageRange(spec, nPages, allowed)) {
-            allowed.Reset();
+            VecReset(allowed);
         }
         dm->textSearch->SetAllowedPages(allowed);
     }
@@ -951,7 +951,7 @@ void ClearFindMatches(MainWindow* win) {
     for (int i = 0; i < n; i++) {
         str::Free(win->findMatches[i].snippet);
     }
-    win->findMatches.Reset();
+    VecReset(win->findMatches);
     win->findCountHasSnippets = false;
     InvalidateFindMatchPaintCache();
     // for markdown, findMatches came from the webview's all-pages sweep; reset
@@ -977,7 +977,7 @@ void InvalidateFindForDocumentChange(MainWindow* win) {
     win->findCountValid = false;
     win->findCountCapped = false;
     win->findCountEngine = nullptr;
-    win->findCountPositions.Reset();
+    VecReset(win->findCountPositions);
     str::FreePtr(&win->findCountText);
     FindWindowUpdatePagesLabel(win);
     FindWindowRefreshResults(win);
@@ -1274,7 +1274,7 @@ static void CountThread(CountThreadData* d) {
         ts.SetMatchWholeWord(d->matchWholeWord);
         Vec<bool> allowed;
         if (!ParseFindPageRange(d->rangeSpec, engine->PageCount(), allowed)) {
-            allowed.Reset();
+            VecReset(allowed);
         }
         ts.SetAllowedPages(allowed);
         ts.SetDirection(TextSearch::Direction::Forward);
@@ -1962,7 +1962,7 @@ void PaintAllFindMatches(MainWindow* win, Gfx* gfx) {
         ClearFindMatches(win);
         win->findCountValid = false;
         win->findCountEngine = nullptr;
-        win->findCountPositions.Reset();
+        VecReset(win->findCountPositions);
         str::FreePtr(&win->findCountText);
         return;
     }
@@ -2116,7 +2116,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     DisplayModel* dm = tab->AsFixed();
 
     // Clear the last forward-search result
-    win->fwdSearchMark.rects.Reset();
+    VecReset(win->fwdSearchMark.rects);
     HwndInvalidate(win->hwndCanvas);
 
     // On double-clicking error message will be shown to the user
@@ -2247,7 +2247,7 @@ void ShowLinkDestHighlight(MainWindow* win, int pageNo, RectF dest) {
     if (!win || !win->AsFixed()) {
         return;
     }
-    win->fwdSearchMark.rects.Reset();
+    VecReset(win->fwdSearchMark.rects);
     win->fwdSearchMark.show = false;
     if (!gSettings || !gSettings->highlightLinkDestination) {
         return;
@@ -2288,7 +2288,7 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
                              Vec<Rect>& rects) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
-    win->fwdSearchMark.rects.Reset();
+    VecReset(win->fwdSearchMark.rects);
     const PageInfo* pi = dm->GetPageInfo(page);
     if ((ret == PDFSYNCERR_SUCCESS) && (len(rects) > 0) && (nullptr != pi)) {
         // remember the position of the search result for drawing the rect later on

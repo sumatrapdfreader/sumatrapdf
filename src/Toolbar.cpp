@@ -1434,8 +1434,8 @@ static void BuildToolbarLayout(MainWindow* win) {
 
     ToolbarVirt* tb = win->toolbarVirt;
     UnbindAnnotFilterEdit(win);
-    tb->items.Reset();
-    tb->annotationItems.Reset();
+    VecReset(tb->items);
+    VecReset(tb->annotationItems);
     tb->annotationRow = nullptr;
     tb->pageLabel = nullptr;
     tb->pageTotal = nullptr;

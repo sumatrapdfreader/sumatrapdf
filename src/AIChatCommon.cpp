@@ -133,7 +133,7 @@ void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions) {
         str::Free(sessions[i].display);
         str::Free(sessions[i].project);
     }
-    sessions.Reset();
+    VecReset(sessions);
 }
 
 void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions) {

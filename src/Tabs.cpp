@@ -848,7 +848,7 @@ void TabsOnCloseWindow(MainWindow* win) {
     auto tabs = win->Tabs();
     DeleteVecMembers(tabs);
     win->tabsCtrl->RemoveAllTabs();
-    win->tabSelectionHistory->Reset();
+    VecReset(*win->tabSelectionHistory);
 }
 
 void SetTabsInTitlebar(MainWindow* win, bool inTitleBar) {

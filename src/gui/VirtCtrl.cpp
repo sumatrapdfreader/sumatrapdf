@@ -392,7 +392,7 @@ void VirtCtrl::InsertChild(VirtCtrl* c, int idx) {
     if (idx < 0 || idx >= len(children)) {
         children.Append(c);
     } else {
-        children.InsertAt(idx, c);
+        VecInsertAt(children, idx, c);
     }
 }
 
@@ -611,7 +611,7 @@ void VirtRoot::SetChild(VirtCtrl* c) {
     }
     delete owned;
     owned = c;
-    tops.Reset();
+    VecReset(tops);
     hovered = nullptr;
     captured = nullptr;
     focused = nullptr;
@@ -631,7 +631,7 @@ void VirtRoot::SetChild(VirtCtrl* c) {
 
 void VirtRoot::SetTops(const Vec<VirtCtrl*>& newTops) {
     ReportIf(owned);
-    tops.Reset();
+    VecReset(tops);
     hovered = nullptr;
     captured = nullptr;
     focused = nullptr;
@@ -1702,7 +1702,7 @@ void VirtListBox::EnsureSelectedSize() {
     if (len(selected) == n) {
         return;
     }
-    selected.Reset();
+    VecReset(selected);
     if (n <= 0) {
         return;
     }
@@ -1741,7 +1741,7 @@ int VirtListBox::SelectedCount() {
 }
 
 void VirtListBox::GetSelectedIndices(Vec<int>& out) {
-    out.Reset();
+    VecReset(out);
     if (!multiSelect) {
         if (selIdx >= 0) {
             out.Append(selIdx);
@@ -1818,7 +1818,7 @@ bool VirtListBox::SetCurrentSelection(int idx) {
     anchorIdx = idx;
     if (multiSelect) {
         int n = ItemsCount();
-        selected.Reset();
+        VecReset(selected);
         if (n > 0) {
             u8* p = selected.AppendBlanks(n);
             if (p) {
@@ -1893,7 +1893,7 @@ void VirtListBox::SetModel(ListBoxModel* m) {
     model = m;
     selIdx = -1;
     anchorIdx = -1;
-    selected.Reset();
+    VecReset(selected);
     // the items are new even when the model object is the same one refilled
     scrollY = 0;
     Invalidate();
@@ -3296,7 +3296,7 @@ static void CollectTabStops_Test() {
     utassert(out[1].vwnd == b2);
 
     // a collapsed subtree is out of the ring
-    out.Reset();
+    VecReset(out);
     b1->SetVisibility(Visibility::Collapse);
     CollectTabStops(box, out);
     utassert(len(out) == 1);

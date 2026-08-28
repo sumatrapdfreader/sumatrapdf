@@ -780,7 +780,7 @@ void ChmModel::UpdateTheme() {
     {
         ScopedMutex scope(&docAccess);
         DeleteVecMembers(urlDataCache);
-        urlDataCache.Reset();
+        VecReset(urlDataCache);
     }
     if (docView && len(currentPageUrl) > 0) {
         SaveHtmlScrollPos();

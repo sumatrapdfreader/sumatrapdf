@@ -197,7 +197,7 @@ TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, St
     if (spec) {
         Vec<bool> allowed;
         if (!ParseFindPageRange(spec, engine->PageCount(), allowed)) {
-            allowed.Reset();
+            VecReset(allowed);
         }
         ts->SetAllowedPages(allowed);
     } else {

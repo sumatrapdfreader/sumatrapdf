@@ -610,7 +610,7 @@ static int VecNextCap(int cap, int wanted, int elSize) {
 // elements sit in storage the vec borrowed (VecUseExternalBuffer); growing past
 // it allocates and copies, and leaves the borrowed block alone.
 
-NO_INLINE bool VecReserveNonTemplated(Arena* arena, VecNonTemplated* v, int elSize, int wantedSize) {
+NO_INLINE bool VecReserveNT(Arena* arena, VecNonTemplated* v, int elSize, int wantedSize) {
     int cap = v->cap;
     int curCap = cap < 0 ? -cap : cap;
     if (wantedSize <= curCap) {
@@ -634,10 +634,10 @@ NO_INLINE bool VecReserveNonTemplated(Arena* arena, VecNonTemplated* v, int elSi
     return VecRealloc(arena, &v->els, v->len, &v->cap, newCap, elSize);
 }
 
-NO_INLINE void* VecInsertSpaceNonTemplated(VecNonTemplated* v, int elSize, int idx, int count) {
+NO_INLINE void* VecInsertSpaceNT(VecNonTemplated* v, int elSize, int idx, int count) {
     int len = v->len;
     int newLen = std::max(len, idx) + count;
-    if (!VecReserveNonTemplated(nullptr, v, elSize, newLen)) {
+    if (!VecReserveNT(nullptr, v, elSize, newLen)) {
         return nullptr;
     }
     char* res = (char*)v->els + (size_t)idx * (size_t)elSize;
@@ -649,13 +649,13 @@ NO_INLINE void* VecInsertSpaceNonTemplated(VecNonTemplated* v, int elSize, int i
     return res;
 }
 
-NO_INLINE bool VecResizeNonTemplated(VecNonTemplated* v, int elSize, int newSize) {
+NO_INLINE bool VecResizeNT(VecNonTemplated* v, int elSize, int newSize) {
     if (newSize < 0) {
         return false;
     }
     int curCap = v->cap < 0 ? -v->cap : v->cap;
     if (newSize > curCap) {
-        if (!VecReserveNonTemplated(nullptr, v, elSize, newSize)) {
+        if (!VecReserveNT(nullptr, v, elSize, newSize)) {
             return false;
         }
         curCap = v->cap < 0 ? -v->cap : v->cap;
@@ -668,7 +668,7 @@ NO_INLINE bool VecResizeNonTemplated(VecNonTemplated* v, int elSize, int newSize
     return true;
 }
 
-NO_INLINE void VecRemoveAtNonTemplated(VecNonTemplated* v, int elSize, int idx, int count) {
+NO_INLINE void VecRemoveAtNT(VecNonTemplated* v, int elSize, int idx, int count) {
     int len = v->len;
     char* els = (char*)v->els;
     if (len > idx + count) {
@@ -682,8 +682,8 @@ NO_INLINE void VecRemoveAtNonTemplated(VecNonTemplated* v, int elSize, int idx, 
 }
 
 // replaces the removed element with the last one, so it copies less than
-// VecRemoveAtNonTemplated but does not keep the order
-NO_INLINE void VecRemoveAtFastNonTemplated(VecNonTemplated* v, int elSize, int idx) {
+// VecRemoveAtNT but does not keep the order
+NO_INLINE void VecRemoveAtFastNT(VecNonTemplated* v, int elSize, int idx) {
     int len = v->len;
     ReportIf(idx >= len);
     if (idx >= len) {
@@ -699,19 +699,20 @@ NO_INLINE void VecRemoveAtFastNonTemplated(VecNonTemplated* v, int elSize, int i
     v->len = len - 1;
 }
 
-NO_INLINE void VecFreeElsNonTemplated(VecNonTemplated* v) {
+// frees the storage and empties the vec: len, cap and els all go to 0
+NO_INLINE void VecFreeElementsNT(VecNonTemplated* v) {
+    v->len = 0;
     if (!v->els) {
         return;
     }
     if (v->cap > 0) {
         Free(nullptr, v->els);
-    } else {
-        v->cap = 0;
     }
+    v->cap = 0;
     v->els = nullptr;
 }
 
-NO_INLINE void VecClearNonTemplated(VecNonTemplated* v, int elSize) {
+NO_INLINE void VecClearNT(VecNonTemplated* v, int elSize) {
     v->len = 0;
     int curCap = v->cap < 0 ? -v->cap : v->cap;
     if (v->els && curCap > 0) {
@@ -721,7 +722,7 @@ NO_INLINE void VecClearNonTemplated(VecNonTemplated* v, int elSize) {
 
 // hands the storage over to the caller, leaving the vec empty. Borrowed
 // storage is copied to the heap first, since the caller gets to free it.
-NO_INLINE void* VecTakeNonTemplated(VecNonTemplated* v, int elSize) {
+NO_INLINE void* VecTakeNT(VecNonTemplated* v, int elSize) {
     void* els = v->els;
     if (v->cap < 0) {
         int n = v->len;
@@ -748,8 +749,8 @@ NO_INLINE void* VecTakeNonTemplated(VecNonTemplated* v, int elSize) {
 
 // Vec only holds POD, so copying is a reserve plus a memcpy. zeroTail is for
 // operator=, which zeroes the capacity past the new length.
-NO_INLINE void VecCopyFromNonTemplated(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail) {
-    VecReserveNonTemplated(nullptr, v, elSize, srcLen);
+NO_INLINE void VecCopyFromNT(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail) {
+    VecReserveNT(nullptr, v, elSize, srcLen);
     v->len = srcLen;
     if (srcLen > 0 && srcEls && v->els) {
         memcpy(v->els, srcEls, (size_t)srcLen * (size_t)elSize);

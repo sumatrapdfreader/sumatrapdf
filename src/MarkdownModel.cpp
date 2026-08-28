@@ -883,7 +883,7 @@ void MarkdownModel::UpdateTheme() {
     {
         ScopedMutex scope(&docAccess);
         DeleteVecMembers(urlDataCache);
-        urlDataCache.Reset();
+        VecReset(urlDataCache);
     }
     if (docView && currentPageUrl) {
         SaveHtmlScrollPos();
@@ -956,7 +956,7 @@ static void FreeTocTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
         str::Free(ti.title);
         str::Free(ti.url);
     }
-    tocTrace.Reset();
+    VecReset(tocTrace);
 }
 
 static TocTree* BuildTocTreeFromTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
@@ -1043,7 +1043,7 @@ static TocTree* BuildFullToc(StrVec& pages, Str baseDir, bool isHtml) {
             str::Free(hi.title);
             str::Free(hi.anchor);
         }
-        ft.headings.Reset();
+        VecReset(ft.headings);
     }
 
     TocTree* res = BuildTocTreeFromTrace(tocTrace);

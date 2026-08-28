@@ -504,7 +504,7 @@ static void FreeCapturedScreenshots(ScreenshotOverlayData* data) {
         }
         str::Free(cs.processName);
     }
-    data->captures.Reset();
+    VecReset(data->captures);
 }
 
 // one capture target; the result lands in cs (cs.bmp stays null on failure)

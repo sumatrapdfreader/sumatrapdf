@@ -696,7 +696,7 @@ static bool WinTtsInit() {
 static void WinTtsRelease() {
     WinTtsCancelSynth();
     WinTtsStopPlayback();
-    gWinCues.Reset();
+    VecReset(gWinCues);
 
     if (gWinVoicesStatic) {
         gWinVoicesStatic->Release();
@@ -817,7 +817,7 @@ static bool WinTtsSpeak(WStr textW) {
 
     WinTtsCancelSynth();
     WinTtsStopPlayback();
-    gWinCues.Reset();
+    VecReset(gWinCues);
 
     HSTRING text = nullptr;
     HRESULT hr = pWindowsCreateString(textW.s, (UINT32)textW.len, &text);
@@ -843,7 +843,7 @@ static bool WinTtsSpeak(WStr textW) {
 // extract word boundary cues: where each word starts in the spoken text
 // and when it starts playing
 static void WinTtsExtractCues(WMSS::ISpeechSynthesisStream* stream) {
-    gWinCues.Reset();
+    VecReset(gWinCues);
 
     WMC::ITimedMetadataTrackProvider* provider = nullptr;
     if (FAILED(stream->QueryInterface(IID_PPV_ARGS(&provider))) || !provider) {
@@ -1282,7 +1282,7 @@ void TtsFreeVoices(Vec<TtsVoiceInfo>& voices) {
         str::Free(voice.name);
         str::Free(voice.lang);
     }
-    voices.Reset();
+    VecReset(voices);
 }
 
 void TtsRelease() {

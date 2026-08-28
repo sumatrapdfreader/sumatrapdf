@@ -229,7 +229,7 @@ EngineImages::~EngineImages() {
         logf("EngineImages::~EngineImages: tc.ctx = %p\n", tc.ctx);
         fz_drop_context(tc.ctx);
     }
-    threadCtxs.Reset();
+    VecReset(threadCtxs);
 
     if (fz_ctx) {
         fz_drop_context_windows(fz_ctx);
@@ -971,12 +971,12 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             // holding cacheLock so other threads can keep using the cache
             result = new ImagePage(pageNo, nullptr);
             result->loading = true;
-            pageCache.InsertAt(0, result);
+            VecInsertAt(pageCache, 0, result);
             isLoader = true;
         } else if (result != pageCache[0]) {
             // keep the list Most Recently Used first
             pageCache.Remove(result);
-            pageCache.InsertAt(0, result);
+            VecInsertAt(pageCache, 0, result);
         }
 
         waitForLoad = !isLoader;

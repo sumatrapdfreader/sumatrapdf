@@ -184,7 +184,7 @@ void FreePendingOps(Vec<PendingWebViewOp>& ops) {
     for (PendingWebViewOp& op : ops) {
         str::Free(op.text);
     }
-    ops.Reset();
+    VecReset(ops);
 }
 
 void RemovePendingWebview(WebviewWnd* wv) {
@@ -1130,7 +1130,7 @@ void WebviewWnd::FlushPendingOps() {
     // Vec copies PendingWebViewOp by value (shallow copy of text pointers), so only
     // free op.text once -- in the loop below.
     Vec<PendingWebViewOp> ops = pendingOps;
-    pendingOps.Reset();
+    VecReset(pendingOps);
     for (PendingWebViewOp& op : ops) {
         switch (op.kind) {
             case PendingWebViewOp::Init:
@@ -1818,7 +1818,7 @@ void WebviewWnd::RevokeForwardingDropTarget() {
     for (HWND h : dropTargetHwnds) {
         RevokeDragDrop(h);
     }
-    dropTargetHwnds.Reset();
+    VecReset(dropTargetHwnds);
     if (dropTarget) {
         dropTarget->Release();
         dropTarget = nullptr;
@@ -1851,7 +1851,7 @@ static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg);
 
 static void FailPendingWebviews() {
     Vec<WebviewWnd*> pending = gPendingWebviews;
-    gPendingWebviews.Reset();
+    VecReset(gPendingWebviews);
     for (WebviewWnd* wv : pending) {
         if (wv && !wv->initFailed) {
             wv->FailInit();
@@ -1971,7 +1971,7 @@ static void OnSharedEnvironmentReady(HRESULT res, ICoreWebView2Environment* env)
     gEnvCreateAttempts = 0;
 
     Vec<WebviewWnd*> pending = gPendingWebviews;
-    gPendingWebviews.Reset();
+    VecReset(gPendingWebviews);
     for (WebviewWnd* wv : pending) {
         if (!wv || wv->initFailed) {
             continue;
@@ -2198,11 +2198,11 @@ WebviewWnd::~WebviewWnd() {
     for (WebViewInitScript& script : initScripts) {
         wstr::Free(script.id);
     }
-    initScripts.Reset();
+    VecReset(initScripts);
     for (Str& name : boundNames) {
         str::Free(name);
     }
-    boundNames.Reset();
+    VecReset(boundNames);
     RevokeForwardingDropTarget();
     // Close() shuts down the browser instance behind this webview and is not
     // optional: releasing the controller only drops our reference, so without

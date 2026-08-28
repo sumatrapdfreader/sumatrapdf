@@ -1456,7 +1456,7 @@ Vec<PointF> GetVertices(Annotation* annot) {
     fz_catch(ctx) {
         fz_report_error(ctx);
         logf("GetVertices: pdf_annot_vertex() failed\n");
-        res.Reset();
+        VecReset(res);
     }
     return res;
 }
@@ -1500,8 +1500,8 @@ void SetVertices(Annotation* annot, const Vec<PointF>& points) {
 }
 
 static void GetInkList(Annotation* annot, Vec<int>& strokeCounts, Vec<PointF>& points) {
-    strokeCounts.Reset();
-    points.Reset();
+    VecReset(strokeCounts);
+    VecReset(points);
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Ink) {
         return;
     }
@@ -1523,8 +1523,8 @@ static void GetInkList(Annotation* annot, Vec<int>& strokeCounts, Vec<PointF>& p
     fz_catch(ctx) {
         fz_report_error(ctx);
         logf("GetInkList: pdf_annot_ink_list() failed\n");
-        strokeCounts.Reset();
-        points.Reset();
+        VecReset(strokeCounts);
+        VecReset(points);
     }
 }
 
@@ -2137,10 +2137,10 @@ static void ClearAnnotationClipboard() {
     gAnnotClipboard.hasLine = false;
     gAnnotClipboard.lineStart = {};
     gAnnotClipboard.lineEnd = {};
-    gAnnotClipboard.vertices.Reset();
-    gAnnotClipboard.quads.Reset();
-    gAnnotClipboard.inkStrokeCounts.Reset();
-    gAnnotClipboard.inkPoints.Reset();
+    VecReset(gAnnotClipboard.vertices);
+    VecReset(gAnnotClipboard.quads);
+    VecReset(gAnnotClipboard.inkStrokeCounts);
+    VecReset(gAnnotClipboard.inkPoints);
 }
 
 static Pixmap* PixmapFromRgbFzPixmap(fz_context* ctx, fz_pixmap* src) {

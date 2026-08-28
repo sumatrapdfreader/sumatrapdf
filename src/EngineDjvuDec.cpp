@@ -954,7 +954,7 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
                 break;
             }
         }
-        pageCacheLru.InsertAt(0, page0);
+        VecInsertAt(pageCacheLru, 0, page0);
     }
 
     for (;;) {

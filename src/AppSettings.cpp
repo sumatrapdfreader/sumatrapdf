@@ -190,7 +190,7 @@ static UiFontsAtDpi* GetUiFontsAtDpi(int dpi) {
 static void ResetCachedFonts() {
     // Fonts are interned PlatformFonts, so just drop these per-DPI references;
     // old fonts stay valid for windows that still hold them.
-    gUiFontsAtDpi.Reset();
+    VecReset(gUiFontsAtDpi);
 }
 
 // number of weeks past since 2011-01-01
@@ -315,7 +315,7 @@ static void CreateZoomCommands() {
         float zoomLevel = (*prefs->zoomLevels)[i];
         CommandArg* arg = NewFloatArg(kCmdArgLevel, zoomLevel);
         auto* cmd = CreateCustomCommand(StrL("CmdZoomCustom"), CmdZoomCustom, arg);
-        cmdIds->InsertAt(i, cmd->id);
+        VecInsertAt(*cmdIds, i, cmd->id);
     }
 }
 
@@ -1170,7 +1170,7 @@ static float gZoomLevelsChm[] = {
 
 // Fit/preset zoom values for the zoom combo (Settings) and Custom Zoom dialog.
 void CollectZoomLevels(Vec<float>& out, bool forChm) {
-    out.Reset();
+    VecReset(out);
     auto* customZoomLevels = gSettings->zoomLevels;
     int n = customZoomLevels ? len(*customZoomLevels) : 0;
     if (n > 0) {
@@ -1416,7 +1416,7 @@ void FreeSessionDataVec(Vec<SessionData*>* sessionData) {
     for (SessionData* data : *sessionData) {
         FreeSessionData(data);
     }
-    sessionData->Reset();
+    VecReset(*sessionData);
 }
 
 void SetFileStatePath(FileState* fs, Str path) {

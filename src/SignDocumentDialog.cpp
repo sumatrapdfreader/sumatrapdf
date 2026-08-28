@@ -316,7 +316,7 @@ bool FinishSignaturePlacement(MainWindow* win, int x, int y, bool aborted) {
 
 void SignDocumentWnd::CollectFields() {
     fieldNames.Reset();
-    fieldPages.Reset();
+    VecReset(fieldPages);
     currPageNo = 1;
     EngineBase* engine = GetPdfEngine(win);
     if (!engine) {

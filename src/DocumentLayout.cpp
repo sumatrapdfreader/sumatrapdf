@@ -28,7 +28,7 @@ static bool PageIsSpread(const Vec<u8>& flags, int pageNo) {
 // two-page row instead of pairing with the next page. Book view still keeps
 // page 1 alone. With no spreads this matches the old 2-column arithmetic.
 void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const Vec<u8>& spreadFlags) {
-    out.Reset();
+    VecReset(out);
     if (pageCount < 1) {
         return;
     }
@@ -71,7 +71,7 @@ static const FacingRow* FindFacingRow(const Vec<FacingRow>& rows, int pageNo) {
 }
 
 void DocumentLayout::Reset(int pageCount) {
-    pages.Reset();
+    VecReset(pages);
     if (pageCount > 0) {
         VecResize(pages, pageCount);
     }

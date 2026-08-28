@@ -189,7 +189,7 @@ static void FreeNavEntries(Vec<NavFileEntry>& entries) {
     for (NavFileEntry& e : entries) {
         FreeNavEntry(e);
     }
-    entries.Reset();
+    VecReset(entries);
 }
 
 static void StealNavEntries(Vec<NavFileEntry>& dst, Vec<NavFileEntry>& src) {

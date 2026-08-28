@@ -1413,7 +1413,7 @@ static int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePa
 }
 
 static void CollectAllPages(int pageCount, Vec<int>& pages) {
-    pages.Reset();
+    VecReset(pages);
     for (int i = 1; i <= pageCount; i++) {
         pages.Append(i);
     }

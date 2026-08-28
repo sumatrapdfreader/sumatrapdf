@@ -119,7 +119,7 @@ static TempStr FromEditTextTemp(Str s) {
 // for top/bottom and left/right, or four in top-right-bottom-left order.
 // anything else (or out of range) is left empty, i.e. unset
 static void ParseMargin(Str s, Vec<float>& out) {
-    out.Reset();
+    VecReset(out);
     if (!s) {
         return;
     }
@@ -148,7 +148,7 @@ static void ParseMargin(Str s, Vec<float>& out) {
         ok = out[i] >= 0 && out[i] <= 200;
     }
     if (!ok) {
-        out.Reset();
+        VecReset(out);
     }
 }
 
@@ -291,7 +291,7 @@ void EbookSettingsWnd::ReadControls(EbookVals& out) {
         // the CSS in the box replaces what we would have generated, so the
         // values those rules came from are no longer ours to apply
         out.fontName = {};
-        out.margin.Reset();
+        VecReset(out.margin);
         out.lineSpacing = 0;
     }
 }
@@ -406,7 +406,7 @@ void EbookSettingsWnd::Apply() {
     str::ReplaceWithCopy(&f->fontName, str::Eq(v.fontName, g->fontName) ? Str{} : v.fontName);
     f->fontSize = (v.fontSize == g->fontSize) ? 0 : v.fontSize;
     if (MarginEq(v.margin, g->margin)) {
-        f->margin->Reset();
+        VecReset(*f->margin);
     } else {
         *f->margin = v.margin;
     }

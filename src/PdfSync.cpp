@@ -242,10 +242,10 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
     // reset synchronizer database
     srcfiles.Reset();
-    lines.Reset();
-    points.Reset();
-    fileIndex.Reset();
-    sheetIndex.Reset();
+    VecReset(lines);
+    VecReset(points);
+    VecReset(fileIndex);
+    VecReset(sheetIndex);
 
     Vec<int> filestack;
     int page = 1;
@@ -515,7 +515,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
         return (int)ret;
     }
 
-    rects.Reset();
+    VecReset(rects);
 
     // records have been found for the desired source position:
     // we now find the page and positions in the PDF corresponding to these found records
@@ -952,7 +952,7 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
 
     synctex_node_p node;
     int firstpage = -1;
-    rects.Reset();
+    VecReset(rects);
 
     while ((node = synctex_scanner_next_result(this->scanner)) != nullptr) {
         if (firstpage == -1) {

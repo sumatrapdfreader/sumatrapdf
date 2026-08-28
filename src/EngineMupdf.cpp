@@ -1133,7 +1133,7 @@ static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& cont
             AddLineSepUtf8(content, rects, hardLineSep);
         }
         // each line has independent glyph positions; reset duplicate detection
-        seen.Reset();
+        VecReset(seen);
         line = line->next;
     }
 }
@@ -3768,13 +3768,13 @@ bool EngineMupdf_UnitTestEbookMarginCss() {
         return false;
     }
     // 0 is a real value: no margin at all
-    m.Reset();
+    VecReset(m);
     m.Append(0);
     if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 0pt !important; }\n"))) {
         return false;
     }
     // one value for all four sides, and points, so it scales with the display
-    m.Reset();
+    VecReset(m);
     m.Append(24);
     if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 24pt !important; }\n"))) {
         return false;
@@ -3783,13 +3783,13 @@ bool EngineMupdf_UnitTestEbookMarginCss() {
         return false;
     }
     // two and four values pass through in CSS order
-    m.Reset();
+    VecReset(m);
     m.Append(36);
     m.Append(24);
     if (!str::Eq(EbookMarginCssTemp(&m, 96), StrL("@page { margin: 36pt 24pt !important; }\n"))) {
         return false;
     }
-    m.Reset();
+    VecReset(m);
     m.Append(1);
     m.Append(2);
     m.Append(3);
@@ -3798,12 +3798,12 @@ bool EngineMupdf_UnitTestEbookMarginCss() {
         return false;
     }
     // out of range is ignored rather than clamped
-    m.Reset();
+    VecReset(m);
     m.Append(-1);
     if (EbookMarginCssTemp(&m, 96)) {
         return false;
     }
-    m.Reset();
+    VecReset(m);
     m.Append(200.1f);
     return !EbookMarginCssTemp(&m, 96);
 }
@@ -5633,7 +5633,7 @@ RectF EngineMupdf::PageMediabox(int pageNo) {
 // default to Crop/Media when absent; we skip those so the overlay only draws
 // what is in the file (issue #814). Rects are in the same space as PageMediabox.
 void EngineMupdf::GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) {
-    out.Reset();
+    VecReset(out);
     if (!pdfdoc || pageNo < 1 || pageNo > pageCount) {
         return;
     }
@@ -7718,7 +7718,7 @@ void FreePdfSigCerts(Vec<PdfSigCert>& certs) {
         str::Free(c.label);
         str::Free(c.der);
     }
-    certs.Reset();
+    VecReset(certs);
 }
 #endif
 
@@ -8409,7 +8409,7 @@ static void InvalidateFzPageAfterContentChange(EngineMupdf* e, FzPageInfo* pi) {
 // DeleteAnnotation). Incremental save is unsafe afterwards; pdfdoc->redacted
 // already forces a full rewrite in EngineMupdfSaveUpdated.
 bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut) {
-    deletedOut.Reset();
+    VecReset(deletedOut);
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
         return false;
@@ -8693,7 +8693,7 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
 // nothing to step to. The wrappers in removedOut are detached from the document
 // already; the caller must take them out of the UI and delete them.
 static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>& removedOut) {
-    removedOut.Reset();
+    VecReset(removedOut);
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
         return false;

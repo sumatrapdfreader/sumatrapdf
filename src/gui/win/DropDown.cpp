@@ -201,7 +201,7 @@ bool DropDown::IsFocused() const {
 
 void DropDown::SetItems(StrVec& newItems) {
     items.Reset();
-    itemColors.Reset();
+    VecReset(itemColors);
     int n = len(newItems);
     for (int i = 0; i < n; i++) {
         Str s = newItems[i];

@@ -21,15 +21,15 @@ struct VecNonTemplated {
     void* els;
 };
 
-bool VecReserveNonTemplated(Arena* arena, VecNonTemplated* v, int elSize, int wantedSize);
-void* VecInsertSpaceNonTemplated(VecNonTemplated* v, int elSize, int idx, int count);
-bool VecResizeNonTemplated(VecNonTemplated* v, int elSize, int newSize);
-void VecRemoveAtNonTemplated(VecNonTemplated* v, int elSize, int idx, int count);
-void VecRemoveAtFastNonTemplated(VecNonTemplated* v, int elSize, int idx);
-void VecFreeElsNonTemplated(VecNonTemplated* v);
-void VecClearNonTemplated(VecNonTemplated* v, int elSize);
-void* VecTakeNonTemplated(VecNonTemplated* v, int elSize);
-void VecCopyFromNonTemplated(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail);
+bool VecReserveNT(Arena* arena, VecNonTemplated* v, int elSize, int wantedSize);
+void* VecInsertSpaceNT(VecNonTemplated* v, int elSize, int idx, int count);
+bool VecResizeNT(VecNonTemplated* v, int elSize, int newSize);
+void VecRemoveAtNT(VecNonTemplated* v, int elSize, int idx, int count);
+void VecRemoveAtFastNT(VecNonTemplated* v, int elSize, int idx);
+void VecFreeElementsNT(VecNonTemplated* v);
+void VecClearNT(VecNonTemplated* v, int elSize);
+void* VecTakeNT(VecNonTemplated* v, int elSize);
+void VecCopyFromNT(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail);
 
 // Ensure capacity is at least wantedSize for a vec-like {els,len,cap}.
 // Growth: max(cap*2, wantedSize). arena may be null (heap).
@@ -51,6 +51,18 @@ bool VecAppendN(Vec<T>& v, const T* src, int count);
 // Index of the first element equal to el at or after startAt, -1 if none.
 template <typename T>
 int VecFind(const Vec<T>& v, const T& el, int startAt = 0);
+
+// Free the storage, leaving the vec empty (len, cap and els all 0).
+template <typename T>
+void VecReset(Vec<T>& v);
+
+// free() every element, then reset. Only for a vec of pointers.
+template <typename T>
+void VecFreeMembers(Vec<T>& v);
+
+// Insert el at idx, moving the rest up.
+template <typename T>
+bool VecInsertAt(Vec<T>& v, int idx, const T& el);
 
 template <typename T>
 struct Vec {
@@ -77,46 +89,27 @@ struct Vec {
     // so the type-erased view is a cast, not a copy
     VecNonTemplated* NT() { return (VecNonTemplated*)this; }
 
-    void FreeEls() { VecFreeElsNonTemplated(NT()); }
-
-    // resets to initial state, freeing memory
-    void Reset() {
-        FreeEls();
-        len = 0;
-        cap = 0;
-    }
-
     // use to empty but don't free els
     // for efficient reuse
-    void Clear() { VecClearNonTemplated(NT(), (int)sizeof(T)); }
+    void Clear() { VecClearNT(NT(), (int)sizeof(T)); }
 
     explicit Vec() = default;
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
-    Vec(const Vec& other) { VecCopyFromNonTemplated(NT(), (int)sizeof(T), other.len, (const void*)other.els, false); }
+    Vec(const Vec& other) { VecCopyFromNT(NT(), (int)sizeof(T), other.len, (const void*)other.els, false); }
 
     Vec& operator=(const Vec& other) {
         if (this == &other) {
             return *this;
         }
 
-        Reset();
-        VecCopyFromNonTemplated(NT(), (int)sizeof(T), other.len, (const void*)other.els, true);
+        VecReset(*this);
+        VecCopyFromNT(NT(), (int)sizeof(T), other.len, (const void*)other.els, true);
         return *this;
     }
 
-    ~Vec() { FreeEls(); }
-
-    // this frees all elements and clears the array.
-    // only applicable where T is a pointer. Otherwise will fail to compile
-    void FreeMembers() {
-        for (int i = 0; i < len; i++) {
-            auto s = els[i];
-            free(s);
-        }
-        Reset();
-    }
+    ~Vec() { VecReset(*this); }
 
     T& operator[](int idx) const {
         ReportIf(idx < 0);
@@ -126,23 +119,14 @@ struct Vec {
 
     bool isValidIndex(int idx) const { return (idx >= 0) && (idx < len); }
 
-    bool InsertAt(int idx, const T& el) {
-        T* p = VecInsertSpace(*this, idx, 1);
-        if (!p) {
-            return false;
-        }
-        p[0] = el;
-        return true;
-    }
-
-    bool Append(const T& el) { return InsertAt(len, el); }
+    bool Append(const T& el) { return VecInsertAt(*this, len, el); }
 
     bool Append(const Vec& other) { return VecAppendN(*this, other.LendData(), other.len); }
 
     // appends count blank (i.e. zeroed-out) elements at the end
     T* AppendBlanks(int count) { return VecInsertSpace(*this, len, count); }
 
-    void RemoveAt(int idx, int count = 1) { VecRemoveAtNonTemplated(NT(), (int)sizeof(T), idx, count); }
+    void RemoveAt(int idx, int count = 1) { VecRemoveAtNT(NT(), (int)sizeof(T), idx, count); }
 
     void RemoveLast() {
         if (len == 0) {
@@ -156,7 +140,7 @@ struct Vec {
     // It can only be used if order of elements doesn't matter and elements
     // can be copied via memcpy()
     // TODO: could be extend to take number of elements to remove
-    void RemoveAtFast(int idx) { VecRemoveAtFastNonTemplated(NT(), (int)sizeof(T), idx); }
+    void RemoveAtFast(int idx) { VecRemoveAtFastNT(NT(), (int)sizeof(T), idx); }
 
     T Pop() {
         ReportIf(0 == len);
@@ -181,7 +165,7 @@ struct Vec {
     // without duplicate allocation. Note: since Vec over-allocates, this
     // is likely to use more memory than strictly necessary, but in most cases
     // it doesn't matter
-    T* Take() { return (T*)VecTakeNonTemplated(NT(), (int)sizeof(T)); }
+    T* Take() { return (T*)VecTakeNT(NT(), (int)sizeof(T)); }
 
     T* LendData() const { return els; }
 
@@ -251,7 +235,7 @@ bool VecReserve(Arena* arena, T& v, int wantedSize) {
     static_assert(offsetof(T, len) == offsetof(VecNonTemplated, len));
     static_assert(offsetof(T, cap) == offsetof(VecNonTemplated, cap));
     static_assert(offsetof(T, els) == offsetof(VecNonTemplated, els));
-    return VecReserveNonTemplated(arena, (VecNonTemplated*)&v, (int)sizeof(*v.els), wantedSize);
+    return VecReserveNT(arena, (VecNonTemplated*)&v, (int)sizeof(*v.els), wantedSize);
 }
 
 // Lend v an array to start in, instead of its first allocation. The vec
@@ -292,7 +276,30 @@ inline T* VecReserve(Vec<T>& v, int capNeeded) {
 
 template <typename T>
 T* VecInsertSpace(Vec<T>& v, int idx, int count) {
-    return (T*)VecInsertSpaceNonTemplated(v.NT(), (int)sizeof(T), idx, count);
+    return (T*)VecInsertSpaceNT(v.NT(), (int)sizeof(T), idx, count);
+}
+
+template <typename T>
+void VecReset(Vec<T>& v) {
+    VecFreeElementsNT(v.NT());
+}
+
+template <typename T>
+void VecFreeMembers(Vec<T>& v) {
+    for (int i = 0; i < v.len; i++) {
+        free(v.els[i]);
+    }
+    VecReset(v);
+}
+
+template <typename T>
+bool VecInsertAt(Vec<T>& v, int idx, const T& el) {
+    T* p = VecInsertSpace(v, idx, 1);
+    if (!p) {
+        return false;
+    }
+    p[0] = el;
+    return true;
 }
 
 template <typename T>
@@ -322,7 +329,7 @@ bool VecAppendN(Vec<T>& v, const T* src, int count) {
 // zeros unused capacity beyond the new length.
 template <typename T>
 bool VecResize(Vec<T>& v, int newSize) {
-    return VecResizeNonTemplated(v.NT(), (int)sizeof(T), newSize);
+    return VecResizeNT(v.NT(), (int)sizeof(T), newSize);
 }
 
 // only suitable for T that are pointers to C++ objects

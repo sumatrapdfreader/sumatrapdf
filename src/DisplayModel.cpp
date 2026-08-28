@@ -438,9 +438,9 @@ void DisplayModel::EnsureSpreadFlags() const {
     }
     spreadCacheValid = true;
     if (n <= 0) {
-        spreadFlags.Reset();
-        rowFirst.Reset();
-        rowLast.Reset();
+        VecReset(spreadFlags);
+        VecReset(rowFirst);
+        VecReset(rowLast);
         return;
     }
     VecResize(spreadFlags, n);

@@ -113,7 +113,7 @@ static void DeleteThumbnailNavigationCache(ThumbnailNavigationCache* cache) {
     for (Pixmap* thumbnail : cache->thumbnails) {
         FreeThumbnail(thumbnail);
     }
-    cache->thumbnails.Reset();
+    VecReset(cache->thumbnails);
     FreeThumbnailRenderEngine(cache);
     delete cache;
 }
