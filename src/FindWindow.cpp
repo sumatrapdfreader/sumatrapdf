@@ -359,7 +359,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         edit = new DropDown();
         edit->SetColors(colTxt, colBg);
         edit->Create(args);
-        edit->SetCueBanner(_TRA("Find"));
+        CbSetCueBanner(edit, _TRA("Find"));
         edit->onTextChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnTextChanged>(this);
         edit->onSelectionChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnHistorySelected>(this);
         ApplyFindHistory(edit);
@@ -854,7 +854,7 @@ void FindWindowWnd::OnTextChanged() {
 }
 
 void FindWindowWnd::OnHistorySelected() {
-    if (!edit || edit->GetCurrentSelection() < 0) {
+    if (!edit || CbGetCurrentSelection(edit) < 0) {
         return;
     }
     OnFindBarTextChanged(win);
@@ -919,9 +919,9 @@ void FindWindowWnd::OnClose(WindowBase::CloseEvent* /*ev*/) {
 }
 
 void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
-    HWND editHwnd = edit ? edit->EditHwnd() : nullptr;
+    HWND editHwnd = CbEditHwnd(edit);
     bool editFocused = edit && (ev->hwnd == edit->hwnd || ev->hwnd == editHwnd);
-    bool historyDropped = editFocused && ComboBox_GetDroppedState(edit->hwnd);
+    bool historyDropped = editFocused && CbIsDropped(edit);
     switch (ev->vkey) {
         case 'F':
             if (ev->isCtrl && !ev->isAlt) {
@@ -980,8 +980,8 @@ void FindWindowWnd::OnKeyDown(KeyEvent* ev) {
             // the caret (same idea as the two-press pattern in the request).
             // Focus is on the combo's child edit, not the combo HWND.
             int selStart = 0, selEnd = 0;
-            edit->GetSelection(selStart, selEnd);
-            int textLen = edit->GetTextLen();
+            CbEditGetSelection(edit, selStart, selEnd);
+            int textLen = CbGetTextLen(edit);
             bool toEnd = (ev->vkey == VK_END);
             bool caretAtBound = (selStart == selEnd) && (toEnd ? selEnd == textLen : selStart == 0);
             if (caretAtBound) {
@@ -1076,7 +1076,7 @@ void ShowFindWindow(MainWindow* win) {
     FindWindowWnd* w = win->findWindow;
     win->findEdit = w->edit; // make this the active find edit
     win->findPagesEdit = w->editPages;
-    if (len(term) > 0 && win->findEdit->GetTextLen() == 0) {
+    if (len(term) > 0 && CbGetTextLen(win->findEdit) == 0) {
         w->suppressTextChanged = true;
         win->findEdit->SetText(term);
         w->suppressTextChanged = false;
@@ -1092,11 +1092,11 @@ void ShowFindWindow(MainWindow* win) {
     w->Layout();
     ShowWindow(w->hwnd, SW_SHOW);
     win->findEdit->SetFocus();
-    win->findEdit->SelectAll();
+    CbEditSelectAll(win->findEdit);
     // populate the results list: show what's cached, and (re)run the search for
     // the current term so snippets get built now that the window is visible
     w->RefreshResults();
-    if (!win->findEdit || win->findEdit->GetTextLen() == 0) {
+    if (CbGetTextLen(win->findEdit) == 0) {
         return;
     }
     if (win->findThread) {

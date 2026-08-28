@@ -154,7 +154,7 @@ void ChangeThemeWnd::OnSelectionChanged() {
 }
 
 void ChangeThemeWnd::OnDocumentColorsFollowThemeChanged() {
-    int idx = dropDownDocumentColorsFollowTheme->GetCurrentSelection();
+    int idx = CbGetCurrentSelection(dropDownDocumentColorsFollowTheme);
     if (idx < 0) {
         return;
     }
@@ -259,7 +259,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         c->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnDocumentColorsFollowThemeChanged>(this);
         c->onCloseUp = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::KeepFocus>(this);
         dropDownDocumentColorsFollowTheme = c;
-        c->SetCurrentSelection(DocumentColorsFollowThemeToDropDownIndex(startDocumentColorsFollowTheme));
+        CbSetCurrentSelection(c, DocumentColorsFollowThemeToDropDownIndex(startDocumentColorsFollowTheme));
         vbox->AddChild(c);
     }
 

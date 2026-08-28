@@ -1491,7 +1491,7 @@ int ConvertPdfToImagesDialog::SelectedFormatIdx() const {
     if (!dropFormat) {
         return 0;
     }
-    int idx = dropFormat->GetCurrentSelection();
+    int idx = CbGetCurrentSelection(dropFormat);
     if (idx < 0 || idx >= ConvertImageFormatCount()) {
         return 0;
     }
@@ -1520,11 +1520,11 @@ void ConvertPdfToImagesDialog::SyncFormatFromPath(Str path) {
         return;
     }
     int idx = ConvertImageFormatIdxFromPath(path);
-    if (idx == dropFormat->GetCurrentSelection()) {
+    if (idx == CbGetCurrentSelection(dropFormat)) {
         return;
     }
     syncingFormat = true;
-    dropFormat->SetCurrentSelection(idx);
+    CbSetCurrentSelection(dropFormat, idx);
     syncingFormat = false;
 }
 
@@ -1597,7 +1597,7 @@ void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
     int filterIdx = (int)ofn.nFilterIndex - 1;
     if (filterIdx >= 0 && filterIdx < ConvertImageFormatCount()) {
         syncingFormat = true;
-        dropFormat->SetCurrentSelection(filterIdx);
+        CbSetCurrentSelection(dropFormat, filterIdx);
         syncingFormat = false;
         SetDestExtFromFormat();
     } else {
@@ -1687,7 +1687,7 @@ bool ConvertPdfToImagesDialog::Create(MainWindow* w, WindowTab* tab) {
             items.Append(kConvertImageFormats[i].label);
         }
         dd->SetItems(items);
-        dd->SetCurrentSelection(0);
+        CbSetCurrentSelection(dd, 0);
         dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
         dd->onSelectionChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnFormatChanged>(this);
         dropFormat = dd;

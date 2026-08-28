@@ -813,7 +813,7 @@ void AdvancedSettingsWnd::BeginEditEnum(int idx) {
         }
     }
     c->SetItems(vals);
-    c->SetCurrentSelection(currSel);
+    CbSetCurrentSelection(c, currSel);
     c->onSelectionChanged = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnEnumSelectionChanged>(this);
     c->onCloseUp = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnEnumDropDownClosed>(this);
     dropDownValue = c;
@@ -853,7 +853,7 @@ void AdvancedSettingsWnd::OnEnumSelectionChanged() {
         return;
     }
     SettingItem* item = items[editItemIdx];
-    int sel = dropDownValue->GetCurrentSelection();
+    int sel = CbGetCurrentSelection(dropDownValue);
     if (sel >= 0) {
         str::ReplaceWithCopy(&item->strVal, Str(item->enumValues[sel]));
         NoteItemEdited(item);

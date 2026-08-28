@@ -265,7 +265,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         edit = new DropDown();
         edit->SetColors(colTxt, colBg);
         edit->Create(args);
-        edit->SetCueBanner(_TRA("Find"));
+        CbSetCueBanner(edit, _TRA("Find"));
         edit->onTextChanged = MkMethod0<FindBarWnd, &FindBarWnd::OnTextChanged>(this);
         edit->onSelectionChanged = MkMethod0<FindBarWnd, &FindBarWnd::OnHistorySelected>(this);
         ApplyFindHistory(edit);
@@ -376,7 +376,7 @@ void FindBarWnd::OnTextChanged() {
 }
 
 void FindBarWnd::OnHistorySelected() {
-    if (suppressTextChanged || !edit || edit->GetCurrentSelection() < 0) {
+    if (suppressTextChanged || !edit || CbGetCurrentSelection(edit) < 0) {
         return;
     }
     OnFindBarTextChanged(win);
@@ -666,7 +666,7 @@ static void ShowCompactBar(MainWindow* win) {
     FindBarWnd* bar = win->findBar;
     win->findEdit = bar->edit;    // make this the active find edit
     win->findPagesEdit = nullptr; // page range is only on the floating window
-    if (len(term) > 0 && win->findEdit->GetTextLen() == 0) {
+    if (len(term) > 0 && CbGetTextLen(win->findEdit) == 0) {
         bar->suppressTextChanged = true;
         win->findEdit->SetText(term);
         bar->suppressTextChanged = false;
@@ -677,8 +677,8 @@ static void ShowCompactBar(MainWindow* win) {
     PositionFindBar(bar);
     ShowWindow(bar->hwnd, SW_SHOW);
     win->findEdit->SetFocus();
-    win->findEdit->SelectAll();
-    if (win->findEdit->GetTextLen() > 0 && !win->findThread && !win->findDebouncePending &&
+    CbEditSelectAll(win->findEdit);
+    if (CbGetTextLen(win->findEdit) > 0 && !win->findThread && !win->findDebouncePending &&
         len(win->findMatches) == 0) {
         OnFindBarTextChanged(win);
     }
@@ -741,7 +741,7 @@ void FocusFindEditSelectAll(MainWindow* win) {
         return;
     }
     win->findEdit->SetFocus();
-    win->findEdit->SelectAll();
+    CbEditSelectAll(win->findEdit);
 }
 
 void FindBarSyncHistory(MainWindow* win) {
@@ -771,7 +771,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
         if (w->findEdit) {
             state.hasText = true;
             state.text = str::Dup(w->findEdit->GetTextTemp());
-            w->findEdit->GetSelection(state.selStart, state.selEnd);
+            CbEditGetSelection(w->findEdit, state.selStart, state.selEnd);
         }
         if (w->findPagesEdit) {
             state.pages = str::Dup(w->findPagesEdit->GetTextTemp());
@@ -798,7 +798,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
         if (w->findEdit) {
             w->findEdit->SetFocus();
             // restore the caret/selection last, after Show/SetText reset it
-            w->findEdit->SetSelection(state.selStart, state.selEnd);
+            CbEditSelectText(w->findEdit, state.selStart, state.selEnd);
         }
     };
     // Restore the initiating window last so switching another window does not
@@ -861,7 +861,7 @@ TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
         compact += IsFindBarVisible(w) ? 1 : 0;
         floating += IsFindWindowVisible(w) ? 1 : 0;
     }
-    int firstTextLen = gWindows[0]->findEdit ? gWindows[0]->findEdit->GetTextLen() : -1;
+    int firstTextLen = gWindows[0]->findEdit ? CbGetTextLen(gWindows[0]->findEdit) : -1;
     out.Append(fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d firstTextLen=%d\n", len(gWindows), docs,
                    gGlobalPrefs->searchUIFloating ? 1 : 0, compact, floating, firstTextLen));
     return finish(0);

@@ -71,7 +71,7 @@ void CustomZoomWnd::FillZoom() {
         }
     }
     if (sel >= 0) {
-        dropDown->SetCurrentSelection(sel);
+        CbSetCurrentSelection(dropDown, sel);
     } else {
         dropDown->SetText(fmt("%.0f%%", startZoom));
     }
@@ -90,7 +90,7 @@ void CustomZoomWnd::SetTarget(MainWindow* mainWin) {
 
 // Selected list entry, or a typed number (empty / non-numeric keeps startZoom).
 float CustomZoomWnd::SelectedZoom() {
-    int idx = dropDown ? dropDown->GetCurrentSelection() : -1;
+    int idx = CbGetCurrentSelection(dropDown);
     if (idx >= 0 && idx < len(zoomLevels)) {
         float z = zoomLevels[idx];
         return z == 0 ? startZoom : z;

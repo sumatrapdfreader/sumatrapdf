@@ -66,7 +66,7 @@ void InverseSearchWnd::FillCommands() {
     }
     int idx = items.Find(cmdLine);
     if (idx >= 0) {
-        dropDown->SetCurrentSelection(idx);
+        CbSetCurrentSelection(dropDown, idx);
     } else {
         dropDown->SetText(cmdLine);
     }

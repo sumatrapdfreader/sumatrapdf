@@ -343,12 +343,12 @@ void SignDocumentWnd::FillCertificates() {
     items.Append(_TRA("Certificate file..."));
     ddCert->SetItems(items);
     // a store cert if we have one; otherwise the file picker
-    ddCert->SetCurrentSelection(len(certThumbs) > 0 ? 0 : len(items) - 1);
+    CbSetCurrentSelection(ddCert, len(certThumbs) > 0 ? 0 : len(items) - 1);
     UpdateCertFileEnabled();
 }
 
 bool SignDocumentWnd::UsingCertFile() const {
-    int idx = ddCert ? ddCert->GetCurrentSelection() : -1;
+    int idx = CbGetCurrentSelection(ddCert);
     return idx < 0 || idx >= len(certThumbs);
 }
 
@@ -434,7 +434,7 @@ void SignDocumentWnd::FillPlacement() {
             }
         }
     }
-    ddPlacement->SetCurrentSelection(sel);
+    CbSetCurrentSelection(ddPlacement, sel);
 }
 
 // Turns the dialog state into what the engine needs; false if something the
@@ -454,7 +454,7 @@ bool SignDocumentWnd::BuildSignArgs(PdfSignArgs& args) {
         args.certPath = certPath;
         args.certPassword = editPassword ? editPassword->GetTextTemp() : Str{};
     } else {
-        int idx = ddCert->GetCurrentSelection();
+        int idx = CbGetCurrentSelection(ddCert);
         args.certThumbprint = certThumbs[idx];
     }
     args.reason = editReason ? editReason->GetTextTemp() : Str{};
@@ -503,7 +503,7 @@ bool SignDocumentWnd::BuildSignArgs(PdfSignArgs& args) {
     }
     args.appearanceFlags = flags;
 
-    int idx = ddPlacement ? ddPlacement->GetCurrentSelection() : -1;
+    int idx = CbGetCurrentSelection(ddPlacement);
     if (idx >= 0 && idx < len(fieldNames)) {
         args.fieldName = fieldNames[idx];
         args.pageNo = fieldPages[idx];

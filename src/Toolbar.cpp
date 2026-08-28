@@ -492,7 +492,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId, AppCommandCtx* ctx) {
         case CmdFindNext:
         case CmdFindPrev: {
             // Need non-empty find text (findEdit is the active bar or floating window edit).
-            if (!win->findEdit || win->findEdit->GetTextLen() == 0) {
+            if (CbGetTextLen(win->findEdit) == 0) {
                 return false;
             }
             // When we already know there are zero matches, disable next/prev.

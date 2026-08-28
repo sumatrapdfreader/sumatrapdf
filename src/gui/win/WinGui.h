@@ -859,6 +859,24 @@ struct Progress : ControlBase {
 
 //--- DropDown
 
+struct DropDown;
+
+// The base/Win.h combo box helpers, taking the control rather than its HWND, so
+// a caller that holds a DropDown* can pass it straight in. A null control is
+// the same no-op a null HWND is.
+void CbSetCueBanner(DropDown*, Str);
+int CbGetTextLen(DropDown*);
+bool CbIsDropped(DropDown*);
+int CbGetCurrentSelection(DropDown*);
+void CbSetCurrentSelection(DropDown*, int);
+
+HWND CbEditHwnd(DropDown*);
+void CbEditSelectAll(DropDown*);
+void CbEditSelectText(DropDown*, int start, int end);
+void CbEditGetSelection(DropDown*, int& start, int& end);
+void CbEditSetModified(DropDown*, bool);
+bool CbEditIsModified(DropDown*);
+
 struct DropDown : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
@@ -896,21 +914,10 @@ struct DropDown : ControlBase {
     bool IsFocused() const override;
     void SetFocus() override;
 
-    int GetCurrentSelection();
-    void SetCurrentSelection(int n);
     void SetItems(StrVec& newItems);
     void SetItemsKeepText(StrVec& newItems);
     void SetItemsSeqStrings(SeqStrings items);
-    void SetCueBanner(Str);
-
-    int GetTextLen() const;
-    void SelectAll();
-    void SetSelection(int start, int end);
-    void GetSelection(int& start, int& end) const;
-    void SetModified(bool);
-    bool IsModified() const;
     void SetCursorId(LPWSTR);
-    HWND EditHwnd() const;
 };
 
 //--- Trackbar

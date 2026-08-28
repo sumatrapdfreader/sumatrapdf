@@ -166,9 +166,28 @@ DWORD LvSetExtendedStyle(HWND hwnd, DWORD ex);
 int LvInsertColumn(HWND hwnd, int iCol, const LVCOLUMNW* col);
 
 //--- combo box
+// all no-op (or return a zero value) on a null hwnd. gui/win/WinGui.h overloads
+// them on DropDown*, which is what code holding a control should call
 
+void CbResetContent(HWND);
 void CbAddString(HWND, Str s);
+void CbSetCueBanner(HWND, Str);
+void CbSetMinVisible(HWND, int n);
+void CbSetItemHeight(HWND, int idx, int dy);
+int CbGetTextLen(HWND);
+bool CbIsDropped(HWND);
+// which item of the drop-down list is selected, -1 for none
+int CbGetCurrentSelection(HWND);
 void CbSetCurrentSelection(HWND, int);
+
+// the edit an editable (CBS_DROPDOWN) combo keeps its text in. CbEdit*Selection
+// is the text selected in there, as opposed to CbGetCurrentSelection above
+HWND CbEditHwnd(HWND);
+void CbEditSelectAll(HWND);
+void CbEditSelectText(HWND, int start, int end);
+void CbEditGetSelection(HWND, int& start, int& end);
+void CbEditSetModified(HWND, bool);
+bool CbEditIsModified(HWND);
 
 //--- toolbar
 

@@ -184,7 +184,7 @@ static void PopulateLanguageDropDown(DropDown* dd, Str initial, bool includeAuto
         dd->SetText(initial);
         for (int i = 0; i < len(items); i++) {
             if (str::EqI(items[i], initial)) {
-                dd->SetCurrentSelection(i);
+                CbSetCurrentSelection(dd, i);
                 return;
             }
         }
@@ -810,7 +810,7 @@ static void PopulateEngineDropDown(DropDown* dd, TranslateEngine selected) {
         items.Append(EngineDisplayName(TranslateEngine::Google));
     }
     dd->SetItems(items);
-    dd->SetCurrentSelection(selIdx);
+    CbSetCurrentSelection(dd, selIdx);
 }
 
 // build the Google / DeepL web-translator url for the given languages and text

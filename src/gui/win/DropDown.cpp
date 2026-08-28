@@ -23,12 +23,10 @@ DropDown::DropDown() {
 }
 
 static void SetDropDownItems(HWND hwnd, StrVec& items) {
-    ComboBox_ResetContent(hwnd);
+    CbResetContent(hwnd);
     int n = len(items);
     for (int i = 0; i < n; i++) {
-        Str s = items[i];
-        WCHAR* ws = CWStrTemp(s);
-        ComboBox_AddString(hwnd, ws);
+        CbAddString(hwnd, items[i]);
     }
 }
 
@@ -170,12 +168,12 @@ HWND DropDown::Create(const CreateArgs& args) {
     }
 
     // SetDropDownItems(hwnd, items);
-    SetCurrentSelection(-1);
-    ComboBox_SetMinVisible(hwnd, 10);
+    CbSetCurrentSelection(hwnd, -1);
+    CbSetMinVisible(hwnd, 10);
     if (colorSwatches) {
         int dy = ColorSwatchItemDy(font);
-        ComboBox_SetItemHeight(hwnd, 0, dy);
-        ComboBox_SetItemHeight(hwnd, -1, dy);
+        CbSetItemHeight(hwnd, 0, dy);
+        CbSetItemHeight(hwnd, -1, dy);
     }
 
     SizeToIdealSize(this);
@@ -186,20 +184,8 @@ HWND DropDown::Create(const CreateArgs& args) {
 // ComboBox HWND itself uses the main accelerator table, so a leftover F from
 // Ctrl+F can fire CmdToggleFullscreen and take focus away.
 void DropDown::SetFocus() {
-    HWND edit = EditHwnd();
+    HWND edit = CbEditHwnd(hwnd);
     HwndSetFocus(edit ? edit : hwnd);
-}
-
-HWND DropDown::EditHwnd() const {
-    if (!hwnd) {
-        return nullptr;
-    }
-    COMBOBOXINFO info{};
-    info.cbSize = sizeof(info);
-    if (!GetComboBoxInfo(hwnd, &info)) {
-        return nullptr;
-    }
-    return info.hwndItem;
 }
 
 bool DropDown::IsFocused() const {
@@ -209,30 +195,8 @@ bool DropDown::IsFocused() const {
     if (HwndIsFocused(hwnd)) {
         return true;
     }
-    HWND edit = EditHwnd();
+    HWND edit = CbEditHwnd(hwnd);
     return edit && HwndIsFocused(edit);
-}
-
-// -1 means no selection
-int DropDown::GetCurrentSelection() {
-    int res = (int)ComboBox_GetCurSel(hwnd);
-    return res;
-}
-
-// -1 : no selection
-void DropDown::SetCurrentSelection(int n) {
-    if (n < 0) {
-        ComboBox_SetCurSel(hwnd, -1);
-        return;
-    }
-    int nItems = len(items);
-    ReportIf(n >= nItems);
-    ComboBox_SetCurSel(hwnd, n);
-}
-
-void DropDown::SetCueBanner(Str sv) {
-    WCHAR* ws = CWStrTemp(sv);
-    ComboBox_SetCueBannerText(hwnd, ws);
 }
 
 void DropDown::SetItems(StrVec& newItems) {
@@ -244,16 +208,16 @@ void DropDown::SetItems(StrVec& newItems) {
         items.Append(s);
     }
     SetDropDownItems(hwnd, items);
-    SetCurrentSelection(-1);
+    CbSetCurrentSelection(hwnd, -1);
 }
 
-// ComboBox_ResetContent clears the edit; keep whatever the user is typing
+// CbResetContent clears the edit; keep whatever the user is typing
 // and the caret / selection (SetText would otherwise put the caret at 0).
-// Do not CB_SETCURSEL(-1) afterwards: that clears a CBS_DROPDOWN edit.
+// Do not CbSetCurrentSelection(-1) afterwards: that clears a CBS_DROPDOWN edit.
 void DropDown::SetItemsKeepText(StrVec& newItems) {
     TempStr cur = GetTextTemp();
     int selStart = 0, selEnd = 0;
-    GetSelection(selStart, selEnd);
+    CbEditGetSelection(hwnd, selStart, selEnd);
     bool prev = suppressNotify;
     suppressNotify = true;
     SetItems(newItems);
@@ -265,7 +229,7 @@ void DropDown::SetItemsKeepText(StrVec& newItems) {
     if (selEnd > n) {
         selEnd = n;
     }
-    SetSelection(selStart, selEnd);
+    CbEditSelectText(hwnd, selStart, selEnd);
     suppressNotify = prev;
 }
 
@@ -314,43 +278,63 @@ Size DropDown::GetIdealSize() {
     return {dx, dy};
 }
 
-int DropDown::GetTextLen() const {
-    return hwnd ? HwndGetTextLen(hwnd) : 0;
-}
-
-void DropDown::SelectAll() {
-    SetSelection(0, -1);
-}
-
-void DropDown::SetSelection(int start, int end) {
-    if (hwnd) {
-        ComboBox_SetEditSel(hwnd, start, end);
-    }
-}
-
-void DropDown::GetSelection(int& start, int& end) const {
-    start = 0;
-    end = 0;
-    if (!hwnd) {
-        return;
-    }
-    DWORD sel = ComboBox_GetEditSel(hwnd);
-    start = (int)LOWORD(sel);
-    end = (int)HIWORD(sel);
-}
-
-void DropDown::SetModified(bool on) {
-    HWND edit = EditHwnd();
-    if (edit) {
-        EditSetModified(edit, on);
-    }
-}
-
-bool DropDown::IsModified() const {
-    HWND edit = EditHwnd();
-    return EditIsModified(edit);
-}
-
 void DropDown::SetCursorId(LPWSTR id) {
     cursorId = id;
+}
+
+// the base/Win.h combo box helpers, taking the control instead of its HWND
+static HWND HwndOf(DropDown* dd) {
+    return dd ? dd->hwnd : nullptr;
+}
+
+void CbSetCueBanner(DropDown* dd, Str s) {
+    CbSetCueBanner(HwndOf(dd), s);
+}
+
+int CbGetTextLen(DropDown* dd) {
+    return CbGetTextLen(HwndOf(dd));
+}
+
+bool CbIsDropped(DropDown* dd) {
+    return CbIsDropped(HwndOf(dd));
+}
+
+int CbGetCurrentSelection(DropDown* dd) {
+    return CbGetCurrentSelection(HwndOf(dd));
+}
+
+void CbSetCurrentSelection(DropDown* dd, int n) {
+    if (!dd) {
+        return;
+    }
+    if (n < 0) {
+        CbSetCurrentSelection(dd->hwnd, -1);
+        return;
+    }
+    ReportIf(n >= len(dd->items));
+    CbSetCurrentSelection(dd->hwnd, n);
+}
+
+HWND CbEditHwnd(DropDown* dd) {
+    return CbEditHwnd(HwndOf(dd));
+}
+
+void CbEditSelectAll(DropDown* dd) {
+    CbEditSelectAll(HwndOf(dd));
+}
+
+void CbEditSelectText(DropDown* dd, int start, int end) {
+    CbEditSelectText(HwndOf(dd), start, end);
+}
+
+void CbEditGetSelection(DropDown* dd, int& start, int& end) {
+    CbEditGetSelection(HwndOf(dd), start, end);
+}
+
+void CbEditSetModified(DropDown* dd, bool on) {
+    CbEditSetModified(HwndOf(dd), on);
+}
+
+bool CbEditIsModified(DropDown* dd) {
+    return CbEditIsModified(HwndOf(dd));
 }

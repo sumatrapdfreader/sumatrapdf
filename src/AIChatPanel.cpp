@@ -291,7 +291,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     AIChatTabState* st = GetTabState(tab, win->aiChatProvider);
     if (!tab || !tab->filePath || !st) {
         win->aiChatSessionCombo->SetItems(items);
-        win->aiChatSessionCombo->SetCurrentSelection(0);
+        CbSetCurrentSelection(win->aiChatSessionCombo, 0);
         return;
     }
 
@@ -320,7 +320,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     }
 
     win->aiChatSessionCombo->SetItems(items);
-    win->aiChatSessionCombo->SetCurrentSelection(selectedIdx);
+    CbSetCurrentSelection(win->aiChatSessionCombo, selectedIdx);
     AIChatFreeSessions(sessions);
 }
 
@@ -329,7 +329,7 @@ static void OnSessionComboChange(MainWindow* win) {
     if (!p) {
         return;
     }
-    int sel = win->aiChatSessionCombo->GetCurrentSelection();
+    int sel = CbGetCurrentSelection(win->aiChatSessionCombo);
 
     WindowTab* tab = win->CurrentTab();
     AIChatTabState* st = GetTabState(tab, win->aiChatProvider);
@@ -411,14 +411,14 @@ static void ApplyAIChatSettingsToUI(MainWindow* win) {
         p->BuildModelsList(models);
         Str model = AIChatResolveModel(models, p->GetModel(), p->defaultModel);
         int modelIdx = std::max(AIChatFindModelInList(models, model), 0);
-        win->aiChatModelCombo->SetCurrentSelection(modelIdx);
+        CbSetCurrentSelection(win->aiChatModelCombo, modelIdx);
     }
     if (win->aiChatOptionCombo) {
         int optionIdx = p->GetOption();
         if (optionIdx < 0 || optionIdx >= p->optionCount) {
             optionIdx = p->optionDefault;
         }
-        win->aiChatOptionCombo->SetCurrentSelection(optionIdx);
+        CbSetCurrentSelection(win->aiChatOptionCombo, optionIdx);
     }
     if (win->aiChatCheckbox) {
         win->aiChatCheckbox->SetIsChecked(p->GetFlag());
@@ -432,7 +432,7 @@ static void SyncAIChatSettingsFromUI(MainWindow* win) {
         return;
     }
     if (win->aiChatModelCombo) {
-        int sel = win->aiChatModelCombo->GetCurrentSelection();
+        int sel = CbGetCurrentSelection(win->aiChatModelCombo);
         StrVec models;
         p->BuildModelsList(models);
         if (sel >= 0 && sel < len(models)) {
@@ -440,7 +440,7 @@ static void SyncAIChatSettingsFromUI(MainWindow* win) {
         }
     }
     if (win->aiChatOptionCombo) {
-        p->SetOption(win->aiChatOptionCombo->GetCurrentSelection());
+        p->SetOption(CbGetCurrentSelection(win->aiChatOptionCombo));
     }
     if (win->aiChatCheckbox) {
         p->SetFlag(win->aiChatCheckbox->IsChecked());

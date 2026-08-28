@@ -3157,15 +3157,101 @@ void HwndSetDlgItemText(HWND hDlg, int itemID, Str s) {
     SetDlgItemTextW(hDlg, itemID, ws);
 }
 
-// hwnd should be Combo Box control
+//--- combo box
+// hwnd should be a Combo Box control
+
+void CbResetContent(HWND hwnd) {
+    SendMessageW(hwnd, CB_RESETCONTENT, 0, 0);
+}
+
 void CbAddString(HWND hwnd, Str s) {
     WCHAR* ws = CWStrTemp(s);
     SendMessageW(hwnd, CB_ADDSTRING, 0, (LPARAM)ws);
 }
 
-// hwnd should be Combo Box control
+void CbSetCueBanner(HWND hwnd, Str s) {
+    if (!hwnd) {
+        return;
+    }
+    SendMessageW(hwnd, CB_SETCUEBANNER, 0, (LPARAM)CWStrTemp(s));
+}
+
+// how many items the drop-down list shows before it scrolls
+void CbSetMinVisible(HWND hwnd, int n) {
+    SendMessageW(hwnd, CB_SETMINVISIBLE, (WPARAM)n, 0);
+}
+
+// idx of -1 sets the height of the always-visible selection field
+void CbSetItemHeight(HWND hwnd, int idx, int dy) {
+    SendMessageW(hwnd, CB_SETITEMHEIGHT, (WPARAM)idx, (LPARAM)dy);
+}
+
+int CbGetTextLen(HWND hwnd) {
+    return hwnd ? HwndGetTextLen(hwnd) : 0;
+}
+
+// true while the drop-down list is showing
+bool CbIsDropped(HWND hwnd) {
+    return hwnd && SendMessageW(hwnd, CB_GETDROPPEDSTATE, 0, 0);
+}
+
+// which item of the drop-down list is selected. -1 means none, which is also
+// what a null hwnd reports
+int CbGetCurrentSelection(HWND hwnd) {
+    if (!hwnd) {
+        return -1;
+    }
+    return (int)SendMessageW(hwnd, CB_GETCURSEL, 0, 0);
+}
+
+// -1 : no selection
 void CbSetCurrentSelection(HWND hwnd, int selIdx) {
     SendMessageW(hwnd, CB_SETCURSEL, (WPARAM)selIdx, 0);
+}
+
+// the edit control an editable combo keeps the text and keyboard focus in,
+// null for a CBS_DROPDOWNLIST combo (which has no edit)
+HWND CbEditHwnd(HWND hwnd) {
+    if (!hwnd) {
+        return nullptr;
+    }
+    COMBOBOXINFO info{};
+    info.cbSize = sizeof(info);
+    if (!GetComboBoxInfo(hwnd, &info)) {
+        return nullptr;
+    }
+    return info.hwndItem;
+}
+
+void CbEditSelectAll(HWND hwnd) {
+    CbEditSelectText(hwnd, 0, -1);
+}
+
+// the text selection within the edit, not the selected drop-down list item
+void CbEditSelectText(HWND hwnd, int start, int end) {
+    if (!hwnd) {
+        return;
+    }
+    SendMessageW(hwnd, CB_SETEDITSEL, 0, MAKELPARAM(start, end));
+}
+
+void CbEditGetSelection(HWND hwnd, int& start, int& end) {
+    start = 0;
+    end = 0;
+    if (!hwnd) {
+        return;
+    }
+    DWORD sel = (DWORD)SendMessageW(hwnd, CB_GETEDITSEL, 0, 0);
+    start = (int)LOWORD(sel);
+    end = (int)HIWORD(sel);
+}
+
+void CbEditSetModified(HWND hwnd, bool on) {
+    EditSetModified(CbEditHwnd(hwnd), on);
+}
+
+bool CbEditIsModified(HWND hwnd) {
+    return EditIsModified(CbEditHwnd(hwnd));
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-seticon

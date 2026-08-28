@@ -600,7 +600,7 @@ static int GetSelectedFormatIdx(ImageEditWindow* ew) {
     if (!ew->dropFormat) {
         return kDefaultFormatIdx;
     }
-    int ddIdx = ew->dropFormat->GetCurrentSelection();
+    int ddIdx = CbGetCurrentSelection(ew->dropFormat);
     if (ddIdx < 0 || ddIdx >= len(ew->formatIndices)) {
         return kDefaultFormatIdx;
     }
@@ -2378,7 +2378,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             items.Append(gImageFormats[i].label);
         }
         dd->SetItems(items);
-        dd->SetCurrentSelection(defaultDdIdx);
+        CbSetCurrentSelection(dd, defaultDdIdx);
         dd->onSelectionChanged = MkFunc0<ImageEditWindow>(OnFormatChanged, ew);
         ew->dropFormat = dd;
         if (selectPdf) {

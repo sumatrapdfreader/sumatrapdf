@@ -97,7 +97,7 @@ void SettingsWnd::FillLayout() {
     if (sel < 0 || sel >= len(items)) {
         sel = 0;
     }
-    dropLayout->SetCurrentSelection(sel);
+    CbSetCurrentSelection(dropLayout, sel);
 }
 
 void SettingsWnd::FillZoom() {
@@ -119,7 +119,7 @@ void SettingsWnd::FillZoom() {
         }
     }
     if (sel >= 0) {
-        dropZoom->SetCurrentSelection(sel);
+        CbSetCurrentSelection(dropZoom, sel);
     } else {
         dropZoom->SetText(fmt("%.0f%%", startZoom));
     }
@@ -141,7 +141,7 @@ void SettingsWnd::FillInverse() {
     }
     int idx = items.Find(cmdLine);
     if (idx >= 0) {
-        dropInverse->SetCurrentSelection(idx);
+        CbSetCurrentSelection(dropInverse, idx);
     } else {
         dropInverse->SetText(cmdLine);
     }
@@ -149,7 +149,7 @@ void SettingsWnd::FillInverse() {
 
 // Selected list entry, or a typed number (empty / non-numeric keeps startZoom).
 float SettingsWnd::SelectedZoom() {
-    int idx = dropZoom ? dropZoom->GetCurrentSelection() : -1;
+    int idx = CbGetCurrentSelection(dropZoom);
     if (idx >= 0 && idx < len(zoomLevels)) {
         float z = zoomLevels[idx];
         return z == 0 ? startZoom : z;
@@ -182,7 +182,7 @@ void SettingsWnd::OnOk(VirtMouseEvent*) {
         ScheduleDelete();
         return;
     }
-    int layoutIdx = dropLayout ? dropLayout->GetCurrentSelection() : -1;
+    int layoutIdx = CbGetCurrentSelection(dropLayout);
     int nLayout = dropLayout ? len(dropLayout->items) : 0;
     if (layoutIdx >= 0 && nLayout > 0 && layoutIdx == nLayout - 1) {
         str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, StrL("page aspect"));

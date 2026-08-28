@@ -282,7 +282,7 @@ void PageGridWnd::ApplyLive() {
         pg->offsetX = ox;
         pg->offsetY = oy;
     }
-    int styleIdx = ddStyle ? ddStyle->GetCurrentSelection() : kPageGridDefaultStyleIdx;
+    int styleIdx = ddStyle ? CbGetCurrentSelection(ddStyle) : kPageGridDefaultStyleIdx;
     if (styleIdx < 0) {
         styleIdx = kPageGridDefaultStyleIdx;
     }
@@ -309,7 +309,7 @@ void PageGridWnd::OnUnitsChanged() {
         pg->offsetX = ox;
         pg->offsetY = oy;
     }
-    int idx = ddUnits->GetCurrentSelection();
+    int idx = CbGetCurrentSelection(ddUnits);
     if (idx < 0) {
         idx = kPageGridDefaultUnitIdx;
     }
@@ -374,10 +374,10 @@ void PageGridWnd::LoadFromPrefs() {
     }
     updating = true;
     if (ddUnits) {
-        ddUnits->SetCurrentSelection(unitIdx);
+        CbSetCurrentSelection(ddUnits, unitIdx);
     }
     if (ddStyle) {
-        ddStyle->SetCurrentSelection(styleIdx);
+        CbSetCurrentSelection(ddStyle, styleIdx);
     }
     if (editColor) {
         editColor->SetText(SerializeColorTemp(currentColor));
@@ -418,10 +418,10 @@ void PageGridWnd::OnReset(VirtMouseEvent*) {
     unitIdx = kPageGridDefaultUnitIdx;
     updating = true;
     if (ddUnits) {
-        ddUnits->SetCurrentSelection(unitIdx);
+        CbSetCurrentSelection(ddUnits, unitIdx);
     }
     if (ddStyle) {
-        ddStyle->SetCurrentSelection(kPageGridDefaultStyleIdx);
+        CbSetCurrentSelection(ddStyle, kPageGridDefaultStyleIdx);
     }
     if (editColor) {
         editColor->SetText(SerializeColorTemp(currentColor));
