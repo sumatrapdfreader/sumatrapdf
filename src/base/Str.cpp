@@ -1736,100 +1736,39 @@ static bool IsNotOurHeapBlock(const str::Builder* s) {
     return !s->els || s->cap < 0;
 }
 
-// both Builders lead with {len, cap, els}, in that order, so they have Vec<T>'s
-// layout and can be passed to the VecNonTemplated helpers
-static_assert(offsetof(str::Builder, len) == offsetof(VecNonTemplated, len));
-static_assert(offsetof(str::Builder, cap) == offsetof(VecNonTemplated, cap));
-static_assert(offsetof(str::Builder, els) == offsetof(VecNonTemplated, els));
+// wstr::Builder still has its own storage, so it needs Vec<T>'s layout to reach
+// the VecNonTemplated helpers (str::Builder is a Vec<char>, so it's a given)
 static_assert(offsetof(wstr::Builder, len) == offsetof(VecNonTemplated, len));
 static_assert(offsetof(wstr::Builder, cap) == offsetof(VecNonTemplated, cap));
 static_assert(offsetof(wstr::Builder, els) == offsetof(VecNonTemplated, els));
 
-static char* EnsureCap(Arena* a, str::Builder* s, int needed) {
-    if (s->cap < 0) {
-        // storage we don't own, usable while the chars plus the NUL still fit.
-        // Once we grow out of the caller's scratch we never go back: RemoveAt()
-        // can shrink len enough to fit again, and switching back would lose data
-        // and leak the allocation.
-        if (needed + kPadding <= -s->cap) {
-            return s->els;
-        }
-    } else if (s->els && s->cap >= needed) {
-        return s->els;
+// Vec allocates one element past the capacity and zeroes what it isn't using,
+// so there is always room for the NUL. Writing it after every change keeps it
+// right for lent buffers too, which nobody zeroes.
+static void Terminate(str::Builder& b) {
+    if (b.els) {
+        b.els[b.len] = 0;
     }
+}
 
-    int curCap = s->cap < 0 ? -s->cap : s->cap;
-    int newCap = curCap * 2;
-    newCap = std::max(needed, newCap);
-
-    int newElCount = newCap + kPadding;
-
-    int allocSize = newElCount;
-    char* newEls;
-    bool ownsHeapBlock = s->els && s->cap > 0;
-    if (ownsHeapBlock && !a) {
-        newEls = (char*)Realloc(nullptr, s->els, (size_t)allocSize, (size_t)s->len + kPadding);
-    } else {
-        // an arena never frees, and realloc() of the caller's scratch would be
-        // undefined, so both go through a fresh block plus a copy
-        newEls = (char*)Alloc(a, allocSize);
-        if (newEls && s->els && s->len > 0) {
-            memcpy(newEls, s->els, (size_t)s->len + 1);
-        } else if (newEls) {
-            newEls[0] = 0;
-        }
-    }
-    if (!newEls) {
-        ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
+// VecReserve() marks arena storage with a positive cap, which would have ~Vec()
+// free() arena memory. Flip the sign, so it reads as "not ours", like a lent
+// buffer does.
+static char* BuilderEnsureCap(Arena* a, str::Builder& b, int needed) {
+    char* els = VecReserve(a, b, needed);
+    if (!els) {
         return nullptr;
     }
-    s->els = newEls;
-    // an arena block is not ours to free, so it is marked the same way the
-    // caller's scratch is
-    s->cap = a ? -newCap : newCap;
-    return newEls;
-}
-
-static char* MakeSpaceAt(Arena* a, str::Builder* s, int idx, int count) {
-    ReportIf(count == 0);
-    int newLen = std::max(s->len, idx) + count;
-    char* buf = EnsureCap(a, s, newLen);
-    if (!buf) {
-        return nullptr;
+    if (a && b.cap > 0) {
+        b.cap = -b.cap;
     }
-    buf[newLen] = 0;
-    char* res = &(buf[idx]);
-    if (s->len > idx) {
-        // inserting in the middle of string, have to copy
-        char* src = buf + idx;
-        char* dst = buf + idx + count;
-        memmove(dst, src, (size_t)(s->len - idx));
-    }
-    s->len = newLen;
-    // ZeroMemory(res, count);
-    return res;
-}
-
-// keeps the storage (heap or borrowed) for re-use, only empties it
-static void StrBuilderReset(str::Builder* s) {
-    s->len = 0;
-    if (s->els) {
-        s->els[0] = 0;
-    }
-}
-
-static void StrBuilderFree(str::Builder* s) {
-    if (s->els && s->cap > 0) {
-        // cap > 0 is only ever a heap block of ours; arena storage has cap < 0
-        Free(nullptr, s->els);
-    }
-    s->len = 0;
-    s->cap = 0;
-    s->els = nullptr;
+    return els;
 }
 
 void str::Builder::Reset(Str s) {
-    StrBuilderReset(this);
+    // keeps the storage (heap or borrowed) for re-use, only empties it
+    len = 0;
+    Terminate(*this);
     Append(s); // no-op if s is empty
 }
 
@@ -1837,50 +1776,39 @@ void str::BuilderUseExternalBuffer(Builder& b, Str buf) {
     ReportIf(b.els || b.len != 0);
     if (buf.s && buf.len > kPadding) {
         b.els = buf.s;
-        b.cap = -buf.len;
+        // one char of the caller's buffer is held back for the NUL
+        b.cap = -(buf.len - kPadding);
         b.els[0] = 0;
     }
 }
 
 bool str::BuilderReserve(Arena* a, Builder& b, int cap) {
-    return EnsureCap(a, &b, cap) != nullptr;
-}
-
-str::Builder::~Builder() {
-    StrBuilderFree(this);
-}
-
-char& str::Builder::operator[](int idx) const {
-    ReportIf(idx < 0 || idx >= len);
-    return els[idx];
-}
-
-int len(const str::Builder& b) {
-    return b.len;
-}
-
-static bool BuilderInsertAt(Arena* a, str::Builder& b, int idx, char el) {
-    char* p = MakeSpaceAt(a, &b, idx, 1);
-    if (!p) {
+    if (!BuilderEnsureCap(a, b, cap)) {
         return false;
     }
-    p[0] = el;
+    Terminate(b);
     return true;
 }
 
 bool str::BuilderAppendChar(Arena* a, Builder& b, char c) {
-    return BuilderInsertAt(a, b, b.len, c);
+    if (!BuilderEnsureCap(a, b, b.len + 1)) {
+        return false;
+    }
+    b.els[b.len++] = c;
+    Terminate(b);
+    return true;
 }
 
 bool str::BuilderAppend(Arena* a, Builder& b, Str src) {
     if (str::IsNull(src) || 0 == src.len) {
         return true;
     }
-    char* dst = MakeSpaceAt(a, &b, b.len, src.len);
-    if (!dst) {
+    if (!BuilderEnsureCap(a, b, b.len + src.len)) {
         return false;
     }
-    memcpy(dst, src.s, (size_t)src.len);
+    memcpy(b.els + b.len, src.s, (size_t)src.len);
+    b.len += src.len;
+    Terminate(b);
     return true;
 }
 
@@ -1894,14 +1822,8 @@ bool str::Builder::Append(Str src) {
 
 char str::Builder::RemoveAt(int idx, int count) {
     char res = els[idx];
-    if (len > idx + count) {
-        char* dst = els + idx;
-        char* src = els + idx + count;
-        int nToMove = len - idx - count;
-        memmove(dst, src, (size_t)nToMove);
-    }
-    len -= count;
-    memset(els + len, 0, (size_t)count);
+    // VecRemoveAtN() zeroes the chars it frees at the end, so the NUL is there
+    VecRemoveAtN(*this, idx, count);
     return res;
 }
 
@@ -1946,11 +1868,10 @@ bool str::Contains(const str::Builder& b, Str sub) {
 }
 
 char str::Builder::LastChar() const {
-    auto n = this->len;
-    if (n == 0) {
+    if (len == 0) {
         return 0;
     }
-    return els[n - 1];
+    return els[len - 1];
 }
 
 // using external scratch, or no storage yet (not heap)
@@ -1958,101 +1879,37 @@ static bool IsNotOurHeapBlock(const wstr::Builder* s) {
     return !s->els || s->cap < 0;
 }
 
-static WCHAR* EnsureCap(Arena* a, wstr::Builder* s, int needed) {
-    if (s->cap < 0) {
-        // storage we don't own, see the str::Builder version
-        if (needed + kPadding <= -s->cap) {
-            return s->els;
-        }
-    } else if (s->els && s->cap >= needed) {
-        return s->els;
+// see the str::Builder version
+static void Terminate(wstr::Builder& b) {
+    if (b.els) {
+        b.els[b.len] = 0;
     }
-
-    int curCap = s->cap < 0 ? -s->cap : s->cap;
-    int newCap = curCap * 2;
-    newCap = std::max(needed, newCap);
-
-    int newElCount = newCap + kPadding;
-
-    int allocSize = newElCount * wstr::Builder::kElSize;
-    WCHAR* newEls;
-    bool ownsHeapBlock = s->els && s->cap > 0;
-    if (ownsHeapBlock && !a) {
-        newEls =
-            (WCHAR*)Realloc(nullptr, s->els, (size_t)allocSize, (size_t)wstr::Builder::kElSize * (s->len + kPadding));
-    } else {
-        newEls = (WCHAR*)Alloc(a, allocSize);
-        if (newEls && s->els && s->len > 0) {
-            memcpy(newEls, s->els, (size_t)wstr::Builder::kElSize * (s->len + 1));
-        } else if (newEls) {
-            newEls[0] = 0;
-        }
-    }
-
-    if (!newEls) {
-        ReportIf(AtomicIntGet(&gAllowAllocFailure) == 0);
-        return nullptr;
-    }
-    s->els = newEls;
-    s->cap = a ? -newCap : newCap;
-    return newEls;
-}
-
-static WCHAR* MakeSpaceAt(Arena* a, wstr::Builder* s, int idx, int count) {
-    ReportIf(count == 0);
-    int newLen = std::max(s->len, idx) + count;
-    WCHAR* buf = EnsureCap(a, s, newLen);
-    if (!buf) {
-        return nullptr;
-    }
-    buf[newLen] = 0;
-    WCHAR* res = &(buf[idx]);
-    if (s->len > idx) {
-        WCHAR* src = buf + idx;
-        WCHAR* dst = buf + idx + count;
-        memmove(dst, src, (size_t)(s->len - idx) * wstr::Builder::kElSize);
-    }
-    s->len = newLen;
-    return res;
-}
-
-static void WStrBuilderFree(wstr::Builder* s) {
-    if (s->els && s->cap > 0) {
-        // cap > 0 is only ever a heap block of ours; arena storage has cap < 0
-        Free(nullptr, s->els);
-    }
-    s->len = 0;
-    s->cap = 0;
-    s->els = nullptr;
 }
 
 void wstr::BuilderUseExternalBuffer(Builder& b, WStr buf) {
     ReportIf(b.els || b.len != 0);
     if (buf.s && buf.len > kPadding) {
         b.els = buf.s;
-        b.cap = -buf.len;
+        // one WCHAR of the caller's buffer is held back for the NUL
+        b.cap = -(buf.len - kPadding);
         b.els[0] = 0;
     }
 }
 
-wstr::Builder::~Builder() {
-    WStrBuilderFree(this);
-}
-
-int len(const wstr::Builder& b) {
-    return b.len;
-}
-
 bool wstr::BuilderReserve(Builder& b, int cap) {
-    return EnsureCap(nullptr, &b, cap) != nullptr;
+    if (!VecReserve(b, cap)) {
+        return false;
+    }
+    Terminate(b);
+    return true;
 }
 
 bool wstr::Builder::AppendChar(WCHAR c) {
-    WCHAR* p = MakeSpaceAt(nullptr, this, len, 1);
-    if (!p) {
+    if (!VecReserve(*this, len + 1)) {
         return false;
     }
-    p[0] = c;
+    els[len++] = c;
+    Terminate(*this);
     return true;
 }
 
@@ -2060,11 +1917,12 @@ bool wstr::Builder::Append(WStr src) {
     if (wstr::IsNull(src) || 0 == src.len) {
         return true;
     }
-    WCHAR* dst = MakeSpaceAt(nullptr, this, len, src.len);
-    if (!dst) {
+    if (!VecReserve(*this, len + src.len)) {
         return false;
     }
-    memcpy(dst, src.s, (size_t)src.len * kElSize);
+    memcpy(els + len, src.s, (size_t)src.len * sizeof(WCHAR));
+    len += src.len;
+    Terminate(*this);
     return true;
 }
 
@@ -2077,15 +1935,13 @@ WStr wstr::Builder::TakeWStr() {
         return WStr{};
     }
     if (IsNotOurHeapBlock(this)) {
-        res = (WCHAR*)MemDup(nullptr, els, (size_t)(n + kPadding) * kElSize);
+        res = (WCHAR*)MemDup(nullptr, els, (size_t)(n + kPadding) * sizeof(WCHAR));
     } else {
         els = nullptr;
         cap = 0;
     }
     len = 0;
-    if (els) {
-        els[0] = 0;
-    }
+    Terminate(*this);
     return WStr(res, n);
 }
 
@@ -2093,18 +1949,15 @@ WCHAR wstr::Builder::RemoveLast() {
     if (len == 0) {
         return 0;
     }
-    len--;
-    WCHAR res = els[len];
-    els[len] = 0;
-    return res;
+    // VecPop() zeroes the char it drops, so the NUL is there
+    return VecPop(*this);
 }
 
 WCHAR wstr::Builder::LastChar() const {
-    auto n = this->len;
-    if (n == 0) {
+    if (len == 0) {
         return 0;
     }
-    return els[n - 1];
+    return els[len - 1];
 }
 
 namespace wstr {

@@ -237,26 +237,11 @@ TempStr SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut);
 TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
 
 namespace str {
-struct Builder {
-    // len/cap/els come first, in that order, so Builder has the same layout as
-    // Vec<T> and can be handed to the VecNonTemplated helpers
-    int len = 0;
-    // Negative means the chars sit in storage this Builder does not own and the
-    // capacity is `-cap`, exactly like Vec<T>: the buffer lent by
-    // BuilderUseExternalBuffer(), or a block allocated from an arena. Growing
-    // allocates a fresh block and copies; nothing frees it.
-    int cap = 0;
-    char* els = nullptr;
-
-    Builder() = default;
-    // the implicit memberwise copy would alias els and double-free it
-    Builder(const Builder&) = delete;
-    Builder& operator=(const Builder&) = delete;
-
-    ~Builder();
-
+// A Vec<char> that always keeps a NUL after the last char, so the storage is
+// also a C string. Vec supplies the fields, operator[], begin/end and the
+// destructor; only what needs the terminator or an arena is left here.
+struct Builder : Vec<char> {
     void Reset(Str s = {});
-    char& operator[](int idx) const;
     // these grow on the heap; to grow from an arena use the BuilderAppend*()
     // free functions below, which take the allocator like VecPush() does
     bool AppendChar(char c);
@@ -265,12 +250,6 @@ struct Builder {
     char RemoveLast();
     Str TakeStr();
     char LastChar() const;
-
-    // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
-    // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
-    using iterator = char*;
-
-    iterator begin() const { return els ? &(els[0]) : nullptr; }
 };
 
 bool Contains(const Builder& b, Str sub);
@@ -296,32 +275,14 @@ void SeqStrNumAppend(str::Builder* b, Str s, i64 num);
 void SeqStrNumFinish(str::Builder* b);
 
 namespace wstr {
-struct Builder {
-    // len/cap/els come first, in that order, so Builder has the same layout as
-    // Vec<T> and can be handed to the VecNonTemplated helpers
-    int len = 0;
-    // negative cap means storage we don't own, of capacity -cap; see str::Builder
-    int cap = 0;
-    WCHAR* els = nullptr;
-
-    static constexpr int kElSize = sizeofi(WCHAR);
-
-    Builder() = default;
-    // the implicit memberwise copy would alias els and double-free it
-    Builder(const Builder&) = delete;
-    Builder& operator=(const Builder&) = delete;
-
-    ~Builder();
-
+// see str::Builder: a Vec<WCHAR> that always keeps a NUL after the last char
+struct Builder : Vec<WCHAR> {
     bool AppendChar(WCHAR);
     bool Append(WStr src);
     WCHAR RemoveLast();
     WCHAR LastChar() const;
     WStr TakeWStr();
 };
-} // namespace wstr
-
-namespace wstr {
 
 // see str::BuilderUseExternalBuffer()
 void BuilderUseExternalBuffer(Builder& b, WStr buf);
@@ -347,9 +308,6 @@ Str ToStr(const str::Builder&);
 WStr ToWStr(const wstr::Builder&);
 
 TempStr ToStrTemp(const str::Builder&);
-
-int len(const str::Builder&);
-int len(const wstr::Builder&);
 
 wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);
