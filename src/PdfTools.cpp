@@ -128,7 +128,14 @@ PdfToolDialog::~PdfToolDialog() {
 
 static void PdfToolDialogOnClose(WindowBase::CloseEvent* ev) {
     auto* dlg = (PdfToolDialog*)ev->e->self;
-    delete dlg;
+    // hand activation back to the main window ourselves: after the browse
+    // dialog has been up, letting DestroyWindow pick the next window can drop
+    // the frame behind whatever else is on screen
+    if (dlg->win && IsWindow(dlg->win->hwndFrame)) {
+        SetActiveWindow(dlg->win->hwndFrame);
+    }
+    // must not `delete dlg` here: we're inside the window's own WM_CLOSE
+    dlg->ScheduleDelete();
 }
 
 void PdfToolDialog::OnCancel(VirtMouseEvent*) {
