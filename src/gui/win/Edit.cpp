@@ -155,9 +155,7 @@ void Edit::SetCursorId(LPWSTR id) {
 }
 
 void Edit::SelectAll() {
-    TempWStr s = HwndGetTextWTemp(hwnd);
-    int pos = len(s);
-    Edit_SetSel(hwnd, 0, pos);
+    EditSelectAll(hwnd);
 }
 
 void Edit::SetCursorPosition(int pos) {

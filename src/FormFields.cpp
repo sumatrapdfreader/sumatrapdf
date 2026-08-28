@@ -251,7 +251,7 @@ static bool StartTextEdit(MainWindow* win, Annotation* widget, Rect rc, int flag
     gEdit.isChoice = false;
 
     HwndSetFocus(hEdit);
-    Edit_SetSel(hEdit, 0, -1);
+    EditSelectAll(hEdit);
     return true;
 }
 
