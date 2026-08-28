@@ -136,7 +136,7 @@ TempStr GumboTextContentTemp(const GumboNode* node) {
             sb.Append(Str(child->v.text.text));
         }
     }
-    if (sb.IsEmpty()) {
+    if (len(sb) == 0) {
         return {};
     }
     return ToStrTemp(sb);

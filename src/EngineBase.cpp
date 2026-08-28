@@ -110,7 +110,7 @@ Str PageDestinationJsMenu::GetValue2() {
         if (str::Eq(it, StrL("-"))) {
             continue;
         }
-        if (!b.IsEmpty()) {
+        if (len(b) > 0) {
             b.AppendChar('\n');
         }
         b.Append(it);
@@ -399,7 +399,7 @@ void EngineBase::AppendError(Str msg) {
 
 bool EngineBase::HasErrors() {
     ScopedMutex scope(&errorsLock);
-    return !errors.IsEmpty();
+    return len(errors) > 0;
 }
 
 // internal builder buffer (no copy); valid until next AppendError or engine

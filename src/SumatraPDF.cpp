@@ -6501,7 +6501,7 @@ static void BuildOpenFileFilters(OpenFileFilterList& out) {
         if (!ff.available) {
             continue;
         }
-        if (!allPat.IsEmpty()) {
+        if (len(allPat) > 0) {
             allPat.AppendChar(';');
         }
         allPat.Append(ff.filter);
@@ -13939,7 +13939,7 @@ static TempStr CleanReadAloudTextTemp(Str text) {
         i++;
     }
 
-    if (out.IsEmpty()) {
+    if (len(out) == 0) {
         return {};
     }
     return ToStrTemp(out);

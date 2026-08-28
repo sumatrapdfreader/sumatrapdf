@@ -1950,10 +1950,6 @@ bool str::Contains(const str::Builder& b, Str sub) {
     return str::Contains(ToStr(b), sub);
 }
 
-bool str::Builder::IsEmpty() const {
-    return len == 0;
-}
-
 char str::Builder::LastChar() const {
     auto n = this->len;
     if (n == 0) {

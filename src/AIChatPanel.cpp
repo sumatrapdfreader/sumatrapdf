@@ -204,7 +204,7 @@ void AIChatHistoryFlushBlock(MainWindow* win) {
 
 // Replay a tab's chat log into the WebView
 static void ReplayChatLog(MainWindow* win, AIChatTabState* st) {
-    if (!st || st->chatLog.IsEmpty()) {
+    if (!st || len(st->chatLog) == 0) {
         return;
     }
     if (!win->aiChatWebView || !win->aiChatWebViewReady) {
@@ -1498,7 +1498,7 @@ void OnAIChatTabChanged(MainWindow* win) {
     SetAIChatWorking(win, st->process != nullptr);
 
     // if tab has in-memory chat log, replay it (fast, includes current session)
-    if (!st->chatLog.IsEmpty()) {
+    if (len(st->chatLog) > 0) {
         ReplayChatLog(win, st);
     } else if (tab->filePath && st->sessionId) {
         // fallback: load from disk

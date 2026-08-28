@@ -265,7 +265,6 @@ struct Builder {
     char RemoveLast();
     char& Last() const;
     Str TakeStr();
-    bool IsEmpty() const;
     char LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html

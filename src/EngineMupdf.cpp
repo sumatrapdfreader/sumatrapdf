@@ -961,7 +961,7 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
     }
     if (isWhitespace) {
         // collapse multiple whitespace characters into one
-        char prev = s.IsEmpty() ? 0 : s.LastChar();
+        char prev = len(s) == 0 ? 0 : s.LastChar();
         if (prev == ' ' || prev == '\t' || prev == '\n' || prev == '\r') {
             return;
         }
@@ -986,7 +986,7 @@ static void AddLineSepUtf8(str::Builder& s, Vec<Rect>& rects, Str lineSep) {
         return;
     }
     // remove trailing space
-    if (!s.IsEmpty() && s.LastChar() == ' ') {
+    if (len(s) > 0 && s.LastChar() == ' ') {
         s.RemoveLast();
         rects.RemoveLast();
     }
@@ -1050,7 +1050,7 @@ static bool IsUnicodeHyphenRune(int c) {
 // so "some-\\nthing" becomes "something" (#5793, #1189). Handles multi-byte
 // UTF-8 hyphens (U+00AD soft hyphen, U+2010/U+2011), not just ASCII '-'.
 static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<Rect>& rects) {
-    if (s.IsEmpty() || len(rects) == 0) {
+    if (len(s) == 0 || len(rects) == 0) {
         return;
     }
     Str text = ToStr(s);
@@ -4753,7 +4753,7 @@ static void AppendHeadingLineText(fz_stext_line* line, str::Builder& b) {
         }
         bool isWs = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
         if (isWs) {
-            if (b.IsEmpty() || b.LastChar() == ' ') {
+            if (len(b) == 0 || b.LastChar() == ' ') {
                 continue;
             }
             b.AppendChar(' ');
@@ -7201,7 +7201,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             info.Append(StrL(")"));
         }
 
-        if (info.IsEmpty()) {
+        if (len(info) == 0) {
             continue;
         }
         AppendIfNotExists(&fonts, ToStr(info));
@@ -7531,7 +7531,7 @@ static int PageNoForSigField(fz_context* ctx, pdf_document* pdfdoc, pdf_obj* fie
 static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier,
                                      pdf_document* pdfdoc, pdf_obj* sigObj, int sigNo, int pageNo, bool docHasDss,
                                      bool docHasDocTs) {
-    if (!s.IsEmpty()) {
+    if (len(s) > 0) {
         s.AppendChar('\n');
     }
     if (pageNo > 0) {
@@ -7775,7 +7775,7 @@ void EngineMupdf::GetProperties(Props& propsOut) {
         fz_catch(ctx) {
             fz_report_error(ctx);
         }
-        if (!sigs.IsEmpty()) {
+        if (len(sigs) > 0) {
             AddProp(propsOut, DocProp::Signatures, str::DupTemp(ToStr(sigs)));
         }
     }

@@ -1188,7 +1188,7 @@ void MobiTocWalker::Walk(const GumboNode* root) {
                 if (attr) {
                     str::Builder text;
                     AppendDeepText(node, text);
-                    if (!text.IsEmpty()) {
+                    if (len(text) > 0) {
                         visitor->Visit(ToStr(text), Str(attr->value), level);
                     }
                 }

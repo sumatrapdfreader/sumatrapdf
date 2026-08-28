@@ -250,7 +250,7 @@ static void StrBuilderRunTwice(void (*fn)(str::Builder&)) {
 }
 
 static void StrBuilderContainsAppend(str::Builder& str) {
-    utassert(str.IsEmpty());
+    utassert(len(str) == 0);
     str.Append(StrL("blah"));
     utassert(str.begin() != nullptr);
     utassert(str::Contains(str, StrL("blah")));
@@ -320,7 +320,7 @@ static void StrBuilderTakeStr(str::Builder& str) {
         utassert(taken.s != before);
     }
     str::Free(taken);
-    utassert(str.IsEmpty());
+    utassert(len(str) == 0);
 }
 
 // BuilderReserve() allocates up front, so content that stays under it never
