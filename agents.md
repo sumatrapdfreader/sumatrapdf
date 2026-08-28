@@ -47,6 +47,10 @@ We rely on a controlled include order rather than self-sufficient headers (this 
 
 Do **not** use `#pragma once` in `.h` files.
 
+## Comments
+
+Use comments rarely. Most comments should be at the request of the user. When something warrants a comment, keep it to one or two lines: what the code does and why it's necessary. No background narrative, no replaying the investigation or failure mode, nothing a test name or the commit message already says. Applies to specs too. If a comment needs a paragraph, make the code clearer instead
+
 ## Put explanatory comments in `.cpp`, not `.h`
 
 **Do not put prose function comments in headers.** Headers are re-parsed by every
