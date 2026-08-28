@@ -487,7 +487,7 @@ struct CodexBuildProvider : AIChatProvider {
             AIChatAppendModelUnique(models, StrL("gpt-5.4"));
             AIChatAppendModelUnique(models, StrL("o3"));
         }
-        Str extra = gGlobalPrefs->codexBuild.models;
+        Str extra = gSettings->codexBuild.models;
         if (len(extra) > 0) {
             StrVec parts;
             Split(&parts, extra, StrL(","), true);
@@ -497,13 +497,13 @@ struct CodexBuildProvider : AIChatProvider {
         }
     }
 
-    Str GetModel() override { return gGlobalPrefs->codexBuild.model; }
-    void SetModel(Str model) override { str::ReplaceWithCopy(&gGlobalPrefs->codexBuild.model, model); }
-    int GetOption() override { return gGlobalPrefs->codexBuild.sandbox; }
-    void SetOption(int option) override { gGlobalPrefs->codexBuild.sandbox = option; }
-    bool GetFlag() override { return gGlobalPrefs->codexBuild.skipSandbox; }
-    void SetFlag(bool flag) override { gGlobalPrefs->codexBuild.skipSandbox = flag; }
-    Str GetBgColor() override { return gGlobalPrefs->codexBuild.bgColor.s; }
+    Str GetModel() override { return gSettings->codexBuild.model; }
+    void SetModel(Str model) override { str::ReplaceWithCopy(&gSettings->codexBuild.model, model); }
+    int GetOption() override { return gSettings->codexBuild.sandbox; }
+    void SetOption(int option) override { gSettings->codexBuild.sandbox = option; }
+    bool GetFlag() override { return gSettings->codexBuild.skipSandbox; }
+    void SetFlag(bool flag) override { gSettings->codexBuild.skipSandbox = flag; }
+    Str GetBgColor() override { return gSettings->codexBuild.bgColor.s; }
 
     void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectCodexSessions(dir, sessions); }
 

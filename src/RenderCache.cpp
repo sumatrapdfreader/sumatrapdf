@@ -1612,7 +1612,7 @@ void RenderCache::UpdateRenderInfo() {
 
 static void CreateRenderInfoWindow() {
     auto* wnd = new DebugTextWnd();
-    wnd->closeOnEsc = gGlobalPrefs->escToExit;
+    wnd->closeOnEsc = gSettings->escToExit;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnRenderInfoClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnRenderInfoDestroy);
     if (!wnd->Create(StrL("Render Queue Info"), 12)) {
@@ -1742,7 +1742,7 @@ void RenderCache::UpdateCacheInfo() {
 
 static void CreateCacheInfoWindow() {
     auto* wnd = new DebugTextWnd();
-    wnd->closeOnEsc = gGlobalPrefs->escToExit;
+    wnd->closeOnEsc = gSettings->escToExit;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnCacheInfoClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnCacheInfoDestroy);
     if (!wnd->Create(StrL("Cache Info"), 12)) {

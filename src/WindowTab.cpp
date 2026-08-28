@@ -188,7 +188,7 @@ Str WindowTab::GetTabTitle() const {
     if (embeddedFileName) {
         return embeddedFileName;
     }
-    if (gGlobalPrefs->fullPathInTitle) {
+    if (gSettings->fullPathInTitle) {
         return filePath;
     }
     return path::GetBaseNameTemp(filePath);

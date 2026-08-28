@@ -39,7 +39,7 @@ struct TabGroupsListBoxModel : ListBoxModel {
 
     void Reload() {
         groups.Reset();
-        auto* g = gGlobalPrefs->tabGroups;
+        auto* g = gSettings->tabGroups;
         if (g) {
             for (auto* tg : *g) {
                 groups.Append(tg);
@@ -114,10 +114,10 @@ void TabGroupsWnd::SaveTabGroup() {
         group->tabFiles->Append(tf);
     }
 
-    if (!gGlobalPrefs->tabGroups) {
-        gGlobalPrefs->tabGroups = new Vec<TabGroup*>();
+    if (!gSettings->tabGroups) {
+        gSettings->tabGroups = new Vec<TabGroup*>();
     }
-    gGlobalPrefs->tabGroups->Append(group);
+    gSettings->tabGroups->Append(group);
     SaveSettings();
     Close();
 }
@@ -127,7 +127,7 @@ void TabGroupsWnd::OpenTabGroup() {
     if (sel < 0) {
         return;
     }
-    auto* groups = gGlobalPrefs->tabGroups;
+    auto* groups = gSettings->tabGroups;
     if (!groups || sel >= len(*groups)) {
         return;
     }
@@ -194,7 +194,7 @@ void TabGroupsWnd::DeleteTabGroup(VirtMouseEvent*) {
     if (sel < 0) {
         return;
     }
-    auto* groups = gGlobalPrefs->tabGroups;
+    auto* groups = gSettings->tabGroups;
     if (!groups || sel >= len(*groups)) {
         return;
     }
@@ -250,7 +250,7 @@ static void OnListDoubleClick(TabGroupsWnd* w) {
     } else {
         int sel = w->listBox ? w->listBox->GetCurrentSelection() : -1;
         if (sel >= 0 && w->editName) {
-            auto* groups = gGlobalPrefs->tabGroups;
+            auto* groups = gSettings->tabGroups;
             if (groups && sel < len(*groups)) {
                 w->editName->SetText((*groups)[sel]->name);
                 EditSelectAll(w->editName);
@@ -325,8 +325,8 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
         args.withBorder = true;
         args.isRtl = isRtl;
         int groupNum = 1;
-        if (gGlobalPrefs->tabGroups) {
-            groupNum = len(*gGlobalPrefs->tabGroups) + 1;
+        if (gSettings->tabGroups) {
+            groupNum = len(*gSettings->tabGroups) + 1;
         }
         TempStr defaultName = fmt("group #%d", groupNum);
         args.text = defaultName;

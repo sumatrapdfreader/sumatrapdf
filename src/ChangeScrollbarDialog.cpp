@@ -71,7 +71,7 @@ void ChangeScrollbarWnd::OnOk(VirtMouseEvent*) {
     int idx = listBox ? listBox->GetCurrentSelection() : -1;
     if (idx >= 0) {
         Str val = SeqStrByIndex(gScrollbarModeNames, idx);
-        str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, val);
+        str::ReplaceWithCopy(&gSettings->scrollbars, val);
         UpdateFixedPageScrollbarsVisibility();
         SaveSettings();
     }

@@ -963,7 +963,7 @@ static void SavePropertiesWindowPos(PropertiesWnd* w, HWND hwnd) {
     if (pos != w->initialPos) {
         // Only stash the point. SaveSettings() walks every tab and can re-enter
         // IsDocLoaded while CloseDocumentInCurrentTab has already cleared win->ctrl.
-        gGlobalPrefs->propWinPos = pos;
+        gSettings->propWinPos = pos;
     }
 }
 
@@ -1148,7 +1148,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         return;
     }
 
-    Point savedPos = gGlobalPrefs->propWinPos;
+    Point savedPos = gSettings->propWinPos;
     if (!savedPos.IsEmpty()) {
         SetWindowPos(wnd->hwnd, nullptr, savedPos.x, savedPos.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
         wnd->DoLayout();

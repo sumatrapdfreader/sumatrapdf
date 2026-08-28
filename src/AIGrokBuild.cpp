@@ -381,7 +381,7 @@ struct GrokBuildProvider : AIChatProvider {
         } else {
             AIChatAppendModelUnique(models, StrL("grok-4.5"));
         }
-        Str extra = gGlobalPrefs->grokBuild.models;
+        Str extra = gSettings->grokBuild.models;
         if (len(extra) > 0) {
             StrVec parts;
             Split(&parts, extra, StrL(","), true);
@@ -391,13 +391,13 @@ struct GrokBuildProvider : AIChatProvider {
         }
     }
 
-    Str GetModel() override { return gGlobalPrefs->grokBuild.model; }
-    void SetModel(Str model) override { str::ReplaceWithCopy(&gGlobalPrefs->grokBuild.model, model); }
-    int GetOption() override { return gGlobalPrefs->grokBuild.effort; }
-    void SetOption(int option) override { gGlobalPrefs->grokBuild.effort = option; }
-    bool GetFlag() override { return gGlobalPrefs->grokBuild.alwaysApprove; }
-    void SetFlag(bool flag) override { gGlobalPrefs->grokBuild.alwaysApprove = flag; }
-    Str GetBgColor() override { return gGlobalPrefs->grokBuild.bgColor.s; }
+    Str GetModel() override { return gSettings->grokBuild.model; }
+    void SetModel(Str model) override { str::ReplaceWithCopy(&gSettings->grokBuild.model, model); }
+    int GetOption() override { return gSettings->grokBuild.effort; }
+    void SetOption(int option) override { gSettings->grokBuild.effort = option; }
+    bool GetFlag() override { return gSettings->grokBuild.alwaysApprove; }
+    void SetFlag(bool flag) override { gSettings->grokBuild.alwaysApprove = flag; }
+    Str GetBgColor() override { return gSettings->grokBuild.bgColor.s; }
 
     void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectGrokSessions(dir, sessions); }
 

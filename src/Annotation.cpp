@@ -1628,7 +1628,7 @@ static Str GetUserTemp() {
 }
 
 static TempStr GetAnnotationTextIconTemp() {
-    TempStr s = str::DupTemp(gGlobalPrefs->annotations.textIconType);
+    TempStr s = str::DupTemp(gSettings->annotations.textIconType);
     // this way user can use "new paragraph" and we'll match "NewParagraph"
     str::RemoveCharsInPlace(s, StrL(" "));
     int idx = SeqStrIndexIS(gAnnotationTextIcons, s);
@@ -1816,7 +1816,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
 
             pdf_set_annot_modification_date(ctx, annot, time(nullptr));
             if (pdf_annot_has_author(ctx, annot)) {
-                Str defAuthor = gGlobalPrefs->annotations.defaultAuthor;
+                Str defAuthor = gSettings->annotations.defaultAuthor;
                 // if "(none)" we don't set it
                 if (!str::Eq(defAuthor, StrL("(none)"))) {
                     Str author = GetUserTemp();

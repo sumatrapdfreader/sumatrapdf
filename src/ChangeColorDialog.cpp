@@ -196,7 +196,7 @@ void ChangeColorWnd::ParseCustomColors() {
         customColors[i] = 0;
     }
     customColorsChanged = false;
-    Str s = gGlobalPrefs ? gGlobalPrefs->customColors : Str{};
+    Str s = gSettings ? gSettings->customColors : Str{};
     if (len(s) == 0) {
         return;
     }
@@ -224,7 +224,7 @@ void ChangeColorWnd::ParseCustomColors() {
 }
 
 void ChangeColorWnd::SaveCustomColorsIfChanged() {
-    if (!customColorsChanged || !gGlobalPrefs) {
+    if (!customColorsChanged || !gSettings) {
         return;
     }
     str::Builder buf;
@@ -237,7 +237,7 @@ void ChangeColorWnd::SaveCustomColorsIfChanged() {
         }
         buf.Append(SerializeColorTemp(customColors[i]));
     }
-    str::ReplaceWithCopy(&gGlobalPrefs->customColors, ToStr(buf));
+    str::ReplaceWithCopy(&gSettings->customColors, ToStr(buf));
     SaveSettings();
 }
 
@@ -531,13 +531,13 @@ void ChangeColorWnd::ApplyBackground() {
 
     if (applyToAll) {
         if (isCbx) {
-            SetColorText(gGlobalPrefs->comicBookUI.windowBgCol, colorStr);
+            SetColorText(gSettings->comicBookUI.windowBgCol, colorStr);
         } else if (isImage) {
-            SetColorText(gGlobalPrefs->imageUI.windowBgCol, colorStr);
+            SetColorText(gSettings->imageUI.windowBgCol, colorStr);
         } else if (isEbook) {
-            SetColorText(gGlobalPrefs->eBookUI.windowBgCol, colorStr);
+            SetColorText(gSettings->eBookUI.windowBgCol, colorStr);
         } else {
-            SetColorText(gGlobalPrefs->fixedPageUI.windowBgCol, colorStr);
+            SetColorText(gSettings->fixedPageUI.windowBgCol, colorStr);
         }
         FileState* fs = FileHistoryFindByPath(t->filePath);
         if (fs) {
@@ -652,13 +652,13 @@ void ChangeColorWnd::LoadCurrentColor() {
     }
     ParsedColor* bgOverride = nullptr;
     if (isCbx) {
-        bgOverride = GetPrefsColor(gGlobalPrefs->comicBookUI.windowBgCol);
+        bgOverride = GetPrefsColor(gSettings->comicBookUI.windowBgCol);
     } else if (isImage) {
-        bgOverride = GetPrefsColor(gGlobalPrefs->imageUI.windowBgCol);
+        bgOverride = GetPrefsColor(gSettings->imageUI.windowBgCol);
     } else if (isEbook) {
-        bgOverride = GetPrefsColor(gGlobalPrefs->eBookUI.windowBgCol);
+        bgOverride = GetPrefsColor(gSettings->eBookUI.windowBgCol);
     } else {
-        bgOverride = GetPrefsColor(gGlobalPrefs->fixedPageUI.windowBgCol);
+        bgOverride = GetPrefsColor(gSettings->fixedPageUI.windowBgCol);
     }
     if (bgOverride && bgOverride->parsedOk) {
         currentColor = bgOverride->col;

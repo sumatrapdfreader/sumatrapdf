@@ -202,7 +202,7 @@ static MenuDef menuDefFile[] = {
         CmdOpenWithHtmlHelp,
     },
     //] ACCESSKEY_ALTERNATIVE
-    // further entries are added if specified in gGlobalPrefs.vecCommandLine
+    // further entries are added if specified in gSettings.vecCommandLine
     {
         _TRN("Send by &E-mail..."),
         CmdSendByEmail,
@@ -1730,7 +1730,7 @@ static struct {
 // clang-format on
 
 static void BuildMenuZoom(HMENU m) {
-    auto* prefs = gGlobalPrefs;
+    auto* prefs = gSettings;
     auto* customZoomLevels = prefs->zoomLevels;
     int n = len(*customZoomLevels);
     if (n <= 0) {
@@ -1764,7 +1764,7 @@ int CmdIdFromVirtualZoom(float virtualZoom) {
 // Custom ZoomLevels menu items use dynamically allocated command ids (not in
 // CmdZoomFirst..CmdZoomLast). Map an absolute zoom % to that custom id, or 0.
 static int CustomZoomCmdIdFromLevel(float zoomVirtual) {
-    auto* prefs = gGlobalPrefs;
+    auto* prefs = gSettings;
     if (!prefs || !prefs->zoomLevels || !prefs->zoomLevelsCmdIds) {
         return 0;
     }
@@ -1798,7 +1798,7 @@ static void ZoomMenuItemCheck(HMENU m, int cmdId, bool canZoom) {
         MenuSetEnabled(m, it.cmdId, canZoom);
     }
 
-    auto* prefs = gGlobalPrefs;
+    auto* prefs = gSettings;
     Vec<int>* customIds = prefs ? prefs->zoomLevelsCmdIds : nullptr;
     int nCustom = customIds ? len(*customIds) : 0;
     for (int i = 0; i < nCustom; i++) {
@@ -1843,7 +1843,7 @@ static void ZoomMenuItemCheck(HMENU m, int cmdId, bool canZoom) {
 }
 
 static void MenuUpdateZoom(MainWindow* win) {
-    float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
+    float zoomVirtual = gSettings->defaultZoomFloat;
     if (win->IsDocLoaded()) {
         zoomVirtual = win->ctrl->GetZoomVirtual();
     }
@@ -1920,7 +1920,7 @@ static void SetMenuStateForSelection(WindowTab* tab, HMENU menu) {
 
 static void MenuUpdateDisplayMode(MainWindow* win) {
     bool enabled = win->IsDocLoaded();
-    DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
+    DisplayMode displayMode = gSettings->defaultDisplayModeEnum;
     if (enabled) {
         displayMode = win->ctrl->GetDisplayMode();
     }
@@ -1968,17 +1968,17 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetEnabled(win->menu, CmdToggleBookmarks, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
-    bool checked = documentSpecific ? win->uiState.tocVisible : gGlobalPrefs->showToc;
+    bool checked = documentSpecific ? win->uiState.tocVisible : gSettings->showToc;
     MenuSetChecked(win->menu, CmdToggleBookmarks, checked);
 
-    MenuSetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
+    MenuSetChecked(win->menu, CmdFavoriteToggle, gSettings->showFavorites);
     MenuSetChecked(win->menu, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
     {
         // checked when mode is not "hide" (show or overlay)
         bool toolbarOn = win->isFullScreen ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
         MenuSetChecked(win->menu, CmdToggleToolbar, toolbarOn);
     }
-    MenuSetChecked(win->menu, CmdToggleMenuBar, gGlobalPrefs->showMenubar);
+    MenuSetChecked(win->menu, CmdToggleMenuBar, gSettings->showMenubar);
     // CmdChangeScrollbar doesn't need a check mark - it opens a dialog
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
@@ -2015,21 +2015,20 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
 
     CheckMenuRadioItem(win->menu, gFirstSetThemeCmdId, gLastSetThemeCmdId, gCurrSetThemeCmdId, MF_BYCOMMAND);
 
-    MenuSetChecked(win->menu, CmdToggleLinks, gGlobalPrefs->showLinks);
+    MenuSetChecked(win->menu, CmdToggleLinks, gSettings->showLinks);
     MenuSetChecked(win->menu, CmdTogglePageBoxes, win->showPageBoxes);
-    MenuSetChecked(win->menu, CmdToggleHighlightFormFields, gGlobalPrefs->highlightFormFields);
+    MenuSetChecked(win->menu, CmdToggleHighlightFormFields, gSettings->highlightFormFields);
     MenuSetChecked(win->menu, CmdToggleTransparencyGrid, ShowTransparencyGrid());
     MenuSetChecked(win->menu, CmdTogglePageGrid, ShowPageGrid());
     MenuSetChecked(win->menu, CmdToggleImages, ShowImageOutlines());
     MenuSetChecked(win->menu, CmdDebugShowFitContentArea, ShowFitContentArea());
     MenuSetEnabled(win->menu, CmdTabGroupSave, HasOpenedDocuments(win));
-    MenuSetChecked(win->menu, CmdToggleFilePicker,
-                   gGlobalPrefs && str::EqI(gGlobalPrefs->filePicker, StrL("sumatrapdf")));
+    MenuSetChecked(win->menu, CmdToggleFilePicker, gSettings && str::EqI(gSettings->filePicker, StrL("sumatrapdf")));
 }
 
 void OnAboutContextMenu(MainWindow* win, int x, int y) {
     if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess) || !SettingsRememberOpenedFiles() ||
-        !gGlobalPrefs->showStartPage) {
+        !gSettings->showStartPage) {
         return;
     }
 
@@ -2283,7 +2282,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     MenuSetChecked(popup, CmdToggleBookmarks, win->uiState.tocVisible);
 
     MenuSetEnabled(popup, CmdFavoriteToggle, HasFavorites());
-    MenuSetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
+    MenuSetChecked(popup, CmdFavoriteToggle, gSettings->showFavorites);
     MenuSetEnabled(popup, CmdFavoriteShowInTab, HasFavorites() && SettingsUseTabs());
     MenuSetChecked(popup, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
 
@@ -2315,7 +2314,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
 
     // if toolbar is not shown, add option to show it
-    if (gGlobalPrefs->showToolbar) {
+    if (gSettings->showToolbar) {
         MenuRemove(popup, CmdToggleToolbar);
     }
     RemoveBadMenuSeparators(popup);
@@ -2922,8 +2921,8 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
     }
 
     if (win->isFullScreen) {
-        gGlobalPrefs->fullscreen.showMenubar = !gGlobalPrefs->fullscreen.showMenubar;
-        if (gGlobalPrefs->fullscreen.showMenubar) {
+        gSettings->fullscreen.showMenubar = !gSettings->fullscreen.showMenubar;
+        if (gSettings->fullscreen.showMenubar) {
             // use rebar-based menu bar (WS_CAPTION is stripped in fullscreen, so SetMenu won't work)
             CreateMenuBarRebar(win);
         } else {
@@ -2939,12 +2938,12 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
         bool isShowing = IsShowingMenuBarRebar(win);
         if (isShowing) {
             DestroyMenuBarRebar(win);
-            gGlobalPrefs->showMenubar = false;
-            gGlobalPrefs->showMenubarWithTabs = false;
+            gSettings->showMenubar = false;
+            gSettings->showMenubarWithTabs = false;
         } else {
             CreateMenuBarRebar(win);
-            gGlobalPrefs->showMenubar = true;
-            gGlobalPrefs->showMenubarWithTabs = true;
+            gSettings->showMenubar = true;
+            gSettings->showMenubarWithTabs = true;
         }
         // layout first so the rebar is positioned correctly, then show it
         ScheduleUiUpdate(win);
@@ -2954,8 +2953,8 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
 
     bool hideMenu = GetMenu(hwnd) != nullptr;
     SetMenu(hwnd, hideMenu ? nullptr : win->menu);
-    gGlobalPrefs->showMenubar = !hideMenu;
-    gGlobalPrefs->showMenubarWithTabs = !hideMenu;
+    gSettings->showMenubar = !hideMenu;
+    gSettings->showMenubarWithTabs = !hideMenu;
 }
 
 // --- Menu bar as rebar control (used when tabs are in titlebar) ---

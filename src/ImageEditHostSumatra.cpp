@@ -123,5 +123,5 @@ void InitImageEditHost() {
     gImageEditHost.GetFont = GetAppFont;
     gImageEditHost.GetOwnerHwnd = GetOwnerHwnd;
     gImageEditHost.appIconId = GetAppIconID();
-    gImageEditHost.escToExit = gGlobalPrefs->escToExit;
+    gImageEditHost.escToExit = gSettings->escToExit;
 }

@@ -282,8 +282,8 @@ static TempStr OsDefaultDestinationLanguageTemp() {
 }
 
 static TempStr DefaultDestinationLanguageTemp() {
-    if (gGlobalPrefs && !str::IsEmptyOrWhiteSpace(gGlobalPrefs->translateToLang)) {
-        return gGlobalPrefs->translateToLang;
+    if (gSettings && !str::IsEmptyOrWhiteSpace(gSettings->translateToLang)) {
+        return gSettings->translateToLang;
     }
     return OsDefaultDestinationLanguageTemp();
 }
@@ -298,8 +298,8 @@ static TempStr NormalizeLangNameTemp(Str lang) {
 }
 
 static TempStr DefaultSourceLanguageTemp() {
-    if (gGlobalPrefs && !str::IsEmptyOrWhiteSpace(gGlobalPrefs->translateFromLang)) {
-        return gGlobalPrefs->translateFromLang;
+    if (gSettings && !str::IsEmptyOrWhiteSpace(gSettings->translateFromLang)) {
+        return gSettings->translateFromLang;
     }
     return kSrcLangAuto;
 }
@@ -318,12 +318,12 @@ static Str EngineDisplayName(TranslateEngine engine);
 
 // remember engine / from / to across launches of the dialog
 static void MaybeSaveTranslatePrefs(TranslateEngine engine, Str srcLang, Str dstLang) {
-    if (!gGlobalPrefs) {
+    if (!gSettings) {
         return;
     }
-    bool changed = UpdateTranslatePref(&gGlobalPrefs->translateEngine, EngineDisplayName(engine));
-    changed |= UpdateTranslatePref(&gGlobalPrefs->translateFromLang, srcLang);
-    changed |= UpdateTranslatePref(&gGlobalPrefs->translateToLang, dstLang);
+    bool changed = UpdateTranslatePref(&gSettings->translateEngine, EngineDisplayName(engine));
+    changed |= UpdateTranslatePref(&gSettings->translateFromLang, srcLang);
+    changed |= UpdateTranslatePref(&gSettings->translateToLang, dstLang);
     if (changed) {
         ScheduleSaveSettings();
     }
@@ -616,11 +616,11 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
 }
 
 static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
-    Str model = gGlobalPrefs->grokBuild.model;
+    Str model = gSettings->grokBuild.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = StrL("grok-composer-2.5-fast");
     }
-    Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? StrL("--always-approve") : Str{};
+    Str permsFlag = gSettings->grokBuild.alwaysApprove ? StrL("--always-approve") : Str{};
     // QuoteCmdLineArgTemp: full Windows argv quoting (not just " -> \") so
     // prompt text ending in \" cannot inject extra CLI flags (CWE-88 / GHSA).
     return fmt("%s -p %s --cwd %s --output-format streaming-json --model %s --effort low %s",
@@ -629,11 +629,11 @@ static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
 }
 
 static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
-    Str model = gGlobalPrefs->claudeCode.model;
+    Str model = gSettings->claudeCode.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = StrL("claude-sonnet-4-20250514");
     }
-    Str permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? StrL("--dangerously-skip-permissions") : Str{};
+    Str permsFlag = gSettings->claudeCode.skipPermissions ? StrL("--dangerously-skip-permissions") : Str{};
     TempStr sessionId = AIChatGenerateSessionIdTemp();
     return fmt("%s -p --verbose --output-format stream-json --model %s %s --session-id %s %s",
                QuoteCmdLineArgTemp(exePath), QuoteCmdLineArgTemp(model), permsFlag, sessionId,
@@ -641,9 +641,9 @@ static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
 }
 
 static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
-    Str model = gGlobalPrefs->codexBuild.model;
+    Str model = gSettings->codexBuild.model;
     bool hasModel = !str::IsEmptyOrWhiteSpace(model);
-    Str skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? StrL("--dangerously-bypass-approvals-and-sandbox") : Str{};
+    Str skipFlag = gSettings->codexBuild.skipSandbox ? StrL("--dangerously-bypass-approvals-and-sandbox") : Str{};
     if (skipFlag) {
         if (hasModel) {
             return fmt("%s exec --json -C %s --skip-git-repo-check -m %s -s read-only %s %s",
@@ -662,14 +662,14 @@ static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) 
 }
 
 static TempStr BuildAntiGravityTranslateCmdLineTemp(Str exePath, Str prompt) {
-    Str model = gGlobalPrefs->antiGravity.model;
+    Str model = gSettings->antiGravity.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = StrL("gemini-3.6-flash");
     }
     // agy takes -p/--print's next argument as the prompt and ignores flags
     // after it (see AIAntiGravity.cpp). Putting -p first made the prompt
     // "--model", so the model answered with its own name instead of translating.
-    Str permsFlag = gGlobalPrefs->antiGravity.autoApprove ? StrL("--dangerously-skip-permissions") : Str{};
+    Str permsFlag = gSettings->antiGravity.autoApprove ? StrL("--dangerously-skip-permissions") : Str{};
     return fmt("%s --model %s --effort low --output-format stream-json %s -p %s", QuoteCmdLineArgTemp(exePath),
                QuoteCmdLineArgTemp(model), permsFlag, QuoteCmdLineArgTemp(prompt));
 }
@@ -780,8 +780,8 @@ static TranslateEngine EngineFromName(Str name) {
 // Default => the engine remembered in settings; anything unavailable falls
 // back to the first available engine
 static TranslateEngine ResolveEngine(TranslateEngine engine) {
-    if (engine == TranslateEngine::Default && gGlobalPrefs) {
-        engine = EngineFromName(gGlobalPrefs->translateEngine);
+    if (engine == TranslateEngine::Default && gSettings) {
+        engine = EngineFromName(gSettings->translateEngine);
     }
     if (engine != TranslateEngine::Default && IsEngineAvailable(engine)) {
         return engine;

@@ -278,7 +278,7 @@ struct ClaudeCodeProvider : AIChatProvider {
         AIChatAppendModelUnique(models, StrL("sonnet[1m]"));
         AIChatAppendModelUnique(models, StrL("opus[1m]"));
         AIChatAppendModelUnique(models, StrL("opusplan"));
-        Str extra = gGlobalPrefs->claudeCode.models;
+        Str extra = gSettings->claudeCode.models;
         if (len(extra) > 0) {
             StrVec parts;
             Split(&parts, extra, StrL(","), true);
@@ -288,13 +288,13 @@ struct ClaudeCodeProvider : AIChatProvider {
         }
     }
 
-    Str GetModel() override { return gGlobalPrefs->claudeCode.model; }
-    void SetModel(Str model) override { str::ReplaceWithCopy(&gGlobalPrefs->claudeCode.model, model); }
-    int GetOption() override { return gGlobalPrefs->claudeCode.effort; }
-    void SetOption(int option) override { gGlobalPrefs->claudeCode.effort = option; }
-    bool GetFlag() override { return gGlobalPrefs->claudeCode.skipPermissions; }
-    void SetFlag(bool flag) override { gGlobalPrefs->claudeCode.skipPermissions = flag; }
-    Str GetBgColor() override { return gGlobalPrefs->claudeCode.bgColor.s; }
+    Str GetModel() override { return gSettings->claudeCode.model; }
+    void SetModel(Str model) override { str::ReplaceWithCopy(&gSettings->claudeCode.model, model); }
+    int GetOption() override { return gSettings->claudeCode.effort; }
+    void SetOption(int option) override { gSettings->claudeCode.effort = option; }
+    bool GetFlag() override { return gSettings->claudeCode.skipPermissions; }
+    void SetFlag(bool flag) override { gSettings->claudeCode.skipPermissions = flag; }
+    Str GetBgColor() override { return gSettings->claudeCode.bgColor.s; }
 
     void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectClaudeSessions(dir, sessions); }
 

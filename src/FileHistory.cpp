@@ -42,7 +42,7 @@ constexpr int kFileHistoryMaxFiles = 1000;
 // Frequent Read list (space permitting)
 constexpr int kFileHistoryMaxFrequent = 1000;
 
-// owned by gGlobalPrefs->fileStates
+// owned by gSettings->fileStates
 static Vec<FileState*>* gStates;
 
 Vec<FileState*>* FileHistoryStates() {

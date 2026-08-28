@@ -687,7 +687,7 @@ static void ShowCompactBar(MainWindow* win) {
 // "ShowFindBar" is the entry point used by FindFirst/Ctrl+F; it shows whichever
 // find UI the user has chosen (compact overlay or floating window)
 void ShowFindBar(MainWindow* win) {
-    if (gGlobalPrefs->searchUIFloating) {
+    if (gSettings->searchUIFloating) {
         ShowFindWindow(win);
         return;
     }
@@ -751,7 +751,7 @@ void FindBarSyncHistory(MainWindow* win) {
 }
 
 // switch the find UI between the compact toolbar overlay and the floating
-// window (persists the choice in gGlobalPrefs->searchUIFloating)
+// window (persists the choice in gSettings->searchUIFloating)
 void ToggleFloatingFindUI(MainWindow* win) {
     struct FindUiSwitchState {
         MainWindow* win = nullptr;
@@ -783,7 +783,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
         HideFindBar(state.win); // dispatches: hides whichever find UI is currently visible
     }
 
-    gGlobalPrefs->searchUIFloating = !gGlobalPrefs->searchUIFloating;
+    gSettings->searchUIFloating = !gSettings->searchUIFloating;
     ScheduleSaveSettings();
 
     auto restore = [](FindUiSwitchState& state) {
@@ -863,7 +863,7 @@ TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
     }
     int firstTextLen = gWindows[0]->findEdit ? CbGetTextLen(gWindows[0]->findEdit) : -1;
     out.Append(fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d firstTextLen=%d\n", len(gWindows), docs,
-                   gGlobalPrefs->searchUIFloating ? 1 : 0, compact, floating, firstTextLen));
+                   gSettings->searchUIFloating ? 1 : 0, compact, floating, firstTextLen));
     return finish(0);
 }
 
@@ -883,7 +883,7 @@ void FindBarReposition(MainWindow* win) {
 
 // show n/m or "No matches" style status in the bar
 void FindBarSetStatus(MainWindow* win, Str s, int totalHits) {
-    if (gGlobalPrefs->searchUIFloating) {
+    if (gSettings->searchUIFloating) {
         FindWindowSetStatus(win, s, totalHits);
         return;
     }
@@ -917,7 +917,7 @@ static void FindBarSetBtnChecked(MainWindow* win, int idx, bool checked) {
 
 // reflect match-case toggle state on the bar's button
 void FindBarSetMatchCaseChecked(MainWindow* win, bool checked) {
-    if (gGlobalPrefs->searchUIFloating) {
+    if (gSettings->searchUIFloating) {
         FindWindowSetMatchCaseChecked(win, checked);
         return;
     }
@@ -926,7 +926,7 @@ void FindBarSetMatchCaseChecked(MainWindow* win, bool checked) {
 
 // reflect match-whole-word toggle state on the bar's button
 void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked) {
-    if (gGlobalPrefs->searchUIFloating) {
+    if (gSettings->searchUIFloating) {
         FindWindowSetMatchWholeWordChecked(win, checked);
         return;
     }

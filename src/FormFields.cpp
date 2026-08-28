@@ -50,7 +50,7 @@ constexpr u8 kFormFieldHighlightAlpha = 96;
 
 // Tint empty fillable fields so they are visible without hovering (issue #5966).
 void PaintFormFieldHighlights(MainWindow* win, Gfx* gfx) {
-    if (!gGlobalPrefs || !gGlobalPrefs->highlightFormFields || !gfx) {
+    if (!gSettings || !gSettings->highlightFormFields || !gfx) {
         return;
     }
     if (!win || !win->IsDocLoaded()) {

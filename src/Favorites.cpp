@@ -338,7 +338,7 @@ static void SortFileFavorites(FileState* fs) {
     if (!fs || !fs->favorites || len(*fs->favorites) < 2) {
         return;
     }
-    if (gGlobalPrefs->sortFavoritesByName) {
+    if (gSettings->sortFavoritesByName) {
         VecSort(*fs->favorites, SortByName);
     } else {
         VecSort(*fs->favorites, SortByPageNo);
@@ -354,7 +354,7 @@ static void SortAllFavorites() {
 
 // toggle SortFavoritesByName, re-sort, refresh trees, and save settings
 void ToggleSortFavoritesByName() {
-    gGlobalPrefs->sortFavoritesByName = !gGlobalPrefs->sortFavoritesByName;
+    gSettings->sortFavoritesByName = !gSettings->sortFavoritesByName;
     SortAllFavorites();
     RememberFavTreeExpansionStateForAllWindows();
     UpdateFavoritesTreeForAllWindows();
@@ -751,7 +751,7 @@ void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
     int pageNo = fav->pageNo;
     PointF scrollPos = fav->scrollPos;
     FileState* ds = FileHistoryFindByPath(fs->filePath);
-    if (ds && !ds->useDefaultState && gGlobalPrefs->rememberStatePerDocument) {
+    if (ds && !ds->useDefaultState && gSettings->rememberStatePerDocument) {
         ds->pageNo = fav->pageNo;
         ds->scrollPos = fav->scrollPos;
         pageNo = -1;
@@ -1062,7 +1062,7 @@ void PopulateFavTreeIfNeeded(MainWindow* win) {
 
 void ToggleFavorites(MainWindow* win) {
     // Sidebar Favorites panel (independent of the Favorites tab)
-    if (gGlobalPrefs->showFavorites) {
+    if (gSettings->showFavorites) {
         SetSidebarVisibility(win, win->uiState.tocVisible, false);
     } else {
         SetSidebarVisibility(win, win->uiState.tocVisible, true);
@@ -1115,7 +1115,7 @@ void UpdateFavoritesTree(MainWindow* win) {
         if (WindowTab* favTab = FindFavoritesTab(win)) {
             CloseTab(favTab, false);
         }
-        if (gGlobalPrefs->showFavorites) {
+        if (gSettings->showFavorites) {
             SetSidebarVisibility(win, win->uiState.tocVisible, false);
         } else {
             ScheduleUiUpdate(win, kUiForceRelayout | kUiSidebarDirty);
@@ -1123,7 +1123,7 @@ void UpdateFavoritesTree(MainWindow* win) {
         return;
     }
     // refresh sidebar visibility only when the sidebar panel is supposed to be open
-    if (gGlobalPrefs->showFavorites) {
+    if (gSettings->showFavorites) {
         SetSidebarVisibility(win, win->uiState.tocVisible, true);
     } else if (FindFavoritesTab(win)) {
         ScheduleUiUpdate(win, kUiForceRelayout | kUiSidebarDirty);
@@ -1452,7 +1452,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
         pt = {ev->mouseScreen.x, ev->mouseScreen.y};
     }
     HMENU popup = BuildMenuFromDef(menuDefContextFav, CreatePopupMenu(), nullptr);
-    MenuSetChecked(popup, CmdToggleFavoritesSort, gGlobalPrefs->sortFavoritesByName);
+    MenuSetChecked(popup, CmdToggleFavoritesSort, gSettings->sortFavoritesByName);
     if (!ti) {
         // Sort By Name works with no selection; Remove needs a favorite row.
         MenuRemove(popup, CmdFavoriteDel);
@@ -1543,7 +1543,7 @@ static void FavCloseClicked(MainWindow* win, VirtMouseEvent*) {
 
 void CreateFavorites(MainWindow* win) {
     HMODULE h = GetModuleHandleW(nullptr);
-    int dx = gGlobalPrefs->sidebarDx;
+    int dx = gSettings->sidebarDx;
     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
     win->hwndFavBox = CreateWindowW(WC_STATICW, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU) nullptr, h, nullptr);
 

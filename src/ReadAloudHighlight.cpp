@@ -831,7 +831,7 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
         return;
     }
 
-    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    ParsedColor* parsedCol = GetPrefsColor(gSettings->fixedPageUI.selectionColor);
     u8 alpha = GetAlpha(parsedCol->col);
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;

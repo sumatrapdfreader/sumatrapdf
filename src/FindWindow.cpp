@@ -311,7 +311,7 @@ void FindWindowWnd::CreateButtons() {
 // CW_USEDEFAULT parks a hidden popup on the primary and Per-Monitor V2 then
 // sends WM_DPICHANGED at the primary's DPI before our children exist (#5998).
 static Rect FindWindowPlacementRect(MainWindow* win) {
-    Rect r = gGlobalPrefs->searchUIWindowPos;
+    Rect r = gSettings->searchUIWindowPos;
     if (r.IsEmpty()) {
         Rect fr = HwndWindowRect(win->hwndFrame);
         int dpi = DpiGetForHwnd(win->hwndFrame);
@@ -829,7 +829,7 @@ void FindWindowWnd::SavePos() {
         return;
     }
     Rect r = HwndWindowRect(hwnd);
-    gGlobalPrefs->searchUIWindowPos = r;
+    gSettings->searchUIWindowPos = r;
 }
 
 // re-apply theme colors after the user switches themes. The toolbar icons are
@@ -1261,7 +1261,7 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
     if (!str::Eq(gFindOrderTerm, term)) {
         str::ReplaceWithCopy(&gFindOrderTerm, term);
         // start the search the way find-as-you-type does, from `startPage`
-        gGlobalPrefs->searchUIFloating = true;
+        gSettings->searchUIFloating = true;
         if (startPage > 0) {
             win->ctrl->GoToPage(startPage, false);
         }
@@ -1329,7 +1329,7 @@ TempStr FindWindowContentsResultTemp(int* exitCodeOut) {
         return fail(StrL("NOTREADY no-doc"));
     }
 
-    gGlobalPrefs->searchUIFloating = true;
+    gSettings->searchUIFloating = true;
     ShowFindWindow(win);
 
     TempStr term = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};

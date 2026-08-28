@@ -408,10 +408,10 @@ void ToggleTocBox(MainWindow* win) {
         return;
     }
     if (win->uiState.tocVisible) {
-        SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
+        SetSidebarVisibility(win, false, gSettings->showFavorites);
         return;
     }
-    SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
+    SetSidebarVisibility(win, true, gSettings->showFavorites);
     if (win->uiState.tocVisible) {
         HwndSetFocus(win->tocTreeView->hwnd);
     }
@@ -606,7 +606,7 @@ void ExpandTocToCurrentPage(MainWindow* win) {
     }
     // make sure the bookmarks (table of contents) sidebar is visible
     if (!win->uiState.tocVisible) {
-        SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
+        SetSidebarVisibility(win, true, gSettings->showFavorites);
     }
     if (!win->tocLoaded || !win->uiState.tocVisible) {
         return;
@@ -1278,7 +1278,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     // check win->ctrl directly, not IsDocLoaded(): a paint can arrive while
     // win->ctrl and CurrentTab()->ctrl transiently disagree (tab close/switch,
     // pending load) and IsDocLoaded() asserts on that mismatch
-    bool showPage = gGlobalPrefs->showTocPageNumbers && win && win->ctrl && tocItem->pageNo > 0;
+    bool showPage = gSettings->showTocPageNumbers && win && win->ctrl && tocItem->pageNo > 0;
     TempStr pageLabel{};
     if (showPage) {
         pageLabel = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
@@ -1371,7 +1371,7 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
 
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     bool filterActive = HasTocFilter(win);
-    bool showPageNumbers = gGlobalPrefs->showTocPageNumbers;
+    bool showPageNumbers = gSettings->showTocPageNumbers;
     bool multiHighlight = gShowAllMatchingTOC && win && len(win->tocMatchingItems) > 0;
 
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
@@ -1789,7 +1789,7 @@ static LRESULT CALLBACK WndProcTocFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPA
 
 void CreateToc(MainWindow* win) {
     HMODULE hmod = GetModuleHandle(nullptr);
-    int dx = gGlobalPrefs->sidebarDx;
+    int dx = gSettings->sidebarDx;
     DWORD style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     HWND parent = win->hwndFrame;
     win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);

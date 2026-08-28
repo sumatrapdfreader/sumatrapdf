@@ -132,13 +132,13 @@ DocumentColorsFollowTheme GetDocumentColorsFollowTheme() {
     if (gDocumentColorsFollowThemePreview >= 0) {
         return (DocumentColorsFollowTheme)gDocumentColorsFollowThemePreview;
     }
-    if (!gGlobalPrefs || !gGlobalPrefs->documentColorsFollowTheme) {
+    if (!gSettings || !gSettings->documentColorsFollowTheme) {
         return DocumentColorsFollowTheme::Off;
     }
-    return DocumentColorsFollowThemeFromString(gGlobalPrefs->documentColorsFollowTheme);
+    return DocumentColorsFollowThemeFromString(gSettings->documentColorsFollowTheme);
 }
 
-// Render pages as if the setting had this value, without touching gGlobalPrefs,
+// Render pages as if the setting had this value, without touching gSettings,
 // so the advanced settings dialog can show what a value does before it's saved
 // (and go back to the saved one when it's cancelled). The caller re-renders.
 void SetDocumentColorsFollowThemePreview(DocumentColorsFollowTheme mode) {
@@ -156,12 +156,12 @@ void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
     if (mode < DocumentColorsFollowTheme::Off || mode > DocumentColorsFollowTheme::Legacy) {
         mode = DocumentColorsFollowTheme::Off;
     }
-    if (!gGlobalPrefs) {
+    if (!gSettings) {
         return;
     }
     Str name(DocumentColorsFollowThemeToString(mode));
-    if (!str::EqI(gGlobalPrefs->documentColorsFollowTheme, name)) {
-        str::ReplaceWithCopy(&gGlobalPrefs->documentColorsFollowTheme, name);
+    if (!str::EqI(gSettings->documentColorsFollowTheme, name)) {
+        str::ReplaceWithCopy(&gSettings->documentColorsFollowTheme, name);
     }
 }
 

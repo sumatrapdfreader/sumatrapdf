@@ -62,14 +62,14 @@ static void RememberLastSavedPrefs(Str s) {
 }
 
 static bool ApplyReadAloudVoiceFromSettings() {
-    if (!gGlobalPrefs) {
+    if (!gSettings) {
         return false;
     }
 
-    float speed = gGlobalPrefs->readAloudSpeed;
+    float speed = gSettings->readAloudSpeed;
     TtsSetSpeed(speed > 0 ? speed : 1.0f);
 
-    Str voiceId = gGlobalPrefs->readAloudVoiceId;
+    Str voiceId = gSettings->readAloudVoiceId;
     if (!voiceId) {
         TtsSetVoiceById(StrL(""));
         return false;
@@ -77,7 +77,7 @@ static bool ApplyReadAloudVoiceFromSettings() {
 
     if (!TtsSetVoiceById(voiceId)) {
         logf("ApplyReadAloudVoiceFromSettings: voice '%s' not available, using system default\n", voiceId);
-        str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, Str{});
+        str::ReplaceWithCopy(&gSettings->readAloudVoiceId, Str{});
         TtsSetVoiceById(StrL(""));
         return true;
     }
@@ -146,10 +146,10 @@ static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
         // back when the mapping was written. 37f920ff0 then redefined smart as
         // "match the UI theme, don't swap black/white", which quietly turned
         // this migration into "light pages" for anyone on a light theme.
-        Color text = ParseColor(gGlobalPrefs->fixedPageUI.textColor.s, kColBlackDefault);
-        Color bg = ParseColor(gGlobalPrefs->fixedPageUI.backgroundColor.s, kColWhiteDefault);
-        SetColorText(gGlobalPrefs->fixedPageUI.textColor, SerializeColorTemp(bg));
-        SetColorText(gGlobalPrefs->fixedPageUI.backgroundColor, SerializeColorTemp(text));
+        Color text = ParseColor(gSettings->fixedPageUI.textColor.s, kColBlackDefault);
+        Color bg = ParseColor(gSettings->fixedPageUI.backgroundColor.s, kColWhiteDefault);
+        SetColorText(gSettings->fixedPageUI.textColor, SerializeColorTemp(bg));
+        SetColorText(gSettings->fixedPageUI.backgroundColor, SerializeColorTemp(text));
         SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Off);
         return true;
     }
@@ -238,7 +238,7 @@ static void CreateSelectionHandlerCommands() {
     }
     bool canUseInternet = HasPermission(Perm::InternetAccess);
 
-    for (auto& sh : *gGlobalPrefs->selectionHandlers) {
+    for (auto& sh : *gSettings->selectionHandlers) {
         if (!sh || !sh->name || str::IsEmptyOrWhiteSpace(sh->name)) {
             // can happen for bad selection handler definition
             continue;
@@ -278,7 +278,7 @@ static void CreateSelectionHandlerCommands() {
 }
 
 static void CreateExternalViewersCommands() {
-    for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
+    for (ExternalViewer* ev : *gSettings->externalViewers) {
         if (!ev || str::IsEmptyOrWhiteSpace(ev->commandLine)) {
             continue;
         }
@@ -300,7 +300,7 @@ static void CreateExternalViewersCommands() {
 }
 
 static void CreateZoomCommands() {
-    auto* prefs = gGlobalPrefs;
+    auto* prefs = gSettings;
     delete prefs->zoomLevelsCmdIds;
     int n = len(*prefs->zoomLevels);
     if (n <= 0) {
@@ -327,7 +327,7 @@ static void CreateZoomCommands() {
 // command that keeps its original id (no args). Always CloneCustomCommand so
 // each shortcut gets a unique id with its name/key packed into the allocation.
 static void CreateCustomShortcuts() {
-    for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
+    for (Shortcut* shortcut : *gSettings->shortcuts) {
         auto* base = CreateCommandFromDefinition(shortcut->cmd);
         if (!base) {
             continue;
@@ -362,7 +362,7 @@ void ApplySettingsToOpenWindows() {
 }
 
 bool LoadSettings() {
-    ReportIf(gGlobalPrefs);
+    ReportIf(gSettings);
 
     auto timeStart = TimeGet();
 
@@ -372,9 +372,9 @@ bool LoadSettings() {
     {
         Str prefsData = file::ReadFile(settingsPath);
 
-        gGlobalPrefs = NewGlobalPrefs(prefsData);
-        ReportIf(!gGlobalPrefs);
-        gprefs = gGlobalPrefs;
+        gSettings = NewGlobalPrefs(prefsData);
+        ReportIf(!gSettings);
+        gprefs = gSettings;
         migratedDocumentColorsFollowTheme = MigrateDocumentColorsFollowThemeSetting(prefsData);
         RememberLastSavedPrefs(prefsData);
         str::Free(prefsData);
@@ -385,9 +385,9 @@ bool LoadSettings() {
     }
 
     // takes effect for PDFs loaded after this (startup, and on settings reload)
-    EngineMupdfSetDisableJavaScript(gGlobalPrefs->disableJavaScript);
-    EngineMupdfSetAllowExternalImages(gGlobalPrefs->allowExternalImages);
-    SetEngineeringDrawingEnhanceMode(gGlobalPrefs->engineeringDrawingEnhance);
+    EngineMupdfSetDisableJavaScript(gSettings->disableJavaScript);
+    EngineMupdfSetAllowExternalImages(gSettings->allowExternalImages);
+    SetEngineeringDrawingEnhanceMode(gSettings->engineeringDrawingEnhance);
     ExplorerQuickLookApplyFromSettings();
 
     if (trans::ValidateLangCode(gprefs->uiLanguage)) {
@@ -649,14 +649,14 @@ static void SyncInitialSessionData() {
         return;
     }
     FreeSessionDataVec(gInitialSessionData);
-    for (SessionData* sd : *gGlobalPrefs->sessionData) {
+    for (SessionData* sd : *gSettings->sessionData) {
         gInitialSessionData->Append(CloneSessionData(sd));
     }
     RefreshLazyTabStatePointers();
 }
 
 static void RememberSessionState() {
-    Vec<SessionData*>* sessionState = gGlobalPrefs->sessionData;
+    Vec<SessionData*>* sessionState = gSettings->sessionData;
     FreeSessionDataVec(sessionState);
 
     if (!SettingsRememberOpenedFiles()) {
@@ -718,11 +718,11 @@ static void RememberSessionState() {
             }
         }
         windowState->tabIndex = selectedDocOrdinal;
-        // TODO: allow recording this state without changing gGlobalPrefs
+        // TODO: allow recording this state without changing gSettings
         RememberDefaultWindowPosition(win);
-        windowState->windowState = gGlobalPrefs->windowState;
-        windowState->windowPos = gGlobalPrefs->windowPos;
-        windowState->sidebarDx = gGlobalPrefs->sidebarDx;
+        windowState->windowState = gSettings->windowState;
+        windowState->windowPos = gSettings->windowPos;
+        windowState->sidebarDx = gSettings->sidebarDx;
         sessionState->Append(windowState);
     }
 }
@@ -793,19 +793,18 @@ bool SaveSettings() {
     SyncInitialSessionData();
 
     // remove entries which should (no longer) be remembered
-    FileHistoryPurge(!gGlobalPrefs->rememberStatePerDocument);
+    FileHistoryPurge(!gSettings->rememberStatePerDocument);
     // update display mode and zoom fields from internal values.
     // "page aspect" is not a DisplayMode enum value — keep the string.
-    if (!IsPageAspectDisplayMode(gGlobalPrefs->defaultDisplayMode)) {
-        str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode,
-                             DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
+    if (!IsPageAspectDisplayMode(gSettings->defaultDisplayMode)) {
+        str::ReplaceWithCopy(&gSettings->defaultDisplayMode, DisplayModeToString(gSettings->defaultDisplayModeEnum));
     }
-    ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
-    if (gGlobalPrefs->imageUI.defaultZoomFloat != 0) {
-        ZoomToString(&gGlobalPrefs->imageUI.defaultZoom, gGlobalPrefs->imageUI.defaultZoomFloat, nullptr);
+    ZoomToString(&gSettings->defaultZoom, gSettings->defaultZoomFloat, nullptr);
+    if (gSettings->imageUI.defaultZoomFloat != 0) {
+        ZoomToString(&gSettings->imageUI.defaultZoom, gSettings->imageUI.defaultZoomFloat, nullptr);
     }
-    if (gGlobalPrefs->comicBookUI.defaultZoomFloat != 0) {
-        ZoomToString(&gGlobalPrefs->comicBookUI.defaultZoom, gGlobalPrefs->comicBookUI.defaultZoomFloat, nullptr);
+    if (gSettings->comicBookUI.defaultZoomFloat != 0) {
+        ZoomToString(&gSettings->comicBookUI.defaultZoom, gSettings->comicBookUI.defaultZoomFloat, nullptr);
     }
 
     TempStr path = GetSettingsPathTemp();
@@ -814,7 +813,7 @@ bool SaveSettings() {
         return false;
     }
     TempStr prevPrefs = file::ReadFileWithArena(path, GetTempArena());
-    Str prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefs);
+    Str prefs = SerializeGlobalPrefs(gSettings, prevPrefs);
     AutoCall freePrefs((void (*)(Str))str::Free, prefs);
     ReportIf(len(prefs) == 0);
     if (len(prefs) == 0) {
@@ -830,7 +829,7 @@ bool SaveSettings() {
     bool ok = file::WriteFile(path, prefs);
     if (ok) {
         RememberLastSavedPrefs(prefs);
-        gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
+        gSettings->lastPrefUpdate = file::GetModificationTime(path);
     }
     WatchedFileSetIgnore(gWatchedSettingsFile, false);
     return ok;
@@ -865,32 +864,32 @@ static void ReloadSettings(bool force = false) {
     }
 
     if (!force && IsLastSavedPrefs(prefsData)) {
-        if (gGlobalPrefs) {
-            gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(settingsPath);
+        if (gSettings) {
+            gSettings->lastPrefUpdate = file::GetModificationTime(settingsPath);
         }
         str::Free(prefsData);
         return;
     }
 
     FILETIME time = file::GetModificationTime(settingsPath);
-    if (!force && gGlobalPrefs && FileTimeEq(time, gGlobalPrefs->lastPrefUpdate)) {
+    if (!force && gSettings && FileTimeEq(time, gSettings->lastPrefUpdate)) {
         str::Free(prefsData);
         return;
     }
     str::Free(prefsData);
 
-    TempStr uiLanguage = str::DupTemp(gGlobalPrefs->uiLanguage);
-    bool showToolbar = gGlobalPrefs->showToolbar;
+    TempStr uiLanguage = str::DupTemp(gSettings->uiLanguage);
+    bool showToolbar = gSettings->showToolbar;
 
     // the home page layout cache points at FileState objects owned by
-    // gGlobalPrefs; CleanUpSettings() frees them (crash 8c34d7eda)
+    // gSettings; CleanUpSettings() frees them (crash 8c34d7eda)
     HomePageInvalidateLayoutCache();
 
     FileHistorySetStates(nullptr);
     CleanUpSettings();
 
     ok = LoadSettings();
-    ReportIf(!ok || !gGlobalPrefs);
+    ReportIf(!ok || !gSettings);
 
     // TODO: about window doesn't have to be at position 0
     if (len(gWindows) > 0 && gWindows[0]->IsCurrentTabAbout()) {
@@ -900,12 +899,12 @@ static void ReloadSettings(bool force = false) {
         win->RedrawAll(true);
     }
 
-    if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage)) {
-        SetCurrentLanguageAndRefreshUI(gGlobalPrefs->uiLanguage);
+    if (!str::Eq(uiLanguage, gSettings->uiLanguage)) {
+        SetCurrentLanguageAndRefreshUI(gSettings->uiLanguage);
     }
 
     for (MainWindow* win : gWindows) {
-        if (gGlobalPrefs->showToolbar != showToolbar) {
+        if (gSettings->showToolbar != showToolbar) {
             ShowOrHideToolbar(win);
         }
         UpdateFavoritesTree(win);
@@ -922,8 +921,8 @@ static void ReloadSettings(bool force = false) {
 }
 
 void CleanUpSettings() {
-    DeleteGlobalPrefs(gGlobalPrefs);
-    gGlobalPrefs = nullptr;
+    DeleteGlobalPrefs(gSettings);
+    gSettings = nullptr;
 }
 
 void ForceReloadSettings() {
@@ -972,8 +971,8 @@ static void GetNonClientMetricsForDpiValue(int dpi, NONCLIENTMETRICS* ncm) {
 // when a window is moved to a monitor with a different scale factor.
 // A user-set UIFontSize is used as-is at every dpi.
 int GetAppMenuFontSizeForDpi(int dpi) {
-    if (gGlobalPrefs->uIFontSize >= kMinFontSize) {
-        return gGlobalPrefs->uIFontSize;
+    if (gSettings->uIFontSize >= kMinFontSize) {
+        return gSettings->uIFontSize;
     }
     NONCLIENTMETRICS ncm{};
     GetNonClientMetricsForDpiValue(dpi, &ncm);
@@ -985,7 +984,7 @@ int GetAppMenuFontSize() {
 }
 
 int GetAppFontSizeForDpi(int dpi) {
-    auto fntSize = gGlobalPrefs->uIFontSize;
+    auto fntSize = gSettings->uIFontSize;
     if (fntSize < kMinFontSize) {
         // match the menu font so tabs/toolbar text scale like native menus
         fntSize = GetAppMenuFontSizeForDpi(dpi);
@@ -1015,7 +1014,7 @@ constexpr int kMinBiggerFontSize = 14;
 // if user provided font size, we use that
 // otherwise we return 1.2x of default font size but no smaller than 14
 static int GetAppBiggerFontSizeForDpi(int dpi) {
-    int fntSize = gGlobalPrefs->uIFontSize;
+    int fntSize = gSettings->uIFontSize;
     if (fntSize < kMinFontSize) {
         fntSize = GetAppMenuFontSizeForDpi(dpi);
         fntSize = (fntSize * 12) / 10;
@@ -1043,14 +1042,14 @@ PlatformFont* GetAppTreeFontExForDpi(int dpi, bool bold, bool italic) {
     if (fonts->treeFontEx[idx]) {
         return fonts->treeFontEx[idx];
     }
-    int fntSize = gGlobalPrefs->treeFontSize;
+    int fntSize = gSettings->treeFontSize;
     if (fntSize < kMinFontSize) {
-        fntSize = gGlobalPrefs->uIFontSize;
+        fntSize = gSettings->uIFontSize;
     }
     if (fntSize < kMinFontSize) {
         fntSize = GetAppMenuFontSizeForDpi(dpi);
     }
-    Str fntNameUser = gGlobalPrefs->treeFontName;
+    Str fntNameUser = gSettings->treeFontName;
     fonts->treeFontEx[idx] = GetUserGuiFontEx(fntNameUser, fntSize, bold, italic);
     return fonts->treeFontEx[idx];
 }
@@ -1098,12 +1097,12 @@ PlatformFont* GetAppMenuFont() {
 }
 
 bool IsMenuFontSizeDefault() {
-    auto fntSize = gGlobalPrefs->uIFontSize;
+    auto fntSize = gSettings->uIFontSize;
     return fntSize < kMinFontSize;
 }
 
 bool IsAppFontSizeDefault() {
-    auto fntSize = gGlobalPrefs->uIFontSize;
+    auto fntSize = gSettings->uIFontSize;
     return fntSize < kMinFontSize;
 }
 
@@ -1170,7 +1169,7 @@ static float gZoomLevelsChm[] = {
 // Fit/preset zoom values for the zoom combo (Settings) and Custom Zoom dialog.
 void CollectZoomLevels(Vec<float>& out, bool forChm) {
     out.Reset();
-    auto* customZoomLevels = gGlobalPrefs->zoomLevels;
+    auto* customZoomLevels = gSettings->zoomLevels;
     int n = customZoomLevels ? len(*customZoomLevels) : 0;
     if (n > 0) {
         if (!forChm) {

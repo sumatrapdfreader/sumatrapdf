@@ -325,7 +325,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     Str fileNameA = engine->FilePath();
     SetFileStatePath(fs, fileNameA);
 
-    fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
+    fs->useDefaultState = !gSettings->rememberStatePerDocument;
 
     DisplayMode savedMode = GetDisplayMode();
     float savedZoom = zoomVirtual;
@@ -426,9 +426,9 @@ bool DisplayModel::ShouldTreatLandscapeAsSpread() const {
         return false;
     }
     if (engine->kind == kindEngineComicBooks) {
-        return gGlobalPrefs->comicBookUI.landscapeAsSpread;
+        return gSettings->comicBookUI.landscapeAsSpread;
     }
-    return gGlobalPrefs->imageUI.landscapeAsSpread;
+    return gSettings->imageUI.landscapeAsSpread;
 }
 
 void DisplayModel::EnsureSpreadFlags() const {
@@ -617,11 +617,11 @@ void DisplayModel::SetUiDpi(int dpi) {
     WindowMargin m;
     Size sp;
     if (!engine->IsImageCollection()) {
-        m = gGlobalPrefs->fixedPageUI.windowMargin;
-        sp = gGlobalPrefs->fixedPageUI.pageSpacing;
+        m = gSettings->fixedPageUI.windowMargin;
+        sp = gSettings->fixedPageUI.pageSpacing;
     } else {
-        m = gGlobalPrefs->comicBookUI.windowMargin;
-        sp = gGlobalPrefs->comicBookUI.pageSpacing;
+        m = gSettings->comicBookUI.windowMargin;
+        sp = gSettings->comicBookUI.pageSpacing;
     }
     auto scale = [dpi](int n) -> int { return MulDiv(n, dpi, 96); };
     windowMargin = {scale(m.top), scale(m.right), scale(m.bottom), scale(m.left)};
@@ -956,11 +956,11 @@ static void GetImageLimitToWindowFlags(EngineBase* engine, bool& limitWidth, boo
         return;
     }
     if (engine->kind == kindEngineComicBooks) {
-        limitWidth = gGlobalPrefs->comicBookUI.limitToWindowWidth;
-        limitHeight = gGlobalPrefs->comicBookUI.limitToWindowHeight;
+        limitWidth = gSettings->comicBookUI.limitToWindowWidth;
+        limitHeight = gSettings->comicBookUI.limitToWindowHeight;
     } else {
-        limitWidth = gGlobalPrefs->imageUI.limitToWindowWidth;
-        limitHeight = gGlobalPrefs->imageUI.limitToWindowHeight;
+        limitWidth = gSettings->imageUI.limitToWindowWidth;
+        limitHeight = gSettings->imageUI.limitToWindowHeight;
     }
 }
 
@@ -1460,7 +1460,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         params.usePageZooms = true;
         params.windowMargin = ToDocumentLayoutMargin(windowMargin);
         params.pageSpacing = pageSpacing;
-        params.paddingAfterLastPage = gGlobalPrefs->paddingAfterLastPage;
+        params.paddingAfterLastPage = gSettings->paddingAfterLastPage;
         params.landscapeAsSpread = ShouldTreatLandscapeAsSpread();
         if (params.landscapeAsSpread) {
             EnsureSpreadFlags();
@@ -2105,7 +2105,7 @@ void DisplayModel::SetInPresentation(bool enable) {
         windowMargin.top = windowMargin.right = windowMargin.bottom = windowMargin.left = 0;
         // Fullscreen.DisplayMode overrides the built-in single-page layout
         DisplayMode mode = DisplayMode::SinglePage;
-        TryParseDisplayMode(gGlobalPrefs->fullscreen.displayMode, &mode);
+        TryParseDisplayMode(gSettings->fullscreen.displayMode, &mode);
         SetDisplayMode(mode);
         SetZoomVirtual(kZoomFitPage, nullptr);
         return;
@@ -2123,7 +2123,7 @@ void DisplayModel::SetInPresentation(bool enable) {
 // Presentation uses SetInPresentation instead.
 void DisplayModel::ApplyFullscreenDisplayMode(bool enable) {
     DisplayMode wanted{};
-    bool havePref = TryParseDisplayMode(gGlobalPrefs->fullscreen.displayMode, &wanted);
+    bool havePref = TryParseDisplayMode(gSettings->fullscreen.displayMode, &wanted);
     if (enable) {
         if (!havePref) {
             return;
@@ -2164,7 +2164,7 @@ static void GetRememberedViewOffset(DisplayModel* dm, int pageNo, int* scrollXOu
    Returns true if advanced to the next page or false if couldn't advance
    (e.g. because already was at the last page) */
 bool DisplayModel::GoToNextPage() {
-    return GoToNextPage(gGlobalPrefs->rememberViewOffsetOnPageTurn);
+    return GoToNextPage(gSettings->rememberViewOffsetOnPageTurn);
 }
 
 // keepViewOffset: land on the new page at the same offset we're at now
@@ -2241,7 +2241,7 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
     // scroll to the bottom of the page
     if (-1 == scrollY) {
         scrollY = GetPageInfo(firstPageInNewRow)->pageOnScreen.dy;
-    } else if (gGlobalPrefs->rememberViewOffsetOnPageTurn && scrollY == 0) {
+    } else if (gSettings->rememberViewOffsetOnPageTurn && scrollY == 0) {
         int scrollX = -1;
         GetRememberedViewOffset(this, currPageNo, &scrollX, &scrollY);
         GoToPage(firstPageInNewRow, scrollY, false, scrollX);
@@ -2507,7 +2507,7 @@ float DisplayModel::GetZoomVirtual(bool absolute) const {
 }
 
 bool MaybeGetNextZoomByIncrement(float* currZoomInOut, float towardsLevel) {
-    auto zoomIncrPerc = gGlobalPrefs->zoomIncrement;
+    auto zoomIncrPerc = gSettings->zoomIncrement;
     if (zoomIncrPerc <= 0) {
         return false;
     }
@@ -2537,11 +2537,11 @@ float* GetDefaultZoomLevels(int* nZoomLevelsOut) {
     float* zoomLevels = defaultZoomLevels;
     int nZoomLevels = dimofi(defaultZoomLevels);
 
-    int nCustomZooms = len(*gGlobalPrefs->zoomLevels);
+    int nCustomZooms = len(*gSettings->zoomLevels);
     if (nCustomZooms > 0) {
         // ReportIf(((*defaultZooms)[0] < kZoomMin || defaultZooms->Last() > kZoomMax));
         // ReportIf((*defaultZooms)[0] > defaultZooms->Last());
-        zoomLevels = gGlobalPrefs->zoomLevels->LendData();
+        zoomLevels = gSettings->zoomLevels->LendData();
         nZoomLevels = nCustomZooms;
     }
     *nZoomLevelsOut = nZoomLevels;
@@ -2936,7 +2936,7 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     // (kZoomFitPage / FitWidth / FitContent); 0 = leave zoom (issue #5828).
     // FitContent uses CurrentPageNo() for the content box, so switch page first
     // for virtual modes, then apply zoom, then fine-tune scroll.
-    if (gGlobalPrefs->ignoreDestinationZoom) {
+    if (gSettings->ignoreDestinationZoom) {
         // the reader stays at the zoom the user picked; the destination still
         // decides the page and the position on it (discussion #5938)
         zoom = 0;

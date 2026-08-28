@@ -393,8 +393,8 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
                 str::Free(extracted);
                 if (engine) {
                     engine->SetFilePath(path);
-                    engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
-                    engine->disableAutoLinks = gGlobalPrefs->disableAutoLinks;
+                    engine->disableAntiAlias = gSettings->disableAntiAlias;
+                    engine->disableAutoLinks = gSettings->disableAutoLinks;
                     return engine;
                 }
             } else {
@@ -418,11 +418,11 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
 
     EngineBase* engine = CreateEngineForKind(kind, contentHint, path, pwdUI, enableChmEngine);
     if (engine) {
-        // gGlobalPrefs can be null in early/headless code paths (e.g. the
+        // gSettings can be null in early/headless code paths (e.g. the
         // -extract-text test harness runs before LoadSettings)
-        if (gGlobalPrefs) {
-            engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
-            engine->disableAutoLinks = gGlobalPrefs->disableAutoLinks;
+        if (gSettings) {
+            engine->disableAntiAlias = gSettings->disableAntiAlias;
+            engine->disableAutoLinks = gSettings->disableAutoLinks;
         }
         return engine;
     }
@@ -437,8 +437,8 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
         engine = CreateEngineForKind(contentHint, contentHint, path, pwdUI, enableChmEngine);
     }
     if (engine) {
-        engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
-        engine->disableAutoLinks = gGlobalPrefs->disableAutoLinks;
+        engine->disableAntiAlias = gSettings->disableAntiAlias;
+        engine->disableAutoLinks = gSettings->disableAutoLinks;
     }
     return engine;
 }

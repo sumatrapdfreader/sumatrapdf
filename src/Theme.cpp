@@ -523,7 +523,7 @@ void CreateThemeCommands() {
         gThemes->Append(theme);
     }
 
-    for (Theme* theme : *gGlobalPrefs->themes) {
+    for (Theme* theme : *gSettings->themes) {
         gThemes->Append(theme);
     }
 
@@ -552,13 +552,13 @@ void CreateThemeCommands() {
 
 // when true, the user picked "System" as the theme: we resolve it to the
 // preferred light/dark theme from the OS setting and re-resolve when Windows
-// switches modes; gGlobalPrefs->theme stays "System"
+// switches modes; gSettings->theme stays "System"
 static bool gThemeFollowsSystem = false;
 
 // remember the last explicitly used light and dark theme so the light/dark
 // toggle and the System theme know what to switch to
 static void RememberLastLightDarkTheme() {
-    if (!gGlobalPrefs || !gCurrentTheme) {
+    if (!gSettings || !gCurrentTheme) {
         return;
     }
     if (gUseHighContrast) {
@@ -567,9 +567,9 @@ static void RememberLastLightDarkTheme() {
         return;
     }
     if (IsLightColor(ThemeWindowBackgroundColor())) {
-        str::ReplaceWithCopy(&gGlobalPrefs->lastLightTheme, gCurrentTheme->name);
+        str::ReplaceWithCopy(&gSettings->lastLightTheme, gCurrentTheme->name);
     } else {
-        str::ReplaceWithCopy(&gGlobalPrefs->lastDarkTheme, gCurrentTheme->name);
+        str::ReplaceWithCopy(&gSettings->lastDarkTheme, gCurrentTheme->name);
     }
 }
 
@@ -599,7 +599,7 @@ void SetThemeByIndex(int themeIdx) {
     gCurrSetThemeCmdId = gFirstSetThemeCmdId + themeIdx;
     gCurrentTheme = (*gThemes)[gCurrThemeIndex];
     RecalcUseHighContrast(); // it depends on which theme is current
-    str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
+    str::ReplaceWithCopy(&gSettings->theme, gCurrentTheme->name);
     RememberLastLightDarkTheme();
     DarkModeApplyThemeColors();
     // always, not only when the theme changed: the same theme can resolve to
@@ -622,10 +622,10 @@ static Str ResolveThemeAlias(Str name) {
 // a Themes[] entry the user wrote themselves; that theme does exist, whatever
 // we once shipped under the same name, so it must not be migrated away
 static bool HasCustomThemeNamed(Str name) {
-    if (!gGlobalPrefs || !gGlobalPrefs->themes) {
+    if (!gSettings || !gSettings->themes) {
         return false;
     }
-    for (Theme* theme : *gGlobalPrefs->themes) {
+    for (Theme* theme : *gSettings->themes) {
         if (str::EqI(theme->name, name)) {
             return true;
         }
@@ -639,10 +639,10 @@ static bool HasCustomThemeNamed(Str name) {
 // time, and shows a stale name to anyone who looks (#5887). Returns true if
 // anything changed, so the caller can save.
 bool MigrateRenamedThemeNames() {
-    if (!gGlobalPrefs) {
+    if (!gSettings) {
         return false;
     }
-    Str* names[] = {&gGlobalPrefs->theme, &gGlobalPrefs->lastLightTheme, &gGlobalPrefs->lastDarkTheme};
+    Str* names[] = {&gSettings->theme, &gSettings->lastLightTheme, &gSettings->lastDarkTheme};
     bool changed = false;
     for (Str* name : names) {
         if (str::IsEmptyOrWhiteSpace(*name)) {
@@ -688,7 +688,7 @@ static bool OsAppsUseDarkMode() {
 }
 
 static int GetPreferredLightThemeIndex() {
-    int idx = GetThemeByName(gGlobalPrefs->lastLightTheme);
+    int idx = GetThemeByName(gSettings->lastLightTheme);
     if (idx >= 0) {
         return idx;
     }
@@ -696,7 +696,7 @@ static int GetPreferredLightThemeIndex() {
 }
 
 static int GetPreferredDarkThemeIndex() {
-    int idx = GetThemeByName(gGlobalPrefs->lastDarkTheme);
+    int idx = GetThemeByName(gSettings->lastDarkTheme);
     if (idx >= 0) {
         return idx;
     }
@@ -711,14 +711,14 @@ void SetTheme(Str name) {
         int idx = OsAppsUseDarkMode() ? GetPreferredDarkThemeIndex() : GetPreferredLightThemeIndex();
         SetThemeByIndex(idx);
         gThemeFollowsSystem = true;
-        str::ReplaceWithCopy(&gGlobalPrefs->theme, StrL("System"));
+        str::ReplaceWithCopy(&gSettings->theme, StrL("System"));
         return;
     }
     name = ResolveThemeAlias(name);
     int idx = GetThemeByName(name);
     if (idx < 0) {
         // invalid name, reset to light theme
-        str::ReplaceWithCopy(&gGlobalPrefs->theme, gThemeLight->name);
+        str::ReplaceWithCopy(&gSettings->theme, gThemeLight->name);
         idx = 0;
     }
     SetThemeByIndex(idx);
@@ -852,8 +852,8 @@ void UpdateThemeAfterHighContrastChange() {
 
 // call after loading settings
 void SetCurrentThemeFromSettings() {
-    SetTheme(gGlobalPrefs->theme);
-    ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
+    SetTheme(gSettings->theme);
+    ParsedColor* bgParsed = GetPrefsColor(gSettings->mainWindowBackground);
     bool isDefault = IsDefaultMainWinColor(bgParsed);
     if (isDefault) {
         gThemeLight->colorizeControls = false;
@@ -915,17 +915,17 @@ static Color ThemePageRenderColorsNoInvert(Color& bg) {
     bg = kColWhite;
 
     // Headless harnesses such as -extract-text run before LoadSettings.
-    if (!gGlobalPrefs) {
+    if (!gSettings) {
         return text;
     }
 
     ParsedColor* parsedCol;
-    parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.textColor);
+    parsedCol = GetPrefsColor(gSettings->fixedPageUI.textColor);
     if (parsedCol->parsedOk) {
         text = parsedCol->col;
     }
 
-    parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.backgroundColor);
+    parsedCol = GetPrefsColor(gSettings->fixedPageUI.backgroundColor);
     if (parsedCol->parsedOk) {
         bg = parsedCol->col;
     }
@@ -986,7 +986,7 @@ Color ThemeMainWindowBackgroundColor() {
     Color bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
     if (gCurrThemeIndex == 0) {
         // Special behavior for light theme.
-        ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
+        ParsedColor* bgParsed = GetPrefsColor(gSettings->mainWindowBackground);
         if (bgParsed->parsedOk && !IsDefaultMainWinColor(bgParsed)) {
             bgColor = bgParsed->col;
         }

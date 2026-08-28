@@ -135,7 +135,7 @@ static void BenchFile(Str path, Str pagesSpec) {
         return;
     }
 
-    if (ChmModel::IsSupportedFileType(kind) && !gGlobalPrefs->chmUI.useFixedPageUI) {
+    if (ChmModel::IsSupportedFileType(kind) && !gSettings->chmUI.useFixedPageUI) {
         BenchChmLoadOnly(path);
         return;
     }
@@ -642,8 +642,8 @@ static bool OpenFile(StressTest* st, Str fileName) {
     ctrl->SetDisplayMode(DisplayMode::Continuous);
     ctrl->SetZoomVirtual(kZoomFitPage, nullptr);
     ctrl->GoToFirstPage();
-    if (st->win->uiState.tocVisible || gGlobalPrefs->showFavorites) {
-        SetSidebarVisibility(st->win, st->win->uiState.tocVisible, gGlobalPrefs->showFavorites);
+    if (st->win->uiState.tocVisible || gSettings->showFavorites) {
+        SetSidebarVisibility(st->win, st->win->uiState.tocVisible, gSettings->showFavorites);
     }
 
     st->maxPagesForFile = kStressTestMaxPagesPerFile;
@@ -969,9 +969,9 @@ static void PositionStressWindows(MainWindow** windows, int n) {
 void StartStressTest(Flags* i, MainWindow* win) {
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
-    gGlobalPrefs->chmUI.useFixedPageUI = true;
+    gSettings->chmUI.useFixedPageUI = true;
     // TODO: make stress test work with tabs?
-    gGlobalPrefs->useTabs = false;
+    gSettings->useTabs = false;
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     srand((unsigned int)time(nullptr));

@@ -1133,9 +1133,9 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // scrollbarInSinglePage is false by default
     // if true, we show scrollbar in single page mode and make its position correspond to page number, so user can
     // scroll through pages using scrollbar even in single page mode
-    bool singlePageWithScrollbar = gGlobalPrefs->scrollbarInSinglePage && dmIsSinglePage;
+    bool singlePageWithScrollbar = gSettings->scrollbarInSinglePage && dmIsSinglePage;
 
-    int lineHeight = DpiScale(ScrollLineAmount(gGlobalPrefs->scrollLineAmount));
+    int lineHeight = DpiScale(ScrollLineAmount(gSettings->scrollLineAmount));
     bool isFitPage = (kZoomFitPage == ctrl->GetZoomVirtual());
     if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
         lineHeight = 1;
@@ -1194,7 +1194,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // SmoothScroll eases wheel input and arrow-key / scrollbar line steps
     // (issue #4662). Page-up/down and thumb stay instant.
     bool isLineScroll = (msg == SB_LINEUP || msg == SB_LINEDOWN);
-    bool useSmoothScroll = gGlobalPrefs->smoothScroll && (gInMouseWheelScroll || isLineScroll);
+    bool useSmoothScroll = gSettings->smoothScroll && (gInMouseWheelScroll || isLineScroll);
     // While a smooth scroll is in flight the animation moves the view a bit at a
     // time, and ScrollYTo -> UpdateScrollbars keeps nPos on that lagging
     // position. Stepping from it discards the distance still to be travelled, so
@@ -1300,7 +1300,7 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
 
     int currPos = si.nPos;
     USHORT msg = LOWORD(wp);
-    int lineAmount = DpiScale(ScrollLineAmount(gGlobalPrefs->scrollLineAmount));
+    int lineAmount = DpiScale(ScrollLineAmount(gSettings->scrollLineAmount));
     switch (msg) {
         case SB_LEFT:
             si.nPos = si.nMin;
@@ -1862,10 +1862,10 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
             bool editPdf = win->pdfAnnotationsToolbarEnabled;
             int srcPageNo = -1;
             IPageElement* el = dm->GetElementAtPos(pos, &srcPageNo);
-            if (el && el->Is(kindPageElementDest) && gGlobalPrefs->disableLinks) {
+            if (el && el->Is(kindPageElementDest) && gSettings->disableLinks) {
                 el = nullptr;
             }
-            int hoverDelayMs = gGlobalPrefs->citationHoverDelay;
+            int hoverDelayMs = gSettings->citationHoverDelay;
             if (annot != prev) {
                 if (editPdf) {
                     ScheduleRepaint(win, 0);
@@ -2364,7 +2364,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         }
         ReportIf(win->linkOnLastButtonDown);
         IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
-        if (pageEl && pageEl->Is(kindPageElementDest) && !gGlobalPrefs->disableLinks) {
+        if (pageEl && pageEl->Is(kindPageElementDest) && !gSettings->disableLinks) {
             win->linkOnLastButtonDown = pageEl;
         }
     }
@@ -2638,7 +2638,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    if (win->fwdSearchMark.show && gGlobalPrefs->forwardSearch.highlightPermanent) {
+    if (win->fwdSearchMark.show && gSettings->forwardSearch.highlightPermanent) {
         /* if there's a permanent forward search mark, hide it */
         win->fwdSearchMark.show = false;
         ScheduleRepaint(win, 0);
@@ -2648,7 +2648,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // Click the left/right fifth of the canvas to turn the page (issue #1203).
     // Presentation mode has its own click-to-turn below. Manga (R2L) reverses
     // the sides so left still advances.
-    if (gGlobalPrefs && gGlobalPrefs->clickEdgeToTurnPage && tab && tab->ctrl && PM_ENABLED != win->presentation) {
+    if (gSettings && gSettings->clickEdgeToTurnPage && tab && tab->ctrl && PM_ENABLED != win->presentation) {
         Rect rc = HwndClientRect(win->hwndCanvas);
         if (rc.dx > 0) {
             int edgeDx = rc.dx / 5;
@@ -2696,7 +2696,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
     auto isLeft = bit::IsMaskSet(key, (WPARAM)MK_LBUTTON);
-    if (gGlobalPrefs->enableTeXEnhancements && !gDisableInteractiveInverseSearch && isLeft) {
+    if (gSettings->enableTeXEnhancements && !gDisableInteractiveInverseSearch && isLeft) {
         bool dontSelect = OnInverseSearch(win, x, y);
         if (dontSelect) {
             return;
@@ -2750,7 +2750,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
     if (pageEl->Is(kindPageElementDest)) {
-        if (gGlobalPrefs->disableLinks) {
+        if (gSettings->disableLinks) {
             return;
         }
         // speed up navigation in a file where navigation links are in a fixed position
@@ -3023,7 +3023,7 @@ static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
     if (gShowImages) {
         DebugOutlinePageElements(dm, hdc, true);
     }
-    if (!gGlobalPrefs->showLinks) {
+    if (!gSettings->showLinks) {
         return;
     }
     DebugOutlinePageElements(dm, hdc, false);
@@ -3166,10 +3166,10 @@ struct PageGridDraw {
 
 static PageGridDraw GetPageGridDraw() {
     PageGridDraw d;
-    if (!gGlobalPrefs) {
+    if (!gSettings) {
         return d;
     }
-    PageGrid& pg = gGlobalPrefs->fixedPageUI.pageGrid;
+    PageGrid& pg = gSettings->fixedPageUI.pageGrid;
     if (pg.width > 0) {
         d.widthPt = pg.width;
     }
@@ -3620,20 +3620,20 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         // allow ComicBookUI/ImageUI WindowBgCol to override the default black
         ParsedColor* bgOverride = nullptr;
         if (engine->kind == kindEngineComicBooks) {
-            bgOverride = GetPrefsColor(gGlobalPrefs->comicBookUI.windowBgCol);
+            bgOverride = GetPrefsColor(gSettings->comicBookUI.windowBgCol);
         } else {
-            bgOverride = GetPrefsColor(gGlobalPrefs->imageUI.windowBgCol);
+            bgOverride = GetPrefsColor(gSettings->imageUI.windowBgCol);
         }
         if (bgOverride->parsedOk) {
             colDocBg = bgOverride->col;
         }
     } else if (isEbook) {
-        ParsedColor* bgOverride = GetPrefsColor(gGlobalPrefs->eBookUI.windowBgCol);
+        ParsedColor* bgOverride = GetPrefsColor(gSettings->eBookUI.windowBgCol);
         if (bgOverride->parsedOk) {
             colDocBg = bgOverride->col;
         }
     } else if (isPdf) {
-        ParsedColor* bgOverride = GetPrefsColor(gGlobalPrefs->fixedPageUI.windowBgCol);
+        ParsedColor* bgOverride = GetPrefsColor(gSettings->fixedPageUI.windowBgCol);
         if (bgOverride->parsedOk) {
             colDocBg = bgOverride->col;
         }
@@ -3664,7 +3664,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     }
 
     bool shouldPaint = false;
-    auto* gcols = gGlobalPrefs->fixedPageUI.gradientColors;
+    auto* gcols = gSettings->fixedPageUI.gradientColors;
     auto nGCols = len(*gcols);
     auto paintBgOrCheckerboard = [&](Color col, Rect rc) {
         if (col == kColorUnset) {
@@ -3898,7 +3898,7 @@ static bool CanvasShouldShowKeyboardFocus(MainWindow* win) {
     if (!win || !win->hwndFrame || !win->hwndCanvas) {
         return false;
     }
-    if (!gGlobalPrefs || !gGlobalPrefs->showDocumentFocusIndicator) {
+    if (!gSettings || !gSettings->showDocumentFocusIndicator) {
         return false;
     }
     if (win->presentation || win->isFullScreen) {
@@ -3929,7 +3929,7 @@ void InvalidateCanvasKeyboardFocus(MainWindow* win) {
     }
     // Still invalidate when the setting is on so the ring appears/disappears
     // with focus; when off, skip the repaint cost.
-    if (!gGlobalPrefs || !gGlobalPrefs->showDocumentFocusIndicator) {
+    if (!gSettings || !gSettings->showDocumentFocusIndicator) {
         return;
     }
     HwndInvalidate(win->hwndCanvas);
@@ -4012,7 +4012,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
 
     int pageNo = 0;
     IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);
-    if (pageEl && pageEl->Is(kindPageElementDest) && gGlobalPrefs->disableLinks) {
+    if (pageEl && pageEl->Is(kindPageElementDest) && gSettings->disableLinks) {
         pageEl = nullptr;
     }
     if (!pageEl) {
@@ -4147,7 +4147,7 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
     float newZoom;
     float factor = 0;
     // when ZoomIncrement is zero/negative, zoom must step through ZoomLevels (issue #5662)
-    bool discreteWheelZoom = !gWheelZoomRelative || gGlobalPrefs->zoomIncrement <= 0;
+    bool discreteWheelZoom = !gWheelZoomRelative || gSettings->zoomIncrement <= 0;
     if (discreteWheelZoom) {
         newZoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
         bool smartZoom = false; // Note: if true will prioritze selection
@@ -4197,7 +4197,7 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
 // that scroll do anything" have to compare the target instead, or they see no
 // movement on every wheel event.
 static int WheelScrollPosOrTarget(MainWindow* win) {
-    if (gGlobalPrefs->smoothScroll && win->scrollAnimActive) {
+    if (gSettings->smoothScroll && win->scrollAnimActive) {
         return win->scrollTargetY;
     }
     return GetScrollPos(win->hwndCanvas, SB_VERT);
@@ -4327,7 +4327,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     // for reading zoomed-in pages (sheet music, scans with wide margins) without
     // the keyboard. Alt + wheel still scrolls, so the rest of the page is
     // reachable; Shift + wheel and Ctrl + wheel are unchanged
-    if (vScroll && !isAlt && gGlobalPrefs->mouseWheelTurnsPage) {
+    if (vScroll && !isAlt && gSettings->mouseWheelTurnsPage) {
         win->wheelAccumDelta += delta;
         if (win->wheelAccumDelta >= WHEEL_DELTA) {
             win->ctrl->GoToPrevPage();
@@ -4358,7 +4358,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     // Handle page-by-page navigation for non-continuous modes and SinglePage mode
     bool isSinglePageMode =
-        gGlobalPrefs->scrollbarInSinglePage && (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
+        gSettings->scrollbarInSinglePage && (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
 
     // For SinglePage mode with content requiring scrolling, use continuous scrolling behavior
     if (isSinglePageMode && vScroll) {
@@ -4480,7 +4480,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         return 0;
     }
 
-    if (gGlobalPrefs->fastScrollOverScrollbar) {
+    if (gSettings->fastScrollOverScrollbar) {
         // scroll faster if the cursor is over the scroll bar
         if (HwndIsCursorOverWindow(win->hwndCanvas)) {
             Point pt = HwndGetCursorPos(win->hwndCanvas);
@@ -4980,7 +4980,7 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             win->annotationUnderCursor = nullptr;
             HideAnnotationHoverOverlay(win);
             ScheduleRepaint(win, 0);
-            RefHoverOnCanvasMouseLeave(win->refHover, win->hwndCanvas, gGlobalPrefs->citationHoverDelay);
+            RefHoverOnCanvasMouseLeave(win->refHover, win->hwndCanvas, gSettings->citationHoverDelay);
             return 0;
 
         case WM_LBUTTONDOWN:

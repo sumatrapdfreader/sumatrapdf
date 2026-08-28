@@ -76,8 +76,8 @@ static bool IsOtherSumatraProcessRunning() {
 
 // find custom shortcut key string for CmdScreenshot, or empty if none
 static Str FindScreenshotShortcut() {
-    // check gGlobalPrefs->shortcuts first (may have been updated at runtime)
-    for (Shortcut* sc : *gGlobalPrefs->shortcuts) {
+    // check gSettings->shortcuts first (may have been updated at runtime)
+    for (Shortcut* sc : *gSettings->shortcuts) {
         if (str::EqI(sc->cmd, StrL("CmdScreenshot")) && sc->key) {
             return sc->key;
         }
@@ -195,7 +195,7 @@ static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt, boo
 
 // find existing Shortcut entry for CmdScreenshot, or nullptr
 static Shortcut* FindScreenshotShortcutEntry() {
-    for (Shortcut* sc : *gGlobalPrefs->shortcuts) {
+    for (Shortcut* sc : *gSettings->shortcuts) {
         if (str::EqI(sc->cmd, StrL("CmdScreenshot"))) {
             return sc;
         }
@@ -326,7 +326,7 @@ void SetHotkeyWnd::DoSet(VirtMouseEvent*) {
         sc->toolbarText = {};
         sc->toolbarSvgIcon = {};
         sc->cmdId = 0;
-        gGlobalPrefs->shortcuts->Append(sc);
+        gSettings->shortcuts->Append(sc);
     }
     SaveSettings();
 
@@ -342,7 +342,7 @@ void SetHotkeyWnd::DoRemove(VirtMouseEvent*) {
 
     Shortcut* sc = FindScreenshotShortcutEntry();
     if (sc) {
-        gGlobalPrefs->shortcuts->Remove(sc);
+        gSettings->shortcuts->Remove(sc);
     }
     auto* curr = gFirstCustomCommand;
     while (curr) {

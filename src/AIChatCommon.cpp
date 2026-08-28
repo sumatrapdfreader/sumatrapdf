@@ -650,8 +650,8 @@ void AIChatApplySavedSidebarDx(MainWindow* win) {
     if (!win) {
         return;
     }
-    if (gGlobalPrefs->aiChatSidebarDx > 0) {
-        win->aiChatDx = gGlobalPrefs->aiChatSidebarDx;
+    if (gSettings->aiChatSidebarDx > 0) {
+        win->aiChatDx = gSettings->aiChatSidebarDx;
     }
 }
 
@@ -661,7 +661,7 @@ void AIChatUpdateSidebarDx(MainWindow* win, int dx, bool persist) {
     }
     win->aiChatDx = dx;
     if (dx > 0) {
-        gGlobalPrefs->aiChatSidebarDx = dx;
+        gSettings->aiChatSidebarDx = dx;
     }
     if (persist) {
         ScheduleSaveSettings();

@@ -10,10 +10,10 @@
 
 #include "GlobalPrefs.h"
 
-GlobalPrefs* gGlobalPrefs = nullptr;
+GlobalPrefs* gSettings = nullptr;
 
 // Walk setting metadata for a Bool field matching name (case-insensitive leaf
-// or full dotted path). Returns a pointer into gGlobalPrefs, or nullptr.
+// or full dotted path). Returns a pointer into gSettings, or nullptr.
 static bool* FindBoolSettingInStruct(const StructInfo* info, u8* base, Str pathPrefix, Str name) {
     if (!info || !base || len(name) == 0) {
         return nullptr;
@@ -48,10 +48,10 @@ static bool* FindBoolSettingInStruct(const StructInfo* info, u8* base, Str pathP
 
 // Case-insensitive leaf or dotted path (e.g. "SelectionToolbar", "Fullscreen.ShowMenubar").
 bool* FindGlobalPrefsBoolSetting(Str name) {
-    if (!gGlobalPrefs || len(name) == 0) {
+    if (!gSettings || len(name) == 0) {
         return nullptr;
     }
-    return FindBoolSettingInStruct(&gGlobalPrefsInfo, (u8*)gGlobalPrefs, {}, name);
+    return FindBoolSettingInStruct(&gGlobalPrefsInfo, (u8*)gSettings, {}, name);
 }
 
 FileState* NewFileState(Str filePath) {

@@ -89,10 +89,10 @@ void SettingsWnd::FillLayout() {
     items.Append(_TRA("Page Aspect"));
     dropLayout->SetItems(items);
     int sel = 0;
-    if (gGlobalPrefs && IsPageAspectDisplayMode(gGlobalPrefs->defaultDisplayMode)) {
+    if (gSettings && IsPageAspectDisplayMode(gSettings->defaultDisplayMode)) {
         sel = len(items) - 1;
-    } else if (gGlobalPrefs) {
-        sel = (int)gGlobalPrefs->defaultDisplayModeEnum - (int)DisplayMode::Automatic;
+    } else if (gSettings) {
+        sel = (int)gSettings->defaultDisplayModeEnum - (int)DisplayMode::Automatic;
     }
     if (sel < 0 || sel >= len(items)) {
         sel = 0;
@@ -104,7 +104,7 @@ void SettingsWnd::FillZoom() {
     if (!dropZoom) {
         return;
     }
-    startZoom = gGlobalPrefs ? gGlobalPrefs->defaultZoomFloat : 0;
+    startZoom = gSettings ? gSettings->defaultZoomFloat : 0;
     CollectZoomLevels(zoomLevels, false);
     StrVec items;
     for (float z : zoomLevels) {
@@ -130,7 +130,7 @@ void SettingsWnd::FillInverse() {
         return;
     }
     StrVec items;
-    Str cmdLine = gGlobalPrefs ? gGlobalPrefs->inverseSearchCmdLine : Str{};
+    Str cmdLine = gSettings ? gSettings->inverseSearchCmdLine : Str{};
     CollectInverseSearchCommands(items, cmdLine);
     if (!cmdLine && len(items) > 0) {
         cmdLine = items[0];
@@ -178,39 +178,38 @@ void SettingsWnd::OnCancel(VirtMouseEvent*) {
 }
 
 void SettingsWnd::OnOk(VirtMouseEvent*) {
-    if (!gGlobalPrefs) {
+    if (!gSettings) {
         ScheduleDelete();
         return;
     }
     int layoutIdx = CbGetCurrentSelection(dropLayout);
     int nLayout = dropLayout ? len(dropLayout->items) : 0;
     if (layoutIdx >= 0 && nLayout > 0 && layoutIdx == nLayout - 1) {
-        str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, StrL("page aspect"));
-        gGlobalPrefs->defaultDisplayModeEnum = DisplayMode::Automatic;
+        str::ReplaceWithCopy(&gSettings->defaultDisplayMode, StrL("page aspect"));
+        gSettings->defaultDisplayModeEnum = DisplayMode::Automatic;
     } else if (layoutIdx >= 0) {
-        gGlobalPrefs->defaultDisplayModeEnum = (DisplayMode)(layoutIdx + (int)DisplayMode::Automatic);
-        str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode,
-                             DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
+        gSettings->defaultDisplayModeEnum = (DisplayMode)(layoutIdx + (int)DisplayMode::Automatic);
+        str::ReplaceWithCopy(&gSettings->defaultDisplayMode, DisplayModeToString(gSettings->defaultDisplayModeEnum));
     }
-    gGlobalPrefs->defaultZoomFloat = SelectedZoom();
+    gSettings->defaultZoomFloat = SelectedZoom();
     if (chkShowToc) {
-        gGlobalPrefs->showToc = chkShowToc->IsChecked();
+        gSettings->showToc = chkShowToc->IsChecked();
     }
     if (chkRememberState) {
-        gGlobalPrefs->rememberStatePerDocument = chkRememberState->IsChecked();
+        gSettings->rememberStatePerDocument = chkRememberState->IsChecked();
     }
     if (chkUseTabs) {
-        gGlobalPrefs->useTabs = chkUseTabs->IsChecked();
+        gSettings->useTabs = chkUseTabs->IsChecked();
     }
     if (chkCheckUpdates) {
-        gGlobalPrefs->checkForUpdates = chkCheckUpdates->IsChecked();
+        gSettings->checkForUpdates = chkCheckUpdates->IsChecked();
     }
     if (chkRememberOpened) {
-        gGlobalPrefs->rememberOpenedFiles = chkRememberOpened->IsChecked();
+        gSettings->rememberOpenedFiles = chkRememberOpened->IsChecked();
     }
     if (showInverseSearch && dropInverse) {
         TempStr tmp = dropInverse->GetTextTemp();
-        str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, tmp);
+        str::ReplaceWithCopy(&gSettings->inverseSearchCmdLine, tmp);
     }
 
     if (!SettingsRememberOpenedFiles()) {
@@ -267,7 +266,7 @@ static Checkbox* MakeCheckbox(HWND parent, Str text, bool isRtl, bool checked, i
 
 bool SettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-    showInverseSearch = gGlobalPrefs && gGlobalPrefs->enableTeXEnhancements && CanAccessDisk();
+    showInverseSearch = gSettings && gSettings->enableTeXEnhancements && CanAccessDisk();
 
     {
         CreateCustomArgs args;
@@ -340,12 +339,12 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
     }
 
     chkShowToc = MakeCheckbox(hwnd, _TRA("Show the &bookmarks sidebar when available"), isRtl,
-                              gGlobalPrefs && gGlobalPrefs->showToc, 8);
+                              gSettings && gSettings->showToc, 8);
     vbox->AddChild(chkShowToc);
 
     chkRememberState = MakeCheckbox(hwnd, _TRA("&Remember these settings for each document"), isRtl,
-                                    gGlobalPrefs && gGlobalPrefs->rememberStatePerDocument, 4);
-    if (gGlobalPrefs && !gGlobalPrefs->rememberOpenedFiles) {
+                                    gSettings && gSettings->rememberStatePerDocument, 4);
+    if (gSettings && !gSettings->rememberOpenedFiles) {
         chkRememberState->SetIsEnabled(false);
     }
     vbox->AddChild(chkRememberState);
@@ -361,18 +360,18 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(c);
     }
 
-    chkUseTabs = MakeCheckbox(hwnd, _TRA("Use &tabs"), isRtl, gGlobalPrefs && gGlobalPrefs->useTabs, 0);
+    chkUseTabs = MakeCheckbox(hwnd, _TRA("Use &tabs"), isRtl, gSettings && gSettings->useTabs, 0);
     vbox->AddChild(chkUseTabs);
 
-    chkCheckUpdates = MakeCheckbox(hwnd, _TRA("Automatically check for &updates"), isRtl,
-                                   gGlobalPrefs && gGlobalPrefs->checkForUpdates, 4);
+    chkCheckUpdates =
+        MakeCheckbox(hwnd, _TRA("Automatically check for &updates"), isRtl, gSettings && gSettings->checkForUpdates, 4);
     if (!HasPermission(Perm::InternetAccess)) {
         chkCheckUpdates->SetIsEnabled(false);
     }
     vbox->AddChild(chkCheckUpdates);
 
     chkRememberOpened =
-        MakeCheckbox(hwnd, _TRA("Remember &opened files"), isRtl, gGlobalPrefs && gGlobalPrefs->rememberOpenedFiles, 4);
+        MakeCheckbox(hwnd, _TRA("Remember &opened files"), isRtl, gSettings && gSettings->rememberOpenedFiles, 4);
     chkRememberOpened->onStateChanged = MkMethod0<SettingsWnd, &SettingsWnd::OnRememberOpenedChanged>(this);
     vbox->AddChild(chkRememberOpened);
 

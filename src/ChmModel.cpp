@@ -922,7 +922,7 @@ void ChmModel::GetDisplayState(FileState* fs) {
         SetFileStatePath(fs, fileNameA);
     }
 
-    fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
+    fs->useDefaultState = !gSettings->rememberStatePerDocument;
 
     str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
     ZoomToString(&fs->zoom, GetZoomVirtual(), fs);

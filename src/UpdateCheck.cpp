@@ -220,7 +220,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     }
 
     // only applies to automatic update check
-    if (!gGlobalPrefs->checkForUpdates) {
+    if (!gSettings->checkForUpdates) {
         logf("CheckForUpdate: skipping auto check because CheckForUpdates is false\n");
         return false;
     }
@@ -228,7 +228,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     // don't check for updates at the first start, so that privacy
     // sensitive users can disable the update check in time
     FILETIME never{};
-    if (FileTimeEq(gGlobalPrefs->timeOfLastUpdateCheck, never)) {
+    if (FileTimeEq(gSettings->timeOfLastUpdateCheck, never)) {
         logf("CheckForUpdate: skipping auto check, first start (TimeOfLastUpdateCheck not set)\n");
         return false;
     }
@@ -243,7 +243,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     // only check if at least a day passed since last check
     FILETIME currentTimeFt;
     GetSystemTimeAsFileTime(&currentTimeFt);
-    int secsSinceLastUpdate = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
+    int secsSinceLastUpdate = FileTimeDiffInSecs(currentTimeFt, gSettings->timeOfLastUpdateCheck);
 
     constexpr int kSecondsInDay = 60 * 60 * 24;
     constexpr int kSecondsInWeek = 7 * 60 * 60 * 24;
@@ -840,7 +840,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
         args.groupId = kNotifUpdateCheckInProgress;
         ShowNotification(args);
     }
-    GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
+    GetSystemTimeAsFileTime(&gSettings->timeOfLastUpdateCheck);
     gUpdateCheckInProgress = true;
 
     // data freed in UpdateCheckFinish()

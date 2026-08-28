@@ -184,7 +184,7 @@ static Str PageGridStyleName(int i) {
 }
 
 static PageGrid* PageGridPrefs() {
-    return gGlobalPrefs ? &gGlobalPrefs->fixedPageUI.pageGrid : nullptr;
+    return gSettings ? &gSettings->fixedPageUI.pageGrid : nullptr;
 }
 
 static void CopyPageGridSnap(PageGridSnap& dst, const PageGrid& src, bool showGrid) {

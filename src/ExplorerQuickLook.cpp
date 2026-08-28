@@ -480,7 +480,7 @@ void ExplorerQuickLookApplyFromSettings() {
     if (gCli && (gCli->install || gCli->uninstall || gCli->quickLookAgent || gCli->forTesting)) {
         return;
     }
-    bool on = gGlobalPrefs && gGlobalPrefs->explorerQuickLook;
+    bool on = gSettings && gSettings->explorerQuickLook;
     if (on) {
         WriteQuickLookRunKey();
         EnsureQuickLookAgentProcess();

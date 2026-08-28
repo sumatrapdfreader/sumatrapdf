@@ -146,7 +146,7 @@ static void CollectTipsFromString(Str src, Str prefix, StrVec* out) {
 
 // the markup of the tip currently on show, {} when there is none
 static Str SelectedTipLine() {
-    if (!gGlobalPrefs->showTips || gSelectedTipIdx < 0) {
+    if (!gSettings->showTips || gSelectedTipIdx < 0) {
         return {};
     }
     StrVec& v = gSelectedIsPromo ? gPromoLines : gTipLines;
@@ -889,7 +889,7 @@ void ShowAboutWindow(MainWindow* win) {
 
 static void ShowFrequentlyRead(VirtMouseEvent* ev) {
     auto* win = (MainWindow*)ev->target->userData;
-    gGlobalPrefs->showStartPage = true;
+    gSettings->showStartPage = true;
     win->RedrawAll(true);
 }
 
@@ -981,12 +981,12 @@ static bool IsHomeThumbOnScreen(const Rect& r, const Rect& thumbsArea, int margi
 
 // HomePageViewMode setting ("thumbnails" or "list")
 bool HomePageIsListView() {
-    return gGlobalPrefs && str::EqI(gGlobalPrefs->homePageViewMode, StrL("list"));
+    return gSettings && str::EqI(gSettings->homePageViewMode, StrL("list"));
 }
 
 void SetHomePageListView(bool listView) {
     Str mode = listView ? StrL("list") : StrL("thumbnails");
-    str::ReplaceWithCopy(&gGlobalPrefs->homePageViewMode, mode);
+    str::ReplaceWithCopy(&gSettings->homePageViewMode, mode);
 }
 
 struct HomePageLayout {
@@ -1183,7 +1183,7 @@ static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t);
 static Rect HomeOutlinePaintClip(const Rect& thumbsArea, const Rect& searchBorder, const Rect& tip, bool hasTip);
 
 static int HomePageIconSize() {
-    int sz = DpiScale(gGlobalPrefs->toolbarSize);
+    int sz = DpiScale(gSettings->toolbarSize);
     if (sz < 1) {
         sz = DpiScale(16);
     }
@@ -1243,7 +1243,7 @@ struct HomeSearchEdit : Edit {
 // Home-list entries with a path (same set as thumbnails when search is empty).
 static int CountHomePageFiles() {
     Vec<FileState*> all;
-    if (gGlobalPrefs && gGlobalPrefs->homePageSortByFrequentlyRead) {
+    if (gSettings && gSettings->homePageSortByFrequentlyRead) {
         FileHistoryGetFrequencyOrder(all);
     } else {
         FileHistoryGetRecentlyOpenedOrder(all);
@@ -1418,7 +1418,7 @@ static void ClearHomeLayoutCache() {
     gHomeLayoutCache.scrollY = 0;
 }
 
-// The cache holds raw FileState* (ThumbnailLayout::fs) owned by gGlobalPrefs.
+// The cache holds raw FileState* (ThumbnailLayout::fs) owned by gSettings.
 // Reloading settings frees and rebuilds those, so the cache has to be dropped
 // first or hover / selection reads freed memory (crash 8c34d7eda). It is
 // rebuilt on the next paint.
@@ -1465,10 +1465,10 @@ static bool HomeLayoutCacheMatches(const Rect& rc, Str filterText) {
     if (c.listView != HomePageIsListView()) {
         return false;
     }
-    if (c.sortByFreq != (gGlobalPrefs && gGlobalPrefs->homePageSortByFrequentlyRead)) {
+    if (c.sortByFreq != (gSettings && gSettings->homePageSortByFrequentlyRead)) {
         return false;
     }
-    if (c.showTips != (gGlobalPrefs && gGlobalPrefs->showTips)) {
+    if (c.showTips != (gSettings && gSettings->showTips)) {
         return false;
     }
     if (c.isRtl != IsUIRtl()) {
@@ -1501,7 +1501,7 @@ static bool HomeLayoutCacheFilesMatch(const Vec<FileState*>& files) {
 
 static void CollectHomePageFiles(MainWindow* win, Vec<FileState*>& fileStates, StrVec& filterWords) {
     Vec<FileState*> allFileStates;
-    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+    if (gSettings->homePageSortByFrequentlyRead) {
         FileHistoryGetFrequencyOrder(allFileStates);
     } else {
         FileHistoryGetRecentlyOpenedOrder(allFileStates);
@@ -1535,8 +1535,8 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
     c.scrollY = scrollY;
     c.nFiles = len(l.thumbnails);
     c.listView = HomePageIsListView();
-    c.sortByFreq = gGlobalPrefs && gGlobalPrefs->homePageSortByFrequentlyRead;
-    c.showTips = gGlobalPrefs && gGlobalPrefs->showTips;
+    c.sortByFreq = gSettings && gSettings->homePageSortByFrequentlyRead;
+    c.showTips = gSettings && gSettings->showTips;
     c.isRtl = IsUIRtl();
     c.tipIdx = gSelectedTipIdx;
     c.tipIsPromo = gSelectedIsPromo;
@@ -1597,7 +1597,7 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     PlatformFont* fontText = HomePageFont(14);
 
     Str txt = _TRA("Recently Opened");
-    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+    if (gSettings->homePageSortByFrequentlyRead) {
         txt = _TRA("Frequently Read");
     }
     HomeChromeCtrl* chrome = EnsureHomeChrome(win);
@@ -1640,7 +1640,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     EnsureTipsParsed();
 
     Vec<FileState*> allFileStates;
-    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+    if (gSettings->homePageSortByFrequentlyRead) {
         FileHistoryGetFrequencyOrder(allFileStates);
     } else {
         FileHistoryGetRecentlyOpenedOrder(allFileStates);

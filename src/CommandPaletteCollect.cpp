@@ -73,7 +73,7 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdToggleMenuBar: {
             isToggle = true;
-            bool visible = SettingsUseTabs() ? gGlobalPrefs->showMenubarWithTabs : gGlobalPrefs->showMenubar;
+            bool visible = SettingsUseTabs() ? gSettings->showMenubarWithTabs : gSettings->showMenubar;
             newIsOn = !visible;
         } break;
         case CmdToggleBookmarks:
@@ -87,15 +87,15 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdToggleLinks: {
             isToggle = true;
-            newIsOn = !gGlobalPrefs->showLinks;
+            newIsOn = !gSettings->showLinks;
         } break;
         case CmdToggleHighlightFormFields: {
             isToggle = true;
-            newIsOn = !gGlobalPrefs->highlightFormFields;
+            newIsOn = !gSettings->highlightFormFields;
         } break;
         case CmdToggleDisableLinks: {
             isToggle = true;
-            newIsOn = !gGlobalPrefs->disableLinks;
+            newIsOn = !gSettings->disableLinks;
         } break;
         case CmdToggleImages: {
             isToggle = true;
@@ -115,7 +115,7 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdToggleHoverPreview: {
             isToggle = true;
-            newIsOn = gGlobalPrefs->citationHoverDelay < 0;
+            newIsOn = gSettings->citationHoverDelay < 0;
         } break;
         case CmdDebugShowFitContentArea: {
             isToggle = true;
@@ -158,7 +158,7 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdFavoriteToggle: {
             isToggle = true;
-            newIsOn = !gGlobalPrefs->showFavorites;
+            newIsOn = !gSettings->showFavorites;
         } break;
         case CmdTogglePageInfo: {
             isToggle = true;
@@ -376,7 +376,7 @@ void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
 
     FileState* currFs = nullptr;
     if (currFilePath) {
-        for (FileState* fs : *gGlobalPrefs->fileStates) {
+        for (FileState* fs : *gSettings->fileStates) {
             if (str::Eq(fs->filePath, currFilePath)) {
                 currFs = fs;
                 break;
@@ -386,7 +386,7 @@ void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
     if (currFs) {
         AppendFavoritesForFile(favorites, currFs, true);
     }
-    for (FileState* fs : *gGlobalPrefs->fileStates) {
+    for (FileState* fs : *gSettings->fileStates) {
         if (fs == currFs) {
             continue;
         }
@@ -398,7 +398,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     Point cursorPos = HwndGetCursorPos(mainWin->hwndCanvas);
     AppCommandCtx ctx = NewAppCommandCtx(mainWin, cursorPos);
 
-    if (smartTabMode && gGlobalPrefs->tabsMru) {
+    if (smartTabMode && gSettings->tabsMru) {
         CollectTabsMru(mainWin, ctx.tab);
     } else {
         CollectTabsRegular(mainWin, ctx.tab);
@@ -408,7 +408,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     CollectFavorites(mainWin);
 
     fileHistory.Reset();
-    for (FileState* fs : *gGlobalPrefs->fileStates) {
+    for (FileState* fs : *gSettings->fileStates) {
         TempStr s = ConvertPathForDisplayTemp(fs->filePath);
         if (len(s) == 0) {
             continue;

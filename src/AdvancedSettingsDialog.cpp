@@ -116,7 +116,7 @@ static const char** GetEnumValuesForSetting(Str name) {
     return nullptr;
 }
 
-// a single editable setting; fieldPtr points into gGlobalPrefs, the pending
+// a single editable setting; fieldPtr points into gSettings, the pending
 // (possibly edited) value is kept here and only written back on Save
 namespace {
 struct SettingItem {
@@ -246,7 +246,7 @@ static TempStr FormatSettingDefaultTemp(SettingItem* item) {
 
 // Show what a setting does before it's saved: some settings change how pages
 // are rendered, and picking a value from a list is guesswork without seeing it.
-// The value is previewed without touching gGlobalPrefs, so Cancel (or closing
+// The value is previewed without touching gSettings, so Cancel (or closing
 // the dialog) puts the saved value back - see EndPreviewSettingChange().
 static void PreviewSettingChange(SettingItem* item) {
     if (!str::EqI(item->name, StrL("DocumentColorsFollowTheme"))) {
@@ -536,7 +536,7 @@ AdvancedSettingsWnd::~AdvancedSettingsWnd() {
     // dropDownValue are created on demand and are not part of the layout, so
     // they are freed explicitly.
     // covers every way the dialog goes away (Save, Cancel, Esc, the close box).
-    // On Save the value is in gGlobalPrefs by now, so dropping the preview
+    // On Save the value is in gSettings by now, so dropping the preview
     // renders the same thing; on every other path it undoes the preview.
     EndPreviewSettingChange();
     delete editValue;
@@ -998,13 +998,13 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
         // representations, which would clobber the edit unless the parsed
         // representation is updated as well
         if (str::EqI(item->name, StrL("DefaultDisplayMode"))) {
-            gGlobalPrefs->defaultDisplayModeEnum = DisplayModeFromString(item->strVal, DisplayMode::Automatic);
+            gSettings->defaultDisplayModeEnum = DisplayModeFromString(item->strVal, DisplayMode::Automatic);
         } else if (str::EqI(item->name, StrL("DefaultZoom"))) {
-            gGlobalPrefs->defaultZoomFloat = ZoomFromString(item->strVal, kZoomActualSize);
+            gSettings->defaultZoomFloat = ZoomFromString(item->strVal, kZoomActualSize);
         } else if (str::EqI(item->name, StrL("ImageUI.DefaultZoom"))) {
-            gGlobalPrefs->imageUI.defaultZoomFloat = ZoomFromString(item->strVal, 0);
+            gSettings->imageUI.defaultZoomFloat = ZoomFromString(item->strVal, 0);
         } else if (str::EqI(item->name, StrL("ComicBookUI.DefaultZoom"))) {
-            gGlobalPrefs->comicBookUI.defaultZoomFloat = ZoomFromString(item->strVal, 0);
+            gSettings->comicBookUI.defaultZoomFloat = ZoomFromString(item->strVal, 0);
         }
     }
     if (!didChange) {
@@ -1251,7 +1251,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     // OnSize closes in-place editors before DoLayout; skip the generic path
     autoLayout = false;
-    CollectSettings(items, &gGlobalPrefsInfo, (u8*)gGlobalPrefs, {});
+    CollectSettings(items, &gGlobalPrefsInfo, (u8*)gSettings, {});
 
     {
         CreateCustomArgs args;

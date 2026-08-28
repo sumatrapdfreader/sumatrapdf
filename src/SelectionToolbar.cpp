@@ -111,7 +111,7 @@ static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
             out.Append(cand.cmdId);
         }
     };
-    Str setting = gGlobalPrefs ? gGlobalPrefs->selectionToolbarLayout : Str{};
+    Str setting = gSettings ? gSettings->selectionToolbarLayout : Str{};
     if (str::IsEmptyOrWhiteSpace(setting)) {
         addDefault();
         return;
@@ -665,7 +665,7 @@ TempStr SelectionToolbarClickTemp(Str cmdName, int* exitCodeOut) {
 // nothing if the feature is disabled (Annotations.SelectionToolbar) or there
 // is no on-screen text selection in a fixed-page document.
 static void ShowSelectionToolbarNow(MainWindow* win) {
-    if (!win || !gGlobalPrefs->selectionToolbar) {
+    if (!win || !gSettings->selectionToolbar) {
         return;
     }
     // Do not check IsActivelySelecting here: OnSelectionStop schedules the show
@@ -710,7 +710,7 @@ static void ShowSelectionToolbarNow(MainWindow* win) {
 // original deadline instead of pushing it back, so a stream of canvas repaints
 // (UpdateSelectionToolbarPosition asks on every one) can't starve the timer.
 void ShowSelectionToolbar(MainWindow* win) {
-    if (!win || !win->hwndCanvas || !gGlobalPrefs->selectionToolbar) {
+    if (!win || !win->hwndCanvas || !gSettings->selectionToolbar) {
         return;
     }
     if (win->selectionToolbarShowPending) {

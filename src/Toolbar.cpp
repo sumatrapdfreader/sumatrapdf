@@ -314,7 +314,7 @@ static void SetToolbarButtonCheckedByIdx(MainWindow* win, int idx, bool isChecke
 // there, `|` a separator, `PageInfo` the page number box, and leaving a button
 // out is how you hide it (issue #5095).
 static void PopulateToolbarLayout() {
-    Str setting = gGlobalPrefs->toolbarCustomLayout;
+    Str setting = gSettings->toolbarCustomLayout;
     if (gLayoutParsed && str::Eq(setting, gLayoutParsedFrom)) {
         return;
     }
@@ -423,7 +423,7 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId, AppCommandCtx* ctx) {
             return NeedsFindUI(win);
         case CmdReadAloud:
             // opt-in: the button and its drop-down only show if asked for
-            return gGlobalPrefs->toolbarShowReadAloud;
+            return gSettings->toolbarShowReadAloud;
         case PageInfoId:
             return true;
     }
@@ -571,7 +571,7 @@ static void SetToolbarButtonImageByIdx(MainWindow* win, int idx, const char* ico
         return;
     }
     ToolbarVirt* tb = win->toolbarVirt;
-    int sz = tb ? tb->iconSize : DpiScale(gGlobalPrefs->toolbarSize);
+    int sz = tb ? tb->iconSize : DpiScale(gSettings->toolbarSize);
     Pixmap* px = GetCachedPixmapForSvg(Str(icon), sz, sz, TbTextColor());
     Pixmap* pxOff = GetCachedPixmapForSvg(Str(icon), sz, sz, TbDisabledColor());
     if (ib->pixmap == px && ib->pixmapDisabled == pxOff) {
@@ -1123,7 +1123,7 @@ static TempStr CustomCommandToolbarToolTipTemp(CustomCommand* cmd, Str fallback)
 
 static void PopulateCustomToolbarButtons() {
     gCustomButtonsCount = 0;
-    for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
+    for (Shortcut* shortcut : *gSettings->shortcuts) {
         if (gCustomButtonsCount >= kMaxCustomButtons) {
             break;
         }
@@ -1179,7 +1179,7 @@ static void PopulateCustomToolbarButtons() {
 }
 
 int ToolbarIconSize() {
-    return RoundUp(DpiScale(gGlobalPrefs->toolbarSize), 4);
+    return RoundUp(DpiScale(gSettings->toolbarSize), 4);
 }
 
 static void ApplyToolbarItemColors(VirtCtrl* w) {

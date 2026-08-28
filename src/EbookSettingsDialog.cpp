@@ -220,7 +220,7 @@ void EbookSettingsWnd::FillFontList() {
 // the settings this dialog is editing: the document's own values (falling back
 // to the global ones for what it doesn't set), or the global ones
 void EbookSettingsWnd::LoadFromTarget() {
-    auto* g = &gGlobalPrefs->eBookUI;
+    auto* g = &gSettings->eBookUI;
     bool thisFile = radioThisFile && radioThisFile->IsChecked();
     FileState* fs = thisFile ? FileHistoryFindByPath(filePath) : nullptr;
     FileEBookUI* f = fs ? fs->eBookUI : nullptr;
@@ -363,7 +363,7 @@ void EbookSettingsWnd::OnTargetChanged() {
 void EbookSettingsWnd::Apply() {
     EbookVals v;
     ReadControls(v);
-    auto* g = &gGlobalPrefs->eBookUI;
+    auto* g = &gSettings->eBookUI;
     bool thisFile = radioThisFile && radioThisFile->IsChecked();
 
     if (!thisFile) {
@@ -431,7 +431,7 @@ void EbookSettingsWnd::OnCancel(VirtMouseEvent*) {
 void EbookSettingsWnd::OnReset(VirtMouseEvent*) {
     bool thisFile = radioThisFile && radioThisFile->IsChecked();
     if (thisFile) {
-        auto* g = &gGlobalPrefs->eBookUI;
+        auto* g = &gSettings->eBookUI;
         SetValues(g->fontName, g->fontSize, g->margin, g->lineSpacing, g->ignoreDocumentCSS, g->customCSS);
         return;
     }
@@ -686,7 +686,7 @@ void ShowEbookSettingsDialog(MainWindow* win) {
     wnd->filePath = str::Dup(win->CurrentTab()->filePath);
     // Usually Esc while editing CSS should not throw the edits away. EscToExit
     // is the explicit opt-in to close this window anyway.
-    wnd->closeOnEsc = gGlobalPrefs->escToExit;
+    wnd->closeOnEsc = gSettings->escToExit;
     wnd->onBeforeDelete = MkFunc0Void(ClearEbookSettingsWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);

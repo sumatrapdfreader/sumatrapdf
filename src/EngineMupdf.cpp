@@ -89,7 +89,7 @@ void EngineMupdfSetDisableJavaScript(bool disable) {
 // PdfPreview/PdfFilter DLLs, which don't link GlobalPrefs).
 static bool gAllowExternalImages = false;
 // allow PDFs to load images from an external sibling file (#3731), for PDFs
-// loaded after this call; set from gGlobalPrefs->allowExternalImages
+// loaded after this call; set from gSettings->allowExternalImages
 void EngineMupdfSetAllowExternalImages(bool allow) {
     gAllowExternalImages = allow;
 }

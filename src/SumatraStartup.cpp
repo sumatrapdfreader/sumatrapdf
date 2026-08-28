@@ -406,7 +406,7 @@ void SetTabState(WindowTab* tab, TabState* state) {
     }
 
     tab->tocState = *state->tocState;
-    SetSidebarVisibility(win, state->showToc, gGlobalPrefs->showFavorites);
+    SetSidebarVisibility(win, state->showToc, gSettings->showFavorites);
 
     DisplayMode displayMode = DisplayModeFromString(state->displayMode, DisplayMode::Automatic);
     if (displayMode != DisplayMode::Automatic) {
@@ -481,25 +481,25 @@ static bool SetupPluginMode(Flags& i) {
     RestrictPolicies(Perm::SavePreferences | Perm::FullscreenAccess);
 
     i.reuseDdeInstance = i.exitWhenDone = false;
-    gGlobalPrefs->reuseInstance = false;
+    gSettings->reuseInstance = false;
     // don't allow tabbed navigation
-    gGlobalPrefs->useTabs = false;
+    gSettings->useTabs = false;
     // always display the toolbar when embedded (as there's no menubar in that case)
-    gGlobalPrefs->showToolbar = true;
+    gSettings->showToolbar = true;
     // never allow esc as a shortcut to quit
-    gGlobalPrefs->escToExit = false;
+    gSettings->escToExit = false;
     // never show the sidebar by default
-    gGlobalPrefs->showToc = false;
-    if (DisplayMode::Automatic == gGlobalPrefs->defaultDisplayModeEnum) {
+    gSettings->showToc = false;
+    if (DisplayMode::Automatic == gSettings->defaultDisplayModeEnum) {
         // if the user hasn't changed the default display mode,
         // display documents as single page/continuous/fit width
         // (similar to Adobe Reader, Google Chrome and how browsers display HTML)
-        gGlobalPrefs->defaultDisplayModeEnum = DisplayMode::Continuous;
-        gGlobalPrefs->defaultZoomFloat = kZoomFitWidth;
+        gSettings->defaultDisplayModeEnum = DisplayMode::Continuous;
+        gSettings->defaultZoomFloat = kZoomFitWidth;
     }
     // use fixed page UI for all document types (so that the context menu always
     // contains all plugin specific entries and the main window is never closed)
-    gGlobalPrefs->chmUI.useFixedPageUI = true;
+    gSettings->chmUI.useFixedPageUI = true;
 
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
@@ -944,12 +944,12 @@ static void UpdateGlobalPrefs(const Flags& i) {
         // know the window's shape before it's on screen reads it from here
         // (EbookLayoutAspectForWindow), and a remembered maximized state would
         // otherwise ignore the rectangle we were given
-        gGlobalPrefs->windowPos = i.windowPos;
-        gGlobalPrefs->windowState = WIN_STATE_NORMAL;
+        gSettings->windowPos = i.windowPos;
+        gSettings->windowState = WIN_STATE_NORMAL;
     }
     if (i.inverseSearchCmdLine) {
-        str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
-        gGlobalPrefs->enableTeXEnhancements = true;
+        str::ReplaceWithCopy(&gSettings->inverseSearchCmdLine, i.inverseSearchCmdLine);
+        gSettings->enableTeXEnhancements = true;
     }
     if (i.invertColors) {
         SetDocumentColorsFollowTheme(DocumentColorsFollowTheme::Smart);
@@ -960,36 +960,36 @@ static void UpdateGlobalPrefs(const Flags& i) {
     for (int n = 0; n < len(i.globalPrefArgs); n++) {
         arg = i.globalPrefArgs[n];
         if (str::EqI(arg, StrL("-esc-to-exit"))) {
-            gGlobalPrefs->escToExit = true;
+            gSettings->escToExit = true;
         } else if (str::EqI(arg, StrL("-bgcolor")) || str::EqI(arg, StrL("-bg-color"))) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
             param = i.globalPrefArgs[++n];
-            ReplaceColor(gGlobalPrefs->mainWindowBackground, param);
+            ReplaceColor(gSettings->mainWindowBackground, param);
         } else if (str::EqI(arg, StrL("-set-color-range"))) {
             param = i.globalPrefArgs[++n];
-            ReplaceColor(gGlobalPrefs->fixedPageUI.textColor, param);
+            ReplaceColor(gSettings->fixedPageUI.textColor, param);
             param = i.globalPrefArgs[++n];
-            ReplaceColor(gGlobalPrefs->fixedPageUI.backgroundColor, param);
+            ReplaceColor(gSettings->fixedPageUI.backgroundColor, param);
         } else if (str::EqI(arg, StrL("-fwdsearch-offset"))) {
             param = i.globalPrefArgs[++n];
-            gGlobalPrefs->forwardSearch.highlightOffset = ParseInt(param);
-            gGlobalPrefs->enableTeXEnhancements = true;
+            gSettings->forwardSearch.highlightOffset = ParseInt(param);
+            gSettings->enableTeXEnhancements = true;
         } else if (str::EqI(arg, StrL("-fwdsearch-width"))) {
             param = i.globalPrefArgs[++n];
-            gGlobalPrefs->forwardSearch.highlightWidth = ParseInt(param);
-            gGlobalPrefs->enableTeXEnhancements = true;
+            gSettings->forwardSearch.highlightWidth = ParseInt(param);
+            gSettings->enableTeXEnhancements = true;
         } else if (str::EqI(arg, StrL("-fwdsearch-color"))) {
             param = i.globalPrefArgs[++n];
-            ReplaceColor(gGlobalPrefs->forwardSearch.highlightColor, param);
-            gGlobalPrefs->enableTeXEnhancements = true;
+            ReplaceColor(gSettings->forwardSearch.highlightColor, param);
+            gSettings->enableTeXEnhancements = true;
         } else if (str::EqI(arg, StrL("-fwdsearch-permanent"))) {
             param = i.globalPrefArgs[++n];
-            gGlobalPrefs->forwardSearch.highlightPermanent = ParseInt(param);
-            gGlobalPrefs->enableTeXEnhancements = true;
+            gSettings->forwardSearch.highlightPermanent = ParseInt(param);
+            gSettings->enableTeXEnhancements = true;
         } else if (str::EqI(arg, StrL("-manga-mode"))) {
             param = i.globalPrefArgs[++n];
-            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(StrL("true"), param) || str::Eq(StrL("1"), param);
+            gSettings->comicBookUI.cbxMangaMode = str::EqI(StrL("true"), param) || str::Eq(StrL("1"), param);
         }
     }
 }
@@ -2647,9 +2647,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     LoadSettings();
     UpdateGlobalPrefs(flags);
     if (gMyWindowWasEmbedded) {
-        str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, StrL("windows"));
+        str::ReplaceWithCopy(&gSettings->scrollbars, StrL("windows"));
     }
-    SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
+    SetCurrentLang(flags.lang ? flags.lang : gSettings->uiLanguage);
     if (flags.showPrintersDialog) {
         // -console / -silent: list to stdout only, no dialog window (#5810)
         ShowPrintersDialog(flags.silent || flags.showConsole);
@@ -2757,7 +2757,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         // TODO: pass print request through to previous instance?
     } else if (flags.reuseDdeInstance || flags.dde) {
         existingHwnd = FindWindowW(kFrameClassName, nullptr);
-    } else if (gGlobalPrefs->reuseInstance) {
+    } else if (gSettings->reuseInstance) {
         existingHwnd = existingInstanceHwnd;
     }
 
@@ -2823,8 +2823,8 @@ ContinueOpenWindow:
     // keep this data alive until the end of program and ensure it's not
     // over-written by re-loading settings file while we're using it
     // and also to keep TabState forever for lazy loading of tabs
-    gInitialSessionData = gGlobalPrefs->sessionData;
-    gGlobalPrefs->sessionData = new Vec<SessionData*>();
+    gInitialSessionData = gSettings->sessionData;
+    gSettings->sessionData = new Vec<SessionData*>();
 
     restoreSession =
         SettingsRestoreSession() && (len(*gInitialSessionData) > 0) && !NeedsWindowEmbeddingHacks() && !flags.quickLook;
@@ -2836,7 +2836,7 @@ ContinueOpenWindow:
     }
 
     showStartPage =
-        !restoreSession && len(flags.fileNames) == 0 && SettingsRememberOpenedFiles() && gGlobalPrefs->showStartPage;
+        !restoreSession && len(flags.fileNames) == 0 && SettingsRememberOpenedFiles() && gSettings->showStartPage;
 
     // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
     if (showStartPage) {
@@ -2855,7 +2855,7 @@ ContinueOpenWindow:
                     logf("WinMain: skipping RestoreTabOnStartup() because state->filePath is empty\n");
                     continue;
                 }
-                RestoreTabOnStartup(win, state, gGlobalPrefs->lazyLoading);
+                RestoreTabOnStartup(win, state, gSettings->lazyLoading);
             }
             // TabIndex is 1-based among document tabs (home tab is not in TabStates).
             // Also accept legacy sessions that stored a UI index including home.
@@ -2889,7 +2889,7 @@ ContinueOpenWindow:
                 }
                 TabsSelect(win, selectIdx);
             }
-            if (gGlobalPrefs->lazyLoading) {
+            if (gSettings->lazyLoading) {
                 // trigger loading of the document
                 ReloadDocument(win, false);
             }
@@ -3156,7 +3156,7 @@ Exit:
     dbghelp::FreeCallstackLogs();
 
     // must be after uitask::Destroy() because we might have queued ReloadSettings()
-    // which crashes if gGlobalPrefs is freed
+    // which crashes if gSettings is freed
     FileHistorySetStates(nullptr);
     CleanUpSettings();
 

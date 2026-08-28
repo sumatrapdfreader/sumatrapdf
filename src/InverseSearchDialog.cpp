@@ -55,7 +55,7 @@ void InverseSearchWnd::FillCommands() {
         return;
     }
     StrVec items;
-    Str cmdLine = gGlobalPrefs ? gGlobalPrefs->inverseSearchCmdLine : Str{};
+    Str cmdLine = gSettings ? gSettings->inverseSearchCmdLine : Str{};
     CollectInverseSearchCommands(items, cmdLine);
     if (!cmdLine && len(items) > 0) {
         cmdLine = items[0];
@@ -78,8 +78,8 @@ void InverseSearchWnd::OnCancel(VirtMouseEvent*) {
 
 void InverseSearchWnd::OnOk(VirtMouseEvent*) {
     TempStr tmp = dropDown ? dropDown->GetTextTemp() : Str{};
-    str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, tmp);
-    gGlobalPrefs->enableTeXEnhancements = true;
+    str::ReplaceWithCopy(&gSettings->inverseSearchCmdLine, tmp);
+    gSettings->enableTeXEnhancements = true;
     SaveSettings();
     ScheduleDelete();
 }

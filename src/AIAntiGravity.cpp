@@ -305,7 +305,7 @@ struct AntiGravityProvider : AIChatProvider {
         AIChatAppendModelUnique(models, StrL("gemini-3.6-pro"));
         AIChatAppendModelUnique(models, StrL("claude-3-5-sonnet"));
         AIChatAppendModelUnique(models, StrL("gpt-4o"));
-        Str extra = gGlobalPrefs->antiGravity.models;
+        Str extra = gSettings->antiGravity.models;
         if (len(extra) > 0) {
             StrVec parts;
             Split(&parts, extra, StrL(","), true);
@@ -315,13 +315,13 @@ struct AntiGravityProvider : AIChatProvider {
         }
     }
 
-    Str GetModel() override { return gGlobalPrefs->antiGravity.model; }
-    void SetModel(Str model) override { str::ReplaceWithCopy(&gGlobalPrefs->antiGravity.model, model); }
-    int GetOption() override { return gGlobalPrefs->antiGravity.effort; }
-    void SetOption(int option) override { gGlobalPrefs->antiGravity.effort = option; }
-    bool GetFlag() override { return gGlobalPrefs->antiGravity.autoApprove; }
-    void SetFlag(bool flag) override { gGlobalPrefs->antiGravity.autoApprove = flag; }
-    Str GetBgColor() override { return gGlobalPrefs->antiGravity.bgColor.s; }
+    Str GetModel() override { return gSettings->antiGravity.model; }
+    void SetModel(Str model) override { str::ReplaceWithCopy(&gSettings->antiGravity.model, model); }
+    int GetOption() override { return gSettings->antiGravity.effort; }
+    void SetOption(int option) override { gSettings->antiGravity.effort = option; }
+    bool GetFlag() override { return gSettings->antiGravity.autoApprove; }
+    void SetFlag(bool flag) override { gSettings->antiGravity.autoApprove = flag; }
+    Str GetBgColor() override { return gSettings->antiGravity.bgColor.s; }
 
     void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override {
         CollectAntiGravitySessions(dir, sessions);

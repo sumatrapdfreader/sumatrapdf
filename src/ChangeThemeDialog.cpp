@@ -191,7 +191,7 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 
 bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-    startThemePref = str::Dup(gGlobalPrefs->theme);
+    startThemePref = str::Dup(gSettings->theme);
     startDocumentColorsFollowTheme = GetDocumentColorsFollowTheme();
 
     {
@@ -229,7 +229,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         c->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnSelectionChanged>(this);
         c->SetModel(model);
         int currIdx = kFollowWindowsThemeListIndex;
-        if (!str::EqI(gGlobalPrefs->theme, StrL("System"))) {
+        if (!str::EqI(gSettings->theme, StrL("System"))) {
             currIdx = ThemeGetCurrentIndex() + 1;
         }
         if (currIdx >= 0 && currIdx < len(model->strings)) {

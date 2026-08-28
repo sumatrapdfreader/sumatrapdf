@@ -453,7 +453,7 @@ static void PaintTouchSelHandles(MainWindow* win, Gfx* gfx) {
     if (!win->touchSelHandles || !GetTouchSelHandleRects(win, start, end)) {
         return;
     }
-    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    ParsedColor* parsedCol = GetPrefsColor(gSettings->fixedPageUI.selectionColor);
     Color col = parsedCol->col;
     gfx->FillEllipse(start, col);
     gfx->FillEllipse(end, col);
@@ -505,7 +505,7 @@ void PaintSelection(MainWindow* win, Gfx* gfx) {
         }
     }
 
-    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    ParsedColor* parsedCol = GetPrefsColor(gSettings->fixedPageUI.selectionColor);
     // honor the alpha channel of SelectionColor (#aarrggbb): a smaller alpha makes
     // the overlay more transparent so the selected text stays crisp (issue #3209).
     // Fall back to the historical default when no alpha is given (e.g. #rrggbb).

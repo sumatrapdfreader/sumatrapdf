@@ -352,7 +352,7 @@ static TempStr SidebarLayoutResultTemp(int* exitCodeOut) {
         return HwndScreenToClient(win->hwndFrame, HwndWindowRect(hwnd).TL()).x;
     };
 
-    bool pref = gGlobalPrefs && gGlobalPrefs->sidebarOnRight;
+    bool pref = gSettings && gSettings->sidebarOnRight;
     bool tocVis = win->hwndTocBox && HwndIsVisible(win->hwndTocBox);
     bool favVis = win->hwndFavBox && HwndIsVisible(win->hwndFavBox);
     int tocX = clientX(win->hwndTocBox);

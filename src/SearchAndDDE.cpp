@@ -1419,7 +1419,7 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     ApplyFindPageRange(win);
     // always build the match list so PaintAllFindMatches can highlight every hit;
     // snippets only when the floating results list is showing
-    bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
+    bool wantSnippets = gSettings->searchUIFloating && IsFindWindowVisible(win);
     bool wantMatchList = true;
     int epoch = AtomicIntInc(&win->findCountEpoch);
     int startPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
@@ -1460,7 +1460,7 @@ TempStr CurrentFindTermTemp(MainWindow* win) {
 static void UpdateMatchCount(MainWindow* win, Str text) {
     DisplayModel* dm = win->AsFixed();
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
-    bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
+    bool wantSnippets = gSettings->searchUIFloating && IsFindWindowVisible(win);
     bool wantMatchList = true;
     ApplyFindPageRange(win);
     bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
@@ -1933,7 +1933,7 @@ static void PaintCurrentFindMatch(MainWindow* win, DisplayModel* dm, TextSearch*
     if (!ts || ts->result.len == 0) {
         return;
     }
-    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    ParsedColor* parsedCol = GetPrefsColor(gSettings->fixedPageUI.selectionColor);
     u8 alpha = GetAlpha(parsedCol->col);
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;
@@ -1999,7 +1999,7 @@ void PaintAllFindMatches(MainWindow* win, Gfx* gfx) {
         currentKey = MatchKey(ts->startPage, ts->startGlyph);
     }
 
-    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    ParsedColor* parsedCol = GetPrefsColor(gSettings->fixedPageUI.selectionColor);
     u8 alpha = GetAlpha(parsedCol->col);
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;
@@ -2034,8 +2034,8 @@ void PaintForwardSearchMark(MainWindow* win, Gfx* gfx) {
         return;
     }
 
-    int hiLiWidth = gGlobalPrefs->forwardSearch.highlightWidth;
-    int hiLiOff = gGlobalPrefs->forwardSearch.highlightOffset;
+    int hiLiWidth = gSettings->forwardSearch.highlightWidth;
+    int hiLiOff = gSettings->forwardSearch.highlightOffset;
 
     // Draw the rectangles highlighting the forward search results
     Vec<Rect> rects;
@@ -2054,7 +2054,7 @@ void PaintForwardSearchMark(MainWindow* win, Gfx* gfx) {
 
     u8 alpha =
         (u8)(0x5f * 1.0f * (float)(kHideFwdSearchMarkSteps - win->fwdSearchMark.hideStep) / kHideFwdSearchMarkSteps);
-    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->forwardSearch.highlightColor);
+    ParsedColor* parsedCol = GetPrefsColor(gSettings->forwardSearch.highlightColor);
     PaintTransparentRectangles(gfx, win->canvasRc, rects, parsedCol->col, alpha);
 }
 
@@ -2125,7 +2125,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
         int err = Synchronizer::Create(path, dm->GetEngine(), &dm->pdfSync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             // We used to warn that "No synchronization file found" at this
-            // point if gGlobalPrefs->enableTeXEnhancements is set; we no longer
+            // point if gSettings->enableTeXEnhancements is set; we no longer
             // so do because a double-click has several other meanings
             // (selecting a word or an image, navigating quickly using links)
             // and showing an unrelated warning in all those cases seems wrong
@@ -2158,7 +2158,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
         return true;
     }
 
-    Str inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
+    Str inverseSearch = gSettings->inverseSearchCmdLine;
     if (!inverseSearch) {
         Vec<TextEditor*> editors;
         DetectTextEditors(editors);
@@ -2183,7 +2183,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
         if (!process) {
             ShowNotification(args);
         }
-    } else if (gGlobalPrefs->enableTeXEnhancements) {
+    } else if (gSettings->enableTeXEnhancements) {
         ShowNotification(args);
     }
 
@@ -2248,7 +2248,7 @@ void ShowLinkDestHighlight(MainWindow* win, int pageNo, RectF dest) {
     }
     win->fwdSearchMark.rects.Reset();
     win->fwdSearchMark.show = false;
-    if (!gGlobalPrefs || !gGlobalPrefs->highlightLinkDestination) {
+    if (!gSettings || !gSettings->highlightLinkDestination) {
         return;
     }
     DisplayModel* dm = win->AsFixed();
@@ -2280,7 +2280,7 @@ TempStr LinkDestHighlightResultTemp(int* exitCodeOut) {
     }
     int n = len(win->fwdSearchMark.rects);
     return finish(0, fmt("OK show=%d page=%d nrects=%d enabled=%d", win->fwdSearchMark.show ? 1 : 0,
-                         win->fwdSearchMark.page, n, gGlobalPrefs && gGlobalPrefs->highlightLinkDestination ? 1 : 0));
+                         win->fwdSearchMark.page, n, gSettings && gSettings->highlightLinkDestination ? 1 : 0));
 }
 
 void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col */, int ret, int page,
@@ -2295,7 +2295,7 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
         win->fwdSearchMark.page = page;
         win->fwdSearchMark.show = true;
         win->fwdSearchMark.hideStep = 0;
-        if (!gGlobalPrefs->forwardSearch.highlightPermanent) {
+        if (!gSettings->forwardSearch.highlightPermanent) {
             SetTimer(win->hwndCanvas, kHideFwdSearchMarkTimerID, kHideFwdSearchMarkDelayInMs, nullptr);
         }
 

@@ -1270,7 +1270,7 @@ static HGLOBAL GlobalMemDevNames(const WCHAR* device) {
 // the PrinterDefaults.Collate setting (issue #1558).
 // returns 1 to force collate, 0 to force no-collate, -1 to leave the driver default
 static int CollateDefaultPref() {
-    Str s = gGlobalPrefs->printerDefaults.collate;
+    Str s = gSettings->printerDefaults.collate;
     if (str::EqI(s, StrL("collate"))) {
         return 1;
     }
@@ -1338,11 +1338,11 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     if (!hasDefaults) {
         hasDefaults = true;
-        if (str::EqI(gGlobalPrefs->printerDefaults.printScale, StrL("fit"))) {
+        if (str::EqI(gSettings->printerDefaults.printScale, StrL("fit"))) {
             defaultScaleAdv = PrintScaleAdv::Fit;
-        } else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, StrL("stretch"))) {
+        } else if (str::EqI(gSettings->printerDefaults.printScale, StrL("stretch"))) {
             defaultScaleAdv = PrintScaleAdv::Stretch;
-        } else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, StrL("none"))) {
+        } else if (str::EqI(gSettings->printerDefaults.printScale, StrL("none"))) {
             defaultScaleAdv = PrintScaleAdv::None;
         }
     }

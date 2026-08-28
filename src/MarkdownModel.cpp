@@ -924,7 +924,7 @@ void MarkdownModel::GetDisplayState(FileState* fs) {
     if (!fs->filePath || !str::EqI(fs->filePath, fileNameA)) {
         SetFileStatePath(fs, fileNameA);
     }
-    fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
+    fs->useDefaultState = !gSettings->rememberStatePerDocument;
     str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
     ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
     fs->pageNo = CurrentPageNo();

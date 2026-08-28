@@ -47,9 +47,9 @@ extern "C" {
 extern "C" int LZX_test_pretree_make_decode_table(void);
 
 static void EnsureTestGlobalPrefs() {
-    // engine creation reads a few fields off gGlobalPrefs (e.g. disableAntiAlias)
-    if (!gGlobalPrefs) {
-        gGlobalPrefs = NewGlobalPrefs({});
+    // engine creation reads a few fields off gSettings (e.g. disableAntiAlias)
+    if (!gSettings) {
+        gSettings = NewGlobalPrefs({});
     }
     // Headless -dbg-control tests don't need form JavaScript. Force it off even
     // when LoadSettings() already ran (the test harness overrides user prefs).
@@ -1064,7 +1064,7 @@ TempStr DestZoomNavResultTemp(int destNo, int startZoomPerc, int* exitCodeOut) {
 
     out.Append(fmt("OK dest=%d destZoom=%g page=%d landed=%d zoomBefore=%g zoomAfter=%g ignore=%d\n", destNo,
                    dest ? PageDestGetZoom(dest) : 0.f, dest ? PageDestGetPageNo(dest) : 0, dm->CurrentPageNo(),
-                   zoomBefore, zoomAfter, gGlobalPrefs->ignoreDestinationZoom ? 1 : 0));
+                   zoomBefore, zoomAfter, gSettings->ignoreDestinationZoom ? 1 : 0));
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }

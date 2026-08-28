@@ -160,15 +160,15 @@ bool NeedsWindowEmbeddingHacks() {
 }
 
 bool SettingsUseTabs() {
-    return gGlobalPrefs->useTabs && !gMyWindowWasEmbedded;
+    return gSettings->useTabs && !gMyWindowWasEmbedded;
 }
 
 bool SettingsRestoreSession() {
-    return gGlobalPrefs->restoreSession && !gMyWindowWasEmbedded && !gForTesting;
+    return gSettings->restoreSession && !gMyWindowWasEmbedded && !gForTesting;
 }
 
 bool SettingsRememberOpenedFiles() {
-    return gGlobalPrefs->rememberOpenedFiles && !gMyWindowWasEmbedded;
+    return gSettings->rememberOpenedFiles && !gMyWindowWasEmbedded;
 }
 
 static Kind kNotifPersistentWarning = "persistentWarning";
@@ -247,8 +247,8 @@ static void OnSidebarSplitterMove(VirtSplitter::MoveEvent* /*ev*/);
 static void OnFavSplitterMove(VirtSplitter::MoveEvent* /*ev*/);
 
 EBookUI* GetEBookUI() {
-    if (!gGlobalPrefs) return nullptr;
-    return &gGlobalPrefs->eBookUI;
+    if (!gSettings) return nullptr;
+    return &gSettings->eBookUI;
 }
 
 // A document is usually loaded on a worker thread, where walking the file
@@ -267,7 +267,7 @@ FileEBookUI* GetFileEBookUI(Str filePath) {
     if (!uitask::IsMainUIThread()) {
         return gLoadThreadFileEBookUI;
     }
-    if (!gGlobalPrefs || !filePath) {
+    if (!gSettings || !filePath) {
         return nullptr;
     }
     FileState* fs = FileHistoryFindByPath(filePath);
@@ -340,8 +340,8 @@ void SetCurrentLang(Str langCode) {
     if (!langCode) {
         return;
     }
-    str::ReplaceWithCopy(&gGlobalPrefs->uiLanguage, langCode);
-    trans::SetCurrentLangByCode(gGlobalPrefs->uiLanguage);
+    str::ReplaceWithCopy(&gSettings->uiLanguage, langCode);
+    trans::SetCurrentLangByCode(gSettings->uiLanguage);
 }
 
 #define kDefaultFilePerceivedTypes "audio,video,webpage"
@@ -720,8 +720,8 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     }
 
     // try the list of default passwords before asking the user
-    if (pwdIdx < len(*gGlobalPrefs->defaultPasswords)) {
-        Str pwd = (*gGlobalPrefs->defaultPasswords)[pwdIdx++];
+    if (pwdIdx < len(*gSettings->defaultPasswords)) {
+        Str pwd = (*gSettings->defaultPasswords)[pwdIdx++];
         return str::Dup(pwd);
     }
 
@@ -753,7 +753,7 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     HwndToForeground(hwnd);
 
     // remembering the password requires saving per-document state
-    bool canRememberPwd = SettingsRememberOpenedFiles() && gGlobalPrefs->rememberStatePerDocument;
+    bool canRememberPwd = SettingsRememberOpenedFiles() && gSettings->rememberStatePerDocument;
     bool* rememberPwd = canRememberPwd ? saveKey : nullptr;
     return ShowGetPasswordDialog(hwnd, path, rememberPwd, &gShowPassword);
 }
@@ -790,7 +790,7 @@ void RememberDefaultWindowPosition(MainWindow* win) {
     // actually loading — a home/empty window must still record the user's
     // normal (non-maximized) size when they resize or close it.
     if (!win->IsDocLoaded() && WindowHasDocumentLoading(win)) {
-        int intended = gGlobalPrefs->windowState;
+        int intended = gSettings->windowState;
         if (intended == WIN_STATE_MAXIMIZED && !IsZoomed(win->hwndFrame)) {
             return;
         }
@@ -800,32 +800,32 @@ void RememberDefaultWindowPosition(MainWindow* win) {
     }
 
     if (win->presentation) {
-        gGlobalPrefs->windowState = win->windowStateBeforePresentation;
+        gSettings->windowState = win->windowStateBeforePresentation;
     } else if (win->isFullScreen) {
-        gGlobalPrefs->windowState = WIN_STATE_FULLSCREEN;
+        gSettings->windowState = WIN_STATE_FULLSCREEN;
     } else if (IsZoomed(win->hwndFrame)) {
-        gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
+        gSettings->windowState = WIN_STATE_MAXIMIZED;
     } else if (!IsIconic(win->hwndFrame)) {
-        gGlobalPrefs->windowState = WIN_STATE_NORMAL;
+        gSettings->windowState = WIN_STATE_NORMAL;
     }
 
     // win->sidebarDx is the layout's source of truth; the toc box rect is
     // stale when the sidebar is hidden or only favorites are showing
-    gGlobalPrefs->sidebarDx = win->sidebarDx > 0 ? win->sidebarDx : HwndWindowRect(win->hwndTocBox).dx;
+    gSettings->sidebarDx = win->sidebarDx > 0 ? win->sidebarDx : HwndWindowRect(win->hwndTocBox).dx;
 
     if (IsIconic(win->hwndFrame) || win->presentation) {
         return;
     }
 
-    if (WIN_STATE_NORMAL == gGlobalPrefs->windowState) {
-        gGlobalPrefs->windowPos = HwndWindowRect(win->hwndFrame);
-    } else if (WIN_STATE_MAXIMIZED == gGlobalPrefs->windowState) {
+    if (WIN_STATE_NORMAL == gSettings->windowState) {
+        gSettings->windowPos = HwndWindowRect(win->hwndFrame);
+    } else if (WIN_STATE_MAXIMIZED == gSettings->windowState) {
         // use GetWindowPlacement to get the non-maximized position
         // so we know which monitor the window is on (for #5277)
         WINDOWPLACEMENT wp{};
         wp.length = sizeof(wp);
         if (GetWindowPlacement(win->hwndFrame, &wp)) {
-            gGlobalPrefs->windowPos = ToRect(wp.rcNormalPosition);
+            gSettings->windowPos = ToRect(wp.rcNormalPosition);
         }
     }
 }
@@ -835,9 +835,9 @@ static void UpdateDisplayStateWindowRect(MainWindow* win, FileState* fs, bool up
         RememberDefaultWindowPosition(win);
     }
 
-    fs->windowState = gGlobalPrefs->windowState;
-    fs->windowPos = gGlobalPrefs->windowPos;
-    fs->sidebarDx = gGlobalPrefs->sidebarDx;
+    fs->windowState = gSettings->windowState;
+    fs->windowPos = gSettings->windowPos;
+    fs->sidebarDx = gSettings->sidebarDx;
 }
 
 static void UpdateSidebarDisplayState(WindowTab* tab, FileState* fs) {
@@ -931,7 +931,7 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
     }
 
     bool tocVisible = win->uiState.tocVisible;
-    bool favVisible = gGlobalPrefs->showFavorites;
+    bool favVisible = gSettings->showFavorites;
     if (tocVisible || favVisible) {
         SetSidebarVisibility(win, false, false);
     }
@@ -966,9 +966,9 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
 
 static bool IsMenubarVisible() {
     if (SettingsUseTabs()) {
-        return gGlobalPrefs->showMenubarWithTabs;
+        return gSettings->showMenubarWithTabs;
     }
-    return gGlobalPrefs->showMenubar;
+    return gSettings->showMenubar;
 }
 
 static bool MenuBarButtonsNeedRebuild(HMENU oldMenu, HMENU newMenu) {
@@ -1077,7 +1077,7 @@ static bool ShouldSaveThumbnail(FileState* ds) {
 
     // don't create thumbnails for files that won't need them anytime soon
     Vec<FileState*> list;
-    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+    if (gSettings->homePageSortByFrequentlyRead) {
         FileHistoryGetFrequencyOrder(list);
     } else {
         FileHistoryGetRecentlyOpenedOrder(list);
@@ -1133,7 +1133,7 @@ void ControllerCallbackHandler::TocChanged(DocController* ctrl) {
         return;
     }
     if (tab->showToc) {
-        SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
+        SetSidebarVisibility(win, true, gSettings->showFavorites);
     }
 }
 
@@ -1423,7 +1423,7 @@ static void ShowWinScrollBar(HWND hwnd, int bar, BOOL show) {
 SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
 
 int ScrollbarModeFromPrefs() {
-    int idx = SeqStrIndexIS(gScrollbarModeNames, gGlobalPrefs->scrollbars);
+    int idx = SeqStrIndexIS(gScrollbarModeNames, gSettings->scrollbars);
     if (idx < 0) {
         idx = kScrollbarWindows;
     }
@@ -1449,10 +1449,10 @@ OverlayScrollbar::Mode ScrollbarsOverlayMode() {
 SeqStrings gToolbarModeNames = "show\0hide\0overlay\0";
 
 int ToolbarModeFromPrefs() {
-    int idx = SeqStrIndexIS(gToolbarModeNames, gGlobalPrefs->toolbar);
+    int idx = SeqStrIndexIS(gToolbarModeNames, gSettings->toolbar);
     if (idx < 0) {
         // not set / invalid: derive from the legacy showToolbar bool
-        idx = gGlobalPrefs->showToolbar ? kToolbarShow : kToolbarHide;
+        idx = gSettings->showToolbar ? kToolbarShow : kToolbarHide;
     }
     return idx;
 }
@@ -1471,16 +1471,16 @@ void SetToolbarMode(int mode) {
         name = StrL("show");
         mode = kToolbarShow;
     }
-    str::ReplaceWithCopy(&gGlobalPrefs->toolbar, name);
+    str::ReplaceWithCopy(&gSettings->toolbar, name);
     // keep the legacy bool in sync so old versions stay sane
-    gGlobalPrefs->showToolbar = (mode != kToolbarHide);
+    gSettings->showToolbar = (mode != kToolbarHide);
 }
 
 int FullscreenToolbarModeFromPrefs() {
-    int idx = SeqStrIndexIS(gToolbarModeNames, gGlobalPrefs->fullscreen.toolbar);
+    int idx = SeqStrIndexIS(gToolbarModeNames, gSettings->fullscreen.toolbar);
     if (idx < 0) {
         // not set / invalid: derive from the legacy Fullscreen.ShowToolbar bool
-        idx = gGlobalPrefs->fullscreen.showToolbar ? kToolbarShow : kToolbarHide;
+        idx = gSettings->fullscreen.showToolbar ? kToolbarShow : kToolbarHide;
     }
     return idx;
 }
@@ -1491,14 +1491,14 @@ void SetFullscreenToolbarMode(int mode) {
         name = StrL("hide");
         mode = kToolbarHide;
     }
-    str::ReplaceWithCopy(&gGlobalPrefs->fullscreen.toolbar, name);
-    gGlobalPrefs->fullscreen.showToolbar = (mode != kToolbarHide);
+    str::ReplaceWithCopy(&gSettings->fullscreen.toolbar, name);
+    gSettings->fullscreen.showToolbar = (mode != kToolbarHide);
 }
 
 SeqStrings gToolbarPositionNames = "top\0bottom\0";
 
 int ToolbarPositionFromPrefs() {
-    int idx = SeqStrIndexIS(gToolbarPositionNames, gGlobalPrefs->toolbarPosition);
+    int idx = SeqStrIndexIS(gToolbarPositionNames, gSettings->toolbarPosition);
     if (idx < 0) {
         idx = kToolbarTop;
     }
@@ -1512,7 +1512,7 @@ bool ToolbarAtBottom() {
 // Reverse the content-row HBox so the sidebar is on the right. RTL frames
 // already mirror via WS_EX_LAYOUTRTL, so don't also reverse the HBox.
 static bool SidebarOnRightLayout() {
-    return gGlobalPrefs && gGlobalPrefs->sidebarOnRight && !IsUIRtl();
+    return gSettings && gSettings->sidebarOnRight && !IsUIRtl();
 }
 
 void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
@@ -1584,7 +1584,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
         si.fMask = SIF_ALL;
     }
 
-    bool isSinglePageMode = gGlobalPrefs->scrollbarInSinglePage && (dm->GetDisplayMode() == DisplayMode::SinglePage);
+    bool isSinglePageMode = gSettings->scrollbarInSinglePage && (dm->GetDisplayMode() == DisplayMode::SinglePage);
     bool showVScroll = true;
     if (isSinglePageMode) {
         int pageCount = dm->PageCount();
@@ -1918,10 +1918,10 @@ static NO_INLINE void VerifyController(DocController* ctrl, Str path) {
 // each gated by its own UseFixedPageUI opt-out (fall back to MuPDF/ebook engines).
 static bool ShouldUseBrowserView(FileType kind) {
     if (MarkdownModel::IsHtmlFileType(kind)) {
-        return !gGlobalPrefs->htmlUI.useFixedPageUI;
+        return !gSettings->htmlUI.useFixedPageUI;
     }
     if (MarkdownModel::IsSupportedFileType(kind)) {
-        return !gGlobalPrefs->markdownUI.useFixedPageUI;
+        return !gSettings->markdownUI.useFixedPageUI;
     }
     return false;
 }
@@ -1963,7 +1963,7 @@ static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWi
     // vector through another browser and our plugin (which doesn't
     // advertise itself for Chm documents but could be tricked into
     // loading one nonetheless); note: this crash should never happen,
-    // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
+    // since gSettings->chmUI.useFixedPageUI is set in SetupPluginMode
     ReportIf(gPluginMode);
     // if the interactive backend (WebView2 / IE CLSID_WebBrowser) isn't
     // available, fall back on ChmEngine's fixed-page rendering
@@ -2001,7 +2001,7 @@ DocController* gMostRecentlyOpenedDoc = nullptr;
 
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win) {
     auto timeStart = TimeGet();
-    bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
+    bool chmInFixedUI = gSettings->chmUI.useFixedPageUI;
     if (!engine) {
         FileType kind = GuessFileTypeFromName(path);
         if (ShouldUseBrowserView(kind)) {
@@ -2043,7 +2043,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     if (embeddedFileName) {
         titlePath = embeddedFileName;
     }
-    if (!gGlobalPrefs->fullPathInTitle) {
+    if (!gSettings->fullPathInTitle) {
         titlePath = path::GetBaseNameTemp(titlePath);
     }
 
@@ -2122,7 +2122,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
 }
 
 static bool showTocByDefault(Str path) {
-    if (!gGlobalPrefs->showToc) {
+    if (!gSettings->showToc) {
         return false;
     }
     // we don't want to show toc by default for comic book files
@@ -2141,16 +2141,16 @@ static float EbookLayoutAspectForView(MainWindow* win, Str path, DisplayMode dis
 // Per-type DefaultDisplayMode (empty = inherit the global DefaultDisplayMode).
 // Used only on first open when there is no remembered FileState (issue #2588).
 static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine) {
-    DisplayMode dm = gGlobalPrefs->defaultDisplayModeEnum;
+    DisplayMode dm = gSettings->defaultDisplayModeEnum;
     Str modeStr;
     Kind k = engine ? engine->kind : nullptr;
     if (k == kindEngineComicBooks || k == kindEngineImageDir ||
         (path && IsEngineCbxSupportedFileType(GuessFileTypeFromName(path, true)))) {
-        modeStr = gGlobalPrefs->comicBookUI.defaultDisplayMode;
+        modeStr = gSettings->comicBookUI.defaultDisplayMode;
     } else if (k == kindEngineEpub || k == kindEngineFb2 || k == kindEngineMobi || k == kindEnginePdb ||
                k == kindEngineHtml || k == kindEngineTxt ||
                (path && IsEbookFileType(GuessFileTypeFromName(path, true)))) {
-        modeStr = gGlobalPrefs->eBookUI.defaultDisplayMode;
+        modeStr = gSettings->eBookUI.defaultDisplayMode;
     }
     if (modeStr) {
         return DisplayModeFromString(modeStr, dm);
@@ -2164,7 +2164,7 @@ static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine) {
 static float ZoomForNewDocument(Str path, EngineBase* engine, float fallback) {
     Kind k = engine ? engine->kind : nullptr;
     if (k == kindEngineComicBooks || (path && IsEngineCbxSupportedFileType(GuessFileTypeFromName(path, true)))) {
-        float z = gGlobalPrefs->comicBookUI.defaultZoomFloat;
+        float z = gSettings->comicBookUI.defaultZoomFloat;
         if (z != 0) {
             return z;
         }
@@ -2176,7 +2176,7 @@ static float ZoomForNewDocument(Str path, EngineBase* engine, float fallback) {
 // Research articles vs slides (issue #4055): portrait -> continuous + fit
 // width, landscape -> single page + fit page. First open only.
 static bool ShouldUsePageAspectForView(Str path) {
-    if (!IsPageAspectDisplayMode(gGlobalPrefs->defaultDisplayMode)) {
+    if (!IsPageAspectDisplayMode(gSettings->defaultDisplayMode)) {
         return false;
     }
     FileType ft = GuessFileTypeFromName(path, true);
@@ -2265,12 +2265,12 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
-    if (!fs && gGlobalPrefs->rememberStatePerDocument) {
+    if (!fs && gSettings->rememberStatePerDocument) {
         Str fn = args->FilePath();
         fs = FileHistoryFindByPath(fn);
         if (fs) {
             if (fs->windowPos.IsEmpty()) {
-                fs->windowPos = gGlobalPrefs->windowPos;
+                fs->windowPos = gSettings->windowPos;
             }
             EnsureAreaVisibility(fs->windowPos);
         }
@@ -2279,15 +2279,15 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         fs = nullptr;
     }
 
-    DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
-    float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
+    DisplayMode displayMode = gSettings->defaultDisplayModeEnum;
+    float zoomVirtual = gSettings->defaultZoomFloat;
     ScrollState ss(1, -1, -1);
     int rotation = 0;
     Str path = args->FilePath();
     bool showToc = showTocByDefault(path);
-    bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState;
+    bool showAsFullScreen = WIN_STATE_FULLSCREEN == gSettings->windowState;
     int showType = SW_NORMAL;
-    if (gGlobalPrefs->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {
+    if (gSettings->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {
         showType = SW_MAXIMIZE;
     }
 
@@ -2348,7 +2348,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     EngineBase* engine = tab->GetEngine();
     if (engine) {
         engine->hideAnnotations = tab->hideAnnotations;
-        float imageZoom = gGlobalPrefs->imageUI.defaultZoomFloat;
+        float imageZoom = gSettings->imageUI.defaultZoomFloat;
         if (engine->kind == kindEngineImage && imageZoom != 0) {
             zoomVirtual = imageZoom;
         }
@@ -2381,7 +2381,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (win->ctrl) {
         DisplayModel* dm = win->AsFixed();
         if (dm) {
-            int dpi = gGlobalPrefs->customScreenDPI;
+            int dpi = gSettings->customScreenDPI;
             // <= 0 means "not set" (users have been seen setting it to -1)
             if (dpi <= 0) {
                 dpi = DpiGetForHwnd(win->hwndFrame);
@@ -2404,7 +2404,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             if (fs && (fs->displayR2L || !declared)) {
                 dm->SetDisplayR2L(fs->displayR2L);
             } else if (!fs && !declared) {
-                dm->SetDisplayR2L(gGlobalPrefs->comicBookUI.cbxMangaMode);
+                dm->SetDisplayR2L(gSettings->comicBookUI.cbxMangaMode);
             }
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->GetFilePath(), prevCtrl->GetFilePath())) {
                 gRenderCache->KeepForDisplayModel(prevCtrl->AsFixed(), dm);
@@ -2504,7 +2504,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (CanAccessDisk() && tab->GetEngineType() == kindEngineMupdf) {
         ReportIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         path = args->FilePath();
-        // note: we used to set gGlobalPrefs->enableTeXEnhancements to true on
+        // note: we used to set gSettings->enableTeXEnhancements to true on
         // success to expose SyncTeX in the UI but that made an explicit
         // EnableTeXEnhancements = false impossible as it was persisted on exit;
         // the setting is now only changed by the user or -inverse-search et al.
@@ -2568,7 +2568,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
-    SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
+    SetSidebarVisibility(win, showToc, gSettings->showFavorites);
     if (dm) {
         if (dm->pendingRelayout) {
             // canvas not yet sized; RelayoutFrame / ShowWindow WM_SIZE will
@@ -2787,7 +2787,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
 
     tab->reloadOnFocus = false;
 
-    if (gGlobalPrefs->showStartPage) {
+    if (gSettings->showStartPage) {
         // refresh the thumbnail for this file
         FileState* state = FileHistoryFindByPath(fs->filePath);
         if (state) {
@@ -3010,7 +3010,7 @@ static void CreateSidebar(MainWindow* win) {
         HwndRepaintNow(win->hwndTocBox);
     }
 
-    if (gGlobalPrefs->showFavorites) {
+    if (gSettings->showFavorites) {
         HwndRepaintNow(win->hwndFavBox);
     }
 }
@@ -3061,7 +3061,7 @@ static MainWindow* CreateMainWindow() {
     // -window-pos wins over both the remembered position and the default, and
     // skips the per-window shift below: a test asked for an exact rectangle
     bool fixedPos = gCli && !gCli->windowPos.IsEmpty();
-    Rect windowPos = fixedPos ? gCli->windowPos : gGlobalPrefs->windowPos;
+    Rect windowPos = fixedPos ? gCli->windowPos : gSettings->windowPos;
     if (!windowPos.IsEmpty()) {
         EnsureAreaVisibility(windowPos);
     } else {
@@ -3334,13 +3334,13 @@ void MaybeShowDefaultAppNotification(MainWindow* win) {
 }
 
 MainWindow* CreateAndShowMainWindow(SessionData* data, bool showWin) {
-    int windowState = gGlobalPrefs->windowState;
+    int windowState = gSettings->windowState;
     MainWindow* win = CreateMainWindow();
     if (!win) {
         return nullptr;
     }
     // CreateMainWindow can inadvertently change windowState (e.g. via layout); restore it
-    gGlobalPrefs->windowState = windowState;
+    gSettings->windowState = windowState;
 
     if (data) {
         windowState = data->windowState;
@@ -3351,7 +3351,7 @@ MainWindow* CreateAndShowMainWindow(SessionData* data, bool showWin) {
 
     // always set up toolbar and sidebar, even if we defer showing
     ShowOrHideToolbar(win);
-    SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
+    SetSidebarVisibility(win, false, gSettings->showFavorites);
     ToolbarUpdateStateForWindow(win, true);
 
     if (showWin) {
@@ -3535,7 +3535,7 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
     // state; showing here would flash a normal-size window first)
     if (showWin) {
         // Use ShowMainWindow so SW_SHOW does not drop a pending maximize (#5529)
-        ShowMainWindow(win, gGlobalPrefs->windowState);
+        ShowMainWindow(win, gSettings->windowState);
     }
 
     // display the notification ASAP (serializing settings can introduce a notable delay)
@@ -3842,9 +3842,9 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     // via Recent / thumbnails (issue #4705).
     bool transient = IsOpenCachePath(fullPath) || path::IsEphemeralHostFile(fullPath);
 
-    if (gGlobalPrefs->reloadModifiedDocuments && !transient) {
+    if (gSettings->reloadModifiedDocuments && !transient) {
         auto fn = MkFunc0(ScheduleReloadTab, currTab);
-        // was gGlobalPrefs->enableTeXEnhancements because people complained
+        // was gSettings->enableTeXEnhancements because people complained
         // about network traffic. but then people complained it stopped working
         // we'll now recommend ReloadModifiedDocuments = false for those
         // who complain
@@ -3855,7 +3855,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     if (SettingsRememberOpenedFiles() && !transient) {
         ReportIf(!str::Eq(fullPath, path));
         FileState* ds = FileHistoryMarkFileLoaded(fullPath);
-        if (gGlobalPrefs->showStartPage) {
+        if (gSettings->showStartPage) {
             CreateThumbnailForFile(win, ds);
         }
         // TODO: this seems to save the state of file that we just opened
@@ -4197,7 +4197,7 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     }
 
     HwndPasswordUI pwdUI(args->hwndPwdParent);
-    bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
+    bool chmInFixedUI = gSettings->chmUI.useFixedPageUI;
     if (!engine) {
         engine = CreateEngineFromFile(path, &pwdUI, chmInFixedUI);
     }
@@ -4231,14 +4231,14 @@ static float EbookLayoutAspectForWindow(MainWindow* win) {
     // So use the size the window is about to be restored to. That is the frame,
     // not the canvas, so take off the toolbar and tab bar: guessing too tall
     // would leave the page overflowing, which is the whole bug.
-    if (gGlobalPrefs->windowState == WIN_STATE_MAXIMIZED || gGlobalPrefs->windowState == WIN_STATE_FULLSCREEN) {
+    if (gSettings->windowState == WIN_STATE_MAXIMIZED || gSettings->windowState == WIN_STATE_FULLSCREEN) {
         HMONITOR mon = MonitorFromWindow(win->hwndFrame, MONITOR_DEFAULTTONEAREST);
         MONITORINFO mi{sizeof(mi)};
         if (GetMonitorInfoW(mon, &mi)) {
             rc = ToRect(mi.rcWork);
         }
     } else {
-        rc = gGlobalPrefs->windowPos;
+        rc = gSettings->windowPos;
     }
     if (rc.dx < 1 || rc.dy < 1) {
         // nothing remembered (first run): the hidden frame already has the
@@ -4249,7 +4249,7 @@ static float EbookLayoutAspectForWindow(MainWindow* win) {
         return 0;
     }
     int chromeDy = 0;
-    if (gGlobalPrefs->showToolbar) {
+    if (gSettings->showToolbar) {
         chromeDy += DpiScale(40);
     }
     if (SettingsUseTabs()) {
@@ -4270,10 +4270,10 @@ static float EbookLayoutAspectForView(MainWindow* win, Str path, DisplayMode dis
 static float EbookLayoutAspectForLoad(LoadArgs* args, MainWindow* win) {
     Str path = args->FilePath();
     DisplayMode displayMode = DisplayModeForNewDocument(path, nullptr);
-    float zoom = gGlobalPrefs->defaultZoomFloat;
+    float zoom = gSettings->defaultZoomFloat;
 
     FileState* fs = nullptr;
-    if (gGlobalPrefs->rememberStatePerDocument) {
+    if (gSettings->rememberStatePerDocument) {
         fs = FileHistoryFindByPath(path);
         if (fs && fs->useDefaultState) {
             fs = nullptr;
@@ -4410,7 +4410,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
     // we could probably delay creating web control but that's more complicated
     {
         FileType kind = GuessFileTypeFromName(path);
-        bool isChm = !gGlobalPrefs->chmUI.useFixedPageUI && ChmModel::IsSupportedFileType(kind);
+        bool isChm = !gSettings->chmUI.useFixedPageUI && ChmModel::IsSupportedFileType(kind);
         bool isMd = ShouldUseBrowserView(kind);
         if (isChm || isMd) {
             // TODO: repeating the code below
@@ -4602,7 +4602,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
             // ensure window is visible even if loading failed
             // (it may have been created hidden during startup)
             if (!HwndIsVisible(win->hwndFrame)) {
-                ShowMainWindow(win, gGlobalPrefs->windowState);
+                ShowMainWindow(win, gSettings->windowState);
             }
             ShowLoadErrorInTab(win, args, path);
             // re-sync win->ctrl with current tab: the above can pump messages
@@ -4632,7 +4632,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     // document
     StopKeyboardLinkFollowing(win);
     StopSelectTextWithKeyboard(win);
-    if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsNonDocumentTab() &&
+    if (gSettings->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsNonDocumentTab() &&
         tab->loadState == WindowTab::LoadState::None) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
@@ -4640,7 +4640,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         args.warning = true;
         ShowNotification(args);
         // Use ShowMainWindow so SW_SHOW does not drop a pending maximize (#5529)
-        ShowMainWindow(win, gGlobalPrefs->windowState);
+        ShowMainWindow(win, gSettings->windowState);
         // display the notification ASAP
         win->RedrawAll(true);
     }
@@ -4716,9 +4716,9 @@ void LoadModelIntoTab(WindowTab* tab) {
     PickAnotherRandomPromotion();
 
     if (win->InPresentation()) {
-        SetSidebarVisibility(win, tab->showTocPresentation, gGlobalPrefs->showFavorites);
+        SetSidebarVisibility(win, tab->showTocPresentation, gSettings->showFavorites);
     } else {
-        SetSidebarVisibility(win, tab->showToc, gGlobalPrefs->showFavorites);
+        SetSidebarVisibility(win, tab->showToc, gSettings->showFavorites);
     }
 
     // Leaving Favorites tab: restore canvas size/visibility before SetViewPortSize
@@ -4769,7 +4769,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (tab->type == WindowTab::Type::None) {
         logf("LoadModelIntoTab: tab 0x%p has Type::None, skipping reload\n", tab);
     } else if (!tab->IsAboutTab()) {
-        if (gGlobalPrefs->lazyLoading && !tab->ctrl && tab->loadState == WindowTab::LoadState::None) {
+        if (gSettings->lazyLoading && !tab->ctrl && tab->loadState == WindowTab::LoadState::None) {
             ReloadDocument(win, false);
         } else {
             if (tab->reloadOnFocus) {
@@ -5110,7 +5110,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     }
 
     if (!keepUIEnabled) {
-        SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
+        SetSidebarVisibility(win, false, gSettings->showFavorites);
         ToolbarUpdateStateForWindow(win, true);
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
@@ -5269,7 +5269,7 @@ static void InvokeInverseSearch(WindowTab* tab) {
     if (!tab) {
         return;
     }
-    if (!gGlobalPrefs->enableTeXEnhancements) {
+    if (!gSettings->enableTeXEnhancements) {
         return;
     }
     MainWindow* win = tab->win;
@@ -6587,15 +6587,15 @@ static void OpenFileWithOSFilePicker(MainWindow* win) {
 
 // FilePicker: empty/os = Windows dialog; sumatrapdf = Navigate Files in Folder.
 static bool FilePickerIsSumatraPDF() {
-    return gGlobalPrefs && str::EqI(gGlobalPrefs->filePicker, StrL("sumatrapdf"));
+    return gSettings && str::EqI(gSettings->filePicker, StrL("sumatrapdf"));
 }
 
 static void ToggleFilePicker() {
     if (FilePickerIsSumatraPDF()) {
-        str::ReplaceWithCopy(&gGlobalPrefs->filePicker, StrL("os"));
+        str::ReplaceWithCopy(&gSettings->filePicker, StrL("os"));
     } else {
         // empty or "os" (or anything else) → sumatrapdf
-        str::ReplaceWithCopy(&gGlobalPrefs->filePicker, StrL("sumatrapdf"));
+        str::ReplaceWithCopy(&gSettings->filePicker, StrL("sumatrapdf"));
     }
     ScheduleSaveSettings();
 }
@@ -7438,7 +7438,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         sidebarDxApplied = win->sidebarDx;
         if (0 == sidebarDxApplied) {
             // not laid out yet: width the toc box was created with
-            // (gGlobalPrefs->sidebarDx, see CreateToc)
+            // (gSettings->sidebarDx, see CreateToc)
             sidebarDxApplied = HwndClientRect(win->hwndTocBox).dx;
         }
         if (0 == sidebarDxApplied) {
@@ -7479,9 +7479,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         if (!win->uiState.favVisible) {
             tocDy = contentDy;
         } else {
-            tocDy = gGlobalPrefs->tocDy;
+            tocDy = gSettings->tocDy;
             if (tocDy > 0) {
-                tocDy = limitValue(gGlobalPrefs->tocDy, 0, contentDy);
+                tocDy = limitValue(gSettings->tocDy, 0, contentDy);
             } else {
                 tocDy = contentDy / 2;
             }
@@ -8570,15 +8570,15 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     // visual effect immediately, preventing a flash of sidebar at
     // fullscreen size during the transition.
     // TODO: make showFavorites a per-window pref
-    bool showFavoritesTmp = gGlobalPrefs->showFavorites;
-    if (presentation && (win->uiState.tocVisible || gGlobalPrefs->showFavorites)) {
+    bool showFavoritesTmp = gSettings->showFavorites;
+    if (presentation && (win->uiState.tocVisible || gSettings->showFavorites)) {
         SetSidebarVisibility(win, false, false);
     }
 
     // Set state flags; RelayoutFrame (triggered by SetWindowPos/WM_SIZE)
     // will handle the actual showing/hiding of toolbar and tabs.
     // Fullscreen.Toolbar mode (show / hide / overlay); presentation never has a toolbar.
-    bool showMenubarInFS = !presentation && gGlobalPrefs->fullscreen.showMenubar;
+    bool showMenubarInFS = !presentation && gSettings->fullscreen.showMenubar;
     win->isToolbarVisible = !presentation && ShouldShowToolbar(win);
     win->isToolbarOverlay = !presentation && ShouldOverlayToolbar(win);
     win->toolbarOverlayShown = false;
@@ -8621,8 +8621,8 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
 
     // Make sure that no toolbar/sidebar keeps the focus
     HwndSetFocus(win->hwndFrame);
-    // restore gGlobalPrefs->showFavorites changed by SetSidebarVisibility()
-    gGlobalPrefs->showFavorites = showFavoritesTmp;
+    // restore gSettings->showFavorites changed by SetSidebarVisibility()
+    gSettings->showFavorites = showFavoritesTmp;
     // ensure layout is correct after fullscreen transition
     RelayoutFrame(win);
     // show menu bar rebar after layout positions it correctly
@@ -8638,7 +8638,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     }
     EndFrameRedrawSuppression(win);
 
-    if (gGlobalPrefs->preventSleepInFullscreen) {
+    if (gSettings->preventSleepInFullscreen) {
         SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     }
 }
@@ -8688,7 +8688,7 @@ void ExitFullScreen(MainWindow* win) {
         return;
     }
 
-    if (gGlobalPrefs->preventSleepInFullscreen) {
+    if (gSettings->preventSleepInFullscreen) {
         SetThreadExecutionState(ES_CONTINUOUS);
     }
 
@@ -8715,7 +8715,7 @@ void ExitFullScreen(MainWindow* win) {
 
     BeginFrameRedrawSuppression(win);
     bool tocVisible = win->CurrentTab() && win->CurrentTab()->showToc;
-    SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
+    SetSidebarVisibility(win, tocVisible, gSettings->showFavorites);
 
     if (win->tabsVisible) {
         win->tabsCtrl->SetIsVisible(true);
@@ -8815,7 +8815,7 @@ static int wrapIdx(int idx, int max) {
 void AdvanceFocus(MainWindow* win) {
     // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
-    bool hasToolbar = !win->isFullScreen && !win->presentation && gGlobalPrefs->showToolbar && win->IsDocLoaded();
+    bool hasToolbar = !win->isFullScreen && !win->presentation && gSettings->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
     constexpr int kMaxWindows = 5;
@@ -8829,7 +8829,7 @@ void AdvanceFocus(MainWindow* win) {
     if (win->tocLoaded && win->uiState.tocVisible) {
         tabOrder[nWindows++] = win->tocTreeView->hwnd;
     }
-    if (gGlobalPrefs->showFavorites) {
+    if (gSettings->showFavorites) {
         tabOrder[nWindows++] = win->favTreeView->hwnd;
     }
     ReportIf(nWindows > kMaxWindows);
@@ -9095,7 +9095,7 @@ static void OnFrameKeyEsc(MainWindow* win) {
         ToolbarUpdateStateForWindow(win, false);
         return;
     }
-    if (gGlobalPrefs->escToExit && CanCloseWindow(win)) {
+    if (gSettings->escToExit && CanCloseWindow(win)) {
         CloseWindow(win, true, false);
         return;
     }
@@ -9437,10 +9437,10 @@ static void OnFavSplitterMove(VirtSplitter::MoveEvent* ev) {
         ev->resizeAllowed = false;
         return;
     }
-    if (ev->queryOnly || tocDy == gGlobalPrefs->tocDy) {
+    if (ev->queryOnly || tocDy == gSettings->tocDy) {
         return;
     }
-    gGlobalPrefs->tocDy = tocDy;
+    gSettings->tocDy = tocDy;
     // the sidebar width is unchanged (win->sidebarDx); kUiNoToolbars makes
     // the relayout run unconditionally
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
@@ -9489,7 +9489,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     }
 
     // TODO: make this a per-window setting as well?
-    gGlobalPrefs->showFavorites = showFavorites;
+    gSettings->showFavorites = showFavorites;
 
     // When the Favorites tab is selected, the tree is focused there — don't
     // steal focus just because the sidebar panel is off.
@@ -9954,7 +9954,7 @@ static void ApplyMenuBarVisibility(MainWindow* win) {
 }
 
 SettingsApplyState GetSettingsApplyState() {
-    GlobalPrefs* p = gGlobalPrefs;
+    GlobalPrefs* p = gSettings;
     SettingsApplyState s;
     s.useTabs = p->useTabs;
     s.showMenubar = p->showMenubar;
@@ -9969,7 +9969,7 @@ SettingsApplyState GetSettingsApplyState() {
 // apply settings changes that need explicit handling beyond a settings reload,
 // then re-layout all windows. `before` is a snapshot taken before the change.
 void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
-    GlobalPrefs* p = gGlobalPrefs;
+    GlobalPrefs* p = gSettings;
 
     if (before.disableAntiAlias != p->disableAntiAlias) {
         for (MainWindow* w : gWindows) {
@@ -10101,12 +10101,12 @@ static void ClearHistory(MainWindow* win) {
         return;
     }
 
-    // there is no separate storage: FileHistoryStates() *is* gGlobalPrefs->fileStates.
+    // there is no separate storage: FileHistoryStates() *is* gSettings->fileStates.
     // LoadSettings() hands the vector to FileHistorySetStates() and the FileHistory*()
     // functions are just an API over it, so FileHistoryClear() deletes the FileStates
-    // and empties that same vector -- gGlobalPrefs->fileStates ends up empty too.
-    // Don't free/replace the vector here: gGlobalPrefs owns it and the history holds
-    // the pointer. gGlobalPrefs->sessionData is deliberately left alone -- it describes
+    // and empties that same vector -- gSettings->fileStates ends up empty too.
+    // Don't free/replace the vector here: gSettings owns it and the history holds
+    // the pointer. gSettings->sessionData is deliberately left alone -- it describes
     // the currently open windows, not history, and SaveSettings() rebuilds it anyway.
     Vec<FileState*>* states = FileHistoryStates();
     int nFiles = states ? len(*states) : 0;
@@ -10382,7 +10382,7 @@ static Rect DefaultHelpWindowRect(HWND parent) {
 }
 
 static Rect ManualBrowserPlacementRect(HWND parent) {
-    Rect saved = gGlobalPrefs->helpWindowPos;
+    Rect saved = gSettings->helpWindowPos;
     if (!saved.IsEmpty()) {
         // nullptr: nearest monitor to the saved rect (a disconnected display
         // then maps to the nearest remaining one)
@@ -10402,7 +10402,7 @@ static void SaveManualBrowserPos(HWND hwnd = nullptr) {
     if (r.IsEmpty()) {
         return;
     }
-    gGlobalPrefs->helpWindowPos = r;
+    gSettings->helpWindowPos = r;
 }
 
 static void SaveManualBrowserPosNow() {
@@ -10729,7 +10729,7 @@ void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
         SetAnnotCreateArgsFromCommand(args, cmd);
         return;
     }
-    auto& a = gGlobalPrefs->annotations;
+    auto& a = gSettings->annotations;
     ParsedColor* col = nullptr;
     ParsedColor* bgCol = nullptr;
     auto typ = args.annotType;
@@ -11558,7 +11558,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdNextTabSmart:
         case CmdPrevTabSmart: {
-            if (gGlobalPrefs->ctrlTabSimple) {
+            if (gSettings->ctrlTabSimple) {
                 // simple (pre-3.6) behavior: switch tabs immediately, in tab-strip order
                 TabsOnCtrlTab(win, cmdId == CmdPrevTabSmart);
                 break;
@@ -11713,11 +11713,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdToggleToolbarShowReadAloud: {
-            bool show = !gGlobalPrefs->toolbarShowReadAloud;
+            bool show = !gSettings->toolbarShowReadAloud;
             if (GetCommandArg(cmd, kCmdArgState)) {
                 show = GetCommandBoolArg(cmd, kCmdArgState, true);
             }
-            gGlobalPrefs->toolbarShowReadAloud = show;
+            gSettings->toolbarShowReadAloud = show;
             for (MainWindow* w : gWindows) {
                 ToolbarUpdateStateForWindow(w, true);
             }
@@ -11821,7 +11821,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdToggleMenuBar: {
-            if (ShouldToggle(cmd, gGlobalPrefs->showMenubar)) {
+            if (ShouldToggle(cmd, gSettings->showMenubar)) {
                 ToggleMenuBar(win, false);
             }
             break;
@@ -12436,24 +12436,24 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdToggleLinks:
-            gGlobalPrefs->showLinks = !gGlobalPrefs->showLinks;
+            gSettings->showLinks = !gSettings->showLinks;
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }
             break;
 
         case CmdToggleHighlightFormFields:
-            gGlobalPrefs->highlightFormFields = !gGlobalPrefs->highlightFormFields;
+            gSettings->highlightFormFields = !gSettings->highlightFormFields;
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }
             break;
 
         case CmdToggleDisableLinks:
-            if (ShouldToggle(cmd, gGlobalPrefs->disableLinks)) {
-                gGlobalPrefs->disableLinks = !gGlobalPrefs->disableLinks;
+            if (ShouldToggle(cmd, gSettings->disableLinks)) {
+                gSettings->disableLinks = !gSettings->disableLinks;
                 ScheduleSaveSettings();
-                if (gGlobalPrefs->disableLinks) {
+                if (gSettings->disableLinks) {
                     for (MainWindow* w : gWindows) {
                         RefHoverHide(w->refHover, w->hwndCanvas);
                         StopKeyboardLinkFollowing(w);
@@ -12706,10 +12706,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdToggleHoverPreview:
-            if (gGlobalPrefs->citationHoverDelay < 0) {
-                gGlobalPrefs->citationHoverDelay = 300;
+            if (gSettings->citationHoverDelay < 0) {
+                gSettings->citationHoverDelay = 300;
             } else {
-                gGlobalPrefs->citationHoverDelay = -1;
+                gSettings->citationHoverDelay = -1;
                 for (MainWindow* w : gWindows) {
                     RefHoverHide(w->refHover, w->hwndCanvas);
                 }
@@ -12976,7 +12976,7 @@ constexpr LONG kWinMinDy = 320;
 
 static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
     // limit windows min width to prevent render loop when siderbar is too big
-    info->ptMinTrackSize.x = kWinMinDx - kSidebarMinDx + gGlobalPrefs->sidebarDx;
+    info->ptMinTrackSize.x = kWinMinDx - kSidebarMinDx + gSettings->sidebarDx;
     info->ptMinTrackSize.y = kWinMinDy;
     return 0;
 }
@@ -13745,10 +13745,10 @@ HMENU GetReadAloudContextSubmenu() {
 static void ReadAloudShowNotif(WindowTab* tab, Str msg);
 
 static void ReadAloudSaveVoicePref(Str voiceId) {
-    if (!gGlobalPrefs) {
+    if (!gSettings) {
         return;
     }
-    str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, voiceId);
+    str::ReplaceWithCopy(&gSettings->readAloudVoiceId, voiceId);
     ScheduleSaveSettings();
 }
 
@@ -14108,7 +14108,7 @@ static int ReadAloudClosestSpeedIdx() {
 
 static void ReadAloudSetSpeed(float speed) {
     TtsSetSpeed(speed);
-    gGlobalPrefs->readAloudSpeed = TtsGetSpeed();
+    gSettings->readAloudSpeed = TtsGetSpeed();
     logf("ReadAloud: SetSpeed: %s\n", ReadAloudSpeedLabelTemp(TtsGetSpeed()));
     ScheduleSaveSettings();
 
@@ -14509,7 +14509,7 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
 
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     UINT showFlags = MF_STRING;
-    if (gGlobalPrefs->toolbarShowReadAloud) {
+    if (gSettings->toolbarShowReadAloud) {
         showFlags |= MF_CHECKED;
     }
     AppendMenuW(menu, showFlags, CmdToggleToolbarShowReadAloud, CWStrTemp(_TRA("Show In Toolbar")));
@@ -14654,7 +14654,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     if (win && !gMyWindowWasEmbedded && isChildWindow) {
         logf("Detected window embedded in another window\n");
         gMyWindowWasEmbedded = true;
-        str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, StrL("windows"));
+        str::ReplaceWithCopy(&gSettings->scrollbars, StrL("windows"));
         uitask::Post(MkFunc0(ApplyEmbeddedWindowChrome, win), "ApplyEmbeddedWindowChrome");
     }
     // custom caption is incompatible with WS_CHILD hosts; skip even before
@@ -14952,7 +14952,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             // the default theme and high contrast mode draw in the system
             // colors, which just changed under us
             SumatraUpdateTheme();
-            if (gGlobalPrefs->useSysColors) {
+            if (gSettings->useSysColors) {
                 UpdateDocumentColors();
             }
             break;
@@ -15278,7 +15278,7 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
         return fail(StrL("NOTREADY doc-already-loaded"), 2);
     }
 
-    int prevState = gGlobalPrefs->windowState;
+    int prevState = gSettings->windowState;
     // Force a non-maximized frame so the bug path is exercised: prefs say
     // maximized, but the visible window is still at restored size (as during
     // slow load). Without the #5529 guard this rewrites WindowState to NORMAL.
@@ -15291,7 +15291,7 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
     // old harness (set Loading on CurrentTab) was a no-op and always "failed"
     // after the guard required WindowHasDocumentLoading. Create a temporary
     // loading document tab when needed.
-    gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
+    gSettings->windowState = WIN_STATE_MAXIMIZED;
     WindowTab* tab = win->CurrentTab();
     if (!tab && win->TabCount() > 0) {
         tab = win->GetTab(0);
@@ -15309,7 +15309,7 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
         tab->loadState = WindowTab::LoadState::Loading;
     }
     RememberDefaultWindowPosition(win);
-    int observedLoading = gGlobalPrefs->windowState;
+    int observedLoading = gSettings->windowState;
     if (createdTempTab) {
         RemoveTab(tab);
         delete tab;
@@ -15319,11 +15319,11 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
     }
 
     // --- empty home (no loading tab): may record NORMAL ---
-    gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
+    gSettings->windowState = WIN_STATE_MAXIMIZED;
     RememberDefaultWindowPosition(win);
-    int observedEmpty = gGlobalPrefs->windowState;
+    int observedEmpty = gSettings->windowState;
 
-    gGlobalPrefs->windowState = prevState;
+    gSettings->windowState = prevState;
 
     bool okLoading = observedLoading == WIN_STATE_MAXIMIZED;
     // Empty non-maximized frame should be allowed to write NORMAL (home-window

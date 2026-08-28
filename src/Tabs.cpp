@@ -103,7 +103,7 @@ int GetTabbarHeight(HWND hwnd, float factor) {
 
 #if 0
 static inline Size GetTabSize(HWND hwnd) {
-    int dx = DpiScale(std::max(gGlobalPrefs->tabWidth, kTabMinDx));
+    int dx = DpiScale(std::max(gSettings->tabWidth, kTabMinDx));
     int dy = GetTabbarHeight(hwnd);
     return Size(dx, dy);
 }
@@ -135,7 +135,7 @@ void UpdateTabWidth(MainWindow* win) {
     // (issue #3850). Height already uses DpiScale via GetTabbarHeight.
     if (win->tabsCtrl) {
         HWND hwnd = win->tabsCtrl->hwnd ? win->tabsCtrl->hwnd : win->hwndFrame;
-        win->tabsCtrl->tabDefaultDx = DpiScale(gGlobalPrefs->tabWidth);
+        win->tabsCtrl->tabDefaultDx = DpiScale(gSettings->tabWidth);
     }
     // Lay out only when the bar stays visible. Hiding it right after
     // TabCtrl_SetItemSize invalidated the control leaves a pending WM_PAINT for
@@ -655,7 +655,7 @@ void CreateTabbar(MainWindow* win) {
     args.withToolTips = true;
     args.font = GetAppFont();
     // logical TabWidth → physical (see UpdateTabWidth / issue #3850)
-    args.tabDefaultDx = DpiScale(gGlobalPrefs->tabWidth);
+    args.tabDefaultDx = DpiScale(gSettings->tabWidth);
     args.isRtl = false; // LTR hwnd; RTL tab order follows parent frame (see UpdateWindowRtlLayout)
 
     TabsCtrl* tabsCtrl = new TabsCtrl();
@@ -753,7 +753,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     auto* tabs = win->tabsCtrl;
     int idx = win->TabCount();
     bool useTabs = SettingsUseTabs();
-    bool noHomeTab = gGlobalPrefs->noHomeTab;
+    bool noHomeTab = gSettings->noHomeTab;
     bool createHomeTab = useTabs && !noHomeTab && (idx == 0);
     if (createHomeTab) {
         WindowTab* homeTab = new WindowTab(win);

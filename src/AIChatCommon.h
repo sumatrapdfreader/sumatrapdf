@@ -107,7 +107,7 @@ struct AIChatProvider {
     virtual TempStr FindExecutableTemp() = 0;
     // built-in models plus extras from settings
     virtual void BuildModelsList(StrVec& models) = 0;
-    // settings accessors (resolved on each call: gGlobalPrefs can be reloaded)
+    // settings accessors (resolved on each call: gSettings can be reloaded)
     virtual Str GetModel() = 0;
     virtual void SetModel(Str) = 0;
     virtual int GetOption() = 0;

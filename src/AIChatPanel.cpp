@@ -1238,7 +1238,7 @@ void CreateAIChatPanel(MainWindow* win) {
         return;
     }
     HMODULE hmod = GetModuleHandle(nullptr);
-    int dx = gGlobalPrefs->sidebarDx;
+    int dx = gSettings->sidebarDx;
     DWORD style = WS_CHILD | WS_CLIPCHILDREN;
     HWND parent = win->hwndFrame;
     win->hwndAiChatBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, nullptr, hmod, nullptr);
