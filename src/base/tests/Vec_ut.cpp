@@ -8,6 +8,13 @@
 // must be last due to assert() over-write
 #include "base/UtAssert.h"
 
+// capacity, whether the storage is owned or borrowed. Was a Vec function, but
+// only these tests look at the capacity.
+template <typename T>
+static int VecCap(const Vec<T>& v) {
+    return v.cap < 0 ? -v.cap : v.cap;
+}
+
 static size_t VecTestAppendFmt() {
     str::Builder v;
     str::BuilderReserve(nullptr, v, 256);

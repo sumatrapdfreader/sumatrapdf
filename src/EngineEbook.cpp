@@ -459,15 +459,16 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
     for (DrawInstr& i : *pageInstrs) {
         Rect bbox = GetInstrBbox(i, pageBorder);
+        bool hasCoords = len(coords) > 0;
+        Rect lastCoord = hasCoords ? VecLast(coords) : Rect{};
         switch (i.type) {
             case DrawInstrType::String:
-                if (len(coords) > 0 &&
-                    (bbox.x < VecLast(coords).BR().x || bbox.y > VecLast(coords).y + (VecLast(coords).dy * 0.8))) {
+                if (hasCoords && (bbox.x < lastCoord.BR().x || bbox.y > lastCoord.y + (lastCoord.dy * 0.8))) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !VecLast(coords).IsEmpty());
-                } else if (insertSpace && len(coords) > 0) {
-                    int swidth = bbox.x - VecLast(coords).BR().x;
+                } else if (insertSpace && hasCoords) {
+                    int swidth = bbox.x - lastCoord.BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
                         coords.Append(Rect(bbox.x - swidth, bbox.y, swidth, bbox.dy));
@@ -487,13 +488,12 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 break;
             case DrawInstrType::RtlString:
-                if (len(coords) > 0 &&
-                    (bbox.BR().x > VecLast(coords).x || bbox.y > VecLast(coords).y + (VecLast(coords).dy * 0.8))) {
+                if (hasCoords && (bbox.BR().x > lastCoord.x || bbox.y > lastCoord.y + (lastCoord.dy * 0.8))) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !VecLast(coords).IsEmpty());
-                } else if (insertSpace && len(coords) > 0) {
-                    int swidth = VecLast(coords).x - bbox.BR().x;
+                } else if (insertSpace && hasCoords) {
+                    int swidth = lastCoord.x - bbox.BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
                         coords.Append(Rect(bbox.BR().x, bbox.y, swidth, bbox.dy));

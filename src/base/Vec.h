@@ -84,10 +84,6 @@ void VecRemoveAtFast(Vec<T>& v, int idx);
 template <typename T>
 void VecClear(Vec<T>& v);
 
-// Capacity, whether the storage is owned or borrowed.
-template <typename T>
-int VecCap(const Vec<T>& v);
-
 // The last element; the vec must not be empty.
 template <typename T>
 T& VecLast(const Vec<T>& v);
@@ -283,11 +279,6 @@ void VecRemoveAtFast(Vec<T>& v, int idx) {
 template <typename T>
 void VecClear(Vec<T>& v) {
     VecClearNT(v.NT(), (int)sizeof(T));
-}
-
-template <typename T>
-int VecCap(const Vec<T>& v) {
-    return v.cap < 0 ? -v.cap : v.cap;
 }
 
 template <typename T>
