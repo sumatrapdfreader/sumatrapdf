@@ -10,7 +10,7 @@
 
 #include "GlobalPrefs.h"
 
-GlobalPrefs* gSettings = nullptr;
+Settings* gSettings = nullptr;
 
 // Walk setting metadata for a Bool field matching name (case-insensitive leaf
 // or full dotted path). Returns a pointer into gSettings, or nullptr.
@@ -47,11 +47,11 @@ static bool* FindBoolSettingInStruct(const StructInfo* info, u8* base, Str pathP
 }
 
 // Case-insensitive leaf or dotted path (e.g. "SelectionToolbar", "Fullscreen.ShowMenubar").
-bool* FindGlobalPrefsBoolSetting(Str name) {
+bool* FindSettingsBoolSetting(Str name) {
     if (!gSettings || len(name) == 0) {
         return nullptr;
     }
-    return FindBoolSettingInStruct(&gGlobalPrefsInfo, (u8*)gSettings, {}, name);
+    return FindBoolSettingInStruct(&gSettingsInfo, (u8*)gSettings, {}, name);
 }
 
 FileState* NewFileState(Str filePath) {
@@ -109,8 +109,8 @@ void DeleteFavorite(Favorite* fav) {
     FreeStruct(&gFavoriteInfo, fav);
 }
 
-GlobalPrefs* NewGlobalPrefs(Str data) {
-    return (GlobalPrefs*)DeserializeStruct(&gGlobalPrefsInfo, data);
+Settings* NewSettings(Str data) {
+    return (Settings*)DeserializeStruct(&gSettingsInfo, data);
 }
 
 // With file history turned off the only thing worth keeping about a file is a
@@ -138,9 +138,9 @@ static bool FileStateWorthKeepingWithoutHistory(FileState* fs) {
     return false;
 }
 
-// prevData is used to preserve fields that exists in prevField but not in GlobalPrefs
+// prevData is used to preserve fields that exists in prevField but not in Settings
 // caller has to free()
-Str SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData) {
+Str SerializeSettings(Settings* prefs, Str prevData) {
     Vec<FileState*>* allFileStates = prefs->fileStates;
     Vec<FileState*> withFavorites;
 
@@ -176,7 +176,7 @@ Str SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData) {
         gFileStateInfo.fieldCount = fieldCount;
     }
 
-    Str serialized = SerializeStruct(&gGlobalPrefsInfo, prefs, prevData);
+    Str serialized = SerializeStruct(&gSettingsInfo, prefs, prevData);
 
     if (dropPerDocState) {
         gFileStateInfo.fieldCount = dimof(gFileStateFields);
@@ -186,7 +186,7 @@ Str SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData) {
     return serialized;
 }
 
-void DeleteGlobalPrefs(GlobalPrefs* gp) {
+void DeleteSettings(Settings* gp) {
     if (!gp) {
         return;
     }
@@ -194,7 +194,7 @@ void DeleteGlobalPrefs(GlobalPrefs* gp) {
     for (FileState* ds : *gp->fileStates) {
         FreePixmap(ds->thumbnail);
     }
-    FreeStruct(&gGlobalPrefsInfo, gp);
+    FreeStruct(&gSettingsInfo, gp);
 }
 
 SessionData* NewSessionData() {

@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 // A dialog for editing advanced settings, driven by the settings metadata
-// (gGlobalPrefsInfo). Shows a filterable list of settings; clicking a bool
+// (gSettingsInfo). Shows a filterable list of settings; clicking a bool
 // toggles it, clicking an enum cycles its allowed values, clicking a string /
 // color / number setting edits it in-place (Enter confirms, Esc cancels).
 // Save writes the settings file and reloads it (so all derived state is
@@ -1251,7 +1251,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     // OnSize closes in-place editors before DoLayout; skip the generic path
     autoLayout = false;
-    CollectSettings(items, &gGlobalPrefsInfo, (u8*)gSettings, {});
+    CollectSettings(items, &gSettingsInfo, (u8*)gSettings, {});
 
     {
         CreateCustomArgs args;

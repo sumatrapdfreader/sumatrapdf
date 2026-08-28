@@ -9954,7 +9954,7 @@ static void ApplyMenuBarVisibility(MainWindow* win) {
 }
 
 SettingsApplyState GetSettingsApplyState() {
-    GlobalPrefs* p = gSettings;
+    Settings* p = gSettings;
     SettingsApplyState s;
     s.useTabs = p->useTabs;
     s.showMenubar = p->showMenubar;
@@ -9969,7 +9969,7 @@ SettingsApplyState GetSettingsApplyState() {
 // apply settings changes that need explicit handling beyond a settings reload,
 // then re-layout all windows. `before` is a snapshot taken before the change.
 void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
-    GlobalPrefs* p = gSettings;
+    Settings* p = gSettings;
 
     if (before.disableAntiAlias != p->disableAntiAlias) {
         for (MainWindow* w : gWindows) {
@@ -11364,7 +11364,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     "CmdToggleBoolSetting requires a setting name, e.g. CmdToggleBoolSetting Fullscreen.ShowMenubar"));
                 break;
             }
-            bool* p = FindGlobalPrefsBoolSetting(settingName);
+            bool* p = FindSettingsBoolSetting(settingName);
             if (!p) {
                 MaybeDelayedWarningNotification(fmt("CmdToggleBoolSetting: unknown boolean setting '%s'", settingName));
                 break;

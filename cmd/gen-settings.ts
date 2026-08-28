@@ -1849,7 +1849,7 @@ const globalPrefsLayout = [
   "CheckForUpdates",
 ];
 
-const globalPrefsStruct = struct("GlobalPrefs", globalPrefs, "Preferences are persisted in SumatraPDF-settings.txt");
+const globalPrefsStruct = struct("Settings", globalPrefs, "Preferences are persisted in SumatraPDF-settings.txt");
 
 const themes: Field[] = [array("Themes", theme, "color themes").ver("3.6")];
 const themesStruct = struct("Themes", themes, "for parsing themes");
@@ -1997,7 +1997,7 @@ function buildStruct(struc: Field, built: Record<string, number>): string {
   }
   lines.push(`struct ${struc.StructName} {`);
   let fields = struc.Default as Field[];
-  if (struc.StructName === "GlobalPrefs") {
+  if (struc.StructName === "Settings") {
     fields = fields
       .filter((field) => !isComment(field))
       .sort((a, b) => globalPrefsLayout.indexOf(a.Name) - globalPrefsLayout.indexOf(b.Name));

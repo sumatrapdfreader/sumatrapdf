@@ -938,7 +938,7 @@ static void ReplaceColor(ParsedColor& col, Str maybeColor) {
     }
 }
 
-static void UpdateGlobalPrefs(const Flags& i) {
+static void UpdateSettings(const Flags& i) {
     if (!i.windowPos.IsEmpty()) {
         // -window-pos stands in for the remembered position: code that has to
         // know the window's shape before it's on screen reads it from here
@@ -2645,7 +2645,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     DarkModeInit();
 
     LoadSettings();
-    UpdateGlobalPrefs(flags);
+    UpdateSettings(flags);
     if (gMyWindowWasEmbedded) {
         str::ReplaceWithCopy(&gSettings->scrollbars, StrL("windows"));
     }

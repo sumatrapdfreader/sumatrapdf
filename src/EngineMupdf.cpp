@@ -77,7 +77,7 @@ Kind kindEngineMupdf = "enginePdf";
 
 // Whether to enable mupdf's JavaScript engine for newly loaded PDFs (form-field
 // calculate/validate/format). Set by the app from the DisableJavaScript pref;
-// PdfPreview/PdfFilter don't link GlobalPrefs, so they keep the default.
+// PdfPreview/PdfFilter don't link Settings, so they keep the default.
 static bool gDisableFormJavaScript = false;
 // disable mupdf's JavaScript engine for PDFs loaded after this call
 void EngineMupdfSetDisableJavaScript(bool disable) {
@@ -86,7 +86,7 @@ void EngineMupdfSetDisableJavaScript(bool disable) {
 
 // Whether a PDF may load an image from an external sibling file (issue #3731).
 // Set by the app from the AllowExternalImages pref; off by default (and in the
-// PdfPreview/PdfFilter DLLs, which don't link GlobalPrefs).
+// PdfPreview/PdfFilter DLLs, which don't link Settings).
 static bool gAllowExternalImages = false;
 // allow PDFs to load images from an external sibling file (#3731), for PDFs
 // loaded after this call; set from gSettings->allowExternalImages

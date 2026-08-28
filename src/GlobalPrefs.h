@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-extern GlobalPrefs* gSettings;
+extern Settings* gSettings;
 
-bool* FindGlobalPrefsBoolSetting(Str name);
+bool* FindSettingsBoolSetting(Str name);
 
 FileState* NewFileState(Str);
 void DeleteFileState(FileState*);
@@ -19,9 +19,9 @@ void DeleteFileEBookUI(FileEBookUI*);
 Favorite* NewFavorite(int pageNo, Str name, Str pageLabel);
 void DeleteFavorite(Favorite* fav);
 
-GlobalPrefs* NewGlobalPrefs(Str);
-Str SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData);
-void DeleteGlobalPrefs(GlobalPrefs*);
+Settings* NewSettings(Str);
+Str SerializeSettings(Settings* prefs, Str prevData);
+void DeleteSettings(Settings*);
 
 SessionData* NewSessionData();
 TabState* NewTabState(FileState*);

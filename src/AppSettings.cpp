@@ -366,13 +366,13 @@ bool LoadSettings() {
 
     auto timeStart = TimeGet();
 
-    GlobalPrefs* gprefs = nullptr;
+    Settings* gprefs = nullptr;
     TempStr settingsPath = GetSettingsPathTemp();
     bool migratedDocumentColorsFollowTheme = false;
     {
         Str prefsData = file::ReadFile(settingsPath);
 
-        gSettings = NewGlobalPrefs(prefsData);
+        gSettings = NewSettings(prefsData);
         ReportIf(!gSettings);
         gprefs = gSettings;
         migratedDocumentColorsFollowTheme = MigrateDocumentColorsFollowThemeSetting(prefsData);
@@ -813,7 +813,7 @@ bool SaveSettings() {
         return false;
     }
     TempStr prevPrefs = file::ReadFileWithArena(path, GetTempArena());
-    Str prefs = SerializeGlobalPrefs(gSettings, prevPrefs);
+    Str prefs = SerializeSettings(gSettings, prevPrefs);
     AutoCall freePrefs((void (*)(Str))str::Free, prefs);
     ReportIf(len(prefs) == 0);
     if (len(prefs) == 0) {
@@ -921,7 +921,7 @@ static void ReloadSettings(bool force = false) {
 }
 
 void CleanUpSettings() {
-    DeleteGlobalPrefs(gSettings);
+    DeleteSettings(gSettings);
     gSettings = nullptr;
 }
 

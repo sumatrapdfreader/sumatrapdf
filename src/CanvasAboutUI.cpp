@@ -33,7 +33,7 @@ static void OnPaintAbout(MainWindow* win) {
         return;
     }
     HDC bufDC = win->buffer->GetDC();
-    GlobalPrefs* prefs = gSettings;
+    Settings* prefs = gSettings;
     bool hasPerms = HasPermission(Perm::SavePreferences | Perm::DiskAccess);
     bool drawHome = hasPerms && prefs->rememberOpenedFiles && prefs->showStartPage;
     Gfx* gfx = GfxCreate(bufDC);

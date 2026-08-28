@@ -1620,7 +1620,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     if (cmdId == CmdToggleBoolSetting && firstArg) {
         // validate the named boolean setting exists (case-insensitive leaf or path)
         Str settingName = firstArg->strVal;
-        if (len(settingName) == 0 || !FindGlobalPrefsBoolSetting(settingName)) {
+        if (len(settingName) == 0 || !FindSettingsBoolSetting(settingName)) {
             MaybeDelayedWarningNotification(
                 fmt("Error parsing Shortcuts: unknown boolean setting '%s' in '%s'\n", settingName, defSafe));
             // still create the command so the shortcut is registered; execute

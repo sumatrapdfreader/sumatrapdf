@@ -994,14 +994,14 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
         Str prefsData = file::ReadFile(path);
         if (len(prefsData) > 0) {
             // serialize without FileStates info because it's the largest
-            GlobalPrefs* gp = NewGlobalPrefs(prefsData);
+            Settings* gp = NewSettings(prefsData);
             DeleteFileStates(gp->fileStates);
             gp->fileStates = new Vec<FileState*>();
             // TODO: also sessionData?
-            Str d = SerializeGlobalPrefs(gp, {});
+            Str d = SerializeSettings(gp, {});
             gSettingsFile = str::Dup(gCrashHandlerArena, d);
             str::Free(d);
-            DeleteGlobalPrefs(gp);
+            DeleteSettings(gp);
             str::Free(prefsData);
         }
     }
