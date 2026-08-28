@@ -163,7 +163,7 @@ static bool LineMatches(Str line) {
 
 // split gFilter into gTerms (views into gFilter's buffer). called after gFilter changes.
 static void RebuildTerms() {
-    gTerms.Reset();
+    VecReset(gTerms);
     char* s = gFilter.s;
     int n = gFilter.len;
     int i = 0;
@@ -176,18 +176,18 @@ static void RebuildTerms() {
             i++;
         }
         if (i > start) {
-            gTerms.Append(Str(s + start, i - start));
+            VecAppend(gTerms, Str(s + start, i - start));
         }
     }
 }
 
 // recompute filtered[] for a tab from scratch.
 static void RebuildFiltered(Tab* tab) {
-    tab->filtered.Reset();
+    VecReset(tab->filtered);
     int n = len(tab->logs);
     for (int i = 0; i < n; i++) {
         if (LineMatches(tab->logs[i])) {
-            tab->filtered.Append(i);
+            VecAppend(tab->filtered, i);
         }
     }
 }
@@ -280,8 +280,7 @@ static void UpdateCountLabel() {
     } else {
         int n = len(tab->filtered);
         int total = len(tab->logs);
-        WCHAR sizeBuf[32];
-        FormatSizeHumanIntoWBuf((u64)tab->logBytes, WStr(sizeBuf, 32));
+        TempWStr sizeBuf = ToWStrTemp(FormatFileSizeTemp((u64)tab->logBytes));
         if (n == total) {
             wsprintfW(buf, L"%d lines · %s", total, sizeBuf);
         } else {
@@ -303,7 +302,7 @@ static Tab* FindOrCreateTab(int connNo) {
     Tab* tab = new Tab();
     tab->connNo = connNo;
     tab->name = str::Dup(StrL("logs"));
-    gTabs.Append(tab);
+    VecAppend(gTabs, tab);
     gSel = len(gTabs) - 1; // select the newest client, like the web ui
     InvalidateTabBar();
     return tab;
@@ -348,7 +347,7 @@ static void HandleValueLine(Tab* tab, Str line) {
     Value v;
     v.name = str::Dup(name);
     v.val = str::Dup(val);
-    tab->values.Append(v);
+    VecAppend(tab->values, v);
 }
 
 // measure a line's pixel width; used to grow the horizontal scroll range.
@@ -385,7 +384,7 @@ static void IngestLine(HDC measureDC, int connNo, Str raw) {
 
     // keep the selected tab's filtered[] in sync incrementally
     if (tab == SelTab() && LineMatches(stored)) {
-        tab->filtered.Append(len(tab->logs) - 1);
+        VecAppend(tab->filtered, len(tab->logs) - 1);
     }
 }
 
@@ -393,8 +392,8 @@ static void IngestLine(HDC measureDC, int connNo, Str raw) {
 static void DrainQueue() {
     gQueueMutex.Lock();
     Vec<PendingLine> local;
-    local.Append(gQueue);
-    gQueue.Reset();
+    VecAppendVec(local, gQueue);
+    VecReset(gQueue);
     gQueueMutex.Unlock();
 
     int n = len(local);
@@ -461,7 +460,7 @@ static void FlushLines(LineSplitter* ls, int connNo, bool* posted) {
         Str line = Str(ls->buf + start, i - start);
         char* dup = str::Dup(line).s;
         gQueueMutex.Lock();
-        gQueue.Append(PendingLine{connNo, dup});
+        VecAppend(gQueue, PendingLine{connNo, dup});
         gQueueMutex.Unlock();
         *posted = true;
         start = i + 1;
@@ -504,7 +503,7 @@ static DWORD WINAPI ReaderThread(void* arg) {
     {
         char* dup = str::Dup(StrL("--- client disconnected ---")).s;
         gQueueMutex.Lock();
-        gQueue.Append(PendingLine{connNo, dup});
+        VecAppend(gQueue, PendingLine{connNo, dup});
         gQueueMutex.Unlock();
         PostMessageW(gHwndMain, kWmAppNewLogs, 0, 0);
     }
@@ -935,7 +934,7 @@ void TabBarCtrl::Paint(VirtPaintCtx& ctx) {
     Rect client = ctx.bounds;
     gfx->FillRect(client, kColTabBar);
 
-    gTabHits.Reset();
+    VecReset(gTabHits);
     int pad = DpiScale(8);
     int x = client.x;
     int n = len(gTabs);
@@ -966,7 +965,7 @@ void TabBarCtrl::Paint(VirtPaintCtx& ctx) {
         Rect rcClose{tx, ty, szClose.dx, szClose.dy};
         gfx->DrawTextAt(closeStr, {tx, ty}, fmtTxt, gUiFont, MkRgb(0x60, 0x60, 0x60));
 
-        gTabHits.Append(TabHit{ToRECT(rc), ToRECT(rcClose)});
+        VecAppend(gTabHits, TabHit{ToRECT(rc), ToRECT(rcClose)});
         x += tabW;
     }
 
@@ -1019,7 +1018,7 @@ static void CloseTab(int idx) {
         return;
     }
     FreeTab(gTabs[idx]);
-    gTabs.RemoveAt(idx);
+    VecRemoveAt(gTabs, idx);
     if (len(gTabs) == 0) {
         gSel = -1;
     } else if (gSel >= len(gTabs)) {
@@ -1094,7 +1093,7 @@ static void ClearSelectedTab() {
         return;
     }
     tab->logs.Reset();
-    tab->filtered.Reset();
+    VecReset(tab->filtered);
     tab->scrollTop = 0;
     tab->scrollX = 0;
     tab->maxWidth = 0;

@@ -2829,93 +2829,14 @@ int WStrCmpNoCase(WStr a, WStr b) {
     return a.len - b.len;
 }
 
-// Format file size with comma separators, returns Str
-// Str utilities
-Str FormatFileSize(Arena* arena, u64 size) {
-    char buf[32];
-
-    if (size == 0) {
-        return str::Dup(arena, StrL("0"));
-    }
-
-    // Convert to string (reversed)
-    char temp[32];
-    int i = 0;
-    while (size > 0 && i < 31) {
-        temp[i++] = (char)('0' + (size % 10));
-        size /= 10;
-    }
-    int numDigits = i;
-
-    // Calculate position of first comma (from left)
-    int firstCommaAfter = numDigits % 3;
-    if (firstCommaAfter == 0) firstCommaAfter = 3;
-
-    // Reverse into buf with comma separators
-    int j = 0;
-    int digitPos = 0;
-    while (i > 0 && j < 31) {
-        buf[j++] = temp[--i];
-        digitPos++;
-        if (digitPos == firstCommaAfter || (digitPos > firstCommaAfter && (digitPos - firstCommaAfter) % 3 == 0)) {
-            if (i > 0 && j < 31) {
-                buf[j++] = ',';
-            }
-        }
-    }
-
-    return str::Dup(arena, Str(buf, j));
-}
-
-// Format file size with comma separators directly into wide string buffer
-void FormatFileSizeToWstrBuf(u64 size, WStr buf) {
-    if (buf.len < 1) return;
-
-    if (size == 0) {
-        buf.s[0] = L'0';
-        buf.s[1] = 0;
-        return;
-    }
-
-    // Convert to string (reversed)
-    wchar_t temp[32];
-    int i = 0;
-    while (size > 0 && i < 31) {
-        temp[i++] = L'0' + (size % 10);
-        size /= 10;
-    }
-    int numDigits = i;
-
-    // Calculate position of first comma (from left)
-    int firstCommaAfter = numDigits % 3;
-    if (firstCommaAfter == 0) firstCommaAfter = 3;
-
-    // Reverse into buf with comma separators
-    int j = 0;
-    int digitPos = 0;
-    int maxLen = buf.len - 1; // Leave room for null terminator
-    while (i > 0 && j < maxLen) {
-        buf.s[j++] = temp[--i];
-        digitPos++;
-        if (digitPos == firstCommaAfter || (digitPos > firstCommaAfter && (digitPos - firstCommaAfter) % 3 == 0)) {
-            if (i > 0 && j < maxLen) {
-                buf.s[j++] = L',';
-            }
-        }
-    }
-    buf.s[j] = 0;
-}
-
 // Format size in human readable form (e.g., "1.23 GB", "456 KB")
-// Returns length written (excluding null terminator)
-int FormatSizeHumanIntoBuf(u64 size, Str buf) {
-    if (buf.len < 2) return 0;
-
+TempStr FormatFileSizeTemp(u64 size) {
     const u64 TB = 1024ULL * 1024 * 1024 * 1024;
     const u64 GB = 1024ULL * 1024 * 1024;
     const u64 MB = 1024ULL * 1024;
     const u64 KB = 1024ULL;
 
+    char buf[32];
     Str suffix;
     u64 divisor;
 
@@ -2933,8 +2854,8 @@ int FormatSizeHumanIntoBuf(u64 size, Str buf) {
         divisor = KB;
     } else {
         // Bytes - just format as integer
-        int n = snprintf(buf.s, buf.len, "%llu B", size);
-        return n < buf.len ? n : buf.len - 1;
+        int n = snprintf(buf, sizeof(buf), "%llu B", size);
+        return str::DupTemp(Str(buf, n));
     }
 
     // Calculate with 2 decimal precision
@@ -2944,28 +2865,13 @@ int FormatSizeHumanIntoBuf(u64 size, Str buf) {
 
     int n;
     if (frac == 0) {
-        n = snprintf(buf.s, buf.len, "%llu%s", whole, suffix.s);
+        n = snprintf(buf, sizeof(buf), "%llu%s", whole, suffix.s);
     } else if (frac % 10 == 0) {
-        n = snprintf(buf.s, buf.len, "%llu.%d%s", whole, frac / 10, suffix.s);
+        n = snprintf(buf, sizeof(buf), "%llu.%d%s", whole, frac / 10, suffix.s);
     } else {
-        n = snprintf(buf.s, buf.len, "%llu.%02d%s", whole, frac, suffix.s);
+        n = snprintf(buf, sizeof(buf), "%llu.%02d%s", whole, frac, suffix.s);
     }
-    return n < buf.len ? n : buf.len - 1;
-}
-
-// Wrapper that formats into wide string buffer
-void FormatSizeHumanIntoWBuf(u64 size, WStr wbuf) {
-    char temp[32];
-    int n = FormatSizeHumanIntoBuf(size, Str(temp, 32));
-
-    // Copy to wide buffer
-    int maxLen = wbuf.len - 1;
-    int i = 0;
-    while (i < n && i < maxLen) {
-        wbuf.s[i] = (wchar_t)temp[i];
-        i++;
-    }
-    wbuf.s[i] = 0;
+    return str::DupTemp(Str(buf, n));
 }
 
 void SplitStrByWhitespace(Arena* arena, const Str& s, VecStr& vecOut) {

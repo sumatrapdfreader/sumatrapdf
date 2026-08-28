@@ -355,7 +355,5 @@ wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);
 int WStrCmpNoCase(WStr a, WStr b);
 
-Str FormatFileSize(Arena* arena, u64 size);
-void FormatFileSizeToWstrBuf(u64 size, WStr buf);
-int FormatSizeHumanIntoBuf(u64 size, Str buf);
-void FormatSizeHumanIntoWBuf(u64 size, WStr wbuf);
+// human readable size, e.g. "1.23 GB", "456 KB", "17 B"
+TempStr FormatFileSizeTemp(u64 size);
