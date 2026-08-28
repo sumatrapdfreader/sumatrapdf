@@ -304,6 +304,7 @@ export const commands = [
     "CmdCutAnnotation", "Cut Annotation",
     "CmdCopyAnnotation", "Copy Annotation",
     "CmdPasteAnnotation", "Paste Annotation",
+    "CmdSearchGoogleLens", "Search with Google Lens",
     "CmdNone", "Do nothing",
 ];
 

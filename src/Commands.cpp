@@ -311,6 +311,7 @@ static SeqStrings gCommandNames =
     "CmdCutAnnotation\0"
     "CmdCopyAnnotation\0"
     "CmdPasteAnnotation\0"
+    "CmdSearchGoogleLens\0"
     "CmdNone\0"
     "\0";
 
@@ -610,6 +611,7 @@ static i32 gCommandIds[] = {
     CmdCutAnnotation,
     CmdCopyAnnotation,
     CmdPasteAnnotation,
+    CmdSearchGoogleLens,
     CmdNone,
 };
 
@@ -909,6 +911,7 @@ SeqStrings gCommandDescriptions =
     "Cut Annotation\0"
     "Copy Annotation\0"
     "Paste Annotation\0"
+    "Search with Google Lens\0"
     "Do nothing\0"
     "\0";
 // clang-format on

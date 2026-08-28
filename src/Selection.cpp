@@ -589,6 +589,82 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
     return s;
 }
 
+RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections) {
+    if (!dm || len(selections) == 0) {
+        return nullptr;
+    }
+
+    constexpr i64 kMaxPixels = 24 * 1000 * 1000;
+    Vec<Pixmap*> pixmaps;
+    i64 totalHeight = 0;
+    int maxWidth = 0;
+
+    for (const SelectionOnPage& selection : selections) {
+        if (!dm->ValidPageNo(selection.pageNo)) {
+            continue;
+        }
+        float zoom = dm->GetZoomReal(selection.pageNo);
+        RectF rect = selection.rect;
+        RenderPageArgs args(selection.pageNo, zoom, dm->GetRotation(), &rect, RenderTarget::Export);
+        Pixmap* pixmap = dm->GetEngine()->RenderPage(args);
+        if (!pixmap) {
+            continue;
+        }
+        RenderedBitmap* rendered = RenderedBitmapFromPixmap(pixmap);
+        if (!rendered) {
+            continue;
+        }
+        Pixmap* dib = PixmapFromRenderedBitmap(rendered);
+        if (!dib) {
+            continue;
+        }
+        i64 pixels = (i64)dib->width * dib->height;
+        if (pixels <= 0 || pixels > kMaxPixels || totalHeight > kMaxPixels - pixels) {
+            FreePixmap(dib);
+            for (Pixmap* p : pixmaps) {
+                FreePixmap(p);
+            }
+            return nullptr;
+        }
+        pixmaps.Append(dib);
+        totalHeight += dib->height;
+        maxWidth = std::max(maxWidth, dib->width);
+    }
+
+    if (len(pixmaps) == 0 || totalHeight > INT_MAX) {
+        for (Pixmap* p : pixmaps) {
+            FreePixmap(p);
+        }
+        return nullptr;
+    }
+    if (len(pixmaps) == 1) {
+        return RenderedBitmapFromPixmap(pixmaps[0]);
+    }
+
+    Pixmap* combined = AllocPixmapDIB(maxWidth, (int)totalHeight);
+    if (!combined) {
+        for (Pixmap* p : pixmaps) {
+            FreePixmap(p);
+        }
+        return nullptr;
+    }
+    for (int y = 0; y < combined->height; y++) {
+        u8* row = combined->data + (size_t)y * combined->stride;
+        memset(row, 0xff, (size_t)combined->width * 4);
+    }
+
+    int y = 0;
+    for (Pixmap* pixmap : pixmaps) {
+        for (int row = 0; row < pixmap->height; row++) {
+            memcpy(combined->data + (size_t)(y + row) * combined->stride, pixmap->data + (size_t)row * pixmap->stride,
+                   (size_t)pixmap->width * 4);
+        }
+        y += pixmap->height;
+        FreePixmap(pixmap);
+    }
+    return RenderedBitmapFromPixmap(combined);
+}
+
 void CopySelectionToClipboard(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     ReportIf(len(*tab->selectionOnPage) == 0 && win->mouseAction != MouseAction::SelectingText);

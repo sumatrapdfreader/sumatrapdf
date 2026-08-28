@@ -109,6 +109,7 @@
 #include "AIChatPanel.h"
 #include "SelectionTranslate.h"
 #include "SelectionHandlers.h"
+#include "GoogleLens.h"
 #include "CommandPalette.h"
 #include "SumatraDialogs.h"
 #include "NavFilesInFolder.h"
@@ -12309,6 +12310,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSearchSelectionWithGoogle:
             LaunchBrowserWithSelection(tab, StrL("https://www.google.com/search?q=${selection}"));
+            break;
+
+        case CmdSearchGoogleLens:
+            SearchWithGoogleLens(tab);
             break;
 
         case CmdSearchSelectionWithBing:

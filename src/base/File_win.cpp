@@ -813,6 +813,10 @@ TempStr GetTempFilePathTemp(Str filePrefix) {
     WCHAR path[MAX_PATH]{};
     WCHAR* filePrefixW = CWStrTemp(filePrefix);
     if (!GetTempFileNameW(tempDir, filePrefixW, 0, path)) {
+        DWORD err = GetLastError();
+        logf("GetTempFilePathTemp: GetTempFileNameW failed tempDir='%s' prefix='%s' lastError=%u\n", WStr(tempDir),
+             filePrefix, err);
+        LogLastError(err);
         return {};
     }
     return ToUtf8Temp(path);
@@ -1276,7 +1280,9 @@ bool Rename(Str newPath, Str oldPath) {
     }
     BOOL ok = MoveFileW(CWStrTemp(oldPath), CWStrTemp(newPath));
     if (!ok) {
-        LogLastError();
+        DWORD err = GetLastError();
+        logf("file::Rename: MoveFileW failed old='%s' new='%s' lastError=%u\n", oldPath, newPath, err);
+        LogLastError(err);
         return false;
     }
     return true;

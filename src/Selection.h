@@ -7,6 +7,8 @@ constexpr int kSelectSmoothScrollSlowDownFactor = 10;
 
 struct Gfx;
 struct WindowTab;
+struct DisplayModel;
+struct RenderedBitmap;
 
 /* Represents selected area on given page */
 struct SelectionOnPage {
@@ -24,6 +26,8 @@ struct SelectionOnPage {
     static Vec<SelectionOnPage>* FromRectangle(DisplayModel* dm, Rect rect);
     static Vec<SelectionOnPage>* FromTextSelect(TextSel* textSel);
 };
+
+RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections);
 
 // default opacity of the selection rectangle when SelectionColor has no alpha
 constexpr u8 kSelectionDefaultAlpha = 0x5f;

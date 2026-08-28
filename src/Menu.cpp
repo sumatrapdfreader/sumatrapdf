@@ -1193,6 +1193,10 @@ static MenuDef menuDefContext[] = {
         CmdCopySelection,
     },
     {
+        _TRN("Search with Google &Lens"),
+        CmdSearchGoogleLens,
+    },
+    {
         _TRN("&Zoom To Selection"),
         CmdZoomToSelection,
     },
