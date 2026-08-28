@@ -57,6 +57,8 @@ static void FreeTaskInfo(TaskInfo* ti) {
 // that are too frequent to log every time.
 constexpr double kSlowTaskDispatchMs = 50.0;
 
+static SeqStrings gSkipLogNames = "TaskFindCountProgress\0CopyProgress\0RenderFinished\0(no kind)\0";
+
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (gExecuteTaskMessage == msg) {
         auto* ti = (TaskInfo*)lp;
@@ -64,17 +66,16 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
         // how long the task waited between Post() and getting here
         double queuedMs = TimeSinceInMs(ti->queueTime);
         Str kindName = kind ? Str(kind) : StrL("(no kind)");
-        bool shouldLog =
-            (kind != nullptr) && !str::Eq(kindName, StrL("RenderFinished")) && !str::Eq(kindName, StrL("CopyProgress"));
+        bool shouldLog = SeqStrIndex(gSkipLogNames, kindName) < 0;
         if (shouldLog) {
-            logf("uitask::WndProcTaskDispatch: will execute '%s', task 0x%p, queued for %.3f ms\n", kindName, (void*)ti,
+            logf("uitask::WndProcTaskDispatch: will execute '%s', 0x%p, queued for %.3f ms\n", kindName, (void*)ti,
                  queuedMs);
         } else if (queuedMs >= kSlowTaskDispatchMs) {
             logf("uitask::WndProcTaskDispatch: slow dispatch of '%s', queued for %.3f ms\n", kindName, queuedMs);
         }
         ti->f.Call();
         if (shouldLog) {
-            logf("uitask::WndProcTaskDispatch: did execute task 0x%p\n", (void*)ti);
+            logf("uitask::WndProcTaskDispatch: did execute 0x%p\n", (void*)ti);
         }
         FreeTaskInfo(ti);
         return 0;
