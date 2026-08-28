@@ -1063,7 +1063,7 @@ bool IsRightDragging(MainWindow* win) {
 // whether the window was destroyed during that pumping. Folding isBeingClosed
 // in here would make CloseWindow abort immediately after setting the flag.
 bool IsMainWindowValid(MainWindow* win) {
-    return win && gWindows.Contains(win);
+    return win && VecContains(gWindows, win);
 }
 
 // True if `win` still exists and CloseWindow has not started. Use this for

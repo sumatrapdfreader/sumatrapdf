@@ -705,7 +705,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
         }
 
         for (DrawInstr& i : *pageInstrs) {
-            if (DrawInstrType::SetFont != i.type || seenFonts.Contains(i.font)) {
+            if (DrawInstrType::SetFont != i.type || VecContains(seenFonts, i.font)) {
                 continue;
             }
             seenFonts.Append(i.font);

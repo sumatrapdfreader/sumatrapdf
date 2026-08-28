@@ -198,7 +198,7 @@ void TabGroupsWnd::DeleteTabGroup(VirtMouseEvent*) {
         return;
     }
     TabGroup* group = (*groups)[sel];
-    groups->Remove(group);
+    VecRemove(*groups, group);
     FreeTabGroup(group);
     SaveSettings();
     PopulateListBox(this);
@@ -279,7 +279,7 @@ static void TeardownTabGroupsWnd(TabGroupsWnd* w) {
     if (!w || VecFind(gTabGroupsWnds, w) < 0) {
         return;
     }
-    gTabGroupsWnds.Remove(w);
+    VecRemove(gTabGroupsWnds, w);
     w->model = nullptr;
     w->ScheduleDelete();
 }

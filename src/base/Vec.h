@@ -52,6 +52,13 @@ bool VecAppendN(Vec<T>& v, const T* src, int count);
 template <typename T>
 int VecFind(const Vec<T>& v, const T& el, int startAt = 0);
 
+template <typename T>
+bool VecContains(const Vec<T>& v, const T& el);
+
+// Remove the first el; returns where it was, or -1 if it wasn't there.
+template <typename T>
+int VecRemove(Vec<T>& v, const T& el);
+
 // Free the storage, leaving the vec empty (len, cap and els all 0).
 template <typename T>
 void VecReset(Vec<T>& v);
@@ -168,26 +175,6 @@ struct Vec {
     T* Take() { return (T*)VecTakeNT(NT(), (int)sizeof(T)); }
 
     T* LendData() const { return els; }
-
-    bool Contains(const T& el) const { return -1 != VecFind(*this, el); }
-
-    // returns position of removed element or -1 if not removed
-    int Remove(const T& el) {
-        int i = VecFind(*this, el);
-        if (i >= 0) {
-            RemoveAt(i);
-        }
-        return i;
-    }
-
-    // returns position of removed element or -1 if not removed
-    int RemoveFast(const T& el) {
-        int i = VecFind(*this, el);
-        if (i >= 0) {
-            RemoveAtFast(i);
-        }
-        return i;
-    }
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
@@ -310,6 +297,20 @@ int VecFind(const Vec<T>& v, const T& el, int startAt) {
         }
     }
     return -1;
+}
+
+template <typename T>
+bool VecContains(const Vec<T>& v, const T& el) {
+    return -1 != VecFind(v, el);
+}
+
+template <typename T>
+int VecRemove(Vec<T>& v, const T& el) {
+    int i = VecFind(v, el);
+    if (i >= 0) {
+        v.RemoveAt(i);
+    }
+    return i;
 }
 
 template <typename T>

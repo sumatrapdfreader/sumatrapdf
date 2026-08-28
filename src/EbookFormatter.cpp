@@ -215,7 +215,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    if (!tagNesting.Contains(Tag_Svg) && Tag_Svg_Image != t->tag) {
+    if (!VecContains(tagNesting, Tag_Svg) && Tag_Svg_Image != t->tag) {
         return;
     }
     AttrInfo* attr = t->GetAttrByNameNS(StrL("href"), StrL("http://www.w3.org/1999/xlink"));
@@ -320,7 +320,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         FlushCurrLine(true);
         HandleAnchorAttr(t);
     } else if (Tag_P == t->tag) {
-        if (!tagNesting.Contains(Tag_Title)) {
+        if (!VecContains(tagNesting, Tag_Title)) {
             HtmlFormatter::HandleHtmlTag(t);
         }
     } else if (Tag_Image == t->tag) {

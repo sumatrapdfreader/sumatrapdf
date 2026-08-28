@@ -768,14 +768,14 @@ static bool KeepOnlyPagesWithAnnotations(EngineBase* engine, Vec<int>& pages) {
     Vec<int> annotationPages;
     for (Annotation* annotation : annotations) {
         int pageNo = PageNo(annotation);
-        if (!annotationPages.Contains(pageNo)) {
+        if (!VecContains(annotationPages, pageNo)) {
             annotationPages.Append(pageNo);
         }
     }
 
     Vec<int> filteredPages;
     for (int pageNo : pages) {
-        if (annotationPages.Contains(pageNo)) {
+        if (VecContains(annotationPages, pageNo)) {
             filteredPages.Append(pageNo);
         }
     }

@@ -1781,7 +1781,7 @@ static BOOL CALLBACK CollectChildHwnds(HWND hwnd, LPARAM lp) {
 // Register `target` on `hwnd` (replacing any existing drop target). Records the
 // window in `registered` on success so it can be revoked later.
 static void RegisterDropOn(HWND hwnd, IDropTarget* target, Vec<HWND>& registered) {
-    if (registered.Contains(hwnd)) {
+    if (VecContains(registered, hwnd)) {
         return;
     }
     RevokeDragDrop(hwnd);

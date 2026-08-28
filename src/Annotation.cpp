@@ -132,7 +132,7 @@ static bool IsAnnotationInEngine(EngineMupdf* e, Annotation* annot) {
     if (!pageInfo) {
         return false;
     }
-    return pageInfo->annotations.Contains(annot) || pageInfo->widgets.Contains(annot);
+    return VecContains(pageInfo->annotations, annot) || VecContains(pageInfo->widgets, annot);
 }
 
 // Safe to call MuPDF with annot->pdfannot.

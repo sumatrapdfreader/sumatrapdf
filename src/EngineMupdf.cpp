@@ -7033,7 +7033,7 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
     // dedupe/cycle-protect via resList, not pdf_mark_obj: marks mutate shared
     // pdf_obj flags, which races with other threads using marks (and would
     // leave objects marked while locks are dropped between pages)
-    if (!res || depth >= 64 || resList.Contains(res)) {
+    if (!res || depth >= 64 || VecContains(resList, res)) {
         return;
     }
     resList.Append(res);
@@ -7041,7 +7041,7 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
     pdf_obj* fonts = pdf_dict_gets(ctx, res, "Font");
     for (int k = 0; k < pdf_dict_len(ctx, fonts); k++) {
         pdf_obj* font = pdf_resolve_indirect(ctx, pdf_dict_get_val(ctx, fonts, k));
-        if (font && !fontList.Contains(font)) {
+        if (font && !VecContains(fontList, font)) {
             fontList.Append(font);
         }
     }
@@ -8489,7 +8489,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
                 continue;
             }
             w->pdfannot = nullptr;
-            pi->annotations.Remove(w);
+            VecRemove(pi->annotations, w);
             deletedOut.Append(w);
         }
 
@@ -8636,7 +8636,7 @@ static void ResyncWrapperList(EngineMupdf* e, int pageNo, Vec<Annotation*>& wrap
         res.Append(w);
     }
     for (Annotation* w : wrappers) {
-        if (!w || res.Contains(w)) {
+        if (!w || VecContains(res, w)) {
             continue;
         }
         // its pdf_annot is gone; the wrapper must not reach MuPDF again
@@ -9110,9 +9110,9 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
 
     if (change == AnnotationChange::Remove) {
         // Markup and form widgets live in separate vectors.
-        int removedPos = pageInfo->annotations.Remove(annot);
+        int removedPos = VecRemove(pageInfo->annotations, annot);
         if (removedPos < 0) {
-            removedPos = pageInfo->widgets.Remove(annot);
+            removedPos = VecRemove(pageInfo->widgets, annot);
         }
         ReportIf(removedPos < 0); // must exist in one of the lists
         ValidateAnnotationsInSync(e, pageInfo);

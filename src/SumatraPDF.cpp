@@ -3359,7 +3359,7 @@ MainWindow* CreateAndShowMainWindow(SessionData* data, bool showWin) {
 }
 
 void DeleteMainWindow(MainWindow* win) {
-    int winIdx = gWindows.Remove(win);
+    int winIdx = VecRemove(gWindows, win);
 
     int nWindowsLeft = len(gWindows);
     logf("DeleteMainWindow: win: 0x%p, hwndFrame: 0x%p, hwndCanvas: 0x%p, winIdx : %d, nWindowsLeft: %d\n", win,
@@ -5612,7 +5612,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
             return;
         }
     } else {
-        ReportIf(gPluginMode && !gWindows.Contains(win));
+        ReportIf(gPluginMode && !VecContains(gWindows, win));
         // RemoveTab no-ops if a nested close already unlinked this tab; do not
         // delete a tab we no longer own.
         if (win->GetTabIdx(tab) < 0) {
@@ -5675,7 +5675,7 @@ bool CanCloseWindow(MainWindow* win) {
         return false;
     }
     // a plugin window should only be closed when its parent is destroyed
-    if (gPluginMode && !gWindows.Contains(win)) {
+    if (gPluginMode && !VecContains(gWindows, win)) {
         return false;
     }
 
@@ -5716,7 +5716,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
 
     // when used as an embedded plugin, closing should happen automatically
     // when the parent window is destroyed (cf. WM_DESTROY)
-    if (gPluginMode && !gWindows.Contains(win) && !forceClose) {
+    if (gPluginMode && !VecContains(gWindows, win) && !forceClose) {
         win->isBeingClosed = false;
         return;
     }
@@ -5802,7 +5802,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
         CloseDocumentInCurrentTab(win, false, false);
         win->isBeingClosed = false;
         HwndSetFocus(win->hwndFrame);
-        ReportIf(!gWindows.Contains(win));
+        ReportIf(!VecContains(gWindows, win));
     } else {
         HWND hwnd = win->hwndFrame;
         DeleteMainWindow(win);

@@ -2488,7 +2488,7 @@ void FreeAllMenuDrawInfos() {
 }
 
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
-    g_menuDrawInfos.Remove(modi);
+    VecRemove(g_menuDrawInfos, modi);
     str::Free(modi->text);
     free(modi);
 }

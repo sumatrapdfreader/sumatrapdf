@@ -1771,7 +1771,7 @@ void ImageEditWindow::OnDestroy(WindowBase::DestroyEvent*) {
     if (destEdit && destEdit->hwnd && gDestEditSubclassId) {
         RemoveWindowSubclass(destEdit->hwnd, WndProcDestEditSubclass, gDestEditSubclassId);
     }
-    gImageEditWindows.Remove(this);
+    VecRemove(gImageEditWindows, this);
     // deleting a window while handling its own message is unsafe;
     // uitask runs after this dispatch finishes
     auto fn = MkFunc0<ImageEditWindow>(DeleteImageEditWindow, this);
@@ -2288,7 +2288,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     }
     HWND hwnd = ew->hwnd;
     if (!hwnd) {
-        gImageEditWindows.Remove(ew);
+        VecRemove(gImageEditWindows, ew);
         delete ew;
         return;
     }

@@ -45,7 +45,7 @@ void VecTest() {
         ints.Append(i);
     }
     utassert(len(ints) == 1000 && ints[500] == 500);
-    ints.Remove(500);
+    VecRemove(ints, 500);
     utassert(len(ints) == 999 && ints[500] == 501);
     last = ints.Pop();
     utassert(last == 999);
@@ -59,7 +59,7 @@ void VecTest() {
         Vec<int> ints2(ints);
         utassert(len(ints2) == 999);
         utassert(ints.LendData() != ints2.LendData());
-        ints.Remove(600);
+        VecRemove(ints, 600);
         utassert(len(ints) < len(ints2));
         ints2 = ints;
         utassert(len(ints2) == 998);
@@ -169,7 +169,7 @@ void VecTest() {
         while (len(v) > 64) {
             size_t pos = rand() % len(v);
             Point* f = v[(int)pos];
-            v.Remove(f);
+            VecRemove(v, f);
             delete f;
         }
         DeleteVecMembers(v);
@@ -182,7 +182,7 @@ void VecTest() {
         v[250] = 5;
         VecReverse(v);
         utassert(len(v) == 501 && v[0] == 4 && v[249] == v[251] && v[250] == 5 && v[500] == 2);
-        v.Remove(4);
+        VecRemove(v, 4);
         VecReverse(v);
         utassert(len(v) == 500 && v[0] == 2 && v[249] == v[251] && v[250] == 5 && v[499] == 4);
     }

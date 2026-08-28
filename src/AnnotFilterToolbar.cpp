@@ -846,7 +846,7 @@ static void DeleteFloatSelected(AnnotFilterWindow* w) {
         return;
     }
     Annotation* keepSelected = tab->selectedAnnotation;
-    if (toDelete.Contains(keepSelected)) {
+    if (VecContains(toDelete, keepSelected)) {
         keepSelected = nullptr;
     }
     for (Annotation* annot : toDelete) {

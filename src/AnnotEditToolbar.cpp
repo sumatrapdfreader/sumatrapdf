@@ -2560,7 +2560,7 @@ static void AddAnnotPage(Vec<int>& pages, int pageNo, int pageCount) {
     if (pageNo < 1 || pageNo > pageCount) {
         return;
     }
-    if (pages.Contains(pageNo)) {
+    if (VecContains(pages, pageNo)) {
         return;
     }
     pages.Append(pageNo);

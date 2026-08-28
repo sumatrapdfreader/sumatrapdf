@@ -521,7 +521,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     // we now find the page and positions in the PDF corresponding to these found records
     int firstPage = UINT_MAX;
     for (PdfsyncPoint& p : points) {
-        if (!found_records.Contains((int)p.record)) {
+        if (!VecContains(found_records, (int)p.record)) {
             continue;
         }
         if (firstPage != UINT_MAX && firstPage != (int)p.page) {

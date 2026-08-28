@@ -975,7 +975,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             isLoader = true;
         } else if (result != pageCache[0]) {
             // keep the list Most Recently Used first
-            pageCache.Remove(result);
+            VecRemove(pageCache, result);
             VecInsertAt(pageCache, 0, result);
         }
 
@@ -1036,7 +1036,7 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
     {
         ScopedRecursiveMutex scope(&cacheLock);
         // pageCache.Remove is a no-op if the page was already evicted earlier
-        pageCache.Remove(page);
+        VecRemove(pageCache, page);
     }
 
     if (newRefs == 0) {

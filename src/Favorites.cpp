@@ -149,7 +149,7 @@ static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
 static FileState* GetByFavorite(Favorite* fn) {
     FileState* ds;
     for (int i = 0; (ds = FileHistoryGet(i)) != nullptr; i++) {
-        if (ds->favorites->Contains(fn)) {
+        if (VecContains(*ds->favorites, fn)) {
             return ds;
         }
     }
@@ -466,7 +466,7 @@ static void RemoveFav(Str filePath, int pageNo) {
         return;
     }
 
-    fav->favorites->Remove(fn);
+    VecRemove(*fav->favorites, fn);
     DeleteFavorite(fn);
 
     if (!SettingsRememberOpenedFiles() && 0 == len(*fav->favorites)) {
@@ -879,7 +879,7 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter) {
             parent->text = str::Dup(baseName);
             parent->fileNameOffset = 0;
             parent->fileNameLen = len(baseName);
-            parent->isExpanded = win->expandedFavorites.Contains(fs);
+            parent->isExpanded = VecContains(win->expandedFavorites, fs);
             for (int j = 0; j < nFavs; j++) {
                 Favorite* fn = (*fs->favorites)[j];
                 auto* ti = new FavTreeItem();

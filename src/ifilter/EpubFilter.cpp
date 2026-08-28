@@ -84,8 +84,8 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
     HtmlToken* t;
     Vec<HtmlTag> tagNesting;
     while ((t = p.Next()) != nullptr && !t->IsError()) {
-        if (t->IsText() && !tagNesting.Contains(Tag_Head) && !tagNesting.Contains(Tag_Script) &&
-            !tagNesting.Contains(Tag_Style)) {
+        if (t->IsText() && !VecContains(tagNesting, Tag_Head) && !VecContains(tagNesting, Tag_Script) &&
+            !VecContains(tagNesting, Tag_Style)) {
             // trim whitespace (TODO: also normalize within text?)
             Str tokText = t->s;
             TrimHtmlTextToken(tokText);
@@ -107,7 +107,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
             // when closing a tag, if the top tag doesn't match but
             // there are only potentially self-closing tags on the
             // stack between the matching tag, we pop all of them
-            if (tagNesting.Contains(t->tag)) {
+            if (VecContains(tagNesting, t->tag)) {
                 while (tagNesting.Last() != t->tag) {
                     tagNesting.Pop();
                 }

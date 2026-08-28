@@ -106,7 +106,7 @@ void DeletePropertiesWindow(HWND hwndParent) {
     }
     // Unregister first so a second closer cannot find this instance and schedule
     // another delete (CloseDocumentInCurrentTab then DeleteMainWindow).
-    gPropertiesWindows.Remove(w);
+    VecRemove(gPropertiesWindows, w);
     if (w->hwnd && IsWindow(w->hwnd)) {
         SavePropertiesWindowPos(w, w->hwnd);
         // Destroy HWND now (sync). Do not use Close()/PostMessage: that left the
@@ -974,7 +974,7 @@ static void OnPropertiesClose(WindowBase::CloseEvent* ev) {
         return;
     }
     SavePropertiesWindowPos(w, w->hwnd);
-    gPropertiesWindows.Remove(w);
+    VecRemove(gPropertiesWindows, w);
     w->ScheduleDelete();
 }
 
@@ -987,7 +987,7 @@ static void OnPropertiesDestroy(WindowBase::DestroyEvent* ev) {
     }
     if (VecFind(gPropertiesWindows, w) >= 0) {
         SavePropertiesWindowPos(w, ev->e->hwnd);
-        gPropertiesWindows.Remove(w);
+        VecRemove(gPropertiesWindows, w);
     }
     w->ScheduleDelete();
 }
@@ -1142,7 +1142,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnPropertiesDestroy);
     wnd->onCommand = MkMethod1<PropertiesWnd, WindowBase::CommandEvent*, &PropertiesWnd::OnCommand>(wnd);
     if (!wnd->Create(parent)) {
-        gPropertiesWindows.Remove(wnd);
+        VecRemove(gPropertiesWindows, wnd);
         delete wnd;
         return;
     }

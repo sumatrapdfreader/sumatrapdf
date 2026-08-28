@@ -63,7 +63,7 @@ void FileHistoryAppend(FileState* fs) {
 // FileState right after; crash 8c7b045cb). It is rebuilt on the next paint
 void FileHistoryRemove(FileState* fs) {
     HomePageInvalidateLayoutCache();
-    gStates->Remove(fs);
+    VecRemove(*gStates, fs);
 }
 
 void FileHistoryClear(bool keepFavorites) {
@@ -111,7 +111,7 @@ FileState* FileHistoryMarkFileLoaded(Str filePath) {
         fs = NewFileState(filePath);
         fs->useDefaultState = true;
     } else {
-        gStates->Remove(fs);
+        VecRemove(*gStates, fs);
         fs->isMissing = false;
     }
     VecInsertAt(*gStates, 0, fs);
@@ -135,7 +135,7 @@ bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
     int newIdx = hide ? INT_MAX : kFileHistoryMaxRecent - 1;
     int idx = VecFind(*gStates, state);
     if (idx < newIdx && state != gStates->Last()) {
-        gStates->Remove(state);
+        VecRemove(*gStates, state);
         if (len(*gStates) <= newIdx) {
             gStates->Append(state);
         } else {

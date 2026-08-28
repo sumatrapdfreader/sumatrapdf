@@ -155,7 +155,7 @@ void RemoveTab(WindowTab* tab) {
         return;
     }
     UpdateTabFileDisplayStateForTab(tab);
-    win->tabSelectionHistory->Remove(tab);
+    VecRemove(*win->tabSelectionHistory, tab);
     WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
     ReportIf(tab != tab2);
     bool closedCurrentTab = (tab == win->CurrentTab());
@@ -728,7 +728,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
     VerifyWindowTab(win, tab);
 
     // update the selection history
-    win->tabSelectionHistory->Remove(tab);
+    VecRemove(*win->tabSelectionHistory, tab);
     win->tabSelectionHistory->Append(tab);
 }
 

@@ -341,7 +341,7 @@ void SetHotkeyWnd::DoRemove(VirtMouseEvent*) {
 
     Shortcut* sc = FindScreenshotShortcutEntry();
     if (sc) {
-        gSettings->shortcuts->Remove(sc);
+        VecRemove(*gSettings->shortcuts, sc);
     }
     auto* curr = gFirstCustomCommand;
     while (curr) {

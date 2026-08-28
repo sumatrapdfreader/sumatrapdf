@@ -712,7 +712,7 @@ next:
 
 static void SetInitialExpandState(TocItem* item, Vec<int>& tocState) {
     while (item) {
-        item->isOpenToggled = tocState.Contains(item->id);
+        item->isOpenToggled = VecContains(tocState, item->id);
         SetInitialExpandState(item->child, tocState);
         item = item->next;
     }
