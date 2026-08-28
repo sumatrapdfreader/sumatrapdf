@@ -1912,11 +1912,6 @@ char str::Builder::RemoveLast() {
     return RemoveAt(len - 1);
 }
 
-char& str::Builder::Last() const {
-    ReportIf(0 == len);
-    return els[len - 1];
-}
-
 // perf hack for using as a buffer: client can get accumulated data
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases

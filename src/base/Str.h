@@ -263,7 +263,6 @@ struct Builder {
     bool Append(Str src);
     char RemoveAt(int idx, int count = 1);
     char RemoveLast();
-    char& Last() const;
     Str TakeStr();
     char LastChar() const;
 

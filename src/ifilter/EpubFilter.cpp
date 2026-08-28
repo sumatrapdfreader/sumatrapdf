@@ -100,7 +100,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
                 tagNesting.Append(t->tag);
             }
         } else if (t->IsEndTag()) {
-            if (!IsInlineTag(t->tag) && len(text) > 0 && text.Last() == ' ') {
+            if (!IsInlineTag(t->tag) && text.LastChar() == ' ') {
                 text.RemoveLast();
                 text.Append(StrL("\r\n"));
             }
