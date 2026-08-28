@@ -1308,23 +1308,6 @@ static void SetDevModeCopies(HGLOBAL hDevMode, short copies) {
     }
 }
 
-/* Show Print Dialog box to allow user to select the printer
-and the pages to print.
-
-For reference: In order to print with Adobe Reader instead: ViewWithAcrobat(win, L"/P");
-
-Note: The following only applies for printing as image
-
-Creates a new dummy page for each page with a large zoom factor,
-and then uses StretchDIBits to copy this to the printer's dc.
-
-So far have tested printing from XP to
- - Acrobat Professional 6 (note that acrobat is usually set to
-   downgrade the resolution of its bitmaps to 150dpi)
- - HP Laserjet 2300d
- - HP Deskjet D4160
- - Lexmark Z515 inkjet, which should cover most bases.
-*/
 enum {
     MAXPAGERANGES = 10
 };
