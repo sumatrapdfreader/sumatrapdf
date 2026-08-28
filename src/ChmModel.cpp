@@ -854,7 +854,7 @@ TocTree* ChmModel::GetToc() {
         // append the item at the correct level
         ReportIf(ti.level < 1);
         if (ti.level <= len(levels)) {
-            VecRemoveAt(levels, ti.level, len(levels) - ti.level);
+            VecRemoveAtN(levels, ti.level, len(levels) - ti.level);
             VecLast(levels)->AddSiblingAtEnd(item);
         } else {
             *nextChild = item;

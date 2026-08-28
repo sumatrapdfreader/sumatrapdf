@@ -969,7 +969,7 @@ static TocTree* BuildTocTreeFromTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
         TocItem* item = NewMarkdownTocItem(nullptr, ti.title, ti.pageNo, ti.url);
         item->id = ++idCounter;
         if (ti.level <= len(levels)) {
-            VecRemoveAt(levels, ti.level, len(levels) - ti.level);
+            VecRemoveAtN(levels, ti.level, len(levels) - ti.level);
             VecLast(levels)->AddSiblingAtEnd(item);
         } else {
             *nextChild = item;

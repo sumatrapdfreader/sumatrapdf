@@ -2465,8 +2465,8 @@ static TocItem* BuildCbxFolderToc(const Vec<Archive::FileInfo*>& files) {
         while (match < len(stack) && (common + match) < nDir && str::Eq(stackNames[match], parts[common + match])) {
             match++;
         }
-        VecRemoveAt(stack, match, len(stack) - match);
-        VecRemoveAt(stackNames, match, len(stackNames) - match);
+        VecRemoveAtN(stack, match, len(stack) - match);
+        VecRemoveAtN(stackNames, match, len(stackNames) - match);
 
         for (int k = common + match; k < nDir; k++) {
             TocItem* parent = len(stack) == 0 ? realRoot : VecLast(stack);

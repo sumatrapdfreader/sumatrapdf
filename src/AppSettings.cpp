@@ -403,7 +403,7 @@ bool LoadSettings() {
     // make sure that zoom levels are in the order expected by DisplayModel
     VecSort(*gprefs->zoomLevels, cmpFloat);
     while (len(*gprefs->zoomLevels) > 0 && (*gprefs->zoomLevels)[0] < kZoomMin) {
-        VecPopAt(*gprefs->zoomLevels, 0);
+        VecRemoveAt(*gprefs->zoomLevels, 0);
     }
     while (len(*gprefs->zoomLevels) > 0 && VecLast(*gprefs->zoomLevels) > kZoomMaxAllowed) {
         VecPop(*gprefs->zoomLevels);

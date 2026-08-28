@@ -2850,7 +2850,7 @@ void DisplayModel::AddNavPoint(bool rememberZoom) {
     }
     // remove the current and all Forward history entries
     if (navHistoryIdx < len(navHistory)) {
-        VecRemoveAt(navHistory, navHistoryIdx, len(navHistory) - navHistoryIdx);
+        VecRemoveAtN(navHistory, navHistoryIdx, len(navHistory) - navHistoryIdx);
     }
     // don't add another entry for the exact same position
     if (navHistoryIdx > 0 && ss == navHistory[navHistoryIdx - 1]) {
@@ -2859,7 +2859,7 @@ void DisplayModel::AddNavPoint(bool rememberZoom) {
     // make sure that the history doesn't grow overly large
     if (navHistoryIdx >= kMaxNavHistoryLen) {
         ReportIf(navHistoryIdx > kMaxNavHistoryLen);
-        VecRemoveAt(navHistory, 0, navHistoryIdx - kMaxNavHistoryLen + 1);
+        VecRemoveAtN(navHistory, 0, navHistoryIdx - kMaxNavHistoryLen + 1);
         navHistoryIdx = kMaxNavHistoryLen - 1;
     }
     // add a new Back history entry

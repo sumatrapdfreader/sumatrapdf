@@ -113,7 +113,17 @@ bool VecInsertAt(Vec<T>& v, int idx, const VecIdentityT<T>& el);
 
 // Remove count elements at idx, moving the rest down.
 template <typename T>
-void VecRemoveAt(Vec<T>& v, int idx, int count = 1);
+void VecRemoveAtN(Vec<T>& v, int idx, int count);
+
+// Remove the element at idx.
+template <typename T>
+void VecRemoveAt(Vec<T>& v, int idx);
+
+// Same, but hands the element back. Both exist because most removals throw the
+// element away, and for those VecRemoveAt() avoids copying it out first --
+// which for a big element type is the whole cost of the call.
+template <typename T>
+T VecPopAt(Vec<T>& v, int idx);
 
 // Cheaper RemoveAt: fills the hole with the last element, so the order changes.
 // Only for elements that can be moved with memcpy().
@@ -132,12 +142,9 @@ T& VecLast(const Vec<T>& v);
 template <typename T>
 void VecRemoveLast(Vec<T>& v);
 
-// Remove and return the last element (or the one at idx).
+// Remove and return the last element.
 template <typename T>
 T VecPop(Vec<T>& v);
-
-template <typename T>
-T VecPopAt(Vec<T>& v, int idx);
 
 template <typename T>
 struct Vec {
@@ -321,8 +328,21 @@ T* VecData(const Vec<T>& v) {
 }
 
 template <typename T>
-void VecRemoveAt(Vec<T>& v, int idx, int count) {
+void VecRemoveAtN(Vec<T>& v, int idx, int count) {
     VecRemoveAtNT(VecNT(v), (int)sizeof(T), idx, count);
+}
+
+template <typename T>
+void VecRemoveAt(Vec<T>& v, int idx) {
+    VecRemoveAtN(v, idx, 1);
+}
+
+template <typename T>
+T VecPopAt(Vec<T>& v, int idx) {
+    ReportIf(idx >= v.len);
+    T el = v.els[idx];
+    VecRemoveAtN(v, idx, 1);
+    return el;
 }
 
 template <typename T>
@@ -354,14 +374,6 @@ T VecPop(Vec<T>& v) {
     ReportIf(0 == v.len);
     T el = v.els[v.len - 1];
     VecRemoveAtFast(v, v.len - 1);
-    return el;
-}
-
-template <typename T>
-T VecPopAt(Vec<T>& v, int idx) {
-    ReportIf(idx >= v.len);
-    T el = v.els[idx];
-    VecRemoveAt(v, idx);
     return el;
 }
 
