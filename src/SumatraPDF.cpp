@@ -10640,8 +10640,10 @@ void LaunchDocumentation(Str docURI) {
         args.backgroundColor = ThemeWindowBackgroundColor();
         gManualBrowserWindow = SimpleBrowserWindowCreate(args);
         if (gManualBrowserWindow != nullptr) {
-            gManualBrowserWindow->closeOnEsc = gGlobalPrefs->escToExit;
-            // F1 opened it, F1 dismisses it (issue #6084)
+            // No closeOnEsc, not even with EscToExit: the page uses Esc to
+            // dismiss its own UI (Ctrl+K search), and we get the key first, so
+            // closing here means that UI can never see it (issues #5942, #6084).
+            // F1 opened the window and F1 dismisses it, Ctrl+W too.
             gManualBrowserWindow->closeOnF1 = true;
             gManualBrowserWindow->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnCloseManualBrowserWindow);
             gManualBrowserWindow->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroyManualBrowserWindow);
