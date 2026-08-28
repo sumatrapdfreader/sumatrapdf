@@ -22,14 +22,23 @@
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 
+static bool gCodexExecutableSearched = false;
+static Str gCodexExecutablePath;
+
 static TempStr FindCodexExecutableTemp() {
+    if (gCodexExecutableSearched) {
+        return gCodexExecutablePath;
+    }
+    gCodexExecutableSearched = true;
+
     StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
         candidates.Append(fmt("%s\\.codex\\bin\\codex.exe", userProfile));
         candidates.Append(fmt("%s\\.local\\bin\\codex.exe", userProfile));
     }
-    return AIChatFindExecutableTemp(candidates, WStr(L"codex.exe"), WStr(L"codex"));
+    gCodexExecutablePath = str::Dup(AIChatFindExecutableTemp(candidates, WStr(L"codex.exe"), WStr(L"codex")));
+    return gCodexExecutablePath;
 }
 
 bool IsCodexBuildInstalled() {

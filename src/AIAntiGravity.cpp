@@ -21,7 +21,15 @@
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 
+static bool gAntiGravityExecutableSearched = false;
+static Str gAntiGravityExecutablePath;
+
 static TempStr FindAntiGravityExecutableTemp() {
+    if (gAntiGravityExecutableSearched) {
+        return gAntiGravityExecutablePath;
+    }
+    gAntiGravityExecutableSearched = true;
+
     StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
@@ -41,7 +49,8 @@ static TempStr FindAntiGravityExecutableTemp() {
     TempStr res = AIChatFindExecutableTemp(candidates, WStr(L"antigravity.exe"), WStr(L"antigravity"));
     if (res) {
         logf("FindAntiGravityExecutableTemp: found %s\n", res);
-        return res;
+        gAntiGravityExecutablePath = str::Dup(res);
+        return gAntiGravityExecutablePath;
     }
     res = AIChatFindExecutableTemp(candidates, WStr(L"agy.exe"), WStr(L"agy"));
     if (res) {
@@ -49,7 +58,8 @@ static TempStr FindAntiGravityExecutableTemp() {
     } else {
         logf("FindAntiGravityExecutableTemp: not found\n");
     }
-    return res;
+    gAntiGravityExecutablePath = str::Dup(res);
+    return gAntiGravityExecutablePath;
 }
 
 bool IsAntiGravityInstalled() {

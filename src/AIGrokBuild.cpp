@@ -21,14 +21,23 @@
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 
+static bool gGrokExecutableSearched = false;
+static Str gGrokExecutablePath;
+
 static TempStr FindGrokExecutableTemp() {
+    if (gGrokExecutableSearched) {
+        return gGrokExecutablePath;
+    }
+    gGrokExecutableSearched = true;
+
     StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
         candidates.Append(fmt("%s\\.grok\\bin\\grok.exe", userProfile));
         candidates.Append(fmt("%s\\.local\\bin\\grok.exe", userProfile));
     }
-    return AIChatFindExecutableTemp(candidates, WStr(L"grok.exe"), WStr(L"grok"));
+    gGrokExecutablePath = str::Dup(AIChatFindExecutableTemp(candidates, WStr(L"grok.exe"), WStr(L"grok")));
+    return gGrokExecutablePath;
 }
 
 bool IsGrokBuildInstalled() {

@@ -21,7 +21,15 @@
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 
+static bool gClaudeExecutableSearched = false;
+static Str gClaudeExecutablePath;
+
 static TempStr FindClaudeExecutableTemp() {
+    if (gClaudeExecutableSearched) {
+        return gClaudeExecutablePath;
+    }
+    gClaudeExecutableSearched = true;
+
     StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
@@ -29,7 +37,8 @@ static TempStr FindClaudeExecutableTemp() {
         candidates.Append(fmt("%s\\AppData\\Local\\Programs\\claude-code\\claude.exe", userProfile));
         candidates.Append(fmt("%s\\AppData\\Roaming\\npm\\claude.cmd", userProfile));
     }
-    return AIChatFindExecutableTemp(candidates, WStr(L"claude.exe"), WStr(L"claude"));
+    gClaudeExecutablePath = str::Dup(AIChatFindExecutableTemp(candidates, WStr(L"claude.exe"), WStr(L"claude")));
+    return gClaudeExecutablePath;
 }
 
 // the providers (implemented in AIClaudeCode.cpp, AIGrokBuild.cpp, AICodexBuild.cpp)
