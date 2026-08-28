@@ -35,11 +35,14 @@ constexpr int kThumbnailNavigationMaxCols = 6;
 constexpr int kThumbnailRenderScreens = 1;
 constexpr int kThumbnailKeepScreens = 2;
 
+// stored in ThumbnailNavigationCache::thumbnails for a page the engine failed
+// to render, so that following render passes don't keep retrying it
+static Pixmap* const kThumbnailFailedToRender = (Pixmap*)(intptr_t)-1;
+
 struct ThumbnailNavigationCache {
+    // null for a page not rendered yet, kThumbnailFailedToRender for one that
+    // can't be rendered
     Vec<Pixmap*> thumbnails;
-    // 1 for a page that was handed to the renderer, so that a page the engine
-    // fails to render isn't retried by every following render pass
-    Vec<char> rendered;
     HWND hwnd = nullptr;
     AtomicInt cancelRendering = 0;
     int pageCount = 0;
@@ -77,12 +80,23 @@ static const WCHAR* kThumbnailNavigationClassName = L"SumatraPDF_ThumbnailNaviga
 
 static void StartThumbnailRendering(ThumbnailNavigationState* state);
 
+static void FreeThumbnail(Pixmap* thumbnail) {
+    if (thumbnail != kThumbnailFailedToRender) {
+        FreePixmap(thumbnail);
+    }
+}
+
+// the thumbnail to draw for a page, null if there isn't one to draw
+static Pixmap* ThumbnailToDraw(ThumbnailNavigationCache* cache, int idx) {
+    Pixmap* thumbnail = cache->thumbnails[idx];
+    return thumbnail == kThumbnailFailedToRender ? nullptr : thumbnail;
+}
+
 static void DeleteThumbnailNavigationCache(ThumbnailNavigationCache* cache) {
-    for (Pixmap* bitmap : cache->thumbnails) {
-        FreePixmap(bitmap);
+    for (Pixmap* thumbnail : cache->thumbnails) {
+        FreeThumbnail(thumbnail);
     }
     cache->thumbnails.Reset();
-    cache->rendered.Reset();
     delete cache;
 }
 
@@ -128,14 +142,15 @@ static void FinishThumbnailRender(ThumbnailRenderTask* task) {
     int idx = task->pageNo - 1;
     bool isValid = !cache->deleteWhenWorkerFinishes && idx >= 0 && idx < cache->thumbnails.len;
     if (isValid) {
-        cache->rendered[idx] = 1;
         if (task->bitmap) {
-            FreePixmap(cache->thumbnails[idx]);
+            FreeThumbnail(cache->thumbnails[idx]);
             cache->thumbnails[idx] = task->bitmap;
             task->bitmap = nullptr;
             if (cache->hwnd) {
                 InvalidateRect(cache->hwnd, nullptr, FALSE);
             }
+        } else if (!cache->thumbnails[idx]) {
+            cache->thumbnails[idx] = kThumbnailFailedToRender;
         }
     }
     FreePixmap(task->bitmap);
@@ -323,8 +338,8 @@ static void PaintThumbnailNavigation(ThumbnailNavigationState* state, HDC hdc) {
         HBRUSH pageBrush = CreateSolidBrush(RGB(255, 255, 255));
         FillRect(buffer, &cell, pageBrush);
         DeleteObject(pageBrush);
-        if (state->cache->thumbnails[index]) {
-            Pixmap* thumbnail = state->cache->thumbnails[index];
+        Pixmap* thumbnail = ThumbnailToDraw(state->cache, index);
+        if (thumbnail) {
             int drawDx = std::min(thumbnail->width, state->thumbDx);
             int drawDy = std::min(thumbnail->height, state->thumbDy);
             Rect target{x + (state->thumbDx - drawDx) / 2, y + (state->thumbDy - drawDy) / 2, drawDx, drawDy};
@@ -537,26 +552,25 @@ static void StartThumbnailRendering(ThumbnailNavigationState* state) {
     for (int idx = 0; idx < cache->thumbnails.len; idx++) {
         int pageNo = idx + 1;
         if (cache->thumbnails[idx] && (pageNo < keepFirst || pageNo > keepLast)) {
-            FreePixmap(cache->thumbnails[idx]);
+            FreeThumbnail(cache->thumbnails[idx]);
             cache->thumbnails[idx] = nullptr;
-            cache->rendered[idx] = 0;
         }
     }
 
     auto* worker = new ThumbnailRenderWorker;
     // visible pages first, then the rows just off-screen in either direction
     for (int pageNo = firstVisible; pageNo <= lastVisible; pageNo++) {
-        if (!cache->rendered[pageNo - 1]) {
+        if (!cache->thumbnails[pageNo - 1]) {
             worker->pages.Append(pageNo);
         }
     }
     for (int pageNo = firstPage; pageNo < firstVisible; pageNo++) {
-        if (!cache->rendered[pageNo - 1]) {
+        if (!cache->thumbnails[pageNo - 1]) {
             worker->pages.Append(pageNo);
         }
     }
     for (int pageNo = lastVisible + 1; pageNo <= lastPage; pageNo++) {
-        if (!cache->rendered[pageNo - 1]) {
+        if (!cache->thumbnails[pageNo - 1]) {
             worker->pages.Append(pageNo);
         }
     }
@@ -628,7 +642,6 @@ void ShowThumbnailNavigation(MainWindow* win) {
         cache->thumbDx = thumbDx;
         cache->thumbDy = thumbDy;
         cache->thumbnails.AppendBlanks(pageCount);
-        cache->rendered.AppendBlanks(pageCount);
         tab->thumbnailNavigationCache = cache;
     }
 
