@@ -157,6 +157,11 @@ class EngineImages : public EngineBase {
     // GDI+ path) for cases mupdf can't handle -- e.g. multi-frame TIFFs.
     virtual fz_image* LoadFzImageForPage(fz_context* ctx, int pageNo);
     virtual RectF LoadMediabox(int pageNo) = 0;
+    // Takes over the mediaboxes src has already loaded. On an archive-backed
+    // engine each one costs an archive open plus a partial extract of the
+    // entry, so a clone that starts empty repeats all of that work. Call from
+    // Clone() right after creating the copy.
+    void CopyMediaboxesFrom(EngineImages* src);
     // Returns a non-owning view into engine-owned storage; the caller must
     // not free. Bytes stay valid until the engine is destroyed.
     virtual Str GetImageData(int pageNo) = 0;
@@ -341,10 +346,29 @@ RectF EngineImages::PageMediabox(int pageNo) {
     int n = pageNo - 1;
     ImagePageInfo* pi = pageInfos[n];
     if (pi->state == PageInfoState::Unknown) {
-        pi->mediabox = LoadMediabox(pageNo);
+        RectF mediabox = LoadMediabox(pageNo);
+        // store the box before flipping state: CopyMediaboxesFrom reads these
+        // from a clone being created on a render thread, and must never see
+        // Known paired with an unwritten mediabox
+        pi->mediabox = mediabox;
         pi->state = PageInfoState::Known;
     }
     return pi->mediabox;
+}
+
+void EngineImages::CopyMediaboxesFrom(EngineImages* src) {
+    if (!src || pageCount != src->pageCount) {
+        // different documents: the file changed on disk between the two opens
+        return;
+    }
+    for (int i = 0; i < pageCount; i++) {
+        ImagePageInfo* from = src->pageInfos[i];
+        if (from->state != PageInfoState::Known) {
+            continue;
+        }
+        pageInfos[i]->mediabox = from->mediabox;
+        pageInfos[i]->state = PageInfoState::Known;
+    }
 }
 
 static Pixmap* FzPixmapToPixmap(fz_context* ctx, fz_pixmap* pixmap) {
@@ -2294,24 +2318,28 @@ EngineCbx::~EngineCbx() {
 }
 
 EngineBase* EngineCbx::Clone() {
+    EngineBase* clone = nullptr;
+    Str path = FilePath();
     if (sourceData) {
-        auto* clone = CreateFromData(sourceData);
+        clone = CreateFromData(sourceData);
         if (!clone) {
             log(StrL("EngineCbx::Clone() failed: CreateFromData() failed\n"));
         }
-        return clone;
-    }
-    Str path = FilePath();
-    if (path) {
+    } else if (path) {
         // keep the cached-local-copy in play on the clone too
-        auto* clone = CreateFromFile(path, {}, nullptr, nullptr, FileType::Unknown, physicalPath);
+        clone = CreateFromFile(path, {}, nullptr, nullptr, FileType::Unknown, physicalPath);
         if (!clone) {
             logf("EngineCbx::Clone() failed: CreateFromFile('%s') failed\n", path);
         }
-        return clone;
+    } else {
+        logf("EngineCbx::Clone() failed: no stream or file path\n");
     }
-    logf("EngineCbx::Clone() failed: no stream or file path\n");
-    return nullptr;
+    if (clone) {
+        // a mediabox costs an archive open + partial extract here, so hand the
+        // clone the ones we have instead of making it load them all again
+        ((EngineImages*)clone)->CopyMediaboxesFrom(this);
+    }
+    return clone;
 }
 
 bool EngineCbx::LoadFromFile(Str file) {
