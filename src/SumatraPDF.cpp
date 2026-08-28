@@ -2341,6 +2341,10 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // if find is still open. Must run after win->ctrl points at the new document.
     InvalidateFindForDocumentChange(win);
 
+    // Thumbnails were rendered from the previous engine and are indexed by its
+    // page count. Same reason as above: must run after tab->ctrl is the new one
+    FreeThumbnailNavigationCache(tab);
+
     EngineBase* engine = tab->GetEngine();
     if (engine) {
         engine->hideAnnotations = tab->hideAnnotations;
