@@ -1241,6 +1241,59 @@ bool SkipChar(Str& s, char toSkip) {
     return i > 0;
 }
 
+// advances s past its leading whitespace; returns how many chars were skipped
+int SkipWs(Str& s) {
+    int i = 0;
+    while (i < s.len && IsWs(s.s[i])) {
+        i++;
+    }
+    s.s += i;
+    s.len -= i;
+    return i;
+}
+
+// advances s past its leading non-whitespace; returns how many chars were skipped
+int SkipNonWs(Str& s) {
+    int i = 0;
+    while (i < s.len && !IsWs(s.s[i])) {
+        i++;
+    }
+    s.s += i;
+    s.len -= i;
+    return i;
+}
+
+// eats leading whitespace and the word (run of non-whitespace) after it,
+// returning the word. Returns {} when only whitespace is left, so:
+//   while (Str word = str::NextWord(s)) { ... }
+// walks the words of s.
+Str NextWord(Str& s) {
+    SkipWs(s);
+    Str word = s;
+    word.len = SkipNonWs(s);
+    if (word.len == 0) {
+        return {};
+    }
+    return word;
+}
+
+// the part of s without its leading / trailing whitespace. Unlike
+// TrimWSInPlace() this only narrows the view, so s can be read-only
+Str TrimWs(Str s, TrimOpt opt) {
+    if (IsNull(s)) {
+        return s;
+    }
+    if (opt != TrimOpt::Right) {
+        SkipWs(s);
+    }
+    if (opt != TrimOpt::Left) {
+        while (s.len > 0 && IsWs(s.s[s.len - 1])) {
+            s.len--;
+        }
+    }
+    return s;
+}
+
 } // namespace str
 
 namespace url {
@@ -3009,31 +3062,14 @@ void FormatSizeHumanIntoWBuf(u64 size, WStr wbuf) {
     wbuf.s[i] = 0;
 }
 
-static bool IsWhitespace(char c) {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
 void SplitStrByWhitespace(Arena* arena, const Str& s, VecStr& vecOut) {
     vecOut.len = 0;
     vecOut.cap = 0;
     vecOut.els = nullptr;
 
-    int i = 0;
-    while (i < s.len) {
-        // Skip whitespace
-        while (i < s.len && IsWhitespace(s.s[i])) {
-            i++;
-        }
-        if (i >= s.len) break;
-
-        // Find end of token
-        int start = i;
-        while (i < s.len && !IsWhitespace(s.s[i])) {
-            i++;
-        }
-
-        // Add token (points into original string, no allocation)
-        Str token(s.s + start, i - start);
+    Str rest = s;
+    // the tokens point into the original string, no allocation
+    while (Str token = str::NextWord(rest)) {
         VecPush(arena, vecOut, token);
     }
 }

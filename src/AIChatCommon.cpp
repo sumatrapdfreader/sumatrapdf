@@ -298,14 +298,10 @@ void AIChatAppendModelUnique(StrVec& models, Str model) {
         return;
     }
     TempStr norm = str::DupTemp(model);
-    int start = 0;
-    while (start < norm.len && str::IsWs(norm.s[start])) {
-        start++;
-    }
-    if (start >= norm.len) {
+    str::SkipWs(norm);
+    if (norm.len == 0) {
         return;
     }
-    norm = Str(norm.s + start, norm.len - start);
     str::ToLowerInPlace(norm);
     for (int i = 0; i < len(models); i++) {
         if (str::EqI(models[i], norm)) {

@@ -170,16 +170,6 @@ static SeqStrNum gVirtKeysNum =
 // #define VK_NONAME         0xFC
 // #define VK_PA1            0xFD
 
-static void skipWS(Str& s) {
-    while (len(s) > 0) {
-        if (!str::IsWs(*s.s)) {
-            return;
-        }
-        s.s++;
-        s.len--;
-    }
-}
-
 static void skipPlusOrMinus(Str& s) {
     if (len(s) > 0 && *s.s == '+') {
         s.s++;
@@ -199,9 +189,9 @@ static bool skipVirtKey(Str& s, Str key) {
     }
     s.s += key.len;
     s.len -= key.len;
-    skipWS(s);
+    str::SkipWs(s);
     skipPlusOrMinus(s);
-    skipWS(s);
+    str::SkipWs(s);
     return true;
 }
 
@@ -228,7 +218,7 @@ static bool ParseShortcut(Str shortcut, ACCEL& accel) {
     BYTE fVirt = 0;
 
 again:
-    skipWS(cursor);
+    str::SkipWs(cursor);
     // before "alt": "AltGr + Return" would otherwise match "alt" and leave "Gr"
     if (skipVirtKey(cursor, StrL("altgr")) || skipVirtKey(cursor, StrL("ralt")) ||
         skipVirtKey(cursor, StrL("rightalt"))) {

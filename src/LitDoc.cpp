@@ -1478,11 +1478,7 @@ static Str LitUnBinary(LitFile* lit, Str bin, Str path, bool isHtml, LitAtoms* a
         return {};
     }
     Str raw = ToStrTemp(ctx.out);
-    // strip leading whitespace
-    while (len(raw) > 0 && str::IsWs(raw.s[0])) {
-        raw.s++;
-        raw.len--;
-    }
+    str::SkipWs(raw); // strip leading whitespace
     return LitEscapeReserved(raw);
 }
 

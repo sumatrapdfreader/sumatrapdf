@@ -29,10 +29,8 @@ namespace json {
 constexpr int kParseFail = -1;
 
 static inline int SkipWS(Str data, int off) {
-    while (off < data.len && str::IsWs(data.s[off])) {
-        off++;
-    }
-    return off;
+    Str s = Str(data.s + off, data.len - off);
+    return off + str::SkipWs(s);
 }
 
 static inline int SkipDigits(Str data, int off) {

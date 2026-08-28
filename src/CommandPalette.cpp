@@ -78,11 +78,8 @@ Str CommandPaletteSkipWS(Str s) {
     if (!s.s) {
         return {};
     }
-    int off = 0;
-    while (off < s.len && str::IsWs(s.s[off])) {
-        off++;
-    }
-    return Str(s.s + off, s.len - off);
+    str::SkipWs(s);
+    return s;
 }
 
 CommandPaletteWnd* gCommandPaletteWnd = nullptr;

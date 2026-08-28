@@ -119,20 +119,18 @@ bool SkipUntil(Str s, int& off, Str term) {
 
 // return true if skipped
 bool SkipWs(Str s, int& off) {
-    int start = off;
-    while (off < s.len && str::IsWs(s.s[off])) {
-        ++off;
-    }
-    return start != off;
+    Str rest = Str(s.s + off, s.len - off);
+    int n = str::SkipWs(rest);
+    off += n;
+    return n > 0;
 }
 
 // return true if skipped
 bool SkipNonWs(Str s, int& off) {
-    int start = off;
-    while (off < s.len && !str::IsWs(s.s[off])) {
-        ++off;
-    }
-    return start != off;
+    Str rest = Str(s.s + off, s.len - off);
+    int n = str::SkipNonWs(rest);
+    off += n;
+    return n > 0;
 }
 
 static bool IsNameChar(char c) {

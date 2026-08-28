@@ -140,6 +140,10 @@ int CmpI(Str a, Str b);
 
 bool IsEmptyOrWhiteSpace(Str s);
 bool SkipChar(Str& s, char toSkip);
+int SkipWs(Str& s);
+int SkipNonWs(Str& s);
+Str NextWord(Str& s);
+Str TrimWs(Str s, TrimOpt opt = TrimOpt::Both);
 
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
 

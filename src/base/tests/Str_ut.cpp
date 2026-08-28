@@ -562,6 +562,38 @@ static void StrCutTest() {
     utassert(str::Eq(before, StrL("a")) && str::Eq(after, StrL("b::c")));
 }
 
+static void StrSkipWsTest() {
+    // SkipWs / SkipNonWs eat from the front and report how much they ate
+    Str s = StrL("  \t ab c");
+    utassert(str::SkipWs(s) == 4 && str::Eq(s, StrL("ab c")));
+    utassert(str::SkipWs(s) == 0 && str::Eq(s, StrL("ab c")));
+    utassert(str::SkipNonWs(s) == 2 && str::Eq(s, StrL(" c")));
+
+    s = StrL("   ");
+    utassert(str::SkipWs(s) == 3 && len(s) == 0);
+    s = StrL("");
+    utassert(str::SkipWs(s) == 0 && str::SkipNonWs(s) == 0);
+
+    // NextWord walks the whitespace-separated words
+    Str rest = StrL("  one\ttwo\r\nthree  ");
+    utassert(str::Eq(str::NextWord(rest), StrL("one")));
+    utassert(str::Eq(str::NextWord(rest), StrL("two")));
+    utassert(str::Eq(str::NextWord(rest), StrL("three")));
+    utassert(!str::NextWord(rest));
+
+    rest = StrL(" \t ");
+    utassert(!str::NextWord(rest));
+
+    // TrimWs only narrows the view, the string itself isn't touched
+    Str orig = StrL(" \t a b \n");
+    utassert(str::Eq(str::TrimWs(orig), StrL("a b")));
+    utassert(str::Eq(str::TrimWs(orig, str::TrimOpt::Left), StrL("a b \n")));
+    utassert(str::Eq(str::TrimWs(orig, str::TrimOpt::Right), StrL(" \t a b")));
+    utassert(len(orig) == 8);
+    utassert(len(str::TrimWs(StrL("  "))) == 0);
+    utassert(str::IsNull(str::TrimWs(Str{})));
+}
+
 static void StrNextLineTest() {
     Str line, rest;
 
@@ -1138,6 +1170,7 @@ void StrTest() {
     StrFindITest();
     StrCutTest();
     StrNextLineTest();
+    StrSkipWsTest();
     StrStartsWithTest();
     // ParseUntilTest();
 }

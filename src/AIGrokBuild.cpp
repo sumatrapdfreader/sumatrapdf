@@ -70,13 +70,8 @@ static bool ParseGrokModelsOutput(Str output, StrVec& models) {
         if (!inModels || !str::TrimPrefix(trimmed, StrL("* "))) {
             continue;
         }
-        Str model = trimmed;
-        for (int i = 0; i < model.len; i++) {
-            if (str::IsWs(model.s[i])) {
-                model.len = i;
-                break;
-            }
-        }
+        Str rest2 = trimmed;
+        Str model = str::NextWord(rest2);
         AIChatAppendModelUnique(models, model);
     }
     return len(models) > 0;

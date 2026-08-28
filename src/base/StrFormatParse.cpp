@@ -611,10 +611,8 @@ static bool ParseULongAt(Str& s, int base, unsigned long* val) {
         return false;
     }
     unsigned long v = 0;
+    str::SkipWs(s);
     int i = 0;
-    while (i < s.len && str::IsWs(s.s[i])) {
-        i++;
-    }
     if (base == 16 && i + 1 < s.len && s.s[i] == '0' && (s.s[i + 1] == 'x' || s.s[i + 1] == 'X')) {
         i += 2;
     }
@@ -646,22 +644,16 @@ static bool ParseLongAt(Str& s, int base, long* val) {
     if (s.len <= 0) {
         return false;
     }
-    bool neg = false;
-    int i = 0;
-    while (i < s.len && str::IsWs(s.s[i])) {
-        i++;
-    }
-    if (i >= s.len) {
+    Str rest = s;
+    str::SkipWs(rest);
+    if (rest.len <= 0) {
         return false;
     }
-    if (s.s[i] == '-') {
-        neg = true;
-        i++;
-    } else if (s.s[i] == '+') {
-        i++;
+    bool neg = rest.s[0] == '-';
+    if (neg || rest.s[0] == '+') {
+        Eat(rest, 1);
     }
     unsigned long uv = 0;
-    Str rest = Str(s.s + i, s.len - i);
     if (!ParseULongAt(rest, base, &uv)) {
         return false;
     }

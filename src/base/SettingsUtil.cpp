@@ -129,17 +129,13 @@ static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
 }
 
 static int SkipNonWhitespaceOff(Str s, int off) {
-    while (off < s.len && !str::IsWs(s.s[off])) {
-        off++;
-    }
-    return off;
+    Str rest = Str(s.s + off, s.len - off);
+    return off + str::SkipNonWs(rest);
 }
 
 static int SkipWhitespaceOff(Str s, int off) {
-    while (off < s.len && str::IsWs(s.s[off])) {
-        off++;
-    }
-    return off;
+    Str rest = Str(s.s + off, s.len - off);
+    return off + str::SkipWs(rest);
 }
 
 static void DeserializeUtf8StringArray(Vec<Str>* strArray, Str serialized) {
