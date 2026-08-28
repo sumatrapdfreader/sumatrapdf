@@ -229,6 +229,12 @@ static void StrUrlExtractTest() {
 }
 
 // Run fn once with no external buf, once with a stack buf of random size 1..128.
+// was str::Builder::UsesExternalBuf(); only these tests care whether the
+// storage is still the lent buffer rather than a heap block of the Builder's own
+static bool UsesExternalBuf(const str::Builder& b) {
+    return !b.els || b.cap < 0;
+}
+
 static void StrBuilderRunTwice(void (*fn)(str::Builder&)) {
     {
         str::Builder b;
@@ -270,7 +276,7 @@ static void StrBuilderGrowPastExternal(str::Builder& str) {
     for (int i = 0; i < 200; i++) {
         str.AppendChar((char)i);
     }
-    utassert(!str.UsesExternalBuf());
+    utassert(!UsesExternalBuf(str));
     for (int i = 0; i < 200; i++) {
         utassert(str[i] == (char)i);
     }
@@ -282,7 +288,7 @@ static void StrBuilderRemoveAtStaysOnHeap(str::Builder& str) {
         str.AppendChar((char)('a' + (i % 26)));
     }
     uintptr_t heap = (uintptr_t)str.begin();
-    utassert(!str.UsesExternalBuf());
+    utassert(!UsesExternalBuf(str));
     // RemoveAt shrinks len; further appends must not switch back to external
     // (that would lose data and leak the heap allocation).
     str.RemoveAt(0, 190);
@@ -306,7 +312,7 @@ static void StrBuilderManyAppends(str::Builder& str) {
 static void StrBuilderTakeStr(str::Builder& str) {
     str.Append(StrL("hello"));
     char* before = str.begin();
-    bool wasExternal = str.UsesExternalBuf();
+    bool wasExternal = UsesExternalBuf(str);
     Str taken = str.TakeStr();
     utassert(str::Eq(taken, StrL("hello")));
     if (wasExternal) {
@@ -335,7 +341,7 @@ static void StrBuilderReserve() {
     str::Builder str2;
     str::BuilderUseExternalBuffer(str2, Str(stack, sizeofi(stack)));
     str::BuilderReserve(nullptr, str2, 16);
-    utassert(str2.UsesExternalBuf());
+    utassert(UsesExternalBuf(str2));
     utassert((uintptr_t)str2.begin() == (uintptr_t)stack);
 }
 
@@ -348,110 +354,46 @@ void strStrTest() {
     StrBuilderReserve();
 }
 
-// --- wstr::Builder (same external-buf contract as str::Builder) ---
-
-static void WStrBuilderRunTwice(void (*fn)(wstr::Builder&)) {
-    {
-        wstr::Builder b;
-        fn(b);
-    }
-    {
-        WCHAR stack[128];
-        int n = 1 + (rand() % 128); // 1..128
-        wstr::Builder b;
-        wstr::BuilderUseExternalBuffer(b, WStr(stack, n));
-        fn(b);
-    }
-}
-
-static void WStrBuilderContainsAppend(wstr::Builder& str) {
-    utassert(str.IsEmpty());
-    str.Append(L"blah");
-    utassert(str.begin() != nullptr);
-    utassert(wstr::Eq(ToWStr(str), WStrL(L"blah")));
-    str.Append(L"lost");
-    utassert(wstr::Eq(ToWStr(str), WStrL(L"blahlost")));
-    utassert(wstr::ContainsChar(str, L'a'));
-    utassert(!wstr::ContainsChar(str, L'z'));
-}
-
-static void WStrBuilderGrowPastExternal(wstr::Builder& str) {
-    str.Append(L"blah");
-    utassert(wstr::Eq(ToWStr(str), WStrL(L"blah")));
-    str.Append(L"lost");
-    utassert(wstr::Eq(ToWStr(str), WStrL(L"blahlost")));
-    str.Reset();
-    for (int i = 0; i < 200; i++) {
-        str.AppendChar((WCHAR)i);
-    }
-    utassert(!str.UsesExternalBuf());
-    for (int i = 0; i < 200; i++) {
-        utassert(str[i] == (WCHAR)i);
-    }
-}
-
-static void WStrBuilderRemoveAtStaysOnHeap(wstr::Builder& str) {
-    for (int i = 0; i < 200; i++) {
-        str.AppendChar((WCHAR)(L'a' + (i % 26)));
-    }
-    uintptr_t heap = (uintptr_t)str.begin();
-    utassert(!str.UsesExternalBuf());
-    str.RemoveAt(0, 190);
-    utassert(len(str) == 10);
-    utassert((uintptr_t)str.begin() == heap);
-    str.Append(L"xyz");
-    utassert((uintptr_t)str.begin() == heap);
-    utassert(wstr::Eq(ToWStr(str), WStrL(L"ijklmnopqrxyz")));
-}
-
-static void WStrBuilderManyAppends(wstr::Builder& str) {
-    for (int i = 0; i < 50; i++) {
-        str.Append(L"01234567890123456789");
-    }
-    utassert(len(str) == 1000);
-    utassert(wstr::StartsWith(ToWStr(str), WStrL(L"01234567890123456789")));
-    utassert(wstr::EndsWith(ToWStr(str), WStrL(L"01234567890123456789")));
-}
-
-static void WStrBuilderTakeWStr(wstr::Builder& str) {
-    str.Append(L"hello");
-    WCHAR* before = str.begin();
-    bool wasExternal = str.UsesExternalBuf();
-    WStr taken = str.TakeWStr();
-    utassert(wstr::Eq(taken, WStrL(L"hello")));
-    if (wasExternal) {
-        utassert(taken.s != before);
-    }
-    wstr::Free(taken);
-    utassert(str.IsEmpty());
-}
-
-static void WStrBuilderReserve() {
-    wstr::Builder str;
-    wstr::BuilderReserve(nullptr, str, 1024);
-    uintptr_t heap = (uintptr_t)str.begin();
-    utassert(heap != 0);
-    for (int i = 0; i < 50; i++) {
-        str.Append(L"01234567890123456789");
-    }
-    utassert((uintptr_t)str.begin() == heap);
-
-    // reserving less than an external buf already holds keeps the buf
-    WCHAR stack[64];
-    wstr::Builder str2;
-    wstr::BuilderUseExternalBuffer(str2, WStr(stack, dimofi(stack)));
-    wstr::BuilderReserve(nullptr, str2, 16);
-    utassert(str2.UsesExternalBuf());
-    utassert((uintptr_t)str2.begin() == (uintptr_t)stack);
-}
+// --- wstr::Builder: only AppendChar/Append/RemoveLast/LastChar/TakeWStr and
+// the lent buffer are left, so that is all there is to cover ---
 
 static void wstrBuilderTest() {
-    WStrBuilderRunTwice(WStrBuilderContainsAppend);
-    WStrBuilderRunTwice(WStrBuilderGrowPastExternal);
-    WStrBuilderRunTwice(WStrBuilderRemoveAtStaysOnHeap);
-    WStrBuilderRunTwice(WStrBuilderManyAppends);
-    WStrBuilderRunTwice(WStrBuilderTakeWStr);
-    WStrBuilderReserve();
+    // grows out of the lent buffer and keeps the content
+    WCHAR stack[8];
+    wstr::Builder b;
+    wstr::BuilderUseExternalBuffer(b, WStr(stack, dimofi(stack)));
+    utassert(b.els == stack);
+    for (int i = 0; i < 100; i++) {
+        b.AppendChar((WCHAR)(L'a' + (i % 26)));
+    }
+    utassert(len(b) == 100);
+    utassert(b.els != stack); // moved to the heap
+    utassert(b.LastChar() == (WCHAR)(L'a' + (99 % 26)));
+
+    utassert(b.RemoveLast() == (WCHAR)(L'a' + (99 % 26)));
+    utassert(len(b) == 99);
+    utassert(b.LastChar() == (WCHAR)(L'a' + (98 % 26)));
+
+    b.Append(L"xyz");
+    utassert(len(b) == 102);
+    utassert(wstr::EndsWith(ToWStr(b), L"xyz"));
+
+    // TakeWStr hands the heap block over and leaves the Builder empty
+    WStr taken = b.TakeWStr();
+    utassert(len(taken) == 102);
+    utassert(wstr::EndsWith(taken, L"xyz"));
+    wstr::Free(taken);
+    utassert(len(b) == 0);
+
+    // content that still fits the lent buffer stays in it, and TakeWStr copies
+    wstr::Builder b2;
+    wstr::BuilderUseExternalBuffer(b2, WStr(stack, dimofi(stack)));
+    b2.Append(L"abc");
+    utassert(b2.els == stack);
+    WStr taken2 = b2.TakeWStr();
+    utassert(wstr::Eq(taken2, L"abc"));
+    utassert(taken2.s != stack);
+    wstr::Free(taken2);
 }
 
 // case-insensitive Find/Contains must work for non-Latin scripts, not just

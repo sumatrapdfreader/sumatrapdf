@@ -255,15 +255,10 @@ struct Builder {
 
     ~Builder();
 
-    // true while the storage isn't a heap block of ours (a lent buffer, an
-    // arena block, or nothing yet)
-    bool UsesExternalBuf() const { return !els || cap < 0; }
-
     void Reset(Str s = {});
     char& operator[](int idx) const;
     // these grow on the heap; to grow from an arena use the BuilderAppend*()
     // free functions below, which take the allocator like VecPush() does
-    bool InsertAt(int idx, char el);
     bool AppendChar(char c);
     bool Append(Str src);
     char RemoveAt(int idx, int count = 1);
@@ -278,7 +273,6 @@ struct Builder {
     using iterator = char*;
 
     iterator begin() const { return els ? &(els[0]) : nullptr; }
-    iterator end() const { return els ? &(els[len]) : nullptr; }
 };
 
 bool Contains(const Builder& b, Str sub);
@@ -295,7 +289,6 @@ void BuilderUseExternalBuffer(Builder& b, Str buf);
 // allocate storage for cap chars up front, instead of on the first append
 bool BuilderReserve(Arena* a, Builder& b, int cap);
 
-bool BuilderInsertAt(Arena* a, Builder& b, int idx, char el);
 bool BuilderAppendChar(Arena* a, Builder& b, char c);
 bool BuilderAppend(Arena* a, Builder& b, Str s);
 Str BuilderTakeStr(Arena* a, Builder& b);
@@ -322,27 +315,11 @@ struct Builder {
 
     ~Builder();
 
-    // true while the storage isn't a heap block of ours (a lent buffer, an
-    // arena block, or nothing yet)
-    bool UsesExternalBuf() const { return !els || cap < 0; }
-
-    void Reset(WStr s = {});
-    WCHAR& operator[](int idx) const;
-    bool InsertAt(int idx, const WCHAR& el);
     bool AppendChar(WCHAR);
     bool Append(WStr src);
-    WCHAR RemoveAt(int idx, int count = 1);
     WCHAR RemoveLast();
-    WStr TakeWStr();
-    bool IsEmpty() const;
     WCHAR LastChar() const;
-
-    // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
-    // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
-    using iterator = WCHAR*;
-
-    iterator begin() const { return els ? &(els[0]) : nullptr; }
-    iterator end() const { return els ? &(els[len]) : nullptr; }
+    WStr TakeWStr();
 };
 } // namespace wstr
 
@@ -352,15 +329,7 @@ namespace wstr {
 void BuilderUseExternalBuffer(Builder& b, WStr buf);
 
 // see str::BuilderReserve()
-bool BuilderReserve(Arena* a, Builder& b, int cap);
-
-// the allocator is passed in, see str::BuilderAppend()
-bool BuilderAppendChar(Arena* a, Builder& b, WCHAR c);
-bool BuilderAppend(Arena* a, Builder& b, WStr s);
-WStr BuilderTakeWStr(Arena* a, Builder& b);
-
-bool Replace(Builder& s, WStr toReplace, WStr replaceWith);
-bool ContainsChar(const Builder& b, WCHAR el);
+bool BuilderReserve(Builder& b, int cap);
 
 } // namespace wstr
 
@@ -377,9 +346,7 @@ WCHAR* CWStrTemp(WStr s);
 WCHAR* CWStrTemp(WStr s, int& cch);
 
 Str ToStr(const str::Builder&);
-char* ToCStr(const str::Builder&);
 WStr ToWStr(const wstr::Builder&);
-WCHAR* ToWCStr(const wstr::Builder&);
 
 TempStr ToStrTemp(const str::Builder&);
 

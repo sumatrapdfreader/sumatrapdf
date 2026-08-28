@@ -1859,7 +1859,7 @@ int len(const str::Builder& b) {
     return b.len;
 }
 
-bool str::BuilderInsertAt(Arena* a, Builder& b, int idx, char el) {
+static bool BuilderInsertAt(Arena* a, str::Builder& b, int idx, char el) {
     char* p = MakeSpaceAt(a, &b, idx, 1);
     if (!p) {
         return false;
@@ -1884,12 +1884,8 @@ bool str::BuilderAppend(Arena* a, Builder& b, Str src) {
     return true;
 }
 
-bool str::Builder::InsertAt(int idx, char el) {
-    return str::BuilderInsertAt(nullptr, *this, idx, el);
-}
-
 bool str::Builder::AppendChar(char c) {
-    return str::BuilderInsertAt(nullptr, *this, len, c);
+    return str::BuilderAppendChar(nullptr, *this, c);
 }
 
 bool str::Builder::Append(Str src) {
@@ -2029,14 +2025,6 @@ static WCHAR* MakeSpaceAt(Arena* a, wstr::Builder* s, int idx, int count) {
     return res;
 }
 
-// keeps the storage (heap or borrowed) for re-use, only empties it
-static void WStrBuilderReset(wstr::Builder* s) {
-    s->len = 0;
-    if (s->els) {
-        s->els[0] = 0;
-    }
-}
-
 static void WStrBuilderFree(wstr::Builder* s) {
     if (s->els && s->cap > 0) {
         // cap > 0 is only ever a heap block of ours; arena storage has cap < 0
@@ -2045,11 +2033,6 @@ static void WStrBuilderFree(wstr::Builder* s) {
     s->len = 0;
     s->cap = 0;
     s->els = nullptr;
-}
-
-void wstr::Builder::Reset(WStr s) {
-    WStrBuilderReset(this);
-    Append(s); // no-op if s is empty
 }
 
 void wstr::BuilderUseExternalBuffer(Builder& b, WStr buf) {
@@ -2061,50 +2044,20 @@ void wstr::BuilderUseExternalBuffer(Builder& b, WStr buf) {
     }
 }
 
-bool wstr::BuilderReserve(Arena* a, Builder& b, int cap) {
-    return EnsureCap(a, &b, cap) != nullptr;
-}
-
 wstr::Builder::~Builder() {
     WStrBuilderFree(this);
-}
-
-WCHAR& wstr::Builder::operator[](int idx) const {
-    ReportIf(idx < 0 || idx >= len);
-    return els[idx];
 }
 
 int len(const wstr::Builder& b) {
     return b.len;
 }
 
-bool wstr::Builder::InsertAt(int idx, const WCHAR& el) {
-    WCHAR* p = MakeSpaceAt(nullptr, this, idx, 1);
-    if (!p) {
-        return false;
-    }
-    p[0] = el;
-    return true;
+bool wstr::BuilderReserve(Builder& b, int cap) {
+    return EnsureCap(nullptr, &b, cap) != nullptr;
 }
 
 bool wstr::Builder::AppendChar(WCHAR c) {
-    return InsertAt(len, c);
-}
-
-bool wstr::BuilderAppend(Arena* a, Builder& b, WStr src) {
-    if (wstr::IsNull(src) || 0 == src.len) {
-        return true;
-    }
-    WCHAR* dst = MakeSpaceAt(a, &b, b.len, src.len);
-    if (!dst) {
-        return false;
-    }
-    memcpy(dst, src.s, (size_t)src.len * wstr::Builder::kElSize);
-    return true;
-}
-
-bool wstr::BuilderAppendChar(Arena* a, Builder& b, WCHAR c) {
-    WCHAR* p = MakeSpaceAt(a, &b, b.len, 1);
+    WCHAR* p = MakeSpaceAt(nullptr, this, len, 1);
     if (!p) {
         return false;
     }
@@ -2113,62 +2066,46 @@ bool wstr::BuilderAppendChar(Arena* a, Builder& b, WCHAR c) {
 }
 
 bool wstr::Builder::Append(WStr src) {
-    return wstr::BuilderAppend(nullptr, *this, src);
+    if (wstr::IsNull(src) || 0 == src.len) {
+        return true;
+    }
+    WCHAR* dst = MakeSpaceAt(nullptr, this, len, src.len);
+    if (!dst) {
+        return false;
+    }
+    memcpy(dst, src.s, (size_t)src.len * kElSize);
+    return true;
 }
 
-WCHAR wstr::Builder::RemoveAt(int idx, int count) {
-    WCHAR res = els[idx];
-    if (len > idx + count) {
-        WCHAR* dst = els + idx;
-        WCHAR* src = els + idx + count;
-        memmove(dst, src, (size_t)(len - idx - count) * kElSize);
+// hands the storage over to the caller, leaving the Builder empty. A lent
+// buffer is copied out first, since the caller gets to free the result.
+WStr wstr::Builder::TakeWStr() {
+    int n = len;
+    WCHAR* res = els;
+    if (!els || n == 0) {
+        return WStr{};
     }
-    len -= count;
-    memset(els + len, 0, (size_t)count * kElSize);
-    return res;
+    if (IsNotOurHeapBlock(this)) {
+        res = (WCHAR*)MemDup(nullptr, els, (size_t)(n + kPadding) * kElSize);
+    } else {
+        els = nullptr;
+        cap = 0;
+    }
+    len = 0;
+    if (els) {
+        els[0] = 0;
+    }
+    return WStr(res, n);
 }
 
 WCHAR wstr::Builder::RemoveLast() {
     if (len == 0) {
         return 0;
     }
-    return RemoveAt(len - 1);
-}
-
-// perf hack for using as a buffer: client can get accumulated data
-// without duplicate allocation. Note: since Vec over-allocates, this
-// is likely to use more memory than strictly necessary, but in most cases
-// it doesn't matter
-WStr wstr::BuilderTakeWStr(Arena* a, Builder& b) {
-    int n = b.len;
-    WCHAR* res = b.els;
-    if (!b.els || n == 0) {
-        b.Reset();
-        return WStr{};
-    }
-    if (IsNotOurHeapBlock(&b)) {
-        // storage we can't hand over: a lent buffer, or an arena block the arena
-        // owns. The chars are copied out and the Builder keeps using it.
-        res = (WCHAR*)MemDup(a, b.els, (size_t)(n + kPadding) * wstr::Builder::kElSize);
-    } else {
-        // hand the block (heap or arena) to the caller and start over
-        b.els = nullptr;
-        b.cap = 0;
-    }
-    b.Reset();
-    return WStr(res, n);
-}
-
-WStr wstr::Builder::TakeWStr() {
-    return wstr::BuilderTakeWStr(nullptr, *this);
-}
-
-bool wstr::ContainsChar(const wstr::Builder& b, WCHAR el) {
-    return wstr::ContainsChar(ToWStr(b), el);
-}
-
-bool wstr::Builder::IsEmpty() const {
-    return len == 0;
+    len--;
+    WCHAR res = els[len];
+    els[len] = 0;
+    return res;
 }
 
 WCHAR wstr::Builder::LastChar() const {
@@ -2180,21 +2117,6 @@ WCHAR wstr::Builder::LastChar() const {
 }
 
 namespace wstr {
-
-// returns true if was replaced
-bool Replace(wstr::Builder& s, WStr toReplace, WStr replaceWith) {
-    // fast path: nothing to replace
-    if (!s.els || !wstr::FindFrom(ToWStr(s), toReplace)) {
-        return false;
-    }
-    WStr newStr = wstr::Replace(ToWStr(s), toReplace, replaceWith);
-    s.Reset();
-    if (newStr) {
-        s.Append(newStr);
-        wstr::Free(newStr);
-    }
-    return true;
-}
 
 bool IsWs(WCHAR c) {
     return iswspace(c);
@@ -2460,7 +2382,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
     }
 
     wstr::Builder result;
-    wstr::BuilderReserve(nullptr, result, s.len);
+    wstr::BuilderReserve(result, s.len);
     int findLen = toReplace.len;
     int start = 0;
     while (start < s.len) {
@@ -2867,11 +2789,8 @@ WCHAR* CWStrTemp(WStr s, int& cch) {
     return ws.s;
 }
 
-// handles embedded 0 in the string
-// str::Builder/wstr::Builder always keep their data NUL-terminated.
-// ToStr() returns a {ptr,len} view (may contain embedded NULs).
-// ToCStr() returns the NUL-terminated buffer, for passing to C/win32 code we
-// don't control that expects a zero-terminated char*/WCHAR*.
+// str::Builder/wstr::Builder always keep their data NUL-terminated; ToStr()
+// returns a {ptr,len} view of it, which may contain embedded NULs
 Str ToStr(const str::Builder& b) {
     return Str(b.els, (int)b.len);
 }
@@ -2882,28 +2801,8 @@ NO_INLINE TempStr ToStrTemp(const str::Builder& b) {
     return str::DupTemp(ToStr(b));
 }
 
-// str::Builder always keeps its data NUL-terminated, so we can hand out the
-// buffer directly for C/win32 APIs we don't control that want a char*
-char* ToCStr(const str::Builder& b) {
-    if (!b.els) {
-        static char empty = 0;
-        return &empty;
-    }
-    return b.els;
-}
-
 WStr ToWStr(const wstr::Builder& b) {
     return WStr(b.els, (int)b.len);
-}
-
-// wstr::Builder always keeps its data NUL-terminated, so we can hand out the
-// buffer directly for C/win32 APIs we don't control that want a WCHAR*
-WCHAR* ToWCStr(const wstr::Builder& b) {
-    if (!b.els) {
-        static WCHAR empty = 0;
-        return &empty;
-    }
-    return b.els;
 }
 
 // --- begin: merged from former src/common/str_util.cpp ---
