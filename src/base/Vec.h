@@ -44,6 +44,10 @@ inline T* VecReserve(Vec<T>& v, int capNeeded);
 template <typename T>
 T* VecInsertSpace(Vec<T>& v, int idx, int count);
 
+// Append count elements from src.
+template <typename T>
+bool VecAppendN(Vec<T>& v, const T* src, int count);
+
 template <typename T>
 struct Vec {
     int len = 0;
@@ -129,23 +133,7 @@ struct Vec {
 
     bool Append(const T& el) { return InsertAt(len, el); }
 
-    bool Append(const T* src, int count) {
-        if (0 == count) {
-            return true;
-        }
-        T* dst = VecInsertSpace(*this, len, count);
-        if (!dst) {
-            return false;
-        }
-        memcpy((void*)dst, (const void*)src, (size_t)count * sizeof(T));
-        return true;
-    }
-
-    bool Append(const Vec& other) {
-        int n = other.len;
-        const T* data = other.LendData();
-        return this->Append(data, n);
-    }
+    bool Append(const Vec& other) { return VecAppendN(*this, other.LendData(), other.len); }
 
     // appends count blank (i.e. zeroed-out) elements at the end
     T* AppendBlanks(int count) { return VecInsertSpace(*this, len, count); }
@@ -310,6 +298,19 @@ inline T* VecReserve(Vec<T>& v, int capNeeded) {
 template <typename T>
 T* VecInsertSpace(Vec<T>& v, int idx, int count) {
     return (T*)VecInsertSpaceNonTemplated(v.NT(), (int)sizeof(T), idx, count);
+}
+
+template <typename T>
+bool VecAppendN(Vec<T>& v, const T* src, int count) {
+    if (0 == count) {
+        return true;
+    }
+    T* dst = VecInsertSpace(v, v.len, count);
+    if (!dst) {
+        return false;
+    }
+    memcpy((void*)dst, (const void*)src, (size_t)count * sizeof(T));
+    return true;
 }
 
 // Set logical length to newSize (std::vector::resize). Grows capacity if needed;

@@ -595,7 +595,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
         // TODO: this occasionally leads to empty links
         AppendInstr(DrawInstr(DrawInstrType::LinkEnd));
     }
-    currPage->instructions.Append(currLineInstr.LendData(), len(currLineInstr));
+    VecAppendN(currPage->instructions, currLineInstr.LendData(), len(currLineInstr));
     currLineInstr.Reset();
     currLineReparseIdx = -1; // mark as not set
     currLineTopPadding = 0;
