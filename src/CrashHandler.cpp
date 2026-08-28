@@ -181,7 +181,8 @@ static void AppendUncaughtMupdfError(str::Builder& s) {
 }
 
 static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    str::Builder s(16 * 1024);
+    str::Builder s;
+    str::BuilderReserve(gCrashHandlerArena, s, 16 * 1024);
     if (!isCrash) {
         captureCallstack = true;
         str::BuilderAppend(gCrashHandlerArena, s, StrL("Type: debug report (not crash)\n"));
@@ -240,7 +241,8 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
 }
 
 static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    str::Builder s(16 * 1024);
+    str::Builder s;
+    str::BuilderReserve(gCrashHandlerArena, s, 16 * 1024);
     if (!isCrash) {
         captureCallstack = true;
         str::BuilderAppend(gCrashHandlerArena, s, StrL("Type: debug report (not crash)\n"));
@@ -302,10 +304,12 @@ static void UploadCrashReport(Str d) {
         return;
     }
 
-    str::Builder headers(256);
+    str::Builder headers;
+    str::BuilderReserve(gCrashHandlerArena, headers, 256);
     str::BuilderAppend(gCrashHandlerArena, headers, StrL("Content-Type: text/plain"));
 
-    str::Builder data(16 * 1024);
+    str::Builder data;
+    str::BuilderReserve(gCrashHandlerArena, data, 16 * 1024);
     str::BuilderAppend(gCrashHandlerArena, data, d);
 
     HttpPost(StrL(kCrashHandlerServer), kCrashHandlerServerPort, StrL(kCrashHandlerServerSubmitURL), &headers, &data);
@@ -435,7 +439,8 @@ static bool gAddSymbolServer = false;
 static bool gAddExeDir = false;
 
 static TempStr BuildSymbolPathTemp(Str symDir) {
-    str::Builder path(2048);
+    str::Builder path;
+    str::BuilderReserve(nullptr, path, 2048);
     Arena* a = GetTempArena();
 
     bool symDirExists = dir::Exists(symDir);
@@ -856,14 +861,16 @@ static void GetSystemInfo(str::Builder& s) {
 
 // returns true if running on wine
 static bool BuildModulesInfo() {
-    str::Builder s(1024);
+    str::Builder s;
+    str::BuilderReserve(gCrashHandlerArena, s, 1024);
     bool isWine = GetModules(s, false);
     gModulesInfo = str::BuilderTakeStr(gCrashHandlerArena, s);
     return isWine;
 }
 
 static void BuildSystemInfo() {
-    str::Builder s(1024);
+    str::Builder s;
+    str::BuilderReserve(gCrashHandlerArena, s, 1024);
     GetProgramInfo(gCrashHandlerArena, s);
     GetOsVersion(s);
     GetSystemInfo(s);

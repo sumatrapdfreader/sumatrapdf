@@ -130,7 +130,8 @@ void log(Str s) {
 
     if (!gLogBuf) {
         gLogAllocator = ArenaNew();
-        gLogBuf = new str::Builder(32 * 1024);
+        gLogBuf = new str::Builder();
+        str::BuilderReserve(gLogAllocator, *gLogBuf, 32 * 1024);
     } else {
         if (len(*gLogBuf) > kMaxLogBuf) {
             // TODO: use gLogBuf->Clear(), which doesn't free the allocated space

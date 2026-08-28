@@ -9,7 +9,8 @@
 #include "base/UtAssert.h"
 
 static size_t VecTestAppendFmt() {
-    str::Builder v(256);
+    str::Builder v;
+    str::BuilderReserve(nullptr, v, 256);
     i64 val = 1;
     for (int i = 0; i < 10000; i++) {
         v.Append(fmt("i%" PRId64 "e", val));
@@ -101,7 +102,8 @@ void VecTest() {
     }
 
     {
-        str::Builder v(128);
+        str::Builder v;
+        str::BuilderReserve(nullptr, v, 128);
         v.Append(StrL("boo"));
         utassert(str::Eq(StrL("boo"), ToStr(v)));
         utassert(len(v) == 3);

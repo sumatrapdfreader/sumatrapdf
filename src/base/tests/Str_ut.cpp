@@ -317,42 +317,29 @@ static void StrBuilderTakeStr(str::Builder& str) {
     utassert(str.IsEmpty());
 }
 
-// capHint is independent of external buf: large hint should avoid realloc while
-// content stays under the hint (and ignore a small external scratch once heap
-// is allocated with that hint).
-static void StrBuilderCapHint() {
-    str::Builder str(1024);
-    uintptr_t heap = 0;
+// BuilderReserve() allocates up front, so content that stays under it never
+// reallocates
+static void StrBuilderReserve() {
+    str::Builder str;
+    str::BuilderReserve(nullptr, str, 1024);
+    utassert(str.nReallocs == 1);
+    uintptr_t heap = (uintptr_t)str.begin();
+    utassert(heap != 0);
     for (int i = 0; i < 50; i++) {
         str.Append(StrL("01234567890123456789"));
-        if (i == 0) {
-            heap = (uintptr_t)str.begin();
-            utassert(heap != 0);
-        }
     }
     // 50*20 = 1000 chars < 1024, so no further realloc
     utassert((uintptr_t)str.begin() == heap);
     utassert(str.nReallocs == 1);
 
-    // same with a small external buf: once content needs heap, capHint applies
-    // (set .cap after construct — preferred capacity while still on external storage)
-    char stack[16];
+    // reserving less than an external buf already holds keeps the buf
+    char stack[64];
     str::Builder str2;
     str::BuilderUseExternalBuffer(str2, Str(stack, sizeofi(stack)));
-    str2.capHint = 1024 + 1; // +1 NUL padding, same as Builder(1024)
-    heap = 0;
-    int reallocsAtHeap = -1;
-    for (int i = 0; i < 50; i++) {
-        str2.Append(StrL("01234567890123456789"));
-        if (!str2.UsesExternalBuf() && reallocsAtHeap < 0) {
-            heap = (uintptr_t)str2.begin();
-            reallocsAtHeap = str2.nReallocs;
-        }
-    }
-    utassert(heap != 0);
-    utassert((uintptr_t)str2.begin() == heap);
-    // only the grow-from-external realloc, no further ones for 1000 chars
-    utassert(str2.nReallocs == reallocsAtHeap);
+    str::BuilderReserve(nullptr, str2, 16);
+    utassert(str2.UsesExternalBuf());
+    utassert(str2.nReallocs == 0);
+    utassert((uintptr_t)str2.begin() == (uintptr_t)stack);
 }
 
 void strStrTest() {
@@ -361,7 +348,7 @@ void strStrTest() {
     StrBuilderRunTwice(StrBuilderRemoveAtStaysOnHeap);
     StrBuilderRunTwice(StrBuilderManyAppends);
     StrBuilderRunTwice(StrBuilderTakeStr);
-    StrBuilderCapHint();
+    StrBuilderReserve();
 }
 
 // --- wstr::Builder (same external-buf contract as str::Builder) ---
@@ -442,35 +429,26 @@ static void WStrBuilderTakeWStr(wstr::Builder& str) {
     utassert(str.IsEmpty());
 }
 
-static void WStrBuilderCapHint() {
-    wstr::Builder str(1024);
-    uintptr_t heap = 0;
+static void WStrBuilderReserve() {
+    wstr::Builder str;
+    wstr::BuilderReserve(nullptr, str, 1024);
+    utassert(str.nReallocs == 1);
+    uintptr_t heap = (uintptr_t)str.begin();
+    utassert(heap != 0);
     for (int i = 0; i < 50; i++) {
         str.Append(L"01234567890123456789");
-        if (i == 0) {
-            heap = (uintptr_t)str.begin();
-            utassert(heap != 0);
-        }
     }
     utassert((uintptr_t)str.begin() == heap);
     utassert(str.nReallocs == 1);
 
-    WCHAR stack[16];
+    // reserving less than an external buf already holds keeps the buf
+    WCHAR stack[64];
     wstr::Builder str2;
     wstr::BuilderUseExternalBuffer(str2, WStr(stack, dimofi(stack)));
-    str2.capHint = 1024 + 1; // +1 NUL padding, same as Builder(1024)
-    heap = 0;
-    int reallocsAtHeap = -1;
-    for (int i = 0; i < 50; i++) {
-        str2.Append(L"01234567890123456789");
-        if (!str2.UsesExternalBuf() && reallocsAtHeap < 0) {
-            heap = (uintptr_t)str2.begin();
-            reallocsAtHeap = str2.nReallocs;
-        }
-    }
-    utassert(heap != 0);
-    utassert((uintptr_t)str2.begin() == heap);
-    utassert(str2.nReallocs == reallocsAtHeap);
+    wstr::BuilderReserve(nullptr, str2, 16);
+    utassert(str2.UsesExternalBuf());
+    utassert(str2.nReallocs == 0);
+    utassert((uintptr_t)str2.begin() == (uintptr_t)stack);
 }
 
 static void wstrBuilderTest() {
@@ -479,7 +457,7 @@ static void wstrBuilderTest() {
     WStrBuilderRunTwice(WStrBuilderRemoveAtStaysOnHeap);
     WStrBuilderRunTwice(WStrBuilderManyAppends);
     WStrBuilderRunTwice(WStrBuilderTakeWStr);
-    WStrBuilderCapHint();
+    WStrBuilderReserve();
 }
 
 // case-insensitive Find/Contains must work for non-Latin scripts, not just

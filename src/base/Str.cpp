@@ -1763,7 +1763,6 @@ static char* EnsureCap(Arena* a, str::Builder* s, int needed) {
     int curCap = callerScratch ? 0 : (s->cap < 0 ? -s->cap : s->cap);
     int newCap = curCap * 2;
     newCap = std::max(needed, newCap);
-    newCap = std::max(newCap, s->capHint);
 
     int newElCount = newCap + kPadding;
 
@@ -1847,11 +1846,8 @@ void str::BuilderUseExternalBuffer(Builder& b, Str buf) {
     }
 }
 
-// capHint: preferred capacity after first grow
-// capHint: preferred capacity after first grow
-str::Builder::Builder(int capHintArg) {
-    Reset();
-    capHint = capHintArg + kPadding; // + kPadding for terminating 0
+bool str::BuilderReserve(Arena* a, Builder& b, int cap) {
+    return EnsureCap(a, &b, cap) != nullptr;
 }
 
 str::Builder::~Builder() {
@@ -1994,7 +1990,6 @@ static WCHAR* EnsureCap(Arena* a, wstr::Builder* s, int needed) {
     int curCap = callerScratch ? 0 : (s->cap < 0 ? -s->cap : s->cap);
     int newCap = curCap * 2;
     newCap = std::max(needed, newCap);
-    newCap = std::max(newCap, s->capHint);
 
     int newElCount = newCap + kPadding;
 
@@ -2074,11 +2069,8 @@ void wstr::BuilderUseExternalBuffer(Builder& b, WStr buf) {
     }
 }
 
-// capHint: preferred capacity after first grow
-// capHint: preferred capacity after first grow
-wstr::Builder::Builder(int capHintArg) {
-    Reset();
-    capHint = capHintArg + kPadding; // + kPadding for terminating 0
+bool wstr::BuilderReserve(Arena* a, Builder& b, int cap) {
+    return EnsureCap(a, &b, cap) != nullptr;
 }
 
 wstr::Builder::~Builder() {
@@ -2475,7 +2467,8 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
         return {};
     }
 
-    wstr::Builder result(s.len);
+    wstr::Builder result;
+    wstr::BuilderReserve(nullptr, result, s.len);
     int findLen = toReplace.len;
     int start = 0;
     while (start < s.len) {
@@ -2825,8 +2818,8 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
         lenDiff = replLen - findLen;
     }
     // heuristic: allow 6 replacements without reallocating
-    int capHint = s.len + 1 + (lenDiff * 6);
-    str::Builder result(capHint);
+    str::Builder result;
+    str::BuilderReserve(nullptr, result, s.len + 1 + (lenDiff * 6));
     bool ok;
     while (idx >= 0) {
         ok = result.Append(Str(curr.s, idx));

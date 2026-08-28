@@ -54,7 +54,8 @@ bool IsUiHangDetectorRunning() {
 // whatever the crash handler downloaded into gSymbolsDir.
 static bool EnsureSymbols() {
     Arena* a = GetTempArena();
-    str::Builder symPath(1024);
+    str::Builder symPath;
+    str::BuilderReserve(nullptr, symPath, 1024);
     str::BuilderAppend(a, symPath, GetSelfExeDirTemp());
     if (len(gSymbolsDir) > 0) {
         str::BuilderAppend(a, symPath, StrL(";"));
@@ -159,7 +160,8 @@ static void ReportHang(double blockedMs) {
     }
 
     gHangReportsLeft--;
-    str::Builder s(8 * 1024);
+    str::Builder s;
+    str::BuilderReserve(nullptr, s, 8 * 1024);
     int nSkipped = 0;
     for (int i = 0; i < nThreads; i++) {
         ThreadStack& ts = gStacks[i];
@@ -167,7 +169,8 @@ static void ReportHang(double blockedMs) {
             nSkipped++;
             continue;
         }
-        str::Builder cs(2048);
+        str::Builder cs;
+        str::BuilderReserve(nullptr, cs, 2048);
         for (int j = 0; j < ts.nAddrs; j++) {
             dbghelp::GetAddressInfo(nullptr, cs, (DWORD64)ts.addrs[j], false);
         }

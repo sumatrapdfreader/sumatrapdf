@@ -247,13 +247,9 @@ struct Builder {
     // fresh block and copies; nothing frees it.
     int cap = 0;
     char* els = nullptr;
-    // preferred capacity for the first allocation, 0 for none
-    int capHint = 0;
-
     int nReallocs = 0;
 
     Builder() = default;
-    explicit Builder(int capHint);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
     Builder& operator=(const Builder&) = delete;
@@ -296,6 +292,9 @@ bool Contains(const Builder& b, Str sub);
 // copies, leaving buf alone. Nothing frees buf, so it must outlive b.
 void BuilderUseExternalBuffer(Builder& b, Str buf);
 
+// allocate storage for cap chars up front, instead of on the first append
+bool BuilderReserve(Arena* a, Builder& b, int cap);
+
 bool BuilderInsertAt(Arena* a, Builder& b, int idx, char el);
 bool BuilderAppendChar(Arena* a, Builder& b, char c);
 bool BuilderAppend(Arena* a, Builder& b, Str s);
@@ -313,15 +312,11 @@ struct Builder {
     // negative cap means storage we don't own, of capacity -cap; see str::Builder
     int cap = 0;
     WCHAR* els = nullptr;
-    // preferred capacity for the first allocation, 0 for none
-    int capHint = 0;
-
     int nReallocs = 0;
 
     static constexpr int kElSize = sizeofi(WCHAR);
 
     Builder() = default;
-    explicit Builder(int capHint);
     // the implicit memberwise copy would alias els and double-free it
     Builder(const Builder&) = delete;
     Builder& operator=(const Builder&) = delete;
@@ -355,6 +350,9 @@ namespace wstr {
 
 // see str::BuilderUseExternalBuffer()
 void BuilderUseExternalBuffer(Builder& b, WStr buf);
+
+// see str::BuilderReserve()
+bool BuilderReserve(Arena* a, Builder& b, int cap);
 
 // the allocator is passed in, see str::BuilderAppend()
 bool BuilderAppendChar(Arena* a, Builder& b, WCHAR c);

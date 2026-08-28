@@ -1388,7 +1388,9 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
         return {};
     }
 
-    str::Builder raw((int)palm.uncompressedDocSize);
+    str::Builder raw;
+
+    str::BuilderReserve(nullptr, raw, (int)palm.uncompressedDocSize);
     for (int i = 1; i <= recCount; i++) {
         auto rec = pdb->GetRecord(i);
         if (len(rec) == 0) {

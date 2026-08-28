@@ -783,7 +783,8 @@ static bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str&
         return false;
     }
 
-    str::Builder raw(4096);
+    str::Builder raw;
+    str::BuilderReserve(nullptr, raw, 4096);
     AIChatReadAllPipe(launch.hReadPipe, raw);
     CloseHandle(launch.hReadPipe);
     launch.hReadPipe = nullptr;

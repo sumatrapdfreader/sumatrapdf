@@ -872,7 +872,8 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
         return false;
     }
 
-    str::Builder output(4096);
+    str::Builder output;
+    str::BuilderReserve(nullptr, output, 4096);
     ReadPipeToStrBuilder(launch.hReadPipe, output);
     CloseHandle(launch.hReadPipe);
     launch.hReadPipe = nullptr;
@@ -889,7 +890,8 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
 
     LogTranslation(backend, StrL("<<< raw"), ToStr(output));
 
-    str::Builder translation(1024);
+    str::Builder translation;
+    str::BuilderReserve(nullptr, translation, 1024);
     ParseTranslationOutput(backend, ToStr(output), translation);
     LogTranslation(backend, StrL("<<< parsed"), ToStr(translation));
     if (len(translation) == 0) {

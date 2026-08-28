@@ -1684,7 +1684,8 @@ static TempStr DecompressTcrTextTemp(Str data) {
         curr = Str(curr.s + step, curr.len - step);
     }
 
-    str::Builder text(data.len * 2);
+    str::Builder text;
+    str::BuilderReserve(nullptr, text, data.len * 2);
     AtomicIntInc(&gAllowAllocFailure);
     AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
 

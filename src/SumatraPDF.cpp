@@ -5295,7 +5295,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     WCHAR dstFileName[MAX_PATH + 1]{};
 
     OPENFILENAME ofn{};
-    str::Builder fileFilter(256);
+    str::Builder fileFilter;
+    str::BuilderReserve(nullptr, fileFilter, 256);
     fileFilter.Append(_TRA("PDF documents"));
     fileFilter.Append(StrL("\1*.pdf\1"));
     fileFilter.Append(StrL("\1*.*\1"));
@@ -5900,7 +5901,8 @@ static void SaveCurrentFileAs(MainWindow* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    str::Builder fileFilter(256);
+    str::Builder fileFilter;
+    str::BuilderReserve(nullptr, fileFilter, 256);
     if (AppendFileFilterForDoc(ctrl, fileFilter)) {
         fileFilter.Append(fmt("\1*%s\1", defExt));
     }
@@ -6187,7 +6189,8 @@ static void RenameCurrentFile(MainWindow* win) {
     // methods too early on)
     Str defExt = ctrl->GetDefaultFileExt();
     TempWStr defExtW = ToWStrTemp(defExt);
-    str::Builder fileFilter(256);
+    str::Builder fileFilter;
+    str::BuilderReserve(nullptr, fileFilter, 256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
     fileFilter.Append(fmt("\1*%s\1", defExt));
@@ -10495,7 +10498,8 @@ static Str ManualInjectThemeCss(Str html) {
     if (insertAt < 0) {
         insertAt = 0;
     }
-    str::Builder result(len(html) + len(css));
+    str::Builder result;
+    str::BuilderReserve(nullptr, result, len(html) + len(css));
     result.Append(Str(html.s, insertAt));
     result.Append(css);
     result.Append(Str(html.s + insertAt, len(html) - insertAt));
@@ -10880,7 +10884,8 @@ static Annotation* CreateImageStampAnnotation(MainWindow* win, WindowTab* tab, D
 
 static TempStr PickImageFilePathTemp(HWND hwnd) {
     WCHAR pathW[MAX_PATH + 1]{};
-    str::Builder fileFilter(256);
+    str::Builder fileFilter;
+    str::BuilderReserve(nullptr, fileFilter, 256);
     fileFilter.Append(_TRA("Image files"));
     fileFilter.Append(StrL("\1*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.heic;*.heif;*.ico\1"));
     fileFilter.Append(_TRA("All files"));

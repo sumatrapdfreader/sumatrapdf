@@ -883,16 +883,16 @@ static void JoinInner(Arena* a, const StrVec* v, Str joint, str::Builder& res) {
 }
 
 Str Join(StrVec* v, Str sep) {
-    int capHint = CalcCapForJoin(v, sep);
-    str::Builder tmp(capHint);
+    str::Builder tmp;
+    str::BuilderReserve(nullptr, tmp, CalcCapForJoin(v, sep));
     JoinInner(nullptr, v, sep, tmp);
     return tmp.TakeStr();
 }
 
 TempStr JoinTemp(StrVec* v, Str sep) {
-    int capHint = CalcCapForJoin(v, sep);
-    str::Builder tmp(capHint);
     Arena* a = GetTempArena();
+    str::Builder tmp;
+    str::BuilderReserve(a, tmp, CalcCapForJoin(v, sep));
     JoinInner(a, v, sep, tmp);
     return ToStrTemp(tmp);
 }

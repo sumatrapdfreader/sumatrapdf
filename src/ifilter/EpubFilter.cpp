@@ -78,7 +78,8 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
     Str d = doc->GetHtmlData();
     int dataLen = d.len;
 
-    str::Builder text(dataLen / 2);
+    str::Builder text;
+    str::BuilderReserve(nullptr, text, dataLen / 2);
     GumboHtmlParser p(d);
     HtmlToken* t;
     Vec<HtmlTag> tagNesting;

@@ -492,7 +492,8 @@ NO_INLINE bool GetCurrentThreadCallstack(Arena* a, str::Builder& s) {
 static str::Builder* gCallstackLogs = nullptr;
 
 TempStr GetCurrentThreadCallstackTemp() {
-    str::Builder s(2048);
+    str::Builder s;
+    str::BuilderReserve(nullptr, s, 2048);
     if (!GetCurrentThreadCallstack(nullptr, s)) {
         return StrL("");
     }
@@ -519,7 +520,8 @@ Str GetCallstacks() {
 }
 
 void LogCallstack() {
-    str::Builder s(2048);
+    str::Builder s;
+    str::BuilderReserve(nullptr, s, 2048);
     if (!GetCurrentThreadCallstack(nullptr, s)) {
         return;
     }
