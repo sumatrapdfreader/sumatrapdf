@@ -45,6 +45,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0031-html-image-page-height` | shrink every reflow image against the fixed page height, not advancing block bounds (#6007) |
 | `0032-pdf-appearance-unrendered-annots` | placeholder AP for Movie/Screen/3D/RichMedia/Watermark/PrinterMark/TrapNet/Projection |
 | `0033-pdf-appearance-markup-movie-poster` | highlight default yellow, markup `/Rect` if no QuadPoints, skip 0-width unfilled Square/Circle, Movie `/Poster` as AP |
+| `0034-pdf-appearance-cjk-annotation-text` | annotation text goes in a CJK collection that actually has the characters, instead of dropping them or embedding a 5 MB fallback font (#6082) |
 
 And three that are not ours but that we carry ahead of the release we vendor:
 
