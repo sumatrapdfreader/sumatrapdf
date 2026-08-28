@@ -30,6 +30,7 @@ bool EngineMupdf_UnitTestEbookLineSpacingCss();
 bool EngineMupdf_UnitTestEbookFontFamilyCss();
 bool EngineMupdf_UnitTestEbookMarginCss();
 bool EngineMupdf_UnitTestMergeEBookUI();
+bool Accelerators_UnitTestFolderNavIsSafe();
 #endif
 
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
@@ -162,6 +163,7 @@ int RunAppUnitTests() {
     utassert(EngineMupdf_UnitTestEbookFontFamilyCss());
     utassert(EngineMupdf_UnitTestEbookMarginCss());
     utassert(EngineMupdf_UnitTestMergeEBookUI());
+    utassert(Accelerators_UnitTestFolderNavIsSafe());
 #endif
     return utassert_print_results();
 }

@@ -297,6 +297,28 @@ static bool isSafeAccel(const ACCEL& a) {
     return true;
 }
 
+// Folder browsing (Ctrl+Shift+arrows) is meaningless to a tree view or to a
+// document shown in the WebView2, but an edit control uses those keys to select
+// by word. So it's safe everywhere except the edit table: after clicking a link
+// in a .md / .html file the arrows stopped browsing the folder (issue #6089).
+static bool isSafeOutsideEditAccel(const ACCEL& a) {
+    if (isSafeAccel(a)) {
+        return true;
+    }
+    // a plain arrow rebound to the command still has to move in the tree
+    bool isChord = (a.fVirt & (FCONTROL | FALT)) != 0;
+    if (!isChord) {
+        return false;
+    }
+    switch (a.cmd) {
+        case CmdOpenNextFileInFolder:
+        case CmdOpenPrevFileInFolder:
+        case CmdNavigateFilesInFolder:
+            return true;
+    }
+    return false;
+}
+
 // Command bound to vk + modifiers among the "safe" accelerators (those allowed
 // while a custom control has focus). 0 if none. Lets custom controls (e.g. the
 // WebView2-hosted CHM) forward app shortcuts they'd otherwise swallow.
@@ -317,7 +339,7 @@ int SafeAcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt) {
     }
     for (int i = 0; i < gAccelsCount; i++) {
         const ACCEL& a = gAccels[i];
-        if (a.key == vk && a.fVirt == fVirt && isSafeAccel(a)) {
+        if (a.key == vk && a.fVirt == fVirt && isSafeOutsideEditAccel(a)) {
             return a.cmd;
         }
     }
@@ -362,8 +384,8 @@ void AccelTablesBuilder::Add(ACCEL accel) {
         treeViewAccels[nTreeViewAccels++] = accel;
         return;
     }
-    if ((int)accel.cmd == (int)CmdToggleBookmarks) {
-        // https://github.com/sumatrapdfreader/sumatrapdf/issues/2832
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/2832
+    if (isSafeOutsideEditAccel(accel) || (int)accel.cmd == (int)CmdToggleBookmarks) {
         treeViewAccels[nTreeViewAccels++] = accel;
     }
 }
@@ -441,6 +463,28 @@ void FreeAcceleratorTables() {
     free(gAccels);
     gAccels = nullptr;
 }
+
+#ifdef DEBUG
+// Folder browsing has to keep working when focus is inside the document (the
+// WebView2 that shows .md / .html) or the bookmarks tree (issue #6089)
+bool Accelerators_UnitTestFolderNavIsSafe() {
+    GetAcceleratorTables(); // builds gAccels if it isn't built yet
+    if (SafeAcceleratorCmd(VK_RIGHT, true, true, false) != CmdOpenNextFileInFolder) {
+        return false;
+    }
+    if (SafeAcceleratorCmd(VK_LEFT, true, true, false) != CmdOpenPrevFileInFolder) {
+        return false;
+    }
+    if (SafeAcceleratorCmd(VK_UP, true, true, false) != CmdNavigateFilesInFolder) {
+        return false;
+    }
+    // a bare arrow still belongs to the control, so it can scroll / move the selection
+    if (SafeAcceleratorCmd(VK_RIGHT, false, false, false) != 0) {
+        return false;
+    }
+    return true;
+}
+#endif
 
 HACCEL* GetAcceleratorTables() {
     if (gAccelTables[0] == nullptr) {
