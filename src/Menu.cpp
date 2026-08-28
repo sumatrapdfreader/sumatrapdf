@@ -44,6 +44,7 @@
 #include "Tabs.h"
 #include "Accelerators.h"
 #include "ImageSaveCropResize.h"
+#include "GoogleLens.h"
 #include "CommandAvailability.h"
 #include "NavFilesInFolder.h"
 #include "ReadAloudHighlight.h"
@@ -2194,6 +2195,16 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
     EngineBase* engine = dm->GetEngine();
 
+    bool onImage = pageEl && pageEl->Is(kindPageElementImage);
+    onImage = onImage || (engine && engine->kind == kindEngineImage);
+    if (onImage) {
+        MenuSetText(popup, CmdSearchGoogleLens, _TRA("Search Image with Google Lens"));
+    } else if (ctx->hasSelection) {
+        MenuSetText(popup, CmdSearchGoogleLens, _TRA("Search Selection with Google Lens"));
+    } else if (pageNoUnderCursor > 0) {
+        MenuSetText(popup, CmdSearchGoogleLens, fmt(_TRA("Search Page %d with Google Lens").s, pageNoUnderCursor));
+    }
+
     win->contextMenuPt = cursorPos;
     bool isImageDoc = engine && (engine->IsImageCollection() || engine->kind == kindEngineImage ||
                                  engine->kind == kindEngineImageDir || engine->kind == kindEngineComicBooks);
@@ -2228,7 +2239,6 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         }
     }
     {
-        bool onImage = pageEl && pageEl->Is(kindPageElementImage);
         bool isImageEngine = tab && tab->GetEngineType() == kindEngineImage;
         if (!onImage && !isImageEngine) {
             MenuRemove(popup, CmdCopyImage);
@@ -2347,6 +2357,9 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
 
     switch (cmdId) {
+        case CmdSearchGoogleLens:
+            SearchWithGoogleLens(tab, pageEl, pageNoUnderCursor);
+            return;
         case CmdSaveImage:
         case CmdCropImage:
         case CmdResizeImage:

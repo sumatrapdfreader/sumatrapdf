@@ -132,7 +132,7 @@ static bool EncodePng(RenderedBitmap* bitmap, Vec<u8>& out) {
     return ok;
 }
 
-void SearchWithGoogleLens(WindowTab* tab) {
+void SearchWithGoogleLens(WindowTab* tab, IPageElement* imageElement, int pageNo) {
     if (!tab || !tab->win || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
     }
@@ -143,10 +143,16 @@ void SearchWithGoogleLens(WindowTab* tab) {
     }
 
     RenderedBitmap* bitmap = nullptr;
-    if (tab->selectionOnPage && len(*tab->selectionOnPage) > 0) {
+    bool isImage = imageElement && imageElement->Is(kindPageElementImage);
+    if (isImage) {
+        bitmap = dm->GetEngine()->GetImageForPageElement(imageElement);
+    } else if (dm->GetEngine()->kind != kindEngineImage && tab->selectionOnPage && len(*tab->selectionOnPage) > 0) {
         bitmap = RenderSelectionsAsRenderedBitmap(dm, *tab->selectionOnPage);
-    } else {
-        int pageNo = dm->CurrentPageNo();
+    }
+    if (!bitmap && !isImage) {
+        if (pageNo <= 0) {
+            pageNo = dm->CurrentPageNo();
+        }
         if (dm->ValidPageNo(pageNo)) {
             float zoom = dm->GetZoomReal(pageNo);
             RectF pageRect = dm->GetEngine()->PageMediabox(pageNo);

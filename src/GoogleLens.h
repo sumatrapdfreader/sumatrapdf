@@ -2,5 +2,6 @@
    License: GPLv3 */
 
 struct WindowTab;
+struct IPageElement;
 
-void SearchWithGoogleLens(WindowTab* tab);
+void SearchWithGoogleLens(WindowTab* tab, IPageElement* imageElement = nullptr, int pageNo = 0);
