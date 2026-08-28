@@ -199,9 +199,7 @@ bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
     UpdateTheme();
 
     SetIsVisible(true);
-    if (editSearch) {
-        HwndSetFocus(editSearch->hwnd);
-    }
+    EditSetFocus(editSearch);
     return true;
 }
 

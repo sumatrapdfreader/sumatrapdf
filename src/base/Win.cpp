@@ -96,6 +96,72 @@ void EditSelectText(HWND hwnd, int start, int end) {
     Edit_SetSel(hwnd, start, end);
 }
 
+void EditGetSelection(HWND hwnd, int& start, int& end) {
+    start = 0;
+    end = 0;
+    if (!hwnd) {
+        return;
+    }
+    DWORD sel = (DWORD)Edit_GetSel(hwnd);
+    start = (int)LOWORD(sel);
+    end = (int)HIWORD(sel);
+}
+
+void EditSetCursorPos(HWND hwnd, int pos) {
+    if (!hwnd) {
+        return;
+    }
+    EditSelectText(hwnd, pos, pos);
+}
+
+void EditSetCursorPosAtEnd(HWND hwnd) {
+    EditSetCursorPos(hwnd, EditGetTextLen(hwnd));
+}
+
+int EditGetTextLen(HWND hwnd) {
+    return hwnd ? HwndGetTextLen(hwnd) : 0;
+}
+
+void EditSetModified(HWND hwnd, bool on) {
+    if (!hwnd) {
+        return;
+    }
+    Edit_SetModify(hwnd, on);
+}
+
+bool EditIsModified(HWND hwnd) {
+    return hwnd && Edit_GetModify(hwnd);
+}
+
+void EditSetCueText(HWND hwnd, Str s) {
+    if (!hwnd) {
+        return;
+    }
+    Edit_SetCueBannerText(hwnd, CWStrTemp(s));
+}
+
+void EditSetMargins(HWND hwnd, int left, int right) {
+    if (!hwnd) {
+        return;
+    }
+    SendMessageW(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(left, right));
+}
+
+void EditSetNumbersOnly(HWND hwnd, bool on) {
+    if (!hwnd) {
+        return;
+    }
+    HwndSetWindowStyle(hwnd, ES_NUMBER, on);
+}
+
+void EditSetPasswordVisible(HWND hwnd, bool show) {
+    if (!hwnd) {
+        return;
+    }
+    SendMessageW(hwnd, EM_SETPASSWORDCHAR, show ? 0 : (WPARAM)L'\x25CF', 0);
+    HwndInvalidate(hwnd, true);
+}
+
 //--- list box
 
 void LbResetContent(HWND hwnd) {

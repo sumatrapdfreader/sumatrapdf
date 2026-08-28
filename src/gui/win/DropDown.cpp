@@ -342,13 +342,13 @@ void DropDown::GetSelection(int& start, int& end) const {
 void DropDown::SetModified(bool on) {
     HWND edit = EditHwnd();
     if (edit) {
-        Edit_SetModify(edit, on);
+        EditSetModified(edit, on);
     }
 }
 
 bool DropDown::IsModified() const {
     HWND edit = EditHwnd();
-    return edit && Edit_GetModify(edit);
+    return EditIsModified(edit);
 }
 
 void DropDown::SetCursorId(LPWSTR id) {

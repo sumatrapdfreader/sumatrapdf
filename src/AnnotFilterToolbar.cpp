@@ -153,11 +153,9 @@ static void UpdateCue(AnnotFilterToolbar* f) {
         return;
     }
     TempStr cue = fmt(_TRA("filter %d annotations").s, len(f->annotations));
-    if (f->edit) {
-        f->edit->SetCue(cue);
-    }
-    if (f->floatWnd && f->floatWnd->edit) {
-        f->floatWnd->edit->SetCue(cue);
+    EditSetCueText(f->edit, cue);
+    if (f->floatWnd) {
+        EditSetCueText(f->floatWnd->edit, cue);
     }
 }
 
@@ -564,8 +562,8 @@ static bool FilterHomeEndMovesList(AnnotFilterToolbar* f, int vkey, bool isCtrl)
     }
     int selStart = 0;
     int selEnd = 0;
-    e->GetSelection(selStart, selEnd);
-    int textLen = e->GetTextLen();
+    EditGetSelection(e, selStart, selEnd);
+    int textLen = EditGetTextLen(e);
     bool toEnd = (vkey == VK_END);
     return (selStart == selEnd) && (toEnd ? selEnd == textLen : selStart == 0);
 }
@@ -782,12 +780,12 @@ static void CopyFilterText(AnnotFilterToolbar* f, Edit* src, Edit* dst) {
     }
     int a = 0;
     int b = 0;
-    src->GetSelection(a, b);
+    EditGetSelection(src, a, b);
     TempStr t = src->GetTextTemp();
     f->suppressFilterChanged = true;
     dst->SetText(t);
     f->suppressFilterChanged = false;
-    dst->SetSelection(a, b);
+    EditSelectText(dst, a, b);
 }
 
 static Rect AnnotFilterWindowPlacementRect(MainWindow* win) {
@@ -1020,7 +1018,7 @@ bool AnnotFilterWindow::Create(MainWindow* mainWin) {
         edit->SetColors(colTxt, colBg);
         edit->Create(args);
         edit->SetIdealWidthFromText(fmt(_TRA("filter %d annotations").s, 999), DpiScale(8));
-        edit->SetCue(fmt(_TRA("filter %d annotations").s, 0));
+        EditSetCueText(edit, fmt(_TRA("filter %d annotations").s, 0));
         WireFilterEdit(f, edit);
     }
 
@@ -1309,7 +1307,7 @@ Edit* CreateAnnotFilterEdit(MainWindow* win, PlatformFont* font, int iconDy) {
     e->mapRtlX = true;
     e->SetIdealWidthFromText(fmt(_TRA("filter %d annotations").s, 999), DpiScale(8));
     e->idealDy = iconDy;
-    e->SetCue(fmt(_TRA("filter %d annotations").s, 0));
+    EditSetCueText(e, fmt(_TRA("filter %d annotations").s, 0));
     if (f) {
         f->edit = e;
         WireFilterEdit(f, e);

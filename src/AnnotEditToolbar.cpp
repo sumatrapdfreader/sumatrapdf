@@ -1360,7 +1360,7 @@ static void StartContentsEdit(AnnotEditToolbar* tb) {
     tb->host->Invalidate(false);
     SetActiveWindow(tb->host->native);
     edit->SetFocus();
-    edit->SetCursorPositionAtEnd();
+    EditSetCursorPosAtEnd(edit);
 }
 
 static AnnotEditToolbar* GetOrCreateToolbar(MainWindow* win) {

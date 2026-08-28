@@ -1264,7 +1264,7 @@ static void UpdateHomeSearchCueBanner(MainWindow* win) {
     }
     // _TRA returns Str; pass .s into type-safe fmt for the format string.
     TempStr cue = fmt(_TRA("Search %d files (Ctrl + F)").s, CountHomePageFiles());
-    win->homeSearch->SetCue(cue);
+    EditSetCueText(win->homeSearch, cue);
 }
 
 static void HomeSearchTextChanged(MainWindow* win) {
@@ -1304,7 +1304,7 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
     UpdateHomeSearchCueBanner(win);
     // add left/right padding so text doesn't overlap the border
     int margin = DpiScale(6);
-    e->SetMargins(margin, margin);
+    EditSetMargins(e, margin, margin);
     // restore the query from before the edit control was destroyed
     // (e.g. by switching to a document tab and back)
     if (len(win->homeSearchQuery) > 0) {
@@ -1355,7 +1355,7 @@ void HomePageOnDpiChanged(MainWindow* win, int dpi) {
         int fontSize = DpiScaleByDpi(dpi, 14);
         win->homeSearch->SetFont(GetUserGuiFont(StrL("MS Shell Dlg"), fontSize));
         int margin = DpiScaleByDpi(dpi, 6);
-        win->homeSearch->SetMargins(margin, margin);
+        EditSetMargins(win->homeSearch, margin, margin);
     }
     if (win->hwndCanvas) {
         HwndInvalidate(win->hwndCanvas, true);
@@ -1365,7 +1365,7 @@ void HomePageOnDpiChanged(MainWindow* win, int dpi) {
 void HomePageFocusSearch(MainWindow* win) {
     EnsureHomeSearchCreated(win);
     win->homeSearch->SetIsVisible(true);
-    HwndSetFocus(win->homeSearch->hwnd);
+    EditSetFocus(win->homeSearch);
 }
 
 void PickAnotherRandomPromotion() {
@@ -3474,7 +3474,7 @@ void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
         if (dRow < 0 && win->homeSearch) {
             win->homePageSearchReturnCol = HomePageIsListView() ? 0 : (idx % nCols);
             win->DeleteToolTip();
-            HwndSetFocus(win->homeSearch->hwnd);
+            EditSetFocus(win->homeSearch);
             HwndInvalidate(win->hwndCanvas); // drop selection outline while typing
             return;
         }

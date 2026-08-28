@@ -70,7 +70,7 @@ void AddFavoriteWnd::SetTarget(MainWindow* win, Str path, int page, Str labelIn,
     }
     if (editName) {
         editName->SetText(name);
-        editName->SelectAll();
+        EditSelectAll(editName);
     }
 }
 
@@ -173,10 +173,8 @@ bool AddFavoriteWnd::Create(MainWindow* win, Str path, int page, Str labelIn, St
     UpdateTheme();
 
     SetIsVisible(true);
-    if (editName) {
-        editName->SelectAll();
-        HwndSetFocus(editName->hwnd);
-    }
+    EditSelectAll(editName);
+    EditSetFocus(editName);
     return true;
 }
 
@@ -188,9 +186,7 @@ void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLa
             HwndInvalidate(gAddFavoriteWnd->hwnd);
         }
         HwndSetFocus(gAddFavoriteWnd->hwnd);
-        if (gAddFavoriteWnd->editName) {
-            HwndSetFocus(gAddFavoriteWnd->editName->hwnd);
-        }
+        EditSetFocus(gAddFavoriteWnd->editName);
         return;
     }
     auto* wnd = new AddFavoriteWnd();

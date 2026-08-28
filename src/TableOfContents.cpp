@@ -1491,8 +1491,8 @@ static void FocusTocFilterEdit(MainWindow* win) {
     if (!win || !win->tocFilterEdit || !win->tocFilterEdit->hwnd) {
         return;
     }
-    HwndSetFocus(win->tocFilterEdit->hwnd);
-    win->tocFilterEdit->SetCursorPositionAtEnd();
+    EditSetFocus(win->tocFilterEdit);
+    EditSetCursorPosAtEnd(win->tocFilterEdit);
 }
 
 // Select the first top-level bookmark (Down from the search box).

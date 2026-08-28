@@ -1638,7 +1638,7 @@ void CreateToolbar(MainWindow* win) {
     if (ctrl && win->pageEdit) {
         TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
         win->pageEdit->SetText(label);
-        win->pageEdit->SetNumbersOnly(!ctrl->HasPageLabels());
+        EditSetNumbersOnly(win->pageEdit, !ctrl->HasPageLabels());
     }
     UpdateToolbarFindText(win);
     ToolbarUpdateStateForWindow(win, true);

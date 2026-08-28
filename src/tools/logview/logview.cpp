@@ -1278,7 +1278,7 @@ static bool HandleKey(MSG* msg) {
 
     if (key == VK_OEM_2) { // '/' key
         SetFocus(gWnd->filterEdit->hwnd);
-        gWnd->filterEdit->SelectAll();
+        EditSelectAll(gWnd->filterEdit);
         return true;
     }
     if (key >= '1' && key <= '9') {

@@ -270,9 +270,7 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     HwndCenterDialog(hwnd, win->hwndFrame);
     UpdateTheme();
     SetIsVisible(true);
-    if (focusOn) {
-        HwndSetFocus(focusOn->hwnd);
-    }
+    EditSetFocus(focusOn);
 }
 
 struct PdfBakeDialog : PdfToolDialog {

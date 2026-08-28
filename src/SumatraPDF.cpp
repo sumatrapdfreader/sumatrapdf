@@ -2105,7 +2105,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
     if (win->pageEdit) {
-        win->pageEdit->SetNumbersOnly(onlyNumbers);
+        EditSetNumbersOnly(win->pageEdit, onlyNumbers);
         // a tab without a document (home page, failed load) has no page to go
         // to: disable the page box and drop the previous tab's page number.
         // With a document, sync the number here: PageNoChanged skips the
@@ -4681,10 +4681,8 @@ void LoadModelIntoTab(WindowTab* tab) {
             win->favTreeView->ExpandAll();
             RedrawWindow(win->favTreeView->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
-        if (win->favFilterEdit) {
-            HwndSetFocus(win->favFilterEdit->hwnd);
-            win->favFilterEdit->SetCursorPositionAtEnd();
-        }
+        EditSetFocus(win->favFilterEdit);
+        EditSetCursorPosAtEnd(win->favFilterEdit);
         return;
     }
 

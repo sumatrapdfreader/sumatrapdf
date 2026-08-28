@@ -253,8 +253,8 @@ static void OnListDoubleClick(TabGroupsWnd* w) {
             auto* groups = gGlobalPrefs->tabGroups;
             if (groups && sel < len(*groups)) {
                 w->editName->SetText((*groups)[sel]->name);
-                w->editName->SelectAll();
-                HwndSetFocus(w->editName->hwnd);
+                EditSelectAll(w->editName);
+                EditSetFocus(w->editName);
             }
         }
     }
@@ -380,8 +380,8 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
     UpdateDeleteButton();
     SetIsVisible(true);
     if (editName) {
-        editName->SelectAll();
-        HwndSetFocus(editName->hwnd);
+        EditSelectAll(editName);
+        EditSetFocus(editName);
     } else {
         // no name to type in when restoring: the list owns the keyboard
         SetFocusTo(listBox);

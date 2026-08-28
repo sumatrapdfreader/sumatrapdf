@@ -672,10 +672,8 @@ bool PageGridWnd::Create(MainWindow* mainWin) {
     LoadFromPrefs();
 
     SetIsVisible(true);
-    if (editWidth) {
-        editWidth->SelectAll();
-        HwndSetFocus(editWidth->hwnd);
-    }
+    EditSelectAll(editWidth);
+    EditSetFocus(editWidth);
     return true;
 }
 

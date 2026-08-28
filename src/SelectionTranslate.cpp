@@ -1338,9 +1338,7 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
     UpdateTheme();
     UpdateTranslateButtonState();
     SetIsVisible(true);
-    if (editSrcText) {
-        HwndSetFocus(editSrcText->hwnd);
-    }
+    EditSetFocus(editSrcText);
     return true;
 }
 

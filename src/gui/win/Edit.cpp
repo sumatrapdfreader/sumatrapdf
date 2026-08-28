@@ -17,6 +17,63 @@
 
 //--- Edit
 
+// the base/Win.h edit helpers, taking the control instead of its HWND
+static HWND HwndOf(Edit* e) {
+    return e ? e->hwnd : nullptr;
+}
+
+void EditSelectAll(Edit* e) {
+    EditSelectAll(HwndOf(e));
+}
+
+void EditSelectText(Edit* e, int start, int end) {
+    EditSelectText(HwndOf(e), start, end);
+}
+
+void EditGetSelection(Edit* e, int& start, int& end) {
+    EditGetSelection(HwndOf(e), start, end);
+}
+
+void EditSetCursorPos(Edit* e, int pos) {
+    EditSetCursorPos(HwndOf(e), pos);
+}
+
+void EditSetCursorPosAtEnd(Edit* e) {
+    EditSetCursorPosAtEnd(HwndOf(e));
+}
+
+int EditGetTextLen(Edit* e) {
+    return EditGetTextLen(HwndOf(e));
+}
+
+void EditSetModified(Edit* e, bool on) {
+    EditSetModified(HwndOf(e), on);
+}
+
+bool EditIsModified(Edit* e) {
+    return EditIsModified(HwndOf(e));
+}
+
+void EditSetCueText(Edit* e, Str s) {
+    EditSetCueText(HwndOf(e), s);
+}
+
+void EditSetMargins(Edit* e, int left, int right) {
+    EditSetMargins(HwndOf(e), left, right);
+}
+
+void EditSetNumbersOnly(Edit* e, bool on) {
+    EditSetNumbersOnly(HwndOf(e), on);
+}
+
+void EditSetPasswordVisible(Edit* e, bool show) {
+    EditSetPasswordVisible(HwndOf(e), show);
+}
+
+void EditSetFocus(Edit* e) {
+    HwndSetFocus(HwndOf(e));
+}
+
 // after the current mouse/focus message so the edit's default processing
 // does not undo the selection
 static void DelayedEditSelectAll(HWND hwnd) {
@@ -36,7 +93,10 @@ void PostDelayedEditSelectAll(HWND hwnd) {
 static void EditImplementCtrlBack(HWND hwnd) {
     // we calc selection in WCHAR space because it's easier
     TempWStr text = HwndGetTextWTemp(hwnd);
-    int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
+    int selStart = 0;
+    int selEnd = 0;
+    EditGetSelection(hwnd, selStart, selEnd);
+    selEnd = selStart;
     // remove the rectangle produced by Ctrl+Backspace
     if (selStart > 0 && text.s[selStart - 1] == '\x7F') {
         memmove(text.s + selStart - 1, text.s + selStart, len(text.s + selStart - 1) * sizeof(WCHAR));
@@ -85,21 +145,7 @@ static constexpr int kEditBottomBorderDy = 1;
 
 // space between the text and the left / right edges of the client area, in
 // (already DPI-scaled) pixels
-void Edit::SetMargins(int left, int right) {
-    if (!hwnd) {
-        return;
-    }
-    SendMessageW(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(left, right));
-}
-
 // the placeholder text shown while the edit is empty
-void Edit::SetCue(Str s) {
-    if (!hwnd) {
-        return;
-    }
-    Edit_SetCueBannerText(hwnd, CWStrTemp(s));
-}
-
 static int EditWidthForChars(PlatformFont* font, int nChars) {
     if (nChars <= 0) {
         return 0;
@@ -115,57 +161,11 @@ Edit::~Edit() {
     // DeleteObject(bgBrush);
 }
 
-void Edit::SetSelection(int start, int end) {
-    if (!hwnd) {
-        return;
-    }
-    EditSelectText(hwnd, start, end);
-}
-
-void Edit::GetSelection(int& start, int& end) const {
-    start = 0;
-    end = 0;
-    if (!hwnd) {
-        return;
-    }
-    DWORD sel = (DWORD)Edit_GetSel(hwnd);
-    start = (int)LOWORD(sel);
-    end = (int)HIWORD(sel);
-}
-
-int Edit::GetTextLen() const {
-    return hwnd ? HwndGetTextLen(hwnd) : 0;
-}
-
-void Edit::SetModified(bool on) {
-    if (hwnd) {
-        Edit_SetModify(hwnd, on);
-    }
-}
-
-bool Edit::IsModified() const {
-    return hwnd && Edit_GetModify(hwnd);
-}
-
 // null restores the edit's own cursor (I-beam). Must not be done with
 // GCLP_HCURSOR: that is per window class (WC_EDIT), i.e. every edit in the
 // process, so one edit would change the cursor of all the others
 void Edit::SetCursorId(LPWSTR id) {
     cursorId = id;
-}
-
-void Edit::SelectAll() {
-    EditSelectAll(hwnd);
-}
-
-void Edit::SetCursorPosition(int pos) {
-    SetSelection(pos, pos);
-}
-
-void Edit::SetCursorPositionAtEnd() {
-    TempWStr s = HwndGetTextWTemp(hwnd);
-    int pos = len(s);
-    SetCursorPosition(pos);
 }
 
 // preferred GetIdealSize width ≈ nChars average character widths (0 clears)
@@ -202,22 +202,7 @@ void Edit::SetIdealWidthFromText(Str s, int extraPx) {
     idealDx = sz.dx + extraPx;
 }
 
-void Edit::SetNumbersOnly(bool on) {
-    if (!hwnd) {
-        return;
-    }
-    HwndSetWindowStyle(hwnd, ES_NUMBER, on);
-}
-
 // 0 shows the real text; the bullet matches the old password dialog.
-void Edit::SetPasswordVisible(bool show) {
-    if (!hwnd) {
-        return;
-    }
-    SendMessageW(hwnd, EM_SETPASSWORDCHAR, show ? 0 : (WPARAM)L'\x25CF', 0);
-    HwndInvalidate(hwnd, true);
-}
-
 HWND Edit::Create(const CreateArgs& args) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     onWndProc = MkMethod1<Edit, ControlBase::WndProcEvent*, &Edit::WndProc>(this);
@@ -274,7 +259,7 @@ HWND Edit::Create(const CreateArgs& args) {
         textPadding = DpiScale(args.textPadding);
     }
     if (args.marginLeft || args.marginRight) {
-        SetMargins(args.marginLeft, args.marginRight);
+        EditSetMargins(hwnd, args.marginLeft, args.marginRight);
     }
     SizeToIdealSize(this);
     ApplyTextPadding();
@@ -286,7 +271,7 @@ HWND Edit::Create(const CreateArgs& args) {
     }
 
     if (args.cueText) {
-        SetCue(args.cueText);
+        EditSetCueText(hwnd, args.cueText);
     }
     if (args.text) {
         SetText(args.text);
@@ -388,8 +373,10 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
 
         case WM_LBUTTONUP: {
             if (selectAllOnFocus && delaySelectAll) {
-                DWORD sel = Edit_GetSel(hwnd);
-                if (LOWORD(sel) == HIWORD(sel)) {
+                int selStart = 0;
+                int selEnd = 0;
+                EditGetSelection(hwnd, selStart, selEnd);
+                if (selStart == selEnd) {
                     PostDelayedEditSelectAll(hwnd);
                 }
                 delaySelectAll = false;

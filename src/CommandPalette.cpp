@@ -153,8 +153,8 @@ void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx) {
 
 static void EditSetTextAndFocus(Edit* e, Str s) {
     e->SetText(s);
-    e->SetCursorPositionAtEnd();
-    HwndSetFocus(e->hwnd);
+    EditSetCursorPosAtEnd(e);
+    EditSetFocus(e);
 }
 
 void CommandPaletteWnd::SwitchToPrefix(Str prefix) {
@@ -214,9 +214,7 @@ void CommandPaletteWnd::OnCommand(WindowBase::CommandEvent* ev) {
         case CmdSelectAll:
             // Ctrl+A is an accelerator (CmdSelectAll) sent to this window;
             // select the query instead of the document (issue #5972).
-            if (editQuery) {
-                editQuery->SelectAll();
-            }
+            EditSelectAll(editQuery);
             ev->didHandle = true;
             return;
         case CmdCopySelection:
@@ -371,8 +369,8 @@ void CommandPaletteWnd::OnKeyDown(KeyEvent* ev) {
         // Home / End: if the caret is already at the start/end of the query,
         // move the list; otherwise let the Edit control move the caret.
         int selStart = 0, selEnd = 0;
-        editQuery->GetSelection(selStart, selEnd);
-        int textLen = editQuery->GetTextLen();
+        EditGetSelection(editQuery, selStart, selEnd);
+        int textLen = EditGetTextLen(editQuery);
         bool toEnd = (ev->vkey == VK_END);
         bool caretAtBound = (selStart == selEnd) && (toEnd ? selEnd == textLen : selStart == 0);
         if (caretAtBound) {
@@ -753,7 +751,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     DoLayout(HwndClientRect(hwnd).Size());
     PositionCommandPalette(hwnd, win->hwndFrame);
 
-    editQuery->SetCursorPositionAtEnd();
+    EditSetCursorPosAtEnd(editQuery);
     if (smartTabMode) {
         int nItems = listBox->model->ItemsCount();
         int tabToSelect = (currTabIdx + nItems + smartTabAdvance) % nItems;
@@ -766,7 +764,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     }
 
     SetIsVisible(true);
-    HwndSetFocus(editQuery->hwnd);
+    EditSetFocus(editQuery);
     return true;
 }
 
@@ -833,10 +831,8 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
         selectedCmdId = data ? data->cmdId : 0;
     }
     int qStart = 0, qEnd = 0, qLen = 0;
-    if (wnd->editQuery) {
-        wnd->editQuery->GetSelection(qStart, qEnd);
-        qLen = wnd->editQuery->GetTextLen();
-    }
+    EditGetSelection(wnd->editQuery, qStart, qEnd);
+    qLen = EditGetTextLen(wnd->editQuery);
     out.Append(fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d\n", sel, n, qStart, qEnd, qLen,
                    selectedCmdId, (int)CommandPaletteUiRtl()));
     return finish(0);

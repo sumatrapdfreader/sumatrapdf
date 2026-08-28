@@ -1762,8 +1762,8 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
         installPath = path::JoinTemp(installPath, StrL(kAppName));
     }
     editDir->SetText(installPath);
-    editDir->SetSelection(0, -1);
-    HwndSetFocus(editDir->hwnd);
+    EditSelectText(editDir, 0, -1);
+    EditSetFocus(editDir);
 }
 
 static bool InstallerOnWmCommand(WPARAM wp) {

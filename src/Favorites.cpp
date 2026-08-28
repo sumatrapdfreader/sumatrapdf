@@ -944,11 +944,11 @@ static void ExpandAllFavTree(MainWindow* win) {
 }
 
 static void FocusFavFilterEdit(MainWindow* win) {
-    if (!win || !win->favFilterEdit || !win->favFilterEdit->hwnd) {
+    if (!win) {
         return;
     }
-    HwndSetFocus(win->favFilterEdit->hwnd);
-    win->favFilterEdit->SetCursorPositionAtEnd();
+    EditSetFocus(win->favFilterEdit);
+    EditSetCursorPosAtEnd(win->favFilterEdit);
 }
 
 // Select first top-level item's first child when it has children; otherwise the

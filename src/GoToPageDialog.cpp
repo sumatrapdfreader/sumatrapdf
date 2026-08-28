@@ -65,9 +65,9 @@ void GoToPageWnd::SetTarget(MainWindow* mainWin) {
         labelOf->SetText(fmt(_TRA("(of %d)").s, pageCount));
     }
     if (editPage) {
-        editPage->SetNumbersOnly(onlyNumeric);
+        EditSetNumbersOnly(editPage, onlyNumeric);
         editPage->SetText(pageLabel);
-        editPage->SelectAll();
+        EditSelectAll(editPage);
     }
 }
 
@@ -194,10 +194,8 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
     UpdateTheme();
 
     SetIsVisible(true);
-    if (editPage) {
-        editPage->SelectAll();
-        HwndSetFocus(editPage->hwnd);
-    }
+    EditSelectAll(editPage);
+    EditSetFocus(editPage);
     return true;
 }
 
@@ -212,9 +210,7 @@ void ShowGoToPageDialog(MainWindow* win) {
             HwndInvalidate(gGoToPageWnd->hwnd);
         }
         HwndSetFocus(gGoToPageWnd->hwnd);
-        if (gGoToPageWnd->editPage) {
-            HwndSetFocus(gGoToPageWnd->editPage->hwnd);
-        }
+        EditSetFocus(gGoToPageWnd->editPage);
         return;
     }
     auto* wnd = new GoToPageWnd();

@@ -22,6 +22,7 @@ enum WindowBorderStyle {
 
 struct WindowBase;
 struct ControlBase;
+struct Edit;
 struct HwndBase;
 struct VirtRoot;
 struct PlatformFont;
@@ -684,6 +685,23 @@ using TextChangedHandler = Func0;
 void PostDelayedEditSelectAll(HWND);
 void PostDelayedEditCtrlBack(HWND);
 
+// The base/Win.h edit helpers, taking the control rather than its HWND, so a
+// caller that holds an Edit* can pass it straight in. A null control is the
+// same no-op a null HWND is.
+void EditSelectAll(Edit*);
+void EditSelectText(Edit*, int start, int end);
+void EditGetSelection(Edit*, int& start, int& end);
+void EditSetCursorPos(Edit*, int pos);
+void EditSetCursorPosAtEnd(Edit*);
+int EditGetTextLen(Edit*);
+void EditSetModified(Edit*, bool);
+bool EditIsModified(Edit*);
+void EditSetCueText(Edit*, Str);
+void EditSetMargins(Edit*, int left, int right);
+void EditSetNumbersOnly(Edit*, bool);
+void EditSetPasswordVisible(Edit*, bool);
+void EditSetFocus(Edit*);
+
 struct Edit : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
@@ -768,21 +786,9 @@ struct Edit : ControlBase {
     void SetIdealWidthChars(int nChars);
     void SetMaxWidthChars(int nChars);
     void SetIdealWidthFromText(Str s, int extraPx = 0);
-    void SetNumbersOnly(bool);
-    void SetPasswordVisible(bool);
 
     int GetLeftTextMargin();
 
-    void SetCue(Str);
-    void SetMargins(int left, int right);
-    void SetSelection(int start, int end);
-    void GetSelection(int& start, int& end) const;
-    void SelectAll();
-    void SetCursorPosition(int pos);
-    void SetCursorPositionAtEnd();
-    int GetTextLen() const;
-    void SetModified(bool);
-    bool IsModified() const;
     void SetCursorId(LPWSTR);
     bool HasBorder();
     void ApplyTextPadding();

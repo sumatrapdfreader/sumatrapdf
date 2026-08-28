@@ -549,9 +549,7 @@ void SignDocumentWnd::OnBrowse(VirtMouseEvent*) {
     if (editCert) {
         editCert->SetText(ToUtf8Temp(WStr(fileName)));
     }
-    if (editPassword) {
-        HwndSetFocus(editPassword->hwnd);
-    }
+    EditSetFocus(editPassword);
 }
 
 void SignDocumentWnd::OnBrowseImage(VirtMouseEvent*) {
@@ -859,7 +857,7 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
 
     SetIsVisible(true);
     if (UsingCertFile() && editCert) {
-        HwndSetFocus(editCert->hwnd);
+        EditSetFocus(editCert);
     } else if (ddCert) {
         HwndSetFocus(ddCert->hwnd);
     }

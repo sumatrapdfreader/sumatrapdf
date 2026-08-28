@@ -751,8 +751,8 @@ void AdvancedSettingsWnd::BeginEditValue(int idx) {
     editValue = c;
     editItemIdx = idx;
     SetWindowPos(c->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_SHOWWINDOW);
-    c->SelectAll();
-    HwndSetFocus(c->hwnd);
+    EditSelectAll(c);
+    EditSetFocus(c);
     editCreating = false;
     if (pendingCancelEdit) {
         pendingCancelEdit = false;
@@ -1413,7 +1413,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     PositionDialog(hwnd, win->hwndFrame);
 
     SetIsVisible(true);
-    HwndSetFocus(editFilter->hwnd);
+    EditSetFocus(editFilter);
     return true;
 }
 

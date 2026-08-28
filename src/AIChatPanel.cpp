@@ -1449,9 +1449,7 @@ void OnAIChatToggle(MainWindow* win, int providerId) {
         EnsureWebViewReady(win);
         UpdateAIChatPanelForCurrentTab(win);
         PopulateSessionCombo(win);
-        if (win->aiChatInput) {
-            HwndSetFocus(win->aiChatInput->hwnd);
-        }
+        EditSetFocus(win->aiChatInput);
         // if the webview was recreated (provider change), its navigationCompleted
         // callback replays the chat once the new page has loaded
         // defer auto-select so SetHtml has time to load the page

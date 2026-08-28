@@ -910,10 +910,8 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
     UpdateTheme();
 
     SetIsVisible(true);
-    if (editRgb) {
-        HwndSetFocus(editRgb->hwnd);
-        editRgb->SelectAll();
-    }
+    EditSetFocus(editRgb);
+    EditSelectAll(editRgb);
     return true;
 }
 
@@ -924,10 +922,8 @@ void ShowChangeBackgroundColorDialog(MainWindow* win) {
     if (gChangeColorWnd) {
         gChangeColorWnd->SetTargetBackground(win);
         HwndSetFocus(gChangeColorWnd->hwnd);
-        if (gChangeColorWnd->editRgb) {
-            HwndSetFocus(gChangeColorWnd->editRgb->hwnd);
-            gChangeColorWnd->editRgb->SelectAll();
-        }
+        EditSetFocus(gChangeColorWnd->editRgb);
+        EditSelectAll(gChangeColorWnd->editRgb);
         return;
     }
     auto* wnd = new ChangeColorWnd();
@@ -952,10 +948,8 @@ void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab) {
     if (gChangeColorWnd) {
         gChangeColorWnd->SetTargetTab(win, tab);
         HwndSetFocus(gChangeColorWnd->hwnd);
-        if (gChangeColorWnd->editRgb) {
-            HwndSetFocus(gChangeColorWnd->editRgb->hwnd);
-            gChangeColorWnd->editRgb->SelectAll();
-        }
+        EditSetFocus(gChangeColorWnd->editRgb);
+        EditSelectAll(gChangeColorWnd->editRgb);
         return;
     }
     auto* wnd = new ChangeColorWnd();

@@ -81,9 +81,7 @@ void GetPasswordWnd::OnShowPasswordChanged() {
     if (showPassword) {
         *showPassword = show;
     }
-    if (editPwd) {
-        editPwd->SetPasswordVisible(show);
-    }
+    EditSetPasswordVisible(editPwd, show);
 }
 
 static void OnClose(WindowBase::CloseEvent* ev) {
@@ -174,7 +172,7 @@ bool GetPasswordWnd::Create() {
         chkShow = c;
         vbox->AddChild(c);
         if (showPassword && *showPassword) {
-            editPwd->SetPasswordVisible(true);
+            EditSetPasswordVisible(editPwd, true);
         }
     }
 
@@ -217,9 +215,7 @@ bool GetPasswordWnd::Create() {
 
     SetIsVisible(true);
     BringWindowToTop(hwnd);
-    if (editPwd) {
-        HwndSetFocus(editPwd->hwnd);
-    }
+    EditSetFocus(editPwd);
     return true;
 }
 

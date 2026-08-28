@@ -108,9 +108,21 @@ void HwndSendCommand(HWND hwnd, int cmdId, LPARAM lp = 0);
 void HwndPostCommand(HWND hwnd, int cmdId, LPARAM lp = 0);
 
 //--- edit control
+// all no-op (or return a zero value) on a null hwnd. gui/win/WinGui.h overloads
+// them on Edit*, which is what code holding a control should call
 
 void EditSelectAll(HWND);
 void EditSelectText(HWND hwnd, int start, int end);
+void EditGetSelection(HWND hwnd, int& start, int& end);
+void EditSetCursorPos(HWND hwnd, int pos);
+void EditSetCursorPosAtEnd(HWND hwnd);
+int EditGetTextLen(HWND hwnd);
+void EditSetModified(HWND hwnd, bool);
+bool EditIsModified(HWND hwnd);
+void EditSetCueText(HWND hwnd, Str);
+void EditSetMargins(HWND hwnd, int left, int right);
+void EditSetNumbersOnly(HWND hwnd, bool);
+void EditSetPasswordVisible(HWND hwnd, bool);
 
 //--- list box
 
