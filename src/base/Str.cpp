@@ -1730,10 +1730,10 @@ TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
 // kPadding is number of characters needed for terminating character
 static constexpr int kPadding = 1;
 
-// still on the caller's scratch (or with no storage at all), i.e. there is no
-// block of ours to grow
-static bool IsCallerScratch(const str::Builder* s) {
-    return !s->els || (s->cap < 0 && s->nReallocs == 0);
+// storage that isn't a heap block of ours: a lent buffer, an arena block, or
+// nothing at all
+static bool IsNotOurHeapBlock(const str::Builder* s) {
+    return !s->els || s->cap < 0;
 }
 
 // both Builders lead with {len, cap, els}, in that order, so they have Vec<T>'s
@@ -1758,15 +1758,11 @@ static char* EnsureCap(Arena* a, str::Builder* s, int needed) {
         return s->els;
     }
 
-    bool callerScratch = IsCallerScratch(s);
-    // the caller's scratch is not ours to double; an arena block is
-    int curCap = callerScratch ? 0 : (s->cap < 0 ? -s->cap : s->cap);
+    int curCap = s->cap < 0 ? -s->cap : s->cap;
     int newCap = curCap * 2;
     newCap = std::max(needed, newCap);
 
     int newElCount = newCap + kPadding;
-
-    s->nReallocs++;
 
     int allocSize = newElCount;
     char* newEls;
@@ -1936,9 +1932,9 @@ Str str::BuilderTakeStr(Arena* a, Builder& b) {
         b.Reset();
         return Str{};
     }
-    if (IsCallerScratch(&b)) {
-        // the chars are in the caller's scratch, so they have to be duplicated
-        // and the Builder keeps using the scratch
+    if (IsNotOurHeapBlock(&b)) {
+        // storage we can't hand over: a lent buffer, or an arena block the arena
+        // owns. The chars are copied out and the Builder keeps using it.
         res = (char*)MemDup(a, b.els, (size_t)n + kPadding);
     } else {
         // hand the block (heap or arena) to the caller and start over
@@ -1971,8 +1967,8 @@ char str::Builder::LastChar() const {
 }
 
 // using external scratch, or no storage yet (not heap)
-static bool IsCallerScratch(const wstr::Builder* s) {
-    return !s->els || (s->cap < 0 && s->nReallocs == 0);
+static bool IsNotOurHeapBlock(const wstr::Builder* s) {
+    return !s->els || s->cap < 0;
 }
 
 static WCHAR* EnsureCap(Arena* a, wstr::Builder* s, int needed) {
@@ -1985,15 +1981,11 @@ static WCHAR* EnsureCap(Arena* a, wstr::Builder* s, int needed) {
         return s->els;
     }
 
-    bool callerScratch = IsCallerScratch(s);
-    // the caller's scratch is not ours to double; an arena block is
-    int curCap = callerScratch ? 0 : (s->cap < 0 ? -s->cap : s->cap);
+    int curCap = s->cap < 0 ? -s->cap : s->cap;
     int newCap = curCap * 2;
     newCap = std::max(needed, newCap);
 
     int newElCount = newCap + kPadding;
-
-    s->nReallocs++;
 
     int allocSize = newElCount * wstr::Builder::kElSize;
     WCHAR* newEls;
@@ -2154,9 +2146,9 @@ WStr wstr::BuilderTakeWStr(Arena* a, Builder& b) {
         b.Reset();
         return WStr{};
     }
-    if (IsCallerScratch(&b)) {
-        // the chars are in the caller's scratch, so they have to be duplicated
-        // and the Builder keeps using the scratch
+    if (IsNotOurHeapBlock(&b)) {
+        // storage we can't hand over: a lent buffer, or an arena block the arena
+        // owns. The chars are copied out and the Builder keeps using it.
         res = (WCHAR*)MemDup(a, b.els, (size_t)(n + kPadding) * wstr::Builder::kElSize);
     } else {
         // hand the block (heap or arena) to the caller and start over

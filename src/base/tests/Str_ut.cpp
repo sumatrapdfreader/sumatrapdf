@@ -322,7 +322,6 @@ static void StrBuilderTakeStr(str::Builder& str) {
 static void StrBuilderReserve() {
     str::Builder str;
     str::BuilderReserve(nullptr, str, 1024);
-    utassert(str.nReallocs == 1);
     uintptr_t heap = (uintptr_t)str.begin();
     utassert(heap != 0);
     for (int i = 0; i < 50; i++) {
@@ -330,7 +329,6 @@ static void StrBuilderReserve() {
     }
     // 50*20 = 1000 chars < 1024, so no further realloc
     utassert((uintptr_t)str.begin() == heap);
-    utassert(str.nReallocs == 1);
 
     // reserving less than an external buf already holds keeps the buf
     char stack[64];
@@ -338,7 +336,6 @@ static void StrBuilderReserve() {
     str::BuilderUseExternalBuffer(str2, Str(stack, sizeofi(stack)));
     str::BuilderReserve(nullptr, str2, 16);
     utassert(str2.UsesExternalBuf());
-    utassert(str2.nReallocs == 0);
     utassert((uintptr_t)str2.begin() == (uintptr_t)stack);
 }
 
@@ -432,14 +429,12 @@ static void WStrBuilderTakeWStr(wstr::Builder& str) {
 static void WStrBuilderReserve() {
     wstr::Builder str;
     wstr::BuilderReserve(nullptr, str, 1024);
-    utassert(str.nReallocs == 1);
     uintptr_t heap = (uintptr_t)str.begin();
     utassert(heap != 0);
     for (int i = 0; i < 50; i++) {
         str.Append(L"01234567890123456789");
     }
     utassert((uintptr_t)str.begin() == heap);
-    utassert(str.nReallocs == 1);
 
     // reserving less than an external buf already holds keeps the buf
     WCHAR stack[64];
@@ -447,7 +442,6 @@ static void WStrBuilderReserve() {
     wstr::BuilderUseExternalBuffer(str2, WStr(stack, dimofi(stack)));
     wstr::BuilderReserve(nullptr, str2, 16);
     utassert(str2.UsesExternalBuf());
-    utassert(str2.nReallocs == 0);
     utassert((uintptr_t)str2.begin() == (uintptr_t)stack);
 }
 

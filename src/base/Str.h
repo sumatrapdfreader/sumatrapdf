@@ -242,12 +242,11 @@ struct Builder {
     // Vec<T> and can be handed to the VecNonTemplated helpers
     int len = 0;
     // Negative means the chars sit in storage this Builder does not own and the
-    // capacity is `-cap`, exactly like Vec<T>. That is the externalBuf ctor arg
-    // while nReallocs is 0, and an arena block after that. Growing allocates a
-    // fresh block and copies; nothing frees it.
+    // capacity is `-cap`, exactly like Vec<T>: the buffer lent by
+    // BuilderUseExternalBuffer(), or a block allocated from an arena. Growing
+    // allocates a fresh block and copies; nothing frees it.
     int cap = 0;
     char* els = nullptr;
-    int nReallocs = 0;
 
     Builder() = default;
     // the implicit memberwise copy would alias els and double-free it
@@ -256,8 +255,9 @@ struct Builder {
 
     ~Builder();
 
-    // true while storage is the caller's scratch (or there is none yet)
-    bool UsesExternalBuf() const { return !els || (cap < 0 && nReallocs == 0); }
+    // true while the storage isn't a heap block of ours (a lent buffer, an
+    // arena block, or nothing yet)
+    bool UsesExternalBuf() const { return !els || cap < 0; }
 
     void Reset(Str s = {});
     char& operator[](int idx) const;
@@ -312,7 +312,6 @@ struct Builder {
     // negative cap means storage we don't own, of capacity -cap; see str::Builder
     int cap = 0;
     WCHAR* els = nullptr;
-    int nReallocs = 0;
 
     static constexpr int kElSize = sizeofi(WCHAR);
 
@@ -323,8 +322,9 @@ struct Builder {
 
     ~Builder();
 
-    // true while storage is the caller's scratch (or there is none yet)
-    bool UsesExternalBuf() const { return !els || (cap < 0 && nReallocs == 0); }
+    // true while the storage isn't a heap block of ours (a lent buffer, an
+    // arena block, or nothing yet)
+    bool UsesExternalBuf() const { return !els || cap < 0; }
 
     void Reset(WStr s = {});
     WCHAR& operator[](int idx) const;
