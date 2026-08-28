@@ -151,7 +151,7 @@ bool AddFavoriteWnd::Create(MainWindow* win, Str path, int page, Str labelIn, St
         hbox->alignMain = MainAxisAlign::MainEnd;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
+        auto pad = Insets{.top = 4, .right = 0, .bottom = 4, .left = 0};
 
         btnCancel = NewThemedButton(hwnd, _TRA("Cancel"), font, false);
         btnCancel->onClick = MkMethod1<AddFavoriteWnd, VirtMouseEvent*, &AddFavoriteWnd::OnCancel>(this);

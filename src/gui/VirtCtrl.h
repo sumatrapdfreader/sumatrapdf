@@ -670,7 +670,7 @@ struct VirtLink : VirtText {
 
 struct VirtButton : VirtText {
     // colors: kColBtn*, defaulting to gColsBtnDefault when isDefault
-    Insets textPadding{4, 8, 4, 8};
+    Insets textPadding{.top = 4, .right = 8, .bottom = 4, .left = 8};
 
     VirtButton(Str s, PlatformFont* font = nullptr);
     ~VirtButton() override;
