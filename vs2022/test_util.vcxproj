@@ -965,8 +965,7 @@
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\PageRenderPolicy.h" />
     <ClInclude Include="..\src\PdfDarkMode.h" />
-    <ClInclude Include="..\src\RefHoverDetect.h" />
-    <ClInclude Include="..\src\RefHoverTextDetect.h" />
+    <ClInclude Include="..\src\RefHover.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\AppendStore.h" />

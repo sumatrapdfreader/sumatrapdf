@@ -13,8 +13,7 @@
 
 #include "DocController.h"
 #include "EngineBase.h"
-#include "RefHoverInternal.h"
-#include "RefHoverText.h"
+#include "RefHover.h"
 
 RefHoverState* RefHoverCreate(HWND hwndCanvas) {
     auto* s = new RefHoverState();

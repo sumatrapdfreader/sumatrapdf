@@ -15,7 +15,6 @@
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "RefHover.h"
-#include "RefHoverText.h"
 
 // Canvas wiring entry points (RefHoverCanvas.cpp) — keep Canvas.cpp thin.
 bool RefHoverIsInternalLink(IPageElement* el, DisplayModel* dm) {

@@ -7,8 +7,7 @@
 // region matching the documented behaviour.
 
 #include "base/Base.h"
-#include "RefHoverDetect.h"
-#include "RefHoverTextDetect.h"
+#include "RefHover.h"
 
 // must be last due to assert() over-write
 #include "base/UtAssert.h"

@@ -7,7 +7,7 @@
 
 #include "DocController.h"
 #include "EngineBase.h"
-#include "RefHoverInternal.h"
+#include "RefHover.h"
 
 bool RefHoverIsLaunchLink(IPageDestination* dest) {
     if (!dest) {

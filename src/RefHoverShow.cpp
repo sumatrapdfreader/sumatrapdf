@@ -8,9 +8,7 @@
 
 #include "DocController.h"
 #include "EngineBase.h"
-#include "RefHoverDetect.h"
-#include "RefHoverInternal.h"
-#include "RefHoverText.h"
+#include "RefHover.h"
 
 // pageZoom is the destination page's current display zoom (px-per-pt) —
 // used as the initial render zoom so popup text height matches the page.

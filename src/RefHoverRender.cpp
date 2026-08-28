@@ -10,7 +10,7 @@
 
 #include "DocController.h"
 #include "EngineBase.h"
-#include "RefHoverInternal.h"
+#include "RefHover.h"
 
 struct RefHoverRenderJob {
     RefHoverState* s = nullptr;

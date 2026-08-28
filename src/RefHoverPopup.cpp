@@ -10,7 +10,7 @@
 
 #include "DocController.h"
 #include "EngineBase.h"
-#include "RefHoverInternal.h"
+#include "RefHover.h"
 
 static int gClassRegistered = 0;
 

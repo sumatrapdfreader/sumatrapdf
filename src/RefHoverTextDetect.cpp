@@ -7,7 +7,7 @@
 // without pulling in the engine, HWND, or rendering layers.
 
 #include "base/Base.h"
-#include "RefHoverTextDetect.h"
+#include "RefHover.h"
 
 // === Plain-text citation detection ===
 
