@@ -592,6 +592,47 @@ NO_INLINE bool VecRealloc(Arena* a, void** els, int len, int* cap, int newCap, i
     return true;
 }
 
+// Doubling, but never from a first capacity of one. max(cap * 2, wanted)
+// out of an empty vec hands back 1, so a vec that ends up holding four
+// elements reallocates and memcpys three times on the way there. The floor
+// is in bytes rather than in elements (Rust's RawVec::MIN_NON_ZERO_CAP):
+// four 192-byte items is a sensible first block and four 4 KB ones is not.
+static int VecNextCap(int cap, int wanted, int elSize) {
+    if (cap == 0) {
+        int floorCap = elSize == 1 ? 8 : elSize <= 1024 ? 4 : 1;
+        return std::max(floorCap, wanted);
+    }
+    return std::max(cap * 2, wanted);
+}
+
+// The element type is erased so this is compiled once rather than once per
+// Vec<T>. A negative cap means the elements sit in storage the vec borrowed
+// (VecUseExternalBuffer); growing past it allocates and copies, and leaves the
+// borrowed block alone.
+NO_INLINE bool VecReserveNonTemplated(Arena* arena, VecNonTemplated& v, int wantedSize) {
+    int elSize = v.elSize;
+    int curCap = v.cap < 0 ? -v.cap : v.cap;
+    if (wantedSize <= curCap) {
+        return true;
+    }
+    int newCap = VecNextCap(curCap, wantedSize, elSize);
+    if (v.cap < 0) {
+        void* borrowed = *v.pels;
+        *v.pels = nullptr;
+        v.cap = 0;
+        if (!VecRealloc(arena, v.pels, 0, &v.cap, newCap, elSize)) {
+            *v.pels = borrowed;
+            v.cap = -curCap;
+            return false;
+        }
+        if (v.len > 0) {
+            memcpy(*v.pels, borrowed, (size_t)v.len * (size_t)elSize);
+        }
+        return true;
+    }
+    return VecRealloc(arena, v.pels, v.len, &v.cap, newCap, elSize);
+}
+
 // Logs an arena's lifetime allocation count and peak bytes. Call on exit, before
 // logging is torn down.
 void LogArenaStats(Str what, Arena* a) {

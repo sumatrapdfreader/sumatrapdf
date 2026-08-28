@@ -11,6 +11,18 @@ Storage is heap (or arena) only; starts empty with no allocation.
 template <typename T>
 struct Vec;
 
+// A vec-like {els,len,cap} with the element type erased, so the growth logic
+// is compiled once instead of per Vec<T>. len is read-only for the callee;
+// cap is written back by the caller, els is written through pels.
+struct VecNonTemplated {
+    int len;
+    int cap;
+    void** pels;
+    int elSize;
+};
+
+bool VecReserveNonTemplated(Arena* arena, VecNonTemplated& v, int wantedSize);
+
 // Ensure capacity is at least wantedSize for a vec-like {els,len,cap}.
 // Growth: max(cap*2, wantedSize). arena may be null (heap).
 template <typename T>
@@ -307,45 +319,15 @@ void VecReverse(Vec<T>& v) {
     }
 }
 
-// Doubling, but never from a first capacity of one. max(cap * 2, wanted)
-// out of an empty vec hands back 1, so a vec that ends up holding four
-// elements reallocates and memcpys three times on the way there. The floor
-// is in bytes rather than in elements (Rust's RawVec::MIN_NON_ZERO_CAP):
-// four 192-byte items is a sensible first block and four 4 KB ones is not.
-inline int VecNextCap(int cap, int wanted, int elSize) {
-    if (cap == 0) {
-        int floorCap = elSize == 1 ? 8 : elSize <= 1024 ? 4 : 1;
-        return std::max(floorCap, wanted);
-    }
-    return std::max(cap * 2, wanted);
-}
-
 template <typename T>
 bool VecReserve(Arena* arena, T& v, int wantedSize) {
     // v is a Vec<T> or a vec-shaped struct (str::Builder), so the borrowed-
-    // storage sign is spelled out here rather than read off Cap() those do
-    // not have. A positive cap in those is the only case they ever reach.
-    int elSize = (int)sizeof(*v.els);
-    int curCap = v.cap < 0 ? -v.cap : v.cap;
-    if (wantedSize <= curCap) {
-        return true;
-    }
-    int newCap = VecNextCap(curCap, wantedSize, elSize);
-    if (v.cap < 0) {
-        auto* borrowed = v.els;
-        v.els = nullptr;
-        v.cap = 0;
-        if (!VecRealloc(arena, (void**)&v.els, 0, &v.cap, newCap, elSize)) {
-            v.els = borrowed;
-            v.cap = -curCap;
-            return false;
-        }
-        if (v.len > 0) {
-            memcpy((void*)v.els, (const void*)borrowed, (size_t)v.len * (size_t)elSize);
-        }
-        return true;
-    }
-    return VecRealloc(arena, (void**)&v.els, v.len, &v.cap, newCap, elSize);
+    // storage sign is spelled out in VecReserveNonTemplated rather than read
+    // off Cap() those do not have.
+    VecNonTemplated nt{v.len, v.cap, (void**)&v.els, (int)sizeof(*v.els)};
+    bool ok = VecReserveNonTemplated(arena, nt, wantedSize);
+    v.cap = nt.cap;
+    return ok;
 }
 
 // Lend v an array to start in, instead of its first allocation. The vec
