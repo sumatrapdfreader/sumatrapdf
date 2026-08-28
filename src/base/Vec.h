@@ -11,17 +11,25 @@ Storage is heap (or arena) only; starts empty with no allocation.
 template <typename T>
 struct Vec;
 
-// A vec-like {els,len,cap} with the element type erased, so the growth logic
-// is compiled once instead of per Vec<T>. len is read-only for the callee;
-// cap is written back by the caller, els is written through pels.
+// Vec<T> with the element type erased. Vec<T>'s layout does not depend on T,
+// so Vec<T>::NT() is a cast rather than a copy and the shims below cost
+// nothing beyond passing elSize. The bodies live in Arena.cpp and so are
+// compiled once instead of once per Vec<T>.
 struct VecNonTemplated {
     int len;
     int cap;
-    void** pels;
-    int elSize;
+    void* els;
 };
 
-bool VecReserveNonTemplated(Arena* arena, VecNonTemplated& v, int wantedSize);
+bool VecReserveNonTemplated(Arena* arena, VecNonTemplated* v, int elSize, int wantedSize);
+void* VecInsertSpaceNonTemplated(VecNonTemplated* v, int elSize, int idx, int count);
+bool VecResizeNonTemplated(VecNonTemplated* v, int elSize, int newSize);
+void VecRemoveAtNonTemplated(VecNonTemplated* v, int elSize, int idx, int count);
+void VecRemoveAtFastNonTemplated(VecNonTemplated* v, int elSize, int idx);
+void VecFreeElsNonTemplated(VecNonTemplated* v);
+void VecClearNonTemplated(VecNonTemplated* v, int elSize);
+void* VecTakeNonTemplated(VecNonTemplated* v, int elSize);
+void VecCopyFromNonTemplated(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail);
 
 // Ensure capacity is at least wantedSize for a vec-like {els,len,cap}.
 // Growth: max(cap*2, wantedSize). arena may be null (heap).
@@ -57,16 +65,11 @@ struct Vec {
 
     int Cap() const { return cap < 0 ? -cap : cap; }
 
-    void FreeEls() {
-        if (els) {
-            if (cap > 0) {
-                Free(nullptr, (void*)els);
-            } else {
-                cap = 0;
-            }
-            els = nullptr;
-        }
-    }
+    // Vec<T>'s layout is the same for every T (see the static_asserts below),
+    // so the type-erased view is a cast, not a copy
+    VecNonTemplated* NT() { return (VecNonTemplated*)this; }
+
+    void FreeEls() { VecFreeElsNonTemplated(NT()); }
 
     // resets to initial state, freeing memory
     void Reset() {
@@ -77,25 +80,13 @@ struct Vec {
 
     // use to empty but don't free els
     // for efficient reuse
-    void Clear() {
-        len = 0;
-        if (els && Cap() > 0) {
-            memset((void*)els, 0, (size_t)Cap() * sizeof(T));
-        }
-    }
+    void Clear() { VecClearNonTemplated(NT(), (int)sizeof(T)); }
 
     explicit Vec() = default;
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
-    Vec(const Vec& other) {
-        VecReserve(*this, other.len);
-        len = other.len;
-        // using memcpy, as Vec only supports POD types
-        if (other.len > 0 && other.els && els) {
-            memcpy((void*)els, (const void*)other.els, sizeof(T) * (size_t)other.len);
-        }
-    }
+    Vec(const Vec& other) { VecCopyFromNonTemplated(NT(), (int)sizeof(T), other.len, (const void*)other.els, false); }
 
     Vec& operator=(const Vec& other) {
         if (this == &other) {
@@ -103,13 +94,7 @@ struct Vec {
         }
 
         Reset();
-        VecReserve(*this, other.len);
-        // using memcpy, as Vec only supports POD types
-        len = other.len;
-        if (other.len > 0) {
-            memcpy((void*)els, (const void*)other.els, sizeof(T) * (size_t)len);
-            memset((void*)(els + len), 0, sizeof(T) * (size_t)(Cap() - len));
-        }
+        VecCopyFromNonTemplated(NT(), (int)sizeof(T), other.len, (const void*)other.els, true);
         return *this;
     }
 
@@ -165,15 +150,7 @@ struct Vec {
     // appends count blank (i.e. zeroed-out) elements at the end
     T* AppendBlanks(int count) { return VecInsertSpace(*this, len, count); }
 
-    void RemoveAt(int idx, int count = 1) {
-        if (len > idx + count) {
-            T* dst = els + idx;
-            T* src = els + idx + count;
-            memmove((void*)dst, (const void*)src, (size_t)(len - idx - count) * sizeof(T));
-        }
-        len -= count;
-        memset((void*)(els + len), 0, (size_t)count * sizeof(T));
-    }
+    void RemoveAt(int idx, int count = 1) { VecRemoveAtNonTemplated(NT(), (int)sizeof(T), idx, count); }
 
     void RemoveLast() {
         if (len == 0) {
@@ -187,19 +164,7 @@ struct Vec {
     // It can only be used if order of elements doesn't matter and elements
     // can be copied via memcpy()
     // TODO: could be extend to take number of elements to remove
-    void RemoveAtFast(int idx) {
-        ReportIf(idx >= len);
-        if (idx >= len) {
-            return;
-        }
-        T* toRemove = els + idx;
-        T* last = els + len - 1;
-        if (toRemove != last) {
-            memcpy((void*)toRemove, (const void*)last, sizeof(T));
-        }
-        memset((void*)last, 0, sizeof(T));
-        --len;
-    }
+    void RemoveAtFast(int idx) { VecRemoveAtFastNonTemplated(NT(), (int)sizeof(T), idx); }
 
     T Pop() {
         ReportIf(0 == len);
@@ -224,31 +189,7 @@ struct Vec {
     // without duplicate allocation. Note: since Vec over-allocates, this
     // is likely to use more memory than strictly necessary, but in most cases
     // it doesn't matter
-    T* Take() {
-        if (cap < 0) {
-            int n = len;
-            T* borrowed = els;
-            els = nullptr;
-            cap = 0;
-            len = 0;
-            if (n <= 0) {
-                return nullptr;
-            }
-            if (!VecRealloc(nullptr, (void**)&els, 0, &cap, n, (int)sizeof(T))) {
-                return nullptr;
-            }
-            memcpy((void*)els, (const void*)borrowed, (size_t)n * sizeof(T));
-            T* res = els;
-            els = nullptr;
-            cap = 0;
-            return res;
-        }
-        T* res = els;
-        els = nullptr;
-        len = 0;
-        cap = 0;
-        return res;
-    }
+    T* Take() { return (T*)VecTakeNonTemplated(NT(), (int)sizeof(T)); }
 
     T* LendData() const { return els; }
 
@@ -319,13 +260,19 @@ void VecReverse(Vec<T>& v) {
     }
 }
 
+// Vec<T> can hand its own storage over directly
+template <typename T>
+bool VecReserve(Arena* arena, Vec<T>& v, int wantedSize) {
+    return VecReserveNonTemplated(arena, v.NT(), (int)sizeof(T), wantedSize);
+}
+
+// str::Builder and friends are vec-shaped but do not have Vec's layout (they
+// put other fields first), so their fields are copied in and out
 template <typename T>
 bool VecReserve(Arena* arena, T& v, int wantedSize) {
-    // v is a Vec<T> or a vec-shaped struct (str::Builder), so the borrowed-
-    // storage sign is spelled out in VecReserveNonTemplated rather than read
-    // off Cap() those do not have.
-    VecNonTemplated nt{v.len, v.cap, (void**)&v.els, (int)sizeof(*v.els)};
-    bool ok = VecReserveNonTemplated(arena, nt, wantedSize);
+    VecNonTemplated nt{v.len, v.cap, (void*)v.els};
+    bool ok = VecReserveNonTemplated(arena, &nt, (int)sizeof(*v.els), wantedSize);
+    v.els = (decltype(v.els))nt.els;
     v.cap = nt.cap;
     return ok;
 }
@@ -342,6 +289,15 @@ bool VecReserve(Arena* arena, T& v, int wantedSize) {
 // and copies, leaving buf alone. Nothing frees buf, so it must outlive the
 // vec. The vec must not then have its storage taken over by hand
 // (other.els = v.els), since the sign is what says the block is not the heap's.
+// Vec<T>::NT() casts, so the layouts must match. Vec<T> is standard-layout and
+// its field offsets do not depend on T; check both a small and a large T.
+static_assert(sizeof(Vec<char>) == sizeof(VecNonTemplated));
+static_assert(offsetof(Vec<char>, len) == offsetof(VecNonTemplated, len));
+static_assert(offsetof(Vec<char>, cap) == offsetof(VecNonTemplated, cap));
+static_assert(offsetof(Vec<char>, els) == offsetof(VecNonTemplated, els));
+static_assert(sizeof(Vec<double>) == sizeof(VecNonTemplated));
+static_assert(offsetof(Vec<double>, els) == offsetof(VecNonTemplated, els));
+
 template <typename T, int N>
 inline void VecUseExternalBuffer(Vec<T>& v, T (&buf)[N]) {
     v.els = buf;
@@ -359,38 +315,14 @@ inline T* VecReserve(Vec<T>& v, int capNeeded) {
 
 template <typename T>
 T* VecInsertSpace(Vec<T>& v, int idx, int count) {
-    int newLen = std::max(v.len, idx) + count;
-    T* ok = VecReserve(v, newLen);
-    if (!ok) {
-        return nullptr;
-    }
-    T* res = &(v.els[idx]);
-    if (v.len > idx) {
-        T* src = v.els + idx;
-        T* dst = v.els + idx + count;
-        memmove((void*)dst, (const void*)src, (size_t)(v.len - idx) * sizeof(T));
-    }
-    v.len = newLen;
-    return res;
+    return (T*)VecInsertSpaceNonTemplated(v.NT(), (int)sizeof(T), idx, count);
 }
 
 // Set logical length to newSize (std::vector::resize). Grows capacity if needed;
 // zeros unused capacity beyond the new length.
 template <typename T>
 bool VecResize(Vec<T>& v, int newSize) {
-    if (newSize < 0) {
-        return false;
-    }
-    if (newSize > v.Cap()) {
-        if (!VecReserve(v, newSize)) {
-            return false;
-        }
-    }
-    v.len = newSize;
-    if (v.els && v.Cap() > v.len) {
-        memset((void*)(v.els + v.len), 0, (size_t)(v.Cap() - v.len) * sizeof(T));
-    }
-    return true;
+    return VecResizeNonTemplated(v.NT(), (int)sizeof(T), newSize);
 }
 
 // only suitable for T that are pointers to C++ objects

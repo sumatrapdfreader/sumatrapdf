@@ -605,32 +605,162 @@ static int VecNextCap(int cap, int wanted, int elSize) {
     return std::max(cap * 2, wanted);
 }
 
-// The element type is erased so this is compiled once rather than once per
-// Vec<T>. A negative cap means the elements sit in storage the vec borrowed
-// (VecUseExternalBuffer); growing past it allocates and copies, and leaves the
-// borrowed block alone.
-NO_INLINE bool VecReserveNonTemplated(Arena* arena, VecNonTemplated& v, int wantedSize) {
-    int elSize = v.elSize;
-    int curCap = v.cap < 0 ? -v.cap : v.cap;
+// The bodies below take the element type erased in a VecNonTemplated, so they
+// are compiled once rather than once per Vec<T>. A negative cap means the
+// elements sit in storage the vec borrowed (VecUseExternalBuffer); growing past
+// it allocates and copies, and leaves the borrowed block alone.
+
+NO_INLINE bool VecReserveNonTemplated(Arena* arena, VecNonTemplated* v, int elSize, int wantedSize) {
+    int cap = v->cap;
+    int curCap = cap < 0 ? -cap : cap;
     if (wantedSize <= curCap) {
         return true;
     }
     int newCap = VecNextCap(curCap, wantedSize, elSize);
-    if (v.cap < 0) {
-        void* borrowed = *v.pels;
-        *v.pels = nullptr;
-        v.cap = 0;
-        if (!VecRealloc(arena, v.pels, 0, &v.cap, newCap, elSize)) {
-            *v.pels = borrowed;
-            v.cap = -curCap;
+    if (cap < 0) {
+        void* borrowed = v->els;
+        v->els = nullptr;
+        v->cap = 0;
+        if (!VecRealloc(arena, &v->els, 0, &v->cap, newCap, elSize)) {
+            v->els = borrowed;
+            v->cap = -curCap;
             return false;
         }
-        if (v.len > 0) {
-            memcpy(*v.pels, borrowed, (size_t)v.len * (size_t)elSize);
+        if (v->len > 0) {
+            memcpy(v->els, borrowed, (size_t)v->len * (size_t)elSize);
         }
         return true;
     }
-    return VecRealloc(arena, v.pels, v.len, &v.cap, newCap, elSize);
+    return VecRealloc(arena, &v->els, v->len, &v->cap, newCap, elSize);
+}
+
+NO_INLINE void* VecInsertSpaceNonTemplated(VecNonTemplated* v, int elSize, int idx, int count) {
+    int len = v->len;
+    int newLen = std::max(len, idx) + count;
+    if (!VecReserveNonTemplated(nullptr, v, elSize, newLen)) {
+        return nullptr;
+    }
+    char* res = (char*)v->els + (size_t)idx * (size_t)elSize;
+    if (len > idx) {
+        char* dst = res + (size_t)count * (size_t)elSize;
+        memmove(dst, res, (size_t)(len - idx) * (size_t)elSize);
+    }
+    v->len = newLen;
+    return res;
+}
+
+NO_INLINE bool VecResizeNonTemplated(VecNonTemplated* v, int elSize, int newSize) {
+    if (newSize < 0) {
+        return false;
+    }
+    int curCap = v->cap < 0 ? -v->cap : v->cap;
+    if (newSize > curCap) {
+        if (!VecReserveNonTemplated(nullptr, v, elSize, newSize)) {
+            return false;
+        }
+        curCap = v->cap < 0 ? -v->cap : v->cap;
+    }
+    v->len = newSize;
+    if (v->els && curCap > newSize) {
+        char* tail = (char*)v->els + (size_t)newSize * (size_t)elSize;
+        memset(tail, 0, (size_t)(curCap - newSize) * (size_t)elSize);
+    }
+    return true;
+}
+
+NO_INLINE void VecRemoveAtNonTemplated(VecNonTemplated* v, int elSize, int idx, int count) {
+    int len = v->len;
+    char* els = (char*)v->els;
+    if (len > idx + count) {
+        char* dst = els + (size_t)idx * (size_t)elSize;
+        char* src = els + (size_t)(idx + count) * (size_t)elSize;
+        memmove(dst, src, (size_t)(len - idx - count) * (size_t)elSize);
+    }
+    len -= count;
+    memset(els + (size_t)len * (size_t)elSize, 0, (size_t)count * (size_t)elSize);
+    v->len = len;
+}
+
+// replaces the removed element with the last one, so it copies less than
+// VecRemoveAtNonTemplated but does not keep the order
+NO_INLINE void VecRemoveAtFastNonTemplated(VecNonTemplated* v, int elSize, int idx) {
+    int len = v->len;
+    ReportIf(idx >= len);
+    if (idx >= len) {
+        return;
+    }
+    char* els = (char*)v->els;
+    char* toRemove = els + (size_t)idx * (size_t)elSize;
+    char* last = els + (size_t)(len - 1) * (size_t)elSize;
+    if (toRemove != last) {
+        memcpy(toRemove, last, (size_t)elSize);
+    }
+    memset(last, 0, (size_t)elSize);
+    v->len = len - 1;
+}
+
+NO_INLINE void VecFreeElsNonTemplated(VecNonTemplated* v) {
+    if (!v->els) {
+        return;
+    }
+    if (v->cap > 0) {
+        Free(nullptr, v->els);
+    } else {
+        v->cap = 0;
+    }
+    v->els = nullptr;
+}
+
+NO_INLINE void VecClearNonTemplated(VecNonTemplated* v, int elSize) {
+    v->len = 0;
+    int curCap = v->cap < 0 ? -v->cap : v->cap;
+    if (v->els && curCap > 0) {
+        memset(v->els, 0, (size_t)curCap * (size_t)elSize);
+    }
+}
+
+// hands the storage over to the caller, leaving the vec empty. Borrowed
+// storage is copied to the heap first, since the caller gets to free it.
+NO_INLINE void* VecTakeNonTemplated(VecNonTemplated* v, int elSize) {
+    void* els = v->els;
+    if (v->cap < 0) {
+        int n = v->len;
+        v->els = nullptr;
+        v->cap = 0;
+        v->len = 0;
+        if (n <= 0) {
+            return nullptr;
+        }
+        if (!VecRealloc(nullptr, &v->els, 0, &v->cap, n, elSize)) {
+            return nullptr;
+        }
+        void* res = v->els;
+        memcpy(res, els, (size_t)n * (size_t)elSize);
+        v->els = nullptr;
+        v->cap = 0;
+        return res;
+    }
+    v->els = nullptr;
+    v->len = 0;
+    v->cap = 0;
+    return els;
+}
+
+// Vec only holds POD, so copying is a reserve plus a memcpy. zeroTail is for
+// operator=, which zeroes the capacity past the new length.
+NO_INLINE void VecCopyFromNonTemplated(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail) {
+    VecReserveNonTemplated(nullptr, v, elSize, srcLen);
+    v->len = srcLen;
+    if (srcLen > 0 && srcEls && v->els) {
+        memcpy(v->els, srcEls, (size_t)srcLen * (size_t)elSize);
+    }
+    if (zeroTail && v->els) {
+        int curCap = v->cap < 0 ? -v->cap : v->cap;
+        if (curCap > srcLen) {
+            char* tail = (char*)v->els + (size_t)srcLen * (size_t)elSize;
+            memset(tail, 0, (size_t)(curCap - srcLen) * (size_t)elSize);
+        }
+    }
 }
 
 // Logs an arena's lifetime allocation count and peak bytes. Call on exit, before
