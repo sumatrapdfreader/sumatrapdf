@@ -8140,7 +8140,7 @@ static void AppendLoadedAnnotations(EngineMupdf* e, Vec<Annotation*>& annotsOut)
     VecClear(annotsOut);
     for (FzPageInfo* pi : e->pages) {
         if (pi && pi->annotsLoaded) {
-            VecAppend(annotsOut, pi->annotations);
+            VecAppendVec(annotsOut, pi->annotations);
         }
     }
 }
@@ -8184,7 +8184,7 @@ void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) 
         if (!pi) {
             continue;
         }
-        VecAppend(annotsOut, pi->annotations);
+        VecAppendVec(annotsOut, pi->annotations);
     }
 }
 
