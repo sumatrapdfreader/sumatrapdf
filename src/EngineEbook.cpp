@@ -462,12 +462,12 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         switch (i.type) {
             case DrawInstrType::String:
                 if (len(coords) > 0 &&
-                    (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + (coords.Last().dy * 0.8))) {
+                    (bbox.x < VecLast(coords).BR().x || bbox.y > VecLast(coords).y + (VecLast(coords).dy * 0.8))) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
-                    ReportIf(lineSep && !coords.Last().IsEmpty());
+                    ReportIf(lineSep && !VecLast(coords).IsEmpty());
                 } else if (insertSpace && len(coords) > 0) {
-                    int swidth = bbox.x - coords.Last().BR().x;
+                    int swidth = bbox.x - VecLast(coords).BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
                         coords.Append(Rect(bbox.x - swidth, bbox.y, swidth, bbox.dy));
@@ -488,12 +488,12 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 break;
             case DrawInstrType::RtlString:
                 if (len(coords) > 0 &&
-                    (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + (coords.Last().dy * 0.8))) {
+                    (bbox.BR().x > VecLast(coords).x || bbox.y > VecLast(coords).y + (VecLast(coords).dy * 0.8))) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
-                    ReportIf(lineSep && !coords.Last().IsEmpty());
+                    ReportIf(lineSep && !VecLast(coords).IsEmpty());
                 } else if (insertSpace && len(coords) > 0) {
-                    int swidth = coords.Last().x - bbox.BR().x;
+                    int swidth = VecLast(coords).x - bbox.BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
                         coords.Append(Rect(bbox.BR().x, bbox.y, swidth, bbox.dy));
@@ -1382,7 +1382,7 @@ class ChmDataCache {
 
         data.fileName = str::Dup(url);
         images.Append(data);
-        return images.Last().base;
+        return VecLast(images).base;
     }
 
     TempStr GetFileData(Str relPath, Str pagePath) {
@@ -1553,7 +1553,7 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
     Vec<const GumboNode*> toVisit;
     toVisit.Append(node);
     while (len(toVisit) > 0) {
-        const GumboNode* n = toVisit.Pop();
+        const GumboNode* n = VecPop(toVisit);
         if (!n) {
             continue;
         }

@@ -963,7 +963,7 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm, Str* whyNot) {
         queue.Append(TilePosition(0, 0, 0));
         bool sawTarget = false;
         while (len(queue) > 0) {
-            TilePosition tile = queue.PopAt(0);
+            TilePosition tile = VecPopAt(queue, 0);
             Rect tileOnScreen = GetTileOnScreen(dm->GetEngine(), pageNo, rotation, zoom, tile, pi->pageOnScreen);
             if (tileOnScreen.IsEmpty()) {
                 continue;
@@ -1305,7 +1305,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
     bool neededScaling = false;
 
     while (len(queue) > 0) {
-        TilePosition tile = queue.PopAt(0);
+        TilePosition tile = VecPopAt(queue, 0);
         Rect tileOnScreen = GetTileOnScreen(dm->GetEngine(), pageNo, rotation, zoom, tile, pi->pageOnScreen);
         if (tileOnScreen.IsEmpty()) {
             // display an error message when only empty tiles should be drawn (i.e. on page loading errors)

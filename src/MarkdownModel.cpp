@@ -970,7 +970,7 @@ static TocTree* BuildTocTreeFromTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
         item->id = ++idCounter;
         if (ti.level <= len(levels)) {
             VecRemoveAt(levels, ti.level, len(levels) - ti.level);
-            levels.Last()->AddSiblingAtEnd(item);
+            VecLast(levels)->AddSiblingAtEnd(item);
         } else {
             *nextChild = item;
             levels.Append(item);

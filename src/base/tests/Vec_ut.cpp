@@ -25,13 +25,13 @@ void VecTest() {
     Vec<int> ints;
     utassert(len(ints) == 0);
     ints.Append(1);
-    utassert(ints.Cap() == 4);
+    utassert(VecCap(ints) == 4);
     ints.Append(2);
     VecInsertAt(ints, 0, -1);
     utassert(len(ints) == 3);
     utassert(ints[0] == -1 && ints[1] == 1 && ints[2] == 2);
-    utassert(ints[0] == -1 && ints.Last() == 2);
-    int last = ints.Pop();
+    utassert(ints[0] == -1 && VecLast(ints) == 2);
+    int last = VecPop(ints);
     utassert(last == 2);
     utassert(len(ints) == 2);
     ints.Append(3);
@@ -47,7 +47,7 @@ void VecTest() {
     utassert(len(ints) == 1000 && ints[500] == 500);
     VecRemove(ints, 500);
     utassert(len(ints) == 999 && ints[500] == 501);
-    last = ints.Pop();
+    last = VecPop(ints);
     utassert(last == 999);
     ints.Append(last);
 
@@ -69,7 +69,7 @@ void VecTest() {
         int buf[4];
         Vec<int> v;
         VecUseExternalBuffer(v, buf);
-        utassert(v.Cap() == 4);
+        utassert(VecCap(v) == 4);
         utassert(v.els == buf);
         for (int i = 0; i < 4; i++) {
             v.Append(i);
@@ -80,7 +80,7 @@ void VecTest() {
         v.Append(4);
         utassert(len(v) == 5);
         utassert(v.els != buf);
-        utassert(v.Cap() >= 5);
+        utassert(VecCap(v) >= 5);
         utassert(v[0] == 0 && v[4] == 4);
         VecReset(v);
         utassert(v.els == nullptr);

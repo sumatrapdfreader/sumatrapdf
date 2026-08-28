@@ -84,6 +84,25 @@ void VecRemoveAtFast(Vec<T>& v, int idx);
 template <typename T>
 void VecClear(Vec<T>& v);
 
+// Capacity, whether the storage is owned or borrowed.
+template <typename T>
+int VecCap(const Vec<T>& v);
+
+// The last element; the vec must not be empty.
+template <typename T>
+T& VecLast(const Vec<T>& v);
+
+// Drop the last element, a no-op on an empty vec.
+template <typename T>
+void VecRemoveLast(Vec<T>& v);
+
+// Remove and return the last element (or the one at idx).
+template <typename T>
+T VecPop(Vec<T>& v);
+
+template <typename T>
+T VecPopAt(Vec<T>& v, int idx);
+
 template <typename T>
 struct Vec {
     int len = 0;
@@ -102,8 +121,6 @@ struct Vec {
     // not useful for other types, the code is simpler if we always do it
     // (rather than have it an optional behavior). Borrowed storage is not
     // padded; VecUseExternalBuffer is for POD, not C-string Vec<char>.
-
-    int Cap() const { return cap < 0 ? -cap : cap; }
 
     // Vec<T>'s layout is the same for every T (see the static_asserts below),
     // so the type-erased view is a cast, not a copy
@@ -141,32 +158,6 @@ struct Vec {
 
     // appends count blank (i.e. zeroed-out) elements at the end
     T* AppendBlanks(int count) { return VecInsertSpace(*this, len, count); }
-
-    void RemoveLast() {
-        if (len == 0) {
-            return;
-        }
-        VecRemoveAt(*this, len - 1);
-    }
-
-    T Pop() {
-        ReportIf(0 == len);
-        T el = els[len - 1];
-        VecRemoveAtFast(*this, len - 1);
-        return el;
-    }
-
-    T PopAt(int idx) {
-        ReportIf(idx >= len);
-        T el = els[idx];
-        VecRemoveAt(*this, idx);
-        return el;
-    }
-
-    T& Last() const {
-        ReportIf(0 == len);
-        return els[len - 1];
-    }
 
     // perf hack for using as a buffer: client can get accumulated data
     // without duplicate allocation. Note: since Vec over-allocates, this
@@ -292,6 +283,41 @@ void VecRemoveAtFast(Vec<T>& v, int idx) {
 template <typename T>
 void VecClear(Vec<T>& v) {
     VecClearNT(v.NT(), (int)sizeof(T));
+}
+
+template <typename T>
+int VecCap(const Vec<T>& v) {
+    return v.cap < 0 ? -v.cap : v.cap;
+}
+
+template <typename T>
+T& VecLast(const Vec<T>& v) {
+    ReportIf(0 == v.len);
+    return v.els[v.len - 1];
+}
+
+template <typename T>
+void VecRemoveLast(Vec<T>& v) {
+    if (v.len == 0) {
+        return;
+    }
+    VecRemoveAt(v, v.len - 1);
+}
+
+template <typename T>
+T VecPop(Vec<T>& v) {
+    ReportIf(0 == v.len);
+    T el = v.els[v.len - 1];
+    VecRemoveAtFast(v, v.len - 1);
+    return el;
+}
+
+template <typename T>
+T VecPopAt(Vec<T>& v, int idx) {
+    ReportIf(idx >= v.len);
+    T el = v.els[idx];
+    VecRemoveAt(v, idx);
+    return el;
 }
 
 template <typename T>

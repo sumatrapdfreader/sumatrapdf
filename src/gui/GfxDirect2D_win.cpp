@@ -710,7 +710,7 @@ void GfxDirect2D::PopClip() {
         ReportIf(true);
         return;
     }
-    clipDepth.Pop();
+    VecPop(clipDepth);
     target->PopAxisAlignedClip();
 }
 

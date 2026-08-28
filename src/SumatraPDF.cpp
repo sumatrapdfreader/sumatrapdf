@@ -3883,7 +3883,7 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
         // modify the args so that we always reuse the same window
         // TODO: enable the tab bar if tabs haven't been initialized
         if (len(gWindows) > 0) {
-            win = gWindows.Last();
+            win = VecLast(gWindows);
             args->win = win;
             args->isNewWindow = false;
         }
@@ -4026,7 +4026,7 @@ static void DispatchQueuedDocumentLoads() {
                 break;
             }
         }
-        LoadDocumentAsyncData* next = gLoadQueue.PopAt(idx);
+        LoadDocumentAsyncData* next = VecPopAt(gLoadQueue, idx);
         if (!IsLoadTargetValid(next->args)) {
             EndDocumentLoad(next->args->FilePath());
             next->args->onFinished.Call(false);

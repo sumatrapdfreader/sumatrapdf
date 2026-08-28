@@ -134,7 +134,7 @@ bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
     // should the file reappear later on
     int newIdx = hide ? INT_MAX : kFileHistoryMaxRecent - 1;
     int idx = VecFind(*gStates, state);
-    if (idx < newIdx && state != gStates->Last()) {
+    if (idx < newIdx && state != VecLast(*gStates)) {
         VecRemove(*gStates, state);
         if (len(*gStates) <= newIdx) {
             gStates->Append(state);

@@ -202,7 +202,7 @@ struct HtmlFormatter {
     void ForceNewPage();
     bool EnsureDx(float dx);
 
-    DrawStyle* CurrStyle() { return &styleStack.Last(); }
+    DrawStyle* CurrStyle() { return &VecLast(styleStack); }
     PlatformFont* CurrFont() { return CurrStyle()->font; }
     void SetFont(Str fontName, PlatformFontStyle fs, float fontSize = -1);
     void SetFontBasedOn(PlatformFont* origFont, PlatformFontStyle fs, float fontSize = -1);

@@ -77,7 +77,7 @@ static const GumboNode* GumboFindDescendantByTagImpl(const GumboNode* node, Str 
     Vec<const GumboNode*> toVisit;
     toVisit.Append(node);
     while (len(toVisit) > 0) {
-        const GumboNode* n = toVisit.Pop();
+        const GumboNode* n = VecPop(toVisit);
         if (!n) {
             continue;
         }

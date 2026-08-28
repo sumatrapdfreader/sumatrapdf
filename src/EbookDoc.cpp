@@ -413,7 +413,7 @@ static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
     while (len(toVisit) > 0) {
-        const GumboNode* node = toVisit.Pop();
+        const GumboNode* node = VecPop(toVisit);
         if (!node) {
             continue;
         }
@@ -728,7 +728,7 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
             fi->data = nullptr;
             data.fileName = str::Dup(url);
             images.Append(data);
-            return images.Last().base;
+            return VecLast(images).base;
         }
     }
 
@@ -1610,7 +1610,7 @@ Str HtmlDoc::GetImageData(Str fileName) {
     }
     data.fileName = str::Dup(url);
     images.Append(data);
-    return images.Last().base;
+    return VecLast(images).base;
 }
 
 Str HtmlDoc::GetFileData(Str relPath) {
@@ -1969,7 +1969,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
     Vec<const GumboNode*> toVisit;
     toVisit.Append(doc.Document());
     while (len(toVisit) > 0) {
-        const GumboNode* node = toVisit.Pop();
+        const GumboNode* node = VecPop(toVisit);
         if (!node) {
             continue;
         }

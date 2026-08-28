@@ -455,7 +455,7 @@ void GumboHtmlParser::BuildEvents() {
     Vec<Frame> toVisit;
     toVisit.Append({output->document, false});
     while (len(toVisit) > 0) {
-        Frame frame = toVisit.Pop();
+        Frame frame = VecPop(toVisit);
         const GumboNode* node = frame.node;
         if (!node) {
             continue;

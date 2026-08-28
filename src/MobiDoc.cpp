@@ -1070,7 +1070,7 @@ static const GumboNode* FindMobiTocReference(const GumboNode* root) {
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
     while (len(toVisit) > 0) {
-        const GumboNode* node = toVisit.Pop();
+        const GumboNode* node = VecPop(toVisit);
         if (!node) {
             continue;
         }
@@ -1127,7 +1127,7 @@ static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
     while (len(toVisit) > 0) {
-        const GumboNode* node = toVisit.Pop();
+        const GumboNode* node = VecPop(toVisit);
         if (!node) {
             continue;
         }
@@ -1166,7 +1166,7 @@ void MobiTocWalker::Walk(const GumboNode* root) {
     Vec<MobiTocWalkItem> stack;
     stack.Append({root, 0});
     while (len(stack) > 0) {
-        MobiTocWalkItem it = stack.Pop();
+        MobiTocWalkItem it = VecPop(stack);
         const GumboNode* node = it.node;
         int level = it.level;
         if (!node) {

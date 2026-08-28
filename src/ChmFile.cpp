@@ -544,10 +544,10 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
     Vec<ChmUlFrame> stack;
     stack.Append({ulNode, level, 0});
     while (len(stack) > 0) {
-        ChmUlFrame& top = stack.Last();
+        ChmUlFrame& top = VecLast(stack);
         const GumboVector* lis = &top.ul->v.element.children;
         if (top.i >= lis->length) {
-            stack.RemoveLast();
+            VecRemoveLast(stack);
             continue;
         }
         const GumboNode* child = (const GumboNode*)lis->data[top.i];
@@ -605,7 +605,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
     while (len(toVisit) > 0) {
-        const GumboNode* node = toVisit.Pop();
+        const GumboNode* node = VecPop(toVisit);
         if (!node) {
             continue;
         }

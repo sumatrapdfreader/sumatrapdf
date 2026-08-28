@@ -357,7 +357,7 @@ void GfxGdiplus::PopClip() {
         ReportIf(true);
         return;
     }
-    u32 st = savedStates.Pop();
+    u32 st = VecPop(savedStates);
     gfx->Restore((Gdiplus::GraphicsState)st);
 }
 

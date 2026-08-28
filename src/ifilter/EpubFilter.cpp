@@ -108,12 +108,12 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
             // there are only potentially self-closing tags on the
             // stack between the matching tag, we pop all of them
             if (VecContains(tagNesting, t->tag)) {
-                while (tagNesting.Last() != t->tag) {
-                    tagNesting.Pop();
+                while (VecLast(tagNesting) != t->tag) {
+                    VecPop(tagNesting);
                 }
             }
-            if (len(tagNesting) > 0 && tagNesting.Last() == t->tag) {
-                tagNesting.Pop();
+            if (len(tagNesting) > 0 && VecLast(tagNesting) == t->tag) {
+                VecPop(tagNesting);
             }
         }
     }

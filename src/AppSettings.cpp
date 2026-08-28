@@ -403,16 +403,16 @@ bool LoadSettings() {
     // make sure that zoom levels are in the order expected by DisplayModel
     VecSort(*gprefs->zoomLevels, cmpFloat);
     while (len(*gprefs->zoomLevels) > 0 && (*gprefs->zoomLevels)[0] < kZoomMin) {
-        gprefs->zoomLevels->PopAt(0);
+        VecPopAt(*gprefs->zoomLevels, 0);
     }
-    while (len(*gprefs->zoomLevels) > 0 && gprefs->zoomLevels->Last() > kZoomMaxAllowed) {
-        gprefs->zoomLevels->Pop();
+    while (len(*gprefs->zoomLevels) > 0 && VecLast(*gprefs->zoomLevels) > kZoomMaxAllowed) {
+        VecPop(*gprefs->zoomLevels);
     }
     // the largest level the user listed is the largest zoom we allow (issue
     // #1195). Must come before any zoom is parsed, as it decides which are valid
     kZoomMax = kZoomMaxDefault;
     if (len(*gprefs->zoomLevels) > 0) {
-        kZoomMax = std::max(kZoomMax, gprefs->zoomLevels->Last());
+        kZoomMax = std::max(kZoomMax, VecLast(*gprefs->zoomLevels));
     }
 
     gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);

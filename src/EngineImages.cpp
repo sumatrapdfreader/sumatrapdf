@@ -215,7 +215,7 @@ EngineImages::~EngineImages() {
     logf("~EngineImages: '%s'\n", FilePath());
     cacheLock.Lock();
     while (len(pageCache) > 0) {
-        ImagePage* lastPage = pageCache.Last();
+        ImagePage* lastPage = VecLast(pageCache);
         ReportIf(lastPage->refs != 1);
         DropPage(lastPage, true);
     }
@@ -965,7 +965,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             // TODO: drop most memory intensive pages first
             if (len(pageCache) >= kMaxImagePageCache) {
                 ReportIf(len(pageCache) != kMaxImagePageCache);
-                DropPage(pageCache.Last(), true);
+                DropPage(VecLast(pageCache), true);
             }
             // insert a loading placeholder; do the actual decode without
             // holding cacheLock so other threads can keep using the cache
@@ -2115,7 +2115,7 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
     while (len(toVisit) > 0) {
-        const GumboNode* node = toVisit.Pop();
+        const GumboNode* node = VecPop(toVisit);
         if (!node) {
             continue;
         }
@@ -2469,7 +2469,7 @@ static TocItem* BuildCbxFolderToc(const Vec<Archive::FileInfo*>& files) {
         VecRemoveAt(stackNames, match, len(stackNames) - match);
 
         for (int k = common + match; k < nDir; k++) {
-            TocItem* parent = len(stack) == 0 ? realRoot : stack.Last();
+            TocItem* parent = len(stack) == 0 ? realRoot : VecLast(stack);
             TocItem* folder = AllocTocItem(nullptr, parts[k], i + 1);
             folder->isOpenDefault = true;
             folder->id = ++idCounter;
@@ -2478,7 +2478,7 @@ static TocItem* BuildCbxFolderToc(const Vec<Archive::FileInfo*>& files) {
             stackNames.Append(parts[k]);
         }
 
-        TocItem* parent = len(stack) == 0 ? realRoot : stack.Last();
+        TocItem* parent = len(stack) == 0 ? realRoot : VecLast(stack);
         TocItem* leaf = AllocTocItem(nullptr, parts[n - 1], i + 1);
         leaf->id = ++idCounter;
         TocAppendChild(parent, leaf);

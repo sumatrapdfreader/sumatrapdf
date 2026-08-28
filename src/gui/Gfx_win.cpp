@@ -298,7 +298,7 @@ void GfxHdc::PopClip() {
         ReportIf(true);
         return;
     }
-    int saved = savedDCs.Pop();
+    int saved = VecPop(savedDCs);
     RestoreDC(hdc, saved);
 }
 

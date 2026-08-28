@@ -231,7 +231,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
 
 void EpubFormatter::HandleHtmlTag(HtmlToken* t) {
     ReportIf(!t->IsTag());
-    if (hiddenDepth && t->IsEndTag() && len(tagNesting) == hiddenDepth && t->tag == tagNesting.Last()) {
+    if (hiddenDepth && t->IsEndTag() && len(tagNesting) == hiddenDepth && t->tag == VecLast(tagNesting)) {
         hiddenDepth = 0;
         UpdateTagNesting(t);
         return;
@@ -268,7 +268,7 @@ Fb2Formatter::Fb2Formatter(HtmlFormatterArgs* args, Fb2Doc* doc)
     // smaller images just separated by a horizontal line
     if (0 == len(currLineInstr)) {
         /* the image was broken */;
-    } else if (currLineInstr.Last().bbox.dy > args->pageDy / 2) {
+    } else if (VecLast(currLineInstr).bbox.dy > args->pageDy / 2) {
         ForceNewPage();
     } else {
         EmitHr();

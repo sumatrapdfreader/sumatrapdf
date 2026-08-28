@@ -988,7 +988,7 @@ static void AddLineSepUtf8(str::Builder& s, Vec<Rect>& rects, Str lineSep) {
     // remove trailing space
     if (len(s) > 0 && s.LastChar() == ' ') {
         s.RemoveLast();
-        rects.RemoveLast();
+        VecRemoveLast(rects);
     }
     s.Append(lineSep);
     for (size_t i = 0; i < lineSepLen; i++) {
@@ -1064,7 +1064,7 @@ static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<Rect>& rects) {
     while (dropBytes-- > 0) {
         s.RemoveLast();
     }
-    rects.RemoveLast();
+    VecRemoveLast(rects);
 }
 
 static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& content, Vec<Rect>& rects,
@@ -4792,7 +4792,7 @@ static TocItem* GenerateTocFromHeadings(EngineMupdf* e, int& idCounter) {
     auto addNode = [&](TocItem* node) {
         bool same = false;
         while (len(stack) > 0 && !HeadingIsParentOf(stack[len(stack) - 1]->title, node->title, &same) && !same) {
-            stack.RemoveLast();
+            VecRemoveLast(stack);
         }
         if (same) {
             FreeTocItemRec(nullptr, node);

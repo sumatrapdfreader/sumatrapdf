@@ -183,7 +183,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     style.align = AlignAttr::Justify;
     style.dirRtl = false;
     styleStack.Append(style);
-    nextPageStyle = styleStack.Last();
+    nextPageStyle = VecLast(styleStack);
 
     textMeasure->SetFont(CurrFont());
 
@@ -270,7 +270,7 @@ void HtmlFormatter::SetFont(Str fontName, PlatformFontStyle fs, float fontSize) 
         AppendInstr(DrawInstr::SetFont(newFont));
     }
 
-    DrawStyle style = styleStack.Last();
+    DrawStyle style = VecLast(styleStack);
     style.font = newFont;
     styleStack.Append(style);
 }
@@ -302,14 +302,14 @@ void HtmlFormatter::ChangeFontStyle(PlatformFontStyle fs, bool addStyle) {
 }
 
 void HtmlFormatter::SetAlignment(AlignAttr align) {
-    DrawStyle style = styleStack.Last();
+    DrawStyle style = VecLast(styleStack);
     style.align = align;
     styleStack.Append(style);
 }
 
 void HtmlFormatter::RevertStyleChange() {
     if (len(styleStack) > 1) {
-        DrawStyle style = styleStack.Pop();
+        DrawStyle style = VecPop(styleStack);
         if (style.font != CurrFont()) {
             AppendInstr(DrawInstr::SetFont(CurrFont()));
         }
@@ -604,7 +604,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
         AppendInstr(DrawInstr::LinkStart(link.str));
         currLinkIdx = len(currLineInstr);
     }
-    nextPageStyle = styleStack.Last();
+    nextPageStyle = VecLast(styleStack);
     return createdPage;
 }
 
@@ -740,7 +740,7 @@ static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec
     if (currX > maxCurrX) {
         return false;
     }
-    DrawInstr& di = currLineInstr.Last();
+    DrawInstr& di = VecLast(currLineInstr);
     // don't add a space if only an anchor would be in between them
     if (DrawInstrType::Anchor == di.type && len(currLineInstr) > 1) {
         di = currLineInstr[len(currLineInstr) - 2];
@@ -1223,7 +1223,7 @@ void HtmlFormatter::AutoCloseTags(size_t count) {
     tok.s = {};
     // let HandleHtmlTag clean up (in reverse order)
     for (size_t i = 0; i < count; i++) {
-        tok.tag = tagNesting.Pop();
+        tok.tag = VecPop(tagNesting);
         HandleHtmlTag(&tok);
     }
     keepTagNesting = false;
@@ -1262,8 +1262,8 @@ void HtmlFormatter::UpdateTagNesting(HtmlToken* t) {
     if (t->IsStartTag()) {
         tagNesting.Append(t->tag);
     } else {
-        ReportIf(!t->IsEndTag() || t->tag != tagNesting.Last());
-        tagNesting.Pop();
+        ReportIf(!t->IsEndTag() || t->tag != VecLast(tagNesting));
+        VecPop(tagNesting);
     }
 }
 
@@ -1326,12 +1326,12 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
             }
             listInfos.Append(li);
         } else if (t->IsEndTag() && len(listInfos) > 0) {
-            listInfos.RemoveLast();
+            VecRemoveLast(listInfos);
         }
     } else if (Tag_Li == tag) {
         FlushCurrLine(true);
         if (t->IsStartTag() && len(listInfos) > 0) {
-            ListInfo& li = listInfos.Last();
+            ListInfo& li = VecLast(listInfos);
             if (li.ordered) {
                 Str marker = str::Dup(textAllocator, fmt("%d. ", li.nextNum));
                 li.nextNum++;
@@ -1480,7 +1480,7 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
     for (;;) {
         // send out all pages accumulated so far
         while (len(pagesToSend) > 0) {
-            HtmlPage* ret = pagesToSend.PopAt(0);
+            HtmlPage* ret = VecPopAt(pagesToSend, 0);
             pageCount++;
             if (skipEmptyPages && IsEmptyPage(ret)) {
                 delete ret;

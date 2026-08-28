@@ -482,7 +482,7 @@ T RemoveRandomElementFromVec(Vec<T>& v) {
     auto n = len(v);
     ReportIf(n <= 0);
     int idx = rand() % n;
-    int res = v.PopAt(idx);
+    int res = VecPopAt(v, idx);
     return res;
 }
 
@@ -666,7 +666,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
     int randomPageIdx = rand() % len(st->pagesToRender);
     st->pageForSearchStart = st->pagesToRender[randomPageIdx];
 
-    st->currPageNo = st->pagesToRender.PopAt(0);
+    st->currPageNo = VecPopAt(st->pagesToRender, 0);
     ctrl->GoToPage(st->currPageNo, false);
     st->currPageRenderTime = TimeGet();
     ++st->nFilesProcessed;
@@ -809,7 +809,7 @@ static bool GoToNextPage(StressTest* st) {
     }
 
     RandomizeViewingState(st);
-    st->currPageNo = st->pagesToRender.PopAt(0);
+    st->currPageNo = VecPopAt(st->pagesToRender, 0);
     ctrl->GoToPage(st->currPageNo, false);
     st->currPageRenderTime = TimeGet();
 

@@ -451,7 +451,7 @@ bool FinishAnnotationPlacement(MainWindow* win) {
             CancelAnnotationPlacement(win);
             return true;
         }
-        Point pt = dm->CvtToScreen(p.pageNo, p.points.Last());
+        Point pt = dm->CvtToScreen(p.pageNo, VecLast(p.points));
         CommitPlacementCommand(win, pt);
         return true;
     }
@@ -468,7 +468,7 @@ bool FinishAnnotationPlacement(MainWindow* win) {
         }
         ReleasePlacementCapture(win);
         p.mouseDown = false;
-        Point pt = dm->CvtToScreen(p.pageNo, p.points.Last());
+        Point pt = dm->CvtToScreen(p.pageNo, VecLast(p.points));
         CommitPlacementCommand(win, pt);
         return true;
     }
@@ -723,14 +723,14 @@ static bool AppendInkPoint(MainWindow* win, DisplayModel* dm, Point pt) {
     if (!dm || !dm->ValidPageNo(pageNo) || dm->GetPageNoByPoint(pt) != pageNo || len(p.strokeCounts) == 0) {
         return false;
     }
-    if (p.strokeCounts.Last() > 0) {
-        Point previous = dm->CvtToScreen(pageNo, p.points.Last());
+    if (VecLast(p.strokeCounts) > 0) {
+        Point previous = dm->CvtToScreen(pageNo, VecLast(p.points));
         if (previous == pt) {
             return false;
         }
     }
     p.points.Append(dm->CvtFromScreen(pt, pageNo));
-    p.strokeCounts.Last()++;
+    VecLast(p.strokeCounts)++;
     HwndInvalidate(win->hwndCanvas);
     return true;
 }
@@ -1236,7 +1236,7 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
                 return false;
             }
             ptOnPage = p.points[0];
-            pt = dm->CvtToScreen(pageNo, p.points.Last());
+            pt = dm->CvtToScreen(pageNo, VecLast(p.points));
             args.inkStrokeCounts = &p.strokeCounts;
             args.inkPoints = &p.points;
             return true;
@@ -1280,7 +1280,7 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
                 return false;
             }
             ptOnPage = p.points[0];
-            pt = dm->CvtToScreen(pageNo, p.points.Last());
+            pt = dm->CvtToScreen(pageNo, VecLast(p.points));
             args.polyLinePoints = &p.points;
             return true;
         case AnnotPlacementKind::Text:

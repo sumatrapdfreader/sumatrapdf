@@ -270,7 +270,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
         Str line = SyncLineAt(data, lineOff);
         switch (line.s[0]) {
             case 'l':
-                psline.file = filestack.Last();
+                psline.file = VecLast(filestack);
                 if (!str::IsNull(str::Parse(line, "l %u %u %u", &psline.record, &psline.line, &psline.column))) {
                     lines.Append(psline);
                 } else if (!str::IsNull(str::Parse(line, "l %u %u", &psline.record, &psline.line))) {
@@ -327,7 +327,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
             case ')':
                 if (len(filestack) > 1) {
-                    fileIndex[filestack.Pop()].end = len(lines);
+                    fileIndex[VecPop(filestack)].end = len(lines);
                 }
                 // else dbg("Unbalanced ')' line in the pdfsync file");
                 break;

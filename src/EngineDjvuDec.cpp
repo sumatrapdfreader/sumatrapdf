@@ -974,7 +974,7 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
                 return;
             }
             // Evict least-recently used that is not the page we just rendered.
-            dropPage = pageCacheLru.Last();
+            dropPage = VecLast(pageCacheLru);
             if (dropPage == page0) {
                 return;
             }
