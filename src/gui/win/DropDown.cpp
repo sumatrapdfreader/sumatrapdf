@@ -213,14 +213,23 @@ void DropDown::SetItems(StrVec& newItems) {
 
 // CbResetContent clears the edit; keep whatever the user is typing
 // and the caret / selection (SetText would otherwise put the caret at 0).
-// Do not CbSetCurrentSelection(-1) afterwards: that clears a CBS_DROPDOWN edit.
+// Do not go through SetItems: that ends with CbSetCurrentSelection(-1),
+// which clears a CBS_DROPDOWN edit.
 void DropDown::SetItemsKeepText(StrVec& newItems) {
-    TempStr cur = GetTextTemp();
+    Str cur = str::Dup(GetTextTemp());
     int selStart = 0, selEnd = 0;
     CbEditGetSelection(hwnd, selStart, selEnd);
     bool prev = suppressNotify;
     suppressNotify = true;
-    SetItems(newItems);
+
+    items.Reset();
+    VecReset(itemColors);
+    int nItems = len(newItems);
+    for (int i = 0; i < nItems; i++) {
+        items.Append(newItems[i]);
+    }
+    SetDropDownItems(hwnd, items);
+
     SetText(cur);
     int n = len(cur);
     if (selStart > n) {
@@ -230,6 +239,7 @@ void DropDown::SetItemsKeepText(StrVec& newItems) {
         selEnd = n;
     }
     CbEditSelectText(hwnd, selStart, selEnd);
+    str::Free(cur);
     suppressNotify = prev;
 }
 

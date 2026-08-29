@@ -3,7 +3,7 @@
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR } from "./util";
-import { getClassName, getControlText, getFocusedHwnd, getParentWindow, sendMessage } from "./winapi";
+import { getClassName, getControlText, getParentWindow, sendMessage } from "./winapi";
 import {
   launchControlled,
   pressKey,
@@ -39,22 +39,23 @@ export async function testit(): Promise<void> {
     const combo2 = comboOfEdit(edit2);
     await typeIntoInput(combo2, "inflate", false);
     sendMessage(edit2, EM_SETSEL, 7, 7); // caret at end
-    await pressKey(edit2, VK_RETURN);
-
-    const focused = getFocusedHwnd(frame) || 0;
-    const afterEnter = getControlText(focused);
-    if (afterEnter !== "inflate") {
-      throw new Error(`issue-893: Enter cleared the find field, got '${afterEnter}'`);
-    }
-    const sel = Number(sendMessage(focused, EM_GETSEL, 0, 0));
-    const caret = sel & 0xffff;
-    if (caret !== 7) {
-      throw new Error(`issue-893: Enter moved the caret to ${caret}, want 7`);
-    }
+    await pressKey(edit2, VK_RETURN, 250 * SLOW_BUILD_FACTOR);
 
     const hist = await waitHistory(client, (lines) => lines[0] === "inflate" && lines.includes("deflate"));
     if (hist[0] !== "inflate" || hist[1] !== "deflate") {
       throw new Error(`issue-893: expected inflate then deflate, got ${JSON.stringify(hist)}`);
+    }
+
+    // Read the combo/edit, not the thread's focused HWND: after Enter a suite
+    // run often has no GUI focus (GetGUIThreadInfo hwndFocus is 0).
+    const afterEnter = getControlText(combo2) || getControlText(edit2);
+    if (afterEnter !== "inflate") {
+      throw new Error(`issue-893: Enter cleared the find field, got '${afterEnter}'`);
+    }
+    const sel = Number(sendMessage(edit2, EM_GETSEL, 0, 0));
+    const caret = sel & 0xffff;
+    if (caret !== 7) {
+      throw new Error(`issue-893: Enter moved the caret to ${caret}, want 7`);
     }
     console.log("issue-893: OK");
   } finally {
