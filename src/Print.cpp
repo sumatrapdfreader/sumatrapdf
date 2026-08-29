@@ -612,9 +612,9 @@ static float SanitizePrintZoom(float zoom, float fallback, Str why, Size paperSi
     return 1.f;
 }
 
-bool CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanced_Data& advanced, Size paperSize,
-                              Rect printable, float dpiX, float dpiY, bool printPortrait, Str printerName,
-                              PrintPageLayout& layout) {
+PrintPageLayout CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanced_Data& advanced,
+                                         Size paperSize, Rect printable, float dpiX, float dpiY, bool printPortrait,
+                                         Str printerName) {
     float fileDPI = engine.GetFileDPI();
     if (!(fileDPI > 0) || !isfinite(fileDPI)) {
         fileDPI = 96.f;
@@ -691,12 +691,13 @@ bool CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanc
         offset.x += (int)((float)paperSize.dx - (pageSize.dx * zoom)) / 2;
     }
 
+    PrintPageLayout layout;
     layout.zoom = zoom;
     layout.rotation = rotation;
     layout.offset = offset;
     layout.stretch = stretch;
     layout.isStretch = isStretch;
-    return true;
+    return layout;
 }
 
 // Rasterize a page (or, for selections, a page-space sub-rectangle of it) onto
@@ -1040,9 +1041,8 @@ static bool PrintToDevice(const PrintData& pd) {
                 continue;
             }
 
-            PrintPageLayout layout;
-            CalculatePrintPageLayout(engine, (int)pageNo, pd.advData, paperSize, printable, logPixelsX, logPixelsY,
-                                     bPrintPortrait, pd.printer->name, layout);
+            PrintPageLayout layout = CalculatePrintPageLayout(engine, (int)pageNo, pd.advData, paperSize, printable,
+                                                              logPixelsX, logPixelsY, bPrintPortrait, pd.printer->name);
             RectF mediabox = engine.PageMediabox((int)pageNo);
             if (layout.isStretch) {
                 PrintPageInBands(engine, hdc, (int)pageNo, layout.zoom, layout.rotation, mediabox, Point(0, 0),
@@ -1361,10 +1361,6 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 #endif
 
-    if (!waitForCompletion && TryPrintCurrentFileWin11(win, defaultScaleAdv)) {
-        return;
-    }
-
     if (win->printThread) {
         uint type = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
         Str title = _TRA("Printing in progress.");
@@ -1375,6 +1371,12 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         }
     }
     AbortPrinting(win);
+
+    // the Windows 11 dialog runs the whole job itself; -print-to and friends
+    // need the synchronous classic path
+    if (!waitForCompletion && TryPrintCurrentFileWin11(win, defaultScaleAdv)) {
+        return;
+    }
 
     PRINTDLGEXW pdex{};
     pdex.lStructSize = sizeof(PRINTDLGEXW);

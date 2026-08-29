@@ -59,9 +59,11 @@ struct PrintPageLayout {
     bool isStretch = false;
 };
 
-bool CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanced_Data& advanced, Size paperSize,
-                              Rect printable, float dpiX, float dpiY, bool printPortrait, Str printerName,
-                              PrintPageLayout& layout);
+// where a page lands on the paper: shared by the GDI and the WinRT print paths
+// so both place the content identically
+PrintPageLayout CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanced_Data& advanced,
+                                         Size paperSize, Rect printable, float dpiX, float dpiY, bool printPortrait,
+                                         Str printerName);
 
 // result of command-line printing; the numeric values double as the process
 // exit code so an automated caller can tell why printing failed (issue #3478)

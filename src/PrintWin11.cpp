@@ -6,6 +6,7 @@
 #include "base/GuessFileType.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
+#include "base/Win.h"
 #include "gui/UIModels.h"
 
 #include "Settings.h"
@@ -48,6 +49,13 @@ using Microsoft::WRL::RuntimeClass;
 using Microsoft::WRL::RuntimeClassFlags;
 using Microsoft::WRL::WinRtClassicComMix;
 
+// Windows 11 is 10.0.22000 and up
+constexpr DWORD kWin11Build = 22000;
+
+// a page is rasterized whole before it goes to the print control, so the cap
+// keeps the bitmap for a large page within reason
+constexpr float kMaxRasterDpi = 300.f;
+
 namespace Printing = ABI::Windows::Graphics::Printing;
 namespace Foundation = ABI::Windows::Foundation;
 
@@ -58,23 +66,26 @@ static decltype(&WindowsCreateString) gWindowsCreateString;
 
 struct WinRtApi {
     decltype(&RoInitialize) roInitialize = nullptr;
-    decltype(&RoUninitialize) roUninitialize = nullptr;
     decltype(&RoGetActivationFactory) roGetActivationFactory = nullptr;
     decltype(&WindowsCreateString) windowsCreateString = nullptr;
     decltype(&WindowsDeleteString) windowsDeleteString = nullptr;
 
     bool Load() {
-        HMODULE combase = LoadLibraryW(L"combase.dll");
+        // combase is already in the process and is never unloaded, so prefer the
+        // handle we can take without adding a reference on every print
+        HMODULE combase = GetModuleHandleW(L"combase.dll");
+        if (!combase) {
+            combase = LoadLibraryW(L"combase.dll");
+        }
         if (!combase) {
             return false;
         }
         roInitialize = (decltype(roInitialize))GetProcAddress(combase, "RoInitialize");
-        roUninitialize = (decltype(roUninitialize))GetProcAddress(combase, "RoUninitialize");
         roGetActivationFactory = (decltype(roGetActivationFactory))GetProcAddress(combase, "RoGetActivationFactory");
         windowsCreateString = (decltype(windowsCreateString))GetProcAddress(combase, "WindowsCreateString");
         windowsDeleteString = (decltype(windowsDeleteString))GetProcAddress(combase, "WindowsDeleteString");
         gWindowsCreateString = windowsCreateString;
-        return roInitialize && roUninitialize && roGetActivationFactory && windowsCreateString && windowsDeleteString;
+        return roInitialize && roGetActivationFactory && windowsCreateString && windowsDeleteString;
     }
 };
 
@@ -326,15 +337,26 @@ class PrintDocumentSource final
         return pages[(int)jobPage - 1];
     }
 
+    // the preview asks for JOB_PAGE_APPLICATION_DEFINED to let us pick the page
+    // it opens on: the one the user is looking at. It's also what "Current page"
+    // in the dialog prints, since that's the page the preview is showing.
+    UINT32 FirstJobPage() const {
+        int idx = VecFind(pages, currentPage);
+        if (idx < 0) {
+            return 1;
+        }
+        return (UINT32)idx + 1;
+    }
+
     void UseAllPages() {
-        pages.Reset();
+        VecClear(pages);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
-            pages.Append(pageNo);
+            VecAppend(pages, pageNo);
         }
     }
 
     void ReadPageRanges(IInspectable* options) {
-        pages.Reset();
+        VecClear(pages);
         ComPtr<Printing::IPrintTaskOptions2> options2;
         HRESULT hr = options->QueryInterface(IID_PPV_ARGS(&options2));
         ComPtr<__FIVector_1_Windows__CGraphics__CPrinting__CPrintPageRange> ranges;
@@ -362,7 +384,7 @@ class PrintDocumentSource final
             first = std::max(1, first);
             last = std::min(engine->PageCount(), last);
             for (int pageNo = first; pageNo <= last; pageNo++) {
-                pages.Append(pageNo);
+                VecAppend(pages, pageNo);
             }
         }
         if (len(pages) == 0) {
@@ -379,9 +401,9 @@ class PrintDocumentSource final
                        (int)lroundf(description.ImageableRect.Y * unitsPerDip),
                        (int)lroundf(description.ImageableRect.Width * unitsPerDip),
                        (int)lroundf(description.ImageableRect.Height * unitsPerDip));
-        PrintPageLayout layout;
-        CalculatePrintPageLayout(*engine, pageNo, advanced, paperSize, printable, renderDpi, renderDpi,
-                                 paperSize.dx < paperSize.dy, StrL("Windows print dialog"), layout);
+        PrintPageLayout layout =
+            CalculatePrintPageLayout(*engine, pageNo, advanced, paperSize, printable, renderDpi, renderDpi,
+                                     paperSize.dx < paperSize.dy, StrL("Windows print dialog"));
 
         RenderPageArgs args(pageNo, layout.zoom, layout.rotation, nullptr, RenderTarget::Print);
         Pixmap* pixmap = ConvertToBgra(engine->RenderPage(args));
@@ -464,7 +486,7 @@ class PrintDocumentSource final
             return E_INVALIDARG;
         }
         ScopedMutex lock(&mutex);
-        UINT32 jobPage = desiredJobPage == JOB_PAGE_APPLICATION_DEFINED ? 1 : desiredJobPage;
+        UINT32 jobPage = desiredJobPage == JOB_PAGE_APPLICATION_DEFINED ? FirstJobPage() : desiredJobPage;
         int pageNo = DocumentPage(jobPage);
         if (!pageNo || !previewOptions) {
             return E_INVALIDARG;
@@ -513,12 +535,15 @@ class PrintDocumentSource final
 
         Printing::PrintPageDescription firstDescription{};
         hr = optionCore->GetPageDescription(1, &firstDescription);
-        float rasterDpi = (float)std::min(firstDescription.DpiX, firstDescription.DpiY);
-        rasterDpi = std::max(96.f, std::min(300.f, rasterDpi));
-        ComPtr<ID2D1PrintControl> printControl;
-        if (SUCCEEDED(hr)) {
-            hr = graphics.CreatePrintControl(packageTarget, rasterDpi, &printControl);
+        if (FAILED(hr)) {
+            // without it rasterDpi would come from a zeroed description, i.e. we'd
+            // silently print everything at the 96 dpi floor
+            return hr;
         }
+        float rasterDpi = (float)std::min(firstDescription.DpiX, firstDescription.DpiY);
+        rasterDpi = std::max(96.f, std::min(kMaxRasterDpi, rasterDpi));
+        ComPtr<ID2D1PrintControl> printControl;
+        hr = graphics.CreatePrintControl(packageTarget, rasterDpi, &printControl);
 
         for (UINT32 jobPage = 1; SUCCEEDED(hr) && jobPage <= (UINT32)len(pages); jobPage++) {
             Printing::PrintPageDescription description{};
@@ -559,9 +584,28 @@ class PrintDocumentSource final
     }
 };
 
+// WinRT is initialized on the UI thread (the only thread that opens the print
+// dialog) and left initialized: the print pipeline outlives the session that
+// started it, so uninitializing when a session goes away would pull the ground
+// from under a job that is still running.
+static HRESULT EnsureWinRt(WinRtApi& api) {
+    if (!api.Load()) {
+        return HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
+    }
+    static bool initialized = false;
+    if (initialized) {
+        return S_OK;
+    }
+    HRESULT hr = api.roInitialize(RO_INIT_SINGLETHREADED);
+    if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) {
+        return hr;
+    }
+    initialized = true;
+    return S_OK;
+}
+
 class Win11PrintSession {
     WinRtApi api;
-    bool roInitialized = false;
     HWND hwnd = nullptr;
     EventRegistrationToken token{};
     ComPtr<IPrintManagerInterop> interop;
@@ -623,24 +667,20 @@ class Win11PrintSession {
     }
 
   public:
+    // Only our own references go away here. The WinRT print pipeline keeps its
+    // own on the document source, so this is safe even while a job is still
+    // spooling -- as long as we don't tear WinRT down under it, which is why
+    // EnsureWinRt() initializes once per process and never uninitializes.
     ~Win11PrintSession() {
         if (manager && token.value) {
             manager->remove_PrintTaskRequested(token);
         }
         wstr::Free(jobTitle);
-        if (roInitialized) {
-            api.roUninitialize();
-        }
     }
 
     HRESULT Initialize(HWND hwnd, EngineBase* engine, int currentPage, PrintScaleAdv scale, float previewDpi) {
-        if (!api.Load()) {
-            return HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
-        }
-        HRESULT hr = api.roInitialize(RO_INIT_SINGLETHREADED);
-        if (SUCCEEDED(hr)) {
-            roInitialized = true;
-        } else if (hr != RPC_E_CHANGED_MODE) {
+        HRESULT hr = EnsureWinRt(api);
+        if (FAILED(hr)) {
             return hr;
         }
 
@@ -697,8 +737,25 @@ class Win11PrintSession {
 
 static Win11PrintSession* gPrintSession = nullptr;
 
+// The modern print dialog with the preview pane is Windows 11 (build 22000+).
+// Windows 10 shows the old UWP print flyout for the same API, which is a step
+// down from PrintDlgEx, so everything before 11 keeps the classic dialog.
+static bool IsWin11OrGreater() {
+    OSVERSIONINFOEX ver{};
+    if (!GetOsVersion(ver)) {
+        return false;
+    }
+    if (ver.dwMajorVersion != 10) {
+        return ver.dwMajorVersion > 10;
+    }
+    return ver.dwBuildNumber >= kWin11Build;
+}
+
 bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
-    if (!win || !win->hwndFrame || !win->AsFixed()) {
+    if (!IsWin11OrGreater()) {
+        return false;
+    }
+    if (!win || !win->hwndFrame || !win->AsFixed() || !win->CurrentTab()) {
         return false;
     }
     if (win->CurrentTab()->selectionOnPage) {
@@ -732,6 +789,11 @@ bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
     return true;
 }
 
+void ShutdownWin11Printing() {
+    delete gPrintSession;
+    gPrintSession = nullptr;
+}
+
 #else
 
 #include "PrintWin11.h"
@@ -739,5 +801,7 @@ bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
 bool TryPrintCurrentFileWin11(MainWindow*, PrintScaleAdv) {
     return false;
 }
+
+void ShutdownWin11Printing() {}
 
 #endif

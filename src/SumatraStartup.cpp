@@ -57,6 +57,7 @@
 #include "CrashHandler.h"
 #include "HangDetector.h"
 #include "Print.h"
+#include "PrintWin11.h"
 #include "SearchAndDDE.h"
 #include "SumatraProperties.h"
 #include "Tabs.h"
@@ -3125,6 +3126,7 @@ Exit:
 
     FreeAllMenuDrawInfos();
     FreeAnnotationClipboard();
+    ShutdownWin11Printing();
 
     ShutdownCleanup();
     EngineEbookCleanup();
