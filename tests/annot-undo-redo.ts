@@ -5,8 +5,9 @@
 // mouse move, and both must come back with a single Undo.
 //
 // Also covers the buttons this state drives at the end of the Edit PDF
-// toolbar: Undo, Redo and the two Save buttons, which are only enabled when
-// there is something to do.
+// toolbar: Undo, Redo and Save (Save to a new PDF and Discard live in the
+// Save button's hover drop-down). They are only enabled when there is
+// something to do.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -98,7 +99,7 @@ async function toolbarButtons(client: ControlClient): Promise<Map<string, Button
   const re = /annotation-idx=(\d+) cmd=(\d+) hidden=(\d) enabled=(\d) rect=\S+ text=.*? tip=(.*)/g;
   for (const m of raw.matchAll(re)) {
     const cmd = +m[2]!;
-    for (const name of ["CmdUndo", "CmdRedo", "CmdSaveAnnotations", "CmdSaveAnnotationsNewFile"]) {
+    for (const name of ["CmdUndo", "CmdRedo", "CmdSaveAnnotations"]) {
       if (cmd === cmdId(name) && m[3] === "0") {
         res.set(name, { idx: +m[1]!, enabled: m[4] === "1", tip: m[5]!.trim() });
       }
@@ -162,11 +163,9 @@ export async function testit(): Promise<void> {
     const undoBtn = wantButton(btns, "CmdUndo", false);
     const redoBtn = wantButton(btns, "CmdRedo", false);
     const saveBtn = wantButton(btns, "CmdSaveAnnotations", false);
-    const saveNewBtn = wantButton(btns, "CmdSaveAnnotationsNewFile", false);
-    if (!(undoBtn.idx < redoBtn.idx && redoBtn.idx < saveBtn.idx && saveBtn.idx < saveNewBtn.idx)) {
+    if (!(undoBtn.idx < redoBtn.idx && redoBtn.idx < saveBtn.idx)) {
       throw new Error(
-        `annot-undo-redo: want Undo, Redo, Save, Save-new in that order, got ` +
-          `${undoBtn.idx}, ${redoBtn.idx}, ${saveBtn.idx}, ${saveNewBtn.idx}`,
+        `annot-undo-redo: want Undo, Redo, Save in that order, got ` + `${undoBtn.idx}, ${redoBtn.idx}, ${saveBtn.idx}`,
       );
     }
     if (!/square\.pdf/.test(saveBtn.tip)) {
@@ -187,7 +186,6 @@ export async function testit(): Promise<void> {
     wantButton(btns, "CmdUndo", true);
     wantButton(btns, "CmdRedo", false);
     wantButton(btns, "CmdSaveAnnotations", true);
-    wantButton(btns, "CmdSaveAnnotationsNewFile", true);
 
     s = await undo(client, frame);
     want(s, "undo did not bring the annotation back", s.annotations === 1 && s.squares.length === 1);

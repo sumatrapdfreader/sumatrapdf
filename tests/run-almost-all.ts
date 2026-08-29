@@ -230,6 +230,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["annotation clipboard tests", annotationClipboardTests],
   ["cmyk-image-save", cmykImageSave],
   ["issue-5993", issue5993],
   ["image-only-palette-items", imageOnlyPaletteItems],
@@ -270,7 +271,6 @@ export const tests: NamedTest[] = [
   ["issue-6054", issue6054],
   ["move-polygon-polyline-ink", movePolygonPolylineInk],
   ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
-  ["annotation clipboard tests", annotationClipboardTests],
   ["text-annotation-placement", textAnnotationPlacement],
   ["free-text-annotation-placement", freeTextAnnotationPlacement],
   ["free-text-edit-toolbar", freeTextEditToolbar],
