@@ -1313,6 +1313,8 @@ static void LayoutContentsEditor(AnnotEditToolbar* tb) {
     auto* content = new Padding(vbox, Insets{margin, margin, margin, margin});
     tb->size = tb->host->SetLayoutSizedToContent(content);
     VecReset(tb->kinds);
+    // SetLayoutSizedToContent freed the property row that owned them
+    VecReset(tb->chips);
 }
 
 static void PostedStartContentsEdit(MainWindow* win) {
@@ -1787,6 +1789,7 @@ void HideAnnotEditToolbar(MainWindow* win) {
     tb->lastPlaced = {};
     tb->lastAnnotBounds = {};
     VecReset(tb->kinds);
+    VecReset(tb->chips);
 }
 
 void UpdateAnnotEditToolbar(MainWindow* win) {
