@@ -56,12 +56,15 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut);
 // whatever it likes in there; NewToolbarHoverMenu() builds the menu-like rows
 // most of them want.
 
-// one row: an icon on the left, text on the right, and the command a click runs
+// one item: an icon, a label and the command a click runs. NewToolbarHoverMenu()
+// makes each a menu-like row, NewToolbarHoverStrip() a cell in a single row.
 struct ToolbarHoverMenuItem {
     Str svgIcon;
     Str text;
     int cmdId = 0;
     bool enabled = true;
+    // the one in use, e.g. the current zoom level: the strip boxes it
+    bool isCurrent = false;
 };
 
 // Built every time the drop-down opens, so it shows the current state.
@@ -69,10 +72,16 @@ struct ToolbarHoverBuildEvent {
     MainWindow* win = nullptr;
     // out: the drop-down's content; the drop-down takes ownership
     ILayout* layout = nullptr;
+    // out: optional. This control inside `layout` is put under the middle of
+    // the button, instead of the drop-down's left edge lining up with it
+    VirtCtrl* anchor = nullptr;
 };
 
 void SetToolbarHoverDropdown(MainWindow*, int cmdId, const Func1<ToolbarHoverBuildEvent*>&);
 ILayout* NewToolbarHoverMenu(MainWindow*, const Vec<ToolbarHoverMenuItem>&);
+// the items as one compact row of labels rather than a column of menu rows.
+// *currentOut, when asked for, is the cell of the item marked isCurrent
+ILayout* NewToolbarHoverStrip(MainWindow*, const Vec<ToolbarHoverMenuItem>&, VirtCtrl** currentOut);
 void HideToolbarHoverDropdown(MainWindow*);
 bool ToolbarHoverDropdownContainsScreenPoint(MainWindow*, Point);
 
@@ -89,6 +98,15 @@ constexpr int kHideOverlayToolbarTimerId = 0x101;
 // the hover drop-down's timers, also on the toolbar's own host
 constexpr int kOpenHoverDropdownTimerId = 0x102;
 constexpr int kCloseHoverDropdownTimerId = 0x103;
+
+// one row or cell of the drop-down that is up, for the -dbg-control dump
+struct ToolbarHoverItemState {
+    VirtCtrl* ctrl = nullptr; // not owned, the drop-down's layout owns it
+    Str text;                 // not owned, the ctrl's own copy
+    int cmdId = 0;
+    bool isCurrent = false;
+    bool isStripCell = false; // from NewToolbarHoverStrip(), so ctrl is a cell
+};
 
 // a button that opens a drop-down when the mouse rests on it
 struct ToolbarHoverReg {
@@ -110,6 +128,8 @@ struct ToolbarVirt {
 
     // buttons with a hover drop-down, and the one currently open (if any)
     Vec<ToolbarHoverReg> hoverRegs;
+    // what the drop-down that is up is showing; empty when none is
+    Vec<ToolbarHoverItemState> hoverItems;
     VirtHost* hoverHost = nullptr;
     int hoverCmdId = 0;
     int hoverPendingCmdId = 0;

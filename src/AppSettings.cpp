@@ -32,6 +32,7 @@
 #include "DisplayModel.h"
 #include "AppTools.h"
 #include "Favorites.h"
+#include "Menu.h"
 #include "HomePage.h"
 #include "Toolbar.h"
 #include "Translations.h"
@@ -301,21 +302,47 @@ static void CreateExternalViewersCommands() {
     }
 }
 
+// A command per zoom level the zoom buttons step through, in the same order, so
+// the toolbar's zoom drop-down can offer every step. Most of the built-in levels
+// have no command of their own; those get a CmdZoomCustom with the level as its
+// argument, the same as the ZoomLevels ones.
+static Vec<int> gZoomStepCmdIds;
+
+Vec<int>* GetZoomStepCmdIds() {
+    return &gZoomStepCmdIds;
+}
+
 static void CreateZoomCommands() {
     auto* prefs = gSettings;
     delete prefs->zoomLevelsCmdIds;
+    prefs->zoomLevelsCmdIds = nullptr;
+    VecReset(gZoomStepCmdIds);
+
     int n = len(*prefs->zoomLevels);
-    if (n <= 0) {
+    if (n > 0) {
+        // ZoomLevels replaces the built-in levels, for the buttons too
+        Vec<int>* cmdIds = new Vec<int>();
+        VecReserve(*cmdIds, n);
+        prefs->zoomLevelsCmdIds = cmdIds;
+        for (int i = 0; i < n; i++) {
+            float zoomLevel = (*prefs->zoomLevels)[i];
+            CommandArg* arg = NewFloatArg(kCmdArgLevel, zoomLevel);
+            auto* cmd = CreateCustomCommand(StrL("CmdZoomCustom"), CmdZoomCustom, arg);
+            VecInsertAt(*cmdIds, i, cmd->id);
+            VecAppend(gZoomStepCmdIds, cmd->id);
+        }
         return;
     }
-    Vec<int>* cmdIds = new Vec<int>();
-    VecReserve(*cmdIds, n);
-    prefs->zoomLevelsCmdIds = cmdIds;
+    float* levels = GetDefaultZoomLevels(&n);
     for (int i = 0; i < n; i++) {
-        float zoomLevel = (*prefs->zoomLevels)[i];
-        CommandArg* arg = NewFloatArg(kCmdArgLevel, zoomLevel);
-        auto* cmd = CreateCustomCommand(StrL("CmdZoomCustom"), CmdZoomCustom, arg);
-        VecInsertAt(*cmdIds, i, cmd->id);
+        // the ones the Zoom menu already has a command for keep it, so they
+        // keep their shortcut and don't turn into a second, identical command
+        int cmdId = CmdIdFromVirtualZoom(levels[i]);
+        if (cmdId == CmdZoomCustom) {
+            CommandArg* arg = NewFloatArg(kCmdArgLevel, levels[i]);
+            cmdId = CreateCustomCommand(StrL("CmdZoomCustom"), CmdZoomCustom, arg)->id;
+        }
+        VecAppend(gZoomStepCmdIds, cmdId);
     }
 }
 

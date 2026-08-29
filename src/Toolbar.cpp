@@ -18,6 +18,7 @@
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
+#include "DisplayMode.h"
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
@@ -1060,10 +1061,14 @@ void UpdateToolbarFindText(MainWindow* win) {
     FindBarReposition(win);
 }
 
+static void UpdateZoomHoverDropdown(MainWindow* win);
+
 void UpdateToolbarState(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
+    // the zoom buttons' strip may be up: the zoom just moved under it
+    UpdateZoomHoverDropdown(win);
     DisplayMode dm = win->ctrl->GetDisplayMode();
     float zoomVirtual = win->ctrl->GetZoomVirtual();
     {
@@ -1339,6 +1344,8 @@ Rect GetToolbarButtonScreenRect(MainWindow* win, int cmdId) {
 // shows as its tooltip. Also reports how many tools the toolbar's tooltip
 // control ended up with: the toolbar registers one tool per button keyed by
 // command id, so duplicate command ids silently collapse into one tooltip.
+static TempStr HoverDropdownStateTemp(MainWindow* win);
+
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     str::Builder out;
     MainWindow* win = len(gWindows) == 0 ? nullptr : gWindows[0];
@@ -1392,6 +1399,7 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
                        bi.toolTip, tip));
     }
     out.Append(AnnotFilterToolbarStateTemp(win));
+    out.Append(HoverDropdownStateTemp(win));
     *exitCodeOut = 0;
     return ToStrTemp(out);
 }
@@ -1448,6 +1456,9 @@ constexpr int kHoverRowIconGapX = 8;
 // between the label and the shortcut that sits at the right edge, as in a menu
 constexpr int kHoverRowShortcutGapX = 24;
 constexpr int kHoverMenuBorder = 1;
+// around a label in the single-row strip; less than a menu row's, it is a row
+// of them and the gaps add up
+constexpr int kHoverCellPadX = 8;
 // the mouse crosses a seam going from the button to the drop-down; don't close
 // on the frame where it is over neither
 constexpr int kCloseHoverDropdownDelayMs = 150;
@@ -1507,6 +1518,39 @@ struct ToolbarHoverRow : VirtCtrl {
     void OnMouseLeave() { Invalidate(); }
 };
 
+// A cell of NewToolbarHoverStrip(): a label in a row of them, no icon. The one
+// in use is boxed rather than ticked; a tick per cell would double the width of
+// a strip whose whole point is to be compact.
+struct ToolbarHoverCell : VirtCtrl {
+    Str text; // owned
+    PlatformFont* font = nullptr;
+    bool isCurrent = false;
+
+    ToolbarHoverCell() = default;
+    ~ToolbarHoverCell() override { str::Free(text); }
+
+    Size GetIdealSize() override {
+        Size ts = PlatformFontMeasureText(font, text);
+        return {ts.dx + (2 * DpiScale(kHoverCellPadX)), ts.dy + (2 * DpiScale(kHoverRowPadY))};
+    }
+
+    void Paint(VirtPaintCtx& ctx) override {
+        bool enabled = IsEnabled();
+        Rect r = ctx.bounds;
+        if (enabled && HasFlag(vwfHovered)) {
+            ctx.gfx->FillRect(r, TbHoverColor());
+        }
+        if (isCurrent) {
+            ctx.gfx->DrawRect(r, TbTextColor(), DpiScale(1));
+        }
+        Color col = enabled ? TbTextColor() : TbDisabledColor();
+        ctx.gfx->DrawText(text, r, gfxTextCenter | gfxTextVCenter, font, col);
+    }
+
+    void OnMouseEnter() { Invalidate(); }
+    void OnMouseLeave() { Invalidate(); }
+};
+
 static void PostedHideHoverDropdown(MainWindow* win) {
     if (IsMainWindowValidAndNotClosing(win)) {
         HideToolbarHoverDropdown(win);
@@ -1523,6 +1567,18 @@ static void OnHoverRowClicked(MainWindow* win, VirtMouseEvent* ev) {
     // be torn down once that returns
     uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
     ToolbarPostCommand(win, cmdId);
+}
+
+// Remember a row/cell for HoverDropdownStateTemp(). `text` has to be the ctrl's
+// own copy: what the caller built the item from is often temp-allocated and
+// gone by the time the dump is asked for.
+static void RecordHoverItem(ToolbarVirt* tb, VirtCtrl* w, Str text, const ToolbarHoverMenuItem& it) {
+    ToolbarHoverItemState st;
+    st.ctrl = w;
+    st.text = text;
+    st.cmdId = it.cmdId;
+    st.isCurrent = it.isCurrent;
+    VecAppend(tb->hoverItems, st);
 }
 
 ILayout* NewToolbarHoverMenu(MainWindow* win, const Vec<ToolbarHoverMenuItem>& items) {
@@ -1549,9 +1605,56 @@ ILayout* NewToolbarHoverMenu(MainWindow* win, const Vec<ToolbarHoverMenuItem>& i
         row->SetIsEnabled(it.enabled);
         row->onClick = MkFunc1(OnHoverRowClicked, win);
         vbox->AddChild(row);
+        RecordHoverItem(tb, row, row->text, it);
     }
     int b = DpiScale(kHoverMenuBorder);
     return new Padding(vbox, Insets{b, b, b, b});
+}
+
+ILayout* NewToolbarHoverStrip(MainWindow* win, const Vec<ToolbarHoverMenuItem>& items, VirtCtrl** currentOut) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
+        return nullptr;
+    }
+    auto* hbox = new HBox();
+    hbox->alignCross = CrossAxisAlign::Stretch;
+    for (const ToolbarHoverMenuItem& it : items) {
+        auto* cell = new ToolbarHoverCell();
+        cell->id = it.cmdId;
+        cell->font = tb->platformFont;
+        cell->isCurrent = it.isCurrent;
+        str::ReplaceWithCopy(&cell->text, it.text);
+        cell->SetIsEnabled(it.enabled);
+        cell->onClick = MkFunc1(OnHoverRowClicked, win);
+        hbox->AddChild(cell);
+        RecordHoverItem(tb, cell, cell->text, it);
+        tb->hoverItems[len(tb->hoverItems) - 1].isStripCell = true;
+        if (it.isCurrent && currentOut) {
+            *currentOut = cell;
+        }
+    }
+    int b = DpiScale(kHoverMenuBorder);
+    return new Padding(hbox, Insets{b, b, b, b});
+}
+
+// The rows/cells of the drop-down that is up, in screen coordinates, for
+// -dbg-control tests (tests/toolbar-hover-dropdown.ts).
+static TempStr HoverDropdownStateTemp(MainWindow* win) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    VirtHost* host = tb ? tb->hoverHost : nullptr;
+    if (!host) {
+        return StrL("dropdown cmd=0 items=0\n");
+    }
+    str::Builder out;
+    int n = len(tb->hoverItems);
+    out.Append(fmt("dropdown cmd=%d items=%d\n", tb->hoverCmdId, n));
+    for (int i = 0; i < n; i++) {
+        ToolbarHoverItemState& st = tb->hoverItems[i];
+        Rect r = st.ctrl ? host->ToScreen(st.ctrl->BoundsInWindow()) : Rect{};
+        out.Append(fmt("dropdown-item idx=%d cmd=%d current=%d rect=%d,%d,%d,%d text=%s\n", i, st.cmdId,
+                       st.isCurrent ? 1 : 0, r.x, r.y, r.x + r.dx, r.y + r.dy, st.text));
+    }
+    return ToStrTemp(out);
 }
 
 // The toolbar sees no mouse moves once the cursor is inside the drop-down, so
@@ -1573,6 +1676,7 @@ void HideToolbarHoverDropdown(MainWindow* win) {
     if (!tb) {
         return;
     }
+    VecReset(tb->hoverItems);
     if (tb->hoverCmdId != 0) {
         if (VirtCtrl* btn = ToolbarItemForCmd(win, tb->hoverCmdId)) {
             btn->SetTooltip(tb->hoverSavedTip);
@@ -1643,6 +1747,7 @@ static void OpenHoverDropdown(MainWindow* win, int cmdId) {
     }
     ToolbarHoverBuildEvent ev;
     ev.win = win;
+    VecReset(tb->hoverItems);
     reg->build.Call(&ev);
     if (!ev.layout) {
         return;
@@ -1667,13 +1772,18 @@ static void OpenHoverDropdown(MainWindow* win, int cmdId) {
     host->onMouseLeave = MkFunc0(OnHoverDropdownMouseLeave, win);
     Size sz = host->SetLayoutSizedToContent(ev.layout);
 
-    // under the button, left edges aligned, kept on the monitor
-    Rect r{anchor.x, anchor.Bottom(), sz.dx, sz.dy};
+    // under the button, left edges aligned, kept on the monitor. A build that
+    // asked for it instead gets that control under the middle of the button,
+    // so e.g. the zoom level in use is where the mouse already is
+    int x = anchor.x;
+    if (ev.anchor) {
+        Rect ar = ev.anchor->BoundsInWindow();
+        x = anchor.x + (anchor.dx / 2) - (ar.x + (ar.dx / 2));
+    }
+    Rect r{x, anchor.Bottom(), sz.dx, sz.dy};
     r = ShiftRectToWorkArea(r, win->hwndFrame, true);
     host->SetPos(r, true);
 
-    // the button's tooltip would sit on top of the drop-down, and WM_SETCURSOR
-    // would bring it back, so the button goes without one until this closes
     // the button's tooltip would sit on top of the drop-down, and WM_SETCURSOR
     // would bring it back, so the button goes without one until this closes
     if (VirtCtrl* btn = ToolbarItemForCmd(win, cmdId)) {
@@ -1713,6 +1823,13 @@ static void ToolbarHoverDropdownOnMouseMove(MainWindow* win) {
             tb->host->KillTimer(kCloseHoverDropdownTimerId);
             return;
         }
+        if (cmdId != 0) {
+            // moved straight onto another button that has one: swap to it
+            // without the delay, the way a menu bar follows the mouse
+            HideToolbarHoverDropdown(win);
+            OpenHoverDropdown(win, cmdId);
+            return;
+        }
         tb->host->SetTimer(kCloseHoverDropdownTimerId, kCloseHoverDropdownDelayMs);
         return;
     }
@@ -1750,6 +1867,148 @@ static void OnHoverDropdownTimer(MainWindow* win, int timerId) {
         return;
     }
     HideToolbarHoverDropdown(win);
+}
+
+struct ZoomHoverLevel {
+    float zoom;
+    int cmdId;
+};
+
+// What the zoom strip lists: the levels the zoom buttons step through, so a
+// click on one of them is the same jump the buttons make in one go, plus the
+// two fit modes where 100% is. GetDefaultZoomLevels() is ZoomLevels from the
+// settings when it is set, otherwise the built-in list, and GetZoomStepCmdIds()
+// has a command for each of them, in the same order.
+static void ZoomHoverLevels(Vec<ZoomHoverLevel>& out) {
+    int n = 0;
+    float* levels = GetDefaultZoomLevels(&n);
+    Vec<int>* cmdIds = GetZoomStepCmdIds();
+    if (!levels || !cmdIds || len(*cmdIds) != n) {
+        return;
+    }
+    bool addedFits = false;
+    for (int i = 0; i < n; i++) {
+        if (!addedFits && levels[i] > 100) {
+            // the fit modes go where their size puts them, i.e. right after
+            // 100% in every list that has it
+            VecAppend(out, ZoomHoverLevel{kZoomFitPage, CmdZoomFitPage});
+            VecAppend(out, ZoomHoverLevel{kZoomFitWidth, CmdZoomFitWidth});
+            addedFits = true;
+        }
+        VecAppend(out, ZoomHoverLevel{levels[i], (*cmdIds)[i]});
+    }
+    if (!addedFits) {
+        VecAppend(out, ZoomHoverLevel{kZoomFitPage, CmdZoomFitPage});
+        VecAppend(out, ZoomHoverLevel{kZoomFitWidth, CmdZoomFitWidth});
+    }
+}
+
+static TempStr ZoomHoverLevelStrTemp(float zoom) {
+    if (zoom < 0) {
+        // a fit mode
+        return ZoomLevelStr(zoom);
+    }
+    // ZoomLevelStr() rounds, which would show 12.5% as "12%"; the Zoom menu's
+    // rows for the same levels don't, so neither do ours
+    return fmt("%g%%", zoom);
+}
+
+// which of the levels the document is at, exact match only, -1 when it is at
+// none of them (a zoom typed into Custom Zoom, or a fit mode not listed)
+static int ZoomHoverCurrentIdx(MainWindow* win, const Vec<ZoomHoverLevel>& levels) {
+    DocController* ctrl = win ? win->ctrl : nullptr;
+    if (!ctrl) {
+        return -1;
+    }
+    float current = ctrl->GetZoomVirtual(false);
+    // the same fuzz DisplayModel::GetNextZoomStep uses to match a level
+    constexpr float kZoomFuzz = 0.01f;
+    for (int i = 0; i < len(levels); i++) {
+        float zl = levels[i].zoom;
+        if (current + kZoomFuzz >= zl && current - kZoomFuzz <= zl) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// The zoom buttons' drop-down: the zoom levels in one compact row, the one in
+// use boxed and sitting under the button, so it is the shortest trip from the
+// button to any other level.
+static void BuildZoomHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
+    DocController* ctrl = win ? win->ctrl : nullptr;
+    if (!ctrl) {
+        return;
+    }
+    Vec<ZoomHoverLevel> levels;
+    ZoomHoverLevels(levels);
+    int currentIdx = ZoomHoverCurrentIdx(win, levels);
+
+    Vec<ToolbarHoverMenuItem> items;
+    for (int i = 0; i < len(levels); i++) {
+        ToolbarHoverMenuItem it;
+        it.text = ZoomHoverLevelStrTemp(levels[i].zoom);
+        it.cmdId = levels[i].cmdId;
+        it.isCurrent = i == currentIdx;
+        VecAppend(items, it);
+    }
+
+    VirtCtrl* anchorCtrl = nullptr;
+    ev->layout = NewToolbarHoverStrip(win, items, &anchorCtrl);
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (!anchorCtrl) {
+        // at a zoom none of them is: anchor on the level it is closest to, so
+        // the strip still opens around where the zoom is
+        float absolute = ctrl->GetZoomVirtual(true);
+        int nearest = -1;
+        float nearestDiff = 0;
+        for (int i = 0; i < len(levels); i++) {
+            float zl = levels[i].zoom;
+            if (zl <= 0) {
+                continue;
+            }
+            float diff = absolute > zl ? absolute - zl : zl - absolute;
+            if (nearest < 0 || diff < nearestDiff) {
+                nearest = i;
+                nearestDiff = diff;
+            }
+        }
+        if (nearest >= 0 && nearest < len(tb->hoverItems)) {
+            anchorCtrl = tb->hoverItems[nearest].ctrl;
+        }
+    }
+    ev->anchor = anchorCtrl;
+}
+
+// The zoom moved (the buttons step it, and their strip stays up while they are
+// clicked): box the level it landed on, if it landed on one. The strip stays
+// where it is; sliding it out from under the mouse mid-click would be worse
+// than the mark being off-centre.
+static void UpdateZoomHoverDropdown(MainWindow* win) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb || !tb->hoverHost) {
+        return;
+    }
+    if (tb->hoverCmdId != CmdZoomIn && tb->hoverCmdId != CmdZoomOut) {
+        return;
+    }
+    Vec<ZoomHoverLevel> levels;
+    ZoomHoverLevels(levels);
+    int currentIdx = ZoomHoverCurrentIdx(win, levels);
+    for (int i = 0; i < len(tb->hoverItems); i++) {
+        ToolbarHoverItemState& st = tb->hoverItems[i];
+        if (!st.isStripCell || !st.ctrl) {
+            continue;
+        }
+        bool isCurrent = i == currentIdx;
+        auto* cell = (ToolbarHoverCell*)st.ctrl;
+        if (cell->isCurrent == isCurrent) {
+            continue;
+        }
+        cell->isCurrent = isCurrent;
+        st.isCurrent = isCurrent;
+        cell->Invalidate();
+    }
 }
 
 // The Save button's drop-down: the three ways to end an editing session.
@@ -1912,6 +2171,8 @@ static void BuildToolbarLayout(MainWindow* win) {
     mainRow->AddChild(box, 1);
 
     SetToolbarHoverDropdown(win, CmdSaveAnnotations, MkFunc1(BuildSaveHoverMenu, win));
+    SetToolbarHoverDropdown(win, CmdZoomIn, MkFunc1(BuildZoomHoverMenu, win));
+    SetToolbarHoverDropdown(win, CmdZoomOut, MkFunc1(BuildZoomHoverMenu, win));
 
     auto* root = new VBox();
     root->alignCross = CrossAxisAlign::Stretch;

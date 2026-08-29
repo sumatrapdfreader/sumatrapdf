@@ -47,6 +47,8 @@ PlatformFont* GetAppSidebarLabelFontForDpi(int dpi);
 bool IsMenuFontSizeDefault();
 
 TempStr ZoomLevelStr(float zoom);
+// the command for each level the zoom buttons step through, in that order
+Vec<int>* GetZoomStepCmdIds();
 void CollectZoomLevels(Vec<float>& out, bool forChm);
 
 extern Settings* gSettings;
