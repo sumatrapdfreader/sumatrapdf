@@ -613,7 +613,11 @@ static int VecNextCap(int cap, int wanted, int elSize) {
 NO_INLINE bool VecReserveNT(Arena* arena, VecNonTemplated* v, int elSize, int wantedSize) {
     int cap = v->cap;
     int curCap = cap < 0 ? -cap : cap;
-    if (wantedSize <= curCap) {
+    // cap without els is a size hint (ByteWriter used to set it and drop writes)
+    if (wantedSize <= curCap && v->els) {
+        return true;
+    }
+    if (wantedSize <= 0) {
         return true;
     }
     int newCap = VecNextCap(curCap, wantedSize, elSize);

@@ -140,6 +140,17 @@ void ByteOrderTests() {
         utassert(MemEq(kAbc, b, 3));
         utassert(26 == d.Offset());
     }
+
+    {
+        // sizeHint must allocate; setting cap without els used to drop writes
+        ByteWriterLE wr(64);
+        wr.Write8x2('I', 'I');
+        wr.Write16(42);
+        Str s = wr.AsByteSlice();
+        utassert(len(s) == 4 && s.s);
+        utassert(s.s[0] == 'I' && s.s[1] == 'I');
+        utassert((u8)s.s[2] == 42 && s.s[3] == 0);
+    }
 }
 
 #undef kAbc
