@@ -6,6 +6,8 @@
 #include "base/BitManip.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
+#include "base/UITask.h"
+#include "base/Win.h"
 
 #include "gui/UIModels.h"
 
@@ -121,9 +123,9 @@ static ToolbarButtonInfo gPdfAnnotationButtons[] = {
     {nullptr, 0, {}},
     {gIconFindAnnotation, CmdFindAnnotation, _TRN("Find Annotation")},
     {nullptr, 0, {}},
-    // the tooltip of the first one names the file, see ToolbarUpdateStateForWindow
+    // the tooltip names the file, see ToolbarUpdateStateForWindow. Hovering it
+    // opens a drop-down with the other two ways to end an editing session
     {gIconSave, CmdSaveAnnotations, _TRN("Save changes to existing PDF")},
-    {gIconSaveToNewFile, CmdSaveAnnotationsNewFile, _TRN("Save changes to a new PDF")},
 };
 
 constexpr int kPdfAnnotationButtonsCount = dimof(gPdfAnnotationButtons);
@@ -982,7 +984,13 @@ void RevealOverlayToolbar(MainWindow* win) {
 }
 
 // the delayed-hide timer fired on the toolbar's own host
+static void OnHoverDropdownTimer(MainWindow* win, int timerId);
+
 static void OnToolbarTimer(MainWindow* win, int timerId) {
+    if (timerId == kOpenHoverDropdownTimerId || timerId == kCloseHoverDropdownTimerId) {
+        OnHoverDropdownTimer(win, timerId);
+        return;
+    }
     if (timerId != kHideOverlayToolbarTimerId) {
         return;
     }
@@ -1275,12 +1283,35 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
 }
 
 // bounds of a button in the toolbar's client coords, empty if it has none
+static VirtCtrl* ToolbarItemForCmd(MainWindow* win, int cmdId) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
+        return nullptr;
+    }
+    for (VirtCtrl* w : tb->items) {
+        if (w && w->id == cmdId && w->GetVisibility() == Visibility::Visible) {
+            return w;
+        }
+    }
+    for (VirtCtrl* w : tb->annotationItems) {
+        if (w && w->id == cmdId && w->GetVisibility() == Visibility::Visible) {
+            return w;
+        }
+    }
+    return nullptr;
+}
+
 static Rect ToolbarButtonRect(MainWindow* win, int cmdId) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb) {
         return {};
     }
     for (VirtCtrl* w : tb->items) {
+        if (w && w->id == cmdId && w->GetVisibility() == Visibility::Visible) {
+            return w->BoundsInWindow();
+        }
+    }
+    for (VirtCtrl* w : tb->annotationItems) {
         if (w && w->id == cmdId && w->GetVisibility() == Visibility::Visible) {
             return w->BoundsInWindow();
         }
@@ -1405,6 +1436,345 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
     }
     ToolbarPostCommand(win, cmdId);
     ev->didHandle = true;
+}
+
+//--- hover drop-down
+
+// A row of NewToolbarHoverMenu(): an icon on the left, text on the right, and a
+// background that lights up under the mouse, like a menu item.
+constexpr int kHoverRowPadY = 6;
+constexpr int kHoverRowPadX = 10;
+constexpr int kHoverRowIconGapX = 8;
+// between the label and the shortcut that sits at the right edge, as in a menu
+constexpr int kHoverRowShortcutGapX = 24;
+constexpr int kHoverMenuBorder = 1;
+// the mouse crosses a seam going from the button to the drop-down; don't close
+// on the frame where it is over neither
+constexpr int kCloseHoverDropdownDelayMs = 150;
+
+struct ToolbarHoverRow : VirtCtrl {
+    Pixmap* pixmap = nullptr; // not owned, from GetCachedPixmapForSvg()
+    Str text;                 // owned
+    Str shortcut;             // owned; empty when the command has no key
+    PlatformFont* font = nullptr;
+    int iconSize = 0;
+
+    ToolbarHoverRow() = default;
+    ~ToolbarHoverRow() override {
+        str::Free(text);
+        str::Free(shortcut);
+    }
+
+    int ShortcutDx() {
+        if (!shortcut) {
+            return 0;
+        }
+        return PlatformFontMeasureText(font, shortcut).dx + DpiScale(kHoverRowShortcutGapX);
+    }
+
+    Size GetIdealSize() override {
+        Size ts = PlatformFontMeasureText(font, text);
+        int dx = (2 * DpiScale(kHoverRowPadX)) + iconSize + DpiScale(kHoverRowIconGapX) + ts.dx + ShortcutDx();
+        int dy = std::max(ts.dy, iconSize) + (2 * DpiScale(kHoverRowPadY));
+        return {dx, dy};
+    }
+
+    void Paint(VirtPaintCtx& ctx) override {
+        bool enabled = IsEnabled();
+        Rect r = ctx.bounds;
+        if (enabled && HasFlag(vwfHovered)) {
+            ctx.gfx->FillRect(r, TbHoverColor());
+        }
+        int x = r.x + DpiScale(kHoverRowPadX);
+        if (pixmap) {
+            int y = r.y + ((r.dy - pixmap->height) / 2);
+            ctx.gfx->DrawPixmap(pixmap, {x, y, pixmap->width, pixmap->height});
+        }
+        x += iconSize + DpiScale(kHoverRowIconGapX);
+        int right = r.Right() - DpiScale(kHoverRowPadX);
+        Color col = enabled ? TbTextColor() : TbDisabledColor();
+        if (shortcut) {
+            // right-aligned and dimmer, the way a menu shows its accelerator
+            Rect sr{x, r.y, right - x, r.dy};
+            ctx.gfx->DrawText(shortcut, sr, gfxTextRight | gfxTextVCenter, font, TbDisabledColor());
+            right -= ShortcutDx();
+        }
+        Rect tr{x, r.y, right - x, r.dy};
+        ctx.gfx->DrawText(text, tr, gfxTextVCenter | gfxTextEllipsis, font, col);
+    }
+
+    void OnMouseEnter() { Invalidate(); }
+    void OnMouseLeave() { Invalidate(); }
+};
+
+static void PostedHideHoverDropdown(MainWindow* win) {
+    if (IsMainWindowValidAndNotClosing(win)) {
+        HideToolbarHoverDropdown(win);
+    }
+}
+
+static void OnHoverRowClicked(MainWindow* win, VirtMouseEvent* ev) {
+    VirtCtrl* w = ev ? ev->target : nullptr;
+    if (!w || !w->IsEnabled()) {
+        return;
+    }
+    int cmdId = w->id;
+    // the click is being handled by the drop-down's own window, so it can only
+    // be torn down once that returns
+    uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
+    ToolbarPostCommand(win, cmdId);
+}
+
+ILayout* NewToolbarHoverMenu(MainWindow* win, const Vec<ToolbarHoverMenuItem>& items) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
+        return nullptr;
+    }
+    int iconSize = tb->iconSize;
+    Color fg = TbTextColor();
+    Color dis = TbDisabledColor();
+    Color bg = TbBgColor();
+    auto* vbox = new VBox();
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    for (const ToolbarHoverMenuItem& it : items) {
+        auto* row = new ToolbarHoverRow();
+        row->id = it.cmdId;
+        row->font = tb->platformFont;
+        row->iconSize = iconSize;
+        str::ReplaceWithCopy(&row->text, it.text);
+        str::ReplaceWithCopy(&row->shortcut, ShortcutsForCmdTemp(it.cmdId, 1));
+        if (it.svgIcon) {
+            row->pixmap = GetCachedPixmapForSvg(it.svgIcon, iconSize, iconSize, it.enabled ? fg : dis, bg);
+        }
+        row->SetIsEnabled(it.enabled);
+        row->onClick = MkFunc1(OnHoverRowClicked, win);
+        vbox->AddChild(row);
+    }
+    int b = DpiScale(kHoverMenuBorder);
+    return new Padding(vbox, Insets{b, b, b, b});
+}
+
+// The toolbar sees no mouse moves once the cursor is inside the drop-down, so
+// the drop-down has to say when the cursor leaves it.
+static void OnHoverDropdownMouseLeave(MainWindow* win) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (tb && tb->host && tb->hoverCmdId != 0) {
+        tb->host->SetTimer(kCloseHoverDropdownTimerId, kCloseHoverDropdownDelayMs);
+    }
+}
+
+static void PaintHoverDropdownBg(MainWindow*, VirtHostPaintEvent* ev) {
+    ev->gfx->FillRect(ev->clientRect, TbBgColor());
+    ev->gfx->DrawRect(ev->clientRect, ThemeEdgeColor(), DpiScale(kHoverMenuBorder));
+}
+
+void HideToolbarHoverDropdown(MainWindow* win) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
+        return;
+    }
+    if (tb->hoverCmdId != 0) {
+        if (VirtCtrl* btn = ToolbarItemForCmd(win, tb->hoverCmdId)) {
+            btn->SetTooltip(tb->hoverSavedTip);
+        }
+        str::Free(tb->hoverSavedTip);
+        tb->hoverSavedTip = {};
+    }
+    tb->hoverPendingCmdId = 0;
+    tb->hoverCmdId = 0;
+    if (tb->host) {
+        tb->host->KillTimer(kOpenHoverDropdownTimerId);
+        tb->host->KillTimer(kCloseHoverDropdownTimerId);
+    }
+    if (tb->hoverHost) {
+        VirtHost* h = tb->hoverHost;
+        tb->hoverHost = nullptr;
+        delete h;
+    }
+}
+
+// Geometry, not WindowFromPoint(): the toolbar only gets a mouse move while
+// the cursor is over it, so who is on top does not come into it.
+static bool HostHasPoint(VirtHost* host, Point pt) {
+    return host && host->IsVisible() && host->ScreenRect().Contains(pt);
+}
+
+bool ToolbarHoverDropdownContainsScreenPoint(MainWindow* win, Point pt) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    return HostHasPoint(tb ? tb->hoverHost : nullptr, pt);
+}
+
+static ToolbarHoverReg* FindHoverReg(ToolbarVirt* tb, int cmdId) {
+    if (!tb || cmdId == 0) {
+        return nullptr;
+    }
+    for (ToolbarHoverReg& reg : tb->hoverRegs) {
+        if (reg.cmdId == cmdId) {
+            return &reg;
+        }
+    }
+    return nullptr;
+}
+
+void SetToolbarHoverDropdown(MainWindow* win, int cmdId, const Func1<ToolbarHoverBuildEvent*>& build) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
+        return;
+    }
+    if (ToolbarHoverReg* reg = FindHoverReg(tb, cmdId)) {
+        reg->build = build;
+        return;
+    }
+    ToolbarHoverReg reg;
+    reg.cmdId = cmdId;
+    reg.build = build;
+    VecAppend(tb->hoverRegs, reg);
+}
+
+static void OpenHoverDropdown(MainWindow* win, int cmdId) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    ToolbarHoverReg* reg = FindHoverReg(tb, cmdId);
+    if (!reg || !reg->build.IsValid() || !tb->host) {
+        return;
+    }
+    Rect anchor = GetToolbarButtonScreenRect(win, cmdId);
+    if (anchor.IsEmpty()) {
+        return;
+    }
+    ToolbarHoverBuildEvent ev;
+    ev.win = win;
+    reg->build.Call(&ev);
+    if (!ev.layout) {
+        return;
+    }
+
+    VirtHost::CreateArgs args;
+    args.parent = win->hwndFrame;
+    args.className = WStrL(L"SumatraToolbarHoverMenu");
+    args.isPopup = true;
+    args.visible = false;
+    args.noActivate = true;
+    args.userData = win;
+    args.bgColor = TbBgColor();
+    args.isRtl = IsUIRtl();
+    args.initialSize = {100, 100};
+    VirtHost* host = VirtHost::Create(args);
+    if (!host) {
+        delete ev.layout;
+        return;
+    }
+    host->onPaintBackground = MkFunc1(PaintHoverDropdownBg, win);
+    host->onMouseLeave = MkFunc0(OnHoverDropdownMouseLeave, win);
+    Size sz = host->SetLayoutSizedToContent(ev.layout);
+
+    // under the button, left edges aligned, kept on the monitor
+    Rect r{anchor.x, anchor.Bottom(), sz.dx, sz.dy};
+    r = ShiftRectToWorkArea(r, win->hwndFrame, true);
+    host->SetPos(r, true);
+
+    // the button's tooltip would sit on top of the drop-down, and WM_SETCURSOR
+    // would bring it back, so the button goes without one until this closes
+    // the button's tooltip would sit on top of the drop-down, and WM_SETCURSOR
+    // would bring it back, so the button goes without one until this closes
+    if (VirtCtrl* btn = ToolbarItemForCmd(win, cmdId)) {
+        str::ReplaceWithCopy(&tb->hoverSavedTip, btn->tooltip);
+        btn->SetTooltip({});
+    }
+    if (tb->host->vroot) {
+        tb->host->vroot->HideTooltip();
+    }
+    tb->hoverHost = host;
+    tb->hoverCmdId = cmdId;
+    tb->hoverPendingCmdId = 0;
+}
+
+// The mouse moved over the toolbar (or left it): open, keep or close the
+// drop-down of whatever button it is resting on.
+static void ToolbarHoverDropdownOnMouseMove(MainWindow* win) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb || !tb->host || len(tb->hoverRegs) == 0) {
+        return;
+    }
+    Point ptScreen = UiCursorScreenPos();
+    bool overMenu = ToolbarHoverDropdownContainsScreenPoint(win, ptScreen);
+    int cmdId = 0;
+    if (HostHasPoint(tb->host, ptScreen)) {
+        // a disabled button still gets its drop-down, the way it still gets its
+        // tooltip: the rows say what could be done and why they are greyed
+        VirtCtrl* w = ToolbarItemFromPoint(win, tb->host->FromScreen(ptScreen));
+        if (w && FindHoverReg(tb, w->id)) {
+            cmdId = w->id;
+        }
+    }
+
+    if (tb->hoverCmdId != 0) {
+        // one is open: keep it while the mouse is on its button or in it
+        if (overMenu || cmdId == tb->hoverCmdId) {
+            tb->host->KillTimer(kCloseHoverDropdownTimerId);
+            return;
+        }
+        tb->host->SetTimer(kCloseHoverDropdownTimerId, kCloseHoverDropdownDelayMs);
+        return;
+    }
+    if (cmdId == tb->hoverPendingCmdId) {
+        return;
+    }
+    tb->hoverPendingCmdId = cmdId;
+    tb->host->KillTimer(kOpenHoverDropdownTimerId);
+    if (cmdId != 0) {
+        tb->host->SetTimer(kOpenHoverDropdownTimerId, UiTooltipDelayMs());
+    }
+}
+
+static void OnHoverDropdownTimer(MainWindow* win, int timerId) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb || !tb->host) {
+        return;
+    }
+    if (timerId == kOpenHoverDropdownTimerId) {
+        tb->host->KillTimer(kOpenHoverDropdownTimerId);
+        int cmdId = tb->hoverPendingCmdId;
+        tb->hoverPendingCmdId = 0;
+        if (cmdId != 0) {
+            OpenHoverDropdown(win, cmdId);
+        }
+        return;
+    }
+    tb->host->KillTimer(kCloseHoverDropdownTimerId);
+    Point pt = UiCursorScreenPos();
+    if (ToolbarHoverDropdownContainsScreenPoint(win, pt)) {
+        return;
+    }
+    // still on the button that opened it: leave it up
+    if (GetToolbarButtonScreenRect(win, tb->hoverCmdId).Contains(pt)) {
+        return;
+    }
+    HideToolbarHoverDropdown(win);
+}
+
+// The Save button's drop-down: the three ways to end an editing session.
+static void BuildSaveHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    auto* ctx = NewBuildMenuCtx(tab, Point{0, 0});
+    AutoCall delCtx(DeleteBuildMenuCtx, ctx);
+    bool dirty = ctx->hasUnsavedAnnotations;
+
+    TempStr base = tab ? path::GetBaseNameTemp(tab->filePath) : TempStr{};
+    Str saveText = _TRA("Save changes to existing PDF");
+    if (len(base) > 0) {
+        saveText = fmt(_TRA("Save changes to %s").s, base);
+    }
+
+    Vec<ToolbarHoverMenuItem> items;
+    VecAppend(items, {Str(gIconSave), saveText, CmdSaveAnnotations, dirty});
+    VecAppend(items, {Str(gIconSaveToNewFile), _TRA("Save changes to a new PDF"), CmdSaveAnnotationsNewFile, dirty});
+    VecAppend(items, {Str(gIconTrash), _TRA("Discard changes"), CmdDiscardChanges, dirty});
+    ev->layout = NewToolbarHoverMenu(win, items);
+}
+
+static void OnToolbarMouseMove(MainWindow* win) {
+    UpdateOverlayToolbarForMouse(win);
+    ToolbarHoverDropdownOnMouseMove(win);
 }
 
 static void PaintToolbarSeparator(VirtCustom*, VirtPaintCtx* ctx) {
@@ -1541,6 +1911,8 @@ static void BuildToolbarLayout(MainWindow* win) {
     mainRow->gap = DpiScale(kButtonSpacingX);
     mainRow->AddChild(box, 1);
 
+    SetToolbarHoverDropdown(win, CmdSaveAnnotations, MkFunc1(BuildSaveHoverMenu, win));
+
     auto* root = new VBox();
     root->alignCross = CrossAxisAlign::Stretch;
     root->AddChild(new Padding(mainRow, Insets{0, DpiScale(4), 0, DpiScale(4)}));
@@ -1599,8 +1971,8 @@ void CreateToolbar(MainWindow* win) {
     host->onPaintBackground = MkFunc1(PaintToolbarBackground, win);
     host->onPaint = MkFunc1(PaintToolbarEdge, win);
     host->onTimer = MkFunc1(OnToolbarTimer, win);
-    host->onMouseMove = MkFunc0(UpdateOverlayToolbarForMouse, win);
-    host->onMouseLeave = MkFunc0(UpdateOverlayToolbarForMouse, win);
+    host->onMouseMove = MkFunc0(OnToolbarMouseMove, win);
+    host->onMouseLeave = MkFunc0(OnToolbarMouseMove, win);
     ToolbarSetNativeHooks(win, host);
 
     auto* tb = new ToolbarVirt();
@@ -1635,6 +2007,7 @@ void DestroyToolbar(MainWindow* win) {
         win->hwndToolbar = nullptr;
         return;
     }
+    HideToolbarHoverDropdown(win);
     DeleteAnnotFilterToolbar(win);
     win->pageEdit = nullptr;
     win->toolbarVirt = nullptr;

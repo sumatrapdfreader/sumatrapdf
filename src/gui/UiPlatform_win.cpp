@@ -22,6 +22,11 @@ Point UiCursorScreenPos() {
     return GetCursorPosition();
 }
 
+// what a tooltip's TTDT_INITIAL defaults to
+int UiTooltipDelayMs() {
+    return (int)GetDoubleClickTime();
+}
+
 int UiHScrollbarDy() {
     return DpiGetSystemMetrics(SM_CYHSCROLL);
 }

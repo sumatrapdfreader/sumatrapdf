@@ -49,6 +49,33 @@ int ToolbarIconSize();
 
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut);
 
+//--- hover drop-down
+
+// A toolbar button can open a drop-down when the mouse rests on it, after the
+// same delay a tooltip takes. The content is any layout, so a caller can put
+// whatever it likes in there; NewToolbarHoverMenu() builds the menu-like rows
+// most of them want.
+
+// one row: an icon on the left, text on the right, and the command a click runs
+struct ToolbarHoverMenuItem {
+    Str svgIcon;
+    Str text;
+    int cmdId = 0;
+    bool enabled = true;
+};
+
+// Built every time the drop-down opens, so it shows the current state.
+struct ToolbarHoverBuildEvent {
+    MainWindow* win = nullptr;
+    // out: the drop-down's content; the drop-down takes ownership
+    ILayout* layout = nullptr;
+};
+
+void SetToolbarHoverDropdown(MainWindow*, int cmdId, const Func1<ToolbarHoverBuildEvent*>&);
+ILayout* NewToolbarHoverMenu(MainWindow*, const Vec<ToolbarHoverMenuItem>&);
+void HideToolbarHoverDropdown(MainWindow*);
+bool ToolbarHoverDropdownContainsScreenPoint(MainWindow*, Point);
+
 //--- shared between Toolbar.cpp and Toolbar_win.cpp, not meant for anyone else
 
 // those are not real commands but we have to refer to toolbar buttons
@@ -59,6 +86,15 @@ constexpr int WarningMsgId = (int)CmdLast + 17;
 
 // the overlay toolbar's delayed-hide timer, on the toolbar's own host
 constexpr int kHideOverlayToolbarTimerId = 0x101;
+// the hover drop-down's timers, also on the toolbar's own host
+constexpr int kOpenHoverDropdownTimerId = 0x102;
+constexpr int kCloseHoverDropdownTimerId = 0x103;
+
+// a button that opens a drop-down when the mouse rests on it
+struct ToolbarHoverReg {
+    int cmdId = 0;
+    Func1<ToolbarHoverBuildEvent*> build;
+};
 
 struct ToolbarVirt {
     // the toolbar's window; owns the layout tree and the virtual controls
@@ -71,6 +107,14 @@ struct ToolbarVirt {
     PlatformFont* platformFont = nullptr;
     int iconSize = 0;
     int rowDy = 0;
+
+    // buttons with a hover drop-down, and the one currently open (if any)
+    Vec<ToolbarHoverReg> hoverRegs;
+    VirtHost* hoverHost = nullptr;
+    int hoverCmdId = 0;
+    int hoverPendingCmdId = 0;
+    // the open button's tooltip, taken away for as long as the drop-down is up
+    Str hoverSavedTip;
 };
 
 // implemented in Toolbar.cpp

@@ -141,6 +141,8 @@ struct VirtHost {
 
 // where the mouse cursor is, in screen coordinates
 Point UiCursorScreenPos();
+// how long the mouse has to rest on something before its tooltip appears
+int UiTooltipDelayMs();
 // height of a horizontal scrollbar the OS draws
 int UiHScrollbarDy();
 // width of the 3d border the OS draws around a sunken control
