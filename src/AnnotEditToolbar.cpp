@@ -1077,10 +1077,13 @@ static void DestroyContentsEditor(AnnotEditToolbar* tb) {
     if (!tb) {
         return;
     }
+    // clear the state before the delete: destroying the box takes its focus
+    // away, and that WM_KILLFOCUS comes back through OnContentsEditWndProc
+    Edit* edit = tb->contentsEdit;
+    tb->contentsEdit = nullptr;
     tb->editingContents = false;
     tb->contentsEditClosing = false;
-    delete tb->contentsEdit;
-    tb->contentsEdit = nullptr;
+    delete edit;
     if (tb->host) {
         SetHostNoActivate(tb->host, true);
     }
@@ -1141,6 +1144,12 @@ static void QueueEndContentsEdit(AnnotEditToolbar* tb, bool accept) {
     }
 }
 
+// A click that ends a contents edit is spent on ending it: it must not also
+// deselect the annotation the text was just written to. Same idea as
+// gInPlaceEndedAt for the free text editor on the page.
+static u64 gContentsEditEndedAt = 0;
+constexpr u64 kContentsEditJustEndedMs = 400;
+
 static void OnAcceptContentsClick(AnnotEditToolbar* tb, VirtMouseEvent*) {
     QueueEndContentsEdit(tb, true);
 }
@@ -1175,6 +1184,11 @@ static void OnContentsEditWndProc(AnnotEditToolbar* tb, ControlBase::WndProcEven
             QueueEndContentsEdit(tb, true);
             return;
         }
+    }
+    if (ev->msg == WM_KILLFOCUS) {
+        // clicking away from the box is "done", the same as Ctrl+Enter
+        QueueEndContentsEdit(tb, true);
+        gContentsEditEndedAt = GetTickCount64();
     }
     tb->contentsEdit->WndProc(ev);
 }
@@ -1437,7 +1451,14 @@ static bool gInPlaceEnding = false;
 static u64 gInPlaceEndedAt = 0;
 
 static bool FreeTextInPlaceEditJustEnded() {
-    return gInPlaceEndedAt != 0 && (GetTickCount64() - gInPlaceEndedAt) < 400;
+    return gInPlaceEndedAt != 0 && (GetTickCount64() - gInPlaceEndedAt) < kContentsEditJustEndedMs;
+}
+
+bool AnnotContentsEditJustEnded() {
+    if (gContentsEditEndedAt != 0 && (GetTickCount64() - gContentsEditEndedAt) < kContentsEditJustEndedMs) {
+        return true;
+    }
+    return FreeTextInPlaceEditJustEnded();
 }
 
 bool IsEditingFreeTextInPlace(MainWindow* win) {
@@ -2705,6 +2726,8 @@ TempStr AnnotEditorLayoutResultTemp(int, int, int* exitCodeOut, int) {
             outline = dm->CvtToScreen(annot->pageNo, win->annotationResizePreviewRect);
         }
         out.Append(fmt(" resizeOutline=%d,%d,%d,%d", outline.x, outline.y, outline.dx, outline.dy));
+        // last on the line: the contents can hold anything, including spaces
+        out.Append(fmt(" contents=%s", Contents(annot)));
     }
     return finish({}, 0);
 }

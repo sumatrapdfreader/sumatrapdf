@@ -2360,7 +2360,11 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         // deselect when the press moved past SM_CXDRAG and became a page pan,
         // so the only ways out were Esc or a right click (issue #5933).
         if (tab && tab->selectedAnnotation) {
-            SetSelectedAnnotation(tab, nullptr);
+            // a click that ended a contents edit is spent on ending it; the
+            // annotation the text was written to stays selected
+            if (!AnnotContentsEditJustEnded()) {
+                SetSelectedAnnotation(tab, nullptr);
+            }
             return;
         }
         ReportIf(win->linkOnLastButtonDown);
@@ -2596,7 +2600,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // clicking next to a selected annotation deselects it. Without this the
     // resize handles stayed up and the only ways out of "editing its size"
     // were Esc or a right click (issue #5933)
-    if (tab && tab->selectedAnnotation) {
+    if (tab && tab->selectedAnnotation && !AnnotContentsEditJustEnded()) {
         SetSelectedAnnotation(tab, nullptr);
     }
 

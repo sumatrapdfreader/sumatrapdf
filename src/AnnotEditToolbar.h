@@ -20,6 +20,7 @@ TempStr AnnotEditToolbarStateTemp(MainWindow*);
 bool StartFreeTextInPlaceEdit(MainWindow*, Annotation*);
 bool StartFreeTextInPlaceEditAt(MainWindow*, Point);
 bool IsEditingFreeTextInPlace(MainWindow*);
+bool AnnotContentsEditJustEnded();
 void EndFreeTextInPlaceEdit(bool accept);
 void RepositionFreeTextInPlaceEdit(MainWindow*);
 TempStr FreeTextInPlaceEditStateTemp(MainWindow*);
