@@ -2003,7 +2003,6 @@ void CloseAnnotationUiForTab(WindowTab* tab) {
     MainWindow* win = tab->win;
     if (win && win->CurrentTab() == tab) {
         HideAnnotEditToolbar(win);
-        HideAnnotFilterList(win);
     }
 }
 

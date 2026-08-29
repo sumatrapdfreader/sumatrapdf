@@ -308,7 +308,8 @@ enum {
     CmdNavigateThumbnail = 497,
     CmdShowAnnotationText = 498,
     CmdAnnotationHighlightBrush = 499,
-    CmdNone = 500,
+    CmdFindAnnotation = 500,
+    CmdNone = 501,
 
     /* range for file history */
     CmdFileHistoryFirst,

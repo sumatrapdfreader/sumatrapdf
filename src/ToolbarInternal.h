@@ -27,7 +27,6 @@ struct ILayout;
 // covered by other HWNDs. They need the right size
 constexpr int PageInfoId = (int)CmdLast + 16;
 constexpr int WarningMsgId = (int)CmdLast + 17;
-constexpr int AnnotFilterFloatBtnId = (int)CmdLast + 18;
 
 // the overlay toolbar's delayed-hide timer, on the toolbar's own host
 constexpr int kHideOverlayToolbarTimerId = 0x101;
@@ -40,8 +39,6 @@ struct ToolbarVirt {
     ILayout* annotationRow = nullptr;
     VirtText* pageLabel = nullptr;
     VirtText* pageTotal = nullptr;
-    Edit* annotFilterEdit = nullptr;
-    VirtIconButton* annotFilterFloatBtn = nullptr;
     PlatformFont* platformFont = nullptr;
     int iconSize = 0;
     int rowDy = 0;

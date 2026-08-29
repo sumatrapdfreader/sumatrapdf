@@ -197,6 +197,7 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdInsertImage,,Insert Image...,"Pick an image and stamp it onto the current page as a stamp annotation - a signature, say (fixes #1744), ver 3.7+"
 CmdCreateAnnotCaret,,Create Caret Annotation,
 CmdCreateAnnotCircle,,Create Circle Annotation,
+CmdFindAnnotation,,Find Annotation,"opens the floating annotation list, where you can filter the document's annotations and jump to one, ver 3.7+"
 CmdCreateAnnotFileAttachment,,Create File Attachment Annotation,"click to place, like Stamp/Caret; Esc cancels, ver 3.7+"
 CmdCreateAnnotFreeText,,Create Free Text Annotation,
 CmdCreateAnnotHighlight,"a, A",Create Highlight Annotation,

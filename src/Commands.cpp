@@ -315,6 +315,7 @@ static SeqStrings gCommandNames =
     "CmdNavigateThumbnail\0"
     "CmdShowAnnotationText\0"
     "CmdAnnotationHighlightBrush\0"
+    "CmdFindAnnotation\0"
     "CmdNone\0"
     "\0";
 
@@ -618,6 +619,7 @@ static i32 gCommandIds[] = {
     CmdNavigateThumbnail,
     CmdShowAnnotationText,
     CmdAnnotationHighlightBrush,
+    CmdFindAnnotation,
     CmdNone,
 };
 
@@ -921,6 +923,7 @@ SeqStrings gCommandDescriptions =
     "Navigate Thumbnails\0"
     "Show Comment\0"
     "Highlight with Brush\0"
+    "Find Annotation\0"
     "Do nothing\0"
     "\0";
 // clang-format on

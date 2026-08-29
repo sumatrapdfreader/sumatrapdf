@@ -120,6 +120,8 @@ static ToolbarButtonInfo gPdfAnnotationButtons[] = {
     {gIconUndo, CmdUndo, _TRN("Undo")},
     {gIconRedo, CmdRedo, _TRN("Redo")},
     {nullptr, 0, {}},
+    {gIconFindAnnotation, CmdFindAnnotation, _TRN("Find Annotation")},
+    {nullptr, 0, {}},
     // the tooltip of the first one names the file, see ToolbarUpdateStateForWindow
     {gIconSave, CmdSaveAnnotations, _TRN("Save changes to existing PDF")},
     {gIconSaveToNewFile, CmdSaveAnnotationsNewFile, _TRN("Save changes to a new PDF")},
@@ -232,11 +234,6 @@ VirtCtrl* ToolbarItemFromPoint(MainWindow* win, Point pt) {
         }
         if (w->BoundsInWindow().Contains(pt)) {
             return w;
-        }
-    }
-    if (tb->annotFilterFloatBtn && tb->annotFilterFloatBtn->GetVisibility() == Visibility::Visible) {
-        if (tb->annotFilterFloatBtn->BoundsInWindow().Contains(pt)) {
-            return tb->annotFilterFloatBtn;
         }
     }
     if (tb->pageTotal && tb->pageTotal->GetVisibility() == Visibility::Visible &&
@@ -600,7 +597,6 @@ static void SetPdfAnnotationsToolbarVisible(MainWindow* win, bool visible) {
         return;
     }
     tb->annotationRow->SetVisibility(want);
-    SetAnnotFilterEditVisible(win, visible);
     SetToolbarButtonCheckedState(win, CmdToggleEditPDF, visible);
     ToolbarSetHeight(win, tb->rowDy * (visible ? 2 : 1));
     tb->host->Relayout();
@@ -910,7 +906,7 @@ static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
     bool inBand = band.Contains(Point(ptFrame.x, ptFrame.y));
 
     // also keep shown while the cursor is over the toolbar window itself
-    return inBand || ToolbarHost(win)->ContainsScreenPoint(pt) || AnnotFilterListContainsScreenPoint(win, pt);
+    return inBand || ToolbarHost(win)->ContainsScreenPoint(pt);
 }
 
 // the overlay toolbar must not vanish while it owns the keyboard focus (e.g.
@@ -941,9 +937,6 @@ static void SetOverlayShown(MainWindow* win, bool shown) {
     }
     win->toolbarOverlayShown = shown;
     PositionOverlayToolbar(win);
-    if (!shown) {
-        HideAnnotFilterList(win);
-    }
 }
 
 // re-evaluate overlay toolbar visibility based on the cursor's screen position
@@ -1012,11 +1005,9 @@ void ShowOrHideToolbar(MainWindow* win) {
     }
     if (!show && !overlay) {
         // Move the focus out of the toolbar
-        if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused()) ||
-            (win->toolbarVirt && win->toolbarVirt->annotFilterEdit && win->toolbarVirt->annotFilterEdit->IsFocused())) {
+        if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused())) {
             ToolbarFocusFrame(win);
         }
-        HideAnnotFilterList(win);
         if (win->hwndToolbar) {
             ShowWindow(win->hwndToolbar, SW_HIDE);
         }
@@ -1256,14 +1247,6 @@ static void RefreshToolbarIcons(MainWindow* win) {
     if (win->pageEdit) {
         win->pageEdit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
     }
-    if (tb->annotFilterEdit) {
-        tb->annotFilterEdit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
-    }
-    if (tb->annotFilterFloatBtn) {
-        tb->annotFilterFloatBtn->pixmap = GetCachedPixmapForSvg(Str(gIconArrowsDiagonal), sz, sz, fg, TbBgColor());
-        ApplyToolbarItemColors(tb->annotFilterFloatBtn);
-        tb->annotFilterFloatBtn->Invalidate();
-    }
 }
 
 void UpdateToolbarAfterThemeChange(MainWindow* win) {
@@ -1434,14 +1417,11 @@ static void BuildToolbarLayout(MainWindow* win) {
     PopulateCustomToolbarButtons();
 
     ToolbarVirt* tb = win->toolbarVirt;
-    UnbindAnnotFilterEdit(win);
     VecReset(tb->items);
     VecReset(tb->annotationItems);
     tb->annotationRow = nullptr;
     tb->pageLabel = nullptr;
     tb->pageTotal = nullptr;
-    tb->annotFilterEdit = nullptr;
-    tb->annotFilterFloatBtn = nullptr;
     win->pageEdit = nullptr;
 
     int cyPad = ToolbarCyPad();
@@ -1514,14 +1494,6 @@ static void BuildToolbarLayout(MainWindow* win) {
         box->AddChild(w);
     }
 
-    Edit* annotFilter = CreateAnnotFilterEdit(win, tb->platformFont, tb->iconSize);
-    annotFilter->SetVisibility(Visibility::Collapse);
-    tb->annotFilterEdit = annotFilter;
-    VirtIconButton* annotFloatBtn = CreateAnnotFilterFloatBtn(win, tb->iconSize, cyPad, iconPad);
-    annotFloatBtn->SetVisibility(Visibility::Collapse);
-    ApplyToolbarItemColors(annotFloatBtn);
-    tb->annotFilterFloatBtn = annotFloatBtn;
-
     auto* annotationBox = new HBox();
     annotationBox->alignMain = MainAxisAlign::MainCenter;
     annotationBox->alignCross = CrossAxisAlign::CrossCenter;
@@ -1553,8 +1525,6 @@ static void BuildToolbarLayout(MainWindow* win) {
     mainRow->alignCross = CrossAxisAlign::CrossCenter;
     mainRow->gap = DpiScale(kButtonSpacingX);
     mainRow->AddChild(box, 1);
-    mainRow->AddChild(annotFilter);
-    mainRow->AddChild(annotFloatBtn);
 
     auto* root = new VBox();
     root->alignCross = CrossAxisAlign::Stretch;

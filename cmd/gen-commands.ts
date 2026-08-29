@@ -308,6 +308,7 @@ export const commands = [
     "CmdNavigateThumbnail", "Navigate Thumbnails",
     "CmdShowAnnotationText", "Show Comment",
     "CmdAnnotationHighlightBrush", "Highlight with Brush",
+    "CmdFindAnnotation", "Find Annotation",
     "CmdNone", "Do nothing",
 ];
 

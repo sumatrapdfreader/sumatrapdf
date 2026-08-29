@@ -51,31 +51,21 @@ constexpr int kFloatWinGap = 6;
 struct AnnotFilterToolbar;
 struct AnnotFilterWindow;
 
-static void HideList(AnnotFilterToolbar*, bool dismissed, bool apply = true);
-static void ShowList(AnnotFilterToolbar*);
 static void RebuildList(AnnotFilterToolbar*);
 static void UpdateCue(AnnotFilterToolbar*);
 static void ApplySelectionNow(AnnotFilterToolbar*);
 static void ScheduleSelection(AnnotFilterToolbar*);
-static void EnsureListHost(AnnotFilterToolbar*);
-static void PositionList(AnnotFilterToolbar*);
 static AnnotFilterToolbar* GetOrCreate(MainWindow*);
 static void ShowAnnotFilterWindow(MainWindow*);
 static void HideAnnotFilterWindow(MainWindow*);
-static void DockAnnotFilterWindow(MainWindow*);
-static void OnListTimer(AnnotFilterToolbar*, int);
 static bool FilterHomeEndMovesList(AnnotFilterToolbar*, int vkey, bool isCtrl);
 static bool IsListNavKey(int vkey);
-static void SetToolbarFilterWidgetsVisible(MainWindow*, bool);
-static void RelayoutToolbarFilter(MainWindow*);
 static void KillSelectionTimer(AnnotFilterToolbar*);
-static void CopyFilterText(AnnotFilterToolbar*, Edit* src, Edit* dst);
 static void UpdateFloatButtons(AnnotFilterToolbar*);
 
 struct AnnotFilterWindow : WindowBase {
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
-    VirtIconButton* dockBtn = nullptr;
     VirtListBox* listBox = nullptr;
     VirtButton* btnDelete = nullptr;
     VirtButton* btnDiscard = nullptr;
@@ -94,7 +84,6 @@ struct AnnotFilterWindow : WindowBase {
     void ApplyDarkMode() override;
     void UpdateDpi(int dpi);
     void BuildLayout();
-    void UpdateDockIcon();
     void OnClose(WindowBase::CloseEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnSize(WindowBase::SizeEvent* ev);
@@ -105,17 +94,11 @@ struct AnnotFilterWindow : WindowBase {
 
 struct AnnotFilterToolbar {
     MainWindow* win = nullptr;
-    Edit* edit = nullptr;
-    VirtIconButton* floatBtn = nullptr;
-    VirtHost* listHost = nullptr;
-    VirtListBox* listBox = nullptr;
     AnnotFilterWindow* floatWnd = nullptr;
     Vec<Annotation*> annotations;
     Vec<Annotation*> visibleAnnots;
     StrVec filterWords;
     Vec<u8> filterHlScratch;
-    Func1List<MainWindow*> onWindowMoved;
-    bool listDismissed = false;
     bool suppressFilterChanged = false;
     // bumped on each list caret change / cancel so a late uitask apply is dropped
     int selEpoch = 0;
@@ -130,33 +113,22 @@ static WindowTab* FilterTab(AnnotFilterToolbar* f) {
     return f && f->win ? f->win->CurrentTab() : nullptr;
 }
 
-static bool IsAnnotListFloating(AnnotFilterToolbar* f) {
-    return f && f->win && f->win->annotListFloating;
-}
-
 static Edit* ActiveEdit(AnnotFilterToolbar* f) {
-    if (IsAnnotListFloating(f) && f->floatWnd && f->floatWnd->edit) {
-        return f->floatWnd->edit;
-    }
-    return f ? f->edit : nullptr;
+    return (f && f->floatWnd) ? f->floatWnd->edit : nullptr;
 }
 
 static VirtListBox* ActiveList(AnnotFilterToolbar* f) {
-    if (IsAnnotListFloating(f) && f->floatWnd && f->floatWnd->listBox) {
-        return f->floatWnd->listBox;
-    }
-    return f ? f->listBox : nullptr;
+    return (f && f->floatWnd) ? f->floatWnd->listBox : nullptr;
 }
 
 static void UpdateCue(AnnotFilterToolbar* f) {
     if (!f) {
         return;
     }
-    TempStr cue = fmt(_TRA("filter %d annotations").s, len(f->annotations));
-    EditSetCueText(f->edit, cue);
-    if (f->floatWnd) {
-        EditSetCueText(f->floatWnd->edit, cue);
+    if (!f->floatWnd) {
+        return;
     }
+    EditSetCueText(f->floatWnd->edit, fmt(_TRA("filter %d annotations").s, len(f->annotations)));
 }
 
 static void LoadAnnotations(AnnotFilterToolbar* f) {
@@ -195,7 +167,6 @@ static void ApplyListColors(AnnotFilterToolbar* f) {
     if (!f) {
         return;
     }
-    ApplyListColorsTo(f->listBox);
     if (f->floatWnd) {
         ApplyListColorsTo(f->floatWnd->listBox);
     }
@@ -269,15 +240,10 @@ static void RebuildList(AnnotFilterToolbar* f) {
             VecAppend(f->visibleAnnots, annot);
         }
     }
-    ApplyVisibleToList(f, f->listBox, caret, keepSel, prevScrollY);
     if (f->floatWnd) {
         ApplyVisibleToList(f, f->floatWnd->listBox, caret, keepSel, prevScrollY);
     }
     UpdateCue(f);
-    if (f->listHost && f->listHost->IsVisible()) {
-        PositionList(f);
-        f->listHost->Invalidate(false);
-    }
     if (f->floatWnd && f->floatWnd->listBox) {
         f->floatWnd->listBox->Invalidate();
     }
@@ -287,9 +253,6 @@ static void RebuildList(AnnotFilterToolbar* f) {
 static void KillSelectionTimer(AnnotFilterToolbar* f) {
     if (!f) {
         return;
-    }
-    if (f->listHost) {
-        f->listHost->KillTimer((int)kSelectionDebounceTimerId);
     }
     if (f->floatWnd && f->floatWnd->hwnd) {
         KillTimer(f->floatWnd->hwnd, kSelectionDebounceTimerId);
@@ -355,12 +318,8 @@ static void ScheduleSelection(AnnotFilterToolbar* f) {
         return;
     }
     CancelPendingSelection(f);
-    if (IsAnnotListFloating(f) && f->floatWnd && f->floatWnd->hwnd) {
+    if (f->floatWnd && f->floatWnd->hwnd) {
         SetTimer(f->floatWnd->hwnd, kSelectionDebounceTimerId, kSelectionDebounceMs, nullptr);
-        return;
-    }
-    if (f->listHost) {
-        f->listHost->SetTimer((int)kSelectionDebounceTimerId, kSelectionDebounceMs);
         return;
     }
     f->applyEpoch = f->selEpoch;
@@ -385,9 +344,6 @@ static void OnListSelectionChanged(AnnotFilterToolbar* f) {
 
 static void OnListDoubleClick(AnnotFilterToolbar* f) {
     ApplySelectionNow(f);
-    if (!IsAnnotListFloating(f)) {
-        HideList(f, true, false);
-    }
 }
 
 static void OnListDrawItem(AnnotFilterToolbar* f, VirtListBox::DrawItemEvent* ev) {
@@ -402,11 +358,6 @@ static void OnListDrawItem(AnnotFilterToolbar* f, VirtListBox::DrawItemEvent* ev
                           ev->listBox->GetColor(kColListBg), ev->listBox->GetColor(kColListText), ev->selected);
 }
 
-static void PaintListBg(AnnotFilterToolbar*, VirtHostPaintEvent* ev) {
-    ev->gfx->FillRect(ev->clientRect, ThemeWindowControlBackgroundColor());
-    ev->gfx->DrawRect(ev->clientRect, ThemeEdgeColor(), 1);
-}
-
 static void WireListBox(AnnotFilterToolbar* f, VirtListBox* lb, int dpi) {
     lb->dpi = dpi;
     lb->font = GetAppFont();
@@ -418,135 +369,6 @@ static void WireListBox(AnnotFilterToolbar* f, VirtListBox* lb, int dpi) {
     lb->onDrawItem = MkFunc1(OnListDrawItem, f);
     lb->SetFlag(vwfFocusable, false);
     ApplyListColorsTo(lb);
-}
-
-static void EnsureListHost(AnnotFilterToolbar* f) {
-    if (!f || !f->win || f->listHost) {
-        return;
-    }
-    VirtHost::CreateArgs args;
-    args.parent = f->win->hwndFrame;
-    args.className = WStr(kAnnotFilterListClassName);
-    args.isPopup = true;
-    args.visible = false;
-    args.noActivate = true;
-    args.userData = f;
-    args.bgColor = ThemeWindowControlBackgroundColor();
-    args.initialSize = {100, 100};
-
-    f->listHost = VirtHost::Create(args);
-    if (!f->listHost) {
-        return;
-    }
-    f->listHost->onPaintBackground = MkFunc1(PaintListBg, f);
-    f->listHost->onTimer = MkFunc1(OnListTimer, f);
-
-    auto* lb = new VirtListBox();
-    WireListBox(f, lb, DpiGetForHwnd(f->win->hwndFrame));
-    f->listBox = lb;
-    f->listHost->SetLayout(lb);
-}
-
-static void PositionList(AnnotFilterToolbar* f) {
-    if (!f || !f->edit || !f->listHost || !f->listBox) {
-        return;
-    }
-    Rect editScreen = HwndWindowRect(f->edit->hwnd);
-    if (editScreen.IsEmpty()) {
-        return;
-    }
-    int n = f->listBox->ItemsCount();
-    int lines = n;
-    if (lines < 1) {
-        lines = 1;
-    }
-    if (lines > kMaxListLines) {
-        lines = kMaxListLines;
-    }
-    f->listBox->idealSizeLines = lines;
-    int minDx = DpiScale(280);
-    f->listBox->idealSizeDx = std::max(editScreen.dx, minDx);
-    Size sz = f->listBox->GetIdealSize();
-    int w = std::max(sz.dx, f->listBox->idealSizeDx);
-    int h = sz.dy;
-    if (w < 1 || h < 1) {
-        return;
-    }
-    int x = editScreen.x;
-    if (IsUIRtl()) {
-        x = editScreen.x + editScreen.dx - w;
-    }
-    int y = editScreen.y + editScreen.dy;
-    Rect work = GetWorkAreaRect(editScreen, f->win->hwndFrame);
-    bool above = ToolbarAtBottom();
-    if (!work.IsEmpty()) {
-        if (!above && y + h > work.y + work.dy) {
-            above = true;
-        }
-        if (above) {
-            y = editScreen.y - h;
-            if (y < work.y) {
-                y = work.y;
-            }
-        }
-        if (x + w > work.x + work.dx) {
-            x = work.x + work.dx - w;
-        }
-        if (x < work.x) {
-            x = work.x;
-        }
-    } else if (above) {
-        y = editScreen.y - h;
-    }
-    f->listHost->SetPos({x, y, w, h}, true);
-}
-
-static void HideList(AnnotFilterToolbar* f, bool dismissed, bool apply) {
-    if (!f) {
-        return;
-    }
-    f->listDismissed = dismissed;
-    if (apply && f->listHost && f->listHost->IsVisible()) {
-        ApplySelectionNow(f);
-    } else {
-        CancelPendingSelection(f);
-    }
-    if (f->listHost && f->listHost->IsVisible()) {
-        f->listHost->Show(false);
-    }
-}
-
-static void ShowList(AnnotFilterToolbar* f) {
-    if (!f) {
-        return;
-    }
-    if (IsAnnotListFloating(f)) {
-        LoadAnnotations(f);
-        RebuildList(f);
-        return;
-    }
-    if (!f->edit || !f->edit->IsFocused()) {
-        return;
-    }
-    f->listDismissed = false;
-    EnsureListHost(f);
-    if (!f->listHost) {
-        return;
-    }
-    LoadAnnotations(f);
-    RebuildList(f);
-    PositionList(f);
-}
-
-static bool ListIsShown(AnnotFilterToolbar* f) {
-    return f && f->listHost && f->listHost->IsVisible() && !f->listDismissed;
-}
-
-static void EnsureListShown(AnnotFilterToolbar* f) {
-    if (IsAnnotListFloating(f) || ListIsShown(f)) {
-        return;
-    }
-    ShowList(f);
 }
 
 static bool FilterHomeEndMovesList(AnnotFilterToolbar* f, int vkey, bool isCtrl) {
@@ -577,9 +399,6 @@ static void HandleEscape(AnnotFilterToolbar* f) {
         e->SetText({});
         return;
     }
-    if (!IsAnnotListFloating(f)) {
-        HideList(f, false);
-    }
     if (f->win && f->win->hwndCanvas) {
         HwndSetFocus(f->win->hwndCanvas);
     }
@@ -597,12 +416,8 @@ static void OnFilterTextChanged(AnnotFilterToolbar* f) {
     Annotation* keep = tab ? tab->selectedAnnotation : nullptr;
     f->filterWords.Reset();
     SplitFilterToWords(e->GetTextTemp(), f->filterWords);
-    if (IsAnnotListFloating(f) || !e->IsFocused()) {
-        LoadAnnotations(f);
-        RebuildList(f);
-    } else {
-        ShowList(f);
-    }
+    LoadAnnotations(f);
+    RebuildList(f);
     VirtListBox* lb = ActiveList(f);
     if (!lb) {
         return;
@@ -620,48 +435,6 @@ static void OnFilterTextChanged(AnnotFilterToolbar* f) {
     if (tab) {
         SetSelectedAnnotation(tab, nullptr);
     }
-}
-
-static void OnFilterFocus(AnnotFilterToolbar* f) {
-    if (!f) {
-        return;
-    }
-    WindowTab* tab = FilterTab(f);
-    StartLoadingAnnotationsForUi(tab);
-    if (IsAnnotListFloating(f)) {
-        LoadAnnotations(f);
-        RebuildList(f);
-        return;
-    }
-    ShowList(f);
-}
-
-static void PostedHideIfUnfocused(MainWindow* win) {
-    if (!IsMainWindowValidAndNotClosing(win)) {
-        return;
-    }
-    AnnotFilterToolbar* f = win->annotFilterToolbar;
-    if (!f) {
-        return;
-    }
-    if (IsAnnotListFloating(f)) {
-        return;
-    }
-    Edit* e = ActiveEdit(f);
-    if (e && e->IsFocused()) {
-        return;
-    }
-    HideList(f, false);
-}
-
-static void OnFilterKillFocus(AnnotFilterToolbar* f) {
-    if (!f || !f->win) {
-        return;
-    }
-    if (IsAnnotListFloating(f)) {
-        return;
-    }
-    uitask::Post(MkFunc0(PostedHideIfUnfocused, f->win), "HideAnnotFilterList");
 }
 
 static void OnFilterWndProc(AnnotFilterToolbar* f, ControlBase::WndProcEvent* ev) {
@@ -691,10 +464,8 @@ static void OnFilterWndProc(AnnotFilterToolbar* f, ControlBase::WndProcEvent* ev
             ev->result = 0;
             return;
         }
-        VirtListBox* lb = ActiveList(f);
         if (IsListNavKey(vkey) && ((vkey != VK_HOME && vkey != VK_END) || FilterHomeEndMovesList(f, vkey, isCtrl))) {
-            EnsureListShown(f);
-            lb = ActiveList(f);
+            VirtListBox* lb = ActiveList(f);
             if (!lb || lb->ItemsCount() == 0) {
                 ev->didHandle = true;
                 ev->result = 0;
@@ -724,8 +495,6 @@ static void WireFilterEdit(AnnotFilterToolbar* f, Edit* e) {
         return;
     }
     e->onTextChanged = MkFunc0(OnFilterTextChanged, f);
-    e->onFocus = MkFunc0(OnFilterFocus, f);
-    e->onKillFocus = MkFunc0(OnFilterKillFocus, f);
     e->onWndProc = MkFunc1(OnFilterWndProc, f);
 }
 
@@ -738,8 +507,6 @@ static AnnotFilterToolbar* GetOrCreate(MainWindow* win) {
     }
     auto* f = new AnnotFilterToolbar();
     f->win = win;
-    f->onWindowMoved = MkFunc1Void(RepositionAnnotFilterList);
-    win->RegisterOnWindowMoved(&f->onWindowMoved);
     win->annotFilterToolbar = f;
     return f;
 }
@@ -750,42 +517,6 @@ static int FilterEditPadL() {
 
 static int FilterEditPadR() {
     return FilterEditPadL() + DpiScale(4);
-}
-
-static void RelayoutToolbarFilter(MainWindow* win) {
-    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
-    if (tb && tb->host) {
-        tb->host->Relayout();
-        tb->host->Invalidate(true);
-    }
-}
-
-static void SetToolbarFilterWidgetsVisible(MainWindow* win, bool visible) {
-    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
-    if (!tb) {
-        return;
-    }
-    Visibility v = visible ? Visibility::Visible : Visibility::Collapse;
-    if (tb->annotFilterEdit) {
-        tb->annotFilterEdit->SetVisibility(v);
-    }
-    if (tb->annotFilterFloatBtn) {
-        tb->annotFilterFloatBtn->SetVisibility(v);
-    }
-}
-
-static void CopyFilterText(AnnotFilterToolbar* f, Edit* src, Edit* dst) {
-    if (!f || !src || !dst || src == dst) {
-        return;
-    }
-    int a = 0;
-    int b = 0;
-    EditGetSelection(src, a, b);
-    TempStr t = src->GetTextTemp();
-    f->suppressFilterChanged = true;
-    dst->SetText(t);
-    f->suppressFilterChanged = false;
-    EditSelectText(dst, a, b);
 }
 
 static Rect AnnotFilterWindowPlacementRect(MainWindow* win) {
@@ -806,12 +537,6 @@ static void PositionAnnotFilterWindow(AnnotFilterWindow* w) {
     }
     Rect r = AnnotFilterWindowPlacementRect(w->win);
     SetWindowPos(w->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_NOACTIVATE);
-}
-
-static void OnDockBtnClicked(AnnotFilterWindow* w, VirtMouseEvent*) {
-    if (w && w->win) {
-        DockAnnotFilterWindow(w->win);
-    }
 }
 
 static void DeleteFloatSelected(AnnotFilterWindow* w) {
@@ -936,15 +661,6 @@ static void UpdateFloatButtons(AnnotFilterToolbar* f) {
     }
 }
 
-void AnnotFilterWindow::UpdateDockIcon() {
-    int dpi = layoutDpi > 0 ? layoutDpi : GetDpi();
-    int isz = RoundUp(DpiScaleByDpi(dpi, 16), 4);
-    if (dockBtn) {
-        dockBtn->pixmap = GetCachedPixmapForSvg(Str(gIconArrowsDiagonalMinimize), isz, isz);
-        dockBtn->Invalidate();
-    }
-}
-
 void AnnotFilterWindow::BuildLayout() {
     int pad = DpiScale(kFloatWinPadding);
     int gap = DpiScale(kFloatWinGap);
@@ -953,7 +669,6 @@ void AnnotFilterWindow::BuildLayout() {
     header->gap = gap;
     header->rtl = IsUIRtl();
     header->AddChild(edit, 1);
-    header->AddChild(dockBtn);
 
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -1023,15 +738,6 @@ bool AnnotFilterWindow::Create(MainWindow* mainWin) {
     }
 
     {
-        int pad = DpiScale(4);
-        dockBtn = new VirtIconButton();
-        dockBtn->padding = Insets{pad, pad, pad, pad};
-        dockBtn->SetTooltip(_TRA("Dock to toolbar"));
-        dockBtn->onClick = MkFunc1(OnDockBtnClicked, this);
-        UpdateDockIcon();
-    }
-
-    {
         listBox = new VirtListBox();
         WireListBox(f, listBox, GetDpi());
         listBox->multiSelect = true;
@@ -1072,7 +778,6 @@ void AnnotFilterWindow::UpdateTheme() {
         edit->SetColors(colTxt, colBg);
     }
     ApplyListColorsTo(listBox);
-    UpdateDockIcon();
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
     UpdateFloatButtons(f);
 }
@@ -1099,10 +804,6 @@ void AnnotFilterWindow::UpdateDpi(int dpi) {
     if (rootPadding) {
         rootPadding->insets = Insets{pad, pad, pad, pad};
     }
-    int buttonPad = DpiScaleByDpi(dpi, 4);
-    if (dockBtn) {
-        dockBtn->padding = Insets{buttonPad, buttonPad, buttonPad, buttonPad};
-    }
     if (listButtonsGap) {
         listButtonsGap->dy = gap;
     }
@@ -1118,7 +819,6 @@ void AnnotFilterWindow::UpdateDpi(int dpi) {
         }
     }
     layoutDpi = dpi;
-    UpdateDockIcon();
     DoLayout();
 }
 
@@ -1172,9 +872,9 @@ void AnnotFilterWindow::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
 }
 
 void AnnotFilterWindow::OnClose(WindowBase::CloseEvent* /*ev*/) {
-    // caption close docks instead of destroying, so Edit PDF still has a filter
+    // the caption close only hides: Find Annotation opens the same window again
     if (win) {
-        DockAnnotFilterWindow(win);
+        HideAnnotFilterWindow(win);
     }
 }
 
@@ -1223,22 +923,11 @@ static void ShowAnnotFilterWindow(MainWindow* win) {
     if (!f) {
         return;
     }
-    win->annotListFloating = true;
-    HideList(f, false, false);
-    SetToolbarFilterWidgetsVisible(win, false);
-    RelayoutToolbarFilter(win);
-
     if (!f->floatWnd) {
         f->floatWnd = CreateAnnotFilterWindow(win);
         if (!f->floatWnd) {
-            win->annotListFloating = false;
-            SetToolbarFilterWidgetsVisible(win, win->pdfAnnotationsToolbarEnabled);
-            RelayoutToolbarFilter(win);
             return;
         }
-    }
-    if (f->edit && f->floatWnd->edit) {
-        CopyFilterText(f, f->edit, f->floatWnd->edit);
     }
     LoadAnnotations(f);
     RebuildList(f);
@@ -1264,127 +953,17 @@ static void HideAnnotFilterWindow(MainWindow* win) {
     }
 }
 
-static void DockAnnotFilterWindow(MainWindow* win) {
+bool IsFloatingAnnotListVisible(MainWindow* win) {
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
-    if (!f) {
-        return;
-    }
-    Edit* src = (f->floatWnd && f->floatWnd->edit) ? f->floatWnd->edit : nullptr;
-    HideAnnotFilterWindow(win);
-    win->annotListFloating = false;
-    bool show = win->pdfAnnotationsToolbarEnabled;
-    SetToolbarFilterWidgetsVisible(win, show);
-    RelayoutToolbarFilter(win);
-    if (show && src && f->edit) {
-        CopyFilterText(f, src, f->edit);
-        f->edit->SetFocus();
-    }
-    LoadAnnotations(f);
-    RebuildList(f);
-}
-
-static void OnFloatBtnClicked(AnnotFilterToolbar* f, VirtMouseEvent*) {
-    if (f && f->win) {
-        ToggleFloatingAnnotList(f->win);
-    }
-}
-
-Edit* CreateAnnotFilterEdit(MainWindow* win, PlatformFont* font, int iconDy) {
-    AnnotFilterToolbar* f = GetOrCreate(win);
-    Edit::CreateArgs args;
-    args.parent = win->hwndToolbar;
-    args.font = font;
-    args.isRtl = IsUIRtl();
-    args.withFrame = true;
-    args.noTheme = true;
-    args.selectAllOnFocus = true;
-    args.centerTextVert = true;
-    args.marginLeft = FilterEditPadL();
-    args.marginRight = FilterEditPadR();
-    auto* e = new Edit();
-    e->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
-    e->Create(args);
-    e->mapRtlX = true;
-    e->SetIdealWidthFromText(fmt(_TRA("filter %d annotations").s, 999), DpiScale(8));
-    e->idealDy = iconDy;
-    EditSetCueText(e, fmt(_TRA("filter %d annotations").s, 0));
-    if (f) {
-        f->edit = e;
-        WireFilterEdit(f, e);
-        UpdateCue(f);
-    }
-    return e;
-}
-
-VirtIconButton* CreateAnnotFilterFloatBtn(MainWindow* win, int iconSize, int padY, int padX) {
-    AnnotFilterToolbar* f = GetOrCreate(win);
-    auto* ib = new VirtIconButton();
-    ib->id = AnnotFilterFloatBtnId;
-    ib->padding = {padY, padX, padY, padX};
-    ib->pixmap = GetCachedPixmapForSvg(Str(gIconArrowsDiagonal), iconSize, iconSize, TbTextColor(),
-                                       ThemeControlBackgroundColor());
-    ib->SetTooltip(_TRA("Open in a window"));
-    if (f) {
-        f->floatBtn = ib;
-        ib->onClick = MkFunc1(OnFloatBtnClicked, f);
-    }
-    return ib;
-}
-
-void UnbindAnnotFilterEdit(MainWindow* win) {
-    AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
-    if (f) {
-        HideList(f, false, false);
-        f->edit = nullptr;
-        f->floatBtn = nullptr;
-    }
-    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
-    if (tb) {
-        tb->annotFilterEdit = nullptr;
-        tb->annotFilterFloatBtn = nullptr;
-    }
-}
-
-void HideAnnotFilterList(MainWindow* win) {
-    AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
-    if (f) {
-        HideList(f, false);
-    }
-}
-
-void RepositionAnnotFilterList(MainWindow* win) {
-    AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
-    if (!f || !f->listHost || !f->listHost->IsVisible()) {
-        return;
-    }
-    if (!f->edit || !f->edit->IsFocused()) {
-        HideList(f, false);
-        return;
-    }
-    PositionList(f);
-}
-
-void SetAnnotFilterEditVisible(MainWindow* win, bool visible) {
-    AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
-    bool floating = win && win->annotListFloating;
-    bool showToolbar = visible && !floating;
-    SetToolbarFilterWidgetsVisible(win, showToolbar);
-    if (!visible) {
-        HideAnnotFilterList(win);
-        HideAnnotFilterWindow(win);
-        return;
-    }
-    if (floating) {
-        ShowAnnotFilterWindow(win);
-    }
+    return f && f->floatWnd && f->floatWnd->hwnd && HwndIsVisible(f->floatWnd->hwnd);
 }
 
 void ToggleFloatingAnnotList(MainWindow* win) {
     if (!win) {
         return;
     }
-    if (win->annotListFloating) {
-        DockAnnotFilterWindow(win);
+    if (IsFloatingAnnotListVisible(win)) {
+        HideAnnotFilterWindow(win);
         return;
     }
     ShowAnnotFilterWindow(win);
@@ -1396,20 +975,10 @@ void UpdateAnnotFilterToolbar(MainWindow* win) {
         return;
     }
     ApplyListColors(f);
-    if (f->edit) {
-        f->edit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
-    }
-    ToolbarVirt* tb = win->toolbarVirt;
-    if (f->floatBtn && tb) {
-        f->floatBtn->pixmap = GetCachedPixmapForSvg(Str(gIconArrowsDiagonal), tb->iconSize, tb->iconSize, TbTextColor(),
-                                                    ThemeControlBackgroundColor());
-        f->floatBtn->Invalidate();
-    }
     if (f->floatWnd) {
         f->floatWnd->UpdateTheme();
     }
     if (!win->pdfAnnotationsToolbarEnabled) {
-        HideList(f, false);
         HideAnnotFilterWindow(win);
         return;
     }
@@ -1426,10 +995,6 @@ void UpdateAnnotFilterToolbar(MainWindow* win) {
     }
     UpdateCue(f);
     UpdateFloatButtons(f);
-    if (f->listHost && f->listHost->IsVisible()) {
-        PositionList(f);
-        f->listHost->Invalidate(false);
-    }
 }
 
 void RefreshAnnotFilterAnnotations(MainWindow* win) {
@@ -1447,8 +1012,6 @@ void DeleteAnnotFilterToolbar(MainWindow* win) {
     if (!f) {
         return;
     }
-    HideList(f, false, false);
-    win->UnregisterOnWindowMoved(&f->onWindowMoved);
     if (f->floatWnd) {
         f->floatWnd->SavePos();
         AnnotFilterWindow* w = f->floatWnd;
@@ -1456,52 +1019,21 @@ void DeleteAnnotFilterToolbar(MainWindow* win) {
         w->win = nullptr;
         delete w;
     }
-    f->edit = nullptr;
-    f->floatBtn = nullptr;
-    f->listBox = nullptr;
-    delete f->listHost;
-    f->listHost = nullptr;
     win->annotFilterToolbar = nullptr;
-    if (win->toolbarVirt) {
-        win->toolbarVirt->annotFilterEdit = nullptr;
-        win->toolbarVirt->annotFilterFloatBtn = nullptr;
-    }
     delete f;
-}
-
-bool AnnotFilterListContainsScreenPoint(MainWindow* win, Point pt) {
-    AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
-    if (!f || !f->listHost || !f->listHost->IsVisible()) {
-        return false;
-    }
-    return f->listHost->ContainsScreenPoint(pt);
 }
 
 TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
-    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
-    Edit* edit = tb ? tb->annotFilterEdit : nullptr;
-    bool editVisible = edit && edit->GetVisibility() == Visibility::Visible;
-    bool listVisible = f && f->listHost && f->listHost->IsVisible();
-    bool floating = win && win->annotListFloating;
     bool floatVisible = f && f->floatWnd && f->floatWnd->hwnd && HwndIsVisible(f->floatWnd->hwnd);
     int nAll = f ? len(f->annotations) : 0;
     int nVisible = f ? len(f->visibleAnnots) : 0;
     VirtListBox* lb = ActiveList(f);
     int sel = lb ? lb->GetCurrentSelection() : -1;
-    Rect r = edit ? edit->lastBounds : Rect{};
-    Rect lr = listVisible ? f->listHost->ScreenRect() : Rect{};
-    Rect br = (tb && tb->annotFilterFloatBtn) ? tb->annotFilterFloatBtn->BoundsInWindow() : Rect{};
-    Rect dr{};
-    if (f && f->floatWnd && f->floatWnd->dockBtn) {
-        dr = f->floatWnd->dockBtn->BoundsInWindow();
-    }
+    Rect wr = floatVisible ? HwndWindowRect(f->floatWnd->hwnd) : Rect{};
     str::Builder out;
-    out.Append(fmt("annotFilter hidden=%d rect=%d,%d,%d,%d listVisible=%d nAll=%d nVisible=%d sel=%d ",
-                   editVisible ? 0 : 1, r.x, r.y, r.dx, r.dy, listVisible ? 1 : 0, nAll, nVisible, sel));
-    out.Append(fmt("listRect=%d,%d,%d,%d floating=%d floatVisible=%d floatBtn=%d,%d,%d,%d dockBtn=%d,%d,%d,%d\n", lr.x,
-                   lr.y, lr.dx, lr.dy, floating ? 1 : 0, floatVisible ? 1 : 0, br.x, br.y, br.dx, br.dy, dr.x, dr.y,
-                   dr.dx, dr.dy));
+    out.Append(fmt("annotFilter floatVisible=%d floatRect=%d,%d,%d,%d nAll=%d nVisible=%d sel=%d\n",
+                   floatVisible ? 1 : 0, wr.x, wr.y, wr.dx, wr.dy, nAll, nVisible, sel));
     int deleteOn = 0;
     int discardOn = 0;
     int saveOn = 0;

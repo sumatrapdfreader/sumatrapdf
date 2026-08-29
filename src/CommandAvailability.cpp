@@ -236,6 +236,7 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
     CmdCreateAnnotImageFromClipboard,
     CmdInsertImage,
     CmdAnnotationHighlightBrush,
+    CmdFindAnnotation,
     CmdCutAnnotation,
     CmdCopyAnnotation,
     CmdPasteAnnotation,

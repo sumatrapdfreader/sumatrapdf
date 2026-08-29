@@ -1,4 +1,10 @@
-// Edit PDF toolbar filter: cue, dropdown list, keyboard nav, Esc, click / double-click.
+// Find Annotation (issue #6086): the annotation filter used to be a search box
+// on the main toolbar that crowded out the other buttons. It now lives only in
+// the floating Annotations window, which a button near the end of the Edit PDF
+// toolbar opens and closes.
+//
+// Covers: the toggle, the list and its keyboard nav, Esc, click / double-click,
+// multi-select and Delete.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -12,7 +18,6 @@ import {
   getClientRect,
   getFocusedHwnd,
   getWindowPid,
-  getWindowRect,
   isWindowVisible,
   packCoords,
   sendMessage,
@@ -38,23 +43,14 @@ import {
 } from "./win-automation";
 
 const TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
-const LIST_CLASS = "SumatraAnnotFilterList";
 const FLOAT_CLASS = "SUMATRA_ANNOT_FILTER_WND";
 const CANVAS_CLASS = "SUMATRA_PDF_CANVAS";
 
-type Rect4 = { x: number; y: number; dx: number; dy: number };
-
 type FilterState = {
-  hidden: boolean;
-  rect: Rect4;
-  listVisible: boolean;
+  floatVisible: boolean;
   nAll: number;
   nVisible: number;
   sel: number;
-  floating: boolean;
-  floatVisible: boolean;
-  floatBtn: Rect4;
-  dockBtn: Rect4;
   deleteEnabled: boolean;
   discardEnabled: boolean;
   saveEnabled: boolean;
@@ -63,10 +59,6 @@ type FilterState = {
   listY: number;
   raw: string;
 };
-
-function parseRect4(m: RegExpMatchArray, i: number): Rect4 {
-  return { x: +m[i]!, y: +m[i + 1]!, dx: +m[i + 2]!, dy: +m[i + 3]! };
-}
 
 function makePdf(): string {
   const objs = [
@@ -83,23 +75,17 @@ function makePdf(): string {
 
 function parseFilter(dump: string): FilterState | null {
   const m =
-    /annotFilter hidden=(\d+) rect=(-?\d+),(-?\d+),(\d+),(\d+) listVisible=(\d+) nAll=(\d+) nVisible=(\d+) sel=(-?\d+) listRect=(-?\d+),(-?\d+),(\d+),(\d+) floating=(\d+) floatVisible=(\d+) floatBtn=(-?\d+),(-?\d+),(\d+),(\d+) dockBtn=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(
+    /annotFilter floatVisible=(\d+) floatRect=(-?\d+),(-?\d+),(\d+),(\d+) nAll=(\d+) nVisible=(\d+) sel=(-?\d+)/.exec(
       dump,
     );
   if (!m) {
     return null;
   }
   return {
-    hidden: m[1] === "1",
-    rect: parseRect4(m, 2),
-    listVisible: m[6] === "1",
-    nAll: +m[7]!,
-    nVisible: +m[8]!,
-    sel: +m[9]!,
-    floating: m[14] === "1",
-    floatVisible: m[15] === "1",
-    floatBtn: parseRect4(m, 16),
-    dockBtn: parseRect4(m, 20),
+    floatVisible: m[1] === "1",
+    nAll: +m[6]!,
+    nVisible: +m[7]!,
+    sel: +m[8]!,
     deleteEnabled: /deleteEnabled=1/.test(dump),
     discardEnabled: /discardEnabled=1/.test(dump),
     saveEnabled: /saveEnabled=1/.test(dump),
@@ -172,21 +158,16 @@ async function waitFocusedClass(frame: number, want: string, what: string): Prom
   }
 }
 
-// The filter box specifically: there are other Edits in the window (the page
-// number box), and sending the arrow keys to the wrong one does nothing.
-async function waitFocusedHwnd(frame: number, want: number, what: string): Promise<void> {
-  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
-  for (;;) {
-    const hwnd = getFocusedHwnd(frame);
-    if (hwnd === want) {
-      return;
+function floatEditHwnd(floatWnd: number): number {
+  let e = 0;
+  enumChildWindows(floatWnd, (hwnd) => {
+    if (getClassName(hwnd) === "Edit" && isWindowVisible(hwnd)) {
+      e = hwnd;
+      return false;
     }
-    if (Date.now() > deadline) {
-      const cls = hwnd ? getClassName(hwnd) : "none";
-      throw new Error(`annot-filter-toolbar: ${what} (focus is ${hwnd} class=${cls}, want ${want})`);
-    }
-    await sleep(50);
-  }
+    return true;
+  });
+  return e;
 }
 
 export async function testit(): Promise<void> {
@@ -200,154 +181,81 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
+    const pid = getWindowPid(frame);
     sendCommand(frame, cmdId("CmdToggleEditPDF"));
+    await sleep(300);
 
-    let st = await waitFilter(client, (s) => !s.hidden);
-    if (st.rect.dx < 40 || st.rect.dy < 10) {
-      throw new Error(`annot-filter-toolbar: filter rect too small ${JSON.stringify(st.rect)}`);
-    }
-    st = await waitFilter(client, (s) => s.nAll >= 2, 8000);
-
+    // the main toolbar no longer carries a filter box (#6086)
     const toolbar = findChildByClass(frame, TOOLBAR_CLASS);
     if (!toolbar) {
       throw new Error("annot-filter-toolbar: no toolbar");
     }
     captureWindowToPng(toolbar, join(dir, "toolbar.png"));
-
-    if (st.rect.y > 40) {
-      throw new Error(`annot-filter-toolbar: filter should be on the main toolbar row, got y=${st.rect.y}`);
-    }
-
-    let filterEdit = 0;
-    let filterEditX = -1;
+    let nEdits = 0;
     enumChildWindows(toolbar, (hwnd) => {
-      if (getClassName(hwnd) !== "Edit" || !isWindowVisible(hwnd)) {
-        return true;
-      }
-      const wr = getWindowRect(hwnd);
-      if (wr.left > filterEditX) {
-        filterEditX = wr.left;
-        filterEdit = hwnd;
+      if (getClassName(hwnd) === "Edit" && isWindowVisible(hwnd)) {
+        nEdits++;
       }
       return true;
     });
-    if (!filterEdit) {
-      throw new Error("annot-filter-toolbar: no filter Edit hwnd");
+    if (nEdits > 1) {
+      throw new Error(`annot-filter-toolbar: toolbar still has a filter box (${nEdits} edits)`);
     }
-    const editRc = getClientRect(filterEdit);
-    await clickAt(filterEdit, Math.floor(editRc.right / 2), Math.floor(editRc.bottom / 2), 200);
-    st = await waitFilter(client, (s) => s.listVisible && s.nVisible >= 2);
-
-    const pid = getWindowPid(frame);
-    const list = findTopWindow(pid, LIST_CLASS);
-    if (!list || !isWindowVisible(list)) {
-      throw new Error("annot-filter-toolbar: dropdown list window not visible");
+    if (findTopWindow(pid, FLOAT_CLASS)) {
+      throw new Error("annot-filter-toolbar: annotation list opened without being asked for");
     }
-    captureWindowToPng(list, join(dir, "list.png"));
 
-    await waitFocusedHwnd(frame, filterEdit, "filter edit did not take focus");
-    const edit = filterEdit;
-
-    sendMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
-    st = await waitFilter(client, (s) => s.sel >= 0);
-    await waitPageSelected(client, "arrow did not select annotation on the page");
-
-    sendText(edit, "unique");
-    st = await waitFilter(client, (s) => s.nVisible === 1 && s.listVisible);
-
-    await pressEscape(edit);
-    st = await waitFilter(client, (s) => s.nVisible >= 2 && s.listVisible);
-
-    await pressEscape(edit);
-    st = await waitFilter(client, (s) => !s.listVisible);
-    await waitFocusedClass(frame, CANVAS_CLASS, "Esc with empty filter did not focus canvas");
-
-    st = await waitFilter(client, (s) => s.floatBtn.dx >= 8 && s.floatBtn.dy >= 8);
-    await clickAt(
-      toolbar,
-      Math.floor(st.floatBtn.x + st.floatBtn.dx / 2),
-      Math.floor(st.floatBtn.y + st.floatBtn.dy / 2),
-      250,
-    );
-    st = await waitFilter(client, (s) => s.floating && s.floatVisible && s.hidden && !s.listVisible);
+    // Find Annotation opens the floating list
+    sendCommand(frame, cmdId("CmdFindAnnotation"));
+    let st = await waitFilter(client, (s) => s.floatVisible && s.nAll >= 2, 8000);
     if (st.discardEnabled || st.saveEnabled) {
       throw new Error(`annot-filter-toolbar: save/discard should be disabled with no changes\n${st.raw}`);
     }
-
     const floatWnd = findTopWindow(pid, FLOAT_CLASS);
     if (!floatWnd || !isWindowVisible(floatWnd)) {
       throw new Error("annot-filter-toolbar: floating annotation list window not visible");
     }
     captureWindowToPng(floatWnd, join(dir, "floating.png"));
 
-    let floatEdit = 0;
-    enumChildWindows(floatWnd, (hwnd) => {
-      if (getClassName(hwnd) === "Edit" && isWindowVisible(hwnd)) {
-        floatEdit = hwnd;
-        return false;
-      }
-      return true;
-    });
-    if (!floatEdit) {
+    const edit = floatEditHwnd(floatWnd);
+    if (!edit) {
       throw new Error("annot-filter-toolbar: floating window has no Edit");
     }
-    const floatEditRc = getClientRect(floatEdit);
-    await clickAt(floatEdit, Math.floor(floatEditRc.right / 2), Math.floor(floatEditRc.bottom / 2), 200);
-    sendMessage(floatEdit, WM_KEYDOWN, VK_DOWN, 0);
-    st = await waitFilter(client, (s) => s.sel >= 0 && s.floatVisible);
-    await waitPageSelected(client, "floating list arrow did not select annotation");
+    const editRc = getClientRect(edit);
+    await clickAt(edit, Math.floor(editRc.right / 2), Math.floor(editRc.bottom / 2), 200);
+
+    sendMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
+    st = await waitFilter(client, (s) => s.sel >= 0);
+    await waitPageSelected(client, "arrow did not select annotation on the page");
     st = await waitFilter(client, (s) => s.deleteEnabled);
 
-    sendText(floatEdit, "unique");
+    sendText(edit, "unique");
     st = await waitFilter(client, (s) => s.nVisible === 1 && s.floatVisible);
 
-    await pressEscape(floatEdit);
+    await pressEscape(edit);
     st = await waitFilter(client, (s) => s.nVisible >= 2 && s.floatVisible);
-    await pressEscape(floatEdit);
-    st = await waitFilter(client, (s) => s.floatVisible && s.nVisible >= 2);
-    await waitFocusedClass(frame, CANVAS_CLASS, "Esc with empty floating filter did not focus canvas");
+    await pressEscape(edit);
+    await waitFocusedClass(frame, CANVAS_CLASS, "Esc with an empty filter did not focus the canvas");
 
-    if (st.dockBtn.dx < 8 || st.dockBtn.dy < 8) {
-      throw new Error(`annot-filter-toolbar: dock icon missing ${JSON.stringify(st.dockBtn)}`);
-    }
-    await clickAt(
-      floatWnd,
-      Math.floor(st.dockBtn.x + st.dockBtn.dx / 2),
-      Math.floor(st.dockBtn.y + st.dockBtn.dy / 2),
-      250,
-    );
-    st = await waitFilter(client, (s) => !s.floating && !s.floatVisible && !s.hidden);
-
-    await clickAt(filterEdit, Math.floor(editRc.right / 2), Math.floor(editRc.bottom / 2), 200);
-    st = await waitFilter(client, (s) => s.listVisible);
-    const list2 = findTopWindow(pid, LIST_CLASS);
-    if (!list2) {
-      throw new Error("annot-filter-toolbar: list did not reopen");
-    }
-    const lp = packCoords(12, 12);
-    sendMessage(list2, WM_LBUTTONDOWN, MK_LBUTTON, lp);
-    sendMessage(list2, WM_LBUTTONUP, 0, lp);
+    // click and double-click in the list
+    st = await waitFilter(client, (s) => s.itemDy > 0);
+    const lp = packCoords(24, st.listY + Math.floor(st.itemDy / 2));
+    sendMessage(floatWnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
+    sendMessage(floatWnd, WM_LBUTTONUP, 0, lp);
     st = await waitFilter(client, (s) => s.sel >= 0);
-    sendMessage(list2, WM_LBUTTONDBLCLK, MK_LBUTTON, lp);
-    st = await waitFilter(client, (s) => !s.listVisible);
+    sendMessage(floatWnd, WM_LBUTTONDBLCLK, MK_LBUTTON, lp);
+    await waitPageSelected(client, "double-click did not select the annotation");
 
-    await clickAt(
-      toolbar,
-      Math.floor(st.floatBtn.x + st.floatBtn.dx / 2),
-      Math.floor(st.floatBtn.y + st.floatBtn.dy / 2),
-      250,
-    );
-    st = await waitFilter(client, (s) => s.floating && s.floatVisible && s.itemDy > 0);
-    const floatWnd2 = findTopWindow(pid, FLOAT_CLASS);
-    if (!floatWnd2) {
-      throw new Error("annot-filter-toolbar: floating window did not reopen");
-    }
-    await clickAt(floatWnd2, 24, st.listY + Math.floor(st.itemDy / 2), 200);
+    // Ctrl+click adds to the selection; Del removes both annotations
     st = await waitFilter(client, (s) => s.nSel >= 1 && s.deleteEnabled);
-    await clickAt(floatWnd2, 24, st.listY + st.itemDy + Math.floor(st.itemDy / 2), 200, MK_CONTROL);
+    await clickAt(floatWnd, 24, st.listY + st.itemDy + Math.floor(st.itemDy / 2), 200, MK_CONTROL);
     st = await waitFilter(client, (s) => s.nSel >= 2);
-    await pressKey(floatWnd2, VK_DELETE, 400);
+    await pressKey(floatWnd, VK_DELETE, 400);
     st = await waitFilter(client, (s) => s.nAll === 0 && s.nSel === 0 && !s.deleteEnabled);
+
+    // Find Annotation again closes it
+    sendCommand(frame, cmdId("CmdFindAnnotation"));
+    st = await waitFilter(client, (s) => !s.floatVisible);
   } finally {
     client.close();
     await killAndWait(proc);

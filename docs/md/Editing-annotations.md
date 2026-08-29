@@ -30,7 +30,7 @@ If you close the dialog or choose `Discard`, annotations will be lost.
 
 Turn on **Edit PDF** in the main toolbar to add, select, and change annotations. `Shift + A` creates a highlight (the same as lowercase `a`) and also turns on Edit PDF mode.
 
-The toolbar search box on the right (`filter N annotations`) lists annotations. Focus it to open the dropdown; an icon after the box pops the list into a floating window.
+**Find Annotation**, near the end of the Edit PDF toolbar (before the save buttons), opens a floating **Annotations** window: a search box (`filter N annotations`) over the list of the document's annotations. Press it again, or close the window, to hide it.
 
 ## Other annotations for selected text
 

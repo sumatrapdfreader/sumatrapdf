@@ -25,6 +25,7 @@ extern const char* gIconNavigateForward;
 extern const char* gIconUndo;
 extern const char* gIconRedo;
 extern const char* gIconSearch;
+extern const char* gIconFindAnnotation;
 extern const char* gIconCommandPalette;
 extern const char* gIconChevronUp;
 extern const char* gIconChevronDown;

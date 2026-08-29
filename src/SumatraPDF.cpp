@@ -88,6 +88,7 @@
 #include "KeyboardHelp.h"
 #include "SelectionToolbar.h"
 #include "AnnotEditToolbar.h"
+#include "AnnotFilterToolbar.h"
 #include "ScreenshotCapture.h"
 #include "Screenshot.h"
 #include "ImageSaveCropResize.h"
@@ -12931,6 +12932,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleEditPDF:
             TogglePdfAnnotationsToolbar(win);
+            break;
+
+        case CmdFindAnnotation:
+            // the list belongs with the annotation tools, so bring those up too
+            EnablePdfAnnotationsToolbar(win);
+            ToggleFloatingAnnotList(win);
             break;
 
         case CmdToggleInverseSearch:

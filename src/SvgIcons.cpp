@@ -240,6 +240,17 @@ const char* gIconSearch =
   <line x1="21" y1="21" x2="15" y2="15" />
 </svg>)";
 
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/list-search.svg
+const char* gIconFindAnnotation =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <circle cx="15" cy="14" r="4" />
+  <line x1="18" y1="17" x2="21" y2="20" />
+  <line x1="3" y1="6" x2="20" y2="6" />
+  <line x1="3" y1="12" x2="8" y2="12" />
+  <line x1="3" y1="18" x2="8" y2="18" />
+</svg>)";
+
 // https://github.com/tabler/tabler-icons/blob/main/icons/outline/command.svg
 const char* gIconCommandPalette =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">

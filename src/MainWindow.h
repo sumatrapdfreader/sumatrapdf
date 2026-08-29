@@ -704,7 +704,6 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // filter box on the Edit PDF toolbar and its dropdown list
     AnnotFilterToolbar* annotFilterToolbar = nullptr;
     // session-only: pop the annotation list into a floating window (not saved)
-    bool annotListFloating = false;
     Rect annotListFloatPos;
 
     // annotation details shown next to a hovered annotation in Edit PDF mode
