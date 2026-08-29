@@ -954,19 +954,6 @@ bool AnnotationPlacementOnKeyDown(MainWindow* win, WPARAM key) {
     return false;
 }
 
-bool AnnotationPlacementSkipAccelerator(MainWindow* win, WPARAM key) {
-    if (!win || IsCtrlPressed() || IsShiftPressed() || IsAltPressed()) {
-        return false;
-    }
-    if (key == VK_RETURN && IsPlacingInkAnnotation(win)) {
-        return true;
-    }
-    if ((key == VK_SPACE || key == VK_RETURN) && IsPlacingPolyLineAnnotation(win)) {
-        return true;
-    }
-    return false;
-}
-
 // Screen rect of a preview box anchored at the cursor. The screen -> page ->
 // screen round trip can lose a pixel (both conversions bias by 0.499 and then
 // truncate), which shows as a preview sitting a pixel off the mouse, so shift

@@ -788,13 +788,13 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
         }
     }
 
-    // Enter and Space normally scroll via accelerators. During polyline or Ink
-    // placement they finish the annotation, so let FrameOnKeydown receive them.
+    // Enter/Space scroll via accelerators; during ink/polyline they finish
+    // the drawing. Consume them here so IsDialogMessage cannot steal them.
     if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
         WPARAM key = msg.wParam;
         MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
-        if (AnnotationPlacementSkipAccelerator(win, key)) {
-            return false;
+        if (AnnotationPlacementOnKeyDown(win, key)) {
+            return true;
         }
     }
 

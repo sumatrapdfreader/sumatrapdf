@@ -5,7 +5,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath, assemblePdf } from "./util.ts";
+import { cmdId, runStandalone, tmpPath, assemblePdf, SLOW_BUILD_FACTOR } from "./util.ts";
 import {
   captureWindowPixels,
   clientToScreen,
@@ -21,6 +21,7 @@ import {
   setCursorPos,
   sleep,
   VK_DOWN,
+  VK_RETURN,
   WM_COMMAND,
   WM_KEYDOWN,
   WM_LBUTTONDOWN,
@@ -35,6 +36,7 @@ import {
   launchControlled,
   pressEnter,
   pressEscape,
+  pressKey,
   sendCommand,
 } from "./win-automation.ts";
 
@@ -90,7 +92,7 @@ async function placementState(client: ControlClient): Promise<PlacementState> {
 }
 
 async function waitForPlacement(client: ControlClient, active: boolean): Promise<PlacementState> {
-  const deadline = Date.now() + 5_000;
+  const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
   let state: PlacementState;
   for (;;) {
     state = await placementState(client);
@@ -342,7 +344,7 @@ export async function testit(): Promise<void> {
       throw new Error(`ink-annotation-placement: second stroke was not added to the same markup\n${state.raw}`);
     }
 
-    await pressEnter(frame);
+    await pressKey(frame, VK_RETURN, 400 * SLOW_BUILD_FACTOR);
     state = await waitForPlacement(client, false);
     const firstInk = inkScreenRects(state.raw)[0];
     if (!firstInk || state.notification || state.annotations !== 1 || firstInk.dx < 180 || firstInk.dy < 120) {
