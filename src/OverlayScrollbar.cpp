@@ -158,14 +158,21 @@ static bool IsOrIsParentOf(HWND hwnd, HWND child) {
     return false;
 }
 
-// Sit just above the owner frame. HWND_TOP covers other Sumatra windows that
-// overlap the canvas (edit annotations, command palette).
+// Sit just above the owner frame, so the bar is seen but doesn't cover the
+// windows floating over the canvas (the annotation property row, the command
+// palette). SetWindowPos inserts *after* the window it is given, so that is
+// the one directly above the frame, not the frame itself (issue #6093).
 static HWND ScrollbarZOrderAfter(OverlayScrollbar* sb) {
-    if (!sb->hwndOwner) {
+    HWND root = sb->hwndOwner ? GetAncestor(sb->hwndOwner, GA_ROOT) : nullptr;
+    if (!root) {
         return HWND_TOP;
     }
-    HWND root = GetAncestor(sb->hwndOwner, GA_ROOT);
-    return root ? root : HWND_TOP;
+    HWND above = GetWindow(root, GW_HWNDPREV);
+    // skip ourselves: we are what is directly above the frame once shown
+    while (above == sb->hwnd) {
+        above = GetWindow(above, GW_HWNDPREV);
+    }
+    return above ? above : HWND_TOP;
 }
 
 static void ShowScrollbarHwnd(OverlayScrollbar* sb) {
