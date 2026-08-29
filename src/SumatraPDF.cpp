@@ -7900,24 +7900,20 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
     HideSelectionToolbar(win);
     HideAnnotationHoverOverlay(win);
     DestroySvgPixmapIconsCache();
-    // Refresh the icons before anything can paint: the cache wipe leaves the
-    // existing buttons holding freed pixmaps. Update in place — destroying the
-    // find bar here nested into another WM_DPICHANGED and heap-corrupted.
-    // Everything that keeps a cached pixmap must be refreshed for every window,
-    // `win` included: the rebuild below only covers its toolbar, so its
-    // floating find window painted freed pixmaps after a DPI change.
+    // Rebind every cached pixmap before anything below can paint. FindBar
+    // layout (and a nested WM_PAINT) used to hit the toolbar of `win` while it
+    // still held freed pixmaps; ReCreateToolbar is too late for that.
+    for (MainWindow* w : gWindows) {
+        DpiScope dpiScope(w->hwndFrame);
+        UpdateToolbarAfterThemeChange(w);
+        RefreshSelectionToolbarIcons(w);
+        RefreshAnnotEditToolbar(w);
+        RefreshAnnotationHoverOverlay(w);
+    }
     for (MainWindow* w : gWindows) {
         DpiScope dpiScope(w->hwndFrame);
         FindBarUpdateDpi(w);
         UpdateFindWindowTheme(w);
-        RefreshSelectionToolbarIcons(w);
-        RefreshAnnotEditToolbar(w);
-        RefreshAnnotationHoverOverlay(w);
-        if (w == win) {
-            // ReCreateToolbar(win) below re-renders its toolbar icons
-            continue;
-        }
-        UpdateToolbarAfterThemeChange(w);
     }
 
     bool menuRebarVisible = IsShowingMenuBarRebar(win);

@@ -624,24 +624,41 @@ Size GfxDirect2D::MeasureText(Str s, PlatformFont* font) {
 // d2d wants 32bpp premultiplied BGRA; a Pixmap can be several other things.
 // Returns the rows to hand it (into `scratch` when a conversion was needed).
 static const u8* PixmapAsPremulBgra(Pixmap* px, Vec<u8>& scratch, int* strideOut) {
-    if (px->format == PixmapFormat::BGRA8 && px->premultiplied) {
+    if (!px || px->width <= 0 || px->height <= 0) {
+        return nullptr;
+    }
+    if (px->format == PixmapFormat::BGRA8 && px->premultiplied && px->data) {
         *strideOut = px->stride;
         return px->data;
     }
     Pixmap* src = px;
     Pixmap* owned = nullptr;
-    if (px->format == PixmapFormat::Native) {
-        // only the platform bitmap knows how to read those pixels
+    // Native pixels, or a handle-only HBITMAP with no scan0, can only be read
+    // by blitting through GDI
+    if (px->format == PixmapFormat::Native || !px->data) {
         owned = PixmapCopyAs32bppDIB(px);
-        if (!owned) {
+        if (!owned || !owned->data) {
+            FreePixmap(owned);
             return nullptr;
         }
         src = owned;
     }
+    if (!src->data) {
+        return nullptr;
+    }
     int w = src->width, h = src->height;
     int stride = w * 4;
+    i64 nBytes = (i64)stride * h;
+    if (stride <= 0 || nBytes <= 0 || nBytes > INT_MAX) {
+        FreePixmap(owned);
+        return nullptr;
+    }
     VecReset(scratch);
-    u8* dst = VecReserve(scratch, stride * h);
+    u8* dst = VecReserve(scratch, (int)nBytes);
+    if (!dst) {
+        FreePixmap(owned);
+        return nullptr;
+    }
     int srcBpp = PixmapBytesPerPixel(src->format);
     bool isRgba = src->format == PixmapFormat::RGBA8;
     bool hasAlpha = src->format != PixmapFormat::BGR8;
