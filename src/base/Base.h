@@ -241,11 +241,11 @@ struct Str {
     char* s;
     int len;
 
-    Str() : s(nullptr), len(0) {}
+    constexpr Str() : s(nullptr), len(0) {}
     explicit Str(const char* s_) : s((char*)s_), len(0) { len = s_ ? (int)strlen(s_) : 0; }
-    explicit Str(const char* s_, int len_) : s((char*)s_), len(len_) {}
+    constexpr explicit Str(const char* s_, int len_) : s((char*)s_), len(len_) {}
     explicit Str(char* s_) : s(s_), len(0) { len = s ? (int)strlen(s) : 0; }
-    explicit Str(char* s_, int len_) : s(s_), len(len_) {}
+    constexpr explicit Str(char* s_, int len_) : s(s_), len(len_) {}
 
     explicit operator bool() const { return len > 0 && s; }
 };
@@ -254,7 +254,7 @@ struct Str {
 using TempStr = Str;
 
 // Create Str from string literal with compile-time length
-#define StrL(lit) Str((char*)(lit), (int)(sizeof(lit) - 1))
+#define StrL(lit) Str(lit, (int)(sizeof(lit) - 1))
 
 // Compile-time length (as int) of a string literal (or char[]/WCHAR[] array);
 // faster than len() which does a runtime strlen. Works for both narrow

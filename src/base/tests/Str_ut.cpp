@@ -6,6 +6,11 @@
 // must be last due to assert() over-write
 #include "base/UtAssert.h"
 
+static_assert(Str{}.len == 0);
+static_assert(StrL("ab").len == 2);
+static_assert(StrL("xyz").s[0] == 'x');
+static constinit Str kStrLConstInit = StrL("hello");
+
 static void StrReplaceTestOne(Str s, Str toReplace, Str replaceWith, Str expected) {
     TempStr res = str::ReplaceTemp(s, toReplace, replaceWith);
     utassert(str::Eq(res, expected));
