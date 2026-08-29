@@ -28,7 +28,6 @@
 #include "WindowTab.h"
 #include "Commands.h"
 #include "AppTools.h"
-#include "ToolbarInternal.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"

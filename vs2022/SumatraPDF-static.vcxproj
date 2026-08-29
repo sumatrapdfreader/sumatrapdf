@@ -1266,7 +1266,6 @@
     <ClInclude Include="..\src\Theme.h" />
     <ClInclude Include="..\src\ThumbnailNavigation.h" />
     <ClInclude Include="..\src\Toolbar.h" />
-    <ClInclude Include="..\src\ToolbarInternal.h" />
     <ClInclude Include="..\src\Translations.h" />
     <ClInclude Include="..\src\UpdateCheck.h" />
     <ClInclude Include="..\src\Version.h" />

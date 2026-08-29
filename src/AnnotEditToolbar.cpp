@@ -34,6 +34,7 @@ extern "C" {
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Canvas.h"
+#include "Commands.h"
 #include "Toolbar.h"
 #include "AppSettings.h"
 #include "FormFields.h"

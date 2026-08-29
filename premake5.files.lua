@@ -745,7 +745,6 @@ function sumatrapdf_files()
     "Theme.*",
     "Theme_win.*",
     "Toolbar.*",
-    "ToolbarInternal.h",
     "Toolbar_win.*",
     "TranslationLangs.cpp",
     "Translations.*",

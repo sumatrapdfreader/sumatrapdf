@@ -20,6 +20,7 @@
 #include "MainWindow.h"
 #include "Annotation.h"
 #include "SumatraPDF.h"
+#include "Commands.h"
 #include "Toolbar.h"
 #include "SumatraDialogs.h"
 #include "FormFields.h"

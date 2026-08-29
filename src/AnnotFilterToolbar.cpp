@@ -35,7 +35,6 @@
 #include "Toolbar.h"
 #include "FilterUtil.h"
 #include "AnnotEditToolbar.h"
-#include "ToolbarInternal.h"
 #include "DarkMode_win.h"
 
 #include "AnnotFilterToolbar.h"

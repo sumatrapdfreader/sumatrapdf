@@ -32,10 +32,10 @@
 #include "Canvas.h"
 #include "Selection.h"
 #include "SelectTextKeyboard.h"
+#include "Commands.h"
 #include "Toolbar.h"
 #include "Translations.h"
 #include "SvgIcons.h"
-#include "Commands.h"
 
 #include "AnnotPlacement.h"
 

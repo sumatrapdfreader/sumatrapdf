@@ -24,6 +24,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
+#include "Commands.h"
 #include "Toolbar.h"
 #include "AppSettings.h"
 #include "ExplorerQuickLook.h"

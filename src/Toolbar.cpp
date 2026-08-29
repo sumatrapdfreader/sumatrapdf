@@ -34,7 +34,6 @@
 #include "SearchAndDDE.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
-#include "ToolbarInternal.h"
 #include "Tabs.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"

@@ -61,9 +61,9 @@
 #include "ReadAloudPlaybackBar.h"
 #include "TextToSpeech.h"
 #include "HomePage.h"
+#include "Commands.h"
 #include "Toolbar.h"
 #include "Translations.h"
-#include "Commands.h"
 
 #include "RefHover.h"
 #include "Canvas.h"

@@ -29,6 +29,7 @@
 #include "WindowTab.h"
 #include "SelectionToolbar.h"
 #include "SelectTextKeyboard.h"
+#include "Commands.h"
 #include "Toolbar.h"
 #include "Translations.h"
 #include "uia/Provider.h"

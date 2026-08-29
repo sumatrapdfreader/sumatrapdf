@@ -450,9 +450,6 @@
     <ClInclude Include="..\src\Toolbar.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ToolbarInternal.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Translations.h">
       <Filter>src</Filter>
     </ClInclude>
