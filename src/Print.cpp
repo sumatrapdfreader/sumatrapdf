@@ -28,6 +28,7 @@
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
+#include "PrintWin11.h"
 #include "Print.h"
 
 class AbortCookieManager {
@@ -611,6 +612,94 @@ static float SanitizePrintZoom(float zoom, float fallback, Str why, Size paperSi
     return 1.f;
 }
 
+PrintPageLayout CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanced_Data& advanced,
+                                         Size paperSize, Rect printable, float dpiX, float dpiY, bool printPortrait,
+                                         Str printerName) {
+    float fileDPI = engine.GetFileDPI();
+    if (!(fileDPI > 0) || !isfinite(fileDPI)) {
+        fileDPI = 96.f;
+    }
+    float dpiFactor = std::min(SafePrintDiv(dpiX, fileDPI), SafePrintDiv(dpiY, fileDPI));
+    if (!IsValidPrintZoom(dpiFactor)) {
+        dpiFactor = 1.f;
+    }
+
+    SizeF pageSize = engine.PageMediabox(pageNo).Size();
+    int rotation = 0;
+    if (advanced.autoRotate && pageSize.dx > pageSize.dy) {
+        rotation += 90;
+        std::swap(pageSize.dx, pageSize.dy);
+    }
+    rotation = (rotation % 180) == 0 ? 0 : 270;
+    if (!printPortrait) {
+        rotation = (rotation + 90) % 360;
+        std::swap(pageSize.dx, pageSize.dy);
+    }
+    if (advanced.extraRotation != 0) {
+        rotation = (rotation + advanced.extraRotation) % 360;
+        if (advanced.extraRotation == 90 || advanced.extraRotation == 270) {
+            std::swap(pageSize.dx, pageSize.dy);
+        }
+    }
+
+    float zoom = dpiFactor;
+    Point offset(-printable.x, -printable.y);
+    float pageDx = pageSize.dx > 0 ? pageSize.dx : 1.f;
+    float pageDy = pageSize.dy > 0 ? pageSize.dy : 1.f;
+    Rect stretch;
+    bool isStretch = advanced.scale == PrintScaleAdv::Stretch;
+
+    if (isStretch) {
+        zoom = std::max(SafePrintDiv((float)printable.dx, pageDx), SafePrintDiv((float)printable.dy, pageDy));
+        offset = Point(0, 0);
+        stretch = Rect(0, 0, printable.dx, printable.dy);
+    } else if (advanced.scale != PrintScaleAdv::None) {
+        RectF rect = engine.PageContentBox(pageNo, RenderTarget::Print);
+        if (rect.IsEmpty() || rect.dx <= 0 || rect.dy <= 0) {
+            rect = engine.PageMediabox(pageNo);
+        }
+        RectF contentBox = engine.Transform(rect, pageNo, 1.0, rotation);
+        float contentDx = contentBox.dx > 0 ? contentBox.dx : pageDx;
+        float contentDy = contentBox.dy > 0 ? contentBox.dy : pageDy;
+        zoom = std::min(
+            SafePrintDiv((float)printable.dx, contentDx),
+            std::min(SafePrintDiv((float)printable.dy, contentDy),
+                     std::min(SafePrintDiv((float)paperSize.dx, pageDx), SafePrintDiv((float)paperSize.dy, pageDy))));
+        if (advanced.scale == PrintScaleAdv::Shrink && dpiFactor < zoom) {
+            zoom = dpiFactor;
+        }
+        offset.x += (int)((float)paperSize.dx - (pageSize.dx * zoom)) / 2;
+        offset.y += (int)((float)paperSize.dy - (pageSize.dy * zoom)) / 2;
+        RectF onPaper((float)printable.x + (float)offset.x + (contentBox.x * zoom),
+                      (float)printable.y + (float)offset.y + (contentBox.y * zoom), contentBox.dx * zoom,
+                      contentBox.dy * zoom);
+        if (onPaper.x < (float)printable.x) {
+            offset.x += (int)((float)printable.x - onPaper.x);
+        } else if (onPaper.BR().x > (float)printable.BR().x) {
+            offset.x -= (int)(onPaper.BR().x - (float)printable.BR().x);
+        }
+        if (onPaper.y < (float)printable.y) {
+            offset.y += (int)((float)printable.y - onPaper.y);
+        } else if (onPaper.BR().y > (float)printable.BR().y) {
+            offset.y -= (int)(onPaper.BR().y - (float)printable.BR().y);
+        }
+    }
+
+    zoom = SanitizePrintZoom(zoom, dpiFactor, StrL("page"), paperSize, printable, dpiX, dpiY, fileDPI, dpiFactor,
+                             printerName);
+    if (advanced.centerHorizontally && advanced.scale == PrintScaleAdv::None) {
+        offset.x += (int)((float)paperSize.dx - (pageSize.dx * zoom)) / 2;
+    }
+
+    PrintPageLayout layout;
+    layout.zoom = zoom;
+    layout.rotation = rotation;
+    layout.offset = offset;
+    layout.stretch = stretch;
+    layout.isStretch = isStretch;
+    return layout;
+}
+
 // Rasterize a page (or, for selections, a page-space sub-rectangle of it) onto
 // the printer HDC in horizontal device-pixel bands. Banding bounds peak memory
 // regardless of page size / printer DPI, replacing the old "shrink to half
@@ -952,112 +1041,15 @@ static bool PrintToDevice(const PrintData& pd) {
                 continue;
             }
 
-            SizeF pSize = engine.PageMediabox((int)pageNo).Size();
-            int rotation = 0;
-            // Turn the document by 90 deg if it isn't in portrait mode & if autoRotation is not disabled
-            if (pd.advData.autoRotate && pSize.dx > pSize.dy) {
-                rotation += 90;
-                std::swap(pSize.dx, pSize.dy);
-            }
-            // make sure not to print upside-down
-            rotation = (rotation % 180) == 0 ? 0 : 270;
-            // finally turn the page by (another) 90 deg in landscape mode
-            if (!bPrintPortrait) {
-                rotation = (rotation + 90) % 360;
-                std::swap(pSize.dx, pSize.dy);
-            }
-            // apply the user-requested extra rotation on top, to fix wrong
-            // orientation (e.g. upside-down output on virtual printers) (#1246)
-            if (pd.advData.extraRotation != 0) {
-                rotation = (rotation + pd.advData.extraRotation) % 360;
-                if (pd.advData.extraRotation == 90 || pd.advData.extraRotation == 270) {
-                    std::swap(pSize.dx, pSize.dy);
-                }
-            }
-
-            // dpiFactor means no physical zoom
-            float zoom = dpiFactor;
-            // offset of the top-left corner of the page from the printable area
-            // (negative values move the page into the left/top margins, etc.);
-            // offset adjustments are needed because the GDI coordinate system
-            // starts at the corner of the printable area and we rather want to
-            // center the page on the physical paper (except for PrintScaleNone
-            // where the page starts at the very top left of the physical paper so
-            // that printing forms/labels of varying size remains reliably possible)
-            Point offset(-printable.x, -printable.y);
-
-            float pdx = pSize.dx > 0 ? pSize.dx : 1.f;
-            float pdy = pSize.dy > 0 ? pSize.dy : 1.f;
-
-            if (PrintScaleAdv::Stretch == pd.advData.scale) {
-                // stretch the page to fill the whole printable area in both
-                // dimensions, ignoring the aspect ratio (issue #2220). Render at
-                // a zoom large enough that the bitmap is at least as big as the
-                // printable area in both dimensions (so we only ever downscale
-                // one of them); the StretchBlt in the blit loop below then resizes
-                // it to exactly fill the printable area.
-                zoom = std::max(SafePrintDiv((float)printable.dx, pdx), SafePrintDiv((float)printable.dy, pdy));
-                offset = Point(0, 0);
-            } else if (pd.advData.scale != PrintScaleAdv::None) {
-                // make sure to fit all content into the printable area when scaling
-                // and the whole document page on the physical paper
-                RectF rect = engine.PageContentBox((int)pageNo, RenderTarget::Print);
-                // empty content box (e.g. failed image crop) → use full mediabox
-                if (rect.IsEmpty() || rect.dx <= 0 || rect.dy <= 0) {
-                    rect = engine.PageMediabox((int)pageNo);
-                }
-                RectF cbox = engine.Transform(rect, (int)pageNo, 1.0, rotation);
-                float cdx = cbox.dx > 0 ? cbox.dx : pdx;
-                float cdy = cbox.dy > 0 ? cbox.dy : pdy;
-                zoom = std::min(
-                    SafePrintDiv((float)printable.dx, cdx),
-                    std::min(SafePrintDiv((float)printable.dy, cdy),
-                             std::min(SafePrintDiv((float)paperSize.dx, pdx), SafePrintDiv((float)paperSize.dy, pdy))));
-                // use the correct zoom values, if the page fits otherwise
-                // and the user didn't ask for anything else (default setting)
-                if (PrintScaleAdv::Shrink == pd.advData.scale && dpiFactor < zoom) {
-                    zoom = dpiFactor;
-                }
-                // center the page on the physical paper
-                offset.x += (int)((float)paperSize.dx - (pSize.dx * zoom)) / 2;
-                offset.y += (int)((float)paperSize.dy - (pSize.dy * zoom)) / 2;
-                // make sure that no content lies in the non-printable paper margins
-                RectF onPaper((float)printable.x + (float)offset.x + (cbox.x * zoom),
-                              (float)printable.y + (float)offset.y + (cbox.y * zoom), cbox.dx * zoom, cbox.dy * zoom);
-                if (onPaper.x < (float)printable.x) {
-                    offset.x += (int)((float)printable.x - onPaper.x);
-                } else if (onPaper.BR().x > (float)printable.BR().x) {
-                    offset.x -= (int)(onPaper.BR().x - (float)printable.BR().x);
-                }
-                if (onPaper.y < (float)printable.y) {
-                    offset.y += (int)((float)printable.y - onPaper.y);
-                } else if (onPaper.BR().y > (float)printable.BR().y) {
-                    offset.y -= (int)(onPaper.BR().y - (float)printable.BR().y);
-                }
-            }
-
-            zoom = SanitizePrintZoom(zoom, dpiFactor, StrL("page"), paperSize, printable, logPixelsX, logPixelsY,
-                                     fileDPI, dpiFactor, pd.printer->name);
-
-            // optionally center the page horizontally on the physical paper
-            // (issue #348). The scaling modes already center the page and Stretch
-            // fills the paper, so this only affects placement for PrintScaleNone,
-            // where the page is otherwise aligned to the top-left corner. Useful
-            // for printing a page smaller than the paper (e.g. envelopes or A5
-            // stock fed through a tray that centers the paper).
-            if (pd.advData.centerHorizontally && PrintScaleAdv::None == pd.advData.scale) {
-                offset.x += (int)((float)paperSize.dx - (pSize.dx * zoom)) / 2;
-            }
-
+            PrintPageLayout layout = CalculatePrintPageLayout(engine, (int)pageNo, pd.advData, paperSize, printable,
+                                                              logPixelsX, logPixelsY, bPrintPortrait, pd.printer->name);
             RectF mediabox = engine.PageMediabox((int)pageNo);
-            if (PrintScaleAdv::Stretch == pd.advData.scale) {
-                // resize the rendered page to exactly fill the printable area
-                Rect stretchRc(0, 0, printable.dx, printable.dy);
-                PrintPageInBands(engine, hdc, (int)pageNo, zoom, rotation, mediabox, Point(0, 0), &stretchRc,
-                                 RenderTarget::Print, abortCookie, progressCb);
+            if (layout.isStretch) {
+                PrintPageInBands(engine, hdc, (int)pageNo, layout.zoom, layout.rotation, mediabox, Point(0, 0),
+                                 &layout.stretch, RenderTarget::Print, abortCookie, progressCb);
             } else {
-                PrintPageInBands(engine, hdc, (int)pageNo, zoom, rotation, mediabox, offset, nullptr,
-                                 RenderTarget::Print, abortCookie, progressCb);
+                PrintPageInBands(engine, hdc, (int)pageNo, layout.zoom, layout.rotation, mediabox, layout.offset,
+                                 nullptr, RenderTarget::Print, abortCookie, progressCb);
             }
 
             res = EndPage(hdc);
@@ -1308,23 +1300,6 @@ static void SetDevModeCopies(HGLOBAL hDevMode, short copies) {
     }
 }
 
-/* Show Print Dialog box to allow user to select the printer
-and the pages to print.
-
-For reference: In order to print with Adobe Reader instead: ViewWithAcrobat(win, L"/P");
-
-Note: The following only applies for printing as image
-
-Creates a new dummy page for each page with a large zoom factor,
-and then uses StretchDIBits to copy this to the printer's dc.
-
-So far have tested printing from XP to
- - Acrobat Professional 6 (note that acrobat is usually set to
-   downgrade the resolution of its bitmaps to 150dpi)
- - HP Laserjet 2300d
- - HP Deskjet D4160
- - Lexmark Z515 inkjet, which should cover most bases.
-*/
 enum {
     MAXPAGERANGES = 10
 };
@@ -1396,6 +1371,12 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         }
     }
     AbortPrinting(win);
+
+    // the Windows 11 dialog runs the whole job itself; -print-to and friends
+    // need the synchronous classic path
+    if (!waitForCompletion && TryPrintCurrentFileWin11(win, defaultScaleAdv)) {
+        return;
+    }
 
     PRINTDLGEXW pdex{};
     pdex.lStructSize = sizeof(PRINTDLGEXW);
