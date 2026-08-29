@@ -86,6 +86,9 @@ constexpr int kDragHandleSize = 6;
 constexpr int kControlAreaDy = 100;
 constexpr int kRowPadding = 6;
 constexpr int kButtonPadding = 8;
+// WM_TIMER id used to clear the transient "Copied to clipboard" info label
+constexpr UINT_PTR kCopyStatusTimerId = 1;
+constexpr UINT kCopyStatusTimeoutMs = 1500;
 
 struct ImageFormat {
     Str label;
@@ -246,6 +249,8 @@ struct ImageEditWindow : WindowBase {
     ImageEditButton* btnSave = nullptr;
     ImageEditButton* btnCrop = nullptr;   // "Crop" or "Apply Crop"
     ImageEditButton* btnResize = nullptr; // "Resize" or "Apply Resize"
+    ImageEditButton* btnCopy = nullptr;   // "Copy" - copies the image to the clipboard
+    UINT_PTR copyStatusTimer = 0;         // clears the transient "Copied" info label
     DropDown* dropFormat = nullptr;
     Vec<int> formatIndices; // maps dropdown index to gImageFormats index
 
@@ -471,7 +476,7 @@ static bool TriggerImageEditMnemonic(ImageEditWindow* ew, WCHAR key) {
         return false;
     }
     key = UpperW(key);
-    ImageEditButton* btns[] = {ew->btnSave, ew->btnCrop, ew->btnResize};
+    ImageEditButton* btns[] = {ew->btnSave, ew->btnCrop, ew->btnResize, ew->btnCopy};
     for (ImageEditButton* btn : btns) {
         if (!btn || !btn->IsEnabled() || btn->mnemonic == 0) {
             continue;
@@ -592,6 +597,7 @@ static void ImageEditApplyFont(ImageEditWindow* ew) {
     setVirtFont(ew->btnSave);
     setVirtFont(ew->btnCrop);
     setVirtFont(ew->btnResize);
+    setVirtFont(ew->btnCopy);
     setWndFont(ew->destEdit);
     setWndFont(ew->dropFormat);
 }
@@ -1703,6 +1709,20 @@ static bool CopyEditedImageToClipboard(ImageEditWindow* ew) {
     return CopyImageToClipboard(tmp, false);
 }
 
+// Copy and say so in the info label; a one-shot timer puts the label back.
+static void OnCopyButton(ImageEditWindow* ew) {
+    if (ew->copyStatusTimer) {
+        KillTimer(ew->hwnd, kCopyStatusTimerId);
+        ew->copyStatusTimer = 0;
+    }
+    bool ok = CopyEditedImageToClipboard(ew);
+    if (ew->staticInfoLabel) {
+        ew->staticInfoLabel->SetText(ok ? StrL("Copied to clipboard") : StrL("Copy failed"));
+    }
+    LayoutControls(ew);
+    ew->copyStatusTimer = SetTimer(ew->hwnd, kCopyStatusTimerId, kCopyStatusTimeoutMs, nullptr);
+}
+
 // Tab moves between the dest edit, the format drop-down and the buttons; the
 // ring is the layout order and covers HWND and virtual controls alike
 void ImageEditWindow::OnKeyDown(KeyEvent* ev) {
@@ -1766,6 +1786,10 @@ void ImageEditWindow::OnActivate(WindowBase::ActivateEvent* ev) {
 void ImageEditWindow::OnDestroy(WindowBase::DestroyEvent*) {
     if (GetCurrentModelessDialog() == hwnd) {
         SetCurrentModelessDialog(nullptr);
+    }
+    if (copyStatusTimer) {
+        KillTimer(hwnd, kCopyStatusTimerId);
+        copyStatusTimer = 0;
     }
     HWND parent = hwndParent;
     if (destEdit && destEdit->hwnd && gDestEditSubclassId) {
@@ -2113,12 +2137,23 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
             }
             break;
 
+        case WM_TIMER:
+            if (wp == kCopyStatusTimerId) {
+                KillTimer(hwnd, ew->copyStatusTimer);
+                ew->copyStatusTimer = 0;
+                UpdateInfoLabel(ew);
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
+            break;
+
         case WM_KEYDOWN: {
             if (!ew) {
                 break;
             }
             if ((GetKeyState(VK_CONTROL) & 0x8000) != 0 && wp == 'C') {
-                CopyEditedImageToClipboard(ew);
+                OnCopyButton(ew);
                 {
                     ev->result = 0;
                     ev->didHandle = true;
@@ -2351,6 +2386,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     ew->btnSave = NewImageEditButton(ew, Tr(StrL("&Save")), MkFunc0(OnSave, ew));
     ew->btnCrop = NewImageEditButton(ew, Tr(StrL("&Crop")), MkFunc0(OnCropButton, ew));
     ew->btnResize = NewImageEditButton(ew, Tr(StrL("&Resize")), MkFunc0(OnResizeButton, ew));
+    ew->btnCopy = NewImageEditButton(ew, Tr(StrL("C&opy")), MkFunc0(OnCopyButton, ew));
 
     // format dropdown
     {
@@ -2406,6 +2442,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             row2->AddChild(ew->destEdit, 1);
             row2->AddChild(ew->btnBrowse);
             row2->AddChild(ew->btnSave);
+            row2->AddChild(ew->btnCopy);
             auto* row2Pad = new Padding(row2, {0, 0, ImageEditRowPadding(), 0});
             vbox->AddChild(row2Pad);
         }
