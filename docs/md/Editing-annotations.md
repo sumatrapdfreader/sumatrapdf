@@ -68,6 +68,14 @@ Pick a PNG (or JPEG, etc.). The image is stamped on the page and you can drag or
 
 ![Context Menu Annotation Under Cursor](img/context-menu-annot-under-cursor.png)
 
+## Highlighter brush
+
+The **Highlighter** is a marker pen: drag on the page and it paints a wide translucent stroke wherever the mouse goes, over pictures and blank areas as well as text. The selection-based **Highlight** (`a`) still needs text to attach to.
+
+Start it from the **Annotations** toolbar, from the command palette, or with right-click → **Create annotation under cursor → Highlighter**. Drag to paint, `Enter` to finish, `Esc` to cancel. The stroke keeps a constant on-screen width while you draw, whatever the zoom.
+
+It is saved as an ink annotation in the `HighlightColor` from Advanced Settings (yellow by default) at 40% opacity, so you can move, recolor, or delete it like any other annotation.
+
 ## Changing an annotation
 
 Click an annotation in Edit PDF mode to select it. A compact property row appears under it (color, opacity, border, font, icon, line endings, Contents). The filter list and floating list also select an annotation when you click a row.

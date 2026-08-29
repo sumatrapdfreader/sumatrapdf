@@ -12822,6 +12822,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             [[fallthrough]];
         case CmdCreateAnnotInk:
             [[fallthrough]];
+        case CmdAnnotationHighlightBrush:
+            [[fallthrough]];
         case CmdCreateAnnotRedact:
             [[fallthrough]];
         case CmdCreateAnnotFileAttachment: {

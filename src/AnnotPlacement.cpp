@@ -16,6 +16,7 @@
 #include "gui/win/WinGui.h"
 
 #include "Settings.h"
+#include "AppSettings.h"
 #include "Annotation.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -53,6 +54,16 @@ constexpr float kCaretAnnotDefaultDx = 18.f;
 constexpr float kCaretAnnotDefaultDy = 15.f;
 constexpr float kFileAttachmentAnnotDefaultDx = 16.f;
 constexpr float kFileAttachmentAnnotDefaultDy = 16.f;
+
+// The highlighter brush keeps a roughly constant on-screen width whatever the
+// zoom, the way a real marker does, and saves as a translucent stroke.
+constexpr int kHighlightBrushScreenWidthPx = 22;
+constexpr int kHighlightBrushOpacity = 40;
+
+// the marker paints in the same color the selection highlight uses
+static Color HighlightBrushColor() {
+    return GetParsedColor(gSettings->annotations.highlightColor, kColYellow);
+}
 
 // Free text is placed like a stamp: a preview box the size of the annotation
 // follows the cursor and a click creates it there. MuPDF lays free text out
@@ -131,6 +142,8 @@ void AnnotPlacement::Reset() {
     VecClear(points);
     VecClear(strokeCounts);
     circle = false;
+    highlightBrush = false;
+    brushWidthPt = 0.f;
     mouseDown = false;
     didDrag = false;
     constrain = false;
@@ -187,6 +200,7 @@ AnnotPlacementKind PlacementKindFromCommand(int cmdId) {
         case CmdCreateAnnotRedact:
             return AnnotPlacementKind::Shape;
         case CmdCreateAnnotInk:
+        case CmdAnnotationHighlightBrush:
             return AnnotPlacementKind::Ink;
         default:
             return AnnotPlacementKind::None;
@@ -392,6 +406,9 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
                              "Place rectangle annotation. Drag or click twice. **Shift** for a square. **Esc** to "
                              "cancel.");
         case AnnotPlacementKind::Ink:
+            if (OrigCommandId(cmdId) == CmdAnnotationHighlightBrush) {
+                return _TRA("Paint with the highlighter. **Enter** to finish. **Esc** to cancel.");
+            }
             return _TRA("Draw ink annotation. **Enter** to finish. **Esc** to cancel.");
         default:
             return {};
@@ -513,6 +530,7 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
     p.kind = kind;
     p.cmdId = cmdId;
     p.circle = OrigCommandId(cmdId) == CmdCreateAnnotCircle;
+    p.highlightBrush = OrigCommandId(cmdId) == CmdAnnotationHighlightBrush;
     if (IsPointPlacementKind(kind)) {
         p.pos = HwndGetCursorPos(win->hwndCanvas);
     }
@@ -735,6 +753,14 @@ static bool AppendInkPoint(MainWindow* win, DisplayModel* dm, Point pt) {
     return true;
 }
 
+// How many screen pixels one PDF point of the page covers at the current zoom.
+static float PxPerPagePt(DisplayModel* dm, int pageNo) {
+    Point p0 = dm->CvtToScreen(pageNo, PointF(0, 0));
+    Point p1 = dm->CvtToScreen(pageNo, PointF(0, 1));
+    float px = (float)(p1.y - p0.y);
+    return px < 0.01f ? 1.f : px;
+}
+
 static bool HandleInkDown(MainWindow* win, Point pt) {
     if (!IsPlacingInkAnnotation(win)) {
         return false;
@@ -753,6 +779,11 @@ static bool HandleInkDown(MainWindow* win, Point pt) {
     }
     if (!started) {
         p.pageNo = pageNo;
+    }
+    if (p.highlightBrush) {
+        // the marker is a fixed number of screen pixels wide, so its width in
+        // page units depends on the zoom the stroke was drawn at
+        p.brushWidthPt = (float)kHighlightBrushScreenWidthPx / PxPerPagePt(dm, pageNo);
     }
     VecAppend(p.strokeCounts, 0);
     p.mouseDown = true;
@@ -1177,9 +1208,17 @@ static void PaintInkPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
 
     Gdiplus::Graphics gs(hdc);
     gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    Gdiplus::Color blue(255, 0, 80, 200);
+    Gdiplus::Color strokeCol(255, 0, 80, 200);
     Gdiplus::REAL width = (Gdiplus::REAL)std::max(DpiScale(2), 1);
-    Gdiplus::Pen pen(blue, width);
+    if (p.highlightBrush) {
+        // preview what the marker will lay down: its color at its opacity,
+        // as wide on screen as the saved stroke will be
+        u8 r, g, b;
+        UnpackColor(HighlightBrushColor(), r, g, b);
+        strokeCol = Gdiplus::Color((u8)((kHighlightBrushOpacity * 255) / 100), r, g, b);
+        width = (Gdiplus::REAL)std::max(1.f, p.brushWidthPt * PxPerPagePt(dm, pageNo));
+    }
+    Gdiplus::Pen pen(strokeCol, width);
     pen.SetStartCap(Gdiplus::LineCapRound);
     pen.SetEndCap(Gdiplus::LineCapRound);
 
@@ -1192,7 +1231,7 @@ static void PaintInkPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
         if (count == 1) {
             int dotSize = std::max(DpiScale(3), 2);
             int dotHalf = dotSize / 2;
-            Gdiplus::SolidBrush brush(blue);
+            Gdiplus::SolidBrush brush(strokeCol);
             gs.FillEllipse(&brush, previous.x - dotHalf, previous.y - dotHalf, dotSize, dotSize);
             continue;
         }
@@ -1239,6 +1278,11 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
             pt = dm->CvtToScreen(pageNo, VecLast(p.points));
             args.inkStrokeCounts = &p.strokeCounts;
             args.inkPoints = &p.points;
+            if (p.highlightBrush) {
+                args.borderWidth = (int)(p.brushWidthPt + 0.5f);
+                args.opacity = kHighlightBrushOpacity;
+                args.col = *GetParsedColor(gSettings->annotations.highlightColor);
+            }
             return true;
         case AnnotPlacementKind::Shape: {
             bool validType =

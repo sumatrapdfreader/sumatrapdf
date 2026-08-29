@@ -37,6 +37,7 @@ extern const char* gIconHomeThumbnails;
 extern const char* gIconPin;
 extern const char* gIconEditAnnotations;
 extern const char* gIconAnnotHighlight;
+extern const char* gIconAnnotHighlightBrush;
 extern const char* gIconAnnotUnderline;
 extern const char* gIconAnnotSquiggly;
 extern const char* gIconAnnotStrikeOut;

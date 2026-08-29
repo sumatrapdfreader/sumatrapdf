@@ -2055,6 +2055,17 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 }
             }
 
+            if (typ == AnnotationType::Ink) {
+                // the highlighter brush is an ink stroke as wide and as
+                // translucent as a marker
+                if (args->borderWidth >= 0) {
+                    pdf_set_annot_border_width(ctx, annot, (float)args->borderWidth);
+                }
+                if (args->opacity < 100) {
+                    pdf_set_annot_opacity(ctx, annot, (float)args->opacity / 100.0f);
+                }
+            }
+
             if (interiorCol.parsedOk && AnnotationSupportsInteriorColor(typ)) {
                 float interiorColor[3]{};
                 PdfColorToFloat(interiorCol.pdfCol, interiorColor);
@@ -2497,6 +2508,7 @@ AnnotationType CmdIdToAnnotationType(int cmdId) {
         case CmdCreateAnnotStamp:          return AnnotationType::Stamp;
         case CmdCreateAnnotCaret:          return AnnotationType::Caret;
         case CmdCreateAnnotInk:            return AnnotationType::Ink;
+        case CmdAnnotationHighlightBrush:  return AnnotationType::Ink;
         case CmdCreateAnnotPopup:          return AnnotationType::Popup;
         case CmdCreateAnnotFileAttachment: return AnnotationType::FileAttachment;
     }

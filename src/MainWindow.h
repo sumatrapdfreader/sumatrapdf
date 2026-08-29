@@ -188,6 +188,10 @@ struct AnnotPlacement {
     Vec<PointF> points;
     Vec<int> strokeCounts;
     bool circle = false;
+    // highlighter brush: an ink stroke painted with a fixed-size translucent
+    // marker instead of the thin pen
+    bool highlightBrush = false;
+    float brushWidthPt = 0.f;
     bool mouseDown = false;
     bool didDrag = false;
     bool constrain = false;

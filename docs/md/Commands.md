@@ -200,6 +200,7 @@ CmdCreateAnnotCircle,,Create Circle Annotation,
 CmdCreateAnnotFileAttachment,,Create File Attachment Annotation,"click to place, like Stamp/Caret; Esc cancels, ver 3.7+"
 CmdCreateAnnotFreeText,,Create Free Text Annotation,
 CmdCreateAnnotHighlight,"a, A",Create Highlight Annotation,
+CmdAnnotationHighlightBrush,,Highlight with Brush,"a freehand highlighter: drag to paint a marker stroke anywhere on the page, no text selection needed. Enter finishes, Esc cancels. Saved as an ink annotation in HighlightColor, ver 3.7+"
 CmdCreateAnnotInk,,Create Ink Annotation,
 CmdCreateAnnotLine,,Create Line Annotation,
 CmdCreateAnnotLink,,Create Link Annotation,

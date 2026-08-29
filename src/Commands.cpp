@@ -314,6 +314,7 @@ static SeqStrings gCommandNames =
     "CmdSearchGoogleLens\0"
     "CmdNavigateThumbnail\0"
     "CmdShowAnnotationText\0"
+    "CmdAnnotationHighlightBrush\0"
     "CmdNone\0"
     "\0";
 
@@ -616,6 +617,7 @@ static i32 gCommandIds[] = {
     CmdSearchGoogleLens,
     CmdNavigateThumbnail,
     CmdShowAnnotationText,
+    CmdAnnotationHighlightBrush,
     CmdNone,
 };
 
@@ -918,6 +920,7 @@ SeqStrings gCommandDescriptions =
     "Search with Google Lens\0"
     "Navigate Thumbnails\0"
     "Show Comment\0"
+    "Highlight with Brush\0"
     "Do nothing\0"
     "\0";
 // clang-format on

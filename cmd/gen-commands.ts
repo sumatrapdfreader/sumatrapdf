@@ -307,6 +307,7 @@ export const commands = [
     "CmdSearchGoogleLens", "Search with Google Lens",
     "CmdNavigateThumbnail", "Navigate Thumbnails",
     "CmdShowAnnotationText", "Show Comment",
+    "CmdAnnotationHighlightBrush", "Highlight with Brush",
     "CmdNone", "Do nothing",
 ];
 
