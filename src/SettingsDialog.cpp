@@ -107,7 +107,7 @@ void SettingsWnd::FillZoom() {
     CollectZoomLevels(zoomLevels, false);
     StrVec items;
     for (float z : zoomLevels) {
-        items.Append(ZoomLevelStr(z));
+        items.Append(ZoomLevelStrExact(z));
     }
     dropZoom->SetItems(items);
     int sel = -1;

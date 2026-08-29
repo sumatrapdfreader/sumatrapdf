@@ -1929,16 +1929,6 @@ static void ZoomHoverLevels(Vec<ZoomHoverLevel>& out) {
     }
 }
 
-static TempStr ZoomHoverLevelStrTemp(float zoom) {
-    if (zoom < 0) {
-        // a fit mode
-        return ZoomLevelStr(zoom);
-    }
-    // ZoomLevelStr() rounds, which would show 12.5% as "12%"; the Zoom menu's
-    // rows for the same levels don't, so neither do ours
-    return fmt("%g%%", zoom);
-}
-
 // which of the levels the document is at, exact match only, -1 when it is at
 // none of them (a zoom typed into Custom Zoom, or a fit mode not listed)
 static int ZoomHoverCurrentIdx(MainWindow* win, const Vec<ZoomHoverLevel>& levels) {
@@ -1973,7 +1963,7 @@ static void BuildZoomHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
     Vec<ToolbarHoverMenuItem> items;
     for (int i = 0; i < len(levels); i++) {
         ToolbarHoverMenuItem it;
-        it.text = ZoomHoverLevelStrTemp(levels[i].zoom);
+        it.text = ZoomLevelStrExact(levels[i].zoom);
         it.cmdId = levels[i].cmdId;
         it.isCurrent = i == currentIdx;
         VecAppend(items, it);

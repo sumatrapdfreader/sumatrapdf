@@ -1160,6 +1160,16 @@ TempStr ZoomLevelStr(float zoom) {
     return fmt("%.f%%", zoom);
 }
 
+// A level as a list of them should offer it: a fit mode by name, a percentage
+// exactly. ZoomLevelStr() rounds, which is right for "Zoom: 137%" in the corner
+// of the window but turns the 12.5% level into a row saying "12%".
+TempStr ZoomLevelStrExact(float zoom) {
+    if (zoom <= 0) {
+        return ZoomLevelStr(zoom);
+    }
+    return fmt("%g%%", zoom);
+}
+
 // clang-format off
 static float gZoomLevels[] = {
     kZoomFitPage,
@@ -1168,7 +1178,6 @@ static float gZoomLevels[] = {
     kZoomFitByOrientation,
     kZoomFitContent,
     kZoomShrinkToFit,
-    0,
     6400.0,
     3200.0,
     1600.0,

@@ -23,8 +23,11 @@
 #include "DarkMode_win.h"
 #include "SumatraDialogs.h"
 
-// Label and buttons are VirtCtrl; the zoom field is an editable DropDown.
-// Same WindowBase layout pattern as Change Theme / Add Favorite.
+// The zoom to use is whatever is in the edit field: a level's name ("Fit Page")
+// or a number. The list under it is the levels to choose from, and picking one
+// writes it into the field, so the two behave like the editable combo box this
+// replaces -- except that the whole list is visible instead of one row of it.
+// Label, list and buttons are VirtCtrl; only the edit is a real HWND.
 struct CustomZoomWnd : WindowBase {
     ~CustomZoomWnd() override = default;
 
@@ -33,7 +36,9 @@ struct CustomZoomWnd : WindowBase {
     float startZoom = 0;
     Vec<float> zoomLevels;
     VirtText* label = nullptr;
-    DropDown* dropDown = nullptr;
+    Edit* editZoom = nullptr;
+    VirtListBox* listBox = nullptr;
+    ListBoxModelStrings* model = nullptr; // owned by listBox
     VirtButton* btnCancel = nullptr;
     VirtButton* btnZoom = nullptr;
 
@@ -42,6 +47,12 @@ struct CustomZoomWnd : WindowBase {
     void FillZoom();
     float SelectedZoom();
 
+    void SetEditFromSelection();
+    void SelectLevelFromEdit();
+    bool MoveSelection(int vkey);
+    void OnListSelectionChanged();
+    void OnListDoubleClick();
+    void OnKeyDown(KeyEvent* ev);
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
 };
@@ -52,16 +63,23 @@ static void ClearCustomZoomWnd() {
     gCustomZoomWnd = nullptr;
 }
 
+// the fewest rows the list is allowed to shrink to when the screen is too
+// short for all of them
+constexpr int kZoomListMinLines = 6;
+
 void CustomZoomWnd::FillZoom() {
-    if (!dropDown) {
+    if (!listBox || !model) {
         return;
     }
     CollectZoomLevels(zoomLevels, forChm);
-    StrVec items;
+    model->strings.Reset();
     for (float z : zoomLevels) {
-        items.Append(ZoomLevelStr(z));
+        model->strings.Append(ZoomLevelStrExact(z));
     }
-    dropDown->SetItems(items);
+    listBox->SetModel(model);
+    // every level, so there is nothing to scroll to; Create() cuts this back if
+    // the screen turns out to be too short for that
+    listBox->idealSizeLines = len(zoomLevels);
     int sel = -1;
     for (int i = 0; i < len(zoomLevels); i++) {
         if (zoomLevels[i] == startZoom) {
@@ -69,10 +87,13 @@ void CustomZoomWnd::FillZoom() {
             break;
         }
     }
+    listBox->SetCurrentSelection(sel);
     if (sel >= 0) {
-        CbSetCurrentSelection(dropDown, sel);
-    } else {
-        dropDown->SetText(fmt("%.0f%%", startZoom));
+        listBox->EnsureVisible(sel);
+        SetEditFromSelection();
+    } else if (editZoom) {
+        // a zoom that is none of them, e.g. one typed in here before
+        editZoom->SetText(fmt("%.0f%%", startZoom));
     }
 }
 
@@ -87,14 +108,88 @@ void CustomZoomWnd::SetTarget(MainWindow* mainWin) {
     FillZoom();
 }
 
-// Selected list entry, or a typed number (empty / non-numeric keeps startZoom).
-float CustomZoomWnd::SelectedZoom() {
-    int idx = CbGetCurrentSelection(dropDown);
-    if (idx >= 0 && idx < len(zoomLevels)) {
-        float z = zoomLevels[idx];
-        return z == 0 ? startZoom : z;
+// The row the list is on, written into the edit field the way an editable combo
+// box does it, selected so the next keystroke replaces it.
+void CustomZoomWnd::SetEditFromSelection() {
+    int idx = listBox ? listBox->GetCurrentSelection() : -1;
+    if (!editZoom || idx < 0 || idx >= len(zoomLevels)) {
+        return;
     }
-    TempStr text = dropDown ? dropDown->GetTextTemp() : Str{};
+    editZoom->SetText(ZoomLevelStrExact(zoomLevels[idx]));
+    EditSelectAll(editZoom);
+}
+
+// The other way round: typing a level's name or one of the percentages puts the
+// list on it, so the field and the list never disagree.
+void CustomZoomWnd::SelectLevelFromEdit() {
+    if (!listBox || !editZoom) {
+        return;
+    }
+    TempStr text = editZoom->GetTextTemp();
+    int sel = -1;
+    for (int i = 0; i < len(zoomLevels); i++) {
+        if (str::EqI(text, ZoomLevelStrExact(zoomLevels[i]))) {
+            sel = i;
+            break;
+        }
+    }
+    listBox->SetCurrentSelection(sel);
+    if (sel >= 0) {
+        listBox->EnsureVisible(sel);
+    }
+}
+
+void CustomZoomWnd::OnListSelectionChanged() {
+    SetEditFromSelection();
+}
+
+void CustomZoomWnd::OnListDoubleClick() {
+    SetEditFromSelection();
+    OnOk();
+}
+
+// Up / Down work wherever the focus is, the way they do in a combo box: they
+// move the list and the field follows. They stop at the ends rather than wrap:
+// the list is short enough to see where they stop.
+bool CustomZoomWnd::MoveSelection(int vkey) {
+    if (!listBox) {
+        return false;
+    }
+    int n = listBox->ItemsCount();
+    if (n == 0) {
+        return false;
+    }
+    int sel = listBox->GetCurrentSelection();
+    if (sel < 0) {
+        // a typed zoom that is none of them: step into the list from the end
+        // the key comes from
+        sel = (vkey == VK_UP) ? n - 1 : 0;
+    } else if (vkey == VK_UP) {
+        sel = std::max(sel - 1, 0);
+    } else {
+        sel = std::min(sel + 1, n - 1);
+    }
+    listBox->SetCurrentSelection(sel);
+    listBox->EnsureVisible(sel);
+    SetEditFromSelection();
+    return true;
+}
+
+void CustomZoomWnd::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_UP || ev->vkey == VK_DOWN) {
+        ev->didHandle = MoveSelection(ev->vkey);
+    }
+}
+
+// What the edit field says: one of the levels by name, or a number typed into
+// it. Empty or unreadable leaves the zoom alone.
+float CustomZoomWnd::SelectedZoom() {
+    TempStr text = editZoom ? editZoom->GetTextTemp() : Str{};
+    for (int i = 0; i < len(zoomLevels); i++) {
+        if (str::EqI(text, ZoomLevelStrExact(zoomLevels[i]))) {
+            return zoomLevels[i];
+        }
+    }
     if (len(text) == 0) {
         return startZoom;
     }
@@ -138,7 +233,7 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
     {
         CreateCustomArgs args;
         args.owner = win ? win->hwndFrame : nullptr;
-        args.title = _TRA("Zoom factor");
+        args.title = _TRA("Zoom");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
         args.font = GetFont();
@@ -167,15 +262,28 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        DropDown::CreateArgs args;
+        Edit::CreateArgs args;
         args.parent = hwnd;
         args.font = GetFont();
+        args.withBorder = true;
+        args.selectAllOnFocus = true;
         args.isRtl = isRtl;
-        args.isEditable = true;
-        auto* c = new DropDown();
+        auto* c = new Edit();
         c->Create(args);
-        dropDown = c;
+        c->onTextChanged = MkMethod0<CustomZoomWnd, &CustomZoomWnd::SelectLevelFromEdit>(this);
+        editZoom = c;
         vbox->AddChild(c);
+    }
+
+    {
+        auto* c = new VirtListBox();
+        c->dpi = GetDpi();
+        c->font = font;
+        listBox = c;
+        model = new ListBoxModelStrings();
+        c->onSelectionChanged = MkMethod0<CustomZoomWnd, &CustomZoomWnd::OnListSelectionChanged>(this);
+        c->onDoubleClick = MkMethod0<CustomZoomWnd, &CustomZoomWnd::OnListDoubleClick>(this);
+        vbox->AddChild(new Padding(c, DpiScaledInsets(4, 0, 0, 0)));
         FillZoom();
     }
 
@@ -200,13 +308,29 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
 
     int dx = DpiScale(240);
     LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    {
+        // the list asked for all of its rows: give some back if that made the
+        // window taller than the screen it will open on
+        Rect wa = GetWorkAreaRect({}, win ? win->hwndFrame : hwnd);
+        int dy = HwndWindowRect(hwnd).dy;
+        int rowDy = listBox->GetItemHeight();
+        if (dy > wa.dy && rowDy > 0) {
+            int drop = ((dy - wa.dy) + rowDy - 1) / rowDy;
+            int lines = std::max(listBox->idealSizeLines - drop, kZoomListMinLines);
+            if (lines != listBox->idealSizeLines) {
+                listBox->idealSizeLines = lines;
+                LayoutAndSizeToContent(layout, dx, 0, hwnd);
+            }
+        }
+    }
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();
 
     SetIsVisible(true);
-    if (dropDown) {
-        HwndSetFocus(dropDown->hwnd);
+    if (editZoom) {
+        HwndSetFocus(editZoom->hwnd);
+        EditSelectAll(editZoom);
     }
     return true;
 }
@@ -218,8 +342,9 @@ void ShowCustomZoomDialog(MainWindow* win) {
     if (gCustomZoomWnd) {
         gCustomZoomWnd->SetTarget(win);
         HwndSetFocus(gCustomZoomWnd->hwnd);
-        if (gCustomZoomWnd->dropDown) {
-            HwndSetFocus(gCustomZoomWnd->dropDown->hwnd);
+        if (gCustomZoomWnd->editZoom) {
+            HwndSetFocus(gCustomZoomWnd->editZoom->hwnd);
+            EditSelectAll(gCustomZoomWnd->editZoom);
         }
         return;
     }
@@ -234,6 +359,7 @@ void ShowCustomZoomDialog(MainWindow* win) {
         delete wnd;
         return;
     }
+    wnd->onKeyDown = MkMethod1<CustomZoomWnd, KeyEvent*, &CustomZoomWnd::OnKeyDown>(wnd);
     gCustomZoomWnd = wnd;
     RunModalWindow(wnd->hwnd, win ? win->hwndFrame : nullptr);
 }
