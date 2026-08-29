@@ -59,7 +59,7 @@ does the parsing of the document builds pages by invoking methods on DrawInstrBu
 
 TODO: support <figure> and <figcaption> as e.g in http://ebookarchitects.com/files/BookOfTexas.mobi
 
-TODO: instead of generating list of DrawInstr objects, we could add neccessary
+TODO: instead of generating list of DrawInstr objects, we could add necessary
 support to mui and use list of Control objects instead (especially if we slim down
 Control objects further to make allocating hundreds of them cheaper or introduce some
 other base element(s) with less functionality and less overhead).
