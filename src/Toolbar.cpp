@@ -268,6 +268,20 @@ static void SetPdfAnnotationButtonEnabledByIdx(MainWindow* win, int idx, bool is
     w->Invalidate();
 }
 
+// true if the row has to be laid out again
+static bool SetPdfAnnotationButtonHiddenByIdx(MainWindow* win, int idx, bool isHidden) {
+    VirtCtrl* w = PdfAnnotationToolbarItemAt(win, idx);
+    if (!w) {
+        return false;
+    }
+    Visibility want = isHidden ? Visibility::Collapse : Visibility::Visible;
+    if (w->GetVisibility() == want) {
+        return false;
+    }
+    w->SetVisibility(want);
+    return true;
+}
+
 // hiding the page box hides the whole group (label + edit + " / N")
 static bool SetToolbarButtonHiddenByIdx(MainWindow* win, int idx, bool isHidden) {
     VirtCtrl* w = ToolbarItemAt(win, idx);
@@ -649,14 +663,16 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
 
     bool showPdfAnnotationsToolbar = win->pdfAnnotationsToolbarEnabled && ctx->isPdf && ctx->supportsAnnots;
     SetPdfAnnotationsToolbarVisible(win, showPdfAnnotationsToolbar);
+    bool annotVisibilityChanged = false;
     for (int i = 0; i < kPdfAnnotationButtonsCount; i++) {
         const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
         if (!HasToolbarButtonContent(bi)) {
             continue;
         }
         CommandVisibility v = GetCommandVisibility(bi.cmdId, *ctx, CommandSurface::Toolbar);
-        SetPdfAnnotationButtonEnabledByIdx(
-            win, i, showPdfAnnotationsToolbar && !CommandShouldDisable(v) && !CommandShouldRemove(v));
+        bool remove = CommandShouldRemove(v);
+        annotVisibilityChanged |= SetPdfAnnotationButtonHiddenByIdx(win, i, remove);
+        SetPdfAnnotationButtonEnabledByIdx(win, i, showPdfAnnotationsToolbar && !CommandShouldDisable(v) && !remove);
         if (bi.cmdId == CmdSaveAnnotations) {
             // name the file it writes to, like the annotation list's Save button
             WindowTab* tab = win->CurrentTab();
@@ -701,7 +717,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         }
     }
 
-    if (visibilityChanged) {
+    if (visibilityChanged || annotVisibilityChanged) {
         VirtHost* host = ToolbarHost(win);
         if (host) {
             if (host->vroot) {

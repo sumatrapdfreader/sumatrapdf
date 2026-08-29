@@ -11007,47 +11007,6 @@ static void PrintCurrentFileDeferred(MainWindow* win) {
     PrintCurrentFile(win);
 }
 
-static bool ConfirmApplyRedactions(HWND hwndParent) {
-    if (gForTesting) {
-        return true;
-    }
-    TASKDIALOGCONFIG dialogConfig{};
-    TASKDIALOG_BUTTON buttons[2];
-    buttons[0].nButtonID = IDOK;
-    auto s = _TRA("&Apply");
-    buttons[0].pszButtonText = CWStrTemp(s);
-    buttons[1].nButtonID = IDCANCEL;
-    s = _TRA("&Cancel");
-    buttons[1].pszButtonText = CWStrTemp(s);
-
-    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_POSITION_RELATIVE_TO_WINDOW;
-    if (trans::IsCurrLangRtl()) {
-        flags |= TDF_RTL_LAYOUT;
-    }
-    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    s = _TRA("Apply Redactions");
-    dialogConfig.pszWindowTitle = CWStrTemp(s);
-    s = _TRA("Permanently remove marked content?");
-    dialogConfig.pszMainInstruction = CWStrTemp(s);
-    s = _TRA(
-        "Text and images under the marks are deleted from the file. Undo can take this back until you save. Save a "
-        "copy if you need the unredacted document.");
-    dialogConfig.pszContent = CWStrTemp(s);
-    dialogConfig.nDefaultButton = IDCANCEL;
-    dialogConfig.dwFlags = (TASKDIALOG_FLAGS)flags;
-    dialogConfig.cxWidth = 0;
-    dialogConfig.pfCallback = nullptr;
-    dialogConfig.dwCommonButtons = 0;
-    dialogConfig.cButtons = dimof(buttons);
-    dialogConfig.pButtons = &buttons[0];
-    dialogConfig.pszMainIcon = TD_WARNING_ICON;
-    dialogConfig.hwndParent = hwndParent;
-
-    int buttonPressedId = 0;
-    auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
-    return hr == S_OK && buttonPressedId == IDOK;
-}
-
 // A gesture that writes to the document as it goes (a resize drag writes the
 // annotation on every mouse move) should still be a single undo step, so it
 // holds one journal operation open from start to end. Both calls are safe to
@@ -11144,9 +11103,6 @@ static void ApplyRedactionsInTab(WindowTab* tab) {
 
     if (!EngineHasRedactMarks(engine)) {
         ShowTemporaryNotification(win->hwndCanvas, _TRA("No redaction marks to apply"));
-        return;
-    }
-    if (!ConfirmApplyRedactions(win->hwndFrame)) {
         return;
     }
     if (gRenderCache) {

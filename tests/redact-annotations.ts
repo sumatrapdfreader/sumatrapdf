@@ -1,5 +1,6 @@
 // Redact marks selected text or a dragged rectangle; Apply Redactions
-// permanently removes the marked content from the file.
+// permanently removes the marked content from the file. Its toolbar button is
+// only there while something is marked.
 //
 // Run: bun tests/redact-annotations.ts [--no-build]
 
@@ -129,6 +130,35 @@ function releaseDrag(canvas: number, end: Point): void {
   sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(end.x, end.y));
 }
 
+function annotBtnHidden(dump: string, cmd: number): string | null {
+  const m = new RegExp(`annotation-idx=\\d+ cmd=${cmd} hidden=(\\d)`).exec(dump);
+  return m ? m[1]! : null;
+}
+
+// The Apply Redactions button is added to / removed from the annotation
+// toolbar as marks come and go, so poll rather than read once. Redact is the
+// reference: while the whole row is down every button in it reads as hidden.
+async function waitApplyButton(client: ControlClient, want: boolean, what: string): Promise<void> {
+  const apply = cmdId("CmdApplyRedactions");
+  const redact = cmdId("CmdCreateAnnotRedact");
+  const deadline = Date.now() + 8000 * SLOW_BUILD_FACTOR;
+  let why = "the annotation toolbar never came up";
+  for (;;) {
+    const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+    if (annotBtnHidden(raw, redact) === "0") {
+      const h = annotBtnHidden(raw, apply);
+      if (h !== null && (h === "0") === want) {
+        return;
+      }
+      why = h === null ? "no Apply Redactions button in the dump" : `hidden=${h}`;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`redact-annotations: ${what} (${why})`);
+    }
+    await sleep(50);
+  }
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("redact-annotations");
   rmSync(dir, { recursive: true, force: true });
@@ -157,6 +187,7 @@ export async function testit(): Promise<void> {
 
     sendCommand(frame, cmdId("CmdToggleEditPDF"));
     await sleep(200);
+    await waitApplyButton(client, false, "Apply Redactions is on the toolbar with nothing marked");
 
     sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
     const startDeadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
@@ -195,6 +226,7 @@ export async function testit(): Promise<void> {
     if (!/page1text=.*SECRETWORD/.test(raw)) {
       throw new Error(`redact-annotations: marking must leave the text in the file\n${raw}`);
     }
+    await waitApplyButton(client, true, "Apply Redactions did not appear once text was marked");
 
     sendCommandSync(frame, cmdId("CmdApplyRedactions"));
     await client.waitForRenderIdle();
@@ -219,6 +251,7 @@ export async function testit(): Promise<void> {
     sendCommandSync(frame, cmdId("CmdApplyRedactions"));
     await client.waitForRenderIdle();
     await waitForMarkup(client, (s) => !/type=Redact /.test(s), "apply did not remove the area mark");
+    await waitApplyButton(client, false, "Apply Redactions stayed on the toolbar with nothing left to apply");
   } finally {
     client.close();
     await killAndWait(proc);

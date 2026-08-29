@@ -759,7 +759,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (cmdId == CmdApplyRedactions) {
-        return ctx.hasRedactMarks ? CommandVisibility::Show : CommandVisibility::Disable;
+        // nothing to apply until something is marked, and a permanently greyed
+        // button on the annotation toolbar is just noise
+        return ctx.hasRedactMarks ? CommandVisibility::Show : CommandVisibility::Hide;
     }
 
     if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
