@@ -577,11 +577,11 @@ static void WindowBaseDefaultPaint(WindowBase* w, HDC hdc, PAINTSTRUCT* ps) {
 }
 
 void WindowBase::SetFocusTo(ControlBase* c) {
-    if (!c) {
+    if (!c || !c->hwnd) {
         return;
     }
     // the win32 focus moving away from us clears the virtual focus (WM_KILLFOCUS)
-    c->SetFocus();
+    HwndSetFocusForce(c->hwnd);
 }
 
 void WindowBase::SetFocusTo(VirtCtrl* w) {
@@ -590,26 +590,8 @@ void WindowBase::SetFocusTo(VirtCtrl* w) {
     }
     // a virtual control has no HWND: we hold the focus on its behalf and route
     // the keys to it
-    if (::GetFocus() != hwnd) {
-        ::SetFocus(hwnd);
-    }
+    HwndSetFocusForce(hwnd);
     vroot->SetFocus(w);
-}
-
-// GetFocus() is null when this thread is not the foreground thread. The thread
-// still has a focused window; GUITHREADINFO reports it. Posted-key tests and a
-// properties dialog opened while the runner holds foreground both hit that.
-static HWND ThreadFocusHwnd() {
-    HWND h = ::GetFocus();
-    if (h) {
-        return h;
-    }
-    GUITHREADINFO gti{};
-    gti.cbSize = sizeof(gti);
-    if (GetGUIThreadInfo(GetCurrentThreadId(), &gti)) {
-        return gti.hwndFocus;
-    }
-    return nullptr;
 }
 
 bool WindowBase::TabNavigate(bool backwards) {
@@ -626,7 +608,7 @@ bool WindowBase::TabNavigate(bool backwards) {
     // control that owns the win32 focus
     int idx = -1;
     VirtCtrl* focusedVirt = vroot ? vroot->focused : nullptr;
-    HWND focusedHwnd = ThreadFocusHwnd();
+    HWND focusedHwnd = HwndThreadFocus();
     for (int i = 0; i < n && idx < 0; i++) {
         TabStop& ts = stops[i];
         if (focusedVirt && ts.vwnd == focusedVirt) {
@@ -1486,9 +1468,6 @@ bool WindowBase::PreTranslateMessage(MSG& msg) {
     }
     // default Tab among mixed HWND + virtual controls
     if (ev.vkey != VK_TAB || !layout || ev.isCtrl || ev.isAlt) {
-        return false;
-    }
-    if (!vroot) {
         return false;
     }
     return TabNavigate(ev.isShift);

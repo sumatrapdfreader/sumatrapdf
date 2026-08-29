@@ -845,6 +845,7 @@ bool VirtRoot::TabNavigate(bool backwards) {
         }
     }
     SetFocus(all[idx]);
+    HwndSetFocusForce(hwnd);
     return true;
 }
 

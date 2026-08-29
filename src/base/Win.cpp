@@ -1851,6 +1851,49 @@ HWND HwndSetFocus(HWND hwnd) {
     return SetFocus(hwnd);
 }
 
+// GetFocus() is null when this thread is not the foreground thread;
+// GUITHREADINFO still reports the window that would have focus.
+HWND HwndThreadFocus() {
+    HWND h = ::GetFocus();
+    if (h) {
+        return h;
+    }
+    GUITHREADINFO gti{};
+    gti.cbSize = sizeof(gti);
+    if (GetGUIThreadInfo(GetCurrentThreadId(), &gti)) {
+        return gti.hwndFocus;
+    }
+    return nullptr;
+}
+
+// SetFocus() does not move this thread's focused window when the thread is not
+// foreground. Attach to the foreground thread so Tab can leave a child HWND
+// for a virtual control (posted-key tests, a dialog that is not active).
+bool HwndSetFocusForce(HWND hwnd) {
+    if (!hwnd) {
+        return false;
+    }
+    if (HwndThreadFocus() == hwnd) {
+        return true;
+    }
+    ::SetFocus(hwnd);
+    if (HwndThreadFocus() == hwnd) {
+        return true;
+    }
+    HWND hwndFg = GetForegroundWindow();
+    DWORD fgTid = hwndFg ? GetWindowThreadProcessId(hwndFg, nullptr) : 0;
+    DWORD ourTid = GetCurrentThreadId();
+    if (!fgTid || fgTid == ourTid) {
+        return false;
+    }
+    if (!AttachThreadInput(ourTid, fgTid, TRUE)) {
+        return false;
+    }
+    ::SetFocus(hwnd);
+    AttachThreadInput(ourTid, fgTid, FALSE);
+    return HwndThreadFocus() == hwnd;
+}
+
 bool HwndIsFocused(HWND hwnd) {
     return GetFocus() == hwnd;
 }

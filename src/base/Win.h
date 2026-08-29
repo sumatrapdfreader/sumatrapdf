@@ -65,6 +65,8 @@ bool HwndIsMouseOverRect(HWND hwnd, const Rect& r);
 //--- HWND: focus / visibility / Z-order
 
 HWND HwndSetFocus(HWND hwnd);
+HWND HwndThreadFocus();
+bool HwndSetFocusForce(HWND hwnd);
 bool HwndIsFocused(HWND);
 bool HwndIsVisible(HWND hwnd);
 void HwndSetVisible(HWND hwnd, bool visible);
