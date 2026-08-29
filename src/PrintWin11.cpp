@@ -52,9 +52,12 @@ using Microsoft::WRL::WinRtClassicComMix;
 // Windows 11 is 10.0.22000 and up
 constexpr DWORD kWin11Build = 22000;
 
-// a page is rasterized whole before it goes to the print control, so the cap
-// keeps the bitmap for a large page within reason
+// the cap keeps the bitmap of a large page within reason
 constexpr float kMaxRasterDpi = 300.f;
+
+// peak bytes of a rendered band, matching the GDI print path. Bounds what the
+// engine has to allocate for one render, whatever the page size and print DPI
+constexpr i64 kMaxBandBytes = 16LL * 1024 * 1024;
 
 namespace Printing = ABI::Windows::Graphics::Printing;
 namespace Foundation = ABI::Windows::Foundation;
@@ -392,6 +395,69 @@ class PrintDocumentSource final
         }
     }
 
+    // Rasterizes pageNo into a bitmap of the laid-out page. The page is rendered
+    // in horizontal device-pixel bands and copied into the bitmap band by band,
+    // so the engine never allocates a whole page at print DPI -- the GDI path
+    // bands for the same reason (see PrintPageInBands())
+    HRESULT RenderPageBitmap(ID2D1DeviceContext* context, int pageNo, const PrintPageLayout& layout, float renderDpi,
+                             ID2D1Bitmap1** bitmapOut, Size& sizeOut) {
+        *bitmapOut = nullptr;
+        RectF mediabox = engine->PageMediabox(pageNo);
+        RectF devFull = engine->Transform(mediabox, pageNo, layout.zoom, layout.rotation);
+        int fullW = (int)lroundf(devFull.dx);
+        int fullH = (int)lroundf(devFull.dy);
+        if (fullW <= 0 || fullH <= 0) {
+            return E_FAIL;
+        }
+
+        D2D1_BITMAP_PROPERTIES1 bitmapProperties{};
+        bitmapProperties.pixelFormat = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE);
+        bitmapProperties.dpiX = renderDpi;
+        bitmapProperties.dpiY = renderDpi;
+        ComPtr<ID2D1Bitmap1> bitmap;
+        HRESULT hr =
+            context->CreateBitmap(D2D1::SizeU((UINT32)fullW, (UINT32)fullH), nullptr, 0, bitmapProperties, &bitmap);
+        if (FAILED(hr)) {
+            return hr;
+        }
+
+        int bandH = (int)std::max((i64)1, kMaxBandBytes / ((i64)fullW * 4));
+        bandH = std::min(bandH, fullH);
+        int dy = 0;
+        while (dy < fullH) {
+            int h = std::min(bandH, fullH - dy);
+            // the page-space rectangle that renders to exactly these device rows;
+            // the inverse transform takes care of rotation
+            RectF devBand(devFull.x, devFull.y + (float)dy, devFull.dx, (float)h);
+            RectF pageBand = engine->Transform(devBand, pageNo, layout.zoom, layout.rotation, /* inverse */ true);
+            RenderPageArgs args(pageNo, layout.zoom, layout.rotation, &pageBand, RenderTarget::Print);
+            Pixmap* band = ConvertToBgra(engine->RenderPage(args));
+            if (!band || !band->data) {
+                FreePixmap(band);
+                // couldn't allocate even a band: try thinner ones before giving
+                // up, so the page still prints at full resolution
+                if (bandH > 1) {
+                    bandH = std::max(1, bandH / 2);
+                    continue; // retry the same rows with a thinner band
+                }
+                return E_FAIL;
+            }
+            // the engine can be a pixel off on either axis; copy what both agree on
+            UINT32 w = (UINT32)std::min(band->width, fullW);
+            UINT32 rows = (UINT32)std::min(band->height, fullH - dy);
+            D2D1_RECT_U dst = D2D1::RectU(0, (UINT32)dy, w, (UINT32)dy + rows);
+            hr = bitmap->CopyFromMemory(&dst, band->data, (UINT32)band->stride);
+            FreePixmap(band);
+            if (FAILED(hr)) {
+                return hr;
+            }
+            dy += h;
+        }
+        sizeOut = Size(fullW, fullH);
+        *bitmapOut = bitmap.Detach();
+        return S_OK;
+    }
+
     HRESULT DrawPage(ID2D1DeviceContext* context, int pageNo, const Printing::PrintPageDescription& description,
                      float renderDpi) {
         float unitsPerDip = renderDpi / 96.f;
@@ -405,35 +471,24 @@ class PrintDocumentSource final
             CalculatePrintPageLayout(*engine, pageNo, advanced, paperSize, printable, renderDpi, renderDpi,
                                      paperSize.dx < paperSize.dy, StrL("Windows print dialog"));
 
-        RenderPageArgs args(pageNo, layout.zoom, layout.rotation, nullptr, RenderTarget::Print);
-        Pixmap* pixmap = ConvertToBgra(engine->RenderPage(args));
-        if (!pixmap || !pixmap->data) {
-            FreePixmap(pixmap);
-            return E_FAIL;
+        ComPtr<ID2D1Bitmap1> bitmap;
+        Size pageSize;
+        HRESULT hr = RenderPageBitmap(context, pageNo, layout, renderDpi, &bitmap, pageSize);
+        if (FAILED(hr)) {
+            return hr;
         }
 
-        D2D1_BITMAP_PROPERTIES1 bitmapProperties{};
-        bitmapProperties.pixelFormat = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE);
-        bitmapProperties.dpiX = renderDpi;
-        bitmapProperties.dpiY = renderDpi;
-        ComPtr<ID2D1Bitmap1> bitmap;
-        HRESULT hr = context->CreateBitmap(D2D1::SizeU((UINT32)pixmap->width, (UINT32)pixmap->height), pixmap->data,
-                                           (UINT32)pixmap->stride, &bitmapProperties, &bitmap);
-        if (SUCCEEDED(hr)) {
-            Rect target;
-            if (layout.isStretch) {
-                target = Rect(printable.x, printable.y, printable.dx, printable.dy);
-            } else {
-                target =
-                    Rect(printable.x + layout.offset.x, printable.y + layout.offset.y, pixmap->width, pixmap->height);
-            }
-            D2D1_RECT_F destination = D2D1::RectF(target.x / unitsPerDip, target.y / unitsPerDip,
-                                                  target.BR().x / unitsPerDip, target.BR().y / unitsPerDip);
-            context->DrawBitmap(bitmap.Get(), destination, 1.f, D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC, nullptr,
-                                nullptr);
+        Rect target;
+        if (layout.isStretch) {
+            target = Rect(printable.x, printable.y, printable.dx, printable.dy);
+        } else {
+            target = Rect(printable.x + layout.offset.x, printable.y + layout.offset.y, pageSize.dx, pageSize.dy);
         }
-        FreePixmap(pixmap);
-        return hr;
+        D2D1_RECT_F destination = D2D1::RectF(target.x / unitsPerDip, target.y / unitsPerDip,
+                                              target.BR().x / unitsPerDip, target.BR().y / unitsPerDip);
+        context->DrawBitmap(bitmap.Get(), destination, 1.f, D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC, nullptr,
+                            nullptr);
+        return S_OK;
     }
 
   public:
