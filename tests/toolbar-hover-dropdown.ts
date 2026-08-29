@@ -123,6 +123,18 @@ async function waitAnnotButton(client: ControlClient, cmd: number, what: string)
   }
 }
 
+// the tooltip each main-row button is showing, empty for one that has none
+async function mainButtonTips(client: ControlClient): Promise<Map<number, string>> {
+  const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+  const re = /^idx=\d+ cmd=(\d+) hidden=\d rect=\S+ text=(.*)$/gm;
+  const res = new Map<number, string>();
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(raw)) !== null) {
+    res.set(+m[1]!, m[2]!.trim());
+  }
+  return res;
+}
+
 async function annotTip(client: ControlClient, cmd: number): Promise<string | null> {
   const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
   const m = new RegExp(`annotation-idx=\\d+ cmd=${cmd} .* tip=(.*)$`, "m").exec(raw);
@@ -488,21 +500,36 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdZoom200"));
     await waitZoom(client, "200", "could not put the zoom back on a listed level");
 
-    // Zoom Out gets the same drop-down, and moving onto it from Zoom In swaps
-    // straight to it rather than waiting for the delay all over again
+    // the two zoom buttons share the strip: crossing from one to the other
+    // leaves it exactly where it is rather than sliding it under the other
+    // button, and it does not close and open again on the way
     const zoomOut = (await mainButtons(client)).find((b) => b.cmd === cmdId("CmdZoomOut") && !b.hidden && b.dx > 0);
     if (!zoomOut) {
       throw new Error("toolbar-hover-dropdown: no Zoom Out button");
     }
     const ox = zoomOut.x + Math.floor(zoomOut.dx / 2);
     const oy = zoomOut.y + Math.floor(zoomOut.dy / 2);
-    await hoverUntilMenu(toolbar, pid, ox, oy, "moving onto Zoom Out did not carry the drop-down over");
-    await sleep(200);
-    items = await dropdownItems(client);
-    if (items.map((it) => it.text).join() !== ZOOM_LEVELS.join()) {
-      throw new Error("toolbar-hover-dropdown: Zoom Out's drop-down is not the same list");
+    const wasAt = (await dropdownItems(client)).map((it) => `${it.text}@${it.x}`).join();
+    const wasRect = JSON.stringify(getWindowRect(zoomMenu));
+    hoverToolbar(toolbar, ox, oy);
+    await sleep(400 * SLOW_BUILD_FACTOR);
+    const stillUp = findTopWindow(pid, MENU_CLASS);
+    if (stillUp !== zoomMenu || !isWindowVisible(stillUp)) {
+      throw new Error("toolbar-hover-dropdown: moving onto Zoom Out did not keep the same drop-down");
     }
-    checkCurrentUnderButton(items, "200%", clientToScreen(toolbar, ox, oy).x, zoomMenu);
+    items = await dropdownItems(client);
+    if (
+      items.map((it) => `${it.text}@${it.x}`).join() !== wasAt ||
+      JSON.stringify(getWindowRect(stillUp)) !== wasRect
+    ) {
+      throw new Error("toolbar-hover-dropdown: the strip moved when the mouse crossed to Zoom Out");
+    }
+
+    // and Zoom Out's own tooltip is the one suppressed now
+    const tips = await mainButtonTips(client);
+    if (tips.get(cmdId("CmdZoomOut")) || !tips.get(cmdId("CmdZoomIn"))) {
+      throw new Error("toolbar-hover-dropdown: the tooltips did not follow the mouse to Zoom Out");
+    }
   } finally {
     client.close();
     await killAndWait(proc);

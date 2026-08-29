@@ -1671,19 +1671,35 @@ static void PaintHoverDropdownBg(MainWindow*, VirtHostPaintEvent* ev) {
     ev->gfx->DrawRect(ev->clientRect, ThemeEdgeColor(), DpiScale(kHoverMenuBorder));
 }
 
+// The button a drop-down is up for goes without its tooltip: the bubble would
+// sit on top of the drop-down, and WM_SETCURSOR would keep bringing it back.
+static void TakeHoverButtonTooltip(MainWindow* win, int cmdId) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (VirtCtrl* btn = ToolbarItemForCmd(win, cmdId)) {
+        str::ReplaceWithCopy(&tb->hoverSavedTip, btn->tooltip);
+        btn->SetTooltip({});
+    }
+}
+
+static void GiveHoverButtonTooltipBack(MainWindow* win) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    if (tb->hoverCmdId == 0) {
+        return;
+    }
+    if (VirtCtrl* btn = ToolbarItemForCmd(win, tb->hoverCmdId)) {
+        btn->SetTooltip(tb->hoverSavedTip);
+    }
+    str::Free(tb->hoverSavedTip);
+    tb->hoverSavedTip = {};
+}
+
 void HideToolbarHoverDropdown(MainWindow* win) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb) {
         return;
     }
     VecReset(tb->hoverItems);
-    if (tb->hoverCmdId != 0) {
-        if (VirtCtrl* btn = ToolbarItemForCmd(win, tb->hoverCmdId)) {
-            btn->SetTooltip(tb->hoverSavedTip);
-        }
-        str::Free(tb->hoverSavedTip);
-        tb->hoverSavedTip = {};
-    }
+    GiveHoverButtonTooltipBack(win);
     tb->hoverPendingCmdId = 0;
     tb->hoverCmdId = 0;
     if (tb->host) {
@@ -1720,17 +1736,19 @@ static ToolbarHoverReg* FindHoverReg(ToolbarVirt* tb, int cmdId) {
     return nullptr;
 }
 
-void SetToolbarHoverDropdown(MainWindow* win, int cmdId, const Func1<ToolbarHoverBuildEvent*>& build) {
+void SetToolbarHoverDropdown(MainWindow* win, int cmdId, const Func1<ToolbarHoverBuildEvent*>& build, int groupId) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb) {
         return;
     }
     if (ToolbarHoverReg* reg = FindHoverReg(tb, cmdId)) {
         reg->build = build;
+        reg->groupId = groupId;
         return;
     }
     ToolbarHoverReg reg;
     reg.cmdId = cmdId;
+    reg.groupId = groupId;
     reg.build = build;
     VecAppend(tb->hoverRegs, reg);
 }
@@ -1784,12 +1802,7 @@ static void OpenHoverDropdown(MainWindow* win, int cmdId) {
     r = ShiftRectToWorkArea(r, win->hwndFrame, true);
     host->SetPos(r, true);
 
-    // the button's tooltip would sit on top of the drop-down, and WM_SETCURSOR
-    // would bring it back, so the button goes without one until this closes
-    if (VirtCtrl* btn = ToolbarItemForCmd(win, cmdId)) {
-        str::ReplaceWithCopy(&tb->hoverSavedTip, btn->tooltip);
-        btn->SetTooltip({});
-    }
+    TakeHoverButtonTooltip(win, cmdId);
     if (tb->host->vroot) {
         tb->host->vroot->HideTooltip();
     }
@@ -1824,6 +1837,19 @@ static void ToolbarHoverDropdownOnMouseMove(MainWindow* win) {
             return;
         }
         if (cmdId != 0) {
+            ToolbarHoverReg* from = FindHoverReg(tb, tb->hoverCmdId);
+            ToolbarHoverReg* to = FindHoverReg(tb, cmdId);
+            int group = from ? from->groupId : 0;
+            if (group != 0 && to && to->groupId == group) {
+                // both buttons share this drop-down, so it stays put: the two
+                // sit side by side and sliding it between them would be a
+                // twitch, not a new drop-down
+                tb->host->KillTimer(kCloseHoverDropdownTimerId);
+                GiveHoverButtonTooltipBack(win);
+                tb->hoverCmdId = cmdId;
+                TakeHoverButtonTooltip(win, cmdId);
+                return;
+            }
             // moved straight onto another button that has one: swap to it
             // without the delay, the way a menu bar follows the mouse
             HideToolbarHoverDropdown(win);
@@ -2171,8 +2197,10 @@ static void BuildToolbarLayout(MainWindow* win) {
     mainRow->AddChild(box, 1);
 
     SetToolbarHoverDropdown(win, CmdSaveAnnotations, MkFunc1(BuildSaveHoverMenu, win));
-    SetToolbarHoverDropdown(win, CmdZoomIn, MkFunc1(BuildZoomHoverMenu, win));
-    SetToolbarHoverDropdown(win, CmdZoomOut, MkFunc1(BuildZoomHoverMenu, win));
+    // one strip for the two of them, so it doesn't jump when the mouse crosses
+    // from one to the other
+    SetToolbarHoverDropdown(win, CmdZoomIn, MkFunc1(BuildZoomHoverMenu, win), CmdZoomIn);
+    SetToolbarHoverDropdown(win, CmdZoomOut, MkFunc1(BuildZoomHoverMenu, win), CmdZoomIn);
 
     auto* root = new VBox();
     root->alignCross = CrossAxisAlign::Stretch;

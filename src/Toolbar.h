@@ -77,7 +77,10 @@ struct ToolbarHoverBuildEvent {
     VirtCtrl* anchor = nullptr;
 };
 
-void SetToolbarHoverDropdown(MainWindow*, int cmdId, const Func1<ToolbarHoverBuildEvent*>&);
+// buttons armed with the same non-zero groupId share one drop-down: moving the
+// mouse from one of them to another keeps it exactly where it is, instead of
+// closing it and opening it again under the other button
+void SetToolbarHoverDropdown(MainWindow*, int cmdId, const Func1<ToolbarHoverBuildEvent*>&, int groupId = 0);
 ILayout* NewToolbarHoverMenu(MainWindow*, const Vec<ToolbarHoverMenuItem>&);
 // the items as one compact row of labels rather than a column of menu rows.
 // *currentOut, when asked for, is the cell of the item marked isCurrent
@@ -111,6 +114,7 @@ struct ToolbarHoverItemState {
 // a button that opens a drop-down when the mouse rests on it
 struct ToolbarHoverReg {
     int cmdId = 0;
+    int groupId = 0;
     Func1<ToolbarHoverBuildEvent*> build;
 };
 
