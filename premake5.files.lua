@@ -620,6 +620,7 @@ function sumatrapdf_files()
     "AppTools.*",
     "Canvas.*",
     "AnnotPlacement.*",
+    "AnnotTextPopup.*",
     "AnnotEditToolbar.*",
     "AnnotFilterToolbar.*",
     "CanvasAboutUI.*",

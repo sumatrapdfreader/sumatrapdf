@@ -1183,6 +1183,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\AnnotEditToolbar.h" />
     <ClInclude Include="..\src\AnnotFilterToolbar.h" />
     <ClInclude Include="..\src\AnnotPlacement.h" />
+    <ClInclude Include="..\src\AnnotTextPopup.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppSettings.h" />
     <ClInclude Include="..\src\AppTools.h" />
@@ -1377,6 +1378,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\AnnotEditToolbar.cpp" />
     <ClCompile Include="..\src\AnnotFilterToolbar.cpp" />
     <ClCompile Include="..\src\AnnotPlacement.cpp" />
+    <ClCompile Include="..\src\AnnotTextPopup.cpp" />
     <ClCompile Include="..\src\Annotation.cpp" />
     <ClCompile Include="..\src\AppSettings.cpp" />
     <ClCompile Include="..\src\AppTools.cpp" />

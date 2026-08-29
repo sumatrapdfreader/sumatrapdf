@@ -117,6 +117,9 @@
     <ClInclude Include="..\src\AnnotPlacement.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\AnnotTextPopup.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Annotation.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -621,6 +624,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AnnotPlacement.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\AnnotTextPopup.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Annotation.cpp">

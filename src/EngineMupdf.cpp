@@ -5277,10 +5277,9 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
 static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* annot, int pageNo,
                                                 Vec<IPageElement*>& comments) {
     auto tp = pdf_annot_type(ctx, annot);
+    // only used to tell an empty annotation from one with something to show;
+    // MakePdfCommentFromPdfAnnot() below re-reads the contents in full
     Str contents = Str(pdf_annot_contents(ctx, annot)); // don't free
-    if (contents.len > 128) {
-        contents = str::DupTemp(Str(contents.s, 128));
-    }
     bool isContentsEmpty = !contents;
     Str author;
     if (pdf_annot_has_author(ctx, annot)) {

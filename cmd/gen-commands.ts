@@ -306,6 +306,7 @@ export const commands = [
     "CmdPasteAnnotation", "Paste Annotation",
     "CmdSearchGoogleLens", "Search with Google Lens",
     "CmdNavigateThumbnail", "Navigate Thumbnails",
+    "CmdShowAnnotationText", "Show Comment",
     "CmdNone", "Do nothing",
 ];
 

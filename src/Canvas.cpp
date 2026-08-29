@@ -56,6 +56,7 @@
 #include "SelectTextKeyboard.h"
 #include "SelectionToolbar.h"
 #include "AnnotEditToolbar.h"
+#include "AnnotTextPopup.h"
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
 #include "TextToSpeech.h"
@@ -2580,6 +2581,14 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    // Outside Edit PDF mode a click on an annotation did nothing. Show its
+    // text, so a long comment can be read without the editing UI (issue #4790)
+    if (clickedAnnot && tab && !MouseHasCtrl(key) && AnnotationHasText(clickedAnnot)) {
+        if (ShowAnnotationTextPopup(win, clickedAnnot)) {
+            return;
+        }
+    }
+
     if (clickedAnnot && tab && clickedAnnot == tab->selectedAnnotation) {
         return;
     }
@@ -3838,6 +3847,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     PaintAnnotationPlacement(win, hdc, dm);
     PaintHoveredAnnotationMark(win, hdc, dm);
     RepositionAnnotationHoverOverlay(win);
+    RepositionAnnotationTextPopup(win);
     RepositionAnnotEditToolbar(win);
     RepositionFreeTextInPlaceEdit(win);
     PaintCurrentEditAnnotationMark(tab, hdc, dm);

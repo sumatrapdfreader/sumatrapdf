@@ -26,6 +26,7 @@
 #include "FileHistory.h"
 #include "Theme.h"
 #include "Annotation.h"
+#include "AnnotTextPopup.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Canvas.h"
@@ -1221,6 +1222,10 @@ static MenuDef menuDefContext[] = {
         CmdCopyComment,
     },
     {
+        _TRN("Sho&w Comment"),
+        CmdShowAnnotationText,
+    },
+    {
         _TRN("Save Attachment"),
         CmdSaveAttachment,
     },
@@ -2403,6 +2408,14 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             }
             return;
         };
+        case CmdShowAnnotationText: {
+            Annotation* annot = ctx->annotationUnderCursor;
+            if (annot) {
+                ShowAnnotationTextPopup(win, annot);
+            }
+            return;
+        }
+
         case CmdCopyComment: {
             Str comment = value;
             if (ctx->annotationUnderCursor) {

@@ -17,6 +17,7 @@ struct HBox;
 struct Splitter;
 struct Tooltip;
 struct AnnotationHoverOverlay;
+struct AnnotTextPopup;
 struct TreeView;
 struct SelectionToolbar;
 struct AnnotEditToolbar;
@@ -704,6 +705,9 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     // annotation details shown next to a hovered annotation in Edit PDF mode
     AnnotationHoverOverlay* annotationHoverOverlay = nullptr;
+
+    // read-only card with a clicked annotation's whole text
+    AnnotTextPopup* annotTextPopup = nullptr;
 
     // set at the beginning of CloseWindow() to prevent
     // processing commands while closing (e.g. reentrancy

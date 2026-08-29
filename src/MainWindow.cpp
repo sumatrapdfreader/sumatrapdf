@@ -38,6 +38,7 @@
 #include "AIChatPanel.h"
 #include "SelectionToolbar.h"
 #include "AnnotEditToolbar.h"
+#include "AnnotTextPopup.h"
 #include "AnnotFilterToolbar.h"
 #include "FindBar.h"
 #include "FindWindow.h"
@@ -198,6 +199,7 @@ MainWindow::~MainWindow() {
     DeleteAnnotEditToolbar(this);
     DeleteAnnotFilterToolbar(this);
     DeleteAnnotationHoverOverlay(this);
+    DeleteAnnotationTextPopup(this);
 
     delete linkHandler;
     delete buffer;

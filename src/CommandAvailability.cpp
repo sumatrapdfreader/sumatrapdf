@@ -794,7 +794,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (!ctx.cursorOnLinkTarget && cmdId == CmdCopyLinkTarget) {
         return CommandVisibility::Hide;
     }
-    if (!ctx.cursorOnComment && cmdId == CmdCopyComment) {
+    if (!ctx.cursorOnComment && (cmdId == CmdCopyComment || cmdId == CmdShowAnnotationText)) {
         return CommandVisibility::Hide;
     }
     if (!ctx.cursorOnImage && cmdId == CmdCopyImage) {

@@ -59,6 +59,7 @@ CmdExtendSelectionCharRight,,Extend Selection One Character Right,"ver 3.7+, no 
 CmdExtendSelectionWordLeft,,Extend Selection One Word Left,"ver 3.7+, no default shortcut; grows or shrinks the existing text selection (see below)"
 CmdExtendSelectionWordRight,,Extend Selection One Word Right,"ver 3.7+, no default shortcut; grows or shrinks the existing text selection (see below)"
 CmdCopyComment,,Copy Comment,
+CmdShowAnnotationText,,Show Comment,"opens a read-only card with the annotation's whole text; also on a left click on the annotation, ver 3.7+"
 CmdCopyImage,,Copy Image,
 CmdCopyLinkTarget,,Copy Link Target,
 CmdCopySelection,"Ctrl + C, Ctrl + Insert",Copy Selection,"in Edit PDF mode with an annotation selected, copies that annotation instead of text"
