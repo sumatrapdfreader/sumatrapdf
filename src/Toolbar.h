@@ -57,7 +57,7 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut);
 // most of them want.
 
 // one item: an icon, a label and the command a click runs. NewToolbarHoverMenu()
-// makes each a menu-like row, NewToolbarHoverStrip() a cell in a single row.
+// makes each a menu-like row, NewToolbarHoverStrip() a cell in a pyramid.
 struct ToolbarHoverMenuItem {
     Str svgIcon;
     Str text;
@@ -72,9 +72,9 @@ struct ToolbarHoverBuildEvent {
     MainWindow* win = nullptr;
     // out: the drop-down's content; the drop-down takes ownership
     ILayout* layout = nullptr;
-    // out: optional. This control inside `layout` is put under the middle of
-    // the button, instead of the drop-down's left edge lining up with it
-    VirtCtrl* anchor = nullptr;
+    // out: optional. Hang the drop-down off the middle of the button, instead
+    // of lining its left edge up with the button's
+    bool centerOnButton = false;
 };
 
 // buttons armed with the same non-zero groupId share one drop-down: moving the
@@ -82,9 +82,10 @@ struct ToolbarHoverBuildEvent {
 // closing it and opening it again under the other button
 void SetToolbarHoverDropdown(MainWindow*, int cmdId, const Func1<ToolbarHoverBuildEvent*>&, int groupId = 0);
 ILayout* NewToolbarHoverMenu(MainWindow*, const Vec<ToolbarHoverMenuItem>&);
-// the items as one compact row of labels rather than a column of menu rows.
-// *currentOut, when asked for, is the cell of the item marked isCurrent
-ILayout* NewToolbarHoverStrip(MainWindow*, const Vec<ToolbarHoverMenuItem>&, VirtCtrl** currentOut);
+// the items as a compact pyramid of labels rather than a column of menu rows:
+// the widest row on top holds the middle of the list, each row below it what
+// surrounds the middle, the last one the two ends
+ILayout* NewToolbarHoverStrip(MainWindow*, const Vec<ToolbarHoverMenuItem>&);
 void HideToolbarHoverDropdown(MainWindow*);
 bool ToolbarHoverDropdownContainsScreenPoint(MainWindow*, Point);
 
@@ -109,6 +110,9 @@ struct ToolbarHoverItemState {
     int cmdId = 0;
     bool isCurrent = false;
     bool isStripCell = false; // from NewToolbarHoverStrip(), so ctrl is a cell
+    // in the strip pyramid's right half, i.e. past the middle of the list; that
+    // half is painted on its own background
+    bool isRightHalf = false;
 };
 
 // a button that opens a drop-down when the mouse rests on it

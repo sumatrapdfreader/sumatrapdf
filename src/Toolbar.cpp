@@ -172,6 +172,13 @@ static Color TbHoverColor() {
     return ThemeHotBackgroundColor();
 }
 
+// A ground a shade off the normal one, for telling two areas of a drop-down
+// apart. Well short of the hover highlight, which is 20 units off: this is a
+// cue, not something lit up.
+static Color TbSubtleBgColor() {
+    return AccentColor(TbBgColor(), 8);
+}
+
 static Color TbSelectedColor() {
     return AccentColor(TbBgColor(), 28);
 }
@@ -1611,13 +1618,40 @@ ILayout* NewToolbarHoverMenu(MainWindow* win, const Vec<ToolbarHoverMenuItem>& i
     return new Padding(vbox, Insets{b, b, b, b});
 }
 
-ILayout* NewToolbarHoverStrip(MainWindow* win, const Vec<ToolbarHoverMenuItem>& items, VirtCtrl** currentOut) {
+// The widest row of the pyramid: the smallest w with 1+2+...+w >= n, so the
+// rows w, w-1, ... w-k hold every item with only the last one part-full. 26
+// items give 7, 6, 5, 4, 3 and a last row of 1.
+static int HoverPyramidTopRow(int n) {
+    int w = 1;
+    while (((w * (w + 1)) / 2) < n) {
+        w++;
+    }
+    return w;
+}
+
+// one row of the pyramid: items [a0, a1) from below the middle and [b0, b1)
+// from above it, so the row still runs smallest to largest
+static void AddHoverPyramidRow(VBox* vbox, const Vec<VirtCtrl*>& cells, int a0, int a1, int b0, int b1) {
+    auto* hbox = new HBox();
+    hbox->alignCross = CrossAxisAlign::Stretch;
+    for (int i = a0; i < a1; i++) {
+        hbox->AddChild(cells[i]);
+    }
+    for (int i = b0; i < b1; i++) {
+        hbox->AddChild(cells[i]);
+    }
+    vbox->AddChild(hbox);
+}
+
+ILayout* NewToolbarHoverStrip(MainWindow* win, const Vec<ToolbarHoverMenuItem>& items) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb) {
         return nullptr;
     }
-    auto* hbox = new HBox();
-    hbox->alignCross = CrossAxisAlign::Stretch;
+    // a cell per item, made in the order they came in so that hoverItems (and
+    // the -dbg-control dump built from it) stays in that order whatever row a
+    // cell ends up in
+    Vec<VirtCtrl*> cells;
     for (const ToolbarHoverMenuItem& it : items) {
         auto* cell = new ToolbarHoverCell();
         cell->id = it.cmdId;
@@ -1626,15 +1660,47 @@ ILayout* NewToolbarHoverStrip(MainWindow* win, const Vec<ToolbarHoverMenuItem>& 
         str::ReplaceWithCopy(&cell->text, it.text);
         cell->SetIsEnabled(it.enabled);
         cell->onClick = MkFunc1(OnHoverRowClicked, win);
-        hbox->AddChild(cell);
+        VecAppend(cells, (VirtCtrl*)cell);
         RecordHoverItem(tb, cell, cell->text, it);
         tb->hoverItems[len(tb->hoverItems) - 1].isStripCell = true;
-        if (it.isCurrent && currentOut) {
-            *currentOut = cell;
-        }
     }
+
+    // A pyramid rather than one long row: the middle of the list goes in the
+    // top row, next to the button, and each row below it holds what surrounds
+    // the middle, down to the two extremes. Every value is then a short move
+    // down and across instead of a run along a row as wide as the screen.
+    int base = len(tb->hoverItems) - len(cells);
+    auto* vbox = new VBox();
+    vbox->alignCross = CrossAxisAlign::CrossCenter;
     int b = DpiScale(kHoverMenuBorder);
-    return new Padding(hbox, Insets{b, b, b, b});
+    int n = len(cells);
+    if (n == 0) {
+        return new Padding(vbox, Insets{b, b, b, b});
+    }
+    int top = HoverPyramidTopRow(n);
+    // items [lo, hi) are the ones already placed
+    int lo = (n - top) / 2;
+    int hi = lo + top;
+    // the top row splits at its own middle, and everything past that point is
+    // on the larger side in every row: the rows below it take from the two
+    // sides of the middle in order
+    for (int i = lo + (top / 2); i < n; i++) {
+        tb->hoverItems[base + i].isRightHalf = true;
+    }
+    AddHoverPyramidRow(vbox, cells, lo, hi, 0, 0);
+    int rowLen = top - 1;
+    while (lo > 0 || hi < n) {
+        // as evenly as the two sides allow: the shorter side runs out first
+        // and the other takes what is left of the row
+        int nLeft = std::min(lo, (rowLen + 1) / 2);
+        int nRight = std::min(n - hi, rowLen - nLeft);
+        nLeft = std::min(lo, rowLen - nRight);
+        AddHoverPyramidRow(vbox, cells, lo - nLeft, lo, hi, hi + nRight);
+        lo -= nLeft;
+        hi += nRight;
+        rowLen = std::max(rowLen - 1, 1);
+    }
+    return new Padding(vbox, Insets{b, b, b, b});
 }
 
 // The rows/cells of the drop-down that is up, in screen coordinates, for
@@ -1666,8 +1732,83 @@ static void OnHoverDropdownMouseLeave(MainWindow* win) {
     }
 }
 
-static void PaintHoverDropdownBg(MainWindow*, VirtHostPaintEvent* ev) {
+// The pyramid's right half - the values above the middle - gets its own
+// ground, so which way is bigger can be seen rather than read. The rows are
+// staggered, so the two halves meet along a staircase, and each band runs to
+// the right edge, covering the empty space beside a short row as well.
+static void PaintHoverDropdownRightHalf(MainWindow* win, VirtHostPaintEvent* ev) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
+        return;
+    }
+    Vec<ToolbarHoverItemState>& items = tb->hoverItems;
+    int n = len(items);
+    constexpr int kMaxRows = 32;
+    int rowTop[kMaxRows];
+    int rowBottom[kMaxRows];
+    int rowSplit[kMaxRows];
+    int nRows = 0;
+    int prevTop = INT_MIN;
+    while (nRows < kMaxRows) {
+        // the topmost row below the last one found
+        int y = INT_MAX;
+        for (int i = 0; i < n; i++) {
+            // only a strip has halves; a menu's rows are all one ground
+            VirtCtrl* c = items[i].isStripCell ? items[i].ctrl : nullptr;
+            if (c) {
+                int cy = c->BoundsInWindow().y;
+                if (cy > prevTop && cy < y) {
+                    y = cy;
+                }
+            }
+        }
+        if (y == INT_MAX) {
+            break;
+        }
+        int bottom = y;
+        int right = INT_MIN;
+        int split = INT_MAX;
+        for (int i = 0; i < n; i++) {
+            VirtCtrl* c = items[i].ctrl;
+            if (!c) {
+                continue;
+            }
+            Rect r = c->BoundsInWindow();
+            if (r.y != y) {
+                continue;
+            }
+            bottom = std::max(bottom, r.y + r.dy);
+            right = std::max(right, r.x + r.dx);
+            if (items[i].isRightHalf) {
+                split = std::min(split, r.x);
+            }
+        }
+        if (split == INT_MAX) {
+            // nothing of the larger side in this row: only the space past its
+            // end is on that side
+            split = right;
+        }
+        rowTop[nRows] = y;
+        rowBottom[nRows] = bottom;
+        rowSplit[nRows] = split;
+        nRows++;
+        prevTop = y;
+    }
+    Rect cr = ev->clientRect;
+    Color col = TbSubtleBgColor();
+    for (int i = 0; i < nRows; i++) {
+        // the first and last bands take in the border, so no strip of the
+        // other ground is left above or below them
+        int y = (i == 0) ? cr.y : rowTop[i];
+        int bottom = (i == nRows - 1) ? cr.y + cr.dy : rowBottom[i];
+        int x = rowSplit[i];
+        ev->gfx->FillRect(Rect{x, y, (cr.x + cr.dx) - x, bottom - y}, col);
+    }
+}
+
+static void PaintHoverDropdownBg(MainWindow* win, VirtHostPaintEvent* ev) {
     ev->gfx->FillRect(ev->clientRect, TbBgColor());
+    PaintHoverDropdownRightHalf(win, ev);
     ev->gfx->DrawRect(ev->clientRect, ThemeEdgeColor(), DpiScale(kHoverMenuBorder));
 }
 
@@ -1791,12 +1932,11 @@ static void OpenHoverDropdown(MainWindow* win, int cmdId) {
     Size sz = host->SetLayoutSizedToContent(ev.layout);
 
     // under the button, left edges aligned, kept on the monitor. A build that
-    // asked for it instead gets that control under the middle of the button,
-    // so e.g. the zoom level in use is where the mouse already is
+    // asked for it instead hangs off the middle of the button, so it opens
+    // around where the mouse already is
     int x = anchor.x;
-    if (ev.anchor) {
-        Rect ar = ev.anchor->BoundsInWindow();
-        x = anchor.x + (anchor.dx / 2) - (ar.x + (ar.dx / 2));
+    if (ev.centerOnButton) {
+        x = anchor.x + ((anchor.dx - sz.dx) / 2);
     }
     Rect r{x, anchor.Bottom(), sz.dx, sz.dy};
     r = ShiftRectToWorkArea(r, win->hwndFrame, true);
@@ -1948,9 +2088,9 @@ static int ZoomHoverCurrentIdx(MainWindow* win, const Vec<ZoomHoverLevel>& level
     return -1;
 }
 
-// The zoom buttons' drop-down: the zoom levels in one compact row, the one in
-// use boxed and sitting under the button, so it is the shortest trip from the
-// button to any other level.
+// The zoom buttons' drop-down: the zoom levels as a compact pyramid centred on
+// the button, the one in use boxed, so it is a short trip from the button to
+// any of the levels.
 static void BuildZoomHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
     DocController* ctrl = win ? win->ctrl : nullptr;
     if (!ctrl) {
@@ -1969,31 +2109,8 @@ static void BuildZoomHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
         VecAppend(items, it);
     }
 
-    VirtCtrl* anchorCtrl = nullptr;
-    ev->layout = NewToolbarHoverStrip(win, items, &anchorCtrl);
-    ToolbarVirt* tb = win->toolbarVirt;
-    if (!anchorCtrl) {
-        // at a zoom none of them is: anchor on the level it is closest to, so
-        // the strip still opens around where the zoom is
-        float absolute = ctrl->GetZoomVirtual(true);
-        int nearest = -1;
-        float nearestDiff = 0;
-        for (int i = 0; i < len(levels); i++) {
-            float zl = levels[i].zoom;
-            if (zl <= 0) {
-                continue;
-            }
-            float diff = absolute > zl ? absolute - zl : zl - absolute;
-            if (nearest < 0 || diff < nearestDiff) {
-                nearest = i;
-                nearestDiff = diff;
-            }
-        }
-        if (nearest >= 0 && nearest < len(tb->hoverItems)) {
-            anchorCtrl = tb->hoverItems[nearest].ctrl;
-        }
-    }
-    ev->anchor = anchorCtrl;
+    ev->layout = NewToolbarHoverStrip(win, items);
+    ev->centerOnButton = true;
 }
 
 // The zoom moved (the buttons step it, and their strip stays up while they are

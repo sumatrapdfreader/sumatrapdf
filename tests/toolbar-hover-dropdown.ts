@@ -2,8 +2,12 @@
 // tooltip takes, and the tooltip gives way to it. The Edit PDF toolbar's Save
 // button uses it for the three ways to end an editing session, each row showing
 // its keyboard shortcut; Save to a new PDF is no longer its own button. The Zoom
-// In / Zoom Out buttons use it for the zoom levels, as one compact row with the
-// level in use boxed and sitting under the button.
+// In / Zoom Out buttons use it for the zoom levels, laid out as a pyramid: the
+// widest row on top holding the middle of the list, each row below it the levels
+// further out and the last the extremes. The levels above the middle sit on a
+// slightly different background, so which way is bigger can be seen rather than
+// read. The level in use is boxed, and the drop-down opens centred on the
+// button.
 //
 // Run: bun tests/toolbar-hover-dropdown.ts [--no-build]
 
@@ -18,6 +22,7 @@ import {
   findTopWindow,
   getWindowRect,
   isWindowVisible,
+  readWindowDCRow,
   packCoords,
   sendMessage,
   setCursorPos,
@@ -67,9 +72,13 @@ const ZOOM_LEVELS = [
 const CUSTOM_ZOOM_LEVELS = [50, 75, 100, 150, 300];
 const CUSTOM_ZOOM_STRIP = ["50%", "75%", "100%", "Fit Page", "Fit Width", "150%", "300%"];
 
-// a window away from the right edge of the screen: the strip runs to the right
-// of the zoom buttons, and one that would hang off the monitor is slid back on,
-// which is right but would move the level in use out from under the button
+// how many cells each row of the pyramid holds, top row first: the widest row
+// a triangle of rows needs to hold them all, then one fewer each row down
+const ZOOM_ROWS = [7, 6, 5, 4, 3, 1];
+const CUSTOM_ZOOM_ROWS = [4, 3];
+
+// a window away from the edges of the screen: a drop-down that would hang off
+// the monitor is slid back on, which is right but takes it off centre
 const WINDOW_POS = "1100x900@40x40";
 
 type Btn = { cmd: number; hidden: boolean; x: number; y: number; dx: number; dy: number };
@@ -242,11 +251,115 @@ async function dropdownItems(client: ControlClient): Promise<Item[]> {
   return res;
 }
 
-// the level in use has to end up under the middle of the button: that is what
-// makes the strip worth opening from a button the mouse is already on. A strip
-// this wide can run off the monitor, and one that does is slid back on, which
-// is right and moves the level off the button by however much it took
-function checkCurrentUnderButton(items: Item[], want: string, btnCentreX: number, menu: number): void {
+// the cells grouped into rows, the top row first. The dump lists them smallest
+// level first whatever row they landed in, and that order is kept within a row
+function rowsOf(items: Item[]): Item[][] {
+  const byY = new Map<number, Item[]>();
+  for (const it of items) {
+    const row = byY.get(it.y);
+    if (row) {
+      row.push(it);
+    } else {
+      byY.set(it.y, [it]);
+    }
+  }
+  return [...byY.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1]);
+}
+
+// A pyramid, not one long row: the top row holds the middle of the list, so
+// the levels nearest the one in use are the shortest trip from the button, and
+// each row below holds what surrounds it, down to the extremes. Rows are
+// centred on one another and inside a row the levels run smallest to largest.
+function checkPyramid(items: Item[], want: number[], levels: string[]): void {
+  const rows = rowsOf(items);
+  const shape = rows.map((r) => r.length);
+  if (shape.join() !== want.join()) {
+    throw new Error(`toolbar-hover-dropdown: the rows hold [${shape.join()}], want [${want.join()}]`);
+  }
+  const mid = Math.floor((levels.length - want[0]!) / 2);
+  const top = rows[0]!.map((it) => it.text).join();
+  if (top !== levels.slice(mid, mid + want[0]!).join()) {
+    throw new Error(`toolbar-hover-dropdown: the top row is [${top}], want the middle of the list`);
+  }
+  const last = rows[rows.length - 1]!;
+  if (last[last.length - 1]!.text !== levels[levels.length - 1]) {
+    throw new Error(`toolbar-hover-dropdown: the bottom row is [${last.map((it) => it.text).join()}], want the ends`);
+  }
+  const centreOf = (r: Item[]) => Math.floor((r[0]!.x + r[r.length - 1]!.x2) / 2);
+  const centre = centreOf(rows[0]!);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i]!;
+    const texts = r.map((it) => it.text).join();
+    if (Math.abs(centreOf(r) - centre) > 12) {
+      throw new Error(`toolbar-hover-dropdown: the row [${texts}] is not centred under the one above it`);
+    }
+    for (let j = 1; j < r.length; j++) {
+      if (r[j]!.x < r[j - 1]!.x2 - 1) {
+        throw new Error(`toolbar-hover-dropdown: the row [${texts}] does not run smallest to largest`);
+      }
+    }
+    if (i > 0 && r[0]!.y < rows[i - 1]![0]!.y2) {
+      throw new Error(`toolbar-hover-dropdown: the row [${texts}] overlaps the one above it`);
+    }
+  }
+}
+
+// The right half of the pyramid - the levels above the middle - is on its own
+// background, which runs to the right edge of the drop-down so the empty space
+// beside a short row is covered too. The rows are staggered, so the two grounds
+// meet along a staircase rather than one straight edge.
+// a COLORREF (0x00bbggrr) as r, g, b
+function channels(c: number): number[] {
+  return [c & 0xff, (c >> 8) & 0xff, (c >> 16) & 0xff];
+}
+
+function checkRightHalfShading(items: Item[], levels: string[], menu: number): { bg: number; shade: number } {
+  const wr = getWindowRect(menu);
+  const dx = wr.right - wr.left;
+  const rows = rowsOf(items);
+  const topLen = rows[0]!.length;
+  // where the top row splits; past that point, in every row, is the larger side
+  const rightFrom = Math.floor((levels.length - topLen) / 2) + Math.floor(topLen / 2);
+  const splits: number[] = [];
+  let bg = -1;
+  let shade = -1;
+  for (const r of rows) {
+    const y = Math.floor((r[0]!.y + r[0]!.y2) / 2) - wr.top;
+    const run = readWindowDCRow(menu, 0, y, dx);
+    const texts = r.map((it) => it.text).join();
+    // a row of nothing but smaller levels still has the space past its end on
+    // the larger side
+    const first = r.find((it) => levels.indexOf(it.text) >= rightFrom);
+    const split = (first ? first.x : r[r.length - 1]!.x2) - wr.left;
+    splits.push(split);
+    // 3px either side of the split: inside a cell's padding, clear of its text
+    const left = run[split - 3]!;
+    const right = run[split + 3]!;
+    if (left === right) {
+      throw new Error(`toolbar-hover-dropdown: the row [${texts}] is one ground either side of x=${split}`);
+    }
+    if (bg < 0) {
+      bg = left;
+      shade = right;
+    }
+    if (left !== bg || right !== shade) {
+      throw new Error(`toolbar-hover-dropdown: the row [${texts}] is not the same two grounds as the rows above`);
+    }
+    if (run[dx - 3] !== shade) {
+      throw new Error(`toolbar-hover-dropdown: the row [${texts}] leaves the space past its end unshaded`);
+    }
+    if (run[2] !== bg) {
+      throw new Error(`toolbar-hover-dropdown: the row [${texts}] shades the space before its start`);
+    }
+  }
+  if (new Set(splits).size < 2) {
+    throw new Error(`toolbar-hover-dropdown: the two grounds meet along a straight line at ${splits.join()}`);
+  }
+  return { bg, shade };
+}
+
+// the level in use is the one boxed, and only it
+function checkCurrentBoxed(items: Item[], want: string): void {
   const current = items.filter((it) => it.current);
   if (current.length !== 1 || current[0]!.text !== want) {
     throw new Error(
@@ -254,31 +367,40 @@ function checkCurrentUnderButton(items: Item[], want: string, btnCentreX: number
         `[${current.map((it) => it.text).join()}]`,
     );
   }
-  const centre = Math.floor((current[0]!.x + current[0]!.x2) / 2);
+}
+
+// the drop-down hangs off the middle of the button it belongs to, so it opens
+// around where the mouse already is whatever it is showing. One that would run
+// off the monitor is slid back on, which is right and takes it off centre
+function checkCentredOnButton(menu: number, btnCentreX: number): void {
+  const mr = getWindowRect(menu);
+  const centre = Math.floor((mr.left + mr.right) / 2);
   if (Math.abs(centre - btnCentreX) <= 4) {
     return;
   }
   const wa = getWorkArea();
-  const mr = getWindowRect(menu);
   const clamped = mr.left <= wa.left + 1 || mr.right >= wa.right - 1;
   if (!clamped) {
-    throw new Error(`toolbar-hover-dropdown: ${want} is at x=${centre}, not under the button at x=${btnCentreX}`);
+    throw new Error(
+      `toolbar-hover-dropdown: the drop-down is centred at x=${centre}, not on the button at x=${btnCentreX}`,
+    );
   }
   // slid back on: it went as far as it could towards the button
   const wantLeft = mr.left <= wa.left + 1 ? wa.left : wa.right - (mr.right - mr.left);
   if (Math.abs(mr.left - wantLeft) > 4) {
-    throw new Error(`toolbar-hover-dropdown: the strip is neither under ${want} nor against the screen edge`);
+    throw new Error("toolbar-hover-dropdown: the drop-down is neither on the button nor against the screen edge");
   }
 }
 
-// a second instance, this one told to use its own zoom levels
+// a second instance, this one told to use its own zoom levels and a dark theme:
+// the cue is a shade off whatever the background is, not a fixed grey
 async function checkCustomZoomLevels(dir: string, pdf: string): Promise<void> {
   const appdata = join(dir, "appdata-custom");
   mkdirSync(appdata);
   writeFileSync(
     join(appdata, "SumatraPDF-settings.txt"),
     "UiLanguage = en\nRestoreSession = false\nShowStartPage = false\nCheckForUpdates = false\n" +
-      `ZoomLevels = ${CUSTOM_ZOOM_LEVELS.join(" ")}\n`,
+      `Theme = Dark\nZoomLevels = ${CUSTOM_ZOOM_LEVELS.join(" ")}\n`,
   );
   const { proc, client, frame } = await launchControlled([
     "-appdata",
@@ -308,7 +430,17 @@ async function checkCustomZoomLevels(dir: string, pdf: string): Promise<void> {
     if (items.map((it) => it.text).join() !== CUSTOM_ZOOM_STRIP.join()) {
       throw new Error(`toolbar-hover-dropdown: custom ZoomLevels give [${items.map((it) => it.text).join()}]`);
     }
-    checkCurrentUnderButton(items, "100%", clientToScreen(toolbar, zx, zy).x, findTopWindow(proc.pid!, MENU_CLASS));
+    checkPyramid(items, CUSTOM_ZOOM_ROWS, CUSTOM_ZOOM_STRIP);
+    const dark = checkRightHalfShading(items, CUSTOM_ZOOM_STRIP, findTopWindow(proc.pid!, MENU_CLASS));
+    if (channels(dark.bg).some((c) => c > 128)) {
+      throw new Error(`toolbar-hover-dropdown: the dark theme drop-down is not dark (${dark.bg})`);
+    }
+    // lighter than what it sits on, the way it is darker in a light theme
+    if (channels(dark.shade).every((c, i) => c <= channels(dark.bg)[i]!)) {
+      throw new Error("toolbar-hover-dropdown: the dark theme shades the larger half darker, not lighter");
+    }
+    checkCurrentBoxed(items, "100%");
+    checkCentredOnButton(findTopWindow(proc.pid!, MENU_CLASS), clientToScreen(toolbar, zx, zy).x);
 
     // and they are real commands, not just labels
     const menu = await hoverUntilMenu(toolbar, proc.pid!, zx, zy, "the zoom drop-down closed");
@@ -445,20 +577,35 @@ export async function testit(): Promise<void> {
     if (texts.join() !== ZOOM_LEVELS.join()) {
       throw new Error(`toolbar-hover-dropdown: the zoom levels are [${texts.join()}]`);
     }
-    // one row, not a column: every cell has the same top and bottom
-    if (items.some((it) => it.y !== items[0]!.y || it.y2 !== items[0]!.y2)) {
-      throw new Error("toolbar-hover-dropdown: the zoom levels are not in a single row");
-    }
+    checkPyramid(items, ZOOM_ROWS, ZOOM_LEVELS);
     const zr = getWindowRect(zoomMenu);
-    if (zr.bottom - zr.top > 2 * (items[0]!.y2 - items[0]!.y)) {
-      throw new Error(`toolbar-hover-dropdown: the zoom drop-down is taller than a row ${JSON.stringify(zr)}`);
+    // and the pyramid is what keeps it narrow: all 26 in a row would be wider
+    // than the window the toolbar is in
+    if (zr.right - zr.left > 600) {
+      throw new Error(`toolbar-hover-dropdown: the zoom drop-down is too wide ${JSON.stringify(zr)}`);
     }
-    checkCurrentUnderButton(items, "100%", btnCentreX, zoomMenu);
+    checkCurrentBoxed(items, "100%");
+    checkCentredOnButton(zoomMenu, btnCentreX);
+    const zoomMenuRect = JSON.stringify(zr);
+
+    const grounds = checkRightHalfShading(items, ZOOM_LEVELS, zoomMenu);
 
     // clicking a level zooms straight to it. 300% is one of the levels the Zoom
     // menu has no command for, so it is also the check that those levels get a
     // command of their own
     const cell300 = items.find((it) => it.text === "300%")!;
+    // and it is a cue rather than a highlight: a few units off the plain
+    // ground, where a cell lit up under the mouse is 20 units off it
+    const cellX = cell300.x - zr.left + 3;
+    const cellY = Math.floor((cell300.y + cell300.y2) / 2) - zr.top;
+    if (readWindowDCRow(zoomMenu, cellX, cellY, 1)[0] !== grounds.shade) {
+      throw new Error("toolbar-hover-dropdown: 300% is not on the shaded half");
+    }
+    const step = Math.max(...channels(grounds.bg).map((c, i) => Math.abs(c - channels(grounds.shade)[i]!)));
+    if (step < 3 || step > 15) {
+      throw new Error(`toolbar-hover-dropdown: the shading is ${step} units off the background, want a few`);
+    }
+
     await clickAt(
       zoomMenu,
       Math.floor((cell300.x + cell300.x2) / 2) - zr.left,
@@ -468,12 +615,16 @@ export async function testit(): Promise<void> {
     await waitMenu(pid, false, "clicking a zoom level did not close the drop-down");
     await waitZoom(client, "300", "clicking the 300% cell did not zoom to it");
 
-    // and now that level is the one boxed, and the strip has moved so that it
-    // is the one under the button
+    // and now that level is the one boxed. The drop-down itself opens exactly
+    // where it did before: it hangs off the button, not off the zoom
     zoomMenu = await hoverUntilMenu(toolbar, pid, zx, zy, "the zoom drop-down did not open again");
     await sleep(200);
     items = await dropdownItems(client);
-    checkCurrentUnderButton(items, "300%", btnCentreX, zoomMenu);
+    checkCurrentBoxed(items, "300%");
+    checkCentredOnButton(zoomMenu, btnCentreX);
+    if (JSON.stringify(getWindowRect(zoomMenu)) !== zoomMenuRect) {
+      throw new Error("toolbar-hover-dropdown: the drop-down opened somewhere else once the zoom had changed");
+    }
 
     // stepping the zoom with the button the strip belongs to moves the box to
     // the level it lands on, without the strip itself moving out from under
