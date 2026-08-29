@@ -42,6 +42,9 @@ constexpr int kLabelHeight = 20;
 constexpr int kLabelGap = 4;
 // height for the info bar at the bottom
 constexpr int kInfoBarHeight = 30;
+// WM_TIMER id used to clear a transient info-bar status message
+constexpr UINT_PTR kStatusTimerId = 1;
+constexpr UINT kStatusMsgTimeoutMs = 1500;
 
 struct CapturedScreenshot {
     HBITMAP bmp = nullptr;   // full-size capture
@@ -66,6 +69,10 @@ struct ScreenshotOverlayData {
     Vec<int> rowY;       // y start of each row (cumulative)
     int winW = 0;
     int winH = 0;
+    // transient message shown in the info bar (e.g. "Copied to clipboard"),
+    // cleared by a one-shot timer
+    Str statusMsg;
+    UINT_PTR statusTimer = 0;
 };
 
 // true if hwnd is a floating window of ours owned by one of our frames (e.g. the
@@ -900,8 +907,12 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
 
     SetTextColor(hdcTemp, kColWhite);
     SetBkMode(hdcTemp, TRANSPARENT);
-    HdcDrawText(hdcTemp, WStrL(L"Select screenshot to save. ↑ ↓ to navigate. Enter to select. Esc to cancel"), infoRect,
-                DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    // a transient status message (e.g. "Copied to clipboard") replaces the hint
+    WStr infoText = WStrL(L"Select screenshot to save. ↑ ↓ to navigate. Enter to save. Ctrl+C to copy. Esc to cancel");
+    if (data->statusMsg) {
+        infoText = ToWStrTemp(data->statusMsg);
+    }
+    HdcDrawText(hdcTemp, infoText, infoRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
     SelectObject(hdcTemp, prevInfoFont);
 
@@ -999,6 +1010,26 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     ReleaseDC(nullptr, hdcScreen);
 }
 
+// Show a transient message in the info bar; a one-shot timer clears it again.
+static void ShowOverlayStatus(HWND hwnd, ScreenshotOverlayData* data, Str msg) {
+    str::ReplaceWithCopy(&data->statusMsg, msg);
+    if (data->statusTimer) {
+        KillTimer(hwnd, data->statusTimer);
+    }
+    data->statusTimer = SetTimer(hwnd, kStatusTimerId, kStatusMsgTimeoutMs, nullptr);
+    PaintOverlayLayered(hwnd, data);
+}
+
+// Copy the currently selected screenshot to the clipboard (Ctrl+C in the picker).
+static void CopySelectedScreenshotToClipboard(HWND hwnd, ScreenshotOverlayData* data) {
+    if (data->selected < 0 || data->selected >= len(data->captures)) {
+        return;
+    }
+    auto& cs = data->captures[data->selected];
+    bool ok = cs.bmp && CopyImageToClipboard(cs.bmp, false);
+    ShowOverlayStatus(hwnd, data, ok ? StrL("Copied to clipboard") : StrL("Copy failed"));
+}
+
 // Destroying the picker directly leaves its UI thread without keyboard focus.
 // Return cancellation to the window that was active before the picker opened.
 static void CancelScreenshotOverlay(HWND hwnd, ScreenshotOverlayData* data) {
@@ -1063,6 +1094,12 @@ static LRESULT CALLBACK WndProcScreenshotOverlay(HWND hwnd, UINT msg, WPARAM wp,
                         PaintOverlayLayered(hwnd, data);
                     }
                     return 0;
+                case 'C':
+                    if ((GetKeyState(VK_CONTROL) & 0x8000) != 0) {
+                        CopySelectedScreenshotToClipboard(hwnd, data);
+                        return 0;
+                    }
+                    break;
                 case VK_RETURN:
                     SaveSelectedScreenshot(data);
                     DestroyWindow(hwnd);
@@ -1095,8 +1132,23 @@ static LRESULT CALLBACK WndProcScreenshotOverlay(HWND hwnd, UINT msg, WPARAM wp,
             }
             return 0;
 
+        case WM_TIMER:
+            if (data && wp == kStatusTimerId) {
+                KillTimer(hwnd, data->statusTimer);
+                data->statusTimer = 0;
+                str::Free(data->statusMsg);
+                data->statusMsg = {};
+                PaintOverlayLayered(hwnd, data);
+                return 0;
+            }
+            break;
+
         case WM_DESTROY:
             if (data) {
+                if (data->statusTimer) {
+                    KillTimer(hwnd, data->statusTimer);
+                }
+                str::Free(data->statusMsg);
                 FreeCapturedScreenshots(data);
                 delete data;
                 SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
