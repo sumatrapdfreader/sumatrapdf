@@ -1360,6 +1360,11 @@ static bool FileStateWorthKeepingWithoutHistory(FileState* fs) {
     return false;
 }
 
+// FileState identity kept when RememberStatePerDocument is false. Display
+// fields (page, zoom, scroll, window) are omitted (#5907).
+static SeqStrings kFileStateKeepNoPerDoc =
+    "Favorites\0EBookUI\0FilePath\0DecryptionKey\0OpenCount\0IsPinned\0IsMissing\0UseDefaultState\0";
+
 // prevData is used to preserve fields that exists in prevField but not in Settings
 // caller has to free()
 Str SerializeSettings(Settings* prefs, Str prevData) {
@@ -1386,24 +1391,40 @@ Str SerializeSettings(Settings* prefs, Str prevData) {
             // the in-memory history is still needed for this session
             prefs->fileStates = &withFavorites;
         }
-        // prevent unnecessary settings from being written out
-        u16 fieldCount = 0;
-        while (++fieldCount <= dimof(gFileStateFields)) {
-            // count the number of fields up to and including useDefaultState
-            if (gFileStateFields[fieldCount - 1].offset == offsetof(FileState, useDefaultState)) {
-                break;
+        FieldInfo keepFields[dimof(gFileStateFields)];
+        char keepNames[512];
+        int nKeep = 0;
+        int namesLen = 0;
+        const char* srcName = gFileStateInfo.fieldNames;
+        for (u16 i = 0; i < dimof(gFileStateFields); i++) {
+            Str name = Str(srcName);
+            if (SeqStrIndex(kFileStateKeepNoPerDoc, name) >= 0) {
+                keepFields[nKeep] = gFileStateFields[i];
+                int n = len(name);
+                ReportIf(namesLen + n + 1 > (int)sizeof(keepNames));
+                memcpy(keepNames + namesLen, name.s, (size_t)n + 1);
+                namesLen += n + 1;
+                nKeep++;
             }
+            srcName += len(name) + 1;
         }
-        // restore the correct fieldCount ASAP after serialization
-        gFileStateInfo.fieldCount = fieldCount;
+        const FieldInfo* savedFields = gFileStateInfo.fields;
+        const char* savedNames = gFileStateInfo.fieldNames;
+        u16 savedCount = gFileStateInfo.fieldCount;
+        gFileStateInfo.fields = keepFields;
+        gFileStateInfo.fieldNames = keepNames;
+        gFileStateInfo.fieldCount = (u16)nKeep;
+
+        Str serialized = SerializeStruct(&gSettingsInfo, prefs, prevData);
+
+        gFileStateInfo.fields = savedFields;
+        gFileStateInfo.fieldNames = savedNames;
+        gFileStateInfo.fieldCount = savedCount;
+        prefs->fileStates = allFileStates;
+        return serialized;
     }
 
     Str serialized = SerializeStruct(&gSettingsInfo, prefs, prevData);
-
-    if (dropPerDocState) {
-        gFileStateInfo.fieldCount = dimof(gFileStateFields);
-        prefs->fileStates = allFileStates;
-    }
 
     return serialized;
 }
