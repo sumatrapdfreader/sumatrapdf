@@ -158,13 +158,24 @@ find_first_content(fz_html_box *box)
 	return NULL;
 }
 
+/* A flow node's y is its baseline. A link that lands there puts everything the
+ * glyphs draw above the baseline off the top of the view, so the target line
+ * comes out clipped. Back up to the top of its line box: em is what layout_line
+ * gives a text node for its height, and a line is never shorter than that. */
+static float
+flow_line_top(fz_html_flow *flow)
+{
+	float y = flow->y - flow->box->s.layout.em;
+	return y < 0 ? 0 : y;
+}
+
 static float
 find_flow_target(fz_html_flow *flow, const char *id)
 {
 	while (flow)
 	{
 		if (flow->box->id && !strcmp(id, flow->box->id))
-			return flow->y;
+			return flow_line_top(flow);
 		flow = flow->next;
 	}
 	return -1;
@@ -178,9 +189,14 @@ find_box_target(fz_html_box *box, const char *id)
 	{
 		if (box->id && !strcmp(id, box->id))
 		{
-			fz_html_flow *flow = find_first_content(box);
+			fz_html_flow *flow;
+			/* a block knows where its own top is; only an inline box has to
+			 * be located through the line its first content sits on */
+			if (box->type != BOX_INLINE)
+				return box->s.layout.y;
+			flow = find_first_content(box);
 			if (flow)
-				return flow->y;
+				return flow_line_top(flow);
 			return box->s.layout.y;
 		}
 		if (box->type == BOX_FLOW)
