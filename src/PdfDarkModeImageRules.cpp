@@ -5,6 +5,11 @@
 
 #include "PdfDarkMode.h"
 
+// Border has to be one light color all the way round, e.g. the flat backdrop a
+// 3D render or a chart is drawn on.
+static constexpr float kLightBackdropBorderLight = 0.95f;
+static constexpr float kLightBackdropBorderUniformity = 0.90f;
+
 static int PdfDarkModeFeatureColorBuckets(const DarkImageFeatures& f) {
     return (int)lroundf(f.colorBucketRatio * 4096.f);
 }
@@ -50,6 +55,11 @@ static bool PdfDarkModeFeaturesLookLikeLayoutBackground(const DarkImageFeatures&
     return false;
 }
 
+// Mirrors PdfDarkModeStatsLookLikeLightBackdrop in PdfDarkModeImageStats.cpp.
+static bool PdfDarkModeFeaturesLookLikeLightBackdrop(const DarkImageFeatures& f) {
+    return f.borderLightRatio >= kLightBackdropBorderLight && f.borderUniformity >= kLightBackdropBorderUniformity;
+}
+
 static bool PdfDarkModeFeaturesLookLikePaperTextBox(const DarkImageFeatures& f) {
     int buckets = PdfDarkModeFeatureColorBuckets(f);
     return f.highLuminanceRatio > 0.64f && f.luminanceVariance < 0.014f && buckets <= 12 &&
@@ -75,6 +85,9 @@ DarkImageKind PdfDarkModeClassifyImageFeatures(const DarkImageFeatures& f, float
     } else if (PdfDarkModeFeaturesLookLikeLayoutBackground(f, pageCoverage)) {
         kind = DarkImageKind::LightBackgroundArtwork;
         confidence = 0.80f;
+    } else if (PdfDarkModeFeaturesLookLikeLightBackdrop(f)) {
+        kind = DarkImageKind::LightBackgroundArtwork;
+        confidence = 0.78f;
     } else if (PdfDarkModeFeaturesLookLikePhoto(f)) {
         if (pageCoverage < 0.14f && PdfDarkModeFeaturesLookLikePaperTextBox(f)) {
             kind = DarkImageKind::IconOrLineArt;
@@ -126,6 +139,9 @@ bool PdfDarkModeShouldPreserveImageFeatures(const DarkImageFeatures& f, float pa
         return false;
     }
     if (PdfDarkModeFeaturesLookLikeLayoutBackground(f, pageCoverage)) {
+        return false;
+    }
+    if (PdfDarkModeFeaturesLookLikeLightBackdrop(f)) {
         return false;
     }
     if (PdfDarkModeFeaturesLookLikePhoto(f)) {

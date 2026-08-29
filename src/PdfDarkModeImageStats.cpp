@@ -14,8 +14,16 @@ struct PdfDarkModeImageSampleStats {
     float lumVar = 0.f;
     float satRatio = 0.f;
     float highLumRatio = 0.f;
+    float borderLightRatio = 0.f;
+    float borderUniformity = 0.f;
     bool valid = false;
 };
+
+// Border has to be one light color all the way round, e.g. the flat backdrop a
+// 3D render or a chart is drawn on.
+static constexpr float kLightBackdropBorderLight = 0.95f;
+static constexpr float kLightBackdropBorderUniformity = 0.90f;
+static constexpr int kBorderSamplesPerEdge = 32;
 
 static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* outR, float* outG, float* outB) {
     if (!pix || !pix->samples || x < 0 || y < 0 || x >= pix->w || y >= pix->h) {
@@ -37,6 +45,65 @@ static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     *outR = srcRgb[0];
     *outG = srcRgb[1];
     *outB = srcRgb[2];
+}
+
+// How light the outermost ring of pixels is, and how close it is to a single
+// color. borderUniformity is 1 for a perfectly flat border and drops to 0 as
+// the mean squared RGB distance from the border's average color reaches 0.12.
+static void SampleBorderStats(fz_context* ctx, fz_pixmap* pix, PdfDarkModeImageSampleStats* stats) {
+    float r[kBorderSamplesPerEdge * 4] = {};
+    float g[kBorderSamplesPerEdge * 4] = {};
+    float b[kBorderSamplesPerEdge * 4] = {};
+    int n = 0;
+    int light = 0;
+
+    auto sampleAt = [&](int x, int y) {
+        if (n >= kBorderSamplesPerEdge * 4) {
+            return;
+        }
+        SamplePixmapRgb(ctx, pix, x, y, &r[n], &g[n], &b[n]);
+        float lum = (0.2126f * r[n]) + (0.7152f * g[n]) + (0.0722f * b[n]);
+        if (lum > 0.72f) {
+            light++;
+        }
+        n++;
+    };
+
+    int stepX = pix->w >= kBorderSamplesPerEdge ? pix->w / kBorderSamplesPerEdge : 1;
+    for (int x = 0; x < pix->w; x += stepX) {
+        sampleAt(x, 0);
+        sampleAt(x, pix->h - 1);
+    }
+    int stepY = pix->h >= kBorderSamplesPerEdge ? pix->h / kBorderSamplesPerEdge : 1;
+    for (int y = 0; y < pix->h; y += stepY) {
+        sampleAt(0, y);
+        sampleAt(pix->w - 1, y);
+    }
+    if (n <= 0) {
+        return;
+    }
+
+    float mr = 0.f, mg = 0.f, mb = 0.f;
+    for (int i = 0; i < n; i++) {
+        mr += r[i];
+        mg += g[i];
+        mb += b[i];
+    }
+    mr /= (float)n;
+    mg /= (float)n;
+    mb /= (float)n;
+
+    float var = 0.f;
+    for (int i = 0; i < n; i++) {
+        float dr = r[i] - mr;
+        float dg = g[i] - mg;
+        float db = b[i] - mb;
+        var += (dr * dr) + (dg * dg) + (db * db);
+    }
+    var /= (float)n;
+
+    stats->borderLightRatio = (float)light / (float)n;
+    stats->borderUniformity = limitValue(1.f - (var / 0.12f), 0.f, 1.f);
 }
 
 static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, fz_image* image) {
@@ -111,6 +178,7 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
         stats.lumVar = (lumSqSum / (float)n) - (lumMean * lumMean);
         stats.satRatio = (float)saturated / (float)n;
         stats.highLumRatio = (float)highLum / (float)n;
+        SampleBorderStats(ctx, pix, &stats);
         stats.valid = true;
     }
     fz_always(ctx) {
@@ -219,6 +287,15 @@ static bool PdfDarkModeStatsLookLikeDarkArtwork(const PdfDarkModeImageSampleStat
            (stats.significantBuckets >= 8 || stats.satRatio >= 0.08f);
 }
 
+// Mirrors PdfDarkModeFeaturesLookLikeLightBackdrop in PdfDarkModeImageRules.cpp.
+static bool PdfDarkModeStatsLookLikeLightBackdrop(const PdfDarkModeImageSampleStats& stats) {
+    if (!stats.valid) {
+        return false;
+    }
+    return stats.borderLightRatio >= kLightBackdropBorderLight &&
+           stats.borderUniformity >= kLightBackdropBorderUniformity;
+}
+
 static bool PdfDarkModeStatsLookLikePaperTextBox(const PdfDarkModeImageSampleStats& stats) {
     if (!stats.valid) {
         return false;
@@ -248,6 +325,11 @@ bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, fl
     if (PdfDarkModeStatsLookLikeLayoutBackground(stats)) {
         return false;
     }
+    // artwork on a flat light backdrop: recolor so the backdrop follows the page
+    // instead of staying a bright block on it (#6088)
+    if (PdfDarkModeStatsLookLikeLightBackdrop(stats)) {
+        return false;
+    }
     if (PdfDarkModeStatsLookLikeDarkArtwork(stats, pageCoverage)) {
         return true;
     }
@@ -270,6 +352,11 @@ bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float 
         return false;
     }
     if (PdfDarkModeStatsLookLikeLayoutBackground(stats)) {
+        return false;
+    }
+    // artwork on a flat light backdrop: recolor so the backdrop follows the page
+    // instead of staying a bright block on it (#6088)
+    if (PdfDarkModeStatsLookLikeLightBackdrop(stats)) {
         return false;
     }
     if (PdfDarkModeStatsLookLikeDarkArtwork(stats, pageCoverage)) {
