@@ -18,6 +18,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "SumatraDialogs.h"
+#include "Translations.h"
 #include "Print.h"
 
 #if defined(_MSC_VER) && __has_include(<PrintManagerInterop.h>) && __has_include(<DocumentSource.h>)
@@ -31,7 +32,9 @@
 #include <roapi.h>
 #include <wincodec.h>
 #include <windows.foundation.h>
+#include <windows.foundation.collections.h>
 #include <windows.graphics.printing.h>
+#include <windows.graphics.printing.optiondetails.h>
 #include <DocumentSource.h>
 #include <DocumentTarget.h>
 #include <PrintManagerInterop.h>
@@ -62,16 +65,28 @@ constexpr i64 kMaxBandBytes = 16LL * 1024 * 1024;
 namespace Printing = ABI::Windows::Graphics::Printing;
 namespace Foundation = ABI::Windows::Foundation;
 
+namespace OptDetails = ABI::Windows::Graphics::Printing::OptionDetails;
+
 using PrintRequestedHandler =
     Foundation::ITypedEventHandler<Printing::PrintManager*, Printing::PrintTaskRequestedEventArgs*>;
 
-static decltype(&WindowsCreateString) gWindowsCreateString;
+using OptionChangedHandler =
+    Foundation::ITypedEventHandler<OptDetails::PrintTaskOptionDetails*, OptDetails::PrintTaskOptionChangedEventArgs*>;
+
+// ids of the options we add to the dialog's "More settings" pane. They are ours,
+// so they only have to be unique within the print task
+static const WCHAR* kOptCenterHorizontally = L"sumatraCenterHorizontally";
+static const WCHAR* kOptExtraRotation = L"sumatraExtraRotation";
+
+// item ids of the rotation option, which is also how its value comes back
+static const WCHAR* kRotationItems[] = {L"0", L"90", L"180", L"270"};
 
 struct WinRtApi {
     decltype(&RoInitialize) roInitialize = nullptr;
     decltype(&RoGetActivationFactory) roGetActivationFactory = nullptr;
     decltype(&WindowsCreateString) windowsCreateString = nullptr;
     decltype(&WindowsDeleteString) windowsDeleteString = nullptr;
+    decltype(&WindowsGetStringRawBuffer) windowsGetStringRawBuffer = nullptr;
 
     bool Load() {
         // combase is already in the process and is never unloaded, so prefer the
@@ -87,10 +102,143 @@ struct WinRtApi {
         roGetActivationFactory = (decltype(roGetActivationFactory))GetProcAddress(combase, "RoGetActivationFactory");
         windowsCreateString = (decltype(windowsCreateString))GetProcAddress(combase, "WindowsCreateString");
         windowsDeleteString = (decltype(windowsDeleteString))GetProcAddress(combase, "WindowsDeleteString");
-        gWindowsCreateString = windowsCreateString;
-        return roInitialize && roGetActivationFactory && windowsCreateString && windowsDeleteString;
+        windowsGetStringRawBuffer =
+            (decltype(windowsGetStringRawBuffer))GetProcAddress(combase, "WindowsGetStringRawBuffer");
+        return roInitialize && roGetActivationFactory && windowsCreateString && windowsDeleteString &&
+               windowsGetStringRawBuffer;
     }
 };
+
+// loaded and initialized once, by EnsureWinRt()
+static WinRtApi gWinRt;
+
+// an HSTRING that frees itself; the WinRT calls below need a lot of them
+struct ScopedHStr {
+    HSTRING h = nullptr;
+
+    ScopedHStr() = default;
+    explicit ScopedHStr(const WCHAR* s) {
+        if (s) {
+            gWinRt.windowsCreateString(s, (UINT32)wcslen(s), &h);
+        }
+    }
+    ScopedHStr(const ScopedHStr&) = delete;
+    ScopedHStr& operator=(const ScopedHStr&) = delete;
+
+    ~ScopedHStr() {
+        if (h) {
+            gWinRt.windowsDeleteString(h);
+        }
+    }
+};
+
+template <typename T>
+static HRESULT GetActivationFactory(const WCHAR* runtimeClass, ComPtr<T>& factory) {
+    ScopedHStr cls(runtimeClass);
+    if (!cls.h) {
+        return E_OUTOFMEMORY;
+    }
+    return gWinRt.roGetActivationFactory(cls.h, IID_PPV_ARGS(&factory));
+}
+
+// the option details hang off the print task's options, so both the dialog side
+// (creating the options) and the render side (reading them) start here
+static HRESULT GetOptionDetails(Printing::IPrintTaskOptionsCore* options,
+                                ComPtr<OptDetails::IPrintTaskOptionDetails>& details) {
+    ComPtr<OptDetails::IPrintTaskOptionDetailsStatic> statics;
+    HRESULT hr =
+        GetActivationFactory(RuntimeClass_Windows_Graphics_Printing_OptionDetails_PrintTaskOptionDetails, statics);
+    if (FAILED(hr)) {
+        return hr;
+    }
+    return statics->GetFromPrintTaskOptions(options, &details);
+}
+
+static HRESULT GetOptionValue(OptDetails::IPrintTaskOptionDetails* details, const WCHAR* optionId,
+                              ComPtr<IInspectable>& value) {
+    ComPtr<__FIMapView_2_HSTRING_Windows__CGraphics__CPrinting__COptionDetails__CIPrintOptionDetails> options;
+    HRESULT hr = details->get_Options(&options);
+    if (FAILED(hr)) {
+        return hr;
+    }
+    ScopedHStr key(optionId);
+    ComPtr<OptDetails::IPrintOptionDetails> option;
+    hr = options->Lookup(key.h, &option);
+    if (FAILED(hr)) {
+        return hr;
+    }
+    return option->get_Value(&value);
+}
+
+static void SetOptionValue(OptDetails::IPrintOptionDetails* option, IInspectable* value) {
+    boolean ok = false;
+    option->TrySetValue(value, &ok);
+}
+
+static void SetOptionBool(OptDetails::IPrintOptionDetails* option, bool value) {
+    ComPtr<Foundation::IPropertyValueStatics> statics;
+    if (FAILED(GetActivationFactory(RuntimeClass_Windows_Foundation_PropertyValue, statics))) {
+        return;
+    }
+    ComPtr<IInspectable> boxed;
+    if (SUCCEEDED(statics->CreateBoolean((boolean)value, &boxed))) {
+        SetOptionValue(option, boxed.Get());
+    }
+}
+
+static void SetOptionStr(OptDetails::IPrintOptionDetails* option, const WCHAR* value) {
+    ComPtr<Foundation::IPropertyValueStatics> statics;
+    if (FAILED(GetActivationFactory(RuntimeClass_Windows_Foundation_PropertyValue, statics))) {
+        return;
+    }
+    ScopedHStr str(value);
+    ComPtr<IInspectable> boxed;
+    if (SUCCEEDED(statics->CreateString(str.h, &boxed))) {
+        SetOptionValue(option, boxed.Get());
+    }
+}
+
+static bool UnboxBool(IInspectable* value, bool defVal) {
+    ComPtr<Foundation::IPropertyValue> prop;
+    if (!value || FAILED(value->QueryInterface(IID_PPV_ARGS(&prop)))) {
+        return defVal;
+    }
+    boolean res = 0;
+    if (FAILED(prop->GetBoolean(&res))) {
+        return defVal;
+    }
+    return res != 0;
+}
+
+// the rotation option's value is the item id, i.e. "0", "90", "180" or "270"
+static int UnboxRotation(IInspectable* value, int defVal) {
+    ComPtr<Foundation::IPropertyValue> prop;
+    if (!value || FAILED(value->QueryInterface(IID_PPV_ARGS(&prop)))) {
+        return defVal;
+    }
+    HSTRING hstr = nullptr;
+    if (FAILED(prop->GetString(&hstr)) || !hstr) {
+        return defVal;
+    }
+    const WCHAR* str = gWinRt.windowsGetStringRawBuffer(hstr, nullptr);
+    int res = defVal;
+    for (int i = 0; str && i < dimofi(kRotationItems); i++) {
+        if (wstr::Eq(str, kRotationItems[i])) {
+            res = i * 90;
+            break;
+        }
+    }
+    gWinRt.windowsDeleteString(hstr);
+    return res;
+}
+
+// the Advanced page's labels carry an accelerator marker the print dialog has
+// no use for
+static TempWStr OptionLabelTemp(Str label) {
+    TempStr noAccel = str::DupTemp(label);
+    str::RemoveCharsInPlace(noAccel, StrL("&"));
+    return ToWStrTemp(Str(noAccel.s));
+}
 
 class D2DFactoryLock {
     ID2D1Multithread* multithread = nullptr;
@@ -307,11 +455,11 @@ class PrintDocumentSource final
             return E_POINTER;
         }
         *runtimeName = nullptr;
-        if (!gWindowsCreateString) {
+        if (!gWinRt.windowsCreateString) {
             return E_NOTIMPL;
         }
         const WCHAR* name = L"Windows.Graphics.Printing.IPrintDocumentSource";
-        return gWindowsCreateString(name, (UINT32)wcslen(name), runtimeName);
+        return gWinRt.windowsCreateString(name, (UINT32)wcslen(name), runtimeName);
     }
 
     HRESULT STDMETHODCALLTYPE GetTrustLevel(TrustLevel* trustLevel) override {
@@ -355,6 +503,27 @@ class PrintDocumentSource final
         VecClear(pages);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
             VecAppend(pages, pageNo);
+        }
+    }
+
+    // what the user picked in the dialog's "More settings" pane; the rest of
+    // Print_Advanced_Data has no equivalent there and keeps its default
+    void ReadAdvancedOptions(IInspectable* options) {
+        ComPtr<Printing::IPrintTaskOptionsCore> core;
+        if (FAILED(options->QueryInterface(IID_PPV_ARGS(&core)))) {
+            return;
+        }
+        ComPtr<OptDetails::IPrintTaskOptionDetails> details;
+        if (FAILED(GetOptionDetails(core.Get(), details))) {
+            return;
+        }
+        ComPtr<IInspectable> value;
+        if (SUCCEEDED(GetOptionValue(details.Get(), kOptCenterHorizontally, value))) {
+            advanced.centerHorizontally = UnboxBool(value.Get(), advanced.centerHorizontally);
+        }
+        value.Reset();
+        if (SUCCEEDED(GetOptionValue(details.Get(), kOptExtraRotation, value))) {
+            advanced.extraRotation = UnboxRotation(value.Get(), advanced.extraRotation);
         }
     }
 
@@ -507,6 +676,17 @@ class PrintDocumentSource final
 
     ~PrintDocumentSource() override { SafeEngineRelease(&engine); }
 
+    // a custom option changed: nothing re-paginates on its own, so ask for the
+    // preview to be built again with the new value
+    void InvalidatePreview() {
+        ScopedMutex lock(&mutex);
+        if (previewTarget) {
+            previewTarget->InvalidatePreview();
+        }
+    }
+
+    const Print_Advanced_Data& Advanced() const { return advanced; }
+
     HRESULT STDMETHODCALLTYPE GetPreviewPageCollection(IPrintDocumentPackageTarget* packageTarget,
                                                        IPrintPreviewPageCollection** collection) override {
         if (!packageTarget || !collection) {
@@ -525,6 +705,7 @@ class PrintDocumentSource final
             return E_INVALIDARG;
         }
         ScopedMutex lock(&mutex);
+        ReadAdvancedOptions(options);
         ReadPageRanges(options);
         HRESULT hr = options->QueryInterface(IID_PPV_ARGS(&previewOptions));
         if (SUCCEEDED(hr)) {
@@ -581,6 +762,7 @@ class PrintDocumentSource final
             return E_INVALIDARG;
         }
         ScopedMutex lock(&mutex);
+        ReadAdvancedOptions(options);
         ReadPageRanges(options);
         ComPtr<Printing::IPrintTaskOptionsCore> optionCore;
         HRESULT hr = options->QueryInterface(IID_PPV_ARGS(&optionCore));
@@ -643,15 +825,15 @@ class PrintDocumentSource final
 // dialog) and left initialized: the print pipeline outlives the session that
 // started it, so uninitializing when a session goes away would pull the ground
 // from under a job that is still running.
-static HRESULT EnsureWinRt(WinRtApi& api) {
-    if (!api.Load()) {
+static HRESULT EnsureWinRt() {
+    if (!gWinRt.Load()) {
         return HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
     }
     static bool initialized = false;
     if (initialized) {
         return S_OK;
     }
-    HRESULT hr = api.roInitialize(RO_INIT_SINGLETHREADED);
+    HRESULT hr = gWinRt.roInitialize(RO_INIT_SINGLETHREADED);
     if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) {
         return hr;
     }
@@ -660,14 +842,112 @@ static HRESULT EnsureWinRt(WinRtApi& api) {
 }
 
 class Win11PrintSession {
-    WinRtApi api;
     HWND hwnd = nullptr;
     EventRegistrationToken token{};
     ComPtr<IPrintManagerInterop> interop;
     ComPtr<Printing::IPrintManager> manager;
     ComPtr<PrintRequestedHandler> requestedHandler;
     ComPtr<PrintDocumentSource> source;
+    ComPtr<OptDetails::IPrintTaskOptionDetails> optionDetails;
+    EventRegistrationToken optionToken{};
     WStr jobTitle;
+
+    // Sumatra's Advanced print options go into the dialog's "More settings"
+    // pane as custom options; PrintDocumentSource reads them back when it lays
+    // the pages out. The paper tray is a standard option the dialog already
+    // knows how to show, it just isn't among the ones it shows by default.
+    // The rest of Print_Advanced_Data has no equivalent here: autoRotate is on
+    // in both paths and settable in neither, and the two paper-size options
+    // work by rewriting a DEVMODE, which the system owns in this path.
+    HRESULT AddAdvancedOptions(Printing::IPrintTaskOptionsCore* options) {
+        ComPtr<OptDetails::IPrintTaskOptionDetails> details;
+        HRESULT hr = GetOptionDetails(options, details);
+        if (FAILED(hr)) {
+            return hr;
+        }
+        const Print_Advanced_Data& advanced = source->Advanced();
+
+        ComPtr<OptDetails::IPrintTaskOptionDetails2> details2;
+        hr = details.As(&details2);
+        ComPtr<OptDetails::IPrintOptionDetails> centerOption;
+        if (SUCCEEDED(hr)) {
+            ScopedHStr id(kOptCenterHorizontally);
+            ScopedHStr name(OptionLabelTemp(_TRA("Center page hori&zontally on the paper")).s);
+            hr = details2->CreateToggleOption(id.h, name.h, &centerOption);
+        }
+        if (SUCCEEDED(hr)) {
+            SetOptionBool(centerOption.Get(), advanced.centerHorizontally);
+        }
+
+        ComPtr<OptDetails::IPrintOptionDetails> rotateOption;
+        if (SUCCEEDED(hr)) {
+            ScopedHStr id(kOptExtraRotation);
+            ScopedHStr name(OptionLabelTemp(_TRA("&Rotate printout:")).s);
+            hr = details->CreateItemListOption(id.h, name.h, &rotateOption);
+        }
+        if (SUCCEEDED(hr)) {
+            ComPtr<OptDetails::IPrintCustomItemListOptionDetails> items;
+            hr = rotateOption.As(&items);
+            for (int i = 0; SUCCEEDED(hr) && i < dimofi(kRotationItems); i++) {
+                ScopedHStr itemId(kRotationItems[i]);
+                // "None", then the degrees, matching the Advanced page
+                ScopedHStr name(i == 0 ? ToWStrTemp(_TRA("None")).s : ToWStrTemp(fmt("%d°", i * 90)).s);
+                hr = items->AddItem(itemId.h, name.h);
+            }
+        }
+        if (SUCCEEDED(hr)) {
+            int idx = (advanced.extraRotation / 90) % dimofi(kRotationItems);
+            SetOptionStr(rotateOption.Get(), kRotationItems[idx]);
+        }
+        if (FAILED(hr)) {
+            return hr;
+        }
+
+        hr = ShowAdvancedOptions(options);
+        if (FAILED(hr)) {
+            return hr;
+        }
+
+        PrintDocumentSource* src = source.Get();
+        auto handler = Callback<OptionChangedHandler>(
+            [src](OptDetails::IPrintTaskOptionDetails*, OptDetails::IPrintTaskOptionChangedEventArgs*) -> HRESULT {
+                src->InvalidatePreview();
+                return S_OK;
+            });
+        if (!handler) {
+            return E_OUTOFMEMORY;
+        }
+        optionDetails = details;
+        return details->add_OptionChanged(handler.Get(), &optionToken);
+    }
+
+    // adds our options, plus the printer's paper tray, to what the dialog shows
+    HRESULT ShowAdvancedOptions(Printing::IPrintTaskOptionsCore* options) {
+        ComPtr<Printing::IPrintTaskOptionsCoreUIConfiguration> config;
+        HRESULT hr = options->QueryInterface(IID_PPV_ARGS(&config));
+        ComPtr<__FIVector_1_HSTRING> displayed;
+        if (SUCCEEDED(hr)) {
+            hr = config->get_DisplayedOptions(&displayed);
+        }
+        if (FAILED(hr)) {
+            return hr;
+        }
+
+        ComPtr<Printing::IStandardPrintTaskOptionsStatic> standard;
+        HRESULT stdHr = GetActivationFactory(RuntimeClass_Windows_Graphics_Printing_StandardPrintTaskOptions, standard);
+        if (SUCCEEDED(stdHr)) {
+            HSTRING inputBin = nullptr;
+            if (SUCCEEDED(standard->get_InputBin(&inputBin)) && inputBin) {
+                displayed->Append(inputBin);
+                gWinRt.windowsDeleteString(inputBin);
+            }
+        }
+        ScopedHStr center(kOptCenterHorizontally);
+        displayed->Append(center.h);
+        ScopedHStr rotate(kOptExtraRotation);
+        displayed->Append(rotate.h);
+        return S_OK;
+    }
 
     HRESULT OnPrintRequested(Printing::IPrintTaskRequestedEventArgs* args) {
         ComPtr<Printing::IPrintTaskRequest> request;
@@ -691,14 +971,14 @@ class Win11PrintSession {
 
         HSTRING title = nullptr;
         if (SUCCEEDED(hr)) {
-            hr = api.windowsCreateString(jobTitle.s, (UINT32)len(jobTitle), &title);
+            hr = gWinRt.windowsCreateString(jobTitle.s, (UINT32)len(jobTitle), &title);
         }
         ComPtr<Printing::IPrintTask> task;
         if (SUCCEEDED(hr)) {
             hr = request->CreatePrintTask(title, sourceHandler.Get(), &task);
         }
         if (title) {
-            api.windowsDeleteString(title);
+            gWinRt.windowsDeleteString(title);
         }
 
         ComPtr<Printing::IPrintTaskOptionsCore> options;
@@ -712,6 +992,13 @@ class Win11PrintSession {
                 rangeOptions->put_AllowAllPages(true);
                 rangeOptions->put_AllowCurrentPage(true);
                 rangeOptions->put_AllowCustomSetOfPages(true);
+            }
+        }
+        if (SUCCEEDED(hr)) {
+            // losing these costs the extra options, not the print job
+            HRESULT optHr = AddAdvancedOptions(options.Get());
+            if (FAILED(optHr)) {
+                logf("Win11 print: advanced options unavailable: 0x%08x\n", (uint)optHr);
             }
         }
         ComPtr<Printing::IPrintTask2> task2;
@@ -730,11 +1017,14 @@ class Win11PrintSession {
         if (manager && token.value) {
             manager->remove_PrintTaskRequested(token);
         }
+        if (optionDetails && optionToken.value) {
+            optionDetails->remove_OptionChanged(optionToken);
+        }
         wstr::Free(jobTitle);
     }
 
     HRESULT Initialize(HWND hwnd, EngineBase* engine, int currentPage, PrintScaleAdv scale, float previewDpi) {
-        HRESULT hr = EnsureWinRt(api);
+        HRESULT hr = EnsureWinRt();
         if (FAILED(hr)) {
             return hr;
         }
@@ -757,15 +1047,7 @@ class Win11PrintSession {
         TempStr baseName = path::GetBaseNameTemp(engine->FilePath());
         jobTitle = wstr::Dup(ToWStrTemp(baseName ? baseName : StrL("SumatraPDF document")));
 
-        HSTRING className = nullptr;
-        const WCHAR* runtimeClass = RuntimeClass_Windows_Graphics_Printing_PrintManager;
-        hr = api.windowsCreateString(runtimeClass, (UINT32)wcslen(runtimeClass), &className);
-        if (SUCCEEDED(hr)) {
-            hr = api.roGetActivationFactory(className, IID_PPV_ARGS(&interop));
-        }
-        if (className) {
-            api.windowsDeleteString(className);
-        }
+        hr = GetActivationFactory(RuntimeClass_Windows_Graphics_Printing_PrintManager, interop);
         if (SUCCEEDED(hr)) {
             hr = interop->GetForWindow(hwnd, IID_PPV_ARGS(&manager));
         }
