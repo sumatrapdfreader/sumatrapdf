@@ -52,6 +52,8 @@ constexpr int kBtnPadX = 8;
 constexpr int kBtnPadY = 4;
 constexpr int kMargin = 5;
 constexpr int kBtnGap = 2;
+// breathing room above and below the Accept / Cancel row of the contents editor
+constexpr int kContentsButtonsRowPad = 4;
 constexpr int kCornerRadius = 10;
 constexpr int kButtonRadius = 6;
 constexpr int kToolbarFontPct = 108;
@@ -1304,8 +1306,9 @@ static void LayoutContentsEditor(AnnotEditToolbar* tb) {
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->gap = gap;
+    int rowPad = DpiScale(kContentsButtonsRowPad);
     vbox->AddChild(slot);
-    vbox->AddChild(buttons);
+    vbox->AddChild(new Padding(buttons, Insets{rowPad, 0, rowPad, 0}));
 
     auto* content = new Padding(vbox, Insets{margin, margin, margin, margin});
     tb->size = tb->host->SetLayoutSizedToContent(content);
