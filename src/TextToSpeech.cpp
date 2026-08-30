@@ -71,6 +71,22 @@ static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
     return str::CmpI(a.name ? a.name : StrL(""), b.name ? b.name : StrL("")) < 0;
 }
 
+static bool TtsForceSapi() {
+    return len(GetEnvVariableTemp(StrL("SUMATRA_TTS_FORCE_SAPI"))) > 0;
+}
+
+static bool TtsVoiceIdInList(const Vec<TtsVoiceInfo>& voices, Str id) {
+    if (!id) {
+        return false;
+    }
+    for (const TtsVoiceInfo& v : voices) {
+        if (v.id && str::EqI(v.id, id)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void TtsSortVoicesByLanguage(Vec<TtsVoiceInfo>& voices) {
     for (int i = 1; i < len(voices); i++) {
         TtsVoiceInfo value = voices[i];
@@ -1309,14 +1325,12 @@ static void WinTtsStop() {
 
 static bool IsWinRtBackend() {
     if (gTtsBackend == TtsBackend::Unknown) {
-        // an escape hatch, also for testing the SAPI implementation
-        bool forceSapi = len(GetEnvVariableTemp(StrL("SUMATRA_TTS_FORCE_SAPI"))) > 0;
-        if (!forceSapi && WinTtsInit()) {
+        if (!TtsForceSapi() && WinTtsInit()) {
             gTtsBackend = TtsBackend::WinRt;
             dbgtts("backend=winrt\n");
         } else {
             gTtsBackend = TtsBackend::Sapi;
-            dbgtts("backend=sapi forceSapi=%d\n", (int)forceSapi);
+            dbgtts("backend=sapi forceSapi=%d\n", (int)TtsForceSapi());
         }
     }
     return gTtsBackend == TtsBackend::WinRt;
@@ -1435,29 +1449,59 @@ void TtsStop() {
     gTtsQueuedStarted = false;
 }
 
+// WinRT OneCore plus SAPI (NaturalVoiceSAPIAdapter etc.). Same token id once.
 Vec<TtsVoiceInfo> TtsGetVoices() {
     Vec<TtsVoiceInfo> voices;
-    if (IsWinRtBackend()) {
+    if (!TtsForceSapi()) {
         WinTtsGetVoices(voices);
-    } else {
-        SapiGetVoices(voices);
     }
+
+    Vec<TtsVoiceInfo> sapi;
+    SapiGetVoices(sapi);
+    for (TtsVoiceInfo& v : sapi) {
+        if (TtsVoiceIdInList(voices, v.id)) {
+            str::Free(v.id);
+            str::Free(v.name);
+            str::Free(v.lang);
+            continue;
+        }
+        VecAppend(voices, v);
+    }
+    VecReset(sapi);
+
     TtsSortVoicesByLanguage(voices);
+    dbgtts("voices winrt+sapi=%d forceSapi=%d\n", len(voices), (int)TtsForceSapi());
     return voices;
 }
 
+// Use WinRT if it knows the id, else SAPI. Empty id is the system default.
 bool TtsSetVoiceById(Str voiceId) {
-    bool ok;
-    if (IsWinRtBackend()) {
-        ok = WinTtsSetVoiceById(voiceId);
-    } else {
-        ok = SapiSetVoiceById(voiceId);
+    TtsBackend prev = gTtsBackend;
+    TtsBackend next = TtsBackend::Unknown;
+    bool ok = false;
+
+    if (!TtsForceSapi() && WinTtsInit() && WinTtsSetVoiceById(voiceId)) {
+        next = TtsBackend::WinRt;
+        ok = true;
+    } else if (SapiSetVoiceById(voiceId)) {
+        next = TtsBackend::Sapi;
+        ok = true;
     }
     if (!ok) {
         return false;
     }
 
+    if (prev != TtsBackend::Unknown && prev != next) {
+        if (prev == TtsBackend::WinRt) {
+            WinTtsStop();
+        } else {
+            SapiStop();
+        }
+    }
+
+    gTtsBackend = next;
     str::ReplacePtr(&gTtsVoiceId, voiceId ? str::Dup(voiceId) : Str{});
+    dbgtts("set-voice backend=%d\n", (int)next);
     return true;
 }
 
