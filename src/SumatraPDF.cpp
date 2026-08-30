@@ -13719,25 +13719,123 @@ static void ReadAloudSaveVoicePref(Str voiceId) {
 // WinRT speech synthesis is too slow for whole-document requests; speak in chunks.
 static constexpr int kReadAloudMaxChunkLen = 1024;
 
+static bool IsReadAloudSentencePunct(int c) {
+    return c == '.' || c == '!' || c == '?' || c == 0x3002 || c == 0xFF01 || c == 0xFF1F || c == 0x2026;
+}
+
+static bool IsReadAloudCloser(int c) {
+    return c == '"' || c == '\'' || c == ')' || c == ']' || c == '}' || c == 0x2019 || c == 0x201D || c == 0x00BB;
+}
+
+// Prefer a sentence end in the window so TTS does not drop intonation mid-clause
+// (issue #6110). Skip "e.g. the" (lowercase after the period). Else last space.
 static int ReadAloudFindChunkEnd(Str text, int start, int maxLen) {
     int textLen = text.len;
     if (start >= textLen) {
         return textLen;
     }
 
-    int end = start + maxLen;
-    if (end >= textLen) {
+    int limit = start + maxLen;
+    if (limit >= textLen) {
         return textLen;
     }
 
-    while (end > start && text.s[end] != ' ') {
-        end--;
+    int bestSent = start;
+    int bestSpace = start;
+    int i = start;
+    while (i < limit) {
+        int c = Utf8CodepointNext(text, i);
+        if (c == ' ' || c == '\t') {
+            bestSpace = i;
+            continue;
+        }
+        if (!IsReadAloudSentencePunct(c)) {
+            continue;
+        }
+
+        int after = i;
+        while (after < textLen) {
+            int t = after;
+            int d = Utf8CodepointNext(text, t);
+            if (!IsReadAloudCloser(d)) {
+                break;
+            }
+            after = t;
+        }
+        while (after < textLen) {
+            int t = after;
+            int d = Utf8CodepointNext(text, t);
+            if (d != ' ' && d != '\t') {
+                break;
+            }
+            after = t;
+        }
+        if (after < textLen) {
+            int t = after;
+            int d = Utf8CodepointNext(text, t);
+            if (d >= 'a' && d <= 'z') {
+                continue;
+            }
+        }
+        if (after > start && after <= limit) {
+            bestSent = after;
+        }
     }
-    if (end <= start) {
-        end = start + maxLen;
-        end = std::min(end, textLen);
+
+    if (bestSent > start) {
+        return bestSent;
     }
-    return end;
+    if (bestSpace > start) {
+        return bestSpace;
+    }
+    return limit;
+}
+
+static void ReadAloudQueueNext(WindowTab* tab) {
+    if (!tab || tab->readAloudQueuedEnd > 0 || len(tab->readAloudText) == 0) {
+        return;
+    }
+    if (tab->readAloudChunkEnd >= tab->readAloudText.len) {
+        return;
+    }
+
+    int start = tab->readAloudChunkEnd;
+    int end = ReadAloudFindChunkEnd(tab->readAloudText, start, kReadAloudMaxChunkLen);
+    if (start >= end) {
+        return;
+    }
+
+    TempStr chunk = str::DupTemp(Str(tab->readAloudText.s + start, end - start));
+    if (!TtsQueueUtf8(chunk)) {
+        return;
+    }
+    tab->readAloudQueuedEnd = end;
+    dbgtts("queue-next %d..%d of %d\n", start, end, tab->readAloudText.len);
+}
+
+static void ReadAloudOnQueuedStarted(WindowTab* tab) {
+    if (!tab || tab->readAloudQueuedEnd <= tab->readAloudChunkEnd) {
+        tab->readAloudQueuedEnd = 0;
+        return;
+    }
+    tab->readAloudChunkStart = tab->readAloudChunkEnd;
+    tab->readAloudChunkEnd = tab->readAloudQueuedEnd;
+    tab->readAloudQueuedEnd = 0;
+    dbgtts("queued-now %d..%d of %d\n", tab->readAloudChunkStart, tab->readAloudChunkEnd, tab->readAloudText.len);
+}
+
+// Promote a prefetched chunk and start the next prefetch.
+void ReadAloudAfterTtsEvents() {
+    WindowTab* tab = GetReadAloudSourceTab();
+    if (!tab) {
+        return;
+    }
+    if (TtsDidStartQueued()) {
+        ReadAloudOnQueuedStarted(tab);
+    }
+    if (TtsIsSpeaking()) {
+        ReadAloudQueueNext(tab);
+    }
 }
 
 static bool ReadAloudHasMoreChunks(WindowTab* tab) {
@@ -13763,6 +13861,7 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
     tab->readAloudResumePos = -1;
     tab->readAloudChunkStart = 0;
     tab->readAloudChunkEnd = 0;
+    tab->readAloudQueuedEnd = 0;
     if (tab->readAloudHighlight) {
         ReadAloudHighlightFree(tab->readAloudHighlight);
         delete tab->readAloudHighlight;
@@ -13804,6 +13903,8 @@ static bool ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
 
     tab->readAloudChunkStart = start;
     tab->readAloudChunkEnd = end;
+    tab->readAloudQueuedEnd = 0;
+    ReadAloudQueueNext(tab);
     ToolbarUpdateStateForWindow(tab->win, true);
     HwndInvalidate(tab->win->hwndCanvas);
     return true;
@@ -13981,6 +14082,7 @@ static void ResetReadAloudStateForTab(WindowTab* tab) {
     tab->readAloudHighlightBase = 0;
     tab->readAloudChunkStart = 0;
     tab->readAloudChunkEnd = 0;
+    tab->readAloudQueuedEnd = 0;
     tab->readAloudAutoScroll = false;
     tab->readAloudScope = 0;
     if (gReadAloudSessionTab == tab) {
@@ -14160,6 +14262,7 @@ static void ReadAloudStartText(WindowTab* tab, Str cleaned, ReadAloudHighlightMa
     tab->readAloudHighlightBase = highlightBase;
     tab->readAloudChunkStart = 0;
     tab->readAloudChunkEnd = 0;
+    tab->readAloudQueuedEnd = 0;
     tab->readAloudResumePos = -1;
     tab->readAloudAutoScroll = true;
     gReadAloudSessionTab = tab;
@@ -14335,6 +14438,7 @@ static void ReadAloudContinueInTab(WindowTab* tab) {
     int resumeInText = tab->readAloudResumePos - tab->readAloudHighlightBase;
     tab->readAloudChunkEnd = resumeInText;
     tab->readAloudChunkStart = resumeInText;
+    tab->readAloudQueuedEnd = 0;
     tab->readAloudResumePos = -1;
     tab->readAloudAutoScroll = true;
     ReadAloudSetSourceTab(tab);
@@ -15001,21 +15105,23 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
             return MA_ACTIVATE;
 
-        case kWmTtsEvent:
+        case kWmTtsEvent: {
             TtsProcessEvents();
+            ReadAloudAfterTtsEvents();
 
-            if (TtsIsSpeaking() && gReadAloudSourceTab && gReadAloudSourceTab->win) {
-                HwndInvalidate(gReadAloudSourceTab->win->hwndCanvas);
+            WindowTab* raTab = gReadAloudSourceTab;
+
+            if (TtsIsSpeaking() && raTab && raTab->win) {
+                HwndInvalidate(raTab->win->hwndCanvas);
                 // Tick, not UpdateSession: relayout rebuilds virt tops and
                 // clears pressed, so Pause/Stop/Speed mouse-up is lost (issue #6106)
                 dbgtts("event speaking pos=%d\n", TtsGetSpokenPosUtf8());
-                ReadAloudPlaybackBarTick(gReadAloudSourceTab->win);
+                ReadAloudPlaybackBarTick(raTab->win);
             }
 
             // also gets here for word boundary events while still speaking;
             // only the end of speech needs handling
-            if (!TtsIsSpeaking() && gReadAloudSourceTab) {
-                WindowTab* raTab = gReadAloudSourceTab;
+            if (!TtsIsSpeaking() && raTab) {
                 dbgtts("event idle hasMore=%d chunkEnd=%d textLen=%d\n", (int)ReadAloudHasMoreChunks(raTab),
                        raTab->readAloudChunkEnd, raTab->readAloudText.len);
                 if (ReadAloudHasMoreChunks(raTab)) {
@@ -15028,6 +15134,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
 
             return 0;
+        }
         case WM_ERASEBKGND:
             // not sure why it's needed but it causes
             // flash of caption area in choco theme when resizing sidebar

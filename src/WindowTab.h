@@ -91,6 +91,8 @@ struct WindowTab {
     // current chunk within readAloudText (for WinRT-sized TTS segments)
     int readAloudChunkStart = 0;
     int readAloudChunkEnd = 0;
+    // next chunk submitted to TtsQueueUtf8; 0 if none
+    int readAloudQueuedEnd = 0;
     enum ReadAloudScope {
         ReadAloudScopeSmart = 1,
         ReadAloudScopeViewport = 2,

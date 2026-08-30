@@ -153,6 +153,7 @@ WindowTab* FindTabByFilePath(Str path);
 WindowTab* FindTabByController(DocController*);
 WindowTab* GetReadAloudSourceTab();
 void ReadAloudForgetTab(WindowTab*);
+void ReadAloudAfterTtsEvents();
 
 constexpr UINT CmdTtsVoiceDefault = 0x7100;
 constexpr UINT CmdTtsVoiceFirst = 0x7101;

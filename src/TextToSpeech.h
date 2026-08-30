@@ -6,6 +6,8 @@ struct TtsVoiceInfo {
 };
 
 bool TtsSpeakUtf8(Str text);
+bool TtsQueueUtf8(Str text);
+bool TtsDidStartQueued();
 void TtsStop();
 void TtsRelease();
 

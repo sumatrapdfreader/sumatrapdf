@@ -5450,6 +5450,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case kReadAloudHighlightTimerID:
             if (GetReadAloudSourceTab()) {
                 TtsProcessEvents();
+                ReadAloudAfterTtsEvents();
                 DBG_TTS({
                     int pos = TtsGetSpokenPosUtf8();
                     static int sLastTtsPos = -999;
