@@ -27,6 +27,12 @@ void FileUtilTest() {
     utassert(str::Eq(dirName, StrL("\\\\server")));
     dirName = path::GetDirTemp(StrL("file.exe"));
     utassert(str::Eq(dirName, StrL(".")));
+    utassert(path::IsDriveRoot(StrL("C:\\")));
+    utassert(path::IsDriveRoot(StrL("C:/")));
+    utassert(path::IsDriveRoot(StrL("C:\\\\")));
+    utassert(!path::IsDriveRoot(StrL("C:")));
+    utassert(!path::IsDriveRoot(StrL("C:\\Windows")));
+    utassert(!path::IsDriveRoot(StrL("file.exe")));
     dirName = path::GetDirTemp(StrL("/etc"));
     utassert(str::Eq(dirName, StrL("/")));
 

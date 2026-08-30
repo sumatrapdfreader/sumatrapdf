@@ -52,6 +52,7 @@ bool IsCloudPlaceholder(Str path);
 bool IsEphemeralHostFile(Str path);
 bool SupportsChangeNotifications(Str path);
 bool IsAbsolute(Str path);
+bool IsDriveRoot(Str path);
 
 bool IsWslUnc(Str path);
 bool IsWslMount(Str path);
