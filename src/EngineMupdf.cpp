@@ -5313,8 +5313,6 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
         el->rect = ToRectF(rect);
 
         VecAppend(comments, el);
-        // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-        // for saving the attachment to a file
         // TODO: expose /Contents in addition to the file path
         return;
     }
@@ -5346,7 +5344,6 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
 static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
     DeleteVecMembers(pageInfo->comments);
 
-    // TODO: can use pageInof->annotations
     Vec<IPageElement*>& comments = pageInfo->comments;
 
     auto* page = pageInfo->page;
