@@ -15,6 +15,7 @@ Color gColsListBox[kColListCount];
 Color gColsSplitter[kColSplitterCount];
 Color gColsFill[kColFillCount];
 Color gColsLine[kColLineCount];
+Color gColsSlider[kColSliderCount];
 Color gColsRichText[kColRichCount];
 Color gColsTab[kColTabCount];
 Color gColsWin[kColWinCount];
@@ -118,6 +119,11 @@ void GuiSetDefaultColorsFromSystem() {
     gColsFill[kColFillBg] = ctlBg;
 
     gColsLine[kColLineFg] = edge;
+
+    gColsSlider[kColSliderTrack] = AccentColor(ctlBg, 40);
+    gColsSlider[kColSliderFill] = ctlText;
+    gColsSlider[kColSliderThumb] = ctlText;
+    gColsSlider[kColSliderThumbHover] = AccentColor(ctlText, 20);
 
     gColsRichText[kColRichText] = winText;
     gColsRichText[kColRichLink] = link;

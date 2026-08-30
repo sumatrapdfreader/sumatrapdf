@@ -732,6 +732,7 @@ void VirtRoot::UpdateTooltip(Point ptWindow) {
     }
     // already showing for this control: leave the bubble where it first appeared
     if (w == tooltipWnd && tooltip && tooltip->Count() > 0) {
+        tooltip->SetSingle(tip, tipRc, false);
         return;
     }
     if (!tooltip && hwnd) {
@@ -3067,6 +3068,196 @@ void VirtLine::Paint(VirtPaintCtx& ctx) {
     ctx.gfx->FillRect(r, GetColor(kColLineFg));
 }
 
+//--- VirtSlider
+
+static Kind kindVirtCtrlSlider = "virtCtrlSlider";
+
+VirtSlider::VirtSlider() {
+    kind = kindVirtCtrlSlider;
+    colorDefaults = gColsSlider;
+    nColors = kColSliderCount;
+    flags |= vwfCapturesMouse;
+    flags &= ~vwfFocusable;
+    cursor = CursorId::Hand;
+    onMouseDown = MkMethod1<VirtSlider, VirtMouseEvent*, &VirtSlider::OnMouseDown>(this);
+    onMouseMove = MkMethod1<VirtSlider, VirtMouseEvent*, &VirtSlider::OnMouseMove>(this);
+    onMouseUp = MkMethod1<VirtSlider, VirtMouseEvent*, &VirtSlider::OnMouseUp>(this);
+    onMouseWheel = MkMethod1<VirtSlider, VirtMouseEvent*, &VirtSlider::OnMouseWheel>(this);
+    onMouseEnter = MkMethod0<VirtSlider, &VirtSlider::OnMouseEnter>(this);
+    onMouseLeave = MkMethod0<VirtSlider, &VirtSlider::OnMouseLeave>(this);
+    onCaptureLost = MkMethod0<VirtSlider, &VirtSlider::OnCaptureLost>(this);
+}
+
+VirtSlider::~VirtSlider() = default;
+
+int VirtSlider::ThumbRadius() const {
+    HWND hwnd = GetHwnd();
+    int dpi = hwnd ? DpiGetForHwnd(hwnd) : 96;
+    return std::max(DpiScaleByDpi(dpi, 7), 5);
+}
+
+Rect VirtSlider::TrackRectLocal() const {
+    int r = ThumbRadius();
+    int thick = std::max(r / 3, 3);
+    Rect c = {0, 0, bounds.dx, bounds.dy};
+    int y = c.y + (c.dy - thick) / 2;
+    int x = c.x + r;
+    int dx = std::max(c.dx - (2 * r), 1);
+    return {x, y, dx, thick};
+}
+
+int VirtSlider::ValueFromLocalX(int xLocal) {
+    if (maxVal <= minVal) {
+        return minVal;
+    }
+    Rect track = TrackRectLocal();
+    int x = xLocal;
+    HWND hwnd = GetHwnd();
+    if (hwnd && HwndIsRtl(hwnd)) {
+        x = track.x + track.dx - (xLocal - track.x);
+    }
+    float t = 0;
+    if (track.dx > 0) {
+        t = (float)(x - track.x) / (float)track.dx;
+    }
+    if (t < 0) {
+        t = 0;
+    }
+    if (t > 1) {
+        t = 1;
+    }
+    int n = maxVal - minVal;
+    return minVal + (int)lroundf(t * (float)n);
+}
+
+bool VirtSlider::IsAdjusting() const {
+    return adjusting;
+}
+
+void VirtSlider::SetValue(int v, bool notify) {
+    if (maxVal < minVal) {
+        maxVal = minVal;
+    }
+    if (v < minVal) {
+        v = minVal;
+    }
+    if (v > maxVal) {
+        v = maxVal;
+    }
+    if (v == value) {
+        if (!adjusting) {
+            committed = v;
+        }
+        return;
+    }
+    value = v;
+    if (!adjusting) {
+        committed = v;
+    }
+    Invalidate();
+    if (notify && onValueChanged.IsValid()) {
+        onValueChanged.Call();
+    }
+}
+
+Size VirtSlider::GetIdealSize() {
+    HWND hwnd = GetHwnd();
+    int dpi = hwnd ? DpiGetForHwnd(hwnd) : 96;
+    int r = ThumbRadius();
+    int dx = idealDx > 0 ? idealDx : DpiScaleByDpi(dpi, 88);
+    return {dx, (2 * r) + DpiScaleByDpi(dpi, 4)};
+}
+
+void VirtSlider::Paint(VirtPaintCtx& ctx) {
+    Rect track = TrackRectLocal();
+    track.x += ctx.bounds.x;
+    track.y += ctx.bounds.y;
+    int r = ThumbRadius();
+    int n = maxVal - minVal;
+    float t = (n <= 0) ? 0 : (float)(value - minVal) / (float)n;
+    HWND hwnd = GetHwnd();
+    bool rtl = hwnd && HwndIsRtl(hwnd);
+    int cx;
+    if (rtl) {
+        cx = track.x + track.dx - (int)lroundf(t * (float)track.dx);
+    } else {
+        cx = track.x + (int)lroundf(t * (float)track.dx);
+    }
+    int cy = track.y + track.dy / 2;
+
+    Color trackCol = GetColor(kColSliderTrack);
+    Color fillCol = GetColor(kColSliderFill);
+    int radius = std::max(track.dy / 2, 1);
+    ctx.gfx->FillRoundedRect(track, radius, trackCol);
+    Rect fill = track;
+    if (rtl) {
+        fill.dx = track.x + track.dx - cx;
+        fill.x = cx;
+    } else {
+        fill.dx = cx - track.x;
+    }
+    if (fill.dx > 0) {
+        ctx.gfx->FillRoundedRect(fill, radius, fillCol);
+    }
+
+    bool hot = HasFlag(vwfHovered) || HasFlag(vwfPressed);
+    Color thumb = GetColor(hot ? kColSliderThumbHover : kColSliderThumb);
+    int d = r * 2;
+    ctx.gfx->FillEllipse({cx - r, cy - r, d, d}, thumb);
+}
+
+void VirtSlider::ApplyFromEvent(const VirtMouseEvent& ev, bool commit) {
+    Rect b = BoundsInWindow();
+    int v = ValueFromLocalX(ev.ptWindow.x - b.x);
+    SetValue(v, true);
+    if (commit && onValueCommitted.IsValid()) {
+        onValueCommitted.Call();
+    }
+}
+
+void VirtSlider::OnMouseDown(VirtMouseEvent* ev) {
+    adjusting = true;
+    ApplyFromEvent(*ev, false);
+    ev->didHandle = true;
+}
+
+void VirtSlider::OnMouseMove(VirtMouseEvent* ev) {
+    if (!adjusting) {
+        return;
+    }
+    ApplyFromEvent(*ev, false);
+    ev->didHandle = true;
+}
+
+void VirtSlider::OnMouseUp(VirtMouseEvent* ev) {
+    ApplyFromEvent(*ev, true);
+    committed = value;
+    adjusting = false;
+    ev->didHandle = true;
+}
+
+void VirtSlider::OnMouseWheel(VirtMouseEvent* ev) {
+    int dir = ev->wheelDelta > 0 ? 1 : -1;
+    SetValue(value + dir, true);
+    if (onValueCommitted.IsValid()) {
+        onValueCommitted.Call();
+    }
+    ev->didHandle = true;
+}
+
+void VirtSlider::OnMouseEnter() {
+    Invalidate();
+}
+
+void VirtSlider::OnMouseLeave() {
+    Invalidate();
+}
+
+void VirtSlider::OnCaptureLost() {
+    adjusting = false;
+    SetValue(committed, false);
+}
+
 //--- VirtSpacer
 
 static Kind kindVirtCtrlSpacer = "virtCtrlSpacer";
@@ -3116,6 +3307,13 @@ VirtIconButton* AsVirtIconButton(ILayout* l) {
 VirtCloseButton* AsVirtCloseButton(ILayout* l) {
     if (l && l->GetKind() == kindVirtCtrlCloseButton) {
         return (VirtCloseButton*)l;
+    }
+    return nullptr;
+}
+
+VirtSlider* AsVirtSlider(ILayout* l) {
+    if (l && l->GetKind() == kindVirtCtrlSlider) {
+        return (VirtSlider*)l;
     }
     return nullptr;
 }

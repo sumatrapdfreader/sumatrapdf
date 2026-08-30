@@ -44,7 +44,8 @@ struct ReadAloudPlaybackBar : WindowBase {
     HWND hwndCanvas = nullptr;
     VirtButton* btnPause = nullptr;
     VirtButton* btnStop = nullptr;
-    VirtButton* btnSpeed = nullptr;
+    VirtSlider* speedSlider = nullptr;
+    VirtText* speedLabel = nullptr;
     VirtText* status = nullptr;
     bool showResume = false;
     int lastX = 0;
@@ -99,10 +100,6 @@ static TempStr ReadAloudPlaybackBarTextTemp(WindowTab* tab) {
     return fmt(_TRA("Reading \xC2\xB7 %s \xC2\xB7 %s").s, docName, scope);
 }
 
-static TempStr SpeedLabelTemp() {
-    return ReadAloudSpeedLabelTemp(TtsGetSpeed());
-}
-
 static void OnPauseClicked(ReadAloudPlaybackBar* bar, VirtMouseEvent*) {
     dbgtts("bar pause-click speaking=%d resume=%d\n", (int)TtsIsSpeaking(), (int)bar->showResume);
     ReadAloudPlaybackPauseOrResume();
@@ -115,12 +112,25 @@ static void OnStopClicked(ReadAloudPlaybackBar*, VirtMouseEvent*) {
     ReadAloudPlaybackStop();
 }
 
-// left-click steps up, right-click steps down
-static void OnSpeedClicked(ReadAloudPlaybackBar* bar, VirtMouseEvent* ev) {
-    dbgtts("bar speed-click button=%d\n", ev->button);
-    ReadAloudPlaybackCycleSpeed(ev->button == 1 ? -1 : +1);
-    bar->UpdateLayout(true);
-    HwndRepaintNow(bar->hwnd);
+static void SyncSpeedLabel(ReadAloudPlaybackBar* bar) {
+    int idx = bar->speedSlider ? bar->speedSlider->value : ReadAloudClosestSpeedIdx();
+    bar->speedLabel->SetText(ReadAloudSpeedLabelTemp(ReadAloudSpeedAt(idx)));
+}
+
+static void OnSpeedSliderDrag(ReadAloudPlaybackBar* bar) {
+    SyncSpeedLabel(bar);
+    HwndInvalidate(bar->hwnd);
+}
+
+static void OnSpeedSliderCommit(ReadAloudPlaybackBar* bar) {
+    ReadAloudSetSpeedIdx(bar->speedSlider->value);
+    SyncSpeedLabel(bar);
+    HwndInvalidate(bar->hwnd);
+}
+
+static void OnSpeedSliderTooltip(ReadAloudPlaybackBar* bar, VirtTooltipEvent* ev) {
+    int idx = bar->speedSlider->ValueFromLocalX(ev->ptLocal.x);
+    ev->tip = ReadAloudSpeedLabelTemp(ReadAloudSpeedAt(idx));
 }
 
 static void OnBarWndProc(WindowBase::WndProcEvent* ev) {
@@ -153,9 +163,9 @@ HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
     return hwnd;
 }
 
-// [Pause] [Stop] [Speed] [status…]. The HWND is WS_EX_LAYOUTRTL, but we paint
-// into a DoubleBuffer DC that is not mirrored, so HBox.rtl (not GDI's flip)
-// is what reverses the row.
+// [Pause] [Stop] [slider] [1.5x] [status…]. The HWND is WS_EX_LAYOUTRTL, but we
+// paint into a DoubleBuffer DC that is not mirrored, so HBox.rtl (not GDI's
+// flip) is what reverses the row.
 void ReadAloudPlaybackBar::BuildLayout() {
     PlatformFont* pf = font;
     int gap = DpiScale(kBtnGap);
@@ -177,11 +187,18 @@ void ReadAloudPlaybackBar::BuildLayout() {
     btnStop->flags |= vwfCapturesMouse;
     btnStop->onClick = MkFunc1(OnStopClicked, this);
 
-    btnSpeed = new VirtButton({}, pf);
-    btnSpeed->textPadding = btnPad;
-    btnSpeed->flags &= ~vwfFocusable;
-    btnSpeed->flags |= vwfCapturesMouse;
-    btnSpeed->onClick = MkFunc1(OnSpeedClicked, this);
+    speedSlider = new VirtSlider();
+    speedSlider->minVal = 0;
+    speedSlider->maxVal = std::max(ReadAloudSpeedCount() - 1, 0);
+    speedSlider->value = ReadAloudClosestSpeedIdx();
+    speedSlider->onValueChanged = MkFunc0(OnSpeedSliderDrag, this);
+    speedSlider->onValueCommitted = MkFunc0(OnSpeedSliderCommit, this);
+    speedSlider->onGetTooltip = MkFunc1(OnSpeedSliderTooltip, this);
+
+    speedLabel = NewVirtText({
+        .font = pf,
+        .isRtl = IsUIRtl(),
+    });
 
     status = NewVirtText({
         .font = pf,
@@ -196,7 +213,9 @@ void ReadAloudPlaybackBar::BuildLayout() {
     row->AddChild(new Spacer(gap, 0));
     row->AddChild(btnStop);
     row->AddChild(new Spacer(gap, 0));
-    row->AddChild(btnSpeed);
+    row->AddChild(speedSlider);
+    row->AddChild(new Spacer(gap, 0));
+    row->AddChild(speedLabel);
     row->AddChild(new Spacer(gap, 0));
     row->AddChild(status, 1);
     layout = new Padding(row, Insets{padY, padX, padY, padX});
@@ -205,7 +224,10 @@ void ReadAloudPlaybackBar::BuildLayout() {
 void ReadAloudPlaybackBar::SyncLabels() {
     showResume = sessionTab && CanContinueReadAloud(sessionTab) && !TtsIsSpeaking();
     btnPause->SetText(showResume ? _TRA("Resume") : _TRA("Pause"));
-    btnSpeed->SetText(SpeedLabelTemp());
+    if (!speedSlider->IsAdjusting()) {
+        speedSlider->SetValue(ReadAloudClosestSpeedIdx(), false);
+        SyncSpeedLabel(this);
+    }
     status->SetText(ReadAloudPlaybackBarTextTemp(sessionTab));
 }
 
@@ -215,13 +237,19 @@ void ReadAloudPlaybackBar::SyncColors() {
     Color colBorder = kColGray;
     Color colBtnBg = AccentColor(colBg, 8, -8);
     Color colBtnHover = AccentColor(colBg, 16, -16);
-    VirtButton* btns[] = {btnPause, btnStop, btnSpeed};
+    VirtButton* btns[] = {btnPause, btnStop};
     for (VirtButton* b : btns) {
         b->SetColor(kColBtnBg, colBtnBg);
         b->SetColor(kColBtnBgHover, colBtnHover);
         b->SetColor(kColBtnBorder, colBorder);
         b->SetColor(kColBtnText, colTxt);
     }
+    Color thumb = colTxt;
+    speedSlider->SetColor(kColSliderTrack, AccentColor(colBg, 28, -28));
+    speedSlider->SetColor(kColSliderFill, thumb);
+    speedSlider->SetColor(kColSliderThumb, thumb);
+    speedSlider->SetColor(kColSliderThumbHover, AccentColor(thumb, 18, -18));
+    speedLabel->SetColor(kColText, colTxt);
     status->SetColor(kColText, colTxt);
 }
 
@@ -360,6 +388,9 @@ void ReadAloudPlaybackBarTick(MainWindow* win) {
     if (!bar || !bar->hwnd || !HwndIsVisible(bar->hwnd)) {
         return;
     }
+    if (bar->speedSlider && bar->speedSlider->IsAdjusting()) {
+        return;
+    }
     bool wasResume = bar->showResume;
     bar->SyncLabels();
     if (wasResume != bar->showResume) {
@@ -390,18 +421,24 @@ TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut) {
     }
     MainWindow* win = gWindows[0];
     ReadAloudPlaybackBar* bar = win->readAloudPlaybackBar;
-    if (!bar || !bar->hwnd || !HwndIsVisible(bar->hwnd) || !bar->btnPause || !bar->btnStop || !bar->btnSpeed) {
+    if (!bar || !bar->hwnd || !HwndIsVisible(bar->hwnd) || !bar->btnPause || !bar->btnStop || !bar->speedSlider ||
+        !bar->speedLabel) {
         out.Append(StrL("NOTREADY no-bar\n"));
         return finish(2);
     }
 
     Rect pause = bar->btnPause->bounds;
     Rect stop = bar->btnStop->bounds;
-    Rect speed = bar->btnSpeed->bounds;
+    Rect speed = bar->speedSlider->bounds;
+    Rect speedLab = bar->speedLabel->bounds;
+    int idx = bar->speedSlider->value;
     out.Append(fmt("OK visible=1 resume=%d hwnd=%d\n", (int)bar->showResume, (int)(uintptr_t)bar->hwnd));
     out.Append(fmt("pause=%d,%d,%d,%d\n", pause.x, pause.y, pause.dx, pause.dy));
     out.Append(fmt("stop=%d,%d,%d,%d\n", stop.x, stop.y, stop.dx, stop.dy));
     out.Append(fmt("speed=%d,%d,%d,%d\n", speed.x, speed.y, speed.dx, speed.dy));
+    out.Append(fmt("speedLabel=%d,%d,%d,%d\n", speedLab.x, speedLab.y, speedLab.dx, speedLab.dy));
+    out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", idx, ReadAloudSpeedCount(),
+                   ReadAloudSpeedLabelTemp(ReadAloudSpeedAt(idx))));
     return finish(0);
 }
 

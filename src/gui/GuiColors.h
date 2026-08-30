@@ -102,6 +102,16 @@ enum {
 };
 extern Color gColsLine[kColLineCount];
 
+//--- VirtSlider
+enum {
+    kColSliderTrack,
+    kColSliderFill,
+    kColSliderThumb,
+    kColSliderThumbHover,
+    kColSliderCount,
+};
+extern Color gColsSlider[kColSliderCount];
+
 //--- VirtRichText
 enum {
     kColRichText,

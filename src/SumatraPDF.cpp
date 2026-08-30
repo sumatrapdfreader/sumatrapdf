@@ -14177,7 +14177,7 @@ void ReadAloudPlaybackPauseOrResume() {
 
 // preset playback speeds offered in the Speed menu and cycled by the speed
 // button on the playback bar
-constexpr float kReadAloudSpeeds[] = {0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 3.0f};
+constexpr float kReadAloudSpeeds[] = {0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.25f, 2.5f, 2.75f, 3.0f, 3.25f, 3.5f};
 
 // e.g. "1x", "0.75x", "1.5x"
 TempStr ReadAloudSpeedLabelTemp(float speed) {
@@ -14193,9 +14193,22 @@ TempStr ReadAloudSpeedLabelTemp(float speed) {
     return fmt("%d.%02dx", whole, frac);
 }
 
-// index of the preset closest to the current speed (the setting can hold
-// an arbitrary value edited by hand)
-static int ReadAloudClosestSpeedIdx() {
+int ReadAloudSpeedCount() {
+    return dimofi(kReadAloudSpeeds);
+}
+
+float ReadAloudSpeedAt(int idx) {
+    int n = dimofi(kReadAloudSpeeds);
+    if (idx < 0) {
+        idx = 0;
+    }
+    if (idx >= n) {
+        idx = n - 1;
+    }
+    return kReadAloudSpeeds[idx];
+}
+
+int ReadAloudClosestSpeedIdx() {
     float curr = TtsGetSpeed();
     int idx = 0;
     float bestDist = -1;
@@ -14230,6 +14243,10 @@ static void ReadAloudSetSpeed(float speed) {
 }
 
 // dir is +1 (next speed) or -1 (previous speed), wraps around
+void ReadAloudSetSpeedIdx(int idx) {
+    ReadAloudSetSpeed(ReadAloudSpeedAt(idx));
+}
+
 void ReadAloudPlaybackCycleSpeed(int dir) {
     int n = dimofi(kReadAloudSpeeds);
     int idx = (ReadAloudClosestSpeedIdx() + dir + n) % n;

@@ -795,6 +795,11 @@ static void UpdateGuiColorsFromTheme() {
     gColsFill[kColFillBg] = ctlBg;
     gColsLine[kColLineFg] = edge;
 
+    gColsSlider[kColSliderTrack] = AccentColor(ctlBg, 40);
+    gColsSlider[kColSliderFill] = text;
+    gColsSlider[kColSliderThumb] = text;
+    gColsSlider[kColSliderThumbHover] = AccentColor(text, 20);
+
     gColsRichText[kColRichText] = text;
     gColsRichText[kColRichLink] = link;
     gColsRichText[kColRichBg] = ctlBg;

@@ -168,6 +168,10 @@ constexpr UINT CmdTtsSpeedFirst = 0x7300;
 constexpr UINT CmdTtsSpeedLast = 0x730f;
 
 TempStr ReadAloudSpeedLabelTemp(float speed);
+int ReadAloudSpeedCount();
+float ReadAloudSpeedAt(int idx);
+int ReadAloudClosestSpeedIdx();
+void ReadAloudSetSpeedIdx(int idx);
 
 void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem = false, bool canReadFromCursor = false);
 bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId);

@@ -788,6 +788,41 @@ struct VirtLine : VirtCtrl {
 
 VirtLine* AsVirtLine(ILayout*);
 
+// Discrete horizontal slider: a bar with a circle thumb. value is minVal..maxVal.
+struct VirtSlider : VirtCtrl {
+    int minVal = 0;
+    int maxVal = 0;
+    int value = 0;
+    int idealDx = 0;
+    Func0 onValueChanged;
+    Func0 onValueCommitted;
+
+    VirtSlider();
+    ~VirtSlider() override;
+
+    void SetValue(int v, bool notify);
+    bool IsAdjusting() const;
+    int ValueFromLocalX(int xLocal);
+    Size GetIdealSize() override;
+    void Paint(VirtPaintCtx&) override;
+    void OnMouseDown(VirtMouseEvent*);
+    void OnMouseMove(VirtMouseEvent*);
+    void OnMouseUp(VirtMouseEvent*);
+    void OnMouseWheel(VirtMouseEvent*);
+    void OnMouseEnter();
+    void OnMouseLeave();
+    void OnCaptureLost();
+
+  private:
+    bool adjusting = false;
+    int committed = 0;
+    int ThumbRadius() const;
+    Rect TrackRectLocal() const;
+    void ApplyFromEvent(const VirtMouseEvent&, bool commit);
+};
+
+VirtSlider* AsVirtSlider(ILayout*);
+
 struct VirtSpacer : VirtCtrl {
     Size idealSize;
 

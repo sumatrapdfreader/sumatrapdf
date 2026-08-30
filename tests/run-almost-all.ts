@@ -180,6 +180,7 @@ import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as commandPaletteShortcutFilter } from "./command-palette-shortcut-filter.ts";
 import { testit as issue6104 } from "./issue-6104.ts";
 import { testit as issue6106 } from "./issue-6106.ts";
+import { testit as issue6107 } from "./issue-6107.ts";
 
 import { testit as issue5968 } from "./issue-5968.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
@@ -408,6 +409,7 @@ export const tests: NamedTest[] = [
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
   ["issue-6104", issue6104],
   ["issue-6106", issue6106],
+  ["issue-6107", issue6107],
   ["issue-5968", issue5968],
   ["issue-5980", issue5980],
   ["issue-5982", issue5982],
