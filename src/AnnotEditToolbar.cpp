@@ -259,6 +259,32 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
     AnnotationType type = Type(annot);
     bool isFreeText = type == AnnotationType::FreeText;
 
+    if (type == AnnotationType::FileAttachment) {
+        Str fileName;
+        bool hasFile = HasEmbeddedFile(annot);
+        if (hasFile) {
+            fileName = EmbeddedFileNameTemp(annot);
+            if (fileName) {
+                fileName = path::GetBaseNameTemp(fileName);
+            }
+            if (!fileName) {
+                fileName = StrL("file");
+            }
+        }
+        {
+            AnnotEditItem it;
+            it.kind = AnnotEditKind::AttachFile;
+            it.tooltip = hasFile ? fmt(_TRA("Replace %s with...").s, fileName) : _TRA("Attach File");
+            VecAppend(out, it);
+        }
+        if (hasFile) {
+            AnnotEditItem it;
+            it.kind = AnnotEditKind::SaveAttachment;
+            it.tooltip = fmt(_TRA("Save %s to disk").s, fileName);
+            VecAppend(out, it);
+        }
+    }
+
     // free text is about its text, so the text's color leads
     if (isFreeText) {
         AnnotEditItem it;
@@ -331,20 +357,6 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         it.tooltip = _TRA("Icon");
         VecAppend(out, it);
     }
-    if (type == AnnotationType::FileAttachment) {
-        {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::AttachFile;
-            it.tooltip = _TRA("Attach File");
-            VecAppend(out, it);
-        }
-        {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::SaveAttachment;
-            it.tooltip = _TRA("Save Attachment");
-            VecAppend(out, it);
-        }
-    }
     if (type == AnnotationType::Line) {
         int start = 0;
         int end = 0;
@@ -369,14 +381,14 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
     if (type != AnnotationType::Widget) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Contents;
-        it.tooltip = _TRA("Edit text");
+        it.tooltip = isFreeText ? _TRA("Edit text") : _TRA("Edit Note");
         VecAppend(out, it);
     }
     if (type != AnnotationType::Widget) {
         // last, so a mis-aimed click lands on a harmless chip, not on delete
         AnnotEditItem it;
         it.kind = AnnotEditKind::Delete;
-        it.tooltip = _TRA("Delete Annotation");
+        it.tooltip = _TRA("Delete");
         VecAppend(out, it);
     }
 }

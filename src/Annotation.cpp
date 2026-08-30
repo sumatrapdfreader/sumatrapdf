@@ -970,6 +970,18 @@ static i64 FileTimeToUnixSeconds(FILETIME ft) {
     return (i64)((value.QuadPart - kTicksFrom1601To1970) / 10000000);
 }
 
+static pdf_obj* FilespecDict(fz_context* ctx, pdf_annot* a) {
+    pdf_obj* obj = pdf_annot_obj(ctx, a);
+    if (!obj) {
+        return nullptr;
+    }
+    pdf_obj* fs = pdf_dict_get(ctx, obj, PDF_NAME(FS));
+    if (!fs || !pdf_is_dict(ctx, fs)) {
+        return nullptr;
+    }
+    return fs;
+}
+
 bool HasEmbeddedFile(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return false;
@@ -980,11 +992,11 @@ bool HasEmbeddedFile(Annotation* annot) {
     ScopedRecursiveMutex cs(&e->docLock);
     bool ok = false;
     fz_try(ctx) {
-        pdf_obj* fs = pdf_annot_filespec(ctx, a);
+        pdf_obj* fs = FilespecDict(ctx, a);
         ok = fs && pdf_is_embedded_file(ctx, fs);
     }
     fz_catch(ctx) {
-        fz_report_error(ctx);
+        fz_ignore_error(ctx);
     }
     return ok;
 }
@@ -999,7 +1011,7 @@ Str EmbeddedFileNameTemp(Annotation* annot) {
     ScopedRecursiveMutex cs(&e->docLock);
     Str name;
     fz_try(ctx) {
-        pdf_obj* fs = pdf_annot_filespec(ctx, a);
+        pdf_obj* fs = FilespecDict(ctx, a);
         if (fs) {
             pdf_filespec_params params{};
             pdf_get_filespec_params(ctx, fs, &params);
@@ -1009,7 +1021,7 @@ Str EmbeddedFileNameTemp(Annotation* annot) {
         }
     }
     fz_catch(ctx) {
-        fz_report_error(ctx);
+        fz_ignore_error(ctx);
         name = {};
     }
     return name;
@@ -1026,7 +1038,7 @@ Str LoadEmbeddedFile(Annotation* annot) {
     ScopedRecursiveMutex cs(&e->docLock);
     Str res;
     fz_try(ctx) {
-        pdf_obj* fs = pdf_annot_filespec(ctx, a);
+        pdf_obj* fs = FilespecDict(ctx, a);
         if (fs && pdf_is_embedded_file(ctx, fs)) {
             fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
             if (buf) {

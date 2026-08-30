@@ -5291,8 +5291,6 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
     bool isEmpty = isContentsEmpty && !author;
 
     if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
-        logf("found file attachment annotation\n");
-
         pdf_filespec_params fileParams = {};
         pdf_obj* fs = pdf_annot_filespec(ctx, annot);
         int num = pdf_to_num(ctx, pdf_annot_obj(ctx, annot));
@@ -5303,7 +5301,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
             return;
         }
 
-        logf("attachment: %s, num: %d\n", Str(attname), num);
+        // logf("attachment: %s, num: %d\n", Str(attname), num);
 
         auto* dest = new PageDestination();
         dest->kind = kindDestinationLaunchEmbedded;
@@ -8527,7 +8525,14 @@ int EngineMupdfUndoPos(EngineMupdf* e, int* stepsOut) {
         pos = pdf_undoredo_state(ctx, e->pdfdoc, &steps);
     }
     fz_catch(ctx) {
-        fz_report_error(ctx);
+        // MuPDF throws while an edit/appearance op is still open (e.g. selecting
+        // a file attachment rebuilds its property row, then the toolbar asks
+        // undo/redo). That is expected; do not log it as an error.
+        if (fz_caught(ctx) != FZ_ERROR_ARGUMENT) {
+            fz_report_error(ctx);
+        } else {
+            fz_ignore_error(ctx);
+        }
         pos = -1;
     }
     if (stepsOut && pos >= 0) {
