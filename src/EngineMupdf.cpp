@@ -3079,11 +3079,13 @@ static void fz_print_cb(void* user, const char* msg) {
         return;
     }
     // logged above, not shown as "Errors in document": epub 3.0 is rendered
-    // fine, a missing system font falls back to a default (issue #6027), and
-    // Movie (etc.) appearance streams are a MuPDF limitation, not a PDF defect
+    // fine, a missing system font falls back to a default (issue #6027),
+    // Movie (etc.) appearance streams are a MuPDF limitation, not a PDF defect,
+    // and hyphen tables are compiled out (issue #6109)
     if (str::Contains(msgStr, StrL("unknown epub version")) ||
         str::Contains(msgStr, StrL("couldn't find system font")) ||
-        str::Contains(msgStr, StrL("cannot create appearance stream"))) {
+        str::Contains(msgStr, StrL("cannot create appearance stream")) ||
+        str::Contains(msgStr, StrL("no hyphenation table"))) {
         return;
     }
     engine->AppendError(msgStr);
