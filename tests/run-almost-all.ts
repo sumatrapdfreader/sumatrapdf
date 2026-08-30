@@ -236,6 +236,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6103", issue6103],
   ["issue-6062", issue6062],
   ["issue-6101", issue6101],
   ["issue-5907", issue5907],
@@ -292,7 +293,6 @@ export const tests: NamedTest[] = [
   ["free-text-edit-matches-render", freeTextEditMatchesRender],
   ["annot-moveable-types", annotMoveableTypes],
   ["stamp-caret-annotation-placement", stampCaretAnnotationPlacement],
-  ["issue-6103", issue6103],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["shape-annotation-placement", shapeAnnotationPlacement],
