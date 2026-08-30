@@ -518,16 +518,55 @@ static int FilterEditPadR() {
     return FilterEditPadL() + DpiScale(4);
 }
 
-static Rect AnnotFilterWindowPlacementRect(MainWindow* win) {
-    Rect r = win ? win->annotListFloatPos : Rect{};
-    if (r.IsEmpty() && win) {
-        Rect fr = HwndWindowRect(win->hwndFrame);
-        int dpi = DpiGetForHwnd(win->hwndFrame);
-        int dx = DpiScaleByDpi(dpi, 360);
-        int dy = DpiScaleByDpi(dpi, 540);
-        r = {fr.x + fr.dx - dx - DpiScaleByDpi(dpi, 40), fr.y + DpiScaleByDpi(dpi, 80), dx, dy};
+static bool FrameIsMaxOrFullscreen(MainWindow* win) {
+    if (!win || !win->hwndFrame) {
+        return false;
     }
-    return ShiftRectToWorkArea(r, win ? win->hwndFrame : nullptr, true);
+    return win->isFullScreen || win->presentation || IsZoomed(win->hwndFrame);
+}
+
+static Rect AnnotFilterDefaultRect(MainWindow* win, int dx, int dy) {
+    HWND hwnd = win->hwndFrame;
+    Rect fr = HwndWindowRect(hwnd);
+    int dpi = DpiGetForHwnd(hwnd);
+    int gap = DpiScaleByDpi(dpi, kFloatWinGap);
+    Rect area = (win->isFullScreen || win->presentation) ? HwndGetFullscreenRect(hwnd) : GetWorkAreaRect(fr, nullptr);
+    dx = std::min(dx, std::max(area.dx, 1));
+    dy = std::min(dy, std::max(area.dy, 1));
+
+    if (FrameIsMaxOrFullscreen(win)) {
+        int x = area.x + area.dx - dx;
+        int y = area.y + (area.dy - dy) / 2;
+        return {x, y, dx, dy};
+    }
+
+    int spaceRight = area.x + area.dx - (fr.x + fr.dx);
+    int spaceLeft = fr.x - area.x;
+    int x = spaceRight >= spaceLeft ? fr.x + fr.dx + gap : fr.x - gap - dx;
+    return ShiftRectToWorkArea({x, fr.y, dx, dy}, nullptr, true);
+}
+
+static Rect AnnotFilterWindowPlacementRect(MainWindow* win) {
+    if (!win || !win->hwndFrame) {
+        return {};
+    }
+    int dpi = DpiGetForHwnd(win->hwndFrame);
+    int dx = DpiScaleByDpi(dpi, 360);
+    int dy = DpiScaleByDpi(dpi, 540);
+    Rect saved = win->annotListFloatPos;
+    if (saved.dx > 0) {
+        dx = saved.dx;
+    }
+    if (saved.dy > 0) {
+        dy = saved.dy;
+    }
+    if (win->annotListFloatPosUserSet && !saved.IsEmpty()) {
+        return ShiftRectToWorkArea(saved, nullptr, true);
+    }
+    if (FrameIsMaxOrFullscreen(win) || saved.IsEmpty()) {
+        return AnnotFilterDefaultRect(win, dx, dy);
+    }
+    return ShiftRectToWorkArea(saved, nullptr, true);
 }
 
 static void PositionAnnotFilterWindow(AnnotFilterWindow* w) {
@@ -829,6 +868,9 @@ void AnnotFilterWindow::OnSize(WindowBase::SizeEvent* ev) {
     if (ev->msg == WM_EXITSIZEMOVE) {
         HwndInvalidate(hwnd, true);
         SavePos();
+        if (win) {
+            win->annotListFloatPosUserSet = true;
+        }
     }
 }
 

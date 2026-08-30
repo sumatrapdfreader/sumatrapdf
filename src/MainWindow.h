@@ -705,6 +705,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     AnnotFilterToolbar* annotFilterToolbar = nullptr;
     // session-only: pop the annotation list into a floating window (not saved)
     Rect annotListFloatPos;
+    bool annotListFloatPosUserSet = false;
 
     // annotation details shown next to a hovered annotation in Edit PDF mode
     AnnotationHoverOverlay* annotationHoverOverlay = nullptr;
