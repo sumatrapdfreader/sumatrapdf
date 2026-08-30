@@ -18,7 +18,16 @@
 // for Direct2D's EndDraw() and GDI+'s Graphics teardown to have completed.
 Gfx::~Gfx() {
     if (doubleBufferTarget && doubleBufferSource && !doubleBufferSize.IsEmpty()) {
+        // BitBlt onto LAYOUT_RTL mirrors glyphs; the buffer is LTR (issue #6113).
+        DWORD layout = GetLayout(doubleBufferTarget);
+        bool mirrored = layout != GDI_ERROR && (layout & LAYOUT_RTL);
+        if (mirrored) {
+            SetLayout(doubleBufferTarget, 0);
+        }
         BitBlt(doubleBufferTarget, 0, 0, doubleBufferSize.dx, doubleBufferSize.dy, doubleBufferSource, 0, 0, SRCCOPY);
+        if (mirrored) {
+            SetLayout(doubleBufferTarget, layout);
+        }
     }
 }
 
@@ -359,6 +368,8 @@ Gfx* GfxCreateWithDoubleBuffer(HwndBase* w, HDC hdc) {
         w->gfxDoubleBufferDy = size.dy;
         if (!size.IsEmpty()) {
             w->gfxDoubleBufferHdc = CreateCompatibleDC(hdc);
+            // CreateCompatibleDC copies LAYOUT_RTL; keep the DIB LTR (issue #6113)
+            SetLayout(w->gfxDoubleBufferHdc, 0);
             // 32-bit DIB: Direct2D BindDC rejects a 24-bit DDB from CreateCompatibleBitmap
             w->gfxDoubleBufferBitmap = CreateMemoryBitmap(size);
             if (w->gfxDoubleBufferHdc && w->gfxDoubleBufferBitmap) {
@@ -376,6 +387,7 @@ Gfx* GfxCreateWithDoubleBuffer(HwndBase* w, HDC hdc) {
     if (!bufferHdc) {
         return GfxCreate(hdc);
     }
+    SetLayout(bufferHdc, 0);
     SetBkMode(bufferHdc, TRANSPARENT);
     Gfx* gfx = GfxCreate(bufferHdc);
     gfx->doubleBufferTarget = hdc;

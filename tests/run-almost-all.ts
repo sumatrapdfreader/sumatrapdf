@@ -177,6 +177,7 @@ import { testit as shapeAnnotationPlacement } from "./shape-annotation-placement
 import { testit as redactAnnotations } from "./redact-annotations.ts";
 import { testit as inkAnnotationPlacement } from "./ink-annotation-placement.ts";
 import { testit as issue5956 } from "./issue-5956.ts";
+import { testit as issue6113 } from "./issue-6113.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as commandPaletteShortcutFilter } from "./command-palette-shortcut-filter.ts";
 import { testit as issue6104 } from "./issue-6104.ts";
@@ -258,6 +259,7 @@ export const tests: NamedTest[] = [
   ["issue-5964", issue5964],
   ["issue-6013", issue6013],
   ["issue-5956", issue5956],
+  ["issue-6113", issue6113],
   ["issue-5989", issue5989],
 
   // --- no Sumatra process -------------------------------------------------
