@@ -774,8 +774,9 @@ static Pixmap* RenderMupdfAnnotIcon(Str name, Color fg, int dx, int dy) {
         }
         float pad = 0.4f;
         float scale = std::min((float)dx / (bw + 2 * pad), (float)dy / (bh + 2 * pad));
-        // PDF y-up → pixmap y-down; fit the path into dx×dy
-        fz_matrix ctm = fz_make_matrix(scale, 0, 0, -scale, -scale * (bound.x0 - pad), scale * (bound.y1 + pad));
+        // Open Iconic streams are y-down (MuPDF's appearance cm flips them for
+        // PDF). Fit into the pixmap without a second flip (issue #6112).
+        fz_matrix ctm = fz_make_matrix(scale, 0, 0, scale, -scale * (bound.x0 - pad), -scale * (bound.y0 - pad));
         fzpx = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), fz_make_irect(0, 0, dx, dy), nullptr, 1);
         fz_clear_pixmap(ctx, fzpx);
         dev = fz_new_draw_device(ctx, fz_identity, fzpx);
