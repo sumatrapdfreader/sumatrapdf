@@ -178,6 +178,7 @@ import { testit as commandPaletteShortcutFilter } from "./command-palette-shortc
 
 import { testit as issue5968 } from "./issue-5968.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
+import { testit as issue6101 } from "./issue-6101.ts";
 import { testit as issue5963 } from "./issue-5963.ts";
 import { testit as issue5964 } from "./issue-5964.ts";
 import { testit as issue5965 } from "./issue-5965.ts";
@@ -230,6 +231,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6101", issue6101],
   ["issue-5907", issue5907],
   ["ink-annotation-placement", inkAnnotationPlacement],
   ["issue-893", issue893],

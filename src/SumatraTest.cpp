@@ -1732,6 +1732,104 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+static int CountNonWhitePixels(Pixmap* bmp) {
+    if (!bmp || !bmp->data) {
+        return 0;
+    }
+    int bpp = PixmapBytesPerPixel(bmp->format);
+    if (bpp < 3) {
+        return 0;
+    }
+    int n = 0;
+    for (int y = 0; y < bmp->height; y++) {
+        const u8* row = bmp->data + ((size_t)y * (size_t)bmp->stride);
+        for (int x = 0; x < bmp->width; x++) {
+            const u8* px = row + ((size_t)x * bpp);
+            int r, g, b;
+            if (bmp->format == PixmapFormat::RGBA8) {
+                r = px[0];
+                g = px[1];
+                b = px[2];
+            } else {
+                b = px[0];
+                g = px[1];
+                r = px[2];
+            }
+            if (r < 250 || g < 250 || b < 250) {
+                n++;
+            }
+        }
+    }
+    return n;
+}
+
+// View vs Print non-white pixel counts. Print-only OCG content (PrintState ON,
+// off on screen) must still paint when rendering for print (issue #6101).
+TempStr PageRenderViewPrintResultTemp(Str path, int* exitCodeOut) {
+    EnsureTestSettings();
+
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    if (!engine->BenchLoadPage(1)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR page-load-failed\n"));
+    }
+
+    RenderPageArgs viewArgs(1, 1.f, 0, nullptr, RenderTarget::View);
+    RenderPageArgs printArgs(1, 1.f, 0, nullptr, RenderTarget::Print);
+    Pixmap* viewRaw = engine->RenderPage(viewArgs);
+    Pixmap* printRaw = engine->RenderPage(printArgs);
+    if (!viewRaw || !viewRaw->data || !printRaw || !printRaw->data) {
+        FreePixmap(viewRaw);
+        FreePixmap(printRaw);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR render-failed\n"));
+    }
+    Pixmap* view = (viewRaw->format == PixmapFormat::BGRA8) ? viewRaw : PixmapCopyAs32bppDIB(viewRaw);
+    Pixmap* print = (printRaw->format == PixmapFormat::BGRA8) ? printRaw : PixmapCopyAs32bppDIB(printRaw);
+    if (!view || !view->data || !print || !print->data) {
+        if (view != viewRaw) {
+            FreePixmap(view);
+        }
+        if (print != printRaw) {
+            FreePixmap(print);
+        }
+        FreePixmap(viewRaw);
+        FreePixmap(printRaw);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR pixmap-convert-failed\n"));
+    }
+
+    int viewN = CountNonWhitePixels(view);
+    int printN = CountNonWhitePixels(print);
+    out.Append(fmt("viewNonwhite=%d printNonwhite=%d viewSize=%dx%d printSize=%dx%d\n", viewN, printN, view->width,
+                   view->height, print->width, print->height));
+    if (view != viewRaw) {
+        FreePixmap(view);
+    }
+    if (print != printRaw) {
+        FreePixmap(print);
+    }
+    FreePixmap(viewRaw);
+    FreePixmap(printRaw);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // SHA-1 thumbprints and drop-down labels of CurrentUser\MY certs that can
 // sign, one pair per cert. Used to check the store enumeration for #5965.
 TempStr ListSigningCertsResultTemp(int* exitCodeOut) {

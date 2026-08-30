@@ -762,6 +762,7 @@ enum class ControlCmd : u16 {
     TestContextMenuPoint = 76,
     TestFindWindowContents = 77,
     TestFindUiState = 78,
+    TestRenderViewPrint = 79,
 };
 
 enum class ControlArgType : u16 {
@@ -1551,6 +1552,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             int exitCode = 0;
             Str res = FindUiStateResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRenderViewPrint: {
+            Str path = StringArg(req, 0);
+            if (!path) {
+                AppendError(req, StrL("TestRenderViewPrint expects string path"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = PageRenderViewPrintResultTemp(path, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

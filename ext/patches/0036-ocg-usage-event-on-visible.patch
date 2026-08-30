@@ -1,0 +1,27 @@
+ocg: PrintState/ViewState ON is visible even when the OCG is in /OFF (issue #6101)
+
+pdf_is_ocg_hidden already hid a layer when its Usage event (PrintState,
+ViewState, ExportState) was OFF. Any other value, including ON, fell through
+to the optional-content config ON/OFF list.
+
+Print-only OCGs (PrintState ON, ViewState OFF) are listed in /OFF so they do
+not show on screen. Printing still has to draw them: Acrobat does. Without
+honouring ON, Sumatra skipped the print-only fill that ocgx2 uses to clip
+hyperlink text, so the link vanished on print.
+
+Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/6101
+---
+diff --git a/source/pdf/pdf-layer.c b/source/pdf/pdf-layer.c
+index 73f118a78..fb1b1b0b1 100644
+--- a/source/pdf/pdf-layer.c
++++ b/source/pdf/pdf-layer.c
+@@ -767,6 +767,9 @@ pdf_is_ocg_hidden_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rd
+ 		es = pdf_dict_gets(ctx, obj2, event_state);
+ 		if (pdf_name_eq(ctx, es, PDF_NAME(OFF)))
+ 			return 1;
++		/* Usage event ON: visible even if the OCG is in the config OFF list. */
++		if (pdf_name_eq(ctx, es, PDF_NAME(ON)))
++			return 0;
+ 		return default_value;
+ 	}
+ 	else if (pdf_name_eq(ctx, type, PDF_NAME(OCMD)))
