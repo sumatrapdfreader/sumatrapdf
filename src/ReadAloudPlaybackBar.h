@@ -15,3 +15,4 @@ void ReadAloudPlaybackPauseOrResume();
 void ReadAloudPlaybackStop();
 void ReadAloudPlaybackCycleSpeed(int dir);
 void ReadAloudPlaybackBarDestroy(MainWindow* win);
+TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut);

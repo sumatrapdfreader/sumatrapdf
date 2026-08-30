@@ -13752,7 +13752,7 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
         return;
     }
 
-    logf("ReadAloud: FinishSession\n");
+    dbgtts("finish-session\n");
     if (tab->win) {
         ReadAloudHighlightTimerStop(tab->win);
         HwndInvalidate(tab->win->hwndCanvas);
@@ -13794,13 +13794,13 @@ static bool ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
 
     int chunkLen = end - start;
     TempStr chunk = str::DupTemp(Str(tab->readAloudText.s + start, (int)((size_t)chunkLen)));
-    logf("ReadAloud: SpeakChunk: %d..%d of %d (mapBase=%d)\n", start, end, textLen, tab->readAloudHighlightBase);
-
     if (!TtsSpeakUtf8(chunk)) {
-        logf("ReadAloud: SpeakChunk: TtsSpeakUtf8 failed\n");
+        logf("tts: SpeakChunk: TtsSpeakUtf8 failed\n");
+        dbgtts("chunk speak failed %d..%d of %d\n", start, end, textLen);
         ReadAloudShowNotif(tab, errMsg);
         return false;
     }
+    dbgtts("chunk %d..%d of %d mapBase=%d\n", start, end, textLen, tab->readAloudHighlightBase);
 
     tab->readAloudChunkStart = start;
     tab->readAloudChunkEnd = end;
@@ -14021,14 +14021,18 @@ void ReadAloudPlaybackPauseOrResume() {
     if (!tab) {
         tab = GetReadAloudSourceTab();
     }
+    dbgtts("pause-or-resume speaking=%d session=%d source=%d canContinue=%d\n", (int)TtsIsSpeaking(), tab ? 1 : 0,
+           GetReadAloudSourceTab() ? 1 : 0, tab ? (int)CanContinueReadAloud(tab) : 0);
     if (!tab || !tab->win) {
         return;
     }
 
     if (TtsIsSpeaking() && GetReadAloudSourceTab() == tab) {
+        dbgtts("pause now\n");
         ReadAloudStopRememberPos();
         ToolbarUpdateStateForWindow(tab->win, true);
     } else if (CanContinueReadAloud(tab)) {
+        dbgtts("resume now\n");
         ReadAloudContinueInTab(tab);
     }
 }
@@ -14073,7 +14077,7 @@ static int ReadAloudClosestSpeedIdx() {
 static void ReadAloudSetSpeed(float speed) {
     TtsSetSpeed(speed);
     gSettings->readAloudSpeed = TtsGetSpeed();
-    logf("ReadAloud: SetSpeed: %s\n", ReadAloudSpeedLabelTemp(TtsGetSpeed()));
+    dbgtts("SetSpeed: %s\n", ReadAloudSpeedLabelTemp(TtsGetSpeed()));
     ScheduleSaveSettings();
 
     // the WinRT backend applies the new speed only to newly synthesized
@@ -14095,6 +14099,7 @@ void ReadAloudPlaybackCycleSpeed(int dir) {
 }
 
 void ReadAloudPlaybackStop() {
+    dbgtts("stop-click\n");
     // always halt TTS, even if the session tab is already gone (issue #6053)
     TtsStop();
     WindowTab* tab = gReadAloudSessionTab;
@@ -14123,14 +14128,14 @@ static void ReadAloudShowNotif(WindowTab* tab, Str msg) {
 static void ReadAloudStartText(WindowTab* tab, Str cleaned, ReadAloudHighlightMap* newMap, int highlightBase,
                                Str errMsg) {
     if (len(cleaned) == 0) {
-        logf("ReadAloud: StartText: empty cleaned text\n");
+        logf("tts: StartText: empty cleaned text\n");
         ReadAloudShowNotif(tab, errMsg);
         return;
     }
 
     int cleanedLen = cleaned.len;
     int mapLen = newMap ? newMap->len : -1;
-    logf("ReadAloud: StartText: cleanedLen=%d mapLen=%d highlightBase=%d\n", cleanedLen, mapLen, highlightBase);
+    dbgtts("StartText: cleanedLen=%d mapLen=%d highlightBase=%d\n", cleanedLen, mapLen, highlightBase);
 
     if (newMap) {
         if (!tab->readAloudHighlight) {
@@ -14143,7 +14148,7 @@ static void ReadAloudStartText(WindowTab* tab, Str cleaned, ReadAloudHighlightMa
             newMap->len = 0;
             newMap->cap = 0;
         } else {
-            logf("ReadAloud: StartText: highlight map empty (len=%d locs=%p)\n", newMap->len, newMap->locs);
+            dbgtts("StartText: highlight map empty (len=%d locs=%p)\n", newMap->len, newMap->locs);
         }
     } else if (highlightBase == 0 && tab->readAloudHighlight) {
         ReadAloudHighlightFree(tab->readAloudHighlight);
@@ -14166,14 +14171,13 @@ static void ReadAloudStartText(WindowTab* tab, Str cleaned, ReadAloudHighlightMa
         return;
     }
     ReadAloudPlaybackBarUpdateSession(tab);
-    logf("ReadAloud: StartText: started speaking\n");
 }
 
 static void ReadAloudStartFromViewportTop(WindowTab* tab, Str errMsg) {
-    logf("ReadAloud: StartFromViewportTop\n");
+    dbgtts("StartFromViewportTop\n");
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
-        logf("ReadAloud: StartFromViewportTop: not a fixed-layout document\n");
+        logf("tts: StartFromViewportTop: not a fixed-layout document\n");
         ReadAloudShowNotif(tab, errMsg);
         return;
     }
@@ -14181,7 +14185,7 @@ static void ReadAloudStartFromViewportTop(WindowTab* tab, Str errMsg) {
     int startPage = 0;
     int startGlyph = 0;
     if (!ReadAloudGetViewportStart(dm, &startPage, &startGlyph)) {
-        logf("ReadAloud: StartFromViewportTop: GetViewportStart failed\n");
+        logf("tts: StartFromViewportTop: GetViewportStart failed\n");
         ReadAloudShowNotif(tab, errMsg);
         return;
     }
@@ -14189,7 +14193,7 @@ static void ReadAloudStartFromViewportTop(WindowTab* tab, Str errMsg) {
     str::Builder cleaned;
     ReadAloudHighlightMap map{};
     if (!ReadAloudHighlightBuildFromDocument(dm, startPage, startGlyph, &map, cleaned)) {
-        logf("ReadAloud: StartFromViewportTop: BuildFromDocument failed (page=%d glyph=%d)\n", startPage, startGlyph);
+        logf("tts: StartFromViewportTop: BuildFromDocument failed (page=%d glyph=%d)\n", startPage, startGlyph);
         ReadAloudShowNotif(tab, errMsg);
         return;
     }
@@ -14219,12 +14223,12 @@ static void ReadAloudStartFromSelection(WindowTab* tab, Str errMsg) {
 
 static void ReadAloudInTab(WindowTab* tab) {
     if (!tab || !tab->win) {
-        logf("ReadAloud: InTab: null tab or window\n");
+        logf("tts: InTab: null tab or window\n");
         return;
     }
 
     if (!HasPermission(Perm::CopySelection)) {
-        logf("ReadAloud: InTab: CopySelection permission denied\n");
+        logf("tts: InTab: CopySelection permission denied\n");
         return;
     }
 
@@ -14232,22 +14236,21 @@ static void ReadAloudInTab(WindowTab* tab) {
     TempStr text = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnlySelection);
 
     if (len(text) > 0 && isTextOnlySelection) {
-        logf("ReadAloud: InTab: using selection path (len=%d)\n", len(text));
+        dbgtts("InTab: using selection path (len=%d)\n", len(text));
         tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
         ReadAloudStartFromSelection(tab, _TRA("No text available to read aloud"));
     } else {
-        logf("ReadAloud: InTab: using viewport-top path (hasSelection=%d isTextOnly=%d)\n", len(text) > 0,
-             isTextOnlySelection);
+        dbgtts("InTab: using viewport-top path (hasSelection=%d isTextOnly=%d)\n", len(text) > 0, isTextOnlySelection);
         tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
         ReadAloudStartFromViewportTop(tab, _TRA("No text available to read aloud"));
     }
 }
 
 static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, Str errMsg) {
-    logf("ReadAloud: StartFromCursor\n");
+    dbgtts("StartFromCursor\n");
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
-        logf("ReadAloud: StartFromCursor: not a fixed-layout document\n");
+        logf("tts: StartFromCursor: not a fixed-layout document\n");
         ReadAloudShowNotif(tab, errMsg);
         return;
     }
@@ -14255,7 +14258,7 @@ static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, Str errMsg)
     int startPage = 0;
     int startGlyph = 0;
     if (!ReadAloudGetCursorStart(dm, screenPt, &startPage, &startGlyph)) {
-        logf("ReadAloud: StartFromCursor: GetCursorStart failed\n");
+        logf("tts: StartFromCursor: GetCursorStart failed\n");
         ReadAloudShowNotif(tab, errMsg);
         return;
     }
@@ -14263,7 +14266,7 @@ static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, Str errMsg)
     str::Builder cleaned;
     ReadAloudHighlightMap map{};
     if (!ReadAloudHighlightBuildFromDocument(dm, startPage, startGlyph, &map, cleaned)) {
-        logf("ReadAloud: StartFromCursor: BuildFromDocument failed (page=%d glyph=%d)\n", startPage, startGlyph);
+        logf("tts: StartFromCursor: BuildFromDocument failed (page=%d glyph=%d)\n", startPage, startGlyph);
         ReadAloudShowNotif(tab, errMsg);
         return;
     }
@@ -14273,12 +14276,12 @@ static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, Str errMsg)
 
 static void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
     if (!tab || !tab->win) {
-        logf("ReadAloud: FromCursorInTab: null tab or window\n");
+        logf("tts: FromCursorInTab: null tab or window\n");
         return;
     }
 
     if (!HasPermission(Perm::CopySelection)) {
-        logf("ReadAloud: FromCursorInTab: CopySelection permission denied\n");
+        logf("tts: FromCursorInTab: CopySelection permission denied\n");
         return;
     }
 
@@ -14288,12 +14291,12 @@ static void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
 
 static void ReadAloudFromViewportTopInTab(WindowTab* tab) {
     if (!tab || !tab->win) {
-        logf("ReadAloud: FromViewportTopInTab: null tab or window\n");
+        logf("tts: FromViewportTopInTab: null tab or window\n");
         return;
     }
 
     if (!HasPermission(Perm::CopySelection)) {
-        logf("ReadAloud: FromViewportTopInTab: CopySelection permission denied\n");
+        logf("tts: FromViewportTopInTab: CopySelection permission denied\n");
         return;
     }
 
@@ -15003,13 +15006,18 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
             if (TtsIsSpeaking() && gReadAloudSourceTab && gReadAloudSourceTab->win) {
                 HwndInvalidate(gReadAloudSourceTab->win->hwndCanvas);
-                ReadAloudPlaybackBarUpdateSession(gReadAloudSourceTab);
+                // Tick, not UpdateSession: relayout rebuilds virt tops and
+                // clears pressed, so Pause/Stop/Speed mouse-up is lost (issue #6106)
+                dbgtts("event speaking pos=%d\n", TtsGetSpokenPosUtf8());
+                ReadAloudPlaybackBarTick(gReadAloudSourceTab->win);
             }
 
             // also gets here for word boundary events while still speaking;
             // only the end of speech needs handling
             if (!TtsIsSpeaking() && gReadAloudSourceTab) {
                 WindowTab* raTab = gReadAloudSourceTab;
+                dbgtts("event idle hasMore=%d chunkEnd=%d textLen=%d\n", (int)ReadAloudHasMoreChunks(raTab),
+                       raTab->readAloudChunkEnd, raTab->readAloudText.len);
                 if (ReadAloudHasMoreChunks(raTab)) {
                     if (!ReadAloudSpeakChunk(raTab, _TRA("No text available to read aloud"))) {
                         ReadAloudFinishSession(raTab, win);

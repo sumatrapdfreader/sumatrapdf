@@ -74,6 +74,7 @@ export enum ControlCommand {
   TestFindWindowContents = 77,
   TestFindUiState = 78,
   TestRenderViewPrint = 79,
+  TestReadAloudPlaybackBar = 80,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

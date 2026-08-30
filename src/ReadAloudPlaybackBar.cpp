@@ -26,6 +26,7 @@
 #include "SumatraPDF.h"
 #include "Theme.h"
 #include "ReadAloudPlaybackBar.h"
+#include "SumatraLog.h"
 
 struct ReadAloudPlaybackBar : WindowBase {
     ReadAloudPlaybackBar() = default;
@@ -36,7 +37,7 @@ struct ReadAloudPlaybackBar : WindowBase {
     void BuildLayout();
     void SyncLabels();
     void SyncColors();
-    void UpdateLayout();
+    void UpdateLayout(bool forceLayout = false);
     void OnPaint(WindowBase::PaintEvent* ev);
 
     WindowTab* sessionTab = nullptr;
@@ -103,24 +104,37 @@ static TempStr SpeedLabelTemp() {
 }
 
 static void OnPauseClicked(ReadAloudPlaybackBar* bar, VirtMouseEvent*) {
+    dbgtts("bar pause-click speaking=%d resume=%d\n", (int)TtsIsSpeaking(), (int)bar->showResume);
     ReadAloudPlaybackPauseOrResume();
-    bar->UpdateLayout();
+    bar->UpdateLayout(true);
     HwndRepaintNow(bar->hwnd);
 }
 
 static void OnStopClicked(ReadAloudPlaybackBar*, VirtMouseEvent*) {
+    dbgtts("bar stop-click\n");
     ReadAloudPlaybackStop();
 }
 
 // left-click steps up, right-click steps down
 static void OnSpeedClicked(ReadAloudPlaybackBar* bar, VirtMouseEvent* ev) {
+    dbgtts("bar speed-click button=%d\n", ev->button);
     ReadAloudPlaybackCycleSpeed(ev->button == 1 ? -1 : +1);
-    bar->UpdateLayout();
+    bar->UpdateLayout(true);
     HwndRepaintNow(bar->hwnd);
+}
+
+static void OnBarWndProc(WindowBase::WndProcEvent* ev) {
+    UINT msg = ev->msg;
+    if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP || msg == WM_RBUTTONDOWN || msg == WM_RBUTTONUP) {
+        int x = GET_X_LPARAM(ev->lparam);
+        int y = GET_Y_LPARAM(ev->lparam);
+        dbgtts("bar-mouse msg=0x%x x=%d y=%d\n", (int)msg, x, y);
+    }
 }
 
 HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
     onPaint = MkMethod1<ReadAloudPlaybackBar, WindowBase::PaintEvent*, &ReadAloudPlaybackBar::OnPaint>(this);
+    onWndProc = MkFunc1Void(OnBarWndProc);
     hwndCanvas = parentCanvas;
     CreateCustomArgs args;
     // Owned popup, not a canvas child: WebView2 fills the canvas and steals
@@ -154,16 +168,19 @@ void ReadAloudPlaybackBar::BuildLayout() {
     btnPause = new VirtButton({}, pf);
     btnPause->textPadding = btnPad;
     btnPause->flags &= ~vwfFocusable;
+    btnPause->flags |= vwfCapturesMouse;
     btnPause->onClick = MkFunc1(OnPauseClicked, this);
 
     btnStop = new VirtButton(_TRA("Stop"), pf);
     btnStop->textPadding = btnPad;
     btnStop->flags &= ~vwfFocusable;
+    btnStop->flags |= vwfCapturesMouse;
     btnStop->onClick = MkFunc1(OnStopClicked, this);
 
     btnSpeed = new VirtButton({}, pf);
     btnSpeed->textPadding = btnPad;
     btnSpeed->flags &= ~vwfFocusable;
+    btnSpeed->flags |= vwfCapturesMouse;
     btnSpeed->onClick = MkFunc1(OnSpeedClicked, this);
 
     status = NewVirtText({
@@ -215,11 +232,13 @@ void ReadAloudPlaybackBar::SetSession(WindowTab* tab) {
     }
 
     UpdateLayout();
-    SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    if (!HwndIsVisible(hwnd)) {
+        SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    }
     HwndInvalidate(hwnd);
 }
 
-void ReadAloudPlaybackBar::UpdateLayout() {
+void ReadAloudPlaybackBar::UpdateLayout(bool forceLayout) {
     if (!hwnd || !layout || !hwndCanvas) {
         return;
     }
@@ -229,8 +248,10 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     Rect canvas = HwndMapLtrClientRectToScreen(hwndCanvas, HwndClientRect(hwndCanvas));
     int margin = DpiScale(kBarMargin);
     int barDx = std::max(canvas.dx - (2 * margin), 0);
-    Size natural = layout->Layout(ExpandInf());
-    int barDy = natural.dy;
+    int barDy = lastDy;
+    if (forceLayout || barDy <= 0 || barDx != lastDx) {
+        barDy = layout->Layout(ExpandInf()).dy;
+    }
 
     int x = canvas.x + margin;
     int y = canvas.y + canvas.dy - barDy - margin;
@@ -244,9 +265,13 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     lastDx = barDx;
     lastDy = barDy;
     if (!samePos) {
+        dbgtts("bar-move x=%d y=%d %dx%d\n", x, y, barDx, barDy);
         SetWindowPos(hwnd, HWND_TOP, x, y, barDx, barDy, SWP_NOACTIVATE);
     }
-    DoLayout({barDx, barDy});
+    if (!samePos || forceLayout) {
+        dbgtts("bar-layout force=%d samePos=%d\n", (int)forceLayout, (int)samePos);
+        DoLayout({barDx, barDy});
+    }
 }
 
 void ReadAloudPlaybackBar::OnPaint(WindowBase::PaintEvent* ev) {
@@ -338,10 +363,46 @@ void ReadAloudPlaybackBarTick(MainWindow* win) {
     bool wasResume = bar->showResume;
     bar->SyncLabels();
     if (wasResume != bar->showResume) {
-        bar->UpdateLayout();
+        bar->UpdateLayout(true);
         return;
     }
+    SetWindowPos(bar->hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     HwndInvalidate(bar->hwnd);
+}
+
+TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    Vec<TtsVoiceInfo> voices = TtsGetVoices();
+    int nVoices = len(voices);
+    TtsFreeVoices(voices);
+    out.Append(fmt("voices=%d speaking=%d\n", nVoices, (int)TtsIsSpeaking()));
+
+    if (len(gWindows) == 0) {
+        out.Append(StrL("NOTREADY no-window\n"));
+        return finish(2);
+    }
+    MainWindow* win = gWindows[0];
+    ReadAloudPlaybackBar* bar = win->readAloudPlaybackBar;
+    if (!bar || !bar->hwnd || !HwndIsVisible(bar->hwnd) || !bar->btnPause || !bar->btnStop || !bar->btnSpeed) {
+        out.Append(StrL("NOTREADY no-bar\n"));
+        return finish(2);
+    }
+
+    Rect pause = bar->btnPause->bounds;
+    Rect stop = bar->btnStop->bounds;
+    Rect speed = bar->btnSpeed->bounds;
+    out.Append(fmt("OK visible=1 resume=%d hwnd=%d\n", (int)bar->showResume, (int)(uintptr_t)bar->hwnd));
+    out.Append(fmt("pause=%d,%d,%d,%d\n", pause.x, pause.y, pause.dx, pause.dy));
+    out.Append(fmt("stop=%d,%d,%d,%d\n", stop.x, stop.y, stop.dx, stop.dy));
+    out.Append(fmt("speed=%d,%d,%d,%d\n", speed.x, speed.y, speed.dx, speed.dy));
+    return finish(0);
 }
 
 void ReadAloudPlaybackBarUpdateSession(WindowTab* tab) {

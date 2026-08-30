@@ -67,6 +67,7 @@
 
 #include "RefHover.h"
 #include "Canvas.h"
+#include "SumatraLog.h"
 
 // if set instead of trying to render pages we don't have, we simply do nothing
 // this reduces the flickering when going quickly through pages but creates
@@ -5449,6 +5450,14 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case kReadAloudHighlightTimerID:
             if (GetReadAloudSourceTab()) {
                 TtsProcessEvents();
+                DBG_TTS({
+                    int pos = TtsGetSpokenPosUtf8();
+                    static int sLastTtsPos = -999;
+                    if (pos != sLastTtsPos) {
+                        sLastTtsPos = pos;
+                        dbgtts("tick pos=%d speaking=%d\n", pos, (int)TtsIsSpeaking());
+                    }
+                });
                 ReadAloudUpdateAutoScroll(win);
                 ReadAloudPlaybackBarTick(win);
                 HwndInvalidate(hwnd);

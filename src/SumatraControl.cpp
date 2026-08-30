@@ -59,6 +59,7 @@
 #include "EutlTrust.h"
 #include "CommandPalette.h"
 #include "PdfTools.h"
+#include "ReadAloudPlaybackBar.h"
 #include "SumatraControl.h"
 
 extern bool gIsStartup;
@@ -763,6 +764,7 @@ enum class ControlCmd : u16 {
     TestFindWindowContents = 77,
     TestFindUiState = 78,
     TestRenderViewPrint = 79,
+    TestReadAloudPlaybackBar = 80,
 };
 
 enum class ControlArgType : u16 {
@@ -1564,6 +1566,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = PageRenderViewPrintResultTemp(path, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestReadAloudPlaybackBar: {
+            int exitCode = 0;
+            Str res = ReadAloudPlaybackBarStateTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
