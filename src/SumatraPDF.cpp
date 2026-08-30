@@ -1419,6 +1419,31 @@ static void ShowWinScrollBar(HWND hwnd, int bar, BOOL show) {
     }
 }
 
+// About / empty window has no document: no native or overlay bars (issue #6062).
+static void HideCanvasScrollbars(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    OverlayScrollbarShow(win->overlayScrollV, false);
+    OverlayScrollbarShow(win->overlayScrollH, false);
+    HWND hwnd = win->hwndCanvas;
+    if (!hwnd) {
+        return;
+    }
+    SCROLLINFO si{};
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_ALL;
+    SetScrollInfo(hwnd, SB_VERT, &si, FALSE);
+    SetScrollInfo(hwnd, SB_HORZ, &si, FALSE);
+    ShowScrollBar(hwnd, SB_BOTH, FALSE);
+    DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
+    if (style & (WS_VSCROLL | WS_HSCROLL)) {
+        SetWindowLongW(hwnd, GWL_STYLE, (LONG)(style & ~(WS_VSCROLL | WS_HSCROLL)));
+        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    }
+}
+
 SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
 
 int ScrollbarModeFromPrefs() {
@@ -4953,15 +4978,18 @@ void UpdateFixedPageScrollbarsVisibility() {
     for (MainWindow* w : gWindows) {
         OverlayScrollbarSetMode(w->overlayScrollV, mode);
         OverlayScrollbarSetMode(w->overlayScrollH, mode);
+        // no document (about / empty window): never show bars (issue #6062)
+        if (!w->AsFixed()) {
+            HideCanvasScrollbars(w);
+            continue;
+        }
         OverlayScrollbarShow(w->overlayScrollV, showOverlayScrollbar);
         OverlayScrollbarShow(w->overlayScrollH, showOverlayScrollbar);
         // changing the scrollbar mode changes whether window scrollbars reserve
         // canvas space, so the usable viewport changes. Relayout the document
         // (recomputes page layout and window-scrollbar visibility for the new
         // mode), the same way a resize does; RerenderFixedPage() then redraws.
-        if (DisplayModel* dm = w->AsFixed()) {
-            dm->SetViewPortSize(w->GetViewPortSize());
-        }
+        w->AsFixed()->SetViewPortSize(w->GetViewPortSize());
     }
     RerenderFixedPage();
 }
@@ -5128,12 +5156,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
             RebuildMenuBarForWindow(win);
             ShowOrHideToolbar(win);
         }
-        OverlayScrollbarShow(win->overlayScrollV, false);
-        OverlayScrollbarShow(win->overlayScrollH, false);
-        if (!ScrollbarsAreHidden() && !ScrollbarsUseOverlay()) {
-            ShowWinScrollBar(win->hwndCanvas, SB_VERT, FALSE);
-            ShowWinScrollBar(win->hwndCanvas, SB_HORZ, FALSE);
-        }
+        HideCanvasScrollbars(win);
         win->RedrawAllIncludingNonClient();
         HwndSetText(win->hwndFrame, Str(kSumatraWindowTitle));
         ReportIf(win->TabCount() != 0 || win->CurrentTab());

@@ -51,8 +51,8 @@ function visibleOverlayScrollbars(pid: number): number {
   return n;
 }
 
-export async function testit(): Promise<void> {
-  const appData = tmpPath("issue-6062-appdata");
+async function runCloseLastFile(scrollbars: string): Promise<void> {
+  const appData = tmpPath(`issue-6062-appdata-${scrollbars}`);
   rmSync(appData, { recursive: true, force: true });
   mkdirSync(appData, { recursive: true });
   const pdf = join(appData, "doc.pdf");
@@ -68,7 +68,7 @@ export async function testit(): Promise<void> {
       "NoHomeTab = true",
       "ShowStartPage = false",
       "ShowToc = false",
-      "Scrollbars = windows",
+      `Scrollbars = ${scrollbars}`,
       "DefaultDisplayMode = continuous",
       "DefaultZoom = 200%",
       "",
@@ -87,16 +87,20 @@ export async function testit(): Promise<void> {
     const before = toolbarEdits(frame);
     const pageBefore = before.find((e) => /^\d+$/.test(e.text));
     if (!pageBefore) {
-      throw new Error(`issue-6062: no page number in the toolbar before close (${JSON.stringify(before)})`);
+      throw new Error(
+        `issue-6062 (${scrollbars}): no page number in the toolbar before close (${JSON.stringify(before)})`,
+      );
     }
 
     const canvas = findCanvas(frame);
     if (!canvas) {
-      throw new Error("issue-6062: no canvas");
+      throw new Error(`issue-6062 (${scrollbars}): no canvas`);
     }
-    const hadVScroll = (getWindowLong(canvas, GWL_STYLE) & WS_VSCROLL) !== 0;
-    if (!hadVScroll) {
-      throw new Error("issue-6062: expected a vertical scrollbar before close");
+    if (scrollbars === "windows") {
+      const hadVScroll = (getWindowLong(canvas, GWL_STYLE) & WS_VSCROLL) !== 0;
+      if (!hadVScroll) {
+        throw new Error(`issue-6062 (${scrollbars}): expected a vertical scrollbar before close`);
+      }
     }
 
     sendCommandSync(frame, cmdId("CmdClose"));
@@ -105,23 +109,32 @@ export async function testit(): Promise<void> {
     const after = toolbarEdits(frame);
     const leftoverPage = after.find((e) => /^\d+$/.test(e.text));
     if (leftoverPage) {
-      throw new Error(`issue-6062: page box still shows '${leftoverPage.text}' after closing the last file`);
+      throw new Error(
+        `issue-6062 (${scrollbars}): page box still shows '${leftoverPage.text}' after closing the last file`,
+      );
     }
 
     const style = getWindowLong(canvas, GWL_STYLE);
     if ((style & WS_VSCROLL) !== 0) {
       throw new Error(
-        `issue-6062: canvas still has WS_VSCROLL after closing the last file (style=0x${(style >>> 0).toString(16)})`,
+        `issue-6062 (${scrollbars}): canvas still has WS_VSCROLL after closing the last file (style=0x${(style >>> 0).toString(16)})`,
       );
     }
     const nOverlay = visibleOverlayScrollbars(proc.pid!);
     if (nOverlay > 0) {
-      throw new Error(`issue-6062: overlay scrollbar still visible after closing the last file (n=${nOverlay})`);
+      throw new Error(
+        `issue-6062 (${scrollbars}): overlay scrollbar still visible after closing the last file (n=${nOverlay})`,
+      );
     }
   } finally {
     client.close();
     await killAndWait(proc);
   }
+}
+
+export async function testit(): Promise<void> {
+  await runCloseLastFile("windows");
+  await runCloseLastFile("smart");
 }
 
 if (import.meta.main) {
