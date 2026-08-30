@@ -28,9 +28,6 @@
     <ClInclude Include="..\src\base\AppendStore.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\Arena.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\Base.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -41,9 +38,6 @@
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\CmdLineArgs.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Color.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\Crypto.h">
@@ -70,9 +64,6 @@
     <ClInclude Include="..\src\base\GdiPlusUtil.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\Geom.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\GuessFileType.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -88,40 +79,16 @@
     <ClInclude Include="..\src\base\Pixmap.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\Scoped.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\SettingsUtil.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\SquareTreeParser.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\Str.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\StrFormatParse.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\StrQueue.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\StrUtf8.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\StrVec.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Strconv.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Thread.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\UtAssert.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Vec.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\Win.h">
@@ -162,9 +129,6 @@
     <ClCompile Include="..\src\base\AppendStore.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Arena.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\Arena_win.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -181,9 +145,6 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\CmdLineArgs_win.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Color.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Crypto_win.cpp">
@@ -216,9 +177,6 @@
     <ClCompile Include="..\src\base\GdiPlusUtil.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Geom.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\GuessFileType.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -240,25 +198,7 @@
     <ClCompile Include="..\src\base\SquareTreeParser.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Str.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\StrFormatParse.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\StrQueue.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\StrUtf8.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\StrVec.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Strconv.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Thread.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\UtAssert.cpp">

@@ -121,7 +121,7 @@ body: put the comment in the `.cpp`.
 
 We use our own `Str` value type (a `char*` + `int len`) for strings instead of
 raw `char*` / `std::string`. The most-used formatter is `fmt()`, a macro
-`#define fmt(...) str::FormatTemp(__VA_ARGS__)` (base/StrFormatParse.h). It formats into
+`#define fmt(...) str::FormatTemp(__VA_ARGS__)` (base/Base.h). It formats into
 the temp arena and returns a `TempStr`, so call sites read `fmt("page %d", n)`.
 
 `fmt()` is **type-safe**, not a raw `vsnprintf` wrapper:

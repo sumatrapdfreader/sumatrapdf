@@ -30,9 +30,6 @@
     <ClInclude Include="..\ext\a-zlib\zlib.h">
       <Filter>ext\a-zlib</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\Arena.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\Base.h">
       <Filter>src\base</Filter>
     </ClInclude>
@@ -42,16 +39,10 @@
     <ClInclude Include="..\src\base\CmdLineArgs.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\Color.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\DirScan.h">
       <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\File.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Geom.h">
       <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\Log.h">
@@ -63,25 +54,7 @@
     <ClInclude Include="..\src\base\Pixmap.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\Str.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\StrFormatParse.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\StrQueue.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\StrUtf8.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\StrVec.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Strconv.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\Thread.h">
       <Filter>src\base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\Win.h">
@@ -113,9 +86,6 @@
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Arena.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\Arena_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -134,9 +104,6 @@
     <ClCompile Include="..\src\base\CmdLineArgs_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Color.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\DirScan.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -149,9 +116,6 @@
     <ClCompile Include="..\src\base\File_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Geom.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\LogNoOp.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -161,25 +125,7 @@
     <ClCompile Include="..\src\base\Pixmap.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Str.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\StrFormatParse.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\StrQueue.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\StrUtf8.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\StrVec.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Strconv.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Thread.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Win.cpp">
