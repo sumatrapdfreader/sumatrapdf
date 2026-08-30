@@ -10,8 +10,9 @@
 // Run: bun tests/issue-5581.ts [--no-build]
 
 import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const kCertSubject = "CN=SumatraPDF SigPropsTest";
 
@@ -91,7 +92,55 @@ function requireLine(raw: string, re: RegExp, label: string): void {
   }
 }
 
+async function signaturesOf(pdf: string): Promise<string> {
+  return withControlledSumatra(
+    EXE,
+    async (client) => {
+      const deadline = Date.now() + 20_000;
+      let raw = "";
+      for (;;) {
+        const res = await client.request(ControlCommand.TestDocumentSignatures);
+        const code = res[0] as number;
+        raw = String(res[1] ?? "");
+        if (code === 0) {
+          return raw;
+        }
+        if (code !== 2) {
+          throw new Error(`issue-5581 signatures: ${raw.trim()}`);
+        }
+        if (Date.now() > deadline) {
+          throw new Error(`issue-5581: signatures never ready: ${raw.trim()}`);
+        }
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    },
+    [pdf],
+  );
+}
+
 export async function testit(): Promise<void> {
+  const padesDir = join(ROOT, "tests", "issue-5581-data");
+  const bt = join(padesDir, "test_sign_PAdES_B-T.pdf");
+  const lta = join(padesDir, "test_sign_PAdES_B-LTA.pdf");
+  if (existsSync(bt)) {
+    const raw = await signaturesOf(bt);
+    requireLine(raw, /Included Time Stamp/, "embedded TSA block");
+    requireLine(raw, /Sectigo Public Time Stamping/, "TSA signer");
+    requireLine(raw, /PAdES B-T/, "PAdES B-T level");
+    requireLine(raw, /The time and date displayed is from the secure time/, "TSA time label");
+    console.log(`issue-5581 B-T:\n${raw.trim()}`);
+  }
+  if (existsSync(lta)) {
+    const raw = await signaturesOf(lta);
+    requireLine(raw, /Included Time Stamp/, "embedded TSA on the CAdES signature");
+    requireLine(raw, /Signature 2 \(document timestamp\)/, "document timestamp field");
+    requireLine(raw, /Sectigo Public Time Stamping/, "TSA certificate");
+    if (/Signature 2[\s\S]*not signed/.test(raw)) {
+      throw new Error(`issue-5581: document timestamp treated as unsigned:\n${raw}`);
+    }
+    console.log(`issue-5581 B-LTA:\n${raw.trim()}`);
+  }
+
   const thumb = makeTestCert();
   if (!thumb) {
     return;

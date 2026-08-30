@@ -1113,6 +1113,7 @@ static void free_ts(fz_context* ctx, pkcs7_windows_ts_info* ts) {
 }
 
 void pkcs7_windows_sig_info_free(fz_context* ctx, pkcs7_windows_sig_info* info) {
+    int i;
     if (!info) {
         return;
     }
@@ -1122,8 +1123,89 @@ void pkcs7_windows_sig_info_free(fz_context* ctx, pkcs7_windows_sig_info* info) 
     fz_free(ctx, info->sig_algo);
     fz_free(ctx, info->digest_hex);
     fz_free(ctx, info->cert_der);
-    free_ts(ctx, &info->ts);
+    for (i = 0; i < info->n_ts; i++) {
+        free_ts(ctx, &info->ts[i]);
+    }
     memset(info, 0, sizeof(*info));
+}
+
+static int ts_filled(const pkcs7_windows_ts_info* ts) {
+    return ts->signer_cn || ts->gen_time_unix || ts->cert_der;
+}
+
+static void add_ts_token(fz_context* ctx, unsigned char* p, DWORD n, pkcs7_windows_sig_info* info) {
+    pkcs7_windows_ts_info* dst;
+    if (!info || info->n_ts >= PKCS7_WINDOWS_MAX_TS || !p || n == 0) {
+        return;
+    }
+    dst = &info->ts[info->n_ts];
+    memset(dst, 0, sizeof(*dst));
+    inspect_timestamp_token(ctx, p, n, dst);
+    if (!ts_filled(dst)) {
+        free_ts(ctx, dst);
+        memset(dst, 0, sizeof(*dst));
+        return;
+    }
+    info->n_ts++;
+    info->has_timestamp = 1;
+}
+
+static int is_ts_oid(const char* oid) {
+    return oid && (!strcmp(oid, szOID_RFC3161_counterSign) || !strcmp(oid, szOID_PKCS9_COUNTER_SIGNATURE) ||
+                   !strcmp(oid, "1.2.840.113549.1.9.16.2.27") || !strcmp(oid, "1.2.840.113549.1.9.16.2.48") ||
+                   !strcmp(oid, "0.4.0.19122.1.1"));
+}
+
+static void collect_ts_from_unauth(fz_context* ctx, PCRYPT_ATTRIBUTES attrs, pkcs7_windows_sig_info* info) {
+    DWORD i, v;
+    if (!attrs) {
+        return;
+    }
+    for (i = 0; i < attrs->cAttr; i++) {
+        CRYPT_ATTRIBUTE* attr = &attrs->rgAttr[i];
+        if (!is_ts_oid(attr->pszObjId)) {
+            continue;
+        }
+        for (v = 0; v < attr->cValue; v++) {
+            add_ts_token(ctx, attr->rgValue[v].pbData, attr->rgValue[v].cbData, info);
+        }
+    }
+}
+
+static void collect_ts_from_raw(fz_context* ctx, unsigned char* sig, size_t sig_len, pkcs7_windows_sig_info* info) {
+    static const unsigned char kOid14[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x10, 0x02, 0x0E};
+    static const unsigned char kOid27[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x10, 0x02, 0x1B};
+    static const unsigned char kOid48[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x10, 0x02, 0x30};
+    size_t i;
+    sig_len = trim_sig(sig, sig_len);
+    for (i = 0; i + sizeof(kOid14) + 4 < sig_len && info->n_ts < PKCS7_WINDOWS_MAX_TS; i++) {
+        int hit = 0;
+        if (memcmp(sig + i, kOid14, sizeof(kOid14)) == 0) {
+            hit = (int)sizeof(kOid14);
+        } else if (memcmp(sig + i, kOid27, sizeof(kOid27)) == 0) {
+            hit = (int)sizeof(kOid27);
+        } else if (memcmp(sig + i, kOid48, sizeof(kOid48)) == 0) {
+            hit = (int)sizeof(kOid48);
+        }
+        if (!hit) {
+            continue;
+        }
+        {
+            const unsigned char* p = sig + i + (size_t)hit;
+            size_t left = sig_len - (i + (size_t)hit);
+            size_t hdr, body;
+            if (left < 2 || p[0] != 0x31 || asn1_len(p, left, &hdr, &body) != 0) {
+                continue;
+            }
+            p += hdr;
+            left = body;
+            if (left < 2 || p[0] != 0x30 || asn1_len(p, left, &hdr, &body) != 0) {
+                continue;
+            }
+            add_ts_token(ctx, (unsigned char*)p, (DWORD)(hdr + body), info);
+        }
+        i += (size_t)hit - 1;
+    }
 }
 
 int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, pkcs7_windows_sig_info* info) {
@@ -1188,15 +1270,9 @@ int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, p
     if (find_attr(&si->AuthAttrs, "1.2.840.113549.1.9.16.2.15")) {
         info->has_sig_policy_attr = 1;
     }
-    attr = find_attr(&si->UnauthAttrs, szOID_RFC3161_counterSign);
-    if (!attr) {
-        attr = find_attr(&si->UnauthAttrs, szOID_PKCS9_COUNTER_SIGNATURE);
-    }
-    if (attr && attr->cValue > 0) {
-        inspect_timestamp_token(ctx, attr->rgValue[0].pbData, attr->rgValue[0].cbData, &info->ts);
-        if (info->ts.signer_cn || info->ts.gen_time_unix) {
-            info->has_timestamp = 1;
-        }
+    collect_ts_from_unauth(ctx, &si->UnauthAttrs, info);
+    if (info->n_ts == 0) {
+        collect_ts_from_raw(ctx, sig, sig_len, info);
     }
     ok = 1;
 

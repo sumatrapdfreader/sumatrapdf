@@ -18,7 +18,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | --- | --- |
 | `0001-tools-usage-say-sumatrapdf` | usage text names `SumatraPDF <tool>`, not `mutool` |
 | `0002-tools-reset-fz-optind` | tool mains can be called more than once in-process |
-| `0003-signatures-windows-pkcs7` | Windows CryptoAPI pkcs7 helper instead of OpenSSL |
+| `0003-signatures-windows-pkcs7` | Windows CryptoAPI pkcs7 helper instead of OpenSSL (`pkcs7-windows.[ch]` are ours) |
 | `0004-console-io-for-gui-subsystem-exe` | stdio for a GUI-subsystem exe (#5677, #5665, #5681) |
 | `0005-pdfinfo-to-buffer` | `mutool info` output as a buffer, for the properties window |
 | `0006-jpeg-xr-via-windows-wic` | JPEG-XR decoding through the Windows WIC codec |
@@ -37,9 +37,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0019-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
 | `0020-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
 | `0025-webp-images` | decode WebP via libwebp (`HAVE_WEBP`) so EPUB/HTML/MOBI/CBZ can show `.webp` (#3415) |
-| `0026-pkcs7-windows-store` | load a signing cert from CurrentUser\\MY by SHA-1 thumbprint (#5965) |
 | `0027-webp-iccp-without-demux` | apply a WebP `ICCP` chunk via our own RIFF walk (no libwebp demux) |
-| `0028-pkcs7-windows-inspect` | algorithms, issuer, digest, RFC 3161 timestamp from a PKCS#7 signature (#5581) |
 | `0029-pdf-tj-array-tc-tw` | `Tc`/`Tw` inside a `TJ` array is not a syntax error that dumps the rest of the page (#4157) |
 | `0030-pdf-subset-base14-font-name` | strip `ABCDEF+` subset tags so a non-embedded `XXXXXX+Symbol` uses the builtin Symbol font (#4655) |
 | `0031-html-image-page-height` | shrink every reflow image against the fixed page height, not advancing block bounds (#6007) |

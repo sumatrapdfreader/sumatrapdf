@@ -7528,22 +7528,27 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     if (len(s) > 0) {
         s.AppendChar('\n');
     }
-    if (pageNo > 0) {
-        s.Append(fmt("Signature %d (page %d):\n", sigNo, pageNo));
-    } else {
-        s.Append(fmt("Signature %d (document timestamp):\n", sigNo));
-    }
-    if (!pdf_signature_is_signed(ctx, pdfdoc, sigObj)) {
-        s.Append(StrL("  not signed\n"));
-        return;
-    }
-
     pdf_obj* vDict = pdf_dict_get(ctx, sigObj, PDF_NAME(V));
     if (!vDict) {
         vDict = sigObj;
     }
     const char* subFilter = SigSubFilter(ctx, vDict);
     bool isDocTs = SubFilterIsDocTimeStamp(subFilter);
+    bool isSigned = pdf_signature_is_signed(ctx, pdfdoc, sigObj);
+    if (!isSigned && isDocTs && pdf_dict_get(ctx, vDict, PDF_NAME(Contents))) {
+        isSigned = true;
+    }
+    if (isDocTs) {
+        s.Append(fmt("Signature %d (document timestamp):\n", sigNo));
+    } else if (pageNo > 0) {
+        s.Append(fmt("Signature %d (page %d):\n", sigNo, pageNo));
+    } else {
+        s.Append(fmt("Signature %d:\n", sigNo));
+    }
+    if (!isSigned) {
+        s.Append(StrL("  not signed\n"));
+        return;
+    }
 
     char* contents = nullptr;
     size_t contentsLen = 0;
@@ -7562,7 +7567,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         fz_report_error(ctx);
     }
 
-    s.Append(StrL("  User certificate:\n"));
+    s.Append(isDocTs ? StrL("  Timestamp certificate:\n") : StrL("  User certificate:\n"));
     AppendTrustSource(s, info.cert_der, info.cert_der_len);
     if (info.signer_cn && info.signer_cn[0]) {
         s.Append(fmt("  Signed by: %s\n", Str(info.signer_cn)));
@@ -7572,8 +7577,8 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
 
     pdf_obj* mObj = pdf_dict_get(ctx, vDict, PDF_NAME(M));
     TempStr signedAt = FormatPdfDateRawTemp(ctx, mObj);
-    if (!signedAt) {
-        signedAt = FormatUnixTimeTemp(info.ts.gen_time_unix);
+    if (!signedAt && info.n_ts > 0) {
+        signedAt = FormatUnixTimeTemp(info.ts[0].gen_time_unix);
     }
     if (signedAt) {
         s.Append(fmt("  Signature time: %s\n", signedAt));
@@ -7601,15 +7606,17 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    if (certErr) {
-        s.Append(fmt("  Certificate: %s\n", Str(pdf_signature_error_description(certErr))));
-    }
-    if (digErr) {
-        s.Append(fmt("  Digest: %s\n", Str(pdf_signature_error_description(digErr))));
-    } else if (edits) {
-        s.Append(StrL("  The document was changed since the signature was applied.\n"));
-    } else {
-        s.Append(StrL("  The document wasn't changed since the signature was applied.\n"));
+    if (!isDocTs) {
+        if (certErr) {
+            s.Append(fmt("  Certificate: %s\n", Str(pdf_signature_error_description(certErr))));
+        }
+        if (digErr) {
+            s.Append(fmt("  Digest: %s\n", Str(pdf_signature_error_description(digErr))));
+        } else if (edits) {
+            s.Append(StrL("  The document was changed since the signature was applied.\n"));
+        } else {
+            s.Append(StrL("  The document wasn't changed since the signature was applied.\n"));
+        }
     }
 
     bool ltv = docHasDss;
@@ -7630,27 +7637,28 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     AppendSigDictText(ctx, s, vDict, StrL("location"), PDF_NAME(Location));
     AppendSigDictText(ctx, s, vDict, StrL("contact"), PDF_NAME(ContactInfo));
 
-    if (info.has_timestamp) {
+    for (int ti = 0; ti < info.n_ts; ti++) {
+        const pkcs7_windows_ts_info& ts = info.ts[ti];
         s.Append(StrL("  -----\n"));
         s.Append(StrL("  Included Time Stamp:\n"));
-        AppendTrustSource(s, info.ts.cert_der, info.ts.cert_der_len);
-        if (info.ts.signer_cn && info.ts.signer_cn[0]) {
-            s.Append(fmt("  Signed by: %s\n", Str(info.ts.signer_cn)));
+        AppendTrustSource(s, ts.cert_der, ts.cert_der_len);
+        if (ts.signer_cn && ts.signer_cn[0]) {
+            s.Append(fmt("  Signed by: %s\n", Str(ts.signer_cn)));
         }
-        TempStr tsTime = FormatUnixTimeTemp(info.ts.gen_time_unix);
+        TempStr tsTime = FormatUnixTimeTemp(ts.gen_time_unix);
         if (tsTime) {
             s.Append(fmt("  Signature time: %s\n", tsTime));
             s.Append(StrL("  The time and date displayed is from the secure time & date server.\n"));
         }
-        if (info.ts.issuer_cn && info.ts.issuer_cn[0]) {
-            s.Append(fmt("  Certificate issued by: %s\n", Str(info.ts.issuer_cn)));
+        if (ts.issuer_cn && ts.issuer_cn[0]) {
+            s.Append(fmt("  Certificate issued by: %s\n", Str(ts.issuer_cn)));
         }
-        AppendLtvLine(s, ltv, info.ts.not_after_unix);
-        if (info.ts.hash_algo) {
-            s.Append(fmt("  Hash algorithm: %s\n", Str(info.ts.hash_algo)));
+        AppendLtvLine(s, ltv, ts.not_after_unix);
+        if (ts.hash_algo) {
+            s.Append(fmt("  Hash algorithm: %s\n", Str(ts.hash_algo)));
         }
-        if (info.ts.policy_oid) {
-            s.Append(fmt("  Policy ID: %s\n", Str(info.ts.policy_oid)));
+        if (ts.policy_oid) {
+            s.Append(fmt("  Policy ID: %s\n", Str(ts.policy_oid)));
         }
     }
 
@@ -7671,11 +7679,12 @@ void EngineMupdfGetSignatureCerts(EngineBase* engine, Vec<PdfSigCert>& out) {
         int sigNo = 0;
         for (pdf_obj* field : fields) {
             ++sigNo;
-            if (!pdf_signature_is_signed(ctx, e->pdfdoc, field)) {
-                continue;
-            }
             char* contents = nullptr;
             size_t contentsLen = pdf_signature_contents(ctx, e->pdfdoc, field, &contents);
+            if (contentsLen == 0) {
+                fz_free(ctx, contents);
+                continue;
+            }
             pkcs7_windows_sig_info info{};
             if (contentsLen > 0) {
                 pkcs7_windows_inspect(ctx, (unsigned char*)contents, contentsLen, &info);
@@ -7690,9 +7699,11 @@ void EngineMupdfGetSignatureCerts(EngineBase* engine, Vec<PdfSigCert>& out) {
                 c.der = str::Dup(Str((const char*)der, derLen));
                 VecAppend(out, c);
             };
-            add("signer", info.cert_der, info.cert_der_len);
-            if (info.has_timestamp) {
-                add("timestamp", info.ts.cert_der, info.ts.cert_der_len);
+            pdf_obj* v = pdf_dict_get(ctx, field, PDF_NAME(V));
+            bool docTs = SubFilterIsDocTimeStamp(SigSubFilter(ctx, v ? v : field));
+            add(docTs ? "timestamp" : "signer", info.cert_der, info.cert_der_len);
+            for (int ti = 0; ti < info.n_ts; ti++) {
+                add("timestamp", info.ts[ti].cert_der, info.ts[ti].cert_der_len);
             }
             pkcs7_windows_sig_info_free(ctx, &info);
         }

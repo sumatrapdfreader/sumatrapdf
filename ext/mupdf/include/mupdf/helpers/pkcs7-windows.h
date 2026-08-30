@@ -48,6 +48,8 @@ typedef struct {
     int cert_der_len;
 } pkcs7_windows_ts_info;
 
+#define PKCS7_WINDOWS_MAX_TS 8
+
 typedef struct {
     char* signer_cn;
     char* issuer_cn;
@@ -61,7 +63,8 @@ typedef struct {
     unsigned char* cert_der;
     int cert_der_len;
     int has_timestamp;
-    pkcs7_windows_ts_info ts;
+    int n_ts;
+    pkcs7_windows_ts_info ts[PKCS7_WINDOWS_MAX_TS];
 } pkcs7_windows_sig_info;
 
 void pkcs7_windows_sig_info_clear(pkcs7_windows_sig_info* info);
