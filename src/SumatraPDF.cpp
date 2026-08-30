@@ -7794,6 +7794,7 @@ static void FrameUpdateUi(MainWindow* win) {
             if (rect != fullscreen && rect != GetVirtualScreenRect()) {
                 uint flags = SWP_NOACTIVATE | SWP_NOZORDER;
                 SetWindowPos(win->hwndFrame, nullptr, fullscreen.x, fullscreen.y, fullscreen.dx, fullscreen.dy, flags);
+                RepositionAnnotEditToolbar(win);
             }
         }
     }
@@ -8646,6 +8647,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     gSettings->showFavorites = showFavoritesTmp;
     // ensure layout is correct after fullscreen transition
     RelayoutFrame(win);
+    RepositionAnnotEditToolbar(win);
     // show menu bar rebar after layout positions it correctly
     ShowMenuBarRebar(win);
     BrowserDocView* browserView = nullptr;
@@ -12953,6 +12955,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // brings the text it was copied from.
     if (cmdId == CmdCreateAnnotFreeText && lastCreatedAnnot->type == AnnotationType::FreeText) {
         StartFreeTextInPlaceEdit(win, lastCreatedAnnot);
+    } else {
+        bool openEdit = cmd && GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
+        if (!openEdit && win->isFullScreen) {
+            AnnotationType t = lastCreatedAnnot->type;
+            openEdit = t == AnnotationType::Highlight || t == AnnotationType::Underline ||
+                       t == AnnotationType::Squiggly || t == AnnotationType::StrikeOut;
+        }
+        if (openEdit) {
+            // openedit, and F11 markup: Contents used to never open (issue #6111)
+            uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, win), "StartAnnotContentsEdit");
+        }
     }
     return 0;
 }

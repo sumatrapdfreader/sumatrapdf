@@ -515,7 +515,7 @@ static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
     ctx->tab = tabUnderMouse;
     ctx->isDocLoaded = true; // tabUnderMouse is a real (non-about) document tab
     ctx->filePath = tabUnderMouse->filePath;
-    ctx->supportsAnnots = EngineSupportsAnnotations(tabEngine) && !win->isFullScreen;
+    ctx->supportsAnnots = EngineSupportsAnnotations(tabEngine);
     ctx->hasUnsavedAnnotations = EngineHasUnsavedAnnotations(tabEngine);
     ctx->canCloseOtherTabs = len(toCloseOther) > 0;
     ctx->canCloseTabsToRight = len(toCloseRight) > 0;

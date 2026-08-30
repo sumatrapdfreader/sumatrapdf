@@ -295,7 +295,7 @@ static bool PositionPopup(AnnotTextPopup* popup) {
     Point screen = HwndClientToScreen(win->hwndCanvas, Point(x, y));
     Rect placed(screen.x, screen.y, width, height);
     if (placed != popup->lastPlaced) {
-        popup->host->SetBounds(placed);
+        popup->host->SetPos(placed, true);
         popup->lastPlaced = placed;
     }
     return true;

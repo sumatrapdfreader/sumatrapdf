@@ -504,7 +504,7 @@ Use case: if you want to go forward or back by more than one page.
 Arguments:
 
 - `color` : default, color
-- `openedit` : Boolean, `false` if not given. **Ver 3.7+:** creating an annotation always turns on Edit PDF mode, so this argument no longer does anything. It is still accepted, so existing shortcuts keep working
+- `openedit` : Boolean, `false` if not given. Opens the Contents editor on the property row after creating the annotation (the old annotations window is gone). Creating an annotation always turns on Edit PDF mode.
 - `copytoclipboard` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, copies the selection (the annotation's text) to the clipboard. This used to be the default behavior for built-in keyboard shortcuts such as `a`, but now it has to be chosen explicitly.
 - `setcontent` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, sets the annotation's content to the selection (the annotation's text)
 

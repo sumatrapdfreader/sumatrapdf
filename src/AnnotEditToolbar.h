@@ -12,6 +12,7 @@ struct Vec;
 
 void UpdateAnnotEditToolbar(MainWindow*);
 void HideAnnotEditToolbar(MainWindow*);
+void StartSelectedAnnotContentsEdit(MainWindow*);
 void RepositionAnnotEditToolbar(MainWindow*);
 void RefreshAnnotEditToolbar(MainWindow*);
 void DeleteAnnotEditToolbar(MainWindow*);

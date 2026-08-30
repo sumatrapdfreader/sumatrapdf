@@ -425,7 +425,8 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.isFixedPage = true;
         auto* engine = dm->GetEngine();
         ctx.hasTextSelection = ctx.hasSelection && dm->textSelection->result.len > 0;
-        ctx.supportsAnnots = EngineSupportsAnnotations(engine) && !win->isFullScreen;
+        // F11 still edits: the property row is a popup (issue #6111)
+        ctx.supportsAnnots = EngineSupportsAnnotations(engine);
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
         ctx.hasRedactMarks = EngineHasRedactMarks(engine);
         ctx.canUndo = EngineMupdfCanUndo(engine);

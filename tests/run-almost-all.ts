@@ -162,6 +162,7 @@ import { testit as textAnnotationPlacement } from "./text-annotation-placement.t
 import { testit as freeTextAnnotationPlacement } from "./free-text-annotation-placement.ts";
 import { testit as freeTextEditToolbar } from "./free-text-edit-toolbar.ts";
 import { testit as createAnnotEntersEditMode } from "./create-annot-enters-edit-mode.ts";
+import { testit as issue6111 } from "./issue-6111.ts";
 import { testit as exitEditPdfDeselects } from "./exit-edit-pdf-deselects.ts";
 import { testit as freeTextInPlaceEdit } from "./free-text-in-place-edit.ts";
 import { testit as freeTextEditMatchesRender } from "./free-text-edit-matches-render.ts";
@@ -283,6 +284,7 @@ export const tests: NamedTest[] = [
   ["free-text-annotation-placement", freeTextAnnotationPlacement],
   ["free-text-edit-toolbar", freeTextEditToolbar],
   ["create-annot-enters-edit-mode", createAnnotEntersEditMode],
+  ["issue-6111", issue6111],
   ["exit-edit-pdf-deselects", exitEditPdfDeselects],
   ["free-text-in-place-edit", freeTextInPlaceEdit],
   ["free-text-edit-matches-render", freeTextEditMatchesRender],

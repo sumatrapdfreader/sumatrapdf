@@ -1529,12 +1529,34 @@ static bool GetAnnotScreenBounds(MainWindow* win, Annotation* annot, Rect& out) 
         return false;
     }
     Rect canvas = HwndClientRect(win->hwndCanvas);
+    if (canvas.IsEmpty()) {
+        return false;
+    }
     Rect r = dm->CvtToScreen(PageNo(annot), GetRect(annot)).Intersect(canvas);
     if (r.IsEmpty()) {
-        return false;
+        // page is on screen; the quad missed the canvas (layout in flight).
+        // Park at the canvas so Contents can still be edited (issue #6111)
+        r = Rect(canvas.x, canvas.y, 1, 1);
     }
     out = r;
     return true;
+}
+
+// caption-less fullscreen sits above a SHOWNOACTIVATE owner popup unless the
+// popup is TOPMOST (issue #6111)
+static HWND ToolbarZ(AnnotEditToolbar* tb) {
+    MainWindow* win = tb ? tb->win : nullptr;
+    if (win && (win->isFullScreen || win->presentation)) {
+        return HWND_TOPMOST;
+    }
+    return HWND_TOP;
+}
+
+static void RaiseToolbarHost(AnnotEditToolbar* tb) {
+    if (!tb || !tb->host || !tb->host->native) {
+        return;
+    }
+    SetWindowPos(tb->host->native, ToolbarZ(tb), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
 }
 
 static bool PositionToolbar(AnnotEditToolbar* tb, const Rect& annot) {
@@ -1560,11 +1582,13 @@ static bool PositionToolbar(AnnotEditToolbar* tb, const Rect& annot) {
     Point p = HwndClientToScreen(win->hwndCanvas, Point(x, y));
     Rect placed(p.x, p.y, w, h);
     if (placed == tb->lastPlaced) {
+        RaiseToolbarHost(tb);
         return false;
     }
     bool sizeChanged = tb->lastPlaced.dx != w || tb->lastPlaced.dy != h;
     tb->lastPlaced = placed;
-    tb->host->SetBounds(placed);
+    SetWindowPos(tb->host->native, ToolbarZ(tb), placed.x, placed.y, placed.dx, placed.dy,
+                 SWP_NOACTIVATE | SWP_SHOWWINDOW);
     if (sizeChanged) {
         tb->host->ClipToRoundedRect(kCornerRadius, {w, h});
     }
@@ -1833,7 +1857,8 @@ static void LayoutContentsEditor(AnnotEditToolbar* tb) {
     VecReset(tb->chips);
 }
 
-static void PostedStartContentsEdit(MainWindow* win) {
+// Contents editor on the property row (openedit after create, Contents chip).
+void StartSelectedAnnotContentsEdit(MainWindow* win) {
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
     if (!tb) {
         return;
@@ -1854,6 +1879,10 @@ static void PostedStartContentsEdit(MainWindow* win) {
         return;
     }
     StartContentsEdit(tb);
+}
+
+static void PostedStartContentsEdit(MainWindow* win) {
+    StartSelectedAnnotContentsEdit(win);
 }
 
 static void PostedDeleteSelectedAnnotation(MainWindow* win) {
@@ -1897,8 +1926,8 @@ static void StartContentsEdit(AnnotEditToolbar* tb) {
     SetHostNoActivate(tb->host, false);
     LayoutContentsEditor(tb);
     PositionToolbar(tb, tb->lastAnnotBounds);
-    tb->host->Show(true);
     tb->host->Invalidate(false);
+    RaiseToolbarHost(tb);
     SetActiveWindow(tb->host->native);
     edit->SetFocus();
     EditSetCursorPosAtEnd(edit);
@@ -2354,13 +2383,18 @@ void UpdateAnnotEditToolbar(MainWindow* win) {
     tb->lastAnnotBounds = bounds;
     LayoutToolbar(tb, items);
     PositionToolbar(tb, bounds);
-    tb->host->Show(true);
     tb->host->Invalidate(false);
 }
 
 void RepositionAnnotEditToolbar(MainWindow* win) {
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
     if (!tb || !tb->host || !tb->host->IsVisible()) {
+        // layout can hide the row while pageOnScreen is empty; show it again
+        // once the selected annot has canvas bounds (issue #6111)
+        WindowTab* tab = win ? win->CurrentTab() : nullptr;
+        if (win && win->pdfAnnotationsToolbarEnabled && tab && tab->selectedAnnotation) {
+            UpdateAnnotEditToolbar(win);
+        }
         return;
     }
     Annotation* annot = LiveToolbarAnnot(tb);
