@@ -1732,6 +1732,13 @@ static void OnHoverDropdownMouseLeave(MainWindow* win) {
     }
 }
 
+static void OnHoverDropdownMouseMove(MainWindow* win) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (tb && tb->host && tb->hoverCmdId != 0) {
+        tb->host->KillTimer(kCloseHoverDropdownTimerId);
+    }
+}
+
 // The pyramid's right half - the values above the middle - gets its own
 // ground, so which way is bigger can be seen rather than read. The rows are
 // staggered, so the two halves meet along a staircase, and each band runs to
@@ -1928,6 +1935,7 @@ static void OpenHoverDropdown(MainWindow* win, int cmdId) {
         return;
     }
     host->onPaintBackground = MkFunc1(PaintHoverDropdownBg, win);
+    host->onMouseMove = MkFunc0(OnHoverDropdownMouseMove, win);
     host->onMouseLeave = MkFunc0(OnHoverDropdownMouseLeave, win);
     Size sz = host->SetLayoutSizedToContent(ev.layout);
 
@@ -1952,8 +1960,9 @@ static void OpenHoverDropdown(MainWindow* win, int cmdId) {
 }
 
 // The mouse moved over the toolbar (or left it): open, keep or close the
-// drop-down of whatever button it is resting on.
-static void ToolbarHoverDropdownOnMouseMove(MainWindow* win) {
+// drop-down of whatever button it is resting on. clientPt is the move; null
+// on leave, which uses the real cursor so the drop-down stays up in it.
+static void ToolbarHoverDropdownOnMouseMove(MainWindow* win, const Point* clientPt) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb || !tb->host || len(tb->hoverRegs) == 0) {
         return;
@@ -1961,7 +1970,12 @@ static void ToolbarHoverDropdownOnMouseMove(MainWindow* win) {
     Point ptScreen = UiCursorScreenPos();
     bool overMenu = ToolbarHoverDropdownContainsScreenPoint(win, ptScreen);
     int cmdId = 0;
-    if (HostHasPoint(tb->host, ptScreen)) {
+    if (clientPt) {
+        VirtCtrl* w = ToolbarItemFromPoint(win, *clientPt);
+        if (w && FindHoverReg(tb, w->id)) {
+            cmdId = w->id;
+        }
+    } else if (HostHasPoint(tb->host, ptScreen)) {
         // a disabled button still gets its drop-down, the way it still gets its
         // tooltip: the rows say what could be done and why they are greyed
         VirtCtrl* w = ToolbarItemFromPoint(win, tb->host->FromScreen(ptScreen));
@@ -2164,9 +2178,14 @@ static void BuildSaveHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
     ev->layout = NewToolbarHoverMenu(win, items);
 }
 
-static void OnToolbarMouseMove(MainWindow* win) {
+static void OnToolbarMouseMove(MainWindow* win, Point pt) {
     UpdateOverlayToolbarForMouse(win);
-    ToolbarHoverDropdownOnMouseMove(win);
+    ToolbarHoverDropdownOnMouseMove(win, &pt);
+}
+
+static void OnToolbarMouseLeave(MainWindow* win) {
+    UpdateOverlayToolbarForMouse(win);
+    ToolbarHoverDropdownOnMouseMove(win, nullptr);
 }
 
 static void PaintToolbarSeparator(VirtCustom*, VirtPaintCtx* ctx) {
@@ -2367,8 +2386,8 @@ void CreateToolbar(MainWindow* win) {
     host->onPaintBackground = MkFunc1(PaintToolbarBackground, win);
     host->onPaint = MkFunc1(PaintToolbarEdge, win);
     host->onTimer = MkFunc1(OnToolbarTimer, win);
-    host->onMouseMove = MkFunc0(OnToolbarMouseMove, win);
-    host->onMouseLeave = MkFunc0(OnToolbarMouseMove, win);
+    host->onMouseMove = MkFunc1(OnToolbarMouseMove, win);
+    host->onMouseLeave = MkFunc0(OnToolbarMouseLeave, win);
     ToolbarSetNativeHooks(win, host);
 
     auto* tb = new ToolbarVirt();

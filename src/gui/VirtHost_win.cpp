@@ -129,9 +129,15 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             }
             break;
         case WM_MOUSEMOVE: {
-            TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT), TME_LEAVE, hwnd, 0};
-            TrackMouseEvent(&tme);
-            host->onMouseMove.Call();
+            // posted moves (tests) are not the real cursor; TME_LEAVE would
+            // fire at once and cancel a hover the move just started
+            if (HwndWindowRect(hwnd).Contains(GetCursorPosition())) {
+                TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT), TME_LEAVE, hwnd, 0};
+                TrackMouseEvent(&tme);
+            }
+            Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+            UnmirrorRtl(hwnd, pt);
+            host->onMouseMove.Call(pt);
             break;
         }
         case WM_MOUSELEAVE:

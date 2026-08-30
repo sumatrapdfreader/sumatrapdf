@@ -948,6 +948,11 @@ void VirtRoot::TrackMouseLeaveIfNeeded() {
     if (trackingMouseLeave || !hwnd) {
         return;
     }
+    // posted moves (tests) are not the real cursor; TME_LEAVE would fire
+    // at once and clear hover the move just set
+    if (!HwndWindowRect(hwnd).Contains(GetCursorPosition())) {
+        return;
+    }
     TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT)};
     tme.dwFlags = TME_LEAVE;
     tme.hwndTrack = hwnd;

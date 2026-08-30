@@ -26,6 +26,7 @@ import {
   packCoords,
   sendMessage,
   setCursorPos,
+  setProcessDpiAware,
   sleep,
   WM_COMMAND,
   WM_MOUSEMOVE,
@@ -460,6 +461,7 @@ async function checkCustomZoomLevels(dir: string, pdf: string): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
+  setProcessDpiAware();
   const dir = tmpPath("toolbar-hover-dropdown");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });

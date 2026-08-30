@@ -81,8 +81,8 @@ struct VirtHost {
     Func1<VirtHostPaintEvent*> onPaintBackground;
     // draws on top of the tree
     Func1<VirtHostPaintEvent*> onPaint;
-    // the mouse moved over the host, or left it
-    Func0 onMouseMove;
+    // the mouse moved over the host (client coords, RTL-unmirrored) or left it
+    Func1<Point> onMouseMove;
     Func0 onMouseLeave;
     // a timer started with SetTimer() fired; the argument is the timer's id
     Func1<int> onTimer;
