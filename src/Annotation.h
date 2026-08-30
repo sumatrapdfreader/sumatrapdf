@@ -163,6 +163,10 @@ bool SetQuadding(Annotation*, int);
 void SetBorderWidth(Annotation*, int);
 void SetOpacity(Annotation*, int);
 void SetIconName(Annotation*, Str);
+bool HasEmbeddedFile(Annotation*);
+Str EmbeddedFileNameTemp(Annotation*);
+Str LoadEmbeddedFile(Annotation*);
+bool SetEmbeddedFileFromPath(Annotation*, Str);
 void SetLineEndStyles(Annotation*, int end);
 void SetLineStartStyles(Annotation*, int start);
 

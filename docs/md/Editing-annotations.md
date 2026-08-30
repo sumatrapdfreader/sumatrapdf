@@ -78,7 +78,7 @@ It is saved as an ink annotation in the `HighlightColor` from Advanced Settings 
 
 ## Changing an annotation
 
-Click an annotation in Edit PDF mode to select it. A compact property row appears under it (color, opacity, border, font, icon, line endings, Contents). The filter list and floating list also select an annotation when you click a row.
+Click an annotation in Edit PDF mode to select it. A compact property row appears under it (color, opacity, border, font, icon, line endings, Contents). A file attachment's row also has **Attach File** and **Save Attachment**. Icon, line-ending, and text-alignment menus show the glyph next to the name. The filter list and floating list also select an annotation when you click a row.
 
 Delete the selected annotation with `Delete`, or with **Delete Annotation** in the floating list.
 

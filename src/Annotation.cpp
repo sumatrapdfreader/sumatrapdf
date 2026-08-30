@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/File.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
 
@@ -956,6 +957,135 @@ void SetIconName(Annotation* annot, Str iconName) {
         }
     }
     MarkNotificationAsModified(e, annot);
+}
+
+static i64 FileTimeToUnixSeconds(FILETIME ft) {
+    constexpr i64 kTicksFrom1601To1970 = 116444736000000000LL;
+    ULARGE_INTEGER value;
+    value.LowPart = ft.dwLowDateTime;
+    value.HighPart = ft.dwHighDateTime;
+    if (value.QuadPart < (u64)kTicksFrom1601To1970) {
+        return -1;
+    }
+    return (i64)((value.QuadPart - kTicksFrom1601To1970) / 10000000);
+}
+
+bool HasEmbeddedFile(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return false;
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    bool ok = false;
+    fz_try(ctx) {
+        pdf_obj* fs = pdf_annot_filespec(ctx, a);
+        ok = fs && pdf_is_embedded_file(ctx, fs);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return ok;
+}
+
+Str EmbeddedFileNameTemp(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return {};
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    Str name;
+    fz_try(ctx) {
+        pdf_obj* fs = pdf_annot_filespec(ctx, a);
+        if (fs) {
+            pdf_filespec_params params{};
+            pdf_get_filespec_params(ctx, fs, &params);
+            if (params.filename) {
+                name = str::DupTemp(Str(params.filename));
+            }
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        name = {};
+    }
+    return name;
+}
+
+// caller owns the result (binary; may not be NUL-terminated)
+Str LoadEmbeddedFile(Annotation* annot) {
+    if (!AnnotationIsLive(annot)) {
+        return {};
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    Str res;
+    fz_try(ctx) {
+        pdf_obj* fs = pdf_annot_filespec(ctx, a);
+        if (fs && pdf_is_embedded_file(ctx, fs)) {
+            fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
+            if (buf) {
+                res = str::Dup(Str((char*)buf->data, (int)buf->len));
+                fz_drop_buffer(ctx, buf);
+            }
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("LoadEmbeddedFile() failed\n");
+    }
+    return res;
+}
+
+bool SetEmbeddedFileFromPath(Annotation* annot, Str path) {
+    if (!AnnotationIsLive(annot) || !path || !file::Exists(path)) {
+        return false;
+    }
+    EngineMupdf* e = annot->engine;
+    Str data = file::ReadFile(path);
+    if (!data.s) {
+        return false;
+    }
+    TempStr name = path::GetBaseNameTemp(path);
+    TempStr mime = MimeTypeFromExtTemp(path::GetExtTemp(path));
+    i64 modified = FileTimeToUnixSeconds(file::GetModificationTime(path));
+    bool ok = false;
+    {
+        ScopedEngineOperation op(e, "Embed file attachment");
+        auto* ctx = e->Ctx();
+        ScopedRecursiveMutex cs(&e->docLock);
+        pdf_obj* fs = nullptr;
+        fz_buffer* buf = nullptr;
+        fz_var(fs);
+        fz_var(buf);
+        fz_try(ctx) {
+            buf = fz_new_buffer_from_copied_data(ctx, (const u8*)data.s, (size_t)data.len);
+            fs = pdf_add_embedded_file(ctx, e->pdfdoc, CStrTemp(name), mime ? CStrTemp(mime) : nullptr, buf, modified,
+                                       modified, 0);
+            pdf_set_annot_filespec(ctx, annot->pdfannot, fs);
+            pdf_update_annot(ctx, annot->pdfannot);
+            ok = true;
+        }
+        fz_always(ctx) {
+            fz_drop_buffer(ctx, buf);
+            pdf_drop_obj(ctx, fs);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("SetEmbeddedFileFromPath() failed\n");
+            ok = false;
+        }
+    }
+    str::Free(data);
+    if (ok) {
+        MarkNotificationAsModified(e, annot);
+    }
+    return ok;
 }
 
 void SetLineEndStyles(Annotation* annot, int end) {

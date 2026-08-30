@@ -167,6 +167,7 @@ import { testit as freeTextInPlaceEdit } from "./free-text-in-place-edit.ts";
 import { testit as freeTextEditMatchesRender } from "./free-text-edit-matches-render.ts";
 import { testit as annotMoveableTypes } from "./annot-moveable-types.ts";
 import { testit as stampCaretAnnotationPlacement } from "./stamp-caret-annotation-placement.ts";
+import { testit as issue6103 } from "./issue-6103.ts";
 import { testit as lineAnnotationPlacement } from "./line-annotation-placement.ts";
 import { testit as polylineAnnotationPlacement } from "./polyline-annotation-placement.ts";
 import { testit as shapeAnnotationPlacement } from "./shape-annotation-placement.ts";
@@ -284,6 +285,7 @@ export const tests: NamedTest[] = [
   ["free-text-edit-matches-render", freeTextEditMatchesRender],
   ["annot-moveable-types", annotMoveableTypes],
   ["stamp-caret-annotation-placement", stampCaretAnnotationPlacement],
+  ["issue-6103", issue6103],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["shape-annotation-placement", shapeAnnotationPlacement],

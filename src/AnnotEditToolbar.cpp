@@ -2,14 +2,19 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/File.h"
 #include "base/Pixmap.h"
 #include "base/Win.h"
 #include "base/UITask.h"
 #include "gui/Dpi.h"
+#include <commdlg.h>
 
 extern "C" {
 #include <mupdf/pdf.h>
 }
+
+// 8x8 PDF path streams used by pdf_write_icon_appearance (text / file / sound)
+#include "../ext/mupdf/source/pdf/annotation-icons.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -41,6 +46,7 @@ extern "C" {
 #include "FilterHighlightDraw.h"
 #include "AnnotFilterToolbar.h"
 #include "SvgIcons.h"
+#include "ImageReader.h"
 
 #include "AnnotEditToolbar.h"
 
@@ -72,6 +78,8 @@ enum class AnnotEditKind {
     Contents,
     LineStart,
     LineEnd,
+    AttachFile,
+    SaveAttachment,
     Delete,
 };
 
@@ -84,6 +92,7 @@ struct AnnotEditItem {
     int lineEnding = 0;
     bool lineIsStart = false;
     Str iconName;
+    bool mupdfIcon = false;
 };
 
 struct AnnotEditToolbar;
@@ -227,6 +236,10 @@ static Str KindName(AnnotEditKind kind) {
             return StrL("lineStart");
         case AnnotEditKind::LineEnd:
             return StrL("lineEnd");
+        case AnnotEditKind::AttachFile:
+            return StrL("attachFile");
+        case AnnotEditKind::SaveAttachment:
+            return StrL("saveAttachment");
         case AnnotEditKind::Delete:
             return StrL("delete");
     }
@@ -314,8 +327,23 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Icon;
         it.iconName = IconName(annot);
+        it.mupdfIcon = type != AnnotationType::Stamp;
         it.tooltip = _TRA("Icon");
         VecAppend(out, it);
+    }
+    if (type == AnnotationType::FileAttachment) {
+        {
+            AnnotEditItem it;
+            it.kind = AnnotEditKind::AttachFile;
+            it.tooltip = _TRA("Attach File");
+            VecAppend(out, it);
+        }
+        {
+            AnnotEditItem it;
+            it.kind = AnnotEditKind::SaveAttachment;
+            it.tooltip = _TRA("Save Attachment");
+            VecAppend(out, it);
+        }
     }
     if (type == AnnotationType::Line) {
         int start = 0;
@@ -506,34 +534,319 @@ static void PaintLineEnding(Gfx* gfx, Rect r, int style, bool isStart, Color col
     }
 }
 
-static void PaintIconGlyph(Gfx* gfx, Rect r, Str name, Color col, PlatformFont* font) {
-    int pad = DpiScale(4);
-    Rect inner = r;
-    inner.Inflate(-pad, -pad);
-    if (str::EqI(name, StrL("Note")) || str::EqI(name, StrL("Comment"))) {
-        gfx->DrawRect(inner, col, 1);
-        gfx->FillRect({inner.x + 2, inner.y + inner.dy / 3, inner.dx - 4, 1}, col);
-        gfx->FillRect({inner.x + 2, inner.y + (2 * inner.dy) / 3, inner.dx / 2, 1}, col);
-        return;
+static fz_context* gIconFzCtx = nullptr;
+
+static fz_context* IconFzCtx() {
+    if (!gIconFzCtx) {
+        gIconFzCtx = fz_new_context_windows();
+    }
+    return gIconFzCtx;
+}
+
+static const char* MupdfIconStream(Str name) {
+    if (str::EqI(name, StrL("Comment"))) {
+        return icon_comment;
+    }
+    if (str::EqI(name, StrL("Key"))) {
+        return icon_key;
+    }
+    if (str::EqI(name, StrL("Note"))) {
+        return icon_note;
+    }
+    if (str::EqI(name, StrL("Help"))) {
+        return icon_help;
+    }
+    if (str::EqI(name, StrL("NewParagraph"))) {
+        return icon_new_paragraph;
+    }
+    if (str::EqI(name, StrL("Paragraph"))) {
+        return icon_paragraph;
+    }
+    if (str::EqI(name, StrL("Insert"))) {
+        return icon_insert;
+    }
+    if (str::EqI(name, StrL("Graph"))) {
+        return icon_graph;
     }
     if (str::EqI(name, StrL("PushPin"))) {
-        int cx = inner.x + inner.dx / 2;
-        int head = std::max(inner.dx / 5, 2);
-        gfx->FillEllipse({cx - head, inner.y, head * 2, head * 2}, col);
-        gfx->DrawLineAA({cx, inner.y + head * 2}, {cx, inner.y + inner.dy}, col, 1.5f);
-        return;
+        return icon_push_pin;
     }
     if (str::EqI(name, StrL("Paperclip"))) {
-        gfx->DrawLineAA({inner.x + 2, inner.y + inner.dy - 2}, {inner.x + inner.dx - 2, inner.y + 2}, col, 1.5f);
-        return;
+        return icon_paperclip;
     }
-    if (str::EqI(name, StrL("Circle"))) {
-        gfx->FillEllipse(inner, col);
+    if (str::EqI(name, StrL("Tag"))) {
+        return icon_tag;
+    }
+    if (str::EqI(name, StrL("Speaker"))) {
+        return icon_speaker;
+    }
+    if (str::EqI(name, StrL("Mic"))) {
+        return icon_mic;
+    }
+    return icon_star;
+}
+
+static bool IsPdfPathOpChar(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '*';
+}
+
+static void SkipPdfPathWs(const char*& p) {
+    while (*p == ' ' || *p == '\n' || *p == '\r' || *p == '\t') {
+        p++;
+    }
+}
+
+static fz_point XfPoint(fz_matrix m, float x, float y) {
+    return fz_transform_point(fz_make_point(x, y), m);
+}
+
+// Build an fz_path from a pdf_write_icon_appearance glyph stream (m/l/c/re/h/cm/f).
+static float PdfPathPop(float* stk, int& top) {
+    if (top <= 0) {
+        return 0;
+    }
+    return stk[--top];
+}
+
+static fz_path* ParseMupdfIconPath(fz_context* ctx, const char* s) {
+    fz_path* path = fz_new_path(ctx);
+    float stk[32];
+    int top = 0;
+    fz_matrix ctm = fz_identity;
+    fz_try(ctx) {
+        const char* p = s;
+        for (;;) {
+            SkipPdfPathWs(p);
+            if (*p == 0) {
+                break;
+            }
+            if (*p == '.' || *p == '-' || *p == '+' || (*p >= '0' && *p <= '9')) {
+                char* end = nullptr;
+                float v = strtof(p, &end);
+                if (end == p || top >= dimofi(stk)) {
+                    break;
+                }
+                stk[top++] = v;
+                p = end;
+                continue;
+            }
+            if (!IsPdfPathOpChar(*p)) {
+                p++;
+                continue;
+            }
+            const char* op = p;
+            while (IsPdfPathOpChar(*p)) {
+                p++;
+            }
+            int nOp = (int)(p - op);
+            if (nOp == 1 && op[0] == 'm' && top >= 2) {
+                float y = PdfPathPop(stk, top);
+                float x = PdfPathPop(stk, top);
+                fz_point pt = XfPoint(ctm, x, y);
+                fz_moveto(ctx, path, pt.x, pt.y);
+            } else if (nOp == 1 && op[0] == 'l' && top >= 2) {
+                float y = PdfPathPop(stk, top);
+                float x = PdfPathPop(stk, top);
+                fz_point pt = XfPoint(ctm, x, y);
+                fz_lineto(ctx, path, pt.x, pt.y);
+            } else if (nOp == 1 && op[0] == 'c' && top >= 6) {
+                float y3 = PdfPathPop(stk, top);
+                float x3 = PdfPathPop(stk, top);
+                float y2 = PdfPathPop(stk, top);
+                float x2 = PdfPathPop(stk, top);
+                float y1 = PdfPathPop(stk, top);
+                float x1 = PdfPathPop(stk, top);
+                fz_point p1 = XfPoint(ctm, x1, y1);
+                fz_point p2 = XfPoint(ctm, x2, y2);
+                fz_point p3 = XfPoint(ctm, x3, y3);
+                fz_curveto(ctx, path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+            } else if (nOp == 2 && op[0] == 'r' && op[1] == 'e' && top >= 4) {
+                float h = PdfPathPop(stk, top);
+                float w = PdfPathPop(stk, top);
+                float y = PdfPathPop(stk, top);
+                float x = PdfPathPop(stk, top);
+                fz_point a = XfPoint(ctm, x, y);
+                fz_point b = XfPoint(ctm, x + w, y);
+                fz_point c = XfPoint(ctm, x + w, y + h);
+                fz_point d = XfPoint(ctm, x, y + h);
+                fz_moveto(ctx, path, a.x, a.y);
+                fz_lineto(ctx, path, b.x, b.y);
+                fz_lineto(ctx, path, c.x, c.y);
+                fz_lineto(ctx, path, d.x, d.y);
+                fz_closepath(ctx, path);
+            } else if (nOp == 1 && op[0] == 'h') {
+                fz_closepath(ctx, path);
+            } else if (nOp == 2 && op[0] == 'c' && op[1] == 'm' && top >= 6) {
+                float f = PdfPathPop(stk, top);
+                float e = PdfPathPop(stk, top);
+                float d = PdfPathPop(stk, top);
+                float c = PdfPathPop(stk, top);
+                float b = PdfPathPop(stk, top);
+                float a = PdfPathPop(stk, top);
+                ctm = fz_concat(fz_make_matrix(a, b, c, d, e, f), ctm);
+            } else if (nOp == 1 && op[0] == 'f') {
+                top = 0;
+            } else {
+                top = 0;
+            }
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        fz_drop_path(ctx, path);
+        return nullptr;
+    }
+    return path;
+}
+
+static Pixmap* PixmapFromAnnotIconFz(fz_pixmap* src) {
+    if (!src || src->w < 1 || src->h < 1) {
+        return nullptr;
+    }
+    Pixmap* px = AllocPixmap(src->w, src->h, PixmapFormat::BGRA8, true);
+    if (!px) {
+        return nullptr;
+    }
+    px->hasAlpha = src->alpha != 0;
+    int srcN = src->n;
+    int srcAlpha = src->alpha;
+    for (int y = 0; y < src->h; y++) {
+        u8* s = src->samples + (src->stride * y);
+        u8* d = px->data + (px->stride * y);
+        for (int x = 0; x < src->w; x++) {
+            d[0] = s[2];
+            d[1] = s[1];
+            d[2] = s[0];
+            d[3] = srcAlpha ? s[srcN - 1] : 0xff;
+            d += 4;
+            s += srcN;
+        }
+    }
+    return px;
+}
+
+static Pixmap* RenderMupdfAnnotIcon(Str name, Color fg, int dx, int dy) {
+    fz_context* ctx = IconFzCtx();
+    if (!ctx || dx < 4 || dy < 4) {
+        return nullptr;
+    }
+    if (!name) {
+        name = StrL("Note");
+    }
+    u8 r;
+    u8 g;
+    u8 b;
+    UnpackColor(fg, r, g, b);
+    float rgb[3] = {r / 255.f, g / 255.f, b / 255.f};
+
+    fz_path* path = nullptr;
+    fz_pixmap* fzpx = nullptr;
+    fz_device* dev = nullptr;
+    Pixmap* px = nullptr;
+    fz_var(path);
+    fz_var(fzpx);
+    fz_var(dev);
+    fz_try(ctx) {
+        path = ParseMupdfIconPath(ctx, MupdfIconStream(name));
+        if (!path) {
+            break;
+        }
+        fz_rect bound = fz_bound_path(ctx, path, nullptr, fz_identity);
+        float bw = bound.x1 - bound.x0;
+        float bh = bound.y1 - bound.y0;
+        if (bw < 0.5f) {
+            bw = 8;
+        }
+        if (bh < 0.5f) {
+            bh = 8;
+        }
+        float pad = 0.4f;
+        float scale = std::min((float)dx / (bw + 2 * pad), (float)dy / (bh + 2 * pad));
+        // PDF y-up → pixmap y-down; fit the path into dx×dy
+        fz_matrix ctm = fz_make_matrix(scale, 0, 0, -scale, -scale * (bound.x0 - pad), scale * (bound.y1 + pad));
+        fzpx = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), fz_make_irect(0, 0, dx, dy), nullptr, 1);
+        fz_clear_pixmap(ctx, fzpx);
+        dev = fz_new_draw_device(ctx, fz_identity, fzpx);
+        fz_fill_path(ctx, dev, path, 0, ctm, fz_device_rgb(ctx), rgb, 1, fz_default_color_params);
+        fz_close_device(ctx, dev);
+        px = PixmapFromAnnotIconFz(fzpx);
+    }
+    fz_always(ctx) {
+        fz_drop_device(ctx, dev);
+        fz_drop_pixmap(ctx, fzpx);
+        fz_drop_path(ctx, path);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("RenderMupdfAnnotIcon(%s) failed\n", name);
+        FreePixmap(px);
+        return nullptr;
+    }
+    return px;
+}
+
+struct MupdfIconCacheEntry {
+    MupdfIconCacheEntry* next = nullptr;
+    Str name;
+    Color fg = 0;
+    int dx = 0;
+    int dy = 0;
+    Pixmap* pixmap = nullptr;
+};
+
+static MupdfIconCacheEntry* gMupdfIconCache = nullptr;
+
+static Pixmap* GetCachedMupdfAnnotIcon(Str name, Color fg, int dx, int dy) {
+    for (MupdfIconCacheEntry* e = gMupdfIconCache; e; e = e->next) {
+        if (e->dx == dx && e->dy == dy && e->fg == fg && str::EqI(e->name, name)) {
+            return e->pixmap;
+        }
+    }
+    Pixmap* px = RenderMupdfAnnotIcon(name, fg, dx, dy);
+    if (!px) {
+        return nullptr;
+    }
+    auto* e = new MupdfIconCacheEntry();
+    e->name = str::Dup(name);
+    e->fg = fg;
+    e->dx = dx;
+    e->dy = dy;
+    e->pixmap = px;
+    e->next = gMupdfIconCache;
+    gMupdfIconCache = e;
+    return px;
+}
+
+static void PaintMupdfAnnotIcon(Gfx* gfx, Rect r, Str name, Color fg, PlatformFont* font) {
+    int pad = DpiScale(3);
+    int sz = std::min(r.dx, r.dy) - 2 * pad;
+    if (sz < 8) {
+        sz = std::min(r.dx, r.dy);
+    }
+    Pixmap* px = GetCachedMupdfAnnotIcon(name, fg, sz, sz);
+    if (px) {
+        int x = r.x + (r.dx - px->width) / 2;
+        int y = r.y + (r.dy - px->height) / 2;
+        gfx->DrawPixmap(px, {x, y, px->width, px->height});
         return;
     }
     Str label = name;
-    if (len(label) > 4) {
-        label = Str(name.s, 4);
+    if (len(label) > 2) {
+        label = Str(name.s, 2);
+    }
+    gfx->DrawText(label, r, gfxTextCenter | gfxTextVCenter | gfxTextEllipsis, font, fg);
+}
+
+static void PaintIconGlyph(Gfx* gfx, Rect r, Str name, Color col, PlatformFont* font) {
+    if (!name) {
+        return;
+    }
+    int pad = DpiScale(4);
+    Rect inner = r;
+    inner.Inflate(-pad, -pad);
+    Str label = name;
+    if (len(label) > 2) {
+        label = Str(name.s, 2);
     }
     gfx->DrawText(label, inner, gfxTextCenter | gfxTextVCenter | gfxTextEllipsis, font, col);
 }
@@ -567,7 +880,11 @@ void AnnotEditChip::Paint(VirtPaintCtx& ctx) {
             PaintAlignment(ctx.gfx, r, item.number, textCol);
             break;
         case AnnotEditKind::Icon:
-            PaintIconGlyph(ctx.gfx, r, item.iconName, textCol, tb ? tb->font : nullptr);
+            if (item.mupdfIcon) {
+                PaintMupdfAnnotIcon(ctx.gfx, r, item.iconName, textCol, tb ? tb->font : nullptr);
+            } else {
+                PaintIconGlyph(ctx.gfx, r, item.iconName, textCol, tb ? tb->font : nullptr);
+            }
             break;
         case AnnotEditKind::LineStart:
         case AnnotEditKind::LineEnd:
@@ -575,6 +892,12 @@ void AnnotEditChip::Paint(VirtPaintCtx& ctx) {
             break;
         case AnnotEditKind::Contents:
             PaintSvgChip(ctx.gfx, r, gIconAnnotText, textCol, BarBg());
+            break;
+        case AnnotEditKind::AttachFile:
+            PaintSvgChip(ctx.gfx, r, gIconFileOpen, textCol, BarBg());
+            break;
+        case AnnotEditKind::SaveAttachment:
+            PaintSvgChip(ctx.gfx, r, gIconSave, textCol, BarBg());
             break;
         case AnnotEditKind::Delete:
             PaintSvgChip(ctx.gfx, r, gIconTrash, textCol, BarBg());
@@ -743,7 +1066,139 @@ static int PopupPickColors(MainWindow* win, Point screen, int current, Rect chip
     return cmd > 0 ? cmd - 1 : -1;
 }
 
-static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int current, Rect chipScreen) {
+enum class PopupGlyphKind {
+    None,
+    Icon,
+    LineEnding,
+    Alignment,
+};
+
+static HBITMAP CreateMenuGlyphBitmap(int dx, int dy, PopupGlyphKind glyph, Str iconName, int style, bool lineIsStart,
+                                     Color fg, Color bg, PlatformFont* font) {
+    if (dx < 1 || dy < 1 || glyph == PopupGlyphKind::None) {
+        return nullptr;
+    }
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = dx;
+    bmi.bmiHeader.biHeight = -dy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    void* bits = nullptr;
+    HBITMAP bmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!bmp || !bits) {
+        DeleteObject(bmp);
+        return nullptr;
+    }
+    u8 r;
+    u8 g;
+    u8 b;
+    UnpackColor(bg, r, g, b);
+    auto* px = (u32*)bits;
+    u32 fill = 0xFF000000u | ((u32)r << 16) | ((u32)g << 8) | b;
+    int nPx = dx * dy;
+    for (int i = 0; i < nPx; i++) {
+        px[i] = fill;
+    }
+    if (glyph == PopupGlyphKind::Icon) {
+        Pixmap* src = GetCachedMupdfAnnotIcon(iconName, fg, dx, dy);
+        if (src && src->data) {
+            int ox = (dx - src->width) / 2;
+            int oy = (dy - src->height) / 2;
+            for (int y = 0; y < src->height; y++) {
+                int dyOut = y + oy;
+                if (dyOut < 0 || dyOut >= dy) {
+                    continue;
+                }
+                u8* s = src->data + y * src->stride;
+                for (int x = 0; x < src->width; x++) {
+                    int dxOut = x + ox;
+                    if (dxOut < 0 || dxOut >= dx) {
+                        s += 4;
+                        continue;
+                    }
+                    u8 sb = s[0];
+                    u8 sg = s[1];
+                    u8 sr = s[2];
+                    u8 sa = s[3];
+                    u32* d = &px[dyOut * dx + dxOut];
+                    u8 db = (u8)(*d);
+                    u8 dg = (u8)((*d >> 8) & 0xff);
+                    u8 dr = (u8)((*d >> 16) & 0xff);
+                    int inv = 255 - sa;
+                    u8 ob = (u8)(sb + (db * inv + 127) / 255);
+                    u8 og = (u8)(sg + (dg * inv + 127) / 255);
+                    u8 oor = (u8)(sr + (dr * inv + 127) / 255);
+                    *d = 0xFF000000u | ((u32)oor << 16) | ((u32)og << 8) | ob;
+                    s += 4;
+                }
+            }
+        }
+        return bmp;
+    }
+    HDC hdc = CreateCompatibleDC(nullptr);
+    HGDIOBJ old = SelectObject(hdc, bmp);
+    Gfx* gfx = GfxCreate(hdc);
+    Rect rr{0, 0, dx, dy};
+    if (glyph == PopupGlyphKind::LineEnding) {
+        PaintLineEnding(gfx, rr, style, lineIsStart, fg);
+    } else if (glyph == PopupGlyphKind::Alignment) {
+        PaintAlignment(gfx, rr, style, fg);
+    }
+    delete gfx;
+    SelectObject(hdc, old);
+    DeleteDC(hdc);
+    for (int i = 0; i < nPx; i++) {
+        px[i] |= 0xFF000000u;
+    }
+    return bmp;
+}
+
+static int PopupPickGlyphs(MainWindow* win, Point screen, const StrVec& names, int current, Rect chipScreen,
+                           PopupGlyphKind glyph, bool lineIsStart, PlatformFont* font) {
+    HMENU menu = CreatePopupMenu();
+    if (!menu) {
+        return -1;
+    }
+    Vec<HBITMAP> bmps;
+    int sw = DpiScale(18);
+    Color fg = GetSysColor(COLOR_MENUTEXT);
+    Color bg = GetSysColor(COLOR_MENU);
+    for (int i = 0; i < len(names); i++) {
+        HBITMAP bmp = CreateMenuGlyphBitmap(sw, sw, glyph, names[i], i, lineIsStart, fg, bg, font);
+        if (bmp) {
+            VecAppend(bmps, bmp);
+        }
+        MENUITEMINFOW mii{};
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_ID | MIIM_STRING | MIIM_STATE;
+        if (bmp) {
+            mii.fMask |= MIIM_BITMAP;
+            mii.hbmpItem = bmp;
+        }
+        mii.wID = (UINT)(i + 1);
+        WCHAR* ws = ToWStrTemp(names[i]).s;
+        mii.dwTypeData = ws;
+        mii.cch = (UINT)len(names[i]);
+        if (i == current) {
+            mii.fState = MFS_CHECKED;
+        }
+        InsertMenuItemW(menu, (UINT)i, TRUE, &mii);
+    }
+    int cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN, screen.x, screen.y, 0, win->hwndFrame,
+                             nullptr);
+    DestroyMenu(menu);
+    for (HBITMAP bmp : bmps) {
+        DeleteObject(bmp);
+    }
+    EatDismissClickOverRect(chipScreen);
+    return cmd > 0 ? cmd - 1 : -1;
+}
+
+static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int current, Rect chipScreen,
+                        PopupGlyphKind glyph = PopupGlyphKind::None, bool lineIsStart = false,
+                        PlatformFont* font = nullptr) {
     StrVec items;
     for (int off = 0; SeqStrAt(names, off);) {
         items.Append(SeqStrAt(names, off));
@@ -751,7 +1206,10 @@ static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int cur
             break;
         }
     }
-    return PopupPick(win, screen, items, current, chipScreen);
+    if (glyph == PopupGlyphKind::None) {
+        return PopupPick(win, screen, items, current, chipScreen);
+    }
+    return PopupPickGlyphs(win, screen, items, current, chipScreen, glyph, lineIsStart, font);
 }
 
 static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
@@ -885,7 +1343,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             break;
         }
         case AnnotEditKind::Alignment: {
-            int idx = PopupPickSeq(tb->win, screen, gQuaddingNames, chip->item.number, chipScreen);
+            int idx = PopupPickSeq(tb->win, screen, gQuaddingNames, chip->item.number, chipScreen,
+                                   PopupGlyphKind::Alignment, false, tb->font);
             if (dismissed(idx)) {
                 return;
             }
@@ -896,7 +1355,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
         case AnnotEditKind::Icon: {
             SeqStrings icons = AnnotationIconNames(annot);
             int current = SeqStrIndex(icons, chip->item.iconName);
-            int idx = PopupPickSeq(tb->win, screen, icons, current, chipScreen);
+            PopupGlyphKind glyph = Type(annot) == AnnotationType::Stamp ? PopupGlyphKind::None : PopupGlyphKind::Icon;
+            int idx = PopupPickSeq(tb->win, screen, icons, current, chipScreen, glyph, false, tb->font);
             if (dismissed(idx)) {
                 return;
             }
@@ -906,7 +1366,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
         }
         case AnnotEditKind::LineStart:
         case AnnotEditKind::LineEnd: {
-            int idx = PopupPickSeq(tb->win, screen, AnnotEditorLineEndingStyles(), chip->item.lineEnding, chipScreen);
+            int idx = PopupPickSeq(tb->win, screen, AnnotEditorLineEndingStyles(), chip->item.lineEnding, chipScreen,
+                                   PopupGlyphKind::LineEnding, kind == AnnotEditKind::LineStart, tb->font);
             if (dismissed(idx)) {
                 return;
             }
@@ -916,6 +1377,46 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
                 SetLineEndStyles(annot, idx);
             }
             AnnotChanged(tab);
+            break;
+        }
+        case AnnotEditKind::AttachFile: {
+            if (!CanAccessDisk()) {
+                break;
+            }
+            WCHAR pathW[MAX_PATH + 1]{};
+            str::Builder fileFilter;
+            str::BuilderReserve(nullptr, fileFilter, 256);
+            fileFilter.Append(_TRA("All files"));
+            fileFilter.Append(StrL("\1*.*\1"));
+            Str fileFilterStr = ToStr(fileFilter);
+            str::TransCharsInPlace(fileFilterStr, StrL("\1"), StrL("\0"));
+            OPENFILENAME ofn{};
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = tb->win->hwndFrame;
+            ofn.lpstrFile = pathW;
+            ofn.nMaxFile = dimofi(pathW);
+            ofn.lpstrFilter = CWStrTemp(fileFilterStr);
+            ofn.nFilterIndex = 1;
+            ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+            if (!GetOpenFileNameW(&ofn)) {
+                break;
+            }
+            if (SetEmbeddedFileFromPath(annot, ToUtf8Temp(pathW))) {
+                AnnotChanged(tab);
+            }
+            break;
+        }
+        case AnnotEditKind::SaveAttachment: {
+            if (!HasEmbeddedFile(annot)) {
+                break;
+            }
+            Str data = LoadEmbeddedFile(annot);
+            Str fileName = EmbeddedFileNameTemp(annot);
+            if (!fileName) {
+                fileName = StrL("attachment");
+            }
+            SaveDataToFile(tb->win->hwndFrame, path::GetBaseNameTemp(fileName), data);
+            str::Free(data);
             break;
         }
         case AnnotEditKind::Contents:
@@ -942,6 +1443,8 @@ static Size ChipSizeFor(const AnnotEditItem& item, PlatformFont* font, int rowDy
         case AnnotEditKind::Alignment:
         case AnnotEditKind::Icon:
         case AnnotEditKind::Contents:
+        case AnnotEditKind::AttachFile:
+        case AnnotEditKind::SaveAttachment:
         case AnnotEditKind::Delete:
             return {rowDy, rowDy};
         case AnnotEditKind::LineStart:
@@ -2263,6 +2766,12 @@ static void CollectAnnotationHoverRows(Annotation* annot, AnnotationHoverRows& r
     Str icon = IconName(annot);
     if (AnnotationIconNames(annot) && icon) {
         rows.Add(StrL("icon"), _TRA("Icon:"), ShortAnnotationHoverValueTemp(icon));
+    }
+    if (type == AnnotationType::FileAttachment) {
+        Str attached = EmbeddedFileNameTemp(annot);
+        if (attached) {
+            rows.Add(StrL("attachedFile"), _TRA("Attached File:"), ShortAnnotationHoverValueTemp(attached));
+        }
     }
     if (AnnotationSupportsBorder(type)) {
         rows.Add(StrL("border"), _TRA("Border:"), fmt("%d", BorderWidth(annot)));
