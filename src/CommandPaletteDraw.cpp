@@ -92,18 +92,32 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     // reserve space on the right for rightStr (accel key, dir, or "p34") so it
     // is always visible; the item text gets the remaining space and is
-    // ellipsized when too long.
+    // ellipsized when too long. File history: the filename takes precedence
+    // over a long directory (issue #6104).
     Rect rcText = rc;
     bool hasRight = rightStr && rightStr.s[0];
     int rightW = 0;
     if (hasRight) {
         int gap = DpiScale(8);
         rightW = gfx->MeasureText(rightStr, lb->font).dx;
-        if (isRtl) {
-            rcText.x += rightW + gap;
-            rcText.dx -= rightW + gap;
-        } else {
-            rcText.dx -= rightW + gap;
+        if (data->filePath) {
+            int nameW = gfx->MeasureText(itemText, lb->font).dx;
+            int minDir = DpiScale(80);
+            int maxRight = rc.dx - nameW - gap;
+            if (maxRight < minDir) {
+                hasRight = false;
+                rightW = 0;
+            } else if (rightW > maxRight) {
+                rightW = maxRight;
+            }
+        }
+        if (hasRight) {
+            if (isRtl) {
+                rcText.x += rightW + gap;
+                rcText.dx -= rightW + gap;
+            } else {
+                rcText.dx -= rightW + gap;
+            }
         }
     }
 
@@ -130,6 +144,9 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
             DrawMaybeHighlightedText(gfx, rcRight, rightStr, filterWords, highlighted, colBg, false, false, rightFmt,
                                      lb->font, rightCol);
         } else {
+            if (data->filePath) {
+                rightFmt |= gfxTextPathEllipsis;
+            }
             gfx->DrawText(rightStr, rcRight, rightFmt, lb->font, rightCol);
         }
     }
