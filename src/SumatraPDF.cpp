@@ -9124,7 +9124,10 @@ static void OnFrameKeyEsc(MainWindow* win) {
         ToolbarUpdateStateForWindow(win, false);
         return;
     }
-    if (gSettings->escToExit && CanCloseWindow(win)) {
+    // Esc is the cancel key while the Edit PDF toolbar is up ("Place text
+    // annotation. Esc to cancel"), so it must not also quit: the press after a
+    // cancelled placement was closing the document (issue #6118).
+    if (!win->pdfAnnotationsToolbarEnabled && gSettings->escToExit && CanCloseWindow(win)) {
         CloseWindow(win, true, false);
         return;
     }
