@@ -191,7 +191,7 @@ struct FindWindowWnd : WindowBase {
     void UpdatePagesLabel();
 
     void OnTextChanged();
-    void OnHistorySelected();
+    void OnHistoryCommitted();
     void DrawResultItem(VirtListBox::DrawItemEvent* ev);
     void OnResultSelected();
     void SaveSelectedMatch();
@@ -342,7 +342,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         edit->Create(args);
         CbSetCueBanner(edit, _TRA("Find"));
         edit->onTextChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnTextChanged>(this);
-        edit->onSelectionChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnHistorySelected>(this);
+        edit->onCloseUp = MkMethod0<FindWindowWnd, &FindWindowWnd::OnHistoryCommitted>(this);
         ApplyFindHistory(edit);
     }
 
@@ -834,8 +834,10 @@ void FindWindowWnd::OnTextChanged() {
     OnFindBarTextChanged(win);
 }
 
-void FindWindowWnd::OnHistorySelected() {
-    if (!edit || CbGetCurrentSelection(edit) < 0) {
+// picking an entry out of the open history list is a search request; walking
+// the list with the arrow keys only fills the box, and waits for Enter
+void FindWindowWnd::OnHistoryCommitted() {
+    if (suppressTextChanged || !edit || CbGetCurrentSelection(edit) < 0) {
         return;
     }
     OnFindBarTextChanged(win);
@@ -1077,20 +1079,15 @@ void ShowFindWindow(MainWindow* win) {
     // populate the results list: show what's cached, and (re)run the search for
     // the current term so snippets get built now that the window is visible
     w->RefreshResults();
-    if (CbGetTextLen(win->findEdit) == 0) {
+    // a CLI/DDE search still running fills the list itself: FindEndTask ->
+    // UpdateMatchCount requests snippets now that the window is visible
+    if (CbGetTextLen(win->findEdit) == 0 || win->findThread) {
         return;
     }
-    if (win->findThread) {
-        // CLI/DDE search still running: FindEndTask -> UpdateMatchCount will
-        // request snippets because the window is visible now
-        return;
-    }
+    // finish off a completed search's rows, but don't start a new search: the
+    // term restored into the box is a starting point, not a request
     if (len(win->findMatches) > 0 && !win->findCountHasSnippets) {
         EnsureFindSnippets(win);
-        return;
-    }
-    if (len(win->findMatches) == 0) {
-        OnFindBarTextChanged(win);
     }
 }
 

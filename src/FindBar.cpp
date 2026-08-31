@@ -165,7 +165,7 @@ struct FindBarWnd : WindowBase {
     int MinBarDx() const;
 
     void OnTextChanged();
-    void OnHistorySelected();
+    void OnHistoryCommitted();
 
     void OnSize(WindowBase::SizeEvent* ev);
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
@@ -291,7 +291,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         edit->Create(args);
         CbSetCueBanner(edit, _TRA("Find"));
         edit->onTextChanged = MkMethod0<FindBarWnd, &FindBarWnd::OnTextChanged>(this);
-        edit->onSelectionChanged = MkMethod0<FindBarWnd, &FindBarWnd::OnHistorySelected>(this);
+        edit->onCloseUp = MkMethod0<FindBarWnd, &FindBarWnd::OnHistoryCommitted>(this);
         ApplyFindHistory(edit);
         if (!win->findEdit) {
             // don't steal it from the floating find window: this can run while
@@ -398,7 +398,9 @@ void FindBarWnd::OnTextChanged() {
     OnFindBarTextChanged(win);
 }
 
-void FindBarWnd::OnHistorySelected() {
+// picking an entry out of the open history list is a search request; walking
+// the list with the arrow keys only fills the box, and waits for Enter
+void FindBarWnd::OnHistoryCommitted() {
     if (suppressTextChanged || !edit || CbGetCurrentSelection(edit) < 0) {
         return;
     }
@@ -701,10 +703,8 @@ static void ShowCompactBar(MainWindow* win) {
     ShowWindow(bar->hwnd, SW_SHOW);
     win->findEdit->SetFocus();
     CbEditSelectAll(win->findEdit);
-    if (CbGetTextLen(win->findEdit) > 0 && !win->findThread && !win->findDebouncePending &&
-        len(win->findMatches) == 0) {
-        OnFindBarTextChanged(win);
-    }
+    // the restored term is only a starting point, not a search request: hitting
+    // Ctrl+F must not re-run the last search behind the user's back
 }
 
 // "ShowFindBar" is the entry point used by FindFirst/Ctrl+F; it shows whichever
