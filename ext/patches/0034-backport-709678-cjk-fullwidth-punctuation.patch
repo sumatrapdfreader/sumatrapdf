@@ -1,0 +1,68 @@
+backport: use CJK fonts for half/fullwidth forms and punctuation (bug 709678)
+
+BACKPORT of upstream mupdf 27d8576c07ca578dd32b270934ee262b67dba9ae, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2.
+
+https://bugs.ghostscript.com/show_bug.cgi?id=709678
+
+Halfwidth/fullwidth forms (U+FF01-FFEE, including the fullwidth comma) and CJK
+punctuation (U+3000-303F) are not in the Han/Hiragana/Hangul scripts, so the
+appearance generator treated them as unencodable and took the rich HTML path,
+which embeds a fallback font. Treat them as Han so they stay on the simple
+CJK path.
+
+Replaces our 0034-pdf-appearance-cjk-annotation-text rewrite for issue #6082.
+
+Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/6082
+---
+diff --git a/source/pdf/pdf-appearance.c b/source/pdf/pdf-appearance.c
+index 4cd48587e..eabdbd34e 100644
+--- a/source/pdf/pdf-appearance.c
++++ b/source/pdf/pdf-appearance.c
+@@ -1668,6 +1668,14 @@ add_required_fonts(fz_context *ctx, pdf_document *doc, pdf_obj *res_font,
+ 		case UCDN_SCRIPT_BOPOMOFO: add_bopomofo = 1; break;
+ 		case UCDN_SCRIPT_HAN: add_han = 1; break;
+ 		}
++
++		// halfwidth and fullwidth forms
++		if (c >= 0xff01 && c <= 0xffee)
++			add_han = 1;
++
++		// cjk symbols and punctuation
++		if (c >= 0x3000 && c <= 0x303f)
++			add_han = 1;
+ 	}
+ 
+ 	if (add_han)
+@@ -1803,6 +1811,15 @@ static int next_text_walk(fz_context *ctx, struct text_walk_state *state)
+ 
+ 	state->n = fz_chartorune(&state->u, state->text);
+ 	script = ucdn_get_script(state->u);
++
++	// halfwidth and fullwidth forms
++	if (state->u >= 0xff01 && state->u <= 0xffee)
++		script = UCDN_SCRIPT_HAN;
++
++	// cjk symbols and punctuation
++	if (state->u >= 0x3000 && state->u <= 0x303f)
++		script = UCDN_SCRIPT_HAN;
++
+ 	if (script == UCDN_SCRIPT_COMMON || script == UCDN_SCRIPT_INHERITED)
+ 		script = state->last_script;
+ 	state->last_script = script;
+@@ -2459,6 +2476,14 @@ static int text_needs_rich_layout(fz_context *ctx, const char *s)
+ 		)
+ 			continue;
+ 
++		// halfwidth and fullwidth forms
++		if (c >= 0xff01 && c <= 0xffee)
++			continue;
++
++		// cjk symbols and punctuation
++		if (c >= 0x3000 && c <= 0x303f)
++			continue;
++
+ 		return 1;
+ 	}
+ 	return 0;
