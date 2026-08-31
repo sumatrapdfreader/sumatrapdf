@@ -837,11 +837,17 @@ void FindWindowWnd::OnTextChanged() {
 // picking an entry out of the open history list is a search request; walking
 // the list with the arrow keys only fills the box, and waits for Enter
 void FindWindowWnd::OnHistoryCommitted() {
-    if (suppressTextChanged || !edit || CbGetCurrentSelection(edit) < 0) {
+    if (suppressTextChanged || !edit) {
         return;
     }
-    OnFindBarTextChanged(win);
-    FindFlushPendingSearch(win);
+    int idx = CbGetCurrentSelection(edit);
+    if (idx < 0 || idx >= len(edit->items)) {
+        return;
+    }
+    // Take the term from the list item, not the edit: a combo box has not
+    // necessarily copied the picked item into its edit yet when it says the
+    // list closed.
+    StartPickedFindTerm(win, edit->items[idx]);
 }
 
 void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {

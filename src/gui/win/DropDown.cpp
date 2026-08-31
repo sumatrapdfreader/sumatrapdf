@@ -31,10 +31,11 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
 }
 
 // Same result as SetDropDownItems() but without CB_RESETCONTENT, which on an
-// editable combo also empties the edit control. Deleting items one by one
-// leaves the edit alone, except for the item the list has selected - the
-// caller restores the text if that happens.
+// editable combo also empties the edit control. Deleting an item the list has
+// selected empties it too, so let go of the selection first - that way exactly
+// one step here can disturb the edit, and the caller undoes it.
 static void ReplaceDropDownItems(HWND hwnd, StrVec& items) {
+    CbSetCurrentSelection(hwnd, -1);
     for (int i = CbGetItemsCount(hwnd) - 1; i >= 0; i--) {
         CbDeleteString(hwnd, i);
     }
@@ -262,8 +263,9 @@ void DropDown::SetItemsKeepText(StrVec& newItems) {
     }
     ReplaceDropDownItems(hwnd, items);
 
-    // the edit should be untouched; only a list selection could still have
-    // taken it down with a deleted item
+    // dropping the list selection empties the edit; put the text back. The
+    // text is what the box means now - the list index it came from is stale
+    // once the list is rebuilt.
     if (!str::Eq(GetTextTemp(), cur)) {
         SetText(cur);
         int n = len(cur);

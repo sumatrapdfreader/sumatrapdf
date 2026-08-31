@@ -5,6 +5,7 @@
 #include "base/WinDynCalls.h"
 #include "base/Win.h"
 #include "base/Pixmap.h"
+#include "base/UITask.h"
 
 #include "gui/Dpi.h"
 #include "gui/UIModels.h"
@@ -398,14 +399,55 @@ void FindBarWnd::OnTextChanged() {
     OnFindBarTextChanged(win);
 }
 
+namespace {
+struct PickedTermData {
+    MainWindow* win = nullptr;
+    Str term;
+    ~PickedTermData() { str::Free(term); }
+};
+} // namespace
+
+static void StartPickedFindTask(PickedTermData* d) {
+    AutoDelete del(d);
+    MainWindow* win = d->win;
+    if (!IsMainWindowValidAndNotClosing(win) || !win->findEdit) {
+        return;
+    }
+    if (!str::Eq(win->findEdit->GetTextTemp(), d->term)) {
+        win->findEdit->SetText(d->term);
+    }
+    CbEditSetModified(win->findEdit, false);
+    FindTextOnThread(win, TextSearch::Direction::Forward, d->term, true, false);
+}
+
+// Run the search after the combo box is done closing its list. Starting it here
+// would rebuild the history list from inside the combo's own notification, and
+// the combo then finishes the close-up against a selection we just deleted -
+// leaving the edit empty while the status still counted the old term.
+void StartPickedFindTerm(MainWindow* win, Str term) {
+    if (!win || len(term) == 0) {
+        return;
+    }
+    auto* d = new PickedTermData;
+    d->win = win;
+    d->term = str::Dup(term);
+    uitask::Post(MkFunc0<PickedTermData>(StartPickedFindTask, d), "TaskFindHistoryPick");
+}
+
 // picking an entry out of the open history list is a search request; walking
 // the list with the arrow keys only fills the box, and waits for Enter
 void FindBarWnd::OnHistoryCommitted() {
-    if (suppressTextChanged || !edit || CbGetCurrentSelection(edit) < 0) {
+    if (suppressTextChanged || !edit) {
         return;
     }
-    OnFindBarTextChanged(win);
-    FindFlushPendingSearch(win);
+    int idx = CbGetCurrentSelection(edit);
+    if (idx < 0 || idx >= len(edit->items)) {
+        return;
+    }
+    // Take the term from the list item, not the edit: a combo box has not
+    // necessarily copied the picked item into its edit yet when it says the
+    // list closed.
+    StartPickedFindTerm(win, edit->items[idx]);
 }
 
 void FindBarWnd::OnSize(WindowBase::SizeEvent* ev) {
