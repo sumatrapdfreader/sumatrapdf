@@ -433,9 +433,10 @@ void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, 
             int maxRG = pixel[2] > pixel[1] ? pixel[2] : pixel[1];
             int lum = (pixel[0] + pixel[1] + pixel[2]) / 3;
             if (linkColor && pixel[0] >= maxRG + 25 && pixel[0] >= 72 && lum <= 230) {
-                pixel[0] = linkB;
-                pixel[1] = linkG;
-                pixel[2] = linkR;
+                int rg = ((int)pixel[1] + pixel[2]) / 2;
+                pixel[0] = (u8)(linkB + Mul255(rg, (int)bgB - linkB));
+                pixel[1] = (u8)(linkG + Mul255(rg, (int)bgG - linkG));
+                pixel[2] = (u8)(linkR + Mul255(rg, (int)bgR - linkR));
                 continue;
             }
             for (int i = 0; i < 3; i++) {

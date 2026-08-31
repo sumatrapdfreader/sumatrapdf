@@ -2602,9 +2602,8 @@ static inline int mul255(int a, int b) {
 }
 
 // Recolor a rendered page bitmap: map black->textColor and white->bgColor
-// (proportionally in between). When linkColor is non-zero, pixels that look
-// like link text (blue-ish) are set to linkColor instead. Pixels inside
-// skipRects keep their original colors (dark-mode image preservation).
+// (proportionally in between). Blue-ish pixels map to linkColor using R/G as
+// coverage so anti-aliased edges stay smooth. skipRects keep original colors.
 void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
     if (!hbmp) {
         return;
@@ -2634,12 +2633,6 @@ void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color link
         return true;
     };
 
-    auto setLinkPixel = [&](u8* px) {
-        px[0] = linkB;
-        px[1] = linkG;
-        px[2] = linkR;
-    };
-
     // color order in DIB is blue-green-red-alpha
     byte rt, gt, bt;
     UnpackColor(textColor, rt, gt, bt);
@@ -2647,6 +2640,13 @@ void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color link
     byte rb, gb, bb;
     UnpackColor(bgColor, rb, gb, bb);
     int const diff[4] = {(int)bb - base[0], (int)gb - base[1], (int)rb - base[2], 255};
+
+    auto setLinkPixel = [&](u8* px) {
+        int rg = ((int)px[1] + px[2]) / 2;
+        px[0] = (u8)(linkB + mul255(rg, (int)bb - linkB));
+        px[1] = (u8)(linkG + mul255(rg, (int)gb - linkG));
+        px[2] = (u8)(linkR + mul255(rg, (int)rb - linkR));
+    };
 
     DIBSECTION info{};
     int ret = GetObject(hbmp, sizeof(info), &info);
@@ -2727,9 +2727,10 @@ void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color link
             u8 g = palette[i].rgbGreen;
             u8 b = palette[i].rgbBlue;
             if (recolorLinks && isLikelyLinkPixel(r, g, b)) {
-                palette[i].rgbRed = linkR;
-                palette[i].rgbGreen = linkG;
-                palette[i].rgbBlue = linkB;
+                int rg = ((int)r + g) / 2;
+                palette[i].rgbRed = (u8)(linkR + mul255(rg, (int)rb - linkR));
+                palette[i].rgbGreen = (u8)(linkG + mul255(rg, (int)gb - linkG));
+                palette[i].rgbBlue = (u8)(linkB + mul255(rg, (int)bb - linkB));
                 continue;
             }
             palette[i].rgbRed = (u8)(base[2] + mul255(palette[i].rgbRed, diff[2]));
