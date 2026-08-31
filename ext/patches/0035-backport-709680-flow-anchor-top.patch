@@ -1,0 +1,57 @@
+backport: return top y of flow node anchors (bug 709680)
+
+BACKPORT of upstream mupdf f5f215d7950fa5fd0990a9a20ec3ec0c34ebee3e, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2.
+
+https://bugs.ghostscript.com/show_bug.cgi?id=709680
+
+A flow node's y is its baseline. Scrolling that to the top of the window
+clips the glyphs above it. Skip empty FLOW_ANCHOR nodes, keep images at
+their top-left, and for everything else back up by 0.8 of the node's height.
+
+Replaces our 0035-html-link-target-line-top rewrite for issue #6095.
+
+Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/6095
+---
+diff --git a/source/html/html-outline.c b/source/html/html-outline.c
+index e7b024cc4..719d86aac 100644
+--- a/source/html/html-outline.c
++++ b/source/html/html-outline.c
+@@ -158,13 +158,26 @@ find_first_content(fz_html_box *box)
+ 	return NULL;
+ }
+ 
++static float
++find_flow_top(fz_html_flow *node)
++{
++	// try to find next "real" element
++	while (node->type == FLOW_ANCHOR && node->next)
++		node = node->next;
++	// an image flow node's coordinates are the top left corner
++	if (node->type == FLOW_IMAGE)
++		return node->y;
++	// and everything else is the baseline
++	return node->y - node->h * 0.8f;
++}
++
+ static float
+ find_flow_target(fz_html_flow *flow, const char *id)
+ {
+ 	while (flow)
+ 	{
+ 		if (flow->box->id && !strcmp(id, flow->box->id))
+-			return flow->y;
++			return find_flow_top(flow);
+ 		flow = flow->next;
+ 	}
+ 	return -1;
+@@ -180,7 +193,7 @@ find_box_target(fz_html_box *box, const char *id)
+ 		{
+ 			fz_html_flow *flow = find_first_content(box);
+ 			if (flow)
+-				return flow->y;
++				return find_flow_top(flow);
+ 			return box->s.layout.y;
+ 		}
+ 		if (box->type == BOX_FLOW)

@@ -44,11 +44,11 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0032-pdf-appearance-unrendered-annots` | placeholder AP for Movie/Screen/3D/RichMedia/Watermark/PrinterMark/TrapNet/Projection |
 | `0033-pdf-appearance-markup-movie-poster` | highlight default yellow, markup `/Rect` if no QuadPoints, skip 0-width unfilled Square/Circle, Movie `/Poster` as AP |
 | `0034-backport-709678-cjk-fullwidth-punctuation` | half/fullwidth forms and CJK punctuation stay on the non-embedded CJK path (covers #6082) |
-| `0035-html-link-target-line-top` | an internal link scrolls to the top of the target's line, not to its baseline, which cut the line off (#6095) |
+| `0035-backport-709680-flow-anchor-top` | HTML/EPUB link targets use the top of the flow node, not its baseline (covers #6095) |
 | `0036-ocg-usage-event-on-visible` | PrintState/ViewState ON draws the OCG even if it is in the config `/OFF` list (#6101) |
 | `0037-backport-709648-inline-context-after-block` | stop adding to an inline context after a block interrupts it (covers #5943) |
 
-And five that are not ours but that we carry ahead of the release we vendor:
+And six that are not ours but that we carry ahead of the release we vendor:
 
 | Patch | What |
 | --- | --- |
@@ -56,6 +56,7 @@ And five that are not ours but that we carry ahead of the release we vendor:
 | `0022-backport-709480-bound-xml-recursion` | upstream depth limits for XPS metadata and epub outlines (covers #5032) |
 | `0023-backport-709574-html-metadata` | upstream title/author/subject metadata for HTML and FB2 (covers #2254) |
 | `0034-backport-709678-cjk-fullwidth-punctuation` | half/fullwidth forms and CJK punctuation use the CJK fonts, not an embedded fallback (#6082) |
+| `0035-backport-709680-flow-anchor-top` | HTML/EPUB link targets use the top of the flow node, not its baseline (#6095) |
 | `0037-backport-709648-inline-context-after-block` | nested `<span id>` wrapping a block no longer all jump to the chapter start (#5943) |
 
 And one of ours that has to come after a backport, because it builds on it:
