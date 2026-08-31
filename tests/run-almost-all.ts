@@ -117,6 +117,7 @@ import { testit as annotContentsClickAway } from "./annot-contents-click-away.ts
 import { testit as issue6093 } from "./issue-6093.ts";
 import { testit as toolbarHoverDropdown } from "./toolbar-hover-dropdown.ts";
 import { testit as issue6095 } from "./issue-6095.ts";
+import { testit as issue6117 } from "./issue-6117.ts";
 import { testit as customZoomDialog } from "./custom-zoom-dialog.ts";
 import { testit as issue1106 } from "./issue-1106.ts";
 import { testit as issue814 } from "./issue-814.ts";
@@ -231,8 +232,6 @@ async function annotationClipboardTests(): Promise<void> {
   try {
     await annotUndoRedo();
     await annotCopyPaste();
-    await annotFilterCloseTab();
-    await annotFilterSyntax();
     await annotCutPaste();
   } finally {
     await endSharedControlledSession();
@@ -394,6 +393,9 @@ export const tests: NamedTest[] = [
   ["annot-contents-click-away", annotContentsClickAway],
   ["issue-6093", issue6093],
   ["issue-6095", issue6095],
+  ["issue-6117", issue6117],
+  ["annot-filter-syntax", annotFilterSyntax],
+  ["annot-filter-close-tab", annotFilterCloseTab],
   ["custom-zoom-dialog", customZoomDialog],
   ["issue-1106", issue1106],
   ["issue-814", issue814],

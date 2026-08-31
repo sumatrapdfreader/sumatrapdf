@@ -244,6 +244,11 @@ static WORD gNotSafeKeys[] = {
     VK_BACK,
     VK_HOME,
     VK_END,
+    // like Home/End: a list or tree with the focus pages through its own items.
+    // The find window's results list only got them once they stopped
+    // accelerating to CmdScrollUpPage / CmdScrollDownPage (issue #6117)
+    VK_PRIOR,
+    VK_NEXT,
     VK_OEM_4,
     VK_OEM_6,
     VK_OEM_2 // '?' opens keyboard help, but must still type into edit controls
