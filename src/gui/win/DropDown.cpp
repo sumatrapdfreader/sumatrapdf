@@ -30,6 +30,35 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
     }
 }
 
+// Same result as SetDropDownItems() but without CB_RESETCONTENT, which on an
+// editable combo also empties the edit control. Deleting items one by one
+// leaves the edit alone, except for the item the list has selected - the
+// caller restores the text if that happens.
+static void ReplaceDropDownItems(HWND hwnd, StrVec& items) {
+    for (int i = CbGetItemsCount(hwnd) - 1; i >= 0; i--) {
+        CbDeleteString(hwnd, i);
+    }
+    int n = len(items);
+    for (int i = 0; i < n; i++) {
+        CbInsertString(hwnd, i, items[i]);
+    }
+}
+
+// On WM_SIZE a combo box re-sets its edit's text (to the same string) and
+// leaves all of it selected. Any relayout around us - the find bar's "n / m"
+// slot widening as the count comes in - would then wipe out what the user is
+// typing, so put the caret back where it was (issue #6068).
+static LRESULT CALLBACK DropDownProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
+    if (msg != WM_SIZE) {
+        return DefSubclassProc(hwnd, msg, wp, lp);
+    }
+    int start = 0, end = 0;
+    CbEditGetSelection(hwnd, start, end);
+    LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
+    CbEditSelectText(hwnd, start, end);
+    return res;
+}
+
 void DropDown::OnCommand(ControlBase::CommandEvent* ev) {
     if (suppressNotify) {
         return;
@@ -168,6 +197,9 @@ HWND DropDown::Create(const CreateArgs& args) {
     }
 
     // SetDropDownItems(hwnd, items);
+    if (CbEditHwnd(hwnd)) {
+        SetWindowSubclass(hwnd, DropDownProc, 0, 0);
+    }
     CbSetCurrentSelection(hwnd, -1);
     CbSetMinVisible(hwnd, 10);
     if (colorSwatches) {
@@ -211,10 +243,10 @@ void DropDown::SetItems(StrVec& newItems) {
     CbSetCurrentSelection(hwnd, -1);
 }
 
-// CbResetContent clears the edit; keep whatever the user is typing
-// and the caret / selection (SetText would otherwise put the caret at 0).
-// Do not go through SetItems: that ends with CbSetCurrentSelection(-1),
-// which clears a CBS_DROPDOWN edit.
+// Rebuild the list under a user who is still typing, e.g. the find history
+// growing while find-as-you-type runs. Do not go through SetItems: both the
+// CB_RESETCONTENT it starts with and the CbSetCurrentSelection(-1) it ends
+// with empty a CBS_DROPDOWN edit.
 void DropDown::SetItemsKeepText(StrVec& newItems) {
     Str cur = str::Dup(GetTextTemp());
     int selStart = 0, selEnd = 0;
@@ -228,17 +260,21 @@ void DropDown::SetItemsKeepText(StrVec& newItems) {
     for (int i = 0; i < nItems; i++) {
         items.Append(newItems[i]);
     }
-    SetDropDownItems(hwnd, items);
+    ReplaceDropDownItems(hwnd, items);
 
-    SetText(cur);
-    int n = len(cur);
-    if (selStart > n) {
-        selStart = n;
+    // the edit should be untouched; only a list selection could still have
+    // taken it down with a deleted item
+    if (!str::Eq(GetTextTemp(), cur)) {
+        SetText(cur);
+        int n = len(cur);
+        if (selStart > n) {
+            selStart = n;
+        }
+        if (selEnd > n) {
+            selEnd = n;
+        }
+        CbEditSelectText(hwnd, selStart, selEnd);
     }
-    if (selEnd > n) {
-        selEnd = n;
-    }
-    CbEditSelectText(hwnd, selStart, selEnd);
     str::Free(cur);
     suppressNotify = prev;
 }

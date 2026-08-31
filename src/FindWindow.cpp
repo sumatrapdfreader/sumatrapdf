@@ -106,24 +106,6 @@ void FindFixedDx::SetBounds(Rect r) {
     }
 }
 
-static int DecimalDigits(int n) {
-    int digits = 1;
-    while (n >= 10) {
-        n /= 10;
-        digits++;
-    }
-    return digits;
-}
-
-static int FindStatusDx(PlatformFont* font, int totalHits, bool capped) {
-    int digits = DecimalDigits(std::max(totalHits, 0));
-    int nChars = (2 * digits) + 3; // N, " / ", M
-    if (capped) {
-        nChars++; // the trailing '+' in e.g. "999 / 999+"
-    }
-    return nChars * font->averageCharWidth;
-}
-
 } // namespace
 
 struct FindWindowWnd;

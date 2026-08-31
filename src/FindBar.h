@@ -3,6 +3,7 @@
 
 struct MainWindow;
 struct FindBarWnd;
+struct PlatformFont;
 
 FindBarWnd* CreateFindBar(MainWindow* win);
 void DeleteFindBar(MainWindow* win);
@@ -16,6 +17,7 @@ bool IsFindBarVisible(MainWindow* win);
 bool IsFindUIVisible(MainWindow* win);
 void FindBarReposition(MainWindow* win);
 void FindBarSetStatus(MainWindow* win, Str s, int totalHits = -1);
+int FindStatusDx(PlatformFont* font, int totalHits, bool capped);
 void FindBarSetMatchCaseChecked(MainWindow* win, bool checked);
 void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked);
 

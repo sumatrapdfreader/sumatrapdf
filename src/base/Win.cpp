@@ -16,6 +16,7 @@
 #include <float.h> // for _clearfp / _controlfp_s in MaskFpExceptions
 #include <mlang.h>
 #include "base/Win.h"
+
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IMultiLanguage2
 __CRT_UUID_DECL(IMultiLanguage2, 0xDCCFC164, 0x2B38, 0x11D2, 0xB7, 0xEC, 0x00, 0xC0, 0x4F, 0x8F, 0x5D, 0x9A)
@@ -3210,6 +3211,26 @@ void CbAddString(HWND hwnd, Str s) {
     SendMessageW(hwnd, CB_ADDSTRING, 0, (LPARAM)ws);
 }
 
+int CbGetItemsCount(HWND hwnd) {
+    if (!hwnd) {
+        return 0;
+    }
+    int n = (int)SendMessageW(hwnd, CB_GETCOUNT, 0, 0);
+    return n < 0 ? 0 : n;
+}
+
+// unlike CbResetContent() / CbAddString(), these leave an editable combo's
+// edit control untouched, so they can rebuild the list under a user who is
+// still typing
+void CbInsertString(HWND hwnd, int idx, Str s) {
+    WCHAR* ws = CWStrTemp(s);
+    SendMessageW(hwnd, CB_INSERTSTRING, (WPARAM)idx, (LPARAM)ws);
+}
+
+void CbDeleteString(HWND hwnd, int idx) {
+    SendMessageW(hwnd, CB_DELETESTRING, (WPARAM)idx, 0);
+}
+
 void CbSetCueBanner(HWND hwnd, Str s) {
     if (!hwnd) {
         return;
@@ -3268,23 +3289,30 @@ void CbEditSelectAll(HWND hwnd) {
     CbEditSelectText(hwnd, 0, -1);
 }
 
-// the text selection within the edit, not the selected drop-down list item
+// The text selection within the edit, not the selected drop-down list item.
+// Goes to the edit control rather than through the combo's CB_SETEDITSEL /
+// CB_GETEDITSEL: those are packed into a LPARAM's two WORDs (so they can't say
+// anything past 65535) and the combo drops CB_SETEDITSEL while it is itself
+// setting the edit's text, which loses the caret.
 void CbEditSelectText(HWND hwnd, int start, int end) {
-    if (!hwnd) {
+    HWND edit = CbEditHwnd(hwnd);
+    if (!edit) {
         return;
     }
-    SendMessageW(hwnd, CB_SETEDITSEL, 0, MAKELPARAM(start, end));
+    SendMessageW(edit, EM_SETSEL, (WPARAM)start, (LPARAM)end);
 }
 
 void CbEditGetSelection(HWND hwnd, int& start, int& end) {
     start = 0;
     end = 0;
-    if (!hwnd) {
+    HWND edit = CbEditHwnd(hwnd);
+    if (!edit) {
         return;
     }
-    DWORD sel = (DWORD)SendMessageW(hwnd, CB_GETEDITSEL, 0, 0);
-    start = (int)LOWORD(sel);
-    end = (int)HIWORD(sel);
+    DWORD s = 0, e = 0;
+    SendMessageW(edit, EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
+    start = (int)s;
+    end = (int)e;
 }
 
 void CbEditSetModified(HWND hwnd, bool on) {

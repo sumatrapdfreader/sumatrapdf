@@ -173,6 +173,9 @@ int LvInsertColumn(HWND hwnd, int iCol, const LVCOLUMNW* col);
 
 void CbResetContent(HWND);
 void CbAddString(HWND, Str s);
+int CbGetItemsCount(HWND);
+void CbInsertString(HWND, int idx, Str s);
+void CbDeleteString(HWND, int idx);
 void CbSetCueBanner(HWND, Str);
 void CbSetMinVisible(HWND, int n);
 void CbSetItemHeight(HWND, int idx, int dy);

@@ -42,12 +42,12 @@ constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
 namespace {
 
 // min-width box: at least `dx`, wider if the child needs more
-struct FindMinDx : ILayout {
+struct FindStatusBox : ILayout {
     ILayout* child = nullptr;
     int dx = 0;
 
-    FindMinDx(ILayout* c, int dxIn);
-    ~FindMinDx() override;
+    FindStatusBox(ILayout* c, int dxIn);
+    ~FindStatusBox() override;
 
     Size Layout(Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
@@ -57,33 +57,32 @@ struct FindMinDx : ILayout {
     ILayout* LayoutChildAt(int) override;
 };
 
-FindMinDx::FindMinDx(ILayout* c, int dxIn) {
+FindStatusBox::FindStatusBox(ILayout* c, int dxIn) {
     child = c;
     dx = dxIn;
 }
 
-FindMinDx::~FindMinDx() {
+FindStatusBox::~FindStatusBox() {
     delete child;
 }
 
-int FindMinDx::LayoutChildCount() {
+int FindStatusBox::LayoutChildCount() {
     return child ? 1 : 0;
 }
 
-ILayout* FindMinDx::LayoutChildAt(int) {
+ILayout* FindStatusBox::LayoutChildAt(int) {
     return child;
 }
 
-int FindMinDx::MinIntrinsicWidth(int height) {
-    int childDx = child ? child->MinIntrinsicWidth(height) : 0;
-    return std::max(dx, childDx);
+int FindStatusBox::MinIntrinsicWidth(int) {
+    return dx;
 }
 
-int FindMinDx::MinIntrinsicHeight(int width) {
+int FindStatusBox::MinIntrinsicHeight(int width) {
     return child ? child->MinIntrinsicHeight(width) : 0;
 }
 
-Size FindMinDx::Layout(const Constraints bc) {
+Size FindStatusBox::Layout(const Constraints bc) {
     int w = MinIntrinsicWidth(0);
     if (bc.min.dx > w) {
         w = bc.min.dx;
@@ -95,7 +94,7 @@ Size FindMinDx::Layout(const Constraints bc) {
     return {w, s.dy};
 }
 
-void FindMinDx::SetBounds(Rect r) {
+void FindStatusBox::SetBounds(Rect r) {
     lastBounds = r;
     if (child) {
         child->SetBounds(r);
@@ -104,13 +103,37 @@ void FindMinDx::SetBounds(Rect r) {
 
 } // namespace
 
+static int DecimalDigits(int n) {
+    int digits = 1;
+    while (n >= 10) {
+        n /= 10;
+        digits++;
+    }
+    return digits;
+}
+
+// width of the "n / m" status slot, wide enough for the largest count it will
+// show. Shared with the floating find window so both size it the same way.
+int FindStatusDx(PlatformFont* font, int totalHits, bool capped) {
+    int digits = DecimalDigits(std::max(totalHits, 0));
+    int nChars = (2 * digits) + 3; // N, " / ", M
+    if (capped) {
+        nChars++; // the trailing '+' in e.g. "999 / 999+"
+    }
+    return nChars * font->averageCharWidth;
+}
+
 struct FindBarWnd : WindowBase {
     MainWindow* win = nullptr;
     // the status text and the buttons are virtual controls; the search field is
     // the only HWND child. Owned by `layout` once BuildLayout() runs
     DropDown* edit = nullptr;
     VirtText* status = nullptr;
-    FindMinDx* statusBox = nullptr;
+    FindStatusBox* statusBox = nullptr;
+    // what statusBox->dx was sized for; the slot is fixed so the search field
+    // next to it doesn't resize every time the count changes
+    int statusTotalHits = 0;
+    bool statusCapped = false;
     Spacer* gapAfterEdit = nullptr;
     Spacer* gapAfterStatus = nullptr;
     Padding* padLayout = nullptr;
@@ -150,6 +173,8 @@ struct FindBarWnd : WindowBase {
     void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCommand(WindowBase::CommandEvent* ev);
+
+    bool UpdateStatusWidth(int totalHits, bool capped);
 };
 
 // tooltip text for the bar's toolbar buttons
@@ -316,8 +341,7 @@ void FindBarWnd::BuildLayout() {
     row->AddChild(edit, 1);
     gapAfterEdit = new Spacer(gap, 0);
     row->AddChild(gapAfterEdit);
-    int statusMinDx = PlatformFontMeasureText(status->font, StrL("1 / 999")).dx;
-    statusBox = new FindMinDx(status, statusMinDx);
+    statusBox = new FindStatusBox(status, FindStatusDx(status->font, statusTotalHits, statusCapped));
     row->AddChild(statusBox);
     gapAfterStatus = new Spacer(gap, 0);
     row->AddChild(gapAfterStatus);
@@ -448,7 +472,7 @@ void FindBarWnd::UpdateDpi(int dpi) {
         padLayout->insets = Insets{p, p, p, p};
     }
     if (statusBox && status) {
-        statusBox->dx = PlatformFontMeasureText(status->font, StrL("1 / 999")).dx;
+        statusBox->dx = FindStatusDx(status->font, statusTotalHits, statusCapped);
     }
     int buttonPad = DpiScaleByDpi(dpi, 4);
     for (VirtIconButton* b : btns) {
@@ -880,21 +904,45 @@ void FindBarReposition(MainWindow* win) {
     PositionFindBar(win->findBar);
 }
 
+// Widen the status slot only when a bigger count needs it. Relaying out on
+// every status change resized the search field, and a combo box re-sets its
+// edit's text on WM_SIZE - selecting all of it under the typing user (#6068).
+bool FindBarWnd::UpdateStatusWidth(int totalHits, bool capped) {
+    if (!statusBox || totalHits < 0) {
+        return false;
+    }
+    int dx = FindStatusDx(status->font, totalHits, capped);
+    if (statusBox->dx == dx) {
+        return false;
+    }
+    statusBox->dx = dx;
+    statusTotalHits = totalHits;
+    statusCapped = capped;
+    return true;
+}
+
 // show n/m or "No matches" style status in the bar
 void FindBarSetStatus(MainWindow* win, Str s, int totalHits) {
     if (gSettings->searchUIFloating) {
         FindWindowSetStatus(win, s, totalHits);
         return;
     }
-    if (win->findBar && win->findBar->status) {
-        win->findBar->status->SetText(s ? s : StrL(""));
-        // relayout so the status is the text width (a fixed slot left a large
-        // empty gap after short counts like "1 / 999+")
-        if (win->findBar->barDx > 0) {
-            win->findBar->Layout(win->findBar->barDx);
-        } else {
-            win->findBar->Layout();
-        }
+    FindBarWnd* bar = win->findBar;
+    if (!bar || !bar->status) {
+        return;
+    }
+    Str text = s ? s : StrL("");
+    bool capped = str::EndsWith(text, StrL("+"));
+    bool widthChanged = bar->UpdateStatusWidth(totalHits, capped);
+    bar->status->SetText(text);
+    if (!widthChanged) {
+        bar->status->Invalidate();
+        return;
+    }
+    if (bar->barDx > 0) {
+        bar->Layout(bar->barDx);
+    } else {
+        bar->Layout();
     }
 }
 
