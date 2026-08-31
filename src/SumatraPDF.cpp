@@ -1442,6 +1442,12 @@ static void HideCanvasScrollbars(MainWindow* win) {
         SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
     }
+    // Losing the bars grows the client area over the strips they occupied, and
+    // none of the calls above sends a WM_SIZE. canvasRc and the double buffer
+    // would still describe the smaller area, so the next paint stops a
+    // scrollbar's width short and the old bars stay on screen (issue #6062).
+    win->UpdateCanvasSize();
+    HwndInvalidate(hwnd);
 }
 
 SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";

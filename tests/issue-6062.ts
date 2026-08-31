@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
 import {
+  captureWindowPixels,
   enumChildWindows,
   enumWindows,
   findChildWindow,
@@ -24,6 +25,36 @@ import {
 
 const WS_VSCROLL = 0x00200000;
 const SRC_PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+
+// Removing the scroll styles grows the client area; if the repaint does not
+// follow, the old bars stay painted in the strips they occupied even though
+// WS_VSCROLL is gone. Sample the right and bottom edges: on the empty window
+// they must be the flat page background, like the rest of the canvas.
+function paintedScrollbarStrip(canvas: number): string {
+  const cap = captureWindowPixels(canvas);
+  if (!cap) {
+    return "";
+  }
+  const { w, h, data } = cap;
+  const at = (x: number, y: number) => {
+    const i = (y * w + x) * 4;
+    return (data[i] << 16) | (data[i + 1] << 8) | data[i + 2];
+  };
+  // a corner well inside the canvas is background by construction: the About
+  // box is centered and the home page's rows do not reach it
+  const bg = at(4, 4);
+  for (let y = 4; y < h - 4; y += 7) {
+    if (at(w - 4, y) !== bg) {
+      return `right edge at y=${y} is 0x${at(w - 4, y).toString(16)}, background is 0x${bg.toString(16)}`;
+    }
+  }
+  for (let x = 4; x < w - 4; x += 7) {
+    if (at(x, h - 4) !== bg) {
+      return `bottom edge at x=${x} is 0x${at(x, h - 4).toString(16)}, background is 0x${bg.toString(16)}`;
+    }
+  }
+  return "";
+}
 
 function toolbarEdits(frame: number): { hwnd: number; text: string }[] {
   const tb = findChildWindow(frame, "SUMATRA_VIRT_TOOLBAR");
@@ -119,6 +150,10 @@ async function runCloseLastFile(scrollbars: string): Promise<void> {
       throw new Error(
         `issue-6062 (${scrollbars}): canvas still has WS_VSCROLL after closing the last file (style=0x${(style >>> 0).toString(16)})`,
       );
+    }
+    const painted = paintedScrollbarStrip(canvas);
+    if (painted) {
+      throw new Error(`issue-6062 (${scrollbars}): scrollbar still painted after closing the last file: ${painted}`);
     }
     const nOverlay = visibleOverlayScrollbars(proc.pid!);
     if (nOverlay > 0) {
