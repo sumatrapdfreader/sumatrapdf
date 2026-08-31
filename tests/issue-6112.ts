@@ -116,6 +116,10 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
 
     const dump = await toolbarDump(client);
+    const iconName = / iconName=(\S+)/.exec(dump)?.[1] ?? "";
+    if (iconName !== "PushPin") {
+      throw new Error(`issue-6112: icon chip should be PushPin, got ${iconName || "(empty)"}: ${dump}`);
+    }
     const placed = parseRect(/ placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(dump));
     const icon = parseRect(/[=;]icon:(-?\d+),(-?\d+),(\d+),(\d+)/.exec(dump));
     if (icon.dx < 8) {

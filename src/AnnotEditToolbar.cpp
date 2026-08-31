@@ -251,6 +251,37 @@ static bool AnnotationColorIsBackground(AnnotationType tp) {
     return tp == AnnotationType::FreeText;
 }
 
+static Str DefaultAnnotIconName(AnnotationType type) {
+    switch (type) {
+        case AnnotationType::Text:
+            return StrL("Note");
+        case AnnotationType::FileAttachment:
+            return StrL("PushPin");
+        case AnnotationType::Sound:
+            return StrL("Speaker");
+        case AnnotationType::Stamp:
+            return StrL("Draft");
+        default:
+            return {};
+    }
+}
+
+// a name from the type's list, so the chip can paint it after the temp arena resets
+static Str ResolvedAnnotIconName(Annotation* annot) {
+    SeqStrings icons = AnnotationIconNames(annot);
+    if (!icons) {
+        return {};
+    }
+    int idx = SeqStrIndexIS(icons, IconName(annot));
+    if (idx < 0) {
+        idx = SeqStrIndexIS(icons, DefaultAnnotIconName(Type(annot)));
+    }
+    if (idx < 0) {
+        idx = 0;
+    }
+    return SeqStrByIndex(icons, idx);
+}
+
 static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
     VecReset(out);
     if (!AnnotationIsLive(annot)) {
@@ -352,7 +383,7 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
     if (icons) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Icon;
-        it.iconName = IconName(annot);
+        it.iconName = ResolvedAnnotIconName(annot);
         it.mupdfIcon = type != AnnotationType::Stamp;
         it.tooltip = _TRA("Icon");
         VecAppend(out, it);
@@ -2447,6 +2478,7 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
     }
     Rect r = tb->host->ScreenRect();
     str::Builder chips;
+    Str iconName;
     for (int i = 0; i < len(tb->chips); i++) {
         if (i > 0) {
             chips.AppendChar(';');
@@ -2454,9 +2486,13 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
         Rect cr = tb->chips[i]->BoundsInWindow();
         Str name = i < len(tb->kinds) ? KindName(tb->kinds[i]) : StrL("?");
         chips.Append(fmt("%s:%d,%d,%d,%d:%s", name, r.x + cr.x, r.y + cr.y, cr.dx, cr.dy, tb->chips[i]->tooltip));
+        if (tb->chips[i]->item.kind == AnnotEditKind::Icon) {
+            iconName = tb->chips[i]->item.iconName;
+        }
     }
-    return fmt("annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d chips=%s\n", len(tb->kinds),
-               ToStrTemp(items), r.x, r.y, r.dx, r.dy, tb->editingContents ? 1 : 0, ToStrTemp(chips));
+    return fmt("annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d iconName=%s chips=%s\n",
+               len(tb->kinds), ToStrTemp(items), r.x, r.y, r.dx, r.dy, tb->editingContents ? 1 : 0, iconName,
+               ToStrTemp(chips));
 }
 
 // clang-format off
