@@ -280,6 +280,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // (the toc box window can be hidden and its rect stale, e.g. when only
     // favorites are showing). 0 = not laid out yet
     int sidebarDx = 0;
+    // extra frame width added so showing the sidebar does not shrink the canvas
+    int sidebarGrewFrameDx = 0;
 
     // state related to favorites
     HWND hwndFavBox = nullptr;

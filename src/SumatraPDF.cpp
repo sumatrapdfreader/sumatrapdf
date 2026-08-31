@@ -7329,6 +7329,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // unchanged rows, which visibly flashes while dragging the window border.
     bool isFrameResize = !win->uiState.lastFrameRc.IsEmpty() && !(curState.rc == win->uiState.lastFrameRc);
     win->uiState.lastFrameRc = curState.rc;
+    bool prevSidebar =
+        win->uiState.layout.tocVisible || (win->uiState.layout.showFavorites && !win->uiState.layout.favoritesAsTab);
 
     // skip redundant relayouts when all layout-affecting state is unchanged
     if (IsUiLayoutEq(&curState, &win->uiState.layout) && updateToolbars && sidebarDx == -1) {
@@ -7486,7 +7488,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // 1px caption-border inset can disagree with the HWND's x. Only pin when
     // the sidebar is on the left: on the right, side.x is the right pane and
     // using it as rc.x stacked fav+canvas at the same x (issue-2165).
-    if ((isFrameResize || isSplitterDrag) && sidebarVisible && !SidebarOnRightLayout()) {
+    if ((isFrameResize || isSplitterDrag) && sidebarVisible && prevSidebar && !SidebarOnRightLayout()) {
         HWND sideHwnd = tocVisible ? win->hwndTocBox : win->hwndFavBox;
         if (sideHwnd) {
             Rect side = ChildPosWithinParent(sideHwnd);
@@ -9478,6 +9480,92 @@ static void OnFavSplitterMove(VirtSplitter::MoveEvent* ev) {
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
 }
 
+static int SidebarExtraDx(MainWindow* win) {
+    int dx = win->sidebarDx;
+    if (dx <= 0 && gSettings) {
+        dx = gSettings->sidebarDx;
+    }
+    if (dx <= 0 && win->hwndTocBox) {
+        dx = HwndClientRect(win->hwndTocBox).dx;
+    }
+    if (dx < kSidebarMinDx) {
+        dx = kSidebarMinDx;
+    }
+    return dx + kSplitterDx;
+}
+
+static bool FrameCanResizeForSidebar(MainWindow* win) {
+    if (!win || !win->hwndFrame || gPluginMode) {
+        return false;
+    }
+    if (win->isFullScreen || win->presentation) {
+        return false;
+    }
+    if (IsZoomed(win->hwndFrame)) {
+        return false;
+    }
+    if (!HwndIsVisible(win->hwndFrame)) {
+        return false;
+    }
+    return true;
+}
+
+static void MoveFrameForSidebar(HWND hwnd, Rect wr) {
+    // MoveWindow copies old client bits; a left shift then shows the page on
+    // the new right strip until the next full DWM repaint
+    SetWindowPos(hwnd, nullptr, wr.x, wr.y, wr.dx, wr.dy, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
+}
+
+// Grow the frame when showing the bookmarks/favorites sidebar if the work area
+// has room, so the canvas keeps its size. Shrink it again on hide. If the
+// grown frame would sit off-screen, shift it fully into the work area.
+static void AdjustFrameForSidebar(MainWindow* win, bool show) {
+    if (!FrameCanResizeForSidebar(win)) {
+        if (!show) {
+            win->sidebarGrewFrameDx = 0;
+        }
+        return;
+    }
+
+    HWND hwnd = win->hwndFrame;
+    Rect wr = HwndWindowRect(hwnd);
+    Rect work = GetWorkAreaRect(wr, hwnd);
+    bool onRight = SidebarOnRightLayout();
+
+    if (show) {
+        int extra = SidebarExtraDx(win);
+        int spare = work.dx - wr.dx;
+        if (extra <= 0 || spare < extra) {
+            win->sidebarGrewFrameDx = 0;
+            return;
+        }
+        wr.dx += extra;
+        if (!onRight) {
+            wr.x -= extra;
+        }
+        wr = ShiftRectToWorkArea(wr, hwnd, true);
+        win->sidebarGrewFrameDx = extra;
+        if (win->sidebarDx < kSidebarMinDx) {
+            win->sidebarDx = extra - kSplitterDx;
+        }
+        MoveFrameForSidebar(hwnd, wr);
+        return;
+    }
+
+    int extra = win->sidebarGrewFrameDx;
+    win->sidebarGrewFrameDx = 0;
+    if (extra <= 0 || wr.dx <= extra) {
+        return;
+    }
+    if (!onRight) {
+        wr.x += extra;
+    }
+    wr.dx -= extra;
+    wr = ShiftRectToWorkArea(wr, hwnd, true);
+    MoveFrameForSidebar(hwnd, wr);
+}
+
 // Records the desired sidebar visibility in UIState and schedules the
 // deferred update, which shows/hides the sidebar windows and relayouts
 // (see FrameUpdateUi).
@@ -9531,8 +9619,13 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
         HwndSetFocus(win->hwndFrame);
     }
 
+    bool wasSidebar = win->uiState.tocVisible || win->uiState.favVisible;
     win->uiState.tocVisible = tocVisible;
     win->uiState.favVisible = showFavorites;
+    bool nowSidebar = tocVisible || showFavorites;
+    if (wasSidebar != nowSidebar) {
+        AdjustFrameForSidebar(win, nowSidebar);
+    }
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiSidebarDirty);
 }
 
