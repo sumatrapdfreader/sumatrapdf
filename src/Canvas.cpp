@@ -5451,17 +5451,15 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             if (GetReadAloudSourceTab()) {
                 TtsProcessEvents();
                 ReadAloudAfterTtsEvents();
-                DBG_TTS({
-                    int pos = TtsGetSpokenPosUtf8();
-                    static int sLastTtsPos = -999;
-                    if (pos != sLastTtsPos) {
-                        sLastTtsPos = pos;
-                        dbgtts("tick pos=%d speaking=%d\n", pos, (int)TtsIsSpeaking());
-                    }
-                });
-                ReadAloudUpdateAutoScroll(win);
+                int pos = TtsGetSpokenPosUtf8();
+                static int sLastTtsPos = -999;
+                if (pos != sLastTtsPos) {
+                    sLastTtsPos = pos;
+                    DBG_TTS(dbgtts("tick pos=%d speaking=%d\n", pos, (int)TtsIsSpeaking()));
+                    ReadAloudUpdateAutoScroll(win);
+                    HwndInvalidate(hwnd);
+                }
                 ReadAloudPlaybackBarTick(win);
-                HwndInvalidate(hwnd);
             } else {
                 ReadAloudHighlightTimerStop(win);
             }

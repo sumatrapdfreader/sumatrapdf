@@ -194,7 +194,8 @@ struct ID2D1StrokeStyle;
 // Everything is a no-op when Direct2DAvailable() is false.
 struct GfxDirect2D : Gfx {
     HDC hdc = nullptr;
-    ID2D1DCRenderTarget* target = nullptr; // owned; null when d2d isn't there
+    ID2D1DCRenderTarget* target = nullptr; // null when d2d isn't there
+    bool ownsTarget = true;                // false when borrowed from the DC-target pool
     ID2D1SolidColorBrush* brush = nullptr; // owned, re-colored per draw
     ID2D1StrokeStyle* dottedStroke = nullptr;
     bool drawing = false; // between BeginDraw() and EndDraw()

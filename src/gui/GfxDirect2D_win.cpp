@@ -120,6 +120,124 @@ bool Direct2DAvailable() {
     return gD2DFactory != nullptr && gDWriteFactory != nullptr;
 }
 
+// A new ID2D1DCRenderTarget's first BeginDraw() makes d3d11 throw (and catch)
+// a C++ EH while it sets up GDI interop. Reuse a few targets so the read-aloud
+// highlight timer (and other 80ms paints) don't flood the debugger.
+constexpr int kD2DTargetPool = 8;
+
+struct D2DTargetSlot {
+    ID2D1DCRenderTarget* target = nullptr;
+    bool inUse = false;
+    int dx = 0;
+    int dy = 0;
+};
+
+static D2DTargetSlot gD2DSlots[kD2DTargetPool];
+
+static D2D1_RENDER_TARGET_PROPERTIES D2DDcTargetProps() {
+    return D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
+                                        D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE), 96.0f,
+                                        96.0f, D2D1_RENDER_TARGET_USAGE_NONE, D2D1_FEATURE_LEVEL_DEFAULT);
+}
+
+static ID2D1DCRenderTarget* D2DCreateDcTarget() {
+    if (!gD2DFactory) {
+        return nullptr;
+    }
+    ID2D1DCRenderTarget* t = nullptr;
+    D2D1_RENDER_TARGET_PROPERTIES props = D2DDcTargetProps();
+    HRESULT hr = gD2DFactory->CreateDCRenderTarget(&props, &t);
+    if (FAILED(hr) || !t) {
+        logf("GfxDirect2D: CreateDCRenderTarget failed 0x%x\n", (int)hr);
+        return nullptr;
+    }
+    return t;
+}
+
+static void D2DNoteSize(ID2D1DCRenderTarget* t, int dx, int dy) {
+    for (int i = 0; i < kD2DTargetPool; i++) {
+        if (gD2DSlots[i].target == t) {
+            gD2DSlots[i].dx = dx;
+            gD2DSlots[i].dy = dy;
+            return;
+        }
+    }
+}
+
+static ID2D1DCRenderTarget* D2DAcquireDcTarget(int dx, int dy, bool* owned) {
+    *owned = true;
+    int empty = -1;
+    int wrongSize = -1;
+    for (int i = 0; i < kD2DTargetPool; i++) {
+        if (gD2DSlots[i].inUse) {
+            continue;
+        }
+        if (gD2DSlots[i].target && gD2DSlots[i].dx == dx && gD2DSlots[i].dy == dy) {
+            gD2DSlots[i].inUse = true;
+            *owned = false;
+            return gD2DSlots[i].target;
+        }
+        if (!gD2DSlots[i].target) {
+            if (empty < 0) {
+                empty = i;
+            }
+        } else if (wrongSize < 0) {
+            wrongSize = i;
+        }
+    }
+
+    ID2D1DCRenderTarget* t = D2DCreateDcTarget();
+    if (!t) {
+        return nullptr;
+    }
+    int slot = empty >= 0 ? empty : wrongSize;
+    if (slot < 0) {
+        *owned = true;
+        return t;
+    }
+    if (gD2DSlots[slot].target) {
+        gD2DSlots[slot].target->Release();
+    }
+    gD2DSlots[slot].target = t;
+    gD2DSlots[slot].inUse = true;
+    gD2DSlots[slot].dx = dx;
+    gD2DSlots[slot].dy = dy;
+    *owned = false;
+    return t;
+}
+
+static void D2DDropSlot(ID2D1DCRenderTarget* t) {
+    for (int i = 0; i < kD2DTargetPool; i++) {
+        if (gD2DSlots[i].target == t) {
+            gD2DSlots[i].target = nullptr;
+            gD2DSlots[i].inUse = false;
+            break;
+        }
+    }
+    t->Release();
+}
+
+static void D2DReleaseDcTarget(ID2D1DCRenderTarget* t, bool owned, bool drop) {
+    if (!t) {
+        return;
+    }
+    if (owned) {
+        t->Release();
+        return;
+    }
+    if (drop) {
+        D2DDropSlot(t);
+        return;
+    }
+    for (int i = 0; i < kD2DTargetPool; i++) {
+        if (gD2DSlots[i].target == t) {
+            gD2DSlots[i].inUse = false;
+            return;
+        }
+    }
+    t->Release();
+}
+
 //--- text formats
 //
 // A PlatformFont is interned and lives for the whole run, so the text format
@@ -278,30 +396,44 @@ GfxDirect2D::GfxDirect2D(HDC hdc) {
     if (sz.dx <= 0 || sz.dy <= 0) {
         return;
     }
-    // 96 dpi so a DIP is a pixel; the caller's coordinates are pixels
-    D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties(
-        D2D1_RENDER_TARGET_TYPE_DEFAULT, D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE), 96.0f,
-        96.0f, D2D1_RENDER_TARGET_USAGE_NONE, D2D1_FEATURE_LEVEL_DEFAULT);
-    HRESULT hr = gD2DFactory->CreateDCRenderTarget(&props, &target);
-    if (FAILED(hr) || !target) {
-        logf("GfxDirect2D: CreateDCRenderTarget failed 0x%x\n", (int)hr);
-        target = nullptr;
-        return;
-    }
     RECT rc = {0, 0, sz.dx, sz.dy};
-    hr = target->BindDC(hdc, &rc);
-    if (FAILED(hr)) {
-        logf("GfxDirect2D: BindDC failed 0x%x\n", (int)hr);
-        target->Release();
-        target = nullptr;
+    bool owned = true;
+    ID2D1DCRenderTarget* t = D2DAcquireDcTarget(sz.dx, sz.dy, &owned);
+    if (!t) {
         return;
     }
+    HRESULT hr = t->BindDC(hdc, &rc);
+    if (FAILED(hr)) {
+        D2DReleaseDcTarget(t, owned, true);
+        t = D2DCreateDcTarget();
+        owned = true;
+        if (!t) {
+            return;
+        }
+        hr = t->BindDC(hdc, &rc);
+        if (FAILED(hr)) {
+            logf("GfxDirect2D: BindDC failed 0x%x\n", (int)hr);
+            t->Release();
+            return;
+        }
+    }
+    D2DNoteSize(t, sz.dx, sz.dy);
+    target = t;
+    ownsTarget = owned;
     target->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
     target->BeginDraw();
     drawing = true;
 }
 
 GfxDirect2D::~GfxDirect2D() {
+    if (brush) {
+        brush->Release();
+        brush = nullptr;
+    }
+    if (dottedStroke) {
+        dottedStroke->Release();
+        dottedStroke = nullptr;
+    }
     if (!target) {
         return;
     }
@@ -309,13 +441,16 @@ GfxDirect2D::~GfxDirect2D() {
     while (len(clipDepth) > 0) {
         PopClip();
     }
+    bool drop = false;
     if (drawing) {
         HRESULT hr = target->EndDraw();
         if (FAILED(hr)) {
             logf("GfxDirect2D: EndDraw failed 0x%x\n", (int)hr);
+            drop = true;
         }
+        drawing = false;
     }
-    target->Release();
+    D2DReleaseDcTarget(target, ownsTarget, drop);
     target = nullptr;
 }
 

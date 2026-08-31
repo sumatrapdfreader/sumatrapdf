@@ -392,13 +392,18 @@ void ReadAloudPlaybackBarTick(MainWindow* win) {
         return;
     }
     bool wasResume = bar->showResume;
+    TempStr statusBefore = str::DupTemp(bar->status ? bar->status->s : Str{});
     bar->SyncLabels();
     if (wasResume != bar->showResume) {
         bar->UpdateLayout(true);
         return;
     }
     SetWindowPos(bar->hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-    HwndInvalidate(bar->hwnd);
+    // skip a full paint when Pause/page text is unchanged: D2D BeginDraw on the
+    // bar's memory DC throws a first-chance C++ EH inside d3d11 every time
+    if (!str::Eq(statusBefore, bar->status ? bar->status->s : Str{})) {
+        HwndInvalidate(bar->hwnd);
+    }
 }
 
 TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut) {
