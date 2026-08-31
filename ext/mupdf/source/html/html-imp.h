@@ -490,6 +490,9 @@ struct fz_html_box_s
 	unsigned int suppress_border: 4;
 	unsigned int collapsed_cell : 1;
 
+	// to indicate when an inline formatting context has been finished (when interrupted by a block level block)
+	unsigned int stop : 1;
+
 	fz_html_box *up, *down, *next;
 
 	const char *tag, *id, *href;

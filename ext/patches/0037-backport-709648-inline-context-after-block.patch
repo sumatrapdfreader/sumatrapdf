@@ -1,0 +1,54 @@
+backport: stop adding to an inline context after a block (bug 709648)
+
+BACKPORT of upstream mupdf 37a14e17d0c5f62551791d7953ef19a2c8e389cd, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2.
+
+https://bugs.ghostscript.com/show_bug.cgi?id=709648
+
+An inline element interrupted by a block (invalid HTML: a <span> wrapping a
+<div>) kept receiving later siblings on the same flow box. Those extra
+FLOW_ANCHOR nodes were never laid out, so every nested span id resolved to
+the chapter's first page.
+
+Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/5943
+---
+diff --git a/source/html/html-imp.h b/source/html/html-imp.h
+index 1d5f75e6f..f4f51be74 100644
+--- a/source/html/html-imp.h
++++ b/source/html/html-imp.h
+@@ -490,6 +490,9 @@ struct fz_html_box_s
+ 	unsigned int suppress_border: 4;
+ 	unsigned int collapsed_cell : 1;
+ 
++	// to indicate when an inline formatting context has been finished (when interrupted by a block level block)
++	unsigned int stop : 1;
++
+ 	fz_html_box *up, *down, *next;
+ 
+ 	const char *tag, *id, *href;
+diff --git a/source/html/html-parse.c b/source/html/html-parse.c
+index 02bf77486..78ff6d7f0 100644
+--- a/source/html/html-parse.c
++++ b/source/html/html-parse.c
+@@ -934,6 +934,8 @@ static void append_box(fz_context *ctx, fz_html_box *parent, fz_html_box *child)
+ 
+ static fz_html_box *find_block_context(fz_context *ctx, fz_html_box *box)
+ {
++	if (box->type == BOX_INLINE)
++		box->stop = 1;
+ 	while (box->type != BOX_BLOCK && box->type != BOX_TABLE_CELL)
+ 		box = box->up;
+ 	return box;
+@@ -966,7 +968,10 @@ static fz_html_box *find_inline_context(fz_context *ctx, struct genstate *g, fz_
+ 	fz_css_style style;
+ 	fz_html_box *flow_box;
+ 
+-	if (box->type == BOX_FLOW || box->type == BOX_INLINE)
++	if (box->type == BOX_FLOW)
++		return box;
++
++	if (box->type == BOX_INLINE && !box->stop)
+ 		return box;
+ 
+ 	// We have an inline element that is not in an existing flow/inline context.

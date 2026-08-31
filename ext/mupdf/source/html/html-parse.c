@@ -934,6 +934,8 @@ static void append_box(fz_context *ctx, fz_html_box *parent, fz_html_box *child)
 
 static fz_html_box *find_block_context(fz_context *ctx, fz_html_box *box)
 {
+	if (box->type == BOX_INLINE)
+		box->stop = 1;
 	while (box->type != BOX_BLOCK && box->type != BOX_TABLE_CELL)
 		box = box->up;
 	return box;
@@ -966,7 +968,10 @@ static fz_html_box *find_inline_context(fz_context *ctx, struct genstate *g, fz_
 	fz_css_style style;
 	fz_html_box *flow_box;
 
-	if (box->type == BOX_FLOW || box->type == BOX_INLINE)
+	if (box->type == BOX_FLOW)
+		return box;
+
+	if (box->type == BOX_INLINE && !box->stop)
 		return box;
 
 	// We have an inline element that is not in an existing flow/inline context.

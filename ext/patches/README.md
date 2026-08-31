@@ -46,14 +46,16 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0034-pdf-appearance-cjk-annotation-text` | annotation text goes in a CJK collection that actually has the characters, instead of dropping them or embedding a 5 MB fallback font (#6082) |
 | `0035-html-link-target-line-top` | an internal link scrolls to the top of the target's line, not to its baseline, which cut the line off (#6095) |
 | `0036-ocg-usage-event-on-visible` | PrintState/ViewState ON draws the OCG even if it is in the config `/OFF` list (#6101) |
+| `0037-backport-709648-inline-context-after-block` | stop adding to an inline context after a block interrupts it (covers #5943) |
 
-And three that are not ours but that we carry ahead of the release we vendor:
+And four that are not ours but that we carry ahead of the release we vendor:
 
 | Patch | What |
 | --- | --- |
 | `0021-backport-709471-single-line-field-box` | upstream fix for the single-line field content box and a zero `/DA` font size |
 | `0022-backport-709480-bound-xml-recursion` | upstream depth limits for XPS metadata and epub outlines (covers #5032) |
 | `0023-backport-709574-html-metadata` | upstream title/author/subject metadata for HTML and FB2 (covers #2254) |
+| `0037-backport-709648-inline-context-after-block` | nested `<span id>` wrapping a block no longer all jump to the chapter start (#5943) |
 
 And one of ours that has to come after a backport, because it builds on it:
 
