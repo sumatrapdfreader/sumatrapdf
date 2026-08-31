@@ -34,6 +34,7 @@
 #include "Commands.h"
 #include "Toolbar.h"
 #include "FilterUtil.h"
+#include "AnnotSearch.h"
 #include "AnnotEditToolbar.h"
 #include "DarkMode_win.h"
 
@@ -75,6 +76,7 @@ struct AnnotFilterWindow : WindowBase {
     Spacer* headerListGap = nullptr;
     Spacer* listButtonsGap = nullptr;
     VBox* buttonsBox = nullptr;
+    Spacer* buttonsHelpGap = nullptr;
     int layoutDpi = 96;
 
     bool Create(MainWindow* mainWin);
@@ -96,7 +98,9 @@ struct AnnotFilterToolbar {
     AnnotFilterWindow* floatWnd = nullptr;
     Vec<Annotation*> annotations;
     Vec<Annotation*> visibleAnnots;
+    // words to highlight in the list; the ":" conditions are not among them
     StrVec filterWords;
+    AnnotMatchOpts filter;
     Vec<u8> filterHlScratch;
     bool suppressFilterChanged = false;
     // bumped on each list caret change / cancel so a late uitask apply is dropped
@@ -235,7 +239,7 @@ static void RebuildList(AnnotFilterToolbar* f) {
     }
     VecReset(f->visibleAnnots);
     for (Annotation* annot : f->annotations) {
-        if (AnnotMatchesFilter(annot, f->filterWords)) {
+        if (AnnotMatches(annot, f->filter)) {
             VecAppend(f->visibleAnnots, annot);
         }
     }
@@ -247,6 +251,23 @@ static void RebuildList(AnnotFilterToolbar* f) {
         f->floatWnd->listBox->Invalidate();
     }
     UpdateFloatButtons(f);
+}
+
+// Reparse the filter box. Bad syntax (a typo in a ":" condition) would match
+// nothing, which reads as "the filter is broken"; treat it as plain text
+// instead, the way it behaved before conditions existed.
+static void SetFilter(AnnotFilterToolbar* f, Str text) {
+    f->filter.Reset();
+    f->filterWords.Reset();
+    if (!ParseAnnotSearch(text, f->filter)) {
+        f->filter.Reset();
+        StrVec words;
+        SplitFilterToWords(text, words);
+        for (Str w : words) {
+            AnnotSearchAddContentWord(f->filter, w);
+        }
+    }
+    AnnotSearchContentWords(f->filter, f->filterWords);
 }
 
 static void KillSelectionTimer(AnnotFilterToolbar* f) {
@@ -413,8 +434,7 @@ static void OnFilterTextChanged(AnnotFilterToolbar* f) {
     }
     WindowTab* tab = FilterTab(f);
     Annotation* keep = tab ? tab->selectedAnnotation : nullptr;
-    f->filterWords.Reset();
-    SplitFilterToWords(e->GetTextTemp(), f->filterWords);
+    SetFilter(f, e->GetTextTemp());
     LoadAnnotations(f);
     RebuildList(f);
     VirtListBox* lb = ActiveList(f);
@@ -699,6 +719,46 @@ static void UpdateFloatButtons(AnnotFilterToolbar* f) {
     }
 }
 
+// Cheat sheet under the buttons. The syntax itself is not translated, only the
+// explanation of what each condition does. A table so the explanations line up.
+static ILayout* NewFilterHelp(int gap) {
+    struct HelpRow {
+        Str syntax;
+        Str what;
+    };
+    HelpRow rows[] = {
+        {StrL(":a=name  :a!=name"), _TRA("author is / is not")},
+        {StrL(":t=text  :t!=line"), _TRA("type is / is not")},
+        {StrL(":c+  :c-"), _TRA("has / has no contents")},
+    };
+    PlatformFont* font = GetAppFont();
+    Color col = ThemeWindowTextDisabledColor();
+    auto mkText = [&](Str s) -> ILayout* {
+        return NewVirtText({
+            .s = s,
+            .font = font,
+            .textColor = col,
+            .isRtl = IsUIRtl(),
+            .ellipsis = true,
+        });
+    };
+
+    auto* box = new VBox();
+    box->alignCross = CrossAxisAlign::Stretch;
+    box->AddChild(mkText(_TRA("Search syntax:")));
+    box->AddChild(new Spacer(0, gap / 2));
+    int nRows = (int)dimof(rows);
+    auto* table = new Table();
+    table->SetSize(nRows, 2);
+    table->colGap = 2 * gap;
+    for (int i = 0; i < nRows; i++) {
+        table->SetCell(i, 0, mkText(rows[i].syntax));
+        table->SetCell(i, 1, mkText(rows[i].what));
+    }
+    box->AddChild(table);
+    return box;
+}
+
 void AnnotFilterWindow::BuildLayout() {
     int pad = DpiScale(kFloatWinPadding);
     int gap = DpiScale(kFloatWinGap);
@@ -724,6 +784,10 @@ void AnnotFilterWindow::BuildLayout() {
     buttonsBox->AddChild(btnSave);
     buttonsBox->AddChild(btnSaveNew);
     vbox->AddChild(buttonsBox);
+
+    buttonsHelpGap = new Spacer(0, gap);
+    vbox->AddChild(buttonsHelpGap);
+    vbox->AddChild(NewFilterHelp(gap));
 
     rootPadding = new Padding(vbox, Insets{pad, pad, pad, pad});
     layout = rootPadding;
@@ -1036,6 +1100,33 @@ void UpdateAnnotFilterToolbar(MainWindow* win) {
     }
     UpdateCue(f);
     UpdateFloatButtons(f);
+}
+
+static void PostedRefreshAnnots(MainWindow* win) {
+    if (IsMainWindowValidAndNotClosing(win)) {
+        RefreshAnnotFilterAnnotations(win);
+    }
+}
+
+// The cached Annotation* belong to an engine the caller is about to destroy.
+// Drop them now - a paint between here and the refresh below would otherwise
+// read freed annotations - and re-read from whatever tab is current once the
+// close has finished.
+void ClearAnnotFilterAnnotations(MainWindow* win) {
+    AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
+    if (!f) {
+        return;
+    }
+    CancelPendingSelection(f);
+    VecReset(f->annotations);
+    VecReset(f->visibleAnnots);
+    if (VirtListBox* lb = ActiveList(f)) {
+        lb->SetModel(NewAnnotListModel(f));
+        lb->Invalidate();
+    }
+    UpdateCue(f);
+    UpdateFloatButtons(f);
+    uitask::Post(MkFunc0(PostedRefreshAnnots, win), "RefreshAnnotFilterAnnots");
 }
 
 void RefreshAnnotFilterAnnotations(MainWindow* win) {

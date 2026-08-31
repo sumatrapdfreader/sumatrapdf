@@ -31,7 +31,6 @@ void SetSelectedAnnotation(WindowTab*, Annotation*);
 void RefreshAnnotationLists(WindowTab*);
 void NotifyAnnotationsChanged(WindowTab*);
 void StartLoadingAnnotationsForUi(WindowTab*);
-bool AnnotMatchesFilter(Annotation*, const StrVec& words);
 void DrawAnnotationListRow(Gfx*, PlatformFont*, Rect, Annotation*, const StrVec& filterWords, Vec<u8>& hlScratch,
                            Color colBg, Color colText, bool selected);
 void DetachAnnotationFromUI(Annotation*);

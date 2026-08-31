@@ -2555,6 +2555,10 @@ void CloseAnnotationUiForTab(WindowTab* tab) {
     if (win && win->CurrentTab() == tab) {
         HideAnnotEditToolbar(win);
     }
+    // Not just for the current tab: by the time a tab is deleted it has already
+    // been unlinked from the window, and the filter list may still be holding
+    // its annotations.
+    ClearAnnotFilterAnnotations(win);
 }
 
 // Clear non-owning Annotation* before the old engine is destroyed.
@@ -2581,13 +2585,6 @@ void NotifyAnnotationsChanged(WindowTab* tab) {
     if (tab && tab->win) {
         UpdateAnnotFilterToolbar(tab->win);
     }
-}
-
-bool AnnotMatchesFilter(Annotation* annot, const StrVec& words) {
-    if (len(words) == 0) {
-        return true;
-    }
-    return FilterMatches(Contents(annot), words);
 }
 
 // Type on the left, optional contents in muted color, page number on the right.

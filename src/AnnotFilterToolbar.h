@@ -6,6 +6,7 @@ struct MainWindow;
 void DeleteAnnotFilterToolbar(MainWindow*);
 void UpdateAnnotFilterToolbar(MainWindow*);
 void RefreshAnnotFilterAnnotations(MainWindow*);
+void ClearAnnotFilterAnnotations(MainWindow*);
 void ToggleFloatingAnnotList(MainWindow*);
 bool IsFloatingAnnotListVisible(MainWindow*);
 TempStr AnnotFilterToolbarStateTemp(MainWindow*);

@@ -156,6 +156,8 @@ import { testit as movePolygonPolylineInk } from "./move-polygon-polyline-ink.ts
 
 import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interaction.ts";
 import { testit as annotCopyPaste } from "./annot-copy-paste.ts";
+import { testit as annotFilterCloseTab } from "./annot-filter-close-tab.ts";
+import { testit as annotFilterSyntax } from "./annot-filter-syntax.ts";
 import { testit as annotCutPaste } from "./annot-cut-paste.ts";
 import { testit as annotUndoRedo } from "./annot-undo-redo.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
@@ -229,6 +231,8 @@ async function annotationClipboardTests(): Promise<void> {
   try {
     await annotUndoRedo();
     await annotCopyPaste();
+    await annotFilterCloseTab();
+    await annotFilterSyntax();
     await annotCutPaste();
   } finally {
     await endSharedControlledSession();

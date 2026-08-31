@@ -35,6 +35,40 @@ SeqStrings AnnotationTextIcons() {
     return gAnnotationTextIcons;
 }
 
+// clang-format off
+// indexed by AnnotationType; unlike AnnotationReadableNameTemp() these are not
+// translated, so they can appear in the annotation filter's ":t=" syntax
+static SeqStrings gAnnotationTypeNames =
+    "Text\0Link\0FreeText\0Line\0Square\0Circle\0Polygon\0PolyLine\0Highlight\0Underline\0Squiggly\0"
+    "StrikeOut\0Redact\0Stamp\0Caret\0Ink\0Popup\0FileAttachment\0Sound\0Movie\0RichMedia\0Widget\0"
+    "Screen\0PrinterMark\0TrapNet\0Watermark\0ThreeD\0Projection\0";
+// clang-format on
+
+SeqStrings AnnotationTypeNames() {
+    return gAnnotationTypeNames;
+}
+
+// Matches case- and space-insensitively, so "free text" and "freetext" both
+// name AnnotationType::FreeText. Unknown if there is no such type.
+AnnotationType AnnotationTypeFromName(Str name) {
+    TempStr want = str::DupTemp(name);
+    want.len -= str::RemoveCharsInPlace(want, StrL(" -_"));
+    if (len(want) == 0) {
+        return AnnotationType::Unknown;
+    }
+    int idx = 0;
+    SeqStrings names = gAnnotationTypeNames;
+    for (int off = 0; SeqStrAt(names, off); idx++) {
+        if (str::EqI(SeqStrAt(names, off), want)) {
+            return (AnnotationType)idx;
+        }
+        if (!SeqStrAdvance(names, off)) {
+            break;
+        }
+    }
+    return AnnotationType::Unknown;
+}
+
 // Translate an English annotation type label for the UI.
 // When menuKey is set (e.g. "&Highlight"), use that key — those strings are
 // already translated for context menus. Otherwise use english (already in
