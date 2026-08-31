@@ -373,7 +373,7 @@ void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color
                                 bool drawBorder) {
     Vec<Rect> paintedRects;
     // A bordered selection is the 3.6.1 look: font-height boxes as-is and a
-    // 1px outline. Find/read-aloud highlights stay borderless and pad the box.
+    // 1px outline. Find highlights stay borderless and pad the box.
     int clipPad = drawBorder ? 1 : pad;
     screenRc.Inflate(clipPad, clipPad);
     for (int i = 0; i < len(rects); i++) {

@@ -112,6 +112,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - Markdown documents have a **Show Generated HTML** command (`Ctrl + K` command palette) that saves the rendered HTML to a temporary `.html` file and opens it in Notepad
 - can open Windows icon files (`.ico`); a file with several sizes shows each size as a page
 - HEIC / HEIF still images now decode with a built-in decoder (no Windows HEIC codec required for most phone photos); AVIF still uses dav1d. The system WIC path remains as a fallback if built-in decode fails
+- Read Aloud underlines the sentence being spoken (blue) and the current word (amber), instead of a yellow background highlight
 - Read Aloud **Voice** lists SAPI voices as well as WinRT OneCore voices, so adapters such as NaturalVoiceSAPIAdapter show up (fixes #6105)
 - Read Aloud: adjustable playback speed — pick 0.5x .. 3x in the new `Speed` submenu (next to `Voice` in the Read Aloud menu, toolbar dropdown and context menu) or click the speed button on the playback bar to cycle presets (right-click cycles backwards); the speed persists across sessions via the `ReadAloudSpeed` advanced setting
 - clicking an empty signature field in a PDF opens **Sign Document** with that field already selected, instead of doing nothing and leaving the command to be found in a menu (fixes #5964)

@@ -32,6 +32,7 @@ bool EngineMupdf_UnitTestEbookMarginCss();
 bool EngineMupdf_UnitTestMergeEBookUI();
 bool Accelerators_UnitTestFolderNavIsSafe();
 bool AnnotSearch_UnitTests();
+void ReadAloudHighlight_UnitTests();
 #endif
 
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
@@ -166,6 +167,7 @@ int RunAppUnitTests() {
     utassert(EngineMupdf_UnitTestMergeEBookUI());
     utassert(Accelerators_UnitTestFolderNavIsSafe());
     utassert(AnnotSearch_UnitTests());
+    ReadAloudHighlight_UnitTests();
 #endif
     return utassert_print_results();
 }
