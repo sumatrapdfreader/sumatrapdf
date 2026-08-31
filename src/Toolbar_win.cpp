@@ -199,7 +199,10 @@ static bool OnCaptionDrag(MainWindow* win, VirtHostNativeMsg* ev) {
     Point pt = {GET_X_LPARAM(ev->lp), GET_Y_LPARAM(ev->lp)};
     HWND childAtPoint = ChildWindowFromPoint(hwnd, ToPOINT(pt));
     bool overChild = childAtPoint && childAtPoint != hwnd;
-    VirtCtrl* hit = ToolbarItemFromPoint(win, pt);
+    // layout bounds are physical-left; WM_LBUTTONDOWN x is mirrored on RTL
+    Point hitPt = pt;
+    UnmirrorRtl(hwnd, hitPt);
+    VirtCtrl* hit = ToolbarItemFromPoint(win, hitPt);
     if (overChild || (hit && hit->id != 0 && hit->id != PageInfoId)) {
         return false;
     }

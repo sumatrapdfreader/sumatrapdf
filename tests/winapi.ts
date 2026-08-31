@@ -658,6 +658,7 @@ export const SWP_NOZORDER = 0x0004;
 export const SWP_NOACTIVATE = 0x0010;
 export const SWP_FRAMECHANGED = 0x0020;
 export const GWL_STYLE = -16;
+export const GWL_EXSTYLE = -20;
 export const WS_MAXIMIZE = 0x01000000;
 
 export function getWindowLong(hwnd: number, index: number): number {
