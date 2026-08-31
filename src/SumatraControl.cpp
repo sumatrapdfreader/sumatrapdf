@@ -590,6 +590,14 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
             Rect screen = dm->CvtToScreen(PageNo(a), r);
             out.Append(fmt("type=%s page=%d rect=%g,%g,%g,%g screen=%d,%d,%d,%d\n", typeName, PageNo(a), r.x, r.y, r.dx,
                            r.dy, screen.x, screen.y, screen.dx, screen.dy));
+            // A closed polyline repeats its first vertex, so a test can tell an
+            // open path from one closed with Ctrl+click (issue #6119). On its
+            // own line: readers of the one above anchor at its end.
+            if (tp == AnnotationType::PolyLine || tp == AnnotationType::Polygon) {
+                Vec<PointF> pts = GetVertices(a);
+                bool closed = len(pts) > 2 && pts[0] == VecLast(pts);
+                out.Append(fmt("polyline vertices=%d closed=%d\n", len(pts), closed ? 1 : 0));
+            }
             n++;
             continue;
         }

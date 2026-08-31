@@ -13,6 +13,7 @@ import {
   getClientRect,
   getFocusedHwnd,
   getRootWindow,
+  MK_CONTROL,
   MK_LBUTTON,
   MK_RBUTTON,
   packCoords,
@@ -58,7 +59,8 @@ type PlacementState = {
 };
 
 const notification =
-  "Place polyline annotation. **Double-click**, **right-click**, **Space**, or **Enter** to finish. **Esc** to cancel.";
+  "Place polyline annotation. **Double-click**, **right-click**, **Space**, or **Enter** to finish, " +
+  "**Ctrl+click** to close it. **Esc** to cancel.";
 
 function makeBlankPdf(): string {
   const objects = [
@@ -244,6 +246,7 @@ export async function testit(): Promise<void> {
     const p1 = { x: center.x - 120, y: center.y - 90 };
     const p2 = { x: center.x + 105, y: center.y - 25 };
     const p3 = { x: center.x - 75, y: center.y + 105 };
+    const p4 = { x: center.x + 60, y: center.y + 60 };
     const outside = { x: 2, y: center.y };
 
     sendCommand(frame, cmdId("CmdToggleEditPDF"));
@@ -361,6 +364,40 @@ export async function testit(): Promise<void> {
         `polyline-annotation-placement: a supplied context point did not place immediately\n${state.raw}`,
       );
     }
+
+    // Ctrl+click commits the vertex and closes the path back to the first
+    // point, so the annotation repeats it (issue #6119)
+    await executeFromCommandPalette(client, frame);
+    await waitForPlacement(client, true);
+    // enough vertices that closing the path grows the point vec: appending an
+    // element of the vec to itself used to read the freed buffer
+    await clickPoints(canvas, [p1, p2, p3]);
+    await clickAt(canvas, p4.x, p4.y, 350, MK_CONTROL);
+    state = await expectFinished(client, 6, "Ctrl+click");
+    // the dump lists every annotation; the one just placed is the last
+    const all = [...state.raw.matchAll(/polyline vertices=(\d+) closed=(\d)/g)];
+    const closed = all[all.length - 1];
+    if (!closed || closed[2] !== "1") {
+      throw new Error(`polyline-annotation-placement: Ctrl+click did not close the path\n${state.raw}`);
+    }
+    if (+closed[1]! !== 5) {
+      throw new Error(
+        `polyline-annotation-placement: closed path has ${closed[1]} vertices, wanted the 4 clicked plus the repeat`,
+      );
+    }
+
+    // two vertices are a single segment: closing would double back on it, so
+    // Ctrl+click keeps collecting instead
+    await executeFromCommandPalette(client, frame);
+    await waitForPlacement(client, true);
+    await clickAt(canvas, p1.x, p1.y);
+    await clickAt(canvas, p2.x, p2.y, 350, MK_CONTROL);
+    state = await placementState(client);
+    if (!state.active || state.points !== 2) {
+      throw new Error(`polyline-annotation-placement: Ctrl+click closed a single segment\n${state.raw}`);
+    }
+    await pressEscape(frame);
+    await waitForPlacement(client, false);
   } finally {
     client.close();
     await killAndWait(proc);

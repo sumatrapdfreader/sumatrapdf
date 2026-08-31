@@ -396,8 +396,8 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
             return _TRA("Place line annotation. **Esc** to cancel.");
         case AnnotPlacementKind::PolyLine:
             return _TRA(
-                "Place polyline annotation. **Double-click**, **right-click**, **Space**, or **Enter** to finish. "
-                "**Esc** to cancel.");
+                "Place polyline annotation. **Double-click**, **right-click**, **Space**, or **Enter** to finish, "
+                "**Ctrl+click** to close it. **Esc** to cancel.");
         case AnnotPlacementKind::Shape:
             return circle
                        ? _TRA(
@@ -657,7 +657,9 @@ static bool HandleLineClick(MainWindow* win, Point pt) {
 
 // Each page click commits a vertex and starts previewing the next segment.
 // A click off that page cancels the whole path, matching line placement.
-static bool HandlePolyLineClick(MainWindow* win, Point pt) {
+// Ctrl+click commits the vertex and then closes the shape, repeating the first
+// point so the last segment runs back to it (issue #6119).
+static bool HandlePolyLineClick(MainWindow* win, Point pt, WPARAM key) {
     if (!IsPlacingPolyLineAnnotation(win)) {
         return false;
     }
@@ -674,6 +676,19 @@ static bool HandlePolyLineClick(MainWindow* win, Point pt) {
     }
     VecAppend(p.points, dm->CvtFromScreen(pt, pageNo));
     p.end = pt;
+    // one point plus this click is a single segment; closing it would just
+    // double back on itself, so let it keep collecting vertices instead
+    bool close = bit::IsMaskSet(key, (WPARAM)MK_CONTROL) && len(p.points) > 2;
+    if (close) {
+        // by value: VecAppend takes a reference, and growing the vec frees the
+        // buffer that reference would point into
+        // by value: VecAppend takes a reference, and growing the vec frees the
+        // buffer that reference would point into
+        PointF first = p.points[0];
+        VecAppend(p.points, first);
+        CommitPlacementCommand(win, dm->CvtToScreen(pageNo, first));
+        return true;
+    }
     ScheduleRepaint(win, 0);
     return true;
 }
@@ -819,7 +834,7 @@ bool AnnotationPlacementOnLeftDown(MainWindow* win, Point pt, WPARAM key) {
             return true;
         case AnnotPlacementKind::PolyLine:
             HwndSetFocus(win->hwndFrame);
-            HandlePolyLineClick(win, pt);
+            HandlePolyLineClick(win, pt, key);
             return true;
         case AnnotPlacementKind::Text:
         case AnnotPlacementKind::FreeText:
