@@ -179,11 +179,51 @@ static Gdiplus::FontStyle ToGdiPlusFontStyle(PlatformFontStyle style) {
     return (Gdiplus::FontStyle)(int)style;
 }
 
+// Gdiplus::Font(HDC, HFONT) matches the HFONT by enumerating every installed
+// font, which dominates tab-bar startup when the catalog is large. Build from
+// the realized family name instead (once, cached on PlatformFont).
+static Font* GdiplusFontFromHfont(HFONT hf, float sizePt, PlatformFontStyle style) {
+    if (!hf || sizePt <= 0) {
+        return nullptr;
+    }
+    LOGFONTW lf{};
+    if (GetObjectW(hf, sizeof(lf), &lf) == 0) {
+        return nullptr;
+    }
+    WCHAR family[LF_FACESIZE]{};
+    wstr::BufSet(WStr(family, dimof(family)), WStr(lf.lfFaceName));
+    HDC dc = CreateCompatibleDC(nullptr);
+    if (dc) {
+        HGDIOBJ prev = SelectObject(dc, hf);
+        UINT cb = GetOutlineTextMetricsW(dc, 0, nullptr);
+        if (cb >= sizeof(OUTLINETEXTMETRICW)) {
+            auto* otm = (OUTLINETEXTMETRICW*)AllocArrayTemp<u8>((int)cb);
+            otm->otmSize = cb;
+            if (GetOutlineTextMetricsW(dc, cb, otm) && otm->otmpFamilyName) {
+                const WCHAR* name = (const WCHAR*)((const u8*)otm + (uintptr_t)otm->otmpFamilyName);
+                if (name[0]) {
+                    wstr::BufSet(WStr(family, dimof(family)), WStr(name));
+                }
+            }
+        }
+        SelectObject(dc, prev);
+        DeleteDC(dc);
+    }
+    Gdiplus::FontStyle gpStyle = ToGdiPlusFontStyle(style);
+    Font* font = new Font(family, sizePt, gpStyle);
+    if (font->GetLastStatus() != Ok) {
+        delete font;
+        return nullptr;
+    }
+    return font;
+}
+
 // gdiplus is what lays out and draws our ebook text, so the font is created
 // there and the HFONT (needed by the gdi text renderers) is derived from it
 bool PlatformFontCreateNative(PlatformFont* f) {
     if (f->nativeId) {
         f->hfont = (HFONT)f->nativeId;
+        f->gdiFont = GdiplusFontFromHfont(f->hfont, f->sizePt, f->style);
         return true;
     }
     Gdiplus::FontStyle style = ToGdiPlusFontStyle(f->style);
@@ -203,12 +243,10 @@ bool PlatformFontCreateNative(PlatformFont* f) {
 }
 
 void PlatformFontDestroyNative(PlatformFont* font) {
-    if (!font->gdiFont) {
-        return;
-    }
     delete font->gdiFont;
     font->gdiFont = nullptr;
-    if (font->hfont) {
+    // adopted UI HFONTs (nativeId) are owned by the creator, not us
+    if (font->hfont && font->nativeId == 0) {
         DeleteFont(font->hfont);
         font->hfont = nullptr;
     }

@@ -34,8 +34,7 @@ struct PlatformFont {
     uintptr_t nativeId = 0;
     int averageCharWidth = 0;
 #if OS_WIN
-    // created from the description above; null when the font was adopted from
-    // an existing HFONT (one of the app's UI fonts)
+    // created from the description, or from an adopted HFONT's family name
     Gdiplus::Font* gdiFont = nullptr;
     // for gdiFont, created lazily by GetHFont(); set upfront when adopted
     HFONT hfont = nullptr;

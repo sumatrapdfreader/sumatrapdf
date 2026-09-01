@@ -233,9 +233,9 @@ static void InitStringFormat(StringFormat& sf, u32 flags) {
     sf.SetLineAlignment(vcenter ? Gdiplus::StringAlignmentCenter : Gdiplus::StringAlignmentNear);
 }
 
-// A PlatformFont describes itself with gdiplus unless it was adopted from one
-// of the app's HFONTs, in which case the gdiplus font has to be derived from
-// that HFONT. Sets *owned when the caller has to free the result.
+// Prefer the interned gdiplus font. Adopted HFONTs get one at intern time
+// from the family name; Font(hdc, HFONT) is only the last resort (and is
+// then cached on the PlatformFont). Sets *owned when the caller must free.
 Gdiplus::Font* GfxGdiplus::GetGdiplusFont(PlatformFont* font, bool* owned) {
     *owned = false;
     Gdiplus::Font* f = font ? font->GetGdiplusFont() : nullptr;
@@ -255,6 +255,13 @@ Gdiplus::Font* GfxGdiplus::GetGdiplusFont(PlatformFont* font, bool* owned) {
     if (f->GetLastStatus() != Gdiplus::Ok) {
         delete f;
         return nullptr;
+    }
+    // Font(hdc, HFONT) enumerates the font catalog; keep the result on the
+    // interned PlatformFont so tab / UI paints don't pay that on every draw
+    if (font) {
+        font->gdiFont = f;
+        *owned = false;
+        return f;
     }
     *owned = true;
     return f;
