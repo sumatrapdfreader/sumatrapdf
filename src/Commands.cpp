@@ -1604,7 +1604,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     if (cmdId == CmdCommandPalette && firstArg) {
         // validate mode
         Str s = firstArg->strVal;
-        static SeqStrings validModes = ">\0#\0@\0:\0*\0$\0"; // TODO: "@@\0" ?
+        static SeqStrings validModes = ">\0#\0@\0:\0*\0$\0%\0=\0"; // TODO: "@@\0" ?
         if (SeqStrIndex(validModes, s) < 0) {
             logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", defSafe);
             FreeCommandArgs(firstArg);

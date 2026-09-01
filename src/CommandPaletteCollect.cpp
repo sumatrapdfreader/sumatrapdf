@@ -12,6 +12,8 @@
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
 
+#include "base/SettingsUtil.h"
+#define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "Settings.h"
 #include "AppSettings.h"
 #include "DisplayMode.h"
@@ -393,6 +395,56 @@ void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
     }
 }
 
+static void CollectBoolSettingsInStruct(StrVecCP& out, const StructInfo* info, u8* base, Str prefix) {
+    if (!info || !base) {
+        return;
+    }
+    const char* fieldName = info->fieldNames;
+    for (u16 i = 0; i < info->fieldCount; i++) {
+        const FieldInfo& field = info->fields[i];
+        Str fname(fieldName);
+        fieldName += len(fname) + 1;
+        if (field.internal || field.type == SettingType::Comment || field.offset == (size_t)-1) {
+            continue;
+        }
+        u8* fieldPtr = base + field.offset;
+        TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, fname) : str::DupTemp(fname);
+        if (field.type == SettingType::Struct) {
+            CollectBoolSettingsInStruct(out, (const StructInfo*)field.value, fieldPtr, path);
+            continue;
+        }
+        if (field.type != SettingType::Bool || len(path) == 0) {
+            continue;
+        }
+        ItemDataCP data;
+        data.boolSetting = (bool*)fieldPtr;
+        data.boolSettingDefault = field.value != 0;
+        out.Append(path, data);
+    }
+}
+
+void CommandPaletteWnd::CollectBoolSettings() {
+    boolSettings.Reset();
+    if (!gSettings) {
+        return;
+    }
+    CollectBoolSettingsInStruct(boolSettings, &gSettingsInfo, (u8*)gSettings, {});
+    SortNoCase(&boolSettings);
+
+    // changed values first, then the rest; both groups stay alphabetical
+    StrVecCP ordered;
+    for (int pass = 0; pass < 2; pass++) {
+        for (int i = 0; i < len(boolSettings); i++) {
+            ItemDataCP* d = boolSettings.AtData(i);
+            bool changed = *d->boolSetting != d->boolSettingDefault;
+            if (changed == (pass == 0)) {
+                ordered.AppendFrom(&boolSettings, i);
+            }
+        }
+    }
+    boolSettings = ordered;
+}
+
 void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     Point cursorPos = HwndGetCursorPos(mainWin->hwndCanvas);
     AppCommandCtx ctx = NewAppCommandCtx(mainWin, cursorPos);
@@ -405,6 +457,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
     CollectToc(mainWin);
     CollectFavorites(mainWin);
+    CollectBoolSettings();
 
     fileHistory.Reset();
     for (FileState* fs : *gSettings->fileStates) {

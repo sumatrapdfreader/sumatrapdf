@@ -1280,6 +1280,15 @@ bool* FindSettingsBoolSetting(Str name) {
     return FindBoolSettingInStruct(&gSettingsInfo, (u8*)gSettings, {}, name);
 }
 
+void ToggleSettingsBool(bool* p) {
+    if (!p) {
+        return;
+    }
+    *p = !*p;
+    ScheduleSaveSettings();
+    ApplySettingsToOpenWindows();
+}
+
 FileState* NewFileState(Str filePath) {
     FileState* fs = (FileState*)DeserializeStruct(&gFileStateInfo, {});
     SetFileStatePath(fs, filePath);

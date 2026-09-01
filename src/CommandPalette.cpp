@@ -181,6 +181,10 @@ void CommandPaletteWnd::SwitchToFavorites() {
     SwitchToPrefix(Str(kPalettePrefixFavorites));
 }
 
+void CommandPaletteWnd::SwitchToBoolSettings() {
+    SwitchToPrefix(Str(kPalettePrefixBoolSettings));
+}
+
 void CommandPaletteWnd::OnActivate(WindowBase::ActivateEvent* ev) {
     if (ev->state == WA_INACTIVE) {
         // -for-testing runs in the background, so this popup never stays
@@ -445,12 +449,22 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     auto* m = (ListBoxModelCP*)listBox->model;
     ItemDataCP* data = m->strings.AtData(idx);
     i32 cmdId = data->cmdId;
+    if (cmdId == CmdToggleBoolSetting) {
+        SwitchToBoolSettings();
+        return;
+    }
     if (cmdId != 0) {
         bool noActivate = IsCmdInList(cmdId, gCommandsNoActivate);
         if (noActivate) {
             gHwndToActivateOnClose = nullptr;
         }
         ScheduleDeleteAndExecCommand(cmdId);
+        return;
+    }
+
+    if (data->boolSetting) {
+        ToggleSettingsBool(data->boolSetting);
+        ScheduleDeleteAndExecCommand();
         return;
     }
 
@@ -673,6 +687,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         if (len(favorites) > 0) {
             addSwitch(_TRA("$ Favorites"), Str(kPalettePrefixFavorites));
         }
+        addSwitch(_TRA("= Settings"), Str(kPalettePrefixBoolSettings));
         vbox->AddChild(NewHelpRow(box));
     }
 
@@ -701,16 +716,21 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     {
         Str strings[4];
         int nHelp = 0;
+        bool boolSettingsMode = str::Eq(prefix, Str(kPalettePrefixBoolSettings));
         if (smartTabMode) {
-            strings[nHelp++] = _TRA("Ctrl+Tab to navigate");
-            strings[nHelp++] = _TRA("Release Ctrl to select");
+            strings[nHelp++] = _TRA("Ctrl+Tab navigate");
+            strings[nHelp++] = _TRA("Release Ctrl select");
             strings[nHelp++] = _TRA("Space for sticky mode");
-            strings[nHelp++] = _TRA("Del to remove item");
+            strings[nHelp++] = _TRA("Del remove item");
+        } else if (boolSettingsMode) {
+            strings[nHelp++] = _TRA("↑ ↓ PgUp PgDn navigate");
+            strings[nHelp++] = _TRA("Enter change");
+            strings[nHelp++] = _TRA("Esc close");
         } else {
-            strings[nHelp++] = _TRA("↑ ↓ PgUp PgDn to navigate");
-            strings[nHelp++] = _TRA("Enter to select");
-            strings[nHelp++] = _TRA("Del to remove item");
-            strings[nHelp++] = _TRA("Esc to close");
+            strings[nHelp++] = _TRA("↑ ↓ PgUp PgDn navigate");
+            strings[nHelp++] = _TRA("Enter select");
+            strings[nHelp++] = _TRA("Del remove item");
+            strings[nHelp++] = _TRA("Esc close");
         }
         auto* box = new HBox();
         box->rtl = CommandPaletteUiRtl();

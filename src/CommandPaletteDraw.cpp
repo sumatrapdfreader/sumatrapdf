@@ -67,8 +67,20 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     ItemDataCP* data = m->Data(ev->itemIndex);
 
     TempStr rightStr;
+    PlatformFont* rightFont = lb->font;
+    Color rightCol = AccentColor(colText, 80);
     if (data->cmdId != 0) {
         rightStr = CommandPaletteShortcutTemp(data->cmdId);
+    } else if (data->boolSetting) {
+        bool on = *data->boolSetting;
+        rightStr = on ? StrL("true") : StrL("false");
+        rightCol = colText;
+        if (on != data->boolSettingDefault) {
+            PlatformFont* bold = GetBoldPlatformFont(lb->font);
+            if (bold) {
+                rightFont = bold;
+            }
+        }
     } else if (data->pageNo > 0) {
         // toc entry: show the destination page number on the right, e.g. "p33"
         rightStr = fmt("p%d", data->pageNo);
@@ -99,7 +111,7 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     int rightW = 0;
     if (hasRight) {
         int gap = DpiScale(8);
-        rightW = gfx->MeasureText(rightStr, lb->font).dx;
+        rightW = gfx->MeasureText(rightStr, rightFont).dx;
         if (data->filePath) {
             int nameW = gfx->MeasureText(itemText, lb->font).dx;
             int minDir = DpiScale(80);
@@ -139,15 +151,14 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
             rcRight.dx = rightW;
             rightFmt |= gfxTextRight;
         }
-        Color rightCol = AccentColor(colText, 80);
         if (data->cmdId != 0) {
             DrawMaybeHighlightedText(gfx, rcRight, rightStr, filterWords, highlighted, colBg, false, false, rightFmt,
-                                     lb->font, rightCol);
+                                     rightFont, rightCol);
         } else {
             if (data->filePath) {
                 rightFmt |= gfxTextPathEllipsis;
             }
-            gfx->DrawText(rightStr, rcRight, rightFmt, lb->font, rightCol);
+            gfx->DrawText(rightStr, rcRight, rightFmt, rightFont, rightCol);
         }
     }
 

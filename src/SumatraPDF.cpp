@@ -11453,19 +11453,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 MaybeDelayedWarningNotification(fmt("CmdToggleBoolSetting: unknown boolean setting '%s'", settingName));
                 break;
             }
-            *p = !*p;
-            ScheduleSaveSettings();
-            // selection toolbar respects the setting on next show; hide if turned off
-            if (str::EqI(settingName, StrL("SelectionToolbar")) && !*p) {
-                for (MainWindow* w : gWindows) {
-                    HideSelectionToolbar(w);
-                }
-            }
-            if (str::EqI(settingName, StrL("HighlightFormFields"))) {
-                for (MainWindow* w : gWindows) {
-                    w->RedrawAll(true);
-                }
-            }
+            ToggleSettingsBool(p);
             break;
         }
 

@@ -41,6 +41,10 @@ static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matched
             TempStr shortcut = CommandPaletteShortcutTemp(data->cmdId);
             matches = FilterMatches(shortcut, words);
         }
+        if (!matches && data && data->boolSetting) {
+            Str val = *data->boolSetting ? StrL("true") : StrL("false");
+            matches = FilterMatches(val, words);
+        }
         if (!matches) {
             continue;
         }
@@ -54,7 +58,8 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
         filter = StrL("");
     }
 
-    bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false;
+    bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false,
+         searchBoolSettings = false;
     if (str::TrimPrefix(filter, Str(kPalettePrefixEverything))) {
         searchTabs = searchHistory = searchCommands = true;
     } else if (str::TrimPrefix(filter, Str(kPalettePrefixTabs))) {
@@ -66,6 +71,8 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
         searchToc = true;
     } else if (str::TrimPrefix(filter, Str(kPalettePrefixFavorites))) {
         searchFavorites = true;
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixBoolSettings))) {
+        searchBoolSettings = true;
     } else {
         str::TrimPrefix(filter, Str(kPalettePrefixCommands));
         searchCommands = true;
@@ -88,6 +95,9 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
     }
     if (searchFavorites) {
         FilterStrings(favorites, filterWords, strings);
+    }
+    if (searchBoolSettings) {
+        FilterStrings(boolSettings, filterWords, strings);
     }
 }
 

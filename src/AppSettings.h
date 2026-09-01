@@ -55,6 +55,7 @@ void CollectZoomLevels(Vec<float>& out, bool forChm);
 extern Settings* gSettings;
 
 bool* FindSettingsBoolSetting(Str name);
+void ToggleSettingsBool(bool*);
 
 FileState* NewFileState(Str);
 void DeleteFileState(FileState*);

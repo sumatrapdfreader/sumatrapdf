@@ -18,6 +18,8 @@ struct ItemDataCP {
     int pageNo = 0; // toc entry destination page (0 if none), shown in the list
     FileState* favFs = nullptr;
     Favorite* fav = nullptr;
+    bool* boolSetting = nullptr;
+    bool boolSettingDefault = false;
 };
 
 using StrVecCP = StrVecWithData<ItemDataCP>;
@@ -42,6 +44,7 @@ struct CommandPaletteWnd : WindowBase {
     StrVecCP commands;
     StrVecCP toc;
     StrVecCP favorites;
+    StrVecCP boolSettings;
     VirtListBox* listBox = nullptr;
 
     StrVec filterWords;
@@ -63,6 +66,7 @@ struct CommandPaletteWnd : WindowBase {
     void CollectTabsMru(MainWindow*, WindowTab* currTab);
     void CollectToc(MainWindow*);
     void CollectFavorites(MainWindow*);
+    void CollectBoolSettings();
     void FilterStringsForQuery(Str, StrVecCP&);
 
     bool Create(MainWindow* win, Str prefix, int smartTabAdvance);
@@ -79,6 +83,7 @@ struct CommandPaletteWnd : WindowBase {
     void SwitchToFileHistory();
     void SwitchToTOC();
     void SwitchToFavorites();
+    void SwitchToBoolSettings();
     void OnSelectionChange();
     void OnListDoubleClick();
     void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
