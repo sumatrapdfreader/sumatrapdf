@@ -7,6 +7,7 @@ struct TextSel {
     int cap = 0;
     int* pages = nullptr;
     Rect* rects = nullptr;
+    QuadF* quads = nullptr;
 };
 
 // Unit for keyboard/accessibility selection extension (platform-neutral).

@@ -88,6 +88,25 @@ void GfxGdiplus::FillRects(const Rect* rects, int count, Color col, u8 alpha, in
     }
 }
 
+void GfxGdiplus::FillQuads(const Point* pts, int nQuads, Color col, u8 alpha, int outlineWidth) {
+    if (ColorSkipsPaint(col) || nQuads <= 0 || !pts) {
+        return;
+    }
+    GraphicsPath path(Gdiplus::FillModeWinding);
+    for (int i = 0; i < nQuads; i++) {
+        const Point* p = pts + i * 4;
+        Gdiplus::Point gp[4] = {{p[0].x, p[0].y}, {p[1].x, p[1].y}, {p[2].x, p[2].y}, {p[3].x, p[3].y}};
+        path.AddPolygon(gp, 4);
+    }
+    SolidBrush brush(ToGdipColor(col, alpha));
+    gfx->FillPath(&brush, &path);
+    if (outlineWidth > 0) {
+        path.Outline(nullptr, 0.2f);
+        Pen pen(ToGdipColor(kColBlack, alpha), (float)outlineWidth);
+        gfx->DrawPath(&pen, &path);
+    }
+}
+
 void GfxGdiplus::DrawRect(const Rect& r, Color col, int thickness) {
     if (ColorSkipsPaint(col) || r.IsEmpty() || thickness < 1) {
         return;

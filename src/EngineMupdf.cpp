@@ -939,11 +939,31 @@ static bool IsTrackingSpace(const fz_stext_char* space, const fz_stext_char* nex
     return gap < size * 0.1f;
 }
 
-static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects,
+struct GlyphBox {
+    Rect rect;
+    QuadF quad;
+};
+
+static QuadF QuadFromFz(const fz_quad& q) {
+    QuadF r;
+    r.ul = PointF(q.ul.x, q.ul.y);
+    r.ur = PointF(q.ur.x, q.ur.y);
+    r.ll = PointF(q.ll.x, q.ll.y);
+    r.lr = PointF(q.lr.x, q.lr.y);
+    return r;
+}
+
+static GlyphBox BoxFromChar(fz_stext_char* c) {
+    GlyphBox b;
+    b.rect = ToRectF(fz_rect_from_quad(c->quad)).Round();
+    b.quad = QuadFromFz(c->quad);
+    return b;
+}
+
+static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder& s, Vec<GlyphBox>& boxes,
                         Vec<SeenGlyph>& seen) {
-    fz_rect bbox = fz_rect_from_quad(c->quad);
-    RectF rf = ToRectF(bbox);
-    Rect r = rf.Round();
+    GlyphBox box = BoxFromChar(c);
+    RectF rf = ToRectF(fz_rect_from_quad(c->quad));
     int rune = c->c;
     if (HasSeenGlyph(seen, rune, rf)) {
         return;
@@ -955,7 +975,7 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
     // that produces illegal UTF-8 that Utf8CodepointCount splits into multiple units.
     if (!IsUnicodeScalar(rune) || (isNonPrintable && !isWhitespace)) {
         s.AppendChar('?');
-        VecAppend(rects, r);
+        VecAppend(boxes, box);
         AddSeenGlyph(seen, rune, rf);
         return;
     }
@@ -966,7 +986,7 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
             return;
         }
         s.AppendChar(' ');
-        VecAppend(rects, r);
+        VecAppend(boxes, box);
         AddSeenGlyph(seen, rune, rf);
         return;
     }
@@ -976,11 +996,11 @@ static void AddCharUtf8(fz_stext_line* /*line*/, fz_stext_char* c, str::Builder&
     if (n <= 0 || !s.Append(Str(buf, n))) {
         return;
     }
-    VecAppend(rects, r);
+    VecAppend(boxes, box);
     AddSeenGlyph(seen, rune, rf);
 }
 
-static void AddLineSepUtf8(str::Builder& s, Vec<Rect>& rects, Str lineSep) {
+static void AddLineSepUtf8(str::Builder& s, Vec<GlyphBox>& boxes, Str lineSep) {
     size_t lineSepLen = (size_t)lineSep.len;
     if (lineSepLen == 0) {
         return;
@@ -988,11 +1008,11 @@ static void AddLineSepUtf8(str::Builder& s, Vec<Rect>& rects, Str lineSep) {
     // remove trailing space
     if (len(s) > 0 && s.LastChar() == ' ') {
         s.RemoveLast();
-        VecRemoveLast(rects);
+        VecRemoveLast(boxes);
     }
     s.Append(lineSep);
     for (size_t i = 0; i < lineSepLen; i++) {
-        VecAppend(rects, Rect());
+        VecAppend(boxes, GlyphBox{});
     }
 }
 
@@ -1049,8 +1069,8 @@ static bool IsUnicodeHyphenRune(int c) {
 // Drop a trailing hyphen used for line wrapping before joining the next line
 // so "some-\\nthing" becomes "something" (#5793, #1189). Handles multi-byte
 // UTF-8 hyphens (U+00AD soft hyphen, U+2010/U+2011), not just ASCII '-'.
-static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<Rect>& rects) {
-    if (len(s) == 0 || len(rects) == 0) {
+static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<GlyphBox>& boxes) {
+    if (len(s) == 0 || len(boxes) == 0) {
         return;
     }
     Str text = ToStr(s);
@@ -1064,10 +1084,10 @@ static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<Rect>& rects) {
     while (dropBytes-- > 0) {
         s.RemoveLast();
     }
-    VecRemoveLast(rects);
+    VecRemoveLast(boxes);
 }
 
-static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& content, Vec<Rect>& rects,
+static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& content, Vec<GlyphBox>& boxes,
                                  Vec<SeenGlyph>& seen, Str hardLineSep, Str softLineSep) {
     fz_stext_line* line = block->u.t.first_line;
     while (line) {
@@ -1100,7 +1120,7 @@ static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& cont
                     continue;
                 }
             }
-            AddCharUtf8(line, c, content, rects, seen);
+            AddCharUtf8(line, c, content, boxes, seen);
             c = c->next;
         }
         // Soft-join reflow lines within a paragraph for better copy (#5793);
@@ -1124,13 +1144,13 @@ static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& cont
                 }
             }
             if (dehyphen || hadHyphen) {
-                MaybeDropTrailingSoftHyphen(content, rects);
+                MaybeDropTrailingSoftHyphen(content, boxes);
                 // no separator: dehyphenated word continues on next line
             } else {
-                AddLineSepUtf8(content, rects, softLineSep);
+                AddLineSepUtf8(content, boxes, softLineSep);
             }
         } else {
-            AddLineSepUtf8(content, rects, hardLineSep);
+            AddLineSepUtf8(content, boxes, hardLineSep);
         }
         // each line has independent glyph positions; reset duplicate detection
         VecReset(seen);
@@ -1138,36 +1158,52 @@ static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& cont
     }
 }
 
-static void AppendStextBlocks(fz_stext_block* block, str::Builder& content, Vec<Rect>& rects, Vec<SeenGlyph>& seen,
+static void AppendStextBlocks(fz_stext_block* block, str::Builder& content, Vec<GlyphBox>& boxes, Vec<SeenGlyph>& seen,
                               Str hardLineSep, Str softLineSep) {
     while (block) {
         if (block->type == FZ_STEXT_BLOCK_TEXT) {
-            AppendStextTextBlock(block, content, rects, seen, hardLineSep, softLineSep);
+            AppendStextTextBlock(block, content, boxes, seen, hardLineSep, softLineSep);
         } else if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down) {
             // Tagged-PDF structure nodes; MuPDF's do_as_text walks these too.
             // They only appear when FZ_STEXT_COLLECT_STRUCTURE is set (#4859).
-            AppendStextBlocks(block->u.s.down->first_block, content, rects, seen, hardLineSep, softLineSep);
+            AppendStextBlocks(block->u.s.down->first_block, content, boxes, seen, hardLineSep, softLineSep);
         }
         block = block->next;
     }
 }
 
-static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
+static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut, QuadF** quadsOut = nullptr) {
     Str hardLineSep = StrL("\n");
     Str softLineSep = StrL(" ");
     str::Builder content;
-    Vec<Rect> rects;
+    Vec<GlyphBox> boxes;
     Vec<SeenGlyph> seen;
 
-    AppendStextBlocks(text->first_block, content, rects, seen, hardLineSep, softLineSep);
+    AppendStextBlocks(text->first_block, content, boxes, seen, hardLineSep, softLineSep);
 
-    ReportIf(Utf8CodepointCount(ToStr(content)) != len(rects));
+    ReportIf(Utf8CodepointCount(ToStr(content)) != len(boxes));
 
+    int n = len(boxes);
     if (coordsOut) {
-        if (len(rects) > 0) {
-            *coordsOut = VecTake(rects);
+        if (n > 0) {
+            Rect* rects = AllocArray<Rect>(n);
+            for (int i = 0; i < n; i++) {
+                rects[i] = boxes[i].rect;
+            }
+            *coordsOut = rects;
         } else {
             *coordsOut = nullptr;
+        }
+    }
+    if (quadsOut) {
+        if (n > 0) {
+            QuadF* quads = AllocArray<QuadF>(n);
+            for (int i = 0; i < n; i++) {
+                quads[i] = boxes[i].quad;
+            }
+            *quadsOut = quads;
+        } else {
+            *quadsOut = nullptr;
         }
     }
     return content.TakeStr();
@@ -7038,7 +7074,7 @@ static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
         return {};
     }
     PageText res;
-    res.text = FzTextPageToUtf8(stext, &res.coords);
+    res.text = FzTextPageToUtf8(stext, &res.coords, &res.quads);
     fz_drop_stext_page(ctx, stext);
     res.len = res.text.len;
     res.nCodepoints = Utf8CodepointCount(res.text);

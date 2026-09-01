@@ -12,14 +12,16 @@ struct RenderedBitmap;
 
 /* Represents selected area on given page */
 struct SelectionOnPage {
-    explicit SelectionOnPage(int pageNo = 0, const RectF* rect = nullptr);
+    explicit SelectionOnPage(int pageNo = 0, const RectF* rect = nullptr, const QuadF* quad = nullptr);
 
     int pageNo; // page this selection is on
-    RectF rect; // position of selection rectangle on page (in page coordinates)
+    RectF rect; // axis-aligned box on the page (toolbar, copy-as-image)
+    QuadF quad; // glyph corners; empty means paint rect
 
     SelectionOnPage(const SelectionOnPage&) = default;
     SelectionOnPage& operator=(const SelectionOnPage&) = default;
 
+    bool HasQuad() const;
     // position of selection rectangle in the view port
     Rect GetRect(DisplayModel* dm) const;
 

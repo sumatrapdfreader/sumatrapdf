@@ -113,8 +113,9 @@ enum class TextExtractionState {
 struct PageText {
     Str text;
     Rect* coords = nullptr;
-    int len = 0;         // number of bytes in text, not including the terminating null
-    int nCodepoints = 0; // number of Unicode codepoints and bounding boxes in coords
+    QuadF* quads = nullptr; // glyph corners; null when the engine only has AABBs
+    int len = 0;            // number of bytes in text, not including the terminating null
+    int nCodepoints = 0;    // number of Unicode codepoints and bounding boxes in coords
 };
 
 void FreePageText(PageText*);
@@ -548,8 +549,8 @@ class EngineBase {
     bool HasTextForPage(int pageNo);
     TextExtractionState GetTextExtractionState(int pageNo);
     void RequestTextExtraction(int pageNo);
-    Str GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
-    bool TryGetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
+    Str GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr, QuadF** quadsOut = nullptr);
+    bool TryGetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr, QuadF** quadsOut = nullptr);
     void InvalidateTextForPage(int pageNo);
     virtual void ReleaseTextExtractionThreadContext() {}
     // pages where clipping doesn't help are rendered in larger tiles

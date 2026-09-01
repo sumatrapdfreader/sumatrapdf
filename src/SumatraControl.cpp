@@ -508,6 +508,11 @@ static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
         for (SelectionOnPage& onPage : *tab->selectionOnPage) {
             RectF r = onPage.rect;
             out.Append(fmt("rect=%g,%g,%g,%g page=%d\n", r.x, r.y, r.dx, r.dy, onPage.pageNo));
+            if (onPage.HasQuad()) {
+                QuadF q = onPage.quad;
+                out.Append(fmt("quad=%g,%g %g,%g %g,%g %g,%g\n", q.ul.x, q.ul.y, q.ur.x, q.ur.y, q.ll.x, q.ll.y, q.lr.x,
+                               q.lr.y));
+            }
         }
     } else {
         out.Append(StrL("nrects=0\n"));

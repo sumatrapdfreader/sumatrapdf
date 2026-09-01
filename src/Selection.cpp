@@ -35,13 +35,20 @@
 #include "uia/Provider.h"
 #include "Selection.h"
 
-SelectionOnPage::SelectionOnPage(int pageNo, const RectF* const rect) {
+SelectionOnPage::SelectionOnPage(int pageNo, const RectF* const rect, const QuadF* const quad) {
     this->pageNo = pageNo;
     if (rect) {
         this->rect = *rect;
     } else {
         this->rect = RectF();
     }
+    if (quad) {
+        this->quad = *quad;
+    }
+}
+
+bool SelectionOnPage::HasQuad() const {
+    return !quad.IsEmpty();
 }
 
 Rect SelectionOnPage::GetRect(DisplayModel* dm) const {
@@ -88,7 +95,8 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
 
     for (int i = textSel->len - 1; i >= 0; i--) {
         RectF rect = ToRectF(textSel->rects[i]);
-        VecAppend(*sel, SelectionOnPage(textSel->pages[i], &rect));
+        const QuadF* q = textSel->quads ? &textSel->quads[i] : nullptr;
+        VecAppend(*sel, SelectionOnPage(textSel->pages[i], &rect, q));
     }
     VecReverse(*sel);
 
@@ -390,6 +398,38 @@ void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color
     gfx->FillRects(paintedRects.els, len(paintedRects), selectionColor, alpha, outlineWidth);
 }
 
+static Rect QuadScreenBounds(const Point* pts) {
+    int x0 = pts[0].x, y0 = pts[0].y, x1 = x0, y1 = y0;
+    for (int i = 1; i < 4; i++) {
+        x0 = std::min(x0, pts[i].x);
+        y0 = std::min(y0, pts[i].y);
+        x1 = std::max(x1, pts[i].x);
+        y1 = std::max(y1, pts[i].y);
+    }
+    return Rect::FromXY(x0, y0, x1, y1);
+}
+
+static void PaintTransparentQuads(Gfx* gfx, Rect screenRc, Vec<Point>& pts, Color selectionColor, u8 alpha,
+                                  bool drawBorder) {
+    int nQuads = len(pts) / 4;
+    if (nQuads <= 0) {
+        return;
+    }
+    screenRc.Inflate(1, 1);
+    Vec<Point> painted;
+    for (int i = 0; i < nQuads; i++) {
+        Point* q = pts.els + i * 4;
+        if (QuadScreenBounds(q).Intersect(screenRc).IsEmpty()) {
+            continue;
+        }
+        for (int k = 0; k < 4; k++) {
+            VecAppend(painted, q[k]);
+        }
+    }
+    int outlineWidth = drawBorder ? 1 : 0;
+    gfx->FillQuads(painted.els, len(painted) / 4, selectionColor, alpha, outlineWidth);
+}
+
 // Touch selection handles: a dot under each end of the selection, big enough
 // to grab with a fingertip. kTouchSelHandleDip is the dot's diameter; the
 // touchable area around it is padded so a slightly-off tap still lands.
@@ -464,6 +504,7 @@ void PaintSelection(MainWindow* win, Gfx* gfx) {
     ReportIf(!win->AsFixed());
 
     Vec<Rect> rects;
+    Vec<Point> quadPts;
 
     if (win->mouseAction == MouseAction::Selecting) {
         // during rectangle selection
@@ -502,7 +543,20 @@ void PaintSelection(MainWindow* win, Gfx* gfx) {
         }
 
         for (SelectionOnPage& sel : *win->CurrentTab()->selectionOnPage) {
-            VecAppend(rects, sel.GetRect(win->AsFixed()));
+            if (sel.HasQuad()) {
+                DisplayModel* dm = win->AsFixed();
+                Point pts[4] = {
+                    dm->CvtToScreen(sel.pageNo, sel.quad.ul),
+                    dm->CvtToScreen(sel.pageNo, sel.quad.ur),
+                    dm->CvtToScreen(sel.pageNo, sel.quad.lr),
+                    dm->CvtToScreen(sel.pageNo, sel.quad.ll),
+                };
+                for (int k = 0; k < 4; k++) {
+                    VecAppend(quadPts, pts[k]);
+                }
+            } else {
+                VecAppend(rects, sel.GetRect(win->AsFixed()));
+            }
         }
     }
 
@@ -514,7 +568,12 @@ void PaintSelection(MainWindow* win, Gfx* gfx) {
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;
     }
-    PaintTransparentRectangles(gfx, win->canvasRc, rects, parsedCol->col, alpha, 1, /*drawBorder*/ true);
+    if (len(quadPts) > 0) {
+        PaintTransparentQuads(gfx, win->canvasRc, quadPts, parsedCol->col, alpha, /*drawBorder*/ true);
+    }
+    if (len(rects) > 0) {
+        PaintTransparentRectangles(gfx, win->canvasRc, rects, parsedCol->col, alpha, 1, /*drawBorder*/ true);
+    }
     PaintTouchSelHandles(win, gfx);
 }
 

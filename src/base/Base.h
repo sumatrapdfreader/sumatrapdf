@@ -891,6 +891,16 @@ struct PointF {
     bool operator!=(const PointF& other) const;
 };
 
+// Four corners of a (possibly rotated) glyph box. Order matches MuPDF fz_quad.
+struct QuadF {
+    PointF ul;
+    PointF ur;
+    PointF ll;
+    PointF lr;
+
+    bool IsEmpty() const;
+};
+
 struct Size {
     int dx = 0;
     int dy = 0;

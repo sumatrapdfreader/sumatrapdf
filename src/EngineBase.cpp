@@ -56,8 +56,10 @@ static void EnsurePageText(PageText* pageText) {
     // TakeStr()/Vec::Take() can allocate backing storage even for empty pages.
     str::Free(pageText->text);
     free((void*)pageText->coords);
+    free((void*)pageText->quads);
     pageText->text = {};
     pageText->coords = nullptr;
+    pageText->quads = nullptr;
     pageText->len = 0;
     pageText->nCodepoints = 0;
 }
@@ -65,8 +67,10 @@ static void EnsurePageText(PageText* pageText) {
 void FreePageText(PageText* pageText) {
     str::Free(pageText->text);
     free((void*)pageText->coords);
+    free((void*)pageText->quads);
     pageText->text = {};
     pageText->coords = nullptr;
+    pageText->quads = nullptr;
     pageText->len = 0;
     pageText->nCodepoints = 0;
 }
@@ -523,12 +527,15 @@ bool EngineBase::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
     return true;
 }
 
-static Str ReturnCachedPageText(PageText* pt, int* lenOut, Rect** coordsOut) {
+static Str ReturnCachedPageText(PageText* pt, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
     if (lenOut) {
         *lenOut = pt->nCodepoints;
     }
     if (coordsOut) {
         *coordsOut = pt->coords;
+    }
+    if (quadsOut) {
+        *quadsOut = pt->quads;
     }
     Str text = pt->text;
     if (text.s) {
@@ -543,7 +550,7 @@ static Str ReturnCachedPageText(PageText* pt, int* lenOut, Rect** coordsOut) {
 
 // like GetTextForPage but returns false (and empty text) if the engine
 // can't acquire locks without blocking (e.g. render thread is busy)
-bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
+bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
         if (lenOut) {
@@ -551,6 +558,9 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
         }
         if (coordsOut) {
             *coordsOut = nullptr;
+        }
+        if (quadsOut) {
+            *quadsOut = nullptr;
         }
         return true;
     }
@@ -578,6 +588,9 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
             if (coordsOut) {
                 *coordsOut = nullptr;
             }
+            if (quadsOut) {
+                *quadsOut = nullptr;
+            }
             return false;
         }
         EnsurePageText(&extracted);
@@ -595,11 +608,11 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
 
     ScopedMutex scope(&textCacheLock);
     PageText* pt = &pagesText[pageNo - 1];
-    ReturnCachedPageText(pt, lenOut, coordsOut);
+    ReturnCachedPageText(pt, lenOut, coordsOut, quadsOut);
     return true;
 }
 
-Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
+Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
         if (lenOut) {
@@ -607,6 +620,9 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
         }
         if (coordsOut) {
             *coordsOut = nullptr;
+        }
+        if (quadsOut) {
+            *quadsOut = nullptr;
         }
         return {};
     }
@@ -646,7 +662,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
 
     ScopedMutex scope(&textCacheLock);
     PageText* pt = &pagesText[pageNo - 1];
-    return ReturnCachedPageText(pt, lenOut, coordsOut);
+    return ReturnCachedPageText(pt, lenOut, coordsOut, quadsOut);
 }
 
 void EngineBase::InvalidateTextForPage(int pageNo) {

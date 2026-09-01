@@ -243,6 +243,10 @@ bool PointF::operator!=(const PointF& other) const {
     return !this->operator==(other);
 }
 
+bool QuadF::IsEmpty() const {
+    return ul == ur && ul == ll && ul == lr;
+}
+
 // ------------- Size
 
 Size::Size(int dx, int dy) : dx(dx), dy(dy) {}

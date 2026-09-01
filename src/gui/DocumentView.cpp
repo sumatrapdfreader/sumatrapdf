@@ -346,13 +346,27 @@ static void OnPaint(DocumentView* view, PlatformCanvasPaintEvent* ev) {
             if (!page || !page->isShown) {
                 continue;
             }
-            RectF transformed = data->reader->GetEngine()->Transform(ToRectF(selection.rects[i]), pageNo,
-                                                                     page->zoomReal, data->rotation);
-            Rect screenRect = transformed.Round();
-            screenRect.Offset(page->pageOnScreen.x, page->pageOnScreen.y);
-            selectionRects.Append(screenRect);
+            if (selection.quads && !selection.quads[i].IsEmpty()) {
+                QuadF q = selection.quads[i];
+                EngineBase* eng = data->reader->GetEngine();
+                PointF corners[4] = {q.ul, q.ur, q.lr, q.ll};
+                Point pts[4];
+                for (int k = 0; k < 4; k++) {
+                    PointF t = eng->Transform(corners[k], pageNo, page->zoomReal, data->rotation);
+                    pts[k] = Point((int)t.x + page->pageOnScreen.x, (int)t.y + page->pageOnScreen.y);
+                }
+                ev->gfx->FillQuads(pts, 1, MkRgb(255, 225, 70), 115);
+            } else {
+                RectF transformed = data->reader->GetEngine()->Transform(ToRectF(selection.rects[i]), pageNo,
+                                                                         page->zoomReal, data->rotation);
+                Rect screenRect = transformed.Round();
+                screenRect.Offset(page->pageOnScreen.x, page->pageOnScreen.y);
+                selectionRects.Append(screenRect);
+            }
         }
-        ev->gfx->FillRects(selectionRects.els, len(selectionRects), MkRgb(255, 225, 70), 115);
+        if (len(selectionRects) > 0) {
+            ev->gfx->FillRects(selectionRects.els, len(selectionRects), MkRgb(255, 225, 70), 115);
+        }
     }
 
     int current = data->layout.CurrentPageNo();

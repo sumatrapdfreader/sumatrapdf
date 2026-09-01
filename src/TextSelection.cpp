@@ -40,6 +40,8 @@ void TextSelection::Reset() {
     result.pages = nullptr;
     free(result.rects);
     result.rects = nullptr;
+    free(result.quads);
+    result.quads = nullptr;
     wordStartPage = wordStartGlyph = wordEndPage = wordEndGlyph = -1;
 }
 
@@ -110,13 +112,75 @@ static bool IsGlyphOnVisualLine(Rect lineBox, Rect glyphBox) {
     return (bottom - top) * 2 >= glyphBox.dy;
 }
 
+static bool QuadIsRotated(const QuadF& q) {
+    if (q.IsEmpty()) {
+        return false;
+    }
+    const float eps = 0.5f;
+    return fabsf(q.ul.y - q.ur.y) > eps || fabsf(q.ll.y - q.lr.y) > eps || fabsf(q.ul.x - q.ll.x) > eps ||
+           fabsf(q.ur.x - q.lr.x) > eps;
+}
+
+static void TextSelAppend(TextSel* result, int pageNo, Rect bbox, const QuadF* quad) {
+    int currLen = result->len;
+    int left = result->cap - currLen;
+    ReportIf(left < 0);
+    if (left == 0) {
+        int newCap = result->cap * 2;
+        newCap = std::max(newCap, 64);
+        int* newPages = (int*)realloc(result->pages, sizeof(int) * newCap);
+        Rect* newRects = (Rect*)realloc(result->rects, sizeof(Rect) * newCap);
+        ReportIf(!newPages);
+        ReportIf(!newRects);
+        result->pages = newPages;
+        result->rects = newRects;
+        if (result->quads) {
+            QuadF* newQuads = (QuadF*)realloc(result->quads, sizeof(QuadF) * newCap);
+            ReportIf(!newQuads);
+            memset(newQuads + result->cap, 0, sizeof(QuadF) * (newCap - result->cap));
+            result->quads = newQuads;
+        }
+        result->cap = newCap;
+    }
+    if (quad && !result->quads) {
+        result->quads = (QuadF*)calloc(result->cap, sizeof(QuadF));
+        ReportIf(!result->quads);
+    }
+    result->pages[currLen] = pageNo;
+    result->rects[currLen] = bbox;
+    if (result->quads) {
+        result->quads[currLen] = quad ? *quad : QuadF{};
+    }
+    result->len++;
+}
+
 static void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int textLen, int glyph, int length,
-                               Rect mediabox) {
+                               Rect mediabox, QuadF* glyphQuads = nullptr) {
     Rect *c = &coords[glyph], *end = c + length;
     while (c < end) {
         // skip line breaks (empty boxes: hard newlines and soft-join spaces)
         for (; c < end && !c->x && !c->dx; c++) {
             // no-op
+        }
+        if (c >= end) {
+            break;
+        }
+
+        int runStart = (int)(c - coords);
+        bool rotated = glyphQuads && QuadIsRotated(glyphQuads[runStart]);
+        if (rotated) {
+            for (; c < end && (c->x || c->dx); c++) {
+                int ix = (int)(c - coords);
+                if (ix > runStart && !IsGlyphOnVisualLine(coords[runStart], *c)) {
+                    break;
+                }
+                Rect bbox = c->Intersect(mediabox);
+                if (bbox.IsEmpty()) {
+                    continue;
+                }
+                TextSelAppend(result, pageNo, bbox, &glyphQuads[ix]);
+            }
+            continue;
         }
 
         Rect bbox;
@@ -139,31 +203,15 @@ static void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int te
             bbox.dx = c->x - bbox.x;
         }
 
-        int currLen = result->len;
-        int left = result->cap - currLen;
-        ReportIf(left < 0);
-        if (left == 0) {
-            int newCap = result->cap * 2;
-            newCap = std::max(newCap, 64);
-            int* newPages = (int*)realloc(result->pages, sizeof(int) * newCap);
-            Rect* newRects = (Rect*)realloc(result->rects, sizeof(Rect) * newCap);
-            ReportIf(!newPages);
-            ReportIf(!newRects);
-            result->pages = newPages;
-            result->rects = newRects;
-            result->cap = newCap;
-        }
-
-        result->pages[currLen] = pageNo;
-        result->rects[currLen] = bbox;
-        result->len++;
+        TextSelAppend(result, pageNo, bbox, nullptr);
     }
 }
 
 static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, StrVec* lines = nullptr) {
     Rect* coords;
+    QuadF* quads = nullptr;
     int textLen = 0;
-    Str text = ts->engine->GetTextForPage(pageNo, &textLen, &coords);
+    Str text = ts->engine->GetTextForPage(pageNo, &textLen, &coords, &quads);
     // Clamp ranges that outlive their page text (stale find-match coords after
     // tab close/reload, or a multi-page match that ends past a shorter page).
     if (glyph < 0) {
@@ -221,7 +269,7 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
         return;
     }
 
-    FillSelectionRects(&ts->result, pageNo, coords, textLen, glyph, length, mediabox);
+    FillSelectionRects(&ts->result, pageNo, coords, textLen, glyph, length, mediabox, quads);
 }
 
 #if IS_DEBUG
@@ -240,6 +288,7 @@ void TextSelection_UnitTests() {
     utassert(result.rects[3] == Rect(56, 145, 10, 10));
     free(result.pages);
     free(result.rects);
+    free(result.quads);
 
     Rect superscript[] = {{10, 100, 12, 10}, {20, 97, 8, 6}, {28, 100, 12, 10}};
     result = {};
@@ -248,6 +297,23 @@ void TextSelection_UnitTests() {
     utassert(result.rects[0] == Rect(10, 97, 30, 13));
     free(result.pages);
     free(result.rects);
+    free(result.quads);
+
+    // 45-degree run: keep per-glyph quads instead of one axis-aligned union
+    Rect rotCoords[] = {{10, 10, 20, 20}, {20, 20, 20, 20}};
+    QuadF rotQuads[] = {
+        {PointF(10, 20), PointF(24, 10), PointF(20, 30), PointF(34, 20)},
+        {PointF(20, 30), PointF(34, 20), PointF(30, 40), PointF(44, 30)},
+    };
+    result = {};
+    FillSelectionRects(&result, 1, rotCoords, dimof(rotCoords), 0, dimof(rotCoords), {0, 0, 200, 200}, rotQuads);
+    utassert(result.len == 2);
+    utassert(result.quads);
+    utassert(result.quads[0].ul.x == 10 && result.quads[0].ur.y == 10);
+    utassert(result.quads[1].ul.x == 20 && result.quads[1].lr.x == 44);
+    free(result.pages);
+    free(result.rects);
+    free(result.quads);
 }
 #endif
 

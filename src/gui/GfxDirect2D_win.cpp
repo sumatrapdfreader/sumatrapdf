@@ -47,6 +47,7 @@ GfxDirect2D::GfxDirect2D(HDC hdc) {
 GfxDirect2D::~GfxDirect2D() = default;
 void GfxDirect2D::FillRect(const Rect&, Color) {}
 void GfxDirect2D::FillRects(const Rect*, int, Color, u8, int) {}
+void GfxDirect2D::FillQuads(const Point*, int, Color, u8, int) {}
 void GfxDirect2D::DrawRect(const Rect&, Color, int) {}
 void GfxDirect2D::DrawDashedRect(const Rect&, Color) {}
 void GfxDirect2D::FillRoundedRect(const Rect&, int, Color, Color) {}
@@ -527,6 +528,49 @@ void GfxDirect2D::FillRects(const Rect* rects, int count, Color col, u8 alpha, i
                 D2D1::Point2F((float)r.Right(), (float)r.y),
                 D2D1::Point2F((float)r.Right(), (float)r.Bottom()),
                 D2D1::Point2F((float)r.x, (float)r.Bottom()),
+            };
+            sink->AddLines(points, dimof(points));
+            sink->EndFigure(D2D1_FIGURE_END_CLOSED);
+        }
+        hr = sink->Close();
+        sink->Release();
+    }
+    if (SUCCEEDED(hr)) {
+        target->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+        ID2D1SolidColorBrush* br = GetBrush(col, alpha);
+        if (br) {
+            target->FillGeometry(path, br);
+        }
+        if (outlineWidth > 0) {
+            br = GetBrush(kColBlack, alpha);
+            if (br) {
+                target->DrawGeometry(path, br, (float)outlineWidth);
+            }
+        }
+    }
+    path->Release();
+}
+
+void GfxDirect2D::FillQuads(const Point* pts, int nQuads, Color col, u8 alpha, int outlineWidth) {
+    if (!target || ColorSkipsPaint(col) || nQuads <= 0 || !pts) {
+        return;
+    }
+    ID2D1PathGeometry* path = nullptr;
+    HRESULT hr = gD2DFactory->CreatePathGeometry(&path);
+    if (FAILED(hr)) {
+        return;
+    }
+    ID2D1GeometrySink* sink = nullptr;
+    hr = path->Open(&sink);
+    if (SUCCEEDED(hr)) {
+        sink->SetFillMode(D2D1_FILL_MODE_WINDING);
+        for (int i = 0; i < nQuads; i++) {
+            const Point* p = pts + i * 4;
+            sink->BeginFigure(D2D1::Point2F((float)p[0].x, (float)p[0].y), D2D1_FIGURE_BEGIN_FILLED);
+            D2D1_POINT_2F points[] = {
+                D2D1::Point2F((float)p[1].x, (float)p[1].y),
+                D2D1::Point2F((float)p[2].x, (float)p[2].y),
+                D2D1::Point2F((float)p[3].x, (float)p[3].y),
             };
             sink->AddLines(points, dimof(points));
             sink->EndFigure(D2D1_FIGURE_END_CLOSED);
