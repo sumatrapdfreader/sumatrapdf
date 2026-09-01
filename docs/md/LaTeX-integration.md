@@ -8,9 +8,9 @@ For LaTeX edited/compiled **inside WSL**, see [LaTeX integration with WSL](LaTeX
 
 Compile with SyncTeX enabled (most tools use `-synctex=1` or an equivalent). That produces a `.synctex` / `.synctex.gz` next to the PDF.
 
-| Direction | Who starts it | What happens |
-|-----------|---------------|--------------|
-| **Forward search** | Editor → Sumatra | Jump from a `.tex` line to the matching place in the PDF (highlight). |
+| Direction          | Who starts it    | What happens                                                                                     |
+| ------------------ | ---------------- | ------------------------------------------------------------------------------------------------ |
+| **Forward search** | Editor → Sumatra | Jump from a `.tex` line to the matching place in the PDF (highlight).                            |
 | **Inverse search** | Sumatra → editor | Double-click (or inverse-search click) in the PDF opens the matching source line in your editor. |
 
 Forward search is usually configured **in the editor** (viewer command / external PDF viewer). Inverse search is configured **in Sumatra** via the inverse-search command line (below).
@@ -40,11 +40,11 @@ ReloadModifiedDocuments = true
 
 **Placeholders** (replaced by Sumatra when launching the editor):
 
-| Token | Meaning |
-|-------|---------|
-| `%f` | Full path of the source `.tex` file |
-| `%l` | Line number (1-based) |
-| `%c` | Column (when available; often 0) |
+| Token | Meaning                             |
+| ----- | ----------------------------------- |
+| `%f`  | Full path of the source `.tex` file |
+| `%l`  | Line number (1-based)               |
+| `%c`  | Column (when available; often 0)    |
 
 Use quotes around paths that may contain spaces. Adjust executable paths to match your install (Program Files vs Program Files (x86), user installs, portable layouts).
 
@@ -89,7 +89,11 @@ TeXstudio’s `?c:am.tex`, `@` (line), and `?am.pdf` expand to the current root 
 
 ### Visual Studio Code / Cursor (LaTeX Workshop)
 
+Install the [LaTeX Workshop](https://marketplace.visualstudio.com/items?itemName=James-Yu.latex-workshop) extension. External-viewer SyncTeX is not officially supported by LaTeX Workshop; this is the setup that works with Sumatra.
+
 **1. Inverse search (in Sumatra)**
+
+Set this once (`Ctrl + K` → **Set Inverse Search Command Line**, or Advanced Options). Overwrite `InverseSearchCmdLine` in place; do not paste it under the “Settings below are not recognized” footer, or Sumatra ignores it.
 
 Prefer the `code` / `cursor` CLI on `PATH`, or a full path to the `.cmd` launcher:
 
@@ -97,34 +101,40 @@ Prefer the `code` / `cursor` CLI on `PATH`, or a full path to the `.cmd` launche
 "C:\Users\<you>\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd" -r -g "%f:%l"
 ```
 
-For Cursor, use the analogous `cursor.cmd` path. Using `.cmd` (not only `Code.exe`) avoids some inverse-search failures on Windows.
+`-r` reuses the existing VS Code window. `-g "%f:%l"` opens file `%f` at line `%l` (lowercase L). Using `.cmd` (not only `Code.exe`) avoids some inverse-search failures on Windows. For Cursor, use the analogous `cursor.cmd` path.
 
-**2. External viewer (in `settings.json`)**
+If that still fails, launch via Electron’s CLI:
+
+```
+"C:\Users\<you>\AppData\Local\Programs\Microsoft VS Code\Code.exe" "C:\Users\<you>\AppData\Local\Programs\Microsoft VS Code\resources\app\out\cli.js" --ms-enable-electron-run-as-node -r -g "%f:%l"
+```
+
+Also set `EnableTeXEnhancements = true` (the inverse-search dialog does this on OK).
+
+**2. External viewer (in VS Code `settings.json`)**
+
+`Ctrl + Shift + P` → **Preferences: Open User Settings (JSON)**. Point `viewer.command` / `synctex.command` at your Sumatra (installer under `C:/Program Files/SumatraPDF/`, or portable under `%LOCALAPPDATA%/SumatraPDF/`).
 
 ```json
 {
   "latex-workshop.view.pdf.viewer": "external",
   "latex-workshop.view.pdf.external.viewer.command": "C:/Program Files/SumatraPDF/SumatraPDF.exe",
-  "latex-workshop.view.pdf.external.viewer.args": [
-    "-reuse-instance",
-    "%PDF%"
-  ],
+  "latex-workshop.view.pdf.external.viewer.args": ["-reuse-instance", "%PDF%"],
   "latex-workshop.view.pdf.external.synctex.command": "C:/Program Files/SumatraPDF/SumatraPDF.exe",
-  "latex-workshop.view.pdf.external.synctex.args": [
-    "-reuse-instance",
-    "-forward-search",
-    "%TEX%",
-    "%LINE%",
-    "%PDF%"
-  ]
+  "latex-workshop.view.pdf.external.synctex.args": ["-reuse-instance", "-forward-search", "%TEX%", "%LINE%", "%PDF%"]
 }
 ```
 
+`%TEX%`, `%LINE%`, and `%PDF%` are LaTeX Workshop placeholders. Do not add `-inverse-search "..."` here once Sumatra already has `InverseSearchCmdLine`; sending it on every jump can cause issues.
+
 **3. Use it**
 
-- Build so SyncTeX is produced (LaTeX Workshop recipes usually do).
-- Forward: LaTeX Workshop “SyncTeX from cursor” / view PDF actions.
-- Inverse: double-click in Sumatra → editor focuses `%f` at line `%l`.
+- Build so SyncTeX is produced (LaTeX Workshop recipes usually pass `-synctex=1`).
+- View PDF: LaTeX Workshop **View LaTeX PDF file in external viewer**.
+- Forward: **SyncTeX from cursor** (`Ctrl + Alt + J`).
+- Inverse: double-click in Sumatra → VS Code focuses `%f` at line `%l`.
+
+For LaTeX inside WSL Remote, see [LaTeX integration with WSL](LaTeX-integration-wsl.md) (TexLab, not LaTeX Workshop).
 
 ### TeXworks
 
