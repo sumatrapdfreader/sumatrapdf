@@ -156,6 +156,11 @@ async function annotCount(client: ControlClient): Promise<number> {
   return +(/annotations=(\d+)/.exec(raw)?.[1] ?? -1);
 }
 
+async function annotModified(client: ControlClient): Promise<boolean> {
+  const raw = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+  return /undo canUndo=\d canRedo=\d modified=1/.test(raw);
+}
+
 async function waitAnnotCount(client: ControlClient, want: number, what: string): Promise<void> {
   const deadline = Date.now() + 6000 * SLOW_BUILD_FACTOR;
   for (;;) {
@@ -558,6 +563,33 @@ export async function testit(): Promise<void> {
     setCursorPos(away.x, away.y - 200);
     sendMessage(toolbar, WM_MOUSEMOVE, 0, packCoords(4, 4));
     await waitMenu(pid, false, "moving the mouse away did not close the drop-down");
+
+    // clicking the Save icon itself must close the drop-down: the three rows
+    // end the session, and after a save they no longer apply
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotText"), packCoords(180, 340));
+    await waitAnnotCount(client, 2, "could not create an annotation to save from the icon");
+    const save3 = await waitAnnotButton(
+      client,
+      cmdId("CmdSaveAnnotations"),
+      "Save button vanished before the icon click",
+    );
+    const sx = save3.x + Math.floor(save3.dx / 2);
+    const sy = save3.y + Math.floor(save3.dy / 2);
+    await hoverUntilMenu(toolbar, pid, sx, sy, "resting on Save did not open the drop-down before the icon click");
+    await clickAt(toolbar, sx, sy, 300);
+    await waitMenu(pid, false, "clicking the Save icon did not close the drop-down");
+    const stayClosedUntil = Date.now() + 1500;
+    while (Date.now() < stayClosedUntil) {
+      hoverToolbar(toolbar, sx, sy);
+      const h = findTopWindow(pid, MENU_CLASS);
+      if (h !== 0 && isWindowVisible(h)) {
+        throw new Error("toolbar-hover-dropdown: the drop-down came back while still on Save after the icon click");
+      }
+      await sleep(100);
+    }
+    if (await annotModified(client)) {
+      throw new Error("toolbar-hover-dropdown: clicking the Save icon did not save");
+    }
 
     // --- the zoom buttons list the zoom levels
     sendCommand(frame, cmdId("CmdZoom100"));

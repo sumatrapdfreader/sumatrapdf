@@ -1460,6 +1460,13 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
             }
         }
     }
+    if (cmdId == CmdSaveAnnotations) {
+        // the hover menu's rows end the session; they no longer apply
+        HideToolbarHoverDropdown(win);
+        if (ToolbarVirt* tb = win->toolbarVirt) {
+            tb->hoverPendingCmdId = cmdId;
+        }
+    }
     ToolbarPostCommand(win, cmdId);
     ev->didHandle = true;
 }
