@@ -42,6 +42,7 @@
 #include "TextToSpeech.h"
 #include "Notifications.h"
 #include "ExplorerQuickLook.h"
+#include "Tabs.h"
 #include "AppSettings.h"
 
 // workaround for OnMenuExit
@@ -386,6 +387,9 @@ void ApplySettingsToOpenWindows() {
         // force the relayout: toolbar size/font are not part of the layout
         // state snapshot (see issue #5136), and repaint the toolbar after it
         ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty);
+        for (WindowTab* tab : win->Tabs()) {
+            UpdateTabPageText(tab);
+        }
         win->RedrawAll(true);
     }
 }

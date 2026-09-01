@@ -12,6 +12,7 @@ void CreateTabbar(MainWindow*);
 WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate = false);
 void TabsOnCloseWindow(MainWindow*);
 void TabsOnChangedDoc(MainWindow*);
+void UpdateTabPageText(WindowTab*);
 void TabsSelect(MainWindow* win, int tabIndex);
 void TabsOnCtrlTab(MainWindow* win, bool reverse);
 void UpdateTabWidth(MainWindow*);

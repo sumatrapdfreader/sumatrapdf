@@ -57,6 +57,29 @@ TempStr MakeTabTooltipTemp(Str path, bool dirty) {
     return tip;
 }
 
+static TempStr TabPageSuffixTemp(WindowTab* tab) {
+    if (!gSettings || !gSettings->showPageNumberInTabs) {
+        return {};
+    }
+    if (!tab || !tab->IsDocLoaded() || !tab->ctrl) {
+        return {};
+    }
+    int curr = tab->ctrl->CurrentPageNo();
+    int count = tab->ctrl->PageCount();
+    if (count <= 0 || curr < 1) {
+        return {};
+    }
+    return fmt(" %d/%d", curr, count);
+}
+
+void UpdateTabPageText(WindowTab* tab) {
+    if (!tab || !tab->win || !tab->win->tabsCtrl) {
+        return;
+    }
+    int idx = tab->win->GetTabIdx(tab);
+    tab->win->tabsCtrl->SetPageText(idx, TabPageSuffixTemp(tab));
+}
+
 static void UpdateTabTitle(WindowTab* tab) {
     if (!tab) {
         return;
@@ -70,6 +93,7 @@ static void UpdateTabTitle(WindowTab* tab) {
     }
     TempStr tooltip = MakeTabTooltipTemp(tab->filePath, dirty);
     win->tabsCtrl->SetTextAndTooltip(idx, title, tooltip);
+    UpdateTabPageText(tab);
 }
 
 int GetTabbarHeight(HWND hwnd, float factor) {
@@ -764,6 +788,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     tab->canvasRc = win->canvasRc;
     TabInfo* newTab = new TabInfo();
     newTab->text = str::Dup(tab->GetTabTitle());
+    newTab->pageText = str::Dup(TabPageSuffixTemp(tab));
     // same full path + size as UpdateTabTitle (was path-only, so size missing until
     // TabsOnChangedDoc for the active tab)
     newTab->tooltip = str::Dup(MakeTabTooltipTemp(tab->filePath, false));

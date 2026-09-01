@@ -49,6 +49,7 @@ static bool IsTabsRtl(HWND hwnd) {
 TabInfo::~TabInfo() {
     str::Free(text);
     str::Free(tooltip);
+    str::Free(pageText);
 }
 
 static Gdiplus::Color GdipCol(Color c) {
@@ -241,18 +242,48 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
         int textRight = closeVisible ? rClose.x - textGap : r.x + r.dx - textPad;
         rTxt.dx = std::max(0, textRight - rTxt.x);
     }
+    PlatformFont* pageFont = font;
+    int pageDx = 0;
+    if (len(ti->pageText) > 0) {
+        PlatformFont* scaled = GetScaledPlatformFont(font, 85);
+        if (scaled) {
+            pageFont = scaled;
+        }
+        pageDx = gfx->MeasureText(ti->pageText, pageFont).dx;
+        if (pageDx + DpiScale(12) >= rTxt.dx) {
+            pageDx = 0;
+        }
+    }
+
+    Rect rFile = rTxt;
+    Rect rPage{};
+    if (pageDx > 0) {
+        if (isRtl) {
+            rPage = {rTxt.x, rTxt.y, pageDx, rTxt.dy};
+            rFile.x = rTxt.x + pageDx;
+            rFile.dx = rTxt.dx - pageDx;
+        } else {
+            rFile.dx = rTxt.dx - pageDx;
+            rPage = {rFile.Right(), rTxt.y, pageDx, rTxt.dy};
+        }
+    }
+
     u32 fmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
-    gfx->DrawText(ti->text, rTxt, fmt, font, textColor);
+    gfx->DrawText(ti->text, rFile, fmt, font, textColor);
+    if (pageDx > 0) {
+        Color pageCol = AccentColor(textColor, 40);
+        u32 pageFmt = gfxTextVCenter | gfxTextNoClip | (isRtl ? gfxTextRight : gfxTextLeft);
+        gfx->DrawText(ti->pageText, rPage, pageFmt, pageFont, pageCol);
+    }
 
     // draw red dot after tab text for dirty (unsaved) tabs
     if (ti->isDirty) {
         int dotRadius = DpiScale(3);
         // the text may have been ellipsized, so the dot goes after whichever is
         // narrower: the text or the room it had
-        int textDx = std::min(gfx->MeasureText(ti->text, font).dx, rTxt.dx);
-        int textEnd = isRtl ? rTxt.Right() : rTxt.x + textDx;
-        // clamp to not exceed the text area
-        int maxX = rTxt.Right() - (dotRadius * 2);
+        int textDx = std::min(gfx->MeasureText(ti->text, font).dx, rFile.dx);
+        int textEnd = isRtl ? rFile.Right() : rFile.x + textDx;
+        int maxX = rFile.Right() - (dotRadius * 2);
         int dotX = std::min(textEnd + dotRadius, maxX);
         int dotY = r.y + ((r.dy - (dotRadius * 2)) / 2);
         gfx->FillEllipse({dotX, dotY, dotRadius * 2, dotRadius * 2}, MkRgb(0xEE, 0x22, 0x22));
@@ -524,10 +555,14 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     gfx->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     gfx->SetPageUnit(UnitPixel);
 
-    StringFormat sf(StringFormat::GenericDefault());
-    sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
-    sf.SetLineAlignment(StringAlignmentCenter);
-    sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
+    StringFormat sfFile(StringFormat::GenericDefault());
+    sfFile.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
+    sfFile.SetLineAlignment(StringAlignmentCenter);
+    sfFile.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
+    StringFormat sfPage(StringFormat::GenericDefault());
+    sfPage.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
+    sfPage.SetLineAlignment(StringAlignmentCenter);
+    sfPage.SetTrimming(Gdiplus::StringTrimmingNone);
 
     // the drag image is the tab as it looks while selected
     Color bgCol = GetColor(kColTabBg);
@@ -537,16 +572,45 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     Gdiplus::Rect gr(0, 0, r.dx, r.dy);
     gfx->FillRectangle(&br, gr);
 
-    HDC hdc = GetDC(hwnd);
-    Font f(hdc, GetFont()->GetHFont());
-    ReleaseDC(hwnd, hdc);
+    Gdiplus::Font* f = GetFont() ? GetFont()->GetGdiplusFont() : nullptr;
+    bool ownedFont = false;
+    if (!f && GetFont()) {
+        HDC hdc = GetDC(hwnd);
+        f = new Font(hdc, GetFont()->GetHFont());
+        ReleaseDC(hwnd, hdc);
+        ownedFont = true;
+    }
 
     Gdiplus::RectF rTxt(0, 0, (float)r.dx, (float)r.dy);
     rTxt.X += 8;
     rTxt.Width -= (8 + 8);
+
+    int pageDx = 0;
+    if (len(ti->pageText) > 0 && GetFont()) {
+        pageDx = PlatformFontMeasureText(GetFont(), ti->pageText).dx;
+        if (pageDx + 12 >= (int)rTxt.Width) {
+            pageDx = 0;
+        }
+    }
+    Gdiplus::RectF rFile = rTxt;
+    Gdiplus::RectF rPage = rTxt;
+    if (pageDx > 0) {
+        rFile.Width = rTxt.Width - (float)pageDx;
+        rPage.X = rFile.X + rFile.Width;
+        rPage.Width = (float)pageDx;
+    }
+
     br.SetColor(GdipCol(textCol));
     WCHAR* ws = CWStrTemp(ti->text);
-    gfx->DrawString(ws, -1, &f, rTxt, &sf, &br);
+    gfx->DrawString(ws, -1, f, rFile, &sfFile, &br);
+    if (pageDx > 0) {
+        br.SetColor(GdipCol(AccentColor(textCol, 40)));
+        WCHAR* wsPage = CWStrTemp(ti->pageText);
+        gfx->DrawString(wsPage, -1, f, rPage, &sfPage, &br);
+    }
+    if (ownedFont) {
+        delete f;
+    }
 
     HBITMAP ret;
     bitmap.GetHBITMAP(Gdiplus::Color(255, 255, 255), &ret);
@@ -1020,6 +1084,18 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab, bool update) {
         TabsCtrlUpdateAfterChangingTabsCount(this);
     }
     return idx;
+}
+
+void TabsCtrl::SetPageText(int idx, Str page) {
+    TabInfo* tab = GetTab(idx);
+    if (!tab) {
+        return;
+    }
+    if (tab->pageText && page && str::Eq(tab->pageText, page)) {
+        return;
+    }
+    str::ReplaceWithCopy(&tab->pageText, page);
+    ScheduleRepaint();
 }
 
 void TabsCtrl::SetTextAndTooltip(int idx, Str text, Str tooltip2) {

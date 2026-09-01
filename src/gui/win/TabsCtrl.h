@@ -20,6 +20,7 @@ constexpr Color kTabDefaultBgCol = (Color)-1;
 struct TabInfo {
     Str text;
     Str tooltip;
+    Str pageText;
     bool isPinned = false;
     bool canClose = true; // TODO: same as !isPinned?
     bool isDirty = false;
@@ -153,6 +154,7 @@ struct TabsCtrl : VirtCtrl {
     void SwapTabs(int idx1, int idx2);
 
     void SetTextAndTooltip(int idx, Str text, Str tooltip);
+    void SetPageText(int idx, Str);
     void SetTabDirty(int idx, bool isDirty);
 
     int TabCount();

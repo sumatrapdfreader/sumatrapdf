@@ -117,6 +117,10 @@ ShowMenubar = true
 ; version 3.7)
 ShowMenubarWithTabs = false
 
+; if true, show the current page as n/N after the file name on tabs (introduced
+; in version 3.7)
+ShowPageNumberInTabs = false
+
 ; if true, show tips on the home page (introduced in version 3.7)
 ShowTips = true
 

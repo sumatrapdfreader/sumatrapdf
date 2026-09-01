@@ -1893,6 +1893,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
         if (win->ctrl->HasPageLabels()) {
             UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
         }
+        UpdateTabPageText(win->CurrentTab());
     }
 
     // Markdown multi-file: each .md is a "page". Keep tab path/title/tooltip and

@@ -1190,6 +1190,12 @@ const globalPrefs: Field[] = [
     "if true, show the menu bar (F9 toggles it; the choice is remembered across sessions)",
   ).ver("2.5"),
   field("ShowMenubarWithTabs", Bool, false, "if true, show the menu bar when using tabs (useTabs = true)").ver("3.7"),
+  field(
+    "ShowPageNumberInTabs",
+    Bool,
+    false,
+    "if true, show the current page as n/N after the file name on tabs",
+  ).ver("3.7"),
   field("ShowTips", Bool, true, "if true, show tips on the home page").ver("3.7"),
   field(
     "CustomColors",
