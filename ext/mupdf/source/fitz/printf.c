@@ -838,3 +838,19 @@ fz_asprintf(fz_context *ctx, const char *fmt, ...)
 	va_end(ap);
 	return mem;
 }
+
+char *
+fz_pool_asprintf(fz_context *ctx, fz_pool *pool, const char *fmt, ...)
+{
+	size_t len;
+	char *mem;
+	va_list ap;
+	va_start(ap, fmt);
+	len = fz_vsnprintf(NULL, 0, fmt, ap);
+	va_end(ap);
+	mem = fz_pool_alloc(ctx, pool, len+1);
+	va_start(ap, fmt);
+	fz_vsnprintf(mem, len+1, fmt, ap);
+	va_end(ap);
+	return mem;
+}

@@ -1,0 +1,56 @@
+backport: improve parsing of FB2 author metadata (bug 709657)
+
+BACKPORT of upstream mupdf 14a68928239893df146292afe4b6e239be1bcf01, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2.
+
+https://bugs.ghostscript.com/show_bug.cgi?id=709657
+
+Replaces our 0024-fb2-all-authors-names-only. Upstream walks every
+<title-info><author>, uses first-name + last-name when both are present, and
+falls back to collect_text() otherwise. Depends on 0023 (fz_html_metadata)
+and 0024 (fz_pool_asprintf). Covers #2254 for the usual first-name/last-name
+case.
+---
+diff --git a/source/html/html-parse.c b/source/html/html-parse.c
+index 44d74ad..0cf2d41 100644
+--- a/source/html/html-parse.c
++++ b/source/html/html-parse.c
+@@ -2231,13 +2231,35 @@ xml_to_boxes(fz_context *ctx,
+ 		{
+ 			if (metadata)
+ 			{
++				char *author = NULL, *first_name, *last_name;
++
+ 				node = fz_xml_find(root, "FictionBook");
+ 				node = fz_xml_find_down(node, "description");
+ 				node = fz_xml_find_down(node, "title-info");
+ 				node2 = fz_xml_find_down(node, "book-title");
+ 				metadata->title = collect_text(ctx, g.pool, node2);
+-				node2 = fz_xml_find_down(node, "author");
+-				metadata->author = collect_text(ctx, g.pool, node2);
++
++				for (node2 = fz_xml_find_down(node, "author"); node2; node2 = fz_xml_find_next(node2, "author"))
++				{
++					first_name = collect_text(ctx, g.pool, fz_xml_find_down(node2, "first-name"));
++					last_name = collect_text(ctx, g.pool, fz_xml_find_down(node2, "last-name"));
++					if (first_name && last_name)
++					{
++						if (author)
++							author = fz_pool_asprintf(ctx, g.pool, "%s, %s %s", author, first_name, last_name);
++						else
++							author = fz_pool_asprintf(ctx, g.pool, "%s %s", first_name, last_name);
++					}
++					else
++					{
++						if (author)
++							author = fz_pool_asprintf(ctx, g.pool, "%s, %s", author, collect_text(ctx, g.pool, node2));
++						else
++							author = collect_text(ctx, g.pool, node2);
++					}
++				}
++				metadata->author = author;
++
+ 				node2 = fz_xml_find_down(node, "annotation");
+ 				metadata->subject = collect_text(ctx, g.pool, node2);
+ 			}

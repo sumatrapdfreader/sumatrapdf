@@ -1,0 +1,49 @@
+backport: add fz_pool_asprintf (5e5ef9e)
+
+BACKPORT of upstream mupdf 5e5ef9e46196ceddfe1b1f4cca9973b51a345038, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2.
+
+Needed by 0026 (FB2 author metadata, bug 709657). The docs/reference change
+from that commit is omitted; we do not vendor the mupdf docs.
+---
+diff --git a/include/mupdf/fitz/pool.h b/include/mupdf/fitz/pool.h
+index 3b53474ee..89d52c664 100644
+--- a/include/mupdf/fitz/pool.h
++++ b/include/mupdf/fitz/pool.h
+@@ -57,6 +57,11 @@ char *fz_pool_strdup(fz_context *ctx, fz_pool *pool, const char *s);
+ */
+ char *fz_pool_strndup(fz_context *ctx, fz_pool *pool, const char *s, size_t n);
+ 
++/**
++	asprintf equivalent allocating from the pool.
++*/
++char *fz_pool_asprintf(fz_context *ctx, fz_pool *pool, const char *fmt, ...);
++
+ /**
+ 	The current size of the pool.
+ 
+diff --git a/source/fitz/printf.c b/source/fitz/printf.c
+index 08fcf4a35..168c8fdfb 100644
+--- a/source/fitz/printf.c
++++ b/source/fitz/printf.c
+@@ -838,3 +838,19 @@ fz_asprintf(fz_context *ctx, const char *fmt, ...)
+ 	va_end(ap);
+ 	return mem;
+ }
++
++char *
++fz_pool_asprintf(fz_context *ctx, fz_pool *pool, const char *fmt, ...)
++{
++	size_t len;
++	char *mem;
++	va_list ap;
++	va_start(ap, fmt);
++	len = fz_vsnprintf(NULL, 0, fmt, ap);
++	va_end(ap);
++	mem = fz_pool_alloc(ctx, pool, len+1);
++	va_start(ap, fmt);
++	fz_vsnprintf(mem, len+1, fmt, ap);
++	va_end(ap);
++	return mem;
++}
