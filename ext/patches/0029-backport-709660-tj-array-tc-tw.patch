@@ -1,0 +1,24 @@
+backport: recover after Tc/Tw inside a TJ array (bug 709660)
+
+BACKPORT of upstream mupdf 4a95c9651721091c86405e03965d2df52b2fe480, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2.
+
+https://bugs.ghostscript.com/show_bug.cgi?id=709660
+
+Replaces our 0029-pdf-tj-array-tc-tw. Upstream adds the same break after
+applying Tc/Tw inside a TJ array so a syntax error does not drop the rest of
+the page. Covers #4157.
+---
+diff --git a/source/pdf/pdf-interpret.c b/source/pdf/pdf-interpret.c
+index cf4cf09..3864606 100644
+--- a/source/pdf/pdf-interpret.c
++++ b/source/pdf/pdf-interpret.c
+@@ -1595,6 +1595,7 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
+ 									csi->stack[0] = pdf_to_real(ctx, o);
+ 									pdf_array_delete(ctx, csi->obj, n-1);
+ 									pdf_process_keyword(ctx, proc, csi, stm, buf->scratch);
++									break; /* keep parsing the rest of the array */
+ 								}
+ 							}
+ 						}

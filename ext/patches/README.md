@@ -38,7 +38,6 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0020-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
 | `0025-webp-images` | decode WebP via libwebp (`HAVE_WEBP`) so EPUB/HTML/MOBI/CBZ can show `.webp` (#3415) |
 | `0027-webp-iccp-without-demux` | apply a WebP `ICCP` chunk via our own RIFF walk (no libwebp demux) |
-| `0029-pdf-tj-array-tc-tw` | `Tc`/`Tw` inside a `TJ` array is not a syntax error that dumps the rest of the page (#4157) |
 | `0030-pdf-subset-base14-font-name` | strip `ABCDEF+` subset tags so a non-embedded `XXXXXX+Symbol` uses the builtin Symbol font (#4655) |
 | `0031-html-image-page-height` | shrink every reflow image against the fixed page height, not advancing block bounds (#6007) |
 | `0032-pdf-appearance-unrendered-annots` | placeholder AP for Movie/Screen/3D/RichMedia/Watermark/PrinterMark/TrapNet/Projection |
@@ -48,7 +47,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0036-ocg-usage-event-on-visible` | PrintState/ViewState ON draws the OCG even if it is in the config `/OFF` list (#6101) |
 | `0037-backport-709648-inline-context-after-block` | stop adding to an inline context after a block interrupts it (covers #5943) |
 
-And eight that are not ours but that we carry ahead of the release we vendor:
+And nine that are not ours but that we carry ahead of the release we vendor:
 
 | Patch | What |
 | --- | --- |
@@ -57,6 +56,7 @@ And eight that are not ours but that we carry ahead of the release we vendor:
 | `0023-backport-709574-html-metadata` | upstream title/author/subject metadata for HTML and FB2 (covers #2254) |
 | `0024-backport-5e5ef9e-pool-asprintf` | upstream `fz_pool_asprintf` (needed by 0026) |
 | `0026-backport-709657-fb2-author` | upstream FB2 author walk: every `<author>`, first-name + last-name (covers #2254) |
+| `0029-backport-709660-tj-array-tc-tw` | recover after `Tc`/`Tw` inside a `TJ` array so the rest of the page still draws (covers #4157) |
 | `0034-backport-709678-cjk-fullwidth-punctuation` | half/fullwidth forms and CJK punctuation use the CJK fonts, not an embedded fallback (#6082) |
 | `0035-backport-709680-flow-anchor-top` | HTML/EPUB link targets use the top of the flow node, not its baseline (#6095) |
 | `0037-backport-709648-inline-context-after-block` | nested `<span id>` wrapping a block no longer all jump to the chapter start (#5943) |
@@ -77,9 +77,9 @@ thing: it is code we do not have to re-merge, and upstream usually covers more
 cases. `0022` replaced our own XPS depth limit for exactly that reason — it
 guards the two epub outline parsers as well, and `0023` is our own FB2 metadata
 patch after Artifex upstreamed it ("Based on a patch from Krzysztof Kowalczyk of
-SumatraPDF"). `0026` replaced our FB2 author-name helper the same way. Check
-before writing a new patch, and check again at each update, since upstream may
-have caught up.
+SumatraPDF"). `0026` replaced our FB2 author-name helper the same way, and
+`0029` replaced our TJ `Tc`/`Tw` break. Check before writing a new patch, and
+check again at each update, since upstream may have caught up.
 
 ## Applying them
 

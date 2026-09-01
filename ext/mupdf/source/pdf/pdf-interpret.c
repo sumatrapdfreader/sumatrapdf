@@ -1584,10 +1584,6 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 					case PDF_TOK_EOF:
 						break;
 					case PDF_TOK_KEYWORD:
-						/* Broken generators put "0 Tc" / "0 Tw" inside a TJ array
-						 * (issue #4157). Apply the operator and keep parsing the
-						 * array; do not fall through to a syntax error that, after
-						 * enough hits, drops the rest of the page. */
 						if (buf->scratch[0] == 'T' && (buf->scratch[1] == 'w' || buf->scratch[1] == 'c') && buf->scratch[2] == 0)
 						{
 							int n = pdf_array_len(ctx, csi->obj);
@@ -1599,11 +1595,11 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 									csi->stack[0] = pdf_to_real(ctx, o);
 									pdf_array_delete(ctx, csi->obj, n-1);
 									pdf_process_keyword(ctx, proc, csi, stm, buf->scratch);
-									break;
+									break; /* keep parsing the rest of the array */
 								}
 							}
 						}
-						fz_throw(ctx, FZ_ERROR_SYNTAX, "syntax error in array");
+						/* Deliberate Fallthrough! */
 					default:
 						fz_throw(ctx, FZ_ERROR_SYNTAX, "syntax error in array");
 					}
