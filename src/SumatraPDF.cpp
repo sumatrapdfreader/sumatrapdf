@@ -15361,8 +15361,8 @@ void GetProgramInfo() {
     }
     TempStr signer = GetExecutableSignerTemp(exePath);
     CrashInfoAppend(fmt("Signer: %s\r\n", signer ? signer : StrL("(not signed)")));
-    if (builtOn) {
-        CrashInfoAppend(fmt("BuiltOn: %s\n", builtOn));
+    if (len(gBuiltOn) > 0) {
+        CrashInfoAppend(fmt("BuiltOn: %s\n", gBuiltOn));
     }
     Str exeType = IsDllBuild() ? StrL("dll") : StrL("static");
     Str instType = IsRunningInPortableMode() ? StrL("portable") : StrL("installed");

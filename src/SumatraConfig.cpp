@@ -17,9 +17,9 @@ bool gIsPreReleaseBuild = false;
 #endif
 
 #ifdef BUILT_ON
-Str builtOn = Str(QM(BUILT_ON));
+Str gBuiltOn = Str(QM(BUILT_ON));
 #else
-Str builtOn;
+Str gBuiltOn;
 #endif
 
 Str currentVersion = Str(CURR_VERSION_STRA);

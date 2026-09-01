@@ -14,7 +14,7 @@ extern bool gDisableDocumentRestrictions;
 // or agents. Always starts a new instance, doesn't restore a session and
 // doesn't save settings
 extern bool gForTesting;
-extern Str builtOn;
+extern Str gBuiltOn;
 extern Str currentVersion; // e.g. "3.2.1138"
 extern Str gitCommidId;
 extern Str preReleaseVersion;
