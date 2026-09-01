@@ -443,6 +443,72 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
     return engine;
 }
 
+static EngineBase* CreateEngineForKindFromData(FileType kind, Str data, Str nameHint, PasswordUI* pwdUI) {
+    if (kind == FileType::Unknown || len(data) == 0) {
+        return nullptr;
+    }
+    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown) {
+        return CreateEngineMupdfFromData(data, nameHint, pwdUI);
+    }
+    if (IsEngineDjVuSupportedFileType(kind)) {
+        return CreateEngineDjvuDecFromData(data);
+    }
+    if (IsEngineImageSupportedFileType(kind)) {
+        return CreateEngineImageFromData(data);
+    }
+    if (IsEngineCbxSupportedFileType(kind)) {
+        return CreateEngineCbxFromData(data);
+    }
+    if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
+        EngineBase* engine = CreateEngineMupdfFromData(data, nameHint, pwdUI);
+        if (engine) {
+            return engine;
+        }
+    }
+    if (kind == FileType::Epub) {
+        return CreateEngineEpubFromData(data);
+    }
+    if (kind == FileType::Fb2 || kind == FileType::Fb2z) {
+        return CreateEngineFb2FromData(data);
+    }
+    if (kind == FileType::Mobi) {
+        Str pdf = ExtractPdfFromPrintReplicaData(data);
+        if (len(pdf) > 0) {
+            EngineBase* engine = CreateEngineMupdfFromData(pdf, StrL("file.pdf"), pwdUI);
+            str::Free(pdf);
+            if (engine) {
+                return engine;
+            }
+        }
+        return CreateEngineMobiFromData(data);
+    }
+    return nullptr;
+}
+
+static void ApplyEngineSettings(EngineBase* engine) {
+    if (!engine || !gSettings) {
+        return;
+    }
+    engine->disableAntiAlias = gSettings->disableAntiAlias;
+    engine->disableAutoLinks = gSettings->disableAutoLinks;
+}
+
+EngineBase* CreateEngineFromData(Str data, Str nameHint, PasswordUI* pwdUI) {
+    if (len(data) == 0) {
+        return nullptr;
+    }
+    FileType kind = GuessFileTypeFromName(nameHint, true);
+    EngineBase* engine = CreateEngineForKindFromData(kind, data, nameHint, pwdUI);
+    if (!engine) {
+        FileType contentKind = GuessFileTypeFromData(data);
+        if (contentKind != kind) {
+            engine = CreateEngineForKindFromData(contentKind, data, nameHint, pwdUI);
+        }
+    }
+    ApplyEngineSettings(engine);
+    return engine;
+}
+
 static bool IsEngineMupdf(EngineBase* engine) {
     if (!engine) {
         return false;

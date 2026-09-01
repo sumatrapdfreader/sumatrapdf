@@ -550,7 +550,8 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
                        tp == AnnotationType::PolyLine || tp == AnnotationType::Ink;
         bool isStamp = tp == AnnotationType::Stamp;
         bool isRedact = tp == AnnotationType::Redact;
-        if (!isMarkup && !isShape && !isStamp && !isRedact) {
+        bool isFileAttachment = tp == AnnotationType::FileAttachment;
+        if (!isMarkup && !isShape && !isStamp && !isRedact && !isFileAttachment) {
             continue;
         }
         Str typeName = StrL("other");
@@ -576,6 +577,8 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
             typeName = StrL("Stamp");
         } else if (tp == AnnotationType::Redact) {
             typeName = StrL("Redact");
+        } else if (tp == AnnotationType::FileAttachment) {
+            typeName = StrL("FileAttachment");
         }
         if (isRedact) {
             Vec<RectF> quads = GetQuadPointsAsRect(a);
@@ -590,7 +593,7 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
             n++;
             continue;
         }
-        if (isShape || isStamp) {
+        if (isShape || isStamp || isFileAttachment) {
             RectF r = GetRect(a);
             Rect screen = dm->CvtToScreen(PageNo(a), r);
             out.Append(fmt("type=%s page=%d rect=%g,%g,%g,%g screen=%d,%d,%d,%d\n", typeName, PageNo(a), r.x, r.y, r.dx,

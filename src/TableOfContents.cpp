@@ -750,13 +750,7 @@ static void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     if (len(data) == 0) {
         return;
     }
-    MainWindow* win = tab->win;
-    EngineBase* newEngine = CreateEngineMupdfFromData(data, fileName, nullptr);
-    DocController* ctrl = CreateControllerForEngineOrFile(newEngine, {}, nullptr, win);
-    LoadArgs* args = new LoadArgs(tab->filePath, win);
-    args->SetDisplayName(fileName);
-    args->ctrl = ctrl;
-    LoadDocumentFinish(args);
+    OpenDocumentFromMemory(tab->win, data, fileName);
     str::Free(data);
 }
 

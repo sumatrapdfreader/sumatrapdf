@@ -177,6 +177,7 @@ import { testit as freeTextEditMatchesRender } from "./free-text-edit-matches-re
 import { testit as annotMoveableTypes } from "./annot-moveable-types.ts";
 import { testit as stampCaretAnnotationPlacement } from "./stamp-caret-annotation-placement.ts";
 import { testit as issue6103 } from "./issue-6103.ts";
+import { testit as issue4276 } from "./issue-4276.ts";
 import { testit as issue6112 } from "./issue-6112.ts";
 import { testit as lineAnnotationPlacement } from "./line-annotation-placement.ts";
 import { testit as polylineAnnotationPlacement } from "./polyline-annotation-placement.ts";
@@ -250,6 +251,7 @@ export const tests: NamedTest[] = [
   ["issue-5978", issue5978],
   ["toolbar-hover-dropdown", toolbarHoverDropdown],
   ["issue-6103", issue6103],
+  ["issue-4276", issue4276],
   ["issue-6062", issue6062],
   ["issue-6101", issue6101],
   ["issue-5907", issue5907],

@@ -2069,6 +2069,35 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
     return ctrl;
 }
 
+// Open in-memory bytes in a new tab. nameHint is the attachment file name
+// (used to pick an engine and as the tab title). Returns false if we cannot
+// open this type.
+bool OpenDocumentFromMemory(MainWindow* win, Str data, Str nameHint) {
+    if (!win || len(data) == 0) {
+        return false;
+    }
+    EngineBase* engine = CreateEngineFromData(data, nameHint, nullptr);
+    if (!engine) {
+        return false;
+    }
+    DocController* ctrl = CreateControllerForEngineOrFile(engine, {}, nullptr, win);
+    if (!ctrl) {
+        return false;
+    }
+    TempStr display = path::GetBaseNameTemp(nameHint);
+    if (!display) {
+        display = StrL("attachment");
+    }
+    // empty FilePath: this is not a file on disk (no watcher, no history)
+    LoadArgs args(display, win);
+    args.SetFilePath({});
+    args.SetDisplayName(display);
+    args.ctrl = ctrl;
+    args.skipHistory = true;
+    LoadDocumentFinish(&args);
+    return true;
+}
+
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     Str titlePath = tab->displayName ? Str(tab->displayName) : tab->filePath;
     TempStr embeddedFileName = ParseEmbeddedPdfName(titlePath).fileName;

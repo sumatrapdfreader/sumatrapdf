@@ -536,6 +536,11 @@ static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
     Str fileName = pd->GetValue2();
     logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName, pd->embedObjNum,
          (int)data.len);
+    // PDF (and other types we can open): load from memory into a tab
+    if (OpenDocumentFromMemory(win, data, fileName)) {
+        str::Free(data);
+        return;
+    }
     TempStr tmpDir = GetTempDirTemp();
     if (!tmpDir) {
         str::Free(data);

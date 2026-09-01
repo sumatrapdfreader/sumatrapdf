@@ -5,6 +5,7 @@
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 - **Open File Without History** (`CmdOpenFileNoHistory`) opens a document without adding it to File History or Windows Recent Documents. Palette-only; bind a shortcut if you want one (fixes #6121)
+- Clicking a PDF file-attachment annotation (the paperclip / pushpin on the page) whose file Sumatra can open (PDF, and other supported types) opens it in a new tab from memory, without writing a temp file. Other attached types still use Save Attachment on the context menu, or the OS handler (discussion #4276)
 - in the bookmarks and favorites trees, letter shortcuts run the command (e.g. `t` bound to Toggle Bookmarks) instead of type-ahead; arrows, Page Up/Down, Home, End, Enter and Space still navigate the tree
 - Command Palette **Toggle Boolean Setting** lists boolean advanced settings (`=` prefix); Enter or a click toggles the selected setting and closes
 - `ShowPageNumberInTabs` (off by default) shows the current page as `n/N` after the file name on tabs; the name ellipsizes first

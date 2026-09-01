@@ -340,6 +340,7 @@ MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr, bool showWin = 
 void ShowMainWindow(MainWindow* win, int windowState);
 void MaybeShowDefaultAppNotification(MainWindow* win);
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win);
+bool OpenDocumentFromMemory(MainWindow* win, Str data, Str nameHint);
 
 uint MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, Str msg, Str title = {});

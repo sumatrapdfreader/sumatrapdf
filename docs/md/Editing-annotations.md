@@ -80,6 +80,8 @@ It is saved as an ink annotation in the `HighlightColor` from Advanced Settings 
 
 Click an annotation in Edit PDF mode to select it. A compact property row appears under it (color, opacity, border, font, icon, line endings, Contents). A file attachment's row starts with **Attach File**, and **Save Attachment** once a file is embedded. Icon, line-ending, and text-alignment menus show the glyph next to the name. The filter list and floating list also select an annotation when you click a row.
 
+Outside Edit PDF mode, click a file attachment whose file Sumatra can open (a PDF, for example) to open it in a new tab. Use **Save Attachment** on the page context menu to write it to disk.
+
 Delete the selected annotation with `Delete`, or with **Delete Annotation** in the floating list.
 
 `Ctrl + C` copies the selected annotation. `Ctrl + V` pastes a copy with its top-left corner at the mouse. You can paste on another page, or into another PDF. Copy and Paste are also on the page context menu and in the command palette.

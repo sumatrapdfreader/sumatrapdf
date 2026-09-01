@@ -186,6 +186,7 @@ EngineBase* CreateEnginePsFromFile(Str fileName);
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks);
 
 EngineBase* CreateEngineFromFile(Str filePath, PasswordUI* pwdUI, bool enableChmEngine);
+EngineBase* CreateEngineFromData(Str data, Str nameHint, PasswordUI* pwdUI);
 
 bool IsOpenCachePath(Str path);
 TempStr MaybeCopyEphemeralHostFile(Str path);
