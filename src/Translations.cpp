@@ -281,7 +281,3 @@ void Destroy() {
 Str _TRA(Str s) {
     return trans::GetTranslation(s);
 }
-
-TempWStr _TRW(Str s) {
-    return ToWStrTemp(trans::GetTranslation(s));
-}
