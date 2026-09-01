@@ -1196,7 +1196,14 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut, QuadF** quads
         }
     }
     if (quadsOut) {
-        if (n > 0) {
+        // quads (32 bytes/glyph, cached for the engine's lifetime) only add
+        // information over coords for rotated text; consumers fall back to
+        // coords when null, so skip them for the common all-upright page
+        bool hasRotated = false;
+        for (int i = 0; !hasRotated && i < n; i++) {
+            hasRotated = boxes[i].quad.IsRotated();
+        }
+        if (hasRotated) {
             QuadF* quads = AllocArray<QuadF>(n);
             for (int i = 0; i < n; i++) {
                 quads[i] = boxes[i].quad;

@@ -416,9 +416,7 @@ TempStr EngineBase::GetErrorsTextTemp() {
 EngineBase::~EngineBase() {
     if (pagesText) {
         for (int i = 0; i < pageCount; i++) {
-            PageText* pt = &pagesText[i];
-            free(pt->coords);
-            str::Free(pt->text);
+            FreePageText(&pagesText[i]);
         }
         free(pagesText);
     }

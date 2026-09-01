@@ -247,6 +247,15 @@ bool QuadF::IsEmpty() const {
     return ul == ur && ul == ll && ul == lr;
 }
 
+// true when the glyph box is not axis-aligned (rotated / sheared text)
+bool QuadF::IsRotated() const {
+    if (IsEmpty()) {
+        return false;
+    }
+    const float eps = 0.5f;
+    return fabsf(ul.y - ur.y) > eps || fabsf(ll.y - lr.y) > eps || fabsf(ul.x - ll.x) > eps || fabsf(ur.x - lr.x) > eps;
+}
+
 // ------------- Size
 
 Size::Size(int dx, int dy) : dx(dx), dy(dy) {}

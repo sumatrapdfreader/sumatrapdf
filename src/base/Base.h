@@ -899,6 +899,7 @@ struct QuadF {
     PointF lr;
 
     bool IsEmpty() const;
+    bool IsRotated() const;
 };
 
 struct Size {

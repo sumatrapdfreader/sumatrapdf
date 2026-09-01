@@ -112,15 +112,6 @@ static bool IsGlyphOnVisualLine(Rect lineBox, Rect glyphBox) {
     return (bottom - top) * 2 >= glyphBox.dy;
 }
 
-static bool QuadIsRotated(const QuadF& q) {
-    if (q.IsEmpty()) {
-        return false;
-    }
-    const float eps = 0.5f;
-    return fabsf(q.ul.y - q.ur.y) > eps || fabsf(q.ll.y - q.lr.y) > eps || fabsf(q.ul.x - q.ll.x) > eps ||
-           fabsf(q.ur.x - q.lr.x) > eps;
-}
-
 static void TextSelAppend(TextSel* result, int pageNo, Rect bbox, const QuadF* quad) {
     int currLen = result->len;
     int left = result->cap - currLen;
@@ -167,7 +158,7 @@ static void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int te
         }
 
         int runStart = (int)(c - coords);
-        bool rotated = glyphQuads && QuadIsRotated(glyphQuads[runStart]);
+        bool rotated = glyphQuads && glyphQuads[runStart].IsRotated();
         if (rotated) {
             for (; c < end && (c->x || c->dx); c++) {
                 int ix = (int)(c - coords);
