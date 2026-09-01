@@ -55,7 +55,7 @@ static void FreeTaskInfo(TaskInfo* ti) {
 
 // A task that sat in the queue this long is worth reporting even for the kinds
 // that are too frequent to log every time.
-#if defined(ASAN_BUILD) || defined(DEBUG)
+#if IS_ASAN || IS_DEBUG
 constexpr double kSlowTaskDispatchMs = 300.0;
 #else
 constexpr double kSlowTaskDispatchMs = 50.0;

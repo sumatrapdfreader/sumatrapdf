@@ -1575,7 +1575,7 @@ extern int RunUninstaller();
 // In release builds, we want to do fast exit and leave cleaning up (freeing memory) to the os.
 // In debug and in release asan builds, we want to cleanup ourselves in order to see leaks.
 // Note: detect_leaks ASAN flag is not (yet?) supported with msvc 16.4
-#if defined(DEBUG) || defined(ASAN_BUILD)
+#if IS_DEBUG || IS_ASAN
 static bool fastExit = false;
 #else
 static bool fastExit = true;
@@ -2402,7 +2402,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         // gRedrawLog = true;
     }
 
-#ifdef DEBUG
+#if IS_DEBUG
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (flags.tester) {
             extern int TesterMain(); // in Tester.cpp
@@ -2493,7 +2493,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         ::ExitProcess(exitCode);
     }
 
-#ifdef DEBUG
+#if IS_DEBUG
     if (flags.unitTests) {
         CreateSumatraAcceleratorTable();
         exitCode = RunAppUnitTests();
@@ -2548,7 +2548,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         ::ExitProcess(1);
     }
 
-#ifdef DEBUG
+#if IS_DEBUG
     if (flags.testExtractPage) {
         TestExtractPage(flags);
         ShutdownCommon();
@@ -2572,7 +2572,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         SetAppDataDir(flags.appdataDir);
     }
 
-#ifdef DEBUG
+#if IS_DEBUG
     if (flags.testApp) {
         // in TestApp.cpp
         extern void TestApp();

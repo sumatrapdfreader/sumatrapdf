@@ -7,17 +7,8 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 
-#ifdef DEBUG
-bool gIsDebugBuild = true;
-#else
-bool gIsDebugBuild = false;
-#endif
-
-#ifdef ASAN_BUILD
-bool gIsAsanBuild = true;
-#else
-bool gIsAsanBuild = false;
-#endif
+bool gIsDebugBuild = IS_DEBUG;
+bool gIsAsanBuild = IS_ASAN;
 
 #ifdef PRE_RELEASE_VER
 bool gIsPreReleaseBuild = true;

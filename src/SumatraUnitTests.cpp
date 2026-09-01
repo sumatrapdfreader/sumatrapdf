@@ -23,7 +23,7 @@
 
 #define utassert_fequal(a, b) utassert(fabs((a) - (b)) < FLT_EPSILON);
 
-#ifdef DEBUG
+#if IS_DEBUG
 void PageRenderPolicy_UnitTests();
 void CommandPaletteModel_UnitTests();
 #if OS_LINUX
@@ -314,7 +314,7 @@ static void DocPropertiesTest() {
 }
 
 void SumatraPDF_UnitTests() {
-#ifdef DEBUG
+#if IS_DEBUG
     Layout_UnitTests();
     PageRenderPolicy_UnitTests();
     CommandPaletteModel_UnitTests();

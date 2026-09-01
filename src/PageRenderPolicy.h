@@ -32,6 +32,6 @@ void PageRenderPolicyDropStale(Vec<PageRenderPolicyRequest>& requests, u32 gener
 int PageRenderPolicyPickRequest(const Vec<PageRenderPolicyRequest>& requests);
 int PageRenderPolicyPickEviction(const Vec<PageRenderPolicyCacheEntry>& entries, int protectedIndex);
 
-#ifdef DEBUG
+#if IS_DEBUG
 void PageRenderPolicy_UnitTests();
 #endif

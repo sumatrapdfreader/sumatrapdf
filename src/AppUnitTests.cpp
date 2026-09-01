@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 
-#ifdef DEBUG
+#if IS_DEBUG
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -14,7 +14,6 @@
 #include "base/UtAssert.h"
 #include "AppUnitTests.h"
 
-#ifdef DEBUG
 void TextSelection_UnitTests();
 void Layout_UnitTests();
 void VirtCtrl_UnitTests();
@@ -35,7 +34,6 @@ bool Accelerators_UnitTestFolderNavIsSafe();
 bool Accelerators_UnitTestTreeTakesLetters();
 bool AnnotSearch_UnitTests();
 void ReadAloudHighlight_UnitTests();
-#endif
 
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
     VirtRichText* tip = ParseTip(input);
@@ -148,7 +146,7 @@ static void ParseTip_UnitTests() {
 
 int RunAppUnitTests() {
     ParseTip_UnitTests();
-#ifdef DEBUG
+#if IS_DEBUG
     TextSelection_UnitTests();
     Layout_UnitTests();
 #if OS_WIN

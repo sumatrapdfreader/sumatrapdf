@@ -6,7 +6,7 @@
 #include "base/Win.h"
 
 #include "gui/Layout.h"
-#ifdef DEBUG
+#if IS_DEBUG
 #include "base/UtAssert.h"
 #endif
 #include "gui/Layout_win.h"
@@ -75,7 +75,7 @@ void HwndSlot::SetBounds(Rect bounds) {
     HwndMoveWindow(hwnd, &bounds);
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 
 void LayoutWin_UnitTests() {
     // A slot without an HWND still records its bounds for lazily-created windows.

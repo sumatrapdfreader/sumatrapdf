@@ -397,7 +397,7 @@ Size LayoutToSize(ILayout* layout, Size size);
 void dbglayout(Str s);
 void LogConstraints(Constraints c, Str suffix);
 
-#ifdef DEBUG
+#if IS_DEBUG
 void Layout_UnitTests();
 #endif
 

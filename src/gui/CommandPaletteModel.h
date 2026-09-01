@@ -17,6 +17,6 @@ struct CommandPaletteModel {
     int ItemCommandId(int index) const;
 };
 
-#ifdef DEBUG
+#if IS_DEBUG
 void CommandPaletteModel_UnitTests();
 #endif

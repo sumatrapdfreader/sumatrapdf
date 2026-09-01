@@ -198,7 +198,7 @@ static Pixmap* PixmapFromDataWin(Str bmpData) {
     // the OS HEIF codec via WIC faster than heicdec (~1.2x AVIF / ~2x HEIC when
     // the Windows codec is installed), then fall back to heicdec.
     if (FileType::Heic == kind || FileType::Avif == kind) {
-#ifdef DEBUG
+#if IS_DEBUG
         Pixmap* px = PixmapFromAvifData(bmpData);
         if (px) {
             return px;

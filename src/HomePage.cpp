@@ -248,7 +248,7 @@ static AboutRow gAboutRows[] = {
 #ifdef PRE_RELEASE_VER
     {StrL("a note"), StrL("Pre-release version, for testing only!"), {}},
 #endif
-#ifdef DEBUG
+#if IS_DEBUG
     {StrL("a note"), StrL("Debug version, for testing only!"), {}},
 #endif
     {{}, {}, {}}};

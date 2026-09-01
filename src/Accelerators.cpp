@@ -498,7 +498,7 @@ void FreeAcceleratorTables() {
     gAccels = nullptr;
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 // Folder browsing has to keep working when focus is inside the document (the
 // WebView2 that shows .md / .html) or the bookmarks tree (issue #6089)
 bool Accelerators_UnitTestFolderNavIsSafe() {

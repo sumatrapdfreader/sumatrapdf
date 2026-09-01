@@ -3676,7 +3676,7 @@ TempStr EbookGeneratedCssTemp(Str fontName, const Vec<float>* margin, float line
     return res;
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 bool EngineMupdf_UnitTestEbookLineSpacingCss() {
     return !EbookLineSpacingCssTemp(0) && !EbookLineSpacingCssTemp(0.49f) && !EbookLineSpacingCssTemp(5.01f) &&
            str::Eq(EbookLineSpacingCssTemp(1.5f), StrL("body, body * { line-height: 1.5 !important; }\n"));
@@ -3756,7 +3756,7 @@ static EBookUISettings MergeEBookUI(const EBookUI* global, const FileEBookUI* pe
     return res;
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 bool EngineMupdf_UnitTestEbookMarginCss() {
     Vec<float> m;
     // nothing set, and 3 values (not a CSS margin), leave mupdf's default alone
@@ -9141,7 +9141,7 @@ void EngineMupdfGetFormFieldHighlightRects(EngineBase* engine, int pageNo, Annot
 }
 
 // Note: this code is compiled in release mode even if debug build so
-// DEBUG is not defined so we can't do #if defined(DEBUG) here
+// DEBUG is not defined so we can't do #if IS_DEBUG here
 // so we use this runtime boolean instead
 static bool gSkipAnnotatoinValidation = true;
 

@@ -43,7 +43,7 @@ extern void ShowCrashHandlerMessage();
 extern void GetProgramInfo();
 
 // in DEBUG we don't enable symbols download because they are not uploaded
-#ifdef DEBUG
+#if IS_DEBUG
 static bool gDisableSymbolsDownload = true;
 #else
 static bool gDisableSymbolsDownload = false;

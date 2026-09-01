@@ -69,6 +69,20 @@
 #define COMPILER_MINGW 0
 #endif
 
+// Always 0 or 1 so `#if IS_DEBUG` / `#if IS_ASAN` compile under /W4 /WX (C4668).
+// The build may pass IS_DEBUG=1 / IS_ASAN=1; otherwise IS_DEBUG follows DEBUG.
+#ifndef IS_DEBUG
+#ifdef DEBUG
+#define IS_DEBUG 1
+#else
+#define IS_DEBUG 0
+#endif
+#endif
+
+#ifndef IS_ASAN
+#define IS_ASAN 0
+#endif
+
 #ifndef UNICODE
 #define UNICODE
 #endif
@@ -399,7 +413,7 @@ extern void _uploadDebugReport(Str, Str, bool, bool);
 
 #define ReportIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)
 #define ReportIfFast(cond) ReportIfCond(cond, #cond, FILE_LINE, false, false)
-#ifdef DEBUG
+#if IS_DEBUG
 #define ReportDebugIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)
 #else
 // In release the check is gone, but the condition must still be *read*, or a

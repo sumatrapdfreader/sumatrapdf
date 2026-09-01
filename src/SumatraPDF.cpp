@@ -10378,10 +10378,10 @@ ShowMessage:
     MessageBoxWarning(nullptr, msg, _TRA("Downloading symbols"));
 }
 
-// CmdDebugCorruptMemory, the only caller, is behind #if defined(DEBUG), so
+// CmdDebugCorruptMemory, the only caller, is behind #if IS_DEBUG, so
 // defining this in a release build leaves an unreferenced static: C4505, which
 // /WX turns into an error
-#ifdef DEBUG
+#if IS_DEBUG
 #if 1
 static void DebugCorruptMemory() {}
 #else
@@ -12622,7 +12622,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-#ifdef DEBUG
+#if IS_DEBUG
         case CmdDebugTestApp:
             extern void TestApp(HINSTANCE hInstance);
             extern void TestBrowser();

@@ -534,7 +534,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -549,7 +549,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -710,7 +710,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -725,7 +725,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -898,7 +898,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -915,7 +915,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -1088,7 +1088,7 @@
       <PrecompiledHeaderFile>base/Base.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;28125;28252;28253;4100;4701;4702;4703;4706;4819;6324;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -1105,7 +1105,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\libwebp\src;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>

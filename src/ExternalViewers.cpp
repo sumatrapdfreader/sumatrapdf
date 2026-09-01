@@ -326,7 +326,7 @@ static TempStr GetPDFXChangePathTemp() {
     return {};
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 bool ExternalViewers_UnitTestPDFXChangePaths() {
     TempStr testDir = GetTempFilePathTemp(StrL("issue-5941"));
     if (!testDir || !file::Delete(testDir) || !dir::Create(testDir)) {

@@ -187,7 +187,7 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
     return NewSimpleDest(pageNo, r, zoom);
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 bool TableOfContents_UnitTestSnapshotNamedDest() {
     PageDestination source;
     source.kind = kindDestinationScrollTo;

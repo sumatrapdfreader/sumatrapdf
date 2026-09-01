@@ -1389,7 +1389,7 @@ function test_engines_files()
     "src/gui/UIModels.h",
     "src/tools/test_engines.cpp",
   }
-  -- TextSelection.cpp ends in a #if DEBUG unit-test block calling utassert()
+  -- TextSelection.cpp ends in a #if IS_DEBUG unit-test block calling utassert()
   files_in_dir("src/base", {
     "UtAssert.*",
   })
@@ -1417,7 +1417,7 @@ function logview_files()
   files {
     "src/tools/logview/logview.cpp",
   }
-  -- Layout.cpp and VirtCtrl.cpp end in a #if DEBUG unit-test block calling utassert()
+  -- Layout.cpp and VirtCtrl.cpp end in a #if IS_DEBUG unit-test block calling utassert()
   files_in_dir("src/base", {
     "UtAssert.*",
   })

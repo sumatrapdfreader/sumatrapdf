@@ -233,7 +233,7 @@ void AnnotSearchContentWords(const AnnotMatchOpts& opts, StrVec& wordsOut) {
     }
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 
 static int CondCount(const AnnotMatchOpts& opts) {
     return ListLen(opts.conds);

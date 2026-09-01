@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "gui/Dpi.h"
 
-#ifdef DEBUG
+#if IS_DEBUG
 #include "base/UtAssert.h"
 #endif
 #include "gui/Layout.h"
@@ -1818,7 +1818,7 @@ void Wrap::SetBounds(Rect bounds) {
     }
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 
 // Unit tests for the core layout engine. They use Spacer as a pure, HWND-free
 // leaf (fixed intrinsic size, and its SetBounds records lastBounds), so whole

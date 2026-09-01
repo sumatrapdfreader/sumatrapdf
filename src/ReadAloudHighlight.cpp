@@ -1147,7 +1147,7 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
     gfx->FillRects(wordRects.els, len(wordRects), kWordCol);
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 #include "base/UtAssert.h"
 
 void ReadAloudHighlight_UnitTests() {

@@ -254,7 +254,7 @@ int printUsage(Str exeName) {
 }
 
 int main(__unused int argc, __unused char** argv) {
-#ifdef DEBUG
+#if IS_DEBUG
     // report memory leaks on stderr
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
     _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);

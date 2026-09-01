@@ -1021,7 +1021,7 @@ static int ScrollLineAmount(int configuredAmount) {
     return configuredAmount > 0 ? configuredAmount : 16;
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 bool Canvas_UnitTestScrollLineAmount() {
     return ScrollLineAmount(16) == 16 && ScrollLineAmount(30) == 30 && ScrollLineAmount(1) == 1 &&
            ScrollLineAmount(0) == 16 && ScrollLineAmount(-1) == 16;

@@ -419,7 +419,7 @@ void HtmlFormatter::DumpLineDebugInfo() {
 // Redistribute extra space in the line equally among the spaces
 void HtmlFormatter::JustifyLineBoth() {
     float extraSpaceDxTotal = pageDx - currX;
-#ifdef DEBUG
+#if IS_DEBUG
     if (extraSpaceDxTotal < 0.f) DumpLineDebugInfo();
 #endif
     ReportIf(extraSpaceDxTotal < 0.f);

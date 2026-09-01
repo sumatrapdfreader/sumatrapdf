@@ -6,7 +6,7 @@
 #include "DocController.h"
 #include "gui/UIModels.h"
 #include "EngineBase.h"
-#ifdef DEBUG
+#if IS_DEBUG
 #include "base/UtAssert.h"
 #endif
 #include "TextSelection.h"
@@ -224,7 +224,7 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
     FillSelectionRects(&ts->result, pageNo, coords, textLen, glyph, length, mediabox);
 }
 
-#ifdef DEBUG
+#if IS_DEBUG
 void TextSelection_UnitTests() {
     Rect coords[] = {
         {50, 100, 12, 10}, {60, 100, 12, 10}, {70, 100, 12, 10}, {56, 115, 12, 10},

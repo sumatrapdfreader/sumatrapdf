@@ -516,7 +516,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -532,7 +532,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -689,7 +689,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -704,7 +704,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -864,7 +864,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -880,7 +880,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -1042,7 +1042,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4206;4701;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
@@ -1058,7 +1058,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_ASAN=1;IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;FZ_ENABLE_PDF=1;FZ_ENABLE_SVG=1;FZ_ENABLE_BROTLI=1;FZ_ENABLE_BARCODE=0;FZ_ENABLE_JS=1;FZ_ENABLE_HYPHEN=0;FZ_ENABLE_MD=1;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
