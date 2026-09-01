@@ -1050,9 +1050,9 @@ void PopulateFavTreeIfNeeded(MainWindow* win) {
 void ToggleFavorites(MainWindow* win) {
     // Sidebar Favorites panel (independent of the Favorites tab)
     if (gSettings->showFavorites) {
-        SetSidebarVisibility(win, win->uiState.tocVisible, false);
+        SetSidebarVisibility(win, win->uiState.tocVisible, false, SidebarResizeFrame::Adjust);
     } else {
-        SetSidebarVisibility(win, win->uiState.tocVisible, true);
+        SetSidebarVisibility(win, win->uiState.tocVisible, true, SidebarResizeFrame::Adjust);
         HwndSetFocus(win->favTreeView->hwnd);
     }
 }

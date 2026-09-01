@@ -407,10 +407,10 @@ void ToggleTocBox(MainWindow* win) {
         return;
     }
     if (win->uiState.tocVisible) {
-        SetSidebarVisibility(win, false, gSettings->showFavorites);
+        SetSidebarVisibility(win, false, gSettings->showFavorites, SidebarResizeFrame::Adjust);
         return;
     }
-    SetSidebarVisibility(win, true, gSettings->showFavorites);
+    SetSidebarVisibility(win, true, gSettings->showFavorites, SidebarResizeFrame::Adjust);
     if (win->uiState.tocVisible) {
         HwndSetFocus(win->tocTreeView->hwnd);
     }

@@ -185,7 +185,12 @@ HMENU GetReadAloudContextSubmenu();
 bool CanCloseWindow(MainWindow* win);
 void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
 void PostAppExit();
-void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites);
+enum class SidebarResizeFrame {
+    Keep,
+    Adjust
+};
+void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites,
+                          SidebarResizeFrame = SidebarResizeFrame::Keep);
 void RememberFavTreeExpansionState(MainWindow* win);
 void AdvanceFocus(MainWindow* win);
 void SetCurrentLanguageAndRefreshUI(Str langCode);

@@ -4,8 +4,10 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { getWorkArea, sleep } from "./winapi.ts";
+import { getWorkArea, sendCopyDataW, sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
+
+const kCopyDataDdeW = 0x44646557;
 import type { LayoutInfo } from "./control.ts";
 
 function makePdf(): string {
@@ -48,16 +50,18 @@ export async function testit(): Promise<void> {
   const dir = tmpPath("issue-6080");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
-  const pdf = join(dir, "doc.pdf");
+  const pdfA = join(dir, "a.pdf");
+  const pdfB = join(dir, "b.pdf");
   const appdata = join(dir, "appdata");
   mkdirSync(appdata, { recursive: true });
-  writeFileSync(pdf, makePdf(), "latin1");
+  writeFileSync(pdfA, makePdf(), "latin1");
+  writeFileSync(pdfB, makePdf(), "latin1");
   writeFileSync(
     join(appdata, "SumatraPDF-settings.txt"),
-    "CheckForUpdates = false\nRestoreSession = false\nShowStartPage = false\nShowToc = false\nShowFavorites = false\n",
+    "CheckForUpdates = false\nRestoreSession = false\nShowStartPage = false\nShowToc = false\nShowFavorites = false\nUseTabs = true\n",
   );
 
-  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdfA]);
   try {
     await client.waitForRenderIdle();
     const closed = await waitToc(client, false);
@@ -84,6 +88,25 @@ export async function testit(): Promise<void> {
       throw new Error(
         `issue-6080: frame not fully in work area: x=${frame1.x} dx=${frame1.dx} work=${wa.left}..${wa.right}`,
       );
+    }
+
+    const openPath = pdfB.replaceAll("\\", "/");
+    if (!sendCopyDataW(frame, kCopyDataDdeW, `[Open("${openPath}")]`)) {
+      throw new Error("issue-6080: DDE Open of second tab failed");
+    }
+    await client.waitForRenderIdle();
+    const other = await waitToc(client, false);
+    const frameTab = item(other, "frame").rect;
+    if (Math.abs(frameTab.dx - frame1.dx) > 2) {
+      throw new Error(`issue-6080: tab switch changed frame dx ${frame1.dx} -> ${frameTab.dx}`);
+    }
+
+    sendCommandSync(frame, cmdId("CmdPrevTab"));
+    await client.waitForRenderIdle();
+    const back = await waitToc(client, true);
+    const frameBack = item(back, "frame").rect;
+    if (Math.abs(frameBack.dx - frame1.dx) > 2) {
+      throw new Error(`issue-6080: return tab changed frame dx ${frame1.dx} -> ${frameBack.dx}`);
     }
 
     sendCommandSync(frame, cmdId("CmdToggleBookmarks"));

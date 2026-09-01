@@ -9532,9 +9532,9 @@ static void MoveFrameForSidebar(HWND hwnd, Rect wr) {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
 }
 
-// Grow the frame when showing the bookmarks/favorites sidebar if the work area
-// has room, so the canvas keeps its size. Shrink it again on hide. If the
-// grown frame would sit off-screen, shift it fully into the work area.
+// Grow/shrink the frame on explicit Bookmarks/Favorites show/hide when the
+// work area has room. Skip grow if already widened (tab switch must not
+// stack another extra). Off-screen frames are shifted into the work area.
 static void AdjustFrameForSidebar(MainWindow* win, bool show) {
     if (!FrameCanResizeForSidebar(win)) {
         if (!show) {
@@ -9549,6 +9549,9 @@ static void AdjustFrameForSidebar(MainWindow* win, bool show) {
     bool onRight = SidebarOnRightLayout();
 
     if (show) {
+        if (win->sidebarGrewFrameDx > 0) {
+            return;
+        }
         int extra = SidebarExtraDx(win);
         int spare = work.dx - wr.dx;
         if (extra <= 0 || spare < extra) {
@@ -9584,7 +9587,7 @@ static void AdjustFrameForSidebar(MainWindow* win, bool show) {
 // Records the desired sidebar visibility in UIState and schedules the
 // deferred update, which shows/hides the sidebar windows and relayouts
 // (see FrameUpdateUi).
-void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) {
+void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, SidebarResizeFrame resizeFrame) {
     if (gPluginMode || !CanAccessDisk()) {
         showFavorites = false;
     }
@@ -9638,7 +9641,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     win->uiState.tocVisible = tocVisible;
     win->uiState.favVisible = showFavorites;
     bool nowSidebar = tocVisible || showFavorites;
-    if (wasSidebar != nowSidebar) {
+    if (resizeFrame == SidebarResizeFrame::Adjust && wasSidebar != nowSidebar) {
         AdjustFrameForSidebar(win, nowSidebar);
     }
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiSidebarDirty);
