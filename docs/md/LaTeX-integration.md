@@ -1,6 +1,6 @@
 # LaTeX integration
 
-SumatraPDF is a common PDF previewer for LaTeX on Windows: it opens quickly, reloads when the PDF is rebuilt, and supports **SyncTeX** so you can jump between source and PDF.
+SumatraPDF is a common PDF previewer for LaTeX on Windows: it opens quickly, reloads when the PDF is rebuilt, and supports **SyncTeX** so you can jump between source and PDF. [Typst](https://typst.app/) users on Windows use it the same way for live PDF reload (see [Typst](#typst)); Typst does not emit SyncTeX.
 
 For LaTeX edited/compiled **inside WSL**, see [LaTeX integration with WSL](LaTeX-integration-wsl.md). Editors can also drive Sumatra with [DDE commands](DDE-Commands.md); prefer command-line `-forward-search` when possible (simpler and Unicode-friendly).
 
@@ -326,11 +326,51 @@ SumatraPDF.exe -reuse-instance "$o"
 
 and set inverse search in Sumatra to your LyX executable with the arguments LyX documents for SyncTeX inverse search (version-specific). See [LyX + Sumatra forward/inverse search notes](http://joonro.github.io/blog/posts/inverse-and-forward-search-lyx-windows/) for a full walkthrough.
 
+### Typst
+
+[Typst](https://typst.app/) is a markup typesetter (not LaTeX). The Typst project [recommends SumatraPDF on Windows](https://typst.app/open-source/) because Sumatra reloads the PDF while `typst watch` rewrites it and does not lock the file.
+
+The Typst CLI does **not** write SyncTeX (`.synctex` / `.synctex.gz`). Sumatra’s forward search (`-forward-search`) and inverse search (double-click to source) need that file, so they do not work for `.typ` the way they do for LaTeX. For click-to-source, use [Tinymist](https://github.com/Myriad-Dreamin/tinymist)’s built-in preview, not Sumatra.
+
+**1. Sumatra**
+
+```
+ReuseInstance = true
+ReloadModifiedDocuments = true
+```
+
+**2. CLI**
+
+In the project directory:
+
+```
+typst watch main.typ
+```
+
+Open `main.pdf` in Sumatra (or run `typst compile --open main.typ` once if Sumatra is the default PDF viewer). Each save rebuilds the PDF; Sumatra reloads it.
+
+**3. VS Code / Cursor (Tinymist)**
+
+Install [Tinymist Typst](https://marketplace.visualstudio.com/items?itemName=myriad-dreamin.tinymist). To keep a PDF next to the source for Sumatra:
+
+```json
+{
+  "tinymist.exportPdf": "onSave"
+}
+```
+
+Use `"onType"` to rewrite the PDF on every keystroke (heavier). Open that PDF in Sumatra. Inverse-search command line is the same as for [LaTeX Workshop](#visual-studio-code--cursor-latex-workshop) (`code.cmd -r -g "%f:%l"`), but without SyncTeX it will not jump to a line.
+
+**4. Use it**
+
+- Edit `.typ` → compiler or Tinymist writes PDF → Sumatra reloads.
+- Source ↔ preview jumps: Tinymist preview, not Sumatra.
+
 ---
 
 ## Tips and troubleshooting
 
-1. **Always compile with SyncTeX** (`-synctex=1`). Without `.synctex`/`.synctex.gz`, jumps cannot map lines.
+1. **Always compile with SyncTeX** (`-synctex=1`). Without `.synctex`/`.synctex.gz`, jumps cannot map lines. Typst does not emit SyncTeX; see [Typst](#typst).
 2. **Set inverse search once in Sumatra** rather than stuffing a long `-inverse-search "..."` into every editor viewer command.
 3. **Paths with spaces** must be quoted; placeholders `%f` / `%l` stay outside or inside quotes as in the examples.
 4. **PDF does not reload after build** — set `ReloadModifiedDocuments = true`; avoid locking the PDF (Sumatra does not lock like some readers).
@@ -345,4 +385,5 @@ and set inverse search in Sumatra to your LyX executable with the arguments LyX 
 - [Command-line arguments](Command-line-arguments.md) (`-forward-search`, `-inverse-search`, forward-search highlight flags)
 - [DDE Commands](DDE-Commands.md)
 - [LaTeX integration with WSL](LaTeX-integration-wsl.md)
+- [Typst](https://typst.app/), [Tinymist](https://github.com/Myriad-Dreamin/tinymist)
 - Advanced settings: `InverseSearchCmdLine`, `EnableTeXEnhancements`, `ForwardSearch` highlight options
