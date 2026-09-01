@@ -9532,9 +9532,8 @@ static void MoveFrameForSidebar(HWND hwnd, Rect wr) {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME);
 }
 
-// Grow/shrink the frame on explicit Bookmarks/Favorites show/hide when the
-// work area has room. Skip grow if already widened (tab switch must not
-// stack another extra). Off-screen frames are shifted into the work area.
+// Grow the frame by sidebar minus unused canvas margin (Fit Width has
+// none). Skip if already grown (tab switch). Hide undoes the grow.
 static void AdjustFrameForSidebar(MainWindow* win, bool show) {
     if (!FrameCanResizeForSidebar(win)) {
         if (!show) {
@@ -9553,17 +9552,32 @@ static void AdjustFrameForSidebar(MainWindow* win, bool show) {
             return;
         }
         int extra = SidebarExtraDx(win);
-        int spare = work.dx - wr.dx;
-        if (extra <= 0 || spare < extra) {
+        if (extra <= 0) {
             win->sidebarGrewFrameDx = 0;
             return;
         }
-        wr.dx += extra;
+        int unused = 0;
+        if (DisplayModel* dm = win->AsFixed()) {
+            unused = dm->UnusedCanvasDx();
+        }
+        int grow = extra - unused;
+        if (grow < 0) {
+            grow = 0;
+        }
+        int spare = work.dx - wr.dx;
+        if (grow > spare) {
+            grow = spare;
+        }
+        if (grow <= 0) {
+            win->sidebarGrewFrameDx = 0;
+            return;
+        }
+        wr.dx += grow;
         if (!onRight) {
-            wr.x -= extra;
+            wr.x -= grow;
         }
         wr = ShiftRectToWorkArea(wr, hwnd, true);
-        win->sidebarGrewFrameDx = extra;
+        win->sidebarGrewFrameDx = grow;
         if (win->sidebarDx < kSidebarMinDx) {
             win->sidebarDx = extra - kSplitterDx;
         }

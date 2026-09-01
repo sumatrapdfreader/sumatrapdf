@@ -237,6 +237,41 @@ Size DisplayModel::GetCanvasSize() const {
     return canvasSize;
 }
 
+// Horizontal slack besides the page and windowMargin. Fit Width uses the
+// full width, so 0.
+int DisplayModel::UnusedCanvasDx() const {
+    if (zoomVirtual == kZoomFitWidth) {
+        return 0;
+    }
+
+    int minX = 0;
+    int maxX = 0;
+    bool any = false;
+    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        if (!PageShown(pageNo)) {
+            continue;
+        }
+        const Rect& r = GetPageInfo(pageNo)->pos;
+        if (r.dx <= 0) {
+            continue;
+        }
+        if (!any) {
+            minX = r.x;
+            maxX = r.x + r.dx;
+            any = true;
+            continue;
+        }
+        minX = std::min(minX, r.x);
+        maxX = std::max(maxX, r.x + r.dx);
+    }
+    if (!any) {
+        return 0;
+    }
+
+    int needed = windowMargin.left + (maxX - minX) + windowMargin.right;
+    return std::max(0, viewPort.dx - needed);
+}
+
 void DisplayModel::SetDisplayR2L(bool r2l) {
     displayR2L = r2l;
 }

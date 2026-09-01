@@ -171,6 +171,7 @@ struct DisplayModel : DocController {
     bool CanScrollUp() const;
     bool IsAtDocumentEnd() const;
     Size GetCanvasSize() const;
+    int UnusedCanvasDx() const;
 
     bool PageShown(int pageNo) const;
     bool PageVisible(int pageNo) const;

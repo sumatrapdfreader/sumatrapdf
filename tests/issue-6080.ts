@@ -1,5 +1,6 @@
-// #6080: showing Bookmarks should grow the frame when the work area has room,
-// so the canvas (and the page) keep their size. Hide shrinks the frame again.
+// #6080: showing Bookmarks grows the frame only as much as unused canvas
+// margin does not cover. Fit Width has no unused dx, so the frame grows by
+// the toc. Hide shrinks by the amount we grew. Tab switch does not resize.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -64,29 +65,33 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdfA]);
   try {
     await client.waitForRenderIdle();
-    const closed = await waitToc(client, false);
-    const canvas0 = item(closed, "canvas").rect;
-    const frame0 = item(closed, "frame").rect;
+
+    // Fit Width: page uses the full canvas dx, so the frame must grow by ~toc.
+    sendCommandSync(frame, cmdId("CmdZoomFitWidth"));
+    await client.waitForRenderIdle();
+    const closedFw = await waitToc(client, false);
+    const canvasFw0 = item(closedFw, "canvas").rect;
+    const frameFw0 = item(closedFw, "frame").rect;
 
     sendCommandSync(frame, cmdId("CmdToggleBookmarks"));
-    const open = await waitToc(client, true);
+    const openFw = await waitToc(client, true);
     await client.waitForRenderIdle();
-    const canvas1 = item(open, "canvas").rect;
-    const frame1 = item(open, "frame").rect;
-    const toc1 = item(open, "toc").rect;
+    const canvasFw1 = item(openFw, "canvas").rect;
+    const frameFw1 = item(openFw, "frame").rect;
+    const tocFw = item(openFw, "toc").rect;
 
-    if (Math.abs(canvas1.dx - canvas0.dx) > 2) {
+    if (Math.abs(canvasFw1.dx - canvasFw0.dx) > 2) {
       throw new Error(
-        `issue-6080: canvas dx should stay ${canvas0.dx} when showing bookmarks, got ${canvas1.dx} (frame ${frame0.dx} -> ${frame1.dx})`,
+        `issue-6080: fit-width canvas dx should stay ${canvasFw0.dx}, got ${canvasFw1.dx} (frame ${frameFw0.dx} -> ${frameFw1.dx})`,
       );
     }
-    if (frame1.dx < frame0.dx + toc1.dx - 8) {
-      throw new Error(`issue-6080: frame should grow by ~toc width ${toc1.dx}, ${frame0.dx} -> ${frame1.dx}`);
+    if (frameFw1.dx < frameFw0.dx + tocFw.dx - 8) {
+      throw new Error(`issue-6080: fit-width frame should grow by ~toc ${tocFw.dx}, ${frameFw0.dx} -> ${frameFw1.dx}`);
     }
     const wa = getWorkArea();
-    if (frame1.x < wa.left - 2 || frame1.x + frame1.dx > wa.right + 2) {
+    if (frameFw1.x < wa.left - 2 || frameFw1.x + frameFw1.dx > wa.right + 2) {
       throw new Error(
-        `issue-6080: frame not fully in work area: x=${frame1.x} dx=${frame1.dx} work=${wa.left}..${wa.right}`,
+        `issue-6080: frame not fully in work area: x=${frameFw1.x} dx=${frameFw1.dx} work=${wa.left}..${wa.right}`,
       );
     }
 
@@ -97,27 +102,67 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     const other = await waitToc(client, false);
     const frameTab = item(other, "frame").rect;
-    if (Math.abs(frameTab.dx - frame1.dx) > 2) {
-      throw new Error(`issue-6080: tab switch changed frame dx ${frame1.dx} -> ${frameTab.dx}`);
+    if (Math.abs(frameTab.dx - frameFw1.dx) > 2) {
+      throw new Error(`issue-6080: tab switch changed frame dx ${frameFw1.dx} -> ${frameTab.dx}`);
     }
 
     sendCommandSync(frame, cmdId("CmdPrevTab"));
     await client.waitForRenderIdle();
     const back = await waitToc(client, true);
     const frameBack = item(back, "frame").rect;
-    if (Math.abs(frameBack.dx - frame1.dx) > 2) {
-      throw new Error(`issue-6080: return tab changed frame dx ${frame1.dx} -> ${frameBack.dx}`);
+    if (Math.abs(frameBack.dx - frameFw1.dx) > 2) {
+      throw new Error(`issue-6080: return tab changed frame dx ${frameFw1.dx} -> ${frameBack.dx}`);
     }
 
     sendCommandSync(frame, cmdId("CmdToggleBookmarks"));
-    const closedAgain = await waitToc(client, false);
-    const canvas2 = item(closedAgain, "canvas").rect;
-    const frame2 = item(closedAgain, "frame").rect;
-    if (Math.abs(canvas2.dx - canvas0.dx) > 2) {
-      throw new Error(`issue-6080: canvas dx after hide ${canvas2.dx}, want ${canvas0.dx}`);
+    const closedFwAgain = await waitToc(client, false);
+    await client.waitForRenderIdle();
+    const canvasFw2 = item(closedFwAgain, "canvas").rect;
+    const frameFw2 = item(closedFwAgain, "frame").rect;
+    if (Math.abs(canvasFw2.dx - canvasFw0.dx) > 2) {
+      throw new Error(`issue-6080: fit-width canvas dx after hide ${canvasFw2.dx}, want ${canvasFw0.dx}`);
     }
-    if (Math.abs(frame2.dx - frame0.dx) > 2) {
-      throw new Error(`issue-6080: frame dx after hide ${frame2.dx}, want ${frame0.dx}`);
+    if (Math.abs(frameFw2.dx - frameFw0.dx) > 2) {
+      throw new Error(`issue-6080: fit-width frame dx after hide ${frameFw2.dx}, want ${frameFw0.dx}`);
+    }
+
+    // 25%: plenty of unused canvas dx, so steal that instead of growing by toc.
+    sendCommandSync(frame, cmdId("CmdZoom25"));
+    await client.waitForRenderIdle();
+    const closedSm = await waitToc(client, false);
+    const canvasSm0 = item(closedSm, "canvas").rect;
+    const frameSm0 = item(closedSm, "frame").rect;
+
+    sendCommandSync(frame, cmdId("CmdToggleBookmarks"));
+    const openSm = await waitToc(client, true);
+    await client.waitForRenderIdle();
+    const canvasSm1 = item(openSm, "canvas").rect;
+    const frameSm1 = item(openSm, "frame").rect;
+    const tocSm = item(openSm, "toc").rect;
+
+    const frameGrew = frameSm1.dx - frameSm0.dx;
+    const canvasLost = canvasSm0.dx - canvasSm1.dx;
+    if (canvasLost < tocSm.dx - 16) {
+      throw new Error(
+        `issue-6080: 25% should steal canvas margin (~toc ${tocSm.dx}), canvas ${canvasSm0.dx} -> ${canvasSm1.dx} frame grew ${frameGrew}`,
+      );
+    }
+    if (frameGrew > 8) {
+      throw new Error(
+        `issue-6080: 25% should not grow the frame when margin covers toc ${tocSm.dx}, ${frameSm0.dx} -> ${frameSm1.dx}`,
+      );
+    }
+
+    sendCommandSync(frame, cmdId("CmdToggleBookmarks"));
+    const closedSmAgain = await waitToc(client, false);
+    await client.waitForRenderIdle();
+    const canvasSm2 = item(closedSmAgain, "canvas").rect;
+    const frameSm2 = item(closedSmAgain, "frame").rect;
+    if (Math.abs(canvasSm2.dx - canvasSm0.dx) > 2) {
+      throw new Error(`issue-6080: 25% canvas dx after hide ${canvasSm2.dx}, want ${canvasSm0.dx}`);
+    }
+    if (Math.abs(frameSm2.dx - frameSm0.dx) > 2) {
+      throw new Error(`issue-6080: 25% frame dx after hide ${frameSm2.dx}, want ${frameSm0.dx}`);
     }
   } finally {
     client.close();
