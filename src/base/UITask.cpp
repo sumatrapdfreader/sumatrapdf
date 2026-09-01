@@ -61,7 +61,7 @@ constexpr double kSlowTaskDispatchMs = 300.0;
 constexpr double kSlowTaskDispatchMs = 50.0;
 #endif
 
-static SeqStrings gSkipLogNames = "TaskFindCountProgress\0CopyProgress\0RenderFinished\0(no kind)\0";
+static SeqStrings gSkipLogNames = "TaskFindCountProgress\0CopyProgress\0RenderFinished\0FrameUpdateUi\0(no kind)\0";
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (gExecuteTaskMessage != msg) {
@@ -75,7 +75,7 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
     bool shouldLog = SeqStrIndex(gSkipLogNames, kindName) < 0;
     if (shouldLog) {
         logf("uitask::WndProcTaskDispatch: will execute '%s', 0x%p, queued for %.3f ms\n", kindName, (void*)ti,
-                queuedMs);
+             queuedMs);
     } else if (queuedMs >= kSlowTaskDispatchMs) {
         logf("uitask::WndProcTaskDispatch: slow dispatch of '%s', queued for %.3f ms\n", kindName, queuedMs);
     }
