@@ -125,6 +125,7 @@ struct DisplayModel : DocController {
     bool HasPageLabels() const override;
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
+    int LogicalPageCount() const;
 
     bool ValidPageNo(int pageNo) const override;
     bool GoToNextPage() override;

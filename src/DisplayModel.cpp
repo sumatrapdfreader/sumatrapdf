@@ -153,6 +153,13 @@ int DisplayModel::GetPageByLabel(Str label) const {
     return engine->GetPageByLabel(label);
 }
 
+int DisplayModel::LogicalPageCount() const {
+    if (!engine) {
+        return 0;
+    }
+    return engine->LogicalPageCount();
+}
+
 // common shortcuts
 bool DisplayModel::ValidPageNo(int pageNo) const {
     if (!engine) {

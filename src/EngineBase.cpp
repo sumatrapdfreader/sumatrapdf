@@ -764,6 +764,13 @@ bool EngineBase::HasPageLabels() const {
     return hasPageLabels;
 }
 
+int EngineBase::LogicalPageCount() const {
+    if (logicalPageCount > 0) {
+        return logicalPageCount;
+    }
+    return PageCount();
+}
+
 // returns a label to be displayed instead of the page number
 // caller must free() the result
 TempStr EngineBase::GetPageLabeTemp(int pageNo) const {

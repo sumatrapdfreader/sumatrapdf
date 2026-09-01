@@ -496,6 +496,7 @@ class EngineBase {
     // hex-encoded password fingerprint + crypt key; arena-allocated
     Str decryptionKey;
     bool hasPageLabels = false;
+    int logicalPageCount = 0;
     bool hideAnnotations = false;
     bool disableAntiAlias = false;
     bool disableAutoLinks = false;
@@ -585,6 +586,7 @@ class EngineBase {
     virtual TocTree* GetToc();
 
     bool HasPageLabels() const;
+    int LogicalPageCount() const;
 
     virtual TempStr GetPageLabeTemp(int pageNo) const;
 

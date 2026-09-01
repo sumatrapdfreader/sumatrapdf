@@ -1109,7 +1109,16 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
         txt = fmt(" / %d", pageCount);
     } else {
-        txt = fmt("%d / %d", win->ctrl->CurrentPageNo(), pageCount);
+        int logical = pageCount;
+        DisplayModel* dm = win->ctrl->AsFixed();
+        if (dm) {
+            logical = dm->LogicalPageCount();
+        }
+        if (logical > 0 && logical != pageCount) {
+            txt = fmt(" / %d (%d / %d)", logical, win->ctrl->CurrentPageNo(), pageCount);
+        } else {
+            txt = fmt("%d / %d", win->ctrl->CurrentPageNo(), pageCount);
+        }
     }
     if (updateOnly && tb->pageTotal->s && txt && str::Eq(tb->pageTotal->s, txt)) {
         return;

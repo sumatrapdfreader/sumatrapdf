@@ -3850,6 +3850,53 @@ bool EngineMupdf_UnitTestMergeEBookUI() {
     // the tri-state can turn the global true back off
     return !s.ignoreDocumentCSS;
 }
+
+static TempStr AssemblePdfTemp(const char* const* objs, int nObjs) {
+    str::Builder b;
+    b.Append(StrL("%PDF-1.4\n"));
+    Vec<int> offs;
+    VecReserve(offs, nObjs);
+    for (int i = 0; i < nObjs; i++) {
+        VecAppend(offs, len(b));
+        b.Append(fmt("%d 0 obj\n%s\nendobj\n", i + 1, Str(objs[i])));
+    }
+    int xref = len(b);
+    b.Append(fmt("xref\n0 %d\n0000000000 65535 f \n", nObjs + 1));
+    for (int i = 0; i < nObjs; i++) {
+        b.Append(fmt("%010d 00000 n \n", offs[i]));
+    }
+    b.Append(fmt("trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n", nObjs + 1, xref));
+    b.Append(StrL("%%EOF\n"));
+    return ToStrTemp(b);
+}
+
+bool EngineMupdf_UnitTestPageLabels() {
+    const char* objs[] = {
+        "<< /Type /Catalog /Pages 2 0 R /PageLabels << /Nums [0 << /S /r >> 3 << /S /D >>] >> >>",
+        "<< /Type /Pages /Count 5 /Kids [3 0 R 4 0 R 5 0 R 6 0 R 7 0 R] >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
+    };
+    TempStr pdf = AssemblePdfTemp(objs, dimof(objs));
+    EngineBase* engine = CreateEngineMupdfFromData(pdf, StrL("labels.pdf"), nullptr);
+    if (!engine) {
+        return false;
+    }
+    bool ok = engine->HasPageLabels() && engine->PageCount() == 5 && engine->LogicalPageCount() == 2;
+    ok = ok && str::Eq(engine->GetPageLabeTemp(1), StrL("i"));
+    ok = ok && str::Eq(engine->GetPageLabeTemp(2), StrL("ii"));
+    ok = ok && str::Eq(engine->GetPageLabeTemp(3), StrL("iii"));
+    ok = ok && str::Eq(engine->GetPageLabeTemp(4), StrL("1"));
+    ok = ok && str::Eq(engine->GetPageLabeTemp(5), StrL("2"));
+    ok = ok && engine->GetPageByLabel(StrL("i")) == 1;
+    ok = ok && engine->GetPageByLabel(StrL("1")) == 4;
+    ok = ok && engine->GetPageByLabel(StrL("2")) == 5;
+    SafeEngineRelease(&engine);
+    return ok;
+}
 #endif
 
 // can mupdf turn this font-family into a font? mirrors fz_load_html_font():
@@ -4500,6 +4547,15 @@ bool EngineMupdf::FinishLoading() {
     }
     if (pageLabels) {
         hasPageLabels = true;
+        int maxN = 0;
+        int n = len(*pageLabels);
+        for (int i = 0; i < n; i++) {
+            int v = 0;
+            if (str::Parse((*pageLabels)[i], "%d%$", &v).s && v > maxN) {
+                maxN = v;
+            }
+        }
+        logicalPageCount = maxN;
     }
 
     // enable mupdf's JavaScript engine so form-field calculate / validate /
