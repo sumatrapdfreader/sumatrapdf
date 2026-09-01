@@ -541,9 +541,25 @@ static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND /*hwnd*/, UINT msg, WPA
 }
 
 static const Str kExpectedDlHost = StrL("https://www.sumatrapdfreader.org/");
+constexpr int kUrlHexHead = 40;
+
+static bool IsTrustedUpdateDlUrl(Str dlURL) {
+    return str::StartsWith(dlURL, kExpectedDlHost);
+}
+
+static TempStr HexHeadTemp(Str s, int nMax) {
+    if (!s.s || len(s) <= 0) {
+        return StrL("");
+    }
+    int n = std::min(len(s), nMax);
+    return str::MemToHexTemp(Str(s.s, n));
+}
 
 static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
     logf("NotifySuspiciousUpdate: suspicious download url '%s'\n", dlURL);
+    logf("  urlLen=%d hostLen=%d host='%s'\n", len(dlURL), len(kExpectedDlHost), kExpectedDlHost);
+    logf("  url hex[0..%d]=%s\n", kUrlHexHead, HexHeadTemp(dlURL, kUrlHexHead));
+    logf("  host hex[0..%d]=%s\n", kUrlHexHead, HexHeadTemp(kExpectedDlHost, kUrlHexHead));
     ReportIfFast(true);
     auto title = _TRA("SumatraPDF Update");
     auto content = fmt(R"(Suspicious update.
@@ -700,7 +716,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         return 0;
     }
 
-    if (!str::StartsWith(updateInfo->dlURL, kExpectedDlHost)) {
+    if (!IsTrustedUpdateDlUrl(updateInfo->dlURL)) {
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         NotifySuspiciousUpdate(hwndParent, updateInfo->dlURL);
         delete updateInfo;

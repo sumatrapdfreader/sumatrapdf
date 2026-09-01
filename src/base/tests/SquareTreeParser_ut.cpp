@@ -243,4 +243,36 @@ void SquareTreeTest() {
         delete a;
         delete b;
     }
+
+    {
+        Str body = StrL(R"([SumatraPDF]
+Latest: 21929
+BuiltOn: 2026-08-31
+Installer64: https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prerel-64-install.exe
+InstallerArm64: https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prerel-arm64-install.exe
+Installer32: https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prerel-32-install.exe
+PortableExe64: https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prerel-64.exe
+PortableExeArm64: https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prerel-arm64.exe
+PortableExe32: https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prerel-32.exe
+)");
+        utassert(len(body) == 611);
+
+        SquareTreeNode* root = ParseSquareTree(body);
+        SquareTreeNode* node = root ? root->GetChild(StrL("SumatraPDF")) : nullptr;
+        utassert(node);
+
+        Str host = StrL("https://www.sumatrapdfreader.org/");
+        Str keys[] = {
+            StrL("Installer64"),   StrL("InstallerArm64"),   StrL("Installer32"),
+            StrL("PortableExe64"), StrL("PortableExeArm64"), StrL("PortableExe32"),
+        };
+        for (Str key : keys) {
+            Str url = node->GetValue(key);
+            utassert(len(url) > 0);
+            utassert(str::StartsWith(url, host));
+        }
+        utassert(str::Eq(node->GetValue(StrL("Installer64")),
+                         StrL("https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prerel-64-install.exe")));
+        delete root;
+    }
 }
