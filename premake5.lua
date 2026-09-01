@@ -360,7 +360,6 @@ workspace "SumatraPDF"
 
   filter "platforms:x64_asan"
     sanitize { "Address" }
-    defines { "IS_ASAN=1" }
     incrementallink("Off")
     editandcontinue "Off"
     -- disablewarnings { "4731" }

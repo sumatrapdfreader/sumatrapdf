@@ -70,7 +70,8 @@
 #endif
 
 // Always 0 or 1 so `#if IS_DEBUG` / `#if IS_ASAN` compile under /W4 /WX (C4668).
-// The build may pass IS_DEBUG=1 / IS_ASAN=1; otherwise IS_DEBUG follows DEBUG.
+// The build may pass IS_DEBUG=1 / IS_ASAN=1; otherwise IS_DEBUG follows DEBUG
+// and IS_ASAN follows the compiler (/fsanitize=address, -fsanitize=address).
 #ifndef IS_DEBUG
 #ifdef DEBUG
 #define IS_DEBUG 1
@@ -80,7 +81,17 @@
 #endif
 
 #ifndef IS_ASAN
+#if defined(__SANITIZE_ADDRESS__)
+#define IS_ASAN 1
+#elif defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define IS_ASAN 1
+#else
 #define IS_ASAN 0
+#endif
+#else
+#define IS_ASAN 0
+#endif
 #endif
 
 #ifndef UNICODE
