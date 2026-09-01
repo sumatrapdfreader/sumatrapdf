@@ -707,7 +707,8 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardS
         }
         return editAccTable;
     }
-    // Edit / tree keep a reduced table so letters and arrows type/navigate.
+    // Edit keeps a reduced table so letters type. Tree keeps nav keys
+    // (arrows, page, home/end, Enter/Space) and takes every other shortcut.
     // Every other child (Virt toolbar, tabs HWND, canvas, WebView host, …)
     // uses the main table — those windows take focus on click, and returning
     // nullptr here is why Ctrl+W stopped closing a tab after the Virt toolbar.

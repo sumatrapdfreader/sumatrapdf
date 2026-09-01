@@ -32,6 +32,7 @@ bool EngineMupdf_UnitTestEbookMarginCss();
 bool EngineMupdf_UnitTestMergeEBookUI();
 bool EngineMupdf_UnitTestPageLabels();
 bool Accelerators_UnitTestFolderNavIsSafe();
+bool Accelerators_UnitTestTreeTakesLetters();
 bool AnnotSearch_UnitTests();
 void ReadAloudHighlight_UnitTests();
 #endif
@@ -168,6 +169,7 @@ int RunAppUnitTests() {
     utassert(EngineMupdf_UnitTestMergeEBookUI());
     utassert(EngineMupdf_UnitTestPageLabels());
     utassert(Accelerators_UnitTestFolderNavIsSafe());
+    utassert(Accelerators_UnitTestTreeTakesLetters());
     utassert(AnnotSearch_UnitTests());
     ReadAloudHighlight_UnitTests();
 #endif

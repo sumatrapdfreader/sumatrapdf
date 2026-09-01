@@ -324,6 +324,38 @@ static bool isSafeOutsideEditAccel(const ACCEL& a) {
     return false;
 }
 
+// keys the tree uses to move / activate; those stay with the control even
+// when a command is bound to them. Ctrl/Alt chords are still accelerators.
+static bool isTreeNavKey(WORD k) {
+    switch (k) {
+        case VK_LEFT:
+        case VK_RIGHT:
+        case VK_UP:
+        case VK_DOWN:
+        case VK_HOME:
+        case VK_END:
+        case VK_PRIOR:
+        case VK_NEXT:
+        case VK_SPACE:
+        case VK_RETURN:
+        case VK_TAB:
+        case VK_ADD:
+        case VK_SUBTRACT:
+        case VK_MULTIPLY:
+            return true;
+    }
+    return false;
+}
+
+// tree: letter shortcuts (and everything else) run the command; only the
+// navigation keys above, without Ctrl/Alt, are left for the tree
+static bool isSafeTreeAccel(const ACCEL& a) {
+    if ((a.fVirt & (FCONTROL | FALT)) != 0) {
+        return true;
+    }
+    return !isTreeNavKey(a.key);
+}
+
 // Command bound to vk + modifiers among the "safe" accelerators (those allowed
 // while a custom control has focus). 0 if none. Lets custom controls (e.g. the
 // WebView2-hosted CHM) forward app shortcuts they'd otherwise swallow.
@@ -386,11 +418,8 @@ void AccelTablesBuilder::Add(ACCEL accel) {
     accels[nAccels++] = accel;
     if (isSafeAccel(accel)) {
         editAccels[nEditAccels++] = accel;
-        treeViewAccels[nTreeViewAccels++] = accel;
-        return;
     }
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/2832
-    if (isSafeOutsideEditAccel(accel) || (int)accel.cmd == (int)CmdToggleBookmarks) {
+    if (isSafeTreeAccel(accel)) {
         treeViewAccels[nTreeViewAccels++] = accel;
     }
 }
@@ -485,6 +514,47 @@ bool Accelerators_UnitTestFolderNavIsSafe() {
     }
     // a bare arrow still belongs to the control, so it can scroll / move the selection
     if (SafeAcceleratorCmd(VK_RIGHT, false, false, false) != 0) {
+        return false;
+    }
+    return true;
+}
+
+// bookmarks / favorites tree: letter shortcuts run the command (e.g. t bound
+// to CmdToggleBookmarks); arrows stay on the tree
+bool Accelerators_UnitTestTreeTakesLetters() {
+    ACCEL letter{};
+    letter.fVirt = FVIRTKEY;
+    letter.key = 'T';
+    letter.cmd = (WORD)CmdToggleBookmarks;
+    if (!isSafeTreeAccel(letter)) {
+        return false;
+    }
+    ACCEL up{};
+    up.fVirt = FVIRTKEY;
+    up.key = VK_UP;
+    up.cmd = (WORD)CmdScrollUp;
+    if (isSafeTreeAccel(up)) {
+        return false;
+    }
+    ACCEL pgDn{};
+    pgDn.fVirt = FVIRTKEY;
+    pgDn.key = VK_NEXT;
+    pgDn.cmd = (WORD)CmdScrollDownPage;
+    if (isSafeTreeAccel(pgDn)) {
+        return false;
+    }
+    ACCEL enter{};
+    enter.fVirt = FVIRTKEY;
+    enter.key = VK_RETURN;
+    enter.cmd = (WORD)CmdScrollDownPage;
+    if (isSafeTreeAccel(enter)) {
+        return false;
+    }
+    ACCEL ctrlUp{};
+    ctrlUp.fVirt = FCONTROL | FVIRTKEY;
+    ctrlUp.key = VK_UP;
+    ctrlUp.cmd = (WORD)CmdScrollUpPage;
+    if (!isSafeTreeAccel(ctrlUp)) {
         return false;
     }
     return true;
