@@ -232,8 +232,20 @@ bool Direct2DAvailable();
 // flip to draw with Direct2D instead of gdiplus, for comparing the two
 extern bool gUseDirect2D;
 
+// Persistent 32-bit DIB for GfxCreateWithDoubleBuffer. A new memory DC every
+// paint makes d3d11 throw a first-chance C++ EH on BindDC.
+struct GfxDoubleBuffer {
+    HDC hdc = nullptr;
+    HBITMAP bitmap = nullptr;
+    HGDIOBJ prevBitmap = nullptr;
+    int dx = 0;
+    int dy = 0;
+};
+
 Gfx* GfxCreate(HDC);
+Gfx* GfxCreateWithDoubleBuffer(HWND, HDC, GfxDoubleBuffer*);
 Gfx* GfxCreateWithDoubleBuffer(HwndBase*, HDC);
+void GfxDestroyDoubleBuffer(GfxDoubleBuffer*);
 void GfxDestroyDoubleBuffer(HwndBase*);
 #endif
 

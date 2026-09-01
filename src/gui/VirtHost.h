@@ -19,6 +19,7 @@ struct VirtRoot;
 struct Gfx;
 struct PlatformFont;
 struct VirtHost;
+struct GfxDoubleBuffer;
 
 // the platform's window handle; only the platform-specific files touch it
 #if OS_WIN
@@ -68,6 +69,9 @@ struct VirtHost {
     };
 
     NativeWnd native = nullptr;
+#if OS_WIN
+    GfxDoubleBuffer* gfxBuf = nullptr;
+#endif
     // the tree of controls the host shows; owned
     ILayout* layout = nullptr;
     // the virtual controls of the tree, created on demand by Relayout(); owned

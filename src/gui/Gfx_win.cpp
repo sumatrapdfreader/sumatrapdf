@@ -337,61 +337,96 @@ Gfx* GfxCreate(HDC hdc) {
     return new GfxGdiplus(hdc);
 }
 
+void GfxDestroyDoubleBuffer(GfxDoubleBuffer* b) {
+    if (!b) {
+        return;
+    }
+    if (b->hdc && b->prevBitmap) {
+        SelectObject(b->hdc, b->prevBitmap);
+    }
+    DeleteObject(b->bitmap);
+    DeleteDC(b->hdc);
+    b->hdc = nullptr;
+    b->bitmap = nullptr;
+    b->prevBitmap = nullptr;
+    b->dx = 0;
+    b->dy = 0;
+}
+
 void GfxDestroyDoubleBuffer(HwndBase* w) {
     if (!w) {
         return;
     }
-    if (w->gfxDoubleBufferHdc && w->gfxDoubleBufferPrevBitmap) {
-        SelectObject(w->gfxDoubleBufferHdc, w->gfxDoubleBufferPrevBitmap);
-    }
-    DeleteObject(w->gfxDoubleBufferBitmap);
-    DeleteDC(w->gfxDoubleBufferHdc);
-    w->gfxDoubleBufferHdc = nullptr;
-    w->gfxDoubleBufferBitmap = nullptr;
-    w->gfxDoubleBufferPrevBitmap = nullptr;
-    w->gfxDoubleBufferDx = 0;
-    w->gfxDoubleBufferDy = 0;
+    GfxDoubleBuffer b{};
+    b.hdc = w->gfxDoubleBufferHdc;
+    b.bitmap = w->gfxDoubleBufferBitmap;
+    b.prevBitmap = w->gfxDoubleBufferPrevBitmap;
+    b.dx = w->gfxDoubleBufferDx;
+    b.dy = w->gfxDoubleBufferDy;
+    GfxDestroyDoubleBuffer(&b);
+    w->gfxDoubleBufferHdc = b.hdc;
+    w->gfxDoubleBufferBitmap = b.bitmap;
+    w->gfxDoubleBufferPrevBitmap = b.prevBitmap;
+    w->gfxDoubleBufferDx = b.dx;
+    w->gfxDoubleBufferDy = b.dy;
 }
 
-// Keep one bitmap per HwndBase. A repaint at the same client size reuses it;
-// resizing replaces it, and a failed allocation falls back to direct drawing.
-Gfx* GfxCreateWithDoubleBuffer(HwndBase* w, HDC hdc) {
-    if (!w || !w->hwnd || !hdc) {
+// Keep one bitmap. A repaint at the same client size reuses it; resizing
+// replaces it, and a failed allocation falls back to drawing on hdc.
+Gfx* GfxCreateWithDoubleBuffer(HWND hwnd, HDC hdc, GfxDoubleBuffer* b) {
+    if (!hwnd || !hdc || !b) {
         return GfxCreate(hdc);
     }
 
-    Size size = HwndClientRect(w->hwnd).Size();
-    bool sizeChanged = size.dx != w->gfxDoubleBufferDx || size.dy != w->gfxDoubleBufferDy;
-    if (sizeChanged) {
-        GfxDestroyDoubleBuffer(w);
-        w->gfxDoubleBufferDx = size.dx;
-        w->gfxDoubleBufferDy = size.dy;
+    Size size = HwndClientRect(hwnd).Size();
+    if (size.dx != b->dx || size.dy != b->dy) {
+        GfxDestroyDoubleBuffer(b);
+        b->dx = size.dx;
+        b->dy = size.dy;
         if (!size.IsEmpty()) {
-            w->gfxDoubleBufferHdc = CreateCompatibleDC(hdc);
+            b->hdc = CreateCompatibleDC(hdc);
             // CreateCompatibleDC copies LAYOUT_RTL; keep the DIB LTR (issue #6113)
-            SetLayout(w->gfxDoubleBufferHdc, 0);
+            SetLayout(b->hdc, 0);
             // 32-bit DIB: Direct2D BindDC rejects a 24-bit DDB from CreateCompatibleBitmap
-            w->gfxDoubleBufferBitmap = CreateMemoryBitmap(size);
-            if (w->gfxDoubleBufferHdc && w->gfxDoubleBufferBitmap) {
-                w->gfxDoubleBufferPrevBitmap = SelectObject(w->gfxDoubleBufferHdc, w->gfxDoubleBufferBitmap);
+            b->bitmap = CreateMemoryBitmap(size);
+            if (b->hdc && b->bitmap) {
+                b->prevBitmap = SelectObject(b->hdc, b->bitmap);
             }
-            if (!w->gfxDoubleBufferHdc || !w->gfxDoubleBufferBitmap || !w->gfxDoubleBufferPrevBitmap) {
-                GfxDestroyDoubleBuffer(w);
-                w->gfxDoubleBufferDx = size.dx;
-                w->gfxDoubleBufferDy = size.dy;
+            if (!b->hdc || !b->bitmap || !b->prevBitmap) {
+                GfxDestroyDoubleBuffer(b);
+                b->dx = size.dx;
+                b->dy = size.dy;
             }
         }
     }
 
-    HDC bufferHdc = w->gfxDoubleBufferHdc;
-    if (!bufferHdc) {
+    if (!b->hdc) {
         return GfxCreate(hdc);
     }
-    SetLayout(bufferHdc, 0);
-    SetBkMode(bufferHdc, TRANSPARENT);
-    Gfx* gfx = GfxCreate(bufferHdc);
+    SetLayout(b->hdc, 0);
+    SetBkMode(b->hdc, TRANSPARENT);
+    Gfx* gfx = GfxCreate(b->hdc);
     gfx->doubleBufferTarget = hdc;
-    gfx->doubleBufferSource = bufferHdc;
+    gfx->doubleBufferSource = b->hdc;
     gfx->doubleBufferSize = size;
+    return gfx;
+}
+
+Gfx* GfxCreateWithDoubleBuffer(HwndBase* w, HDC hdc) {
+    if (!w || !w->hwnd) {
+        return GfxCreate(hdc);
+    }
+    GfxDoubleBuffer b{};
+    b.hdc = w->gfxDoubleBufferHdc;
+    b.bitmap = w->gfxDoubleBufferBitmap;
+    b.prevBitmap = w->gfxDoubleBufferPrevBitmap;
+    b.dx = w->gfxDoubleBufferDx;
+    b.dy = w->gfxDoubleBufferDy;
+    Gfx* gfx = GfxCreateWithDoubleBuffer(w->hwnd, hdc, &b);
+    w->gfxDoubleBufferHdc = b.hdc;
+    w->gfxDoubleBufferBitmap = b.bitmap;
+    w->gfxDoubleBufferPrevBitmap = b.prevBitmap;
+    w->gfxDoubleBufferDx = b.dx;
+    w->gfxDoubleBufferDy = b.dy;
     return gfx;
 }

@@ -16,6 +16,7 @@
 struct VirtCtrl;
 struct VirtRoot;
 struct Pixmap;
+struct GfxDoubleBuffer;
 struct WindowBase;
 struct ControlBase;
 struct Tooltip;
@@ -287,6 +288,7 @@ bool VirtTreeOnMessage(HWND, VirtRoot*, UINT, WPARAM, LPARAM, LRESULT&);
 // two - and they are not owned here; the layout tree owns them
 struct VirtRoot {
     HWND hwnd = nullptr;
+    GfxDoubleBuffer* gfxBuf = nullptr;
     Vec<VirtCtrl*> tops;
     // set only by SetChild(), which owns what it is given
     VirtCtrl* owned = nullptr;

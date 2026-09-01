@@ -603,6 +603,9 @@ VirtRoot::~VirtRoot() {
     }
     delete owned;
     delete tooltip;
+    GfxDestroyDoubleBuffer(gfxBuf);
+    delete gfxBuf;
+    gfxBuf = nullptr;
 }
 
 void VirtRoot::SetChild(VirtCtrl* c) {
@@ -3596,18 +3599,13 @@ void PaintVirtTree(VirtRoot* root, HDC hdc, Rect clip, Color bg) {
     }
     HWND hwnd = root->hwnd;
     Rect rc = HwndClientRect(hwnd);
-    DoubleBuffer buffer(hwnd, rc);
-    HDC memDC = buffer.GetDC();
-    SetBkMode(memDC, TRANSPARENT);
-    // scoped: GfxDirect2D reaches the dc only when destroyed, so the gfx must
-    // die before the buffer is flushed
-    {
-        Gfx* gfx = GfxCreate(memDC);
-        gfx->FillRect(rc, bg);
-        root->Paint(gfx, clip);
-        delete gfx;
+    if (!root->gfxBuf) {
+        root->gfxBuf = new GfxDoubleBuffer();
     }
-    buffer.Flush(hdc);
+    Gfx* gfx = GfxCreateWithDoubleBuffer(hwnd, hdc, root->gfxBuf);
+    gfx->FillRect(rc, bg);
+    root->Paint(gfx, clip);
+    delete gfx;
 }
 
 bool VirtHostOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res, Color bg) {

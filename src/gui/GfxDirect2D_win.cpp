@@ -120,13 +120,14 @@ bool Direct2DAvailable() {
     return gD2DFactory != nullptr && gDWriteFactory != nullptr;
 }
 
-// A new ID2D1DCRenderTarget's first BeginDraw() makes d3d11 throw (and catch)
-// a C++ EH while it sets up GDI interop. Reuse a few targets so the read-aloud
-// highlight timer (and other 80ms paints) don't flood the debugger.
+// d3d11 throws a first-chance C++ EH the first time a DC render target BindDC /
+// BeginDraws on an HDC (GDI interop device setup). Reuse the target AND skip
+// BindDC when the HDC and size match, so page-flip toolbar paints stay quiet.
 constexpr int kD2DTargetPool = 8;
 
 struct D2DTargetSlot {
     ID2D1DCRenderTarget* target = nullptr;
+    HDC boundHdc = nullptr;
     bool inUse = false;
     int dx = 0;
     int dy = 0;
@@ -154,14 +155,26 @@ static ID2D1DCRenderTarget* D2DCreateDcTarget() {
     return t;
 }
 
-static void D2DNoteSize(ID2D1DCRenderTarget* t, int dx, int dy) {
+static D2DTargetSlot* D2DSlotFor(ID2D1DCRenderTarget* t) {
+    if (!t) {
+        return nullptr;
+    }
     for (int i = 0; i < kD2DTargetPool; i++) {
         if (gD2DSlots[i].target == t) {
-            gD2DSlots[i].dx = dx;
-            gD2DSlots[i].dy = dy;
-            return;
+            return &gD2DSlots[i];
         }
     }
+    return nullptr;
+}
+
+static void D2DNoteBind(ID2D1DCRenderTarget* t, HDC hdc, int dx, int dy) {
+    D2DTargetSlot* slot = D2DSlotFor(t);
+    if (!slot) {
+        return;
+    }
+    slot->boundHdc = hdc;
+    slot->dx = dx;
+    slot->dy = dy;
 }
 
 static ID2D1DCRenderTarget* D2DAcquireDcTarget(int dx, int dy, bool* owned) {
@@ -199,6 +212,7 @@ static ID2D1DCRenderTarget* D2DAcquireDcTarget(int dx, int dy, bool* owned) {
         gD2DSlots[slot].target->Release();
     }
     gD2DSlots[slot].target = t;
+    gD2DSlots[slot].boundHdc = nullptr;
     gD2DSlots[slot].inUse = true;
     gD2DSlots[slot].dx = dx;
     gD2DSlots[slot].dy = dy;
@@ -207,12 +221,11 @@ static ID2D1DCRenderTarget* D2DAcquireDcTarget(int dx, int dy, bool* owned) {
 }
 
 static void D2DDropSlot(ID2D1DCRenderTarget* t) {
-    for (int i = 0; i < kD2DTargetPool; i++) {
-        if (gD2DSlots[i].target == t) {
-            gD2DSlots[i].target = nullptr;
-            gD2DSlots[i].inUse = false;
-            break;
-        }
+    D2DTargetSlot* slot = D2DSlotFor(t);
+    if (slot) {
+        slot->target = nullptr;
+        slot->boundHdc = nullptr;
+        slot->inUse = false;
     }
     t->Release();
 }
@@ -402,22 +415,27 @@ GfxDirect2D::GfxDirect2D(HDC hdc) {
     if (!t) {
         return;
     }
-    HRESULT hr = t->BindDC(hdc, &rc);
-    if (FAILED(hr)) {
-        D2DReleaseDcTarget(t, owned, true);
-        t = D2DCreateDcTarget();
-        owned = true;
-        if (!t) {
-            return;
-        }
-        hr = t->BindDC(hdc, &rc);
+    D2DTargetSlot* slot = D2DSlotFor(t);
+    bool sameBind = slot && slot->boundHdc == hdc && slot->dx == sz.dx && slot->dy == sz.dy;
+    if (!sameBind) {
+        HRESULT hr = t->BindDC(hdc, &rc);
         if (FAILED(hr)) {
-            logf("GfxDirect2D: BindDC failed 0x%x\n", (int)hr);
-            t->Release();
-            return;
+            D2DReleaseDcTarget(t, owned, true);
+            t = D2DCreateDcTarget();
+            owned = true;
+            slot = nullptr;
+            if (!t) {
+                return;
+            }
+            hr = t->BindDC(hdc, &rc);
+            if (FAILED(hr)) {
+                logf("GfxDirect2D: BindDC failed 0x%x\n", (int)hr);
+                t->Release();
+                return;
+            }
         }
+        D2DNoteBind(t, hdc, sz.dx, sz.dy);
     }
-    D2DNoteSize(t, sz.dx, sz.dy);
     target = t;
     ownsTarget = owned;
     target->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);

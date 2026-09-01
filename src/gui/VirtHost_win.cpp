@@ -40,13 +40,12 @@ static void PaintHost(VirtHost* host, HWND hwnd) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
     Rect rc = HwndClientRect(hwnd);
-    DoubleBuffer buffer(hwnd, rc);
-    HDC memDC = buffer.GetDC();
-    SetBkMode(memDC, TRANSPARENT);
-    // scoped: GfxDirect2D reaches the dc only when destroyed, so the gfx must
-    // die before the buffer is flushed
+    if (!host->gfxBuf) {
+        host->gfxBuf = new GfxDoubleBuffer();
+    }
+    // scoped: GfxDirect2D EndDraw and the blit run in ~Gfx
     {
-        Gfx* gfx = GfxCreate(memDC);
+        Gfx* gfx = GfxCreateWithDoubleBuffer(hwnd, hdc, host->gfxBuf);
         VirtHostPaintEvent ev;
         ev.host = host;
         ev.gfx = gfx;
@@ -63,20 +62,6 @@ static void PaintHost(VirtHost* host, HWND hwnd) {
             host->onPaint.Call(&ev);
         }
         delete gfx;
-    }
-    // An RTL host (WS_EX_LAYOUTRTL) hands out a mirrored hdc, which would flip
-    // the buffer as a whole on the blit - reversing every glyph and putting the
-    // controls at mirrored positions. The tree already arranged itself
-    // right-to-left (HBox.rtl) and the mouse coordinates are unmirrored to
-    // match (VirtTreeOnMessage), so copy the buffer verbatim
-    DWORD layout = GetLayout(hdc);
-    bool mirrored = layout != GDI_ERROR && (layout & LAYOUT_RTL);
-    if (mirrored) {
-        SetLayout(hdc, 0);
-    }
-    buffer.Flush(hdc);
-    if (mirrored) {
-        SetLayout(hdc, layout);
     }
     EndPaint(hwnd, &ps);
 }
@@ -210,6 +195,9 @@ VirtHost::~VirtHost() {
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
     }
     native = nullptr;
+    GfxDestroyDoubleBuffer(gfxBuf);
+    delete gfxBuf;
+    gfxBuf = nullptr;
     delete layout;
     layout = nullptr;
     delete vroot;
