@@ -4176,20 +4176,17 @@ void VirtRichText::LayoutText(int areaWidth) {
     HWND hwnd = GetHwnd();
     PlatformFont* boldFont = nullptr;
     int kbdPadX = DpiScale(7);
+    // a pixel above/below so descenders and the key-cap border stay inside the
+    // box; both kinds of word get it so they share a baseline when VCentered
+    int padY = DpiScale(1);
     for (TipWord* w = words.next; w; w = w->next) {
         if (w->isBold && !boldFont) {
             boldFont = GetBoldPlatformFont(font);
         }
         PlatformFont* use = (w->isBold && boldFont) ? boldFont : font;
         Size sz = PlatformFontMeasureText(use, w->text);
-        if (w->isKbd) {
-            // side padding only: top/bottom of the cap is the text height
-            w->dx = sz.dx + (2 * kbdPadX);
-            w->dy = sz.dy;
-        } else {
-            w->dx = sz.dx;
-            w->dy = sz.dy;
-        }
+        w->dx = sz.dx + (w->isKbd ? (2 * kbdPadX) : 0);
+        w->dy = sz.dy + (2 * padY);
     }
 
     int startX = 0;
@@ -4216,6 +4213,22 @@ void VirtRichText::LayoutText(int areaWidth) {
         x += w->dx;
         maxX = std::max(x, maxX);
         lineHeight = std::max(w->dy, lineHeight);
+    }
+
+    // shorter words (plain vs key-cap) sit on the same visual center / baseline
+    for (TipWord* w = words.next; w;) {
+        int lineY = w->y;
+        int lineH = 0;
+        TipWord* lineEnd = w;
+        for (TipWord* t = w; t && t->y == lineY; t = t->next) {
+            lineH = std::max(lineH, t->dy);
+            lineEnd = t;
+        }
+        TipWord* nextLine = lineEnd->next;
+        for (TipWord* t = w; t != nextLine; t = t->next) {
+            t->y = lineY + (lineH - t->dy) / 2;
+        }
+        w = nextLine;
     }
 
     totalDx = maxX - startX;
@@ -4261,7 +4274,6 @@ void VirtRichText::SetBounds(Rect r) {
 // isKbd words as key-caps like the keyboard help sheet)
 void VirtRichText::Paint(VirtPaintCtx& ctx) {
     Gfx* gfx = ctx.gfx;
-    u32 fmt = gfxTextLeft | gfxTextNoClip | gfxTextSingleLine;
     PlatformFont* boldFont = nullptr;
     Color textCol = GetColor(kColRichText);
     Color linkCol = GetColor(kColRichLink);
@@ -4280,19 +4292,20 @@ void VirtRichText::Paint(VirtPaintCtx& ctx) {
     int offX = ctx.content.x;
     int offY = ctx.content.y;
 
+    // same VCenter box for key-caps and body so they share a baseline
+    u32 wordFmt = gfxTextVCenter | gfxTextNoClip | gfxTextSingleLine;
     for (TipWord* w = words.next; w; w = w->next) {
+        Rect rc{offX + w->x, offY + w->y, w->dx, w->dy};
         if (w->isKbd) {
-            Rect capRc{offX + w->x, offY + w->y, w->dx, w->dy};
-            gfx->FillRoundedRect(capRc, rad, capBg, capBorder);
-            gfx->DrawText(w->text, capRc, gfxTextCenter | gfxTextVCenter, font, textCol);
+            gfx->FillRoundedRect(rc, rad, capBg, capBorder);
+            gfx->DrawText(w->text, rc, wordFmt | gfxTextCenter, font, textCol);
             continue;
         }
         if (w->isBold && !boldFont) {
             boldFont = GetBoldPlatformFont(font);
         }
-        Point pt = {offX + w->x, offY + w->y};
         PlatformFont* use = (w->isBold && boldFont) ? boldFont : font;
-        gfx->DrawTextAt(w->text, pt, fmt, use, w->isLink ? linkCol : textCol);
+        gfx->DrawText(w->text, rc, wordFmt | gfxTextLeft, use, w->isLink ? linkCol : textCol);
     }
     // underline each link
     for (TipLink* link = links.next; link; link = link->next) {
