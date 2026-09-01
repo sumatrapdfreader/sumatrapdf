@@ -299,6 +299,8 @@ struct LoadArgs {
     bool lazyLoad = false;
     bool async = false;
     bool activateExisting = false;
+    // do not add to File History / Windows Recent (CmdOpenFileNoHistory)
+    bool skipHistory = false;
     // with activateExisting: only switch to an existing tab in args->win (UI
     // open paths). DDE and other global lookups leave this false.
     bool activateExistingInWindow = false;
@@ -328,7 +330,7 @@ struct PasswordUI;
 MainWindow* LoadDocument(LoadArgs* args);
 MainWindow* LoadDocumentFinish(LoadArgs* args);
 void StartLoadDocument(LoadArgs* args);
-void StartLoadDocuments(StrVec& paths, MainWindow* win);
+void StartLoadDocuments(StrVec& paths, MainWindow* win, bool skipHistory = false);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr, bool showWin = true);
 void ShowMainWindow(MainWindow* win, int windowState);
 void MaybeShowDefaultAppNotification(MainWindow* win);

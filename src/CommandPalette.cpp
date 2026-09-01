@@ -43,6 +43,7 @@ static i32 gCommandsNoActivate[] = {
     CmdHelpOpenKeyboardShortcuts,
     CmdHelpVisitWebsite,
     CmdOpenFile,
+    CmdOpenFileNoHistory,
     CmdProperties,
     CmdNewWindow,
     CmdDuplicateInNewWindow,

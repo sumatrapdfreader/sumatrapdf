@@ -309,6 +309,7 @@ export const commands = [
     "CmdShowAnnotationText", "Show Comment",
     "CmdAnnotationHighlightBrush", "Highlight with Brush",
     "CmdFindAnnotation", "Find Annotation",
+    "CmdOpenFileNoHistory", "Open File Without History...",
     "CmdNone", "Do nothing",
 ];
 

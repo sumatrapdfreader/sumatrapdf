@@ -89,6 +89,7 @@ struct NavFilesInFolderWnd : WindowBase {
     bool scanInFlight = false;
     Str pendingSelectPath; // owned; file to select when a scan finishes
     int pendingSelectIdx = -1;
+    bool skipHistory = false;
 
     void OnKeyDown(KeyEvent* ev);
     void OnActivate(WindowBase::ActivateEvent* ev);
@@ -527,6 +528,7 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection(bool inNewTab) {
         }
         DismissNextFileScrollHint(mainWin);
         LoadArgs args(path, mainWin);
+        args.skipHistory = skipHistory;
         // no forceReuse: opens in a new tab, leaving the current document alone
         StartLoadDocument(&args);
         return;
@@ -538,6 +540,7 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection(bool inNewTab) {
     }
     DismissNextFileScrollHint(mainWin);
     LoadArgs args(path, mainWin);
+    args.skipHistory = skipHistory;
     // replace the document in the current tab; keep this window open
     args.forceReuse = true;
     StartLoadDocument(&args);
@@ -956,7 +959,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin) {
     return true;
 }
 
-void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
+void ShowNavFilesInFolder(MainWindow* win, Str selectPath, bool skipHistory) {
     // Prefer an explicit path (e.g. home-page thumbnail); else the current tab.
     Str filePath = selectPath;
     if (len(filePath) == 0) {
@@ -978,6 +981,7 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
             }
             ShowWindow(gNavFilesWnd->hwnd, SW_SHOW);
             SetForegroundWindow(gNavFilesWnd->hwnd);
+            gNavFilesWnd->skipHistory = skipHistory;
             if (gNavFilesWnd->listBox) {
                 gNavFilesWnd->SetFocusTo(gNavFilesWnd->listBox);
             } else {
@@ -988,6 +992,7 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath) {
         ScheduleDeleteNavFilesWnd();
     }
     auto* wnd = new NavFilesInFolderWnd();
+    wnd->skipHistory = skipHistory;
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc0Void(ScheduleDeleteNavFilesWnd);
     wnd->onDestroy = MkFunc0Void(ScheduleDeleteNavFilesWnd);

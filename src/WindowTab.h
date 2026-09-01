@@ -111,6 +111,8 @@ struct WindowTab {
     bool showTocPresentation = false;
     // whether to auto-reload the document when the tab is selected
     bool reloadOnFocus = false;
+    // opened via CmdOpenFileNoHistory: do not write File History / Windows Recent
+    bool skipHistory = false;
 
     // TODO: terrible hack
     bool askedToSaveAnnotations = false;

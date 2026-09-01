@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- **Open File Without History** (`CmdOpenFileNoHistory`) opens a document without adding it to File History or Windows Recent Documents. Palette-only; bind a shortcut if you want one (fixes #6121)
 - in the bookmarks and favorites trees, letter shortcuts run the command (e.g. `t` bound to Toggle Bookmarks) instead of type-ahead; arrows, Page Up/Down, Home, End, Enter and Space still navigate the tree
 - Command Palette **Toggle Boolean Setting** lists boolean advanced settings (`=` prefix); Enter or a click toggles the selected setting and closes
 - `ShowPageNumberInTabs` (off by default) shows the current page as `n/N` after the file name on tabs; the name ellipsizes first
@@ -276,6 +277,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdToggleHoverPreview` : "Toggle Hover Preview" — palette-only; enables/disables the citation/reference hover popup (`CitationHoverDelay`)
 - `CmdToggleDisableLinks` : "Toggle Disable Links" — palette-only; toggles `DisableLinks` (fixes #5939)
 - `CmdZoomToSelection` : "Zoom: To Selection" (`Ctrl + 4`) — zoom so the selection fills the window (fixes #1699)
+- `CmdOpenFileNoHistory` : "Open File Without History..." — same picker as Open File; not added to File History or Windows Recent (fixes #6121)
 - `CmdOpenFileWithOSFilePicker` : "Open File With Windows File Picker..." — always the system multi-select open dialog (when `FilePicker = sumatrapdf`, use this to force the Windows picker)
 - `CmdToggleFilePicker` : "SumatraPDF File Picker" — check under Settings and File menus; toggles `FilePicker` between Windows and SumatraPDF
 - `CmdToggleBoolSetting` : "Toggle Boolean Setting" — custom shortcut/toolbar command with a setting name argument, e.g. `CmdToggleBoolSetting Fullscreen.ShowMenubar` (fixes #5912)

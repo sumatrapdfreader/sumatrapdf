@@ -333,6 +333,7 @@ LoadArgs* LoadArgs::Clone() {
     res->initialDisplayMode = this->initialDisplayMode;
     res->initialZoom = this->initialZoom;
     res->ebookLayoutAspect = this->ebookLayoutAspect;
+    res->skipHistory = this->skipHistory;
     return res;
 }
 
@@ -852,7 +853,7 @@ static void UpdateSidebarDisplayState(WindowTab* tab, FileState* fs) {
 }
 
 void UpdateTabFileDisplayStateForTab(WindowTab* tab) {
-    if (!tab || !tab->ctrl) {
+    if (!tab || !tab->ctrl || tab->skipHistory) {
         return;
     }
     MainWindow* win = tab->win;
@@ -3800,6 +3801,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         WindowTab* tab = new WindowTab(win);
         tab->SetFilePath(fullPath);
         tab->SetDisplayName(args->DisplayName());
+        tab->skipHistory = args->skipHistory;
         win->currentTabTemp = AddTabToWindow(win, tab);
 
         if (!IsMainWindowValidAndNotClosing(win)) {
@@ -3872,6 +3874,10 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     // not the user's file: don't watch, don't remember, don't pin the original
     // via Recent / thumbnails (issue #4705).
     bool transient = IsOpenCachePath(fullPath) || path::IsEphemeralHostFile(fullPath);
+    if (args->skipHistory && win->CurrentTab()) {
+        win->CurrentTab()->skipHistory = true;
+    }
+    bool skipHistory = transient || args->skipHistory || (win->CurrentTab() && win->CurrentTab()->skipHistory);
 
     if (gSettings->reloadModifiedDocuments && !transient) {
         auto fn = MkFunc0(ScheduleReloadTab, currTab);
@@ -3883,7 +3889,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         currTab->watcher = FileWatcherSubscribe(path, fn, enableManualCheck);
     }
 
-    if (SettingsRememberOpenedFiles() && !transient) {
+    if (SettingsRememberOpenedFiles() && !skipHistory) {
         ReportIf(!str::Eq(fullPath, path));
         FileState* ds = FileHistoryMarkFileLoaded(fullPath);
         if (gSettings->showStartPage) {
@@ -3898,7 +3904,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    if (CanAccessDisk() && !gPluginMode && !IsStressTesting() && !transient) {
+    if (CanAccessDisk() && !gPluginMode && !IsStressTesting() && !skipHistory) {
         AddPathToRecentDocs(fullPath);
 
         // Remove Zone.Identifier (Mark of the Web) so that Windows Explorer
@@ -4380,6 +4386,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
     EnsureNextPrevDirScan(path);
 
     if (argsIn->targetTab) {
+        argsIn->targetTab->skipHistory = argsIn->skipHistory;
         argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
         if (argsIn->targetTab == win->CurrentTab()) {
             HwndInvalidate(win->hwndCanvas);
@@ -4393,6 +4400,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
         tab->SetFilePath(path);
         tab->SetDisplayName(argsIn->DisplayName());
         tab->loadState = WindowTab::LoadState::Loading;
+        tab->skipHistory = argsIn->skipHistory;
         argsIn->targetTab = AddTabToWindow(win, tab);
         win->currentTabTemp = argsIn->targetTab;
         LoadModelIntoTab(argsIn->targetTab);
@@ -4408,6 +4416,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
         tab->SetFilePath(path);
         tab->SetDisplayName(argsIn->DisplayName());
         tab->loadState = WindowTab::LoadState::Loading;
+        tab->skipHistory = argsIn->skipHistory;
         tab->loadCopyBytesCopied = -1;
         tab->loadCopyBytesTotal = 0;
         argsIn->targetTab = tab;
@@ -4422,6 +4431,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
         UpdateWindow(win->hwndCanvas);
     } else if (SettingsUseTabs() && win->CurrentTab()) {
         argsIn->targetTab = win->CurrentTab();
+        argsIn->targetTab->skipHistory = argsIn->skipHistory;
         argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
         HwndInvalidate(win->hwndCanvas);
     }
@@ -4497,12 +4507,13 @@ void StartLoadDocument(LoadArgs* argsIn) {
     StartOrQueueLoadDocument(data);
 }
 
-void StartLoadDocuments(StrVec& paths, MainWindow* win) {
+void StartLoadDocuments(StrVec& paths, MainWindow* win, bool skipHistory) {
     if (!SettingsUseTabs() || !win) {
         for (Str path : paths) {
             LoadArgs args(path, win);
             args.activateExisting = true;
             args.activateExistingInWindow = win != nullptr;
+            args.skipHistory = skipHistory;
             StartLoadDocument(&args);
         }
         return;
@@ -4512,6 +4523,7 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win) {
     for (Str path : paths) {
         if (!DocumentPathExists(path)) {
             LoadArgs args(path, win);
+            args.skipHistory = skipHistory;
             StartLoadDocument(&args);
             continue;
         }
@@ -4533,6 +4545,7 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win) {
         WindowTab* tab = new WindowTab(win);
         tab->SetFilePath(pathsToLoad[i]);
         tab->loadState = WindowTab::LoadState::Loading;
+        tab->skipHistory = skipHistory;
         bool deferUpdate = i != len(pathsToLoad) - 1;
         VecAppend(tabs, AddTabToWindow(win, tab, deferUpdate));
     }
@@ -4543,6 +4556,7 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win) {
     for (int i = 0; i < len(pathsToLoad); i++) {
         LoadArgs args(pathsToLoad[i], win);
         args.targetTab = tabs[i];
+        args.skipHistory = skipHistory;
         StartLoadDocument(&args);
     }
 }
@@ -6547,7 +6561,7 @@ static void BuildOpenFileFilters(OpenFileFilterList& out) {
 }
 
 // Standard Windows IFileOpenDialog multi-select open.
-static void OpenFileWithOSFilePicker(MainWindow* win) {
+static void OpenFileWithOSFilePicker(MainWindow* win, bool skipHistory = false) {
     if (!CanAccessDisk()) {
         return;
     }
@@ -6614,7 +6628,7 @@ static void OpenFileWithOSFilePicker(MainWindow* win) {
         }
         paths.Append(path);
     }
-    StartLoadDocuments(paths, win);
+    StartLoadDocuments(paths, win, skipHistory);
 }
 
 // FilePicker: empty/os = Windows dialog; sumatrapdf = Navigate Files in Folder.
@@ -6632,17 +6646,17 @@ static void ToggleFilePicker() {
     ScheduleSaveSettings();
 }
 
-static void OpenFile(MainWindow* win) {
+static void OpenFile(MainWindow* win, bool skipHistory = false) {
     if (!CanAccessDisk() || gPluginMode) {
         return;
     }
 
     if (FilePickerIsSumatraPDF()) {
-        ShowNavFilesInFolder(win);
+        ShowNavFilesInFolder(win, {}, skipHistory);
         return;
     }
     // empty, "os", or unrecognized: Windows file picker
-    OpenFileWithOSFilePicker(win);
+    OpenFileWithOSFilePicker(win, skipHistory);
 }
 
 static void RemoveFailedFiles(StrVec& files) {
@@ -11427,6 +11441,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdOpenFile:
             OpenFile(win);
+            break;
+
+        case CmdOpenFileNoHistory:
+            OpenFile(win, true);
             break;
 
         case CmdOpenFileWithOSFilePicker:

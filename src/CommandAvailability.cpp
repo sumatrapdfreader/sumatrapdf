@@ -32,6 +32,7 @@
 
 static UINT_PTR gNoDocWhitelist[] = {
     CmdOpenFile,
+    CmdOpenFileNoHistory,
     CmdOpenFileWithOSFilePicker,
     CmdToggleFilePicker,
     CmdToggleBoolSetting,
@@ -185,6 +186,7 @@ static UINT_PTR removeIfNoCopyPerms[] = {
 static UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdNewWindow,
     CmdOpenFile,
+    CmdOpenFileNoHistory,
     CmdOpenFileWithOSFilePicker,
     CmdToggleFilePicker,
     CmdOpenNextFileInFolder,

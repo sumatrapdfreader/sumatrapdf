@@ -309,7 +309,8 @@ enum {
     CmdShowAnnotationText = 498,
     CmdAnnotationHighlightBrush = 499,
     CmdFindAnnotation = 500,
-    CmdNone = 501,
+    CmdOpenFileNoHistory = 501,
+    CmdNone = 502,
 
     /* range for file history */
     CmdFileHistoryFirst,

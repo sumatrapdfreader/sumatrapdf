@@ -24,6 +24,7 @@ CmdExit,Ctrl + Q,Exit Application,
 CmdMoveFrameFocus,F6,Move Frame Focus,
 CmdNewWindow,Ctrl + N,Open New SumatraPDF Window,
 CmdOpenFile,Ctrl + O,Open File...,"uses the Windows file picker or Navigate Files in Folder according to the `FilePicker` advanced setting (empty/os = Windows, sumatrapdf = in-app), ver 3.7+"
+CmdOpenFileNoHistory,,Open File Without History...,"same picker as Open File, but the document is not added to File History or Windows Recent Documents (fixes #6121), ver 3.7+"
 CmdOpenFileWithOSFilePicker,,Open File With Windows File Picker...,"always the standard Windows multi-select file open dialog, ver 3.7+"
 CmdToggleFilePicker,,SumatraPDF File Picker,"checkbox under File and Settings; toggles `FilePicker` empty/os ↔ sumatrapdf, ver 3.7+"
 CmdToggleBoolSetting,,Toggle Boolean Setting,"in the Command Palette, lists boolean advanced settings; Enter or a click toggles one and closes. Custom shortcuts: `CmdToggleBoolSetting <SettingName>` (case-insensitive leaf or dotted path), e.g. `Fullscreen.ShowMenubar` (fixes #5912), ver 3.7+"

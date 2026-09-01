@@ -478,6 +478,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId, AppCommandCtx* ctx) {
     }
     switch (cmdId) {
         case CmdOpenFile:
+        case CmdOpenFileNoHistory:
             if (!CanAccessDisk()) {
                 return false;
             }
@@ -498,6 +499,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId, AppCommandCtx* ctx) {
 
     switch (cmdId) {
         case CmdOpenFile:
+        case CmdOpenFileNoHistory:
             // opening different files isn't allowed in plugin mode
             return !gPluginMode;
 
