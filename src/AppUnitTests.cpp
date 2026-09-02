@@ -32,6 +32,7 @@ bool EngineMupdf_UnitTestMergeEBookUI();
 bool EngineMupdf_UnitTestPageLabels();
 bool Accelerators_UnitTestFolderNavIsSafe();
 bool Accelerators_UnitTestTreeTakesLetters();
+bool ShortcutParse_UnitTestShiftedPunct();
 bool AnnotSearch_UnitTests();
 void ReadAloudHighlight_UnitTests();
 
@@ -82,6 +83,7 @@ static void ParseTip_UnitTests() {
     // (Key/...) only expands for real commands
     ParseTipExpectPlainContains(StrL("file (Key/foo).pdf"), StrL("(Key/foo).pdf"));
     ParseTipExpectPlainContains(StrL("(Key/CmdCommandPalette)"), StrL("Ctrl"));
+    ParseTipExpectPlainContains(StrL("(Key/CmdToggleKeyboardHelp)"), StrL("?"));
 
     // (Kbd/...) draws as a key-cap word; nests with (Key/...)
     {
@@ -168,6 +170,7 @@ int RunAppUnitTests() {
     utassert(EngineMupdf_UnitTestPageLabels());
     utassert(Accelerators_UnitTestFolderNavIsSafe());
     utassert(Accelerators_UnitTestTreeTakesLetters());
+    utassert(ShortcutParse_UnitTestShiftedPunct());
     utassert(AnnotSearch_UnitTests());
     ReadAloudHighlight_UnitTests();
 #endif

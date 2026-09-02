@@ -357,6 +357,25 @@ bool ParseShortcutString(Str shortcut, ACCEL& accel) {
     return ParseShortcut(shortcut, accel);
 }
 
+// US layout: Shift + these keys is the glyph people type (Shift+/ is "?").
+static char ShiftedPunctGlyph(BYTE key) {
+    static const struct {
+        BYTE vk;
+        char unshifted;
+        char shifted;
+    } kMap[] = {
+        {VK_OEM_2, '/', '?'}, {VK_OEM_COMMA, ',', '<'}, {VK_OEM_PERIOD, '.', '>'},
+        {VK_OEM_4, '[', '{'}, {VK_OEM_6, ']', '}'},     {VK_OEM_5, '\\', '|'},
+        {VK_OEM_1, ';', ':'}, {VK_OEM_7, '\'', '"'},    {VK_OEM_3, '`', '~'},
+    };
+    for (int i = 0; i < dimofi(kMap); i++) {
+        if (key == kMap[i].vk || key == (BYTE)kMap[i].unshifted) {
+            return kMap[i].shifted;
+        }
+    }
+    return 0;
+}
+
 // Appends " \tCtrl + O" to a menu string, for the key a is bound to.
 TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     Str lang = gShortcutLangCode ? gShortcutLangCode() : Str();
@@ -370,6 +389,9 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     str::BuilderUseExternalBuffer(str, Str(strScratch, sizeofi(strScratch)));
     str.Append(StrL("\t")); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
+    BYTE key = (BYTE)a.key;
+    bool isVirt = virt & FVIRTKEY;
+    char shiftedPunct = (virt & FSHIFT) ? ShiftedPunctGlyph(key) : 0;
     if ((virt & FALT) && (virt & FCONTROL)) {
         // same bits as AltGr on Windows; keep the name the user would type
         str.Append(StrL("AltGr + "));
@@ -386,15 +408,17 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
         }
         str.Append(s);
     }
-    if (virt & FSHIFT) {
+    if ((virt & FSHIFT) && !shiftedPunct) {
         Str s = StrL("Shift + ");
         if (isGerman) {
             s = StrL("Umschalt + ");
         }
         str.Append(s);
     }
-    bool isVirt = virt & FVIRTKEY;
-    BYTE key = (BYTE)a.key;
+    if (shiftedPunct) {
+        str.AppendChar(shiftedPunct);
+        goto Exit;
+    }
 
     if (isVirt) {
         if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
@@ -433,3 +457,39 @@ Exit:
     TempStr res = str::JoinTemp(menuStr, ToStr(str));
     return res;
 }
+
+#if IS_DEBUG
+#include "base/UtAssert.h"
+
+static bool AccelShowsAs(BYTE virt, WORD key, Str expected) {
+    ACCEL a{};
+    a.fVirt = virt;
+    a.key = key;
+    TempStr s = AppendAccelKeyToMenuStringTemp(StrL(""), a);
+    if (!s || len(s) < 1 || s.s[0] != '\t') {
+        return false;
+    }
+    return str::Eq(Str(s.s + 1, len(s) - 1), expected);
+}
+
+bool ShortcutParse_UnitTestShiftedPunct() {
+    auto prevLang = gShortcutLangCode;
+    gShortcutLangCode = nullptr;
+
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_2, StrL("?")));
+    utassert(AccelShowsAs(FVIRTKEY, VK_OEM_2, StrL("/")));
+    utassert(AccelShowsAs(FCONTROL | FSHIFT | FVIRTKEY, VK_OEM_2, StrL("Ctrl + ?")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_COMMA, StrL("<")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_PERIOD, StrL(">")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_4, StrL("{")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_6, StrL("}")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_5, StrL("|")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_1, StrL(":")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_7, StrL("\"")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_3, StrL("~")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, 'A', StrL("Shift + A")));
+
+    gShortcutLangCode = prevLang;
+    return true;
+}
+#endif

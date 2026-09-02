@@ -113,7 +113,7 @@ const virtKeys: [string, string][] = [
     ["VK_DECIMAL", "Decimal"],
     ["VK_SCROLL", "Scroll"],
     ["VK_OEM_1", ";"],
-    ["VK_OEM_2", "/"], // the '/?' key; '?' shows as "Shift + /"
+    ["VK_OEM_2", "/"], // the '/?' key; Shift+/ prints as "?"
     ["VK_OEM_3", "`"],
     ["VK_OEM_4", "["],
     ["VK_OEM_6", "]"],
