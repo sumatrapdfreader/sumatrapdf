@@ -630,9 +630,6 @@ function sumatrapdf_files()
     "AIGrokBuild.*",
     "CommandAvailability.*",
     "CommandPalette.*",
-    "CommandPaletteCollect.*",
-    "CommandPaletteDraw.*",
-    "CommandPaletteFilter.*",
     "FilterUtil.*",
     "FilterHighlightDraw.*",
     "Commands.*",
@@ -645,7 +642,6 @@ function sumatrapdf_files()
     "PageRenderPolicy.*",
     "PageRenderService.*",
     "ReaderModel.*",
-    "gui/CommandPaletteModel.*",
     "DocController.h",
     "DocProperties.*",
     "EditAnnotations.*",
@@ -1316,7 +1312,6 @@ function test_util_files()
     "Win.*",
   })
   files_in_dir("src/gui", {
-    "CommandPaletteModel.*",
     "Dpi.h",
     "Dpi_win.cpp",
     "Layout.h",
@@ -1324,6 +1319,7 @@ function test_util_files()
   })
   files_in_dir("src", {
     --"AppTools.*",
+    "CommandPalette.*",
     "Commands.*",
     "CrashHandlerNoOp.cpp",
     "DisplayMode.*",

@@ -1273,7 +1273,6 @@
     <ClInclude Include="..\src\WindowTab.h" />
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\UtAssert.h" />
-    <ClInclude Include="..\src\gui\CommandPaletteModel.h" />
     <ClInclude Include="..\src\gui\DocumentView.h" />
     <ClInclude Include="..\src\gui\Gfx.h" />
     <ClInclude Include="..\src\gui\GuiColors.h" />
@@ -1380,9 +1379,6 @@
     <ClCompile Include="..\src\ChmModel.cpp" />
     <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
-    <ClCompile Include="..\src\CommandPaletteCollect.cpp" />
-    <ClCompile Include="..\src\CommandPaletteDraw.cpp" />
-    <ClCompile Include="..\src\CommandPaletteFilter.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\CustomZoomDialog.cpp" />
@@ -1756,7 +1752,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\gui\CommandPaletteModel.cpp" />
     <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp" />
     <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp" />
     <ClCompile Include="..\src\gui\Gfx_win.cpp" />

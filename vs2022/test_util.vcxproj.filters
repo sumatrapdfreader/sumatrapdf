@@ -15,6 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DocProperties.h" />
@@ -97,9 +98,6 @@
     <ClInclude Include="..\src\base\WinDynCalls.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\CommandPaletteModel.h">
-      <Filter>gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gui\Dpi.h">
       <Filter>gui</Filter>
     </ClInclude>
@@ -109,6 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
+    <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
@@ -263,9 +262,6 @@
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>base\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\CommandPaletteModel.cpp">
-      <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\Dpi_win.cpp">
       <Filter>gui</Filter>

@@ -2,10 +2,107 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+
+#ifdef SUMATRA_TEST_UTIL
+
+#if IS_DEBUG
+#include "base/UtAssert.h"
+#endif
+#include "Commands.h"
+#include "FilterUtil.h"
+#include "CommandPalette.h"
+
+/* CommandPaletteModel code:
+   Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+struct CommandPaletteEntry {
+    int commandId = 0;
+};
+
+struct CommandPaletteModel {
+    StrVecWithData<CommandPaletteEntry> commands;
+    StrVecWithData<CommandPaletteEntry> filtered;
+    StrVec filterWords;
+
+    void SetCommands(const int* commandIds, int count);
+    void Filter(Str query);
+    int Count() const;
+    Str ItemText(int index) const;
+    int ItemCommandId(int index) const;
+};
+
+void CommandPaletteModel::SetCommands(const int* commandIds, int count) {
+    commands.Reset();
+    filtered.Reset();
+    filterWords.Reset();
+    for (int i = 0; i < count; i++) {
+        int commandId = commandIds[i];
+        Str description = GetCommandDescription(commandId);
+        if (!description) {
+            continue;
+        }
+        commands.Append(description, {commandId});
+    }
+    SortNoCase(&commands);
+    Filter({});
+}
+
+void CommandPaletteModel::Filter(Str query) {
+    filtered.Reset();
+    filterWords.Reset();
+    SplitFilterToWords(query, filterWords);
+    for (int i = 0; i < len(commands); i++) {
+        if (FilterMatches(commands[i], filterWords)) {
+            filtered.AppendFrom(&commands, i);
+        }
+    }
+}
+
+int CommandPaletteModel::Count() const {
+    return len(filtered);
+}
+
+Str CommandPaletteModel::ItemText(int index) const {
+    return index >= 0 && index < len(filtered) ? filtered[index] : Str{};
+}
+
+int CommandPaletteModel::ItemCommandId(int index) const {
+    CommandPaletteEntry* entry = index >= 0 && index < len(filtered) ? filtered.AtData(index) : nullptr;
+    return entry ? entry->commandId : 0;
+}
+
+#if IS_DEBUG
+
+void CommandPaletteModel_UnitTests() {
+    const int commands[] = {CmdOpenFile, CmdRotateLeft, CmdRotateRight, CmdZoomFitWidth};
+    CommandPaletteModel model;
+    model.SetCommands(commands, dimofi(commands));
+    utassert(model.Count() == dimofi(commands));
+    utassert(model.ItemCommandId(0) == CmdOpenFile);
+
+    model.Filter(StrL("rotate right"));
+    utassert(model.Count() == 1);
+    utassert(model.ItemCommandId(0) == CmdRotateRight);
+
+    model.Filter(StrL("FIT width"));
+    utassert(model.Count() == 1);
+    utassert(model.ItemCommandId(0) == CmdZoomFitWidth);
+
+    model.Filter(StrL("missing"));
+    utassert(model.Count() == 0);
+}
+
+#endif
+
+#else
+
 #include "base/Pixmap.h"
 #include "base/Win.h"
-#include "gui/Dpi.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/SettingsUtil.h"
 #include "base/UITask.h"
+#include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -15,8 +112,10 @@
 #include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
+#define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "Settings.h"
 #include "AppSettings.h"
+#include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
@@ -26,13 +125,132 @@
 #include "SumatraConfig.h"
 #include "Commands.h"
 #include "SumatraPDF.h"
+#include "Canvas.h"
 #include "TableOfContents.h"
 #include "Favorites.h"
 #include "FileHistory.h"
 #include "Menu.h"
 #include "Translations.h"
-#include "CommandPaletteInternal.h"
+#include "Installer.h"
+#include "RegistryPreview.h"
+#include "RegistrySearchFilter.h"
+#include "Notifications.h"
+#include "PdfDarkMode.h"
+#include "EngineAll.h"
+#include "CommandAvailability.h"
+#include "Accelerators.h"
+#include "FilterHighlightDraw.h"
 #include "CommandPalette.h"
+
+struct MainWindow;
+struct WindowTab;
+struct TocItem;
+struct FileState;
+struct Favorite;
+struct ThumbnailPaletteCtrl;
+
+enum class ThumbnailMode {
+    Disabled,
+    Enabled,
+};
+
+struct ItemDataCP {
+    i32 cmdId = 0;
+    // a "Debug: ..." command; those are listed after all the others
+    bool isDebug = false;
+    WindowTab* tab = nullptr;
+    Str filePath;
+    TocItem* tocItem = nullptr;
+    int indent = 0;
+    int pageNo = 0; // toc entry destination page (0 if none), shown in the list
+    FileState* favFs = nullptr;
+    Favorite* fav = nullptr;
+    bool* boolSetting = nullptr;
+    bool boolSettingDefault = false;
+};
+
+using StrVecCP = StrVecWithData<ItemDataCP>;
+
+struct ListBoxModelCP : ListBoxModel {
+    StrVecCP strings;
+
+    ListBoxModelCP() = default;
+    ~ListBoxModelCP() override = default;
+    int ItemsCount() override { return len(strings); }
+    Str Item(int i) override { return strings[i]; }
+    ItemDataCP* Data(int i) { return strings.AtData(i); }
+};
+
+struct CommandPaletteWnd : WindowBase {
+    ~CommandPaletteWnd() override = default;
+    MainWindow* win = nullptr;
+
+    Edit* editQuery = nullptr;
+    StrVecCP tabs;
+    StrVecCP fileHistory;
+    StrVecCP commands;
+    StrVecCP toc;
+    StrVecCP favorites;
+    StrVecCP boolSettings;
+    VirtListBox* listBox = nullptr;
+    ThumbnailPaletteCtrl* thumbnailCtrl = nullptr;
+    HBox* helpRow = nullptr;
+    int helpKind = -1;
+
+    StrVec filterWords;
+    Vec<u8> highlighted;
+
+    int currTabIdx = 0;
+    int currTocIdx = 0;
+    bool tocMode = false;
+    bool thumbnailMode = false;
+    bool smartTabMode = false;
+    bool stickyMode = false;
+
+    void PreTranslate(WindowBase::PreTranslateEvent*);
+    void OnKeyDown(KeyEvent*);
+    void OnActivate(WindowBase::ActivateEvent*);
+    void OnCommand(WindowBase::CommandEvent*);
+
+    void CollectStrings(MainWindow*);
+    void CollectTabsRegular(MainWindow*, WindowTab* currTab);
+    void CollectTabsMru(MainWindow*, WindowTab* currTab);
+    void CollectToc(MainWindow*);
+    void CollectFavorites(MainWindow*);
+    void CollectBoolSettings();
+    void FilterStringsForQuery(Str, StrVecCP&);
+
+    bool Create(MainWindow* win, Str prefix, int smartTabAdvance);
+    void QueryChanged();
+    void UpdateHelpRow();
+
+    void ExecuteCurrentSelection();
+    bool AdvanceSelection(int dir);
+    bool MoveSelection(int vkey);
+    bool RemoveSelectedItem();
+    void SwitchToPrefix(Str prefix);
+    void SwitchToCommands();
+    void SwitchToTabs();
+    void SwitchToEverything();
+    void SwitchToFileHistory();
+    void SwitchToTOC();
+    void SwitchToFavorites();
+    void SwitchToBoolSettings();
+    void SetThumbnailMode(ThumbnailMode mode);
+    void OnSelectionChange();
+    void OnListDoubleClick();
+    void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
+};
+
+extern CommandPaletteWnd* gCommandPaletteWnd;
+
+Str CommandPaletteSkipWS(Str s);
+bool CommandPaletteUiRtl();
+TempStr CommandPaletteShortcutTemp(i32 cmdId);
+void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx);
+void ScheduleDeleteAndExecCommand(i32 cmdId = 0);
+void SafeDeleteCommandPaletteWnd();
+void PositionCommandPalette(HWND hwnd, HWND hwndRelative);
 
 // clang-format off
 static i32 gCommandsNoActivate[] = {
@@ -1537,3 +1755,762 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
                    rendered));
     return finish(0);
 }
+
+static bool AllowCommand(const AppCommandCtx& ctx, i32 cmdId) {
+    return CommandShouldShow(GetCommandVisibility(cmdId, ctx, CommandSurface::Palette));
+}
+
+static TempStr ConvertPathForDisplayTemp(Str s) {
+    return path::GetBaseNameTemp(s);
+}
+
+static TempStr RemovePrefixFromString(Str s) {
+    return str::ReplaceTemp(s, StrL("&"), StrL(""));
+}
+
+static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
+    bool isToggle = false;
+    bool newIsOn = false;
+    switch (cmdId) {
+        case CmdToggleInverseSearch: {
+            extern bool gDisableInteractiveInverseSearch;
+            isToggle = true;
+            newIsOn = !gDisableInteractiveInverseSearch;
+        } break;
+        case CmdToggleFullscreen: {
+            isToggle = true;
+            newIsOn = !(win->isFullScreen || win->presentation);
+        } break;
+        case CmdToggleToolbar: {
+            isToggle = true;
+            bool currentlyOn =
+                win->isFullScreen ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
+            newIsOn = !currentlyOn;
+        } break;
+        case CmdToggleMenuBar: {
+            isToggle = true;
+            bool visible = SettingsUseTabs() ? gSettings->showMenubarWithTabs : gSettings->showMenubar;
+            newIsOn = !visible;
+        } break;
+        case CmdToggleBookmarks:
+        case CmdToggleTableOfContents: {
+            isToggle = true;
+            newIsOn = !win->uiState.tocVisible;
+        } break;
+        case CmdTogglePresentationMode: {
+            isToggle = true;
+            newIsOn = !win->presentation;
+        } break;
+        case CmdToggleLinks: {
+            isToggle = true;
+            newIsOn = !gSettings->showLinks;
+        } break;
+        case CmdToggleHighlightFormFields: {
+            isToggle = true;
+            newIsOn = !gSettings->highlightFormFields;
+        } break;
+        case CmdToggleDisableLinks: {
+            isToggle = true;
+            newIsOn = !gSettings->disableLinks;
+        } break;
+        case CmdToggleImages: {
+            isToggle = true;
+            newIsOn = !ShowImageOutlines();
+        } break;
+        case CmdToggleTransparencyGrid: {
+            isToggle = true;
+            newIsOn = !ShowTransparencyGrid();
+        } break;
+        case CmdTogglePageGrid: {
+            isToggle = true;
+            newIsOn = !ShowPageGrid();
+        } break;
+        case CmdToggleLaserPointer: {
+            isToggle = true;
+            newIsOn = !IsLaserPointerActive();
+        } break;
+        case CmdToggleHoverPreview: {
+            isToggle = true;
+            newIsOn = gSettings->citationHoverDelay < 0;
+        } break;
+        case CmdDebugShowFitContentArea: {
+            isToggle = true;
+            newIsOn = !ShowFitContentArea();
+        } break;
+        case CmdToggleShowAnnotations: {
+            WindowTab* tab = win->CurrentTab();
+            if (tab) {
+                isToggle = true;
+                newIsOn = tab->hideAnnotations;
+            }
+        } break;
+        case CmdToggleContinuousView: {
+            if (win->ctrl) {
+                isToggle = true;
+                newIsOn = !IsContinuous(win->ctrl->GetDisplayMode());
+            }
+        } break;
+        case CmdToggleMangaMode: {
+            DisplayModel* dm = win->AsFixed();
+            if (dm) {
+                isToggle = true;
+                newIsOn = !dm->GetDisplayR2L();
+            }
+        } break;
+        case CmdToggleUniformPageWidth: {
+            DisplayModel* dm = win->AsFixed();
+            if (dm) {
+                isToggle = true;
+                newIsOn = !dm->GetUniformPageWidth();
+            }
+        } break;
+        case CmdFindToggleMatchCase: {
+            isToggle = true;
+            newIsOn = !win->findMatchCase;
+        } break;
+        case CmdFindToggleMatchWholeWord: {
+            isToggle = true;
+            newIsOn = !win->findMatchWholeWord;
+        } break;
+        case CmdFavoriteToggle: {
+            isToggle = true;
+            newIsOn = !gSettings->showFavorites;
+        } break;
+        case CmdTogglePageInfo: {
+            isToggle = true;
+            newIsOn = !win->pageInfoWanted;
+        } break;
+        case CmdTogglePageBoxes: {
+            isToggle = true;
+            newIsOn = !win->showPageBoxes;
+        } break;
+        case CmdTogglePreservePdfImages: {
+            isToggle = true;
+            newIsOn = !GetPreservePdfImagesInDarkMode();
+        } break;
+        case CmdDebugTogglePredictiveRender: {
+            isToggle = true;
+            newIsOn = !gPredictiveRender;
+        } break;
+        case CmdToggleEngineeringDrawingEnhance: {
+            DisplayModel* dm = win->AsFixed();
+            if (dm) {
+                isToggle = true;
+                newIsOn = !EngineMupdfCadEnhanceActive(dm->GetEngine());
+            }
+        } break;
+    }
+
+    if (isToggle) {
+        return str::JoinTemp(s, newIsOn ? StrL(": set to true") : StrL(": set to false"));
+    }
+
+    // these two cycle through values rather than on and off, so they name what
+    // comes next instead of saying set to true / false
+    if (cmdId == CmdToggleZoom) {
+        WindowTab* tab = win->CurrentTab();
+        if (tab && tab->IsDocLoaded()) {
+            Str zoomName;
+            ZoomToString(&zoomName, tab->NextToggleZoom(), nullptr);
+            TempStr res = str::JoinTemp(s, StrL(": switch to "), zoomName);
+            str::Free(zoomName);
+            return res;
+        }
+    }
+
+    if (cmdId == CmdToggleCursorPosition) {
+        Str unit = NextCursorPositionUnitName(win);
+        if (unit) {
+            return str::JoinTemp(s, StrL(": switch to "), unit);
+        }
+    }
+
+    if (cmdId == CmdToggleLightDarkTheme) {
+        // this toggle picks a theme, so name it instead of saying true / false
+        Str target = ToggleLightDarkThemeTargetName();
+        if (target) {
+            return str::JoinTemp(s, StrL(": switch to "), target);
+        }
+    }
+
+    if (cmdId == CmdToggleWindowsPreviewer) {
+        if (IsPreviewInstalled()) {
+            return _TRA("Unregister Windows Previewer");
+        }
+        return _TRA("Register Windows Previewer");
+    }
+
+    if (cmdId == CmdToggleWindowsSearchFilter) {
+        if (IsSearchFilterInstalled()) {
+            return _TRA("Unregister Windows Search Filter");
+        }
+        return _TRA("Register Windows Search Filter");
+    }
+
+    if (cmdId == CmdAIChatWithClaudeCode) {
+        return _TRA("AI Claude chat with document");
+    }
+    if (cmdId == CmdAIChatWithGrokBuild) {
+        return _TRA("AI Grok chat with document");
+    }
+    if (cmdId == CmdAIChatWithOpenAICodex) {
+        return _TRA("AI Codex chat with document");
+    }
+    if (cmdId == CmdAIChatWithAntiGravity) {
+        return _TRA("AI Antigravity chat with document");
+    }
+
+    return s;
+}
+
+static void AppendTab(StrVecCP& tabs, WindowTab* tab, WindowTab* currTab, int& currTabIdx) {
+    ItemDataCP data;
+    data.tab = tab;
+    if (tab->IsAboutTab()) {
+        tabs.Append(_TRA("Home"), data);
+    } else {
+        auto name = path::GetBaseNameTemp(tab->filePath);
+        if (len(name) == 0) {
+            return;
+        }
+        tabs.Append(name, data);
+    }
+    if (tab == currTab) {
+        currTabIdx = len(tabs) - 1;
+        logf("currTabIdx: %d\n", currTabIdx);
+    }
+}
+
+void CommandPaletteWnd::CollectTabsRegular(MainWindow* /*mainWin*/, WindowTab* currTab) {
+    currTabIdx = 0;
+    tabs.Reset();
+    for (MainWindow* w : gWindows) {
+        for (WindowTab* tab : w->Tabs()) {
+            AppendTab(tabs, tab, currTab, currTabIdx);
+        }
+    }
+}
+
+void CommandPaletteWnd::CollectTabsMru(MainWindow* mainWin, WindowTab* currTab) {
+    currTabIdx = 0;
+    tabs.Reset();
+    if (currTab) {
+        AppendTab(tabs, currTab, currTab, currTabIdx);
+    }
+    Vec<WindowTab*>* history = mainWin->tabSelectionHistory;
+    if (history) {
+        for (int i = len(*history) - 1; i >= 0; i--) {
+            WindowTab* tab = (*history)[i];
+            if (tab == currTab) {
+                continue;
+            }
+            AppendTab(tabs, tab, currTab, currTabIdx);
+        }
+    }
+    for (MainWindow* w : gWindows) {
+        for (WindowTab* tab : w->Tabs()) {
+            bool alreadyAdded = false;
+            for (int i = 0; i < len(tabs); i++) {
+                if (tabs.AtData(i)->tab == tab) {
+                    alreadyAdded = true;
+                    break;
+                }
+            }
+            if (!alreadyAdded) {
+                AppendTab(tabs, tab, currTab, currTabIdx);
+            }
+        }
+    }
+}
+
+static void CollectTocRec(StrVecCP& toc, TocItem* ti, int indent, int currPageNo, int& bestIdx, int& bestPageNo) {
+    while (ti) {
+        Str title = ti->title ? ti->title : StrL("");
+        ItemDataCP data;
+        data.tocItem = ti;
+        data.indent = indent;
+        data.pageNo = ti->pageNo;
+        if (len(title) > 0) {
+            toc.Append(title, data);
+        }
+        int pageNo = ti->pageNo;
+        if (len(title) > 0 && pageNo > 0 && pageNo <= currPageNo && pageNo > bestPageNo) {
+            bestPageNo = pageNo;
+            bestIdx = len(toc) - 1;
+        }
+        if (ti->child) {
+            CollectTocRec(toc, ti->child, indent + 1, currPageNo, bestIdx, bestPageNo);
+        }
+        ti = ti->next;
+    }
+}
+
+void CommandPaletteWnd::CollectToc(MainWindow* mainWin) {
+    toc.Reset();
+    currTocIdx = 0;
+    if (!mainWin->ctrl) {
+        return;
+    }
+    TocTree* tree = mainWin->ctrl->GetToc();
+    if (!tree || !tree->root) {
+        return;
+    }
+    int currPageNo = mainWin->ctrl->CurrentPageNo();
+    int bestIdx = 0;
+    int bestPageNo = 0;
+    CollectTocRec(toc, tree->root->child, 0, currPageNo, bestIdx, bestPageNo);
+    currTocIdx = bestIdx;
+}
+
+static void AppendFavoritesForFile(StrVecCP& favorites, FileState* fs, bool isCurrent) {
+    if (!fs || !fs->favorites) {
+        return;
+    }
+    for (Favorite* fav : *fs->favorites) {
+        TempStr rn = FavReadableNameTemp(fav);
+        TempStr disp;
+        if (isCurrent) {
+            disp = rn;
+        } else {
+            TempStr base = path::GetBaseNameTemp(fs->filePath);
+            disp = fmt("%s : %s", base, rn);
+        }
+        if (len(disp) == 0) {
+            continue;
+        }
+        ItemDataCP data;
+        data.favFs = fs;
+        data.fav = fav;
+        favorites.Append(disp, data);
+    }
+}
+
+void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
+    favorites.Reset();
+    WindowTab* currTab = mainWin->CurrentTab();
+    Str currFilePath = currTab ? currTab->filePath : Str();
+
+    FileState* currFs = nullptr;
+    if (currFilePath) {
+        for (FileState* fs : *gSettings->fileStates) {
+            if (str::Eq(fs->filePath, currFilePath)) {
+                currFs = fs;
+                break;
+            }
+        }
+    }
+    if (currFs) {
+        AppendFavoritesForFile(favorites, currFs, true);
+    }
+    for (FileState* fs : *gSettings->fileStates) {
+        if (fs == currFs) {
+            continue;
+        }
+        AppendFavoritesForFile(favorites, fs, false);
+    }
+}
+
+static void CollectBoolSettingsInStruct(StrVecCP& out, const StructInfo* info, u8* base, Str prefix) {
+    if (!info || !base) {
+        return;
+    }
+    const char* fieldName = info->fieldNames;
+    for (u16 i = 0; i < info->fieldCount; i++) {
+        const FieldInfo& field = info->fields[i];
+        Str fname(fieldName);
+        fieldName += len(fname) + 1;
+        if (field.internal || field.type == SettingType::Comment || field.offset == (size_t)-1) {
+            continue;
+        }
+        u8* fieldPtr = base + field.offset;
+        TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, fname) : str::DupTemp(fname);
+        if (field.type == SettingType::Struct) {
+            CollectBoolSettingsInStruct(out, (const StructInfo*)field.value, fieldPtr, path);
+            continue;
+        }
+        if (field.type != SettingType::Bool || len(path) == 0) {
+            continue;
+        }
+        ItemDataCP data;
+        data.boolSetting = (bool*)fieldPtr;
+        data.boolSettingDefault = field.value != 0;
+        out.Append(path, data);
+    }
+}
+
+void CommandPaletteWnd::CollectBoolSettings() {
+    boolSettings.Reset();
+    if (!gSettings) {
+        return;
+    }
+    CollectBoolSettingsInStruct(boolSettings, &gSettingsInfo, (u8*)gSettings, {});
+    SortNoCase(&boolSettings);
+
+    // changed values first, then the rest; both groups stay alphabetical
+    StrVecCP ordered;
+    for (int pass = 0; pass < 2; pass++) {
+        for (int i = 0; i < len(boolSettings); i++) {
+            ItemDataCP* d = boolSettings.AtData(i);
+            bool changed = *d->boolSetting != d->boolSettingDefault;
+            if (changed == (pass == 0)) {
+                ordered.AppendFrom(&boolSettings, i);
+            }
+        }
+    }
+    boolSettings = ordered;
+}
+
+void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
+    Point cursorPos = HwndGetCursorPos(mainWin->hwndCanvas);
+    AppCommandCtx ctx = NewAppCommandCtx(mainWin, cursorPos);
+
+    if (smartTabMode && gSettings->tabsMru) {
+        CollectTabsMru(mainWin, ctx.tab);
+    } else {
+        CollectTabsRegular(mainWin, ctx.tab);
+    }
+
+    CollectToc(mainWin);
+    CollectFavorites(mainWin);
+    CollectBoolSettings();
+
+    fileHistory.Reset();
+    for (FileState* fs : *gSettings->fileStates) {
+        TempStr s = ConvertPathForDisplayTemp(fs->filePath);
+        if (len(s) == 0) {
+            continue;
+        }
+        ItemDataCP data;
+        data.filePath = fs->filePath;
+        fileHistory.Append(s, data);
+    }
+
+    StrVecCP tempCommands;
+    int cmdId = (int)CmdFirst + 1;
+    for (int off = 0; SeqStrAt(gCommandDescriptions, off);) {
+        Str name = SeqStrAt(gCommandDescriptions, off);
+        if (!AllowCommand(ctx, (i32)cmdId)) {
+            if (!SeqStrAdvance(gCommandDescriptions, off, &cmdId)) {
+                break;
+            }
+            continue;
+        }
+        ReportIf(len(name) == 0);
+        ItemDataCP data;
+        data.cmdId = (i32)cmdId;
+        // test against the English name: a translation may not carry the prefix
+        data.isDebug = str::StartsWith(name, StrL("Debug: "));
+        auto nameTranslated = trans::GetTranslation(name);
+        auto nameUpdated = UpdateCommandNameTemp(mainWin, cmdId, nameTranslated);
+        tempCommands.Append(nameUpdated, data);
+        if (!SeqStrAdvance(gCommandDescriptions, off, &cmdId)) {
+            break;
+        }
+    }
+
+    auto* curr = gFirstCustomCommand;
+    while (curr) {
+        TempStr name = curr->name;
+        cmdId = curr->id;
+        if (cmdId > 0 && !str::IsEmptyOrWhiteSpace(name)) {
+            if (AllowCommand(ctx, cmdId)) {
+                ItemDataCP data;
+                data.cmdId = cmdId;
+                name = RemovePrefixFromString(name);
+                tempCommands.Append(name, data);
+            }
+        }
+        curr = curr->next;
+    }
+
+    SortNoCase(&tempCommands);
+    int n = len(tempCommands);
+    commands.Reset();
+    // dev-only commands go last instead of sitting in the middle of the list
+    // under "D"; each group keeps its alphabetical order
+    for (int pass = 0; pass < 2; pass++) {
+        bool wantDebug = (pass == 1);
+        for (int i = 0; i < n; i++) {
+            if (tempCommands.AtData(i)->isDebug == wantDebug) {
+                commands.AppendFrom(&tempCommands, i);
+            }
+        }
+    }
+}
+
+void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
+    Rect rRelative = HwndWindowRect(hwndRelative);
+    Rect r = HwndWindowRect(hwnd);
+    int x = rRelative.x + (rRelative.dx / 2) - (r.dx / 2);
+    int y = rRelative.y + (rRelative.dy / 2) - (r.dy / 2);
+    r = {x, y, r.dx, r.dy};
+    Rect r2 = ShiftRectToWorkArea(r, hwndRelative, true);
+    r2.y = rRelative.y + 42;
+    SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}
+
+void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
+    VirtListBox* lb = ev->listBox;
+    auto* m = (ListBoxModelCP*)lb->model;
+    if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
+        return;
+    }
+
+    Gfx* gfx = ev->gfx;
+    HWND hwndList = lb->GetHwnd();
+    Rect rc = ev->itemRect;
+
+    Color colBg = lb->GetColor(kColListBg);
+    Color colText = lb->GetColor(kColListText);
+    if (IsSpecialColor(colBg)) {
+        colBg = GetSysColor(COLOR_WINDOW);
+    }
+    if (IsSpecialColor(colText)) {
+        colText = GetSysColor(COLOR_WINDOWTEXT);
+    }
+    if (ev->selected) {
+        colBg = AccentColor(colBg, 30);
+    }
+
+    gfx->FillRect(rc, colBg);
+
+    // Gfx (Direct2D / GDI+) does not pick up WS_EX_LAYOUTRTL, so we lay the
+    // row out right-to-left ourselves. Do not use HwndIsRtl(): the palette
+    // hwnd stays LTR so mouse hit-testing and virtual-control coords match
+    // (issue #5956). If the DC is still mirrored (nested RTL hwnd), turn it
+    // off so Hebrew glyphs are not reversed.
+    bool isRtl = CommandPaletteUiRtl();
+    bool hwndRtl = HwndIsRtl(hwndList);
+    bool prevMirrored = hwndRtl ? gfx->SetMirrored(false) : false;
+
+    Str itemText = m->Item(ev->itemIndex);
+    ItemDataCP* data = m->Data(ev->itemIndex);
+
+    TempStr rightStr;
+    PlatformFont* rightFont = lb->font;
+    Color rightCol = AccentColor(colText, 80);
+    if (data->cmdId != 0) {
+        rightStr = CommandPaletteShortcutTemp(data->cmdId);
+    } else if (data->boolSetting) {
+        bool on = *data->boolSetting;
+        rightStr = on ? StrL("true") : StrL("false");
+        rightCol = colText;
+        if (on != data->boolSettingDefault) {
+            PlatformFont* bold = GetBoldPlatformFont(lb->font);
+            if (bold) {
+                rightFont = bold;
+            }
+        }
+    } else if (data->pageNo > 0) {
+        // toc entry: show the destination page number on the right, e.g. "p33"
+        rightStr = fmt("p%d", data->pageNo);
+    } else if (data->filePath) {
+        rightStr = path::GetDirTemp(data->filePath);
+    }
+
+    int padX = DpiScale(4);
+    rc.x += padX;
+    rc.dx -= 2 * padX;
+
+    if (data->indent > 0) {
+        int indentW = data->indent * DpiScale(16);
+        if (isRtl) {
+            rc.dx -= indentW;
+        } else {
+            rc.x += indentW;
+            rc.dx -= indentW;
+        }
+    }
+
+    // reserve space on the right for rightStr (accel key, dir, or "p34") so it
+    // is always visible; the item text gets the remaining space and is
+    // ellipsized when too long. File history: the filename takes precedence
+    // over a long directory (issue #6104).
+    Rect rcText = rc;
+    bool hasRight = rightStr && rightStr.s[0];
+    int rightW = 0;
+    if (hasRight) {
+        int gap = DpiScale(8);
+        rightW = gfx->MeasureText(rightStr, rightFont).dx;
+        if (data->filePath) {
+            int nameW = gfx->MeasureText(itemText, lb->font).dx;
+            int minDir = DpiScale(80);
+            int maxRight = rc.dx - nameW - gap;
+            if (maxRight < minDir) {
+                hasRight = false;
+                rightW = 0;
+            } else if (rightW > maxRight) {
+                rightW = maxRight;
+            }
+        }
+        if (hasRight) {
+            if (isRtl) {
+                rcText.x += rightW + gap;
+                rcText.dx -= rightW + gap;
+            } else {
+                rcText.dx -= rightW + gap;
+            }
+        }
+    }
+
+    {
+        u32 drawFmt = gfxTextEllipsis | gfxTextVCenter;
+        drawFmt |= isRtl ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
+        DrawMaybeHighlightedText(gfx, rcText, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt,
+                                 lb->font, colText);
+    }
+
+    if (hasRight) {
+        Rect rcRight = rc;
+        u32 rightFmt = gfxTextVCenter;
+        if (isRtl) {
+            rcRight.dx = rightW;
+            rightFmt |= gfxTextLeft;
+        } else {
+            rcRight.x += rcRight.dx - rightW;
+            rcRight.dx = rightW;
+            rightFmt |= gfxTextRight;
+        }
+        if (data->cmdId != 0) {
+            DrawMaybeHighlightedText(gfx, rcRight, rightStr, filterWords, highlighted, colBg, false, false, rightFmt,
+                                     rightFont, rightCol);
+        } else {
+            if (data->filePath) {
+                rightFmt |= gfxTextPathEllipsis;
+            }
+            gfx->DrawText(rightStr, rcRight, rightFmt, rightFont, rightCol);
+        }
+    }
+
+    if (hwndRtl) {
+        gfx->SetMirrored(prevMirrored);
+    }
+}
+
+// Return the same effective shortcut text that is painted on the right side
+// of a command row, without the menu separator tab.
+TempStr CommandPaletteShortcutTemp(i32 cmdId) {
+    if (cmdId == 0) {
+        return {};
+    }
+    TempStr withAccel = AppendAccelKeyToMenuStringTemp(StrL(""), cmdId);
+    if (!withAccel || withAccel.s[0] != '\t') {
+        return {};
+    }
+    return Str(withAccel.s + 1, len(withAccel) - 1);
+}
+
+static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matchedOut) {
+    int n = len(strs);
+    for (int i = 0; i < n; i++) {
+        Str s = strs[i];
+        if (len(s) == 0) {
+            continue;
+        }
+        bool matches = FilterMatches(s, words);
+        ItemDataCP* data = strs.AtData(i);
+        if (!matches && data && data->cmdId != 0) {
+            TempStr shortcut = CommandPaletteShortcutTemp(data->cmdId);
+            matches = FilterMatches(shortcut, words);
+        }
+        if (!matches && data && data->boolSetting) {
+            Str val = *data->boolSetting ? StrL("true") : StrL("false");
+            matches = FilterMatches(val, words);
+        }
+        if (!matches) {
+            continue;
+        }
+        matchedOut.AppendFrom(&strs, i);
+    }
+}
+
+void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
+    strings.Reset();
+    if (!filter) {
+        filter = StrL("");
+    }
+
+    bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false,
+         searchBoolSettings = false;
+    if (str::TrimPrefix(filter, Str(kPalettePrefixEverything))) {
+        searchTabs = searchHistory = searchCommands = true;
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixTabs))) {
+        searchTabs = true;
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixFileHistory))) {
+        searchHistory = true;
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixTOC)) ||
+               str::TrimPrefix(filter, Str(kPalettePrefixTOCLegacy))) {
+        searchToc = true;
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixFavorites))) {
+        searchFavorites = true;
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixBoolSettings))) {
+        searchBoolSettings = true;
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixThumbnails))) {
+        return;
+    } else {
+        str::TrimPrefix(filter, Str(kPalettePrefixCommands));
+        searchCommands = true;
+    }
+
+    filterWords.Reset();
+    SplitFilterToWords(filter, filterWords);
+
+    if (searchTabs) {
+        FilterStrings(tabs, filterWords, strings);
+    }
+    if (searchHistory) {
+        FilterStrings(fileHistory, filterWords, strings);
+    }
+    if (searchCommands) {
+        FilterStrings(commands, filterWords, strings);
+    }
+    if (searchToc) {
+        FilterStrings(toc, filterWords, strings);
+    }
+    if (searchFavorites) {
+        FilterStrings(favorites, filterWords, strings);
+    }
+    if (searchBoolSettings) {
+        FilterStrings(boolSettings, filterWords, strings);
+    }
+}
+
+void CommandPaletteWnd::QueryChanged() {
+    Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
+    if (win->AsFixed() && str::StartsWith(filter, Str(kPalettePrefixThumbnails))) {
+        SetThumbnailMode(ThumbnailMode::Enabled);
+        UpdateHelpRow();
+        return;
+    }
+    SetThumbnailMode(ThumbnailMode::Disabled);
+    int currSelIdx = 0;
+    auto* m = (ListBoxModelCP*)listBox->model;
+    int nItemsPrev = m->ItemsCount();
+    if (smartTabMode) {
+        if (!stickyMode) {
+            if (len(filter) > 1) {
+                stickyMode = true;
+                currSelIdx = listBox->GetCurrentSelection();
+            }
+        }
+    }
+    FilterStringsForQuery(filter, m->strings);
+    listBox->SetModel(m);
+    UpdateHelpRow();
+    int nItems = m->ItemsCount();
+    if (nItems == 0) {
+        return;
+    }
+    if (stickyMode && nItemsPrev == nItems) {
+        CommandPaletteSetCurrentSelection(this, currSelIdx);
+        return;
+    }
+    if ((str::StartsWith(filter, Str(kPalettePrefixTOC)) || str::StartsWith(filter, Str(kPalettePrefixTOCLegacy))) &&
+        len(filterWords) == 0) {
+        int idx = (currTocIdx >= 0 && currTocIdx < nItems) ? currTocIdx : 0;
+        CommandPaletteSetCurrentSelection(this, idx);
+        return;
+    }
+    CommandPaletteSetCurrentSelection(this, 0);
+}
+#endif

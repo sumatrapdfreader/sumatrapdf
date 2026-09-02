@@ -471,9 +471,6 @@
     <ClInclude Include="..\src\base\UtAssert.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\CommandPaletteModel.h">
-      <Filter>src\gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gui\DocumentView.h">
       <Filter>src\gui</Filter>
     </ClInclude>
@@ -681,15 +678,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CommandPalette.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\CommandPaletteCollect.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\CommandPaletteDraw.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\CommandPaletteFilter.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Commands.cpp">
@@ -1189,9 +1177,6 @@
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>src\base\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\CommandPaletteModel.cpp">
-      <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp">
       <Filter>src\gui</Filter>
