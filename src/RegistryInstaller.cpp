@@ -205,7 +205,7 @@ ShCtx\Software\Classes\${ext}\OpenWithProgids
 */
 static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
     TempStr exePathQuoted = str::JoinTemp(StrL("\""), installedExePath, StrL("\""));
-    TempStr cmdOpen = str::JoinTemp(exePathQuoted, StrL(" \"%1\" \"%2\" \"%3\" \"%4\""));
+    TempStr cmdOpen = str::JoinTemp(exePathQuoted, StrL(" \"%1\""));
     TempStr cmdPrint = str::JoinTemp(exePathQuoted, StrL(" -print-to-default \"%1\""));
     TempStr cmdPrintTo = str::JoinTemp(exePathQuoted, StrL(" -print-to \"%2\" \"%1\""));
     TempStr key;
@@ -258,6 +258,7 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
 
         key = str::JoinTemp(progIDKey, StrL("\\shell\\open"));
         ok &= LoggedWriteRegStr(hkey, key, StrL("Icon"), iconPath);
+        ok &= LoggedWriteRegStr(hkey, key, StrL("MultiSelectModel"), StrL("Player"));
 
         key = str::JoinTemp(progIDKey, StrL("\\shell\\open\\command"));
         ok &= LoggedWriteRegStr(hkey, key, {}, cmdOpen);
