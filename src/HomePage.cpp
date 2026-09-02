@@ -2814,6 +2814,15 @@ HomeChromeCtrl::~HomeChromeCtrl() {
     aboutHover = nullptr;
 }
 
+// e.g. "Command Palette (Ctrl + K)"
+static TempStr AppendCmdAccel(Str base, int cmd) {
+    TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
+    if (!accel) {
+        return base;
+    }
+    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, len(accel) - 1))); // +1 skips the leading \t
+}
+
 // created once per window so that hover / pressed state survives the repaints
 // that scrolling and filtering cause
 static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
@@ -2868,7 +2877,7 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->logoRow = new HomeLogoRow();
     chrome->paletteBtn = new HomeCircleBtnCtrl();
     chrome->paletteBtn->glyph = StrL(">");
-    chrome->paletteBtn->SetTooltip(_TRA("Command Palette"));
+    chrome->paletteBtn->SetTooltip(AppendCmdAccel(_TRA("Command Palette"), CmdCommandPalette));
     chrome->paletteBtn->onClick = MkFunc1(HomePaletteClicked, win);
     chrome->logo = new SumatraLogo();
     chrome->logo->SetFlag(vwfNoHitTest, false);
@@ -2876,7 +2885,7 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->logo->onMouseLeave = MkFunc0(OnHomeLogoLeave, win);
     chrome->helpBtn = new HomeCircleBtnCtrl();
     chrome->helpBtn->glyph = StrL("?");
-    chrome->helpBtn->SetTooltip(_TRA("Keyboard Shortcuts"));
+    chrome->helpBtn->SetTooltip(AppendCmdAccel(_TRA("Keyboard Shortcuts"), CmdToggleKeyboardHelp));
     chrome->helpBtn->onClick = MkFunc1(HomeHelpClicked, win);
     chrome->logoRow->AddItem(chrome->paletteBtn);
     chrome->logoRow->AddItem(chrome->logo);
