@@ -683,6 +683,7 @@ struct VirtButton : VirtText {
     void SetIsDefault(bool);
 
     Size GetIdealSize() override;
+    Color TextColor(Color bg) const;
     void Paint(VirtPaintCtx&) override;
     void OnMouseEnter();
     void OnMouseLeave();

@@ -1819,13 +1819,7 @@ void ButtonWithKbd::Paint(VirtPaintCtx& ctx) {
     }
     bool isEnabled = HasFlag(vwfEnabled);
     Color bg = GetColor((isEnabled && HasFlag(vwfHovered)) ? kColBtnBgHover : kColBtnBg);
-    Color textCol = GetColor(kColBtnText);
-    if (!isEnabled) {
-        Color disabled = GetColor(kColBtnTextDisabled);
-        if (disabled != kColorUnset) {
-            textCol = disabled;
-        }
-    }
+    Color textCol = TextColor(bg);
     Rect r = ctx.content;
     r.SubTB(textPadding.top, textPadding.bottom);
     r.SubLR(textPadding.left, textPadding.right);
@@ -2677,7 +2671,7 @@ void DrawAnnotationListRow(Gfx* gfx, PlatformFont* font, Rect rc, Annotation* an
                 gfx->PushClip(rcContents);
                 DrawMaybeHighlightedText(gfx, rcContents, oneLine, filterWords, hlScratch, colBg, false, false,
                                          gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, font,
-                                         ThemeWindowTextDisabledColor());
+                                         EnsureContrast(ThemeWindowTextDisabledColor(), colBg));
                 gfx->PopClip();
             }
         }

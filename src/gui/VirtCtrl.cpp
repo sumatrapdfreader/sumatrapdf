@@ -2689,6 +2689,19 @@ Size VirtButton::GetIdealSize() {
     return {s2.dx + textPadding.left + textPadding.right, s2.dy + textPadding.top + textPadding.bottom};
 }
 
+// Disabled labels are muted, then lifted if they would vanish into `bg`.
+Color VirtButton::TextColor(Color bg) const {
+    Color textCol = GetColor(kColBtnText);
+    if (HasFlag(vwfEnabled)) {
+        return textCol;
+    }
+    Color disabled = GetColor(kColBtnTextDisabled);
+    if (disabled != kColorUnset) {
+        textCol = disabled;
+    }
+    return EnsureContrast(textCol, bg);
+}
+
 void VirtButton::Paint(VirtPaintCtx& ctx) {
     bool isEnabled = HasFlag(vwfEnabled);
     Color bg = GetColor((isEnabled && HasFlag(vwfHovered)) ? kColBtnBgHover : kColBtnBg);
@@ -2706,13 +2719,7 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
     r.SubLR(textPadding.left, textPadding.right);
     VirtPaintCtx c2 = ctx;
     c2.content = r;
-    Color textCol = GetColor(kColBtnText);
-    if (!isEnabled) {
-        Color disabled = GetColor(kColBtnTextDisabled);
-        if (disabled != kColorUnset) {
-            textCol = disabled;
-        }
-    }
+    Color textCol = TextColor(bg);
     PaintText(c2, textCol);
 
     if (HasFlag(vwfFocused)) {

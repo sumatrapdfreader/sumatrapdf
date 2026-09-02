@@ -732,7 +732,7 @@ static ILayout* NewFilterHelp(int gap) {
         {StrL(":c+  :c-"), _TRA("has / has no contents")},
     };
     PlatformFont* font = GetAppFont();
-    Color col = ThemeWindowTextDisabledColor();
+    Color col = EnsureContrast(ThemeWindowTextDisabledColor(), ThemeWindowControlBackgroundColor());
     auto mkText = [&](Str s) -> ILayout* {
         return NewVirtText({
             .s = s,
@@ -1172,6 +1172,7 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     int nSel = 0;
     int itemDy = 0;
     int listY = 0;
+    Rect saveNewRc{};
     if (f && f->floatWnd) {
         deleteOn = f->floatWnd->btnDelete && f->floatWnd->btnDelete->IsEnabled() ? 1 : 0;
         discardOn = f->floatWnd->btnDiscard && f->floatWnd->btnDiscard->IsEnabled() ? 1 : 0;
@@ -1181,8 +1182,20 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
             itemDy = f->floatWnd->listBox->GetItemHeight();
             listY = f->floatWnd->listBox->BoundsInWindow().y;
         }
+        if (f->floatWnd->btnSaveNew) {
+            saveNewRc = f->floatWnd->btnSaveNew->BoundsInWindow();
+        }
     }
-    out.Append(fmt("deleteEnabled=%d discardEnabled=%d saveEnabled=%d nSel=%d itemDy=%d listY=%d\n", deleteOn,
-                   discardOn, saveOn, nSel, itemDy, listY));
+    Color saveNewBg = kColorUnset;
+    Color saveNewTxt = kColorUnset;
+    if (f && f->floatWnd && f->floatWnd->btnSaveNew) {
+        saveNewBg = f->floatWnd->btnSaveNew->GetColor(kColBtnBg);
+        saveNewTxt = f->floatWnd->btnSaveNew->TextColor(saveNewBg);
+    }
+    out.Append(
+        fmt("deleteEnabled=%d discardEnabled=%d saveEnabled=%d nSel=%d itemDy=%d listY=%d "
+            "saveNewRect=%d,%d,%d,%d saveNewText=%s saveNewBg=%s\n",
+            deleteOn, discardOn, saveOn, nSel, itemDy, listY, saveNewRc.x, saveNewRc.y, saveNewRc.dx, saveNewRc.dy,
+            SerializeColorTemp(saveNewTxt), SerializeColorTemp(saveNewBg)));
     return ToStrTemp(out);
 }

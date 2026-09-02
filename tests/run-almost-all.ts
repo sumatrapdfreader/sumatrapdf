@@ -122,6 +122,7 @@ import { testit as issue5943 } from "./issue-5943.ts";
 import { testit as issue6117 } from "./issue-6117.ts";
 import { testit as issue6118 } from "./issue-6118.ts";
 import { testit as issue6120 } from "./issue-6120.ts";
+import { testit as issue6123 } from "./issue-6123.ts";
 import { testit as customZoomDialog } from "./custom-zoom-dialog.ts";
 import { testit as issue1106 } from "./issue-1106.ts";
 import { testit as issue814 } from "./issue-814.ts";
@@ -406,6 +407,7 @@ export const tests: NamedTest[] = [
   ["issue-6117", issue6117],
   ["issue-6118", issue6118],
   ["issue-6120", issue6120],
+  ["issue-6123", issue6123],
   ["annot-filter-syntax", annotFilterSyntax],
   ["annot-filter-close-tab", annotFilterCloseTab],
   ["custom-zoom-dialog", customZoomDialog],

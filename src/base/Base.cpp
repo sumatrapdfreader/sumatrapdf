@@ -7331,6 +7331,29 @@ Color AccentColor(Color col, int light, int dark) {
     return AdjustLightness2(col, (float)dark);
 }
 
+// If `fg` is too close to `bg` in lightness, shift it away so muted labels
+// (disabled buttons, secondary list text) stay readable. `minDelta` is in
+// GetLightness units (0-255).
+Color EnsureContrast(Color fg, Color bg, int minDelta) {
+    if (minDelta <= 0 || IsSpecialColor(fg) || IsSpecialColor(bg)) {
+        return fg;
+    }
+    float lf = GetLightness(fg);
+    float lb = GetLightness(bg);
+    float d = lf - lb;
+    float ad = d < 0 ? -d : d;
+    if (ad >= (float)minDelta) {
+        return fg;
+    }
+    float sign = 1.f;
+    if (ad > 0.5f) {
+        sign = d > 0 ? 1.f : -1.f;
+    } else if (IsLightColor(bg)) {
+        sign = -1.f;
+    }
+    return AdjustLightness2(fg, sign * ((float)minDelta - ad));
+}
+
 DWORD PremultiplyPixel(Color c, u8 alpha) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);

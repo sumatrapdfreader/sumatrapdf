@@ -260,6 +260,18 @@ static void ColorTest() {
     parsed = {};
     ParseColor(parsed, StrL("#f2f2f"));
     utassert(!parsed.parsedOk);
+
+    // One Dark disabled text on a lifted button fill is too close; boost it
+    Color oneDarkBg = MkRgb(0x21, 0x25, 0x2b);
+    Color oneDarkBtn = AccentColor(oneDarkBg, 14);
+    Color oneDarkDis = MkRgb(0x5c, 0x63, 0x70);
+    Color boosted = EnsureContrast(oneDarkDis, oneDarkBtn, 80);
+    utassert(abs((int)GetLightness(boosted) - (int)GetLightness(oneDarkBtn)) >= 80);
+
+    // already-contrasty pair is left alone
+    Color lightFg = MkRgb(0xf9, 0xfa, 0xfb);
+    Color blackBg = MkRgb(0, 0, 0);
+    utassert(EnsureContrast(lightFg, blackBg, 80) == lightFg);
 }
 
 static void ArenaPtrCompressTest() {
