@@ -6118,8 +6118,22 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
 }
 
-void SumatraOpenPathInDefaultFileManager(Str path) {
+// FilePicker: empty/os = Windows dialog; sumatrapdf = Navigate Files in Folder.
+static bool FilePickerIsSumatraPDF() {
+    return gSettings && str::EqI(gSettings->filePicker, StrL("sumatrapdf"));
+}
+
+// Show in folder: Explorer (and select the file) unless File / Use SumatraPDF
+// file picker is on, in which case open Navigate Files in Folder on that dir.
+void ShowFileInFolder(MainWindow* win, Str path) {
+    if (!win || len(path) == 0) {
+        return;
+    }
     if (gPluginMode || !CanAccessDisk()) {
+        return;
+    }
+    if (FilePickerIsSumatraPDF()) {
+        ShowNavFilesInFolder(win, path);
         return;
     }
     OpenPathInDefaultFileManager(path);
@@ -6129,8 +6143,7 @@ static void ShowCurrentFileInFolder(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
-    auto* ctrl = win->ctrl;
-    SumatraOpenPathInDefaultFileManager(ctrl->GetFilePath());
+    ShowFileInFolder(win, win->ctrl->GetFilePath());
 }
 
 static void ShowGeneratedMarkdownHtml(MainWindow* win) {
@@ -6658,11 +6671,6 @@ static void OpenFileWithOSFilePicker(MainWindow* win, bool skipHistory = false) 
         paths.Append(path);
     }
     StartLoadDocuments(paths, win, skipHistory);
-}
-
-// FilePicker: empty/os = Windows dialog; sumatrapdf = Navigate Files in Folder.
-static bool FilePickerIsSumatraPDF() {
-    return gSettings && str::EqI(gSettings->filePicker, StrL("sumatrapdf"));
 }
 
 static void ToggleFilePicker() {

@@ -588,7 +588,7 @@ static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
             return;
         }
         case CmdShowInFolder: {
-            SumatraOpenPathInDefaultFileManager(tabUnderMouse->filePath);
+            ShowFileInFolder(win, tabUnderMouse->filePath);
             return;
         }
         case CmdCopyFilePath: {

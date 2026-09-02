@@ -41,7 +41,7 @@ CmdRenameFile,F2,Rename File...,
 CmdReopenLastClosedFile,Shift + Ctrl + T,Reopen Last Closed,
 CmdSaveAs,Ctrl + S,Save File As...,
 CmdToggleCursorPosition,m,Toggle Cursor Position,
-CmdShowInFolder,,Show File In Folder...,
+CmdShowInFolder,,Show File In Folder...,"Explorer (selects the file), or Navigate Files in Folder when FilePicker = sumatrapdf, ver 3.7+"
 CmdToggleBookmarks,F12,Toggle Bookmarks,
 CmdToggleTableOfContents,,Toggle Table Of Contents,ver 3.6+
 CmdCollapseAll,,Collapse All,"Bookmarks: collapse the outline; if there is only one top-level entry with children, expand it one level (Word-style TOC), ver 3.7+"

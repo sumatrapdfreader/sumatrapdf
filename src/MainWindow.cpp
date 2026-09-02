@@ -823,13 +823,13 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         return;
     }
     if (pathType == path::Type::Dir) {
-        SumatraOpenPathInDefaultFileManager(fullPath);
+        OpenPathInDefaultFileManager(fullPath);
         return;
     }
 
     bool canWeOpenIt = IsFileSupportedByContent(fullPath);
     if (!canWeOpenIt) {
-        SumatraOpenPathInDefaultFileManager(fullPath);
+        OpenPathInDefaultFileManager(fullPath);
         return;
     }
 

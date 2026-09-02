@@ -377,7 +377,7 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
 bool DocIsSupportedFileType(FileType);
 TempStr GetLogFilePathTemp();
 void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, bool showWin = true);
-void SumatraOpenPathInDefaultFileManager(Str path);
+void ShowFileInFolder(MainWindow* win, Str path);
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 TempStr GetSumatraDataDirTemp();
 TempStr GetCrashInfoDirTemp();

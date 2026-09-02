@@ -46,7 +46,6 @@
 #include "ImageSaveCropResize.h"
 #include "GoogleLens.h"
 #include "CommandAvailability.h"
-#include "NavFilesInFolder.h"
 #include "ReadAloudHighlight.h"
 #include "Menu.h"
 
@@ -1301,7 +1300,7 @@ static MenuDef menuDefContextStart[] = {
     },
     {
         _TRN("Show in folder"),
-        CmdNavigateFilesInFolder,
+        CmdShowInFolder,
     },
     {
         _TRN("&Pin Document"),
@@ -2084,8 +2083,8 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         return;
     }
 
-    if (CmdNavigateFilesInFolder == cmd) {
-        ShowNavFilesInFolder(win, path);
+    if (CmdShowInFolder == cmd) {
+        ShowFileInFolder(win, path);
         return;
     }
 
