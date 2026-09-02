@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/Pixmap.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
 #include "base/UITask.h"
@@ -18,6 +19,7 @@
 #include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "DisplayModel.h"
 #include "MainWindow.h"
 #include "Theme.h"
 #include "WindowTab.h"
@@ -89,6 +91,557 @@ static WindowTab* gTabToSelectOnClose = nullptr;
 static i32 gCmdIdToExecOnClose = 0;
 static FileState* gFavFsToGoToOnClose = nullptr;
 static Favorite* gFavToGoToOnClose = nullptr;
+
+constexpr int kPaletteThumbnailDx = 120;
+constexpr int kPaletteThumbnailDy = 170;
+constexpr int kPaletteThumbnailGap = 16;
+constexpr int kPaletteThumbnailPadding = 16;
+constexpr int kPaletteThumbnailMaxCols = 6;
+constexpr int kPaletteThumbnailRenderScreens = 1;
+constexpr int kPaletteThumbnailKeepScreens = 2;
+
+static Pixmap* const kThumbnailRenderFailed = (Pixmap*)(intptr_t)-1;
+
+struct ThumbnailPaletteCtrl;
+
+struct ThumbnailPaletteCache {
+    Vec<Pixmap*> thumbnails;
+    ThumbnailPaletteCtrl* ctrl = nullptr;
+    EngineBase* renderEngine = nullptr;
+    AtomicInt cancelRendering = 0;
+    int rotation = 0;
+    int thumbDx = 0;
+    int thumbDy = 0;
+    bool workerRunning = false;
+    bool deleteWhenWorkerFinishes = false;
+};
+
+struct ThumbnailRowsModel : ListBoxModel {
+    int rows = 0;
+
+    int ItemsCount() override { return rows; }
+    Str Item(int) override { return {}; }
+};
+
+struct ThumbnailRenderTask {
+    ThumbnailPaletteCache* cache = nullptr;
+    int pageNo = 0;
+    Pixmap* bitmap = nullptr;
+};
+
+struct ThumbnailRenderWorker {
+    ThumbnailPaletteCache* cache = nullptr;
+    EngineBase* sourceEngine = nullptr;
+    Vec<int> pages;
+    int rotation = 0;
+    int thumbDx = 0;
+    int thumbDy = 0;
+};
+
+struct ThumbnailPaletteCtrl : VirtListBox {
+    MainWindow* win = nullptr;
+    WindowTab* tab = nullptr;
+    ThumbnailRowsModel* rowsModel = nullptr;
+    ThumbnailPaletteCache* cache = nullptr;
+    int pageCount = 0;
+    int selectedPage = 1;
+    int cols = 1;
+    int thumbDx = 0;
+    int thumbDy = 0;
+    int gap = 0;
+    int labelDy = 0;
+    bool active = false;
+
+    ThumbnailPaletteCtrl(MainWindow*, PlatformFont*, int dpi);
+    ~ThumbnailPaletteCtrl() override;
+
+    void SetBounds(Rect) override;
+    void DrawRow(DrawItemEvent*);
+    void OnThumbMouseDown(VirtMouseEvent*);
+    void OnThumbMouseMove(VirtMouseEvent*);
+    void OnThumbMouseUp(VirtMouseEvent*);
+    void OnThumbMouseWheel(VirtMouseEvent*);
+    void OnThumbDoubleClick(VirtMouseEvent*);
+    void Activate();
+    void Deactivate();
+    void HandleKey(int vkey);
+    void StartRendering();
+    int RenderedCount() const;
+
+  private:
+    int PageAtPoint(Point);
+    void SelectPage(int);
+    void OpenSelectedPage();
+};
+
+static void FreeThumbnail(Pixmap* thumbnail) {
+    if (thumbnail != kThumbnailRenderFailed) {
+        FreePixmap(thumbnail);
+    }
+}
+
+static Pixmap* ThumbnailToDraw(ThumbnailPaletteCache* cache, int idx) {
+    Pixmap* thumbnail = cache->thumbnails[idx];
+    return thumbnail == kThumbnailRenderFailed ? nullptr : thumbnail;
+}
+
+static void FreeThumbnailRenderEngine(ThumbnailPaletteCache* cache) {
+    ReportIf(cache->workerRunning);
+    if (cache->renderEngine) {
+        cache->renderEngine->Release();
+        cache->renderEngine = nullptr;
+    }
+}
+
+static void DeleteThumbnailCache(ThumbnailPaletteCache* cache) {
+    for (Pixmap* thumbnail : cache->thumbnails) {
+        FreeThumbnail(thumbnail);
+    }
+    VecReset(cache->thumbnails);
+    FreeThumbnailRenderEngine(cache);
+    delete cache;
+}
+
+static Pixmap* RenderPageThumbnail(EngineBase* engine, int pageNo, int rotation, int thumbDx, int thumbDy) {
+    RectF pageRect = engine->PageMediabox(pageNo);
+    if (pageRect.IsEmpty()) {
+        return nullptr;
+    }
+
+    pageRect = engine->Transform(pageRect, pageNo, 1.0f, rotation);
+    if (pageRect.dx <= 0 || pageRect.dy <= 0) {
+        return nullptr;
+    }
+    float zoom = (float)thumbDx / pageRect.dx;
+    pageRect.dy = std::min(pageRect.dy, (float)thumbDy / zoom);
+    pageRect = engine->Transform(pageRect, pageNo, 1.0f, rotation, true);
+    RenderPageArgs args(pageNo, zoom, rotation, &pageRect, RenderTarget::View);
+    return engine->RenderPage(args);
+}
+
+static void FinishThumbnailRender(ThumbnailRenderTask* task) {
+    ThumbnailPaletteCache* cache = task->cache;
+    int idx = task->pageNo - 1;
+    bool isValid = !cache->deleteWhenWorkerFinishes && idx >= 0 && idx < len(cache->thumbnails);
+    if (isValid) {
+        if (task->bitmap) {
+            FreeThumbnail(cache->thumbnails[idx]);
+            cache->thumbnails[idx] = task->bitmap;
+            task->bitmap = nullptr;
+            if (cache->ctrl && cache->ctrl->active) {
+                cache->ctrl->Invalidate();
+            }
+        } else if (!cache->thumbnails[idx]) {
+            cache->thumbnails[idx] = kThumbnailRenderFailed;
+        }
+    }
+    FreePixmap(task->bitmap);
+    delete task;
+}
+
+static void FinishThumbnailWorker(ThumbnailPaletteCache* cache) {
+    cache->workerRunning = false;
+    if (cache->deleteWhenWorkerFinishes) {
+        DeleteThumbnailCache(cache);
+        return;
+    }
+    if (!cache->ctrl || !cache->ctrl->active) {
+        FreeThumbnailRenderEngine(cache);
+        return;
+    }
+    cache->ctrl->StartRendering();
+}
+
+static void RenderAndPostThumbnail(ThumbnailRenderWorker* worker, EngineBase* engine, int pageNo) {
+    auto* task = new ThumbnailRenderTask;
+    task->cache = worker->cache;
+    task->pageNo = pageNo;
+    task->bitmap = RenderPageThumbnail(engine, pageNo, worker->rotation, worker->thumbDx, worker->thumbDy);
+    uitask::Post(MkFunc0<ThumbnailRenderTask>(FinishThumbnailRender, task));
+}
+
+static void RenderThumbnailsInBackground(ThumbnailRenderWorker* worker) {
+    ThumbnailPaletteCache* cache = worker->cache;
+    if (worker->sourceEngine) {
+        cache->renderEngine = worker->sourceEngine->Clone();
+        worker->sourceEngine->Release();
+        worker->sourceEngine = nullptr;
+    }
+    EngineBase* engine = cache->renderEngine;
+    if (engine) {
+        for (int pageNo : worker->pages) {
+            if (AtomicIntGet(&cache->cancelRendering) != 0) {
+                break;
+            }
+            RenderAndPostThumbnail(worker, engine, pageNo);
+        }
+    }
+    uitask::Post(MkFunc0<ThumbnailPaletteCache>(FinishThumbnailWorker, cache));
+    delete worker;
+}
+
+ThumbnailPaletteCtrl::ThumbnailPaletteCtrl(MainWindow* win, PlatformFont* font, int dpi) {
+    this->win = win;
+    this->tab = win->CurrentTab();
+    this->font = font;
+    this->dpi = dpi;
+    SetFlag(vwfFocusable, false);
+    SetColor(kColListText, ThemeWindowTextColor());
+    SetColor(kColListBg, ThemeWindowControlBackgroundColor());
+
+    thumbDx = DpiScaleByDpi(dpi, kPaletteThumbnailDx);
+    thumbDy = DpiScaleByDpi(dpi, kPaletteThumbnailDy);
+    gap = DpiScaleByDpi(dpi, kPaletteThumbnailGap);
+    labelDy = PlatformFontMeasureText(font, StrL("0")).dy + DpiScaleByDpi(dpi, 4);
+    itemDy = thumbDy + labelDy + gap;
+    padding = DpiScaledInsets(kPaletteThumbnailPadding, kPaletteThumbnailPadding);
+
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    pageCount = dm ? dm->PageCount() : 0;
+    selectedPage = dm ? Clamp(dm->CurrentPageNo(), 1, std::max(pageCount, 1)) : 1;
+
+    rowsModel = new ThumbnailRowsModel();
+    rowsModel->rows = pageCount;
+    SetModel(rowsModel);
+
+    cache = new ThumbnailPaletteCache();
+    cache->ctrl = this;
+    cache->rotation = dm ? dm->GetRotation() : 0;
+    cache->thumbDx = thumbDx;
+    cache->thumbDy = thumbDy;
+    VecAppendBlanks(cache->thumbnails, pageCount);
+
+    onDrawItem = MkMethod1<ThumbnailPaletteCtrl, DrawItemEvent*, &ThumbnailPaletteCtrl::DrawRow>(this);
+    VirtCtrl::onMouseDown =
+        MkMethod1<ThumbnailPaletteCtrl, VirtMouseEvent*, &ThumbnailPaletteCtrl::OnThumbMouseDown>(this);
+    VirtCtrl::onMouseMove =
+        MkMethod1<ThumbnailPaletteCtrl, VirtMouseEvent*, &ThumbnailPaletteCtrl::OnThumbMouseMove>(this);
+    VirtCtrl::onMouseUp = MkMethod1<ThumbnailPaletteCtrl, VirtMouseEvent*, &ThumbnailPaletteCtrl::OnThumbMouseUp>(this);
+    VirtCtrl::onMouseWheel =
+        MkMethod1<ThumbnailPaletteCtrl, VirtMouseEvent*, &ThumbnailPaletteCtrl::OnThumbMouseWheel>(this);
+    VirtCtrl::onDoubleClick =
+        MkMethod1<ThumbnailPaletteCtrl, VirtMouseEvent*, &ThumbnailPaletteCtrl::OnThumbDoubleClick>(this);
+}
+
+ThumbnailPaletteCtrl::~ThumbnailPaletteCtrl() {
+    cache->ctrl = nullptr;
+    AtomicIntSet(&cache->cancelRendering, 1);
+    if (cache->workerRunning) {
+        cache->deleteWhenWorkerFinishes = true;
+    } else {
+        DeleteThumbnailCache(cache);
+    }
+    cache = nullptr;
+}
+
+void ThumbnailPaletteCtrl::SetBounds(Rect r) {
+    int reservedScrollbarDx = DpiScaleByDpi(dpi, 10);
+    int availableDx = r.dx - padding.left - padding.right - reservedScrollbarDx;
+    int newCols = (availableDx + gap) / (thumbDx + gap);
+    newCols = Clamp(newCols, 1, kPaletteThumbnailMaxCols);
+    if (newCols != cols) {
+        cols = newCols;
+        rowsModel->rows = (pageCount + cols - 1) / cols;
+        SetModel(rowsModel);
+    }
+
+    VirtListBox::SetBounds(r);
+    EnsureVisible((selectedPage - 1) / cols);
+    if (active) {
+        StartRendering();
+    }
+}
+
+void ThumbnailPaletteCtrl::DrawRow(DrawItemEvent* ev) {
+    int gridDx = cols * thumbDx + (cols - 1) * gap;
+    int left = ev->itemRect.x + std::max(0, (ev->itemRect.dx - gridDx) / 2);
+    int firstPage = ev->itemIndex * cols + 1;
+    int lastPage = std::min(pageCount, firstPage + cols - 1);
+    Color textColor = ThemeWindowTextColor();
+    for (int pageNo = firstPage; pageNo <= lastPage; pageNo++) {
+        int col = pageNo - firstPage;
+        int x = left + col * (thumbDx + gap);
+        Rect pageRect{x, ev->itemRect.y, thumbDx, thumbDy};
+        ev->gfx->FillRect(pageRect, kColWhite);
+
+        Pixmap* thumbnail = ThumbnailToDraw(cache, pageNo - 1);
+        if (thumbnail) {
+            int drawDx = std::min(thumbnail->width, thumbDx);
+            int drawDy = std::min(thumbnail->height, thumbDy);
+            Rect target{x + (thumbDx - drawDx) / 2, pageRect.y + (thumbDy - drawDy) / 2, drawDx, drawDy};
+            ev->gfx->DrawPixmap(thumbnail, target);
+        }
+
+        Color border = pageNo == selectedPage ? MkRgb(0, 120, 215) : MkGray(150);
+        ev->gfx->DrawRect(pageRect, border, pageNo == selectedPage ? 3 : 1);
+        Rect label{x, pageRect.Bottom(), thumbDx, labelDy};
+        ev->gfx->DrawText(fmt("%d", pageNo), label, gfxTextCenter | gfxTextVCenter, font, textColor);
+    }
+}
+
+int ThumbnailPaletteCtrl::PageAtPoint(Point pt) {
+    int row = ItemFromPoint(pt);
+    if (row < 0) {
+        return -1;
+    }
+    Rect rowRect = ItemRect(row);
+    if (rowRect.IsEmpty()) {
+        return -1;
+    }
+    Point origin = OriginInWindow();
+    rowRect.Offset(-origin.x, -origin.y);
+    int gridDx = cols * thumbDx + (cols - 1) * gap;
+    int left = rowRect.x + std::max(0, (rowRect.dx - gridDx) / 2);
+    if (pt.x < left || pt.y < rowRect.y || pt.y >= rowRect.y + thumbDy + labelDy) {
+        return -1;
+    }
+    int col = (pt.x - left) / (thumbDx + gap);
+    if (col < 0 || col >= cols) {
+        return -1;
+    }
+    int cellX = left + col * (thumbDx + gap);
+    if (pt.x >= cellX + thumbDx) {
+        return -1;
+    }
+    int pageNo = row * cols + col + 1;
+    return pageNo <= pageCount ? pageNo : -1;
+}
+
+void ThumbnailPaletteCtrl::SelectPage(int pageNo) {
+    if (pageCount <= 0) {
+        return;
+    }
+    pageNo = Clamp(pageNo, 1, pageCount);
+    if (pageNo == selectedPage) {
+        return;
+    }
+    selectedPage = pageNo;
+    EnsureVisible((selectedPage - 1) / cols);
+    Invalidate();
+    StartRendering();
+}
+
+void ThumbnailPaletteCtrl::OpenSelectedPage() {
+    if (!win || !tab || win->CurrentTab() != tab) {
+        return;
+    }
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        return;
+    }
+    dm->GoToPage(selectedPage, 0, true);
+    ScheduleDeleteAndExecCommand();
+}
+
+void ThumbnailPaletteCtrl::OnThumbMouseDown(VirtMouseEvent* ev) {
+    int pageNo = PageAtPoint(ev->pt);
+    if (pageNo > 0) {
+        SelectPage(pageNo);
+        ev->didHandle = true;
+        return;
+    }
+    int oldScrollY = scrollY;
+    VirtListBox::OnMouseDown(ev);
+    if (scrollY != oldScrollY) {
+        StartRendering();
+    }
+}
+
+void ThumbnailPaletteCtrl::OnThumbMouseMove(VirtMouseEvent* ev) {
+    int oldScrollY = scrollY;
+    VirtListBox::OnMouseMove(ev);
+    if (scrollY != oldScrollY) {
+        StartRendering();
+    }
+    if (ev->didHandle) {
+        return;
+    }
+    int pageNo = PageAtPoint(ev->pt);
+    if (pageNo > 0) {
+        SelectPage(pageNo);
+        ev->didHandle = true;
+    }
+}
+
+void ThumbnailPaletteCtrl::OnThumbMouseUp(VirtMouseEvent* ev) {
+    VirtListBox::OnMouseUp(ev);
+}
+
+void ThumbnailPaletteCtrl::OnThumbMouseWheel(VirtMouseEvent* ev) {
+    int oldScrollY = scrollY;
+    VirtListBox::OnMouseWheel(ev);
+    if (scrollY != oldScrollY) {
+        StartRendering();
+    }
+}
+
+void ThumbnailPaletteCtrl::OnThumbDoubleClick(VirtMouseEvent* ev) {
+    int pageNo = PageAtPoint(ev->pt);
+    if (pageNo <= 0) {
+        return;
+    }
+    SelectPage(pageNo);
+    OpenSelectedPage();
+    ev->didHandle = true;
+}
+
+void ThumbnailPaletteCtrl::HandleKey(int vkey) {
+    if (pageCount <= 0) {
+        return;
+    }
+    int pageNo = selectedPage;
+    int pageStep = std::max(1, UsableDy() / itemDy) * cols;
+    switch (vkey) {
+        case VK_RETURN:
+            OpenSelectedPage();
+            return;
+        case VK_LEFT:
+            pageNo--;
+            break;
+        case VK_RIGHT:
+            pageNo++;
+            break;
+        case VK_UP:
+            pageNo -= cols;
+            break;
+        case VK_DOWN:
+            pageNo += cols;
+            break;
+        case VK_PRIOR:
+            pageNo -= pageStep;
+            break;
+        case VK_NEXT:
+            pageNo += pageStep;
+            break;
+        case VK_HOME:
+            pageNo = 1;
+            break;
+        case VK_END:
+            pageNo = pageCount;
+            break;
+        default:
+            return;
+    }
+    SelectPage(Clamp(pageNo, 1, pageCount));
+}
+
+void ThumbnailPaletteCtrl::Activate() {
+    if (active) {
+        return;
+    }
+    active = true;
+    AtomicIntSet(&cache->cancelRendering, 0);
+    EnsureVisible((selectedPage - 1) / cols);
+    StartRendering();
+    Invalidate();
+}
+
+void ThumbnailPaletteCtrl::Deactivate() {
+    if (!active) {
+        return;
+    }
+    active = false;
+    AtomicIntSet(&cache->cancelRendering, 1);
+    if (!cache->workerRunning) {
+        FreeThumbnailRenderEngine(cache);
+    }
+}
+
+int ThumbnailPaletteCtrl::RenderedCount() const {
+    int n = 0;
+    for (Pixmap* thumbnail : cache->thumbnails) {
+        if (thumbnail && thumbnail != kThumbnailRenderFailed) {
+            n++;
+        }
+    }
+    return n;
+}
+
+void ThumbnailPaletteCtrl::StartRendering() {
+    if (!active || cache->workerRunning || pageCount <= 0) {
+        return;
+    }
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    if (!dm || win->CurrentTab() != tab || dm->PageCount() != pageCount || dm->GetRotation() != cache->rotation) {
+        return;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        return;
+    }
+
+    int visibleRows = std::max(1, UsableDy() / itemDy);
+    int firstVisible = (scrollY / itemDy) * cols + 1;
+    int perScreen = std::max(1, visibleRows * cols);
+    int lastVisible = std::min(pageCount, firstVisible + perScreen - 1);
+    int firstPage = std::max(1, firstVisible - kPaletteThumbnailRenderScreens * perScreen);
+    int lastPage = std::min(pageCount, lastVisible + kPaletteThumbnailRenderScreens * perScreen);
+
+    int keepFirst = std::max(1, firstPage - kPaletteThumbnailKeepScreens * perScreen);
+    int keepLast = std::min(pageCount, lastPage + kPaletteThumbnailKeepScreens * perScreen);
+    for (int idx = 0; idx < len(cache->thumbnails); idx++) {
+        int pageNo = idx + 1;
+        if (cache->thumbnails[idx] && (pageNo < keepFirst || pageNo > keepLast)) {
+            FreeThumbnail(cache->thumbnails[idx]);
+            cache->thumbnails[idx] = nullptr;
+        }
+    }
+
+    auto* worker = new ThumbnailRenderWorker;
+    for (int pageNo = firstVisible; pageNo <= lastVisible; pageNo++) {
+        if (!cache->thumbnails[pageNo - 1]) {
+            VecAppend(worker->pages, pageNo);
+        }
+    }
+    for (int pageNo = firstPage; pageNo < firstVisible; pageNo++) {
+        if (!cache->thumbnails[pageNo - 1]) {
+            VecAppend(worker->pages, pageNo);
+        }
+    }
+    for (int pageNo = lastVisible + 1; pageNo <= lastPage; pageNo++) {
+        if (!cache->thumbnails[pageNo - 1]) {
+            VecAppend(worker->pages, pageNo);
+        }
+    }
+    if (len(worker->pages) == 0) {
+        delete worker;
+        return;
+    }
+
+    worker->cache = cache;
+    worker->rotation = cache->rotation;
+    worker->thumbDx = cache->thumbDx;
+    worker->thumbDy = cache->thumbDy;
+    if (!cache->renderEngine) {
+        worker->sourceEngine = engine;
+        engine->AddRef();
+    }
+    AtomicIntSet(&cache->cancelRendering, 0);
+    cache->workerRunning = true;
+    RunAsync(MkFunc0<ThumbnailRenderWorker>(RenderThumbnailsInBackground, worker),
+             StrL("CommandPaletteThumbnailRender"));
+}
+
+void CommandPaletteWnd::SetThumbnailMode(ThumbnailMode mode) {
+    bool enabled = mode == ThumbnailMode::Enabled;
+    if (!thumbnailCtrl || thumbnailMode == enabled) {
+        return;
+    }
+    if (enabled) {
+        listBox->SetIsVisible(false);
+        thumbnailCtrl->SetIsVisible(true);
+        thumbnailMode = true;
+        DoLayout(HwndClientRect(hwnd).Size());
+        thumbnailCtrl->Activate();
+    } else {
+        thumbnailCtrl->Deactivate();
+        thumbnailCtrl->SetIsVisible(false);
+        listBox->SetIsVisible(true);
+        thumbnailMode = false;
+        DoLayout(HwndClientRect(hwnd).Size());
+    }
+    EditSetFocus(editQuery);
+}
 
 void SafeDeleteCommandPaletteWnd() {
     if (!gCommandPaletteWnd) {
@@ -332,6 +885,11 @@ void CommandPaletteWnd::OnKeyDown(KeyEvent* ev) {
     }
 
     if (ev->vkey == VK_RETURN) {
+        if (thumbnailMode) {
+            thumbnailCtrl->HandleKey(ev->vkey);
+            ev->didHandle = true;
+            return;
+        }
         ExecuteCurrentSelection();
         ev->didHandle = true;
         return;
@@ -352,12 +910,23 @@ void CommandPaletteWnd::OnKeyDown(KeyEvent* ev) {
         return;
     }
 
-    if (ev->vkey == VK_UP || ev->vkey == VK_DOWN || ev->vkey == VK_NEXT || ev->vkey == VK_PRIOR) {
+    if (ev->vkey == VK_LEFT || ev->vkey == VK_RIGHT || ev->vkey == VK_UP || ev->vkey == VK_DOWN ||
+        ev->vkey == VK_NEXT || ev->vkey == VK_PRIOR) {
+        if (thumbnailMode) {
+            thumbnailCtrl->HandleKey(ev->vkey);
+            ev->didHandle = true;
+            return;
+        }
         ev->didHandle = MoveSelection(ev->vkey);
         return;
     }
 
     if (ev->vkey == VK_HOME || ev->vkey == VK_END) {
+        if (thumbnailMode) {
+            thumbnailCtrl->HandleKey(ev->vkey);
+            ev->didHandle = true;
+            return;
+        }
         // Ctrl+Home / Ctrl+End: always first / last row
         if (ev->isCtrl) {
             ev->didHandle = MoveSelection(ev->vkey);
@@ -627,6 +1196,7 @@ enum {
     kHelpSettings,
     kHelpToc,
     kHelpEverything,
+    kHelpThumbnails,
 };
 
 static int PaletteHelpKind(Str filter, bool smartTab) {
@@ -650,6 +1220,9 @@ static int PaletteHelpKind(Str filter, bool smartTab) {
     }
     if (str::StartsWith(filter, Str(kPalettePrefixBoolSettings))) {
         return kHelpSettings;
+    }
+    if (str::StartsWith(filter, Str(kPalettePrefixThumbnails))) {
+        return kHelpThumbnails;
     }
     return kHelpCommands;
 }
@@ -699,6 +1272,10 @@ void CommandPaletteWnd::UpdateHelpRow() {
             break;
         case kHelpSettings:
             strings[nHelp++] = _TRA("Enter change");
+            strings[nHelp++] = _TRA("Esc close");
+            break;
+        case kHelpThumbnails:
+            strings[nHelp++] = _TRA("Enter go to");
             strings[nHelp++] = _TRA("Esc close");
             break;
         case kHelpToc:
@@ -800,10 +1377,14 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             addSwitch(_TRA("$ Favorites"), Str(kPalettePrefixFavorites));
         }
         addSwitch(_TRA("= Settings"), Str(kPalettePrefixBoolSettings));
+        if (win->AsFixed()) {
+            addSwitch(_TRA("& Thumbnails"), Str(kPalettePrefixThumbnails));
+        }
         vbox->AddChild(NewHelpRow(box));
     }
 
     {
+        auto* overlay = new Overlay();
         auto* c = new VirtListBox();
         // the query edit owns the keyboard here (the palette turns the arrow
         // keys into selection changes itself), so the list doesn't take the
@@ -822,7 +1403,14 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         FilterStringsForQuery(prefix, m->strings);
         c->SetModel(m);
         listBox = c;
-        vbox->AddChild(c, 1);
+        overlay->AddChild(c);
+
+        if (win->AsFixed()) {
+            thumbnailCtrl = new ThumbnailPaletteCtrl(win, font, GetDpi());
+            thumbnailCtrl->SetIsVisible(false);
+            overlay->AddChild(thumbnailCtrl);
+        }
+        vbox->AddChild(overlay, 1);
     }
 
     {
@@ -855,6 +1443,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     // the help rows are virtual controls: pick them up so we paint them and
     // they get their input
     DoLayout(HwndClientRect(hwnd).Size());
+    if (str::StartsWith(prefix, Str(kPalettePrefixThumbnails))) {
+        SetThumbnailMode(ThumbnailMode::Enabled);
+    }
     PositionCommandPalette(hwnd, win->hwndFrame);
 
     EditSetCursorPosAtEnd(editQuery);
@@ -939,7 +1530,10 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     int qStart = 0, qEnd = 0, qLen = 0;
     EditGetSelection(wnd->editQuery, qStart, qEnd);
     qLen = EditGetTextLen(wnd->editQuery);
-    out.Append(fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d\n", sel, n, qStart, qEnd, qLen,
-                   selectedCmdId, (int)CommandPaletteUiRtl()));
+    int thumbPage = wnd->thumbnailCtrl ? wnd->thumbnailCtrl->selectedPage : 0;
+    int rendered = wnd->thumbnailCtrl ? wnd->thumbnailCtrl->RenderedCount() : 0;
+    out.Append(fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d thumb=%d page=%d rendered=%d\n", sel, n,
+                   qStart, qEnd, qLen, selectedCmdId, (int)CommandPaletteUiRtl(), (int)wnd->thumbnailMode, thumbPage,
+                   rendered));
     return finish(0);
 }

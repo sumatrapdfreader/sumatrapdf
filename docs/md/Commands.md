@@ -618,6 +618,7 @@ Argument:
   - `@` for open files (tabs)
   - `#` for history of files
   - `>` for commands
+  - `&` for page thumbnails
   - `%` for table of contents (`CmdCommandPaletteTOC`, `Shift + F12`; `*` still works)
   - `$` for favorites (`CmdCommandPaletteFavorites`)
   - `=` for boolean advanced settings (`CmdToggleBoolSetting`)

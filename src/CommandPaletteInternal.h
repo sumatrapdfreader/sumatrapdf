@@ -6,6 +6,12 @@ struct WindowTab;
 struct TocItem;
 struct FileState;
 struct Favorite;
+struct ThumbnailPaletteCtrl;
+
+enum class ThumbnailMode {
+    Disabled,
+    Enabled,
+};
 
 struct ItemDataCP {
     i32 cmdId = 0;
@@ -46,6 +52,7 @@ struct CommandPaletteWnd : WindowBase {
     StrVecCP favorites;
     StrVecCP boolSettings;
     VirtListBox* listBox = nullptr;
+    ThumbnailPaletteCtrl* thumbnailCtrl = nullptr;
     HBox* helpRow = nullptr;
     int helpKind = -1;
 
@@ -55,6 +62,7 @@ struct CommandPaletteWnd : WindowBase {
     int currTabIdx = 0;
     int currTocIdx = 0;
     bool tocMode = false;
+    bool thumbnailMode = false;
     bool smartTabMode = false;
     bool stickyMode = false;
 
@@ -87,6 +95,7 @@ struct CommandPaletteWnd : WindowBase {
     void SwitchToTOC();
     void SwitchToFavorites();
     void SwitchToBoolSettings();
+    void SetThumbnailMode(ThumbnailMode mode);
     void OnSelectionChange();
     void OnListDoubleClick();
     void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);

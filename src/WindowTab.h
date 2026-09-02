@@ -9,7 +9,6 @@ namespace str {
 struct Builder;
 }
 struct ReadAloudHighlightMap;
-struct ThumbnailNavigationCache;
 
 // per-tab state of one AI chat provider (see AIChatPanel.cpp)
 struct AIChatTabState {
@@ -36,7 +35,6 @@ struct WindowTab {
     };
     MainWindow* win = nullptr;
     DocController* ctrl = nullptr;
-    ThumbnailNavigationCache* thumbnailNavigationCache = nullptr;
     u64 loadStartedAt = 0;
     // network-drive copy progress while loading (-1 = not in copy phase)
     i64 loadCopyBytesCopied = -1;

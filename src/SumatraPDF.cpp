@@ -110,7 +110,6 @@
 #include "SelectionTranslate.h"
 #include "SelectionHandlers.h"
 #include "GoogleLens.h"
-#include "ThumbnailNavigation.h"
 #include "CommandPalette.h"
 #include "SumatraDialogs.h"
 #include "NavFilesInFolder.h"
@@ -2401,10 +2400,6 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // or replace). Find UI text is kept; count restarts against the new engine
     // if find is still open. Must run after win->ctrl points at the new document.
     InvalidateFindForDocumentChange(win);
-
-    // Thumbnails were rendered from the previous engine and are indexed by its
-    // page count. Same reason as above: must run after tab->ctrl is the new one
-    FreeThumbnailNavigationCache(tab);
 
     EngineBase* engine = tab->GetEngine();
     if (engine) {
@@ -12481,7 +12476,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdNavigateThumbnail:
-            ShowThumbnailNavigation(win);
+            RunCommandPalette(win, Str(kPalettePrefixThumbnails), 0);
             break;
 
         case CmdSearchSelectionWithBing:

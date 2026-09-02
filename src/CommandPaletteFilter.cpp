@@ -12,6 +12,8 @@
 
 #include "Accelerators.h"
 #include "FilterHighlightDraw.h"
+#include "Settings.h"
+#include "MainWindow.h"
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
 
@@ -73,6 +75,8 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
         searchFavorites = true;
     } else if (str::TrimPrefix(filter, Str(kPalettePrefixBoolSettings))) {
         searchBoolSettings = true;
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixThumbnails))) {
+        return;
     } else {
         str::TrimPrefix(filter, Str(kPalettePrefixCommands));
         searchCommands = true;
@@ -103,6 +107,12 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
 
 void CommandPaletteWnd::QueryChanged() {
     Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
+    if (win->AsFixed() && str::StartsWith(filter, Str(kPalettePrefixThumbnails))) {
+        SetThumbnailMode(ThumbnailMode::Enabled);
+        UpdateHelpRow();
+        return;
+    }
+    SetThumbnailMode(ThumbnailMode::Disabled);
     int currSelIdx = 0;
     auto* m = (ListBoxModelCP*)listBox->model;
     int nItemsPrev = m->ItemsCount();

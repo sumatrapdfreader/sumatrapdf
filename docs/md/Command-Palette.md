@@ -13,6 +13,7 @@ The command palette is a fast and convenient way to:
 - access all SumatraPDF functionality via commands: the default view and `>`
 - `#` : open a file from history
 - `@` : switch to another tab
+- `&` : navigate pages with thumbnails
 - `%` : jump to a table of contents entry in the current document
 - `$` : jump to a favorite (current document's favorites first, then others)
 - `:` : combined view (replicates behavior before ver 3.6)
@@ -52,6 +53,13 @@ command can also be a [toolbar button](./Customize-toolbar.md#command-palette-on
 The list shows the fully expanded table of contents, indented to reflect the
 tree hierarchy. The entry closest to the current page is pre-selected. Type to
 filter, then `Enter` (or double-click) to navigate to the selected entry.
+
+## Page thumbnails
+
+Type `&` to open the thumbnail grid for the current document. The current page
+is selected initially. Use the arrow keys, `Home`, `End`, mouse, or the
+scrollbar to navigate; `Enter` opens the selected page and `Escape` closes the
+grid.
 
 ## Favorites
 

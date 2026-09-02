@@ -447,9 +447,6 @@
     <ClInclude Include="..\src\Theme.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ThumbnailNavigation.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Toolbar.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -1110,9 +1107,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Theme_win.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ThumbnailNavigation.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Toolbar.cpp">
