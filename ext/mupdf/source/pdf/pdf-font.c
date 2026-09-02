@@ -136,6 +136,15 @@ static int is_dynalab(char *name)
 	return 0;
 }
 
+static const char *skip_subset_prefix(const char *name)
+{
+	int i;
+	for (i = 0; i < 6; ++i)
+		if (name[i] < 'A' || name[i] > 'Z')
+			return name;
+	return (name[6] == '+' && name[7] != 0) ? name + 7 : name;
+}
+
 static int strcmp_ignore_space(const char *a, const char *b)
 {
 	while (1)
@@ -155,29 +164,13 @@ static int strcmp_ignore_space(const char *a, const char *b)
 	}
 }
 
-/* PDF subset fonts are tagged "ABCDEF+" in front of the original name
- * (PDF 1.7 9.6.4). A non-embedded subset of a base-14 font, typically
- * "XXXXXX+Symbol", must still resolve to that builtin; otherwise we
- * substitute Helvetica and drop Symbol glyph names such as
- * bracketlefttp used for matrix delimiters (issue #4655). */
-static int is_pdf_subset_prefix(const char *name)
-{
-	int i;
-	for (i = 0; i < 6; ++i)
-		if (name[i] < 'A' || name[i] > 'Z')
-			return 0;
-	return name[6] == '+' && name[7] != 0;
-}
-
 const char *pdf_clean_font_name(const char *fontname)
 {
 	int i, k;
-	const char *bare = fontname;
-	if (is_pdf_subset_prefix(fontname))
-		bare = fontname + 7;
+	const char *s = skip_subset_prefix(fontname);
 	for (i = 0; i < (int)nelem(base_font_names); i++)
 		for (k = 0; base_font_names[i][k]; k++)
-			if (!strcmp_ignore_space(base_font_names[i][k], bare))
+			if (!strcmp_ignore_space(base_font_names[i][k], s))
 				return base_font_names[i][0];
 	return fontname;
 }
@@ -375,11 +368,8 @@ pdf_make_font_family(fz_context *ctx, fz_font *font)
 	if (font->flags.ft_substitute || font->t3procs)
 	{
 		/* Remove "ABCDEF+" prefix and "-Bold" suffix. */
-		char *p = strchr(font->name, '+');
-		if (p)
-			fz_strlcpy(font->family, p+1, sizeof font->family);
-		else
-			fz_strlcpy(font->family, font->name, sizeof font->family);
+		char *p;
+		fz_strlcpy(font->family, skip_subset_prefix(font->name), sizeof font->family);
 		p = strrchr(font->family, '-');
 		if (p)
 			*p = 0;

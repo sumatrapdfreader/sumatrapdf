@@ -1,0 +1,58 @@
+backport: ignore subset prefix for builtin fonts (bug 709661)
+
+BACKPORT of upstream mupdf af5f68c853b8371a04b7e623efd72836ef2a492c, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2.
+
+https://bugs.ghostscript.com/show_bug.cgi?id=709661
+
+Replaces our 0030-pdf-subset-base14-font-name. Upstream skips ABCDEF+ subset
+tags when matching known builtin names (and when deriving the font family),
+so a non-embedded XXXXXX+Symbol uses the builtin Symbol font. Covers #4655.
+---
+diff --git a/source/pdf/pdf-font.c b/source/pdf/pdf-font.c
+index 37e298eea..30acc4711 100644
+--- a/source/pdf/pdf-font.c
++++ b/source/pdf/pdf-font.c
+@@ -136,6 +136,15 @@ static int is_dynalab(char *name)
+ 	return 0;
+ }
+ 
++static const char *skip_subset_prefix(const char *name)
++{
++	int i;
++	for (i = 0; i < 6; ++i)
++		if (name[i] < 'A' || name[i] > 'Z')
++			return name;
++	return (name[6] == '+' && name[7] != 0) ? name + 7 : name;
++}
++
+ static int strcmp_ignore_space(const char *a, const char *b)
+ {
+ 	while (1)
+@@ -158,9 +167,10 @@ static int strcmp_ignore_space(const char *a, const char *b)
+ const char *pdf_clean_font_name(const char *fontname)
+ {
+ 	int i, k;
++	const char *s = skip_subset_prefix(fontname);
+ 	for (i = 0; i < (int)nelem(base_font_names); i++)
+ 		for (k = 0; base_font_names[i][k]; k++)
+-			if (!strcmp_ignore_space(base_font_names[i][k], fontname))
++			if (!strcmp_ignore_space(base_font_names[i][k], s))
+ 				return base_font_names[i][0];
+ 	return fontname;
+ }
+@@ -358,11 +368,8 @@ pdf_make_font_family(fz_context *ctx, fz_font *font)
+ 	if (font->flags.ft_substitute || font->t3procs)
+ 	{
+ 		/* Remove "ABCDEF+" prefix and "-Bold" suffix. */
+-		char *p = strchr(font->name, '+');
+-		if (p)
+-			fz_strlcpy(font->family, p+1, sizeof font->family);
+-		else
+-			fz_strlcpy(font->family, font->name, sizeof font->family);
++		char *p;
++		fz_strlcpy(font->family, skip_subset_prefix(font->name), sizeof font->family);
+ 		p = strrchr(font->family, '-');
+ 		if (p)
+ 			*p = 0;
