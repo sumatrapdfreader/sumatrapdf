@@ -735,6 +735,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         CreateCustomArgs args;
         args.visible = false;
         args.style = WS_POPUPWINDOW;
+        // owned tool window: stays above the frame, off the taskbar (#6126)
+        args.owner = win->hwndFrame;
+        args.exStyle = WS_EX_TOOLWINDOW;
         args.font = GetFont();
         CreateCustom(args);
     }
