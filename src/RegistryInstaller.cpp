@@ -647,6 +647,33 @@ static TempStr ReadUserChoiceProgIdTemp(Str ext) {
     return LoggedReadRegStrTemp(HKEY_CURRENT_USER, key, StrL("ProgId"));
 }
 
+static TempStr ReadDefaultProgIdTemp(Str ext) {
+    TempStr progId = ReadUserChoiceProgIdTemp(ext);
+    if (len(progId) > 0) {
+        return progId;
+    }
+
+    TempStr key = str::JoinTemp(StrL("Software\\Classes\\"), ext);
+    progId = ReadRegStrTemp(HKEY_CURRENT_USER, key, {});
+    if (len(progId) > 0) {
+        return progId;
+    }
+    return ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, {});
+}
+
+void LogNonDefaultRegisteredExtensions() {
+    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
+        Str ext = SeqStrAt(gSupportedExts, off);
+        TempStr progId = ReadDefaultProgIdTemp(ext);
+        if (!IsOurProgId(progId, ext)) {
+            logf("Not default app: extension=%s, progId=%s\n", ext, len(progId) > 0 ? progId : StrL("(none)"));
+        }
+        if (!SeqStrAdvance(gSupportedExts, off)) {
+            break;
+        }
+    }
+}
+
 // Extensions we registered for Open With where something else is explicitly the
 // default (UserChoice points at another ProgId). Used by the home-page bottom bar.
 void CollectNonDefaultRegisteredExtensions(StrVec& out) {

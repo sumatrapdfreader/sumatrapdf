@@ -112,5 +112,6 @@ void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();
 
 void ReRegisterFileAssociations();
+void LogNonDefaultRegisteredExtensions();
 void CollectNonDefaultRegisteredExtensions(StrVec& out);
 void LaunchDefaultAppDialogForExtension(HWND hwnd, Str ext);

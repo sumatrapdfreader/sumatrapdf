@@ -2603,6 +2603,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
 
     DetectExternalViewers();
     ReRegisterFileAssociations();
+    LogNonDefaultRegisteredExtensions();
 
     gRenderCache = new RenderCache();
 
