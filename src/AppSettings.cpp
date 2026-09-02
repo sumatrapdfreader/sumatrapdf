@@ -721,8 +721,6 @@ static void RememberSessionState() {
                 }
                 if (src) {
                     VecAppend(*windowState->tabStates, CloneTabState(src));
-                } else {
-                    logf("RememberSessionState: didn't find state for file '%s'\n", fp ? fp : StrL("(none)"));
                 }
                 continue;
             }

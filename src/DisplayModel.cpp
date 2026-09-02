@@ -1635,7 +1635,6 @@ bool DisplayModel::EnsureMediaBoxesForVisiblePages() {
     if (nMeasured > nListed) {
         msg = fmt("%s and %d more", msg, nMeasured - nListed);
     }
-    logf("EnsureMediaBoxesForVisiblePages: %s\n", msg);
     NotifyMediaBoxRelayout(this, msg);
     return true;
 }

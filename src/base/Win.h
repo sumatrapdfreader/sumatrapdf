@@ -435,6 +435,8 @@ bool WasLaunchedByPowershellWithPipeRedirect();
 
 //--- registry
 
+extern bool gLogRegistryCalls;
+
 TempStr RegKeyNameTemp(HKEY key);
 bool RegKeyExists(HKEY keySub, Str keyName);
 TempStr ReadRegStrTemp(HKEY keySub, Str keyName, Str valName);
@@ -445,6 +447,7 @@ bool WriteRegStr(HKEY keySub, Str keyName, Str valName, Str value);
 bool LoggedWriteRegStr(HKEY keySub, Str keyName, Str valName, Str value);
 bool ReadRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD& value);
 bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value);
+bool WriteRegNone(HKEY hkey, Str key, Str valName);
 bool LoggedWriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value);
 bool LoggedWriteRegNone(HKEY hkey, Str key, Str valName);
 bool CreateRegKey(HKEY keySub, Str keyName);

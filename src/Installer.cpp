@@ -2342,6 +2342,7 @@ static bool ShouldInstallMismatchedArch(HWND hwndParent) {
 }
 
 int RunInstaller() {
+    gLogRegistryCalls = true;
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 
     Str installerLogPath;

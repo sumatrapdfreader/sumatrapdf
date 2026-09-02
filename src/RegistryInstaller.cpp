@@ -662,12 +662,24 @@ static TempStr ReadDefaultProgIdTemp(Str ext) {
     return ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, {});
 }
 
+static TempStr GetProgIdExePathTemp(Str progId) {
+    WCHAR* progIdW = CWStrTemp(progId);
+    WCHAR pathW[MAX_PATH]{};
+    DWORD cch = dimofi(pathW);
+    HRESULT hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, progIdW, nullptr, pathW, &cch);
+    if (FAILED(hr) || !pathW[0]) {
+        return {};
+    }
+    return ToUtf8Temp(pathW);
+}
+
 void LogNonDefaultRegisteredExtensions() {
     for (int off = 0; SeqStrAt(gSupportedExts, off);) {
         Str ext = SeqStrAt(gSupportedExts, off);
         TempStr progId = ReadDefaultProgIdTemp(ext);
-        if (!IsOurProgId(progId, ext)) {
-            logf("Not default app: extension=%s, progId=%s\n", ext, len(progId) > 0 ? progId : StrL("(none)"));
+        if (len(progId) > 0 && !IsOurProgId(progId, ext)) {
+            TempStr app = GetProgIdExePathTemp(progId);
+            logf("Not default app: extension=%s, progId=%s, app=%s\n", ext, progId, app ? app : StrL("(none)"));
         }
         if (!SeqStrAdvance(gSupportedExts, off)) {
             break;

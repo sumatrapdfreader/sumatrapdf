@@ -547,6 +547,7 @@ static void InitSelfDelete() {
 }
 
 int RunUninstaller() {
+    gLogRegistryCalls = true;
     Str uninstallerLogPath;
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 

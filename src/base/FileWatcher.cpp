@@ -189,7 +189,6 @@ static void NotifyAboutFile(WatchedDir* d, Str fileName) {
 
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->ignore) {
-            logf("NotifyAboutFile: ignoring '%s'\n", wf->filePath);
             continue;
         }
         if (wf->watchedDir != d) {
