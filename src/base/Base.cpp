@@ -256,6 +256,34 @@ bool QuadF::IsRotated() const {
     return fabsf(ul.y - ur.y) > eps || fabsf(ll.y - lr.y) > eps || fabsf(ul.x - ll.x) > eps || fabsf(ur.x - lr.x) > eps;
 }
 
+PointF QuadF::Center() const {
+    return {(ul.x + ur.x + ll.x + lr.x) / 4.f, (ul.y + ur.y + ll.y + lr.y) / 4.f};
+}
+
+// MuPDF winding is ul -> ur -> lr -> ll. Same-side cross products => inside.
+bool QuadF::Contains(PointF p) const {
+    if (IsEmpty()) {
+        return false;
+    }
+    PointF pts[4] = {ul, ur, lr, ll};
+    bool neg = false;
+    bool pos = false;
+    for (int i = 0; i < 4; i++) {
+        PointF a = pts[i];
+        PointF b = pts[(i + 1) % 4];
+        float cross = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+        if (cross < 0) {
+            neg = true;
+        } else if (cross > 0) {
+            pos = true;
+        }
+        if (neg && pos) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // ------------- Size
 
 Size::Size(int dx, int dy) : dx(dx), dy(dy) {}

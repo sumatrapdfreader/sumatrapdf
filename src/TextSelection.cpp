@@ -45,14 +45,21 @@ void TextSelection::Reset() {
     wordStartPage = wordStartGlyph = wordEndPage = wordEndGlyph = -1;
 }
 
+static bool GlyphContains(Rect coord, const QuadF* quads, int i, PointF pt, Point pti) {
+    if (quads && quads[i].IsRotated()) {
+        return quads[i].Contains(pt);
+    }
+    return coord.Contains(pti);
+}
+
 // returns the index of the glyph closest to the right of the given coordinates
 // (i.e. when over the right half of a glyph, the returned index will be for the
 // glyph following it, which will be the first glyph (not) to be selected)
 static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     Rect* coords;
+    QuadF* quads = nullptr;
     int textLen = 0;
-    // called for the side effect of filling textLen and coords
-    ts->engine->GetTextForPage(pageNo, &textLen, &coords);
+    ts->engine->GetTextForPage(pageNo, &textLen, &coords, &quads);
     PointF pt = PointF((float)x, (float)y);
 
     unsigned int maxDist = UINT_MAX;
@@ -65,17 +72,27 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
         if (!coord.x && !coord.dx) {
             continue;
         }
-        if (overGlyph && !coord.Contains(pti)) {
+        bool inside = GlyphContains(coord, quads, i, pt, pti);
+        if (overGlyph && !inside) {
             continue;
         }
 
-        uint dist = distSq((int)x - coord.x - (coord.dx / 2), (int)y - coord.y - (coord.dy / 2));
+        int cx, cy;
+        if (quads && quads[i].IsRotated()) {
+            PointF c = quads[i].Center();
+            cx = (int)c.x;
+            cy = (int)c.y;
+        } else {
+            cx = coord.x + (coord.dx / 2);
+            cy = coord.y + (coord.dy / 2);
+        }
+        uint dist = distSq((int)x - cx, (int)y - cy);
         if (dist < maxDist) {
             result = i;
             maxDist = dist;
         }
         // prefer glyphs the cursor is actually over
-        if (!overGlyph && coord.Contains(pti)) {
+        if (!overGlyph && inside) {
             overGlyph = true;
             result = i;
             maxDist = dist;
@@ -87,10 +104,35 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     }
     ReportIf(result < 0 || result >= textLen);
 
-    // the result indexes the first glyph to be selected in a forward selection
-    RectF bbox = ts->engine->Transform(ToRectF(coords[result]), pageNo, 1.0, 0);
-    pt = ts->engine->Transform(pt, pageNo, 1.0, 0);
-    if (pt.x > bbox.x + (0.5 * bbox.dx)) {
+    // the result indexes the first glyph to be selected in a forward selection.
+    // Along the baseline for rotated glyphs; along +x for upright ones.
+    bool pastMid = false;
+    if (quads && quads[result].IsRotated()) {
+        PointF ul = quads[result].ul;
+        PointF ur = quads[result].ur;
+        float dx = ur.x - ul.x;
+        float dy = ur.y - ul.y;
+        float den = dx * dx + dy * dy;
+        if (den > 0.01f) {
+            float t = ((pt.x - ul.x) * dx + (pt.y - ul.y) * dy) / den;
+            float ax = ul.x + t * dx;
+            float ay = ul.y + t * dy;
+            float perp2 = (pt.x - ax) * (pt.x - ax) + (pt.y - ay) * (pt.y - ay);
+            float hx = quads[result].ll.x - ul.x;
+            float hy = quads[result].ll.y - ul.y;
+            float height2 = hx * hx + hy * hy;
+            // ignore the half-glyph split when the point is far off the baseline
+            // (e.g. F7 caret at the page's top-left)
+            if (overGlyph || perp2 <= height2 * 4.f) {
+                pastMid = t > 0.5f;
+            }
+        }
+    } else {
+        RectF bbox = ts->engine->Transform(ToRectF(coords[result]), pageNo, 1.0, 0);
+        PointF ptT = ts->engine->Transform(pt, pageNo, 1.0, 0);
+        pastMid = ptT.x > bbox.x + (0.5 * bbox.dx);
+    }
+    if (pastMid) {
         result++;
         // for some (DjVu) documents, all glyphs of a word share the same bbox
         while (result < textLen && coords[result - 1] == coords[result]) {
@@ -310,22 +352,30 @@ void TextSelection_UnitTests() {
 
 bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     Rect* coords;
+    QuadF* quads = nullptr;
     int textLen = 0;
-    if (!engine->TryGetTextForPage(pageNo, &textLen, &coords)) {
+    if (!engine->TryGetTextForPage(pageNo, &textLen, &coords, &quads)) {
         return false;
     }
 
     int glyphIx = FindClosestGlyph(this, pageNo, x, y);
-    Point pt = ToPoint(PointF((float)x, (float)y));
+    PointF ptf((float)x, (float)y);
+    Point pt = ToPoint(ptf);
+    auto contains = [&](int i) -> bool {
+        if (i < 0 || i >= textLen) {
+            return false;
+        }
+        return GlyphContains(coords[i], quads, i, ptf, pt);
+    };
     // when over the right half of a glyph, FindClosestGlyph returns the
     // index of the next glyph, in which case glyphIx must be decremented
-    if (glyphIx == textLen || !coords[glyphIx].Contains(pt)) {
+    if (glyphIx == textLen || !contains(glyphIx)) {
         glyphIx--;
     }
     if (-1 == glyphIx) {
         return false;
     }
-    return coords[glyphIx].Contains(pt);
+    return contains(glyphIx);
 }
 
 // index of the glyph closest to (x, y) on pageNo, without mutating the

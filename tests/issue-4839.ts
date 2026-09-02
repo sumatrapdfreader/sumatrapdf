@@ -5,11 +5,14 @@
 //
 // Run: bun tests/issue-4839.ts [--no-build]
 
-import { writeFileSync } from "node:fs";
+import { copyFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { cmdId, ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 import { postMessage, sleep, WM_CHAR, WM_KEYDOWN, WM_KEYUP } from "./winapi.ts";
+
+const CM_PDF = join(ROOT, "tests", "issue-4839-data", "rotated.pdf");
 
 const VK_END = 0x23;
 
@@ -92,7 +95,8 @@ export async function testit(): Promise<void> {
 
     let raw = "";
     let quads: ReturnType<typeof parseQuads> = [];
-    while (Date.now() < deadline) {
+    const selDeadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+    while (Date.now() < selDeadline) {
       raw = String((await client.request(ControlCommand.TestSelectionVars, ["${selection}"]))[1] ?? "");
       quads = parseQuads(raw);
       if (quads.some((q) => Math.abs(q.uly - q.ury) > 2)) {
@@ -115,6 +119,27 @@ export async function testit(): Promise<void> {
     client.close();
     try {
       await killAndWait(proc);
+    } catch {
+      // already exited
+    }
+  }
+
+  // click-drag must stay a text selection, not a rubber-band rectangle
+  const cmPdf = tmpPath("issue-4839-cm.pdf");
+  copyFileSync(CM_PDF, cmPdf);
+  const drag = await launchControlled(["-view", "single page", "-zoom", "fit page", cmPdf]);
+  try {
+    await drag.client.waitForRenderIdle();
+    await drag.client.setNotificationsEnabled(false);
+    const res = await drag.client.request(ControlCommand.TestRotatedTextMouseDrag, ["Example"]);
+    const dragRaw = String(res[1] ?? "");
+    if (res[0] !== 0) {
+      throw new Error(`issue-4839: mouse drag of rotated text failed\n${dragRaw}`);
+    }
+  } finally {
+    drag.client.close();
+    try {
+      await killAndWait(drag.proc);
     } catch {
       // already exited
     }

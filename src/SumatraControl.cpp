@@ -781,6 +781,7 @@ enum class ControlCmd : u16 {
     TestFindUiState = 78,
     TestRenderViewPrint = 79,
     TestReadAloudPlaybackBar = 80,
+    TestRotatedTextMouseDrag = 81,
 };
 
 enum class ControlArgType : u16 {
@@ -1589,6 +1590,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestReadAloudPlaybackBar: {
             int exitCode = 0;
             Str res = ReadAloudPlaybackBarStateTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRotatedTextMouseDrag: {
+            Str word = StringArg(req, 0);
+            if (!word) {
+                AppendError(req, StrL("TestRotatedTextMouseDrag expects string word"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = RotatedTextMouseDragResultTemp(word, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

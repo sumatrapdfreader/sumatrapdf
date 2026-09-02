@@ -272,6 +272,16 @@ static void ColorTest() {
     Color lightFg = MkRgb(0xf9, 0xfa, 0xfb);
     Color blackBg = MkRgb(0, 0, 0);
     utassert(EnsureContrast(lightFg, blackBg, 80) == lightFg);
+
+    // 45-degree diamond: center inside, a point beside it outside
+    QuadF diamond;
+    diamond.ul = {0, 10};
+    diamond.ur = {10, 0};
+    diamond.ll = {10, 20};
+    diamond.lr = {20, 10};
+    utassert(diamond.IsRotated());
+    utassert(diamond.Contains({10, 10}));
+    utassert(!diamond.Contains({0, 0}));
 }
 
 static void ArenaPtrCompressTest() {

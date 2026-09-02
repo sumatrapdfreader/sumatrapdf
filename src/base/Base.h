@@ -900,6 +900,8 @@ struct QuadF {
 
     bool IsEmpty() const;
     bool IsRotated() const;
+    bool Contains(PointF) const;
+    PointF Center() const;
 };
 
 struct Size {

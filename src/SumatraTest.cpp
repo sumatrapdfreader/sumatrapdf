@@ -671,6 +671,122 @@ TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Mouse-drag text selection of rotated glyphs (issue #4839). Finds `word`,
+// clicks the first glyph and drags to the last, then reports whether that
+// stayed a text selection with tilted quads rather than a rubber-band rect.
+TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word)) {
+        return fail(StrL("ERROR missing word"));
+    }
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm || !win->hwndCanvas) {
+        return fail(StrL("NOTREADY no-doc"));
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    Rect* coords = nullptr;
+    QuadF* quads = nullptr;
+    int textLen = 0;
+    Str text = engine->GetTextForPage(pageNo, &textLen, &coords, &quads);
+    if (!text || !coords) {
+        return fail(StrL("ERROR no-page-text"));
+    }
+    int startGlyph = -1;
+    int endGlyph = -1;
+    int wordLen = Utf8CodepointCount(word);
+    for (int i = 0; i <= textLen - wordLen; i++) {
+        if (str::Eq(Utf8SliceByCodepoints(text, i, wordLen), word)) {
+            startGlyph = i;
+            endGlyph = i + wordLen;
+            break;
+        }
+    }
+    if (startGlyph < 0) {
+        return fail(StrL("ERROR word-not-found"));
+    }
+    int first = startGlyph;
+    int last = endGlyph - 1;
+    for (; first < endGlyph && !coords[first].x && !coords[first].dx; first++) {
+    }
+    for (; last > first && !coords[last].x && !coords[last].dx; last--) {
+    }
+    if (first >= endGlyph) {
+        return fail(StrL("ERROR empty-glyph-boxes"));
+    }
+    bool firstTilted = quads && quads[first].IsRotated();
+    out.Append(fmt("quads=%d firstTilted=%d start=%d end=%d\n", quads ? 1 : 0, firstTilted ? 1 : 0, first, last));
+
+    PointF p0{(float)(coords[first].x + coords[first].dx / 2.0), (float)(coords[first].y + coords[first].dy / 2.0)};
+    PointF p1{(float)(coords[last].x + coords[last].dx), (float)(coords[last].y + coords[last].dy / 2.0)};
+    if (quads) {
+        p0 = quads[first].Center();
+        // past the last glyph along its baseline so the final letter is included
+        p1 = {(quads[last].ur.x + quads[last].lr.x) / 2.f, (quads[last].ur.y + quads[last].lr.y) / 2.f};
+    }
+    Point s0 = dm->CvtToScreen(pageNo, p0);
+    Point s1 = dm->CvtToScreen(pageNo, p1);
+    out.Append(fmt("screen0=%d,%d screen1=%d,%d overText0=%d overText1=%d\n", s0.x, s0.y, s1.x, s1.y,
+                   dm->IsOverText(s0) ? 1 : 0, dm->IsOverText(s1) ? 1 : 0));
+    if (!dm->IsOverText(s0)) {
+        return fail(StrL("ERROR start-not-over-text"));
+    }
+
+    DeleteOldSelectionInfo(win, true);
+    LPARAM lp0 = MAKELPARAM(s0.x, s0.y);
+    LPARAM lp1 = MAKELPARAM(s1.x, s1.y);
+    SendMessageW(win->hwndCanvas, WM_LBUTTONDOWN, 0, lp0);
+    int actionDown = (int)win->mouseAction;
+    SendMessageW(win->hwndCanvas, WM_MOUSEMOVE, MK_LBUTTON, lp1);
+    SendMessageW(win->hwndCanvas, WM_LBUTTONUP, 0, lp1);
+    int actionUp = (int)win->mouseAction;
+
+    WindowTab* tab = win->CurrentTab();
+    bool isTextOnly = false;
+    TempStr selected = tab ? GetSelectedTextTemp(tab, StrL(" "), isTextOnly) : TempStr{};
+    int nrects = (tab && tab->selectionOnPage) ? len(*tab->selectionOnPage) : 0;
+    int nQuads = 0;
+    int nTilted = 0;
+    if (tab && tab->selectionOnPage) {
+        for (SelectionOnPage& onPage : *tab->selectionOnPage) {
+            if (onPage.HasQuad()) {
+                nQuads++;
+                if (onPage.quad.IsRotated()) {
+                    nTilted++;
+                }
+            }
+        }
+    }
+    out.Append(fmt("actionDown=%d actionUp=%d isTextOnly=%d nrects=%d nQuads=%d nTilted=%d selected=%s\n", actionDown,
+                   actionUp, isTextOnly ? 1 : 0, nrects, nQuads, nTilted, selected));
+
+    bool ok =
+        (actionDown == (int)MouseAction::SelectingText) && isTextOnly && nTilted > 0 && str::ContainsI(selected, word);
+    if (!ok) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // find the [start, end) glyph range of the first occurrence of `word` on a page
 static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* startOut, int* endOut) {
     if (!engine || !word || !startOut || !endOut) {
