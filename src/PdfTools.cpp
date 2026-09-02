@@ -35,6 +35,7 @@
 #include "Theme.h"
 
 #include "DarkMode_win.h"
+#include "Commands.h"
 #include "PdfTools.h"
 
 extern "C" int pdfbake_main(int argc, char** argv);
@@ -616,6 +617,7 @@ struct PdfDeletePageDialog : PdfToolDialog {
     bool Create(MainWindow* win, WindowTab* tab, bool isExtract);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
     void UpdateButton();
+    void PreTranslate(WindowBase::PreTranslateEvent* ev);
 };
 
 // Parse delete page ranges like "1,3-8,13-N" where N means last page.
@@ -882,6 +884,30 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
     }
 }
 
+// Page Up / Page Down skip the edit accelerator table; send next/prev page.
+void PdfDeletePageDialog::PreTranslate(WindowBase::PreTranslateEvent* ev) {
+    MSG& msg = *ev->msg;
+    if (msg.message != WM_KEYDOWN) {
+        return;
+    }
+    if (IsCtrlPressed() || IsAltPressed() || IsShiftPressed()) {
+        return;
+    }
+    int cmdId = 0;
+    if (msg.wParam == VK_NEXT) {
+        cmdId = CmdGoToNextPage;
+    } else if (msg.wParam == VK_PRIOR) {
+        cmdId = CmdGoToPrevPage;
+    } else {
+        return;
+    }
+    if (!win || !win->hwndFrame) {
+        return;
+    }
+    HwndSendCommand(win->hwndFrame, cmdId);
+    ev->didHandle = true;
+}
+
 // the buttons are virtual controls, so they are styled here rather than by the
 // system: a filled box with a border, brighter on hover
 
@@ -916,6 +942,8 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
 
     Str actionText = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");
     AddButtonsRow(actionText, StrL("Syntax: 2,5-7,13-"));
+    onPreTranslate =
+        MkMethod1<PdfDeletePageDialog, WindowBase::PreTranslateEvent*, &PdfDeletePageDialog::PreTranslate>(this);
     FinishDialog(pagesEdit);
 
     // attach the change handler only now that actionBtn exists, then set the
