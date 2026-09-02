@@ -19,7 +19,7 @@ import {
   sendText,
   setCursorPos,
   sleep,
-  MK_CONTROL,
+  MK_SHIFT,
   VK_DOWN,
   WM_COMMAND,
   WM_KEYDOWN,
@@ -239,7 +239,7 @@ export async function testit(): Promise<void> {
       state.started ||
       state.annotations !== 0 ||
       state.command !== cmdId("CmdCreateAnnotLine") ||
-      state.message !== "Place line annotation. **Ctrl** to snap to multiples of 45 degrees. **Esc** to cancel."
+      state.message !== "Place line annotation. **Shift** to snap to multiples of 45 degrees. **Esc** to cancel."
     ) {
       throw new Error(`line-annotation-placement: toolbar did not start clean placement mode\n${state.raw}`);
     }
@@ -262,17 +262,17 @@ export async function testit(): Promise<void> {
     await sleep(100);
     const before = captureWindowPixels(canvas);
     const blueBefore = countPreviewBlue(before, start, end);
-    moveMouse(canvas, end, MK_CONTROL);
+    moveMouse(canvas, end, MK_SHIFT);
     state = await placementState(client);
     const snapped = /end=(-?\d+),(-?\d+)/.exec(state.raw);
     if (!snapped || Math.abs(+snapped[1]! - start.x - (+snapped[2]! - start.y)) > 2) {
-      throw new Error(`line-annotation-placement: Ctrl did not snap preview to 45 degrees\n${state.raw}`);
+      throw new Error(`line-annotation-placement: Shift did not snap preview to 45 degrees\n${state.raw}`);
     }
 
     moveMouse(canvas, end);
     state = await placementState(client);
     if (!snapped || !state.raw.includes(`end=${end.x},${end.y}`)) {
-      throw new Error(`line-annotation-placement: releasing Ctrl did not restore the pointer endpoint\n${state.raw}`);
+      throw new Error(`line-annotation-placement: releasing Shift did not restore the pointer endpoint\n${state.raw}`);
     }
     await sleep(150);
     const after = captureWindowPixels(canvas);
@@ -296,8 +296,8 @@ export async function testit(): Promise<void> {
       throw new Error(`line-annotation-placement: palette did not start placement mode\n${state.raw}`);
     }
     await clickAt(canvas, start.x, start.y);
-    moveMouse(canvas, end, MK_CONTROL);
-    await clickAt(canvas, end.x, end.y, 350, MK_CONTROL);
+    moveMouse(canvas, end, MK_SHIFT);
+    await clickAt(canvas, end.x, end.y, 350, MK_SHIFT);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 1) {
       throw new Error(`line-annotation-placement: second page click did not create exactly one line\n${state.raw}`);

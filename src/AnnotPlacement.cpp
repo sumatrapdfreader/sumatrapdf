@@ -393,7 +393,7 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
         case AnnotPlacementKind::FreeText:
             return _TRA("Place free text annotation. **Esc** to cancel.");
         case AnnotPlacementKind::Line:
-            return _TRA("Place line annotation. **Ctrl** to snap to multiples of 45 degrees. **Esc** to cancel.");
+            return _TRA("Place line annotation. **Shift** to snap to multiples of 45 degrees. **Esc** to cancel.");
         case AnnotPlacementKind::PolyLine:
             return _TRA(
                 "Place polyline annotation. **Double-click**, **right-click**, **Space**, or **Enter** to finish, "
@@ -665,7 +665,7 @@ static bool HandleLineClick(MainWindow* win, Point pt, WPARAM key) {
         ScheduleRepaint(win, 0);
         return true;
     }
-    p.end = bit::IsMaskSet(key, (WPARAM)MK_CONTROL) ? SnapLineEndpoint(dm->CvtToScreen(pageNo, p.start), pt) : pt;
+    p.end = bit::IsMaskSet(key, (WPARAM)MK_SHIFT) ? SnapLineEndpoint(dm->CvtToScreen(pageNo, p.start), pt) : pt;
     CommitPlacementCommand(win, pt);
     return true;
 }
@@ -936,7 +936,7 @@ bool AnnotationPlacementOnMouseMove(MainWindow* win, Point pt, WPARAM key) {
         case AnnotPlacementKind::Line:
             if (p.pageNo > 0 && pt != p.end) {
                 Point start = dm->CvtToScreen(p.pageNo, p.start);
-                p.end = bit::IsMaskSet(key, (WPARAM)MK_CONTROL) ? SnapLineEndpoint(start, pt) : pt;
+                p.end = bit::IsMaskSet(key, (WPARAM)MK_SHIFT) ? SnapLineEndpoint(start, pt) : pt;
                 ScheduleRepaint(win, 0);
             }
             break;

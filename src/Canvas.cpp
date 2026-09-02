@@ -1928,7 +1928,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                     if (IsLineEndpointHandle(handle)) {
                         int linePageNo = PageNo(annot);
                         Point screenPt{x, y};
-                        if (IsCtrlPressed() || bit::IsMaskSet(key, (WPARAM)MK_CONTROL)) {
+                        if (IsShiftPressed() || bit::IsMaskSet(key, (WPARAM)MK_SHIFT)) {
                             Point fixed = handle == ResizeHandle::LineStart
                                               ? dm->CvtToScreen(linePageNo, win->annotationOriginalLineEnd)
                                               : dm->CvtToScreen(linePageNo, win->annotationOriginalLineStart);
