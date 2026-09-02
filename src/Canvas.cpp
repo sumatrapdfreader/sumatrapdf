@@ -1926,7 +1926,15 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                     SetCursorCached(GetCursorForResizeHandle(handle));
 
                     if (IsLineEndpointHandle(handle)) {
-                        PointF pagePt = dm->CvtFromScreen(Point{x, y}, PageNo(annot));
+                        int linePageNo = PageNo(annot);
+                        Point screenPt{x, y};
+                        if (IsCtrlPressed() || bit::IsMaskSet(key, (WPARAM)MK_CONTROL)) {
+                            Point fixed = handle == ResizeHandle::LineStart
+                                              ? dm->CvtToScreen(linePageNo, win->annotationOriginalLineEnd)
+                                              : dm->CvtToScreen(linePageNo, win->annotationOriginalLineStart);
+                            screenPt = SnapLineEndpoint(fixed, screenPt);
+                        }
+                        PointF pagePt = dm->CvtFromScreen(screenPt, linePageNo);
                         if (handle == ResizeHandle::LineStart) {
                             win->annotationLinePreviewStart = pagePt;
                         } else {

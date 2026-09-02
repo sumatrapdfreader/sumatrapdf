@@ -393,7 +393,7 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
         case AnnotPlacementKind::FreeText:
             return _TRA("Place free text annotation. **Esc** to cancel.");
         case AnnotPlacementKind::Line:
-            return _TRA("Place line annotation. **Esc** to cancel.");
+            return _TRA("Place line annotation. **Ctrl** to snap to multiples of 45 degrees. **Esc** to cancel.");
         case AnnotPlacementKind::PolyLine:
             return _TRA(
                 "Place polyline annotation. **Double-click**, **right-click**, **Space**, or **Enter** to finish, "
@@ -628,10 +628,25 @@ static bool PlacePointAnnotationAt(MainWindow* win, Point pt) {
     return true;
 }
 
+// Keep the cursor at the requested point while constraining only the line end.
+Point SnapLineEndpoint(Point start, Point end) {
+    int dx = end.x - start.x;
+    int dy = end.y - start.y;
+    if (dx == 0 && dy == 0) {
+        return end;
+    }
+
+    constexpr float kSnapAngle = 0.785398163f; // pi / 4
+    float angle = atan2f((float)dy, (float)dx);
+    float distance = sqrtf((float)(dx * dx) + (float)(dy * dy));
+    float snappedAngle = roundf(angle / kSnapAngle) * kSnapAngle;
+    return {start.x + (int)roundf(distance * cosf(snappedAngle)), start.y + (int)roundf(distance * sinf(snappedAngle))};
+}
+
 // The first page click anchors the preview. A second click on that page
 // executes the original command with both endpoints; a click anywhere else
 // cancels the mode because a PDF line annotation cannot span pages.
-static bool HandleLineClick(MainWindow* win, Point pt) {
+static bool HandleLineClick(MainWindow* win, Point pt, WPARAM key) {
     if (!IsPlacingLineAnnotation(win)) {
         return false;
     }
@@ -650,7 +665,7 @@ static bool HandleLineClick(MainWindow* win, Point pt) {
         ScheduleRepaint(win, 0);
         return true;
     }
-    p.end = pt;
+    p.end = bit::IsMaskSet(key, (WPARAM)MK_CONTROL) ? SnapLineEndpoint(dm->CvtToScreen(pageNo, p.start), pt) : pt;
     CommitPlacementCommand(win, pt);
     return true;
 }
@@ -830,7 +845,7 @@ bool AnnotationPlacementOnLeftDown(MainWindow* win, Point pt, WPARAM key) {
             return true;
         case AnnotPlacementKind::Line:
             HwndSetFocus(win->hwndFrame);
-            HandleLineClick(win, pt);
+            HandleLineClick(win, pt, key);
             return true;
         case AnnotPlacementKind::PolyLine:
             HwndSetFocus(win->hwndFrame);
@@ -920,7 +935,8 @@ bool AnnotationPlacementOnMouseMove(MainWindow* win, Point pt, WPARAM key) {
             break;
         case AnnotPlacementKind::Line:
             if (p.pageNo > 0 && pt != p.end) {
-                p.end = pt;
+                Point start = dm->CvtToScreen(p.pageNo, p.start);
+                p.end = bit::IsMaskSet(key, (WPARAM)MK_CONTROL) ? SnapLineEndpoint(start, pt) : pt;
                 ScheduleRepaint(win, 0);
             }
             break;
