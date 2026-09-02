@@ -46,6 +46,10 @@ struct ChangeThemeWnd : WindowBase {
     void OnSelectionChanged();
     void OnDocumentColorsFollowThemeChanged();
     void PreviewDocumentColors();
+    void ApplyPreview();
+    void SchedulePreview();
+    void KillPreviewTimer();
+    void OnTimer(WindowBase::TimerEvent*);
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnChange(VirtMouseEvent* ev = nullptr);
 };
@@ -53,6 +57,8 @@ struct ChangeThemeWnd : WindowBase {
 static ChangeThemeWnd* gChangeThemeWnd = nullptr;
 
 static constexpr int kFollowWindowsThemeListIndex = 0;
+static constexpr UINT_PTR kThemePreviewTimerId = 1;
+static constexpr UINT kThemePreviewDebounceMs = 300;
 static SeqStrings gDocumentColorsFollowThemeNames = "off\0smart\0legacy\0";
 
 static int DocumentColorsFollowThemeToDropDownIndex(DocumentColorsFollowTheme mode) {
@@ -76,6 +82,7 @@ static DocumentColorsFollowTheme DocumentColorsFollowThemeFromDropDownIndex(int 
 }
 
 ChangeThemeWnd::~ChangeThemeWnd() {
+    KillPreviewTimer();
     str::Free(startThemePref);
 }
 
@@ -137,7 +144,20 @@ void ChangeThemeWnd::KeepFocus() {
     HwndSetFocus(hwnd);
 }
 
-void ChangeThemeWnd::OnSelectionChanged() {
+void ChangeThemeWnd::KillPreviewTimer() {
+    if (hwnd) {
+        KillTimer(hwnd, kThemePreviewTimerId);
+    }
+}
+
+// Live-preview the list's current theme. Arrowing through the list would
+// rebuild chrome on every item; SchedulePreview waits 300ms after the last
+// change. Change/Enter calls this so the saved theme matches the highlight.
+void ChangeThemeWnd::ApplyPreview() {
+    KillPreviewTimer();
+    if (!listBox) {
+        return;
+    }
     int idx = listBox->GetCurrentSelection();
     if (idx < 0) {
         return;
@@ -152,6 +172,25 @@ void ChangeThemeWnd::OnSelectionChanged() {
     KeepFocus();
 }
 
+void ChangeThemeWnd::SchedulePreview() {
+    if (!hwnd) {
+        return;
+    }
+    KillTimer(hwnd, kThemePreviewTimerId);
+    SetTimer(hwnd, kThemePreviewTimerId, kThemePreviewDebounceMs, nullptr);
+}
+
+void ChangeThemeWnd::OnTimer(WindowBase::TimerEvent* ev) {
+    if (ev->timerId != kThemePreviewTimerId) {
+        return;
+    }
+    ApplyPreview();
+}
+
+void ChangeThemeWnd::OnSelectionChanged() {
+    SchedulePreview();
+}
+
 void ChangeThemeWnd::OnDocumentColorsFollowThemeChanged() {
     int idx = CbGetCurrentSelection(dropDownDocumentColorsFollowTheme);
     if (idx < 0) {
@@ -163,6 +202,7 @@ void ChangeThemeWnd::OnDocumentColorsFollowThemeChanged() {
 }
 
 void ChangeThemeWnd::OnCancel(VirtMouseEvent*) {
+    KillPreviewTimer();
     if (!documentColorsFollowThemeOnly) {
         SetTheme(startThemePref);
     }
@@ -172,6 +212,7 @@ void ChangeThemeWnd::OnCancel(VirtMouseEvent*) {
 }
 
 void ChangeThemeWnd::OnChange(VirtMouseEvent*) {
+    ApplyPreview();
     SaveSettings();
     ScheduleDelete();
 }
@@ -205,6 +246,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     if (!hwnd) {
         return false;
     }
+    onTimer = MkMethod1<ChangeThemeWnd, WindowBase::TimerEvent*, &ChangeThemeWnd::OnTimer>(this);
 
     bool isRtl = IsUIRtl();
 
