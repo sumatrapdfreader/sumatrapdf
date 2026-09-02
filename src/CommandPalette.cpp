@@ -511,7 +511,7 @@ ThumbnailPaletteCtrl::ThumbnailPaletteCtrl(MainWindow* win, PlatformFont* font, 
     thumbDy = DpiScaleByDpi(dpi, kPaletteThumbnailDy);
     gap = DpiScaleByDpi(dpi, kPaletteThumbnailGap);
     labelDy = PlatformFontMeasureText(font, StrL("0")).dy + DpiScaleByDpi(dpi, 4);
-    itemDy = thumbDy + labelDy + gap;
+    itemDy = thumbDy + gap;
     padding = DpiScaledInsets(kPaletteThumbnailPadding, kPaletteThumbnailPadding);
 
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
@@ -590,9 +590,10 @@ void ThumbnailPaletteCtrl::DrawRow(DrawItemEvent* ev) {
             ev->gfx->DrawPixmap(thumbnail, target);
         }
 
-        Color border = pageNo == selectedPage ? MkRgb(0, 120, 215) : MkGray(150);
-        ev->gfx->DrawRect(pageRect, border, pageNo == selectedPage ? 3 : 1);
-        Rect label{x, pageRect.Bottom(), thumbDx, labelDy};
+        if (pageNo == selectedPage) {
+            ev->gfx->DrawRect(pageRect, MkRgb(0, 120, 215), 3);
+        }
+        Rect label{x, pageRect.Bottom() - labelDy, thumbDx, labelDy};
         ev->gfx->DrawText(fmt("%d", pageNo), label, gfxTextCenter | gfxTextVCenter, font, textColor);
     }
 }
@@ -610,7 +611,7 @@ int ThumbnailPaletteCtrl::PageAtPoint(Point pt) {
     rowRect.Offset(-origin.x, -origin.y);
     int gridDx = cols * thumbDx + (cols - 1) * gap;
     int left = rowRect.x + std::max(0, (rowRect.dx - gridDx) / 2);
-    if (pt.x < left || pt.y < rowRect.y || pt.y >= rowRect.y + thumbDy + labelDy) {
+    if (pt.x < left || pt.y < rowRect.y || pt.y >= rowRect.y + thumbDy) {
         return -1;
     }
     int col = (pt.x - left) / (thumbDx + gap);
