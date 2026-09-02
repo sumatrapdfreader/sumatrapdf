@@ -12,6 +12,7 @@ import {
   postMessage,
   sendText,
   sleep,
+  VK_HOME,
   VK_RIGHT,
   VK_RETURN,
   WM_KEYDOWN,
@@ -101,6 +102,7 @@ export async function testit(): Promise<void> {
       throw new Error("command-palette-thumbnails: palette did not open");
     }
 
+    postMessage(handles.palette, WM_KEYDOWN, VK_HOME, 0);
     const thumbnail = await waitForThumbnail(client, true);
     if (!thumbnail?.active || thumbnail.page !== 1 || thumbnail.rendered < 1) {
       throw new Error(`command-palette-thumbnails: thumbnail grid not ready: ${JSON.stringify(thumbnail)}`);

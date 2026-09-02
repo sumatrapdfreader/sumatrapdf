@@ -367,6 +367,7 @@ struct ThumbnailPaletteCtrl : VirtListBox {
     int thumbDx = 0;
     int thumbDy = 0;
     int gap = 0;
+    int rowGap = 0;
     int labelDy = 0;
     bool active = false;
 
@@ -510,6 +511,7 @@ ThumbnailPaletteCtrl::ThumbnailPaletteCtrl(MainWindow* win, PlatformFont* font, 
     thumbDx = DpiScaleByDpi(dpi, kPaletteThumbnailDx);
     thumbDy = DpiScaleByDpi(dpi, kPaletteThumbnailDy);
     gap = DpiScaleByDpi(dpi, kPaletteThumbnailGap);
+    rowGap = gap;
     labelDy = PlatformFontMeasureText(font, StrL("0")).dy + DpiScaleByDpi(dpi, 4);
     itemDy = thumbDy + gap;
     padding = DpiScaledInsets(kPaletteThumbnailPadding, kPaletteThumbnailPadding);
@@ -562,6 +564,16 @@ void ThumbnailPaletteCtrl::SetBounds(Rect r) {
         rowsModel->rows = (pageCount + cols - 1) / cols;
         SetModel(rowsModel);
     }
+
+    int visibleRows = std::max(1, (r.dy - gap) / (thumbDy + gap));
+    visibleRows = std::min(visibleRows, rowsModel->rows);
+    if (visibleRows > 0) {
+        int freeDy = r.dy - visibleRows * thumbDy;
+        rowGap = std::max(gap, freeDy / (visibleRows + 1));
+    }
+    itemDy = thumbDy + rowGap;
+    padding.top = rowGap;
+    padding.bottom = 0;
 
     VirtListBox::SetBounds(r);
     EnsureVisible((selectedPage - 1) / cols);
