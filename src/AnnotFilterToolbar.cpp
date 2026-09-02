@@ -1041,6 +1041,9 @@ static void ShowAnnotFilterWindow(MainWindow* win) {
     Rect wr = HwndWindowRect(f->floatWnd->hwnd);
     f->floatWnd->UpdateDpi(DpiGetForPoint(wr.x + wr.dx / 2, wr.y + wr.dy / 2));
     f->floatWnd->DoLayout();
+    // Ctrl+W always; Esc only with EscToExit (issue #6124)
+    f->floatWnd->closeOnCtrlW = true;
+    f->floatWnd->closeOnEsc = gSettings->escToExit;
     ShowWindow(f->floatWnd->hwnd, SW_SHOW);
     if (f->floatWnd->edit) {
         f->floatWnd->edit->SetFocus();
