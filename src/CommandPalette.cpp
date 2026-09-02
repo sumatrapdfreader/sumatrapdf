@@ -617,6 +617,114 @@ static HBox* NewHelpRow(HBox* box) {
     return box;
 }
 
+enum {
+    kHelpNone = -1,
+    kHelpSmartTab,
+    kHelpCommands,
+    kHelpHistory,
+    kHelpTabs,
+    kHelpFavorites,
+    kHelpSettings,
+    kHelpToc,
+    kHelpEverything,
+};
+
+static int PaletteHelpKind(Str filter, bool smartTab) {
+    if (smartTab) {
+        return kHelpSmartTab;
+    }
+    if (str::StartsWith(filter, Str(kPalettePrefixEverything))) {
+        return kHelpEverything;
+    }
+    if (str::StartsWith(filter, Str(kPalettePrefixTabs))) {
+        return kHelpTabs;
+    }
+    if (str::StartsWith(filter, Str(kPalettePrefixFileHistory))) {
+        return kHelpHistory;
+    }
+    if (str::StartsWith(filter, Str(kPalettePrefixTOC)) || str::StartsWith(filter, Str(kPalettePrefixTOCLegacy))) {
+        return kHelpToc;
+    }
+    if (str::StartsWith(filter, Str(kPalettePrefixFavorites))) {
+        return kHelpFavorites;
+    }
+    if (str::StartsWith(filter, Str(kPalettePrefixBoolSettings))) {
+        return kHelpSettings;
+    }
+    return kHelpCommands;
+}
+
+void CommandPaletteWnd::UpdateHelpRow() {
+    if (!helpRow) {
+        return;
+    }
+    Str filter{};
+    if (editQuery) {
+        filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
+    }
+    int kind = PaletteHelpKind(filter, smartTabMode);
+    if (helpRow->ChildrenCount() > 0 && kind == helpKind) {
+        return;
+    }
+    helpKind = kind;
+
+    for (auto& c : helpRow->children) {
+        delete c.layout;
+    }
+    VecReset(helpRow->children);
+
+    Str strings[4];
+    int nHelp = 0;
+    switch (kind) {
+        case kHelpSmartTab:
+            strings[nHelp++] = _TRA("Ctrl+Tab navigate");
+            strings[nHelp++] = _TRA("Release Ctrl select");
+            strings[nHelp++] = _TRA("Space for sticky mode");
+            strings[nHelp++] = _TRA("Del close tab");
+            break;
+        case kHelpHistory:
+            strings[nHelp++] = _TRA("Enter open file");
+            strings[nHelp++] = _TRA("Del remove from history");
+            strings[nHelp++] = _TRA("Esc close");
+            break;
+        case kHelpTabs:
+            strings[nHelp++] = _TRA("Enter switch to tab");
+            strings[nHelp++] = _TRA("Del close tab");
+            strings[nHelp++] = _TRA("Esc close");
+            break;
+        case kHelpFavorites:
+            strings[nHelp++] = _TRA("Enter go to favorite");
+            strings[nHelp++] = _TRA("Del remove favorite");
+            strings[nHelp++] = _TRA("Esc close");
+            break;
+        case kHelpSettings:
+            strings[nHelp++] = _TRA("Enter change");
+            strings[nHelp++] = _TRA("Esc close");
+            break;
+        case kHelpToc:
+            strings[nHelp++] = _TRA("Enter go to");
+            strings[nHelp++] = _TRA("Esc close");
+            break;
+        case kHelpEverything:
+            strings[nHelp++] = _TRA("Enter select");
+            strings[nHelp++] = _TRA("Esc close");
+            break;
+        default:
+            strings[nHelp++] = _TRA("Enter run command");
+            strings[nHelp++] = _TRA("Esc close");
+            break;
+    }
+    auto colBg = ThemeWindowControlBackgroundColor();
+    auto colTxt = ThemeWindowTextColor();
+    HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
+    for (int i = 0; i < nHelp; i++) {
+        helpRow->AddChild(NewHelpText(st, WithKbdMarkupTemp(strings[i])));
+    }
+    if (layout) {
+        DoLayout();
+    }
+}
+
 bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance) {
     if (str::Eq(prefix, Str(kPalettePrefixTabs))) {
         smartTabMode = smartTabAdvance != 0;
@@ -715,33 +823,11 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     }
 
     {
-        Str strings[4];
-        int nHelp = 0;
-        bool boolSettingsMode = str::Eq(prefix, Str(kPalettePrefixBoolSettings));
-        if (smartTabMode) {
-            strings[nHelp++] = _TRA("Ctrl+Tab navigate");
-            strings[nHelp++] = _TRA("Release Ctrl select");
-            strings[nHelp++] = _TRA("Space for sticky mode");
-            strings[nHelp++] = _TRA("Del remove item");
-        } else if (boolSettingsMode) {
-            strings[nHelp++] = _TRA("↑ ↓ PgUp PgDn navigate");
-            strings[nHelp++] = _TRA("Enter change");
-            strings[nHelp++] = _TRA("Esc close");
-        } else {
-            strings[nHelp++] = _TRA("↑ ↓ PgUp PgDn navigate");
-            strings[nHelp++] = _TRA("Enter select");
-            strings[nHelp++] = _TRA("Del remove item");
-            strings[nHelp++] = _TRA("Esc close");
-        }
         auto* box = new HBox();
         box->rtl = CommandPaletteUiRtl();
-        // the hints are secondary information, so they use the regular (smaller)
-        // app font, not the bigger font of the query / list
-        HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
-        for (int i = 0; i < nHelp; i++) {
-            box->AddChild(NewHelpText(st, WithKbdMarkupTemp(strings[i])));
-        }
-        vbox->AddChild(NewHelpRow(box));
+        helpRow = NewHelpRow(box);
+        vbox->AddChild(helpRow);
+        UpdateHelpRow();
     }
 
     auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));

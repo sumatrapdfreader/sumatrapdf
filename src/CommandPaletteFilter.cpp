@@ -116,6 +116,7 @@ void CommandPaletteWnd::QueryChanged() {
     }
     FilterStringsForQuery(filter, m->strings);
     listBox->SetModel(m);
+    UpdateHelpRow();
     int nItems = m->ItemsCount();
     if (nItems == 0) {
         return;

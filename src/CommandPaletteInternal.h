@@ -46,6 +46,8 @@ struct CommandPaletteWnd : WindowBase {
     StrVecCP favorites;
     StrVecCP boolSettings;
     VirtListBox* listBox = nullptr;
+    HBox* helpRow = nullptr;
+    int helpKind = -1;
 
     StrVec filterWords;
     Vec<u8> highlighted;
@@ -71,6 +73,7 @@ struct CommandPaletteWnd : WindowBase {
 
     bool Create(MainWindow* win, Str prefix, int smartTabAdvance);
     void QueryChanged();
+    void UpdateHelpRow();
 
     void ExecuteCurrentSelection();
     bool AdvanceSelection(int dir);
