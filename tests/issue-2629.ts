@@ -133,6 +133,24 @@ async function waitForState(
   throw new Error(`keyboard-link state did not match in time\n${last.dump}`);
 }
 
+async function startLinkFollowing(client: ControlClient, frame: number): Promise<{ state: State; dump: string }> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let last = await getState(client);
+  while (Date.now() < deadline) {
+    if (!last.state.active && last.state.page === 1) {
+      // Link enumeration uses a nonblocking engine lock and can briefly decline
+      // activation while an ASan render thread still owns the page.
+      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
+    }
+    last = await getState(client);
+    if (last.state.active && last.state.page === 1 && last.state.count === 20) {
+      return last;
+    }
+    await sleep(25);
+  }
+  throw new Error(`keyboard-link mode did not start in time\n${last.dump}`);
+}
+
 async function waitForFullscreenState(client: ControlClient, expected: boolean): Promise<void> {
   const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
   let dump = "";
@@ -193,8 +211,7 @@ async function testLinkedPdf(): Promise<void> {
       }
 
       // turn the mode on
-      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      ({ state, dump } = await waitForState(client, (s) => s.active));
+      ({ state, dump } = await startLinkFollowing(client, frame));
       // All 20 links on page 1 are visible.
       if (state.count !== 20) {
         fail(`expected 20 labeled links at the top of page 1, got ${state.count}`, dump);
@@ -221,21 +238,18 @@ async function testLinkedPdf(): Promise<void> {
       }
 
       // Esc leaves the mode
-      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      ({ state, dump } = await waitForState(client, (s) => s.active));
+      ({ state, dump } = await startLinkFollowing(client, frame));
       pressVKey(frame, VK_ESCAPE);
       ({ state, dump } = await waitForState(client, (s) => !s.active));
 
       // B is not in Vimium's ergonomic hint alphabet. It cancels the mode and
       // is consumed instead of falling through to an unrelated shortcut.
-      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20));
+      ({ state, dump } = await startLinkFollowing(client, frame));
       postMessage(frame, WM_CHAR, "b".charCodeAt(0), 0);
       ({ state, dump } = await waitForState(client, (s) => !s.active && s.page === 1));
 
       // A is a complete single-letter hint for the first link.
-      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20));
+      ({ state, dump } = await startLinkFollowing(client, frame));
       postMessage(frame, WM_CHAR, "a".charCodeAt(0), 0);
       ({ state, dump } = await waitForState(client, (s) => s.page !== 1 && !s.active));
       const singleHintPage = state.page;
@@ -244,8 +258,7 @@ async function testLinkedPdf(): Promise<void> {
       // (what typing produces) must follow the hint, not create an annotation.
       sendCommandSync(frame, cmdId("CmdGoToFirstPage"));
       await client.waitForRenderIdle();
-      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20 && s.page === 1));
+      ({ state, dump } = await startLinkFollowing(client, frame));
       pressVKey(frame, VK_A);
       ({ state, dump } = await waitForState(client, (s) => s.page !== 1 && !s.active));
       if (state.page !== singleHintPage) {
@@ -260,8 +273,7 @@ async function testLinkedPdf(): Promise<void> {
       // application shortcut.
       sendCommandSync(frame, cmdId("CmdGoToFirstPage"));
       await client.waitForRenderIdle();
-      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      ({ state, dump } = await waitForState(client, (s) => s.active && s.count === 20));
+      ({ state, dump } = await startLinkFollowing(client, frame));
       postMessage(frame, WM_CHAR, "s".charCodeAt(0), 0);
       ({ state, dump } = await waitForState(client, (s) => s.active && s.page === 1));
       postMessage(frame, WM_CHAR, "a".charCodeAt(0), 0);
@@ -284,8 +296,7 @@ async function testRecomputeAfterNavigation(): Promise<void> {
     EXE,
     async (client, proc) => {
       const frame = await setupPdfView(client, proc);
-      sendCommandSync(frame, cmdId("CmdToggleKeyboardLinkFollowing"));
-      let { state, dump } = await waitForState(client, (s) => s.active && s.count === 20);
+      let { state, dump } = await startLinkFollowing(client, frame);
       const atTop = state.count;
 
       // Page 2 has no links. Labels are recalculated 300ms after navigation.
