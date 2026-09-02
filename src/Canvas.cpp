@@ -5324,7 +5324,7 @@ void ScheduleRepaint(MainWindow* win, int delayInMs) {
     auto fn = MkFunc0<RepaintTaskData>(RepaintTask, data);
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    uitask::Post(fn, nullptr);
+    uitask::Post(fn, "Repaint");
 }
 
 static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
