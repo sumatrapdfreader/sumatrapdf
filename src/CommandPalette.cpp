@@ -1360,7 +1360,7 @@ static TempStr WithKbdMarkupTemp(Str s) {
     return ToStrTemp(out);
 }
 
-// one of the "# File History" / "> Commands" switches in the top row; it
+// one of the "# History" / "> Commands" switches in the top row; it
 // carries the prefix it switches to so they can share one click handler
 struct PaletteSwitch : VirtRichText {
     CommandPaletteWnd* wnd = nullptr;
@@ -1574,7 +1574,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         box->rtl = CommandPaletteUiRtl();
         // same smaller app font as the bottom hint row
         HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
-        // in "# File History" and friends the first character is what you type
+        // in "# History" and friends the first character is what you type
         // to get there, so it becomes a key-cap
         auto addSwitch = [this, box, &st](Str s, Str switchTo) {
             TempStr markup = str::JoinTemp(StrL("(Kbd/"), Str(s.s, 1), StrL(")"), Str(s.s + 1, len(s) - 1));
@@ -1585,10 +1585,12 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             t->onClick = MkFunc1Void(OnPaletteSwitchClicked);
             box->AddChild(t);
         };
-        addSwitch(_TRA("# File History"), Str(kPalettePrefixFileHistory));
+        addSwitch(_TRA("# History"), Str(kPalettePrefixFileHistory));
         addSwitch(_TRA("> Commands"), Str(kPalettePrefixCommands));
         addSwitch(_TRA("@ Tabs"), Str(kPalettePrefixTabs));
-        addSwitch(_TRA(": Everything"), Str(kPalettePrefixEverything));
+        if (win->AsFixed()) {
+            addSwitch(_TRA("& Thumbnails"), Str(kPalettePrefixThumbnails));
+        }
         if (len(toc) > 0) {
             addSwitch(_TRA("% TOC"), Str(kPalettePrefixTOC));
         }
@@ -1596,9 +1598,6 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             addSwitch(_TRA("$ Favorites"), Str(kPalettePrefixFavorites));
         }
         addSwitch(_TRA("= Settings"), Str(kPalettePrefixBoolSettings));
-        if (win->AsFixed()) {
-            addSwitch(_TRA("& Thumbnails"), Str(kPalettePrefixThumbnails));
-        }
         vbox->AddChild(NewHelpRow(box));
     }
 
