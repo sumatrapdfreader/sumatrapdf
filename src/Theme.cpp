@@ -55,6 +55,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #000000
         BackgroundColor = #f2f2f2
         ControlBackgroundColor = #ffffff
+        ActiveTabBackgroundColor = #ffffff
+        InactiveTabBackgroundColor = #e6e6e6
         LinkColor = #0020a0
         DisabledTextColor = #808080
         DarkerTextColor = #404040
@@ -73,6 +75,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #F9FAFB
         BackgroundColor = #000000
         ControlBackgroundColor = #000000
+        ActiveTabBackgroundColor = #000000
+        InactiveTabBackgroundColor = #191919
         LinkColor = #6B7280
         DisabledTextColor = #6B7280
         DarkerTextColor = #9CA3AF
@@ -91,6 +95,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #333333
         BackgroundColor = #ebe6da
         ControlBackgroundColor = #f5f1e8
+        ActiveTabBackgroundColor = #f5f1e8
+        InactiveTabBackgroundColor = #e6dcc5
         LinkColor = #0020a0
         DisabledTextColor = #8a8578
         DarkerTextColor = #5c574c
@@ -109,6 +115,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #bac9d0
         BackgroundColor = #263238
         ControlBackgroundColor = #263238
+        ActiveTabBackgroundColor = #263238
+        InactiveTabBackgroundColor = #4d3a56
         LinkColor = #8aa3b0
         DisabledTextColor = #6b7c85
         DarkerTextColor = #8aa3b0
@@ -127,6 +135,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #ffffff
         BackgroundColor = #2d2d30
         ControlBackgroundColor = #2d2d30
+        ActiveTabBackgroundColor = #2d2d30
+        InactiveTabBackgroundColor = #45454a
         LinkColor = #9999a0
         DisabledTextColor = #808088
         DarkerTextColor = #b0b0b8
@@ -145,6 +155,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #212323
         BackgroundColor = #fdf6e3
         ControlBackgroundColor = #eee8d5
+        ActiveTabBackgroundColor = #eee8d5
+        InactiveTabBackgroundColor = #e0d5b1
         LinkColor = #268bd2
         DisabledTextColor = #93a1a1
         DarkerTextColor = #586e75
@@ -163,6 +175,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #839496
         BackgroundColor = #002b36
         ControlBackgroundColor = #073642
+        ActiveTabBackgroundColor = #073642
+        InactiveTabBackgroundColor = #5b0c6f
         LinkColor = #268bd2
         DisabledTextColor = #586e75
         DarkerTextColor = #657b83
@@ -181,6 +195,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #f8f8f2
         BackgroundColor = #282a36
         ControlBackgroundColor = #44475a
+        ActiveTabBackgroundColor = #44475a
+        InactiveTabBackgroundColor = #5d5a76
         LinkColor = #8be9fd
         DisabledTextColor = #6272a4
         DarkerTextColor = #6272a4
@@ -199,6 +215,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #CBE3E7
         BackgroundColor = #100E23
         ControlBackgroundColor = #1E1C31
+        ActiveTabBackgroundColor = #1E1C31
+        InactiveTabBackgroundColor = #312e51
         LinkColor = #91DDFF
         DisabledTextColor = #6b6b8a
         DarkerTextColor = #a0a0c0
@@ -217,6 +235,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #FDD085
         BackgroundColor = #4F6232
         ControlBackgroundColor = #1E3304
+        ActiveTabBackgroundColor = #1E3304
+        InactiveTabBackgroundColor = #086139
         LinkColor = #A2E53B
         DisabledTextColor = #8a9a60
         DarkerTextColor = #c0c878
@@ -235,6 +255,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #D7AD62
         BackgroundColor = #2A1104
         ControlBackgroundColor = #172736
+        ActiveTabBackgroundColor = #172736
+        InactiveTabBackgroundColor = #402659
         LinkColor = #E8CD12
         DisabledTextColor = #8a7040
         DarkerTextColor = #b09050
@@ -253,6 +275,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #E2C3C3
         BackgroundColor = #20222A
         ControlBackgroundColor = #1E0126
+        ActiveTabBackgroundColor = #1E0126
+        InactiveTabBackgroundColor = #440257
         LinkColor = #EFF0B8
         DisabledTextColor = #8a7088
         DarkerTextColor = #b0a0b0
@@ -271,6 +295,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #abb2bf
         BackgroundColor = #282c34
         ControlBackgroundColor = #21252b
+        ActiveTabBackgroundColor = #21252b
+        InactiveTabBackgroundColor = #3d3747
         LinkColor = #61afef
         DisabledTextColor = #5c6370
         DarkerTextColor = #7f848e
@@ -289,6 +315,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #f8f8f2
         BackgroundColor = #272822
         ControlBackgroundColor = #3e3d32
+        ActiveTabBackgroundColor = #3e3d32
+        InactiveTabBackgroundColor = #5a5848
         LinkColor = #66d9ef
         DisabledTextColor = #75715e
         DarkerTextColor = #a6a68a
@@ -307,6 +335,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #d8dee9
         BackgroundColor = #2e3440
         ControlBackgroundColor = #3b4252
+        ActiveTabBackgroundColor = #3b4252
+        InactiveTabBackgroundColor = #59506f
         LinkColor = #88c0d0
         DisabledTextColor = #4c566a
         DarkerTextColor = #81a1c1
@@ -325,6 +355,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #e6edf3
         BackgroundColor = #0d1117
         ControlBackgroundColor = #161b22
+        ActiveTabBackgroundColor = #161b22
+        InactiveTabBackgroundColor = #332a40
         LinkColor = #2f81f7
         DisabledTextColor = #6e7681
         DarkerTextColor = #8b949e
@@ -343,6 +375,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #cdd6f4
         BackgroundColor = #1e1e2e
         ControlBackgroundColor = #181825
+        ActiveTabBackgroundColor = #181825
+        InactiveTabBackgroundColor = #2c2c43
         LinkColor = #89b4fa
         DisabledTextColor = #6c7086
         DarkerTextColor = #a6adc8
@@ -361,6 +395,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #c0caf5
         BackgroundColor = #1a1b26
         ControlBackgroundColor = #16161e
+        ActiveTabBackgroundColor = #16161e
+        InactiveTabBackgroundColor = #2b2b3b
         LinkColor = #7aa2f7
         DisabledTextColor = #565f89
         DarkerTextColor = #a9b1d6
@@ -379,6 +415,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #ebdbb2
         BackgroundColor = #282828
         ControlBackgroundColor = #3c3836
+        ActiveTabBackgroundColor = #3c3836
+        InactiveTabBackgroundColor = #56514e
         LinkColor = #83a598
         DisabledTextColor = #928374
         DarkerTextColor = #a89984
@@ -397,6 +435,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #d6deeb
         BackgroundColor = #011627
         ControlBackgroundColor = #0b2942
+        ActiveTabBackgroundColor = #0b2942
+        InactiveTabBackgroundColor = #44126d
         LinkColor = #82aaff
         DisabledTextColor = #5f7e97
         DarkerTextColor = #7fdbca
@@ -415,6 +455,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #bfbdb6
         BackgroundColor = #0b0e14
         ControlBackgroundColor = #0d1017
+        ActiveTabBackgroundColor = #0d1017
+        InactiveTabBackgroundColor = #261f37
         LinkColor = #59c2ff
         DisabledTextColor = #565b66
         DarkerTextColor = #acb6bf
@@ -433,6 +475,8 @@ static Str themesTxt = StrL(R"(Themes [
         TextColor = #a6accd
         BackgroundColor = #292d3e
         ControlBackgroundColor = #1b1e2b
+        ActiveTabBackgroundColor = #1b1e2b
+        InactiveTabBackgroundColor = #332e4a
         LinkColor = #82aaff
         DisabledTextColor = #676e95
         DarkerTextColor = #8796b0
@@ -805,7 +849,8 @@ static void UpdateGuiColorsFromTheme() {
     gColsRichText[kColRichBg] = ctlBg;
 
     gColsTab[kColTabText] = text;
-    gColsTab[kColTabBg] = ctlBg;
+    gColsTab[kColTabBg] = ThemeActiveTabBackgroundColor();
+    gColsTab[kColTabInactiveBg] = ThemeInactiveTabBackgroundColor();
 
     // custom top-level windows (dialogs, popups) sit their content on ctlBg,
     // like the side panels; a window that wants something else (the toolbar's
@@ -1047,6 +1092,21 @@ Color ThemeWindowControlBackgroundColor() {
     }
     auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
     return col;
+}
+
+Color ThemeActiveTabBackgroundColor() {
+    if (gUseHighContrast) {
+        return SysWindowBgColor();
+    }
+    return GetThemeCol(gCurrentTheme->activeTabBackgroundColor, ThemeWindowControlBackgroundColor());
+}
+
+Color ThemeInactiveTabBackgroundColor() {
+    if (gUseHighContrast) {
+        return SysWindowBgColor();
+    }
+    Color fallback = AccentColor(ThemeWindowControlBackgroundColor(), 25);
+    return GetThemeCol(gCurrentTheme->inactiveTabBackgroundColor, fallback);
 }
 
 Color ThemeWindowLinkColor() {

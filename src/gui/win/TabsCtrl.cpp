@@ -129,6 +129,7 @@ bool TabCtrl::IsUnderMouse() {
 
 Color TabCtrl::BgColor() {
     Color selected = GetColor(kColTabBg);
+    Color inactive = GetColor(kColTabInactiveBg);
     bool isSelected = IsSelected();
     bool isUnderMouse = IsUnderMouse();
     // a tab with a color of its own keeps it, shaded when it isn't selected
@@ -141,7 +142,7 @@ Color TabCtrl::BgColor() {
     if (isSelected) {
         return selected;
     }
-    return AccentColor(selected, isUnderMouse ? 35 : 25);
+    return isUnderMouse ? AccentColor(inactive, 10) : inactive;
 }
 
 Size TabCtrl::GetIdealSize() {

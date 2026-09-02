@@ -236,6 +236,18 @@ const theme: Field[] = [
   field("TextColor", Color, "", "color of text in menus, toolbar, tabs and sidebars"),
   field("BackgroundColor", Color, "", "background color of the window around the document"),
   field("ControlBackgroundColor", Color, "", "background color of toolbar, tabs, sidebars and dialogs"),
+  field(
+    "ActiveTabBackgroundColor",
+    Color,
+    "",
+    "background color of the active tab; if empty, uses ControlBackgroundColor",
+  ).ver("3.7"),
+  field(
+    "InactiveTabBackgroundColor",
+    Color,
+    "",
+    "background color of inactive tabs; if empty, derived from ControlBackgroundColor",
+  ).ver("3.7"),
   field("LinkColor", Color, "", "color of clickable links in the UI"),
   field(
     "DisabledTextColor",

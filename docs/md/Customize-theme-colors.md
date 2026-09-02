@@ -19,6 +19,8 @@ Themes [
         TextColor = #bac9d0
         BackgroundColor = #263238
         ControlBackgroundColor = #263238
+        ActiveTabBackgroundColor = #263238
+        InactiveTabBackgroundColor = #4d3a56
         LinkColor = #8aa3b0
         DisabledTextColor = #6b7c85
         DarkerTextColor = #8aa3b0
@@ -55,12 +57,15 @@ Themes [
 
 The above will provide you with custom themes such as `My Dark Theme` and `Dracula`. Built-in themes already ship with these colors filled in, including Solarized, Dracula, **One Dark**, **Monokai**, **Nord**, **GitHub Dark**, **Catppuccin Mocha**, **Tokyo Night**, **Gruvbox**, **Night Owl**, **Ayu**, and **Palenight**.
 
+To customize an existing theme, copy its definition from `src/Theme.cpp` into your `Themes` setting, give it a new `Name`, and change the colors you want. For example, copy `Dracula`, rename it `My Dracula`, and set `ActiveTabBackgroundColor` and `InactiveTabBackgroundColor` to your preferred tab colors. Select `My Dracula` in Settings / Theme after saving.
+
 Meaning of the parameters:
 
 **Required / base colors**
 
 - `TextColor` and `BackgroundColor` set the main window's text and background colors.
 - `ControlBackgroundColor` sets the background of Windows controls (buttons, window frame, menus, list controls, etc.).
+- `ActiveTabBackgroundColor` and `InactiveTabBackgroundColor` set the backgrounds of active and inactive tabs. If empty, they use the control background and its derived inactive shade.
 - `LinkColor` sets the color of links. It is typically blue.
 - `ColorizeControls` should be `true`. If it is `false`, we won't try to change the colors of standard Windows controls (menus, toolbars, buttons, etc.), so much of the UI will not respect the theme colors.
 
@@ -91,6 +96,7 @@ This is independent of `Theme = ...`. You can use a dark UI theme with `Document
 - `EdgeColor` / `HotEdgeColor` / `DisabledEdgeColor` — control borders
 - `ErrorBackgroundColor` — error surfaces
 - `NotificationBackgroundColor` / `NotificationHighlightColor` / `NotificationHighlightTextColor` — in-app notification tips
+- `ActiveTabBackgroundColor` / `InactiveTabBackgroundColor` — active and inactive tab backgrounds
 
 After you save the settings file, there are three main ways to choose a theme that you created:
 

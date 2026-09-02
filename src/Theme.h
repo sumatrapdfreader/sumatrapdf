@@ -33,6 +33,8 @@ Color SysHighlightBgColor();
 Color SysHighlightTextColor();
 Color ThemeWindowDarkerTextColor();
 Color ThemeWindowControlBackgroundColor();
+Color ThemeActiveTabBackgroundColor();
+Color ThemeInactiveTabBackgroundColor();
 Color ThemeWindowLinkColor();
 Color ThemeHotBackgroundColor();
 Color ThemeEdgeColor();

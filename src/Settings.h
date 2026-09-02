@@ -136,6 +136,12 @@ struct Theme {
     ParsedColor backgroundColor;
     // background color of toolbar, tabs, sidebars and dialogs
     ParsedColor controlBackgroundColor;
+    // background color of the active tab; if empty, uses
+    // ControlBackgroundColor
+    ParsedColor activeTabBackgroundColor;
+    // background color of inactive tabs; if empty, derived from
+    // ControlBackgroundColor
+    ParsedColor inactiveTabBackgroundColor;
     // color of clickable links in the UI
     ParsedColor linkColor;
     // color of disabled (grayed out) text; if empty, derived from the
@@ -1584,6 +1590,8 @@ static const FieldInfo gThemeFields[] = {
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, activeTabBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, inactiveTabBackgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, linkColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, disabledTextColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, darkerTextColor), SettingType::Color, (intptr_t)""},
@@ -1599,22 +1607,25 @@ static const FieldInfo gThemeFields[] = {
 };
 static const StructInfo gThemeInfo = {
     sizeof(Theme),
-    16,
+    18,
     gThemeFields,
-    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgr"
-    "oundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0ErrorBackgroundColor\0NotificationBackgroundColor\0Notifica"
-    "tionHighlightColor\0NotificationHighlightTextColor\0ColorizeControls",
+    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0ActiveTabBackgroundColor\0InactiveTabBackgroundColor\0Li"
+    "nkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgroundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0Error"
+    "BackgroundColor\0NotificationBackgroundColor\0NotificationHighlightColor\0NotificationHighlightTextColor\0Colorize"
+    "Controls",
     "name of the theme, as shown in the Settings / Theme menu\0color of text in menus, toolbar, tabs and "
     "sidebars\0background color of the window around the document\0background color of toolbar, tabs, sidebars and "
-    "dialogs\0color of clickable links in the UI\0color of disabled (grayed out) text; if empty, derived from the "
-    "colors above\0color of secondary / muted text like the page label; if empty, derived from the colors "
-    "above\0background color of a control the mouse is over; if empty, derived from the colors above\0color of control "
-    "borders and separators; if empty, derived from the colors above\0border color of a control the mouse is over; if "
-    "empty, derived from the colors above\0border color of a disabled control; if empty, derived from the colors "
-    "above\0background color of error messages; if empty, derived from the colors above\0background color of "
-    "notification tips; if empty, derived from the colors above\0background color of a highlighted notification tip; "
-    "if empty, derived from the colors above\0text color of a highlighted notification tip; if empty, derived from the "
-    "colors above\0if true, apply the theme colors to Windows controls and window areas too",
+    "dialogs\0background color of the active tab; if empty, uses ControlBackgroundColor\0background color of inactive "
+    "tabs; if empty, derived from ControlBackgroundColor\0color of clickable links in the UI\0color of disabled "
+    "(grayed out) text; if empty, derived from the colors above\0color of secondary / muted text like the page label; "
+    "if empty, derived from the colors above\0background color of a control the mouse is over; if empty, derived from "
+    "the colors above\0color of control borders and separators; if empty, derived from the colors above\0border color "
+    "of a control the mouse is over; if empty, derived from the colors above\0border color of a disabled control; if "
+    "empty, derived from the colors above\0background color of error messages; if empty, derived from the colors "
+    "above\0background color of notification tips; if empty, derived from the colors above\0background color of a "
+    "highlighted notification tip; if empty, derived from the colors above\0text color of a highlighted notification "
+    "tip; if empty, derived from the colors above\0if true, apply the theme colors to Windows controls and window "
+    "areas too",
     false};
 
 static const FieldInfo gTabFileFields[] = {
@@ -2198,6 +2209,8 @@ static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, activeTabBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, inactiveTabBackgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, linkColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, disabledTextColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, darkerTextColor), SettingType::Color, (intptr_t)""},
@@ -2213,22 +2226,25 @@ static const FieldInfo gTheme_1_Fields[] = {
 };
 static const StructInfo gTheme_1_Info = {
     sizeof(Theme),
-    16,
+    18,
     gTheme_1_Fields,
-    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgr"
-    "oundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0ErrorBackgroundColor\0NotificationBackgroundColor\0Notifica"
-    "tionHighlightColor\0NotificationHighlightTextColor\0ColorizeControls",
+    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0ActiveTabBackgroundColor\0InactiveTabBackgroundColor\0Li"
+    "nkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgroundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0Error"
+    "BackgroundColor\0NotificationBackgroundColor\0NotificationHighlightColor\0NotificationHighlightTextColor\0Colorize"
+    "Controls",
     "name of the theme, as shown in the Settings / Theme menu\0color of text in menus, toolbar, tabs and "
     "sidebars\0background color of the window around the document\0background color of toolbar, tabs, sidebars and "
-    "dialogs\0color of clickable links in the UI\0color of disabled (grayed out) text; if empty, derived from the "
-    "colors above\0color of secondary / muted text like the page label; if empty, derived from the colors "
-    "above\0background color of a control the mouse is over; if empty, derived from the colors above\0color of control "
-    "borders and separators; if empty, derived from the colors above\0border color of a control the mouse is over; if "
-    "empty, derived from the colors above\0border color of a disabled control; if empty, derived from the colors "
-    "above\0background color of error messages; if empty, derived from the colors above\0background color of "
-    "notification tips; if empty, derived from the colors above\0background color of a highlighted notification tip; "
-    "if empty, derived from the colors above\0text color of a highlighted notification tip; if empty, derived from the "
-    "colors above\0if true, apply the theme colors to Windows controls and window areas too",
+    "dialogs\0background color of the active tab; if empty, uses ControlBackgroundColor\0background color of inactive "
+    "tabs; if empty, derived from ControlBackgroundColor\0color of clickable links in the UI\0color of disabled "
+    "(grayed out) text; if empty, derived from the colors above\0color of secondary / muted text like the page label; "
+    "if empty, derived from the colors above\0background color of a control the mouse is over; if empty, derived from "
+    "the colors above\0color of control borders and separators; if empty, derived from the colors above\0border color "
+    "of a control the mouse is over; if empty, derived from the colors above\0border color of a disabled control; if "
+    "empty, derived from the colors above\0background color of error messages; if empty, derived from the colors "
+    "above\0background color of notification tips; if empty, derived from the colors above\0background color of a "
+    "highlighted notification tip; if empty, derived from the colors above\0text color of a highlighted notification "
+    "tip; if empty, derived from the colors above\0if true, apply the theme colors to Windows controls and window "
+    "areas too",
     false};
 
 static const FieldInfo gThemesFields[] = {

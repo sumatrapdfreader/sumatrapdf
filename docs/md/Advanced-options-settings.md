@@ -945,6 +945,14 @@ Themes [
     ; background color of toolbar, tabs, sidebars and dialogs
     ControlBackgroundColor = 
 
+    ; background color of the active tab; if empty, uses ControlBackgroundColor
+    ; (introduced in version 3.7)
+    ActiveTabBackgroundColor = 
+
+    ; background color of inactive tabs; if empty, derived from
+    ; ControlBackgroundColor (introduced in version 3.7)
+    InactiveTabBackgroundColor = 
+
     ; color of clickable links in the UI
     LinkColor = 
 

@@ -125,9 +125,10 @@ extern Color gColsRichText[kColRichCount];
 //--- TabsCtrl / TabCtrl
 enum {
     kColTabText,
-    // the selected tab and the strip behind the tabs; the unselected and
-    // hovered shades are derived from it
+    // the active tab and the strip behind the tabs
     kColTabBg,
+    // the inactive tab; its hovered shade is derived from it
+    kColTabInactiveBg,
     kColTabCount,
 };
 extern Color gColsTab[kColTabCount];
