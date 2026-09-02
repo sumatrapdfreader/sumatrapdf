@@ -207,6 +207,10 @@ ShowDocumentFocusIndicator = false
 ; Ctrl+click to edit.") (introduced in version 3.7)
 ShowAnnotationNotification = true
 
+; if true, show the author at the bottom of an annotation tooltip as "Author:
+; <author>" (introduced in version 3.7)
+ShowAnnotationAuthorInTooltip = false
+
 ; if true, show page numbers (labels) right-aligned on bookmark /
 ; table-of-contents entries (introduced in version 3.7)
 ShowTocPageNumbers = true

@@ -1,7 +1,8 @@
-// #5329: annotation hover tooltip should show author and contents together,
-// and FreeText should show the author (the contents are already on the page).
+// #5329: annotation hover tooltips show contents and, when enabled, the author.
+// FreeText only needs the author because its contents are already on the page.
 
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath, assemblePdf } from "./util.ts";
 
@@ -30,9 +31,17 @@ function parseComments(raw: string): string[] {
     .sort();
 }
 
-export async function testit(): Promise<void> {
-  const pdf = tmpPath("issue-5329.pdf");
-  writeFileSync(pdf, makePdf(), "latin1");
+enum AuthorMode {
+  Default,
+  Show,
+}
+
+async function readComments(pdf: string, mode: AuthorMode): Promise<string[]> {
+  const showAuthor = mode === AuthorMode.Show;
+  const appdata = tmpPath(`issue-5329-${showAuthor ? "author" : "default"}`);
+  mkdirSync(appdata, { recursive: true });
+  const settings = showAuthor ? "ShowAnnotationAuthorInTooltip = true\n" : "";
+  writeFileSync(join(appdata, "SumatraPDF-settings.txt"), settings);
 
   const raw = await withControlledSumatra(
     EXE,
@@ -45,15 +54,27 @@ export async function testit(): Promise<void> {
       }
       return text;
     },
-    [pdf],
+    ["-appdata", appdata, pdf],
   );
+  return parseComments(raw);
+}
 
-  const got = parseComments(raw);
-  const want = ["Alice|hello note", "Anonymous", "Bob", "Carol", "just text"].sort();
-  if (got.join("\n") !== want.join("\n")) {
-    throw new Error(`issue-5329: comments=${JSON.stringify(got)} want ${JSON.stringify(want)}`);
+export async function testit(): Promise<void> {
+  const pdf = tmpPath("issue-5329.pdf");
+  writeFileSync(pdf, makePdf(), "latin1");
+
+  const defaults = await readComments(pdf, AuthorMode.Default);
+  const wantDefaults = ["hello note", "just text"].sort();
+  if (defaults.join("\n") !== wantDefaults.join("\n")) {
+    throw new Error(`issue-5329: default comments=${JSON.stringify(defaults)} want ${JSON.stringify(wantDefaults)}`);
   }
-  console.log(`issue-5329: ${got.join("; ")}`);
+
+  const withAuthor = await readComments(pdf, AuthorMode.Show);
+  const wantWithAuthor = ["hello note|Author: Alice", "Author: Bob", "Author: Carol", "just text"].sort();
+  if (withAuthor.join("\n") !== wantWithAuthor.join("\n")) {
+    throw new Error(`issue-5329: author comments=${JSON.stringify(withAuthor)} want ${JSON.stringify(wantWithAuthor)}`);
+  }
+  console.log(`issue-5329: ${withAuthor.join("; ")}`);
 }
 
 if (import.meta.main) {

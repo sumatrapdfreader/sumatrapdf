@@ -135,6 +135,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add `DisableAutoLinks` advanced setting to disable auto-linking of URLs, email addresses, and plain-text DOIs found in PDF text (fixes #5703)
 - add `ShowDocumentFocusIndicator` advanced setting: when true, draws a focus ring around the document when it has keyboard focus (Tab to the page area); off by default (fixes #4644)
 - add `ShowAnnotationNotification` advanced setting: when false, disables the tip shown when hovering an annotation (e.g. "Highlight annotation. Ctrl+click to edit."); on by default (fixes #4501)
+- `ShowAnnotationAuthorInTooltip` optionally adds `Author: <author>` below an annotation tooltip's contents; off by default
 - Bookmarks sidebar shows page numbers (labels) right-aligned on each entry; disable with `ShowTocPageNumbers = false` (fixes #3288)
 - page-info tip shows extra detail for images: comics / image folders list the current image file name and size (both pages when two are visible in facing view); a single image file shows pixel resolution, size, and DPI when it is not the default 96 (fixes #4456)
 - `-new-window` with several files opens each file in its own window. `-new-window-tabs` opens one new window and loads those files as tabs (issue #5044)

@@ -94,6 +94,11 @@ void EngineMupdfSetAllowExternalImages(bool allow) {
     gAllowExternalImages = allow;
 }
 
+static bool gShowAnnotAuthorInTooltip = false;
+void EngineMupdfSetAnnotAuthorInTooltip(AnnotAuthorVisibility visibility) {
+    gShowAnnotAuthorInTooltip = visibility == AnnotAuthorVisibility::Show;
+}
+
 EngineMupdf* AsEngineMupdf(EngineBase* engine) {
     if (!engine || !IsOfKind(engine, kindEngineMupdf)) {
         return nullptr;
@@ -5340,15 +5345,15 @@ static Str WidgetTooltipTemp(fz_context* ctx, pdf_annot* annot) {
     return Str(s);
 }
 
-// Hover tip for an annotation: author and/or contents (issue #5329).
-// FreeText already draws its contents on the page, so the tip is just the author.
+// FreeText already draws its contents on the page, so its tip only has the
+// optional author.
 // must be called inside fz_try
 static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
     fz_rect rect = pdf_bound_annot(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
     Str contents = NormalizeCommentNewlinesTemp(Str(pdf_annot_contents(ctx, annot)));
     Str author;
-    if (pdf_annot_has_author(ctx, annot)) {
+    if (gShowAnnotAuthorInTooltip && pdf_annot_has_author(ctx, annot)) {
         author = Str(pdf_annot_author(ctx, annot));
         if (str::IsEmptyOrWhiteSpace(author)) {
             author = {};
@@ -5358,15 +5363,14 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
         contents = {};
     }
 
-    Str s;
     if (tp == PDF_ANNOT_FREE_TEXT) {
-        s = author ? author : StrL("Anonymous");
-    } else if (author && contents) {
-        s = str::JoinTemp(author, StrL("\n"), contents);
-    } else if (contents) {
-        s = contents;
-    } else {
-        s = author;
+        contents = {};
+    }
+
+    Str s = contents;
+    if (len(author) > 0) {
+        TempStr authorLine = fmt("Author: %s", author);
+        s = contents ? str::JoinTemp(contents, StrL("\n"), authorLine) : authorLine;
     }
     if (!s) {
         return nullptr;
@@ -5383,7 +5387,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
     Str contents = Str(pdf_annot_contents(ctx, annot)); // don't free
     bool isContentsEmpty = !contents;
     Str author;
-    if (pdf_annot_has_author(ctx, annot)) {
+    if (gShowAnnotAuthorInTooltip && pdf_annot_has_author(ctx, annot)) {
         author = Str(pdf_annot_author(ctx, annot));
         if (str::IsEmptyOrWhiteSpace(author)) {
             author = {};

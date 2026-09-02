@@ -420,6 +420,9 @@ bool LoadSettings() {
     // takes effect for PDFs loaded after this (startup, and on settings reload)
     EngineMupdfSetDisableJavaScript(gSettings->disableJavaScript);
     EngineMupdfSetAllowExternalImages(gSettings->allowExternalImages);
+    auto authorVisibility =
+        gSettings->showAnnotationAuthorInTooltip ? AnnotAuthorVisibility::Show : AnnotAuthorVisibility::Hide;
+    EngineMupdfSetAnnotAuthorInTooltip(authorVisibility);
     SetEngineeringDrawingEnhanceMode(gSettings->engineeringDrawingEnhance);
     ExplorerQuickLookApplyFromSettings();
 

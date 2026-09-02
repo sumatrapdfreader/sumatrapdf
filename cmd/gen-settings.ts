@@ -1317,6 +1317,12 @@ const globalPrefs: Field[] = [
     'if true, show a tip when hovering an annotation (e.g. "Highlight annotation. Ctrl+click to edit.")',
   ).ver("3.7"),
   field(
+    "ShowAnnotationAuthorInTooltip",
+    Bool,
+    false,
+    'if true, show the author at the bottom of an annotation tooltip as "Author: <author>"',
+  ).ver("3.7"),
+  field(
     "ShowTocPageNumbers",
     Bool,
     true,
@@ -1842,6 +1848,7 @@ const globalPrefsLayout = [
   "MouseWheelTurnsPage",
   "ShowDocumentFocusIndicator",
   "ShowAnnotationNotification",
+  "ShowAnnotationAuthorInTooltip",
   "ShowTocPageNumbers",
   "ShowStartPage",
   "ScrollbarInSinglePage",

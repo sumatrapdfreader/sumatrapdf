@@ -170,6 +170,11 @@ void EngineMupdfGetFormFieldHighlightRects(EngineBase*, int pageNo, Annotation* 
 void EngineMupdfSetDisableJavaScript(bool disable);
 float EngineMupdfSetEbookLayoutAspect(float dyOverDx);
 void EngineMupdfSetAllowExternalImages(bool allow);
+enum class AnnotAuthorVisibility {
+    Hide,
+    Show
+};
+void EngineMupdfSetAnnotAuthorInTooltip(AnnotAuthorVisibility);
 void EngineMupdfToggleCadEnhance(EngineBase* engine);
 bool EngineMupdfCadEnhanceActive(EngineBase* engine);
 void EngineMupdfInvalidateDarkMode(EngineBase* engine);
