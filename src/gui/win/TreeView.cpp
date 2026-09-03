@@ -46,6 +46,10 @@ HWND TreeView::Create(const CreateArgs& args) {
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     cargs.style |= TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
     cargs.style |= TVS_TRACKSELECT | TVS_NOHSCROLL | TVS_INFOTIP;
+    // nothing handles TVN_BEGINDRAG; without this the control runs a modal
+    // drag-detect loop on every button-down, which never ends for a synthetic
+    // (sent) click that has no button-up behind it
+    cargs.style |= TVS_DISABLEDRAGDROP;
     cargs.exStyle = args.exStyle | TVS_EX_DOUBLEBUFFER;
     cargs.isRtl = args.isRtl;
 

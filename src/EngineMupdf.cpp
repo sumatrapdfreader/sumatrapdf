@@ -4877,20 +4877,38 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     return dest;
 }
 
+static bool HasAlnumW(const WStr& ws) {
+    for (int i = 0; i < ws.len; i++) {
+        if (IsCharAlphaNumericW(ws.s[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
 TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment, int depth) {
     if (depth >= 64) {
         return nullptr;
     }
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
+    int siblingNo = 0;
 
     while (outline) {
+        siblingNo++;
         TempStr name;
+        TempWStr nameW;
         if (outline->title) {
             // must convert to Unicode because PdfCleanString() doesn't work on utf8
-            TempWStr nameW = ToWStrTemp(Str(outline->title));
+            nameW = ToWStrTemp(Str(outline->title));
             PdfCleanStringInPlace(nameW);
             name = ToUtf8Temp(nameW);
+        }
+        if (!HasAlnumW(nameW)) {
+            // a label with no letter or digit (e.g. " . " in some epubs) tells
+            // the user nothing; number the item among its siblings instead
+            // (engines have no translations, so a bare number)
+            name = fmt("%d", siblingNo);
         }
 
         // for a chaptered doc, dest resolves only the chapter here (cheap);

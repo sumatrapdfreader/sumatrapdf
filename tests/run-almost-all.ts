@@ -235,6 +235,8 @@ import { testit as issue5946 } from "./issue-5946.ts";
 import { testit as issue6012 } from "./issue-6012.ts";
 import { testit as issue6080 } from "./issue-6080.ts";
 import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
+import { testit as tocTitleFallback } from "./toc-title-fallback.ts";
+import { testit as tocTreeSentClick } from "./toc-tree-sent-click.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -466,6 +468,8 @@ export const tests: NamedTest[] = [
   ["issue-6012", issue6012],
   ["issue-6080", issue6080],
   ["adv-settings-fresh-defaults", advSettingsFreshDefaults],
+  ["toc-title-fallback", tocTitleFallback],
+  ["toc-tree-sent-click", tocTreeSentClick],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
