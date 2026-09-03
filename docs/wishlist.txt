@@ -1,13 +1,3 @@
-A list of random ideas, big and small. In no particular order. Those that are
-marked "risky" are likely to cause disturbance to existing code, so should be
-done at the beginning of the dev cycle. I also estimate the complexity (time to
-implement) as low/med/high
-
--- fullscreen (low)
-
-See if https://stackoverflow.com/questions/2382464/win32-full-screen-and-hiding-taskbar
-has better way of switching to fullscreen
-
 -- text viewer (high)
 
 Important thing: make it work even with gigantic files by limiting how much of
@@ -24,42 +14,10 @@ only load the needed part as the user scrolls through the document.
 
 -- hex viewer (high)
 
--- search for eBook UI (med)
-
--- thumbnails (med)
-
-Many viewers have an option to navigate document via thumbnails.
-
-For perf, we could cache thumbnails as a single, WebP-encoded image + info
-about where a thumbnail for a given page is within the image (similar to
-sprite technique in web dev)
-
--- toolbar improvements (med, risky)
-
-Ditch using toolbar control for the toolbar and use more mui-like approach.
-That would allow us to have overlaid toolbar (shown semi-transparent over the
-content). Also we could add an option to make it vertical. Also an option to
-have it user-configurable (via advanced settings, allow specifying the order
-of controls in the toolbar).
-
-This would also help in unifying full-screen modes (overlaid, auto-hidden
-toolbar is a better match for full-screen mode than the current one).
-
 -- better looking notifications (med)
 
 Visual style of notifications is dated. Use more modern look e.g. inspired by
 Chrome or Android.
-
--- loading errors are not always reported (low)
-
-In some cases we don't show document loading errors (e.g. drag&drop a file that
-fails to load). We need to show them as notifications
-
--- more detail when page doesn't render
-
-I think we sometimes get bug reports when PDF page doesn't render because of
-running out of memory. It would be good to show the exact cause of page
-rendering failure instead of generic "failed to render" message.
 
 -- faster re-layout for eBooks (med, risky)
 
