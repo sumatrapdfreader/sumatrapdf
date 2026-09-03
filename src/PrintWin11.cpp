@@ -500,6 +500,7 @@ class PrintDocumentSource final
     }
 
     void UseAllPages() {
+        EnsureFullLayout(engine);
         VecClear(pages);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
             VecAppend(pages, pageNo);
@@ -528,6 +529,7 @@ class PrintDocumentSource final
     }
 
     void ReadPageRanges(IInspectable* options) {
+        EnsureFullLayout(engine);
         VecClear(pages);
         ComPtr<Printing::IPrintTaskOptions2> options2;
         HRESULT hr = options->QueryInterface(IID_PPV_ARGS(&options2));

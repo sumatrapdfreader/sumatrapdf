@@ -76,6 +76,10 @@ export enum ControlCommand {
   TestRenderViewPrint = 79,
   TestReadAloudPlaybackBar = 80,
   TestRotatedTextMouseDrag = 81,
+  TestChapterInfo = 82,
+  TestGoToLocation = 83,
+  TestTocSidebarNav = 84,
+  TestSelectionSurvivesRenumber = 85,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -93,6 +97,15 @@ export type HomeSelection = {
   listView: boolean;
   listIcon: number[];
   raw: string;
+};
+
+export type ChapterInfo = {
+  chapter: number;
+  page: number;
+  chapterCount: number;
+  chapterPageCount: number;
+  pageCount: number;
+  hasChapters: boolean;
 };
 
 export type LayoutRect = { x: number; y: number; dx: number; dy: number };
@@ -498,6 +511,76 @@ export class ControlClient {
     if (code !== 0) {
       throw new Error(`SetNotificationsEnabled failed: ${String(res[1] ?? code)}`);
     }
+  }
+
+  // Current chapter/page and chapter table state of the front window's doc.
+  async chapterInfo(): Promise<ChapterInfo> {
+    const res = await this.request(ControlCommand.TestChapterInfo);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      throw new Error(`TestChapterInfo failed: ${raw || code}`);
+    }
+    const m =
+      /^OK chapter=(\d+) page=(\d+) chapterCount=(\d+) chapterPageCount=(\d+) pageCount=(\d+) hasChapters=(\d)$/.exec(
+        raw,
+      );
+    if (!m) {
+      throw new Error(`chapterInfo: could not parse '${raw}'`);
+    }
+    return {
+      chapter: parseInt(m[1], 10),
+      page: parseInt(m[2], 10),
+      chapterCount: parseInt(m[3], 10),
+      chapterPageCount: parseInt(m[4], 10),
+      pageCount: parseInt(m[5], 10),
+      hasChapters: m[6] === "1",
+    };
+  }
+
+  // Navigate to {chapter, page} (clamped) and report where it landed.
+  async goToLocation(chapter: number, page: number): Promise<{ chapter: number; page: number }> {
+    const res = await this.request(ControlCommand.TestGoToLocation, [chapter, page]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      throw new Error(`TestGoToLocation failed: ${raw || code}`);
+    }
+    const m = /^OK chapter=(\d+) page=(\d+)$/.exec(raw);
+    if (!m) {
+      throw new Error(`goToLocation: could not parse '${raw}'`);
+    }
+    return { chapter: parseInt(m[1], 10), page: parseInt(m[2], 10) };
+  }
+
+  // Starts navigating to the destNo-th (1-based) TOC destination via the same
+  // deferred path (GoToTocItem -> NewGoToTocLinkData -> SnapshotDestForDeferredNav
+  // -> uitask) a real Bookmarks-sidebar click uses. Returns once the uitask is
+  // queued, not once it has run -- poll chapterInfo()/CurrentPageNo afterward.
+  async tocSidebarNav(destNo: number): Promise<void> {
+    const res = await this.request(ControlCommand.TestTocSidebarNav, [destNo]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      throw new Error(`TestTocSidebarNav failed: ${raw || code}`);
+    }
+  }
+
+  // Creates a rectangular selection and a glyph-level text selection on page
+  // 1, lays out `layoutChapter` (triggering SyncWithEngineLayout /
+  // PagesRenumbered), and reports whether both survived instead of being
+  // wiped (see C9 in the location-chapters plan).
+  async selectionSurvivesRenumber(
+    layoutChapter: number,
+  ): Promise<{ survived: boolean; pageNo: number; textSurvived: boolean }> {
+    const res = await this.request(ControlCommand.TestSelectionSurvivesRenumber, [layoutChapter]);
+    const raw = String(res[1] ?? "").trim();
+    const m = /^OK survived=1 pageNo=(-?\d+)$/m.exec(raw);
+    const textSurvived = /^textSurvived=1 /m.test(raw);
+    if (m) {
+      return { survived: true, pageNo: parseInt(m[1], 10), textSurvived };
+    }
+    return { survived: false, pageNo: -1, textSurvived };
   }
 
   close(): void {

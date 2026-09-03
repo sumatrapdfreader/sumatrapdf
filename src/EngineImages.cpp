@@ -1918,7 +1918,7 @@ static bool LoadImageDir(EngineImageDir* e, Str dir) {
 }
 
 TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
-    if (pageNo < 1 || PageCount() < pageNo) {
+    if (pageNo < 1 || pageCount < pageNo) {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 

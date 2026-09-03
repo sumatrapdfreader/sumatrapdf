@@ -654,7 +654,11 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
         md->HandleLink(dest, nullptr);
         return;
     }
-    int pageNo = PageDestGetPageNo(dest);
+    Location loc = win->ctrl->ResolveDest(dest);
+    if (!loc.IsValid()) {
+        return;
+    }
+    int pageNo = win->ctrl->PageNoFromLocation(loc);
     if (!win->ctrl->ValidPageNo(pageNo)) {
         return;
     }

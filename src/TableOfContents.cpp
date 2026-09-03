@@ -156,6 +156,7 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
         copy->zoom = PageDestGetZoom(dest);
         copy->value = str::Dup(PageDestGetValue(dest));
         copy->name = str::Dup(PageDestGetName(dest));
+        copy->loc = dest->loc;
         return copy;
     }
     // mupdf, djvu, none → page navigation snapshot
@@ -184,7 +185,9 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
         }
         zoom = dest->GetZoom2();
     }
-    return NewSimpleDest(pageNo, r, zoom);
+    IPageDestination* copy = NewSimpleDest(pageNo, r, zoom);
+    copy->loc = dest->loc;
+    return copy;
 }
 
 #if IS_DEBUG
@@ -262,10 +265,23 @@ static GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bo
     }
 
     int pageNo = tocItem->pageNo;
-    IPageDestination* dest = SnapshotDestForDeferredNav(tocItem->GetPageDestination(), pageNo);
+    IPageDestination* origDest = tocItem->GetPageDestination();
+    if (origDest && pageNo < 1) {
+        // chaptered docs: pageNo stays -1 until the target chapter lays out.
+        // Resolve now, on the UI thread, so ResolveDest can cache the real
+        // page/loc on origDest before it gets snapshotted below -- otherwise
+        // SnapshotDestForDeferredNav has nothing but pageNo == -1 to go on
+        // and drops the destination.
+        Location loc = ctrl->ResolveDest(origDest);
+        if (loc.IsValid()) {
+            pageNo = ctrl->PageNoFromLocation(loc);
+        }
+    }
+    IPageDestination* dest = SnapshotDestForDeferredNav(origDest, pageNo);
 
-    // drop page-navigation destinations that still have no valid page
-    if (dest && DestNeedsValidPageNo(dest) && PageDestGetPageNo(dest) < 1) {
+    // drop page-navigation destinations that still have no valid page and no
+    // chapter to resolve lazily (see DocController::ResolveDest)
+    if (dest && DestNeedsValidPageNo(dest) && PageDestGetPageNo(dest) < 1 && dest->loc.chapter < 1) {
         logf("NewGoToTocLinkData: skip dest with pageNo=%d\n", PageDestGetPageNo(dest));
         delete dest;
         dest = nullptr;
@@ -368,7 +384,8 @@ static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
     TocItem* tocItem = (TocItem*)ti;
     bool validPage = (tocItem->pageNo > 0);
     bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
-    if (validPage || (allowExternal || isScroll)) {
+    bool hasChapterDest = tocItem->dest && tocItem->dest->loc.chapter >= 1;
+    if (validPage || allowExternal || isScroll || hasChapterDest) {
         // delay changing the page until the tree messages have been handled
         auto* data = NewGoToTocLinkData(win, tocItem, false);
         if (!data) {
@@ -462,6 +479,48 @@ static TocItem* TreeItemForPageNo(TreeView* treeView, int pageNo) {
         return nullptr;
     }
     return d.bestMatch;
+}
+
+struct VisitorForChapterData {
+    int chapter = -1;
+    int pageNo = 0;
+    TocItem* match = nullptr;
+    int matchPageNo = 0;
+};
+
+static void visitTreeForChapter(VisitorForChapterData* d, TreeItemVisitorData* vd) {
+    auto* tocItem = (TocItem*)vd->item;
+    if (!tocItem || tocItem->loc.chapter != d->chapter) {
+        return;
+    }
+    if (!d->match) {
+        d->match = tocItem;
+        d->matchPageNo = tocItem->pageNo;
+    }
+    int page = tocItem->pageNo;
+    if (page >= 1 && page <= d->pageNo && page >= d->matchPageNo) {
+        d->match = tocItem;
+        d->matchPageNo = page;
+        if (page == d->pageNo) {
+            vd->stopTraversal = true;
+        }
+    }
+}
+
+// closest item (in tree order) whose loc.chapter matches, preferring an exact
+// pageNo match; chaptered docs need chapter-first matching because unresolved
+// items all share pageNo == -1, so TreeItemForPageNo can't tell them apart
+static TocItem* TreeItemForChapter(TreeView* treeView, int chapter, int pageNo) {
+    TreeModel* tm = treeView->treeModel;
+    if (!tm || chapter < 1) {
+        return nullptr;
+    }
+    VisitorForChapterData d;
+    d.chapter = chapter;
+    d.pageNo = pageNo;
+    auto fn = MkFunc1<VisitorForChapterData, TreeItemVisitorData*>(visitTreeForChapter, &d);
+    VisitTreeModelItems(tm, fn);
+    return d.match;
 }
 
 struct CollectSamePageData {
@@ -577,7 +636,13 @@ void UpdateTocSelection(MainWindow* win, int currPageNo) {
         return;
     }
 
-    auto* item = TreeItemForPageNo(treeView, currPageNo);
+    TocItem* item = nullptr;
+    if (win->ctrl && win->ctrl->HasChapters()) {
+        item = TreeItemForChapter(treeView, win->ctrl->CurrentLocation().chapter, currPageNo);
+    }
+    if (!item) {
+        item = TreeItemForPageNo(treeView, currPageNo);
+    }
     if (win->tocKeepSelection) {
         // the tree selection is deliberately left alone: the user clicked a
         // bookmark and GoToTocLink set tocKeepSelection so the page change
@@ -612,7 +677,14 @@ void ExpandTocToCurrentPage(MainWindow* win) {
     }
     TreeView* treeView = win->tocTreeView;
     int currPageNo = win->ctrl->CurrentPageNo();
-    TocItem* item = TreeItemForPageNo(treeView, currPageNo);
+    TocItem* item = nullptr;
+    if (win->ctrl->HasChapters()) {
+        // unresolved chaptered items keep pageNo == -1; match by chapter first
+        item = TreeItemForChapter(treeView, win->ctrl->CurrentLocation().chapter, currPageNo);
+    }
+    if (!item) {
+        item = TreeItemForPageNo(treeView, currPageNo);
+    }
     if (!item) {
         return;
     }
@@ -992,7 +1064,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
     if (pageNo > 0) {
         TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
-        bool isBookmarked = IsPageInFavorites(filePath, pageNo);
+        bool isBookmarked = IsPageInFavorites(filePath, pageNo, win->ctrl);
         if (isBookmarked) {
             MenuRemove(popup, CmdFavoriteAdd);
 
@@ -1043,7 +1115,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             AddFavoriteFromToc(win, dti);
             break;
         case CmdFavoriteDel:
-            DelFavorite(filePath, pageNo);
+            DelFavorite(filePath, pageNo, win->ctrl);
             break;
         case CmdSaveEmbeddedFile: {
             SaveEmbeddedFile(tab, path, fileName);

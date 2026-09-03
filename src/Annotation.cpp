@@ -158,12 +158,8 @@ static bool IsAnnotationInEngine(EngineMupdf* e, Annotation* annot) {
         return false;
     }
     int pageNo = annot->pageNo;
-    int pageIdx = pageNo - 1;
-    if (pageIdx < 0 || pageIdx >= len(e->pages)) {
-        return false;
-    }
     ScopedRecursiveMutex scope(&e->pagesLock);
-    FzPageInfo* pageInfo = e->pages[pageIdx];
+    FzPageInfo* pageInfo = e->PageInfoByPageNo(pageNo);
     if (!pageInfo) {
         return false;
     }

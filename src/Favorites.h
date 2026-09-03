@@ -19,13 +19,16 @@ per-file basis in FileHistory.
 */
 
 struct WindowTab;
+struct DocController;
 
 bool HasFavorites();
 void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn);
 void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
 void AddFavoriteForPage(MainWindow* win, int pageNo);
 void AddFavoriteForCurrentPage(MainWindow* win);
-void DelFavorite(Str filePath, int pageNo);
+// ctrl, when it's the DocController for filePath, lets a chaptered doc's
+// favorite be matched by (chapter, page) instead of the stale flat pageNo
+void DelFavorite(Str filePath, int pageNo, DocController* ctrl = nullptr);
 void RebuildFavMenu(MainWindow* win, HMENU menu);
 void CreateFavorites(MainWindow* win);
 void ToggleFavorites(MainWindow* win); // sidebar
@@ -36,7 +39,7 @@ void LayoutFavoritesContainer(MainWindow* win);
 void GoToFavoriteByMenuId(MainWindow* win, int cmdId);
 void UpdateFavoritesTree(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();
-bool IsPageInFavorites(Str filePath, int pageNo);
+bool IsPageInFavorites(Str filePath, int pageNo, DocController* ctrl = nullptr);
 
 void GoToNextFavorite(MainWindow* win, bool forward);
 

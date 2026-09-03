@@ -60,6 +60,8 @@ struct BitmapCacheEntry {
     float zoom = 0.f;
     TilePosition tile;
     int cacheIdx = -1; // index within RenderCache.cache
+    // chapter-aware equivalent of pageNo, for RekeyForLayoutChange()
+    Location loc;
 
     // owned by the BitmapCacheEntry
     Pixmap* bitmap = nullptr;
@@ -89,6 +91,8 @@ struct PageRenderRequest {
     int rotation = 0;
     float zoom = 0.f;
     TilePosition tile;
+    // chapter-aware equivalent of pageNo, for RekeyForLayoutChange()
+    Location loc;
 
     RectF pageRect; // calculated from TilePosition
     bool abort = false;
@@ -222,6 +226,7 @@ struct RenderCache {
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm);
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);
+    void RekeyForLayoutChange(DisplayModel* dm);
     void Invalidate(DisplayModel* dm, int pageNo, RectF rect);
     int Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue);
 

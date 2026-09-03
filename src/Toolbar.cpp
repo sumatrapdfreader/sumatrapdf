@@ -249,6 +249,10 @@ VirtCtrl* ToolbarItemFromPoint(MainWindow* win, Point pt) {
         tb->pageTotal->BoundsInWindow().Contains(pt)) {
         return tb->pageTotal;
     }
+    if (tb->chapterTotal && tb->chapterTotal->GetVisibility() == Visibility::Visible &&
+        tb->chapterTotal->BoundsInWindow().Contains(pt)) {
+        return tb->chapterTotal;
+    }
     return nullptr;
 }
 
@@ -312,6 +316,14 @@ static bool SetToolbarButtonHiddenByIdx(MainWindow* win, int idx, bool isHidden)
         }
         if (tb->pageTotal) {
             tb->pageTotal->SetVisibility(want);
+        }
+        // chapter widgets stay collapsed unless the doc has chapters;
+        // UpdateToolbarPageText() narrows this further right after
+        if (win->chapterEdit) {
+            win->chapterEdit->SetVisibility(want);
+        }
+        if (tb->chapterTotal) {
+            tb->chapterTotal->SetVisibility(want);
         }
     }
     return true;
@@ -1038,7 +1050,8 @@ void ShowOrHideToolbar(MainWindow* win) {
     }
     if (!show && !overlay) {
         // Move the focus out of the toolbar
-        if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused())) {
+        if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused()) ||
+            (win->chapterEdit && win->chapterEdit->IsFocused())) {
             ToolbarFocusFrame(win);
         }
         if (win->hwndToolbar) {
@@ -1102,12 +1115,38 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     if (!tb->pageTotal) {
         return;
     }
+
+    bool hasChapters = win->ctrl && win->ctrl->HasChapters();
     if (tb->pageLabel) {
-        tb->pageLabel->SetText(_TRA("Page:"));
+        tb->pageLabel->SetText(hasChapters ? _TRA("Chapter:") : _TRA("Page:"));
     }
+    Visibility chapterVis = hasChapters ? Visibility::Visible : Visibility::Collapse;
+    bool chapterVisChanged = false;
+    if (win->chapterEdit && win->chapterEdit->GetVisibility() != chapterVis) {
+        win->chapterEdit->SetVisibility(chapterVis);
+        chapterVisChanged = true;
+    }
+    if (tb->chapterTotal && tb->chapterTotal->GetVisibility() != chapterVis) {
+        tb->chapterTotal->SetVisibility(chapterVis);
+        chapterVisChanged = true;
+    }
+    if (tb->pageLabel2 && tb->pageLabel2->GetVisibility() != chapterVis) {
+        tb->pageLabel2->SetVisibility(chapterVis);
+        chapterVisChanged = true;
+    }
+    if (chapterVisChanged) {
+        host->Relayout();
+    }
+
     TempStr txt;
     if (-1 == pageCount || !pageCount) {
         txt = StrL(" ");
+    } else if (hasChapters) {
+        int chapter = win->ctrl->CurrentLocation().chapter;
+        txt = fmt(" / %d", win->ctrl->ChapterPageCount(chapter));
+        if (tb->chapterTotal) {
+            tb->chapterTotal->SetText(fmt(" / %d", win->ctrl->ChapterCount()));
+        }
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
         txt = fmt(" / %d", pageCount);
     } else {
@@ -1287,11 +1326,20 @@ static void RefreshToolbarIcons(MainWindow* win) {
     if (tb->pageLabel) {
         tb->pageLabel->SetColor(kColText, TbTextColor());
     }
+    if (tb->pageLabel2) {
+        tb->pageLabel2->SetColor(kColText, TbTextColor());
+    }
     if (tb->pageTotal) {
         tb->pageTotal->SetColor(kColText, TbTextColor());
     }
     if (win->pageEdit) {
         win->pageEdit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
+    }
+    if (tb->chapterTotal) {
+        tb->chapterTotal->SetColor(kColText, TbTextColor());
+    }
+    if (win->chapterEdit) {
+        win->chapterEdit->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());
     }
 }
 
@@ -2235,8 +2283,11 @@ static void BuildToolbarLayout(MainWindow* win) {
     VecReset(tb->annotationItems);
     tb->annotationRow = nullptr;
     tb->pageLabel = nullptr;
+    tb->pageLabel2 = nullptr;
     tb->pageTotal = nullptr;
+    tb->chapterTotal = nullptr;
     win->pageEdit = nullptr;
+    win->chapterEdit = nullptr;
 
     int cyPad = ToolbarCyPad();
     int iconPad = DpiScale(6);
@@ -2264,6 +2315,31 @@ static void BuildToolbarLayout(MainWindow* win) {
             label->id = PageInfoId;
             tb->pageLabel = label;
             box->AddChild(label);
+
+            // chapter box: [chapterEdit] / N, hidden unless HasChapters()
+            Edit* chapterEdit = ToolbarCreateChapterEdit(win, tb->platformFont, tb->iconSize);
+            chapterEdit->SetVisibility(Visibility::Collapse);
+            win->chapterEdit = chapterEdit;
+            box->AddChild(chapterEdit);
+
+            auto* chapterTotal = new VirtText(StrL(" "), tb->platformFont);
+            chapterTotal->isRtl = box->rtl;
+            chapterTotal->SetColor(kColText, fg);
+            chapterTotal->padding = {0, DpiScale(4), 0, pageGap};
+            chapterTotal->id = PageInfoId;
+            chapterTotal->SetVisibility(Visibility::Collapse);
+            tb->chapterTotal = chapterTotal;
+            box->AddChild(chapterTotal);
+
+            // second "Page:" label, shown before pageEdit only for HasChapters() docs
+            auto* label2 = new VirtText(_TRA("Page:"), tb->platformFont);
+            label2->isRtl = box->rtl;
+            label2->SetColor(kColText, fg);
+            label2->padding = {0, pageGap, 0, DpiScale(4)};
+            label2->id = PageInfoId;
+            label2->SetVisibility(Visibility::Collapse);
+            tb->pageLabel2 = label2;
+            box->AddChild(label2);
 
             Edit* pageEdit = ToolbarCreatePageEdit(win, tb->platformFont, tb->iconSize);
             win->pageEdit = pageEdit;
@@ -2426,8 +2502,16 @@ void CreateToolbar(MainWindow* win) {
     DocController* ctrl = win->ctrl;
     UpdateToolbarPageText(win, ctrl ? ctrl->PageCount() : -1);
     if (ctrl && win->pageEdit) {
-        TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
-        win->pageEdit->SetText(label);
+        if (ctrl->HasChapters()) {
+            Location cur = ctrl->CurrentLocation();
+            win->pageEdit->SetText(fmt("%d", cur.page));
+            if (win->chapterEdit) {
+                win->chapterEdit->SetText(fmt("%d", cur.chapter));
+            }
+        } else {
+            TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
+            win->pageEdit->SetText(label);
+        }
         EditSetNumbersOnly(win->pageEdit, !ctrl->HasPageLabels());
     }
     UpdateToolbarFindText(win);
@@ -2443,6 +2527,7 @@ void DestroyToolbar(MainWindow* win) {
     HideToolbarHoverDropdown(win);
     DeleteAnnotFilterToolbar(win);
     win->pageEdit = nullptr;
+    win->chapterEdit = nullptr;
     win->toolbarVirt = nullptr;
     win->hwndToolbar = nullptr;
     delete tb->host;

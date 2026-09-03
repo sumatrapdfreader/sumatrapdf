@@ -22,6 +22,7 @@
 #include "SumatraPDF.h"
 #include "EmbeddedResources.h"
 #include "MarkdownToc.h"
+#include "PagePosition.h"
 #include "MarkdownModel.h"
 
 constexpr const char* kMdVirtualHost = "https://sumatrapdf.markdown/";
@@ -927,7 +928,7 @@ void MarkdownModel::GetDisplayState(FileState* fs) {
     fs->useDefaultState = !gSettings->rememberStatePerDocument;
     str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
     ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
-    fs->pageNo = CurrentPageNo();
+    str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
     SaveHtmlScrollPos();
     fs->scrollPos = htmlScrollPos;
 }

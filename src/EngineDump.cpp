@@ -332,6 +332,8 @@ static void DumpThumbnail(EngineBase* engine) {
 }
 
 __unused static void DumpData(EngineBase* engine, bool fullDump) {
+    EnsureFullLayout(engine);
+    ResolveTocPages(engine, engine->GetToc());
     Out1(StrL(kUtf8Bom));
     Out1(StrL("<?xml version=\"1.0\"?>\n"));
     Out1(StrL("<EngineDump>\n"));

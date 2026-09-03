@@ -122,6 +122,8 @@ EXPORTS
 
 	fz_count_chapters
 
+	fz_count_chapter_pages
+
 	fz_transform_page
 
 	fz_load_chapter_page

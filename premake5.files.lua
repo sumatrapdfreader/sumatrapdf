@@ -608,6 +608,7 @@ function sumatrapdf_files()
     "InverseSearchDialog.*",
     "SettingsDialog.*",
     "AppSettings.*",
+    "PagePosition.*",
     "AppTools.*",
     "Canvas.*",
     "AnnotPlacement.*",
@@ -642,7 +643,7 @@ function sumatrapdf_files()
     "PageRenderPolicy.*",
     "PageRenderService.*",
     "ReaderModel.*",
-    "DocController.h",
+    "DocController.*",
     "DocProperties.*",
     "EditAnnotations.*",
     "EngineDump.cpp",
@@ -891,6 +892,7 @@ function engines_files()
   files_in_dir("src", {
     "Annotation.*",
     "PdfSign.*",
+    "ChapterTable.*",
     "ChmFile.*",
     "DocProperties.*",
     "EbookDoc.*",
@@ -1316,6 +1318,7 @@ function test_util_files()
     "Dpi_win.cpp",
     "Layout.h",
     "Layout.cpp",
+    "UIModels.h",
   })
   files_in_dir("src", {
     --"AppTools.*",
@@ -1336,6 +1339,10 @@ function test_util_files()
     "SumatraLog.*",
     "SumatraUnitTests.cpp",
     "SimpleLog_ut.cpp",
+    "ChapterTable.*",
+    "ChapterTable_ut.cpp",
+    "PagePosition.*",
+    "PagePosition_ut.cpp",
     "PdfDarkMode.h",
     "PdfDarkModeImageRules.cpp",
     "PdfDarkModeOklab.cpp",
@@ -1351,6 +1358,8 @@ function test_engines_files()
   files {
     "src/base/GuessFileType.cpp",
     "src/AvifReader.cpp",
+    "src/ChapterTable.cpp",
+    "src/ChapterTable.h",
     "src/DocProperties.cpp",
     "src/DocProperties.h",
     "src/EbookDoc.cpp",
@@ -1449,6 +1458,7 @@ function pdf_preview_files()
     "Archive.*",
   })
   files_in_dir("src", {
+    "ChapterTable.*",
     "ChmFile.*",
     "CrashHandlerNoOp.cpp",
     "DocProperties.*",
@@ -1499,6 +1509,7 @@ function search_filter_files()
     "Archive.*",
   })
   files_in_dir("src", {
+    "ChapterTable.*",
     "CrashHandlerNoOp.cpp",
     "DocProperties.*",
     "EbookDoc.*",

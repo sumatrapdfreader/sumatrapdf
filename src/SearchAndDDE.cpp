@@ -1397,6 +1397,10 @@ static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool match
     if (!engine) {
         return;
     }
+    // CountThread runs on a worker thread and can't touch DisplayModel; do the
+    // layout and the resync (and pageAllowed's sizing below, via
+    // ApplyFindPageRange -> dm->PageCount()) it needs here, before it starts
+    EnsureFullLayout(dm);
     win->findCountValid = false;
     // seed the progress status with the page the scan starts from, so it shows a
     // page right away instead of going blank until the first progress tick;
@@ -1716,6 +1720,9 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
     if (!dm || !dm->textSearch) {
         return;
     }
+    // FindThread runs on a worker thread and can't touch DisplayModel; do
+    // the layout and the resync it needs here, before it starts
+    EnsureFullLayout(dm);
     RememberFindQuery(text);
     if (ApplyFindPageRange(win)) {
         wasModified = true;

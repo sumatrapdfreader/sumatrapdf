@@ -849,6 +849,7 @@ const annotations: Field[] = [
 const favorite: Field[] = [
   field("Name", Str, null, "name of this favorite as shown in the menu"),
   field("PageNo", Int, 0, "number of the bookmarked page"),
+  field("Bookmark", Str, null, "engine bookmark for documents with chapters; PageNo is only a hint").ver("3.7"),
   field(
     "PageLabel",
     Str,
@@ -973,7 +974,12 @@ const fileSettings: Field[] = [
   compactStruct("ScrollPos", scrollPos, "how far this document has been scrolled (in x and y direction)").structName(
     "PointF",
   ),
-  field("PageNo", Int, 1, "number of the last read page"),
+  field(
+    "PageNo",
+    Str,
+    "1",
+    "number of the last read page, or `bm:<bookmark>` for documents with chapters (see PagePosition.cpp)",
+  ),
   field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit height, fit content"),
   field("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
   field(
@@ -1064,7 +1070,12 @@ const tabState: Field[] = [
     "layout of pages in this tab. valid values: automatic, single page, facing, " +
       "book view, continuous, continuous facing, continuous book view",
   ),
-  field("PageNo", Int, 1, "number of the last read page"),
+  field(
+    "PageNo",
+    Str,
+    "1",
+    "number of the last read page, or `bm:<bookmark>` for documents with chapters (see PagePosition.cpp)",
+  ),
   field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit height, fit content"),
   field("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
   compactStruct("ScrollPos", scrollPos, "how far this document has been scrolled (in x and y direction)").structName(

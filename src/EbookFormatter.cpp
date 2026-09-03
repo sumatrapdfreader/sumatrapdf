@@ -21,9 +21,10 @@
 
 /* Mobi-specific formatting methods */
 
-MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc) : HtmlFormatter(args), doc(doc) {
+MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc, MobiCoverImage coverImage)
+    : HtmlFormatter(args), doc(doc) {
     bool fromBeginning = (0 == args->reparseIdx);
-    if (!doc || !fromBeginning) {
+    if (!doc || !fromBeginning || coverImage != MobiCoverImage::Show) {
         return;
     }
 

@@ -13,6 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\AvifReader.h" />
+    <ClInclude Include="..\src\ChapterTable.h" />
     <ClInclude Include="..\src\ChmFile.h" />
     <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\EbookDoc.h" />
@@ -50,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\AvifReader.cpp" />
+    <ClCompile Include="..\src\ChapterTable.cpp" />
     <ClCompile Include="..\src\ChmFile.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />

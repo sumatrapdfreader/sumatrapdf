@@ -19,6 +19,7 @@
 #include "ChmFile.h"
 #include "AppSettings.h"
 #include "Theme.h"
+#include "PagePosition.h"
 #include "ChmModel.h"
 
 static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
@@ -927,7 +928,7 @@ void ChmModel::GetDisplayState(FileState* fs) {
     str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
     ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
 
-    fs->pageNo = CurrentPageNo();
+    str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
     SaveHtmlScrollPos();
     fs->scrollPos = htmlScrollPos;
 }

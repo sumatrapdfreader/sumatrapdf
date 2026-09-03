@@ -153,6 +153,8 @@ static void BenchFile(Str path, Str pagesSpec) {
 
     double timeMs = TimeSinceInMs(t);
     logf("load: %.2f ms\n", timeMs);
+    // benching every page needs the real total, not the lazy-load snapshot
+    EnsureFullLayout(engine);
     int pages = engine->PageCount();
     logf("page count: %d\n", pages);
 
@@ -636,6 +638,9 @@ static bool OpenFile(StressTest* st, Str fileName) {
     st->maxPagesForFile = kStressTestMaxPagesPerFile;
     st->nPagesRenderedThisFile = 0;
     VecClear(st->pagesToRender);
+    DisplayModel* dmChapters = ctrl->AsFixed();
+    // stress test picks pages from the full book, not just what's laid out so far
+    EnsureFullLayout(dmChapters);
     int nPages = ctrl->PageCount();
     if (IsFullRange(st->pageRanges)) {
         Vec<int> allPages;

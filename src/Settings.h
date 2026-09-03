@@ -199,6 +199,8 @@ struct Favorite {
     Str name;
     // number of the bookmarked page
     int pageNo;
+    // engine bookmark for documents with chapters; PageNo is only a hint
+    Str bookmark;
     // label for this page (only present if logical and physical page
     // numbers are not the same)
     Str pageLabel;
@@ -282,8 +284,9 @@ struct FileState {
     // Frequently Read list reflects what's relevant now instead of what
     // used to be opened a lot
     int openCount;
-    // number of the last read page
-    int pageNo;
+    // number of the last read page, or `bm:<bookmark>` for documents with
+    // chapters (see PagePosition.cpp)
+    Str pageNo;
     // how far pages have been rotated as a multiple of 90 degrees
     int rotation;
     // state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4
@@ -333,8 +336,9 @@ struct TabState {
     // facing, book view, continuous, continuous facing, continuous book
     // view
     Str displayMode;
-    // number of the last read page
-    int pageNo;
+    // number of the last read page, or `bm:<bookmark>` for documents with
+    // chapters (see PagePosition.cpp)
+    Str pageNo;
     // zoom (in %) or one of those values: fit page, fit width, fit height,
     // fit content
     Str zoom;
@@ -1708,18 +1712,20 @@ static const StructInfo gPointFInfo = {sizeof(PointF),
 static const FieldInfo gFavoriteFields[] = {
     {offsetof(Favorite, name), SettingType::String, 0},
     {offsetof(Favorite, pageNo), SettingType::Int, 0},
+    {offsetof(Favorite, bookmark), SettingType::String, 0},
     {offsetof(Favorite, pageLabel), SettingType::String, 0},
     {offsetof(Favorite, scrollPos), SettingType::Compact, (intptr_t)&gPointFInfo},
     {offsetof(Favorite, isTemporary), SettingType::Bool, false, true},
 };
 static const StructInfo gFavoriteInfo = {
     sizeof(Favorite),
-    5,
+    6,
     gFavoriteFields,
-    "Name\0PageNo\0PageLabel\0ScrollPos\0IsTemporary",
-    "name of this favorite as shown in the menu\0number of the bookmarked page\0label for this page (only present if "
-    "logical and physical page numbers are not the same)\0position on the page when the favorite was added (document "
-    "units; -1 if not stored)\0session-only favorite; omitted when serializing array elements",
+    "Name\0PageNo\0Bookmark\0PageLabel\0ScrollPos\0IsTemporary",
+    "name of this favorite as shown in the menu\0number of the bookmarked page\0engine bookmark for documents with "
+    "chapters; PageNo is only a hint\0label for this page (only present if logical and physical page numbers are not "
+    "the same)\0position on the page when the favorite was added (document units; -1 if not stored)\0session-only "
+    "favorite; omitted when serializing array elements",
     true};
 
 static const FieldInfo gFileEBookUIFields[] = {
@@ -1784,7 +1790,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, bgCol), SettingType::Color, (intptr_t)""},
     {offsetof(FileState, tabCol), SettingType::Color, (intptr_t)""},
     {offsetof(FileState, openCount), SettingType::Int, 0},
-    {offsetof(FileState, pageNo), SettingType::Int, 1},
+    {offsetof(FileState, pageNo), SettingType::String, (intptr_t)"1"},
     {offsetof(FileState, rotation), SettingType::Int, 0},
     {offsetof(FileState, windowState), SettingType::Int, 0},
     {offsetof(FileState, sidebarDx), SettingType::Int, 0},
@@ -1813,15 +1819,16 @@ static StructInfo gFileStateInfo = {
     "automatic, single page, facing, book view, continuous, continuous facing, continuous book view\0zoom (in %) or "
     "one of those values: fit page, fit width, fit height, fit content\0if given, overrides the background color for "
     "this document\0if given, overrides the tab color for this document\0number of times this document has been opened "
-    "recently\0number of the last read page\0how far pages have been rotated as a multiple of 90 degrees\0state of the "
-    "window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0width of the bookmarks / favorites sidebar "
-    "in screen pixels, as last resized\0data required to restore the last read page in the ebook UI\0how far this "
-    "document has been scrolled (in x and y direction)\0default position (can be on any monitor)\0if true, the "
-    "document is \"pinned\" to the Frequently Read list, so that recently opened documents don't displace it\0if true, "
-    "the file is considered missing and won't be shown in any list\0if true, this document opens with the global "
-    "defaults instead of the values below\0if true, show the table of contents (Bookmarks) sidebar when the document "
-    "has one\0if true, the document is displayed right-to-left in facing and book view modes\0if true, percentage zoom "
-    "scales every page to the width page 1 has at that zoom level",
+    "recently\0number of the last read page, or `bm:<bookmark>` for documents with chapters (see "
+    "PagePosition.cpp)\0how far pages have been rotated as a multiple of 90 degrees\0state of the window. 1 is normal, "
+    "2 is maximized, 3 is fullscreen, 4 is minimized\0width of the bookmarks / favorites sidebar in screen pixels, as "
+    "last resized\0data required to restore the last read page in the ebook UI\0how far this document has been "
+    "scrolled (in x and y direction)\0default position (can be on any monitor)\0if true, the document is \"pinned\" to "
+    "the Frequently Read list, so that recently opened documents don't displace it\0if true, the file is considered "
+    "missing and won't be shown in any list\0if true, this document opens with the global defaults instead of the "
+    "values below\0if true, show the table of contents (Bookmarks) sidebar when the document has one\0if true, the "
+    "document is displayed right-to-left in facing and book view modes\0if true, percentage zoom scales every page to "
+    "the width page 1 has at that zoom level",
     false};
 
 static const FieldInfo gPointF_2_Fields[] = {
@@ -1839,7 +1846,7 @@ static const StructInfo gPointF_2_Info = {
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), SettingType::String, 0},
     {offsetof(TabState, displayMode), SettingType::String, (intptr_t)"automatic"},
-    {offsetof(TabState, pageNo), SettingType::Int, 1},
+    {offsetof(TabState, pageNo), SettingType::String, (intptr_t)"1"},
     {offsetof(TabState, zoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(TabState, rotation), SettingType::Int, 0},
     {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_2_Info},
@@ -1852,10 +1859,11 @@ static const StructInfo gTabStateInfo = {
     gTabStateFields,
     "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState",
     "path of the document\0layout of pages in this tab. valid values: automatic, single page, facing, book view, "
-    "continuous, continuous facing, continuous book view\0number of the last read page\0zoom (in %) or one of those "
-    "values: fit page, fit width, fit height, fit content\0how far pages have been rotated as a multiple of 90 "
-    "degrees\0how far this document has been scrolled (in x and y direction)\0if true, the table of contents was shown "
-    "when the document was closed\0which table of contents items were expanded (see FileStates -> TocState)",
+    "continuous, continuous facing, continuous book view\0number of the last read page, or `bm:<bookmark>` for "
+    "documents with chapters (see PagePosition.cpp)\0zoom (in %) or one of those values: fit page, fit width, fit "
+    "height, fit content\0how far pages have been rotated as a multiple of 90 degrees\0how far this document has been "
+    "scrolled (in x and y direction)\0if true, the table of contents was shown when the document was closed\0which "
+    "table of contents items were expanded (see FileStates -> TocState)",
     false};
 
 static const FieldInfo gRect_4_Fields[] = {

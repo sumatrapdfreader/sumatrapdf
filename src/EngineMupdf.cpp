@@ -376,11 +376,30 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, fl
     return pageNo + 1;
 }
 
-static int FzGetPageNo(fz_context* ctx, fz_document* doc, fz_link* link, fz_outline* outline) {
-    float x, y;
-    Str uri = FzGetURL(link, outline);
-    int pageNo = ResolveLink(ctx, doc, uri, &x, &y);
-    return pageNo;
+// resolves just the chapter a uri targets, without laying it out. epub only
+// lays out a chapter to find a #fragment inside it, so strip the fragment first
+static int ResolveLinkChapterOnly(fz_context* ctx, fz_document* doc, Str uri) {
+    if (!uri) {
+        return -1;
+    }
+    Str path = uri;
+    Str fragment = str::SliceFromChar(path, '#');
+    if (fragment) {
+        path = Str(path.s, (int)(fragment.s - path.s));
+    }
+    fz_link_dest ldest{};
+    fz_var(ldest);
+    fz_try(ctx) {
+        ldest = fz_resolve_link_dest(ctx, doc, CStrTemp(path));
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return -1;
+    }
+    if (ldest.loc.chapter < 0) {
+        return -1;
+    }
+    return ldest.loc.chapter + 1;
 }
 
 // MuPDF html/md link URIs for relative hrefs are built with an empty base file,
@@ -424,10 +443,11 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
     return true;
 }
 
-static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* doc, fz_link* link,
-                                                 fz_outline* outline) {
+static IPageDestination* NewPageDestinationMupdf(EngineMupdf* e, fz_link* link, fz_outline* outline) {
     ReportIf(link && outline);
     ReportIf(!link && !outline);
+    fz_context* ctx = e->Ctx();
+    fz_document* doc = e->_doc;
     Str uri = FzGetURL(link, outline);
     Str maybePath = uri;
 
@@ -480,11 +500,33 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     // must navigate internally, not launch an external file. Only when the URI
     // doesn't resolve internally do we treat a relative href to a supported file
     // as a sibling file to launch (e.g. markdown "[other](other.md)").
-    float x = 0, y = 0, z = 0;
+    //
+    // A chaptered doc only resolves the chapter here (cheap: no layout unless
+    // the uri has a #fragment); the page and on-page coords are resolved lazily
+    // by EngineMupdf::ResolveDest() when the destination is actually navigated to.
+    bool resolvedInternal = false;
+    int pageNo = -1;
+    Location loc{};
     RectF destRect{};
-    int pageNo = ResolveLink(ctx, doc, uri, &x, &y, &z, &destRect);
+    float x = 0, y = 0, z = 0;
+    bool hasResolvedCoords = false;
 
-    if (pageNo <= 0) {
+    if (e->HasChapters()) {
+        int chapter = ResolveLinkChapterOnly(ctx, doc, uri);
+        if (chapter >= 1) {
+            resolvedInternal = true;
+            loc = {chapter, 0};
+        }
+    } else {
+        pageNo = ResolveLink(ctx, doc, uri, &x, &y, &z, &destRect);
+        if (pageNo > 0) {
+            resolvedInternal = true;
+            loc = LocFromPageNo(pageNo);
+            hasResolvedCoords = true;
+        }
+    }
+
+    if (!resolvedInternal) {
         TempStr localPath;
         Str localFragment;
         if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
@@ -497,7 +539,8 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     auto* dest = new PageDestinationMupdf(link, outline);
     dest->rect = FzGetRectF(link);
     dest->pageNo = pageNo;
-    if (pageNo > 0) {
+    dest->loc = loc;
+    if (hasResolvedCoords) {
         dest->destX = destRect.x;
         dest->destY = destRect.y;
         dest->destW = destRect.dx;
@@ -553,9 +596,8 @@ static Str PdfLinkContents(fz_context* ctx, pdf_document* pdfdoc, pdf_page* pdfp
     return res;
 }
 
-static PageElementDestination* NewLinkDestination(int srcPageNo, fz_context* ctx, fz_document* doc, fz_link* link,
-                                                  fz_outline* outline) {
-    auto* dest = NewPageDestinationMupdf(ctx, doc, link, outline);
+static PageElementDestination* NewLinkDestination(int srcPageNo, EngineMupdf* e, fz_link* link, fz_outline* outline) {
+    auto* dest = NewPageDestinationMupdf(e, link, outline);
     if (!dest) {
         return nullptr;
     }
@@ -2040,7 +2082,8 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     free(coords);
 }
 
-static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageInfo*>& images, fz_stext_page* stext) {
+static void FzFindImagePositions(fz_context* ctx, int pageNo, Location loc, Vec<FitzPageImageInfo*>& images,
+                                 fz_stext_page* stext) {
     if (!stext) {
         return;
     }
@@ -2060,6 +2103,7 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageI
             img->image = fz_keep_image(ctx, image);
             auto* pel = new PageElementImage();
             pel->pageNo = pageNo;
+            pel->loc = loc;
             pel->rect = ToRectF(block->bbox);
             pel->imageID = len(images);
             img->imageElement = pel;
@@ -2110,8 +2154,8 @@ static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx
 
 // --- dark-mode image preservation helpers (ported from dengxibo/sumatrapdf-plus) ---
 
-static void FzAppendPageImageRect(fz_context* ctx, Vec<FitzPageImageInfo*>& images, int pageNo, fz_rect bbox,
-                                  fz_image* image) {
+static void FzAppendPageImageRect(fz_context* ctx, Vec<FitzPageImageInfo*>& images, int pageNo, Location loc,
+                                  fz_rect bbox, fz_image* image) {
     if (fz_is_empty_rect(bbox) || fz_is_infinite_rect(bbox)) {
         return;
     }
@@ -2133,6 +2177,7 @@ static void FzAppendPageImageRect(fz_context* ctx, Vec<FitzPageImageInfo*>& imag
     }
     auto* pel = new PageElementImage();
     pel->pageNo = pageNo;
+    pel->loc = loc;
     pel->rect = rf;
     pel->imageID = len(images);
     img->imageElement = pel;
@@ -2148,6 +2193,7 @@ typedef struct {
     fz_device super;
     Vec<FitzPageImageInfo*>* images;
     int pageNo;
+    Location loc;
     int top;
     fz_rect stack[kImgCollectStackSize];
 } fz_image_collect_device;
@@ -2158,7 +2204,7 @@ static void fz_img_collect_add(fz_context* ctx, fz_device* dev, fz_rect rect, bo
         rect = fz_intersect_rect(rect, d->stack[d->top - 1]);
     }
     if (!clip && !fz_is_empty_rect(rect)) {
-        FzAppendPageImageRect(ctx, *d->images, d->pageNo, rect, image);
+        FzAppendPageImageRect(ctx, *d->images, d->pageNo, d->loc, rect, image);
     }
     if (clip && ++d->top <= kImgCollectStackSize) {
         d->stack[d->top - 1] = rect;
@@ -2240,7 +2286,7 @@ static int fz_img_collect_begin_tile(fz_context* ctx, fz_device* dev, fz_rect ar
 
 static void fz_img_collect_end_tile(fz_context* /*ctx*/, fz_device* /*dev*/) {}
 
-static fz_device* FzNewImageCollectDevice(fz_context* ctx, Vec<FitzPageImageInfo*>* images, int pageNo) {
+static fz_device* FzNewImageCollectDevice(fz_context* ctx, Vec<FitzPageImageInfo*>* images, int pageNo, Location loc) {
     fz_image_collect_device* dev = fz_new_derived_device(ctx, fz_image_collect_device);
     dev->super.fill_image = fz_img_collect_fill_image;
     dev->super.fill_image_mask = fz_img_collect_fill_image_mask;
@@ -2258,6 +2304,7 @@ static fz_device* FzNewImageCollectDevice(fz_context* ctx, Vec<FitzPageImageInfo
     dev->super.end_tile = fz_img_collect_end_tile;
     dev->images = images;
     dev->pageNo = pageNo;
+    dev->loc = loc;
     dev->top = 0;
     return &dev->super;
 }
@@ -2267,7 +2314,7 @@ static void FzCollectImagesFromPageContent(fz_context* ctx, int pageNo, FzPageIn
     fz_device* dev = nullptr;
     fz_var(dev);
     fz_try(ctx) {
-        dev = FzNewImageCollectDevice(ctx, &pageInfo->images, pageNo);
+        dev = FzNewImageCollectDevice(ctx, &pageInfo->images, pageNo, pageInfo->loc);
         fz_run_page(ctx, page, dev, fz_identity, cookie);
     }
     fz_always(ctx) {
@@ -3276,33 +3323,36 @@ EngineMupdf::~EngineMupdf() {
         PdfDarkModeEngineCacheFree(ctx, darkModeEngineCache);
         darkModeEngineCache = nullptr;
     }
-    for (FzPageInfo* pi : pages) {
-        DeleteVecMembers(pi->links);
-        DeleteVecMembers(pi->autoLinks);
-        DeleteVecMembers(pi->comments);
-        for (FitzPageImageInfo* img : pi->images) {
-            if (img && img->image) {
-                fz_drop_image(ctx, img->image);
-                img->image = nullptr;
+    for (Vec<FzPageInfo*>* v : chapterPages) {
+        for (FzPageInfo* pi : *v) {
+            DeleteVecMembers(pi->links);
+            DeleteVecMembers(pi->autoLinks);
+            DeleteVecMembers(pi->comments);
+            for (FitzPageImageInfo* img : pi->images) {
+                if (img && img->image) {
+                    fz_drop_image(ctx, img->image);
+                    img->image = nullptr;
+                }
             }
+            DeleteVecMembers(pi->images);
+            DeleteVecMembers(pi->annotations);
+            DeleteVecMembers(pi->widgets);
+            if (pi->retainedLinks) {
+                fz_drop_link(ctx, pi->retainedLinks);
+            }
+            if (pi->displayList) {
+                fz_drop_display_list(ctx, pi->displayList);
+            }
+            PdfDarkModeInvalidatePage(ctx, pi);
+            if (pi->page) {
+                fz_drop_page(ctx, pi->page);
+            }
+            // storage is arena-owned; run the destructor in place so the inner
+            // Vec<>s free their heap-allocated els buffers, then leave the
+            // memory to the arena.
+            pi->~FzPageInfo();
         }
-        DeleteVecMembers(pi->images);
-        DeleteVecMembers(pi->annotations);
-        DeleteVecMembers(pi->widgets);
-        if (pi->retainedLinks) {
-            fz_drop_link(ctx, pi->retainedLinks);
-        }
-        if (pi->displayList) {
-            fz_drop_display_list(ctx, pi->displayList);
-        }
-        PdfDarkModeInvalidatePage(ctx, pi);
-        if (pi->page) {
-            fz_drop_page(ctx, pi->page);
-        }
-        // storage is arena-owned; run the destructor in place so the inner
-        // Vec<>s free their heap-allocated els buffers, then leave the
-        // memory to the arena.
-        pi->~FzPageInfo();
+        delete v;
     }
 
     fz_drop_outline(ctx, outline);
@@ -3333,6 +3383,36 @@ EngineMupdf::~EngineMupdf() {
     pagesLock.Unlock();
 
     DeInitializeEngineMupdf();
+}
+
+// caller holds (or doesn't need) pagesLock; RecursiveMutex makes re-entry safe
+FzPageInfo* EngineMupdf::PageInfoByLoc(Location loc) {
+    ScopedRecursiveMutex scope(&pagesLock);
+    if (loc.chapter < 1 || loc.chapter > len(chapterPages)) {
+        return nullptr;
+    }
+    Vec<FzPageInfo*>* v = chapterPages[loc.chapter - 1];
+    if (!v || loc.page < 1 || loc.page > len(*v)) {
+        return nullptr;
+    }
+    return (*v)[loc.page - 1];
+}
+
+FzPageInfo* EngineMupdf::PageInfoByPageNo(int pageNo) {
+    return PageInfoByLoc(LocationFromPageNo(pageNo));
+}
+
+// runs fn on every FzPageInfo across every chapter, laid out or not
+template <typename Fn>
+static void ForEachPageInfo(EngineMupdf* e, const Fn& fn) {
+    for (Vec<FzPageInfo*>* v : e->chapterPages) {
+        if (!v) {
+            continue;
+        }
+        for (FzPageInfo* pi : *v) {
+            fn(pi);
+        }
+    }
 }
 
 class PasswordCloner : public PasswordUI {
@@ -4340,19 +4420,54 @@ static bool IsLinearizedFile(EngineMupdf* e) {
     return isLinear;
 }
 
+// one vector, pageCount full entries: PDF, XPS and single-chapter reflow docs
+static void InitChapterPagesFlat(EngineMupdf* e) {
+    VecResize(e->chapterPages, 1);
+    auto* v = new Vec<FzPageInfo*>();
+    e->chapterPages[0] = v;
+    for (int i = 0; i < e->pageCount; i++) {
+        auto* pi = New<FzPageInfo>(e->arena);
+        pi->loc = {1, i + 1};
+        pi->pageNo = i + 1;
+        VecAppend(*v, pi);
+    }
+}
+
+// nCh vectors; chapter 1 gets its real n1 pages, every other chapter gets a
+// single placeholder page that LayOutChapter() replaces on demand. Every
+// unlaid chapter counts as 1 page, so flat numbering is n1 pages for chapter
+// 1, then one more per following chapter -- computed directly (not via
+// chapters.PageNoFromLocation()) so creating a placeholder never triggers a
+// chapter layout.
+static void InitChapterPagesLazy(EngineMupdf* e, int nCh, int n1) {
+    VecResize(e->chapterPages, nCh);
+    for (int ch = 1; ch <= nCh; ch++) {
+        auto* v = new Vec<FzPageInfo*>();
+        e->chapterPages[ch - 1] = v;
+        int cnt = (ch == 1) ? n1 : 1;
+        for (int p = 1; p <= cnt; p++) {
+            auto* pi = New<FzPageInfo>(e->arena);
+            pi->loc = {ch, p};
+            pi->pageNo = (ch == 1) ? p : (n1 + (ch - 1));
+            VecAppend(*v, pi);
+        }
+    }
+}
+
 static void FinishNonPDFLoading(EngineMupdf* e) {
     ScopedRecursiveMutex scope(&e->docLock);
 
     auto* ctx = e->Ctx();
-    for (int i = 0; i < e->pageCount; i++) {
+    if (e->isReflowable) {
+        // every page of a reflow layout shares one mediabox; load only page
+        // {1,1} to learn it instead of fz_load_page-ing (and laying out) every
+        // page, which for a chaptered doc would lay out every chapter
         fz_rect mbox{};
-        fz_matrix page_ctm{};
         fz_page* page = nullptr;
         fz_var(page);
         fz_var(mbox);
         fz_try(ctx) {
-            page = nullptr;
-            page = fz_load_page(ctx, e->_doc, i);
+            page = fz_load_chapter_page(ctx, e->_doc, 0, 0);
             mbox = fz_bound_page(ctx, page);
         }
         fz_always(ctx) {
@@ -4363,17 +4478,47 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
             mbox = {};
         }
         if (fz_is_empty_rect(mbox)) {
-            fz_warn(ctx, "cannot find page size for page %d", i);
+            fz_warn(ctx, "cannot find page size for reflowable document");
             mbox.x0 = 0;
             mbox.y0 = 0;
             mbox.x1 = 612;
             mbox.y1 = 792;
         }
-        FzPageInfo* pageInfo = e->pages[i];
-        pageInfo->mediabox = ToRectF(mbox);
-        pageInfo->pageNo = i + 1;
+        RectF mediabox = ToRectF(mbox);
+        e->reflowMediabox = mediabox;
+        ForEachPageInfo(e, [mediabox](FzPageInfo* pi) { pi->mediabox = mediabox; });
+    } else {
+        Vec<FzPageInfo*>* v = e->chapterPages[0];
+        for (int i = 0; i < e->pageCount; i++) {
+            fz_rect mbox{};
+            fz_page* page = nullptr;
+            fz_var(page);
+            fz_var(mbox);
+            fz_try(ctx) {
+                page = fz_load_page(ctx, e->_doc, i);
+                mbox = fz_bound_page(ctx, page);
+            }
+            fz_always(ctx) {
+                fz_drop_page(ctx, page);
+            }
+            fz_catch(ctx) {
+                fz_report_error(ctx);
+                mbox = {};
+            }
+            if (fz_is_empty_rect(mbox)) {
+                fz_warn(ctx, "cannot find page size for page %d", i);
+                mbox.x0 = 0;
+                mbox.y0 = 0;
+                mbox.x1 = 612;
+                mbox.y1 = 792;
+            }
+            FzPageInfo* pageInfo = (*v)[i];
+            pageInfo->mediabox = ToRectF(mbox);
+        }
     }
 
+    // cheap for epub too: NCX/nav is parsed at open, fz_load_outline() just
+    // returns it, no chapter layout involved (verified in epub-doc.c)
     fz_try(ctx) {
         e->outline = fz_load_outline(ctx, e->_doc);
     }
@@ -4444,15 +4589,48 @@ bool EngineMupdf::FinishLoading() {
         }
     }
 
-    pageCount = 0;
-    fz_var(pageCount);
+    // only EPUB reports more than one chapter; every other format keeps the
+    // single flat fz_count_pages() path and behaves exactly as before
+    int nCh = 1;
     fz_try(ctx) {
-        // this call might throw the first time
-        pageCount = fz_count_pages(ctx, _doc);
+        nCh = fz_count_chapters(ctx, _doc);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        pageCount = 0;
+        nCh = 1;
+    }
+    if (nCh < 1) {
+        nCh = 1;
+    }
+
+    pageCount = 0;
+    fz_var(pageCount);
+    bool lazyChapters = nCh > 1;
+    int n1 = 1;
+    if (lazyChapters) {
+        chapters.Init(nCh);
+        fz_try(ctx) {
+            n1 = fz_count_chapter_pages(ctx, _doc, 0);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            n1 = 1;
+        }
+        if (n1 < 1) {
+            n1 = 1;
+        }
+        chapters.SetPageCount(1, n1);
+        SetPageCountFromChapters();
+        logf("EngineMupdf::FinishLoading: %d chapters, chapter 1 has %d pages\n", nCh, n1);
+    } else {
+        fz_try(ctx) {
+            // this call might throw the first time
+            pageCount = fz_count_pages(ctx, _doc);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            pageCount = 0;
+        }
     }
     if (pageCount == 0) {
         fz_warn(ctx, "document has no pages");
@@ -4477,9 +4655,10 @@ bool EngineMupdf::FinishLoading() {
     allowsPrinting = fz_has_permission(ctx, _doc, FZ_PERMISSION_PRINT);
     allowsCopyingText = fz_has_permission(ctx, _doc, FZ_PERMISSION_COPY);
 
-    for (int i = 0; i < pageCount; i++) {
-        auto* pi = New<FzPageInfo>(arena);
-        VecAppend(pages, pi);
+    if (lazyChapters) {
+        InitChapterPagesLazy(this, nCh, n1);
+    } else {
+        InitChapterPagesFlat(this);
     }
     if (!pdfdoc) {
         FinishNonPDFLoading(this);
@@ -4511,9 +4690,8 @@ bool EngineMupdf::FinishLoading() {
             mbox.x1 = 612;
             mbox.y1 = 792;
         }
-        FzPageInfo* pageInfo = pages[pageNo];
+        FzPageInfo* pageInfo = (*chapterPages[0])[pageNo];
         pageInfo->mediabox = ToRectF(mbox);
-        pageInfo->pageNo = pageNo + 1;
     }
 
     fz_try(ctx) {
@@ -4632,6 +4810,60 @@ bool EngineMupdf::FinishLoading() {
     return true;
 }
 
+// Lays out one EPUB chapter on demand; single-chapter docs are laid out at
+// FinishLoading. IsLaidOut() makes repeat/racing calls and a post-reset
+// re-layout idempotent, trusting the freshly counted page total each time.
+int EngineMupdf::LayOutChapter(int chapter) {
+    if (chapters.IsLaidOut(chapter)) {
+        return chapters.PageCount(chapter);
+    }
+
+    auto* ctx = Ctx();
+    int n = 1;
+    {
+        ScopedRecursiveMutex docScope(&docLock);
+        fz_var(n);
+        fz_try(ctx) {
+            n = fz_count_chapter_pages(ctx, _doc, chapter - 1);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            n = 1;
+        }
+    }
+    if (n < 1) {
+        n = 1;
+    }
+
+    {
+        ScopedRecursiveMutex pagesScope(&pagesLock);
+        if (chapter >= 1 && chapter <= len(chapterPages)) {
+            Vec<FzPageInfo*>* v = chapterPages[chapter - 1];
+            RectF mbox = len(*v) > 0 ? (*v)[0]->mediabox : RectF{};
+            while (len(*v) < n) {
+                int p = len(*v) + 1;
+                auto* pi = New<FzPageInfo>(arena);
+                pi->loc = {chapter, p};
+                pi->pageNo = chapters.PageNoFromLocation(pi->loc);
+                pi->mediabox = mbox;
+                VecAppend(*v, pi);
+            }
+            // stale tail from before a re-pagination that shrank this chapter
+            while (len(*v) > n) {
+                FzPageInfo* pi = (*v)[len(*v) - 1];
+                pi->~FzPageInfo();
+                VecRemoveLast(*v);
+            }
+        }
+    }
+
+    chapters.SetPageCount(chapter, n);
+    SetPageCountFromChapters();
+
+    logf("EngineMupdf::LayOutChapter: chapter %d -> %d pages\n", chapter, n);
+    return n;
+}
+
 static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationAttachment;
@@ -4652,7 +4884,6 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
 
-    auto* ctx = Ctx();
     while (outline) {
         TempStr name;
         if (outline->title) {
@@ -4662,20 +4893,21 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
             name = ToUtf8Temp(nameW);
         }
 
-        int pageNo = FzGetPageNo(ctx, _doc, nullptr, outline);
-
+        // for a chaptered doc, dest resolves only the chapter here (cheap);
+        // pageNo stays -1 until ResolveDest() runs the full resolve on click
         IPageDestination* dest = nullptr;
         if (isAttachment) {
             dest = DestFromAttachment(this, outline);
         } else {
-            dest = NewPageDestinationMupdf(ctx, _doc, nullptr, outline);
+            dest = NewPageDestinationMupdf(this, nullptr, outline);
         }
         TocItem* item = NewTocItemWithDestination(parent, name, dest);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         // style (bold / italic / color) is filled in by ApplyOutlineStyles()
         item->fontFlags = 0;
-        item->pageNo = pageNo;
+        item->pageNo = dest ? dest->pageNo : -1;
+        item->loc = dest ? dest->loc : kInvalidLocation;
         ReportIf(!isAttachment && !item->PageNumbersMatch());
 
         if (outline->down) {
@@ -5058,9 +5290,14 @@ bool EngineMupdf::HeadingTocPending() const {
 
 // Kick off heading extraction on a background thread. DisplayModel starts this
 // after load so HasToc()/GetToc() on the UI thread stay cheap (issue #5724
-// still fills the sidebar when the scan finishes).
+// still fills the sidebar when the scan finishes). Skipped for a chaptered doc:
+// it walks every page with fz_load_page(), which would lay out every chapter.
 void EngineMupdf::StartHeadingTocIfNeeded() {
     if (outline) {
+        return;
+    }
+    if (HasChapters()) {
+        headingTocDone = true;
         return;
     }
     {
@@ -5089,8 +5326,8 @@ TocTree* EngineMupdf::GetToc() {
     }
     // No DisplayModel (tests, -dump): generate headings now. The UI path starts
     // StartHeadingTocIfNeeded() instead so opening a long document does not
-    // freeze the message loop.
-    if (!outline && !headingTocStarted) {
+    // freeze the message loop. Skipped for a chaptered doc (see StartHeadingTocIfNeeded).
+    if (!outline && !headingTocStarted && !HasChapters()) {
         headingTocStarted = true;
         int idCounter = 0;
         TocItem* headings = GenerateTocFromHeadings(this, idCounter);
@@ -5280,8 +5517,8 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
 FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
     ScopedRecursiveMutex scope(&pagesLock);
     ReportIf(pageNo < 1 || pageNo > pageCount);
-    FzPageInfo* pageInfo = pages[pageNo - 1];
-    if (!pageInfo->page || !pageInfo->fullyLoaded) {
+    FzPageInfo* pageInfo = PageInfoByPageNo(pageNo);
+    if (!pageInfo || !pageInfo->page || !pageInfo->fullyLoaded) {
         return nullptr;
     }
     return pageInfo;
@@ -5537,7 +5774,7 @@ static fz_stext_page* fz_new_stext_page_from_whole_page(fz_context* ctx, fz_page
 }
 
 // caller must hold pagesLock and renderLock
-static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuick, fz_cookie* cookie) {
+static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQuick, fz_cookie* cookie) {
     auto* ctx = e->Ctx();
     // docLock too: loading a page loads its annotations and has MuPDF generate
     // their appearance streams, reading the same pdf objects the UI thread
@@ -5545,19 +5782,30 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
     // the annotation-loading or heading-TOC thread walks the pages is a
     // use-after-free (and trips mupdf's local_xref_nesting assert).
     ScopedRecursiveMutex docScope(&e->docLock);
-    ReportIf(pageNo < 1 || pageNo > e->pageCount);
-    if (pageNo < 1 || pageNo > e->pageCount) {
-        return nullptr;
-    }
-    int pageIdx = pageNo - 1;
-    FzPageInfo* pageInfo = e->pages[pageIdx];
-    if (!pageInfo) {
+
+    ReportIf(!loc.IsValid());
+    if (!loc.IsValid()) {
         return nullptr;
     }
 
+    // an unlaid chapter has only its placeholder page; lay it out now so
+    // loc.page beyond 1 becomes valid
+    if (!e->IsChapterLaidOut(loc.chapter)) {
+        e->LayOutChapter(loc.chapter);
+    }
+    loc = e->ClampLocation(loc);
+
+    FzPageInfo* pageInfo = e->PageInfoByLoc(loc);
+    ReportIf(!pageInfo);
+    if (!pageInfo) {
+        return nullptr;
+    }
+    int pageNo = e->PageNoFromLocation(loc);
+    pageInfo->pageNo = pageNo;
+
     if (!pageInfo->page) {
         fz_try(ctx) {
-            pageInfo->page = fz_load_page(ctx, e->_doc, pageIdx);
+            pageInfo->page = fz_load_chapter_page(ctx, e->_doc, loc.chapter - 1, loc.page - 1);
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
@@ -5601,8 +5849,6 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
     if (loadQuick || pageInfo->fullyLoaded) {
         return pageInfo;
     }
-
-    ReportIf(pageInfo->pageNo != pageNo);
 
     pageInfo->fullyLoaded = true;
 
@@ -5648,8 +5894,9 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
         }
     }
     while (link) {
-        auto* pel = NewLinkDestination(pageNo, ctx, e->_doc, link, nullptr);
+        auto* pel = NewLinkDestination(pageNo, e, link, nullptr);
         if (pel) {
+            pel->loc = pageInfo->loc;
             // a link that goes somewhere in this document has no URL to show,
             // so show the description the PDF gives it, like other viewers do
             auto* dest = (PageDestinationMupdf*)pel->AsLink();
@@ -5677,7 +5924,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, int pageNo, bool loadQuic
     if (!e->disableAutoLinks) {
         FzLinkifyPageText(pageInfo, stext);
     }
-    FzFindImagePositions(ctx, pageNo, pageInfo->images, stext);
+    FzFindImagePositions(ctx, pageNo, pageInfo->loc, pageInfo->images, stext);
     fz_drop_stext_page(ctx, stext);
     return pageInfo;
 }
@@ -5701,7 +5948,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
         pagesLock.Unlock();
         return nullptr;
     }
-    FzPageInfo* res = GetFzPageInfoLocked(this, pageNo, true, nullptr);
+    FzPageInfo* res = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), true, nullptr);
     docLock.Unlock();
     renderLock.Unlock();
     pagesLock.Unlock();
@@ -5713,19 +5960,43 @@ FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
 // Maybe: when loading fully, cache extracted text in FzPageInfo
 // so that we don't have to re-do fz_new_stext_page_from_page() when doing search
 FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* cookie) {
+    return GetFzPageInfo(LocationFromPageNo(pageNo), loadQuick, cookie);
+}
+
+FzPageInfo* EngineMupdf::GetFzPageInfo(Location loc, bool loadQuick, fz_cookie* cookie) {
     // TODO: minimize time spent under pagesLock when fully loading
     ScopedRecursiveMutex scope(&pagesLock);
     // page-running operations on this specific page run under per-page lock.
     // pagesLock (held above) serializes concurrent fz_load_page on _doc.
     ScopedMutex ctxScope(&renderLock);
-    return GetFzPageInfoLocked(this, pageNo, loadQuick, cookie);
+    return GetFzPageInfoLocked(this, loc, loadQuick, cookie);
 }
 
+// hot path (Transform/CvtToScreen/GetTileRes for every PDF page render), so
+// avoid pagesLock when the answer doesn't need it: a reflow doc shares one
+// mediabox across every page, and a single-chapter (non-reflow) doc's page
+// vector is fully built at load and never grows afterward.
 RectF EngineMupdf::PageMediabox(int pageNo) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
-    if (pageNo < 1 || pageNo > pageCount) return {};
-    FzPageInfo* pi = pages[pageNo - 1];
-    return pi->mediabox;
+    if (pageNo < 1 || pageNo > pageCount) {
+        return {};
+    }
+    if (isReflowable) {
+        return reflowMediabox;
+    }
+    if (HasChapters()) {
+        // chaptered non-reflow docs don't exist today; stay safe if one ever does
+        FzPageInfo* pi = PageInfoByPageNo(pageNo);
+        return pi ? pi->mediabox : RectF{};
+    }
+    if (len(chapterPages) < 1 || !chapterPages[0]) {
+        return {};
+    }
+    Vec<FzPageInfo*>* v = chapterPages[0];
+    if (pageNo > len(*v)) {
+        return {};
+    }
+    return (*v)[pageNo - 1]->mediabox;
 }
 
 // Boxes the page (or an ancestor /Pages node) actually names. Crop/Bleed/Trim/Art
@@ -6417,7 +6688,7 @@ void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation
     // annotation edit on the UI thread frees
     ScopedRecursiveMutex docScope(&docLock);
 
-    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, pageNo, false, nullptr);
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), false, nullptr);
     if (!pageInfo || !pageInfo->page) {
         return;
     }
@@ -6531,6 +6802,7 @@ static void MarkTransparentBackdropPixmap(Pixmap* pixmap, bool transparentBackdr
 Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto* ctx = Ctx();
     auto pageNo = args.pageNo;
+    Location loc = args.loc.IsValid() ? args.loc : LocationFromPageNo(pageNo);
 
     fz_cookie* fzcookie = nullptr;
     FitzAbortCookie* cookie = nullptr;
@@ -6540,7 +6812,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fzcookie = (fz_cookie*)cookie->GetData();
     }
 
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, fzcookie);
+    FzPageInfo* pageInfo = GetFzPageInfo(loc, false, fzcookie);
     if (!pageInfo) {
         return nullptr;
     }
@@ -6771,7 +7043,7 @@ bool EngineMupdf::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
     }
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo >= 1 && pageNo <= pageCount) {
-        FzPageInfo* pageInfo = pages[pageNo - 1];
+        FzPageInfo* pageInfo = PageInfoByPageNo(pageNo);
         if (pageInfo && pageInfo->page && pageInfo->fullyLoaded) {
             BuildElementsInfo(pageInfo);
             *out = pageInfo->allElements;
@@ -6779,6 +7051,61 @@ bool EngineMupdf::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
     }
     pagesLock.Unlock();
     return true;
+}
+
+// resolves a PageDestinationMupdf lazily: for a chaptered doc, dest->loc is
+// only {chapter, 0} until now (see NewPageDestinationMupdf); finish the
+// resolve here, laying out the target chapter, and cache the result on dest
+Location EngineMupdf::ResolveDest(IPageDestination* dest) {
+    if (!dest) {
+        return kInvalidLocation;
+    }
+    if (dest->GetKind() != kindDestinationMupdf) {
+        return EngineBase::ResolveDest(dest);
+    }
+    auto* d = (PageDestinationMupdf*)dest;
+    if (d->loc.IsValid()) {
+        return d->loc;
+    }
+    Str uri = d->outline ? Str(d->outline->uri) : (d->link ? Str(d->link->uri) : Str{});
+    if (!uri) {
+        return kInvalidLocation;
+    }
+    auto* ctx = Ctx();
+    fz_link_dest ldest{};
+    fz_var(ldest);
+    bool ok = false;
+    fz_var(ok);
+    {
+        ScopedRecursiveMutex scope(&docLock);
+        fz_try(ctx) {
+            ldest = fz_resolve_link_dest(ctx, _doc, CStrTemp(uri));
+            ok = true;
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("EngineMupdf::ResolveDest: fz_resolve_link_dest() for '%s' failed\n", uri);
+        }
+    }
+    if (!ok || ldest.loc.chapter < 0) {
+        return kInvalidLocation;
+    }
+    Location loc{ldest.loc.chapter + 1, ldest.loc.page + 1};
+    LayOutChapter(loc.chapter);
+    loc = ClampLocation(loc);
+
+    RectF r;
+    float zoom = 0.f;
+    DestFromFzLinkDest(ldest, &r, &zoom);
+    d->destX = r.x;
+    d->destY = r.y;
+    d->destW = r.dx;
+    d->destH = r.dy;
+    d->destZoom = zoom;
+    d->hasResolvedCoords = true;
+    d->loc = loc;
+    d->pageNo = PageNoFromLocation(loc);
+    return loc;
 }
 
 static void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkHandler) {
@@ -6797,25 +7124,8 @@ static void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler
         return;
     }
 
-    // those locks must be taken in this order
-    // we need to lock pagesLock because it might
-    // be taken below
-    ScopedRecursiveMutex csPages(&e->pagesLock);
-    ScopedRecursiveMutex cs(&e->docLock);
-
-    int pageNo = -1;
-    fz_link_dest ldest{};
-    auto* ctx = e->Ctx();
-    fz_var(pageNo);
-    fz_try(ctx) {
-        ldest = fz_resolve_link_dest(ctx, e->_doc, CStrTemp(uri));
-        pageNo = fz_page_number_from_location(ctx, e->_doc, ldest.loc);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        logf("HandleLinkMupdf: fz_resolve_link() for '%s' failed\n", uri);
-    }
-    if (pageNo < 0) {
+    Location loc = e->ResolveDest(dest);
+    if (!loc.IsValid()) {
         TempStr localPath;
         Str localFragment;
         if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
@@ -6826,10 +7136,9 @@ static void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler
     }
 
     // Adobe /Fit, /FitH, /FitV, /FitB*, /XYZ, /FitR → zoom modes + scroll (issue #5828)
-    RectF r;
-    float zoom = 0.f;
-    DestFromFzLinkDest(ldest, &r, &zoom);
-    linkHandler->ScrollTo(pageNo + 1, r, zoom);
+    int pageNo = e->PageNoFromLocation(loc);
+    RectF r{link->destX, link->destY, link->destW, link->destH};
+    linkHandler->ScrollTo(pageNo, r, link->destZoom);
 }
 
 bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
@@ -6850,7 +7159,7 @@ RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {
     ReportIf(kindPageElementImage != ipel->GetKind());
     auto* pel = (PageElementImage*)ipel;
     auto r = pel->rect;
-    int pageNo = pel->pageNo;
+    int pageNo = pel->loc.IsValid() ? PageNoFromLocation(pel->loc) : pel->pageNo;
     int imageID = pel->imageID;
     return GetPageImage(pageNo, r, imageID);
 #else
@@ -6912,7 +7221,8 @@ Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
         return {};
     }
     auto* pel = (PageElementImage*)ipel;
-    FzPageInfo* pageInfo = GetFzPageInfo(pel->pageNo, false);
+    Location loc = pel->loc.IsValid() ? pel->loc : LocationFromPageNo(pel->pageNo);
+    FzPageInfo* pageInfo = GetFzPageInfo(loc, false);
     if (!pageInfo || !pageInfo->page) {
         return {};
     }
@@ -6989,12 +7299,15 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         return nullptr;
     }
     const auto& images = pageInfo->images;
-    bool outOfBounds = imageIdx >= len(images);
+    bool outOfBounds = imageIdx < 0 || imageIdx >= len(images);
+    ReportIf(outOfBounds);
+    if (outOfBounds) {
+        return nullptr;
+    }
     fz_rect imgRect = images[imageIdx]->rect;
     bool badRect = ToRectF(imgRect) != rect;
-    ReportIf(outOfBounds);
     ReportIf(badRect);
-    if (outOfBounds || badRect) {
+    if (badRect) {
         return nullptr;
     }
 
@@ -7095,7 +7408,7 @@ static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
 PageText EngineMupdf::ExtractPageText(int pageNo) {
     ScopedRecursiveMutex pagesScope(&pagesLock);
     ScopedMutex renderScope(&renderLock);
-    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, pageNo, true, nullptr);
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), true, nullptr);
     if (!pageInfo) {
         return {};
     }
@@ -7110,7 +7423,7 @@ bool EngineMupdf::TryExtractPageText(int pageNo, PageText* out) {
         pagesLock.Unlock();
         return false;
     }
-    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, pageNo, true, nullptr);
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), true, nullptr);
     if (!pageInfo) {
         renderLock.Unlock();
         pagesLock.Unlock();
@@ -8092,7 +8405,7 @@ static bool HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
     if (pageNo < 1 || pageNo > e->pageCount) {
         return false;
     }
-    FzPageInfo* pageInfo = e->pages[pageNo - 1];
+    FzPageInfo* pageInfo = e->PageInfoByPageNo(pageNo);
     if (!pageInfo || !pageInfo->page || !pageInfo->fullyLoaded) {
         return false;
     }
@@ -8127,7 +8440,7 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
 }
 
 TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
-    if (!pageLabels || pageNo < 1 || PageCount() < pageNo) {
+    if (!pageLabels || pageNo < 1 || pageCount < pageNo) {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 
@@ -8248,11 +8561,11 @@ EngineBase* CreateEngineMupdfFromData(Str data, Str nameHint, PasswordUI* pwdUI)
 
 static void AppendLoadedAnnotations(EngineMupdf* e, Vec<Annotation*>& annotsOut) {
     VecClear(annotsOut);
-    for (FzPageInfo* pi : e->pages) {
+    ForEachPageInfo(e, [&annotsOut](FzPageInfo* pi) {
         if (pi && pi->annotsLoaded) {
             VecAppendVec(annotsOut, pi->annotations);
         }
-    }
+    });
 }
 
 // Collect Annotation* already sitting on FzPageInfo. Does not load pages.
@@ -8331,11 +8644,11 @@ static void PostAnnotLoadProgress(EngineMupdf* e) {
 static int CountLoadedAnnots(EngineMupdf* e) {
     int n = 0;
     ScopedRecursiveMutex scope(&e->pagesLock);
-    for (FzPageInfo* pi : e->pages) {
+    ForEachPageInfo(e, [&n](FzPageInfo* pi) {
         if (pi && pi->annotsLoaded) {
             n += len(pi->annotations);
         }
-    }
+    });
     return n;
 }
 
@@ -8346,7 +8659,7 @@ static int LoadAnnotsForPageNo(EngineMupdf* e, int pageNo) {
     int before = 0;
     {
         ScopedRecursiveMutex scope(&e->pagesLock);
-        FzPageInfo* pi = e->pages[pageNo - 1];
+        FzPageInfo* pi = e->PageInfoByPageNo(pageNo);
         if (pi && pi->annotsLoaded) {
             return 0;
         }
@@ -8435,8 +8748,9 @@ void EngineMupdfStartLoadAllAnnotations(EngineBase* engine, const Vec<int>& firs
     }
     bool allLoaded = true;
     {
+        // PDF is always single-chapter (annotations are PDF-only)
         ScopedRecursiveMutex scope(&e->pagesLock);
-        for (FzPageInfo* pi : e->pages) {
+        for (FzPageInfo* pi : *e->chapterPages[0]) {
             if (!pi || !pi->annotsLoaded) {
                 allLoaded = false;
                 break;
@@ -8537,7 +8851,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
     ScopedMutex renderScope(&e->renderLock);
 
     for (int pageNo = 1; pageNo <= e->pageCount; pageNo++) {
-        FzPageInfo* pi = GetFzPageInfoLocked(e, pageNo, true, nullptr);
+        FzPageInfo* pi = GetFzPageInfoLocked(e, e->LocationFromPageNo(pageNo), true, nullptr);
         if (!pi || !pi->page) {
             continue;
         }
@@ -8771,15 +9085,17 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
     auto* ctx = e->Ctx();
     ScopedRecursiveMutex pagesScope(&e->pagesLock);
     ScopedMutex renderScope(&e->renderLock);
-    for (FzPageInfo* pi : e->pages) {
+    ForEachPageInfo(e, [&](FzPageInfo* pi) {
         if (!pi || !pi->page) {
-            continue;
+            return;
         }
         if (pi->annotsLoaded) {
             Vec<pdf_annot*> liveAnnots;
             Vec<pdf_annot*> liveWidgets;
             {
                 ScopedRecursiveMutex docScope(&e->docLock);
+                bool ok = false;
+                fz_var(ok);
                 fz_try(ctx) {
                     pdf_page* page = pdf_page_from_fz_page(ctx, pi->page);
                     for (pdf_annot* a = page ? pdf_first_annot(ctx, page) : nullptr; a; a = pdf_next_annot(ctx, a)) {
@@ -8788,10 +9104,13 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
                     for (pdf_annot* a = page ? pdf_first_widget(ctx, page) : nullptr; a; a = pdf_next_widget(ctx, a)) {
                         VecAppend(liveWidgets, a);
                     }
+                    ok = true;
                 }
                 fz_catch(ctx) {
                     fz_report_error(ctx);
-                    continue;
+                }
+                if (!ok) {
+                    return;
                 }
             }
             ResyncWrapperList(e, pi->pageNo, pi->annotations, liveAnnots, removedOut);
@@ -8803,7 +9122,7 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
         }
         InvalidateFzPageAfterContentChange(e, pi);
         e->InvalidateTextForPage(pi->pageNo);
-    }
+    });
 }
 
 // Step one operation back (or forward with redo). Returns false if there was
@@ -8882,8 +9201,9 @@ bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
 }
 
 // Restyle a reflowable document with the current theme page colors and drop
-// cached page display lists so the next render uses the new HTML. Color-only
-// CSS should not change page count; if it does we keep the existing slots.
+// cached page display lists so the next render uses the new HTML. A chaptered
+// doc re-lays-out lazily (chapter 1 only, like at open); a single-chapter doc
+// resizes its page-info vector to match the new count.
 void EngineMupdf::ApplyReflowThemeCss() {
     if (!isReflowable || !_doc || ebookLayoutW <= 0 || ebookLayoutH <= 0) {
         return;
@@ -8903,28 +9223,69 @@ void EngineMupdf::ApplyReflowThemeCss() {
     if (!ctx) {
         return;
     }
-    for (FzPageInfo* pi : pages) {
-        if (!pi) {
-            continue;
-        }
+    ForEachPageInfo(this, [this, ctx](FzPageInfo* pi) {
         InvalidateFzPageAfterContentChange(this, pi);
         if (pi->page) {
             fz_drop_page(ctx, pi->page);
             pi->page = nullptr;
         }
-    }
+    });
 
+    bool ok = false;
+    fz_var(ok);
     fz_try(ctx) {
         fz_style_document(ctx, _doc, ebookPublisherCss, cssZ);
         fz_layout_document(ctx, _doc, ebookLayoutW, ebookLayoutH, ebookLayoutEm);
-        int n = fz_count_pages(ctx, _doc);
-        if (n != pageCount) {
-            logf("ApplyReflowThemeCss: page count %d -> %d, keeping %d\n", pageCount, n, pageCount);
-        }
+        ok = true;
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
+    if (!ok) {
+        return;
+    }
+
+    if (HasChapters()) {
+        chapters.Reset();
+        LayOutChapter(1);
+        SetPageCountFromChapters();
+        logf("ApplyReflowThemeCss: chapters reset, chapter 1 -> %d pages\n", chapters.PageCount(1));
+        return;
+    }
+
+    int n = pageCount;
+    fz_try(ctx) {
+        n = fz_count_pages(ctx, _doc);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    if (n < 1) {
+        n = 1;
+    }
+    if (n == pageCount) {
+        return;
+    }
+    logf("ApplyReflowThemeCss: page count %d -> %d\n", pageCount, n);
+    Vec<FzPageInfo*>* v = chapterPages[0];
+    RectF mbox = len(*v) > 0 ? (*v)[len(*v) - 1]->mediabox : RectF{};
+    while (len(*v) < n) {
+        int p = len(*v) + 1;
+        auto* pi = New<FzPageInfo>(arena);
+        pi->loc = {1, p};
+        pi->pageNo = p;
+        pi->mediabox = mbox;
+        VecAppend(*v, pi);
+    }
+    while (len(*v) > n) {
+        FzPageInfo* pi = (*v)[len(*v) - 1];
+        pi->~FzPageInfo();
+        VecRemoveLast(*v);
+    }
+    // EnsureChapterTable() (run by the next chapter-API call, e.g.
+    // LayoutGeneration()) resyncs chapters[1] to pageCount and bumps the
+    // generation so DisplayModel resyncs
+    pageCount = n;
 }
 
 // Drop cached dark-mode analyses and processed images; call when dark-mode
@@ -8941,11 +9302,7 @@ void EngineMupdfInvalidateDarkMode(EngineBase* engine) {
     if (epdf->darkModeEngineCache) {
         PdfDarkModeEngineCacheClear(ctx, epdf->darkModeEngineCache);
     }
-    for (FzPageInfo* pi : epdf->pages) {
-        if (pi) {
-            PdfDarkModeInvalidatePage(ctx, pi);
-        }
-    }
+    ForEachPageInfo(epdf, [ctx](FzPageInfo* pi) { PdfDarkModeInvalidatePage(ctx, pi); });
 }
 
 // PDF documents support the object-level smart dark renderer
@@ -9213,7 +9570,6 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     }
     int pageNo = annot->pageNo;
     ReportIf(pageNo < 1 || pageNo > e->pageCount);
-    int pageIdx = pageNo - 1;
 
     // EngineMupdf is the ultimate source of truth for Annotation* list
     // all other places only get references to Annotation* created
@@ -9223,7 +9579,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     // so on add /remove we update the list manually
     // on change we assume Annotation* lives inside EngineMupdf
     ScopedRecursiveMutex scope(&e->pagesLock);
-    FzPageInfo* pageInfo = e->pages[pageIdx];
+    FzPageInfo* pageInfo = e->PageInfoByPageNo(pageNo);
 
     if (change == AnnotationChange::Remove) {
         // Markup and form widgets live in separate vectors.

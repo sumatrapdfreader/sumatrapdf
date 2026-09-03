@@ -124,6 +124,56 @@ void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     }
 }
 
+// a chapter layout shifted dm's flat pageNo underneath tab->selectionOnPage;
+// remap each entry via dm->RemapPageNo() instead of dropping the whole
+// selection, and drop only the entries that no longer map to a page
+void RemapSelOnRenumber(MainWindow* win, DisplayModel* dm) {
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (!tab || !tab->selectionOnPage || !dm) {
+        return;
+    }
+    for (int i = len(*tab->selectionOnPage) - 1; i >= 0; i--) {
+        SelectionOnPage& sel = (*tab->selectionOnPage)[i];
+        int newPageNo = dm->RemapPageNo(sel.pageNo);
+        if (newPageNo < 1) {
+            VecRemoveAt(*tab->selectionOnPage, i);
+            continue;
+        }
+        sel.pageNo = newPageNo;
+    }
+    if (len(*tab->selectionOnPage) == 0) {
+        delete tab->selectionOnPage;
+        tab->selectionOnPage = nullptr;
+        win->showSelection = false;
+    }
+}
+
+// glyph-level text selection: TextSel::pages[] holds one pageNo per selected
+// glyph/rect. Remap in place instead of dropping the whole selection; only
+// Reset() when a page no longer maps (the chapter it was on is gone)
+void RemapTextSelection(DisplayModel* dm) {
+    if (!dm || !dm->textSelection) {
+        return;
+    }
+    TextSelection* ts = dm->textSelection;
+    TextSel& result = ts->result;
+    for (int i = 0; i < result.len; i++) {
+        int newPageNo = dm->RemapPageNo(result.pages[i]);
+        if (newPageNo < 1) {
+            ts->Reset();
+            return;
+        }
+        result.pages[i] = newPageNo;
+    }
+    ts->startPage = dm->RemapPageNo(ts->startPage);
+    ts->endPage = dm->RemapPageNo(ts->endPage);
+    ts->wordStartPage = dm->RemapPageNo(ts->wordStartPage);
+    ts->wordEndPage = dm->RemapPageNo(ts->wordEndPage);
+    if (result.len > 0 && (ts->startPage < 1 || ts->endPage < 1)) {
+        ts->Reset();
+    }
+}
+
 // Rectangular (Ctrl+drag) selection: move/resize after it exists.
 bool IsRectangularSelection(MainWindow* win) {
     if (!win || !win->showSelection) {
@@ -790,7 +840,8 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
         return;
     }
 
-    if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused())) {
+    if ((win->findEdit && win->findEdit->IsFocused()) || (win->pageEdit && win->pageEdit->IsFocused()) ||
+        (win->chapterEdit && win->chapterEdit->IsFocused())) {
         EditSelectAll(GetFocus());
         return;
     }

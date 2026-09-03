@@ -594,7 +594,7 @@ static TabState* CloneTabState(const TabState* src) {
     TabState* dst = (TabState*)AllocStruct<TabState>();
     str::ReplaceWithCopy(&dst->filePath, src->filePath);
     str::ReplaceWithCopy(&dst->displayMode, src->displayMode);
-    dst->pageNo = src->pageNo;
+    str::ReplaceWithCopy(&dst->pageNo, src->pageNo);
     str::ReplaceWithCopy(&dst->zoom, src->zoom);
     dst->rotation = src->rotation;
     dst->scrollPos = src->scrollPos;
@@ -1333,11 +1333,12 @@ void DeleteFileStates(Vec<FileState*>* a) {
     delete a;
 }
 
-Favorite* NewFavorite(int pageNo, Str name, Str pageLabel) {
+Favorite* NewFavorite(int pageNo, Str name, Str pageLabel, Str bookmark) {
     Favorite* fav = (Favorite*)DeserializeStruct(&gFavoriteInfo, {});
     fav->pageNo = pageNo;
     str::ReplaceWithCopy(&fav->name, name);
     str::ReplaceWithCopy(&fav->pageLabel, pageLabel);
+    str::ReplaceWithCopy(&fav->bookmark, bookmark);
     return fav;
 }
 
@@ -1462,7 +1463,7 @@ TabState* NewTabState(FileState* fs) {
     TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, {});
     str::ReplaceWithCopy(&state->filePath, fs->filePath);
     str::ReplaceWithCopy(&state->displayMode, fs->displayMode);
-    state->pageNo = fs->pageNo;
+    str::ReplaceWithCopy(&state->pageNo, fs->pageNo);
     str::ReplaceWithCopy(&state->zoom, fs->zoom);
     state->rotation = fs->rotation;
     state->scrollPos = fs->scrollPos;

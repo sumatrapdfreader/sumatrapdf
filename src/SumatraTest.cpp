@@ -1099,6 +1099,11 @@ TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
         return fail(fmt("ERROR no-dest destNo=%d", destNo));
     }
     int expectPage = PageDestGetPageNo(dest);
+    if (expectPage <= 0 && dest->loc.chapter >= 1) {
+        // chaptered doc: the dest carries a chapter, not yet a resolved page
+        Location loc = win->ctrl->ResolveDest(dest);
+        expectPage = win->ctrl->PageNoFromLocation(loc);
+    }
     if (expectPage <= 0) {
         return fail(fmt("ERROR bad-dest-page destNo=%d page=%d", destNo, expectPage));
     }
@@ -1122,6 +1127,117 @@ TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
+// Drives the real deferred TOC-click path (GoToTocItem, unlike
+// TocNavigateResultTemp() doesn't pre-resolve the dest); poll chapterInfo()
+// for the "NAVIGATING" result to land. Used by tests/ad-hoc-chapters.ts.
+TempStr TocSidebarNavResultTemp(int destNo, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    EngineBase* engine = win->AsFixed() ? win->AsFixed()->GetEngine() : nullptr;
+    TocTree* toc = engine ? engine->GetToc() : nullptr;
+    if (!toc || !toc->root) {
+        return fail(StrL("ERROR no-toc"));
+    }
+    int counter = 0;
+    TocItem* item = NthTocItemWithDest(toc->root, destNo, counter);
+    if (!item) {
+        return fail(fmt("ERROR no-dest destNo=%d", destNo));
+    }
+
+    GoToTocItem(win, item);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    out.Append(fmt("NAVIGATING dest=%d\n", destNo));
+    return ToStrTemp(out);
+}
+
+// Seeds a rectangle + text selection, lays out a chapter (forcing
+// SyncWithEngineLayout/PagesRenumbered), reports if both survived.
+TempStr RenumberSelResultTemp(int layoutChapter, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || !engine->HasChapters()) {
+        return fail(StrL("ERROR not-chaptered"));
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab) {
+        return fail(StrL("ERROR no-tab"));
+    }
+
+    DeleteOldSelectionInfo(win, true);
+    RectF r(10, 10, 50, 20);
+    tab->selectionOnPage = new Vec<SelectionOnPage>();
+    VecAppend(*tab->selectionOnPage, SelectionOnPage(1, &r, nullptr));
+    win->showSelection = true;
+
+    // by glyph index, not screen coords: robust regardless of page layout.
+    // Scan for the first early page with extractable text (e.g. a cover-only
+    // page 1 has none) instead of assuming page 1 has some.
+    int textLenBefore = 0;
+    for (int p = 1; p <= 5 && p <= dm->PageCount(); p++) {
+        int n = 0;
+        engine->GetTextForPage(p, &n);
+        if (n < 2) {
+            continue;
+        }
+        dm->textSelection->StartAt(p, 0);
+        dm->textSelection->SelectUpTo(p, std::min(n, 10));
+        textLenBefore = dm->textSelection->result.len;
+        if (textLenBefore > 0) {
+            break;
+        }
+    }
+
+    dm->ChapterPageCount(layoutChapter); // lays out the chapter and resyncs dm
+
+    bool survived = tab->selectionOnPage && len(*tab->selectionOnPage) > 0;
+    int pageNo = survived ? (*tab->selectionOnPage)[0].pageNo : -1;
+    bool textSurvived = textLenBefore > 0 && dm->textSelection->result.len == textLenBefore;
+    if (survived) {
+        out.Append(fmt("OK survived=1 pageNo=%d\n", pageNo));
+    } else {
+        out.Append(StrL("FAIL survived=0\n"));
+    }
+    out.Append(fmt("textSurvived=%d textLen=%d\n", (int)textSurvived, dm->textSelection->result.len));
+    if (exitCodeOut) {
+        *exitCodeOut = (survived && textSurvived) ? 0 : 1;
     }
     return ToStrTemp(out);
 }
@@ -2212,6 +2328,69 @@ TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCodeOut) {
                    (int)wroteJpeg, nComp, jc, jm, jy, jk, (int)wroteTiff, (int)photo));
     if (exitCodeOut) {
         *exitCodeOut = (wroteJpeg && wroteTiff && nComp == 4 && photo == 5) ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
+// Current chapter/page and chapter table state of the front window's doc.
+// Used by tests/ad-hoc-chapters.ts.
+TempStr ChapterInfoResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    DocController* ctrl = win->ctrl;
+    Location cur = ctrl->CurrentLocation();
+    bool hasChapters = ctrl->HasChapters();
+    out.Append(fmt("OK chapter=%d page=%d chapterCount=%d chapterPageCount=%d pageCount=%d hasChapters=%d\n",
+                   cur.chapter, cur.page, ctrl->ChapterCount(), ctrl->ChapterPageCount(cur.chapter), ctrl->PageCount(),
+                   hasChapters ? 1 : 0));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// Navigate to {chapter, page} (clamped) and report where it landed.
+// Used by tests/ad-hoc-chapters.ts.
+TempStr GoToLocationResultTemp(int chapter, int page, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    DocController* ctrl = win->ctrl;
+    Location want = ctrl->ClampLocation({chapter, page});
+    ctrl->GoToLocation(want, true);
+    Location got = ctrl->CurrentLocation();
+    out.Append(fmt("OK chapter=%d page=%d\n", got.chapter, got.page));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
     }
     return ToStrTemp(out);
 }

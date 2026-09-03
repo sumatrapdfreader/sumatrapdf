@@ -8,7 +8,13 @@ struct RenderedBitmap;
 struct IPageDestination;
 struct TocItem;
 struct PropValue;
+struct PageTextCache;
 enum class DocProp : u8;
+class EngineBase;
+
+// Location (chapter-aware page addressing) and ChapterTable live in
+// ChapterTable.h; pulled in here so every EngineBase.h consumer sees them.
+#include "ChapterTable.h"
 
 struct ILinkHandler {
     virtual ~ILinkHandler() = default;
@@ -126,6 +132,8 @@ struct IPageDestination : KindBase {
     int pageNo = -1;
     RectF rect;
     float zoom = 0.f;
+    // chapter-aware equivalent of pageNo; invalid until resolved
+    Location loc;
 
     IPageDestination() = default;
     virtual ~IPageDestination() = default;
@@ -284,6 +292,8 @@ struct IPageElement {
     // position of the element on the page
     RectF rect;
     int pageNo = -1;
+    // chapter-aware equivalent of pageNo; invalid until resolved
+    Location loc;
 
     virtual ~IPageElement() = default;
 
@@ -374,6 +384,8 @@ struct TocItem {
     // page this item points to (-1 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
     int pageNo;
+    // chapter-aware equivalent of pageNo; invalid until resolved
+    Location loc;
 
     // arbitrary number allowing to distinguish this TocItem
     // from any other of the same ToC tree (must be constant
@@ -431,6 +443,12 @@ struct TocTree : TreeModel {
     uintptr_t GetUserData(TreeItem) override;
 };
 
+void ResolveTocPages(EngineBase* engine, TocTree* toc);
+
+// print / dump / full-document search / PDF export / stress test: lay out
+// every chapter. No-op for a single-chapter document or a null engine
+void EnsureFullLayout(EngineBase* engine);
+
 struct VisitTocTreeData {
     TocItem* ti = nullptr;
     TocItem* parent = nullptr; // only for VisitTocTreeWithParent
@@ -453,6 +471,8 @@ struct DarkModeProfile;
 
 struct RenderPageArgs {
     int pageNo = 0;
+    // chapter-aware equivalent of pageNo; invalid until resolved
+    Location loc;
     float zoom = 0.f;
     int rotation = 0;
     /* if nullptr: defaults to the page's mediabox */
@@ -518,7 +538,33 @@ class EngineBase {
     bool HasErrors();
     TempStr GetErrorsTextTemp();
 
-    int PageCount() const;
+    int PageCount();
+
+    // chapter-aware page addressing; single-chapter engines report ChapterCount() == 1
+    // and behave exactly as the flat pageNo API always has
+    int ChapterCount();
+    bool HasChapters();
+    int ChapterPageCount(int chapter);
+    bool IsChapterLaidOut(int chapter);
+    Location LocationFromPageNo(int pageNo);
+    int PageNoFromLocation(Location loc);
+    Location NextLocation(Location loc);
+    Location PrevLocation(Location loc);
+    Location FirstLocation();
+    Location LastLocation();
+    Location ClampLocation(Location loc);
+    int LayoutGeneration();
+    void EnsureAllChaptersLaidOut();
+    // called (from any thread) whenever LayoutGeneration() actually changes
+    void SetOnLayoutChanged(const Func0& fn) { onLayoutChanged = fn; }
+
+    // real page count for a chapter; engines with more than one chapter override this
+    virtual int LayOutChapter(int chapter);
+    // persisted position that survives re-pagination; default is "chapter:page:chapterPageCount"
+    virtual TempStr MakeBookmarkTemp(Location loc);
+    virtual Location LookupBookmark(Str s);
+    // resolves dest->loc (or dest->pageNo) to a Location, caching it on dest
+    virtual Location ResolveDest(IPageDestination* dest);
 
     // the box containing the visible page content (usually RectF(0, 0, pageWidth, pageHeight))
     virtual RectF PageMediabox(int pageNo) = 0;
@@ -587,7 +633,7 @@ class EngineBase {
     virtual TocTree* GetToc();
 
     bool HasPageLabels() const;
-    int LogicalPageCount() const;
+    int LogicalPageCount();
 
     virtual TempStr GetPageLabeTemp(int pageNo) const;
 
@@ -624,13 +670,23 @@ class EngineBase {
   protected:
     virtual ~EngineBase();
 
-    // cached text, one entry per page (lazily allocated)
-    PageText* pagesText = nullptr;
-    TextExtractionState* pagesTextState = nullptr;
+    // engines with chapters call this after chapters.SetPageCount() to keep
+    // the flat pageCount total in sync
+    void SetPageCountFromChapters();
+
+    ChapterTable chapters;
+    Func0 onLayoutChanged;
+    int notifiedGeneration = 0;
+
+    // per-chapter cached text (PageTextCache, defined in EngineBase.cpp)
+    PageTextCache* pageTextCache = nullptr;
     Mutex textCacheLock;
 
     str::Builder errors;
     Mutex errorsLock;
+
+  private:
+    void EnsureChapterTable();
 };
 
 struct PasswordUI {

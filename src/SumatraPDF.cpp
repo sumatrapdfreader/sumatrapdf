@@ -122,6 +122,7 @@
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
 #include "ExplorerQuickLook.h"
+#include "PagePosition.h"
 #include "SumatraPDF.h"
 #include "SumatraLog.h"
 
@@ -1116,6 +1117,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
     }
     void FindAllResultReceived(Str payload) override { BrowserFindAllResultReceived(win, payload); }
     void TocChanged(DocController* ctrl) override;
+    void PagesRenumbered(DisplayModel* dm) override;
 };
 
 void ControllerCallbackHandler::TocChanged(DocController* ctrl) {
@@ -1135,6 +1137,23 @@ void ControllerCallbackHandler::TocChanged(DocController* ctrl) {
     if (tab->showToc) {
         SetSidebarVisibility(win, true, gSettings->showFavorites);
     }
+}
+
+// a chapter shifted dm's flat page numbering; refresh everything keyed by
+// the old pageNo, remapping both selection kinds instead of clearing them.
+void ControllerCallbackHandler::PagesRenumbered(DisplayModel* dm) {
+    if (win->AsFixed() != dm) {
+        return;
+    }
+    RemapSelOnRenumber(win, dm);
+    RemapTextSelection(dm);
+    if (win->findThread || win->findCountThread) {
+        AbortFinding(win, true);
+    }
+    UpdateToolbarPageText(win, dm->PageCount());
+    UpdateTabPageText(win->CurrentTab());
+    UpdateTocSelection(win, dm->CurrentPageNo());
+    win->RedrawAll();
 }
 
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {
@@ -1741,10 +1760,17 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
         pageNo = ctrl->CurrentPageNo();
     }
     int nPages = ctrl->PageCount();
-    TempStr pageInfo = fmt("%s %d / %d", _TRA("Page:"), pageNo, nPages);
-    if (ctrl->HasPageLabels()) {
+    TempStr pageInfo;
+    if (ctrl->HasChapters()) {
+        Location loc = ctrl->LocationFromPageNo(pageNo);
+        int chapterPages = ctrl->ChapterPageCount(loc.chapter);
+        pageInfo = fmt("%s %d / %d, %s %d / %d", _TRA("Chapter:"), loc.chapter, ctrl->ChapterCount(), _TRA("Page:"),
+                       loc.page, chapterPages);
+    } else if (ctrl->HasPageLabels()) {
         TempStr label = ctrl->GetPageLabeTemp(pageNo);
         pageInfo = fmt("%s %s (%d / %d)", _TRA("Page:"), label, pageNo, nPages);
+    } else {
+        pageInfo = fmt("%s %d / %d", _TRA("Page:"), pageNo, nPages);
     }
     float zoomLevel = ctrl->GetZoomVirtual();
     auto zoomStr = BuildZoomString(zoomLevel);
@@ -1884,13 +1910,22 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     bool pageChanged = pageNo != win->currPageNo;
 
     if (pageChanged && kInvalidPageNo != pageNo) {
-        TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
         // HwndSetText is a no-op when the text is unchanged
-        if (win->pageEdit) {
+        if (win->ctrl->HasChapters()) {
+            Location cur = win->ctrl->CurrentLocation();
+            if (win->chapterEdit) {
+                win->chapterEdit->SetText(fmt("%d", cur.chapter));
+            }
+            if (win->pageEdit) {
+                win->pageEdit->SetText(fmt("%d", cur.page));
+            }
+        } else if (win->pageEdit) {
+            TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
             win->pageEdit->SetText(label);
         }
         ToolbarUpdateStateForWindow(win, false);
-        if (win->ctrl->HasPageLabels()) {
+        if (win->ctrl->HasPageLabels() || win->ctrl->HasChapters()) {
+            // page-in-chapter total changes with every chapter
             UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
         }
         UpdateTabPageText(win->CurrentTab());
@@ -2164,6 +2199,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle);
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
+    bool hasChapters = win->ctrl && win->ctrl->HasChapters();
     if (win->pageEdit) {
         EditSetNumbersOnly(win->pageEdit, onlyNumbers);
         // a tab without a document (home page, failed load) has no page to go
@@ -2173,10 +2209,20 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
         // the box, then back to the same document and page)
         bool hasDoc = win->ctrl != nullptr;
         win->pageEdit->SetIsEnabled(hasDoc);
-        if (hasDoc) {
+        if (hasChapters) {
+            win->pageEdit->SetText(fmt("%d", win->ctrl->CurrentLocation().page));
+        } else if (hasDoc) {
             win->pageEdit->SetText(win->ctrl->GetPageLabeTemp(win->ctrl->CurrentPageNo()));
         } else {
             win->pageEdit->SetText({});
+        }
+    }
+    if (win->chapterEdit) {
+        win->chapterEdit->SetIsEnabled(hasChapters);
+        if (hasChapters) {
+            win->chapterEdit->SetText(fmt("%d", win->ctrl->CurrentLocation().chapter));
+        } else {
+            win->chapterEdit->SetText({});
         }
     }
 }
@@ -2352,7 +2398,8 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     }
 
     if (fs) {
-        ss.page = fs->pageNo;
+        // resolved to a real Location once win->ctrl exists, below
+        ss.page = ParseStoredPagePos(fs->pageNo).pageNo;
         displayMode = DisplayModeFromString(fs->displayMode, DisplayMode::Automatic);
         showAsFullScreen = WIN_STATE_FULLSCREEN == fs->windowState;
         if (fs->windowState == WIN_STATE_NORMAL) {
@@ -2447,6 +2494,19 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             dm->SetUiDpi(win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame));
             if (fs) {
                 dm->SetUniformPageWidth(fs->uniformPageWidth);
+            }
+            if (fs) {
+                // lays out ss.page's chapter for a chaptered doc (intended,
+                // single-chapter cost). ss.loc is set only for a real bookmark:
+                // a legacy flat int must open at that flat page even if some
+                // earlier chapter isn't laid out yet, so it can't go through
+                // Location (which would resolve against a still-placeholder
+                // chapter table and drift)
+                StoredPagePos pos = ParseStoredPagePos(fs->pageNo);
+                ss.page = PageNoFromStoredPagePos(win->ctrl, fs->pageNo);
+                if (pos.bookmark) {
+                    ss.loc = win->ctrl->LocationFromPageNo(ss.page);
+                }
             }
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // SetInitialViewSettings() has just taken the direction from the
@@ -5208,6 +5268,10 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         if (win->pageEdit) {
             win->pageEdit->SetIsEnabled(false);
             win->pageEdit->SetText({});
+        }
+        if (win->chapterEdit) {
+            win->chapterEdit->SetIsEnabled(false);
+            win->chapterEdit->SetText({});
         }
         if (wasntFixed) {
             // restore the full menu and toolbar
@@ -8602,14 +8666,17 @@ static void OnMenuGoToPage(MainWindow* win) {
     // Don't show a dialog if we don't have to - use the Toolbar instead.
     // In overlay mode the toolbar is only visible while revealed, so reveal it
     // first; focusing the hidden page box did nothing at all (#5916).
-    if (win->pageEdit && !win->presentation) {
+    // chaptered docs start at the chapter box, the natural first field
+    bool hasChapters = win->ctrl && win->ctrl->HasChapters();
+    Edit* target = (hasChapters && win->chapterEdit) ? win->chapterEdit : win->pageEdit;
+    if (target && !win->presentation) {
         if (win->isToolbarOverlay) {
             RevealOverlayToolbar(win);
-            FocusPageNoEdit(win->pageEdit->hwnd);
+            FocusPageNoEdit(target->hwnd);
             return;
         }
         if (win->isToolbarVisible) {
-            FocusPageNoEdit(win->pageEdit->hwnd);
+            FocusPageNoEdit(target->hwnd);
             return;
         }
     }
@@ -8905,14 +8972,17 @@ static int wrapIdx(int idx, int max) {
 }
 
 void AdvanceFocus(MainWindow* win) {
-    // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
+    // Tab order: Frame -> Chapter -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
     bool hasToolbar = !win->isFullScreen && !win->presentation && gSettings->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
-    constexpr int kMaxWindows = 5;
+    constexpr int kMaxWindows = 6;
     HWND tabOrder[kMaxWindows] = {win->hwndFrame};
     int nWindows = 1;
+    if (hasToolbar && win->ctrl && win->ctrl->HasChapters() && win->chapterEdit) {
+        tabOrder[nWindows++] = win->chapterEdit->hwnd;
+    }
     if (hasToolbar && win->pageEdit) {
         tabOrder[nWindows++] = win->pageEdit->hwnd;
     }
@@ -12767,7 +12837,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdFavoriteDel:
             if (win->IsDocLoaded()) {
                 auto path = ctrl->GetFilePath();
-                DelFavorite(path, win->currPageNo);
+                DelFavorite(path, win->currPageNo, ctrl);
             }
             break;
 

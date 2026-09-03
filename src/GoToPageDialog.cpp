@@ -14,6 +14,7 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
+#include "EngineBase.h"
 #include "DocController.h"
 #include "MainWindow.h"
 #include "Theme.h"
@@ -31,9 +32,14 @@ struct GoToPageWnd : WindowBase {
     MainWindow* win = nullptr;
     int pageCount = 0;
     bool onlyNumeric = true;
+    bool hasChapters = false;
     VirtText* label = nullptr;
     Edit* editPage = nullptr;
     VirtText* labelOf = nullptr;
+    // chapter row; only built when hasChapters was true at Create() time
+    VirtText* chapterLabel = nullptr;
+    Edit* editChapter = nullptr;
+    VirtText* chapterLabelOf = nullptr;
     VirtButton* btnCancel = nullptr;
     VirtButton* btnGo = nullptr;
 
@@ -50,15 +56,28 @@ static void ClearGoToPageWnd() {
     gGoToPageWnd = nullptr;
 }
 
+// caller (ShowGoToPageDialog) only reuses this window when hasChapters still
+// matches, so the row layout built in Create() stays valid here
 void GoToPageWnd::SetTarget(MainWindow* mainWin) {
     win = mainWin;
     pageCount = 0;
     onlyNumeric = true;
     Str pageLabel;
+    int chapterCount = 0;
+    int chapterCur = 0;
     if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded() && win->ctrl) {
-        pageCount = win->ctrl->PageCount();
-        onlyNumeric = !win->ctrl->HasPageLabels();
-        pageLabel = win->ctrl->GetPageLabeTemp(win->ctrl->CurrentPageNo());
+        DocController* ctrl = win->ctrl;
+        if (hasChapters) {
+            Location cur = ctrl->CurrentLocation();
+            chapterCount = ctrl->ChapterCount();
+            chapterCur = cur.chapter;
+            pageCount = ctrl->ChapterPageCount(cur.chapter);
+            pageLabel = fmt("%d", cur.page);
+        } else {
+            pageCount = ctrl->PageCount();
+            onlyNumeric = !ctrl->HasPageLabels();
+            pageLabel = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
+        }
     }
     if (labelOf) {
         labelOf->SetText(fmt(_TRA("(of %d)").s, pageCount));
@@ -68,6 +87,12 @@ void GoToPageWnd::SetTarget(MainWindow* mainWin) {
         editPage->SetText(pageLabel);
         EditSelectAll(editPage);
     }
+    if (chapterLabelOf) {
+        chapterLabelOf->SetText(fmt(_TRA("(of %d)").s, chapterCount));
+    }
+    if (editChapter) {
+        editChapter->SetText(fmt("%d", chapterCur));
+    }
 }
 
 void GoToPageWnd::OnCancel(VirtMouseEvent*) {
@@ -76,6 +101,14 @@ void GoToPageWnd::OnCancel(VirtMouseEvent*) {
 
 void GoToPageWnd::OnOk(VirtMouseEvent*) {
     if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded() || !win->ctrl) {
+        ScheduleDelete();
+        return;
+    }
+    if (hasChapters) {
+        int chapter = editChapter ? ParseInt(editChapter->GetTextTemp()) : 1;
+        int page = editPage ? ParseInt(editPage->GetTextTemp()) : 1;
+        Location loc = win->ctrl->ClampLocation({chapter, page});
+        win->ctrl->GoToLocation(loc, true);
         ScheduleDelete();
         return;
     }
@@ -102,10 +135,22 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 bool GoToPageWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     Str pageLabel;
+    int chapterCount = 0;
+    int chapterCur = 0;
     if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded() && win->ctrl) {
-        pageCount = win->ctrl->PageCount();
-        onlyNumeric = !win->ctrl->HasPageLabels();
-        pageLabel = win->ctrl->GetPageLabeTemp(win->ctrl->CurrentPageNo());
+        DocController* ctrl = win->ctrl;
+        hasChapters = ctrl->HasChapters();
+        if (hasChapters) {
+            Location cur = ctrl->CurrentLocation();
+            chapterCount = ctrl->ChapterCount();
+            chapterCur = cur.chapter;
+            pageCount = ctrl->ChapterPageCount(cur.chapter);
+            pageLabel = fmt("%d", cur.page);
+        } else {
+            pageCount = ctrl->PageCount();
+            onlyNumeric = !ctrl->HasPageLabels();
+            pageLabel = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
+        }
     }
 
     {
@@ -127,13 +172,53 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
+    if (hasChapters) {
+        auto* hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        auto* lab = NewVirtText({
+            .s = _TRA("&Chapter:"),
+            .font = font,
+            .isRtl = isRtl,
+            .prefix = true,
+        });
+        chapterLabel = lab;
+        hbox->AddChild(lab);
+
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.font = GetFont();
+        args.withBorder = true;
+        args.alignRight = true;
+        args.numbersOnly = true;
+        args.selectAllOnFocus = true;
+        args.isRtl = isRtl;
+        args.text = fmt("%d", chapterCur);
+        args.idealWidthChars = 6;
+        auto* ce = new Edit();
+        ce->SetInsetsPt(0, 8, 0, 8);
+        ce->Create(args);
+        editChapter = ce;
+        hbox->AddChild(ce);
+
+        auto* of = NewVirtText({
+            .s = fmt(_TRA("(of %d)").s, chapterCount),
+            .font = font,
+            .isRtl = isRtl,
+        });
+        chapterLabelOf = of;
+        hbox->AddChild(of);
+        vbox->AddChild(hbox);
+    }
+
     {
         auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainStart;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
         auto* lab = NewVirtText({
-            .s = _TRA("&Go to page:"),
+            .s = hasChapters ? _TRA("&Page:") : _TRA("&Go to page:"),
             .font = font,
             .isRtl = isRtl,
             .prefix = true,
@@ -193,14 +278,21 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
     UpdateTheme();
 
     SetIsVisible(true);
-    EditSelectAll(editPage);
-    EditSetFocus(editPage);
+    Edit* focusTarget = hasChapters && editChapter ? editChapter : editPage;
+    EditSelectAll(focusTarget);
+    EditSetFocus(focusTarget);
     return true;
 }
 
 void ShowGoToPageDialog(MainWindow* win) {
     if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded()) {
         return;
+    }
+    // the chapter row is only built in Create(); rebuild if the doc kind changed
+    bool hasChapters = win->ctrl && win->ctrl->HasChapters();
+    if (gGoToPageWnd && gGoToPageWnd->hasChapters != hasChapters) {
+        gGoToPageWnd->ScheduleDelete();
+        gGoToPageWnd = nullptr;
     }
     if (gGoToPageWnd) {
         gGoToPageWnd->SetTarget(win);
@@ -209,7 +301,9 @@ void ShowGoToPageDialog(MainWindow* win) {
             HwndInvalidate(gGoToPageWnd->hwnd);
         }
         HwndSetFocus(gGoToPageWnd->hwnd);
-        EditSetFocus(gGoToPageWnd->editPage);
+        Edit* focusTarget =
+            gGoToPageWnd->hasChapters && gGoToPageWnd->editChapter ? gGoToPageWnd->editChapter : gGoToPageWnd->editPage;
+        EditSetFocus(focusTarget);
         return;
     }
     auto* wnd = new GoToPageWnd();

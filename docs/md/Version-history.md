@@ -251,6 +251,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - Find remembers the last 10 search queries for the session (not saved to settings) and offers them from a drop-down on the find field (fixes #893)
 - **Stop Reading** is always in the Read Aloud menu (main menu, context menu, toolbar dropdown), even when the playback bar is not visible, so a session can still be stopped from the top menu (fixes #6053). It is disabled when nothing is being read; the command palette lists it only while a session is active
 - **Navigate Thumbnails** opens a page-thumbnail grid for the current fixed-page document; thumbnails appear as they are rendered in the background, and the grid supports arrow-key navigation, mouse selection, double-click or Enter to open a page, Escape to close, and a scrollbar for long documents
+- Multi-chapter ebooks (EPUB, MOBI) open showing only the first chapter and lay out the rest as you read them, instead of paginating the whole book up front — a 1000-chapter MOBI now opens in about 0.1s instead of roughly 40s. For those documents the toolbar shows **Chapter: [n] / N** next to **Page: [n] / M** (the page within the current chapter), the Go to Page dialog asks for a chapter and a page, and Next Page / Previous Page cross chapter boundaries. The remembered reading position is a chapter bookmark, so it survives font-size changes that reflow the book; old plain page numbers in settings still open at that flat page
 
 **New commands:**
 

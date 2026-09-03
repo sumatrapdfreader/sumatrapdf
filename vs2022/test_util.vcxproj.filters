@@ -15,12 +15,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\ChapterTable.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\FilterUtil.h" />
     <ClInclude Include="..\src\Flags.h" />
+    <ClInclude Include="..\src\PagePosition.h" />
     <ClInclude Include="..\src\PageRenderPolicy.h" />
     <ClInclude Include="..\src\PdfDarkMode.h" />
     <ClInclude Include="..\src\RefHover.h" />
@@ -104,9 +106,14 @@
     <ClInclude Include="..\src\gui\Layout.h">
       <Filter>gui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gui\UIModels.h">
+      <Filter>gui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
+    <ClCompile Include="..\src\ChapterTable.cpp" />
+    <ClCompile Include="..\src\ChapterTable_ut.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
@@ -114,6 +121,8 @@
     <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\FilterUtil.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
+    <ClCompile Include="..\src\PagePosition.cpp" />
+    <ClCompile Include="..\src\PagePosition_ut.cpp" />
     <ClCompile Include="..\src\PageRenderPolicy.cpp" />
     <ClCompile Include="..\src\PdfDarkModeImageClassifier_ut.cpp" />
     <ClCompile Include="..\src\PdfDarkModeImageRules.cpp" />

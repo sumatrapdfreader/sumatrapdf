@@ -2316,6 +2316,9 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     } else if (data->pageNo > 0) {
         // toc entry: show the destination page number on the right, e.g. "p33"
         rightStr = fmt("p%d", data->pageNo);
+    } else if (data->tocItem && data->tocItem->loc.chapter >= 1) {
+        // chaptered doc: destination unresolved until clicked, show the chapter
+        rightStr = fmt("ch%d", data->tocItem->loc.chapter);
     } else if (data->filePath) {
         rightStr = path::GetDirTemp(data->filePath);
     }

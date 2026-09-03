@@ -156,7 +156,7 @@ void ZoomToString(Str* dst, float zoom, FileState* fileState) {
             logf("File type: %s\n", ext);
         }
         logf("DisplayMode: %s\n", fileState->displayMode);
-        logf("PageNo: %d\n", fileState->pageNo);
+        logf("PageNo: %s\n", fileState->pageNo);
     }
     ReportIf(!IsValidZoom(zoom));
     if (kZoomFitPage == zoom) {

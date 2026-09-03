@@ -250,6 +250,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     FindWindowWnd* findWindow = nullptr; // floating window variant (SearchUIFloating)
     // owned by the toolbar layout
     Edit* pageEdit = nullptr;
+    // chapter number edit, next to pageEdit; only for HasChapters() docs
+    Edit* chapterEdit = nullptr;
 
     // state related to table of contents (PDF bookmarks etc.)
     HWND hwndTocBox = nullptr;

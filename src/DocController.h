@@ -13,6 +13,8 @@ struct TocItem;
 struct MainWindow;
 struct FileState;
 struct RenderedBitmap;
+// chapter-aware page location; full definition in ChapterTable.h
+struct Location;
 enum class DisplayMode;
 enum class DocProp : u8;
 
@@ -51,6 +53,10 @@ struct DocControllerCallback {
     // the controller replaced its TocTree (built in the background): show the
     // new one. Must not return while anything still points into the old tree.
     virtual void TocChanged(DocController*) = 0;
+    // the DisplayModel's flat page numbering shifted because a chapter got
+    // (re)laid out; refresh anything keyed by pageNo (selection, find, toolbar,
+    // toc selection)
+    virtual void PagesRenumbered(DisplayModel* dm) = 0;
 };
 
 struct DocController {
@@ -70,6 +76,20 @@ struct DocController {
     virtual void GoToPage(int pageNo, bool addNavPoint) = 0;
     virtual bool CanNavigate(int dir) const = 0;
     virtual void Navigate(int dir) = 0;
+
+    // chapter-aware page addressing; single-chapter controllers (the
+    // default) behave exactly as the flat pageNo API always has
+    virtual bool HasChapters() const { return false; }
+    virtual int ChapterCount() { return 1; }
+    virtual int ChapterPageCount(int) { return PageCount(); }
+    virtual Location CurrentLocation();
+    virtual void GoToLocation(Location loc, bool addNavPoint);
+    virtual Location LocationFromPageNo(int pageNo);
+    virtual int PageNoFromLocation(Location loc);
+    virtual Location ResolveDest(IPageDestination* dest);
+    virtual TempStr MakeBookmarkTemp(Location loc);
+    virtual Location LookupBookmark(Str s);
+    virtual Location ClampLocation(Location loc);
 
     // view settings
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) = 0;

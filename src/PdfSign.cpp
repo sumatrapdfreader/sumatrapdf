@@ -171,11 +171,7 @@ static pdf_annot* FindUnsignedSignatureWidget(fz_context* ctx, pdf_document* doc
 // left alone: the document is re-loaded right after saving.
 static void DropCachedPageRendering(EngineMupdf* e, int pageNo) {
     ScopedRecursiveMutex scope(&e->pagesLock);
-    int pageIdx = pageNo - 1;
-    if (pageIdx < 0 || pageIdx >= len(e->pages)) {
-        return;
-    }
-    FzPageInfo* pageInfo = e->pages[pageIdx];
+    FzPageInfo* pageInfo = e->PageInfoByPageNo(pageNo);
     if (!pageInfo) {
         return;
     }

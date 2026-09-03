@@ -153,7 +153,13 @@ static void AddFavoriteSilent(MainWindow* win, int pageNo) {
     TempStr plainLabel = fmt("%d", pageNo);
     bool needsLabel = pageLabel && !str::Eq(plainLabel, pageLabel);
     Str pl = needsLabel ? pageLabel : Str{};
-    Favorite* fn = NewFavorite(pageNo, {}, pl);
+    TempStr bookmark;
+    if (win->ctrl->HasChapters()) {
+        Location loc = win->ctrl->LocationFromPageNo(pageNo);
+        bookmark = win->ctrl->MakeBookmarkTemp(loc);
+        pl = fmt("%d/%d", loc.chapter, loc.page);
+    }
+    Favorite* fn = NewFavorite(pageNo, {}, pl, bookmark);
     DisplayModel* dm = win->AsFixed();
     if (dm && dm->GetScrollState().page == pageNo) {
         ScrollState ss = dm->GetScrollState();
@@ -782,6 +788,10 @@ enum class ControlCmd : u16 {
     TestRenderViewPrint = 79,
     TestReadAloudPlaybackBar = 80,
     TestRotatedTextMouseDrag = 81,
+    TestChapterInfo = 82,
+    TestGoToLocation = 83,
+    TestTocSidebarNav = 84,
+    TestSelectionSurvivesRenumber = 85,
 };
 
 enum class ControlArgType : u16 {
@@ -1815,6 +1825,47 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = AIChatTestReplayResultTemp(userMsg, response, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestChapterInfo: {
+            int exitCode = 0;
+            Str res = ChapterInfoResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestGoToLocation: {
+            i32 chapter = 0;
+            i32 page = 0;
+            if (!IntArg(req, 0, chapter) || !IntArg(req, 1, page)) {
+                AppendError(req, StrL("TestGoToLocation expects int chapter, int page"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = GoToLocationResultTemp(chapter, page, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestTocSidebarNav: {
+            i32 destNo = 1;
+            if (!IntArg(req, 0, destNo)) {
+                AppendError(req, StrL("TestTocSidebarNav expects int destNo (1-based)"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = TocSidebarNavResultTemp(destNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSelectionSurvivesRenumber: {
+            i32 layoutChapter = 2;
+            IntArg(req, 0, layoutChapter); // optional
+            int exitCode = 0;
+            Str res = RenumberSelResultTemp(layoutChapter, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

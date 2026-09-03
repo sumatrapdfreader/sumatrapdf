@@ -30,7 +30,12 @@ bool RefHoverIsInternalLink(IPageElement* el, DisplayModel* dm) {
         return false;
     }
     int destPage = PageDestGetPageNo(dest);
-    return dm && dm->ValidPageNo(destPage);
+    if (dm && dm->ValidPageNo(destPage)) {
+        return true;
+    }
+    // chaptered doc: destPage stays -1 until clicked, but a dest with a
+    // chapter to resolve lazily is still an internal link
+    return dm && destPage < 1 && dest->loc.chapter >= 1;
 }
 
 static Rect PageScreenRectToScreen(HWND hwndCanvas, DisplayModel* dm, int srcPage) {

@@ -54,6 +54,7 @@ struct TextSearch : public TextSelection {
 
     void SetText(Str text);
     bool FindTextInPage(int pageNo, PageAndOffset* finalGlyph);
+    void EnsureFullyLaidOut();
     bool FindStartingAtPage(int pageNo);
     PageAndOffset MatchEnd(int startOff) const;
 

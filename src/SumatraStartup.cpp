@@ -78,6 +78,7 @@
 #include "LinkFollow.h"
 #include "SumatraControl.h"
 #include "ExplorerQuickLook.h"
+#include "PagePosition.h"
 #include "SumatraLog.h"
 
 // return false if failed in a way that should abort the app
@@ -394,13 +395,17 @@ void SetTabState(WindowTab* tab, TabState* state) {
     // validate page number from session state
     // TODO: figure out how this happens in the first place i.e.
     // why TabState->pageNo etc. gets saved as 0
-    if (state->pageNo < 1) {
-        state->pageNo = 1;
+    StoredPagePos storedPos = ParseStoredPagePos(state->pageNo);
+    int pageNo = PageNoFromStoredPagePos(ctrl, state->pageNo);
+    if (pageNo < 1) {
+        pageNo = 1;
         state->scrollPos = {-1, -1};
     } else {
+        // PageNoFromStoredPagePos() already synced dm (for a bookmark, via
+        // LookupBookmark -> PageNoFromLocation), so this count is fresh
         int nPages = ctrl->PageCount();
-        if (state->pageNo > nPages) {
-            state->pageNo = nPages;
+        if (pageNo > nPages) {
+            pageNo = nPages;
             state->scrollPos = {-1, -1};
         }
     }
@@ -414,10 +419,14 @@ void SetTabState(WindowTab* tab, TabState* state) {
     }
 
     if (dm) {
-        ScrollState scrollState = {state->pageNo, state->scrollPos.x, state->scrollPos.y};
+        ScrollState scrollState = {pageNo, state->scrollPos.x, state->scrollPos.y};
+        if (storedPos.bookmark) {
+            // legacy plain int stays flat by design; only a bookmark restores by Location
+            scrollState.loc = ctrl->LocationFromPageNo(pageNo);
+        }
         dm->SetScrollState(scrollState);
     } else {
-        ctrl->GoToPage(state->pageNo, true);
+        ctrl->GoToPage(pageNo, true);
     }
 
     float zoom = ZoomFromString(state->zoom, kInvalidZoom);

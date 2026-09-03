@@ -797,6 +797,7 @@ static bool PrintToDevice(const PrintData& pd) {
     int res;
 
     EngineBase& engine = *pd.engine;
+    EnsureFullLayout(pd.engine);
 
     pd.engine->AddRef();
     defer {
@@ -1353,6 +1354,8 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         return;
     }
     int rotation;
+    // the print dialog needs the real total up front; no progress UI here
+    EnsureFullLayout(dm);
     int nPages = dm->PageCount();
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
@@ -1475,6 +1478,8 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     pinnedEngine = engine;
     pinnedEngine->AddRef();
     rotation = dm->GetRotation();
+    // no-op if already laid out above; covers a doc swapped in while the dialog was open
+    EnsureFullLayout(dm);
     nPages = dm->PageCount();
 
     if (!pdex.hDevNames) {

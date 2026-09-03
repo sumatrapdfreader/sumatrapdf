@@ -710,10 +710,29 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     return true;
 }
 
+// a chaptered doc may have laid out only the first chapter when this
+// TextSearch was constructed; lay out the rest so a whole-document find
+// covers every page, and grow pagesToSkip to match
+void TextSearch::EnsureFullyLaidOut() {
+    EnsureFullLayout(engine);
+    int newPages = engine->PageCount();
+    if (newPages == nPages) {
+        return;
+    }
+    int oldPages = nPages;
+    nPages = newPages;
+    VecResize(pagesToSkip, nPages);
+    for (int i = oldPages; i < nPages; i++) {
+        pagesToSkip[i] = false;
+    }
+}
+
 bool TextSearch::FindStartingAtPage(int pageNo) {
     if (len(findText) == 0) {
         return false;
     }
+
+    EnsureFullyLaidOut();
 
     int lo = RestrictFirst();
     int hi = RestrictLast();

@@ -1062,6 +1062,10 @@ FileStates [
         ; number of the bookmarked page
         PageNo = 0
 
+        ; engine bookmark for documents with chapters; PageNo is only a hint
+        ; (introduced in version 3.7)
+        Bookmark =
+
         ; label for this page (only present if logical and physical page numbers
         ; are not the same)
         PageLabel =
@@ -1145,7 +1149,8 @@ FileStates [
     ; number of times this document has been opened recently
     OpenCount = 0
 
-    ; number of the last read page
+    ; number of the last read page, or `bm:<bookmark>` for documents with
+    ; chapters (see PagePosition.cpp)
     PageNo = 1
 
     ; how far pages have been rotated as a multiple of 90 degrees
@@ -1207,7 +1212,8 @@ SessionData [
         ; facing, book view, continuous, continuous facing, continuous book view
         DisplayMode = automatic
 
-        ; number of the last read page
+        ; number of the last read page, or `bm:<bookmark>` for documents with
+        ; chapters (see PagePosition.cpp)
         PageNo = 1
 
         ; zoom (in %) or one of those values: fit page, fit width, fit height,

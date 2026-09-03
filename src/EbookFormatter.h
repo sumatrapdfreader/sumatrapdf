@@ -5,6 +5,14 @@
 
 struct MobiDoc;
 
+// whether the book's cover image is emitted at the start of the formatted
+// output; Skip for a chapter slice other than the book's first (its
+// reparseIdx is 0 too, but there's no cover to show there)
+enum class MobiCoverImage {
+    Skip,
+    Show,
+};
+
 struct MobiFormatter : HtmlFormatter {
     // accessor to images (and other format-specific data)
     // it can be nullptr (enables testing by feeding raw html)
@@ -15,7 +23,7 @@ struct MobiFormatter : HtmlFormatter {
     void HandleHtmlTag(HtmlToken* t) override;
 
   public:
-    MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc);
+    MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc, MobiCoverImage coverImage = MobiCoverImage::Show);
 };
 
 /* formatting extensions for EPUB */

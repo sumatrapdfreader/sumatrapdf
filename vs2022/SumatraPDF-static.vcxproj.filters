@@ -144,6 +144,9 @@
     <ClInclude Include="..\src\CaptionGlyphs.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ChapterTable.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ChmDump.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -301,6 +304,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\OverlayScrollbar.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PagePosition.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\PageRenderPolicy.h">
@@ -665,6 +671,9 @@
     <ClCompile Include="..\src\ChangeThemeDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ChapterTable.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ChmDump.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -696,6 +705,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DisplayModel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DocController.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DocProperties.cpp">
@@ -864,6 +876,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PageGridDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PagePosition.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PageRenderPolicy.cpp">

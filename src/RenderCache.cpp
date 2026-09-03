@@ -161,11 +161,16 @@ BitmapCacheEntry::~BitmapCacheEntry() {
 BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile) {
     ScopedRecursiveMutex scope(&cacheAccess);
     rotation = NormalizeRotation(rotation);
+    // a stale entry keyed by the old pageNo must not match after a chapter
+    // shift; loc identifies the page across the shift, pageNo alone doesn't
+    PageInfo* pi = dm ? dm->GetPageInfo(pageNo) : nullptr;
+    Location loc = pi ? pi->loc : kInvalidLocation;
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* e = cache[i];
+        bool locOk = !loc.IsValid() || !e->loc.IsValid() || loc == e->loc;
         if ((dm == e->dm) && (pageNo == e->pageNo) && (rotation == e->rotation) &&
             (kInvalidZoom == zoom || zoom == e->zoom) && (!tile || e->tile == *tile) &&
-            (e->darkModeEpoch == darkModeEpoch)) {
+            (e->darkModeEpoch == darkModeEpoch) && locOk) {
             e->refs++;
             ReportIf(i != e->cacheIdx);
             return e;
@@ -292,6 +297,7 @@ void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
 
     // Copy the PageRenderRequest as it will be reused
     auto* entry = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
+    entry->loc = req.loc;
     entry->darkModeEpoch = darkModeEpoch;
     entry->cacheIdx = cacheCount;
     cache[cacheCount] = entry;
@@ -425,6 +431,72 @@ void RenderCache::KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm) 
         // make sure that the page is rerendered eventually
         entry->zoom = kInvalidZoom;
         entry->outOfDate = true;
+    }
+}
+
+// a chapter (re)laid out and the engine's flat page numbering shifted under dm:
+// remap cache entries / requests to their new pageNo by loc, dropping ones
+// whose loc no longer maps to a page (e.g. the chapter shrank)
+void RenderCache::RekeyForLayoutChange(DisplayModel* dm) {
+    ScopedRecursiveMutex scopeReq(&requestAccess);
+    ScopedRecursiveMutex scopeCache(&cacheAccess);
+
+    auto findPageNo = [dm](Location loc) -> int {
+        for (int pageNo = 1; pageNo <= dm->PageCount(); pageNo++) {
+            PageInfo* pi = dm->GetPageInfo(pageNo);
+            if (pi && pi->loc == loc) {
+                return pageNo;
+            }
+        }
+        return kInvalidPageNo;
+    };
+
+    for (int i = cacheCount - 1; i >= 0; i--) {
+        BitmapCacheEntry* e = cache[i];
+        if (e->dm != dm) {
+            continue;
+        }
+        int newPageNo = e->loc.IsValid() ? findPageNo(e->loc) : kInvalidPageNo;
+        if (newPageNo == kInvalidPageNo) {
+            DropCacheEntryIfNotUsed(e);
+        } else {
+            e->pageNo = newPageNo;
+        }
+    }
+
+    int reqCount = requestCount;
+    int curPos = 0;
+    for (int i = 0; i < reqCount; i++) {
+        PageRenderRequest* req = &(requests[i]);
+        if (i != curPos) {
+            requests[curPos] = requests[i];
+        }
+        if (req->dm != dm) {
+            curPos++;
+            continue;
+        }
+        int newPageNo = req->loc.IsValid() ? findPageNo(req->loc) : kInvalidPageNo;
+        if (newPageNo == kInvalidPageNo) {
+            // no cb call: same "treat as aborted" contract as ClearQueueForDisplayModel
+            requestCount--;
+        } else {
+            requests[curPos].pageNo = newPageNo;
+            curPos++;
+        }
+    }
+    UpdateRenderInfo();
+
+    for (int i = 0; i < nRenderThreads; i++) {
+        PageRenderRequest* cr = curReqs[i];
+        if (!cr || cr->dm != dm) {
+            continue;
+        }
+        int newPageNo = cr->loc.IsValid() ? findPageNo(cr->loc) : kInvalidPageNo;
+        if (newPageNo == kInvalidPageNo) {
+            AbortCurrentRequest(i);
+        } else {
+            cr->pageNo = newPageNo;
+        }
     }
 }
 
@@ -729,6 +801,8 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     newRequest->pageNo = pageNo;
     newRequest->rotation = rotation;
     newRequest->zoom = zoom;
+    PageInfo* pi = dm->GetPageInfo(pageNo);
+    newRequest->loc = pi ? pi->loc : kInvalidLocation;
     if (tile) {
         newRequest->pageRect = GetTileRectUser(dm->GetEngine(), pageNo, rotation, zoom, *tile);
         newRequest->tile = *tile;
@@ -1092,7 +1166,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             continue;
         }
 
-        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderFinishedCb.IsValid()) {
+        if (!req.dm->PageVisibleNearbyLocked(req.pageNo) && !req.renderFinishedCb.IsValid()) {
             continue;
         }
 
@@ -1105,6 +1179,9 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         EngineBase* engine = req.dm->GetEngine();
 
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
+        if (req.loc.IsValid()) {
+            args.loc = req.loc;
+        }
         // the canvas paints the document background before drawing the page,
         // so a page with transparency composites over it (#5844)
         args.keepAlpha = true;
@@ -1286,6 +1363,9 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
 
         RenderPageArgs args(pageNo, zoom, rotation, &area);
+        if (pi->loc.IsValid()) {
+            args.loc = pi->loc;
+        }
         args.keepAlpha = true; // see the other RenderPageArgs above (#5844)
         args.transparentBackdrop = ShowTransparencyGrid();
         Pixmap* bmp = dm->GetEngine()->RenderPage(args);

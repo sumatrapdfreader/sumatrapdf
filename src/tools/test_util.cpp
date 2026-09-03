@@ -30,6 +30,8 @@ extern void StrVecTest();
 extern void PdfDarkModeOklab_UnitTests();
 extern void PdfDarkModeImageClassifier_UnitTests();
 extern void AppendStoreTest();
+extern void ChapterTable_UnitTests();
+extern void PagePosition_UnitTests();
 #if OS_WIN
 extern void WinUtilTest();
 extern void ClipboardImageTest();
@@ -127,6 +129,8 @@ int main(int argc, char** argv) {
     PdfDarkModeOklab_UnitTests();
     PdfDarkModeImageClassifier_UnitTests();
     AppendStoreTest();
+    ChapterTable_UnitTests();
+    PagePosition_UnitTests();
 #if OS_WIN
     WinUtilTest();
     ClipboardImageTest();

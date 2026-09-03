@@ -347,6 +347,7 @@ bool PdfCreator::SaveToFile(Str filePath) const {
 
 // creates a simple PDF with all pages rendered as a single image
 bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
+    EnsureFullLayout(engine);
     PdfCreator* c = new PdfCreator();
     bool ok = true;
     // render all pages to images
@@ -380,6 +381,7 @@ bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine,
     if (!engine || !engine->IsImageCollection() || engine->PageCount() <= 0) {
         return false;
     }
+    EnsureFullLayout(engine);
 
     PdfCreator* c = new PdfCreator();
     if (!c->ctx || !c->doc) {

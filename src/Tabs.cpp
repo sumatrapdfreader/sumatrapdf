@@ -69,6 +69,11 @@ static TempStr TabPageSuffixTemp(WindowTab* tab) {
     if (count <= 0 || curr < 1) {
         return {};
     }
+    if (tab->ctrl->HasChapters()) {
+        Location loc = tab->ctrl->CurrentLocation();
+        int chapterPages = tab->ctrl->ChapterPageCount(loc.chapter);
+        return fmt(" %d/%d · %d/%d", loc.chapter, tab->ctrl->ChapterCount(), loc.page, chapterPages);
+    }
     return fmt(" %d/%d", curr, count);
 }
 

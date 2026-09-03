@@ -89,21 +89,33 @@ void ToolbarSetHeight(MainWindow* win, int dy) {
 
 //--- the native page-number edit
 
-static void OnPageEditChar(MainWindow* win, Edit::CharEvent* ev) {
-    if (!win || !win->IsDocLoaded() || !win->pageEdit) {
+// Enter in either the page or chapter edit navigates; chaptered docs read
+// both boxes and go by Location, single-chapter docs keep the page-label path
+static void OnLocationEditChar(MainWindow* win, Edit::CharEvent* ev) {
+    if (!win || !win->IsDocLoaded()) {
         return;
     }
     switch ((Key)ev->c) {
         case Key::Enter: {
-            TempStr s = win->pageEdit->GetTextTemp();
-            int newPageNo = win->ctrl->GetPageByLabel(s);
-            if (win->ctrl->ValidPageNo(newPageNo)) {
-                win->ctrl->GoToPage(newPageNo, true);
-                HwndSetFocus(win->hwndFrame);
-                // the overlay toolbar was kept up by the focus; now that
-                // it's gone, let it hide again
-                UpdateOverlayToolbarForMouse(win);
+            DocController* ctrl = win->ctrl;
+            if (ctrl->HasChapters()) {
+                int chapter = win->chapterEdit ? ParseInt(win->chapterEdit->GetTextTemp()) : 1;
+                int page = win->pageEdit ? ParseInt(win->pageEdit->GetTextTemp()) : 1;
+                Location loc = ctrl->ClampLocation({chapter, page});
+                ctrl->GoToLocation(loc, true);
+            } else if (win->pageEdit) {
+                TempStr s = win->pageEdit->GetTextTemp();
+                int newPageNo = ctrl->GetPageByLabel(s);
+                if (!ctrl->ValidPageNo(newPageNo)) {
+                    ev->didHandle = true;
+                    return;
+                }
+                ctrl->GoToPage(newPageNo, true);
             }
+            HwndSetFocus(win->hwndFrame);
+            // the overlay toolbar was kept up by the focus; now that
+            // it's gone, let it hide again
+            UpdateOverlayToolbarForMouse(win);
             ev->didHandle = true;
             return;
         }
@@ -129,7 +141,7 @@ static int PageEditPadR() {
     return PageEditPadL() + DpiScale(4);
 }
 
-Edit* ToolbarCreatePageEdit(MainWindow* win, PlatformFont* font, int iconDy) {
+static Edit* ToolbarCreateLocationEdit(MainWindow* win, PlatformFont* font, int iconDy) {
     Edit::CreateArgs args;
     args.parent = win->hwndToolbar;
     args.font = font;
@@ -157,8 +169,16 @@ Edit* ToolbarCreatePageEdit(MainWindow* win, PlatformFont* font, int iconDy) {
     e->SetIdealWidthChars(6);
     e->SetMaxWidthChars(6);
     e->idealDy = iconDy;
-    e->onChar = MkFunc1(OnPageEditChar, win);
+    e->onChar = MkFunc1(OnLocationEditChar, win);
     return e;
+}
+
+Edit* ToolbarCreatePageEdit(MainWindow* win, PlatformFont* font, int iconDy) {
+    return ToolbarCreateLocationEdit(win, font, iconDy);
+}
+
+Edit* ToolbarCreateChapterEdit(MainWindow* win, PlatformFont* font, int iconDy) {
+    return ToolbarCreateLocationEdit(win, font, iconDy);
 }
 
 // no document: the find edit does nothing, so don't offer a text cursor
