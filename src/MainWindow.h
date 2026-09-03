@@ -495,8 +495,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // inside the search box the home page draws
     Edit* homeSearch = nullptr;
     ILayout* homeSearchLayout = nullptr;
-    // remembers the search query while the edit control is destroyed
-    // (e.g. when a document tab is active)
+    // remembers the search query if the edit is destroyed (window teardown)
     Str homeSearchQuery;
 
     bool isToolbarVisible = false;

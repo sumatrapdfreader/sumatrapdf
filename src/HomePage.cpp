@@ -4,10 +4,10 @@
 #include "base/Base.h"
 #include "base/GdiPlusUtil.h"
 #include "base/ScopedWin.h"
-#include "gui/Dpi.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
 #include "base/Win.h"
+#include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -890,6 +890,7 @@ void ShowAboutWindow(MainWindow* win) {
 static void ShowFrequentlyRead(VirtMouseEvent* ev) {
     auto* win = (MainWindow*)ev->target->userData;
     gSettings->showStartPage = true;
+    HomePageRelayout(win);
     win->RedrawAll(true);
 }
 
@@ -1097,9 +1098,7 @@ struct HomeEntryCtrl : VirtCtrl {
     VirtCloseButton* closeBtn = nullptr;
     VirtCloseButton* removeBtn = nullptr;
     HomeListIconCtrl* pinBtn = nullptr;
-    // per-paint: points into the HomePageLayout being painted. Set by
-    // HomePageSyncChrome right before every paint; only valid during the
-    // homeRoot->Paint() that follows
+    // points into gHomeLayoutCache.thumbs; set by HomePageRelayout
     ThumbnailLayout* layout = nullptr;
 
     HomeEntryCtrl();
@@ -1115,8 +1114,6 @@ struct HomeEntriesCtrl : VirtCtrl {
     // selection, which follows the mouse
     int activeIdx = -1;
     Point lastHoverPt{-1, -1};
-    // per-paint search-filter state, owned by the HomePageLayout being painted
-    // (same lifetime rules as HomeEntryCtrl::layout)
     const StrVec* filterWords = nullptr;
     Vec<u8>* highlighted = nullptr;
 
@@ -1271,12 +1268,23 @@ static void HomeSearchTextChanged(MainWindow* win) {
     win->homePageScrollY = 0;
     // the filter changed the list, so select its first entry (#1136)
     HomePageSelectFirst(win);
+    HomePageRelayout(win);
     HwndInvalidate(win->hwndCanvas);
 }
 
 // the keyboard selection outline is hidden while the search box has the focus
 static void HomeSearchFocusChanged(MainWindow* win) {
     HwndInvalidate(win->hwndCanvas);
+}
+
+static void PlaceHomeSearchEdit(MainWindow* win, const Rect& rcSearchBorder) {
+    if (!win || !win->homeSearchLayout || rcSearchBorder.IsEmpty()) {
+        return;
+    }
+    int searchEditDy = DpiScale(kSearchEditDy);
+    Rect rcEdit = {rcSearchBorder.x + 1, rcSearchBorder.y + 1, rcSearchBorder.dx - 2, searchEditDy};
+    LayoutToSize(win->homeSearchLayout, rcEdit.Size());
+    win->homeSearchLayout->SetBounds(rcEdit);
 }
 
 static void EnsureHomeSearchCreated(MainWindow* win) {
@@ -1316,10 +1324,17 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
     box->alignCross = CrossAxisAlign::CrossCenter;
     box->AddChild(e, 1);
     win->homeSearchLayout = box;
+    e->SetIsVisible(false);
+}
+
+void HomePageHideSearch(MainWindow* win) {
+    if (win && win->homeSearch) {
+        win->homeSearch->SetIsVisible(false);
+    }
 }
 
 void HomePageDestroySearch(MainWindow* win) {
-    if (!win->homeSearch) {
+    if (!win || !win->homeSearch) {
         return;
     }
     TempStr query = win->homeSearch->GetTextTemp();
@@ -1357,15 +1372,10 @@ void HomePageOnDpiChanged(MainWindow* win, int dpi) {
         int margin = DpiScaleByDpi(dpi, 6);
         EditSetMargins(win->homeSearch, margin, margin);
     }
+    HomePageRelayout(win);
     if (win->hwndCanvas) {
         HwndInvalidate(win->hwndCanvas, true);
     }
-}
-
-void HomePageFocusSearch(MainWindow* win) {
-    EnsureHomeSearchCreated(win);
-    win->homeSearch->SetIsVisible(true);
-    EditSetFocus(win->homeSearch);
 }
 
 void PickAnotherRandomPromotion() {
@@ -1403,6 +1413,7 @@ struct HomePageLayoutCache {
     bool hasTip = false;
     Vec<ThumbnailLayout> thumbs;
     StrVec filterWords;
+    Vec<u8> highlighted;
 };
 
 static HomePageLayoutCache gHomeLayoutCache;
@@ -1413,6 +1424,7 @@ static void ClearHomeLayoutCache() {
     gHomeLayoutCache.filterText = {};
     VecReset(gHomeLayoutCache.thumbs);
     gHomeLayoutCache.filterWords.Reset();
+    VecReset(gHomeLayoutCache.highlighted);
     gHomeLayoutCache.hasTip = false;
     gHomeLayoutCache.nFiles = 0;
     gHomeLayoutCache.scrollY = 0;
@@ -1421,10 +1433,19 @@ static void ClearHomeLayoutCache() {
 // The cache holds raw FileState* (ThumbnailLayout::fs) owned by gSettings.
 // Reloading settings frees and rebuilds those, so the cache has to be dropped
 // first or hover / selection reads freed memory (crash 8c34d7eda). It is
-// rebuilt on the next paint.
+// rebuilt on the next HomePageRelayout.
 // must be called before the FileState objects the cache points at are freed
 void HomePageInvalidateLayoutCache() {
     ClearHomeLayoutCache();
+}
+
+void HomePageFocusSearch(MainWindow* win) {
+    EnsureHomeSearchCreated(win);
+    HomePageRelayout(win);
+    if (win->homeSearch) {
+        win->homeSearch->SetIsVisible(true);
+        EditSetFocus(win->homeSearch);
+    }
 }
 
 static void OffsetThumbnailLayouts(Vec<ThumbnailLayout>& thumbs, int dy) {
@@ -1445,10 +1466,11 @@ static void OffsetThumbnailLayouts(Vec<ThumbnailLayout>& thumbs, int dy) {
 }
 
 static TempStr HomeSearchQueryTemp(MainWindow* win) {
-    if (!win->homeSearch) {
-        return {};
+    if (win->homeSearch) {
+        return win->homeSearch->GetTextTemp();
     }
-    return win->homeSearch->GetTextTemp();
+    // edit is created after paint; keep filtering with the remembered query
+    return win->homeSearchQuery;
 }
 
 static bool HomeLayoutCacheMatches(const Rect& rc, Str filterText) {
@@ -1556,6 +1578,7 @@ static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scr
     c.hasTip = l.hasTip;
     c.thumbs = l.thumbnails;
     c.filterWords = l.filterWords;
+    c.highlighted = l.highlighted;
 }
 
 // rebuild chrome VirtText + copy cached geometry into l (no full layout)
@@ -1592,6 +1615,7 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     l.hasTip = c.hasTip;
     l.thumbnails = c.thumbs;
     l.filterWords = c.filterWords;
+    l.highlighted = c.highlighted;
 
     PlatformFont* hdrFont = HomePageFont(24);
     PlatformFont* fontText = HomePageFont(14);
@@ -1619,23 +1643,6 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     l.openDoc = openDoc;
 }
 
-// after paint, keep lazy fileSize values in the cache for the next frame
-static void SyncHomeLayoutCacheFileSizes(const HomePageLayout& l) {
-    auto& c = gHomeLayoutCache;
-    if (!c.valid || len(c.thumbs) != len(l.thumbnails)) {
-        return;
-    }
-    for (int i = 0; i < len(c.thumbs); i++) {
-        c.thumbs[i].fileSize = l.thumbnails[i].fileSize;
-        // geometry may have been filled for newly visible list rows
-        c.thumbs[i].rcListFileName = l.thumbnails[i].rcListFileName;
-        c.thumbs[i].rcListPath = l.thumbnails[i].rcListPath;
-        c.thumbs[i].rcListSize = l.thumbnails[i].rcListSize;
-        c.thumbs[i].listTextMeasured = l.thumbnails[i].listTextMeasured;
-        c.thumbs[i].szThumb = l.thumbnails[i].szThumb;
-    }
-}
-
 static void LayoutHomePage(HomePageLayout& l) {
     EnsureTipsParsed();
 
@@ -1648,11 +1655,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     auto rc = l.rc;
     auto* win = l.win;
 
-    // filter by search query if present
-    TempStr searchQuery;
-    if (win->homeSearch) {
-        searchQuery = win->homeSearch->GetTextTemp();
-    }
+    TempStr searchQuery = HomeSearchQueryTemp(win);
     bool hasFilter = searchQuery && searchQuery.s[0];
     if (hasFilter) {
         SplitFilterToWords(searchQuery, l.filterWords);
@@ -1704,7 +1707,6 @@ static void LayoutHomePage(HomePageLayout& l) {
     hdr->SetBounds({});
     l.freqRead = hdr;
 
-    EnsureHomeSearchCreated(win);
     int searchEditDy = DpiScale(kSearchEditDy);
     int searchThumbsGap = DpiScale(kSearchThumbnailsGapY);
     int borderDy = searchEditDy + 2; // 1px border on each side
@@ -1773,14 +1775,6 @@ static void LayoutHomePage(HomePageLayout& l) {
     l.rcIconOpen = rcIconOpen;
     openDoc->SetBounds(rcOpenDoc);
     l.openDoc = openDoc;
-
-    {
-        // inside the 1px border: the layout gives the edit the full width and
-        // its own (text-sized) height, centered vertically
-        Rect rcEdit = {l.rcSearchBorder.x + 1, l.rcSearchBorder.y + 1, l.rcSearchBorder.dx - 2, searchEditDy};
-        LayoutToSize(win->homeSearchLayout, rcEdit.Size());
-        win->homeSearchLayout->SetBounds(rcEdit);
-    }
 
     int headerBottomY = hdrY + rowDy + searchThumbsGap;
 
@@ -2479,6 +2473,7 @@ static void HomePinEntryClicked(MainWindow* win, VirtMouseEvent* ev) {
     fs->isPinned = !fs->isPinned;
     ScheduleSaveSettings();
     win->DeleteToolTip();
+    HomePageRelayout(win);
     win->RedrawAll(true);
 }
 
@@ -2505,6 +2500,7 @@ static void HomeViewModeClicked(MainWindow* win, VirtMouseEvent* ev) {
     }
     win->homePageScrollY = 0;
     ScheduleSaveSettings();
+    HomePageRelayout(win);
     win->RedrawAll(true);
 }
 
@@ -2998,14 +2994,14 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     // file entries: clipped to the thumbnails band, like the static links were
     HomeEntriesCtrl* entries = chrome->entries;
     entries->SetBounds(l.rcThumbsArea);
-    // what the entries paint with; owned by l, which outlives the paint
-    entries->filterWords = &l.filterWords;
-    entries->highlighted = &l.highlighted;
-    int nEntries = len(l.thumbnails);
+    auto& cache = gHomeLayoutCache;
+    entries->filterWords = &cache.filterWords;
+    entries->highlighted = &cache.highlighted;
+    int nEntries = len(cache.thumbs);
     entries->SetEntryCount(nEntries);
     bool listView = HomePageIsListView();
     for (int i = 0; i < nEntries; i++) {
-        ThumbnailLayout& t = l.thumbnails[i];
+        ThumbnailLayout& t = cache.thumbs[i];
         HomeEntryCtrl* e = entries->EntryAt(i);
         e->idx = i;
         e->layout = &t;
@@ -3105,48 +3101,27 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         // the edit HWND is on top of the canvas; this is the canvas-drawn
         // border/fill around it. Repaint so a 1px antialiased leak cannot
         // show through the field.
-        HomeChromeCtrl* chrome = EnsureHomeChrome(win);
-        if (chrome->searchBorder) {
+        HomeChromeCtrl* chrome = HomeChrome(win);
+        if (chrome && chrome->searchBorder) {
             chrome->searchBorder->PaintStandalone(gfx);
         }
     }
 }
 
-void DrawHomePage(MainWindow* win, Gfx* gfx) {
-    HomePageLayout l;
-    l.rc = HwndClientRect(win->hwndCanvas);
-    l.gfx = gfx;
-    l.win = win;
-
-    TempStr filterText = HomeSearchQueryTemp(win);
-    int scrollY = win->homePageScrollY;
-
-    // Prefer the scroll-friendly path: when only scrollY changed, offset cached
-    // thumb rects instead of re-running full LayoutHomePage (was ~30% of scroll CPU).
-    bool usedCache = false;
-    if (HomeLayoutCacheMatches(l.rc, filterText)) {
-        Vec<FileState*> files;
-        StrVec filterWords;
-        CollectHomePageFiles(win, files, filterWords);
-        if (HomeLayoutCacheFilesMatch(files)) {
-            ApplyHomeLayoutCache(l, scrollY);
-            usedCache = true;
-        }
+static bool HomePageShouldShow(MainWindow* win) {
+    if (!win || !win->IsCurrentTabAbout()) {
+        return false;
     }
-    if (!usedCache) {
-        LayoutHomePage(l);
-        SaveHomeLayoutCache(l, filterText, win->homePageScrollY);
+    if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess)) {
+        return false;
     }
-    // Keep cue "Search N files …" in sync when history changes without recreating the edit.
-    UpdateHomeSearchCueBanner(win);
+    return gSettings && SettingsRememberOpenedFiles() && gSettings->showStartPage;
+}
 
-    HomePageSyncChrome(l);
-    DrawHomePageLayout(l);
-    SyncHomeLayoutCacheFileSizes(l);
-
-    // update overlay scrollbar for home page if thumbnails overflow visible area
-    bool showScrollbarV = ScrollbarsUseOverlay() && l.totalContentDy > l.thumbsVisibleDy;
-    if (showScrollbarV) {
+static void UpdateHomeOverlayScrollbar(MainWindow* win) {
+    auto& c = gHomeLayoutCache;
+    bool show = c.valid && ScrollbarsUseOverlay() && c.totalContentDy > c.thumbsVisibleDy;
+    if (show) {
         if (!win->overlayScrollV) {
             win->overlayScrollV =
                 OverlayScrollbarCreate(win->hwndCanvas, OverlayScrollbar::Type::Vert, ScrollbarsOverlayMode());
@@ -3155,20 +3130,90 @@ void DrawHomePage(MainWindow* win, Gfx* gfx) {
         si.cbSize = sizeof(si);
         si.fMask = SIF_ALL;
         si.nMin = 0;
-        si.nMax = l.totalContentDy - 1;
-        si.nPage = l.thumbsVisibleDy;
+        si.nMax = c.totalContentDy - 1;
+        si.nPage = c.thumbsVisibleDy;
         si.nPos = win->homePageScrollY;
         OverlayScrollbarShow(win->overlayScrollV, true);
         OverlayScrollbarSetInfo(win->overlayScrollV, &si, TRUE);
     }
-    // show thin scrollbar briefly to indicate content is scrollable
-    OverlayScrollbarShow(win->overlayScrollV, showScrollbarV);
+    OverlayScrollbarShow(win->overlayScrollV, show);
+}
+
+void HomePageCreate(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return;
+    }
+    EnsureHomeChrome(win);
+    EnsureHomeSearchCreated(win);
+}
+
+void HomePageRelayout(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return;
+    }
+    if (!HomePageShouldShow(win)) {
+        HomePageHideSearch(win);
+        return;
+    }
+    EnsureHomeChrome(win);
+    EnsureHomeSearchCreated(win);
+
+    HomePageLayout l;
+    l.rc = HwndClientRect(win->hwndCanvas);
+    l.win = win;
+    if (l.rc.IsEmpty()) {
+        HomePageHideSearch(win);
+        return;
+    }
+
+    TempStr filterText = HomeSearchQueryTemp(win);
+    bool usedCache = false;
+    if (HomeLayoutCacheMatches(l.rc, filterText)) {
+        Vec<FileState*> files;
+        StrVec filterWords;
+        CollectHomePageFiles(win, files, filterWords);
+        if (HomeLayoutCacheFilesMatch(files)) {
+            ApplyHomeLayoutCache(l, win->homePageScrollY);
+            usedCache = true;
+        }
+    }
+    if (!usedCache) {
+        LayoutHomePage(l);
+        SaveHomeLayoutCache(l, filterText, win->homePageScrollY);
+    }
+    HomePageSyncChrome(l);
+    PlaceHomeSearchEdit(win, l.rcSearchBorder);
+    if (win->homeSearch) {
+        win->homeSearch->SetIsVisible(true);
+    }
+    UpdateHomeSearchCueBanner(win);
+    UpdateHomeOverlayScrollbar(win);
+}
+
+void DrawHomePage(MainWindow* win, Gfx* gfx) {
+    if (!gHomeLayoutCache.valid) {
+        HomePageRelayout(win);
+    }
+    if (!gHomeLayoutCache.valid) {
+        return;
+    }
+
+    auto& c = gHomeLayoutCache;
+    HomePageLayout l;
+    l.win = win;
+    l.gfx = gfx;
+    l.rc = c.canvasRc;
+    l.rcThumbsArea = c.rcThumbsArea;
+    l.rcSearchBorder = c.rcSearchBorder;
+    l.rcTip = c.rcTip;
+    l.hasTip = c.hasTip;
+    l.thumbnails = c.thumbs;
+    DrawHomePageLayout(l);
 }
 
 // --- keyboard navigation of the file list (issue #1136) ---
 
-// Selection works off the layout cache, which is filled by the last paint, so
-// the entries are exactly what's on screen (same order, same filtering).
+// Selection works off the layout cache, filled by HomePageRelayout.
 static int HomeSelectableCount() {
     return gHomeLayoutCache.valid ? len(gHomeLayoutCache.thumbs) : 0;
 }
@@ -3497,6 +3542,7 @@ void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
     }
     win->homePageSelIdx = newIdx;
     HomeScrollSelectionIntoView(win);
+    HomePageRelayout(win);
     HwndInvalidate(win->hwndCanvas);
     HomePageShowSelectionTooltip(win);
 }
@@ -3540,6 +3586,7 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
     newScrollY = std::max(newScrollY, 0);
     if (newScrollY != win->homePageScrollY) {
         win->homePageScrollY = newScrollY;
+        HomePageRelayout(win);
         HwndInvalidate(win->hwndCanvas);
     }
 }
@@ -3555,6 +3602,7 @@ void HomePageOnMouseWheel(MainWindow* win, int delta) {
     newScrollY = std::max(newScrollY, 0);
     if (newScrollY != win->homePageScrollY) {
         win->homePageScrollY = newScrollY;
+        HomePageRelayout(win);
         HwndInvalidate(win->hwndCanvas);
     }
 }

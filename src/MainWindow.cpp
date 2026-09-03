@@ -148,6 +148,7 @@ MainWindow::~MainWindow() {
     str::Free(homeSearchQuery);
 
     UnsubclassToc(this);
+    HomePageDestroySearch(this);
     HomePageDestroyChrome(this);
 
     OverlayScrollbarDestroy(overlayScrollV);

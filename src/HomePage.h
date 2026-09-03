@@ -23,6 +23,9 @@ void FreeHomePageTips();
 void HomePageInvalidateLayoutCache();
 
 void DrawHomePage(MainWindow* win, Gfx* gfx);
+void HomePageCreate(MainWindow* win);
+void HomePageRelayout(MainWindow* win);
+void HomePageHideSearch(MainWindow* win);
 void PickAnotherRandomPromotion();
 void HomePageOnVScroll(MainWindow* win, WPARAM wp);
 void HomePageOnMouseWheel(MainWindow* win, int delta);

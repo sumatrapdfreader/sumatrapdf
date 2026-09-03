@@ -3179,6 +3179,7 @@ static MainWindow* CreateMainWindow() {
         delete win;
         return nullptr;
     }
+    HomePageCreate(win);
 
     // hide scrollbars to avoid showing/hiding on empty window
     if (!ScrollbarsAreHidden() && !ScrollbarsUseOverlay()) {
@@ -3260,6 +3261,7 @@ static MainWindow* CreateMainWindow() {
     // TODO: this is hackish. in general we should divorce
     // layout re-calculations from MainWindow and creation of windows
     win->UpdateCanvasSize();
+    HomePageRelayout(win);
     DarkModeApplyToNewFrame(win);
 
     // show menu bar rebar now that layout is done
@@ -4778,7 +4780,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     // canvas may not receive a message for a long time, leaving the edit (and
     // its "Search %d files" cue) floating over the document
     if (!tab->IsAboutTab()) {
-        HomePageDestroySearch(win);
+        HomePageHideSearch(win);
     }
 
     UpdateUiForCurrentTab(win);
@@ -4794,6 +4796,9 @@ void LoadModelIntoTab(WindowTab* tab) {
     // (deferred ScheduleUiUpdate would leave canvas hidden / wrong size).
     win->uiState.layout = {};
     RelayoutFrame(win, true, -1);
+    if (tab->IsAboutTab()) {
+        HomePageRelayout(win);
+    }
 
     // show the webview only now, when the toolbar/sidebar layout is final:
     // showing it earlier (at the previous tab's canvas geometry) made it
@@ -8276,6 +8281,7 @@ static void SetToolbarModeAndApply(int mode) {
 void MaybeRedrawHomePage() {
     for (MainWindow* w : gWindows) {
         if (w && w->IsCurrentTabAbout()) {
+            HomePageRelayout(w);
             w->RedrawAll(true);
         }
     }

@@ -39,7 +39,7 @@ static void OnPaintAbout(MainWindow* win) {
     if (drawHome) {
         DrawHomePage(win, gfx);
     } else {
-        HomePageDestroySearch(win);
+        HomePageHideSearch(win);
         // DrawAboutPage swaps the canvas root's child from the home page's
         // chrome to the About page's controls
         DrawAboutPage(win, gfx);

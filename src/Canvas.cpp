@@ -6036,6 +6036,9 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     logf("redraw: WM_SIZE hwnd=0x%p (canvas) size=(%d,%d)\n", hwnd, rc.dx, rc.dy);
                 }
                 win->UpdateCanvasSize();
+                if (win->IsCurrentTabAbout()) {
+                    HomePageRelayout(win);
+                }
                 // fully invalidate since layout depends on size
                 // (replaces CS_HREDRAW | CS_VREDRAW which caused transparent flash)
                 HwndInvalidate(hwnd);
@@ -6069,12 +6072,12 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         default:
             // TODO: achieve this split through subclassing or different window classes
             if (win->AsFixed()) {
-                HomePageDestroySearch(win);
+                HomePageHideSearch(win);
                 return WndProcCanvasFixedPageUI(win, hwnd, msg, wp, lp);
             }
 
             if (IsBrowserDocController(win->ctrl)) {
-                HomePageDestroySearch(win);
+                HomePageHideSearch(win);
                 return WndProcCanvasChmUI(win, hwnd, msg, wp, lp);
             }
 
@@ -6082,7 +6085,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return WndProcCanvasAbout(win, hwnd, msg, wp, lp);
             }
 
-            HomePageDestroySearch(win);
+            HomePageHideSearch(win);
             return WndProcCanvasLoadError(win, hwnd, msg, wp, lp);
     }
 }
