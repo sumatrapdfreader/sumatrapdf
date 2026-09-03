@@ -738,7 +738,7 @@ bool ReadAloudGetProgressPage(WindowTab* tab, int* pageOut, int* pageCountOut) {
         if (spokenPos >= 0) {
             absPos = tab->readAloudHighlightBase + tab->readAloudChunkStart + spokenPos;
         }
-    } else if (tab->readAloudResumePos > 0) {
+    } else if (tab->readAloudResumePos >= 0) {
         absPos = tab->readAloudResumePos;
     } else if (tab->readAloudChunkEnd > 0) {
         absPos = tab->readAloudHighlightBase + tab->readAloudChunkStart;

@@ -5143,7 +5143,15 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     WindowTab* currentTab = win->CurrentTab();
     if (currentTab) {
         currentTab->selectedAnnotation = nullptr;
+        bool hadReading = !deleteModel && (GetReadAloudSourceTab() == currentTab || CanContinueReadAloud(currentTab));
         ResetReadAloudStateForTab(currentTab);
+        if (hadReading && win->hwndCanvas) {
+            NotificationCreateArgs args;
+            args.hwndParent = win->hwndCanvas;
+            args.msg = _TRA("Reading stopped");
+            args.timeoutMs = 2000;
+            ShowNotification(args);
+        }
         // Compact toolbar / filter list hold non-owning Annotation* into the
         // engine about to die.
         if (deleteModel) {
@@ -14301,12 +14309,10 @@ static void ReadAloudStopRememberPos() {
     WindowTab* tab = gReadAloudSourceTab;
     if (tab && TtsIsSpeaking()) {
         int pos = TtsGetSpokenPosUtf8();
-        if (pos >= 0) {
-            int absPos = tab->readAloudHighlightBase + tab->readAloudChunkStart + pos;
-            int maxPos = tab->readAloudHighlightBase + tab->readAloudText.len;
-            if (absPos > 0 && absPos < maxPos) {
-                tab->readAloudResumePos = absPos;
-            }
+        int absPos = tab->readAloudHighlightBase + tab->readAloudChunkStart + (pos >= 0 ? pos : 0);
+        int maxPos = tab->readAloudHighlightBase + tab->readAloudText.len;
+        if (absPos >= 0 && absPos < maxPos) {
+            tab->readAloudResumePos = absPos;
         }
     }
     TtsStop();
@@ -14549,6 +14555,7 @@ static void ReadAloudInTab(WindowTab* tab) {
 
     if (!HasPermission(Perm::CopySelection)) {
         logf("tts: InTab: CopySelection permission denied\n");
+        ReadAloudShowNotif(tab, _TRA("This document doesn't allow copying text."));
         return;
     }
 
@@ -14602,6 +14609,7 @@ static void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
 
     if (!HasPermission(Perm::CopySelection)) {
         logf("tts: FromCursorInTab: CopySelection permission denied\n");
+        ReadAloudShowNotif(tab, _TRA("This document doesn't allow copying text."));
         return;
     }
 
@@ -14617,6 +14625,7 @@ static void ReadAloudFromViewportTopInTab(WindowTab* tab) {
 
     if (!HasPermission(Perm::CopySelection)) {
         logf("tts: FromViewportTopInTab: CopySelection permission denied\n");
+        ReadAloudShowNotif(tab, _TRA("This document doesn't allow copying text."));
         return;
     }
 
@@ -14630,6 +14639,8 @@ static void ReadAloudSelectionInTab(WindowTab* tab) {
     }
 
     if (!HasPermission(Perm::CopySelection)) {
+        logf("tts: SelectionInTab: CopySelection permission denied\n");
+        ReadAloudShowNotif(tab, _TRA("This document doesn't allow copying text."));
         return;
     }
 
@@ -14644,11 +14655,17 @@ bool CanContinueReadAloud(WindowTab* tab) {
     }
     int pos = tab->readAloudResumePos;
     int maxPos = tab->readAloudHighlightBase + tab->readAloudText.len;
-    return pos > 0 && pos < maxPos;
+    return pos >= 0 && pos < maxPos;
 }
 
 static void ReadAloudContinueInTab(WindowTab* tab) {
     if (!CanContinueReadAloud(tab) || !tab->win) {
+        return;
+    }
+
+    if (!HasPermission(Perm::CopySelection)) {
+        logf("tts: ContinueInTab: CopySelection permission denied\n");
+        ReadAloudShowNotif(tab, _TRA("This document doesn't allow copying text."));
         return;
     }
 

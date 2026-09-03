@@ -70,7 +70,7 @@ static Str ReadAloudScopeLabel(WindowTab* tab) {
         case WindowTab::ReadAloudScopeSelection:
             return _TRA("Selection");
         case WindowTab::ReadAloudScopeViewport:
-            return _TRA("From top");
+            return _TRA("Top of view");
         case WindowTab::ReadAloudScopeCursor:
             return _TRA("From cursor");
         case WindowTab::ReadAloudScopeSmart:
@@ -94,10 +94,15 @@ static TempStr ReadAloudPlaybackBarTextTemp(WindowTab* tab) {
     bool hasPage = ReadAloudGetProgressPage(tab, &pageNo, &pageCount);
     Str scope = ReadAloudScopeLabel(tab);
 
+    bool isPaused = CanContinueReadAloud(tab) && !TtsIsSpeaking();
     if (hasPage && pageCount > 0) {
-        return fmt(_TRA("Reading \xC2\xB7 %s \xC2\xB7 page %d of %d \xC2\xB7 %s").s, docName, pageNo, pageCount, scope);
+        const char* pattern = isPaused ? _TRA("Paused \xC2\xB7 %s \xC2\xB7 page %d of %d \xC2\xB7 %s").s
+                                       : _TRA("Reading \xC2\xB7 %s \xC2\xB7 page %d of %d \xC2\xB7 %s").s;
+        return fmt(pattern, docName, pageNo, pageCount, scope);
     }
-    return fmt(_TRA("Reading \xC2\xB7 %s \xC2\xB7 %s").s, docName, scope);
+    const char* pattern =
+        isPaused ? _TRA("Paused \xC2\xB7 %s \xC2\xB7 %s").s : _TRA("Reading \xC2\xB7 %s \xC2\xB7 %s").s;
+    return fmt(pattern, docName, scope);
 }
 
 static void OnPauseClicked(ReadAloudPlaybackBar* bar, VirtMouseEvent*) {
@@ -444,6 +449,7 @@ TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut) {
     out.Append(fmt("speedLabel=%d,%d,%d,%d\n", speedLab.x, speedLab.y, speedLab.dx, speedLab.dy));
     out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", idx, ReadAloudSpeedCount(),
                    ReadAloudSpeedLabelTemp(ReadAloudSpeedAt(idx))));
+    out.Append(fmt("status=%s\n", bar->status ? bar->status->s : Str{}));
     return finish(0);
 }
 
