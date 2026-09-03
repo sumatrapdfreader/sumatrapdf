@@ -781,6 +781,7 @@ static void fz_drop_html_box(fz_context *ctx, fz_html_box *box)
 		fz_html_box *next = box->next;
 		if (box->type == BOX_FLOW)
 			fz_drop_html_flow(ctx, box->u.flow.head);
+		fz_drop_image(ctx, box->background_image);
 		fz_drop_html_box(ctx, box->down);
 		box = next;
 	}
@@ -869,6 +870,10 @@ static fz_html_box *new_box(fz_context *ctx, struct genstate *g, fz_xml *node, i
 #endif
 
 	box->style = fz_css_enlist(ctx, style, &g->styles, g->pool);
+
+	/* Only element boxes own a background image; anonymous boxes borrow the style but must not repaint it. */
+	if (node && style->background_image && fz_html_box_has_boxes(box))
+		box->background_image = load_html_image(ctx, g->zip, g->base_uri, style->background_image);
 
 	if (tag)
 	{

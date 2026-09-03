@@ -11,6 +11,10 @@ struct css_property_info { const char *name; int key; };
 -webkit-text-stroke-width,PRO_TEXT_STROKE_WIDTH
 background,PRO_BACKGROUND
 background-color,PRO_BACKGROUND_COLOR
+background-image,PRO_BACKGROUND_IMAGE
+background-position,PRO_BACKGROUND_POSITION
+background-repeat,PRO_BACKGROUND_REPEAT
+background-size,PRO_BACKGROUND_SIZE
 border,PRO_BORDER
 border-bottom,PRO_BORDER_BOTTOM
 border-bottom-color,PRO_BORDER_BOTTOM_COLOR

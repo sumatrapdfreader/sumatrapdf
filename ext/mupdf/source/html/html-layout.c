@@ -3663,6 +3663,100 @@ static void draw_rect(fz_context *ctx, fz_device *dev, fz_matrix ctm, float page
 		fz_rethrow(ctx);
 }
 
+/* Tiling a tiny image over a big box would mean millions of fills; past this we draw one copy. */
+#define MAX_BACKGROUND_TILES 4096
+
+/* Paint box->background_image into the padding box (x0,y0)-(x1,y1), honoring
+ * background-size, -position and -repeat. Image px map to pt like <img> does. */
+static void draw_background_image(fz_context *ctx, fz_device *dev, fz_matrix ctm, float page_top, fz_html_box *box, float x0, float y0, float x1, float y1)
+{
+	const fz_css_style *style = box->style;
+	fz_image *img = box->background_image;
+	float em = box->s.layout.em;
+	float bw = x1 - x0, bh = y1 - y0;
+	float iw = img->w * 72.0f / 96.0f, ih = img->h * 72.0f / 96.0f;
+	float w, h, ox, oy, sx, sy, ex, ey, tx, ty;
+	float tiles;
+	int repeat_x, repeat_y;
+	fz_rect area;
+	fz_path *clip;
+
+	if (iw <= 0 || ih <= 0 || bw <= 0 || bh <= 0)
+		return;
+
+	if (style->background_size_mode == BGS_COVER || style->background_size_mode == BGS_CONTAIN)
+	{
+		float scale = style->background_size_mode == BGS_COVER ? fz_max(bw / iw, bh / ih) : fz_min(bw / iw, bh / ih);
+		w = iw * scale;
+		h = ih * scale;
+	}
+	else
+	{
+		fz_css_number sw = style->background_size[0], sh = style->background_size[1];
+		w = fz_from_css_number(sw, em, bw, iw);
+		h = fz_from_css_number(sh, em, bh, ih);
+		if (sw.unit == N_AUTO && sh.unit != N_AUTO)
+			w = h * iw / ih;
+		else if (sh.unit == N_AUTO && sw.unit != N_AUTO)
+			h = w * ih / iw;
+	}
+	if (w <= 0 || h <= 0)
+		return;
+
+	/* A percentage positions the image within the free space, so 50% centers it. */
+	ox = x0 + fz_from_css_number(style->background_position[0], em, bw - w, 0);
+	oy = y0 + fz_from_css_number(style->background_position[1], em, bh - h, 0);
+
+	repeat_x = style->background_repeat == BGR_REPEAT || style->background_repeat == BGR_REPEAT_X;
+	repeat_y = style->background_repeat == BGR_REPEAT || style->background_repeat == BGR_REPEAT_Y;
+	sx = ox; ex = ox + w;
+	sy = oy; ey = oy + h;
+	if (repeat_x)
+	{
+		sx = ox - ceilf((ox - x0) / w) * w;
+		ex = x1;
+	}
+	if (repeat_y)
+	{
+		sy = oy - ceilf((oy - y0) / h) * h;
+		ey = y1;
+	}
+	tiles = ceilf((ex - sx) / w) * ceilf((ey - sy) / h);
+	if (tiles > MAX_BACKGROUND_TILES)
+	{
+		sx = ox; ex = ox + w;
+		sy = oy; ey = oy + h;
+	}
+
+	area = fz_make_rect(x0, y0 - page_top, x1, y1 - page_top);
+	clip = fz_new_path(ctx);
+	fz_try(ctx)
+	{
+		fz_rectto(ctx, clip, area.x0, area.y0, area.x1, area.y1);
+		fz_clip_path(ctx, dev, clip, 0, ctm, fz_transform_rect(area, ctm));
+		fz_try(ctx)
+		{
+			for (ty = sy; ty < ey; ty += h)
+			{
+				for (tx = sx; tx < ex; tx += w)
+				{
+					fz_matrix itm = fz_pre_translate(ctm, tx, ty - page_top);
+					itm = fz_pre_scale(itm, w, h);
+					fz_fill_image(ctx, dev, img, itm, 1, fz_default_color_params);
+				}
+			}
+		}
+		fz_always(ctx)
+			fz_pop_clip(ctx, dev);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+	}
+	fz_always(ctx)
+		fz_drop_path(ctx, clip);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
 static void draw_quad(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_css_color color,
 	float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3)
 {
@@ -4449,7 +4543,11 @@ static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, flo
 		 * we might find the end-of-skip point inside this box. If there is no content
 		 * then the box height will be 0, so nothing will be drawn. */
 		if (y1 > y0)
+		{
 			draw_rect(ctx, dev, ctm, page_top, box->style->background_color, x0, y0 - cell_padding_top, x1, y1 + cell_padding_bot);
+			if (box->background_image)
+				draw_background_image(ctx, dev, ctm, page_top, box, x0, y0 - cell_padding_top, x1, y1 + cell_padding_bot);
+		}
 
 		if (!skipping)
 		{

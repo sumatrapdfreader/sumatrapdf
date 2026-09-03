@@ -1,0 +1,848 @@
+html: draw CSS background-image on block boxes (issue #6131)
+
+The CSS engine only knew background-color. Fixed-layout EPUBs from
+scan-to-EPUB tools (Jouve LetoGen among them) put each page's artwork in
+`div{background-image:url(...)}` with no <img> and no text, so every page
+rendered blank.
+
+Parse background-image, -size, -position and -repeat (longhand and the
+`background:` shorthand) into fz_css_style. An element box whose style
+names an image loads it at build time, like <img>, and draw_block_box
+paints it over the background color, clipped to the padding box, with
+cover/contain and tiling. Tiling is capped: past MAX_BACKGROUND_TILES a
+single copy is drawn instead.
+
+css-properties.h is regenerated from css-properties.gperf with gperf 3.2.1.
+
+Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/6131
+---
+diff --git a/source/html/css-apply.c b/source/html/css-apply.c
+index fd483ffe6..46ee3eaa6 100644
+--- a/source/html/css-apply.c
++++ b/source/html/css-apply.c
+@@ -1008,11 +1008,71 @@ add_shorthand_font(fz_css_match *match, fz_css_value *value, int spec)
+ 		add_property(match, PRO_FONT_WEIGHT, &static_value_normal, spec);
+ }
+ 
++static fz_css_value static_value_none = { CSS_KEYWORD, "none", NULL, NULL };
++static fz_css_value static_value_transparent = { CSS_KEYWORD, "transparent", NULL, NULL };
++static fz_css_value static_value_auto = { CSS_KEYWORD, "auto", NULL, NULL };
++static fz_css_value static_value_repeat = { CSS_KEYWORD, "repeat", NULL, NULL };
++
++/* sorted for keyword_in_list */
++static const char *background_position_kw[] = { "bottom", "center", "left", "right", "top" };
++static const char *background_repeat_kw[] = { "no-repeat", "repeat", "repeat-x", "repeat-y" };
++static const char *background_size_kw[] = { "auto", "contain", "cover" };
++
++static int
++is_background_position_value(fz_css_value *value)
++{
++	if (value->type == CSS_LENGTH || value->type == CSS_PERCENT || value->type == CSS_NUMBER)
++		return 1;
++	return value->type == CSS_KEYWORD && keyword_in_list(value->data, background_position_kw, nelem(background_position_kw));
++}
++
++static int
++is_background_size_value(fz_css_value *value)
++{
++	if (value->type == CSS_LENGTH || value->type == CSS_PERCENT || value->type == CSS_NUMBER)
++		return 1;
++	return value->type == CSS_KEYWORD && keyword_in_list(value->data, background_size_kw, nelem(background_size_kw));
++}
++
++/* background: [color] [image] [position [/ size]] [repeat], any order.
++ * Longhands not mentioned reset to their initial value. */
+ static void
+ add_shorthand_background(fz_css_match *match, fz_css_value *value, int spec)
+ {
+-	/* TODO: background-image, -origin, -size, -repeat */
+-	add_property(match, PRO_BACKGROUND_COLOR, value, spec);
++	fz_css_value *color = &static_value_transparent;
++	fz_css_value *image = &static_value_none;
++	fz_css_value *position = NULL;
++	fz_css_value *size = &static_value_auto;
++	fz_css_value *repeat = &static_value_repeat;
++
++	for (; value; value = value->next)
++	{
++		if (value->type == CSS_URI)
++			image = value;
++		else if (value->type == '/')
++		{
++			size = value->next;
++			while (value->next && is_background_size_value(value->next))
++				value = value->next;
++		}
++		else if (value->type == CSS_KEYWORD && !strcmp(value->data, "none"))
++			image = value;
++		else if (value->type == CSS_KEYWORD && keyword_in_list(value->data, background_repeat_kw, nelem(background_repeat_kw)))
++			repeat = value;
++		else if (is_background_position_value(value))
++		{
++			if (!position)
++				position = value;
++		}
++		else
++			color = value;
++	}
++
++	add_property(match, PRO_BACKGROUND_COLOR, color, spec);
++	add_property(match, PRO_BACKGROUND_IMAGE, image, spec);
++	add_property(match, PRO_BACKGROUND_POSITION, position, spec);
++	add_property(match, PRO_BACKGROUND_SIZE, size, spec);
++	add_property(match, PRO_BACKGROUND_REPEAT, repeat, spec);
+ }
+ 
+ static void
+@@ -1838,6 +1898,94 @@ page_break_from_property(fz_css_match *match, int prop)
+ 	return PB_AUTO;
+ }
+ 
++static const char *
++background_image_from_property(fz_css_match *match)
++{
++	fz_css_value *value = value_from_property(match, PRO_BACKGROUND_IMAGE);
++	if (value && value->type == CSS_URI && value->data[0])
++		return value->data;
++	return NULL;
++}
++
++static int
++background_repeat_from_property(fz_css_match *match)
++{
++	fz_css_value *value = value_from_property(match, PRO_BACKGROUND_REPEAT);
++	if (value)
++	{
++		if (!strcmp(value->data, "no-repeat")) return BGR_NO_REPEAT;
++		if (!strcmp(value->data, "repeat-x")) return BGR_REPEAT_X;
++		if (!strcmp(value->data, "repeat-y")) return BGR_REPEAT_Y;
++	}
++	return BGR_REPEAT;
++}
++
++/* background-size: auto | cover | contain | <w> [<h>]; a missing <h> is auto. */
++static void
++background_size_from_property(fz_css_match *match, fz_css_style *style)
++{
++	fz_css_value *value = value_from_property(match, PRO_BACKGROUND_SIZE);
++	int i;
++
++	style->background_size_mode = BGS_LENGTH;
++	style->background_size[0] = make_number(0, N_AUTO);
++	style->background_size[1] = make_number(0, N_AUTO);
++
++	if (value && value->type == CSS_KEYWORD)
++	{
++		if (!strcmp(value->data, "cover")) { style->background_size_mode = BGS_COVER; return; }
++		if (!strcmp(value->data, "contain")) { style->background_size_mode = BGS_CONTAIN; return; }
++	}
++
++	for (i = 0; i < 2 && value && is_background_size_value(value); i++, value = value->next)
++		if (value->type != CSS_KEYWORD)
++			style->background_size[i] = number_from_value(value, 0, N_AUTO);
++}
++
++static fz_css_number
++background_position_edge(fz_css_value *value)
++{
++	if (value->type != CSS_KEYWORD)
++		return number_from_value(value, 0, N_PERCENT);
++	if (!strcmp(value->data, "center"))
++		return make_number(50, N_PERCENT);
++	if (!strcmp(value->data, "right") || !strcmp(value->data, "bottom"))
++		return make_number(100, N_PERCENT);
++	return make_number(0, N_PERCENT);
++}
++
++/* background-position: <x> [<y>]; a lone value centers the other axis.
++ * Two keywords may come in either order ("top left"). */
++static void
++background_position_from_property(fz_css_match *match, fz_css_style *style)
++{
++	fz_css_value *x = value_from_property(match, PRO_BACKGROUND_POSITION);
++	fz_css_value *y = NULL;
++
++	style->background_position[0] = make_number(0, N_PERCENT);
++	style->background_position[1] = make_number(0, N_PERCENT);
++
++	if (!x || !is_background_position_value(x))
++		return;
++	if (x->next && is_background_position_value(x->next))
++		y = x->next;
++
++	if (y && x->type == CSS_KEYWORD && y->type == CSS_KEYWORD)
++	{
++		int x_is_vertical = !strcmp(x->data, "top") || !strcmp(x->data, "bottom");
++		int y_is_horizontal = !strcmp(y->data, "left") || !strcmp(y->data, "right");
++		if (x_is_vertical || y_is_horizontal)
++		{
++			fz_css_value *t = x;
++			x = y;
++			y = t;
++		}
++	}
++
++	style->background_position[0] = background_position_edge(x);
++	style->background_position[1] = y ? background_position_edge(y) : make_number(50, N_PERCENT);
++}
++
+ void
+ fz_default_css_style(fz_context *ctx, fz_css_style *style)
+ {
+@@ -2015,6 +2163,10 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style,
+ 	style->text_fill_color = color_from_properties(match, PRO_TEXT_FILL_COLOR, PRO_COLOR, black);
+ 	style->text_stroke_color = color_from_property(match, PRO_TEXT_STROKE_COLOR, transparent);
+ 	style->background_color = color_from_property(match, PRO_BACKGROUND_COLOR, transparent);
++	style->background_image = background_image_from_property(match);
++	style->background_repeat = background_repeat_from_property(match);
++	background_size_from_property(match, style);
++	background_position_from_property(match, style);
+ 
+ 	style->border_spacing = number_from_property(match, PRO_BORDER_SPACING, 0, N_LENGTH);
+ 
+diff --git a/source/html/css-properties.gperf b/source/html/css-properties.gperf
+index a5ab5f2cc..53befbfe5 100644
+--- a/source/html/css-properties.gperf
++++ b/source/html/css-properties.gperf
+@@ -11,6 +11,10 @@ struct css_property_info { const char *name; int key; };
+ -webkit-text-stroke-width,PRO_TEXT_STROKE_WIDTH
+ background,PRO_BACKGROUND
+ background-color,PRO_BACKGROUND_COLOR
++background-image,PRO_BACKGROUND_IMAGE
++background-position,PRO_BACKGROUND_POSITION
++background-repeat,PRO_BACKGROUND_REPEAT
++background-size,PRO_BACKGROUND_SIZE
+ border,PRO_BORDER
+ border-bottom,PRO_BORDER_BOTTOM
+ border-bottom-color,PRO_BORDER_BOTTOM_COLOR
+diff --git a/source/html/css-properties.h b/source/html/css-properties.h
+index 66fde479c..f6a977b62 100644
+--- a/source/html/css-properties.h
++++ b/source/html/css-properties.h
+@@ -32,12 +32,12 @@
+ #line 1 "source/html/css-properties.gperf"
+ struct css_property_info { const char *name; int key; };
+ 
+-#define TOTAL_KEYWORDS 81
++#define TOTAL_KEYWORDS 85
+ #define MIN_WORD_LENGTH 3
+ #define MAX_WORD_LENGTH 25
+-#define MIN_HASH_VALUE 8
+-#define MAX_HASH_VALUE 155
+-/* maximum key range = 148, duplicates = 0 */
++#define MIN_HASH_VALUE 7
++#define MAX_HASH_VALUE 180
++/* maximum key range = 174, duplicates = 0 */
+ 
+ #ifdef __GNUC__
+ __inline
+@@ -51,32 +51,32 @@ css_property_hash (register const char *str, register size_t len)
+ {
+   static unsigned char asso_values[] =
+     {
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156,  35, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156,  25,   5,   0,
+-        5,   5, 110,  50,  75,  70, 156, 156,   0,  25,
+-       50,   5,   0,  20,  30,  65,   0,  20,  25,   5,
+-      156,   5, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156, 156, 156, 156, 156,
+-      156, 156, 156, 156, 156, 156
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181,  15, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181,   0,  10,  10,
++       20,   5, 100,   0,  70,  20, 181, 181,  75,  40,
++       50,  15,   0,   0,  60,  50,   0,   0,  40,  45,
++      181,  10, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181, 181, 181, 181, 181,
++      181, 181, 181, 181, 181, 181
+     };
+   return len + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]] + asso_values[(unsigned char)str[len - 1]];
+ }
+@@ -87,196 +87,216 @@ css_property_hash (register const char *str, register size_t len)
+ #endif
+ static struct css_property_info css_property_list[] =
+   {
+-    {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+-#line 82 "source/html/css-properties.gperf"
++    {""}, {""}, {""}, {""}, {""}, {""}, {""},
++#line 71 "source/html/css-properties.gperf"
++    {"padding",PRO_PADDING},
++    {""}, {""}, {""},
++#line 75 "source/html/css-properties.gperf"
++    {"padding-top",PRO_PADDING_TOP},
++#line 73 "source/html/css-properties.gperf"
++    {"padding-left",PRO_PADDING_LEFT},
++#line 74 "source/html/css-properties.gperf"
++    {"padding-right",PRO_PADDING_RIGHT},
++    {""}, {""},
++#line 84 "source/html/css-properties.gperf"
++    {"text-indent",PRO_TEXT_INDENT},
++    {""},
++#line 86 "source/html/css-properties.gperf"
+     {"top",PRO_INSET_TOP},
+-#line 53 "source/html/css-properties.gperf"
+-    {"left",PRO_INSET_LEFT},
++    {""}, {""}, {""},
++#line 77 "source/html/css-properties.gperf"
++    {"page-break-before",PRO_PAGE_BREAK_BEFORE},
++    {""}, {""}, {""}, {""},
++#line 16 "source/html/css-properties.gperf"
++    {"background-repeat",PRO_BACKGROUND_REPEAT},
+     {""}, {""},
+-#line 40 "source/html/css-properties.gperf"
++#line 17 "source/html/css-properties.gperf"
++    {"background-size",PRO_BACKGROUND_SIZE},
++#line 14 "source/html/css-properties.gperf"
++    {"background-image",PRO_BACKGROUND_IMAGE},
++#line 44 "source/html/css-properties.gperf"
+     {"content",PRO_CONTENT},
+-    {""}, {""}, {""},
+-#line 80 "source/html/css-properties.gperf"
+-    {"text-indent",PRO_TEXT_INDENT},
+-    {""}, {""}, {""},
+-#line 31 "source/html/css-properties.gperf"
++    {""}, {""},
++#line 35 "source/html/css-properties.gperf"
+     {"border-top",PRO_BORDER_TOP},
+-#line 21 "source/html/css-properties.gperf"
+-    {"border-left",PRO_BORDER_LEFT},
+ #line 25 "source/html/css-properties.gperf"
++    {"border-left",PRO_BORDER_LEFT},
++#line 29 "source/html/css-properties.gperf"
+     {"border-right",PRO_BORDER_RIGHT},
+-    {""}, {""}, {""}, {""},
+-#line 30 "source/html/css-properties.gperf"
++    {""},
++#line 33 "source/html/css-properties.gperf"
++    {"border-spacing",PRO_BORDER_SPACING},
++#line 12 "source/html/css-properties.gperf"
++    {"background",PRO_BACKGROUND},
++    {""},
++#line 34 "source/html/css-properties.gperf"
+     {"border-style",PRO_BORDER_STYLE},
+     {""}, {""},
+-#line 20 "source/html/css-properties.gperf"
++#line 24 "source/html/css-properties.gperf"
+     {"border-collapse",PRO_BORDER_COLLAPSE},
+-#line 33 "source/html/css-properties.gperf"
++#line 37 "source/html/css-properties.gperf"
+     {"border-top-style",PRO_BORDER_TOP_STYLE},
+-#line 23 "source/html/css-properties.gperf"
+-    {"border-left-style",PRO_BORDER_LEFT_STYLE},
+ #line 27 "source/html/css-properties.gperf"
++    {"border-left-style",PRO_BORDER_LEFT_STYLE},
++#line 31 "source/html/css-properties.gperf"
+     {"border-right-style",PRO_BORDER_RIGHT_STYLE},
+-#line 17 "source/html/css-properties.gperf"
++#line 21 "source/html/css-properties.gperf"
+     {"border-bottom-style",PRO_BORDER_BOTTOM_STYLE},
+-#line 37 "source/html/css-properties.gperf"
+-    {"clear",PRO_CLEAR},
+-#line 71 "source/html/css-properties.gperf"
+-    {"padding-top",PRO_PADDING_TOP},
+-#line 69 "source/html/css-properties.gperf"
+-    {"padding-left",PRO_PADDING_LEFT},
+-#line 70 "source/html/css-properties.gperf"
+-    {"padding-right",PRO_PADDING_RIGHT},
+-    {""},
+-#line 38 "source/html/css-properties.gperf"
+-    {"color",PRO_COLOR},
+-#line 36 "source/html/css-properties.gperf"
+-    {"bottom",PRO_INSET_BOTTOM},
+-    {""},
+-#line 66 "source/html/css-properties.gperf"
+-    {"overflow-wrap",PRO_OVERFLOW_WRAP},
+-#line 81 "source/html/css-properties.gperf"
+-    {"text-transform",PRO_TEXT_TRANSFORM},
+-#line 12 "source/html/css-properties.gperf"
+-    {"background",PRO_BACKGROUND},
+-#line 14 "source/html/css-properties.gperf"
+-    {"border",PRO_BORDER},
+-#line 73 "source/html/css-properties.gperf"
+-    {"page-break-before",PRO_PAGE_BREAK_BEFORE},
+-#line 15 "source/html/css-properties.gperf"
+-    {"border-bottom",PRO_BORDER_BOTTOM},
+-    {""}, {""}, {""},
+-#line 19 "source/html/css-properties.gperf"
+-    {"border-color",PRO_BORDER_COLOR},
+-    {""}, {""}, {""},
+-#line 32 "source/html/css-properties.gperf"
+-    {"border-top-color",PRO_BORDER_TOP_COLOR},
+-#line 22 "source/html/css-properties.gperf"
+-    {"border-left-color",PRO_BORDER_LEFT_COLOR},
+-#line 26 "source/html/css-properties.gperf"
+-    {"border-right-color",PRO_BORDER_RIGHT_COLOR},
+-#line 16 "source/html/css-properties.gperf"
+-    {"border-bottom-color",PRO_BORDER_BOTTOM_COLOR},
+-#line 64 "source/html/css-properties.gperf"
++#line 68 "source/html/css-properties.gperf"
+     {"margin-top",PRO_MARGIN_TOP},
+-#line 62 "source/html/css-properties.gperf"
++#line 66 "source/html/css-properties.gperf"
+     {"margin-left",PRO_MARGIN_LEFT},
+-#line 63 "source/html/css-properties.gperf"
++#line 67 "source/html/css-properties.gperf"
+     {"margin-right",PRO_MARGIN_RIGHT},
+-#line 74 "source/html/css-properties.gperf"
+-    {"position",PRO_POSITION},
+-#line 68 "source/html/css-properties.gperf"
++    {""},
++#line 72 "source/html/css-properties.gperf"
+     {"padding-bottom",PRO_PADDING_BOTTOM},
+-#line 78 "source/html/css-properties.gperf"
+-    {"text-align",PRO_TEXT_ALIGN},
+-    {""}, {""}, {""},
+-#line 54 "source/html/css-properties.gperf"
+-    {"letter-spacing",PRO_LETTER_SPACING},
++    {""},
+ #line 79 "source/html/css-properties.gperf"
++    {"quotes",PRO_QUOTES},
++#line 46 "source/html/css-properties.gperf"
++    {"display",PRO_DISPLAY},
++    {""},
++#line 85 "source/html/css-properties.gperf"
++    {"text-transform",PRO_TEXT_TRANSFORM},
++    {""}, {""}, {""}, {""}, {""},
++#line 82 "source/html/css-properties.gperf"
++    {"text-align",PRO_TEXT_ALIGN},
++    {""}, {""},
++#line 70 "source/html/css-properties.gperf"
++    {"overflow-wrap",PRO_OVERFLOW_WRAP},
++#line 8 "source/html/css-properties.gperf"
++    {"-mupdf-leading",PRO_LEADING},
++#line 83 "source/html/css-properties.gperf"
+     {"text-decoration",PRO_TEXT_DECORATION},
+-#line 72 "source/html/css-properties.gperf"
++#line 40 "source/html/css-properties.gperf"
++    {"bottom",PRO_INSET_BOTTOM},
++#line 92 "source/html/css-properties.gperf"
++    {"word-spacing",PRO_WORD_SPACING},
++#line 78 "source/html/css-properties.gperf"
++    {"position",PRO_POSITION},
++    {""},
++#line 56 "source/html/css-properties.gperf"
++    {"inset",PRO_INSET},
++#line 76 "source/html/css-properties.gperf"
+     {"page-break-after",PRO_PAGE_BREAK_AFTER},
++    {""},
++#line 19 "source/html/css-properties.gperf"
++    {"border-bottom",PRO_BORDER_BOTTOM},
++#line 15 "source/html/css-properties.gperf"
++    {"background-position",PRO_BACKGROUND_POSITION},
+ #line 88 "source/html/css-properties.gperf"
+-    {"word-spacing",PRO_WORD_SPACING},
+-    {""},
+-#line 29 "source/html/css-properties.gperf"
+-    {"border-spacing",PRO_BORDER_SPACING},
++    {"visibility",PRO_VISIBILITY},
++#line 54 "source/html/css-properties.gperf"
++    {"height",PRO_HEIGHT},
++#line 43 "source/html/css-properties.gperf"
++    {"columns",PRO_COLUMNS},
+     {""},
++#line 57 "source/html/css-properties.gperf"
++    {"left",PRO_INSET_LEFT},
++#line 80 "source/html/css-properties.gperf"
++    {"right",PRO_INSET_RIGHT},
+ #line 13 "source/html/css-properties.gperf"
+     {"background-color",PRO_BACKGROUND_COLOR},
+-#line 39 "source/html/css-properties.gperf"
+-    {"columns",PRO_COLUMNS},
+     {""}, {""}, {""},
+-#line 55 "source/html/css-properties.gperf"
+-    {"line-height",PRO_LINE_HEIGHT},
+-#line 67 "source/html/css-properties.gperf"
+-    {"padding",PRO_PADDING},
+-    {""}, {""},
+-#line 56 "source/html/css-properties.gperf"
+-    {"list-style",PRO_LIST_STYLE},
+-#line 50 "source/html/css-properties.gperf"
+-    {"height",PRO_HEIGHT},
+ #line 42 "source/html/css-properties.gperf"
+-    {"display",PRO_DISPLAY},
+-#line 61 "source/html/css-properties.gperf"
++    {"color",PRO_COLOR},
++#line 18 "source/html/css-properties.gperf"
++    {"border",PRO_BORDER},
++    {""},
++#line 65 "source/html/css-properties.gperf"
+     {"margin-bottom",PRO_MARGIN_BOTTOM},
++#line 58 "source/html/css-properties.gperf"
++    {"letter-spacing",PRO_LETTER_SPACING},
++    {""},
++#line 64 "source/html/css-properties.gperf"
++    {"margin",PRO_MARGIN},
++#line 23 "source/html/css-properties.gperf"
++    {"border-color",PRO_BORDER_COLOR},
++    {""},
++#line 45 "source/html/css-properties.gperf"
++    {"direction",PRO_DIRECTION},
++    {""},
++#line 36 "source/html/css-properties.gperf"
++    {"border-top-color",PRO_BORDER_TOP_COLOR},
++#line 26 "source/html/css-properties.gperf"
++    {"border-left-color",PRO_BORDER_LEFT_COLOR},
++#line 30 "source/html/css-properties.gperf"
++    {"border-right-color",PRO_BORDER_RIGHT_COLOR},
++#line 20 "source/html/css-properties.gperf"
++    {"border-bottom-color",PRO_BORDER_BOTTOM_COLOR},
+     {""},
+ #line 59 "source/html/css-properties.gperf"
+-    {"list-style-type",PRO_LIST_STYLE_TYPE},
+-#line 57 "source/html/css-properties.gperf"
+-    {"list-style-image",PRO_LIST_STYLE_IMAGE},
+-    {""},
+-#line 9 "source/html/css-properties.gperf"
+-    {"-webkit-text-fill-color",PRO_TEXT_FILL_COLOR},
+-#line 83 "source/html/css-properties.gperf"
+-    {"vertical-align",PRO_VERTICAL_ALIGN},
+-#line 10 "source/html/css-properties.gperf"
+-    {"-webkit-text-stroke-color",PRO_TEXT_STROKE_COLOR},
+-#line 85 "source/html/css-properties.gperf"
+-    {"white-space",PRO_WHITE_SPACE},
+-#line 35 "source/html/css-properties.gperf"
++    {"line-height",PRO_LINE_HEIGHT},
++#line 39 "source/html/css-properties.gperf"
+     {"border-width",PRO_BORDER_WIDTH},
+-#line 77 "source/html/css-properties.gperf"
+-    {"src",PRO_SRC},
+-    {""}, {""},
+-#line 34 "source/html/css-properties.gperf"
++    {""},
++#line 87 "source/html/css-properties.gperf"
++    {"vertical-align",PRO_VERTICAL_ALIGN},
++#line 60 "source/html/css-properties.gperf"
++    {"list-style",PRO_LIST_STYLE},
++#line 38 "source/html/css-properties.gperf"
+     {"border-top-width",PRO_BORDER_TOP_WIDTH},
+-#line 24 "source/html/css-properties.gperf"
+-    {"border-left-width",PRO_BORDER_LEFT_WIDTH},
+ #line 28 "source/html/css-properties.gperf"
++    {"border-left-width",PRO_BORDER_LEFT_WIDTH},
++#line 32 "source/html/css-properties.gperf"
+     {"border-right-width",PRO_BORDER_RIGHT_WIDTH},
+-#line 18 "source/html/css-properties.gperf"
++#line 22 "source/html/css-properties.gperf"
+     {"border-bottom-width",PRO_BORDER_BOTTOM_WIDTH},
+-#line 76 "source/html/css-properties.gperf"
+-    {"right",PRO_INSET_RIGHT},
+-#line 60 "source/html/css-properties.gperf"
+-    {"margin",PRO_MARGIN},
+-#line 65 "source/html/css-properties.gperf"
+-    {"orphans",PRO_ORPHANS},
++#line 63 "source/html/css-properties.gperf"
++    {"list-style-type",PRO_LIST_STYLE_TYPE},
++#line 61 "source/html/css-properties.gperf"
++    {"list-style-image",PRO_LIST_STYLE_IMAGE},
+     {""}, {""},
+-#line 84 "source/html/css-properties.gperf"
+-    {"visibility",PRO_VISIBILITY},
+-#line 75 "source/html/css-properties.gperf"
+-    {"quotes",PRO_QUOTES},
+-    {""}, {""}, {""},
+-#line 43 "source/html/css-properties.gperf"
+-    {"float",PRO_FLOAT},
+-    {""}, {""}, {""},
+-#line 44 "source/html/css-properties.gperf"
++#line 48 "source/html/css-properties.gperf"
+     {"font",PRO_FONT},
+-    {""}, {""}, {""}, {""},
+-#line 8 "source/html/css-properties.gperf"
+-    {"-mupdf-leading",PRO_LEADING},
+-#line 52 "source/html/css-properties.gperf"
+-    {"inset",PRO_INSET},
+-#line 49 "source/html/css-properties.gperf"
++    {""},
++#line 90 "source/html/css-properties.gperf"
++    {"widows",PRO_WIDOWS},
++    {""},
++#line 81 "source/html/css-properties.gperf"
++    {"src",PRO_SRC},
++    {""}, {""},
++#line 53 "source/html/css-properties.gperf"
+     {"font-weight",PRO_FONT_WEIGHT},
+-#line 48 "source/html/css-properties.gperf"
++#line 52 "source/html/css-properties.gperf"
+     {"font-variant",PRO_FONT_VARIANT},
+     {""},
+-#line 46 "source/html/css-properties.gperf"
++#line 50 "source/html/css-properties.gperf"
+     {"font-size",PRO_FONT_SIZE},
+-#line 47 "source/html/css-properties.gperf"
++#line 51 "source/html/css-properties.gperf"
+     {"font-style",PRO_FONT_STYLE},
+-#line 45 "source/html/css-properties.gperf"
++#line 89 "source/html/css-properties.gperf"
++    {"white-space",PRO_WHITE_SPACE},
++#line 69 "source/html/css-properties.gperf"
++    {"orphans",PRO_ORPHANS},
++    {""}, {""}, {""},
++#line 49 "source/html/css-properties.gperf"
+     {"font-family",PRO_FONT_FAMILY},
++#line 55 "source/html/css-properties.gperf"
++    {"hyphens",PRO_HYPHENS},
+     {""}, {""},
++#line 91 "source/html/css-properties.gperf"
++    {"width",PRO_WIDTH},
++    {""}, {""},
++#line 9 "source/html/css-properties.gperf"
++    {"-webkit-text-fill-color",PRO_TEXT_FILL_COLOR},
++    {""},
++#line 10 "source/html/css-properties.gperf"
++    {"-webkit-text-stroke-color",PRO_TEXT_STROKE_COLOR},
++    {""}, {""}, {""}, {""},
+ #line 41 "source/html/css-properties.gperf"
+-    {"direction",PRO_DIRECTION},
++    {"clear",PRO_CLEAR},
+     {""}, {""}, {""}, {""},
+-#line 58 "source/html/css-properties.gperf"
+-    {"list-style-position",PRO_LIST_STYLE_POSITION},
+ #line 11 "source/html/css-properties.gperf"
+     {"-webkit-text-stroke-width",PRO_TEXT_STROKE_WIDTH},
+-    {""}, {""}, {""}, {""}, {""},
+-#line 86 "source/html/css-properties.gperf"
+-    {"widows",PRO_WIDOWS},
+-    {""}, {""}, {""}, {""}, {""},
+-#line 51 "source/html/css-properties.gperf"
+-    {"hyphens",PRO_HYPHENS},
+-    {""}, {""},
+-#line 87 "source/html/css-properties.gperf"
+-    {"width",PRO_WIDTH}
++    {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
++#line 62 "source/html/css-properties.gperf"
++    {"list-style-position",PRO_LIST_STYLE_POSITION},
++    {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
++    {""}, {""}, {""}, {""}, {""}, {""},
++#line 47 "source/html/css-properties.gperf"
++    {"float",PRO_FLOAT}
+   };
+ #if (defined __GNUC__ && __GNUC__ + (__GNUC_MINOR__ >= 6) > 4) || (defined __clang__ && __clang_major__ >= 3)
+ #pragma GCC diagnostic pop
+diff --git a/source/html/html-imp.h b/source/html/html-imp.h
+index f4f51be74..813fb2296 100644
+--- a/source/html/html-imp.h
++++ b/source/html/html-imp.h
+@@ -134,6 +134,10 @@ struct fz_css_value_s
+ enum
+ {
+ 	PRO_BACKGROUND_COLOR,
++	PRO_BACKGROUND_IMAGE,
++	PRO_BACKGROUND_POSITION,
++	PRO_BACKGROUND_REPEAT,
++	PRO_BACKGROUND_SIZE,
+ 	PRO_BORDER_BOTTOM_COLOR,
+ 	PRO_BORDER_BOTTOM_STYLE,
+ 	PRO_BORDER_BOTTOM_WIDTH,
+@@ -237,6 +241,8 @@ enum { V_VISIBLE, V_HIDDEN, V_COLLAPSE };
+ enum { PB_AUTO, PB_ALWAYS, PB_AVOID, PB_LEFT, PB_RIGHT };
+ enum { TD_NONE, TD_UNDERLINE, TD_LINE_THROUGH };
+ enum { HYP_NONE, HYP_MANUAL, HYP_AUTO };
++enum { BGS_LENGTH, BGS_COVER, BGS_CONTAIN };
++enum { BGR_REPEAT, BGR_REPEAT_X, BGR_REPEAT_Y, BGR_NO_REPEAT };
+ 
+ enum {
+ 	WS_COLLAPSE = 1,
+@@ -305,6 +311,9 @@ struct fz_css_style_s
+ 	fz_css_color text_fill_color;
+ 	fz_css_color text_stroke_color;
+ 	fz_css_number vertical_align_number;
++	const char *background_image;
++	fz_css_number background_size[2];
++	fz_css_number background_position[2];
+ 
+ 	unsigned int rowspan : 10; /* Needs to be able to represent 1-1000 */
+ 	unsigned int colspan : 10; /* Needs to be able to represent 1-1000 */
+@@ -326,6 +335,8 @@ struct fz_css_style_s
+ 	unsigned int position : 2;
+ 	unsigned int border_collapse : 1;
+ 	unsigned int hyphens : 2;
++	unsigned int background_size_mode : 2;
++	unsigned int background_repeat : 2;
+ };
+ 
+ struct fz_css_style_splay_s {
+@@ -497,6 +508,7 @@ struct fz_html_box_s
+ 
+ 	const char *tag, *id, *href;
+ 	const fz_css_style *style;
++	fz_image *background_image;
+ #ifdef DEBUG_HTML_SEQ
+ 	int seq;
+ #endif
+diff --git a/source/html/html-layout.c b/source/html/html-layout.c
+index e3fc9bf98..207a238a1 100644
+--- a/source/html/html-layout.c
++++ b/source/html/html-layout.c
+@@ -3663,6 +3663,100 @@ static void draw_rect(fz_context *ctx, fz_device *dev, fz_matrix ctm, float page
+ 		fz_rethrow(ctx);
+ }
+ 
++/* Tiling a tiny image over a big box would mean millions of fills; past this we draw one copy. */
++#define MAX_BACKGROUND_TILES 4096
++
++/* Paint box->background_image into the padding box (x0,y0)-(x1,y1), honoring
++ * background-size, -position and -repeat. Image px map to pt like <img> does. */
++static void draw_background_image(fz_context *ctx, fz_device *dev, fz_matrix ctm, float page_top, fz_html_box *box, float x0, float y0, float x1, float y1)
++{
++	const fz_css_style *style = box->style;
++	fz_image *img = box->background_image;
++	float em = box->s.layout.em;
++	float bw = x1 - x0, bh = y1 - y0;
++	float iw = img->w * 72.0f / 96.0f, ih = img->h * 72.0f / 96.0f;
++	float w, h, ox, oy, sx, sy, ex, ey, tx, ty;
++	float tiles;
++	int repeat_x, repeat_y;
++	fz_rect area;
++	fz_path *clip;
++
++	if (iw <= 0 || ih <= 0 || bw <= 0 || bh <= 0)
++		return;
++
++	if (style->background_size_mode == BGS_COVER || style->background_size_mode == BGS_CONTAIN)
++	{
++		float scale = style->background_size_mode == BGS_COVER ? fz_max(bw / iw, bh / ih) : fz_min(bw / iw, bh / ih);
++		w = iw * scale;
++		h = ih * scale;
++	}
++	else
++	{
++		fz_css_number sw = style->background_size[0], sh = style->background_size[1];
++		w = fz_from_css_number(sw, em, bw, iw);
++		h = fz_from_css_number(sh, em, bh, ih);
++		if (sw.unit == N_AUTO && sh.unit != N_AUTO)
++			w = h * iw / ih;
++		else if (sh.unit == N_AUTO && sw.unit != N_AUTO)
++			h = w * ih / iw;
++	}
++	if (w <= 0 || h <= 0)
++		return;
++
++	/* A percentage positions the image within the free space, so 50% centers it. */
++	ox = x0 + fz_from_css_number(style->background_position[0], em, bw - w, 0);
++	oy = y0 + fz_from_css_number(style->background_position[1], em, bh - h, 0);
++
++	repeat_x = style->background_repeat == BGR_REPEAT || style->background_repeat == BGR_REPEAT_X;
++	repeat_y = style->background_repeat == BGR_REPEAT || style->background_repeat == BGR_REPEAT_Y;
++	sx = ox; ex = ox + w;
++	sy = oy; ey = oy + h;
++	if (repeat_x)
++	{
++		sx = ox - ceilf((ox - x0) / w) * w;
++		ex = x1;
++	}
++	if (repeat_y)
++	{
++		sy = oy - ceilf((oy - y0) / h) * h;
++		ey = y1;
++	}
++	tiles = ceilf((ex - sx) / w) * ceilf((ey - sy) / h);
++	if (tiles > MAX_BACKGROUND_TILES)
++	{
++		sx = ox; ex = ox + w;
++		sy = oy; ey = oy + h;
++	}
++
++	area = fz_make_rect(x0, y0 - page_top, x1, y1 - page_top);
++	clip = fz_new_path(ctx);
++	fz_try(ctx)
++	{
++		fz_rectto(ctx, clip, area.x0, area.y0, area.x1, area.y1);
++		fz_clip_path(ctx, dev, clip, 0, ctm, fz_transform_rect(area, ctm));
++		fz_try(ctx)
++		{
++			for (ty = sy; ty < ey; ty += h)
++			{
++				for (tx = sx; tx < ex; tx += w)
++				{
++					fz_matrix itm = fz_pre_translate(ctm, tx, ty - page_top);
++					itm = fz_pre_scale(itm, w, h);
++					fz_fill_image(ctx, dev, img, itm, 1, fz_default_color_params);
++				}
++			}
++		}
++		fz_always(ctx)
++			fz_pop_clip(ctx, dev);
++		fz_catch(ctx)
++			fz_rethrow(ctx);
++	}
++	fz_always(ctx)
++		fz_drop_path(ctx, clip);
++	fz_catch(ctx)
++		fz_rethrow(ctx);
++}
++
+ static void draw_quad(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_css_color color,
+ 	float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3)
+ {
+@@ -4449,7 +4543,11 @@ static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, flo
+ 		 * we might find the end-of-skip point inside this box. If there is no content
+ 		 * then the box height will be 0, so nothing will be drawn. */
+ 		if (y1 > y0)
++		{
+ 			draw_rect(ctx, dev, ctm, page_top, box->style->background_color, x0, y0 - cell_padding_top, x1, y1 + cell_padding_bot);
++			if (box->background_image)
++				draw_background_image(ctx, dev, ctm, page_top, box, x0, y0 - cell_padding_top, x1, y1 + cell_padding_bot);
++		}
+ 
+ 		if (!skipping)
+ 		{
+diff --git a/source/html/html-parse.c b/source/html/html-parse.c
+index 09f899cc9..177ea3a21 100644
+--- a/source/html/html-parse.c
++++ b/source/html/html-parse.c
+@@ -781,6 +781,7 @@ static void fz_drop_html_box(fz_context *ctx, fz_html_box *box)
+ 		fz_html_box *next = box->next;
+ 		if (box->type == BOX_FLOW)
+ 			fz_drop_html_flow(ctx, box->u.flow.head);
++		fz_drop_image(ctx, box->background_image);
+ 		fz_drop_html_box(ctx, box->down);
+ 		box = next;
+ 	}
+@@ -870,6 +871,10 @@ static fz_html_box *new_box(fz_context *ctx, struct genstate *g, fz_xml *node, i
+ 
+ 	box->style = fz_css_enlist(ctx, style, &g->styles, g->pool);
+ 
++	/* Only element boxes own a background image; anonymous boxes borrow the style but must not repaint it. */
++	if (node && style->background_image && fz_html_box_has_boxes(box))
++		box->background_image = load_html_image(ctx, g->zip, g->base_uri, style->background_image);
++
+ 	if (tag)
+ 	{
+ 		box->tag = find_known_html_tag(tag);

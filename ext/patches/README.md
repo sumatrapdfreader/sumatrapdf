@@ -46,6 +46,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0035-backport-709680-flow-anchor-top` | HTML/EPUB link targets use the top of the flow node, not its baseline (covers #6095) |
 | `0036-ocg-usage-event-on-visible` | PrintState/ViewState ON draws the OCG even if it is in the config `/OFF` list (#6101) |
 | `0037-backport-709648-inline-context-after-block` | stop adding to an inline context after a block interrupts it (covers #5943) |
+| `0038-html-css-background-image` | CSS `background-image` / `-size` / `-position` / `-repeat` on block boxes; fixed-layout scan EPUBs were blank (#6131) |
 
 And ten that are not ours but that we carry ahead of the release we vendor:
 
