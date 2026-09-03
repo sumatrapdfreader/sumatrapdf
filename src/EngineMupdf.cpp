@@ -6817,6 +6817,13 @@ static void MarkTransparentBackdropPixmap(Pixmap* pixmap, bool transparentBackdr
     }
 }
 
+// An aborted run stops between a clip push and its pop, so the draw device's
+// stack is unbalanced and fz_close_device throws. The pixmap is discarded
+// anyway; skip closing so nothing is reported.
+static bool RenderAborted(fz_cookie* cookie) {
+    return cookie && cookie->abort;
+}
+
 Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto* ctx = Ctx();
     auto pageNo = args.pageNo;
@@ -6933,12 +6940,14 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 dev = PdfCadEnhanceWrapDevice(ctx, dev, opts);
             }
             fz_run_display_list(ctx, keptList, dev, fz_identity, pRect, fzcookie);
-            fz_close_device(ctx, dev);
-            if (CadEnhanceActive() && cadRasterDominant) {
-                PdfCadEnhancePixmap(ctx, pix, zoom, true);
+            if (!RenderAborted(fzcookie)) {
+                fz_close_device(ctx, dev);
+                if (CadEnhanceActive() && cadRasterDominant) {
+                    PdfCadEnhancePixmap(ctx, pix, zoom, true);
+                }
+                pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+                MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
             }
-            pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
-            MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
         }
         fz_always(ctx) {
             if (dev) {
@@ -6987,12 +6996,14 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             } else {
                 pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
             }
-            fz_close_device(ctx, dev);
-            if (CadEnhanceActive() && cadRasterDominant) {
-                PdfCadEnhancePixmap(ctx, pix, zoom, true);
+            if (!RenderAborted(fzcookie)) {
+                fz_close_device(ctx, dev);
+                if (CadEnhanceActive() && cadRasterDominant) {
+                    PdfCadEnhancePixmap(ctx, pix, zoom, true);
+                }
+                pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+                MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
             }
-            pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
-            MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
         }
         fz_always(ctx) {
             if (dev) {
