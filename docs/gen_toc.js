@@ -108,11 +108,19 @@ function tocGoTo(n) {
     top: y,
   });
   highlightElement(el);
+  closeTocList();
   // the above scrollTo() triggers updateClosestToc() which might
   // not be accurate so we set the exact selected after a small delay
   setTimeout(() => {
     showSelectedTocItem(n);
   }, 100);
+}
+
+function closeTocList() {
+  let el = document.querySelector(".toc-wrapper");
+  if (el) {
+    el.classList.remove("toc-open");
+  }
 }
 
 function rebuildPageToc() {
@@ -131,6 +139,15 @@ function rebuildPageToc() {
   let s2 = genTocList(tocItems);
   container.innerHTML = s + s2;
   document.body.appendChild(container);
+
+  let mini = container.querySelector(".toc-mini");
+  mini.addEventListener("click", (e) => {
+    e.stopPropagation();
+    container.classList.toggle("toc-open");
+  });
+  container.querySelector(".toc-list").addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
   updateClosestToc();
 }
 
@@ -183,6 +200,12 @@ function updateClosestToc() {
 }
 
 window.addEventListener("scroll", updateClosestToc);
+document.addEventListener("click", closeTocList);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeTocList();
+  }
+});
 
 window.rebuildPageToc = rebuildPageToc;
 
