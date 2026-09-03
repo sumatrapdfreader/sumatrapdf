@@ -140,7 +140,6 @@ struct DisplayModel : DocController {
     bool GoToLastPage() override;
 
     // chapter-aware page addressing (forwards to the engine)
-    bool HasChapters() const override;
     int ChapterCount() override;
     int ChapterPageCount(int chapter) override;
     Location CurrentLocation() override;

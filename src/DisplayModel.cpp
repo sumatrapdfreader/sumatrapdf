@@ -2497,10 +2497,6 @@ bool DisplayModel::HandleLink(IPageDestination* dest, ILinkHandler* lh) {
     return engine->HandleLink(dest, lh);
 }
 
-bool DisplayModel::HasChapters() const {
-    return engine && engine->HasChapters();
-}
-
 int DisplayModel::ChapterCount() {
     return engine ? engine->ChapterCount() : 1;
 }

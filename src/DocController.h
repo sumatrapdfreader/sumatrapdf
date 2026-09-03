@@ -79,8 +79,8 @@ struct DocController {
 
     // chapter-aware page addressing; single-chapter controllers (the
     // default) behave exactly as the flat pageNo API always has
-    virtual bool HasChapters() const { return false; }
     virtual int ChapterCount() { return 1; }
+    bool HasChapters() { return ChapterCount() > 1; }
     virtual int ChapterPageCount(int) { return PageCount(); }
     virtual Location CurrentLocation();
     virtual void GoToLocation(Location loc, bool addNavPoint);
