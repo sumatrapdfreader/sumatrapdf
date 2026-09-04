@@ -46,6 +46,12 @@ enum class AnnotationChange {
     Modify,
 };
 
+enum class InkEraseResult {
+    None,
+    Changed,
+    Empty,
+};
+
 class EngineBase;
 class EngineMupdf;
 extern "C" struct pdf_annot;
@@ -156,6 +162,9 @@ bool GetLinePoints(Annotation*, PointF& start, PointF& end);
 void SetLinePoints(Annotation*, PointF start, PointF end);
 Vec<PointF> GetVertices(Annotation*);
 void SetVertices(Annotation*, const Vec<PointF>&);
+void GetInkList(Annotation*, Vec<int>&, Vec<PointF>&);
+bool EraseInkStrokes(Vec<int>&, Vec<PointF>&, PointF, float);
+InkEraseResult EraseAnnotationInk(Annotation*, PointF, float);
 
 void SetDefaultAppearanceTextFont(Annotation*, Str);
 void SetDefaultAppearanceTextSize(Annotation*, int);

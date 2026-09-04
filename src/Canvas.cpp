@@ -4851,8 +4851,43 @@ constexpr int kSumatraPointerMessageFlagInContact = 0x0004;
 constexpr int kSumatraPointerMessageFlagFirstButton = 0x0010;
 
 // dynamically loaded pointer API (Windows 8+)
+// Local ABI declarations keep the Windows 7 build target while using Win8 APIs.
+struct SumatraPointerInfo {
+    DWORD pointerType;
+    UINT32 pointerId;
+    UINT32 frameId;
+    UINT32 pointerFlags;
+    HANDLE sourceDevice;
+    HWND hwndTarget;
+    POINT ptPixelLocation;
+    POINT ptHimetricLocation;
+    POINT ptPixelLocationRaw;
+    POINT ptHimetricLocationRaw;
+    DWORD time;
+    UINT32 historyCount;
+    INT32 inputData;
+    DWORD keyStates;
+    UINT64 performanceCount;
+    DWORD buttonChangeType;
+};
+
+struct SumatraPointerPenInfo {
+    SumatraPointerInfo pointerInfo;
+    UINT32 penFlags;
+    UINT32 penMask;
+    UINT32 pressure;
+    UINT32 rotation;
+    INT32 tiltX;
+    INT32 tiltY;
+};
+
+constexpr UINT32 kSumatraPenFlagInverted = 0x0002;
+constexpr UINT32 kSumatraPenFlagEraser = 0x0004;
+
 typedef BOOL(WINAPI* Sig_GetPointerType)(UINT32 pointerId, DWORD* pointerType);
+typedef BOOL(WINAPI* Sig_GetPointerPenInfo)(UINT32 pointerId, SumatraPointerPenInfo* penInfo);
 static Sig_GetPointerType DynGetPointerType = nullptr;
+static Sig_GetPointerPenInfo DynGetPointerPenInfo = nullptr;
 static bool triedLoadPointerApi = false;
 
 static void EnsurePointerApiLoaded() {
@@ -4863,6 +4898,7 @@ static void EnsurePointerApiLoaded() {
     HMODULE h = GetModuleHandleW(L"user32.dll");
     if (h) {
         DynGetPointerType = (Sig_GetPointerType)GetProcAddress(h, "GetPointerType");
+        DynGetPointerPenInfo = (Sig_GetPointerPenInfo)GetProcAddress(h, "GetPointerPenInfo");
     }
 }
 
@@ -4946,6 +4982,18 @@ static bool OnPointerMessage(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LP
     Point pt = HwndScreenToClient(hwnd, Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)));
     int x = pt.x;
     int y = pt.y;
+
+    SumatraPointerPenInfo penInfo{};
+    bool eraser = DynGetPointerPenInfo && DynGetPointerPenInfo(pointerId, &penInfo) &&
+                  (penInfo.penFlags & (kSumatraPenFlagInverted | kSumatraPenFlagEraser)) != 0;
+    if (eraser && IsPlacingInkAnnotation(win)) {
+        WORD flags = HIWORD(wp);
+        bool inContact = (flags & kSumatraPointerMessageFlagInContact) != 0;
+        if (msg == WM_POINTERDOWN || (msg == WM_POINTERUPDATE && inContact)) {
+            AnnotationPlacementEraseAt(win, pt);
+        }
+        return true;
+    }
 
     // pointer message flags are in HIWORD(wParam)
     WORD flags = HIWORD(wp);

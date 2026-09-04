@@ -59,6 +59,7 @@ constexpr float kFileAttachmentAnnotDefaultDy = 16.f;
 // zoom, the way a real marker does, and saves as a translucent stroke.
 constexpr int kHighlightBrushScreenWidthPx = 22;
 constexpr int kHighlightBrushOpacity = 40;
+constexpr int kInkEraserRadiusPx = 10;
 
 // the marker paints in the same color the selection highlight uses
 static Color HighlightBrushColor() {
@@ -789,6 +790,53 @@ static float PxPerPagePt(DisplayModel* dm, int pageNo) {
     Point p1 = dm->CvtToScreen(pageNo, PointF(0, 1));
     float px = (float)(p1.y - p0.y);
     return px < 0.01f ? 1.f : px;
+}
+
+bool AnnotationPlacementEraseAt(MainWindow* win, Point pt) {
+    if (!IsPlacingInkAnnotation(win)) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    WindowTab* tab = win->CurrentTab();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    int pageNo = dm ? dm->GetPageNoByPoint(pt) : -1;
+    if (!dm || !tab || !engine || !dm->ValidPageNo(pageNo)) {
+        return true;
+    }
+
+    PointF pagePt = dm->CvtFromScreen(pt, pageNo);
+    float radius = (float)DpiScale(kInkEraserRadiusPx) / PxPerPagePt(dm, pageNo);
+    AnnotPlacement& p = win->annotPlacement;
+    bool pendingChanged = false;
+    if (p.pageNo == pageNo) {
+        pendingChanged = EraseInkStrokes(p.strokeCounts, p.points, pagePt, radius);
+        if (len(p.strokeCounts) == 0) {
+            p.pageNo = -1;
+        }
+    }
+
+    bool savedChanged = false;
+    Vec<Annotation*> annots;
+    EngineMupdfGetLoadedAnnotations(engine, annots);
+    for (Annotation* annot : annots) {
+        if (Type(annot) != AnnotationType::Ink || PageNo(annot) != pageNo) {
+            continue;
+        }
+        InkEraseResult result = EraseAnnotationInk(annot, pagePt, radius);
+        if (result == InkEraseResult::Empty) {
+            DeleteAnnotationAndUpdateUI(tab, annot);
+            savedChanged = true;
+        } else if (result == InkEraseResult::Changed) {
+            savedChanged = true;
+        }
+    }
+    if (savedChanged) {
+        RefreshAnnotationLists(tab);
+        MainWindowRerender(win);
+    } else if (pendingChanged) {
+        HwndInvalidate(win->hwndCanvas);
+    }
+    return true;
 }
 
 static bool HandleInkDown(MainWindow* win, Point pt) {

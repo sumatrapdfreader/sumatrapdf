@@ -239,6 +239,7 @@ import { testit as tocTitleFallback } from "./toc-title-fallback.ts";
 import { testit as tocTreeSentClick } from "./toc-tree-sent-click.ts";
 import { testit as issue6132 } from "./issue-6132.ts";
 import { testit as issue6133 } from "./issue-6133.ts";
+import { testit as issue6135 } from "./issue-6135.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -474,6 +475,7 @@ export const tests: NamedTest[] = [
   ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-6132", issue6132],
   ["issue-6133", issue6133],
+  ["issue-6135", issue6135],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

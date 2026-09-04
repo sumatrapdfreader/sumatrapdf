@@ -1689,7 +1689,7 @@ void SetVertices(Annotation* annot, const Vec<PointF>& points) {
     MarkNotificationAsModified(e, annot);
 }
 
-static void GetInkList(Annotation* annot, Vec<int>& strokeCounts, Vec<PointF>& points) {
+void GetInkList(Annotation* annot, Vec<int>& strokeCounts, Vec<PointF>& points) {
     VecReset(strokeCounts);
     VecReset(points);
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Ink) {
@@ -1716,6 +1716,112 @@ static void GetInkList(Annotation* annot, Vec<int>& strokeCounts, Vec<PointF>& p
         VecReset(strokeCounts);
         VecReset(points);
     }
+}
+
+static float PointSegmentDistSq(PointF p, PointF a, PointF b) {
+    float dx = b.x - a.x;
+    float dy = b.y - a.y;
+    float lengthSq = dx * dx + dy * dy;
+    float t = 0.f;
+    if (lengthSq > 0.f) {
+        t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq;
+        if (t < 0.f) {
+            t = 0.f;
+        } else if (t > 1.f) {
+            t = 1.f;
+        }
+    }
+    float px = a.x + t * dx;
+    float py = a.y + t * dy;
+    dx = p.x - px;
+    dy = p.y - py;
+    return dx * dx + dy * dy;
+}
+
+static bool InkStrokeHit(const Vec<PointF>& points, int start, int count, PointF pt, float radiusSq) {
+    if (count == 1) {
+        return PointSegmentDistSq(pt, points[start], points[start]) <= radiusSq;
+    }
+    for (int i = start + 1; i < start + count; i++) {
+        if (PointSegmentDistSq(pt, points[i - 1], points[i]) <= radiusSq) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool EraseInkStrokes(Vec<int>& strokeCounts, Vec<PointF>& points, PointF pt, float radius) {
+    int pointCount = 0;
+    for (int count : strokeCounts) {
+        if (count < 0) {
+            return false;
+        }
+        pointCount += count;
+    }
+    if (pointCount != len(points)) {
+        ReportIf(true);
+        return false;
+    }
+
+    bool erased = false;
+    float radiusSq = radius * radius;
+    int end = len(points);
+    for (int i = len(strokeCounts) - 1; i >= 0; i--) {
+        int count = strokeCounts[i];
+        int start = end - count;
+        if (count > 0 && InkStrokeHit(points, start, count, pt, radiusSq)) {
+            VecRemoveAtN(points, start, count);
+            VecRemoveAt(strokeCounts, i);
+            erased = true;
+        }
+        end = start;
+    }
+    return erased;
+}
+
+InkEraseResult EraseAnnotationInk(Annotation* annot, PointF pt, float radius) {
+    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Ink) {
+        return InkEraseResult::None;
+    }
+
+    Vec<int> strokeCounts;
+    Vec<PointF> points;
+    GetInkList(annot, strokeCounts, points);
+    radius += (float)BorderWidth(annot) / 2.f;
+    if (!EraseInkStrokes(strokeCounts, points, pt, radius)) {
+        return InkEraseResult::None;
+    }
+    if (len(strokeCounts) == 0) {
+        return InkEraseResult::Empty;
+    }
+
+    Vec<fz_point> pts;
+    VecReserve(pts, len(points));
+    for (PointF p : points) {
+        VecAppend(pts, {p.x, p.y});
+    }
+    EngineMupdf* e = annot->engine;
+    auto* a = annot->pdfannot;
+    bool failed = false;
+    {
+        auto* ctx = e->Ctx();
+        ScopedRecursiveMutex cs(&e->docLock);
+        fz_try(ctx) {
+            pdf_set_annot_ink_list(ctx, a, len(strokeCounts), strokeCounts.els, pts.els);
+            pdf_update_annot(ctx, a);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            failed = true;
+            logf("EraseAnnotationInk: pdf_set_annot_ink_list() failed\n");
+        }
+    }
+    if (failed) {
+        return InkEraseResult::None;
+    }
+    annot->bounds = GetBounds(annot);
+    MarkNotificationAsModified(e, annot);
+    return InkEraseResult::Changed;
 }
 
 int BorderWidth(Annotation* annot) {

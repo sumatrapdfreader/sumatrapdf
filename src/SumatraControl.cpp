@@ -527,7 +527,7 @@ static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
 }
 
 // QuadPoints of markup annotations on the current document (issue #6023).
-static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
+static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](Str msg, int code) -> TempStr {
         out.Append(msg);
@@ -544,6 +544,9 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
         return finish(StrL("NOTREADY no-engine\n"), 2);
+    }
+    if (str::Eq(action, StrL("erase-ink"))) {
+        AnnotationPlacementEraseAt(gWindows[0], Point(x, y));
     }
     Vec<Annotation*> annots;
     EngineMupdfGetLoadedAnnotations(engine, annots);
@@ -611,6 +614,12 @@ static TempStr MarkupAnnotsResultTemp(int* exitCodeOut) {
                 Vec<PointF> pts = GetVertices(a);
                 bool closed = len(pts) > 2 && pts[0] == VecLast(pts);
                 out.Append(fmt("polyline vertices=%d closed=%d\n", len(pts), closed ? 1 : 0));
+            }
+            if (tp == AnnotationType::Ink) {
+                Vec<int> strokeCounts;
+                Vec<PointF> points;
+                GetInkList(a, strokeCounts, points);
+                out.Append(fmt("ink strokes=%d points=%d\n", len(strokeCounts), len(points)));
             }
             n++;
             continue;
@@ -1637,8 +1646,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestMarkupAnnots: {
+            Str action = StringArg(req, 0);
+            i32 x = 0;
+            i32 y = 0;
+            if (action && (!IntArg(req, 1, x) || !IntArg(req, 2, y))) {
+                AppendError(req, StrL("TestMarkupAnnots expects action, x, y"));
+                break;
+            }
             int exitCode = 0;
-            Str res = MarkupAnnotsResultTemp(&exitCode);
+            Str res = MarkupAnnotsResultTemp(action, x, y, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
