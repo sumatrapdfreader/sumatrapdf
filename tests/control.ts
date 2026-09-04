@@ -376,23 +376,31 @@ export class ControlClient {
     const id = this.nextId++ & 0xffff;
     this.socket.write(encodeRequest(cmd, id, args));
 
-    const sizeBuf = await readExactly(this.socket, 4);
-    const size = sizeBuf.readUInt32LE(0);
-    const payload = await readExactly(this.socket, size);
-    const r = new PacketReader(payload);
-    const responseId = r.u16();
-    if (responseId !== id) {
-      throw new Error(`control response id mismatch: got ${responseId}, expected ${id}`);
-    }
-    const result: ControlArg[] = [];
-    for (;;) {
-      const arg = decodeArg(r);
-      if (arg === undefined) {
-        break;
+    try {
+      const sizeBuf = await readExactly(this.socket, 4);
+      const size = sizeBuf.readUInt32LE(0);
+      const payload = await readExactly(this.socket, size);
+      const r = new PacketReader(payload);
+      const responseId = r.u16();
+      if (responseId !== id) {
+        throw new Error(`control response id mismatch: got ${responseId}, expected ${id}`);
       }
-      result.push(arg);
+      const result: ControlArg[] = [];
+      for (;;) {
+        const arg = decodeArg(r);
+        if (arg === undefined) {
+          break;
+        }
+        result.push(arg);
+      }
+      return result;
+    } catch (e) {
+      const msg = String((e as Error)?.message ?? e);
+      if (/EPIPE|control pipe closed/i.test(msg)) {
+        throw new Error(`SumatraPDF exited while waiting for control response (${msg})`);
+      }
+      throw e;
     }
-    return result;
   }
 
   async quit(): Promise<void> {

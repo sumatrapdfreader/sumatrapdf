@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { runStandalone, tmpPath } from "./util.ts";
-import { launchControlled, killAndWait } from "./win-automation.ts";
+import { launchControlled, killAndWait, takeStderr } from "./win-automation.ts";
 import { tryOpenExclusive, tryDeleteFile, getWindowText } from "./winapi.ts";
 
 function makePdf(): Buffer {
@@ -77,8 +77,24 @@ export async function testit(): Promise<void> {
     if (!getWindowText(frame).includes("attachment.pdf")) {
       throw new Error("issue-4705: document gone after host cache was deleted");
     }
+  } catch (e) {
+    try {
+      await client.quit();
+    } catch {
+      /* already gone */
+    }
+    await killAndWait(proc);
+    const err = await takeStderr(proc);
+    if (err) {
+      console.error(err);
+    }
+    throw e;
   } finally {
-    await client.quit();
+    try {
+      await client.quit();
+    } catch {
+      /* already gone */
+    }
     await killAndWait(proc);
   }
 }

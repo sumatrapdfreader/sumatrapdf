@@ -68,6 +68,7 @@ let sharedSession: SharedControlledSession | null = null;
 // keep drain promises alive: `void new Response().text()` can be GC'd, the
 // pipe fills, ASan's next stderr write kills the process, tests see EPIPE
 const gStderrDrains = new Set<Promise<string>>();
+const gStderrByProc = new WeakMap<Bun.Subprocess, Promise<string>>();
 
 function drainStderr(proc: Bun.Subprocess): Promise<string> {
   if (!proc.stderr) {
@@ -75,8 +76,14 @@ function drainStderr(proc: Bun.Subprocess): Promise<string> {
   }
   const p = new Response(proc.stderr).text();
   gStderrDrains.add(p);
+  gStderrByProc.set(proc, p);
   void p.finally(() => gStderrDrains.delete(p));
   return p;
+}
+
+export async function takeStderr(proc: Bun.Subprocess): Promise<string> {
+  const p = gStderrByProc.get(proc);
+  return p ? (await p).trim() : "";
 }
 
 export function beginSharedControlledSession(): void {
