@@ -2057,7 +2057,6 @@ bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut = nullptr);
 int SeqStrIndex(SeqStrings strs, Str toFind);
 int SeqStrIndexIS(SeqStrings strs, Str toFind);
 TempStr SeqStrByIndex(SeqStrings strs, int idx);
-int SeqStrCount(SeqStrings strs);
 
 // look up the mime type for a file extension (e.g. ".png" -> "image/png");
 // returns {} for unknown extensions. If the matched type is an image and

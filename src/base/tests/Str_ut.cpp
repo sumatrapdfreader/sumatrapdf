@@ -149,9 +149,6 @@ static void StrSeqTest() {
     utassert(2 == SeqStrIndexIS(s.s, StrL("B A R")));
     utassert(-1 == SeqStrIndexIS(s.s, StrL("fo")));
     utassert(-1 == SeqStrIndexIS(nullptr, StrL("foo")));
-    utassert(3 == SeqStrCount(s.s));
-    utassert(0 == SeqStrCount(nullptr));
-    utassert(0 == SeqStrCount(""));
 }
 
 static void StrIsDigitTest() {
