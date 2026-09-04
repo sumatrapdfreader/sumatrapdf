@@ -1122,6 +1122,7 @@ void pkcs7_windows_sig_info_free(fz_context* ctx, pkcs7_windows_sig_info* info) 
     fz_free(ctx, info->hash_algo);
     fz_free(ctx, info->sig_algo);
     fz_free(ctx, info->digest_hex);
+    fz_free(ctx, info->policy_oid);
     fz_free(ctx, info->cert_der);
     for (i = 0; i < info->n_ts; i++) {
         free_ts(ctx, &info->ts[i]);
@@ -1273,6 +1274,22 @@ int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, p
     collect_ts_from_unauth(ctx, &si->UnauthAttrs, info);
     if (info->n_ts == 0) {
         collect_ts_from_raw(ctx, sig, sig_len, info);
+    }
+    {
+        DWORD cb = 0;
+        if (CryptMsgGetParam(hMsg, CMSG_CONTENT_PARAM, 0, NULL, &cb) && cb > 0) {
+            unsigned char* inner = (unsigned char*)LocalAlloc(LPTR, cb);
+            if (inner && CryptMsgGetParam(hMsg, CMSG_CONTENT_PARAM, 0, inner, &cb)) {
+                pkcs7_windows_ts_info ts;
+                memset(&ts, 0, sizeof(ts));
+                parse_tstinfo(ctx, inner, cb, &ts);
+                info->gen_time_unix = ts.gen_time_unix;
+                info->policy_oid = ts.policy_oid;
+            }
+            if (inner) {
+                LocalFree(inner);
+            }
+        }
     }
     ok = 1;
 

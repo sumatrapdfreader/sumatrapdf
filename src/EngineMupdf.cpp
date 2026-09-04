@@ -8024,6 +8024,9 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
 
     pdf_obj* mObj = pdf_dict_get(ctx, vDict, PDF_NAME(M));
     TempStr signedAt = FormatPdfDateRawTemp(ctx, mObj);
+    if (!signedAt && info.gen_time_unix > 0) {
+        signedAt = FormatUnixTimeTemp(info.gen_time_unix);
+    }
     if (!signedAt && info.n_ts > 0) {
         signedAt = FormatUnixTimeTemp(info.ts[0].gen_time_unix);
     }
@@ -8076,6 +8079,9 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     }
     if (info.digest_hex) {
         s.Append(fmt("  Document hash: %s\n", Str(info.digest_hex)));
+    }
+    if (info.policy_oid) {
+        s.Append(fmt("  Policy ID: %s\n", Str(info.policy_oid)));
     }
     bool isCades = SubFilterIsCades(subFilter) || info.has_cades_attr;
     AppendPadesLevel(s, isCades, info.has_timestamp, ltv, docHasDocTs, isDocTs, info.has_sig_policy_attr);

@@ -56,6 +56,8 @@ typedef struct {
     char* hash_algo;
     char* sig_algo;
     char* digest_hex;
+    char* policy_oid;
+    int64_t gen_time_unix;
     int64_t not_after_unix;
     int has_qc_statement;
     int has_cades_attr;
