@@ -2199,12 +2199,8 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
     StrVecCP tempCommands;
     int cmdId = (int)CmdFirst + 1;
-    for (int off = 0; SeqStrAt(gCommandDescriptions, off);) {
-        Str name = SeqStrAt(gCommandDescriptions, off);
+    for (Str name = SeqStrFirst(gCommandDescriptions); len(name) > 0; name = SeqStrNext(name), cmdId++) {
         if (!AllowCommand(ctx, (i32)cmdId)) {
-            if (!SeqStrAdvance(gCommandDescriptions, off, &cmdId)) {
-                break;
-            }
             continue;
         }
         ReportIf(len(name) == 0);
@@ -2215,9 +2211,6 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         auto nameTranslated = trans::GetTranslation(name);
         auto nameUpdated = UpdateCommandNameTemp(mainWin, cmdId, nameTranslated);
         tempCommands.Append(nameUpdated, data);
-        if (!SeqStrAdvance(gCommandDescriptions, off, &cmdId)) {
-            break;
-        }
     }
 
     auto* curr = gFirstCustomCommand;

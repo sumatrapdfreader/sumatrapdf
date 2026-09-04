@@ -31,12 +31,9 @@ static SeqStrings gImageExts =
 // clang-format on
 
 static bool ExtInList(SeqStrings list, Str ext) {
-    for (int off = 0; SeqStrAt(list, off);) {
-        if (str::EqI(ext, SeqStrAt(list, off))) {
+    for (Str item = SeqStrFirst(list); len(item) > 0; item = SeqStrNext(item)) {
+        if (str::EqI(ext, item)) {
             return true;
-        }
-        if (!SeqStrAdvance(list, off)) {
-            break;
         }
     }
     return false;
@@ -66,12 +63,9 @@ static bool HasOurOpenWithEntry(HKEY hkey, Str ext) {
 }
 
 static bool HasAllOurOpenWithEntries(HKEY hkey) {
-    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
-        if (!HasOurOpenWithEntry(hkey, SeqStrAt(gSupportedExts, off))) {
+    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
+        if (!HasOurOpenWithEntry(hkey, ext)) {
             return false;
-        }
-        if (!SeqStrAdvance(gSupportedExts, off)) {
-            break;
         }
     }
     return true;
@@ -166,16 +160,12 @@ static bool RegisterForDefaultPrograms(HKEY hkey, Str installedExePath) {
     // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
     TempStr keyAssoc = str::JoinTemp(appCapabilityPath, StrL("\\FileAssociations"));
 
-    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
-        Str ext = SeqStrAt(gSupportedExts, off);
+    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
         // must match the per-extension ProgID created by RegisterForOpenWith
         // (e.g. "SumatraPDF.pdf"); Default Apps UI hides the app if the
         // FileAssociations ProgID can't be resolved under HKCR
         TempStr progIDName = str::JoinTemp(StrL(kAppName), ext);
         ok &= LoggedWriteRegStr(hkey, keyAssoc, ext, progIDName);
-        if (!SeqStrAdvance(gSupportedExts, off)) {
-            break;
-        }
     }
 
     ok &= LoggedWriteRegStr(hkey, StrL("SOFTWARE\\RegisteredApplications"), StrL(kAppName), appCapabilityPath);
@@ -210,8 +200,7 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
     TempStr cmdPrintTo = str::JoinTemp(exePathQuoted, StrL(" -print-to \"%2\" \"%1\""));
     TempStr key;
     bool ok = true;
-    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
-        Str ext = SeqStrAt(gSupportedExts, off);
+    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
         TempStr progIDName = str::JoinTemp(StrL(kAppName), ext);
         TempStr progIDKey = str::JoinTemp(StrL("Software\\Classes\\"), progIDName);
         // ok &= CreateRegKey(hkey, progIDKey);
@@ -274,10 +263,6 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
 
         key = str::JoinTemp(StrL("Software\\Classes\\"), ext, StrL("\\OpenWithProgids"));
         ok &= LoggedWriteRegNone(hkey, key, progIDName);
-
-        if (!SeqStrAdvance(gSupportedExts, off)) {
-            break;
-        }
     }
     return ok;
 }
@@ -299,13 +284,10 @@ bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     bool ok = true;
 
     TempWStr openWithVal = str::JoinTemp(WStrL(L"\\OpenWithList\\"), kExeName);
-    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
-        TempWStr ext = ToWStrTemp(SeqStrAt(gSupportedExts, off));
+    for (Str extUtf8 = SeqStrFirst(gSupportedExts); len(extUtf8) > 0; extUtf8 = SeqStrNext(extUtf8)) {
+        TempWStr ext = ToWStrTemp(extUtf8);
         TempWStr name = str::JoinTemp(WStrL(L"Software\\Classes\\"), ext, openWithVal);
         ok &= CreateRegKey(hkey, name);
-        if (!SeqStrAdvance(gSupportedExts, off)) {
-            break;
-        }
     }
     return ok;
 }
@@ -483,8 +465,7 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
 
     // those are registry keys written before 3.4
     TempStr openWithVal = str::JoinTemp(StrL("\\OpenWithList\\"), Str(kExeName));
-    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
-        Str ext = SeqStrAt(gSupportedExts, off);
+    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
         TempStr keyname = str::JoinTemp(StrL("Software\\Classes\\"), ext, StrL("\\OpenWithProgids"));
         LoggedDeleteRegValue(hkey, keyname, StrL(kAppName));
         DeleteEmptyRegKey(hkey, keyname);
@@ -500,14 +481,10 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
                 }
             }
         }
-        if (!SeqStrAdvance(gSupportedExts, off)) {
-            break;
-        }
     }
 
     // those were introduced in 3.4
-    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
-        Str ext = SeqStrAt(gSupportedExts, off);
+    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
         TempStr progIDName = str::JoinTemp(StrL(kAppName), ext);
         TempStr key = str::JoinTemp(StrL("Software\\Classes\\"), progIDName);
 
@@ -515,10 +492,6 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
 
         key = str::JoinTemp(StrL("Software\\Classes\\"), ext, StrL("\\OpenWithProgids"));
         LoggedDeleteRegValue(hkey, key, progIDName);
-
-        if (!SeqStrAdvance(gSupportedExts, off)) {
-            break;
-        }
     }
 
     // delete keys written in ListAsDefaultProgramWin10()
@@ -674,15 +647,11 @@ static TempStr GetProgIdExePathTemp(Str progId) {
 }
 
 void LogNonDefaultRegisteredExtensions() {
-    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
-        Str ext = SeqStrAt(gSupportedExts, off);
+    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
         TempStr progId = ReadDefaultProgIdTemp(ext);
         if (len(progId) > 0 && !IsOurProgId(progId, ext)) {
             TempStr app = GetProgIdExePathTemp(progId);
             logf("Not default app: extension=%s, progId=%s, app=%s\n", ext, progId, app ? app : StrL("(none)"));
-        }
-        if (!SeqStrAdvance(gSupportedExts, off)) {
-            break;
         }
     }
 }
@@ -694,8 +663,7 @@ void CollectNonDefaultRegisteredExtensions(StrVec& out) {
     if (!IsOurExeInstalled()) {
         return;
     }
-    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
-        Str ext = SeqStrAt(gSupportedExts, off);
+    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
         if (HaveRegisteredOpenWithForExt(ext) && !IsSumatraDefaultForExt(ext)) {
             // only list types with an explicit UserChoice that isn't us — otherwise
             // every registered format (e.g. .tga) would show after a fresh install
@@ -703,9 +671,6 @@ void CollectNonDefaultRegisteredExtensions(StrVec& out) {
             if (len(userChoice) > 0 && !IsOurProgId(userChoice, ext)) {
                 out.Append(ext);
             }
-        }
-        if (!SeqStrAdvance(gSupportedExts, off)) {
-            break;
         }
     }
 }

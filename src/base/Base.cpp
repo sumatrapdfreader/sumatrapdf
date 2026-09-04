@@ -3152,37 +3152,26 @@ TempStr EncodeMayTruncateTemp(Str s, int maxEncodedLen, bool* didTruncateOut) {
 }
 } // namespace url
 
-// SeqStrings (SeqStr* helpers) is for size-efficient implementation of:
+// SeqStrings is for size-efficient implementation of:
 // string -> int and int->string.
 // it's even more efficient than using char *[] array
 // it comes at the cost of speed, so it's not good for places
 // that are critial for performance. On the other hand, it's
 // not that bad: linear scanning of memory is fast due to the magic
 // of L1 cache
-TempStr SeqStrAt(SeqStrings strs, int off) {
-    if (!strs || off < 0 || !strs[off]) {
+Str SeqStrFirst(SeqStrings strs) {
+    if (!strs || !strs[0]) {
         return {};
     }
-    return Str(strs + off);
+    return Str(strs);
 }
 
-bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut) {
-    if (!strs || off < 0 || !strs[off]) {
-        off = -1;
-        if (idxInOut) {
-            *idxInOut = -1;
-        }
-        return false;
+Str SeqStrNext(Str s) {
+    if (len(s) == 0) {
+        return {};
     }
-    off += len(strs + off) + 1;
-    if (!strs[off]) {
-        off = -1;
-        return false;
-    }
-    if (idxInOut) {
-        (*idxInOut)++;
-    }
-    return true;
+    const char* next = s.s + len(s) + 1;
+    return next[0] ? Str(next) : Str{};
 }
 
 // conceptually strings is an array of 0-terminated strings where, laid
@@ -3268,14 +3257,12 @@ int SeqStrIndexIS(SeqStrings strs, Str toFind) {
 // returns a strings at that index.
 TempStr SeqStrByIndex(SeqStrings strs, int idx) {
     ReportIf(idx < 0);
-    int off = 0;
-    while (idx > 0) {
-        if (!SeqStrAdvance(strs, off)) {
-            return {};
-        }
+    Str s = SeqStrFirst(strs);
+    while (idx > 0 && len(s) > 0) {
+        s = SeqStrNext(s);
         idx--;
     }
-    return SeqStrAt(strs, off);
+    return s;
 }
 
 // flat sequence of (extension, mime type) pairs
@@ -3362,7 +3349,7 @@ static int SeqStrNumEntryEndOff(SeqStrNum strs, int off) {
 
 static void SeqStrNumEntryParts(SeqStrNum strs, int off, Str* strOut, i64* numOut) {
     if (strOut) {
-        *strOut = SeqStrAt(strs, off);
+        *strOut = SeqStrNumAt(strs, off);
     }
     const u8* p = (const u8*)(strs + off + len(strs + off) + 1);
     if (numOut) {
@@ -3383,7 +3370,10 @@ void SeqStrNumFinish(str::Builder* b) {
 }
 
 TempStr SeqStrNumAt(SeqStrNum strs, int off) {
-    return SeqStrAt(strs, off);
+    if (!strs || off < 0 || !strs[off]) {
+        return {};
+    }
+    return Str(strs + off);
 }
 
 bool SeqStrNumAdvance(SeqStrNum strs, int& off, int* idxInOut) {

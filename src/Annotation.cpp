@@ -58,12 +58,9 @@ AnnotationType AnnotationTypeFromName(Str name) {
     }
     int idx = 0;
     SeqStrings names = gAnnotationTypeNames;
-    for (int off = 0; SeqStrAt(names, off); idx++) {
-        if (str::EqI(SeqStrAt(names, off), want)) {
+    for (Str item = SeqStrFirst(names); len(item) > 0; item = SeqStrNext(item), idx++) {
+        if (str::EqI(item, want)) {
             return (AnnotationType)idx;
-        }
-        if (!SeqStrAdvance(names, off)) {
-            break;
         }
     }
     return AnnotationType::Unknown;

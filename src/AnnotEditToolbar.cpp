@@ -1244,11 +1244,8 @@ static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int cur
                         PopupGlyphKind glyph = PopupGlyphKind::None, bool lineIsStart = false,
                         PlatformFont* font = nullptr) {
     StrVec items;
-    for (int off = 0; SeqStrAt(names, off);) {
-        items.Append(SeqStrAt(names, off));
-        if (!SeqStrAdvance(names, off)) {
-            break;
-        }
+    for (Str name = SeqStrFirst(names); len(name) > 0; name = SeqStrNext(name)) {
+        items.Append(name);
     }
     if (glyph == PopupGlyphKind::None) {
         return PopupPick(win, screen, items, current, chipScreen);

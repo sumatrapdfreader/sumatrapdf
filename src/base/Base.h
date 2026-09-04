@@ -2052,8 +2052,8 @@ TempStr GetFileNameTemp(Str url);
 
 using SeqStrings = const char*;
 
-TempStr SeqStrAt(SeqStrings strs, int off);
-bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut = nullptr);
+Str SeqStrFirst(SeqStrings strs);
+Str SeqStrNext(Str s);
 int SeqStrIndex(SeqStrings strs, Str toFind);
 int SeqStrIndexIS(SeqStrings strs, Str toFind);
 TempStr SeqStrByIndex(SeqStrings strs, int idx);

@@ -282,11 +282,8 @@ void DropDown::SetItemsKeepText(StrVec& newItems) {
 }
 
 static void DropDownItemsFromStringArray(StrVec& items, SeqStrings strings) {
-    for (int off = 0; SeqStrAt(strings, off);) {
-        items.Append(SeqStrAt(strings, off));
-        if (!SeqStrAdvance(strings, off)) {
-            break;
-        }
+    for (Str s = SeqStrFirst(strings); len(s) > 0; s = SeqStrNext(s)) {
+        items.Append(s);
     }
 }
 

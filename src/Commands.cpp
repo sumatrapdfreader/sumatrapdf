@@ -1057,15 +1057,11 @@ int GetCommandIdByDesc(Str cmdDesc) {
 }
 
 Str GetCommandDescription(int commandId) {
-    int off = 0;
     int id = (int)CmdFirst + 1;
-    while (SeqStrAt(gCommandDescriptions, off)) {
-        Str description = SeqStrAt(gCommandDescriptions, off);
+    for (Str description = SeqStrFirst(gCommandDescriptions); len(description) > 0;
+         description = SeqStrNext(description), id++) {
         if (id == commandId) {
             return description;
-        }
-        if (!SeqStrAdvance(gCommandDescriptions, off, &id)) {
-            break;
         }
     }
     return {};

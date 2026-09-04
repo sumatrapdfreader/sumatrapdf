@@ -129,6 +129,18 @@ static void StrSeqNumTest() {
 static void StrSeqTest() {
     static const char seqData[] = "foo\0a\0bar\0";
     Str s(seqData, (int)(sizeof(seqData) - 1));
+
+    Str item = SeqStrFirst(s.s);
+    utassert(str::Eq(item, StrL("foo")));
+    item = SeqStrNext(item);
+    utassert(str::Eq(item, StrL("a")));
+    item = SeqStrNext(item);
+    utassert(str::Eq(item, StrL("bar")));
+    item = SeqStrNext(item);
+    utassert(len(item) == 0);
+    utassert(len(SeqStrFirst(nullptr)) == 0);
+    utassert(len(SeqStrNext({})) == 0);
+
     utassert(0 == SeqStrIndex(s.s, StrL("foo")));
     utassert(1 == SeqStrIndex(s.s, StrL("a")));
     utassert(2 == SeqStrIndex(s.s, StrL("bar")));
