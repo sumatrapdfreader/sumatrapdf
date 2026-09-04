@@ -3160,18 +3160,27 @@ bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut) {
 // Returns index of toFind string in strings
 // Returns -1 if string doesn't exist
 int SeqStrIndex(SeqStrings strs, Str toFind) {
-    if (!toFind) {
+    if (!strs || !toFind) {
         return -1;
     }
-    int off = 0;
+
+    const char* candidate = strs;
+    int toFindLen = len(toFind);
     int idx = 0;
-    while (strs[off]) {
-        if (str::Eq(SeqStrAt(strs, off), toFind)) {
+    while (*candidate) {
+        int i = 0;
+        while (i < toFindLen && candidate[i] && candidate[i] == toFind.s[i]) {
+            i++;
+        }
+        if (i == toFindLen && !candidate[i]) {
             return idx;
         }
-        if (!SeqStrAdvance(strs, off)) {
-            break;
+
+        candidate += i;
+        while (*candidate) {
+            candidate++;
         }
+        candidate++;
         idx++;
     }
     return -1;
@@ -3179,18 +3188,47 @@ int SeqStrIndex(SeqStrings strs, Str toFind) {
 
 // like SeqStrIndex but ignores case and whitespace
 int SeqStrIndexIS(SeqStrings strs, Str toFind) {
-    if (!toFind) {
+    if (!strs || !toFind) {
         return -1;
     }
-    int off = 0;
+
+    const char* candidate = strs;
+    int toFindLen = len(toFind);
     int idx = 0;
-    while (strs[off]) {
-        if (str::EqIS(SeqStrAt(strs, off), toFind)) {
+    while (*candidate) {
+        int i = 0;
+        int j = 0;
+        while (candidate[i] && j < toFindLen) {
+            while (candidate[i] && str::IsWs(candidate[i])) {
+                i++;
+            }
+            while (j < toFindLen && str::IsWs(toFind.s[j])) {
+                j++;
+            }
+            if (!candidate[i] || j >= toFindLen) {
+                break;
+            }
+            if (tolower((u8)candidate[i]) != tolower((u8)toFind.s[j])) {
+                break;
+            }
+            i++;
+            j++;
+        }
+        while (candidate[i] && str::IsWs(candidate[i])) {
+            i++;
+        }
+        while (j < toFindLen && str::IsWs(toFind.s[j])) {
+            j++;
+        }
+        if (!candidate[i] && j == toFindLen) {
             return idx;
         }
-        if (!SeqStrAdvance(strs, off)) {
-            break;
+
+        candidate += i;
+        while (*candidate) {
+            candidate++;
         }
+        candidate++;
         idx++;
     }
     return -1;
