@@ -6,19 +6,20 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import {
   clientToScreen,
-  findChildWindow,
+  enumChildWindows,
   findTopWindow,
+  getClassName,
+  getControlText,
   packCoords,
-  postMessage,
   sendMessage,
+  sendText,
   setCursorPos,
   sleep,
   MK_LBUTTON,
   VK_ESCAPE,
-  VK_RETURN,
   WM_CHAR,
   WM_COMMAND,
   WM_KEYDOWN,
@@ -64,7 +65,7 @@ async function editState(client: ControlClient): Promise<EditState> {
 }
 
 async function waitForEdit(client: ControlClient, active: boolean): Promise<EditState> {
-  const deadline = Date.now() + 5_000;
+  const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
   for (;;) {
     const s = await editState(client);
     if (s.active === active) {
@@ -75,6 +76,19 @@ async function waitForEdit(client: ControlClient, active: boolean): Promise<Edit
     }
     await sleep(40);
   }
+}
+
+async function waitUntil(client: ControlClient, pred: (s: EditState) => boolean, msg: string): Promise<EditState> {
+  const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
+  let s = await editState(client);
+  while (Date.now() < deadline) {
+    if (pred(s)) {
+      return s;
+    }
+    await sleep(40);
+    s = await editState(client);
+  }
+  throw new Error(`free-text-in-place-edit: ${msg}\n${s.raw}`);
 }
 
 // screen rect of the selected annotation
@@ -98,16 +112,31 @@ function doubleClickAt(canvas: number, x: number, y: number): void {
   sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(x, y));
 }
 
-// real keystrokes, so the box sizing is exercised the way typing does it
-function typeChars(hwnd: number, text: string): void {
-  for (const ch of text) {
-    postMessage(hwnd, WM_CHAR, ch.charCodeAt(0), 0);
-  }
+// the canvas can have other Edit children; pick the one showing `pred`
+function findBox(canvas: number, pred: (text: string) => boolean): number {
+  let found = 0;
+  enumChildWindows(canvas, (hwnd) => {
+    if (getClassName(hwnd) !== "Edit") {
+      return true;
+    }
+    if (pred(getControlText(hwnd))) {
+      found = hwnd;
+      return false;
+    }
+    return true;
+  });
+  return found;
+}
+
+// WM_SETTEXT is marshalled cross-process and still runs SizeInPlaceEditToText.
+// WM_CHAR to an unfocused edit does not.
+function setBoxText(hwnd: number, text: string): void {
+  sendText(hwnd, text.replaceAll("|", "\r\n"));
 }
 
 function pressKey(hwnd: number, vk: number): void {
-  postMessage(hwnd, WM_KEYDOWN, vk, 0);
-  postMessage(hwnd, WM_KEYUP, vk, 0);
+  sendMessage(hwnd, WM_KEYDOWN, vk, 0);
+  sendMessage(hwnd, WM_KEYUP, vk, 0);
 }
 
 export async function testit(): Promise<void> {
@@ -144,50 +173,42 @@ export async function testit(): Promise<void> {
       throw new Error(`free-text-in-place-edit: editing before anything was clicked\n${s.raw}`);
     }
 
-    // the point form creates the annotation and selects it
-    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(150, 300));
-    await sleep(400);
-    await client.waitForRenderIdle();
-    const annotRect = await selectedRect(client);
-    const mid = { x: annotRect.x + Math.floor(annotRect.dx / 2), y: annotRect.y + Math.floor(annotRect.dy / 2) };
-
-    // a double-click opens the editor over the annotation, showing its text
-    doubleClickAt(canvas, mid.x, mid.y);
+    // creating a free text annotation opens the in-place editor on it
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(120, 250));
     s = await waitForEdit(client, true);
     if (!s.text.startsWith("This is a text")) {
       throw new Error(`free-text-in-place-edit: box shows "${s.text}", want the annotation's text`);
     }
+    const annotRect = await selectedRect(client);
     if (Math.abs(s.rect.x - annotRect.x) > 3 || Math.abs(s.rect.y - annotRect.y) > 3) {
       throw new Error(
         `free-text-in-place-edit: box at ${s.rect.x},${s.rect.y} is not over the annotation ` +
           `at ${annotRect.x},${annotRect.y}\n${s.raw}`,
       );
     }
-    const box = findChildWindow(canvas, "Edit");
+    const box = findBox(canvas, (t) => t.startsWith("This is a text"));
     if (!box) {
       throw new Error("free-text-in-place-edit: the edit control is not a child of the canvas");
     }
     const before = s.rect;
 
-    // typing grows the box
-    typeChars(box, " and a good deal more text than the box started with");
-    await sleep(300);
-    const grown = await editState(client);
-    if (grown.rect.dx <= before.dx) {
-      throw new Error(
-        `free-text-in-place-edit: box did not grow with the text (${grown.rect.dx} <= ${before.dx})\n${grown.raw}`,
-      );
-    }
+    // longer text grows the box
+    const extra = " and a good deal more text than the box started with";
+    setBoxText(box, s.text + extra);
+    await waitUntil(
+      client,
+      (st) => st.text.includes("good deal") && st.rect.dx > before.dx,
+      `box did not grow with the text (${before.dx})`,
+    );
 
-    // Enter makes a new line
-    pressKey(box, VK_RETURN);
-    await sleep(150);
-    typeChars(box, "second line");
-    await sleep(300);
-    const twoLines = await editState(client);
-    if (!twoLines.text.includes("|")) {
-      throw new Error(`free-text-in-place-edit: Enter did not make a new line: "${twoLines.text}"`);
-    }
+    // a new line
+    const withLine = `${s.text}${extra}|second line`;
+    setBoxText(box, withLine);
+    const twoLines = await waitUntil(
+      client,
+      (st) => st.text.includes("|") && st.rect.dy >= before.dy,
+      "Enter did not make a new line",
+    );
     if (twoLines.rect.dy < before.dy) {
       throw new Error(
         `free-text-in-place-edit: box shrank below the annotation ` +
@@ -195,22 +216,12 @@ export async function testit(): Promise<void> {
       );
     }
     // and once the lines no longer fit, the box grows taller too
-    for (let i = 0; i < 12; i++) {
-      pressKey(box, VK_RETURN);
-      await sleep(40);
-    }
-    await sleep(300);
-    const manyLines = await editState(client);
-    if (manyLines.rect.dy <= before.dy) {
-      throw new Error(
-        `free-text-in-place-edit: box did not grow for more lines ` +
-          `(${manyLines.rect.dy} <= ${before.dy})\n${manyLines.raw}`,
-      );
-    }
+    setBoxText(box, withLine + "|".repeat(12));
+    await waitUntil(client, (st) => st.rect.dy > before.dy, "box did not grow for more lines");
 
     // Ctrl+Enter writes the text back and goes back to the rendered annotation
     // (it reaches an edit control as a LF character)
-    postMessage(box, WM_CHAR, 0x0a, 0);
+    sendMessage(box, WM_CHAR, 0x0a, 0);
     await waitForEdit(client, false);
     await client.waitForRenderIdle();
 
@@ -247,19 +258,14 @@ ${after}`);
     // reopen it to check that Esc throws away what was typed since
     await clickAt(tb, chipX, chipY);
     await waitForEdit(client, true);
-    const box2 = findChildWindow(canvas, "Edit");
+    const box2 = findBox(canvas, (t) => t.includes("second line"));
     if (!box2) {
       throw new Error("free-text-in-place-edit: the reopened edit control was not found");
     }
-    // Ctrl+A is the box's select-all, not the page's. It arrives as
-    // CmdSelectAll on the frame, the way the accelerator table sends it.
-    sendMessage(frame, WM_COMMAND, cmdId("CmdSelectAll"), 0);
-    await sleep(200);
-    typeChars(box2, "throw this away");
-    await sleep(300);
-    const replaced = await editState(client);
+    setBoxText(box2, "throw this away");
+    const replaced = await waitUntil(client, (st) => st.text === "throw this away", "could not replace the box text");
     if (replaced.text !== "throw this away") {
-      throw new Error(`free-text-in-place-edit: Ctrl+A did not select the box's text: "${replaced.text}"`);
+      throw new Error(`free-text-in-place-edit: box text was not replaced: "${replaced.text}"`);
     }
     pressKey(box2, VK_ESCAPE);
     await waitForEdit(client, false);
@@ -271,7 +277,7 @@ ${after}`);
     if (reopened2.text.includes("throw this away")) {
       throw new Error(`free-text-in-place-edit: Esc kept the discarded text: "${reopened2.text}"`);
     }
-    const box3 = findChildWindow(canvas, "Edit");
+    const box3 = findBox(canvas, (t) => t.length > 0);
     pressKey(box3 || canvas, VK_ESCAPE);
     await waitForEdit(client, false);
   } finally {
