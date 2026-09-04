@@ -482,9 +482,7 @@ static void AppendGrokTranslationText(Str line, str::Builder& out) {
     TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
     if (eventType && str::Eq(eventType, StrL("text"))) {
         TempStr text = AIChatJsonStrTemp(line, StrL("data"));
-        if (len(text) > 0) {
-            out.Append(text);
-        }
+        out.AppendNonEmpty(text);
     }
 }
 
@@ -516,9 +514,7 @@ static void AppendClaudeTranslationText(Str line, str::Builder& out) {
         }
     } else if (str::Eq(eventType, StrL("content_block_delta"))) {
         TempStr text = AIChatJsonStrTemp(line, StrL("text"));
-        if (len(text) > 0) {
-            out.Append(text);
-        }
+        out.AppendNonEmpty(text);
     }
 }
 
@@ -538,9 +534,7 @@ static void AppendCodexTranslationText(Str line, str::Builder& out) {
     Str agentMsg;
     if (str::Cut(line, StrL("\"type\":\"agent_message\""), nullptr, &agentMsg)) {
         text = AIChatJsonStrTemp(agentMsg, StrL("text"));
-        if (len(text) > 0) {
-            out.Append(text);
-        }
+        out.AppendNonEmpty(text);
     }
 }
 
@@ -555,9 +549,7 @@ static void AppendAntiGravityTranslationText(Str line, str::Builder& out) {
     if (str::Eq(eventName, StrL("step_update"))) {
         if (str::Contains(line, StrL("\"step_type\":\"agent_response\""))) {
             TempStr delta = AIChatJsonStrTemp(line, StrL("text_delta"));
-            if (len(delta) > 0) {
-                out.Append(delta);
-            }
+            out.AppendNonEmpty(delta);
         }
         return;
     }

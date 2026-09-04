@@ -2089,6 +2089,7 @@ struct Builder : Vec<char> {
     // free functions below, which take the allocator like VecPush() does
     bool AppendChar(char c);
     bool Append(Str src);
+    bool AppendNonEmpty(Str src);
     char RemoveAt(int idx, int count = 1);
     char RemoveLast();
     Str TakeStr();
@@ -2392,6 +2393,7 @@ struct StrVec {
     Str operator[](int) const;
 
     Str Append(Str s);
+    Str AppendNonEmpty(Str s);
     Str SetAt(int idx, Str s);
     Str InsertAt(int, Str s);
     Str RemoveAt(int);

@@ -272,9 +272,7 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
         auto flushLine = [&](int runEnd) {
             if (runStart >= 0 && runEnd > runStart) {
                 Str s = Utf8SliceByCodepoints(text, runStart, runEnd - runStart);
-                if (len(s) > 0) {
-                    lines->Append(s);
-                }
+                lines->AppendNonEmpty(s);
             }
             runStart = -1;
         };

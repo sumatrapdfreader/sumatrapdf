@@ -60,9 +60,7 @@ static void CollectTagContents(Str xml, Str openNeedle, Str closeNeedle, StrVec&
         }
         Str val(body.s, close);
         str::TrimWsBoth(val);
-        if (len(val) > 0) {
-            out.Append(val);
-        }
+        out.AppendNonEmpty(val);
         rest = Str(body.s + close, body.len - close);
     }
 }

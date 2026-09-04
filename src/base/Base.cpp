@@ -3565,6 +3565,13 @@ bool str::Builder::Append(Str src) {
     return str::BuilderAppend(nullptr, *this, src);
 }
 
+bool str::Builder::AppendNonEmpty(Str src) {
+    if (::len(src) == 0) {
+        return true;
+    }
+    return Append(src);
+}
+
 char str::Builder::RemoveAt(int idx, int count) {
     char res = els[idx];
     // VecRemoveAtN() zeroes the chars it frees at the end, so the NUL is there
@@ -6458,6 +6465,13 @@ Str StrVec::Append(Str s) {
     size++;
     InvalidateSortIndexes(this);
     return res.s;
+}
+
+Str StrVec::AppendNonEmpty(Str s) {
+    if (len(s) == 0) {
+        return {};
+    }
+    return Append(s);
 }
 
 // returns index of inserted string, -1 if not inserted

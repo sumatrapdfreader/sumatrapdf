@@ -528,9 +528,7 @@ void FindWindowWnd::RefreshResults(bool allowNavigation) {
     if (len(term) == 0) {
         term = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};
     }
-    if (len(term) > 0) {
-        filterWords.Append(term);
-    }
+    filterWords.AppendNonEmpty(term);
     results->SetModel(results->model); // the model is live; re-read it
     // keep a result selected so it's visible as you type and Next/Prev have a
     // sensible starting point.
