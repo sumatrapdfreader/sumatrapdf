@@ -65,6 +65,20 @@ type SharedControlledSession = {
 let sharedSessionRequested = false;
 let sharedSession: SharedControlledSession | null = null;
 
+// keep drain promises alive: `void new Response().text()` can be GC'd, the
+// pipe fills, ASan's next stderr write kills the process, tests see EPIPE
+const gStderrDrains = new Set<Promise<string>>();
+
+function drainStderr(proc: Bun.Subprocess): Promise<string> {
+  if (!proc.stderr) {
+    return Promise.resolve("");
+  }
+  const p = new Response(proc.stderr).text();
+  gStderrDrains.add(p);
+  void p.finally(() => gStderrDrains.delete(p));
+  return p;
+}
+
 export function beginSharedControlledSession(): void {
   if (sharedSession || sharedSessionRequested) {
     throw new Error("a shared controlled session is already active");
@@ -142,9 +156,7 @@ export async function launchControlled(
     stdout: "ignore",
     stderr: "pipe",
   });
-  if (proc.stderr) {
-    void new Response(proc.stderr).text();
-  }
+  drainStderr(proc);
   try {
     const client = await ControlClient.connect(pipe);
     const frame = await waitForFrame(proc.pid!);

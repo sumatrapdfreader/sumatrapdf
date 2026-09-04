@@ -256,6 +256,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-5956", issue5956],
   ["issue-6135", issue6135],
   ["free-text-edit-matches-render", freeTextEditMatchesRender],
@@ -473,7 +474,6 @@ export const tests: NamedTest[] = [
   ["issue-6080", issue6080],
   ["adv-settings-fresh-defaults", advSettingsFreshDefaults],
   ["toc-title-fallback", tocTitleFallback],
-  ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-6132", issue6132],
   ["issue-6133", issue6133],
 ];

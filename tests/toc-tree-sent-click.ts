@@ -95,10 +95,14 @@ export async function testit(): Promise<void> {
         `toc-tree-sent-click: click did not navigate: selection ${sel0} -> ${sel1}, page=${info.page} (expected ${rowNo})`,
       );
     }
-    await client.quit();
   } finally {
     if (child && child.exitCode == null) {
       child.kill();
+    }
+    try {
+      await client.quit();
+    } catch {
+      /* process already gone */
     }
     await killAndWait(proc);
   }
