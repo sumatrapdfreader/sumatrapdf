@@ -126,7 +126,7 @@ RectF MeasureText(Graphics* g, Font* f, WStr s, TextMeasureAlgorithm algo) {
     // TODO: ideally we should not be here with len == 0. This
     // might indicate a problem with fromatter code. See internals-en.epub
     // for a repro
-    ReportIf((s.len == 0) || (s.len > INT_MAX));
+    ReportIf((len(s) == 0) || (s.len > INT_MAX));
     if (algo) {
         return algo(g, f, s);
     }

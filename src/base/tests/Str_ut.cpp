@@ -6,7 +6,7 @@
 // must be last due to assert() over-write
 #include "base/UtAssert.h"
 
-static_assert(Str{}.len == 0);
+static_assert(len(Str{}) == 0);
 static_assert(StrL("ab").len == 2);
 static_assert(StrL("xyz").s[0] == 'x');
 static constinit Str kStrLConstInit = StrL("hello");
@@ -606,12 +606,12 @@ static void StrArenaTest() {
     utassert(a != nullptr);
 
     utassert(StrArenaToStr(a, 0).s == nullptr);
-    utassert(StrArenaToStr(a, 0).len == 0);
+    utassert(len(StrArenaToStr(a, 0)) == 0);
 
     StrArena empty = StrArenaDupStr(a, StrL(""));
     utassert(empty != 0);
     Str emptyS = StrArenaToStr(a, empty);
-    utassert(emptyS.len == 0);
+    utassert(len(emptyS) == 0);
     utassert(emptyS.s != nullptr);
     utassert(emptyS.s[0] == 0);
 
@@ -767,7 +767,7 @@ void StrTest() {
         utassert(str::Eq(r, StrL("one two three")));
         utassert(str::Eq(raw, StrL(" one\t\rtwo  three ")));
         // empty input
-        utassert(str::NormalizeWSTemp(Str()).len == 0);
+        utassert(len(str::NormalizeWSTemp(Str())) == 0);
     }
 
     {
@@ -839,7 +839,7 @@ void StrTest() {
         f1 = 0;
         f2 = 0;
         Str end2 = str::Parse(Str(StrL("%1.23y -2e-3zlah").s, 13), "%%%fy%fz%$", &f1, &f2);
-        utassert(!str::IsNull(end2) && end2.len == 0);
+        utassert(!str::IsNull(end2) && len(end2) == 0);
         utassert(f1 == 1.23f && f2 == -2e-3f);
     }
 
@@ -997,33 +997,33 @@ void StrTest() {
         Str s = str::Dup(StrL(""));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 0);
-        utassert(s.len == 0);
+        utassert(len(s) == 0);
         utassert(str::Eq(s, StrL("")));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 0);
-        utassert(s.len == 0);
+        utassert(len(s) == 0);
         utassert(str::Eq(s, StrL("")));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 0);
-        utassert(s.len == 0);
+        utassert(len(s) == 0);
         utassert(str::Eq(s, StrL("")));
 
         str::ReplaceWithCopy(&s, StrL("  \n\t  "));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 6);
-        utassert(s.len == 0);
+        utassert(len(s) == 0);
         utassert(str::Eq(s, StrL("")));
 
         str::ReplaceWithCopy(&s, StrL("  \n\t  "));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 6);
-        utassert(s.len == 0);
+        utassert(len(s) == 0);
         utassert(str::Eq(s, StrL("")));
 
         str::ReplaceWithCopy(&s, StrL("  \n\t  "));
         trimmed = str::TrimWSInPlace(s, str::TrimOpt::Left);
         utassert(trimmed == 6);
-        utassert(s.len == 0);
+        utassert(len(s) == 0);
         utassert(str::Eq(s, StrL("")));
 
         str::ReplaceWithCopy(&s, StrL("  lola"));

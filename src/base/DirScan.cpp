@@ -282,7 +282,7 @@ void AskDirScanThreadToQuit(DirScanCtx* ctx) {
 // compares them, and only at a separator, so "C:\foo" doesn't swallow
 // "C:\foobar".
 static bool IsUnderDir(Str path, Str dir) {
-    if (dir.len == 0 || path.len < dir.len) {
+    if (len(dir) == 0 || path.len < dir.len) {
         return false;
     }
     if (!str::StartsWithI(path, dir)) {

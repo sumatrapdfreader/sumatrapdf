@@ -547,7 +547,7 @@ static void ComputeHighlight(const WCHAR* lc, int n, char* mask) {
     int nTerms = len(gTerms);
     for (int t = 0; t < nTerms; t++) {
         WStr tw = ToWStrTemp(gTerms[t]);
-        if (tw.len == 0) {
+        if (len(tw) == 0) {
             continue;
         }
         // lowercase the term in place
@@ -571,7 +571,7 @@ static void ComputeHighlight(const WCHAR* lc, int n, char* mask) {
 
 static void DrawLogLine(HDC hdc, int x, int y, Str line) {
     WStr w = ToWStrTemp(line);
-    if (w.len == 0) {
+    if (len(w) == 0) {
         return;
     }
     SetBkMode(hdc, TRANSPARENT);

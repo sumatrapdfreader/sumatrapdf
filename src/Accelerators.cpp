@@ -205,7 +205,7 @@ TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
             continue;
         }
         TempStr key = Str(withTab.s + 1); // drop the leading '\t'
-        if (key.len == 0) {
+        if (len(key) == 0) {
             continue;
         }
         // skip a duplicate that formats to the same text (e.g. '+' and numpad '+')

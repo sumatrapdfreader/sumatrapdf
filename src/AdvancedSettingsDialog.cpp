@@ -92,7 +92,7 @@ static const EnumSettingDef gEnumSettings[] = {
 
 // Leaf name of a dotted path: "Fullscreen.Toolbar" → "Toolbar"
 static Str SettingPathLeaf(Str name) {
-    if (!name || name.len == 0) {
+    if (len(name) == 0) {
         return name;
     }
     const char* s = name.s;

@@ -186,7 +186,7 @@ static bool IsPathUnderOrEqualDir(Str path, Str dir) {
             return true;
         }
         TempStr parent = path::GetDirTemp(cur);
-        if (!parent || len(parent) == 0 || len(parent) >= len(cur)) {
+        if (len(parent) == 0 || len(parent) >= len(cur)) {
             break;
         }
         cur = parent;
@@ -218,7 +218,7 @@ static bool CanWriteToDirectory(Str dir) {
     TempStr probeDir = str::DupTemp(dir);
     while (probeDir && !dir::Exists(probeDir)) {
         TempStr parent = path::GetDirTemp(probeDir);
-        if (!parent || len(parent) == 0 || len(parent) >= len(probeDir)) {
+        if (len(parent) == 0 || len(parent) >= len(probeDir)) {
             break;
         }
         probeDir = parent;

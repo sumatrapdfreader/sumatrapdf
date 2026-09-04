@@ -313,7 +313,7 @@ using TempWStr = WStr;
 
 // length of a Str / WStr as int. C strings have a dedicated overload so
 // len(ptr) does not depend on Str's explicit const char* constructor.
-inline int len(Str s) {
+constexpr int len(Str s) {
     return s.len;
 }
 inline int len(WStr s) {
@@ -1734,7 +1734,7 @@ void VecRemoveAtFast(Vec<T>& v, int idx) {
 
 template <typename T>
 void VecRemoveLast(Vec<T>& v) {
-    if (v.len == 0) {
+    if (len(v) == 0) {
         return;
     }
     VecRemoveAt(v, v.len - 1);

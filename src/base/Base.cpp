@@ -2067,7 +2067,7 @@ bool EqI(Str s1, Str s2) {
     if (s1.len != s2.len) {
         return false;
     }
-    if (s1.len == 0) {
+    if (len(s1) == 0) {
         return true;
     }
     if (str::IsNull(s1) || str::IsNull(s2)) {
@@ -2081,10 +2081,10 @@ int Cmp(Str a, Str b) {
     if (a.s == b.s) {
         return 0;
     }
-    if (str::IsNull(a) || a.len == 0) {
-        return (str::IsNull(b) || b.len == 0) ? 0 : -1;
+    if (str::IsNull(a) || len(a) == 0) {
+        return (str::IsNull(b) || len(b) == 0) ? 0 : -1;
     }
-    if (str::IsNull(b) || b.len == 0) {
+    if (str::IsNull(b) || len(b) == 0) {
         return 1;
     }
     int n = std::min(a.len, b.len);
@@ -2100,10 +2100,10 @@ int CmpI(Str a, Str b) {
     if (a.s == b.s) {
         return 0;
     }
-    if (str::IsNull(a) || a.len == 0) {
-        return (str::IsNull(b) || b.len == 0) ? 0 : -1;
+    if (str::IsNull(a) || len(a) == 0) {
+        return (str::IsNull(b) || len(b) == 0) ? 0 : -1;
     }
-    if (str::IsNull(b) || b.len == 0) {
+    if (str::IsNull(b) || len(b) == 0) {
         return 1;
     }
     int n = std::min(a.len, b.len);
@@ -3009,7 +3009,7 @@ Str NextWord(Str& s) {
     TrimWs(s);
     Str word = s;
     word.len = TrimNonWs(s);
-    if (word.len == 0) {
+    if (len(word) == 0) {
         return {};
     }
     return word;
@@ -3809,7 +3809,7 @@ bool EqI(WStr s1, WStr s2) {
     if (s1.len != s2.len) {
         return false;
     }
-    if (s1.len == 0) {
+    if (len(s1) == 0) {
         return true;
     }
     if (wstr::IsNull(s1) || wstr::IsNull(s2)) {
@@ -3823,10 +3823,10 @@ int Cmp(WStr a, WStr b) {
     if (a.s == b.s) {
         return 0;
     }
-    if (wstr::IsNull(a) || a.len == 0) {
-        return (wstr::IsNull(b) || b.len == 0) ? 0 : -1;
+    if (wstr::IsNull(a) || len(a) == 0) {
+        return (wstr::IsNull(b) || len(b) == 0) ? 0 : -1;
     }
-    if (wstr::IsNull(b) || b.len == 0) {
+    if (wstr::IsNull(b) || len(b) == 0) {
         return 1;
     }
     int n = std::min(a.len, b.len);
@@ -3843,10 +3843,10 @@ int CmpI(WStr a, WStr b) {
     if (a.s == b.s) {
         return 0;
     }
-    if (wstr::IsNull(a) || a.len == 0) {
-        return (wstr::IsNull(b) || b.len == 0) ? 0 : -1;
+    if (wstr::IsNull(a) || len(a) == 0) {
+        return (wstr::IsNull(b) || len(b) == 0) ? 0 : -1;
     }
-    if (wstr::IsNull(b) || b.len == 0) {
+    if (wstr::IsNull(b) || len(b) == 0) {
         return 1;
     }
     int n = std::min(a.len, b.len);
@@ -6951,7 +6951,7 @@ WStr Utf8ToWStr(Str s, Arena* a) {
         return {};
     }
 #if OS_WIN
-    if (s.len == 0) {
+    if (len(s) == 0) {
         WCHAR* res = AllocArray<WCHAR>(a, 1);
         return WrapAllocatedWStr(res, 0);
     }
@@ -6979,7 +6979,7 @@ Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
         return {};
     }
 #if OS_WIN
-    if (s.len == 0) {
+    if (len(s) == 0) {
         char* res = AllocArray<char>(a, 1);
         return WrapAllocatedStr(res, 0);
     }

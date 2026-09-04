@@ -557,7 +557,7 @@ static int ReadAloudAfterSentEnd(Str text, int afterPunct) {
 }
 
 static bool ReadAloudSentenceRange(Str text, int pos, int* startOut, int* endOut) {
-    if (!text || !startOut || !endOut || text.len == 0) {
+    if (!startOut || !endOut || len(text) == 0) {
         return false;
     }
     if (pos < 0) {

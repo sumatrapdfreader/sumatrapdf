@@ -403,7 +403,7 @@ static void RelayoutFacingWithSpreads(DocumentLayout& layout, bool isFitContent)
 }
 
 void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
-    if (pages.len == 0) {
+    if (len(pages) == 0) {
         Reset(0);
         return;
     }

@@ -230,7 +230,7 @@ void DrawTreeItemFilterHighlight(Gfx* gfx, Rect labelRect, Str text, const StrVe
     // disappear on the focused selected row.
     // Use the tree's font for GetTextExtentPoint32 / DrawText or the bars
     // misalign and look oversized relative to the control's text.
-    if (!text || len(text) == 0) {
+    if (len(text) == 0) {
         return;
     }
 

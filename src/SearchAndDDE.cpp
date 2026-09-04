@@ -445,7 +445,7 @@ static void StartIncrementalFind(MainWindow* win) {
 // allowed. Invalid input returns false (caller treats that as all pages).
 bool ParseFindPageRange(Str s, int nPages, Vec<bool>& allowedOut) {
     VecReset(allowedOut);
-    if (!s || len(s) == 0 || nPages < 1) {
+    if (len(s) == 0 || nPages < 1) {
         return true;
     }
     const char* p = s.s;

@@ -755,7 +755,7 @@ static bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str&
     }
     TempStr sessionId = p->generatesSessionId ? AIChatGenerateSessionIdTemp() : Str{};
     TempStr dir = len(filePath) > 0 ? path::GetDirTemp(filePath) : str::DupTemp(StrL("."));
-    if (!dir || len(dir) == 0) {
+    if (len(dir) == 0) {
         dir = str::DupTemp(StrL("."));
     }
 

@@ -23,7 +23,7 @@ static bool HasChar(Str s, char c) {
 }
 
 static bool ValidateKindAndMeta(AppendStore* store, Str kind, Str meta) {
-    if (kind.len == 0) {
+    if (len(kind) == 0) {
         SetStoreError(store, StrL("kind is empty"));
         return false;
     }
@@ -93,7 +93,7 @@ static bool AppendToFile(AppendStore* store, Str path, file::FileHandle* filePtr
 }
 
 static bool ParseNonNegative(Str s, i64* valueOut) {
-    if (s.len == 0) {
+    if (len(s) == 0) {
         return false;
     }
     i64 value = 0;
@@ -158,7 +158,7 @@ static AppendStoreRecord* ParseIndexLine(AppendStore* store, Str line, i64 index
             rec->meta = str::Dup(store->arena, parts[4]);
         }
     }
-    if (rec->mode == AppendStoreMode::File && rec->fileName.len == 0) {
+    if (rec->mode == AppendStoreMode::File && len(rec->fileName) == 0) {
         SetStoreError(store, StrL("file record is missing its file name"));
         return nullptr;
     }
@@ -216,7 +216,7 @@ static bool ReplayIndex(AppendStore* store) {
 }
 
 bool AppendStoreOpen(AppendStore* store) {
-    if (!store || store->dataDir.len == 0) {
+    if (!store || len(store->dataDir) == 0) {
         return false;
     }
     Str dataDir = store->dataDir;
@@ -266,7 +266,7 @@ static TempStr SerializeRecordTemp(const AppendStoreRecord* rec) {
         offset = fmt("%lld", rec->dataOffset);
     }
     Str meta = rec->mode == AppendStoreMode::File ? rec->fileName : rec->meta;
-    if (meta.len == 0) {
+    if (len(meta) == 0) {
         return fmt("%s %lld %lld %s\n", offset, rec->dataSize, rec->timestampMs, rec->kind);
     }
     return fmt("%s %lld %lld %s %s\n", offset, rec->dataSize, rec->timestampMs, rec->kind, meta);
@@ -280,7 +280,7 @@ bool AppendStoreAppend(AppendStore* store, const AppendStoreAppendOptions& opts,
         return false;
     }
     if (opts.mode == AppendStoreMode::File &&
-        (opts.fileName.len == 0 || HasChar(opts.fileName, '\r') || HasChar(opts.fileName, '\n') ||
+        (len(opts.fileName) == 0 || HasChar(opts.fileName, '\r') || HasChar(opts.fileName, '\n') ||
          !ValidateInlineData(store, opts.inlineMeta))) {
         SetStoreError(store, StrL("invalid file record"));
         return false;
