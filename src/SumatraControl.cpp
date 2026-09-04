@@ -2061,12 +2061,15 @@ static bool WriteControlResponse(HANDLE h, ControlRequest* req) {
     return WriteExact(h, ToStr(packet));
 }
 
-static void ProcessControlConnection(HANDLE h) {
+// returns true if the app is quitting, so the listener thread should exit
+// instead of blocking in ConnectNamedPipe (ASan shutdown hangs on that)
+static bool ProcessControlConnection(HANDLE h) {
     for (;;) {
         ControlRequest* req = ReadControlRequest(h);
         if (!req) {
-            return;
+            return false;
         }
+        bool isQuit = (ControlCmd)req->cmd == ControlCmd::Quit;
         // WaitRenderIdle polls on this thread so the UI thread stays free to
         // paint (and thereby request the tiles we are waiting for)
         if ((ControlCmd)req->cmd == ControlCmd::WaitRenderIdle) {
@@ -2077,8 +2080,8 @@ static void ProcessControlConnection(HANDLE h) {
         }
         bool ok = WriteControlResponse(h, req);
         DeleteControlRequest(req);
-        if (!ok) {
-            return;
+        if (!ok || isQuit) {
+            return isQuit;
         }
     }
 }
@@ -2108,11 +2111,15 @@ static void SumatraControlThread(ControlThreadArg* arg) {
             return;
         }
         BOOL connected = ConnectNamedPipe(pipe, nullptr) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
+        bool stop = false;
         if (connected) {
-            ProcessControlConnection(pipe);
+            stop = ProcessControlConnection(pipe);
         }
         DisconnectNamedPipe(pipe);
         CloseHandle(pipe);
+        if (stop) {
+            return;
+        }
     }
 }
 
