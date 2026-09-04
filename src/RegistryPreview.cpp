@@ -143,8 +143,8 @@ bool UninstallPreviewDll() {
 // TODO: is anyone using this functionality?
 void DisablePreviewInstallExts(Str cmdLine) {
     // allows installing only a subset of available preview handlers
-    if (str::StartsWithI(cmdLine, StrL("exts:"))) {
-        TempStr extsList = str::DupTemp(Str(cmdLine.s + 5, cmdLine.len - 5));
+    if (str::TrimPrefixI(cmdLine, StrL("exts:"))) {
+        TempStr extsList = str::DupTemp(cmdLine);
         str::ToLowerInPlace(extsList);
         str::TransCharsInPlace(extsList, StrL(";. :"), StrL(",,,\0"));
         StrVec exts;

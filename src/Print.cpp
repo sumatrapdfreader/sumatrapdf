@@ -1883,7 +1883,6 @@ static void ApplyPdfViewerPrintPrefs(const PdfViewerPrintPrefs& prefs, DEVMODEW*
 static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
                                Print_Advanced_Data& advanced) {
     auto* devMode = printer->devMode;
-    auto suffix = [](Str s, int n) -> Str { return Str(s.s + n, s.len - n); };
 
     StrVec rangeList;
     if (settings) {
@@ -1936,10 +1935,10 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             devMode->dmFields |= DM_ORIENTATION;
         } else if (str::EqI(s, StrL("disable-auto-rotation"))) {
             advanced.autoRotate = false;
-        } else if (str::StartsWithI(s, StrL("rotate="))) {
+        } else if (str::TrimPrefixI(s, StrL("rotate="))) {
             // extra rotation of the printout in degrees: 90, 180 or 270 (#1246)
             int deg = 0;
-            if (!str::IsNull(str::Parse(suffix(s, 7), "%d%$", &deg))) {
+            if (!str::IsNull(str::Parse(s, "%d%$", &deg))) {
                 deg = ((deg % 360) + 360) % 360;
                 if (deg == 90 || deg == 180 || deg == 270) {
                     advanced.extraRotation = deg;
@@ -1978,32 +1977,32 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
         } else if (str::EqI(s, StrL("nocollate"))) {
             devMode->dmCollate = DMCOLLATE_FALSE;
             devMode->dmFields |= DM_COLLATE;
-        } else if (str::StartsWithI(s, StrL("bin="))) {
-            devMode->dmDefaultSource = GetPaperSourceByName(printer, suffix(s, 4));
+        } else if (str::TrimPrefixI(s, StrL("bin="))) {
+            devMode->dmDefaultSource = GetPaperSourceByName(printer, s);
             devMode->dmFields |= DM_DEFAULTSOURCE;
-        } else if (str::StartsWithI(s, StrL("paper="))) {
+        } else if (str::TrimPrefixI(s, StrL("paper="))) {
             float mmW = 0, mmH = 0;
-            if (str::EqI(suffix(s, 6), StrL("auto"))) {
+            if (str::EqI(s, StrL("auto"))) {
                 // set the paper size per page from the document's page size, for
                 // mixed page size documents (issue #533)
                 advanced.perPagePaperSize = true;
-            } else if (!str::IsNull(str::Parse(suffix(s, 6), "%fmm x %fmm%$", &mmW, &mmH)) && mmW > 0 && mmH > 0) {
+            } else if (!str::IsNull(str::Parse(s, "%fmm x %fmm%$", &mmW, &mmH)) && mmW > 0 && mmH > 0) {
                 // custom paper size specified as dimensions e.g. "paper=76mm x 130mm"
                 // SetCustomPaperSize expects tenths of a millimeter
                 SizeF size(mmW * 10.f, mmH * 10.f);
                 SetCustomPaperSize(printer, size);
             } else {
-                devMode->dmPaperSize = GetPaperByName(printer, suffix(s, 6));
+                devMode->dmPaperSize = GetPaperByName(printer, s);
                 devMode->dmFields |= DM_PAPERSIZE;
             }
-        } else if (str::StartsWithI(s, StrL("paperkind="))) {
+        } else if (str::TrimPrefixI(s, StrL("paperkind="))) {
             // alternatively allow indicating the paper kind directly by number
-            devMode->dmPaperSize = GetPaperKind(suffix(s, 10));
+            devMode->dmPaperSize = GetPaperKind(s);
             devMode->dmFields |= DM_PAPERSIZE;
-        } else if (str::StartsWithI(s, StrL("output="))) {
-            printer->output = str::Dup(suffix(s, 7));
-        } else if (str::StartsWithI(s, StrL("docname="))) {
-            printer->docName = str::Dup(suffix(s, 8));
+        } else if (str::TrimPrefixI(s, StrL("output="))) {
+            printer->output = str::Dup(s);
+        } else if (str::TrimPrefixI(s, StrL("docname="))) {
+            printer->docName = str::Dup(s);
         } else if (str::EqI(s, kIgnorePdfPrintSettingsToken)) {
             // handled before ApplyPrintSettings (see PrintFile2); ignore here
         }

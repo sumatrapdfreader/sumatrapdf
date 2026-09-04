@@ -703,11 +703,10 @@ void LinkHandler::ScrollTo(int pageNo, RectF rect, float zoom) {
 // Convert file:// / file:/// / file: URIs to a local path (+ optional #fragment).
 // Returns false if uri is not a file: scheme.
 static bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
-    if (!str::StartsWithI(uri, StrL("file:"))) {
+    Str rest = uri;
+    if (!str::TrimPrefixI(rest, StrL("file:"))) {
         return false;
     }
-    // Skip "file:" case-insensitively (str::TrimPrefix is case-sensitive).
-    Str rest = Str(uri.s + 5, uri.len - 5);
     // file://host/path or file:///path → drop authority (// or ///)
     if (str::TrimPrefix(rest, StrL("//"))) {
         // empty host: next char is / of absolute path
@@ -783,13 +782,9 @@ static bool IsFileSupportedByContent(Str filePath) {
 // fragment, but EngineBase::GetNamedDest prepends "#nameddest=" itself -- so the
 // prefix must be stripped or the lookup becomes "#nameddest=nameddest=<name>"
 // and fails, leaving the remote PDF on page 1 (issue #5642).
-// strips mupdf's "nameddest=" prefix from a remote link's destination name
-// so it can be passed to GetNamedDest (issue #5642)
-Str CleanRemoteDestName(Str destName) {
-    if (destName && str::StartsWithI(destName, StrL("nameddest="))) {
-        return Str(destName.s + 10, destName.len - 10);
-    }
-    return destName;
+// Strips mupdf's "nameddest=" prefix so the name can be passed to GetNamedDest.
+void CleanRemoteDestNameInPlace(Str& destName) {
+    str::TrimPrefixI(destName, StrL("nameddest="));
 }
 
 // for safety, only handle relative paths and only open them in SumatraPDF
@@ -887,7 +882,8 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
 
     Str destName = PageDestGetName(remoteLink);
     if (destName) {
-        IPageDestination* dest = targetWin->ctrl->GetNamedDest(CleanRemoteDestName(destName));
+        CleanRemoteDestNameInPlace(destName);
+        IPageDestination* dest = targetWin->ctrl->GetNamedDest(destName);
         if (dest) {
             targetWin->linkHandler->ScrollTo(dest);
             delete dest;

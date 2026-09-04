@@ -285,7 +285,7 @@ TempStr DestResultTemp(Str pdfPath, int destNo) {
 // Headless test for remote named-destination resolution (issue #5642). Loads the
 // pdf and resolves <name> -- which may carry mupdf's "nameddest=" prefix, as a
 // remote GoToR link's name does -- the same way LinkHandler::LaunchFile does
-// (CleanRemoteDestName + GetNamedDest), returning the resolved page.
+// (CleanRemoteDestNameInPlace + GetNamedDest), returning the resolved page.
 // Used by tests/issue-5642.ts.
 TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
     ScopedGdiPlus gdiPlus;
@@ -296,7 +296,8 @@ TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
     if (!engine) {
         out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
     } else {
-        Str name = CleanRemoteDestName(destName);
+        Str name = destName;
+        CleanRemoteDestNameInPlace(name);
         IPageDestination* dest = engine->GetNamedDest(name);
         if (dest) {
             out.Append(fmt("name=%s page=%d\n", destName, PageDestGetPageNo(dest)));

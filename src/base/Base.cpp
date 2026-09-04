@@ -2190,7 +2190,7 @@ bool StartsWith(Str s, Str prefix) {
 
 // Removes prefix from the string view, without modifying the underlying data.
 int TrimPrefix(Str& s, Str prefix) {
-    if (!StartsWith(s, prefix)) {
+    if (!s.s || len(s) == 0 || len(prefix) == 0 || !StartsWith(s, prefix)) {
         return 0;
     }
     s.s += prefix.len;
@@ -2199,7 +2199,7 @@ int TrimPrefix(Str& s, Str prefix) {
 }
 
 int TrimPrefixI(Str& s, Str prefix) {
-    if (!StartsWithI(s, prefix)) {
+    if (!s.s || len(s) == 0 || len(prefix) == 0 || !StartsWithI(s, prefix)) {
         return 0;
     }
     s.s += prefix.len;

@@ -771,4 +771,4 @@ HWND GetHwndForNotification();
 void RelayoutCaption(MainWindow* win);
 void OpenSystemMenu(MainWindow* win);
 
-Str CleanRemoteDestName(Str destName);
+void CleanRemoteDestNameInPlace(Str& destName);

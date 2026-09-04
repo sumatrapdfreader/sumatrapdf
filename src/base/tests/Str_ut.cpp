@@ -587,6 +587,13 @@ static void StrStartsWithTest() {
     utassert(str::Eq(tp, StrL(" PageDown")));
     utassert(str::TrimPrefixI(tp, StrL("global")) == 0);
 
+    Str emptyPrefix = StrL("abc");
+    utassert(str::TrimPrefix(emptyPrefix, {}) == 0 && str::Eq(emptyPrefix, StrL("abc")));
+    utassert(str::TrimPrefixI(emptyPrefix, {}) == 0 && str::Eq(emptyPrefix, StrL("abc")));
+    Str nullStr;
+    utassert(str::TrimPrefix(nullStr, StrL("abc")) == 0);
+    utassert(str::TrimPrefixI(nullStr, StrL("abc")) == 0);
+
     Str t1 = StrL("+-PageDown");
     utassert(str::TrimAny(t1, "+-") == 2);
     utassert(str::Eq(t1, StrL("PageDown")));

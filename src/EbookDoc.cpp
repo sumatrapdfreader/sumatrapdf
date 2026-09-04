@@ -1769,8 +1769,9 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
         // copy (not a view): htmlData is mutated below before beforeAt is appended back
         beforeAt = str::DupTemp(Str(&htmlData[idx]));
     } else {
-        ReportIf(!str::StartsWith(curr, StrL("mailto:")));
-        rest = Str(curr.s + 7, curr.len - 7);
+        bool isMailto = str::TrimPrefix(curr, StrL("mailto:"));
+        ReportIf(!isMailto);
+        rest = curr;
         if (!rest.len || !IsEmailUsernameChar(rest.s[0])) {
             return {};
         }

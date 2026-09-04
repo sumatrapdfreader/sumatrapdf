@@ -3504,7 +3504,7 @@ TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     Str streamNoStr = ParseEmbeddedPdfName(path2).streamNoStr;
     if (streamNoStr) {
         Str rest = str::Parse(streamNoStr, ":%d", &streamNo);
-        bool hasAttachmentName = rest && str::StartsWith(rest, StrL(":attachname="));
+        bool hasAttachmentName = str::StartsWith(rest, StrL(":attachname="));
         // there shouldn't be any left unparsed data except attachment name metadata
         ReportIf(!rest.s || (rest.s[0] && !hasAttachmentName));
         if (!rest.s || (rest.s[0] && !hasAttachmentName)) {

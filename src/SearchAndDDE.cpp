@@ -2478,12 +2478,12 @@ static Str HandleSearchCmd(HWND hwnd, Str cmd, bool* ack) {
     // Manual parse so search terms may contain " via "" escapes; str::Parse
     // stops at the first " and cannot express that.
     Str kPrefix = StrL("[Search(\"");
-    if (!str::StartsWith(cmd, kPrefix)) {
+    if (!str::TrimPrefix(cmd, kPrefix)) {
         return {};
     }
     int endFile = 0;
     TempStr pdfFile;
-    if (!ParseDdeQuoted(cmd, kPrefix.len, &pdfFile, &endFile)) {
+    if (!ParseDdeQuoted(cmd, 0, &pdfFile, &endFile)) {
         return {};
     }
     // expect "," after the closing quote of the path

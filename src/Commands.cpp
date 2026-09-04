@@ -1076,14 +1076,13 @@ static bool IsArgName(Str name, Str argName) {
     if (str::EqI(name, argName)) {
         return true;
     }
-    if (!str::StartsWithI(name, argName)) {
+    if (!str::TrimPrefixI(name, argName)) {
         return false;
     }
-    if (name.len <= argName.len) {
+    if (len(name) == 0) {
         return false;
     }
-    char c = name.s[argName.len];
-    return c == '=';
+    return name.s[0] == '=';
 }
 
 // One allocation: sizeofi(CommandArg) + name + NUL + strVal + NUL.
@@ -1419,13 +1418,12 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
             return nullptr;
         }
         argName = argSpecs[i].name;
-        if (!str::StartsWithI(rest, argName)) {
+        if (!str::TrimPrefixI(rest, argName)) {
             continue;
         }
         type = argSpecs[i].type;
         break;
     }
-    rest = Str(rest.s + argName.len, rest.len - argName.len);
     if (len(rest) == 0) {
         if (type == CommandArg::Type::Bool) {
             // name of bool arg followed by nothing is true
