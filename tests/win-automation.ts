@@ -136,10 +136,15 @@ export async function launchControlled(
   const pipe = uniquePipeName();
   const posArgs = opts?.defaultWindowPos || args.includes("-window-pos") ? [] : windowPosArgs();
   const testing = opts?.saveSettings ? [] : ["-for-testing"];
+  // drain stderr: ASan writes reports there, and with stderr:"ignore" those
+  // writes hit a closed pipe and kill the process (EPIPE in the test client)
   const proc = Bun.spawn([EXE, ...testing, ...posArgs, "-dbg-control", pipe, ...args], {
     stdout: "ignore",
-    stderr: "ignore",
+    stderr: "pipe",
   });
+  if (proc.stderr) {
+    void new Response(proc.stderr).text();
+  }
   try {
     const client = await ControlClient.connect(pipe);
     const frame = await waitForFrame(proc.pid!);

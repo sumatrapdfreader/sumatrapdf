@@ -174,7 +174,11 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-5956: page still flipped after leaving RTL (diff=${vsAfter} of ${pixels})`);
     }
   } finally {
-    await client.quit();
+    try {
+      await client.quit();
+    } catch {
+      /* process already gone */
+    }
     await killAndWait(proc);
   }
 }
