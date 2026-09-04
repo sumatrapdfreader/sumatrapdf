@@ -84,6 +84,7 @@ struct RefHoverState {
         // optimistically and only need the new bitmap.
         bool showPopup = false;
         Point screenPt;
+        int destPageRaw = -1;
         float destXRaw = -1.f;
         float destYRaw = -1.f;
         // source link location (page coords) that triggered this show; carried
@@ -104,6 +105,9 @@ struct RefHoverState {
     // re-used by the wheel-zoom / wheel-scroll handlers so they can re-render
     // without re-running detection.
     struct Displayed {
+        // Original link page, which can differ from the rendered page when a
+        // broken PDF anchor stayed behind a heading moved to the next page.
+        int destPageRaw = -1;
         int destPage = -1;
         float destX = -1.f;
         float destY = -1.f;
@@ -163,6 +167,8 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
 RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY,
                      RectF* continuationOut = nullptr);
 
+bool ShouldSearchNextPage(RectF mediabox, float destY);
+
 //--- plain-text citation lookup (RefHoverText.cpp)
 
 bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Point pagePos, int& destPageOut,
@@ -170,7 +176,13 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
 
 void RefHoverFreeLookupCache(RefHoverState* s);
 
-float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF srcRect, int destPage);
+enum class RefHoverTextMatch {
+    Any,
+    Best,
+};
+
+float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF srcRect, int destPage,
+                                         RefHoverTextMatch match = RefHoverTextMatch::Any);
 
 //--- citation pattern matching (RefHoverTextDetect.cpp)
 

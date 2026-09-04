@@ -89,6 +89,7 @@ static void RefHoverRenderDone(RefHoverRenderJob* job) {
         FreePixmap(s->bmp);
         s->bmp = job->bmp;
         if (job->req.showPopup) {
+            s->displayed.destPageRaw = job->req.destPageRaw;
             s->displayed.destPage = job->req.pageNo;
             s->displayed.destX = job->req.destXRaw;
             s->displayed.destY = job->req.destYRaw;

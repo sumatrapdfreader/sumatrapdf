@@ -324,10 +324,10 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
     return result;
 }
 
-// When a link destination is page-level (no specific destY), extract the
-// source link's text from srcRect on srcPage and search destPage for a
-// matching entry anchor. Returns -1 if no match.
-float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF srcRect, int destPage) {
+// Extract the source link text and find its matching anchor on destPage.
+// Best only tries the highest-ranked candidate to avoid common-word matches.
+float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF srcRect, int destPage,
+                                         RefHoverTextMatch match) {
     if (srcPage <= 0 || destPage <= 0 || srcRect.dx <= 0.f || srcRect.dy <= 0.f) {
         return -1.f;
     }
@@ -480,6 +480,9 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
         int bestY = (bestY_lineStart >= 0) ? bestY_lineStart : bestY_any;
         if (bestY >= 0) {
             return (float)bestY;
+        }
+        if (match == RefHoverTextMatch::Best) {
+            break;
         }
     }
     return -1.f;

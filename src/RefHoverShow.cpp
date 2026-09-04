@@ -10,6 +10,41 @@
 #include "EngineBase.h"
 #include "RefHover.h"
 
+enum class MissingEntry {
+    Empty,
+    Landscape,
+};
+
+static RectF DetectRegion(EngineBase* engine, int pageNo, RectF mediabox, float destX, float destY, RectF* continuation,
+                          MissingEntry missingEntry) {
+    AutoArenaSavepoint tempScope;
+
+    Rect* coords = nullptr;
+    int textLen = 0;
+    Str textUtf8 = engine->GetTextForPage(pageNo, &textLen, &coords);
+    TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
+    WCHAR* cleanText = nullptr;
+    Rect* cleanCoords = nullptr;
+    Rect* normCoords = coords;
+    if (coords && len(text) > 0) {
+        cleanText = AllocArrayTemp<WCHAR>(textLen);
+        cleanCoords = AllocArrayTemp<Rect>(textLen);
+        int cleanLen = StripWatermarkGlyphs(text, coords, cleanText, cleanCoords);
+        text = WStr(cleanText, cleanLen);
+        normCoords = AllocArrayTemp<Rect>(cleanLen);
+        NormalizeGlyphLines(cleanCoords, normCoords, cleanLen);
+    }
+
+    RectF region = DetectEquationBox(text, normCoords, mediabox, destX, destY);
+    if (region.dx <= 0.f || region.dy <= 0.f) {
+        region = DetectEntryBox(text, normCoords, mediabox, destX, destY, continuation);
+    }
+    if ((region.dx <= 0.f || region.dy <= 0.f) && missingEntry == MissingEntry::Landscape) {
+        region = LandscapeBox(mediabox, destX, destY, text, normCoords);
+    }
+    return region;
+}
+
 // pageZoom is the destination page's current display zoom (px-per-pt) —
 // used as the initial render zoom so popup text height matches the page.
 void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom) {
@@ -55,27 +90,32 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     if (useLinkZoom) {
         region = RectF{0.f, destY, mediabox.dx, mediabox.dy - destY};
     } else {
-        Rect* coords = nullptr;
-        int textLen = 0;
-        Str textUtf8 = engine->GetTextForPage(destPage, &textLen, &coords);
-        TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
-        WCHAR* cleanText = nullptr;
-        Rect* cleanCoords = nullptr;
-        Rect* normCoords = coords;
-        if (coords && len(text) > 0) {
-            // Strip the page watermark on the raw glyphs first (its true height
-            // is only visible pre-normalization), then normalize the survivors
-            // so the detectors below see clean, baseline-flattened text.
-            cleanText = AllocArrayTemp<WCHAR>(textLen);
-            cleanCoords = AllocArrayTemp<Rect>(textLen);
-            int cleanLen = StripWatermarkGlyphs(text, coords, cleanText, cleanCoords);
-            text = WStr(cleanText, cleanLen);
-            normCoords = AllocArrayTemp<Rect>(cleanLen);
-            NormalizeGlyphLines(cleanCoords, normCoords, cleanLen);
+        region = DetectRegion(engine, destPage, mediabox, destX, destY, &continuation, MissingEntry::Empty);
+        bool regionEmpty = region.dx <= 0.f || region.dy <= 0.f;
+        bool searchNext = regionEmpty || ShouldSearchNextPage(mediabox, destY);
+        if (searchNext && !regionEmpty) {
+            float currentY = RefHoverResolveDestYFromSourceText(engine, s->pending.srcPage, s->pending.srcRect,
+                                                                destPage, RefHoverTextMatch::Best);
+            searchNext = currentY < 0.f;
         }
-        region = DetectEquationBox(text, normCoords, mediabox, destX, destY);
-        if (region.dx <= 0.f || region.dy <= 0.f) {
-            region = DetectEntryBox(text, normCoords, mediabox, destX, destY, &continuation);
+
+        float nextY = -1.f;
+        if (searchNext) {
+            int nextPage = destPage + 1;
+            if (nextPage <= engine->PageCount()) {
+                nextY = RefHoverResolveDestYFromSourceText(engine, s->pending.srcPage, s->pending.srcRect, nextPage,
+                                                           RefHoverTextMatch::Best);
+            }
+            if (nextY >= 0.f) {
+                destPage = nextPage;
+                destY = nextY;
+                destX = std::max(destX, 0.f);
+                mediabox = engine->PageMediabox(destPage);
+                region = DetectRegion(engine, destPage, mediabox, destX, destY, &continuation, MissingEntry::Landscape);
+            }
+        }
+        if (regionEmpty && nextY < 0.f) {
+            region = DetectRegion(engine, destPage, mediabox, destX, destY, &continuation, MissingEntry::Landscape);
         }
     }
     bool hasContinuation = continuation.dx > 0.f && continuation.dy > 0.f;
@@ -156,6 +196,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     }
     req.showPopup = true;
     req.screenPt = s->pending.screenPt;
+    req.destPageRaw = s->pending.destPage;
     req.destXRaw = s->pending.destX;
     req.destYRaw = s->pending.destY;
     req.srcPageRaw = s->pending.srcPage;

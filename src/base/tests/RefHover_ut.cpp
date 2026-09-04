@@ -66,6 +66,26 @@ static void NegativeDestYFallsToLandscape() {
     utassert(box.dy < kPageH);
 }
 
+// A broken named destination can stay at the end of one page while its
+// heading moves to the next. An empty result lets the caller try that page.
+static void DestBeforeFooterIsEmpty() {
+    WCHAR text[256];
+    Rect coords[256];
+    int n = 0;
+    AddText(text, coords, n, 256, L"body text ending before the destination", 52, 380);
+    AddText(text, coords, n, 256, L"the final line on this page is here", 52, 394);
+    AddText(text, coords, n, 256, L"231", 200, 500);
+
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 52.f, 420.f);
+    utassert(IsEmpty(box));
+}
+
+static void LateDestSearchesNextPage() {
+    RectF page{0.f, 0.f, 419.53f, 558.43f};
+    utassert(!ShouldSearchNextPage(page, 350.f));
+    utassert(ShouldSearchNextPage(page, 409.53f));
+}
+
 // (3) Bracket-style bibliography "[Foo10]" / "[Bar11]": DetectEntryBox fits
 // to the first entry and does not include the second.
 static void BracketEntryFitsToOneEntry() {
@@ -1065,6 +1085,8 @@ void RefHoverTest() {
     ItalianPortugueseCaptionDetected();
     LandscapeBoxBasicShape();
     NegativeDestYFallsToLandscape();
+    DestBeforeFooterIsEmpty();
+    LateDestSearchesNextPage();
     NonTrailingParenRejected();
     PluralHeadingWordNotMatched();
     SparseTextReturnsWholePage();

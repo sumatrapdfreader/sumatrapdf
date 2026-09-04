@@ -12,6 +12,11 @@
 static constexpr float kAnchorTopMarginPt = 6.f;
 // pt of padding around the detected entry box.
 static constexpr float kEntryPadPt = 6.f;
+static constexpr float kLatePageStartRatio = 0.70f;
+
+bool ShouldSearchNextPage(RectF mediabox, float destY) {
+    return mediabox.dy > 0.f && destY >= mediabox.dy * kLatePageStartRatio;
+}
 
 static bool IsAsciiAlnum(WCHAR c) {
     return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9');
@@ -895,14 +900,11 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
 //   2. Scan forward; stop at "[N" near the same left margin (next entry) or
 //      a vertical paragraph gap.
 //   3. Return the min/max bounding box of glyphs in [start, end), padded.
-// Falls back to LandscapeBox() when the link is not a bibliography reference
-// (TOC, topbar, cross-ref, table caption). The landscape box renders a half-
-// page-tall slice of the page anchored on the destination so the user sees
-// surrounding context (e.g. the table rows under a caption).
 // Bibliography / glossary / abbreviation entry box. Tries bracket-style
 // ("[Foo+09]"), hanging-indent author-year, and single-line description-list
-// layouts. Falls back to LandscapeBox when the destination doesn't look like
-// a list entry.
+// layouts. Returns empty when there is no text near the destination so the
+// caller can recover a stale page anchor; other non-list layouts fall back to
+// LandscapeBox.
 //
 // continuationOut, if non-null, is set to a second box when a bracket-style
 // entry runs off the bottom of its 2-column-layout column with no natural
@@ -966,7 +968,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         }
     }
     if (startIdx < 0) {
-        return LandscapeBox(mediabox, destX, destY, text, coords);
+        return {};
     }
 
     // PDF link destX is unreliable: poorly-authored links carry the source
