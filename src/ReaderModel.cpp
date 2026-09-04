@@ -39,7 +39,7 @@ static EngineBase* CreateReaderEngine(Str path, PasswordUI* pwdUI) {
 }
 
 ReaderModel* ReaderModel::Create(Str path, PasswordUI* pwdUI) {
-    if (!path) {
+    if (len(path) == 0) {
         return nullptr;
     }
     EngineBase* engine = CreateReaderEngine(path, pwdUI);

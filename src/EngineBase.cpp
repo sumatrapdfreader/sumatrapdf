@@ -149,7 +149,7 @@ Kind kindTocDjvu = "tocDjvu";
 // separators into spaces, so they don't render as a stray hyphen or as
 // boxes (#2647).
 static TempStr CleanupTreeViewControlStringTemp(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return {};
     }
     TempWStr ws = ToWStrTemp(s);
@@ -775,7 +775,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     {
         ScopedMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        if (ct && loc.page <= len(ct->text) && !ct->text[loc.page - 1].text) {
+        if (ct && loc.page <= len(ct->text) && len(ct->text[loc.page - 1].text) == 0) {
             ct->state[loc.page - 1] = TextExtractionState::NotExtracted;
         }
     }

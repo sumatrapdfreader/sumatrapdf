@@ -1211,7 +1211,7 @@ EngineBase* EngineImage::Clone() {
 }
 
 bool EngineImage::LoadSingleFile(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return false;
     }
     SetFilePath(path);
@@ -1229,15 +1229,15 @@ bool EngineImage::LoadSingleFile(Str path) {
     // TODO: maybe default to file extension and only use detected from content
     // if no extension?
     TempStr fileExt = GfxFileExtFromDataTemp(data);
-    if (!fileExt) {
+    if (len(fileExt) == 0) {
         // imageFormat already holds the Kind we resolved above; skip the
         // redundant GuessFileTypeFromName call.
         fileExt = GfxFileExtFromTypeTemp(imageFormat);
     }
-    if (!fileExt) {
+    if (len(fileExt) == 0) {
         fileExt = path::GetExtTemp(path);
     }
-    if (!fileExt) {
+    if (len(fileExt) == 0) {
         fileExt = StrL("");
     }
     SetDefaultExt(defaultExt, fileExt);
@@ -1266,7 +1266,7 @@ bool EngineImage::LoadFromData(Str data) {
     sourceData = str::Dup(data);
 
     Str fileExt = GfxFileExtFromDataTemp(data);
-    if (!fileExt) {
+    if (len(fileExt) == 0) {
         return false;
     }
     SetDefaultExt(defaultExt, path::GetExtTemp(fileExt));
@@ -1925,7 +1925,7 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
     Str path = pageFileNames[pageNo - 1];
     TempStr fileName = path::GetBaseNameTemp(path);
     TempStr ext = path::GetExtTemp(fileName);
-    if (!ext) {
+    if (len(ext) == 0) {
         return str::DupTemp(fileName);
     }
     int n = str::IndexOf(fileName, ext);
@@ -1944,7 +1944,7 @@ int EngineImageDir::GetPageByLabel(Str label) const {
         if (!str::TrimPrefix(maybeExt, label)) {
             continue;
         }
-        if (str::Eq(maybeExt, ext) || !maybeExt) {
+        if (str::Eq(maybeExt, ext) || len(maybeExt) == 0) {
             return i + 1;
         }
     }
@@ -1994,7 +1994,7 @@ bool EngineImageDir::SaveFileAs(Str dstPath) {
 Pixmap* EngineImageDir::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
     Str path = pageFileNames[pageNo - 1];
     Str bmpData = file::ReadFile(path);
-    if (!bmpData) {
+    if (len(bmpData) == 0) {
         return nullptr;
     }
     deleteAfterUse = true;
@@ -2103,7 +2103,7 @@ static void ComicInfoVisit(ComicInfoParser* cip, StrNode* path, Str value, json:
 }
 
 void ComicInfoParser::AddBookmark(int imageIdx, Str title) {
-    if (!title || imageIdx < 0) {
+    if (len(title) == 0 || imageIdx < 0) {
         return;
     }
     VecAppend(bookmarkImageIdx, imageIdx);
@@ -2198,7 +2198,7 @@ void ComicInfoParser::Parse(Str xmlData) {
     // UTF-8 input). Handles UTF-8, UTF-16 LE, and UTF-16 BE BOMs; if there's
     // no BOM the data is treated as UTF-8 (ComicInfo.xml's spec encoding).
     TempStr utf8 = strconv::UnknownToUtf8Temp(xmlData);
-    if (!utf8) {
+    if (len(utf8) == 0) {
         return;
     }
     int utf8Len = len(utf8);
@@ -2343,7 +2343,7 @@ EngineBase* EngineCbx::Clone() {
 }
 
 bool EngineCbx::LoadFromFile(Str file) {
-    if (!file) {
+    if (len(file) == 0) {
         return false;
     }
     SetFilePath(file);
@@ -2519,7 +2519,7 @@ bool EngineCbx::FinishLoading() {
     for (int i = 0; i < n; i++) {
         auto* fileInfo = fileInfos[i];
         Str fileName = fileInfo->name;
-        if (!fileName) {
+        if (len(fileName) == 0) {
             continue;
         }
         if (Archive::Format::Zip == cbxArchive->format && str::StartsWithI(fileName, StrL("_rels/.rels"))) {
@@ -2563,7 +2563,7 @@ bool EngineCbx::FinishLoading() {
     }
 
     // encrypted archives list entries but can't extract data without password
-    if (cbxArchive->isEncrypted && !cbxArchive->password) {
+    if (cbxArchive->isEncrypted && len(cbxArchive->password) == 0) {
         delete cbxArchive;
         cbxArchive = nullptr;
         return false;
@@ -2891,7 +2891,7 @@ EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, FileType hintTy
     bool saveKey = false;
     for (;;) {
         Str pwd = pwdUI->GetPassword(path, nullptr, nullptr, &saveKey);
-        if (!pwd) {
+        if (len(pwd) == 0) {
             return {}; // user cancelled
         }
         engine = EngineCbx::CreateFromFile(path, pwd, nullptr, nullptr, hintType, realPath);
@@ -2932,7 +2932,7 @@ bool EngineImagesGetPageFileInfo(EngineBase* engine, int pageNo, TempStr* nameOu
         TempStr pathOrName = e->GetImagePathTemp(pageNo);
         *nameOut = pathOrName ? path::GetBaseNameTemp(pathOrName) : TempStr{};
         // single-image engine: path is the document itself; still report the base name
-        if (!*nameOut) {
+        if (len(*nameOut) == 0) {
             Str fp = engine->FilePath();
             *nameOut = fp ? path::GetBaseNameTemp(fp) : TempStr{};
         }

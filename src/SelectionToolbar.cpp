@@ -123,7 +123,7 @@ static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
     for (Str name : names) {
         Str tok = name;
         str::TrimWSInPlace(tok, str::TrimOpt::Both);
-        if (!tok) {
+        if (len(tok) == 0) {
             continue;
         }
         if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
@@ -301,7 +301,7 @@ static void UpdateButtonIcons(SelectionToolbar* tb, int size) {
     Color disabledCol = SelBarMutedTextColor();
     Color bgCol = SelBarBg();
     for (SelectionToolbarButton& b : tb->buttons) {
-        if (!b.svgIcon) {
+        if (len(b.svgIcon) == 0) {
             continue;
         }
         b.icon = GetCachedPixmapForSvg(b.svgIcon, size, size, fgCol, bgCol);

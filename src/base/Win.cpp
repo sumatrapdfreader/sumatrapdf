@@ -782,7 +782,7 @@ TempStr LoggedReadRegStrTemp(HKEY keySub, Str keyName, Str valName) {
 
 TempStr ReadRegStr2Temp(Str keyName, Str valName) {
     TempStr res = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
-    if (!res) {
+    if (len(res) == 0) {
         res = ReadRegStrTemp(HKEY_CURRENT_USER, keyName, valName);
     }
     return res;
@@ -790,7 +790,7 @@ TempStr ReadRegStr2Temp(Str keyName, Str valName) {
 
 TempStr LoggedReadRegStr2Temp(Str keyName, Str valName) {
     TempStr res = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
-    if (!res) {
+    if (len(res) == 0) {
         res = LoggedReadRegStrTemp(HKEY_CURRENT_USER, keyName, valName);
     }
     return res;
@@ -1536,7 +1536,7 @@ HANDLE LaunchProcessInDir(Str cmdLine, Str currDir, DWORD flags) {
 }
 
 bool CreateProcessHelper(Str exe, Str args) {
-    if (!args) {
+    if (len(args) == 0) {
         args = StrL("");
     }
     TempStr cmd = fmt("\"%s\" %s", exe, args);
@@ -2036,7 +2036,7 @@ void CloseClipboardAfterUpdate() {
 }
 
 static bool CopyOrAppendTextToClipboard(WStr text, bool appendOnly) {
-    if (!text) {
+    if (len(text) == 0) {
         return false;
     }
 
@@ -2535,7 +2535,7 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
         }
     }
 
-    if (!args) {
+    if (len(args) == 0) {
         Str func = install ? StrL("DllRegisterServer") : StrL("DllUnregisterServer");
         DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func.s);
         if (DllRegUnreg) {
@@ -3666,7 +3666,7 @@ static void AddPathToRecentDocsOnThread(WCHAR* pathW) {
 }
 
 void AddPathToRecentDocs(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return;
     }
     if (!path::IsOnNetworkDrive(path)) {

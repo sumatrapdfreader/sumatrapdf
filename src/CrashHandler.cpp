@@ -297,7 +297,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
 }
 
 static void SaveCrashInfo(Str d) {
-    if (!gCrashFilePath) {
+    if (len(gCrashFilePath) == 0) {
         logf("SaveCrashInfo: skipping because !gCrashFilePath");
         return;
     }
@@ -348,7 +348,7 @@ static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* a) {
         lzma::FileInfo* fi = &(archive.files[i]);
         Str name = fi->name;
         logf("ExtractSymbols: file %d is '%s'\n", i, name);
-        if (!name || str::Eq(name, StrL(".")) || str::Eq(name, StrL("..")) || str::Contains(name, StrL("/")) ||
+        if (len(name) == 0 || str::Eq(name, StrL(".")) || str::Eq(name, StrL("..")) || str::Contains(name, StrL("/")) ||
             str::Contains(name, StrL("\\")) || str::Contains(name, StrL(":"))) {
             return false;
         }
@@ -357,7 +357,7 @@ static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* a) {
             return false;
         }
         TempStr filePath = path::JoinTemp(dstDir, name);
-        if (!filePath) {
+        if (len(filePath) == 0) {
             return false;
         }
         Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
@@ -394,7 +394,7 @@ static bool DownloadAndUnzipSymbols(Str symDir) {
     }
 
     logf("DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
-    if (!symDir || !dir::Exists(symDir)) {
+    if (len(symDir) == 0 || !dir::Exists(symDir)) {
         log(StrL("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n"));
         return false;
     }
@@ -742,7 +742,7 @@ static void GetOsVersion() {
 static void GetProcessorName() {
     const auto* key = R"(HARDWARE\DESCRIPTION\System\CentralProcessor)";
     TempStr name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, Str(key), StrL("ProcessorNameString"));
-    if (!name) {
+    if (len(name) == 0) {
         // if more than one processor
         key = R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)";
         name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, Str(key), StrL("ProcessorNameString"));
@@ -767,7 +767,7 @@ static void GetGraphicsDriverInfo() {
         TempStr key = str::JoinTemp(StrL(kGfxDriverKeyPrefix), fmt("%04d", i));
         TempStr v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("DriverDesc"));
         // I assume that if I can't read the value, there are no more drivers
-        if (!v) {
+        if (len(v) == 0) {
             break;
         }
         CrashInfoAppend(fmt("Graphics driver %d\n", i));
@@ -816,11 +816,11 @@ static void GetSystemInfo() {
         TempStr s2 =
             ReadRegStrTemp(HKEY_LOCAL_MACHINE, StrL(R"(HARDWARE\DESCRIPTION\System\BIOS)"), StrL("SystemVersion"));
 
-        if (!s1 && !s2) {
+        if (len(s1) == 0 && len(s2) == 0) {
             // no-op
-        } else if (!s1) {
+        } else if (len(s1) == 0) {
             CrashInfoAppend(fmt("Machine: %s\n", s2));
-        } else if (!s2 || str::EqI(s1, s2)) {
+        } else if (len(s2) == 0 || str::EqI(s1, s2)) {
             CrashInfoAppend(fmt("Machine: %s\n", s1));
         } else {
             CrashInfoAppend(fmt("Machine: %s %s\n", s1, s2));
@@ -893,7 +893,7 @@ static void BuildSystemInfo() {
 }
 
 bool SetSymbolsDir(Str symDir) {
-    if (!symDir) {
+    if (len(symDir) == 0) {
         return false;
     }
     gSymbolsDir = str::Dup(gCrashHandlerArena, symDir);
@@ -969,7 +969,7 @@ static Str BuildSymbolsUrl() {
 void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool localOnly) {
     ReportIf(gDumpEvent || gDumpThread);
 
-    if (!crashDumpPath) {
+    if (len(crashDumpPath) == 0) {
         log(StrL("InstallCrashHandler: skipping because !crashDumpPath\n"));
         return;
     }

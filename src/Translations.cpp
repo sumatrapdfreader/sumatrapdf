@@ -93,12 +93,12 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
     int i = 2; // skip first 2 header lines
     while (i < nLines) {
         Str origLine = lines[i];
-        ReportDebugIf(!origLine || origLine.s[0] != ':');
+        ReportDebugIf(len(origLine) == 0 || origLine.s[0] != ':');
         orig = Str(origLine.s + 1, origLine.len - 1);
         i++;
         trans = {};
         while (i < nLines && lines[i] && lines[i].s[0] != ':') {
-            if (!trans) {
+            if (len(trans) == 0) {
                 Str line = lines[i];
                 if (str::TrimPrefix(line, langCodePref)) {
                     trans = line;
@@ -106,12 +106,12 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
             }
             i++;
         }
-        if (!trans) {
+        if (len(trans) == 0) {
             nUntranslated++;
         }
         TempStr unescaped = UnescapeTemp(orig);
         c->Append(unescaped);
-        if (!trans) {
+        if (len(trans) == 0) {
             c->Append({});
             continue;
         }
@@ -144,7 +144,7 @@ Str GetTranslation(Str s) {
         Str s2 = c->At(idx);
         if (s2.len == sLen && str::Eq(s, s2)) {
             Str tr = c->At(idx + 1);
-            if (!tr) {
+            if (len(tr) == 0) {
                 logf("Didn't find translation for '%s'\n", s);
                 return s;
             }
@@ -230,7 +230,7 @@ void SetCurrentLangByCode(Str langCode) {
 }
 
 Str ValidateLangCode(Str langCode) {
-    if (!langCode) return {};
+    if (len(langCode) == 0) return {};
     int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
         return {};

@@ -138,7 +138,7 @@ class TestPasswordUI : public PasswordUI {
 
     Str GetPassword(Str /*path*/, u8* /*fileDigest*/, u8 /*decryptionKeyOut*/[32], bool* saveKey) override {
         *saveKey = false;
-        if (triedPassword || !password) {
+        if (triedPassword || len(password) == 0) {
             return {};
         }
         triedPassword = true;
@@ -330,7 +330,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
     }
 
     Str fileData = file::ReadFile(chmPath);
-    if (!fileData) {
+    if (len(fileData) == 0) {
         out.Append(fmt("open=FAILED path=%s\n", chmPath));
         ok = false;
     } else {
@@ -702,7 +702,7 @@ TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut) {
     QuadF* quads = nullptr;
     int textLen = 0;
     Str text = engine->GetTextForPage(pageNo, &textLen, &coords, &quads);
-    if (!text || !coords) {
+    if (len(text) == 0 || !coords) {
         return fail(StrL("ERROR no-page-text"));
     }
     int startGlyph = -1;
@@ -789,12 +789,12 @@ TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut) {
 
 // find the [start, end) glyph range of the first occurrence of `word` on a page
 static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* startOut, int* endOut) {
-    if (!engine || !word || !startOut || !endOut) {
+    if (!engine || len(word) == 0 || !startOut || !endOut) {
         return false;
     }
     int textLen = 0;
     Str text = engine->GetTextForPage(pageNo, &textLen);
-    if (!text) {
+    if (len(text) == 0) {
         return false;
     }
     int wordLen = Utf8CodepointCount(word);
@@ -929,13 +929,13 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
 }
 
 static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut) {
-    if (!engine || !word || !xOut || !yOut) {
+    if (!engine || len(word) == 0 || !xOut || !yOut) {
         return false;
     }
     Rect* coords = nullptr;
     int textLen = 0;
     Str text = engine->GetTextForPage(pageNo, &textLen, &coords);
-    if (!text) {
+    if (len(text) == 0) {
         return false;
     }
     int wordLen = Utf8CodepointCount(word);
@@ -1383,7 +1383,7 @@ TempStr MarkdownFollowLinkResultTemp(Str href, bool follow, int* exitCodeOut) {
         if (!mm) {
             return finish(StrL("NOTREADY no-markdown"), 2);
         }
-        if (!href) {
+        if (len(href) == 0) {
             return finish(StrL("ERROR no-href"), 1);
         }
         navigate = mm->OnBeforeNavigate(href, false) ? 1 : 0;
@@ -2221,7 +2221,7 @@ TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCodeOut) {
         }
         return ToStrTemp(out);
     };
-    if (!jpegPath || !tiffPath) {
+    if (len(jpegPath) == 0 || len(tiffPath) == 0) {
         return fail(StrL("ERROR bad-args"));
     }
 
@@ -2273,7 +2273,7 @@ TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCodeOut) {
     }
 
     TempStr pdfPath = GetTempFilePathTemp(StrL("cmyksave"));
-    if (!pdfPath || !pdf.SaveToFile(pdfPath)) {
+    if (len(pdfPath) == 0 || !pdf.SaveToFile(pdfPath)) {
         return fail(StrL("ERROR save-pdf"));
     }
 
@@ -2303,7 +2303,7 @@ TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCodeOut) {
     Str jpeg = engine->GetImageDataForPageElement(imgEl);
     SafeEngineRelease(&engine);
     file::Delete(pdfPath);
-    if (!jpeg) {
+    if (len(jpeg) == 0) {
         return fail(StrL("ERROR no-image-data"));
     }
     bool wroteJpeg = file::WriteFile(jpegPath, jpeg);

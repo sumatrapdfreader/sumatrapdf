@@ -85,7 +85,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     Split(&parts, currPath, StrL(";"));
     for (Str entry : parts) {
         // skip empty entries and the one matching installDir (case-insensitive)
-        if (!entry || str::EqI(entry, installDir)) {
+        if (len(entry) == 0 || str::EqI(entry, installDir)) {
             continue;
         }
         if (len(newPath) > 0) {
@@ -106,7 +106,7 @@ static void RemoveInstalledFiles() {
     // can't use GetExistingInstallationDir() anymore because we
     // delete registry entries
     Str dir = gCli->installDir;
-    if (!dir) {
+    if (len(dir) == 0) {
         log(StrL("RemoveInstalledFiles(): dir is empty\n"));
     }
 #if 0

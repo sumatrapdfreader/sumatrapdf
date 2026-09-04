@@ -182,7 +182,7 @@ struct FindBarWnd : WindowBase {
 // append a command's keyboard shortcut to its tooltip, e.g. "Find Next (F3)"
 static TempStr AppendCmdAccel(Str base, int cmd) {
     TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
-    if (!accel) {
+    if (len(accel) == 0) {
         return base;
     }
     return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, len(accel) - 1))); // +1 skips the leading \t

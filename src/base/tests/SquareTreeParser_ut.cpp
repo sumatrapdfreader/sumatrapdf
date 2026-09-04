@@ -25,7 +25,7 @@ void SquareTreeTest() {
         utassert(str::Eq(root->GetValue(StrL("KEY")), StrL("value")));
         int off = 0;
         utassert(str::Eq(root->GetValue(StrL("key"), &off), StrL("value")));
-        utassert(!root->GetValue(StrL("key"), &off));
+        utassert(len(root->GetValue(StrL("key"), &off)) == 0);
         delete root;
     }
 
@@ -116,7 +116,7 @@ void SquareTreeTest() {
         value = root->GetValue(StrL("count"), &off);
         utassert(str::Eq(value, StrL("1")) && 2 == off);
         value = root->GetValue(StrL("count"), &off);
-        utassert(!value && 2 == off);
+        utassert(len(value) == 0 && 2 == off);
         delete root;
     }
 
@@ -147,7 +147,7 @@ void SquareTreeTest() {
         SquareTreeNode* node = root->GetChild(StrL("Node"));
         utassert(node && 1 == len(node->data) && str::Eq(node->GetValue(StrL("child")), StrL("")));
         utassert(str::Eq(root->GetValue(StrL("key")), StrL("value")));
-        utassert(!root->GetValue(StrL("node")) && !root->GetChild(StrL("key")));
+        utassert(len(root->GetValue(StrL("node"))) == 0 && !root->GetChild(StrL("key")));
         delete root;
     }
 

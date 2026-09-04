@@ -1370,7 +1370,7 @@ static CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
         valEnd = {};
     }
     TempStr val = {};
-    if (!valEnd) {
+    if (len(valEnd) == 0) {
         val = str::DupTemp(rest);
         *argsInOut = {};
     } else {
@@ -1426,7 +1426,7 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
         break;
     }
     rest = Str(rest.s + argName.len, rest.len - argName.len);
-    if (!rest) {
+    if (len(rest) == 0) {
         if (type == CommandArg::Type::Bool) {
             // name of bool arg followed by nothing is true
             *argsInOut = {};
@@ -1451,14 +1451,14 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
     } else if (rest.s[0] == '=') {
         valStart = Str(rest.s + 1, rest.len - 1);
     }
-    if (!valStart) {
+    if (len(valStart) == 0) {
         // <args> doesn't start with any of the available commands for this command
         return nullptr;
     }
     Str valEnd = str::SliceFromChar(valStart, ' ');
     TempStr val = {};
     Str afterVal;
-    if (!valEnd) {
+    if (len(valEnd) == 0) {
         val = str::DupTemp(valStart);
         afterVal = {};
     } else {

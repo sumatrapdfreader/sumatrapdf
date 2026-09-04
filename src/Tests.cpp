@@ -58,7 +58,7 @@ void TestRenderPage(const Flags& i) {
 
 static void extractPageText(EngineBase* engine, int pageNo) {
     PageText pageText = engine->ExtractPageText(pageNo);
-    if (!pageText.text) {
+    if (len(pageText.text) == 0) {
         return;
     }
     TempStr s = str::ReplaceTemp(Str(pageText.text.s), StrL("\n"), StrL("_"));

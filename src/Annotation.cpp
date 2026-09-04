@@ -1085,7 +1085,7 @@ Str LoadEmbeddedFile(Annotation* annot) {
 }
 
 bool SetEmbeddedFileFromPath(Annotation* annot, Str path) {
-    if (!AnnotationIsLive(annot) || !path || !file::Exists(path)) {
+    if (!AnnotationIsLive(annot) || len(path) == 0 || !file::Exists(path)) {
         return false;
     }
     EngineMupdf* e = annot->engine;
@@ -1811,10 +1811,10 @@ void SetOpacity(Annotation* annot, int newOpacity) {
 
 static Str GetUserTemp() {
     Str u = Str(getenv("USER"));
-    if (!u) {
+    if (len(u) == 0) {
         u = Str(getenv("USERNAME"));
     }
-    if (!u) {
+    if (len(u) == 0) {
         return StrL("user");
     }
     return u;

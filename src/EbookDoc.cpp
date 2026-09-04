@@ -89,7 +89,7 @@ static uint GetCodepageFromPI(Str xmlPI) {
         return CP_ACP;
     }
     TempStr encoding = GetXmlPIAttrTemp(Str(xmlPI.s, xmlPIEnd + 2), StrL("encoding"));
-    if (!encoding) {
+    if (len(encoding) == 0) {
         return CP_ACP;
     }
 
@@ -167,7 +167,7 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
 }
 
 TempStr NormalizeURLTemp(Str url, Str base) {
-    if (!url || !base) {
+    if (len(url) == 0 || len(base) == 0) {
         // nothing to resolve against; url is already as normalized as it gets
         ReportIf(true);
         return str::DupTemp(url);
@@ -302,7 +302,7 @@ static inline void AppendChar(str::Builder& htmlData, char c) {
 
 static TempStr DecodeDataURITemp(Str url) {
     Str comma = str::SliceFromChar(url, ',');
-    if (!comma) {
+    if (len(comma) == 0) {
         return {};
     }
     Str data = Str(comma.s + 1, (int)(url.s + url.len - (comma.s + 1)));
@@ -318,7 +318,7 @@ struct GumboDoc {
 
     GumboDoc(Str data, bool xmlFragment) {
         opts = xmlFragment ? GumboMakeXmlFragmentOptions() : GumboMakeOptions();
-        if (!data) {
+        if (len(data) == 0) {
             return;
         }
         output = gumbo_parse_with_options(&opts, data.s, (size_t)data.len);
@@ -455,7 +455,7 @@ bool EpubDoc::Load() {
         return false;
     }
     TempStr contentPath = GumboAttributeValueTemp(node, "full-path");
-    if (!contentPath) {
+    if (len(contentPath) == 0) {
         return false;
     }
     contentPath = url::DecodeTemp(contentPath);
@@ -504,7 +504,7 @@ bool EpubDoc::Load() {
         TempStr mediaType = GumboAttributeValueTemp(node, "media-type");
         if (isImageMediaType(mediaType)) {
             TempStr imgPath = GumboAttributeValueTemp(node, "href");
-            if (!imgPath) {
+            if (len(imgPath) == 0) {
                 continue;
             }
             imgPath = url::DecodeTemp(imgPath);
@@ -519,7 +519,7 @@ bool EpubDoc::Load() {
             VecAppend(images, data);
         } else if (isHtmlMediaType(mediaType)) {
             TempStr htmlPath = GumboAttributeValueTemp(node, "href");
-            if (!htmlPath) {
+            if (len(htmlPath) == 0) {
                 continue;
             }
             htmlPath = url::DecodeTemp(htmlPath);
@@ -571,7 +571,7 @@ bool EpubDoc::Load() {
             continue;
         }
         TempStr idref = GumboAttributeValueTemp(node, "idref");
-        if (!idref) {
+        if (len(idref) == 0) {
             continue;
         }
         int idx = idList.Find(idref);
@@ -586,7 +586,7 @@ bool EpubDoc::Load() {
         }
         Str html = Str((char*)((u8*)htmlFi->data), htmlFi->fileSizeUncompressed);
         TempStr decoded = DecodeTextToUtf8Temp(html, true);
-        if (!decoded) {
+        if (len(decoded) == 0) {
             continue;
         }
         // insert explicit page-breaks between sections including
@@ -670,7 +670,7 @@ Str EpubDoc::GetHtmlData() const {
 Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
     ScopedMutex scope(&zipAccess);
 
-    if (!pagePath) {
+    if (len(pagePath) == 0) {
         ReportIf(true);
         // if we're reparsing, we might not have pagePath, which is needed to
         // build the exact url so try to find a partial match
@@ -736,7 +736,7 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
 }
 
 Str EpubDoc::GetFileData(Str relPath, Str pagePath) {
-    if (!pagePath) {
+    if (len(pagePath) == 0) {
         ReportIf(true);
         return {};
     }
@@ -810,14 +810,14 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
         while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || itemTag != tok->tag)) {
             if (tok->IsText()) {
                 TempStr part = str::DupTemp(tok->s);
-                if (!text) {
+                if (len(text) == 0) {
                     text = part;
                 } else {
                     text = str::JoinTemp(text, part);
                 }
             }
         }
-        if (!text) {
+        if (len(text) == 0) {
             continue;
         }
         TempStr itemText = str::DupTemp(text);
@@ -893,7 +893,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
             tocDataStr = Str(fi->data, fi->fileSizeUncompressed);
         }
     }
-    if (!tocDataStr) {
+    if (len(tocDataStr) == 0) {
         return false;
     }
 
@@ -1060,7 +1060,7 @@ static Str loadFromData(Fb2Doc* doc, Str srcData) {
 }
 
 bool Fb2Doc::Load(Str srcData) {
-    ReportIf(!srcData && len(fileName) == 0);
+    ReportIf(len(srcData) == 0 && len(fileName) == 0);
 
     Str data;
     if (len(fileName) > 0) {
@@ -1073,7 +1073,7 @@ bool Fb2Doc::Load(Str srcData) {
     }
     TempStr tmp = DecodeTextToUtf8Temp(data, true);
     str::Free(data);
-    if (!tmp) {
+    if (len(tmp) == 0) {
         return false;
     }
 
@@ -1149,7 +1149,7 @@ bool Fb2Doc::Load(Str srcData) {
                     nickname = appendTo(nickname, ResolveHtmlEntitiesTemp(tok->s));
                 }
             }
-            if (!docAuthor) {
+            if (len(docAuthor) == 0) {
                 // some files give only a nickname
                 docAuthor = nickname;
             }
@@ -1543,11 +1543,11 @@ HtmlDoc::~HtmlDoc() {
 bool HtmlDoc::Load() {
     {
         Str data = file::ReadFile(fileName);
-        if (!data) {
+        if (len(data) == 0) {
             return false;
         }
         TempStr decoded = DecodeTextToUtf8Temp(data, true);
-        if (!decoded) {
+        if (len(decoded) == 0) {
             return false;
         }
         Str dup = str::Dup(decoded);
@@ -1833,7 +1833,7 @@ static Str TextFindRfcEnd(str::Builder& htmlData, Str curr, char prevChar) {
 
 bool TxtDoc::Load() {
     Str fileContent = file::ReadFile(fileName);
-    if (!fileContent) {
+    if (len(fileContent) == 0) {
         return false;
     }
 
@@ -1844,7 +1844,7 @@ bool TxtDoc::Load() {
     } else {
         text = DecodeTextToUtf8Temp(raw);
     }
-    if (!text) {
+    if (len(text) == 0) {
         return false;
     }
 

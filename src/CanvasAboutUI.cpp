@@ -130,7 +130,7 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
                     return 0;
                 case VK_RETURN: {
                     Str path = HomePageSelectedFilePathTemp(win);
-                    if (!path) {
+                    if (len(path) == 0) {
                         return 0;
                     }
                     LoadArgs args(path, win);

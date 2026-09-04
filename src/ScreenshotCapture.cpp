@@ -757,14 +757,14 @@ static void SaveSelectedScreenshot(ScreenshotOverlayData* data) {
         return;
     }
     TempStr screenshotDir = gScreenshotHost.GetSaveDirTemp ? gScreenshotHost.GetSaveDirTemp() : TempStr();
-    if (!screenshotDir) {
+    if (len(screenshotDir) == 0) {
         return;
     }
     dir::CreateAll(screenshotDir);
 
     auto& cs = data->captures[data->selected];
     TempStr filePath = MakeUniquePathTemp(screenshotDir, cs.processName);
-    if (!filePath) {
+    if (len(filePath) == 0) {
         return;
     }
 

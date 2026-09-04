@@ -32,7 +32,7 @@ static bool DarkChromeActive() {
 }
 
 DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
-    if (!v || str::EqI(v, StrL("off"))) {
+    if (len(v) == 0 || str::EqI(v, StrL("off"))) {
         return DocumentColorsFollowTheme::Off;
     }
     if (str::EqI(v, StrL("smart"))) {
@@ -132,7 +132,7 @@ DocumentColorsFollowTheme GetDocumentColorsFollowTheme() {
     if (gDocumentColorsFollowThemePreview >= 0) {
         return (DocumentColorsFollowTheme)gDocumentColorsFollowThemePreview;
     }
-    if (!gSettings || !gSettings->documentColorsFollowTheme) {
+    if (!gSettings || len(gSettings->documentColorsFollowTheme) == 0) {
         return DocumentColorsFollowTheme::Off;
     }
     return DocumentColorsFollowThemeFromString(gSettings->documentColorsFollowTheme);

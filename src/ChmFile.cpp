@@ -41,7 +41,7 @@ static chm_entry* ChmLookupPath(const ChmFile* chm, Str path) {
 // tolerating backslashes in URLs the way Microsoft's HTML Help viewer does.
 // Returns the entry (owned by chmCtx) or nullptr.
 static chm_entry* ChmResolveObject(const ChmFile* chm, Str fileName) {
-    if (!fileName) {
+    if (len(fileName) == 0) {
         return nullptr;
     }
     if (!str::StartsWith(fileName, StrL("/"))) {
@@ -302,7 +302,7 @@ TempStr ChmFile::ResolveTopicID(unsigned int id) const {
         if (br.UInt32LE(off) == id) {
             TempStr stringsData = GetDataTemp(StrL("/#STRINGS"));
             Str res = GetCharZ(stringsData, (int)br.UInt32LE(off + 4));
-            if (!res) {
+            if (len(res) == 0) {
                 return {};
             }
             return str::DupTemp(res);
@@ -391,7 +391,7 @@ TempStr ChmFile::GetPropertyTemp(DocProp prop) const {
     } else if (prop == DocProp::CreatorApp && len(creator) > 0) {
         result = SmartToUtf8Temp(creator, codepage);
     }
-    if (!result) {
+    if (len(result) == 0) {
         return {};
     }
     str::NormalizeWSInPlace(result);
@@ -452,7 +452,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, 
             local = str::DupTemp(StripItsProtocol(Str(attrVal->value)));
         }
     }
-    if (!name) {
+    if (len(name) == 0) {
         return false;
     }
     visitor->Visit(name, local, level);
@@ -494,7 +494,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
         } else if (str::EqI(Str(attrName->value), StrL("Name"))) {
             name = Str(attrVal->value);
             // some CHM documents seem to use a lonely Name instead of Keyword
-            if (!keyword) {
+            if (len(keyword) == 0) {
                 keyword = name;
             }
         } else if (str::EqI(Str(attrName->value), StrL("Local")) && name) {
@@ -502,7 +502,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
             references.Append(StripItsProtocol(Str(attrVal->value)));
         }
     }
-    if (!keyword) {
+    if (len(keyword) == 0) {
         return false;
     }
 
@@ -690,7 +690,7 @@ static int ChmEntityByte(WCHAR c) {
 // are pure-ASCII labels (issue #842).
 static TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
     uint cp = (codepage == CP_ACP) ? GetACP() : codepage;
-    if (!s || !ChmTocNeedsEntityRemap(cp)) {
+    if (len(s) == 0 || !ChmTocNeedsEntityRemap(cp)) {
         return s;
     }
     TempWStr ws = ToWStrTemp(s);
@@ -724,7 +724,7 @@ struct ChmTocEntityFixer : EbookTocVisitor {
 };
 
 bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) const {
-    if (!path) {
+    if (len(path) == 0) {
         return false;
     }
     TempStr htmlData = GetDataTemp(path);
@@ -735,7 +735,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     // attribute values come out in a known encoding -- no per-attribute
     // conversion needed in the visit functions.
     TempStr utf8 = SmartToUtf8Temp(htmlData, codepage);
-    if (!utf8) {
+    if (len(utf8) == 0) {
         return false;
     }
     int n = ::len(utf8);

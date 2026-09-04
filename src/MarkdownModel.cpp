@@ -29,7 +29,7 @@ constexpr const char* kMdVirtualHost = "https://sumatrapdf.markdown/";
 constexpr int kMdVirtualHostLen = sizeof("https://sumatrapdf.markdown/") - 1;
 
 static bool IsMarkdownVirtualHostUrl(Str url) {
-    if (!url) {
+    if (len(url) == 0) {
         return false;
     }
     if (str::StartsWith(url, Str(kMdVirtualHost))) {
@@ -41,7 +41,7 @@ static bool IsMarkdownVirtualHostUrl(Str url) {
 
 // Virtual-host pages use an https:// scheme but are served in-app via WebView2.
 static bool IsMarkdownExternalUrl(Str url) {
-    if (!url || IsMarkdownVirtualHostUrl(url)) {
+    if (len(url) == 0 || IsMarkdownVirtualHostUrl(url)) {
         return false;
     }
     return IsExternalUrl(url);
@@ -49,7 +49,7 @@ static bool IsMarkdownExternalUrl(Str url) {
 
 static TempStr NormalizeMarkdownUrlTemp(Str url) {
     TempStr plainUrl = url::GetFullPathTemp(url);
-    if (!plainUrl) {
+    if (len(plainUrl) == 0) {
         return {};
     }
     if (str::StartsWith(plainUrl, Str(kMdVirtualHost))) {
@@ -74,7 +74,7 @@ static bool IsBrowserViewableExt(Str urlOrPath) {
         ".md\0.markdown\0.html\0.htm\0.xhtml\0.txt\0.css\0.js\0.json\0"
         ".svg\0.png\0.apng\0.jpg\0.jpeg\0.gif\0.bmp\0.webp\0.avif\0.ico\0";
     TempStr ext = path::GetExtTemp(urlOrPath);
-    return !ext || SeqStrIndexIS(exts, ext) >= 0;
+    return len(ext) == 0 || SeqStrIndexIS(exts, ext) >= 0;
 }
 
 // "...#page=3" -> "page=3", url-decoded
@@ -89,7 +89,7 @@ static TempStr UrlFragmentTemp(Str url) {
 static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
     TempStr normFile = path::NormalizeTemp(filePath);
     TempStr normBase = path::NormalizeTemp(baseDir);
-    if (!normBase || !str::TrimPrefix(normFile, normBase)) {
+    if (len(normBase) == 0 || !str::TrimPrefix(normFile, normBase)) {
         return path::GetBaseNameTemp(filePath);
     }
     Str rel = normFile;
@@ -97,7 +97,7 @@ static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
         rel.s++;
         rel.len--;
     }
-    if (!rel) {
+    if (len(rel) == 0) {
         return path::GetBaseNameTemp(filePath);
     }
     return str::DupTemp(rel);
@@ -147,7 +147,7 @@ struct MarkdownLaunchTask {
 };
 
 static IPageDestination* NewMarkdownNamedDest(Str url, int pageNo) {
-    if (!url) {
+    if (len(url) == 0) {
         return nullptr;
     }
     IPageDestination* dest = nullptr;
@@ -241,11 +241,11 @@ int MarkdownModel::CurrentPageNo() const {
 // the TOC is also built on a background thread, which has no model to ask, so
 // this takes the two fields it needs instead of being a method
 static TempStr FileToVirtualUrlTemp(Str filePath, Str baseDir, bool isHtml) {
-    if (!filePath) {
+    if (len(filePath) == 0) {
         return {};
     }
     TempStr rel = RelPathFromBaseTemp(filePath, baseDir);
-    if (!rel) {
+    if (len(rel) == 0) {
         rel = path::GetBaseNameTemp(filePath);
     }
     rel = str::ReplaceTemp(rel, StrL("\\"), StrL("/"));
@@ -267,7 +267,7 @@ TempStr MarkdownModel::FileToVirtualUrlTemp(Str filePath) const {
 }
 
 TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
-    if (!url || !str::TrimPrefix(url, Str(kMdVirtualHost))) {
+    if (len(url) == 0 || !str::TrimPrefix(url, Str(kMdVirtualHost))) {
         return {};
     }
     Str pathPart = url;
@@ -445,13 +445,13 @@ LRESULT MarkdownModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const {
 // Unlike VirtualUrlToFileTemp() this doesn't fall back to page lookups, so a
 // link to a file that doesn't exist still resolves (and reports an error).
 TempStr MarkdownModel::LinkedDocPathTemp(Str url) const {
-    if (!url || IsMarkdownExternalUrl(url)) {
+    if (len(url) == 0 || IsMarkdownExternalUrl(url)) {
         return {};
     }
     // WebView2 reports an in-document url with the virtual host already stripped
     // ("sub/doc.pdf"), a TOC destination carries it; normalize to have it
     TempStr urlPath = NormalizeMarkdownUrlTemp(url);
-    if (!urlPath || !str::TrimPrefix(urlPath, Str(kMdVirtualHost)) || IsBrowserViewableExt(urlPath)) {
+    if (len(urlPath) == 0 || !str::TrimPrefix(urlPath, Str(kMdVirtualHost)) || IsBrowserViewableExt(urlPath)) {
         return {};
     }
     TempStr rel = str::ReplaceTemp(urlPath, StrL("/"), StrL("\\"));
@@ -490,7 +490,7 @@ bool MarkdownModel::MaybeLaunchLinkedDoc(Str url) {
         return false;
     }
     TempStr filePath = LinkedDocPathTemp(url);
-    if (!filePath) {
+    if (len(filePath) == 0) {
         return false;
     }
     if (launchTask) {
@@ -508,7 +508,7 @@ bool MarkdownModel::MaybeLaunchLinkedDoc(Str url) {
 }
 
 bool MarkdownModel::DisplayPage(Str pageUrl) {
-    if (!pageUrl) {
+    if (len(pageUrl) == 0) {
         return false;
     }
     pageUrl = str::DupTemp(pageUrl);
@@ -651,7 +651,7 @@ void MarkdownModel::SaveHtmlScrollPosForPage(int pageNo) {
 }
 
 void MarkdownModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
-    if (!url || pos.x < 0 || pos.y < 0) {
+    if (len(url) == 0 || pos.x < 0 || pos.y < 0) {
         return;
     }
     TempStr plainUrl = url::GetFullPathTemp(url);
@@ -672,7 +672,7 @@ bool MarkdownModel::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const 
 }
 
 bool MarkdownModel::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
-    if (!url || !pos) {
+    if (len(url) == 0 || !pos) {
         return false;
     }
     TempStr plainUrl = url::GetFullPathTemp(url);
@@ -793,7 +793,7 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
 }
 
 void MarkdownModel::OnDocumentComplete(Str url) {
-    if (!url) {
+    if (len(url) == 0) {
         return;
     }
     TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
@@ -867,7 +867,7 @@ Str MarkdownModel::GetDataForUrl(Str url) {
         }
     }
 
-    if (!data) {
+    if (len(data) == 0) {
         return {};
     }
 
@@ -922,7 +922,7 @@ TocTree* MarkdownModel::GetToc() {
 
 void MarkdownModel::GetDisplayState(FileState* fs) {
     Str fileNameA = fileName;
-    if (!fs->filePath || !str::EqI(fs->filePath, fileNameA)) {
+    if (len(fs->filePath) == 0 || !str::EqI(fs->filePath, fileNameA)) {
         SetFileStatePath(fs, fileNameA);
     }
     fs->useDefaultState = !gSettings->rememberStatePerDocument;

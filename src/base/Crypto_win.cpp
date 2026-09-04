@@ -71,7 +71,7 @@ static bool ExtractSignature(Str hexSignature, Str& data, ScopedMem<BYTE>& signa
     // * empty, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
     Str hex = hexSignature;
     if (!str::TrimPrefix(hex, StrL("sha1:"))) {
-        if (!hex) {
+        if (len(hex) == 0) {
             if (data.len < 20 || memchr(data.s, 0, data.len)) {
                 return false;
             }

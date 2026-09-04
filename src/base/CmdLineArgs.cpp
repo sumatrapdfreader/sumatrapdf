@@ -47,7 +47,7 @@ TempStr QuoteCmdLineArgTemp(Str arg) {
 }
 
 bool CouldBeArg(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return false;
     }
     char c = *s.s;

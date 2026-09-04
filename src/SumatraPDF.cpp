@@ -268,7 +268,7 @@ FileEBookUI* GetFileEBookUI(Str filePath) {
     if (!uitask::IsMainUIThread()) {
         return gLoadThreadFileEBookUI;
     }
-    if (!gSettings || !filePath) {
+    if (!gSettings || len(filePath) == 0) {
         return nullptr;
     }
     FileState* fs = FileHistoryFindByPath(filePath);
@@ -339,7 +339,7 @@ LoadArgs* LoadArgs::Clone() {
 }
 
 void SetCurrentLang(Str langCode) {
-    if (!langCode) {
+    if (len(langCode) == 0) {
         return;
     }
     str::ReplaceWithCopy(&gSettings->uiLanguage, langCode);
@@ -447,7 +447,7 @@ bool SumatraLaunchBrowser(Str url) {
         HWND plugin = gWindows[0]->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
         int urlLen = len(url);
-        if (!parent || !url || (urlLen > 4096)) {
+        if (!parent || len(url) == 0 || (urlLen > 4096)) {
             return false;
         }
         TempStr urlZ = str::DupTemp(url);
@@ -506,7 +506,7 @@ bool OpenFileExternally(Str path) {
     str::ToLowerInPlace(perceivedType);
     if (gAllowedFileTypes.Contains(StrL("*"))) {
         /* allow all file types (not recommended) */;
-    } else if (!perceivedType || !gAllowedFileTypes.Contains(perceivedType)) {
+    } else if (len(perceivedType) == 0 || !gAllowedFileTypes.Contains(perceivedType)) {
         return false;
     }
 
@@ -580,7 +580,7 @@ void SelectTabInWindow(WindowTab* tab) {
 // when limitWin is set, only that window's tabs are considered
 MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) {
     WindowTab* tab = nullptr;
-    if (!file) {
+    if (len(file) == 0) {
         return nullptr;
     }
     if (!limitWin && gMostRecentlyOpenedDoc != nullptr) {
@@ -608,7 +608,7 @@ MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) 
 static StrVec gFilesLoading;
 
 static int IndexOfLoadingFile(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return -1;
     }
     int n = len(gFilesLoading);
@@ -621,7 +621,7 @@ static int IndexOfLoadingFile(Str path) {
         }
     }
     TempStr norm = path::NormalizeTemp(path);
-    if (!norm || str::EqI(norm, path)) {
+    if (len(norm) == 0 || str::EqI(norm, path)) {
         return -1; // already compared as-is
     }
     for (int i = 0; i < n; i++) {
@@ -635,7 +635,7 @@ static int IndexOfLoadingFile(Str path) {
 // True if a tab already shows this file, or a load for it is already in progress
 // (tab is only created when load finishes, so mid-password / async loads need this).
 bool IsDocumentOpenOrLoading(Str file) {
-    if (!file) {
+    if (len(file) == 0) {
         return false;
     }
     if (FindTabByFile(file)) {
@@ -646,7 +646,7 @@ bool IsDocumentOpenOrLoading(Str file) {
 
 // Mark/unmark a path as currently loading. Call from the UI thread only.
 void BeginDocumentLoad(Str file) {
-    if (!file) {
+    if (len(file) == 0) {
         return;
     }
     if (IndexOfLoadingFile(file) >= 0) {
@@ -888,7 +888,7 @@ uint MbRtlReadingMaybe() {
 
 void MessageBoxWarning(HWND hwnd, Str msg, Str title) {
     uint type = MB_OK | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
-    if (!title) {
+    if (len(title) == 0) {
         title = _TRA("Warning");
     }
     MsgBox(hwnd, msg, title, type);
@@ -1271,7 +1271,7 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
             auto* engine = model->GetEngine();
             bool withPwd = engine->IsPasswordProtected();
             Str decrKey = engine->decryptionKey;
-            if (withPwd && !decrKey) {
+            if (withPwd && len(decrKey) == 0) {
                 RemoveThumbnail(ds);
                 return;
             }
@@ -1517,7 +1517,7 @@ bool ToolbarModeIsHidden() {
 
 void SetToolbarMode(int mode) {
     Str name = SeqStrByIndex(gToolbarModeNames, mode);
-    if (!name) {
+    if (len(name) == 0) {
         name = StrL("show");
         mode = kToolbarShow;
     }
@@ -1537,7 +1537,7 @@ int FullscreenToolbarModeFromPrefs() {
 
 void SetFullscreenToolbarMode(int mode) {
     Str name = SeqStrByIndex(gToolbarModeNames, mode);
-    if (!name) {
+    if (len(name) == 0) {
         name = StrL("hide");
         mode = kToolbarHide;
     }
@@ -1821,7 +1821,7 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
                 int h = (int)lroundf(box.dy);
                 TempStr detail{};
                 auto appendPart = [&](TempStr part) {
-                    if (!part) {
+                    if (len(part) == 0) {
                         return;
                     }
                     detail = detail ? fmt("%s%s%s", detail, StrL(kPageInfoSep), part) : part;
@@ -2120,7 +2120,7 @@ bool OpenDocumentFromMemory(MainWindow* win, Str data, Str nameHint) {
         return false;
     }
     TempStr display = path::GetBaseNameTemp(nameHint);
-    if (!display) {
+    if (len(display) == 0) {
         display = StrL("attachment");
     }
     // empty FilePath: this is not a file on disk (no watcher, no history)
@@ -3602,7 +3602,7 @@ static void AutoReloadResetFileState(WindowTab* tab) {
 // attribute cache, so on a network drive both values look stable right away
 // and we reload immediately, as before.
 bool AutoReloadFileStillChanging(WindowTab* tab) {
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return false;
     }
     u64 now = GetTickCount64();
@@ -3681,7 +3681,7 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
 static StrNode* gFilesFailedToOpen = nullptr;
 
 static void MarkFileFailedToOpen(Str path) {
-    if (!path || FindStrNode(gFilesFailedToOpen, path)) {
+    if (len(path) == 0 || FindStrNode(gFilesFailedToOpen, path)) {
         return;
     }
     StrNode* node = AllocStrNode(GetPermArena(), path);
@@ -3693,7 +3693,7 @@ static void MarkFileFailedToOpen(Str path) {
 // a file that loads again is no longer broken (e.g. the program holding a lock
 // on it exited), so stop skipping it when navigating the folder
 static void MarkFileOpenedOk(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return;
     }
     StrNode* node = FindStrNode(gFilesFailedToOpen, path);
@@ -4655,11 +4655,11 @@ static void MaybeDetachEphemeralHostFile(LoadArgs* args) {
     if (!path::IsEphemeralHostFile(path) || IsOpenCachePath(path)) {
         return;
     }
-    if (!args->DisplayName()) {
+    if (len(args->DisplayName()) == 0) {
         args->SetDisplayName(path::GetBaseNameTemp(path));
     }
     TempStr copy = MaybeCopyEphemeralHostFile(path);
-    if (!copy) {
+    if (len(copy) == 0) {
         return;
     }
     args->SetFilePath(copy);
@@ -6032,7 +6032,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         }
     }
 
-    if (!srcFileName) {
+    if (len(srcFileName) == 0) {
         ShowTemporaryNotification(win->hwndCanvas, _TRA("File path not available"), kNotif5SecsTimeOut);
         return;
     }
@@ -6128,7 +6128,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
             srcFileName = urlName;
         }
     }
-    if (!srcFileName) {
+    if (len(srcFileName) == 0) {
         ShowTemporaryNotification(win->hwndCanvas, _TRA("File path not available"), kNotif5SecsTimeOut);
         return;
     }
@@ -6243,7 +6243,7 @@ static void ShowGeneratedMarkdownHtml(MainWindow* win) {
         }
         str::Free(markdown);
     }
-    if (!html) {
+    if (len(html) == 0) {
         return;
     }
 
@@ -6512,7 +6512,7 @@ static void CreateLnkShortcut(MainWindow* win) {
 }
 
 static TabState* NewTabStateFromTab(WindowTab* tab) {
-    if (!tab || !tab->ctrl || !tab->filePath) {
+    if (!tab || !tab->ctrl || len(tab->filePath) == 0) {
         return nullptr;
     }
 
@@ -6532,8 +6532,8 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     }
 
     Str path = tab->filePath;
-    ReportIf(!path);
-    if (!path) {
+    ReportIf(len(path) == 0);
+    if (len(path) == 0) {
         return;
     }
     TabState* state = NewTabStateFromTab(tab);
@@ -6578,13 +6578,13 @@ static void DuplicateInNewTab(MainWindow* win) {
         return;
     }
     WindowTab* currentTab = win->CurrentTab();
-    if (!currentTab || !currentTab->filePath) {
+    if (!currentTab || len(currentTab->filePath) == 0) {
         return;
     }
 
     Str path = currentTab->filePath;
-    ReportIf(!path);
-    if (!path) {
+    ReportIf(len(path) == 0);
+    if (len(path) == 0) {
         return;
     }
 
@@ -6797,7 +6797,7 @@ static void CollectHistoryFilesInDir(Str dir, StrVec& out) {
         return;
     }
     for (FileState* fs : *states) {
-        if (!fs || !fs->filePath) {
+        if (!fs || len(fs->filePath) == 0) {
             continue;
         }
         TempStr d = path::GetDirTemp(fs->filePath);
@@ -6907,7 +6907,7 @@ static void FinishNextPrevDirScan(NextPrevDirScanResult* r) {
             continue;
         }
         WindowTab* tab = w->CurrentTab();
-        if (!tab || !tab->filePath) {
+        if (!tab || len(tab->filePath) == 0) {
             continue;
         }
         TempStr dir = path::GetDirTemp(tab->filePath);
@@ -6976,7 +6976,7 @@ static void StartNextPrevDirScan(Str dir) {
 }
 
 static void EnsureNextPrevDirScan(Str filePath) {
-    if (!filePath || !CanAccessDisk() || gPluginMode) {
+    if (len(filePath) == 0 || !CanAccessDisk() || gPluginMode) {
         return;
     }
     TempStr dir = path::GetDirTemp(filePath);
@@ -7044,7 +7044,7 @@ static TempStr PeekNextFileInFolderTemp(MainWindow* win, int* outN = nullptr, in
         return {};
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return {};
     }
     Str path = tab->filePath;
@@ -7089,7 +7089,7 @@ static void MaybeShowNextFileScrollHint(MainWindow* win) {
     }
     int n = 0, m = 0;
     TempStr nextPath = PeekNextFileInFolderTemp(win, &n, &m);
-    if (!nextPath) {
+    if (len(nextPath) == 0) {
         return;
     }
     TempStr name = path::GetBaseNameTemp(nextPath);
@@ -7236,7 +7236,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDe
         }
         next += step;
     }
-    if (!chosen) {
+    if (len(chosen) == 0) {
         ShowNoFileToOpenNotif(win, forward);
         return;
     }
@@ -7244,7 +7244,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDe
 
     // with pathToDelete the caller wants the old file deleted once the new one
     // loaded, which only the load path does
-    if (!pathToDelete && GoToFileInBrowserView(win, path)) {
+    if (len(pathToDelete) == 0 && GoToFileInBrowserView(win, path)) {
         return;
     }
 
@@ -8299,7 +8299,7 @@ static void FinishDeferredMainWindowDpiRefresh(MainWindow* win) {
 }
 
 void SetCurrentLanguageAndRefreshUI(Str langCode) {
-    if (!langCode || str::Eq(langCode, trans::GetCurrentLangCode())) {
+    if (len(langCode) == 0 || str::Eq(langCode, trans::GetCurrentLangCode())) {
         return;
     }
     SetCurrentLang(langCode);
@@ -9834,7 +9834,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
 
     bool isTextOnlySelectionOut; // if false, a rectangular selection
     TempStr selText = GetSelectedTextTemp(tab, StrL("\n"), isTextOnlySelectionOut);
-    if (!selText) {
+    if (len(selText) == 0) {
         return;
     }
     // The budget is for the whole URL, so subtract the pattern around the
@@ -10001,7 +10001,7 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
 // this directory is the same for installed / portable etc. versions
 TempStr GetSumatraDataDirTemp() {
     TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
-    if (!dir) {
+    if (len(dir) == 0) {
         return {};
     }
     return path::JoinTemp(dir, StrL("SumatraPDF-data"));
@@ -10009,7 +10009,7 @@ TempStr GetSumatraDataDirTemp() {
 
 TempStr GetSumatraBuildSpecificDirTemp() {
     TempStr dataDir = GetSumatraDataDirTemp();
-    if (!dataDir) {
+    if (len(dataDir) == 0) {
         return {};
     }
     char id[7] = "000000";
@@ -10022,7 +10022,7 @@ TempStr GetSumatraBuildSpecificDirTemp() {
 
 TempStr GetLogFilePathTemp() {
     TempStr buildDir = GetSumatraBuildSpecificDirTemp();
-    if (!buildDir) {
+    if (len(buildDir) == 0) {
         return {};
     }
     // TODO: maybe use unique name
@@ -10031,7 +10031,7 @@ TempStr GetLogFilePathTemp() {
 
 TempStr GetCrashInfoDirTemp() {
     TempStr buildDir = GetSumatraBuildSpecificDirTemp();
-    if (!buildDir) {
+    if (len(buildDir) == 0) {
         return {};
     }
     return path::JoinTemp(buildDir, StrL("crashinfo"));
@@ -10069,7 +10069,7 @@ static bool IsMarkdownTab(WindowTab* tab) {
 static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
     for (MainWindow* w : gWindows) {
         for (WindowTab* tab : w->Tabs()) {
-            if (tab->IsAboutTab() || !tab->filePath) {
+            if (tab->IsAboutTab() || len(tab->filePath) == 0) {
                 continue;
             }
             paths.Append(tab->filePath);
@@ -10326,7 +10326,7 @@ static void ListPrintersThread(HWND* hwndPtr) {
 
 static void ReopenLastClosedFile(MainWindow* win) {
     Str path = PopRecentlyClosedDocument();
-    if (!path) {
+    if (len(path) == 0) {
         return;
     }
     LoadArgs args(path, win);
@@ -10413,7 +10413,7 @@ static void RemoveDeletedFilesFromHistory(MainWindow* win) {
     for (int i = len(*states) - 1; i >= 0; i--) {
         FileState* fs = (*states)[i];
         Str path = fs->filePath;
-        if (!path) {
+        if (len(path) == 0) {
             continue;
         }
         // Skip only when we can't tell deleted from "drive is away": an
@@ -10725,7 +10725,7 @@ void DeleteManualBrowserWindow() {
 static TempStr ManualMimeFromPathTemp(Str path) {
     Str ext = str::SliceFromCharLast(path, '.');
     TempStr mime = MimeTypeFromExtTemp(ext);
-    if (!mime) {
+    if (len(mime) == 0) {
         mime = StrL("text/html");
     }
     return mime;
@@ -11254,7 +11254,7 @@ static Str CurrentImageTabPathTemp(MainWindow* win) {
         return {};
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return {};
     }
     if (tab->GetEngineType() != kindEngineImage) {
@@ -11466,7 +11466,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     switch (cmdId) {
         case CmdViewWithExternalViewer: {
             Str cmdLine = GetCommandStringArg(cmd, kCmdArgCommandLine, {});
-            if (!cmdLine || !CanAccessDisk() || !tab || !file::Exists(tab->filePath)) {
+            if (len(cmdLine) == 0 || !CanAccessDisk() || !tab || !file::Exists(tab->filePath)) {
                 return 0;
             }
             Str filter = GetCommandStringArg(cmd, kCmdArgFilter, {});
@@ -11503,7 +11503,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // text without going near a command-line length limit
                 bool isTextOnly;
                 TempStr sel = GetSelectedTextTemp(tab, StrL("\n"), isTextOnly);
-                if (!sel) {
+                if (len(sel) == 0) {
                     return 0;
                 }
                 TempStr cmdLine = ExpandSelectionVarsTemp(exe, sel, false, 0, nullptr, tab);
@@ -11511,7 +11511,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             auto url = GetCommandStringArg(cmd, kCmdArgURL, {});
-            if (!url) {
+            if (len(url) == 0) {
                 return 0;
             }
             // try to auto-fix url
@@ -11529,7 +11529,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             bool isTextOnlySelection;
             TempStr selText = GetSelectedTextTemp(tab, StrL("\n"), isTextOnlySelection);
-            if (!selText) {
+            if (len(selText) == 0) {
                 return 0;
             }
             auto body = GetCommandStringArg(cmd, kCmdArgBody, {});
@@ -13127,7 +13127,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             TempStr path = PickImageFilePathTemp(win->hwndFrame);
-            if (!path) {
+            if (len(path) == 0) {
                 return 0;
             }
             Str data = file::ReadFile(path);
@@ -15552,7 +15552,7 @@ void ShowCrashHandlerMessage() {
         log(StrL("ShowCrashHandlerMessage: res != IDCANCEL\n"));
         return;
     }
-    if (!gCrashFilePath) {
+    if (len(gCrashFilePath) == 0) {
         log(StrL("ShowCrashHandlerMessage: !gCrashFilePath\n"));
         return;
     }

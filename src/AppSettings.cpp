@@ -75,7 +75,7 @@ static bool ApplyReadAloudVoiceFromSettings() {
     TtsSetSpeed(speed > 0 ? speed : 1.0f);
 
     Str voiceId = gSettings->readAloudVoiceId;
-    if (!voiceId) {
+    if (len(voiceId) == 0) {
         TtsSetVoiceById(StrL(""));
         return false;
     }
@@ -110,7 +110,7 @@ constexpr Color kColWhiteDefault = 0xFFFFFF;
 
 // Migrate FixedPageUI.InvertColors and DocumentColorMode to DocumentColorsFollowTheme
 static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
-    if (!prefsData) {
+    if (len(prefsData) == 0) {
         return false;
     }
     SquareTreeNode* root = ParseSquareTree(prefsData);
@@ -533,7 +533,7 @@ bool LoadSettings() {
         str::ReplaceWithCopy(&gprefs->toolbarPosition, StrL("top"));
     }
 
-    if (!gprefs->treeFontName) {
+    if (len(gprefs->treeFontName) == 0) {
         gprefs->treeFontName = StrL("automatic");
     }
 
@@ -553,7 +553,7 @@ bool LoadSettings() {
     FileHistorySetStates(gprefs->fileStates);
     {
         Str fontName = EbookFontNameFromSetting(gprefs->eBookUI.fontName);
-        if (!fontName) {
+        if (len(fontName) == 0) {
             fontName = StrL("Georgia");
         }
         float fontSize = gprefs->eBookUI.fontSize;
@@ -665,7 +665,7 @@ static void RefreshLazyTabStatePointers() {
         SessionData* sd = (*gInitialSessionData)[sdIdx++];
         int tsIdx = 0;
         for (WindowTab* tab : win->Tabs()) {
-            if (!tab->filePath) {
+            if (len(tab->filePath) == 0) {
                 continue;
             }
             if (tsIdx >= len(*sd->tabStates)) {
@@ -707,7 +707,7 @@ static void RememberSessionState() {
         }
         SessionData* windowState = NewSessionData();
         for (WindowTab* tab : win->Tabs()) {
-            if (!tab->filePath) {
+            if (len(tab->filePath) == 0) {
                 // home page tab
                 continue;
             }
@@ -844,8 +844,8 @@ bool SaveSettings() {
     }
 
     TempStr path = GetSettingsPathTemp();
-    ReportIf(!path);
-    if (!path) {
+    ReportIf(len(path) == 0);
+    if (len(path) == 0) {
         return false;
     }
     TempStr prevPrefs = file::ReadFileWithArena(path, GetTempArena());

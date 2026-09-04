@@ -69,7 +69,7 @@ static Rect CitationSpanBounds(const Rect* coords, int textLen, const Vec<int>& 
 }
 
 static bool IsNamePrefix(WStr word) {
-    if (!word || !iswlower(word.s[0])) {
+    if (len(word) == 0 || !iswlower(word.s[0])) {
         return false;
     }
     for (WStr prefix : kNamePrefixes) {
@@ -97,7 +97,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
                               Rect* srcRectOut) {
     *surnameOut = {};
     *yearOut = 0;
-    if (!text || textLen <= 0 || !coords) {
+    if (len(text) == 0 || textLen <= 0 || !coords) {
         return false;
     }
 
@@ -386,7 +386,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
 // anchor (top-left of the matching line's first glyph).
 bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surnameW, int year, float* xOut,
                            float* yOut) {
-    if (!text || textLen <= 0 || !coords || !surnameW) {
+    if (len(text) == 0 || textLen <= 0 || !coords || len(surnameW) == 0) {
         return false;
     }
     int surnameLen = surnameW.len;
@@ -499,7 +499,7 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
 bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen, Point pagePos, int* numOut,
                                      Rect* srcRectOut) {
     *numOut = 0;
-    if (!text || textLen <= 0 || !coords) {
+    if (len(text) == 0 || textLen <= 0 || !coords) {
         return false;
     }
 
@@ -764,7 +764,7 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
 // "[num]" at the page's leftmost text column. Returns true on hit and fills
 // xOut/yOut with the entry's anchor (top-left of the "[" glyph).
 bool FindNumericReferenceInPageText(WStr text, const Rect* coords, int textLen, int num, float* xOut, float* yOut) {
-    if (!text || textLen <= 0 || !coords || num <= 0) {
+    if (len(text) == 0 || textLen <= 0 || !coords || num <= 0) {
         return false;
     }
 

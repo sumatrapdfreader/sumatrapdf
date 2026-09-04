@@ -109,7 +109,7 @@ static void StrSeqNumTest() {
     utassert(str::Eq(s, StrL("foo")));
     s = SeqStrNumStrByNumber(seq, 0x1234);
     utassert(str::Eq(s, StrL("baz")));
-    utassert(!SeqStrNumStrByNumber(seq, 99));
+    utassert(len(SeqStrNumStrByNumber(seq, 99)) == 0);
 
     int off = 0;
     int idx = 0;
@@ -173,9 +173,9 @@ static void StrIsDigitTest() {
 }
 
 static void StrUrlExtractTest() {
-    utassert(!url::GetFileNameTemp(StrL("")));
-    utassert(!url::GetFileNameTemp(StrL("#hash_only")));
-    utassert(!url::GetFileNameTemp(StrL("?query=only")));
+    utassert(len(url::GetFileNameTemp(StrL(""))) == 0);
+    utassert(len(url::GetFileNameTemp(StrL("#hash_only"))) == 0);
+    utassert(len(url::GetFileNameTemp(StrL("?query=only"))) == 0);
     TempStr fileName = url::GetFileNameTemp(StrL("http://example.net/filename.ext"));
     utassert(str::Eq(fileName, StrL("filename.ext")));
     fileName = url::GetFileNameTemp(StrL("http://example.net/filename.ext#with_hash"));
@@ -192,7 +192,7 @@ static void StrUrlExtractTest() {
     utassert(str::Eq(wiki, StrL("https://ru.wikipedia.org/wiki/"
                                 "\xD0\xAD\xD0\xBD\xD0\xB5\xD1\x80\xD0\xB3\xD0\xB8\xD1\x8F_\xE2\x80\x94_"
                                 "\xD0\x91\xD1\x83\xD1\x80\xD0\xB0\xD0\xBD")));
-    utassert(!url::DecodeTemp({}));
+    utassert(len(url::DecodeTemp({})) == 0);
     utassert(str::Eq(url::DecodeTemp(StrL("nothing to decode")), StrL("nothing to decode")));
     // a stray or truncated escape is left alone
     utassert(str::Eq(url::DecodeTemp(StrL("100%")), StrL("100%")));
@@ -213,7 +213,7 @@ static void StrUrlExtractTest() {
     // query-value encoding: reserved URL chars must not stay as syntax
     // (discussion #6029: UrlEscapeW left '?' alone so "me?" became a new query)
     utassert(str::Eq(url::EncodeTemp(StrL("")), StrL("")));
-    utassert(!url::EncodeTemp({}));
+    utassert(len(url::EncodeTemp({})) == 0);
     utassert(str::Eq(url::EncodeTemp(StrL("play with me? he asked")), StrL("play%20with%20me%3F%20he%20asked")));
     utassert(str::Eq(url::EncodeTemp(StrL("play with me?\" he asked")), StrL("play%20with%20me%3F%22%20he%20asked")));
     utassert(str::Eq(url::EncodeTemp(StrL("a&b=c#d/e~f_g-h.i")), StrL("a%26b%3Dc%23d%2Fe~f_g-h.i")));
@@ -487,10 +487,10 @@ static void StrTrimWsTest() {
     utassert(str::Eq(str::NextWord(rest), StrL("one")));
     utassert(str::Eq(str::NextWord(rest), StrL("two")));
     utassert(str::Eq(str::NextWord(rest), StrL("three")));
-    utassert(!str::NextWord(rest));
+    utassert(len(str::NextWord(rest)) == 0);
 
     rest = StrL(" \t ");
-    utassert(!str::NextWord(rest));
+    utassert(len(str::NextWord(rest)) == 0);
 
     // TrimWsBoth narrows the view without touching its data
     Str orig = StrL(" \t a b \n");
@@ -847,7 +847,7 @@ void StrTest() {
         TempStr str1;
         char c1;
         utassert(!str::Parse(StrL("no exclamation mark?"), "%s!", &str1).s);
-        utassert(!str1);
+        utassert(len(str1) == 0);
         utassert(str::Parse(StrL("xyz"), "x%cz", &c1).s);
         utassert(c1 == 'y');
         utassert(!str::Parse(StrL("leaks memory!?"), "%s!%$", &str1).s);
@@ -1067,11 +1067,11 @@ void StrTest() {
 
     {
         TempStr tmp = strconv::ToMultiByteTemp(StrL("abc"), 9876, 123456);
-        utassert(!tmp);
+        utassert(len(tmp) == 0);
     }
     {
         Str tmp = strconv::WStrToCodePage(98765, L"abc");
-        utassert(!tmp);
+        utassert(len(tmp) == 0);
     }
     {
         TempWStr tmp = strconv::StrCPToWStrTemp(StrL("abc"), 12345);

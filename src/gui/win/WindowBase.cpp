@@ -195,7 +195,7 @@ HWND HwndBase::Detach() {
 }
 
 void HwndBase::SetText(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         s = StrL("");
     }
     HwndSetText(hwnd, s);
@@ -1952,7 +1952,7 @@ void ControlBase::AttachDlgItem(UINT id, HWND parent) {
 }
 
 HWND ControlBase::CreateControl(const CreateControlArgs& args) {
-    ReportIf(!args.className);
+    ReportIf(len(args.className) == 0);
     // TODO: validate that className is one of the known controls?
 
     font = args.font;

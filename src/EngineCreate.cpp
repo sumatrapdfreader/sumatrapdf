@@ -27,7 +27,7 @@ static bool gEnableEpubWithPdfEngine = true;
 // inspects the temp copy still sniffs the right format.
 static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
     TempStr dataDir = GetSumatraDataDirTemp();
-    if (!dataDir) {
+    if (len(dataDir) == 0) {
         return {};
     }
     if (path::IsOnNetworkDrive(dataDir)) {
@@ -82,7 +82,7 @@ static EngineBase* MaybeCreateCbxFromMemory(Str path) {
     }
     auto timeStart = TimeGet();
     Str data = file::ReadFile(path);
-    if (!data) {
+    if (len(data) == 0) {
         logf("MaybeCreateCbxFromMemory: ReadFile('%s') failed\n", path);
         return nullptr;
     }
@@ -119,7 +119,7 @@ static TempStr MaybeCopyCbxToLocalCache(Str path) {
         return {};
     }
     TempStr cachePath = GetCbxCachePathTemp(path, fileSize);
-    if (!cachePath) {
+    if (len(cachePath) == 0) {
         return {};
     }
     if (file::Exists(cachePath)) {
@@ -151,7 +151,7 @@ static AtomicInt gOpenCacheSeq;
 
 static TempStr GetOpenCacheDirTemp() {
     TempStr dataDir = GetSumatraDataDirTemp();
-    if (!dataDir) {
+    if (len(dataDir) == 0) {
         return {};
     }
     return path::JoinTemp(dataDir, StrL("open-cache"));
@@ -160,7 +160,7 @@ static TempStr GetOpenCacheDirTemp() {
 // Copies we made of OneNote / Outlook extracts live under <dataDir>/open-cache.
 bool IsOpenCachePath(Str path) {
     TempStr dir = GetOpenCacheDirTemp();
-    if (!path || !dir) {
+    if (len(path) == 0 || len(dir) == 0) {
         return false;
     }
     if (!str::StartsWithI(path, dir)) {
@@ -174,7 +174,7 @@ bool IsOpenCachePath(Str path) {
 // exclusive-open or delete it the moment we close, then write our private copy.
 static bool CopyUnlockingSource(Str dst, Str src) {
     Str data = file::ReadFile(src);
-    if (!data) {
+    if (len(data) == 0) {
         return false;
     }
     bool ok = file::WriteFile(dst, data);
@@ -201,7 +201,7 @@ TempStr MaybeCopyEphemeralHostFile(Str path) {
         return {};
     }
     TempStr dir = GetOpenCacheDirTemp();
-    if (!dir) {
+    if (len(dir) == 0) {
         return {};
     }
     if (!dir::CreateAll(dir)) {

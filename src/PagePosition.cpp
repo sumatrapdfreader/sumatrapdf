@@ -61,7 +61,7 @@ Location BookmarkLocationHint(Str bookmark) {
 // falls back to page 1
 int PageNoFromStoredPagePos(DocController* ctrl, Str stored) {
     StoredPagePos pos = ParseStoredPagePos(stored);
-    if (!ctrl || !pos.bookmark || !ctrl->HasChapters()) {
+    if (!ctrl || len(pos.bookmark) == 0 || !ctrl->HasChapters()) {
         return pos.pageNo;
     }
     Location loc = ctrl->LookupBookmark(pos.bookmark);

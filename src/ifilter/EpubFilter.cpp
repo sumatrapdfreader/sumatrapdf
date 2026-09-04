@@ -146,7 +146,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
         case STATE_EPUB_TITLE:
             m_state = STATE_EPUB_DATE;
             str = m_epubDoc->GetPropertyTemp(DocProp::Title);
-            if (!str) {
+            if (len(str) == 0) {
                 str = m_epubDoc->GetPropertyTemp(DocProp::Subject);
             }
             if (len(str) > 0) {
@@ -159,7 +159,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
         case STATE_EPUB_DATE:
             m_state = STATE_EPUB_CONTENT;
             str = m_epubDoc->GetPropertyTemp(DocProp::ModificationDate);
-            if (!str) {
+            if (len(str) == 0) {
                 str = m_epubDoc->GetPropertyTemp(DocProp::CreationDate);
             }
             if (len(str) > 0) {

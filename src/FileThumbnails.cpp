@@ -33,7 +33,7 @@ TempStr GetThumbnailPathTemp(Str filePath) {
     TempStr fingerPrint = str::MemToHexTemp(Str((const char*)digest, dimofi(digest)));
 
     TempStr thumbsDir = GetThumbnailCacheDirTemp();
-    if (!thumbsDir) {
+    if (len(thumbsDir) == 0) {
         return {};
     }
 
@@ -56,7 +56,7 @@ void EmptyThumbnailCacheDirectory() {
 
 void DeleteThumbnailForFile(Str filePath) {
     TempStr thumbPath = GetThumbnailPathTemp(filePath);
-    if (!thumbPath) {
+    if (len(thumbPath) == 0) {
         return;
     }
     bool ok = file::Delete(thumbPath);
@@ -76,12 +76,12 @@ Pixmap* LoadThumbnail(FileState* fs) {
         return fs->thumbnail;
     }
     TempStr bmpPath = GetThumbnailPathTemp(fs->filePath);
-    if (!bmpPath) {
+    if (len(bmpPath) == 0) {
         return nullptr;
     }
 
     Str data = file::ReadFile(bmpPath);
-    if (!data) {
+    if (len(data) == 0) {
         return nullptr;
     }
     Pixmap* px = PixmapFromData(data);
@@ -105,7 +105,7 @@ bool HasThumbnail(FileState* fs) {
     }
 
     TempStr bmpPath = GetThumbnailPathTemp(fs->filePath);
-    if (!bmpPath) {
+    if (len(bmpPath) == 0) {
         return fs->thumbnail != nullptr;
     }
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
@@ -137,7 +137,7 @@ void SaveThumbnail(FileState* fs) {
     }
 
     TempStr thumbnailPath = GetThumbnailPathTemp(fs->filePath);
-    if (!thumbnailPath) {
+    if (len(thumbnailPath) == 0) {
         return;
     }
     // failing to create the cache dir is environmental (antivirus, ACLs, disk full,

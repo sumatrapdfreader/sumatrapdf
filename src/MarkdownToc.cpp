@@ -208,7 +208,7 @@ static Str ExtractHeadingTitle(cmark_node* heading) {
         AppendHeadingText(child, &out);
     }
     Str title = out.TakeStr();
-    if (!title) {
+    if (len(title) == 0) {
         return {};
     }
     return str::Dup(title);
@@ -219,7 +219,7 @@ static void ParseMarkdownHeadings(Str filePath, MarkdownFileToc* toc) {
     VecReset(toc->headings);
 
     Str data = file::ReadFile(filePath);
-    if (!data) {
+    if (len(data) == 0) {
         return;
     }
 
@@ -246,7 +246,7 @@ static void ParseMarkdownHeadings(Str filePath, MarkdownFileToc* toc) {
             continue;
         }
         Str title = ExtractHeadingTitle(node);
-        if (!title) {
+        if (len(title) == 0) {
             continue;
         }
         MarkdownHeadingItem item;
@@ -267,7 +267,7 @@ static bool IsHtmlHeadingTag(HtmlTag tag) {
 // attribute (when present) as the in-page anchor. headingsOut items are heap-owned.
 void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
     VecReset(headingsOut);
-    if (!data) {
+    if (len(data) == 0) {
         return;
     }
     GumboHtmlParser parser(data);
@@ -321,7 +321,7 @@ static void ParseHtmlHeadings(Str filePath, MarkdownFileToc* toc) {
     toc->filePath = str::Dup(filePath);
     VecReset(toc->headings);
     Str data = file::ReadFile(filePath);
-    if (!data) {
+    if (len(data) == 0) {
         return;
     }
     ParseHtmlHeadingsData(data, toc->headings);
@@ -427,7 +427,7 @@ img { max-width: 100%%; }
 // fences. mermaid.js looks for <pre class="mermaid"> (or elements with that class).
 // Returns how many blocks were rewritten.
 static int RewriteMermaidCodeBlocks(str::Builder& out, Str body) {
-    if (!body) {
+    if (len(body) == 0) {
         return 0;
     }
     // Match the open tag cmark produces; language name is case-insensitive.
@@ -541,7 +541,7 @@ static TempStr MarkdownPageCssTemp() {
 // relative links on that virtual resource graph instead of navigating to the
 // source .md name.
 static TempStr MarkdownLinkToHtmlTemp(Str url) {
-    if (!url || url.s[0] == '#' || str::StartsWith(url, StrL("//"))) {
+    if (len(url) == 0 || url.s[0] == '#' || str::StartsWith(url, StrL("//"))) {
         return {};
     }
 
@@ -596,7 +596,7 @@ static void RewriteMarkdownLinks(cmark_node* doc) {
 }
 
 static bool IsSafeAnchorId(Str id) {
-    if (!id) {
+    if (len(id) == 0) {
         return false;
     }
     for (int i = 0; i < id.len; i++) {
@@ -716,7 +716,7 @@ static void AddHeadingAnchors(cmark_node* doc) {
             continue;
         }
         Str title = ExtractHeadingTitle(node);
-        if (!title) {
+        if (len(title) == 0) {
             continue;
         }
         Str slug = MarkdownHeadingSlug(nullptr, title);
@@ -732,7 +732,7 @@ static void AddHeadingAnchors(cmark_node* doc) {
 }
 
 static char* MarkdownToHtmlBody(Str markdown) {
-    if (!markdown) {
+    if (len(markdown) == 0) {
         return nullptr;
     }
 
@@ -839,9 +839,9 @@ bool MarkdownToc_UnitTestHtmlLinks() {
     if (!str::Eq(url, StrL("UPPER.html?x=1#part"))) {
         return false;
     }
-    bool linksOk = !MarkdownLinkToHtmlTemp(StrL("https://example.com/readme.md")) &&
-                   !MarkdownLinkToHtmlTemp(StrL("//example.com/readme.md")) &&
-                   !MarkdownLinkToHtmlTemp(StrL("#heading"));
+    bool linksOk = len(MarkdownLinkToHtmlTemp(StrL("https://example.com/readme.md"))) == 0 &&
+                   len(MarkdownLinkToHtmlTemp(StrL("//example.com/readme.md"))) == 0 &&
+                   len(MarkdownLinkToHtmlTemp(StrL("#heading"))) == 0;
 
     Str markdown = StrL(
         "<a id=\"finding-14\"></a>\n\n"

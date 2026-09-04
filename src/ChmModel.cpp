@@ -23,7 +23,7 @@
 #include "ChmModel.h"
 
 static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
-    if (!url) {
+    if (len(url) == 0) {
         return nullptr;
     }
     IPageDestination* dest = nullptr;
@@ -268,7 +268,7 @@ LRESULT ChmModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const {
 }
 
 bool ChmModel::DisplayPage(Str pageUrl) {
-    if (!pageUrl) {
+    if (len(pageUrl) == 0) {
         return false;
     }
     // pageUrl may alias currentPageUrl (e.g. via GoToPage), which we overwrite
@@ -440,7 +440,7 @@ void ChmModel::SaveHtmlScrollPosForPage(int pageNo) {
 }
 
 void ChmModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
-    if (!url || pos.x < 0 || pos.y < 0) {
+    if (len(url) == 0 || pos.x < 0 || pos.y < 0) {
         return;
     }
 
@@ -463,7 +463,7 @@ bool ChmModel::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
 }
 
 bool ChmModel::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
-    if (!url || !pos) {
+    if (len(url) == 0 || !pos) {
         return false;
     }
 
@@ -518,7 +518,7 @@ struct ChmTocBuilder : EbookTocVisitor {
     // toc tree and considering each unique html page in toc tree
     // as a page
     int CreatePageNoForURL(Str url) {
-        if (!url || IsExternalUrl(url)) {
+        if (len(url) == 0 || IsExternalUrl(url)) {
             return 0;
         }
 
@@ -604,7 +604,7 @@ ChmCacheEntry* ChmModel::FindDataForUrl(Str url) const {
 // Sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
 void ChmModel::OnDocumentComplete(Str url) {
-    if (!url || IsBlankUrl(url)) {
+    if (len(url) == 0 || IsBlankUrl(url)) {
         return;
     }
     if (url.s[0] == '/') {
@@ -746,7 +746,7 @@ static Str ChmInjectStyle(Str raw, Str style) {
 // non-default page colors
 static Str ChmThemeApplyToData(Str raw) {
     TempStr style = ChmThemeStyleTemp();
-    if (!style) {
+    if (len(style) == 0) {
         return str::Dup(raw);
     }
     bool isHtml = str::IndexOfI(raw, StrL("<html")) >= 0 || str::IndexOfI(raw, StrL("<head")) >= 0 ||
@@ -818,7 +818,7 @@ IPageDestination* ChmModel::GetNamedDest(Str name) {
         return nullptr;
     }
     TempStr topicURL = doc->ResolveTopicID(topicID);
-    if (!topicURL) {
+    if (len(topicURL) == 0) {
         return nullptr;
     }
     url = topicURL;
@@ -919,7 +919,7 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
 
 void ChmModel::GetDisplayState(FileState* fs) {
     Str fileNameA = fileName;
-    if (!fs->filePath || !str::EqI(fs->filePath, fileNameA)) {
+    if (len(fs->filePath) == 0 || !str::EqI(fs->filePath, fileNameA)) {
         SetFileStatePath(fs, fileNameA);
     }
 

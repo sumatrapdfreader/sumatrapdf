@@ -22,7 +22,7 @@ static bool HasBeenInstalled() {
     TempStr regPathUninst =
         str::JoinTemp(StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"), StrL(kAppName));
     TempStr installedPath = LoggedReadRegStr2Temp(regPathUninst, StrL("InstallLocation"));
-    if (!installedPath) {
+    if (len(installedPath) == 0) {
         return false;
     }
 
@@ -151,9 +151,9 @@ TempStr GetAppDataDirTemp() {
             dir = {};
         }
     }
-    if (!dir) {
+    if (len(dir) == 0) {
         dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-        if (!dir) {
+        if (len(dir) == 0) {
             LogLastError();
             ReportIf(true);
             dir = GetTempDirTemp(); // shouldn't happen, last chance thing
@@ -167,7 +167,7 @@ TempStr GetAppDataDirTemp() {
 
 // Generate full path for a file or directory for storing data
 TempStr GetPathInAppDataDirTemp(Str name) {
-    if (!name) {
+    if (len(name) == 0) {
         return {};
     }
     TempStr dir = GetAppDataDirTemp();
@@ -358,7 +358,7 @@ static void FindTextEditors() {
         Str regKey = rule.regKey;
         Str regValue = rule.regValue;
         TempStr path = LoggedReadRegStr2Temp(regKey, regValue);
-        if (!path) {
+        if (len(path) == 0) {
             continue;
         }
 
@@ -398,7 +398,7 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
     int n = dimofi(editorRules);
     for (int i = 0; i < n; i++) {
         TextEditor* e = &editorRules[i];
-        if (!e->openFileCmd) {
+        if (len(e->openFileCmd) == 0) {
             continue;
         }
         VecAppend(res, e);
@@ -481,7 +481,7 @@ Str Sha1OfAppExe() {
     }
 
     TempStr appPath = GetSelfExePathTemp();
-    if (!appPath) {
+    if (len(appPath) == 0) {
         return {};
     }
     Str d = file::ReadFile(appPath);
@@ -501,7 +501,7 @@ Str Sha1OfAppExe() {
 
 TempStr GetWebViewDataDirTemp() {
     TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
-    if (!dir) {
+    if (len(dir) == 0) {
         return {};
     }
     dir = path::JoinTemp(dir, StrL("SumatraPDF-data"));
@@ -534,7 +534,7 @@ TempStr FormatFileSizeTransTemp(i64 size) {
 
 // returns true if file exists
 bool LaunchFileIfExists(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return false;
     }
     if (!file::Exists(path)) {

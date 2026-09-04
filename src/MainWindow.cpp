@@ -543,7 +543,7 @@ static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
         return;
     }
     TempStr tmpDir = GetTempDirTemp();
-    if (!tmpDir) {
+    if (len(tmpDir) == 0) {
         str::Free(data);
         return;
     }
@@ -735,7 +735,7 @@ static bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
 }
 
 void LinkHandler::LaunchURL(Str uri) {
-    if (!uri) {
+    if (len(uri) == 0) {
         /* ignore missing URLs */;
         return;
     }

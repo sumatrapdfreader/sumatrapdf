@@ -55,7 +55,7 @@ HRESULT PdfFilter::OnInit() {
 
 // copied from SumatraProperties.cpp
 static bool PdfDateParse(Str pdfDate, SYSTEMTIME* timeOut) {
-    if (!pdfDate) {
+    if (len(pdfDate) == 0) {
         return false;
     }
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
@@ -112,7 +112,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
         case PdfFilterState::Title:
             m_state = PdfFilterState::Date;
             prop = m_pdfEngine->GetPropertyTemp(DocProp::Title);
-            if (!prop) {
+            if (len(prop) == 0) {
                 prop = m_pdfEngine->GetPropertyTemp(DocProp::Subject);
             }
             if (len(prop) > 0) {
@@ -126,7 +126,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
         case PdfFilterState::Date:
             m_state = PdfFilterState::Content;
             prop = m_pdfEngine->GetPropertyTemp(DocProp::ModificationDate);
-            if (!prop) {
+            if (len(prop) == 0) {
                 prop = m_pdfEngine->GetPropertyTemp(DocProp::CreationDate);
             }
             if (len(prop) > 0) {
@@ -143,7 +143,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
         case PdfFilterState::Content:
             while (++m_iPageNo <= m_pdfEngine->PageCount()) {
                 PageText pageText = m_pdfEngine->ExtractPageText(m_iPageNo);
-                if (!pageText.text) {
+                if (len(pageText.text) == 0) {
                     FreePageText(&pageText);
                     continue;
                 }

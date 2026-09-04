@@ -131,7 +131,7 @@ static TempStr EncodeGrokDirTemp(Str dir) {
 }
 
 static bool IsGrokSessionDirName(Str name) {
-    if (!name) {
+    if (len(name) == 0) {
         return false;
     }
     int n = len(name);
@@ -153,7 +153,7 @@ static bool IsGrokSessionDirName(Str name) {
 
 static TempStr GrokSessionsProjectDirTemp(Str dir) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (!userProfile) {
+    if (len(userProfile) == 0) {
         return {};
     }
     TempStr encodedDir = EncodeGrokDirTemp(dir);
@@ -162,7 +162,7 @@ static TempStr GrokSessionsProjectDirTemp(Str dir) {
 
 static TempStr ExtractGrokPromptFromHistoryLineTemp(Str line, Str sessionId) {
     TempStr sid = AIChatJsonStrTemp(line, StrL("session_id"));
-    if (!sid || !str::Eq(sid, sessionId)) {
+    if (len(sid) == 0 || !str::Eq(sid, sessionId)) {
         return {};
     }
     return AIChatJsonStrTemp(line, StrL("prompt"));
@@ -179,7 +179,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     Str result;
     Str line;
 
-    while (!result && str::NextLine(rest, line, rest)) {
+    while (len(result) == 0 && str::NextLine(rest, line, rest)) {
         if (len(line) == 0) {
             continue;
         }
@@ -195,7 +195,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
 // Scan ~/.grok/sessions/<url-encoded-dir>/ for session subdirectories
 static void CollectGrokSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr projectDir = GrokSessionsProjectDirTemp(dir);
-    if (!projectDir || !dir::Exists(projectDir)) {
+    if (len(projectDir) == 0 || !dir::Exists(projectDir)) {
         return;
     }
 
@@ -220,7 +220,7 @@ static void CollectGrokSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
 }
 
 static TempStr StripGrokUserQueryWrapperTemp(Str text) {
-    if (!text) {
+    if (len(text) == 0) {
         return {};
     }
     Str contentStart;
@@ -295,7 +295,7 @@ static void AppendGrokHistoryTools(MainWindow* win, Str line) {
 // Load conversation history from Grok's chat_history.jsonl
 static void LoadGrokSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     TempStr projectDir = GrokSessionsProjectDirTemp(dir);
-    if (!projectDir) {
+    if (len(projectDir) == 0) {
         return;
     }
     TempStr sessionPath = fmt("%s\\%s\\chat_history.jsonl", projectDir, sessionId);
@@ -430,7 +430,7 @@ struct GrokBuildProvider : AIChatProvider {
             }
         } else if (eventType && str::Eq(eventType, StrL("error"))) {
             TempStr err = AIChatJsonStrTemp(line, StrL("data"));
-            if (!err) {
+            if (len(err) == 0) {
                 err = AIChatJsonStrTemp(line, StrL("message"));
             }
             if (err) {

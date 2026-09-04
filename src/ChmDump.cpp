@@ -16,7 +16,7 @@
 #include "ChmDump.h"
 
 static void CliWrite(Str s, int n = 0) {
-    if (!s) {
+    if (len(s) == 0) {
         return;
     }
     if (n == 0) {

@@ -923,7 +923,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     // would navigate to; the auto-fit in RefHoverOnTimer scales the bitmap
     // to popup limits.
     constexpr int kSparsePageTextLen = 50;
-    if (!text || text.len < kSparsePageTextLen || !coords) {
+    if (len(text) == 0 || text.len < kSparsePageTextLen || !coords) {
         return RectF{0.f, 0.f, mediabox.dx, mediabox.dy};
     }
     if (destY < 0.f) {

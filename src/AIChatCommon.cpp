@@ -34,7 +34,7 @@ bool IsAIChatAvailable() {
 }
 
 bool IsAIChatSupportedForFile(Str filePath, Kind engineKind) {
-    if (!filePath) {
+    if (len(filePath) == 0) {
         return false;
     }
     // Comics, image folders, single images, and DjVu have no useful text/agent
@@ -48,14 +48,14 @@ bool IsAIChatSupportedForFile(Str filePath, Kind engineKind) {
 }
 
 bool IsAIChatSupportedForTab(WindowTab* tab) {
-    if (!tab || tab->IsAboutTab() || !tab->filePath) {
+    if (!tab || tab->IsAboutTab() || len(tab->filePath) == 0) {
         return false;
     }
     return IsAIChatSupportedForFile(tab->filePath, tab->GetEngineType());
 }
 
 TempStr AIChatJsEscapeTemp(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return str::DupTemp(StrL(""));
     }
     str::Builder buf;
@@ -175,7 +175,7 @@ TempStr AIChatDebugGetTemp() {
 }
 
 void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
-    if (!text) {
+    if (len(text) == 0) {
         text = StrL("");
     }
 
@@ -205,11 +205,11 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
     }
 
     TempStr dir = GetSumatraDataDirTemp();
-    if (!dir || !logger->logFileName) {
+    if (len(dir) == 0 || len(logger->logFileName) == 0) {
         return;
     }
     TempStr path = path::JoinTemp(dir, logger->logFileName);
-    if (!path || !logger->mutex) {
+    if (len(path) == 0 || !logger->mutex) {
         return;
     }
 

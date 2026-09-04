@@ -230,7 +230,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_Value(BSTR* pRetV
     }
 
     Str pageContent = dm->GetEngine()->GetTextForPage(pageNum);
-    if (!pageContent) {
+    if (len(pageContent) == 0) {
         *pRetVal = nullptr;
         return S_OK;
     }

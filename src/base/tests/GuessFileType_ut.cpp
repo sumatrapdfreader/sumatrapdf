@@ -547,7 +547,7 @@ static void extMapTest() {
     utassert(str::Eq(GetExtForFileTypeTemp(FileType::Epub), StrL(".epub")));
     utassert(str::Eq(GetExtForFileTypeTemp(FileType::Fb2), StrL(".fb2")));
     utassert(str::Eq(GetExtForFileTypeTemp(FileType::Fb2z), StrL(".fb2z")));
-    utassert(!GetExtForFileTypeTemp(FileType::Unknown));
+    utassert(len(GetExtForFileTypeTemp(FileType::Unknown)) == 0);
 }
 
 void GuessFileTypeTest() {

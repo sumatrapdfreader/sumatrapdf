@@ -1271,7 +1271,7 @@ FileType GuessFileTypeFromData(Str d) {
 // or "c:/foo.pdf:${pdfStreamNo}:attachname=${hexUtf8Name}" into its pieces
 EmbeddedPdfName ParseEmbeddedPdfName(Str path) {
     EmbeddedPdfName res;
-    if (!path) {
+    if (len(path) == 0) {
         return res;
     }
 
@@ -1327,7 +1327,7 @@ EmbeddedPdfName ParseEmbeddedPdfName(Str path) {
 
 // path::IsDirectory() is expensive on network drives so we can pass notDir=true if we know the path is not a directory
 FileType GuessFileTypeFromName(Str path, bool notDir) {
-    if (!path) {
+    if (len(path) == 0) {
         return FileType::Unknown;
     }
     if (!notDir && path::IsDirectory(path)) {

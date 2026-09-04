@@ -188,7 +188,7 @@ void Edit::SetMaxWidthChars(int nChars) {
 }
 
 void Edit::SetIdealWidthFromText(Str s, int extraPx) {
-    if (!hwnd || !s) {
+    if (!hwnd || len(s) == 0) {
         return;
     }
     HDC dc = GetDC(hwnd);

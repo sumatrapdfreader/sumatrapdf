@@ -127,7 +127,7 @@ static UpdateInfo* ParseUpdateInfo(Str d) {
     // if a user configures os-wide proxy that is not a regular ie proxy
     // (which we pick up) we might get garbage http response
     // check if response looks valid
-    if (!d) {
+    if (len(d) == 0) {
         return nullptr;
     }
     Str prefix = (d.s[0] == '[') ? StrL("[SumatraPDF]") : StrL("SumatraPDF");
@@ -257,7 +257,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 void StartInstallerAutoUpgrade(Str installerPath) {
     TempStr expectedSigner = GetExecutableSignerTemp(GetSelfExePathTemp());
     TempStr installerSigner = GetExecutableSignerTemp(installerPath);
-    if (!expectedSigner || !installerSigner || !str::Eq(expectedSigner, installerSigner) ||
+    if (len(expectedSigner) == 0 || len(installerSigner) == 0 || !str::Eq(expectedSigner, installerSigner) ||
         !IsPEFileSigned(installerPath)) {
         logf("StartInstallerAutoUpgrade: refusing an update with an untrusted signature\n");
         return;
@@ -707,7 +707,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         return 0;
     }
 
-    if (!updateInfo->dlURL) {
+    if (len(updateInfo->dlURL) == 0) {
         // currently for release builds we don't set this and redirecto to a website instead
         logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", ToStr(*data));
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
@@ -870,7 +870,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
 // we should copy ourselves over the existing file, launch ourselves and
 // tell our new copy to delete ourselves
 void UpdateSelfTo(Str dstPath) {
-    ReportIf(!dstPath);
+    ReportIf(len(dstPath) == 0);
     if (!file::Exists(dstPath)) {
         logf("UpdateSelfTo: failed because destination doesn't exist\n");
         return;

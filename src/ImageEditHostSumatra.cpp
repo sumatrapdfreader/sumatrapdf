@@ -72,7 +72,7 @@ static TempStr FormatPdfDateTemp() {
 // converted to a 24-bit RGB pixmap (a format PDF supports) and stamped with
 // the current time as CreationDate/ModDate (issue #949).
 static bool SaveBitmapAsPdf(Bitmap* bmp, Str destPath) {
-    if (!bmp || !destPath) {
+    if (!bmp || len(destPath) == 0) {
         return false;
     }
     PdfCreator* c = new PdfCreator();

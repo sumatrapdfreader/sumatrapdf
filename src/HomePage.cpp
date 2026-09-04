@@ -58,7 +58,7 @@ struct SumatraCommandsContext : CommandsContext {
             return {}; // not a command: the markup stays literal text
         }
         TempStr accel = AppendAccelKeyToMenuStringTemp(StrL(""), cmdId);
-        if (!accel || !*accel.s) {
+        if (len(accel) == 0 || !*accel.s) {
             return str::DupTemp(cmdName); // a command, but unbound
         }
         // AppendAccelKeyToMenuStringTemp prepends 	, skip it
@@ -295,7 +295,7 @@ static void OpenAboutUrl(VirtMouseEvent* ev) {
 }
 
 void SetPromoString(Str s) {
-    if (!s) return;
+    if (len(s) == 0) return;
     str::ReplaceWithCopy(&promoFromServer, s);
 }
 
@@ -2413,7 +2413,7 @@ void HomeTipCtrl::SetTipLine(Str line, PlatformFont* font) {
         rich = nullptr;
     }
     str::ReplaceWithCopy(&richFor, line);
-    if (!line) {
+    if (len(line) == 0) {
         return;
     }
     rich = ParseTip(line);
@@ -2813,7 +2813,7 @@ HomeChromeCtrl::~HomeChromeCtrl() {
 // e.g. "Command Palette (Ctrl + K)"
 static TempStr AppendCmdAccel(Str base, int cmd) {
     TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
-    if (!accel) {
+    if (len(accel) == 0) {
         return base;
     }
     return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, len(accel) - 1))); // +1 skips the leading \t
@@ -3360,7 +3360,7 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
     HomeSyncLayoutCacheScroll(win);
     ThumbnailLayout& t = c.thumbs[idx];
     FileState* fs = t.fs;
-    if (!fs || !fs->filePath) {
+    if (!fs || len(fs->filePath) == 0) {
         win->DeleteToolTip();
         return;
     }

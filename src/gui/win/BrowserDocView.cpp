@@ -268,7 +268,7 @@ struct NotifyArgsState {
         return v;
     }
     Str Text(int idx) const {
-        if (idx < 0 || idx >= kMaxArgs || !args[idx]) {
+        if (idx < 0 || idx >= kMaxArgs || len(args[idx]) == 0) {
             return {};
         }
         return args[idx];
@@ -325,7 +325,7 @@ static TempStr ChmMimeFromPathTemp(Str path, Str data) {
 
     TempStr imgExt = GfxFileExtFromDataTemp(data);
     TempStr mime = MimeTypeFromExtTemp(ext, imgExt);
-    if (!mime) {
+    if (len(mime) == 0) {
         mime = StrL("text/html");
     }
     return mime;
@@ -608,7 +608,7 @@ BrowserDocView::~BrowserDocView() {
 }
 
 void BrowserDocView::NavigateToDataUrl(Str url) {
-    if (!url) {
+    if (len(url) == 0) {
         return;
     }
     if (backend == Backend::WebView2 && wv) {

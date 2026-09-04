@@ -259,7 +259,7 @@ bool SetHotkeyWnd::HandleKeyDown(UINT vk) {
 }
 
 void SetHotkeyWnd::DoSet(VirtMouseEvent*) {
-    if (!newHotkey) {
+    if (len(newHotkey) == 0) {
         return;
     }
     logf("SetHotkeyDoSet: setting screenshot hotkey to '%s'\n", newHotkey);

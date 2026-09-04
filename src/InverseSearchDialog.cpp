@@ -56,11 +56,11 @@ void InverseSearchWnd::FillCommands() {
     StrVec items;
     Str cmdLine = gSettings ? gSettings->inverseSearchCmdLine : Str{};
     CollectInverseSearchCommands(items, cmdLine);
-    if (!cmdLine && len(items) > 0) {
+    if (len(cmdLine) == 0 && len(items) > 0) {
         cmdLine = items[0];
     }
     dropDown->SetItems(items);
-    if (!cmdLine) {
+    if (len(cmdLine) == 0) {
         return;
     }
     int idx = items.Find(cmdLine);

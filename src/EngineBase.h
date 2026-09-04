@@ -165,7 +165,7 @@ static inline Str PageDestGetValue(IPageDestination* dest) {
 // file path). A link inside the document has no address; its value is the
 // description the PDF gives it, which is for showing, not for copying
 static inline bool PageDestHasAddress(IPageDestination* dest) {
-    if (!dest || !dest->GetValue2()) {
+    if (!dest || len(dest->GetValue2()) == 0) {
         return false;
     }
     Kind k = dest->GetKind();
@@ -205,7 +205,7 @@ struct PageDestinationURL : IPageDestination {
     PageDestinationURL() = delete;
 
     PageDestinationURL(Str u) {
-        ReportIf(!u);
+        ReportIf(len(u) == 0);
         kind = kindDestinationLaunchURL;
         url = str::Dup(u);
     }
@@ -216,10 +216,10 @@ struct PageDestinationURL : IPageDestination {
     }
 
     Str GetValue2() override {
-        if (!url) {
+        if (len(url) == 0) {
             return {};
         }
-        if (!displayUrl) {
+        if (len(displayUrl) == 0) {
             displayUrl = str::Dup(url::DecodeTemp(url));
         }
         return displayUrl;
@@ -237,7 +237,7 @@ struct PageDestinationFile : IPageDestination {
     PageDestinationFile() = delete;
 
     PageDestinationFile(Str u, Str dest) {
-        ReportIf(!u);
+        ReportIf(len(u) == 0);
         kind = kindDestinationLaunchFile;
         path = str::Dup(u);
         this->dest = str::Dup(dest);

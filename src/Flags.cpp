@@ -120,7 +120,7 @@ void ShowPrintersDialog(bool) {}
 // into an interable list (returns nullptr on parsing errors)
 // caller must delete the result
 bool ParsePageRanges(Str ranges, Vec<PageRange>& result) {
-    if (!ranges) {
+    if (len(ranges) == 0) {
         return false;
     }
 
@@ -245,12 +245,12 @@ static Str EatParam(StrNode*& next) {
 
 static void SkipOptionalAdobePrinterParams(StrNode*& next) {
     Str driver = AdditionalParam(next);
-    if (!driver || CouldBeArg(driver)) {
+    if (len(driver) == 0 || CouldBeArg(driver)) {
         return;
     }
     EatParam(next);
     Str port = AdditionalParam(next);
-    if (!port || CouldBeArg(port)) {
+    if (len(port) == 0 || CouldBeArg(port)) {
         return;
     }
     EatParam(next);
@@ -426,7 +426,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
         if (arg == Arg::PrintToDefault) {
             i.printerName = str::Dup(a, GetDefaultPrinterNameTemp());
-            if (!i.printerName) {
+            if (len(i.printerName) == 0) {
                 i.printDialog = true;
             }
             i.exitWhenDone = true;
@@ -440,7 +440,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // Adobe Reader: /t <file> <printer> [<driver> [<port>]]
             // also: <file> /t <printer> when the file is given earlier on the cmd-line
             Str p1 = EatParam(nextArg);
-            if (!p1) {
+            if (len(p1) == 0) {
                 goto CollectFile;
             }
             Str p2 = AdditionalParam(nextArg);
@@ -454,7 +454,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             } else {
                 i.fileNames.Append(p1);
                 i.printerName = str::Dup(a, GetDefaultPrinterNameTemp());
-                if (!i.printerName) {
+                if (len(i.printerName) == 0) {
                     i.printDialog = true;
                 }
             }
@@ -607,7 +607,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         param = EatParam(nextArg);
         // following args require at least one param
         // if no params here, assume this is a file
-        if (!param) {
+        if (len(param) == 0) {
             // argName starts with '-' but there are no params after that and it's not
             // one of the args without params, so assume this is a file that starts with '-'
             goto CollectFile;
@@ -845,7 +845,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         // silently extract files to directory given if /d
         // or current directory if no /d given
         i.silent = true;
-        if (!i.installDir) {
+        if (len(i.installDir) == 0) {
             i.installDir = str::Dup(a, StrL("."));
         }
     }

@@ -320,7 +320,7 @@ static void MaybeGoTo(MainWindow* win, Str destName, int pageNumber) {
 }
 
 static void MaybeStartSearch(MainWindow* win, Str searchTerm) {
-    if (!win || !searchTerm) {
+    if (!win || len(searchTerm) == 0) {
         return;
     }
     StartSearchFromCommandLine(win, searchTerm);
@@ -479,7 +479,7 @@ static bool SetupPluginMode(Flags& i) {
     }
 
     gPluginURL = Str(i.pluginURL);
-    if (!gPluginURL) {
+    if (len(gPluginURL) == 0) {
         gPluginURL = Str(i.fileNames[0]);
     }
 
@@ -1273,7 +1273,7 @@ static bool LoadLibsumatrapdfFromFileRobust(Str path, i64 expectedSize, bool jus
 // Extract embedded libsumatrapdf.dll into dir (if size mismatches), then load with
 // retry / LoadLibraryExW. Used for single-exe portable layout.
 static bool ExtractAndLoadLibsumatrapdfRobust(Str dir, bool extract) {
-    if (!dir) {
+    if (len(dir) == 0) {
         return false;
     }
     i64 expectedSize = GetEmbeddedLibsumatrapdfSize();
@@ -1312,7 +1312,7 @@ static void LogLibsumatrapdfLoadFailureDiagnostics(Str selfDir, Str buildDir, i6
     logf("LoadLibsumatrapdf FAILED: gLibsumatrapdfDll=%p\n", (void*)gLibsumatrapdfDll);
 
     auto logDllCandidate = [](Str dir, Str label) {
-        if (!dir) {
+        if (len(dir) == 0) {
             logf("LoadLibsumatrapdf FAILED: %s dir is null\n", label);
             return;
         }
@@ -1610,7 +1610,7 @@ static void ShowNotValidInstallerError() {
 // cold entries is safe.
 static void DeleteStaleCbxCacheFiles() {
     TempStr dataDir = GetSumatraDataDirTemp();
-    if (!dataDir) {
+    if (len(dataDir) == 0) {
         return;
     }
     TempStr cacheDir = path::JoinTemp(dataDir, StrL("cbx-cache"));
@@ -1715,7 +1715,7 @@ static int CmpPreviewLogNewestFirst(const PreviewLogFile* a, const PreviewLogFil
 }
 static void DeleteOldPdfPreviewLogs(int keep) {
     TempStr dir = GetPdfPreviewLogDirTemp();
-    if (!dir || !dir::Exists(dir)) {
+    if (len(dir) == 0 || !dir::Exists(dir)) {
         return;
     }
     Vec<PreviewLogFile> files;
@@ -1746,7 +1746,7 @@ static void DeleteOldPdfPreviewLogs(int keep) {
 // tabs delete their own copy when the tab closes.
 static void DeleteStaleOpenCacheFiles() {
     TempStr dataDir = GetSumatraDataDirTemp();
-    if (!dataDir) {
+    if (len(dataDir) == 0) {
         return;
     }
     TempStr cacheDir = path::JoinTemp(dataDir, StrL("open-cache"));
@@ -1830,7 +1830,7 @@ static void DeleteStaleFilesAsync() {
         return;
     }
     TempStr dataDir = GetSumatraDataDirTemp();
-    if (!dataDir) {
+    if (len(dataDir) == 0) {
         return;
     }
     logf("DeleteStaleFilesAsync: dataDir: '%s'\n", dataDir);
@@ -1893,7 +1893,7 @@ static int WineDpiFromEnv() {
     int bestDpi = 0;
     for (Str var : scaleVars) {
         Str val = Str(getenv(var.s));
-        if (!val) {
+        if (len(val) == 0) {
             continue;
         }
         float scale = (float)atof(val.s);
@@ -2384,7 +2384,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
 
     // in debug build, default
     if (gIsDebugBuild) {
-        if (!flags.logFile) {
+        if (len(flags.logFile) == 0) {
             // from the perm arena like all other flag strings (~Flags frees nothing)
             TempStr dir = GetPathInExeDirTemp(StrL("sumlog.txt"));
             flags.logFile = str::Dup(GetPermArena(), dir);

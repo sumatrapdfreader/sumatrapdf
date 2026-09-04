@@ -78,7 +78,7 @@ u32 BitReader::Peek(int nBits) {
 // Unpacks a structure from the data according to the given format
 // e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
 bool ByteReader::Unpack(void* strct, int size, Str format, int off, bool isBE) const {
-    if (!format) {
+    if (::len(format) == 0) {
         return false;
     }
     int repeat = 0;

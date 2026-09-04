@@ -41,7 +41,7 @@
 // Used by Tabs and Toolbar (toolbar was overwriting tooltips with path-only).
 // full path + size (if available); optional dirty suffix for unsaved annotations
 TempStr MakeTabTooltipTemp(Str path, bool dirty) {
-    if (!path) {
+    if (len(path) == 0) {
         return Str{};
     }
     TempStr tip;

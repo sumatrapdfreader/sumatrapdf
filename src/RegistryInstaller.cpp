@@ -405,7 +405,7 @@ static TempStr GetRegClassesAppTemp(Str appName) {
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     log(StrL("UnregisterFromBeingDefaultViewer()\n"));
     TempStr curr = LoggedReadRegStrTemp(hkey, StrL(kRegClassesPdf), {});
-    if (!curr || !str::Eq(curr, StrL(kAppName))) {
+    if (len(curr) == 0 || !str::Eq(curr, StrL(kAppName))) {
         // not the default, do nothing
     } else {
         LoggedDeleteRegValue(hkey, StrL(kRegClassesPdf), {});

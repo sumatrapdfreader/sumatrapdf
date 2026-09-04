@@ -194,7 +194,7 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool) 
         return nullptr;
     }
     TempStr dirPath = path::GetDirTemp(path);
-    if (!dirPath) {
+    if (len(dirPath) == 0) {
         dirPath = StrL(".");
     }
     TempStr name = path::GetBaseNameTemp(path);

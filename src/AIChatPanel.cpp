@@ -288,7 +288,7 @@ static void PopulateSessionCombo(MainWindow* win) {
 
     WindowTab* tab = win->CurrentTab();
     AIChatTabState* st = GetTabState(tab, win->aiChatProvider);
-    if (!tab || !tab->filePath || !st) {
+    if (!tab || len(tab->filePath) == 0 || !st) {
         win->aiChatSessionCombo->SetItems(items);
         CbSetCurrentSelection(win->aiChatSessionCombo, 0);
         return;
@@ -332,7 +332,7 @@ static void OnSessionComboChange(MainWindow* win) {
 
     WindowTab* tab = win->CurrentTab();
     AIChatTabState* st = GetTabState(tab, win->aiChatProvider);
-    if (!tab || !tab->filePath || !st) {
+    if (!tab || len(tab->filePath) == 0 || !st) {
         return;
     }
 
@@ -368,7 +368,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
     AIChatProvider* p = CurrentProvider(win);
     WindowTab* tab = win->CurrentTab();
     AIChatTabState* st = GetTabState(tab, win->aiChatProvider);
-    if (!p || !st || !tab->filePath || st->sessionId) {
+    if (!p || !st || len(tab->filePath) == 0 || st->sessionId) {
         return; // already has a session or no file
     }
 
@@ -531,7 +531,7 @@ static WindowTab* FindAIChatUpdateTab(MainWindow* win, int pid, Str sessionId) {
         if (sessionId && st->sessionId && str::Eq(st->sessionId, sessionId)) {
             return t;
         }
-        if (sessionId && str::Eq(sessionId, kAIChatPendingSessionId()) && !st->sessionId) {
+        if (sessionId && str::Eq(sessionId, kAIChatPendingSessionId()) && len(st->sessionId) == 0) {
             return t;
         }
     }
@@ -741,7 +741,7 @@ static bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str&
         return false;
     }
     TempStr exePath = p->FindExecutableTemp();
-    if (!exePath) {
+    if (len(exePath) == 0) {
         outErr = str::Dup(fmt("%s is not installed (not found in PATH)", p->exeName));
         return false;
     }
@@ -905,7 +905,7 @@ static void SendAIChatMessage(MainWindow* win) {
 
     WindowTab* tab = win->CurrentTab();
     AIChatTabState* st = GetTabState(tab, win->aiChatProvider);
-    if (!tab || !tab->filePath || !st) {
+    if (!tab || len(tab->filePath) == 0 || !st) {
         return;
     }
     if (st->process) {
@@ -939,7 +939,7 @@ static void SendAIChatMessage(MainWindow* win) {
     }
 
     TempStr exePath = p->FindExecutableTemp();
-    if (!exePath) {
+    if (len(exePath) == 0) {
         AIChatLog(p->logger, StrL("error"), fmt("Cannot find %s executable", p->exeName));
         WebViewAddError(win, fmt("Cannot find %s. Is %s installed?", p->exeName, p->name));
         SetAIChatWorking(win, false);

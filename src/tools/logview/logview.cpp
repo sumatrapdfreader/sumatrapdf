@@ -38,7 +38,7 @@
 // ---- logging required by the base library (we don't link SumatraLog.cpp) ----
 
 void log(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return;
     }
     OutputDebugStringA(s.s);

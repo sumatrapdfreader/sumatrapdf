@@ -306,7 +306,7 @@ static TempStr DefaultSourceLanguageTemp() {
 // update one remembered translate pref; returns true if it changed
 static bool UpdateTranslatePref(Str* pref, Str value) {
     TempStr normalized = NormalizeLangNameTemp(value);
-    if (!normalized || (*pref && str::EqI(*pref, normalized))) {
+    if (len(normalized) == 0 || (*pref && str::EqI(*pref, normalized))) {
         return false;
     }
     str::ReplacePtr(pref, str::Dup(normalized));
@@ -425,7 +425,7 @@ static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str r
 }
 
 static TempStr StripTrailingSlashTemp(TempStr path) {
-    if (!path) {
+    if (len(path) == 0) {
         return {};
     }
     TempStr p = str::DupTemp(path);
@@ -437,7 +437,7 @@ static TempStr StripTrailingSlashTemp(TempStr path) {
 }
 
 static TempStr NormalizeTextForPromptTemp(Str text) {
-    if (!text) {
+    if (len(text) == 0) {
         return {};
     }
     str::Builder buf;
@@ -490,7 +490,7 @@ static void AppendGrokTranslationText(Str line, str::Builder& out) {
 
 static void AppendClaudeTranslationText(Str line, str::Builder& out) {
     TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
-    if (!eventType) {
+    if (len(eventType) == 0) {
         return;
     }
     if (str::Eq(eventType, StrL("result"))) {
@@ -523,11 +523,11 @@ static void AppendClaudeTranslationText(Str line, str::Builder& out) {
 }
 
 static void AppendCodexTranslationText(Str line, str::Builder& out) {
-    if (!line || line.s[0] != '{') {
+    if (len(line) == 0 || line.s[0] != '{') {
         return;
     }
     TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
-    if (!eventType || !str::Eq(eventType, StrL("item.completed"))) {
+    if (len(eventType) == 0 || !str::Eq(eventType, StrL("item.completed"))) {
         return;
     }
     TempStr text = AIChatJsonStrTemp(line, StrL("text"));
@@ -549,7 +549,7 @@ static void AppendCodexTranslationText(Str line, str::Builder& out) {
 // `event:result` with status ERROR (see AIAntiGravity.cpp::ParseStreamLine).
 static void AppendAntiGravityTranslationText(Str line, str::Builder& out) {
     TempStr eventName = AIChatJsonStrTemp(line, StrL("event"));
-    if (!eventName) {
+    if (len(eventName) == 0) {
         return;
     }
     if (str::Eq(eventName, StrL("step_update"))) {
@@ -815,15 +815,15 @@ static void PopulateEngineDropDown(DropDown* dd, TranslateEngine selected) {
 // build the Google / DeepL web-translator url for the given languages and text
 static TempStr BuildTranslateUrlTemp(TranslateEngine engine, Str srcLang, Str dstLang, Str text) {
     TempStr enc = URLEncodeMayTruncateTemp(text);
-    if (!enc) {
+    if (len(enc) == 0) {
         return {};
     }
     TempStr src = LangCodeForUrlTemp(srcLang);
-    if (!src) {
+    if (len(src) == 0) {
         src = str::DupTemp(StrL("auto"));
     }
     TempStr dst = LangCodeForUrlTemp(dstLang);
-    if (!dst) {
+    if (len(dst) == 0) {
         dst = str::DupTemp(StrL("en"));
     }
     if (engine == TranslateEngine::DeepL) {
@@ -841,7 +841,7 @@ static TempStr BuildTranslateUrlTemp(TranslateEngine engine, Str srcLang, Str ds
 
 static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str text, Str& msgOut) {
     TempStr exePath = FindBackendExecutableTemp(backend);
-    if (!exePath) {
+    if (len(exePath) == 0) {
         msgOut = str::Dup(_TRA("The selected AI CLI is not installed."));
         return false;
     }

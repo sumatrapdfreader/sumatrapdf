@@ -2935,7 +2935,7 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     Rect* coords;
     int textLen = 0;
     Str pageText = engine->GetTextForPage(pageNo, &textLen, &coords);
-    if (!pageText) {
+    if (len(pageText) == 0) {
         return {};
     }
 

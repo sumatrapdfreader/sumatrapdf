@@ -120,14 +120,14 @@ static TempStr FromEditTextTemp(Str s) {
 // anything else (or out of range) is left empty, i.e. unset
 static void ParseMargin(Str s, Vec<float>& out) {
     VecReset(out);
-    if (!s) {
+    if (len(s) == 0) {
         return;
     }
     StrVec parts;
     Split(&parts, s, StrL(" "), true);
     bool ok = true;
     for (Str part : parts) {
-        if (!part) {
+        if (len(part) == 0) {
             continue; // Split can hand back an empty piece
         }
         // strtof, not atof: a token that isn't a plain number (or is null,
@@ -177,7 +177,7 @@ static bool MarginEq(const Vec<float>& a, const Vec<float>* b) {
 
 static float ParseFloatTemp(Edit* e) {
     TempStr s = e->GetTextTemp();
-    if (!s) {
+    if (len(s) == 0) {
         return 0;
     }
     return (float)atof(CStrTemp(s));
@@ -264,7 +264,7 @@ void EbookSettingsWnd::SetValues(Str fontName, float fontSize, const Vec<float>*
     cbIgnoreCss->SetIsChecked(ignoreCss);
 
     str::ReplaceWithCopy(&customCssText, customCss);
-    bool hasCustom = !!customCss;
+    bool hasCustom = len(customCss) != 0;
     cbCustomCss->SetIsChecked(hasCustom);
     updating = false;
 
@@ -338,7 +338,7 @@ void EbookSettingsWnd::OnCustomCssToggled() {
     bool custom = cbCustomCss->IsChecked();
     if (custom) {
         // start from what was being applied, so nothing is lost by taking over
-        if (!customCssText) {
+        if (len(customCssText) == 0) {
             str::ReplaceWithCopy(&customCssText, FromEditTextTemp(editCss->GetTextTemp()));
         }
         editCss->SetText(ToEditTextTemp(customCssText));

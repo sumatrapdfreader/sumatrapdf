@@ -298,7 +298,7 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
             if (fileName) {
                 fileName = path::GetBaseNameTemp(fileName);
             }
-            if (!fileName) {
+            if (len(fileName) == 0) {
                 fileName = StrL("file");
             }
         }
@@ -773,7 +773,7 @@ static Pixmap* RenderMupdfAnnotIcon(Str name, Color fg, int dx, int dy) {
     if (!ctx || dx < 4 || dy < 4) {
         return nullptr;
     }
-    if (!name) {
+    if (len(name) == 0) {
         name = StrL("Note");
     }
     u8 r;
@@ -882,7 +882,7 @@ static void PaintMupdfAnnotIcon(Gfx* gfx, Rect r, Str name, Color fg, PlatformFo
 }
 
 static void PaintIconGlyph(Gfx* gfx, Rect r, Str name, Color col, PlatformFont* font) {
-    if (!name) {
+    if (len(name) == 0) {
         return;
     }
     int pad = DpiScale(4);
@@ -1456,7 +1456,7 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             }
             Str data = LoadEmbeddedFile(annot);
             Str fileName = EmbeddedFileNameTemp(annot);
-            if (!fileName) {
+            if (len(fileName) == 0) {
                 fileName = StrL("attachment");
             }
             SaveDataToFile(tb->win->hwndFrame, path::GetBaseNameTemp(fileName), data);

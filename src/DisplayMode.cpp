@@ -72,7 +72,7 @@ static SeqStrings displayModeNames =
 Str DisplayModeToString(DisplayMode mode) {
     int idx = (int)mode;
     Str s = SeqStrByIndex(displayModeNames, idx);
-    if (!s) {
+    if (len(s) == 0) {
         ReportIf(true);
         return StrL("unknown display mode");
     }
@@ -83,7 +83,7 @@ Str DisplayModeToString(DisplayMode mode) {
 // Empty / unknown strings return false (Fullscreen.DisplayMode uses this
 // so an unset setting means "don't change").
 bool TryParseDisplayMode(Str s, DisplayMode* modeOut) {
-    if (!s) {
+    if (len(s) == 0) {
         return false;
     }
     // for consistency ("continuous" is used instead in the settings instead for brevity)

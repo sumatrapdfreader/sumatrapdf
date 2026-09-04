@@ -61,7 +61,7 @@ TryAgain64Bit:
             Str ver = versions[i - 1];
             TempStr keyName = fmt("Software\\%s\\%s", gsProd, ver);
             TempStr gsDLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, StrL("GS_DLL"));
-            if (!gsDLL) {
+            if (len(gsDLL) == 0) {
                 continue;
             }
             TempStr dir = path::GetDirTemp(gsDLL);
@@ -117,7 +117,7 @@ static EngineBase* ps2pdf(Str path) {
     TempStr tmpFile = GetTempFilePathTemp(StrL("PsE"));
     AutoDeleteFile tmpFileScope(tmpFile);
     TempStr gswin32c = GetGhostscriptPathTemp();
-    if (!shortPath || !tmpFile || !gswin32c) {
+    if (len(shortPath) == 0 || len(tmpFile) == 0 || len(gswin32c) == 0) {
         return nullptr;
     }
 
@@ -169,7 +169,7 @@ static EngineBase* ps2pdf(Str path) {
 static EngineBase* psgz2pdf(Str fileName) {
     TempStr tmpFile = GetTempFilePathTemp(StrL("PsE"));
     AutoDeleteFile tmpFileScope(tmpFile);
-    if (!tmpFile) {
+    if (len(tmpFile) == 0) {
         return nullptr;
     }
 
@@ -255,7 +255,7 @@ class EnginePs : public EngineBase {
 
     bool SaveFileAs(Str dstPath) override {
         Str srcPath = FilePath();
-        if (!srcPath) {
+        if (len(srcPath) == 0) {
             return false;
         }
         return file::Copy(dstPath, srcPath, false);
@@ -302,7 +302,7 @@ class EnginePs : public EngineBase {
     bool Load(Str fileName) {
         pageCount = 0;
         ReportIf(FilePath() || pdfEngine);
-        if (!fileName) {
+        if (len(fileName) == 0) {
             return false;
         }
 

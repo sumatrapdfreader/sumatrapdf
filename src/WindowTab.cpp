@@ -171,7 +171,7 @@ Str WindowTab::GetTabTitle() const {
     if (displayName) {
         return displayName;
     }
-    if (!filePath) {
+    if (len(filePath) == 0) {
         if (IsAboutTab()) {
             return StrL("Home");
         }

@@ -30,7 +30,7 @@ extern "C" {
 }
 
 void log(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return;
     }
     fwrite(s.s, 1, (size_t)s.len, stderr);
@@ -123,7 +123,7 @@ static void JpegErrorExit(j_common_ptr cinfo) {
 }
 
 static bool DecodeLibjpegTurbo(Str data, int* outW, int* outH) {
-    if (!data || data.len < 2) {
+    if (len(data) == 0 || data.len < 2) {
         return false;
     }
     jpeg_decompress_struct cinfo{};
@@ -176,7 +176,7 @@ static bool DecodeLibjpegTurbo(Str data, int* outW, int* outH) {
 // --- libwebp ----------------------------------------------------------------
 
 static bool DecodeLibwebp(Str data, int* outW, int* outH) {
-    if (!data) {
+    if (len(data) == 0) {
         return false;
     }
     int w = 0, h = 0;
@@ -207,7 +207,7 @@ static bool DecodeLibwebp(Str data, int* outW, int* outH) {
 // --- jxldec -----------------------------------------------------------------
 
 static bool DecodeJxldec(Str data, int* outW, int* outH) {
-    if (!data) {
+    if (len(data) == 0) {
         return false;
     }
     jxl_ctx* ctx = jxl_ctx_new(nullptr, nullptr, nullptr, nullptr);
@@ -234,7 +234,7 @@ static bool DecodeJxldec(Str data, int* outW, int* outH) {
 // --- heicdec (+ dav1d for AV1/AVIF, pure-C HEVC for HEIC) -------------------
 
 static bool DecodeHeicdec(Str data, int* outW, int* outH) {
-    if (!data) {
+    if (len(data) == 0) {
         return false;
     }
     heic_ctx* ctx = heic_ctx_new(nullptr, nullptr, nullptr, nullptr);
@@ -531,7 +531,7 @@ static const char* WinnerName(double native, bool nOk, double wic, bool wOk, dou
 
 static void BenchFile(Str path, BenchFormat fmt, Totals& tot) {
     Str data = file::ReadFile(path);
-    if (!data) {
+    if (len(data) == 0) {
         printf("READ FAIL  %.*s\n", path.len, path.s);
         return;
     }
@@ -616,7 +616,7 @@ int main(int argc, char** argv) {
             printf("unknown option: %s\n", arg.s);
             Usage();
             return 1;
-        } else if (!root) {
+        } else if (len(root) == 0) {
             root = arg;
         } else {
             printf("extra argument: %s\n", arg.s);
@@ -625,7 +625,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (!haveFmt || !root) {
+    if (!haveFmt || len(root) == 0) {
         Usage();
         return 1;
     }

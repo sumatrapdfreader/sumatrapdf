@@ -300,7 +300,7 @@ void PdfBakeDialog::DoIt(VirtMouseEvent*) {
     // annotations would be missing unless we write them out first (issue #5977).
     if (engine && EngineHasUnsavedAnnotations(engine)) {
         tmpPath = GetTempFilePathTemp(StrL("bake"));
-        if (!tmpPath || !EngineMupdfSaveCopy(engine, tmpPath)) {
+        if (len(tmpPath) == 0 || !EngineMupdfSaveCopy(engine, tmpPath)) {
             MessageBoxWarning(hwnd, StrL("Failed to bake PDF file."), _TRA("Bake PDF"));
             return;
         }
@@ -349,7 +349,7 @@ void ShowPdfBakeDialog(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     if (!IsPdfDoc(tab)) {
@@ -463,7 +463,7 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     logf("ShowPdfExtractTextDialog: opening for '%s'\n", tab->filePath);
@@ -525,7 +525,7 @@ void ShowPdfCompressDialog(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     if (!IsPdfDoc(tab)) {
@@ -589,7 +589,7 @@ void ShowPdfDecompressDialog(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     if (!IsPdfDoc(tab)) {
@@ -624,7 +624,7 @@ struct PdfDeletePageDialog : PdfToolDialog {
 // Returns a sorted list of unique 1-based page numbers to delete.
 // Returns false if the syntax is invalid or any page is out of range.
 static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
-    if (!s) {
+    if (len(s) == 0) {
         return false;
     }
     StrVec parts;
@@ -635,7 +635,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
     for (int pi = 0; pi < len(parts); pi++) {
         Str part = parts[pi];
         str::TrimWSInPlace(part, str::TrimOpt::Both);
-        if (!part) {
+        if (len(part) == 0) {
             return false;
         }
         // check for range "A-B" where A/B can be a number or "N"
@@ -643,11 +643,11 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
         if (str::CutChar(part, '-', &startStr, &endStr)) {
             str::TrimWSInPlace(startStr, str::TrimOpt::Both);
             str::TrimWSInPlace(endStr, str::TrimOpt::Both);
-            if (!startStr) {
+            if (len(startStr) == 0) {
                 return false;
             }
             // "8-" means "8-N" (from page 8 to the last page)
-            bool endIsEmpty = !endStr;
+            bool endIsEmpty = len(endStr) == 0;
             int start, end;
             if (str::EqI(startStr, StrL("N"))) {
                 start = pageCount;
@@ -847,7 +847,7 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
     TempStr tmpPath;
     if (isExtract && sourceEngine && EngineHasUnsavedAnnotations(sourceEngine)) {
         tmpPath = GetTempFilePathTemp(StrL("extract-pages"));
-        if (!tmpPath || !EngineMupdfSaveCopy(sourceEngine, tmpPath)) {
+        if (len(tmpPath) == 0 || !EngineMupdfSaveCopy(sourceEngine, tmpPath)) {
             MessageBoxWarning(hwnd, StrL("Failed to extract pages from PDF file."), _TRA("Extract Pages From PDF"));
             return;
         }
@@ -958,7 +958,7 @@ static void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     if (!IsPdfDoc(tab)) {
@@ -1059,7 +1059,7 @@ void ShowPdfEncryptDialog(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     if (!IsPdfDoc(tab)) {
@@ -1140,7 +1140,7 @@ void ShowPdfDecryptDialog(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     if (!IsPdfDoc(tab)) {
@@ -1169,11 +1169,11 @@ void ShowPdfDecryptDialog(MainWindow* win) {
 // Default destination: same path with .pdf extension, made unique if the file
 // already exists (e.g. comic.cbz → comic.pdf, or comic.1.pdf if taken).
 static TempStr DefaultPdfDestPathTemp(Str srcPath) {
-    if (!srcPath) {
+    if (len(srcPath) == 0) {
         return {};
     }
     TempStr noExt = path::GetPathNoExtTemp(srcPath);
-    if (!noExt) {
+    if (len(noExt) == 0) {
         noExt = str::DupTemp(srcPath);
     }
     TempStr pdfPath = str::JoinTemp(noExt, StrL(".pdf"));
@@ -1246,7 +1246,7 @@ void ShowConvertToPdfDialog(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     EngineBase* engine = tab->GetEngine();
@@ -1313,7 +1313,7 @@ static TempStr EnsurePagePlaceholderTemp(Str path, bool multiPage) {
     }
     TempStr ext = path::GetExtTemp(path);
     TempStr noExt = path::GetPathNoExtTemp(path);
-    if (!ext) {
+    if (len(ext) == 0) {
         return str::JoinTemp(noExt, StrL("-<N>.png"));
     }
     return str::JoinTemp(noExt, StrL("-<N>"), ext);
@@ -1354,7 +1354,7 @@ static bool GetImageEncoderForPath(Str path, CLSID* encOut) {
 }
 
 static bool SavePixmapAsImageFile(Pixmap* px, Str path) {
-    if (!px || !path) {
+    if (!px || len(path) == 0) {
         return false;
     }
     CLSID enc{};
@@ -1401,7 +1401,7 @@ static int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePa
         return 0;
     }
     TempStr withExt = WithDefaultImageExtTemp(templatePath);
-    if (!withExt) {
+    if (len(withExt) == 0) {
         return 0;
     }
     TempStr templ = EnsurePagePlaceholderTemp(withExt, len(pages) > 1);
@@ -1781,7 +1781,7 @@ void ShowConvertPdfToImagesDialog(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     if (!IsPdfDoc(tab)) {

@@ -759,7 +759,7 @@ typedef struct tagTHREADNAME_INFO {
                                 // not intended to be handled
 #pragma warning(disable : 6322) // silence /analyze: Empty _except block
 void SetThreadName(Str threadName, ThreadId threadId) {
-    if (!threadName) {
+    if (len(threadName) == 0) {
         return;
     }
     if (DynSetThreadDescription && threadId == 0) {
@@ -2122,7 +2122,7 @@ bool EqIS(Str s1, Str s2) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2) {
+    if (len(s1) == 0 || len(s2) == 0) {
         return false;
     }
 
@@ -2157,7 +2157,7 @@ bool EqN(Str s1, Str s2, int n) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2 || n == 0) {
+    if (len(s1) == 0 || len(s2) == 0 || n == 0) {
         return n == 0;
     }
     if (s1.len < n || s2.len < n) {
@@ -2170,7 +2170,7 @@ bool EqNI(Str s1, Str s2, int n) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2 || n == 0) {
+    if (len(s1) == 0 || len(s2) == 0 || n == 0) {
         return n == 0;
     }
     if (s1.len < n || s2.len < n) {
@@ -2247,7 +2247,7 @@ bool ContainsI(Str s, Str sub) {
 }
 
 bool EndsWith(Str txt, Str end) {
-    if (!txt || !end) {
+    if (len(txt) == 0 || len(end) == 0) {
         return false;
     }
     int txtLen = len(txt);
@@ -2259,7 +2259,7 @@ bool EndsWith(Str txt, Str end) {
 }
 
 bool EndsWithI(Str txt, Str end) {
-    if (!txt || !end) {
+    if (len(txt) == 0 || len(end) == 0) {
         return false;
     }
     int txtLen = len(txt);
@@ -2277,7 +2277,7 @@ bool EqNIx(Str s, int n, Str s2) {
 // case-insensitive variant of IndexOf: returns the byte offset of the first
 // match of toFind in s, or -1 if not found
 int IndexOfI(Str s, Str toFind) {
-    if (!s || !toFind) {
+    if (len(s) == 0 || len(toFind) == 0) {
         return -1;
     }
 
@@ -2510,7 +2510,7 @@ Str SliceFromCharLast(Str str, char c) {
 }
 
 int IndexOf(Str buf, Str toFind) {
-    if (!buf || !toFind) {
+    if (len(buf) == 0 || len(toFind) == 0) {
         return -1;
     }
     int toFindLen = toFind.len;
@@ -2659,7 +2659,7 @@ int TrimWSInPlace(Str& s, TrimOpt opt) {
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
 int NormalizeWSInPlace(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return 0;
     }
     int dst = 0;
@@ -2752,7 +2752,7 @@ int NormalizeNewlinesInPlace(Str s) {
 // Remove all characters in "toRemove" from "str", in place.
 // Returns number of removed characters.
 int RemoveCharsInPlace(Str str, Str toRemove) {
-    if (!str) {
+    if (len(str) == 0) {
         return 0;
     }
     int removed = 0;
@@ -2775,7 +2775,7 @@ int RemoveCharsInPlace(Str str, Str toRemove) {
 namespace wstr {
 
 int RemoveCharsInPlace(WStr str, WStr toRemove) {
-    if (!str) {
+    if (len(str) == 0) {
         return 0;
     }
     int removed = 0;
@@ -2890,7 +2890,7 @@ static int CmpNaturalLex(Str a, Str b) {
 }
 
 int CmpNatural(Str aIn, Str bIn) {
-    ReportIf(!aIn || !bIn);
+    ReportIf(len(aIn) == 0 || len(bIn) == 0);
     int ai = 0;
     int bi = 0;
     int diff = 0;
@@ -3190,7 +3190,7 @@ bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut) {
 // Returns index of toFind string in strings
 // Returns -1 if string doesn't exist
 int SeqStrIndex(SeqStrings strs, Str toFind) {
-    if (!strs || !toFind) {
+    if (!strs || len(toFind) == 0) {
         return -1;
     }
 
@@ -3218,7 +3218,7 @@ int SeqStrIndex(SeqStrings strs, Str toFind) {
 
 // like SeqStrIndex but ignores case and whitespace
 int SeqStrIndexIS(SeqStrings strs, Str toFind) {
-    if (!strs || !toFind) {
+    if (!strs || len(toFind) == 0) {
         return -1;
     }
 
@@ -3420,7 +3420,7 @@ bool SeqStrNumAdvance(SeqStrNum strs, int& off, int* idxInOut) {
 }
 
 int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut) {
-    if (!toFind) {
+    if (len(toFind) == 0) {
         return -1;
     }
     int off = 0;
@@ -3441,7 +3441,7 @@ int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut) {
 }
 
 int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut) {
-    if (!toFind) {
+    if (len(toFind) == 0) {
         return -1;
     }
     int off = 0;
@@ -3749,7 +3749,7 @@ namespace str {
 // Reinterpret a UTF-16 byte buffer held in a Str as a WStr without a
 // char*→WCHAR* cast (CodeQL cpp/incorrect-string-type-conversion).
 WStr CastStrToWStr(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return {};
     }
     WCHAR* w = nullptr;
@@ -3778,7 +3778,7 @@ bool EqNI(WStr s1, WStr s2, int n) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2) {
+    if (len(s1) == 0 || len(s2) == 0) {
         return n == 0;
     }
     if (n == 0) {
@@ -3864,17 +3864,17 @@ bool EqN(WStr s1, WStr s2, int n) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2) {
+    if (len(s1) == 0 || len(s2) == 0) {
         return false;
     }
     return 0 == wcsncmp(s1.s, s2.s, (size_t)n);
 }
 
 bool StartsWith(WStr str, WStr prefix) {
-    if (!prefix) {
+    if (len(prefix) == 0) {
         return true;
     }
-    if (!str || prefix.len > str.len) {
+    if (len(str) == 0 || prefix.len > str.len) {
         return false;
     }
     return EqN(str, prefix, prefix.len);
@@ -3885,17 +3885,17 @@ bool StartsWithI(WStr str, WStr prefix) {
     if (str.s == prefix.s) {
         return true;
     }
-    if (!prefix) {
+    if (len(prefix) == 0) {
         return true;
     }
-    if (!str || prefix.len > str.len) {
+    if (len(str) == 0 || prefix.len > str.len) {
         return false;
     }
     return EqNI(str, prefix, prefix.len);
 }
 
 bool EndsWith(WStr txt, WStr end) {
-    if (!txt || !end) {
+    if (len(txt) == 0 || len(end) == 0) {
         return false;
     }
     if (end.len > txt.len) {
@@ -3905,7 +3905,7 @@ bool EndsWith(WStr txt, WStr end) {
 }
 
 bool EndsWithI(WStr txt, WStr end) {
-    if (!txt || !end) {
+    if (len(txt) == 0 || len(end) == 0) {
         return false;
     }
     if (end.len > txt.len) {
@@ -3936,7 +3936,7 @@ WStr SliceFromChar(WStr str, WCHAR c) {
 }
 
 WStr FindFrom(WStr str, WStr find) {
-    if (!str || !find || find.len > str.len) {
+    if (len(str) == 0 || len(find) == 0 || find.len > str.len) {
         return {};
     }
     for (int i = 0; i <= str.len - find.len; i++) {
@@ -3990,7 +3990,7 @@ void TransCharsInPlace(WStr& str, WStr oldChars, WStr newChars) {
 
 // free() the result via str::Free(s) or str::FreePtr(&s)
 WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
-    if (!s || len(toReplace) == 0 || !replaceWith) {
+    if (len(s) == 0 || len(toReplace) == 0 || len(replaceWith) == 0) {
         return {};
     }
 
@@ -4001,7 +4001,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
     while (start < s.len) {
         WStr rest(s.s + start, s.len - start);
         WStr match = wstr::FindFrom(rest, toReplace);
-        if (!match) {
+        if (len(match) == 0) {
             result.Append(WStr(s.s + start, s.len - start));
             break;
         }
@@ -4017,7 +4017,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
 int NormalizeWSInPlace(WStr s) {
-    if (!s) {
+    if (len(s) == 0) {
         return 0;
     }
     int src = 0;
@@ -4056,7 +4056,7 @@ int BufSet(Str dst, Str src) {
         ReportIf(true);
         return 0;
     }
-    if (!src) {
+    if (len(src) == 0) {
         *dst.s = 0;
         return 0;
     }
@@ -4079,7 +4079,7 @@ int BufSet(WStr dst, WStr src) {
         ReportIf(true);
         return 0;
     }
-    if (!src) {
+    if (len(src) == 0) {
         *dst.s = 0;
         return 0;
     }
@@ -4158,7 +4158,7 @@ TempStr GetFileNameTemp(Str url) {
 } // namespace url
 
 int ParseInt(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return 0;
     }
     int off = 0;
@@ -4179,7 +4179,7 @@ int ParseInt(Str s) {
 }
 
 i64 ParseInt64(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return 0;
     }
     int off = 0;
@@ -4198,7 +4198,7 @@ i64 ParseInt64(Str s) {
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
 // Return false if it contains anything else.
 bool IsValidProgramVersion(Str ver) {
-    if (!ver || !str::IsDigit(ver.s[0])) {
+    if (len(ver) == 0 || !str::IsDigit(ver.s[0])) {
         return false;
     }
 
@@ -4262,7 +4262,7 @@ int CompareProgramVersion(Str ver1, Str ver2) {
 // IsTextRtl is optimized version of checking if a string is rtl
 // we look at max first 40 chars and
 bool IsTextRtl(WStr s) {
-    if (!s) {
+    if (len(s) == 0) {
         return false;
     }
     int n = s.len > 40 ? 40 : s.len;
@@ -4732,7 +4732,7 @@ int Utf8CodepointStartByte(Str s, int byteIdx) {
 
 // the codepoint the byte at byteIdx is part of, 0 if there is none
 int Utf8CodepointContaining(Str s, int byteIdx) {
-    if (!s || byteIdx < 0 || byteIdx >= len(s)) {
+    if (len(s) == 0 || byteIdx < 0 || byteIdx >= len(s)) {
         return 0;
     }
     return Utf8CodepointAtByte(s, Utf8CodepointStartByte(s, byteIdx));
@@ -4742,7 +4742,7 @@ int Utf8CodepointAtByte(Str s, int byteIdx, int* bytesOut) {
     if (bytesOut) {
         *bytesOut = 0;
     }
-    if (!s || byteIdx < 0 || byteIdx >= s.len) {
+    if (len(s) == 0 || byteIdx < 0 || byteIdx >= s.len) {
         return 0;
     }
 
@@ -4776,7 +4776,7 @@ int Utf8CodepointCount(Str s) {
 }
 
 int Utf8CodepointNext(Str s, int& byteIdx) {
-    if (!s || byteIdx < 0 || byteIdx >= s.len) {
+    if (len(s) == 0 || byteIdx < 0 || byteIdx >= s.len) {
         return 0;
     }
     int n = 0;
@@ -4786,7 +4786,7 @@ int Utf8CodepointNext(Str s, int& byteIdx) {
 }
 
 int Utf8CodepointPrev(Str s, int& byteIdx) {
-    if (!s || byteIdx <= 0) {
+    if (len(s) == 0 || byteIdx <= 0) {
         return 0;
     }
     byteIdx = std::min(byteIdx, s.len);
@@ -4799,7 +4799,7 @@ int Utf8CodepointPrev(Str s, int& byteIdx) {
 }
 
 int Utf8CodepointToByteIndex(Str s, int codepointIdx) {
-    if (!s || codepointIdx <= 0) {
+    if (len(s) == 0 || codepointIdx <= 0) {
         return 0;
     }
     int byteIdx = 0;
@@ -4812,7 +4812,7 @@ int Utf8CodepointToByteIndex(Str s, int codepointIdx) {
 }
 
 int Utf8AdvanceCodepoints(Str s, int byteIdx, int nCodepoints) {
-    if (!s || byteIdx < 0) {
+    if (len(s) == 0 || byteIdx < 0) {
         return 0;
     }
     if (byteIdx > s.len) {
@@ -4825,7 +4825,7 @@ int Utf8AdvanceCodepoints(Str s, int byteIdx, int nCodepoints) {
 }
 
 Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints) {
-    if (!s || nCodepoints <= 0) {
+    if (len(s) == 0 || nCodepoints <= 0) {
         return {};
     }
     startCodepoint = std::max(startCodepoint, 0);
@@ -5979,7 +5979,7 @@ TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits) {
     }
 
     TempStr sizestr = str::FormatFloatWithThousandSepTemp(s, LOCALE_USER_DEFAULT, false);
-    if (!unit) {
+    if (len(unit) == 0) {
         return sizestr;
     }
     return str::FormatTemp("%s %s", sizestr, unit);
@@ -7078,7 +7078,7 @@ TempStr ToMultiByteTemp(Str src, uint codePageSrc, uint codePageDest) {
     }
 
     TempWStr tmp = StrCPToWStrTemp(src, codePageSrc);
-    if (!tmp) {
+    if (len(tmp) == 0) {
         return {};
     }
     Arena* a = GetTempArena();
@@ -7237,7 +7237,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
     }
     parsed.wasParsed = true;
     parsed.parsedOk = false;
-    if (!txt) {
+    if (len(txt) == 0) {
         return;
     }
     TempStr s = str::DupTemp(txt);

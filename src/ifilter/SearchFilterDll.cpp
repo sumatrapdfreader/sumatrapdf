@@ -123,7 +123,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
 STDAPI DllRegisterServer() {
     log(StrL("DllRegisterServer\n"));
     TempStr dllPath = GetSelfExePathTemp();
-    if (!dllPath) {
+    if (len(dllPath) == 0) {
         return HRESULT_FROM_WIN32(GetLastError());
     }
     bool ok = InstallSearchFilter(dllPath, false);

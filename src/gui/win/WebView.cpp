@@ -458,14 +458,14 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
 static TempWStr UriPathFromPrefix(WStr uri, WStr prefix, bool keepQueryAndFragment = false);
 
 static TempStr UrlForWebViewEvent(WStr uri, WStr prefix) {
-    if (!uri) {
+    if (len(uri) == 0) {
         return {};
     }
     if (prefix && wstr::StartsWith(uri, prefix)) {
         // keep ?query and #fragment: navigation handlers (markdown heading
         // dests, CHM) need the hash; resource fetches strip it separately
         TempWStr pathW = UriPathFromPrefix(uri, prefix, true);
-        if (!pathW) {
+        if (len(pathW) == 0) {
             return {};
         }
         TempStr path = ToUtf8Temp(pathW);
@@ -518,7 +518,7 @@ class webview2_navigation_starting_handler : public ICoreWebView2NavigationStart
         }
         TempStr url = UrlForWebViewEvent(WStr(uri), m_wnd->resourceUriPrefix);
         CoTaskMemFree(uri);
-        if (!url) {
+        if (len(url) == 0) {
             return S_OK;
         }
         bool allow = m_wnd->events.navigationStarting(m_wnd->events.ctx, url, false);
@@ -665,7 +665,7 @@ class webview2_new_window_handler : public ICoreWebView2NewWindowRequestedEventH
 // and open external http(s) URLs in the OS default browser. Virtual-host
 // content (markdown/CHM) is not opened externally.
 static bool ShouldOpenWebViewDownloadInOsBrowser(WStr uri, WStr resourceUriPrefix) {
-    if (!uri) {
+    if (len(uri) == 0) {
         return false;
     }
     if (resourceUriPrefix && wstr::StartsWith(uri, resourceUriPrefix)) {
@@ -784,7 +784,7 @@ static TempWStr MimeHeaderFromContentType(Str contentType) {
 }
 
 static TempWStr UriPathFromPrefix(WStr uri, WStr prefix, bool keepQueryAndFragment) {
-    if (!uri || !prefix || !wstr::StartsWith(uri, prefix)) {
+    if (len(uri) == 0 || len(prefix) == 0 || !wstr::StartsWith(uri, prefix)) {
         return {};
     }
     int pathOff = prefix.len;
@@ -874,7 +874,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
     }
 
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2WebResourceRequestedEventArgs* args) {
-        if (!args || !m_wnd || !m_wnd->resourceProvider.getResource || !m_wnd->resourceUriPrefix) {
+        if (!args || !m_wnd || !m_wnd->resourceProvider.getResource || len(m_wnd->resourceUriPrefix) == 0) {
             return S_OK;
         }
 
@@ -893,7 +893,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
 
         TempWStr pathW = UriPathFromPrefix(WStr(uri), m_wnd->resourceUriPrefix);
         CoTaskMemFree(uri);
-        if (!pathW) {
+        if (len(pathW) == 0) {
             return S_OK;
         }
 
@@ -1500,7 +1500,7 @@ void WebviewWnd::RemoveInitScript(int token) {
         return;
     }
     WebViewInitScript& script = initScripts[idx];
-    if (!script.id) {
+    if (len(script.id) == 0) {
         // the id hasn't arrived yet; OnInitScriptAdded will remove it
         script.removePending = true;
         return;
@@ -1573,7 +1573,7 @@ void WebviewWnd::OnJsCall(Str msg) {
         logf("WebviewWnd::OnJsCall: failed to parse '%s'\n", msg);
         return;
     }
-    if (!st.id || !st.method) {
+    if (len(st.id) == 0 || len(st.method) == 0) {
         return;
     }
     if (!events.jsCall) {
@@ -1594,7 +1594,7 @@ void WebviewWnd::OnJsNotify(Str msg) {
         logf("WebviewWnd::OnJsNotify: failed to parse '%s'\n", msg);
         return;
     }
-    if (!st.method) {
+    if (len(st.method) == 0) {
         return;
     }
     Str params = st.params ? Str(st.params) : StrL("[]");
@@ -2037,7 +2037,7 @@ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
     if (initStarted) {
         return !initFailed;
     }
-    if (!dataDir) {
+    if (len(dataDir) == 0) {
         logf("WebviewWnd::Embed: dataDir is null, aborting\n");
         initFailed = true;
         return false;
@@ -2103,7 +2103,7 @@ static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg) {
 }
 
 HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
-    ReportIf(!dataDir);
+    ReportIf(len(dataDir) == 0);
     onTimer = MkMethod1<WebviewWnd, WindowBase::TimerEvent*, &WebviewWnd::OnTimer>(this);
     onSize = MkMethod1<WebviewWnd, WindowBase::SizeEvent*, &WebviewWnd::OnSize>(this);
     onActivate = MkMethod1<WebviewWnd, WindowBase::ActivateEvent*, &WebviewWnd::OnActivate>(this);

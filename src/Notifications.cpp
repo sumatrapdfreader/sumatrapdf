@@ -477,7 +477,7 @@ int CalcPerc(int current, int total) {
 }
 
 void NotificationWnd::Layout(Str message) {
-    if (!message) {
+    if (len(message) == 0) {
         message = StrL("");
     }
     int padX = DpiScale(12);

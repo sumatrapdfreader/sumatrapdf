@@ -183,7 +183,7 @@ static bool TryOpenUnrarFallback(Archive*, Str, bool, const ArchiveExtractProgre
 // ArchiveExtractProgress). Pass a default-constructed Func1 to skip
 // notifications.
 bool Archive::Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExtractProgressCb& cbProgress) {
-    if (!path) {
+    if (len(path) == 0) {
         return false;
     }
     FileType ft = hintType;
@@ -282,7 +282,7 @@ static struct archive* OpenLibarchiveFile(Str path, Str password) {
 }
 
 static struct archive* OpenLibarchiveMemory(Str data, Str password) {
-    if (!data) {
+    if (len(data) == 0) {
         return nullptr;
     }
     struct archive* a = NewLibarchiveReader(password);
@@ -313,7 +313,7 @@ bool Archive::OpenFromData(Str data, bool eagerLoad) {
 
     str::Free(archiveData_);
     archiveData_ = str::Dup(data);
-    if (!archiveData_) {
+    if (len(archiveData_) == 0) {
         return false;
     }
 
@@ -435,7 +435,7 @@ void Archive::LoadFileDataByIdLibarchive(int fileId) {
     // and skip to the right entry
     struct archive* a = OpenLibarchiveSource(this);
     if (!a) {
-        if (!archivePath_ && !archiveData_) {
+        if (len(archivePath_) == 0 && len(archiveData_) == 0) {
             fileInfo->failed = true;
             return;
         }
@@ -596,7 +596,7 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
         return 1;
     }
     if (msg == UCM_NEEDPASSWORDW) {
-        if (!buf->password) {
+        if (len(buf->password) == 0) {
             return -1;
         }
         WCHAR* pwdBuf = (WCHAR*)rarBuffer;
@@ -664,7 +664,7 @@ void Archive::LoadFileDataByIdUnrarDll(int fileId) {
     if (fileInfo->data != nullptr) {
         return; // already loaded
     }
-    if (!rarFilePath_) {
+    if (len(rarFilePath_) == 0) {
         fileInfo->failed = true;
         return;
     }
@@ -724,7 +724,7 @@ Exit:
 }
 
 Str Archive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
-    ReportIf(!rarFilePath_);
+    ReportIf(len(rarFilePath_) == 0);
 
     auto* fileInfo = fileInfos_[fileId];
     ReportIf(fileInfo->fileId != fileId);
@@ -790,10 +790,10 @@ Exit:
 // asan build crashes in UnRAR code
 // see https://codeeval.dev/gist/801ad556960e59be41690d0c2fa7cba0
 bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
-    if (!rarPath) {
+    if (len(rarPath) == 0) {
         return false;
     }
-    ReportIf(rarFilePath_);
+    ReportIf(len(rarFilePath_) != 0);
     WCHAR* rarPathW = CWStrTemp(rarPath);
 
     UnrarData uncompressedBuf;

@@ -501,7 +501,7 @@ void AppendLine(ExifParser& parser, IfdGroup g, u16 tag, u16 type, TempStr value
     Str prefix = GroupPrefix(g);
     Str name = TagName(g, tag);
     char tagNameBuf[32];
-    if (!name) {
+    if (len(name) == 0) {
         snprintf(tagNameBuf, sizeof(tagNameBuf), "Tag 0x%04X", tag);
         name = Str(tagNameBuf);
     }

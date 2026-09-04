@@ -49,7 +49,7 @@ static void Test03() {
     bool ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && kTagAny == sel->tag && !sel->clazz && IsSelector(sel, StrL("*")));
+    utassert(sel && kTagAny == sel->tag && len(sel->clazz) == 0 && IsSelector(sel, StrL("*")));
     sel = parser.NextSelector();
     utassert(!sel);
     prop = parser.NextProperty();
@@ -60,7 +60,7 @@ static void Test03() {
     ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && Tag_P == sel->tag && !sel->clazz && IsSelector(sel, StrL("p")));
+    utassert(sel && Tag_P == sel->tag && len(sel->clazz) == 0 && IsSelector(sel, StrL("p")));
     prop = parser.NextProperty();
     utassert(prop && Css_Color == prop->type && IsPropVal(prop, StrL("blue")));
     prop = parser.NextProperty();
@@ -103,7 +103,7 @@ static void Test04() {
     prop = parser.NextProperty();
     utassert(!prop);
     sel = parser.NextSelector();
-    utassert(sel && Tag_Span == sel->tag && !sel->clazz && IsSelector(sel, StrL("span")));
+    utassert(sel && Tag_Span == sel->tag && len(sel->clazz) == 0 && IsSelector(sel, StrL("span")));
     sel = parser.NextSelector();
     utassert(!sel);
 
@@ -112,9 +112,9 @@ static void Test04() {
     prop = parser.NextProperty();
     utassert(!prop);
     sel = parser.NextSelector();
-    utassert(sel && Tag_P == sel->tag && !sel->clazz && IsSelector(sel, StrL("p")));
+    utassert(sel && Tag_P == sel->tag && len(sel->clazz) == 0 && IsSelector(sel, StrL("p")));
     sel = parser.NextSelector();
-    utassert(sel && Tag_NotFound == sel->tag && !sel->clazz && IsSelector(sel, StrL("p#id")));
+    utassert(sel && Tag_NotFound == sel->tag && len(sel->clazz) == 0 && IsSelector(sel, StrL("p#id")));
     sel = parser.NextSelector();
     utassert(!sel);
 
@@ -131,7 +131,7 @@ static void Test05() {
     bool ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && Tag_Html == sel->tag && !sel->clazz && IsSelector(sel, StrL("html")));
+    utassert(sel && Tag_Html == sel->tag && len(sel->clazz) == 0 && IsSelector(sel, StrL("html")));
     sel = parser.NextSelector();
     utassert(!sel);
     prop = parser.NextProperty();
@@ -140,7 +140,7 @@ static void Test05() {
     ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && Tag_P == sel->tag && !sel->clazz && IsSelector(sel, StrL("p")));
+    utassert(sel && Tag_P == sel->tag && len(sel->clazz) == 0 && IsSelector(sel, StrL("p")));
     sel = parser.NextSelector();
     utassert(!sel);
     prop = parser.NextProperty();

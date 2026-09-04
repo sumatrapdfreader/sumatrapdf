@@ -729,7 +729,7 @@ void VirtRoot::UpdateTooltip(Point ptWindow) {
         }
         w = w->parent;
     }
-    if (!tip) {
+    if (len(tip) == 0) {
         HideTooltip();
         return;
     }
@@ -4036,7 +4036,7 @@ static TempStr CommandShortcutTemp(Str cmdName) {
 
 void ParseTipInto(VirtRichText* tipIn, Str s) {
     VirtRichText& tip = *tipIn;
-    if (!s) {
+    if (len(s) == 0) {
         return;
     }
     str::Builder expanded;

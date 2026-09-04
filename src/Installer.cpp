@@ -117,7 +117,7 @@ constexpr const char* kLogFileName = "sumatra-install-log.txt";
 // caller has to free()
 Str GetInstallerLogPath() {
     TempStr dir = GetTempDirTemp();
-    if (!dir) {
+    if (len(dir) == 0) {
         return str::Dup(Str(kLogFileName));
     }
     return path::Join(dir, Str(kLogFileName));
@@ -144,7 +144,7 @@ static bool IsDiskFullError(DWORD err) {
 // with the new exe). Retry: direct write, temp+rename, kill holders, delete.
 static bool WriteInstallerFileRobust(Str path, Str data) {
     gLastWriteInstallerErr = 0;
-    if (!path || !data.s) {
+    if (len(path) == 0 || !data.s) {
         log(StrL("WriteInstallerFileRobust: null path or data\n"));
         return false;
     }
@@ -290,7 +290,7 @@ static bool WaitServiceStopped(SC_HANDLE svc, Str name, int maxWaitMs = 15000) {
 // Stop a service and its active dependents first (depth-limited).
 // Fixes ERROR_DEPENDENT_SERVICES_RUNNING (1051) when stopping WSearch alone.
 static void StopServiceAndDependents(SC_HANDLE scm, Str serviceName, int depth = 0) {
-    if (depth > 8 || !scm || !serviceName) {
+    if (depth > 8 || !scm || len(serviceName) == 0) {
         return;
     }
     SC_HANDLE svc =
@@ -363,7 +363,7 @@ static TempStr ProcessesHoldingFileTemp(Str path) {
     (void)path;
     return {};
 #else
-    if (!path) {
+    if (len(path) == 0) {
         return {};
     }
     DWORD session = 0;
@@ -570,7 +570,7 @@ static bool MoveAsideLooksLikeAccessDenied(Str path) {
         return false;
     }
     TempStr holders = ProcessesHoldingFileTemp(path);
-    return !holders;
+    return len(holders) == 0;
 }
 
 // Dialog body: prefer live Restart Manager holders; ACCESS_DENIED vs file-in-use.
@@ -1091,7 +1091,7 @@ static void CopySettingsFile() {
 
 static bool CreateAppShortcut(int csidl, Str installedExePath) {
     TempStr shortcutPath = GetShortcutPathTemp(csidl);
-    if (!shortcutPath) {
+    if (len(shortcutPath) == 0) {
         log(StrL("CreateAppShortcut() failed\n"));
         return false;
     }
@@ -1120,7 +1120,7 @@ static void CreateAppShortcuts(bool forAllUsers, Str installedExePath) {
 
 static void RemoveShortcutFile(int csidl) {
     TempStr path = GetShortcutPathTemp(csidl);
-    if (!path || !file::Exists(path)) {
+    if (len(path) == 0 || !file::Exists(path)) {
         return;
     }
     file::Delete(path);
@@ -1750,7 +1750,7 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
 
     auto caption = _TRA("Select the folder where SumatraPDF should be installed:");
     TempStr installPath = BrowseForFolderTemp(wnd->hwnd, installDir, caption);
-    if (!installPath) {
+    if (len(installPath) == 0) {
         HwndSetFocus(wnd->btnBrowseDir->hwnd);
         return;
     }
@@ -2198,7 +2198,7 @@ static bool GetFreeBytesAvailable(Str pathOnVolume, u64* freeOut) {
     WCHAR volume[MAX_PATH]{};
     if (!GetVolumePathNameW(CWStrTemp(pathOnVolume), volume, dimofi(volume))) {
         TempStr parent = path::GetDirTemp(pathOnVolume);
-        if (!parent || !GetVolumePathNameW(CWStrTemp(parent), volume, dimofi(volume))) {
+        if (len(parent) == 0 || !GetVolumePathNameW(CWStrTemp(parent), volume, dimofi(volume))) {
             logf("GetFreeBytesAvailable: GetVolumePathNameW failed for '%s' err=%u\n", pathOnVolume, GetLastError());
             return false;
         }
@@ -2386,7 +2386,7 @@ int RunInstaller() {
     }
 
     gCliNew.installDir = str::Dup(gCli->installDir);
-    if (!gCliNew.installDir) {
+    if (len(gCliNew.installDir) == 0) {
         auto dir = GetDefaultInstallationDirTemp(gCliNew.allUsers, false);
         gCliNew.installDir = str::Dup(dir);
     }

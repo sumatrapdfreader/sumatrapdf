@@ -145,7 +145,7 @@ Str ImageSaveExtFromData(Str data) {
 }
 
 static bool ExtMatchesOriginal(Str ext, Str originalExt) {
-    if (!ext || !originalExt) {
+    if (len(ext) == 0 || len(originalExt) == 0) {
         return false;
     }
     if (str::EqI(ext, originalExt)) {
@@ -1205,7 +1205,7 @@ static void OnBrowse(ImageEditWindow* ew) {
 // Save a GDI+ Bitmap using WIC. Supports all formats that have a WIC encoder installed,
 // including WebP on Windows 10+.
 static bool SaveBitmapWithWIC(Bitmap* bmp, WStr destPath, const GUID* containerFormat) {
-    if (!bmp || !destPath || !containerFormat) {
+    if (!bmp || len(destPath) == 0 || !containerFormat) {
         return false;
     }
 
@@ -1315,7 +1315,7 @@ Done:
 // Uncompressed chunky CMYK TIFF (PhotometricInterpretation = Separated).
 // samples are packed C,M,Y,K, stride = w*4, PDF polarity (0 = no ink).
 static bool WriteCmykTiff(Str destPath, int w, int h, int srcStride, const u8* samples) {
-    if (!destPath || w <= 0 || h <= 0 || srcStride < w * 4 || !samples) {
+    if (len(destPath) == 0 || w <= 0 || h <= 0 || srcStride < w * 4 || !samples) {
         return false;
     }
     const int rowBytes = w * 4;
@@ -2228,7 +2228,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         }
     } else {
         // the caller names the image; there is nothing to edit without one
-        if (!filePath) {
+        if (len(filePath) == 0) {
             return;
         }
         Str data = file::ReadFile(filePath);

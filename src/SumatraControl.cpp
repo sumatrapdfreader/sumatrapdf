@@ -132,7 +132,7 @@ static void AddFavoriteSilent(MainWindow* win, int pageNo) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath || !win->ctrl->ValidPageNo(pageNo)) {
+    if (!tab || len(tab->filePath) == 0 || !win->ctrl->ValidPageNo(pageNo)) {
         return;
     }
     Str path = tab->filePath;
@@ -261,7 +261,7 @@ static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
     }
 
     bool reportR2L = str::EqI(action, StrL("r2l"));
-    if (!action || str::EqI(action, StrL("get")) || reportR2L) {
+    if (len(action) == 0 || str::EqI(action, StrL("get")) || reportR2L) {
         // report only
     } else if (str::EqI(action, StrL("presentation"))) {
         ToggleFullScreen(win, win->AsFixed() != nullptr);
@@ -426,7 +426,7 @@ static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
         return finish(StrL("NOTREADY no-window\n"), 2);
     }
     MainWindow* win = gWindows[0];
-    if (!action || str::EqI(action, StrL("get"))) {
+    if (len(action) == 0 || str::EqI(action, StrL("get"))) {
         // report only
     } else if (str::EqI(action, StrL("start")) || str::EqI(action, StrL("reset"))) {
         gLayoutProbe.win = win;
@@ -496,7 +496,7 @@ static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
     WindowTab* tab = gWindows[0]->CurrentTab();
     bool isTextOnly = false;
     TempStr sel = tab ? GetSelectedTextTemp(tab, StrL("\n"), isTextOnly) : TempStr{};
-    if (!sel) {
+    if (len(sel) == 0) {
         sel = StrL("");
     }
     if (str::IsEmptyOrWhiteSpace(pattern)) {
@@ -708,7 +708,7 @@ static TempStr DocumentFontListResultTemp(int* exitCodeOut) {
         return finish(StrL("NOTREADY no-fixed-document"), 2);
     }
     TempStr fonts = engine->GetPropertyTemp(DocProp::FontList);
-    if (!fonts) {
+    if (len(fonts) == 0) {
         return finish(StrL("ERROR no-fonts"), 1);
     }
     return finish(fmt("OK fonts=%s", fonts), 0);
@@ -906,7 +906,7 @@ static void AppendArgInt(str::Builder& s, i32 v) {
 }
 
 static void AppendArgString(str::Builder& s, Str str) {
-    if (!str) {
+    if (len(str) == 0) {
         str = StrL("");
     }
     size_t n = (size_t)str.len;
@@ -1068,7 +1068,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 line = 0;
             Str pdf = StringArg(req, 0);
             Str src = StringArg(req, 1);
-            if (!pdf || !src || !IntArg(req, 2, line)) {
+            if (len(pdf) == 0 || len(src) == 0 || !IntArg(req, 2, line)) {
                 AppendError(req, StrL("TestSynctex expects string pdf, string source, int line"));
                 break;
             }
@@ -1079,7 +1079,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestInverseSearch: {
             i32 page = 0, x = 0, y = 0;
             Str pdf = StringArg(req, 0);
-            if (!pdf || !IntArg(req, 1, page) || !IntArg(req, 2, x) || !IntArg(req, 3, y)) {
+            if (len(pdf) == 0 || !IntArg(req, 1, page) || !IntArg(req, 2, x) || !IntArg(req, 3, y)) {
                 AppendError(req, StrL("TestInverseSearch expects string pdf, int page, int x, int y"));
                 break;
             }
@@ -1091,11 +1091,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str pdf = StringArg(req, 0);
             Str needle = StringArg(req, 1);
             Str password = StringArg(req, 2);
-            if (!pdf || !needle) {
+            if (len(pdf) == 0 || len(needle) == 0) {
                 AppendError(req, StrL("TestSearch expects string pdf, string needle, optional string password"));
                 break;
             }
-            if (!password && gCli) {
+            if (len(password) == 0 && gCli) {
                 password = gCli->password;
             }
             AppendTestResult(req, 0, SearchResultTemp(pdf, needle, password));
@@ -1105,7 +1105,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestDest: {
             i32 destNo = 0;
             Str pdf = StringArg(req, 0);
-            if (!pdf || !IntArg(req, 1, destNo)) {
+            if (len(pdf) == 0 || !IntArg(req, 1, destNo)) {
                 AppendError(req, StrL("TestDest expects string pdf, int destinationNumber"));
                 break;
             }
@@ -1116,7 +1116,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestNamedDest: {
             Str pdf = StringArg(req, 0);
             Str name = StringArg(req, 1);
-            if (!pdf || !name) {
+            if (len(pdf) == 0 || len(name) == 0) {
                 AppendError(req, StrL("TestNamedDest expects string pdf, string name"));
                 break;
             }
@@ -1126,7 +1126,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestChm: {
             Str chm = StringArg(req, 0);
-            if (!chm) {
+            if (len(chm) == 0) {
                 AppendError(req, StrL("TestChm expects string chmPath"));
                 break;
             }
@@ -1141,7 +1141,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str srcLang = StringArg(req, 1);
             Str dstLang = StringArg(req, 2);
             Str text = StringArg(req, 3);
-            if (!IntArg(req, 0, backend) || !srcLang || !dstLang || !text) {
+            if (!IntArg(req, 0, backend) || len(srcLang) == 0 || len(dstLang) == 0 || len(text) == 0) {
                 AppendError(
                     req,
                     StrL("TestSelectionTranslate expects int backend, string srcLang, string dstLang, string text"));
@@ -1157,7 +1157,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str pdf = StringArg(req, 0);
             Str clickWord = StringArg(req, 1);
             Str expectedLine = StringArg(req, 2);
-            if (!pdf || !clickWord || !expectedLine) {
+            if (len(pdf) == 0 || len(clickWord) == 0 || len(expectedLine) == 0) {
                 AppendError(
                     req, StrL("TestTripleClickLineSelect expects string pdf, string clickWord, string expectedLine"));
                 break;
@@ -1172,7 +1172,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str word1 = StringArg(req, 0);
             Str word2 = StringArg(req, 1);
             Str cursorWord = StringArg(req, 2);
-            if (!word1 || !word2 || !cursorWord) {
+            if (len(word1) == 0 || len(word2) == 0 || len(cursorWord) == 0) {
                 AppendError(req,
                             StrL("TestContextMenuSelection expects string word1, string word2, string cursorWord"));
                 break;
@@ -1186,7 +1186,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestGoToFindMatch: {
             Str word = StringArg(req, 0);
             Str typed = StringArg(req, 1);
-            if (!word || !typed) {
+            if (len(word) == 0 || len(typed) == 0) {
                 AppendError(req, StrL("TestGoToFindMatch expects string word, string typed"));
                 break;
             }
@@ -1198,7 +1198,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestImageResizeArrowKey: {
             Str imagePath = StringArg(req, 0);
-            if (!imagePath) {
+            if (len(imagePath) == 0) {
                 AppendError(req, StrL("TestImageResizeArrowKey expects string imagePath"));
                 break;
             }
@@ -1212,7 +1212,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str imagePath = StringArg(req, 0);
             i32 newW = 0;
             i32 newH = 0;
-            if (!imagePath || !IntArg(req, 1, newW) || !IntArg(req, 2, newH)) {
+            if (len(imagePath) == 0 || !IntArg(req, 1, newW) || !IntArg(req, 2, newH)) {
                 AppendError(req, StrL("TestImageResizeEdges expects string imagePath, int newW, int newH"));
                 break;
             }
@@ -1224,7 +1224,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestClickClearsSelection: {
             Str word = StringArg(req, 0);
-            if (!word) {
+            if (len(word) == 0) {
                 AppendError(req, StrL("TestClickClearsSelection expects string word"));
                 break;
             }
@@ -1236,7 +1236,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestRectSelectionDrag: {
             Str word = StringArg(req, 0);
-            if (!word) {
+            if (len(word) == 0) {
                 AppendError(req, StrL("TestRectSelectionDrag expects string word"));
                 break;
             }
@@ -1248,7 +1248,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestFindResultsOrder: {
             Str term = StringArg(req, 0);
-            if (!term) {
+            if (len(term) == 0) {
                 AppendError(req, StrL("TestFindResultsOrder expects string term, int startPage"));
                 break;
             }
@@ -1270,7 +1270,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestFileKind: {
             Str path = StringArg(req, 0);
             Str expectedKind = StringArg(req, 1);
-            if (!path || !expectedKind) {
+            if (len(path) == 0 || len(expectedKind) == 0) {
                 AppendError(req, StrL("TestFileKind expects string path, string expectedKind"));
                 break;
             }
@@ -1299,7 +1299,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestPageInfoOverlay: {
             Str pathTwo = StringArg(req, 0);
             Str pathOne = StringArg(req, 1);
-            if (!pathTwo || !pathOne) {
+            if (len(pathTwo) == 0 || len(pathOne) == 0) {
                 AppendError(req, StrL("TestPageInfoOverlay expects string pathTwoPages, string pathOnePage"));
                 break;
             }
@@ -1311,7 +1311,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestGetToc: {
             Str path = StringArg(req, 0);
-            if (!path) {
+            if (len(path) == 0) {
                 AppendError(req, StrL("TestGetToc expects string path"));
                 break;
             }
@@ -1324,7 +1324,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestPageLinks: {
             Str path = StringArg(req, 0);
             i32 pageNo = 1;
-            if (!path || !IntArg(req, 1, pageNo)) {
+            if (len(path) == 0 || !IntArg(req, 1, pageNo)) {
                 AppendError(req, StrL("TestPageLinks expects string path, int pageNo"));
                 break;
             }
@@ -1337,7 +1337,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestInsertImage: {
             Str pdfPath = StringArg(req, 0);
             Str imagePath = StringArg(req, 1);
-            if (!pdfPath || !imagePath) {
+            if (len(pdfPath) == 0 || len(imagePath) == 0) {
                 AppendError(req, StrL("TestInsertImage expects string pdfPath, string imagePath"));
                 break;
             }
@@ -1363,7 +1363,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str imagePath = StringArg(req, 5);
             i32 appearanceFlags = -1;
             IntArg(req, 6, appearanceFlags);
-            if (!pdfPath || !destPath) {
+            if (len(pdfPath) == 0 || len(destPath) == 0) {
                 AppendError(
                     req, StrL("TestSignDocument expects string pdfPath, string destPath [, thumbprint] [, certPath] [, "
                               "password] [, imagePath] [, appearanceFlags]"));
@@ -1395,7 +1395,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestRenderPageColors: {
             Str path = StringArg(req, 0);
-            if (!path) {
+            if (len(path) == 0) {
                 AppendError(req, StrL("TestRenderPageColors expects string path"));
                 break;
             }
@@ -1409,7 +1409,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str path = StringArg(req, 0);
             i32 zoomPercent = 100;
             i32 clipKind = 0;
-            if (!path) {
+            if (len(path) == 0) {
                 AppendError(req, StrL("TestImageRenderEdges expects string path [, int zoomPercent] [, int clipKind]"));
                 break;
             }
@@ -1425,7 +1425,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str path = StringArg(req, 0);
             i32 pageNo = 1;
             i32 zoomPercent = 25;
-            if (!path || !IntArg(req, 1, pageNo)) {
+            if (len(path) == 0 || !IntArg(req, 1, pageNo)) {
                 AppendError(req, StrL("TestCadEnhanceColors expects string path, int pageNo [, int zoomPercent]"));
                 break;
             }
@@ -1439,7 +1439,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestPageComments: {
             Str path = StringArg(req, 0);
             i32 pageNo = 1;
-            if (!path || !IntArg(req, 1, pageNo)) {
+            if (len(path) == 0 || !IntArg(req, 1, pageNo)) {
                 AppendError(req, StrL("TestPageComments expects string path, int pageNo"));
                 break;
             }
@@ -1541,7 +1541,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, first);
             IntArg(req, 3, last);
             Str spec = StringArg(req, 4); // optional "3,4-6,18-"
-            if (!pdf || !needle) {
+            if (len(pdf) == 0 || len(needle) == 0) {
                 AppendError(
                     req,
                     StrL(
@@ -1587,7 +1587,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestRenderViewPrint: {
             Str path = StringArg(req, 0);
-            if (!path) {
+            if (len(path) == 0) {
                 AppendError(req, StrL("TestRenderViewPrint expects string path"));
                 break;
             }
@@ -1606,7 +1606,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestRotatedTextMouseDrag: {
             Str word = StringArg(req, 0);
-            if (!word) {
+            if (len(word) == 0) {
                 AppendError(req, StrL("TestRotatedTextMouseDrag expects string word"));
                 break;
             }
@@ -1698,7 +1698,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestConvertToImages: {
             Str templatePath = StringArg(req, 0);
             Str pagesSpec = StringArg(req, 1);
-            if (!templatePath || !pagesSpec) {
+            if (len(templatePath) == 0 || len(pagesSpec) == 0) {
                 AppendError(req, StrL("TestConvertToImages expects string templatePath, string pages"));
                 break;
             }
@@ -1711,7 +1711,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestCmykImageSave: {
             Str jpegPath = StringArg(req, 0);
             Str tiffPath = StringArg(req, 1);
-            if (!jpegPath || !tiffPath) {
+            if (len(jpegPath) == 0 || len(tiffPath) == 0) {
                 AppendError(req, StrL("TestCmykImageSave expects string jpegPath, string tiffPath"));
                 break;
             }
@@ -1757,7 +1757,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             i32 arg = 0;
             IntArg(req, 1, arg); // optional; only "scroll" uses it
-            if (!action) {
+            if (len(action) == 0) {
                 AppendError(req, StrL("TestAdvSettingsRows expects string action [, int rows]"));
                 break;
             }
@@ -1771,7 +1771,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str action = StringArg(req, 0);
             i32 pageNo = 0;
             IntArg(req, 1, pageNo); // optional for next/prev/page
-            if (!action) {
+            if (len(action) == 0) {
                 AppendError(req, StrL("TestFavoriteNav expects string action [, int pageNo]"));
                 break;
             }
@@ -1806,7 +1806,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 backend = 0;
             Str filePath = StringArg(req, 1);
             Str message = StringArg(req, 2);
-            if (!IntArg(req, 0, backend) || !filePath || !message) {
+            if (!IntArg(req, 0, backend) || len(filePath) == 0 || len(message) == 0) {
                 AppendError(req, StrL("TestAIChat expects int backend, string filePath, string message"));
                 break;
             }
@@ -1819,7 +1819,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestAIChatReplay: {
             Str userMsg = StringArg(req, 0);
             Str response = StringArg(req, 1);
-            if (!userMsg || !response) {
+            if (len(userMsg) == 0 || len(response) == 0) {
                 AppendError(req, StrL("TestAIChatReplay expects string userMsg, string response"));
                 break;
             }

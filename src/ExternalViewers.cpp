@@ -196,7 +196,7 @@ static TempStr GetAcrobatPathTemp() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
     Str keyName = StrL(R"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)");
     TempStr path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, {});
-    if (!path) {
+    if (len(path) == 0) {
         keyName = StrL(R"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)");
         path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, {});
     }
@@ -252,7 +252,7 @@ static TempStr GetAppPathExeTemp(Str exeName) {
 static TempStr GetRegisteredOpenExeTemp(Str progId) {
     TempStr keyName = fmt(R"(%s\shell\open\command)", progId);
     TempStr command = ReadRegStrTemp(HKEY_CLASSES_ROOT, keyName, {});
-    if (!command) {
+    if (len(command) == 0) {
         return {};
     }
     StrNode* args = ParseCmdLine(command);
@@ -287,13 +287,13 @@ static TempStr GetPDFXChangePathTemp() {
     // V11 renamed both the vendor directory and the executable. Prefer paths
     // registered by the installer, then cover clean and upgraded installations.
     TempStr exePath = GetAppPathExeTemp(StrL("PXCEditor.exe"));
-    if (!exePath) {
+    if (len(exePath) == 0) {
         exePath = GetAppPathExeTemp(StrL("PDFXEdit.exe"));
     }
-    if (!exePath) {
+    if (len(exePath) == 0) {
         exePath = GetRegisteredOpenExeTemp(StrL("PXCEditor.PDF"));
     }
-    if (!exePath) {
+    if (len(exePath) == 0) {
         exePath = GetRegisteredOpenExeTemp(StrL("PDFXEdit.PDF"));
     }
     if (exePath) {
@@ -316,7 +316,7 @@ static TempStr GetPDFXChangePathTemp() {
     // Legacy PDF-XChange Viewer registry entry.
     Str keyName = StrL(R"(Software\Tracker Software\PDFViewer)");
     TempStr path = ReadRegStr2Temp(keyName, StrL("InstallPath"));
-    if (!path) {
+    if (len(path) == 0) {
         return {};
     }
     exePath = path::JoinTemp(path, StrL("PDFXCview.exe"));
@@ -358,11 +358,11 @@ bool ExternalViewers_UnitTestPDFXChangePaths() {
 #endif
 
 static void SetKnownExternalViewerExePath(int cmdId, Str exePath) {
-    if (!exePath) {
+    if (len(exePath) == 0) {
         return;
     }
     ExternalViewerInfo* info = FindKnownExternalViewerInfoByCmdId(cmdId);
-    if (info && !info->exeFullPath) {
+    if (info && len(info->exeFullPath) == 0) {
         info->exeFullPath = str::Dup(exePath);
     }
 }
@@ -371,7 +371,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* ev) {
     if (ev->exeFullPath) {
         return true;
     }
-    if (!ev->exePartialPath) {
+    if (len(ev->exePartialPath) == 0) {
         return false;
     }
 
@@ -420,7 +420,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
         return false;
     }
     ExternalViewerInfo* ev = FindKnownExternalViewerInfoByCmdId(cmdId);
-    if (!ev || !ev->exeFullPath) {
+    if (!ev || len(ev->exeFullPath) == 0) {
         // logf("CanViewWithKnownExternalViewer cmd: %d, !ev || ev->exeFullPath == nullptr\n", cmd);
         return false;
     }
@@ -569,7 +569,7 @@ bool ViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
         return false;
     }
     ExternalViewerInfo* ev = FindKnownExternalViewerInfoByCmdId(cmdId);
-    if (!ev->exeFullPath) {
+    if (len(ev->exeFullPath) == 0) {
         return false;
     }
     TempStr args;

@@ -191,7 +191,7 @@ bool ReadAloudHighlightBuildFromPage(EngineBase* engine, int pageNo, ReadAloudHi
     }
 
     PageText pageText = engine->ExtractPageText(pageNo);
-    if (!pageText.text || pageText.nCodepoints <= 0) {
+    if (len(pageText.text) == 0 || pageText.nCodepoints <= 0) {
         FreePageText(&pageText);
         return false;
     }
@@ -221,7 +221,7 @@ static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* en
     Rect* coords = nullptr;
     int textLen = 0;
     Str text = engine->GetTextForPage(pageNo, &textLen, &coords);
-    if (!text) {
+    if (len(text) == 0) {
         dbgtts("AppendPageGlyphs: page %d has no text (textLen=%d)\n", pageNo, textLen);
         return;
     }
@@ -305,7 +305,7 @@ bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGl
         Rect* coords = nullptr;
         int textLen = 0;
         Str text = engine->GetTextForPage(pageNo, &textLen, &coords);
-        if (!text) {
+        if (len(text) == 0) {
             continue;
         }
 
@@ -392,7 +392,7 @@ static bool ReadAloudGetGlyphAtCursor(DisplayModel* dm, Point screenPt, int* pag
     Rect* coords = nullptr;
     int textLen = 0;
     Str text = engine->GetTextForPage(pageNo, &textLen, &coords);
-    if (!text) {
+    if (len(text) == 0) {
         return false;
     }
 
@@ -503,7 +503,7 @@ static void ReadAloudPaintLogOnce(int code, Str fmt) {
 }
 
 static int ReadAloudWordEndUtf8(Str text, int pos) {
-    if (!text || pos < 0) {
+    if (len(text) == 0 || pos < 0) {
         return pos;
     }
     if (pos >= text.len) {

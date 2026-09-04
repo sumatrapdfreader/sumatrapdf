@@ -54,7 +54,7 @@ void FileHistorySetStates(Vec<FileState*>* states) {
 }
 
 void FileHistoryAppend(FileState* fs) {
-    ReportIf(!fs->filePath);
+    ReportIf(len(fs->filePath) == 0);
     VecAppend(*gStates, fs);
 }
 
@@ -102,7 +102,7 @@ FileState* FileHistoryFindByPath(Str filePath) {
 }
 
 FileState* FileHistoryMarkFileLoaded(Str filePath) {
-    ReportIf(!filePath);
+    ReportIf(len(filePath) == 0);
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
     // the file moves to the front of the list
@@ -120,7 +120,7 @@ FileState* FileHistoryMarkFileLoaded(Str filePath) {
 }
 
 bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
-    ReportIf(!filePath);
+    ReportIf(len(filePath) == 0);
     FileState* state = FileHistoryFindByPath(filePath);
     if (!state) {
         // keep a record so IsMissing can be persisted in settings (fixes #5585)
@@ -312,7 +312,7 @@ bool DocumentPathExists(Str path) {
         return true;
     }
     Str pos = str::SliceFromCharLast(Str(path.s + 2, path.len - 2), ':');
-    if (!pos) {
+    if (len(pos) == 0) {
         return false;
     }
     // remove information needed for pointing at embedded documents
@@ -347,7 +347,7 @@ static void CheckFilesExistAsync(CheckFilesExistData* d) {
     int n = len(toCheck);
     for (int i = 0; i < n; i++) {
         Str path = toCheck[i];
-        if (!path) {
+        if (len(path) == 0) {
             continue;
         }
         // files on network / removable drives can be temporarily missing

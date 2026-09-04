@@ -380,11 +380,11 @@ Vec<Pixmap*> PixmapsFromData(Str bmpData) {
 
 // Load path into a RenderedBitmap (Windows); nullptr on POSIX for now.
 RenderedBitmap* LoadRenderedBitmap(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return nullptr;
     }
     Str data = file::ReadFile(path);
-    if (!data) {
+    if (len(data) == 0) {
         return nullptr;
     }
 

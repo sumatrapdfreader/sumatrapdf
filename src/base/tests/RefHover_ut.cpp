@@ -458,7 +458,7 @@ static void PlainTextCitationNoYear() {
     int year = 0;
     bool ok = DetectCitationInPageText(WStr(text, n), coords, n, Point{100, 206}, &surname, &year);
     utassert(!ok);
-    utassert(!surname);
+    utassert(len(surname) == 0);
 }
 
 // (12) Bibliography page lookup: a line starting with the surname and

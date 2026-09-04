@@ -492,12 +492,13 @@ bool SignDocumentWnd::BuildSignArgs(PdfSignArgs& args) {
     if (cbShowDate && cbShowDate->IsChecked()) {
         flags |= kPdfSignShowDate;
     }
-    if (!args.imagePath && cbShowGraphicName && cbShowGraphicName->IsChecked()) {
+    if (len(args.imagePath) == 0 && cbShowGraphicName && cbShowGraphicName->IsChecked()) {
         flags |= kPdfSignShowGraphicName;
     }
     // an empty appearance (no text bits and no reason/location) would draw a
     // blank box; keep the name so something is visible, like mupdf-gl
-    if ((flags & (kPdfSignShowTextName | kPdfSignShowDN | kPdfSignShowDate)) == 0 && !args.reason && !args.location) {
+    if ((flags & (kPdfSignShowTextName | kPdfSignShowDN | kPdfSignShowDate)) == 0 && len(args.reason) == 0 &&
+        len(args.location) == 0) {
         flags |= kPdfSignShowLabels | kPdfSignShowTextName;
     }
     args.appearanceFlags = flags;
@@ -657,7 +658,7 @@ void SignDocumentWnd::OnSign(VirtMouseEvent*) {
     }
     // a new field with nowhere to put it: hide this dialog and let the user
     // click or drag on the page (issue #5967)
-    if (!args.fieldName && args.rect.IsEmpty()) {
+    if (len(args.fieldName) == 0 && args.rect.IsEmpty()) {
         StartSignaturePlacement(this);
         return;
     }

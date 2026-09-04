@@ -918,7 +918,7 @@ static bool LitParseManifest(LitFile* lit) {
                 item.internal = LitSizedStringTemp(raw, &pos, false);
                 item.original = LitSizedStringTemp(raw, &pos, false);
                 item.mime = LitSizedStringTemp(raw, &pos, true);
-                if (!item.internal || !item.original) {
+                if (len(item.internal) == 0 || len(item.original) == 0) {
                     return len(lit->manifest) > 0;
                 }
                 item.isSpine = (state == 0);
@@ -1255,7 +1255,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                         if (!LitBinaryToText(ctx, depth + 1)) {
                             return false;
                         }
-                        if (!tagName) {
+                        if (len(tagName) == 0) {
                             return false;
                         }
                         out.Append(StrL("</"));

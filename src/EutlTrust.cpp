@@ -27,7 +27,7 @@ constexpr int kMaxXmlBytes = 8 * 1024 * 1024;
 
 static TempStr EutlCachePathTemp() {
     TempStr dir = GetSumatraDataDirTemp();
-    if (!dir) {
+    if (len(dir) == 0) {
         return {};
     }
     return path::JoinTemp(dir, StrL("eutl-certs.sha256"));
@@ -35,7 +35,7 @@ static TempStr EutlCachePathTemp() {
 
 static TempStr EutlStampPathTemp() {
     TempStr dir = GetSumatraDataDirTemp();
-    if (!dir) {
+    if (len(dir) == 0) {
         return {};
     }
     return path::JoinTemp(dir, StrL("eutl-certs.txt"));
@@ -129,7 +129,7 @@ bool EutlCertIsEuTrusted(const u8* der, int derLen) {
         return false;
     }
     TempStr path = EutlCachePathTemp();
-    if (!path || !file::Exists(path)) {
+    if (len(path) == 0 || !file::Exists(path)) {
         return false;
     }
     Str cache = file::ReadFile(path);
@@ -151,7 +151,7 @@ bool EutlCacheExists() {
 
 TempStr EutlCacheInfoTemp() {
     TempStr stamp = EutlStampPathTemp();
-    if (!stamp || !file::Exists(stamp)) {
+    if (len(stamp) == 0 || !file::Exists(stamp)) {
         return StrL("EU trusted list not downloaded");
     }
     Str s = file::ReadFile(stamp);
@@ -202,7 +202,7 @@ bool EutlUpdate(Str* errOut) {
     }
     TempStr cachePath = EutlCachePathTemp();
     TempStr stampPath = EutlStampPathTemp();
-    if (!cachePath || !dir::CreateForFile(cachePath)) {
+    if (len(cachePath) == 0 || !dir::CreateForFile(cachePath)) {
         if (errOut) {
             *errOut = str::Dup(StrL("could not write the EUTL cache"));
         }

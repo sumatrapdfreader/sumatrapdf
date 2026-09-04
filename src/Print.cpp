@@ -811,7 +811,7 @@ static bool PrintToDevice(const PrintData& pd) {
     } else if (gPluginMode) {
         TempStr fileName = url::GetFileNameTemp(gPluginURL);
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        if (!fileName) {
+        if (len(fileName) == 0) {
             fileName = StrL("filename");
         }
         di.lpszDocName = CWStrTemp(fileName);
@@ -1836,7 +1836,7 @@ static short GetPaperSourceByName(Printer* printer, Str binName) {
 static Str kIgnorePdfPrintSettingsToken = StrL("ignore-pdf-print-settings");
 
 static bool PrintSettingsHaveToken(Str settings, Str token) {
-    if (!settings) {
+    if (len(settings) == 0) {
         return false;
     }
     StrVec list;
@@ -2095,7 +2095,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
         printer = NewPrinter(printerName);
     } else {
         TempStr defName = GetDefaultPrinterNameTemp();
-        if (!defName) {
+        if (len(defName) == 0) {
             logf("PrintFile: GetDefaultPrinterName() failed\n");
             return PrintResult::PrinterNotFound;
         }

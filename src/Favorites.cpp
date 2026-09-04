@@ -376,18 +376,18 @@ static int SortByName(Favorite* const* a, Favorite* const* b) {
     Favorite* na = *a;
     Favorite* nb = *b;
     Str sa = na->name;
-    if (!sa) {
+    if (len(sa) == 0) {
         sa = na->pageLabel;
     }
     Str sb = nb->name;
-    if (!sb) {
+    if (len(sb) == 0) {
         sb = nb->pageLabel;
     }
     if (sa || sb) {
-        if (!sa) {
+        if (len(sa) == 0) {
             return 1;
         }
-        if (!sb) {
+        if (len(sb) == 0) {
             return -1;
         }
         int n = str::CmpNatural(sa, sb);
@@ -456,7 +456,7 @@ static Str SearchStartFavName() {
 }
 
 static Favorite* FindByName(FileState* ds, Str name) {
-    if (!ds || !ds->favorites || !name) {
+    if (!ds || !ds->favorites || len(name) == 0) {
         return nullptr;
     }
     for (Favorite* fav : *ds->favorites) {
@@ -476,7 +476,7 @@ void SetSearchStartFavorite(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->filePath) {
+    if (!tab || len(tab->filePath) == 0) {
         return;
     }
     int pageNo = win->currPageNo;
@@ -577,7 +577,7 @@ bool HasFavorites() {
 // shared with CommandPalette.cpp (favorites mode)
 TempStr FavReadableNameTemp(Favorite* fn) {
     Str label = fn->pageLabel;
-    if (!label) {
+    if (len(label) == 0) {
         label = fmt("%d", fn->pageNo);
     }
     if (fn->name) {
@@ -1219,7 +1219,7 @@ static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
 
 // Persist a favorite after the Add Favorite dialog's OK (name may be empty).
 void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name) {
-    if (!filePath || !IsMainWindowValidAndNotClosing(win)) {
+    if (len(filePath) == 0 || !IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     TempStr plainLabel = fmt("%d", pageNo);
@@ -1280,7 +1280,7 @@ void AddFavoriteForCurrentPage(MainWindow* win) {
 }
 
 void DelFavorite(Str filePath, int pageNo, DocController* ctrl) {
-    if (!filePath) {
+    if (len(filePath) == 0) {
         return;
     }
     RememberFavTreeExpansionStateForAllWindows();
@@ -1336,7 +1336,7 @@ static bool HasFavFilter(MainWindow* win) {
 // bold. The same pass preserves multi-word search highlights when filtering.
 static void DrawFavItemText(TreeView::CustomDrawEvent* ev, MainWindow* win) {
     FavTreeItem* fti = (FavTreeItem*)ev->treeItem;
-    if (!fti || !fti->text) {
+    if (!fti || len(fti->text) == 0) {
         return;
     }
     StrVec words;

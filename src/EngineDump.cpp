@@ -352,7 +352,7 @@ __unused static void DumpData(EngineBase* engine, bool fullDump) {
 #define ErrOut1(msg) fprintf(stderr, "%s", msg "\n")
 
 static bool CheckRenderPath(Str path) {
-    ReportIf(!path);
+    ReportIf(len(path) == 0);
     bool hasArg = false;
     int i = 0;
     while (i < path.len) {

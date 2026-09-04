@@ -34,14 +34,14 @@ constexpr i64 kMemoryMapMinFileSize = 128LL * 1024 * 1024;
 static int ParseDjvuDecLink(Str link) {
     str::TrimChar(link, '#');
     str::TrimChar(link, ' ');
-    if (!link) {
+    if (len(link) == 0) {
         return -1;
     }
     return ParseInt(link);
 }
 
 static bool DjvuDecCouldBeURL(Str link) {
-    if (!link) {
+    if (len(link) == 0) {
         return false;
     }
     if (str::StartsWithI(link, StrL("http:")) || str::StartsWithI(link, StrL("https:")) ||
@@ -80,7 +80,7 @@ struct PageDestinationDjvuDec : IPageDestination {
 };
 
 static IPageDestination* NewDjvuDecDestination(Str link, Str comment) {
-    if (!link || str::Eq(link, StrL("#"))) {
+    if (len(link) == 0 || str::Eq(link, StrL("#"))) {
         return nullptr;
     }
     auto* res = new PageDestinationDjvuDec(link, comment);
@@ -784,7 +784,7 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
 
 // returns a numeric DjVu link to a named page (if the name resolves)
 static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, Str name) {
-    if (!name) {
+    if (len(name) == 0) {
         return {};
     }
     int pageNo = djvu_doc_page_by_name(doc, CStrTemp(name));
@@ -815,13 +815,13 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
     for (int i = 0; i < links->nlinks; i++) {
         djvu_link& l = links->links[i];
         Str url = Str(l.url);
-        if (!url) {
+        if (len(url) == 0) {
             continue;
         }
         Rect rect((int)((float)l.x * dpiF), (int)((float)l.y * dpiF), (int)((float)l.w * dpiF),
                   (int)((float)l.h * dpiF));
         TempStr link = ResolveNamedDestDjvuDecTemp(doc, url);
-        if (!link) {
+        if (len(link) == 0) {
             link = url;
         }
         auto* el = NewDjvuDecLink(pageNo, rect, link, Str(l.comment));

@@ -171,7 +171,7 @@ Key = Value";
     utassert(2 == len(*(*data->sutStructItems)[1]->nested.colorArray));
     utassert(str::Eq(StrL("#12345678"), (*(*data->sutStructItems)[1]->nested.colorArray)[0]));
     utassert(str::Eq(StrL("#987654"), (*(*data->sutStructItems)[1]->nested.colorArray)[1]));
-    utassert(!data->internalString);
+    utassert(len(data->internalString) == 0);
     {
         Str res = SerializeStruct(&gSutStructInfo, data);
         utassert(!str::Eq(Str(serialized), res));
@@ -342,7 +342,7 @@ Key = Value";
 
         // a block in the data with none of its fields set still means "set"
         auto* empty = (SutOptRoot*)DeserializeStruct(&gSutOptRootInfo, StrL(kUtf8Bom "Sub [\r\n]\r\n"));
-        utassert(empty && empty->sub && !empty->sub->name && 0 == empty->sub->size);
+        utassert(empty && empty->sub && len(empty->sub->name) == 0 && 0 == empty->sub->size);
 
         // deserializing onto an existing struct merges, like the other types:
         // fields not in the data keep their value, present ones win

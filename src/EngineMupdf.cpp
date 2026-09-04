@@ -158,7 +158,7 @@ class FitzAbortCookie : public AbortCookie {
 
 // copy of fz_is_external_link without ctx
 static bool IsExternalLink(Str uri) {
-    if (!uri) {
+    if (len(uri) == 0) {
         return false;
     }
     int i = 0;
@@ -334,7 +334,7 @@ static void DestFromFzLinkDest(const fz_link_dest& ldest, RectF* rectOut, float*
 
 static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, float* yp, float* zoomp = nullptr,
                        RectF* rectp = nullptr) {
-    if (!uri) {
+    if (len(uri) == 0) {
         return -1;
     }
     int pageNo = -1;
@@ -379,7 +379,7 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, fl
 // resolves just the chapter a uri targets, without laying it out. epub only
 // lays out a chapter to find a #fragment inside it, so strip the fragment first
 static int ResolveLinkChapterOnly(fz_context* ctx, fz_document* doc, Str uri) {
-    if (!uri) {
+    if (len(uri) == 0) {
         return -1;
     }
     Str path = uri;
@@ -413,7 +413,7 @@ static void SkipLeadingPathSeparators(Str& path) {
 }
 
 static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
-    if (!uri || uri.s[0] == '#') {
+    if (len(uri) == 0 || uri.s[0] == '#') {
         return false;
     }
     if (str::StartsWith(uri, StrL("file:")) || IsExternalUrl(uri) || IsExternalLink(uri)) {
@@ -429,7 +429,7 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
     }
     // MuPDF uses unix paths; strip a leading slash from relative URIs.
     SkipLeadingPathSeparators(pathStr);
-    if (!pathStr) {
+    if (len(pathStr) == 0) {
         return false;
     }
     path = str::ReplaceTemp(pathStr, StrL("/"), StrL("\\"));
@@ -691,7 +691,7 @@ static TempStr PdfToUtf8Temp(fz_context* ctx, pdf_obj* obj) {
 // some PDF documents contain control characters in outline titles or /Info properties
 // we replace them with spaces and cleanup for display with NormalizeWSInPlace()
 static void PdfCleanStringInPlace(WStr& ws) {
-    if (!ws) {
+    if (len(ws) == 0) {
         return;
     }
     for (int i = 0; i < ws.len; i++) {
@@ -2043,7 +2043,7 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
 
     Rect* coords;
     Str pageTextUtf8 = FzTextPageToUtf8(stext, &coords);
-    if (!pageTextUtf8) {
+    if (len(pageTextUtf8) == 0) {
         // even for empty text FzTextPageToUtf8 allocates coords via Vec::Take
         free(coords);
         str::Free(pageTextUtf8);
@@ -2068,7 +2068,7 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         }
 
         TempStr uri = list->links[i];
-        if (!uri) {
+        if (len(uri) == 0) {
             continue;
         }
 
@@ -2697,7 +2697,7 @@ static bool ParseJsPopUpMenuItems(Str js, StrVec& items) {
 
 // First identifier that is followed by '(', skipping JS keywords.
 static Str ExtractJsCallName(Str js) {
-    if (!js) {
+    if (len(js) == 0) {
         return {};
     }
     const char* p = js.s;
@@ -2726,7 +2726,7 @@ static Str ExtractJsCallName(Str js) {
 }
 
 static char* LookupNamedJavaScript(fz_context* ctx, pdf_document* doc, Str name) {
-    if (!ctx || !doc || !name) {
+    if (!ctx || !doc || len(name) == 0) {
         return nullptr;
     }
     pdf_obj* needle = nullptr;
@@ -3576,15 +3576,15 @@ static Str TxtFileToHTML(Str path) {
 
     TempStr data = fd;
     data = str::ReplaceTemp(data, StrL("&"), StrL("&amp;"));
-    if (!data) {
+    if (len(data) == 0) {
         return {};
     }
     data = str::ReplaceTemp(data, StrL(">"), StrL("&gt;"));
-    if (!data) {
+    if (len(data) == 0) {
         return {};
     }
     data = str::ReplaceTemp(data, StrL("<"), StrL("&lt;"));
-    if (!data) {
+    if (len(data) == 0) {
         return {};
     }
 
@@ -3752,7 +3752,7 @@ static TempStr EbookLineSpacingCssTemp(float lineSpacing) {
 // another inline element. pre, code, kbd, samp and tt are left out on purpose,
 // so code stays monospace
 static TempStr EbookFontFamilyCssTemp(Str fontName) {
-    if (!fontName) {
+    if (len(fontName) == 0) {
         return {};
     }
     return fmt(
@@ -3796,7 +3796,7 @@ TempStr EbookGeneratedCssTemp(Str fontName, const Vec<float>* margin, float line
     TempStr res = EbookFontFamilyCssTemp(EbookFontNameFromSetting(fontName));
     TempStr parts[] = {EbookMarginCssTemp(margin, displayDPI), EbookLineSpacingCssTemp(lineSpacing)};
     for (TempStr part : parts) {
-        if (!part) {
+        if (len(part) == 0) {
             continue;
         }
         res = res ? str::JoinTemp(res, part) : part;
@@ -4224,7 +4224,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             decryptKey = pdf_crypt_key(ctx, pdfdoc->crypt);
         }
         Str pwd = pwdUI->GetPassword(FilePath(), digest, decryptKey, &saveKey);
-        if (!pwd) {
+        if (len(pwd) == 0) {
             // password not given or encryption key has been remembered
             ok = saveKey;
             break;
@@ -4543,7 +4543,7 @@ static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* fil
     EngineMupdf* e = (EngineMupdf*)opaque;
     Str pdfPath = e ? e->FilePath() : Str{};
     Str spec = Str(filespec);
-    if (!pdfPath || !spec) {
+    if (len(pdfPath) == 0 || len(spec) == 0) {
         return nullptr;
     }
     // sibling-only: reject anything with a path separator or drive spec so the
@@ -5627,7 +5627,7 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
         TempStr authorLine = fmt("Author: %s", author);
         s = contents ? str::JoinTemp(contents, StrL("\n"), authorLine) : authorLine;
     }
-    if (!s) {
+    if (len(s) == 0) {
         return nullptr;
     }
     return NewFzComment(s, pageNo, ToRectF(rect));
@@ -5640,7 +5640,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
     // only used to tell an empty annotation from one with something to show;
     // MakePdfCommentFromPdfAnnot() below re-reads the contents in full
     Str contents = Str(pdf_annot_contents(ctx, annot)); // don't free
-    bool isContentsEmpty = !contents;
+    bool isContentsEmpty = len(contents) == 0;
     Str author;
     if (gShowAnnotAuthorInTooltip && pdf_annot_has_author(ctx, annot)) {
         author = Str(pdf_annot_author(ctx, annot));
@@ -5648,7 +5648,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
             author = {};
         }
     }
-    bool isEmpty = isContentsEmpty && !author;
+    bool isEmpty = isContentsEmpty && len(author) == 0;
 
     if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
         pdf_filespec_params fileParams = {};
@@ -5682,7 +5682,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
     // usually read-only — skipping those left no tip at all (issue #2083).
     if (tp == PDF_ANNOT_WIDGET) {
         Str tu = WidgetTooltipTemp(ctx, annot);
-        if (!tu) {
+        if (len(tu) == 0) {
             return;
         }
         fz_rect rect = pdf_bound_annot(ctx, annot);
@@ -5918,7 +5918,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
             // a link that goes somewhere in this document has no URL to show,
             // so show the description the PDF gives it, like other viewers do
             auto* dest = (PageDestinationMupdf*)pel->AsLink();
-            if (dest && !PageDestGetValue(dest)) {
+            if (dest && len(PageDestGetValue(dest)) == 0) {
                 dest->value = PdfLinkContents(ctx, e->pdfdoc, pdfpage, pageNo, link->rect);
             }
             VecAppend(pageInfo->links, pel);
@@ -7097,7 +7097,7 @@ Location EngineMupdf::ResolveDest(IPageDestination* dest) {
         return d->loc;
     }
     Str uri = d->outline ? Str(d->outline->uri) : (d->link ? Str(d->link->uri) : Str{});
-    if (!uri) {
+    if (len(uri) == 0) {
         return kInvalidLocation;
     }
     auto* ctx = Ctx();
@@ -7145,7 +7145,7 @@ static void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler
         return;
     }
     Str uri = link->outline ? Str(link->outline->uri) : Str(link->link->uri);
-    if (!uri) {
+    if (len(uri) == 0) {
         return;
     }
     if (IsExternalLink(uri)) {
@@ -7567,10 +7567,10 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             }
 
             name = Str(pdf_to_name(ctx, pdf_dict_getsa(ctx, font2, "BaseFont", "Name")));
-            bool needAnonName = !name;
+            bool needAnonName = len(name) == 0;
             if (needAnonName && font2 != font) {
                 name = Str(pdf_to_name(ctx, pdf_dict_getsa(ctx, font, "BaseFont", "Name")));
-                needAnonName = !name;
+                needAnonName = len(name) == 0;
             }
             if (needAnonName) {
                 name = fmt("<#%d>", pdf_obj_parent_num(ctx, font2));
@@ -7760,7 +7760,7 @@ static SeqStrNum pdfPropNames =
     // clang-format on
     // @gen-end docprop-pdf-info
     Str pdfPropName = SeqStrNumStrByNumber(pdfPropNames, (i64)prop);
-    if (!pdfPropName) {
+    if (len(pdfPropName) == 0) {
         return {};
     }
 
@@ -8024,10 +8024,10 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
 
     pdf_obj* mObj = pdf_dict_get(ctx, vDict, PDF_NAME(M));
     TempStr signedAt = FormatPdfDateRawTemp(ctx, mObj);
-    if (!signedAt && info.gen_time_unix > 0) {
+    if (len(signedAt) == 0 && info.gen_time_unix > 0) {
         signedAt = FormatUnixTimeTemp(info.gen_time_unix);
     }
-    if (!signedAt && info.n_ts > 0) {
+    if (len(signedAt) == 0 && info.n_ts > 0) {
         signedAt = FormatUnixTimeTemp(info.ts[0].gen_time_unix);
     }
     if (signedAt) {
@@ -8286,7 +8286,7 @@ Str EngineMupdf::GetFileData() {
     }
 
     auto path = FilePath();
-    if (!path) {
+    if (len(path) == 0) {
         return {};
     }
     return file::ReadFile(path);
@@ -8300,7 +8300,7 @@ bool EngineMupdf::SaveFileAs(Str dstPath) {
         return ok;
     }
     auto srcPath = FilePath();
-    if (!srcPath) {
+    if (len(srcPath) == 0) {
         return false;
     }
     bool ok = file::Copy(dstPath, srcPath, false);
@@ -8413,7 +8413,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
 // that re-open the file from disk (bake) see the current session (issue #5977).
 bool EngineMupdfSaveCopy(EngineBase* engine, Str path) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf || !epdf->pdfdoc || !path) {
+    if (!epdf || !epdf->pdfdoc || len(path) == 0) {
         return false;
     }
     auto* ctx = epdf->Ctx();

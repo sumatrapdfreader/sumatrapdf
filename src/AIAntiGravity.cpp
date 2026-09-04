@@ -126,7 +126,7 @@ static Str GetSessionDescription(Str sessionPath) {
     Str result;
     Str line;
 
-    while (!result && str::NextLine(rest, line, rest)) {
+    while (len(result) == 0 && str::NextLine(rest, line, rest)) {
         if (len(line) == 0) {
             continue;
         }
@@ -180,7 +180,7 @@ static void CollectAntiGravitySessionsFromDir(Str projectDir, Str dir, Vec<AICha
 
 static void CollectAntiGravitySessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (!userProfile) {
+    if (len(userProfile) == 0) {
         return;
     }
     TempStr encodedDir = EncodeAntiGravityDirTemp(dir);
@@ -202,7 +202,7 @@ static void CollectAntiGravitySessions(Str dir, Vec<AIChatSessionInfo>& sessions
 
 static void LoadAntiGravitySessionHistory(MainWindow* win, Str sessionId, Str dir) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (!userProfile) {
+    if (len(userProfile) == 0) {
         return;
     }
     TempStr encodedDir = EncodeAntiGravityDirTemp(dir);
@@ -254,7 +254,7 @@ static void LoadAntiGravitySessionHistory(MainWindow* win, Str sessionId, Str di
             continue;
         }
         TempStr toolName = AIChatJsonStrTemp(line, StrL("name"));
-        if (!toolName) {
+        if (len(toolName) == 0) {
             continue;
         }
         TempStr fp = AIChatJsonStrTemp(line, StrL("file_path"));
@@ -359,7 +359,7 @@ struct AntiGravityProvider : AIChatProvider {
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {
         AIChatLog(&gAntiGravityLogger, StrL("<<< stream"), line);
         TempStr eventName = AIChatJsonStrTemp(line, StrL("event"));
-        if (!eventName) {
+        if (len(eventName) == 0) {
             return;
         }
         if (str::Eq(eventName, StrL("init"))) {

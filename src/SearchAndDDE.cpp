@@ -53,7 +53,7 @@ void ApplyFindHistory(DropDown* dd) {
 }
 
 void RememberFindQuery(Str q) {
-    if (!q) {
+    if (len(q) == 0) {
         return;
     }
     TempStr trimmed = str::DupTemp(q);
@@ -1004,7 +1004,7 @@ void InvalidateFindForDocumentChange(MainWindow* win) {
 static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
     int textLen = 0;
     Str pageText = engine->GetTextForPage(m.startPage, &textLen);
-    if (!pageText) {
+    if (len(pageText) == 0) {
         return {};
     }
     int mStart = limitValue(m.startGlyph, 0, textLen);
@@ -1782,7 +1782,7 @@ void StartPendingSearch(MainWindow* win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->pendingFindText) {
+    if (!tab || len(tab->pendingFindText) == 0) {
         return;
     }
     TempStr text = str::DupTemp(tab->pendingFindText);
@@ -2167,7 +2167,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     }
 
     Str inverseSearch = gSettings->inverseSearchCmdLine;
-    if (!inverseSearch) {
+    if (len(inverseSearch) == 0) {
         Vec<TextEditor*> editors;
         DetectTextEditors(editors);
         if (len(editors) > 0) {
@@ -3134,7 +3134,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     }
     ATOM a = HIWORD(lp);
     TempStr cmd = AtomToStrTemp(a);
-    if (!cmd) {
+    if (len(cmd) == 0) {
         return 0;
     }
 

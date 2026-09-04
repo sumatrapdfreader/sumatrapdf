@@ -105,7 +105,7 @@ void TabGroupsWnd::SaveTabGroup() {
         if (tab->IsAboutTab()) {
             continue;
         }
-        if (!tab->filePath) {
+        if (len(tab->filePath) == 0) {
             continue;
         }
         auto* tf = AllocStruct<TabFile>();

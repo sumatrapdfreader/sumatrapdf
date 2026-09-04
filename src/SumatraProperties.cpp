@@ -120,7 +120,7 @@ void DeletePropertiesWindow(HWND hwndParent) {
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
 static bool PdfDateParseA(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
-    if (!date) return false;
+    if (len(date) == 0) return false;
 
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     *timeZoneOut = 0;
@@ -167,7 +167,7 @@ static bool PdfDateParseA(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
 // Format:  "YYYY-MM-DDTHH:MM:SSZ"
 // Example: "2011-04-19T22:10:48Z"
 static bool IsoDateParse(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
-    if (!date) return false;
+    if (len(date) == 0) return false;
 
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     *timeZoneOut = 0;
@@ -408,7 +408,7 @@ static const PropLabel propToName[] = {
 // clang-format on
 
 static void AppendPropTranslated(str::Builder& out, DocProp prop, Str val) {
-    if (prop == DocProp::None || !val) return;
+    if (prop == DocProp::None || len(val) == 0) return;
     if (prop == DocProp::ImageFileSize) {
         TempStr valFormatted = FormatFileSizeTransTemp(ParseInt64(val));
         AppendProp(out, _TRA("File Size:"), valFormatted);
@@ -489,7 +489,7 @@ static void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) 
     SYSTEMTIME date;
     int timeZone = 0;
     bool ok = false;
-    if (!val) return;
+    if (len(val) == 0) return;
     if (isPdfDate) {
         ok = PdfDateParseA(val, &date, &timeZone);
     } else {
@@ -542,7 +542,7 @@ static void AppendFileType(str::Builder& out, Str path) {
         return;
     }
     Str name = FileTypeDisplayName(ft);
-    if (!name) {
+    if (len(name) == 0) {
         TempStr ext = GetExtForFileTypeTemp(ft);
         if (len(ext) < 2) {
             return;
@@ -680,7 +680,7 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
     for (int i = 0; i < nProps; i++) {
         DocProp prop = props[i].prop;
         Str propVal = props[i].val;
-        if (!propVal) {
+        if (len(propVal) == 0) {
             continue;
         }
         bool handled = false;

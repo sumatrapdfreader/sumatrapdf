@@ -286,7 +286,7 @@ bool ChangeColorWnd::TryParseEdit() {
         return false;
     }
     TempStr text = editRgb->GetTextTemp();
-    if (!text || !text.s[0]) {
+    if (len(text) == 0 || !text.s[0]) {
         return false;
     }
     ParsedColor parsed;

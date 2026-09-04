@@ -854,7 +854,7 @@ bool DocumentView::FindText(Str text, bool forward, bool restart) {
     bool newText = !str::Eq(search->lastText, text);
     search->SetDirection(forward ? TextSearch::Direction::Forward : TextSearch::Direction::Backward);
     TextSel* result = nullptr;
-    if (restart || newText || !search->findText) {
+    if (restart || newText || len(search->findText) == 0) {
         result = search->FindFirst(CurrentPageNo(), text);
     } else {
         result = search->FindNext();

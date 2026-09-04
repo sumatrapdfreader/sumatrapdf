@@ -120,7 +120,7 @@ static bool DetectCitationAtCursor(EngineBase* engine, int srcPage, Point pagePo
 // matches the surname + year. Returns true on hit.
 static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, int year, int* destPageOut,
                                   float* destXOut, float* destYOut) {
-    if (!engine || !surname) {
+    if (!engine || len(surname) == 0) {
         return false;
     }
     int pageCount = engine->PageCount();
@@ -130,7 +130,7 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, 
 
     // Convert surname to wide string for engine text matching.
     TempWStr surnameW = ToWStrTemp(surname);
-    if (!surnameW || len(surnameW) < 2) {
+    if (len(surnameW) == 0 || len(surnameW) < 2) {
         return false;
     }
     bool found = false;
@@ -289,7 +289,7 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
             while (p && *p.s == ' ') {
                 p = Str(p.s + 1, p.len - 1);
             }
-            if (!p) {
+            if (len(p) == 0) {
                 break;
             }
             Str start = p;
@@ -335,7 +335,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
     Rect* srcCoords = nullptr;
     Str srcTextUtf8 = engine->GetTextForPage(srcPage, &srcLen, &srcCoords);
     TempWStr srcText = RefHoverPageTextToWStrTemp(srcTextUtf8);
-    if (!srcText || srcLen <= 0 || !srcCoords) {
+    if (len(srcText) == 0 || srcLen <= 0 || !srcCoords) {
         return -1.f;
     }
     int srcL = (int)srcRect.x - 2;
@@ -405,7 +405,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
     Rect* destCoords = nullptr;
     Str destTextUtf8 = engine->GetTextForPage(destPage, &destLen, &destCoords);
     TempWStr destText = RefHoverPageTextToWStrTemp(destTextUtf8);
-    if (!destText || destLen <= 0 || !destCoords) {
+    if (len(destText) == 0 || destLen <= 0 || !destCoords) {
         return -1.f;
     }
     auto isLineStartMatch = [&](int idx) -> bool {

@@ -74,7 +74,7 @@ void ApplyExplorerQuickLookChrome(MainWindow* win) {
 }
 
 static bool PathIsSupportedPreview(Str path) {
-    if (!path || !file::Exists(path)) {
+    if (len(path) == 0 || !file::Exists(path)) {
         return false;
     }
     FileType kind = GuessFileTypeFromFile(path);
@@ -82,7 +82,7 @@ static bool PathIsSupportedPreview(Str path) {
 }
 
 void ShowExplorerQuickLook(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return;
     }
     TempStr norm = path::NormalizeTemp(path);
@@ -123,7 +123,7 @@ void ShowExplorerQuickLook(Str path) {
 }
 
 bool SendExplorerQuickLookToExisting(HWND hwnd, Str path) {
-    if (!hwnd || !path || !IsWindow(hwnd)) {
+    if (!hwnd || len(path) == 0 || !IsWindow(hwnd)) {
         return false;
     }
     TempStr pathZ = str::DupTemp(path);

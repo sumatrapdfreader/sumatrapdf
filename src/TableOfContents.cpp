@@ -55,10 +55,10 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
         return;
     }
     Str path = PageDestGetValue(link);
-    if (!path) {
+    if (len(path) == 0) {
         path = tocItem->title;
     }
-    if (!path) {
+    if (len(path) == 0) {
         return;
     }
     const auto* k = link->GetKind();
@@ -115,7 +115,7 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
     Kind k = dest->GetKind();
     if (k == kindDestinationLaunchURL) {
         Str url = ((PageDestinationURL*)dest)->url;
-        if (!url) {
+        if (len(url) == 0) {
             url = PageDestGetValue(dest);
         }
         return url ? new PageDestinationURL(url) : nullptr;
@@ -217,7 +217,7 @@ static TocItem* FindTocItemByTitlePage(TocItem* item, Str title, int pageNo) {
             if (pageNo <= 0 || item->pageNo == pageNo) {
                 return item;
             }
-        } else if (!title && pageNo > 0 && item->pageNo == pageNo) {
+        } else if (len(title) == 0 && pageNo > 0 && item->pageNo == pageNo) {
             return item;
         }
         TocItem* found = FindTocItemByTitlePage(item->child, title, pageNo);
@@ -1301,7 +1301,7 @@ static bool HasTocFilter(MainWindow* win) {
 // page label, and multi-match "current page" highlight (issue #4642).
 static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win) {
     TocItem* tocItem = (TocItem*)ev->treeItem;
-    if (!tocItem || !tocItem->title) {
+    if (!tocItem || len(tocItem->title) == 0) {
         return;
     }
 
@@ -1347,7 +1347,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     TempStr pageLabel{};
     if (showPage) {
         pageLabel = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
-        if (!pageLabel) {
+        if (len(pageLabel) == 0) {
             showPage = false;
         }
     }

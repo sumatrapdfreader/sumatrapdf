@@ -181,7 +181,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
             cargs.pos = {CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT};
         }
         cargs.title = args.title;
-        if (!cargs.title) {
+        if (len(cargs.title) == 0) {
             cargs.title = StrL("Browser Window");
         }
         HMODULE h = GetModuleHandleW(nullptr);
@@ -226,7 +226,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
     {
         webView = new WebviewWnd();
         Str dataDir = args.dataDir;
-        if (!dataDir) {
+        if (len(dataDir) == 0) {
             dataDir = GetWebViewDataDirTemp();
         }
         webView->dataDir = str::Dup(dataDir);

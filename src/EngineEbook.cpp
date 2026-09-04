@@ -827,7 +827,7 @@ struct EbookTocBuilder : EbookTocVisitor {
 
 void EbookTocBuilder::Visit(Str name, Str url, int level) {
     IPageDestination* dest;
-    if (!url) {
+    if (len(url) == 0) {
         dest = nullptr;
     } else if (url::IsAbsolute(url)) {
         dest = NewSimpleDest(0, RectF(), 0.f, url);
@@ -916,7 +916,7 @@ bool EngineEpub::Load(Str fileName) {
     if (dir::Exists(fileName)) {
         // load uncompressed documents as recompressed ZIP data
         Str data = ZipDirToData(fileName, true);
-        if (!data) {
+        if (len(data) == 0) {
             return false;
         }
         bool ok = LoadFromData(data);
@@ -1443,7 +1443,7 @@ Location EngineMobi::ResolveDest(IPageDestination* dest) {
         return dest->loc;
     }
     Str filePos = dest->loc.chapter >= 1 ? dest->GetName2() : Str{};
-    if (!filePos) {
+    if (len(filePos) == 0) {
         return EngineBase::ResolveDest(dest);
     }
     IPageDestination* resolved = GetNamedDest(filePos);
@@ -1541,7 +1541,7 @@ class EnginePdb : public EngineEbook {
     }
     EngineBase* Clone() override {
         Str fileName = FilePath();
-        if (!fileName) {
+        if (len(fileName) == 0) {
             return {};
         }
         return CreateFromFile(fileName);
@@ -1644,7 +1644,7 @@ class ChmDataCache {
     Str GetHtmlData() { return html; }
 
     Str GetImageData(Str id, Str pagePath) {
-        if (!id || !pagePath) {
+        if (len(id) == 0 || len(pagePath) == 0) {
             return {};
         }
         TempStr url = NormalizeURLTemp(id, pagePath);
@@ -1668,7 +1668,7 @@ class ChmDataCache {
     }
 
     TempStr GetFileData(Str relPath, Str pagePath) {
-        if (!relPath || !pagePath) {
+        if (len(relPath) == 0 || len(pagePath) == 0) {
             return {};
         }
         TempStr url = NormalizeURLTemp(relPath, pagePath);
@@ -1700,7 +1700,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         TempStr src = url::DecodeTemp(attr->val);
         Str img = chmDoc->GetImageData(src, pagePath);
-        needAlt = !img || !EmitImage(img);
+        needAlt = len(img) == 0 || !EmitImage(img);
     }
     if (needAlt) {
         attr = t->GetAttrByName(StrL("alt"));
@@ -1768,7 +1768,7 @@ class EngineChm : public EngineEbook {
     }
     EngineBase* Clone() override {
         Str fileName = FilePath();
-        if (!fileName) {
+        if (len(fileName) == 0) {
             return {};
         }
         return CreateFromFile(fileName);
@@ -1912,7 +1912,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
     }
 
     void Visit(Str, Str url, int) override {
-        if (!url || url::IsAbsolute(url)) {
+        if (len(url) == 0 || url::IsAbsolute(url)) {
             return;
         }
         TempStr plainUrl = url::GetFullPathTemp(url);
@@ -1922,7 +1922,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
         AtomicIntInc(&gAllowAllocFailure);
         AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
         TempStr pageHtml = doc->GetDataTemp(plainUrl);
-        if (!pageHtml) {
+        if (len(pageHtml) == 0) {
             return;
         }
         html.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl));
@@ -2054,7 +2054,7 @@ class EngineHtml : public EngineEbook {
     ~EngineHtml() override { delete doc; }
     EngineBase* Clone() override {
         Str fileName = FilePath();
-        if (!fileName) {
+        if (len(fileName) == 0) {
             return {};
         }
         return CreateFromFile(fileName);
@@ -2160,7 +2160,7 @@ class EngineTxt : public EngineEbook {
     }
     EngineBase* Clone() override {
         Str fileName = FilePath();
-        if (!fileName) {
+        if (len(fileName) == 0) {
             return {};
         }
         return CreateFromFile(fileName);
@@ -2185,7 +2185,7 @@ class EngineTxt : public EngineEbook {
 };
 
 bool EngineTxt::Load(Str fileName) {
-    if (!fileName) {
+    if (len(fileName) == 0) {
         return false;
     }
 

@@ -16,7 +16,7 @@ static Str FieldDefaultStr(const FieldInfo& field) {
 // only escape characters which are significant to SquareTreeParser:
 // newlines and leading/trailing whitespace (and escape characters)
 static bool NeedsEscaping(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return false;
     }
     return str::IsWs(s.s[0]) || str::IsWs(s.s[s.len - 1]) || str::ContainsCharAny(s, StrL("\n\r$"));
@@ -107,7 +107,7 @@ static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
             serialized.AppendChar(' ');
         }
         Str str = (*strArray)[i];
-        bool needsQuotes = !str;
+        bool needsQuotes = len(str) == 0;
         for (int j = 0; str && !needsQuotes && j < str.len; j++) {
             char c = str.s[j];
             needsQuotes = str::IsWs(c) || '"' == c;
@@ -229,7 +229,7 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
             return true;
         case SettingType::String: {
             Str str = *(Str*)fieldPtr;
-            if (!str) {
+            if (len(str) == 0) {
                 return false; // skip empty strings
             }
             if (!NeedsEscaping(str)) {
@@ -241,7 +241,7 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
         }
         case SettingType::Color: {
             Str str = ((ParsedColor*)fieldPtr)->s;
-            if (!str) {
+            if (len(str) == 0) {
                 return false; // skip empty strings
             }
             if (!NeedsEscaping(str)) {

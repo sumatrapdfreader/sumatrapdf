@@ -255,7 +255,7 @@ bool PdfCreator::SetProperty(DocProp prop, Str value) const {
     }
 
     Str name = SeqStrNumStrByNumber(pdfCreatorPropsMap, (i64)prop);
-    if (!name) {
+    if (len(name) == 0) {
         return false;
     }
 

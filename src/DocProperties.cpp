@@ -104,7 +104,7 @@ Str GetPropValueTemp(const Props& props, DocProp prop) {
 }
 
 void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists) {
-    ReportIf(prop == DocProp::None || !val);
+    ReportIf(prop == DocProp::None || len(val) == 0);
     int idx = GetPropIdx(props, prop);
     if (idx < 0) {
         // doesn't exsit
@@ -120,7 +120,7 @@ void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists) {
 // like AddProp but stores an owned (heap) copy of val. Use when props must
 // outlive the buffer val points into (e.g. the temp arena). Free with FreeProps.
 void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists) {
-    if (!val) {
+    if (len(val) == 0) {
         return;
     }
     int idx = GetPropIdx(props, prop);

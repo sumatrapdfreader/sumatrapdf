@@ -23,7 +23,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 namespace path {
 
 Type GetType(Str pathA) {
-    if (!pathA) {
+    if (len(pathA) == 0) {
         return Type::None;
     }
 
@@ -140,7 +140,7 @@ constexpr u64 kDriveAvailTtlMs = 4ull * 60ull * 1000ull; // 4 minutes
 // Fill keyOut with a non-fixed drive key ("X" or "\\server\share"). Returns
 // false for fixed drives, relative paths, and paths we do not guard.
 static bool GetNonFixedDriveKey(Str path, char* keyOut, int keyCap) {
-    if (!path || !keyOut || keyCap < 2) {
+    if (len(path) == 0 || !keyOut || keyCap < 2) {
         return false;
     }
     keyOut[0] = 0;
@@ -282,7 +282,7 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
     if (out) {
         *out = {};
     }
-    if (!path || !out) {
+    if (len(path) == 0 || !out) {
         return false;
     }
 
@@ -674,7 +674,7 @@ static bool IsEphemeralHostDirName(Str name) {
 // file, and the host then fails to sync with "denied access to the file"
 // (issue #4705). Detection is by path component only; the file need not exist.
 bool IsEphemeralHostFile(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return false;
     }
     int start = 0;
@@ -714,7 +714,7 @@ bool IsOnFixedDrive(Str path) {
 // mapped share with a missing file should be cleaned up, but an unplugged
 // drive / offline share must not — we can't tell those files from deleted.
 bool IsOnAvailableDrive(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return false;
     }
 
@@ -807,7 +807,7 @@ TempStr GetTempFilePathTemp(Str filePrefix) {
     if (!res || res >= dimof(tempDir)) {
         return {};
     }
-    if (!filePrefix) {
+    if (len(filePrefix) == 0) {
         return ToUtf8Temp(tempDir);
     }
     WCHAR path[MAX_PATH]{};
@@ -854,8 +854,8 @@ TempStr GetPathInExeDirTemp(Str fileName) {
 namespace file {
 
 FILE* OpenFILE(Str path) {
-    ReportIf(!path);
-    if (!path) {
+    ReportIf(len(path) == 0);
+    if (len(path) == 0) {
         return nullptr;
     }
     return _wfopen(CWStrTemp(path), L"rb");
@@ -969,8 +969,8 @@ TempStr LastErrorTemp() {
 // copies through that buffer before calling CreateFileW anyway. This runs once
 // per page when opening an image directory, so that overhead is worth skipping.
 int ReadN(Str path, u8* buf, size_t toRead) {
-    ReportIf(!path);
-    if (!path || !buf || toRead > (size_t)UINT32_MAX) {
+    ReportIf(len(path) == 0);
+    if (len(path) == 0 || !buf || toRead > (size_t)UINT32_MAX) {
         return -1;
     }
     // share flags match what the CRT's "rb" mode uses, plus DELETE so we don't
@@ -1014,8 +1014,8 @@ static i64 GetSizeFromHandle(FileHandle h) {
 //  - we allocate without zeroing: the buffer is immediately overwritten with
 //    file data, so pre-zeroing it is a second full-size memset per file
 Str ReadFileWithArena(Str filePath, Arena* a) {
-    ReportIf(!filePath);
-    if (!filePath) {
+    ReportIf(len(filePath) == 0);
+    if (len(filePath) == 0) {
         return {};
     }
     DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
@@ -1060,7 +1060,7 @@ Str ReadFileWithArena(Str filePath, Arena* a) {
 }
 
 bool Exists(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return false;
     }
     // GetCachedAttributes: network paths cached 1hr (avoids UI-thread stalls in
@@ -1128,8 +1128,8 @@ static bool GetInfo(Str path, WIN32_FILE_ATTRIBUTE_DATA& fileInfo) {
 }
 
 i64 GetSize(Str path) {
-    ReportIf(!path);
-    if (!path) {
+    ReportIf(len(path) == 0);
+    if (len(path) == 0) {
         return -1;
     }
     WIN32_FILE_ATTRIBUTE_DATA fileInfo{};
@@ -1154,7 +1154,7 @@ i64 GetSize(Str path) {
 }
 
 bool Delete(Str filePath) {
-    if (!filePath) {
+    if (len(filePath) == 0) {
         return false;
     }
     BOOL ok = DeleteFileW(CWStrTemp(filePath));
@@ -1274,7 +1274,7 @@ bool DeleteZoneIdentifier(Str filePath) {
 }
 
 bool Rename(Str newPath, Str oldPath) {
-    if (!newPath || !oldPath) {
+    if (len(newPath) == 0 || len(oldPath) == 0) {
         return false;
     }
     BOOL ok = MoveFileW(CWStrTemp(oldPath), CWStrTemp(newPath));
@@ -1290,7 +1290,7 @@ bool Rename(Str newPath, Str oldPath) {
 // Like Rename() but overwrites newPath if it exists, and doesn't return until
 // the rename is on disk. Used to publish a file written to a temp path.
 bool RenameReplace(Str newPath, Str oldPath) {
-    if (!newPath || !oldPath) {
+    if (len(newPath) == 0 || len(oldPath) == 0) {
         return false;
     }
     DWORD flags = MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH;
@@ -1298,7 +1298,7 @@ bool RenameReplace(Str newPath, Str oldPath) {
 }
 
 bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
-    if (!dst || !src) {
+    if (len(dst) == 0 || len(src) == 0) {
         return false;
     }
 
@@ -1364,14 +1364,14 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
 namespace dir {
 
 bool Exists(WStr dir) {
-    if (!dir) {
+    if (len(dir) == 0) {
         return false;
     }
     return Exists(ToUtf8Temp(dir));
 }
 
 bool Exists(Str dir) {
-    if (!dir) {
+    if (len(dir) == 0) {
         return false;
     }
     DWORD attrs = path::GetCachedAttributes(dir);
@@ -1395,7 +1395,7 @@ bool CreateAll(Str dir, int* errOut) {
     if (errOut) {
         *errOut = 0;
     }
-    if (!dir) {
+    if (len(dir) == 0) {
         return false;
     }
     if (Exists(dir)) {
@@ -1442,7 +1442,7 @@ bool Empty(Str dir) {
 }
 
 bool HasWriteAccess(Str dir) {
-    if (!dir) {
+    if (len(dir) == 0) {
         return false;
     }
     TempStr path = path::JoinTemp(dir, StrL("__sumatra_write_test__.tmp"));

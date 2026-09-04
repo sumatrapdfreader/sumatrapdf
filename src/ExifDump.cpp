@@ -11,7 +11,7 @@
 
 // GUI-subsystem exes lose CRT stdout when spawned with a pipe (issue #5677).
 static void CliWrite(Str s, int n = 0) {
-    if (!s) {
+    if (len(s) == 0) {
         return;
     }
     if (n == 0) {
@@ -34,7 +34,7 @@ static void CliPrint(Str s) {
 // Dump all EXIF metadata for path to stdout (exif-py compatible format).
 // Returns true if any EXIF was found.
 bool DumpExifFile(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return false;
     }
     CliPrint(fmt("Opening: %s", path));

@@ -214,7 +214,7 @@ static Str AdvanceUntilWildcardMatch(Str fileName, Str filter) {
 
 bool Match(Str path, Str filter) {
     Str baseName = GetBaseNameTemp(path);
-    if (!baseName) {
+    if (len(baseName) == 0) {
         return false;
     }
     while (str::ContainsChar(filter, ';')) {
@@ -232,7 +232,7 @@ bool IsWslUnc(Str path) {
 }
 
 bool IsWslMount(Str path) {
-    if (!path || !str::StartsWithI(path, StrL("/mnt/"))) {
+    if (len(path) == 0 || !str::StartsWithI(path, StrL("/mnt/"))) {
         return false;
     }
     if (path.len < 6) {
@@ -243,7 +243,7 @@ bool IsWslMount(Str path) {
 }
 
 TempStr WslUncToUnixTemp(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return {};
     }
 
@@ -269,7 +269,7 @@ TempStr WslUncToUnixTemp(Str path) {
 }
 
 TempStr WindowsToWslMountTemp(Str path) {
-    if (!path || path.len < 3) {
+    if (len(path) == 0 || path.len < 3) {
         return {};
     }
     char drive = (char)tolower((unsigned char)path.s[0]);

@@ -380,7 +380,7 @@ static bool MatchSearchUnit(Str h, int hLen, int hIdx, int hByteIdx, Str n, int 
 }
 
 static int StrStrFoldCase(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
-    if (!haystack || !needle) {
+    if (len(haystack) == 0 || len(needle) == 0) {
         return startOff;
     }
     int byteIdx = Utf8CodepointToByteIndex(haystack, startOff);
@@ -420,7 +420,7 @@ static bool StartsWithAtByte(Str text, int byteIdx, Str prefix) {
 }
 
 static int StrRStr(Str text, int textLen, int endOff, Str needle, int needleLen) {
-    if (!text || !needle || endOff <= 0 || endOff > textLen) {
+    if (len(text) == 0 || len(needle) == 0 || endOff <= 0 || endOff > textLen) {
         return -1;
     }
     if (needleLen <= 0 || needleLen > endOff) {
@@ -438,7 +438,7 @@ static int StrRStr(Str text, int textLen, int endOff, Str needle, int needleLen)
 }
 
 static int StrRStrFoldCase(Str text, int textLen, int endOff, Str needle, int needleLen) {
-    if (!text || !needle || endOff <= 0 || endOff > textLen) {
+    if (len(text) == 0 || len(needle) == 0 || endOff <= 0 || endOff > textLen) {
         return -1;
     }
     // ß <-> ss makes the matched length variable, so scan forward within
@@ -484,7 +484,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
     int currentPageTextLen = pageTextLen;
     bool lookingAtWs;
 
-    if (!findText) {
+    if (len(findText) == 0) {
         return notFound;
     }
 
@@ -630,7 +630,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
 }
 
 static int StrStr(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
-    if (!haystack || len(needle) == 0) {
+    if (len(haystack) == 0 || len(needle) == 0) {
         return -1;
     }
     int byteIdx = Utf8CodepointToByteIndex(haystack, startOff);
@@ -670,7 +670,7 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
             if (WasCanceled(progressCb)) {
                 return false;
             }
-            if (!anchor) {
+            if (len(anchor) == 0) {
                 found = GetNextIndex(pageTextLen, findIndex, forward);
             } else if (forward) {
                 if (matchCase) {
@@ -759,7 +759,7 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
             break;
         }
         findIndex = pageTextLen;
-        if (!pageText) {
+        if (len(pageText) == 0) {
             pageNo += next;
             continue;
         }
@@ -815,7 +815,7 @@ TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
         return nullptr;
     }
     findIndex = pageTextLen;
-    if (!pageText) {
+    if (len(pageText) == 0) {
         return nullptr;
     }
     if (forward) {
@@ -839,8 +839,8 @@ TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
 }
 
 TextSel* TextSearch::FindNext() {
-    ReportIf(!findText);
-    if (!findText) {
+    ReportIf(len(findText) == 0);
+    if (len(findText) == 0) {
         return nullptr;
     }
 

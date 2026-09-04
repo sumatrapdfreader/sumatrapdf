@@ -42,7 +42,7 @@ u8* GetEmbeddedFileData(Str name, int* outSize) {
     if (outSize) {
         *outSize = 0;
     }
-    if (!name || !EnsureEmbeddedArchiveLoaded()) {
+    if (len(name) == 0 || !EnsureEmbeddedArchiveLoaded()) {
         return nullptr;
     }
     int idx = lzma::GetIdxFromName(&gEmbeddedArchive, name);

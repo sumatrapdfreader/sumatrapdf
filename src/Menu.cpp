@@ -1383,8 +1383,8 @@ static bool CmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 #define cmdIdInList(name) CmdIdInList(cmdId, name, dimof(name))
 
 static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
-    ReportIf(!filePath || !menuFile);
-    if (!filePath || !menuFile) {
+    ReportIf(len(filePath) == 0 || !menuFile);
+    if (len(filePath) == 0 || !menuFile) {
         return;
     }
 
@@ -1413,7 +1413,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
             break;
         }
         Str fp = fs->filePath;
-        if (!fp) {
+        if (len(fp) == 0) {
             // comes from settings file so can be missing due to user modifications
             continue;
         }
@@ -1427,7 +1427,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
 
 static void AppendCommandsToMenu(HMENU m, const Vec<CustomCommand*>& cmds, bool isEnabled) {
     for (CustomCommand* cmd : cmds) {
-        if (!cmd->name) {
+        if (len(cmd->name) == 0) {
             continue;
         }
         TempStr menuString = cmd->name;
@@ -1498,7 +1498,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, Str filePath) {
         menuString = AppendAccelKeyToMenuStringTemp(menuString, cmdId);
         WCHAR* ws = CWStrTemp(menuString);
         InsertMenuW(menuFile, cmdId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, (UINT_PTR)cmdId, ws);
-        if (!filePath) {
+        if (len(filePath) == 0) {
             MenuSetEnabled(menuFile, cmdId, false);
         }
     }
@@ -1586,7 +1586,7 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
     bool addExternalViewersNext = false;
     while (true) {
         MenuDef md = menuDef[i];
-        if (!md.title) { // sentinel
+        if (len(md.title) == 0) { // sentinel
             break;
         }
         i++;
@@ -2037,7 +2037,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     if (!fromClick) {
         path = str::DupTemp(HomePageSelectedFilePathTemp(win));
     }
-    if (!path || !path::IsAbsolute(path)) {
+    if (len(path) == 0 || !path::IsAbsolute(path)) {
         return;
     }
 
@@ -2394,7 +2394,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             TempStr noExt = path::GetPathNoExtTemp(base);
             Str origData = imgEngine->GetImageDataForPageElement(pageEl);
             Str ext = ImageSaveExtFromData(origData);
-            if (!ext) {
+            if (len(ext) == 0) {
                 ext = StrL(".png");
             }
             TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d%s", noExt, pageNoUnderCursor, ext));
@@ -2815,7 +2815,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     gfx->FillRect(rc, bgCol);
 
     if (isSeparator) {
-        ReportIf(modi->text);
+        ReportIf(len(modi->text) != 0);
         int sx = rc.x + cxCheckMark;
         int y = rc.y + (rcDy / 2);
         int ex = rc.x + rc.dx - padX;
@@ -2824,7 +2824,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     }
 
     // TODO: probably could be a bitmap etc.
-    if (!modi->text) {
+    if (len(modi->text) == 0) {
         return;
     }
 

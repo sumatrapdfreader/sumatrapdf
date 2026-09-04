@@ -68,7 +68,7 @@ static void logToPipe(Str s) {
     if (!gLogToPipe) {
         return;
     }
-    if (!s) {
+    if (len(s) == 0) {
         return;
     }
     size_t n = (size_t)s.len;
@@ -164,7 +164,7 @@ void log(Str s) {
 }
 
 void StartLogToFile(Str path, bool removeIfExists) {
-    ReportIf(gLogFilePath);
+    ReportIf(len(gLogFilePath) != 0);
     gLogFilePath = str::Dup(path);
     FileWatcherSetSkipPath(gLogFilePath);
     if (removeIfExists) {

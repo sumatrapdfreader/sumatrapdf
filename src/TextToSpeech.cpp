@@ -76,7 +76,7 @@ static bool TtsForceSapi() {
 }
 
 static bool TtsVoiceIdInList(const Vec<TtsVoiceInfo>& voices, Str id) {
-    if (!id) {
+    if (len(id) == 0) {
         return false;
     }
     for (const TtsVoiceInfo& v : voices) {
@@ -1359,7 +1359,7 @@ bool TtsSpeakUtf8(Str text) {
     }
 
     TempWStr textW = ToWStrTemp(text);
-    if (!textW) {
+    if (len(textW) == 0) {
         return false;
     }
 
@@ -1390,7 +1390,7 @@ bool TtsQueueUtf8(Str text) {
     }
 
     TempWStr textW = ToWStrTemp(text);
-    if (!textW) {
+    if (len(textW) == 0) {
         return false;
     }
 

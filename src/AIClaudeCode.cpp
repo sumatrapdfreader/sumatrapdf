@@ -116,7 +116,7 @@ static Str GetSessionDescription(Str sessionPath) {
     Str result;
     Str line;
 
-    while (!result && str::NextLine(rest, line, rest)) {
+    while (len(result) == 0 && str::NextLine(rest, line, rest)) {
         if (len(line) == 0) {
             continue;
         }
@@ -132,7 +132,7 @@ static Str GetSessionDescription(Str sessionPath) {
 // Scan ~/.claude/projects/<encoded-dir>/ for .jsonl session files
 static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (!userProfile) {
+    if (len(userProfile) == 0) {
         return;
     }
     TempStr encodedDir = EncodeClaudeDirTemp(dir);
@@ -172,7 +172,7 @@ static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
 // Load conversation history from a session's JSONL file
 static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (!userProfile) {
+    if (len(userProfile) == 0) {
         return;
     }
     TempStr encodedDir = EncodeClaudeDirTemp(dir);
@@ -222,7 +222,7 @@ static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
             continue;
         }
         TempStr toolName = AIChatJsonStrTemp(line, StrL("name"));
-        if (!toolName) {
+        if (len(toolName) == 0) {
             continue;
         }
         TempStr fp = AIChatJsonStrTemp(line, StrL("file_path"));
@@ -323,7 +323,7 @@ struct ClaudeCodeProvider : AIChatProvider {
 
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {
         TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
-        if (!eventType) {
+        if (len(eventType) == 0) {
             return;
         }
         if (str::Eq(eventType, StrL("assistant"))) {
@@ -337,7 +337,7 @@ struct ClaudeCodeProvider : AIChatProvider {
                 return;
             }
             TempStr toolName = AIChatJsonStrTemp(line, StrL("name"));
-            if (!toolName) {
+            if (len(toolName) == 0) {
                 return;
             }
             TempStr fp = AIChatJsonStrTemp(line, StrL("file_path"));

@@ -426,7 +426,7 @@ class TextDataObject : public IDataObject {
 
   public:
     explicit TextDataObject(WStr text) {
-        if (!text) {
+        if (len(text) == 0) {
             return;
         }
         size_t cb = (size_t)(text.len + 1) * sizeof(WCHAR);
@@ -5653,7 +5653,7 @@ static TempStr FileNameFromUrlTemp(Str url) {
     Str lastSlash;
     Str p = path;
     AdvanceUrlPathUntilSuffix(p, lastSlash);
-    if (!lastSlash) {
+    if (len(lastSlash) == 0) {
         return {};
     }
     int nameLen = (int)(p.s - lastSlash.s - 1);
@@ -5685,7 +5685,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     Str url = data->url;
 
     TempStr downloadsDir = GetDownloadsDirTemp();
-    if (!downloadsDir) {
+    if (len(downloadsDir) == 0) {
         logf("DownloadAndOpenUrl: failed to get Downloads folder\n");
         str::Free(data->url);
         delete data;
@@ -5693,7 +5693,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     }
 
     TempStr fileName = FileNameFromUrlTemp(url);
-    if (!fileName || str::Eq(fileName, StrL(".")) || str::Eq(fileName, StrL("..")) ||
+    if (len(fileName) == 0 || str::Eq(fileName, StrL(".")) || str::Eq(fileName, StrL("..")) ||
         str::Contains(fileName, StrL("/")) || str::Contains(fileName, StrL("\\")) ||
         str::Contains(fileName, StrL(":"))) {
         // generate a fallback name
@@ -5898,7 +5898,7 @@ class CanvasDropTarget : public IDropTarget {
 
         // try URL drop
         TempStr url = GetUrlFromDataObject(dataObj);
-        if (!url) {
+        if (len(url) == 0) {
             // fall back to plain text
             TempStr text = GetTextFromDataObject(dataObj);
             if (text && (str::StartsWithI(text, StrL("http://")) || str::StartsWithI(text, StrL("https://")))) {

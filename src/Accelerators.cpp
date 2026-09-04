@@ -201,7 +201,7 @@ TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
             continue;
         }
         TempStr withTab = AppendAccelKeyToMenuStringTemp(StrL(""), a);
-        if (!withTab || withTab.s[0] != '\t') {
+        if (len(withTab) == 0 || withTab.s[0] != '\t') {
             continue;
         }
         TempStr key = Str(withTab.s + 1); // drop the leading '\t'

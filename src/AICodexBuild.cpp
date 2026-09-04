@@ -182,14 +182,14 @@ static bool QueryCodexModels(Str exePath, StrVec& models) {
 
 static TempStr CodexSessionsRootTemp() {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (!userProfile) {
+    if (len(userProfile) == 0) {
         return {};
     }
     return fmt("%s\\.codex\\sessions", userProfile);
 }
 
 static TempStr NormalizeCodexPathTemp(Str path) {
-    if (!path) {
+    if (len(path) == 0) {
         return {};
     }
     str::TrimPrefix(path, StrL("\\\\?\\"));
@@ -199,7 +199,7 @@ static TempStr NormalizeCodexPathTemp(Str path) {
 static bool CodexPathsEqual(Str a, Str b) {
     TempStr na = NormalizeCodexPathTemp(a);
     TempStr nb = NormalizeCodexPathTemp(b);
-    if (!na || !nb) {
+    if (len(na) == 0 || len(nb) == 0) {
         return false;
     }
     return path::IsSame(na, nb);
@@ -211,7 +211,7 @@ static bool IsCodexRolloutFileName(Str name) {
 
 static TempStr ExtractCodexPromptFromHistoryLineTemp(Str line, Str sessionId) {
     TempStr sid = AIChatJsonStrTemp(line, StrL("session_id"));
-    if (!sid || !str::Eq(sid, sessionId)) {
+    if (len(sid) == 0 || !str::Eq(sid, sessionId)) {
         return {};
     }
     return AIChatJsonStrTemp(line, StrL("text"));
@@ -220,7 +220,7 @@ static TempStr ExtractCodexPromptFromHistoryLineTemp(Str line, Str sessionId) {
 static Str GetCodexSessionDescription(Str sessionId) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     TempStr historyPath = userProfile ? fmt("%s\\.codex\\history.jsonl", userProfile) : TempStr();
-    if (!historyPath) {
+    if (len(historyPath) == 0) {
         return str::Dup(StrL("(no description)"));
     }
     Str data = file::ReadFile(historyPath);
@@ -232,7 +232,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
     Str result;
     Str line;
 
-    while (!result && str::NextLine(rest, line, rest)) {
+    while (len(result) == 0 && str::NextLine(rest, line, rest)) {
         if (len(line) == 0) {
             continue;
         }
@@ -253,7 +253,7 @@ static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut)
     str::Cut(line, StrL("\"payload\":"), nullptr, &payload);
     TempStr cwd = payload ? AIChatJsonStrTemp(payload, StrL("cwd")) : TempStr();
     TempStr id = payload ? AIChatJsonStrTemp(payload, StrL("id")) : TempStr();
-    if (!cwd || !id || !CodexPathsEqual(cwd, matchDir)) {
+    if (len(cwd) == 0 || len(id) == 0 || !CodexPathsEqual(cwd, matchDir)) {
         return false;
     }
     *sessionIdOut = str::Dup(id);
@@ -299,7 +299,7 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
 // Walk ~/.codex/sessions/YYYY/MM/DD/ for a rollout file whose name ends with sessionId.jsonl
 static TempStr FindCodexRolloutPathTemp(Str sessionId) {
     TempStr root = CodexSessionsRootTemp();
-    if (!root || !sessionId) {
+    if (len(root) == 0 || len(sessionId) == 0) {
         return {};
     }
     TempStr suffix = fmt("%s.jsonl", sessionId);
@@ -318,7 +318,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
 // Scan ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl for sessions with matching cwd
 static void CollectCodexSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr root = CodexSessionsRootTemp();
-    if (!root || !dir::Exists(root)) {
+    if (len(root) == 0 || !dir::Exists(root)) {
         return;
     }
 
@@ -337,7 +337,7 @@ static void CollectCodexSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
 }
 
 static bool IsCodexInjectedUserText(Str text) {
-    if (!text) {
+    if (len(text) == 0) {
         return true;
     }
     if (str::Contains(text, StrL("# AGENTS.md"))) {
@@ -367,7 +367,7 @@ static TempStr ExtractCodexRolloutUserTextTemp(Str line) {
         return {};
     }
     TempStr text = AIChatJsonStrTemp(inputText, StrL("text"));
-    if (!text || IsCodexInjectedUserText(text)) {
+    if (len(text) == 0 || IsCodexInjectedUserText(text)) {
         return {};
     }
     str::TrimWSInPlace(text, str::TrimOpt::Both);
@@ -407,7 +407,7 @@ static void AppendCodexRolloutTools(MainWindow* win, Str line) {
 // Load conversation history from Codex rollout JSONL
 static void LoadCodexSessionHistory(MainWindow* win, Str sessionId, Str /*dir*/) {
     TempStr sessionPath = FindCodexRolloutPathTemp(sessionId);
-    if (!sessionPath || !file::Exists(sessionPath)) {
+    if (len(sessionPath) == 0 || !file::Exists(sessionPath)) {
         return;
     }
 

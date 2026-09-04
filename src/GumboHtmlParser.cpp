@@ -153,7 +153,7 @@ bool IsSpaceOnly(Str s) {
 }
 
 static void MemAppend(char* buf, int& off, Str src) {
-    if (!buf || !src) {
+    if (!buf || len(src) == 0) {
         return;
     }
     memcpy(buf + off, src.s, src.len);
@@ -473,7 +473,7 @@ void GumboHtmlParser::BuildEvents() {
 
         if (node->type == GUMBO_NODE_TEXT || node->type == GUMBO_NODE_WHITESPACE) {
             Str text = StrFromPiece(node->v.text.original_text);
-            if (!text) {
+            if (len(text) == 0) {
                 text = Str(node->v.text.text);
             }
             VecAppend(events, {HtmlToken::Text, node, text, {}, text, PosOfSource(html, text)});

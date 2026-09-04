@@ -21,7 +21,7 @@ LPCOLESTR myGuid = kPdfPreviewClsid;
 typedef HRESULT ourDllGetClassObjectT(REFCLSID rclsid, REFIID riid, void** ppv);
 
 void log(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return;
     }
     OutputDebugStringA(s.s);

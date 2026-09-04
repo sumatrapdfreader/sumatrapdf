@@ -10,7 +10,7 @@
 
 // base expects these from the host app; provide no-ops for this tool
 void log(Str s) {
-    if (!s) {
+    if (len(s) == 0) {
         return;
     }
     fwrite(s.s, 1, (size_t)s.len, stderr);

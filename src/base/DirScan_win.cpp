@@ -192,7 +192,7 @@ void AdvanceDirIter(DirIter::iterator* it, int n) {
     TempStr path;
 
 NextDir:
-    if (!it->pattern) {
+    if (len(it->pattern) == 0) {
         int nDirs = len(it->dirsToVisit);
         if (nDirs == 0) {
             goto DidFinish;

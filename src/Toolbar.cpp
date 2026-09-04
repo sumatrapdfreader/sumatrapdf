@@ -379,7 +379,7 @@ static void PopulateToolbarLayout() {
     for (Str name : names) {
         Str tok = name;
         str::TrimWSInPlace(tok, str::TrimOpt::Both);
-        if (!tok) {
+        if (len(tok) == 0) {
             continue;
         }
         if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
@@ -575,7 +575,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
     }
     for (int i = 0; i < gLayoutButtonsCount; i++) {
         const ToolbarButtonInfo& bi = gLayoutButtons[i];
-        if (!bi.toolTip || bi.isText) {
+        if (len(bi.toolTip) == 0 || bi.isText) {
             continue;
         }
         VirtCtrl* w = ToolbarItemAt(win, i);
@@ -585,7 +585,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
     }
     for (int i = 0; i < kPdfAnnotationButtonsCount; i++) {
         const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
-        if (!bi.toolTip) {
+        if (len(bi.toolTip) == 0) {
             continue;
         }
         VirtCtrl* w = PdfAnnotationToolbarItemAt(win, i);
@@ -1550,7 +1550,7 @@ struct ToolbarHoverRow : VirtCtrl {
     }
 
     int ShortcutDx() {
-        if (!shortcut) {
+        if (len(shortcut) == 0) {
             return 0;
         }
         return PlatformFontMeasureText(font, shortcut).dx + DpiScale(kHoverRowShortcutGapX);

@@ -1058,7 +1058,7 @@ Str MobiDoc::GetHtmlData() const {
 
 TempStr MobiDoc::GetPropertyTemp(DocProp prop) {
     Str v = GetPropValueTemp(props, prop);
-    if (!v) {
+    if (len(v) == 0) {
         return {};
     }
     return strconv::StrToUtf8Temp(v, textEncoding);

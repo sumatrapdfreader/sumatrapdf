@@ -1359,7 +1359,7 @@ static TempStr WithKbdMarkupTemp(Str s) {
                 break;
             }
         }
-        if (!match) {
+        if (len(match) == 0) {
             out.AppendChar(s.s[i]);
             i++;
             continue;
@@ -2409,7 +2409,7 @@ TempStr CommandPaletteShortcutTemp(i32 cmdId) {
         return {};
     }
     TempStr withAccel = AppendAccelKeyToMenuStringTemp(StrL(""), cmdId);
-    if (!withAccel || withAccel.s[0] != '\t') {
+    if (len(withAccel) == 0 || withAccel.s[0] != '\t') {
         return {};
     }
     return Str(withAccel.s + 1, len(withAccel) - 1);
@@ -2441,7 +2441,7 @@ static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matched
 
 void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
     strings.Reset();
-    if (!filter) {
+    if (len(filter) == 0) {
         filter = StrL("");
     }
 
