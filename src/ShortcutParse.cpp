@@ -203,7 +203,7 @@ static bool ParseShortcut(Str shortcut, ACCEL& accel) {
     BYTE fVirt = 0;
 
 again:
-    str::SkipWs(cursor);
+    str::TrimWs(cursor);
     // before "alt": "AltGr + Return" would otherwise match "alt" and leave "Gr"
     if (skipVirtKey(cursor, StrL("altgr")) || skipVirtKey(cursor, StrL("ralt")) ||
         skipVirtKey(cursor, StrL("rightalt"))) {
@@ -339,20 +339,21 @@ bool IsValidShortcutString(Str shortcut) {
     return ParseShortcut(shortcut, accel);
 }
 
-bool TrimGlobalPrefix(Str& shortcut) {
+int TrimGlobalPrefix(Str& shortcut) {
     Str s = shortcut;
-    str::SkipWs(s);
+    str::TrimWs(s);
     if (!str::TrimPrefixI(s, StrL("global"))) {
-        return false;
+        return 0;
     }
     if (!str::TrimAny(s, " \t+-")) {
-        return false;
+        return 0;
     }
     if (len(s) == 0) {
-        return false;
+        return 0;
     }
+    int trimmed = len(shortcut) - len(s);
     shortcut = s;
-    return true;
+    return trimmed;
 }
 
 bool IsGlobalShortcut(Str shortcut) {

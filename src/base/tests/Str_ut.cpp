@@ -470,17 +470,17 @@ static void StrCutTest() {
     utassert(str::Eq(before, StrL("a")) && str::Eq(after, StrL("b::c")));
 }
 
-static void StrSkipWsTest() {
-    // SkipWs / SkipNonWs eat from the front and report how much they ate
+static void StrTrimWsTest() {
+    // TrimWs / TrimNonWs eat from the front and report how much they ate
     Str s = StrL("  \t ab c");
-    utassert(str::SkipWs(s) == 4 && str::Eq(s, StrL("ab c")));
-    utassert(str::SkipWs(s) == 0 && str::Eq(s, StrL("ab c")));
-    utassert(str::SkipNonWs(s) == 2 && str::Eq(s, StrL(" c")));
+    utassert(str::TrimWs(s) == 4 && str::Eq(s, StrL("ab c")));
+    utassert(str::TrimWs(s) == 0 && str::Eq(s, StrL("ab c")));
+    utassert(str::TrimNonWs(s) == 2 && str::Eq(s, StrL(" c")));
 
     s = StrL("   ");
-    utassert(str::SkipWs(s) == 3 && len(s) == 0);
+    utassert(str::TrimWs(s) == 3 && len(s) == 0);
     s = StrL("");
-    utassert(str::SkipWs(s) == 0 && str::SkipNonWs(s) == 0);
+    utassert(str::TrimWs(s) == 0 && str::TrimNonWs(s) == 0);
 
     // NextWord walks the whitespace-separated words
     Str rest = StrL("  one\ttwo\r\nthree  ");
@@ -492,14 +492,30 @@ static void StrSkipWsTest() {
     rest = StrL(" \t ");
     utassert(!str::NextWord(rest));
 
-    // TrimWs only narrows the view, the string itself isn't touched
+    // TrimWs with an option narrows the view without touching its data
     Str orig = StrL(" \t a b \n");
-    utassert(str::Eq(str::TrimWs(orig), StrL("a b")));
-    utassert(str::Eq(str::TrimWs(orig, str::TrimOpt::Left), StrL("a b \n")));
-    utassert(str::Eq(str::TrimWs(orig, str::TrimOpt::Right), StrL(" \t a b")));
-    utassert(len(orig) == 8);
-    utassert(len(str::TrimWs(StrL("  "))) == 0);
-    utassert(str::IsNull(str::TrimWs(Str{})));
+    Str trimmed = orig;
+    utassert(str::TrimWs(trimmed, str::TrimOpt::Both) == 5 && str::Eq(trimmed, StrL("a b")));
+    trimmed = orig;
+    utassert(str::TrimWs(trimmed, str::TrimOpt::Left) == 3 && str::Eq(trimmed, StrL("a b \n")));
+    trimmed = orig;
+    utassert(str::TrimWs(trimmed, str::TrimOpt::Right) == 2 && str::Eq(trimmed, StrL(" \t a b")));
+
+    trimmed = StrL("  ");
+    utassert(str::TrimWs(trimmed, str::TrimOpt::Both) == 2 && len(trimmed) == 0);
+    trimmed = {};
+    utassert(str::TrimWs(trimmed, str::TrimOpt::Both) == 0 && str::IsNull(trimmed));
+
+    trimmed = StrL("name.ext");
+    utassert(str::TrimSuffix(trimmed, StrL(".ext")) == 4 && str::Eq(trimmed, StrL("name")));
+    utassert(str::TrimSuffix(trimmed, StrL(".ext")) == 0 && str::Eq(trimmed, StrL("name")));
+
+    trimmed = StrL("---name");
+    utassert(str::TrimChar(trimmed, '-') == 3 && str::Eq(trimmed, StrL("name")));
+
+    Str writable = str::Dup(StrL("name \r\n"));
+    utassert(str::TrimSuffixWhitespace(writable) == 3 && str::Eq(writable, StrL("name")));
+    str::Free(writable);
 }
 
 static void StrNextLineTest() {
@@ -564,14 +580,14 @@ static void StrStartsWithTest() {
     utassert(!str::StartsWithAny(StrL("+foo"), nullptr));
 
     Str tp = StrL("Global PageDown");
-    utassert(str::TrimPrefixI(tp, StrL("global")));
+    utassert(str::TrimPrefixI(tp, StrL("global")) == 6);
     utassert(str::Eq(tp, StrL(" PageDown")));
-    utassert(!str::TrimPrefixI(tp, StrL("global")));
+    utassert(str::TrimPrefixI(tp, StrL("global")) == 0);
 
     Str t1 = StrL("+-PageDown");
-    utassert(str::TrimAny(t1, "+-"));
+    utassert(str::TrimAny(t1, "+-") == 2);
     utassert(str::Eq(t1, StrL("PageDown")));
-    utassert(!str::TrimAny(t1, "+-"));
+    utassert(str::TrimAny(t1, "+-") == 0);
     utassert(str::Eq(t1, StrL("PageDown")));
 
     Str t2 = StrL("PageDown");
@@ -579,11 +595,11 @@ static void StrStartsWithTest() {
     utassert(str::Eq(t2, StrL("PageDown")));
 
     Str t3 = StrL("---");
-    utassert(str::TrimAny(t3, "-"));
+    utassert(str::TrimAny(t3, "-") == 3);
     utassert(len(t3) == 0);
 
     Str t4 = StrL(" \t+ - PageDown");
-    utassert(str::TrimAny(t4, " \t+-"));
+    utassert(str::TrimAny(t4, " \t+-") == 6);
     utassert(str::Eq(t4, StrL("PageDown")));
 }
 
@@ -660,8 +676,8 @@ void StrTest() {
     utassert(str::StartsWith(str, StrL("a s")) && str::StartsWithI(str, StrL("A Str")));
     utassert(!str::StartsWith(str, StrL("Astr")));
     Str withoutPrefix = str;
-    utassert(str::TrimPrefix(withoutPrefix, StrL("a ")) && str::Eq(withoutPrefix, StrL("string")));
-    utassert(!str::TrimPrefix(withoutPrefix, StrL("a ")) && str::Eq(withoutPrefix, StrL("string")));
+    utassert(str::TrimPrefix(withoutPrefix, StrL("a ")) == 2 && str::Eq(withoutPrefix, StrL("string")));
+    utassert(str::TrimPrefix(withoutPrefix, StrL("a ")) == 0 && str::Eq(withoutPrefix, StrL("string")));
     utassert(str::EndsWith(str, StrL("ing")) && str::EndsWithI(str, StrL("ING")));
     utassert(!str::EndsWith(str, StrL("ung")));
     utassert(str::ContainsChar(str, 's') && !str::ContainsChar(str, 'S'));
@@ -1102,7 +1118,7 @@ void StrTest() {
     StrFindITest();
     StrCutTest();
     StrNextLineTest();
-    StrSkipWsTest();
+    StrTrimWsTest();
     StrStartsWithTest();
     // ParseUntilTest();
 }

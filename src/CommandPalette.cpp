@@ -299,7 +299,7 @@ Str CommandPaletteSkipWS(Str s) {
     if (!s.s) {
         return {};
     }
-    str::SkipWs(s);
+    str::TrimWs(s);
     return s;
 }
 

@@ -1918,9 +1918,9 @@ bool StartsWith(Str str, Str prefix);
 bool StartsWithI(Str str, Str prefix);
 bool StartsWithAny(Str s, const char* chars);
 
-bool TrimPrefix(Str& s, Str prefix);
-bool TrimPrefixI(Str& s, Str prefix);
-bool TrimAny(Str& s, const char* chars);
+int TrimPrefix(Str& s, Str prefix);
+int TrimPrefixI(Str& s, Str prefix);
+int TrimAny(Str& s, const char* chars);
 bool EndsWith(Str txt, Str end);
 bool EndsWithI(Str txt, Str end);
 bool EqNIx(Str s, int n, Str s2);
@@ -1951,9 +1951,9 @@ bool ContainsI(Str s, Str sub);
 bool ContainsChar(Str s, char c);
 bool ContainsCharAny(Str s, Str chars);
 
-Str TrimSuffix(Str s, Str suffix);
+int TrimSuffix(Str& s, Str suffix);
 int LastIndexOfChar(Str s, char c);
-Str TrimSuffixWhitespace(Str s); // trims trailing whitespace in place
+int TrimSuffixWhitespace(Str& s);
 
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith);
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
@@ -1979,11 +1979,11 @@ int Cmp(Str a, Str b);
 int CmpI(Str a, Str b);
 
 bool IsEmptyOrWhiteSpace(Str s);
-bool SkipChar(Str& s, char toSkip);
-int SkipWs(Str& s);
-int SkipNonWs(Str& s);
+int TrimChar(Str& s, char toSkip);
+int TrimWs(Str& s);
+int TrimNonWs(Str& s);
 Str NextWord(Str& s);
-Str TrimWs(Str s, TrimOpt opt = TrimOpt::Both);
+int TrimWs(Str& s, TrimOpt opt);
 
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
 

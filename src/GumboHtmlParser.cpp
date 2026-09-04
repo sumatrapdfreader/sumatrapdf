@@ -120,7 +120,7 @@ bool SkipUntil(Str s, int& off, Str term) {
 // return true if skipped
 bool SkipWs(Str s, int& off) {
     Str rest = Str(s.s + off, s.len - off);
-    int n = str::SkipWs(rest);
+    int n = str::TrimWs(rest);
     off += n;
     return n > 0;
 }
@@ -128,7 +128,7 @@ bool SkipWs(Str s, int& off) {
 // return true if skipped
 bool SkipNonWs(Str s, int& off) {
     Str rest = Str(s.s + off, s.len - off);
-    int n = str::SkipNonWs(rest);
+    int n = str::TrimNonWs(rest);
     off += n;
     return n > 0;
 }

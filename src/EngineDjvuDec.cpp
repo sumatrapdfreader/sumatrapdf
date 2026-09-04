@@ -32,8 +32,8 @@ constexpr i64 kMemoryMapMinFileSize = 128LL * 1024 * 1024;
 
 // parses "123", "#123", "# 123"; returns -1 for invalid page
 static int ParseDjvuDecLink(Str link) {
-    str::SkipChar(link, '#');
-    str::SkipChar(link, ' ');
+    str::TrimChar(link, '#');
+    str::TrimChar(link, ' ');
     if (!link) {
         return -1;
     }

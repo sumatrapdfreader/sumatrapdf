@@ -1360,7 +1360,7 @@ static int ParseBool(Str s);
 static CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
     // first is default value
     Str rest = *argsInOut;
-    str::SkipChar(rest, ' ');
+    str::TrimChar(rest, ' ');
     Str valEnd = str::SliceFromChar(rest, ' ');
     Str argName = argSpecs[defaultArgIdx].name;
     CommandArg::Type type = argSpecs[defaultArgIdx].type;
@@ -1376,7 +1376,7 @@ static CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
     } else {
         val = str::DupTemp(Str(rest.s, (int)(valEnd.s - rest.s)));
         *argsInOut = valEnd;
-        str::SkipChar(*argsInOut, ' ');
+        str::TrimChar(*argsInOut, ' ');
     }
 
     if (type == CommandArg::Type::Bool) {
@@ -1437,17 +1437,17 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
     } else if (rest.s[0] == ' ') {
         if (type == CommandArg::Type::Bool) {
             // name of bool arg followed by nothing is true
-            str::SkipChar(rest, ' ');
+            str::TrimChar(rest, ' ');
             *argsInOut = rest;
             auto* arg = NewArg(type, argName);
             arg->boolVal = true;
             return arg;
         }
         valStart = rest;
-        str::SkipChar(valStart, ' ');
+        str::TrimChar(valStart, ' ');
     } else if (rest.len >= 2 && rest.s[0] == ':' && rest.s[1] == ' ') {
         valStart = Str(rest.s + 1, rest.len - 1);
-        str::SkipChar(valStart, ' ');
+        str::TrimChar(valStart, ' ');
     } else if (rest.s[0] == '=') {
         valStart = Str(rest.s + 1, rest.len - 1);
     }

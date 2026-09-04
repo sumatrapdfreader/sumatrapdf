@@ -621,7 +621,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         int colon = str::IndexOf(chosen, StrL(": "));
         if (colon >= 0) {
             url = Str(chosen.s + colon + 2, chosen.len - colon - 2);
-            str::SkipWs(url);
+            str::TrimWs(url);
         }
         if (IsExternalUrl(url) || str::StartsWithI(url, StrL("ftp://"))) {
             LaunchURL(url);

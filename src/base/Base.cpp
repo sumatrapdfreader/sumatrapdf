@@ -2189,22 +2189,22 @@ bool StartsWith(Str s, Str prefix) {
 }
 
 // Removes prefix from the string view, without modifying the underlying data.
-bool TrimPrefix(Str& s, Str prefix) {
+int TrimPrefix(Str& s, Str prefix) {
     if (!StartsWith(s, prefix)) {
-        return false;
+        return 0;
     }
     s.s += prefix.len;
     s.len -= prefix.len;
-    return true;
+    return prefix.len;
 }
 
-bool TrimPrefixI(Str& s, Str prefix) {
+int TrimPrefixI(Str& s, Str prefix) {
     if (!StartsWithI(s, prefix)) {
-        return false;
+        return 0;
     }
     s.s += prefix.len;
     s.len -= prefix.len;
-    return true;
+    return prefix.len;
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
@@ -2226,16 +2226,16 @@ bool StartsWithAny(Str s, const char* chars) {
     return false;
 }
 
-bool TrimAny(Str& s, const char* chars) {
+int TrimAny(Str& s, const char* chars) {
     if (len(s) <= 0 || !s.s || !chars) {
-        return false;
+        return 0;
     }
     int origLen = len(s);
     while (len(s) > 0 && StartsWithAny(s, chars)) {
         s.s++;
         s.len--;
     }
-    return len(s) < origLen;
+    return origLen - len(s);
 }
 
 bool Contains(Str s, Str sub) {
@@ -2384,12 +2384,13 @@ Str Join(Str s1, Str s2, Str s3) {
     return Join(nullptr, s1, s2, s3);
 }
 
-// trim suffix (exact match) from s, returning the shortened view
-Str TrimSuffix(Str s, Str suffix) {
-    if (str::EndsWith(s, suffix)) {
-        return Str(s.s, s.len - suffix.len);
+// Trims an exact suffix from the string view and returns its length.
+int TrimSuffix(Str& s, Str suffix) {
+    if (!str::EndsWith(s, suffix)) {
+        return 0;
     }
-    return s;
+    s.len -= suffix.len;
+    return suffix.len;
 }
 
 // index of last occurrence of c in s, or -1
@@ -2402,8 +2403,9 @@ int LastIndexOfChar(Str s, char c) {
     return -1;
 }
 
-// trim trailing whitespace in place (writes a NUL at the new end), returns the shortened view
-Str TrimSuffixWhitespace(Str s) {
+// Trims trailing whitespace, writes a NUL at the new end and returns the count.
+int TrimSuffixWhitespace(Str& s) {
+    int origLen = len(s);
     while (s.len > 0) {
         char c = s.s[s.len - 1];
         if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
@@ -2412,7 +2414,7 @@ Str TrimSuffixWhitespace(Str s) {
         s.len--;
         s.s[s.len] = 0;
     }
-    return s;
+    return origLen - len(s);
 }
 
 } // namespace str
@@ -2966,19 +2968,19 @@ bool IsEmptyOrWhiteSpace(Str s) {
     return true;
 }
 
-// advances s past any leading toSkip chars (in place); returns whether it skipped any
-bool SkipChar(Str& s, char toSkip) {
+// advances s past any leading toSkip chars; returns how many were trimmed
+int TrimChar(Str& s, char toSkip) {
     int i = 0;
     while (i < s.len && s.s[i] == toSkip) {
         i++;
     }
     s.s += i;
     s.len -= i;
-    return i > 0;
+    return i;
 }
 
-// advances s past its leading whitespace; returns how many chars were skipped
-int SkipWs(Str& s) {
+// advances s past its leading whitespace; returns how many chars were trimmed
+int TrimWs(Str& s) {
     int i = 0;
     while (i < s.len && IsWs(s.s[i])) {
         i++;
@@ -2988,8 +2990,8 @@ int SkipWs(Str& s) {
     return i;
 }
 
-// advances s past its leading non-whitespace; returns how many chars were skipped
-int SkipNonWs(Str& s) {
+// advances s past its leading non-whitespace; returns how many chars were trimmed
+int TrimNonWs(Str& s) {
     int i = 0;
     while (i < s.len && !IsWs(s.s[i])) {
         i++;
@@ -3004,30 +3006,30 @@ int SkipNonWs(Str& s) {
 //   while (Str word = str::NextWord(s)) { ... }
 // walks the words of s.
 Str NextWord(Str& s) {
-    SkipWs(s);
+    TrimWs(s);
     Str word = s;
-    word.len = SkipNonWs(s);
+    word.len = TrimNonWs(s);
     if (word.len == 0) {
         return {};
     }
     return word;
 }
 
-// the part of s without its leading / trailing whitespace. Unlike
-// TrimWSInPlace() this only narrows the view, so s can be read-only
-Str TrimWs(Str s, TrimOpt opt) {
+// Narrows the view past leading or trailing whitespace without modifying data.
+int TrimWs(Str& s, TrimOpt opt) {
     if (IsNull(s)) {
-        return s;
+        return 0;
     }
+    int origLen = len(s);
     if (opt != TrimOpt::Right) {
-        SkipWs(s);
+        TrimWs(s);
     }
     if (opt != TrimOpt::Left) {
         while (s.len > 0 && IsWs(s.s[s.len - 1])) {
             s.len--;
         }
     }
-    return s;
+    return origLen - len(s);
 }
 
 } // namespace str
@@ -5665,7 +5667,7 @@ static bool ParseULongAt(Str& s, int base, unsigned long* val) {
         return false;
     }
     unsigned long v = 0;
-    str::SkipWs(s);
+    str::TrimWs(s);
     int i = 0;
     if (base == 16 && i + 1 < s.len && s.s[i] == '0' && (s.s[i + 1] == 'x' || s.s[i + 1] == 'X')) {
         i += 2;
@@ -5699,7 +5701,7 @@ static bool ParseLongAt(Str& s, int base, long* val) {
         return false;
     }
     Str rest = s;
-    str::SkipWs(rest);
+    str::TrimWs(rest);
     if (rest.len <= 0) {
         return false;
     }

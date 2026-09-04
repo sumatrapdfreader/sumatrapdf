@@ -182,11 +182,11 @@ static void ApplyCompactInts(const StructInfo* info, u8* base, Str s) {
             continue;
         }
         Str rest = Str(s.s + off, len(s) - off);
-        off += str::SkipWs(rest);
+        off += str::TrimWs(rest);
         int val = (int)f.value;
         if (len(rest) > 0) {
             val = ParseInt(rest);
-            off += str::SkipNonWs(rest);
+            off += str::TrimNonWs(rest);
         }
         *(int*)(base + f.offset) = val;
     }

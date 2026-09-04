@@ -10,7 +10,7 @@ extern Str (*gShortcutLangCode)();
 
 bool IsValidShortcutString(Str shortcut);
 bool IsGlobalShortcut(Str shortcut);
-bool TrimGlobalPrefix(Str& shortcut);
+int TrimGlobalPrefix(Str& shortcut);
 
 #if OS_WIN
 bool ParseShortcutString(Str shortcut, ACCEL& accel);

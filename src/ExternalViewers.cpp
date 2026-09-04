@@ -594,7 +594,7 @@ bool PathMatchFilter(Str path, Str filter) {
 // and set *restOut to the remaining command line (after the exe and any spaces)
 static TempStr ExtractExePathTemp(Str cmdLine, Str* restOut) {
     Str s = cmdLine;
-    str::SkipChar(s, ' ');
+    str::TrimChar(s, ' ');
     str::Builder exe;
     if (len(s) > 0 && s.s[0] == '"') {
         s = Str(s.s + 1, s.len - 1);
@@ -610,7 +610,7 @@ static TempStr ExtractExePathTemp(Str cmdLine, Str* restOut) {
         }
         s = Str(s.s + i, s.len - i);
     }
-    str::SkipChar(s, ' ');
+    str::TrimChar(s, ' ');
     *restOut = s;
     return ToStrTemp(exe);
 }

@@ -58,7 +58,8 @@ static void CollectTagContents(Str xml, Str openNeedle, Str closeNeedle, StrVec&
         if (close < 0) {
             break;
         }
-        Str val = str::TrimWs(Str(body.s, close));
+        Str val(body.s, close);
+        str::TrimWs(val, str::TrimOpt::Both);
         if (len(val) > 0) {
             out.Append(val);
         }

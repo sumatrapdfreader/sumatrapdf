@@ -132,12 +132,12 @@ static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
 
 static int SkipNonWhitespaceOff(Str s, int off) {
     Str rest = Str(s.s + off, s.len - off);
-    return off + str::SkipNonWs(rest);
+    return off + str::TrimNonWs(rest);
 }
 
 static int SkipWhitespaceOff(Str s, int off) {
     Str rest = Str(s.s + off, s.len - off);
-    return off + str::SkipWs(rest);
+    return off + str::TrimWs(rest);
 }
 
 static void DeserializeUtf8StringArray(Vec<Str>* strArray, Str serialized) {

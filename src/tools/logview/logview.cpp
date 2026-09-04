@@ -360,20 +360,20 @@ static int MeasureLineWidth(HDC hdc, Str line) {
 
 // process one received line for a client. mirrors plog() in the web ui.
 static void IngestLine(HDC measureDC, int connNo, Str raw) {
-    Str line = str::TrimSuffixWhitespace(raw); // trimEnd
+    str::TrimSuffixWhitespace(raw);
 
     Tab* tab = FindOrCreateTab(connNo);
 
-    if (str::StartsWith(line, kValuePrefix)) {
-        HandleValueLine(tab, line);
+    if (str::StartsWith(raw, kValuePrefix)) {
+        HandleValueLine(tab, raw);
         return; // value lines are not added to the log
     }
 
-    Str stored = tab->logs.Append(line);
+    Str stored = tab->logs.Append(raw);
     tab->logBytes += stored.len + 1; // +1 for the newline that was trimmed
-    if (str::StartsWith(line, kAppPrefix)) {
+    if (str::StartsWith(raw, kAppPrefix)) {
         str::Free(tab->name);
-        tab->name = str::Dup(Str(line.s + kAppPrefix.len, line.len - kAppPrefix.len));
+        tab->name = str::Dup(Str(raw.s + kAppPrefix.len, raw.len - kAppPrefix.len));
         InvalidateTabBar();
     }
 

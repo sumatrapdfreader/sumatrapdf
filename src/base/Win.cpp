@@ -3957,7 +3957,7 @@ Str GetLastErrorAsStr(Arena* arena) {
     }
     auto ws = WStr(msgBuf);
     Str temp = ToUtf8(GetTempArena(), WStr(msgBuf));
-    temp = str::TrimSuffixWhitespace(temp);
+    str::TrimSuffixWhitespace(temp);
     Str result = fmt("0x%08lX '%s'", err, temp);
     LocalFree(msgBuf);
     return str::Dup(arena, result);

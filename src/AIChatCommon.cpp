@@ -294,14 +294,11 @@ TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchEx
 }
 
 void AIChatAppendModelUnique(StrVec& models, Str model) {
+    str::TrimWs(model, str::TrimOpt::Both);
     if (len(model) == 0) {
         return;
     }
     TempStr norm = str::DupTemp(model);
-    str::SkipWs(norm);
-    if (norm.len == 0) {
-        return;
-    }
     str::ToLowerInPlace(norm);
     for (int i = 0; i < len(models); i++) {
         if (str::EqI(models[i], norm)) {

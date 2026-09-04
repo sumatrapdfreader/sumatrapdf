@@ -69,7 +69,7 @@ static bool IsoDateParse(Str isoDate, SYSTEMTIME* timeOut) {
 }
 
 static void TrimHtmlTextToken(Str& tokText) {
-    tokText = str::TrimWs(tokText);
+    str::TrimWs(tokText, str::TrimOpt::Both);
 }
 
 static WStr ExtractHtmlText(EpubDoc* doc) {
