@@ -2081,10 +2081,10 @@ int Cmp(Str a, Str b) {
     if (a.s == b.s) {
         return 0;
     }
-    if (str::IsNull(a) || len(a) == 0) {
-        return (str::IsNull(b) || len(b) == 0) ? 0 : -1;
+    if (len(a) == 0) {
+        return len(b) == 0 ? 0 : -1;
     }
-    if (str::IsNull(b) || len(b) == 0) {
+    if (len(b) == 0) {
         return 1;
     }
     int n = std::min(a.len, b.len);
@@ -2100,10 +2100,10 @@ int CmpI(Str a, Str b) {
     if (a.s == b.s) {
         return 0;
     }
-    if (str::IsNull(a) || len(a) == 0) {
-        return (str::IsNull(b) || len(b) == 0) ? 0 : -1;
+    if (len(a) == 0) {
+        return len(b) == 0 ? 0 : -1;
     }
-    if (str::IsNull(b) || len(b) == 0) {
+    if (len(b) == 0) {
         return 1;
     }
     int n = std::min(a.len, b.len);
@@ -3823,10 +3823,10 @@ int Cmp(WStr a, WStr b) {
     if (a.s == b.s) {
         return 0;
     }
-    if (wstr::IsNull(a) || len(a) == 0) {
-        return (wstr::IsNull(b) || len(b) == 0) ? 0 : -1;
+    if (len(a) == 0) {
+        return len(b) == 0 ? 0 : -1;
     }
-    if (wstr::IsNull(b) || len(b) == 0) {
+    if (len(b) == 0) {
         return 1;
     }
     int n = std::min(a.len, b.len);
@@ -3843,10 +3843,10 @@ int CmpI(WStr a, WStr b) {
     if (a.s == b.s) {
         return 0;
     }
-    if (wstr::IsNull(a) || len(a) == 0) {
-        return (wstr::IsNull(b) || len(b) == 0) ? 0 : -1;
+    if (len(a) == 0) {
+        return len(b) == 0 ? 0 : -1;
     }
-    if (wstr::IsNull(b) || len(b) == 0) {
+    if (len(b) == 0) {
         return 1;
     }
     int n = std::min(a.len, b.len);
