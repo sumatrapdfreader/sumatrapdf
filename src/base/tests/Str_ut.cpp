@@ -554,6 +554,37 @@ static void StrStartsWithTest() {
     utassert(wstr::StartsWith(emptyW1, emptyW2));
     utassert(wstr::StartsWithI(WStrL(L"abc"), emptyW1));
     utassert(wstr::StartsWithI(emptyW1, emptyW2));
+
+    utassert(str::StartsWithAny(StrL("+foo"), "+-"));
+    utassert(str::StartsWithAny(StrL("-foo"), "+-"));
+    utassert(!str::StartsWithAny(StrL("foo"), "+-"));
+    utassert(!str::StartsWithAny(StrL(""), "+-"));
+    utassert(!str::StartsWithAny(empty1, "+-"));
+    utassert(!str::StartsWithAny(StrL("+foo"), ""));
+    utassert(!str::StartsWithAny(StrL("+foo"), nullptr));
+
+    Str tp = StrL("Global PageDown");
+    utassert(str::TrimPrefixI(tp, StrL("global")));
+    utassert(str::Eq(tp, StrL(" PageDown")));
+    utassert(!str::TrimPrefixI(tp, StrL("global")));
+
+    Str t1 = StrL("+-PageDown");
+    utassert(str::TrimAny(t1, "+-"));
+    utassert(str::Eq(t1, StrL("PageDown")));
+    utassert(!str::TrimAny(t1, "+-"));
+    utassert(str::Eq(t1, StrL("PageDown")));
+
+    Str t2 = StrL("PageDown");
+    utassert(!str::TrimAny(t2, "+-"));
+    utassert(str::Eq(t2, StrL("PageDown")));
+
+    Str t3 = StrL("---");
+    utassert(str::TrimAny(t3, "-"));
+    utassert(len(t3) == 0);
+
+    Str t4 = StrL(" \t+ - PageDown");
+    utassert(str::TrimAny(t4, " \t+-"));
+    utassert(str::Eq(t4, StrL("PageDown")));
 }
 
 static void StrArenaTest() {

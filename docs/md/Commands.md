@@ -323,7 +323,7 @@ CmdForgetSelectedDocument,,Remove Selected Document From History,
 CmdListPrinters,,List Printers,ver 3.7+
 CmdOptions,,Options...,
 CmdSetInverseSearch,,Set Inverse Search Command Line,"ver 3.7+, opens a dialog to set the SyncTeX inverse-search command and enables TeX enhancements"
-CmdScreenshot,,Take Screenshot,"ver 3.7+, requires Shortcuts entry (e.g. Key = PrtSc) to register global hotkey"
+CmdScreenshot,,Take Screenshot,"ver 3.7+, can be registered as a global hotkey via Shortcuts entry (e.g. Key = Global PrtSc) or through the Settings menu"
 CmdCropImage,,Crop Image,ver 3.7+
 CmdResizeImage,,Resize Image,ver 3.7+
 CmdSaveImage,,Save Image,"Save image from context menu, ver 3.7+"

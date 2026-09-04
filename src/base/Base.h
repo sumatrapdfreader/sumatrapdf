@@ -1915,9 +1915,12 @@ inline bool IsNull(const Str& s) {
     return !s.s;
 }
 bool StartsWith(Str str, Str prefix);
-bool TrimPrefix(Str& s, Str prefix);
-
 bool StartsWithI(Str str, Str prefix);
+bool StartsWithAny(Str s, const char* chars);
+
+bool TrimPrefix(Str& s, Str prefix);
+bool TrimPrefixI(Str& s, Str prefix);
+bool TrimAny(Str& s, const char* chars);
 bool EndsWith(Str txt, Str end);
 bool EndsWithI(Str txt, Str end);
 bool EqNIx(Str s, int n, Str s2);

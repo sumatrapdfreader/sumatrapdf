@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- **Global shortcuts:** prefixing `Key` with `Global ` in `Shortcuts` settings (e.g. `Key = Global PageDown`) registers a system-wide hotkey. Commands route to the most recently active open SumatraPDF window (fixes #6133)
 - **Open File Without History** (`CmdOpenFileNoHistory`) opens a document without adding it to File History or Windows Recent Documents. Palette-only; bind a shortcut if you want one (fixes #6121)
 - Themes can set separate `ActiveTabBackgroundColor` and `InactiveTabBackgroundColor` values; built-in themes define both to preserve their existing tab appearance
 - Clicking a PDF file-attachment annotation (the paperclip / pushpin on the page) whose file Sumatra can open (PDF, and other supported types) opens it in a new tab from memory, without writing a temp file. Other attached types still use Save Attachment on the context menu, or the OS handler (discussion #4276)

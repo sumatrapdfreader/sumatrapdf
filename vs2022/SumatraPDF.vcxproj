@@ -1225,6 +1225,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClInclude Include="..\src\FindWindow.h" />
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\FormFields.h" />
+    <ClInclude Include="..\src\GlobalHotkeys.h" />
     <ClInclude Include="..\src\GoogleLens.h" />
     <ClInclude Include="..\src\GumboHelpers.h" />
     <ClInclude Include="..\src\GumboHtmlParser.h" />
@@ -1445,6 +1446,7 @@ cd ../out/rel64_prefast_asan &amp; if not exist InstallerData.dat ..\..\bin\Make
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\FormFields.cpp" />
     <ClCompile Include="..\src\GetPasswordDialog.cpp" />
+    <ClCompile Include="..\src\GlobalHotkeys.cpp" />
     <ClCompile Include="..\src\GoToPageDialog.cpp" />
     <ClCompile Include="..\src\GoogleLens.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />

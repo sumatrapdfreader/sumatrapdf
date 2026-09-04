@@ -428,7 +428,8 @@ void AccelTablesBuilder::Add(ACCEL accel) {
 static int CountCustomShortcuts() {
     int n = 0;
     for (auto* curr = gFirstCustomCommand; curr; curr = curr->next) {
-        if ((curr->id > 0) && !str::IsEmptyOrWhiteSpace(curr->key)) {
+        if ((curr->id > 0) && !str::IsEmptyOrWhiteSpace(curr->key) && !IsGlobalShortcut(curr->key) &&
+            curr->origId != CmdScreenshot) {
             n++;
         }
     }
@@ -440,8 +441,8 @@ static void AddCustomShortcuts(AccelTablesBuilder& b) {
         if ((curr->id <= 0) || str::IsEmptyOrWhiteSpace(curr->key)) {
             continue;
         }
-        // CmdScreenshot shortcuts are registered as global hotkeys, not accelerators
-        if (curr->origId == CmdScreenshot) {
+        // global shortcuts are registered with the OS, not accelerators
+        if (IsGlobalShortcut(curr->key) || curr->origId == CmdScreenshot) {
             continue;
         }
         ACCEL accel{};

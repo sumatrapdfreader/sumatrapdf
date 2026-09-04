@@ -243,6 +243,9 @@
     <ClInclude Include="..\src\FormFields.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\GlobalHotkeys.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\GoogleLens.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -792,6 +795,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GetPasswordDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GlobalHotkeys.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GoToPageDialog.cpp">

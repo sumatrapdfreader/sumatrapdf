@@ -2198,9 +2198,44 @@ bool TrimPrefix(Str& s, Str prefix) {
     return true;
 }
 
+bool TrimPrefixI(Str& s, Str prefix) {
+    if (!StartsWithI(s, prefix)) {
+        return false;
+    }
+    s.s += prefix.len;
+    s.len -= prefix.len;
+    return true;
+}
+
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(Str s, Str prefix) {
     return EqNI(s, prefix, len(prefix));
+}
+
+bool StartsWithAny(Str s, const char* chars) {
+    if (len(s) <= 0 || !s.s || !chars) {
+        return false;
+    }
+    char c = s.s[0];
+    while (*chars) {
+        if (*chars == c) {
+            return true;
+        }
+        chars++;
+    }
+    return false;
+}
+
+bool TrimAny(Str& s, const char* chars) {
+    if (len(s) <= 0 || !s.s || !chars) {
+        return false;
+    }
+    int origLen = len(s);
+    while (len(s) > 0 && StartsWithAny(s, chars)) {
+        s.s++;
+        s.len--;
+    }
+    return len(s) < origLen;
 }
 
 bool Contains(Str s, Str sub) {

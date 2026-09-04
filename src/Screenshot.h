@@ -2,8 +2,4 @@
    License: GPLv3 */
 
 void InitScreenshotHost();
-void RegisterScreenshotHotkey(HWND hwnd);
-void UnregisterScreenshotHotkey(HWND hwnd);
 void ShowSetScreenshotHotkeyDialog(HWND hwndOwner);
-
-constexpr int kScreenshotHotkeyId = 0x5001;

@@ -43,6 +43,7 @@
 #include "Notifications.h"
 #include "ExplorerQuickLook.h"
 #include "Tabs.h"
+#include "GlobalHotkeys.h"
 #include "AppSettings.h"
 
 // workaround for OnMenuExit
@@ -392,6 +393,7 @@ void ApplySettingsToOpenWindows() {
         }
         win->RedrawAll(true);
     }
+    ReRegisterGlobalHotkeys();
 }
 
 bool LoadSettings() {

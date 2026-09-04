@@ -170,28 +170,13 @@ static SeqStrNum gVirtKeysNum =
 // #define VK_NONAME         0xFC
 // #define VK_PA1            0xFD
 
-static void skipPlusOrMinus(Str& s) {
-    if (len(s) > 0 && *s.s == '+') {
-        s.s++;
-        s.len--;
-        return;
-    }
-    if (len(s) > 0 && *s.s == '-') {
-        s.s++;
-        s.len--;
-        return;
-    }
-}
-
 static bool skipVirtKey(Str& s, Str key) {
     if (!str::StartsWithI(s, key)) {
         return false;
     }
     s.s += key.len;
     s.len -= key.len;
-    str::SkipWs(s);
-    skipPlusOrMinus(s);
-    str::SkipWs(s);
+    str::TrimAny(s, " \t+-");
     return true;
 }
 
@@ -236,6 +221,9 @@ again:
     }
     if (skipVirtKey(cursor, StrL("ctrl"))) {
         fVirt |= (FCONTROL | FVIRTKEY);
+        goto again;
+    }
+    if (skipVirtKey(cursor, StrL("global"))) {
         goto again;
     }
     accel.fVirt = fVirt;
@@ -349,6 +337,26 @@ bool IsValidShortcutString(Str shortcut) {
     ACCEL accel = {};
     accel.cmd = (WORD)-1; // for debugging
     return ParseShortcut(shortcut, accel);
+}
+
+bool TrimGlobalPrefix(Str& shortcut) {
+    Str s = shortcut;
+    str::SkipWs(s);
+    if (!str::TrimPrefixI(s, StrL("global"))) {
+        return false;
+    }
+    if (!str::TrimAny(s, " \t+-")) {
+        return false;
+    }
+    if (len(s) == 0) {
+        return false;
+    }
+    shortcut = s;
+    return true;
+}
+
+bool IsGlobalShortcut(Str shortcut) {
+    return TrimGlobalPrefix(shortcut);
 }
 
 // Fills accel with the key and modifiers shortcut names. Returns false if it

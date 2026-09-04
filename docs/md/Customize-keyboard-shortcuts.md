@@ -75,6 +75,27 @@ Explanation of the first example:
 - without modifiers, case matters, i.e. `a` and `A` are different
 - with modifiers, use `Shift` to select uppercase, i.e. `Alt + a` is the same as `Alt + A`; use `Alt + Shift + A` to select uppercase `A`
 
+## Global shortcuts
+
+**Ver 3.7+:** prefix `Key` with `Global ` to register a system-wide global shortcut that works even when SumatraPDF does not have focus:
+
+```
+Shortcuts [
+    [
+        Cmd = CmdGoToNextPage
+        Key = Global PageDown
+    ]
+    [
+        Cmd = CmdScreenshot
+        Key = Global Alt+PrtSc
+    ]
+]
+```
+
+- To avoid hotkey conflicts, global shortcuts are only registered by the first running SumatraPDF instance.
+- For commands that require a window or document, the command is dispatched to the most recently activated open window. If that window is closed, it falls back to the previously active open window. Triggering the global shortcut does not steal focus or bring background windows to the foreground.
+- If SumatraPDF fails to register a global shortcut (e.g. if another program has already registered it), a warning notification is shown.
+
 ## Commands
 
 You can see a [full list of commands](Commands.md) ([or view them in the source code](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/Commands.h#L9)).

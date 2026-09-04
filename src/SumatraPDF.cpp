@@ -91,6 +91,7 @@
 #include "AnnotFilterToolbar.h"
 #include "ScreenshotCapture.h"
 #include "Screenshot.h"
+#include "GlobalHotkeys.h"
 #include "ImageSaveCropResize.h"
 #include "StressTesting.h"
 #include "HomePage.h"
@@ -3283,7 +3284,7 @@ static MainWindow* CreateMainWindow() {
         InitScreenshotHost();
         InitImageEditHost();
         if (!NeedsWindowEmbeddingHacks()) {
-            RegisterScreenshotHotkey(win->hwndFrame);
+            RegisterGlobalHotkeys(win->hwndFrame);
         }
     }
     VecAppend(gWindows, win);
@@ -15155,8 +15156,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             break;
 
         case WM_HOTKEY:
-            if (wp == kScreenshotHotkeyId) {
-                TakeScreenshots();
+            if (HandleGlobalHotkey((int)wp)) {
                 return 0;
             }
             break;
@@ -15189,6 +15189,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_ACTIVATE:
             if (wp != WA_INACTIVE) {
                 gLastActiveFrameHwnd = hwnd;
+                GlobalHotkeysOnActivate(hwnd);
                 // restore home-page keyboard-selection tooltip if applicable
                 if (win) {
                     HomePageOnWindowActivate(win, true);
@@ -15366,7 +15367,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             // case CloseWindow() has already been called.
             // It's also sent when a parent window (e.g. Total Commander's lister)
             // destroys our embedded window.
-            UnregisterScreenshotHotkey(hwnd);
+            GlobalHotkeysOnDestroy(hwnd);
             FreeMenuOwnerDrawInfoData(GetMenu(hwnd));
             if (win) {
                 CloseWindow(win, true, true);
