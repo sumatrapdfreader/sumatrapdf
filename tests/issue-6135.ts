@@ -3,7 +3,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import {
   clientToScreen,
   getClientRect,
@@ -79,7 +79,7 @@ async function eraseAt(client: ControlClient, point: Point): Promise<InkState> {
 }
 
 async function waitForInkActive(client: ControlClient): Promise<void> {
-  const deadline = Date.now() + 5000;
+  const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
   for (;;) {
     if ((await inkState(client)).active) {
       return;
@@ -89,6 +89,19 @@ async function waitForInkActive(client: ControlClient): Promise<void> {
     }
     await sleep(40);
   }
+}
+
+async function waitUntil(client: ControlClient, pred: (s: InkState) => boolean, msg: string): Promise<InkState> {
+  const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+  let state = await inkState(client);
+  while (Date.now() < deadline) {
+    if (pred(state)) {
+      return state;
+    }
+    await sleep(40);
+    state = await inkState(client);
+  }
+  throw new Error(`issue-6135: ${msg}\n${state.raw}`);
 }
 
 export async function testit(): Promise<void> {
@@ -135,22 +148,30 @@ export async function testit(): Promise<void> {
     await drawStroke(canvas, first);
     await drawStroke(canvas, second);
 
-    let state = await inkState(client);
-    if (!state.active || state.strokes !== 2 || state.points !== first.length + second.length) {
-      throw new Error(`issue-6135: could not create two unfinished strokes\n${state.raw}`);
-    }
+    // SetCapture injects a cursor move, so each stroke can have extra points
+    let state = await waitUntil(
+      client,
+      (s) => s.active && s.strokes === 2 && s.points >= first.length + second.length,
+      "could not create two unfinished strokes",
+    );
 
     state = await eraseAt(client, first[1]!);
-    if (!state.active || state.strokes !== 1 || state.points !== second.length || state.annotations !== 0) {
+    if (
+      !state.active ||
+      state.strokes !== 1 ||
+      state.points >= first.length + second.length ||
+      state.annotations !== 0
+    ) {
       throw new Error(`issue-6135: eraser did not remove one unfinished stroke\n${state.raw}`);
     }
+    const remainingPoints = state.points;
 
     await pressEnter(frame);
-    await client.waitForRenderIdle();
-    state = await inkState(client);
-    if (state.active || state.annotations !== 1 || state.savedStrokes !== 1 || state.savedPoints !== second.length) {
-      throw new Error(`issue-6135: remaining stroke was not saved alone\n${state.raw}`);
-    }
+    state = await waitUntil(
+      client,
+      (s) => !s.active && s.annotations === 1 && s.savedStrokes === 1 && s.savedPoints === remainingPoints,
+      "remaining stroke was not saved alone",
+    );
 
     sendCommand(frame, cmdId("CmdCreateAnnotInk"));
     await waitForInkActive(client);
