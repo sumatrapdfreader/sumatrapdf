@@ -332,7 +332,7 @@ static Str MupdfCStrDupTemp(const char* s) {
 }
 
 static Str MupdfCStrTemp(const char* s) {
-    if (!s || str::IsEmptyOrWhiteSpace(Str(s))) {
+    if (str::IsEmptyOrWhiteSpace(Str(s))) {
         return {};
     }
     return str::DupTemp(Str(s));

@@ -244,7 +244,7 @@ static void CreateSelectionHandlerCommands() {
     bool canUseInternet = HasPermission(Perm::InternetAccess);
 
     for (auto& sh : *gSettings->selectionHandlers) {
-        if (!sh || !sh->name || str::IsEmptyOrWhiteSpace(sh->name)) {
+        if (!sh || str::IsEmptyOrWhiteSpace(sh->name)) {
             // can happen for bad selection handler definition
             continue;
         }
