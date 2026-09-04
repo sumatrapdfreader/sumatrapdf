@@ -492,19 +492,17 @@ static void StrTrimWsTest() {
     rest = StrL(" \t ");
     utassert(!str::NextWord(rest));
 
-    // TrimWs with an option narrows the view without touching its data
+    // TrimWsBoth narrows the view without touching its data
     Str orig = StrL(" \t a b \n");
     Str trimmed = orig;
-    utassert(str::TrimWs(trimmed, str::TrimOpt::Both) == 5 && str::Eq(trimmed, StrL("a b")));
+    utassert(str::TrimWsBoth(trimmed) == 5 && str::Eq(trimmed, StrL("a b")));
     trimmed = orig;
-    utassert(str::TrimWs(trimmed, str::TrimOpt::Left) == 3 && str::Eq(trimmed, StrL("a b \n")));
-    trimmed = orig;
-    utassert(str::TrimWs(trimmed, str::TrimOpt::Right) == 2 && str::Eq(trimmed, StrL(" \t a b")));
+    utassert(str::TrimWs(trimmed) == 3 && str::Eq(trimmed, StrL("a b \n")));
 
     trimmed = StrL("  ");
-    utassert(str::TrimWs(trimmed, str::TrimOpt::Both) == 2 && len(trimmed) == 0);
+    utassert(str::TrimWsBoth(trimmed) == 2 && len(trimmed) == 0);
     trimmed = {};
-    utassert(str::TrimWs(trimmed, str::TrimOpt::Both) == 0 && str::IsNull(trimmed));
+    utassert(str::TrimWsBoth(trimmed) == 0 && str::IsNull(trimmed));
 
     trimmed = StrL("name.ext");
     utassert(str::TrimSuffix(trimmed, StrL(".ext")) == 4 && str::Eq(trimmed, StrL("name")));

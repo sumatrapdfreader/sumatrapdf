@@ -3015,19 +3015,12 @@ Str NextWord(Str& s) {
     return word;
 }
 
-// Narrows the view past leading or trailing whitespace without modifying data.
-int TrimWs(Str& s, TrimOpt opt) {
-    if (IsNull(s)) {
-        return 0;
-    }
+// Narrows the view past leading and trailing whitespace without modifying data.
+int TrimWsBoth(Str& s) {
     int origLen = len(s);
-    if (opt != TrimOpt::Right) {
-        TrimWs(s);
-    }
-    if (opt != TrimOpt::Left) {
-        while (s.len > 0 && IsWs(s.s[s.len - 1])) {
-            s.len--;
-        }
+    TrimWs(s);
+    while (s.len > 0 && IsWs(s.s[s.len - 1])) {
+        s.len--;
     }
     return origLen - len(s);
 }

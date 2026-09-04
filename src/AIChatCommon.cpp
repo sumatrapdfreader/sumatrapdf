@@ -294,7 +294,7 @@ TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchEx
 }
 
 void AIChatAppendModelUnique(StrVec& models, Str model) {
-    str::TrimWs(model, str::TrimOpt::Both);
+    str::TrimWsBoth(model);
     if (len(model) == 0) {
         return;
     }

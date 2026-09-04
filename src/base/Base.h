@@ -1983,7 +1983,7 @@ int TrimChar(Str& s, char toSkip);
 int TrimWs(Str& s);
 int TrimNonWs(Str& s);
 Str NextWord(Str& s);
-int TrimWs(Str& s, TrimOpt opt);
+int TrimWsBoth(Str& s);
 
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
 
