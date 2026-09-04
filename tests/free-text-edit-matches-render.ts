@@ -7,13 +7,15 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
-  findChildWindow,
+  enumChildWindows,
+  getClassName,
+  getControlText,
   packCoords,
-  postMessage,
   sendMessage,
+  sendText,
   sleep,
   WM_CHAR,
   WM_COMMAND,
@@ -48,13 +50,28 @@ async function editActive(client: ControlClient): Promise<boolean> {
 }
 
 async function waitForEdit(client: ControlClient, active: boolean): Promise<void> {
-  const deadline = Date.now() + 5_000;
+  const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
   while ((await editActive(client)) !== active) {
     if (Date.now() > deadline) {
       throw new Error(`free-text-edit-matches-render: in-place edit did not become ${active}`);
     }
     await sleep(40);
   }
+}
+
+function findBox(canvas: number, pred: (text: string) => boolean): number {
+  let found = 0;
+  enumChildWindows(canvas, (hwnd) => {
+    if (getClassName(hwnd) !== "Edit") {
+      return true;
+    }
+    if (pred(getControlText(hwnd))) {
+      found = hwnd;
+      return false;
+    }
+    return true;
+  });
+  return found;
 }
 
 // How many bands of rows inside `r` have dark pixels: one band per rendered
@@ -127,20 +144,22 @@ export async function testit(): Promise<void> {
     // creating a free text annotation opens the in-place editor on it
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(120, 250));
     await waitForEdit(client, true);
-    const box = findChildWindow(canvas, "Edit");
+    const box = findBox(canvas, (t) => t.startsWith("This is a text"));
     if (!box) {
       throw new Error("free-text-edit-matches-render: placing a free text annotation did not open the editor");
     }
 
     // replace the placeholder with one long line
-    postMessage(box, WM_CHAR, 1, 0); // Ctrl+A
-    await sleep(120);
-    for (const ch of TEXT) {
-      postMessage(box, WM_CHAR, ch.charCodeAt(0), 0);
+    sendText(box, TEXT);
+    const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
+    while (getControlText(box) !== TEXT) {
+      if (Date.now() > deadline) {
+        throw new Error(`free-text-edit-matches-render: box text is "${getControlText(box)}"`);
+      }
+      await sleep(40);
     }
-    await sleep(400);
 
-    postMessage(box, WM_CHAR, 0x0a, 0); // Ctrl+Enter
+    sendMessage(box, WM_CHAR, 0x0a, 0); // Ctrl+Enter
     await waitForEdit(client, false);
     await client.waitForRenderIdle();
 

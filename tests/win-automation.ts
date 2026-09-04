@@ -19,6 +19,7 @@ import {
   enumWindows,
   getClassName,
   findChildWindow,
+  findVisibleChildWindow,
   waitForTopWindow,
   packCoords,
   sleep,
@@ -226,10 +227,12 @@ export function findChildByClass(parent: number, className: string): number {
   return findChildWindow(parent, className);
 }
 
-// the floating in-place form-field editor: a standard "Edit" child of the canvas
+// the floating in-place form-field editor: a visible "Edit" child of the canvas
 // that appears while editing a text/choice field. 0 if none is active.
+// Must skip hidden children: the home-page search box is an Edit under the
+// canvas even after a document is open.
 export function findFormEditor(canvas: number): number {
-  return findChildWindow(canvas, "Edit");
+  return findVisibleChildWindow(canvas, "Edit");
 }
 
 // poll until the form editor overlay appears (after clicking a text field)
