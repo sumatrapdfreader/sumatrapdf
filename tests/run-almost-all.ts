@@ -256,6 +256,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["lint-mingw-sources", lintMingwSources],
   ["issue-2629", issue2629],
   ["toolbar-hover-dropdown", toolbarHoverDropdown],
   ["issue-6103", issue6103],
@@ -283,7 +284,6 @@ export const tests: NamedTest[] = [
 
   // --- no Sumatra process -------------------------------------------------
   ["lint-command-ids", lintCommandIds],
-  ["lint-mingw-sources", lintMingwSources],
   ["build-cli", buildCli],
   ["parse-tip-brackets", parseTipBrackets],
   ["combining-mark-first", combiningMarkFirst],
