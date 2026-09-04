@@ -3806,7 +3806,8 @@ TempStr EbookGeneratedCssTemp(Str fontName, const Vec<float>* margin, float line
 
 #if IS_DEBUG
 bool EngineMupdf_UnitTestEbookLineSpacingCss() {
-    return !EbookLineSpacingCssTemp(0) && !EbookLineSpacingCssTemp(0.49f) && !EbookLineSpacingCssTemp(5.01f) &&
+    return len(EbookLineSpacingCssTemp(0)) == 0 && len(EbookLineSpacingCssTemp(0.49f)) == 0 &&
+           len(EbookLineSpacingCssTemp(5.01f)) == 0 &&
            str::Eq(EbookLineSpacingCssTemp(1.5f), StrL("body, body * { line-height: 1.5 !important; }\n"));
 }
 
@@ -3935,7 +3936,7 @@ bool EngineMupdf_UnitTestEbookMarginCss() {
     }
     VecReset(m);
     VecAppend(m, 200.1f);
-    return !EbookMarginCssTemp(&m, 96);
+    return len(EbookMarginCssTemp(&m, 96)) == 0;
 }
 
 bool EngineMupdf_UnitTestMergeEBookUI() {

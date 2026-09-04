@@ -329,7 +329,7 @@ static TempStr GetPDFXChangePathTemp() {
 #if IS_DEBUG
 bool ExternalViewers_UnitTestPDFXChangePaths() {
     TempStr testDir = GetTempFilePathTemp(StrL("issue-5941"));
-    if (!testDir || !file::Delete(testDir) || !dir::Create(testDir)) {
+    if (len(testDir) == 0 || !file::Delete(testDir) || !dir::Create(testDir)) {
         return false;
     }
     defer {
@@ -349,7 +349,7 @@ bool ExternalViewers_UnitTestPDFXChangePaths() {
             return false;
         }
         TempStr found = FindPDFXChangeInProgramDirsTemp(programDirs);
-        if (!found || !path::IsSame(found, expected) || !file::Delete(expected)) {
+        if (len(found) == 0 || !path::IsSame(found, expected) || !file::Delete(expected)) {
             return false;
         }
     }

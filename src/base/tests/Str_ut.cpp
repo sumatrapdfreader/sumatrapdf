@@ -11,6 +11,14 @@ static_assert(StrL("ab").len == 2);
 static_assert(StrL("xyz").s[0] == 'x');
 static constinit Str kStrLConstInit = StrL("hello");
 
+template <typename T>
+concept CanNegate = requires(T v) {
+    !v;
+};
+
+static_assert(!CanNegate<Str>);
+static_assert(!CanNegate<WStr>);
+
 static void StrReplaceTestOne(Str s, Str toReplace, Str replaceWith, Str expected) {
     TempStr res = str::ReplaceTemp(s, toReplace, replaceWith);
     utassert(str::Eq(res, expected));

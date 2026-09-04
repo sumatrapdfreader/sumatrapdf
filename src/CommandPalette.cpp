@@ -38,7 +38,7 @@ void CommandPaletteModel::SetCommands(const int* commandIds, int count) {
     for (int i = 0; i < count; i++) {
         int commandId = commandIds[i];
         Str description = GetCommandDescription(commandId);
-        if (!description) {
+        if (len(description) == 0) {
             continue;
         }
         commands.Append(description, {commandId});

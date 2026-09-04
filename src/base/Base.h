@@ -273,6 +273,7 @@ struct Str {
     constexpr explicit Str(char* s_, int len_) : s(s_), len(len_) {}
 
     explicit operator bool() const { return len > 0 && s; }
+    bool operator!() const = delete;
 };
 
 // exists just to mark the intent, needed by both Str.h and TempAllocator.h
@@ -303,6 +304,7 @@ struct WStr {
     explicit WStr(wchar_t* s_, int len_) : s(s_), len(len_) {}
 
     explicit operator bool() const { return len > 0 && s; }
+    bool operator!() const = delete;
 };
 
 // exists just to mark the intent, needed by both Str.h and TempAllocator.h
@@ -1555,6 +1557,8 @@ struct Vec {
     const_iterator begin() const { return els; }
     iterator end() { return els ? els + len : nullptr; }
     const_iterator end() const { return els ? els + len : nullptr; }
+
+    bool operator!() const = delete;
 };
 
 // VecNT() casts, so the layouts must match. Vec<T> is standard-layout and its

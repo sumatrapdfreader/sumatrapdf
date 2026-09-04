@@ -8,6 +8,13 @@
 // must be last due to assert() over-write
 #include "base/UtAssert.h"
 
+template <typename T>
+concept CanNegateVec = requires(T v) {
+    !v;
+};
+
+static_assert(!CanNegateVec<Vec<int>>);
+
 // capacity, whether the storage is owned or borrowed. Was a Vec function, but
 // only these tests look at the capacity.
 template <typename T>

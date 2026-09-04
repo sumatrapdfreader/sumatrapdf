@@ -475,7 +475,7 @@ static bool AccelShowsAs(BYTE virt, WORD key, Str expected) {
     a.fVirt = virt;
     a.key = key;
     TempStr s = AppendAccelKeyToMenuStringTemp(StrL(""), a);
-    if (!s || len(s) < 1 || s.s[0] != '\t') {
+    if (len(s) < 1 || s.s[0] != '\t') {
         return false;
     }
     return str::Eq(Str(s.s + 1, len(s) - 1), expected);
