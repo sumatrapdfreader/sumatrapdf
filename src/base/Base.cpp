@@ -1005,8 +1005,13 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
     }
 
     if (current->reserved < posPost && !(arena->flags & ArenaFlagNoChain)) {
-        u64 reserveChunkSize = current->reserveChunkSize;
-        u64 commitChunkSize = current->commitChunkSize;
+        // from the head, not from `current`: a block made to hold one
+        // oversized allocation carries that allocation's size as its chunk
+        // size, and it stays `current` afterwards. Taking the next block's
+        // size from it would reserve - and, since the two are equal there,
+        // commit - the whole of it for the next small push.
+        u64 reserveChunkSize = arena->reserveChunkSize;
+        u64 commitChunkSize = arena->commitChunkSize;
         if (size + kArenaHeaderSize > reserveChunkSize) {
             reserveChunkSize = ArenaAlignPow2(size + kArenaHeaderSize, ArenaMax(align, ArenaPageSize()));
             commitChunkSize = reserveChunkSize;
