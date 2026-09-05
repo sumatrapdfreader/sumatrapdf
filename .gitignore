@@ -32,6 +32,7 @@ cmd/tmp/
 
 .work/
 log.txt
+inlined.txt
 sumlog.txt
 vs2022/enc_temp_folder
 docs/md/.obsidian
