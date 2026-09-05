@@ -619,8 +619,9 @@ Argument:
   - `#` for history of files
   - `>` for commands
   - `&` for page thumbnails
-  - `%` for table of contents (`CmdCommandPaletteTOC`, `Shift + F12`; `*` still works)
+  - `%` for table of contents (`CmdCommandPaletteTOC`, `Shift + F12`)
   - `$` for favorites (`CmdCommandPaletteFavorites`)
+  - `*` for annotations in the current PDF
   - `=` for boolean advanced settings (`CmdToggleBoolSetting`)
 
 Without an argument it defaults to `>`.

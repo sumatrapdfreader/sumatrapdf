@@ -16,6 +16,7 @@ The command palette is a fast and convenient way to:
 - `&` : navigate pages with thumbnails
 - `%` : jump to a table of contents entry in the current document
 - `$` : jump to a favorite (current document's favorites first, then others)
+- `*` : jump to an annotation in the current PDF
 - `:` : combined view (replicates behavior before ver 3.6)
 
 How to use it:
@@ -74,6 +75,18 @@ You can bind a keyboard shortcut to open the palette directly in favorites mode
 with the `CmdCommandPaletteFavorites` [command](./Commands.md) (see
 [Managing favorites](./Managing-favorites.md)). The same command can be a
 [toolbar button](./Customize-toolbar.md#command-palette-on-the-toolbar).
+
+## Annotations
+
+Type `*` to jump to an annotation in the current PDF. `* Annotations` appears
+in the mode row once annotations have been collected and the document has at
+least one. Collection runs in the background the first time the command palette
+or **Find Annotation** needs them, and the result is reused (including when
+there are none).
+
+Rows match the **Find Annotation** list: type, contents, page number. Filter
+with the same syntax (`:t=text`, `:a=kjk`, `:c+`, plain words). `Enter` or
+double-click selects the annotation and jumps to it.
 
 ## Combined view
 

@@ -47,6 +47,7 @@ extern "C" {
 #include "AnnotFilterToolbar.h"
 #include "SvgIcons.h"
 #include "ImageReader.h"
+#include "CommandPalette.h"
 
 #include "AnnotEditToolbar.h"
 
@@ -2612,6 +2613,7 @@ void NotifyAnnotationsChanged(WindowTab* tab) {
     if (tab && tab->win) {
         UpdateAnnotFilterToolbar(tab->win);
     }
+    CommandPaletteOnAnnotationsChanged();
 }
 
 // Type on the left, optional contents in muted color, page number on the right.
@@ -3226,6 +3228,7 @@ static void OnAnnotsProgress(WindowTab* tab) {
         return;
     }
     RefreshAnnotFilterAnnotations(tab->win);
+    CommandPaletteOnAnnotationsChanged();
 }
 
 void StartLoadingAnnotationsForUi(WindowTab* tab) {
@@ -3255,6 +3258,7 @@ void RefreshAnnotationLists(WindowTab* tab) {
     if (tab->win) {
         StartLoadingAnnotationsForUi(tab);
         RefreshAnnotFilterAnnotations(tab->win);
+        CommandPaletteOnAnnotationsChanged();
     }
 }
 

@@ -140,6 +140,9 @@ void CommandPaletteModel_UnitTests() {
 #include "CommandAvailability.h"
 #include "Accelerators.h"
 #include "FilterHighlightDraw.h"
+#include "Annotation.h"
+#include "AnnotSearch.h"
+#include "AnnotEditToolbar.h"
 #include "CommandPalette.h"
 
 struct MainWindow;
@@ -148,6 +151,7 @@ struct TocItem;
 struct FileState;
 struct Favorite;
 struct ThumbnailPaletteCtrl;
+struct Annotation;
 
 enum class ThumbnailMode {
     Disabled,
@@ -165,6 +169,7 @@ struct ItemDataCP {
     int pageNo = 0; // toc entry destination page (0 if none), shown in the list
     FileState* favFs = nullptr;
     Favorite* fav = nullptr;
+    Annotation* annot = nullptr;
     bool* boolSetting = nullptr;
     bool boolSettingDefault = false;
 };
@@ -191,9 +196,11 @@ struct CommandPaletteWnd : WindowBase {
     StrVecCP commands;
     StrVecCP toc;
     StrVecCP favorites;
+    StrVecCP annotations;
     StrVecCP boolSettings;
     VirtListBox* listBox = nullptr;
     ThumbnailPaletteCtrl* thumbnailCtrl = nullptr;
+    HBox* switchRow = nullptr;
     HBox* helpRow = nullptr;
     int helpKind = -1;
 
@@ -217,7 +224,9 @@ struct CommandPaletteWnd : WindowBase {
     void CollectTabsMru(MainWindow*, WindowTab* currTab);
     void CollectToc(MainWindow*);
     void CollectFavorites(MainWindow*);
+    void CollectAnnotations(MainWindow*);
     void CollectBoolSettings();
+    void FillSwitchRow();
     void FilterStringsForQuery(Str, StrVecCP&);
 
     bool Create(MainWindow* win, Str prefix, int smartTabAdvance);
@@ -1296,6 +1305,16 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         ScheduleDeleteAndExecCommand();
         return;
     }
+
+    if (data->annot) {
+        WindowTab* curr = win->CurrentTab();
+        if (curr) {
+            SetSelectedAnnotation(curr, data->annot);
+        }
+        gHwndToActivateOnClose = win->hwndFrame;
+        ScheduleDeleteAndExecCommand();
+        return;
+    }
     auto filePath = data->filePath;
     if (filePath) {
         LoadArgs args(filePath, win);
@@ -1403,6 +1422,48 @@ static void InitHelpText(const HelpStyle& st, VirtRichText* t, Str markup) {
     t->padding = Insets{0, padX, 0, padX};
 }
 
+void CommandPaletteWnd::FillSwitchRow() {
+    if (!switchRow) {
+        return;
+    }
+    for (auto& c : switchRow->children) {
+        delete c.layout;
+    }
+    VecReset(switchRow->children);
+
+    auto colBg = ThemeWindowControlBackgroundColor();
+    auto colTxt = ThemeWindowTextColor();
+    HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
+    auto addSwitch = [this, &st](Str s, Str switchTo) {
+        TempStr markup = str::JoinTemp(StrL("(Kbd/"), Str(s.s, 1), StrL(")"), Str(s.s + 1, len(s) - 1));
+        auto* t = new PaletteSwitch();
+        InitHelpText(st, t, markup);
+        t->wnd = this;
+        t->prefix = switchTo;
+        t->onClick = MkFunc1Void(OnPaletteSwitchClicked);
+        switchRow->AddChild(t);
+    };
+    addSwitch(_TRA("# History"), Str(kPalettePrefixFileHistory));
+    addSwitch(_TRA("> Commands"), Str(kPalettePrefixCommands));
+    addSwitch(_TRA("@ Tabs"), Str(kPalettePrefixTabs));
+    if (win && win->AsFixed()) {
+        addSwitch(_TRA("& Thumbnails"), Str(kPalettePrefixThumbnails));
+    }
+    if (len(toc) > 0) {
+        addSwitch(_TRA("% TOC"), Str(kPalettePrefixTOC));
+    }
+    if (len(favorites) > 0) {
+        addSwitch(_TRA("$ Favorites"), Str(kPalettePrefixFavorites));
+    }
+    if (len(annotations) > 0) {
+        addSwitch(_TRA("* Annotations"), Str(kPalettePrefixAnnotations));
+    }
+    addSwitch(_TRA("= Settings"), Str(kPalettePrefixBoolSettings));
+    if (layout) {
+        DoLayout();
+    }
+}
+
 static VirtRichText* NewHelpText(const HelpStyle& st, Str markup) {
     auto* t = new VirtRichText();
     InitHelpText(st, t, markup);
@@ -1424,6 +1485,7 @@ enum {
     kHelpHistory,
     kHelpTabs,
     kHelpFavorites,
+    kHelpAnnotations,
     kHelpSettings,
     kHelpToc,
     kHelpEverything,
@@ -1443,11 +1505,14 @@ static int PaletteHelpKind(Str filter, bool smartTab) {
     if (str::StartsWith(filter, Str(kPalettePrefixFileHistory))) {
         return kHelpHistory;
     }
-    if (str::StartsWith(filter, Str(kPalettePrefixTOC)) || str::StartsWith(filter, Str(kPalettePrefixTOCLegacy))) {
+    if (str::StartsWith(filter, Str(kPalettePrefixTOC))) {
         return kHelpToc;
     }
     if (str::StartsWith(filter, Str(kPalettePrefixFavorites))) {
         return kHelpFavorites;
+    }
+    if (str::StartsWith(filter, Str(kPalettePrefixAnnotations))) {
+        return kHelpAnnotations;
     }
     if (str::StartsWith(filter, Str(kPalettePrefixBoolSettings))) {
         return kHelpSettings;
@@ -1501,6 +1566,10 @@ void CommandPaletteWnd::UpdateHelpRow() {
             strings[nHelp++] = _TRA("Del remove favorite");
             strings[nHelp++] = _TRA("Esc close");
             break;
+        case kHelpAnnotations:
+            strings[nHelp++] = _TRA("Enter go to");
+            strings[nHelp++] = _TRA("Esc close");
+            break;
         case kHelpSettings:
             strings[nHelp++] = _TRA("Enter change");
             strings[nHelp++] = _TRA("Esc close");
@@ -1537,7 +1606,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     if (str::Eq(prefix, Str(kPalettePrefixTabs))) {
         smartTabMode = smartTabAdvance != 0;
     }
-    tocMode = str::Eq(prefix, Str(kPalettePrefixTOC)) || str::Eq(prefix, Str(kPalettePrefixTOCLegacy));
+    tocMode = str::Eq(prefix, Str(kPalettePrefixTOC));
     CollectStrings(win);
     {
         CreateCustomArgs args;
@@ -1584,33 +1653,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         vbox->AddChild(new Spacer(0, DpiScale(4)));
         auto* box = new HBox();
         box->rtl = CommandPaletteUiRtl();
-        // same smaller app font as the bottom hint row
-        HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
-        // in "# History" and friends the first character is what you type
-        // to get there, so it becomes a key-cap
-        auto addSwitch = [this, box, &st](Str s, Str switchTo) {
-            TempStr markup = str::JoinTemp(StrL("(Kbd/"), Str(s.s, 1), StrL(")"), Str(s.s + 1, len(s) - 1));
-            auto* t = new PaletteSwitch();
-            InitHelpText(st, t, markup);
-            t->wnd = this;
-            t->prefix = switchTo;
-            t->onClick = MkFunc1Void(OnPaletteSwitchClicked);
-            box->AddChild(t);
-        };
-        addSwitch(_TRA("# History"), Str(kPalettePrefixFileHistory));
-        addSwitch(_TRA("> Commands"), Str(kPalettePrefixCommands));
-        addSwitch(_TRA("@ Tabs"), Str(kPalettePrefixTabs));
-        if (win->AsFixed()) {
-            addSwitch(_TRA("& Thumbnails"), Str(kPalettePrefixThumbnails));
-        }
-        if (len(toc) > 0) {
-            addSwitch(_TRA("% TOC"), Str(kPalettePrefixTOC));
-        }
-        if (len(favorites) > 0) {
-            addSwitch(_TRA("$ Favorites"), Str(kPalettePrefixFavorites));
-        }
-        addSwitch(_TRA("= Settings"), Str(kPalettePrefixBoolSettings));
-        vbox->AddChild(NewHelpRow(box));
+        switchRow = NewHelpRow(box);
+        FillSwitchRow();
+        vbox->AddChild(switchRow);
     }
 
     {
@@ -1714,10 +1759,60 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
         MkMethod1<CommandPaletteWnd, WindowBase::PreTranslateEvent*, &CommandPaletteWnd::PreTranslate>(wnd);
     wnd->SetFont(GetAppBiggerFont());
     wnd->win = win;
+    gCommandPaletteWnd = wnd;
     bool ok = wnd->Create(win, prefix, smartTabAdvance);
     ReportIf(!ok);
-    gCommandPaletteWnd = wnd;
     gHwndToActivateOnClose = win->hwndFrame;
+}
+
+void CommandPaletteOnAnnotationsChanged() {
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    if (!wnd || !wnd->hwnd || !wnd->win) {
+        return;
+    }
+    if (!IsMainWindowValidAndNotClosing(wnd->win)) {
+        return;
+    }
+    int nPrev = len(wnd->annotations);
+    wnd->CollectAnnotations(wnd->win);
+    if ((nPrev == 0) != (len(wnd->annotations) == 0)) {
+        wnd->FillSwitchRow();
+    }
+    if (!wnd->editQuery || !wnd->listBox) {
+        return;
+    }
+    Str filter = CommandPaletteSkipWS(Str(wnd->editQuery->GetTextTemp()));
+    if (!str::StartsWith(filter, Str(kPalettePrefixAnnotations))) {
+        return;
+    }
+    auto* m = (ListBoxModelCP*)wnd->listBox->model;
+    if (!m) {
+        return;
+    }
+    Annotation* keep = nullptr;
+    int sel = wnd->listBox->GetCurrentSelection();
+    if (sel >= 0 && sel < m->ItemsCount()) {
+        ItemDataCP* data = m->Data(sel);
+        keep = data ? data->annot : nullptr;
+    }
+    wnd->FilterStringsForQuery(filter, m->strings);
+    wnd->listBox->SetModel(m);
+    wnd->UpdateHelpRow();
+    int n = m->ItemsCount();
+    if (n == 0) {
+        return;
+    }
+    int idx = 0;
+    if (keep) {
+        for (int i = 0; i < n; i++) {
+            ItemDataCP* data = m->Data(i);
+            if (data && data->annot == keep) {
+                idx = i;
+                break;
+            }
+        }
+    }
+    CommandPaletteSetCurrentSelection(wnd, idx);
 }
 
 HWND CommandPaletteHwndForAccelerator(HWND hwnd) {
@@ -1752,19 +1847,28 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     int sel = wnd->listBox ? wnd->listBox->GetCurrentSelection() : -1;
     int n = wnd->listBox ? wnd->listBox->ItemsCount() : 0;
     int selectedCmdId = 0;
+    int annotPage = 0;
     if (sel >= 0 && sel < n) {
         auto* model = (ListBoxModelCP*)wnd->listBox->model;
         ItemDataCP* data = model->Data(sel);
         selectedCmdId = data ? data->cmdId : 0;
+        if (data && data->annot) {
+            annotPage = data->annot->pageNo;
+        }
     }
     int qStart = 0, qEnd = 0, qLen = 0;
     EditGetSelection(wnd->editQuery, qStart, qEnd);
     qLen = EditGetTextLen(wnd->editQuery);
     int thumbPage = wnd->thumbnailCtrl ? wnd->thumbnailCtrl->selectedPage : 0;
     int rendered = wnd->thumbnailCtrl ? wnd->thumbnailCtrl->RenderedCount() : 0;
-    out.Append(fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d thumb=%d page=%d rendered=%d\n", sel, n,
-                   qStart, qEnd, qLen, selectedCmdId, (int)CommandPaletteUiRtl(), (int)wnd->thumbnailMode, thumbPage,
-                   rendered));
+    int nAnnots = len(wnd->annotations);
+    EngineBase* engine = wnd->win && wnd->win->CurrentTab() ? wnd->win->CurrentTab()->GetEngine() : nullptr;
+    int annotsDone = EngineMupdfAnnotsLoadDone(engine) ? 1 : 0;
+    out.Append(
+        fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d thumb=%d page=%d rendered=%d annots=%d "
+            "annotPage=%d annotsDone=%d\n",
+            sel, n, qStart, qEnd, qLen, selectedCmdId, (int)CommandPaletteUiRtl(), (int)wnd->thumbnailMode, thumbPage,
+            rendered, nAnnots, annotPage, annotsDone));
     return finish(0);
 }
 
@@ -2097,6 +2201,28 @@ static void AppendFavoritesForFile(StrVecCP& favorites, FileState* fs, bool isCu
     }
 }
 
+void CommandPaletteWnd::CollectAnnotations(MainWindow* mainWin) {
+    annotations.Reset();
+    WindowTab* tab = mainWin ? mainWin->CurrentTab() : nullptr;
+    if (!tab) {
+        return;
+    }
+    EngineBase* engine = tab->GetEngine();
+    if (!EngineSupportsAnnotations(engine)) {
+        return;
+    }
+    Vec<Annotation*> annots;
+    EngineMupdfGetLoadedAnnotations(engine, annots);
+    for (Annotation* a : annots) {
+        if (!a) {
+            continue;
+        }
+        ItemDataCP data;
+        data.annot = a;
+        annotations.Append(AnnotationReadableNameTemp(a->type), data);
+    }
+}
+
 void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
     favorites.Reset();
     WindowTab* currTab = mainWin->CurrentTab();
@@ -2184,6 +2310,11 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
     CollectToc(mainWin);
     CollectFavorites(mainWin);
+    WindowTab* tab = mainWin->CurrentTab();
+    if (tab && EngineSupportsAnnotations(tab->GetEngine())) {
+        StartLoadingAnnotationsForUi(tab);
+    }
+    CollectAnnotations(mainWin);
     CollectBoolSettings();
 
     fileHistory.Reset();
@@ -2264,6 +2395,15 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     Gfx* gfx = ev->gfx;
     HWND hwndList = lb->GetHwnd();
     Rect rc = ev->itemRect;
+    ItemDataCP* data = m->Data(ev->itemIndex);
+    if (!data) {
+        return;
+    }
+    if (data->annot) {
+        DrawAnnotationListRow(gfx, lb->font, rc, data->annot, filterWords, highlighted, lb->GetColor(kColListBg),
+                              lb->GetColor(kColListText), ev->selected);
+        return;
+    }
 
     Color colBg = lb->GetColor(kColListBg);
     Color colText = lb->GetColor(kColListText);
@@ -2289,7 +2429,6 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     bool prevMirrored = hwndRtl ? gfx->SetMirrored(false) : false;
 
     Str itemText = m->Item(ev->itemIndex);
-    ItemDataCP* data = m->Data(ev->itemIndex);
 
     TempStr rightStr;
     PlatformFont* rightFont = lb->font;
@@ -2439,18 +2578,19 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
     }
 
     bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false,
-         searchBoolSettings = false;
+         searchBoolSettings = false, searchAnnotations = false;
     if (str::TrimPrefix(filter, Str(kPalettePrefixEverything))) {
         searchTabs = searchHistory = searchCommands = true;
     } else if (str::TrimPrefix(filter, Str(kPalettePrefixTabs))) {
         searchTabs = true;
     } else if (str::TrimPrefix(filter, Str(kPalettePrefixFileHistory))) {
         searchHistory = true;
-    } else if (str::TrimPrefix(filter, Str(kPalettePrefixTOC)) ||
-               str::TrimPrefix(filter, Str(kPalettePrefixTOCLegacy))) {
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixTOC))) {
         searchToc = true;
     } else if (str::TrimPrefix(filter, Str(kPalettePrefixFavorites))) {
         searchFavorites = true;
+    } else if (str::TrimPrefix(filter, Str(kPalettePrefixAnnotations))) {
+        searchAnnotations = true;
     } else if (str::TrimPrefix(filter, Str(kPalettePrefixBoolSettings))) {
         searchBoolSettings = true;
     } else if (str::TrimPrefix(filter, Str(kPalettePrefixThumbnails))) {
@@ -2461,6 +2601,27 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
     }
 
     filterWords.Reset();
+    if (searchAnnotations) {
+        AnnotMatchOpts opts;
+        if (!ParseAnnotSearch(filter, opts)) {
+            opts.Reset();
+            StrVec words;
+            SplitFilterToWords(filter, words);
+            for (Str w : words) {
+                AnnotSearchAddContentWord(opts, w);
+            }
+        }
+        AnnotSearchContentWords(opts, filterWords);
+        int n = len(annotations);
+        for (int i = 0; i < n; i++) {
+            ItemDataCP* data = annotations.AtData(i);
+            if (data && AnnotMatches(data->annot, opts)) {
+                strings.AppendFrom(&annotations, i);
+            }
+        }
+        return;
+    }
+
     SplitFilterToWords(filter, filterWords);
 
     if (searchTabs) {
@@ -2513,8 +2674,7 @@ void CommandPaletteWnd::QueryChanged() {
         CommandPaletteSetCurrentSelection(this, currSelIdx);
         return;
     }
-    if ((str::StartsWith(filter, Str(kPalettePrefixTOC)) || str::StartsWith(filter, Str(kPalettePrefixTOCLegacy))) &&
-        len(filterWords) == 0) {
+    if (str::StartsWith(filter, Str(kPalettePrefixTOC)) && len(filterWords) == 0) {
         int idx = (currTocIdx >= 0 && currTocIdx < nItems) ? currTocIdx : 0;
         CommandPaletteSetCurrentSelection(this, idx);
         return;

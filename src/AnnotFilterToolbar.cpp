@@ -1037,6 +1037,7 @@ static void ShowAnnotFilterWindow(MainWindow* win) {
             return;
         }
     }
+    StartLoadingAnnotationsForUi(win->CurrentTab());
     LoadAnnotations(f);
     RebuildList(f);
     UpdateFloatButtons(f);

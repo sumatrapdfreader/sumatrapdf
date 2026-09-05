@@ -8638,6 +8638,11 @@ void EngineMupdfGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& annot
     AppendLoadedAnnotations(e, annotsOut);
 }
 
+bool EngineMupdfAnnotsLoadDone(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    return e && e->annotLoadDone;
+}
+
 // Like EngineMupdfGetLoadedAnnotations but does not wait for pagesLock.
 bool EngineMupdfTryGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
     EngineMupdf* e = AsEngineMupdf(engine);
