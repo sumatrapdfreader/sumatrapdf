@@ -5407,36 +5407,29 @@ static Str bufFmt(Str buf, const char* fmt, ...) {
 }
 
 // default formatting for {n} positional and %v: format by the arg's runtime type
-static void evalDefault(Fmt& fmt, const FmtArg& arg) {
+static bool evalDefault(Fmt& fmt, const FmtArg& arg) {
     TempStr s;
     Str buf(fmt.buf, dimofi(fmt.buf));
     switch (arg.t) {
         case FmtArg::Kind::Char:
-            fmt.res.AppendChar(arg.c);
-            break;
+            return fmt.res.AppendChar(arg.c);
         case FmtArg::Kind::Int:
-            fmt.res.Append(bufFmt(buf, "%lld", (long long)arg.i));
-            break;
+            return fmt.res.Append(bufFmt(buf, "%lld", (long long)arg.i));
         case FmtArg::Kind::Ptr:
-            fmt.res.Append(bufFmt(buf, "%p", arg.ptr));
-            break;
+            return fmt.res.Append(bufFmt(buf, "%p", arg.ptr));
         case FmtArg::Kind::Float:
             // Note: %G, unlike %f, avoids trailing '0'
-            fmt.res.Append(bufFmt(buf, "%G", (double)arg.f));
-            break;
+            return fmt.res.Append(bufFmt(buf, "%G", (double)arg.f));
         case FmtArg::Kind::Double:
-            fmt.res.Append(bufFmt(buf, "%G", arg.d));
-            break;
+            return fmt.res.Append(bufFmt(buf, "%G", arg.d));
         case FmtArg::Kind::Str:
-            fmt.res.Append(arg.str);
-            break;
+            return fmt.res.Append(arg.str);
         case FmtArg::Kind::WStr:
             s = ToUtf8Temp(arg.wstr);
-            fmt.res.Append(s);
-            break;
+            return fmt.res.Append(s);
         default:
             ReportIf(true);
-            break;
+            return true;
     }
 }
 
@@ -5457,7 +5450,7 @@ static i64 argToI64(const FmtArg& arg) {
 // delegating to snprintf (bufFmt), normalizing the length modifier so the
 // 32/64-bit value width matches printf. %s padding/truncation is done by hand to
 // avoid relying on the Str being NUL-terminated.
-static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
+static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
     Str buf(fmt.buf, dimofi(fmt.buf));
 
     if (inst.conv == 's' || inst.conv == 'S') {
@@ -5470,16 +5463,22 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
         pad = std::max(pad, 0);
         if (!inst.leftJust) {
             for (int j = 0; j < pad; j++) {
-                fmt.res.AppendChar(' ');
+                if (!fmt.res.AppendChar(' ')) {
+                    return false;
+                }
             }
         }
-        fmt.res.Append(Str(sv.s, slen));
+        if (!fmt.res.Append(Str(sv.s, slen))) {
+            return false;
+        }
         if (inst.leftJust) {
             for (int j = 0; j < pad; j++) {
-                fmt.res.AppendChar(' ');
+                if (!fmt.res.AppendChar(' ')) {
+                    return false;
+                }
             }
         }
-        return;
+        return true;
     }
 
     // build "%" + flags+width+precision into fbuf
@@ -5491,6 +5490,7 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
     }
     char conv = inst.conv;
     i64 ival = argToI64(arg);
+    bool ok = true;
     switch (conv) {
         case 'd':
         case 'i':
@@ -5499,11 +5499,11 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                fmt.res.Append(bufFmt(buf, fbuf, (long long)ival));
+                ok = fmt.res.Append(bufFmt(buf, fbuf, (long long)ival));
             } else {
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
+                ok = fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
             }
             break;
         case 'u':
@@ -5515,17 +5515,17 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                fmt.res.Append(bufFmt(buf, fbuf, (unsigned long long)ival));
+                ok = fmt.res.Append(bufFmt(buf, fbuf, (unsigned long long)ival));
             } else {
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                fmt.res.Append(bufFmt(buf, fbuf, (unsigned int)(unsigned long long)ival));
+                ok = fmt.res.Append(bufFmt(buf, fbuf, (unsigned int)(unsigned long long)ival));
             }
             break;
         case 'c':
             fbuf[k++] = 'c';
             fbuf[k] = 0;
-            fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
+            ok = fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
             break;
         case 'f':
         case 'F':
@@ -5538,17 +5538,18 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
             fbuf[k++] = conv;
             fbuf[k] = 0;
             double dv = (arg.t == FmtArg::Kind::Double) ? arg.d : (double)arg.f;
-            fmt.res.Append(bufFmt(buf, fbuf, dv));
+            ok = fmt.res.Append(bufFmt(buf, fbuf, dv));
         } break;
         case 'p': {
             // flags/width are uncommon (and platform-specific) for %p; emit plain
             const void* pv = (arg.t == FmtArg::Kind::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
-            fmt.res.Append(bufFmt(buf, "%p", pv));
+            ok = fmt.res.Append(bufFmt(buf, "%p", pv));
         } break;
         default:
             ReportIf(true);
             break;
     }
+    return ok;
 }
 
 bool Fmt::Eval(const FmtArg** args, int nArgs) {
@@ -5563,7 +5564,10 @@ bool Fmt::Eval(const FmtArg** args, int nArgs) {
         auto& inst = instructions[n];
 
         if (inst.t == FmtArg::Kind::RawStr) {
-            res.Append(Str(format.s + inst.rawOff, inst.sLen));
+            if (!res.Append(Str(format.s + inst.rawOff, inst.sLen))) {
+                isOk = false;
+                return false;
+            }
             continue;
         }
 
@@ -5581,10 +5585,13 @@ bool Fmt::Eval(const FmtArg** args, int nArgs) {
             return false;
         }
 
-        if (inst.t == FmtArg::Kind::Any) {
-            evalDefault(*this, arg);
-        } else {
-            evalPercInst(*this, inst, arg);
+        // an append that could not allocate has to be told apart from one
+        // that worked, or Eval answers true over a string missing the middle
+        // of it
+        bool appended = (inst.t == FmtArg::Kind::Any) ? evalDefault(*this, arg) : evalPercInst(*this, inst, arg);
+        if (!appended) {
+            isOk = false;
+            return false;
         }
     }
     return true;
