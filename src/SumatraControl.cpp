@@ -2020,7 +2020,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestKeyboardLinkFollow: {
             int exitCode = 0;
-            Str res = KeyboardLinkFollowResultTemp(&exitCode);
+            Str res = KeyboardLinkFollowResultTemp(StringArg(req, 0), StringArg(req, 1), &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

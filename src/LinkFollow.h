@@ -16,4 +16,4 @@ void KeyboardLinkFollowingViewportChanged(MainWindow*);
 void KeyboardLinkFollowingRecompute(MainWindow*);
 void PaintKeyboardLinkTargets(MainWindow*, Gfx*);
 
-TempStr KeyboardLinkFollowResultTemp(int* exitCodeOut);
+TempStr KeyboardLinkFollowResultTemp(Str action, Str chars, int* exitCodeOut);

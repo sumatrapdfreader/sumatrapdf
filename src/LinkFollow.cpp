@@ -353,7 +353,8 @@ bool KeyboardLinkFollowingOnChar(MainWindow* win, WPARAM key) {
 
 // State dump for -dbg-control tests (tests/issue-2629.ts): whether the mode is
 // on, which page we're on, and the labeled links with their screen rects.
-TempStr KeyboardLinkFollowResultTemp(int* exitCodeOut) {
+// action "stop" leaves the mode; "char" types chars as hint input.
+TempStr KeyboardLinkFollowResultTemp(Str action, Str chars, int* exitCodeOut) {
     str::Builder out;
     if (len(gWindows) == 0) {
         *exitCodeOut = 2;
@@ -361,6 +362,17 @@ TempStr KeyboardLinkFollowResultTemp(int* exitCodeOut) {
         return ToStrTemp(out);
     }
     MainWindow* win = gWindows[0];
+    if (str::Eq(action, StrL("stop"))) {
+        StopKeyboardLinkFollowing(win);
+    } else if (str::Eq(action, StrL("char"))) {
+        for (int i = 0; i < len(chars); i++) {
+            KeyboardLinkFollowingOnChar(win, (u8)chars.s[i]);
+        }
+    } else if (len(action) > 0) {
+        *exitCodeOut = 1;
+        out.Append(StrL("ERROR unknown-action\n"));
+        return ToStrTemp(out);
+    }
     DisplayModel* dm = win->AsFixed();
     int currPage = win->ctrl ? win->ctrl->CurrentPageNo() : 0;
     // the keyboard shortcut can't be exercised from a test (posted key messages
