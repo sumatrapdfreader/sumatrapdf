@@ -410,7 +410,7 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
             if (OrigCommandId(cmdId) == CmdAnnotationHighlightBrush) {
                 return _TRA("Paint with the highlighter. Release to finish. **Esc** to cancel.");
             }
-            return _TRA("Draw ink annotation. **Enter** to finish. **Esc** to cancel.");
+            return _TRA("Draw ink annotation. Release to finish. **Esc** to cancel.");
         default:
             return {};
     }
@@ -908,11 +908,12 @@ static bool HandleInkUp(MainWindow* win, Point pt) {
         ReleaseCapture();
     }
     win->annotPlacement.mouseDown = false;
-    if (win->annotPlacement.highlightBrush) {
-        FinishInkAnnotationPlacement(win);
-        return true;
+    bool rearm = !win->annotPlacement.highlightBrush;
+    int cmdId = win->annotPlacement.cmdId;
+    FinishInkAnnotationPlacement(win);
+    if (rearm) {
+        StartAnnotationPlacement(win, cmdId);
     }
-    HwndInvalidate(win->hwndCanvas);
     return true;
 }
 

@@ -1,13 +1,11 @@
-// Ink annotations from the PDF toolbar and Command Palette collect one or
-// more freehand strokes with a live preview. Enter commits the combined
-// InkList; Esc discards it.
+// Ink annotations from the PDF toolbar and Command Palette: each stroke
+// commits on release and the tool stays on. Esc or an empty click leaves it.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, runStandalone, tmpPath, assemblePdf, SLOW_BUILD_FACTOR } from "./util.ts";
 import {
-  captureWindowPixels,
   clientToScreen,
   getClassName,
   getClientRect,
@@ -21,7 +19,6 @@ import {
   setCursorPos,
   sleep,
   VK_DOWN,
-  VK_RETURN,
   WM_COMMAND,
   WM_KEYDOWN,
   WM_LBUTTONDOWN,
@@ -36,7 +33,6 @@ import {
   launchControlled,
   pressEnter,
   pressEscape,
-  pressKey,
   sendCommand,
 } from "./win-automation.ts";
 
@@ -190,48 +186,6 @@ async function drawStroke(canvas: number, points: Point[]): Promise<void> {
   await sleep(100);
 }
 
-function countPreviewBlue(shot: { w: number; h: number; data: Uint8Array } | null, points: Point[]): number {
-  if (!shot) {
-    return 0;
-  }
-  let left = points[0]!.x;
-  let right = left;
-  let top = points[0]!.y;
-  let bottom = top;
-  for (const point of points) {
-    left = Math.min(left, point.x);
-    right = Math.max(right, point.x);
-    top = Math.min(top, point.y);
-    bottom = Math.max(bottom, point.y);
-  }
-  left = Math.max(0, left - 8);
-  right = Math.min(shot.w - 1, right + 8);
-  top = Math.max(0, top - 8);
-  bottom = Math.min(shot.h - 1, bottom + 8);
-  let count = 0;
-  for (let y = top; y <= bottom; y++) {
-    for (let x = left; x <= right; x++) {
-      const off = (y * shot.w + x) * 4;
-      const b = shot.data[off]!;
-      const g = shot.data[off + 1]!;
-      const r = shot.data[off + 2]!;
-      if (b > 150 && b > g + 50 && g > r + 30 && r < 80) {
-        count++;
-      }
-    }
-  }
-  return count;
-}
-
-function inkScreenRects(raw: string): { x: number; y: number; dx: number; dy: number }[] {
-  return Array.from(raw.matchAll(/type=Ink page=1 rect=[^\n]+ screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/g), (m) => ({
-    x: +m[1]!,
-    y: +m[2]!,
-    dx: +m[3]!,
-    dy: +m[4]!,
-  }));
-}
-
 export async function testit(): Promise<void> {
   const dir = tmpPath("ink-annotation-placement");
   rmSync(dir, { recursive: true, force: true });
@@ -293,7 +247,7 @@ export async function testit(): Promise<void> {
       state.points !== 0 ||
       state.annotations !== 0 ||
       state.command !== cmdId("CmdCreateAnnotInk") ||
-      state.message !== "Draw ink annotation. **Enter** to finish. **Esc** to cancel."
+      state.message !== "Draw ink annotation. Release to finish. **Esc** to cancel."
     ) {
       throw new Error(`ink-annotation-placement: toolbar did not start clean placement mode\n${state.raw}`);
     }
@@ -313,68 +267,47 @@ export async function testit(): Promise<void> {
     }
 
     await client.setNotificationsEnabled(false);
-    const before = captureWindowPixels(canvas);
-    const blueBefore = countPreviewBlue(before, stroke1);
     await drawStroke(canvas, stroke1);
-    const after = captureWindowPixels(canvas);
-    const blueAfter = countPreviewBlue(after, stroke1);
-    state = await placementState(client);
-    if (
-      !state.active ||
-      state.mouseDown ||
-      state.strokes !== 1 ||
-      state.points < stroke1.length ||
-      state.page !== 1 ||
-      state.annotations !== 0 ||
-      blueAfter < blueBefore + 40
-    ) {
-      throw new Error(
-        `ink-annotation-placement: first stroke did not remain live (${blueBefore} -> ${blueAfter})\n${state.raw}`,
-      );
+    state = await waitForPlacement(client, true);
+    if (state.mouseDown || state.strokes !== 0 || state.annotations !== 1) {
+      throw new Error(`ink-annotation-placement: first stroke did not commit on release\n${state.raw}`);
     }
 
     await drawStroke(canvas, stroke2);
     state = await placementState(client);
-    if (
-      !state.active ||
-      state.strokes !== 2 ||
-      state.points < stroke1.length + stroke2.length ||
-      state.annotations !== 0
-    ) {
-      throw new Error(`ink-annotation-placement: second stroke was not added to the same markup\n${state.raw}`);
+    if (!state.active || state.annotations !== 2) {
+      throw new Error(`ink-annotation-placement: second stroke did not commit as its own ink\n${state.raw}`);
     }
 
-    await pressKey(frame, VK_RETURN, 400 * SLOW_BUILD_FACTOR);
+    await pressEscape(frame);
     state = await waitForPlacement(client, false);
-    const firstInk = inkScreenRects(state.raw)[0];
-    if (!firstInk || state.notification || state.annotations !== 1 || firstInk.dx < 180 || firstInk.dy < 120) {
-      throw new Error(`ink-annotation-placement: Enter did not create the combined Ink annotation\n${state.raw}`);
+    if (state.annotations !== 2) {
+      throw new Error(`ink-annotation-placement: Esc dropped committed ink\n${state.raw}`);
     }
 
     await client.setNotificationsEnabled(true);
     sendCommand(frame, cmdId("CmdCreateAnnotInk"));
     await waitForPlacement(client, true);
-    await client.setNotificationsEnabled(false);
-    await drawStroke(canvas, stroke1);
     await pressEscape(frame);
     state = await waitForPlacement(client, false);
-    if (state.annotations !== 1) {
-      throw new Error(`ink-annotation-placement: Esc did not discard the in-progress Ink annotation\n${state.raw}`);
+    if (state.annotations !== 2) {
+      throw new Error(`ink-annotation-placement: Esc on an empty tool created or deleted ink\n${state.raw}`);
     }
 
     sendCommand(frame, cmdId("CmdCreateAnnotInk"));
     await waitForPlacement(client, true);
-    await drawStroke(canvas, stroke2);
+    await client.setNotificationsEnabled(false);
+    await drawStroke(canvas, stroke1);
     sendCommand(frame, cmdId("CmdCreateAnnotLine"));
     state = await waitForPlacement(client, false);
-    if (state.annotations !== 2 || !state.raw.includes("linePlacement active=1")) {
-      throw new Error(`ink-annotation-placement: switching tools did not commit completed strokes\n${state.raw}`);
+    if (state.annotations !== 3 || !state.raw.includes("linePlacement active=1")) {
+      throw new Error(`ink-annotation-placement: switching tools lost the last stroke\n${state.raw}`);
     }
     await pressEscape(frame);
 
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotInk"), packCoords(stroke1[0]!.x, stroke1[0]!.y));
     state = await placementState(client);
-    if (state.active || state.annotations !== 3) {
+    if (state.active || state.annotations !== 4) {
       throw new Error(`ink-annotation-placement: a supplied context point did not place immediately\n${state.raw}`);
     }
   } finally {

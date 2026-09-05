@@ -149,36 +149,16 @@ export async function testit(): Promise<void> {
     await drawStroke(canvas, first);
     await drawStroke(canvas, second);
 
-    // SetCapture injects a cursor move, so each stroke can have extra points
-    let state = await waitUntil(
-      client,
-      (s) => s.active && s.strokes === 2 && s.points >= first.length + second.length,
-      "could not create two unfinished strokes",
-    );
+    let state = await waitUntil(client, (s) => s.active && s.annotations === 2, "could not commit two ink strokes");
 
     state = await eraseAt(client, first[1]!);
-    if (
-      !state.active ||
-      state.strokes !== 1 ||
-      state.points >= first.length + second.length ||
-      state.annotations !== 0
-    ) {
-      throw new Error(`issue-6135: eraser did not remove one unfinished stroke\n${state.raw}`);
+    if (!state.active || state.annotations !== 1) {
+      throw new Error(`issue-6135: eraser did not remove one committed stroke\n${state.raw}`);
     }
-    const remainingPoints = state.points;
 
-    await inkState(client, ["finish-ink", 0, 0]);
-    state = await waitUntil(
-      client,
-      (s) => !s.active && s.annotations === 1 && s.savedStrokes === 1 && s.savedPoints === remainingPoints,
-      "remaining stroke was not saved alone",
-    );
-
-    sendCommand(frame, cmdId("CmdCreateAnnotInk"));
-    await waitForInkActive(client);
     state = await eraseAt(client, second[1]!);
     if (!state.active || state.annotations !== 0) {
-      throw new Error(`issue-6135: eraser did not delete ink after its final stroke\n${state.raw}`);
+      throw new Error(`issue-6135: eraser did not delete the remaining ink\n${state.raw}`);
     }
     await inkState(client, ["cancel-ink", 0, 0]);
   } finally {

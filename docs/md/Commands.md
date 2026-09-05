@@ -202,8 +202,8 @@ CmdFindAnnotation,,Find Annotation,"opens the floating annotation list, where yo
 CmdCreateAnnotFileAttachment,,Create File Attachment Annotation,"click to place, like Stamp/Caret; Esc cancels, ver 3.7+"
 CmdCreateAnnotFreeText,,Create Free Text Annotation,
 CmdCreateAnnotHighlight,"a, A",Create Highlight Annotation,
-CmdAnnotationHighlightBrush,,Highlight with Brush,"a freehand highlighter: drag to paint a marker stroke anywhere on the page, no text selection needed. Enter finishes, Esc cancels. Saved as an ink annotation in HighlightColor, ver 3.7+"
-CmdCreateAnnotInk,,Create Ink Annotation,
+CmdAnnotationHighlightBrush,,Highlight with Brush,"a freehand highlighter: drag to paint a marker stroke anywhere on the page, no text selection needed. Release finishes, Esc cancels. Saved as an ink annotation in HighlightColor, ver 3.7+"
+CmdCreateAnnotInk,,Create Ink Annotation,"drag to paint; release commits the stroke and leaves the tool on. Esc or closing the hint leaves the tool, ver 3.7+"
 CmdCreateAnnotLine,,Create Line Annotation,
 CmdCreateAnnotLink,,Create Link Annotation,
 CmdCreateAnnotPolygon,,Create Polygon Annotation,
