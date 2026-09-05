@@ -22,15 +22,15 @@
 #include "PagePosition.h"
 #include "ChmModel.h"
 
-static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
+static IPageDestination* NewChmNamedDest(Arena* arena, Str url, int pageNo) {
     if (len(url) == 0) {
         return nullptr;
     }
     IPageDestination* dest = nullptr;
     if (IsExternalUrl(url)) {
-        dest = new PageDestinationURL(url);
+        dest = arena ? New<PageDestinationURL>(arena, url) : new PageDestinationURL(url);
     } else {
-        auto* pdest = new PageDestination();
+        auto* pdest = arena ? New<PageDestination>(arena) : new PageDestination();
         pdest->kind = kindDestinationScrollTo;
         pdest->name = str::Dup(url);
         dest = pdest;
@@ -41,10 +41,10 @@ static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
     return dest;
 }
 
-static TocItem* NewChmTocItem(TocItem* parent, Str title, int pageNo, Str url) {
-    auto* res = AllocTocItem(nullptr, title, pageNo);
+static TocItem* NewChmTocItem(Arena* arena, TocItem* parent, Str title, int pageNo, Str url) {
+    auto* res = AllocTocItem(arena, title, pageNo);
     res->parent = parent;
-    res->dest = NewChmNamedDest(url, pageNo);
+    res->dest = NewChmNamedDest(arena, url, pageNo);
     return res;
 }
 
@@ -84,7 +84,7 @@ ChmModel::~ChmModel() {
     delete htmlWindowCb;
     delete doc;
     delete tocTrace;
-    delete tocTree;
+    DestroyTocTree(tocTree);
     DeleteVecMembers(urlDataCache);
     docAccess.Unlock();
     ArenaDelete(poolAlloc);
@@ -280,7 +280,7 @@ bool ChmModel::DisplayPage(Str pageUrl) {
         // (same as for PDF, XPS, etc. documents)
         if (cb) {
             // TODO: optimize, create just destination
-            auto* item = NewChmTocItem(nullptr, {}, 0, pageUrl);
+            auto* item = NewChmTocItem(nullptr, nullptr, {}, 0, pageUrl);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -672,7 +672,7 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
     if (newWindow || IsExternalUrl(url)) {
         if (url && cb) {
             // TODO: optimize, create just destination
-            auto* item = NewChmTocItem(nullptr, {}, 1, url);
+            auto* item = NewChmTocItem(nullptr, nullptr, {}, 1, url);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -808,10 +808,10 @@ IPageDestination* ChmModel::GetNamedDest(Str name) {
     TempStr url = url::GetFullPathTemp(name);
     int pageNo = pages.Find(url) + 1;
     if (pageNo >= 1) {
-        return NewChmNamedDest(url, pageNo);
+        return NewChmNamedDest(nullptr, url, pageNo);
     }
     if (doc->HasData(url)) {
-        return NewChmNamedDest(url, 1);
+        return NewChmNamedDest(nullptr, url, 1);
     }
     unsigned int topicID;
     if (str::IsNull(str::Parse(name, "%u%$", &topicID))) {
@@ -830,7 +830,7 @@ IPageDestination* ChmModel::GetNamedDest(Str name) {
     // return pageNo=1 for these, as HandleLink will ignore that anyway
     // but LinkHandler::ScrollTo doesn't
     pageNo = std::max(pageNo, 1);
-    return NewChmNamedDest(url, pageNo);
+    return NewChmNamedDest(nullptr, url, pageNo);
 }
 
 // table of contents
@@ -850,7 +850,7 @@ TocTree* ChmModel::GetToc() {
 
     for (ChmTocTraceItem& ti : *tocTrace) {
         // TODO: set parent
-        TocItem* item = NewChmTocItem(nullptr, ti.title, ti.pageNo, ti.url);
+        TocItem* item = NewChmTocItem(poolAlloc, nullptr, ti.title, ti.pageNo, ti.url);
         item->id = ++idCounter;
         // append the item at the correct level
         ReportIf(ti.level < 1);
@@ -867,9 +867,9 @@ TocTree* ChmModel::GetToc() {
     if (!foundRoot) {
         return nullptr;
     }
-    auto* realRoot = AllocTocItem(nullptr, {}, 0);
+    auto* realRoot = AllocTocItem(poolAlloc, {}, 0);
     realRoot->child = root;
-    tocTree = new TocTree(realRoot);
+    tocTree = AllocTocTree(poolAlloc, realRoot);
     return tocTree;
 }
 

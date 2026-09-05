@@ -1920,16 +1920,6 @@ static TocItem* NewTocItemWithDestination(Arena* arena, TocItem* parent, Str tit
     return res;
 }
 
-static TocTree* AllocTocTree(Arena* arena, TocItem* root) {
-    return New<TocTree>(arena, root, arena);
-}
-
-static void DestroyTocTree(TocTree* t) {
-    if (t) {
-        t->~TocTree();
-    }
-}
-
 // TODO: could be optimized
 static bool RectFullyContains(RectF r1, RectF r2) {
     // if same size, we don't consider it that one covers another

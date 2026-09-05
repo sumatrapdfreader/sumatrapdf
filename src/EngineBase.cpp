@@ -284,6 +284,16 @@ bool TocItem::PageNumbersMatch() const {
     return true;
 }
 
+TocTree* AllocTocTree(Arena* arena, TocItem* root) {
+    return New<TocTree>(arena, root, arena);
+}
+
+void DestroyTocTree(TocTree* tree) {
+    if (tree) {
+        tree->~TocTree();
+    }
+}
+
 TocTree::TocTree(TocItem* root, Arena* arena) {
     this->root = root;
     this->arena = arena;

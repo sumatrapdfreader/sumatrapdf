@@ -1842,7 +1842,7 @@ class EngineImageDir : public EngineImages {
         hasPageLabels = true;
     }
 
-    ~EngineImageDir() override { delete tocTree; }
+    ~EngineImageDir() override { DestroyTocTree(tocTree); }
 
     EngineBase* Clone() override {
         Str path = FilePath();
@@ -1951,8 +1951,8 @@ int EngineImageDir::GetPageByLabel(Str label) const {
     return EngineBase::GetPageByLabel(label);
 }
 
-static TocItem* newImageDirTocItem(TocItem* parent, Str title, int pageNo) {
-    auto* res = AllocTocItem(nullptr, title, pageNo);
+static TocItem* newImageDirTocItem(Arena* arena, TocItem* parent, Str title, int pageNo) {
+    auto* res = AllocTocItem(arena, title, pageNo);
     res->parent = parent;
     return res;
 };
@@ -1962,17 +1962,17 @@ TocTree* EngineImageDir::GetToc() {
         return tocTree;
     }
     TempStr label = GetPageLabeTemp(1);
-    TocItem* root = newImageDirTocItem(nullptr, label, 1);
+    TocItem* root = newImageDirTocItem(arena, nullptr, label, 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
         label = GetPageLabeTemp(i);
-        TocItem* item = newImageDirTocItem(root, label, i);
+        TocItem* item = newImageDirTocItem(arena, root, label, i);
         item->id = i;
         root->AddSiblingAtEnd(item);
     }
-    auto* realRoot = AllocTocItem(nullptr, {}, 0);
+    auto* realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;
-    tocTree = new TocTree(realRoot);
+    tocTree = AllocTocTree(arena, realRoot);
     return tocTree;
 }
 
@@ -2311,7 +2311,7 @@ EngineCbx::EngineCbx(Archive* archive) {
 }
 
 EngineCbx::~EngineCbx() {
-    delete tocTree;
+    DestroyTocTree(tocTree);
     delete cbxArchive;
     str::Free(physicalPath);
 }
@@ -2418,7 +2418,7 @@ static void TocAppendChild(TocItem* parent, TocItem* child) {
 // shared by every file (e.g. all images in "images/") is stripped so a
 // single-folder comic stays a flat list. Remaining chapter folders become
 // tree nodes; clicking a folder goes to its first page.
-static TocItem* BuildCbxFolderToc(const Vec<Archive::FileInfo*>& files) {
+static TocItem* BuildCbxFolderToc(Arena* arena, const Vec<Archive::FileInfo*>& files) {
     int nFiles = len(files);
     if (nFiles <= 0) {
         return nullptr;
@@ -2448,7 +2448,7 @@ static TocItem* BuildCbxFolderToc(const Vec<Archive::FileInfo*>& files) {
         return nullptr;
     }
 
-    auto* realRoot = AllocTocItem(nullptr, {}, 0);
+    auto* realRoot = AllocTocItem(arena, {}, 0);
     Vec<TocItem*> stack;
     Vec<Str> stackNames;
     int idCounter = 0;
@@ -2469,7 +2469,7 @@ static TocItem* BuildCbxFolderToc(const Vec<Archive::FileInfo*>& files) {
 
         for (int k = common + match; k < nDir; k++) {
             TocItem* parent = len(stack) == 0 ? realRoot : VecLast(stack);
-            TocItem* folder = AllocTocItem(nullptr, parts[k], i + 1);
+            TocItem* folder = AllocTocItem(arena, parts[k], i + 1);
             folder->isOpenDefault = true;
             folder->id = ++idCounter;
             TocAppendChild(parent, folder);
@@ -2478,13 +2478,13 @@ static TocItem* BuildCbxFolderToc(const Vec<Archive::FileInfo*>& files) {
         }
 
         TocItem* parent = len(stack) == 0 ? realRoot : VecLast(stack);
-        TocItem* leaf = AllocTocItem(nullptr, parts[n - 1], i + 1);
+        TocItem* leaf = AllocTocItem(arena, parts[n - 1], i + 1);
         leaf->id = ++idCounter;
         TocAppendChild(parent, leaf);
     }
 
     if (!realRoot->child) {
-        FreeTocItemRec(nullptr, realRoot);
+        FreeTocItemRec(arena, realRoot);
         return nullptr;
     }
     return realRoot;
@@ -2597,7 +2597,7 @@ bool EngineCbx::FinishLoading() {
     TocItem* tocBuildRoot = nullptr;
     TocItem* tocBuildCurr = nullptr;
     auto addTocItem = [&](Str title, int pageNo) {
-        TocItem* ti = AllocTocItem(nullptr, title, pageNo);
+        TocItem* ti = AllocTocItem(arena, title, pageNo);
         if (!tocBuildRoot) {
             tocBuildRoot = ti;
         } else if (tocBuildCurr) {
@@ -2623,14 +2623,14 @@ bool EngineCbx::FinishLoading() {
             addTocItem(cip.bookmarkTitles[bi], pageNo);
         }
         if (tocBuildRoot) {
-            auto* realRoot = AllocTocItem(nullptr, {}, 0);
+            auto* realRoot = AllocTocItem(arena, {}, 0);
             realRoot->child = tocBuildRoot;
-            tocTree = new TocTree(realRoot);
+            tocTree = AllocTocTree(arena, realRoot);
         }
     } else {
-        TocItem* folderRoot = BuildCbxFolderToc(files);
+        TocItem* folderRoot = BuildCbxFolderToc(arena, files);
         if (folderRoot) {
-            tocTree = new TocTree(folderRoot);
+            tocTree = AllocTocTree(arena, folderRoot);
         } else {
             for (int i = 0; i < pageCount; i++) {
                 Str fname = files[i]->name;
@@ -2638,9 +2638,9 @@ bool EngineCbx::FinishLoading() {
                 addTocItem(baseName, i + 1);
             }
             if (tocBuildRoot) {
-                auto* realRoot = AllocTocItem(nullptr, {}, 0);
+                auto* realRoot = AllocTocItem(arena, {}, 0);
                 realRoot->child = tocBuildRoot;
-                tocTree = new TocTree(realRoot);
+                tocTree = AllocTocTree(arena, realRoot);
             }
         }
     }

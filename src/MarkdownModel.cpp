@@ -103,6 +103,8 @@ static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
     return str::DupTemp(rel);
 }
 
+static void DestroyOwnedTocTree(TocTree* tree);
+
 struct MarkdownCacheEntry {
     Str url;
     Str data;
@@ -128,7 +130,7 @@ struct MarkdownTocBuildTask {
 
     ~MarkdownTocBuildTask() {
         str::Free(baseDir);
-        delete tocTree;
+        DestroyOwnedTocTree(tocTree);
     }
 };
 
@@ -146,15 +148,15 @@ struct MarkdownLaunchTask {
     }
 };
 
-static IPageDestination* NewMarkdownNamedDest(Str url, int pageNo) {
+static IPageDestination* NewMarkdownNamedDest(Arena* arena, Str url, int pageNo) {
     if (len(url) == 0) {
         return nullptr;
     }
     IPageDestination* dest = nullptr;
     if (IsMarkdownExternalUrl(url)) {
-        dest = new PageDestinationURL(url);
+        dest = arena ? New<PageDestinationURL>(arena, url) : new PageDestinationURL(url);
     } else {
-        auto* pdest = new PageDestination();
+        auto* pdest = arena ? New<PageDestination>(arena) : new PageDestination();
         pdest->kind = kindDestinationScrollTo;
         pdest->name = str::Dup(url);
         dest = pdest;
@@ -164,11 +166,21 @@ static IPageDestination* NewMarkdownNamedDest(Str url, int pageNo) {
     return dest;
 }
 
-static TocItem* NewMarkdownTocItem(TocItem* parent, Str title, int pageNo, Str url) {
-    auto* res = AllocTocItem(nullptr, title, pageNo);
+static TocItem* NewMarkdownTocItem(Arena* arena, TocItem* parent, Str title, int pageNo, Str url) {
+    auto* res = AllocTocItem(arena, title, pageNo);
     res->parent = parent;
-    res->dest = NewMarkdownNamedDest(url, pageNo);
+    res->dest = NewMarkdownNamedDest(arena, url, pageNo);
     return res;
+}
+
+// ToC is built on a worker that can outlive the model, so it has its own arena
+static void DestroyOwnedTocTree(TocTree* tree) {
+    if (!tree) {
+        return;
+    }
+    Arena* a = tree->arena;
+    DestroyTocTree(tree);
+    ArenaDelete(a);
 }
 
 class MarkdownHtmlWindowHandler : public HtmlWindowCallback {
@@ -206,7 +218,7 @@ MarkdownModel::~MarkdownModel() {
     docAccess.Lock();
     delete docView;
     delete htmlWindowCb;
-    delete tocTree;
+    DestroyOwnedTocTree(tocTree);
     DeleteVecMembers(urlDataCache);
     docAccess.Unlock();
     ArenaDelete(poolAlloc);
@@ -514,7 +526,7 @@ bool MarkdownModel::DisplayPage(Str pageUrl) {
     pageUrl = str::DupTemp(pageUrl);
     if (IsMarkdownExternalUrl(pageUrl)) {
         if (cb) {
-            auto* item = NewMarkdownTocItem(nullptr, {}, 1, pageUrl);
+            auto* item = NewMarkdownTocItem(nullptr, nullptr, {}, 1, pageUrl);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -771,7 +783,7 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
     // document webview off-document (issue #5920)
     if (IsMarkdownExternalUrl(url)) {
         if (url && cb) {
-            auto* item = NewMarkdownTocItem(nullptr, {}, 1, url);
+            auto* item = NewMarkdownTocItem(nullptr, nullptr, {}, 1, url);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -913,7 +925,7 @@ IPageDestination* MarkdownModel::GetNamedDest(Str name) {
         pageNo = pages.Find(filePath) + 1;
     }
     pageNo = std::max(pageNo, 1);
-    return NewMarkdownNamedDest(url, pageNo);
+    return NewMarkdownNamedDest(nullptr, url, pageNo);
 }
 
 TocTree* MarkdownModel::GetToc() {
@@ -960,14 +972,14 @@ static void FreeTocTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
     VecReset(tocTrace);
 }
 
-static TocTree* BuildTocTreeFromTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
+static TocTree* BuildTocTreeFromTrace(Arena* arena, Vec<MarkdownTocTraceItem>& tocTrace) {
     TocItem* root = nullptr;
     TocItem** nextChild = &root;
     Vec<TocItem*> levels;
     bool foundRoot = false;
     int idCounter = 0;
     for (MarkdownTocTraceItem& ti : tocTrace) {
-        TocItem* item = NewMarkdownTocItem(nullptr, ti.title, ti.pageNo, ti.url);
+        TocItem* item = NewMarkdownTocItem(arena, nullptr, ti.title, ti.pageNo, ti.url);
         item->id = ++idCounter;
         if (ti.level <= len(levels)) {
             VecRemoveAtN(levels, ti.level, len(levels) - ti.level);
@@ -982,9 +994,9 @@ static TocTree* BuildTocTreeFromTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
     if (!foundRoot) {
         return nullptr;
     }
-    auto* realRoot = AllocTocItem(nullptr, {}, 0);
+    auto* realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;
-    return new TocTree(realRoot);
+    return AllocTocTree(arena, realRoot);
 }
 
 static void AppendFileTocTraceItem(Vec<MarkdownTocTraceItem>& tocTrace, Str filePath, Str pageUrl, int pageNo) {
@@ -1001,19 +1013,19 @@ static void AppendFileTocTraceItem(Vec<MarkdownTocTraceItem>& tocTrace, Str file
 // .html file to find its headings takes minutes in a directory with thousands
 // of them (#5918), so the document opens with this and BuildFullToc() replaces
 // it when it's ready.
-static TocTree* BuildFilesOnlyToc(StrVec& pages, Str baseDir, bool isHtml) {
+static TocTree* BuildFilesOnlyToc(Arena* arena, StrVec& pages, Str baseDir, bool isHtml) {
     Vec<MarkdownTocTraceItem> tocTrace;
     for (int i = 0; i < len(pages); i++) {
         Str filePath = pages[i];
         AppendFileTocTraceItem(tocTrace, filePath, FileToVirtualUrlTemp(filePath, baseDir, isHtml), i + 1);
     }
-    TocTree* res = BuildTocTreeFromTrace(tocTrace);
+    TocTree* res = BuildTocTreeFromTrace(arena, tocTrace);
     FreeTocTrace(tocTrace);
     return res;
 }
 
 // the real TOC: every file plus the hierarchy of headings inside it
-static TocTree* BuildFullToc(StrVec& pages, Str baseDir, bool isHtml) {
+static TocTree* BuildFullToc(Arena* arena, StrVec& pages, Str baseDir, bool isHtml) {
     Vec<MarkdownFileToc> fileTocs;
     ParseMarkdownTocsParallel(pages, isHtml, fileTocs);
 
@@ -1047,7 +1059,7 @@ static TocTree* BuildFullToc(StrVec& pages, Str baseDir, bool isHtml) {
         VecReset(ft.headings);
     }
 
-    TocTree* res = BuildTocTreeFromTrace(tocTrace);
+    TocTree* res = BuildTocTreeFromTrace(arena, tocTrace);
     FreeTocTrace(tocTrace);
     return res;
 }
@@ -1074,7 +1086,11 @@ static void MarkdownTocBuildFinished(MarkdownTocBuildTask* task) {
 }
 
 static void MarkdownTocBuildThread(MarkdownTocBuildTask* task) {
-    task->tocTree = BuildFullToc(task->pages, task->baseDir, task->isHtml);
+    Arena* tocArena = ArenaNew();
+    task->tocTree = BuildFullToc(tocArena, task->pages, task->baseDir, task->isHtml);
+    if (!task->tocTree) {
+        ArenaDelete(tocArena);
+    }
     auto fn = MkFunc0(MarkdownTocBuildFinished, task);
     uitask::Post(fn, "MarkdownTocBuildFinished");
 }
@@ -1091,7 +1107,7 @@ void MarkdownModel::SetToc(TocTree* newToc) {
     if (cb) {
         cb->TocChanged(this);
     }
-    delete old;
+    DestroyOwnedTocTree(old);
 }
 
 bool MarkdownModel::Load(Str fileName) {
@@ -1107,7 +1123,11 @@ bool MarkdownModel::Load(Str fileName) {
 
     pages = mdFiles;
     // show the files right away, then fill in the headings in the background
-    tocTree = BuildFilesOnlyToc(pages, baseDir, isHtml);
+    Arena* tocArena = ArenaNew();
+    tocTree = BuildFilesOnlyToc(tocArena, pages, baseDir, isHtml);
+    if (!tocTree) {
+        ArenaDelete(tocArena);
+    }
 
     auto* task = new MarkdownTocBuildTask;
     task->model = this;

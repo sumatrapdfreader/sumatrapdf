@@ -445,6 +445,9 @@ struct TocTree : TreeModel {
     uintptr_t GetUserData(TreeItem) override;
 };
 
+TocTree* AllocTocTree(Arena* arena, TocItem* root);
+void DestroyTocTree(TocTree* tree);
+
 void ResolveTocPages(EngineBase* engine, TocTree* toc);
 
 // print / dump / full-document search / PDF export / stress test: lay out

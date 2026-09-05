@@ -218,8 +218,8 @@ static IPageElement* NewImageDataElement(int pageNo, Rect bbox, int imageID) {
     return res;
 }
 
-static TocItem* newEbookTocItem(TocItem* parent, Str title, IPageDestination* dest) {
-    auto res = AllocTocItem(nullptr, title, 0);
+static TocItem* newEbookTocItem(Arena* arena, TocItem* parent, Str title, IPageDestination* dest) {
+    auto res = AllocTocItem(arena, title, 0);
     res->parent = parent;
     res->dest = dest;
     if (dest) {
@@ -229,6 +229,31 @@ static TocItem* newEbookTocItem(TocItem* parent, Str title, IPageDestination* de
         res->loc = dest->loc;
     }
     return res;
+}
+
+// GetNamedDestLazy returns a heap dest (page links / callers delete it). Copy
+// onto the engine arena for a ToC item, then delete the original.
+static IPageDestination* DestToArena(Arena* a, IPageDestination* src) {
+    if (!src) {
+        return nullptr;
+    }
+    Kind k = src->GetKind();
+    IPageDestination* dst;
+    if (k == kindDestinationLaunchURL) {
+        dst = New<PageDestinationURL>(a, src->GetValue2());
+    } else {
+        auto* pd = New<PageDestination>(a);
+        pd->kind = k;
+        pd->value = str::Dup(src->GetValue2());
+        pd->name = str::Dup(src->GetName2());
+        dst = pd;
+    }
+    dst->pageNo = src->pageNo;
+    dst->loc = src->loc;
+    dst->rect = src->GetRect2();
+    dst->zoom = src->GetZoom2();
+    delete src;
+    return dst;
 }
 
 EngineEbook::EngineEbook() {
@@ -826,23 +851,24 @@ struct EbookTocBuilder : EbookTocVisitor {
 };
 
 void EbookTocBuilder::Visit(Str name, Str url, int level) {
+    Arena* arena = engine->arena;
     IPageDestination* dest;
     if (len(url) == 0) {
         dest = nullptr;
     } else if (url::IsAbsolute(url)) {
-        dest = NewSimpleDest(0, RectF(), 0.f, url);
+        dest = NewSimpleDest(arena, 0, RectF(), 0.f, url);
     } else {
         // GetNamedDestLazy(), not GetNamedDest(): building the ToC must not
         // lay out a chapter for every entry it points to
-        dest = engine->GetNamedDestLazy(url);
+        dest = DestToArena(arena, engine->GetNamedDestLazy(url));
         if (!dest && str::ContainsChar(url, '%')) {
             TempStr decodedUrl = url::DecodeTemp(url);
-            dest = engine->GetNamedDestLazy(decodedUrl);
+            dest = DestToArena(arena, engine->GetNamedDestLazy(decodedUrl));
         }
     }
 
     // TODO: send parent to newEbookTocItem
-    TocItem* item = newEbookTocItem(nullptr, name, dest);
+    TocItem* item = newEbookTocItem(arena, nullptr, name, dest);
     item->id = ++idCounter;
     if (isIndex) {
         item->pageNo = 0;
@@ -887,7 +913,7 @@ EngineEpub::EngineEpub() {
 
 EngineEpub::~EngineEpub() {
     delete doc;
-    delete tocTree;
+    DestroyTocTree(tocTree);
 }
 
 EngineBase* EngineEpub::Clone() {
@@ -975,9 +1001,9 @@ TocTree* EngineEpub::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = AllocTocItem(nullptr, {}, 0);
+    auto realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;
-    tocTree = new TocTree(realRoot);
+    tocTree = AllocTocTree(arena, realRoot);
     return tocTree;
 }
 
@@ -1017,7 +1043,7 @@ class EngineFb2 : public EngineEbook {
         SetDefaultExt(defaultExt, StrL(".fb2"));
     }
     ~EngineFb2() override {
-        delete tocTree;
+        DestroyTocTree(tocTree);
         delete doc;
     }
     EngineBase* Clone() override {
@@ -1101,9 +1127,9 @@ TocTree* EngineFb2::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = AllocTocItem(nullptr, {}, 0);
+    auto realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;
-    tocTree = new TocTree(realRoot);
+    tocTree = AllocTocTree(arena, realRoot);
     return tocTree;
 }
 
@@ -1214,7 +1240,7 @@ static void FindMobiChapterStarts(Str html, Vec<int>& starts) {
 }
 
 EngineMobi::~EngineMobi() {
-    delete tocTree;
+    DestroyTocTree(tocTree);
     delete doc;
     ScopedRecursiveMutex scope(&pagesAccess);
     for (Vec<HtmlPage*>* v : chapterPages) {
@@ -1495,9 +1521,9 @@ TocTree* EngineMobi::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = AllocTocItem(nullptr, {}, 0);
+    auto realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;
-    tocTree = new TocTree(realRoot);
+    tocTree = AllocTocTree(arena, realRoot);
     return tocTree;
 }
 
@@ -1536,7 +1562,7 @@ class EnginePdb : public EngineEbook {
         SetDefaultExt(defaultExt, StrL(".pdb"));
     }
     ~EnginePdb() override {
-        delete tocTree;
+        DestroyTocTree(tocTree);
         delete doc;
     }
     EngineBase* Clone() override {
@@ -1602,9 +1628,9 @@ TocTree* EnginePdb::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = AllocTocItem(nullptr, {}, 0);
+    auto realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;
-    tocTree = new TocTree(realRoot);
+    tocTree = AllocTocTree(arena, realRoot);
     return tocTree;
 }
 
@@ -1764,7 +1790,7 @@ class EngineChm : public EngineEbook {
     ~EngineChm() override {
         delete dataCache;
         delete doc;
-        delete tocTree;
+        DestroyTocTree(tocTree);
     }
     EngineBase* Clone() override {
         Str fileName = FilePath();
@@ -1999,9 +2025,9 @@ TocTree* EngineChm::GetToc() {
     if (!root) {
         return nullptr;
     }
-    auto realRoot = AllocTocItem(nullptr, {}, 0);
+    auto realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;
-    tocTree = new TocTree(realRoot);
+    tocTree = AllocTocTree(arena, realRoot);
     return tocTree;
 }
 
@@ -2155,7 +2181,7 @@ class EngineTxt : public EngineEbook {
         SetDefaultExt(defaultExt, StrL(".txt"));
     }
     ~EngineTxt() override {
-        delete tocTree;
+        DestroyTocTree(tocTree);
         delete doc;
     }
     EngineBase* Clone() override {
@@ -2230,9 +2256,9 @@ TocTree* EngineTxt::GetToc() {
     doc->ParseToc(&builder);
     auto* root = builder.GetRoot();
 
-    auto realRoot = AllocTocItem(nullptr, {}, 0);
+    auto realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;
-    tocTree = new TocTree(realRoot);
+    tocTree = AllocTocTree(arena, realRoot);
     return tocTree;
 }
 
