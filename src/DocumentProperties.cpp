@@ -85,6 +85,25 @@ PropertiesWnd* FindPropertyWindowByHwnd(HWND hwnd) {
     return nullptr;
 }
 
+// Which action buttons the open properties dialog has.
+TempStr PropertiesDialogButtonsTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+    if (len(gPropertiesWindows) == 0) {
+        return finish(StrL("NOTREADY no-properties-window"), 2);
+    }
+    PropertiesWnd* w = gPropertiesWindows[0];
+    return finish(fmt("copy=%d viewCert=%d updateEutl=%d", w->btnCopyToClipboard ? 1 : 0, w->btnViewCert ? 1 : 0,
+                      w->btnUpdateEutl ? 1 : 0),
+                  0);
+}
+
 // True for the properties dialog and its children (the read-only edit),
 // but not the owner frame. Used so Home/End keep navigating the document
 // while Properties stays open (issue #5971).

@@ -263,6 +263,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-5993", issue5993],
   ["issue-2629", issue2629],
   ["issue-6135", issue6135],
   ["issue-4276", issue4276],
@@ -281,7 +282,6 @@ export const tests: NamedTest[] = [
   ["issue-893", issue893],
   ["annotation clipboard tests", annotationClipboardTests],
   ["cmyk-image-save", cmykImageSave],
-  ["issue-5993", issue5993],
   ["image-only-palette-items", imageOnlyPaletteItems],
   ["issue-5868", issue5868],
   ["issue-2252", issue2252],

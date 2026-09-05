@@ -20,6 +20,7 @@
 #include "DocumentLayout.h"
 #include "DocController.h"
 #include "DocProperties.h"
+#include "DocumentProperties.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "RenderCache.h"
@@ -1616,7 +1617,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestDocumentProperties: {
             int exitCode = 0;
-            Str res = DocumentPropertiesResultTemp(&exitCode);
+            Str action = StringArg(req, 0);
+            Str res = str::Eq(action, StrL("buttons")) ? PropertiesDialogButtonsTemp(&exitCode)
+                                                       : DocumentPropertiesResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

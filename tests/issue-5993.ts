@@ -1,130 +1,64 @@
-// Regression test for https://github.com/sumatrapdfreader/sumatrapdf/issues/5993
-//
-// The View Certificate and Update EU Trusted List actions in Document
-// Properties are PDF-specific. They must not appear for a comic book.
-//
-// Run: bun tests/issue-5993.ts [--no-build]
+// View Certificate and Update EU Trusted List are only on Document Properties
+// when the PDF has signature certificates (issue #5993, #3997).
 
 import { join } from "node:path";
-import { cmdId, ROOT, runStandalone, SLOW_BUILD_FACTOR } from "./util.ts";
-import { clickAt, killAndWait, launchControlled, pressKey, sendCommandSync } from "./win-automation.ts";
-import {
-  enumChildWindows,
-  enumWindows,
-  getClassName,
-  getClientRect,
-  getControlText,
-  getFocusedHwnd,
-  getWindowPid,
-  getWindowText,
-  sleep,
-  VK_TAB,
-} from "./winapi.ts";
+import { ControlCommand } from "./control.ts";
+import { cmdId, pollUntil, ROOT, runStandalone, SLOW_BUILD_FACTOR } from "./util.ts";
+import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
-const PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+const UNSIGNED_PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+const SIGNED_PDF = join(ROOT, "tests", "issue-5581-data", "test_sign_PAdES_B-T.pdf");
 const CBZ = join(ROOT, "tests", "issue-1201.cbz");
-const kWaitMs = 8000 * SLOW_BUILD_FACTOR;
-const kTabMs = 150 * SLOW_BUILD_FACTOR;
 
-function findFirstEdit(parent: number): number {
-  let found = 0;
-  enumChildWindows(parent, (hwnd) => {
-    if (getClassName(hwnd) === "Edit") {
-      found = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
+type Buttons = { copy: number; viewCert: number; updateEutl: number; raw: string };
 
-async function waitForProperties(pid: number, timeoutMs = kWaitMs): Promise<{ props: number; edit: number }> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    let props = 0;
-    enumWindows((hwnd) => {
-      if (getWindowPid(hwnd) === pid && getWindowText(hwnd).includes("Document Properties")) {
-        props = hwnd;
-        return false;
-      }
-      return true;
-    });
-    const edit = props ? findFirstEdit(props) : 0;
-    if (props && edit) {
-      return { props, edit };
-    }
-    await sleep(50);
+function parseButtons(raw: string): Buttons | null {
+  const m = /copy=(\d+) viewCert=(\d+) updateEutl=(\d+)/.exec(raw);
+  if (!m) {
+    return null;
   }
-  throw new Error("issue-5993: Document Properties window did not open");
+  return { copy: +m[1]!, viewCert: +m[2]!, updateEutl: +m[3]!, raw };
 }
 
-async function waitForHwndFocus(hwndInThread: number, expected: number, what: string): Promise<void> {
-  const deadline = Date.now() + kWaitMs;
-  let focused = 0;
-  while (Date.now() < deadline) {
-    focused = getFocusedHwnd(hwndInThread);
-    if (focused === expected) {
-      return;
-    }
-    await sleep(40);
-  }
-  const cls = focused ? getClassName(focused) : "none";
-  throw new Error(`issue-5993: ${what} (focus=${focused} class=${cls}, expected=${expected})`);
-}
-
-// SizeToContent after the font list arrives can take longer than a fixed Tab
-// settle, especially on ASan, so wait until that work has finished.
-async function waitForFontList(edit: number): Promise<void> {
-  const deadline = Date.now() + kWaitMs;
-  while (Date.now() < deadline) {
-    const text = getControlText(edit);
-    if (text && !text.includes("Getting font information...")) {
-      return;
-    }
-    await sleep(40);
-  }
-  throw new Error("issue-5993: properties font list did not finish");
-}
-
-async function checkPropertiesActions(path: string, isPdf: boolean): Promise<void> {
+async function propertiesButtons(path: string): Promise<Buttons> {
   const { proc, client, frame } = await launchControlled([path]);
   try {
     await client.waitForRenderIdle();
     sendCommandSync(frame, cmdId("CmdProperties"));
-    const { props, edit } = await waitForProperties(proc.pid!);
-    await waitForFontList(edit);
-
-    // Focus the native Edit first so the number of Tabs needed to wrap is
-    // deterministic. Each drawn action is one tab stop hosted by props itself.
-    const rc = getClientRect(edit);
-    await clickAt(edit, Math.min(10, rc.right - 1), Math.min(10, rc.bottom - 1), 100 * SLOW_BUILD_FACTOR);
-    await waitForHwndFocus(props, edit, "could not focus the properties text");
-
-    await pressKey(props, VK_TAB, 0); // Copy To Clipboard
-    await waitForHwndFocus(props, props, "Copy To Clipboard was not the next tab stop");
-    await pressKey(props, VK_TAB, kTabMs);
-    if (isPdf) {
-      // View Certificate and Update EU Trusted List follow Copy; the fourth
-      // Tab wraps to the Edit.
-      if (getFocusedHwnd(props) !== props) {
-        throw new Error("issue-5993: PDF certification actions are missing");
-      }
-      await pressKey(props, VK_TAB, kTabMs);
-      await pressKey(props, VK_TAB, 0);
-      await waitForHwndFocus(props, edit, "unexpected PDF properties action count");
-    } else {
-      await waitForHwndFocus(props, edit, "PDF certification actions are visible for a comic book");
+    const buttons = await pollUntil(
+      async () => {
+        const res = await client.request(ControlCommand.TestDocumentProperties, ["buttons"]);
+        return parseButtons(String(res[1] ?? ""));
+      },
+      (b) => b !== null,
+      {
+        timeoutMs: 8000 * SLOW_BUILD_FACTOR,
+        error: (b) => `issue-5993: properties buttons not ready (${b?.raw ?? "empty"})`,
+      },
+    );
+    if (!buttons) {
+      throw new Error("issue-5993: properties buttons not ready");
     }
+    return buttons;
   } finally {
     client.close();
     await killAndWait(proc);
   }
 }
 
+function expectButtons(got: Buttons, want: { copy: number; viewCert: number; updateEutl: number }, what: string): void {
+  if (got.copy !== want.copy || got.viewCert !== want.viewCert || got.updateEutl !== want.updateEutl) {
+    throw new Error(
+      `issue-5993: ${what}: got ${got.raw}, want copy=${want.copy} viewCert=${want.viewCert} updateEutl=${want.updateEutl}`,
+    );
+  }
+}
+
 export async function testit(): Promise<void> {
-  await checkPropertiesActions(PDF, true);
-  await checkPropertiesActions(CBZ, false);
-  console.log("PASS: PDF certification actions only appear in PDF properties (issue #5993)");
+  expectButtons(await propertiesButtons(UNSIGNED_PDF), { copy: 1, viewCert: 0, updateEutl: 0 }, "unsigned PDF");
+  expectButtons(await propertiesButtons(CBZ), { copy: 1, viewCert: 0, updateEutl: 0 }, "comic book");
+  expectButtons(await propertiesButtons(SIGNED_PDF), { copy: 1, viewCert: 1, updateEutl: 1 }, "signed PDF");
+  console.log("PASS: PDF certification actions only when the PDF has certificates (issue #5993)");
 }
 
 if (import.meta.main) {
