@@ -2843,6 +2843,30 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
     }
 }
 
+// Acrobat keeps /Info from an earlier trailer when an incremental update omits it (issue #1846).
+static pdf_obj* PdfInfoFromTrailers(fz_context* ctx, pdf_document* doc) {
+    if (!doc) {
+        return nullptr;
+    }
+    pdf_obj* info = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info));
+    if (info) {
+        return info;
+    }
+    int n = doc->num_xref_sections;
+    int start = doc->xref_base + 1;
+    for (int i = start; i < n; i++) {
+        pdf_obj* trailer = doc->xref_sections[i].trailer;
+        if (!trailer) {
+            continue;
+        }
+        info = pdf_dict_get(ctx, trailer, PDF_NAME(Info));
+        if (info) {
+            return info;
+        }
+    }
+    return nullptr;
+}
+
 static pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* /*doc*/, pdf_obj* dict) {
     pdf_obj* copy = pdf_copy_dict(ctx, dict);
     for (int i = 0; i < pdf_dict_len(ctx, copy); i++) {
@@ -4729,7 +4753,7 @@ bool EngineMupdf::FinishLoading() {
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
         // displaying document properties
-        origInfo = pdf_dict_gets(ctx, pdf_trailer(ctx, pdfdoc), "Info");
+        origInfo = PdfInfoFromTrailers(ctx, pdfdoc);
 
         if (origInfo) {
             pdfInfo = PdfCopyStrDict(ctx, pdfdoc, origInfo);

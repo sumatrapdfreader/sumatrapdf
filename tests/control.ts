@@ -88,6 +88,7 @@ export enum ControlCommand {
   TestAnnotFilter = 91,
   TestCanvasFlags = 92,
   CrashMe = 93,
+  TestDocumentProperties = 94,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

@@ -723,6 +723,40 @@ static TempStr DocumentFontListResultTemp(int* exitCodeOut) {
     return finish(fmt("OK fonts=%s", fonts), 0);
 }
 
+static TempStr DocumentPropertiesResultTemp(int* exitCodeOut) {
+    auto finish = [exitCodeOut](Str result, int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return str::DupTemp(result);
+    };
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        return finish(StrL("NOTREADY no-fixed-document"), 2);
+    }
+    Props props;
+    engine->GetProperties(props);
+    str::Builder out;
+    out.Append(StrL("OK"));
+    int n = PropsCount(props);
+    for (int i = 0; i < n; i++) {
+        TempStr name = PropNameTemp(props[i].prop);
+        if (len(name) == 0) {
+            continue;
+        }
+        out.Append(StrL("\n"));
+        out.Append(name);
+        out.Append(StrL("="));
+        out.Append(props[i].val);
+    }
+    return finish(ToStrTemp(out), 0);
+}
+
 enum class ControlCmd : u16 {
     Ping = 1,
     Quit = 2,
@@ -809,6 +843,7 @@ enum class ControlCmd : u16 {
     TestAnnotFilter = 91,
     TestCanvasFlags = 92,
     CrashMe = 93,
+    TestDocumentProperties = 94,
 };
 
 enum class ControlArgType : u16 {
@@ -1548,6 +1583,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestDocumentFontList: {
             int exitCode = 0;
             Str res = DocumentFontListResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestDocumentProperties: {
+            int exitCode = 0;
+            Str res = DocumentPropertiesResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
