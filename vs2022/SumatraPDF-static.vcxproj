@@ -1178,6 +1178,7 @@
     <ClInclude Include="..\src\DocController.h" />
     <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\DocumentLayout.h" />
+    <ClInclude Include="..\src\DocumentProperties.h" />
     <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EbookFormatter.h" />
     <ClInclude Include="..\src\EmbeddedResources.h" />
@@ -1258,7 +1259,6 @@
     <ClInclude Include="..\src\SumatraDialogs.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\SumatraPDF.h" />
-    <ClInclude Include="..\src\SumatraProperties.h" />
     <ClInclude Include="..\src\SumatraTest.h" />
     <ClInclude Include="..\src\SvgIcons.h" />
     <ClInclude Include="..\src\TabGroupsManage.h" />
@@ -1392,6 +1392,7 @@
     <ClCompile Include="..\src\DocController.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\DocumentLayout.cpp" />
+    <ClCompile Include="..\src\DocumentProperties.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EbookFormatter.cpp" />
     <ClCompile Include="..\src\EbookSettingsDialog.cpp" />
@@ -1516,7 +1517,6 @@
     <ClCompile Include="..\src\SumatraDialogs.cpp" />
     <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\SumatraPDF.cpp" />
-    <ClCompile Include="..\src\SumatraProperties.cpp" />
     <ClCompile Include="..\src\SumatraStartup.cpp" />
     <ClCompile Include="..\src\SumatraTest.cpp" />
     <ClCompile Include="..\src\SvgIcons.cpp" />

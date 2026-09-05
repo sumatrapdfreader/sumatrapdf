@@ -22,7 +22,7 @@
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
-#include "SumatraProperties.h"
+#include "DocumentProperties.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Commands.h"

@@ -36,7 +36,7 @@
 #if OS_WIN
 #include <wincrypt.h>
 #endif
-#include "SumatraProperties.h"
+#include "DocumentProperties.h"
 
 void ShowProperties(HWND parent, DocController* ctrl);
 

@@ -186,6 +186,9 @@
     <ClInclude Include="..\src\DocumentLayout.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\DocumentProperties.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\EbookDoc.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -424,9 +427,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SumatraPDF.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SumatraProperties.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SumatraTest.h">
@@ -717,6 +717,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DocumentLayout.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DocumentProperties.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EbookDoc.cpp">
@@ -1065,9 +1068,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SumatraPDF.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SumatraProperties.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SumatraStartup.cpp">

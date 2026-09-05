@@ -53,7 +53,7 @@ HRESULT PdfFilter::OnInit() {
     return S_OK;
 }
 
-// copied from SumatraProperties.cpp
+// copied from DocumentProperties.cpp
 static bool PdfDateParse(Str pdfDate, SYSTEMTIME* timeOut) {
     if (len(pdfDate) == 0) {
         return false;

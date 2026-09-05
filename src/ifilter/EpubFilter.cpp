@@ -47,7 +47,7 @@ HRESULT EpubFilter::OnInit() {
     return S_OK;
 }
 
-// copied from SumatraProperties.cpp
+// copied from DocumentProperties.cpp
 static bool IsoDateParse(Str isoDate, SYSTEMTIME* timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     int year = 0, month = 0, day = 0;

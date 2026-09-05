@@ -59,7 +59,7 @@
 #include "Print.h"
 #include "PrintWin11.h"
 #include "SearchAndDDE.h"
-#include "SumatraProperties.h"
+#include "DocumentProperties.h"
 #include "Tabs.h"
 #include "Translations.h"
 #include "StressTesting.h"
