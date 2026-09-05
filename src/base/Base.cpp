@@ -1468,11 +1468,16 @@ void* AllocTemp(int size, u64 align) {
 
 // allocate null-terminated string
 Str AllocStrTemp(int size) {
-    if (size == 0) {
+    // a negative size would ask the arena for close to 2^64 bytes and then
+    // terminate at a negative offset from whatever came back
+    if (size <= 0) {
         return {};
     }
     Arena* arena = GetTempArena();
     char* res = (char*)arena->Push((u64)size + 1, 1, false);
+    if (!res) {
+        return {};
+    }
     res[size] = 0;
     return Str(res, size);
 }

@@ -694,8 +694,24 @@ static void StrArenaTest() {
     ArenaDelete(a);
 }
 
+// nothing to allocate is an empty Str, not an allocation of nothing - and a
+// negative length asks for close to 2^64 bytes once it is widened, so it is
+// the same answer rather than a terminator written at a negative offset
+static void AllocStrTempTest() {
+    Str none = AllocStrTemp(0);
+    utassert(none.s == nullptr && none.len == 0);
+    Str negative = AllocStrTemp(-1);
+    utassert(negative.s == nullptr && negative.len == 0);
+    Str huge = AllocStrTemp(-1000000);
+    utassert(huge.s == nullptr && huge.len == 0);
+
+    Str one = AllocStrTemp(1);
+    utassert(one.s != nullptr && one.len == 1 && one.s[1] == 0);
+}
+
 void StrTest() {
     StrArenaTest();
+    AllocStrTempTest();
 
     char buf[32];
     Str str = StrL("a string");
