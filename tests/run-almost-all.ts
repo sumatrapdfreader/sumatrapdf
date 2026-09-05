@@ -163,6 +163,7 @@ import { testit as movePolygonPolylineInk } from "./move-polygon-polyline-ink.ts
 import { testit as pdfEditToolbarInteraction } from "./pdf-edit-toolbar-interaction.ts";
 import { testit as annotCopyPaste } from "./annot-copy-paste.ts";
 import { testit as annotFilterCloseTab } from "./annot-filter-close-tab.ts";
+import { testit as annotFilterCloseWindow } from "./annot-filter-close-window.ts";
 import { testit as annotFilterSyntax } from "./annot-filter-syntax.ts";
 import { testit as annotCutPaste } from "./annot-cut-paste.ts";
 import { testit as annotUndoRedo } from "./annot-undo-redo.ts";
@@ -419,6 +420,7 @@ export const tests: NamedTest[] = [
   ["issue-6123", issue6123],
   ["annot-filter-syntax", annotFilterSyntax],
   ["annot-filter-close-tab", annotFilterCloseTab],
+  ["annot-filter-close-window", annotFilterCloseWindow],
   ["custom-zoom-dialog", customZoomDialog],
   ["issue-1106", issue1106],
   ["issue-814", issue814],

@@ -876,8 +876,10 @@ void TabsOnCloseWindow(MainWindow* win) {
     win->ctrl = nullptr;
     win->currentTabTemp = nullptr;
     auto tabs = win->Tabs();
-    DeleteVecMembers(tabs);
+    // drop TabsCtrl userData first so CurrentTab() is null while WindowTab
+    // dtors run (they refresh the annotation filter via CurrentTab)
     win->tabsCtrl->RemoveAllTabs();
+    DeleteVecMembers(tabs);
     VecReset(*win->tabSelectionHistory);
 }
 

@@ -676,6 +676,9 @@ static void UpdateFloatButtons(AnnotFilterToolbar* f) {
     if (!f || !f->floatWnd) {
         return;
     }
+    if (f->win && f->win->isBeingClosed) {
+        return;
+    }
     AnnotFilterWindow* w = f->floatWnd;
     WindowTab* tab = FilterTab(f);
     int nSel = 0;
