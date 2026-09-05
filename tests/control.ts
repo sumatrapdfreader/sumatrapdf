@@ -80,6 +80,7 @@ export enum ControlCommand {
   TestGoToLocation = 83,
   TestTocSidebarNav = 84,
   TestSelectionSurvivesRenumber = 85,
+  TestConvertToPdf = 86,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

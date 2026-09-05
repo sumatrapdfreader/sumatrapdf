@@ -801,6 +801,7 @@ enum class ControlCmd : u16 {
     TestGoToLocation = 83,
     TestTocSidebarNav = 84,
     TestSelectionSurvivesRenumber = 85,
+    TestConvertToPdf = 86,
 };
 
 enum class ControlArgType : u16 {
@@ -1720,6 +1721,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ConvertPagesToImagesResultTemp(templatePath, pagesSpec, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestConvertToPdf: {
+            Str srcPath = StringArg(req, 0);
+            Str destPath = StringArg(req, 1);
+            if (len(srcPath) == 0 || len(destPath) == 0) {
+                AppendError(req, StrL("TestConvertToPdf expects string srcPath, string destPath"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = ConvertImageCollectionToPdfResultTemp(srcPath, destPath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

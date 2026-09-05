@@ -1185,6 +1185,51 @@ struct ConvertToPdfDialog : PdfToolDialog {
     void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
 
+// Same conversion as File → Convert to PDF (issue #4118).
+static bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath) {
+    if (!engine || !engine->IsImageCollection() || len(destPath) == 0) {
+        return false;
+    }
+
+    TempStr producer = fmt("SumatraPDF %s", currentVersion);
+    PdfCreator::SetProducerName(producer);
+    // Formats PDF cannot re-wrap (WebP, JXL, HEIC, AVIF, TGA, …): decode via
+    // the same codecs we use for viewing, then PNG + zopfli before embed.
+    auto toOptimizedPng = [](Str data) -> Str {
+        Pixmap* px = PixmapFromData(data);
+        if (!px) {
+            logf("ConvertToPdf: decode-to-pixmap failed (%d bytes)\n", len(data));
+            return {};
+        }
+        Str png = EncodeAndOptimizePngFromPixmap(px);
+        FreePixmap(px);
+        return png;
+    };
+    return PdfCreator::SaveImageCollectionAsPdf(destPath, engine, toOptimizedPng);
+}
+
+TempStr ConvertImageCollectionToPdfResultTemp(Str srcPath, Str destPath, int* exitCodeOut) {
+    auto finish = [&](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    if (len(srcPath) == 0 || len(destPath) == 0) {
+        return finish(1, str::DupTemp(StrL("ERROR bad-args")));
+    }
+    EngineBase* engine = CreateEngineFromFile(srcPath, nullptr, false);
+    if (!engine) {
+        return finish(1, str::DupTemp(StrL("ERROR engine-create-failed")));
+    }
+    bool ok = ConvertImageCollectionToPdf(engine, destPath);
+    SafeEngineRelease(&engine);
+    if (!ok) {
+        return finish(1, str::DupTemp(StrL("ERROR convert-failed")));
+    }
+    return finish(0, str::DupTemp(StrL("OK")));
+}
+
 void ConvertToPdfDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {
@@ -1201,22 +1246,7 @@ void ConvertToPdfDialog::DoIt(VirtMouseEvent*) {
     }
 
     logf("ConvertToPdf: converting '%s' to '%s'\n", srcPath, destPath);
-
-    TempStr producer = fmt("SumatraPDF %s", currentVersion);
-    PdfCreator::SetProducerName(producer);
-    // Formats PDF cannot re-wrap (WebP, JXL, HEIC, AVIF, TGA, …): decode via
-    // the same codecs we use for viewing, then PNG + zopfli before embed.
-    auto toOptimizedPng = [](Str data) -> Str {
-        Pixmap* px = PixmapFromData(data);
-        if (!px) {
-            logf("ConvertToPdf: decode-to-pixmap failed (%d bytes)\n", len(data));
-            return {};
-        }
-        Str png = EncodeAndOptimizePngFromPixmap(px);
-        FreePixmap(px);
-        return png;
-    };
-    bool ok = PdfCreator::SaveImageCollectionAsPdf(destPath, engine, toOptimizedPng);
+    bool ok = ConvertImageCollectionToPdf(engine, destPath);
     if (ok) {
         logf("ConvertToPdf: converted successfully\n");
         MainWindow* w = win;

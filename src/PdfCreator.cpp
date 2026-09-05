@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 #include "base/Win.h"
+#include "base/GdiPlusUtil.h"
 
 extern "C" {
 #include <mupdf/pdf.h>
@@ -400,6 +401,11 @@ bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine,
         bool pageOk = false;
 
         Str data = EngineImagesGetImageData(engine, i);
+        // One file holds every frame (GIF/TIFF/ICO). Embedding that blob on
+        // each PDF page makes MuPDF show the last frame (issue #1930).
+        if (engine->kind == kindEngineImage && nPages > 1) {
+            data = {};
+        }
         if (len(data) > 0) {
             pageOk = c->AddPageFromImageData(data, dpi);
             if (!pageOk && fallbackToEmbeddable) {
@@ -418,6 +424,13 @@ bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine,
             Pixmap* bmp = engine->RenderPage(args);
             if (bmp && bmp->hbmp) {
                 pageOk = AddPageFromHBITMAP(c, bmp->hbmp, Size(bmp->width, bmp->height), dpi);
+            }
+            if (!pageOk && bmp) {
+                Gdiplus::Bitmap* gp = WrapPixmapGdiplus(bmp);
+                if (gp) {
+                    pageOk = c->AddPageFromGdiplusBitmap(gp, dpi);
+                    delete gp;
+                }
             }
             FreePixmap(bmp);
         }

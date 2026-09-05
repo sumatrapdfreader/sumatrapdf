@@ -1758,10 +1758,9 @@ i64 EngineImage::GetImageByteSize(int /*pageNo*/) {
 }
 
 fz_image* EngineImage::LoadFzImageForPage(fz_context* ctx, int pageNo) {
-    // mupdf decodes the file's first frame lazily at render scale. Additional
-    // frames of multi-page TIFFs / animated GIFs come from the pre-decoded
-    // `frames` list via LoadPixmapForPage, so opt out of the mupdf path for them.
-    if (pageNo != 1) {
+    // mupdf's GIF loader composites every frame onto one pixmap (the last).
+    // Multi-frame TIFF/GIF/ICO pages come from `frames` via LoadPixmapForPage.
+    if (len(frames) > 1 || pageNo != 1) {
         return nullptr;
     }
     return EngineImages::LoadFzImageForPage(ctx, pageNo);
