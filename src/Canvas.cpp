@@ -3762,6 +3762,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
 
     bool rendering = false;
     Rect screen(Point(), dm->GetViewPort().Size());
+    bool anyPageVisible = false;
 
     bool isRtl = IsUIRtl();
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
@@ -3769,6 +3770,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         if (!pi || 0.0F == pi->visibleRatio) {
             continue;
         }
+        anyPageVisible = true;
         ReportIf(!pi->isShown);
         if (!pi->isShown) {
             continue;
@@ -3909,6 +3911,11 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         if (win->showPageBoxes) {
             PaintPdfPageBoxes(dm, hdc);
         }
+    }
+    // Empty viewport (narrow page on a canvas sized by a wider one): the last
+    // frame is stale after a reload or jump. Flush the background. Issue #6136.
+    if (!anyPageVisible) {
+        shouldPaint = true;
     }
     return shouldPaint;
 }
