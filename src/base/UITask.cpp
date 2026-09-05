@@ -61,7 +61,7 @@ constexpr double kSlowTaskDispatchMs = 300.0;
 constexpr double kSlowTaskDispatchMs = 50.0;
 #endif
 
-static SeqStrings gSkipLogNames = "TaskFindCountProgress\0CopyProgress\0RenderFinished\0FrameUpdateUi\0(no kind)\0Repaint\0SaveSettings\0";
+static SeqStrings gSkipLogNames = "TaskFindCountProgress\0CopyProgress\0RenderFinished\0FrameUpdateUi\0(no kind)\0Repaint\0SaveSettings\0ShowSelectedAnnot\0GoToFindMatch\0";
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (gExecuteTaskMessage != msg) {
