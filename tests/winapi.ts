@@ -253,6 +253,7 @@ export const WM_RBUTTONDOWN = 0x0204;
 export const WM_RBUTTONUP = 0x0205;
 export const WM_MBUTTONDOWN = 0x0207;
 export const WM_CONTEXTMENU = 0x007b;
+export const WM_KILLFOCUS = 0x0008;
 export const WM_COMMAND = 0x0111;
 export const WM_SYSCOMMAND = 0x0112;
 export const SC_CLOSE = 0xf060;

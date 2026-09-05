@@ -68,6 +68,7 @@ HWND HwndSetFocus(HWND hwnd);
 HWND HwndThreadFocus();
 bool HwndSetFocusForce(HWND hwnd);
 bool HwndIsFocused(HWND);
+bool HwndIsOnScreenKeyboard(HWND);
 bool HwndIsVisible(HWND hwnd);
 void HwndSetVisible(HWND hwnd, bool visible);
 void HwndShow(HWND hwnd);

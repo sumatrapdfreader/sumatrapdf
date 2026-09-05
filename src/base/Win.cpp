@@ -1926,6 +1926,37 @@ bool HwndIsFocused(HWND hwnd) {
     return GetFocus() == hwnd;
 }
 
+// TabTip / osk / TextInputHost. A Contents or in-place edit that closes on
+// WM_KILLFOCUS would vanish when the tablet keyboard takes focus.
+bool HwndIsOnScreenKeyboard(HWND hwnd) {
+    if (!hwnd) {
+        return false;
+    }
+    WCHAR clsW[64]{};
+    GetClassNameW(hwnd, clsW, dimof(clsW));
+    TempStr cls = ToUtf8Temp(clsW);
+    if (str::StartsWithI(cls, StrL("IPTip")) || str::EqI(cls, StrL("OSKMainClass"))) {
+        return true;
+    }
+    DWORD pid = 0;
+    GetWindowThreadProcessId(hwnd, &pid);
+    if (pid == 0) {
+        return false;
+    }
+    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc.IsValid()) {
+        return false;
+    }
+    WCHAR pathW[MAX_PATH]{};
+    DWORD pathLen = MAX_PATH;
+    if (!QueryFullProcessImageNameW(hProc, 0, pathW, &pathLen)) {
+        return false;
+    }
+    TempStr name = path::GetBaseNameTemp(ToUtf8Temp(pathW));
+    static SeqStrings kOskExes = "TabTip.exe\0osk.exe\0TextInputHost.exe\0";
+    return SeqStrIndexIS(kOskExes, name) >= 0;
+}
+
 bool HwndIsCursorOverWindow(HWND hwnd) {
     Point pt = GetCursorPosition();
     Rect rcWnd = HwndWindowRect(hwnd);

@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- The annotation **Contents** box and the free-text in-place editor stay open when the Windows on-screen keyboard takes focus, so they can be used on a tablet
 - Document Properties (Ctrl+D) fills Title, Author, Subject, Keywords, dates, Application and PDF Producer from the Catalog XMP metadata stream when the Info dictionary omits them
 - **Global shortcuts:** prefixing `Key` with `Global ` in `Shortcuts` settings (e.g. `Key = Global PageDown`) registers a system-wide hotkey. Commands route to the most recently active open SumatraPDF window (fixes #6133)
 - **Open File Without History** (`CmdOpenFileNoHistory`) opens a document without adding it to File History or Windows Recent Documents. Palette-only; bind a shortcut if you want one (fixes #6121)

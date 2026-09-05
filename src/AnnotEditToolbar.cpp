@@ -1730,6 +1730,34 @@ static void OnCancelContentsClick(AnnotEditToolbar* tb, VirtMouseEvent*) {
     QueueEndContentsEdit(tb, false);
 }
 
+static bool KeepContentsEditOnKillFocus(AnnotEditToolbar* tb, HWND next) {
+    if (!next) {
+        return true;
+    }
+    if (tb && tb->contentsEdit && next == tb->contentsEdit->hwnd) {
+        return true;
+    }
+    if (tb && tb->host && tb->host->native) {
+        HWND host = tb->host->native;
+        if (next == host || IsChild(host, next)) {
+            return true;
+        }
+    }
+    return HwndIsOnScreenKeyboard(next);
+}
+
+static void PostedRefocusContents(MainWindow* win) {
+    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    if (!tb || tb->contentsEditClosing || !tb->editingContents || !tb->contentsEdit) {
+        return;
+    }
+    HWND hwnd = tb->contentsEdit->hwnd;
+    if (!hwnd || GetFocus() == hwnd) {
+        return;
+    }
+    HwndSetFocus(hwnd);
+}
+
 static void OnContentsEditWndProc(AnnotEditToolbar* tb, ControlBase::WndProcEvent* ev) {
     if (!tb || !tb->contentsEdit) {
         return;
@@ -1758,9 +1786,17 @@ static void OnContentsEditWndProc(AnnotEditToolbar* tb, ControlBase::WndProcEven
         }
     }
     if (ev->msg == WM_KILLFOCUS) {
-        // clicking away from the box is "done", the same as Ctrl+Enter
-        QueueEndContentsEdit(tb, true);
-        gContentsEditEndedAt = GetTickCount64();
+        HWND next = (HWND)ev->wparam;
+        if (KeepContentsEditOnKillFocus(tb, next)) {
+            // OSK / no new focus: keep the box. Host clicks are OK/Cancel.
+            if (tb->win && (next == nullptr || HwndIsOnScreenKeyboard(next))) {
+                uitask::Post(MkFunc0(PostedRefocusContents, tb->win), "RefocusAnnotContents");
+            }
+        } else {
+            // clicking away from the box is "done", the same as Ctrl+Enter
+            QueueEndContentsEdit(tb, true);
+            gContentsEditEndedAt = GetTickCount64();
+        }
     }
     tb->contentsEdit->WndProc(ev);
 }
@@ -2204,12 +2240,20 @@ static LRESULT CALLBACK WndProcFreeTextInPlaceEdit(HWND hwnd, UINT msg, WPARAM w
                 return 0;
             }
             break;
-        case WM_KILLFOCUS:
+        case WM_KILLFOCUS: {
+            HWND next = (HWND)wp;
+            if (!next || HwndIsOnScreenKeyboard(next)) {
+                if (next && gInPlace.hwnd) {
+                    PostMessageW(gInPlace.hwnd, WM_SETFOCUS, 0, 0);
+                }
+                break;
+            }
             EndFreeTextInPlaceEdit(true);
             // only a click elsewhere gets here, and if that click was on the
             // Edit text button it means "done", not "start again"
             gInPlaceEndedAt = GetTickCount64();
             return 0;
+        }
     }
     LRESULT res = CallWindowProcW(gInPlaceDefProc, hwnd, msg, wp, lp);
     switch (msg) {
