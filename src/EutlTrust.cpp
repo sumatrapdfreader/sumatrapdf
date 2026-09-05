@@ -97,6 +97,19 @@ static void AddCertFingerprint(Str der, StrVec& fps) {
     }
 }
 
+// LOTL TSLLocation lists XML TSLs and PDF copies. Fetch XML only
+// (.xml, .xtsl, or names like TSLDK_v6xml).
+static bool IsXmlTslUrl(Str url) {
+    int cut = str::IndexOfChar(url, '?');
+    if (cut < 0) {
+        cut = str::IndexOfChar(url, '#');
+    }
+    if (cut >= 0) {
+        url = Str(url.s, cut);
+    }
+    return str::EndsWithI(url, StrL("xml")) || str::EndsWithI(url, StrL("xtsl"));
+}
+
 static bool HttpGetBounded(Str url, str::Builder& out) {
     HttpRsp rsp;
     if (!HttpGet(url, &rsp) || !IsHttpRspOk(&rsp)) {
@@ -173,7 +186,7 @@ bool EutlUpdate(Str* errOut) {
     int fetched = 0;
     for (int i = 0; i < len(tslUrls) && fetched < kMaxTslLists; i++) {
         Str url = tslUrls[i];
-        if (!str::StartsWithI(url, StrL("http"))) {
+        if (!str::StartsWithI(url, StrL("http")) || !IsXmlTslUrl(url)) {
             continue;
         }
         str::Builder tsl;
