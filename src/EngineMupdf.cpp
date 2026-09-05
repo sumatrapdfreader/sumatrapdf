@@ -443,7 +443,16 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
     return true;
 }
 
-static IPageDestination* NewPageDestinationMupdf(EngineMupdf* e, fz_link* link, fz_outline* outline) {
+template <typename T, typename... Args>
+static T* AllocDest(Arena* a, Args&&... args) {
+    if (a) {
+        return New<T>(a, std::forward<Args>(args)...);
+    }
+    return new T(std::forward<Args>(args)...);
+}
+
+static IPageDestination* NewPageDestinationMupdf(EngineMupdf* e, fz_link* link, fz_outline* outline,
+                                                 Arena* destArena = nullptr) {
     ReportIf(link && outline);
     ReportIf(!link && !outline);
     fz_context* ctx = e->Ctx();
@@ -484,13 +493,13 @@ static IPageDestination* NewPageDestinationMupdf(EngineMupdf* e, fz_link* link, 
             // degenerate bare "file:" uri (seen in broken PDFs)
             return nullptr;
         }
-        auto* res = new PageDestinationFile(path, destStr);
+        auto* res = AllocDest<PageDestinationFile>(destArena, path, destStr);
         res->rect = FzGetRectF(link);
         return res;
     }
 
     if (IsExternalUrl(uri)) {
-        auto* res = new PageDestinationURL(uri);
+        auto* res = AllocDest<PageDestinationURL>(destArena, uri);
         res->rect = FzGetRectF(link);
         return res;
     }
@@ -530,13 +539,13 @@ static IPageDestination* NewPageDestinationMupdf(EngineMupdf* e, fz_link* link, 
         TempStr localPath;
         Str localFragment;
         if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
-            auto* res = new PageDestinationFile(localPath, localFragment);
+            auto* res = AllocDest<PageDestinationFile>(destArena, localPath, localFragment);
             res->rect = FzGetRectF(link);
             return res;
         }
     }
 
-    auto* dest = new PageDestinationMupdf(link, outline);
+    auto* dest = AllocDest<PageDestinationMupdf>(destArena, link, outline);
     dest->rect = FzGetRectF(link);
     dest->pageNo = pageNo;
     dest->loc = loc;
@@ -1904,11 +1913,21 @@ static Pixmap* NewPixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pixmap, bool pr
 #endif
 }
 
-static TocItem* NewTocItemWithDestination(TocItem* parent, Str title, IPageDestination* dest) {
-    auto* res = AllocTocItem(nullptr, title, 0);
+static TocItem* NewTocItemWithDestination(Arena* arena, TocItem* parent, Str title, IPageDestination* dest) {
+    auto* res = AllocTocItem(arena, title, 0);
     res->parent = parent;
     res->dest = dest;
     return res;
+}
+
+static TocTree* AllocTocTree(Arena* arena, TocItem* root) {
+    return New<TocTree>(arena, root, arena);
+}
+
+static void DestroyTocTree(TocTree* t) {
+    if (t) {
+        t->~TocTree();
+    }
 }
 
 // TODO: could be optimized
@@ -3074,7 +3093,7 @@ static void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec
     }
 }
 
-static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
+static StrVec* BuildPageLabelVec(Arena* arena, fz_context* ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(ctx, root, pageCount, data, 0);
     VecSort(data, CmpPageLabelInfo);
@@ -3093,7 +3112,7 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
         return nullptr;
     }
 
-    StrVec* labels = new StrVec();
+    StrVec* labels = New<StrVec>(arena);
     for (int i = 0; i < pageCount; i++) {
         labels->Append(StrL(""));
     }
@@ -3120,7 +3139,7 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
     }
 
     if (PageLabelsContainInternalPdgNames(labels, pageCount)) {
-        delete labels;
+        labels->~StrVec();
         return nullptr;
     }
     return labels;
@@ -3315,8 +3334,6 @@ fz_context* EngineMupdf::Ctx() const {
 
 EngineMupdf::~EngineMupdf() {
     pagesLock.Lock();
-    str::Free(ebookFontUnavailable);
-    str::Free(ebookUserCss);
 
     auto* ctx = _ctx;
     if (darkModeEngineCache) {
@@ -3324,6 +3341,9 @@ EngineMupdf::~EngineMupdf() {
         darkModeEngineCache = nullptr;
     }
     for (Vec<FzPageInfo*>* v : chapterPages) {
+        if (!v) {
+            continue;
+        }
         for (FzPageInfo* pi : *v) {
             DeleteVecMembers(pi->links);
             DeleteVecMembers(pi->autoLinks);
@@ -3352,7 +3372,7 @@ EngineMupdf::~EngineMupdf() {
             // memory to the arena.
             pi->~FzPageInfo();
         }
-        delete v;
+        v->~Vec<FzPageInfo*>();
     }
 
     fz_drop_outline(ctx, outline);
@@ -3375,10 +3395,14 @@ EngineMupdf::~EngineMupdf() {
     fz_drop_context(ctx);
 
     str::Free(pdfPassword);
-    delete pageLabels;
-    FreeTocItemRec(nullptr, pendingHeadingToc);
+    if (pageLabels) {
+        pageLabels->~StrVec();
+        pageLabels = nullptr;
+    }
+    FreeTocItemRec(arena, pendingHeadingToc);
     pendingHeadingToc = nullptr;
-    delete tocTree;
+    DestroyTocTree(tocTree);
+    tocTree = nullptr;
 
     pagesLock.Unlock();
 
@@ -4131,7 +4155,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         }
         usePublisherCss = s.ignoreDocumentCSS ? 0 : 1;
     }
-    str::ReplaceWithCopy(&ebookUserCss, userCss);
+    ebookUserCss = str::Dup(arena, userCss);
     ebookPublisherCss = usePublisherCss;
     TempStr themeCss = ReflowDocumentThemeCssTemp();
     if (themeCss) {
@@ -4198,7 +4222,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     // After fz_layout_document, so a font that was used is already cached.
     if (requestedFontName && isReflowable) {
         if (!EbookFontIsAvailable(ctx, requestedFontName)) {
-            ebookFontUnavailable = str::Dup(requestedFontName);
+            ebookFontUnavailable = str::Dup(arena, requestedFontName);
         }
     }
 
@@ -4424,7 +4448,7 @@ static bool IsLinearizedFile(EngineMupdf* e) {
 // one vector, pageCount full entries: PDF, XPS and single-chapter reflow docs
 static void InitChapterPagesFlat(EngineMupdf* e) {
     VecResize(e->chapterPages, 1);
-    auto* v = new Vec<FzPageInfo*>();
+    auto* v = New<Vec<FzPageInfo*>>(e->arena);
     e->chapterPages[0] = v;
     for (int i = 0; i < e->pageCount; i++) {
         auto* pi = New<FzPageInfo>(e->arena);
@@ -4443,7 +4467,7 @@ static void InitChapterPagesFlat(EngineMupdf* e) {
 static void InitChapterPagesLazy(EngineMupdf* e, int nCh, int n1) {
     VecResize(e->chapterPages, nCh);
     for (int ch = 1; ch <= nCh; ch++) {
-        auto* v = new Vec<FzPageInfo*>();
+        auto* v = New<Vec<FzPageInfo*>>(e->arena);
         e->chapterPages[ch - 1] = v;
         int cnt = (ch == 1) ? n1 : 1;
         for (int p = 1; p <= cnt; p++) {
@@ -4765,7 +4789,7 @@ bool EngineMupdf::FinishLoading() {
     fz_try(ctx) {
         labels = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/PageLabels");
         if (labels) {
-            pageLabels = BuildPageLabelVec(ctx, labels, PageCount());
+            pageLabels = BuildPageLabelVec(arena, ctx, labels, PageCount());
         }
     }
     fz_catch(ctx) {
@@ -4866,11 +4890,9 @@ int EngineMupdf::LayOutChapter(int chapter) {
 }
 
 static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
-    PageDestination* dest = new PageDestination();
+    PageDestination* dest = New<PageDestination>(engine->arena);
     dest->kind = kindDestinationAttachment;
-    // WCHAR* path = ToWStr(outline->uri);
     dest->name = str::Dup(Str(outline->title));
-    // page is really a stream number
     Str title = outline->title ? Str(outline->title) : StrL("");
     TempStr nameHex = str::MemToHexTemp(title);
     dest->value = str::Dup(fmt("%s:%d:attachname=%s", engine->FilePath(), outline->page.page, nameHex));
@@ -4918,9 +4940,9 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         if (isAttachment) {
             dest = DestFromAttachment(this, outline);
         } else {
-            dest = NewPageDestinationMupdf(this, nullptr, outline);
+            dest = NewPageDestinationMupdf(this, nullptr, outline, arena);
         }
-        TocItem* item = NewTocItemWithDestination(parent, name, dest);
+        TocItem* item = NewTocItemWithDestination(arena, parent, name, dest);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         // style (bold / italic / color) is filled in by ApplyOutlineStyles()
@@ -5152,7 +5174,7 @@ static TocItem* GenerateTocFromHeadings(EngineMupdf* e, int& idCounter) {
             VecRemoveLast(stack);
         }
         if (same) {
-            FreeTocItemRec(nullptr, node);
+            FreeTocItemRec(e->arena, node);
             return;
         }
         nAdded++;
@@ -5182,8 +5204,8 @@ static TocItem* GenerateTocFromHeadings(EngineMupdf* e, int& idCounter) {
                     Str title = b.TakeStr();
                     str::TrimWSInPlace(title, str::TrimOpt::Both);
                     if (IsHeadingTitle(title)) {
-                        IPageDestination* dest = NewSimpleDest(pageNo, RectF{0, line->bbox.y0, 0, 0}, 0, {});
-                        TocItem* item = NewTocItemWithDestination(nullptr, title, dest);
+                        IPageDestination* dest = NewSimpleDest(e->arena, pageNo, RectF{0, line->bbox.y0, 0, 0}, 0, {});
+                        TocItem* item = NewTocItemWithDestination(e->arena, nullptr, title, dest);
                         item->pageNo = pageNo;
                         item->id = ++idCounter;
                         item->isOpenDefault = true;
@@ -5228,7 +5250,7 @@ static TocItem* GenerateTocFromHeadings(EngineMupdf* e, int& idCounter) {
         }
     }
     if (AtomicIntGet(&e->headingTocCancel)) {
-        FreeTocItemRec(nullptr, first);
+        FreeTocItemRec(e->arena, first);
         return nullptr;
     }
     logf("GenerateTocFromHeadings: %d pages, %d entries, %.1f ms\n", e->pageCount, nAdded, TimeSinceInMs(t0));
@@ -5256,9 +5278,9 @@ static TocTree* ReplaceTocWithHeadings(EngineMupdf* e, TocItem* headings, int id
     if (!root) {
         return old;
     }
-    TocItem* realRoot = AllocTocItem(nullptr, {}, 0);
+    TocItem* realRoot = AllocTocItem(e->arena, {}, 0);
     realRoot->child = root;
-    e->tocTree = new TocTree(realRoot);
+    e->tocTree = AllocTocTree(e->arena, realRoot);
     return old;
 }
 
@@ -5270,12 +5292,12 @@ static void HeadingTocBuildFinished(EngineMupdf* e) {
     if (!AtomicIntGet(&e->headingTocCancel) && headings) {
         old = ReplaceTocWithHeadings(e, headings, idCounter);
     } else {
-        FreeTocItemRec(nullptr, headings);
+        FreeTocItemRec(e->arena, headings);
     }
     e->headingTocDone = true;
     Func0 cb = e->headingTocDoneCb;
     cb.Call();
-    delete old;
+    DestroyTocTree(old);
     AtomicIntDec(&gDangerousThreadCount);
     e->Release();
 }
@@ -5285,7 +5307,7 @@ static void HeadingTocBuildThread(EngineMupdf* e) {
     TocItem* headings = GenerateTocFromHeadings(e, idCounter);
     e->ReleaseTextExtractionThreadContext();
     if (AtomicIntGet(&e->headingTocCancel)) {
-        FreeTocItemRec(nullptr, headings);
+        FreeTocItemRec(e->arena, headings);
         AtomicIntDec(&gDangerousThreadCount);
         e->Release();
         return;
@@ -5381,9 +5403,9 @@ TocTree* EngineMupdf::BuildToc() {
     if (!root) {
         return nullptr;
     }
-    TocItem* realRoot = AllocTocItem(nullptr, {}, 0);
+    TocItem* realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;
-    tocTree = new TocTree(realRoot);
+    tocTree = AllocTocTree(arena, realRoot);
     return tocTree;
 }
 

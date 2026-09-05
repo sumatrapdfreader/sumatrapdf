@@ -123,16 +123,20 @@ Str PageDestinationJsMenu::GetValue2() {
     return tooltip;
 }
 
-IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, Str value) {
+IPageDestination* NewSimpleDest(Arena* arena, int pageNo, RectF rect, float zoom, Str value) {
     if (value) {
-        return new PageDestinationURL(value);
+        return arena ? New<PageDestinationURL>(arena, value) : new PageDestinationURL(value);
     }
-    auto* res = new PageDestination();
+    auto* res = arena ? New<PageDestination>(arena) : new PageDestination();
     res->pageNo = pageNo;
     res->rect = rect;
     res->kind = kindDestinationScrollTo;
     res->zoom = zoom;
     return res;
+}
+
+IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, Str value) {
+    return NewSimpleDest(nullptr, pageNo, rect, zoom, value);
 }
 
 bool IPageElement::Is(Kind expectedKind) {
@@ -182,8 +186,14 @@ void FreeTocItemRec(Arena* arena, TocItem* item) {
         return;
     }
     FreeTocItemRec(arena, item->child);
-    if (!item->destNotOwned) {
-        delete item->dest;
+    // arena dests: destructor only; heap dests: delete
+    if (!item->destNotOwned && item->dest) {
+        if (arena) {
+            item->dest->~IPageDestination();
+        } else {
+            delete item->dest;
+        }
+        item->dest = nullptr;
     }
     FreeTocItemRec(arena, item->next);
     Free(arena, item->title.s);
@@ -274,12 +284,15 @@ bool TocItem::PageNumbersMatch() const {
     return true;
 }
 
-TocTree::TocTree(TocItem* root) {
+TocTree::TocTree(TocItem* root, Arena* arena) {
     this->root = root;
+    this->arena = arena;
 }
 
+// arena items are not heap-freed; dests still run their destructor
 TocTree::~TocTree() {
-    FreeTocItemRec(nullptr, root);
+    FreeTocItemRec(arena, root);
+    root = nullptr;
 }
 
 // TreeModel

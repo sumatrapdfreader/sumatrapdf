@@ -278,6 +278,7 @@ struct PageDestinationJsMenu : IPageDestination {
 };
 
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, Str value = {});
+IPageDestination* NewSimpleDest(Arena* arena, int pageNo, RectF rect, float zoom = 0.f, Str value = {});
 
 // use in PageDestination::GetDestRect for values that don't matter
 constexpr float kDestUseDefault = -999.9f;
@@ -425,9 +426,10 @@ void FreeTocItemRec(Arena* arena, TocItem* item);
 
 struct TocTree : TreeModel {
     TocItem* root = nullptr;
+    Arena* arena = nullptr;
 
     TocTree() = default;
-    explicit TocTree(TocItem* root);
+    explicit TocTree(TocItem* root, Arena* arena = nullptr);
     ~TocTree() override;
 
     TreeItem Root() override;
