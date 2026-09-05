@@ -36,7 +36,7 @@ static TempStr EscapeTemp(Str str) {
     }
 
     str::Builder escaped;
-    str::BuilderReserve(nullptr, escaped, 256);
+    str::BuilderReserve(escaped, 256);
     for (int i = 0; i < str.len; i++) {
         switch (str.s[i]) {
             case '&':
@@ -390,7 +390,7 @@ __unused static bool RenderDocument(EngineBase* engine, Str renderPath, float zo
 
     if (str::EndsWithI(renderPath, StrL(".txt"))) {
         str::Builder text;
-        str::BuilderReserve(nullptr, text, 1024);
+        str::BuilderReserve(text, 1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
             PageText pageText = engine->ExtractPageText(pageNo);
             if (pageText.text) {

@@ -53,13 +53,12 @@ bool IsUiHangDetectorRunning() {
 // Symbols: prefer a .pdb next to the .exe (what a local build has), then
 // whatever the crash handler downloaded into gSymbolsDir.
 static bool EnsureSymbols() {
-    Arena* a = GetTempArena();
-    str::Builder symPath;
-    str::BuilderReserve(nullptr, symPath, 1024);
-    str::BuilderAppend(a, symPath, GetSelfExeDirTemp());
+    str::Builder symPath(GetTempArena());
+    symPath.Reserve(1024);
+    symPath.Append(GetSelfExeDirTemp());
     if (len(gSymbolsDir) > 0) {
-        str::BuilderAppend(a, symPath, StrL(";"));
-        str::BuilderAppend(a, symPath, gSymbolsDir);
+        symPath.Append(StrL(";"));
+        symPath.Append(gSymbolsDir);
     }
     TempWStr ws = ToWStrTemp(ToStrTemp(symPath));
     if (!dbghelp::Initialize(ws, false)) {
@@ -161,7 +160,7 @@ static void ReportHang(double blockedMs) {
 
     gHangReportsLeft--;
     str::Builder s;
-    str::BuilderReserve(nullptr, s, 8 * 1024);
+    s.Reserve(8 * 1024);
     int nSkipped = 0;
     for (int i = 0; i < nThreads; i++) {
         ThreadStack& ts = gStacks[i];
@@ -170,9 +169,9 @@ static void ReportHang(double blockedMs) {
             continue;
         }
         str::Builder cs;
-        str::BuilderReserve(nullptr, cs, 2048);
+        cs.Reserve(2048);
         for (int j = 0; j < ts.nAddrs; j++) {
-            dbghelp::GetAddressInfo(nullptr, cs, (DWORD64)ts.addrs[j], false);
+            dbghelp::GetAddressInfo(cs, (DWORD64)ts.addrs[j], false);
         }
         Str csStr = ToStr(cs);
         if (!IsOurThread(ts.tid, csStr)) {

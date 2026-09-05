@@ -111,7 +111,7 @@ bool HttpGet(Str urlA, HttpRsp* rspOut) {
     }
 
     str::Builder cmd;
-    str::BuilderReserve(nullptr, cmd, 1024);
+    str::BuilderReserve(cmd, 1024);
     bool ok = AppendCurlBase(&cmd, bodyPath, statusPath);
     AppendShellQuoted(&cmd, urlA);
     AppendStatusRedirect(&cmd, statusPath);
@@ -139,7 +139,7 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
     }
 
     str::Builder cmd;
-    str::BuilderReserve(nullptr, cmd, 1024);
+    str::BuilderReserve(cmd, 1024);
     bool ok = AppendCurlBase(&cmd, destFilePath, statusPath);
     if (maxSize >= 0) {
         cmd.Append(fmt(" --max-filesize %lld ", maxSize));
@@ -181,7 +181,7 @@ bool HttpPost(Str serverA, int port, Str urlA, str::Builder* headers, str::Build
     {
         TempStr url = BuildPostUrlTemp(serverA, port, urlA);
         str::Builder cmd;
-        str::BuilderReserve(nullptr, cmd, 1024);
+        str::BuilderReserve(cmd, 1024);
         ok = AppendCurlBase(&cmd, outPath, statusPath);
         cmd.Append(StrL(" --request POST "));
         AppendHeaders(&cmd, headers);

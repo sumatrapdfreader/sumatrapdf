@@ -5443,7 +5443,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     OPENFILENAME ofn{};
     str::Builder fileFilter;
-    str::BuilderReserve(nullptr, fileFilter, 256);
+    str::BuilderReserve(fileFilter, 256);
     fileFilter.Append(_TRA("PDF documents"));
     fileFilter.Append(StrL("\1*.pdf\1"));
     fileFilter.Append(StrL("\1*.*\1"));
@@ -6049,7 +6049,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     str::Builder fileFilter;
-    str::BuilderReserve(nullptr, fileFilter, 256);
+    str::BuilderReserve(fileFilter, 256);
     if (AppendFileFilterForDoc(ctrl, fileFilter)) {
         fileFilter.Append(fmt("\1*%s\1", defExt));
     }
@@ -6350,7 +6350,7 @@ static void RenameCurrentFile(MainWindow* win) {
     Str defExt = ctrl->GetDefaultFileExt();
     TempWStr defExtW = ToWStrTemp(defExt);
     str::Builder fileFilter;
-    str::BuilderReserve(nullptr, fileFilter, 256);
+    str::BuilderReserve(fileFilter, 256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
     fileFilter.Append(fmt("\1*%s\1", defExt));
@@ -10772,7 +10772,7 @@ static Str ManualInjectThemeCss(Str html) {
         insertAt = 0;
     }
     str::Builder result;
-    str::BuilderReserve(nullptr, result, len(html) + len(css));
+    str::BuilderReserve(result, len(html) + len(css));
     result.Append(Str(html.s, insertAt));
     result.Append(css);
     result.Append(Str(html.s + insertAt, len(html) - insertAt));
@@ -11158,7 +11158,7 @@ static Annotation* CreateImageStampAnnotation(MainWindow* win, WindowTab* tab, D
 static TempStr PickImageFilePathTemp(HWND hwnd) {
     WCHAR pathW[MAX_PATH + 1]{};
     str::Builder fileFilter;
-    str::BuilderReserve(nullptr, fileFilter, 256);
+    str::BuilderReserve(fileFilter, 256);
     fileFilter.Append(_TRA("Image files"));
     fileFilter.Append(StrL("\1*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.heic;*.heif;*.ico\1"));
     fileFilter.Append(_TRA("All files"));

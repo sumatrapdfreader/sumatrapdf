@@ -2068,7 +2068,7 @@ void PaintForwardSearchMark(MainWindow* win, Gfx* gfx) {
 // Replace in 'pattern' the macros %f %l %c by 'path', 'line' and 'col'
 static TempStr BuildOpenFileCmdTemp(Str pattern, Str path, int line, int col) {
     str::Builder cmdline;
-    str::BuilderReserve(nullptr, cmdline, 256);
+    str::BuilderReserve(cmdline, 256);
 
     logf("BuildOpenFileCmdTemp: path: '%s', pattern: '%s'\n", path, pattern);
     Str s = pattern;

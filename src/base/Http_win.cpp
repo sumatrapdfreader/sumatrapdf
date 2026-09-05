@@ -226,7 +226,7 @@ Exit:
 
 bool HttpPost(Str serverA, int port, Str urlA, str::Builder* headers, str::Builder* data) {
     str::Builder resp;
-    str::BuilderReserve(nullptr, resp, 2048);
+    str::BuilderReserve(resp, 2048);
     bool ok = false;
     char* hdr = nullptr;
     DWORD hdrLen = 0;

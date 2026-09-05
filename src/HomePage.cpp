@@ -662,7 +662,7 @@ static void AppendBugReportInfo(str::Builder& s) {
 
 static void CopyAboutInfoToClipboard() {
     str::Builder info;
-    str::BuilderReserve(nullptr, info, 1024);
+    str::BuilderReserve(info, 1024);
     AppendBugReportInfo(info);
     CopyTextToClipboard(ToStr(info));
 }

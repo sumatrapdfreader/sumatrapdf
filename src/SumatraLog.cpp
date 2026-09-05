@@ -130,8 +130,8 @@ void log(Str s) {
 
     if (!gLogBuf) {
         gLogAllocator = ArenaNew();
-        gLogBuf = new str::Builder();
-        str::BuilderReserve(gLogAllocator, *gLogBuf, 32 * 1024);
+        gLogBuf = new str::Builder(gLogAllocator);
+        gLogBuf->Reserve(32 * 1024);
     } else {
         if (len(*gLogBuf) > kMaxLogBuf) {
             // TODO: use gLogBuf->Clear(), which doesn't free the allocated space
@@ -144,7 +144,7 @@ void log(Str s) {
     // when skipping, we skip buf (crash reports) and console
     // but write to file and logview
     if (!skipLog) {
-        str::BuilderAppend(gLogAllocator, *gLogBuf, s);
+        gLogBuf->Append(s);
     }
 
     if (!skipLog && gLogToConsole) {

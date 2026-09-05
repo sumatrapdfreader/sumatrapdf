@@ -2084,9 +2084,15 @@ namespace str {
 // also a C string. Vec supplies the fields, operator[], begin/end and the
 // destructor; only what needs the terminator or an arena is left here.
 struct Builder : Vec<char> {
+    // growth allocator; null means the heap. Arena storage is never freed by
+    // the Builder (the arena owns it).
+    Arena* a = nullptr;
+
+    Builder() = default;
+    explicit Builder(Arena* arena) : a(arena) {}
+
     void Reset(Str s = {});
-    // these grow on the heap; to grow from an arena use the BuilderAppend*()
-    // free functions below, which take the allocator like VecPush() does
+    bool Reserve(int cap);
     bool AppendChar(char c);
     bool Append(Str src);
     bool AppendNonEmpty(Str src);
@@ -2098,21 +2104,16 @@ struct Builder : Vec<char> {
 
 bool Contains(const Builder& b, Str sub);
 
-// Builder does not hold an allocator; like Vec, the arena is passed to the calls
-// that can grow. a == nullptr means the heap. Storage that came from an arena is
-// never freed by the Builder (the arena owns it).
 // Lend b a buffer to start in, instead of its first allocation, the way
 // VecUseExternalBuffer() does. b must be empty and have no storage yet. It
 // appends into buf until buf is full; the append past that allocates and
 // copies, leaving buf alone. Nothing frees buf, so it must outlive b.
 void BuilderUseExternalBuffer(Builder& b, Str buf);
 
-// allocate storage for cap chars up front, instead of on the first append
-bool BuilderReserve(Arena* a, Builder& b, int cap);
-
-bool BuilderAppendChar(Arena* a, Builder& b, char c);
-bool BuilderAppend(Arena* a, Builder& b, Str s);
-Str BuilderTakeStr(Arena* a, Builder& b);
+bool BuilderReserve(Builder& b, int cap);
+bool BuilderAppendChar(Builder& b, char c);
+bool BuilderAppend(Builder& b, Str s);
+Str BuilderTakeStr(Builder& b);
 } // namespace str
 
 void SeqStrNumAppend(str::Builder* b, Str s, i64 num);

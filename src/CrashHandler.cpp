@@ -71,7 +71,7 @@ void CrashInfoAppend(Str s) {
     if (!gCrashInfo) {
         return;
     }
-    str::BuilderAppend(gCrashHandlerArena, *gCrashInfo, s);
+    gCrashInfo->Append(s);
 }
 
 // start a fresh report, keeping the storage already allocated
@@ -80,14 +80,14 @@ static void CrashInfoStart(int cap) {
         return;
     }
     gCrashInfo->Reset();
-    str::BuilderReserve(gCrashHandlerArena, *gCrashInfo, cap);
+    gCrashInfo->Reserve(cap);
 }
 
 static Str CrashInfoTake() {
     if (!gCrashInfo) {
         return {};
     }
-    return str::BuilderTakeStr(gCrashHandlerArena, *gCrashInfo);
+    return gCrashInfo->TakeStr();
 }
 
 // exit code for a debug report (ReportIf) in a -for-testing run; test runners
@@ -224,13 +224,13 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
 
     if (gMei.ExceptionPointers) {
         // those are only set when we capture exception
-        dbghelp::GetExceptionInfo(gCrashHandlerArena, *gCrashInfo, gMei.ExceptionPointers);
+        dbghelp::GetExceptionInfo(*gCrashInfo, gMei.ExceptionPointers);
         CrashInfoAppend(StrL("\n"));
     } else {
         // GetExceptionInfo() also adds current thread callstack
         if (captureCallstack) {
             CrashInfoAppend(StrL("\nCrashed thread:\n"));
-            dbghelp::GetCurrentThreadCallstack(gCrashHandlerArena, *gCrashInfo);
+            dbghelp::GetCurrentThreadCallstack(*gCrashInfo);
             CrashInfoAppend(StrL("\n"));
         }
     }
@@ -255,7 +255,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
 
     if (captureCallstack) {
         CrashInfoAppend(StrL("\n-------- All Threads ----------\n\n"));
-        dbghelp::GetAllThreadsCallstacks(gCrashHandlerArena, *gCrashInfo);
+        dbghelp::GetAllThreadsCallstacks(*gCrashInfo);
         CrashInfoAppend(StrL("\n"));
     }
 
@@ -280,16 +280,16 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
 
     ThreadId crashedThreadId = gMei.ThreadId;
     if (gMei.ExceptionPointers) {
-        dbghelp::GetExceptionInfo(gCrashHandlerArena, *gCrashInfo, gMei.ExceptionPointers);
+        dbghelp::GetExceptionInfo(*gCrashInfo, gMei.ExceptionPointers);
     } else if (captureCallstack) {
         crashedThreadId = GetCurrentThreadId();
         CrashInfoAppend(StrL("\nCrashed thread:\n"));
-        dbghelp::GetCurrentThreadCallstack(gCrashHandlerArena, *gCrashInfo);
+        dbghelp::GetCurrentThreadCallstack(*gCrashInfo);
     }
 
     if (captureCallstack) {
         CrashInfoAppend(StrL("\nOther threads:\n"));
-        dbghelp::GetAllThreadsCallstacksExcept(gCrashHandlerArena, *gCrashInfo, crashedThreadId);
+        dbghelp::GetAllThreadsCallstacksExcept(*gCrashInfo, crashedThreadId);
         CrashInfoAppend(StrL("\n"));
     }
 
@@ -324,13 +324,13 @@ static void UploadCrashReport(Str d) {
         return;
     }
 
-    str::Builder headers;
-    str::BuilderReserve(gCrashHandlerArena, headers, 256);
-    str::BuilderAppend(gCrashHandlerArena, headers, StrL("Content-Type: text/plain"));
+    str::Builder headers(gCrashHandlerArena);
+    headers.Reserve(256);
+    headers.Append(StrL("Content-Type: text/plain"));
 
-    str::Builder data;
-    str::BuilderReserve(gCrashHandlerArena, data, 16 * 1024);
-    str::BuilderAppend(gCrashHandlerArena, data, d);
+    str::Builder data(gCrashHandlerArena);
+    data.Reserve(16 * 1024);
+    data.Append(d);
 
     HttpPost(StrL(kCrashHandlerServer), kCrashHandlerServerPort, StrL(kCrashHandlerServerSubmitURL), &headers, &data);
 }
@@ -459,21 +459,20 @@ static bool gAddSymbolServer = false;
 static bool gAddExeDir = false;
 
 static TempStr BuildSymbolPathTemp(Str symDir) {
-    str::Builder path;
-    str::BuilderReserve(nullptr, path, 2048);
-    Arena* a = GetTempArena();
+    str::Builder path(GetTempArena());
+    path.Reserve(2048);
 
     bool symDirExists = dir::Exists(symDir);
 
     // at this point symDir might not exist but we add it anyway
-    str::BuilderAppend(a, path, symDir);
-    str::BuilderAppend(a, path, StrL(";"));
+    path.Append(symDir);
+    path.Append(StrL(";"));
 
     // in debug builds the symbols are in the same directory as .exe
     if (gIsDebugBuild || gAddExeDir) {
         TempStr dir = GetSelfExeDirTemp();
-        str::BuilderAppend(a, path, dir);
-        str::BuilderAppend(a, path, StrL(";"));
+        path.Append(dir);
+        path.Append(StrL(";"));
     }
 
     if (gAddNtSymbolPath) {
@@ -486,14 +485,14 @@ static TempStr BuildSymbolPathTemp(Str symDir) {
             ntSymPath = GetEnvVariableTemp(StrL("_NT_ALTERNATE_SYMBOL_PATH"));
         }
         if (len(ntSymPath) > 0) {
-            str::BuilderAppend(a, path, ntSymPath);
-            str::BuilderAppend(a, path, StrL(";"));
+            path.Append(ntSymPath);
+            path.Append(StrL(";"));
         }
     }
     if (gAddSymbolServer && symDirExists) {
         // this probably won't work as it needs symsrv.dll and that's not included with Windows
         // TODO: maybe try to scan system directories for symsrv.dll and somehow add it?
-        str::BuilderAppend(a, path, fmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir));
+        path.Append(fmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir));
     }
 
     // remove ";" from the end
@@ -978,7 +977,7 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
     gCrashHandlerArena = ArenaNew();
-    gCrashInfo = New<str::Builder>(gCrashHandlerArena);
+    gCrashInfo = New<str::Builder>(gCrashHandlerArena, gCrashHandlerArena);
 
     if (!SetSymbolsDir(symDir)) {
         log(StrL("InstallCrashHandler: skipping because !SetSymbolsDir()\n"));

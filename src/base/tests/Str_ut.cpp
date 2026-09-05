@@ -353,7 +353,7 @@ static void StrBuilderTakeStr(str::Builder& str) {
 // reallocates
 static void StrBuilderReserve() {
     str::Builder str;
-    str::BuilderReserve(nullptr, str, 1024);
+    str::BuilderReserve(str, 1024);
     uintptr_t heap = (uintptr_t)str.begin();
     utassert(heap != 0);
     for (int i = 0; i < 50; i++) {
@@ -366,9 +366,20 @@ static void StrBuilderReserve() {
     char stack[64];
     str::Builder str2;
     str::BuilderUseExternalBuffer(str2, Str(stack, sizeofi(stack)));
-    str::BuilderReserve(nullptr, str2, 16);
+    str::BuilderReserve(str2, 16);
     utassert(UsesExternalBuf(str2));
     utassert((uintptr_t)str2.begin() == (uintptr_t)stack);
+}
+
+static void StrBuilderArena() {
+    Arena* a = ArenaNew();
+    str::Builder b(a);
+    b.Reserve(64);
+    b.Append(StrL("hello"));
+    b.Append(StrL(" "));
+    b.Append(StrL("arena"));
+    utassert(str::Eq(ToStr(b), StrL("hello arena")));
+    ArenaDelete(a);
 }
 
 void strStrTest() {
@@ -378,6 +389,7 @@ void strStrTest() {
     StrBuilderRunTwice(StrBuilderManyAppends);
     StrBuilderRunTwice(StrBuilderTakeStr);
     StrBuilderReserve();
+    StrBuilderArena();
 }
 
 // --- wstr::Builder: only AppendChar/Append/RemoveLast/LastChar/TakeWStr and

@@ -51,7 +51,7 @@ Str PixmapToBmpFormat(const Pixmap* pixmap) {
     }
 
     str::Builder bmpData;
-    str::BuilderReserve(nullptr, bmpData, (int)bmpBytes);
+    str::BuilderReserve(bmpData, (int)bmpBytes);
     AppendLE16(bmpData, 0x4d42); // "BM"
     AppendLE32(bmpData, (u32)bmpBytes);
     AppendLE16(bmpData, 0);

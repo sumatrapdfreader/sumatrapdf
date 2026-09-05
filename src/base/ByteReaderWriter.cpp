@@ -329,7 +329,7 @@ u32 UInt32LE(const u8* d) {
 
 ByteWriter::ByteWriter(int sizeHint) {
     if (sizeHint > 0) {
-        str::BuilderReserve(nullptr, d, sizeHint);
+        str::BuilderReserve(d, sizeHint);
     }
 }
 
@@ -389,6 +389,6 @@ Str ByteWriter::AsByteSlice() const {
 ByteWriterLE::ByteWriterLE(int sizeHint) {
     isLE = true;
     if (sizeHint > 0) {
-        str::BuilderReserve(nullptr, d, sizeHint);
+        str::BuilderReserve(d, sizeHint);
     }
 }

@@ -1427,7 +1427,7 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             }
             WCHAR pathW[MAX_PATH + 1]{};
             str::Builder fileFilter;
-            str::BuilderReserve(nullptr, fileFilter, 256);
+            str::BuilderReserve(fileFilter, 256);
             fileFilter.Append(_TRA("All files"));
             fileFilter.Append(StrL("\1*.*\1"));
             Str fileFilterStr = ToStr(fileFilter);
