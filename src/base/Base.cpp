@@ -5130,7 +5130,10 @@ static void addRawStr(Fmt& fmt, int off, size_t n) {
     if (n == 0) {
         return;
     }
-    ReportIf(fmt.nInst >= dimof(fmt.instructions));
+    if (fmt.nInst >= dimofi(fmt.instructions)) {
+        fmt.isOk = false;
+        return;
+    }
     auto& i = fmt.instructions[fmt.nInst++];
     i.t = FmtArg::Kind::RawStr;
     i.rawOff = off;
@@ -5272,6 +5275,10 @@ static int parseArgDefPerc(Fmt& fmt, int off) {
     char conv = (off < f.len) ? f.s[off] : 0;
     off++;
 
+    if (fmt.nInst >= dimofi(fmt.instructions)) {
+        fmt.isOk = false;
+        return off;
+    }
     auto& i = fmt.instructions[fmt.nInst++];
     i.t = typeFromConv(conv);
     i.argNo = fmt.currPercArgNo++;
