@@ -1443,17 +1443,17 @@ void CommandPaletteWnd::FillSwitchRow() {
         t->onClick = MkFunc1Void(OnPaletteSwitchClicked);
         switchRow->AddChild(t);
     };
-    addSwitch(_TRA("# History"), Str(kPalettePrefixFileHistory));
     addSwitch(_TRA("> Commands"), Str(kPalettePrefixCommands));
     addSwitch(_TRA("@ Tabs"), Str(kPalettePrefixTabs));
-    if (win && win->AsFixed()) {
-        addSwitch(_TRA("& Thumbnails"), Str(kPalettePrefixThumbnails));
+    addSwitch(_TRA("# History"), Str(kPalettePrefixFileHistory));
+    if (len(favorites) > 0) {
+        addSwitch(_TRA("$ Favorites"), Str(kPalettePrefixFavorites));
     }
     if (len(toc) > 0) {
         addSwitch(_TRA("% TOC"), Str(kPalettePrefixTOC));
     }
-    if (len(favorites) > 0) {
-        addSwitch(_TRA("$ Favorites"), Str(kPalettePrefixFavorites));
+    if (win && win->AsFixed()) {
+        addSwitch(_TRA("& Thumbnails"), Str(kPalettePrefixThumbnails));
     }
     if (len(annotations) > 0) {
         addSwitch(_TRA("* Annotations"), Str(kPalettePrefixAnnotations));
