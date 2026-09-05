@@ -3191,10 +3191,10 @@ void HomePageRelayout(MainWindow* win) {
 }
 
 void DrawHomePage(MainWindow* win, Gfx* gfx) {
-    if (!gHomeLayoutCache.valid) {
+    if (!gHomeLayoutCache.valid || !win->homeRoot) {
         HomePageRelayout(win);
     }
-    if (!gHomeLayoutCache.valid) {
+    if (!gHomeLayoutCache.valid || !win->homeRoot) {
         return;
     }
 

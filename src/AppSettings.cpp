@@ -917,23 +917,21 @@ static void ReloadSettings(bool force = false) {
     TempStr uiLanguage = str::DupTemp(gSettings->uiLanguage);
     bool showToolbar = gSettings->showToolbar;
 
-    // the home page layout cache points at FileState objects owned by
-    // gSettings; CleanUpSettings() frees them (crash 8c34d7eda)
+    // FileState* in the cache and chrome die with CleanUpSettings()
+    // (crash 8c34d7eda). LoadSettings() rebuilds both; do not destroy after.
     HomePageInvalidateLayoutCache();
+    for (MainWindow* win : gWindows) {
+        if (win->IsCurrentTabAbout()) {
+            win->DeleteToolTip();
+            HomePageDestroyChrome(win);
+        }
+    }
 
     FileHistorySetStates(nullptr);
     CleanUpSettings();
 
     ok = LoadSettings();
     ReportIf(!ok || !gSettings);
-
-    // TODO: about window doesn't have to be at position 0
-    if (len(gWindows) > 0 && gWindows[0]->IsCurrentTabAbout()) {
-        MainWindow* win = gWindows[0];
-        win->DeleteToolTip();
-        HomePageDestroyChrome(win);
-        win->RedrawAll(true);
-    }
 
     if (!str::Eq(uiLanguage, gSettings->uiLanguage)) {
         SetCurrentLanguageAndRefreshUI(gSettings->uiLanguage);

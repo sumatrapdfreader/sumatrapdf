@@ -235,6 +235,7 @@ import { testit as issue5946 } from "./issue-5946.ts";
 import { testit as issue6012 } from "./issue-6012.ts";
 import { testit as issue6080 } from "./issue-6080.ts";
 import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
+import { testit as advSettingsHomeReload } from "./adv-settings-home-reload.ts";
 import { testit as tocTitleFallback } from "./toc-title-fallback.ts";
 import { testit as tocTreeSentClick } from "./toc-tree-sent-click.ts";
 import { testit as issue6132 } from "./issue-6132.ts";
@@ -473,6 +474,7 @@ export const tests: NamedTest[] = [
   ["issue-6012", issue6012],
   ["issue-6080", issue6080],
   ["adv-settings-fresh-defaults", advSettingsFreshDefaults],
+  ["adv-settings-home-reload", advSettingsHomeReload],
   ["toc-title-fallback", tocTitleFallback],
   ["issue-6132", issue6132],
   ["issue-6133", issue6133],

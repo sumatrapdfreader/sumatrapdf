@@ -1547,6 +1547,11 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
         out.Append(fmt("closed=%d\n", closing ? 1 : 0));
         return finish(0);
     }
+    if (str::Eq(action, StrL("save"))) {
+        wnd->OnSave(nullptr);
+        out.Append(StrL("saved=1\n"));
+        return finish(0);
+    }
     if (!wnd->listBox) {
         out.Append(StrL("NOTREADY no-dialog\n"));
         return finish(2);
