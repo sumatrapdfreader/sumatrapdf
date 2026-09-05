@@ -8119,11 +8119,16 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     pkcs7_windows_sig_info_free(ctx, &info);
 }
 
-void EngineMupdfGetSignatureCerts(EngineBase* engine, Vec<PdfSigCert>& out) {
-    FreePdfSigCerts(out);
+PdfSigCert::~PdfSigCert() {
+    str::Free(label);
+    str::Free(der);
+}
+
+PdfSigCert* EngineMupdfGetSignatureCerts(EngineBase* engine) {
+    PdfSigCert* head = nullptr;
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
-        return;
+        return nullptr;
     }
     fz_context* ctx = e->Ctx();
     ScopedRecursiveMutex scope(&e->docLock);
@@ -8148,10 +8153,10 @@ void EngineMupdfGetSignatureCerts(EngineBase* engine, Vec<PdfSigCert>& out) {
                 if (!der || derLen <= 0) {
                     return;
                 }
-                PdfSigCert c;
-                c.label = str::Dup(fmt("Signature %d %s", sigNo, Str(who)));
-                c.der = str::Dup(Str((const char*)der, derLen));
-                VecAppend(out, c);
+                auto* c = new PdfSigCert;
+                c->label = str::Dup(fmt("Signature %d %s", sigNo, Str(who)));
+                c->der = str::Dup(Str((const char*)der, derLen));
+                ListInsertEnd(&head, c);
             };
             pdf_obj* v = pdf_dict_get(ctx, field, PDF_NAME(V));
             bool docTs = SubFilterIsDocTimeStamp(SigSubFilter(ctx, v ? v : field));
@@ -8170,14 +8175,11 @@ void EngineMupdfGetSignatureCerts(EngineBase* engine, Vec<PdfSigCert>& out) {
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
+    return head;
 }
 
-void FreePdfSigCerts(Vec<PdfSigCert>& certs) {
-    for (PdfSigCert& c : certs) {
-        str::Free(c.label);
-        str::Free(c.der);
-    }
-    VecReset(certs);
+void FreePdfSigCerts(PdfSigCert* certs) {
+    ListDelete(certs);
 }
 #endif
 

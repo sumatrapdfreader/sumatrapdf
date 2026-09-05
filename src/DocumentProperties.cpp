@@ -44,7 +44,6 @@ constexpr int kButtonPadding = 8;
 
 struct PropertiesWnd : WindowBase {
     HWND hwndParent = nullptr;
-    bool showPdfCertActions = false;
     Edit* editProps = nullptr;
     VirtButton* btnCopyToClipboard = nullptr;
     VirtButton* btnViewCert = nullptr;
@@ -52,7 +51,11 @@ struct PropertiesWnd : WindowBase {
     PlatformFont* propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
+#if OS_WIN
+    PdfSigCert* certs = nullptr;
+#endif
 
+    ~PropertiesWnd() override;
     bool Create(HWND parent);
     void UpdateTheme() override;
     void ApplyDarkMode() override;
@@ -771,6 +774,13 @@ void PropertiesWnd::CopyToClipboard(VirtMouseEvent*) {
     CopyTextToClipboard(ToStr(propsText));
 }
 
+PropertiesWnd::~PropertiesWnd() {
+#if OS_WIN
+    FreePdfSigCerts(certs);
+    certs = nullptr;
+#endif
+}
+
 #if OS_WIN
 // CryptUIDlgViewContext is in cryptui.dll. MSVC can pull that via
 // #pragma comment; mingw-w64 often has no import lib, so load it here.
@@ -795,39 +805,109 @@ static void ViewCertDer(HWND parent, Str der) {
     CertFreeCertificateContext(cert);
 }
 
+static TempStr HexBytesTemp(const BYTE* p, int n, bool reverse) {
+    if (!p || n <= 0) {
+        return {};
+    }
+    char* buf = AllocArrayTemp<char>(n * 2 + 1);
+    for (int i = 0; i < n; i++) {
+        BYTE v = reverse ? p[n - 1 - i] : p[i];
+        buf[i * 2] = "0123456789ABCDEF"[v >> 4];
+        buf[i * 2 + 1] = "0123456789ABCDEF"[v & 0xf];
+    }
+    return Str(buf, n * 2);
+}
+
+static TempStr CertNameTemp(PCCERT_CONTEXT cert, DWORD flags) {
+    char buf[512];
+    DWORD n = CertGetNameStringA(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, flags, nullptr, buf, dimof(buf));
+    if (n <= 1) {
+        return {};
+    }
+    return str::DupTemp(Str(buf));
+}
+
+static TempStr FileTimeLocalTemp(const FILETIME& ft) {
+    FILETIME local{};
+    SYSTEMTIME st{};
+    if (!FileTimeToLocalFileTime(&ft, &local) || !FileTimeToSystemTime(&local, &st)) {
+        return {};
+    }
+    return FormatSystemTimeTemp(st, 0);
+}
+
+static void AppendOneCert(str::Builder& out, PdfSigCert* c) {
+    out.Append(c->label);
+    out.AppendChar('\n');
+    if (len(c->der) == 0) {
+        return;
+    }
+    PCCERT_CONTEXT cert = CertCreateCertificateContext(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, (const BYTE*)c->der.s,
+                                                       (DWORD)len(c->der));
+    if (!cert) {
+        return;
+    }
+    AppendProp(out, _TRA("Subject:"), CertNameTemp(cert, 0));
+    AppendProp(out, _TRA("Issuer:"), CertNameTemp(cert, CERT_NAME_ISSUER_FLAG));
+    if (cert->pCertInfo) {
+        AppendProp(out, _TRA("Serial Number:"),
+                   HexBytesTemp(cert->pCertInfo->SerialNumber.pbData, (int)cert->pCertInfo->SerialNumber.cbData, true));
+        AppendProp(out, _TRA("Valid From:"), FileTimeLocalTemp(cert->pCertInfo->NotBefore));
+        AppendProp(out, _TRA("Valid To:"), FileTimeLocalTemp(cert->pCertInfo->NotAfter));
+    }
+    BYTE hash[20];
+    DWORD hashLen = sizeof(hash);
+    if (CertGetCertificateContextProperty(cert, CERT_HASH_PROP_ID, hash, &hashLen) && hashLen > 0) {
+        AppendProp(out, _TRA("SHA-1:"), HexBytesTemp(hash, (int)hashLen, false));
+    }
+    Str trust = EutlCertIsEuTrusted((const u8*)c->der.s, len(c->der)) ? StrL("European Union Trusted List (EUTL)")
+                                                                      : StrL("Windows Certificate Store");
+    AppendProp(out, _TRA("Trust:"), trust);
+    CertFreeCertificateContext(cert);
+}
+
+static void AppendCertsText(str::Builder& out, PdfSigCert* certs) {
+    if (!certs) {
+        return;
+    }
+    out.AppendChar('\n');
+    out.Append(_TRA("Certificates:"));
+    out.AppendChar('\n');
+    for (PdfSigCert* c = certs; c; c = c->next) {
+        AppendOneCert(out, c);
+        if (c->next) {
+            out.AppendChar('\n');
+        }
+    }
+}
+
 void PropertiesWnd::ViewCertificate(VirtMouseEvent*) {
-    MainWindow* win = FindMainWindowByHwnd(hwndParent);
-    DisplayModel* dm = win && win->ctrl ? win->ctrl->AsFixed() : nullptr;
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine) {
-        MessageBoxW(hwnd, L"No PDF document is open.", L"View Certificate", MB_OK | MB_ICONINFORMATION);
+    if (!certs) {
         return;
     }
-    Vec<PdfSigCert> certs;
-    EngineMupdfGetSignatureCerts(engine, certs);
-    if (len(certs) == 0) {
-        MessageBoxW(hwnd, L"This document has no signature certificates to view.", L"View Certificate",
-                    MB_OK | MB_ICONINFORMATION);
-        FreePdfSigCerts(certs);
-        return;
-    }
-    if (len(certs) == 1) {
-        ViewCertDer(hwnd, certs[0].der);
-        FreePdfSigCerts(certs);
+    if (!certs->next) {
+        ViewCertDer(hwnd, certs->der);
         return;
     }
     HMENU menu = CreatePopupMenu();
-    for (int i = 0; i < len(certs); i++) {
-        AppendMenuW(menu, MF_STRING, (UINT_PTR)(i + 1), CWStrTemp(certs[i].label));
+    UINT_PTR id = 1;
+    for (PdfSigCert* c = certs; c; c = c->next) {
+        AppendMenuW(menu, MF_STRING, id, CWStrTemp(c->label));
+        id++;
     }
     POINT pt{};
     GetCursorPos(&pt);
-    int id = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY, pt.x, pt.y, 0, hwnd, nullptr);
+    int chosen = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY, pt.x, pt.y, 0, hwnd, nullptr);
     DestroyMenu(menu);
-    if (id >= 1 && id <= len(certs)) {
-        ViewCertDer(hwnd, certs[id - 1].der);
+    if (chosen >= 1) {
+        PdfSigCert* c = certs;
+        for (int n = 1; c && n < chosen; n++) {
+            c = c->next;
+        }
+        if (c) {
+            ViewCertDer(hwnd, c->der);
+        }
     }
-    FreePdfSigCerts(certs);
 }
 
 struct EutlUpdateJob {
@@ -1044,7 +1124,7 @@ bool PropertiesWnd::Create(HWND parent) {
         btnCopyToClipboard->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::CopyToClipboard>(this);
         btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
 #if OS_WIN
-        if (showPdfCertActions) {
+        if (certs) {
             btnViewCert = NewThemedButton(hwnd, _TRA("View Certificate..."), GetAppFont(), true);
             btnViewCert->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::ViewCertificate>(this);
             btnRow->AddChild(new Padding(btnViewCert, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
@@ -1125,13 +1205,16 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     VecAppend(gPropertiesWindows, wnd);
     DisplayModel* dm = ctrl->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    wnd->showPdfCertActions = EngineMupdfIsPdf(engine);
 #if OS_WIN
-    if (wnd->showPdfCertActions) {
+    if (EngineMupdfIsPdf(engine)) {
         EutlRegisterLookup();
+        wnd->certs = EngineMupdfGetSignatureCerts(engine);
     }
 #endif
     GetPropsText(ctrl, wnd->propsText);
+#if OS_WIN
+    AppendCertsText(wnd->propsText, wnd->certs);
+#endif
     AlignPropertiesText(wnd->propsText);
     EndWithSingleNewline(wnd->propsText);
     wnd->propsText.Append(StrL("\n"));
