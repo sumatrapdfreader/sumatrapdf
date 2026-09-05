@@ -808,6 +808,7 @@ enum class ControlCmd : u16 {
     TestExtractPages = 90,
     TestAnnotFilter = 91,
     TestCanvasFlags = 92,
+    CrashMe = 93,
 };
 
 enum class ControlArgType : u16 {
@@ -1850,6 +1851,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::CrashMe:
+            log(StrL("ControlCmd::CrashMe\n"));
+            CrashMe();
+            break;
+
         case ControlCmd::TestCanvasFlags: {
             Str action = StringArg(req, 0);
             if (str::EqI(action, StrL("set-grid"))) {
@@ -2209,6 +2215,10 @@ static bool ProcessControlConnection(HANDLE h) {
             return false;
         }
         bool isQuit = (ControlCmd)req->cmd == ControlCmd::Quit;
+        if ((ControlCmd)req->cmd == ControlCmd::CrashMe) {
+            log(StrL("ControlCmd::CrashMe\n"));
+            CrashMe();
+        }
         // WaitRenderIdle polls on this thread so the UI thread stays free to
         // paint (and thereby request the tiles we are waiting for)
         if ((ControlCmd)req->cmd == ControlCmd::WaitRenderIdle) {

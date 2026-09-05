@@ -193,14 +193,16 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
     }
 }
 
-void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump) {
-    if (!Initialize({}, false) || !DynMiniDumpWriteDump) {
+void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump, Str comment) {
+    if (!DynMiniDumpWriteDump) {
+        log(StrL("WriteMiniDump: MiniDumpWriteDump not loaded\n"));
         return;
     }
 
     HANDLE hFile = CreateFileW(crashDumpFilePath.s, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
                                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
     if (INVALID_HANDLE_VALUE == hFile) {
+        logf("WriteMiniDump: CreateFileW failed, err=%u\n", GetLastError());
         return;
     }
 
@@ -211,7 +213,22 @@ void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, 
     }
     MINIDUMP_CALLBACK_INFORMATION mci = {OpenMiniDumpCallback, nullptr};
 
-    DynMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, type, mei, nullptr, &mci);
+    MINIDUMP_USER_STREAM userStream{};
+    MINIDUMP_USER_STREAM_INFORMATION userInfo{};
+    MINIDUMP_USER_STREAM_INFORMATION* userParam = nullptr;
+    if (len(comment) > 0) {
+        userStream.Type = CommentStreamA;
+        userStream.BufferSize = (ULONG)comment.len + 1;
+        userStream.Buffer = (PVOID)comment.s;
+        userInfo.UserStreamCount = 1;
+        userInfo.UserStreamArray = &userStream;
+        userParam = &userInfo;
+    }
+
+    BOOL ok = DynMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, type, mei, userParam, &mci);
+    if (!ok) {
+        logf("WriteMiniDump: MiniDumpWriteDump failed, err=%u\n", GetLastError());
+    }
 
     CloseHandle(hFile);
 }

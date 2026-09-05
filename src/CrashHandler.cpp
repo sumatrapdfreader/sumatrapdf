@@ -35,12 +35,22 @@
 constexpr int kCrashHandlerServerPort = 443;
 #define kCrashHandlerServerSubmitURL "/uploadcrash/sumatrapdf-crashes"
 
+// true: write/upload a .dmp (log as CommentStreamA). false: old text report.
+constexpr bool gCrashHandlerUsingMinidump = true;
+
+#if IS_DEBUG
+#define kMinidumpSubmitUrl "http://127.0.0.1:9321/uploadminidump"
+#else
+#define kMinidumpSubmitUrl "https://www.sumatrapdfreader.org/uploadminidump"
+#endif
+
 // The following functions allow crash handler to be used by both installer
 // and sumatra proper. They must be implemented for each app.
 extern void GetStressTestInfo();
 extern bool CrashHandlerCanUseNet();
 extern void ShowCrashHandlerMessage();
 extern void GetProgramInfo();
+extern void AppendClientInfoQuery(str::Builder& url);
 
 // in DEBUG we don't enable symbols download because they are not uploaded
 #if IS_DEBUG
@@ -333,6 +343,65 @@ static void UploadCrashReport(Str d) {
     data.Append(d);
 
     HttpPost(StrL(kCrashHandlerServer), kCrashHandlerServerPort, StrL(kCrashHandlerServerSubmitURL), &headers, &data);
+}
+
+// Log + settings + version; no stacks/modules/exception (those are in the .dmp).
+static Str BuildMinidumpLogText() {
+    CrashInfoStart(16 * 1024);
+    CrashInfoAppend(StrL("Type: crash (minidump)\n"));
+    CrashInfoAppend(str::Format(gCrashHandlerArena, "Minidump: %s\n", gCrashDumpPath));
+    GetProgramInfo();
+    AppendUncaughtMupdfError();
+    CrashInfoAppend(StrL("\n-------- Log -----------------\n\n"));
+    if (gLogBuf) {
+        CrashInfoAppend(ToStr(*gLogBuf));
+    } else {
+        CrashInfoAppend(StrL("(no log - crashed before initializing logging)\n"));
+    }
+    if (gSettingsFile) {
+        CrashInfoAppend(StrL("\n\n----- Settings file ----------\n\n"));
+        CrashInfoAppend(gSettingsFile);
+        CrashInfoAppend(StrL("\n"));
+    }
+    return CrashInfoTake();
+}
+
+static void HandleCrashWithMinidump() {
+    log(StrL("HandleCrashWithMinidump\n"));
+
+    Str logText = BuildMinidumpLogText();
+    SaveCrashInfo(logText);
+    WriteCrashInfoToStdErr(logText);
+
+    DWORD n = GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", nullptr, 0);
+    bool fullDump = (0 != n);
+    dir::CreateForFile(gCrashDumpPath);
+    TempWStr ws = ToWStrTemp(gCrashDumpPath);
+    dbghelp::WriteMiniDump(ws, &gMei, fullDump, logText);
+
+    if (IsDebuggerPresent()) {
+        log(StrL("HandleCrashWithMinidump: skipping upload, debugger present\n"));
+        return;
+    }
+    if (!CrashHandlerCanUseNet()) {
+        log(StrL("HandleCrashWithMinidump: skipping upload, no net permission\n"));
+        return;
+    }
+
+    Str dump = file::ReadFileWithArena(gCrashDumpPath, gCrashHandlerArena);
+    if (len(dump) == 0) {
+        log(StrL("HandleCrashWithMinidump: empty dump, not uploading\n"));
+        return;
+    }
+
+    str::Builder url(gCrashHandlerArena);
+    url.Append(StrL(kMinidumpSubmitUrl));
+    AppendClientInfoQuery(url);
+    Str urlStr = ToStr(url);
+    HttpRsp rsp;
+    bool ok = HttpPostUrl(urlStr, StrL("application/octet-stream"), {}, dump, &rsp);
+    logf("HandleCrashWithMinidump: upload ok=%d status=%u err=%u bytes=%d url=%s\n", (int)ok,
+         (unsigned)rsp.httpStatusCode, (unsigned)rsp.error, dump.len, urlStr);
 }
 
 static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* a) {
@@ -639,6 +708,11 @@ static DWORD WINAPI CrashDumpThread(LPVOID /*data*/) {
     }
 
     log(StrL("CrashDumpThread\n"));
+    if (gCrashHandlerUsingMinidump) {
+        HandleCrashWithMinidump();
+        return 0;
+    }
+
     _uploadDebugReport(Str(), StrL(""), true, true);
 
     // always write a MiniDump (for the latest crash only)

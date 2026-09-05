@@ -87,6 +87,7 @@ export enum ControlCommand {
   TestExtractPages = 90,
   TestAnnotFilter = 91,
   TestCanvasFlags = 92,
+  CrashMe = 93,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -412,6 +413,12 @@ export class ControlClient {
 
   async quit(): Promise<void> {
     await this.request(ControlCommand.Quit);
+  }
+
+  // Fire-and-forget: the process dies in the crash handler, so there is no reply.
+  crashMe(): void {
+    const id = this.nextId++ & 0xffff;
+    this.socket.write(encodeRequest(ControlCommand.CrashMe, id, []));
   }
 
   // Block until the visible page is cached at the resolution a capture would

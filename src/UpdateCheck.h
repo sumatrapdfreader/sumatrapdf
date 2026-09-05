@@ -7,6 +7,7 @@ enum class UpdateCheck {
 };
 
 void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType);
+void AppendClientInfoQuery(str::Builder& url);
 void DownloadAndInstallPendingUpdate(MainWindow* win);
 void StartInstallerAutoUpgrade(Str installerPath);
 void UpdateSelfTo(Str dstPath);

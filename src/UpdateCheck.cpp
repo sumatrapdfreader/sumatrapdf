@@ -745,8 +745,8 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     return 0;
 }
 
-static void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType) {
-    url.Reset(baseURL);
+// Shared by update check and minidump upload: v, os, 64bit, arm, lang, webview, store, simd.
+void AppendClientInfoQuery(str::Builder& url) {
     url.Append(StrL("?v="));
     url.Append(StrL(UPDATE_CHECK_VERA));
     TempStr osVerTemp = GetWindowsVerTemp();
@@ -769,6 +769,11 @@ static void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateChe
     }
     url.Append(StrL("&simd="));
     url.Append(Str(LatestSupportedSIMD().s));
+}
+
+static void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType) {
+    url.Reset(baseURL);
+    AppendClientInfoQuery(url);
     url.Append(StrL("&withPromo"));
     if (UpdateCheck::UserInitiated == updateCheckType) {
         url.Append(StrL("&force"));
