@@ -548,6 +548,12 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
     if (str::Eq(action, StrL("erase-ink"))) {
         AnnotationPlacementEraseAt(gWindows[0], Point(x, y));
     }
+    if (str::Eq(action, StrL("finish-ink"))) {
+        FinishInkAnnotationPlacement(gWindows[0]);
+    }
+    if (str::Eq(action, StrL("cancel-ink"))) {
+        CancelAnnotationPlacement(gWindows[0]);
+    }
     // Follow a FileAttachment dest on the live page (issue #4276).
     if (str::Eq(action, StrL("open-embedded"))) {
         int pageNo = dm->CurrentPageNo();

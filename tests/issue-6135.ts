@@ -1,4 +1,5 @@
 // A pen's eraser end removes whole InkList strokes while the ink tool stays active.
+// Finish/cancel via -dbg-control: a posted Enter does not reach the ink tool.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -16,7 +17,7 @@ import {
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { findCanvas, killAndWait, launchControlled, pressEnter, pressEscape, sendCommand } from "./win-automation.ts";
+import { findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 type Point = { x: number; y: number };
 
@@ -166,7 +167,7 @@ export async function testit(): Promise<void> {
     }
     const remainingPoints = state.points;
 
-    await pressEnter(frame);
+    await inkState(client, ["finish-ink", 0, 0]);
     state = await waitUntil(
       client,
       (s) => !s.active && s.annotations === 1 && s.savedStrokes === 1 && s.savedPoints === remainingPoints,
@@ -179,7 +180,7 @@ export async function testit(): Promise<void> {
     if (!state.active || state.annotations !== 0) {
       throw new Error(`issue-6135: eraser did not delete ink after its final stroke\n${state.raw}`);
     }
-    await pressEscape(frame);
+    await inkState(client, ["cancel-ink", 0, 0]);
   } finally {
     client.close();
     await killAndWait(proc);
