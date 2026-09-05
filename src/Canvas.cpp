@@ -2594,9 +2594,14 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    IPageDestination* dest = link ? link->AsLink() : nullptr;
+    Kind destKind = dest ? dest->GetKind() : nullptr;
+    // FileAttachment is also a dest; open it instead of the #4790 comment card.
+    bool openEmbedded = destKind == kindDestinationLaunchEmbedded;
+
     // Outside Edit PDF mode a click on an annotation did nothing. Show its
     // text, so a long comment can be read without the editing UI (issue #4790)
-    if (clickedAnnot && tab && !MouseHasCtrl(key) && AnnotationHasText(clickedAnnot)) {
+    if (!openEmbedded && clickedAnnot && tab && !MouseHasCtrl(key) && AnnotationHasText(clickedAnnot)) {
         if (ShowAnnotationTextPopup(win, clickedAnnot)) {
             return;
         }
@@ -2615,12 +2620,8 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
 
     if (link && link->GetRect().Contains(ptPage)) {
         /* follow an active link */
-        IPageDestination* dest = link->AsLink();
         // highlight the clicked link (as a reminder of the last action once the user returns)
-        Kind kind = nullptr;
-        if (dest) {
-            kind = dest->GetKind();
-        }
+        Kind kind = destKind;
         if ((kindDestinationLaunchURL == kind || kindDestinationLaunchFile == kind)) {
             DeleteOldSelectionInfo(win, true);
             tab->selectionOnPage = SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(pageNo, link->GetRect()));

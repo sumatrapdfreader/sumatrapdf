@@ -548,6 +548,27 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
     if (str::Eq(action, StrL("erase-ink"))) {
         AnnotationPlacementEraseAt(gWindows[0], Point(x, y));
     }
+    // Follow a FileAttachment dest on the live page (issue #4276).
+    if (str::Eq(action, StrL("open-embedded"))) {
+        int pageNo = dm->CurrentPageNo();
+        Vec<IPageElement*> els = engine->GetElements(pageNo);
+        IPageDestination* dest = nullptr;
+        for (IPageElement* el : els) {
+            if (!el || !el->Is(kindPageElementDest)) {
+                continue;
+            }
+            IPageDestination* d = el->AsLink();
+            if (d && d->GetKind() == kindDestinationLaunchEmbedded) {
+                dest = d;
+                break;
+            }
+        }
+        if (!dest) {
+            return finish(StrL("ERROR no-embedded-dest\n"), 1);
+        }
+        gWindows[0]->ctrl->HandleLink(dest, gWindows[0]->linkHandler);
+        return finish(StrL("OK\n"), 0);
+    }
     Vec<Annotation*> annots;
     EngineMupdfGetLoadedAnnotations(engine, annots);
     int n = 0;

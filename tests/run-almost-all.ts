@@ -263,6 +263,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-4276", issue4276],
   ["issue-4705", issue4705],
   ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-5956", issue5956],
@@ -273,7 +274,6 @@ export const tests: NamedTest[] = [
   ["issue-2629", issue2629],
   ["toolbar-hover-dropdown", toolbarHoverDropdown],
   ["issue-6103", issue6103],
-  ["issue-4276", issue4276],
   ["issue-6062", issue6062],
   ["issue-6101", issue6101],
   ["issue-5907", issue5907],
