@@ -2883,6 +2883,356 @@ static pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* /*doc*/, pdf_obj* 
     return copy;
 }
 
+static Str XmlLocalName(const char* tag) {
+    if (!tag) {
+        return {};
+    }
+    const char* colon = strrchr(tag, ':');
+    if (colon) {
+        return Str(colon + 1);
+    }
+    return Str(tag);
+}
+
+// local XMP name, then Info key; next pair starts after the Info key
+static SeqStrings kXmpLocalMap =
+    "title\0"
+    "Title\0"
+    "Title\0"
+    "Title\0"
+    "creator\0"
+    "Author\0"
+    "Author\0"
+    "Author\0"
+    "description\0"
+    "Subject\0"
+    "Subject\0"
+    "Subject\0"
+    "subject\0"
+    "Keywords\0"
+    "Keywords\0"
+    "Keywords\0"
+    "rights\0"
+    "Copyright\0"
+    "Copyright\0"
+    "Copyright\0"
+    "CreatorTool\0"
+    "Creator\0"
+    "Creator\0"
+    "Creator\0"
+    "Producer\0"
+    "Producer\0"
+    "CreateDate\0"
+    "CreationDate\0"
+    "CreationDate\0"
+    "CreationDate\0"
+    "ModifyDate\0"
+    "ModDate\0"
+    "ModDate\0"
+    "ModDate\0";
+
+static SeqStrings kXmpPrefixes = "dc\0pdf\0xmp\0xap\0";
+
+// order must match XmpSlot cases
+static SeqStrings kXmpInfoKeys =
+    "Title\0"
+    "Author\0"
+    "Subject\0"
+    "Keywords\0"
+    "Copyright\0"
+    "Creator\0"
+    "Producer\0"
+    "CreationDate\0"
+    "ModDate\0";
+
+static Str XmpInfoKey(Str local) {
+    for (Str name = SeqStrFirst(kXmpLocalMap); len(name);) {
+        Str info = SeqStrNext(name);
+        if (str::Eq(name, local)) {
+            return info;
+        }
+        name = SeqStrNext(info);
+    }
+    return {};
+}
+
+struct XmpFields {
+    TempStr title;
+    TempStr author;
+    TempStr subject;
+    TempStr keywords;
+    TempStr copyright;
+    TempStr creator;
+    TempStr producer;
+    TempStr creationDate;
+    TempStr modDate;
+};
+
+static TempStr* XmpSlot(XmpFields* f, Str key) {
+    switch (SeqStrIndex(kXmpInfoKeys, key)) {
+        case 0:
+            return &f->title;
+        case 1:
+            return &f->author;
+        case 2:
+            return &f->subject;
+        case 3:
+            return &f->keywords;
+        case 4:
+            return &f->copyright;
+        case 5:
+            return &f->creator;
+        case 6:
+            return &f->producer;
+        case 7:
+            return &f->creationDate;
+        case 8:
+            return &f->modDate;
+        default:
+            return nullptr;
+    }
+}
+
+static void XmpSetIfEmpty(TempStr* slot, Str val) {
+    if (!slot || len(*slot) > 0 || len(val) == 0) {
+        return;
+    }
+    *slot = val;
+}
+
+static void XmlAppendText(fz_xml* n, str::Builder& b) {
+    if (!n) {
+        return;
+    }
+    const char* t = fz_xml_text(n);
+    if (t) {
+        b.Append(Str(t));
+        return;
+    }
+    for (fz_xml* c = fz_xml_down(n); c; c = fz_xml_next(c)) {
+        XmlAppendText(c, b);
+    }
+}
+
+static TempStr XmlTrimTextTemp(Str raw) {
+    if (len(raw) == 0) {
+        return {};
+    }
+    TempStr s = str::DupTemp(raw);
+    str::TrimWSInPlace(s, str::TrimOpt::Both);
+    s.len -= str::NormalizeWSInPlace(s);
+    return s;
+}
+
+static void XmlCollectLi(fz_xml* n, StrVec& vals, StrVec& langs) {
+    if (!n || fz_xml_text(n)) {
+        return;
+    }
+    if (str::Eq(XmlLocalName(fz_xml_tag(n)), StrL("li"))) {
+        str::Builder b;
+        XmlAppendText(n, b);
+        TempStr s = XmlTrimTextTemp(ToStr(b));
+        if (len(s) == 0) {
+            return;
+        }
+        vals.Append(s);
+        const char* lang = fz_xml_att(n, "xml:lang");
+        langs.Append(lang ? Str(lang) : Str{});
+        return;
+    }
+    for (fz_xml* c = fz_xml_down(n); c; c = fz_xml_next(c)) {
+        XmlCollectLi(c, vals, langs);
+    }
+}
+
+static TempStr XmlValueTemp(fz_xml* node) {
+    StrVec vals;
+    StrVec langs;
+    XmlCollectLi(node, vals, langs);
+    if (len(vals) > 0) {
+        bool anyLang = false;
+        for (int i = 0; i < len(langs); i++) {
+            if (len(langs[i]) > 0) {
+                anyLang = true;
+                break;
+            }
+        }
+        if (anyLang) {
+            for (int i = 0; i < len(langs); i++) {
+                if (str::EqI(langs[i], StrL("x-default"))) {
+                    return str::DupTemp(vals[i]);
+                }
+            }
+            return str::DupTemp(vals[0]);
+        }
+        return JoinTemp(&vals, StrL(", "));
+    }
+    str::Builder b;
+    XmlAppendText(node, b);
+    return XmlTrimTextTemp(ToStr(b));
+}
+
+static void XmpTakeAtts(fz_xml* n, XmpFields* f) {
+    for (Str local = SeqStrFirst(kXmpLocalMap); len(local);) {
+        Str info = SeqStrNext(local);
+        const char* v = fz_xml_att(n, CStrTemp(local));
+        if (!v) {
+            for (Str pfx = SeqStrFirst(kXmpPrefixes); len(pfx); pfx = SeqStrNext(pfx)) {
+                v = fz_xml_att(n, CStrTemp(fmt("%s:%s", pfx, local)));
+                if (v) {
+                    break;
+                }
+            }
+        }
+        if (v && v[0]) {
+            XmpSetIfEmpty(XmpSlot(f, info), XmlTrimTextTemp(Str(v)));
+        }
+        local = SeqStrNext(info);
+    }
+}
+
+static void XmlWalkXmp(fz_xml* n, XmpFields* f) {
+    if (!n) {
+        return;
+    }
+    // parsed XML's root is a document node, not an element
+    if (!fz_xml_up(n)) {
+        for (fz_xml* c = fz_xml_down(n); c; c = fz_xml_next(c)) {
+            XmlWalkXmp(c, f);
+        }
+        return;
+    }
+    if (fz_xml_text(n)) {
+        return;
+    }
+    XmpTakeAtts(n, f);
+    Str key = XmpInfoKey(XmlLocalName(fz_xml_tag(n)));
+    if (len(key) > 0) {
+        XmpSetIfEmpty(XmpSlot(f, key), XmlValueTemp(n));
+    }
+    for (fz_xml* c = fz_xml_down(n); c; c = fz_xml_next(c)) {
+        XmlWalkXmp(c, f);
+    }
+}
+
+// XMP dates are ISO-8601; Document Properties parses Info dates as PDF D:YYYYMMDD...
+static TempStr XmpDateToPdfTemp(Str iso) {
+    if (len(iso) < 4) {
+        return {};
+    }
+    int y = 0;
+    int m = 1;
+    int d = 1;
+    int h = 0;
+    int mi = 0;
+    int s = 0;
+    Str rest = str::Parse(iso, "%4d-%2d-%2d", &y, &m, &d);
+    if (!rest.s) {
+        return {};
+    }
+    // e.g. Visagesoft's 10000-01-01
+    if (y < 1900 || y > 2200) {
+        return {};
+    }
+    if (len(rest) > 0 && rest.s[0] == 'T') {
+        Str t = str::Parse(rest, "T%2d:%2d:%2d", &h, &mi, &s);
+        if (t.s) {
+            rest = t;
+        }
+        if (len(rest) > 0 && rest.s[0] == '.') {
+            int i = 1;
+            while (i < len(rest) && rest.s[i] >= '0' && rest.s[i] <= '9') {
+                i++;
+            }
+            rest = Str(rest.s + i, rest.len - i);
+        }
+    }
+    char tzSign = 0;
+    int tzH = 0;
+    int tzM = 0;
+    if (len(rest) > 0 && rest.s[0] == 'Z') {
+        tzSign = 'Z';
+    } else if (len(rest) > 0 && (rest.s[0] == '+' || rest.s[0] == '-')) {
+        tzSign = rest.s[0];
+        str::Parse(Str(rest.s + 1, rest.len - 1), "%2d:%2d", &tzH, &tzM);
+    }
+    if (tzSign == 'Z') {
+        return fmt("D:%04d%02d%02d%02d%02d%02dZ", y, m, d, h, mi, s);
+    }
+    if (tzSign == '+' || tzSign == '-') {
+        return fmt("D:%04d%02d%02d%02d%02d%02d%c%02d'%02d'", y, m, d, h, mi, s, tzSign, tzH, tzM);
+    }
+    return fmt("D:%04d%02d%02d%02d%02d%02d", y, m, d, h, mi, s);
+}
+
+static bool PdfInfoHasValue(fz_context* ctx, pdf_obj* info, Str key) {
+    pdf_obj* obj = pdf_dict_gets(ctx, info, CStrTemp(key));
+    if (!obj) {
+        return false;
+    }
+    const char* s = pdf_to_text_string(ctx, obj);
+    return s && s[0];
+}
+
+enum class XmpValKind {
+    Text,
+    Date
+};
+
+static void PdfInfoPutMissing(fz_context* ctx, pdf_obj* info, Str key, Str val, XmpValKind kind) {
+    if (len(val) == 0 || PdfInfoHasValue(ctx, info, key)) {
+        return;
+    }
+    TempStr stored = val;
+    if (kind == XmpValKind::Date) {
+        stored = XmpDateToPdfTemp(val);
+        if (len(stored) == 0) {
+            return;
+        }
+    }
+    pdf_dict_puts_drop(ctx, info, CStrTemp(key), pdf_new_text_string(ctx, CStrTemp(stored)));
+}
+
+// Fill Info keys the trailer dict omitted from Catalog /Metadata (XMP).
+static void PdfFillInfoFromXmp(fz_context* ctx, pdf_document* doc, pdf_obj* info) {
+    if (!doc || !info) {
+        return;
+    }
+    pdf_obj* root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+    pdf_obj* meta = pdf_dict_get(ctx, root, PDF_NAME(Metadata));
+    if (!meta) {
+        return;
+    }
+
+    fz_buffer* buf = nullptr;
+    fz_xml* xml = nullptr;
+    fz_var(buf);
+    fz_var(xml);
+    fz_try(ctx) {
+        buf = pdf_load_stream(ctx, meta);
+        xml = fz_parse_xml(ctx, buf, 0);
+        XmpFields fields{};
+        XmlWalkXmp(xml, &fields);
+        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 0), fields.title, XmpValKind::Text);
+        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 1), fields.author, XmpValKind::Text);
+        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 2), fields.subject, XmpValKind::Text);
+        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 3), fields.keywords, XmpValKind::Text);
+        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 4), fields.copyright, XmpValKind::Text);
+        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 5), fields.creator, XmpValKind::Text);
+        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 6), fields.producer, XmpValKind::Text);
+        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 7), fields.creationDate, XmpValKind::Date);
+        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 8), fields.modDate, XmpValKind::Date);
+    }
+    fz_always(ctx) {
+        fz_drop_xml(ctx, xml);
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        fz_warn(ctx, "Couldn't load XMP metadata");
+    }
+}
+
 // Note: make sure to only call with docLock
 // PdfLoadAttachment && PdfLoadAttachments must traverse in the same order
 static Str PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
@@ -4761,6 +5111,7 @@ bool EngineMupdf::FinishLoading() {
         if (!pdfInfo) {
             pdfInfo = pdf_new_dict(ctx, pdfdoc, 4);
         }
+        PdfFillInfoFromXmp(ctx, pdfdoc, pdfInfo);
         // also remember linearization and tagged states at this point
         if (IsLinearizedFile(this)) {
             pdf_dict_puts_drop(ctx, pdfInfo, "Linearized", PDF_TRUE);
@@ -8273,6 +8624,14 @@ void EngineMupdf::GetProperties(Props& propsOut) {
     ScopedRecursiveMutex ctxScope(&docLock);
 
     TempStr val = LookupMetadataTemp(ctx, _doc, StrL("info:Keywords"));
+    if (len(val) == 0 && pdfInfo) {
+        pdf_obj* obj = pdf_dict_gets(ctx, pdfInfo, "Keywords");
+        if (obj) {
+            TempWStr ws = PdfToWStrTemp(ctx, obj);
+            PdfCleanStringInPlace(ws);
+            val = ToUtf8Temp(ws);
+        }
+    }
     if (val) {
         AddProp(propsOut, DocProp::Keywords, val);
     }
