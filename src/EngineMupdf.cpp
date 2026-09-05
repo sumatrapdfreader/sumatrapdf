@@ -8181,6 +8181,52 @@ void FreePdfSigCerts(Vec<PdfSigCert>& certs) {
 }
 #endif
 
+static TempStr GetSignatures(EngineMupdf* e) {
+    // pdf signatures (signed form widgets). Walks each page's widget set;
+    // for each signature widget, pulls signer DN + cert/digest verdict via
+    // the Windows CryptoAPI pdf_pkcs7_verifier.
+#if OS_WIN
+    auto pdfdoc = e->pdfdoc;
+    if (!pdfdoc) return {};
+    auto ctx = e->Ctx();
+    int nSigs = pdf_count_signatures(ctx, pdfdoc);
+    if (nSigs == 0) return {};
+    str::Builder sigs;
+    pdf_pkcs7_verifier* verifier = nullptr;
+    Vec<pdf_obj*> fields;
+    fz_var(verifier);
+    fz_try(ctx) {
+        verifier = pkcs7_windows_new_verifier(ctx);
+        CollectSignatureFields(ctx, pdfdoc, fields);
+        bool hasDss = PdfHasDssRevocation(ctx, pdfdoc);
+        bool hasDocTs = false;
+        for (pdf_obj* field : fields) {
+            pdf_obj* v = pdf_dict_get(ctx, field, PDF_NAME(V));
+            if (SubFilterIsDocTimeStamp(SigSubFilter(ctx, v ? v : field))) {
+                hasDocTs = true;
+                break;
+            }
+        }
+        int sigNo = 0;
+        for (pdf_obj* field : fields) {
+            ++sigNo;
+            int pageNo = PageNoForSigField(ctx, pdfdoc, field);
+            AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs);
+        }
+    }
+    fz_always(ctx) {
+        for (pdf_obj* field : fields) {
+            pdf_drop_obj(ctx, field);
+        }
+        pdf_drop_verifier(ctx, verifier);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return len(sigs) > 0 ? str::DupTemp(ToStr(sigs)) : TempStr{};
+#endif
+}
+
 void EngineMupdf::GetProperties(Props& propsOut) {
     EngineBase::GetProperties(propsOut);
 
@@ -8197,48 +8243,10 @@ void EngineMupdf::GetProperties(Props& propsOut) {
         AddProp(propsOut, DocProp::Encryption, val);
     }
 
-    // pdf signatures (signed form widgets). Walks each page's widget set;
-    // for each signature widget, pulls signer DN + cert/digest verdict via
-    // the Windows CryptoAPI pdf_pkcs7_verifier.
-#if OS_WIN
-    if (pdfdoc && pdf_count_signatures(ctx, pdfdoc) > 0) {
-        str::Builder sigs;
-        pdf_pkcs7_verifier* verifier = nullptr;
-        Vec<pdf_obj*> fields;
-        fz_var(verifier);
-        fz_try(ctx) {
-            verifier = pkcs7_windows_new_verifier(ctx);
-            CollectSignatureFields(ctx, pdfdoc, fields);
-            bool hasDss = PdfHasDssRevocation(ctx, pdfdoc);
-            bool hasDocTs = false;
-            for (pdf_obj* field : fields) {
-                pdf_obj* v = pdf_dict_get(ctx, field, PDF_NAME(V));
-                if (SubFilterIsDocTimeStamp(SigSubFilter(ctx, v ? v : field))) {
-                    hasDocTs = true;
-                    break;
-                }
-            }
-            int sigNo = 0;
-            for (pdf_obj* field : fields) {
-                ++sigNo;
-                int pageNo = PageNoForSigField(ctx, pdfdoc, field);
-                AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs);
-            }
-        }
-        fz_always(ctx) {
-            for (pdf_obj* field : fields) {
-                pdf_drop_obj(ctx, field);
-            }
-            pdf_drop_verifier(ctx, verifier);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-        }
-        if (len(sigs) > 0) {
-            AddProp(propsOut, DocProp::Signatures, str::DupTemp(ToStr(sigs)));
-        }
+    TempStr sigs = GetSignatures(this);
+    if (len(sigs) > 0) {
+        AddProp(propsOut, DocProp::Signatures, sigs);
     }
-#endif
 
     // for epub files, list all files in the archive
     Str path = FilePath();
