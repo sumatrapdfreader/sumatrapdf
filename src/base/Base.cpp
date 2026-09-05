@@ -4541,6 +4541,20 @@ int str::VsnprintfUtf8(Str buf, const char* fmt, va_list args) {
     return vsnprintf(buf.s, (size_t)buf.len, fmt, args);
 }
 
+// How long the formatted output will be. vsnprintf reports it on the platforms
+// whose vsnprintf does; MSVC keeps it in a call of its own.
+static int VscprintfUtf8(const char* fmt, va_list args) {
+#ifdef _MSC_VER
+    _locale_t loc = GetUtf8FormatLocale();
+    if (loc) {
+        return _vscprintf_l(fmt, loc, args);
+    }
+    return _vscprintf(fmt, args);
+#else
+    return vsnprintf(nullptr, 0, fmt, args);
+#endif
+}
+
 // --- copyright for utf8 code below
 
 /*
@@ -5133,6 +5147,8 @@ struct Fmt {
     int currPercArgNo = 0;
     str::Builder res;
 
+    // Scratch for one conversion. A field too wide for it is written straight
+    // into `res` instead, so this is a fast path and not a limit.
     char buf[256] = {};
 };
 
@@ -5390,38 +5406,60 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
     return true;
 }
 
-// format a single value into a caller-provided buffer via snprintf, NUL-terminating
-// even on truncation. Returns a Str view of the written bytes (not including the NUL).
-// Avoids allocating (assuming vsnprintf doesn't allocate).
-static Str bufFmt(Str buf, const char* fmt, ...) {
+// Format one conversion onto the answer via snprintf. The 256-byte scratch
+// buffer takes all but the widest fields in one pass; a field that does not fit
+// is written straight into the answer instead, so a width says what it says
+// rather than being cut to the size of the buffer.
+static bool appendConv(Fmt& fmt, const char* spec, ...) {
     va_list args;
-    va_start(args, fmt);
-    int n = str::VsnprintfUtf8(buf, fmt, args);
+    va_start(args, spec);
+    va_list retry;
+    va_copy(retry, args);
+    Str bufS(fmt.buf, dimofi(fmt.buf));
+    int n = str::VsnprintfUtf8(bufS, spec, args);
     va_end(args);
-    if (n < 0 || n >= buf.len) {
-        n = buf.len - 1;
+    fmt.buf[dimof(fmt.buf) - 1] = 0;
+    if (n >= 0 && n < bufS.len) {
+        va_end(retry);
+        return fmt.res.Append(Str(fmt.buf, n));
     }
-    buf.s[n] = 0;
-    buf.len = n;
-    return buf;
+
+    // Wider than the scratch buffer. MSVC's vsnprintf answers -1 rather than the
+    // length it wanted, so the length is asked for separately.
+    va_list write;
+    va_copy(write, retry);
+    int need = VscprintfUtf8(spec, retry);
+    va_end(retry);
+    bool ok = false;
+    str::Builder& res = fmt.res;
+    int at = res.len;
+    if (need >= 0 && need < INT_MAX - at - 1 && res.Reserve(at + need + 1)) {
+        Str dst(res.els + at, need + 1);
+        if (str::VsnprintfUtf8(dst, spec, write) == need) {
+            res.len = at + need;
+            Terminate(res);
+            ok = true;
+        }
+    }
+    va_end(write);
+    return ok;
 }
 
 // default formatting for {n} positional and %v: format by the arg's runtime type
 static bool evalDefault(Fmt& fmt, const FmtArg& arg) {
     TempStr s;
-    Str buf(fmt.buf, dimofi(fmt.buf));
     switch (arg.t) {
         case FmtArg::Kind::Char:
             return fmt.res.AppendChar(arg.c);
         case FmtArg::Kind::Int:
-            return fmt.res.Append(bufFmt(buf, "%lld", (long long)arg.i));
+            return appendConv(fmt, "%lld", (long long)arg.i);
         case FmtArg::Kind::Ptr:
-            return fmt.res.Append(bufFmt(buf, "%p", arg.ptr));
+            return appendConv(fmt, "%p", arg.ptr);
         case FmtArg::Kind::Float:
             // Note: %G, unlike %f, avoids trailing '0'
-            return fmt.res.Append(bufFmt(buf, "%G", (double)arg.f));
+            return appendConv(fmt, "%G", (double)arg.f);
         case FmtArg::Kind::Double:
-            return fmt.res.Append(bufFmt(buf, "%G", arg.d));
+            return appendConv(fmt, "%G", arg.d);
         case FmtArg::Kind::Str:
             return fmt.res.Append(arg.str);
         case FmtArg::Kind::WStr:
@@ -5451,8 +5489,6 @@ static i64 argToI64(const FmtArg& arg) {
 // 32/64-bit value width matches printf. %s padding/truncation is done by hand to
 // avoid relying on the Str being NUL-terminated.
 static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
-    Str buf(fmt.buf, dimofi(fmt.buf));
-
     if (inst.conv == 's' || inst.conv == 'S') {
         Str sv = (arg.t == FmtArg::Kind::WStr) ? ToUtf8Temp(arg.wstr) : arg.str;
         int slen = sv.len;
@@ -5499,11 +5535,11 @@ static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                ok = fmt.res.Append(bufFmt(buf, fbuf, (long long)ival));
+                ok = appendConv(fmt, fbuf, (long long)ival);
             } else {
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                ok = fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
+                ok = appendConv(fmt, fbuf, (int)ival);
             }
             break;
         case 'u':
@@ -5515,17 +5551,17 @@ static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                ok = fmt.res.Append(bufFmt(buf, fbuf, (unsigned long long)ival));
+                ok = appendConv(fmt, fbuf, (unsigned long long)ival);
             } else {
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                ok = fmt.res.Append(bufFmt(buf, fbuf, (unsigned int)(unsigned long long)ival));
+                ok = appendConv(fmt, fbuf, (unsigned int)(unsigned long long)ival);
             }
             break;
         case 'c':
             fbuf[k++] = 'c';
             fbuf[k] = 0;
-            ok = fmt.res.Append(bufFmt(buf, fbuf, (int)ival));
+            ok = appendConv(fmt, fbuf, (int)ival);
             break;
         case 'f':
         case 'F':
@@ -5538,12 +5574,12 @@ static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
             fbuf[k++] = conv;
             fbuf[k] = 0;
             double dv = (arg.t == FmtArg::Kind::Double) ? arg.d : (double)arg.f;
-            ok = fmt.res.Append(bufFmt(buf, fbuf, dv));
+            ok = appendConv(fmt, fbuf, dv);
         } break;
         case 'p': {
             // flags/width are uncommon (and platform-specific) for %p; emit plain
             const void* pv = (arg.t == FmtArg::Kind::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
-            ok = fmt.res.Append(bufFmt(buf, "%p", pv));
+            ok = appendConv(fmt, "%p", pv);
         } break;
         default:
             ReportIf(true);

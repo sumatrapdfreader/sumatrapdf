@@ -285,6 +285,31 @@ static void testMoreDirectivesThanFit() {
                  .len > 0);
 }
 
+// Every conversion but %s goes through a 256-byte buffer in Fmt. A field too
+// wide for it is written straight into the answer instead, so the width says
+// what it says rather than being cut to 255 characters with nothing to say so.
+static void testFieldWiderThanTheScratchBuffer() {
+    Str s = FormatTemp("%500d", 1);
+    utassert(s.len == 500);
+    utassert(s.s[0] == ' ' && s.s[498] == ' ' && s.s[499] == '1');
+    check(s, fmtRef("%500d", 1));
+
+    // what follows the wide field is still appended after it
+    Str after = FormatTemp("%500d|", 1);
+    utassert(after.len == 501 && after.s[500] == '|');
+
+    // a precision, which is the other way to outgrow the buffer
+    Str precise = FormatTemp("%.400f", 0.5);
+    utassert(precise.len == 402);
+    check(precise, fmtRef("%.400f", 0.5));
+
+    // two of them in one format, so the second is not written over the first:
+    // the answer grows, it is not a buffer being reused
+    Str both = FormatTemp("%300d;%300d", 1, 2);
+    utassert(both.len == 601 && both.s[300] == ';');
+    utassert(both.s[299] == '1' && both.s[600] == '2');
+}
+
 void StrFormatTest() {
     testStrings();
     testChars();
@@ -299,4 +324,5 @@ void StrFormatTest() {
     testAnyType();
     testUnterminatedPositional();
     testMoreDirectivesThanFit();
+    testFieldWiderThanTheScratchBuffer();
 }
