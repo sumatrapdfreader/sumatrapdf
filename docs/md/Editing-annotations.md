@@ -72,7 +72,7 @@ Pick a PNG (or JPEG, etc.). The image is stamped on the page and you can drag or
 
 The **Highlighter** is a marker pen: drag on the page and it paints a wide translucent stroke wherever the mouse goes, over pictures and blank areas as well as text. The selection-based **Highlight** (`a`) still needs text to attach to.
 
-Start it from the **Annotations** toolbar, from the command palette, or with right-click → **Create annotation under cursor → Highlighter**. Drag to paint, `Enter` to finish, `Esc` to cancel. The stroke keeps a constant on-screen width while you draw, whatever the zoom.
+Start it from the **Annotations** toolbar, from the command palette, or with right-click → **Create annotation under cursor → Highlighter**. Drag to paint, release the mouse or pen to finish, `Esc` to cancel. `Enter` also finishes. Closing the hint at the bottom of the window finishes ink and polyline, so a touch device does not need a keyboard. The stroke keeps a constant on-screen width while you draw, whatever the zoom.
 
 It is saved as an ink annotation in the `HighlightColor` from Advanced Settings (yellow by default) at 40% opacity, so you can move, recolor, or delete it like any other annotation.
 

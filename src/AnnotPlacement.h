@@ -24,6 +24,7 @@ bool CancelAnnotationPlacement(MainWindow*);
 bool FinishAnnotationPlacement(MainWindow*);
 bool FinishPolyLineAnnotationPlacement(MainWindow*);
 bool FinishInkAnnotationPlacement(MainWindow*);
+bool CloseAnnotationPlacementHint(MainWindow*);
 
 bool AnnotationPlacementOnLeftDown(MainWindow*, Point, WPARAM);
 bool AnnotationPlacementOnLeftUp(MainWindow*, Point, WPARAM);

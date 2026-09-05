@@ -902,6 +902,13 @@ void RemoveNotification(NotificationWnd* wnd) {
     NotifsRemoveNotification(wnd);
 }
 
+void CloseNotification(NotificationWnd* wnd) {
+    if (!wnd) {
+        return;
+    }
+    wnd->ScheduleRemove();
+}
+
 bool AreNotificationsEnabled() {
     return gNotificationsEnabled;
 }

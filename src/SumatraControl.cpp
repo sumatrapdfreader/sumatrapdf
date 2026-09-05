@@ -555,6 +555,9 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
     if (str::Eq(action, StrL("cancel-ink"))) {
         CancelAnnotationPlacement(gWindows[0]);
     }
+    if (str::Eq(action, StrL("close-placement-hint"))) {
+        CloseAnnotationPlacementHint(gWindows[0]);
+    }
     // Follow a FileAttachment dest on the live page (issue #4276).
     if (str::Eq(action, StrL("open-embedded"))) {
         int pageNo = dm->CurrentPageNo();
@@ -647,7 +650,7 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
                 Vec<int> strokeCounts;
                 Vec<PointF> points;
                 GetInkList(a, strokeCounts, points);
-                out.Append(fmt("ink strokes=%d points=%d\n", len(strokeCounts), len(points)));
+                out.Append(fmt("ink strokes=%d points=%d opacity=%d\n", len(strokeCounts), len(points), Opacity(a)));
             }
             n++;
             continue;

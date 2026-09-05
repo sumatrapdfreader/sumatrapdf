@@ -247,6 +247,7 @@ import { testit as tocTreeSentClick } from "./toc-tree-sent-click.ts";
 import { testit as issue6132 } from "./issue-6132.ts";
 import { testit as issue6133 } from "./issue-6133.ts";
 import { testit as issue6135 } from "./issue-6135.ts";
+import { testit as issue6137 } from "./issue-6137.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -270,6 +271,7 @@ export const tests: NamedTest[] = [
   ["issue-4705", issue4705],
   ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-5956", issue5956],
+  ["issue-6137", issue6137],
   ["free-text-edit-matches-render", freeTextEditMatchesRender],
   ["free-text-in-place-edit", freeTextInPlaceEdit],
   ["lint-mingw-sources", lintMingwSources],

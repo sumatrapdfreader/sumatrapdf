@@ -2382,6 +2382,11 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
             SetColor(res, col.pdfCol);
         }
     }
+    // SetColor copies the color's alpha (opaque for #rrggbb like HighlightColor)
+    // and would wipe args->opacity set during create (highlighter is 40%).
+    if (args->opacity < 100) {
+        SetOpacity(res, (args->opacity * 255) / 100);
+    }
     pdf_drop_annot(ctx, annot);
     return res;
 }

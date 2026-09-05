@@ -408,7 +408,7 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
                              "cancel.");
         case AnnotPlacementKind::Ink:
             if (OrigCommandId(cmdId) == CmdAnnotationHighlightBrush) {
-                return _TRA("Paint with the highlighter. **Enter** to finish. **Esc** to cancel.");
+                return _TRA("Paint with the highlighter. Release to finish. **Esc** to cancel.");
             }
             return _TRA("Draw ink annotation. **Enter** to finish. **Esc** to cancel.");
         default:
@@ -507,6 +507,34 @@ bool FinishInkAnnotationPlacement(MainWindow* win) {
     return FinishAnnotationPlacement(win);
 }
 
+static void OnPlacementNotifClosed(MainWindow* win, NotificationWnd* wnd) {
+    RemoveNotification(wnd);
+    if (!win || !IsPlacingAnnotation(win)) {
+        return;
+    }
+    if (IsPlacingInkAnnotation(win) || IsPlacingPolyLineAnnotation(win)) {
+        FinishAnnotationPlacement(win);
+        return;
+    }
+    CancelAnnotationPlacement(win);
+}
+
+bool CloseAnnotationPlacementHint(MainWindow* win) {
+    if (!win || !win->hwndCanvas) {
+        return false;
+    }
+    Kind group = NotifGroupForKind(KindOf(win));
+    if (!group) {
+        return false;
+    }
+    NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, group);
+    if (!notif) {
+        return false;
+    }
+    CloseNotification(notif);
+    return true;
+}
+
 static void EndCurrentPlacement(MainWindow* win) {
     if (IsPlacingInkAnnotation(win)) {
         FinishInkAnnotationPlacement(win);
@@ -561,6 +589,7 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
     args.corner = NotifCorner::BottomBar;
     args.warning = true;
     args.tab = tab;
+    args.onRemoved = MkFunc1(OnPlacementNotifClosed, win);
     ShowNotification(args);
 
     HwndSetFocus(win->hwndFrame);
@@ -879,6 +908,10 @@ static bool HandleInkUp(MainWindow* win, Point pt) {
         ReleaseCapture();
     }
     win->annotPlacement.mouseDown = false;
+    if (win->annotPlacement.highlightBrush) {
+        FinishInkAnnotationPlacement(win);
+        return true;
+    }
     HwndInvalidate(win->hwndCanvas);
     return true;
 }
