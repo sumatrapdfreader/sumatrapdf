@@ -920,7 +920,7 @@ void GetStressTestInfo() {
         Str filePath = w->CurrentTab()->filePath;
         CrashInfoAppend(filePath);
         GetLogInfo(w->stressTest);
-        CrashInfoAppend(StrL("\r\n"));
+        CrashInfoAppend(StrL("\n"));
     }
 }
 

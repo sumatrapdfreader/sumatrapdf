@@ -1588,7 +1588,7 @@ static void SerializeRequest(str::Builder& s, Str label, PageRenderRequest* r, u
         TempStr name = path::GetBaseNameTemp(r->dm->GetEngine()->FilePath());
         s.Append(fmt("  %s", name));
     }
-    s.Append(StrL("\r\n"));
+    s.Append(StrL("\n"));
 }
 
 static void SerializeFinished(str::Builder& s, FinishedRequestInfo* r, u64 now) {
@@ -1601,7 +1601,7 @@ static void SerializeFinished(str::Builder& s, FinishedRequestInfo* r, u64 now) 
     if (r->fileName[0]) {
         s.Append(fmt("  %s", Str(r->fileName)));
     }
-    s.Append(StrL("\r\n"));
+    s.Append(StrL("\n"));
 }
 
 // record a just-finished request in finishedHistory (call holding requestAccess)
@@ -1641,8 +1641,7 @@ void RenderCache::SerializeQueueState(str::Builder& s) {
             nInProgress++;
         }
     }
-    s.Append(
-        fmt("Render queue: %d rendering, %d queued (%d threads)\r\n\r\n", nInProgress, requestCount, nRenderThreads));
+    s.Append(fmt("Render queue: %d rendering, %d queued (%d threads)\n\n", nInProgress, requestCount, nRenderThreads));
 
     for (int i = 0; i < nRenderThreads; i++) {
         if (curReqs[i]) {
@@ -1656,7 +1655,7 @@ void RenderCache::SerializeQueueState(str::Builder& s) {
 
     // recently finished requests, most recently finished first
     if (finishedHistoryCount > 0) {
-        s.Append(fmt("\r\nLast %d finished:\r\n", finishedHistoryCount));
+        s.Append(fmt("\nLast %d finished:\n", finishedHistoryCount));
         int idx = finishedHistoryNext - 1;
         for (int n = 0; n < finishedHistoryCount; n++) {
             if (idx < 0) {
@@ -1770,7 +1769,7 @@ static void SerializeCacheChange(str::Builder& s, CacheChangeInfo* c, u64 now) {
     if (c->fileName[0]) {
         s.Append(fmt("  %s", Str(c->fileName)));
     }
-    s.Append(StrL("\r\n"));
+    s.Append(StrL("\n"));
 }
 
 // serialize cache stats and recent changes as plain text for the cache-info
@@ -1785,11 +1784,11 @@ void RenderCache::SerializeCacheState(str::Builder& s) {
             totalBytes += PixmapByteSize(e->bitmap);
         }
     }
-    s.Append(fmt("Cache: %d / %d entries, %s total\r\n\r\n", cacheCount, kMaxBitmapsCached,
-                 FormatCacheBytesTemp(totalBytes)));
+    s.Append(
+        fmt("Cache: %d / %d entries, %s total\n\n", cacheCount, kMaxBitmapsCached, FormatCacheBytesTemp(totalBytes)));
 
     if (cacheHistoryCount > 0) {
-        s.Append(fmt("Recent %d changes:\r\n", cacheHistoryCount));
+        s.Append(fmt("Recent %d changes:\n", cacheHistoryCount));
         int idx = cacheHistoryNext - 1;
         for (int n = 0; n < cacheHistoryCount; n++) {
             if (idx < 0) {

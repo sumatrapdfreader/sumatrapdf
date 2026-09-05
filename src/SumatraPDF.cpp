@@ -15472,27 +15472,27 @@ static TempStr GetFileSizeAsStrTemp(Str path) {
 }
 
 void GetProgramInfo() {
-    CrashInfoAppend(fmt("Crash file: %s\r\n", gCrashFilePath));
+    CrashInfoAppend(fmt("Crash file: %s\n", gCrashFilePath));
 
     TempStr exePath = GetSelfExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
-    CrashInfoAppend(fmt("Exe: %s %s\r\n", exePath, fileSizeExe));
+    CrashInfoAppend(fmt("Exe: %s %s\n", exePath, fileSizeExe));
     if (IsDllBuild()) {
         // show the size of the dll so that we can verify it's the
         // correct size for the given version
         TempStr dir = path::GetDirTemp(exePath);
         TempStr dllPath = path::JoinTemp(dir, StrL("libsumatrapdf.dll"));
         auto fileSizeDll = GetFileSizeAsStrTemp(dllPath);
-        CrashInfoAppend(fmt("Dll: %s %s\r\n", dllPath, fileSizeDll));
+        CrashInfoAppend(fmt("Dll: %s %s\n", dllPath, fileSizeDll));
     }
     TempStr signer = GetExecutableSignerTemp(exePath);
-    CrashInfoAppend(fmt("Signer: %s\r\n", signer ? signer : StrL("(not signed)")));
+    CrashInfoAppend(fmt("Signer: %s\n", signer ? signer : StrL("(not signed)")));
     if (len(gBuiltOn) > 0) {
         CrashInfoAppend(fmt("BuiltOn: %s\n", gBuiltOn));
     }
     Str exeType = IsDllBuild() ? StrL("dll") : StrL("static");
     Str instType = IsRunningInPortableMode() ? StrL("portable") : StrL("installed");
-    CrashInfoAppend(fmt("ExeType: %s, %s\r\n", exeType, instType));
+    CrashInfoAppend(fmt("ExeType: %s, %s\n", exeType, instType));
     CrashInfoAppend(fmt("Ver: %s", currentVersion));
     if (gIsPreReleaseBuild) {
         CrashInfoAppend(fmt(" pre-release"));
@@ -15513,11 +15513,11 @@ void GetProgramInfo() {
     if (gPluginMode) {
         CrashInfoAppend(StrL(" [plugin]"));
     }
-    CrashInfoAppend(StrL("\r\n"));
+    CrashInfoAppend(StrL("\n"));
 
     if (gitCommidId) {
         CrashInfoAppend(
-            fmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitCommidId, gitCommidId));
+            fmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\n", gitCommidId, gitCommidId));
     }
 }
 

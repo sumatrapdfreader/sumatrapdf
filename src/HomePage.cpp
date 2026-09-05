@@ -587,19 +587,19 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
 
 // Version, OS, WebView2, memory and similar facts for a bug report.
 static void AppendBugReportInfo(str::Builder& s) {
-    s.Append(fmt("SumatraPDF %s\r\n", GetAppVersionTemp()));
-    s.Append(fmt("Built on: %s %s\r\n", StrL(__DATE__), StrL(__TIME__)));
+    s.Append(fmt("SumatraPDF %s\n", GetAppVersionTemp()));
+    s.Append(fmt("Built on: %s %s\n", StrL(__DATE__), StrL(__TIME__)));
     if (gitCommidId) {
-        s.Append(fmt("Git: %s\r\n", gitCommidId));
+        s.Append(fmt("Git: %s\n", gitCommidId));
     }
     Str exeType = IsDllBuild() ? StrL("dll") : StrL("static");
     Str instType = IsRunningInPortableMode() ? StrL("portable") : StrL("installed");
-    s.Append(fmt("Type: %s, %s\r\n", exeType, instType));
+    s.Append(fmt("Type: %s, %s\n", exeType, instType));
     if (gIsPreReleaseBuild) {
-        s.Append(StrL("Pre-release: yes\r\n"));
+        s.Append(StrL("Pre-release: yes\n"));
     }
     if (gIsAsanBuild) {
-        s.Append(StrL("ASan: yes\r\n"));
+        s.Append(StrL("ASan: yes\n"));
     }
 
     OSVERSIONINFOEX ver{};
@@ -610,53 +610,53 @@ static void AppendBugReportInfo(str::Builder& s) {
         if (IsProcess32()) {
             arch = IsRunningInWow64() ? StrL("32-bit (Wow64)") : StrL("32-bit");
         }
-        s.Append(fmt("OS: Windows %s, build %d, %s\r\n", os, buildNumber, arch));
+        s.Append(fmt("OS: Windows %s, build %d, %s\n", os, buildNumber, arch));
     }
     if (IsOs64()) {
-        s.Append(StrL("OS architecture: 64-bit\r\n"));
+        s.Append(StrL("OS architecture: 64-bit\n"));
     } else {
-        s.Append(StrL("OS architecture: 32-bit\r\n"));
+        s.Append(StrL("OS architecture: 32-bit\n"));
     }
 
     TempStr wv = GetWebView2VersionTemp();
     if (len(wv) == 0) {
-        s.Append(StrL("WebView2: not installed\r\n"));
+        s.Append(StrL("WebView2: not installed\n"));
     } else {
-        s.Append(fmt("WebView2: %s\r\n", wv));
+        s.Append(fmt("WebView2: %s\n", wv));
     }
 
     MEMORYSTATUSEX ms{};
     ms.dwLength = sizeof(ms);
     if (GlobalMemoryStatusEx(&ms)) {
         float physMemGB = (float)ms.ullTotalPhys / (float)(1024 * 1024 * 1024);
-        s.Append(fmt("Physical memory: %.2f GB (%d%% in use)\r\n", physMemGB, (int)ms.dwMemoryLoad));
+        s.Append(fmt("Physical memory: %.2f GB (%d%% in use)\n", physMemGB, (int)ms.dwMemoryLoad));
     }
 
     SYSTEM_INFO si{};
     GetSystemInfo(&si);
-    s.Append(fmt("Processors: %d\r\n", (int)si.dwNumberOfProcessors));
+    s.Append(fmt("Processors: %d\n", (int)si.dwNumberOfProcessors));
     TempStr cpuName = ReadRegStrTemp(HKEY_LOCAL_MACHINE, StrL(R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)"),
                                      StrL("ProcessorNameString"));
     if (cpuName) {
-        s.Append(fmt("Processor: %s\r\n", cpuName));
+        s.Append(fmt("Processor: %s\n", cpuName));
     }
 
     int screenDx = GetSystemMetrics(SM_CXSCREEN);
     int screenDy = GetSystemMetrics(SM_CYSCREEN);
     int dpi = DpiGet();
-    s.Append(fmt("Screen: %dx%d, DPI %d (%d%%)\r\n", screenDx, screenDy, dpi, MulDiv(dpi, 100, 96)));
+    s.Append(fmt("Screen: %dx%d, DPI %d (%d%%)\n", screenDx, screenDy, dpi, MulDiv(dpi, 100, 96)));
 
     char country[32] = {}, lang[32]{};
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
-    s.Append(fmt("Locale: %s-%s\r\n", Str(lang), Str(country)));
+    s.Append(fmt("Locale: %s-%s\n", Str(lang), Str(country)));
 
     Str theme = ThemeGetNameAt(ThemeGetCurrentIndex());
     if (theme) {
-        s.Append(fmt("Theme: %s\r\n", theme));
+        s.Append(fmt("Theme: %s\n", theme));
     }
     if (IsRunningOnWine()) {
-        s.Append(StrL("Wine: yes\r\n"));
+        s.Append(StrL("Wine: yes\n"));
     }
 }
 
