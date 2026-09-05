@@ -514,6 +514,9 @@ struct AdvancedSettingsWnd : WindowBase {
     void CheckDropDownClosed();
     void CloseEnumEdit(bool keepValue);
     void KeepFocus();
+    void RelayoutInPlaceEditor();
+    void OnEditValueKillFocus();
+    void PostedRefocusEditValue();
 
     void OnOpenSettingsFile(VirtMouseEvent* ev = nullptr);
     void OnHelp(VirtMouseEvent* ev = nullptr);
@@ -746,6 +749,7 @@ void AdvancedSettingsWnd::BeginEditValue(int idx) {
     }
     editValue = c;
     editItemIdx = idx;
+    c->onKillFocus = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::OnEditValueKillFocus>(this);
     SetWindowPos(c->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_SHOWWINDOW);
     EditSelectAll(c);
     EditSetFocus(c);
@@ -842,6 +846,54 @@ void AdvancedSettingsWnd::KeepFocus() {
         return;
     }
     HwndSetFocus(hwnd);
+}
+
+void AdvancedSettingsWnd::RelayoutInPlaceEditor() {
+    if (editItemIdx < 0) {
+        return;
+    }
+    Rect r = ValueRectForItem(editItemIdx);
+    if (r.IsEmpty()) {
+        return;
+    }
+    HWND h = nullptr;
+    if (editValue) {
+        h = editValue->hwnd;
+    } else if (dropDownValue) {
+        h = dropDownValue->hwnd;
+    }
+    if (h) {
+        SetWindowPos(h, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_NOACTIVATE);
+    }
+}
+
+void AdvancedSettingsWnd::PostedRefocusEditValue() {
+    if (gAdvancedSettingsWnd != this || !editValue || !editValue->hwnd) {
+        return;
+    }
+    if (GetFocus() == editValue->hwnd) {
+        return;
+    }
+    HwndSetFocus(editValue->hwnd);
+}
+
+void AdvancedSettingsWnd::OnEditValueKillFocus() {
+    if (!editValue) {
+        return;
+    }
+    HWND next = GetFocus();
+    if (next == editValue->hwnd) {
+        return;
+    }
+    if (!next || HwndIsOnScreenKeyboard(next)) {
+        auto fn = MkMethod0<AdvancedSettingsWnd, &AdvancedSettingsWnd::PostedRefocusEditValue>(this);
+        uitask::Post(fn, "AdvSettingsRefocusEdit");
+        return;
+    }
+    if (hwnd && (next == hwnd || IsChild(hwnd, next))) {
+        return;
+    }
+    CommitEditValue();
 }
 
 void AdvancedSettingsWnd::OnEnumSelectionChanged() {
@@ -1169,10 +1221,8 @@ void AdvancedSettingsWnd::OnSize(WindowBase::SizeEvent* ev) {
     }
     gAdvSettingsLastClientDx = dx;
     gAdvSettingsLastClientDy = dy;
-    // in-place editors are positioned over a specific item rect; that rect
-    // moves on resize, so close them
-    CancelEditValue();
     DoLayout({dx, dy});
+    RelayoutInPlaceEditor();
     HwndInvalidate(hwnd);
 }
 
@@ -1245,7 +1295,7 @@ static void PositionDialog(HWND hwnd, HWND hwndRelative) {
 // system: a filled box with a border, brighter on hover (like the other dialogs)
 bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-    // OnSize closes in-place editors before DoLayout; skip the generic path
+    // OnSize repositions in-place editors after DoLayout; skip the generic path
     autoLayout = false;
     CollectSettings(items, &gSettingsInfo, (u8*)gSettings, {});
 
@@ -1550,6 +1600,46 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     if (str::Eq(action, StrL("save"))) {
         wnd->OnSave(nullptr);
         out.Append(StrL("saved=1\n"));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("state"))) {
+        out.Append(fmt("editing=%d\n", wnd->editValue ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("edit"))) {
+        int idx = -1;
+        if (wnd->model) {
+            int n = wnd->model->ItemsCount();
+            for (int i = 0; i < n; i++) {
+                SettingItem* item = wnd->model->ItemAt(i);
+                if (item && !item->enumValues && item->type != SettingType::Bool) {
+                    idx = wnd->model->filtered[i];
+                    break;
+                }
+            }
+        }
+        if (idx < 0) {
+            out.Append(StrL("ERROR no-edit-item\n"));
+            return finish(1);
+        }
+        wnd->BeginEditValue(idx);
+        out.Append(fmt("editing=%d\n", wnd->editValue ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("killfocus"))) {
+        if (wnd->editValue && wnd->editValue->hwnd) {
+            HWND edit = wnd->editValue->hwnd;
+            int id = GetDlgCtrlID(edit);
+            SendMessageW(wnd->hwnd, WM_COMMAND, MAKEWPARAM(id, EN_KILLFOCUS), (LPARAM)edit);
+        }
+        out.Append(fmt("editing=%d\n", wnd->editValue ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("resize"))) {
+        WindowBase::SizeEvent ev;
+        ev.size = HwndClientRect(wnd->hwnd).Size();
+        wnd->OnSize(&ev);
+        out.Append(fmt("editing=%d\n", wnd->editValue ? 1 : 0));
         return finish(0);
     }
     if (!wnd->listBox) {
