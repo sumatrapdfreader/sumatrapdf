@@ -1230,6 +1230,62 @@ TempStr ConvertImageCollectionToPdfResultTemp(Str srcPath, Str destPath, int* ex
     return finish(0, str::DupTemp(StrL("OK")));
 }
 
+TempStr ExtractPdfPagesResultTemp(Str destPath, Str pagesSpec, int annotsOnly, int* exitCodeOut) {
+    auto finish = [&](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    if (len(gWindows) == 0) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    MainWindow* win = gWindows[0];
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    if (!engine || len(tab->filePath) == 0) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-engine")));
+    }
+    if (len(destPath) == 0 || len(pagesSpec) == 0) {
+        return finish(1, str::DupTemp(StrL("ERROR bad-args")));
+    }
+    int pageCount = engine->PageCount();
+    Vec<int> parsedPages;
+    if (!ParseDeletePages(pagesSpec, pageCount, parsedPages)) {
+        return finish(1, str::DupTemp(StrL("ERROR bad-pages")));
+    }
+    if (annotsOnly) {
+        if (!KeepOnlyPagesWithAnnotations(engine, parsedPages)) {
+            return finish(1, str::DupTemp(StrL("ERROR annots")));
+        }
+        if (len(parsedPages) == 0) {
+            return finish(1, str::DupTemp(StrL("ERROR no-annot-pages")));
+        }
+    }
+    TempStr pageRange = FormatPageRangeTemp(parsedPages);
+    Str inputPath = tab->filePath;
+    TempStr tmpPath;
+    if (EngineHasUnsavedAnnotations(engine)) {
+        tmpPath = GetTempFilePathTemp(StrL("extract-pages"));
+        if (len(tmpPath) == 0 || !EngineMupdfSaveCopy(engine, tmpPath)) {
+            return finish(1, str::DupTemp(StrL("ERROR save-copy")));
+        }
+        inputPath = tmpPath;
+    }
+    char* argv[] = {(char*)"clean",      (char*)"-gggg",     (char*)"-e",        (char*)"100",
+                    (char*)"-f",         (char*)"-i",        (char*)"-t",        (char*)"-Z",
+                    CStrTemp(inputPath), CStrTemp(destPath), CStrTemp(pageRange)};
+    fz_set_optind(0);
+    int res = pdfclean_main(11, argv);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
+    if (res != 0) {
+        return finish(1, str::DupTemp(StrL("ERROR pdfclean")));
+    }
+    return finish(0, str::DupTemp(StrL("OK")));
+}
+
 void ConvertToPdfDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
     if (len(destPath) == 0) {

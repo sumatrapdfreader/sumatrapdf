@@ -399,7 +399,7 @@ void PageGridWnd::OnCancel(VirtMouseEvent*) {
 
 // Restore the shipped appearance settings as a live preview. Show Grid is a
 // session toggle rather than a saved setting, so leave it unchanged.
-void PageGridWnd::OnReset(VirtMouseEvent*) {
+void ResetPageGridToDefaults() {
     PageGrid* pg = PageGridPrefs();
     if (!pg) {
         return;
@@ -412,6 +412,25 @@ void PageGridWnd::OnReset(VirtMouseEvent*) {
     SetColorText(pg->color, SerializeColorTemp(kPageGridDefaultColor));
     str::ReplaceWithCopy(&pg->style, SeqStrByIndex(kPageGridStyleTok, kPageGridDefaultStyleIdx));
     str::ReplaceWithCopy(&pg->units, SeqStrByIndex(kPageGridUnitTok, kPageGridDefaultUnitIdx));
+}
+
+TempStr PageGridStateTemp() {
+    PageGrid* pg = PageGridPrefs();
+    if (!pg) {
+        return str::DupTemp(StrL("ERROR no-settings"));
+    }
+    return fmt("show=%d width=%g height=%g subdiv=%d ox=%g oy=%g color=%s style=%s units=%s checker=%d\n",
+               ShowPageGrid() ? 1 : 0, pg->width, pg->height, pg->subdivisions, pg->offsetX, pg->offsetY,
+               pg->color.s ? pg->color.s : StrL(""), pg->style.s ? pg->style : StrL(""),
+               pg->units.s ? pg->units : StrL(""), ShowTransparencyGrid() ? 1 : 0);
+}
+
+void PageGridWnd::OnReset(VirtMouseEvent*) {
+    PageGrid* pg = PageGridPrefs();
+    if (!pg) {
+        return;
+    }
+    ResetPageGridToDefaults();
 
     currentColor = kPageGridDefaultColor;
     unitIdx = kPageGridDefaultUnitIdx;

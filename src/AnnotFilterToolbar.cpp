@@ -1161,6 +1161,40 @@ void DeleteAnnotFilterToolbar(MainWindow* win) {
     delete f;
 }
 
+void ApplyAnnotFilterText(MainWindow* win, Str text) {
+    AnnotFilterToolbar* f = GetOrCreate(win);
+    if (!f) {
+        return;
+    }
+    SetFilter(f, text);
+    LoadAnnotations(f);
+    RebuildList(f);
+    UpdateFloatButtons(f);
+    Edit* e = ActiveEdit(f);
+    if (e) {
+        f->suppressFilterChanged = true;
+        e->SetText(text);
+        f->suppressFilterChanged = false;
+    }
+    VirtListBox* lb = ActiveList(f);
+    if (lb) {
+        lb->Invalidate();
+    }
+}
+
+void PaintAnnotFilterWindow(MainWindow* win) {
+    AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
+    if (!f || !f->floatWnd || !f->floatWnd->hwnd) {
+        return;
+    }
+    InvalidateRect(f->floatWnd->hwnd, nullptr, TRUE);
+    UpdateWindow(f->floatWnd->hwnd);
+    VirtListBox* lb = ActiveList(f);
+    if (lb) {
+        lb->Invalidate();
+    }
+}
+
 TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
     bool floatVisible = f && f->floatWnd && f->floatWnd->hwnd && HwndIsVisible(f->floatWnd->hwnd);

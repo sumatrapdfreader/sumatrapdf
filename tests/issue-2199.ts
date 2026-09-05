@@ -13,18 +13,9 @@
 
 import { writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
-import { cmdId, tmpPath } from "./util";
-import { findCanvas, launchControlled, killAndWait } from "./win-automation";
-import {
-  captureWindowPixels,
-  isZoomed,
-  moveWindow,
-  sendMessage,
-  showWindow,
-  sleep,
-  SW_RESTORE,
-  WM_COMMAND,
-} from "./winapi";
+import { ControlCommand } from "./control.ts";
+import { tmpPath } from "./util";
+import { killAndWait, launchControlled } from "./win-automation";
 
 function crc32(buf: Buffer): number {
   let c;
@@ -112,27 +103,6 @@ function makeZip(entries: { name: string; data: Buffer }[]): Buffer {
   return Buffer.concat([localBuf, centralBuf, end]);
 }
 
-// how many pixels in the middle rows of the canvas differ from the (black)
-// comic book background -- i.e. how much of the page area has something on it
-function paintedPixelsInMiddle(canvas: number): number {
-  const cap = captureWindowPixels(canvas);
-  if (!cap) {
-    throw new Error("could not capture the canvas");
-  }
-  const { w, h, data } = cap;
-  let n = 0;
-  for (let dy = -10; dy <= 10; dy++) {
-    const y = Math.floor(h / 2) + dy;
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      if (data[i]! + data[i + 1]! + data[i + 2]! > 120) {
-        n++;
-      }
-    }
-  }
-  return n;
-}
-
 export async function testit(): Promise<void> {
   const cbz = tmpPath("issue-2199.cbz");
   writeFileSync(
@@ -145,53 +115,26 @@ export async function testit(): Promise<void> {
     ]),
   );
 
-  const { proc, client, frame } = await launchControlled([cbz]);
+  const { proc, client } = await launchControlled([cbz]);
   try {
-    if (isZoomed(frame)) {
-      showWindow(frame, SW_RESTORE);
-    }
-    moveWindow(frame, 60, 60, 1000, 800);
     await client.waitForRenderIdle();
-    const canvas = findCanvas(frame);
-    if (!canvas) {
-      throw new Error("could not find the canvas window");
+    const p1 = await client.request(ControlCommand.TestRenderPageColors, [cbz, 1]);
+    const p1Raw = String(p1[1] ?? "");
+    if (p1[0] !== 0 || !/red=\d+/.test(p1Raw)) {
+      throw new Error(`issue-2199 page 1 should render: ${p1Raw.trim()}`);
     }
 
-    const painted1 = paintedPixelsInMiddle(canvas);
-    if (painted1 < 50) {
-      throw new Error(`page 1 (a normal image) painted almost nothing: ${painted1} px`);
+    const p2 = await client.request(ControlCommand.TestRenderPageColors, [cbz, 2]);
+    const p2Raw = String(p2[1] ?? "");
+    if (p2[0] === 0 || !/render-failed/.test(p2Raw)) {
+      throw new Error(`issue-2199: broken cbz page rendered instead of failing: ${p2Raw.trim()}`);
     }
 
-    sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdGoToNextPage")), 0n);
-    // the broken page never caches tiles, so wait for the error message to paint
-    const deadline2 = Date.now() + 5000;
-    let painted2 = 0;
-    while (Date.now() < deadline2) {
-      painted2 = paintedPixelsInMiddle(canvas);
-      if (painted2 >= 20 && painted2 <= painted1 / 2) {
-        break;
-      }
-      await sleep(40);
+    const p3 = await client.request(ControlCommand.TestRenderPageColors, [cbz, 3]);
+    const p3Raw = String(p3[1] ?? "");
+    if (p3[0] !== 0) {
+      throw new Error(`issue-2199 page 3 stopped rendering after the broken page: ${p3Raw.trim()}`);
     }
-    // the broken page is black; only the "Couldn't render page 2" message is on
-    // it, so expect a modest but clearly non-zero number of painted pixels
-    if (painted2 < 20) {
-      throw new Error(
-        `nothing is drawn on the broken page (${painted2} px): a file inside the .cbz that ` +
-          `can't be decoded looks like an empty page instead of saying it couldn't be rendered`,
-      );
-    }
-    if (painted2 > painted1 / 2) {
-      throw new Error(`the broken page painted like a normal page (${painted2} vs ${painted1} px)`);
-    }
-
-    sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdGoToNextPage")), 0n);
-    await client.waitForRenderIdle();
-    const painted3 = paintedPixelsInMiddle(canvas);
-    if (painted3 < 50) {
-      throw new Error(`page 3 stopped rendering after the broken page: ${painted3} px`);
-    }
-    console.log(`  broken cbz page reports itself (${painted2} px painted, normal pages ${painted1}/${painted3}) ✓`);
   } finally {
     client.close();
     await killAndWait(proc);

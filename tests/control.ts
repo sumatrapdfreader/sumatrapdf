@@ -81,6 +81,12 @@ export enum ControlCommand {
   TestTocSidebarNav = 84,
   TestSelectionSurvivesRenumber = 85,
   TestConvertToPdf = 86,
+  TestInvokeCommand = 87,
+  TestCurrentTab = 88,
+  TestCommandVisibility = 89,
+  TestExtractPages = 90,
+  TestAnnotFilter = 91,
+  TestCanvasFlags = 92,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

@@ -4,12 +4,9 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { sendCommandSync, waitForFrame } from "./win-automation.ts";
-import { cmdId, EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 
 function buildPdf(): Buffer {
-  // page 1: Media + Crop + Trim (no Bleed, no Art)
-  // page 2: Media only
   const objs = [
     `<< /Type /Catalog /Pages 2 0 R >>`,
     `<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>`,
@@ -76,11 +73,7 @@ export async function testit(): Promise<void> {
 
   await withControlledSumatra(
     EXE,
-    async (client, proc) => {
-      const frame = await waitForFrame(proc.pid!);
-      if (!frame) {
-        throw new Error("issue-814: no frame");
-      }
+    async (client) => {
       await client.waitForRenderIdle();
 
       const p1 = await queryBoxes(client, 1);
@@ -92,15 +85,12 @@ export async function testit(): Promise<void> {
       const p2 = await queryBoxes(client, 2);
       expectNames(p2.names, ["media"], "page 2 (MediaBox only)");
 
-      sendCommandSync(frame, cmdId("CmdTogglePageBoxes"));
+      await client.request(ControlCommand.TestInvokeCommand, ["CmdTogglePageBoxes"]);
       const after = await queryBoxes(client, 1);
       if (after.show !== 1) {
         throw new Error(`issue-814: CmdTogglePageBoxes did not turn the overlay on (show=${after.show})`);
       }
       expectNames(after.names, ["media", "crop", "trim"], "page 1 after toggle");
-      console.log(
-        `issue-814: page1 [${p1.names.join(",")}] page2 [${p2.names.join(",")}] show ${p1.show}->${after.show}`,
-      );
     },
     [pdfPath],
   );

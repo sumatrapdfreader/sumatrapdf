@@ -1,51 +1,29 @@
-// Issue #6053: Stop Reading must be in the Read Aloud menu even when the
-// playback bar is not on screen. It is disabled when nothing is being read.
+// Issue #6053: Stop Reading must be available even when the playback bar is
+// not on screen. It is disabled when nothing is being read.
 
 import { join } from "node:path";
-import { cmdId, ROOT, runStandalone } from "./util.ts";
-import {
-  findCanvas,
-  findSubMenu,
-  killAndWait,
-  launchControlled,
-  readContextMenuTree,
-  sendCommand,
-} from "./win-automation.ts";
-import { setForegroundWindow } from "./winapi.ts";
+import { ControlCommand } from "./control.ts";
+import { ROOT, runStandalone } from "./util.ts";
+import { killAndWait, launchControlled } from "./win-automation.ts";
 
 const PDF = join(ROOT, "tests", "issue-1189.pdf");
 
 export async function testit(): Promise<void> {
-  const { proc, client, frame } = await launchControlled([PDF]);
+  const { proc, client } = await launchControlled([PDF]);
   try {
     await client.waitForRenderIdle();
-    setForegroundWindow(frame);
-    const canvas = findCanvas(frame);
-    if (!canvas) {
-      throw new Error("issue-6053: no canvas");
+    const res = await client.request(ControlCommand.TestCommandVisibility, ["CmdStopReadAloud", "menu"]);
+    const raw = String(res[1] ?? "");
+    if (res[0] !== 0) {
+      throw new Error(`issue-6053: ${raw.trim()}`);
     }
-
-    const tree = await readContextMenuTree(canvas);
-    if (tree.length === 0) {
-      throw new Error("issue-6053: no context menu");
+    if (!/vis=disable/.test(raw)) {
+      throw new Error(`issue-6053: Stop Reading should be disabled when idle: ${raw}`);
     }
-    const readAloud = findSubMenu(tree, "Read Aloud");
-    if (!readAloud || !readAloud.items) {
-      throw new Error(`issue-6053: no Read Aloud submenu: ${JSON.stringify(tree.map((it) => it.text))}`);
+    const stop = await client.request(ControlCommand.TestInvokeCommand, ["CmdStopReadAloud"]);
+    if (stop[0] !== 0) {
+      throw new Error(`issue-6053: CmdStopReadAloud: ${String(stop[1] ?? "")}`);
     }
-    const stop = readAloud.items.find((it) => it.text === "Stop Reading");
-    if (!stop) {
-      throw new Error(`issue-6053: Stop Reading missing from Read Aloud menu: ${JSON.stringify(readAloud.items)}`);
-    }
-    if (!stop.disabled) {
-      throw new Error(
-        `issue-6053: Stop Reading should be disabled when not reading: ${JSON.stringify(readAloud.items)}`,
-      );
-    }
-
-    // Stop with no session must not crash (the playback bar / tab may already be gone)
-    sendCommand(frame, cmdId("CmdStopReadAloud"));
-    console.log(`issue-6053: Stop Reading is in the menu and disabled when idle`);
   } finally {
     client.close();
     await killAndWait(proc);

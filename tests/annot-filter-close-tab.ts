@@ -8,11 +8,10 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
-import { captureWindowPixels, findTopWindow, getWindowPid, isWindowVisible, sleep } from "./winapi";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation";
-
-const FLOAT_CLASS = "SUMATRA_ANNOT_FILTER_WND";
+import { ControlCommand } from "./control.ts";
+import { runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { sleep } from "./winapi";
+import { killAndWait, launchControlled } from "./win-automation";
 
 // two Text annotations, enough for the list to have rows to paint
 function makePdf(): string {
@@ -49,36 +48,19 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    const pid = getWindowPid(frame);
-
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300 * SLOW_BUILD_FACTOR);
-    sendCommand(frame, cmdId("CmdFindAnnotation"));
-    const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
-    let floatWnd = 0;
-    while (Date.now() < deadline) {
-      floatWnd = findTopWindow(pid, FLOAT_CLASS);
-      if (floatWnd && isWindowVisible(floatWnd)) {
-        break;
-      }
-      await sleep(50);
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleEditPDF"]);
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdFindAnnotation"]);
+    const opened = await client.request(ControlCommand.TestAnnotFilter, []);
+    if (!/floatVisible=1/.test(String(opened[1] ?? ""))) {
+      throw new Error(`annot-filter-close-tab: the Annotations window did not open: ${String(opened[1] ?? "")}`);
     }
-    if (!floatWnd) {
-      throw new Error("annot-filter-close-tab: the Annotations window did not open");
-    }
-    // let it lay out and paint the rows it is about to lose
     await sleep(300 * SLOW_BUILD_FACTOR);
 
-    // close the document out from under the open list
-    sendCommand(frame, cmdId("CmdClose"));
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdClose"]);
     await sleep(400 * SLOW_BUILD_FACTOR);
 
-    // force the list to repaint with no document behind it; under ASan that
-    // repaint is where the freed annotations used to be read
     for (let i = 0; i < 3; i++) {
-      if (isWindowVisible(floatWnd)) {
-        captureWindowPixels(floatWnd); // PrintWindow makes it paint now
-      }
+      await client.request(ControlCommand.TestAnnotFilter, ["paint"]);
       await sleep(150 * SLOW_BUILD_FACTOR);
     }
     if (proc.exitCode !== null) {

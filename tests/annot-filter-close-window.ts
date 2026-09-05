@@ -8,11 +8,10 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
-import { findTopWindow, isWindowVisible, postMessage, sleep, WM_CLOSE } from "./winapi";
-import { killAndWait, launchControlled, sendCommandSync, waitForExit } from "./win-automation";
-
-const FLOAT_CLASS = "SUMATRA_ANNOT_FILTER_WND";
+import { ControlCommand } from "./control.ts";
+import { runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { sleep } from "./winapi";
+import { killAndWait, launchControlled, waitForExit } from "./win-automation";
 
 function makePdf(): string {
   const objs: string[] = [];
@@ -53,24 +52,16 @@ export async function testit(): Promise<void> {
 
     // selected tab must not be last: DeleteVecMembers walks 0..n-1, and
     // CurrentTab() kept returning the already-deleted selected tab
-    sendCommandSync(frame, cmdId("CmdPrevTab"));
-    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdPrevTab"]);
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleEditPDF"]);
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdFindAnnotation"]);
+    const opened = await client.request(ControlCommand.TestAnnotFilter, []);
+    if (!/floatVisible=1/.test(String(opened[1] ?? ""))) {
+      throw new Error(`annot-filter-close-window: the Annotations window did not open: ${String(opened[1] ?? "")}`);
+    }
     await sleep(300 * SLOW_BUILD_FACTOR);
-    sendCommandSync(frame, cmdId("CmdFindAnnotation"));
-    const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
-    let floatWnd = 0;
-    while (Date.now() < deadline) {
-      floatWnd = findTopWindow(proc.pid!, FLOAT_CLASS);
-      if (floatWnd && isWindowVisible(floatWnd)) {
-        break;
-      }
-      await sleep(50);
-    }
-    if (!floatWnd) {
-      throw new Error("annot-filter-close-window: the Annotations window did not open");
-    }
 
-    postMessage(frame, WM_CLOSE, 0, 0);
+    await client.request(ControlCommand.TestInvokeCommand, ["WM_CLOSE"]);
     const exited = await waitForExit(proc, 8000 * SLOW_BUILD_FACTOR);
     if (!exited) {
       throw new Error("annot-filter-close-window: window did not close");

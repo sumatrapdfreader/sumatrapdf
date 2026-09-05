@@ -1891,7 +1891,7 @@ TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOut) {
 // Open any document, render page 1, and report dest size plus how many
 // red-ish / non-white pixels it has. Used to check that a WebP inside an
 // EPUB actually paints (issue #3415) instead of the IMAGE placeholder.
-TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut) {
+TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo) {
     EnsureTestSettings();
 
     str::Builder out;
@@ -1903,31 +1903,62 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    EngineBase* engine = nullptr;
+    bool ownEngine = true;
+    if (len(gWindows) > 0 && gWindows[0]) {
+        WindowTab* tab = gWindows[0]->CurrentTab();
+        if (tab && tab->filePath && str::EqI(tab->filePath, path)) {
+            DisplayModel* dm = tab->AsFixed();
+            engine = dm ? dm->GetEngine() : nullptr;
+            ownEngine = false;
+        }
+    }
+    if (!engine) {
+        engine = CreateEngineFromFile(path, nullptr, false);
+    }
     if (!engine) {
         return fail(fmt("ERROR engine-create-failed path=%s\n", path));
     }
-    if (!engine->BenchLoadPage(1)) {
-        SafeEngineRelease(&engine);
+    if (pageNo < 1) {
+        pageNo = 1;
+    }
+    auto release = [&]() {
+        if (ownEngine) {
+            SafeEngineRelease(&engine);
+        }
+    };
+    if (pageNo > engine->PageCount()) {
+        int nPages = engine->PageCount();
+        release();
+        return fail(fmt("ERROR bad-page page=%d pages=%d\n", pageNo, nPages));
+    }
+    if (!engine->BenchLoadPage(pageNo)) {
+        release();
         return fail(StrL("ERROR page-load-failed\n"));
     }
 
-    RenderPageArgs rargs(1, 1.f, 0, nullptr, RenderTarget::Export);
+    RenderPageArgs rargs(pageNo, 1.f, 0, nullptr, RenderTarget::Export);
     Pixmap* bmp = engine->RenderPage(rargs);
     if (!bmp || !bmp->data) {
         FreePixmap(bmp);
-        SafeEngineRelease(&engine);
-        return fail(StrL("ERROR render-failed\n"));
+        int nPages = engine->PageCount();
+        release();
+        return fail(fmt("ERROR render-failed page=%d pages=%d\n", pageNo, nPages));
     }
-    Pixmap* rgb = (bmp->format == PixmapFormat::BGRA8) ? bmp : PixmapCopyAs32bppDIB(bmp);
+    Pixmap* rgb = bmp;
+    if (bmp->format != PixmapFormat::BGRA8 && bmp->format != PixmapFormat::BGR8 && bmp->format != PixmapFormat::RGBA8) {
+        rgb = PixmapCopyAs32bppDIB(bmp);
+    }
     if (!rgb || !rgb->data) {
         FreePixmap(bmp);
-        SafeEngineRelease(&engine);
+        release();
         return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", (int)bmp->format));
     }
     int bpp = PixmapBytesPerPixel(rgb->format);
     int red = 0;
+    int blue = 0;
     int nonWhite = 0;
+    int rMin = 255, rMax = 0, gMin = 255, gMax = 0, bMin = 255, bMax = 0;
     if (bpp >= 3) {
         for (int y = 0; y < rgb->height; y++) {
             const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
@@ -1949,16 +1980,40 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut) {
                 if (r > 180 && g < 80 && b < 80) {
                     red++;
                 }
+                if (b > 180 && r < 80 && g < 80) {
+                    blue++;
+                }
+                if (r < rMin) {
+                    rMin = r;
+                }
+                if (r > rMax) {
+                    rMax = r;
+                }
+                if (g < gMin) {
+                    gMin = g;
+                }
+                if (g > gMax) {
+                    gMax = g;
+                }
+                if (b < bMin) {
+                    bMin = b;
+                }
+                if (b > bMax) {
+                    bMax = b;
+                }
             }
         }
     }
-    out.Append(
-        fmt("red=%d nonwhite=%d size=%dx%d pages=%d\n", red, nonWhite, rgb->width, rgb->height, engine->PageCount()));
+    int spread = (rMax - rMin) + (gMax - gMin) + (bMax - bMin);
+    out.Append(fmt("red=%d nonwhite=%d size=%dx%d pages=%d page=%d blue=%d spread=%d\n", red, nonWhite, rgb->width,
+                   rgb->height, engine->PageCount(), pageNo, blue, spread));
     if (rgb != bmp) {
         FreePixmap(rgb);
     }
     FreePixmap(bmp);
-    SafeEngineRelease(&engine);
+    if (ownEngine) {
+        SafeEngineRelease(&engine);
+    }
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }

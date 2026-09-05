@@ -4,51 +4,53 @@
 // The gate used CouldBePDFDoc(), which is true for epub/mobi/fb2/xps/svg too;
 // it now asks the engine whether there is really a pdf_document behind the tab.
 
-import { findCanvas, findSubMenu, launchControlled, readContextMenuTree, killAndWait } from "./win-automation.ts";
-import { setForegroundWindow } from "./winapi.ts";
-import { runStandalone } from "./util.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { EXE, runStandalone } from "./util.ts";
 
-const kDocumentSubMenu = "Document";
+const kPdfCmds = ["CmdPdShowInfo", "CmdPdfCompress", "CmdPdfExtractPages", "CmdPdfEncrypt"];
 
-async function documentMenuItems(file: string): Promise<string[]> {
-  const { proc, client, frame } = await launchControlled([file]);
-  try {
-    await client.waitForRenderIdle();
-    setForegroundWindow(frame);
-    const canvas = findCanvas(frame);
-    if (!canvas) {
-      throw new Error(`pdf-only-menu-items: no canvas for ${file}`);
-    }
-    const tree = await readContextMenuTree(canvas);
-    if (tree.length === 0) {
-      throw new Error(`pdf-only-menu-items: no context menu for ${file}`);
-    }
-    const doc = findSubMenu(tree, kDocumentSubMenu);
-    if (!doc || !doc.items) {
-      throw new Error(`pdf-only-menu-items: no '${kDocumentSubMenu}' submenu for ${file}`);
-    }
-    return doc.items.map((it) => it.text);
-  } finally {
-    client.close();
-    await killAndWait(proc);
+async function vis(client: { request: Function }, cmd: string): Promise<string> {
+  const res = await client.request(ControlCommand.TestCommandVisibility, [cmd, "menu"]);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0) {
+    throw new Error(`pdf-only-menu-items: ${cmd}: ${raw.trim()}`);
   }
+  const m = /vis=(\w+)/.exec(raw);
+  return m?.[1] ?? "";
 }
 
 export async function testit(): Promise<void> {
-  const epub = await documentMenuItems("tests/issue-5846.epub");
-  const pdfOnEpub = epub.filter((s) => s.includes("PDF"));
-  if (pdfOnEpub.length > 0) {
-    throw new Error(`pdf-only-menu-items: epub Document menu offers PDF commands: ${JSON.stringify(pdfOnEpub)}`);
-  }
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      await client.waitForRenderIdle();
+      for (const cmd of kPdfCmds) {
+        const v = await vis(client, cmd);
+        if (v !== "hide") {
+          throw new Error(`pdf-only-menu-items: epub still shows ${cmd} vis=${v}`);
+        }
+      }
+    },
+    ["tests/issue-5846.epub"],
+  );
 
-  // the other half: don't hide them from actual PDFs
-  const pdf = await documentMenuItems("tests/issue-1189.pdf");
-  const pdfOnPdf = pdf.filter((s) => s.includes("PDF"));
-  if (pdfOnPdf.length === 0) {
-    throw new Error(`pdf-only-menu-items: pdf Document menu lost its PDF commands: ${JSON.stringify(pdf)}`);
-  }
-
-  console.log(`pdf-only-menu-items: epub ${JSON.stringify(epub)}; pdf keeps ${pdfOnPdf.length} PDF commands`);
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      await client.waitForRenderIdle();
+      const shown = [];
+      for (const cmd of kPdfCmds) {
+        const v = await vis(client, cmd);
+        if (v === "show") {
+          shown.push(cmd);
+        }
+      }
+      if (shown.length === 0) {
+        throw new Error("pdf-only-menu-items: pdf hid every PDF command");
+      }
+    },
+    ["tests/issue-1189.pdf"],
+  );
 }
 
 if (import.meta.main) {

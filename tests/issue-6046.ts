@@ -2,26 +2,12 @@
 //
 // Run: bun tests/issue-6046.ts [--no-build]
 
-import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { pdfPageCount } from "./print-util.ts";
-import { cmdId, extractPageText, runStandalone, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, pressEnter, sendCommand } from "./win-automation.ts";
-import {
-  enumChildWindows,
-  enumWindows,
-  getClassName,
-  getControlText,
-  getWindowPid,
-  getWindowText,
-  isWindowVisible,
-  packCoords,
-  sendMessage,
-  sendText,
-  sleep,
-  WM_COMMAND,
-} from "./winapi.ts";
+import { ControlCommand } from "./control.ts";
+import { extractPageText, runStandalone, tmpPath } from "./util.ts";
+import { killAndWait, launchControlled } from "./win-automation.ts";
 
-const BM_CLICK = 0x00f5;
 const annotatedPages = [2, 4];
 const expectedPages = [1, ...annotatedPages];
 
@@ -71,94 +57,28 @@ function buildPdf(): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-function childWindowsByClass(parent: number, className: string): number[] {
-  const children: number[] = [];
-  enumChildWindows(parent, (hwnd) => {
-    if (getClassName(hwnd) === className) {
-      children.push(hwnd);
-    }
-    return true;
-  });
-  return children;
-}
-
-function findExtractDialog(pid: number): number {
-  let found = 0;
-  enumWindows((hwnd) => {
-    if (getWindowPid(hwnd) === pid && isWindowVisible(hwnd) && getWindowText(hwnd) === "Extract Pages From PDF") {
-      found = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
-
-// the dialog window exists (and is titled) before its controls are added, and is
-// only shown once they all are, so wait for visible *and* for both edits
-async function waitForExtractDialog(pid: number, timeoutMs = 5000): Promise<number> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const dialog = findExtractDialog(pid);
-    if (dialog && childWindowsByClass(dialog, "Edit").length >= 2) {
-      return dialog;
-    }
-    await sleep(30);
-  }
-  throw new Error("issue-6046: Extract Pages dialog did not appear");
-}
-
-async function waitForOutput(path: string, timeoutMs = 10000): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  let previousSize = -1;
-  while (Date.now() < deadline) {
-    if (existsSync(path)) {
-      const size = statSync(path).size;
-      if (size > 0 && size === previousSize) {
-        return;
-      }
-      previousSize = size;
-    }
-    await sleep(50);
-  }
-  throw new Error("issue-6046: extracted PDF was not created");
-}
-
 export async function testit(): Promise<void> {
   const source = tmpPath("issue-6046.pdf");
   const output = tmpPath("issue-6046-extracted.pdf");
   writeFileSync(source, buildPdf());
   rmSync(output, { force: true });
 
-  const { proc, client, frame } = await launchControlled([source]);
+  const { proc, client } = await launchControlled([source]);
   try {
     await client.waitForRenderIdle();
-    // Add an unsaved annotation on page 1. Filtering must see it, and the
-    // extracted PDF must retain it instead of reopening only the disk copy.
-    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotStamp"), packCoords(80, 80));
+    const stamp = await client.request(ControlCommand.TestInvokeCommand, ["CmdCreateAnnotStamp", 80, 80]);
+    if (stamp[0] !== 0) {
+      throw new Error(`issue-6046: create stamp: ${String(stamp[1] ?? "")}`);
+    }
     await client.waitForRenderIdle();
 
-    sendCommand(frame, cmdId("CmdPdfExtractPages"));
-    const dialog = await waitForExtractDialog(proc.pid!);
-
-    const edits = childWindowsByClass(dialog, "Edit");
-    const destEdit = edits.find((hwnd) => /\.pdf$/i.test(getControlText(hwnd)));
-    const pagesEdit = edits.find((hwnd) => hwnd !== destEdit);
-    if (!destEdit || !pagesEdit) {
-      throw new Error(`issue-6046: expected destination and pages edits, got ${edits.length}`);
+    const conv = await client.request(ControlCommand.TestExtractPages, [output, "1-N", 1]);
+    if (conv[0] !== 0) {
+      throw new Error(`issue-6046 extract: ${String(conv[1] ?? "").trim()}`);
     }
-    sendText(destEdit, output);
-    sendText(pagesEdit, "1-N");
-
-    const checkbox = childWindowsByClass(dialog, "Button").find(
-      (hwnd) => getControlText(hwnd).replace(/&/g, "") === "Only with annotations",
-    );
-    if (!checkbox) {
-      throw new Error("issue-6046: Only with annotations checkbox not found");
+    if (!existsSync(output)) {
+      throw new Error("issue-6046: extracted PDF was not created");
     }
-    sendMessage(checkbox, BM_CLICK, 0, 0);
-    await pressEnter(dialog);
-    await waitForOutput(output);
 
     const count = pdfPageCount(output);
     if (count !== expectedPages.length) {

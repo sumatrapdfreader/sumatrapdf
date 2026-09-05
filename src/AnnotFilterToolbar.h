@@ -10,3 +10,5 @@ void ClearAnnotFilterAnnotations(MainWindow*);
 void ToggleFloatingAnnotList(MainWindow*);
 bool IsFloatingAnnotListVisible(MainWindow*);
 TempStr AnnotFilterToolbarStateTemp(MainWindow*);
+void ApplyAnnotFilterText(MainWindow* win, Str text);
+void PaintAnnotFilterWindow(MainWindow* win);

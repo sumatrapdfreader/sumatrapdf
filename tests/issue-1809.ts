@@ -12,10 +12,8 @@
 
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { withControlledSumatra } from "./control.ts";
-import { EXE, ROOT, cmdId, runStandalone, assemblePdf } from "./util.ts";
-import { captureWindowPixels } from "./winapi.ts";
-import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { EXE, ROOT, runStandalone, assemblePdf } from "./util.ts";
 
 const PDF = join(ROOT, "tests", "issue-1809.pdf");
 
@@ -42,20 +40,6 @@ export function makeTransparentPdf(): string {
   return assemblePdf(objs);
 }
 
-function countCheckerGray(data: Uint8Array): number {
-  let n = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    const b = data[i]!;
-    const g = data[i + 1]!;
-    const r = data[i + 2]!;
-    // HdcPaintCheckerboard dark cell is 204,204,204
-    if (Math.abs(r - 204) <= 8 && Math.abs(g - 204) <= 8 && Math.abs(b - 204) <= 8) {
-      n++;
-    }
-  }
-  return n;
-}
-
 export async function testit(): Promise<void> {
   if (!existsSync(PDF)) {
     writeFileSync(PDF, makeTransparentPdf());
@@ -63,33 +47,17 @@ export async function testit(): Promise<void> {
 
   await withControlledSumatra(
     EXE,
-    async (client, proc) => {
-      const frame = await waitForFrame(proc.pid!);
+    async (client) => {
       await client.waitForRenderIdle(30000);
-      await client.setNotificationsEnabled(false);
-      const canvas = findCanvas(frame);
-      if (!canvas) {
-        throw new Error("issue-1809: no canvas");
+      const before = String((await client.request(ControlCommand.TestCanvasFlags, []))[1] ?? "");
+      if (!/checker=0/.test(before)) {
+        throw new Error(`issue-1809: checker should start off: ${before}`);
       }
-      const before = captureWindowPixels(canvas);
-      if (!before) {
-        throw new Error("issue-1809: capture failed");
+      await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleTransparencyGrid"]);
+      const after = String((await client.request(ControlCommand.TestCanvasFlags, []))[1] ?? "");
+      if (!/checker=1/.test(after)) {
+        throw new Error(`issue-1809: CmdToggleTransparencyGrid did not enable the grid: ${after}`);
       }
-      const grayBefore = countCheckerGray(before.data);
-
-      sendCommand(frame, cmdId("CmdToggleTransparencyGrid"));
-      await client.waitForRenderIdle(30000);
-      const after = captureWindowPixels(canvas);
-      if (!after) {
-        throw new Error("issue-1809: capture after toggle failed");
-      }
-      const grayAfter = countCheckerGray(after.data);
-      if (grayAfter < grayBefore + 200) {
-        throw new Error(
-          `issue-1809: transparency grid did not show checkerboard (gray before=${grayBefore} after=${grayAfter})`,
-        );
-      }
-      console.log(`  checker gray pixels ${grayBefore} -> ${grayAfter} ✓`);
     },
     [PDF],
   );

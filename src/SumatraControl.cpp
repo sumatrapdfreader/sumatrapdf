@@ -802,6 +802,12 @@ enum class ControlCmd : u16 {
     TestTocSidebarNav = 84,
     TestSelectionSurvivesRenumber = 85,
     TestConvertToPdf = 86,
+    TestInvokeCommand = 87,
+    TestCurrentTab = 88,
+    TestCommandVisibility = 89,
+    TestExtractPages = 90,
+    TestAnnotFilter = 91,
+    TestCanvasFlags = 92,
 };
 
 enum class ControlArgType : u16 {
@@ -1406,11 +1412,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestRenderPageColors: {
             Str path = StringArg(req, 0);
             if (len(path) == 0) {
-                AppendError(req, StrL("TestRenderPageColors expects string path"));
+                AppendError(req, StrL("TestRenderPageColors expects string path [, int pageNo]"));
                 break;
             }
+            i32 pageNo = 1;
+            IntArg(req, 1, pageNo);
             int exitCode = 0;
-            Str res = PageRenderColorsResultTemp(path, &exitCode);
+            Str res = PageRenderColorsResultTemp(path, &exitCode, pageNo);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -1735,6 +1743,123 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = ConvertImageCollectionToPdfResultTemp(srcPath, destPath, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestInvokeCommand: {
+            Str name = StringArg(req, 0);
+            if (len(gWindows) == 0 || !gWindows[0] || !gWindows[0]->hwndFrame) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                break;
+            }
+            MainWindow* win = gWindows[0];
+            if (str::EqI(name, StrL("WM_CLOSE"))) {
+                PostMessageW(win->hwndFrame, WM_CLOSE, 0, 0);
+                AppendTestResult(req, 0, StrL("OK"));
+                break;
+            }
+            int cmdId = GetCommandIdByName(name);
+            if (cmdId <= 0) {
+                AppendError(req, StrL("TestInvokeCommand expects a command name"));
+                break;
+            }
+            i32 x = 0;
+            i32 y = 0;
+            LPARAM lp = 0;
+            if (IntArg(req, 1, x) && IntArg(req, 2, y)) {
+                lp = MAKELPARAM((WORD)x, (WORD)y);
+            }
+            HwndPostCommand(win->hwndFrame, cmdId, lp);
+            AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
+        case ControlCmd::TestCurrentTab: {
+            if (len(gWindows) == 0 || !gWindows[0]) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                break;
+            }
+            WindowTab* tab = gWindows[0]->CurrentTab();
+            if (!tab || len(tab->filePath) == 0) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-tab"));
+                break;
+            }
+            int page = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
+            AppendTestResult(req, 0, fmt("path=%s page=%d", tab->filePath, page));
+            break;
+        }
+
+        case ControlCmd::TestCommandVisibility: {
+            Str name = StringArg(req, 0);
+            int cmdId = GetCommandIdByName(name);
+            if (cmdId <= 0) {
+                AppendError(req, StrL("TestCommandVisibility expects a command name"));
+                break;
+            }
+            if (len(gWindows) == 0 || !gWindows[0]) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                break;
+            }
+            CommandSurface surface = CommandSurface::Menu;
+            Str surf = StringArg(req, 1);
+            if (str::EqI(surf, StrL("palette"))) {
+                surface = CommandSurface::Palette;
+            } else if (str::EqI(surf, StrL("toolbar"))) {
+                surface = CommandSurface::Toolbar;
+            }
+            AppCommandCtx ctx = NewAppCommandCtx(gWindows[0]);
+            CommandVisibility vis = GetCommandVisibility(cmdId, ctx, surface);
+            Str visName = StrL("show");
+            if (vis == CommandVisibility::Hide) {
+                visName = StrL("hide");
+            } else if (vis == CommandVisibility::Disable) {
+                visName = StrL("disable");
+            }
+            AppendTestResult(req, 0, fmt("cmd=%s vis=%s", name, visName));
+            break;
+        }
+
+        case ControlCmd::TestExtractPages: {
+            Str destPath = StringArg(req, 0);
+            Str pagesSpec = StringArg(req, 1);
+            i32 annotsOnly = 0;
+            IntArg(req, 2, annotsOnly);
+            if (len(destPath) == 0 || len(pagesSpec) == 0) {
+                AppendError(req, StrL("TestExtractPages expects string dest, string pages [, int annotsOnly]"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = ExtractPdfPagesResultTemp(destPath, pagesSpec, annotsOnly, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestAnnotFilter: {
+            if (len(gWindows) == 0 || !gWindows[0]) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                break;
+            }
+            MainWindow* win = gWindows[0];
+            Str action = StringArg(req, 0);
+            if (str::EqI(action, StrL("set"))) {
+                ApplyAnnotFilterText(win, StringArg(req, 1));
+            } else if (str::EqI(action, StrL("paint"))) {
+                PaintAnnotFilterWindow(win);
+            }
+            AppendTestResult(req, 0, AnnotFilterToolbarStateTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestCanvasFlags: {
+            Str action = StringArg(req, 0);
+            if (str::EqI(action, StrL("set-grid"))) {
+                i32 on = 0;
+                IntArg(req, 1, on);
+                SetShowPageGrid(on != 0);
+            } else if (str::EqI(action, StrL("reset-grid"))) {
+                ResetPageGridToDefaults();
+            }
+            AppendTestResult(req, 0, PageGridStateTemp());
             break;
         }
 

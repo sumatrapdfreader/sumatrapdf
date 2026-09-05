@@ -11,32 +11,14 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
-import { captureWindowPixels, captureWindowToPng } from "./winapi.ts";
-import { findCanvas, sendCommandSync, waitForFrame } from "./win-automation.ts";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
+import { EXE, runStandalone } from "./util.ts";
 
 const AZW3 = join(import.meta.dir, "issue-4315.azw3");
 
-function meanRgb(shot: { w: number; h: number; data: Uint8Array }): { r: number; g: number; b: number } {
-  let r = 0,
-    g = 0,
-    b = 0,
-    n = 0;
-  const x0 = Math.floor(shot.w * 0.3);
-  const x1 = Math.floor(shot.w * 0.7);
-  const y0 = Math.floor(shot.h * 0.12);
-  const y1 = Math.floor(shot.h * 0.55);
-  for (let y = y0; y < y1; y += 2) {
-    for (let x = x0; x < x1; x += 2) {
-      const i = (y * shot.w + x) * 4;
-      b += shot.data[i]!;
-      g += shot.data[i + 1]!;
-      r += shot.data[i + 2]!;
-      n++;
-    }
-  }
-  n = Math.max(n, 1);
-  return { r: r / n, g: g / n, b: b / n };
+function parseColors(raw: string): { red: number; blue: number } {
+  const red = /red=(\d+)/.exec(raw);
+  const blue = /blue=(\d+)/.exec(raw);
+  return { red: red ? +red[1]! : 0, blue: blue ? +blue[1]! : 0 };
 }
 
 export async function testit(): Promise<void> {
@@ -44,46 +26,27 @@ export async function testit(): Promise<void> {
     throw new Error(`issue-4315: fixture not found: ${AZW3}`);
   }
 
-  await withControlledSumatra(
-    EXE,
-    async (client, proc) => {
-      const frame = await waitForFrame(proc.pid!);
-      if (!frame) {
-        throw new Error("issue-4315: no frame");
-      }
-      await client.request(ControlCommand.SetNotificationsEnabled, [0]);
-      await client.waitForRenderIdle();
-      sendCommandSync(frame, cmdId("CmdZoomFitPage"));
-      await client.waitForRenderIdle();
+  await withControlledSumatra(EXE, async (client) => {
+    const p1 = await client.request(ControlCommand.TestRenderPageColors, [AZW3, 1]);
+    const p1Raw = String(p1[1] ?? "");
+    if (p1[0] !== 0) {
+      throw new Error(`issue-4315 page 1: ${p1Raw.trim()}`);
+    }
+    const c1 = parseColors(p1Raw);
+    if (c1.red < 100 || c1.red <= c1.blue) {
+      throw new Error(`issue-4315: page 1 should be red, got red=${c1.red} blue=${c1.blue}`);
+    }
 
-      const canvas = findCanvas(frame);
-      if (!canvas) {
-        throw new Error("issue-4315: no canvas");
-      }
-      captureWindowToPng(canvas, tmpPath("issue-4315-p1.png"));
-      const p1 = captureWindowPixels(canvas);
-      if (!p1) {
-        throw new Error("issue-4315: capture p1 failed");
-      }
-      const c1 = meanRgb(p1);
-      if (c1.r < 120 || c1.r - c1.b < 40) {
-        throw new Error(`issue-4315: page 1 should be red, got r=${c1.r.toFixed(0)} b=${c1.b.toFixed(0)}`);
-      }
-
-      sendCommandSync(frame, cmdId("CmdGoToNextPage"));
-      await client.waitForRenderIdle();
-      captureWindowToPng(canvas, tmpPath("issue-4315-p2.png"));
-      const p2 = captureWindowPixels(canvas);
-      if (!p2) {
-        throw new Error("issue-4315: capture p2 failed");
-      }
-      const c2 = meanRgb(p2);
-      if (c2.b < 120 || c2.b - c2.r < 40) {
-        throw new Error(`issue-4315: page 2 should be blue, got r=${c2.r.toFixed(0)} b=${c2.b.toFixed(0)}`);
-      }
-    },
-    [AZW3],
-  );
+    const p2 = await client.request(ControlCommand.TestRenderPageColors, [AZW3, 2]);
+    const p2Raw = String(p2[1] ?? "");
+    if (p2[0] !== 0) {
+      throw new Error(`issue-4315 page 2: ${p2Raw.trim()}`);
+    }
+    const c2 = parseColors(p2Raw);
+    if (c2.blue < 100 || c2.blue <= c2.red) {
+      throw new Error(`issue-4315: page 2 should be blue, got red=${c2.red} blue=${c2.blue}`);
+    }
+  });
 }
 
 if (import.meta.main) {

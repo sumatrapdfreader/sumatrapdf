@@ -13,9 +13,8 @@
 
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
-import { launchControlled, findCanvas, killAndWait } from "./win-automation.ts";
-import { captureWindowToPng } from "./winapi.ts";
 
 // build a PDF whose only image is an external-file stream (/F + /FFilter), with
 // an empty embedded stream. imgName sits next to the PDF; w/h are the image dims
@@ -66,35 +65,28 @@ function makeExternalImagePdf(imgName: string, w: number, h: number): Buffer {
 // makes mupdf report a PDF error) sit in the bottom-right corner. Counting the
 // whole canvas would fold that yellow/red toast into the color count and
 // spuriously push the denied case over the threshold.
-function distinctColors(png: string): number {
-  const p = png.split("\\").join("\\\\");
-  const ps =
-    `Add-Type -AssemblyName System.Drawing; $b=[System.Drawing.Bitmap]::FromFile('${p}'); ` +
-    `$x0=[int]($b.Width*0.25); $x1=[int]($b.Width*0.75); $y0=[int]($b.Height*0.25); $y1=[int]($b.Height*0.75); ` +
-    `$h=@{}; for($y=$y0;$y -lt $y1;$y+=4){for($x=$x0;$x -lt $x1;$x+=4){` +
-    `$c=$b.GetPixel($x,$y); $k=[int]($c.R/32)*64+[int]($c.G/32)*8+[int]($c.B/32); $h[$k]=1}}; ` +
-    `$b.Dispose(); Write-Output $h.Count`;
-  const r = Bun.spawnSync(["powershell", "-NoProfile", "-Command", ps]);
-  return parseInt(r.stdout.toString().trim(), 10) || 0;
-}
-
-async function renderDistinctColors(pdf: string, appdata: string, label: string): Promise<number> {
-  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
-  try {
-    await client.waitForRenderIdle();
-    const canvas = findCanvas(frame);
-    if (!canvas) {
-      throw new Error("canvas not found");
-    }
-    const png = tmpPath(`issue-3731-${label}.png`);
-    if (!captureWindowToPng(canvas, png)) {
-      throw new Error("capture failed");
-    }
-    return distinctColors(png);
-  } finally {
-    client.close();
-    await killAndWait(proc);
-  }
+async function renderNonWhite(pdf: string, appdata: string): Promise<number> {
+  let n = -1;
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      await client.waitForRenderIdle();
+      const tab = await client.request(ControlCommand.TestCurrentTab, []);
+      const tabRaw = String(tab[1] ?? "");
+      const pm = /^path=(.+?) page=/.exec(tabRaw.trim());
+      const path = pm ? pm[1]! : pdf;
+      const res = await client.request(ControlCommand.TestRenderPageColors, [path]);
+      const raw = String(res[1] ?? "");
+      if (res[0] !== 0) {
+        n = 0;
+        return;
+      }
+      const m = /spread=(\d+)/.exec(raw);
+      n = m ? +m[1]! : 0;
+    },
+    ["-appdata", appdata, pdf],
+  );
+  return n;
 }
 
 export async function testit(): Promise<void> {
@@ -134,19 +126,15 @@ export async function testit(): Promise<void> {
     return ad;
   };
 
-  const onColors = await renderDistinctColors(pdf, mkAppdata("ad-on", true), "on");
-  const offColors = await renderDistinctColors(pdf, mkAppdata("ad-off", false), "off");
+  const onSpread = await renderNonWhite(pdf, mkAppdata("ad-on", true));
+  const offSpread = await renderNonWhite(pdf, mkAppdata("ad-off", false));
 
-  console.log(`AllowExternalImages on : distinct colors = ${onColors} (expect many, image rendered)`);
-  console.log(`AllowExternalImages off: distinct colors = ${offColors} (expect few, image denied)`);
-
-  if (offColors > 8) {
-    throw new Error(`external image rendered with the setting OFF (${offColors} colors); secure default broken`);
+  if (offSpread > 40) {
+    throw new Error(`external image rendered with the setting OFF (spread=${offSpread}); secure default broken`);
   }
-  if (onColors < 25) {
-    throw new Error(`external image did NOT render with the setting ON (${onColors} colors); #3731 not working`);
+  if (onSpread < 80) {
+    throw new Error(`external image did NOT render with the setting ON (spread=${onSpread}); #3731 not working`);
   }
-  console.log("PASS: external-file image loads only when AllowExternalImages is on (issue #3731)");
 }
 
 if (import.meta.main) {
