@@ -199,6 +199,97 @@ void FreePixmapNativeBitmap(Pixmap* p) {
     p->data = nullptr;
 }
 
+// Shell / association icons carry transparency in a 1-bit AND mask or a 32bpp
+// alpha channel. Gdiplus::Bitmap(HICON) drops that and leaves transparent
+// pixels as opaque black, which then shows as a black square on the home page.
+Pixmap* PixmapFromHICON(HICON hicon) {
+    if (!hicon) {
+        return nullptr;
+    }
+    ICONINFO ii{};
+    if (!GetIconInfo(hicon, &ii)) {
+        return nullptr;
+    }
+    BITMAP bm{};
+    HBITMAP srcBmp = ii.hbmColor ? ii.hbmColor : ii.hbmMask;
+    if (!srcBmp || GetObjectW(srcBmp, sizeof(bm), &bm) == 0 || bm.bmWidth <= 0 || bm.bmHeight <= 0) {
+        DeleteObject(ii.hbmColor);
+        DeleteObject(ii.hbmMask);
+        return nullptr;
+    }
+    int w = bm.bmWidth;
+    int h = ii.hbmColor ? bm.bmHeight : bm.bmHeight / 2;
+    if (h <= 0) {
+        DeleteObject(ii.hbmColor);
+        DeleteObject(ii.hbmMask);
+        return nullptr;
+    }
+
+    Pixmap* px = AllocPixmapDIB(w, h);
+    if (!px) {
+        DeleteObject(ii.hbmColor);
+        DeleteObject(ii.hbmMask);
+        return nullptr;
+    }
+    memset(px->data, 0, (size_t)px->stride * (size_t)h);
+    px->hasAlpha = true;
+
+    HDC hdc = CreateCompatibleDC(nullptr);
+    if (!hdc) {
+        FreePixmap(px);
+        DeleteObject(ii.hbmColor);
+        DeleteObject(ii.hbmMask);
+        return nullptr;
+    }
+    HGDIOBJ old = SelectObject(hdc, px->hbmp);
+    DrawIconEx(hdc, 0, 0, hicon, w, h, 0, nullptr, DI_NORMAL);
+    if (old) {
+        SelectObject(hdc, old);
+    }
+
+    bool anyAlpha = false;
+    for (int y = 0; y < h && !anyAlpha; y++) {
+        const u8* d = px->data + ((size_t)y * px->stride);
+        for (int x = 0; x < w; x++, d += 4) {
+            if (d[3] != 0) {
+                anyAlpha = true;
+                break;
+            }
+        }
+    }
+
+    if (!anyAlpha && ii.hbmMask) {
+        BITMAPINFO bmi{};
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = w;
+        bmi.bmiHeader.biHeight = -h;
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 32;
+        bmi.bmiHeader.biCompression = BI_RGB;
+        Pixmap* mask = AllocPixmap(w, h, PixmapFormat::BGRA8);
+        if (mask && mask->data) {
+            GetDIBits(hdc, ii.hbmMask, 0, (UINT)h, mask->data, &bmi, DIB_RGB_COLORS);
+            for (int y = 0; y < h; y++) {
+                u8* d = px->data + ((size_t)y * px->stride);
+                const u8* m = mask->data + ((size_t)y * mask->stride);
+                for (int x = 0; x < w; x++, d += 4, m += 4) {
+                    if (m[0] || m[1] || m[2]) {
+                        d[0] = d[1] = d[2] = d[3] = 0;
+                    } else {
+                        d[3] = 255;
+                    }
+                }
+            }
+        }
+        FreePixmap(mask);
+    }
+
+    DeleteDC(hdc);
+    DeleteObject(ii.hbmColor);
+    DeleteObject(ii.hbmMask);
+    return px;
+}
+
 static bool BlitPixmapRegionComposited(Pixmap* p, HDC hdc, Rect target, Rect source);
 
 bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {

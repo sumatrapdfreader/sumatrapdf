@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/GdiPlusUtil.h"
 #include "base/ScopedWin.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
@@ -1982,10 +1981,7 @@ static Pixmap* GetFileStateIconPixmap(FileState* fs) {
     HICON hicon = ImageList_GetIcon(fs->himl, fs->iconIdx, ILD_TRANSPARENT);
     Pixmap* pixmap = nullptr;
     if (hicon) {
-        {
-            Gdiplus::Bitmap bmp(hicon);
-            pixmap = PixmapFromGdiplus(&bmp);
-        }
+        pixmap = PixmapFromHICON(hicon);
         DestroyIcon(hicon);
     }
     auto* icon = new HomeFileIcon();

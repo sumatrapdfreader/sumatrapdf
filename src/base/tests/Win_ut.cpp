@@ -119,11 +119,68 @@ static void RecolorLinkAaTest() {
     FreePixmap(dib);
 }
 
+// 16x16 red square in the middle, transparent corners (AND mask).
+static HICON MakeMaskedRedIcon() {
+    const int n = 16;
+    Pixmap* color = AllocPixmapDIB(n, n);
+    if (!color || !color->data) {
+        FreePixmap(color);
+        return nullptr;
+    }
+    memset(color->data, 0, (size_t)color->stride * (size_t)n);
+    for (int y = 4; y < 12; y++) {
+        u8* d = color->data + ((size_t)y * color->stride) + (4 * 4);
+        for (int x = 4; x < 12; x++, d += 4) {
+            d[0] = 0;
+            d[1] = 0;
+            d[2] = 255;
+            d[3] = 255;
+        }
+    }
+    // 1-bit mask, MSB is leftmost. White (1) = transparent, black (0) = opaque.
+    u8 maskBits[16 * 2];
+    memset(maskBits, 0xFF, sizeof(maskBits));
+    for (int y = 4; y < 12; y++) {
+        maskBits[y * 2] = 0xF0;
+        maskBits[y * 2 + 1] = 0x0F;
+    }
+    HBITMAP hbmMask = CreateBitmap(n, n, 1, 1, maskBits);
+    if (!hbmMask) {
+        FreePixmap(color);
+        return nullptr;
+    }
+    ICONINFO ii{};
+    ii.fIcon = TRUE;
+    ii.hbmMask = hbmMask;
+    ii.hbmColor = color->hbmp;
+    HICON hicon = CreateIconIndirect(&ii);
+    DeleteObject(hbmMask);
+    FreePixmap(color);
+    return hicon;
+}
+
+static void PixmapFromHICONAlphaTest() {
+    HICON hicon = MakeMaskedRedIcon();
+    utassert(hicon);
+    Pixmap* px = PixmapFromHICON(hicon);
+    DestroyIcon(hicon);
+    utassert(px && px->data && px->hasAlpha);
+    utassert(px->width == 16 && px->height == 16);
+    utassert(px->format == PixmapFormat::BGRA8);
+    const u8* corner = px->data;
+    utassert(corner[3] == 0);
+    const u8* center = px->data + ((size_t)8 * px->stride) + (8 * 4);
+    utassert(center[3] > 128);
+    utassert(center[2] > 128);
+    FreePixmap(px);
+}
+
 void WinUtilTest() {
     ScopedCom comScope;
 
     QuoteCmdLineArgTest();
     RecolorLinkAaTest();
+    PixmapFromHICONAlphaTest();
 
     {
         Str string = StrL("abcde");
