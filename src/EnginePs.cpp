@@ -293,6 +293,7 @@ class EnginePs : public EngineBase {
 
     bool HandleLink(IPageDestination* dest, ILinkHandler* lh) override { return pdfEngine->HandleLink(dest, lh); }
 
+    // engine-owned; do not delete
     IPageDestination* GetNamedDest(Str name) override { return pdfEngine->GetNamedDest(name); }
 
     TocTree* GetToc() override { return pdfEngine->GetToc(); }

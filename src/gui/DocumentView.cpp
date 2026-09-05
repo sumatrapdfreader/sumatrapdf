@@ -247,7 +247,6 @@ struct DocumentViewLinkHandler : ILinkHandler {
         IPageDestination* dest = data->reader ? data->reader->GetEngine()->GetNamedDest(name) : nullptr;
         if (dest) {
             ScrollTo(dest);
-            delete dest;
         }
     }
 

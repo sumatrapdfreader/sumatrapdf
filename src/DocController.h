@@ -117,6 +117,7 @@ struct DocController {
     virtual TocTree* GetToc() = 0;
     virtual void ScrollTo(int pageNo, RectF rect, float zoom) = 0;
 
+    // engine-owned; do not delete
     virtual IPageDestination* GetNamedDest(Str name) = 0;
 
     // get display state (pageNo, zoom, scroll etc. of the document)

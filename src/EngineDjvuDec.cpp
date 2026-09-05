@@ -882,12 +882,13 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
     return true;
 }
 
+// engine-owned; do not delete
 IPageDestination* EngineDjvuDec::GetNamedDest(Str name) {
     Str n = name;
     str::TrimPrefix(n, StrL("#"));
     TempStr link = ResolveNamedDestDjvuDecTemp(doc, n);
     if (link) {
-        return NewDjvuDecDestination(link, {});
+        return NewDjvuDecDestination(arena, link, {});
     }
     return nullptr;
 }

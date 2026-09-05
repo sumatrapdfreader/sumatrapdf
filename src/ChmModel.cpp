@@ -803,15 +803,16 @@ void ChmModel::OnLButtonDown() {
     }
 }
 
-// named destinations are either in-document URLs or Alias topic IDs
+// named destinations are either in-document URLs or Alias topic IDs.
+// engine-owned; do not delete
 IPageDestination* ChmModel::GetNamedDest(Str name) {
     TempStr url = url::GetFullPathTemp(name);
     int pageNo = pages.Find(url) + 1;
     if (pageNo >= 1) {
-        return NewChmNamedDest(nullptr, url, pageNo);
+        return NewChmNamedDest(poolAlloc, url, pageNo);
     }
     if (doc->HasData(url)) {
-        return NewChmNamedDest(nullptr, url, 1);
+        return NewChmNamedDest(poolAlloc, url, 1);
     }
     unsigned int topicID;
     if (str::IsNull(str::Parse(name, "%u%$", &topicID))) {
@@ -830,7 +831,7 @@ IPageDestination* ChmModel::GetNamedDest(Str name) {
     // return pageNo=1 for these, as HandleLink will ignore that anyway
     // but LinkHandler::ScrollTo doesn't
     pageNo = std::max(pageNo, 1);
-    return NewChmNamedDest(nullptr, url, pageNo);
+    return NewChmNamedDest(poolAlloc, url, pageNo);
 }
 
 // table of contents

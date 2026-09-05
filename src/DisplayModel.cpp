@@ -141,6 +141,7 @@ TocTree* DisplayModel::GetToc() {
     return engine->GetToc();
 }
 
+// engine-owned; do not delete
 IPageDestination* DisplayModel::GetNamedDest(Str name) {
     return engine->GetNamedDest(name);
 }

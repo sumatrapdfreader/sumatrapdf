@@ -886,7 +886,6 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         IPageDestination* dest = targetWin->ctrl->GetNamedDest(destName);
         if (dest) {
             targetWin->linkHandler->ScrollTo(dest);
-            delete dest;
         }
     } else {
         targetWin->linkHandler->ScrollTo(remoteLink);
@@ -975,7 +974,6 @@ void LinkHandler::GotoNamedDest(Str name) {
     bool hasDest = dest != nullptr;
     if (dest) {
         ScrollTo(dest);
-        delete dest;
     } else if (ctrl->HasToc()) {
         auto* docTree = ctrl->GetToc();
         TocItem* root = docTree->root;

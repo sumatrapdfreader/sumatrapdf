@@ -1057,8 +1057,7 @@ float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
-// creates a PageDestination from a name (or nullptr for invalid names)
-// caller must delete the result
+// named dest; engine-owned, do not delete
 IPageDestination* EngineBase::GetNamedDest(Str /*name*/) {
     return nullptr;
 }

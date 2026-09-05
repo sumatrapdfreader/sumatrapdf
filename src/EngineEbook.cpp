@@ -193,7 +193,7 @@ class EngineEbook : public EngineBase {
     virtual HtmlPage* GetHtmlPage2(Location loc);
 };
 
-static IPageElement* NewEbookLink(Rect rect, IPageDestination* dest, int pageNo = 0) {
+static IPageElement* NewEbookLink(Rect rect, IPageDestination* dest, int pageNo = 0, bool destOwned = true) {
     if (!dest) {
         // TODO: this doesn't make sense
         dest = new PageDestination();
@@ -201,9 +201,10 @@ static IPageElement* NewEbookLink(Rect rect, IPageDestination* dest, int pageNo 
         // TODO: not sure about this
         // dest->value = str::Dup(res->value);
         dest->rect = ToRectF(rect);
+        destOwned = true;
     }
 
-    auto res = new PageElementDestination(dest);
+    auto res = new PageElementDestination(dest, destOwned);
     res->pageNo = pageNo;
     res->rect = ToRectF(rect);
 
@@ -229,31 +230,6 @@ static TocItem* newEbookTocItem(Arena* arena, TocItem* parent, Str title, IPageD
         res->loc = dest->loc;
     }
     return res;
-}
-
-// GetNamedDestLazy returns a heap dest (page links / callers delete it). Copy
-// onto the engine arena for a ToC item, then delete the original.
-static IPageDestination* DestToArena(Arena* a, IPageDestination* src) {
-    if (!src) {
-        return nullptr;
-    }
-    Kind k = src->GetKind();
-    IPageDestination* dst;
-    if (k == kindDestinationLaunchURL) {
-        dst = New<PageDestinationURL>(a, src->GetValue2());
-    } else {
-        auto* pd = New<PageDestination>(a);
-        pd->kind = k;
-        pd->value = str::Dup(src->GetValue2());
-        pd->name = str::Dup(src->GetName2());
-        dst = pd;
-    }
-    dst->pageNo = src->pageNo;
-    dst->loc = src->loc;
-    dst->rect = src->GetRect2();
-    dst->zoom = src->GetZoom2();
-    delete src;
-    return dst;
 }
 
 EngineEbook::EngineEbook() {
@@ -605,7 +581,8 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     if (!dest) {
         return nullptr;
     }
-    return NewEbookLink(rect, dest, pageNo);
+    // GetNamedDestLazy is engine-owned
+    return NewEbookLink(rect, dest, pageNo, false);
 }
 
 Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
@@ -697,6 +674,7 @@ IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointF pt) {
     return nullptr;
 }
 
+// engine-owned; do not delete
 IPageDestination* EngineEbook::GetNamedDest(Str name) {
     Str id = name;
     Str hash = str::SliceFromChar(name, '#');
@@ -735,7 +713,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
         if (id_len == anchor->instr->str.len && str::EqNI(id, anchor->instr->str, id_len)) {
             RectF rect(0, anchor->instr->bbox.y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
-            return NewSimpleDest(anchor->pageNo, rect);
+            return NewSimpleDest(arena, anchor->pageNo, rect);
         }
     }
 
@@ -743,7 +721,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
     if (basePageNo != 0) {
         RectF rect(0, pageBorder, pageRect.dx, 10);
         rect.Inflate(-pageBorder, 0);
-        return NewSimpleDest(basePageNo, rect);
+        return NewSimpleDest(arena, basePageNo, rect);
     }
 
     return nullptr;
@@ -859,16 +837,19 @@ void EbookTocBuilder::Visit(Str name, Str url, int level) {
         dest = NewSimpleDest(arena, 0, RectF(), 0.f, url);
     } else {
         // GetNamedDestLazy(), not GetNamedDest(): building the ToC must not
-        // lay out a chapter for every entry it points to
-        dest = DestToArena(arena, engine->GetNamedDestLazy(url));
+        // lay out a chapter for every entry it points to. Dest is engine-owned.
+        dest = engine->GetNamedDestLazy(url);
         if (!dest && str::ContainsChar(url, '%')) {
             TempStr decodedUrl = url::DecodeTemp(url);
-            dest = DestToArena(arena, engine->GetNamedDestLazy(decodedUrl));
+            dest = engine->GetNamedDestLazy(decodedUrl);
         }
     }
 
     // TODO: send parent to newEbookTocItem
     TocItem* item = newEbookTocItem(arena, nullptr, name, dest);
+    if (dest && !url::IsAbsolute(url)) {
+        item->destNotOwned = true;
+    }
     item->id = ++idCounter;
     if (isIndex) {
         item->pageNo = 0;
@@ -1405,6 +1386,7 @@ static int PageForFilePosInChapter(Vec<HtmlPage*>* v, int filePos) {
     return page;
 }
 
+// engine-owned; do not delete
 IPageDestination* EngineMobi::GetNamedDest(Str name) {
     int filePos = ParseInt(name);
     if (filePos < 0 || (0 == filePos && (!name.s || name.s[0] != '0'))) {
@@ -1438,13 +1420,13 @@ IPageDestination* EngineMobi::GetNamedDest(Str name) {
     }
     RectF rect(0, currY + pageBorder, pageRect.dx, 10);
     rect.Inflate(-pageBorder, 0);
-    auto* dest = NewSimpleDest(pageNo, rect);
+    auto* dest = NewSimpleDest(arena, pageNo, rect);
     dest->loc = loc;
     return dest;
 }
 
 // cheap: just the chapter, no formatting; the page is resolved on click by
-// ResolveDest() via GetNamedDest()
+// ResolveDest() via GetNamedDest(). Engine-owned; do not delete.
 IPageDestination* EngineMobi::GetNamedDestLazy(Str url) {
     if (!HasChapters()) {
         return GetNamedDest(url);
@@ -1453,11 +1435,11 @@ IPageDestination* EngineMobi::GetNamedDestLazy(Str url) {
     if (filePos < 0 || (0 == filePos && (!url.s || url.s[0] != '0'))) {
         return nullptr;
     }
-    auto* dest = new PageDestination();
+    auto* dest = New<PageDestination>(arena);
     dest->kind = kindDestinationScrollTo;
     dest->pageNo = -1;
     dest->loc = {ChapterForFilePos(filePos), 0};
-    dest->name = str::Dup(url);
+    dest->name = str::Dup(arena, url);
     return dest;
 }
 
@@ -1479,7 +1461,6 @@ Location EngineMobi::ResolveDest(IPageDestination* dest) {
     dest->loc = resolved->loc;
     dest->pageNo = resolved->pageNo;
     dest->rect = resolved->GetRect2();
-    delete resolved;
     return dest->loc;
 }
 
@@ -1992,6 +1973,7 @@ bool EngineChm::Load(Str fileName) {
     return pageCount > 0;
 }
 
+// engine-owned; do not delete
 IPageDestination* EngineChm::GetNamedDest(Str name) {
     IPageDestination* dest = EngineEbook::GetNamedDest(name);
     if (dest) {

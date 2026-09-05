@@ -917,6 +917,7 @@ void MarkdownModel::OnLButtonDown() {
     }
 }
 
+// engine-owned; do not delete
 IPageDestination* MarkdownModel::GetNamedDest(Str name) {
     TempStr url = url::GetFullPathTemp(name);
     int pageNo = 0;
@@ -925,7 +926,7 @@ IPageDestination* MarkdownModel::GetNamedDest(Str name) {
         pageNo = pages.Find(filePath) + 1;
     }
     pageNo = std::max(pageNo, 1);
-    return NewMarkdownNamedDest(nullptr, url, pageNo);
+    return NewMarkdownNamedDest(poolAlloc, url, pageNo);
 }
 
 TocTree* MarkdownModel::GetToc() {

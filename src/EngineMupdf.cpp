@@ -5399,6 +5399,7 @@ TocTree* EngineMupdf::BuildToc() {
     return tocTree;
 }
 
+// engine-owned; do not delete
 IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     if (!pdfdoc) {
         return nullptr;
@@ -5416,7 +5417,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
 
     // kDestUseDefault dx/dy selects the /XYZ path in DisplayModel::ScrollTo
     // (IsEmpty would also work for 0,0 but would treat unspecified as bottom).
-    pageDest = NewSimpleDest(pageNo, r, zoom);
+    pageDest = NewSimpleDest(arena, pageNo, r, zoom);
     return pageDest;
 }
 

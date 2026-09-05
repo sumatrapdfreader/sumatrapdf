@@ -301,7 +301,6 @@ TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
         IPageDestination* dest = engine->GetNamedDest(name);
         if (dest) {
             out.Append(fmt("name=%s page=%d\n", destName, PageDestGetPageNo(dest)));
-            delete dest;
         } else {
             out.Append(fmt("name=%s NOTFOUND\n", destName));
         }

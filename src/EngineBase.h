@@ -337,13 +337,19 @@ struct PageElementComment : IPageElement {
 
 struct PageElementDestination : IPageElement {
     IPageDestination* dest;
+    bool destOwned = true; // false if dest is engine-owned (GetNamedDest)
 
-    PageElementDestination(IPageDestination* d) {
+    PageElementDestination(IPageDestination* d, bool owned = true) {
         kind = kindPageElementDest;
         dest = d;
+        destOwned = owned;
     }
 
-    ~PageElementDestination() override { delete dest; }
+    ~PageElementDestination() override {
+        if (destOwned) {
+            delete dest;
+        }
+    }
 
     Str GetValue() override {
         if (dest) {
@@ -628,6 +634,7 @@ class EngineBase {
     // returns the element at a given point or nullptr if there's none
     virtual IPageElement* GetElementAtPos(int pageNo, PointF pt) = 0;
 
+    // engine-owned; do not delete
     virtual IPageDestination* GetNamedDest(Str name);
 
     // 1-based page from safe PDF /OpenAction GoTo, or 0 (issue #1631)
