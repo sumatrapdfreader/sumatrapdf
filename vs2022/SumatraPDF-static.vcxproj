@@ -1403,7 +1403,14 @@
     <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
-    <ClCompile Include="..\src\EngineMupdf.cpp" />
+    <ClCompile Include="..\src\EngineMupdf.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\EnginePs.cpp" />
     <ClCompile Include="..\src\EutlTrust.cpp" />
     <ClCompile Include="..\src\ExifDump.cpp" />
@@ -1545,7 +1552,14 @@
     </ClCompile>
     <ClCompile Include="..\src\Tester.cpp" />
     <ClCompile Include="..\src\Tests.cpp" />
-    <ClCompile Include="..\src\TextSearch.cpp" />
+    <ClCompile Include="..\src\TextSearch.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\TextToSpeech.cpp" />
     <ClCompile Include="..\src\TextViewWnd.cpp" />

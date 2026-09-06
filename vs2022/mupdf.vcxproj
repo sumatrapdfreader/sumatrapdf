@@ -1005,7 +1005,14 @@
     <ClCompile Include="..\ext\mupdf\source\fitz\device.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\directory.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\document-all.c" />
-    <ClCompile Include="..\ext\mupdf\source\fitz\document.c" />
+    <ClCompile Include="..\ext\mupdf\source\fitz\document.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\draw-affine.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\draw-blend.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\draw-device.c" />
@@ -1036,7 +1043,14 @@
     <ClCompile Include="..\ext\mupdf\source\fitz\filter-thunder.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\font.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\ftoa.c" />
-    <ClCompile Include="..\ext\mupdf\source\fitz\geometry.c" />
+    <ClCompile Include="..\ext\mupdf\source\fitz\geometry.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\getopt.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\glyph.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\glyphbox.c" />
@@ -1064,7 +1078,14 @@
     <ClCompile Include="..\ext\mupdf\source\fitz\load-webp.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\log.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\memento.c" />
-    <ClCompile Include="..\ext\mupdf\source\fitz\memory.c" />
+    <ClCompile Include="..\ext\mupdf\source\fitz\memory.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\noto.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\ocr-device.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\options.c" />
@@ -1093,7 +1114,14 @@
     <ClCompile Include="..\ext\mupdf\source\fitz\skew.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\stext-boxer.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\stext-classify.c" />
-    <ClCompile Include="..\ext\mupdf\source\fitz\stext-device.c" />
+    <ClCompile Include="..\ext\mupdf\source\fitz\stext-device.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\stext-iterator.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\stext-output.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\stext-para.c" />
@@ -1104,7 +1132,14 @@
     <ClCompile Include="..\ext\mupdf\source\fitz\stream-open.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\stream-read.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\string.c" />
-    <ClCompile Include="..\ext\mupdf\source\fitz\strtof.c" />
+    <ClCompile Include="..\ext\mupdf\source\fitz\strtof.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\subset-cff.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\subset-ttf.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\svg-device.c" />
@@ -1151,7 +1186,14 @@
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-clean.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-cmap-load.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-cmap-parse.c" />
-    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-cmap.c" />
+    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-cmap.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-colorspace.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-crypt.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-device.c" />
@@ -1163,20 +1205,55 @@
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-graft.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-image-rewriter.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-image.c" />
-    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-interpret.c" />
+    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-interpret.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-js.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-label.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-layer.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-layout.c" />
-    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-lex.c" />
+    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-lex.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-link.c" />
-    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-metrics.c" />
+    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-metrics.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-nametree.c" />
-    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-object.c" />
+    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-object.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-op-buffer.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-op-color.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-op-filter.c" />
-    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-op-run.c" />
+    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-op-run.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-op-vectorize.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-outline.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-page.c" />
@@ -1194,7 +1271,14 @@
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-struct.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-subset.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-type3.c" />
-    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-unicode.c" />
+    <ClCompile Include="..\ext\mupdf\source\pdf\pdf-unicode.c">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-util.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-write.c" />
     <ClCompile Include="..\ext\mupdf\source\pdf\pdf-xobject.c" />
