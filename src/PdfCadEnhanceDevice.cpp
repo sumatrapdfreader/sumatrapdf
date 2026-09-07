@@ -9,14 +9,10 @@ extern "C" {
 
 #include "PdfCadEnhanceDevice.h"
 
-// A pass-through fz_device that remaps typical CAD-export grays toward
-// Acrobat-like darker strokes, scaled by zoom (stronger when zoomed out,
-// none when zoomed in), and slightly emboldens the tiny text matrices that
-// WPS-style hairline exports use.
+// Darken CAD-export grays without changing text geometry.
 typedef struct {
     fz_device super;
     fz_device* inner;
-    CadEnhanceRenderOpts opts;
 } pdf_cad_enhance_device;
 
 static bool CadIsNeutralGray(float r, float g, float b, float* outLum) {
@@ -35,22 +31,6 @@ static bool CadIsNeutralGray(float r, float g, float b, float* outLum) {
 
 static float CadMatrixExpansion(fz_matrix ctm) {
     return sqrtf((ctm.a * ctm.a) + (ctm.b * ctm.b));
-}
-
-// WPS and similar tools export CAD labels with a tiny text matrix (~0.05).
-static fz_matrix CadEmboldenTinyTextMatrix(fz_matrix ctm, bool hairlineDoc) {
-    float expansion = CadMatrixExpansion(ctm);
-    if (!hairlineDoc || expansion >= 0.22f) {
-        return ctm;
-    }
-    float boost;
-    if (expansion <= 0.08f) {
-        boost = 1.55f;
-    } else {
-        boost = 1.f + ((0.22f - expansion) * 2.5f);
-        boost = std::min(boost, 1.55f);
-    }
-    return fz_concat(ctm, fz_scale(boost, boost));
 }
 
 // Stronger when zoomed out (small CTM expansion), none when zoomed in.
@@ -141,7 +121,6 @@ static void cad_fill_text(fz_context* ctx, fz_device* dev, const fz_text* text, 
     pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
     float mapped[FZ_MAX_COLORS] = {};
     CadMapColor(ctx, colorspace, color, color_params, ctm, mapped);
-    ctm = CadEmboldenTinyTextMatrix(ctm, d->opts.hairlineVector);
     fz_fill_text(ctx, d->inner, text, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
 }
 
@@ -151,7 +130,6 @@ static void cad_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text
     pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
     float mapped[FZ_MAX_COLORS] = {};
     CadMapColor(ctx, colorspace, color, color_params, ctm, mapped);
-    ctm = CadEmboldenTinyTextMatrix(ctm, d->opts.hairlineVector);
     fz_stroke_text(ctx, d->inner, text, stroke, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
 }
 
@@ -316,10 +294,9 @@ static void cad_ignore_text(fz_context* ctx, fz_device* dev, const fz_text* text
 
 // Wrap <inner> in the CAD-enhancing pass-through device. Takes ownership of
 // <inner>: dropping the wrapper drops it.
-fz_device* PdfCadEnhanceWrapDevice(fz_context* ctx, fz_device* inner, const CadEnhanceRenderOpts& opts) {
+fz_device* PdfCadEnhanceWrapDevice(fz_context* ctx, fz_device* inner) {
     pdf_cad_enhance_device* d = fz_new_derived_device(ctx, pdf_cad_enhance_device);
     d->inner = inner;
-    d->opts = opts;
 
     d->super.close_device = cad_forward_close;
     d->super.drop_device = cad_forward_drop;

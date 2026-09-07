@@ -7323,10 +7323,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 }
             }
             if (CadEnhanceActive()) {
-                CadEnhanceRenderOpts opts;
-                opts.zoom = zoom;
-                opts.hairlineVector = cadHairlineVector;
-                dev = PdfCadEnhanceWrapDevice(ctx, dev, opts);
+                dev = PdfCadEnhanceWrapDevice(ctx, dev);
             }
             fz_run_display_list(ctx, keptList, dev, fz_identity, pRect, fzcookie);
             if (!RenderAborted(fzcookie)) {
