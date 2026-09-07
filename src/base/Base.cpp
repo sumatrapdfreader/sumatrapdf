@@ -7262,6 +7262,7 @@ void UnpackColor(Color c, u8& r, u8& g, u8& b) {
 }
 
 #if OS_WIN
+// TODO: use AdjustLightness instead to compensate for the alpha?
 Gdiplus::Color Unblend(Color c, u8 alpha) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
@@ -7285,8 +7286,6 @@ Gdiplus::Color GdiRgbaFromColor(Color c) {
 }
 #endif
 
-// TODO: use AdjustLightness instead to compensate for the alpha?
-// TODO: not sure if that's the exact translation of the original (above)
 TempStr SerializeColorTemp(Color c) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
