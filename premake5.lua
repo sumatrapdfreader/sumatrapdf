@@ -201,6 +201,18 @@ function favor_speed()
   filter {}
 end
 
+-- /O2 for individual translation units that on the hot path.
+-- This is more targeted than favor_speed() which can increase 
+-- binary size more than desired.
+function favor_speed_files(files)
+  for _, f in ipairs(files) do
+    filter { "files:" .. f, "configurations:Release", "platforms:not x64_asan" }
+    optimize "Speed"
+    enablepch "Off"
+  end
+  filter {}
+end
+
 -- per-workspace setting that differ in clang-cl.exe vs cl.exe builds
 function clang_conf()
   filter "options:with-clang"
@@ -935,6 +947,14 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     mixed_dbg_rel_conf()
+    favor_speed_files {
+      "ext/mupdf/source/pdf/pdf-cmap.c", "ext/mupdf/source/pdf/pdf-lex.c",
+      "ext/mupdf/source/fitz/document.c", "ext/mupdf/source/pdf/pdf-object.c",
+      "ext/mupdf/source/fitz/stext-device.c", "ext/mupdf/source/fitz/geometry.c",
+      "ext/mupdf/source/pdf/pdf-unicode.c", "ext/mupdf/source/pdf/pdf-op-run.c",
+      "ext/mupdf/source/pdf/pdf-interpret.c", "ext/mupdf/source/pdf/pdf-metrics.c",
+      "ext/mupdf/source/fitz/strtof.c", "ext/mupdf/source/fitz/memory.c",
+    }
     -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
     -- so we can't double-define it
     defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1", "HAVE_WEBP=1" }
@@ -1344,6 +1364,7 @@ workspace "SumatraPDF"
     gui_files()
     uia_files()
     engines_files()
+    favor_speed_files { "src/TextSearch.cpp", "src/EngineMupdf.cpp" }
     sumatrapdf_files()
 
     setup_base_pch()
@@ -1443,6 +1464,7 @@ workspace "SumatraPDF"
     gui_files()
     uia_files()
     engines_files()
+    favor_speed_files { "src/TextSearch.cpp", "src/EngineMupdf.cpp" }
     sumatrapdf_files()
     filter "configurations:Debug or DebugFull"
       files { "src/AppUnitTests.cpp" }
