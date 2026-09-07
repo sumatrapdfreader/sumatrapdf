@@ -2499,9 +2499,12 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 dm->SetUniformPageWidth(fs->uniformPageWidth);
                 dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
             }
+            // migrate in place only. SaveSettings() here would rebuild
+            // gInitialSessionData and free the TabState a lazily restored
+            // tab still borrows (read later by SetTabState in
+            // LoadDocumentFinish). The next regular save persists this.
             FileState* favFs = fs ? fs : FileHistoryFindByPath(win->ctrl->GetFilePath());
             if (favFs && MigrateFileStatePagePos(win->ctrl, favFs)) {
-                SaveSettings();
                 UpdateFavoritesTreeForAllWindows();
             }
             if (fs) {
