@@ -131,6 +131,12 @@ static void FreeGraphicsForMeasureText(Graphics* gfx) {
     defer {
         gGraphicsCacheMutex.Unlock();
     };
+    if (!gGraphicsCache) {
+        // PlatformFontDestroy() already ran on the main thread (shutdown) and
+        // freed every entry, including ours. Happens when a background thread
+        // (e.g. thumbnail creation laying out an ebook) outlives shutdown
+        return;
+    }
     ThreadId threadId = GetCurrentThreadId();
     for (GraphicsCacheEntry& e : *gGraphicsCache) {
         if (e.gfx == gfx) {
