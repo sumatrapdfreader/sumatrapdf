@@ -53,9 +53,6 @@ constexpr DWORD DWMWA_COLOR_NONE = 0xFFFFFFFE;
     V(SetDefaultDllDirectories) \
     V(SetThreadDescription)
 
-// TODO: only available in 20348, not yet present in SDK?
-// V(GetTempPath2W)
-
 KERNEL32_API_LIST(API_DECLARATION2)
 
 // not declared in SDK headers with _WIN32_WINNT=0x0601, define manually

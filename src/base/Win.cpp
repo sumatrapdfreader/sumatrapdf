@@ -1016,18 +1016,10 @@ TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
 
 // temp directory
 TempStr GetTempDirTemp() {
+    // not GetTempPath2W(): it only differs for processes running as SYSTEM,
+    // which we never are
     WCHAR dir[MAX_PATH] = {};
-#if 0 // TODO: only available in 20348, not yet present in SDK
-    DWORD cch = 0;
-    if (DynGetTempPath2W) {
-        cch = DynGetTempPath2W(dimof(dir), dir);
-    }
-    if (cch == 0) {
-        cch = GetTempPathW(dimof(dir), dir);
-    }
-#else
     DWORD cch = GetTempPathW(dimof(dir), dir);
-#endif
     if (cch == 0) {
         return {};
     }
