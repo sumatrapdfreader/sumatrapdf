@@ -1309,6 +1309,161 @@ void ToggleSettingsBool(bool* p) {
     ApplySettingsToOpenWindows();
 }
 
+// Enum settings: string settings restricted to a fixed set of values. Matched
+// by full path or by the last path segment, so a nested setting reuses the same
+// list (e.g. Fullscreen.Toolbar -> Toolbar).
+// clang-format off
+static const char* gEnumDisplayMode[] = {
+    "automatic", "single page", "facing", "book view",
+    "continuous", "continuous facing", "continuous book view", "page aspect", nullptr,
+};
+static const char* gEnumFullscreenDisplayMode[] = {
+    "", "automatic", "single page", "facing", "book view",
+    "continuous", "continuous facing", "continuous book view", nullptr,
+};
+static const char* gEnumToolbar[] = {"show", "hide", "overlay", nullptr};
+static const char* gEnumToolbarPosition[] = {"top", "bottom", nullptr};
+static const char* gEnumScrollbars[] = {"windows", "smart", "overlay", "hidden", nullptr};
+static const char* gEnumEngineeringDrawingEnhance[] = {"off", "auto", "on", nullptr};
+static const char* gEnumDocumentColorsFollowTheme[] = {"off", "smart", "legacy", nullptr};
+static const char* gEnumHomePageViewMode[] = {"thumbnails", "list", nullptr};
+static const char* gEnumFilePicker[] = {"", "os", "sumatrapdf", nullptr};
+static const char* gEnumPrintScale[] = {"shrink", "fit", "none", nullptr};
+static const char* gEnumCollate[] = {"default", "collate", "nocollate", nullptr};
+static const char* gEnumFreeTextAlignment[] = {"left", "center", "right", nullptr};
+
+struct EnumSettingDef {
+    const char* name; // full path or leaf name (last dotted segment)
+    const char** values;
+};
+
+static const EnumSettingDef gEnumSettings[] = {
+    {"DefaultDisplayMode", gEnumDisplayMode},
+    {"Fullscreen.DisplayMode", gEnumFullscreenDisplayMode},
+    {"Toolbar", gEnumToolbar},
+    {"ToolbarPosition", gEnumToolbarPosition},
+    {"Scrollbars", gEnumScrollbars},
+    {"EngineeringDrawingEnhance", gEnumEngineeringDrawingEnhance},
+    {"DocumentColorsFollowTheme", gEnumDocumentColorsFollowTheme},
+    {"HomePageViewMode", gEnumHomePageViewMode},
+    {"FilePicker", gEnumFilePicker},
+    {"PrintScale", gEnumPrintScale},
+    {"Collate", gEnumCollate},
+    {"FreeTextAlignment", gEnumFreeTextAlignment},
+};
+// clang-format on
+
+// "Fullscreen.Toolbar" -> "Toolbar"
+static Str SettingPathLeaf(Str name) {
+    Str leaf = str::SliceFromCharLast(name, '.');
+    if (len(leaf) < 2) {
+        return name;
+    }
+    return Str(leaf.s + 1, leaf.len - 1);
+}
+
+const char** GetSettingsEnumValues(Str path) {
+    Str leaf = SettingPathLeaf(path);
+    for (const auto& def : gEnumSettings) {
+        if (str::EqI(path, Str(def.name)) || str::EqI(leaf, Str(def.name))) {
+            return def.values;
+        }
+    }
+    return nullptr;
+}
+
+// Walk setting metadata for the field matching name (case-insensitive leaf or
+// full dotted path), whatever its type.
+static bool FindSettingInStruct(const StructInfo* info, u8* base, Str prefix, Str name, SettingType* typeOut,
+                                u8** ptrOut) {
+    const char* fieldName = info->fieldNames;
+    for (u16 i = 0; i < info->fieldCount; i++) {
+        const FieldInfo& field = info->fields[i];
+        Str fname(fieldName);
+        fieldName += len(fname) + 1;
+        if (field.type == SettingType::Comment || field.offset == (size_t)-1) {
+            continue;
+        }
+        u8* fieldPtr = base + field.offset;
+        TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, fname) : str::DupTemp(fname);
+        if (field.type == SettingType::Struct) {
+            const auto* sub = (const StructInfo*)field.value;
+            if (FindSettingInStruct(sub, fieldPtr, path, name, typeOut, ptrOut)) {
+                return true;
+            }
+            continue;
+        }
+        if (str::EqI(fname, name) || str::EqI(path, name)) {
+            *typeOut = field.type;
+            *ptrOut = fieldPtr;
+            return true;
+        }
+    }
+    return false;
+}
+
+// SaveSettings() re-generates these strings from their parsed twins, which would
+// clobber the text we just wrote unless the twin is updated as well.
+static void UpdateParsedSettingTwin(Str path, Str value) {
+    if (str::EqI(path, StrL("DefaultDisplayMode"))) {
+        gSettings->defaultDisplayModeEnum = DisplayModeFromString(value, DisplayMode::Automatic);
+    } else if (str::EqI(path, StrL("DefaultZoom"))) {
+        gSettings->defaultZoomFloat = ZoomFromString(value, kZoomActualSize);
+    } else if (str::EqI(path, StrL("ImageUI.DefaultZoom"))) {
+        gSettings->imageUI.defaultZoomFloat = ZoomFromString(value, 0);
+    } else if (str::EqI(path, StrL("ComicBookUI.DefaultZoom"))) {
+        gSettings->comicBookUI.defaultZoomFloat = ZoomFromString(value, 0);
+    }
+}
+
+// Parses value for the setting's own type, writes it and applies it to the
+// running app. Arrays and compact structs aren't handled: they need the
+// advanced settings dialog or the settings file.
+bool SetSettingsValueFromStr(Str path, Str value) {
+    SettingType type = SettingType::Comment;
+    u8* p = nullptr;
+    if (!gSettings || len(path) == 0) {
+        return false;
+    }
+    if (!FindSettingInStruct(&gSettingsInfo, (u8*)gSettings, {}, path, &type, &p)) {
+        return false;
+    }
+    // snapshot the settings that need an explicit apply (tabs, menu bar, ...)
+    // before we overwrite them, so we can act on what actually changed
+    SettingsApplyState before = GetSettingsApplyState();
+    switch (type) {
+        case SettingType::Bool:
+            *(bool*)p = str::EqI(value, StrL("true")) || str::Eq(value, StrL("1"));
+            break;
+        case SettingType::Int:
+            *(int*)p = ParseInt(value);
+            break;
+        case SettingType::Float:
+            str::Parse(value, "%f", (float*)p);
+            break;
+        case SettingType::Color: {
+            auto* parsed = (ParsedColor*)p;
+            str::ReplaceWithCopy(&parsed->s, value);
+            // the cached parse belonged to the old text
+            parsed->wasParsed = false;
+            parsed->parsedOk = false;
+            break;
+        }
+        case SettingType::String:
+            str::ReplaceWithCopy((Str*)p, value);
+            break;
+        default:
+            return false;
+    }
+    UpdateParsedSettingTwin(path, value);
+    ScheduleSaveSettings();
+    // reload so everything derived from settings (theme, fonts, parsed colors,
+    // custom commands, accelerators ...) is re-computed and applied
+    ForceReloadSettings();
+    ApplyChangedSettingsAndRelayout(before);
+    return true;
+}
+
 FileState* NewFileState(Str filePath) {
     FileState* fs = (FileState*)DeserializeStruct(&gFileStateInfo, {});
     SetFileStatePath(fs, filePath);

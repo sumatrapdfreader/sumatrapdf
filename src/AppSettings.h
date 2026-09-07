@@ -55,6 +55,8 @@ extern Settings* gSettings;
 
 bool* FindSettingsBoolSetting(Str name);
 void ToggleSettingsBool(bool*);
+const char** GetSettingsEnumValues(Str path);
+bool SetSettingsValueFromStr(Str path, Str value);
 
 FileState* NewFileState(Str);
 void DeleteFileState(FileState*);

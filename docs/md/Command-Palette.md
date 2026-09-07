@@ -17,6 +17,7 @@ The command palette is a fast and convenient way to:
 - `%` : jump to a table of contents entry in the current document
 - `$` : jump to a favorite (current document's favorites first, then others)
 - `*` : jump to an annotation in the current PDF
+- `=` : change a setting
 - `:` : combined view (replicates behavior before ver 3.6)
 
 How to use it:
@@ -87,6 +88,28 @@ there are none).
 Rows match the **Find Annotation** list: type, contents, page number. Filter
 with the same syntax (`:t=text`, `:a=kjk`, `:c+`, plain words). `Enter` or
 double-click selects the annotation and jumps to it.
+
+## Settings
+
+Type `=` to change a setting without opening
+[Advanced Options](./Advanced-options-settings.md). Every setting holding a
+single value is listed by its dotted name, with its current value on the right;
+a value that isn't the default is shown in bold, and those settings are listed
+first. Type to filter by name or by value. Settings holding a list, and the
+compact ones like `WindowMargin`, are only editable in Advanced Options.
+
+`Enter` on a `true` / `false` setting toggles it. Any other setting asks for a
+value: the query becomes `=<name> = <value>`, and
+
+- a setting restricted to a fixed set of values (`Toolbar`, `Scrollbars`,
+  `PrintScale`, ...) lists them; type to narrow the list, `Enter` picks one
+- any other setting takes what you type, starting from the current value
+
+The change takes effect immediately, exactly as if it had been saved from
+Advanced Options - no restart. You can also type the whole thing at once, e.g.
+`=ZoomIncrement = 25`; the name can be the last part of a dotted setting
+(`Units` for `FixedPageUI.PageGrid.Units`) as long as only one setting ends
+with it.
 
 ## Combined view
 

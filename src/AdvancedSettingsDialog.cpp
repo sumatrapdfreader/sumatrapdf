@@ -43,78 +43,6 @@ constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/setti
 // smallest client width the user can drag the dialog to (96 dpi pixels)
 constexpr int kAdvSettingsMinClientDx = 480;
 
-// enum settings: string settings restricted to a fixed set of values.
-// Fixed string values for the in-place enum drop-down. Matched by full path
-// or by the last path segment so nested settings reuse the same list
-// (e.g. Fullscreen.Toolbar → Toolbar).
-// clang-format off
-static const char* gEnumDisplayMode[] = {
-    "automatic", "single page", "facing", "book view",
-    "continuous", "continuous facing", "continuous book view", "page aspect", nullptr,
-};
-static const char* gEnumToolbar[] = {"show", "hide", "overlay", nullptr};
-static const char* gEnumToolbarPosition[] = {"top", "bottom", nullptr};
-static const char* gEnumScrollbars[] = {"windows", "smart", "overlay", "hidden", nullptr};
-static const char* gEnumEngineeringDrawingEnhance[] = {"off", "auto", "on", nullptr};
-static const char* gEnumDocumentColorsFollowTheme[] = {"off", "smart", "legacy", nullptr};
-static const char* gEnumHomePageViewMode[] = {"thumbnails", "list", nullptr};
-static const char* gEnumFilePicker[] = {"", "os", "sumatrapdf", nullptr};
-static const char* gEnumPrintScale[] = {"shrink", "fit", "none", nullptr};
-static const char* gEnumCollate[] = {"default", "collate", "nocollate", nullptr};
-static const char* gEnumFreeTextAlignment[] = {"left", "center", "right", nullptr};
-
-namespace {
-struct EnumSettingDef {
-    const char* name; // full path or leaf name (last dotted segment)
-    const char** values;
-};
-} // namespace
-static const char* gEnumFullscreenDisplayMode[] = {
-    "", "automatic", "single page", "facing", "book view",
-    "continuous", "continuous facing", "continuous book view", nullptr,
-};
-
-static const EnumSettingDef gEnumSettings[] = {
-    {"DefaultDisplayMode", gEnumDisplayMode},
-    {"Fullscreen.DisplayMode", gEnumFullscreenDisplayMode},
-    {"Toolbar", gEnumToolbar},
-    {"ToolbarPosition", gEnumToolbarPosition},
-    {"Scrollbars", gEnumScrollbars},
-    {"EngineeringDrawingEnhance", gEnumEngineeringDrawingEnhance},
-    {"DocumentColorsFollowTheme", gEnumDocumentColorsFollowTheme},
-    {"HomePageViewMode", gEnumHomePageViewMode},
-    {"FilePicker", gEnumFilePicker},
-    {"PrintScale", gEnumPrintScale},
-    {"Collate", gEnumCollate},
-    {"FreeTextAlignment", gEnumFreeTextAlignment},
-};
-// clang-format on
-
-// Leaf name of a dotted path: "Fullscreen.Toolbar" → "Toolbar"
-static Str SettingPathLeaf(Str name) {
-    if (len(name) == 0) {
-        return name;
-    }
-    const char* s = name.s;
-    const char* last = s;
-    for (int i = 0; i < name.len; i++) {
-        if (s[i] == '.') {
-            last = s + i + 1;
-        }
-    }
-    return Str(last, name.len - (int)(last - s));
-}
-
-static const char** GetEnumValuesForSetting(Str name) {
-    Str leaf = SettingPathLeaf(name);
-    for (const auto& def : gEnumSettings) {
-        if (str::EqI(name, Str(def.name)) || str::EqI(leaf, Str(def.name))) {
-            return def.values;
-        }
-    }
-    return nullptr;
-}
-
 // a single editable setting; fieldPtr points into gSettings, the pending
 // (possibly edited) value is kept here and only written back on Save
 namespace {
@@ -360,7 +288,7 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
                         item->strVal = str::Dup(*(Str*)fieldPtr);
                         item->defStr = str::Dup(Str((const char*)field.value));
                         if (field.type == SettingType::String) {
-                            item->enumValues = GetEnumValuesForSetting(path);
+                            item->enumValues = GetSettingsEnumValues(path);
                         }
                         break;
                 }
