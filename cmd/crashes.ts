@@ -5,7 +5,7 @@
 //   bun cmd/crashes.ts <id>         download dump + pdb, run !analyze
 import { existsSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
-import { homedir } from "node:os";
+import { homedir, cpus } from "node:os";
 import { spawn, spawnSync } from "node:child_process";
 
 const ROOT = resolve(join(import.meta.dir, ".."));
@@ -614,30 +614,58 @@ function localDbgSymDir(version: string): string {
   return "";
 }
 
+const inFlightSymbols = new Map<string, Promise<string>>();
+
 async function ensureSymbols(row: DumpRow): Promise<string> {
   const local = localDbgSymDir(row.version);
   if (local) {
     return local;
   }
-  const dir = join(CACHE_DIR, "symbols", symbolCacheKey(row.version));
+  const key = symbolCacheKey(row.version);
+  const dir = join(CACHE_DIR, "symbols", key);
   if (hasSumatraPdbs(dir)) {
     return dir;
   }
-  const url = pdbUrlForVersion(row.version);
-  if (!url) {
-    throw new Error(`no pdb source for version '${row.version}'`);
+  let p = inFlightSymbols.get(key);
+  if (p) {
+    return await p;
   }
+  p = (async () => {
+    const url = pdbUrlForVersion(row.version);
+    if (!url) {
+      throw new Error(`no pdb source for version '${row.version}'`);
+    }
+    mkdirSync(dir, { recursive: true });
+    const lzsaPath = join(dir, "pdb.lzsa");
+    if (!existsSync(lzsaPath) || statSync(lzsaPath).size === 0) {
+      console.log(`pdb: downloading ${url}`);
+      writeFileSync(lzsaPath, await fetchBytes(url));
+    }
+    extractLzsaPdb(readFileSync(lzsaPath), dir);
+    if (!hasSumatraPdbs(dir)) {
+      throw new Error(`pdb lzsa missing SumatraPDF.pdb or libsumatrapdf.pdb (${url})`);
+    }
+    return dir;
+  })();
+  inFlightSymbols.set(key, p);
+  try {
+    return await p;
+  } finally {
+    inFlightSymbols.delete(key);
+  }
+}
+
+async function ensureDownloaded(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
+  const dir = dumpDir(row.id);
   mkdirSync(dir, { recursive: true });
-  const lzsaPath = join(dir, "pdb.lzsa");
-  if (!existsSync(lzsaPath) || statSync(lzsaPath).size === 0) {
-    console.log(`pdb: downloading ${url}`);
-    writeFileSync(lzsaPath, await fetchBytes(url));
+  const dmpPath = dumpPath(row.id);
+  if (!existsSync(dmpPath)) {
+    const url = `${server}/minidump/${row.id}`;
+    console.log(`dump: downloading ${url}`);
+    writeFileSync(dmpPath, await fetchBytes(url, dumpAuth(loadMinidumpPassword())));
   }
-  extractLzsaPdb(readFileSync(lzsaPath), dir);
-  if (!hasSumatraPdbs(dir)) {
-    throw new Error(`pdb lzsa missing SumatraPDF.pdb or libsumatrapdf.pdb (${url})`);
-  }
-  return dir;
+  extractDumpLog(row.id, reanalyze);
+  await ensureSymbols(row);
 }
 
 const MARK_CRASHED = "---CRASHED-STACK---";
@@ -700,19 +728,37 @@ function rewriteAnalyzeLog(raw: string): string {
 
 const CDB_CMD = `.echo ${MARK_CRASHED}; .ecxr; kb; .echo ${MARK_ANALYZE}; !analyze -v; .echo ${MARK_THREADS}; ~*kb; qq`;
 
-async function analyze(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
+function runCdbAsync(cdb: string, args: string[], outPath: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    let stdout = "";
+    let stderr = "";
+    const proc = spawn(cdb, args, { stdio: ["ignore", "pipe", "pipe"] });
+    proc.stdout.on("data", (d) => {
+      stdout += d;
+    });
+    proc.stderr.on("data", (d) => {
+      stderr += d;
+    });
+    proc.on("error", (err) => {
+      reject(err);
+    });
+    proc.on("close", () => {
+      if (!existsSync(outPath) || statSync(outPath).size === 0) {
+        writeFileSync(outPath, `${stdout}\n${stderr}`);
+      }
+      if (existsSync(outPath)) {
+        writeFileSync(outPath, rewriteAnalyzeLog(readFileSync(outPath, "utf8")));
+      }
+      resolve();
+    });
+  });
+}
+
+async function runAnalysis(row: DumpRow, reanalyze: boolean): Promise<void> {
   if (!reanalyze && isAnalyzed(row.id)) {
     return;
   }
-  const dir = dumpDir(row.id);
-  mkdirSync(dir, { recursive: true });
   const dmpPath = dumpPath(row.id);
-  if (!existsSync(dmpPath)) {
-    const url = `${server}/minidump/${row.id}`;
-    console.log(`dump: downloading ${url}`);
-    writeFileSync(dmpPath, await fetchBytes(url, dumpAuth(loadMinidumpPassword())));
-  }
-  extractDumpLog(row.id, reanalyze);
   const outPath = analyzePath(row.id);
   if (reanalyze && existsSync(outPath)) {
     unlinkSync(outPath);
@@ -732,18 +778,17 @@ async function analyze(server: string, row: DumpRow, reanalyze: boolean): Promis
     symParts.push(nt);
   }
   const symPath = symParts.join(";");
-  console.log(`cdb: ${cdb}`);
+  console.log(`cdb: ${cdb} (${row.id})`);
   console.log(`pdb: ${relative(ROOT, symDir).replaceAll("\\", "/")}`);
-  const r = spawnSync(cdb, ["-z", dmpPath, "-y", symPath, "-lines", "-logo", outPath, "-c", CDB_CMD], {
-    encoding: "utf8",
-    timeout: 300_000,
-  });
-  if (!existsSync(outPath) || statSync(outPath).size === 0) {
-    writeFileSync(outPath, `${r.stdout || ""}\n${r.stderr || ""}`);
+  await runCdbAsync(cdb, ["-z", dmpPath, "-y", symPath, "-lines", "-logo", outPath, "-c", CDB_CMD], outPath);
+}
+
+async function analyze(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
+  if (!reanalyze && isAnalyzed(row.id)) {
+    return;
   }
-  if (existsSync(outPath)) {
-    writeFileSync(outPath, rewriteAnalyzeLog(readFileSync(outPath, "utf8")));
-  }
+  await ensureDownloaded(server, row, reanalyze);
+  await runAnalysis(row, reanalyze);
 }
 
 async function ensureAnalyzed(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
@@ -752,6 +797,17 @@ async function ensureAnalyzed(server: string, row: DumpRow, reanalyze: boolean):
     return;
   }
   await analyze(server, row, reanalyze);
+}
+
+async function mapConcurrent<T>(items: T[], limit: number, fn: (item: T) => Promise<void>): Promise<void> {
+  let idx = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (idx < items.length) {
+      const cur = items[idx++];
+      await fn(cur);
+    }
+  });
+  await Promise.all(workers);
 }
 
 type ApiCrash = {
@@ -1079,13 +1135,21 @@ async function main(): Promise<void> {
       console.log(relSettings(row.id));
     }
   } else {
-    for (const row of list) {
+    await mapConcurrent(list, 4, async (row) => {
       try {
-        await ensureAnalyzed(server, row, reanalyze);
+        await ensureDownloaded(server, row, reanalyze);
       } catch (e) {
-        console.error(`${row.id}: ${e instanceof Error ? e.message : e}`);
+        console.error(`${row.id}: download: ${e instanceof Error ? e.message : e}`);
       }
-    }
+    });
+    const cdbWorkers = Math.max(1, cpus().length - 1);
+    await mapConcurrent(list, cdbWorkers, async (row) => {
+      try {
+        await runAnalysis(row, reanalyze);
+      } catch (e) {
+        console.error(`${row.id}: analyze: ${e instanceof Error ? e.message : e}`);
+      }
+    });
     printRows(list);
   }
   await serveCrashes(list);
