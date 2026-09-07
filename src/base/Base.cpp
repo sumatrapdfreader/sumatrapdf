@@ -1718,8 +1718,6 @@ void LogArenaStats(Str what, Arena* a) {
 #define _strdup strdup
 #define _stricmp strcasecmp
 #define _strnicmp strncasecmp
-// TODO: not sure if that's correct
-#define sscanf_s sscanf
 #endif
 
 // StrArena: u32 handle from ArenaPtrCompress. Arena layout is unsigned LEB128
