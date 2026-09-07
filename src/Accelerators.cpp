@@ -161,7 +161,8 @@ static ACCEL gBuiltInAccelerators[] = {
     {FVIRTKEY, 'M', CmdToggleCursorPosition},
     {FVIRTKEY, 'W', CmdPresentationWhiteBackground},
     // for Logitech's wireless presenters which target PowerPoint's shortcuts
-    // TODO: don't know what VK_ is this
+    // fVirt 0 makes this an ASCII accelerator: it matches the typed '.'
+    // on any layout (VK_OEM_PERIOD is only the US-layout virtual key)
     {0, '.', CmdPresentationBlackBackground},
     {FVIRTKEY, 'C', CmdToggleContinuousView},
 };
