@@ -20,6 +20,7 @@ import { testit as issue6003 } from "./issue-6003.ts";
 import { testit as issue4967 } from "./issue-4967.ts";
 import { testit as issue5065 } from "./issue-5065.ts";
 import { testit as issue5353 } from "./issue-5353.ts";
+import { testit as issue6150 } from "./issue-6150.ts";
 import { testit as issue5040 } from "./issue-5040.ts";
 import { testit as reloadDebounce } from "./reload-debounce.ts";
 import { testit as issue2693 } from "./issue-2693.ts";
@@ -64,6 +65,7 @@ export const slowTests: NamedTest[] = [
   ["issue-4967", issue4967],
   ["issue-5065", issue5065],
   ["issue-5353", issue5353],
+  ["issue-6150", issue6150],
   ["issue-5040", issue5040],
   ["reload-debounce", reloadDebounce],
   ["issue-2693", issue2693],
