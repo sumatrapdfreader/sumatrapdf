@@ -5826,6 +5826,14 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
     }
 }
 
+// a print job is running and was not asked to stop
+static bool IsPrintInProgress(MainWindow* win) {
+    if (!win || !win->printThread || win->printCanceled) {
+        return false;
+    }
+    return WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT;
+}
+
 bool CanCloseWindow(MainWindow* win) {
     if (!win) {
         return false;
@@ -5835,7 +5843,7 @@ bool CanCloseWindow(MainWindow* win) {
         return false;
     }
 
-    if (win->printThread && !win->printCanceled && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT) {
+    if (IsPrintInProgress(win)) {
         UINT flags = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
         auto caption = Tr("Printing in progress.");
         auto msg = Tr("Printing is still in progress. Abort and quit?");
@@ -15418,8 +15426,20 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
         } break;
 
+        case WM_QUERYENDSESSION: {
+            // block logoff/shutdown while a print job runs. The reason shows
+            // in the shutdown UI, where the user can wait or force it.
+            // ENDSESSION_CRITICAL: the system goes down regardless
+            if ((lp & ENDSESSION_CRITICAL) || !IsPrintInProgress(win)) {
+                ShutdownBlockReasonDestroy(hwnd);
+                return TRUE;
+            }
+            ShutdownBlockReasonCreate(hwnd, ToWStrTemp(Tr("Printing in progress.")).s);
+            return FALSE;
+        }
+
         case WM_ENDSESSION:
-            // TODO: check for unfinished print jobs in WM_QUERYENDSESSION?
+            // the forced CloseWindow below aborts any print job still running
             ScheduleSaveSettings();
             FlushScheduledSaveSettings();
             gDontSaveSettings = true;
