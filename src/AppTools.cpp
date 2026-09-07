@@ -185,9 +185,6 @@ static TextEditor editorRules[] = {
         StrL(R"(--goto "%f:%l")"),
         RegType::BinaryPath,
         StrL(kRegCurrentVer "\\Uninstall\\{771FD6B0-FA20-440A-A002-3B3BAC16DC50}_is1"),
-        // TODO: change back to Code.exe
-        // the way vscode saves a file seems to break
-        // our reloading of settings
         StrL("DisplayIcon"),
     },
     {
