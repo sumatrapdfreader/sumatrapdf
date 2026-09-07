@@ -179,10 +179,9 @@ static bool FileStateChanged(Str filePath, FileWatcherState* fs) {
     return true;
 }
 
-// TODO: per internet, fileName could be short, 8.3 dos-style name
-// and we don't handle that. On the other hand, I've only seen references
-// to it wrt. to rename/delete operation, which we don't get notified about
-//
+// TODO: per internet, fileName could be a short, 8.3 dos-style name and we
+// don't handle that. It is mostly reported for renames, which we do act on
+// (FILE_ACTION_RENAMED_NEW_NAME below), so the case is not ruled out.
 
 static void NotifyAboutFile(WatchedDir* d, Str fileName) {
     int i = 0;
