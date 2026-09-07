@@ -6957,7 +6957,6 @@ static int CalcCapForJoin(const StrVec* v, Str joint) {
 
 static void JoinInner(const StrVec* v, Str joint, str::Builder& res) {
     int jointLen = joint.len;
-    // TODO: possibly not handling null values in the middle. need to add more tests and fix
     int firstForJoint = 0;
     int i = 0;
     for (auto s : *v) {
