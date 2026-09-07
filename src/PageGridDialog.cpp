@@ -455,7 +455,7 @@ void PageGridWnd::OnReset(VirtMouseEvent*) {
 void PageGridWnd::OnOk(VirtMouseEvent*) {
     ApplyLive();
     if (HasPermission(Perm::SavePreferences)) {
-        SaveSettings();
+        ScheduleSaveSettings();
     }
     ScheduleDelete();
 }

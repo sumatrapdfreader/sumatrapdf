@@ -449,7 +449,7 @@ void ToggleSortFavoritesByName() {
     SortAllFavorites();
     RememberFavTreeExpansionStateForAllWindows();
     UpdateFavoritesTreeForAllWindows();
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 static void AddOrReplaceFav(Str filePath, Str storedPagePos, Str name, Str pageLabel, PointF scrollPos,
@@ -592,7 +592,7 @@ void DelFavorite(FileState* fs, Favorite* fav) {
         DeleteFileState(fs);
     }
     UpdateFavoritesTreeForAllWindows();
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 static void RemoveAllFavForFile(Str filePath) {
@@ -1316,7 +1316,7 @@ void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, 
         VecAppend(win->expandedFavorites, fav);
     }
     UpdateFavoritesTreeForAllWindows();
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn) {
@@ -1365,7 +1365,7 @@ void DelFavorite(Str filePath, int pageNo, DocController* ctrl) {
     Location loc = (ctrl && ctrl->HasChapters() && pageNo >= 1) ? ctrl->LocationFromPageNo(pageNo) : kInvalidLocation;
     RemoveFav(filePath, pageNo, loc);
     UpdateFavoritesTreeForAllWindows();
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 void RememberFavTreeExpansionState(MainWindow* win) {
@@ -1630,7 +1630,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
             RememberFavTreeExpansionStateForAllWindows();
             RemoveAllFavForFile(f->filePath);
             UpdateFavoritesTreeForAllWindows();
-            SaveSettings();
+            ScheduleSaveSettings();
         }
     }
 }

@@ -5129,7 +5129,8 @@ static void OnMenuExit() {
     // since we are closing the windows one by one,
     // CloseWindow() must not save the session state every time
     // (or we will end up with just the last window)
-    SaveSettings();
+    ScheduleSaveSettings();
+    FlushScheduledSaveSettings();
     gDontSaveSettings = true;
 
     // CloseWindow removes the MainWindow from gWindows,
@@ -5935,7 +5936,8 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     // return with win already freed, which skipped this save and dropped
     // ScheduleSaveSettings posts (home-page history / view mode).
     if (lastWindow) {
-        SaveSettings();
+        ScheduleSaveSettings();
+        FlushScheduledSaveSettings();
     }
     // hide the window before tearing down (closing seems slightly faster that way)
     if (!lastWindow || quitIfLast) {
@@ -6307,7 +6309,7 @@ void DeleteFileFromDiskAndHistory(Str path) {
         FileHistoryRemove(fs);
         DeleteFileState(fs);
     }
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 static void DeleteCurrentFile(MainWindow* win) {
@@ -10094,7 +10096,9 @@ static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
         }
     }
 
-    SaveSettings();
+    // closing the windows below must not overwrite this session snapshot
+    ScheduleSaveSettings();
+    FlushScheduledSaveSettings();
 
     // close all windows except the last; use quitIfLast=false to keep it alive
     Vec<MainWindow*> toClose(gWindows);
@@ -10404,7 +10408,7 @@ static void ClearHistory(MainWindow* win) {
     int nFiles = states ? len(*states) : 0;
     FileHistoryClear(false);
 
-    SaveSettings();
+    ScheduleSaveSettings();
 
     NotificationCreateArgs args;
     args.groupId = kNotifClearHistory;
@@ -10457,7 +10461,7 @@ static void RemoveDeletedFilesFromHistory(MainWindow* win) {
     }
 
     if (nRemoved > 0) {
-        SaveSettings();
+        ScheduleSaveSettings();
         MaybeRedrawHomePage();
     }
     TempStr msg = fmt(Tr("Deleted files removed from history: %d").s, nRemoved);
@@ -13009,7 +13013,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             gDontSaveSettings = true;
             CloseCurrentTab(win, true /* quitIfLast */);
             gDontSaveSettings = false;
-            SaveSettings();
+            ScheduleSaveSettings();
             break;
         }
 
@@ -15416,7 +15420,8 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_ENDSESSION:
             // TODO: check for unfinished print jobs in WM_QUERYENDSESSION?
-            SaveSettings();
+            ScheduleSaveSettings();
+            FlushScheduledSaveSettings();
             gDontSaveSettings = true;
             if (wp == TRUE) {
                 CloseWindow(win, true, true);

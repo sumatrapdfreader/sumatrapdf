@@ -296,7 +296,9 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     // one-click update)
     if (gUpdateAutoInstall) {
         gUpdateAutoInstall = false;
-        SaveSettings(); // persist timeOfLastUpdateCheck
+        // persist timeOfLastUpdateCheck before a possible ExitProcess
+        ScheduleSaveSettings();
+        FlushScheduledSaveSettings();
         if (installerPathAuto && file::Exists(installerPathAuto)) {
             StartInstallerAutoUpgrade(installerPathAuto);
             ExitAfterStartingUpdater();
@@ -356,8 +358,9 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     ReportIf(hr == E_INVALIDARG);
     bool doInstall = (hr == S_OK) && (buttonPressedId == kBtnIdInstall);
 
-    // persist timeOfLastUpdateCheck
-    SaveSettings();
+    // persist timeOfLastUpdateCheck before a possible ExitProcess
+    ScheduleSaveSettings();
+    FlushScheduledSaveSettings();
     if (!doInstall) {
         file::Delete(installerPath);
         return;

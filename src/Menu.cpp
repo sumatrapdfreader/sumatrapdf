@@ -2202,7 +2202,7 @@ void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
         DeleteFileState(fs);
     }
     DeleteThumbnailForFile(path);
-    SaveSettings();
+    ScheduleSaveSettings();
     win->DeleteToolTip();
     win->RedrawAll(true);
 }

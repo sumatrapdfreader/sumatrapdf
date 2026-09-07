@@ -1058,7 +1058,7 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
     if (!didChange) {
         return;
     }
-    SaveSettings();
+    ScheduleSaveSettings();
     // reload so that all state derived from settings (theme, fonts, parsed
     // colors, custom commands, accelerators ...) is re-computed and applied
     ForceReloadSettings();

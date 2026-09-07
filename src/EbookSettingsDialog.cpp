@@ -379,7 +379,7 @@ void EbookSettingsWnd::Apply() {
             DeleteFileEBookUI(fs->eBookUI);
             fs->eBookUI = nullptr;
         }
-        SaveSettings();
+        ScheduleSaveSettings();
         return;
     }
 
@@ -396,7 +396,7 @@ void EbookSettingsWnd::Apply() {
         // so it stops being written out
         DeleteFileEBookUI(fs->eBookUI);
         fs->eBookUI = nullptr;
-        SaveSettings();
+        ScheduleSaveSettings();
         return;
     }
     if (!fs->eBookUI) {
@@ -417,7 +417,7 @@ void EbookSettingsWnd::Apply() {
     }
     str::ReplaceWithCopy(&f->ignoreDocumentCSS, ignore);
     str::ReplaceWithCopy(&f->customCSS, str::Eq(v.customCSS, g->customCSS) ? Str{} : v.customCSS);
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 void EbookSettingsWnd::OnCancel(VirtMouseEvent*) {

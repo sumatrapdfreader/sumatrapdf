@@ -278,7 +278,7 @@ void SetHotkeyWnd::DoSet(VirtMouseEvent*) {
         sc->cmdId = 0;
         VecAppend(*gSettings->shortcuts, sc);
     }
-    SaveSettings();
+    ScheduleSaveSettings();
 
     ReRegisterGlobalHotkeys();
     committed = true;
@@ -299,7 +299,7 @@ void SetHotkeyWnd::DoRemove(VirtMouseEvent*) {
         }
         curr = curr->next;
     }
-    SaveSettings();
+    ScheduleSaveSettings();
     ReRegisterGlobalHotkeys();
     committed = true;
     Close();

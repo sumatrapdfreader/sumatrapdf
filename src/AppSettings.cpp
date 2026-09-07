@@ -411,6 +411,285 @@ static void UpdateCrashHandlerSettings() {
     str::Free(d);
 }
 
+static TabState* CloneTabState(const TabState* src) {
+    TabState* dst = (TabState*)AllocStruct<TabState>();
+    str::ReplaceWithCopy(&dst->filePath, src->filePath);
+    str::ReplaceWithCopy(&dst->displayMode, src->displayMode);
+    str::ReplaceWithCopy(&dst->pageNo, src->pageNo);
+    str::ReplaceWithCopy(&dst->zoom, src->zoom);
+    dst->rotation = src->rotation;
+    dst->scrollPos = src->scrollPos;
+    dst->showToc = src->showToc;
+    dst->tocState = new Vec<int>(*src->tocState);
+    return dst;
+}
+
+static SessionData* CloneSessionData(const SessionData* src) {
+    SessionData* dst = NewSessionData();
+    dst->tabIndex = src->tabIndex;
+    dst->windowState = src->windowState;
+    dst->windowPos = src->windowPos;
+    dst->sidebarDx = src->sidebarDx;
+    for (TabState* ts : *src->tabStates) {
+        VecAppend(*dst->tabStates, CloneTabState(ts));
+    }
+    return dst;
+}
+
+// session snapshot loaded at startup. Also the source of state for re-saving
+// not-yet-loaded (lazy) tabs, kept mirroring the live session by
+// SyncInitialSessionData() so it never carries closed-window entries.
+Vec<SessionData*>* gInitialSessionData = nullptr;
+
+// find the saved state for a lazy tab by file path. Because gInitialSessionData
+// is kept in sync with the live session, this never matches a closed window;
+// per-tab disambiguation (e.g. same file in two windows) comes from the more
+// reliable tab->tabState, which RememberSessionState prefers.
+static TabState* FindSessionTabState(Str fp) {
+    if (!gInitialSessionData) {
+        return nullptr;
+    }
+    for (SessionData* psd : *gInitialSessionData) {
+        for (TabState* pts : *psd->tabStates) {
+            if (str::Eq(pts->filePath, fp)) {
+                return pts;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// lazy tabs borrow tab->tabState from gInitialSessionData. After we replace that
+// snapshot, repoint those pointers so the next SaveSettings() does not clone freed
+// TabState objects
+static void RefreshLazyTabStatePointers() {
+    if (!gInitialSessionData) {
+        return;
+    }
+    int sdIdx = 0;
+    for (MainWindow* win : gWindows) {
+        bool hasFileTab = false;
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->filePath) {
+                hasFileTab = true;
+                break;
+            }
+        }
+        if (!hasFileTab) {
+            continue;
+        }
+        if (sdIdx >= len(*gInitialSessionData)) {
+            break;
+        }
+        SessionData* sd = (*gInitialSessionData)[sdIdx++];
+        int tsIdx = 0;
+        for (WindowTab* tab : win->Tabs()) {
+            if (len(tab->filePath) == 0) {
+                continue;
+            }
+            if (tsIdx >= len(*sd->tabStates)) {
+                break;
+            }
+            if (!tab->ctrl && tab->tabState) {
+                tab->tabState = (*sd->tabStates)[tsIdx];
+            }
+            tsIdx++;
+        }
+    }
+}
+
+// keep gInitialSessionData mirroring the just-saved live session, so re-saving
+// not-yet-loaded tabs never feeds stale state from a closed window back into the
+// saved session (fixes #5668). Call after RememberSessionState().
+static void SyncInitialSessionData() {
+    if (!gInitialSessionData) {
+        return;
+    }
+    FreeSessionDataVec(gInitialSessionData);
+    for (SessionData* sd : *gSettings->sessionData) {
+        VecAppend(*gInitialSessionData, CloneSessionData(sd));
+    }
+    RefreshLazyTabStatePointers();
+}
+
+static void RememberSessionState() {
+    Vec<SessionData*>* sessionState = gSettings->sessionData;
+    FreeSessionDataVec(sessionState);
+
+    if (!SettingsRememberOpenedFiles()) {
+        return;
+    }
+
+    for (auto* win : gWindows) {
+        if (win->isQuickLook) {
+            continue;
+        }
+        SessionData* windowState = NewSessionData();
+        for (WindowTab* tab : win->Tabs()) {
+            if (len(tab->filePath) == 0) {
+                // home page tab
+                continue;
+            }
+            Str fp = tab->filePath;
+            if (!tab->ctrl) {
+                // file not loaded into a tab (lazy loading, or a placeholder for
+                // a missing file). Prefer the tab's own remembered state -- it's
+                // authoritative and disambiguates the same file open in multiple
+                // windows -- and only fall back to the (in-sync) startup snapshot.
+                TabState* src = tab->tabState;
+                if (!src) {
+                    src = FindSessionTabState(fp);
+                }
+                if (src) {
+                    VecAppend(*windowState->tabStates, CloneTabState(src));
+                }
+                continue;
+            }
+            FileState* fs = NewFileState(fp);
+            tab->ctrl->GetDisplayState(fs);
+            fs->showToc = tab->showToc;
+            *fs->tocState = tab->tocState;
+            TabState* ts = NewTabState(fs);
+            VecAppend(*windowState->tabStates, ts);
+            DeleteFileState(fs);
+        }
+        if (len(*windowState->tabStates) == 0) {
+            FreeSessionData(windowState);
+            continue;
+        }
+        // 1-based index among document tabs only (home / about tab is omitted
+        // from TabStates above). Using the UI tab index would mis-restore when
+        // the home tab was closed at save time but recreated on the next start.
+        int docOrdinal = 0;
+        int selectedDocOrdinal = 1;
+        WindowTab* cur = win->CurrentTab();
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+                continue;
+            }
+            docOrdinal++;
+            if (tab == cur) {
+                selectedDocOrdinal = docOrdinal;
+            }
+        }
+        windowState->tabIndex = selectedDocOrdinal;
+        RememberDefaultWindowPosition(win);
+        windowState->windowState = gSettings->windowState;
+        windowState->windowPos = gSettings->windowPos;
+        windowState->sidebarDx = gSettings->sidebarDx;
+        VecAppend(*sessionState, windowState);
+    }
+}
+
+// called whenever global preferences change or a file is
+// added or removed from the file history (in order to keep
+// the list of recently opened documents in sync)
+static bool SaveSettings() {
+    gSaveSettingsPending = false;
+    if (gForTesting) {
+        // started with -for-testing for ad-hoc testing: don't modify
+        // the settings of the tester
+        return true;
+    }
+    if (gDontSaveSettings) {
+        // if we are exiting the application by File->Exit,
+        // OnMenuExit will have called SaveSettings() already
+        // and we skip the call here to avoid saving incomplete session info
+        // (because some windows might have been closed already)
+        return true;
+    }
+
+    // don't save preferences without the proper permission
+    if (!HasPermission(Perm::SavePreferences)) {
+        return false;
+    }
+    logf("SaveSettings\n");
+    // update display states for all tabs
+    // we snapshot the list because SaveSettings() can be called re-entrantly
+    // (e.g. from LoadDocumentFinish while other documents are still loading/closing)
+    for (MainWindow* win : gWindows) {
+        Vec<WindowTab*> tabs = win->Tabs();
+        for (WindowTab* tab : tabs) {
+            UpdateTabFileDisplayStateForTab(tab);
+        }
+    }
+    RememberSessionState();
+    SyncInitialSessionData();
+
+    // remove entries which should (no longer) be remembered
+    FileHistoryPurge(!gSettings->rememberStatePerDocument);
+    // update display mode and zoom fields from internal values.
+    // "page aspect" is not a DisplayMode enum value — keep the string.
+    if (!IsPageAspectDisplayMode(gSettings->defaultDisplayMode)) {
+        str::ReplaceWithCopy(&gSettings->defaultDisplayMode, DisplayModeToString(gSettings->defaultDisplayModeEnum));
+    }
+    ZoomToString(&gSettings->defaultZoom, gSettings->defaultZoomFloat, nullptr);
+    if (gSettings->imageUI.defaultZoomFloat != 0) {
+        ZoomToString(&gSettings->imageUI.defaultZoom, gSettings->imageUI.defaultZoomFloat, nullptr);
+    }
+    if (gSettings->comicBookUI.defaultZoomFloat != 0) {
+        ZoomToString(&gSettings->comicBookUI.defaultZoom, gSettings->comicBookUI.defaultZoomFloat, nullptr);
+    }
+
+    TempStr path = GetSettingsPathTemp();
+    ReportIf(len(path) == 0);
+    if (len(path) == 0) {
+        return false;
+    }
+    TempStr prevPrefs = file::ReadFileWithArena(path, GetTempArena());
+    Str prefs = SerializeSettings(gSettings, prevPrefs);
+    AutoCall freePrefs((void (*)(Str))str::Free, prefs);
+    ReportIf(len(prefs) == 0);
+    if (len(prefs) == 0) {
+        return false;
+    }
+    UpdateCrashHandlerSettings();
+
+    if (IsLastSavedPrefs(prefs) || (prevPrefs.len == prefs.len && str::Eq(prefs, prevPrefs))) {
+        RememberLastSavedPrefs(prefs);
+        return true;
+    }
+
+    WatchedFileSetIgnore(gWatchedSettingsFile, true);
+    bool ok = file::WriteFile(path, prefs);
+    if (ok) {
+        RememberLastSavedPrefs(prefs);
+        gSettings->lastPrefUpdate = file::GetModificationTime(path);
+    }
+    WatchedFileSetIgnore(gWatchedSettingsFile, false);
+    return ok;
+}
+
+static void SaveSettingsPosted() {
+    if (!gSaveSettingsPending) {
+        return;
+    }
+    gSaveSettingsPending = false;
+    SaveSettings();
+}
+
+void ScheduleSaveSettings() {
+    if (gSaveSettingsPending || gForTesting || gDontSaveSettings) {
+        return;
+    }
+    if (!HasPermission(Perm::SavePreferences)) {
+        return;
+    }
+    gSaveSettingsPending = true;
+    auto fn = MkFunc0Void(SaveSettingsPosted);
+    uitask::Post(fn, "SaveSettings");
+}
+
+// Last-window close and process exit cannot wait for the uitask:
+// ShowWindow(SW_HIDE) can tear the window down first, and a fast
+// ExitProcess never drains the queue.
+void FlushScheduledSaveSettings() {
+    if (!gSaveSettingsPending) {
+        return;
+    }
+    SaveSettings();
+}
+
 bool LoadSettings() {
     ReportIf(gSettings);
 
@@ -609,285 +888,6 @@ bool LoadSettings() {
     return true;
 }
 
-static TabState* CloneTabState(const TabState* src) {
-    TabState* dst = (TabState*)AllocStruct<TabState>();
-    str::ReplaceWithCopy(&dst->filePath, src->filePath);
-    str::ReplaceWithCopy(&dst->displayMode, src->displayMode);
-    str::ReplaceWithCopy(&dst->pageNo, src->pageNo);
-    str::ReplaceWithCopy(&dst->zoom, src->zoom);
-    dst->rotation = src->rotation;
-    dst->scrollPos = src->scrollPos;
-    dst->showToc = src->showToc;
-    dst->tocState = new Vec<int>(*src->tocState);
-    return dst;
-}
-
-static SessionData* CloneSessionData(const SessionData* src) {
-    SessionData* dst = NewSessionData();
-    dst->tabIndex = src->tabIndex;
-    dst->windowState = src->windowState;
-    dst->windowPos = src->windowPos;
-    dst->sidebarDx = src->sidebarDx;
-    for (TabState* ts : *src->tabStates) {
-        VecAppend(*dst->tabStates, CloneTabState(ts));
-    }
-    return dst;
-}
-
-// session snapshot loaded at startup. Also the source of state for re-saving
-// not-yet-loaded (lazy) tabs, kept mirroring the live session by
-// SyncInitialSessionData() so it never carries closed-window entries.
-Vec<SessionData*>* gInitialSessionData = nullptr;
-
-// find the saved state for a lazy tab by file path. Because gInitialSessionData
-// is kept in sync with the live session, this never matches a closed window;
-// per-tab disambiguation (e.g. same file in two windows) comes from the more
-// reliable tab->tabState, which RememberSessionState prefers.
-static TabState* FindSessionTabState(Str fp) {
-    if (!gInitialSessionData) {
-        return nullptr;
-    }
-    for (SessionData* psd : *gInitialSessionData) {
-        for (TabState* pts : *psd->tabStates) {
-            if (str::Eq(pts->filePath, fp)) {
-                return pts;
-            }
-        }
-    }
-    return nullptr;
-}
-
-// lazy tabs borrow tab->tabState from gInitialSessionData. After we replace that
-// snapshot, repoint those pointers so the next SaveSettings() does not clone freed
-// TabState objects
-static void RefreshLazyTabStatePointers() {
-    if (!gInitialSessionData) {
-        return;
-    }
-    int sdIdx = 0;
-    for (MainWindow* win : gWindows) {
-        bool hasFileTab = false;
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab->filePath) {
-                hasFileTab = true;
-                break;
-            }
-        }
-        if (!hasFileTab) {
-            continue;
-        }
-        if (sdIdx >= len(*gInitialSessionData)) {
-            break;
-        }
-        SessionData* sd = (*gInitialSessionData)[sdIdx++];
-        int tsIdx = 0;
-        for (WindowTab* tab : win->Tabs()) {
-            if (len(tab->filePath) == 0) {
-                continue;
-            }
-            if (tsIdx >= len(*sd->tabStates)) {
-                break;
-            }
-            if (!tab->ctrl && tab->tabState) {
-                tab->tabState = (*sd->tabStates)[tsIdx];
-            }
-            tsIdx++;
-        }
-    }
-}
-
-// keep gInitialSessionData mirroring the just-saved live session, so re-saving
-// not-yet-loaded tabs never feeds stale state from a closed window back into the
-// saved session (fixes #5668). Call after RememberSessionState().
-static void SyncInitialSessionData() {
-    if (!gInitialSessionData) {
-        return;
-    }
-    FreeSessionDataVec(gInitialSessionData);
-    for (SessionData* sd : *gSettings->sessionData) {
-        VecAppend(*gInitialSessionData, CloneSessionData(sd));
-    }
-    RefreshLazyTabStatePointers();
-}
-
-static void RememberSessionState() {
-    Vec<SessionData*>* sessionState = gSettings->sessionData;
-    FreeSessionDataVec(sessionState);
-
-    if (!SettingsRememberOpenedFiles()) {
-        return;
-    }
-
-    for (auto* win : gWindows) {
-        if (win->isQuickLook) {
-            continue;
-        }
-        SessionData* windowState = NewSessionData();
-        for (WindowTab* tab : win->Tabs()) {
-            if (len(tab->filePath) == 0) {
-                // home page tab
-                continue;
-            }
-            Str fp = tab->filePath;
-            if (!tab->ctrl) {
-                // file not loaded into a tab (lazy loading, or a placeholder for
-                // a missing file). Prefer the tab's own remembered state -- it's
-                // authoritative and disambiguates the same file open in multiple
-                // windows -- and only fall back to the (in-sync) startup snapshot.
-                TabState* src = tab->tabState;
-                if (!src) {
-                    src = FindSessionTabState(fp);
-                }
-                if (src) {
-                    VecAppend(*windowState->tabStates, CloneTabState(src));
-                }
-                continue;
-            }
-            FileState* fs = NewFileState(fp);
-            tab->ctrl->GetDisplayState(fs);
-            fs->showToc = tab->showToc;
-            *fs->tocState = tab->tocState;
-            TabState* ts = NewTabState(fs);
-            VecAppend(*windowState->tabStates, ts);
-            DeleteFileState(fs);
-        }
-        if (len(*windowState->tabStates) == 0) {
-            FreeSessionData(windowState);
-            continue;
-        }
-        // 1-based index among document tabs only (home / about tab is omitted
-        // from TabStates above). Using the UI tab index would mis-restore when
-        // the home tab was closed at save time but recreated on the next start.
-        int docOrdinal = 0;
-        int selectedDocOrdinal = 1;
-        WindowTab* cur = win->CurrentTab();
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab->IsAboutTab() || len(tab->filePath) == 0) {
-                continue;
-            }
-            docOrdinal++;
-            if (tab == cur) {
-                selectedDocOrdinal = docOrdinal;
-            }
-        }
-        windowState->tabIndex = selectedDocOrdinal;
-        RememberDefaultWindowPosition(win);
-        windowState->windowState = gSettings->windowState;
-        windowState->windowPos = gSettings->windowPos;
-        windowState->sidebarDx = gSettings->sidebarDx;
-        VecAppend(*sessionState, windowState);
-    }
-}
-
-static void SaveSettingsPosted() {
-    if (!gSaveSettingsPending) {
-        return;
-    }
-    gSaveSettingsPending = false;
-    SaveSettings();
-}
-
-void ScheduleSaveSettings() {
-    if (gSaveSettingsPending || gForTesting || gDontSaveSettings) {
-        return;
-    }
-    if (!HasPermission(Perm::SavePreferences)) {
-        return;
-    }
-    gSaveSettingsPending = true;
-    auto fn = MkFunc0Void(SaveSettingsPosted);
-    uitask::Post(fn, "SaveSettings");
-}
-
-// Last-window close and process exit cannot wait for the uitask:
-// ShowWindow(SW_HIDE) can tear the window down first, and a fast
-// ExitProcess never drains the queue.
-void FlushScheduledSaveSettings() {
-    if (!gSaveSettingsPending) {
-        return;
-    }
-    SaveSettings();
-}
-
-// called whenever global preferences change or a file is
-// added or removed from the file history (in order to keep
-// the list of recently opened documents in sync)
-bool SaveSettings() {
-    gSaveSettingsPending = false;
-    if (gForTesting) {
-        // started with -for-testing for ad-hoc testing: don't modify
-        // the settings of the tester
-        return true;
-    }
-    if (gDontSaveSettings) {
-        // if we are exiting the application by File->Exit,
-        // OnMenuExit will have called SaveSettings() already
-        // and we skip the call here to avoid saving incomplete session info
-        // (because some windows might have been closed already)
-        return true;
-    }
-
-    // don't save preferences without the proper permission
-    if (!HasPermission(Perm::SavePreferences)) {
-        return false;
-    }
-    logf("SaveSettings\n");
-    // update display states for all tabs
-    // we snapshot the list because SaveSettings() can be called re-entrantly
-    // (e.g. from LoadDocumentFinish while other documents are still loading/closing)
-    for (MainWindow* win : gWindows) {
-        Vec<WindowTab*> tabs = win->Tabs();
-        for (WindowTab* tab : tabs) {
-            UpdateTabFileDisplayStateForTab(tab);
-        }
-    }
-    RememberSessionState();
-    SyncInitialSessionData();
-
-    // remove entries which should (no longer) be remembered
-    FileHistoryPurge(!gSettings->rememberStatePerDocument);
-    // update display mode and zoom fields from internal values.
-    // "page aspect" is not a DisplayMode enum value — keep the string.
-    if (!IsPageAspectDisplayMode(gSettings->defaultDisplayMode)) {
-        str::ReplaceWithCopy(&gSettings->defaultDisplayMode, DisplayModeToString(gSettings->defaultDisplayModeEnum));
-    }
-    ZoomToString(&gSettings->defaultZoom, gSettings->defaultZoomFloat, nullptr);
-    if (gSettings->imageUI.defaultZoomFloat != 0) {
-        ZoomToString(&gSettings->imageUI.defaultZoom, gSettings->imageUI.defaultZoomFloat, nullptr);
-    }
-    if (gSettings->comicBookUI.defaultZoomFloat != 0) {
-        ZoomToString(&gSettings->comicBookUI.defaultZoom, gSettings->comicBookUI.defaultZoomFloat, nullptr);
-    }
-
-    TempStr path = GetSettingsPathTemp();
-    ReportIf(len(path) == 0);
-    if (len(path) == 0) {
-        return false;
-    }
-    TempStr prevPrefs = file::ReadFileWithArena(path, GetTempArena());
-    Str prefs = SerializeSettings(gSettings, prevPrefs);
-    AutoCall freePrefs((void (*)(Str))str::Free, prefs);
-    ReportIf(len(prefs) == 0);
-    if (len(prefs) == 0) {
-        return false;
-    }
-    UpdateCrashHandlerSettings();
-
-    if (IsLastSavedPrefs(prefs) || (prevPrefs.len == prefs.len && str::Eq(prefs, prevPrefs))) {
-        RememberLastSavedPrefs(prefs);
-        return true;
-    }
-
-    WatchedFileSetIgnore(gWatchedSettingsFile, true);
-    bool ok = file::WriteFile(path, prefs);
-    if (ok) {
-        RememberLastSavedPrefs(prefs);
-        gSettings->lastPrefUpdate = file::GetModificationTime(path);
-    }
-    WatchedFileSetIgnore(gWatchedSettingsFile, false);
-    return ok;
-}
-
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
 static void ReloadSettings(bool force = false) {
@@ -977,6 +977,8 @@ void CleanUpSettings() {
 }
 
 void ForceReloadSettings() {
+    // a pending scheduled save must reach the file before we re-read it
+    FlushScheduledSaveSettings();
     ReloadSettings(true);
 }
 

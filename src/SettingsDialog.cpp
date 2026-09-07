@@ -221,7 +221,7 @@ void SettingsWnd::OnOk(VirtMouseEvent*) {
     // there's no problem. When moving tabs -> no tabs, a half solution would be to only
     // call SetTabsInTitlebar() for windows that have only one tab, but that's somewhat inconsistent
     ApplySettingsToOpenWindows();
-    SaveSettings();
+    ScheduleSaveSettings();
     MaybeRedrawHomePage();
     ScheduleDelete();
 }

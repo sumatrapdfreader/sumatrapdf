@@ -72,7 +72,7 @@ void ChangeScrollbarWnd::OnOk(VirtMouseEvent*) {
         Str val = SeqStrByIndex(gScrollbarModeNames, idx);
         str::ReplaceWithCopy(&gSettings->scrollbars, val);
         UpdateFixedPageScrollbarsVisibility();
-        SaveSettings();
+        ScheduleSaveSettings();
     }
     ScheduleDelete();
 }

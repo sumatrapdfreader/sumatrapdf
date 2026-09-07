@@ -79,7 +79,7 @@ void InverseSearchWnd::OnOk(VirtMouseEvent*) {
     TempStr tmp = dropDown ? dropDown->GetTextTemp() : Str{};
     str::ReplaceWithCopy(&gSettings->inverseSearchCmdLine, tmp);
     gSettings->enableTeXEnhancements = true;
-    SaveSettings();
+    ScheduleSaveSettings();
     ScheduleDelete();
 }
 

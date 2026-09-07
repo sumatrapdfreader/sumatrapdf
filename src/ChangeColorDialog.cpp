@@ -237,7 +237,7 @@ void ChangeColorWnd::SaveCustomColorsIfChanged() {
         buf.Append(SerializeColorTemp(customColors[i]));
     }
     str::ReplaceWithCopy(&gSettings->customColors, ToStr(buf));
-    SaveSettings();
+    ScheduleSaveSettings();
 }
 
 void ChangeColorWnd::InvalidateSwatches() {
@@ -552,7 +552,7 @@ void ChangeColorWnd::ApplyBackground() {
         t->bgColor = newColor;
         t->bgColorCheckered = isCheckered;
     }
-    SaveSettings();
+    ScheduleSaveSettings();
     HwndInvalidate(win->hwndCanvas, true);
 }
 
@@ -571,7 +571,7 @@ void ChangeColorWnd::ApplyTabColor() {
             SetColorText(fs->tabCol, SerializeColorTemp(currentColor));
         }
     }
-    SaveSettings();
+    ScheduleSaveSettings();
     if (win->tabsCtrl) {
         win->tabsCtrl->ScheduleRepaint();
     }

@@ -19,7 +19,6 @@ TempStr GetSettingsPathTemp();
 TempStr GetSettingsFileNameTemp();
 
 bool LoadSettings();
-bool SaveSettings();
 void ScheduleSaveSettings();
 void FlushScheduledSaveSettings();
 void ForceReloadSettings();

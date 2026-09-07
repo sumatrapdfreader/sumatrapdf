@@ -213,7 +213,7 @@ void ChangeThemeWnd::OnCancel(VirtMouseEvent*) {
 
 void ChangeThemeWnd::OnChange(VirtMouseEvent*) {
     ApplyPreview();
-    SaveSettings();
+    ScheduleSaveSettings();
     ScheduleDelete();
 }
 
