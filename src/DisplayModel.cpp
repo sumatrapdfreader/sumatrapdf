@@ -303,6 +303,12 @@ void DisplayModel::SetTrimEmptyMargins(bool enable) {
         return;
     }
     trimEmptyMargins = enable;
+    // restoring a document's remembered state sets this before the first
+    // layout, when there is nothing to lay out and no zoom yet; the initial
+    // layout picks the flag up on its own
+    if (!pagesInfo) {
+        return;
+    }
     if (cb) {
         cb->CleanUp(this);
     }
