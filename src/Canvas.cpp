@@ -4790,7 +4790,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                     if (deltaX < 0) {
                         bool goNext = dm->GetDisplayR2L();
                         dm->GoToPageHorizontal(false);
-                        // TODO: scroll to show the right-hand part
+                        // show the right-hand part of the page we land on
                         int x = dm->canvasSize.dx - dm->viewPort.dx;
                         // logf("x: %d\n");
                         dm->ScrollXTo(x);
