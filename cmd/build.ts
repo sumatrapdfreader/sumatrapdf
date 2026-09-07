@@ -15,7 +15,7 @@ interface BuildOptions {
   win32: boolean;
   run: boolean;
   runArgs: string[];
-  buildNo?: number;
+  buildNo?: string;
 }
 
 const usage = `Usage: bun cmd/build.ts <mode> [options]
@@ -38,7 +38,7 @@ MinGW cross-builds (they still produce a Windows exe):
                            from Windows it runs through WSL Ubuntu
 
 Other:
-  -build-no [number]      List recent build numbers or resolve one number
+  -build-no [number|sha1] List recent build numbers or resolve a number or sha1
   -h | -help              Print this help
 
 General options:
@@ -113,8 +113,7 @@ function parseArgs(args: string[]): BuildOptions | undefined {
       setMode(opts, "build-no");
       const value = args[i + 1];
       if (value && !value.startsWith("-")) {
-        if (!/^\d+$/.test(value)) throw new CliError(`invalid build number: ${value}`);
-        opts.buildNo = Number(value);
+        opts.buildNo = value;
         i++;
       }
     } else {
@@ -248,17 +247,32 @@ async function buildSmoke(): Promise<void> {
   console.log(`smoke build took ${((performance.now() - timeStart) / 1000).toFixed(1)}s`);
 }
 
-async function showBuildNo(buildNo?: number): Promise<void> {
-  const out = await $`git log --oneline`.text();
-  const lines = out.split("\n").filter((line) => line.trim() !== "");
-  const numberAt = (i: number) => lines.length - i + 1000;
-  if (!buildNo) {
-    for (let i = 0; i < Math.min(32, lines.length); i++) console.log(`${numberAt(i)} ${lines[i]}`);
+async function showBuildNo(query?: string): Promise<void> {
+  const total = Number((await $`git rev-list --count HEAD`.text()).trim());
+  if (!query) {
+    const out = await $`git log -32 --oneline`.text();
+    const lines = out.split("\n").filter((line) => line.trim() !== "");
+    for (let i = 0; i < lines.length; i++) console.log(`${total - i + 1000} ${lines[i]}`);
     return;
   }
-  const index = lines.length - (buildNo - 1000);
-  if (index < 0 || index >= lines.length) throw new Error(`build number ${buildNo} is out of range`);
-  console.log(`${buildNo} ${lines[index]}`);
+  if (/^\d+$/.test(query)) {
+    const buildNo = Number(query);
+    const skip = total - (buildNo - 1000);
+    if (skip >= 0 && skip < total) {
+      const line = (await $`git log -1 --skip ${skip} --oneline`.text()).trim();
+      console.log(`${buildNo} ${line}`);
+      return;
+    }
+  }
+  const sha = (await $`git rev-parse --verify --quiet ${query}^{commit}`.nothrow().text()).trim();
+  if (sha) {
+    const count = Number((await $`git rev-list --count ${sha}`.text()).trim());
+    const line = (await $`git log -1 --oneline ${sha}`.text()).trim();
+    console.log(`${count + 1000} ${line}`);
+    return;
+  }
+  if (/^\d+$/.test(query)) throw new Error(`build number ${query} is out of range`);
+  throw new Error(`unknown commit or build number: ${query}`);
 }
 
 // the wine build runs in WSL Ubuntu when started from Windows

@@ -236,7 +236,8 @@ static bool IsPSFileContent(Str d) {
 
 // https://github.com/file/file/blob/7449263e1d6167233b3b6abfc3e4c13407d6432c/magic/Magdir/animation#L265
 // https://nokiatech.github.io/heif/technical.html
-// TODO: need to figure out heif vs. heic
+// HEIF is the container, HEIC is its HEVC-coded flavour. We decode both
+// the same way, so .heif and .heic share one FileType.
 static FileType DetectHicAndAvif(Str d) {
     if (d.len < 0x18) {
         return FileType::Unknown;
