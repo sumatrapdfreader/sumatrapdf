@@ -647,7 +647,6 @@ void ThumbnailPaletteCtrl::DrawRow(DrawItemEvent* ev) {
         Size ts = ev->gfx->MeasureText(label, font);
         int padX = DpiScaleByDpi(dpi, 6);
         int padY = DpiScaleByDpi(dpi, 2);
-        int rad = DpiScaleByDpi(dpi, 4);
         int inset = DpiScaleByDpi(dpi, 4);
         int boxDx = std::min(ts.dx + padX * 2, pageRect.dx - inset * 2);
         int boxDy = ts.dy + padY * 2;
@@ -657,8 +656,9 @@ void ThumbnailPaletteCtrl::DrawRow(DrawItemEvent* ev) {
             boxY = pageRect.y + inset;
         }
         Rect box{boxX, boxY, boxDx, boxDy};
-        ev->gfx->FillRoundedRect(box, rad, MkRgb(0x22, 0x22, 0x22));
-        ev->gfx->DrawText(label, box, gfxTextCenter | gfxTextVCenter, font, kColWhite);
+        // a pill: half the height rounds the short sides into semicircles
+        ev->gfx->FillRoundedRect(box, boxDy / 2, ThemeWindowBackgroundColor());
+        ev->gfx->DrawText(label, box, gfxTextCenter | gfxTextVCenter, font, ThemeWindowTextColor());
     }
 }
 
