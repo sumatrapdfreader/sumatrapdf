@@ -7031,9 +7031,6 @@ WStr Utf8ToWStr(Str s, Arena* a) {
     }
     int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, res, cchNeeded);
     ReportIf(cchConverted != cchNeeded);
-    // TODO: not sure if invalid test or it's more subtle
-    // triggers in Dune.epub
-    // ReportIf(cchConverted != s.len);
     return WrapAllocatedWStr(res, cchConverted);
 #else
     TempWStr res = ToWStrTemp(s);
