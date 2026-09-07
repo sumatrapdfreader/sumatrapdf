@@ -3508,8 +3508,10 @@ void DeleteMainWindow(MainWindow* win) {
 }
 
 void UpdateAfterThemeChange() {
-    // the icon pixmaps are rendered in the theme's colors
-    DestroySvgPixmapIconsCache();
+    // the icon pixmaps are rendered in the theme's colors and the cache is keyed
+    // by them, so the home page has to re-fetch them: without a relayout it keeps
+    // painting the pixmaps of the previous theme
+    HomePageInvalidateLayoutCache();
     for (auto* win : gWindows) {
         DeleteObject(win->brControlBgColor);
         win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
@@ -8074,10 +8076,12 @@ static void ApplyMainWindowDpiChromeRefresh(MainWindow* win, HWND hwnd) {
 
     HideSelectionToolbar(win);
     HideAnnotationHoverOverlay(win);
-    DestroySvgPixmapIconsCache();
+    // the icon pixmaps are cached per size, so everything holding one has to
+    // re-fetch it at the new DPI
+    HomePageInvalidateLayoutCache();
     // Rebind every cached pixmap before anything below can paint. FindBar
     // layout (and a nested WM_PAINT) used to hit the toolbar of `win` while it
-    // still held freed pixmaps; ReCreateToolbar is too late for that.
+    // still held pixmaps of the old size; ReCreateToolbar is too late for that.
     for (MainWindow* w : gWindows) {
         DpiScope dpiScope(w->hwndFrame);
         UpdateToolbarAfterThemeChange(w);

@@ -151,6 +151,7 @@ import { testit as issue5899 } from "./issue-5899.ts";
 import { testit as issue5907 } from "./issue-5907.ts";
 import { testit as settingsPersist } from "./settings-persist.ts";
 import { testit as issue5970 } from "./issue-5970.ts";
+import { testit as homeThemeIcons } from "./home-theme-icons.ts";
 import { testit as issue5971 } from "./issue-5971.ts";
 import { testit as issue5933 } from "./issue-5933.ts";
 import { testit as issue6037 } from "./issue-6037.ts";
@@ -472,6 +473,7 @@ export const tests: NamedTest[] = [
   ["issue-5899", issue5899],
   ["settings-persist", settingsPersist],
   ["issue-5970", issue5970],
+  ["home-theme-icons", homeThemeIcons],
   ["issue-5971", issue5971],
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
   ["command-palette-thumbnails", commandPaletteThumbnails],

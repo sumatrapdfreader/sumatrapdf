@@ -605,7 +605,7 @@ struct SvgPixmapCacheEntry {
 static SvgPixmapCacheEntry* gSvgPixmapCache = nullptr;
 
 // Render `svg` at dx×dy in fg/bg (theme text/control colors if unset).
-// The Pixmap belongs to the cache until DestroySvgPixmapIconsCache().
+// The Pixmap belongs to the cache and stays valid until the app exits.
 Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg, Color bg) {
     if (str::IsEmptyOrWhiteSpace(svg) || dx <= 0 || dy <= 0) {
         return nullptr;
@@ -636,7 +636,13 @@ Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg, Color bg) {
     return px;
 }
 
-// Theme, DPI, and shutdown: every cached pixmap is in the current colors/size.
+// Shutdown only. Toolbars, the home page and other VirtCtrls keep non-owning
+// pointers to these pixmaps, so freeing entries while the app runs leaves them
+// dangling until whatever re-binds them runs, and the next paint reads freed
+// memory (crash 2026-09-07-13-07-95c3: the home page painted its view-mode icon
+// after a theme change dropped the cache). A theme or DPI change needs no flush:
+// size and colors are part of the key, so new entries are rendered and the stale
+// ones are simply never looked up again.
 void DestroySvgPixmapIconsCache() {
     ListDelete(gSvgPixmapCache);
     gSvgPixmapCache = nullptr;
