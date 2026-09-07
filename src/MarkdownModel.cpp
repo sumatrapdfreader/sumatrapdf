@@ -1138,6 +1138,11 @@ void MarkdownModel::SetToc(TocTree* newToc) {
 }
 
 bool MarkdownModel::Load(Str fileName) {
+    // a path that doesn't exist would otherwise open as the sibling .md files of
+    // whatever directory it names, with the missing file itself as a 404 page
+    if (!file::Exists(fileName)) {
+        return false;
+    }
     str::ReplaceWithCopy(&this->fileName, fileName);
     str::ReplaceWithCopy(&baseDir, path::GetDirTemp(fileName));
     isHtml = IsHtmlFileType(GuessFileType(fileName, true));

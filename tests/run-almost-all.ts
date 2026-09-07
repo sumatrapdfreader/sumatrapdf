@@ -257,6 +257,7 @@ import { testit as issue6142 } from "./issue-6142.ts";
 import { testit as issue6143 } from "./issue-6143.ts";
 import { testit as issue6144 } from "./issue-6144.ts";
 import { testit as toolbarTabSwitchPos } from "./toolbar-tab-switch-pos.ts";
+import { testit as mdMissingFile } from "./ad-hoc-md-missing-file.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -274,6 +275,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["issue-6140", issue6140],
+  ["ad-hoc-md-missing-file", mdMissingFile],
   ["issue-6142", issue6142],
   ["issue-6143", issue6143],
   ["issue-6144", issue6144],
