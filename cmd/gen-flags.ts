@@ -93,6 +93,7 @@ const args = [
     "Control", "dbg-control",
     "UnitTests", "unit-tests",
     "NewWindowTabs", "new-window-tabs",
+    "HtmlBackend", "html-backend",
 ];
 
 function generateCode(): string {

@@ -373,6 +373,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `-pwd <password>` : open password-protected documents from the command line (fixes #906)
 - `-new-window-tabs` : one new window, all files as tabs (issue #5044)
 - `-log-to-file <file>` : log to a specific file (like `-log` but with a custom log file path)
+- `-html-backend <ie|webview2>` : force the embedded browser used for CHM / markdown documents
 - `/p` : Adobe Reader-compatible alias for `-print-dialog`
 - `/t` : Adobe Reader-compatible silent print (alias for `-print-to`)
 - `sumatrapdf-tool.exe <tool> <args>` : command-line tools (draw, convert, audit, bake, clean, create, extract, info, merge, pages, poster, recolor, show, trim, grep, trace)

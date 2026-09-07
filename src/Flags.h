@@ -125,6 +125,9 @@ struct Flags {
     bool allUsers = false;
     bool runInstallNow = false;
     bool storeInstaller = false;
+    // -html-backend ie|webview2: force the embedded browser hosting CHM /
+    // markdown. Empty (the default) picks WebView2 when it's installed.
+    Str htmlBackend;
 
     Flags() = default;
     ~Flags() = default;

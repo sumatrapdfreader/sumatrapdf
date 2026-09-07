@@ -122,6 +122,8 @@ With multiple files, the exit code is `0` only if all printed; otherwise it's th
 
   renders file1.pdf 25 times, renders pages 1 to 3 of file2.pdf and renders all but the first 14 PDF and XPS files from dir 3 times.
 
+- `-html-backend <ie|webview2>` : forces the embedded browser that shows CHM and markdown documents. By default WebView2 is used when it's installed and the IE control otherwise; this makes a test cover both. (**ver 3.7+**)
+
 - `-bench <filepath> [page-range]` : Renders all pages (or just the indicated ones) for the given file and then outputs the required rendering times for performance testing and comparisons. Often used together with `-console`.
 
 ## Deprecated options

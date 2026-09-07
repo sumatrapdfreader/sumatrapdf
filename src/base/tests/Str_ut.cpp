@@ -243,7 +243,21 @@ static void StrUrlExtractTest() {
     utassert(str::Eq(url::EncodePathTemp(StrL("Test Test.html")), StrL("Test%20Test.html")));
     utassert(str::Eq(url::EncodePathTemp(StrL("dir/Test Test.html")), StrL("dir/Test%20Test.html")));
     utassert(str::Eq(url::EncodePathTemp(StrL("a/b c/d")), StrL("a/b%20c/d")));
+    utassert(str::Eq(url::EncodePathTemp(StrL("C#1.md")), StrL("C%231.md")));
     utassert(str::Eq(url::DecodeTemp(url::EncodePathTemp(StrL("dir/Test Test.html"))), StrL("dir/Test Test.html")));
+    utassert(str::Eq(url::DecodeTemp(url::EncodePathTemp(StrL("a/C#1 & 100%.md"))), StrL("a/C#1 & 100%.md")));
+    // every url-special character legal in a Windows file name round-trips and
+    // none is left literal: '/' is the only byte the path encoder passes through
+    Str specials = StrL("dir/ !#$%&'()+,;=@[]^`{}~ caf\xC3\xA9.md");
+    TempStr encSpecials = url::EncodePathTemp(specials);
+    utassert(str::Eq(url::DecodeTemp(encSpecials), specials));
+    Str mustEncode = StrL(" !#$&'()+,;=@[]^`{}");
+    for (int i = 0; i < len(mustEncode); i++) {
+        utassert(str::IndexOfChar(encSpecials, mustEncode.s[i]) < 0);
+    }
+    // the separator after "dir" is the only '/' left
+    utassert(str::IndexOfChar(encSpecials, '/') == 3);
+    utassert(str::IndexOfChar(Str(encSpecials.s + 4, encSpecials.len - 4), '/') < 0);
 
     bool truncated = true;
     TempStr fit = url::EncodeMayTruncateTemp(StrL("abc"), 100, &truncated);

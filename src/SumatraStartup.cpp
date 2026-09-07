@@ -25,6 +25,7 @@
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
 #include "gui/win/WebView.h"
+#include "gui/win/BrowserDocView.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -2255,6 +2256,18 @@ Exit:
     return res;
 }
 
+// -html-backend ie|webview2: force the browser hosting CHM / markdown, so a
+// test can exercise both backends on a machine that has WebView2 installed.
+static void ApplyHtmlBackendFlag(Str name) {
+    if (str::EqI(name, StrL("ie"))) {
+        SetHtmlBackend(HtmlBackend::IE);
+        return;
+    }
+    if (str::EqI(name, StrL("webview2"))) {
+        SetHtmlBackend(HtmlBackend::WebView2);
+    }
+}
+
 static void LogCommandLine() {
     TempStr s = ToUtf8Temp(GetCommandLineW());
     logf("'%s'\n  ver %s\n", Str(s), StrL(UPDATE_CHECK_VERA));
@@ -2333,6 +2346,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     ParseFlags(GetPermArena(), GetCommandLineW(), flags, Str(gToolNames));
     gCli = &flags;
     gForTesting = flags.forTesting;
+    ApplyHtmlBackendFlag(flags.htmlBackend);
     InstallSumatraCrashHandler(flags.forTesting || flags.controlPipeName);
 
     ScopedOle ole;

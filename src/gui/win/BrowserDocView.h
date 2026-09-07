@@ -5,6 +5,15 @@ struct HtmlWindowCallback;
 struct WebViewResourceResult;
 struct BrowserWebviewWnd;
 
+// Which embedded browser hosts the document. Auto = WebView2 when installed.
+enum class HtmlBackend {
+    Auto,
+    IE,
+    WebView2,
+};
+
+void SetHtmlBackend(HtmlBackend);
+
 // Hosts a document's HTML content (CHM, markdown) in an embedded browser:
 // WebView2 when available, otherwise IE.
 class BrowserDocView {

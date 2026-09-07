@@ -572,6 +572,13 @@ bool BrowserDocView::CreateWebView2() {
     return true;
 }
 
+static HtmlBackend gHtmlBackend = HtmlBackend::Auto;
+
+// -html-backend forces IE or WebView2 so tests can exercise both paths.
+void SetHtmlBackend(HtmlBackend backend) {
+    gHtmlBackend = backend;
+}
+
 BrowserDocView* BrowserDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix) {
     if (!hwndParent || !cb) {
         return nullptr;
@@ -589,7 +596,8 @@ BrowserDocView* BrowserDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, 
     }
 
 #ifdef _MSC_VER
-    if (HasWebView() && view->CreateWebView2()) {
+    bool wantWebView = gHtmlBackend != HtmlBackend::IE && HasWebView();
+    if (wantWebView && view->CreateWebView2()) {
         // leave hidden; caller shows with SetVisible(true) when the tab is active
         return view;
     }

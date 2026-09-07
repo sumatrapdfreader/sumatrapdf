@@ -28,6 +28,19 @@
 constexpr const char* kMdVirtualHost = "https://sumatrapdf.markdown/";
 constexpr int kMdVirtualHostLen = sizeof("https://sumatrapdf.markdown/") - 1;
 
+// The url without its ?query / #fragment. Unlike url::GetFullPathTemp() this
+// does not percent-decode: a virtual url stays encoded end to end, so a file
+// named "C#1.md" isn't read as page "C" plus fragment "1.html" (issue #6140).
+static TempStr UrlPathTemp(Str url) {
+    if (len(url) == 0) {
+        return {};
+    }
+    TempStr path = str::DupTemp(url);
+    str::TransCharsInPlace(path, StrL("#?"), StrL("\0\0"));
+    path.len = len(path.s);
+    return path;
+}
+
 static bool IsMarkdownVirtualHostUrl(Str url) {
     if (len(url) == 0) {
         return false;
@@ -35,7 +48,7 @@ static bool IsMarkdownVirtualHostUrl(Str url) {
     if (str::StartsWith(url, Str(kMdVirtualHost))) {
         return true;
     }
-    TempStr plain = url::GetFullPathTemp(url);
+    TempStr plain = UrlPathTemp(url);
     return plain && str::StartsWith(plain, Str(kMdVirtualHost));
 }
 
@@ -48,7 +61,7 @@ static bool IsMarkdownExternalUrl(Str url) {
 }
 
 static TempStr NormalizeMarkdownUrlTemp(Str url) {
-    TempStr plainUrl = url::GetFullPathTemp(url);
+    TempStr plainUrl = UrlPathTemp(url);
     if (len(plainUrl) == 0) {
         return {};
     }
@@ -58,22 +71,11 @@ static TempStr NormalizeMarkdownUrlTemp(Str url) {
     return str::JoinTemp(Str(kMdVirtualHost), plainUrl);
 }
 
-// Keep #fragment (GetFullPathTemp strips it). Encode the path so a name with a
-// space is a valid URI; some WebView2 builds 404 "Test Test.html" (issue #6140).
+// Keep the #fragment: UrlPathTemp() strips it for page lookup and state
+// tracking, but the browser needs it to scroll to a heading within the page.
 static TempStr MarkdownBrowserNavigationUrl(Str url) {
     str::TrimPrefix(url, Str(kMdVirtualHost));
-    int hash = str::IndexOfChar(url, '#');
-    Str path = url;
-    Str frag;
-    if (hash >= 0) {
-        path = Str(url.s, hash);
-        frag = Str(url.s + hash, url.len - hash);
-    }
-    TempStr encoded = url::EncodePathTemp(path);
-    if (len(frag) == 0) {
-        return encoded;
-    }
-    return str::JoinTemp(encoded, frag);
+    return str::DupTemp(url);
 }
 
 // Extensions the embedded browser can display on its own: the pages we render
@@ -271,6 +273,10 @@ static TempStr FileToVirtualUrlTemp(Str filePath, Str baseDir, bool isHtml) {
         rel = path::GetBaseNameTemp(filePath);
     }
     rel = str::ReplaceTemp(rel, StrL("\\"), StrL("/"));
+    // percent-encode the name: a space, '#', '%' or non-ASCII in it must not be
+    // read back as url syntax (issue #6140). '.' stays literal, so the extension
+    // below is still trimmed by length.
+    rel = url::EncodePathTemp(rel);
     if (isHtml) {
         // .html files are served raw, so keep their real name/extension
         return fmt("%s%s", Str(kMdVirtualHost, kMdVirtualHostLen), rel);
@@ -297,7 +303,8 @@ TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
     if (fragment) {
         pathPart = Str(pathPart.s, (int)(fragment.s - pathPart.s));
     }
-    TempStr rel = str::ReplaceTemp(pathPart, StrL("/"), StrL("\\"));
+    // url path -> file path: decode first, a '/' or '\' can't be in a file name
+    TempStr rel = str::ReplaceTemp(url::DecodeTemp(pathPart), StrL("/"), StrL("\\"));
     if (isHtml) {
         // page urls keep their real name; images/links resolve against baseDir too
         return path::JoinTemp(baseDir, rel);
@@ -476,7 +483,7 @@ TempStr MarkdownModel::LinkedDocPathTemp(Str url) const {
     if (len(urlPath) == 0 || !str::TrimPrefix(urlPath, Str(kMdVirtualHost)) || IsBrowserViewableExt(urlPath)) {
         return {};
     }
-    TempStr rel = str::ReplaceTemp(urlPath, StrL("/"), StrL("\\"));
+    TempStr rel = str::ReplaceTemp(url::DecodeTemp(urlPath), StrL("/"), StrL("\\"));
     return path::NormalizeTemp(path::JoinTemp(baseDir, rel));
 }
 
@@ -543,7 +550,7 @@ bool MarkdownModel::DisplayPage(Str pageUrl) {
         return false;
     }
 
-    TempStr plainUrl = url::GetFullPathTemp(pageUrl);
+    TempStr plainUrl = UrlPathTemp(pageUrl);
     int pageNo = pages.Find(VirtualUrlToFileTemp(plainUrl)) + 1;
     if (pageNo < 1) {
         pageNo = currentPageNo;
@@ -676,7 +683,7 @@ void MarkdownModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
     if (len(url) == 0 || pos.x < 0 || pos.y < 0) {
         return;
     }
-    TempStr plainUrl = url::GetFullPathTemp(url);
+    TempStr plainUrl = UrlPathTemp(url);
     int idx = htmlScrollUrls.Find(plainUrl);
     if (idx >= 0) {
         htmlScrollPositions[idx] = pos;
@@ -697,7 +704,7 @@ bool MarkdownModel::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
     if (len(url) == 0 || !pos) {
         return false;
     }
-    TempStr plainUrl = url::GetFullPathTemp(url);
+    TempStr plainUrl = UrlPathTemp(url);
     int idx = htmlScrollUrls.Find(plainUrl);
     if (idx < 0) {
         return false;
@@ -771,7 +778,7 @@ float MarkdownModel::GetNextZoomStep(float towardsLevel) const {
 }
 
 MarkdownCacheEntry* MarkdownModel::FindDataForUrl(Str url) const {
-    TempStr plainUrl = url::GetFullPathTemp(url);
+    TempStr plainUrl = UrlPathTemp(url);
     for (MarkdownCacheEntry* e : urlDataCache) {
         if (str::Eq(e->url, plainUrl)) {
             return e;
@@ -929,7 +936,7 @@ void MarkdownModel::OnLButtonDown() {
 
 // engine-owned; do not delete
 IPageDestination* MarkdownModel::GetNamedDest(Str name) {
-    TempStr url = url::GetFullPathTemp(name);
+    TempStr url = UrlPathTemp(name);
     int pageNo = 0;
     TempStr filePath = VirtualUrlToFileTemp(url);
     if (filePath) {
@@ -972,12 +979,13 @@ bool MarkdownModel_UnitTestBrowserNavigationUrl() {
     if (!str::Eq(MarkdownBrowserNavigationUrl(url), StrL("issue-5842.html#target-heading"))) {
         return false;
     }
-    Str spaced = StrL("https://sumatrapdf.markdown/Test Test.html");
-    if (!str::Eq(MarkdownBrowserNavigationUrl(spaced), StrL("Test%20Test.html"))) {
+    Str spacedFrag = StrL("https://sumatrapdf.markdown/dir/Test%20Test.html#heading");
+    if (!str::Eq(MarkdownBrowserNavigationUrl(spacedFrag), StrL("dir/Test%20Test.html#heading"))) {
         return false;
     }
-    Str spacedFrag = StrL("https://sumatrapdf.markdown/dir/Test Test.html#heading");
-    return str::Eq(MarkdownBrowserNavigationUrl(spacedFrag), StrL("dir/Test%20Test.html#heading"));
+    // the name's own '#' is already %23, so only the real fragment is one
+    Str hashName = StrL("https://sumatrapdf.markdown/C%231.html#heading");
+    return str::Eq(UrlPathTemp(hashName), StrL("https://sumatrapdf.markdown/C%231.html"));
 }
 #endif
 
