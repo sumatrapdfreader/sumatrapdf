@@ -1438,31 +1438,57 @@ bool CreateAll(Str dir, int* errOut) {
     return false;
 }
 
-// SHFileOperation wants a double-NUL-terminated path list
-static bool ShDelete(Str path) {
-    TempWStr pathW = ToWStrTemp(path);
-    int n = len(pathW) + 2;
-    TempWStr doubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
-    wstr::BufSet(doubleTerminated, pathW);
-    FILEOP_FLAGS flags = FOF_NO_UI;
-    uint op = FO_DELETE;
-    SHFILEOPSTRUCTW shfo = {nullptr, op, doubleTerminated.s, nullptr, flags, FALSE, nullptr, nullptr};
-    int res = SHFileOperationW(&shfo);
-    return res == 0;
+// Plain Win32 recursive delete. SHFileOperation is not safe to call from two
+// threads at once: both block forever in the shell's jump-list update.
+static bool DeleteDirContents(Str dir) {
+    WIN32_FIND_DATAW fd{};
+    TempStr pattern = path::JoinTemp(dir, StrL("*"));
+    HANDLE h = FindFirstFileExW(CWStrTemp(pattern), FindExInfoBasic, &fd, FindExSearchNameMatch, nullptr, 0);
+    if (h == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    bool ok = true;
+    do {
+        WStr name = WStr(fd.cFileName);
+        if (wstr::Eq(name, WStrL(L".")) || wstr::Eq(name, WStrL(L".."))) {
+            continue;
+        }
+        TempStr path = path::JoinTemp(dir, ToUtf8Temp(name));
+        bool isDir = (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+        bool isLink = (fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY) {
+            SetFileAttributesW(CWStrTemp(path), FILE_ATTRIBUTE_NORMAL);
+        }
+        // a junction or symlink is removed as an entry, never followed
+        if (isDir && !isLink && !DeleteDirContents(path)) {
+            ok = false;
+        }
+        BOOL removed = isDir ? RemoveDirectoryW(CWStrTemp(path)) : DeleteFileW(CWStrTemp(path));
+        if (!removed) {
+            ok = false;
+        }
+    } while (FindNextFileW(h, &fd));
+    FindClose(h);
+    return ok;
 }
 
 bool RemoveAll(Str dir) {
-    return ShDelete(dir);
+    if (!Exists(dir)) {
+        return false;
+    }
+    bool ok = DeleteDirContents(dir);
+    SetFileAttributesW(CWStrTemp(dir), FILE_ATTRIBUTE_NORMAL);
+    return RemoveDirectoryW(CWStrTemp(dir)) && ok;
 }
 
 // Delete everything inside dir but keep dir itself, so code that races with us
 // still finds the directory there (see SaveThumbnail / dir::CreateAll).
-// A "dir\*" wildcard is how SHFileOperation spells "contents but not the dir".
 bool Empty(Str dir) {
     if (!Exists(dir)) {
         return false;
     }
-    return ShDelete(path::JoinTemp(dir, StrL("*")));
+    return DeleteDirContents(dir);
 }
 
 bool HasWriteAccess(Str dir) {

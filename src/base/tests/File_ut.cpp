@@ -197,3 +197,74 @@ void FileUtilTest() {
         utassert(ok);
     }
 }
+
+#if OS_WIN
+static void MakeDirTree(Str root) {
+    utassert(dir::CreateAll(path::JoinTemp(root, StrL("a\\b"))));
+    utassert(file::WriteFile(path::JoinTemp(root, StrL("top.txt")), StrL("x")));
+    utassert(file::WriteFile(path::JoinTemp(root, StrL("a\\mid.txt")), StrL("x")));
+    TempStr ro = path::JoinTemp(root, StrL("a\\b\\ro.txt"));
+    utassert(file::WriteFile(ro, StrL("x")));
+    SetFileAttributesW(CWStrTemp(ro), FILE_ATTRIBUTE_READONLY);
+}
+
+struct RemoveAllWorker {
+    Str root;
+    int rounds = 0;
+    bool ok = true;
+};
+
+static void RemoveAllWorkerFn(RemoveAllWorker* w) {
+    // a fresh path per round: a just-deleted dir can linger as delete-pending
+    // while an indexer or scanner still holds it, which breaks a re-create
+    for (int i = 0; i < w->rounds; i++) {
+        TempStr root = fmt("%s-%d", w->root, i);
+        MakeDirTree(root);
+        if (!dir::RemoveAll(root) || dir::Exists(root)) {
+            w->ok = false;
+            return;
+        }
+    }
+}
+#endif
+
+// dir::RemoveAll must remove nested and read-only content and must be safe
+// to call from several threads at once (the shutdown WebView profile removal
+// races the DeleteStaleFilesAsync sweep)
+void DirRemoveAllTest() {
+#if OS_WIN
+    TempStr root = GetTempFilePathTemp(StrL("rmall"));
+    file::Delete(root);
+    MakeDirTree(root);
+    utassert(dir::Empty(root));
+    utassert(dir::Exists(root));
+    utassert(!file::Exists(path::JoinTemp(root, StrL("top.txt"))));
+    utassert(!dir::Exists(path::JoinTemp(root, StrL("a"))));
+
+    MakeDirTree(root);
+    utassert(dir::RemoveAll(root));
+    utassert(!dir::Exists(root));
+    utassert(!dir::RemoveAll(root));
+
+    const int kThreads = 4;
+    const int kRounds = 25;
+    const DWORD kTimeoutMs = 60 * 1000;
+    RemoveAllWorker workers[kThreads];
+    ThreadHandle threads[kThreads];
+    for (int i = 0; i < kThreads; i++) {
+        workers[i].root = str::Dup(fmt("%s-%d", root, i));
+        workers[i].rounds = kRounds;
+        threads[i] = StartThread(MkFunc0(RemoveAllWorkerFn, &workers[i]), StrL("RemoveAllWorker"));
+    }
+    DWORD res = WaitForMultipleObjects(kThreads, threads, TRUE, kTimeoutMs);
+    utassert(res != WAIT_TIMEOUT && "concurrent dir::RemoveAll deadlocked");
+    for (int i = 0; i < kThreads; i++) {
+        if (res == WAIT_TIMEOUT) {
+            TerminateThread(threads[i], 1);
+        }
+        SafeCloseThreadHandle(&threads[i]);
+        utassert(workers[i].ok);
+        str::Free(workers[i].root);
+    }
+#endif
+}

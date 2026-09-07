@@ -17,6 +17,7 @@ extern void CryptoUtilTest();
 extern void CssParser_UnitTests();
 extern void DictTest();
 extern void FileUtilTest();
+extern void DirRemoveAllTest();
 extern void GuessFileTypeTest();
 extern void JsonTest();
 extern void RefHoverTest();
@@ -129,6 +130,7 @@ int main(int argc, char** argv) {
     PdfDarkModeOklab_UnitTests();
     PdfDarkModeImageClassifier_UnitTests();
     AppendStoreTest();
+    DirRemoveAllTest();
     ChapterTable_UnitTests();
     PagePosition_UnitTests();
 #if OS_WIN
