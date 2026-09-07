@@ -74,6 +74,9 @@ TempStr GetTempFilePathTemp(Str filePrefix = Str());
 TempStr GetSelfExePathTemp();
 #if OS_WIN
 TempWStr GetSelfExePathW();
+// initialCch is only a starting guess; the buffer grows until the path fits.
+// Tests pass a tiny value to exercise that.
+TempWStr GetModulePathTemp(HMODULE mod, int initialCch);
 #endif
 TempStr GetSelfExeDirTemp();
 TempStr GetPathInExeDirTemp(Str fileName = Str());

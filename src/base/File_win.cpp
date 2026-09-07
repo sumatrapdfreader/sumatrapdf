@@ -822,20 +822,44 @@ TempStr GetTempFilePathTemp(Str filePrefix) {
     return ToUtf8Temp(path);
 }
 
+// GetModuleFileNameW() truncates silently: on a buffer that is too small it
+// fills it, returns the buffer size and sets ERROR_INSUFFICIENT_BUFFER, so a
+// short read is the only way to know the whole path arrived. Grow until it
+// does. initialCch is a parameter so tests can force the growing.
+// kMaxPathCch is the longest path Windows itself accepts.
+constexpr int kMaxPathCch = 32 * 1024;
+
+TempWStr GetModulePathTemp(HMODULE mod, int initialCch) {
+    int cch = initialCch < 1 ? 1 : initialCch;
+    for (;;) {
+        WCHAR* buf = AllocArrayTemp<WCHAR>(cch + 1);
+        if (!buf) {
+            return {};
+        }
+        DWORD n = GetModuleFileNameW(mod, buf, (DWORD)cch);
+        if (n == 0) {
+            LogLastError();
+            return {};
+        }
+        if ((int)n < cch) {
+            return WStr(buf, (int)n);
+        }
+        if (cch >= kMaxPathCch) {
+            logf("GetModulePathTemp: path longer than %d chars\n", kMaxPathCch);
+            return WStr(buf, (int)n);
+        }
+        cch *= 2;
+    }
+}
+
 TempWStr GetSelfExePathW() {
-    WCHAR buf[MAX_PATH + 2]{};
-    DWORD nChars = dimof(buf) - 1;
-    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
-    GetModuleFileNameW((HINSTANCE)&__ImageBase, buf, nChars);
-    return str::DupTemp(WStr(buf));
+    return GetModulePathTemp((HMODULE)&__ImageBase, MAX_PATH + 1);
 }
 
 // Path of this process image (exe or DLL that contains this code).
 TempStr GetSelfExePathTemp() {
-    WCHAR buf[MAX_PATH + 2]{};
-    DWORD nChars = dimof(buf) - 1;
-    GetModuleFileNameW((HINSTANCE)&__ImageBase, buf, nChars);
-    return ToUtf8Temp(buf);
+    TempWStr ws = GetSelfExePathW();
+    return ToUtf8Temp(ws);
 }
 
 // Directory containing GetSelfExePathTemp().

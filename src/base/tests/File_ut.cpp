@@ -154,6 +154,19 @@ void FileUtilTest() {
 #endif
 
     {
+        // the module path must come back whole no matter how small the first
+        // buffer is, i.e. the growing loop must run and not truncate
+        TempWStr expected = GetModulePathTemp((HMODULE) nullptr, MAX_PATH + 1);
+        utassert(len(expected) > 0);
+        int sizes[] = {1, 2, 8, 64};
+        for (int cch : sizes) {
+            TempWStr got = GetModulePathTemp((HMODULE) nullptr, cch);
+            utassert(len(got) == len(expected));
+            utassert(wstr::Eq(got, expected));
+        }
+    }
+
+    {
         // write a temp file, map it and verify the view matches what was written
         TempStr path = GetTempFilePathTemp(StrL("mmap-test"));
         utassert(len(path) > 0);
