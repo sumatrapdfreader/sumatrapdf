@@ -405,6 +405,8 @@ void DbgOutLastError(DWORD err = 0);
 Str GetLastErrorAsStr(Arena* arena);
 TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 TempStr GetTempDirTemp();
+// initialCch is only a starting guess; tests pass a tiny value to force the retry
+TempStr GetTempDirTemp(int initialCch);
 Str GetAppLocalDataDirTemp();
 void ChangeCurrDirToDocuments();
 TempStr ResolveLnkTemp(Str path);

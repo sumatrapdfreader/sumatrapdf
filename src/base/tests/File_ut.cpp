@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/Win.h"
 
 // must be last due to assert() over-write
 #include "base/UtAssert.h"
@@ -152,6 +153,18 @@ void FileUtilTest() {
     utassert(str::Eq(joined, StrL("foo/bar")));
     str::Free(joined);
 #endif
+
+    {
+        // a temp dir that doesn't fit the first buffer must come back whole:
+        // the retry must run and return the same path as a roomy first try
+        TempStr expected = GetTempDirTemp(MAX_PATH);
+        utassert(len(expected) > 0);
+        int sizes[] = {1, 2, 8};
+        for (int cch : sizes) {
+            TempStr got = GetTempDirTemp(cch);
+            utassert(str::Eq(got, expected));
+        }
+    }
 
     {
         // the module path must come back whole no matter how small the first

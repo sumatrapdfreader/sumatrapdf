@@ -1018,14 +1018,34 @@ TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
 TempStr GetTempDirTemp() {
     // not GetTempPath2W(): it only differs for processes running as SYSTEM,
     // which we never are
-    WCHAR dir[MAX_PATH] = {};
-    DWORD cch = GetTempPathW(dimof(dir), dir);
+    return GetTempDirTemp(MAX_PATH);
+}
+
+// GetTempPathW() returns the size the path needs, including the terminator,
+// when the buffer is too small, and writes nothing. Retry with that size.
+// initialCch is a parameter so tests can force the retry.
+TempStr GetTempDirTemp(int initialCch) {
+    int cchBuf = initialCch < 1 ? 1 : initialCch;
+    WCHAR* dir = AllocArrayTemp<WCHAR>(cchBuf + 1);
+    if (!dir) {
+        return {};
+    }
+    DWORD cch = GetTempPathW((DWORD)cchBuf, dir);
     if (cch == 0) {
         return {};
     }
-    // TODO: should handle this
-    ReportIf(cch >= dimof(dir));
-    return ToUtf8Temp(WStr(dir, (int)cch));
+    if ((int)cch < cchBuf) {
+        return ToUtf8Temp(WStr(dir, (int)cch));
+    }
+    WCHAR* buf = AllocArrayTemp<WCHAR>((int)cch + 1);
+    if (!buf) {
+        return {};
+    }
+    DWORD cch2 = GetTempPathW(cch, buf);
+    if (cch2 == 0 || cch2 >= cch) {
+        return {};
+    }
+    return ToUtf8Temp(WStr(buf, (int)cch2));
 }
 
 //--- OS / process (misc)
