@@ -1160,16 +1160,25 @@ ULONG STDMETHODCALLTYPE HtmlMoniker::Release() {
     return res;
 }
 
+// The window that renders the page and processes its input. It sits under
+// "Shell Embedding" / "Shell DocObject View", but descending into the first
+// child at each level found nothing once the parent had another child before
+// it -- our canvas hosts an edit control too (issue #6148). Search by class.
 static HWND GetBrowserControlHwnd(HWND hwndControlParent) {
-    // This is a fragile way to get the actual hwnd of the browser control
-    // that is responsible for processing keyboard messages (I believe the
-    // hierarchy might change depending on how the browser control is configured
-    // e.g. if it has status window etc.).
-    // But it works for us.
-    HWND w1 = GetWindow(hwndControlParent, GW_CHILD);
-    HWND w2 = GetWindow(w1, GW_CHILD);
-    HWND w3 = GetWindow(w2, GW_CHILD);
-    return w3;
+    HWND child = GetWindow(hwndControlParent, GW_CHILD);
+    while (child) {
+        WCHAR cls[64] = {};
+        int n = GetClassNameW(child, cls, dimof(cls));
+        if (wstr::Eq(WStr(cls, n), WStrL(L"Internet Explorer_Server"))) {
+            return child;
+        }
+        HWND res = GetBrowserControlHwnd(child);
+        if (res) {
+            return res;
+        }
+        child = GetWindow(child, GW_HWNDNEXT);
+    }
+    return nullptr;
 }
 
 // WndProc of the window that is a parent hwnd of embedded browser control.
@@ -1186,10 +1195,17 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             break;
 
-        // Note: not quite sure why I need this but if we don't swallow WM_MOUSEWHEEL
-        // messages, we might get infinite recursion.
+        // The wheel lands here whenever the browser control isn't focused, and
+        // swallowing it left CHM / markdown unscrollable (issue #6148). Forward
+        // it instead; the control bounces an unhandled wheel back to this
+        // parent, so a flag breaks the recursion.
         case WM_MOUSEWHEEL:
         case WM_MOUSEHWHEEL:
+            if (!win->forwardingWheel) {
+                win->forwardingWheel = true;
+                win->SendMsg(msg, wp, lp);
+                win->forwardingWheel = false;
+            }
             return 0;
 
         case WM_PARENTNOTIFY:

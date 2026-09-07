@@ -258,6 +258,7 @@ import { testit as issue6143 } from "./issue-6143.ts";
 import { testit as issue6144 } from "./issue-6144.ts";
 import { testit as toolbarTabSwitchPos } from "./toolbar-tab-switch-pos.ts";
 import { testit as mdMissingFile } from "./ad-hoc-md-missing-file.ts";
+import { testit as issue6148 } from "./issue-6148.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -277,6 +278,7 @@ export const tests: NamedTest[] = [
   ["issue-6140", issue6140],
   ["ad-hoc-md-missing-file", mdMissingFile],
   ["issue-6142", issue6142],
+  ["issue-6148", issue6148],
   ["issue-6143", issue6143],
   ["issue-6144", issue6144],
   ["issue-5993", issue5993],

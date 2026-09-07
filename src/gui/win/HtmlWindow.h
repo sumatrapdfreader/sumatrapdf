@@ -100,6 +100,7 @@ class HtmlWindow {
     HtmlWindowCallback* htmlWinCb = nullptr;
 
     UINT_PTR subclassId = 0;
+    bool forwardingWheel = false;
 
     bool OnBeforeNavigate(Str url, bool newWindow);
     void OnDocumentComplete(Str url);
