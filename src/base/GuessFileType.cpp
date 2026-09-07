@@ -16,7 +16,9 @@
 // http://en.wikipedia.org/wiki/Read.me
 // http://www.cix.co.uk/~gidds/Software/TCR.html
 
-// TODO: should .prc be FileType::PalmDoc instead of FileType::Mobi?
+// .prc stays Mobi: it is Mobipocket's own extension, PalmDoc's is .pdb.
+// A PalmDoc that uses .prc anyway is caught by its creator id when
+// sniffing, which wins over the extension.
 // .zip etc. are at the end so that .fb2.zip etc. is recognized at fb2
 #define DEF_EXT_KIND(V)                \
     V(".txt", FileType::Txt)           \
