@@ -135,6 +135,10 @@ function relSettings(id: string): string {
   return relative(ROOT, settingsPath(id)).replaceAll("\\", "/");
 }
 
+function toLF(s: string): string {
+  return s.replace(/\r\n/g, "\n");
+}
+
 const kSettingsMark = "--- settings ---";
 const kSettingsMarkOld = "----- Settings file ----------";
 
@@ -153,8 +157,7 @@ function splitMinidumpComment(text: string): { log: string; settings: string } {
   }
   return {
     log: text.slice(0, idx).replace(/\s+$/, ""),
-    settings: text
-      .slice(idx + markLen)
+    settings: toLF(text.slice(idx + markLen))
       .replace(/^\s+/, "")
       .replace(/\s+$/, ""),
   };
@@ -815,15 +818,13 @@ type ApiCrash = {
   FileNameTxt: string;
   IP: string;
   Ver: string;
-  Cond: string;
   CrashLine: string;
+  SrcLoc: string;
   GitSha1: string;
   IsCrash: boolean;
-  HasLog: boolean;
-  HasSettings: boolean;
 };
 
-function parseAnalyzeSummary(txt: string): { crashLine: string; cond: string; isCrash: boolean } {
+function parseAnalyzeSummary(txt: string): { crashLine: string; srcLoc: string; isCrash: boolean } {
   const isCrash = !/Type:\s*hang/i.test(txt);
   let body = txt;
   const crashed = txt.indexOf("=== crashed thread ===");
@@ -835,7 +836,7 @@ function parseAnalyzeSummary(txt: string): { crashLine: string; cond: string; is
   const siteRe = / : ([A-Za-z0-9_.]+![^\s\[]+)/;
   const srcRe = /\[([^\]]+?) @ (\d+)\]/;
   let crashLine = "";
-  let cond = "";
+  let srcLoc = "";
   for (const line of body.split(/\r?\n/)) {
     const sm = siteRe.exec(line);
     if (!sm) {
@@ -844,28 +845,48 @@ function parseAnalyzeSummary(txt: string): { crashLine: string; cond: string; is
     crashLine = sm[1];
     const src = srcRe.exec(line);
     if (src) {
-      cond = `${crashLine} @ ${src[1]}:${src[2]}`;
+      srcLoc = `${src[1]}:${src[2]}`;
     }
     break;
   }
-  return { crashLine, cond, isCrash };
+  return { crashLine, srcLoc, isCrash };
 }
 
 function crashApiRow(row: DumpRow): ApiCrash {
   const txt = isAnalyzed(row.id) ? readFileSync(analyzePath(row.id), "utf8") : "";
-  const { crashLine, cond, isCrash } = parseAnalyzeSummary(txt);
+  const { crashLine, srcLoc, isCrash } = parseAnalyzeSummary(txt);
   return {
     Day: row.date.slice(0, 10),
     FileNameTxt: row.id,
     IP: row.ip,
     Ver: row.version,
-    Cond: cond,
     CrashLine: crashLine,
+    SrcLoc: srcLoc,
     GitSha1: "",
     IsCrash: isCrash,
-    HasLog: isLogExtracted(row.id),
-    HasSettings: isSettingsExtracted(row.id),
   };
+}
+
+function readLog(id: string): string {
+  return isLogExtracted(id) ? readFileSync(logPath(id), "utf8") : "";
+}
+
+function readSettings(id: string): string {
+  return isSettingsExtracted(id) ? toLF(readFileSync(settingsPath(id), "utf8")) : "";
+}
+
+// analyze.txt with the minidump log and settings appended
+function crashText(id: string, analyzeTxt: string): string {
+  const parts = [analyzeTxt.replace(/\s+$/, "")];
+  const log = readLog(id);
+  if (log) {
+    parts.push("=== minidump log ===", log.replace(/\s+$/, ""));
+  }
+  const settings = readSettings(id);
+  if (settings) {
+    parts.push("=== settings ===", settings.replace(/\s+$/, ""));
+  }
+  return `${parts.join("\n\n")}\n`;
 }
 
 function escapeHtml(s: string): string {
@@ -874,8 +895,8 @@ function escapeHtml(s: string): string {
 
 function crashHtml(id: string, analyzeTxt: string): string {
   const enc = encodeURIComponent(id);
-  const logTxt = isLogExtracted(id) ? readFileSync(logPath(id), "utf8") : "";
-  const settingsTxt = isSettingsExtracted(id) ? readFileSync(settingsPath(id), "utf8") : "";
+  const logTxt = readLog(id);
+  const settingsTxt = readSettings(id);
   const logBlock = logTxt ? `<h2>minidump log</h2>\n<pre>${escapeHtml(logTxt)}</pre>` : "";
   const settingsBlock = settingsTxt ? `<h2>settings</h2>\n<pre>${escapeHtml(settingsTxt)}</pre>` : "";
   return `<!doctype html>
@@ -953,17 +974,7 @@ function crashesIndexHtml(): string {
       let n = crashesPerDay[day] ? crashesPerDay[day].length : 0;
       return "[" + n + "]";
     }
-    function parseCond(crash) {
-      let cond = crash.Cond;
-      if (!cond) return null;
-      let atIdx = cond.lastIndexOf(" @ ");
-      if (atIdx < 0) return null;
-      return { prefix: cond.substring(0, atIdx + 3), shortPath: cond.substring(atIdx + 3), url: "" };
-    }
     function textURL(crash) { return "/crash/" + crash.FileNameTxt; }
-    function htmlURL(crash) { return "/crash/" + crash.FileNameTxt + ".html"; }
-    function logURL(crash) { return "/crash/" + crash.FileNameTxt + ".log"; }
-    function settingsURL(crash) { return "/crash/" + crash.FileNameTxt + ".settings"; }
   </script>
   <script src="https://unpkg.com/alpinejs" defer></script>
   <style>
@@ -999,17 +1010,6 @@ function crashesIndexHtml(): string {
         <template x-for="crash in $store.crashes.currDayCrashes">
           <tr>
             <td><a :href="textURL(crash)" target="_blank">text</a></td>
-            <td><a :href="htmlURL(crash)" target="_blank">html</a></td>
-            <td>
-              <template x-if="crash.HasLog">
-                <a :href="logURL(crash)" target="_blank">log</a>
-              </template>
-            </td>
-            <td>
-              <template x-if="crash.HasSettings">
-                <a :href="settingsURL(crash)" target="_blank">settings</a>
-              </template>
-            </td>
             <td>
               <template x-if="crash.IsCrash">
                 <div style="color: red; font-weight: bold;" x-text="shortVer(crash.ShortVer)"></div>
@@ -1018,16 +1018,9 @@ function crashesIndexHtml(): string {
                 <div x-text="shortVer(crash.ShortVer)"></div>
               </template>
             </td>
-            <td>
-              <template x-if="parseCond(crash)">
-                <div><span x-text="parseCond(crash).prefix"></span><span x-text="parseCond(crash).shortPath"></span></div>
-              </template>
-              <template x-if="!parseCond(crash)">
-                <div x-text="crash.Cond"></div>
-              </template>
-            </td>
-            <td><div x-text="crash.CrashLine"></div></td>
             <td><div x-text="crash.IP"></div></td>
+            <td><div x-text="crash.CrashLine"></div></td>
+            <td><div x-text="crash.SrcLoc"></div></td>
           </tr>
         </template>
       </tbody>
@@ -1070,7 +1063,7 @@ function handleCrashHttp(req: Request, rows: DumpRow[]): Response {
       if (!isSettingsExtracted(id)) {
         return new Response("not found", { status: 404 });
       }
-      return new Response(readFileSync(settingsPath(id), "utf8"), {
+      return new Response(readSettings(id), {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     }
@@ -1081,7 +1074,7 @@ function handleCrashHttp(req: Request, rows: DumpRow[]): Response {
     if (ext === ".html") {
       return new Response(crashHtml(id, body), { headers: { "content-type": "text/html; charset=utf-8" } });
     }
-    return new Response(body, { headers: { "content-type": "text/plain; charset=utf-8" } });
+    return new Response(crashText(id, body), { headers: { "content-type": "text/plain; charset=utf-8" } });
   }
   return new Response("not found", { status: 404 });
 }
