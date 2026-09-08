@@ -201,6 +201,7 @@ import { testit as commandPaletteShortcutFilter } from "./command-palette-shortc
 import { testit as commandPaletteThumbnails } from "./command-palette-thumbnails.ts";
 import { testit as commandPaletteAnnotations } from "./command-palette-annotations.ts";
 import { testit as commandPaletteSettings } from "./command-palette-settings.ts";
+import { testit as commandPaletteDeleteTab } from "./command-palette-delete-tab.ts";
 import { testit as issue6104 } from "./issue-6104.ts";
 import { testit as issue6106 } from "./issue-6106.ts";
 import { testit as issue6107 } from "./issue-6107.ts";
@@ -479,6 +480,7 @@ export const tests: NamedTest[] = [
   ["command-palette-thumbnails", commandPaletteThumbnails],
   ["command-palette-annotations", commandPaletteAnnotations],
   ["command-palette-settings", commandPaletteSettings],
+  ["command-palette-delete-tab", commandPaletteDeleteTab],
   ["issue-6104", issue6104],
   ["issue-6106", issue6106],
   ["issue-6107", issue6107],

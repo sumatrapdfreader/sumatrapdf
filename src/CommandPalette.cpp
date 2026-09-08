@@ -325,6 +325,7 @@ Str CommandPaletteSkipWS(Str s) {
 }
 
 CommandPaletteWnd* gCommandPaletteWnd = nullptr;
+static int gPaletteOpDepth = 0;
 static HWND gHwndToActivateOnClose = nullptr;
 static WindowTab* gTabToSelectOnClose = nullptr;
 static i32 gCmdIdToExecOnClose = 0;
@@ -985,6 +986,75 @@ void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx) {
     wnd->OnSelectionChange();
 }
 
+struct RemoveItemOp {
+    CommandPaletteWnd* wnd = nullptr;
+    WindowTab* tab = nullptr;
+    Favorite* fav = nullptr;
+    FileState* favFs = nullptr;
+    Str filePath;
+    int currSel = 0;
+};
+
+// CloseTab / DelFavorite can pump; this runs after the key handler returns.
+static void ApplyRemoveItem(RemoveItemOp* op) {
+    CommandPaletteWnd* wnd = op->wnd;
+    WindowTab* tab = op->tab;
+    Favorite* fav = op->fav;
+    FileState* favFs = op->favFs;
+    Str filePath = op->filePath;
+    int currSel = op->currSel;
+    defer {
+        str::Free(filePath);
+        delete op;
+    };
+
+    if (gCommandPaletteWnd != wnd) {
+        return;
+    }
+
+    gPaletteOpDepth++;
+    defer {
+        gPaletteOpDepth--;
+    };
+
+    MainWindow* host = wnd->win;
+    if (tab) {
+        CloseTab(tab, false);
+    } else if (fav && favFs) {
+        DelFavorite(favFs, fav);
+    } else if (len(filePath) > 0 && host) {
+        ForgetFileFromFrequentlyRead(host, filePath);
+    }
+
+    if (gCommandPaletteWnd != wnd) {
+        return;
+    }
+    if (!IsMainWindowValid(host)) {
+        ScheduleDeleteAndExecCommand();
+        return;
+    }
+
+    wnd->CollectStrings(host);
+    if (gCommandPaletteWnd != wnd || !wnd->listBox || !wnd->listBox->model) {
+        return;
+    }
+    auto* m = (ListBoxModelCP*)wnd->listBox->model;
+    Str filter = CommandPaletteSkipWS(Str(wnd->editQuery->GetTextTemp()));
+    wnd->FilterStringsForQuery(filter, m->strings);
+    wnd->listBox->SetModel(m);
+
+    int n = m->ItemsCount();
+    if (n == 0) {
+        wnd->listBox->SetCurrentSelection(-1);
+        return;
+    }
+    int sel = currSel;
+    if (sel >= n) {
+        sel = n - 1;
+    }
+    CommandPaletteSetCurrentSelection(wnd, sel);
+}
+
 static void EditSetTextAndFocus(Edit* e, Str s) {
     e->SetText(s);
     EditSetCursorPosAtEnd(e);
@@ -1045,7 +1115,7 @@ void CommandPaletteWnd::OnActivate(WindowBase::ActivateEvent* ev) {
         // -for-testing runs in the background, so this popup never stays
         // foreground. Closing on WA_INACTIVE would destroy it between
         // sequential WM_SETTEXT queries (image-only-palette-items).
-        if (!gForTesting) {
+        if (!gForTesting && gPaletteOpDepth == 0) {
             ScheduleDeleteAndExecCommand();
         }
         ev->didHandle = true;
@@ -1141,37 +1211,22 @@ bool CommandPaletteWnd::RemoveSelectedItem() {
         return false;
     }
 
-    if (d->tab) {
-        WindowTab* tab = d->tab;
-        CloseTab(tab, false);
-        if (!IsMainWindowValid(win)) {
-            // closing the last tab closed the host window
-            ScheduleDeleteAndExecCommand();
-            return true;
-        }
-    } else if (d->fav && d->favFs) {
-        DelFavorite(d->favFs, d->fav);
-    } else if (d->filePath) {
-        ForgetFileFromFrequentlyRead(win, d->filePath);
-    } else {
+    WindowTab* tab = d->tab;
+    Favorite* fav = d->fav;
+    FileState* favFs = d->favFs;
+    Str filePath = d->filePath;
+    if (!tab && !(fav && favFs) && len(filePath) == 0) {
         return false;
     }
 
-    CollectStrings(win);
-    Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
-    FilterStringsForQuery(filter, m->strings);
-    listBox->SetModel(m);
-
-    n = m->ItemsCount();
-    if (n == 0) {
-        listBox->SetCurrentSelection(-1);
-        return true;
-    }
-    int sel = currSel;
-    if (sel >= n) {
-        sel = n - 1;
-    }
-    CommandPaletteSetCurrentSelection(this, sel);
+    auto* op = new RemoveItemOp;
+    op->wnd = this;
+    op->tab = tab;
+    op->fav = fav;
+    op->favFs = favFs;
+    op->filePath = str::Dup(filePath);
+    op->currSel = currSel;
+    uitask::Post(MkFunc0<RemoveItemOp>(ApplyRemoveItem, op), "PaletteRemoveItem");
     return true;
 }
 
