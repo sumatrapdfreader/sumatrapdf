@@ -71,7 +71,14 @@ function fixEscapes(): void {
           line.includes("/fsanitize=address") &&
           !line.includes("/Zi")
         ) {
-          return `${line} /Zi`;
+          line = `${line} /Zi`;
+        }
+        if (
+          (line.startsWith("cflags_") || line.startsWith("cxxflags_")) &&
+          line.includes("/fsanitize=address") &&
+          !line.includes("/FS")
+        ) {
+          return `${line} /FS`;
         }
         if (line.includes("nasm.exe") || line.includes("bin2coff.exe")) {
           return line.replaceAll('\\"', '"');

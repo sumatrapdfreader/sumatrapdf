@@ -172,11 +172,17 @@ function validateOptions(opts: BuildOptions): void {
   reject(opts.runArgs.length > 0 && !opts.run, "arguments after -- require -run");
 }
 
+function formatElapsed(ms: number): string {
+  const seconds = Math.round(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  if (minutes === 0) return `${seconds}s`;
+  return `${minutes}m ${seconds % 60}s`;
+}
+
 async function buildWindows(config: Config, win32: boolean, clean: boolean, ninja: boolean): Promise<void> {
   const configName = config === "release" ? "Release" : "Debug";
   const platform = win32 ? "Win32" : "x64";
   const outDir = join("out", win32 ? "rel32" : config === "release" ? "rel64" : "dbg64");
-  const timeStart = performance.now();
   console.log(`${configName} ${platform} build`);
   if (clean) clearDirPreserveSettings(outDir);
   if (ninja) {
@@ -191,7 +197,6 @@ async function buildWindows(config: Config, win32: boolean, clean: boolean, ninj
     ]);
   }
   printBinaries(outDir, new Set(["SumatraPDF.exe"]));
-  console.log(`build took ${((performance.now() - timeStart) / 1000).toFixed(1)}s`);
 }
 
 async function buildNinja(targets: string[]): Promise<void> {
@@ -260,7 +265,6 @@ function findAsanDll(vsRoot: string): string {
 async function buildWindowsAsan(config: Config, clean: boolean, ninja: boolean): Promise<void> {
   const configName = config === "release" ? "Release" : "Debug";
   const outDir = join("out", config === "release" ? "rel64_asan" : "dbg64_asan");
-  const timeStart = performance.now();
   console.log(`${configName} ASan build (SumatraPDF-static.exe, x64_asan)`);
   if (clean) clearDirPreserveSettings(outDir);
   const { msbuildPath, vsRoot } = detectVisualStudio2026();
@@ -276,13 +280,11 @@ async function buildWindowsAsan(config: Config, clean: boolean, ninja: boolean):
   }
   printBinaries(outDir, new Set(["SumatraPDF-static.exe"]));
   copyFileSync(findAsanDll(vsRoot), join(outDir, asanDllName));
-  console.log(`build took ${((performance.now() - timeStart) / 1000).toFixed(1)}s`);
   console.log(`exe: ${join(outDir, "SumatraPDF-static.exe")}`);
 }
 
 async function buildAll(clean: boolean, ninja: boolean): Promise<void> {
   const outDir = join("out", "rel64");
-  const timeStart = performance.now();
   console.log("Release x64 SumatraPDF and SumatraPDF-static build");
   if (clean) clearDirPreserveSettings(outDir);
   if (ninja) {
@@ -297,12 +299,10 @@ async function buildAll(clean: boolean, ninja: boolean): Promise<void> {
     ]);
   }
   printBinaries(outDir, new Set(["SumatraPDF.exe", "SumatraPDF-static.exe"]));
-  console.log(`build took ${((performance.now() - timeStart) / 1000).toFixed(1)}s`);
 }
 
 async function buildSmoke(ninja: boolean): Promise<void> {
   const outDir = join("out", "rel64");
-  const timeStart = performance.now();
   console.log("smoke build");
   clearDirPreserveSettings(outDir);
   if (ninja) {
@@ -318,7 +318,6 @@ async function buildSmoke(ninja: boolean): Promise<void> {
   }
   printBinaries(outDir, new Set(["SumatraPDF.exe", "test_util.exe"]));
   await runLogged(resolve(join(outDir, "test_util.exe")), [], outDir);
-  console.log(`smoke build took ${((performance.now() - timeStart) / 1000).toFixed(1)}s`);
 }
 
 async function showBuildNo(query?: string): Promise<void> {
@@ -411,7 +410,12 @@ async function main(): Promise<void> {
     console.log(usage);
     return;
   }
-  await runBuild(opts);
+  const timeStart = performance.now();
+  try {
+    await runBuild(opts);
+  } finally {
+    console.log(`build took ${formatElapsed(performance.now() - timeStart)}`);
+  }
 }
 
 try {
