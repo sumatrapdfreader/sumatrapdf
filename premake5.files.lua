@@ -1595,16 +1595,6 @@ function search_filter2_files()
   })
 end
 
-function gumbo_files()
-  files_in_dir("ext/gumbo-parser/src", {
-    "*.c",
-    "*.h",
-  })
-  files_in_dir("ext/gumbo-parser/include", {
-    "*.h",
-  })
-end
-
 function a_gumbo_files()
   files {
     "ext/a-gumbo/gumbo.c",

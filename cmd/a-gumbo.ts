@@ -5,11 +5,10 @@ import { detectVisualStudio2026, runLogged } from "./util";
 type Args = {
   repo: string;
   rev: string;
-  keep: boolean;
 };
 
-const depsDir = "deps";
-const checkoutDir = join(depsDir, "gumbo");
+const srcDir = join(".work", "src");
+const checkoutDir = join(srcDir, "gumbo");
 const outDir = join("ext", "a-gumbo");
 const tmpDir = join("cmd", "tmp", "a-gumbo");
 
@@ -91,15 +90,14 @@ void gumbo_destroy_output_iter(const GumboOptions* options, GumboOutput* output)
 `;
 
 function usage(): never {
-  console.error(`Usage: bun cmd/a-gumbo.ts <gumbo-repo-url-or-local-path> <git-tag-or-checkin> [--keep]
+  console.error(`Usage: bun cmd/a-gumbo.ts <gumbo-repo-url-or-local-path> <git-tag-or-checkin>
 
-Clones/checks out Gumbo under deps/gumbo, generates ext/a-gumbo/gumbo.h and
+Keeps a Gumbo checkout under .work/src/gumbo, generates ext/a-gumbo/gumbo.h and
 ext/a-gumbo/gumbo.c, validates the amalgamated C file with cl.exe, and leaves
 the generated files ready for the a-gumbo Premake project.
 
 Examples:
   bun cmd/a-gumbo.ts https://github.com/google/gumbo-parser.git v0.10.1
-  bun cmd/a-gumbo.ts ext/gumbo-parser HEAD
 `);
   process.exit(1);
 }
@@ -112,16 +110,11 @@ function parseArgs(): Args {
   return {
     repo: args[0],
     rev: args[1],
-    keep: args.includes("--keep"),
   };
 }
 
-async function checkout(repo: string, rev: string, keep: boolean): Promise<void> {
-  mkdirSync(depsDir, { recursive: true });
-  if (!keep && existsSync(checkoutDir)) {
-    rmSync(checkoutDir, { recursive: true, force: true });
-  }
-
+async function checkout(repo: string, rev: string): Promise<void> {
+  mkdirSync(srcDir, { recursive: true });
   if (!existsSync(checkoutDir)) {
     if (existsSync(repo)) {
       cpSync(repo, checkoutDir, { recursive: true });
@@ -411,7 +404,7 @@ async function validateCompile(header: string, source: string): Promise<void> {
 
 async function main() {
   const args = parseArgs();
-  await checkout(args.repo, args.rev, args.keep);
+  await checkout(args.repo, args.rev);
 
   const { header, source } = generateAmalgamation(checkoutDir);
   const version = versionText(args.repo, args.rev);

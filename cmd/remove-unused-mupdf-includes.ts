@@ -128,8 +128,6 @@ const clArgs = [
   "/I",
   "ext/lcms2/include",
   "/I",
-  "ext/gumbo-parser/src",
-  "/I",
   "ext/a-extract",
   "/I",
   "ext/libarchive",

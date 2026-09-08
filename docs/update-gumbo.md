@@ -15,7 +15,7 @@ Use `cmd/a-gumbo.ts` to update the amalgamated Gumbo copy used by the build.
    bun cmd/a-gumbo.ts https://github.com/ArtifexSoftware/thirdparty-gumbo-parser.git v0.10.1
    ```
 
-3. The script checks out the requested revision under `deps/gumbo` and writes
+3. The script keeps its checkout under `.work/src/gumbo` and writes
    the validated amalgamation to `ext/a-gumbo/gumbo.h` and
    `ext/a-gumbo/gumbo.c`. It also writes `ext/a-gumbo/version.txt` with the
    source repo URL, requested revision, resolved commit SHA-1, and GitHub URLs
@@ -37,6 +37,3 @@ Use `cmd/a-gumbo.ts` to update the amalgamated Gumbo copy used by the build.
    ```sh
    bun cmd/build.ts -debug
    ```
-
-The old `ext/gumbo-parser` checkout is intentionally left in the tree for now,
-but the active Windows build uses the `a-gumbo` Premake project.
