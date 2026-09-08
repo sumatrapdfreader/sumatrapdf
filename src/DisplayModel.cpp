@@ -2943,17 +2943,17 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
     int nZoomLevels;
     float* zoomLevels = GetDefaultZoomLevels(&nZoomLevels);
 
-    float pageZoom = (float)HUGE_VAL, widthZoom = (float)HUGE_VAL;
-    int nPages = PageCount();
-    for (int pageNo = 1; pageNo <= nPages; pageNo++) {
-        if (PageShown(pageNo)) {
-            float pagePageZoom = ZoomRealFromVirtualForPage(kZoomFitPage, pageNo);
-            pageZoom = std::min(pageZoom, pagePageZoom);
-            float pageWidthZoom = ZoomRealFromVirtualForPage(kZoomFitWidth, pageNo);
-            widthZoom = std::min(widthZoom, pageWidthZoom);
-        }
+    // Use the current page's fit stops so zoom out cannot jump back up (#6152).
+    int pageNo = CurrentPageNo();
+    if (!ValidPageNo(pageNo) || !PageShown(pageNo)) {
+        pageNo = FirstVisiblePageNo();
     }
-    ReportIf(pageZoom == (float)HUGE_VAL || widthZoom == (float)HUGE_VAL);
+    if (!ValidPageNo(pageNo)) {
+        pageNo = 1;
+    }
+    float pageZoom = ZoomRealFromVirtualForPage(kZoomFitPage, pageNo);
+    float widthZoom = ZoomRealFromVirtualForPage(kZoomFitWidth, pageNo);
+    ReportIf(pageZoom <= 0 || widthZoom <= 0);
     ReportIf(pageZoom > widthZoom);
     pageZoom *= 100 / dpiFactor;
     widthZoom *= 100 / dpiFactor;

@@ -320,30 +320,24 @@ static RectF GetTileRect(RectF pagerect, TilePosition tile) {
 static Rect GetTileRectDevice(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile) {
     EngineBase* engine = dm->GetEngine();
     RectF pageBox = dm->PageMediaBoxForLayout(pageNo);
-    if (tile.res == 0 || tile.res == kInvalidTileRes) {
-        RectF pixelbox = engine->Transform(pageBox, pageNo, zoom, rotation);
-        return Rect(0, 0, pixelbox.Round().dx, pixelbox.Round().dy);
+    if (tile.res > 0 && tile.res != kInvalidTileRes) {
+        pageBox = GetTileRect(pageBox, tile);
     }
-    RectF tileBox = GetTileRect(pageBox, tile);
-    RectF pagePixelBox = engine->Transform(pageBox, pageNo, zoom, rotation);
-    RectF tilePixelBox = engine->Transform(tileBox, pageNo, zoom, rotation);
-    tilePixelBox.x -= pagePixelBox.x;
-    tilePixelBox.y -= pagePixelBox.y;
-    return tilePixelBox.Round();
+    return engine->Transform(pageBox, pageNo, zoom, rotation).Round();
 }
 
 static RectF GetTileRectUser(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile) {
-    RectF pageBox = dm->PageMediaBoxForLayout(pageNo);
-    if (tile.res > 0 && tile.res != kInvalidTileRes) {
-        return GetTileRect(pageBox, tile);
-    }
-    return pageBox;
+    // Render the exact screen pixel bounds so painting doesn't rescale finished tiles.
+    Rect pixelBox = GetTileRectDevice(dm, pageNo, rotation, zoom, tile);
+    return dm->GetEngine()->Transform(ToRectF(pixelBox), pageNo, zoom, rotation, true);
 }
 
 static Rect GetTileOnScreen(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile,
                             Rect pageOnScreen) {
     Rect bbox = GetTileRectDevice(dm, pageNo, rotation, zoom, tile);
-    bbox.Offset(pageOnScreen.x, pageOnScreen.y);
+    RectF pageBox = dm->PageMediaBoxForLayout(pageNo);
+    Rect pagePixels = dm->GetEngine()->Transform(pageBox, pageNo, zoom, rotation).Round();
+    bbox.Offset(pageOnScreen.x - pagePixels.x, pageOnScreen.y - pagePixels.y);
     return bbox;
 }
 
