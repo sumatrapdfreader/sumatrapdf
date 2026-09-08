@@ -179,6 +179,18 @@ function formatElapsed(ms: number): string {
   return `${minutes}m ${seconds % 60}s`;
 }
 
+async function buildApp(msbuildPath: string, configName: string, platform: string, target: string): Promise<void> {
+  const targets = ["PdfFilter", "PdfPreview", "sumatrapdf-tool", target];
+  for (const name of targets) {
+    await runLogged(msbuildPath, [
+      String.raw`vs2022\SumatraPDF.sln`,
+      `/t:${name}`,
+      `/p:Configuration=${configName};Platform=${platform}`,
+      "/m",
+    ]);
+  }
+}
+
 async function buildWindows(config: Config, win32: boolean, clean: boolean, ninja: boolean): Promise<void> {
   const configName = config === "release" ? "Release" : "Debug";
   const platform = win32 ? "Win32" : "x64";
@@ -189,12 +201,7 @@ async function buildWindows(config: Config, win32: boolean, clean: boolean, ninj
     await buildNinja([join("..", outDir, "SumatraPDF.exe")]);
   } else {
     const { msbuildPath } = detectVisualStudio2026();
-    await runLogged(msbuildPath, [
-      String.raw`vs2022\SumatraPDF.sln`,
-      "/t:SumatraPDF",
-      `/p:Configuration=${configName};Platform=${platform}`,
-      "/m",
-    ]);
+    await buildApp(msbuildPath, configName, platform, "SumatraPDF");
   }
   printBinaries(outDir, new Set(["SumatraPDF.exe"]));
 }
@@ -291,9 +298,10 @@ async function buildAll(clean: boolean, ninja: boolean): Promise<void> {
     await buildNinja([join("..", outDir, "SumatraPDF.exe"), join("..", outDir, "SumatraPDF-static.exe")]);
   } else {
     const { msbuildPath } = detectVisualStudio2026();
+    await buildApp(msbuildPath, "Release", "x64", "SumatraPDF");
     await runLogged(msbuildPath, [
       String.raw`vs2022\SumatraPDF.sln`,
-      "/t:SumatraPDF;SumatraPDF-static",
+      "/t:SumatraPDF-static",
       "/p:Configuration=Release;Platform=x64",
       "/m",
     ]);
@@ -309,9 +317,10 @@ async function buildSmoke(ninja: boolean): Promise<void> {
     await buildNinja([join("..", outDir, "SumatraPDF.exe"), join("..", outDir, "test_util.exe")]);
   } else {
     const { msbuildPath } = detectVisualStudio2026();
+    await buildApp(msbuildPath, "Release", "x64", "SumatraPDF:Rebuild");
     await runLogged(msbuildPath, [
       String.raw`vs2022\SumatraPDF.sln`,
-      String.raw`/t:SumatraPDF:Rebuild;tools\test_util:Rebuild`,
+      String.raw`/t:tools\test_util:Rebuild`,
       "/p:Configuration=Release;Platform=x64",
       "/m",
     ]);
