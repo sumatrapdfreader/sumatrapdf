@@ -9,6 +9,7 @@ import { runLogged } from "./util";
 // Usage:
 //   bun cmd/dbg.ts                            # cdb if available, else WinDbg
 //   bun cmd/dbg.ts -windbg                    # WinDbg GUI
+//   bun cmd/dbg.ts -clean                     # clean the ASan output first
 //   bun cmd/dbg.ts -- -for-testing foo.pdf    # args after -- go to SumatraPDF
 //   bun cmd/dbg.ts -windbg -- -for-testing foo.pdf
 //
@@ -16,6 +17,9 @@ import { runLogged } from "./util";
 // instance and won't overwrite the settings you actually use.
 
 const exePath = join("out", "dbg64_asan", "SumatraPDF-static.exe");
+const usage = `Usage: bun cmd/dbg.ts [-windbg] [-clean] [-- <SumatraPDF args>]`;
+
+class CliError extends Error {}
 
 function firstExisting(paths: string[]): string | null {
   return paths.find((p) => existsSync(p)) ?? null;
@@ -170,30 +174,54 @@ export function findDebugger(preferWindbg = false): { exe: string; flags: string
   return null;
 }
 
-// -windbg is ours; arguments after "--" (or leftover args, if there's no "--")
-// go to the app.
-function parseCli(): { preferWindbg: boolean; app: string[] } {
+// Arguments before "--" configure dbg.ts; those after it go to SumatraPDF.
+function parseCli(): { preferWindbg: boolean; clean: boolean; app: string[] } | undefined {
   const args = process.argv.slice(2);
+  if (args.length === 1 && ["-h", "-help", "--help"].includes(args[0])) {
+    return undefined;
+  }
   const sep = args.indexOf("--");
   const ours = sep < 0 ? args : args.slice(0, sep);
   const afterSep = sep < 0 ? [] : args.slice(sep + 1);
 
   let preferWindbg = false;
-  const rest: string[] = [];
+  let clean = false;
   for (const a of ours) {
     if (a === "-windbg") {
+      if (preferWindbg) {
+        throw new CliError("-windbg can only be specified once");
+      }
       preferWindbg = true;
+    } else if (a === "-clean") {
+      if (clean) {
+        throw new CliError("-clean can only be specified once");
+      }
+      clean = true;
     } else {
-      rest.push(a);
+      throw new CliError(`unknown option: ${a}`);
     }
   }
-  return { preferWindbg, app: sep < 0 ? rest : afterSep };
+  return { preferWindbg, clean, app: afterSep };
 }
 
 async function main() {
-  const { preferWindbg, app } = parseCli();
+  let opts: ReturnType<typeof parseCli>;
+  try {
+    opts = parseCli();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`error: ${message}\n`);
+    console.error(usage);
+    process.exitCode = 1;
+    return;
+  }
+  if (!opts) {
+    console.log(usage);
+    return;
+  }
+  const { preferWindbg, clean, app } = opts;
   // Debug builds use Ninja and leave one CPU free.
-  await runLogged("bun", [join(import.meta.dir, "build.ts"), "-asan", "-ninja"]);
+  await runLogged("bun", [join(import.meta.dir, "build.ts"), "-asan", "-ninja", ...(clean ? ["-clean"] : [])]);
 
   const dbg = findDebugger(preferWindbg);
   if (!dbg) {
