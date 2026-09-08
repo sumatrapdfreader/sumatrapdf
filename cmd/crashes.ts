@@ -658,15 +658,19 @@ async function ensureSymbols(row: DumpRow): Promise<string> {
   }
 }
 
-async function ensureDownloaded(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
-  const dir = dumpDir(row.id);
-  mkdirSync(dir, { recursive: true });
-  const dmpPath = dumpPath(row.id);
-  if (!existsSync(dmpPath)) {
-    const url = `${server}/minidump/${row.id}`;
-    console.log(`dump: downloading ${url}`);
-    writeFileSync(dmpPath, await fetchBytes(url, dumpAuth(loadMinidumpPassword())));
+async function downloadDumpIfMissing(server: string, id: string): Promise<void> {
+  mkdirSync(dumpDir(id), { recursive: true });
+  const dmpPath = dumpPath(id);
+  if (existsSync(dmpPath)) {
+    return;
   }
+  const url = `${server}/minidump/${id}`;
+  console.log(`dump: downloading ${url}`);
+  writeFileSync(dmpPath, await fetchBytes(url, dumpAuth(loadMinidumpPassword())));
+}
+
+async function ensureDownloaded(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
+  await downloadDumpIfMissing(server, row.id);
   extractDumpLog(row.id, reanalyze);
   await ensureSymbols(row);
 }
@@ -1147,6 +1151,29 @@ async function main(): Promise<void> {
   }
   await serveCrashes(list);
 }
+
+export type { DumpRow };
+export {
+  CACHE_DIR,
+  PROD_SERVER,
+  LOCAL_SERVER,
+  dumpDir,
+  dumpPath,
+  analyzePath,
+  logPath,
+  settingsPath,
+  relAnalyze,
+  relLog,
+  relSettings,
+  extractDumpLog,
+  isAnalyzed,
+  isLogExtracted,
+  isSettingsExtracted,
+  downloadDumpIfMissing,
+  ensureSymbols,
+  runAnalysis,
+  parseAnalyzeSummary,
+};
 
 if (import.meta.main) {
   try {
