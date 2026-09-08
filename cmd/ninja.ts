@@ -62,7 +62,16 @@ function fixEscapes(): void {
       .map((line) => {
         // Visual Studio's Unicode character set adds these definitions itself.
         if ((line.startsWith("cflags_") || line.startsWith("cxxflags_")) && !line.includes('/D"UNICODE"')) {
-          return `${line} /D"UNICODE" /D"_UNICODE"`;
+          line = `${line} /D"UNICODE" /D"_UNICODE"`;
+        }
+        // MSVC requires debug information for useful ASan reports and otherwise
+        // emits C5072, which our project correctly promotes to an error.
+        if (
+          (line.startsWith("cflags_") || line.startsWith("cxxflags_")) &&
+          line.includes("/fsanitize=address") &&
+          !line.includes("/Zi")
+        ) {
+          return `${line} /Zi`;
         }
         if (line.includes("nasm.exe") || line.includes("bin2coff.exe")) {
           return line.replaceAll('\\"', '"');
