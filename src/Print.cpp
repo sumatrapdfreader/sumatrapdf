@@ -1361,6 +1361,8 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     // the print dialog needs the real total up front; no progress UI here
     EnsureFullLayout(dm);
     int nPages = dm->PageCount();
+    logf("PrintCurrentFile: start wait=%d file='%s' pages=%d selection=%d\n", (int)waitForCompletion,
+         engine->FilePath(), nPages, (int)(win->CurrentTab()->selectionOnPage != nullptr));
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     if (!engine->AllowsPrinting()) {
@@ -1381,8 +1383,12 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     // the Windows 11 dialog runs the whole job itself; -print-to and friends
     // need the synchronous classic path
-    if (!waitForCompletion && TryPrintCurrentFileWin11(win, defaultScaleAdv)) {
-        return;
+    if (!waitForCompletion) {
+        bool usedWin11Dialog = TryPrintCurrentFileWin11(win, defaultScaleAdv);
+        logf("PrintCurrentFile: Windows 11 dialog=%d\n", (int)usedWin11Dialog);
+        if (usedWin11Dialog) {
+            return;
+        }
     }
 
     PRINTDLGEXW pdex{};
@@ -1449,7 +1455,11 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         }
     }
 
+    logf("PrintCurrentFile: PrintDlgEx start flags=0x%x pages=%d hDevMode=%p hDevNames=%p collate=%d\n", pdex.Flags,
+         nPages, pdex.hDevMode, pdex.hDevNames, collatePref);
     HRESULT res = PrintDlgExW(&pdex);
+    logf("PrintCurrentFile: PrintDlgEx result=0x%08x action=%u flags=0x%x ranges=%u hDevMode=%p hDevNames=%p\n",
+         (uint)res, pdex.dwResultAction, pdex.Flags, pdex.nPageRanges, pdex.hDevMode, pdex.hDevNames);
 
     // PrintDlgExW pumps messages, so the window may have been closed/destroyed while the dialog was open
     if (!IsMainWindowValidAndNotClosing(win)) {
@@ -1461,12 +1471,13 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 
     if (res != S_OK) {
-        logf("PrintCurrentFile: PrintDlgEx failed\n");
+        logf("PrintCurrentFile: PrintDlgEx failed, CommDlgExtendedError=0x%x\n", (uint)CommDlgExtendedError());
         MessageBoxWarning(win->hwndFrame, Tr("Couldn't initialize printer"), Tr("Printing problem."));
     }
     auto action = pdex.dwResultAction;
     if (action != PD_RESULT_PRINT) {
         // it's cancel or apply so silently ignore as it's not an error
+        logf("PrintCurrentFile: PrintDlgEx ended without print, action=%u\n", action);
         goto Exit;
     }
 
@@ -1487,6 +1498,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     nPages = dm->PageCount();
 
     if (!pdex.hDevNames) {
+        logf("PrintCurrentFile: PrintDlgEx returned no hDevNames\n");
         MessageBoxWarning(win->hwndFrame, Tr("Couldn't get printer name"), Tr("Printing problem."));
         goto Exit;
     }
@@ -1497,6 +1509,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
             // printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
             WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset;
             TempStr name = ToUtf8Temp(printerName);
+            logf("PrintCurrentFile: selected printer='%s'\n", name);
             printer = NewPrinter(name);
             // printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
             GlobalUnlock(pdex.hDevNames);
@@ -1504,11 +1517,15 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 
     if (!printer) {
+        logf("PrintCurrentFile: couldn't create selected printer\n");
         MessageBoxWarning(win->hwndFrame, Tr("Couldn't initialize printer"), Tr("Printing problem."));
         goto Exit;
     }
 
     devMode = (DEVMODEW*)GlobalLock(pdex.hDevMode);
+    if (!devMode) {
+        logf("PrintCurrentFile: GlobalLock(hDevMode) failed, err=%u\n", GetLastError());
+    }
 
     if (pdex.dwResultAction == PD_RESULT_PRINT || pdex.dwResultAction == PD_RESULT_APPLY) {
         // remember settings for this process

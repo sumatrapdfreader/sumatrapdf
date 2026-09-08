@@ -952,6 +952,7 @@ class Win11PrintSession {
     }
 
     HRESULT OnPrintRequested(Printing::IPrintTaskRequestedEventArgs* args) {
+        logf("Win11 print: PrintTaskRequested\n");
         ComPtr<Printing::IPrintTaskRequest> request;
         HRESULT hr = args->get_Request(&request);
         ComPtr<Printing::IPrintTaskSourceRequestedHandler> sourceHandler;
@@ -963,6 +964,9 @@ class Win11PrintSession {
                     HRESULT sourceHr = retainedSource.As(&documentSource);
                     if (SUCCEEDED(sourceHr)) {
                         sourceHr = sourceArgs->SetSource(documentSource.Get());
+                    }
+                    if (FAILED(sourceHr)) {
+                        logf("Win11 print: SetSource failed: 0x%08x\n", (uint)sourceHr);
                     }
                     return sourceHr;
                 });
@@ -1007,6 +1011,9 @@ class Win11PrintSession {
         if (SUCCEEDED(hr) && SUCCEEDED(task.As(&task2))) {
             task2->put_IsPreviewEnabled(true);
         }
+        if (FAILED(hr)) {
+            logf("Win11 print: PrintTaskRequested failed: 0x%08x\n", (uint)hr);
+        }
         return hr;
     }
 
@@ -1028,6 +1035,7 @@ class Win11PrintSession {
     HRESULT Initialize(HWND hwnd, EngineBase* engine, int currentPage, PrintScaleAdv scale, float previewDpi) {
         HRESULT hr = EnsureWinRt();
         if (FAILED(hr)) {
+            logf("Win11 print: EnsureWinRt failed: 0x%08x\n", (uint)hr);
             return hr;
         }
 
@@ -1042,6 +1050,7 @@ class Win11PrintSession {
         hr = MakeAndInitialize<PrintDocumentSource>(&source, printEngine, currentPage, scale, previewDpi);
         printEngine->Release();
         if (FAILED(hr)) {
+            logf("Win11 print: PrintDocumentSource initialization failed: 0x%08x\n", (uint)hr);
             return hr;
         }
 
@@ -1065,12 +1074,17 @@ class Win11PrintSession {
         if (SUCCEEDED(hr)) {
             hr = manager->add_PrintTaskRequested(requestedHandler.Get(), &token);
         }
+        if (FAILED(hr)) {
+            logf("Win11 print: session initialization failed: 0x%08x\n", (uint)hr);
+        }
         return hr;
     }
 
     HRESULT Show() {
         ComPtr<__FIAsyncOperation_1_boolean> operation;
-        return interop->ShowPrintUIForWindowAsync(hwnd, IID_PPV_ARGS(&operation));
+        HRESULT hr = interop->ShowPrintUIForWindowAsync(hwnd, IID_PPV_ARGS(&operation));
+        logf("Win11 print: ShowPrintUIForWindowAsync result=0x%08x operation=%p\n", (uint)hr, operation.Get());
+        return hr;
     }
 };
 
@@ -1092,16 +1106,20 @@ static bool IsWin11OrGreater() {
 
 bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
     if (!IsWin11OrGreater()) {
+        logf("Win11 print: unavailable before Windows 11\n");
         return false;
     }
     if (!win || !win->hwndFrame || !win->AsFixed() || !win->CurrentTab()) {
+        logf("Win11 print: unavailable, invalid window or document\n");
         return false;
     }
     if (win->CurrentTab()->selectionOnPage) {
+        logf("Win11 print: unavailable for selection\n");
         return false;
     }
     EngineBase* engine = win->AsFixed()->GetEngine();
     if (!engine) {
+        logf("Win11 print: unavailable, no engine\n");
         return false;
     }
 
@@ -1111,6 +1129,8 @@ bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
         ReleaseDC(win->hwndFrame, hdc);
     }
     previewDpi = std::max(96.f, std::min(240.f, previewDpi));
+    logf("Win11 print: start file='%s' page=%d previewDpi=%g\n", engine->FilePath(), win->AsFixed()->CurrentPageNo(),
+         previewDpi);
 
     delete gPrintSession;
     gPrintSession = new Win11PrintSession();

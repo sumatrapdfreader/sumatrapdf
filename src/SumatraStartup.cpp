@@ -2274,6 +2274,21 @@ static void LogCommandLine() {
     LogParentProcessChain();
 }
 
+static void LogOsInfo() {
+    OSVERSIONINFOEX ver{};
+    bool gotVersion = GetOsVersion(ver);
+    int build = (int)(ver.dwBuildNumber & 0xffff);
+    Str key = StrL(R"(SOFTWARE\Microsoft\Windows NT\CurrentVersion)");
+    TempStr product = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("ProductName"));
+    TempStr displayVersion = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("DisplayVersion"));
+    DWORD ubr = 0;
+    bool gotUbr = ReadRegDWORD(HKEY_LOCAL_MACHINE, key, StrL("UBR"), ubr);
+    logf("os: version=%u.%u.%d (%s) product='%s' display='%s' ubr=%s%d process=%dbit os=%dbit arm=%d cores=%d\n",
+         ver.dwMajorVersion, ver.dwMinorVersion, build, gotVersion ? OsNameFromVerTemp(ver) : StrL("unknown"), product,
+         displayVersion, gotUbr ? StrL("") : StrL("?"), (int)ubr, IsProcess64() ? 64 : 32, IsOs64() ? 64 : 32,
+         (int)IsArmBuild(), CpuCoreCount());
+}
+
 static void InstallSumatraCrashHandler(bool localOnly) {
     if (gIsAsanBuild) {
         return;
@@ -2318,6 +2333,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     srand((unsigned int)time(nullptr));
 
     LogCommandLine();
+    LogOsInfo();
 
     if (gIsAsanBuild) {
         TempStr asanOpts = GetEnvVariableTemp(StrL("ASAN_OPTIONS"));
@@ -2422,6 +2438,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         if (logFilePath) {
             StartLogToFile(logFilePath, true);
             LogCommandLine();
+            LogOsInfo();
             logf("wine: %s\n", Str(IsRunningOnWine() ? "true" : "false"));
             logf("elevated: %d\n", (int)IsProcessRunningElevated());
         }
