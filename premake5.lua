@@ -1412,12 +1412,11 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     links_zlib()
-    -- static build has no libsumatrapdf.dll: image codecs + chmdec/unrar/libarchive
-    -- link in here (same set as libsumatrapdf.dll uses). brotli is pulled via mupdf
-    -- (freetype) + needed by heic.
+    -- Static libraries do not propagate dependencies through Ninja.
     links {
       "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli",
-      "mupdf", "libarchive", "base", "unrar", "chmdec", "a-zopfli", "msdes"
+      "mupdf", "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "freetype", "lcms2", "a-openjpeg",
+      "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo", "base", "unrar", "chmdec", "a-zopfli", "msdes"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

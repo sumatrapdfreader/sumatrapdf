@@ -1875,8 +1875,38 @@
     <ProjectReference Include="mupdf.vcxproj">
       <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>
     </ProjectReference>
+    <ProjectReference Include="cmark-gfm.vcxproj">
+      <Project>{5AADABD2-C617-6049-0F56-11EF7BFF3D9E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="a-mujs.vcxproj">
+      <Project>{927D8FED-7E1F-BAC3-67DA-CD17531B4114}</Project>
+    </ProjectReference>
+    <ProjectReference Include="a-extract.vcxproj">
+      <Project>{AE12EE1B-1A7D-A292-63BB-5338CF6480E7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="harfbuzz.vcxproj">
+      <Project>{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}</Project>
+    </ProjectReference>
+    <ProjectReference Include="freetype.vcxproj">
+      <Project>{89895BD8-7556-B6E3-9E6F-A48B8A9BEB71}</Project>
+    </ProjectReference>
+    <ProjectReference Include="lcms2.vcxproj">
+      <Project>{C67ED90F-3293-01C1-FB14-A52067E8FDF1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="a-openjpeg.vcxproj">
+      <Project>{EB343049-D7EC-7196-40F4-4AF22CCB0C87}</Project>
+    </ProjectReference>
+    <ProjectReference Include="a-jbig2dec.vcxproj">
+      <Project>{ADC8EE7E-9980-30CC-0288-0928EE5ECBBC}</Project>
+    </ProjectReference>
+    <ProjectReference Include="libjpeg-turbo.vcxproj">
+      <Project>{DB56484D-4717-C483-1052-0D017CD10860}</Project>
+    </ProjectReference>
     <ProjectReference Include="libarchive.vcxproj">
       <Project>{1E5D585E-0A15-9AAB-731C-73075FF3349C}</Project>
+    </ProjectReference>
+    <ProjectReference Include="a-gumbo.vcxproj">
+      <Project>{CDA7129F-3987-913A-429F-1C11AEFDF79B}</Project>
     </ProjectReference>
     <ProjectReference Include="base.vcxproj">
       <Project>{8078947C-6CAF-950D-159C-7B1001B2110F}</Project>
