@@ -192,6 +192,7 @@ function parseCli(): { preferWindbg: boolean; app: string[] } {
 
 async function main() {
   const { preferWindbg, app } = parseCli();
+  // build.ts generates the Ninja graph and runs Ninja with one CPU free.
   await runLogged("bun", [join(import.meta.dir, "build.ts"), "-asan"]);
 
   const dbg = findDebugger(preferWindbg);

@@ -2,7 +2,12 @@
 
 Our build system uses [Premake 5](https://premake.github.io/). For convenience, we keep the `premake5.exe` binary in the `bin` directory.
 
-Premake generates the Visual Studio solution in the `vs2022` directory from the `premake5.lua` file. The generated solution files are stored in the repository for convenience.
+Premake generates the Visual Studio solution in the `vs2022` directory and the
+ignored Ninja graph in `ninja/`, both from `premake5.lua`. The generated
+solution files are stored in the repository for convenience.
+
+`bun cmd/build.ts` generates the Ninja graph when needed and builds with Ninja.
+To regenerate it without building, run `bun cmd/ninja.ts`.
 
 ## When to run premake
 

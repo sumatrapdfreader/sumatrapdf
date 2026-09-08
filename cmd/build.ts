@@ -1,7 +1,9 @@
-import { copyFileSync, existsSync, readdirSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { copyFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { cpus } from "node:os";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { $ } from "bun";
 import { clearDirPreserveSettings } from "./clean";
+import { ensureNinja } from "./ninja";
 import { detectVisualStudio2026, runLogged } from "./util";
 
 type BuildMode = "windows" | "all" | "smoke" | "ci" | "daily" | "codeql" | "mingw" | "wine" | "build-no";
@@ -162,14 +164,59 @@ async function buildWindows(config: Config, win32: boolean, clean: boolean): Pro
   const timeStart = performance.now();
   console.log(`${configName} ${platform} build`);
   if (clean) clearDirPreserveSettings(outDir);
-  const { msbuildPath } = detectVisualStudio2026();
-  await runLogged(msbuildPath, [
-    String.raw`vs2022\SumatraPDF.sln`,
-    "/t:SumatraPDF",
-    `/p:Configuration=${configName};Platform=${platform}`,
-    "/m",
-  ]);
+  await buildNinja([join("..", outDir, "SumatraPDF.exe")]);
   console.log(`build took ${((performance.now() - timeStart) / 1000).toFixed(1)}s`);
+}
+
+async function buildNinja(targets: string[]): Promise<void> {
+  await ensureNinja();
+  const jobs = Math.max(1, cpus().length - 1);
+  await runLogged("ninja", ["-C", "ninja", "-j", `${jobs}`, ...targets]);
+  const targetNames = new Map<string, Set<string>>();
+  for (const target of targets) {
+    const outDir = dirname(join("ninja", target));
+    let names = targetNames.get(outDir);
+    if (!names) {
+      names = new Set();
+      targetNames.set(outDir, names);
+    }
+    names.add(basename(target));
+  }
+  for (const [outDir, names] of targetNames) {
+    printBinaries(outDir, names);
+  }
+}
+
+function printBinaries(dir: string, targets: Set<string>): void {
+  const paths: string[] = [];
+  const dynamicFiles = new Set([
+    "SumatraPDF.exe",
+    "libsumatrapdf.dll",
+    "obj/PdfFilter.dll",
+    "obj/PdfPreview.dll",
+    "sumatrapdf-tool.exe",
+    "test_util.exe",
+  ]);
+  const walk = (path: string): void => {
+    for (const entry of readdirSync(path, { withFileTypes: true })) {
+      const entryPath = join(path, entry.name);
+      if (entry.isDirectory()) {
+        walk(entryPath);
+        continue;
+      }
+      const relPath = relative(dir, entryPath).replaceAll("\\", "/");
+      const isDynamic = targets.has("SumatraPDF.exe") && dynamicFiles.has(relPath);
+      if (entry.isFile() && (targets.has(entry.name) || isDynamic)) {
+        paths.push(entryPath);
+      }
+    }
+  };
+
+  walk(dir);
+  for (const path of paths.sort()) {
+    const size = statSync(path).size;
+    console.log(`${relative(".", path)}: ${(size / 1_000_000).toFixed(1)} MB, ${size.toLocaleString("en-US")}`);
+  }
 }
 
 const asanDllName = "clang_rt.asan_dynamic-x86_64.dll";
@@ -203,14 +250,8 @@ async function buildWindowsAsan(config: Config, clean: boolean): Promise<void> {
   const timeStart = performance.now();
   console.log(`${configName} ASan build (SumatraPDF-static.exe, x64_asan)`);
   if (clean) clearDirPreserveSettings(outDir);
-  await runLogged(join("bin", "premake5.exe"), ["vs2022"]);
-  const { msbuildPath, vsRoot } = detectVisualStudio2026();
-  await runLogged(msbuildPath, [
-    String.raw`vs2022\SumatraPDF.sln`,
-    "/t:SumatraPDF-static",
-    `/p:Configuration=${configName};Platform=x64_asan`,
-    "/m",
-  ]);
+  await buildNinja([join("..", outDir, "SumatraPDF-static.exe")]);
+  const { vsRoot } = detectVisualStudio2026();
   copyFileSync(findAsanDll(vsRoot), join(outDir, asanDllName));
   console.log(`build took ${((performance.now() - timeStart) / 1000).toFixed(1)}s`);
   console.log(`exe: ${join(outDir, "SumatraPDF-static.exe")}`);
@@ -221,13 +262,7 @@ async function buildAll(clean: boolean): Promise<void> {
   const timeStart = performance.now();
   console.log("Release x64 SumatraPDF and SumatraPDF-static build");
   if (clean) clearDirPreserveSettings(outDir);
-  const { msbuildPath } = detectVisualStudio2026();
-  await runLogged(msbuildPath, [
-    String.raw`vs2022\SumatraPDF.sln`,
-    "/t:SumatraPDF;SumatraPDF-static",
-    "/p:Configuration=Release;Platform=x64",
-    "/m",
-  ]);
+  await buildNinja([join("..", outDir, "SumatraPDF.exe"), join("..", outDir, "SumatraPDF-static.exe")]);
   console.log(`build took ${((performance.now() - timeStart) / 1000).toFixed(1)}s`);
 }
 
@@ -236,13 +271,7 @@ async function buildSmoke(): Promise<void> {
   const timeStart = performance.now();
   console.log("smoke build");
   clearDirPreserveSettings(outDir);
-  const { msbuildPath } = detectVisualStudio2026();
-  await runLogged(msbuildPath, [
-    String.raw`vs2022\SumatraPDF.sln`,
-    String.raw`/t:SumatraPDF:Rebuild;tools\test_util:Rebuild`,
-    "/p:Configuration=Release;Platform=x64",
-    "/m",
-  ]);
+  await buildNinja([join("..", outDir, "SumatraPDF.exe"), join("..", outDir, "test_util.exe")]);
   await runLogged(resolve(join(outDir, "test_util.exe")), [], outDir);
   console.log(`smoke build took ${((performance.now() - timeStart) / 1000).toFixed(1)}s`);
 }

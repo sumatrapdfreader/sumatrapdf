@@ -248,6 +248,13 @@ function links_zlib()
   links { "a-zlib" }
 end
 
+function links_base_win()
+  links {
+    "advapi32", "kernel32", "user32", "gdi32", "comdlg32", "shell32", "windowscodecs", "comctl32", "msimg32",
+    "winspool", "wininet", "urlmon", "gdiplus", "ole32", "oleAut32", "shlwapi", "version", "crypt32",
+  }
+end
+
 -- add to a project that needs to see zlib headers
 function uses_zlib()
   --zlib_ng_defines()
@@ -365,6 +372,7 @@ workspace "SumatraPDF"
   configurations { "Debug", "DebugFull", "Release", "ReleaseAnalyze", }
   platforms { "x86", "x64", "arm64", "x64_asan" }
   startproject "SumatraPDF"
+  characterset "Unicode"
 
   filter "platforms:x86"
     architecture "x86"
@@ -403,6 +411,10 @@ workspace "SumatraPDF"
 
   filter "action:vs2022"
     location "vs2022"
+  filter {}
+
+  filter "action:ninja"
+    location "ninja"
   filter {}
 
   clang_conf()
@@ -1031,9 +1043,7 @@ workspace "SumatraPDF"
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
     files { "src/libsumatrapdf.rc", "src/libsumatrapdf.def", "src/no_op_for_premake.cpp" }
     implibname "libsumatrapdf"
-    -- TODO: is thre a better way to do it?
-    -- linkoptions { "/DEF:..\\src\\libsumatrapdf.def", "-IGNORE:4702" }
-    linkoptions { "-IGNORE:4701", "-IGNORE:4702" }
+    linkoptions { "/DEF:..\\src\\libsumatrapdf.def", "-IGNORE:4701", "-IGNORE:4702" }
     links_zlib()
     -- image codecs + their transitive deps are part of this DLL only; consumers
     -- (SumatraPDF, PdfPreview, …) import the few needed symbols via libsumatrapdf.def
@@ -1047,7 +1057,9 @@ workspace "SumatraPDF"
     -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
     exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec", "msdes"
+      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec", "msdes",
+      "libarchive", "cmark-gfm", "a-gumbo",
+      "a-mujs", "a-extract", "harfbuzz", "freetype", "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
     }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
@@ -1111,6 +1123,7 @@ workspace "SumatraPDF"
     test_util_files()
     setup_base_pch()
     links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet", "shcore", "wintrust", "crypt32" }
+    links_base_win()
 
   project "test_engines"
     static_app_objdir()
@@ -1278,6 +1291,7 @@ workspace "SumatraPDF"
     search_filter_files()
     -- libarchive + unrar live in libsumatrapdf.dll (re-exported); do not link second copies
     links { "base", "libsumatrapdf" }
+    links_base_win()
     links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- project "PdfFilter2"
@@ -1322,6 +1336,7 @@ workspace "SumatraPDF"
     -- djvudec / chmdec / libarchive / unrar live in libsumatrapdf.dll (re-exported);
     -- do not link second copies
     links { "base", "libsumatrapdf" }
+    links_base_win()
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -1387,7 +1402,7 @@ workspace "SumatraPDF"
     -- 4244 (possible loss of data) is only needed by the external synctex
     -- code; keep it fatal for our own sources so silent int64->int truncation
     -- doesn't slip through.
-    filter { "files:ext/synctex/**" }
+    filter { "files:**/ext/synctex/**" }
       disablewarnings { "4244", "4267" }
     filter {}
     uses_zlib()
@@ -1408,6 +1423,7 @@ workspace "SumatraPDF"
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "windowscodecs", "wininet", "uiautomationcore.lib", "uxtheme", "wintrust", "crypt32"
     }
+    links_base_win()
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll" }
@@ -1490,7 +1506,7 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4701", "4702", "4703", "4706", "4819", "6324" }
     -- 4244/4267 are only needed by the external synctex code; keep them fatal
     -- for our own sources so silent truncation doesn't slip through.
-    filter { "files:ext/synctex/**" }
+    filter { "files:**/ext/synctex/**" }
       disablewarnings { "4244", "4267" }
     filter {}
     uses_zlib()
@@ -1518,6 +1534,7 @@ workspace "SumatraPDF"
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "wininet", "d2d1.lib", "uiautomationcore.lib", "uxtheme", "wintrust", "crypt32"
     }
+    links_base_win()
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:libsumatrapdf.dll" }
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
@@ -1537,7 +1554,7 @@ workspace "SumatraPDF"
     -- libsumatrapdf deletes InstallerData.dat so regular builds are not stuck
     -- with a stale pack.
     prebuildcommands {
-      "cd %{cfg.targetdir} & if not exist InstallerData.dat ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libsumatrapdf.dll:libsumatrapdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe",
+      "if not exist %{cfg.targetdir}\\InstallerData.dat ..\\bin\\MakeLZSA.exe %{cfg.targetdir}\\InstallerData.dat %{cfg.targetdir}\\libsumatrapdf.dll:libsumatrapdf.dll %{cfg.targetdir}\\obj\\PdfFilter.dll:PdfFilter.dll %{cfg.targetdir}\\obj\\PdfPreview.dll:PdfPreview.dll %{cfg.targetdir}\\sumatrapdf-tool.exe:sumatrapdf-tool.exe",
     }
     -- /INFERASANLIBS pulls in the *dynamic* ASan runtime, so
     -- clang_rt.asan_dynamic-x86_64.dll must sit next to the exe or it
