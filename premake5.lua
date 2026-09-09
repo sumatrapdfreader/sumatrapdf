@@ -666,7 +666,7 @@ workspace "SumatraPDF"
       "HEIC_HAVE_ZLIB",
       "HEIC_HAVE_BROTLI",
     }
-    includedirs { "ext/heicdec", "ext/dav1d/include", "ext/a-zlib", "ext/brotli/c/include" }
+    includedirs { "ext/heicdec", "ext/dav1d/include", "ext/a-zlib", "ext/a-brotli" }
     files { "ext/heicdec/heic.c", "ext/heicdec/heic.h" }
 
   project "dav1d"
@@ -729,14 +729,17 @@ workspace "SumatraPDF"
     filter {}
     libjpeg_turbo_files()
 
-  project "brotli"
+  project "a-brotli"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
     disablewarnings { "4100", "4201" }
-    includedirs { "ext/brotli/c/include" }
-    brotli_files()
+    includedirs { "ext/a-brotli" }
+    files {
+      "ext/a-brotli/brotli.c", "ext/a-brotli/brotli/*.h",
+      "ext/a-brotli/version.txt", "ext/a-brotli/LICENSE",
+    }
 
   project "a-gumbo"
     static_intermediate_dirs()
@@ -782,7 +785,7 @@ workspace "SumatraPDF"
       "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
     }
     disablewarnings { "4018", "4100", "4101", "4244", "4267", "4312", "4701", "4706", "4996" }
-    includedirs { "ext/mupdf/scripts/freetype", "ext/a-freetype/include", "ext/brotli/c/include" }
+    includedirs { "ext/mupdf/scripts/freetype", "ext/a-freetype/include", "ext/a-brotli" }
     files {
       "ext/a-freetype/freetype.c", "ext/a-freetype/include/**.h",
       "ext/a-freetype/version.txt", "ext/a-freetype/LICENSE.TXT",
@@ -1000,7 +1003,7 @@ workspace "SumatraPDF"
       "ext/mupdf/scripts/freetype",
       "ext/a-freetype/include",
       "ext/a-mujs",
-      "ext/brotli/c/include",
+      "ext/a-brotli",
       "ext/cmark-gfm/src",
       "ext/cmark-gfm/extensions",
       "ext/mupdf/scripts/cmark-gfm",
@@ -1017,7 +1020,7 @@ workspace "SumatraPDF"
     -- Third-party code lives in its own static libs; link them so libsumatrapdf.dll
     -- / SumatraPDF-static pick them up via project references.
     links {
-      "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "brotli",
+      "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-brotli",
       "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo",
     }
 
@@ -1059,7 +1062,7 @@ workspace "SumatraPDF"
     -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
     exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec", "msdes",
+      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "a-brotli", "unrar", "chmdec", "msdes",
       "libarchive", "cmark-gfm", "a-gumbo",
       "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
     }
@@ -1143,7 +1146,7 @@ workspace "SumatraPDF"
     links_zlib()
     -- static link (no libsumatrapdf.dll): same image-codec set as libsumatrapdf.dll
     links { "base", "djvudec", "libarchive", "unrar", "mupdf" }
-    links { "libwebp", "dav1d", "heicdec", "jxldec", "brotli" }
+    links { "libwebp", "dav1d", "heicdec", "jxldec", "a-brotli" }
     -- LitDoc.cpp: DES decryption of DRM-free .lit sections, LZX section decompression
     links { "msdes", "chmdec" }
     links {
@@ -1182,7 +1185,7 @@ workspace "SumatraPDF"
     -- heicdec needs dav1d (AV1), a-zlib / brotli (unci compressed HEIC)
     links {
       "base", "libjpeg-turbo", "libwebp", "heicdec", "dav1d", "a-zlib",
-      "jxldec", "brotli",
+      "jxldec", "a-brotli",
     }
     links {
       "gdiplus", "gdi32", "user32", "comctl32", "shlwapi", "Version",
@@ -1416,7 +1419,7 @@ workspace "SumatraPDF"
     links_zlib()
     -- Static libraries do not propagate dependencies through Ninja.
     links {
-      "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli",
+      "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "a-brotli",
       "mupdf", "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg",
       "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo", "base", "unrar", "chmdec", "a-zopfli", "msdes"
     }
@@ -1579,7 +1582,7 @@ workspace "SumatraPDF"
     end
     -- mupdf static lib + the libraries it links / depends on
     set_group("mupdf", {
-      "mupdf", "cmark-gfm", "libarchive", "a-zlib", "brotli", "libjpeg-turbo",
+      "mupdf", "cmark-gfm", "libarchive", "a-zlib", "a-brotli", "libjpeg-turbo",
       "a-extract", "a-gumbo", "a-jbig2dec", "a-mujs", "a-openjpeg",
       "a-freetype", "a-harfbuzz", "a-lcms2",
     })

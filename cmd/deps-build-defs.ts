@@ -383,7 +383,7 @@ export const heicdec: LibDef = {
   alwaysOptimize: true,
   extraCflags: ["-msse4.1"],
   defines: ["_CRT_SECURE_NO_WARNINGS", "HEIC_HAVE_DAV1D", "HEIC_HAVE_ZLIB", "HEIC_HAVE_BROTLI"],
-  includes: ["ext/heicdec", "ext/dav1d/include", "ext/a-zlib", "ext/brotli/c/include"],
+  includes: ["ext/heicdec", "ext/dav1d/include", "ext/a-zlib", "ext/a-brotli"],
   files: [
     {
       dir: "ext/heicdec",
@@ -418,7 +418,7 @@ const mupdfThirdPartySources: LibDef = {
     "ext/a-harfbuzz",
     "ext/a-mujs",
     "ext/a-extract",
-    "ext/brotli/c/include",
+    "ext/a-brotli",
     "ext/a-zlib",
   ],
   // plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that harfbuzz
@@ -517,9 +517,7 @@ const mupdfThirdPartySources: LibDef = {
     // ── harfbuzz ──
     { dir: "ext/a-harfbuzz", patterns: ["harfbuzz.cc"] },
     // ── brotli ──
-    { dir: "ext/brotli/c/common", patterns: ["*.c"] },
-    { dir: "ext/brotli/c/dec", patterns: ["*.c"] },
-    { dir: "ext/brotli/c/enc", patterns: ["*.c"] },
+    { dir: "ext/a-brotli", patterns: ["brotli.c"] },
   ],
 };
 
@@ -570,7 +568,7 @@ export const openjpeg = thirdPartyLib({
 export const freetype = thirdPartyLib({
   name: "a-freetype",
   defines: ["FT2_BUILD_LIBRARY", 'FT_CONFIG_MODULES_H="slimftmodules.h"', 'FT_CONFIG_OPTIONS_H="slimftoptions.h"'],
-  includes: ["ext/mupdf/scripts/freetype", "ext/a-freetype/include", "ext/brotli/c/include"],
+  includes: ["ext/mupdf/scripts/freetype", "ext/a-freetype/include", "ext/a-brotli"],
   files: sourceFiles(2),
 });
 
@@ -612,8 +610,8 @@ export const extract = thirdPartyLib({
 });
 
 export const brotli = thirdPartyLib({
-  name: "brotli",
-  includes: ["ext/brotli/c/include"],
+  name: "a-brotli",
+  includes: ["ext/a-brotli"],
   files: sourceFiles(5, 6, 7),
 });
 
@@ -699,7 +697,7 @@ export const mupdf: LibDef = {
     "ext/mupdf/scripts/freetype",
     "ext/a-freetype/include",
     "ext/a-mujs",
-    "ext/brotli/c/include",
+    "ext/a-brotli",
     "ext/a-harfbuzz",
     "ext/a-lcms2",
     "ext/a-gumbo",

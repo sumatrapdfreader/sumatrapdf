@@ -1,0 +1,6 @@
+project_homepage: https://github.com/google/brotli
+repo_url: https://github.com/ArtifexSoftware/thirdparty-brotli
+revision: 2523f3314501aa5c90e561922b2e668b3ccee26e
+commit_sha1: 2523f3314501aa5c90e561922b2e668b3ccee26e
+github_url: https://github.com/ArtifexSoftware/thirdparty-brotli
+github_commit_url: https://github.com/ArtifexSoftware/thirdparty-brotli/commit/2523f3314501aa5c90e561922b2e668b3ccee26e

@@ -52,21 +52,6 @@ function makelzsa_files()
   }
 end
 
-function brotli_files()
-  files_in_dir("ext/brotli/c/common", {
-    "*.h",
-    "*.c",
-  })
-  files_in_dir("ext/brotli/c/dec", {
-    "*.h",
-    "*.c",
-  })
-  files_in_dir("ext/brotli/c/enc", {
-    "*.h",
-    "*.c",
-  })
-end
-
 function zlib_files()
   files_in_dir("ext/a-zlib", {
     "zlib.c",

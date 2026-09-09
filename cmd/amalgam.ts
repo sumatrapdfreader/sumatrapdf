@@ -264,6 +264,11 @@ function scopeSymbols(text: string, prefix: string, names: string[]): string {
   return [...defs, text, ...undefs].join("\n") + "\n";
 }
 
+// Lets a chunk redefine a macro an earlier chunk left defined.
+function undefMacros(text: string, names: string[]): string {
+  return names.map((name) => `#undef ${name}`).join("\n") + "\n" + text;
+}
+
 function joinChunks(chunks: string[]): string {
   return normalizeBlankLines(chunks.join("\n"));
 }
@@ -366,6 +371,77 @@ function genZlib(ctx: Ctx): void {
     chunks.push(prepare(join(srcDir, name), rules));
   }
   ctx.files.set("zlib.c", joinChunks(chunks));
+}
+
+// --- brotli ----------------------------------------------------------------
+
+// common, then dec, then enc: the order the non-amalgamated build compiles
+// them in, and the order their private headers depend on each other.
+const brotliDirs = ["common", "dec", "enc"];
+
+// File-local statics that collide once every .c is one translation unit.
+// compress_fragment_two_pass.c is a near-copy of compress_fragment.c, so most
+// of the list is its half of that pair.
+const brotliRenames: Record<string, string[]> = {
+  "compress_fragment_two_pass.c": [
+    "BrotliStoreMetaBlockHeader",
+    "BuildAndStoreCommandPrefixCode",
+    "EmitCopyLen",
+    "EmitCopyLenLastDistance",
+    "EmitDistance",
+    "EmitInsertLen",
+    "EmitUncompressedMetaBlock",
+    "Hash",
+    "HashBytesAtOffset",
+    "IsMatch",
+    "RewindBitPosition",
+    "ShouldCompress",
+  ],
+  "encoder_dict.c": ["ComputeCutoffTransforms", "Hash"],
+  "entropy_encode.c": ["BrotliReverseBits", "SortHuffmanTree"],
+  "static_dict.c": ["IsMatch"],
+};
+
+// compress_fragment.c and its two-pass near-copy both leave MIN_RATIO defined,
+// with different values.
+const brotliUndefs: Record<string, string[]> = {
+  "compress_fragment.c": ["MIN_RATIO"],
+  "compress_fragment_two_pass.c": ["MIN_RATIO"],
+};
+
+function genBrotli(ctx: Ctx): void {
+  const root = join(ctx.checkoutDir, "c");
+
+  // Ship the public headers under brotli/ so `#include <brotli/decode.h>` keeps
+  // working with ext/a-brotli on the include path.
+  const incDir = join(root, "include", "brotli");
+  for (const path of listFiles(incDir, ".h")) {
+    ctx.files.set(join("brotli", basename(path)), readText(path));
+  }
+
+  // Every quoted include is relative to the including file. The *_inc.h X-macro
+  // fragments have no include guard, so dedupOnlyGuarded expands them at each
+  // use, which is what they are for.
+  const rules: IncludeRules = {
+    resolve: dirResolver([]),
+    seen: new Set(),
+    dedupOnlyGuarded: true,
+  };
+  const chunks: string[] = [];
+  for (const dir of brotliDirs) {
+    for (const path of listFiles(join(root, dir), ".c")) {
+      const name = basename(path);
+      let chunk = prepare(path, rules);
+      if (brotliUndefs[name]) {
+        chunk = undefMacros(chunk, brotliUndefs[name]);
+      }
+      if (brotliRenames[name]) {
+        chunk = scopeSymbols(chunk, basename(path, ".c"), brotliRenames[name]);
+      }
+      chunks.push(chunk);
+    }
+  }
+  ctx.files.set("brotli.c", joinChunks(chunks));
 }
 
 // --- bzip2 -----------------------------------------------------------------
@@ -1046,6 +1122,27 @@ function genZopfli(ctx: Ctx): void {
 // --- the table -------------------------------------------------------------
 
 const libs: Lib[] = [
+  {
+    name: "brotli",
+    homepage: "https://github.com/google/brotli",
+    repo: "https://github.com/ArtifexSoftware/thirdparty-brotli",
+    rev: "2523f3314501aa5c90e561922b2e668b3ccee26e",
+    writes: "brotli/*.h, brotli.c, LICENSE",
+    generate: genBrotli,
+    copies: ["LICENSE"],
+    compile: {
+      file: "brotli.c",
+      args: [
+        ...defines("WIN32", "_WIN32", "NDEBUG", "_CRT_SECURE_NO_WARNINGS", "_HAS_ITERATOR_DEBUGGING=0"),
+        "/I",
+        ".",
+        "/wd4100",
+        "/wd4127",
+        "/wd4189",
+        "/wd4201",
+      ],
+    },
+  },
   {
     name: "bzip2",
     homepage: "https://www.sourceware.org/bzip2/",

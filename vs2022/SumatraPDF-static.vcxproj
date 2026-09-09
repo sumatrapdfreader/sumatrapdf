@@ -1871,8 +1871,8 @@
     <ProjectReference Include="jxldec.vcxproj">
       <Project>{9F43DA07-8BE5-04DE-74A0-183260E18B2E}</Project>
     </ProjectReference>
-    <ProjectReference Include="brotli.vcxproj">
-      <Project>{B155C6F4-9DF7-F0CA-86B2-041F72F3771B}</Project>
+    <ProjectReference Include="a-brotli.vcxproj">
+      <Project>{1FF28875-0BBF-E380-34D8-D1282004190F}</Project>
     </ProjectReference>
     <ProjectReference Include="mupdf.vcxproj">
       <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>

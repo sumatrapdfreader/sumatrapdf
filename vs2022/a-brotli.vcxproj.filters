@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="brotli">
+      <UniqueIdentifier>{B155C6F4-9DF7-F0CA-86B2-041F72F3771B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\a-brotli\brotli\decode.h">
+      <Filter>brotli</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-brotli\brotli\encode.h">
+      <Filter>brotli</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-brotli\brotli\port.h">
+      <Filter>brotli</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-brotli\brotli\shared_dictionary.h">
+      <Filter>brotli</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-brotli\brotli\types.h">
+      <Filter>brotli</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\a-brotli\brotli.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\ext\a-brotli\LICENSE" />
+    <None Include="..\ext\a-brotli\version.txt" />
+  </ItemGroup>
+</Project>

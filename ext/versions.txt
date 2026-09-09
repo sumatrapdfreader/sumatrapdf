@@ -70,6 +70,7 @@ openjpeg        2.5.4      (post-release dev snapshot)
 brotli          1.2.0
   https://github.com/google/brotli
   mupdf thirdparty submodule, commit 2523f3314501aa5c90e561922b2e668b3ccee26e
+  amalgamated into ext/a-brotli by cmd/amalgam.ts -brotli, see ext/a-brotli/version.txt
 
 cmark-gfm       0.29.0.gfm.13
   https://github.com/github/cmark-gfm
