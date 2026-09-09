@@ -3,7 +3,7 @@
 //   bun cmd/crashes.ts              list (oldest first); analyze missing
 //   bun cmd/crashes.ts --local      same, against http://127.0.0.1:9321
 //   bun cmd/crashes.ts <id>         download dump + pdb + exe, run !analyze
-import { existsSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSync, copyFileSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
 import { homedir, cpus } from "node:os";
 import { spawn, spawnSync } from "node:child_process";
@@ -707,6 +707,39 @@ async function ensureExeQuiet(row: DumpRow): Promise<string> {
   }
 }
 
+// the dump identifies the image by the path it ran from, so a renamed exe
+// ("SumatraPDF-prerel-64 (3).exe") doesn't match our cached SumatraPDF.exe and
+// cdb can't unwind past inlined frames. Give it a dir with a copy under that name.
+function crashedExeName(id: string): string {
+  if (!isLogExtracted(id)) {
+    return "";
+  }
+  const m = /^Exe:[ \t]*(.*\.exe)[ \t]/im.exec(readFileSync(logPath(id), "utf8"));
+  if (!m) {
+    return "";
+  }
+  const name = m[1].split(/[\\/]/).pop() ?? "";
+  return name === "SumatraPDF.exe" ? "" : name;
+}
+
+function renamedExeDir(id: string, exeDir: string): string {
+  const name = exeDir ? crashedExeName(id) : "";
+  if (!name) {
+    return "";
+  }
+  const src = join(exeDir, "SumatraPDF.exe");
+  if (!existsSync(src)) {
+    return "";
+  }
+  const dir = join(dumpDir(id), "img");
+  const dst = join(dir, name);
+  if (!existsSync(dst) || statSync(dst).size !== statSync(src).size) {
+    mkdirSync(dir, { recursive: true });
+    copyFileSync(src, dst);
+  }
+  return dir;
+}
+
 async function downloadDumpIfMissing(server: string, id: string): Promise<void> {
   mkdirSync(dumpDir(id), { recursive: true });
   const dmpPath = dumpPath(id);
@@ -839,8 +872,9 @@ async function runAnalysis(row: DumpRow, reanalyze: boolean): Promise<void> {
   console.log(`cdb: ${cdb} (${row.id})`);
   console.log(`pdb: ${relative(ROOT, symDir).replaceAll("\\", "/")}`);
   const args = ["-z", dmpPath, "-y", symPath, "-lines"];
-  if (exeDir) {
-    args.push("-i", exeDir);
+  const imgDirs = [exeDir, renamedExeDir(row.id, exeDir)].filter((d) => d !== "");
+  if (imgDirs.length > 0) {
+    args.push("-i", imgDirs.join(";"));
   }
   args.push("-logo", outPath, "-c", CDB_CMD);
   await runCdbAsync(cdb, args, outPath);

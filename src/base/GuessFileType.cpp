@@ -212,11 +212,14 @@ static bool IsPSFileContent(Str d) {
     }
     // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
     if (str::StartsWith(header, StrL("\xC5\xD0\xD3\xC6"))) {
-        DWORD psStart = ByteReader(d).UInt32LE(4);
-        if ((int)psStart >= n - 12) {
+        // unsigned: a psStart with the high bit set is not a small negative
+        // offset into d, it's past the end of what we sniffed
+        u32 psStart = ByteReader(d).UInt32LE(4);
+        if (psStart >= (u32)(n - 12)) {
+            // can't verify what we don't have; assume it's EPS
             return true;
         }
-        Str sub = Str(header.s + psStart, header.len - (int)psStart);
+        Str sub = Str(header.s + psStart, n - (int)psStart);
         return str::StartsWith(sub, StrL("%!PS-Adobe-"));
     }
     if (str::StartsWith(header, StrL("%!PS-Adobe-"))) {

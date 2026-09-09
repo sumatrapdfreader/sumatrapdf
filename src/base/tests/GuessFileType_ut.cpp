@@ -517,6 +517,38 @@ static void jxlTest() {
     utassert(fti.hasImageSize);
 }
 
+// issue 6159 / crash 2026-09-09-19-32-4dfd: a Windows EPS header whose 32-bit
+// psStart offset has the high bit set passed the "past the end" check as a
+// negative int, then was indexed with as unsigned -> wild pointer read
+static void epsTest() {
+    u8 eps[128];
+    memset(eps, 0x8d, sizeof(eps));
+    eps[0] = 0xC5;
+    eps[1] = 0xD0;
+    eps[2] = 0xD3;
+    eps[3] = 0xC6;
+    // psStart = 0x8d8d8d1a: past the end, so unverifiable and assumed EPS.
+    // used to be read back as a negative int and indexed with as unsigned
+    utassert(infoFromBytes(eps, dimofi(eps)).ft == FileType::PS);
+    // the repro file is 64 bytes, the smallest we sniff at all
+    utassert(infoFromBytes(eps, 64).ft == FileType::PS);
+    utassert(infoFromBytes(eps, 63).ft == FileType::Unknown);
+
+    // psStart pointing at the postscript header
+    static const char kPS[] = "%!PS-Adobe-3.0";
+    int psStart = 64;
+    memcpy(eps + psStart, kPS, dimofi(kPS) - 1);
+    eps[4] = (u8)psStart;
+    eps[5] = 0;
+    eps[6] = 0;
+    eps[7] = 0;
+    utassert(infoFromBytes(eps, dimofi(eps)).ft == FileType::PS);
+
+    // ... but not at something else
+    eps[psStart] = 'x';
+    utassert(infoFromBytes(eps, dimofi(eps)).ft == FileType::Unknown);
+}
+
 static void nonImageTest() {
     static const char pdf[] = "%PDF-1.4\nhello";
     FileTypeInfo fti = GuessFileInfoFromData(StrL(pdf));
@@ -563,4 +595,5 @@ void GuessFileTypeTest() {
     heifTest();
     jxlTest();
     nonImageTest();
+    epsTest();
 }
