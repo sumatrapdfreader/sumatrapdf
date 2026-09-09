@@ -1,0 +1,50 @@
+backport: use page height to set maximum image size (bug 709663)
+
+BACKPORT of upstream mupdf b8d245e4e7ee2f28ad154e8e5cf69f96eca68d4f, not a
+change of ours. Drop it when the vendored mupdf moves past that commit - it is
+on mupdf master but not in 1.28.2.
+
+https://bugs.ghostscript.com/show_bug.cgi?id=709663
+
+layout_flow advances ld->bounds through the document, so deriving the page
+height from them makes it zero or negative after the first page: the max-height
+check then stops shrinking later images and they are clipped over several
+pages. ld->page retains the fixed pagination rectangle. Upstream also feeds the
+same max_w / max_h into the CSS width / height percentage resolution.
+
+Replaces our 0031-html-image-page-height patch for issue #6007.
+
+Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/6007
+---
+diff --git a/source/html/html-layout.c b/source/html/html-layout.c
+index 7a76cf9f2..7f09d9f6c 100644
+--- a/source/html/html-layout.c
++++ b/source/html/html-layout.c
+@@ -939,13 +939,10 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
+ 
+ 		if (node->type == FLOW_IMAGE)
+ 		{
+-			float max_w, max_h;
+ 			float xs = 1, ys = 1, s;
+ 			float aspect = 1;
+-			float page_h = ld->bounds[B] - ld->bounds[T];
+-
+-			max_w = ld->bounds[R] - ld->bounds[L];
+-			max_h = page_h;
++			float max_w = ld->bounds[R] - ld->bounds[L]; // current block content box width
++			float max_h = ld->page[B] - ld->page[T]; // page height (excluding page margins)
+ 
+ 			/* NOTE: We ignore the image DPI here, since most images in EPUB files have bogus values. */
+ 			node->w = node->content.image->w * 72.0f / 96.0f;
+@@ -953,9 +950,9 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
+ 			aspect = node->h ? node->w / node->h : 0;
+ 
+ 			if (node->box->style->width.unit != N_AUTO)
+-				node->w = fz_from_css_number(node->box->style->width, top->s.layout.em, ld->bounds[R] - ld->bounds[L], node->w);
++				node->w = fz_from_css_number(node->box->style->width, top->s.layout.em, max_w, node->w);
+ 			if (node->box->style->height.unit != N_AUTO)
+-				node->h = fz_from_css_number(node->box->style->height, top->s.layout.em, page_h, node->h);
++				node->h = fz_from_css_number(node->box->style->height, top->s.layout.em, max_h, node->h);
+ 			if (node->box->style->width.unit == N_AUTO && node->box->style->height.unit != N_AUTO)
+ 				node->w = node->h * aspect;
+ 			if (node->box->style->width.unit != N_AUTO && node->box->style->height.unit == N_AUTO)

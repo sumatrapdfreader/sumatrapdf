@@ -39,7 +39,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0025-webp-images` | decode WebP via libwebp (`HAVE_WEBP`) so EPUB/HTML/MOBI/CBZ can show `.webp` (#3415) |
 | `0027-webp-iccp-without-demux` | apply a WebP `ICCP` chunk via our own RIFF walk (no libwebp demux) |
 | `0030-backport-709661-subset-prefix-font-name` | ignore `ABCDEF+` subset tags when matching builtin font names (covers #4655) |
-| `0031-html-image-page-height` | shrink every reflow image against the fixed page height, not advancing block bounds (#6007) |
+| `0031-backport-709663-image-page-height` | fit reflow images to the fixed page height, not the advancing block bounds (covers #6007) |
 | `0032-pdf-appearance-unrendered-annots` | placeholder AP for Movie/Screen/3D/RichMedia/Watermark/PrinterMark/TrapNet/Projection |
 | `0033-pdf-appearance-markup-movie-poster` | highlight default yellow, markup `/Rect` if no QuadPoints, skip 0-width unfilled Square/Circle, Movie `/Poster` as AP |
 | `0034-backport-709678-cjk-fullwidth-punctuation` | half/fullwidth forms and CJK punctuation stay on the non-embedded CJK path (covers #6082) |
@@ -49,7 +49,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0038-html-css-background-image` | CSS `background-image` / `-size` / `-position` / `-repeat` on block boxes; fixed-layout scan EPUBs were blank (#6131) |
 | `0039-md-empty-buffer-nul-scan` | empty markdown: `len-1` underflow in `fz_md_to_html` (#6143) |
 
-And ten that are not ours but that we carry ahead of the release we vendor:
+And eleven that are not ours but that we carry ahead of the release we vendor:
 
 | Patch | What |
 | --- | --- |
@@ -60,6 +60,7 @@ And ten that are not ours but that we carry ahead of the release we vendor:
 | `0026-backport-709657-fb2-author` | upstream FB2 author walk: every `<author>`, first-name + last-name (covers #2254) |
 | `0029-backport-709660-tj-array-tc-tw` | recover after `Tc`/`Tw` inside a `TJ` array so the rest of the page still draws (covers #4157) |
 | `0030-backport-709661-subset-prefix-font-name` | ignore `ABCDEF+` subset tags when matching builtin font names (covers #4655) |
+| `0031-backport-709663-image-page-height` | reflow images shrink to the fixed page height on every page, not just the first (#6007) |
 | `0034-backport-709678-cjk-fullwidth-punctuation` | half/fullwidth forms and CJK punctuation use the CJK fonts, not an embedded fallback (#6082) |
 | `0035-backport-709680-flow-anchor-top` | HTML/EPUB link targets use the top of the flow node, not its baseline (#6095) |
 | `0037-backport-709648-inline-context-after-block` | nested `<span id>` wrapping a block no longer all jump to the chapter start (#5943) |
@@ -81,9 +82,10 @@ cases. `0022` replaced our own XPS depth limit for exactly that reason — it
 guards the two epub outline parsers as well, and `0023` is our own FB2 metadata
 patch after Artifex upstreamed it ("Based on a patch from Krzysztof Kowalczyk of
 SumatraPDF"). `0026` replaced our FB2 author-name helper the same way, `0029`
-replaced our TJ `Tc`/`Tw` break, and `0030` replaced our subset-tag strip for
-base-14 names. Check before writing a new patch, and check again at each update,
-since upstream may have caught up.
+replaced our TJ `Tc`/`Tw` break, `0030` replaced our subset-tag strip for
+base-14 names, and `0031` replaced our own reflow image page-height fix. Check
+before writing a new patch, and check again at each update, since upstream may
+have caught up.
 
 ## Applying them
 

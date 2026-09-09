@@ -939,13 +939,10 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 
 		if (node->type == FLOW_IMAGE)
 		{
-			float max_w, max_h;
 			float xs = 1, ys = 1, s;
 			float aspect = 1;
-			float page_h = ld->page[B] - ld->page[T];
-
-			max_w = ld->bounds[R] - ld->bounds[L];
-			max_h = page_h;
+			float max_w = ld->bounds[R] - ld->bounds[L]; // current block content box width
+			float max_h = ld->page[B] - ld->page[T]; // page height (excluding page margins)
 
 			/* NOTE: We ignore the image DPI here, since most images in EPUB files have bogus values. */
 			node->w = node->content.image->w * 72.0f / 96.0f;
@@ -953,9 +950,9 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 			aspect = node->h ? node->w / node->h : 0;
 
 			if (node->box->style->width.unit != N_AUTO)
-				node->w = fz_from_css_number(node->box->style->width, top->s.layout.em, ld->bounds[R] - ld->bounds[L], node->w);
+				node->w = fz_from_css_number(node->box->style->width, top->s.layout.em, max_w, node->w);
 			if (node->box->style->height.unit != N_AUTO)
-				node->h = fz_from_css_number(node->box->style->height, top->s.layout.em, page_h, node->h);
+				node->h = fz_from_css_number(node->box->style->height, top->s.layout.em, max_h, node->h);
 			if (node->box->style->width.unit == N_AUTO && node->box->style->height.unit != N_AUTO)
 				node->w = node->h * aspect;
 			if (node->box->style->width.unit != N_AUTO && node->box->style->height.unit == N_AUTO)
