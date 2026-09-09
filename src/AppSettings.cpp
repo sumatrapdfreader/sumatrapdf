@@ -23,7 +23,7 @@
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
-#include "PdfCadDetect.h"
+#include "PdfCad.h"
 #include "SumatraConfig.h"
 #include "FileHistory.h"
 #include "SumatraPDF.h"

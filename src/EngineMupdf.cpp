@@ -27,7 +27,6 @@ extern "C" {
 #include "DocProperties.h"
 #include "gui/UIModels.h"
 #include "EngineBase.h"
-#include "PdfCadEnhanceDevice.h"
 #include "PdfDarkMode.h"
 #include "PdfDarkModeInternal.h"
 #include "EngineAll.h"

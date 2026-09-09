@@ -33,9 +33,27 @@ struct CadDetectResult {
 
 struct fz_context;
 struct pdf_document;
+struct fz_device;
+struct fz_pixmap;
 
 void SetEngineeringDrawingEnhanceMode(Str mode);
 EngineeringDrawingEnhanceMode GetEngineeringDrawingEnhanceMode();
 CadDetectResult DetectCadPdf(fz_context* ctx, pdf_document* doc);
 bool CadEnhanceEnabledForEngine(const CadDetectResult& detect, CadEnhanceOverride overrideState);
 const char* CadEnhanceReasonName(CadEnhanceReason reason);
+
+struct CadMinLineWidthScope {
+    CadMinLineWidthScope(fz_context* ctx, float zoom, bool active, bool hairlineDoc = false);
+    ~CadMinLineWidthScope();
+
+    CadMinLineWidthScope(const CadMinLineWidthScope&) = delete;
+    CadMinLineWidthScope& operator=(const CadMinLineWidthScope&) = delete;
+
+  private:
+    fz_context* ctx = nullptr;
+    float saved = 0;
+    bool active = false;
+};
+
+fz_device* PdfCadEnhanceWrapDevice(fz_context* ctx, fz_device* inner);
+void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool rasterDominant);

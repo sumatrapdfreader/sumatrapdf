@@ -22,7 +22,7 @@ extern "C" {
 #include "ImageReader.h"
 #include "ImageSaveCropResize.h"
 #include "PdfCreator.h"
-#include "PdfCadDetect.h"
+#include "PdfCad.h"
 #include "DisplayModel.h"
 #include "PdfSync.h"
 #include "ProgressUpdateUI.h"

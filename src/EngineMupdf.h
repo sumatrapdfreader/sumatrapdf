@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "PdfCadDetect.h"
+#include "PdfCad.h"
 
 struct Annotation;
 enum class AnnotationChange;
@@ -234,7 +234,7 @@ class EngineMupdf : public EngineBase {
     void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
                                    Vec<Rect>& skipRects) override;
 
-    // CAD/engineering-drawing enhancement (PdfCadDetect.cpp)
+    // CAD/engineering-drawing enhancement (PdfCad.cpp)
     bool cadDetectDone = false;
     bool cadDetectEnable = false;
     int cadDetectScore = 0;

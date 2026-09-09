@@ -17,8 +17,7 @@
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\LitDoc.h" />
-    <ClInclude Include="..\src\PdfCadDetect.h" />
-    <ClInclude Include="..\src\PdfCadEnhanceDevice.h" />
+    <ClInclude Include="..\src\PdfCad.h" />
     <ClInclude Include="..\src\PdfDarkMode.h" />
     <ClInclude Include="..\src\TextSearch.h" />
     <ClInclude Include="..\src\TextSelection.h" />
@@ -46,8 +45,7 @@
     <ClCompile Include="..\src\LitDoc.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
-    <ClCompile Include="..\src\PdfCadDetect.cpp" />
-    <ClCompile Include="..\src\PdfCadEnhanceDevice.cpp" />
+    <ClCompile Include="..\src\PdfCad.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\TextSearch.cpp" />
     <ClCompile Include="..\src\TextSelection.cpp" />

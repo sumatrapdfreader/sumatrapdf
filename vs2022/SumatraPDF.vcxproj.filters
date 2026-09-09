@@ -324,10 +324,7 @@
     <ClInclude Include="..\src\PalmDbReader.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PdfCadDetect.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\PdfCadEnhanceDevice.h">
+    <ClInclude Include="..\src\PdfCad.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\PdfCreator.h">
@@ -902,10 +899,7 @@
     <ClCompile Include="..\src\PalmDbReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PdfCadDetect.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\PdfCadEnhanceDevice.cpp">
+    <ClCompile Include="..\src\PdfCad.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfCreator.cpp">
