@@ -350,7 +350,11 @@ static bool HasTgaVersion2Footer(const u8* data, size_t n) {
         return false;
     }
     const TgaFooter* footer = (const TgaFooter*)(data + n - sizeof(TgaFooter));
-    return str::EqN(Str(footer->signature), StrL("TRUEVISION-XFILE."), sizeof(footer->signature));
+    // signature is a fixed-size field, not necessarily NUL-terminated, so we
+    // must not strlen() it. Also, comparing all 18 bytes would never match
+    // because the literal is 17 chars long
+    Str sig{footer->signature, (int)sizeof(footer->signature)};
+    return str::StartsWith(sig, StrL("TRUEVISION-XFILE."));
 }
 
 static bool IsSupportedTgaPixelFormat(const TgaHeader* header) {

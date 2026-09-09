@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/GuessFileType.h"
+#include "base/TgaReader.h"
 
 // must be last due to assert() over-write
 #include "base/tests/UtAssert.h"
@@ -517,6 +518,45 @@ static void jxlTest() {
     utassert(fti.hasImageSize);
 }
 
+static void tgaTest() {
+    // header alone: 24-bit truecolor 64x32
+    u8 tga[18 + 26] = {};
+    tga[2] = 2;      // imageType: truecolor
+    tga[12] = 64;    // width
+    tga[14] = 32;    // height
+    tga[16] = 24;    // bitDepth
+    FileTypeInfo fti = infoFromBytes(tga, 18);
+    utassert(fti.ft == FileType::Tga);
+    utassert(fti.imageDx == 64);
+    utassert(fti.imageDy == 32);
+
+    // an image type we don't support isn't sniffed as tga
+    tga[2] = 5;
+    utassert(infoFromBytes(tga, 18).ft == FileType::Unknown);
+
+    // ... unless it has a v2 footer. Its signature is a fixed 18-byte field
+    // holding the 17-char string plus a NUL, so it must be compared by
+    // length, not strlen()'d
+    memcpy(tga + 18 + 8, "TRUEVISION-XFILE.", 18);
+    fti = infoFromBytes(tga, dimofi(tga));
+    utassert(fti.ft == FileType::Tga);
+    utassert(fti.imageDx == 64);
+    utassert(fti.imageDy == 32);
+
+    // a footer that isn't NUL-terminated is still a valid signature
+    tga[18 + 8 + 17] = 0x8d;
+    utassert(infoFromBytes(tga, dimofi(tga)).ft == FileType::Tga);
+
+    tga[18 + 8] = 'X';
+    utassert(infoFromBytes(tga, dimofi(tga)).ft == FileType::Unknown);
+
+    // TgaReader has its own copy of the footer check, with the same pitfalls
+    tga[18 + 8] = 'T';
+    utassert(tga::HasSignature(Str((char*)tga, dimofi(tga))));
+    tga[18 + 8] = 'X';
+    utassert(!tga::HasSignature(Str((char*)tga, dimofi(tga))));
+}
+
 // issue 6159 / crash 2026-09-09-19-32-4dfd: a Windows EPS header whose 32-bit
 // psStart offset has the high bit set passed the "past the end" check as a
 // negative int, then was indexed with as unsigned -> wild pointer read
@@ -595,5 +635,6 @@ void GuessFileTypeTest() {
     heifTest();
     jxlTest();
     nonImageTest();
+    tgaTest();
     epsTest();
 }

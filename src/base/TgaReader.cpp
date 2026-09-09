@@ -100,7 +100,11 @@ static bool HasVersion2Footer(const u8* data, size_t n) {
         return false;
     }
     const TgaFooter* footerLE = (const TgaFooter*)(data + n - sizeof(TgaFooter));
-    return str::EqN(Str(footerLE->signature), StrL(kTgaFooterSignature), sizeof(footerLE->signature));
+    // signature is a fixed-size field in file data, not necessarily
+    // NUL-terminated, so we must not strlen() it. Also, comparing all 18 bytes
+    // would never match because the literal is 17 chars long
+    Str sig{footerLE->signature, (int)sizeof(footerLE->signature)};
+    return str::StartsWith(sig, StrL(kTgaFooterSignature));
 }
 
 static const TgaExtArea* GetExtAreaPtr(const u8* data, size_t n) {
