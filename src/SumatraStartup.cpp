@@ -2283,10 +2283,12 @@ static void LogOsInfo() {
     TempStr displayVersion = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, StrL("DisplayVersion"));
     DWORD ubr = 0;
     bool gotUbr = ReadRegDWORD(HKEY_LOCAL_MACHINE, key, StrL("UBR"), ubr);
-    logf("os: version=%u.%u.%d (%s) product='%s' display='%s' ubr=%s%d process=%dbit os=%dbit arm=%d cores=%d\n",
-         ver.dwMajorVersion, ver.dwMinorVersion, build, gotVersion ? OsNameFromVerTemp(ver) : StrL("unknown"), product,
-         displayVersion, gotUbr ? StrL("") : StrL("?"), (int)ubr, IsProcess64() ? 64 : 32, IsOs64() ? 64 : 32,
-         (int)IsArmBuild(), CpuCoreCount());
+    logf(
+        "os: version=%u.%u.%d (%s) product='%s' display='%s' ubr=%s%d "
+        "process=%dbit os=%dbit arm=%d cores=%d wine=%d\n",
+        ver.dwMajorVersion, ver.dwMinorVersion, build, gotVersion ? OsNameFromVerTemp(ver) : StrL("unknown"), product,
+        displayVersion, gotUbr ? StrL("") : StrL("?"), (int)ubr, IsProcess64() ? 64 : 32, IsOs64() ? 64 : 32,
+        (int)IsArmBuild(), CpuCoreCount(), (int)IsRunningOnWine());
 }
 
 static void InstallSumatraCrashHandler(bool localOnly) {
@@ -2334,6 +2336,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
 
     LogCommandLine();
     LogOsInfo();
+    logf("elevated: %d\n", (int)IsProcessRunningElevated());
 
     if (gIsAsanBuild) {
         TempStr asanOpts = GetEnvVariableTemp(StrL("ASAN_OPTIONS"));
@@ -2383,8 +2386,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         // TODO: only if AttachConsole() succeeds?
         gLogToConsole = true;
     }
-    logf("wine: %s\n", Str(IsRunningOnWine() ? "true" : "false"));
-    logf("elevated: %d\n", (int)IsProcessRunningElevated());
     LogWineDpiInfo();
     {
         // the cursor is on the monitor the user launched from. GetForegroundWindow
@@ -2439,7 +2440,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
             StartLogToFile(logFilePath, true);
             LogCommandLine();
             LogOsInfo();
-            logf("wine: %s\n", Str(IsRunningOnWine() ? "true" : "false"));
             logf("elevated: %d\n", (int)IsProcessRunningElevated());
         }
         // gRedrawLog = true;
