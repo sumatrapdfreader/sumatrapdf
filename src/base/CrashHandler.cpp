@@ -4,6 +4,7 @@
 #include "base/Base.h"
 
 #include <csignal>
+#include <exception> // set_terminate
 #include <new.h> // _set_new_handler
 
 #include "base/WinDynCalls.h"
@@ -606,7 +607,7 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     // process to WER, _WRITE_ABORT_MSG prints a message no user of a GUI app
     // ever sees
     _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
-    ::set_terminate(onTerminate);
+    std::set_terminate(onTerminate);
     // set_unexpected() is unavailable with MSVC 17.3+ (_HAS_CXX17 / P0003R5).
     //::set_unexpected(onUnexpected);
 #endif
