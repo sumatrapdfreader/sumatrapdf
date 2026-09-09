@@ -2,18 +2,20 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { dirname, join } from "node:path";
 import { runLogged } from "./util";
 
-const ninjaDir = "ninja";
+export const ninjaDir = join(".work", "ninja");
+// Generated paths are relative to ninjaDir, two levels below the root.
+export const ninjaToRoot = join("..", "..");
 const buildFile = join(ninjaDir, "build.ninja");
 const generatedFile = join(ninjaDir, ".generated");
 // ninja.ts is included: it post-processes the generated files, so changing it
 // must re-generate them from scratch (the fixups are not idempotent).
 const premakeFiles = ["premake5.lua", "premake5.files.lua", "cmd/ninja.ts"];
 const resources = [
-  ["SumatraPDF", "SumatraPDF.exe", "../src/SumatraPDF.rc"],
-  ["SumatraPDF-static", "SumatraPDF-static.exe", "../src/SumatraPDF.rc"],
-  ["libsumatrapdf", "libsumatrapdf.dll", "../src/libsumatrapdf.rc"],
-  ["PdfFilter", "PdfFilter.dll", "../src/ifilter/PdfFilter.rc"],
-  ["PdfPreview", "PdfPreview.dll", "../src/previewer/PdfPreview.rc"],
+  ["SumatraPDF", "SumatraPDF.exe", "../../src/SumatraPDF.rc"],
+  ["SumatraPDF-static", "SumatraPDF-static.exe", "../../src/SumatraPDF.rc"],
+  ["libsumatrapdf", "libsumatrapdf.dll", "../../src/libsumatrapdf.rc"],
+  ["PdfFilter", "PdfFilter.dll", "../../src/ifilter/PdfFilter.rc"],
+  ["PdfPreview", "PdfPreview.dll", "../../src/previewer/PdfPreview.rc"],
 ] as const;
 // SharedLib projects using dll_shared_lib_dirs(): the .dll ships in out/<cfg>/
 // while premake emits it under the intermediate dir out/<cfg>/obj.
@@ -46,9 +48,9 @@ function addResources(text: string, path: string): string {
       continue;
     }
     const targetRe = target.replace(".", "\\.");
-    const re = new RegExp(`^build (../out/([^/]+)/${targetRe})( \\| [^:]+)?: link_msc-v145 (.+)$`, "gm");
+    const re = new RegExp(`^build (../../out/([^/]+)/${targetRe})( \\| [^:]+)?: link_msc-v145 (.+)$`, "gm");
     text = text.replace(re, (line, output, config, implicitOutputs, inputs) => {
-      const resource = `../out/${config}/obj/${project}/${project}.res`;
+      const resource = `../../out/${config}/obj/${project}/${project}.res`;
       if (inputs.includes(resource)) {
         return line;
       }
@@ -58,10 +60,10 @@ function addResources(text: string, path: string): string {
       let deps = "";
       let flags = "";
       if (project === "SumatraPDF") {
-        deps = ` | ../out/${config}/obj/SumatraPDF/SumatraPDF.prebuild`;
-        flags = `\n  resflags = /D EMBEDDED_PAK=.\\../out/${config}\\embedded.lzsa`;
+        deps = ` | ../../out/${config}/obj/SumatraPDF/SumatraPDF.prebuild`;
+        flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out\\${config}\\embedded.lzsa`;
       } else if (project === "SumatraPDF-static") {
-        deps = ` | ../out/${config}/obj-s/SumatraPDF-static/SumatraPDF-static.prebuild`;
+        deps = ` | ../../out/${config}/obj-s/SumatraPDF-static/SumatraPDF-static.prebuild`;
       }
       return `build ${resource}: rc_msc-v145 ${source}${deps}${flags}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
     });
@@ -110,7 +112,7 @@ function fixEscapes(): void {
       })
       .join("\n");
     // Premake's Ninja backend does not apply the Synctex file filter.
-    fixed = fixed.replace(/(build [^\n]* \.\.\/ext\/synctex\/[^\n]*\n  cflags = [^\n]*)/g, (line) => {
+    fixed = fixed.replace(/(build [^\n]* \.\.\/\.\.\/ext\/synctex\/[^\n]*\n  cflags = [^\n]*)/g, (line) => {
       return line.includes('/wd"4244"') ? line : `${line} /wd"4244" /wd"4267"`;
     });
     // link.exe does not update .exp files, so they cannot be Ninja outputs.
@@ -125,18 +127,18 @@ function fixEscapes(): void {
     }
     // link.exe leaves an unchanged import library untouched. Model it as a
     // phony dependency, otherwise Ninja relinks this DLL on every invocation.
-    fixed = fixed.replace(/^build (\.\.\/out\/[^/]+)\/obj\/libsumatrapdf\.lib: phony .+\n/gm, "");
+    fixed = fixed.replace(/^build (\.\.\/\.\.\/out\/[^/]+)\/obj\/libsumatrapdf\.lib: phony .+\n/gm, "");
     fixed = fixed.replace(
-      /^build (\.\.\/out\/[^/]+)\/libsumatrapdf\.dll(?: \| [^:]+)?:(.*)$/gm,
+      /^build (\.\.\/\.\.\/out\/[^/]+)\/libsumatrapdf\.dll(?: \| [^:]+)?:(.*)$/gm,
       "build $1/libsumatrapdf.dll:$2",
     );
     // The archive prebuild must wait for every binary it packages.
     fixed = fixed.replace(
-      /^build (\.\.\/out\/([^/]+)\/obj\/SumatraPDF\/SumatraPDF\.prebuild): prebuild.*$/gm,
-      "build $1: prebuild || ../out/$2/libsumatrapdf.dll ../out/$2/PdfFilter.dll ../out/$2/PdfPreview.dll ../out/$2/sumatrapdf-tool.exe",
+      /^build (\.\.\/\.\.\/out\/([^/]+)\/obj\/SumatraPDF\/SumatraPDF\.prebuild): prebuild.*$/gm,
+      "build $1: prebuild || ../../out/$2/libsumatrapdf.dll ../../out/$2/PdfFilter.dll ../../out/$2/PdfPreview.dll ../../out/$2/sumatrapdf-tool.exe",
     );
     fixed = addResources(fixed, path);
-    const dlls = [...fixed.matchAll(/^build (\.\.\/out\/[^/]+)\/libsumatrapdf\.dll: link_msc-v145/gm)];
+    const dlls = [...fixed.matchAll(/^build (\.\.\/\.\.\/out\/[^/]+)\/libsumatrapdf\.dll: link_msc-v145/gm)];
     for (const [, outputDir] of dlls) {
       fixed += `\nbuild ${outputDir}/obj/libsumatrapdf.lib: phony ${outputDir}/libsumatrapdf.dll\n`;
     }
@@ -156,7 +158,7 @@ function createOutputDirs(): void {
         continue;
       }
       for (const output of outputs.split(" ")) {
-        if (!output.startsWith("../out/")) {
+        if (!output.startsWith("../../out/")) {
           continue;
         }
         mkdirSync(dirname(join(ninjaDir, output)), { recursive: true });

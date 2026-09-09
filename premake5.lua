@@ -57,6 +57,17 @@ Prefast:
  28253 - Inconsistent annotation
 --]]
 
+-- Where premake writes the generated files, relative to the repo root.
+-- Raw command strings and linkoptions below need the way back explicitly
+-- (rootDir / rootDirWin), premake only rewrites real path arguments.
+ninjaDir = ".work/ninja"
+rootDir = ".."
+rootDirWin = ".."
+if _ACTION == "ninja" then
+  rootDir = "../.."
+  rootDirWin = "..\\.."
+end
+
 newoption {
   trigger = "with-clang",
   description = "use clang-cl.exe instead of cl.exe"
@@ -340,8 +351,8 @@ function static_linker_intermediates()
   mapfile "Off"
   for_each_out_config(function(platform, config, outDir)
     filter { platform, config }
-    linkoptions('/IMPLIB:"../' .. outDir .. '/obj-s/%{prj.name}.lib"')
-    linkoptions('/MAP:"../' .. outDir .. '/obj-s/%{prj.name}.map"')
+    linkoptions('/IMPLIB:"' .. rootDir .. '/' .. outDir .. '/obj-s/%{prj.name}.lib"')
+    linkoptions('/MAP:"' .. rootDir .. '/' .. outDir .. '/obj-s/%{prj.name}.map"')
   end)
 end
 
@@ -349,8 +360,8 @@ function dll_linker_intermediates()
   mapfile "Off"
   for_each_out_config(function(platform, config, outDir)
     filter { platform, config }
-    linkoptions('/IMPLIB:"../' .. outDir .. '/obj/%{prj.name}.lib"')
-    linkoptions('/MAP:"../' .. outDir .. '/obj/%{prj.name}.map"')
+    linkoptions('/IMPLIB:"' .. rootDir .. '/' .. outDir .. '/obj/%{prj.name}.lib"')
+    linkoptions('/MAP:"' .. rootDir .. '/' .. outDir .. '/obj/%{prj.name}.map"')
   end)
 end
 
@@ -361,10 +372,10 @@ function dll_shared_lib_dirs()
   mapfile "Off"
   for_each_out_config(function(platform, config, outDir)
     filter { platform, config }
-    linkoptions('/OUT:"../' .. outDir .. '/%{prj.name}.dll"')
-    linkoptions('/PDB:"../' .. outDir .. '/%{prj.name}.pdb"')
-    linkoptions('/IMPLIB:"../' .. outDir .. '/obj/%{prj.name}.lib"')
-    linkoptions('/MAP:"../' .. outDir .. '/obj/%{prj.name}.map"')
+    linkoptions('/OUT:"' .. rootDir .. '/' .. outDir .. '/%{prj.name}.dll"')
+    linkoptions('/PDB:"' .. rootDir .. '/' .. outDir .. '/%{prj.name}.pdb"')
+    linkoptions('/IMPLIB:"' .. rootDir .. '/' .. outDir .. '/obj/%{prj.name}.lib"')
+    linkoptions('/MAP:"' .. rootDir .. '/' .. outDir .. '/obj/%{prj.name}.map"')
   end)
 end
 
@@ -414,7 +425,7 @@ workspace "SumatraPDF"
   filter {}
 
   filter "action:ninja"
-    location "ninja"
+    location(ninjaDir)
   filter {}
 
   clang_conf()
@@ -688,7 +699,7 @@ workspace "SumatraPDF"
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}_asm.obj' }
       buildcommands {
-        '..\\bin\\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
+        rootDirWin .. '\\bin\\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ' .. rootDir .. '/ext/dav1d/src -I ' .. rootDir .. '/ext/dav1d/include -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
       }
     filter {}
     dav1d_files()
@@ -718,14 +729,14 @@ workspace "SumatraPDF"
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
-        '..\\bin\\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+        rootDirWin .. '\\bin\\nasm.exe -f win32 -DWIN32 -I ' .. rootDir .. '/ext/libjpeg-turbo/simd/nasm/ -I ' .. rootDir .. '/ext/libjpeg-turbo/simd/i386/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
       }
     filter {}
     filter { 'files:**.asm', 'platforms:x64 or x64_asan' }
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
-        '..\\bin\\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+        rootDirWin .. '\\bin\\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ' .. rootDir .. '/ext/libjpeg-turbo/simd/nasm/ -I ' .. rootDir .. '/ext/libjpeg-turbo/simd/x86_64/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
       }
     filter {}
     libjpeg_turbo_files()
@@ -903,19 +914,19 @@ workspace "SumatraPDF"
     buildmessage 'bin2coff %{file.basename}.cff (x86)'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {
-      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86'
+      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86'
     }
     filter { 'files:**.cff', 'platforms:x64 or x64_asan' }
     buildmessage 'bin2coff %{file.basename}.cff (x64)'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {
-      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86_64'
+      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86_64'
     }
     filter { 'files:**.cff', 'platforms:arm64' }
     buildmessage 'bin2coff %{file.basename}.cff (arm64)'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {
-      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff ARM64'
+      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff ARM64'
     }
     filter {}
 
@@ -923,19 +934,19 @@ workspace "SumatraPDF"
     buildmessage 'bin2coff %{file.basename}.ttf (x86)'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {
-      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86'
+      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86'
     }
     filter { 'files:**.ttf', 'platforms:x64 or x64_asan' }
     buildmessage 'bin2coff %{file.basename}.ttf (x64)'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {
-      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86_64'
+      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86_64'
     }
     filter { 'files:**.ttf', 'platforms:arm64' }
     buildmessage 'bin2coff %{file.basename}.ttf (arm64)'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {
-      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf ARM64'
+      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf ARM64'
     }
     filter {}
 
@@ -943,19 +954,19 @@ workspace "SumatraPDF"
     buildmessage 'bin2coff %{file.basename}.otf (x86)'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {
-      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86'
+      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86'
     }
     filter { 'files:**.otf', 'platforms:x64 or x64_asan' }
     buildmessage 'bin2coff %{file.basename}.otf (x64)'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {
-      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86_64'
+      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86_64'
     }
     filter { 'files:**.otf', 'platforms:arm64' }
     buildmessage 'bin2coff %{file.basename}.otf (arm64)'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {
-      '..\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf ARM64'
+      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf ARM64'
     }
     filter {}
   end
@@ -1049,7 +1060,7 @@ workspace "SumatraPDF"
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
     files { "src/libsumatrapdf.rc", "src/libsumatrapdf.def", "src/no_op_for_premake.cpp" }
     implibname "libsumatrapdf"
-    linkoptions { "/DEF:..\\src\\libsumatrapdf.def", "-IGNORE:4701", "-IGNORE:4702" }
+    linkoptions { "/DEF:" .. rootDirWin .. "\\src\\libsumatrapdf.def", "-IGNORE:4701", "-IGNORE:4702" }
     links_zlib()
     -- image codecs + their transitive deps are part of this DLL only; consumers
     -- (SumatraPDF, PdfPreview, …) import the few needed symbols via libsumatrapdf.def
@@ -1416,7 +1427,7 @@ workspace "SumatraPDF"
     -- .work/embedded.lzsa (IDR_EMBEDDED_PAK, the default path in SumatraPDF.rc).
     -- Uses cmd so MSBuild need not have bun on PATH.
     prebuildcommands {
-      "call ..\\cmd\\pack-embedded-prebuild.cmd",
+      "call " .. rootDirWin .. "\\cmd\\pack-embedded-prebuild.cmd",
     }
 
   -- a dll version where most functionality is in libsumatrapdf.dll
@@ -1523,7 +1534,7 @@ workspace "SumatraPDF"
     -- unchanged entries, and signed release builds sign the DLLs in place
     -- before this prebuild runs (with BuildProjectReferences=false).
     prebuildcommands {
-      "call ..\\cmd\\pack-embedded-prebuild.cmd %{cfg.targetdir}\\embedded.lzsa %{cfg.targetdir}\\libsumatrapdf.dll:libsumatrapdf.dll %{cfg.targetdir}\\PdfFilter.dll:PdfFilter.dll %{cfg.targetdir}\\PdfPreview.dll:PdfPreview.dll %{cfg.targetdir}\\sumatrapdf-tool.exe:sumatrapdf-tool.exe",
+      "call " .. rootDirWin .. "\\cmd\\pack-embedded-prebuild.cmd %{cfg.targetdir}\\embedded.lzsa %{cfg.targetdir}\\libsumatrapdf.dll:libsumatrapdf.dll %{cfg.targetdir}\\PdfFilter.dll:PdfFilter.dll %{cfg.targetdir}\\PdfPreview.dll:PdfPreview.dll %{cfg.targetdir}\\sumatrapdf-tool.exe:sumatrapdf-tool.exe",
     }
     -- /INFERASANLIBS pulls in the *dynamic* ASan runtime, so
     -- clang_rt.asan_dynamic-x86_64.dll must sit next to the exe or it

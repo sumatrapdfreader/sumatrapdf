@@ -3,7 +3,7 @@ import { cpus } from "node:os";
 import { join, relative } from "node:path";
 import { $ } from "bun";
 import { clearDirPreserveSettings } from "./clean";
-import { ensureNinja } from "./ninja";
+import { ensureNinja, ninjaDir, ninjaToRoot } from "./ninja";
 import { detectVisualStudio2026, runLogged } from "./util";
 
 type BuildMode = "windows" | "all" | "smoke" | "ci" | "daily" | "codeql" | "mingw" | "wine" | "build-no";
@@ -203,7 +203,7 @@ async function buildWindows(config: Config, win32: boolean, clean: boolean, ninj
   console.log(`${configName} ${platform} build`);
   if (clean) clearDirPreserveSettings(outDir);
   if (ninja) {
-    await buildNinja([join("..", outDir, "SumatraPDF.exe")]);
+    await buildNinja([join(ninjaToRoot, outDir, "SumatraPDF.exe")]);
   } else {
     const { msbuildPath } = detectVisualStudio2026();
     await buildApp(msbuildPath, configName, platform, "SumatraPDF");
@@ -214,7 +214,7 @@ async function buildWindows(config: Config, win32: boolean, clean: boolean, ninj
 async function buildNinja(targets: string[]): Promise<void> {
   await ensureNinja();
   const jobs = Math.max(1, cpus().length - 1);
-  await runLogged("ninja", ["-C", "ninja", "-j", `${jobs}`, ...targets]);
+  await runLogged("ninja", ["-C", ninjaDir, "-j", `${jobs}`, ...targets]);
 }
 
 function printBinaries(dir: string, targets: Set<string>): void {
@@ -280,7 +280,7 @@ async function buildWindowsAsan(config: Config, clean: boolean, ninja: boolean):
   if (clean) clearDirPreserveSettings(outDir);
   const { msbuildPath, vsRoot } = detectVisualStudio2026();
   if (ninja) {
-    await buildNinja([join("..", outDir, "SumatraPDF-static.exe")]);
+    await buildNinja([join(ninjaToRoot, outDir, "SumatraPDF-static.exe")]);
   } else {
     await runLogged(msbuildPath, [
       String.raw`vs2022\SumatraPDF.sln`,
@@ -299,7 +299,7 @@ async function buildAll(clean: boolean, ninja: boolean): Promise<void> {
   console.log("Release x64 SumatraPDF and SumatraPDF-static build");
   if (clean) clearDirPreserveSettings(outDir);
   if (ninja) {
-    await buildNinja([join("..", outDir, "SumatraPDF.exe"), join("..", outDir, "SumatraPDF-static.exe")]);
+    await buildNinja([join(ninjaToRoot, outDir, "SumatraPDF.exe"), join(ninjaToRoot, outDir, "SumatraPDF-static.exe")]);
   } else {
     const { msbuildPath } = detectVisualStudio2026();
     await buildApp(msbuildPath, "Release", "x64", "SumatraPDF");
@@ -318,7 +318,7 @@ async function buildSmoke(ninja: boolean): Promise<void> {
   console.log("smoke build");
   clearDirPreserveSettings(outDir);
   if (ninja) {
-    await buildNinja([join("..", outDir, "SumatraPDF.exe")]);
+    await buildNinja([join(ninjaToRoot, outDir, "SumatraPDF.exe")]);
   } else {
     const { msbuildPath } = detectVisualStudio2026();
     await buildApp(msbuildPath, "Release", "x64", "SumatraPDF:Rebuild");

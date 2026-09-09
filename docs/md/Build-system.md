@@ -3,7 +3,7 @@
 Our build system uses [Premake 5](https://premake.github.io/). For convenience, we keep the `premake5.exe` binary in the `bin` directory.
 
 Premake generates the Visual Studio solution in the `vs2022` directory and the
-ignored Ninja graph in `ninja/`, both from `premake5.lua`. The generated
+ignored Ninja graph in `.work/ninja/`, both from `premake5.lua`. The generated
 solution files are stored in the repository for convenience.
 
 `bun cmd/build.ts` builds with MSBuild by default. Pass `-ninja` to generate the
