@@ -20,7 +20,7 @@ const includeDirs = [
   "ext/synctex",
   "ext/lzma/C",
   "ext/libwebp/src",
-  "ext/freetype/include",
+  "ext/a-freetype/include",
   "ext/libarchive",
   "ext/a-zopfli",
   "ext/cmark-gfm/src",

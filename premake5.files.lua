@@ -550,39 +550,6 @@ function harfbuzz_files()
   })
 end
 
-function freetype_files()
-  files_in_dir("ext/freetype/src/base", {
-    "ftbase.c",
-    "ftbbox.c",
-    "ftbitmap.c",
-    "ftdebug.c",
-    "ftfstype.c",
-    "ftgasp.c",
-    "ftglyph.c",
-    "ftinit.c",
-    -- TODO: temporary
-    "ftotval.c",
-    "ftstroke.c",
-    "ftsynth.c",
-    "ftsystem.c",
-    "fttype1.c",
-  })
-
-  files_in_dir("ext/freetype/src", {
-    "gzip/ftgzip.c",
-    "cff/cff.c",
-    "cid/type1cid.c",
-    "psaux/psaux.c",
-    "pshinter/pshinter.c",
-    "psnames/psnames.c",
-    "raster/raster.c",
-    "sfnt/sfnt.c",
-    "smooth/smooth.c",
-    "truetype/truetype.c",
-    "type1/type1.c",
-  })
-end
-
 files {
 }
 

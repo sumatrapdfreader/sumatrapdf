@@ -1889,8 +1889,8 @@
     <ProjectReference Include="harfbuzz.vcxproj">
       <Project>{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}</Project>
     </ProjectReference>
-    <ProjectReference Include="freetype.vcxproj">
-      <Project>{89895BD8-7556-B6E3-9E6F-A48B8A9BEB71}</Project>
+    <ProjectReference Include="a-freetype.vcxproj">
+      <Project>{77F93694-63B1-78E1-CCB8-513DB88F13D2}</Project>
     </ProjectReference>
     <ProjectReference Include="lcms2.vcxproj">
       <Project>{C67ED90F-3293-01C1-FB14-A52067E8FDF1}</Project>

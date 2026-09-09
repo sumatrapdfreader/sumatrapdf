@@ -414,7 +414,7 @@ const mupdfThirdPartySources: LibDef = {
   includes: [
     "ext/libjpeg-turbo/src",
     "ext/mupdf/scripts/freetype",
-    "ext/freetype/include",
+    "ext/a-freetype/include",
     "ext/lcms2/include",
     "ext/harfbuzz/src/hb-ucdn",
     "ext/a-mujs",
@@ -512,40 +512,7 @@ const mupdfThirdPartySources: LibDef = {
       ],
     },
     // ── freetype ──
-    {
-      dir: "ext/freetype/src/base",
-      patterns: [
-        "ftbase.c",
-        "ftbbox.c",
-        "ftbitmap.c",
-        "ftdebug.c",
-        "ftfstype.c",
-        "ftgasp.c",
-        "ftglyph.c",
-        "ftinit.c",
-        "ftstroke.c",
-        "ftsynth.c",
-        "ftsystem.c",
-        "fttype1.c",
-        "ftotval.c",
-      ],
-    },
-    {
-      dir: "ext/freetype/src",
-      patterns: [
-        "gzip/ftgzip.c",
-        "cff/cff.c",
-        "psaux/psaux.c",
-        "pshinter/pshinter.c",
-        "psnames/psnames.c",
-        "raster/raster.c",
-        "sfnt/sfnt.c",
-        "smooth/smooth.c",
-        "truetype/truetype.c",
-        "type1/type1.c",
-        "cid/type1cid.c",
-      ],
-    },
+    { dir: "ext/a-freetype", patterns: ["freetype.c"] },
     // ── lcms2 ──
     { dir: "ext/lcms2/src", patterns: ["*.c"] },
     // ── harfbuzz (.cc files) ──
@@ -678,16 +645,16 @@ export const openjpeg = thirdPartyLib({
 });
 
 export const freetype = thirdPartyLib({
-  name: "freetype",
+  name: "a-freetype",
   defines: ["FT2_BUILD_LIBRARY", 'FT_CONFIG_MODULES_H="slimftmodules.h"', 'FT_CONFIG_OPTIONS_H="slimftoptions.h"'],
-  includes: ["ext/mupdf/scripts/freetype", "ext/freetype/include", "ext/brotli/c/include"],
-  files: sourceFiles(2, 3),
+  includes: ["ext/mupdf/scripts/freetype", "ext/a-freetype/include", "ext/brotli/c/include"],
+  files: sourceFiles(2),
 });
 
 export const lcms2 = thirdPartyLib({
   name: "lcms2",
   includes: ["ext/lcms2/include"],
-  files: sourceFiles(4),
+  files: sourceFiles(3),
 });
 
 const harfbuzzAllocDefines = [
@@ -700,8 +667,8 @@ const harfbuzzAllocDefines = [
 export const harfbuzz = thirdPartyLib({
   name: "harfbuzz",
   defines: ["_CRT_SECURE_NO_WARNINGS", "HAVE_FALLBACK=1", "HAVE_OT", "HAVE_UCDN", "HAVE_FREETYPE"],
-  includes: ["ext/harfbuzz/src/hb-ucdn", "ext/mupdf/scripts/freetype", "ext/freetype/include"],
-  files: sourceFiles(5),
+  includes: ["ext/harfbuzz/src/hb-ucdn", "ext/mupdf/scripts/freetype", "ext/a-freetype/include"],
+  files: sourceFiles(4),
   debugExtraDefines: ["HAVE_ATEXIT", ...harfbuzzAllocDefines],
   releaseExtraDefines: harfbuzzAllocDefines,
 });
@@ -724,7 +691,7 @@ export const extract = thirdPartyLib({
 export const brotli = thirdPartyLib({
   name: "brotli",
   includes: ["ext/brotli/c/include"],
-  files: sourceFiles(6, 7, 8),
+  files: sourceFiles(5, 6, 7),
 });
 
 export const cmarkGfm = thirdPartyLib({
@@ -807,7 +774,7 @@ export const mupdf: LibDef = {
     "ext/libjpeg-turbo/src",
     "ext/a-openjpeg",
     "ext/mupdf/scripts/freetype",
-    "ext/freetype/include",
+    "ext/a-freetype/include",
     "ext/a-mujs",
     "ext/brotli/c/include",
     "ext/harfbuzz/src",

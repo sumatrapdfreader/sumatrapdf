@@ -1,0 +1,6 @@
+project_homepage: https://www.freetype.org/
+repo_url: https://github.com/ArtifexSoftware/thirdparty-freetype2
+revision: 0a0221a1347e2f1e07c395263540026e9a0aa7c7
+commit_sha1: 0a0221a1347e2f1e07c395263540026e9a0aa7c7
+github_url: https://github.com/ArtifexSoftware/thirdparty-freetype2
+github_commit_url: https://github.com/ArtifexSoftware/thirdparty-freetype2/commit/0a0221a1347e2f1e07c395263540026e9a0aa7c7

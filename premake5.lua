@@ -771,7 +771,7 @@ workspace "SumatraPDF"
       "ext/a-openjpeg/version.txt", "ext/a-openjpeg/LICENSE",
     }
 
-  project "freetype"
+  project "a-freetype"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
@@ -782,8 +782,11 @@ workspace "SumatraPDF"
       "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
     }
     disablewarnings { "4018", "4100", "4101", "4244", "4267", "4312", "4701", "4706", "4996" }
-    includedirs { "ext/mupdf/scripts/freetype", "ext/freetype/include", "ext/brotli/c/include" }
-    freetype_files()
+    includedirs { "ext/mupdf/scripts/freetype", "ext/a-freetype/include", "ext/brotli/c/include" }
+    files {
+      "ext/a-freetype/freetype.c", "ext/a-freetype/include/**.h",
+      "ext/a-freetype/version.txt", "ext/a-freetype/LICENSE.TXT",
+    }
 
   project "lcms2"
     static_intermediate_dirs()
@@ -802,7 +805,7 @@ workspace "SumatraPDF"
     optimized_conf()
     -- ext/harfbuzz/src is required so /Yu"hb.hh" and forceincludes can resolve
     -- hb.hh (sources also rely on same-dir includes for other headers).
-    includedirs { "ext/harfbuzz/src", "ext/harfbuzz/src/hb-ucdn", "ext/mupdf/scripts/freetype", "ext/freetype/include" }
+    includedirs { "ext/harfbuzz/src", "ext/harfbuzz/src/hb-ucdn", "ext/mupdf/scripts/freetype", "ext/a-freetype/include" }
     defines {
       "_CRT_SECURE_NO_WARNINGS",
       "HAVE_FALLBACK=1",
@@ -996,7 +999,7 @@ workspace "SumatraPDF"
       "ext/libjpeg-turbo/src",
       "ext/a-openjpeg",
       "ext/mupdf/scripts/freetype",
-      "ext/freetype/include",
+      "ext/a-freetype/include",
       "ext/a-mujs",
       "ext/brotli/c/include",
       "ext/cmark-gfm/src",
@@ -1015,7 +1018,7 @@ workspace "SumatraPDF"
     -- Third-party code lives in its own static libs; link them so libsumatrapdf.dll
     -- / SumatraPDF-static pick them up via project references.
     links {
-      "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "freetype", "brotli",
+      "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "a-freetype", "brotli",
       "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo",
     }
 
@@ -1059,7 +1062,7 @@ workspace "SumatraPDF"
     links {
       "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec", "msdes",
       "libarchive", "cmark-gfm", "a-gumbo",
-      "a-mujs", "a-extract", "harfbuzz", "freetype", "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
+      "a-mujs", "a-extract", "harfbuzz", "a-freetype", "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
     }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
@@ -1415,7 +1418,7 @@ workspace "SumatraPDF"
     -- Static libraries do not propagate dependencies through Ninja.
     links {
       "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli",
-      "mupdf", "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "freetype", "lcms2", "a-openjpeg",
+      "mupdf", "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "a-freetype", "lcms2", "a-openjpeg",
       "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo", "base", "unrar", "chmdec", "a-zopfli", "msdes"
     }
     links {
@@ -1579,7 +1582,7 @@ workspace "SumatraPDF"
     set_group("mupdf", {
       "mupdf", "cmark-gfm", "libarchive", "a-zlib", "brotli", "libjpeg-turbo",
       "a-extract", "a-gumbo", "a-jbig2dec", "a-mujs", "a-openjpeg",
-      "freetype", "harfbuzz", "lcms2",
+      "a-freetype", "harfbuzz", "lcms2",
     })
     -- libsumatrapdf.dll + extra codecs / archives linked only into it (and static EXE).
     -- Folder named "libsumatrapdf.dll" so it does not collide with project "libsumatrapdf".

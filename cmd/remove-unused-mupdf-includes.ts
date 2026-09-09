@@ -112,7 +112,7 @@ const clArgs = [
   "/I",
   "ext/mupdf/scripts/freetype",
   "/I",
-  "ext/freetype/include",
+  "ext/a-freetype/include",
   "/I",
   "ext/a-mujs",
   "/I",

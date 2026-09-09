@@ -26,6 +26,15 @@ function listFiles(dir: string, ext?: string): string[] {
     .sort((a, b) => basename(a).localeCompare(basename(b)));
 }
 
+function listFilesRec(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true })
+    .flatMap((entry) => {
+      const path = join(dir, entry.name);
+      return entry.isDirectory() ? listFilesRec(path) : [path];
+    })
+    .sort();
+}
+
 function mapByName(paths: string[]): Map<string, string> {
   return new Map(paths.map((path) => [basename(path), path]));
 }
@@ -131,6 +140,11 @@ type IncludeRules = {
   drop?: (inc: string) => boolean;
   // Shared across chunks so a header is inlined only once per amalgamation.
   seen?: Set<string>;
+  // Rely on the sources' include guards instead of `seen`: inline a header at
+  // every occurrence and skip only a self-referential one, exactly as the
+  // preprocessor would. Needed when an include sits inside an #ifdef, where
+  // deduping would drop it from the one place it is actually reachable.
+  guarded?: boolean;
   // Wrap inlined text in /* begin x */ ... /* end x */ markers.
   markers?: boolean;
 };
@@ -164,7 +178,10 @@ function expandIncludes(path: string, rules: IncludeRules, stack: string[] = [])
       continue;
     }
     if (stack.includes(incPath)) {
-      throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
+      if (!rules.guarded) {
+        throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
+      }
+      continue;
     }
     rules.seen?.add(incPath);
 
@@ -399,6 +416,69 @@ function genExtract(ctx: Ctx): void {
     chunks.push(chunk);
   }
   ctx.files.set("extract.c", joinChunks(chunks));
+}
+
+// --- freetype --------------------------------------------------------------
+
+// The module set mupdf needs: no autofit, bdf, cache, pcf, pfr, sdf, svg,
+// type42 or winfonts. Adding a module means adding its aggregate .c here.
+const freetypeBaseSources = [
+  "ftbase.c",
+  "ftbbox.c",
+  "ftbitmap.c",
+  "ftdebug.c",
+  "ftfstype.c",
+  "ftgasp.c",
+  "ftglyph.c",
+  "ftinit.c",
+  "ftotval.c",
+  "ftstroke.c",
+  "ftsynth.c",
+  "ftsystem.c",
+  "fttype1.c",
+];
+
+const freetypeModuleSources = [
+  join("gzip", "ftgzip.c"),
+  join("cff", "cff.c"),
+  join("cid", "type1cid.c"),
+  join("psaux", "psaux.c"),
+  join("pshinter", "pshinter.c"),
+  join("psnames", "psnames.c"),
+  join("raster", "raster.c"),
+  join("sfnt", "sfnt.c"),
+  join("smooth", "smooth.c"),
+  join("truetype", "truetype.c"),
+  join("type1", "type1.c"),
+];
+
+function genFreetype(ctx: Ctx): void {
+  const root = ctx.checkoutDir;
+
+  // Ship the header tree verbatim. mupdf and harfbuzz include <freetype/...>
+  // directly and the amalgamated sources keep those includes, so this stays the
+  // library's include dir; comments carry the per-file FTL notice.
+  const incDir = join(root, "include");
+  for (const path of listFilesRec(incDir)) {
+    ctx.files.set(join("include", normPath(relative(incDir, path))), readText(path));
+  }
+
+  // Every quoted include in these modules names a file in the includer's own
+  // directory: either a module-private header or, for the per-module aggregate
+  // .c files, another .c. Inlining exactly those collapses the 24 translation
+  // units into one. <freetype/...> and <brotli/...> includes are left alone.
+  // No dedup: sfnt.c pulls pngshim.c first, and its ttload.h include sits in a
+  // disabled #ifdef, so deduping would drop ttload.h from every later use. The
+  // headers' own guards make the repeats no-ops for the compiler.
+  const rules: IncludeRules = { resolve: dirResolver([]), guarded: true };
+  const chunks: string[] = [];
+  for (const name of freetypeBaseSources) {
+    chunks.push(prepare(join(root, "src", "base", name), rules));
+  }
+  for (const name of freetypeModuleSources) {
+    chunks.push(prepare(join(root, "src", name), rules));
+  }
+  ctx.files.set("freetype.c", joinChunks(chunks));
 }
 
 // --- gumbo -----------------------------------------------------------------
@@ -796,6 +876,42 @@ const libs: Lib[] = [
         "/wd4456",
         "/wd4457",
         "/wd4701",
+        "/wd4996",
+      ],
+    },
+  },
+  {
+    name: "freetype",
+    homepage: "https://www.freetype.org/",
+    repo: "https://github.com/ArtifexSoftware/thirdparty-freetype2",
+    rev: "0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+    writes: "include/**, freetype.c, LICENSE.TXT, FTL.TXT, GPLv2.TXT",
+    generate: genFreetype,
+    // FreeType is dual-licensed (FTL / GPLv2) and both notices must ship.
+    copies: ["LICENSE.TXT", join("docs", "FTL.TXT"), join("docs", "GPLv2.TXT")],
+    // the shipped header tree follows upstream's, so stale headers must not linger
+    wipeOutDir: true,
+    compile: {
+      file: "freetype.c",
+      args: [
+        ...defines("WIN32", "_WIN32", "NDEBUG", "_CRT_SECURE_NO_WARNINGS", "FT2_BUILD_LIBRARY"),
+        // mupdf's trimmed module/option set, same as the build defines
+        '/DFT_CONFIG_MODULES_H="slimftmodules.h"',
+        '/DFT_CONFIG_OPTIONS_H="slimftoptions.h"',
+        "/I",
+        "include",
+        "/I",
+        "..\\..\\..\\ext\\mupdf\\scripts\\freetype",
+        "/I",
+        "..\\..\\..\\ext\\brotli\\c\\include",
+        "/wd4018",
+        "/wd4100",
+        "/wd4101",
+        "/wd4244",
+        "/wd4267",
+        "/wd4312",
+        "/wd4701",
+        "/wd4706",
         "/wd4996",
       ],
     },
