@@ -25,7 +25,7 @@ Use `cmd/amalgam.ts -zlib` to update the amalgamated zlib copy used by the build
 5. Build:
 
    ```sh
-   bun cmd/build.ts -debug
+   bun cmd/build.ts -dbg
    ```
 
 The active zlib build uses only the amalgamated `ext/a-zlib` source. A small

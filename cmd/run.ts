@@ -63,7 +63,7 @@ async function run(
 }
 
 async function build(opts: RunOptions): Promise<void> {
-  const configFlag = opts.config === "release" ? "-release" : "-debug";
+  const configFlag = opts.config === "release" ? "-rel" : "-dbg";
   if (process.platform !== "win32") throw new Error(`unsupported operating system: ${process.platform}`);
   const args = ["bun", "cmd/build.ts"];
   args.push(configFlag);

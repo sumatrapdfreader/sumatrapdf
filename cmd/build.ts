@@ -25,9 +25,9 @@ interface BuildOptions {
 const usage = `Usage: bun cmd/build.ts <mode> [options]
 
 Windows builds:
-  -debug | -release       Build SumatraPDF.exe for x64
-  -release -32            Build the 32-bit release
-  -asan [-debug|-release] Build SumatraPDF-static.exe with MSVC ASan
+  -dbg | -rel             Build SumatraPDF.exe for x64
+  -rel -32                Build the 32-bit release
+  -asan [-dbg|-rel]       Build SumatraPDF-static.exe with MSVC ASan
   -all [-clean]           Build release SumatraPDF and SumatraPDF-static
   -smoke                  Rebuild release SumatraPDF, then run the debug unit tests
   -ci                     Build CI/pre-release artifacts
@@ -35,7 +35,7 @@ Windows builds:
   -codeql                 Build the static release target for CodeQL
 
 MinGW cross-builds (they still produce a Windows exe):
-  -mingw <-debug|-release> [-clean]
+  -mingw <-dbg|-rel> [-clean]
                            Direct MinGW cross-build on the current host
   -wine [-clean] [-run] [-- <SumatraPDF args>]
                            MinGW build on Linux and optionally run under Wine;
@@ -49,7 +49,7 @@ General options:
   -clean                  Clean the selected output directory first
   -ninja                  Use Ninja instead of MSBuild
   -msbuild                Use MSBuild (the default)
-  -32                     Select Win32 (valid only with Windows -release)`;
+  -32                     Select Win32 (valid only with Windows -rel)`;
 
 class CliError extends Error {}
 
@@ -60,9 +60,14 @@ function setMode(opts: BuildOptions, mode: BuildMode): void {
   opts.mode = mode;
 }
 
+// the command-line flag that selects a given configuration
+function configFlag(config: Config): string {
+  return config === "debug" ? "-dbg" : "-rel";
+}
+
 function setConfig(opts: BuildOptions, config: Config): void {
   if (opts.config) {
-    throw new CliError(`-${opts.config} and -${config} cannot be used together`);
+    throw new CliError(`${configFlag(opts.config)} and ${configFlag(config)} cannot be used together`);
   }
   opts.config = config;
 }
@@ -92,8 +97,8 @@ function parseArgs(args: string[]): BuildOptions | undefined {
       opts.runArgs.push(...args.slice(i + 1));
       break;
     }
-    if (arg === "-debug") setConfig(opts, "debug");
-    else if (arg === "-release") setConfig(opts, "release");
+    if (arg === "-dbg") setConfig(opts, "debug");
+    else if (arg === "-rel") setConfig(opts, "release");
     else if (arg === "-asan") {
       if (opts.asan) throw new CliError("-asan can only be specified once");
       opts.asan = true;
@@ -151,15 +156,15 @@ function validateOptions(opts: BuildOptions): void {
   const mode = opts.mode!;
   const fixedModes: BuildMode[] = ["all", "smoke", "ci", "daily", "codeql", "wine", "build-no"];
   if (fixedModes.includes(mode)) {
-    reject(!!opts.config, `-${opts.config} is not valid with -${mode}`);
+    reject(!!opts.config, `${opts.config ? configFlag(opts.config) : ""} is not valid with -${mode}`);
     reject(opts.asan, `-asan is not valid with -${mode}`);
   }
   if (mode === "windows") {
-    reject(!opts.config && !opts.asan, "Windows builds require -debug, -release, or -asan");
-    reject(opts.win32 && (opts.config !== "release" || opts.asan), "-32 requires a non-ASan -release build");
+    reject(!opts.config && !opts.asan, "Windows builds require -dbg, -rel, or -asan");
+    reject(opts.win32 && (opts.config !== "release" || opts.asan), "-32 requires a non-ASan -rel build");
   }
   if (mode === "mingw") {
-    reject(!opts.config, "-mingw requires -debug or -release");
+    reject(!opts.config, "-mingw requires -dbg or -rel");
     reject(opts.asan, "-asan is not supported with -mingw");
   }
   reject(opts.clean && !["windows", "all", "mingw", "wine"].includes(mode), `-clean is not valid with -${mode}`);

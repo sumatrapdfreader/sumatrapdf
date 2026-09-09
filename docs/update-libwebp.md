@@ -29,7 +29,7 @@ the build.
 5. Build:
 
    ```sh
-   bun cmd/build.ts -debug
+   bun cmd/build.ts -dbg
    ```
 
 Decoder only: `src/dec`, `src/utils` and the `src/dsp` files those need. No

@@ -12,7 +12,7 @@ against the mupdf revision in `ext/versions.txt`) in the **same commit** — see
 `ext/patches/README.md`. A change that only lives in the vendored tree is one
 the next mupdf update silently drops.
 
-To build run: `bun cmd/build.ts -debug` (or `-release`, `-asan`, and the other modes shown by `bun cmd/build.ts -help`). Called with no options it prints usage and exits; unknown options print an error plus usage and exit unsuccessfully.
+To build run: `bun cmd/build.ts -dbg` (or `-rel`, `-asan`, and the other modes shown by `bun cmd/build.ts -help`). Called with no options it prints usage and exits; unknown options print an error plus usage and exit unsuccessfully.
 
 Keep `cmd/build.ts` as the single build entry point. Build-mode implementation modules live under `cmd/helper/` and are not invoked directly, except for internal delegation such as the WSL launcher.
 

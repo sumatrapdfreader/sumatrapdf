@@ -28,7 +28,7 @@ by the build.
 5. Build:
 
    ```sh
-   bun cmd/build.ts -debug
+   bun cmd/build.ts -dbg
    ```
 
 Only the read side is built: no write formats, no write filters, no disk-write

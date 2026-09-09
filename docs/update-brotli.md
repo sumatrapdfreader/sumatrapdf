@@ -30,7 +30,7 @@ build.
 5. Build:
 
    ```sh
-   bun cmd/build.ts -debug
+   bun cmd/build.ts -dbg
    ```
 
 The `*_inc.h` files are X-macro fragments with no include guard; the inliner

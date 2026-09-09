@@ -117,7 +117,7 @@ function checkCore(): Dep[] {
       : {
           name: "SumatraPDF.exe (dbg64)",
           ok: false,
-          install: "bun cmd/build.ts -debug",
+          install: "bun cmd/build.ts -dbg",
         },
   );
 

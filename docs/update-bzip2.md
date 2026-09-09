@@ -25,7 +25,7 @@ Use `cmd/amalgam.ts -bzip2` to update the amalgamated bzip2 copy used by the bui
 5. Build:
 
    ```sh
-   bun cmd/build.ts -debug
+   bun cmd/build.ts -dbg
    ```
 
 The active libarchive build uses only the amalgamated `ext/a-bzip2` source.

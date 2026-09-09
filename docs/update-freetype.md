@@ -30,7 +30,7 @@ the build.
 5. Build:
 
    ```sh
-   bun cmd/build.ts -debug
+   bun cmd/build.ts -dbg
    ```
 
 Only the modules mupdf needs are amalgamated (no autofit, bdf, cache, pcf, pfr,

@@ -1,6 +1,6 @@
 # Plan: chapter-aware page locations (`Location`)
 
-Status: implemented (phases 1-7). Each phase must build (`bun cmd/build.ts -debug`) before
+Status: implemented (phases 1-7). Each phase must build (`bun cmd/build.ts -dbg`) before
 the next starts. Never commit; the user commits.
 
 ## Why
@@ -271,7 +271,7 @@ chapter on first use. No behavior change for existing engines.
 - `MakeBookmarkTemp` appends `:r<reparseIdx of loc's page>`; `LookupBookmark`
   uses it when present (chapter from the table, page by reparseIdx scan).
 - Check: `1000.mobi` `LoadDocument` well under 1 s in a release build
-  (`bun cmd/build.ts -release`, `-log-to-file`), first page renders,
+  (`bun cmd/build.ts -rel`, `-log-to-file`), first page renders,
   next/prev across a chapter edge, TOC click into a far chapter.
 
 ### Phase 4 – `DisplayModel` / `RenderCache` / `DocController`

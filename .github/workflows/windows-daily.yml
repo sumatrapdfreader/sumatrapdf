@@ -61,7 +61,7 @@ jobs:
       # wrong behavior. Produces out/dbg64_asan/SumatraPDF-static.exe plus the
       # ASan runtime dll next to it.
       - name: Build (debug, ASan)
-        run: bun cmd/build.ts -asan -debug
+        run: bun cmd/build.ts -asan -dbg
 
       # unit tests are compiled into the debug exe; -for-ai prints assertion
       # and crash callstacks instead of waiting for a debugger

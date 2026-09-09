@@ -28,7 +28,7 @@ the build. It is Artifex's `lcms2mt` fork, the thread-safe variant mupdf needs.
 5. Build:
 
    ```sh
-   bun cmd/build.ts -debug
+   bun cmd/build.ts -dbg
    ```
 
 `extra_xform.h` is a chameleonic header: `cmsxform.c` includes it dozens of

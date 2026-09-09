@@ -14,7 +14,7 @@ function parseArgs(): BuildKind {
   let kind: BuildKind = "dbg";
   let seen = false;
   for (const arg of process.argv.slice(2)) {
-    if (arg === "-dbg" || arg === "-debug") {
+    if (arg === "-dbg") {
       if (seen) usage();
       kind = "dbg";
       seen = true;

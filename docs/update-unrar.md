@@ -29,7 +29,7 @@ build.
 5. Build:
 
    ```sh
-   bun cmd/build.ts -debug
+   bun cmd/build.ts -dbg
    ```
 
 `global.cpp` is first in `unrarSources` on purpose: it defines `INCLUDEGLOBAL`

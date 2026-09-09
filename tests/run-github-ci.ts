@@ -64,7 +64,7 @@ export async function testit(tests: NamedTest[] = ciTests()): Promise<void> {
   console.log(`work area: ${wa.right - wa.left}x${wa.bottom - wa.top}`);
   console.log(`window:    ${pos.dx}x${pos.dy} at ${pos.x},${pos.y}`);
   if (!existsSync(EXE)) {
-    throw new Error(`${EXE} doesn't exist: build it first (bun cmd/build.ts -asan -debug)`);
+    throw new Error(`${EXE} doesn't exist: build it first (bun cmd/build.ts -asan -dbg)`);
   }
 
   const skipped = Object.keys(excludedTests);

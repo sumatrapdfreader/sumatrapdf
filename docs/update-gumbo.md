@@ -38,5 +38,5 @@ Use `cmd/amalgam.ts -gumbo` to update the amalgamated Gumbo copy used by the bui
 7. Build:
 
    ```sh
-   bun cmd/build.ts -debug
+   bun cmd/build.ts -dbg
    ```
