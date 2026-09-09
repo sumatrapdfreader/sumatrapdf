@@ -13,6 +13,9 @@ const resources = [
   ["PdfFilter", "PdfFilter.dll", "../src/ifilter/PdfFilter.rc"],
   ["PdfPreview", "PdfPreview.dll", "../src/previewer/PdfPreview.rc"],
 ] as const;
+// SharedLib projects using dll_shared_lib_dirs(): the .dll ships in out/<cfg>/
+// while premake emits it under the intermediate dir out/<cfg>/obj.
+const sharedLibs = ["libsumatrapdf", "PdfFilter", "PdfPreview"];
 
 function needsGenerate(): boolean {
   if (!existsSync(buildFile) || !existsSync(generatedFile)) {
@@ -96,8 +99,13 @@ function fixEscapes(): void {
     // link.exe does not update .exp files, so they cannot be Ninja outputs.
     fixed = fixed.replace(/ \| ([^ \n]+\.exp) /g, " | ");
     fixed = fixed.replace(/(build [^\n]*\.dll) \| [^\n]*\.lib:/g, "$1:");
-    // libsumatrapdf's linker options place the DLL outside its intermediate dir.
-    fixed = fixed.replace(/build (\.\.\/out\/([^/]+))\/obj\/libsumatrapdf\.dll:/g, "build $1/libsumatrapdf.dll:");
+    // dll_shared_lib_dirs() sets targetdir to the intermediate dir but links
+    // with /OUT into out/<cfg>/, so rewrite both the build edges and the phony
+    // aliases premake points at the intermediate path.
+    for (const name of sharedLibs) {
+      const re = new RegExp(`(\\.\\./out/[^/\\s]+)/obj/${name}\\.dll`, "g");
+      fixed = fixed.replace(re, `$1/${name}.dll`);
+    }
     // link.exe leaves an unchanged import library untouched. Model it as a
     // phony dependency, otherwise Ninja relinks this DLL on every invocation.
     fixed = fixed.replace(/^build (\.\.\/out\/[^/]+)\/obj\/libsumatrapdf\.lib: phony .+\n/gm, "");
