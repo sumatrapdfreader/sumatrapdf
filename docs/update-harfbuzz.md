@@ -14,7 +14,7 @@ the build.
    defaults. Keep the revision in sync with the harfbuzz submodule of the
    vendored mupdf (see `ext/versions.txt`).
 
-2. The script checks out the requested revision under `deps/harfbuzz` and writes
+2. The script checks out the requested revision under `.work/deps/harfbuzz` and writes
    `ext/a-harfbuzz/harfbuzz.cc`, the public `hb*.h` headers, three `.hh`
    X-macro fragments the inliner can't expand, `ext/a-harfbuzz/version.txt` and
    `ext/a-harfbuzz/COPYING`. The output directory is wiped first, so headers

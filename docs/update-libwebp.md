@@ -13,7 +13,7 @@ the build.
    Running `bun cmd/amalgam.ts -libwebp` without further arguments uses those
    defaults.
 
-2. The script checks out the requested revision under `deps/libwebp` and writes
+2. The script checks out the requested revision under `.work/deps/libwebp` and writes
    `ext/a-libwebp/libwebp.c`, the public headers under `ext/a-libwebp/webp/`,
    `ext/a-libwebp/version.txt`, `COPYING`, `PATENTS` and `AUTHORS`. The headers
    keep their directory so `#include <webp/decode.h>` works with

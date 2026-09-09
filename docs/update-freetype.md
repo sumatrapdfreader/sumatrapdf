@@ -14,7 +14,7 @@ the build.
    defaults. Keep the revision in sync with the freetype submodule of the
    vendored mupdf (see `ext/versions.txt`).
 
-2. The script checks out the requested revision under `deps/freetype` and writes
+2. The script checks out the requested revision under `.work/deps/freetype` and writes
    `ext/a-freetype/freetype.c`, the `ext/a-freetype/include` header tree,
    `ext/a-freetype/version.txt`, `ext/a-freetype/LICENSE.TXT` and the
    `ext/a-freetype/docs` license notices. The output directory is wiped first,

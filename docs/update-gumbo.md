@@ -18,7 +18,7 @@ Use `cmd/amalgam.ts -gumbo` to update the amalgamated Gumbo copy used by the bui
    Running `bun cmd/amalgam.ts -gumbo` without further arguments uses those
    defaults.
 
-3. The script checks out the requested revision under `deps/gumbo` and writes
+3. The script checks out the requested revision under `.work/deps/gumbo` and writes
    the validated amalgamation to `ext/a-gumbo/gumbo.h` and
    `ext/a-gumbo/gumbo.c`. It also writes `ext/a-gumbo/version.txt` with the
    source repo URL, requested revision, resolved commit SHA-1, and GitHub URLs

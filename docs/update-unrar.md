@@ -15,7 +15,7 @@ build.
    Running `bun cmd/amalgam.ts -unrar` without further arguments uses those
    defaults.
 
-2. The script checks out the requested revision under `deps/unrar` and writes
+2. The script checks out the requested revision under `.work/deps/unrar` and writes
    `ext/a-unrar/unrar.cpp`, `dll.hpp` (the C API `src/base/Archive.cpp` uses),
    `ext/a-unrar/version.txt`, `license.txt` and `acknow.txt`.
 3. Review `ext/a-unrar/version.txt`; it records the project homepage, source

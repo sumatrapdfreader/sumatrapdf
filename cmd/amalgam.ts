@@ -1992,7 +1992,7 @@ type Args = {
   keep: boolean;
 };
 
-const depsDir = "deps";
+const depsDir = join(".work", "deps");
 
 function usage(err?: string): never {
   if (err) {
@@ -2001,14 +2001,14 @@ function usage(err?: string): never {
   const list = libs.map((lib) => `  -${lib.name.padEnd(10)} ${lib.writes}`).join("\n");
   console.error(`Usage: bun cmd/amalgam.ts -<library> [repo-url] [git-tag-or-checkin] [-keep]
 
-Clones the library under deps/<library>, amalgamates it into ext/a-<library>/,
+Clones the library under .work/deps/<library>, amalgamates it into ext/a-<library>/,
 validates the result with cl.exe, and writes version.txt next to it.
 
 Libraries (and what each writes into ext/a-<library>/):
 ${list}
 
 Options:
-  -keep   reuse an existing deps/<library> checkout instead of re-cloning
+  -keep   reuse an existing .work/deps/<library> checkout instead of re-cloning
 
 Each library defaults to the repo and revision recorded in ext/versions.txt,
 so plain 'bun cmd/amalgam.ts -zlib' regenerates the current copy.

@@ -12,7 +12,7 @@ build.
 
    Running `bun cmd/amalgam.ts -extract` without further arguments uses those defaults.
 
-2. The script checks out the requested revision under `deps/extract` and writes
+2. The script checks out the requested revision under `.work/deps/extract` and writes
    `ext/a-extract/extract/*.h`, `ext/a-extract/memento.h`,
    `ext/a-extract/extract.c`, and `ext/a-extract/version.txt`.
 3. Review `ext/a-extract/version.txt`; it records the project homepage, source

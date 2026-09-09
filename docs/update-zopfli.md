@@ -11,7 +11,7 @@ Use `cmd/amalgam.ts -zopfli` to update the amalgamated zopfli copy used by the b
 
    Running `bun cmd/amalgam.ts -zopfli` without further arguments uses those defaults.
 
-2. The script checks out the requested revision under `deps/zopfli` and writes
+2. The script checks out the requested revision under `.work/deps/zopfli` and writes
    `ext/a-zopfli/zopflipng/zopflipng_lib.h`,
    `ext/a-zopfli/zopflipng/lodepng/lodepng.h`,
    `ext/a-zopfli/zopfli.cpp`, `ext/a-zopfli/version.txt`, and

@@ -14,7 +14,7 @@ the build. It is Artifex's `lcms2mt` fork, the thread-safe variant mupdf needs.
    defaults. Keep the revision in sync with the lcms2 submodule of the vendored
    mupdf (see `ext/versions.txt`).
 
-2. The script checks out the requested revision under `deps/lcms2` and writes
+2. The script checks out the requested revision under `.work/deps/lcms2` and writes
    `ext/a-lcms2/lcms2.c`, the public `lcms2mt.h` / `lcms2mt_plugin.h`,
    `extra_xform.h`, `ext/a-lcms2/version.txt`, `LICENSE` and `AUTHORS`.
 3. Review `ext/a-lcms2/version.txt`; it records the project homepage, source

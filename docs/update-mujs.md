@@ -11,7 +11,7 @@ Use `cmd/amalgam.ts -mujs` to update the amalgamated MuJS copy used by the build
 
    Running `bun cmd/amalgam.ts -mujs` without further arguments uses those defaults.
 
-2. The script checks out the requested revision under `deps/mujs` and writes
+2. The script checks out the requested revision under `.work/deps/mujs` and writes
    `ext/a-mujs/mujs.h`, `ext/a-mujs/mujs.c`, `ext/a-mujs/version.txt`,
    `ext/a-mujs/regexp.h` (used by MuPDF text search), and
    `ext/a-mujs/COPYING`.

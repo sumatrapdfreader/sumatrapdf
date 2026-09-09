@@ -12,7 +12,7 @@ build.
 
    Running `bun cmd/amalgam.ts -jbig2dec` without further arguments uses those defaults.
 
-2. The script checks out the requested revision under `deps/jbig2dec` and writes
+2. The script checks out the requested revision under `.work/deps/jbig2dec` and writes
    `ext/a-jbig2dec/jbig2.h`, `ext/a-jbig2dec/jbig2dec.c`, and
    `ext/a-jbig2dec/version.txt`. It also re-copies the upstream `COPYING` and
    `LICENSE` files into `ext/a-jbig2dec`; they are the only copies in the tree

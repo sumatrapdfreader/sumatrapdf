@@ -14,7 +14,7 @@ build.
    defaults. Keep the revision in sync with the brotli submodule of the
    vendored mupdf (see `ext/versions.txt`).
 
-2. The script checks out the requested revision under `deps/brotli` and writes
+2. The script checks out the requested revision under `.work/deps/brotli` and writes
    `ext/a-brotli/brotli.c`, the public headers under `ext/a-brotli/brotli/`,
    `ext/a-brotli/version.txt` and `ext/a-brotli/LICENSE`. The headers keep
    their directory so `#include <brotli/decode.h>` works with `ext/a-brotli` on

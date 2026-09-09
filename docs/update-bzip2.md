@@ -11,7 +11,7 @@ Use `cmd/amalgam.ts -bzip2` to update the amalgamated bzip2 copy used by the bui
 
    Running `bun cmd/amalgam.ts -bzip2` without further arguments uses those defaults.
 
-2. The script checks out the requested revision under `deps/bzip2` and writes
+2. The script checks out the requested revision under `.work/deps/bzip2` and writes
    `ext/a-bzip2/bzlib.h`, `ext/a-bzip2/bzip2.c`, `ext/a-bzip2/version.txt`,
    and `ext/a-bzip2/LICENSE`.
 3. Review `ext/a-bzip2/version.txt`; it records the project homepage, source

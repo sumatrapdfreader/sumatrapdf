@@ -11,7 +11,7 @@ build.
 
    Running `bun cmd/amalgam.ts -openjpeg` without further arguments uses those defaults.
 
-2. The script checks out the requested revision under `deps/openjpeg` and writes
+2. The script checks out the requested revision under `.work/deps/openjpeg` and writes
    `ext/a-openjpeg/*.h`, `ext/a-openjpeg/openjpeg.c`,
    `ext/a-openjpeg/version.txt`, and `ext/a-openjpeg/LICENSE`.
 3. Review `ext/a-openjpeg/version.txt`; it records the project homepage, source

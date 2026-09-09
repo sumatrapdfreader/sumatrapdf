@@ -13,7 +13,7 @@ by the build.
    Running `bun cmd/amalgam.ts -libarchive` without further arguments uses those
    defaults.
 
-2. The script checks out the requested revision under `deps/libarchive` and
+2. The script checks out the requested revision under `.work/deps/libarchive` and
    writes `ext/a-libarchive/libarchive.c`, `archive.h`, `archive_entry.h`,
    `ext/a-libarchive/version.txt` and `COPYING`.
 3. Review `ext/a-libarchive/version.txt`; it records the project homepage,

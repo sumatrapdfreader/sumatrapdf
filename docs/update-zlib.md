@@ -11,7 +11,7 @@ Use `cmd/amalgam.ts -zlib` to update the amalgamated zlib copy used by the build
 
    Running `bun cmd/amalgam.ts -zlib` without further arguments uses those defaults.
 
-2. The script checks out the requested revision under `deps/zlib` and writes
+2. The script checks out the requested revision under `.work/deps/zlib` and writes
    `ext/a-zlib/zlib.h`, `ext/a-zlib/zlib.c`, `ext/a-zlib/version.txt`, and
    `ext/a-zlib/LICENSE`.
 3. Review `ext/a-zlib/version.txt`; it records the project homepage, source

@@ -8,7 +8,6 @@
 out.txt
 out/
 ninja/
-deps/
 agent-tools/
 ext/mupdf/generated/
 .vs/
