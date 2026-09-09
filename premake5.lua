@@ -797,7 +797,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optimized_conf()
-    disablewarnings { "4100", "4244" }
+    disablewarnings { "4100", "4244", "4996" }
     includedirs { "ext/a-lcms2" }
     files {
       "ext/a-lcms2/lcms2.c", "ext/a-lcms2/*.h",
