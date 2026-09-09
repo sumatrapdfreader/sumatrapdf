@@ -195,7 +195,6 @@ enum {
     CmdToggleInverseSearch = 384,
     CmdDebugCorruptMemory = 385,
     CmdDebugCrashMe = 386,
-    CmdDebugDownloadSymbols = 387,
     CmdDebugTestApp = 388,
     CmdDebugShowNotif = 389,
     CmdDebugStartStressTest = 390,

@@ -702,10 +702,6 @@ static MenuDef menuDefDebug[] = {
         CmdDebugShowFitContentArea,
     },
     {
-        StrL("Download symbols"),
-        CmdDebugDownloadSymbols,
-    },
-    {
         StrL("Test app"),
         CmdDebugTestApp,
     },

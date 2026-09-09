@@ -2298,9 +2298,7 @@ static void InstallSumatraCrashHandler(bool localOnly) {
 
     TempStr crashInfoDir = GetCrashInfoDirTemp();
     TempStr crashDumpPath = path::JoinTemp(crashInfoDir, StrL("sumatrapdfcrash.dmp"));
-    TempStr crashFilePath = path::JoinTemp(crashInfoDir, StrL("sumatrapdfcrash.txt"));
-    TempStr symDir = localOnly ? GetSelfExeDirTemp() : crashInfoDir;
-    InstallCrashHandler(crashDumpPath, crashFilePath, symDir, localOnly);
+    InstallCrashHandler(crashDumpPath, localOnly);
 }
 
 int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ LPSTR /*lpCmdLine*/,

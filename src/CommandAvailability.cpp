@@ -53,7 +53,6 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdToggleKeyboardHelp,
     CmdHelpVisitWebsite,
     CmdHelpAbout,
-    CmdDebugDownloadSymbols,
     CmdDebugShowNotif,
     CmdDebugStartStressTest,
     CmdDebugTestApp,
@@ -314,7 +313,6 @@ static i32 gBlacklistCommandsFromPalette[] = {
 static i32 gCommandsDebugOnly[] = {
     CmdDebugCorruptMemory,
     CmdDebugCrashMe,
-    CmdDebugDownloadSymbols,
     CmdDebugTestApp,
     CmdDebugShowNotif,
     CmdDebugStartStressTest,

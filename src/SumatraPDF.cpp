@@ -10525,27 +10525,6 @@ static void DeleteCachedFiles(MainWindow* win) {
     ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
 }
 
-static void DownloadDebugSymbols() {
-    TempStr msg = StrL("Symbols were already downloaded");
-
-    bool ok = AreSymbolsDownloaded(gSymbolsDir);
-    if (ok) {
-        goto ShowMessage;
-    }
-    ok = CrashHandlerDownloadSymbols();
-    if (!ok) {
-        msg = StrL("Failed to download symbols");
-        goto ShowMessage;
-    }
-    msg = fmt("Downloaded symbols to %s", gSymbolsDir);
-    {
-        bool didInitializeDbgHelp = InitializeDbgHelp(false);
-        ReportIfFast(!didInitializeDbgHelp);
-    }
-ShowMessage:
-    MessageBoxWarning(nullptr, msg, Tr("Downloading symbols"));
-}
-
 // CmdDebugCorruptMemory, the only caller, is behind #if IS_DEBUG, so
 // defining this in a release build leaves an unreferenced static: C4505, which
 // /WX turns into an error
@@ -12695,10 +12674,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdDebugToggleDpiOverride:
             ToggleDpiOverride();
-            break;
-
-        case CmdDebugDownloadSymbols:
-            DownloadDebugSymbols();
             break;
 
         case CmdDebugTogglePredictiveRender:
@@ -15541,8 +15516,6 @@ static TempStr GetFileSizeAsStrTemp(Str path) {
 }
 
 void GetProgramInfo() {
-    CrashInfoAppend(fmt("Crash file: %s\n", gCrashFilePath));
-
     TempStr exePath = GetSelfExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
     CrashInfoAppend(fmt("Exe: %s %s\n", exePath, fileSizeExe));
@@ -15621,11 +15594,6 @@ void ShowCrashHandlerMessage() {
         log(StrL("ShowCrashHandlerMessage: res != IDCANCEL\n"));
         return;
     }
-    if (len(gCrashFilePath) == 0) {
-        log(StrL("ShowCrashHandlerMessage: !gCrashFilePath\n"));
-        return;
-    }
-    LaunchFileIfExists(gCrashFilePath);
     const auto* url = "https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
     LaunchFileShell(Str(url), {}, StrL("open"));
 }

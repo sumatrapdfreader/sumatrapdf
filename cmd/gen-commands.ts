@@ -6,8 +6,10 @@ import { join } from "node:path";
 // - Change: dialog to pick a new app/document preference or mode
 // - Set: dialog to assign an optional per-object value or integration string
 //
+// A removed command keeps its slot, with an empty name, so that the ids of the
+// commands after it don't shift (they are persisted in keyboard shortcuts).
 // prettier-ignore
-export const commands = [
+const commandsRaw = [
     "CmdOpenFile", "Open File...",
     "CmdClose", "Close Document",
     "CmdCloseCurrentDocument", "Close Current Document",
@@ -194,7 +196,7 @@ export const commands = [
     "CmdToggleInverseSearch", "Toggle Inverse Search",
     "CmdDebugCorruptMemory", "Debug: Corrupt Memory",
     "CmdDebugCrashMe", "Debug: Crash Me",
-    "CmdDebugDownloadSymbols", "Debug: Download Symbols",
+    "", "removed: CmdDebugDownloadSymbols",
     "CmdDebugTestApp", "Debug: Test App",
     "CmdDebugShowNotif", "Debug: Show Notification",
     "CmdDebugStartStressTest", "Debug: Start Stress Test",
@@ -318,18 +320,21 @@ export const commands = [
     "CmdNone", "Do nothing",
 ];
 
+// removed slots are dropped: nothing outside the generators should see them
+export const commands: string[] = commandsRaw.filter((_, i) => commandsRaw[i - (i % 2)] !== "");
+
 function getNames(): string[] {
   const names: string[] = [];
-  for (let i = 0; i < commands.length; i += 2) {
-    names.push(commands[i]);
+  for (let i = 0; i < commandsRaw.length; i += 2) {
+    names.push(commandsRaw[i]);
   }
   return names;
 }
 
 function getDescs(): string[] {
   const descs: string[] = [];
-  for (let i = 0; i < commands.length; i += 2) {
-    descs.push(commands[i + 1]);
+  for (let i = 0; i < commandsRaw.length; i += 2) {
+    descs.push(commandsRaw[i + 1]);
   }
   return descs;
 }
@@ -350,6 +355,9 @@ function generateEnum(): string {
   for (let i = 0; i < names.length; i++) {
     let cmd = names[i];
     let id = firstCmdId + i;
+    if (cmd === "") {
+      continue; // removed command, its id stays unused
+    }
     lines.push(`    ${cmd} = ${id},`);
   }
 
@@ -384,35 +392,32 @@ function generateEnum(): string {
 function generateArrays(): string {
   const names = getNames();
   const descs = getDescs();
+  const liveNames = names.filter((n) => n !== "");
+  const liveDescs = descs.filter((_, i) => names[i] !== "");
   const lines: string[] = [];
 
   lines.push("// clang-format off");
 
   // gCommandNames: SeqStrings (null-separated, double-null terminated)
   lines.push("static SeqStrings gCommandNames =");
-  for (let i = 0; i < names.length; i++) {
-    const chunk = names.slice(i, i + 1);
-    const parts = chunk.map((s) => `"${s}\\0"`).join(" ");
-    lines.push(`    ${parts}`);
+  for (const name of liveNames) {
+    lines.push(`    "${name}\\0"`);
   }
   lines.push(`    "\\0";`);
   lines.push("");
 
   // gCommandIds
   lines.push("static i32 gCommandIds[] = {");
-  for (let i = 0; i < names.length; i++) {
-    const chunk = names.slice(i, i + 1).join(", ");
-    lines.push(`    ${chunk},`);
+  for (const name of liveNames) {
+    lines.push(`    ${name},`);
   }
   lines.push("};");
   lines.push("");
 
   // gCommandDescriptions
   lines.push("SeqStrings gCommandDescriptions =");
-  for (let i = 0; i < descs.length; i++) {
-    const chunk = descs.slice(i, i + 1);
-    const parts = chunk.map((s) => `"${s}\\0"`).join(" ");
-    lines.push(`    ${parts}`);
+  for (const desc of liveDescs) {
+    lines.push(`    "${desc}\\0"`);
   }
   lines.push(`    "\\0";`);
   lines.push("// clang-format on");

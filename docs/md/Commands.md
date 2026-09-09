@@ -382,7 +382,6 @@ CmdToggleToolbarShowReadAloud,,Read Aloud: Show In Toolbar,"Show or hide the Rea
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdDebugCrashMe,,Debug: Crash Me,
-CmdDebugDownloadSymbols,,Debug: Download Symbols,
 CmdDebugShowNotif,,Debug: Show Notification,
 CmdDebugStartStressTest,,Debug: Start Stress Test,
 CmdDebugTestApp,,Debug: Test App,
