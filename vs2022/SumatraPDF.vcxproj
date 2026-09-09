@@ -1228,7 +1228,6 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClInclude Include="..\src\FormFields.h" />
     <ClInclude Include="..\src\GlobalHotkeys.h" />
     <ClInclude Include="..\src\GoogleLens.h" />
-    <ClInclude Include="..\src\GumboHelpers.h" />
     <ClInclude Include="..\src\GumboHtmlParser.h" />
     <ClInclude Include="..\src\HangDetector.h" />
     <ClInclude Include="..\src\HomePage.h" />
@@ -1456,7 +1455,6 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClCompile Include="..\src\GlobalHotkeys.cpp" />
     <ClCompile Include="..\src\GoToPageDialog.cpp" />
     <ClCompile Include="..\src\GoogleLens.cpp" />
-    <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\HangDetector.cpp" />
     <ClCompile Include="..\src\HomePage.cpp" />

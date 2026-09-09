@@ -9,7 +9,6 @@
 #include "base/HtmlTags.h"
 
 #include "Theme.h"
-#include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
 
 extern "C" {

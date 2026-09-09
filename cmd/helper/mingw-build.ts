@@ -355,7 +355,6 @@ const sumatraFiles: FileGroup[] = [
       "ImageReader_win.cpp",
       "GlobalHotkeys.*",
       "GlobalPrefs.*",
-      "GumboHelpers.*",
       "HangDetector.*",
       "HomePage.*",
       "Installer.*",

@@ -252,9 +252,6 @@
     <ClInclude Include="..\src\GoogleLens.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\GumboHelpers.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\GumboHtmlParser.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -804,9 +801,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GoogleLens.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\GumboHelpers.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GumboHtmlParser.cpp">

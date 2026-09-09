@@ -7,7 +7,8 @@
 #include "base/File.h"
 #include "base/GuessFileType.h"
 
-#include "GumboHelpers.h"
+#include "base/HtmlTags.h"
+#include "GumboHtmlParser.h"
 
 #include "DocProperties.h"
 #include "EbookBase.h"

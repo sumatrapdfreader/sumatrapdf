@@ -12,7 +12,6 @@
 #include "base/Pixmap.h"
 #include "gui/Dpi.h"
 
-#include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
 
 #include "DocProperties.h"

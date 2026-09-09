@@ -13,7 +13,6 @@
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EbookBase.h"
-#include "GumboHelpers.h"
 #include "GumboHtmlParser.h"
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
