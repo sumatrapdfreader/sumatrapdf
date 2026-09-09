@@ -1265,7 +1265,7 @@ Exit:
     if (gInstallFailed) {
         TempStr cond = fmt("Installation failed: %s", gFirstError ? gFirstError : StrL("(no details)"));
         logf("InstallerThread: upload debug report: %s\n", cond);
-        _uploadDebugReport(cond, StrL(FILE_LINE), false, false);
+        _uploadDebugReport(cond, StrL(FILE_LINE), false);
     }
     if (gWnd && gWnd->hwnd) {
         if (!gCli->silent) {
@@ -1380,7 +1380,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     if (gInstallStarted) {
         // I've seen crashes where somehow "Install" button was pressed twice
         logf("OnButtonInstall: called but gInstallStarted is %d\n", (int)gInstallStarted);
-        // ReportIfFast(gInstallStarted);
+        // ReportIf(gInstallStarted);
         return;
     }
 

@@ -5062,7 +5062,7 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
         bool hwndValid = IsWindow(hwnd);
         logf("WndProcCanvasFixedPageUI: MainWindow win: 0x%p is no longer valid, msg: %d, hwnd valid: %d\n", win,
              (int)msg, (int)hwndValid);
-        ReportIfFast(true);
+        ReportIf(true);
         return 0;
     }
 

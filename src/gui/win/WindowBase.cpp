@@ -77,7 +77,7 @@ static bool HwndListRemove(HwndBase* w) {
 
 static void HwndListAdd(HwndBase* w) {
     bool report = HwndListRemove(w);
-    ReportIfFast(report);
+    ReportIf(report);
     HwndToWnd e{w->hwnd, w};
     VecAppend(gHwndToWnd, e);
 }

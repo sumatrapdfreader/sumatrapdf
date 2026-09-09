@@ -276,7 +276,7 @@ SimpleBrowserWindow* SimpleBrowserWindowCreate(const SimpleBrowserCreateArgs& ar
     }
     auto* res = new SimpleBrowserWindow();
     auto* hwnd = res->Create(args);
-    ReportIfFast(!hwnd);
+    ReportIf(!hwnd);
     if (!hwnd) {
         delete res;
         return nullptr;

@@ -150,7 +150,7 @@ void SaveThumbnail(FileState* fs) {
              fs->filePath);
         return;
     }
-    ReportIfFast(!str::EndsWithI(thumbnailPath, StrL(".png")));
+    ReportIf(!str::EndsWithI(thumbnailPath, StrL(".png")));
 
     Pixmap* thumbnail = fs->thumbnail;
     if (PixmapIsEmpty(thumbnail)) {

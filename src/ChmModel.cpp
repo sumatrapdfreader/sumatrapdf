@@ -340,7 +340,7 @@ bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/)
     Kind k = link->GetKind();
     if (k != kindDestinationScrollTo) {
         logf("ChmModel::HandleLink: unsupported kind '%s'\n", Str(k));
-        ReportIfFast(link->GetKind() != kindDestinationScrollTo);
+        ReportIf(link->GetKind() != kindDestinationScrollTo);
     }
     Str url = PageDestGetName(link);
     if (DisplayPage(url)) {

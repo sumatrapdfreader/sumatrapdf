@@ -1386,9 +1386,8 @@ static bool LoadLibsumatrapdf(bool showErrorDialog) {
     DWORD err = gLibsumatrapdfLastLoadError ? gLibsumatrapdfLastLoadError : GetLastError();
     LogLibsumatrapdfLoadFailureDiagnostics(selfDir, buildDir, expectedSize, err);
 
-    // Upload a debug report (pre-release) without requiring symbols. captureCallstack
-    // is false so we skip symbol download; the log (paths/sizes/errors) is the payload.
-    _uploadDebugReport(StrL("LoadLibsumatrapdf failed"), StrL(FILE_LINE), false, false);
+    // upload a debug report (pre-release); the log (paths/sizes/errors) is the payload
+    _uploadDebugReport(StrL("LoadLibsumatrapdf failed"), StrL(FILE_LINE), false);
 
     if (!showErrorDialog) {
         // e.g. -print-to ... -silent invoked by another program:

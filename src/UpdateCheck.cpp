@@ -563,7 +563,7 @@ static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
     logf("  urlLen=%d hostLen=%d host='%s'\n", len(dlURL), len(kExpectedDlHost), kExpectedDlHost);
     logf("  url hex[0..%d]=%s\n", kUrlHexHead, HexHeadTemp(dlURL, kUrlHexHead));
     logf("  host hex[0..%d]=%s\n", kUrlHexHead, HexHeadTemp(kExpectedDlHost, kUrlHexHead));
-    ReportIfFast(true);
+    ReportIf(true);
     auto title = Tr("SumatraPDF Update");
     auto content = fmt(R"(Suspicious update.
 

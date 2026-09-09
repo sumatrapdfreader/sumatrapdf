@@ -221,8 +221,8 @@ static bool InitializeDbgHelp() {
 }
 
 // like crash report, but can be triggered without a crash
-void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool /*captureCallstack*/) {
-    // in release builds ReportIf()/ReportIfFast() will break if running under
+void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
+    // in release builds ReportIf() will break if running under
     // the debugger. In other builds it sends a debug report
     if (condStr) {
         logf("_uploadDebugReport: %s %s\n", condStr, fileLine);

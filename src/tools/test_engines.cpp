@@ -18,7 +18,7 @@
 #include "TextSearch.h"
 #include "LitDoc.h"
 
-void _uploadDebugReport(Str, Str, bool, bool) {}
+void _uploadDebugReport(Str, Str, bool) {}
 
 void log(Str s) {
     if (len(s) == 0) {

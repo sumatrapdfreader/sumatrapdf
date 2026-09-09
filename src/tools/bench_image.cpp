@@ -36,7 +36,7 @@ void log(Str s) {
     fwrite(s.s, 1, (size_t)s.len, stderr);
 }
 
-void _uploadDebugReport(Str, Str, bool, bool) {}
+void _uploadDebugReport(Str, Str, bool) {}
 
 enum class BenchFormat {
     Jpeg,

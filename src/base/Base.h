@@ -410,24 +410,23 @@ inline void CrashMe() {
 // rare cases where we really want to know a given condition happens. Before
 // each release we should audit the uses of ReportAlwaysIf()
 
-extern void _uploadDebugReport(Str, Str, bool, bool);
+extern void _uploadDebugReport(Str, Str, bool);
 
 #define STRINGIZE_(x) #x
 #define STRINGIZE(x) STRINGIZE_(x)
 #define FILE_LINE __FILE__ ":" STRINGIZE(__LINE__)
 
-#define ReportIfCond(cond, condStr, fileLine, isCrash, captureCallstack)                  \
-    __analysis_assume(!(cond));                                                           \
-    do {                                                                                  \
-        if (cond) {                                                                       \
-            _uploadDebugReport(StrL(condStr), StrL(fileLine), isCrash, captureCallstack); \
-        }                                                                                 \
+#define ReportIfCond(cond, condStr, fileLine, isCrash)                  \
+    __analysis_assume(!(cond));                                         \
+    do {                                                                \
+        if (cond) {                                                     \
+            _uploadDebugReport(StrL(condStr), StrL(fileLine), isCrash); \
+        }                                                               \
     } while (0)
 
-#define ReportIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)
-#define ReportIfFast(cond) ReportIfCond(cond, #cond, FILE_LINE, false, false)
+#define ReportIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false)
 #if IS_DEBUG
-#define ReportDebugIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false, true)
+#define ReportDebugIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false)
 #else
 // In release the check is gone, but the condition must still be *read*, or a
 // variable whose only consumer is a ReportDebugIf looks unused: the compiler

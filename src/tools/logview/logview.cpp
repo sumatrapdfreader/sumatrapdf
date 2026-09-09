@@ -45,7 +45,7 @@ void log(Str s) {
 }
 
 // base's ReportIf() references this crash-reporting hook; we don't crash-report.
-void _uploadDebugReport(Str, Str, bool, bool) {}
+void _uploadDebugReport(Str, Str, bool) {}
 
 // opt into the v6 common controls (themed edit box / buttons = modern look).
 // combined with InitCommonControlsEx() at startup.

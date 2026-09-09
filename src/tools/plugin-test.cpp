@@ -15,7 +15,7 @@ void log(Str s) {
     }
     fwrite(s.s, 1, (size_t)s.len, stderr);
 }
-void _uploadDebugReport(Str, Str, bool, bool) {}
+void _uploadDebugReport(Str, Str, bool) {}
 
 #define kPluginTestNameA "SumatraPDF Plugin Test"
 constexpr const WCHAR* kPluginTestName = L"SumatraPDF Plugin Test";
