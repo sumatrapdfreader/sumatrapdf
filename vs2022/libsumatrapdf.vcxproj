@@ -1115,8 +1115,8 @@
     <ProjectReference Include="a-brotli.vcxproj">
       <Project>{1FF28875-0BBF-E380-34D8-D1282004190F}</Project>
     </ProjectReference>
-    <ProjectReference Include="unrar.vcxproj">
-      <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
+    <ProjectReference Include="a-unrar.vcxproj">
+      <Project>{5B3D0CA0-C71C-8B3B-D034-16123C93F19C}</Project>
     </ProjectReference>
     <ProjectReference Include="chmdec.vcxproj">
       <Project>{892B65F6-75CD-8FCC-5E88-A3204AC9161D}</Project>

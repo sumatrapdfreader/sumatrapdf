@@ -478,7 +478,7 @@ workspace "SumatraPDF"
 
   winver_defines()
 
-  project "unrar"
+  project "a-unrar"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
@@ -488,16 +488,11 @@ workspace "SumatraPDF"
     disablewarnings { "4005", "4100", "4201", "4211", "4244", "4310", "4389", "4456", "4459", "4505", "4701", "4702", "4706", "4709", "4731", "4828", "4996" }
     exceptionhandling "On"
 
-    includedirs { "ext/unrar" }
-    -- every unrar .cpp includes rar.hpp first; vendor rarpch.cpp creates the PCH
-    pchheader "rar.hpp"
-    pchsource "ext/unrar/rarpch.cpp"
-    -- global.cpp defines INCLUDEGLOBAL before rar.hpp so ErrHandler is defined
-    -- rather than extern; that must not use the shared PCH
-    filter { "files:ext/unrar/global.cpp" }
-      enablepch "Off"
-    filter {}
-    unrar_files()
+    includedirs { "ext/a-unrar" }
+    files {
+      "ext/a-unrar/unrar.cpp", "ext/a-unrar/dll.hpp",
+      "ext/a-unrar/version.txt", "ext/a-unrar/license.txt",
+    }
 
   -- chmdec: linked into libsumatrapdf.dll (and static EXE). SumatraPDF.exe /
   -- PdfFilter / PdfPreview import chm_* via libsumatrapdf.def; do not also link here.
@@ -1068,7 +1063,7 @@ workspace "SumatraPDF"
     -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
     exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli", "unrar", "chmdec", "msdes",
+      "mupdf", "djvudec", "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli", "a-unrar", "chmdec", "msdes",
       "a-libarchive", "cmark-gfm", "a-gumbo",
       "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
     }
@@ -1146,12 +1141,12 @@ workspace "SumatraPDF"
     -- FZ_UNUSED is a no-op outside gcc/clang, so mupdf's headers trip 4100;
     -- every other project including them disables it too
     disablewarnings { "4100", "4838" }
-    includedirs { "src", "ext/djvudec", "ext/a-libarchive", "ext/unrar", "ext/mupdf/include" }
+    includedirs { "src", "ext/djvudec", "ext/a-libarchive", "ext/a-unrar", "ext/mupdf/include" }
     includedirs { "ext/heicdec", "ext/a-libwebp", "ext/jxldec", "ext/msdes" }
     test_engines_files()
     links_zlib()
     -- static link (no libsumatrapdf.dll): same image-codec set as libsumatrapdf.dll
-    links { "base", "djvudec", "a-libarchive", "unrar", "mupdf" }
+    links { "base", "djvudec", "a-libarchive", "a-unrar", "mupdf" }
     links { "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli" }
     -- LitDoc.cpp: DES decryption of DRM-free .lit sections, LZX section decompression
     links { "msdes", "chmdec" }
@@ -1427,7 +1422,7 @@ workspace "SumatraPDF"
     links {
       "djvudec", "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli",
       "mupdf", "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg",
-      "a-jbig2dec", "libjpeg-turbo", "a-libarchive", "a-gumbo", "base", "unrar", "chmdec", "a-zopfli", "msdes"
+      "a-jbig2dec", "libjpeg-turbo", "a-libarchive", "a-gumbo", "base", "a-unrar", "chmdec", "a-zopfli", "msdes"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1595,7 +1590,7 @@ workspace "SumatraPDF"
     -- libsumatrapdf.dll + extra codecs / archives linked only into it (and static EXE).
     -- Folder named "libsumatrapdf.dll" so it does not collide with project "libsumatrapdf".
     set_group("libsumatrapdf.dll", {
-      "libsumatrapdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "a-libwebp", "unrar",
+      "libsumatrapdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "a-libwebp", "a-unrar",
     })
     set_group("tools", {
       "bench_image", "bin2coff", "logview", "MakeLZSA", "plugin-test", "preview_test",

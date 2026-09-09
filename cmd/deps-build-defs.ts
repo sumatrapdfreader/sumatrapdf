@@ -25,7 +25,7 @@ export const aGumbo: LibDef = {
 };
 
 export const unrar: LibDef = {
-  name: "unrar",
+  name: "a-unrar",
   alwaysOptimize: true,
   // MSVC compiles throw/catch with exceptions disabled (warning 4530);
   // GCC requires -fexceptions for code that uses throw/catch
@@ -35,64 +35,8 @@ export const unrar: LibDef = {
   // MSVC tolerates via COMDAT pick-any). Consumers only use the C API in
   // dll.hpp, which doesn't mention the class, so a TU-local rename is safe.
   defines: ["UNRAR", "RARDLL", "SILENT", "Archive=UnrarArchive"],
-  includes: ["ext/unrar"],
-  files: [
-    {
-      dir: "ext/unrar",
-      patterns: [
-        "archive.cpp",
-        "arcread.cpp",
-        "blake2s.cpp",
-        "cmddata.cpp",
-        "consio.cpp",
-        "crc.cpp",
-        "crypt.cpp",
-        "dll.cpp",
-        "encname.cpp",
-        "errhnd.cpp",
-        "extinfo.cpp",
-        "extract.cpp",
-        "filcreat.cpp",
-        "file.cpp",
-        "filefn.cpp",
-        "filestr.cpp",
-        "find.cpp",
-        "getbits.cpp",
-        "global.cpp",
-        "hash.cpp",
-        "headers.cpp",
-        "isnt.cpp",
-        "largepage.cpp",
-        "list.cpp",
-        "match.cpp",
-        "motw.cpp",
-        "options.cpp",
-        "pathfn.cpp",
-        "qopen.cpp",
-        "rarvm.cpp",
-        "rawread.cpp",
-        "rdwrfn.cpp",
-        "recvol.cpp",
-        "rijndael.cpp",
-        "rs.cpp",
-        "rs16.cpp",
-        "scantree.cpp",
-        "secpassword.cpp",
-        "sha1.cpp",
-        "sha256.cpp",
-        "smallfn.cpp",
-        "strfn.cpp",
-        "strlist.cpp",
-        "system.cpp",
-        "threadpool.cpp",
-        "timefn.cpp",
-        "ui.cpp",
-        "unicode.cpp",
-        "unpack.cpp",
-        "volume.cpp",
-      ],
-    },
-  ],
+  includes: ["ext/a-unrar"],
+  files: [{ dir: "ext/a-unrar", patterns: ["unrar.cpp"] }],
 };
 
 export const chmdec: LibDef = {

@@ -1,0 +1,6 @@
+project_homepage: https://www.rarlab.com/rar_add.htm
+repo_url: https://github.com/aawc/unrar
+revision: b82477a7d45b6998fbcfc504a0fa59aca6345e4c
+commit_sha1: b82477a7d45b6998fbcfc504a0fa59aca6345e4c
+github_url: https://github.com/aawc/unrar
+github_commit_url: https://github.com/aawc/unrar/commit/b82477a7d45b6998fbcfc504a0fa59aca6345e4c

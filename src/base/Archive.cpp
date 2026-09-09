@@ -15,7 +15,7 @@
 
 #if OS_WIN
 // TODO: set include path to ext/ dir
-#include "../../ext/unrar/dll.hpp"
+#include "../../ext/a-unrar/dll.hpp"
 #endif
 #include "base/Archive.h"
 

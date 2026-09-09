@@ -334,6 +334,100 @@ type Lib = {
 
 const clCommonArgs = ["/nologo", "/c", "/W4", "/WX", "/O2", "/MT"];
 
+// --- unrar -----------------------------------------------------------------
+
+// global.cpp comes first on purpose: it defines INCLUDEGLOBAL before pulling in
+// rar.hpp, which is what turns global.hpp's `EXTVAR ErrorHandler ErrHandler`
+// into the definition rather than a declaration. rar.hpp is inlined once, so
+// whichever chunk pulls it in first decides that.
+const unrarSources = [
+  "global.cpp",
+  "archive.cpp",
+  "arcread.cpp",
+  "blake2s.cpp",
+  "cmddata.cpp",
+  "consio.cpp",
+  "crc.cpp",
+  "crypt.cpp",
+  "dll.cpp",
+  "encname.cpp",
+  "errhnd.cpp",
+  "extinfo.cpp",
+  "extract.cpp",
+  "filcreat.cpp",
+  "file.cpp",
+  "filefn.cpp",
+  "filestr.cpp",
+  "find.cpp",
+  "getbits.cpp",
+  "hash.cpp",
+  "headers.cpp",
+  "isnt.cpp",
+  "largepage.cpp",
+  "list.cpp",
+  "match.cpp",
+  "motw.cpp",
+  "options.cpp",
+  "pathfn.cpp",
+  "qopen.cpp",
+  "rarvm.cpp",
+  "rawread.cpp",
+  "rdwrfn.cpp",
+  "recvol.cpp",
+  "rijndael.cpp",
+  "rs.cpp",
+  "rs16.cpp",
+  "scantree.cpp",
+  "secpassword.cpp",
+  "sha1.cpp",
+  "sha256.cpp",
+  "smallfn.cpp",
+  "strfn.cpp",
+  "strlist.cpp",
+  "system.cpp",
+  "threadpool.cpp",
+  "timefn.cpp",
+  "ui.cpp",
+  "unicode.cpp",
+  "unpack.cpp",
+  "volume.cpp",
+];
+
+// Upstream spells these Windows headers with capitals, which breaks the mingw
+// cross build on a case-sensitive filesystem. Was a local edit to the vendored
+// tree; now it is applied here.
+function lowercaseWinIncludes(text: string): string {
+  return text.replace(/^#include <(PowrProf|Sddl|Wbemidl)\.h>/gm, (_m, name) => `#include <${name.toLowerCase()}.h>`);
+}
+
+// rs.cpp's helper macro would otherwise swallow SecPassword::Clean().
+const unrarSeals: Record<string, string[]> = {
+  "rs.cpp": ["Clean"],
+};
+
+function genUnrar(ctx: Ctx): void {
+  const root = ctx.checkoutDir;
+
+  // src/base/Archive.cpp includes this for the RAR API; nothing else in the
+  // header set is public.
+  ctx.files.set("dll.hpp", readText(join(root, "dll.hpp")));
+
+  // Every .cpp opens with rar.hpp, which pulls in the whole header set, and a
+  // few .cpp include others (crypt.cpp -> crypt1..5.cpp, unpack.cpp -> the
+  // per-format unpackers). Both are handled by inlining local includes once.
+  const rules: IncludeRules = {
+    resolve: dirResolver([root]),
+    seen: new Set(unrarSources.map((name) => normPath(join(root, name)))),
+    dedupOnlyGuarded: true,
+  };
+  const chunks: string[] = [];
+  for (const name of unrarSources) {
+    const chunk = prepare(join(root, name), rules, lowercaseWinIncludes);
+    chunks.push(unrarSeals[name] ? sealMacros(chunk, unrarSeals[name]) : chunk);
+  }
+  ctx.files.set("unrar.cpp", joinChunks(chunks));
+}
+
 // --- zlib ------------------------------------------------------------------
 
 const zlibSources = [
@@ -1782,6 +1876,46 @@ const libs: Lib[] = [
         "/wd4389",
         "/wd4456",
         "/wd4702",
+      ],
+    },
+  },
+  {
+    name: "unrar",
+    homepage: "https://www.rarlab.com/rar_add.htm",
+    // rarlab ships tarballs, not git; this mirror commits each one verbatim
+    repo: "https://github.com/aawc/unrar",
+    rev: "b82477a7d45b6998fbcfc504a0fa59aca6345e4c",
+    writes: "dll.hpp, unrar.cpp, license.txt, acknow.txt",
+    generate: genUnrar,
+    copies: ["license.txt", "acknow.txt"],
+    compile: {
+      file: "unrar.cpp",
+      args: [
+        "/TP",
+        "/EHsc",
+        ...defines("WIN32", "_WIN32", "NDEBUG", "UNRAR", "RARDLL", "SILENT"),
+        "/I",
+        ".",
+        "/wd4005",
+        "/wd4100",
+        "/wd4127",
+        "/wd4189",
+        "/wd4201",
+        "/wd4211",
+        "/wd4244",
+        "/wd4310",
+        "/wd4389",
+        "/wd4456",
+        "/wd4458",
+        "/wd4459",
+        "/wd4505",
+        "/wd4701",
+        "/wd4702",
+        "/wd4706",
+        "/wd4709",
+        "/wd4731",
+        "/wd4828",
+        "/wd4996",
       ],
     },
   },
