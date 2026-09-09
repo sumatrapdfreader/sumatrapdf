@@ -591,13 +591,23 @@ static Str ConvertLocalToUTF8(Str localStr) {
     return Str(utf8Buf, utf8Len - 1);
 }
 
+// The temp files WriteTempSyncFile() wrote. A synctex scanner reads its file
+// for as long as it lives, so they can only go once, on the way out.
+static StrNode* gSyncTempFiles;
+
+void DeleteSyncTempFiles() {
+    for (StrNode* node = gSyncTempFiles; node; node = node->next) {
+        file::Delete(node->s);
+    }
+    FreeStrNode(nullptr, gSyncTempFiles);
+    gSyncTempFiles = nullptr;
+}
+
 // Writes data to a temp file named <base>.synctex: synctex_parser insists on
 // that extension, so the .tmp GetTempFileNameW hands out has to be renamed.
 // Only that .tmp name is guaranteed free, and the rename frees it again, so a
-// .synctex left behind by an earlier run can already be sitting there - replace
-// it instead of failing. Nothing deletes these, so on a machine that has run
-// many forward searches a plain rename() failed often enough to make forward
-// search look flaky.
+// .synctex left behind by a version that didn't delete them, or by a crash,
+// can already be sitting there - replace it instead of failing the search.
 static TempStr WriteTempSyncFile(Str data, Str who) {
     TempStr tempPath = GetTempFilePathTemp(StrL("stx")); // stxabcdef.tmp
     if (len(tempPath) == 0) {
@@ -614,6 +624,12 @@ static TempStr WriteTempSyncFile(Str data, Str who) {
     if (!file::RenameReplace(tempPathSync, tempPath)) {
         logf("%s: unable rename from '%s' to '%s'.\n", who, tempPath, tempPathSync);
         return {};
+    }
+
+    StrNode* node = AllocStrNode(nullptr, tempPathSync);
+    if (node) {
+        node->next = gSyncTempFiles;
+        gSyncTempFiles = node;
     }
     return tempPathSync;
 }

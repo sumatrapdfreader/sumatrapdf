@@ -3169,6 +3169,7 @@ Exit:
 
     FreeAllMenuDrawInfos();
     FreeAnnotationClipboard();
+    DeleteSyncTempFiles();
     ShutdownWin11Printing();
 
     ShutdownCleanup();

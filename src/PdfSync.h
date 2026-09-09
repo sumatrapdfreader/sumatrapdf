@@ -54,3 +54,7 @@ struct Synchronizer {
 
     static int Create(Str pdffilename, EngineBase* engine, Synchronizer** sync);
 };
+
+// Deletes the temp files forward search unpacked the .synctex data into.
+// Call once, on exit: a synctex scanner reads its file for as long as it lives.
+void DeleteSyncTempFiles();
