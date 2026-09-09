@@ -614,10 +614,9 @@ export async function main() {
     writePreviewHtmlFiles();
   }
 
-  // pack translations + JS runtimes + manual into one LzSA (IDR_EMBEDDED_PAK)
-  mkdirSync(".work", { recursive: true });
-  const { packEmbedded } = await import("./pack-embedded");
-  await packEmbedded();
+  // the build's prebuild (cmd/pack-embedded-prebuild.cmd) stages .work/docs
+  // with translations + marked/mermaid under out/<cfg>/embedded[-static]
+  // and packs IDR_EMBEDDED_PAK, so rebuild the exe to pick up the new manual
 
   if (previewHtml) {
     const absDir = resolve(previewOutDir);

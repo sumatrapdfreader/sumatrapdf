@@ -54,9 +54,10 @@ function addResources(text: string, path: string): string {
       if (inputs.includes(resource)) {
         return line;
       }
-      // The prebuild packs IDR_EMBEDDED_PAK, so the .res waits for that stamp.
-      // SumatraPDF.exe's archive also holds libsumatrapdf.dll & co and lives in
-      // out/<cfg>/, passed via the EMBEDDED_PAK resdefine premake sets.
+      // The prebuild packs IDR_EMBEDDED_PAK into out/<cfg>/, so the .res waits
+      // for that stamp and gets the archive path via the EMBEDDED_PAK resdefine
+      // premake sets: embedded.lzsa (also holding libsumatrapdf.dll & co) for
+      // SumatraPDF.exe, embedded-static.lzsa for SumatraPDF-static.exe.
       let deps = "";
       let flags = "";
       if (project === "SumatraPDF") {
@@ -64,6 +65,7 @@ function addResources(text: string, path: string): string {
         flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out\\${config}\\embedded.lzsa`;
       } else if (project === "SumatraPDF-static") {
         deps = ` | ../../out/${config}/obj-s/SumatraPDF-static/SumatraPDF-static.prebuild`;
+        flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out\\${config}\\embedded-static.lzsa`;
       }
       return `build ${resource}: rc_msc-v145 ${source}${deps}${flags}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
     });

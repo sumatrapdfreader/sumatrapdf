@@ -3,7 +3,8 @@
  *
  * Local cache (gitignored via .work/):
  *   .work/translations.txt       languages complete enough for the binary
- *   (packed into .work/embedded.lzsa with marked/mermaid/manual via pack-embedded.ts)
+ *   (the build's prebuild, cmd/pack-embedded-prebuild.cmd, packs it with
+ *   marked/mermaid/manual into out/<cfg>/embedded[-static].lzsa = IDR_EMBEDDED_PAK)
  *
  * Flow:
  *   1. Extract Tr() / TrN() strings from src + command names
@@ -15,14 +16,14 @@
  *        - submit each via /api/edittranslation as user "ai claude" / "ai grok"
  *          only when that lang+string has no translation yet (never overwrite)
  *   5. Re-download (should now include submitted translations)
- *   6. Write filtered .work/translations.txt and build .lzsa
+ *   6. Write filtered .work/translations.txt
  *
  * Usage:
  *   bun cmd/trans-dl.ts                 # production apptranslator + Claude if key set
  *   bun cmd/trans-dl.ts --local         # http://127.0.0.1:9311
  *   bun cmd/trans-dl.ts --server URL
  *   bun cmd/trans-dl.ts --ai=claude|grok|none
- *   bun cmd/trans-dl.ts --no-ai         # download + fix suspicious + filter + lzsa (no AI fill)
+ *   bun cmd/trans-dl.ts --no-ai         # download + fix suspicious + filter (no AI fill)
  *   bun cmd/trans-dl.ts --lang de       # only fill missing for one language
  *   bun cmd/trans-dl.ts --lang br --retranslate  # refill AI/wrong br (not Breton)
  *   bun cmd/trans-dl.ts --max-submit N  # cap AI submissions (for testing; fixes always run)
@@ -44,7 +45,6 @@ const APP_NAME = "SumatraPDF";
 
 const workDir = ".work";
 const translationsTxtPath = join(workDir, "translations.txt");
-// legacy path kept only for cleanup messaging; packing is pack-embedded.ts
 
 const translationPattern = /\b(?:TrN|Tr)\("(.*?)"\)/g;
 
@@ -55,7 +55,6 @@ interface CliArgs {
   ai: AiProvider;
   langs: Set<string> | null; // null = all
   maxSubmit: number; // 0 = unlimited
-  skipLzsa: boolean;
   retranslate: boolean; // refill existing AI/wrong translations for --lang
 }
 
@@ -64,7 +63,6 @@ function parseArgs(argv: string[]): CliArgs {
   let ai: AiProvider = "claude";
   let langs: Set<string> | null = null;
   let maxSubmit = 0;
-  let skipLzsa = false;
   let retranslate = false;
 
   for (let i = 0; i < argv.length; i++) {
@@ -91,8 +89,6 @@ function parseArgs(argv: string[]): CliArgs {
       maxSubmit = parseInt(argv[++i], 10) || 0;
     } else if (a.startsWith("--max-submit=")) {
       maxSubmit = parseInt(a.slice("--max-submit=".length), 10) || 0;
-    } else if (a === "--skip-lzsa") {
-      skipLzsa = true;
     } else if (a === "--retranslate") {
       retranslate = true;
     } else if (a === "--help" || a === "-h") {
@@ -103,8 +99,7 @@ function parseArgs(argv: string[]): CliArgs {
   --no-ai              same as --ai=none
   --lang CODE          only fill this language (repeatable; br-pt/pt-br → br)
   --retranslate        refill AI-authored (and Breton-looking br) strings; requires --lang
-  --max-submit N       stop after N AI submissions (testing)
-  --skip-lzsa          do not run MakeLZSA`);
+  --max-submit N       stop after N AI submissions (testing)`);
       process.exit(0);
     } else {
       throw new Error(`Unknown arg: ${a} (try --help)`);
@@ -113,7 +108,7 @@ function parseArgs(argv: string[]): CliArgs {
   if (retranslate && (!langs || langs.size === 0)) {
     throw new Error("--retranslate requires --lang");
   }
-  return { server: server.replace(/\/$/, ""), ai, langs, maxSubmit, skipLzsa, retranslate };
+  return { server: server.replace(/\/$/, ""), ai, langs, maxSubmit, retranslate };
 }
 
 // Project codes are not always ISO 639-1 (br = Brazilian Portuguese, not Breton).
@@ -1215,15 +1210,6 @@ function writeTranslationsForBinary(pt: ParsedTranslations, downloadSha1: string
   console.log(`fully translated langs: ${fullyTranslated}`);
 }
 
-async function makeLzsa(): Promise<void> {
-  if (!existsSync(translationsTxtPath)) {
-    throw new Error(`missing ${translationsTxtPath}; run without --skip-lzsa after download`);
-  }
-  // pack translations into the combined embedded.lzsa (with marked/mermaid/manual)
-  const { packEmbedded } = await import("./pack-embedded");
-  await packEmbedded();
-}
-
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   console.log(`apptranslator server: ${args.server}`);
@@ -1235,9 +1221,6 @@ async function main() {
   if (!secret) {
     console.log("TRANS_UPLOAD_SECRET not set; skipping download/AI");
     writeEmptyTranslations();
-    if (!args.skipLzsa) {
-      await makeLzsa();
-    }
     return;
   }
 
@@ -1317,12 +1300,10 @@ async function main() {
     autoAddNoPrefixTranslations(pt);
   }
 
-  // 5) write filtered translations for the binary + lzsa
+  // 5) write filtered translations for the binary; the exe's prebuild packs
+  //    them into IDR_EMBEDDED_PAK on the next build
   //    (sha1 line is the full download sha1 for cache comparison on next run)
   writeTranslationsForBinary(pt, dl.sha1);
-  if (!args.skipLzsa) {
-    await makeLzsa();
-  }
 }
 
 await main();

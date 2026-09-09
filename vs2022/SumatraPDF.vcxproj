@@ -433,7 +433,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbg32\embedded.lzsa ../out/dbg32\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg32\PdfFilter.dll:PdfFilter.dll ../out/dbg32\PdfPreview.dll:PdfPreview.dll ../out/dbg32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbg32\embedded ../out/dbg32\embedded.lzsa ../out/dbg32\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg32\PdfFilter.dll:PdfFilter.dll ../out/dbg32\PdfPreview.dll:PdfPreview.dll ../out/dbg32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -477,7 +477,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbg64\embedded.lzsa ../out/dbg64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg64\PdfFilter.dll:PdfFilter.dll ../out/dbg64\PdfPreview.dll:PdfPreview.dll ../out/dbg64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbg64\embedded ../out/dbg64\embedded.lzsa ../out/dbg64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg64\PdfFilter.dll:PdfFilter.dll ../out/dbg64\PdfPreview.dll:PdfPreview.dll ../out/dbg64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -521,7 +521,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgarm64\embedded.lzsa ../out/dbgarm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgarm64\PdfFilter.dll:PdfFilter.dll ../out/dbgarm64\PdfPreview.dll:PdfPreview.dll ../out/dbgarm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgarm64\embedded ../out/dbgarm64\embedded.lzsa ../out/dbgarm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgarm64\PdfFilter.dll:PdfFilter.dll ../out/dbgarm64\PdfPreview.dll:PdfPreview.dll ../out/dbgarm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -565,7 +565,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbg64_asan\embedded.lzsa ../out/dbg64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg64_asan\PdfFilter.dll:PdfFilter.dll ../out/dbg64_asan\PdfPreview.dll:PdfPreview.dll ../out/dbg64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbg64_asan\embedded ../out/dbg64_asan\embedded.lzsa ../out/dbg64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg64_asan\PdfFilter.dll:PdfFilter.dll ../out/dbg64_asan\PdfPreview.dll:PdfPreview.dll ../out/dbg64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
@@ -612,7 +612,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfull32\embedded.lzsa ../out/dbgfull32\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull32\PdfFilter.dll:PdfFilter.dll ../out/dbgfull32\PdfPreview.dll:PdfPreview.dll ../out/dbgfull32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfull32\embedded ../out/dbgfull32\embedded.lzsa ../out/dbgfull32\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull32\PdfFilter.dll:PdfFilter.dll ../out/dbgfull32\PdfPreview.dll:PdfPreview.dll ../out/dbgfull32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -656,7 +656,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfull64\embedded.lzsa ../out/dbgfull64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull64\PdfFilter.dll:PdfFilter.dll ../out/dbgfull64\PdfPreview.dll:PdfPreview.dll ../out/dbgfull64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfull64\embedded ../out/dbgfull64\embedded.lzsa ../out/dbgfull64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull64\PdfFilter.dll:PdfFilter.dll ../out/dbgfull64\PdfPreview.dll:PdfPreview.dll ../out/dbgfull64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -700,7 +700,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfullarm64\embedded.lzsa ../out/dbgfullarm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfullarm64\PdfFilter.dll:PdfFilter.dll ../out/dbgfullarm64\PdfPreview.dll:PdfPreview.dll ../out/dbgfullarm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfullarm64\embedded ../out/dbgfullarm64\embedded.lzsa ../out/dbgfullarm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfullarm64\PdfFilter.dll:PdfFilter.dll ../out/dbgfullarm64\PdfPreview.dll:PdfPreview.dll ../out/dbgfullarm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -744,7 +744,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfull64_asan\embedded.lzsa ../out/dbgfull64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull64_asan\PdfFilter.dll:PdfFilter.dll ../out/dbgfull64_asan\PdfPreview.dll:PdfPreview.dll ../out/dbgfull64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfull64_asan\embedded ../out/dbgfull64_asan\embedded.lzsa ../out/dbgfull64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull64_asan\PdfFilter.dll:PdfFilter.dll ../out/dbgfull64_asan\PdfPreview.dll:PdfPreview.dll ../out/dbgfull64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
@@ -795,7 +795,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel32\embedded.lzsa ../out/rel32\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel32\PdfFilter.dll:PdfFilter.dll ../out/rel32\PdfPreview.dll:PdfPreview.dll ../out/rel32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel32\embedded ../out/rel32\embedded.lzsa ../out/rel32\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel32\PdfFilter.dll:PdfFilter.dll ../out/rel32\PdfPreview.dll:PdfPreview.dll ../out/rel32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -843,7 +843,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64\embedded.lzsa ../out/rel64\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64\PdfFilter.dll:PdfFilter.dll ../out/rel64\PdfPreview.dll:PdfPreview.dll ../out/rel64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64\embedded ../out/rel64\embedded.lzsa ../out/rel64\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64\PdfFilter.dll:PdfFilter.dll ../out/rel64\PdfPreview.dll:PdfPreview.dll ../out/rel64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -891,7 +891,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/arm64\embedded.lzsa ../out/arm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/arm64\PdfFilter.dll:PdfFilter.dll ../out/arm64\PdfPreview.dll:PdfPreview.dll ../out/arm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/arm64\embedded ../out/arm64\embedded.lzsa ../out/arm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/arm64\PdfFilter.dll:PdfFilter.dll ../out/arm64\PdfPreview.dll:PdfPreview.dll ../out/arm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -938,7 +938,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64_asan\embedded.lzsa ../out/rel64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_asan\PdfFilter.dll:PdfFilter.dll ../out/rel64_asan\PdfPreview.dll:PdfPreview.dll ../out/rel64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64_asan\embedded ../out/rel64_asan\embedded.lzsa ../out/rel64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_asan\PdfFilter.dll:PdfFilter.dll ../out/rel64_asan\PdfPreview.dll:PdfPreview.dll ../out/rel64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
@@ -989,7 +989,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel32_prefast\embedded.lzsa ../out/rel32_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel32_prefast\PdfFilter.dll:PdfFilter.dll ../out/rel32_prefast\PdfPreview.dll:PdfPreview.dll ../out/rel32_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel32_prefast\embedded ../out/rel32_prefast\embedded.lzsa ../out/rel32_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel32_prefast\PdfFilter.dll:PdfFilter.dll ../out/rel32_prefast\PdfPreview.dll:PdfPreview.dll ../out/rel32_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1037,7 +1037,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64_prefast\embedded.lzsa ../out/rel64_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_prefast\PdfFilter.dll:PdfFilter.dll ../out/rel64_prefast\PdfPreview.dll:PdfPreview.dll ../out/rel64_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64_prefast\embedded ../out/rel64_prefast\embedded.lzsa ../out/rel64_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_prefast\PdfFilter.dll:PdfFilter.dll ../out/rel64_prefast\PdfPreview.dll:PdfPreview.dll ../out/rel64_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1085,7 +1085,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/arm64_prefast\embedded.lzsa ../out/arm64_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/arm64_prefast\PdfFilter.dll:PdfFilter.dll ../out/arm64_prefast\PdfPreview.dll:PdfPreview.dll ../out/arm64_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/arm64_prefast\embedded ../out/arm64_prefast\embedded.lzsa ../out/arm64_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/arm64_prefast\PdfFilter.dll:PdfFilter.dll ../out/arm64_prefast\PdfPreview.dll:PdfPreview.dll ../out/arm64_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1132,7 +1132,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64_prefast_asan\embedded.lzsa ../out/rel64_prefast_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_prefast_asan\PdfFilter.dll:PdfFilter.dll ../out/rel64_prefast_asan\PdfPreview.dll:PdfPreview.dll ../out/rel64_prefast_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64_prefast_asan\embedded ../out/rel64_prefast_asan\embedded.lzsa ../out/rel64_prefast_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_prefast_asan\PdfFilter.dll:PdfFilter.dll ../out/rel64_prefast_asan\PdfPreview.dll:PdfPreview.dll ../out/rel64_prefast_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>

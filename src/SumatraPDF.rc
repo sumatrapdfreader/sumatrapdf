@@ -60,14 +60,15 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 
-// One LzSA archive with all embedded files (see resource.h). The default is the
-// static build's archive; the dll/installer build passes EMBEDDED_PAK pointing
-// at out\<cfg>\embedded.lzsa, which also holds libsumatrapdf.dll & co.
-#ifdef EMBEDDED_PAK
-IDR_EMBEDDED_PAK        RCDATA               QM(EMBEDDED_PAK)
-#else
-IDR_EMBEDDED_PAK        RCDATA               "..\\.work\\embedded.lzsa"
+// One LzSA archive with all embedded files (see resource.h), packed by the
+// prebuild (cmd\pack-embedded-prebuild.cmd) into out\<cfg>\ and passed in via
+// the EMBEDDED_PAK resdefine (premake5.lua): embedded-static.lzsa for the
+// static build, embedded.lzsa (also holding libsumatrapdf.dll & co) for the
+// dll/installer build.
+#ifndef EMBEDDED_PAK
+#error EMBEDDED_PAK not defined (path of the out\<cfg>\embedded*.lzsa archive)
 #endif
+IDR_EMBEDDED_PAK        RCDATA               QM(EMBEDDED_PAK)
 
 /////////////////////////////////////////////////////////////////////////////
 

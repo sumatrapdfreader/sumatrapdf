@@ -1423,11 +1423,13 @@ workspace "SumatraPDF"
     filter "platforms:x64_asan"
     linkoptions { "/INFERASANLIBS" }
     filter {}
-    -- pack .work/embedded (translations + marked/mermaid + manual) into
-    -- .work/embedded.lzsa (IDR_EMBEDDED_PAK, the default path in SumatraPDF.rc).
-    -- Uses cmd so MSBuild need not have bun on PATH.
+    -- stage translations + marked/mermaid + manual under out/<cfg>/embedded-static
+    -- and pack them into out/<cfg>/embedded-static.lzsa (IDR_EMBEDDED_PAK, path
+    -- passed via the EMBEDDED_PAK resdefine). Uses cmd so MSBuild need not have
+    -- bun on PATH.
+    resdefines { "EMBEDDED_PAK=.\\%{cfg.targetdir}\\embedded-static.lzsa" }
     prebuildcommands {
-      "call " .. rootDirWin .. "\\cmd\\pack-embedded-prebuild.cmd",
+      "call " .. rootDirWin .. "\\cmd\\pack-embedded-prebuild.cmd %{cfg.targetdir}\\embedded-static %{cfg.targetdir}\\embedded-static.lzsa",
     }
 
   -- a dll version where most functionality is in libsumatrapdf.dll
@@ -1528,13 +1530,14 @@ workspace "SumatraPDF"
     -- delay-loaded libsumatrapdf.dll which LoadLibsumatrapdf() loads by full path
     linkoptions { "/DEPENDENTLOADFLAG:0x800" }
     dependson { "PdfFilter", "PdfPreview", "sumatrapdf-tool" }
-    -- pack .work/embedded (translations + marked/mermaid + manual) plus the
-    -- installer payload into out/<cfg>/embedded.lzsa (IDR_EMBEDDED_PAK, path
-    -- passed via the EMBEDDED_PAK resdefine). Always re-packed: MakeLZSA reuses
-    -- unchanged entries, and signed release builds sign the DLLs in place
-    -- before this prebuild runs (with BuildProjectReferences=false).
+    -- stage translations + marked/mermaid + manual under out/<cfg>/embedded and
+    -- pack them plus the installer payload into out/<cfg>/embedded.lzsa
+    -- (IDR_EMBEDDED_PAK, path passed via the EMBEDDED_PAK resdefine above).
+    -- Always re-packed: MakeLZSA reuses unchanged entries, and signed release
+    -- builds sign the DLLs in place before this prebuild runs (with
+    -- BuildProjectReferences=false).
     prebuildcommands {
-      "call " .. rootDirWin .. "\\cmd\\pack-embedded-prebuild.cmd %{cfg.targetdir}\\embedded.lzsa %{cfg.targetdir}\\libsumatrapdf.dll:libsumatrapdf.dll %{cfg.targetdir}\\PdfFilter.dll:PdfFilter.dll %{cfg.targetdir}\\PdfPreview.dll:PdfPreview.dll %{cfg.targetdir}\\sumatrapdf-tool.exe:sumatrapdf-tool.exe",
+      "call " .. rootDirWin .. "\\cmd\\pack-embedded-prebuild.cmd %{cfg.targetdir}\\embedded %{cfg.targetdir}\\embedded.lzsa %{cfg.targetdir}\\libsumatrapdf.dll:libsumatrapdf.dll %{cfg.targetdir}\\PdfFilter.dll:PdfFilter.dll %{cfg.targetdir}\\PdfPreview.dll:PdfPreview.dll %{cfg.targetdir}\\sumatrapdf-tool.exe:sumatrapdf-tool.exe",
     }
     -- /INFERASANLIBS pulls in the *dynamic* ASan runtime, so
     -- clang_rt.asan_dynamic-x86_64.dll must sit next to the exe or it

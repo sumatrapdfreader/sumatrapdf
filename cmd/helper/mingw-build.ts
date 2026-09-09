@@ -629,8 +629,22 @@ void TestPreview(WStr) {}
   const rcTmpPath = join(outDir, "obj", "sumatrapdf", "SumatraPDF_mingw.rc");
   await writeFile(rcTmpPath, rcFixed);
   const rcTmpAbsolute = join(process.cwd(), rcTmpPath);
+  // IDR_EMBEDDED_PAK (translations, marked/mermaid, manual) is staged and packed
+  // by the Windows build's prebuild (cmd/pack-embedded-prebuild.cmd, needs
+  // MakeLZSA.exe) into out/<cfg>/embedded-static.lzsa; reuse one of those.
+  const embeddedFlags: string[] = [];
+  for (const cfg of ["rel64", "dbg64", "dbgfull64"]) {
+    const archive = join(process.cwd(), "out", cfg, "embedded-static.lzsa");
+    if (existsSync(archive)) {
+      embeddedFlags.push(`-DEMBEDDED_PAK=${archive.replace(/\\/g, "/")}`);
+      break;
+    }
+  }
+  if (embeddedFlags.length === 0) {
+    console.error("  WARNING: no out/<cfg>/embedded-static.lzsa (build SumatraPDF-static on Windows first); resources will fail");
+  }
   const rcRes = await spawnCmd(
-    [mingwTools.windres, "-I", ".", "-D_WIN64", ...defineFlags, rcTmpAbsolute, "-o", rcObjAbsolute],
+    [mingwTools.windres, "-I", ".", "-D_WIN64", ...defineFlags, ...embeddedFlags, rcTmpAbsolute, "-o", rcObjAbsolute],
     { cwd: "src" },
   );
   const rcObjs: string[] = [];

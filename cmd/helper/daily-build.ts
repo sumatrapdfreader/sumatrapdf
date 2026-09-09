@@ -1,4 +1,4 @@
-import { writeFileSync, statSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { $ } from "bun";
 import {
@@ -56,16 +56,13 @@ async function revertBuildConfig(): Promise<void> {
   await $`git checkout ${buildConfigPath()}`;
 }
 
-function ensureEmbeddedIsBuilt(): void {
-  const path = join(".work", "embedded.lzsa");
-  let size = 0;
-  try {
-    size = statSync(path).size;
-  } catch {
-    // file doesn't exist
-  }
-  if (size < 100 * 1024) {
-    throw new Error(`size of '${path}' is ${size} which indicates we didn't build it`);
+// gen-docs.ts writes the in-app manual to .work/docs; the exe's prebuild
+// (cmd/pack-embedded-prebuild.cmd) packs it into IDR_EMBEDDED_PAK. Without it
+// the build still succeeds but ships without the manual, so fail early.
+function ensureDocsGenerated(): void {
+  const path = join(".work", "docs", "manual.shell.html");
+  if (!existsSync(path)) {
+    throw new Error(`'${path}' missing which indicates gen-docs didn't run`);
   }
 }
 
@@ -90,7 +87,7 @@ export async function buildDaily() {
   // generate HTML docs
   const { main: genDocs } = await import("../gen-docs");
   await genDocs();
-  ensureEmbeddedIsBuilt();
+  ensureDocsGenerated();
 
   setBuildConfigPreRelease(sha1, preRelVer);
 

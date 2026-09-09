@@ -19,7 +19,7 @@ export async function buildCodeql() {
   const timeStart = performance.now();
   console.log("build-codeql: static 64-bit release build for CodeQL analysis");
 
-  // SumatraPDF.rc embeds .work/embedded.lzsa; generate it first (same as build-ci).
+  // the prebuild packs .work/docs into IDR_EMBEDDED_PAK; generate the manual first (same as build-ci).
   const { main: genDocs } = await import("../gen-docs");
   await genDocs();
 

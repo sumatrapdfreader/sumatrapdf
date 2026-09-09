@@ -417,7 +417,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;EMBEDDED_PAK=.\../out/dbg32\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -433,7 +433,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbg32\embedded-static ../out/dbg32\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -461,7 +461,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;EMBEDDED_PAK=.\../out/dbg64\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -477,7 +477,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbg64\embedded-static ../out/dbg64\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -505,7 +505,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;EMBEDDED_PAK=.\../out/dbgarm64\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -521,7 +521,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgarm64\embedded-static ../out/dbgarm64\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -549,7 +549,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;EMBEDDED_PAK=.\../out/dbg64_asan\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -565,7 +565,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbg64_asan\embedded-static ../out/dbg64_asan\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -593,7 +593,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;EMBEDDED_PAK=.\../out/dbgfull32\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -609,7 +609,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfull32\embedded-static ../out/dbgfull32\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -637,7 +637,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;EMBEDDED_PAK=.\../out/dbgfull64\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -653,7 +653,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfull64\embedded-static ../out/dbgfull64\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -681,7 +681,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;EMBEDDED_PAK=.\../out/dbgfullarm64\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -697,7 +697,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfullarm64\embedded-static ../out/dbgfullarm64\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -725,7 +725,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;EMBEDDED_PAK=.\../out/dbgfull64_asan\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -741,7 +741,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/dbgfull64_asan\embedded-static ../out/dbgfull64_asan\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -771,7 +771,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;EMBEDDED_PAK=.\../out/rel32\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -789,7 +789,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel32\embedded-static ../out/rel32\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -819,7 +819,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;EMBEDDED_PAK=.\../out/rel64\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -837,7 +837,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64\embedded-static ../out/rel64\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -867,7 +867,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;EMBEDDED_PAK=.\../out/arm64\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -885,7 +885,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/arm64\embedded-static ../out/arm64\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -915,7 +915,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;EMBEDDED_PAK=.\../out/rel64_asan\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -932,7 +932,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64_asan\embedded-static ../out/rel64_asan\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -961,7 +961,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;EMBEDDED_PAK=.\../out/rel32_prefast\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -980,7 +980,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel32_prefast\embedded-static ../out/rel32_prefast\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1009,7 +1009,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;EMBEDDED_PAK=.\../out/rel64_prefast\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -1028,7 +1028,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64_prefast\embedded-static ../out/rel64_prefast\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1057,7 +1057,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;EMBEDDED_PAK=.\../out/arm64_prefast\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -1076,7 +1076,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/arm64_prefast\embedded-static ../out/arm64_prefast\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1105,7 +1105,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;LIBARCHIVE_STATIC;_DARKMODELIB_NO_INI_CONFIG;_DARKMODELIB_CUSTOM_MEM=0x002;_CRT_SECURE_NO_WARNINGS;DISABLE_DOCUMENT_RESTRICTIONS;CMARK_GFM_STATIC_DEFINE;_WIN64;EMBEDDED_PAK=.\../out/rel64_prefast_asan\embedded-static.lzsa;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\ext\mupdf\include;..\ext\djvudec;..\ext\chmdec;..\ext\a-libarchive;..\ext\a-zopfli;..\ext\msdes;..\ext\cmark-gfm\src;..\ext\cmark-gfm\extensions;..\ext\mupdf\scripts\cmark-gfm;..\ext\heicdec;..\ext\a-libwebp;..\ext\jxldec;..\ext\darkmodelib\include;..\packages\Microsoft.Web.WebView2.1.0.4022.49\build\native\include;..\ext\a-zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -1123,7 +1123,7 @@
     <ProjectReference>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>call ..\cmd\pack-embedded-prebuild.cmd</Command>
+      <Command>call ..\cmd\pack-embedded-prebuild.cmd ../out/rel64_prefast_asan\embedded-static ../out/rel64_prefast_asan\embedded-static.lzsa</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>

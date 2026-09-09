@@ -82,17 +82,13 @@ async function revertBuildConfig(): Promise<void> {
   await proc.exited;
 }
 
-function ensureEmbeddedIsBuilt(): void {
-  const path = join(".work", "embedded.lzsa");
-  let size = 0;
-  try {
-    size = statSync(path).size;
-  } catch {
-    // file doesn't exist
-  }
-  // mermaid alone is ~2.6MB; a tiny archive means packing failed or docs missing
-  if (size < 100 * 1024) {
-    throw new Error(`size of '${path}' is ${size} which indicates we didn't build it`);
+// gen-docs.ts writes the in-app manual to .work/docs; the exe's prebuild
+// (cmd/pack-embedded-prebuild.cmd) packs it into IDR_EMBEDDED_PAK. Without it
+// the build still succeeds but ships without the manual, so fail early.
+function ensureDocsGenerated(): void {
+  const path = join(".work", "docs", "manual.shell.html");
+  if (!existsSync(path)) {
+    throw new Error(`'${path}' missing which indicates gen-docs didn't run`);
   }
 }
 
@@ -229,7 +225,7 @@ function removeReleaseBuilds(): void {
 }
 
 async function buildPreRelease(preRelVer: string, sha1: string, vsplatform: string): Promise<void> {
-  ensureEmbeddedIsBuilt();
+  ensureDocsGenerated();
   console.log(`building pre-release version ${preRelVer}`);
   const buildStart = performance.now();
 
