@@ -217,8 +217,8 @@ function printBinaries(dir: string, targets: Set<string>): void {
   const dynamicFiles = new Set([
     "SumatraPDF.exe",
     "libsumatrapdf.dll",
-    "obj/PdfFilter.dll",
-    "obj/PdfPreview.dll",
+    "PdfFilter.dll",
+    "PdfPreview.dll",
     "sumatrapdf-tool.exe",
     "test_util.exe",
   ]);

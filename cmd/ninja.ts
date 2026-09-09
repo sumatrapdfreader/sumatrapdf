@@ -10,8 +10,8 @@ const resources = [
   ["SumatraPDF", "SumatraPDF.exe", "../src/SumatraPDF.rc"],
   ["SumatraPDF-static", "SumatraPDF-static.exe", "../src/SumatraPDF.rc"],
   ["libsumatrapdf", "libsumatrapdf.dll", "../src/libsumatrapdf.rc"],
-  ["PdfFilter", "obj/PdfFilter.dll", "../src/ifilter/PdfFilter.rc"],
-  ["PdfPreview", "obj/PdfPreview.dll", "../src/previewer/PdfPreview.rc"],
+  ["PdfFilter", "PdfFilter.dll", "../src/ifilter/PdfFilter.rc"],
+  ["PdfPreview", "PdfPreview.dll", "../src/previewer/PdfPreview.rc"],
 ] as const;
 
 function needsGenerate(): boolean {
@@ -108,7 +108,7 @@ function fixEscapes(): void {
     // The archive prebuild must wait for every binary it packages.
     fixed = fixed.replace(
       /^build (\.\.\/out\/([^/]+)\/obj\/SumatraPDF\/SumatraPDF\.prebuild): prebuild.*$/gm,
-      "build $1: prebuild || ../out/$2/libsumatrapdf.dll ../out/$2/obj/PdfFilter.dll ../out/$2/obj/PdfPreview.dll ../out/$2/sumatrapdf-tool.exe",
+      "build $1: prebuild || ../out/$2/libsumatrapdf.dll ../out/$2/PdfFilter.dll ../out/$2/PdfPreview.dll ../out/$2/sumatrapdf-tool.exe",
     );
     fixed = addResources(fixed, path);
     const dlls = [...fixed.matchAll(/^build (\.\.\/out\/[^/]+)\/libsumatrapdf\.dll: link_msc-v145/gm)];

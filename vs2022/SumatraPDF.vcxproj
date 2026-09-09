@@ -434,7 +434,7 @@
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/dbg32\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbg32\InstallerData.dat ../out/dbg32\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg32\obj\PdfFilter.dll:PdfFilter.dll ../out/dbg32\obj\PdfPreview.dll:PdfPreview.dll ../out/dbg32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/dbg32\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbg32\InstallerData.dat ../out/dbg32\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg32\PdfFilter.dll:PdfFilter.dll ../out/dbg32\PdfPreview.dll:PdfPreview.dll ../out/dbg32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -479,7 +479,7 @@ if not exist ../out/dbg32\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbg32\Ins
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/dbg64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbg64\InstallerData.dat ../out/dbg64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg64\obj\PdfFilter.dll:PdfFilter.dll ../out/dbg64\obj\PdfPreview.dll:PdfPreview.dll ../out/dbg64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/dbg64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbg64\InstallerData.dat ../out/dbg64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg64\PdfFilter.dll:PdfFilter.dll ../out/dbg64\PdfPreview.dll:PdfPreview.dll ../out/dbg64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -524,7 +524,7 @@ if not exist ../out/dbg64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbg64\Ins
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/dbgarm64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgarm64\InstallerData.dat ../out/dbgarm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgarm64\obj\PdfFilter.dll:PdfFilter.dll ../out/dbgarm64\obj\PdfPreview.dll:PdfPreview.dll ../out/dbgarm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/dbgarm64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgarm64\InstallerData.dat ../out/dbgarm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgarm64\PdfFilter.dll:PdfFilter.dll ../out/dbgarm64\PdfPreview.dll:PdfPreview.dll ../out/dbgarm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -569,7 +569,7 @@ if not exist ../out/dbgarm64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgarm
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/dbg64_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbg64_asan\InstallerData.dat ../out/dbg64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg64_asan\obj\PdfFilter.dll:PdfFilter.dll ../out/dbg64_asan\obj\PdfPreview.dll:PdfPreview.dll ../out/dbg64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/dbg64_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbg64_asan\InstallerData.dat ../out/dbg64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbg64_asan\PdfFilter.dll:PdfFilter.dll ../out/dbg64_asan\PdfPreview.dll:PdfPreview.dll ../out/dbg64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
@@ -617,7 +617,7 @@ if not exist ../out/dbg64_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbg6
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/dbgfull32\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfull32\InstallerData.dat ../out/dbgfull32\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull32\obj\PdfFilter.dll:PdfFilter.dll ../out/dbgfull32\obj\PdfPreview.dll:PdfPreview.dll ../out/dbgfull32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/dbgfull32\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfull32\InstallerData.dat ../out/dbgfull32\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull32\PdfFilter.dll:PdfFilter.dll ../out/dbgfull32\PdfPreview.dll:PdfPreview.dll ../out/dbgfull32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -662,7 +662,7 @@ if not exist ../out/dbgfull32\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfu
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/dbgfull64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfull64\InstallerData.dat ../out/dbgfull64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull64\obj\PdfFilter.dll:PdfFilter.dll ../out/dbgfull64\obj\PdfPreview.dll:PdfPreview.dll ../out/dbgfull64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/dbgfull64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfull64\InstallerData.dat ../out/dbgfull64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull64\PdfFilter.dll:PdfFilter.dll ../out/dbgfull64\PdfPreview.dll:PdfPreview.dll ../out/dbgfull64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -707,7 +707,7 @@ if not exist ../out/dbgfull64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfu
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/dbgfullarm64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfullarm64\InstallerData.dat ../out/dbgfullarm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfullarm64\obj\PdfFilter.dll:PdfFilter.dll ../out/dbgfullarm64\obj\PdfPreview.dll:PdfPreview.dll ../out/dbgfullarm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/dbgfullarm64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfullarm64\InstallerData.dat ../out/dbgfullarm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfullarm64\PdfFilter.dll:PdfFilter.dll ../out/dbgfullarm64\PdfPreview.dll:PdfPreview.dll ../out/dbgfullarm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -752,7 +752,7 @@ if not exist ../out/dbgfullarm64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/db
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/dbgfull64_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfull64_asan\InstallerData.dat ../out/dbgfull64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull64_asan\obj\PdfFilter.dll:PdfFilter.dll ../out/dbgfull64_asan\obj\PdfPreview.dll:PdfPreview.dll ../out/dbgfull64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/dbgfull64_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/dbgfull64_asan\InstallerData.dat ../out/dbgfull64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/dbgfull64_asan\PdfFilter.dll:PdfFilter.dll ../out/dbgfull64_asan\PdfPreview.dll:PdfPreview.dll ../out/dbgfull64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
@@ -804,7 +804,7 @@ if not exist ../out/dbgfull64_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/rel32\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel32\InstallerData.dat ../out/rel32\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel32\obj\PdfFilter.dll:PdfFilter.dll ../out/rel32\obj\PdfPreview.dll:PdfPreview.dll ../out/rel32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/rel32\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel32\InstallerData.dat ../out/rel32\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel32\PdfFilter.dll:PdfFilter.dll ../out/rel32\PdfPreview.dll:PdfPreview.dll ../out/rel32\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -853,7 +853,7 @@ if not exist ../out/rel32\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel32\Ins
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/rel64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel64\InstallerData.dat ../out/rel64\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64\obj\PdfFilter.dll:PdfFilter.dll ../out/rel64\obj\PdfPreview.dll:PdfPreview.dll ../out/rel64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/rel64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel64\InstallerData.dat ../out/rel64\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64\PdfFilter.dll:PdfFilter.dll ../out/rel64\PdfPreview.dll:PdfPreview.dll ../out/rel64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -902,7 +902,7 @@ if not exist ../out/rel64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel64\Ins
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/arm64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/arm64\InstallerData.dat ../out/arm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/arm64\obj\PdfFilter.dll:PdfFilter.dll ../out/arm64\obj\PdfPreview.dll:PdfPreview.dll ../out/arm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/arm64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/arm64\InstallerData.dat ../out/arm64\libsumatrapdf.dll:libsumatrapdf.dll ../out/arm64\PdfFilter.dll:PdfFilter.dll ../out/arm64\PdfPreview.dll:PdfPreview.dll ../out/arm64\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -950,7 +950,7 @@ if not exist ../out/arm64\InstallerData.dat ..\bin\MakeLZSA.exe ../out/arm64\Ins
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/rel64_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel64_asan\InstallerData.dat ../out/rel64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_asan\obj\PdfFilter.dll:PdfFilter.dll ../out/rel64_asan\obj\PdfPreview.dll:PdfPreview.dll ../out/rel64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/rel64_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel64_asan\InstallerData.dat ../out/rel64_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_asan\PdfFilter.dll:PdfFilter.dll ../out/rel64_asan\PdfPreview.dll:PdfPreview.dll ../out/rel64_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
@@ -1002,7 +1002,7 @@ if not exist ../out/rel64_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel6
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/rel32_prefast\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel32_prefast\InstallerData.dat ../out/rel32_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel32_prefast\obj\PdfFilter.dll:PdfFilter.dll ../out/rel32_prefast\obj\PdfPreview.dll:PdfPreview.dll ../out/rel32_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/rel32_prefast\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel32_prefast\InstallerData.dat ../out/rel32_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel32_prefast\PdfFilter.dll:PdfFilter.dll ../out/rel32_prefast\PdfPreview.dll:PdfPreview.dll ../out/rel32_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1051,7 +1051,7 @@ if not exist ../out/rel32_prefast\InstallerData.dat ..\bin\MakeLZSA.exe ../out/r
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/rel64_prefast\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel64_prefast\InstallerData.dat ../out/rel64_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_prefast\obj\PdfFilter.dll:PdfFilter.dll ../out/rel64_prefast\obj\PdfPreview.dll:PdfPreview.dll ../out/rel64_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/rel64_prefast\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel64_prefast\InstallerData.dat ../out/rel64_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_prefast\PdfFilter.dll:PdfFilter.dll ../out/rel64_prefast\PdfPreview.dll:PdfPreview.dll ../out/rel64_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1100,7 +1100,7 @@ if not exist ../out/rel64_prefast\InstallerData.dat ..\bin\MakeLZSA.exe ../out/r
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/arm64_prefast\InstallerData.dat ..\bin\MakeLZSA.exe ../out/arm64_prefast\InstallerData.dat ../out/arm64_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/arm64_prefast\obj\PdfFilter.dll:PdfFilter.dll ../out/arm64_prefast\obj\PdfPreview.dll:PdfPreview.dll ../out/arm64_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/arm64_prefast\InstallerData.dat ..\bin\MakeLZSA.exe ../out/arm64_prefast\InstallerData.dat ../out/arm64_prefast\libsumatrapdf.dll:libsumatrapdf.dll ../out/arm64_prefast\PdfFilter.dll:PdfFilter.dll ../out/arm64_prefast\PdfPreview.dll:PdfPreview.dll ../out/arm64_prefast\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
@@ -1148,7 +1148,7 @@ if not exist ../out/arm64_prefast\InstallerData.dat ..\bin\MakeLZSA.exe ../out/a
     </ProjectReference>
     <PreBuildEvent>
       <Command>call ..\cmd\pack-embedded-prebuild.cmd
-if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel64_prefast_asan\InstallerData.dat ../out/rel64_prefast_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_prefast_asan\obj\PdfFilter.dll:PdfFilter.dll ../out/rel64_prefast_asan\obj\PdfPreview.dll:PdfPreview.dll ../out/rel64_prefast_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
+if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../out/rel64_prefast_asan\InstallerData.dat ../out/rel64_prefast_asan\libsumatrapdf.dll:libsumatrapdf.dll ../out/rel64_prefast_asan\PdfFilter.dll:PdfFilter.dll ../out/rel64_prefast_asan\PdfPreview.dll:PdfPreview.dll ../out/rel64_prefast_asan\sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>

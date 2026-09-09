@@ -1553,7 +1553,7 @@ workspace "SumatraPDF"
     -- libsumatrapdf deletes InstallerData.dat so regular builds are not stuck
     -- with a stale pack.
     prebuildcommands {
-      "if not exist %{cfg.targetdir}\\InstallerData.dat ..\\bin\\MakeLZSA.exe %{cfg.targetdir}\\InstallerData.dat %{cfg.targetdir}\\libsumatrapdf.dll:libsumatrapdf.dll %{cfg.targetdir}\\obj\\PdfFilter.dll:PdfFilter.dll %{cfg.targetdir}\\obj\\PdfPreview.dll:PdfPreview.dll %{cfg.targetdir}\\sumatrapdf-tool.exe:sumatrapdf-tool.exe",
+      "if not exist %{cfg.targetdir}\\InstallerData.dat ..\\bin\\MakeLZSA.exe %{cfg.targetdir}\\InstallerData.dat %{cfg.targetdir}\\libsumatrapdf.dll:libsumatrapdf.dll %{cfg.targetdir}\\PdfFilter.dll:PdfFilter.dll %{cfg.targetdir}\\PdfPreview.dll:PdfPreview.dll %{cfg.targetdir}\\sumatrapdf-tool.exe:sumatrapdf-tool.exe",
     }
     -- /INFERASANLIBS pulls in the *dynamic* ASan runtime, so
     -- clang_rt.asan_dynamic-x86_64.dll must sit next to the exe or it
