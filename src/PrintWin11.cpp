@@ -6,6 +6,7 @@
 #include "base/GuessFileType.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
+#include "base/UITask.h"
 #include "base/Win.h"
 #include "gui/UIModels.h"
 
@@ -69,6 +70,13 @@ namespace OptDetails = ABI::Windows::Graphics::Printing::OptionDetails;
 
 using PrintRequestedHandler =
     Foundation::ITypedEventHandler<Printing::PrintManager*, Printing::PrintTaskRequestedEventArgs*>;
+
+// Windows 11 hosts the modern dialog in a separate, medium-integrity process.
+// Once that handshake is known to fail (an elevated app, see issue #6156), stay
+// on the classic dialog for the rest of the session.
+static bool gWin11PrintUnavailable = false;
+
+static void RetryWithClassicDialog(HWND__* hwnd);
 
 using OptionChangedHandler =
     Foundation::ITypedEventHandler<OptDetails::PrintTaskOptionDetails*, OptDetails::PrintTaskOptionChangedEventArgs*>;
@@ -699,6 +707,7 @@ class PrintDocumentSource final
         if (SUCCEEDED(hr)) {
             hr = QueryInterface(IID_PPV_ARGS(collection));
         }
+        logf("Win11 print: GetPreviewPageCollection hr=0x%08x\n", (uint)hr);
         return hr;
     }
 
@@ -716,6 +725,7 @@ class PrintDocumentSource final
         if (SUCCEEDED(hr)) {
             hr = previewTarget->SetJobPageCount(PageCountType::FinalPageCount, (UINT32)len(pages));
         }
+        logf("Win11 print: Paginate pages=%d hr=0x%08x\n", len(pages), (uint)hr);
         return hr;
     }
 
@@ -755,6 +765,9 @@ class PrintDocumentSource final
         }
         if (SUCCEEDED(hr)) {
             hr = previewTarget->DrawPage(jobPage, surface.Get(), previewDpi, previewDpi);
+        }
+        if (FAILED(hr)) {
+            logf("Win11 print: MakePage %d failed: 0x%08x\n", (int)jobPage, (uint)hr);
         }
         return hr;
     }
@@ -1084,7 +1097,34 @@ class Win11PrintSession {
         ComPtr<__FIAsyncOperation_1_boolean> operation;
         HRESULT hr = interop->ShowPrintUIForWindowAsync(hwnd, IID_PPV_ARGS(&operation));
         logf("Win11 print: ShowPrintUIForWindowAsync result=0x%08x operation=%p\n", (uint)hr, operation.Get());
-        return hr;
+        if (FAILED(hr)) {
+            return hr;
+        }
+        if (!operation) {
+            return E_FAIL;
+        }
+
+        // a successful call only means the request went out. The operation
+        // completes with false (or fails) when the host process couldn't put the
+        // dialog up, which is otherwise silent -- printing just does nothing
+        HWND owner = hwnd;
+        auto completed = Callback<__FIAsyncOperationCompletedHandler_1_boolean>(
+            [owner](__FIAsyncOperation_1_boolean* op, Foundation::AsyncStatus status) -> HRESULT {
+                boolean shown = false;
+                HRESULT opHr = op->GetResults(&shown);
+                logf("Win11 print: ShowPrintUI done status=%d shown=%d hr=0x%08x\n", (int)status, (int)shown,
+                     (uint)opHr);
+                if (status == Foundation::AsyncStatus::Completed && shown) {
+                    return S_OK;
+                }
+                gWin11PrintUnavailable = true;
+                uitask::Post(MkFunc0(RetryWithClassicDialog, owner), "Win11PrintFallback");
+                return S_OK;
+            });
+        if (!completed) {
+            return E_OUTOFMEMORY;
+        }
+        return operation->put_Completed(completed.Get());
     }
 };
 
@@ -1107,6 +1147,17 @@ static bool IsWin11OrGreater() {
 bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
     if (!IsWin11OrGreater()) {
         logf("Win11 print: unavailable before Windows 11\n");
+        return false;
+    }
+    if (gWin11PrintUnavailable) {
+        logf("Win11 print: unavailable, disabled for this session\n");
+        return false;
+    }
+    // the host process runs at medium integrity and refuses an elevated client:
+    // the dialog flashes and vanishes (issue #6156)
+    if (IsProcessRunningElevated()) {
+        logf("Win11 print: unavailable, process is elevated\n");
+        gWin11PrintUnavailable = true;
         return false;
     }
     if (!win || !win->hwndFrame || !win->AsFixed() || !win->CurrentTab()) {
@@ -1146,6 +1197,15 @@ bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
         return false;
     }
     return true;
+}
+
+// the modern dialog gave up without printing anything, so show the classic one
+static void RetryWithClassicDialog(HWND__* hwnd) {
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
+    if (!win) {
+        return;
+    }
+    PrintCurrentFile(win);
 }
 
 void ShutdownWin11Printing() {
