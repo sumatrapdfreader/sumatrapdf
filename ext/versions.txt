@@ -7,6 +7,7 @@ mupdf           1.28.2     2026-08-03
 libarchive     3.8.8      2026-06-23
   https://github.com/libarchive/libarchive
   https://github.com/libarchive/libarchive/releases/tag/v3.8.8
+  amalgamated into ext/a-libarchive by cmd/amalgam.ts -libarchive, see ext/a-libarchive/version.txt
 
 mujs           1.3.9
   https://mujs.com/

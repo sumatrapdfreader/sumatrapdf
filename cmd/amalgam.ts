@@ -264,9 +264,10 @@ function scopeSymbols(text: string, prefix: string, names: string[]): string {
   return [...defs, text, ...undefs].join("\n") + "\n";
 }
 
-// Lets a chunk redefine a macro an earlier chunk left defined.
-function undefMacros(text: string, names: string[]): string {
-  return names.map((name) => `#undef ${name}`).join("\n") + "\n" + text;
+// Undefines a file's macros at the end of its chunk so they don't leak into a
+// later one that defines the same name differently.
+function sealMacros(text: string, names: string[]): string {
+  return text + "\n" + names.map((name) => `#undef ${name}`).join("\n") + "\n";
 }
 
 function joinChunks(chunks: string[]): string {
@@ -402,9 +403,9 @@ const brotliRenames: Record<string, string[]> = {
   "static_dict.c": ["IsMatch"],
 };
 
-// compress_fragment.c and its two-pass near-copy both leave MIN_RATIO defined,
-// with different values.
-const brotliUndefs: Record<string, string[]> = {
+// compress_fragment.c and its two-pass near-copy both define MIN_RATIO, with
+// different values.
+const brotliSeals: Record<string, string[]> = {
   "compress_fragment.c": ["MIN_RATIO"],
   "compress_fragment_two_pass.c": ["MIN_RATIO"],
 };
@@ -432,8 +433,8 @@ function genBrotli(ctx: Ctx): void {
     for (const path of listFiles(join(root, dir), ".c")) {
       const name = basename(path);
       let chunk = prepare(path, rules);
-      if (brotliUndefs[name]) {
-        chunk = undefMacros(chunk, brotliUndefs[name]);
+      if (brotliSeals[name]) {
+        chunk = sealMacros(chunk, brotliSeals[name]);
       }
       if (brotliRenames[name]) {
         chunk = scopeSymbols(chunk, basename(path, ".c"), brotliRenames[name]);
@@ -928,6 +929,220 @@ function genLcms2(ctx: Ctx): void {
   ctx.files.set("lcms2.c", joinChunks(chunks));
 }
 
+// --- libarchive ------------------------------------------------------------
+
+// The readers and filters we build: no write side, no disk write, no POSIX
+// backends. Same list the non-amalgamated build compiled, minus
+// archive_read_extract*.c: nothing calls them and in one translation unit their
+// references to the write-disk API can no longer be dropped by the linker.
+const libarchiveSources = [
+  "archive_acl.c",
+  "archive_check_magic.c",
+  "archive_cmdline.c",
+  "archive_cryptor.c",
+  "archive_digest.c",
+  "archive_entry.c",
+  "archive_entry_copy_bhfi.c",
+  "archive_entry_copy_stat.c",
+  "archive_entry_link_resolver.c",
+  "archive_entry_sparse.c",
+  "archive_entry_stat.c",
+  "archive_entry_strmode.c",
+  "archive_entry_xattr.c",
+  "archive_hmac.c",
+  "archive_match.c",
+  "archive_options.c",
+  "archive_pack_dev.c",
+  "archive_pathmatch.c",
+  "archive_ppmd7.c",
+  "archive_ppmd8.c",
+  "archive_random.c",
+  "archive_rb.c",
+  "archive_string.c",
+  "archive_string_sprintf.c",
+  "archive_time.c",
+  "archive_util.c",
+  "archive_version_details.c",
+  "archive_virtual.c",
+  "archive_windows.c",
+  "archive_blake2s_ref.c",
+  "archive_blake2sp_ref.c",
+  "archive_read.c",
+  "archive_read_add_passphrase.c",
+  "archive_read_append_filter.c",
+  "archive_read_data_into_fd.c",
+  "archive_read_open_fd.c",
+  "archive_read_open_file.c",
+  "archive_read_open_filename.c",
+  "archive_read_open_memory.c",
+  "archive_read_set_format.c",
+  "archive_read_set_options.c",
+  "archive_read_support_filter_all.c",
+  "archive_read_support_filter_by_code.c",
+  "archive_read_support_filter_bzip2.c",
+  "archive_read_support_filter_compress.c",
+  "archive_read_support_filter_grzip.c",
+  "archive_read_support_filter_gzip.c",
+  "archive_read_support_filter_lrzip.c",
+  "archive_read_support_filter_lz4.c",
+  "archive_read_support_filter_lzop.c",
+  "archive_read_support_filter_none.c",
+  "archive_read_support_filter_program.c",
+  "archive_read_support_filter_rpm.c",
+  "archive_read_support_filter_uu.c",
+  "archive_read_support_filter_xz.c",
+  "archive_read_support_filter_zstd.c",
+  "archive_read_support_format_7zip.c",
+  "archive_read_support_format_all.c",
+  "archive_read_support_format_ar.c",
+  "archive_read_support_format_by_code.c",
+  "archive_read_support_format_cab.c",
+  "archive_read_support_format_cpio.c",
+  "archive_read_support_format_empty.c",
+  "archive_read_support_format_iso9660.c",
+  "archive_read_support_format_lha.c",
+  "archive_read_support_format_mtree.c",
+  "archive_read_support_format_rar.c",
+  "archive_read_support_format_rar5.c",
+  "archive_read_support_format_raw.c",
+  "archive_read_support_format_tar.c",
+  "archive_read_support_format_warc.c",
+  "archive_read_support_format_xar.c",
+  "archive_read_support_format_zip.c",
+  "xxhash.c",
+  "archive_read_disk_set_standard_lookup.c",
+  "archive_read_disk_windows.c",
+  "archive_parse_date.c",
+  "filter_fork_windows.c",
+];
+
+// File-local statics that collide once every .c is one translation unit. Only
+// one side of each pair is renamed; archive_ppmd8.c is a near-copy of
+// archive_ppmd7.c, hence the size of its entry.
+const libarchiveRenames: Record<string, string[]> = {
+  "archive_ppmd8.c": [
+    "AllocUnits",
+    "AllocUnitsRare",
+    "CreateSuccessors",
+    "GlueFreeBlocks",
+    "InsertNode",
+    "NextContext",
+    "RemoveNode",
+    "Rescale",
+    "RestartModel",
+    "SetSuccessor",
+    "ShrinkUnits",
+    "SplitBlock",
+    "SwapStates",
+    "UpdateModel",
+    "kInitBinEsc",
+    // a file-local typedef, same name and different type in both
+    "CTX_PTR",
+  ],
+  "archive_read_disk_windows.c": [
+    "_archive_read_close",
+    "_archive_read_data_block",
+    "_archive_read_free",
+    "_archive_read_next_header",
+    "_archive_read_next_header2",
+    "next_entry",
+  ],
+  "archive_read_open_filename.c": ["file_close", "file_read", "file_seek", "file_skip"],
+  // each read filter has its own `struct private_data`
+  "archive_read_support_filter_compress.c": ["private_data"],
+  "archive_read_support_filter_gzip.c": ["private_data"],
+  "archive_read_support_filter_lz4.c": ["private_data"],
+  "archive_read_support_filter_lzop.c": ["consume_header"],
+  "archive_read_support_filter_xz.c": ["private_data"],
+  "archive_read_support_filter_zstd.c": ["private_data"],
+  "archive_read_support_format_7zip.c": ["set_error"],
+  "archive_read_support_format_cpio.c": ["links_entry"],
+  "archive_read_support_format_lha.c": ["cache_masks", "huffman", "truncated_error"],
+  "archive_read_support_format_mtree.c": ["cleanup", "rb_ops"],
+  "archive_read_support_format_rar.c": ["cache_masks", "ppmd_read", "read_header"],
+  "archive_read_support_format_rar5.c": ["parse_filter"],
+  "archive_read_support_format_tar.c": ["get_time_t_max", "readline"],
+  "archive_read_support_format_warc.c": ["time_from_tm"],
+  "archive_read_support_format_xar.c": [
+    "base64",
+    "decompress",
+    "heap_add_entry",
+    "heap_get_entry",
+    "heap_queue",
+    "time_from_tm",
+  ],
+  "archive_read_support_format_zip.c": ["compression_name", "ppmd_read", "rb_ops", "slurp_central_directory"],
+};
+
+// The PPMd model macros, defined by both variants with different values and
+// (kTopValue) redefined again by the 7zip reader.
+const ppmdMacros = [
+  "CTX",
+  "I2U",
+  "MASK",
+  "MAX_FREQ",
+  "MyMem12Cpy",
+  "NODE",
+  "ONE_STATE",
+  "STATS",
+  "STATS_REF",
+  "SUCCESSOR",
+  "SUFFIX",
+  "U2B",
+  "U2I",
+  "UNIT_SIZE",
+  "kTopValue",
+];
+
+// Macros a file leaves defined that a later one redefines differently.
+const libarchiveSeals: Record<string, string[]> = {
+  "archive_ppmd7.c": ppmdMacros,
+  "archive_ppmd8.c": ppmdMacros,
+  "archive_rb.c": ["T"],
+  "archive_read_support_format_7zip.c": ["ATIME_IS_SET", "CTIME_IS_SET", "MTIME_IS_SET"],
+  "archive_read_support_format_iso9660.c": [
+    "ATIME_IS_SET",
+    "BIRTHTIME_IS_SET",
+    "CTIME_IS_SET",
+    "MTIME_IS_SET",
+    "next_entry",
+  ],
+};
+
+function genLibarchive(ctx: Ctx): void {
+  const srcDir = findSrcDir(ctx.checkoutDir, ["libarchive", ""], ["archive.h", "archive_entry.h"]);
+
+  // config_windows.h is hand-written (not upstream) and lives in the output dir
+  // already; archive_platform.h reaches it through `#include PLATFORM_CONFIG_H`,
+  // a macro the inliner leaves alone.
+  // Under libarchive/ because mupdf and src/base/Archive.cpp include
+  // "libarchive/archive.h"; both ext/a-libarchive and ext/a-libarchive/libarchive
+  // are on the include path, as the vendored tree's two dirs were.
+  const shipped = ["archive.h", "archive_entry.h"];
+  for (const name of shipped) {
+    ctx.files.set(join("libarchive", name), readText(join(srcDir, name)));
+  }
+
+  const rules: IncludeRules = {
+    resolve: dirResolver([srcDir]),
+    keep: (inc) => shipped.includes(inc),
+    seen: new Set(),
+    dedupOnlyGuarded: true,
+  };
+  const chunks: string[] = [];
+  for (const name of libarchiveSources) {
+    let chunk = prepare(join(srcDir, name), rules);
+    if (libarchiveSeals[name]) {
+      chunk = sealMacros(chunk, libarchiveSeals[name]);
+    }
+    if (libarchiveRenames[name]) {
+      chunk = scopeSymbols(chunk, basename(name, ".c"), libarchiveRenames[name]);
+    }
+    chunks.push(chunk);
+  }
+  ctx.files.set("libarchive.c", joinChunks(chunks));
+}
+
 // --- mujs ------------------------------------------------------------------
 
 function genMujs(ctx: Ctx): void {
@@ -1353,6 +1568,66 @@ const libs: Lib[] = [
         ".",
         "/wd4100",
         "/wd4244",
+      ],
+    },
+  },
+  {
+    name: "libarchive",
+    homepage: "https://www.libarchive.org/",
+    repo: "https://github.com/libarchive/libarchive",
+    rev: "v3.8.8",
+    writes: "libarchive/*.h, libarchive.c, COPYING",
+    generate: genLibarchive,
+    copies: ["COPYING"],
+    compile: {
+      file: "libarchive.c",
+      args: [
+        ...defines(
+          "WIN32",
+          "_WIN32",
+          "NDEBUG",
+          "_CRT_SECURE_NO_WARNINGS",
+          "LIBARCHIVE_STATIC",
+          'PLATFORM_CONFIG_H="config_windows.h"',
+          "BZ_NO_STDIO",
+          "LZMA_API_STATIC",
+        ),
+        "/I",
+        ".",
+        "/I",
+        "libarchive",
+        // config_windows.h is hand-maintained there, not generated
+        "/I",
+        "..\\..\\..\\ext\\a-libarchive",
+        "/I",
+        "..\\..\\..\\ext\\a-zlib",
+        "/I",
+        "..\\..\\..\\ext\\a-bzip2",
+        "/I",
+        "..\\..\\..\\ext\\liblzma\\api",
+        "/wd4018",
+        "/wd4054",
+        "/wd4055",
+        "/wd4090",
+        "/wd4098",
+        "/wd4100",
+        "/wd4127",
+        "/wd4130",
+        "/wd4146",
+        "/wd4152",
+        "/wd4200",
+        "/wd4201",
+        "/wd4244",
+        "/wd4245",
+        "/wd4267",
+        "/wd4305",
+        "/wd4389",
+        "/wd4456",
+        "/wd4457",
+        "/wd4701",
+        "/wd4703",
+        "/wd4706",
+        "/wd4996",
       ],
     },
   },

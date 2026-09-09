@@ -101,7 +101,7 @@ const utils: LibDef = {
     "ext/jxldec",
     "ext/mupdf/include",
     "ext/a-zlib",
-    "ext/libarchive",
+    "ext/a-libarchive",
   ],
   files: [
     {
@@ -528,7 +528,7 @@ async function buildSumatraExe(outDir: string, isRelease: boolean, archives: str
     "ext/libwebp/src",
     "ext/jxldec",
     "ext/a-zlib",
-    "ext/libarchive",
+    "ext/a-libarchive",
     "ext/cmark-gfm/src",
     "ext/cmark-gfm/extensions",
     "ext/mupdf/scripts/cmark-gfm",

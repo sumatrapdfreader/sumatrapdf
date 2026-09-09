@@ -4,7 +4,7 @@
 
 // This file must only contain code that doesn't depend on
 // external libraries (ext/). GuessFileTypeFromFile.cpp has
-// the parts that need base/Archive.h (and thus ext/libarchive).
+// the parts that need base/Archive.h (and thus ext/a-libarchive).
 
 #include "base/Base.h"
 #include "base/File.h"

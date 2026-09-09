@@ -1,0 +1,6 @@
+project_homepage: https://www.libarchive.org/
+repo_url: https://github.com/libarchive/libarchive
+revision: v3.8.8
+commit_sha1: 7219b0134d771dc4b51bf86b4d01761b87398b1b
+github_url: https://github.com/libarchive/libarchive
+github_commit_url: https://github.com/libarchive/libarchive/commit/7219b0134d771dc4b51bf86b4d01761b87398b1b

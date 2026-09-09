@@ -21,7 +21,7 @@ const includeDirs = [
   "ext/lzma/C",
   "ext/libwebp/src",
   "ext/a-freetype/include",
-  "ext/libarchive",
+  "ext/a-libarchive",
   "ext/a-zopfli",
   "ext/cmark-gfm/src",
   "ext/cmark-gfm/extensions",

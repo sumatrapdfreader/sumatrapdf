@@ -1124,8 +1124,8 @@
     <ProjectReference Include="msdes.vcxproj">
       <Project>{8135F40F-ED49-1CC1-B6CB-BF20229F18F2}</Project>
     </ProjectReference>
-    <ProjectReference Include="libarchive.vcxproj">
-      <Project>{1E5D585E-0A15-9AAB-731C-73075FF3349C}</Project>
+    <ProjectReference Include="a-libarchive.vcxproj">
+      <Project>{8C80CF7E-78E3-5E23-2169-97D90DAB2AA6}</Project>
     </ProjectReference>
     <ProjectReference Include="cmark-gfm.vcxproj">
       <Project>{5AADABD2-C617-6049-0F56-11EF7BFF3D9E}</Project>

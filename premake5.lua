@@ -566,7 +566,7 @@ workspace "SumatraPDF"
   -- libarchive: linked into mupdf → libsumatrapdf.dll (and into static EXE).
   -- Do not also link into SumatraPDF.exe / PdfFilter / PdfPreview; re-export
   -- the Archive.cpp symbols via libsumatrapdf.def instead (same as cmark-gfm).
-  project "libarchive"
+  project "a-libarchive"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
@@ -579,8 +579,11 @@ workspace "SumatraPDF"
     warnings_as_errors()
     disablewarnings { "4018", "4054", "4055", "4090", "4098", "4100", "4127", "4130","4146", "4152", "4200", "4201", "4244", "4245", "4267", "4305", "4389", "4456", "4457", "4701", "4703", "4706", "4996" }
     uses_zlib()
-    includedirs { "ext/libarchive/libarchive" }
-    libarchive_files()
+    includedirs { "ext/a-libarchive", "ext/a-libarchive/libarchive" }
+    files {
+      "ext/a-libarchive/libarchive.c", "ext/a-libarchive/*.h", "ext/a-libarchive/libarchive/*.h",
+      "ext/a-libarchive/version.txt", "ext/a-libarchive/COPYING",
+    }
     -- bzip2 support for libarchive
     defines { "BZ_NO_STDIO" }
     includedirs { "ext/a-bzip2" }
@@ -1011,7 +1014,7 @@ workspace "SumatraPDF"
       "ext/a-lcms2",
       "ext/a-gumbo",
       "ext/a-extract",
-      "ext/libarchive",
+      "ext/a-libarchive",
       "ext/libwebp/src",
     }
     fonts()
@@ -1021,7 +1024,7 @@ workspace "SumatraPDF"
     -- / SumatraPDF-static pick them up via project references.
     links {
       "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-brotli",
-      "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo",
+      "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "a-libarchive", "a-gumbo",
     }
 
     -- mupdf
@@ -1063,7 +1066,7 @@ workspace "SumatraPDF"
     exceptionhandling "On"
     links {
       "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "a-brotli", "unrar", "chmdec", "msdes",
-      "libarchive", "cmark-gfm", "a-gumbo",
+      "a-libarchive", "cmark-gfm", "a-gumbo",
       "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
     }
     links {
@@ -1103,7 +1106,7 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4457", "4838" }
     uses_zlib()
     defines { "LIBARCHIVE_STATIC" }
-    includedirs { "src", "ext/lzma/C", "ext/libarchive" }
+    includedirs { "src", "ext/lzma/C", "ext/a-libarchive" }
     base_files()
     -- LzSA decoder (LzmaDecode + x86 BCJ) for LzmaSimpleArchive. Not in
     -- libsumatrapdf/libarchive so the installer can extract without the delay-loaded DLL.
@@ -1140,12 +1143,12 @@ workspace "SumatraPDF"
     -- FZ_UNUSED is a no-op outside gcc/clang, so mupdf's headers trip 4100;
     -- every other project including them disables it too
     disablewarnings { "4100", "4838" }
-    includedirs { "src", "ext/djvudec", "ext/libarchive", "ext/unrar", "ext/mupdf/include" }
+    includedirs { "src", "ext/djvudec", "ext/a-libarchive", "ext/unrar", "ext/mupdf/include" }
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec", "ext/msdes" }
     test_engines_files()
     links_zlib()
     -- static link (no libsumatrapdf.dll): same image-codec set as libsumatrapdf.dll
-    links { "base", "djvudec", "libarchive", "unrar", "mupdf" }
+    links { "base", "djvudec", "a-libarchive", "unrar", "mupdf" }
     links { "libwebp", "dav1d", "heicdec", "jxldec", "a-brotli" }
     -- LitDoc.cpp: DES decryption of DRM-free .lit sections, LZX section decompression
     links { "msdes", "chmdec" }
@@ -1292,7 +1295,7 @@ workspace "SumatraPDF"
     filter { "configurations:Debug" }
     defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
     filter {}
-    includedirs { "src", "src/gui", "ext/mupdf/include", "ext/libarchive" }
+    includedirs { "src", "src/gui", "ext/mupdf/include", "ext/a-libarchive" }
     search_filter_files()
     -- libarchive + unrar live in libsumatrapdf.dll (re-exported); do not link second copies
     links { "base", "libsumatrapdf" }
@@ -1334,7 +1337,7 @@ workspace "SumatraPDF"
     includedirs {
       "src", "src/gui", "ext/mupdf/include",
       "ext/djvudec", "ext/chmdec",
-      "ext/libarchive",
+      "ext/a-libarchive",
       "ext/heicdec", "ext/libwebp/src", "ext/jxldec",
     }
     pdf_preview_files()
@@ -1357,7 +1360,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "ext/mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli", "ext/msdes" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/a-libarchive", "ext/a-zopfli", "ext/msdes" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "ext/mupdf/scripts/cmark-gfm" }
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
 
@@ -1421,7 +1424,7 @@ workspace "SumatraPDF"
     links {
       "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "a-brotli",
       "mupdf", "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg",
-      "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo", "base", "unrar", "chmdec", "a-zopfli", "msdes"
+      "a-jbig2dec", "libjpeg-turbo", "a-libarchive", "a-gumbo", "base", "unrar", "chmdec", "a-zopfli", "msdes"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1461,7 +1464,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "ext/mupdf/include" }
-    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/libarchive", "ext/a-zopfli", "ext/msdes" }
+    includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/a-libarchive", "ext/a-zopfli", "ext/msdes" }
     includedirs { "ext/darkmodelib/include" }
     -- headers only: webp/jxl/heic/chm/DES symbols come from libsumatrapdf.dll (libsumatrapdf.def)
     includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
@@ -1582,7 +1585,7 @@ workspace "SumatraPDF"
     end
     -- mupdf static lib + the libraries it links / depends on
     set_group("mupdf", {
-      "mupdf", "cmark-gfm", "libarchive", "a-zlib", "a-brotli", "libjpeg-turbo",
+      "mupdf", "cmark-gfm", "a-libarchive", "a-zlib", "a-brotli", "libjpeg-turbo",
       "a-extract", "a-gumbo", "a-jbig2dec", "a-mujs", "a-openjpeg",
       "a-freetype", "a-harfbuzz", "a-lcms2",
     })

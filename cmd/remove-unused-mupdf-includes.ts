@@ -130,7 +130,7 @@ const clArgs = [
   "/I",
   "ext/a-extract",
   "/I",
-  "ext/libarchive",
+  "ext/a-libarchive",
   "/Od",
   "/MT",
   "/EHs-c-",

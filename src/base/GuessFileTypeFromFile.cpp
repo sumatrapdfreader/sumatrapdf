@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 // the parts of file-type guessing that depend on base/Archive.h (and thus
-// ext/libarchive); GuessFileType.cpp must stay free of external-library
+// ext/a-libarchive); GuessFileType.cpp must stay free of external-library
 // dependencies
 
 #include "base/Base.h"

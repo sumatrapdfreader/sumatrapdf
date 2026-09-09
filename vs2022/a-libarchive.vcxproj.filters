@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="a-bzip2">
+      <UniqueIdentifier>{BADBBA9E-26BB-393A-2FD3-C4109B31A09B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="a-libarchive">
+      <UniqueIdentifier>{8C80CF7E-78E3-5E23-2169-97D90DAB2AA6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="a-libarchive\libarchive">
+      <UniqueIdentifier>{D455E657-408D-2EEF-4997-9212B54D55E8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="liblzma">
+      <UniqueIdentifier>{90986979-FC77-E814-0590-73EB71EE4E76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="liblzma\check">
+      <UniqueIdentifier>{3D76DA79-A936-56B0-7271-9F2DDEF09A8C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="liblzma\common">
+      <UniqueIdentifier>{E877ACB5-D445-A0BB-BDD9-10E2A9467C20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="liblzma\delta">
+      <UniqueIdentifier>{8909EB79-F5C9-66B0-BE04-B02D2A84AB8C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="liblzma\lz">
+      <UniqueIdentifier>{E56472C0-D11C-B40D-3A24-8D6926FB4EFE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="liblzma\lzma">
+      <UniqueIdentifier>{93409FA6-7FA3-2E4B-2829-6701146BFACD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="liblzma\rangecoder">
+      <UniqueIdentifier>{39D8CE09-25BC-8F5F-8E1C-8AB27A1F7AE1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="liblzma\simple">
+      <UniqueIdentifier>{497B92DA-3549-86E0-1EDD-F6060A4A6245}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\a-bzip2\bzlib.h">
+      <Filter>a-bzip2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-libarchive\config_windows.h">
+      <Filter>a-libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-libarchive\libarchive\archive.h">
+      <Filter>a-libarchive\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-libarchive\libarchive\archive_entry.h">
+      <Filter>a-libarchive\libarchive</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\a-bzip2\bzip2.c">
+      <Filter>a-bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\a-libarchive\libarchive.c">
+      <Filter>a-libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\check\check.c">
+      <Filter>liblzma\check</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\check\crc32_fast.c">
+      <Filter>liblzma\check</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\check\crc64_fast.c">
+      <Filter>liblzma\check</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\alone_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\auto_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\block_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\block_header_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\block_util.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\common.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\filter_common.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\filter_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\filter_flags_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\index.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\index_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\index_hash.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\stream_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\stream_flags_common.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\stream_flags_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\vli_decoder.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\common\vli_size.c">
+      <Filter>liblzma\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\delta\delta_common.c">
+      <Filter>liblzma\delta</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\delta\delta_decoder.c">
+      <Filter>liblzma\delta</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\lz\lz_decoder.c">
+      <Filter>liblzma\lz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\lzma\lzma2_decoder.c">
+      <Filter>liblzma\lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\lzma\lzma_decoder.c">
+      <Filter>liblzma\lzma</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\rangecoder\price_table.c">
+      <Filter>liblzma\rangecoder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\simple\simple_coder.c">
+      <Filter>liblzma\simple</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\simple\simple_decoder.c">
+      <Filter>liblzma\simple</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\liblzma\simple\x86.c">
+      <Filter>liblzma\simple</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\ext\a-bzip2\LICENSE">
+      <Filter>a-bzip2</Filter>
+    </None>
+    <None Include="..\ext\a-bzip2\version.txt">
+      <Filter>a-bzip2</Filter>
+    </None>
+    <None Include="..\ext\a-libarchive\COPYING">
+      <Filter>a-libarchive</Filter>
+    </None>
+    <None Include="..\ext\a-libarchive\version.txt">
+      <Filter>a-libarchive</Filter>
+    </None>
+  </ItemGroup>
+</Project>

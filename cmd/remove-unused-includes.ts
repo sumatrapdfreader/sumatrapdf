@@ -82,7 +82,7 @@ const clArgs = [
   "/I",
   "ext/chmdec",
   "/I",
-  "ext/libarchive",
+  "ext/a-libarchive",
   "/I",
   "ext/darkmodelib/include",
   "/I",
