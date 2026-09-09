@@ -4,7 +4,7 @@
 #include "base/Base.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 struct TestFn0Data {
     int n = 0;

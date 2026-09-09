@@ -6,7 +6,7 @@
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
 #endif
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 static int g_nTotal = 0;
 static int g_nFailed = 0;

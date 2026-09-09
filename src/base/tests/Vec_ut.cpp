@@ -6,7 +6,7 @@
 #include <inttypes.h>
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 template <typename T>
 concept CanNegateVec = requires(T v) {

@@ -10,7 +10,7 @@
 #include "RefHover.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 constexpr float kPageW = 612.f;
 constexpr float kPageH = 792.f;

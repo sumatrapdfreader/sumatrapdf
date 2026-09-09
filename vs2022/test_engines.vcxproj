@@ -951,7 +951,6 @@
     <ClInclude Include="..\src\PdfDarkMode.h" />
     <ClInclude Include="..\src\TextSearch.h" />
     <ClInclude Include="..\src\TextSelection.h" />
-    <ClInclude Include="..\src\base\UtAssert.h" />
     <ClInclude Include="..\src\gui\UIModels.h" />
   </ItemGroup>
   <ItemGroup>
@@ -977,7 +976,6 @@
     <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
-    <ClCompile Include="..\src\base\UtAssert.cpp" />
     <ClCompile Include="..\src\gui\UIModels.cpp" />
     <ClCompile Include="..\src\tools\test_engines.cpp" />
   </ItemGroup>

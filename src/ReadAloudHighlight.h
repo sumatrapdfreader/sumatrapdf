@@ -5,6 +5,7 @@ class EngineBase;
 struct DisplayModel;
 struct Gfx;
 struct MainWindow;
+struct WindowTab;
 namespace str {
 struct Builder;
 }
@@ -49,3 +50,5 @@ void ReadAloudUpdateAutoScroll(MainWindow* win);
 bool ReadAloudGetProgressPage(WindowTab* tab, int* pageOut, int* pageCountOut);
 
 void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx);
+
+bool ReadAloudSentenceRange(Str text, int pos, int* startOut, int* endOut);

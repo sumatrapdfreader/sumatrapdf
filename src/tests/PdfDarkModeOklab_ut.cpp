@@ -5,7 +5,7 @@
 
 #include "PdfDarkMode.h"
 
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 static float SrgbToLinear(float c) {
     if (c <= 0.04045f) {

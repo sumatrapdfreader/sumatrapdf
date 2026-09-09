@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 #include "SumatraLog.h"
 
 void SimpleLogTest() {

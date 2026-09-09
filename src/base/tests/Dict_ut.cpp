@@ -5,7 +5,7 @@
 #include "base/Dict.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 #define kLetters "abcdefghijklmnopqrtswzABCDEFGHIJLMNOPQRTSWZ0123456789"
 

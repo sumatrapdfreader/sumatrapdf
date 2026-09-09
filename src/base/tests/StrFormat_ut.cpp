@@ -5,7 +5,7 @@
 #include <locale.h>
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 using str::FormatTemp;
 

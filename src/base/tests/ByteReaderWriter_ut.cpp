@@ -5,7 +5,7 @@
 #include "base/ByteReaderWriter.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 #define kAbc "abc"
 void ByteOrderTests() {

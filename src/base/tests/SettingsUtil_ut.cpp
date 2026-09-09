@@ -5,7 +5,7 @@
 #include "base/SettingsUtil.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 static const FieldInfo gSutPointIFields[] = {
     {offsetof(Point, x), SettingType::Int, 111},

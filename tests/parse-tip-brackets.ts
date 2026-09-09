@@ -1,6 +1,6 @@
 // Regression: ParseTip must not hang on '[' in plain text (e.g. loading
 // notifications for files like "Apocalypse Bringer Mynoghra_01 [CIW].pdf").
-// Implemented in AppUnitTests.cpp, run via -unit-tests (debug builds only).
+// Implemented in src/tests/Sumatra_ut.cpp, run via -unit-tests (debug builds only).
 
 import { EXE, runStandalone } from "./util.ts";
 

@@ -8,7 +8,7 @@
 #include "base/Win.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 // Round-trip QuoteCmdLineArgTemp through CommandLineToArgvW (ParseCmdLine).
 // The GHSA-xvxg-cwmx-hr7j breakout payload must stay a single argv element.

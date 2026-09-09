@@ -5,7 +5,7 @@
 #include "base/SquareTreeParser.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 void SquareTreeTest() {
     static Str keyValueData[] = {

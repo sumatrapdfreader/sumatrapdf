@@ -5,7 +5,7 @@
 
 #include "PdfDarkMode.h"
 
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 static DarkImageFeatures PhotoLikeFeatures() {
     DarkImageFeatures f;

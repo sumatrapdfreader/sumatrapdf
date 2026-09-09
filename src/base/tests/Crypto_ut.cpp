@@ -5,7 +5,7 @@
 #include "base/Crypto.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 static bool TestDigestMD5(Str data, Str verify) {
     u8 digest[16];

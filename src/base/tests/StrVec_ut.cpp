@@ -4,7 +4,7 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "base/Base.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 static void ValidateSize(StrVec* v) {
     int size1 = v->size;

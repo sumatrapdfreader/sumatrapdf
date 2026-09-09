@@ -6,7 +6,7 @@
 #include "base/CssParser.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 static inline bool IsPropVal(const CssProperty* prop, Str val) {
     return str::EqNIx(prop->s, prop->s.len, val);

@@ -296,7 +296,6 @@ const sumatraFiles: FileGroup[] = [
       "ChmModel.*",
       "AdvancedSettingsDialog.*",
       "AIChatCommon.*",
-      "AppUnitTests.*",
       "AIChatPanel.*",
       "AIAntiGravity.*",
       "AICodexBuild.*",
@@ -430,6 +429,7 @@ const sumatraFiles: FileGroup[] = [
       "Uninstaller.cpp",
     ],
   },
+  { dir: "src/tests", patterns: ["Sumatra_ut.cpp"] },
 ];
 
 // Debug-only extra files for SumatraPDF
@@ -442,7 +442,7 @@ const sumatraDebugExtra: FileGroup[] = [
     patterns: ["TestApp.cpp", "TestTab.cpp", "TestLayout.cpp"],
   },
   // note: src/base/tests/*.cpp omitted for mingw (not essential, may pull extra headers)
-  { dir: "src/base", patterns: ["UtAssert.*"] },
+  { dir: "src/base/tests", patterns: ["UtAssert.*"] },
 ];
 
 // ── System libraries for final link ─────────────────────────────────────────

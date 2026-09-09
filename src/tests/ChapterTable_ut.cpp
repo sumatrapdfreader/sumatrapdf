@@ -5,7 +5,7 @@
 
 #include "ChapterTable.h"
 
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 void ChapterTable_UnitTests() {
     // Init(3): 3 placeholder chapters, 1 page each, none laid out

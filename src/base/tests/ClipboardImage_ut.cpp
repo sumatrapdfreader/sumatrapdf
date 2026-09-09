@@ -8,7 +8,7 @@
 #include "base/GdiPlusUtil.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 // left half opaque red, right half fully transparent (straight alpha)
 static Pixmap* MakeHalfTransparent(int w, int h) {

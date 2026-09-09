@@ -6,9 +6,6 @@
 #include "base/Win.h"
 
 #include "gui/Layout.h"
-#if IS_DEBUG
-#include "base/UtAssert.h"
-#endif
 #include "gui/Layout_win.h"
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
@@ -74,16 +71,3 @@ void HwndSlot::SetBounds(Rect bounds) {
     }
     HwndMoveWindow(hwnd, &bounds);
 }
-
-#if IS_DEBUG
-
-void LayoutWin_UnitTests() {
-    // A slot without an HWND still records its bounds for lazily-created windows.
-    HwndSlot slot(nullptr, 30, 20);
-    Size sz = slot.Layout(Loose(Size{100, 100}));
-    utassert(sz.dx == 30 && sz.dy == 20);
-    slot.SetBounds(Rect{5, 6, 40, 41});
-    utassert(slot.lastBounds.x == 5 && slot.lastBounds.y == 6);
-    utassert(slot.lastBounds.dx == 40 && slot.lastBounds.dy == 41);
-}
-#endif

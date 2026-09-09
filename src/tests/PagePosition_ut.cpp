@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 #include "ChapterTable.h"
 #include "Settings.h"

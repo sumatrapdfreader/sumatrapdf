@@ -28,6 +28,9 @@
     <Filter Include="src\gui">
       <UniqueIdentifier>{210530A9-8DE4-AE44-96FC-391B025B15A6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\gui\tests">
+      <UniqueIdentifier>{C384B012-2F45-2C49-F87F-75C664FF7025}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\gui\win">
       <UniqueIdentifier>{9E7B1B1E-0A31-9413-9325-8EEAFFD98A17}</UniqueIdentifier>
     </Filter>
@@ -36,6 +39,9 @@
     </Filter>
     <Filter Include="src\testcode">
       <UniqueIdentifier>{D744682D-C3A7-F7D1-6C2D-3088586FC354}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tests">
+      <UniqueIdentifier>{CF8328B6-3BEE-DC2C-842C-8ED2F0D5BA81}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\uia">
       <UniqueIdentifier>{1B3F30A9-871E-AF44-9036-3A1BFC9415A6}</UniqueIdentifier>
@@ -468,8 +474,8 @@
     <ClInclude Include="..\src\base\Archive.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\UtAssert.h">
-      <Filter>src\base</Filter>
+    <ClInclude Include="..\src\base\tests\UtAssert.h">
+      <Filter>src\base\tests</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\DocumentView.h">
       <Filter>src\gui</Filter>
@@ -635,9 +641,6 @@
     <ClCompile Include="..\src\AppTools.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\AppUnitTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\AvifReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -666,9 +669,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChapterTable.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ChapterTable_ut.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChmDump.cpp">
@@ -884,9 +884,6 @@
     <ClCompile Include="..\src\PagePosition.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PagePosition_ut.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\PageRenderPolicy.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -923,9 +920,6 @@
     <ClCompile Include="..\src\PdfDarkModeImageClassifier.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PdfDarkModeImageClassifier_ut.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\PdfDarkModeImageRules.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -933,9 +927,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfDarkModeOklab.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\PdfDarkModeOklab_ut.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfDarkModeProfile.cpp">
@@ -1046,9 +1037,6 @@
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SimpleLog_ut.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\StressTesting.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1071,9 +1059,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SumatraTest.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SumatraUnitTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SvgIcons.cpp">
@@ -1145,9 +1130,6 @@
     <ClCompile Include="..\src\base\Archive.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\UtAssert.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\tests\AppendStore_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
@@ -1194,6 +1176,9 @@
       <Filter>src\base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Str_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\UtAssert.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Vec_ut.cpp">
@@ -1246,6 +1231,15 @@
     </ClCompile>
     <ClCompile Include="..\src\gui\VirtHost_win.cpp">
       <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\tests\Layout_ut.cpp">
+      <Filter>src\gui\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\tests\Layout_win_ut.cpp">
+      <Filter>src\gui\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\tests\VirtCtrl_ut.cpp">
+      <Filter>src\gui\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\win\BrowserDocView.cpp">
       <Filter>src\gui\win</Filter>
@@ -1303,6 +1297,42 @@
     </ClCompile>
     <ClCompile Include="..\src\testcode\TestTab.cpp">
       <Filter>src\testcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\AnnotSearch_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\ChapterTable_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\CommandPalette_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\PagePosition_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\PageRenderPolicy_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\PdfDarkModeImageClassifier_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\PdfDarkModeOklab_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\ReadAloudHighlight_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\ShortcutParse_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\SimpleLog_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\Sumatra_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\TextSelection_ut.cpp">
+      <Filter>src\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\uia\DocumentProvider.cpp">
       <Filter>src\uia</Filter>

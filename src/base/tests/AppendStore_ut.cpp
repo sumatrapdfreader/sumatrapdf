@@ -6,7 +6,7 @@
 #include "base/AppendStore.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 struct AppendStoreTestState {
     Vec<AppendStoreRecord*> records;

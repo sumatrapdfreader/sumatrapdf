@@ -4,7 +4,7 @@
 #include "base/Base.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 static_assert(len(Str{}) == 0);
 static_assert(StrL("ab").len == 2);

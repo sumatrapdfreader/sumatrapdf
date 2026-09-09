@@ -5,7 +5,7 @@
 #include "base/GuessFileType.h"
 
 // must be last due to assert() over-write
-#include "base/UtAssert.h"
+#include "base/tests/UtAssert.h"
 
 static FileTypeInfo infoFromBytes(const u8* d, int n) {
     return GuessFileInfoFromData(Str((char*)d, n));

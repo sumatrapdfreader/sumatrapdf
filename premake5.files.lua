@@ -414,13 +414,9 @@ function sumatrapdf_files()
     "regress/Regress.*",
     "TestPlugin.cpp",
     "TestPreview.cpp",
-    "AppUnitTests.cpp",
-    "SumatraUnitTests.cpp",
-    "ChapterTable_ut.cpp",
-    "PagePosition_ut.cpp",
-    "PdfDarkModeImageClassifier_ut.cpp",
-    "PdfDarkModeOklab_ut.cpp",
-    "SimpleLog_ut.cpp",
+  })
+  files_in_dir("src/tests", {
+    "*.cpp",
   })
   files_in_dir("src/testcode", {
     "test-app.h",
@@ -429,11 +425,16 @@ function sumatrapdf_files()
     --"TestLice.cpp",
     "TestTab.cpp",
   })
-  files_in_dir("src/base/tests", {
+  files_in_dir("src/gui/tests", {
     "*.cpp",
   })
+  files_in_dir("src/base/tests", {
+    "*.cpp",
+    "UtAssert.h",
+  })
+  -- linux-only, like the FileWatcher_linux.cpp it tests
+  removefiles { "src/base/tests/FileWatcher_linux_ut.cpp" }
   files_in_dir("src/base", {
-    "UtAssert.*",
     "Archive.*",
   })
   filter {}
@@ -975,10 +976,6 @@ function test_engines_files()
     "src/gui/UIModels.h",
     "src/tools/test_engines.cpp",
   }
-  -- TextSelection.cpp ends in a #if IS_DEBUG unit-test block calling utassert()
-  files_in_dir("src/base", {
-    "UtAssert.*",
-  })
 end
 
 function bench_image_files()
@@ -1003,10 +1000,6 @@ function logview_files()
   files {
     "src/tools/logview/logview.cpp",
   }
-  -- Layout.cpp and VirtCtrl.cpp end in a #if IS_DEBUG unit-test block calling utassert()
-  files_in_dir("src/base", {
-    "UtAssert.*",
-  })
   -- the subset of gui logview's UI needs (no tree view, tabs, web view, ...)
   files_in_dir("src/gui", {
     "UIModels.*",
