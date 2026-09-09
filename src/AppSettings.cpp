@@ -1276,9 +1276,9 @@ static bool* FindBoolSettingInStruct(const StructInfo* info, u8* base, Str pathP
         TempStr path = len(pathPrefix) > 0 ? fmt("%s.%s", pathPrefix, fname) : str::DupTemp(fname);
         if (field.type == SettingType::Struct) {
             const auto* sub = (const StructInfo*)field.value;
-            bool* found = FindBoolSettingInStruct(sub, fieldPtr, path, name);
-            if (found) {
-                return found;
+            bool* boolPtr = FindBoolSettingInStruct(sub, fieldPtr, path, name);
+            if (boolPtr != nullptr) {
+                return boolPtr;
             }
             continue;
         }
