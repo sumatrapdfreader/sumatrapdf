@@ -450,6 +450,10 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     // virtual controls of the home page (header, view buttons, links, ...)
     struct VirtRoot* homeRoot = nullptr;
+    // this window's home page layout, built by HomePageRelayout (owned).
+    // homeRoot's entries paint from it, so it cannot be shared with another
+    // window
+    struct HomePageLayoutCache* homeLayout = nullptr;
     // the frame's virtual controls: the three splitters. The frame paints
     // them and hands them its mouse input
     VirtRoot* frameRoot = nullptr;

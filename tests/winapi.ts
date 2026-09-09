@@ -33,6 +33,8 @@ const user32 = dlopen("user32.dll", {
   GetWindowLongW: { args: [FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
   SetWindowLongW: { args: [FFIType.ptr, FFIType.i32, FFIType.i32], returns: FFIType.i32 },
   ShowWindow: { args: [FFIType.ptr, FFIType.i32], returns: FFIType.bool },
+  InvalidateRect: { args: [FFIType.ptr, FFIType.ptr, FFIType.bool], returns: FFIType.bool },
+  UpdateWindow: { args: [FFIType.ptr], returns: FFIType.bool },
   IsZoomed: { args: [FFIType.ptr], returns: FFIType.bool },
   GetClientRect: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
   GetScrollInfo: { args: [FFIType.ptr, FFIType.i32, FFIType.ptr], returns: FFIType.bool },
@@ -670,6 +672,13 @@ export function collapseTreeRoots(tree: number): void {
     treeExpand(tree, TVE_COLLAPSE, it);
     it = treeGetNextItem(tree, TVGN_NEXT, it);
   }
+}
+
+// force hwnd to repaint now: invalidate its client area and let UpdateWindow
+// deliver WM_PAINT (works cross-process, unlike posting WM_PAINT ourselves)
+export function repaintWindow(hwnd: number): void {
+  user32.symbols.InvalidateRect(hwnd, null, true);
+  user32.symbols.UpdateWindow(hwnd);
 }
 
 export function moveWindow(hwnd: number, x: number, y: number, w: number, h: number, repaint = true): boolean {
