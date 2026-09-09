@@ -22,7 +22,7 @@
 #include "SumatraPDF.h"
 #include "Canvas.h"
 #include "Translations.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 // CmdConfigurePageGrid: spacing / origin / color / line style, like

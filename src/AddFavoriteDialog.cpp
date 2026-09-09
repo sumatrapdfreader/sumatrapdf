@@ -20,7 +20,7 @@
 #include "SumatraPDF.h"
 #include "Favorites.h"
 #include "Translations.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 // Label and buttons are VirtCtrl; the name field is a real HWND Edit.

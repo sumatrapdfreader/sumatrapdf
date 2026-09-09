@@ -118,7 +118,7 @@
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "TextToSpeech.h"
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"

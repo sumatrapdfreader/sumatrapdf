@@ -168,7 +168,7 @@
     <ClInclude Include="..\src\Commands.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\DarkMode_win.h">
+    <ClInclude Include="..\src\DarkMode.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DisplayMode.h">
@@ -486,9 +486,6 @@
     <ClInclude Include="..\src\gui\Layout.h">
       <Filter>src\gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\Layout_win.h">
-      <Filter>src\gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gui\PasswordDialog.h">
       <Filter>src\gui</Filter>
     </ClInclude>
@@ -686,7 +683,7 @@
     <ClCompile Include="..\src\CustomZoomDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\DarkMode_win.cpp">
+    <ClCompile Include="..\src\DarkMode.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DisplayMode.cpp">
@@ -812,9 +809,6 @@
     <ClCompile Include="..\src\ImageReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ImageReader_win.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ImageSaveCropResize.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -831,9 +825,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\KeyboardHelp.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\KeyboardHelp_win.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\LinkFollow.cpp">
@@ -1085,13 +1076,7 @@
     <ClCompile Include="..\src\Theme.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Theme_win.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Toolbar.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Toolbar_win.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TranslationLangs.cpp">
@@ -1175,13 +1160,13 @@
     <ClCompile Include="..\src\base\tests\Win_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp">
+    <ClCompile Include="..\src\gui\Gfx.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp">
+    <ClCompile Include="..\src\gui\GfxDirect2D.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\Gfx_win.cpp">
+    <ClCompile Include="..\src\gui\GfxGdiplus.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\GuiColors.cpp">
@@ -1190,40 +1175,28 @@
     <ClCompile Include="..\src\gui\Layout.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\Layout_win.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\PasswordDialog.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\PlatformFont.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\PlatformFont_win.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\PlatformText.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\PlatformText_win.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\UIModels.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\UiPlatform_win.cpp">
+    <ClCompile Include="..\src\gui\UiPlatform.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\VirtCtrl.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\VirtHost_win.cpp">
+    <ClCompile Include="..\src\gui\VirtHost.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\tests\Layout_ut.cpp">
-      <Filter>src\gui\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\tests\Layout_win_ut.cpp">
       <Filter>src\gui\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\tests\VirtCtrl_ut.cpp">

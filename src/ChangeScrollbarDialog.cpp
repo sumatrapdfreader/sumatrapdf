@@ -19,7 +19,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 // Mode list and buttons are VirtCtrl. Same WindowBase layout as Change Theme.

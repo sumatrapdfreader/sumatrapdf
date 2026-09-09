@@ -24,7 +24,7 @@
 #include "ShortcutParse.h"
 #include "Theme.h"
 #include "SumatraConfig.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "Commands.h"
 #include "Accelerators.h"
 #include "Settings.h"

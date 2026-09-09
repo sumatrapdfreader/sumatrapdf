@@ -22,7 +22,7 @@ Color ThemeControlBackgroundColor();
 Color ThemeWindowBackgroundColor();
 Color ThemeWindowTextColor();
 Color ThemeWindowTextDisabledColor();
-// the colors the OS draws its own UI in (Theme_win.cpp); the default theme and
+// the colors the OS draws its own UI in (Theme.cpp); the default theme and
 // high contrast mode defer to them
 Color SysWindowBgColor();
 Color SysWindowTextColor();

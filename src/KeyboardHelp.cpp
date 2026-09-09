@@ -14,6 +14,12 @@
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
 #include "gui/VirtCtrl.h"
+#include "Settings.h"
+#include "AppSettings.h"
+#include "DocController.h"
+#include "MainWindow.h"
+#include "Accelerators.h"
+#include "Translations.h"
 #endif
 
 #include "Commands.h"
@@ -802,6 +808,37 @@ void ToggleKeyboardHelp(const KeyboardHelpArgs& args) {
 
 bool IsKeyboardHelpVisible() {
     return gKeyboardHelpWindow != nullptr;
+}
+
+#endif
+
+#if OS_WIN
+
+struct SumatraKeyboardHelpDataSource : KeyboardHelpDataSource {
+    Str Translate(Str s) override { return trans::GetTranslation(s); }
+
+    TempStr CommandDescriptionTemp(int cmdId) override {
+        Str description = GetCommandDescription(cmdId);
+        if (len(description) == 0) {
+            return {};
+        }
+        return str::DupTemp(trans::GetTranslation(description));
+    }
+
+    TempStr CommandShortcutTemp(int cmdId, int maxCount) override { return ShortcutsForCmdTemp(cmdId, maxCount); }
+};
+
+static SumatraKeyboardHelpDataSource gSumatraKeyboardHelpDataSource;
+
+void ToggleKeyboardHelp(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    KeyboardHelpArgs args;
+    args.parent = win->hwndFrame;
+    args.parentFullscreen = win->isFullScreen || win->InPresentation();
+    args.dataSource = &gSumatraKeyboardHelpDataSource;
+    ToggleKeyboardHelp(args);
 }
 
 #endif

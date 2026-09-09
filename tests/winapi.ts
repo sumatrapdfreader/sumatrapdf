@@ -176,7 +176,7 @@ const kernel32 = dlopen("kernel32.dll", {
   DeleteFileW: { args: [FFIType.ptr], returns: FFIType.bool },
 });
 
-// Authenticode helpers (mirror src/base/Crypto_win.cpp GetExecutableSignerTemp / IsPEFileSigned).
+// Authenticode helpers (mirror src/base/Crypto.cpp GetExecutableSignerTemp / IsPEFileSigned).
 // crypt32 for embedded PKCS#7 signer name; wintrust for signature validity.
 const crypt32 = dlopen("crypt32.dll", {
   CryptQueryObject: {
@@ -1376,7 +1376,7 @@ export function captureCursorToPng(hcursor: bigint, outPath: string, zoom = 4): 
 
 // Simple display name of the Authenticode signer (e.g. "Krzysztof Kowalczyk",
 // "Microsoft Windows"), or null if the file is unsigned / unreadable.
-// Mirrors GetExecutableSignerTemp in src/base/Crypto_win.cpp.
+// Mirrors GetExecutableSignerTemp in src/base/Crypto.cpp.
 export function getExecutableSigner(filePath: string): string | null {
   const pathW = wideZ(filePath);
   const hStore = new BigUint64Array(1);
@@ -1450,7 +1450,7 @@ export function getExecutableSigner(filePath: string): string | null {
 }
 
 // True if WinVerifyTrust accepts the embedded Authenticode signature.
-// Mirrors IsPEFileSigned in src/base/Crypto_win.cpp.
+// Mirrors IsPEFileSigned in src/base/Crypto.cpp.
 export function isPeFileSigned(filePath: string): boolean {
   const pathW = wideZ(filePath);
 

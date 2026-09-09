@@ -2,11 +2,13 @@
    License: GPLv3 */
 
 // Everything that talks to darkmodelib. The rest of the app calls the functions
-// in DarkMode_win.h and never names DarkMode:: itself, so the conditions that
+// in DarkMode.h and never names DarkMode:: itself, so the conditions that
 // used to be repeated at ~40 call sites - is the library compiled in, is it
 // enabled, is the current theme the default one - live here instead.
 
 #include "base/Base.h"
+
+#if OS_WIN
 #include <commdlg.h>
 #include "gui/Dpi.h"
 
@@ -29,7 +31,7 @@
 #include "gui/win/TabsCtrl.h"
 
 #include "DarkModeSubclass.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 
 // darkmodelib only supports the architectures we still ship it for; older
 // 32-bit builds run without it
@@ -229,3 +231,5 @@ void DarkModeApplyToFrameAfterThemeChange(MainWindow* win) {
     DarkMode::setWindowMenuBarSubclass(win->hwndFrame);
     ApplyToInfotip(win);
 }
+
+#endif

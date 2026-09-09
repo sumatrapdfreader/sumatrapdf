@@ -131,13 +131,10 @@
     <ClCompile Include="..\src\base\Archive.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Arena_win.cpp">
+    <ClCompile Include="..\src\base\Arena.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Base.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Base_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp">
@@ -146,25 +143,19 @@
     <ClCompile Include="..\src\base\CmdLineArgs.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\CmdLineArgs_win.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Crypto_win.cpp">
+    <ClCompile Include="..\src\base\Crypto.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\CssParser.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\DbgHelpDyn_win.cpp">
+    <ClCompile Include="..\src\base\DbgHelpDyn.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Dict.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\DirScan.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\DirScan_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Exif.cpp">
@@ -174,9 +165,6 @@
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\FileWatcher.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\File_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\GdiPlusUtil.cpp">
@@ -191,9 +179,6 @@
     <ClCompile Include="..\src\base\Http.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Http_win.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\JsonParser.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -201,9 +186,6 @@
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Pixmap.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Pixmap_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\SettingsUtil.cpp">
@@ -218,22 +200,19 @@
     <ClCompile Include="..\src\base\TgaReader.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\TgaReader_win.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\UITask.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\WinDynCalls_win.cpp">
+    <ClCompile Include="..\src\base\WinDynCalls.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Zip.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\Dpi_win.cpp">
+    <ClCompile Include="..\src\gui\Dpi.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
   </ItemGroup>

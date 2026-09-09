@@ -2,6 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+
+#if OS_WIN
 #include "base/GdiPlusUtil.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
@@ -472,3 +474,5 @@ Gfx* GfxCreateWithDoubleBuffer(HwndBase* w, HDC hdc) {
     w->gfxDoubleBufferDy = b.dy;
     return gfx;
 }
+
+#endif

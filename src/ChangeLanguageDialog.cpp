@@ -19,7 +19,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 // Search edit is a real HWND; the language list and buttons are VirtCtrl.

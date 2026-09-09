@@ -8,7 +8,7 @@
 // It exists so the code that builds the tree doesn't name an OS windowing API.
 // Instead of an HWND and SetWindowPos / InvalidateRect / SetTimer / GetFocus,
 // that code asks the host to move itself, repaint, run a timer, or say where it
-// is on the screen. The window is created per platform (VirtHost_win.cpp).
+// is on the screen. The window is created per platform (VirtHost.cpp).
 //
 // Whatever the host doesn't model - the colors of a native child control,
 // dragging the window by its background - goes through onNativeMsg, which only

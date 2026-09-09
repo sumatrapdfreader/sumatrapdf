@@ -965,7 +965,6 @@
     <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
-    <ClCompile Include="..\src\ImageReader_win.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\LitDoc.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />

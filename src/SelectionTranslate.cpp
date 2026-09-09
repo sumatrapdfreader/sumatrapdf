@@ -28,7 +28,7 @@
 #include "AIChatPanel.h"
 #include "Translations.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SelectionTranslate.h"
 
 static const Str kSrcLangAuto = StrL("Auto");

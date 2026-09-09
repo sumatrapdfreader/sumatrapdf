@@ -2,12 +2,14 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 // The handful of things the portable UI layer asks the platform for (declared
-// at the end of VirtHost.h). They live apart from VirtHost_win.cpp because
+// at the end of VirtHost.h). They live apart from VirtHost.cpp because
 // VirtCtrl.cpp calls UiSetCursor() and is built by tools that have no host
 // window at all -- logview links VirtCtrl but not VirtHost, and pulling the
 // whole host in for one cursor call would drag the window class with it.
 
 #include "base/Base.h"
+
+#if OS_WIN
 #include "base/Win.h"
 #include "gui/Dpi.h"
 
@@ -65,3 +67,5 @@ void UiSetCursor(CursorId id) {
         SetCursorCached(win32Id);
     }
 }
+
+#endif

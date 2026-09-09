@@ -34,7 +34,7 @@
 #include "FilterHighlightDraw.h"
 #include "Translations.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "FindWindow.h"
 
 // command ids for the window's toolbar buttons (handled in OnCommand)

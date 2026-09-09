@@ -10,7 +10,7 @@
 #include "gui/win/WinGui.h"
 
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraConfig.h"
 #include "base/Win.h"
 

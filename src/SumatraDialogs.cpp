@@ -11,7 +11,7 @@
 #include "resource.h"
 #include "Translations.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 // http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx

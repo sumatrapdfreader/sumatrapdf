@@ -2,6 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+
+#if OS_WIN
 #include "base/WinDynCalls.h"
 #include "base/ScopedWin.h"
 #include "gui/Dpi.h"
@@ -257,3 +259,5 @@ int DpiGetSystemMetrics(int index, int dpi) {
 int DpiGetSystemMetrics(int index) {
     return DpiGetSystemMetrics(index, DpiGet());
 }
+
+#endif

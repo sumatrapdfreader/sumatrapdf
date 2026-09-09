@@ -67,7 +67,7 @@ function mingwPatterns(root: string, dir: string): string[] {
 
 // the .cpp files SumatraPDF.vcxproj compiles that live directly in `dir`. That
 // project is the source of truth for what has to link: premake is regenerated
-// from it by hand and drifts (it was missing DarkMode_win.cpp when that file
+// from it by hand and drifts (it was missing DarkMode.cpp when that file
 // broke the Linux job), so checking only premake -> mingw can pass while the
 // cross-compile is missing a file.
 function vcxprojSources(root: string, dir: string): string[] {

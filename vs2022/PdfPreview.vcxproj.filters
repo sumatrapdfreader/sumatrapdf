@@ -63,7 +63,6 @@
     <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
-    <ClCompile Include="..\src\ImageReader_win.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
@@ -81,13 +80,7 @@
     <ClCompile Include="..\src\gui\PlatformFont.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\PlatformFont_win.cpp">
-      <Filter>gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\PlatformText.cpp">
-      <Filter>gui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\PlatformText_win.cpp">
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreview.cpp">

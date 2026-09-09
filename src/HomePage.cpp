@@ -35,7 +35,7 @@
 #include "Theme.h"
 #include "AppSettings.h"
 #include "AppTools.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SvgIcons.h"
 #include "HomePage.h"
 

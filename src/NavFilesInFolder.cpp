@@ -30,7 +30,7 @@
 #include "SumatraPDF.h"
 #include "Theme.h"
 #include "Translations.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "NavFilesInFolder.h"
 
 // A modeless directory browser listing sub-directories and files SumatraPDF

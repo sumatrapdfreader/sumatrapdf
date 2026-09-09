@@ -23,7 +23,7 @@
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "Translations.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 // Section headers, labels and OK/Cancel are VirtCtrl; layout/zoom/command

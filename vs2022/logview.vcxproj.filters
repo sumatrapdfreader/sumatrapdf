@@ -24,9 +24,6 @@
     <ClInclude Include="..\src\gui\Layout.h">
       <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\Layout_win.h">
-      <Filter>gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gui\PlatformFont.h">
       <Filter>gui</Filter>
     </ClInclude>
@@ -42,13 +39,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
-    <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp">
+    <ClCompile Include="..\src\gui\Gfx.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp">
+    <ClCompile Include="..\src\gui\GfxDirect2D.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\Gfx_win.cpp">
+    <ClCompile Include="..\src\gui\GfxGdiplus.cpp">
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\GuiColors.cpp">
@@ -57,25 +54,16 @@
     <ClCompile Include="..\src\gui\Layout.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\Layout_win.cpp">
-      <Filter>gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\PlatformFont.cpp">
-      <Filter>gui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\PlatformFont_win.cpp">
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\PlatformText.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\PlatformText_win.cpp">
-      <Filter>gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\UIModels.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\UiPlatform_win.cpp">
+    <ClCompile Include="..\src\gui\UiPlatform.cpp">
       <Filter>gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\VirtCtrl.cpp">

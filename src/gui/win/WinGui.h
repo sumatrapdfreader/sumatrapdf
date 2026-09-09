@@ -172,7 +172,7 @@ struct HwndBase {
     HWND CreateCustomHwnd(const CreateCustomArgs&, WStr defaultClassName);
 };
 
-// installed by the app (DarkMode_win.cpp): how WindowBase::ApplyDarkMode()
+// installed by the app (DarkMode.cpp): how WindowBase::ApplyDarkMode()
 // re-applies OS dark mode to a window. gui/ doesn't name darkmodelib; null
 // means there is nothing to apply
 extern void (*gWindowBaseApplyDarkMode)(HWND);

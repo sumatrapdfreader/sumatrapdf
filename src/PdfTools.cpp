@@ -37,7 +37,7 @@
 #include "Theme.h"
 #include "Notifications.h"
 
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "Commands.h"
 #include "PdfTools.h"
 

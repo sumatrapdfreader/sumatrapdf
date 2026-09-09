@@ -1198,7 +1198,7 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClInclude Include="..\src\CommandAvailability.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
-    <ClInclude Include="..\src\DarkMode_win.h" />
+    <ClInclude Include="..\src\DarkMode.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
     <ClInclude Include="..\src\DocController.h" />
@@ -1304,7 +1304,6 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClInclude Include="..\src\gui\Gfx.h" />
     <ClInclude Include="..\src\gui\GuiColors.h" />
     <ClInclude Include="..\src\gui\Layout.h" />
-    <ClInclude Include="..\src\gui\Layout_win.h" />
     <ClInclude Include="..\src\gui\PasswordDialog.h" />
     <ClInclude Include="..\src\gui\PlatformCanvas.h" />
     <ClInclude Include="..\src\gui\PlatformFont.h" />
@@ -1398,7 +1397,7 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CustomZoomDialog.cpp" />
-    <ClCompile Include="..\src\DarkMode_win.cpp" />
+    <ClCompile Include="..\src\DarkMode.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\DocController.cpp" />
@@ -1447,14 +1446,12 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\ImageEditHostSumatra.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
-    <ClCompile Include="..\src\ImageReader_win.cpp" />
     <ClCompile Include="..\src\ImageSaveCropResize.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\InstallerCommon.cpp" />
     <ClCompile Include="..\src\InverseSearchDialog.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\KeyboardHelp.cpp" />
-    <ClCompile Include="..\src\KeyboardHelp_win.cpp" />
     <ClCompile Include="..\src\LinkFollow.cpp" />
     <ClCompile Include="..\src\LitDoc.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
@@ -1564,9 +1561,7 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClCompile Include="..\src\TextToSpeech.cpp" />
     <ClCompile Include="..\src\TextViewWnd.cpp" />
     <ClCompile Include="..\src\Theme.cpp" />
-    <ClCompile Include="..\src\Theme_win.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
-    <ClCompile Include="..\src\Toolbar_win.cpp" />
     <ClCompile Include="..\src\TranslationLangs.cpp" />
     <ClCompile Include="..\src\Translations.cpp" />
     <ClCompile Include="..\src\Uninstaller.cpp" />
@@ -1774,32 +1769,19 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp" />
-    <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp" />
-    <ClCompile Include="..\src\gui\Gfx_win.cpp" />
+    <ClCompile Include="..\src\gui\Gfx.cpp" />
+    <ClCompile Include="..\src\gui\GfxDirect2D.cpp" />
+    <ClCompile Include="..\src\gui\GfxGdiplus.cpp" />
     <ClCompile Include="..\src\gui\GuiColors.cpp" />
     <ClCompile Include="..\src\gui\Layout.cpp" />
-    <ClCompile Include="..\src\gui\Layout_win.cpp" />
     <ClCompile Include="..\src\gui\PasswordDialog.cpp" />
     <ClCompile Include="..\src\gui\PlatformFont.cpp" />
-    <ClCompile Include="..\src\gui\PlatformFont_win.cpp" />
     <ClCompile Include="..\src\gui\PlatformText.cpp" />
-    <ClCompile Include="..\src\gui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\gui\UIModels.cpp" />
-    <ClCompile Include="..\src\gui\UiPlatform_win.cpp" />
+    <ClCompile Include="..\src\gui\UiPlatform.cpp" />
     <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
-    <ClCompile Include="..\src\gui\VirtHost_win.cpp" />
+    <ClCompile Include="..\src\gui\VirtHost.cpp" />
     <ClCompile Include="..\src\gui\tests\Layout_ut.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\tests\Layout_win_ut.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>

@@ -963,23 +963,19 @@
     <ClCompile Include="..\ext\lzma\C\LzmaDec.c" />
     <ClCompile Include="..\ext\lzma\C\LzmaEnc.c" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
-    <ClCompile Include="..\src\base\Arena_win.cpp" />
+    <ClCompile Include="..\src\base\Arena.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
-    <ClCompile Include="..\src\base\Base_win.cpp" />
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgs.cpp" />
-    <ClCompile Include="..\src\base\CmdLineArgs_win.cpp" />
     <ClCompile Include="..\src\base\DirScan.cpp" />
-    <ClCompile Include="..\src\base\DirScan_win.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
-    <ClCompile Include="..\src\base\File_win.cpp" />
     <ClCompile Include="..\src\base\LogNoOp.cpp" />
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\base\Pixmap.cpp" />
     <ClCompile Include="..\src\base\StrQueue.cpp" />
     <ClCompile Include="..\src\base\Win.cpp" />
-    <ClCompile Include="..\src\base\WinDynCalls_win.cpp" />
-    <ClCompile Include="..\src\gui\Dpi_win.cpp" />
+    <ClCompile Include="..\src\base\WinDynCalls.cpp" />
+    <ClCompile Include="..\src\gui\Dpi.cpp" />
     <ClCompile Include="..\src\tools\MakeLzSA.cpp" />
   </ItemGroup>
   <ItemGroup>

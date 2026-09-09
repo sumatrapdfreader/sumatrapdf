@@ -30,7 +30,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "EmbeddedResources.h"
 
 #include "AIChatCommon.h"

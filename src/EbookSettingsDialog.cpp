@@ -25,7 +25,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 // Font, size and line spacing for reflowable documents (EPUB, MOBI, FB2, ...),

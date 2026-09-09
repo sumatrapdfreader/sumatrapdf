@@ -23,7 +23,7 @@
 #include "Translations.h"
 #include "SumatraConfig.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "TabGroupsManage.h"
 
 constexpr int kPadding = 8;

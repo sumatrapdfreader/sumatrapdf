@@ -15,9 +15,13 @@ License: GPLv3 */
 #include "Settings.h"
 #include "AppSettings.h"
 #include "Commands.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "Translations.h"
 #include "PdfDarkMode.h"
+#if OS_WIN
+#include "base/Win.h"
+#endif
+
 #include "Theme.h"
 
 // The installer and uninstaller never load settings, so CreateThemeCommands()
@@ -1223,3 +1227,40 @@ bool ThemeColorizeControls() {
     }
     return !IsMenuFontSizeDefault();
 }
+
+#if OS_WIN
+
+// The colors Windows draws its own UI in. The default theme defers to them so
+// the app follows the system appearance, and every theme defers to them in high
+// contrast mode, where the user's palette is the whole point. The rest of the
+// file asks for them by name so it doesn't have to know the OS palette itself.
+
+Color SysWindowBgColor() {
+    return GetSysColor(COLOR_WINDOW);
+}
+
+Color SysWindowTextColor() {
+    return GetSysColor(COLOR_WINDOWTEXT);
+}
+
+Color SysControlTextColor() {
+    return GetSysColor(COLOR_BTNTEXT);
+}
+
+Color SysDisabledTextColor() {
+    return GetSysColor(COLOR_GRAYTEXT);
+}
+
+Color SysLinkColor() {
+    return GetSysColor(COLOR_HOTLIGHT);
+}
+
+Color SysHighlightBgColor() {
+    return GetSysColor(COLOR_HIGHLIGHT);
+}
+
+Color SysHighlightTextColor() {
+    return GetSysColor(COLOR_HIGHLIGHTTEXT);
+}
+
+#endif

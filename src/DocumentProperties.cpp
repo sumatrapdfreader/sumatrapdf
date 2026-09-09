@@ -30,7 +30,7 @@
 #include "SumatraConfig.h"
 #include "Print.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "EutlTrust.h"
 
 #if OS_WIN

@@ -18,7 +18,7 @@
 #include "Settings.h"
 #include "AppSettings.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraConfig.h"
 #include "DocController.h"
 #include "EngineBase.h"

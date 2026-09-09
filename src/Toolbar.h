@@ -6,7 +6,7 @@
 // tree they live in, and when the overlay toolbar shows and hides. It reaches
 // its window through VirtHost, so it names no OS windowing API.
 //
-// Toolbar_win.cpp owns what is left of Win32: the native page-number edit, the
+// Its OS_WIN section owns what is left of Win32: the native page-number edit, the
 // messages VirtHost doesn't model (the edit's colors, dragging the frame by the
 // toolbar), eating the click that dismissed a drop-down, and the handful of
 // calls that reach the frame and canvas windows, which are not hosts yet.
@@ -89,7 +89,7 @@ ILayout* NewToolbarHoverStrip(MainWindow*, const Vec<ToolbarHoverMenuItem>&);
 void HideToolbarHoverDropdown(MainWindow*);
 bool ToolbarHoverDropdownContainsScreenPoint(MainWindow*, Point);
 
-//--- shared between Toolbar.cpp and Toolbar_win.cpp, not meant for anyone else
+//--- internal to Toolbar.cpp, not meant for anyone else
 
 // those are not real commands but we have to refer to toolbar buttons
 // is by a command. those are just background for area to be
@@ -147,11 +147,9 @@ struct ToolbarVirt {
     Str hoverSavedTip;
 };
 
-// implemented in Toolbar.cpp
 Color TbTextColor();
 VirtCtrl* ToolbarItemFromPoint(MainWindow*, Point);
 
-// implemented in Toolbar_win.cpp
 Edit* ToolbarCreatePageEdit(MainWindow*, PlatformFont*, int iconDy);
 Edit* ToolbarCreateChapterEdit(MainWindow*, PlatformFont*, int iconDy);
 void ToolbarSetNativeHooks(MainWindow*, VirtHost*);

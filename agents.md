@@ -96,7 +96,7 @@ translation unit that includes them, so comments in a `.h` cost compilation time
 on every include. Keep the header declaration terse (ideally a single line) and
 put the explaining comment on the **definition** in the corresponding `.cpp`.
 
-For a function declared in `Foo.h` and defined in `Foo.cpp` (or `Foo_win.cpp`),
+For a function declared in `Foo.h` and defined in `Foo.cpp`,
 the doc comment lives **only** above the definition in the `.cpp` — not on the
 declaration in the `.h`.
 

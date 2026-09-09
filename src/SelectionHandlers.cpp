@@ -26,7 +26,7 @@
 //                    site you're logged into. Custom headers are impossible
 //                    this way (a form submission can't set them).
 //
-// Why WinHTTP rather than the WinINet used elsewhere in base/Http_win.cpp:
+// Why WinHTTP rather than the WinINet used elsewhere in base/Http.cpp:
 // WinINet shares Internet Explorer's cookie jar and cache, so a request would
 // carry whatever cookies happen to be lying around to a third-party endpoint.
 // For calls that are meant to be authenticated only by an explicit api key,

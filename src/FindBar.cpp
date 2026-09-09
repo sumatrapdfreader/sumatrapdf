@@ -33,7 +33,7 @@
 #include "FindWindow.h"
 #include "Translations.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "FindBar.h"
 
 // command ids for the bar's toolbar buttons; must not collide with real commands

@@ -961,7 +961,6 @@
     <ClInclude Include="..\src\gui\Gfx.h" />
     <ClInclude Include="..\src\gui\GuiColors.h" />
     <ClInclude Include="..\src\gui\Layout.h" />
-    <ClInclude Include="..\src\gui\Layout_win.h" />
     <ClInclude Include="..\src\gui\PlatformFont.h" />
     <ClInclude Include="..\src\gui\PlatformText.h" />
     <ClInclude Include="..\src\gui\UIModels.h" />
@@ -971,18 +970,15 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\gui\GfxDirect2D_win.cpp" />
-    <ClCompile Include="..\src\gui\GfxGdiplus_win.cpp" />
-    <ClCompile Include="..\src\gui\Gfx_win.cpp" />
+    <ClCompile Include="..\src\gui\Gfx.cpp" />
+    <ClCompile Include="..\src\gui\GfxDirect2D.cpp" />
+    <ClCompile Include="..\src\gui\GfxGdiplus.cpp" />
     <ClCompile Include="..\src\gui\GuiColors.cpp" />
     <ClCompile Include="..\src\gui\Layout.cpp" />
-    <ClCompile Include="..\src\gui\Layout_win.cpp" />
     <ClCompile Include="..\src\gui\PlatformFont.cpp" />
-    <ClCompile Include="..\src\gui\PlatformFont_win.cpp" />
     <ClCompile Include="..\src\gui\PlatformText.cpp" />
-    <ClCompile Include="..\src\gui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\gui\UIModels.cpp" />
-    <ClCompile Include="..\src\gui\UiPlatform_win.cpp" />
+    <ClCompile Include="..\src\gui\UiPlatform.cpp" />
     <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
     <ClCompile Include="..\src\gui\win\Edit.cpp" />
     <ClCompile Include="..\src\gui\win\Tooltip.cpp" />

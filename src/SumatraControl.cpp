@@ -8,7 +8,6 @@
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
-#include "gui/Layout_win.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"

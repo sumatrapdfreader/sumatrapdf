@@ -21,7 +21,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 // Labels and buttons are VirtCtrl; the password field and checkboxes are HWNDs.

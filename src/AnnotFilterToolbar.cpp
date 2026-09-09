@@ -36,7 +36,7 @@
 #include "FilterUtil.h"
 #include "AnnotSearch.h"
 #include "AnnotEditToolbar.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 
 #include "AnnotFilterToolbar.h"
 

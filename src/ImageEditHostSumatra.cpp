@@ -25,7 +25,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "Translations.h"
 #include "ImageSaveCropResize.h"
 

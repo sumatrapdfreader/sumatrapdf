@@ -18,6 +18,8 @@
 // quite fit in. kTextSlack absorbs the usual case.
 
 #include "base/Base.h"
+
+#if OS_WIN
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
@@ -941,4 +943,6 @@ void GfxDirect2D::PopClip() {
 bool GfxDirect2D::SetMirrored(bool) {
     return false;
 }
+#endif
+
 #endif

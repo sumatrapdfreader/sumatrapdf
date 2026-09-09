@@ -40,7 +40,7 @@
 #include "Translations.h"
 #include "Toolbar.h"
 #include "resource.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "Tabs.h"
 #include "Accelerators.h"
 #include "ImageSaveCropResize.h"

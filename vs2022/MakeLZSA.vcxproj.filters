@@ -86,13 +86,10 @@
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Arena_win.cpp">
+    <ClCompile Include="..\src\base\Arena.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Base.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\Base_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp">
@@ -101,19 +98,10 @@
     <ClCompile Include="..\src\base\CmdLineArgs.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\CmdLineArgs_win.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\DirScan.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\DirScan_win.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\File.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\File_win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\LogNoOp.cpp">
@@ -131,10 +119,10 @@
     <ClCompile Include="..\src\base\Win.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\WinDynCalls_win.cpp">
+    <ClCompile Include="..\src\base\WinDynCalls.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\Dpi_win.cpp">
+    <ClCompile Include="..\src\gui\Dpi.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\MakeLzSA.cpp">

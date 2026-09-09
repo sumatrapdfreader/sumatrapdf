@@ -1065,7 +1065,6 @@
     <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
-    <ClCompile Include="..\src\ImageReader_win.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
@@ -1079,9 +1078,7 @@
     <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
     <ClCompile Include="..\src\gui\PlatformFont.cpp" />
-    <ClCompile Include="..\src\gui\PlatformFont_win.cpp" />
     <ClCompile Include="..\src\gui\PlatformText.cpp" />
-    <ClCompile Include="..\src\gui\PlatformText_win.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
   </ItemGroup>

@@ -16,6 +16,8 @@
 // wouldn't add. Measuring through Gfx::MeasureText() would remove the mismatch.
 
 #include "base/Base.h"
+
+#if OS_WIN
 #include "base/GdiPlusUtil.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
@@ -135,7 +137,7 @@ void GfxGdiplus::DrawDashedRect(const Rect& r, Color col) {
     gfx->SetSmoothingMode(prev);
 }
 
-// `d` is the diameter of the corner circles (see the same helper in Gfx_win.cpp)
+// `d` is the diameter of the corner circles (see the same helper in Gfx.cpp)
 static void AddRoundedRectPath(GraphicsPath& path, const Rect& rc, int d) {
     path.AddArc(rc.x, rc.y, d, d, 180, 90);
     path.AddArc(rc.x + rc.dx - d - 1, rc.y, d, d, 270, 90);
@@ -399,3 +401,5 @@ void GfxGdiplus::PopClip() {
 bool GfxGdiplus::SetMirrored(bool) {
     return false;
 }
+
+#endif

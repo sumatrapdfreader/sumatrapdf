@@ -32,7 +32,7 @@
 #include "MainWindow.h"
 #include "PdfDarkMode.h"
 #include "Theme.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"

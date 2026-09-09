@@ -20,7 +20,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 // The zoom to use is whatever is in the edit field: a level's name ("Fit Page")

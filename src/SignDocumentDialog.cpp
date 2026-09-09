@@ -29,7 +29,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Notifications.h"
-#include "DarkMode_win.h"
+#include "DarkMode.h"
 #include "SumatraDialogs.h"
 
 extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
