@@ -1,15 +1,15 @@
 # Updating zlib
 
-Use `cmd/a-zlib.ts` to update the amalgamated zlib copy used by the build.
+Use `cmd/amalgam.ts -zlib` to update the amalgamated zlib copy used by the build.
 
 1. Pick the upstream zlib repository URL and tag or commit hash. The current
    source is:
 
    ```sh
-   bun cmd/a-zlib.ts https://github.com/madler/zlib v1.3.2
+   bun cmd/amalgam.ts -zlib https://github.com/madler/zlib v1.3.2
    ```
 
-   Running `bun cmd/a-zlib.ts` without arguments uses those defaults.
+   Running `bun cmd/amalgam.ts -zlib` without further arguments uses those defaults.
 
 2. The script checks out the requested revision under `deps/zlib` and writes
    `ext/a-zlib/zlib.h`, `ext/a-zlib/zlib.c`, `ext/a-zlib/version.txt`, and

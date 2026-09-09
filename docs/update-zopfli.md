@@ -1,15 +1,15 @@
 # Updating zopfli
 
-Use `cmd/a-zopfli.ts` to update the amalgamated zopfli copy used by the build.
+Use `cmd/amalgam.ts -zopfli` to update the amalgamated zopfli copy used by the build.
 
 1. Pick the upstream zopfli repository URL and tag or commit hash. The current
    source is:
 
    ```sh
-   bun cmd/a-zopfli.ts https://github.com/google/zopfli ccf9f0588d4a4509cb1040310ec122243e670ee6
+   bun cmd/amalgam.ts -zopfli https://github.com/google/zopfli ccf9f0588d4a4509cb1040310ec122243e670ee6
    ```
 
-   Running `bun cmd/a-zopfli.ts` without arguments uses those defaults.
+   Running `bun cmd/amalgam.ts -zopfli` without further arguments uses those defaults.
 
 2. The script checks out the requested revision under `deps/zopfli` and writes
    `ext/a-zopfli/zopflipng/zopflipng_lib.h`,

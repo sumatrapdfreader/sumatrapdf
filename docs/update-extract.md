@@ -1,16 +1,16 @@
 # Updating extract
 
-Use `cmd/a-extract.ts` to update the amalgamated extract copy used by the
+Use `cmd/amalgam.ts -extract` to update the amalgamated extract copy used by the
 build.
 
 1. Pick the upstream extract repository URL and tag or commit hash. The current
    source is:
 
    ```sh
-   bun cmd/a-extract.ts https://github.com/ArtifexSoftware/extract 8750ac39c30a0d65119b426b5a491c5b8e8bf674
+   bun cmd/amalgam.ts -extract https://github.com/ArtifexSoftware/extract 8750ac39c30a0d65119b426b5a491c5b8e8bf674
    ```
 
-   Running `bun cmd/a-extract.ts` without arguments uses those defaults.
+   Running `bun cmd/amalgam.ts -extract` without further arguments uses those defaults.
 
 2. The script checks out the requested revision under `deps/extract` and writes
    `ext/a-extract/extract/*.h`, `ext/a-extract/memento.h`,

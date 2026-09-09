@@ -1,15 +1,15 @@
 # Updating bzip2
 
-Use `cmd/a-bzip2.ts` to update the amalgamated bzip2 copy used by the build.
+Use `cmd/amalgam.ts -bzip2` to update the amalgamated bzip2 copy used by the build.
 
 1. Pick the upstream bzip2 repository URL and tag or commit hash. The current
    source is:
 
    ```sh
-   bun cmd/a-bzip2.ts git://sourceware.org/git/bzip2.git bzip2-1.0.8
+   bun cmd/amalgam.ts -bzip2 git://sourceware.org/git/bzip2.git bzip2-1.0.8
    ```
 
-   Running `bun cmd/a-bzip2.ts` without arguments uses those defaults.
+   Running `bun cmd/amalgam.ts -bzip2` without further arguments uses those defaults.
 
 2. The script checks out the requested revision under `deps/bzip2` and writes
    `ext/a-bzip2/bzlib.h`, `ext/a-bzip2/bzip2.c`, `ext/a-bzip2/version.txt`,

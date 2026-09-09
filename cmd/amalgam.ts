@@ -1,0 +1,1154 @@
+// Amalgamates a vendored third-party library into a single .c/.cpp plus its
+// public headers under ext/a-<lib>/. One library per run, selected by a -<lib>
+// flag. Everything except the per-library recipe (source list, include rules,
+// cl.exe flags) is shared.
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, normalize, relative } from "node:path";
+import { detectVisualStudio2026, runLogged } from "./util";
+
+// ---------------------------------------------------------------------------
+// generic text / file helpers
+// ---------------------------------------------------------------------------
+
+function readText(path: string): string {
+  return readFileSync(path, "utf-8").replace(/\r\n/g, "\n");
+}
+
+function normPath(path: string): string {
+  return normalize(path).replace(/\\/g, "/");
+}
+
+function listFiles(dir: string, ext?: string): string[] {
+  return readdirSync(dir)
+    .map((name) => join(dir, name))
+    .filter((path) => statSync(path).isFile())
+    .filter((path) => !ext || path.endsWith(ext))
+    .sort((a, b) => basename(a).localeCompare(basename(b)));
+}
+
+function mapByName(paths: string[]): Map<string, string> {
+  return new Map(paths.map((path) => [basename(path), path]));
+}
+
+// Finds the directory holding the library sources: tries each relative
+// candidate under root and returns the first one containing all markers.
+function findSrcDir(root: string, candidates: string[], markers: string[]): string {
+  for (const rel of candidates) {
+    const dir = rel ? join(root, rel) : root;
+    if (existsSync(dir) && markers.every((m) => existsSync(join(dir, m)))) {
+      return dir;
+    }
+  }
+  throw new Error(`could not find ${markers.join(", ")} under ${root}`);
+}
+
+// Removes comments while preserving line count-ish structure and string/char
+// literals. A hand-rolled scanner because the sources aren't preprocessed.
+function stripComments(text: string): string {
+  let out = "";
+  let i = 0;
+  let state: "code" | "line" | "block" | "string" | "char" = "code";
+  while (i < text.length) {
+    const c = text[i];
+    const n = text[i + 1];
+    if (state === "code") {
+      if (c === "/" && n === "/") {
+        state = "line";
+        i += 2;
+        continue;
+      }
+      if (c === "/" && n === "*") {
+        state = "block";
+        i += 2;
+        continue;
+      }
+      if (c === '"') {
+        state = "string";
+      } else if (c === "'") {
+        state = "char";
+      }
+      out += c;
+      i++;
+      continue;
+    }
+    if (state === "line") {
+      if (c === "\n") {
+        out += "\n";
+        state = "code";
+      }
+      i++;
+      continue;
+    }
+    if (state === "block") {
+      if (c === "\n") {
+        out += "\n";
+      }
+      if (c === "*" && n === "/") {
+        state = "code";
+        i += 2;
+      } else {
+        i++;
+      }
+      continue;
+    }
+    out += c;
+    if ((state === "string" || state === "char") && c === "\\") {
+      out += n ?? "";
+      i += 2;
+      continue;
+    }
+    if (state === "string" && c === '"') {
+      state = "code";
+    } else if (state === "char" && c === "'") {
+      state = "code";
+    }
+    i++;
+  }
+  return out;
+}
+
+function normalizeBlankLines(text: string): string {
+  return (
+    text
+      .replace(/[ \t]+$/gm, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim() + "\n"
+  );
+}
+
+// ---------------------------------------------------------------------------
+// local #include handling
+// ---------------------------------------------------------------------------
+
+type ResolveInclude = (fromPath: string, inc: string) => string | undefined;
+
+// How to treat `#include "..."` lines. Checked in order: drop (delete the
+// line), keep (emit verbatim), then resolve+inline. Unresolved includes are
+// emitted verbatim.
+type IncludeRules = {
+  resolve?: ResolveInclude;
+  keep?: (inc: string) => boolean;
+  drop?: (inc: string) => boolean;
+  // Shared across chunks so a header is inlined only once per amalgamation.
+  seen?: Set<string>;
+  // Wrap inlined text in /* begin x */ ... /* end x */ markers.
+  markers?: boolean;
+};
+
+const includeRe = /^\s*#\s*include\s+"([^"]+)"/;
+
+function expandIncludes(path: string, rules: IncludeRules, stack: string[] = []): string {
+  const out: string[] = [];
+  for (const line of readText(path).split("\n")) {
+    const m = includeRe.exec(line);
+    if (!m) {
+      out.push(line);
+      continue;
+    }
+
+    const inc = m[1];
+    if (rules.drop?.(inc)) {
+      continue;
+    }
+    if (rules.keep?.(inc)) {
+      out.push(line);
+      continue;
+    }
+
+    const incPath = rules.resolve?.(path, inc);
+    if (!incPath) {
+      out.push(line);
+      continue;
+    }
+    if (rules.seen?.has(incPath)) {
+      continue;
+    }
+    if (stack.includes(incPath)) {
+      throw new Error(`include cycle: ${[...stack, incPath].join(" -> ")}`);
+    }
+    rules.seen?.add(incPath);
+
+    if (rules.markers) {
+      out.push(`/* begin ${inc} */`);
+    }
+    out.push(expandIncludes(incPath, rules, [...stack, path]));
+    if (rules.markers) {
+      out.push(`/* end ${inc} */`);
+    }
+  }
+  return out.join("\n");
+}
+
+// Resolves an include against a flat basename -> path map.
+function byNameResolver(byName: Map<string, string>): ResolveInclude {
+  return (_fromPath, inc) => byName.get(inc);
+}
+
+// Resolves an include relative to the including file, then against dirs.
+function dirResolver(dirs: string[]): ResolveInclude {
+  return (fromPath, inc) => {
+    for (const dir of [dirname(fromPath), ...dirs]) {
+      const candidate = normPath(join(dir, inc));
+      if (existsSync(candidate)) {
+        return candidate;
+      }
+    }
+    return undefined;
+  };
+}
+
+function inSet(names: Iterable<string>, matchBasename = false): (inc: string) => boolean {
+  const set = new Set(names);
+  return (inc) => set.has(inc) || (matchBasename && set.has(basename(inc)));
+}
+
+// Reads one source file into its amalgamated form. `rules` omitted means local
+// includes are left alone; `transform` runs after comment stripping.
+function prepare(path: string, rules?: IncludeRules, transform?: (text: string) => string): string {
+  const raw = rules ? expandIncludes(path, rules) : readText(path);
+  const text = stripComments(raw);
+  return normalizeBlankLines(transform ? transform(text) : text);
+}
+
+function joinChunks(chunks: string[]): string {
+  return normalizeBlankLines(chunks.join("\n"));
+}
+
+// ---------------------------------------------------------------------------
+// git
+// ---------------------------------------------------------------------------
+
+function gitOutput(args: string[], cwd: string, required = true): string {
+  const proc = Bun.spawnSync(["git", ...args], { cwd, stdout: "pipe", stderr: "pipe" });
+  if (proc.exitCode !== 0) {
+    if (required) {
+      throw new Error(proc.stderr.toString().trim());
+    }
+    return "";
+  }
+  return proc.stdout.toString().trim();
+}
+
+function normalizeGithubUrl(repo: string): string | undefined {
+  let url = repo.trim();
+  const remoteMatch = /^git@github\.com:([^/]+\/[^/]+?)(?:\.git)?$/.exec(url);
+  if (remoteMatch) {
+    return `https://github.com/${remoteMatch[1]}`;
+  }
+
+  url = url.replace(/^ssh:\/\/git@github\.com\//, "https://github.com/");
+  if (!url.startsWith("https://github.com/")) {
+    return undefined;
+  }
+  return url.replace(/\.git$/, "").replace(/\/$/, "");
+}
+
+// ---------------------------------------------------------------------------
+// library recipes
+// ---------------------------------------------------------------------------
+
+type Ctx = {
+  // where the upstream checkout lives
+  checkoutDir: string;
+  // relative path -> generated text, written to both tmpDir and outDir
+  files: Map<string, string>;
+};
+
+type Lib = {
+  name: string;
+  homepage?: string;
+  repo: string;
+  rev: string;
+  // gumbo may be pointed at a local directory instead of a git URL
+  allowLocalRepo?: boolean;
+  // one-line summary of what gets written, shown in usage
+  writes: string;
+  generate: (ctx: Ctx) => void;
+  // files copied verbatim from the checkout into outDir (licenses etc.)
+  copies?: string[];
+  // wipe outDir before writing (libs whose header set can shrink upstream)
+  wipeOutDir?: boolean;
+  // the amalgamated file to compile, plus its extra cl.exe flags
+  compile: { file: string; args: string[] };
+};
+
+const clCommonArgs = ["/nologo", "/c", "/W4", "/WX", "/O2", "/MT"];
+
+// --- zlib ------------------------------------------------------------------
+
+const zlibSources = [
+  "adler32.c",
+  "compress.c",
+  "crc32.c",
+  "deflate.c",
+  "inffast.c",
+  "inflate.c",
+  "inftrees.c",
+  "trees.c",
+  "zutil.c",
+  "gzclose.c",
+  "gzlib.c",
+  "gzread.c",
+  "gzwrite.c",
+];
+
+// zlib.h probes HAVE_UNISTD_H/HAVE_STDARG_H with `#if X-0`, which MSVC's /W4
+// flags. We always build without either, so test for definedness instead.
+function patchZlibHeader(text: string): string {
+  return text
+    .replace("#if HAVE_UNISTD_H-0\n#  define Z_HAVE_UNISTD_H", "#ifdef HAVE_UNISTD_H\n#  define Z_HAVE_UNISTD_H")
+    .replace("#if HAVE_STDARG_H-0\n#  define Z_HAVE_STDARG_H", "#ifdef HAVE_STDARG_H\n#  define Z_HAVE_STDARG_H");
+}
+
+function genZlib(ctx: Ctx): void {
+  const srcDir = findSrcDir(ctx.checkoutDir, [""], ["zlib.h"]);
+  const resolve = byNameResolver(mapByName(listFiles(srcDir)));
+
+  ctx.files.set("zlib.h", patchZlibHeader(prepare(join(srcDir, "zlib.h"), { resolve })));
+
+  const rules: IncludeRules = { resolve, drop: inSet(["zlib.h"]), seen: new Set() };
+  const chunks = ['#include "zlib.h"\n'];
+  for (const name of zlibSources) {
+    chunks.push(prepare(join(srcDir, name), rules));
+  }
+  ctx.files.set("zlib.c", joinChunks(chunks));
+}
+
+// --- bzip2 -----------------------------------------------------------------
+
+const bzip2Sources = ["blocksort.c", "bzlib.c", "compress.c", "crctable.c", "decompress.c", "huffman.c", "randtable.c"];
+
+// bzip2 expects the embedder to supply this; it's called on internal corruption.
+const bzip2Additions = `
+#include <assert.h>
+
+void bz_internal_error(int errcode) {
+  (void)errcode;
+  assert(0);
+}
+`;
+
+function genBzip2(ctx: Ctx): void {
+  const srcDir = findSrcDir(ctx.checkoutDir, [""], ["bzlib.h"]);
+  // bzip2 has only two local headers and both are concatenated in order, so
+  // drop every local include rather than inlining.
+  const rules: IncludeRules = { drop: () => true };
+
+  ctx.files.set("bzlib.h", prepare(join(srcDir, "bzlib.h"), rules));
+
+  const preamble = `#ifndef BZ_NO_STDIO
+#define BZ_NO_STDIO
+#endif
+#include "bzlib.h"
+`;
+  const chunks = [preamble, prepare(join(srcDir, "bzlib_private.h"), rules)];
+  for (const name of bzip2Sources) {
+    chunks.push(prepare(join(srcDir, name), rules));
+  }
+  chunks.push(normalizeBlankLines(bzip2Additions));
+  ctx.files.set("bzip2.c", joinChunks(chunks));
+}
+
+// --- extract ---------------------------------------------------------------
+
+const extractSources = [
+  "alloc.c",
+  "astring.c",
+  "boxer.c",
+  "buffer.c",
+  "document.c",
+  "docx.c",
+  "docx_template.c",
+  "extract.c",
+  "html.c",
+  "join.c",
+  "json.c",
+  "mem.c",
+  "memento.c",
+  "odt_template.c",
+  "odt.c",
+  "outf.c",
+  "rect.c",
+  "sys.c",
+  "text.c",
+  "xml.c",
+  "zip.c",
+];
+
+function genExtract(ctx: Ctx): void {
+  const root = ctx.checkoutDir;
+  for (const name of ["alloc.h", "buffer.h", "extract.h"]) {
+    ctx.files.set(join("extract", name), prepare(join(root, "include", "extract", name)));
+  }
+  ctx.files.set("memento.h", prepare(join(root, "src", "memento.h")));
+
+  const rules: IncludeRules = {
+    resolve: dirResolver([join(root, "include"), join(root, "src")]),
+    // these stay as includes: they're the public headers we ship
+    keep: (inc) => inc.startsWith("extract/") || inc === "memento.h",
+    seen: new Set(),
+  };
+  const chunks = ['#include "extract/extract.h"\n#include "extract/buffer.h"\n#include "memento.h"\n'];
+  for (const name of extractSources) {
+    let chunk = prepare(join(root, "src", name), rules);
+    // mupdf already ships memento.c; when extract is compiled into the mupdf
+    // static lib we define EXTRACT_NO_OWN_MEMENTO to avoid LNK4006 duplicates.
+    if (name === "memento.c") {
+      chunk = "#ifndef EXTRACT_NO_OWN_MEMENTO\n" + chunk + "\n#endif /* EXTRACT_NO_OWN_MEMENTO */\n";
+    }
+    chunks.push(chunk);
+  }
+  ctx.files.set("extract.c", joinChunks(chunks));
+}
+
+// --- gumbo -----------------------------------------------------------------
+
+const gumboHeaderAdditions = `
+void gumbo_destroy_node_iter(GumboOptions* options, GumboNode* node);
+void gumbo_destroy_output_iter(const GumboOptions* options, GumboOutput* output);
+`;
+
+// Upstream frees the parse tree recursively, which blows the stack on deeply
+// nested HTML. These are iterative replacements.
+const gumboSourceAdditions = `
+void gumbo_destroy_node_iter(GumboOptions* options, GumboNode* node) {
+  GumboParser parser;
+  parser._options = options;
+
+  GumboVector stack;
+  gumbo_vector_init(&parser, 10, &stack);
+  gumbo_vector_add(&parser, node, &stack);
+  while (stack.length > 0) {
+    GumboNode* n = (GumboNode*) gumbo_vector_pop(&parser, &stack);
+    switch (n->type) {
+      case GUMBO_NODE_DOCUMENT: {
+        GumboDocument* doc = &n->v.document;
+        for (unsigned int i = 0; i < doc->children.length; ++i) {
+          gumbo_vector_add(&parser, doc->children.data[i], &stack);
+        }
+        gumbo_parser_deallocate(&parser, (void*) doc->children.data);
+        gumbo_parser_deallocate(&parser, (void*) doc->name);
+        gumbo_parser_deallocate(&parser, (void*) doc->public_identifier);
+        gumbo_parser_deallocate(&parser, (void*) doc->system_identifier);
+      } break;
+      case GUMBO_NODE_TEMPLATE:
+      case GUMBO_NODE_ELEMENT:
+        for (unsigned int i = 0; i < n->v.element.attributes.length; ++i) {
+          gumbo_destroy_attribute(&parser, n->v.element.attributes.data[i]);
+        }
+        gumbo_parser_deallocate(&parser, n->v.element.attributes.data);
+        for (unsigned int i = 0; i < n->v.element.children.length; ++i) {
+          gumbo_vector_add(&parser, n->v.element.children.data[i], &stack);
+        }
+        gumbo_parser_deallocate(&parser, n->v.element.children.data);
+        break;
+      case GUMBO_NODE_TEXT:
+      case GUMBO_NODE_CDATA:
+      case GUMBO_NODE_COMMENT:
+      case GUMBO_NODE_WHITESPACE:
+        gumbo_parser_deallocate(&parser, (void*) n->v.text.text);
+        break;
+    }
+    gumbo_parser_deallocate(&parser, n);
+  }
+  gumbo_vector_destroy(&parser, &stack);
+}
+
+void gumbo_destroy_output_iter(const GumboOptions* options, GumboOutput* output) {
+  GumboParser parser;
+  parser._options = options;
+  gumbo_destroy_node_iter((GumboOptions*) options, output->document);
+  for (unsigned int i = 0; i < output->errors.length; ++i) {
+    gumbo_error_destroy(&parser, output->errors.data[i]);
+  }
+  gumbo_vector_destroy(&parser, &output->errors);
+  gumbo_parser_deallocate(&parser, output);
+}
+`;
+
+// <strings.h> doesn't exist on Windows and the preamble already defines
+// _CRT_SECURE_NO_WARNINGS.
+function dropGumboPosixLines(text: string): string {
+  return text
+    .split("\n")
+    .filter((line) => !/^\s*#\s*include\s+<strings\.h>/.test(line))
+    .filter((line) => !/^\s*#\s*define\s+_CRT_SECURE_NO_WARNINGS/.test(line))
+    .join("\n");
+}
+
+function genGumbo(ctx: Ctx): void {
+  const srcDir = findSrcDir(ctx.checkoutDir, ["src", ""], ["gumbo.h"]);
+  const resolve = byNameResolver(mapByName(listFiles(srcDir, ".h")));
+
+  // No dedup: gumbo has include fragments (tag_enum.h, tag_gperf.h) that are
+  // only valid where they appear and are pulled in more than once.
+  let header = prepare(join(srcDir, "gumbo.h"), { resolve, markers: true }, dropGumboPosixLines);
+  const lastEndif = header.lastIndexOf("#endif");
+  if (lastEndif < 0) {
+    throw new Error("could not find final #endif in gumbo.h");
+  }
+  header = header.slice(0, lastEndif) + normalizeBlankLines(gumboHeaderAdditions) + header.slice(lastEndif);
+  ctx.files.set("gumbo.h", header);
+
+  const preamble = `#ifdef _MSC_VER
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#endif
+
+#include "gumbo.h"
+
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#endif
+`;
+  const rules: IncludeRules = { resolve, drop: inSet(["gumbo.h"]), markers: true };
+  const chunks = [preamble];
+  for (const path of listFiles(srcDir, ".c")) {
+    chunks.push(prepare(path, rules, dropGumboPosixLines));
+  }
+  chunks.push(normalizeBlankLines(gumboSourceAdditions));
+  ctx.files.set("gumbo.c", joinChunks(chunks));
+}
+
+// --- jbig2dec --------------------------------------------------------------
+
+const jbig2decSources = [
+  "jbig2.c",
+  "jbig2_arith.c",
+  "jbig2_arith_iaid.c",
+  "jbig2_arith_int.c",
+  "jbig2_generic.c",
+  "jbig2_huffman.c",
+  "jbig2_hufftab.c",
+  "jbig2_halftone.c",
+  "jbig2_image.c",
+  "jbig2_mmr.c",
+  "jbig2_page.c",
+  "jbig2_refinement.c",
+  "jbig2_segment.c",
+  "jbig2_symbol_dict.c",
+  "jbig2_text.c",
+];
+
+function genJbig2dec(ctx: Ctx): void {
+  const root = ctx.checkoutDir;
+  const resolve = dirResolver([root]);
+
+  // jbig2.h uses size_t/uint32_t without including their headers.
+  ctx.files.set(
+    "jbig2.h",
+    normalizeBlankLines(`#include <stddef.h>
+#include <stdint.h>
+
+${prepare(join(root, "jbig2.h"), { resolve })}`),
+  );
+
+  // config.h is generated by autotools and we supply its defines via cl flags.
+  const rules: IncludeRules = { resolve, drop: inSet(["config.h", "jbig2.h"], true), seen: new Set() };
+  const chunks = ['#include "jbig2.h"\n'];
+  for (const name of jbig2decSources) {
+    chunks.push(prepare(join(root, name), rules));
+  }
+  ctx.files.set("jbig2dec.c", joinChunks(chunks));
+}
+
+// --- mujs ------------------------------------------------------------------
+
+function genMujs(ctx: Ctx): void {
+  const root = ctx.checkoutDir;
+  const resolve = byNameResolver(mapByName(listFiles(root)));
+
+  ctx.files.set("mujs.h", prepare(join(root, "mujs.h"), { resolve, seen: new Set() }));
+
+  // one.c is upstream's own single-TU build; inlining its includes is enough.
+  const rules: IncludeRules = { resolve, drop: inSet(["mujs.h"]), seen: new Set() };
+  ctx.files.set("mujs.c", joinChunks(['#include "mujs.h"\n', prepare(join(root, "one.c"), rules)]));
+}
+
+// --- openjpeg --------------------------------------------------------------
+
+const openjpegSources = [
+  "bio.c",
+  "cidx_manager.c",
+  "cio.c",
+  "dwt.c",
+  "event.c",
+  "function_list.c",
+  "ht_dec.c",
+  "image.c",
+  "invert.c",
+  "j2k.c",
+  "jp2.c",
+  "mct.c",
+  "mqc.c",
+  "openjpeg.c",
+  "opj_clock.c",
+  "phix_manager.c",
+  "pi.c",
+  "ppix_manager.c",
+  "sparse_array.c",
+  "t1.c",
+  "t2.c",
+  "tcd.c",
+  "tgt.c",
+  "thix_manager.c",
+  "thread.c",
+  "tpix_manager.c",
+];
+
+// ht_dec.c has its own opj_t1_allocate_buffers() that collides with t1.c's once
+// both land in one translation unit.
+function renameHtDecSymbol(text: string): string {
+  return `#define opj_t1_allocate_buffers opj_ht_dec_t1_allocate_buffers\n${text}\n#undef opj_t1_allocate_buffers\n`;
+}
+
+function genOpenjpeg(ctx: Ctx): void {
+  const srcDir = findSrcDir(ctx.checkoutDir, [join("src", "lib", "openjp2"), ""], ["openjpeg.h", "j2k.c"]);
+
+  // All private headers ship alongside the .c, so local includes stay as-is.
+  for (const path of listFiles(srcDir, ".h")) {
+    ctx.files.set(basename(path), prepare(path));
+  }
+
+  // The amalgamation is a single TU mixing non-SIMD code with SIMD sections that
+  // include <immintrin.h>/<mm_malloc.h>. opj_malloc.h poisons malloc/free, and
+  // #pragma GCC poison can't be undone, so the first include poisons them and the
+  // later SIMD headers fail to compile (clang-18's mm_malloc.h uses malloc/free).
+  // Disable the poison for the whole amalgamated TU.
+  const chunks = ["#define OPJ_SKIP_POISON\n", '#include "openjpeg.h"\n'];
+  for (const name of openjpegSources) {
+    chunks.push(prepare(join(srcDir, name), undefined, name === "ht_dec.c" ? renameHtDecSymbol : undefined));
+  }
+  ctx.files.set("openjpeg.c", joinChunks(chunks));
+}
+
+// --- zopfli ----------------------------------------------------------------
+
+const zopfliSources = [
+  "blocksplitter.c",
+  "cache.c",
+  "deflate.c",
+  "gzip_container.c",
+  "hash.c",
+  "katajainen.c",
+  "lz77.c",
+  "squeeze.c",
+  "tree.c",
+  "util.c",
+  "zlib_container.c",
+  "zopfli_lib.c",
+];
+
+const zopfliCppSources = [
+  join("zopflipng", "lodepng", "lodepng.cpp"),
+  join("zopflipng", "lodepng", "lodepng_util.cpp"),
+  join("zopflipng", "zopflipng_lib.cc"),
+];
+
+// Hoisted from lodepng.cpp. In the non-amalgamated build, zlib_container.c and
+// lodepng.cpp each had their own file-local static adler32(). Concatenating both
+// into one translation unit collides on Win32 where size_t is unsigned.
+const zopfliAdler32Helpers = `
+static unsigned update_adler32(unsigned adler, const unsigned char* data, unsigned len) {
+  unsigned s1 = adler & 0xffffu;
+  unsigned s2 = (adler >> 16u) & 0xffffu;
+
+  while(len != 0u) {
+    unsigned i;
+    unsigned amount = len > 5552u ? 5552u : len;
+    len -= amount;
+    for(i = 0; i != amount; ++i) {
+      s1 += (*data++);
+      s2 += s1;
+    }
+    s1 %= 65521u;
+    s2 %= 65521u;
+  }
+
+  return (s2 << 16u) | s1;
+}
+
+static unsigned adler32(const unsigned char* data, unsigned len) {
+  return update_adler32(1u, data, len);
+}
+`;
+
+// Drops the two originals now that zopfliAdler32Helpers provides them.
+function dropZopfliAdler32(name: string, text: string): string {
+  if (basename(name) === "zlib_container.c") {
+    return text.replace(/static unsigned adler32\(const unsigned char\* data, size_t size\)\s*\{[\s\S]*?\n\}\n\n/, "");
+  }
+  if (basename(name) === "lodepng.cpp") {
+    return text.replace(
+      /static unsigned update_adler32\(unsigned adler, const unsigned char\* data, unsigned len\) \{[\s\S]*?\n\}\n\nstatic unsigned adler32\(const unsigned char\* data, unsigned len\) \{\s*return update_adler32\(1u, data, len\);\s*\}\n\n/,
+      "",
+    );
+  }
+  return text;
+}
+
+// zopfli's includes are written relative to src/, so map by both.
+function zopfliIncludeMap(checkoutDir: string): Map<string, string> {
+  const srcDir = join(checkoutDir, "src");
+  const listed = gitOutput(["-C", checkoutDir, "ls-files", "src"], ".")
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((path) => join(checkoutDir, path))
+    .filter((path) => /\.(h|c|cc|cpp)$/.test(path));
+
+  const map = new Map<string, string>();
+  for (const path of listed) {
+    map.set(normPath(relative(srcDir, path)), path);
+    map.set(basename(path), path);
+  }
+  return map;
+}
+
+function genZopfli(ctx: Ctx): void {
+  const srcDir = join(ctx.checkoutDir, "src");
+  const byName = zopfliIncludeMap(ctx.checkoutDir);
+  const resolve: ResolveInclude = (fromPath, inc) => {
+    const relPath = normPath(join(dirname(fromPath), inc));
+    if (existsSync(relPath)) {
+      return relPath;
+    }
+    const srcRel = normPath(relative(srcDir, relPath));
+    return byName.get(srcRel) ?? byName.get(inc) ?? byName.get(basename(inc));
+  };
+
+  const publicHeaders: [string, string][] = [
+    [join("zopflipng", "lodepng", "lodepng.h"), join(srcDir, "zopflipng", "lodepng", "lodepng.h")],
+    [join("zopflipng", "zopflipng_lib.h"), join(srcDir, "zopflipng", "zopflipng_lib.h")],
+  ];
+  for (const [outName, path] of publicHeaders) {
+    ctx.files.set(outName, prepare(path, { resolve, drop: inSet([basename(path)]) }));
+  }
+
+  const rules: IncludeRules = {
+    resolve,
+    // the two public headers above are included by the preamble instead
+    drop: inSet(["zopflipng_lib.h", "lodepng.h", "zopflipng/lodepng/lodepng.h", "lodepng/lodepng.h"], true),
+    seen: new Set(),
+  };
+  const preamble = `#include "zopflipng/zopflipng_lib.h"
+#include "zopflipng/lodepng/lodepng.h"
+`;
+  const chunks = [preamble, zopfliAdler32Helpers];
+  for (const name of zopfliSources) {
+    chunks.push(dropZopfliAdler32(name, prepare(join(srcDir, "zopfli", name), rules)));
+  }
+  for (const name of zopfliCppSources) {
+    chunks.push(dropZopfliAdler32(name, prepare(join(srcDir, name), rules)));
+  }
+  ctx.files.set("zopfli.cpp", joinChunks(chunks));
+}
+
+// --- the table -------------------------------------------------------------
+
+const libs: Lib[] = [
+  {
+    name: "bzip2",
+    homepage: "https://www.sourceware.org/bzip2/",
+    repo: "git://sourceware.org/git/bzip2.git",
+    rev: "bzip2-1.0.8",
+    writes: "bzlib.h, bzip2.c, LICENSE",
+    generate: genBzip2,
+    copies: ["LICENSE"],
+    compile: {
+      file: "bzip2.c",
+      args: [
+        ...defines("WIN32", "_WIN32", "NDEBUG", "BZ_NO_STDIO", "_CRT_SECURE_NO_WARNINGS", "_HAS_ITERATOR_DEBUGGING=0"),
+        "/wd4018",
+        "/wd4100",
+        "/wd4127",
+        "/wd4244",
+        "/wd4267",
+        "/wd4701",
+        "/wd4706",
+      ],
+    },
+  },
+  {
+    name: "extract",
+    homepage: "https://github.com/ArtifexSoftware/extract",
+    repo: "https://github.com/ArtifexSoftware/extract",
+    rev: "8750ac39c30a0d65119b426b5a491c5b8e8bf674",
+    writes: "extract/*.h, memento.h, extract.c",
+    generate: genExtract,
+    compile: {
+      file: "extract.c",
+      args: [
+        ...defines("WIN32", "_WIN32", "NDEBUG", "_CRT_SECURE_NO_WARNINGS", "_HAS_ITERATOR_DEBUGGING=0"),
+        "/I",
+        ".",
+        "/I",
+        "..\\..\\..\\ext\\a-zlib",
+        "/wd4005",
+        "/wd4100",
+        "/wd4127",
+        "/wd4130",
+        "/wd4201",
+        "/wd4245",
+        "/wd4310",
+        "/wd4389",
+        "/wd4456",
+        "/wd4457",
+        "/wd4701",
+        "/wd4996",
+      ],
+    },
+  },
+  {
+    name: "gumbo",
+    repo: "https://github.com/ArtifexSoftware/thirdparty-gumbo-parser.git",
+    rev: "v0.10.1",
+    allowLocalRepo: true,
+    writes: "gumbo.h, gumbo.c",
+    generate: genGumbo,
+    compile: {
+      file: "gumbo.c",
+      args: [
+        ...defines("WIN32", "_WIN32", "NDEBUG", "_HAS_ITERATOR_DEBUGGING=0"),
+        "/wd4018",
+        "/wd4100",
+        "/wd4132",
+        "/wd4189",
+        "/wd4204",
+        "/wd4244",
+        "/wd4245",
+        "/wd4267",
+        "/wd4305",
+        "/wd4306",
+        "/wd4389",
+        "/wd4456",
+        "/wd4701",
+        "/wd4702",
+      ],
+    },
+  },
+  {
+    name: "jbig2dec",
+    homepage: "https://github.com/ArtifexSoftware/jbig2dec",
+    repo: "https://github.com/ArtifexSoftware/jbig2dec",
+    rev: "dc15c39bbbddc90f79c14563d2eb5a794106be8f",
+    writes: "jbig2.h, jbig2dec.c, COPYING, LICENSE",
+    generate: genJbig2dec,
+    // jbig2dec is AGPL, so the notices have to ship with the source. This is the
+    // only copy in the tree now that ext/jbig2dec is gone; AUTHORS points at
+    // ext/a-jbig2dec/COPYING.
+    copies: ["COPYING", "LICENSE"],
+    compile: {
+      file: "jbig2dec.c",
+      args: [
+        ...defines(
+          "WIN32",
+          "_WIN32",
+          "NDEBUG",
+          "_CRT_SECURE_NO_WARNINGS",
+          "HAVE_STRING_H=1",
+          "JBIG_NO_MEMENTO",
+          "_HAS_ITERATOR_DEBUGGING=0",
+        ),
+        "/wd4018",
+        "/wd4100",
+        "/wd4146",
+        "/wd4244",
+        "/wd4267",
+        "/wd4456",
+        "/wd4701",
+      ],
+    },
+  },
+  {
+    name: "mujs",
+    homepage: "https://mujs.com/",
+    repo: "https://github.com/ArtifexSoftware/mujs",
+    rev: "e892c9fdbbddba94e52f656ccb378ed4885e30cc",
+    writes: "mujs.h, mujs.c, regexp.h, COPYING",
+    generate: genMujs,
+    // regexp.h is used directly by MuPDF text search.
+    copies: ["regexp.h", "COPYING"],
+    compile: {
+      file: "mujs.c",
+      args: [
+        ...defines("WIN32", "_WIN32", "NDEBUG", "_HAS_ITERATOR_DEBUGGING=0"),
+        "/wd4090",
+        "/wd4100",
+        "/wd4127",
+        "/wd4146",
+        "/wd4310",
+        "/wd4324",
+        "/wd4702",
+        "/wd4706",
+      ],
+    },
+  },
+  {
+    name: "openjpeg",
+    homepage: "https://www.openjpeg.org/",
+    repo: "https://github.com/ArtifexSoftware/thirdparty-openjpeg",
+    rev: "957029eb875eee1118743f200cb86da9d8289de2",
+    writes: "*.h, openjpeg.c, LICENSE",
+    generate: genOpenjpeg,
+    copies: ["LICENSE"],
+    // the shipped header set follows upstream's, so stale ones must not linger
+    wipeOutDir: true,
+    compile: {
+      file: "openjpeg.c",
+      args: [
+        ...defines("_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS"),
+        "/I",
+        ".",
+        "/wd4005",
+        "/wd4100",
+        "/wd4127",
+        "/wd4244",
+        "/wd4310",
+        "/wd4389",
+        "/wd4456",
+        "/wd4702",
+      ],
+    },
+  },
+  {
+    name: "zlib",
+    homepage: "https://zlib.net/",
+    repo: "https://github.com/madler/zlib",
+    rev: "v1.3.2",
+    writes: "zlib.h, zlib.c, LICENSE",
+    generate: genZlib,
+    copies: ["LICENSE"],
+    compile: {
+      file: "zlib.c",
+      args: [
+        ...defines("WIN32", "_WIN32", "NDEBUG", "_CRT_SECURE_NO_WARNINGS", "_HAS_ITERATOR_DEBUGGING=0"),
+        "/wd4131",
+        "/wd4005",
+        "/wd4244",
+        "/wd4245",
+        "/wd4267",
+        "/wd4996",
+      ],
+    },
+  },
+  {
+    name: "zopfli",
+    homepage: "https://github.com/google/zopfli",
+    repo: "https://github.com/google/zopfli",
+    rev: "ccf9f0588d4a4509cb1040310ec122243e670ee6",
+    writes: "zopflipng/*.h, zopfli.cpp, COPYING",
+    generate: genZopfli,
+    copies: ["COPYING"],
+    compile: {
+      file: "zopfli.cpp",
+      args: [
+        "/TP",
+        "/EHsc",
+        ...defines("WIN32", "_WIN32", "NDEBUG", "_CRT_SECURE_NO_WARNINGS", "_HAS_ITERATOR_DEBUGGING=0"),
+        "/I",
+        ".",
+        "/wd4018",
+        "/wd4100",
+        "/wd4127",
+        "/wd4244",
+        "/wd4267",
+        "/wd4334",
+        "/wd4305",
+        "/wd4457",
+        "/wd4459",
+        "/wd4477",
+        "/wd4530",
+        "/wd4702",
+        "/wd4996",
+      ],
+    },
+  },
+];
+
+function defines(...names: string[]): string[] {
+  return names.flatMap((name) => ["/D", name]);
+}
+
+// ---------------------------------------------------------------------------
+// driver
+// ---------------------------------------------------------------------------
+
+type Args = {
+  lib: Lib;
+  repo: string;
+  rev: string;
+  keep: boolean;
+};
+
+const depsDir = "deps";
+
+function usage(err?: string): never {
+  if (err) {
+    console.error(`error: ${err}\n`);
+  }
+  const list = libs.map((lib) => `  -${lib.name.padEnd(10)} ${lib.writes}`).join("\n");
+  console.error(`Usage: bun cmd/amalgam.ts -<library> [repo-url] [git-tag-or-checkin] [-keep]
+
+Clones the library under deps/<library>, amalgamates it into ext/a-<library>/,
+validates the result with cl.exe, and writes version.txt next to it.
+
+Libraries (and what each writes into ext/a-<library>/):
+${list}
+
+Options:
+  -keep   reuse an existing deps/<library> checkout instead of re-cloning
+
+Each library defaults to the repo and revision recorded in ext/versions.txt,
+so plain 'bun cmd/amalgam.ts -zlib' regenerates the current copy.
+`);
+  process.exit(err ? 1 : 0);
+}
+
+function parseArgs(): Args {
+  const argv = process.argv.slice(2);
+  if (argv.includes("-h") || argv.includes("-help") || argv.includes("--help")) {
+    usage();
+  }
+
+  let lib: Lib | undefined;
+  const positional: string[] = [];
+  let keep = false;
+  for (const arg of argv) {
+    if (!arg.startsWith("-")) {
+      positional.push(arg);
+      continue;
+    }
+    if (arg === "-keep" || arg === "--keep") {
+      keep = true;
+      continue;
+    }
+    const found = libs.find((l) => l.name === arg.slice(1).replace(/^-/, ""));
+    if (!found) {
+      usage(`unknown option ${arg}`);
+    }
+    if (lib) {
+      usage("pick exactly one library");
+    }
+    lib = found;
+  }
+
+  if (!lib) {
+    usage("no library selected");
+  }
+  if (positional.length > 2) {
+    usage("too many arguments");
+  }
+  return { lib, repo: positional[0] ?? lib.repo, rev: positional[1] ?? lib.rev, keep };
+}
+
+async function checkout(lib: Lib, dir: string, repo: string, rev: string, keep: boolean): Promise<void> {
+  mkdirSync(depsDir, { recursive: true });
+  if (!keep && existsSync(dir)) {
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  if (!existsSync(dir)) {
+    if (lib.allowLocalRepo && existsSync(repo)) {
+      cpSync(repo, dir, { recursive: true });
+    } else {
+      await runLogged("git", ["clone", repo, dir]);
+    }
+  }
+
+  // a local copy may not carry a .git, in which case rev is informational
+  if (existsSync(join(dir, ".git"))) {
+    await runLogged("git", ["-C", dir, "fetch", "--tags", "--force"]);
+    await runLogged("git", ["-C", dir, "checkout", "--force", rev]);
+  }
+}
+
+function versionText(lib: Lib, dir: string, repo: string, rev: string): string {
+  let repoUrl = repo;
+  let commitSha1 = rev;
+  if (existsSync(join(dir, ".git"))) {
+    commitSha1 = gitOutput(["rev-parse", "HEAD"], dir);
+    repoUrl = gitOutput(["config", "--get", "remote.origin.url"], dir, false) || repo;
+  }
+
+  const lines: string[] = [];
+  if (lib.homepage) {
+    lines.push(`project_homepage: ${lib.homepage}`);
+  }
+  lines.push(`repo_url: ${repoUrl}`, `revision: ${rev}`, `commit_sha1: ${commitSha1}`);
+
+  const githubUrl = normalizeGithubUrl(repoUrl);
+  if (githubUrl) {
+    lines.push(`github_url: ${githubUrl}`, `github_commit_url: ${githubUrl}/commit/${commitSha1}`);
+  }
+  return lines.join("\n") + "\n";
+}
+
+function writeFiles(dir: string, files: Map<string, string>): string[] {
+  const written: string[] = [];
+  for (const [name, text] of files) {
+    const path = join(dir, name);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, text);
+    written.push(path);
+  }
+  return written;
+}
+
+async function validateCompile(lib: Lib, tmpDir: string, files: Map<string, string>): Promise<void> {
+  rmSync(tmpDir, { recursive: true, force: true });
+  mkdirSync(tmpDir, { recursive: true });
+  writeFiles(tmpDir, files);
+
+  detectVisualStudio2026();
+  await runLogged("cl.exe", [...clCommonArgs, ...lib.compile.args, lib.compile.file], tmpDir);
+}
+
+// Licenses and hand-picked headers copied straight from upstream. Several are
+// the only copy left in the tree, so re-copy them on every regeneration.
+function copyFromCheckout(checkoutDir: string, outDir: string, names: string[]): string[] {
+  const written: string[] = [];
+  for (const name of names) {
+    const src = join(checkoutDir, name);
+    if (!existsSync(src)) {
+      throw new Error(`missing file in checkout: ${src}`);
+    }
+    const dst = join(outDir, name);
+    mkdirSync(dirname(dst), { recursive: true });
+    writeFileSync(dst, readFileSync(src));
+    written.push(dst);
+  }
+  return written;
+}
+
+async function main(): Promise<void> {
+  const args = parseArgs();
+  const lib = args.lib;
+  const checkoutDir = join(depsDir, lib.name);
+  const outDir = join("ext", `a-${lib.name}`);
+  const tmpDir = join("cmd", "tmp", `a-${lib.name}`);
+
+  await checkout(lib, checkoutDir, args.repo, args.rev, args.keep);
+
+  const ctx: Ctx = { checkoutDir, files: new Map() };
+  lib.generate(ctx);
+  const version = versionText(lib, checkoutDir, args.repo, args.rev);
+
+  await validateCompile(lib, tmpDir, ctx.files);
+
+  if (lib.wipeOutDir) {
+    rmSync(outDir, { recursive: true, force: true });
+  }
+  mkdirSync(outDir, { recursive: true });
+
+  const written = writeFiles(outDir, ctx.files);
+  writeFileSync(join(outDir, "version.txt"), version);
+  written.push(join(outDir, "version.txt"));
+  written.push(...copyFromCheckout(checkoutDir, outDir, lib.copies ?? []));
+  for (const path of written) {
+    console.log(`wrote ${path}`);
+  }
+}
+
+await main();

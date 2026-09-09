@@ -1,15 +1,15 @@
 # Updating OpenJPEG
 
-Use `cmd/a-openjpeg.ts` to update the amalgamated OpenJPEG copy used by the
+Use `cmd/amalgam.ts -openjpeg` to update the amalgamated OpenJPEG copy used by the
 build.
 
 1. Pick the OpenJPEG repository URL and tag or commit hash. The current source is:
 
    ```sh
-   bun cmd/a-openjpeg.ts https://github.com/ArtifexSoftware/thirdparty-openjpeg 957029eb875eee1118743f200cb86da9d8289de2
+   bun cmd/amalgam.ts -openjpeg https://github.com/ArtifexSoftware/thirdparty-openjpeg 957029eb875eee1118743f200cb86da9d8289de2
    ```
 
-   Running `bun cmd/a-openjpeg.ts` without arguments uses those defaults.
+   Running `bun cmd/amalgam.ts -openjpeg` without further arguments uses those defaults.
 
 2. The script checks out the requested revision under `deps/openjpeg` and writes
    `ext/a-openjpeg/*.h`, `ext/a-openjpeg/openjpeg.c`,

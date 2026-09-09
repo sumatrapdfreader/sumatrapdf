@@ -1,15 +1,15 @@
 # Updating MuJS
 
-Use `cmd/a-mujs.ts` to update the amalgamated MuJS copy used by the build.
+Use `cmd/amalgam.ts -mujs` to update the amalgamated MuJS copy used by the build.
 
 1. Check `ext/versions.txt` for the intended upstream repository and revision.
    The current source is:
 
    ```sh
-   bun cmd/a-mujs.ts https://github.com/ArtifexSoftware/mujs e892c9fdbbddba94e52f656ccb378ed4885e30cc
+   bun cmd/amalgam.ts -mujs https://github.com/ArtifexSoftware/mujs e892c9fdbbddba94e52f656ccb378ed4885e30cc
    ```
 
-   Running `bun cmd/a-mujs.ts` without arguments uses those defaults.
+   Running `bun cmd/amalgam.ts -mujs` without further arguments uses those defaults.
 
 2. The script checks out the requested revision under `deps/mujs` and writes
    `ext/a-mujs/mujs.h`, `ext/a-mujs/mujs.c`, `ext/a-mujs/version.txt`,
