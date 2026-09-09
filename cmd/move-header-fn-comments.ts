@@ -15,7 +15,6 @@ const SKIP_HEADERS = new Set([
   "Commands.h", // generated
   "BuildConfig.h",
   "BuildConfig_default.h",
-  "CaptionGlyphs.h", // generated
   "Dia2Subset.h", // third-party COM headers under tools/efi
   "nsWindowsDllInterceptor.h", // vendored
   "parg.h",

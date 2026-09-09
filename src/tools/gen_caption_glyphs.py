@@ -86,7 +86,7 @@ def main() -> int:
         glyph_set[cmap[cp]].draw(pen)
         parts.append(emit_path_fn(fn, pen.ops))
 
-    cpp_path = Path(__file__).resolve().parents[1] / "src" / "CaptionGlyphs.cpp"
+    cpp_path = Path(__file__).resolve().parents[1] / "SumatraPDF.cpp"
     text = cpp_path.read_text(encoding="utf-8")
 
     start = text.index("static void BuildMinimizePath")

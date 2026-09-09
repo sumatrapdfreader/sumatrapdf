@@ -147,9 +147,6 @@
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\CaptionGlyphs.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ChapterTable.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -651,9 +648,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CanvasAboutUI.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\CaptionGlyphs.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChangeColorDialog.cpp">

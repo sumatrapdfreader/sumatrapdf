@@ -1163,7 +1163,6 @@
     <ClInclude Include="..\src\AvifReader.h" />
     <ClInclude Include="..\src\BuildConfig.h" />
     <ClInclude Include="..\src\Canvas.h" />
-    <ClInclude Include="..\src\CaptionGlyphs.h" />
     <ClInclude Include="..\src\ChapterTable.h" />
     <ClInclude Include="..\src\ChmDump.h" />
     <ClInclude Include="..\src\ChmFile.h" />
@@ -1359,7 +1358,6 @@
     </ClCompile>
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
-    <ClCompile Include="..\src\CaptionGlyphs.cpp" />
     <ClCompile Include="..\src\ChangeColorDialog.cpp" />
     <ClCompile Include="..\src\ChangeLanguageDialog.cpp" />
     <ClCompile Include="..\src\ChangeScrollbarDialog.cpp" />

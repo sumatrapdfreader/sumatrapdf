@@ -302,7 +302,6 @@ const sumatraFiles: FileGroup[] = [
       "AIGrokBuild.*",
       "KeyboardHelp.*",
       "KeyboardHelp_win.cpp",
-      "CaptionGlyphs.*",
       "AddFavoriteDialog.*",
       "ChangeColorDialog.*",
       "ChangeLanguageDialog.*",
