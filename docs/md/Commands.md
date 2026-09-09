@@ -384,7 +384,6 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdDebugCrashMe,,Debug: Crash Me,
 CmdDebugShowNotif,,Debug: Show Notification,
 CmdDebugStartStressTest,,Debug: Start Stress Test,
-CmdDebugTestApp,,Debug: Test App,
 CmdDebugTogglePredictiveRender,,Debug: Toggle Predictive Rendering,
 CmdDebugToggleRenderInfo,,Debug: Toggle Render Queue Info,
 CmdDebugToggleCacheInfo,,Debug: Toggle Cache Info,

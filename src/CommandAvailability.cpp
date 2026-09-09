@@ -55,7 +55,6 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdHelpAbout,
     CmdDebugShowNotif,
     CmdDebugStartStressTest,
-    CmdDebugTestApp,
     CmdDebugTogglePredictiveRender,
     CmdDebugToggleRenderInfo,
     CmdDebugToggleCacheInfo,
@@ -313,7 +312,6 @@ static i32 gBlacklistCommandsFromPalette[] = {
 static i32 gCommandsDebugOnly[] = {
     CmdDebugCorruptMemory,
     CmdDebugCrashMe,
-    CmdDebugTestApp,
     CmdDebugShowNotif,
     CmdDebugStartStressTest,
     CmdDebugToggleDpiOverride,

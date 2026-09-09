@@ -412,7 +412,6 @@ function sumatrapdf_files()
   filter { "configurations:Debug or DebugFull" }
   files_in_dir("src", {
     "regress/Regress.*",
-    "Scratch.*",
     "TestPlugin.cpp",
     "TestPreview.cpp",
     "AppUnitTests.cpp",

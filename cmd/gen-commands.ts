@@ -197,7 +197,7 @@ const commandsRaw = [
     "CmdDebugCorruptMemory", "Debug: Corrupt Memory",
     "CmdDebugCrashMe", "Debug: Crash Me",
     "", "removed: CmdDebugDownloadSymbols",
-    "CmdDebugTestApp", "Debug: Test App",
+    "", "removed: CmdDebugTestApp",
     "CmdDebugShowNotif", "Debug: Show Notification",
     "CmdDebugStartStressTest", "Debug: Start Stress Test",
     "CmdDebugTogglePredictiveRender", "Debug: Toggle Predictive Rendering",

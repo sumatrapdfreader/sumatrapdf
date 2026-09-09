@@ -372,9 +372,6 @@
     <ClInclude Include="..\src\RenderCache.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Scratch.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Screenshot.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -1011,9 +1008,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RenderCache.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Scratch.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Screenshot.cpp">

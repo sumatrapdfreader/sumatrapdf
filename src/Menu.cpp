@@ -702,10 +702,6 @@ static MenuDef menuDefDebug[] = {
         CmdDebugShowFitContentArea,
     },
     {
-        StrL("Test app"),
-        CmdDebugTestApp,
-    },
-    {
         StrL("Show notification"),
         CmdDebugShowNotif,
     },

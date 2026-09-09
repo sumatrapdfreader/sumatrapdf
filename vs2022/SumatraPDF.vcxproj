@@ -1268,7 +1268,6 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\RenderCache.h" />
-    <ClInclude Include="..\src\Scratch.h" />
     <ClInclude Include="..\src\Screenshot.h" />
     <ClInclude Include="..\src\ScreenshotCapture.h" />
     <ClInclude Include="..\src\SearchAndDDE.h" />
@@ -1561,16 +1560,6 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
     <ClCompile Include="..\src\RenderCache.cpp" />
-    <ClCompile Include="..\src\Scratch.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\src\Screenshot.cpp" />
     <ClCompile Include="..\src\ScreenshotCapture.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />

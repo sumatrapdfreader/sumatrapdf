@@ -12788,13 +12788,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
 #if IS_DEBUG
-        case CmdDebugTestApp:
-            extern void TestApp(HINSTANCE hInstance);
-            extern void TestBrowser();
-            // TestApp(GetModuleHandle(nullptr));
-            TestBrowser();
-            break;
-
         case CmdDebugStartStressTest: {
             if (!win) {
                 return 0;

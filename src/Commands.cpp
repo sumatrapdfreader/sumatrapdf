@@ -200,7 +200,6 @@ static SeqStrings gCommandNames =
     "CmdToggleInverseSearch\0"
     "CmdDebugCorruptMemory\0"
     "CmdDebugCrashMe\0"
-    "CmdDebugTestApp\0"
     "CmdDebugShowNotif\0"
     "CmdDebugStartStressTest\0"
     "CmdDebugTogglePredictiveRender\0"
@@ -509,7 +508,6 @@ static i32 gCommandIds[] = {
     CmdToggleInverseSearch,
     CmdDebugCorruptMemory,
     CmdDebugCrashMe,
-    CmdDebugTestApp,
     CmdDebugShowNotif,
     CmdDebugStartStressTest,
     CmdDebugTogglePredictiveRender,
@@ -818,7 +816,6 @@ SeqStrings gCommandDescriptions =
     "Toggle Inverse Search\0"
     "Debug: Corrupt Memory\0"
     "Debug: Crash Me\0"
-    "Debug: Test App\0"
     "Debug: Show Notification\0"
     "Debug: Start Stress Test\0"
     "Debug: Toggle Predictive Rendering\0"
