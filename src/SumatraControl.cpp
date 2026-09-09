@@ -60,7 +60,7 @@
 #include "EutlTrust.h"
 #include "CommandPalette.h"
 #include "PdfTools.h"
-#include "ReadAloudPlaybackBar.h"
+#include "ReadAloud.h"
 #include "SumatraControl.h"
 
 extern bool gIsStartup;

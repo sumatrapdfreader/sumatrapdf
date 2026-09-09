@@ -358,8 +358,7 @@ const sumatraFiles: FileGroup[] = [
       "PrintWin11.*",
       "ProgressUpdateUI.*",
       "PreviewPipe.*",
-      "ReadAloudHighlight.*",
-      "ReadAloudPlaybackBar.*",
+      "ReadAloud.*",
       "RefHover.*",
       "RefHoverCanvas.*",
       "RefHoverDetect.*",
@@ -576,46 +575,6 @@ namespace _com_util {
     console.error(`Failed to compile _com_util stub: ${comRes.stderr}`);
   }
   exeObjs.push(comUtilObj);
-
-  // ── TextToSpeech stub (WinRT headers unavailable for mingw cross-compile) ──
-  const ttsStubSrc = join(outDir, "obj", "_tts_stub.cpp");
-  const ttsStubObj = join(outDir, "obj", "_tts_stub.o");
-  await writeFile(
-    ttsStubSrc,
-    `
-#include "base/Base.h"
-#include "TextToSpeech.h"
-
-bool TtsSpeakUtf8(Str) { return false; }
-void TtsStop() {}
-void TtsRelease() {}
-bool TtsIsSpeaking() { return false; }
-int TtsGetSpokenPosUtf8() { return -1; }
-void TtsSetNotifyWindow(HWND, UINT, WPARAM, LPARAM) {}
-void TtsProcessEvents() {}
-Vec<TtsVoiceInfo> TtsGetVoices() { return Vec<TtsVoiceInfo>(); }
-void TtsFreeVoices(Vec<TtsVoiceInfo>&) {}
-bool TtsSetVoiceById(Str) { return false; }
-Str TtsGetVoiceId() { return Str(); }
-void TtsSetSpeed(float) {}
-float TtsGetSpeed() { return 1.0f; }
-`,
-  );
-  const ttsRes = await spawnCmd([
-    mingwTools.cxx,
-    "-Os",
-    ...MINGW_CXX_FLAGS,
-    "-Isrc",
-    "-c",
-    ttsStubSrc,
-    "-o",
-    ttsStubObj,
-  ]);
-  if (!ttsRes.ok) {
-    console.error(`Failed to compile TextToSpeech stub: ${ttsRes.stderr}`);
-    throw new Error("TextToSpeech stub compile failed");
-  }
-  exeObjs.push(ttsStubObj);
 
   // ── debug test stubs (TestPlugin/TestPreview don't build cleanly with mingw GDI+) ──
   const testStubSrc = join(outDir, "obj", "_test_stub.cpp");

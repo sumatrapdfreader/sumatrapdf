@@ -19,7 +19,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Selection.h"
-#include "ReadAloudHighlight.h"
+#include "ReadAloud.h"
 #include "Translations.h"
 #include "AnnotEditToolbar.h"
 #include "WindowTab.h"

@@ -50,7 +50,7 @@
 #include "Translations.h"
 #include "SvgIcons.h"
 #include "Theme.h"
-#include "TextToSpeech.h"
+#include "ReadAloud.h"
 #include "Toolbar.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference

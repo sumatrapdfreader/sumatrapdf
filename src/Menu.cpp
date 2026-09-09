@@ -46,7 +46,7 @@
 #include "ImageSaveCropResize.h"
 #include "GoogleLens.h"
 #include "CommandAvailability.h"
-#include "ReadAloudHighlight.h"
+#include "ReadAloud.h"
 #include "Menu.h"
 
 // value associated with menu item for owner-drawn purposes

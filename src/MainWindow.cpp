@@ -30,7 +30,7 @@
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
-#include "ReadAloudPlaybackBar.h"
+#include "ReadAloud.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SumatraPDF.h"

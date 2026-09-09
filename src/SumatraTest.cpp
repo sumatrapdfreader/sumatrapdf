@@ -32,7 +32,7 @@ extern "C" {
 #include "WindowTab.h"
 #include "Selection.h"
 #include "SearchAndDDE.h"
-#include "ReadAloudHighlight.h"
+#include "ReadAloud.h"
 #include "Translations.h"
 #include "MarkdownModel.h"
 #include "TableOfContents.h"

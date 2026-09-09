@@ -33,8 +33,6 @@ constexpr int kRepaintMessageDelayInMs = 1000;
 
 constexpr int kAutoReloadTimerID = 5;
 
-constexpr int kReadAloudHighlightTimerID = 8;
-constexpr int kReadAloudHighlightDelayInMs = 80;
 // debounce: coalesce bursts of file-change notifications (a single save can
 // fire several) into one reload. SetTimer() with the same id resets it, so the
 // reload only happens once the file has been quiet for this long (#5690).
@@ -142,43 +140,11 @@ bool MaybeLaunchDocumentation(Str url);
 bool OpenFileExternally(Str path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
-bool CanContinueReadAloud(WindowTab* tab);
 bool MaybeSaveAnnotations(WindowTab* tab);
 void DeleteFileFromDiskAndHistory(Str path);
 WindowTab* FindTabByFilePath(Str path);
 // the tab that currently owns this controller, null if it is no longer shown
 WindowTab* FindTabByController(DocController*);
-WindowTab* GetReadAloudSourceTab();
-void ReadAloudForgetTab(WindowTab*);
-void ReadAloudAfterTtsEvents();
-
-constexpr UINT CmdTtsVoiceDefault = 0x7100;
-constexpr UINT CmdTtsVoiceFirst = 0x7101;
-constexpr UINT CmdTtsVoiceLast = 0x71ff;
-constexpr UINT CmdTtsMenuReadCurrentPage = 0x7200;
-constexpr UINT CmdTtsMenuContinueReading = 0x7201;
-constexpr UINT CmdTtsMenuReadSelection = 0x7202;
-constexpr UINT CmdTtsMenuPauseReading = 0x7203;
-constexpr UINT CmdTtsMenuReadFromCursor = 0x7204;
-constexpr UINT CmdTtsMenuStopReading = 0x7205;
-constexpr UINT CmdTtsSpeedFirst = 0x7300;
-constexpr UINT CmdTtsSpeedLast = 0x730f;
-
-TempStr ReadAloudSpeedLabelTemp(float speed);
-int ReadAloudSpeedCount();
-float ReadAloudSpeedAt(int idx);
-int ReadAloudClosestSpeedIdx();
-void ReadAloudSetSpeedIdx(int idx);
-
-void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem = false, bool canReadFromCursor = false);
-bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId);
-void SetReadAloudAppSubmenu(HMENU menu);
-HMENU GetReadAloudAppSubmenu();
-bool IsReadAloudAppSubmenu(HMENU menu);
-void SetReadAloudContextSubmenu(HMENU menu);
-void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen);
-bool IsReadAloudContextSubmenu(HMENU menu);
-HMENU GetReadAloudContextSubmenu();
 bool CanCloseWindow(MainWindow* win);
 void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
 void PostAppExit();

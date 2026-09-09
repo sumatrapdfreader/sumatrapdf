@@ -25,7 +25,7 @@
 #include "Installer.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
-#include "TextToSpeech.h"
+#include "ReadAloud.h"
 #include "CommandAvailability.h"
 
 // clang-format off

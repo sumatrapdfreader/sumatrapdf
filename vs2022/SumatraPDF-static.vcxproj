@@ -1231,8 +1231,7 @@
     <ClInclude Include="..\src\Print.h" />
     <ClInclude Include="..\src\PrintWin11.h" />
     <ClInclude Include="..\src\ProgressUpdateUI.h" />
-    <ClInclude Include="..\src\ReadAloudHighlight.h" />
-    <ClInclude Include="..\src\ReadAloudPlaybackBar.h" />
+    <ClInclude Include="..\src\ReadAloud.h" />
     <ClInclude Include="..\src\ReaderModel.h" />
     <ClInclude Include="..\src\RefHover.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
@@ -1261,7 +1260,6 @@
     <ClInclude Include="..\src\Tabs.h" />
     <ClInclude Include="..\src\TextSearch.h" />
     <ClInclude Include="..\src\TextSelection.h" />
-    <ClInclude Include="..\src\TextToSpeech.h" />
     <ClInclude Include="..\src\Theme.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\Translations.h" />
@@ -1459,8 +1457,7 @@
     <ClCompile Include="..\src\PngOptimizer.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\PrintWin11.cpp" />
-    <ClCompile Include="..\src\ReadAloudHighlight.cpp" />
-    <ClCompile Include="..\src\ReadAloudPlaybackBar.cpp" />
+    <ClCompile Include="..\src\ReadAloud.cpp" />
     <ClCompile Include="..\src\ReaderModel.cpp" />
     <ClCompile Include="..\src\RefHover.cpp" />
     <ClCompile Include="..\src\RefHoverCanvas.cpp" />
@@ -1529,7 +1526,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\TextSelection.cpp" />
-    <ClCompile Include="..\src\TextToSpeech.cpp" />
     <ClCompile Include="..\src\TextViewWnd.cpp" />
     <ClCompile Include="..\src\Theme.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />

@@ -39,7 +39,7 @@
 #include "Accelerators.h"
 #include "Theme.h"
 #include "PdfDarkMode.h"
-#include "TextToSpeech.h"
+#include "ReadAloud.h"
 #include "Notifications.h"
 #include "ExplorerQuickLook.h"
 #include "Tabs.h"
