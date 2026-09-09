@@ -14938,6 +14938,7 @@ WEBP_DSP_INIT_FUNC(VP8FiltersInit) {
   assert(WebPFilters[WEBP_FILTER_GRADIENT] != NULL);
 }
 
+#define GradientPredictor_C filters_neon_GradientPredictor_C
 #if defined(WEBP_USE_NEON)
 
 #include <assert.h>
@@ -15197,6 +15198,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInitNEON(void) {
 WEBP_DSP_INIT_STUB(VP8FiltersInitNEON)
 
 #endif
+
+#undef GradientPredictor_C
 
 #if defined(WEBP_USE_SSE2)
 

@@ -1278,7 +1278,10 @@ const libwebpDspSources = [
 ];
 
 // File-local statics that collide once every .c is one translation unit.
+// filters_neon.c repeats filters.c's GradientPredictor_C; only ARM builds see
+// both, so the x64 validation compile below can't catch it.
 const libwebpRenames: Record<string, string[]> = {
+  "filters_neon.c": ["GradientPredictor_C"],
   "quant_levels_dec_utils.c": ["clip_8b"],
   "ssim_sse2.c": ["kWeight"],
 };
@@ -1606,7 +1609,7 @@ const libs: Lib[] = [
         "/I",
         "..\\..\\..\\ext\\mupdf\\scripts\\freetype",
         "/I",
-        "..\\..\\..\\ext\\brotli\\c\\include",
+        "..\\..\\..\\ext\\a-brotli",
         "/wd4018",
         "/wd4100",
         "/wd4101",
@@ -2103,13 +2106,39 @@ function writeFiles(dir: string, files: Map<string, string>): string[] {
   return written;
 }
 
+// The ARM64 cross compiler next to the x64 cl.exe on PATH. Same toolset
+// version, so the INCLUDE set by the developer prompt still applies (we only
+// compile, never link, so LIB doesn't matter).
+function findArm64Cl(): string {
+  const found = whichExe("cl.exe");
+  if (!found) {
+    throw new Error("cl.exe not in PATH, run from a Visual Studio developer prompt");
+  }
+  const arm64 = found.replace(/\\x64\\cl\.exe$/i, "\\arm64\\cl.exe");
+  if (arm64 === found || !existsSync(arm64)) {
+    throw new Error(`no ARM64 cl.exe next to ${found}, install the VS ARM64 build tools`);
+  }
+  return arm64;
+}
+
+function whichExe(exe: string): string {
+  const proc = Bun.spawnSync(["where", exe], { stdout: "pipe", stderr: "pipe" });
+  return proc.exitCode === 0 ? proc.stdout.toString().split("\n")[0]!.trim() : "";
+}
+
+// Compiles for x64 and ARM64: each arch takes different #ifdef branches (SSE
+// vs NEON), so only building both catches a chunk that breaks the other one.
 async function validateCompile(lib: Lib, tmpDir: string, files: Map<string, string>): Promise<void> {
   rmSync(tmpDir, { recursive: true, force: true });
   mkdirSync(tmpDir, { recursive: true });
   writeFiles(tmpDir, files);
 
   detectVisualStudio2026();
-  await runLogged("cl.exe", [...clCommonArgs, ...lib.compile.args, lib.compile.file], tmpDir);
+  const args = [...clCommonArgs, ...lib.compile.args, lib.compile.file];
+  console.log("compiling for x64");
+  await runLogged("cl.exe", args, tmpDir);
+  console.log("compiling for arm64");
+  await runLogged(findArm64Cl(), args, tmpDir);
 }
 
 // Licenses and hand-picked headers copied straight from upstream. Several are
