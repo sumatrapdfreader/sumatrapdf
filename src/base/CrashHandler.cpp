@@ -3,9 +3,7 @@
 
 #include "base/Base.h"
 
-#pragma warning(disable : 4668)
-#include <signal.h>
-#include <memory>
+#include <csignal>
 #include <new.h> // _set_new_handler
 
 #include "base/WinDynCalls.h"
