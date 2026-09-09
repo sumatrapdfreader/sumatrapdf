@@ -46,7 +46,7 @@ static void CallCb(void (*cb)()) {
 // str::Builder&. Lives in the arena so there is no static ctor/dtor.
 static str::Builder* gCrashInfo = nullptr;
 
-void CrashInfoAppend(Str s) {
+static void CrashInfoAppend(Str s) {
     if (!gCrashInfo) {
         return;
     }
@@ -110,26 +110,6 @@ static bool TryStartCrashHandling(Str handlerName) {
     return false;
 }
 
-// No stacks and no exception record: the .dmp we write alongside already has
-// both, in a form a debugger can actually use.
-static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash) {
-    CrashInfoStart(16 * 1024);
-    if (!isCrash) {
-        CrashInfoAppend(StrL("Type: debug report (not crash)\n"));
-    }
-    if (condStr) {
-        // format into the pre-allocated crash arena, not the temp allocator
-        CrashInfoAppend(str::Format(gCrashHandlerArena, "Cond: %s @ %s\n", condStr, fileLine));
-    }
-    CallCb(gCfg.appendExtraInfo);
-    if (gSystemInfo) {
-        CrashInfoAppend(gSystemInfo);
-        CrashInfoAppend(StrL("\n"));
-    }
-
-    return CrashInfoTake();
-}
-
 static void WriteCrashInfoToStdErr(Str d) {
     if (len(d) == 0) {
         return;
@@ -142,24 +122,13 @@ static void WriteCrashInfoToStdErr(Str d) {
     WriteFile(h, (u8*)d.s, (DWORD)d.len, &written, nullptr);
 }
 
-// Program info plus whatever the app adds; no stacks/modules/exception (those
-// are in the .dmp itself).
-static Str BuildMinidumpLogText(Str condStr, Str fileLine, bool isCrash) {
-    CrashInfoStart(16 * 1024);
-    if (isCrash) {
-        CrashInfoAppend(StrL("Type: crash (minidump)\n"));
-    } else {
-        CrashInfoAppend(StrL("Type: debug report (not crash)\n"));
+// The report text is the app's to write; we only say when and give it the
+// arena to write into.
+static Str BuildCrashComment(Str condStr, Str fileLine, bool isCrash) {
+    if (!gCfg.getCrashComment) {
+        return {};
     }
-    CrashInfoAppend(str::Format(gCrashHandlerArena, "Minidump: %s\n", gCfg.crashDumpPath));
-    if (condStr) {
-        // format into the pre-allocated crash arena, not the temp allocator
-        CrashInfoAppend(str::Format(gCrashHandlerArena, "Cond: %s @ %s\n", condStr, fileLine));
-    }
-    CallCb(gCfg.appendProgramInfo);
-    CallCb(gCfg.appendExtraInfo);
-    CallCb(gCfg.appendMinidumpComment);
-    return CrashInfoTake();
+    return gCfg.getCrashComment(gCrashHandlerArena, condStr, fileLine, isCrash);
 }
 
 // Writes the .dmp with logText attached as its comment stream, then uploads it.
@@ -197,7 +166,7 @@ static void WriteAndUploadMinidump(Str logText, MINIDUMP_EXCEPTION_INFORMATION* 
 static void HandleCrashWithMinidump() {
     log(StrL("HandleCrashWithMinidump\n"));
 
-    Str logText = BuildMinidumpLogText(Str(), StrL(""), true);
+    Str logText = BuildCrashComment(Str(), StrL(""), true);
     WriteCrashInfoToStdErr(logText);
     WriteAndUploadMinidump(logText, &gMei);
 }
@@ -233,9 +202,9 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
     bool shouldUpload = isCrash ? gCfg.uploadCrashes : gCfg.uploadDebugReports;
 
     if (gCfg.localOnly) {
-        auto s = BuildCrashInfoText(condStr, fileLine, isCrash);
+        auto s = BuildCrashComment(condStr, fileLine, isCrash);
         if (len(s) == 0) {
-            log(StrL("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n"));
+            log(StrL("_uploadDebugReport(): skipping because !BuildCrashComment()\n"));
             return;
         }
         WriteCrashInfoToStdErr(s);
@@ -254,9 +223,9 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
         if (IsDebuggerPresent()) {
             DebugBreak();
         } else {
-            auto s = BuildCrashInfoText(condStr, fileLine, isCrash);
+            auto s = BuildCrashComment(condStr, fileLine, isCrash);
             if (len(s) == 0) {
-                log(StrL("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n"));
+                log(StrL("_uploadDebugReport(): skipping because !BuildCrashComment()\n"));
                 return;
             }
             log(s);
@@ -285,7 +254,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
     logf("_uploadDebugReport: isCrash: %d\n", (int)isCrash);
 
     // a debug report has no exception, so the .dmp only carries the stacks
-    Str logText = BuildMinidumpLogText(condStr, fileLine, isCrash);
+    Str logText = BuildCrashComment(condStr, fileLine, isCrash);
     WriteAndUploadMinidump(logText, nullptr);
     log(logText);
     log(StrL("_uploadDebugReport() finished\n"));
@@ -522,10 +491,13 @@ static void GetSystemInfo() {
 
 static void BuildSystemInfo() {
     CrashInfoStart(1024);
-    CallCb(gCfg.appendProgramInfo);
     GetOsVersion();
     GetSystemInfo();
     gSystemInfo = CrashInfoTake();
+}
+
+Str CrashHandlerSystemInfo() {
+    return gSystemInfo;
 }
 
 static void __cdecl onSignalAbort(int /*sig*/) {

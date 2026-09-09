@@ -22,8 +22,11 @@
 #endif
 
 // implemented in SumatraPDF.cpp
-extern void GetProgramInfo();
+extern void GetProgramInfo(str::Builder&);
 extern void ShowCrashHandlerMessage();
+
+// where InstallCrashHandler() writes the .dmp, in the crash arena
+static Str gCrashDumpPath;
 
 // serialized settings, minus FileStates; lives in the crash arena so the
 // minidump comment can use it without allocating
@@ -67,31 +70,57 @@ static const char* LookupUncaughtMupdfError() {
     return nullptr;
 }
 
-static void AppendUncaughtMupdfError() {
+static void AppendUncaughtMupdfError(Arena* a, str::Builder& b) {
     const char* msg = LookupUncaughtMupdfError();
     if (!msg || !msg[0]) {
         return;
     }
-    // High-visibility: empty callstacks from the intentional null-write still
-    // need to explain the real failure (MuPDF throw with no fz_try).
-    CrashInfoAppend(str::Format(CrashHandlerArena(), "Uncaught MuPDF error: %s\n\n", Str(msg)));
+    // High-visibility: a crash with nothing interesting on the stack (the
+    // intentional null-write) still needs to explain the real failure
+    // (MuPDF throw with no fz_try).
+    b.Append(str::Format(a, "Uncaught MuPDF error: %s\n\n", Str(msg)));
 }
 
-// the .dmp already carries stacks and modules, so the comment adds what it
-// can't: the log and the user's settings
-static void AppendMinidumpComment() {
-    CrashInfoAppend(StrL("\n-------- Log -----------------\n\n"));
+static void AppendLogAndSettings(str::Builder& b) {
+    b.Append(StrL("\n-------- Log -----------------\n\n"));
     if (gLogBuf) {
-        CrashInfoAppend(ToStr(*gLogBuf));
+        b.Append(ToStr(*gLogBuf));
     } else {
-        CrashInfoAppend(StrL("(no log - crashed before initializing logging)\n"));
+        b.Append(StrL("(no log - crashed before initializing logging)\n"));
     }
     if (len(gSettingsFile) == 0) {
         return;
     }
-    CrashInfoAppend(StrL("\n--- settings ---\n"));
-    CrashInfoAppend(gSettingsFile);
-    CrashInfoAppend(StrL("\n"));
+    b.Append(StrL("\n--- settings ---\n"));
+    b.Append(gSettingsFile);
+    b.Append(StrL("\n"));
+}
+
+// The .dmp we write alongside this already has the stacks, the modules and the
+// exception record, in a form a debugger can actually use, so the text is for
+// what it can't hold: what we are, what tripped, and the log and settings.
+// Runs on the crashing thread, so everything is allocated from a.
+static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
+    str::Builder b(a);
+    b.Reserve(16 * 1024);
+    if (isCrash) {
+        b.Append(StrL("Type: crash (minidump)\n"));
+    } else {
+        b.Append(StrL("Type: debug report (not crash)\n"));
+    }
+    b.Append(str::Format(a, "Minidump: %s\n", gCrashDumpPath));
+    if (condStr) {
+        b.Append(str::Format(a, "Cond: %s @ %s\n", condStr, fileLine));
+    }
+    GetProgramInfo(b);
+    AppendUncaughtMupdfError(a, b);
+    Str sysInfo = CrashHandlerSystemInfo();
+    if (sysInfo) {
+        b.Append(sysInfo);
+        b.Append(StrL("\n"));
+    }
+    AppendLogAndSettings(b);
+    return ToStr(b);
 }
 
 static void OnCrashBegin() {
@@ -154,12 +183,14 @@ void InstallSumatraCrashHandler(bool localOnly) {
     cfg.uploadCrashes = !gIsDebugBuild && !gIsAsanBuild;
     // a debug report carries too much info to send from a release build
     cfg.uploadDebugReports = gIsPreReleaseBuild;
-    cfg.appendProgramInfo = GetProgramInfo;
-    cfg.appendExtraInfo = AppendUncaughtMupdfError;
-    cfg.appendMinidumpComment = AppendMinidumpComment;
+    cfg.getCrashComment = GetCrashComment;
     cfg.onCrashBegin = OnCrashBegin;
     cfg.showCrashMessage = ShowCrashHandlerMessage;
 
     InstallCrashHandler(cfg);
+    Arena* a = CrashHandlerArena();
+    if (a) {
+        gCrashDumpPath = str::Dup(a, cfg.crashDumpPath);
+    }
     CaptureSettings();
 }

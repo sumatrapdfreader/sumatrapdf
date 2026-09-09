@@ -3,8 +3,7 @@
 
 // Everything app-specific the crash handler needs. Callbacks are optional
 // (null is fine) and run on the crashing thread, so they must not allocate
-// from the process heap: append with CrashInfoAppend(), format into
-// CrashHandlerArena().
+// from the process heap.
 struct CrashHandlerConfig {
     Str crashDumpPath;
     Str submitUrl;      // full url the .dmp is POSTed to, query included; empty disables upload
@@ -14,9 +13,11 @@ struct CrashHandlerConfig {
     bool uploadCrashes;
     bool uploadDebugReports;
 
-    void (*appendProgramInfo)();
-    void (*appendExtraInfo)();       // app-specific detail shown before the callstacks
-    void (*appendMinidumpComment)(); // extra text for the .dmp comment stream
+    // Builds the whole text of a report: attached to the .dmp as its comment
+    // stream and, for a local-only report, written to stderr. condStr/fileLine
+    // describe the ReportIf() that fired and are empty for a crash. Everything
+    // it returns must be allocated from a, which is the crash arena.
+    Str (*getCrashComment)(Arena* a, Str condStr, Str fileLine, bool isCrash);
     void (*onCrashBegin)();
     void (*showCrashMessage)();
 };
@@ -24,7 +25,9 @@ struct CrashHandlerConfig {
 void InstallCrashHandler(const CrashHandlerConfig& cfg);
 void UninstallCrashHandler();
 
-// The crash report is accumulated in one buffer owned by CrashHandler.cpp.
-// The config callbacks append to it with this instead of being handed a Builder.
-void CrashInfoAppend(Str s);
+// pre-allocated, so that a crash doesn't have to touch the process heap
 Arena* CrashHandlerArena();
+
+// os, cpu, memory and graphics driver info, gathered at install time so that
+// getCrashComment() can use it without asking the system anything
+Str CrashHandlerSystemInfo();

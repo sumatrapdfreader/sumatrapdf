@@ -895,14 +895,14 @@ Next:
 }
 
 // note: used from CrashHandler, shouldn't allocate memory
-static void GetLogInfo(StressTest* st) {
-    CrashInfoAppend(fmt(", stress test rendered %d files in ", st->nFilesProcessed));
-    CrashInfoAppend(FormatTimeTemp(SecsSinceSystemTime(st->stressStartTime)));
-    CrashInfoAppend(fmt(", currPage: %d", st->currPageNo));
+static void GetLogInfo(str::Builder& b, StressTest* st) {
+    b.Append(fmt(", stress test rendered %d files in ", st->nFilesProcessed));
+    b.Append(FormatTimeTemp(SecsSinceSystemTime(st->stressStartTime)));
+    b.Append(fmt(", currPage: %d", st->currPageNo));
 }
 
 // note: used from CrashHandler.cpp, should not allocate memory
-void GetStressTestInfo() {
+void GetStressTestInfo(str::Builder& b) {
     // only add paths to files encountered during an explicit stress test
     // (for privacy reasons, users should be able to decide themselves
     // whether they want to share what files they had opened during a crash)
@@ -916,11 +916,11 @@ void GetStressTestInfo() {
             continue;
         }
 
-        CrashInfoAppend(StrL("File: "));
+        b.Append(StrL("File: "));
         Str filePath = w->CurrentTab()->filePath;
-        CrashInfoAppend(filePath);
-        GetLogInfo(w->stressTest);
-        CrashInfoAppend(StrL("\n"));
+        b.Append(filePath);
+        GetLogInfo(b, w->stressTest);
+        b.Append(StrL("\n"));
     }
 }
 
