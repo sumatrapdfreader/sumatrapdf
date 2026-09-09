@@ -5,7 +5,9 @@ import { runLogged } from "./util";
 const ninjaDir = "ninja";
 const buildFile = join(ninjaDir, "build.ninja");
 const generatedFile = join(ninjaDir, ".generated");
-const premakeFiles = ["premake5.lua", "premake5.files.lua"];
+// ninja.ts is included: it post-processes the generated files, so changing it
+// must re-generate them from scratch (the fixups are not idempotent).
+const premakeFiles = ["premake5.lua", "premake5.files.lua", "cmd/ninja.ts"];
 const resources = [
   ["SumatraPDF", "SumatraPDF.exe", "../src/SumatraPDF.rc"],
   ["SumatraPDF-static", "SumatraPDF-static.exe", "../src/SumatraPDF.rc"],
@@ -50,7 +52,16 @@ function addResources(text: string, path: string): string {
       if (inputs.includes(resource)) {
         return line;
       }
-      return `build ${resource}: rc_msc-v145 ${source}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
+      // SumatraPDF.exe embeds the lzsa archive of libsumatrapdf.dll & co as
+      // IDR_DLL_PAK, like the MSBuild build does. The prebuild packs it, so the
+      // .res waits for that stamp and gets the resdefine premake sets.
+      let deps = "";
+      let flags = "";
+      if (project === "SumatraPDF") {
+        deps = ` | ../out/${config}/obj/SumatraPDF/SumatraPDF.prebuild`;
+        flags = `\n  resflags = /D INSTALL_PAYLOAD_ZIP=.\\../out/${config}\\InstallerData.dat`;
+      }
+      return `build ${resource}: rc_msc-v145 ${source}${deps}${flags}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
     });
   }
   return text;
@@ -82,6 +93,10 @@ function fixEscapes(): void {
           !line.includes("/FS")
         ) {
           return `${line} /FS`;
+        }
+        // rc.exe rejects options placed after the input file.
+        if (line.startsWith("  command = rc ")) {
+          return line.replace(" $in $resflags", " $resflags $in");
         }
         if (line.includes("nasm.exe") || line.includes("bin2coff.exe")) {
           return line.replaceAll('\\"', '"');
