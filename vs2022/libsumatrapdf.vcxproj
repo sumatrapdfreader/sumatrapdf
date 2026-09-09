@@ -416,9 +416,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\dbg32\InstallerData.dat del /f /q ..\out\dbg32\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -460,9 +457,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\dbg64\InstallerData.dat del /f /q ..\out\dbg64\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -504,9 +498,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\dbgarm64\InstallerData.dat del /f /q ..\out\dbgarm64\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -548,9 +539,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\dbg64_asan\InstallerData.dat del /f /q ..\out\dbg64_asan\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -591,9 +579,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\dbgfull32\InstallerData.dat del /f /q ..\out\dbgfull32\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -634,9 +619,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\dbgfull64\InstallerData.dat del /f /q ..\out\dbgfull64\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -677,9 +659,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\dbgfullarm64\InstallerData.dat del /f /q ..\out\dbgfullarm64\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -720,9 +699,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\dbgfull64_asan\InstallerData.dat del /f /q ..\out\dbgfull64_asan\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -764,9 +740,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\rel32\InstallerData.dat del /f /q ..\out\rel32\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -808,9 +781,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\rel64\InstallerData.dat del /f /q ..\out\rel64\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -852,9 +822,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\arm64\InstallerData.dat del /f /q ..\out\arm64\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -895,9 +862,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\rel64_asan\InstallerData.dat del /f /q ..\out\rel64_asan\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -940,9 +904,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\rel32_prefast\InstallerData.dat del /f /q ..\out\rel32_prefast\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -985,9 +946,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\rel64_prefast\InstallerData.dat del /f /q ..\out\rel64_prefast\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -1030,9 +988,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\arm64_prefast\InstallerData.dat del /f /q ..\out\arm64_prefast\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
@@ -1074,9 +1029,6 @@
     </Link>
     <ProjectReference>
     </ProjectReference>
-    <PreBuildEvent>
-      <Command>if exist ..\out\rel64_prefast_asan\InstallerData.dat del /f /q ..\out\rel64_prefast_asan\InstallerData.dat</Command>
-    </PreBuildEvent>
     <CustomBuild>
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>

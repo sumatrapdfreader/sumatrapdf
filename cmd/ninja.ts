@@ -52,14 +52,16 @@ function addResources(text: string, path: string): string {
       if (inputs.includes(resource)) {
         return line;
       }
-      // SumatraPDF.exe embeds the lzsa archive of libsumatrapdf.dll & co as
-      // IDR_DLL_PAK, like the MSBuild build does. The prebuild packs it, so the
-      // .res waits for that stamp and gets the resdefine premake sets.
+      // The prebuild packs IDR_EMBEDDED_PAK, so the .res waits for that stamp.
+      // SumatraPDF.exe's archive also holds libsumatrapdf.dll & co and lives in
+      // out/<cfg>/, passed via the EMBEDDED_PAK resdefine premake sets.
       let deps = "";
       let flags = "";
       if (project === "SumatraPDF") {
         deps = ` | ../out/${config}/obj/SumatraPDF/SumatraPDF.prebuild`;
-        flags = `\n  resflags = /D INSTALL_PAYLOAD_ZIP=.\\../out/${config}\\InstallerData.dat`;
+        flags = `\n  resflags = /D EMBEDDED_PAK=.\\../out/${config}\\embedded.lzsa`;
+      } else if (project === "SumatraPDF-static") {
+        deps = ` | ../out/${config}/obj-s/SumatraPDF-static/SumatraPDF-static.prebuild`;
       }
       return `build ${resource}: rc_msc-v145 ${source}${deps}${flags}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
     });

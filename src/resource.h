@@ -28,9 +28,11 @@
 
 #define IDC_STATIC (-1)
 
-#define IDR_DLL_PAK 1
-// translations.txt + marked.min.js + mermaid.min.js + in-app manual (.work/embedded.dat)
-#define IDR_EMBEDDED_PAK 2
+// LzSA archive with everything embedded in the exe: translations.txt,
+// marked.min.js, mermaid.min.js, in-app manual and (non-static builds only)
+// the installer payload: libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll,
+// sumatrapdf-tool.exe. Packed by cmd/pack-embedded-prebuild.cmd.
+#define IDR_EMBEDDED_PAK 1
 
 // Next default values for new objects
 //

@@ -3,7 +3,7 @@
  *
  * Local cache (gitignored via .work/):
  *   .work/translations.txt       languages complete enough for the binary
- *   (packed into .work/embedded.dat with marked/mermaid/manual via pack-embedded.ts)
+ *   (packed into .work/embedded.lzsa with marked/mermaid/manual via pack-embedded.ts)
  *
  * Flow:
  *   1. Extract Tr() / TrN() strings from src + command names
@@ -1219,7 +1219,7 @@ async function makeLzsa(): Promise<void> {
   if (!existsSync(translationsTxtPath)) {
     throw new Error(`missing ${translationsTxtPath}; run without --skip-lzsa after download`);
   }
-  // pack translations into the combined embedded.dat (with marked/mermaid/manual)
+  // pack translations into the combined embedded.lzsa (with marked/mermaid/manual)
   const { packEmbedded } = await import("./pack-embedded");
   await packEmbedded();
 }

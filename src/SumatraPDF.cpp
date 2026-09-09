@@ -10756,7 +10756,7 @@ static bool IsManualDocHtmlPage(Str path) {
 
 static TempStr ManualArchiveLookupPathTemp(Str path) {
     TempStr lookupPath = str::DupTemp(path);
-    // embedded.dat stores names with backslashes (MakeLZSA convention) but WebView
+    // IDR_EMBEDDED_PAK stores names with backslashes (MakeLZSA convention) but WebView
     // requests use URL-style forward slashes.
     str::TransCharsInPlace(lookupPath, StrL("/"), StrL("\\"));
     return lookupPath;
@@ -10841,7 +10841,7 @@ static WebViewResourceProvider ManualResourceProvider() {
 static bool EnsureManualArchiveLoaded() {
     // Manual assets live in the same LzSA as translations / JS runtimes.
     if (!EnsureEmbeddedArchiveLoaded()) {
-        logf("EnsureManualArchiveLoaded(): embedded.dat not loaded\n");
+        logf("EnsureManualArchiveLoaded(): IDR_EMBEDDED_PAK not loaded\n");
         return false;
     }
     lzma::SimpleArchive* archive = GetEmbeddedArchive();
@@ -10850,10 +10850,10 @@ static bool EnsureManualArchiveLoaded() {
     }
     // smoke-check a known manual entry
     if (lzma::GetIdxFromName(archive, StrL("manual.shell.html")) < 0) {
-        logf("EnsureManualArchiveLoaded: manual.shell.html missing from embedded.dat\n");
+        logf("EnsureManualArchiveLoaded: manual.shell.html missing from IDR_EMBEDDED_PAK\n");
         return false;
     }
-    logf("EnsureManualArchiveLoaded(): using embedded.dat, %d files\n", archive->filesCount);
+    logf("EnsureManualArchiveLoaded(): using IDR_EMBEDDED_PAK, %d files\n", archive->filesCount);
     return true;
 }
 
@@ -15808,8 +15808,8 @@ static bool ExeHasNameOfStoreInstaller() {
     return str::ContainsI(exeName, StrL("install-store"));
 }
 
-// Uncompressed size of libsumatrapdf.dll in the IDR_DLL_PAK LzSA resource, or -1 if
-// the resource / entry is missing. Cached after the first call (-2 = uncached).
+// Uncompressed size of libsumatrapdf.dll in IDR_EMBEDDED_PAK, or -1 if the entry
+// is missing (static build). Cached after the first call (-2 = uncached).
 static i64 GetEmbeddedLibsumatrapdfSize() {
     static i64 size = -2;
     if (size != -2) {
@@ -15817,20 +15817,13 @@ static i64 GetEmbeddedLibsumatrapdfSize() {
     }
     size = -1;
 
-    LoadedDataResource res{};
-    if (!LockDataResource(IDR_DLL_PAK, &res)) {
+    lzma::SimpleArchive* archive = GetEmbeddedArchive();
+    if (!archive) {
         return size;
     }
-    lzma::SimpleArchive archive{};
-    if (!lzma::ParseSimpleArchive(res.data, res.dataSize, &archive)) {
-        return size;
-    }
-    for (int i = 0; i < archive.filesCount; i++) {
-        lzma::FileInfo* fi = &archive.files[i];
-        if (str::EqI(fi->name, StrL("libsumatrapdf.dll"))) {
-            size = (i64)fi->uncompressedSize;
-            break;
-        }
+    int idx = lzma::GetIdxFromName(archive, StrL("libsumatrapdf.dll"));
+    if (idx >= 0) {
+        size = (i64)archive->files[idx].uncompressedSize;
     }
     return size;
 }
@@ -16133,7 +16126,7 @@ static void LogLibsumatrapdfLoadFailureDiagnostics(Str selfDir, Str buildDir, i6
 static bool LoadLibsumatrapdf(bool showErrorDialog) {
     // Static-linked builds (mingw wine cross-build, MSVC SumatraPDF-static) do
     // not embed/delay-load libsumatrapdf.dll — MuPDF is already in the exe image.
-    // HasEmbeddedLibsumatrapdf() is false when IDR_DLL_PAK has no libsumatrapdf.dll entry.
+    // HasEmbeddedLibsumatrapdf() is false when IDR_EMBEDDED_PAK has no libsumatrapdf.dll entry.
     if (!HasEmbeddedLibsumatrapdf()) {
         logf("LoadLibsumatrapdf: no embedded libsumatrapdf.dll (static build); nothing to load\n");
         return true;

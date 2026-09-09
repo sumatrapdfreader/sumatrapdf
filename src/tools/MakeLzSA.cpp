@@ -182,10 +182,16 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     if (!data.Append(ToStr(content))) return false;
 
     Str d = ToStr(data);
+    // unchanged archive: keep the old mtime so the build doesn't relink the exe
+    if (str::Eq(d, prevData)) {
+        return true;
+    }
     return file::WriteFile(archivePath, d);
 }
 
-bool CreateArchiveFromDir(Str archivePath, Str dir) {
+// packs every file under dir (named relative to dir, e.g. dir/a/b.txt => a\b.txt)
+// plus extraFiles given as <path>[:<in-archive name>]
+bool CreateArchiveFromDir(Str archivePath, Str dir, StrVec& extraFiles) {
     StrVec files;
     int n = dir.len;
     DirIter di{dir};
@@ -200,6 +206,9 @@ bool CreateArchiveFromDir(Str archivePath, Str dir) {
         }
         TempStr s = str::JoinTemp(path, StrL(":"), archiveName);
         files.Append(s);
+    }
+    for (Str f : extraFiles) {
+        files.Append(f);
     }
     return CreateArchive(archivePath, files, 0);
 }
@@ -249,7 +258,8 @@ int printUsage(Str exeName) {
     FailIf(true,
            "Usage:\n  %s <archive.lzsa>\n    verify archive\n  %s <archive.lzsa> <filename>[:<in-archive name>] "
            "[...]\n    "
-           "create archive from files\n  %s <archive.lzsa> <dir>\n    create archive from directory",
+           "create archive from files\n  %s <archive.lzsa> <dir> [<filename>[:<in-archive name>] ...]\n    create "
+           "archive from directory (names relative to it) plus optional extra files",
            exeName.s, exeName.s, exeName.s);
 }
 
@@ -278,21 +288,22 @@ int main(__unused int argc, __unused char** argv) {
         return mainVerify(archiveName);
     }
 
-    if (nArgs == 3) {
-        auto dir = args[2];
-        if (dir::Exists(dir)) {
-            bool ok = lzsa::CreateArchiveFromDir(archiveName, dir);
-            if (!ok) {
-                return printUsage(exeName);
-            }
-            return 0;
-        }
-    }
-
     if (nArgs < 3) {
         return printUsage(exeName);
     }
     errorStep++;
+
+    // MakeLZSA out.lzsa <dir> [file[:name] ...]
+    Str dir = args[2];
+    if (dir::Exists(dir)) {
+        StrVec extraFiles;
+        for (int i = 3; i < nArgs; i++) {
+            extraFiles.Append(args[i]);
+        }
+        bool ok = lzsa::CreateArchiveFromDir(archiveName, dir, extraFiles);
+        FailIf(!ok, "Failed to create \"%s\" from directory \"%s\"", archiveName.s, dir.s);
+        return 0;
+    }
 
     bool ok = lzsa::CreateArchive(archiveName, args, 2);
     FailIf(!ok, "Failed to create \"%s\"", args[1].s);

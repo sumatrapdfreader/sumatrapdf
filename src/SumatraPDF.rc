@@ -60,14 +60,14 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 
-// when building fully static, portable executable, INSTALL_PAYLOAD_ZIP is not defined
-// for combined executable / installer, it's an lzsa archive that contains
-// libsumatrapdf.dll, PdfPreview.dll and PdfFilter.dll
-#ifdef INSTALL_PAYLOAD_ZIP
-IDR_DLL_PAK             RCDATA               QM(INSTALL_PAYLOAD_ZIP)
+// One LzSA archive with all embedded files (see resource.h). The default is the
+// static build's archive; the dll/installer build passes EMBEDDED_PAK pointing
+// at out\<cfg>\embedded.lzsa, which also holds libsumatrapdf.dll & co.
+#ifdef EMBEDDED_PAK
+IDR_EMBEDDED_PAK        RCDATA               QM(EMBEDDED_PAK)
+#else
+IDR_EMBEDDED_PAK        RCDATA               "..\\.work\\embedded.lzsa"
 #endif
-
-IDR_EMBEDDED_PAK        RCDATA               "..\\.work\\embedded.dat"
 
 /////////////////////////////////////////////////////////////////////////////
 

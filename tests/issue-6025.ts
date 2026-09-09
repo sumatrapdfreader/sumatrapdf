@@ -5,7 +5,7 @@
 // clip; UnitPixel + DpiGet() shrinks them with the window.
 //
 // Run: bun tests/issue-6025.ts [--no-build]
-// Needs the regular (non-static) exe: IDR_DLL_PAK is not in SumatraPDF-static.
+// Needs the regular (non-static) exe: SumatraPDF-static embeds no installer payload.
 
 import { mkdirSync, rmSync } from "node:fs";
 import { basename } from "node:path";
@@ -118,7 +118,7 @@ async function runAtDpi(dpiPercent: number, installDir: string, legacy = false):
 
 export async function testit(): Promise<void> {
   if (/static/i.test(basename(EXE))) {
-    console.log("skip issue-6025: static exe has no installer payload (IDR_DLL_PAK)");
+    console.log("skip issue-6025: static exe has no installer payload (libsumatrapdf.dll)");
     return;
   }
 

@@ -1073,18 +1073,6 @@ workspace "SumatraPDF"
       "winspool", "wininet", "urlmon", "gdiplus", "ole32",
       "oleAut32", "shlwapi", "version", "crypt32"
     }
-    -- Invalidate SumatraPDF's embedded payload when this DLL is rebuilt so a
-    -- later SumatraPDF prebuild re-packs InstallerData.dat with the new binary
-    -- (that prebuild only creates InstallerData.dat when it is missing).
-    -- Note: libsumatrapdf's targetdir is out/<cfg>/obj (intermediates); the DLL
-    -- and InstallerData.dat ship in out/<cfg>/, so delete there explicitly.
-    for_each_out_config(function(platform, config, outDir)
-      filter { platform, config }
-      prebuildcommands {
-        "if exist ..\\" .. outDir:gsub("/", "\\") .. "\\InstallerData.dat del /f /q ..\\" .. outDir:gsub("/", "\\") .. "\\InstallerData.dat",
-      }
-    end)
-    filter {}
 
   project "base"
     static_intermediate_dirs()
@@ -1254,7 +1242,7 @@ workspace "SumatraPDF"
   -- small console app that runs the mupdf command-line tools (draw, convert,
   -- info, ...). Console subsystem (so it works with cmd.exe / PowerShell) and
   -- links libsumatrapdf.dll for everything, so the exe itself is tiny. It's embedded
-  -- in SumatraPDF-dll.exe as a resource (see the InstallerData.dat prebuild).
+  -- in SumatraPDF.exe's IDR_EMBEDDED_PAK (see the embedded.lzsa prebuild).
   project "sumatrapdf-tool"
     dll_app_objdir()
     dll_linker_intermediates()
@@ -1424,8 +1412,9 @@ workspace "SumatraPDF"
     filter "platforms:x64_asan"
     linkoptions { "/INFERASANLIBS" }
     filter {}
-    -- pack translations + marked/mermaid + manual into .work/embedded.dat
-    -- (IDR_EMBEDDED_PAK). Uses cmd so MSBuild need not have bun on PATH.
+    -- pack .work/embedded (translations + marked/mermaid + manual) into
+    -- .work/embedded.lzsa (IDR_EMBEDDED_PAK, the default path in SumatraPDF.rc).
+    -- Uses cmd so MSBuild need not have bun on PATH.
     prebuildcommands {
       "call ..\\cmd\\pack-embedded-prebuild.cmd",
     }
@@ -1500,7 +1489,7 @@ workspace "SumatraPDF"
 
     disablewarnings { "4819" }
 
-    resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
+    resdefines { "EMBEDDED_PAK=.\\%{cfg.targetdir}\\embedded.lzsa" }
 
     files { "src/MuPDF_Exports.cpp" }
 
@@ -1528,16 +1517,13 @@ workspace "SumatraPDF"
     -- delay-loaded libsumatrapdf.dll which LoadLibsumatrapdf() loads by full path
     linkoptions { "/DEPENDENTLOADFLAG:0x800" }
     dependson { "PdfFilter", "PdfPreview", "sumatrapdf-tool" }
-    -- pack translations + marked/mermaid + manual into .work/embedded.dat
+    -- pack .work/embedded (translations + marked/mermaid + manual) plus the
+    -- installer payload into out/<cfg>/embedded.lzsa (IDR_EMBEDDED_PAK, path
+    -- passed via the EMBEDDED_PAK resdefine). Always re-packed: MakeLZSA reuses
+    -- unchanged entries, and signed release builds sign the DLLs in place
+    -- before this prebuild runs (with BuildProjectReferences=false).
     prebuildcommands {
-      "call ..\\cmd\\pack-embedded-prebuild.cmd",
-    }
-    -- Only pack InstallerData.dat when missing. Signed release builds create it
-    -- after signtool (so the archive holds signed DLLs); a rebuild of
-    -- libsumatrapdf deletes InstallerData.dat so regular builds are not stuck
-    -- with a stale pack.
-    prebuildcommands {
-      "if not exist %{cfg.targetdir}\\InstallerData.dat ..\\bin\\MakeLZSA.exe %{cfg.targetdir}\\InstallerData.dat %{cfg.targetdir}\\libsumatrapdf.dll:libsumatrapdf.dll %{cfg.targetdir}\\PdfFilter.dll:PdfFilter.dll %{cfg.targetdir}\\PdfPreview.dll:PdfPreview.dll %{cfg.targetdir}\\sumatrapdf-tool.exe:sumatrapdf-tool.exe",
+      "call ..\\cmd\\pack-embedded-prebuild.cmd %{cfg.targetdir}\\embedded.lzsa %{cfg.targetdir}\\libsumatrapdf.dll:libsumatrapdf.dll %{cfg.targetdir}\\PdfFilter.dll:PdfFilter.dll %{cfg.targetdir}\\PdfPreview.dll:PdfPreview.dll %{cfg.targetdir}\\sumatrapdf-tool.exe:sumatrapdf-tool.exe",
     }
     -- /INFERASANLIBS pulls in the *dynamic* ASan runtime, so
     -- clang_rt.asan_dynamic-x86_64.dll must sit next to the exe or it

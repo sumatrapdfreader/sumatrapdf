@@ -57,7 +57,7 @@ async function revertBuildConfig(): Promise<void> {
 }
 
 function ensureEmbeddedIsBuilt(): void {
-  const path = join(".work", "embedded.dat");
+  const path = join(".work", "embedded.lzsa");
   let size = 0;
   try {
     size = statSync(path).size;

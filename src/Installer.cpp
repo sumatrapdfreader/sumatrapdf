@@ -40,6 +40,7 @@
 #include "RegistrySearchFilter.h"
 #include "SumatraConfig.h"
 #include "Translations.h"
+#include "EmbeddedResources.h"
 #include "Installer.h"
 #include "SumatraLog.h"
 
@@ -48,7 +49,7 @@ constexpr int kInstallerWinMargin = 8;
 struct InstallerWnd;
 
 static InstallerWnd* gWnd = nullptr;
-static lzma::SimpleArchive gArchive{};
+static lzma::SimpleArchive* gArchive = nullptr;
 static bool gInstallStarted = false; // a bit of a hack
 static bool gInstallFailed = false;
 
@@ -933,16 +934,41 @@ static void RestoreInstallCopyFiles(Str installDir) {
     }
 }
 
+// IDR_EMBEDDED_PAK also holds translations and the manual; the installer only
+// writes the top-level binaries (libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll,
+// sumatrapdf-tool.exe) to the install dir.
+static bool IsInstallerPayload(Str name) {
+    if (str::ContainsCharAny(name, StrL("\\/"))) {
+        return false;
+    }
+    return str::EndsWithI(name, StrL(".dll")) || str::EndsWithI(name, StrL(".exe"));
+}
+
+static int CountInstallerPayloadFiles(lzma::SimpleArchive* archive) {
+    int n = 0;
+    for (int i = 0; i < archive->filesCount; i++) {
+        if (IsInstallerPayload(archive->files[i].name)) {
+            n++;
+        }
+    }
+    return n;
+}
+
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
-    logf("ExtractFiles(): dir '%s' filesCount=%d\n", destDir, archive->filesCount);
     lzma::FileInfo* fi;
     u8* uncompressed;
 
-    int nFiles = archive->filesCount;
+    int nFiles = CountInstallerPayloadFiles(archive);
+    logf("ExtractFiles(): dir '%s' filesCount=%d\n", destDir, nFiles);
+    int n = 0;
 
-    for (int i = 0; i < nFiles; i++) {
+    for (int i = 0; i < archive->filesCount; i++) {
         fi = &archive->files[i];
-        logf("  decompress [%d/%d] '%s' compressed=%u uncompressed=%u\n", i + 1, nFiles, fi->name,
+        if (!IsInstallerPayload(fi->name)) {
+            continue;
+        }
+        n++;
+        logf("  decompress [%d/%d] '%s' compressed=%u uncompressed=%u\n", n, nFiles, fi->name,
              (unsigned)fi->compressedSize, (unsigned)fi->uncompressedSize);
         uncompressed = lzma::GetFileDataByIdx(archive, i, nullptr);
 
@@ -1330,7 +1356,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     Rect rc(0, 0, dx, gButtonDy);
     rc = HwndMapRectToWindow(rc, wnd->btnOptions->hwnd, wnd->hwnd);
 
-    int nInstallationSteps = gArchive.filesCount;
+    int nInstallationSteps = CountInstallerPayloadFiles(gArchive);
     nInstallationSteps++; // for copying files to installation dir
     nInstallationSteps++; // for writing registry entries
     nInstallationSteps++; // to show progress at the beginning
@@ -2104,26 +2130,22 @@ static void ShowNoEmbeddedFiles(Str msg) {
     MsgBox(nullptr, msg, Tr("Error"), MB_OK);
 }
 
-static LoadedDataResource gLoadedArchive;
-
 static bool OpenEmbeddedFilesArchive() {
-    if (gArchive.filesCount > 0) {
+    if (gArchive) {
         log(StrL("OpenEmbeddedFilesArchive: already opened\n"));
         return true;
     }
-    bool ok = LockDataResource(IDR_DLL_PAK, &gLoadedArchive);
-    if (!ok) {
+    lzma::SimpleArchive* archive = GetEmbeddedArchive();
+    if (!archive) {
+        ShowNoEmbeddedFiles(StrL("Embedded lzsa archive is missing or corrupted"));
+        return false;
+    }
+    // static builds embed no binaries
+    if (CountInstallerPayloadFiles(archive) == 0) {
         ShowNoEmbeddedFiles(StrL("No embedded files"));
         return false;
     }
-
-    const auto* data = gLoadedArchive.data;
-    auto size = gLoadedArchive.dataSize;
-    ok = lzma::ParseSimpleArchive(data, size, &gArchive);
-    if (!ok) {
-        ShowNoEmbeddedFiles(StrL("Embedded lzsa archive is corrupted"));
-        return false;
-    }
+    gArchive = archive;
     return true;
 }
 
@@ -2133,15 +2155,15 @@ bool ExtractLibsumatrapdfToDir(Str destDir) {
         log(StrL("ExtractLibsumatrapdfToDir: OpenEmbeddedFilesArchive failed\n"));
         return false;
     }
-    int idx = lzma::GetIdxFromName(&gArchive, StrL("libsumatrapdf.dll"));
+    int idx = lzma::GetIdxFromName(gArchive, StrL("libsumatrapdf.dll"));
     if (idx < 0) {
         log(StrL("ExtractLibsumatrapdfToDir: libsumatrapdf.dll not found in archive\n"));
         return false;
     }
-    lzma::FileInfo* fi = &gArchive.files[idx];
+    lzma::FileInfo* fi = &gArchive->files[idx];
     logf("ExtractLibsumatrapdfToDir: archive entry uncompressed=%u compressed=%u\n", (unsigned)fi->uncompressedSize,
          (unsigned)fi->compressedSize);
-    u8* uncompressed = lzma::GetFileDataByIdx(&gArchive, idx, nullptr);
+    u8* uncompressed = lzma::GetFileDataByIdx(gArchive, idx, nullptr);
     if (!uncompressed) {
         log(StrL("ExtractLibsumatrapdfToDir: failed to decompress libsumatrapdf.dll\n"));
         return false;
@@ -2178,6 +2200,9 @@ static i64 EstimateInstallerWriteBytes(const lzma::SimpleArchive* archive) {
     }
     if (archive) {
         for (int i = 0; i < archive->filesCount; i++) {
+            if (!IsInstallerPayload(archive->files[i].name)) {
+                continue;
+            }
             i64 u = (i64)archive->files[i].uncompressedSize;
             need += u;
             if (u > largest) {
@@ -2254,7 +2279,7 @@ bool ExtractInstallerFiles(Str dir) {
     if (!ok) {
         return false;
     }
-    if (!EnsureEnoughDiskSpaceForInstall(dir, &gArchive)) {
+    if (!EnsureEnoughDiskSpaceForInstall(dir, gArchive)) {
         return false;
     }
 
@@ -2283,7 +2308,7 @@ bool ExtractInstallerFiles(Str dir) {
     ProgressStep();
 
     // on error, ExtractFiles() shows error message itself
-    ok = ExtractInstallerFiles(&gArchive, dir);
+    ok = ExtractInstallerFiles(gArchive, dir);
     if (!ok) {
         RestoreInstallCopyFiles(dir);
         return false;

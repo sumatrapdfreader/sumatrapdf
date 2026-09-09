@@ -1,12 +1,16 @@
 /**
- * Packs translations, JS runtimes, and the in-app manual into one LzSA archive
- * (.work/embedded.dat) embedded as IDR_EMBEDDED_PAK.
+ * Stages everything the exe embeds under .work/embedded/ and packs it into
+ * one LzSA archive (.work/embedded.lzsa) linked as IDR_EMBEDDED_PAK.
  *
- * Contents (in-archive names):
+ * Contents (in-archive names = paths relative to .work/embedded/):
  *   translations.txt
  *   marked.min.js
  *   mermaid.min.js
  *   <files from .work/docs/…>  (manual assets; optional if docs not generated yet)
+ *
+ * The non-static SumatraPDF build adds libsumatrapdf.dll & co on top of this
+ * staging dir and packs out/<cfg>/embedded.lzsa instead; see
+ * cmd/pack-embedded-prebuild.cmd (the VS / ninja prebuild).
  *
  * Usage: bun cmd/pack-embedded.ts
  */
@@ -14,8 +18,8 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, wri
 import { join, relative, resolve } from "node:path";
 
 const workDir = ".work";
-const stagingDir = join(workDir, "embedded-src");
-const archivePath = join(workDir, "embedded.dat");
+const stagingDir = join(workDir, "embedded");
+const archivePath = join(workDir, "embedded.lzsa");
 const translationsTxt = join(workDir, "translations.txt");
 const docsDir = join(workDir, "docs");
 const makeLzsaExe = resolve(join("bin", "MakeLZSA.exe"));
@@ -59,7 +63,7 @@ export async function packEmbedded(): Promise<void> {
     }
   }
 
-  // Staging is also used by the VS prebuild (MakeLZSA only — no bun on PATH).
+  // Staging is also what the VS / ninja prebuild packs (MakeLZSA only — no bun on PATH).
   rmSync(stagingDir, { recursive: true, force: true });
   mkdirSync(stagingDir, { recursive: true });
 
@@ -82,17 +86,6 @@ export async function packEmbedded(): Promise<void> {
 
   const nTotal = 3 + nDocs;
   console.log(`packing ${nTotal} files into ${archivePath} (${nDocs} manual assets)`);
-  await runMakeLzsa();
-}
-
-/** Pack whatever is currently in .work/embedded-src (used by VS prebuild). */
-export async function packEmbeddedFromStaging(): Promise<void> {
-  if (!existsSync(makeLzsaExe)) {
-    throw new Error(`'${makeLzsaExe}' doesn't exist`);
-  }
-  if (!existsSync(stagingDir)) {
-    throw new Error(`missing ${stagingDir}; run bun cmd/pack-embedded.ts first`);
-  }
   await runMakeLzsa();
 }
 

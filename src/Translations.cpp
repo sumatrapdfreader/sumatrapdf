@@ -198,7 +198,7 @@ void SetCurrentLangByCode(Str langCode) {
     int dataSize = 0;
     u8* data = GetEmbeddedFileData(StrL("translations.txt"), &dataSize);
     if (!data) {
-        logf("SetCurrentLangByCode: translations.txt not found in embedded.dat\n");
+        logf("SetCurrentLangByCode: translations.txt not found in IDR_EMBEDDED_PAK\n");
         FallbackToEnglish();
         return;
     }

@@ -26,7 +26,7 @@ bool EnsureEmbeddedArchiveLoaded() {
         gEmbeddedArchive.filesCount = 0;
         return false;
     }
-    logf("EnsureEmbeddedArchiveLoaded: %d files in embedded.dat (%d bytes)\n", gEmbeddedArchive.filesCount,
+    logf("EnsureEmbeddedArchiveLoaded: %d files in IDR_EMBEDDED_PAK (%d bytes)\n", gEmbeddedArchive.filesCount,
          gEmbeddedData.dataSize);
     return gEmbeddedArchive.filesCount > 0;
 }
