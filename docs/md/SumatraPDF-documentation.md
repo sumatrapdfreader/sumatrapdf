@@ -61,6 +61,8 @@ Using AI? You can ask an AI assistant questions about SumatraPDF. Ask [Grok](htt
 
 [Comics and manga](Comics-and-manga.md)
 
+[CAD / Engineering Drawings](CAD-Engineering-Drawings.md)
+
 [Convert to PDF](Convert-to-PDF.md) (comics, image folders, images → multi-page PDF)
 
 [Customize eBook UI](Customize-eBook-UI.md)

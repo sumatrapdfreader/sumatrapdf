@@ -1523,7 +1523,7 @@ const globalPrefs: Field[] = [
   field(
     "EngineeringDrawingEnhance",
     Str,
-    "auto",
+    "off",
     "CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on",
   ).ver("3.7"),
   field(

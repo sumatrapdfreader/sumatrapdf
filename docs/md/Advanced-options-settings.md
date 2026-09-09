@@ -22,6 +22,7 @@ Here are some things you can customize:
 - window background color with `FixedPageUI.BackgroundColor`
 - color used to highlight text with `FixedPageUI.SelectionColor`
 - control scrollbar mode with `FixedPageUI.Scrollbars` (values: `windows`, `smart`, `overlay`, `hidden`)
+- CAD / engineering-drawing line rendering with `EngineeringDrawingEnhance` — [CAD / Engineering Drawings](CAD-Engineering-Drawings.md)
 
 Advanced settings file also stores the history and state of opened files so that we can e.g. re-open on the page
 
@@ -347,7 +348,7 @@ DisableAntiAlias = false
 
 ; CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is
 ; detected) or on (introduced in version 3.7)
-EngineeringDrawingEnhance = auto
+EngineeringDrawingEnhance = off
 
 ; if true, disables auto-linking of URLs and email addresses found in PDF text
 ; (introduced in version 3.7)

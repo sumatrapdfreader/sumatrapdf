@@ -1986,7 +1986,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, treeFontSize), SettingType::Int, 0},
     {offsetof(Settings, uIFontSize), SettingType::Int, 0},
     {offsetof(Settings, disableAntiAlias), SettingType::Bool, false},
-    {offsetof(Settings, engineeringDrawingEnhance), SettingType::String, (intptr_t)"auto"},
+    {offsetof(Settings, engineeringDrawingEnhance), SettingType::String, (intptr_t)"off"},
     {offsetof(Settings, disableAutoLinks), SettingType::Bool, false},
     {offsetof(Settings, useSysColors), SettingType::Bool, false},
     {offsetof(Settings, useTabs), SettingType::Bool, true},

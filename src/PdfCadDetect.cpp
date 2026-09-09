@@ -18,7 +18,7 @@ static EngineeringDrawingEnhanceMode gCadEnhanceMode = EngineeringDrawingEnhance
 
 // Parse the EngineeringDrawingEnhance pref ("off", "auto" or "on").
 void SetEngineeringDrawingEnhanceMode(Str mode) {
-    if (len(mode) == 0 || str::EqI(mode, StrL("auto"))) {
+    if (str::EqI(mode, StrL("auto"))) {
         gCadEnhanceMode = EngineeringDrawingEnhanceMode::Auto;
     } else if (str::EqI(mode, StrL("on"))) {
         gCadEnhanceMode = EngineeringDrawingEnhanceMode::On;
