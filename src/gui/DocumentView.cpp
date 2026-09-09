@@ -756,10 +756,10 @@ void DocumentView::SetZoom(float zoomVirtual, Point* anchor) {
     int pageNo = PageAtPoint(viewData, fix);
     DocumentLayoutPage* oldPage = viewData->layout.GetPage(pageNo);
     float relX = oldPage && oldPage->pageOnScreen.dx > 0
-                     ? (float)(fix.x - oldPage->pageOnScreen.x) / oldPage->pageOnScreen.dx
+                     ? (float)(fix.x - oldPage->pageOnScreen.x) / (float)oldPage->pageOnScreen.dx
                      : 0.5f;
     float relY = oldPage && oldPage->pageOnScreen.dy > 0
-                     ? (float)(fix.y - oldPage->pageOnScreen.y) / oldPage->pageOnScreen.dy
+                     ? (float)(fix.y - oldPage->pageOnScreen.y) / (float)oldPage->pageOnScreen.dy
                      : 0.5f;
 
     viewData->zoomVirtual = zoomVirtual;
@@ -767,8 +767,8 @@ void DocumentView::SetZoom(float zoomVirtual, Point* anchor) {
     Relayout(this, viewData->viewSize);
     DocumentLayoutPage* newPage = viewData->layout.GetPage(pageNo);
     if (anchor && newPage) {
-        viewData->viewOffset.x = newPage->pos.x + (int)(relX * newPage->pos.dx) - fix.x;
-        viewData->viewOffset.y = newPage->pos.y + (int)(relY * newPage->pos.dy) - fix.y;
+        viewData->viewOffset.x = newPage->pos.x + (int)(relX * (float)newPage->pos.dx) - fix.x;
+        viewData->viewOffset.y = newPage->pos.y + (int)(relY * (float)newPage->pos.dy) - fix.y;
         Relayout(this, viewData->viewSize);
     }
     Invalidate(this);

@@ -109,15 +109,15 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
         PointF ur = quads[result].ur;
         float dx = ur.x - ul.x;
         float dy = ur.y - ul.y;
-        float den = dx * dx + dy * dy;
+        float den = (dx * dx) + (dy * dy);
         if (den > 0.01f) {
-            float t = ((pt.x - ul.x) * dx + (pt.y - ul.y) * dy) / den;
-            float ax = ul.x + t * dx;
-            float ay = ul.y + t * dy;
-            float perp2 = (pt.x - ax) * (pt.x - ax) + (pt.y - ay) * (pt.y - ay);
+            float t = (((pt.x - ul.x) * dx) + ((pt.y - ul.y) * dy)) / den;
+            float ax = ul.x + (t * dx);
+            float ay = ul.y + (t * dy);
+            float perp2 = ((pt.x - ax) * (pt.x - ax)) + ((pt.y - ay) * (pt.y - ay));
             float hx = quads[result].ll.x - ul.x;
             float hy = quads[result].ll.y - ul.y;
-            float height2 = hx * hx + hy * hy;
+            float height2 = (hx * hx) + (hy * hy);
             // ignore the half-glyph split when the point is far off the baseline
             // (e.g. F7 caret at the page's top-left)
             if (overGlyph || perp2 <= height2 * 4.f) {

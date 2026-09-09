@@ -1721,21 +1721,21 @@ void GetInkList(Annotation* annot, Vec<int>& strokeCounts, Vec<PointF>& points) 
 static float PointSegmentDistSq(PointF p, PointF a, PointF b) {
     float dx = b.x - a.x;
     float dy = b.y - a.y;
-    float lengthSq = dx * dx + dy * dy;
+    float lengthSq = (dx * dx) + (dy * dy);
     float t = 0.f;
     if (lengthSq > 0.f) {
-        t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq;
+        t = (((p.x - a.x) * dx) + ((p.y - a.y) * dy)) / lengthSq;
         if (t < 0.f) {
             t = 0.f;
         } else if (t > 1.f) {
             t = 1.f;
         }
     }
-    float px = a.x + t * dx;
-    float py = a.y + t * dy;
+    float px = a.x + (t * dx);
+    float py = a.y + (t * dy);
     dx = p.x - px;
     dy = p.y - py;
-    return dx * dx + dy * dy;
+    return (dx * dx) + (dy * dy);
 }
 
 static bool InkStrokeHit(const Vec<PointF>& points, int start, int count, PointF pt, float radiusSq) {
@@ -2483,8 +2483,8 @@ static Pixmap* PixmapFromRgbFzPixmap(fz_context* ctx, fz_pixmap* src) {
     p->hasAlpha = true;
     int alphaOff = use->alpha ? n - 1 : -1;
     for (int y = 0; y < use->h; y++) {
-        const u8* s = use->samples + y * use->stride;
-        u8* d = p->data + y * p->stride;
+        const u8* s = use->samples + (y * use->stride);
+        u8* d = p->data + (y * p->stride);
         for (int x = 0; x < use->w; x++) {
             d[0] = s[0];
             d[1] = s[1];

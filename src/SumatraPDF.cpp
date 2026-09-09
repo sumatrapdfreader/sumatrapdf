@@ -6857,7 +6857,7 @@ static void InsertSortedNatural(StrVec* v, Str s) {
     int lo = 0;
     int hi = len(*v);
     while (lo < hi) {
-        int mid = lo + (hi - lo) / 2;
+        int mid = lo + ((hi - lo) / 2);
         if (StrLessNatural(v->At(mid), s)) {
             lo = mid + 1;
         } else {

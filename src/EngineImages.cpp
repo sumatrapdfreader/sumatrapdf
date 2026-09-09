@@ -636,10 +636,10 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         fz_irect subarea;
         fz_irect* subPtr = nullptr;
         if (!isFullPage && pageRect) {
-            subarea.x0 = pageRc.x;
-            subarea.y0 = pageRc.y;
-            subarea.x1 = pageRc.x + pageRc.dx;
-            subarea.y1 = pageRc.y + pageRc.dy;
+            subarea.x0 = (int)pageRc.x;
+            subarea.y0 = (int)pageRc.y;
+            subarea.x1 = (int)(pageRc.x + pageRc.dx);
+            subarea.y1 = (int)(pageRc.y + pageRc.dy);
             if (subarea.x0 < 0) {
                 subarea.x0 = 0;
             }

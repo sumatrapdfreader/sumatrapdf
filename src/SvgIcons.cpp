@@ -515,7 +515,7 @@ static fz_pixmap* RenderSvgToFzPixmap(fz_context* ctx, Str svgData, int dx, int 
         list = fz_new_display_list_from_svg(ctx, buf, nullptr, nullptr, &svgWidth, &svgHeight);
         pixmap = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), fz_make_irect(0, 0, dx, dy), nullptr, 1);
         fz_clear_pixmap(ctx, pixmap);
-        dev = fz_new_draw_device(ctx, fz_scale(dx / svgWidth, dy / svgHeight), pixmap);
+        dev = fz_new_draw_device(ctx, fz_scale((float)dx / svgWidth, (float)dy / svgHeight), pixmap);
         fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, nullptr);
         fz_close_device(ctx, dev);
         fz_drop_device(ctx, dev);

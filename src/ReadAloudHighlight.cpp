@@ -494,7 +494,7 @@ void ReadAloudHighlightTimerStop(MainWindow* win) {
 
 static int gReadAloudPaintLogState = 0;
 
-static void ReadAloudPaintLogOnce(int code, Str fmt) {
+static void ReadAloudPaintLogOnce(int code, [[maybe_unused]] Str fmt) {
     if (gReadAloudPaintLogState == code) {
         return;
     }

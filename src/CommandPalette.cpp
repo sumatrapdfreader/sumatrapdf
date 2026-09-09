@@ -505,7 +505,7 @@ void ThumbnailPaletteCtrl::SetBounds(Rect r) {
     int visibleRows = std::max(1, (r.dy - gap) / (thumbDy + gap));
     visibleRows = std::min(visibleRows, rowsModel->rows);
     if (visibleRows > 0) {
-        int freeDy = r.dy - visibleRows * thumbDy;
+        int freeDy = r.dy - (visibleRows * thumbDy);
         rowGap = std::max(gap, freeDy / (visibleRows + 1));
     }
     itemDy = thumbDy + rowGap;
@@ -520,16 +520,16 @@ void ThumbnailPaletteCtrl::SetBounds(Rect r) {
 }
 
 void ThumbnailPaletteCtrl::DrawRow(DrawItemEvent* ev) {
-    int gridDx = cols * thumbDx + (cols - 1) * gap;
+    int gridDx = (cols * thumbDx) + ((cols - 1) * gap);
     int left = ev->itemRect.x + std::max(0, (ev->itemRect.dx - gridDx) / 2);
-    int firstPage = ev->itemIndex * cols + 1;
+    int firstPage = (ev->itemIndex * cols) + 1;
     int lastPage = std::min(pageCount, firstPage + cols - 1);
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     bool chapters = engine && engine->HasChapters();
     for (int pageNo = firstPage; pageNo <= lastPage; pageNo++) {
         int col = pageNo - firstPage;
-        int x = left + col * (thumbDx + gap);
+        int x = left + (col * (thumbDx + gap));
         Rect pageRect{x, ev->itemRect.y, thumbDx, thumbDy};
         ev->gfx->FillRect(pageRect, kColWhite);
 
@@ -537,7 +537,7 @@ void ThumbnailPaletteCtrl::DrawRow(DrawItemEvent* ev) {
         if (thumbnail) {
             int drawDx = std::min(thumbnail->width, thumbDx);
             int drawDy = std::min(thumbnail->height, thumbDy);
-            Rect target{x + (thumbDx - drawDx) / 2, pageRect.y + (thumbDy - drawDy) / 2, drawDx, drawDy};
+            Rect target{x + ((thumbDx - drawDx) / 2), pageRect.y + ((thumbDy - drawDy) / 2), drawDx, drawDy};
             ev->gfx->DrawPixmap(thumbnail, target);
         }
 
@@ -556,9 +556,9 @@ void ThumbnailPaletteCtrl::DrawRow(DrawItemEvent* ev) {
         int padX = DpiScaleByDpi(dpi, 6);
         int padY = DpiScaleByDpi(dpi, 2);
         int inset = DpiScaleByDpi(dpi, 4);
-        int boxDx = std::min(ts.dx + padX * 2, pageRect.dx - inset * 2);
-        int boxDy = ts.dy + padY * 2;
-        int boxX = pageRect.x + (pageRect.dx - boxDx) / 2;
+        int boxDx = std::min(ts.dx + (padX * 2), pageRect.dx - (inset * 2));
+        int boxDy = ts.dy + (padY * 2);
+        int boxX = pageRect.x + ((pageRect.dx - boxDx) / 2);
         int boxY = pageRect.y + pageRect.dy - boxDy - inset;
         if (boxY < pageRect.y + inset) {
             boxY = pageRect.y + inset;
@@ -581,7 +581,7 @@ int ThumbnailPaletteCtrl::PageAtPoint(Point pt) {
     }
     Point origin = OriginInWindow();
     rowRect.Offset(-origin.x, -origin.y);
-    int gridDx = cols * thumbDx + (cols - 1) * gap;
+    int gridDx = (cols * thumbDx) + ((cols - 1) * gap);
     int left = rowRect.x + std::max(0, (rowRect.dx - gridDx) / 2);
     if (pt.x < left || pt.y < rowRect.y || pt.y >= rowRect.y + thumbDy) {
         return -1;
@@ -590,11 +590,11 @@ int ThumbnailPaletteCtrl::PageAtPoint(Point pt) {
     if (col < 0 || col >= cols) {
         return -1;
     }
-    int cellX = left + col * (thumbDx + gap);
+    int cellX = left + (col * (thumbDx + gap));
     if (pt.x >= cellX + thumbDx) {
         return -1;
     }
-    int pageNo = row * cols + col + 1;
+    int pageNo = (row * cols) + col + 1;
     return pageNo <= pageCount ? pageNo : -1;
 }
 
@@ -762,14 +762,14 @@ void ThumbnailPaletteCtrl::StartRendering() {
     }
 
     int visibleRows = std::max(1, UsableDy() / itemDy);
-    int firstVisible = (scrollY / itemDy) * cols + 1;
+    int firstVisible = ((scrollY / itemDy) * cols) + 1;
     int perScreen = std::max(1, visibleRows * cols);
     int lastVisible = std::min(pageCount, firstVisible + perScreen - 1);
-    int firstPage = std::max(1, firstVisible - kPaletteThumbnailRenderScreens * perScreen);
-    int lastPage = std::min(pageCount, lastVisible + kPaletteThumbnailRenderScreens * perScreen);
+    int firstPage = std::max(1, firstVisible - (kPaletteThumbnailRenderScreens * perScreen));
+    int lastPage = std::min(pageCount, lastVisible + (kPaletteThumbnailRenderScreens * perScreen));
 
-    int keepFirst = std::max(1, firstPage - kPaletteThumbnailKeepScreens * perScreen);
-    int keepLast = std::min(pageCount, lastPage + kPaletteThumbnailKeepScreens * perScreen);
+    int keepFirst = std::max(1, firstPage - (kPaletteThumbnailKeepScreens * perScreen));
+    int keepLast = std::min(pageCount, lastPage + (kPaletteThumbnailKeepScreens * perScreen));
     for (int idx = 0; idx < len(cache->thumbnails); idx++) {
         int pageNo = idx + 1;
         if (cache->thumbnails[idx] && (pageNo < keepFirst || pageNo > keepLast)) {

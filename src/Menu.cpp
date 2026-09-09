@@ -3034,7 +3034,7 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
 
 // --- Menu bar as rebar control (used when tabs are in titlebar) ---
 
-static int MenuBarToolbarIdealDy(MainWindow* win) {
+static int MenuBarToolbarIdealDy() {
     PlatformFont* font = GetAppMenuFont();
     int dy = PlatformFontLineHeight(font) + DpiScale(4);
     int minDy = DpiScale(kTabBarDy);
@@ -3054,7 +3054,7 @@ int GetMenuBarRebarHeight(MainWindow* win) {
         }
         return dy;
     }
-    int ideal = MenuBarToolbarIdealDy(win);
+    int ideal = MenuBarToolbarIdealDy();
     if (IsRunningOnWine()) {
         logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d fallbackIdeal=%d\n", win->hwndMenuReBar, dy, ideal);
     }
@@ -3269,7 +3269,7 @@ void RebuildMenuBarButtons(MainWindow* win) {
 
     if (win->hwndMenuReBar) {
         Rect rc = TbGetItemRect(hwndMb, 0);
-        int menuBarDy = MenuBarToolbarIdealDy(win);
+        int menuBarDy = MenuBarToolbarIdealDy();
         if (rc.dy > 0) {
             menuBarDy = rc.dy + (2 * rc.y);
         }
@@ -3346,7 +3346,7 @@ void CreateMenuBarRebar(MainWindow* win) {
     Rect rc = TbGetItemRect(win->hwndMenuToolbar, 0);
     int menuBarDy = rc.dy + (2 * rc.y);
     if (menuBarDy <= 0) {
-        menuBarDy = MenuBarToolbarIdealDy(win);
+        menuBarDy = MenuBarToolbarIdealDy();
     }
 
     ShowWindow(win->hwndMenuToolbar, SW_SHOW);

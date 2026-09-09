@@ -64,7 +64,7 @@ void ApplyExplorerQuickLookChrome(MainWindow* win) {
     if (dy < 300) {
         dy = work.dy;
     }
-    Rect r{work.x + (work.dx - dx) / 2, work.y + (work.dy - dy) / 2, dx, dy};
+    Rect r{work.x + ((work.dx - dx) / 2), work.y + ((work.dy - dy) / 2), dx, dy};
     HwndMoveWindow(hwnd, &r);
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     ShowOrHideToolbar(win);

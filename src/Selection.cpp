@@ -468,7 +468,7 @@ static void PaintTransparentQuads(Gfx* gfx, Rect screenRc, Vec<Point>& pts, Colo
     screenRc.Inflate(1, 1);
     Vec<Point> painted;
     for (int i = 0; i < nQuads; i++) {
-        Point* q = pts.els + i * 4;
+        Point* q = pts.els + (i * 4);
         if (QuadScreenBounds(q).Intersect(screenRc).IsEmpty()) {
             continue;
         }
@@ -759,15 +759,15 @@ RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<Sel
         return nullptr;
     }
     for (int y = 0; y < combined->height; y++) {
-        u8* row = combined->data + (size_t)y * combined->stride;
+        u8* row = combined->data + ((size_t)y * combined->stride);
         memset(row, 0xff, (size_t)combined->width * 4);
     }
 
     int y = 0;
     for (Pixmap* pixmap : pixmaps) {
         for (int row = 0; row < pixmap->height; row++) {
-            memcpy(combined->data + (size_t)(y + row) * combined->stride, pixmap->data + (size_t)row * pixmap->stride,
-                   (size_t)pixmap->width * 4);
+            memcpy(combined->data + ((size_t)(y + row) * combined->stride),
+                   pixmap->data + ((size_t)row * pixmap->stride), (size_t)pixmap->width * 4);
         }
         y += pixmap->height;
         FreePixmap(pixmap);

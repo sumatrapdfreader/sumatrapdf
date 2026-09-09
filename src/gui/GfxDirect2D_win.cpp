@@ -565,7 +565,7 @@ void GfxDirect2D::FillQuads(const Point* pts, int nQuads, Color col, u8 alpha, i
     if (SUCCEEDED(hr)) {
         sink->SetFillMode(D2D1_FILL_MODE_WINDING);
         for (int i = 0; i < nQuads; i++) {
-            const Point* p = pts + i * 4;
+            const Point* p = pts + (i * 4);
             sink->BeginFigure(D2D1::Point2F((float)p[0].x, (float)p[0].y), D2D1_FIGURE_BEGIN_FILLED);
             D2D1_POINT_2F points[] = {
                 D2D1::Point2F((float)p[1].x, (float)p[1].y),

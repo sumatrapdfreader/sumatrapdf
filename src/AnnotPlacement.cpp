@@ -1114,7 +1114,7 @@ static void PaintPointPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
         Gdiplus::SolidBrush fill(Gdiplus::Color(40, 200, 40, 40));
         gs.FillRectangle(&fill, r.x, r.y, r.dx, r.dy);
         gs.DrawRectangle(&pen, r.x, r.y, r.dx, r.dy);
-        Gdiplus::REAL fontDy = (Gdiplus::REAL)std::max(r.dy * 0.45f, 8.f);
+        Gdiplus::REAL fontDy = (Gdiplus::REAL)std::max((float)r.dy * 0.45f, 8.f);
         Gdiplus::Font font(L"Arial", fontDy, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
         Gdiplus::SolidBrush text(red);
         Gdiplus::StringFormat fmt;
@@ -1140,10 +1140,10 @@ static void PaintPointPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
         gs.FillRectangle(&fill, r.x, r.y, r.dx, r.dy);
         gs.DrawRectangle(&border, r.x, r.y, r.dx, r.dy);
         Gdiplus::Pen pin(Gdiplus::Color(220, 40, 40, 40), (Gdiplus::REAL)std::max(DpiScale(1), 1));
-        int cx = r.x + r.dx / 2;
+        int cx = r.x + (r.dx / 2);
         int head = std::max(r.dx / 5, 2);
         gs.DrawEllipse(&pin, cx - head, r.y + head, head * 2, head * 2);
-        gs.DrawLine(&pin, cx, r.y + head * 3, cx, r.y + r.dy - head);
+        gs.DrawLine(&pin, cx, r.y + (head * 3), cx, r.y + r.dy - head);
     }
 }
 
@@ -1190,7 +1190,7 @@ static void PaintFreeTextPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     if (args.borderWidth > 0) {
         float bw = std::max((float)args.borderWidth * scale, 1.f);
         Gdiplus::Pen pen(textCol, bw);
-        gs.DrawRectangle(&pen, (Gdiplus::REAL)r.x + bw / 2, (Gdiplus::REAL)r.y + bw / 2, (Gdiplus::REAL)r.dx - bw,
+        gs.DrawRectangle(&pen, (Gdiplus::REAL)r.x + (bw / 2), (Gdiplus::REAL)r.y + (bw / 2), (Gdiplus::REAL)r.dx - bw,
                          (Gdiplus::REAL)r.dy - bw);
     } else {
         // no border on the annotation itself, so mark the extent faintly
@@ -1475,7 +1475,7 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
     return dm->ValidPageNo(pageNo);
 }
 
-static bool PointDumpCursor(MainWindow* win, AnnotPlacementKind kind, bool active) {
+static bool PointDumpCursor(AnnotPlacementKind kind, bool active) {
     if (!active) {
         return false;
     }
@@ -1496,7 +1496,7 @@ static TempStr PointPlacementDumpLineTemp(MainWindow* win, AnnotPlacementKind ki
     NotificationWnd* notif =
         active ? GetNotificationForGroup(win->hwndCanvas, kNotifPointAnnotationPlacement) : nullptr;
     Str message = NotificationGetMessageTemp(notif);
-    bool cursor = PointDumpCursor(win, kind, active);
+    bool cursor = PointDumpCursor(kind, active);
     int cmdOut = active ? win->annotPlacement.cmdId : 0;
     if (svgCursor) {
         return fmt("%s active=%d notification=%d cursor=%d cmd=%d message=%s\n", key, active ? 1 : 0, notif ? 1 : 0,

@@ -1915,8 +1915,8 @@ static bool SaveSelectionSizeOk(int w, int h) {
 }
 
 static bool EstimateSelectionPx(RectF rect, float zoom, int& w, int& h) {
-    w = (int)floorf(rect.dx * zoom + 0.5f);
-    h = (int)floorf(rect.dy * zoom + 0.5f);
+    w = (int)floorf((rect.dx * zoom) + 0.5f);
+    h = (int)floorf((rect.dy * zoom) + 0.5f);
     return w > 0 && h > 0;
 }
 

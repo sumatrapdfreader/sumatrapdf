@@ -210,7 +210,7 @@ static void MsSha1Init(MsSha1* s) {
 static void MsSha1Block(MsSha1* s, const u8* p) {
     u32 w[80];
     for (int i = 0; i < 16; i++) {
-        w[i] = ((u32)p[i * 4] << 24) | ((u32)p[i * 4 + 1] << 16) | ((u32)p[i * 4 + 2] << 8) | (u32)p[i * 4 + 3];
+        w[i] = ((u32)p[i * 4] << 24) | ((u32)p[(i * 4) + 1] << 16) | ((u32)p[(i * 4) + 2] << 8) | (u32)p[(i * 4) + 3];
     }
     for (int t = 16; t < 80; t++) {
         w[t] = rol32(w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16], 1);
@@ -294,14 +294,14 @@ static void MsSha1Final(MsSha1* s, u8 digest[20]) {
     }
     u8 lenBuf[8];
     for (int i = 0; i < 8; i++) {
-        lenBuf[i] = (u8)(bitLen >> (56 - i * 8));
+        lenBuf[i] = (u8)(bitLen >> (56 - (i * 8)));
     }
     MsSha1Update(s, lenBuf, 8);
     for (int i = 0; i < 5; i++) {
         digest[i * 4] = (u8)(s->h[i] >> 24);
-        digest[i * 4 + 1] = (u8)(s->h[i] >> 16);
-        digest[i * 4 + 2] = (u8)(s->h[i] >> 8);
-        digest[i * 4 + 3] = (u8)(s->h[i]);
+        digest[(i * 4) + 1] = (u8)(s->h[i] >> 16);
+        digest[(i * 4) + 2] = (u8)(s->h[i] >> 8);
+        digest[(i * 4) + 3] = (u8)(s->h[i]);
     }
 }
 
@@ -486,7 +486,7 @@ static bool LitParseHeader(LitFile* lit) {
 
     // secondary header: CAOL / ITSF blocks
     {
-        int off = hdrLen + nPieces * 16;
+        int off = hdrLen + (nPieces * 16);
         Str sec(d.s + off, std::min(secHdrLen, len(d) - off));
         int pos = (int)LitU32(sec, 4);
         bool haveContentOffset = false;
@@ -528,14 +528,14 @@ static bool LitParseHeader(LitFile* lit) {
     }
     int chunkSize = (int)LitU32(dir, 8);
     int nChunks = (int)LitU32(dir, 24);
-    if (chunkSize <= 48 || nChunks <= 0 || 32 + (i64)nChunks * chunkSize != dirLen64) {
+    if (chunkSize <= 48 || nChunks <= 0 || 32 + ((i64)nChunks * chunkSize) != dirLen64) {
         return false;
     }
     if (lit->entryChunkLen && (u32)chunkSize != lit->entryChunkLen) {
         return false;
     }
     for (int i = 0; i < nChunks; i++) {
-        int chunkOff = 32 + i * chunkSize;
+        int chunkOff = 32 + (i * chunkSize);
         Str chunk(dir.s + chunkOff, chunkSize);
         if (!str::StartsWith(chunk, StrL("AOLL"))) {
             continue;
@@ -602,12 +602,12 @@ static bool LitParseSectionNames(LitFile* lit) {
     for (int i = 0; i < nSections; i++) {
         int nChars = (int)LitU16(raw, pos);
         pos += 2;
-        if (pos + nChars * 2 + 2 > len(raw)) {
+        if (pos + (nChars * 2) + 2 > len(raw)) {
             return false;
         }
         WStr ws((const WCHAR*)(raw.s + pos), nChars);
         lit->sectionNames.Append(ToUtf8Temp(ws));
-        pos += nChars * 2 + 2;
+        pos += (nChars * 2) + 2;
     }
     return true;
 }

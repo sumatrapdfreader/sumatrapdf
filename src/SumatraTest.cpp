@@ -730,8 +730,8 @@ TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut) {
     bool firstTilted = quads && quads[first].IsRotated();
     out.Append(fmt("quads=%d firstTilted=%d start=%d end=%d\n", quads ? 1 : 0, firstTilted ? 1 : 0, first, last));
 
-    PointF p0{(float)(coords[first].x + coords[first].dx / 2.0), (float)(coords[first].y + coords[first].dy / 2.0)};
-    PointF p1{(float)(coords[last].x + coords[last].dx), (float)(coords[last].y + coords[last].dy / 2.0)};
+    PointF p0{(float)(coords[first].x + (coords[first].dx / 2.0)), (float)(coords[first].y + (coords[first].dy / 2.0))};
+    PointF p1{(float)(coords[last].x + coords[last].dx), (float)(coords[last].y + (coords[last].dy / 2.0))};
     if (quads) {
         p0 = quads[first].Center();
         // past the last glyph along its baseline so the final letter is included
@@ -2249,7 +2249,7 @@ static u16 TiffPhotometric(Str tiff) {
     }
     u16 count = r.UInt16LE((int)ifd);
     for (u16 i = 0; i < count; i++) {
-        int e = (int)ifd + 2 + (int)i * 12;
+        int e = (int)ifd + 2 + ((int)i * 12);
         if (e + 12 > n) {
             break;
         }

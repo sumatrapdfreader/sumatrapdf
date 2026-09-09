@@ -2076,14 +2076,14 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
         } else if (moveRight) {
             r.x = orig.x;
         } else {
-            r.x = orig.x + (orig.dx - r.dx) / 2;
+            r.x = orig.x + ((orig.dx - r.dx) / 2);
         }
         if (moveTop) {
             r.y = orig.y + orig.dy - r.dy;
         } else if (moveBottom) {
             r.y = orig.y;
         } else {
-            r.y = orig.y + (orig.dy - r.dy) / 2;
+            r.y = orig.y + ((orig.dy - r.dy) / 2);
         }
     }
 
@@ -3224,7 +3224,7 @@ static float PageGridAlignDown(float v, float origin, float step) {
     if (step <= 0) {
         return origin;
     }
-    return origin + floorf((v - origin) / step) * step;
+    return origin + (floorf((v - origin) / step) * step);
 }
 
 static bool PageGridIsMajor(float v, float origin, float minorPt, int subdiv) {

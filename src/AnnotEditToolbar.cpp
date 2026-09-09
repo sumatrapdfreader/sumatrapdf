@@ -465,16 +465,16 @@ static void PaintAlignment(Gfx* gfx, Rect r, int quadding, Color col) {
         inner.Inflate(-2, -2);
     }
     int lineH = std::max(DpiScale(2), 1);
-    int gap = std::max((inner.dy - 3 * lineH) / 2, 1);
-    int blockDy = 3 * lineH + 2 * gap;
-    int y = inner.y + (inner.dy - blockDy) / 2;
+    int gap = std::max((inner.dy - (3 * lineH)) / 2, 1);
+    int blockDy = (3 * lineH) + (2 * gap);
+    int y = inner.y + ((inner.dy - blockDy) / 2);
     int full = inner.dx;
     int shortDx = std::max((full * 2) / 3, 4);
     for (int i = 0; i < 3; i++) {
         int dx = (i == 1) ? shortDx : full;
         int x = inner.x;
         if (quadding == kQuaddingCenter) {
-            x = inner.x + (inner.dx - dx) / 2;
+            x = inner.x + ((inner.dx - dx) / 2);
         } else if (quadding == kQuaddingRight) {
             x = inner.x + inner.dx - dx;
         }
@@ -485,7 +485,7 @@ static void PaintAlignment(Gfx* gfx, Rect r, int quadding, Color col) {
 
 static void PaintSvgChip(Gfx* gfx, Rect r, const char* svg, Color fg, Color bg) {
     int pad = DpiScale(3);
-    int sz = std::min(r.dx, r.dy) - 2 * pad;
+    int sz = std::min(r.dx, r.dy) - (2 * pad);
     if (sz < 8) {
         sz = std::min(r.dx, r.dy);
     }
@@ -496,8 +496,8 @@ static void PaintSvgChip(Gfx* gfx, Rect r, const char* svg, Color fg, Color bg) 
     if (!px) {
         return;
     }
-    int x = r.x + (r.dx - px->width) / 2;
-    int y = r.y + (r.dy - px->height) / 2;
+    int x = r.x + ((r.dx - px->width) / 2);
+    int y = r.y + ((r.dy - px->height) / 2);
     gfx->DrawPixmap(px, {x, y, px->width, px->height});
 }
 
@@ -505,17 +505,17 @@ static void PaintLineEndingMark(Gfx* gfx, Point tip, Point along, Color col, int
     // along is a unit-ish direction from the shaft toward the tip
     int dx = along.x;
     int dy = along.y;
-    auto perp = [&](int s) -> Point { return {tip.x - dy * s / size, tip.y + dx * s / size}; };
-    auto back = [&](int s) -> Point { return {tip.x - dx * s / size, tip.y - dy * s / size}; };
+    auto perp = [&](int s) -> Point { return {tip.x - (dy * s / size), tip.y + (dx * s / size)}; };
+    auto back = [&](int s) -> Point { return {tip.x - (dx * s / size), tip.y - (dy * s / size)}; };
     switch (style) {
         case 1: { // Square
             Point p = back(size);
-            gfx->DrawRect({p.x - size / 2, p.y - size / 2, size, size}, col, 1);
+            gfx->DrawRect({p.x - (size / 2), p.y - (size / 2), size, size}, col, 1);
             break;
         }
         case 2: { // Circle
             Point p = back(size / 2);
-            gfx->FillEllipse({p.x - size / 2, p.y - size / 2, size, size}, col);
+            gfx->FillEllipse({p.x - (size / 2), p.y - (size / 2), size, size}, col);
             break;
         }
         case 3: { // Diamond
@@ -533,8 +533,8 @@ static void PaintLineEndingMark(Gfx* gfx, Point tip, Point along, Color col, int
             Point wing = (style == 7) ? Point{-dx, -dy} : along;
             Point t = (style == 7) ? back(size) : tip;
             Point base = (style == 7) ? tip : back(size);
-            Point l = {base.x - wing.y / 2, base.y + wing.x / 2};
-            Point r = {base.x + wing.y / 2, base.y - wing.x / 2};
+            Point l = {base.x - (wing.y / 2), base.y + (wing.x / 2)};
+            Point r = {base.x + (wing.y / 2), base.y - (wing.x / 2)};
             gfx->DrawLineAA(t, l, col, 1.5f);
             gfx->DrawLineAA(t, r, col, 1.5f);
             break;
@@ -543,8 +543,8 @@ static void PaintLineEndingMark(Gfx* gfx, Point tip, Point along, Color col, int
         case 8: { // RClosedArrow
             Point t = (style == 8) ? back(size) : tip;
             Point base = (style == 8) ? tip : back(size);
-            Point l = {base.x - dy / 2, base.y + dx / 2};
-            Point r = {base.x + dy / 2, base.y - dx / 2};
+            Point l = {base.x - (dy / 2), base.y + (dx / 2)};
+            Point r = {base.x + (dy / 2), base.y - (dx / 2)};
             gfx->DrawLineAA(t, l, col, 1.5f);
             gfx->DrawLineAA(t, r, col, 1.5f);
             gfx->DrawLineAA(l, r, col, 1.5f);
@@ -554,8 +554,8 @@ static void PaintLineEndingMark(Gfx* gfx, Point tip, Point along, Color col, int
             gfx->DrawLineAA(perp(size / 2), perp(-size / 2), col, 1.5f);
             break;
         case 9: { // Slash
-            Point a = {tip.x - size / 2, tip.y - size / 2};
-            Point b = {tip.x + size / 2, tip.y + size / 2};
+            Point a = {tip.x - (size / 2), tip.y - (size / 2)};
+            Point b = {tip.x + (size / 2), tip.y + (size / 2)};
             gfx->DrawLineAA(a, b, col, 1.5f);
             break;
         }
@@ -566,7 +566,7 @@ static void PaintLineEndingMark(Gfx* gfx, Point tip, Point along, Color col, int
 
 static void PaintLineEnding(Gfx* gfx, Rect r, int style, bool isStart, Color col) {
     int pad = DpiScale(5);
-    int y = r.y + r.dy / 2;
+    int y = r.y + (r.dy / 2);
     Point left{r.x + pad, y};
     Point right{r.x + r.dx - pad, y};
     gfx->DrawLineAA(left, right, col, 1.5f);
@@ -781,7 +781,7 @@ static Pixmap* RenderMupdfAnnotIcon(Str name, Color fg, int dx, int dy) {
     u8 g;
     u8 b;
     UnpackColor(fg, r, g, b);
-    float rgb[3] = {r / 255.f, g / 255.f, b / 255.f};
+    float rgb[3] = {(float)r / 255.f, (float)g / 255.f, (float)b / 255.f};
 
     fz_path* path = nullptr;
     fz_pixmap* fzpx = nullptr;
@@ -805,7 +805,7 @@ static Pixmap* RenderMupdfAnnotIcon(Str name, Color fg, int dx, int dy) {
             bh = 8;
         }
         float pad = 0.4f;
-        float scale = std::min((float)dx / (bw + 2 * pad), (float)dy / (bh + 2 * pad));
+        float scale = std::min((float)dx / (bw + (2 * pad)), (float)dy / (bh + (2 * pad)));
         // Open Iconic streams are y-down (MuPDF's appearance cm flips them for
         // PDF). Fit into the pixmap without a second flip (issue #6112).
         fz_matrix ctm = fz_make_matrix(scale, 0, 0, scale, -scale * (bound.x0 - pad), -scale * (bound.y0 - pad));
@@ -864,14 +864,14 @@ static Pixmap* GetCachedMupdfAnnotIcon(Str name, Color fg, int dx, int dy) {
 
 static void PaintMupdfAnnotIcon(Gfx* gfx, Rect r, Str name, Color fg, PlatformFont* font) {
     int pad = DpiScale(3);
-    int sz = std::min(r.dx, r.dy) - 2 * pad;
+    int sz = std::min(r.dx, r.dy) - (2 * pad);
     if (sz < 8) {
         sz = std::min(r.dx, r.dy);
     }
     Pixmap* px = GetCachedMupdfAnnotIcon(name, fg, sz, sz);
     if (px) {
-        int x = r.x + (r.dx - px->width) / 2;
-        int y = r.y + (r.dy - px->height) / 2;
+        int x = r.x + ((r.dx - px->width) / 2);
+        int y = r.y + ((r.dy - px->height) / 2);
         gfx->DrawPixmap(px, {x, y, px->width, px->height});
         return;
     }
@@ -899,7 +899,7 @@ static void PaintIconGlyph(Gfx* gfx, Rect r, Str name, Color col, PlatformFont* 
 static TempStr ChipLabelTemp(const AnnotEditItem& item) {
     switch (item.kind) {
         case AnnotEditKind::Opacity:
-            return fmt("%d%%", (item.number * 100 + 127) / 255);
+            return fmt("%d%%", ((item.number * 100) + 127) / 255);
         case AnnotEditKind::Border:
         case AnnotEditKind::TextSize:
             return fmt("%d", item.number);
@@ -1065,7 +1065,7 @@ static HBITMAP CreateColorSwatchBitmap(PdfColor pdfCol, int dx, int dy) {
                 pg = g;
                 pb = b;
             }
-            px[y * dx + x] = 0xFF000000u | ((u32)pr << 16) | ((u32)pg << 8) | pb;
+            px[(y * dx) + x] = 0xFF000000u | ((u32)pr << 16) | ((u32)pg << 8) | pb;
         }
     }
     return bmp;
@@ -1119,7 +1119,7 @@ enum class PopupGlyphKind {
 };
 
 static HBITMAP CreateMenuGlyphBitmap(int dx, int dy, PopupGlyphKind glyph, Str iconName, int style, bool lineIsStart,
-                                     Color fg, Color bg, PlatformFont* font) {
+                                     Color fg, Color bg) {
     if (dx < 1 || dy < 1 || glyph == PopupGlyphKind::None) {
         return nullptr;
     }
@@ -1156,7 +1156,7 @@ static HBITMAP CreateMenuGlyphBitmap(int dx, int dy, PopupGlyphKind glyph, Str i
                 if (dyOut < 0 || dyOut >= dy) {
                     continue;
                 }
-                u8* s = src->data + y * src->stride;
+                u8* s = src->data + (y * src->stride);
                 for (int x = 0; x < src->width; x++) {
                     int dxOut = x + ox;
                     if (dxOut < 0 || dxOut >= dx) {
@@ -1167,14 +1167,14 @@ static HBITMAP CreateMenuGlyphBitmap(int dx, int dy, PopupGlyphKind glyph, Str i
                     u8 sg = s[1];
                     u8 sr = s[2];
                     u8 sa = s[3];
-                    u32* d = &px[dyOut * dx + dxOut];
+                    u32* d = &px[(dyOut * dx) + dxOut];
                     u8 db = (u8)(*d);
                     u8 dg = (u8)((*d >> 8) & 0xff);
                     u8 dr = (u8)((*d >> 16) & 0xff);
                     int inv = 255 - sa;
-                    u8 ob = (u8)(sb + (db * inv + 127) / 255);
-                    u8 og = (u8)(sg + (dg * inv + 127) / 255);
-                    u8 oor = (u8)(sr + (dr * inv + 127) / 255);
+                    u8 ob = (u8)(sb + (((db * inv) + 127) / 255));
+                    u8 og = (u8)(sg + (((dg * inv) + 127) / 255));
+                    u8 oor = (u8)(sr + (((dr * inv) + 127) / 255));
                     *d = 0xFF000000u | ((u32)oor << 16) | ((u32)og << 8) | ob;
                     s += 4;
                 }
@@ -1201,7 +1201,7 @@ static HBITMAP CreateMenuGlyphBitmap(int dx, int dy, PopupGlyphKind glyph, Str i
 }
 
 static int PopupPickGlyphs(MainWindow* win, Point screen, const StrVec& names, int current, Rect chipScreen,
-                           PopupGlyphKind glyph, bool lineIsStart, PlatformFont* font) {
+                           PopupGlyphKind glyph, bool lineIsStart) {
     HMENU menu = CreatePopupMenu();
     if (!menu) {
         return -1;
@@ -1211,7 +1211,7 @@ static int PopupPickGlyphs(MainWindow* win, Point screen, const StrVec& names, i
     Color fg = GetSysColor(COLOR_MENUTEXT);
     Color bg = GetSysColor(COLOR_MENU);
     for (int i = 0; i < len(names); i++) {
-        HBITMAP bmp = CreateMenuGlyphBitmap(sw, sw, glyph, names[i], i, lineIsStart, fg, bg, font);
+        HBITMAP bmp = CreateMenuGlyphBitmap(sw, sw, glyph, names[i], i, lineIsStart, fg, bg);
         if (bmp) {
             VecAppend(bmps, bmp);
         }
@@ -1242,8 +1242,7 @@ static int PopupPickGlyphs(MainWindow* win, Point screen, const StrVec& names, i
 }
 
 static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int current, Rect chipScreen,
-                        PopupGlyphKind glyph = PopupGlyphKind::None, bool lineIsStart = false,
-                        PlatformFont* font = nullptr) {
+                        PopupGlyphKind glyph = PopupGlyphKind::None, bool lineIsStart = false) {
     StrVec items;
     for (Str name = SeqStrFirst(names); len(name) > 0; name = SeqStrNext(name)) {
         items.Append(name);
@@ -1251,7 +1250,7 @@ static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int cur
     if (glyph == PopupGlyphKind::None) {
         return PopupPick(win, screen, items, current, chipScreen);
     }
-    return PopupPickGlyphs(win, screen, items, current, chipScreen, glyph, lineIsStart, font);
+    return PopupPickGlyphs(win, screen, items, current, chipScreen, glyph, lineIsStart);
 }
 
 static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
@@ -1326,7 +1325,7 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             StrVec names;
             int current = -1;
             for (int i = 0; i < dimofi(vals); i++) {
-                names.Append(fmt("%d%%", (vals[i] * 100 + 127) / 255));
+                names.Append(fmt("%d%%", ((vals[i] * 100) + 127) / 255));
                 if (abs(vals[i] - chip->item.number) < 20) {
                     current = i;
                 }
@@ -1386,7 +1385,7 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
         }
         case AnnotEditKind::Alignment: {
             int idx = PopupPickSeq(tb->win, screen, gQuaddingNames, chip->item.number, chipScreen,
-                                   PopupGlyphKind::Alignment, false, tb->font);
+                                   PopupGlyphKind::Alignment, false);
             if (dismissed(idx)) {
                 return;
             }
@@ -1398,7 +1397,7 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             SeqStrings icons = AnnotationIconNames(annot);
             int current = SeqStrIndex(icons, chip->item.iconName);
             PopupGlyphKind glyph = Type(annot) == AnnotationType::Stamp ? PopupGlyphKind::None : PopupGlyphKind::Icon;
-            int idx = PopupPickSeq(tb->win, screen, icons, current, chipScreen, glyph, false, tb->font);
+            int idx = PopupPickSeq(tb->win, screen, icons, current, chipScreen, glyph, false);
             if (dismissed(idx)) {
                 return;
             }
@@ -1409,7 +1408,7 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
         case AnnotEditKind::LineStart:
         case AnnotEditKind::LineEnd: {
             int idx = PopupPickSeq(tb->win, screen, AnnotEditorLineEndingStyles(), chip->item.lineEnding, chipScreen,
-                                   PopupGlyphKind::LineEnding, kind == AnnotEditKind::LineStart, tb->font);
+                                   PopupGlyphKind::LineEnding, kind == AnnotEditKind::LineStart);
             if (dismissed(idx)) {
                 return;
             }

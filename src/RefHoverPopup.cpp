@@ -52,7 +52,7 @@ static IPageDestination* LaunchLinkAtPagePt(RefHoverState* s, PointF pagePt) {
     return dest;
 }
 
-static IPageDestination* LaunchLinkAtPopupPt(RefHoverState* s, HWND hwnd, int clientX, int clientY) {
+static IPageDestination* LaunchLinkAtPopupPt(RefHoverState* s, int clientX, int clientY) {
     PointF pagePt;
     if (!PopupClientToPagePt(s, clientX, clientY, pagePt)) {
         return nullptr;
@@ -66,7 +66,7 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         POINT p;
         if (s && GetCursorPos(&p)) {
             ScreenToClient(hwnd, &p);
-            if (LaunchLinkAtPopupPt(s, hwnd, p.x, p.y)) {
+            if (LaunchLinkAtPopupPt(s, p.x, p.y)) {
                 SetCursorCached(IDC_HAND);
                 return TRUE;
             }
@@ -106,7 +106,7 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         if (s) {
             int cx = GET_X_LPARAM(lp);
             int cy = GET_Y_LPARAM(lp);
-            IPageDestination* dest = LaunchLinkAtPopupPt(s, hwnd, cx, cy);
+            IPageDestination* dest = LaunchLinkAtPopupPt(s, cx, cy);
             if (dest) {
                 RefHoverHandlePopupClick(s, dest);
             }

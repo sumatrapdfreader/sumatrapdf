@@ -126,9 +126,9 @@ static void UnpremultiplyBgra(u8* d) {
     if (a == 0 || a == 255) {
         return;
     }
-    d[0] = (u8)std::min<u32>(255, ((u32)d[0] * 255 + (a / 2)) / a);
-    d[1] = (u8)std::min<u32>(255, ((u32)d[1] * 255 + (a / 2)) / a);
-    d[2] = (u8)std::min<u32>(255, ((u32)d[2] * 255 + (a / 2)) / a);
+    d[0] = (u8)std::min<u32>(255, (((u32)d[0] * 255) + (a / 2)) / a);
+    d[1] = (u8)std::min<u32>(255, (((u32)d[1] * 255) + (a / 2)) / a);
+    d[2] = (u8)std::min<u32>(255, (((u32)d[2] * 255) + (a / 2)) / a);
 }
 
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {

@@ -1588,7 +1588,7 @@ Str SerializeSettings(Settings* prefs, Str prevData) {
         int nKeep = 0;
         int namesLen = 0;
         const char* srcName = gFileStateInfo.fieldNames;
-        for (u16 i = 0; i < dimof(gFileStateFields); i++) {
+        for (int i = 0; i < dimofi(gFileStateFields); i++) {
             Str name = Str(srcName);
             if (SeqStrIndex(kFileStateKeepNoPerDoc, name) >= 0) {
                 keepFields[nKeep] = gFileStateFields[i];

@@ -378,14 +378,14 @@ static PreviewLayout ComputePreviewLayout(HWND hwnd, PdfPreview* preview, int pa
         lo.onScreen.x = lo.content.x + preview->panX;
     } else {
         preview->panX = 0;
-        lo.onScreen.x = lo.content.x + (lo.content.dx - pagePx.dx) / 2;
+        lo.onScreen.x = lo.content.x + ((lo.content.dx - pagePx.dx) / 2);
     }
     if (lo.canPanY) {
         preview->panY = limitValue(preview->panY, lo.content.dy - pagePx.dy, 0);
         lo.onScreen.y = lo.content.y + preview->panY;
     } else {
         preview->panY = 0;
-        lo.onScreen.y = lo.content.y + (lo.content.dy - pagePx.dy) / 2;
+        lo.onScreen.y = lo.content.y + ((lo.content.dy - pagePx.dy) / 2);
     }
     lo.onScreen.dx = pagePx.dx;
     lo.onScreen.dy = pagePx.dy;
@@ -541,19 +541,19 @@ static void PreviewZoomAt(HWND hwnd, PdfPreview* preview, Point focus, int wheel
         return;
     }
     if (!lo.onScreen.Contains(focus)) {
-        focus = Point(lo.onScreen.x + lo.onScreen.dx / 2, lo.onScreen.y + lo.onScreen.dy / 2);
+        focus = Point(lo.onScreen.x + (lo.onScreen.dx / 2), lo.onScreen.y + (lo.onScreen.dy / 2));
     }
     float pageX = (float)(focus.x - lo.onScreen.x) / lo.zoom;
     float pageY = (float)(focus.y - lo.onScreen.y) / lo.zoom;
     preview->userZoom = newZoom;
     Rect newPx = RectF(0, 0, lo.page.dx * newZoom, lo.page.dy * newZoom).Round();
     if (newPx.dx > lo.content.dx) {
-        preview->panX = focus.x - lo.content.x - (int)floorf(pageX * newZoom + 0.5f);
+        preview->panX = focus.x - lo.content.x - (int)floorf((pageX * newZoom) + 0.5f);
     } else {
         preview->panX = 0;
     }
     if (newPx.dy > lo.content.dy) {
-        preview->panY = focus.y - lo.content.y - (int)floorf(pageY * newZoom + 0.5f);
+        preview->panY = focus.y - lo.content.y - (int)floorf((pageY * newZoom) + 0.5f);
     } else {
         preview->panY = 0;
     }

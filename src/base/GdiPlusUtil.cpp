@@ -411,9 +411,9 @@ static HBITMAP PixmapToHbitmapOnWhite(const Pixmap* p) {
             u32 g = s[1];
             u32 r = rgba ? s[0] : s[2];
             u32 inv = 255 - a;
-            d[0] = (u8)std::min<u32>(255, ((b * a + 127) / 255) + inv);
-            d[1] = (u8)std::min<u32>(255, ((g * a + 127) / 255) + inv);
-            d[2] = (u8)std::min<u32>(255, ((r * a + 127) / 255) + inv);
+            d[0] = (u8)std::min<u32>(255, (((b * a) + 127) / 255) + inv);
+            d[1] = (u8)std::min<u32>(255, (((g * a) + 127) / 255) + inv);
+            d[2] = (u8)std::min<u32>(255, (((r * a) + 127) / 255) + inv);
             d[3] = 255;
         }
     }
@@ -427,7 +427,7 @@ static HBITMAP PixmapToHbitmapOnWhite(const Pixmap* p) {
 // CF_DIBV5: 32bpp BI_BITFIELDS with an alpha mask, top-down, straight alpha
 static HGLOBAL PixmapToDibV5Global(const Pixmap* p) {
     size_t rowBytes = (size_t)p->width * 4;
-    size_t nBytes = sizeof(BITMAPV5HEADER) + rowBytes * (size_t)p->height;
+    size_t nBytes = sizeof(BITMAPV5HEADER) + (rowBytes * (size_t)p->height);
     HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, nBytes);
     if (!hMem) {
         return nullptr;

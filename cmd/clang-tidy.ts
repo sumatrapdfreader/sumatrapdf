@@ -16,6 +16,7 @@ const includeDirs = [
   "src/gui/win",
   "ext/chmdec",
   "ext/djvudec",
+  "ext/msdes",
   "ext/a-zlib",
   "ext/synctex",
   "ext/lzma/C",

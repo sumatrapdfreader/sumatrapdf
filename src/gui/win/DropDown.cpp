@@ -115,7 +115,7 @@ static void DrawColorSwatchItem(DropDown* w, DRAWITEMSTRUCT* dis) {
 
     int pad = DpiScale(3);
     int sw = std::max(rc.dy - (2 * pad), 8);
-    Rect swatch{rc.x + pad, rc.y + (rc.dy - sw) / 2, sw, sw};
+    Rect swatch{rc.x + pad, rc.y + ((rc.dy - sw) / 2), sw, sw};
     Color col = kColorTransparent;
     if ((int)dis->itemID < len(w->itemColors)) {
         col = w->itemColors[(int)dis->itemID];

@@ -3107,7 +3107,7 @@ Rect VirtSlider::TrackRectLocal() const {
     int r = ThumbRadius();
     int thick = std::max(r / 3, 3);
     Rect c = {0, 0, bounds.dx, bounds.dy};
-    int y = c.y + (c.dy - thick) / 2;
+    int y = c.y + ((c.dy - thick) / 2);
     int x = c.x + r;
     int dx = std::max(c.dx - (2 * r), 1);
     return {x, y, dx, thick};
@@ -3190,7 +3190,7 @@ void VirtSlider::Paint(VirtPaintCtx& ctx) {
     } else {
         cx = track.x + (int)lroundf(t * (float)track.dx);
     }
-    int cy = track.y + track.dy / 2;
+    int cy = track.y + (track.dy / 2);
 
     Color trackCol = GetColor(kColSliderTrack);
     Color fillCol = GetColor(kColSliderFill);
@@ -4017,7 +4017,7 @@ void VirtRichText::LayoutText(int areaWidth) {
         }
         TipWord* nextLine = lineEnd->next;
         for (TipWord* t = w; t != nextLine; t = t->next) {
-            t->y = lineY + (lineH - t->dy) / 2;
+            t->y = lineY + ((lineH - t->dy) / 2);
         }
         w = nextLine;
     }

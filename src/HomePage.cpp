@@ -2774,8 +2774,8 @@ static void ShowHomeAboutHover(MainWindow* win) {
             return;
         }
         chrome->aboutHover->onMouseLeave = MkFunc0(OnHomeAboutHoverLeave, win);
-        LONG_PTR cls = GetClassLongPtrW(chrome->aboutHover->native, GCL_STYLE);
-        SetClassLongPtrW(chrome->aboutHover->native, GCL_STYLE, cls | CS_DROPSHADOW);
+        ULONG_PTR cls = GetClassLongPtrW(chrome->aboutHover->native, GCL_STYLE);
+        SetClassLongPtrW(chrome->aboutHover->native, GCL_STYLE, (LONG_PTR)(cls | CS_DROPSHADOW));
     }
 
     VirtHost* host = chrome->aboutHover;

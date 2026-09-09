@@ -182,7 +182,7 @@ constexpr int kBaseTableItemCount = 64;
 constexpr int kBaseTableDataLen = kBaseTableItemCount * (int)sizeof(u32);
 
 constexpr int kHuffRecordMinLen = kHuffHeaderLen + kCacheDataLen + kBaseTableDataLen;
-constexpr int kHuffRecordLen = kHuffHeaderLen + 2 * kCacheDataLen + 2 * kBaseTableDataLen;
+constexpr int kHuffRecordLen = kHuffHeaderLen + (2 * kCacheDataLen) + (2 * kBaseTableDataLen);
 
 constexpr int kCdicsMax = 32;
 
@@ -681,7 +681,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
     return true;
 }
 
-constexpr int kEofRec = 0xe98e0d0a;
+constexpr u32 kEofRec = 0xe98e0d0a;
 constexpr int kFlisRec = 0x464c4953; // 'FLIS'
 constexpr int kFcisRec = 0x46434953; // 'FCIS
 constexpr int kFdstRec = 0x46445354; // 'FDST'
@@ -950,7 +950,7 @@ int KindleEmbedToRecIndex(Str src) {
         } else {
             break;
         }
-        n = n * 32 + digit;
+        n = (n * 32) + digit;
         any = true;
         p++;
     }

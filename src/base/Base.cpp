@@ -271,7 +271,7 @@ bool QuadF::Contains(PointF p) const {
     for (int i = 0; i < 4; i++) {
         PointF a = pts[i];
         PointF b = pts[(i + 1) % 4];
-        float cross = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+        float cross = ((b.x - a.x) * (p.y - a.y)) - ((b.y - a.y) * (p.x - a.x));
         if (cross < 0) {
             neg = true;
         } else if (cross > 0) {
@@ -1576,9 +1576,9 @@ NO_INLINE void* VecInsertSpaceNT(VecNonTemplated* v, int elSize, int idx, int co
     if (!VecReserveNT(nullptr, v, elSize, newLen)) {
         return nullptr;
     }
-    char* res = (char*)v->els + (size_t)idx * (size_t)elSize;
+    char* res = (char*)v->els + ((size_t)idx * (size_t)elSize);
     if (len > idx) {
-        char* dst = res + (size_t)count * (size_t)elSize;
+        char* dst = res + ((size_t)count * (size_t)elSize);
         memmove(dst, res, (size_t)(len - idx) * (size_t)elSize);
     }
     v->len = newLen;
@@ -1598,7 +1598,7 @@ NO_INLINE bool VecResizeNT(VecNonTemplated* v, int elSize, int newSize) {
     }
     v->len = newSize;
     if (v->els && curCap > newSize) {
-        char* tail = (char*)v->els + (size_t)newSize * (size_t)elSize;
+        char* tail = (char*)v->els + ((size_t)newSize * (size_t)elSize);
         memset(tail, 0, (size_t)(curCap - newSize) * (size_t)elSize);
     }
     return true;
@@ -1608,12 +1608,12 @@ NO_INLINE void VecRemoveAtNT(VecNonTemplated* v, int elSize, int idx, int count)
     int len = v->len;
     char* els = (char*)v->els;
     if (len > idx + count) {
-        char* dst = els + (size_t)idx * (size_t)elSize;
-        char* src = els + (size_t)(idx + count) * (size_t)elSize;
+        char* dst = els + ((size_t)idx * (size_t)elSize);
+        char* src = els + ((size_t)(idx + count) * (size_t)elSize);
         memmove(dst, src, (size_t)(len - idx - count) * (size_t)elSize);
     }
     len -= count;
-    memset(els + (size_t)len * (size_t)elSize, 0, (size_t)count * (size_t)elSize);
+    memset(els + ((size_t)len * (size_t)elSize), 0, (size_t)count * (size_t)elSize);
     v->len = len;
 }
 
@@ -1626,8 +1626,8 @@ NO_INLINE void VecRemoveAtFastNT(VecNonTemplated* v, int elSize, int idx) {
         return;
     }
     char* els = (char*)v->els;
-    char* toRemove = els + (size_t)idx * (size_t)elSize;
-    char* last = els + (size_t)(len - 1) * (size_t)elSize;
+    char* toRemove = els + ((size_t)idx * (size_t)elSize);
+    char* last = els + ((size_t)(len - 1) * (size_t)elSize);
     if (toRemove != last) {
         memcpy(toRemove, last, (size_t)elSize);
     }
@@ -1694,7 +1694,7 @@ NO_INLINE void VecCopyFromNT(VecNonTemplated* v, int elSize, int srcLen, const v
     if (zeroTail && v->els) {
         int curCap = v->cap < 0 ? -v->cap : v->cap;
         if (curCap > srcLen) {
-            char* tail = (char*)v->els + (size_t)srcLen * (size_t)elSize;
+            char* tail = (char*)v->els + ((size_t)srcLen * (size_t)elSize);
             memset(tail, 0, (size_t)(curCap - srcLen) * (size_t)elSize);
         }
     }
@@ -3107,7 +3107,7 @@ TempStr EncodeTemp(Str s) {
         return str::DupTemp(StrL(""));
     }
     int n = len(s);
-    char* buf = AllocArrayTemp<char>(n * 3 + 1);
+    char* buf = AllocArrayTemp<char>((n * 3) + 1);
     int dst = 0;
     for (int i = 0; i < n; i++) {
         UrlAppendEncodedByte(buf, dst, (u8)s.s[i]);
@@ -3126,7 +3126,7 @@ TempStr EncodePathTemp(Str path) {
         return str::DupTemp(StrL(""));
     }
     int n = len(path);
-    char* buf = AllocArrayTemp<char>(n * 3 + 1);
+    char* buf = AllocArrayTemp<char>((n * 3) + 1);
     int dst = 0;
     for (int i = 0; i < n; i++) {
         u8 c = (u8)path.s[i];

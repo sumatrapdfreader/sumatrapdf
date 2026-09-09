@@ -431,8 +431,8 @@ static Pixmap* ConvertToBgra(Pixmap* source) {
         return nullptr;
     }
     for (int y = 0; y < source->height; y++) {
-        const u8* src = source->data + (size_t)y * source->stride;
-        u8* dst = converted->data + (size_t)y * converted->stride;
+        const u8* src = source->data + ((size_t)y * source->stride);
+        u8* dst = converted->data + ((size_t)y * converted->stride);
         for (int x = 0; x < source->width; x++) {
             if (source->format == PixmapFormat::BGR8) {
                 dst[0] = src[0];
@@ -663,8 +663,8 @@ class PrintDocumentSource final
         } else {
             target = Rect(printable.x + layout.offset.x, printable.y + layout.offset.y, pageSize.dx, pageSize.dy);
         }
-        D2D1_RECT_F destination = D2D1::RectF(target.x / unitsPerDip, target.y / unitsPerDip,
-                                              target.BR().x / unitsPerDip, target.BR().y / unitsPerDip);
+        D2D1_RECT_F destination = D2D1::RectF((float)target.x / unitsPerDip, (float)target.y / unitsPerDip,
+                                              (float)target.BR().x / unitsPerDip, (float)target.BR().y / unitsPerDip);
         context->DrawBitmap(bitmap.Get(), destination, 1.f, D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC, nullptr,
                             nullptr);
         return S_OK;

@@ -1388,7 +1388,7 @@ static bool LinkifyCheckMultiline(Utf8PageText pageText, int startOff, int posOf
     if (next.BR().y <= last.y) {
         return false;
     }
-    if (next.y > last.BR().y + last.dy * 1.5f) {
+    if ((float)next.y > (float)last.BR().y + ((float)last.dy * 1.5f)) {
         return false;
     }
     if (next.x >= last.BR().x) {
@@ -1396,14 +1396,14 @@ static bool LinkifyCheckMultiline(Utf8PageText pageText, int startOff, int posOf
     }
     // Continuation stays near the URL's left edge. The next row of a
     // left-hand column starts much further left than that.
-    float slack = last.dy * 1.5f;
+    float slack = (float)last.dy * 1.5f;
     if (first.dx > 0) {
         slack = std::max(slack, (float)first.dx * 3);
     }
-    if (next.x < first.x - slack) {
+    if ((float)next.x < (float)first.x - slack) {
         return false;
     }
-    if (next.dy < last.dy * 0.85f || next.dy > last.dy * 1.2f) {
+    if ((float)next.dy < (float)last.dy * 0.85f || (float)next.dy > (float)last.dy * 1.2f) {
         return false;
     }
     return true;

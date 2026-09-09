@@ -105,7 +105,7 @@ static bool ParseNonNegative(Str s, i64* valueOut) {
         if (value > (INT64_MAX - digit) / 10) {
             return false;
         }
-        value = value * 10 + digit;
+        value = (value * 10) + digit;
     }
     *valueOut = value;
     return true;

@@ -828,11 +828,11 @@ static TempStr HexBytesTemp(const BYTE* p, int n, bool reverse) {
     if (!p || n <= 0) {
         return {};
     }
-    char* buf = AllocArrayTemp<char>(n * 2 + 1);
+    char* buf = AllocArrayTemp<char>((n * 2) + 1);
     for (int i = 0; i < n; i++) {
         BYTE v = reverse ? p[n - 1 - i] : p[i];
         buf[i * 2] = "0123456789ABCDEF"[v >> 4];
-        buf[i * 2 + 1] = "0123456789ABCDEF"[v & 0xf];
+        buf[(i * 2) + 1] = "0123456789ABCDEF"[v & 0xf];
     }
     return Str(buf, n * 2);
 }

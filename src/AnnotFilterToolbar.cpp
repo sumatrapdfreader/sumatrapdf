@@ -556,7 +556,7 @@ static Rect AnnotFilterDefaultRect(MainWindow* win, int dx, int dy) {
 
     if (FrameIsMaxOrFullscreen(win)) {
         int x = area.x + area.dx - dx;
-        int y = area.y + (area.dy - dy) / 2;
+        int y = area.y + ((area.dy - dy) / 2);
         return {x, y, dx, dy};
     }
 
@@ -1043,7 +1043,7 @@ static void ShowAnnotFilterWindow(MainWindow* win) {
     UpdateFloatButtons(f);
     PositionAnnotFilterWindow(f->floatWnd);
     Rect wr = HwndWindowRect(f->floatWnd->hwnd);
-    f->floatWnd->UpdateDpi(DpiGetForPoint(wr.x + wr.dx / 2, wr.y + wr.dy / 2));
+    f->floatWnd->UpdateDpi(DpiGetForPoint(wr.x + (wr.dx / 2), wr.y + (wr.dy / 2)));
     f->floatWnd->DoLayout();
     // Ctrl+W always; Esc only with EscToExit (issue #6124)
     f->floatWnd->closeOnCtrlW = true;

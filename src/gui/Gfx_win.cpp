@@ -134,7 +134,7 @@ void GfxHdc::FillQuads(const Point* pts, int nQuads, Color col, u8 alpha, int ou
     GdiplusOnHdc gh(hdc);
     Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
     for (int i = 0; i < nQuads; i++) {
-        const Point* p = pts + i * 4;
+        const Point* p = pts + (i * 4);
         Gdiplus::Point gp[4] = {{p[0].x, p[0].y}, {p[1].x, p[1].y}, {p[2].x, p[2].y}, {p[3].x, p[3].y}};
         path.AddPolygon(gp, 4);
     }

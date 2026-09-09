@@ -1322,7 +1322,7 @@ static bool WriteCmykTiff(Str destPath, int w, int h, int srcStride, const u8* s
     const u32 dataLen = (u32)rowBytes * (u32)h;
     const int nTags = 11;
     const u32 ifdOff = 8;
-    const u32 ifdSize = 2 + (u32)nTags * 12 + 4;
+    const u32 ifdSize = 2 + ((u32)nTags * 12) + 4;
     const u32 bitsOff = ifdOff + ifdSize;
     const u32 dataOff = bitsOff + 8;
 

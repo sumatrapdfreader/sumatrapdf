@@ -1075,7 +1075,7 @@ void ShowFindWindow(MainWindow* win) {
     // Hidden-window DPI queries keep the caller's scale; use the monitor we
     // actually placed the window on (issue #5998).
     Rect wr = HwndWindowRect(w->hwnd);
-    w->UpdateDpi(DpiGetForPoint(wr.x + wr.dx / 2, wr.y + wr.dy / 2));
+    w->UpdateDpi(DpiGetForPoint(wr.x + (wr.dx / 2), wr.y + (wr.dy / 2)));
     w->Layout();
     ShowWindow(w->hwnd, SW_SHOW);
     win->findEdit->SetFocus();

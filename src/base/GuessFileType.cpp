@@ -769,7 +769,7 @@ static void ParseIco(ByteReader r, FileTypeInfo& res) {
     int cap = 0;
     int got = 0;
     for (int i = 0; i < n; i++) {
-        int ent = 6 + i * 16;
+        int ent = 6 + (i * 16);
         if (ent + 16 > r.len) {
             break;
         }
