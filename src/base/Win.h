@@ -66,6 +66,7 @@ bool HwndIsMouseOverRect(HWND hwnd, const Rect& r);
 
 HWND HwndSetFocus(HWND hwnd);
 HWND HwndThreadFocus();
+bool IsThreadInMenuMode();
 bool HwndSetFocusForce(HWND hwnd);
 bool HwndIsFocused(HWND);
 bool HwndIsOnScreenKeyboard(HWND);

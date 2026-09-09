@@ -175,6 +175,7 @@ import { testit as trimEmptyMarginsRestore } from "./trim-empty-margins-restore.
 import { testit as issue1930 } from "./issue-1930.ts";
 import { testit as annotFilterSyntax } from "./annot-filter-syntax.ts";
 import { testit as annotCutPaste } from "./annot-cut-paste.ts";
+import { testit as ctxMenuReload } from "./ctx-menu-reload.ts";
 import { testit as annotUndoRedo } from "./annot-undo-redo.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
 import { testit as freeTextAnnotationPlacement } from "./free-text-annotation-placement.ts";
@@ -280,6 +281,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["ctx-menu-reload", ctxMenuReload],
   ["issue-5870", issue5870],
   ["issue-6133", issue6133],
   ["image-only-palette-items", imageOnlyPaletteItems],

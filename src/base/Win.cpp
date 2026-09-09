@@ -1906,6 +1906,18 @@ HWND HwndThreadFocus() {
     return nullptr;
 }
 
+// True while a menu (popup, menu bar or system menu) runs its nested message
+// loop on this thread. Work dispatched from that loop runs underneath whatever
+// the menu's caller has on its stack, so anything that frees state must wait.
+bool IsThreadInMenuMode() {
+    GUITHREADINFO gti{};
+    gti.cbSize = sizeof(gti);
+    if (!GetGUIThreadInfo(GetCurrentThreadId(), &gti)) {
+        return false;
+    }
+    return (gti.flags & (GUI_INMENUMODE | GUI_POPUPMENUMODE | GUI_SYSTEMMENUMODE)) != 0;
+}
+
 // SetFocus() does not move this thread's focused window when the thread is not
 // foreground. Attach to the foreground thread so Tab can leave a child HWND
 // for a virtual control (posted-key tests, a dialog that is not active).
