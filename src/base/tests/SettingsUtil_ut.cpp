@@ -60,7 +60,7 @@ struct SutStruct {
 };
 
 static const FieldInfo gSutStructFields[] = {
-    {(size_t)-1, SettingType::Comment, (intptr_t)"This file will be overwritten - modify at your own risk!\r\n"},
+    {(size_t)-1, SettingType::Comment, (intptr_t)"This file will be overwritten - modify at your own risk!\n"},
     {offsetof(SutStruct, boolean), SettingType::Bool, (intptr_t)true},
     {offsetof(SutStruct, color), SettingType::Color, (intptr_t)"0xffcc9933"},
     {offsetof(SutStruct, floatingPoint), SettingType::Float, (intptr_t)"-3.14"},
@@ -84,54 +84,54 @@ static const StructInfo gSutStructInfo = {sizeof(SutStruct), 17, gSutStructField
                                           "rArray\0Point\0\0SutStructItems"};
 
 void SettingsUtilTest() {
-    static const char* serialized = kUtf8Bom
-        "# This file will be overwritten - modify at your own risk!\r\n\r\n\
-Boolean = true\r\n\
-Color = #abcdef\r\n\
-FloatingPoint = 2.7182\r\n\
-Integer = -1234567890\r\n\
-String = Might\\be\\a\\path\r\n\
-EscapedString = $\t$r$n$$ $\r\n\
-Utf8String = another string\r\n\
-EscapedUtf8String = $r$n[]\t$\r\n\
-IntArray = 3 1\r\n\
-StrArray = \"with space\" plain \"quote:\"\"\"\r\n\
-Point [\r\n\
-\tX = -17\r\n\
-\tY = -18\r\n\
-\tZ = -19\r\n\
-]\r\n\
-\r\n\
-SutStructItems [\r\n\
-\t[\r\n\
-\t\tCompactPoint = -1 5\r\n\
-\t\tFloatArray = -1.5 1.5\r\n\
-\t\tNested [\r\n\
-\t\t\tPoint [\r\n\
-\t\t\t\tX = 1\r\n\
-\t\t\t\tY = 2\r\n\
-\t\t\t]\r\n\
-\t\t\tColorArray = \r\n\
-\t\t]\r\n\
-\t]\r\n\
-\t[\r\n\
-\t\tCompactPoint = 3 -4\r\n\
-\t\tNested [\r\n\
-\t\t\tPoint [\r\n\
-\t\t\t\tX = 5\r\n\
-\t\t\t\tY = 6\r\n\
-\t\t\t]\r\n\
-\t\t\tColorArray = #12345678 #987654\r\n\
-\t\t]\r\n\
-\t]\r\n\
-]\r\n\
-UnknownString = Forget-me-not\r\n\
-UnknownNode [\r\n\
-\tAnotherPoint = 7 8\r\n\
-\tNested [\r\n\
-\t\tKey = Value\r\n\
-\t]\r\n\
-]\r\n";
+    static const char* serialized =
+        "# This file will be overwritten - modify at your own risk!\n\n\
+Boolean = true\n\
+Color = #abcdef\n\
+FloatingPoint = 2.7182\n\
+Integer = -1234567890\n\
+String = Might\\be\\a\\path\n\
+EscapedString = $\t$r$n$$ $\n\
+Utf8String = another string\n\
+EscapedUtf8String = $r$n[]\t$\n\
+IntArray = 3 1\n\
+StrArray = \"with space\" plain \"quote:\"\"\"\n\
+Point [\n\
+\tX = -17\n\
+\tY = -18\n\
+\tZ = -19\n\
+]\n\
+\n\
+SutStructItems [\n\
+\t[\n\
+\t\tCompactPoint = -1 5\n\
+\t\tFloatArray = -1.5 1.5\n\
+\t\tNested [\n\
+\t\t\tPoint [\n\
+\t\t\t\tX = 1\n\
+\t\t\t\tY = 2\n\
+\t\t\t]\n\
+\t\t\tColorArray = \n\
+\t\t]\n\
+\t]\n\
+\t[\n\
+\t\tCompactPoint = 3 -4\n\
+\t\tNested [\n\
+\t\t\tPoint [\n\
+\t\t\t\tX = 5\n\
+\t\t\t\tY = 6\n\
+\t\t\t]\n\
+\t\t\tColorArray = #12345678 #987654\n\
+\t\t]\n\
+\t]\n\
+]\n\
+UnknownString = Forget-me-not\n\
+UnknownNode [\n\
+\tAnotherPoint = 7 8\n\
+\tNested [\n\
+\t\tKey = Value\n\
+\t]\n\
+]\n";
 
     static const char* unknownOnly = kUtf8Bom
         "\

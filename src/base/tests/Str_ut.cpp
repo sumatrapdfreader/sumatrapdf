@@ -520,6 +520,26 @@ static void StrCutTest() {
     utassert(str::Eq(before, StrL("a")) && str::Eq(after, StrL("b::c")));
 }
 
+static void StrNormalizeNewlinesInPlaceTest() {
+    // CRLF and lone CR become LF, empty lines survive
+    char buf[64];
+    auto norm = [&buf](const char* in) -> Str {
+        Str s = Str(buf, str::BufSet(Str(buf, sizeofi(buf)), Str(in)));
+        str::NormalizeNewlinesInPlace(s);
+        return s;
+    };
+    utassert(str::Eq(norm("a\r\nb"), StrL("a\nb")));
+    utassert(str::Eq(norm("a\rb"), StrL("a\nb")));
+    utassert(str::Eq(norm("a\nb"), StrL("a\nb")));
+    utassert(str::Eq(norm("a\r\n\r\nb"), StrL("a\n\nb")));
+    utassert(str::Eq(norm("a\r\n"), StrL("a\n")));
+    utassert(len(norm("")) == 0);
+
+    // len is updated and the result stays nul-terminated
+    Str s = Str(buf, str::BufSet(Str(buf, sizeofi(buf)), StrL("x\r\ny\r\n")));
+    utassert(str::NormalizeNewlinesInPlace(s) == 4 && s.len == 4 && s.s[4] == 0);
+}
+
 static void StrTrimWsTest() {
     // TrimWs / TrimNonWs eat from the front and report how much they ate
     Str s = StrL("  \t ab c");
@@ -1190,6 +1210,7 @@ void StrTest() {
     StrCutTest();
     StrNextLineTest();
     StrTrimWsTest();
+    StrNormalizeNewlinesInPlaceTest();
     StrStartsWithTest();
     // ParseUntilTest();
 }

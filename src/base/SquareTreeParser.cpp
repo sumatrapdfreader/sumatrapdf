@@ -402,10 +402,13 @@ SquareTreeNode* ParseSquareTree(Str s) {
     if (str::IsNull(s)) {
         return nullptr;
     }
+    // strips a utf-8 / utf-16 BOM and gives us a private, writeable copy
     TempStr data = strconv::UnknownToUtf8Temp(s);
     if (str::IsNull(data)) {
         return nullptr;
     }
+    // we write LF but older files (and hand-edited ones) can have CRLF or CR
+    str::NormalizeNewlinesInPlace(data);
     int off = 0;
     return ParseSquareTreeRec(data, off, true, 0);
 }

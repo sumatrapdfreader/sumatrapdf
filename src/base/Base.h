@@ -1969,8 +1969,7 @@ void TransCharsInPlace(Str& str, Str oldChars, Str newChars);
 
 int NormalizeWSInPlace(Str str);
 TempStr NormalizeWSTemp(Str s);
-int NormalizeNewlinesInPlace(Str s, Str endExclusive);
-int NormalizeNewlinesInPlace(Str s);
+int NormalizeNewlinesInPlace(Str& s);
 int RemoveCharsInPlace(Str str, Str toRemove);
 
 int BufSet(Str dst, Str src);

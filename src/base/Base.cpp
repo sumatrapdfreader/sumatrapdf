@@ -2720,44 +2720,33 @@ TempStr NormalizeWSTemp(Str s) {
     return res;
 }
 
-static bool isNl(char c) {
-    return '\r' == c || '\n' == c;
-}
+constexpr char kCR = '\r';
+constexpr char kLF = '\n';
 
-// replaces '\r\n' and '\r' with just '\n' and removes empty lines
-int NormalizeNewlinesInPlace(Str s, Str endExclusive) {
-    int endOff = endExclusive.s ? (int)(endExclusive.s - s.s) : s.len;
-    int read = 0;
-    while (read < endOff && isNl(s.s[read])) {
-        read++;
+// kCR kLF and a lone kCR become kLF, in place: the result is never longer.
+// Empty lines are preserved.
+// s must own a writeable, nul-terminated buffer.
+int NormalizeNewlinesInPlace(Str& s) {
+    if (len(s) == 0) {
+        return 0;
     }
 
     int dst = 0;
-    bool inNewline = false;
-    while (read < endOff) {
-        if (isNl(s.s[read])) {
-            if (!inNewline) {
-                s.s[dst++] = '\n';
+    for (int i = 0; i < s.len; i++) {
+        char c = s.s[i];
+        if (c == kCR) {
+            // kCR followed by kLF is a single newline
+            if (i + 1 < s.len && s.s[i + 1] == kLF) {
+                i++;
             }
-            inNewline = true;
-            read++;
-        } else {
-            s.s[dst++] = s.s[read++];
-            inNewline = false;
+            c = kLF;
         }
+        s.s[dst++] = c;
     }
-    if (dst < endOff) {
-        s.s[dst] = 0;
-    }
-    while (dst > 0 && s.s[dst - 1] == '\n') {
-        dst--;
-        s.s[dst] = 0;
-    }
-    return dst;
-}
+    s.s[dst] = 0;
+    s.len = dst;
 
-int NormalizeNewlinesInPlace(Str s) {
-    return NormalizeNewlinesInPlace(s, Str(s.s + s.len, 0));
+    return dst;
 }
 
 // Remove all characters in "toRemove" from "str", in place.

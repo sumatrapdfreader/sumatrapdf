@@ -137,7 +137,7 @@ void SquareTreeTest() {
         StrL("node [\n child = \n]\n key = value"),
         StrL("node [\nchild\n]\n]\n key = value"),
         StrL("node[\n[node\nchild\nchild [ node\n]\n key = value"),
-        StrL("node [\r key = value\n node [\nchild\r\n] key = value"),
+        StrL("node [ key = value\n node [\nchild \n] key = value"),
     };
 
     for (Str s : halfBrokenData) {
@@ -148,6 +148,17 @@ void SquareTreeTest() {
         utassert(node && 1 == len(node->data) && str::Eq(node->GetValue(StrL("child")), StrL("")));
         utassert(str::Eq(root->GetValue(StrL("key")), StrL("value")));
         utassert(len(root->GetValue(StrL("node"))) == 0 && !root->GetChild(StrL("key")));
+        delete root;
+    }
+
+    {
+        // a lone CR ends a line, like CRLF and LF
+        Str s = StrL("key = value\rkey2 = value2\r\nkey3 = value3");
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 3 == len(root->data));
+        utassert(str::Eq(root->GetValue(StrL("key")), StrL("value")));
+        utassert(str::Eq(root->GetValue(StrL("key2")), StrL("value2")));
+        utassert(str::Eq(root->GetValue(StrL("key3")), StrL("value3")));
         delete root;
     }
 
