@@ -968,7 +968,6 @@
     <ClCompile Include="..\src\base\File_win.cpp" />
     <ClCompile Include="..\src\base\GdiPlusUtil.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
-    <ClCompile Include="..\src\base\GuessFileTypeFromFile.cpp" />
     <ClCompile Include="..\src\base\HtmlTags.cpp" />
     <ClCompile Include="..\src\base\Http.cpp" />
     <ClCompile Include="..\src\base\Http_win.cpp" />

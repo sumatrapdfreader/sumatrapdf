@@ -130,7 +130,6 @@ const utils: LibDef = {
         "DirScan_win.cpp",
         "Exif.*",
         "GuessFileType.*",
-        "GuessFileTypeFromFile.cpp",
         "File.h",
         "File.cpp",
         "File_win.cpp",

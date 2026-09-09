@@ -185,9 +185,6 @@
     <ClCompile Include="..\src\base\GuessFileType.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\GuessFileTypeFromFile.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\HtmlTags.cpp">
       <Filter>src\base</Filter>
     </ClCompile>

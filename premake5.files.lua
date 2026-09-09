@@ -504,7 +504,6 @@ function base_files()
     "GdiPlusUtil.cpp",
     "GdiPlusUtil.h",
     "GuessFileType.*",
-    "GuessFileTypeFromFile.cpp",
     "HtmlTags.*",
     "Http.h",
     "Http.cpp",
