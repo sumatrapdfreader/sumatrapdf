@@ -1402,7 +1402,7 @@ workspace "SumatraPDF"
     -- 4244 (possible loss of data) is only needed by the external synctex
     -- code; keep it fatal for our own sources so silent int64->int truncation
     -- doesn't slip through.
-    filter { "files:**/ext/synctex/**" }
+    filter { "files:**synctex_parser*.c" }
       disablewarnings { "4244", "4267" }
     filter {}
     uses_zlib()
@@ -1505,7 +1505,7 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4701", "4702", "4703", "4706", "4819", "6324" }
     -- 4244/4267 are only needed by the external synctex code; keep them fatal
     -- for our own sources so silent truncation doesn't slip through.
-    filter { "files:**/ext/synctex/**" }
+    filter { "files:**synctex_parser*.c" }
       disablewarnings { "4244", "4267" }
     filter {}
     uses_zlib()

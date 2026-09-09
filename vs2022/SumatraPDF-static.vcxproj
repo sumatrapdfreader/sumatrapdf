@@ -1333,9 +1333,11 @@
     </ClCompile>
     <ClCompile Include="..\ext\synctex\synctex_parser.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <DisableSpecificWarnings>4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <DisableSpecificWarnings>4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="..\src\AIAntiGravity.cpp" />
     <ClCompile Include="..\src\AIChatCommon.cpp" />
