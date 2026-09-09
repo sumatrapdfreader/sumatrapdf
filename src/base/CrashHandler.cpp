@@ -79,7 +79,7 @@ static Str gSystemInfo;
 static HANDLE gDumpEvent = nullptr;
 static ThreadHandle gDumpThread = nullptr;
 static bool gCrashed = false;
-static volatile LONG gCrashHandlerStarted = 0;
+static AtomicBool gCrashHandlerStarted = 0;
 static ThreadId gCrashThreadId = 0;
 static ThreadId gDumpThreadId = 0;
 
@@ -87,7 +87,7 @@ static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
 static bool TryStartCrashHandling(Str handlerName) {
-    if (InterlockedCompareExchange(&gCrashHandlerStarted, 1, 0) == 0) {
+    if (!AtomicBoolSwap(&gCrashHandlerStarted, true)) {
         gCrashThreadId = GetCurrentThreadId();
         CallCb(gCfg.onCrashBegin);
         return true;
@@ -566,7 +566,7 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     gCfg.fullDumpEnvVar = str::Dup(gCrashHandlerArena, cfg.fullDumpEnvVar);
     gCrashThreadId = 0;
     gDumpThreadId = 0;
-    InterlockedExchange(&gCrashHandlerStarted, 0);
+    AtomicBoolSet(&gCrashHandlerStarted, false);
 
     // don't bother sending crash reports when running under Wine
     // as they're not helpful
@@ -637,7 +637,7 @@ void UninstallCrashHandler() {
     gCrashHandlerArena = nullptr;
     gCrashThreadId = 0;
     gDumpThreadId = 0;
-    InterlockedExchange(&gCrashHandlerStarted, 0);
+    AtomicBoolSet(&gCrashHandlerStarted, false);
 }
 
 // Tests that various ways to crash will generate crash report.

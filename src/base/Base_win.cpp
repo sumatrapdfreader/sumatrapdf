@@ -19,6 +19,10 @@ void AtomicBoolSet(AtomicBool* p, bool v) {
     InterlockedExchange(p, v ? 1 : 0);
 }
 
+bool AtomicBoolSwap(AtomicBool* p, bool v) {
+    return InterlockedExchange(p, v ? 1 : 0) != 0;
+}
+
 int AtomicIntGet(AtomicInt* p) {
     return (int)InterlockedOr(p, 0);
 }

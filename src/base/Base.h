@@ -243,6 +243,8 @@ using AtomicPtr = void* volatile;
 
 bool AtomicBoolGet(AtomicBool* p);
 void AtomicBoolSet(AtomicBool* p, bool v);
+// sets and returns the previous value, so that exactly one racing thread sees false
+bool AtomicBoolSwap(AtomicBool* p, bool v);
 int AtomicIntGet(AtomicInt* p);
 void AtomicIntSet(AtomicInt* p, int v);
 int AtomicIntAdd(AtomicInt* p, int v);
