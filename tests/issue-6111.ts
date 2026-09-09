@@ -8,7 +8,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
-import { findTopWindow, postMessage, sleep, VK_END, WM_CHAR, WM_KEYDOWN, WM_KEYUP } from "./winapi.ts";
+import { findTopWindow, postMessage, sleep, VK_END, WM_KEYDOWN, WM_KEYUP, postChar } from "./winapi.ts";
 import { findChildByClass, killAndWait, launchControlled, sendCommandSync, typeIntoInput } from "./win-automation.ts";
 
 const TOOLBAR_CLASS = "SumatraAnnotEditToolbar";
@@ -53,7 +53,7 @@ async function selectLineWithKeyboard(client: ControlClient, frame: number): Pro
   if (!/active=1/.test(dump)) {
     throw new Error(`issue-6111: keyboard selection did not start\n${dump}`);
   }
-  postMessage(frame, WM_CHAR, "v".charCodeAt(0), 0);
+  await postChar(frame, "v");
   while (Date.now() < deadline) {
     dump = String((await client.request(ControlCommand.TestSelectTextKeyboard, []))[1] ?? "");
     if (/visual=1/.test(dump)) {

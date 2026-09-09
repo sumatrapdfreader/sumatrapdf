@@ -596,6 +596,16 @@ export function postMessage(hwnd: number, msg: number, wParam: number, lParam: n
   return user32.symbols.PostMessageW(hwnd, msg, BigInt(wParam), BigInt(lParam));
 }
 
+// Post a character to a main window. The app drops a char it sees as a chord
+// (Ctrl+v, Alt+v), and it reads the modifiers from the real key state, so a
+// Ctrl held anywhere on the machine - a shortcut typed in another window while
+// the suite runs - silently eats the char. Posting a key-up does not clear that
+// state (only injected input does), so release the modifiers for real first.
+export async function postChar(hwnd: number, ch: string): Promise<boolean> {
+  await ensureModifierKeysUp();
+  return postMessage(hwnd, WM_CHAR, ch.charCodeAt(0), 0);
+}
+
 // SendMessage is synchronous: use it when you need the return value, or need the
 // target window to finish handling the message before reading state. Returns the
 // LRESULT as a bigint -- TreeView messages return HTREEITEM pointers that can

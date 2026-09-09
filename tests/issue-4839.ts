@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
 import { cmdId, ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
-import { postMessage, sleep, WM_CHAR, WM_KEYDOWN, WM_KEYUP } from "./winapi.ts";
+import { postMessage, sleep, WM_KEYDOWN, WM_KEYUP, postChar } from "./winapi.ts";
 
 const CM_PDF = join(ROOT, "tests", "issue-4839-data", "rotated.pdf");
 
@@ -79,7 +79,7 @@ export async function testit(): Promise<void> {
     if (!/active=1/.test(dump)) {
       throw new Error(`issue-4839: keyboard selection did not start\n${dump}`);
     }
-    postMessage(frame, WM_CHAR, "v".charCodeAt(0), 0);
+    await postChar(frame, "v");
     while (Date.now() < deadline) {
       dump = String((await client.request(ControlCommand.TestSelectTextKeyboard, []))[1] ?? "");
       if (/visual=1/.test(dump)) {

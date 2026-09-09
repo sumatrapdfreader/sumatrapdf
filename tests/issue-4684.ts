@@ -11,7 +11,7 @@ import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import { FRAME_CLASS, sendCommandSync } from "./win-automation";
-import { WM_CHAR, WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow } from "./winapi";
+import { WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow, postChar } from "./winapi";
 
 const VK_RIGHT = 0x27;
 const VK_END = 0x23;
@@ -172,7 +172,7 @@ async function testTextPdf(): Promise<void> {
       }
 
       // visual mode: plain arrows extend the selection
-      postMessage(frame, WM_CHAR, "v".charCodeAt(0), 0);
+      await postChar(frame, "v");
       ({ state, dump } = await waitForState(client, (s) => s.visual));
 
       for (let i = 0; i < 9; i++) {
@@ -200,7 +200,7 @@ async function testTextPdf(): Promise<void> {
       // 'y' copies the selection and leaves the mode
       pressVKey(frame, VK_END); // select something again
       await waitForState(client, (s) => s.text === LINE1);
-      postMessage(frame, WM_CHAR, "y".charCodeAt(0), 0);
+      await postChar(frame, "y");
       ({ state, dump } = await waitForState(client, (s) => !s.active));
 
       // and the command toggles the mode back off

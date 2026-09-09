@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
-import { WM_CHAR, WM_KEYDOWN, WM_KEYUP, postMessage, sleep } from "./winapi.ts";
+import { WM_KEYDOWN, WM_KEYUP, postMessage, sleep, postChar } from "./winapi.ts";
 
 const VK_END = 0x23;
 const PAGE_H = 792;
@@ -103,7 +103,7 @@ export async function testit(): Promise<void> {
       throw new Error(`selection-font-bbox: keyboard selection did not start\n${dump}`);
     }
 
-    postMessage(frame, WM_CHAR, "v".charCodeAt(0), 0);
+    await postChar(frame, "v");
     while (Date.now() < deadline) {
       dump = String((await client.request(ControlCommand.TestSelectTextKeyboard, []))[1] ?? "");
       if (/visual=1/.test(dump)) {

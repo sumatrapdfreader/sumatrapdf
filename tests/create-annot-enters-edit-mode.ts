@@ -8,15 +8,15 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import {
-  packCoords,
-  postMessage,
-  sendMessage,
-  sleep,
   VK_END,
-  WM_CHAR,
   WM_COMMAND,
   WM_KEYDOWN,
   WM_KEYUP,
+  packCoords,
+  postChar,
+  postMessage,
+  sendMessage,
+  sleep,
 } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
 
@@ -64,7 +64,7 @@ async function selectLineWithKeyboard(client: ControlClient, frame: number): Pro
   if (!/active=1/.test(dump)) {
     throw new Error(`create-annot-enters-edit-mode: keyboard selection did not start\n${dump}`);
   }
-  postMessage(frame, WM_CHAR, "v".charCodeAt(0), 0);
+  await postChar(frame, "v");
   while (Date.now() < deadline) {
     dump = String((await client.request(ControlCommand.TestSelectTextKeyboard, []))[1] ?? "");
     if (/visual=1/.test(dump)) {

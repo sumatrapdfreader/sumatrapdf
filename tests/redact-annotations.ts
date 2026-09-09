@@ -9,20 +9,20 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import {
-  clientToScreen,
-  getClientRect,
   MK_LBUTTON,
-  packCoords,
-  postMessage,
-  sendMessage,
-  setCursorPos,
-  sleep,
-  WM_CHAR,
   WM_KEYDOWN,
   WM_KEYUP,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
+  clientToScreen,
+  getClientRect,
+  packCoords,
+  postChar,
+  postMessage,
+  sendMessage,
+  setCursorPos,
+  sleep,
 } from "./winapi.ts";
 import {
   findCanvas,
@@ -203,7 +203,7 @@ export async function testit(): Promise<void> {
       throw new Error(`redact-annotations: keyboard selection did not start\n${dump}`);
     }
 
-    postMessage(frame, WM_CHAR, "v".charCodeAt(0), 0);
+    await postChar(frame, "v");
     while (Date.now() < startDeadline) {
       dump = String((await client.request(ControlCommand.TestSelectTextKeyboard, []))[1] ?? "");
       if (/visual=1/.test(dump)) {

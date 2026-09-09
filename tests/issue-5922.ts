@@ -11,7 +11,7 @@ import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import { FRAME_CLASS, sendCommandSync } from "./win-automation";
-import { WM_CHAR, WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow } from "./winapi";
+import { WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow, postChar } from "./winapi";
 
 const VK_RIGHT = 0x27;
 
@@ -107,7 +107,7 @@ export async function testit(): Promise<void> {
       // make a selection: F7 caret browsing, visual mode, 9 glyphs right
       sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
       await waitForState(client, (s) => s.active);
-      postMessage(frame, WM_CHAR, "v".charCodeAt(0), 0);
+      await postChar(frame, "v");
       for (let i = 0; i < 9; i++) {
         postMessage(frame, WM_KEYDOWN, VK_RIGHT, 0);
         postMessage(frame, WM_KEYUP, VK_RIGHT, 0);

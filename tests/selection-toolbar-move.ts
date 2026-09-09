@@ -10,15 +10,15 @@ import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 import {
+  SWP_NOACTIVATE,
+  SWP_NOZORDER,
+  WM_KEYDOWN,
+  WM_KEYUP,
   getWindowRect,
+  postChar,
   postMessage,
   setWindowPos,
   sleep,
-  SWP_NOACTIVATE,
-  SWP_NOZORDER,
-  WM_CHAR,
-  WM_KEYDOWN,
-  WM_KEYUP,
 } from "./winapi.ts";
 
 const VK_END = 0x23;
@@ -123,7 +123,7 @@ export async function testit(): Promise<void> {
       throw new Error(`selection-toolbar-move: keyboard selection did not start\n${dump}`);
     }
 
-    postMessage(frame, WM_CHAR, "v".charCodeAt(0), 0);
+    await postChar(frame, "v");
     while (Date.now() < startDeadline) {
       dump = String((await client.request(ControlCommand.TestSelectTextKeyboard, []))[1] ?? "");
       if (/visual=1/.test(dump)) {
