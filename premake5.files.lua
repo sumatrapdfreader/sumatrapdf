@@ -604,7 +604,12 @@ function cmark_gfm_files()
 end
 
 function mupdf_files()
-  files { "ext/mupdf_load_system_font.c" }
+  -- our additions to mupdf (not patches): see src/mupdf/README.md
+  files {
+    "src/mupdf/mupdf_load_system_font.c",
+    "src/mupdf/pkcs7-windows.c",
+    "src/mupdf/pkcs7-windows.h",
+  }
 
   files_in_dir("ext/mupdf/source/cbz", {
     "mucbz.c",
@@ -893,10 +898,7 @@ function mupdf_files()
     "ext/mupdf/include/mupdf/helpers/*.h",
     "ext/mupdf/include/mupdf/pdf/*.h",
   }
-  files {
-    "ext/mupdf/source/helpers/mu-threads/mu-threads.c",
-    "ext/mupdf/source/helpers/pkcs7/pkcs7-windows.c",
-  }
+  files { "ext/mupdf/source/helpers/mu-threads/mu-threads.c" }
 end
 
 function synctex_files()

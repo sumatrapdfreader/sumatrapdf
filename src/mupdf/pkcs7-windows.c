@@ -7,7 +7,7 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
-#include "mupdf/helpers/pkcs7-windows.h"
+#include "pkcs7-windows.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -772,8 +772,8 @@ pdf_pkcs7_signer* pkcs7_windows_read_store(fz_context* ctx, const char* thumbpri
         }
         blob.cbData = sizeof(hash);
         blob.pbData = hash;
-        cert = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_HASH, &blob,
-                                          NULL);
+        cert =
+            CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_HASH, &blob, NULL);
         if (!cert) {
             fz_throw(ctx, FZ_ERROR_GENERIC, "certificate %s not found in the Windows certificate store",
                      thumbprint_hex ? thumbprint_hex : "");
@@ -986,8 +986,7 @@ static void parse_tstinfo(fz_context* ctx, const unsigned char* p, size_t n, pkc
     if (asn1_skip(&q, &left) != 0) {
         return;
     }
-    if (left >= 2 && (q[0] == 0x18 || q[0] == 0x17) && asn1_len(q, left, &hdr, &body) == 0 && body >= 10 &&
-        body < 32) {
+    if (left >= 2 && (q[0] == 0x18 || q[0] == 0x17) && asn1_len(q, left, &hdr, &body) == 0 && body >= 10 && body < 32) {
         char tmp[32];
         SYSTEMTIME st;
         FILETIME ft;
@@ -1174,9 +1173,12 @@ static void collect_ts_from_unauth(fz_context* ctx, PCRYPT_ATTRIBUTES attrs, pkc
 }
 
 static void collect_ts_from_raw(fz_context* ctx, unsigned char* sig, size_t sig_len, pkcs7_windows_sig_info* info) {
-    static const unsigned char kOid14[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x10, 0x02, 0x0E};
-    static const unsigned char kOid27[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x10, 0x02, 0x1B};
-    static const unsigned char kOid48[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x10, 0x02, 0x30};
+    static const unsigned char kOid14[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7,
+                                           0x0D, 0x01, 0x09, 0x10, 0x02, 0x0E};
+    static const unsigned char kOid27[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7,
+                                           0x0D, 0x01, 0x09, 0x10, 0x02, 0x1B};
+    static const unsigned char kOid48[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7,
+                                           0x0D, 0x01, 0x09, 0x10, 0x02, 0x30};
     size_t i;
     sig_len = trim_sig(sig, sig_len);
     for (i = 0; i + sizeof(kOid14) + 4 < sig_len && info->n_ts < PKCS7_WINDOWS_MAX_TS; i++) {

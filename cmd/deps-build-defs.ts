@@ -243,7 +243,7 @@ const mupdfThirdPartySources: LibDef = {
     "ext/a-brotli",
     "ext/a-zlib",
   ],
-  // plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that harfbuzz
+  // plain malloc/free wrappers (src/mupdf/mupdf_load_system_font.c) so that harfbuzz
   // allocations don't depend on mupdf's thread-local fz_hb_secret context
   // being set; HAVE_ATEXIT (frees harfbuzz singletons at exit) is debug-only,
   // it only matters for leak detection
@@ -508,6 +508,7 @@ export const mupdf: LibDef = {
     "CMARK_GFM_STATIC_DEFINE",
   ],
   includes: [
+    "src/mupdf",
     "ext/mupdf/include",
     "ext/cmark-gfm/src",
     "ext/cmark-gfm/extensions",
@@ -529,7 +530,8 @@ export const mupdf: LibDef = {
     "ext/a-libwebp",
   ],
   files: [
-    { dir: "ext", patterns: ["mupdf_load_system_font.c"] },
+    // our additions to mupdf (not patches): see src/mupdf/README.md
+    { dir: "src/mupdf", patterns: ["mupdf_load_system_font.c", "pkcs7-windows.c"] },
     { dir: "ext/mupdf/source/cbz", patterns: ["mucbz.c", "muimg.c"] },
     {
       dir: "ext/mupdf/source/fitz",
@@ -808,7 +810,6 @@ export const mupdf: LibDef = {
         "pdftrim.c",
       ],
     },
-    { dir: "ext/mupdf/source/helpers/pkcs7", patterns: ["pkcs7-windows.c"] },
     { dir: "ext/mupdf/source/helpers/mu-threads", patterns: ["mu-threads.c"] },
   ],
 };

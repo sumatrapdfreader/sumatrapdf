@@ -90,7 +90,8 @@ async function main() {
     "src/ifilter/*.h",
     "src/previewer/*.cpp",
     "src/previewer/*.h",
-    "ext/mupdf_load_system_font.c",
+    "src/mupdf/*.c",
+    "src/mupdf/*.h",
   ];
 
   const files = await globFiles(patterns);

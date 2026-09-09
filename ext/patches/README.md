@@ -6,7 +6,9 @@ update means re-deriving our changes from a 1400-file diff.
 
 This directory is that record. Each `.patch` is one logical change against the
 mupdf revision we vendored, in `git diff` format, with a description of what it
-does and why.
+does and why. Whole files of our own that are compiled into the `mupdf` project
+are not patches: they live in `src/mupdf/` (see its README) and are not part
+of the vendored tree at all.
 
 **Base revision: mupdf `1.28.2`** (tag `1.28.2`, commit `fe374accd`), the
 version recorded for mupdf in `ext/versions.txt`. Paths in the patches are
@@ -18,7 +20,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | --- | --- |
 | `0001-tools-usage-say-sumatrapdf` | usage text names `SumatraPDF <tool>`, not `mutool` |
 | `0002-tools-reset-fz-optind` | tool mains can be called more than once in-process |
-| `0003-signatures-windows-pkcs7` | Windows CryptoAPI pkcs7 helper instead of OpenSSL (`pkcs7-windows.[ch]` are ours) |
+| `0003-signatures-windows-pkcs7` | tools use our Windows CryptoAPI pkcs7 helper (`src/mupdf/pkcs7-windows.[ch]`) instead of OpenSSL |
 | `0004-console-io-for-gui-subsystem-exe` | stdio for a GUI-subsystem exe (#5677, #5665, #5681) |
 | `0005-pdfinfo-to-buffer` | `mutool info` output as a buffer, for the properties window |
 | `0006-jpeg-xr-via-windows-wic` | JPEG-XR decoding through the Windows WIC codec |

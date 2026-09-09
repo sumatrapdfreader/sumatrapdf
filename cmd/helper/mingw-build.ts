@@ -641,7 +641,9 @@ void TestPreview(WStr) {}
     }
   }
   if (embeddedFlags.length === 0) {
-    console.error("  WARNING: no out/<cfg>/embedded-static.lzsa (build SumatraPDF-static on Windows first); resources will fail");
+    console.error(
+      "  WARNING: no out/<cfg>/embedded-static.lzsa (build SumatraPDF-static on Windows first); resources will fail",
+    );
   }
   const rcRes = await spawnCmd(
     [mingwTools.windres, "-I", ".", "-D_WIN64", ...defineFlags, ...embeddedFlags, rcTmpAbsolute, "-o", rcObjAbsolute],

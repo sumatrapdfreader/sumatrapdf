@@ -24,7 +24,7 @@
 
 #if FZ_ENABLE_PDF
 #include "mupdf/pdf.h"
-#include "mupdf/helpers/pkcs7-windows.h"
+#include "pkcs7-windows.h"
 #endif
 
 #if FZ_ENABLE_JS

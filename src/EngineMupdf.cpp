@@ -18,7 +18,7 @@
 extern "C" {
 #include <mupdf/pdf.h>
 #if OS_WIN
-#include <mupdf/helpers/pkcs7-windows.h>
+#include "mupdf/pkcs7-windows.h"
 #endif
 #include "../ext/mupdf/source/fitz/color-imp.h"
 }

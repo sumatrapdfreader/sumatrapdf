@@ -26,7 +26,7 @@
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
-#include "mupdf/helpers/pkcs7-windows.h"
+#include "pkcs7-windows.h"
 
 #include <string.h>
 #include <stdlib.h>

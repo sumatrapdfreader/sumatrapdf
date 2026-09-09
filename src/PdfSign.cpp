@@ -18,7 +18,7 @@
 
 extern "C" {
 #include <mupdf/pdf.h>
-#include <mupdf/helpers/pkcs7-windows.h>
+#include "mupdf/pkcs7-windows.h"
 }
 
 #include "gui/UIModels.h"

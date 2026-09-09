@@ -830,7 +830,7 @@ workspace "SumatraPDF"
       "HAVE_FALLBACK=1",
       "HAVE_OT",
       "HAVE_FREETYPE",
-      -- plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that
+      -- plain malloc/free wrappers (src/mupdf/mupdf_load_system_font.c) so that
       -- harfbuzz allocations don't depend on mupdf's thread-local fz_hb_secret
       -- context being set (it's NULL during atexit and when fz_hb_lock/unlock
       -- pairs nest via store scavenging)
@@ -1007,6 +1007,7 @@ workspace "SumatraPDF"
 
     uses_zlib()
     includedirs {
+      "src/mupdf",
       "ext/mupdf/include",
       "ext/mupdf/generated",
       "ext/a-jbig2dec",
