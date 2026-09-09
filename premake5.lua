@@ -797,20 +797,20 @@ workspace "SumatraPDF"
     includedirs { "ext/lcms2/include" }
     lcms2_files()
 
-  project "harfbuzz"
+  project "a-harfbuzz"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
     optimized_conf()
-    -- ext/harfbuzz/src is required so /Yu"hb.hh" and forceincludes can resolve
-    -- hb.hh (sources also rely on same-dir includes for other headers).
-    includedirs { "ext/harfbuzz/src", "ext/harfbuzz/src/hb-ucdn", "ext/mupdf/scripts/freetype", "ext/a-freetype/include" }
+    includedirs { "ext/a-harfbuzz", "ext/mupdf/scripts/freetype", "ext/a-freetype/include" }
+    -- one translation unit of templated OpenType tables exceeds the 64k
+    -- section limit of the default object file format
+    buildoptions { "/bigobj" }
     defines {
       "_CRT_SECURE_NO_WARNINGS",
       "HAVE_FALLBACK=1",
       "HAVE_OT",
-      "HAVE_UCDN",
       "HAVE_FREETYPE",
       -- plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that
       -- harfbuzz allocations don't depend on mupdf's thread-local fz_hb_secret
@@ -825,14 +825,10 @@ workspace "SumatraPDF"
       defines { "HAVE_ATEXIT" }
     filter {}
     disablewarnings { "4805", "4100", "4146", "4244", "4245", "4267", "4310", "4456", "4457", "4459", "4505", "4701", "4702", "4706", "4996" }
-    -- precompiled header: hb.hh is re-parsed by every harfbuzz TU and dominates
-    -- its compile time. forceincludes so MSVC /Yu finds the PCH marker even in
-    -- TUs that include a secondary header first (which then pulls in hb.hh).
-    pchheader "hb.hh"
-    pchsource "src/HarfBuzzPch.cpp"
-    files { "src/HarfBuzzPch.cpp" }
-    forceincludes { "hb.hh" }
-    harfbuzz_files()
+    files {
+      "ext/a-harfbuzz/harfbuzz.cc", "ext/a-harfbuzz/*.h", "ext/a-harfbuzz/*.hh",
+      "ext/a-harfbuzz/version.txt", "ext/a-harfbuzz/COPYING",
+    }
 
   project "a-mujs"
     static_intermediate_dirs()
@@ -1005,7 +1001,7 @@ workspace "SumatraPDF"
       "ext/cmark-gfm/src",
       "ext/cmark-gfm/extensions",
       "ext/mupdf/scripts/cmark-gfm",
-      "ext/harfbuzz/src",
+      "ext/a-harfbuzz",
       "ext/lcms2/include",
       "ext/a-gumbo",
       "ext/a-extract",
@@ -1018,7 +1014,7 @@ workspace "SumatraPDF"
     -- Third-party code lives in its own static libs; link them so libsumatrapdf.dll
     -- / SumatraPDF-static pick them up via project references.
     links {
-      "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "a-freetype", "brotli",
+      "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "brotli",
       "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo",
     }
 
@@ -1062,7 +1058,7 @@ workspace "SumatraPDF"
     links {
       "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec", "msdes",
       "libarchive", "cmark-gfm", "a-gumbo",
-      "a-mujs", "a-extract", "harfbuzz", "a-freetype", "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
+      "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
     }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
@@ -1418,7 +1414,7 @@ workspace "SumatraPDF"
     -- Static libraries do not propagate dependencies through Ninja.
     links {
       "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli",
-      "mupdf", "cmark-gfm", "a-mujs", "a-extract", "harfbuzz", "a-freetype", "lcms2", "a-openjpeg",
+      "mupdf", "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "lcms2", "a-openjpeg",
       "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo", "base", "unrar", "chmdec", "a-zopfli", "msdes"
     }
     links {
@@ -1582,7 +1578,7 @@ workspace "SumatraPDF"
     set_group("mupdf", {
       "mupdf", "cmark-gfm", "libarchive", "a-zlib", "brotli", "libjpeg-turbo",
       "a-extract", "a-gumbo", "a-jbig2dec", "a-mujs", "a-openjpeg",
-      "a-freetype", "harfbuzz", "lcms2",
+      "a-freetype", "a-harfbuzz", "lcms2",
     })
     -- libsumatrapdf.dll + extra codecs / archives linked only into it (and static EXE).
     -- Folder named "libsumatrapdf.dll" so it does not collide with project "libsumatrapdf".

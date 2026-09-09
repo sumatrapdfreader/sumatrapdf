@@ -31,6 +31,7 @@ gumbo           ???
 harfbuzz        13.0.1
   https://harfbuzz.org
   mupdf thirdparty submodule, commit c28ba35a1e6dc4b6b32e2b1d11fd2a408f6c86bb
+  amalgamated into ext/a-harfbuzz by cmd/amalgam.ts -harfbuzz, see ext/a-harfbuzz/version.txt
 
 jbig2dec        0.20
   https://github.com/ArtifexSoftware/jbig2dec/commits/artifex

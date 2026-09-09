@@ -1,0 +1,6 @@
+project_homepage: https://harfbuzz.org/
+repo_url: https://github.com/ArtifexSoftware/thirdparty-harfbuzz
+revision: c28ba35a1e6dc4b6b32e2b1d11fd2a408f6c86bb
+commit_sha1: c28ba35a1e6dc4b6b32e2b1d11fd2a408f6c86bb
+github_url: https://github.com/ArtifexSoftware/thirdparty-harfbuzz
+github_commit_url: https://github.com/ArtifexSoftware/thirdparty-harfbuzz/commit/c28ba35a1e6dc4b6b32e2b1d11fd2a408f6c86bb

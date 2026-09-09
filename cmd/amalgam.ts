@@ -145,11 +145,38 @@ type IncludeRules = {
   // preprocessor would. Needed when an include sits inside an #ifdef, where
   // deduping would drop it from the one place it is actually reachable.
   guarded?: boolean;
+  // Narrows `seen` to headers whose include guard wraps the whole file. A
+  // header that closes its guard right after opening it ("dummy header guard")
+  // is an X-macro fragment meant to be expanded once per includer, so deduping
+  // it would drop it from every place but the first.
+  dedupOnlyGuarded?: boolean;
   // Wrap inlined text in /* begin x */ ... /* end x */ markers.
   markers?: boolean;
 };
 
 const includeRe = /^\s*#\s*include\s+"([^"]+)"/;
+
+const fullFileGuardCache = new Map<string, boolean>();
+
+// True when `#ifndef G` / `#define G` at the top is not immediately closed.
+function hasFullFileGuard(path: string): boolean {
+  const cached = fullFileGuardCache.get(path);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const lines = stripComments(readText(path))
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const m = /^#\s*ifndef\s+(\w+)$/.exec(lines[0] ?? "");
+  const guard = m?.[1];
+  const opened = guard !== undefined && new RegExp(`^#\\s*define\\s+${guard}\\b`).test(lines[1] ?? "");
+  const result = opened && !/^#\s*endif\b/.test(lines[2] ?? "");
+
+  fullFileGuardCache.set(path, result);
+  return result;
+}
 
 function expandIncludes(path: string, rules: IncludeRules, stack: string[] = []): string {
   const out: string[] = [];
@@ -183,7 +210,9 @@ function expandIncludes(path: string, rules: IncludeRules, stack: string[] = [])
       }
       continue;
     }
-    rules.seen?.add(incPath);
+    if (!rules.dedupOnlyGuarded || hasFullFileGuard(incPath)) {
+      rules.seen?.add(incPath);
+    }
 
     if (rules.markers) {
       out.push(`/* begin ${inc} */`);
@@ -592,6 +621,142 @@ function genGumbo(ctx: Ctx): void {
   ctx.files.set("gumbo.c", joinChunks(chunks));
 }
 
+// --- harfbuzz --------------------------------------------------------------
+
+// hb_base_sources + hb_subset_sources + hb-ft.cc from harfbuzz src/meson.build.
+// The backends we don't build (cairo, coretext, directwrite, graphite2, icu,
+// raster, uniscribe, wasm) are left out, same as the non-amalgamated build.
+const harfbuzzSources = [
+  join("OT", "Var", "VARC", "VARC.cc"),
+  "hb-aat-layout.cc",
+  "hb-aat-map.cc",
+  "hb-blob.cc",
+  "hb-buffer-serialize.cc",
+  "hb-buffer-verify.cc",
+  "hb-buffer.cc",
+  "hb-common.cc",
+  "hb-draw.cc",
+  "hb-face-builder.cc",
+  "hb-face.cc",
+  "hb-fallback-shape.cc",
+  "hb-font.cc",
+  "hb-map.cc",
+  "hb-number.cc",
+  "hb-ot-cff1-table.cc",
+  "hb-ot-cff2-table.cc",
+  "hb-ot-color.cc",
+  "hb-ot-face.cc",
+  "hb-ot-font.cc",
+  "hb-ot-layout.cc",
+  "hb-ot-map.cc",
+  "hb-ot-math.cc",
+  "hb-ot-meta.cc",
+  "hb-ot-metrics.cc",
+  "hb-ot-name.cc",
+  "hb-ot-shape-fallback.cc",
+  "hb-ot-shape-normalize.cc",
+  "hb-ot-shape.cc",
+  "hb-ot-shaper-arabic.cc",
+  "hb-ot-shaper-default.cc",
+  "hb-ot-shaper-hangul.cc",
+  "hb-ot-shaper-hebrew.cc",
+  "hb-ot-shaper-indic-table.cc",
+  "hb-ot-shaper-indic.cc",
+  "hb-ot-shaper-khmer.cc",
+  "hb-ot-shaper-myanmar.cc",
+  "hb-ot-shaper-syllabic.cc",
+  "hb-ot-shaper-thai.cc",
+  "hb-ot-shaper-use.cc",
+  "hb-ot-shaper-vowel-constraints.cc",
+  "hb-ot-tag.cc",
+  "hb-ot-var.cc",
+  "hb-outline.cc",
+  "hb-paint-bounded.cc",
+  "hb-paint-extents.cc",
+  "hb-paint.cc",
+  "hb-set.cc",
+  "hb-shape-plan.cc",
+  "hb-shape.cc",
+  "hb-shaper.cc",
+  "hb-static.cc",
+  "hb-style.cc",
+  "hb-ucd.cc",
+  "hb-unicode.cc",
+  join("graph", "gsubgpos-context.cc"),
+  "hb-subset-cff-common.cc",
+  "hb-subset-cff1.cc",
+  "hb-subset-cff2-to-cff1.cc",
+  "hb-subset-cff2.cc",
+  "hb-subset-input.cc",
+  "hb-subset-instancer-iup.cc",
+  "hb-subset-instancer-solver.cc",
+  "hb-subset-plan-layout.cc",
+  "hb-subset-plan-var.cc",
+  "hb-subset-plan.cc",
+  "hb-subset-serialize.cc",
+  "hb-subset-table-cff.cc",
+  "hb-subset-table-color.cc",
+  "hb-subset-table-layout.cc",
+  "hb-subset-table-other.cc",
+  "hb-subset-table-var.cc",
+  "hb-subset.cc",
+  "hb-ft.cc",
+];
+
+// The public C API the rest of the tree includes; everything reachable from
+// these by a quoted include ships next to the amalgamated .cc.
+const harfbuzzApiRoots = ["hb.h", "hb-ot.h", "hb-aat.h", "hb-ft.h", "hb-subset.h", "hb-subset-serialize.h"];
+
+// X-macro fragments the inliner can't expand: the first two are reached through
+// `#include HB_STRING_ARRAY_LIST` (a macro), and win1256 includes itself a
+// second time to emit the table it just measured. They ship as files next to
+// harfbuzz.cc and stay as includes.
+const harfbuzzFragments = ["hb-ot-cff1-std-str.hh", "hb-ot-post-macroman.hh", "hb-ot-shaper-arabic-win1256.hh"];
+
+function harfbuzzApiHeaders(srcDir: string): Set<string> {
+  const found = new Set<string>();
+  const todo = [...harfbuzzApiRoots];
+  while (todo.length > 0) {
+    const name = todo.pop() as string;
+    if (found.has(name)) {
+      continue;
+    }
+    found.add(name);
+    for (const line of readText(join(srcDir, name)).split("\n")) {
+      const m = includeRe.exec(line);
+      if (m && m[1].endsWith(".h")) {
+        todo.push(m[1]);
+      }
+    }
+  }
+  return found;
+}
+
+function genHarfbuzz(ctx: Ctx): void {
+  const srcDir = findSrcDir(ctx.checkoutDir, ["src", ""], ["hb.h", "hb.hh"]);
+
+  const api = harfbuzzApiHeaders(srcDir);
+  for (const name of [...api, ...harfbuzzFragments]) {
+    ctx.files.set(name, readText(join(srcDir, name)));
+  }
+
+  // Only the private .hh/.cc are inlined; the public headers above stay as
+  // includes. Dedup is required here, not just an optimization: the OT/ headers
+  // include each other densely enough that inlining every occurrence blows up
+  // to gigabytes.
+  const rules: IncludeRules = {
+    resolve: dirResolver([srcDir]),
+    keep: (inc) => api.has(inc) || harfbuzzFragments.includes(inc),
+    seen: new Set(),
+    dedupOnlyGuarded: true,
+  };
+  const chunks: string[] = [];
+  for (const name of harfbuzzSources) {
+    chunks.push(prepare(join(srcDir, name), rules));
+  }
+  ctx.files.set("harfbuzz.cc", joinChunks(chunks));
+}
+
 // --- jbig2dec --------------------------------------------------------------
 
 const jbig2decSources = [
@@ -941,6 +1106,51 @@ const libs: Lib[] = [
         "/wd4456",
         "/wd4701",
         "/wd4702",
+      ],
+    },
+  },
+  {
+    name: "harfbuzz",
+    homepage: "https://harfbuzz.org/",
+    repo: "https://github.com/ArtifexSoftware/thirdparty-harfbuzz",
+    rev: "c28ba35a1e6dc4b6b32e2b1d11fd2a408f6c86bb",
+    writes: "hb*.h, harfbuzz.cc, COPYING",
+    generate: genHarfbuzz,
+    copies: ["COPYING"],
+    // the shipped header set follows upstream's, so stale ones must not linger
+    wipeOutDir: true,
+    compile: {
+      file: "harfbuzz.cc",
+      args: [
+        "/TP",
+        "/EHsc",
+        "/std:c++latest",
+        // one TU of templated OpenType tables blows past the 64k section limit
+        "/bigobj",
+        ...defines("_CRT_SECURE_NO_WARNINGS", "HAVE_FALLBACK=1", "HAVE_OT", "HAVE_FREETYPE"),
+        "/I",
+        ".",
+        "/I",
+        "..\\..\\..\\ext\\mupdf\\scripts\\freetype",
+        "/I",
+        "..\\..\\..\\ext\\a-freetype\\include",
+        "/wd4100",
+        "/wd4127",
+        "/wd4146",
+        "/wd4244",
+        "/wd4245",
+        "/wd4267",
+        "/wd4310",
+        "/wd4456",
+        "/wd4457",
+        "/wd4458",
+        "/wd4459",
+        "/wd4505",
+        "/wd4701",
+        "/wd4702",
+        "/wd4706",
+        "/wd4805",
+        "/wd4996",
       ],
     },
   },

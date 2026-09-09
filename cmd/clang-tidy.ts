@@ -115,8 +115,6 @@ function clangTidyFixArgs(path: string): string[] {
 const whitelisted = [
   "resource.h",
   "version.h",
-  // vendored PCH shim: a lone #include "hb.hh", needs harfbuzz-only include dirs
-  "harfbuzzpch.cpp",
   "translationlangs.cpp",
   "doc.cpp",
   "ebookcontroller.cpp",

@@ -124,7 +124,7 @@ const clArgs = [
   "/I",
   "ext/mupdf/scripts/cmark-gfm",
   "/I",
-  "ext/harfbuzz/src",
+  "ext/a-harfbuzz",
   "/I",
   "ext/lcms2/include",
   "/I",
