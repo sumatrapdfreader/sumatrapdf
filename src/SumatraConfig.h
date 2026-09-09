@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// those are defined in SumatraStartup.cpp
+// those are defined in SumatraConfig.cpp
 // those are set based on various pre-processor defines
 // but we prefer to use variables. this way ensure
 // the code compiles

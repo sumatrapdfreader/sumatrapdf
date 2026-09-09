@@ -1046,9 +1046,6 @@
     <ClCompile Include="..\src\SumatraPDF.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SumatraStartup.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SumatraTest.cpp">
       <Filter>src</Filter>
     </ClCompile>

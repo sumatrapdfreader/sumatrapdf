@@ -7,7 +7,6 @@ enum class FileType : u8;
 
 #include "OverlayScrollbar.h"
 
-constexpr const WCHAR* kCanvasClassName = L"SUMATRA_PDF_CANVAS";
 constexpr const WCHAR* kFrameClassName = L"SUMATRA_PDF_FRAME";
 
 constexpr int kFrameResizeHitTest = 5;
@@ -117,7 +116,6 @@ extern RenderCache* gRenderCache;
 extern bool gSupressNextAltMenuTrigger;
 extern HBITMAP gBitmapReloadingCue;
 extern HCURSOR gCursorDrag;
-extern bool gCrashOnOpen;
 extern HWND gLastActiveFrameHwnd;
 
 struct DocController;
@@ -128,15 +126,12 @@ DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win);
 
 #define gPluginMode ((bool)gPluginURL)
 
-bool NeedsWindowEmbeddingHacks();
 bool SettingsUseTabs();
-bool SettingsRestoreSession();
 bool SettingsRememberOpenedFiles();
 
 void CrashHandlerSetSettings(Str settings);
 
 void InitializePolicies(bool restrict);
-void RestrictPolicies(Perm revokePermission);
 bool HasPermission(Perm permission);
 bool CanAccessDisk();
 bool AnnotationsAreDisabled();
@@ -235,7 +230,6 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword = true);
 bool AutoReloadFileStillChanging(WindowTab* tab);
 void DeleteControllerAsync(DocController* ctrl);
-void WaitForPendingControllerDeletes();
 void ToggleFullScreen(MainWindow* win, bool presentation = false);
 
 // flags for ScheduleUiUpdate
@@ -340,7 +334,6 @@ void StartLoadDocument(LoadArgs* args);
 void StartLoadDocuments(StrVec& paths, MainWindow* win, bool skipHistory = false);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr, bool showWin = true);
 void ShowMainWindow(MainWindow* win, int windowState);
-void MaybeShowDefaultAppNotification(MainWindow* win);
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win);
 bool OpenDocumentFromMemory(MainWindow* win, Str data, Str nameHint);
 
@@ -371,16 +364,12 @@ void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepCont
 void OnDocumentVerticalScrollIntent(MainWindow* win, bool down);
 void DismissNextFileScrollHint(MainWindow* win);
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);
-LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
-void ShutdownCleanup();
 
 TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCodeOut = nullptr);
 TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
 bool DocIsSupportedFileType(FileType);
-TempStr GetLogFilePathTemp();
 void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, bool showWin = true);
 void ShowFileInFolder(MainWindow* win, Str path);
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 TempStr GetSumatraDataDirTemp();
-TempStr GetCrashInfoDirTemp();
 TempStr GetSumatraBuildSpecificDirTemp();

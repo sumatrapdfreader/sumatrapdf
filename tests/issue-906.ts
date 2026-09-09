@@ -34,7 +34,7 @@ export async function testit(): Promise<void> {
   rmSync(encryptedPdf, { force: true });
 
   // Command-line tools must run through cmd.exe when invoked from PowerShell
-  // with redirected output; see SumatraStartup.cpp's PowerShell pipe guard.
+  // with redirected output; see SumatraPDF.cpp's PowerShell pipe guard.
   const enc = Bun.spawnSync({
     cmd: ["cmd.exe", "/c", EXE, "clean", "-E", "aes-256", "-U", PASSWORD, "-O", PASSWORD, SRC_PDF, encryptedPdf],
     stdout: "pipe",

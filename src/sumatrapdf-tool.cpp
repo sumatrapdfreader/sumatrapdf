@@ -49,7 +49,7 @@ char** fz_argv_from_wargv(int argc, wchar_t** wargv);
 void fz_free_argv(int argc, char** argv);
 }
 
-// must match premake5.lua and src/SumatraStartup.cpp
+// must match premake5.lua and src/SumatraPDF.cpp
 #define FZ_ENABLE_JS 1
 #define FZ_ENABLE_PDF 1
 #define FZ_ENABLE_BARCODE 0

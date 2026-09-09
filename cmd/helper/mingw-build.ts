@@ -401,7 +401,6 @@ const sumatraFiles: FileGroup[] = [
       "SumatraControl.*",
       "SumatraLog.cpp",
       "SumatraPDF.cpp",
-      "SumatraStartup.cpp",
       "SumatraConfig.cpp",
       "SumatraDialogs.*",
       "DocumentProperties.*",
