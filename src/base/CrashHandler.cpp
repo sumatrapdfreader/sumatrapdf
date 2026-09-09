@@ -110,10 +110,11 @@ static bool TryStartCrashHandling(Str handlerName) {
     return false;
 }
 
-static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
+// No stacks and no exception record: the .dmp we write alongside already has
+// both, in a form a debugger can actually use.
+static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash) {
     CrashInfoStart(16 * 1024);
     if (!isCrash) {
-        captureCallstack = true;
         CrashInfoAppend(StrL("Type: debug report (not crash)\n"));
     }
     if (condStr) {
@@ -123,21 +124,6 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
     CallCb(gCfg.appendExtraInfo);
     if (gSystemInfo) {
         CrashInfoAppend(gSystemInfo);
-        CrashInfoAppend(StrL("\n"));
-    }
-
-    ThreadId crashedThreadId = gMei.ThreadId;
-    if (gMei.ExceptionPointers) {
-        dbghelp::GetExceptionInfo(*gCrashInfo, gMei.ExceptionPointers);
-    } else if (captureCallstack) {
-        crashedThreadId = GetCurrentThreadId();
-        CrashInfoAppend(StrL("\nCrashed thread:\n"));
-        dbghelp::GetCurrentThreadCallstack(*gCrashInfo);
-    }
-
-    if (captureCallstack) {
-        CrashInfoAppend(StrL("\nOther threads:\n"));
-        dbghelp::GetAllThreadsCallstacksExcept(*gCrashInfo, crashedThreadId);
         CrashInfoAppend(StrL("\n"));
     }
 
@@ -235,7 +221,7 @@ static bool InitializeDbgHelp() {
 }
 
 // like crash report, but can be triggered without a crash
-void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
+void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool /*captureCallstack*/) {
     // in release builds ReportIf()/ReportIfFast() will break if running under
     // the debugger. In other builds it sends a debug report
     if (condStr) {
@@ -247,7 +233,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     bool shouldUpload = isCrash ? gCfg.uploadCrashes : gCfg.uploadDebugReports;
 
     if (gCfg.localOnly) {
-        auto s = BuildCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
+        auto s = BuildCrashInfoText(condStr, fileLine, isCrash);
         if (len(s) == 0) {
             log(StrL("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n"));
             return;
@@ -268,7 +254,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
         if (IsDebuggerPresent()) {
             DebugBreak();
         } else {
-            auto s = BuildCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
+            auto s = BuildCrashInfoText(condStr, fileLine, isCrash);
             if (len(s) == 0) {
                 log(StrL("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n"));
                 return;
