@@ -126,7 +126,7 @@ const clArgs = [
   "/I",
   "ext/a-harfbuzz",
   "/I",
-  "ext/lcms2/include",
+  "ext/a-lcms2",
   "/I",
   "ext/a-extract",
   "/I",

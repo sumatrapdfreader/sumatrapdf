@@ -1892,8 +1892,8 @@
     <ProjectReference Include="a-freetype.vcxproj">
       <Project>{77F93694-63B1-78E1-CCB8-513DB88F13D2}</Project>
     </ProjectReference>
-    <ProjectReference Include="lcms2.vcxproj">
-      <Project>{C67ED90F-3293-01C1-FB14-A52067E8FDF1}</Project>
+    <ProjectReference Include="a-lcms2.vcxproj">
+      <Project>{7445639F-E024-E23A-E93C-6D11559B489C}</Project>
     </ProjectReference>
     <ProjectReference Include="a-openjpeg.vcxproj">
       <Project>{EB343049-D7EC-7196-40F4-4AF22CCB0C87}</Project>

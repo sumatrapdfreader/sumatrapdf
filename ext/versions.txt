@@ -59,6 +59,7 @@ lzma            9.22b      2011-04-19
 lcms2           2.19.1     (lcms2mt fork)
   https://github.com/ArtifexSoftware/thirdparty-lcms2
   mupdf thirdparty submodule, commit d69c64417c4a33a4629957fc0e08f4f4c5abcc3d
+  amalgamated into ext/a-lcms2 by cmd/amalgam.ts -lcms2, see ext/a-lcms2/version.txt
 
 MinHook         master     20201-01-1
   https://github.com/TsudaKageyu/minhook

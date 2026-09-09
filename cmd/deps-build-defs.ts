@@ -414,7 +414,7 @@ const mupdfThirdPartySources: LibDef = {
     "ext/libjpeg-turbo/src",
     "ext/mupdf/scripts/freetype",
     "ext/a-freetype/include",
-    "ext/lcms2/include",
+    "ext/a-lcms2",
     "ext/a-harfbuzz",
     "ext/a-mujs",
     "ext/a-extract",
@@ -513,7 +513,7 @@ const mupdfThirdPartySources: LibDef = {
     // ── freetype ──
     { dir: "ext/a-freetype", patterns: ["freetype.c"] },
     // ── lcms2 ──
-    { dir: "ext/lcms2/src", patterns: ["*.c"] },
+    { dir: "ext/a-lcms2", patterns: ["lcms2.c"] },
     // ── harfbuzz ──
     { dir: "ext/a-harfbuzz", patterns: ["harfbuzz.cc"] },
     // ── brotli ──
@@ -575,8 +575,8 @@ export const freetype = thirdPartyLib({
 });
 
 export const lcms2 = thirdPartyLib({
-  name: "lcms2",
-  includes: ["ext/lcms2/include"],
+  name: "a-lcms2",
+  includes: ["ext/a-lcms2"],
   files: sourceFiles(3),
 });
 
@@ -701,7 +701,7 @@ export const mupdf: LibDef = {
     "ext/a-mujs",
     "ext/brotli/c/include",
     "ext/a-harfbuzz",
-    "ext/lcms2/include",
+    "ext/a-lcms2",
     "ext/a-gumbo",
     "ext/a-extract",
     "ext/a-zlib",

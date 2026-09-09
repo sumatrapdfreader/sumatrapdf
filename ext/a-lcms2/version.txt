@@ -1,0 +1,6 @@
+project_homepage: https://littlecms.com/
+repo_url: https://github.com/ArtifexSoftware/thirdparty-lcms2
+revision: d69c64417c4a33a4629957fc0e08f4f4c5abcc3d
+commit_sha1: d69c64417c4a33a4629957fc0e08f4f4c5abcc3d
+github_url: https://github.com/ArtifexSoftware/thirdparty-lcms2
+github_commit_url: https://github.com/ArtifexSoftware/thirdparty-lcms2/commit/d69c64417c4a33a4629957fc0e08f4f4c5abcc3d

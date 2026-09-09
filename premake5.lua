@@ -788,14 +788,17 @@ workspace "SumatraPDF"
       "ext/a-freetype/version.txt", "ext/a-freetype/LICENSE.TXT",
     }
 
-  project "lcms2"
+  project "a-lcms2"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
     disablewarnings { "4100", "4244" }
-    includedirs { "ext/lcms2/include" }
-    lcms2_files()
+    includedirs { "ext/a-lcms2" }
+    files {
+      "ext/a-lcms2/lcms2.c", "ext/a-lcms2/*.h",
+      "ext/a-lcms2/version.txt", "ext/a-lcms2/LICENSE",
+    }
 
   project "a-harfbuzz"
     static_intermediate_dirs()
@@ -1002,7 +1005,7 @@ workspace "SumatraPDF"
       "ext/cmark-gfm/extensions",
       "ext/mupdf/scripts/cmark-gfm",
       "ext/a-harfbuzz",
-      "ext/lcms2/include",
+      "ext/a-lcms2",
       "ext/a-gumbo",
       "ext/a-extract",
       "ext/libarchive",
@@ -1015,7 +1018,7 @@ workspace "SumatraPDF"
     -- / SumatraPDF-static pick them up via project references.
     links {
       "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "brotli",
-      "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo",
+      "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo",
     }
 
     -- mupdf
@@ -1058,7 +1061,7 @@ workspace "SumatraPDF"
     links {
       "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli", "unrar", "chmdec", "msdes",
       "libarchive", "cmark-gfm", "a-gumbo",
-      "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
+      "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
     }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
@@ -1414,7 +1417,7 @@ workspace "SumatraPDF"
     -- Static libraries do not propagate dependencies through Ninja.
     links {
       "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "brotli",
-      "mupdf", "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "lcms2", "a-openjpeg",
+      "mupdf", "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg",
       "a-jbig2dec", "libjpeg-turbo", "libarchive", "a-gumbo", "base", "unrar", "chmdec", "a-zopfli", "msdes"
     }
     links {
@@ -1578,7 +1581,7 @@ workspace "SumatraPDF"
     set_group("mupdf", {
       "mupdf", "cmark-gfm", "libarchive", "a-zlib", "brotli", "libjpeg-turbo",
       "a-extract", "a-gumbo", "a-jbig2dec", "a-mujs", "a-openjpeg",
-      "a-freetype", "a-harfbuzz", "lcms2",
+      "a-freetype", "a-harfbuzz", "a-lcms2",
     })
     -- libsumatrapdf.dll + extra codecs / archives linked only into it (and static EXE).
     -- Folder named "libsumatrapdf.dll" so it does not collide with project "libsumatrapdf".

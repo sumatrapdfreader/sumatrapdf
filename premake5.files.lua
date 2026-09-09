@@ -458,13 +458,6 @@ function libjpeg_turbo_files()
   filter {}
 end
 
-function lcms2_files()
-  files_in_dir("ext/lcms2/src", {
-    "*.c", "*.h"
-  })
-  files { "ext/lcms/include.*.h" }
-end
-
 files {
 }
 

@@ -256,6 +256,14 @@ function prepare(path: string, rules?: IncludeRules, transform?: (text: string) 
   return normalizeBlankLines(transform ? transform(text) : text);
 }
 
+// Gives a file's local statics a unique name so they don't collide with a
+// same-named static from another file once everything is one translation unit.
+function scopeSymbols(text: string, prefix: string, names: string[]): string {
+  const defs = names.map((name) => `#define ${name} ${prefix}_${name}`);
+  const undefs = names.map((name) => `#undef ${name}`);
+  return [...defs, text, ...undefs].join("\n") + "\n";
+}
+
 function joinChunks(chunks: string[]): string {
   return normalizeBlankLines(chunks.join("\n"));
 }
@@ -799,6 +807,51 @@ ${prepare(join(root, "jbig2.h"), { resolve })}`),
   ctx.files.set("jbig2dec.c", joinChunks(chunks));
 }
 
+// --- lcms2 -----------------------------------------------------------------
+
+// A chameleonic header: cmsxform.c includes it ~66 times, redefining
+// FUNCTION_NAME and friends each time, so it ships as a file and stays an
+// include.
+const lcms2XformHeader = "extra_xform.h";
+
+// File-local statics that collide with a same-named static elsewhere once every
+// .c lands in one translation unit. Only one side of each pair needs renaming;
+// cmsio1.c's PickLstarMatrix collides with a local variable in cmsvirt.c.
+const lcms2Renames: Record<string, string[]> = {
+  "cmshalf.c": ["Base", "Offset"],
+  "cmsio1.c": ["PickLstarMatrix"],
+  "cmsmtrx.c": ["CloseEnough"],
+  "cmsnamed.c": ["mywcslen"],
+  "cmspack.c": ["PixelSize"],
+  "cmsps2.c": ["WriteCLUT"],
+};
+
+function genLcms2(ctx: Ctx): void {
+  const root = ctx.checkoutDir;
+  const incDir = join(root, "include");
+  const srcDir = join(root, "src");
+
+  const api = ["lcms2mt.h", "lcms2mt_plugin.h"];
+  for (const name of api) {
+    ctx.files.set(name, prepare(join(incDir, name)));
+  }
+  ctx.files.set(lcms2XformHeader, readText(join(srcDir, lcms2XformHeader)));
+
+  // Only lcms2_internal.h is inlined, once; every .c starts with it.
+  const rules: IncludeRules = {
+    resolve: dirResolver([incDir, srcDir]),
+    keep: (inc) => api.includes(inc) || inc === lcms2XformHeader,
+    seen: new Set(),
+  };
+  const chunks = ['#include "lcms2mt.h"\n#include "lcms2mt_plugin.h"\n'];
+  for (const path of listFiles(srcDir, ".c")) {
+    const renames = lcms2Renames[basename(path)];
+    const chunk = prepare(path, rules);
+    chunks.push(renames ? scopeSymbols(chunk, basename(path, ".c"), renames) : chunk);
+  }
+  ctx.files.set("lcms2.c", joinChunks(chunks));
+}
+
 // --- mujs ------------------------------------------------------------------
 
 function genMujs(ctx: Ctx): void {
@@ -1184,6 +1237,25 @@ const libs: Lib[] = [
         "/wd4267",
         "/wd4456",
         "/wd4701",
+      ],
+    },
+  },
+  {
+    name: "lcms2",
+    homepage: "https://littlecms.com/",
+    repo: "https://github.com/ArtifexSoftware/thirdparty-lcms2",
+    rev: "d69c64417c4a33a4629957fc0e08f4f4c5abcc3d",
+    writes: "lcms2mt.h, lcms2mt_plugin.h, extra_xform.h, lcms2.c, LICENSE, AUTHORS",
+    generate: genLcms2,
+    copies: ["LICENSE", "AUTHORS"],
+    compile: {
+      file: "lcms2.c",
+      args: [
+        ...defines("WIN32", "_WIN32", "NDEBUG", "_CRT_SECURE_NO_WARNINGS", "_HAS_ITERATOR_DEBUGGING=0"),
+        "/I",
+        ".",
+        "/wd4100",
+        "/wd4244",
       ],
     },
   },
