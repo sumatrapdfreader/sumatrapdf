@@ -55,7 +55,8 @@
 #include "ExifDump.h"
 #include "AppSettings.h"
 #include "Canvas.h"
-#include "CrashHandler.h"
+#include "base/CrashHandler.h"
+#include "CrashHandlerSumatra.h"
 #include "HangDetector.h"
 #include "Print.h"
 #include "PrintWin11.h"
@@ -2291,16 +2292,6 @@ static void LogOsInfo() {
         (int)IsArmBuild(), CpuCoreCount(), (int)IsRunningOnWine());
 }
 
-static void InstallSumatraCrashHandler(bool localOnly) {
-    if (gIsAsanBuild) {
-        return;
-    }
-
-    TempStr crashInfoDir = GetCrashInfoDirTemp();
-    TempStr crashDumpPath = path::JoinTemp(crashInfoDir, StrL("sumatrapdfcrash.dmp"));
-    InstallCrashHandler(crashDumpPath, localOnly);
-}
-
 int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ LPSTR /*lpCmdLine*/,
                      _In_ int /*nCmdShow*/) {
     int exitCode = 1; // by default it's error
@@ -2364,6 +2355,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     gCli = &flags;
     gForTesting = flags.forTesting;
     ApplyHtmlBackendFlag(flags.htmlBackend);
+    // must precede InstallSumatraCrashHandler(): it needs to know whether we're
+    // allowed to send the report at all
+    InitializePolicies(flags.restrictedUse);
     InstallSumatraCrashHandler(flags.forTesting || flags.controlPipeName);
 
     ScopedOle ole;
@@ -2409,10 +2403,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     if (gCli->silent) {
         gLogToConsole = false;
     }
-
-    // do this before running installer etc. so that we have disk / net permissions
-    // (default policy is to disallow everything)
-    InitializePolicies(flags.restrictedUse);
 
     // in debug build, default
     if (gIsDebugBuild) {

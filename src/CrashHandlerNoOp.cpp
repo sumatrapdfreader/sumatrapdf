@@ -2,7 +2,7 @@
    License: Simplified BSD */
 
 #include "base/Base.h"
-#include "CrashHandler.h"
+#include "CrashHandlerSumatra.h"
 
 void CrashHandlerSetSettings(Str) {}
 

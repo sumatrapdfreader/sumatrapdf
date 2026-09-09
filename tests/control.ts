@@ -627,7 +627,7 @@ export function uniquePipeName(prefix = "sumatra-control"): string {
 }
 
 // exit code SumatraPDF uses when a debug report (ReportIf) fires in a
-// -for-testing run; must match kDebugReportTestExitCode in src/CrashHandler.cpp
+// -for-testing run; must match kDebugReportTestExitCode in src/base/CrashHandler.cpp
 export const DEBUG_REPORT_EXIT_CODE = 105;
 
 // fn also gets the spawned process so a test can combine control commands with

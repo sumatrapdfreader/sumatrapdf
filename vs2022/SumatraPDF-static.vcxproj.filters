@@ -168,7 +168,7 @@
     <ClInclude Include="..\src\Commands.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\CrashHandler.h">
+    <ClInclude Include="..\src\CrashHandlerSumatra.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DarkMode_win.h">
@@ -471,6 +471,9 @@
     <ClInclude Include="..\src\base\Archive.h">
       <Filter>src\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\base\CrashHandler.h">
+      <Filter>src\base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\tests\UtAssert.h">
       <Filter>src\base\tests</Filter>
     </ClInclude>
@@ -683,7 +686,7 @@
     <ClCompile Include="..\src\Commands.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CrashHandler.cpp">
+    <ClCompile Include="..\src\CrashHandlerSumatra.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CustomZoomDialog.cpp">
@@ -1119,6 +1122,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\Archive.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\CrashHandler.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\AppendStore_ut.cpp">

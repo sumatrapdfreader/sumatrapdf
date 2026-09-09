@@ -71,6 +71,8 @@ CompileFlags:
     - -include
     - base/CmdLineArgsIter.h
     - -include
+    - base/CrashHandler.h
+    - -include
     - base/Crypto.h
     - -include
     - base/CssParser.h
@@ -146,6 +148,8 @@ CompileFlags:
     - base/ByteReaderWriter.h
     - -include
     - base/CmdLineArgsIter.h
+    - -include
+    - base/CrashHandler.h
     - -include
     - base/Crypto.h
     - -include
@@ -247,7 +251,7 @@ CompileFlags:
     - -include
     - Commands.h
     - -include
-    - CrashHandler.h
+    - CrashHandlerSumatra.h
     - -include
     - DisplayMode.h
     - -include

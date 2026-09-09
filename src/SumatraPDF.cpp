@@ -72,7 +72,7 @@
 #include "AppTools.h"
 #include "Canvas.h"
 #include "RefHover.h"
-#include "CrashHandler.h"
+#include "base/CrashHandler.h"
 #include "ExternalViewers.h"
 #include "Favorites.h"
 #include "FileThumbnails.h"
@@ -15774,6 +15774,8 @@ void GetProgramInfo() {
         auto fileSizeDll = GetFileSizeAsStrTemp(dllPath);
         CrashInfoAppend(fmt("Dll: %s %s\n", dllPath, fileSizeDll));
     }
+    TempStr wv2Ver = GetWebView2VersionTemp();
+    CrashInfoAppend(fmt("WebView2: %s\n", len(wv2Ver) > 0 ? wv2Ver : StrL("not installed")));
     TempStr signer = GetExecutableSignerTemp(exePath);
     CrashInfoAppend(fmt("Signer: %s\n", signer ? signer : StrL("(not signed)")));
     if (len(gBuiltOn) > 0) {
@@ -15808,10 +15810,6 @@ void GetProgramInfo() {
         CrashInfoAppend(
             fmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\n", gitCommidId, gitCommidId));
     }
-}
-
-bool CrashHandlerCanUseNet() {
-    return HasPermission(Perm::InternetAccess);
 }
 
 void ShowCrashHandlerMessage() {

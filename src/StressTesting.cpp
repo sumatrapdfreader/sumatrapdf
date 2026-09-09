@@ -32,7 +32,7 @@
 #include "WindowTab.h"
 #include "Flags.h"
 #include "SearchAndDDE.h"
-#include "CrashHandler.h"
+#include "base/CrashHandler.h"
 #include "StressTesting.h"
 
 constexpr int kFirstStressTimerID = 101;

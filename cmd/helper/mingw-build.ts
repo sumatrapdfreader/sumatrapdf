@@ -181,6 +181,10 @@ const utilsDebugExtra: FileGroup[] = [];
 // Combines: darkmodelib_files, synctex_files, mui_files, gui_files,
 // uia_files, engines_files, sumatrapdf_files
 const sumatraFiles: FileGroup[] = [
+  {
+    dir: "src/base",
+    patterns: ["CrashHandler.*"],
+  },
   // darkmodelib
   {
     dir: "ext/darkmodelib/src",
@@ -330,7 +334,7 @@ const sumatraFiles: FileGroup[] = [
       "CommandPalette.*",
       "FilterUtil.*",
       "WebpReader.*",
-      "CrashHandler.*",
+      "CrashHandlerSumatra.*",
       "DisplayModel.*",
       "DocumentLayout.*",
       "DisplayMode.*",

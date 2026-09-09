@@ -23,7 +23,6 @@
 #include "AppSettings.h"
 #include "Flags.h"
 #include "Commands.h"
-#include "CrashHandler.h"
 #include "AppUnitTests.h"
 
 // must be last to over-write assert()
@@ -520,7 +519,7 @@ static void SetupForAi() {
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
     utassert_set_for_ai(true);
-    InitializeDbgHelp(true);
+    dbghelp::Initialize(ToWStrTemp(GetSelfExeDirTemp()), true);
     SetUnhandledExceptionFilter(ForAiCrashHandler);
 }
 

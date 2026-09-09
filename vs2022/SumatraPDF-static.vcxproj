@@ -1170,7 +1170,7 @@
     <ClInclude Include="..\src\CommandAvailability.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
-    <ClInclude Include="..\src\CrashHandler.h" />
+    <ClInclude Include="..\src\CrashHandlerSumatra.h" />
     <ClInclude Include="..\src\DarkMode_win.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
@@ -1271,6 +1271,7 @@
     <ClInclude Include="..\src\WebpReader.h" />
     <ClInclude Include="..\src\WindowTab.h" />
     <ClInclude Include="..\src\base\Archive.h" />
+    <ClInclude Include="..\src\base\CrashHandler.h" />
     <ClInclude Include="..\src\base\tests\UtAssert.h" />
     <ClInclude Include="..\src\gui\DocumentView.h" />
     <ClInclude Include="..\src\gui\Gfx.h" />
@@ -1369,7 +1370,7 @@
     <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
-    <ClCompile Include="..\src\CrashHandler.cpp" />
+    <ClCompile Include="..\src\CrashHandlerSumatra.cpp" />
     <ClCompile Include="..\src\CustomZoomDialog.cpp" />
     <ClCompile Include="..\src\DarkMode_win.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
@@ -1556,6 +1557,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\base\CrashHandler.cpp" />
     <ClCompile Include="..\src\base\tests\AppendStore_ut.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

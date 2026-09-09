@@ -251,6 +251,10 @@ files {
 }
 
 function sumatrapdf_files()
+  files_in_dir("src/base", {
+    "CrashHandler.h",
+    "CrashHandler.cpp",
+  })
   files_in_dir("src", {
     "Accelerators.*",
     "ShortcutParse.*",
@@ -298,7 +302,7 @@ function sumatrapdf_files()
     "FilterUtil.*",
     "FilterHighlightDraw.*",
     "Commands.*",
-    "CrashHandler.*",
+    "CrashHandlerSumatra.*",
     "ImageSaveCropResize.*",
     "ImageEditHostSumatra.cpp",
     "DisplayMode.*",
