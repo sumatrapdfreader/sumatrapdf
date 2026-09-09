@@ -2,7 +2,7 @@
 //
 //   bun cmd/crashes.ts              list (oldest first); analyze missing
 //   bun cmd/crashes.ts --local      same, against http://127.0.0.1:9321
-//   bun cmd/crashes.ts <id>         download dump + pdb, run !analyze
+//   bun cmd/crashes.ts <id>         download dump + pdb + exe, run !analyze
 import { existsSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
 import { homedir, cpus } from "node:os";
@@ -27,8 +27,8 @@ type DumpRow = {
 function usage(): void {
   console.log(`Usage:
   bun cmd/crashes.ts [--local]                 list; download+analyze dumps we don't have yet
-  bun cmd/crashes.ts [--local] <id>            download dump, pdb, run cdb (!analyze -v; ~*kb)
-  bun cmd/crashes.ts -reanalyze [--local] [id] force cdb again (dump/pdb stay cached)
+  bun cmd/crashes.ts [--local] <id>            download dump, pdb, exe, run cdb (!analyze -v; ~*kb)
+  bun cmd/crashes.ts -reanalyze [--local] [id] force cdb again (dump/pdb/exe stay cached)
   bun cmd/crashes.ts --server <url> ...        override server base URL
 After listing, serves a local page (like sumatrapdfreader.org/crashes/) and opens the browser.`);
 }
@@ -425,11 +425,13 @@ function symbolCacheKey(version: string): string {
   return version.trim().replace(/[^\w.-]+/g, "_") || "unknown";
 }
 
-function pdbUrlForVersion(version: string): string {
+// ext is ".pdb.lzsa" or ".exe"; the arch part of the name is the same for both
+function dlUrlForVersion(version: string, ext: string): string {
   const v = version.trim();
   const arch = archSuffix(v);
-  const suff = arch === "64" ? "-64.pdb.lzsa" : arch === "arm64" ? "-arm64.pdb.lzsa" : "-32.pdb.lzsa";
-  const relSuff = arch === "32" ? ".pdb.lzsa" : suff;
+  const suff = arch === "64" ? `-64${ext}` : arch === "arm64" ? `-arm64${ext}` : `-32${ext}`;
+  // 32-bit releases have no arch suffix
+  const relSuff = arch === "32" ? ext : suff;
   const prerel = prerelVer(v);
   if (prerel) {
     return `${PROD_SERVER}/dl/prerel/${prerel}/SumatraPDF-prerel${suff}`;
@@ -634,7 +636,7 @@ async function ensureSymbols(row: DumpRow): Promise<string> {
     return await p;
   }
   p = (async () => {
-    const url = pdbUrlForVersion(row.version);
+    const url = dlUrlForVersion(row.version, ".pdb.lzsa");
     if (!url) {
       throw new Error(`no pdb source for version '${row.version}'`);
     }
@@ -658,6 +660,53 @@ async function ensureSymbols(row: DumpRow): Promise<string> {
   }
 }
 
+const inFlightExe = new Map<string, Promise<string>>();
+
+// cdb needs SumatraPDF.exe to map the image (the dump has no code pages), otherwise
+// it prints "Unable to load image ... Win32 error 0n2" and can't disassemble
+async function ensureExe(row: DumpRow): Promise<string> {
+  const local = localDbgSymDir(row.version);
+  if (local && existsSync(join(local, "SumatraPDF.exe"))) {
+    return local;
+  }
+  const key = symbolCacheKey(row.version);
+  const dir = join(CACHE_DIR, "symbols", key);
+  const exePath = join(dir, "SumatraPDF.exe");
+  if (existsSync(exePath) && statSync(exePath).size > 0) {
+    return dir;
+  }
+  let p = inFlightExe.get(key);
+  if (p) {
+    return await p;
+  }
+  p = (async () => {
+    const url = dlUrlForVersion(row.version, ".exe");
+    if (!url) {
+      throw new Error(`no exe source for version '${row.version}'`);
+    }
+    mkdirSync(dir, { recursive: true });
+    console.log(`exe: downloading ${url}`);
+    writeFileSync(exePath, await fetchBytes(url));
+    return dir;
+  })();
+  inFlightExe.set(key, p);
+  try {
+    return await p;
+  } finally {
+    inFlightExe.delete(key);
+  }
+}
+
+// missing exe only degrades the analysis, so never fail on it
+async function ensureExeQuiet(row: DumpRow): Promise<string> {
+  try {
+    return await ensureExe(row);
+  } catch (e) {
+    console.log(`exe: ${e instanceof Error ? e.message : e}`);
+    return "";
+  }
+}
+
 async function downloadDumpIfMissing(server: string, id: string): Promise<void> {
   mkdirSync(dumpDir(id), { recursive: true });
   const dmpPath = dumpPath(id);
@@ -673,6 +722,7 @@ async function ensureDownloaded(server: string, row: DumpRow, reanalyze: boolean
   await downloadDumpIfMissing(server, row.id);
   extractDumpLog(row.id, reanalyze);
   await ensureSymbols(row);
+  await ensureExeQuiet(row);
 }
 
 const MARK_CRASHED = "---CRASHED-STACK---";
@@ -771,6 +821,7 @@ async function runAnalysis(row: DumpRow, reanalyze: boolean): Promise<void> {
     unlinkSync(outPath);
   }
   const symDir = await ensureSymbols(row);
+  const exeDir = await ensureExeQuiet(row);
   const cdb = findCdb();
   if (!cdb) {
     console.log(`dump: ${dmpPath}`);
@@ -787,7 +838,12 @@ async function runAnalysis(row: DumpRow, reanalyze: boolean): Promise<void> {
   const symPath = symParts.join(";");
   console.log(`cdb: ${cdb} (${row.id})`);
   console.log(`pdb: ${relative(ROOT, symDir).replaceAll("\\", "/")}`);
-  await runCdbAsync(cdb, ["-z", dmpPath, "-y", symPath, "-lines", "-logo", outPath, "-c", CDB_CMD], outPath);
+  const args = ["-z", dmpPath, "-y", symPath, "-lines"];
+  if (exeDir) {
+    args.push("-i", exeDir);
+  }
+  args.push("-logo", outPath, "-c", CDB_CMD);
+  await runCdbAsync(cdb, args, outPath);
 }
 
 async function analyze(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
