@@ -627,14 +627,17 @@ workspace "SumatraPDF"
       "ext/liblzma/simple/x86.c",
     }
 
-  project "libwebp"
+  project "a-libwebp"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
     optimized_conf()
     disablewarnings { "4204", "4244", "4057", "4245", "4310", "4701" }
-    includedirs { "ext/libwebp" }
-    libwebp_files()
+    includedirs { "ext/a-libwebp" }
+    files {
+      "ext/a-libwebp/libwebp.c", "ext/a-libwebp/webp/*.h",
+      "ext/a-libwebp/version.txt", "ext/a-libwebp/COPYING",
+    }
 
     -- ARGS = "-Isrc\libdav1d_entrypoint.a.p" "-Isrc" "-I..\src" "-I." "-I.." "-Iinclude\dav1d" "-I..\include\dav1d" "-Iinclude" "-I..\include" "-I..\include\compat\msvc" "-DNDEBUG" "/MD" "/nologo" "/showIncludes" "/utf-8" "/W3" "/O2" "/Gw" "-D_POSIX_C_SOURCE=200112L" "-wd4028" "-wd4090" "-wd4996" "/Fdsrc\libdav1d_entrypoint.a.p\thread_task.c.pdb"
 
@@ -1015,7 +1018,7 @@ workspace "SumatraPDF"
       "ext/a-gumbo",
       "ext/a-extract",
       "ext/a-libarchive",
-      "ext/libwebp/src",
+      "ext/a-libwebp",
     }
     fonts()
 
@@ -1065,7 +1068,7 @@ workspace "SumatraPDF"
     -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
     exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "a-brotli", "unrar", "chmdec", "msdes",
+      "mupdf", "djvudec", "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli", "unrar", "chmdec", "msdes",
       "a-libarchive", "cmark-gfm", "a-gumbo",
       "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
     }
@@ -1144,12 +1147,12 @@ workspace "SumatraPDF"
     -- every other project including them disables it too
     disablewarnings { "4100", "4838" }
     includedirs { "src", "ext/djvudec", "ext/a-libarchive", "ext/unrar", "ext/mupdf/include" }
-    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec", "ext/msdes" }
+    includedirs { "ext/heicdec", "ext/a-libwebp", "ext/jxldec", "ext/msdes" }
     test_engines_files()
     links_zlib()
     -- static link (no libsumatrapdf.dll): same image-codec set as libsumatrapdf.dll
     links { "base", "djvudec", "a-libarchive", "unrar", "mupdf" }
-    links { "libwebp", "dav1d", "heicdec", "jxldec", "a-brotli" }
+    links { "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli" }
     -- LitDoc.cpp: DES decryption of DRM-free .lit sections, LZX section decompression
     links { "msdes", "chmdec" }
     links {
@@ -1180,14 +1183,14 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     disablewarnings { "4611", "4838" } -- setjmp / C++ destruction; QITABENT
     includedirs {
-      "src", "ext/libjpeg-turbo/src", "ext/libwebp/src", "ext/heicdec",
+      "src", "ext/libjpeg-turbo/src", "ext/a-libwebp", "ext/heicdec",
       "ext/jxldec",
     }
     bench_image_files()
     setup_base_pch()
     -- heicdec needs dav1d (AV1), a-zlib / brotli (unci compressed HEIC)
     links {
-      "base", "libjpeg-turbo", "libwebp", "heicdec", "dav1d", "a-zlib",
+      "base", "libjpeg-turbo", "a-libwebp", "heicdec", "dav1d", "a-zlib",
       "jxldec", "a-brotli",
     }
     links {
@@ -1338,7 +1341,7 @@ workspace "SumatraPDF"
       "src", "src/gui", "ext/mupdf/include",
       "ext/djvudec", "ext/chmdec",
       "ext/a-libarchive",
-      "ext/heicdec", "ext/libwebp/src", "ext/jxldec",
+      "ext/heicdec", "ext/a-libwebp", "ext/jxldec",
     }
     pdf_preview_files()
     -- djvudec / chmdec / libarchive / unrar live in libsumatrapdf.dll (re-exported);
@@ -1362,7 +1365,7 @@ workspace "SumatraPDF"
     includedirs { "src", "ext/mupdf/include" }
     includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/a-libarchive", "ext/a-zopfli", "ext/msdes" }
     includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "ext/mupdf/scripts/cmark-gfm" }
-    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
+    includedirs { "ext/heicdec", "ext/a-libwebp", "ext/jxldec" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
     -- so asan options can only come from the environment.
@@ -1422,7 +1425,7 @@ workspace "SumatraPDF"
     links_zlib()
     -- Static libraries do not propagate dependencies through Ninja.
     links {
-      "djvudec", "libwebp", "dav1d", "heicdec", "jxldec", "a-brotli",
+      "djvudec", "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli",
       "mupdf", "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg",
       "a-jbig2dec", "libjpeg-turbo", "a-libarchive", "a-gumbo", "base", "unrar", "chmdec", "a-zopfli", "msdes"
     }
@@ -1467,7 +1470,7 @@ workspace "SumatraPDF"
     includedirs { "ext/synctex", "ext/djvudec", "ext/chmdec", "ext/a-libarchive", "ext/a-zopfli", "ext/msdes" }
     includedirs { "ext/darkmodelib/include" }
     -- headers only: webp/jxl/heic/chm/DES symbols come from libsumatrapdf.dll (libsumatrapdf.def)
-    includedirs { "ext/heicdec", "ext/libwebp/src", "ext/jxldec" }
+    includedirs { "ext/heicdec", "ext/a-libwebp", "ext/jxldec" }
 
     -- MSVC's dynamic asan runtime ignores __asan_default_options/suppressions(),
     -- so asan options can only come from the environment.
@@ -1592,7 +1595,7 @@ workspace "SumatraPDF"
     -- libsumatrapdf.dll + extra codecs / archives linked only into it (and static EXE).
     -- Folder named "libsumatrapdf.dll" so it does not collide with project "libsumatrapdf".
     set_group("libsumatrapdf.dll", {
-      "libsumatrapdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "libwebp", "unrar",
+      "libsumatrapdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "a-libwebp", "unrar",
     })
     set_group("tools", {
       "bench_image", "bin2coff", "logview", "MakeLZSA", "plugin-test", "preview_test",

@@ -53,6 +53,7 @@ libwebp         1.6.0      2025-06-30
   https://github.com/webmproject/libwebp
   https://github.com/webmproject/libwebp/releases/tag/v1.6.0
   commit 4fa21912338357f89e4fd51cf2368325b59e9bd9
+  amalgamated into ext/a-libwebp by cmd/amalgam.ts -libwebp, see ext/a-libwebp/version.txt
 
 lzma            9.22b      2011-04-19
   https://www.7-zip.org/sdk.html

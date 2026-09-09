@@ -1,0 +1,6 @@
+project_homepage: https://developers.google.com/speed/webp
+repo_url: https://github.com/webmproject/libwebp
+revision: v1.6.0
+commit_sha1: 4fa21912338357f89e4fd51cf2368325b59e9bd9
+github_url: https://github.com/webmproject/libwebp
+github_commit_url: https://github.com/webmproject/libwebp/commit/4fa21912338357f89e4fd51cf2368325b59e9bd9

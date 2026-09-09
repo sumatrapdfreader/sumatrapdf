@@ -19,7 +19,7 @@ const includeDirs = [
   "ext/a-zlib",
   "ext/synctex",
   "ext/lzma/C",
-  "ext/libwebp/src",
+  "ext/a-libwebp",
   "ext/a-freetype/include",
   "ext/a-libarchive",
   "ext/a-zopfli",

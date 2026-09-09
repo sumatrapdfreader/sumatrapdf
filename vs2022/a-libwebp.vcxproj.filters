@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="webp">
+      <UniqueIdentifier>{530BA07C-3F42-A10D-E82E-8710D4441D0F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\a-libwebp\webp\decode.h">
+      <Filter>webp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-libwebp\webp\demux.h">
+      <Filter>webp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-libwebp\webp\encode.h">
+      <Filter>webp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-libwebp\webp\format_constants.h">
+      <Filter>webp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-libwebp\webp\mux.h">
+      <Filter>webp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-libwebp\webp\mux_types.h">
+      <Filter>webp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\a-libwebp\webp\types.h">
+      <Filter>webp</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\a-libwebp\libwebp.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\ext\a-libwebp\COPYING" />
+    <None Include="..\ext\a-libwebp\version.txt" />
+  </ItemGroup>
+</Project>

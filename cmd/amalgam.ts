@@ -1143,6 +1143,85 @@ function genLibarchive(ctx: Ctx): void {
   ctx.files.set("libarchive.c", joinChunks(chunks));
 }
 
+// --- libwebp ---------------------------------------------------------------
+
+// Decoder only: src/dec, src/utils and the dsp files those need. No encoder,
+// no mux/demux, no sharpyuv, same as the non-amalgamated build, minus the
+// encoder-side cost.c: nothing calls it and in one translation unit its
+// reference to the SSE2 encoder can no longer be dropped by the linker.
+const libwebpDspSources = [
+  "alpha_processing.c",
+  "alpha_processing_neon.c",
+  "alpha_processing_sse2.c",
+  "alpha_processing_sse41.c",
+  "cpu.c",
+  "dec.c",
+  "dec_clip_tables.c",
+  "dec_neon.c",
+  "dec_sse2.c",
+  "dec_sse41.c",
+  "filters.c",
+  "filters_neon.c",
+  "filters_sse2.c",
+  "lossless.c",
+  "lossless_avx2.c",
+  "lossless_neon.c",
+  "lossless_sse2.c",
+  "lossless_sse41.c",
+  "rescaler.c",
+  "rescaler_neon.c",
+  "rescaler_sse2.c",
+  "ssim.c",
+  "ssim_sse2.c",
+  "upsampling.c",
+  "upsampling_neon.c",
+  "upsampling_sse2.c",
+  "upsampling_sse41.c",
+  "yuv.c",
+  "yuv_neon.c",
+  "yuv_sse2.c",
+  "yuv_sse41.c",
+];
+
+// File-local statics that collide once every .c is one translation unit.
+const libwebpRenames: Record<string, string[]> = {
+  "quant_levels_dec_utils.c": ["clip_8b"],
+  "ssim_sse2.c": ["kWeight"],
+};
+
+function genLibwebp(ctx: Ctx): void {
+  const root = ctx.checkoutDir;
+
+  // The public API, shipped for src/WebpReader.cpp and mupdf, which include
+  // <webp/decode.h>. The amalgamated .c inlines its own copy.
+  const webpDir = join(root, "src", "webp");
+  for (const path of listFiles(webpDir, ".h")) {
+    ctx.files.set(join("webp", basename(path)), readText(path));
+  }
+
+  const sources = [
+    ...listFiles(join(root, "src", "dec"), ".c"),
+    ...libwebpDspSources.map((name) => join(root, "src", "dsp", name)),
+    ...listFiles(join(root, "src", "utils"), ".c"),
+  ];
+
+  // Quoted includes are rooted at the checkout ("src/dec/vp8i_dec.h"). Marking
+  // the sources as seen keeps a .c that another .c includes from being emitted
+  // twice.
+  const rules: IncludeRules = {
+    resolve: dirResolver([root]),
+    seen: new Set(sources.map(normPath)),
+    dedupOnlyGuarded: true,
+  };
+  const chunks: string[] = [];
+  for (const path of sources) {
+    const name = basename(path);
+    const chunk = prepare(path, rules);
+    chunks.push(libwebpRenames[name] ? scopeSymbols(chunk, basename(name, ".c"), libwebpRenames[name]) : chunk);
+  }
+  ctx.files.set("libwebp.c", joinChunks(chunks));
+}
+
 // --- mujs ------------------------------------------------------------------
 
 function genMujs(ctx: Ctx): void {
@@ -1628,6 +1707,30 @@ const libs: Lib[] = [
         "/wd4703",
         "/wd4706",
         "/wd4996",
+      ],
+    },
+  },
+  {
+    name: "libwebp",
+    homepage: "https://developers.google.com/speed/webp",
+    repo: "https://github.com/webmproject/libwebp",
+    rev: "v1.6.0",
+    writes: "webp/*.h, libwebp.c, COPYING, PATENTS, AUTHORS",
+    generate: genLibwebp,
+    copies: ["COPYING", "PATENTS", "AUTHORS"],
+    compile: {
+      file: "libwebp.c",
+      args: [
+        ...defines("WIN32", "_WIN32", "NDEBUG", "_CRT_SECURE_NO_WARNINGS", "_HAS_ITERATOR_DEBUGGING=0"),
+        "/I",
+        ".",
+        "/wd4057",
+        "/wd4127",
+        "/wd4204",
+        "/wd4244",
+        "/wd4245",
+        "/wd4310",
+        "/wd4701",
       ],
     },
   },

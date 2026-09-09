@@ -224,49 +224,6 @@ function dav1d_files()
   files("ext/dav1d/include/dav1d/*.h")
 end
 
-function libwebp_files()
-  files("ext/libwebp/src/dec/*.c")
-
-  files_in_dir("ext/libwebp/src/dsp", {
-    "alpha_processing.c",
-    "alpha_processing_neon.c",
-    "alpha_processing_sse2.c",
-    "alpha_processing_sse41.c",
-    "cost.c",
-    "cpu.c",
-    "dec.c",
-    "dec_clip_tables.c",
-    "dec_neon.c",
-    "dec_sse2.c",
-    "dec_sse41.c",
-    "filters.c",
-    "filters_neon.c",
-    "filters_sse2.c",
-    "lossless.c",
-    "lossless_neon.c",
-    "lossless_sse2.c",
-    "lossless_sse41.c",
-    "lossless_avx2.c",
-    "rescaler.c",
-    "rescaler_neon.c",
-    "rescaler_sse2.c",
-    "ssim.c",
-    "ssim_sse2.c",
-    "upsampling.c",
-    "upsampling_neon.c",
-    "upsampling_sse2.c",
-    "upsampling_sse41.c",
-    "yuv.c",
-    "yuv_neon.c",
-    "yuv_sse2.c",
-    "yuv_sse41.c",
-  })
-
-  files("ext/libwebp/src/sharpyuv/*.c")
-
-  files("ext/libwebp/src/utils/*.c")
-end
-
 function libjpeg_turbo_files()
   -- libjpeg-turbo 3.x: core (precision-independent) sources
   files_in_dir("ext/libjpeg-turbo/src", {
