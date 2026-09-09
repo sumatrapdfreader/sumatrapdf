@@ -2143,6 +2143,9 @@ async function validateCompile(lib: Lib, tmpDir: string, files: Map<string, stri
 
 // Licenses and hand-picked headers copied straight from upstream. Several are
 // the only copy left in the tree, so re-copy them on every regeneration.
+// Text files are written with LF, like the generated ones: upstream line
+// endings vary by project and by how git checked them out, which would
+// otherwise show up as a whole-file diff on every regeneration.
 function copyFromCheckout(checkoutDir: string, outDir: string, names: string[]): string[] {
   const written: string[] = [];
   for (const name of names) {
@@ -2152,10 +2155,18 @@ function copyFromCheckout(checkoutDir: string, outDir: string, names: string[]):
     }
     const dst = join(outDir, name);
     mkdirSync(dirname(dst), { recursive: true });
-    writeFileSync(dst, readFileSync(src));
+    writeFileSync(dst, toLf(readFileSync(src)));
     written.push(dst);
   }
   return written;
+}
+
+// A NUL byte means binary, and binaries are copied byte for byte.
+function toLf(data: Buffer): Buffer | string {
+  if (data.includes(0)) {
+    return data;
+  }
+  return data.toString("utf-8").replace(/\r\n/g, "\n");
 }
 
 async function main(): Promise<void> {
