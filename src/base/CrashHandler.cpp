@@ -202,16 +202,10 @@ static void WriteAndUploadMinidump(Str logText, MINIDUMP_EXCEPTION_INFORMATION* 
         return;
     }
 
-    str::Builder url(gCrashHandlerArena);
-    url.Append(gCfg.submitUrl);
-    if (gCfg.appendUploadQuery) {
-        gCfg.appendUploadQuery(url);
-    }
-    Str urlStr = ToStr(url);
     HttpRsp rsp;
-    bool ok = HttpPostUrl(urlStr, StrL("application/octet-stream"), {}, dump, &rsp);
+    bool ok = HttpPostUrl(gCfg.submitUrl, StrL("application/octet-stream"), {}, dump, &rsp);
     logf("WriteAndUploadMinidump: upload ok=%d status=%u err=%u bytes=%d url=%s\n", (int)ok,
-         (unsigned)rsp.httpStatusCode, (unsigned)rsp.error, dump.len, urlStr);
+         (unsigned)rsp.httpStatusCode, (unsigned)rsp.error, dump.len, gCfg.submitUrl);
 }
 
 static void HandleCrashWithMinidump() {
@@ -605,7 +599,7 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     gCrashHandlerArena = ArenaNew();
     gCrashInfo = New<str::Builder>(gCrashHandlerArena, gCrashHandlerArena);
 
-    logf("InstallCrashHandler:\n  crashDumpPath: '%s'\n", cfg.crashDumpPath);
+    logf("InstallCrashHandler:\n  crashDumpPath: '%s'\n  submitUrl: '%s'\n", cfg.crashDumpPath, cfg.submitUrl);
 
     gCfg = cfg;
     // the caller's strings can be temporary, ours must outlive any crash

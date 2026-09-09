@@ -122,6 +122,15 @@ static void CaptureSettings() {
     str::Free(prefsData);
 }
 
+// the client info is the same as for the update check and doesn't change while
+// we run, so build the url now rather than at crash time
+static TempStr BuildSubmitUrlTemp() {
+    str::Builder url(GetTempArena());
+    url.Append(StrL(kMinidumpSubmitUrl));
+    AppendClientInfoQuery(url);
+    return ToStr(url);
+}
+
 void InstallSumatraCrashHandler(bool localOnly) {
     if (gIsAsanBuild) {
         return;
@@ -137,7 +146,7 @@ void InstallSumatraCrashHandler(bool localOnly) {
 
     CrashHandlerConfig cfg{};
     cfg.crashDumpPath = path::JoinTemp(crashInfoDir, StrL("sumatrapdfcrash.dmp"));
-    cfg.submitUrl = StrL(kMinidumpSubmitUrl);
+    cfg.submitUrl = BuildSubmitUrlTemp();
     cfg.fullDumpEnvVar = StrL("SUMATRAPDF_FULLDUMP");
     cfg.localOnly = localOnly;
     cfg.forTesting = gForTesting;
@@ -150,7 +159,6 @@ void InstallSumatraCrashHandler(bool localOnly) {
     cfg.appendMinidumpComment = AppendMinidumpComment;
     cfg.onCrashBegin = OnCrashBegin;
     cfg.showCrashMessage = ShowCrashHandlerMessage;
-    cfg.appendUploadQuery = AppendClientInfoQuery;
 
     InstallCrashHandler(cfg);
     CaptureSettings();

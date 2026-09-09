@@ -7,7 +7,7 @@
 // CrashHandlerArena().
 struct CrashHandlerConfig {
     Str crashDumpPath;
-    Str submitUrl;      // where the .dmp is POSTed; empty disables upload
+    Str submitUrl;      // full url the .dmp is POSTed to, query included; empty disables upload
     Str fullDumpEnvVar; // if set in the environment, write a full dump
     bool localOnly;
     bool forTesting; // terminate on a debug report so automated tests fail
@@ -19,7 +19,6 @@ struct CrashHandlerConfig {
     void (*appendMinidumpComment)(); // extra text for the .dmp comment stream
     void (*onCrashBegin)();
     void (*showCrashMessage)();
-    void (*appendUploadQuery)(str::Builder& url);
 };
 
 void InstallCrashHandler(const CrashHandlerConfig& cfg);
