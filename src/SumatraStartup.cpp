@@ -2539,7 +2539,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
 #if IS_DEBUG
     if (flags.unitTests) {
         CreateSumatraAcceleratorTable();
-        exitCode = RunAppUnitTests();
+        exitCode = RunAppUnitTests(flags.forAi);
         FreeAcceleratorTables();
         ShutdownCommon();
         return exitCode;

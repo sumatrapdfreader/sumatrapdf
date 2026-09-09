@@ -1116,21 +1116,6 @@ workspace "SumatraPDF"
 
 ---- executables
 
-  project "test_util"
-    dll_app_objdir()
-    dll_linker_intermediates()
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++latest"
-    mixed_dbg_rel_conf()
-    disablewarnings { "4838" }
-    defines { "SUMATRA_TEST_UTIL=1" }
-    includedirs { "src" }
-    test_util_files()
-    setup_base_pch()
-    links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet", "shcore", "wintrust", "crypt32" }
-    links_base_win()
-
   project "test_engines"
     static_app_objdir()
     static_linker_intermediates()
@@ -1377,9 +1362,6 @@ workspace "SumatraPDF"
     darkmodelib_files()
 
     webview_conf()
-    filter "configurations:Debug or DebugFull"
-      files { "src/AppUnitTests.cpp" }
-    filter {}
 
     synctex_files()
     gui_files()
@@ -1442,7 +1424,6 @@ workspace "SumatraPDF"
     filter "platforms:x64_asan"
     linkoptions { "/INFERASANLIBS" }
     filter {}
-    dependson { "test_util" }
     -- pack translations + marked/mermaid + manual into .work/embedded.dat
     -- (IDR_EMBEDDED_PAK). Uses cmd so MSBuild need not have bun on PATH.
     prebuildcommands {
@@ -1487,9 +1468,6 @@ workspace "SumatraPDF"
     engines_files()
     favor_speed_files { "src/TextSearch.cpp", "src/EngineMupdf.cpp" }
     sumatrapdf_files()
-    filter "configurations:Debug or DebugFull"
-      files { "src/AppUnitTests.cpp" }
-    filter {}
 
     setup_base_pch()
 
@@ -1549,7 +1527,7 @@ workspace "SumatraPDF"
     -- a DLL planted next to the exe can't be side-loaded. doesn't affect
     -- delay-loaded libsumatrapdf.dll which LoadLibsumatrapdf() loads by full path
     linkoptions { "/DEPENDENTLOADFLAG:0x800" }
-    dependson { "PdfFilter", "PdfPreview", "test_util", "sumatrapdf-tool" }
+    dependson { "PdfFilter", "PdfPreview", "sumatrapdf-tool" }
     -- pack translations + marked/mermaid + manual into .work/embedded.dat
     prebuildcommands {
       "call ..\\cmd\\pack-embedded-prebuild.cmd",
@@ -1594,6 +1572,6 @@ workspace "SumatraPDF"
     })
     set_group("tools", {
       "bench_image", "bin2coff", "logview", "MakeLZSA", "plugin-test", "preview_test",
-      "test_engines", "test_util",
+      "test_engines",
     })
   end

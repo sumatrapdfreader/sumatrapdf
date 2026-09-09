@@ -27,29 +27,6 @@ struct MockDocControllerCallback : DocControllerCallback {
     void PagesRenumbered(DisplayModel*) override {}
 };
 
-Location DocController::CurrentLocation() {
-    return {1, 1};
-}
-void DocController::GoToLocation(Location, bool) {}
-Location DocController::LocationFromPageNo(int pageNo) {
-    return {1, pageNo};
-}
-int DocController::PageNoFromLocation(Location loc) {
-    return loc.page;
-}
-Location DocController::ResolveDest(IPageDestination*) {
-    return kInvalidLocation;
-}
-TempStr DocController::MakeBookmarkTemp(__unused Location loc) {
-    return {};
-}
-Location DocController::LookupBookmark(__unused Str s) {
-    return kInvalidLocation;
-}
-Location DocController::ClampLocation(Location loc) {
-    return loc;
-}
-
 struct MockChapterDocCtrl : DocController {
     int laidOut[3]{0, 0, 0};
     int chapterSizes[3]{5, 10, 8};

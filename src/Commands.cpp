@@ -6,11 +6,9 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Notifications.h"
-#ifndef SUMATRA_TEST_UTIL
 #include "ShortcutParse.h"
 #include "Accelerators.h"
 #include "AppSettings.h"
-#endif
 #include "Commands.h"
 
 // @gen-start cmd-c
@@ -1214,15 +1212,11 @@ static void NormalizeCommandNameAndKey(Str definition, Str* name, Str* key) {
         *key = {};
         return;
     }
-#ifndef SUMATRA_TEST_UTIL
     if (!IsValidShortcutString(*key)) {
         logf("CreateCustomCommand: '%s' is not a valid shortcut for '%s'\n", *key, definition);
         MaybeDelayedWarningNotification(fmt("'%s' is not a valid shortcut for '%s'", *key, definition));
         *key = {};
     }
-#else
-    (void)definition;
-#endif
 }
 
 CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* args, Str name, Str key) {
@@ -1627,7 +1621,6 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         firstArg->type = CommandArg::Type::Float;
         firstArg->floatVal = zoomVal;
     }
-#ifndef SUMATRA_TEST_UTIL
     if (cmdId == CmdToggleBoolSetting && firstArg) {
         // validate the named boolean setting exists (case-insensitive leaf or path)
         Str settingName = firstArg->strVal;
@@ -1638,7 +1631,6 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
             // will warn again if the name is still wrong
         }
     }
-#endif
     auto* res = CreateCustomCommand(definition, cmdId, firstArg);
     return res;
 }

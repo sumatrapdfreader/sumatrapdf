@@ -5,14 +5,49 @@
 
 #if IS_DEBUG
 
+#include "base/WinDynCalls.h"
+#include "base/DbgHelpDyn.h"
+
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/VirtCtrl.h"
 #include "Commands.h"
+#include "CrashHandler.h"
 #include "base/UtAssert.h"
 #include "AppUnitTests.h"
+
+// in src/base/tests/
+void AppendStoreTest();
+void BaseUtilTest();
+void ByteOrderTests();
+void ClipboardImageTest();
+void CryptoUtilTest();
+void CssParser_UnitTests();
+void DictTest();
+void DirRemoveAllTest();
+void FileUtilTest();
+void GuessFileTypeTest();
+void JsonTest();
+void RefHoverTest();
+void SettingsUtilTest();
+void SquareTreeTest();
+void StrFormatTest();
+void StrTest();
+void StrVecTest();
+void VecTest();
+void WinUtilTest();
+
+// in src/*_ut.cpp
+void ChapterTable_UnitTests();
+void PagePosition_UnitTests();
+void PdfDarkModeImageClassifier_UnitTests();
+void PdfDarkModeOklab_UnitTests();
+void SimpleLogTest();
+
+// in src/SumatraUnitTests.cpp
+void SumatraPDF_UnitTests();
 
 void TextSelection_UnitTests();
 void Layout_UnitTests();
@@ -146,7 +181,60 @@ static void ParseTip_UnitTests() {
     }
 }
 
-int RunAppUnitTests() {
+static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* ei) {
+    printf("unit tests crash\n");
+    str::Builder s;
+    dbghelp::GetExceptionInfo(s, ei);
+    Str info = ToStr(s);
+    printf("%.*s", info.len, info.s);
+    fflush(stdout);
+    ExitProcess(7);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// -for-ai: print assertion and crash callstacks to stdout instead of breaking
+// into a debugger, so a script can report the failure
+static void SetupForAi() {
+    setvbuf(stdout, nullptr, _IONBF, 0);
+    setvbuf(stderr, nullptr, _IONBF, 0);
+    utassert_set_for_ai(true);
+    InitializeDbgHelp(true);
+    SetUnhandledExceptionFilter(ForAiCrashHandler);
+}
+
+int RunAppUnitTests(bool forAi) {
+    if (forAi) {
+        SetupForAi();
+    }
+    printf("Running unit tests\n");
+
+    AppendStoreTest();
+    BaseUtilTest();
+    ByteOrderTests();
+    ClipboardImageTest();
+    CryptoUtilTest();
+    CssParser_UnitTests();
+    DictTest();
+    DirRemoveAllTest();
+    FileUtilTest();
+    GuessFileTypeTest();
+    JsonTest();
+    RefHoverTest();
+    SettingsUtilTest();
+    SimpleLogTest();
+    SquareTreeTest();
+    StrFormatTest();
+    StrTest();
+    StrVecTest();
+    VecTest();
+    WinUtilTest();
+
+    ChapterTable_UnitTests();
+    PagePosition_UnitTests();
+    PdfDarkModeImageClassifier_UnitTests();
+    PdfDarkModeOklab_UnitTests();
+    SumatraPDF_UnitTests();
+
     ParseTip_UnitTests();
 #if IS_DEBUG
     TextSelection_UnitTests();

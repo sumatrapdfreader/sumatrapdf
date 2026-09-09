@@ -1,15 +1,10 @@
 import { join, resolve } from "node:path";
 import { detectVisualStudio, runLogged } from "./util";
 
+// unit tests are compiled into SumatraPDF.exe only in Debug builds
 const { msbuildPath } = detectVisualStudio();
 const slnPath = join("vs2022", "SumatraPDF.sln");
-// Nested under the "tools" solution folder → MSBuild target is tools\test_util
-await runLogged(msbuildPath, [
-  slnPath,
-  String.raw`/t:tools\test_util:Rebuild`,
-  `/p:Configuration=Release;Platform=x64`,
-  `/m`,
-]);
+await runLogged(msbuildPath, [slnPath, "/t:SumatraPDF:Rebuild", `/p:Configuration=Debug;Platform=x64`, `/m`]);
 
-const dir = join("out", "rel64");
-await runLogged(resolve(join(dir, "test_util.exe")), [], dir);
+const dir = join("out", "dbg64");
+await runLogged(resolve(join(dir, "SumatraPDF.exe")), ["-unit-tests"], dir);

@@ -1,6 +1,6 @@
 import { copyFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { cpus } from "node:os";
-import { join, relative, resolve } from "node:path";
+import { join, relative } from "node:path";
 import { $ } from "bun";
 import { clearDirPreserveSettings } from "./clean";
 import { ensureNinja } from "./ninja";
@@ -29,7 +29,7 @@ Windows builds:
   -release -32            Build the 32-bit release
   -asan [-debug|-release] Build SumatraPDF-static.exe with MSVC ASan
   -all [-clean]           Build release SumatraPDF and SumatraPDF-static
-  -smoke                  Rebuild release SumatraPDF and test_util, then run test_util
+  -smoke                  Rebuild release SumatraPDF, then run the debug unit tests
   -ci                     Build CI/pre-release artifacts
   -daily                  Build daily artifacts
   -codeql                 Build the static release target for CodeQL
@@ -220,7 +220,6 @@ function printBinaries(dir: string, targets: Set<string>): void {
     "PdfFilter.dll",
     "PdfPreview.dll",
     "sumatrapdf-tool.exe",
-    "test_util.exe",
   ]);
   const walk = (path: string): void => {
     for (const entry of readdirSync(path, { withFileTypes: true })) {
@@ -314,19 +313,14 @@ async function buildSmoke(ninja: boolean): Promise<void> {
   console.log("smoke build");
   clearDirPreserveSettings(outDir);
   if (ninja) {
-    await buildNinja([join("..", outDir, "SumatraPDF.exe"), join("..", outDir, "test_util.exe")]);
+    await buildNinja([join("..", outDir, "SumatraPDF.exe")]);
   } else {
     const { msbuildPath } = detectVisualStudio2026();
     await buildApp(msbuildPath, "Release", "x64", "SumatraPDF:Rebuild");
-    await runLogged(msbuildPath, [
-      String.raw`vs2022\SumatraPDF.sln`,
-      String.raw`/t:tools\test_util:Rebuild`,
-      "/p:Configuration=Release;Platform=x64",
-      "/m",
-    ]);
   }
-  printBinaries(outDir, new Set(["SumatraPDF.exe", "test_util.exe"]));
-  await runLogged(resolve(join(outDir, "test_util.exe")), [], outDir);
+  printBinaries(outDir, new Set(["SumatraPDF.exe"]));
+  // unit tests are compiled into the debug SumatraPDF only
+  await runLogged("bun", [join("cmd", "run-unit-tests.ts"), "-dbg"]);
 }
 
 async function showBuildNo(query?: string): Promise<void> {

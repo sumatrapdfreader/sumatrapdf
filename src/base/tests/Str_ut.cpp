@@ -805,7 +805,7 @@ void StrTest() {
     utassert(str::Eq(Str(buf), StrL("AbC\1Efg\1")));
     str::TransCharsInPlace(bufStr, StrL("\1"), StrL("\0"));
     utassert(str::Eq(Str(buf), StrL("AbC")) && str::Eq(Str(buf + 4), StrL("Efg")));
-    str::TransCharsInPlace(bufStr, StrL(""), StrL("X"));
+    str::TransCharsInPlace(bufStr, StrL(""), StrL(""));
     utassert(str::Eq(Str(buf), StrL("AbC")));
 
     str::BufSet(Str(buf, dimof(buf)), StrL("blogarapato"));

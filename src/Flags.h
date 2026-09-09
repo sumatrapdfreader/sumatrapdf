@@ -112,6 +112,7 @@ struct Flags {
     bool dumpExif = false;   // -dump-exif
     bool dumpChm = false;    // -dump-chm
     bool unitTests = false;  // -unit-tests (debug builds only)
+    bool forAi = false;      // -for-ai (AI-friendly unit test output)
     bool showPrintersDialog = false;
     bool crashOnOpen = false;
     // related to installer

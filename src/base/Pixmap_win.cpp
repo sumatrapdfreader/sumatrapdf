@@ -362,7 +362,7 @@ static inline u8 BlendOver(u8 src, u8 dst, u32 srcAlpha, bool premultiplied) {
 //
 // The compositing is done by hand rather than with AlphaBlend() or GDI+:
 // msimg32 and GdiPlusUtil are linked into SumatraPDF.exe but not into the other
-// consumers of base (test_util, PdfFilter, ...). Reading the destination back
+// consumers of base (PdfFilter, PdfPreview, ...). Reading the destination back
 // costs a BitBlt, which is nothing at icon sizes.
 //
 // Only 1:1 blits are composited; a scaling blit falls back to the opaque path.

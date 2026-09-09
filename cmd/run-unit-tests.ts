@@ -4,10 +4,10 @@ import { detectVisualStudio2026, runLogged } from "./util";
 
 const asanDllName = "clang_rt.asan_dynamic-x86_64.dll";
 
-type BuildKind = "dbg" | "rel" | "asan";
+type BuildKind = "dbg" | "dbg32" | "asan";
 
 function usage(): never {
-  throw new Error("usage: bun cmd/run-unit-tests.ts [-dbg | -rel | -asan]");
+  throw new Error("usage: bun cmd/run-unit-tests.ts [-dbg | -32 | -asan]");
 }
 
 function parseArgs(): BuildKind {
@@ -18,9 +18,9 @@ function parseArgs(): BuildKind {
       if (seen) usage();
       kind = "dbg";
       seen = true;
-    } else if (arg === "-rel" || arg === "-release") {
+    } else if (arg === "-32") {
       if (seen) usage();
-      kind = "rel";
+      kind = "dbg32";
       seen = true;
     } else if (arg === "-asan") {
       if (seen) usage();
@@ -61,14 +61,42 @@ function copyAsanRuntime(vsRoot: string, outDir: string): void {
   copyFileSync(src, dst);
 }
 
-function configFor(kind: BuildKind): { config: string; platform: string; outDir: string; logName: string } {
-  if (kind === "rel") {
-    return { config: "Release", platform: "x64", outDir: join("out", "rel64"), logName: "unit-tests-rel.txt" };
+interface UnitTestConfig {
+  platform: string;
+  target: string;
+  exeName: string;
+  outDir: string;
+  logName: string;
+}
+
+// unit tests are compiled into SumatraPDF only in Debug builds, so every
+// config here is Debug
+function configFor(kind: BuildKind): UnitTestConfig {
+  if (kind === "dbg32") {
+    return {
+      platform: "Win32",
+      target: "SumatraPDF",
+      exeName: "SumatraPDF.exe",
+      outDir: join("out", "dbg32"),
+      logName: "unit-tests-dbg32.txt",
+    };
   }
   if (kind === "asan") {
-    return { config: "Debug", platform: "x64_asan", outDir: join("out", "dbg64_asan"), logName: "unit-tests-asan.txt" };
+    return {
+      platform: "x64_asan",
+      target: "SumatraPDF-static",
+      exeName: "SumatraPDF-static.exe",
+      outDir: join("out", "dbg64_asan"),
+      logName: "unit-tests-asan.txt",
+    };
   }
-  return { config: "Debug", platform: "x64", outDir: join("out", "dbg64"), logName: "unit-tests-dbg.txt" };
+  return {
+    platform: "x64",
+    target: "SumatraPDF",
+    exeName: "SumatraPDF.exe",
+    outDir: join("out", "dbg64"),
+    logName: "unit-tests-dbg.txt",
+  };
 }
 
 function tail(s: string, maxLines: number): string {
@@ -77,7 +105,7 @@ function tail(s: string, maxLines: number): string {
 }
 
 async function runAndCapture(exe: string, cwd: string, logPath: string): Promise<{ exitCode: number; output: string }> {
-  const proc = Bun.spawn([exe, "-for-ai"], {
+  const proc = Bun.spawn([exe, "-unit-tests", "-for-ai"], {
     cwd,
     stdout: "pipe",
     stderr: "pipe",
@@ -95,15 +123,14 @@ async function runAndCapture(exe: string, cwd: string, logPath: string): Promise
 
 async function main() {
   const kind = parseArgs();
-  const { config, platform, outDir, logName } = configFor(kind);
+  const { platform, target, exeName, outDir, logName } = configFor(kind);
   const { msbuildPath, vsRoot } = detectVisualStudio2026();
 
   await runLogged(join("bin", "premake5.exe"), ["vs2022"]);
   await runLogged(msbuildPath, [
     String.raw`vs2022\SumatraPDF.sln`,
-    // Nested under the "tools" solution folder → MSBuild target is tools\test_util
-    String.raw`/t:tools\test_util:Rebuild`,
-    `/p:Configuration=${config};Platform=${platform}`,
+    `/t:${target}`,
+    `/p:Configuration=Debug;Platform=${platform}`,
     "/m",
   ]);
   if (kind === "asan") {
@@ -111,17 +138,17 @@ async function main() {
   }
 
   mkdirSync(outDir, { recursive: true });
-  const exe = join(process.cwd(), outDir, "test_util.exe");
+  const exe = join(process.cwd(), outDir, exeName);
   const logPath = join(process.cwd(), outDir, logName);
   const { exitCode, output } = await runAndCapture(exe, outDir, logPath);
 
-  console.log(`test_util exit code: ${exitCode}`);
+  console.log(`${exeName} -unit-tests exit code: ${exitCode}`);
   console.log(`output: ${logPath}`);
   if (exitCode === 0 && output.includes("Passed all ")) {
     console.log("unit tests passed");
     return;
   }
-  if (exitCode === 7 || output.includes("test_util crash") || output.includes("AddressSanitizer")) {
+  if (exitCode === 7 || output.includes("unit tests crash") || output.includes("AddressSanitizer")) {
     console.log("unit tests crashed");
   } else if (output.includes("Assertion failed:") || output.includes("Failed ")) {
     console.log("unit tests failed assertions");

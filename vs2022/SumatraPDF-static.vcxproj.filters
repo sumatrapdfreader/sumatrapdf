@@ -671,6 +671,9 @@
     <ClCompile Include="..\src\ChapterTable.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ChapterTable_ut.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ChmDump.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -881,6 +884,9 @@
     <ClCompile Include="..\src\PagePosition.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PagePosition_ut.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\PageRenderPolicy.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -917,6 +923,9 @@
     <ClCompile Include="..\src\PdfDarkModeImageClassifier.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PdfDarkModeImageClassifier_ut.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\PdfDarkModeImageRules.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -924,6 +933,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfDarkModeOklab.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PdfDarkModeOklab_ut.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfDarkModeProfile.cpp">
@@ -1037,6 +1049,9 @@
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SimpleLog_ut.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\StressTesting.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1059,6 +1074,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SumatraTest.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SumatraUnitTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SvgIcons.cpp">

@@ -63,6 +63,11 @@ jobs:
       - name: Build (debug, ASan)
         run: bun cmd/build.ts -asan -debug
 
+      # unit tests are compiled into the debug exe; -for-ai prints assertion
+      # and crash callstacks instead of waiting for a debugger
+      - name: Run unit tests
+        run: .\out\dbg64_asan\SumatraPDF-static.exe -unit-tests -for-ai
+
       # run-github-ci.ts runs every test that can run here, doesn't stop at the
       # first failure, and exits non-zero if any failed
       - name: Run tests

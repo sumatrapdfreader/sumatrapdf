@@ -20,7 +20,7 @@ This creates ./out/dbg64/SumatraPDF.exe executable. The static build target is S
 
 To cross-compile the Windows exe with mingw inside WSL, use `bun cmd/build.ts -wine` (optional `-clean`, `-run`); the unified build command delegates it to `cmd/helper/wsl-build.ts`. It needs a WSL distro named `Ubuntu` with bun in it, plus `sudo apt install g++-mingw-w64-x86-64 unzip` (and `wine wine64` to run).
 
-To run unit tests with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-rel` / `-asan`). It builds the 64-bit `test_util.exe`, runs it with `-for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
+Unit tests are compiled into `SumatraPDF.exe` in **debug builds only** and run with `-unit-tests`. To run them with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-32` / `-asan`). It builds the debug exe, runs it with `-unit-tests -for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
 
 To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF.exe`
 
@@ -275,7 +275,7 @@ Instead, run only what the change can plausibly break:
 - a named issue fix → `bun tests/issue-<number>.ts`
 - a change to code an existing test covers → that test, found by grepping `tests/` for the
   feature, command id, or setting name involved
-- base/`test_util` work → `bun cmd/run-unit-tests.ts -dbg`
+- base/unit-test work → `bun cmd/run-unit-tests.ts -dbg`
 - nothing covers it → say so instead of running everything as a substitute. A targeted
   manual check (launch with `-for-testing`, screenshot, probe log) is worth more than a
   green suite that never touched the code.

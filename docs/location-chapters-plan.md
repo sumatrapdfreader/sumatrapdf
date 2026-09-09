@@ -112,7 +112,7 @@ One virtual for engines with chapters:
 virtual int LayOutChapter(int chapter); // returns real page count; engine calls chapters.SetPageCount()
 ```
 
-`ChapterTable` (new `src/ChapterTable.h/.cpp`, unit-tested in `test_util`):
+`ChapterTable` (new `src/ChapterTable.h/.cpp`, unit-tested via `-unit-tests`):
 `Init(nChapters)`, `SetPageCount(chapter, n)` (bumps generation when changed),
 `TotalPages()`, `LocationFromPageNo`, `PageNoFromLocation` (pure, no layout),
 `IsLaidOut`, `Generation()`. Thread-safe (mutex; generation atomic). Engines

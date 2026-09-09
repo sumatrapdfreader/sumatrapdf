@@ -2,9 +2,9 @@
    License: GPLv3 */
 
 #if IS_DEBUG
-int RunAppUnitTests();
+int RunAppUnitTests(bool forAi);
 #else
-constexpr int RunAppUnitTests() {
+constexpr int RunAppUnitTests(bool) {
     return 0;
 }
 #endif
