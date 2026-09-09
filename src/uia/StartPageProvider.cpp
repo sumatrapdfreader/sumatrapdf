@@ -140,6 +140,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_ProviderOpti
     if (pRetVal == nullptr) {
         return E_POINTER;
     }
-    *pRetVal = ProviderOptions_ServerSideProvider;
+    // see SumatraUIAutomationProvider::get_ProviderOptions
+    *pRetVal = ProviderOptions_ServerSideProvider | ProviderOptions_UseComThreading;
     return S_OK;
 }

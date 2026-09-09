@@ -117,7 +117,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_ProviderOptions(Provi
     if (pRetVal == nullptr) {
         return E_POINTER;
     }
-    *pRetVal = ProviderOptions_ServerSideProvider;
+    // UseComThreading makes UIA marshal every provider call onto the thread the
+    // provider was created on (the UI thread, an STA via OleInitialize). Without
+    // it calls arrive on RPC threads and race document teardown: a GetText() on
+    // an RPC thread called a pure virtual on an engine the UI thread was deleting.
+    *pRetVal = ProviderOptions_ServerSideProvider | ProviderOptions_UseComThreading;
     return S_OK;
 }
 
