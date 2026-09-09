@@ -343,6 +343,13 @@ void GfxGdiplus::DrawTextAt(Str s, Point pos, u32 flags, PlatformFont* font, Col
     }
 }
 
+// measures on a screen dc, for callers that only lay text out
+Size GdiplusMeasureText(PlatformFont* font, Str s) {
+    AutoReleaseDC dc(nullptr);
+    GfxGdiplus gfx(dc);
+    return gfx.MeasureText(s, font);
+}
+
 Size GfxGdiplus::MeasureText(Str s, PlatformFont* font) {
     if (len(s) == 0) {
         return {};

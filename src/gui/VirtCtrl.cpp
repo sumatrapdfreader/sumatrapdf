@@ -3975,7 +3975,7 @@ void VirtRichText::LayoutText(int areaWidth) {
             boldFont = GetBoldPlatformFont(font);
         }
         PlatformFont* use = (w->isBold && boldFont) ? boldFont : font;
-        Size sz = PlatformFontMeasureText(use, w->text);
+        Size sz = GfxMeasureText(use, w->text);
         w->dx = sz.dx + (w->isKbd ? (2 * kbdPadX) : 0);
         w->dy = sz.dy + (2 * padY);
     }
@@ -3985,7 +3985,11 @@ void VirtRichText::LayoutText(int areaWidth) {
     int x = startX;
     int y = startY;
     int lineHeight = 0;
-    int spaceWidth = 4; // approximate space between words
+    // the font's own space advance: a fixed value doesn't scale with dpi
+    int spaceWidth = GfxMeasureText(font, StrL(" ")).dx;
+    if (spaceWidth <= 0) {
+        spaceWidth = DpiScale(4);
+    }
     int maxX = startX;
     for (TipWord* w = words.next; w; w = w->next) {
         // space goes before the word, so words abutting the previous token

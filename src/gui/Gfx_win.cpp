@@ -359,6 +359,26 @@ Gfx* GfxCreate(HDC hdc) {
     return new GfxGdiplus(hdc);
 }
 
+// Text laid out word by word (VirtRichText) must be measured by the engine that
+// will draw it: gdi metrics run up to 4px wider than DirectWrite for a word of
+// digits and narrower for one of letters, which shows up as uneven word gaps.
+Size GfxMeasureText(PlatformFont* font, Str s) {
+    if (len(s) == 0) {
+        return {};
+    }
+    if (gUseDirect2D && Direct2DAvailable()) {
+        Size sz = D2DMeasureText(font, s);
+        if (!sz.IsEmpty()) {
+            return sz;
+        }
+    }
+    Size sz = GdiplusMeasureText(font, s);
+    if (!sz.IsEmpty()) {
+        return sz;
+    }
+    return PlatformFontMeasureText(font, s);
+}
+
 void GfxDestroyDoubleBuffer(GfxDoubleBuffer* b) {
     if (!b) {
         return;

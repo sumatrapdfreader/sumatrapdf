@@ -234,6 +234,11 @@ struct GfxDirect2D : Gfx {
 
 bool Direct2DAvailable();
 
+// measure text the way GfxCreate()'s backend draws it
+Size GfxMeasureText(PlatformFont*, Str);
+Size D2DMeasureText(PlatformFont*, Str);
+Size GdiplusMeasureText(PlatformFont*, Str);
+
 // flip to draw with Direct2D instead of gdiplus, for comparing the two
 extern bool gUseDirect2D;
 

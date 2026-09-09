@@ -60,6 +60,9 @@ void GfxDirect2D::DrawTextAt(Str, Point, u32, PlatformFont*, Color) {}
 Size GfxDirect2D::MeasureText(Str, PlatformFont*) {
     return {};
 }
+Size D2DMeasureText(PlatformFont*, Str) {
+    return {};
+}
 void GfxDirect2D::DrawPixmap(Pixmap*, const Rect&) {}
 void GfxDirect2D::PushClip(const Rect&) {}
 void GfxDirect2D::PopClip() {}
@@ -796,7 +799,8 @@ void GfxDirect2D::DrawTextAt(Str s, Point pos, u32 flags, PlatformFont* font, Co
     DrawText(s, r, fl, font, col);
 }
 
-Size GfxDirect2D::MeasureText(Str s, PlatformFont* font) {
+// no render target needed, so callers that only lay text out can use it
+Size D2DMeasureText(PlatformFont* font, Str s) {
     if (len(s) == 0 || !gDWriteFactory) {
         return {};
     }
@@ -816,6 +820,10 @@ Size GfxDirect2D::MeasureText(Str s, PlatformFont* font) {
     layout->GetMetrics(&tm);
     layout->Release();
     return {(int)ceilf(tm.widthIncludingTrailingWhitespace), (int)ceilf(tm.height)};
+}
+
+Size GfxDirect2D::MeasureText(Str s, PlatformFont* font) {
+    return D2DMeasureText(font, s);
 }
 
 // d2d wants 32bpp premultiplied BGRA; a Pixmap can be several other things.
