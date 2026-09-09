@@ -1675,7 +1675,7 @@ static void EndContentsEdit(AnnotEditToolbar* tb, bool accept) {
     TempStr newText{};
     if (accept && tb->contentsEdit && annot) {
         newText = tb->contentsEdit->GetTextTemp();
-        newText = str::ReplaceTemp(newText, StrL("\r\n"), StrL("\n"));
+        str::NormalizeNewlinesToLFInPlace(newText);
     }
     RestoreCanvasFocus(tb);
     DestroyContentsEditor(tb);
@@ -1973,9 +1973,9 @@ static void StartContentsEdit(AnnotEditToolbar* tb) {
         delete edit;
         return;
     }
-    Str s = Contents(annot);
-    s = str::ReplaceTemp(s, StrL("\r\n"), StrL("\n"));
-    s = str::ReplaceTemp(s, StrL("\n"), StrL("\r\n"));
+    TempStr s = str::DupTemp(Contents(annot));
+    str::NormalizeNewlinesToLFInPlace(s);
+    s = str::LFToCRLFTemp(s);
     edit->SetText(s);
     edit->onWndProc = MkFunc1(OnContentsEditWndProc, tb);
 
@@ -2174,7 +2174,7 @@ void EndFreeTextInPlaceEdit(bool accept) {
     TempStr text{};
     if (accept) {
         text = str::DupTemp(HwndGetTextTemp(hwnd));
-        text = str::ReplaceTemp(text, StrL("\r\n"), StrL("\n"));
+        str::NormalizeNewlinesToLFInPlace(text);
     }
     // clear the state and unsubclass before destroying, so the destroy-time
     // WM_KILLFOCUS doesn't come back through the commit path
@@ -2319,8 +2319,9 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     SetWindowFont(hwnd, font, TRUE);
     int pad = std::max(DpiScale(2), 1);
     SendMessageW(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(pad, pad));
-    TempStr text = str::ReplaceTemp(Contents(annot), StrL("\r\n"), StrL("\n"));
-    text = str::ReplaceTemp(text, StrL("\n"), StrL("\r\n"));
+    TempStr text = str::DupTemp(Contents(annot));
+    str::NormalizeNewlinesToLFInPlace(text);
+    text = str::LFToCRLFTemp(text);
     HwndSetText(hwnd, text);
 
     gInPlaceDefProc = (WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC);

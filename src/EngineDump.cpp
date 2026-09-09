@@ -402,7 +402,7 @@ __unused static bool RenderDocument(EngineBase* engine, Str renderPath, float zo
             return true;
         }
         TempStr txtFilePath = fmt(renderPath.s, 0);
-        TempStr textCrLf = str::ReplaceTemp(ToStr(text), StrL("\n"), StrL("\r\n"));
+        TempStr textCrLf = str::LFToCRLFTemp(ToStr(text));
         TempStr textUTF8BOM = str::JoinTemp(StrL(kUtf8Bom), textCrLf);
         return file::WriteFile(txtFilePath, textUTF8BOM);
     }

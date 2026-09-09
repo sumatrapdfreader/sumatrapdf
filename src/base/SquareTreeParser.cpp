@@ -408,7 +408,7 @@ SquareTreeNode* ParseSquareTree(Str s) {
         return nullptr;
     }
     // we write LF but older files (and hand-edited ones) can have CRLF or CR
-    str::NormalizeNewlinesInPlace(data);
+    str::NormalizeNewlinesToLFInPlace(data);
     int off = 0;
     return ParseSquareTreeRec(data, off, true, 0);
 }

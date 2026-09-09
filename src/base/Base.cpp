@@ -2726,7 +2726,7 @@ constexpr char kLF = '\n';
 // kCR kLF and a lone kCR become kLF, in place: the result is never longer.
 // Empty lines are preserved.
 // s must own a writeable, nul-terminated buffer.
-int NormalizeNewlinesInPlace(Str& s) {
+int NormalizeNewlinesToLFInPlace(Str& s) {
     if (len(s) == 0) {
         return 0;
     }
@@ -2747,6 +2747,35 @@ int NormalizeNewlinesInPlace(Str& s) {
     s.len = dst;
 
     return dst;
+}
+
+// Every kLF not already preceded by a kCR becomes kCR kLF (what win32 edit
+// controls expect). Returns s unchanged (no allocation) if there's nothing to do.
+TempStr LFToCRLFTemp(Str s) {
+    int n = s.len;
+    int nLF = 0;
+    for (int i = 0; i < n; i++) {
+        if (s.s[i] == kLF && (i == 0 || s.s[i - 1] != kCR)) {
+            nLF++;
+        }
+    }
+    if (nLF == 0) {
+        return s;
+    }
+    char* res = AllocArrayTemp<char>(n + nLF + 1);
+    if (!res) {
+        return {};
+    }
+    int dst = 0;
+    for (int i = 0; i < n; i++) {
+        char c = s.s[i];
+        if (c == kLF && (i == 0 || s.s[i - 1] != kCR)) {
+            res[dst++] = kCR;
+        }
+        res[dst++] = c;
+    }
+    res[dst] = 0;
+    return Str(res, dst);
 }
 
 // Remove all characters in "toRemove" from "str", in place.

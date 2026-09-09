@@ -108,7 +108,7 @@ static void ClearEbookSettingsWnd() {
 // a multi-line edit shows only CRLF as a line break, while our CSS (and what
 // we store in the settings) uses LF
 static TempStr ToEditTextTemp(Str s) {
-    return str::ReplaceTemp(s, StrL("\n"), StrL("\r\n"));
+    return str::LFToCRLFTemp(s);
 }
 
 static TempStr FromEditTextTemp(Str s) {

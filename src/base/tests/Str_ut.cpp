@@ -520,12 +520,12 @@ static void StrCutTest() {
     utassert(str::Eq(before, StrL("a")) && str::Eq(after, StrL("b::c")));
 }
 
-static void StrNormalizeNewlinesInPlaceTest() {
+static void StrNormalizeNewlinesToLFInPlaceTest() {
     // CRLF and lone CR become LF, empty lines survive
     char buf[64];
     auto norm = [&buf](const char* in) -> Str {
         Str s = Str(buf, str::BufSet(Str(buf, sizeofi(buf)), Str(in)));
-        str::NormalizeNewlinesInPlace(s);
+        str::NormalizeNewlinesToLFInPlace(s);
         return s;
     };
     utassert(str::Eq(norm("a\r\nb"), StrL("a\nb")));
@@ -537,7 +537,21 @@ static void StrNormalizeNewlinesInPlaceTest() {
 
     // len is updated and the result stays nul-terminated
     Str s = Str(buf, str::BufSet(Str(buf, sizeofi(buf)), StrL("x\r\ny\r\n")));
-    utassert(str::NormalizeNewlinesInPlace(s) == 4 && s.len == 4 && s.s[4] == 0);
+    utassert(str::NormalizeNewlinesToLFInPlace(s) == 4 && s.len == 4 && s.s[4] == 0);
+}
+
+static void StrLFToCRLFTempTest() {
+    // bare LF becomes CRLF, an existing CRLF is left alone
+    utassert(str::Eq(str::LFToCRLFTemp(StrL("a\nb")), StrL("a\r\nb")));
+    utassert(str::Eq(str::LFToCRLFTemp(StrL("a\r\nb")), StrL("a\r\nb")));
+    utassert(str::Eq(str::LFToCRLFTemp(StrL("\na\n")), StrL("\r\na\r\n")));
+    utassert(str::Eq(str::LFToCRLFTemp(StrL("a\n\nb")), StrL("a\r\n\r\nb")));
+
+    // nothing to do: returns s as-is, no allocation
+    Str s = StrL("abc");
+    TempStr res = str::LFToCRLFTemp(s);
+    utassert(res.s == s.s && res.len == s.len);
+    utassert(len(str::LFToCRLFTemp(Str{})) == 0);
 }
 
 static void StrTrimWsTest() {
@@ -1210,7 +1224,8 @@ void StrTest() {
     StrCutTest();
     StrNextLineTest();
     StrTrimWsTest();
-    StrNormalizeNewlinesInPlaceTest();
+    StrNormalizeNewlinesToLFInPlaceTest();
+    StrLFToCRLFTempTest();
     StrStartsWithTest();
     // ParseUntilTest();
 }

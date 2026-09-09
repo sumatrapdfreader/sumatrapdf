@@ -223,9 +223,9 @@ static void BuildPopup(AnnotTextPopup* popup, Annotation* annot) {
     });
 
     // CRLF is what a win32 edit expects; annotation text uses bare LF
-    Str s = Contents(annot);
-    s = str::ReplaceTemp(s, StrL("\r\n"), StrL("\n"));
-    s = str::ReplaceTemp(s, StrL("\n"), StrL("\r\n"));
+    TempStr s = str::DupTemp(Contents(annot));
+    str::NormalizeNewlinesToLFInPlace(s);
+    s = str::LFToCRLFTemp(s);
     popup->edit->SetText(s);
 
     int textDx = width - (2 * margin);
