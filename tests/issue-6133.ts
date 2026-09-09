@@ -36,7 +36,8 @@ function getFrames(pid: number): number[] {
 }
 
 export async function testit(): Promise<void> {
-  const pdf = join(ROOT, "ext", "brotli", "docs", "brotli-comparison-study-2015-09-22.pdf");
+  // needs at least 3 pages: the hotkey advances a page three times
+  const pdf = join(ROOT, "tests", "issue-6132.pdf");
   const dir = tmpPath("issue-6133");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });

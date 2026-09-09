@@ -12,7 +12,7 @@
 // column's x depends on the window width, the DPI and the theme, so on another
 // machine the sample band landed on the path -- identical for both renders --
 // and the test failed with "file size not shown" while the app was fine.
-import { mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util";
@@ -98,9 +98,15 @@ async function checkFile(docPath: string): Promise<void> {
 
 export async function testit(): Promise<void> {
   // two sizes, so a stuck constant (the bug drew "0.00 KB" for everything)
-  // can't pass for both
-  await checkFile(join(ROOT, "ext", "a-zlib", "zlib.3.pdf")); // ~27 KB
-  await checkFile(join(ROOT, "ext", "brotli", "docs", "brotli-comparison-study-2015-09-22.pdf")); // ~210 KB
+  // can't pass for both. The bigger one is made here rather than borrowed
+  // from some ext/ component, whose docs can be dropped at any time.
+  const small = join(ROOT, "ext", "a-zlib", "zlib.3.pdf"); // ~27 KB
+  await checkFile(small);
+
+  // padding after %%EOF is ignored, so this is still the same valid pdf
+  const big = tmpPath("issue-5870-big.pdf");
+  writeFileSync(big, Buffer.concat([readFileSync(small), Buffer.alloc(200 * 1024, 0x20)]));
+  await checkFile(big);
 }
 
 if (import.meta.main) {

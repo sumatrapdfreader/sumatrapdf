@@ -280,6 +280,8 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-5870", issue5870],
+  ["issue-6133", issue6133],
   ["image-only-palette-items", imageOnlyPaletteItems],
   ["issue-6151", issue6151],
   ["issue-6140", issue6140],
@@ -422,7 +424,6 @@ export const tests: NamedTest[] = [
   ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
   ["issue-5780", issue5780],
   ["issue-5845", issue5845],
-  ["issue-5870", issue5870],
   ["issue-5963", issue5963],
   ["issue-5965", issue5965],
 
@@ -520,7 +521,6 @@ export const tests: NamedTest[] = [
   ["adv-settings-home-reload", advSettingsHomeReload],
   ["toc-title-fallback", tocTitleFallback],
   ["issue-6132", issue6132],
-  ["issue-6133", issue6133],
   ["toolbar-tab-switch-pos", toolbarTabSwitchPos],
   ["issue-trim-margins", issueTrimMargins],
   ["trim-empty-margins-restore", trimEmptyMarginsRestore],
