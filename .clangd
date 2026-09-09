@@ -251,7 +251,6 @@ CompileFlags:
     - -include
     - Commands.h
     - -include
-    - CrashHandlerSumatra.h
     - -include
     - DisplayMode.h
     - -include

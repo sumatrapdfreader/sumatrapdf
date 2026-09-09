@@ -56,7 +56,6 @@
 #include "AppSettings.h"
 #include "Canvas.h"
 #include "base/CrashHandler.h"
-#include "CrashHandlerSumatra.h"
 #include "HangDetector.h"
 #include "Print.h"
 #include "PrintWin11.h"

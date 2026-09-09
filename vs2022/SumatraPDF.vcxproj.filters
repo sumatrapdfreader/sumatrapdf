@@ -168,9 +168,6 @@
     <ClInclude Include="..\src\Commands.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\CrashHandlerSumatra.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\DarkMode_win.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -684,9 +681,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Commands.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\CrashHandlerSumatra.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CustomZoomDialog.cpp">

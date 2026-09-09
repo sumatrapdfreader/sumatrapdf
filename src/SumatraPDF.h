@@ -133,6 +133,9 @@ bool SettingsUseTabs();
 bool SettingsRestoreSession();
 bool SettingsRememberOpenedFiles();
 
+void InstallSumatraCrashHandler(bool localOnly);
+void CrashHandlerSetSettings(Str settings);
+
 void InitializePolicies(bool restrict);
 void RestrictPolicies(Perm revokePermission);
 bool HasPermission(Perm permission);

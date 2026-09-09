@@ -1198,7 +1198,6 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClInclude Include="..\src\CommandAvailability.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
-    <ClInclude Include="..\src\CrashHandlerSumatra.h" />
     <ClInclude Include="..\src\DarkMode_win.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
@@ -1398,7 +1397,6 @@ if not exist ../out/rel64_prefast_asan\InstallerData.dat ..\bin\MakeLZSA.exe ../
     <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
-    <ClCompile Include="..\src\CrashHandlerSumatra.cpp" />
     <ClCompile Include="..\src\CustomZoomDialog.cpp" />
     <ClCompile Include="..\src\DarkMode_win.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />

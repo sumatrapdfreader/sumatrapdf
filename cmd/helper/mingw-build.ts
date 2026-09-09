@@ -334,7 +334,6 @@ const sumatraFiles: FileGroup[] = [
       "CommandPalette.*",
       "FilterUtil.*",
       "WebpReader.*",
-      "CrashHandlerSumatra.*",
       "DisplayModel.*",
       "DocumentLayout.*",
       "DisplayMode.*",

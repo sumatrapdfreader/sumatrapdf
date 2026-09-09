@@ -45,7 +45,6 @@
 #include "Tabs.h"
 #include "GlobalHotkeys.h"
 #include "PagePosition.h"
-#include "CrashHandlerSumatra.h"
 #include "AppSettings.h"
 
 // workaround for OnMenuExit
