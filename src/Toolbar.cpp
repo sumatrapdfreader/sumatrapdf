@@ -1179,7 +1179,7 @@ static TempStr ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
     }
     int origId = cmd ? cmd->origId : shortcut->cmdId;
     if (origId > 0 && origId < CmdLast) {
-        Str desc = SeqStrByIndex(gCommandDescriptions, origId);
+        Str desc = GetCommandDescription(origId);
         if (desc) {
             return desc;
         }

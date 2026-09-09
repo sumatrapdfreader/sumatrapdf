@@ -2421,8 +2421,10 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 
     StrVecCP tempCommands;
-    int cmdId = (int)CmdFirst + 1;
-    for (Str name = SeqStrFirst(gCommandDescriptions); len(name) > 0; name = SeqStrNext(name), cmdId++) {
+    int cmdIdx = 0;
+    int cmdId = 0;
+    for (Str name = SeqStrFirst(gCommandDescriptions); len(name) > 0; name = SeqStrNext(name), cmdIdx++) {
+        cmdId = GetCommandIdByIdx(cmdIdx);
         if (!AllowCommand(ctx, (i32)cmdId)) {
             continue;
         }

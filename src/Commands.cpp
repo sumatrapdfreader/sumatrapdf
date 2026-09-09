@@ -1063,11 +1063,22 @@ int GetCommandIdByDesc(Str cmdDesc) {
     return -1;
 }
 
+// gCommandIds is parallel to gCommandNames / gCommandDescriptions. Removed
+// commands keep their id but are dropped from those tables, so the id of the
+// n-th description is gCommandIds[n], not CmdFirst + 1 + n.
+// returns -1 if idx is out of range
+int GetCommandIdByIdx(int idx) {
+    if (idx < 0 || idx >= dimofi(gCommandIds)) {
+        return -1;
+    }
+    return gCommandIds[idx];
+}
+
 Str GetCommandDescription(int commandId) {
-    int id = (int)CmdFirst + 1;
+    int idx = 0;
     for (Str description = SeqStrFirst(gCommandDescriptions); len(description) > 0;
-         description = SeqStrNext(description), id++) {
-        if (id == commandId) {
+         description = SeqStrNext(description), idx++) {
+        if (GetCommandIdByIdx(idx) == commandId) {
             return description;
         }
     }

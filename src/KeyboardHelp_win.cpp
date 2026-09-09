@@ -18,14 +18,11 @@ struct SumatraKeyboardHelpDataSource : KeyboardHelpDataSource {
     Str Translate(Str s) override { return trans::GetTranslation(s); }
 
     TempStr CommandDescriptionTemp(int cmdId) override {
-        int id = (int)CmdFirst + 1;
-        for (Str description = SeqStrFirst(gCommandDescriptions); len(description) > 0;
-             description = SeqStrNext(description), id++) {
-            if (id == cmdId) {
-                return str::DupTemp(trans::GetTranslation(description));
-            }
+        Str description = GetCommandDescription(cmdId);
+        if (len(description) == 0) {
+            return {};
         }
-        return {};
+        return str::DupTemp(trans::GetTranslation(description));
     }
 
     TempStr CommandShortcutTemp(int cmdId, int maxCount) override { return ShortcutsForCmdTemp(cmdId, maxCount); }

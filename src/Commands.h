@@ -415,6 +415,7 @@ extern SeqStrings gCommandDescriptions;
 
 int GetCommandIdByName(Str);
 int GetCommandIdByDesc(Str);
+int GetCommandIdByIdx(int idx);
 Str GetCommandDescription(int commandId);
 
 CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* args, Str name = {}, Str key = {});
