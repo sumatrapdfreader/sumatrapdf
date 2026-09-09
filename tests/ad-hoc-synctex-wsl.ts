@@ -240,7 +240,10 @@ async function testForwardSearch(
 ): Promise<{ ok: boolean; result: FwdSearchResult }> {
   const res = await forwardSearch(pdfPath, srcPath);
   const pass = res.ret === 0 && res.page >= 1 && res.nrects >= 1;
-  console.log(`${pass ? "PASS" : "FAIL"} forward search (${label}) -> nrects: ${res.nrects}`);
+  // on failure print the whole result line: ret and the source path the app
+  // was asked about are what say whether the toolchain or the app is at fault
+  const detail = pass ? `nrects: ${res.nrects}` : res.raw;
+  console.log(`${pass ? "PASS" : "FAIL"} forward search (${label}) -> ${detail}`);
   return { ok: pass, result: res };
 }
 
