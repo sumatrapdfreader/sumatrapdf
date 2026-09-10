@@ -51,6 +51,7 @@ void WinUtilTest();
 
 // in src/tests/*_ut.cpp
 void ChapterTable_UnitTests();
+void MobiDoc_UnitTests();
 void PagePosition_UnitTests();
 void PageRenderPolicy_UnitTests();
 void PdfDarkModeImageClassifier_UnitTests();
@@ -551,6 +552,7 @@ int RunAppUnitTests(bool forAi) {
     WinUtilTest();
 
     ChapterTable_UnitTests();
+    MobiDoc_UnitTests();
     PagePosition_UnitTests();
     PdfDarkModeImageClassifier_UnitTests();
     PdfDarkModeOklab_UnitTests();

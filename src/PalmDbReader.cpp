@@ -100,8 +100,8 @@ int PdbReader::GetRecordCount() {
 // don't free, memory is owned by us
 Str PdbReader::GetRecord(int recNo) {
     int nRecs = len(recInfos);
-    ReportIf(recNo >= nRecs);
-    if (recNo >= nRecs) {
+    ReportIf(recNo < 0 || recNo >= nRecs);
+    if (recNo < 0 || recNo >= nRecs) {
         return {};
     }
     int off = (int)recInfos[recNo].offset;

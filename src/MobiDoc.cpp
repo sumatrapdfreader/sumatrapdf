@@ -548,7 +548,9 @@ bool MobiDoc::ParseHeader() {
     }
     textEncoding = (int)mobiHdr.textEncoding;
 
-    if (pdbReader->GetRecordCount() > (int)mobiHdr.imageFirstRec) {
+    // compare unsigned: a bogus imageFirstRec of e.g. 0xfffffff0 would pass as
+    // a negative int and index records before the first one
+    if (mobiHdr.imageFirstRec < (u32)pdbReader->GetRecordCount()) {
         imageFirstRec = (int)mobiHdr.imageFirstRec;
         if (0 == imageFirstRec) {
             // I don't think this should ever happen but I've seen it

@@ -1259,6 +1259,9 @@
     <ClCompile Include="..\src\tests\CommandPalette_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\tests\MobiDoc_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\tests\PagePosition_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
