@@ -58,14 +58,18 @@ function addResources(text: string, path: string): string {
       // for that stamp and gets the archive path via the EMBEDDED_PAK resdefine
       // premake sets: embedded.lzsa (also holding libsumatrapdf.dll & co) for
       // SumatraPDF.exe, embedded-static.lzsa for SumatraPDF-static.exe.
+      // Mixed slashes on purpose: QM() turns the path into an RC string, and
+      // rc mangles ".." after "/" into "..." (./../../out -> ./.../.../out)
+      // while a backslash before the config name is an escape (out\rel64
+      // reads as out<CR>el64). "\.." and "/rel64" are both left alone.
       let deps = "";
       let flags = "";
       if (project === "SumatraPDF") {
         deps = ` | ../../out/${config}/obj/SumatraPDF/SumatraPDF.prebuild`;
-        flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out\\${config}\\embedded.lzsa`;
+        flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out/${config}/embedded.lzsa`;
       } else if (project === "SumatraPDF-static") {
         deps = ` | ../../out/${config}/obj-s/SumatraPDF-static/SumatraPDF-static.prebuild`;
-        flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out\\${config}\\embedded-static.lzsa`;
+        flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out/${config}/embedded-static.lzsa`;
       }
       return `build ${resource}: rc_msc-v145 ${source}${deps}${flags}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
     });
