@@ -6385,12 +6385,15 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(Location loc, bool loadQuick, fz_cookie* 
 // mediabox across every page, and a single-chapter (non-reflow) doc's page
 // vector is fully built at load and never grows afterward.
 RectF EngineMupdf::PageMediabox(int pageNo) {
+    // a reflow doc has one mediabox for every page, so answer even for a page
+    // number a caller hasn't resynced yet: a restyle (ApplyReflowThemeCss)
+    // resets the chapter table, shrinking pageCount under DisplayModel
+    if (isReflowable) {
+        return reflowMediabox;
+    }
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
         return {};
-    }
-    if (isReflowable) {
-        return reflowMediabox;
     }
     if (HasChapters()) {
         // chaptered non-reflow docs don't exist today; stay safe if one ever does
