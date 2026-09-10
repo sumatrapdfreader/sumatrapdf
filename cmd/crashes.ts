@@ -14,6 +14,8 @@ const WIN_SYM_CACHE = join(homedir(), ".symbols");
 const MS_SYMBOL_SERVER = "https://msdl.microsoft.com/download/symbols";
 const PROD_SERVER = "https://www.sumatrapdfreader.org";
 const LOCAL_SERVER = "http://127.0.0.1:9321";
+// the crash server hosts minidumps per app under /app/<app>/
+const APP = "sumatrapdf";
 const SECRETS_GO = String.raw`D:\src\hack\webapps\sumatra-website\server\secrets.go`;
 
 type DumpRow = {
@@ -746,7 +748,7 @@ async function downloadDumpIfMissing(server: string, id: string): Promise<void> 
   if (existsSync(dmpPath)) {
     return;
   }
-  const url = `${server}/minidump/${id}`;
+  const url = `${server}/app/${APP}/minidump/${id}`;
   console.log(`dump: downloading ${url}`);
   writeFileSync(dmpPath, await fetchBytes(url, dumpAuth(loadMinidumpPassword())));
 }
@@ -1207,11 +1209,11 @@ async function serveCrashes(rows: DumpRow[]): Promise<void> {
 async function main(): Promise<void> {
   const { server, id, reanalyze } = parseArgs(process.argv.slice(2));
   const password = loadMinidumpPassword();
-  const list = parseList(await fetchText(`${server}/minidumps.txt`, dumpAuth(password)));
+  const list = parseList(await fetchText(`${server}/app/${APP}/minidumps.txt`, dumpAuth(password)));
   if (id) {
     const row = list.find((r) => r.id === id);
     if (!row) {
-      throw new Error(`minidump '${id}' not in ${server}/minidumps.txt`);
+      throw new Error(`minidump '${id}' not in ${server}/app/${APP}/minidumps.txt`);
     }
     await ensureAnalyzed(server, row, reanalyze);
     console.log(relAnalyze(row.id));

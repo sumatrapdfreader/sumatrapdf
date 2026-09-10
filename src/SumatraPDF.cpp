@@ -17153,9 +17153,9 @@ static void ShowCrashHandlerMessage() {
 }
 
 #if IS_DEBUG
-#define kMinidumpSubmitUrl "http://127.0.0.1:9321/uploadminidump"
+#define kMinidumpSubmitUrl "http://127.0.0.1:9321/app/sumatrapdf/uploadminidump"
 #else
-#define kMinidumpSubmitUrl "https://www.sumatrapdfreader.org/uploadminidump"
+#define kMinidumpSubmitUrl "https://www.sumatrapdfreader.org/app/sumatrapdf/uploadminidump"
 #endif
 
 // where InstallCrashHandler() writes the .dmp, in the crash arena
