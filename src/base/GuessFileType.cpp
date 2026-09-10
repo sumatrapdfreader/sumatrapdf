@@ -291,7 +291,7 @@ bool FindWebpChunk(Str d, const char fourcc[4], Str& out) {
     while (idx + 8 <= r.len) {
         int size = (int)r.UInt32LE(idx + 4);
         int payload = idx + 8;
-        if (size < 0 || payload + size > r.len) {
+        if (size < 0 || !r.CanRead(payload, size)) {
             return false;
         }
         if (MemEq(r.d + idx, fourcc, 4)) {
@@ -706,7 +706,7 @@ static Size TiffIfdSize(ByteReader r, int off, bool isBE, bool isJxr) {
         int valOff = idx + 8;
         if (nVals > 4u / typeSize) {
             valOff = (int)r.UInt32(idx + 8, isBE);
-            if (valOff < 0 || valOff + typeSize > r.len) {
+            if (!r.CanRead(valOff, typeSize)) {
                 continue;
             }
         }
@@ -739,7 +739,7 @@ static void ParseTiff(ByteReader r, FileTypeInfo& res, bool isJxr) {
     int cap = 0;
     u32 off = r.UInt32(4, isBE);
     // 4096 iterations bound protects against cycles in corrupt data
-    while (off > 0 && (int)off + 2 <= r.len && nIfds < 4096) {
+    while (off > 0 && r.CanRead((int)off, 2) && nIfds < 4096) {
         Size size = TiffIfdSize(r, (int)off, isBE, isJxr);
         if (nIfds == 0) {
             res.imageDx = size.dx;
@@ -749,7 +749,7 @@ static void ParseTiff(ByteReader r, FileTypeInfo& res, bool isJxr) {
         nIfds++;
         u16 nEntries = r.UInt16((int)off, isBE);
         int nextOff = (int)off + 2 + (nEntries * 12);
-        if (nextOff + 4 > r.len) {
+        if (!r.CanRead(nextOff, 4)) {
             break;
         }
         off = r.UInt32(nextOff, isBE);
@@ -786,7 +786,7 @@ static void ParseIco(ByteReader r, FileTypeInfo& res) {
             dy = 256;
         }
         int imgOff = (int)r.UInt32LE(ent + 12);
-        if (imgOff >= 0 && imgOff + 24 <= r.len && MemEq(r.d + imgOff, "\x89PNG\r\n\x1a\n", 8) &&
+        if (r.CanRead(imgOff, 24) && MemEq(r.d + imgOff, "\x89PNG\r\n\x1a\n", 8) &&
             MemEq(r.d + imgOff + 12, "IHDR", 4)) {
             dx = (int)r.UInt32BE(imgOff + 16);
             dy = (int)r.UInt32BE(imgOff + 20);

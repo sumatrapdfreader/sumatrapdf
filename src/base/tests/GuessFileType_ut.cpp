@@ -622,6 +622,43 @@ static void extMapTest() {
     utassert(len(GetExtForFileTypeTemp(FileType::Unknown)) == 0);
 }
 
+static void hugeOffsetTest() {
+    // fuzzed files whose offsets are near INT_MAX: bounds checks that compute
+    // off + n overflow and let the read through (issue #6161)
+    static const u8 tiffHugeIfdOff[] = {
+        'M',  'M',  0,    0x2A, // header
+        0x7F, 0xFF, 0xFF, 0xFF, // first IFD offset
+        0,    0,
+    };
+    utassert(infoFromBytes(tiffHugeIfdOff, dimofi(tiffHugeIfdOff)).ft == FileType::Tiff);
+
+    static const u8 tiffHugeValOff[] = {
+        'M',  'M',  0,    0x2A,             // header
+        0,    0,    0,    8,                // first IFD offset
+        0,    1,                            // 1 entry
+        0x01, 0x00, 0,    4,    0, 0, 0, 5, // ImageWidth (long), 5 values at...
+        0x7F, 0xFF, 0xFF, 0xFF,             // ... offset 0x7FFFFFFF
+    };
+    utassert(infoFromBytes(tiffHugeValOff, dimofi(tiffHugeValOff)).ft == FileType::Tiff);
+
+    static const u8 jxrHugeIfdOff[] = {
+        'I',  'I',  0xBC, 0,    // header
+        0xFF, 0xFF, 0xFF, 0x7F, // first IFD offset
+        0,    0,
+    };
+    utassert(infoFromBytes(jxrHugeIfdOff, dimofi(jxrHugeIfdOff)).ft == FileType::Jxr);
+
+    static const u8 icoHugeImgOff[] = {
+        0,    0,    1,    0, // ICONDIR
+        0xFF, 0xFF,          // 65535 entries
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, // entry 0, image data at 0x7FFFFFFF
+    };
+    FileTypeInfo fti = infoFromBytes(icoHugeImgOff, dimofi(icoHugeImgOff));
+    utassert(fti.ft == FileType::Ico);
+    FreeFileTypeInfo(&fti);
+}
+
 void GuessFileTypeTest() {
     extMapTest();
     pngTest();
@@ -637,4 +674,5 @@ void GuessFileTypeTest() {
     nonImageTest();
     tgaTest();
     epsTest();
+    hugeOffsetTest();
 }

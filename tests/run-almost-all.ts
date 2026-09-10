@@ -131,6 +131,7 @@ import { testit as issue1106 } from "./issue-1106.ts";
 import { testit as issue814 } from "./issue-814.ts";
 import { testit as issue1422 } from "./issue-1422.ts";
 import { testit as issue6151 } from "./issue-6151.ts";
+import { testit as issue6161 } from "./issue-6161.ts";
 import { testit as issue1438 } from "./issue-1438.ts";
 import { testit as issue1136 } from "./issue-1136.ts";
 import { testit as issue893 } from "./issue-893.ts";
@@ -288,6 +289,7 @@ export const tests: NamedTest[] = [
   ["issue-6133", issue6133],
   ["image-only-palette-items", imageOnlyPaletteItems],
   ["issue-6151", issue6151],
+  ["issue-6161", issue6161],
   ["issue-6140", issue6140],
   ["ad-hoc-md-missing-file", mdMissingFile],
   ["issue-6142", issue6142],

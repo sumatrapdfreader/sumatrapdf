@@ -138,22 +138,28 @@ ByteReader::ByteReader(Str data) : d((const u8*)data.s), len(data.len) {}
 
 ByteReader::ByteReader(const u8* data, int n) : d(data), len(n) {}
 
+// true if n bytes at off are inside the buffer. Compares against len - n
+// rather than off + n, which overflows for an off near INT_MAX
+bool ByteReader::CanRead(int off, int n) const {
+    return off >= 0 && n <= len && off <= len - n;
+}
+
 u8 ByteReader::UInt8(int off) const {
-    if (off >= 0 && off < len) {
+    if (CanRead(off, 1)) {
         return d[off];
     }
     return 0;
 }
 
 u16 ByteReader::UInt16LE(int off) const {
-    if (off >= 0 && off + 2 <= len) {
+    if (CanRead(off, 2)) {
         return d[off] | (d[off + 1] << 8);
     }
     return 0;
 }
 
 u16 ByteReader::UInt16BE(int off) const {
-    if (off >= 0 && off + 2 <= len) {
+    if (CanRead(off, 2)) {
         return (d[off] << 8) | d[off + 1];
     }
     return 0;
@@ -164,14 +170,14 @@ u16 ByteReader::UInt16(int off, bool isBE) const {
 }
 
 u32 ByteReader::UInt32LE(int off) const {
-    if (off >= 0 && off + 4 <= len) {
+    if (CanRead(off, 4)) {
         return d[off] | (d[off + 1] << 8) | (d[off + 2] << 16) | (d[off + 3] << 24);
     }
     return 0;
 }
 
 u32 ByteReader::UInt32BE(int off) const {
-    if (off >= 0 && off + 4 <= len) {
+    if (CanRead(off, 4)) {
         return (d[off] << 24) | (d[off + 1] << 16) | (d[off + 2] << 8) | d[off + 3];
     }
     return 0;
@@ -182,14 +188,14 @@ u32 ByteReader::UInt32(int off, bool isBE) const {
 }
 
 u64 ByteReader::UInt64LE(int off) const {
-    if (off >= 0 && off + 8 <= len) {
+    if (CanRead(off, 8)) {
         return UInt32LE(off) | ((u64)UInt32LE(off + 4) << 32);
     }
     return 0;
 }
 
 u64 ByteReader::UInt64BE(int off) const {
-    if (off >= 0 && off + 8 <= len) {
+    if (CanRead(off, 8)) {
         return ((u64)UInt32BE(off) << 32) | UInt32BE(off + 4);
     }
     return 0;

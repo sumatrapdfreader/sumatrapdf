@@ -28,6 +28,8 @@ struct ByteReader {
     explicit ByteReader(Str data);
     ByteReader(const u8* data, int n);
 
+    bool CanRead(int off, int n) const;
+
     u8 UInt8(int off) const;
     u16 UInt16LE(int off) const;
     u16 UInt16BE(int off) const;
