@@ -64,7 +64,8 @@ END
 // prebuild (cmd\pack-embedded-prebuild.cmd) into out\<cfg>\ and passed in via
 // the EMBEDDED_PAK resdefine (premake5.lua): embedded-static.lzsa for the
 // static build, embedded.lzsa (also holding libsumatrapdf.dll & co) for the
-// dll/installer build.
+// dll/installer build. PdfPreview.dll & co read it from SumatraPDF.exe next to
+// them (src/EmbeddedResources.cpp), so the fonts\* entries serve them too.
 #ifndef EMBEDDED_PAK
 #error EMBEDDED_PAK not defined (path of the out\<cfg>\embedded*.lzsa archive)
 #endif

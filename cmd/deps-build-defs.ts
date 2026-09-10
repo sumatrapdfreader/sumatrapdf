@@ -497,9 +497,7 @@ export const mupdf: LibDef = {
     "HAVE_WEBP=1",
     "OPJ_STATIC",
     "SHARE_JPEG",
-    "TOFU_NOTO",
     "TOFU_CJK_LANG",
-    "TOFU_NOTO_SUMATRA",
     "FZ_ENABLE_SVG=1",
     "FZ_ENABLE_BROTLI=1",
     "FZ_ENABLE_BARCODE=0",
@@ -531,7 +529,7 @@ export const mupdf: LibDef = {
   ],
   files: [
     // our additions to mupdf (not patches): see src/mupdf/README.md
-    { dir: "src/mupdf", patterns: ["mupdf_load_system_font.c", "pkcs7-windows.c"] },
+    { dir: "src/mupdf", patterns: ["mupdf_load_system_font.c", "noto_sumatra.c", "pkcs7-windows.c"] },
     { dir: "ext/mupdf/source/cbz", patterns: ["mucbz.c", "muimg.c"] },
     {
       dir: "ext/mupdf/source/fitz",
@@ -620,7 +618,6 @@ export const mupdf: LibDef = {
         "cull-device.c",
         "memento.c",
         "memory.c",
-        "noto.c",
         "ocr-device.c",
         "options.c",
         "outline.c",

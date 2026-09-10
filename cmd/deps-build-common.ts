@@ -5,16 +5,13 @@
 
 import { Glob } from "bun";
 import { mkdirSync, existsSync, readFileSync, statSync, rmSync, writeFileSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
-import { join, extname, dirname, basename } from "node:path";
+import { join, extname, dirname } from "node:path";
 import { cpus } from "node:os";
 
 export interface BuildTools {
   cc: string;
   cxx: string;
   ar: string;
-  /** PE objcopy (mingw) or Mach-O ld (mac) for font/binary embedding */
-  embed: string;
 }
 
 export interface FileGroup {
@@ -42,8 +39,6 @@ export interface BuildLibraryOptions {
   commonFlags?: string[];
   cxxFlags: string[];
   jobs: number;
-  /** extra object files to add to the archive (e.g. embedded fonts) */
-  extraObjs?: string[];
 }
 
 export const DEFAULT_JOBS = Math.max(1, Math.min(4, cpus().length));
@@ -85,36 +80,6 @@ export function dropX86OnlyCflags(lib: LibDef, arch: string): void {
   }
   lib.extraCflags = lib.extraCflags.filter((f) => !kX86OnlyCflagRe.test(f));
 }
-
-/** Font files embedded into the mupdf static lib (premake fonts()). */
-export const FONT_FILES = [
-  { path: "ext/mupdf/resources/fonts/urw/Dingbats.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusMonoPS-Italic.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusMonoPS-Bold.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusMonoPS-BoldItalic.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusRoman-Regular.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusRoman-Italic.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusRoman-Bold.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusRoman-BoldItalic.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusSans-Regular.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusSans-Italic.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusSans-Bold.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/NimbusSans-BoldItalic.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/urw/StandardSymbolsPS.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/droid/DroidSansFallbackFull.ttf", ext: "ttf" },
-  { path: "ext/mupdf/resources/fonts/sil/CharisSIL.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/sil/CharisSIL-Bold.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/sil/CharisSIL-Italic.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff", ext: "cff" },
-  { path: "ext/mupdf/resources/fonts/noto/NotoSans-Regular.otf", ext: "otf" },
-  { path: "ext/mupdf/resources/fonts/noto/NotoSansMath-Regular.otf", ext: "otf" },
-  { path: "ext/mupdf/resources/fonts/noto/NotoSansSymbols-Regular.otf", ext: "otf" },
-  { path: "ext/mupdf/resources/fonts/noto/NotoSansSymbols2-Regular.otf", ext: "otf" },
-  { path: "ext/mupdf/resources/fonts/noto/NotoEmoji-Regular.ttf", ext: "ttf" },
-  { path: "ext/mupdf/resources/fonts/noto/NotoMusic-Regular.otf", ext: "otf" },
-  { path: "ext/mupdf/resources/fonts/noto/NotoSerif-Regular.otf", ext: "otf" },
-];
 
 /** Resolve file patterns, returning only .c/.cpp/.cc source files */
 export async function resolveSources(groups: FileGroup[]): Promise<string[]> {
@@ -314,121 +279,13 @@ export async function createArchive(tools: BuildTools, archivePath: string, objF
   }
 }
 
-export type EmbedFormat = "pe" | "macho" | "elf";
-
-/** Embed a binary file as a linkable .o (font data for mupdf noto.c). */
-export async function embedBinaryFile(
-  tools: BuildTools,
-  format: EmbedFormat,
-  inputFile: string,
-  outputObj: string,
-  symbolPrefix: string,
-): Promise<void> {
-  mkdirSync(dirname(outputObj), { recursive: true });
-  const outAbsolute = join(process.cwd(), outputObj);
-  const cleanFileName =
-    format === "elf" ? basename(inputFile).replace(/[.-]/g, "_") : symbolPrefix.replace(/^_binary_/, "");
-  const tmpDir = join(dirname(outputObj), "_fonttmp");
-  mkdirSync(tmpDir, { recursive: true });
-  const tmpInput = join(tmpDir, cleanFileName);
-  const data = await readFile(inputFile);
-  await writeFile(tmpInput, data);
-
-  let res: { ok: boolean; stderr: string };
-  if (format === "pe") {
-    res = await spawnCmd(
-      [
-        tools.embed,
-        "-I",
-        "binary",
-        "-O",
-        "pe-x86-64",
-        "-B",
-        "i386:x86-64",
-        "--rename-section",
-        ".data=.rodata,CONTENTS,ALLOC,LOAD,READONLY,DATA",
-        "--redefine-sym",
-        `_binary_${cleanFileName}_start=${symbolPrefix}`,
-        cleanFileName,
-        outAbsolute,
-      ],
-      { cwd: tmpDir },
-    );
-  } else if (format === "elf") {
-    res = await spawnCmd(
-      [
-        tools.embed,
-        "-I",
-        "binary",
-        "-O",
-        "elf64-x86-64",
-        "-B",
-        "i386:x86-64",
-        "--rename-section",
-        ".data=.rodata,contents,alloc,load,readonly,data",
-        "--redefine-sym",
-        `_binary_${cleanFileName}_start=${symbolPrefix}_start`,
-        "--redefine-sym",
-        `_binary_${cleanFileName}_end=${symbolPrefix}_end`,
-        cleanFileName,
-        outAbsolute,
-      ],
-      { cwd: tmpDir },
-    );
-  } else {
-    // Mach-O: Apple's ld lacks GNU objcopy/ld -b binary. Use xxd + clang.
-    const cSrc = join(dirname(outputObj), `${cleanFileName}.c`);
-    const xxd = Bun.which("xxd");
-    if (!xxd) {
-      throw new Error("xxd not found (needed to embed fonts on macOS / Linux arm64)");
-    }
-    const xxdRes = await spawnCmd([xxd, "-i", cleanFileName], { cwd: tmpDir, captureStdout: true });
-    if (!xxdRes.ok) {
-      throw new Error(`xxd failed for ${inputFile}: ${xxdRes.stderr}`);
-    }
-    // xxd -i names symbols from the filename: <name>[] and <name>_len
-    const cBody = xxdRes.stdout
-      .replace(new RegExp(`unsigned char ${cleanFileName}\\[\\]`), `const unsigned char ${symbolPrefix}[]`)
-      .replace(new RegExp(`unsigned int ${cleanFileName}_len`), `const unsigned int ${symbolPrefix}_size`);
-    await writeFile(cSrc, cBody);
-    res = await spawnCmd([tools.cc, "-Os", "-c", cSrc, "-o", outAbsolute]);
-    if (!res.ok) {
-      throw new Error(`Failed to compile embedded font ${inputFile}: ${res.stderr}`);
-    }
-    return;
-  }
-
-  if (!res.ok) {
-    throw new Error(`Failed to embed ${inputFile}: ${res.stderr}`);
-  }
-  if (format === "elf") {
-    const verifyOutput = `${outAbsolute}.embedded-data`;
-    rmSync(verifyOutput, { force: true });
-    try {
-      const verify = await spawnCmd([tools.embed, "-O", "binary", "--only-section=.rodata", outAbsolute, verifyOutput]);
-      if (!verify.ok) {
-        throw new Error(`Failed to verify embedded data for ${inputFile}: ${verify.stderr}`);
-      }
-      const embeddedData = await readFile(verifyOutput);
-      if (!data.equals(embeddedData)) {
-        throw new Error(`Embedded data differs from ${inputFile}`);
-      }
-    } finally {
-      rmSync(verifyOutput, { force: true });
-    }
-  }
-  try {
-    await Bun.write(tmpInput, "");
-  } catch {}
-}
-
 export async function buildLibrary(
   lib: LibDef,
   outDir: string,
   isRelease: boolean,
   opts: BuildLibraryOptions,
 ): Promise<{ archive: string; objs: string[] }> {
-  const { tools, commonDefines, cxxFlags, jobs, extraObjs } = opts;
+  const { tools, commonDefines, cxxFlags, jobs } = opts;
   const commonFlags = opts.commonFlags ?? [];
   console.log(`Building ${lib.name}...`);
 
@@ -506,7 +363,7 @@ export async function buildLibrary(
 
   await compileAll(units, jobs);
 
-  const objs = [...units.map((u) => u.obj), ...(extraObjs ?? [])];
+  const objs = units.map((u) => u.obj);
   const archivePath = join(outDir, "lib", `lib${lib.name}.a`);
   await createArchive(tools, archivePath, objs);
   console.log(`  -> ${archivePath}`);

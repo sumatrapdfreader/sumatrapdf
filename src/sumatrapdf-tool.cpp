@@ -49,6 +49,9 @@ char** fz_argv_from_wargv(int argc, wchar_t** wargv);
 void fz_free_argv(int argc, char** argv);
 }
 
+// src/EmbeddedResources.cpp: mupdf's built-in fonts, from SumatraPDF.exe next to us
+void InstallEmbeddedFontLoader();
+
 // must match premake5.lua and src/SumatraPDF.cpp
 #define FZ_ENABLE_JS 1
 #define FZ_ENABLE_PDF 1
@@ -109,6 +112,7 @@ static void PrintUsage() {
 }
 
 int main() {
+    InstallEmbeddedFontLoader();
     int argc = 0;
     WCHAR** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
     if (!wargv) {

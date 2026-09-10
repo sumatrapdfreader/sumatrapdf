@@ -3234,25 +3234,26 @@ Size ButtonGetIdealSize(HWND hwnd) {
 
 constexpr int kResourceNotFound = -1;
 
-bool LockDataResource(int resId, LoadedDataResource* res) {
+// mod: the module holding the resource, the process exe when null
+bool LockDataResource(int resId, LoadedDataResource* res, HMODULE mod) {
     if (res->dataSize != 0) {
         return res->dataSize != kResourceNotFound;
     }
 
-    auto* h = GetModuleHandleW(nullptr);
+    HMODULE h = mod ? mod : GetModuleHandleW(nullptr);
     WCHAR* name = MAKEINTRESOURCEW(resId);
     HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
     if (!resSrc) {
         res->dataSize = kResourceNotFound;
         return false;
     }
-    HGLOBAL hres = LoadResource(nullptr, resSrc);
+    HGLOBAL hres = LoadResource(h, resSrc);
     if (!hres) {
         res->dataSize = kResourceNotFound;
         return false;
     }
     res->data = (const u8*)LockResource(hres);
-    res->dataSize = (int)SizeofResource(nullptr, resSrc);
+    res->dataSize = (int)SizeofResource(h, resSrc);
     return true;
 }
 

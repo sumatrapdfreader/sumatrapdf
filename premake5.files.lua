@@ -607,6 +607,8 @@ function mupdf_files()
   -- our additions to mupdf (not patches): see src/mupdf/README.md
   files {
     "src/mupdf/mupdf_load_system_font.c",
+    "src/mupdf/noto_sumatra.c",
+    "src/mupdf/noto_sumatra.h",
     "src/mupdf/pkcs7-windows.c",
     "src/mupdf/pkcs7-windows.h",
   }
@@ -703,7 +705,6 @@ function mupdf_files()
     "log.c",
     "memento.c",
     "memory.c",
-    "noto.c",
     "ocr-device.c",
     "outline.c",
     "output-cbz.c",
@@ -930,6 +931,7 @@ function test_engines_files()
     "src/DocProperties.cpp",
     "src/DocProperties.h",
     "src/EbookDoc.cpp",
+    "src/EmbeddedResources.cpp",
     "src/EngineAll.h",
     "src/EngineBase.cpp",
     "src/EngineBase.h",
@@ -1024,6 +1026,7 @@ function pdf_preview_files()
     "EngineImages.*",
     "EngineMupdf.*",
     "EngineMupdfImpl.*",
+    "EmbeddedResources.*",
     "AvifReader.*",
     "ImageReader.h",
     "ImageReader.cpp",
@@ -1066,6 +1069,7 @@ function search_filter_files()
     "EngineBase.*",
     "EngineMupdf.*",
     "EngineMupdfImpl.*",
+    "EmbeddedResources.*",
     "GumboHtmlParser.*",
     "GumboHelpers.*",
     "MobiDoc.*",
@@ -1148,14 +1152,11 @@ function a_gumbo_files()
   }
 end
 
-function bin2coff_files()
-  files_in_dir("src/tools", {
-    "bin2coff.c"
-  })
-end
-
 function sumatrapdf_tool_files()
   files_in_dir("src", {
-    "sumatrapdf-tool.cpp"
+    "CrashHandlerNoOp.cpp",
+    "EmbeddedResources.*",
+    "SumatraLog.*",
+    "sumatrapdf-tool.cpp",
   })
 end

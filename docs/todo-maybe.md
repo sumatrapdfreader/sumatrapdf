@@ -16,7 +16,8 @@ If we want EPUB auto-hyphenation as a feature:
 - `FZ_ENABLE_HYPHEN=1` and `FZ_ENABLE_HYPHEN_ALL=0` (std set includes `en`)
 - embed `ext/mupdf/resources/hyphen/hyph-std.zip` (~174 KB). `hyph-all.zip`
   is ~638 KB and is MuPDF's default if `FZ_ENABLE_HYPHEN_ALL` is left at 1
-- Sumatra's build does not bin2coff those zips today; flipping the define
+- Sumatra's build does not link those zips in today (fonts come from
+  `IDR_EMBEDDED_PAK`, see `src/mupdf/noto_sumatra.c`); flipping the define
   without embedding is a linker error (`_binary_hyph_std_zip`)
 - first use per language unpacks the zip and builds a trie (CPU + RAM)
 - books with `hyphens: auto` would reflow differently (page breaks vs now)

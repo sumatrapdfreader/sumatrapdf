@@ -37,7 +37,6 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0017-svg-font-attributes-on-groups` | children of `<g>` inherit the font family |
 | `0018-pdf-op-run-avoid-double-free` | double free when structure-tree repair throws |
 | `0019-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
-| `0020-fonts-noto-subset-for-sumatra` | `TOFU_NOTO_SUMATRA` subset of the Noto fallback fonts |
 | `0025-webp-images` | decode WebP via libwebp (`HAVE_WEBP`) so EPUB/HTML/MOBI/CBZ can show `.webp` (#3415) |
 | `0027-webp-iccp-without-demux` | apply a WebP `ICCP` chunk via our own RIFF walk (no libwebp demux) |
 | `0030-backport-709661-subset-prefix-font-name` | ignore `ABCDEF+` subset tags when matching builtin font names (covers #4655) |

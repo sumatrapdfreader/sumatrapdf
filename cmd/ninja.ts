@@ -104,7 +104,7 @@ function fixEscapes(): void {
         if (line.startsWith("  command = rc ")) {
           return line.replace(" $in $resflags", " $resflags $in");
         }
-        if (line.includes("nasm.exe") || line.includes("bin2coff.exe")) {
+        if (line.includes("nasm.exe")) {
           return line.replaceAll('\\"', '"');
         }
         if (line.includes("prebuildcommands =")) {

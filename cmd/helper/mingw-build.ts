@@ -6,23 +6,20 @@
  * for x64 targets using x86_64-w64-mingw32-g++.
  *
  * NOTE: .asm (NASM) files are skipped; C fallbacks are used instead.
- * NOTE: Font embedding (.cff/.ttf/.otf) uses objcopy.
  * NOTE: WebView2 is not used for mingw builds. WebView.cpp provides stub
  * implementations; CHM and the in-app manual fall back to IE / online docs.
  */
 
 import { mkdirSync, existsSync, rmSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
-import { join, extname, dirname, basename } from "node:path";
+import { join, extname, dirname } from "node:path";
 import {
   type BuildTools,
   type FileGroup,
   type LibDef,
   DEFAULT_JOBS,
-  FONT_FILES,
   buildLibrary,
   compileAll,
-  embedBinaryFile,
   objPath,
   resolveSources,
   spawnCmd,
@@ -56,7 +53,6 @@ export interface MingwTools {
   cxx: string;
   ar: string;
   windres: string;
-  objcopy: string;
 }
 
 const DEFAULT_MINGW_TOOLS: MingwTools = {
@@ -64,7 +60,6 @@ const DEFAULT_MINGW_TOOLS: MingwTools = {
   cxx: "x86_64-w64-mingw32-g++",
   ar: "x86_64-w64-mingw32-ar",
   windres: "x86_64-w64-mingw32-windres",
-  objcopy: "x86_64-w64-mingw32-objcopy",
 };
 
 let mingwTools: MingwTools = { ...DEFAULT_MINGW_TOOLS };
@@ -78,7 +73,6 @@ function mingwBuildTools(): BuildTools {
     cc: mingwTools.cc,
     cxx: mingwTools.cxx,
     ar: mingwTools.ar,
-    embed: mingwTools.objcopy,
   };
 }
 
@@ -603,21 +597,6 @@ void TestPreview(WStr) {}
   }
   exeObjs.push(testStubObj);
 
-  // ── Embed font files ──────────────────────────────────────────────────
-  console.log("Embedding font files...");
-  const fontObjs: string[] = [];
-  for (const font of FONT_FILES) {
-    if (!existsSync(font.path)) {
-      console.error(`  WARNING: font not found: ${font.path}`);
-      continue;
-    }
-    const base = basename(font.path, `.${font.ext}`).replace(/-/g, "_");
-    const sym = `_binary_${base}_${font.ext}`;
-    const obj = join(outDir, "obj", "fonts", `${base}.o`);
-    await embedBinaryFile(mingwBuildTools(), "pe", font.path, obj, sym);
-    fontObjs.push(obj);
-  }
-
   // ── Compile .rc resource file ─────────────────────────────────────────
   console.log("Compiling resources...");
   const rcObj = join(outDir, "obj", "sumatrapdf", "SumatraPDF.res.o");
@@ -696,7 +675,7 @@ void TestPreview(WStr) {}
   const exePath = join(outDir, "SumatraPDF.exe");
 
   // use response file to avoid excessive command-line length with hundreds of .o files
-  const linkObjs = [...exeObjs, ...rcObjs, ...fontObjs, ...archives];
+  const linkObjs = [...exeObjs, ...rcObjs, ...archives];
   const rspPath = join(outDir, "obj", "sumatrapdf", "link.rsp");
   const rspLines = linkObjs.map((p) => p);
   await writeFile(rspPath, rspLines.join("\n") + "\n");

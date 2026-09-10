@@ -11,6 +11,11 @@ so the tools we patch inside `ext/mupdf` include them by bare name
 
 - `mupdf_load_system_font.c` — loads the fonts installed in Windows for mupdf's
   font fallback, plus the plain-malloc harfbuzz allocator wrappers
+- `noto_sumatra.[ch]` — compiled instead of mupdf's `noto.c`: the built-in fonts
+  (base 14, CJK fallback, Charis SIL, a few Noto) are not linked into the binary
+  but fetched by file name through `fz_set_builtin_font_loader()`. SumatraPDF
+  serves them from the `fonts\` entries of `IDR_EMBEDDED_PAK`, staged by
+  `cmd/pack-embedded-prebuild.cmd`; to add or drop a font, change that list
 - `pkcs7-windows.[ch]` — PDF signature verification and signing on the Win32
   CryptoAPI instead of OpenSSL (patch `0003` makes mupdf's `pdfsign` / `murun`
   call it)

@@ -878,99 +878,6 @@ workspace "SumatraPDF"
       "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
     }
 
-  function fonts()
-    files {
-
-      "ext/mupdf/resources/fonts/urw/Dingbats.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusMonoPS-Italic.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusMonoPS-Bold.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusMonoPS-BoldItalic.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusRoman-Regular.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusRoman-Italic.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusRoman-Bold.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusRoman-BoldItalic.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusSans-Regular.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusSans-Italic.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusSans-Bold.cff",
-      "ext/mupdf/resources/fonts/urw/NimbusSans-BoldItalic.cff",
-      "ext/mupdf/resources/fonts/urw/StandardSymbolsPS.cff",
-      "ext/mupdf/resources/fonts/droid/DroidSansFallbackFull.ttf",
-      "ext/mupdf/resources/fonts/sil/CharisSIL.cff",
-      "ext/mupdf/resources/fonts/sil/CharisSIL-Bold.cff",
-      "ext/mupdf/resources/fonts/sil/CharisSIL-Italic.cff",
-      "ext/mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff",
-
-      "ext/mupdf/resources/fonts/noto/NotoSans-Regular.otf",
-      "ext/mupdf/resources/fonts/noto/NotoSansMath-Regular.otf",
-      "ext/mupdf/resources/fonts/noto/NotoSansSymbols-Regular.otf",
-      "ext/mupdf/resources/fonts/noto/NotoSansSymbols2-Regular.otf",
-      "ext/mupdf/resources/fonts/noto/NotoEmoji-Regular.ttf",
-      "ext/mupdf/resources/fonts/noto/NotoMusic-Regular.otf",
-      "ext/mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
-    }
-
-    filter { 'files:**.cff', 'platforms:x86' }
-    buildmessage 'bin2coff %{file.basename}.cff (x86)'
-    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-    buildcommands {
-      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86'
-    }
-    filter { 'files:**.cff', 'platforms:x64 or x64_asan' }
-    buildmessage 'bin2coff %{file.basename}.cff (x64)'
-    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-    buildcommands {
-      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff x86_64'
-    }
-    filter { 'files:**.cff', 'platforms:arm64' }
-    buildmessage 'bin2coff %{file.basename}.cff (arm64)'
-    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-    buildcommands {
-      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_cff ARM64'
-    }
-    filter {}
-
-    filter { 'files:**.ttf', 'platforms:x86' }
-    buildmessage 'bin2coff %{file.basename}.ttf (x86)'
-    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-    buildcommands {
-      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86'
-    }
-    filter { 'files:**.ttf', 'platforms:x64 or x64_asan' }
-    buildmessage 'bin2coff %{file.basename}.ttf (x64)'
-    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-    buildcommands {
-      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf x86_64'
-    }
-    filter { 'files:**.ttf', 'platforms:arm64' }
-    buildmessage 'bin2coff %{file.basename}.ttf (arm64)'
-    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-    buildcommands {
-      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_ttf ARM64'
-    }
-    filter {}
-
-    filter { 'files:**.otf', 'platforms:x86' }
-    buildmessage 'bin2coff %{file.basename}.otf (x86)'
-    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-    buildcommands {
-      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86'
-    }
-    filter { 'files:**.otf', 'platforms:x64 or x64_asan' }
-    buildmessage 'bin2coff %{file.basename}.otf (x64)'
-    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-    buildcommands {
-      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf x86_64'
-    }
-    filter { 'files:**.otf', 'platforms:arm64' }
-    buildmessage 'bin2coff %{file.basename}.otf (arm64)'
-    buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
-    buildcommands {
-      rootDirWin .. '\\bin\\bin2coff.exe "%{file.relpath}" "%{cfg.objdir}/%{file.basename}.obj" _binary_%{file.basename}_otf ARM64'
-    }
-    filter {}
-  end
-
   project "mupdf"
     static_intermediate_dirs()
     kind "StaticLib"
@@ -988,9 +895,9 @@ workspace "SumatraPDF"
     -- so we can't double-define it
     defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1", "HAVE_WEBP=1" }
     defines { "OPJ_STATIC", "SHARE_JPEG" }
-    -- this defines which fonts are to be excluded from being included directly
-    -- we exclude the very big cjk fonts
-    defines { "TOFU_NOTO", "TOFU_CJK_LANG", "TOFU_NOTO_SUMATRA" }
+    -- built-in fonts come from IDR_EMBEDDED_PAK (src/mupdf/noto_sumatra.c);
+    -- Source Han is not packed, so skip its table entries and per-language retries
+    defines { "TOFU_CJK_LANG" }
     defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
 
@@ -1027,7 +934,6 @@ workspace "SumatraPDF"
       "ext/a-libarchive",
       "ext/a-libwebp",
     }
-    fonts()
 
     mupdf_files()
     -- Third-party code lives in its own static libs; link them so libsumatrapdf.dll
@@ -1141,18 +1047,6 @@ workspace "SumatraPDF"
       "windowscodecs"
     }
 
-  project "bin2coff"
-    static_app_objdir()
-    static_linker_intermediates()
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++latest"
-    mixed_dbg_rel_conf()
-    disablewarnings { "4200", "4838" }
-    includedirs { "src" }
-    bin2coff_files()
-    links { "gdiplus", "comctl32", "shlwapi", "Version" }
-
   -- Image decode microbench: native lib vs WIC vs GDI+ (-jpeg / -webp / -avif / -heif / -jxl)
   project "bench_image"
     static_app_objdir()
@@ -1264,7 +1158,9 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     includedirs { "src" }
     sumatrapdf_tool_files()
-    links { "libsumatrapdf" }
+    -- base: EmbeddedResources.cpp (mupdf's built-in fonts from SumatraPDF.exe's archive)
+    links { "base", "libsumatrapdf" }
+    links_base_win()
     links { "shell32" }
 
   project "PdfFilter"
@@ -1572,7 +1468,7 @@ workspace "SumatraPDF"
       "libsumatrapdf", "chmdec", "djvudec", "dav1d", "heicdec", "jxldec", "a-libwebp", "a-unrar",
     })
     set_group("tools", {
-      "bench_image", "bin2coff", "logview", "MakeLZSA", "plugin-test", "preview_test",
+      "bench_image", "logview", "MakeLZSA", "plugin-test", "preview_test",
       "test_engines",
     })
   end

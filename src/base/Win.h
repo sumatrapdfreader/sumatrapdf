@@ -485,7 +485,7 @@ struct LoadedDataResource {
     const u8* data = nullptr;
     int dataSize = 0;
 };
-bool LockDataResource(int resId, LoadedDataResource*);
+bool LockDataResource(int resId, LoadedDataResource*, HMODULE mod = nullptr);
 
 //--- HGLOBAL / atoms
 

@@ -25,6 +25,7 @@ extern "C" {
 
 #include "Annotation.h"
 #include "DocProperties.h"
+#include "EmbeddedResources.h"
 #include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "PdfDarkMode.h"
@@ -3684,6 +3685,7 @@ EngineMupdf::EngineMupdf() {
 #if OS_WIN
     install_load_windows_font_funcs(_ctx);
 #endif
+    InstallEmbeddedFontLoader();
     fz_register_document_handlers(_ctx);
 }
 

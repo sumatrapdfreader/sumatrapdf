@@ -220,6 +220,8 @@ EXPORTS
 
 	install_load_windows_font_funcs
 
+	fz_set_builtin_font_loader
+
 	pdf_page_transform
 
 	pdf_page_obj_transform
