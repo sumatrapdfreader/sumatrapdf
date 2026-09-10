@@ -1,0 +1,419 @@
+svg: honour class selectors from a <style> sheet (#2155)
+
+The SVG parser only read presentation attributes and the inline style
+attribute, so Illustrator/Inkscape output that keeps all its colors in a
+<style> sheet and references them with class="st0" rendered every shape
+with the default fill: solid black.
+
+Collect the ".name { ... }" rules of every <style> element at document
+open time and splice the matching declarations onto the element's style
+attribute before parsing it. Inline declarations come first, so they
+still win over the sheet. Anything more than a plain class selector
+(at-rules, element and id selectors, combinators, pseudo classes) is
+skipped rather than half-supported.
+---
+diff --git a/source/svg/svg-doc.c b/source/svg/svg-doc.c
+index 21f2e8407..b7b136f20 100644
+--- a/source/svg/svg-doc.c
++++ b/source/svg/svg-doc.c
+@@ -33,6 +33,7 @@ static void
+ svg_drop_document(fz_context *ctx, fz_document *doc_)
+ {
+ 	svg_document *doc = (svg_document*)doc_;
++	svg_drop_class_map(ctx, doc);
+ 	fz_drop_tree(ctx, doc->idmap, NULL);
+ 	fz_drop_xml(ctx, doc->xml);
+ }
+@@ -99,6 +100,185 @@ svg_build_id_map(fz_context *ctx, svg_document *doc, fz_xml *root)
+ 		svg_build_id_map(ctx, doc, node);
+ }
+ 
++/* SumatraPDF: minimal CSS class support (#2155) */
++static int
++svg_is_class_char(int c)
++{
++	return c == '-' || c == '_' ||
++		(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
++}
++
++static const char *
++svg_skip_css_space(const char *p, const char *end)
++{
++	while (p < end)
++	{
++		if (p + 1 < end && p[0] == '/' && p[1] == '*')
++		{
++			p += 2;
++			while (p + 1 < end && !(p[0] == '*' && p[1] == '/'))
++				++p;
++			p = p + 1 < end ? p + 2 : end;
++		}
++		else if (svg_is_whitespace(*p))
++			++p;
++		else
++			break;
++	}
++	return p;
++}
++
++static char *
++svg_dup_range(fz_context *ctx, const char *s, const char *end)
++{
++	size_t n = end - s;
++	char *p = fz_malloc(ctx, n + 1);
++	memcpy(p, s, n);
++	p[n] = 0;
++	return p;
++}
++
++static void
++svg_add_class(fz_context *ctx, svg_document *doc, const char *name, const char *name_end,
++	const char *decl, const char *decl_end)
++{
++	svg_class *cls;
++	const char *p;
++
++	for (p = name; p < name_end; ++p)
++		if (!svg_is_class_char(*p))
++			return; /* not a plain class selector: pseudo class, descendant, ... */
++
++	cls = fz_malloc_struct(ctx, svg_class);
++	fz_try(ctx)
++	{
++		cls->name = svg_dup_range(ctx, name, name_end);
++		cls->decl = svg_dup_range(ctx, decl, decl_end);
++	}
++	fz_catch(ctx)
++	{
++		fz_free(ctx, cls->name);
++		fz_free(ctx, cls);
++		fz_rethrow(ctx);
++	}
++
++	cls->next = doc->classes;
++	doc->classes = cls;
++}
++
++/* Split a selector list (".a, .b") and keep the class selectors in it. */
++static void
++svg_add_rule(fz_context *ctx, svg_document *doc, const char *sel, const char *sel_end,
++	const char *decl, const char *decl_end)
++{
++	while (sel < sel_end)
++	{
++		const char *name, *end;
++
++		name = svg_skip_css_space(sel, sel_end);
++		sel = name;
++		while (sel < sel_end && *sel != ',')
++			++sel;
++		end = sel;
++		if (sel < sel_end)
++			++sel;
++		while (end > name && svg_is_whitespace(end[-1]))
++			--end;
++
++		if (end - name > 1 && name[0] == '.')
++			svg_add_class(ctx, doc, name + 1, end, decl, decl_end);
++	}
++}
++
++/* A deliberately small CSS subset: only ".name { ... }" rules are collected, so
++ * that class="name" can be resolved like an inline style attribute. Everything
++ * else (at-rules, element and id selectors, combinators) is skipped. */
++static void
++svg_parse_style_sheet(fz_context *ctx, svg_document *doc, const char *p)
++{
++	const char *end = p + strlen(p);
++
++	while (p < end)
++	{
++		const char *sel, *sel_end, *decl;
++
++		p = svg_skip_css_space(p, end);
++		if (p == end)
++			break;
++
++		if (*p == '@')
++		{
++			int depth = 0;
++			while (p < end)
++			{
++				if (*p == '{')
++					++depth;
++				else if (*p == '}' && --depth == 0)
++				{
++					++p;
++					break;
++				}
++				else if (*p == ';' && depth == 0)
++				{
++					++p;
++					break;
++				}
++				++p;
++			}
++			continue;
++		}
++
++		sel = p;
++		while (p < end && *p != '{' && *p != '}')
++			++p;
++		if (p == end || *p != '{')
++			break;
++		sel_end = p++;
++
++		decl = p;
++		while (p < end && *p != '}')
++			++p;
++		svg_add_rule(ctx, doc, sel, sel_end, decl, p);
++		if (p < end)
++			++p;
++	}
++}
++
++void
++svg_build_class_map(fz_context *ctx, svg_document *doc, fz_xml *root)
++{
++	fz_xml *node;
++
++	if (fz_xml_is_tag(root, "style"))
++	{
++		for (node = fz_xml_down(root); node; node = fz_xml_next(node))
++		{
++			char *text = fz_xml_text(node);
++			if (text)
++				svg_parse_style_sheet(ctx, doc, text);
++		}
++		return;
++	}
++
++	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
++		svg_build_class_map(ctx, doc, node);
++}
++
++void
++svg_drop_class_map(fz_context *ctx, svg_document *doc)
++{
++	svg_class *cls = doc->classes;
++	while (cls)
++	{
++		svg_class *next = cls->next;
++		fz_free(ctx, cls->name);
++		fz_free(ctx, cls->decl);
++		fz_free(ctx, cls);
++		cls = next;
++	}
++	doc->classes = NULL;
++}
++
+ static int
+ svg_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, size_t size)
+ {
+@@ -119,6 +299,7 @@ svg_open_document_with_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, con
+ 	doc->super.lookup_metadata = svg_lookup_metadata;
+ 
+ 	doc->idmap = NULL;
++	doc->classes = NULL;
+ 	if (base_uri)
+ 		fz_strlcpy(doc->base_uri, base_uri, sizeof doc->base_uri);
+ 	doc->xml = NULL;
+@@ -128,9 +309,15 @@ svg_open_document_with_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, con
+ 	fz_try(ctx)
+ 	{
+ 		if (xmldoc)
++		{
+ 			svg_build_id_map(ctx, doc, fz_xml_root(xmldoc));
++			svg_build_class_map(ctx, doc, fz_xml_root(xmldoc));
++		}
+ 		else
++		{
+ 			svg_build_id_map(ctx, doc, doc->root);
++			svg_build_class_map(ctx, doc, doc->root);
++		}
+ 	}
+ 	fz_catch(ctx)
+ 	{
+@@ -153,6 +340,7 @@ svg_open_document_with_buffer(fz_context *ctx, fz_buffer *buf, const char *base_
+ 	doc->super.lookup_metadata = svg_lookup_metadata;
+ 
+ 	doc->idmap = NULL;
++	doc->classes = NULL;
+ 	if (base_uri)
+ 		fz_strlcpy(doc->base_uri, base_uri, sizeof doc->base_uri);
+ 	doc->zip = zip;
+@@ -162,6 +350,7 @@ svg_open_document_with_buffer(fz_context *ctx, fz_buffer *buf, const char *base_
+ 		doc->xml = fz_parse_xml(ctx, buf, 0);
+ 		doc->root = fz_xml_root(doc->xml);
+ 		svg_build_id_map(ctx, doc, doc->root);
++		svg_build_class_map(ctx, doc, doc->root);
+ 	}
+ 	fz_catch(ctx)
+ 	{
+diff --git a/source/svg/svg-imp.h b/source/svg/svg-imp.h
+index 8ea0c2005..2e84e48de 100644
+--- a/source/svg/svg-imp.h
++++ b/source/svg/svg-imp.h
+@@ -31,12 +31,23 @@ struct svg_cycle_list_s {
+ 
+ typedef struct svg_document_s svg_document;
+ 
++/* SumatraPDF: one ".name { decl }" rule from a <style> sheet. The list is in reverse
++ * document order, so the first match is the one the cascade prefers. */
++typedef struct svg_class_s svg_class;
++struct svg_class_s
++{
++	svg_class *next;
++	char *name;
++	char *decl;
++};
++
+ struct svg_document_s
+ {
+ 	fz_document super;
+ 	fz_xml_doc *xml;
+ 	fz_xml *root;
+ 	fz_tree *idmap;
++	svg_class *classes;
+ 	float width;
+ 	float height;
+ 	svg_cycle_list *cycle; /* for detecting mutual recursive <use> invocations */
+@@ -68,6 +79,9 @@ int svg_is_whitespace(int c);
+ int svg_is_alpha(int c);
+ int svg_is_digit(int c);
+ 
++void svg_build_class_map(fz_context *ctx, svg_document *doc, fz_xml *root);
++void svg_drop_class_map(fz_context *ctx, svg_document *doc);
++
+ void svg_parse_document_bounds(fz_context *ctx, svg_document *doc, fz_xml *root);
+ void svg_run_document(fz_context *ctx, svg_document *doc, fz_xml *root, fz_device *dev, fz_matrix ctm);
+ 
+diff --git a/source/svg/svg-run.c b/source/svg/svg-run.c
+index 3291831ed..2193a731d 100644
+--- a/source/svg/svg-run.c
++++ b/source/svg/svg-run.c
+@@ -1041,9 +1041,69 @@ svg_parse_viewbox(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *s
+ static const char *linecap_table[] = { "butt", "round", "square" };
+ static const char *linejoin_table[] = { "miter", "round", "bevel" };
+ 
++/* SumatraPDF: minimal CSS class support (#2155) */
++static int
++svg_has_class(const char *class_att, const char *name)
++{
++	size_t n = strlen(name);
++	const char *p = class_att;
++
++	while (*p)
++	{
++		while (*p && svg_is_whitespace(*p))
++			++p;
++		if (!strncmp(p, name, n) && (!p[n] || svg_is_whitespace(p[n])))
++			return 1;
++		while (*p && !svg_is_whitespace(*p))
++			++p;
++	}
++
++	return 0;
++}
++
++/* Splice the declarations of the element's classes onto its style attribute.
++ * The svg_parse_*_from_style() lookups take the first match, so the inline
++ * style comes first and the class rules follow in cascade order.
++ * Returns NULL (use style_att as is) when no class rule applies. */
++static char *
++svg_style_with_classes(fz_context *ctx, svg_document *doc, fz_xml *node, const char *style_att)
++{
++	const char *class_att = fz_xml_att(node, "class");
++	svg_class *cls;
++	size_t n = 1;
++	char *s, *p;
++
++	if (!class_att || !doc->classes)
++		return NULL;
++
++	for (cls = doc->classes; cls; cls = cls->next)
++		if (svg_has_class(class_att, cls->name))
++			n += strlen(cls->decl) + 1;
++	if (n == 1)
++		return NULL;
++	if (style_att)
++		n += strlen(style_att) + 1;
++
++	p = s = fz_malloc(ctx, n);
++	if (style_att)
++	{
++		p += fz_strlcpy(p, style_att, n);
++		*p++ = ';';
++	}
++	for (cls = doc->classes; cls; cls = cls->next)
++		if (svg_has_class(class_att, cls->name))
++		{
++			p += fz_strlcpy(p, cls->decl, n - (p - s));
++			*p++ = ';';
++		}
++	*p = 0;
++
++	return s;
++}
++
+ /* parse transform and presentation attributes */
+ static void
+-svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state)
++svg_parse_common_imp(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state, char *style_att)
+ {
+ 	fz_stroke_state *stroke = state->stroke = fz_unshare_stroke_state(ctx, state->stroke);
+ 
+@@ -1051,8 +1111,6 @@ svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *st
+ 
+ 	char *font_size_att = fz_xml_att(node, "font-size");
+ 
+-	char *style_att = fz_xml_att(node, "style");
+-
+ 	// TODO: clip, clip-path, clip-rule
+ 
+ 	char *opacity_att = fz_xml_att(node, "opacity");
+@@ -1200,9 +1258,22 @@ svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *st
+ }
+ 
+ static void
+-svg_parse_font_attributes(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state, char *buf, int buf_size)
++svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state)
+ {
+ 	char *style_att = fz_xml_att(node, "style");
++	char *expanded = svg_style_with_classes(ctx, doc, node, style_att);
++
++	fz_try(ctx)
++		svg_parse_common_imp(ctx, doc, node, state, expanded ? expanded : style_att);
++	fz_always(ctx)
++		fz_free(ctx, expanded);
++	fz_catch(ctx)
++		fz_rethrow(ctx);
++}
++
++static void
++svg_parse_font_attributes_imp(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state, char *buf, int buf_size, char *style_att)
++{
+ 	char *font_family_att = fz_xml_att(node, "font-family");
+ 	char *font_weight_att = fz_xml_att(node, "font-weight");
+ 	char *font_style_att = fz_xml_att(node, "font-style");
+@@ -1260,6 +1331,20 @@ svg_parse_font_attributes(fz_context *ctx, svg_document *doc, fz_xml *node, svg_
+ 	}
+ }
+ 
++static void
++svg_parse_font_attributes(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state, char *buf, int buf_size)
++{
++	char *style_att = fz_xml_att(node, "style");
++	char *expanded = svg_style_with_classes(ctx, doc, node, style_att);
++
++	fz_try(ctx)
++		svg_parse_font_attributes_imp(ctx, doc, node, state, buf, buf_size, expanded ? expanded : style_att);
++	fz_always(ctx)
++		fz_free(ctx, expanded);
++	fz_catch(ctx)
++		fz_rethrow(ctx);
++}
++
+ static void
+ svg_run_svg(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *inherit_state)
+ {

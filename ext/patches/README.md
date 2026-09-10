@@ -49,6 +49,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0037-backport-709648-inline-context-after-block` | stop adding to an inline context after a block interrupts it (covers #5943) |
 | `0038-html-css-background-image` | CSS `background-image` / `-size` / `-position` / `-repeat` on block boxes; fixed-layout scan EPUBs were blank (#6131) |
 | `0039-md-empty-buffer-nul-scan` | empty markdown: `len-1` underflow in `fz_md_to_html` (#6143) |
+| `0040-svg-css-class-styles` | SVG `class="st0"` resolved against the `<style>` sheet; such files drew all black (#2155) |
 
 And eleven that are not ours but that we carry ahead of the release we vendor:
 

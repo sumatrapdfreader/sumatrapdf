@@ -97,6 +97,7 @@ import { testit as issue3731 } from "./issue-3731.ts";
 import { testit as issue5095 } from "./issue-5095.ts";
 import { testit as issue5751 } from "./issue-5751.ts";
 import { testit as issue5780 } from "./issue-5780.ts";
+import { testit as issue2155 } from "./issue-2155.ts";
 import { testit as issue2254 } from "./issue-2254.ts";
 import { testit as issue1846 } from "./issue-1846.ts";
 import { testit as xmpProperties } from "./xmp-properties.ts";
@@ -421,6 +422,7 @@ export const tests: NamedTest[] = [
   ["issue-5317", issue5317],
   ["issue-5694", issue5694],
   ["issue-1699", issue1699],
+  ["issue-2155", issue2155],
   ["issue-2254", issue2254],
   ["issue-1846", issue1846],
   ["xmp-properties", xmpProperties],

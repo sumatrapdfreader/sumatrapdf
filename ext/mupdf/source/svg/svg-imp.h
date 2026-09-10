@@ -31,12 +31,23 @@ struct svg_cycle_list_s {
 
 typedef struct svg_document_s svg_document;
 
+/* SumatraPDF: one ".name { decl }" rule from a <style> sheet. The list is in reverse
+ * document order, so the first match is the one the cascade prefers. */
+typedef struct svg_class_s svg_class;
+struct svg_class_s
+{
+	svg_class *next;
+	char *name;
+	char *decl;
+};
+
 struct svg_document_s
 {
 	fz_document super;
 	fz_xml_doc *xml;
 	fz_xml *root;
 	fz_tree *idmap;
+	svg_class *classes;
 	float width;
 	float height;
 	svg_cycle_list *cycle; /* for detecting mutual recursive <use> invocations */
@@ -67,6 +78,9 @@ int svg_is_whitespace_or_comma(int c);
 int svg_is_whitespace(int c);
 int svg_is_alpha(int c);
 int svg_is_digit(int c);
+
+void svg_build_class_map(fz_context *ctx, svg_document *doc, fz_xml *root);
+void svg_drop_class_map(fz_context *ctx, svg_document *doc);
 
 void svg_parse_document_bounds(fz_context *ctx, svg_document *doc, fz_xml *root);
 void svg_run_document(fz_context *ctx, svg_document *doc, fz_xml *root, fz_device *dev, fz_matrix ctm);
