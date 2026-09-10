@@ -31,14 +31,20 @@ function usage(): void {
   bun cmd/crashes.ts [--local]                 list; download+analyze dumps we don't have yet
   bun cmd/crashes.ts [--local] <id>            download dump, pdb, exe, run cdb (!analyze -v; ~*kb)
   bun cmd/crashes.ts -reanalyze [--local] [id] force cdb again (dump/pdb/exe stay cached)
+  bun cmd/crashes.ts --list [--today]          print the list as CSV and exit (no download, no server)
   bun cmd/crashes.ts --server <url> ...        override server base URL
+  --today                                      only crashes from today
 After listing, serves a local page (like sumatrapdfreader.org/crashes/) and opens the browser.`);
 }
 
-function parseArgs(argv: string[]): { server: string; id: string; reanalyze: boolean } {
+type Args = { server: string; id: string; reanalyze: boolean; list: boolean; today: boolean };
+
+function parseArgs(argv: string[]): Args {
   let server = PROD_SERVER;
   let id = "";
   let reanalyze = false;
+  let list = false;
+  let today = false;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--help" || a === "-h") {
@@ -47,6 +53,14 @@ function parseArgs(argv: string[]): { server: string; id: string; reanalyze: boo
     }
     if (a === "--local") {
       server = LOCAL_SERVER;
+      continue;
+    }
+    if (a === "--list" || a === "-list") {
+      list = true;
+      continue;
+    }
+    if (a === "--today" || a === "-today") {
+      today = true;
       continue;
     }
     if (a === "-reanalyze" || a === "-re-analyze" || a === "--reanalyze" || a === "--re-analyze") {
@@ -69,7 +83,19 @@ function parseArgs(argv: string[]): { server: string; id: string; reanalyze: boo
     }
     id = a;
   }
-  return { server, id, reanalyze };
+  return { server, id, reanalyze, list, today };
+}
+
+// yyyy-mm-dd in local time
+function todayStr(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+// crash ids and the date column both start with yyyy-mm-dd
+function isFromDay(row: DumpRow, day: string): boolean {
+  return row.id.startsWith(day) || row.date.startsWith(day);
 }
 
 function parseList(text: string): DumpRow[] {
@@ -1207,9 +1233,19 @@ async function serveCrashes(rows: DumpRow[]): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const { server, id, reanalyze } = parseArgs(process.argv.slice(2));
+  const { server, id, reanalyze, list: listOnly, today } = parseArgs(process.argv.slice(2));
   const password = loadMinidumpPassword();
-  const list = parseList(await fetchText(`${server}/app/${APP}/minidumps.txt`, dumpAuth(password)));
+  let list = parseList(await fetchText(`${server}/app/${APP}/minidumps.txt`, dumpAuth(password)));
+  if (today) {
+    list = list.filter((r) => isFromDay(r, todayStr()));
+  }
+  if (listOnly) {
+    console.log("id,version,date,size,ip");
+    for (const r of list) {
+      console.log(`${r.id},${r.version},${r.date},${r.size},${r.ip}`);
+    }
+    return;
+  }
   if (id) {
     const row = list.find((r) => r.id === id);
     if (!row) {
