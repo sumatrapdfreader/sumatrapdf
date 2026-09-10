@@ -525,7 +525,7 @@ h6 {
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  left: 1rem;
+  left: 0.25rem;
   z-index: 50;
 
   max-height: calc(100vh - 2rem);
@@ -644,7 +644,7 @@ h6 {
 
 @media (min-width: 950px) {
   .toc-wrapper {
-    left: calc(240px + 0.75rem);
+    left: calc(240px + 0.25rem);
   }
 }
 
