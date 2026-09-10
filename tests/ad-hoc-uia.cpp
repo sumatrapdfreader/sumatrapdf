@@ -120,6 +120,27 @@ int main(int argc, char** argv) {
         SysFreeString(all);
     }
 
+    // GetChildren of a one-page range must return that page and no other:
+    // the page filter used to accept every page, overflowing the array
+    {
+        IUIAutomationTextRange* onePage = nullptr;
+        tp->get_DocumentRange(&onePage);
+        if (onePage) {
+            onePage->MoveEndpointByRange(TextPatternRangeEndpoint_End, onePage, TextPatternRangeEndpoint_Start);
+            onePage->ExpandToEnclosingUnit(TextUnit_Page);
+            IUIAutomationElementArray* kids = nullptr;
+            HRESULT hrK = onePage->GetChildren(&kids);
+            printf("children.hr=0x%08x\n", (unsigned)hrK);
+            int n = 0;
+            if (SUCCEEDED(hrK) && kids) {
+                kids->get_Length(&n);
+                kids->Release();
+            }
+            printf("children.count=%d\n", n);
+            onePage->Release();
+        }
+    }
+
     // walking by character / word / line is how a screen reader reads: each
     // step must land on new text
     struct {

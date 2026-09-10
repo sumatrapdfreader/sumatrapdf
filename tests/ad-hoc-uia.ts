@@ -194,6 +194,15 @@ export async function testit(): Promise<void> {
       throw new Error(`document text does not start with '${firstLine}': '${kv.get("doc.text")}'`);
     }
 
+    // a one-page range has exactly one child page; more than that means the
+    // page filter let every page through and wrote past the array
+    if (need("children.hr") !== "0x00000000") {
+      throw new Error(`GetChildren failed with ${kv.get("children.hr")}`);
+    }
+    if (need("children.count") !== "1") {
+      throw new Error(`a one-page range reported ${kv.get("children.count")} child pages, expected 1`);
+    }
+
     // each Move() must land on new text, or a screen reader repeats one unit
     // forever (that was the bug: Move() reported success without moving)
     for (const [key, steps] of [
