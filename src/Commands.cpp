@@ -318,6 +318,7 @@ static SeqStrings gCommandNames =
     "CmdSearchGoogleLensImage\0"
     "CmdSaveSelectionAsImage\0"
     "CmdToggleTrimEmptyMargins\0"
+    "CmdCopyLocationToClipboard\0"
     "CmdNone\0"
     "\0";
 
@@ -626,6 +627,7 @@ static i32 gCommandIds[] = {
     CmdSearchGoogleLensImage,
     CmdSaveSelectionAsImage,
     CmdToggleTrimEmptyMargins,
+    CmdCopyLocationToClipboard,
     CmdNone,
 };
 
@@ -934,6 +936,7 @@ SeqStrings gCommandDescriptions =
     "Search Image with Google Lens\0"
     "Save As Image...\0"
     "Toggle Trim Empty Margins\0"
+    "Copy Location To Clipboard\0"
     "Do nothing\0"
     "\0";
 // clang-format on

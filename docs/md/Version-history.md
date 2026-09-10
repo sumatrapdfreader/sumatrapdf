@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- **Copy Location To Clipboard** (`CmdCopyLocationToClipboard`, command palette) copies where you are reading as command-line arguments that re-open it: page, zoom, scroll position and file path (discussion #6163)
 - **Save Selection As Image** (`CmdSaveSelectionAsImage`): with a rectangular (Ctrl+drag) selection, export that area as PNG, JPEG or BMP at a chosen DPI, independent of the current zoom (fixes #6127)
 - The annotation **Contents** box, the free-text in-place editor, and Advanced Settings in-place value edits stay open when the Windows on-screen keyboard takes focus, so they can be used on a tablet
 - Document Properties (Ctrl+D) fills Title, Author, Subject, Keywords, dates, Application and PDF Producer from the Catalog XMP metadata stream when the Info dictionary omits them
@@ -362,6 +363,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdSearchGoogleLensPage` : "Search Page with Google Lens"
 - `CmdSearchGoogleLensImage` : "Search Image with Google Lens"
 - `CmdToggleTrimEmptyMargins` : "Toggle Trim Empty Margins" — trims empty margins around page content from display on demand
+- `CmdCopyLocationToClipboard` : "Copy Location To Clipboard" — palette-only; copies the current view (page, zoom, scroll position and file path) to the clipboard as cmd-line args that re-open it, e.g. `-page 33 -zoom "193%" -scroll 0,0 "Material.pdf"` (discussion #6163)
 
 **New command-line arguments:**
 

@@ -70,6 +70,7 @@ CmdSearchGoogleLens,,Search with Google Lens,"opens the selection, image under t
 CmdSearchGoogleLensPage,,Search Page with Google Lens,"current page (or the page under the cursor from the context menu), ver 3.7+"
 CmdSearchGoogleLensImage,,Search Image with Google Lens,"image under the cursor, ver 3.7+"
 CmdCopyFilePath,,Copy File Path,ver 3.5+
+CmdCopyLocationToClipboard,,Copy Location To Clipboard,"copies the current view (page, zoom, scroll position and file path) to the clipboard as command-line arguments, ver 3.7+"
 CmdDeleteFile,,Delete Currently Opened File, ver 3.6+
 CmdDeleteFileAndOpenNext,,Delete File And Open Next,"moves the current file to the Recycle Bin after the next file opens successfully, ver 3.7+"
 CmdShowGeneratedHTML,,Show Generated HTML,"available for Markdown files; saves the generated HTML to a temporary .html file and opens it in Notepad, ver 3.7+"

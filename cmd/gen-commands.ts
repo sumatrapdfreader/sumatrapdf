@@ -317,6 +317,7 @@ const commandsRaw = [
     "CmdSearchGoogleLensImage", "Search Image with Google Lens",
     "CmdSaveSelectionAsImage", "Save As Image...",
     "CmdToggleTrimEmptyMargins", "Toggle Trim Empty Margins",
+    "CmdCopyLocationToClipboard", "Copy Location To Clipboard",
     "CmdNone", "Do nothing",
 ];
 

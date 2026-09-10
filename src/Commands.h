@@ -313,7 +313,8 @@ enum {
     CmdSearchGoogleLensImage = 504,
     CmdSaveSelectionAsImage = 505,
     CmdToggleTrimEmptyMargins = 506,
-    CmdNone = 507,
+    CmdCopyLocationToClipboard = 507,
+    CmdNone = 508,
 
     /* range for file history */
     CmdFileHistoryFirst,

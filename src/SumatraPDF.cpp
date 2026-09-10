@@ -10375,6 +10375,50 @@ void CopyFilePath(WindowTab* tab) {
     CopyTextToClipboard(path);
 }
 
+// a -zoom value the cmd-line parser understands: a fit mode name or a percentage
+static TempStr ZoomArgTemp(DocController* ctrl) {
+    float zoom = ctrl->GetZoomVirtual();
+    if (kZoomFitPage == zoom) {
+        return StrL("fit page");
+    }
+    if (kZoomFitWidth == zoom) {
+        return StrL("fit width");
+    }
+    if (kZoomFitHeight == zoom) {
+        return StrL("fit height");
+    }
+    if (kZoomFitContent == zoom) {
+        return StrL("fit content");
+    }
+    return fmt("%g%%", ctrl->GetZoomVirtual(true));
+}
+
+// Copy the current view as the cmd-line args that re-open it:
+//   -page 33 -zoom "193%" -scroll 0,0 "C:\dir\file.pdf"
+void CopyLocationToClipboard(WindowTab* tab) {
+    if (!tab || !tab->ctrl) {
+        return;
+    }
+    DocController* ctrl = tab->ctrl;
+    DisplayModel* dm = tab->AsFixed();
+
+    int pageNo = ctrl->CurrentPageNo();
+    // -scroll is relative to the page the scroll state reports, not the current one
+    TempStr scrollArg = StrL("");
+    if (dm) {
+        ScrollState ss = dm->GetScrollState();
+        pageNo = ss.page;
+        // -1 means "unchanged" on either axis, so both -1 is nothing to say
+        if (ss.x != -1 || ss.y != -1) {
+            scrollArg = fmt(" -scroll %d,%d", (int)ss.x, (int)ss.y);
+        }
+    }
+
+    Str path = tab->filePath;
+    TempStr loc = fmt("-page %d -zoom \"%s\"%s \"%s\"", pageNo, ZoomArgTemp(ctrl), scrollArg, path);
+    CopyTextToClipboard(loc);
+}
+
 static Kind kNotifClearHistory = "clearHistry";
 
 struct ClearHistoryData {
@@ -11669,6 +11713,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdCopyFilePath:
             CopyFilePath(tab);
+            break;
+
+        case CmdCopyLocationToClipboard:
+            CopyLocationToClipboard(tab);
             break;
 
         case CmdCommandPalette: {
