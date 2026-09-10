@@ -754,7 +754,9 @@ const KEY_VARIANTS: Record<number, number[]> = {
   [VK_SHIFT]: [VK_SHIFT, VK_LSHIFT, VK_RSHIFT],
   [VK_MENU]: [VK_MENU, VK_LMENU, VK_RMENU],
 };
-const MODIFIER_RELEASE_TRIES = 5;
+// a key physically held for a moment (a shortcut typed in another window
+// mid-run) keeps auto-repeating over our key-ups, so wait it out before failing
+const MODIFIER_RELEASE_TRIES = 50;
 
 function heldModifierKeys(): [string, number][] {
   return MODIFIER_KEYS.filter(([, vk]) => isKeyDownAsync(vk));
@@ -777,7 +779,10 @@ export async function ensureModifierKeysUp(): Promise<void> {
     await sleep(100);
   }
   const names = heldModifierKeys().map(([name]) => name);
-  throw new Error(`modifier keys held down on this machine: ${names.join(", ")}`);
+  // injected key-ups are dropped (UIPI) while an elevated window is in front
+  const fg = getForegroundWindow();
+  const fgDesc = fg ? `"${getWindowText(fg)}" (pid ${getWindowPid(fg)})` : "none";
+  throw new Error(`modifier keys held down on this machine: ${names.join(", ")}; foreground window: ${fgDesc}`);
 }
 
 // a null-terminated UTF-16 (wide) string buffer, for LPCWSTR args
