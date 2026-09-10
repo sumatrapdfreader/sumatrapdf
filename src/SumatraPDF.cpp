@@ -4736,6 +4736,14 @@ MainWindow* LoadDocument(LoadArgs* args) {
             }
         }
 
+        // creating the controller pumps messages (password prompt, progress),
+        // so the window can be closed and freed while we were loading
+        if (!IsMainWindowValidAndNotClosing(win)) {
+            DeleteOrphanedController(win, ctrl);
+            EndDocumentLoad(path);
+            return nullptr;
+        }
+
         if (!ctrl) {
             EndDocumentLoad(path);
             // ensure window is visible even if loading failed
