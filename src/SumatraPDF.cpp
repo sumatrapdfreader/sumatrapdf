@@ -17312,8 +17312,9 @@ static void InstallSumatraCrashHandler(bool localOnly) {
     cfg.fullDumpEnvVar = StrL("SUMATRAPDF_FULLDUMP");
     cfg.localOnly = localOnly;
     cfg.forTesting = gForTesting;
-    // a debug build is likely someone else modifying the code
-    cfg.uploadCrashes = !gIsDebugBuild && !gIsAsanBuild;
+    // a debug build submits to a local test server (see kMinidumpSubmitUrl), so
+    // it uploads too, otherwise that path would never be exercised
+    cfg.uploadCrashes = !gIsAsanBuild;
     // a debug report carries too much info to send from a release build
     cfg.uploadDebugReports = gIsPreReleaseBuild;
     cfg.getCrashComment = GetCrashComment;

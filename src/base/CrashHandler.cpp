@@ -130,9 +130,11 @@ static Str BuildCrashComment(Str condStr, Str fileLine, bool isCrash) {
     return gCfg.getCrashComment(gCrashHandlerArena, condStr, fileLine, isCrash);
 }
 
-// Writes the .dmp with logText attached as its comment stream, then uploads it.
+// Writes the .dmp with logText attached as its comment stream, then uploads it
+// if shouldUpload. Writing it is unconditional: a local .dmp is useful even in
+// a build that must not send anything.
 // mei is null for a debug report (no exception to describe).
-static void WriteAndUploadMinidump(Str logText, MINIDUMP_EXCEPTION_INFORMATION* mei) {
+static void WriteAndUploadMinidump(Str logText, MINIDUMP_EXCEPTION_INFORMATION* mei, bool shouldUpload) {
     bool fullDump = false;
     if (len(gCfg.fullDumpEnvVar) > 0) {
         fullDump = GetEnvironmentVariableA(CStrTemp(gCfg.fullDumpEnvVar), nullptr, 0) != 0;
@@ -141,6 +143,10 @@ static void WriteAndUploadMinidump(Str logText, MINIDUMP_EXCEPTION_INFORMATION* 
     TempWStr ws = ToWStrTemp(gCfg.crashDumpPath);
     dbghelp::WriteMiniDump(ws, mei, fullDump, logText);
 
+    if (!shouldUpload) {
+        log(StrL("WriteAndUploadMinidump: skipping upload, !shouldUpload\n"));
+        return;
+    }
     if (IsDebuggerPresent()) {
         log(StrL("WriteAndUploadMinidump: skipping upload, debugger present\n"));
         return;
@@ -165,9 +171,11 @@ static void WriteAndUploadMinidump(Str logText, MINIDUMP_EXCEPTION_INFORMATION* 
 static void HandleCrashWithMinidump() {
     log(StrL("HandleCrashWithMinidump\n"));
 
+    // localOnly is a run that must not talk to the network (tests, control pipe)
+    bool shouldUpload = gCfg.uploadCrashes && !gCfg.localOnly;
     Str logText = BuildCrashComment(Str(), StrL(""), true);
     WriteCrashInfoToStdErr(logText);
-    WriteAndUploadMinidump(logText, &gMei);
+    WriteAndUploadMinidump(logText, &gMei, shouldUpload);
 }
 
 // Symbols are only ever the .pdb sitting next to the .exe (a local build); we
@@ -254,7 +262,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
 
     // a debug report has no exception, so the .dmp only carries the stacks
     Str logText = BuildCrashComment(condStr, fileLine, isCrash);
-    WriteAndUploadMinidump(logText, nullptr);
+    WriteAndUploadMinidump(logText, nullptr, shouldUpload);
     log(logText);
     log(StrL("_uploadDebugReport() finished\n"));
 }
