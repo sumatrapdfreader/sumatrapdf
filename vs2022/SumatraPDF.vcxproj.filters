@@ -16,6 +16,9 @@
     <Filter Include="ext\synctex">
       <UniqueIdentifier>{73E6124D-DF9B-8B42-6890-8519D4448246}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\webview2">
+      <UniqueIdentifier>{302B3E82-1C8E-CD26-C513-06DDB15599A9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
@@ -577,6 +580,9 @@
     </ClCompile>
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c">
       <Filter>ext\synctex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\webview2\WebView2Loader.cpp">
+      <Filter>ext\webview2</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AIAntiGravity.cpp">
       <Filter>src</Filter>

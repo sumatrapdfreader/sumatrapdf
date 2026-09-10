@@ -13,7 +13,7 @@
                 "${workspaceRoot}/ext/darkmodelib/include",
                 "${workspaceRoot}/ext/a-zlib",
                 "${workspaceRoot}/ext/libchm",
-                "${workspaceRoot}/packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include"
+                "${workspaceRoot}/ext/webview2"
             ],
             "defines": [
                 "_DEBUG",

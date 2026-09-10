@@ -86,7 +86,7 @@ const clArgs = [
   "/I",
   "ext/darkmodelib/include",
   "/I",
-  "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include",
+  "ext/webview2",
   "/I",
   "ext/a-zlib",
   "/I",

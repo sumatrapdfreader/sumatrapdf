@@ -1,7 +1,7 @@
 import { Glob } from "bun";
-import { readdirSync, existsSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { unlink, appendFile, writeFile } from "node:fs/promises";
-import { join, basename } from "node:path";
+import { basename } from "node:path";
 import { detectVisualStudio } from "./util";
 
 // Keep in sync with AdditionalIncludeDirectories in vs2022/SumatraPDF-static.vcxproj.
@@ -30,30 +30,11 @@ const includeDirs = [
   "ext/heicdec",
   "ext/jxldec",
   "ext/darkmodelib/include",
+  "ext/webview2",
 ];
-
-// resolved at runtime so bumping the NuGet package doesn't silently re-break WebView.cpp
-function webView2IncludeDir(): string | null {
-  const packages = "packages";
-  if (!existsSync(packages)) {
-    return null;
-  }
-  const dir = readdirSync(packages).find((d) => d.startsWith("Microsoft.Web.WebView2."));
-  if (!dir) {
-    return null;
-  }
-  const inc = join(packages, dir, "build/native/include");
-  return existsSync(inc) ? inc : null;
-}
 
 function buildIncludes(): string[] {
   const dirs = [...includeDirs];
-  const wv2 = webView2IncludeDir();
-  if (wv2) {
-    dirs.push(wv2);
-  } else {
-    console.log("warning: WebView2 package not found, WebView.cpp will not fully parse");
-  }
   for (const d of dirs) {
     if (!existsSync(d)) {
       console.log(`warning: include dir '${d}' does not exist`);

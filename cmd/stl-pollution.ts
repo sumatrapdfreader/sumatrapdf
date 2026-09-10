@@ -338,10 +338,6 @@ function projectName(objPath: string, libPath: string): string {
   if (extIdx >= 0) {
     return originalLib.slice(extIdx + 5).split("/")[0] || "ext";
   }
-  const pkgIdx = originalLib.toLowerCase().indexOf("/packages/");
-  if (pkgIdx >= 0) {
-    return originalLib.slice(pkgIdx + 10).split("/")[0] || "packages";
-  }
   const srcIdx = originalObj.toLowerCase().indexOf("/src/");
   if (srcIdx >= 0) {
     return "src";

@@ -140,16 +140,11 @@ end
 
 -- WebView2 (manual viewer, SimpleBrowserWindow, BrowserDocView). gui/*.cpp is
 -- included via gui_files() in premake5.files.lua.
+-- ext/webview2 has the SDK headers plus our own replacement for the NuGet
+-- package's WebView2LoaderStatic.lib
 function webview_conf()
-  includedirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/include" }
-  filter "platforms:x86"
-  libdirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/x86" }
-  filter "platforms:x64 or x64_asan"
-  libdirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/x64" }
-  filter "platforms:arm64"
-  libdirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/arm64" }
-  filter {}
-  links { "WebView2LoaderStatic.lib" }
+  includedirs { "ext/webview2" }
+  files { "ext/webview2/WebView2Loader.cpp" }
 end
 
 -- to make debug builds faster, we compile stable libraries (freetype, libjpeg etc.)
