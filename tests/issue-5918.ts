@@ -11,10 +11,23 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util";
-import { findChildWindow, getWindowText, postMessage, sendMessage, sleep, WM_CLOSE } from "./winapi";
+import {
+  findChildWindow,
+  getWindowText,
+  postMessage,
+  sendMessage,
+  sleep,
+  treeGetNextItem,
+  TVGN_NEXT,
+  TVGN_ROOT,
+  TVM_EXPAND,
+  WM_CLOSE,
+} from "./winapi";
 import { killAndWait, launchSumatra, sendCommand, waitForExit, waitForFrame, waitForTitle } from "./win-automation";
 
 const TVM_GETCOUNT = 0x1100 + 5;
+const TVE_EXPAND = 2;
+const TVGN_CHILD = 4;
 const nFiles = 400;
 const headingsPerFile = 3;
 
@@ -38,11 +51,25 @@ function makeFolder(): string {
   return dir;
 }
 
+// The tree inserts a node's children when it is first expanded, so expand
+// everything before counting; the count is then files plus headings once the
+// background build has landed.
+function expandAll(tree: number, item: bigint): void {
+  for (let it = item; it !== 0n; it = treeGetNextItem(tree, TVGN_NEXT, it)) {
+    sendMessage(tree, TVM_EXPAND, TVE_EXPAND, it);
+    const child = treeGetNextItem(tree, TVGN_CHILD, it);
+    if (child !== 0n) {
+      expandAll(tree, child);
+    }
+  }
+}
+
 function tocItemCount(frame: number): number {
   const tree = findChildWindow(frame, "SysTreeView32");
   if (!tree) {
     return -1;
   }
+  expandAll(tree, treeGetNextItem(tree, TVGN_ROOT, 0n));
   return Number(sendMessage(tree, TVM_GETCOUNT, 0, 0));
 }
 
