@@ -104,6 +104,11 @@ function fixEscapes(): void {
         ) {
           return `${line} /FS`;
         }
+        // PCH compiles must scan headers. Without /showIncludes, a Base.h
+        // change leaves a stale .pch and /Yu compiles against that snapshot.
+        if (line.includes("/Yc$pchheader") && !line.includes("/showIncludes")) {
+          line = line.replace(" /c $in", " /showIncludes /c $in");
+        }
         // rc.exe rejects options placed after the input file.
         if (line.startsWith("  command = rc ")) {
           return line.replace(" $in $resflags", " $resflags $in");
@@ -117,6 +122,8 @@ function fixEscapes(): void {
         return line;
       })
       .join("\n");
+    // Premake's pch rule has no deps = msvc, so header changes are invisible.
+    fixed = fixed.replace(/(  command = cl[^\n]*\/Yc\$pchheader[^\n]*\n)(?!  deps = )/g, "$1  deps = msvc\n");
     // Premake's Ninja backend does not apply the Synctex file filter.
     fixed = fixed.replace(/(build [^\n]* \.\.\/\.\.\/ext\/synctex\/[^\n]*\n  cflags = [^\n]*)/g, (line) => {
       return line.includes('/wd"4244"') ? line : `${line} /wd"4244" /wd"4267"`;
