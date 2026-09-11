@@ -568,6 +568,7 @@ class EngineBase {
     void EnsureAllChaptersLaidOut();
     // called (from any thread) whenever LayoutGeneration() actually changes
     void SetOnLayoutChanged(const Func0& fn) { onLayoutChanged = fn; }
+    void SetOnDestroy(const Func1<EngineBase*>& fn) { onDestroy = fn; }
 
     // real page count for a chapter; engines with more than one chapter override this
     virtual int LayOutChapter(int chapter);
@@ -688,6 +689,7 @@ class EngineBase {
 
     ChapterTable chapters;
     Func0 onLayoutChanged;
+    Func1<EngineBase*> onDestroy;
     int notifiedGeneration = 0;
 
     // per-chapter cached text (PageTextCache, defined in EngineBase.cpp)
@@ -700,6 +702,8 @@ class EngineBase {
   private:
     void EnsureChapterTable();
 };
+
+extern Func1<EngineBase*> gOnEngineDestroyed;
 
 struct PasswordUI {
     virtual Str GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;

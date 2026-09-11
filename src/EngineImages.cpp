@@ -29,6 +29,7 @@ extern "C" {
 #include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
+#include "CachedObjects.h"
 
 Kind kindEngineImage = "engineImage";
 Kind kindEngineImageDir = "engineImageDir";
@@ -944,6 +945,32 @@ bool EngineImages::SaveFileAs(Str dstPath) {
     return SaveFileOrData(FilePath(), sourceData, dstPath);
 }
 
+static bool ImagePageCanFree(WindowTab* currTab, CachedObject* o) {
+    (void)currTab;
+    auto* page = (ImagePage*)o->id;
+    if (!page || page->loading) {
+        return false;
+    }
+    if (AtomicIntGet(&page->refs) > 1) {
+        return false;
+    }
+    return page->ownPixmap && page->pixmap;
+}
+
+static bool ImagePageFree(WindowTab* currTab, CachedObject* o) {
+    (void)currTab;
+    auto* page = (ImagePage*)o->id;
+    auto* eng = (EngineImages*)o->engine;
+    if (!page || !eng) {
+        return false;
+    }
+    if (AtomicIntGet(&page->refs) > 1) {
+        return false;
+    }
+    eng->DropPage(page, true);
+    return true;
+}
+
 ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
     ImagePage* result = nullptr;
     bool isLoader = false;
@@ -1008,6 +1035,15 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
                 result->failedToLoad = true;
             }
         }
+        if (pixmap && ownPixmap) {
+            CachedObject o{};
+            o.id = (uintptr_t)result;
+            o.size = (u64)PixmapByteSize(pixmap);
+            o.engine = this;
+            o.canFree = ImagePageCanFree;
+            o.free = ImagePageFree;
+            DidAllocateCachedObject(&o);
+        }
         {
             ScopedMutex scope(&result->loadLock);
             result->loading = false;
@@ -1041,6 +1077,7 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
     }
 
     if (newRefs == 0) {
+        UnregisterCachedObject((uintptr_t)page);
         if (page->ownPixmap) {
             FreePixmap(page->pixmap);
         }

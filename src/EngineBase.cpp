@@ -701,7 +701,11 @@ TempStr EngineBase::GetErrorsTextTemp() {
     return ToStr(errors);
 }
 
+Func1<EngineBase*> gOnEngineDestroyed;
+
 EngineBase::~EngineBase() {
+    onDestroy.Call(this);
+    gOnEngineDestroyed.Call(this);
     delete pageTextCache;
     str::Free(defaultExt);
     LogArenaStats(StrL("engine"), arena);

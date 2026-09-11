@@ -45,6 +45,7 @@
 #include "Tabs.h"
 #include "GlobalHotkeys.h"
 #include "PagePosition.h"
+#include "CachedObjects.h"
 #include "AppSettings.h"
 
 // workaround for OnMenuExit
@@ -370,6 +371,10 @@ static void CreateCustomShortcuts() {
 
 /* Caller needs to CleanUpSettings() */
 void ApplySettingsToOpenWindows() {
+    if (gSettings) {
+        setMinMax(gSettings->saveMemory, 0, 100);
+        gSaveMemory = gSettings->saveMemory;
+    }
     for (MainWindow* win : gWindows) {
         // WindowMargin / PageSpacing are copied into DisplayModel at SetUiDpi;
         // pick up the reloaded prefs before the relayout below (issue #6018)
@@ -801,6 +806,7 @@ bool LoadSettings() {
     }
     setMinMax(gprefs->toolbarSize, 8, 64);
     setMinMax(gprefs->annotations.freeTextOpacity, 0, 100);
+    setMinMax(gprefs->saveMemory, 0, 100);
 
     if (SeqStrIndexIS(gScrollbarModeNames, gprefs->scrollbars) < 0) {
         str::ReplaceWithCopy(&gprefs->scrollbars, StrL("windows"));

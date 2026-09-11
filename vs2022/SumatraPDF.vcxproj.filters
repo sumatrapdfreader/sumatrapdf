@@ -147,6 +147,9 @@
     <ClInclude Include="..\src\BuildConfig.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\CachedObjects.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -357,13 +360,13 @@
     <ClInclude Include="..\src\ReadAloud.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ReaderModel.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ReadingAutoScroll.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ReadingBar.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ReaderModel.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\RefHover.h">
@@ -645,6 +648,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\BasePch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CachedObjects.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Canvas.cpp">
@@ -944,13 +950,13 @@
     <ClCompile Include="..\src\ReadAloud.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ReaderModel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ReadingAutoScroll.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ReadingBar.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ReaderModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RefHover.cpp">
@@ -1269,6 +1275,9 @@
       <Filter>src\testcode</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\AnnotSearch_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\CachedObjects_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\ChapterTable_ut.cpp">

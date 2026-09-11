@@ -100,8 +100,17 @@ Pixmap* AllocPixmapDIB(int w, int h) {
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
+    u64 nBytes = (u64)w * (u64)h * 4;
+    if (nBytes >= kLargeAllocationSize && gTryFreeCachedObjects) {
+        gTryFreeCachedObjects(nBytes);
+    }
     void* bits = nullptr;
     HBITMAP hbmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if ((!hbmp || !bits) && nBytes >= kLargeAllocationSize && gFreeCachedObjects && gFreeCachedObjects() > 0) {
+        DeleteObject(hbmp);
+        bits = nullptr;
+        hbmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    }
     if (!hbmp || !bits) {
         DeleteObject(hbmp);
         return nullptr;

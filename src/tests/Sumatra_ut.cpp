@@ -53,6 +53,7 @@ void WinUtilTest();
 void ChapterTable_UnitTests();
 void MobiDoc_UnitTests();
 void PagePosition_UnitTests();
+void CachedObjects_UnitTests();
 void PageRenderPolicy_UnitTests();
 void PdfDarkModeImageClassifier_UnitTests();
 void PdfDarkModeOklab_UnitTests();
@@ -381,6 +382,7 @@ static void DocPropertiesTest() {
 }
 
 static void SumatraPDF_UnitTests() {
+    CachedObjects_UnitTests();
     PageRenderPolicy_UnitTests();
     CommandPaletteModel_UnitTests();
     DocPropertiesTest();

@@ -106,7 +106,7 @@ inline Pixmap* AllocPixmap(int w, int h, PixmapFormat fmt = PixmapFormat::BGRA8,
     if (stride > INT_MAX || nBytes / stride != (size_t)h) {
         return nullptr;
     }
-    u8* data = (u8*)malloc(nBytes);
+    u8* data = (u8*)Alloc(nullptr, nBytes);
     if (!data) {
         return nullptr;
     }
