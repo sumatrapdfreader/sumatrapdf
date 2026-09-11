@@ -58,6 +58,7 @@
 #include "AnnotEditToolbar.h"
 #include "AnnotTextPopup.h"
 #include "ReadAloud.h"
+#include "ReadingAutoScroll.h"
 #include "HomePage.h"
 #include "Commands.h"
 #include "Toolbar.h"
@@ -2831,6 +2832,7 @@ void StartAutoScrollAtCursor(MainWindow* win) {
     if (!win || !win->AsFixed()) {
         return;
     }
+    ReadingAutoScrollStop(win);
     Point pt = HwndGetCursorPos(win->hwndCanvas);
     ToggleAutoScroll(win, pt.x, pt.y);
 }
@@ -5116,6 +5118,7 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             // drive auto-scroll from a high-frequency timer (with fractional-pixel
             // accumulation in the handler) so it's smooth, not choppy (issue #2693)
             // TODO: Create window that shows location of initial click for reference
+            ReadingAutoScrollStop(win);
             ToggleAutoScroll(win, x, y);
             return 0;
 
@@ -5476,6 +5479,10 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             } else {
                 KillTimer(hwnd, kSelectSmoothScrollTimerID);
             }
+            break;
+
+        case kReadingAutoScrollTimerID:
+            ReadingAutoScrollTick(win);
             break;
 
         case kAutoScrollTimerID:

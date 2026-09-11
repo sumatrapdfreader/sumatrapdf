@@ -357,6 +357,9 @@
     <ClInclude Include="..\src\ReadAloud.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ReadingAutoScroll.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ReaderModel.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -936,6 +939,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ReadAloud.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ReadingAutoScroll.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ReaderModel.cpp">

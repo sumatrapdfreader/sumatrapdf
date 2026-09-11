@@ -319,6 +319,9 @@ static SeqStrings gCommandNames =
     "CmdSaveSelectionAsImage\0"
     "CmdToggleTrimEmptyMargins\0"
     "CmdCopyLocationToClipboard\0"
+    "CmdToggleAutomaticallyScroll\0"
+    "CmdAutomaticallyScrollFaster\0"
+    "CmdAutomaticallyScrollSlower\0"
     "CmdNone\0"
     "\0";
 
@@ -628,6 +631,9 @@ static i32 gCommandIds[] = {
     CmdSaveSelectionAsImage,
     CmdToggleTrimEmptyMargins,
     CmdCopyLocationToClipboard,
+    CmdToggleAutomaticallyScroll,
+    CmdAutomaticallyScrollFaster,
+    CmdAutomaticallyScrollSlower,
     CmdNone,
 };
 
@@ -937,6 +943,9 @@ SeqStrings gCommandDescriptions =
     "Save As Image...\0"
     "Toggle Trim Empty Margins\0"
     "Copy Location To Clipboard\0"
+    "Automatically Scroll\0"
+    "Automatically Scroll Faster\0"
+    "Automatically Scroll Slower\0"
     "Do nothing\0"
     "\0";
 // clang-format on

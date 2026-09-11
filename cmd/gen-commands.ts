@@ -318,6 +318,9 @@ const commandsRaw = [
     "CmdSaveSelectionAsImage", "Save As Image...",
     "CmdToggleTrimEmptyMargins", "Toggle Trim Empty Margins",
     "CmdCopyLocationToClipboard", "Copy Location To Clipboard",
+    "CmdToggleAutomaticallyScroll", "Automatically Scroll",
+    "CmdAutomaticallyScrollFaster", "Automatically Scroll Faster",
+    "CmdAutomaticallyScrollSlower", "Automatically Scroll Slower",
     "CmdNone", "Do nothing",
 ];
 

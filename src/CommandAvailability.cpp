@@ -895,6 +895,16 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return ctx.hasSelection ? CommandVisibility::Show : CommandVisibility::Hide;
     }
 
+    if (cmdId == CmdToggleAutomaticallyScroll || cmdId == CmdAutomaticallyScrollFaster ||
+        cmdId == CmdAutomaticallyScrollSlower) {
+        if (!ctx.isFixedPage) {
+            return CommandVisibility::Hide;
+        }
+        if (cmdId != CmdToggleAutomaticallyScroll && !(ctx.win && ctx.win->readingAutoScrollOn)) {
+            return CommandVisibility::Hide;
+        }
+    }
+
     return MapForSurface(CommandVisibility::Show, surface);
 }
 

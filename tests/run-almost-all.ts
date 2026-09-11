@@ -229,6 +229,7 @@ import { testit as issue5991 } from "./issue-5991.ts";
 import { testit as issue6127 } from "./issue-6127.ts";
 import { testit as issue6163 } from "./issue-6163.ts";
 import { testit as issue6166 } from "./issue-6166.ts";
+import { testit as issue6169 } from "./issue-6169.ts";
 import { testit as issue5980 } from "./issue-5980.ts";
 import { testit as issue5982 } from "./issue-5982.ts";
 import { testit as issue6035 } from "./issue-6035.ts";
@@ -368,6 +369,7 @@ export const tests: NamedTest[] = [
   ["free-text-edit-toolbar", freeTextEditToolbar],
   ["create-annot-enters-edit-mode", createAnnotEntersEditMode],
   ["issue-6166", issue6166],
+  ["issue-6169", issue6169],
   ["issue-6111", issue6111],
   ["annot-list-placement", annotListPlacement],
   ["exit-edit-pdf-deselects", exitEditPdfDeselects],

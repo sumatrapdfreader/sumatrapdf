@@ -31,6 +31,7 @@
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "ReadAloud.h"
+#include "ReadingAutoScroll.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SumatraPDF.h"
@@ -132,6 +133,7 @@ void CreateMovePatternLazy(MainWindow* win) {
 MainWindow::~MainWindow() {
     CancelAnnotationResizeRerender(this);
     KillTimer(hwndCanvas, kSmoothScrollTimerID);
+    KillTimer(hwndCanvas, kReadingAutoScrollTimerID);
     if (scrollAnimHiResTimer) {
         timeEndPeriod(1);
         scrollAnimHiResTimer = false;
@@ -226,6 +228,7 @@ MainWindow::~MainWindow() {
 
     delete frameRateWnd;
     ReadAloudPlaybackBarDestroy(this);
+    ReadingAutoScrollDestroy(this);
     UnregisterOnWindowMoved(&overlayScrollOnMoved);
     ReportIf(onWindowMoved);
     delete infotip;
@@ -388,6 +391,7 @@ void MainWindow::UpdateCanvasSize() {
 
     RelayoutNotifications(hwndCanvas);
     ReadAloudPlaybackBarRelayout(hwndCanvas);
+    ReadingAutoScrollRelayout(hwndCanvas);
 }
 
 Size MainWindow::GetViewPortSize() const {

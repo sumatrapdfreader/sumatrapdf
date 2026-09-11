@@ -1410,6 +1410,12 @@ const globalPrefs: Field[] = [
     "playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar",
   ).ver("3.7"),
   field(
+    "ReadingAutoScrollSpeed",
+    Float,
+    40,
+    "pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 8 to 320; also changed from the auto-scroll bar and the arrow keys while scrolling",
+  ).ver("3.7"),
+  field(
     "FastScrollOverScrollbar",
     Bool,
     false,
@@ -1810,6 +1816,7 @@ const globalPrefsLayout = [
   "ScrollLineAmount",
   "CitationHoverDelay",
   "ReadAloudSpeed",
+  "ReadingAutoScrollSpeed",
   "TabWidth",
   "TocDy",
   "ToolbarSize",

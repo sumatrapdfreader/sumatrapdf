@@ -314,7 +314,10 @@ enum {
     CmdSaveSelectionAsImage = 505,
     CmdToggleTrimEmptyMargins = 506,
     CmdCopyLocationToClipboard = 507,
-    CmdNone = 508,
+    CmdToggleAutomaticallyScroll = 508,
+    CmdAutomaticallyScrollFaster = 509,
+    CmdAutomaticallyScrollSlower = 510,
+    CmdNone = 511,
 
     /* range for file history */
     CmdFileHistoryFirst,

@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- **Automatically Scroll** (`Ctrl + Shift + H`, View menu, command palette): hands-free continuous pan for reading, like Acrobat / Foxit. A bar at the bottom of the page shows the speed, Pause / Resume, Stop, Reverse, and a short key list. Up/Down change speed, `0`–`9` set it (0 slowest, 9 fastest), minus reverses, Left/Right jump a page, Space pauses, Esc stops. Speed is remembered in `ReadingAutoScrollSpeed`. This is not middle-click auto-scroll (`CmdStartAutoScroll`), which still follows the cursor
 - Right-clicking a toolbar button that has a drop-down (Zoom In / Zoom Out, Edit PDF Save, Read Aloud) opens that drop-down immediately if it is not already shown
 - **Copy Location To Clipboard** (`CmdCopyLocationToClipboard`, command palette) copies where you are reading as command-line arguments that re-open it: page, zoom, scroll position and file path (discussion #6163)
 - **Save Selection As Image** (`CmdSaveSelectionAsImage`): with a rectangular (Ctrl+drag) selection, export that area as PNG, JPEG or BMP at a chosen DPI, independent of the current zoom (fixes #6127)
@@ -337,6 +338,9 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdShowGeneratedHTML` : "Show Generated HTML" — available for Markdown documents
 - `CmdSetTabColor` : "Set Tab Color"
 - `CmdStartAutoScroll` : "Start Auto-Scroll"
+- `CmdToggleAutomaticallyScroll` : "Automatically Scroll" — hands-free continuous pan (`Ctrl + Shift + H`)
+- `CmdAutomaticallyScrollFaster` : "Automatically Scroll Faster"
+- `CmdAutomaticallyScrollSlower` : "Automatically Scroll Slower"
 - `CmdTabGroupRestore` : "Restore Tab Group"
 - `CmdTabGroupSave` : "Save Tab Group"
 - `CmdToggleDjvuEngine` : "Toggle DjVu Engine" (command palette shows the target, e.g. "set to libdjvu")

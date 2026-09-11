@@ -47,6 +47,7 @@
 #include "GoogleLens.h"
 #include "CommandAvailability.h"
 #include "ReadAloud.h"
+#include "ReadingAutoScroll.h"
 #include "Menu.h"
 
 // value associated with menu item for owner-drawn purposes
@@ -291,6 +292,10 @@ static MenuDef menuDefView[] = {
     {
         TrN("F&ullscreen"),
         CmdToggleFullscreen,
+    },
+    {
+        TrN("A&utomatically Scroll"),
+        CmdToggleAutomaticallyScroll,
     },
     {
         StrL(kMenuSeparator),
@@ -1987,6 +1992,7 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
 
     CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);
     MenuSetChecked(win->menu, CmdToggleContinuousView, IsContinuous(displayMode));
+    MenuSetChecked(win->menu, CmdToggleAutomaticallyScroll, ReadingAutoScrollIsOn(win));
 
     DisplayModel* dm = win->AsFixed();
     if (dm && win->CurrentTab()) {

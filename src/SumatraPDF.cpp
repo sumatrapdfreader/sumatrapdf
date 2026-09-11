@@ -120,6 +120,7 @@
 #include "Theme.h"
 #include "DarkMode.h"
 #include "ReadAloud.h"
+#include "ReadingAutoScroll.h"
 #include "ExplorerQuickLook.h"
 #include "PagePosition.h"
 #include "base/DbgHelpDyn.h"
@@ -9274,6 +9275,10 @@ static void OnFrameKeyEsc(MainWindow* win) {
         HideFindBar(win);
         return;
     }
+    if (ReadingAutoScrollIsOn(win)) {
+        ReadingAutoScrollStop(win);
+        return;
+    }
     if (AbortFinding(win, true)) {
         return;
     }
@@ -12168,6 +12173,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdStartAutoScroll:
             // start middle-click-style auto-scroll without needing a middle button
             StartAutoScrollAtCursor(win);
+            break;
+
+        case CmdToggleAutomaticallyScroll:
+            ReadingAutoScrollToggle(win);
+            break;
+
+        case CmdAutomaticallyScrollFaster:
+            ReadingAutoScrollFaster(win);
+            break;
+
+        case CmdAutomaticallyScrollSlower:
+            ReadingAutoScrollSlower(win);
             break;
 
         case CmdScrollUpHalfPage: {
@@ -15653,6 +15670,9 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
         WPARAM key = msg.wParam;
         MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
         if (AnnotationPlacementOnKeyDown(win, key)) {
+            return true;
+        }
+        if (ReadingAutoScrollOnKey(win, key)) {
             return true;
         }
     }

@@ -353,6 +353,7 @@ const sumatraFiles: FileGroup[] = [
       "ProgressUpdateUI.*",
       "PreviewPipe.*",
       "ReadAloud.*",
+      "ReadingAutoScroll.*",
       "RefHover.*",
       "RefHoverCanvas.*",
       "RefHoverDetect.*",

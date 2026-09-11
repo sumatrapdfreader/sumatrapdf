@@ -162,6 +162,9 @@ CmdScrollRight,"l, Right",Scroll Right,
 CmdScrollUpHalfPage,Shift + Up,Scroll Up By Half Page,
 CmdScrollDownHalfPage,Shift + Down,Scroll Down By Half Page,
 CmdStartAutoScroll,,Start Auto-Scroll,"Start (or stop) middle-click-style auto-scroll anchored at the cursor, without needing a middle mouse button; move the cursor away from the anchor to scroll. Invoke again (or middle-click) to stop, ver 3.7+"
+CmdToggleAutomaticallyScroll,Ctrl + Shift + H,Automatically Scroll,"Hands-free continuous pan (Acrobat-style). A bar at the bottom shows speed and Pause / Stop / Reverse. While it is on: Up/Down change speed, 0-9 set it, minus reverses, Left/Right turn the page, Space pauses, Esc stops. Distinct from CmdStartAutoScroll, ver 3.7+"
+CmdAutomaticallyScrollFaster,,Automatically Scroll Faster,"Increase Automatically Scroll speed (no default shortcut; Up/Down while scrolling also change speed), ver 3.7+"
+CmdAutomaticallyScrollSlower,,Automatically Scroll Slower,"Decrease Automatically Scroll speed, ver 3.7+"
 CmdScrollUpPage,"Ctrl + Up, PageUp, Shift + Return, Shift + Space",Scroll Up By Page,
 CmdScrollDownPage,"Ctrl + Down, PageDown, Return, Space",Scroll Down By Page,
 CmdScrollLeftPage,Shift + Left,Scroll Left By Page,

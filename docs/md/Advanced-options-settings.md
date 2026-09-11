@@ -274,6 +274,11 @@ ReadAloudVoiceId =
 ; in version 3.7)
 ReadAloudSpeed = 1
 
+; pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 8 to
+; 320; also changed from the auto-scroll bar and the arrow keys while scrolling
+; (introduced in version 3.7)
+ReadingAutoScrollSpeed = 40
+
 ; if true, mouse wheel scrolling is faster when mouse is over a scrollbar
 ; (introduced in version 3.6)
 FastScrollOverScrollbar = false

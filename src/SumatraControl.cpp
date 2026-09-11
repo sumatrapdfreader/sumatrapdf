@@ -61,6 +61,7 @@
 #include "CommandPalette.h"
 #include "PdfTools.h"
 #include "ReadAloud.h"
+#include "ReadingAutoScroll.h"
 #include "SumatraControl.h"
 
 extern bool gIsStartup;
@@ -872,6 +873,7 @@ enum class ControlCmd : u16 {
     TestDocumentProperties = 94,
     TestHiddenTabGoToPage = 95,
     TestSaveSelectionAsImage = 96,
+    TestReadingAutoScroll = 97,
 };
 
 enum class ControlArgType : u16 {
@@ -2137,6 +2139,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestHiddenTabGoToPage: {
             int exitCode = 0;
             Str res = HiddenTabGoToPageResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestReadingAutoScroll: {
+            int exitCode = 0;
+            Str res = ReadingAutoScrollBarStateTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
