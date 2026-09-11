@@ -601,7 +601,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
   - added rotate left / right to the toolbar
   - new toolbar:
 
-  ![Toolbar](img/toolbar.png)
+  ![Toolbar](img/toolbar-b00c.png)
 
 - added ability to hide scrollbar (more screen space for the document). Use right-click context menu.
 

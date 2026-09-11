@@ -6,7 +6,7 @@
 
 Use `Ctrl + K` to invoke the command palette, or click the command-palette button to the left of the **SumatraPDF** title on the home page:
 
-![Command Palette](img/command-palette-commands.png)
+![Command Palette](img/command-palette-commands-423d.png)
 
 The command palette is a fast and convenient way to:
 
@@ -38,13 +38,13 @@ By default, it shows the available commands.
 
 Type `@` to switch between open tabs:
 
-![Command Palette](img/command-palette-tabs.png)
+![Command Palette](img/command-palette-tabs-7b7d.png)
 
 ## File history
 
 Type `#` to open a file from the list of previously opened files:
 
-![Command Palette](img/command-palette-file-history.png)
+![Command Palette](img/command-palette-file-history-0f51.png)
 
 ## Table of contents
 
@@ -115,7 +115,7 @@ with it.
 
 Type `:` for a combined view (replicates 3.4 and 3.5 behavior):
 
-![Command Palette](img/command-palette-all.png)
+![Command Palette](img/command-palette-all-8d8c.png)
 
 ## Replicate 3.4 and 3.5 behavior
 

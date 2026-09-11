@@ -18,7 +18,7 @@ Or:
 - right-click to open the context menu
 - select `Document` > `Extract Text From Document`
 
-![Extract text from PDF in SumatraPDF](img/extract-text-dialog.png)
+![Extract text from PDF in SumatraPDF](img/extract-text-dialog-3084.png)
 
 This extracts text from the document and saves it as a text file.
 

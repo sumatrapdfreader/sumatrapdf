@@ -8,7 +8,7 @@ You can add and edit annotations in PDF files.
 
 The most common annotation is a text highlight: select text and press `a`. This creates a yellow highlight annotation:
 
-![Unsaved Annotation Changes](img/annot-unsaved-changes.png)
+![Unsaved Annotation Changes](img/annot-unsaved-changes-f7c7.png)
 
 Here I highlighted the word `USAGE` and pressed `a`.
 
@@ -18,7 +18,7 @@ Notice the **You have unsaved annotations** message in the upper-right corner of
 
 When you close the document (or exit the app) and have unsaved annotations, SumatraPDF will ask if you want to save them:
 
-![Unsaved Annotations Dialog](img/unsaved-annotations-dialog.png)
+![Unsaved Annotations Dialog](img/unsaved-annotations-dialog-2940.png)
 
 If you close the dialog or choose `Discard`, annotations will be lost.
 
@@ -41,7 +41,7 @@ When you select text, you can create the following annotations from the selectio
 - strike out
 - squiggly underline
 
-![Context Menu Annotation From Selection](img/context-menu-annot-from-sel.png)
+![Context Menu Annotation From Selection](img/context-menu-annot-from-sel-473a.png)
 
 We also copy the selected text to the clipboard, so you can, for example, use `Ctrl + V` to paste it into the annotation's `Contents` property.
 
@@ -66,7 +66,7 @@ To put a picture of your signature (or any other image) on a PDF page:
 
 Pick a PNG (or JPEG, etc.). The image is stamped on the page and you can drag or resize it. Save with **File → Save Annotations to existing PDF** (or save as a new PDF). This is an electronic signature image, not a cryptographic digital signature (`File → Sign Document...`, which uses a certificate from the Windows store or a `.pfx` / `.p12` file). **Sign Document** can also draw a PNG or JPEG inside the digital signature itself, and you can turn off the "Digitally signed by" labels and the other lines.
 
-![Context Menu Annotation Under Cursor](img/context-menu-annot-under-cursor.png)
+![Context Menu Annotation Under Cursor](img/context-menu-annot-under-cursor-49b9.png)
 
 ## Highlighter brush
 

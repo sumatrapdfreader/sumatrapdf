@@ -24,7 +24,7 @@ On Windows 10 / 11:
 - select `Apps`
 - find `SumatraPDF` in the list, click it, and press the `Uninstall` button:
 
-![Uninstall](img/uninstall.png)
+![Uninstall](img/uninstall-e197.png)
 
 ## What if the above doesn't help?
 

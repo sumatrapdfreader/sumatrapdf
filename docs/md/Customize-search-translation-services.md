@@ -7,11 +7,11 @@ You can send selected text to the Google or Bing search engine, or to the Google
 - select text using the mouse
 - right-click to open the context menu
 
-![Context Menu Selection](img/context-menu-selection.png)
+![Context Menu Selection](img/context-menu-selection-90e6.png)
 
 - use the `Selection` submenu and select the web service to use for translation or search:
 
-![Context Menu Translate](img/context-menu-translate.png)
+![Context Menu Translate](img/context-menu-translate-e2f3.png)
 
 You can also use the command palette (`Ctrl + K`):
 
@@ -19,7 +19,7 @@ You can also use the command palette (`Ctrl + K`):
 - press `Ctrl + K` to open the command palette
 - type, for example, `deepl` to find the `Translate with DeepL` command
 
-![Using Command Palette](img/cmd-palette-translate.png)
+![Using Command Palette](img/cmd-palette-translate-c1af.png)
 
 - press `Enter` (or double-click with the mouse) to execute the action
 
@@ -67,7 +67,7 @@ SelectionHandlers [
 ]
 ```
 
-![Selection toolbar with a handler button](img/selection-toolbar-handler.png)
+![Selection toolbar with a handler button](img/selection-toolbar-handler-e520.png)
 
 The value is the button's text. Keep it short — the toolbar sits over what you
 are reading, and every handler you add makes it wider. Unlike `Name`, it is
