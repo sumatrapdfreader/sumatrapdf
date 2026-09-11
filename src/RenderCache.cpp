@@ -26,17 +26,7 @@
 #include "DisplayModel.h"
 #include "Canvas.h"
 #include "RenderCache.h"
-
-// CONSERVE_MEMORY sets the compile-time default for gConserveMemory. When defined,
-// cached page bitmaps for non-visible pages are freed aggressively. Undefining it
-// keeps more pages resident (higher GDI memory use, fewer re-renders).
-#define CONSERVE_MEMORY
-
-#ifdef CONSERVE_MEMORY
-static bool gConserveMemory = true;
-#else
-bool gConserveMemory = false;
-#endif
+#include "CachedObjects.h"
 
 static DWORD WINAPI RenderCacheThread(LPVOID data);
 
@@ -211,6 +201,7 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
 
     RecordCacheChange(false, entry);
 
+    UnregisterCachedObject((uintptr_t)entry);
     delete entry;
 
     // fast removal by replacing freed item with the item at the end
@@ -276,6 +267,29 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
     return false;
 }
 
+extern RenderCache* gRenderCache;
+
+static bool RenderCacheCanFree(WindowTab* currTab, CachedObject* o) {
+    (void)currTab;
+    auto* entry = (BitmapCacheEntry*)o->id;
+    if (!entry || entry->refs > 1) {
+        return false;
+    }
+    if (entry->dm && entry->dm->PageVisibleNearby(entry->pageNo)) {
+        return false;
+    }
+    return true;
+}
+
+static bool RenderCacheFree(WindowTab* currTab, CachedObject* o) {
+    (void)currTab;
+    if (!gRenderCache || !o) {
+        return false;
+    }
+    auto* entry = (BitmapCacheEntry*)o->id;
+    return gRenderCache->DropCacheEntryIfNotUsed(entry);
+}
+
 void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
     ScopedRecursiveMutex scope(&cacheAccess);
     ReportIf(!req.dm);
@@ -304,6 +318,14 @@ void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
     cacheCount++;
 
     RecordCacheChange(true, entry);
+
+    CachedObject o{};
+    o.id = (uintptr_t)entry;
+    o.size = (u64)PixmapByteSize(bmp);
+    o.engine = req.dm->GetEngine();
+    o.canFree = RenderCacheCanFree;
+    o.free = RenderCacheFree;
+    DidAllocateCachedObject(&o);
 }
 
 static RectF GetTileRect(RectF pagerect, TilePosition tile) {
@@ -1429,17 +1451,13 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         }
     }
 
-    if (gConserveMemory) {
-        if (!neededScaling) {
-            if (renderOutOfDateCue) {
-                *renderOutOfDateCue = false;
-            }
-            // free tiles with different resolution
-            TilePosition tile(targetRes, (USHORT)-1, 0);
-            rcLogf("RenderCache::Paint: calling FreePage() pageNo: %d\n", pageNo);
-            FreePage(dm, pageNo, &tile);
+    if (gSaveMemory > 0 && !neededScaling) {
+        if (renderOutOfDateCue) {
+            *renderOutOfDateCue = false;
         }
-        FreeNotVisible();
+        TilePosition tile(targetRes, (USHORT)-1, 0);
+        rcLogf("RenderCache::Paint: calling FreePage() pageNo: %d\n", pageNo);
+        FreePage(dm, pageNo, &tile);
     }
 
     return renderDelayMin;

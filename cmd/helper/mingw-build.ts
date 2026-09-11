@@ -228,6 +228,7 @@ const sumatraFiles: FileGroup[] = [
       "ChmFile.*",
       "DocProperties.*",
       "EngineBase.*",
+      "CachedObjects.*",
       "EngineCreate.*",
       "EngineDjvuDec.*",
       "EngineEbook.*",

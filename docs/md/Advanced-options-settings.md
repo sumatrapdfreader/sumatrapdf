@@ -240,6 +240,11 @@ SmoothScroll = true
 ; mouse-wheel line; values below 1 use 16 (introduced in version 3.7)
 ScrollLineAmount = 16
 
+; how hard to free unused page and image caches to save RAM (0 to 100). 0 keeps
+; them until an allocation fails; 100 drops them as soon as a page is off-screen
+; (introduced in version 3.7)
+SaveMemory = 50
+
 ; if true, continuous view has extra scroll room after the last page so you can
 ; scroll the end of the document to the top of the window (introduced in version
 ; 3.7)

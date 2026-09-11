@@ -1158,6 +1158,7 @@
     <ClInclude Include="..\src\AppTools.h" />
     <ClInclude Include="..\src\AvifReader.h" />
     <ClInclude Include="..\src\BuildConfig.h" />
+    <ClInclude Include="..\src\CachedObjects.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\ChapterTable.h" />
     <ClInclude Include="..\src\ChmDump.h" />
@@ -1228,9 +1229,9 @@
     <ClInclude Include="..\src\PrintWin11.h" />
     <ClInclude Include="..\src\ProgressUpdateUI.h" />
     <ClInclude Include="..\src\ReadAloud.h" />
+    <ClInclude Include="..\src\ReaderModel.h" />
     <ClInclude Include="..\src\ReadingAutoScroll.h" />
     <ClInclude Include="..\src\ReadingBar.h" />
-    <ClInclude Include="..\src\ReaderModel.h" />
     <ClInclude Include="..\src\RefHover.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
@@ -1354,6 +1355,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\CachedObjects.cpp" />
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\ChangeColorDialog.cpp" />
@@ -1460,9 +1462,9 @@
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\PrintWin11.cpp" />
     <ClCompile Include="..\src\ReadAloud.cpp" />
+    <ClCompile Include="..\src\ReaderModel.cpp" />
     <ClCompile Include="..\src\ReadingAutoScroll.cpp" />
     <ClCompile Include="..\src\ReadingBar.cpp" />
-    <ClCompile Include="..\src\ReaderModel.cpp" />
     <ClCompile Include="..\src\RefHover.cpp" />
     <ClCompile Include="..\src\RefHoverCanvas.cpp" />
     <ClCompile Include="..\src\RefHoverDetect.cpp" />
@@ -1828,6 +1830,16 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\tests\AnnotSearch_ut.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\tests\CachedObjects_ut.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>

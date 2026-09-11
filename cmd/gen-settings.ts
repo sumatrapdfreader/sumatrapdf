@@ -1389,6 +1389,12 @@ const globalPrefs: Field[] = [
     "distance, in screen pixels at 96 DPI, scrolled by an arrow-key press or one mouse-wheel line; values below 1 use 16",
   ).ver("3.7"),
   field(
+    "SaveMemory",
+    Int,
+    50,
+    "how hard to free unused page and image caches to save RAM (0 to 100). 0 keeps them until an allocation fails; 100 drops them as soon as a page is off-screen",
+  ).ver("3.7"),
+  field(
     "PaddingAfterLastPage",
     Bool,
     false,
@@ -1842,6 +1848,7 @@ const globalPrefsLayout = [
   "Annotations",
   "SidebarDx",
   "ScrollLineAmount",
+  "SaveMemory",
   "CitationHoverDelay",
   "ReadAloudSpeed",
   "ReadingAutoScrollSpeed",

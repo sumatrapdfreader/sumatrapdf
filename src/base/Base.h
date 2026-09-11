@@ -866,6 +866,10 @@ int setMinMax(int& v, int minVal, int maxVal);
 
 extern AtomicInt gAllowAllocFailure;
 
+constexpr u64 kLargeAllocationSize = 1024ull * 1024ull;
+extern u64 (*gTryFreeCachedObjects)(u64 newAllocationSize);
+extern u64 (*gFreeCachedObjects)();
+
 //--- Geom.h ------------------------------------------------------------------
 
 struct Point {

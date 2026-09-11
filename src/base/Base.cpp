@@ -8,6 +8,37 @@ Kind kindNone = "none";
 // if > 1 we won't crash when memory allocation fails
 AtomicInt gAllowAllocFailure = 0;
 
+u64 (*gTryFreeCachedObjects)(u64 newAllocationSize) = nullptr;
+u64 (*gFreeCachedObjects)() = nullptr;
+
+static void* MallocMaybeTrim(size_t size) {
+    if (size >= kLargeAllocationSize && gTryFreeCachedObjects) {
+        gTryFreeCachedObjects((u64)size);
+    }
+    void* p = malloc(size);
+    if (p) {
+        return p;
+    }
+    if (size >= kLargeAllocationSize && gFreeCachedObjects && gFreeCachedObjects() > 0) {
+        p = malloc(size);
+    }
+    return p;
+}
+
+static void* ReallocMaybeTrim(void* mem, size_t newSize) {
+    if (newSize >= kLargeAllocationSize && gTryFreeCachedObjects) {
+        gTryFreeCachedObjects((u64)newSize);
+    }
+    void* p = realloc(mem, newSize);
+    if (p || newSize == 0) {
+        return p;
+    }
+    if (newSize >= kLargeAllocationSize && gFreeCachedObjects && gFreeCachedObjects() > 0) {
+        p = realloc(mem, newSize);
+    }
+    return p;
+}
+
 // This exits so that I can add temporary instrumentation
 // to catch allocations of a given size and it won't cause
 // re-compilation of everything caused by changing Base.h
@@ -1357,7 +1388,7 @@ void* Alloc(Arena* arena, int size) {
         return nullptr;
     }
     if (!arena) {
-        return malloc(size);
+        return MallocMaybeTrim((size_t)size);
     }
     return arena->Alloc(size);
 }
@@ -1375,7 +1406,10 @@ void* Alloc(Arena* arena, size_t size) {
         return nullptr;
     }
     if (!arena) {
-        return malloc(size);
+        return MallocMaybeTrim(size);
+    }
+    if (size >= kLargeAllocationSize && gTryFreeCachedObjects) {
+        gTryFreeCachedObjects((u64)size);
     }
     return arena->Push((u64)size, 8, false);
 }
@@ -1385,18 +1419,21 @@ void* AllocZero(Arena* arena, size_t size) {
         return nullptr;
     }
     if (!arena) {
-        void* mem = malloc(size);
+        void* mem = MallocMaybeTrim(size);
         if (mem) {
             memset(mem, 0, size);
         }
         return mem;
+    }
+    if (size >= kLargeAllocationSize && gTryFreeCachedObjects) {
+        gTryFreeCachedObjects((u64)size);
     }
     return arena->Push((u64)size, 8, true);
 }
 
 void* Realloc(Arena* arena, void* mem, size_t newSize, size_t copySize) {
     if (!arena) {
-        return realloc(mem, newSize);
+        return ReallocMaybeTrim(mem, newSize);
     }
     // Arena has no realloc: allocate fresh and copy. Old memory is not freed
     // (arena lifetime handles it).

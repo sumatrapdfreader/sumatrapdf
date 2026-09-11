@@ -135,6 +135,7 @@
 #include "SumatraControl.h"
 #include "Tests.h"
 #include "Version.h"
+#include "CachedObjects.h"
 #include "SumatraPDF.h"
 #include "SumatraLog.h"
 
@@ -532,6 +533,33 @@ WindowTab* FindTabByController(DocController* ctrl) {
                 return tab;
             }
         }
+    }
+    return nullptr;
+}
+
+static WindowTab* FindTabByEngineForCache(EngineBase* engine) {
+    if (!engine) {
+        return nullptr;
+    }
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->GetEngine() == engine) {
+                return tab;
+            }
+        }
+    }
+    return nullptr;
+}
+
+static WindowTab* CurrentTabForCache() {
+    HWND fg = GetForegroundWindow();
+    for (MainWindow* win : gWindows) {
+        if (win->hwndFrame == fg) {
+            return win->CurrentTab();
+        }
+    }
+    if (len(gWindows) > 0) {
+        return gWindows[0]->CurrentTab();
     }
     return nullptr;
 }
@@ -17782,6 +17810,8 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     LogNonDefaultRegisteredExtensions();
 
     gRenderCache = new RenderCache();
+    gFindTabByEngine = FindTabByEngineForCache;
+    gCurrentTabForCache = CurrentTabForCache;
 
     // TODO: for reasons I don't understand, this must be called before LoadSettings()
     DarkModeInit();
