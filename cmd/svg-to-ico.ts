@@ -1,4 +1,4 @@
-// Rasterize gfx/svg/*.svg to multi-size Windows .ico files under gfx/:
+// Rasterize src/gfx/svg/*.svg to multi-size Windows .ico files under src/gfx/:
 // 256 PNG + 64/48/32/16 BMP (32bpp + AND mask). Optionally zopflipng-compresses
 // the 256 PNG frame.
 //
@@ -15,8 +15,8 @@ import { deflateSync, inflateSync } from "node:zlib";
 const ROOT = join(import.meta.dir, "..");
 const RESVG = join(ROOT, "bin", "resvg.exe");
 const ZOPFLIPNG = join(ROOT, "bin", "zopflipng.exe");
-const SVG_DIR = join(ROOT, "gfx", "svg");
-const ICO_DIR = join(ROOT, "gfx");
+const SVG_DIR = join(ROOT, "src", "gfx", "svg");
+const ICO_DIR = join(ROOT, "src", "gfx");
 const SIZES = [256, 64, 48, 32, 16] as const;
 
 function runResvg(svg: string, png: string, size: number): void {

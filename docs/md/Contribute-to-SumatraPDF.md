@@ -43,5 +43,6 @@ We use [GitHub Actions](https://help.github.com/en/actions) as our CI system. Se
 Overview of the directories:
 
 - `src` : main SumatraPDF code
+- `src/gfx` : icons and Windows Store images
 - `ext` : third-party libraries, including `ext/mupdf` (from [https://mupdf.com/](https://mupdf.com/))
 - `cmd` : Bun scripts that automate common tasks
