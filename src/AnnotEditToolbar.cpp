@@ -3235,7 +3235,6 @@ static void LoadAnnotsForPage(EngineMupdf* e, int pageNo) {
         logf("LoadAnnotsForPage: page %d GetFzPageInfo failed\n", pageNo);
         return;
     }
-    logf("LoadAnnotsForPage: page %d n=%d loaded=%d\n", pageNo, len(pi->annotations), (int)pi->annotsLoaded);
 }
 
 // Pages the background loader should finish first: current page (toolbar page
