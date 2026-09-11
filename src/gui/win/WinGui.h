@@ -1051,6 +1051,7 @@ struct TreeView : ControlBase {
     void Clear();
 
     HTREEITEM GetHandleByTreeItem(TreeItem item);
+    void EnsureChildrenPopulated(TreeItem item, HTREEITEM h);
     TempStr GetDefaultTooltipTemp(TreeItem ti);
     TreeItem GetItemAt(int x, int y);
     TreeItem GetTreeItemByHandle(HTREEITEM item);
@@ -1064,6 +1065,9 @@ struct TreeView : ControlBase {
     Size idealSize;
 
     TreeModel* treeModel = nullptr; // not owned by us
+    // insert children on first expand, not up front: inserting is one message
+    // (and one accessibility event) per node, ~200 ms for a 7k-node toc
+    bool lazyChildren = false;
 
     // for WM_NOTIFY with TVN_GETINFOTIP
     GetTooltipHandler onGetTooltip;

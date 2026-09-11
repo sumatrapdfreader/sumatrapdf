@@ -702,8 +702,8 @@ void ExpandTocToCurrentPage(MainWindow* win) {
 
 static void UpdateDocTocExpansionStateRecur(TreeView* treeView, Vec<int>& tocState, TocItem* tocItem) {
     while (tocItem) {
-        // items without children cannot be toggled
-        if (tocItem->child) {
+        // items without children cannot be toggled; not yet inserted (lazy) ones are in their default state
+        if (tocItem->child && tocItem->userData) {
             // we have to query the state of the tree view item because
             // isOpenToggled is not kept in sync
             // TODO: keep toggle state on TocItem in sync
@@ -897,7 +897,7 @@ static void TocCollapseAll(TreeView* tv) {
     TocExpandToLevel(tv, 1);
     HWND hwnd = tv->hwnd;
     HTREEITEM root = TreeView_GetRoot(hwnd);
-    if (root && !TreeView_GetNextSibling(hwnd, root) && TreeView_GetChild(hwnd, root)) {
+    if (root && !TreeView_GetNextSibling(hwnd, root) && tv->treeModel->ChildCount(tv->GetTreeItemByHandle(root)) > 0) {
         TreeView_Expand(hwnd, root, TVE_EXPAND);
     }
 }
@@ -1885,6 +1885,7 @@ void CreateToc(MainWindow* win) {
     SetWindowSubclass(filterEdit->hwnd, WndProcTocFilterEdit, NextSubclassId(), (DWORD_PTR)win);
 
     auto* treeView = new TreeView();
+    treeView->lazyChildren = true;
     TreeView::CreateArgs args;
     args.parent = win->hwndTocBox;
     args.font = GetAppTreeFont();

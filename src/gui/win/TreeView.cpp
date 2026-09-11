@@ -108,6 +108,16 @@ HWND TreeView::GetToolTipsHwnd() {
 }
 
 HTREEITEM TreeView::GetHandleByTreeItem(TreeItem item) {
+    auto h = (HTREEITEM)treeModel->GetUserData(item);
+    if (h || !lazyChildren) {
+        return h;
+    }
+    // not inserted yet: insert from the nearest inserted ancestor down
+    TreeItem parent = treeModel->Parent(item);
+    if (parent == TreeModel::kNullItem || parent == treeModel->Root()) {
+        return nullptr; // top-level items are always inserted
+    }
+    EnsureChildrenPopulated(parent, GetHandleByTreeItem(parent));
     return (HTREEITEM)treeModel->GetUserData(item);
 }
 
@@ -134,6 +144,7 @@ static TVITEMW* GetTVITEM(TreeView* tree, TreeItem ti) {
 // expand if collapse, collapse if expanded
 static void TreeViewToggle(TreeView* tree, HTREEITEM hItem, bool recursive) {
     HWND hTree = tree->hwnd;
+    tree->EnsureChildrenPopulated(tree->GetTreeItemByHandle(hItem), hItem);
     HTREEITEM child = TreeView_GetChild(hTree, hItem);
     if (!child) {
         // only applies to nodes with children
@@ -394,6 +405,11 @@ static HTREEITEM insertItemFront(TreeView* treeView, TreeItem ti, HTREEITEM pare
 
     TVITEMEXW* tvitem = &toInsert.itemex;
     FillTVITEM(tvitem, treeView->treeModel, ti);
+    if (treeView->lazyChildren && treeView->treeModel->ChildCount(ti) > 0) {
+        // show the expand button before the children are inserted
+        tvitem->mask |= TVIF_CHILDREN;
+        tvitem->cChildren = 1;
+    }
     HTREEITEM res = TreeView_InsertItem(treeView->hwnd, &toInsert);
     return res;
 }
@@ -430,9 +446,30 @@ static void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent
         auto ti = a[i];
         HTREEITEM h = insertItemFront(treeView, ti, parent);
         tm->SetUserData(ti, (uintptr_t)h);
-        // avoid recursing if not needed because we use a lot of stack space
-        if (tm->ChildCount(ti) > 0) {
+        // avoid recursing if not needed because we use a lot of stack space.
+        // lazy: collapsed items get their children on first expand
+        if (tm->ChildCount(ti) > 0 && (!treeView->lazyChildren || tm->IsExpanded(ti))) {
             PopulateTreeItem(treeView, ti, h);
+        }
+    }
+}
+
+// lazy: insert the item's children if that hasn't happened yet
+void TreeView::EnsureChildrenPopulated(TreeItem item, HTREEITEM h) {
+    if (lazyChildren && h && !TreeView_GetChild(hwnd, h) && treeModel->ChildCount(item) > 0) {
+        PopulateTreeItem(this, item, h);
+    }
+}
+
+// GetHandleByTreeItem() trusts a handle stored in the model, so handles left
+// by an earlier population of the same model must be cleared
+static void ResetUserData(TreeModel* tm, TreeItem item) {
+    int n = tm->ChildCount(item);
+    for (int i = 0; i < n; i++) {
+        TreeItem ti = tm->ChildAt(item, i);
+        tm->SetUserData(ti, 0);
+        if (tm->ChildCount(ti) > 0) {
+            ResetUserData(tm, ti);
         }
     }
 }
@@ -454,6 +491,9 @@ void TreeView::SetTreeModel(TreeModel* tm) {
     TreeView_DeleteAllItems(hwnd);
 
     treeModel = tm;
+    if (lazyChildren) {
+        ResetUserData(tm, tm->Root());
+    }
     PopulateTree(this, tm);
     ResumeRedraw();
 
@@ -593,6 +633,14 @@ void TreeView::OnNotifyReflect(ControlBase::NotifyReflectEvent* rev) {
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
+    if (code == TVN_ITEMEXPANDING && lazyChildren) {
+        NMTREEVIEWW* nmExp = (NMTREEVIEWW*)lp;
+        if (nmExp->action == TVE_EXPAND) {
+            EnsureChildrenPopulated((TreeItem)nmExp->itemNew.lParam, nmExp->itemNew.hItem);
+        }
+        return;
+    }
+
     if (code == TVN_SELCHANGED) {
         // log(StrL("tv: TVN_SELCHANGED\n"));
         // only needed when a handler paints beyond the label; without one the
