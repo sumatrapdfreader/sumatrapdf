@@ -354,6 +354,7 @@ const sumatraFiles: FileGroup[] = [
       "PreviewPipe.*",
       "ReadAloud.*",
       "ReadingAutoScroll.*",
+      "ReadingBar.*",
       "RefHover.*",
       "RefHoverCanvas.*",
       "RefHoverDetect.*",

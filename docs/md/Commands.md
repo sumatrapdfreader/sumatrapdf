@@ -165,6 +165,8 @@ CmdStartAutoScroll,,Start Auto-Scroll,"Start (or stop) middle-click-style auto-s
 CmdToggleAutomaticallyScroll,Ctrl + Shift + H,Automatically Scroll,"Hands-free continuous pan (Acrobat-style). A bar at the bottom shows speed and Pause / Stop / Reverse. While it is on: Up/Down change speed, 0-9 set it, minus reverses, Left/Right turn the page, Space pauses, Esc stops. Distinct from CmdStartAutoScroll, ver 3.7+"
 CmdAutomaticallyScrollFaster,,Automatically Scroll Faster,"Increase Automatically Scroll speed (no default shortcut; Up/Down while scrolling also change speed), ver 3.7+"
 CmdAutomaticallyScrollSlower,,Automatically Scroll Slower,"Decrease Automatically Scroll speed, ver 3.7+"
+CmdToggleReadingBar,,Reading Bar,"Toggle a horizontal reading bar on the page (highlight band, or invert to dim the rest). Drag to move, drag the top/bottom edge to resize, hover for a close button. Ctrl+Up/Down move it, Ctrl+Shift+Up/Down change height, Esc hides it. Settings in ReadingBar. Also Focus on the Automatically Scroll bar. ver 3.7+"
+CmdToggleReadingBarInvert,,Reading Bar Invert,"Toggle invert (screen mask) for the reading bar; remembered in ReadingBar.Invert. ver 3.7+"
 CmdScrollUpPage,"Ctrl + Up, PageUp, Shift + Return, Shift + Space",Scroll Up By Page,
 CmdScrollDownPage,"Ctrl + Down, PageDown, Return, Space",Scroll Down By Page,
 CmdScrollLeftPage,Shift + Left,Scroll Left By Page,

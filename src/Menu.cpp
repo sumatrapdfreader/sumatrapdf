@@ -48,6 +48,7 @@
 #include "CommandAvailability.h"
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
+#include "ReadingBar.h"
 #include "Menu.h"
 
 // value associated with menu item for owner-drawn purposes
@@ -296,6 +297,10 @@ static MenuDef menuDefView[] = {
     {
         TrN("A&utomatically Scroll"),
         CmdToggleAutomaticallyScroll,
+    },
+    {
+        TrN("Reading &Bar"),
+        CmdToggleReadingBar,
     },
     {
         StrL(kMenuSeparator),
@@ -1993,6 +1998,8 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
     CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);
     MenuSetChecked(win->menu, CmdToggleContinuousView, IsContinuous(displayMode));
     MenuSetChecked(win->menu, CmdToggleAutomaticallyScroll, ReadingAutoScrollIsOn(win));
+    MenuSetChecked(win->menu, CmdToggleReadingBar, ReadingBarIsOn(win));
+    MenuSetChecked(win->menu, CmdToggleReadingBarInvert, gSettings && gSettings->readingBar.invert);
 
     DisplayModel* dm = win->AsFixed();
     if (dm && win->CurrentTab()) {

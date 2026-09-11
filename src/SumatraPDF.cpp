@@ -121,6 +121,7 @@
 #include "DarkMode.h"
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
+#include "ReadingBar.h"
 #include "ExplorerQuickLook.h"
 #include "PagePosition.h"
 #include "base/DbgHelpDyn.h"
@@ -4774,6 +4775,7 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     MainWindow* win = tab->win;
     ReadingAutoScrollHideBar(win);
+    ReadingBarCancelDrag(win);
     // Document content is about to change; drop any page-element / about-page tip
     // so it cannot linger over the new document.
     win->DeleteToolTip();
@@ -5774,6 +5776,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     // playback bar and the session, which is about to be a dangling one
     ResetReadAloudStateForTab(tab);
     ReadingAutoScrollForgetTab(tab);
+    ReadingBarForgetTab(tab);
     if (!TabStillInWindow(win, tab)) {
         return;
     }
@@ -9285,6 +9288,10 @@ static void OnFrameKeyEsc(MainWindow* win) {
         ReadingAutoScrollStop(win);
         return;
     }
+    if (ReadingBarIsOn(win)) {
+        ReadingBarHide(win);
+        return;
+    }
     if (AbortFinding(win, true)) {
         return;
     }
@@ -12191,6 +12198,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdAutomaticallyScrollSlower:
             ReadingAutoScrollSlower(win);
+            break;
+
+        case CmdToggleReadingBar:
+            ReadingBarToggle(win);
+            break;
+
+        case CmdToggleReadingBarInvert:
+            ReadingBarToggleInvert(win);
             break;
 
         case CmdScrollUpHalfPage: {
@@ -15679,6 +15694,13 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
             return true;
         }
         if (ReadingAutoScrollOnKey(win, key)) {
+            return true;
+        }
+    }
+
+    if (msg.message == WM_KEYDOWN && !IsAltPressed()) {
+        MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
+        if (ReadingBarOnKey(win, msg.wParam)) {
             return true;
         }
     }

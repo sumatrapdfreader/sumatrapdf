@@ -28,6 +28,7 @@
 #include "MainWindow.h"
 #include "Canvas.h"
 #include "SumatraPDF.h"
+#include "ReadingBar.h"
 #include "ReadingAutoScroll.h"
 #include "SumatraLog.h"
 
@@ -50,6 +51,7 @@ struct ReadingAutoScrollBar : WindowBase {
     VirtButton* btnPause = nullptr;
     VirtButton* btnStop = nullptr;
     VirtButton* btnReverse = nullptr;
+    VirtButton* btnFocus = nullptr;
     VirtSlider* speedSlider = nullptr;
     VirtText* speedLabel = nullptr;
     VirtText* status = nullptr;
@@ -516,6 +518,10 @@ static void OnStopClickedBar(ReadingAutoScrollBar* bar, VirtMouseEvent*) {
     ReadingAutoScrollStop(WinFromBar(bar));
 }
 
+static void OnFocusClickedBar(ReadingAutoScrollBar* bar, VirtMouseEvent*) {
+    ReadingBarToggle(WinFromBar(bar));
+}
+
 static void OnReverseClickedBar(ReadingAutoScrollBar* bar, VirtMouseEvent*) {
     ReadingAutoScrollReverse(WinFromBar(bar));
 }
@@ -585,6 +591,12 @@ void ReadingAutoScrollBar::BuildLayout() {
     btnReverse->flags |= vwfCapturesMouse;
     btnReverse->onClick = MkFunc1(OnReverseClickedBar, this);
 
+    btnFocus = new VirtButton(Tr("Focus"), pf);
+    btnFocus->textPadding = btnPad;
+    btnFocus->flags &= ~vwfFocusable;
+    btnFocus->flags |= vwfCapturesMouse;
+    btnFocus->onClick = MkFunc1(OnFocusClickedBar, this);
+
     speedSlider = new VirtSlider();
     speedSlider->minVal = 0;
     speedSlider->maxVal = SpeedCount() - 1;
@@ -621,6 +633,8 @@ void ReadingAutoScrollBar::BuildLayout() {
     row->AddChild(new Spacer(gap, 0));
     row->AddChild(btnReverse);
     row->AddChild(new Spacer(gap, 0));
+    row->AddChild(btnFocus);
+    row->AddChild(new Spacer(gap, 0));
     row->AddChild(speedSlider);
     row->AddChild(new Spacer(gap, 0));
     row->AddChild(speedLabel);
@@ -649,7 +663,7 @@ void ReadingAutoScrollBar::SyncColors() {
     Color colBorder = kColGray;
     Color colBtnBg = AccentColor(colBg, 8, -8);
     Color colBtnHover = AccentColor(colBg, 16, -16);
-    VirtButton* btns[] = {btnPause, btnStop, btnReverse};
+    VirtButton* btns[] = {btnPause, btnStop, btnReverse, btnFocus};
     for (VirtButton* b : btns) {
         b->SetColor(kColBtnBg, colBtnBg);
         b->SetColor(kColBtnBgHover, colBtnHover);

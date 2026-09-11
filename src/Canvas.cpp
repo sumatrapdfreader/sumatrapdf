@@ -59,6 +59,7 @@
 #include "AnnotTextPopup.h"
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
+#include "ReadingBar.h"
 #include "HomePage.h"
 #include "Commands.h"
 #include "Toolbar.h"
@@ -1742,6 +1743,10 @@ static bool OnTouchLongPress(MainWindow* win, int x, int y) {
 }
 
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
+    if (ReadingBarOnMouseMove(win, x, y)) {
+        return;
+    }
+
     DisplayModel* dm = win->AsFixed();
     // ReportIf(!dm); // can happen if reload fails, we delete DisplayModel
     if (!dm) return;
@@ -2234,6 +2239,10 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    if (ReadingBarOnLeftDown(win, x, y)) {
+        return;
+    }
+
     if (AnnotationPlacementOnLeftDown(win, Point{x, y}, key)) {
         return;
     }
@@ -2479,6 +2488,10 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
 }
 
 static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
+    if (ReadingBarOnLeftUp(win)) {
+        return;
+    }
+
     DisplayModel* dm = win->AsFixed();
     ReportIf(!dm);
 
@@ -3908,6 +3921,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     UpdateSelectionToolbarPosition(win);
 
     PaintReadAloudHighlight(win, &gfx);
+    ReadingBarPaint(win, &gfx);
 
     if (win->fwdSearchMark.show) {
         PaintForwardSearchMark(win, &gfx);
@@ -4095,6 +4109,10 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
 
 static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     ReportIf(win->hwndCanvas != hwnd);
+    if (ReadingBarOnSetCursor(win)) {
+        win->DeleteToolTip();
+        return TRUE;
+    }
     if (win->mouseAction != MouseAction::None) {
         win->DeleteToolTip();
     }
@@ -5098,6 +5116,7 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
         case WM_MOUSELEAVE:
             win->annotationUnderCursor = nullptr;
             HideAnnotationHoverOverlay(win);
+            ReadingBarOnMouseLeave(win);
             ScheduleRepaint(win, 0);
             RefHoverOnCanvasMouseLeave(win->refHover, win->hwndCanvas, gSettings->citationHoverDelay);
             return 0;
@@ -5108,6 +5127,10 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
 
         case WM_LBUTTONUP:
             OnMouseLeftButtonUp(win, x, y, wp);
+            return 0;
+
+        case WM_CAPTURECHANGED:
+            ReadingBarCancelDrag(win);
             return 0;
 
         case WM_LBUTTONDBLCLK:

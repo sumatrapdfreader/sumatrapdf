@@ -109,6 +109,13 @@ enum class MouseAction {
     SelectingText
 };
 
+enum class ReadingBarDrag {
+    None = 0,
+    Move,
+    ResizeTop,
+    ResizeBottom,
+};
+
 // Edge / corner / interior of a rectangular selection for move/resize
 // (mirrors crop handles in the save-crop-resize image dialog).
 enum class SelectionDragEdge {
@@ -702,6 +709,10 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     ReadAloudPlaybackBar* readAloudPlaybackBar = nullptr;
     ReadingAutoScrollBar* readingAutoScrollBar = nullptr;
+
+    ReadingBarDrag readingBarDrag = ReadingBarDrag::None;
+    int readingBarDragOff = 0;
+    bool readingBarHover = false;
 
     // small floating toolbar shown after a text selection in fixed-page
     // floating selection actions bar (controlled by the SelectionToolbar setting)

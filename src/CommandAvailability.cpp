@@ -904,6 +904,14 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
             return CommandVisibility::Hide;
         }
     }
+    if (cmdId == CmdToggleReadingBar || cmdId == CmdToggleReadingBarInvert) {
+        if (!ctx.isFixedPage) {
+            return CommandVisibility::Hide;
+        }
+        if (cmdId == CmdToggleReadingBarInvert && !(ctx.tab && ctx.tab->readingBar.on)) {
+            return CommandVisibility::Hide;
+        }
+    }
 
     return MapForSurface(CommandVisibility::Show, surface);
 }

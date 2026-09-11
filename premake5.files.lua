@@ -342,6 +342,7 @@ function sumatrapdf_files()
     "ProgressUpdateUI.*",
     "ReadAloud.*",
     "ReadingAutoScroll.*",
+    "ReadingBar.*",
     "RefHover.h",
     "RefHover.cpp",
     "RefHoverCanvas.cpp",

@@ -322,6 +322,8 @@ static SeqStrings gCommandNames =
     "CmdToggleAutomaticallyScroll\0"
     "CmdAutomaticallyScrollFaster\0"
     "CmdAutomaticallyScrollSlower\0"
+    "CmdToggleReadingBar\0"
+    "CmdToggleReadingBarInvert\0"
     "CmdNone\0"
     "\0";
 
@@ -634,6 +636,8 @@ static i32 gCommandIds[] = {
     CmdToggleAutomaticallyScroll,
     CmdAutomaticallyScrollFaster,
     CmdAutomaticallyScrollSlower,
+    CmdToggleReadingBar,
+    CmdToggleReadingBarInvert,
     CmdNone,
 };
 
@@ -946,6 +950,8 @@ SeqStrings gCommandDescriptions =
     "Automatically Scroll\0"
     "Automatically Scroll Faster\0"
     "Automatically Scroll Slower\0"
+    "Reading Bar\0"
+    "Reading Bar Invert\0"
     "Do nothing\0"
     "\0";
 // clang-format on

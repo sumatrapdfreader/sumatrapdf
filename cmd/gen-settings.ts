@@ -659,6 +659,29 @@ const antiGravity: Field[] = [
   field("BgColor", Color, "#ffffff", "background color of the Antigravity chat panel"),
 ];
 
+const readingBar: Field[] = [
+  field(
+    "Background",
+    Color,
+    rgba(255, 224, 130, 0x66),
+    "fill of the reading bar in highlight mode. #aarrggbb sets opacity " +
+      "(00 = transparent, FF = opaque); #rrggbb is fully opaque",
+  ).ver("3.7"),
+  field(
+    "Invert",
+    Bool,
+    false,
+    "if true, dim the page except the reading bar (screen mask); if false, draw a colored highlight band",
+  ).ver("3.7"),
+  field(
+    "Height",
+    Int,
+    0,
+    "height of the reading bar in pixels at 96 DPI; 0 uses a default of about three lines. " +
+      "dragging the top or bottom edge of the bar also changes this",
+  ).ver("3.7"),
+];
+
 const fullscreen: Field[] = [
   field(
     "ShowToolbar",
@@ -1415,6 +1438,11 @@ const globalPrefs: Field[] = [
     40,
     "pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 8 to 320; also changed from the auto-scroll bar and the arrow keys while scrolling",
   ).ver("3.7"),
+  struct(
+    "ReadingBar",
+    readingBar,
+    "reading bar (View menu): a horizontal band on the page to keep your place. Highlight fills the band; Invert dims everything else",
+  ).ver("3.7"),
   field(
     "FastScrollOverScrollbar",
     Bool,
@@ -1817,6 +1845,7 @@ const globalPrefsLayout = [
   "CitationHoverDelay",
   "ReadAloudSpeed",
   "ReadingAutoScrollSpeed",
+  "ReadingBar",
   "TabWidth",
   "TocDy",
   "ToolbarSize",

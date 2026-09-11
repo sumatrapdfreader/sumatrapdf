@@ -321,6 +321,8 @@ const commandsRaw = [
     "CmdToggleAutomaticallyScroll", "Automatically Scroll",
     "CmdAutomaticallyScrollFaster", "Automatically Scroll Faster",
     "CmdAutomaticallyScrollSlower", "Automatically Scroll Slower",
+    "CmdToggleReadingBar", "Reading Bar",
+    "CmdToggleReadingBarInvert", "Reading Bar Invert",
     "CmdNone", "Do nothing",
 ];
 

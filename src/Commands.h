@@ -317,7 +317,9 @@ enum {
     CmdToggleAutomaticallyScroll = 508,
     CmdAutomaticallyScrollFaster = 509,
     CmdAutomaticallyScrollSlower = 510,
-    CmdNone = 511,
+    CmdToggleReadingBar = 511,
+    CmdToggleReadingBarInvert = 512,
+    CmdNone = 513,
 
     /* range for file history */
     CmdFileHistoryFirst,

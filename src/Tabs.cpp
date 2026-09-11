@@ -29,6 +29,7 @@
 #include "CommandAvailability.h"
 #include "FindBar.h"
 #include "ReadingAutoScroll.h"
+#include "ReadingBar.h"
 #include "SelectionToolbar.h"
 #include "Menu.h"
 #include "TableOfContents.h"
@@ -742,6 +743,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
     HideFindBar(win);
     HideSelectionToolbar(win);
     ReadingAutoScrollHideBar(win);
+    ReadingBarCancelDrag(win);
 
     int current = win->tabsCtrl->GetSelected();
     if (-1 == current) {

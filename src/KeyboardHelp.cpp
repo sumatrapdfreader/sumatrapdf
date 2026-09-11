@@ -96,6 +96,7 @@ static const struct {
     {CmdZoomFitWidth, "Ctrl + 2"}, {CmdZoomActualSize, "Ctrl + 1"}, {CmdToggleZoom, "Z"}, {CmdSinglePageView, "Ctrl + 6"},
     {CmdFacingView, "Ctrl + 7"}, {CmdBookView, "Ctrl + 8"}, {CmdToggleContinuousView, "C"}, {CmdRotateLeft, "["},
     {CmdRotateRight, "]"}, {CmdToggleFullscreen, "F"}, {CmdToggleAutomaticallyScroll, "Ctrl + Shift + H"},
+    {CmdToggleReadingBar, ""}, {CmdToggleReadingBarInvert, ""},
     {CmdOpenFile, "Ctrl + O"}, {CmdSaveAs, "Ctrl + S"},
     {CmdPrint, "Ctrl + P"}, {CmdReloadDocument, "R"}, {CmdClose, "Ctrl + W"}, {CmdNewWindow, "Ctrl + N"},
     {CmdOpenNextFileInFolder, "Ctrl + Shift + Right"}, {CmdOpenPrevFileInFolder, "Ctrl + Shift + Left"},

@@ -279,6 +279,25 @@ ReadAloudSpeed = 1
 ; (introduced in version 3.7)
 ReadingAutoScrollSpeed = 40
 
+; reading bar (View menu): a horizontal band on the page to keep your place.
+; Highlight fills the band; Invert dims everything else (introduced in version
+; 3.7)
+ReadingBar [
+    ; fill of the reading bar in highlight mode. #aarrggbb sets opacity (00 =
+    ; transparent, FF = opaque); #rrggbb is fully opaque (introduced in version
+    ; 3.7)
+    Background = #66ffe082
+
+    ; if true, dim the page except the reading bar (screen mask); if false, draw
+    ; a colored highlight band (introduced in version 3.7)
+    Invert = false
+
+    ; height of the reading bar in pixels at 96 DPI; 0 uses a default of about
+    ; three lines. dragging the top or bottom edge of the bar also changes this
+    ; (introduced in version 3.7)
+    Height = 0
+]
+
 ; if true, mouse wheel scrolling is faster when mouse is over a scrollbar
 ; (introduced in version 3.6)
 FastScrollOverScrollbar = false
