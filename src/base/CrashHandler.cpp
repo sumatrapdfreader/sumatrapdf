@@ -85,6 +85,9 @@ static ThreadId gDumpThreadId = 0;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
+// kept so UninstallCrashHandler() can remove the handler: it reads globals
+// that uninstall tears down
+static PVOID gVectoredHandler = nullptr;
 
 static bool TryStartCrashHandling(Str handlerName) {
     if (!AtomicBoolSwap(&gCrashHandlerStarted, true)) {
@@ -706,7 +709,16 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     }
     gPrevExceptionFilter = SetUnhandledExceptionFilter(CrashDumpExceptionHandler);
     // 1 means that our handler will be called first, 0 would be: last
-    AddVectoredExceptionHandler(1, CrashDumpVectoredExceptionHandler);
+    gVectoredHandler = AddVectoredExceptionHandler(1, CrashDumpVectoredExceptionHandler);
+
+    // Note: a fail-fast (__fastfail / RtlFailFast, i.e. 0xC0000409) gets us
+    // nothing at all - not this filter, not the vectored handler, not even the
+    // stderr report - because the kernel kills the process without dispatching
+    // an exception. That's deliberate, so that corrupted state can't intercept
+    // its own death, and it's what a /GS cookie or CFG failure uses. The only
+    // backstop is WER LocalDumps, which is per-machine and needs admin, so
+    // there is nothing to fix here. The CRT's own fail-fast paths (abort(),
+    // invalid parameter, pure call) are routed into CrashMe() below instead.
 
     signal(SIGABRT, onSignalAbort);
 #if COMPILER_MSVC
@@ -737,12 +749,22 @@ void UninstallCrashHandler() {
     if (gPrevExceptionFilter) {
         SetUnhandledExceptionFilter(gPrevExceptionFilter);
     }
+    // must go before we close the handles it waits on: left registered, it
+    // would run on a heap corruption during shutdown and SetEvent() / wait on
+    // closed handles, whose values may since have been recycled
+    if (gVectoredHandler) {
+        RemoveVectoredExceptionHandler(gVectoredHandler);
+        gVectoredHandler = nullptr;
+    }
 
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, 1000); // 1 sec
 
     SafeCloseThreadHandle(&gDumpThread);
     CloseHandle(gDumpEvent);
+    // InstallCrashHandler() asserts on both being null, so don't leave a stale
+    // handle value behind
+    gDumpEvent = nullptr;
 
     // those are allocated from gCrashHandlerArena so are freed by ArenaDelete()
     gSystemInfo = {};

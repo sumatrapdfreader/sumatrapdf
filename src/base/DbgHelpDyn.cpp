@@ -210,9 +210,11 @@ void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, 
 
     // MiniDumpWithThreadInfo adds the real thread start address and TEB for
     // every thread, which gives the debugger something to anchor a stack walk
-    // to when the stored context is partial. Costs a few hundred bytes.
+    // to when the stored context is partial. MiniDumpWithUnloadedModules keeps
+    // a crash in a dll we've already dropped (webview2, a print driver, a shell
+    // extension) attributable. Both cost a few hundred bytes.
     MINIDUMP_TYPE type = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory |
-                                         MiniDumpWithThreadInfo);
+                                         MiniDumpWithThreadInfo | MiniDumpWithUnloadedModules);
     if (fullDump) {
         type =
             (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
