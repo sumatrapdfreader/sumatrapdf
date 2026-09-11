@@ -20,6 +20,7 @@
 #include "MainWindow.h"
 #include "Selection.h"
 #include "ReadAloud.h"
+#include "ReadingAutoScroll.h"
 #include "Translations.h"
 #include "AnnotEditToolbar.h"
 #include "WindowTab.h"
@@ -64,6 +65,7 @@ WindowTab::~WindowTab() {
     // whatever a close path forgot, nothing may be left pointing at a tab that
     // is going away (the read-aloud playback bar holds one)
     ReadAloudForgetTab(this);
+    ReadingAutoScrollForgetTab(this);
     // Drop MainWindow pointers into this tab / its controller before we free
     // them: DestroyWindow during WebView teardown can re-enter the canvas
     // WndProc, which reads win->ctrl / CurrentTab().

@@ -900,7 +900,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (!ctx.isFixedPage) {
             return CommandVisibility::Hide;
         }
-        if (cmdId != CmdToggleAutomaticallyScroll && !(ctx.win && ctx.win->readingAutoScrollOn)) {
+        if (cmdId != CmdToggleAutomaticallyScroll && !(ctx.tab && ctx.tab->autoScroll.on)) {
             return CommandVisibility::Hide;
         }
     }

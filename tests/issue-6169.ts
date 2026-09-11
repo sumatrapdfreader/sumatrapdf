@@ -99,6 +99,19 @@ export async function testit(): Promise<void> {
     st = await waitBar(client, (s) => s.visible && s.speed > speedBefore, "Down did not increase speed");
     console.log(`  Down: ${speedBefore} -> ${st.speed} px/s ✓`);
 
+    sendCommand(frame, cmdId("CmdPrevTab"));
+    st = await waitBar(client, (s) => !s.visible, "bar still shown on Home");
+    await sleep(300);
+    st = await barState(client);
+    if (st.visible) {
+      throw new Error(`issue-6169: bar reappeared on Home: ${JSON.stringify(st)}`);
+    }
+    console.log(`  Home tab hid the bar ✓`);
+
+    sendCommand(frame, cmdId("CmdNextTab"));
+    st = await waitBar(client, (s) => s.visible && s.paused === 1, "bar did not return with the document tab");
+    console.log(`  document tab restored the paused bar ✓`);
+
     postKey(frame, VK_ESCAPE);
     st = await waitBar(client, (s) => !s.visible, "Esc did not hide the bar");
     console.log(`  Esc stopped auto-scroll ✓`);

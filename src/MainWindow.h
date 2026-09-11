@@ -702,12 +702,6 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     ReadAloudPlaybackBar* readAloudPlaybackBar = nullptr;
     ReadingAutoScrollBar* readingAutoScrollBar = nullptr;
-    bool readingAutoScrollOn = false;
-    bool readingAutoScrollPaused = false;
-    bool readingAutoScrollAtEnd = false;
-    int readingAutoScrollDir = 1;
-    float readingAutoScrollAccum = 0;
-    i64 readingAutoScrollLastQpc = 0;
 
     // small floating toolbar shown after a text selection in fixed-page
     // floating selection actions bar (controlled by the SelectionToolbar setting)

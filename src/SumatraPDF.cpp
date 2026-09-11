@@ -4773,6 +4773,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     }
 
     MainWindow* win = tab->win;
+    ReadingAutoScrollHideBar(win);
     // Document content is about to change; drop any page-element / about-page tip
     // so it cannot linger over the new document.
     win->DeleteToolTip();
@@ -4831,6 +4832,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         }
         EditSetFocus(win->favFilterEdit);
         EditSetCursorPosAtEnd(win->favFilterEdit);
+        ReadingAutoScrollSyncToTab(tab);
         return;
     }
 
@@ -4945,6 +4947,9 @@ void LoadModelIntoTab(WindowTab* tab) {
             ScheduleUiUpdate(win);
         }
         OnAIChatTabChanged(win);
+    }
+    if (IsMainWindowValidAndNotClosing(win)) {
+        ReadingAutoScrollSyncToTab(tab);
     }
 }
 
@@ -5768,6 +5773,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     // StopReadAloudIfSourceTab) also drops the pointers to this tab held by the
     // playback bar and the session, which is about to be a dangling one
     ResetReadAloudStateForTab(tab);
+    ReadingAutoScrollForgetTab(tab);
     if (!TabStillInWindow(win, tab)) {
         return;
     }
