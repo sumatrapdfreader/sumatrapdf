@@ -1899,7 +1899,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             } else if (str::EqI(surf, StrL("toolbar"))) {
                 surface = CommandSurface::Toolbar;
             }
-            AppCommandCtx ctx = NewAppCommandCtx(gWindows[0]);
+            Point pt{};
+            i32 x = 0;
+            i32 y = 0;
+            if (IntArg(req, 2, x) && IntArg(req, 3, y)) {
+                pt = Point{x, y};
+            }
+            AppCommandCtx ctx = NewAppCommandCtx(gWindows[0], pt);
             CommandVisibility vis = GetCommandVisibility(cmdId, ctx, surface);
             Str visName = StrL("show");
             if (vis == CommandVisibility::Hide) {
