@@ -143,6 +143,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 - `a` create highlight annotation from selected text
 - `A` like `a` plus turns on Edit PDF mode
 - `u` create underline annotation from selected text
+- `U` like `u` plus turns on Edit PDF mode
 - `Delete` delete annotation under mouse cursor
 - `Ctrl + C` copy the selected annotation, `Ctrl + X` cut the one under the mouse cursor, `Ctrl + V` paste it with its top-left at the mouse. A cut annotation is deleted when the copy is pasted (**ver 3.7+**)
 - `Ctrl + Z` undo the last change to the PDF, `Ctrl + Shift + Z` redo it (**ver 3.7+**)

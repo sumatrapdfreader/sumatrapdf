@@ -13254,11 +13254,21 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if (!lastCreatedAnnot) {
         return 0;
     }
-    // Creating an annotation by any means turns on Edit PDF mode: that is
-    // where it can be selected, moved, resized and edited from the property
-    // row, and it is what the user just said they are doing. Enable it before
-    // the re-render so the second toolbar row is accounted for in the layout.
-    EnablePdfAnnotationsToolbar(win);
+    bool openEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
+    if (!openEdit && win->isFullScreen) {
+        AnnotationType t = lastCreatedAnnot->type;
+        openEdit = t == AnnotationType::Highlight || t == AnnotationType::Underline || t == AnnotationType::Squiggly ||
+                   t == AnnotationType::StrikeOut;
+    }
+    // CmdCreateAnnot* turns on Edit PDF only when the command has `openedit`
+    // (Shift+A / Shift+U). Paste and insert-image still enter the mode.
+    bool enterEditPdf = true;
+    if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
+        enterEditPdf = openEdit;
+    }
+    if (enterEditPdf) {
+        EnablePdfAnnotationsToolbar(win);
+    }
     // The text selection has done its job: it would sit on top of the markup
     // annotation it just made and keep the selection toolbar open over it.
     StopSelectTextWithKeyboard(win);
@@ -13278,17 +13288,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // brings the text it was copied from.
     if (cmdId == CmdCreateAnnotFreeText && lastCreatedAnnot->type == AnnotationType::FreeText) {
         StartFreeTextInPlaceEdit(win, lastCreatedAnnot);
-    } else {
-        bool openEdit = cmd && GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
-        if (!openEdit && win->isFullScreen) {
-            AnnotationType t = lastCreatedAnnot->type;
-            openEdit = t == AnnotationType::Highlight || t == AnnotationType::Underline ||
-                       t == AnnotationType::Squiggly || t == AnnotationType::StrikeOut;
-        }
-        if (openEdit) {
-            // openedit, and F11 markup: Contents used to never open (issue #6111)
-            uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, win), "StartAnnotContentsEdit");
-        }
+    } else if (openEdit) {
+        // openedit, and F11 markup: Contents used to never open (issue #6111)
+        uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, win), "StartAnnotContentsEdit");
     }
     return 0;
 }

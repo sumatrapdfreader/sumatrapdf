@@ -139,10 +139,7 @@ static ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FVIRTKEY, VK_OEM_2, CmdToggleKeyboardHelp},
 
     {FVIRTKEY, 'A', CmdCreateAnnotHighlight},
-    {FVIRTKEY | FSHIFT, 'A', CmdCreateAnnotHighlight},
-
     {FVIRTKEY, 'U', CmdCreateAnnotUnderline},
-    {FVIRTKEY | FSHIFT, 'U', CmdCreateAnnotUnderline},
 
     {FVIRTKEY | FSHIFT, 'I', CmdInvertColors},
     {FVIRTKEY, 'I', CmdTogglePageInfo},
@@ -165,6 +162,11 @@ static ACCEL gBuiltInAccelerators[] = {
     // on any layout (VK_OEM_PERIOD is only the US-layout virtual key)
     {0, '.', CmdPresentationBlackBackground},
     {FVIRTKEY, 'C', CmdToggleContinuousView},
+
+    // Shift + CreateAnnot*: cmd patched to "CmdCreateAnnot* openedit" before
+    // the accelerator table is built, so they turn on Edit PDF mode.
+    {FVIRTKEY | FSHIFT, 'A', CmdCreateAnnotHighlight},
+    {FVIRTKEY | FSHIFT, 'U', CmdCreateAnnotUnderline},
 };
 // NOLINTEND(modernize-use-designated-initializers)
 
@@ -451,9 +453,46 @@ static void AddCustomShortcuts(AccelTablesBuilder& b) {
     }
 }
 
+// Replace Shift+CreateAnnot* built-ins with a "CmdCreateAnnot* openedit"
+// custom command so those shortcuts turn on Edit PDF mode. orig cmd ids are
+// snapshotted once: LoadSettings frees custom commands and this runs again
+// with new ids.
+static void PatchCreateAnnotEditAccelerators() {
+    static WORD origCmds[dimofi(gBuiltInAccelerators)];
+    static bool didInit = false;
+    if (!didInit) {
+        for (int i = 0; i < dimofi(gBuiltInAccelerators); i++) {
+            origCmds[i] = gBuiltInAccelerators[i].cmd;
+        }
+        didInit = true;
+    }
+    for (int i = 0; i < dimofi(gBuiltInAccelerators); i++) {
+        int origId = origCmds[i];
+        if ((gBuiltInAccelerators[i].fVirt & FSHIFT) == 0) {
+            continue;
+        }
+        if (gBuiltInAccelerators[i].fVirt & (FCONTROL | FALT)) {
+            continue;
+        }
+        if (origId < CmdCreateAnnotFirst || origId > CmdCreateAnnotLast) {
+            continue;
+        }
+        Str name = GetCommandName(origId);
+        if (len(name) == 0) {
+            continue;
+        }
+        CustomCommand* cmd = CreateCommandFromDefinition(fmt("%s openedit", name));
+        if (cmd) {
+            gBuiltInAccelerators[i].cmd = (WORD)cmd->id;
+        }
+    }
+}
+
 void CreateSumatraAcceleratorTable() {
     gShortcutLangCode = CurrentLangCode;
     ReportIf(gAccelTables[0] || gAccelTables[1] || gAccelTables[2]);
+
+    PatchCreateAnnotEditAccelerators();
 
     // an upper bound for all three tables: Add() appends at most one entry to
     // each per call, and it's called once per built-in and once per custom shortcut
@@ -557,6 +596,41 @@ bool Accelerators_UnitTestTreeTakesLetters() {
         return false;
     }
     return true;
+}
+
+bool Accelerators_UnitTestCreateAnnotEdit() {
+    GetAcceleratorTables();
+    bool plainA = false;
+    bool shiftA = false;
+    bool plainU = false;
+    bool shiftU = false;
+    for (int i = 0; i < gAccelsCount; i++) {
+        const ACCEL& a = gAccels[i];
+        if (a.key != 'A' && a.key != 'U') {
+            continue;
+        }
+        if (a.fVirt == FVIRTKEY) {
+            if (a.key == 'A') {
+                plainA = a.cmd == (WORD)CmdCreateAnnotHighlight;
+            } else {
+                plainU = a.cmd == (WORD)CmdCreateAnnotUnderline;
+            }
+            continue;
+        }
+        if (a.fVirt != (FVIRTKEY | FSHIFT)) {
+            continue;
+        }
+        CustomCommand* cmd = FindCustomCommand(a.cmd);
+        if (!cmd || !GetCommandBoolArg(cmd, kCmdArgOpenEdit, false)) {
+            continue;
+        }
+        if (a.key == 'A') {
+            shiftA = cmd->origId == CmdCreateAnnotHighlight;
+        } else {
+            shiftU = cmd->origId == CmdCreateAnnotUnderline;
+        }
+    }
+    return plainA && shiftA && plainU && shiftU;
 }
 #endif
 

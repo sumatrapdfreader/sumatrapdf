@@ -1,6 +1,6 @@
 // #6166: after highlighting text, a drag on that highlight must start a text
-// selection so the marked words can be copied. Creating the highlight turns
-// on Edit PDF and selects the annotation; those used to eat the click.
+// selection so the marked words can be copied. In Edit PDF the new annotation
+// is selected; that used to eat the click.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -137,6 +137,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
 
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     await selectLineWithKeyboard(client, frame);
     sendCommandSync(frame, cmdId("CmdCreateAnnotHighlight"));
 

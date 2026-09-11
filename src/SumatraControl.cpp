@@ -1851,6 +1851,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int cmdId = GetCommandIdByName(name);
+            if (cmdId <= 0 && str::IndexOfChar(name, ' ') >= 0) {
+                CustomCommand* custom = CreateCommandFromDefinition(name);
+                if (custom) {
+                    cmdId = custom->id;
+                }
+            }
             if (cmdId <= 0) {
                 AppendError(req, StrL("TestInvokeCommand expects a command name"));
                 break;

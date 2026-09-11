@@ -28,7 +28,7 @@ If you close the dialog or choose `Discard`, annotations will be lost.
 
 ## Edit PDF mode
 
-Turn on **Edit PDF** in the main toolbar to add, select, and change annotations. `Shift + A` creates a highlight (the same as lowercase `a`) and also turns on Edit PDF mode.
+Turn on **Edit PDF** in the main toolbar to add, select, and change annotations. `Shift + A` / `Shift + U` create a highlight / underline (the same as lowercase `a` / `u`) and also turn on Edit PDF mode.
 
 **Find Annotation**, near the end of the Edit PDF toolbar (before the save buttons), opens a floating **Annotations** window: a search box (`filter N annotations`) over the list of the document's annotations. Press it again, or close the window, to hide it.
 

@@ -208,7 +208,7 @@ CmdCreateAnnotCircle,,Create Circle Annotation,
 CmdFindAnnotation,,Find Annotation,"opens the floating annotation list, where you can filter the document's annotations and jump to one, ver 3.7+"
 CmdCreateAnnotFileAttachment,,Create File Attachment Annotation,"click to place, like Stamp/Caret; Esc cancels, ver 3.7+"
 CmdCreateAnnotFreeText,,Create Free Text Annotation,
-CmdCreateAnnotHighlight,"a, A",Create Highlight Annotation,
+CmdCreateAnnotHighlight,"a, A",Create Highlight Annotation,"`A` (`Shift + A`) is `CmdCreateAnnotHighlight openedit`: also turns on Edit PDF mode"
 CmdAnnotationHighlightBrush,,Highlight with Brush,"a freehand highlighter: drag to paint a marker stroke anywhere on the page, no text selection needed. Release finishes, Esc cancels. Saved as an ink annotation in HighlightColor, ver 3.7+"
 CmdCreateAnnotInk,,Create Ink Annotation,"drag to paint; release commits the stroke and leaves the tool on. Esc or closing the hint leaves the tool, ver 3.7+"
 CmdCreateAnnotLine,,Create Line Annotation,
@@ -224,7 +224,7 @@ CmdCreateAnnotStamp,,Create Stamp Annotation,
 CmdCreateAnnotImageFromClipboard,,Create Image Annotation From Clipboard,
 CmdCreateAnnotStrikeOut,,Create Strike Out Annotation,
 CmdCreateAnnotText,,Create Text Annotation,
-CmdCreateAnnotUnderline,"u, U",Create Underline Annotation,
+CmdCreateAnnotUnderline,"u, U",Create Underline Annotation,"`U` (`Shift + U`) is `CmdCreateAnnotUnderline openedit`: also turns on Edit PDF mode"
 CmdUndo,Ctrl + Z,Undo,"ver 3.7+, takes back the last change to the PDF (annotations, form fields, applied redactions). One gesture is one step: creating, pasting or resizing an annotation comes back in a single Undo. Disabled when there is nothing to undo; in a text box Ctrl + Z is the text box's undo"
 CmdRedo,Shift + Ctrl + Z,Redo,"ver 3.7+, re-applies the change Undo took back. Disabled when there is nothing to redo"
 CmdCutAnnotation,Ctrl + X,Cut Annotation,"ver 3.7+, copies the annotation under the cursor (or the selected one) and deletes it when the copy is pasted; in a text box Ctrl + X is the text box's cut"
@@ -510,7 +510,7 @@ Use case: if you want to go forward or back by more than one page.
 Arguments:
 
 - `color` : default, color
-- `openedit` : Boolean, `false` if not given. Opens the Contents editor on the property row after creating the annotation (the old annotations window is gone). Creating an annotation always turns on Edit PDF mode.
+- `openedit` : Boolean, `false` if not given. Turns on Edit PDF mode and opens the Contents editor on the property row after creating the annotation. Built-in `Shift + A` / `Shift + U` use this.
 - `copytoclipboard` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, copies the selection (the annotation's text) to the clipboard. This used to be the default behavior for built-in keyboard shortcuts such as `a`, but now it has to be chosen explicitly.
 - `setcontent` : Boolean, `false` if not given. For highlight/underline/squiggly/strikeout annotations, sets the annotation's content to the selection (the annotation's text)
 
