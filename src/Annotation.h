@@ -203,6 +203,7 @@ bool AnnotationIsLive(Annotation*);
 
 void DeleteAnnotation(Annotation*);
 bool AnnotationCanBeMoved(AnnotationType);
+bool AnnotationIsTextMarkup(AnnotationType);
 bool AnnotationCanBeResized(AnnotationType);
 bool AnnotationCanBeCopied(AnnotationType);
 bool AnnotationSupportsColor(AnnotationType);

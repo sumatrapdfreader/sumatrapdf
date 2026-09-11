@@ -1,6 +1,8 @@
 // Edit PDF mode makes annotations directly interactive: hover outlines them,
-// Ctrl+click enters Edit PDF mode and selects the annotation, and a plain
-// click in that mode shows a compact property row.
+// Ctrl+click enters Edit PDF mode and selects the annotation, and a click
+// on a selected annot shows a compact property row. Text markup (highlight
+// and friends) still needs Ctrl+click so a drag on the marked text can
+// start a selection (issue #6166).
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -286,10 +288,10 @@ export async function testit(): Promise<void> {
       throw new Error("pdf-edit-toolbar-interaction: hover did not draw an annotation bounding box");
     }
 
-    await clickAt(canvas, editCenterX, editCenterY);
+    await clickAt(canvas, editCenterX, editCenterY, 200, MK_CONTROL);
     state = await annotState(client);
     if (!state.selected || !state.selectedHover) {
-      throw new Error("pdf-edit-toolbar-interaction: plain click did not select the annotation");
+      throw new Error("pdf-edit-toolbar-interaction: Ctrl+click did not select the highlight");
     }
     if (!/annotEditToolbar visible=1 n=\d+ items=.*color.*contents/.test(state.raw)) {
       throw new Error(`pdf-edit-toolbar-interaction: compact property row did not appear\n${state.raw}`);
@@ -306,10 +308,12 @@ export async function testit(): Promise<void> {
       canvas,
       bottomAnnot.x + Math.floor(bottomAnnot.dx / 2),
       bottomAnnot.y + Math.floor(bottomAnnot.dy / 2),
+      200,
+      MK_CONTROL,
     );
     state = await annotState(client);
     if (!state.selected || !state.selectedHover) {
-      throw new Error("pdf-edit-toolbar-interaction: later click did not select the annotation");
+      throw new Error("pdf-edit-toolbar-interaction: later Ctrl+click did not select the highlight");
     }
   } finally {
     client.close();

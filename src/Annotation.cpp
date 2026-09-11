@@ -1241,7 +1241,7 @@ PdfColor GetColor(Annotation* annot) {
 }
 
 // Highlight, Underline, StrikeOut and Squiggly: /C is the only thing drawn
-static bool IsTextMarkupAnnot(AnnotationType tp) {
+bool AnnotationIsTextMarkup(AnnotationType tp) {
     switch (tp) {
         case AnnotationType::Highlight:
         case AnnotationType::Underline:
@@ -1305,7 +1305,7 @@ bool SetColor(Annotation* annot, PdfColor c) {
                 // Other types keep their opacity: a Square with a transparent
                 // stroke still shows /IC, and a FreeText with a transparent
                 // background still shows its text.
-                if (IsTextMarkupAnnot(Type(annot))) {
+                if (AnnotationIsTextMarkup(Type(annot))) {
                     pdf_set_annot_opacity(ctx, a, 0.f);
                 }
             } else {

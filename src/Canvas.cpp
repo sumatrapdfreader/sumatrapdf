@@ -2340,9 +2340,14 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     }
     bool editPdf = win->pdfAnnotationsToolbarEnabled;
     if (editPdf && annot && !AnnotationCanBeMoved(annot->type)) {
-        OpenOrSelectEditAnnotation(tab, annot);
-        win->textDragPending = false;
-        return;
+        // highlight / underline / squiggly / strike-out sit on text. A plain
+        // click starts a selection (issue #6166); Ctrl+click still selects.
+        bool clickThrough = AnnotationIsTextMarkup(annot->type) && !MouseHasCtrl(key);
+        if (!clickThrough) {
+            OpenOrSelectEditAnnotation(tab, annot);
+            win->textDragPending = false;
+            return;
+        }
     }
     bool isMoveableAnnot = annot && AnnotationCanBeMoved(annot->type) && annot->type != AnnotationType::Widget;
     // Selecting / dragging an annotation is Edit PDF (Ctrl+click turns that
@@ -2362,17 +2367,21 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     if (isMoveableAnnot) {
         StartAnnotationDrag(win, annot, pt);
     } else {
-        // Clicking empty page (or non-moveable markup) while a shape is in
-        // size-edit must leave that mode on mouse-down. Mouse-up used to skip
-        // deselect when the press moved past SM_CXDRAG and became a page pan,
-        // so the only ways out were Esc or a right click (issue #5933).
+        // Clicking empty page while a shape is in size-edit must leave that
+        // mode on mouse-down. Mouse-up used to skip deselect when the press
+        // moved past SM_CXDRAG and became a page pan (issue #5933).
         if (tab && tab->selectedAnnotation) {
             // a click that ended a contents edit is spent on ending it; the
             // annotation the text was written to stays selected
-            if (!AnnotContentsEditJustEnded()) {
+            bool keepSelected = AnnotContentsEditJustEnded();
+            if (!keepSelected) {
                 SetSelectedAnnotation(tab, nullptr);
             }
-            return;
+            // over text, keep going so the press can start a selection even
+            // if a highlight was selected (issue #6166)
+            if (keepSelected || !dm->IsOverText(pt)) {
+                return;
+            }
         }
         ReportIf(win->linkOnLastButtonDown);
         IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
@@ -2587,8 +2596,11 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     bool editPdf = win->pdfAnnotationsToolbarEnabled;
 
     if (clickedAnnot && tab && editPdf) {
-        OpenOrSelectEditAnnotation(tab, clickedAnnot);
-        return;
+        bool clickThrough = AnnotationIsTextMarkup(clickedAnnot->type) && !MouseHasCtrl(key);
+        if (!clickThrough) {
+            OpenOrSelectEditAnnotation(tab, clickedAnnot);
+            return;
+        }
     }
 
     IPageDestination* dest = link ? link->AsLink() : nullptr;
