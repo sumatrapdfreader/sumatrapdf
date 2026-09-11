@@ -1431,6 +1431,27 @@ bool IsRightButtonPressed() {
     return IsKeyPressed(VK_RBUTTON);
 }
 
+// Mark every key and mouse button up in this thread's key state (what
+// GetKeyState() and TranslateAccelerator() read), keeping the Caps Lock /
+// Num Lock toggles. Returns how many were down.
+int ReleaseThreadKeyState() {
+    BYTE keys[256];
+    if (!GetKeyboardState(keys)) {
+        return 0;
+    }
+    int nDown = 0;
+    for (BYTE& k : keys) {
+        if (k & 0x80) {
+            k &= ~0x80;
+            nDown++;
+        }
+    }
+    if (nDown > 0) {
+        SetKeyboardState(keys);
+    }
+    return nDown;
+}
+
 #if 0
 // The result value contains major and minor version in the high resp. the low WORD
 DWORD GetFileVersion(const WCHAR* path) {

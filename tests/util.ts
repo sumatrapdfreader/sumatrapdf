@@ -394,6 +394,9 @@ async function failureContext(): Promise<string> {
 
 export async function runTest(name: string, fn: () => void | Promise<void>, opts?: RunTestOptions): Promise<void> {
   const silent = opts?.silent ?? false;
+  // a Ctrl the machine thinks is held chords every posted key and click.
+  // Before the progress line and the muting, so what it says stays visible
+  await ensureModifierKeysUp();
   const progress = progressTotal > 0 ? `${++progressDone}/${progressTotal} ${name}.ts` : "";
   // A silent run prints nothing while a test runs, so the line stays open and
   // the timing completes it: "3/34 issue-5964.ts in 2.0s". A verbose run has
@@ -410,8 +413,6 @@ export async function runTest(name: string, fn: () => void | Promise<void>, opts
   const t0 = performance.now();
   const unmute = silent ? muteConsole() : () => {};
   try {
-    // a Ctrl the machine thinks is held chords every posted key and click
-    await ensureModifierKeysUp();
     await fn();
     unmute();
     recordTestTime(name, performance.now() - t0, true);

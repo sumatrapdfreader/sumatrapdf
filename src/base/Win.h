@@ -344,6 +344,7 @@ bool IsShiftPressed();
 bool IsAltPressed();
 bool IsCtrlPressed();
 bool IsRightButtonPressed();
+int ReleaseThreadKeyState();
 
 //--- cursors / mouse tracking
 

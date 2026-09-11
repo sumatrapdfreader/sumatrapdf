@@ -18134,6 +18134,18 @@ ContinueOpenWindow:
 
     StartSumatraControl(flags.controlPipeName);
 
+    // Tests drive us with posted messages, which carry their own MK_CONTROL etc.
+    // but don't touch the key state. A new thread inherits the machine's key
+    // state, so a Ctrl stuck down (a key-up lost over RDP, which can't be
+    // released while the session is disconnected) would chord every posted key,
+    // click and wheel notch.
+    if (flags.forTesting || flags.controlPipeName) {
+        int nDown = ReleaseThreadKeyState();
+        if (nDown > 0) {
+            logf("WinMain: released %d keys held down on this machine\n", nDown);
+        }
+    }
+
     // on by default in debug builds; release builds can opt in by calling
     // StartUiHangDetector() themselves
     if (gIsDebugBuild) {

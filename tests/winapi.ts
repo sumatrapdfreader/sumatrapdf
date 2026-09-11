@@ -602,9 +602,9 @@ export function postMessage(hwnd: number, msg: number, wParam: number, lParam: n
 
 // Post a character to a main window. The app drops a char it sees as a chord
 // (Ctrl+v, Alt+v), and it reads the modifiers from the real key state, so a
-// Ctrl held anywhere on the machine - a shortcut typed in another window while
-// the suite runs - silently eats the char. Posting a key-up does not clear that
-// state (only injected input does), so release the modifiers for real first.
+// Ctrl that went down while its window was in front silently eats the char.
+// Posting a key-up does not clear that state (only injected input does), so
+// release the modifiers for real first.
 export async function postChar(hwnd: number, ch: string): Promise<boolean> {
   await ensureModifierKeysUp();
   return postMessage(hwnd, WM_CHAR, ch.charCodeAt(0), 0);
@@ -749,11 +749,19 @@ export function injectKeyUp(vk: number): void {
 }
 
 // Wheel and key tests read the real modifier state: the app ORs GetKeyState
-// into its Ctrl/Shift/Alt/right-button checks, so a Ctrl the system thinks is
-// held (a key-up lost over RDP, a shortcut typed in another window) turns a
-// wheel notch into a zoom and the test fails as "did not scroll". Release
-// stuck keys with an injected key-up; fail naming the key if it stays down
-// (a physically held key, or the right mouse button, which this can't clear).
+// into its Ctrl/Shift/Alt/right-button checks, and TranslateAccelerator reads
+// it too, so a held Ctrl turns a posted wheel notch into a zoom and a posted
+// key into a shortcut.
+//
+// Over RDP a Ctrl can stay down with nobody at the server pressing it: the
+// client sends a Ctrl down and never the up (logged right after it re-synced
+// its modifier state, which it does when its window gets focus), and a
+// session disconnected with the key down keeps it down.
+// SumatraPDF started with -for-testing or -dbg-control clears the key state
+// it inherits (ReleaseThreadKeyState()), so a stuck key only matters if it
+// goes down while a test window is in front. Release stuck keys with injected
+// key-ups anyway. They are dropped while the session is disconnected or an
+// elevated window is in front; then warn and carry on.
 const MODIFIER_KEYS: [string, number][] = [
   ["Ctrl", VK_CONTROL],
   ["Shift", VK_SHIFT],
@@ -767,34 +775,55 @@ const KEY_VARIANTS: Record<number, number[]> = {
   [VK_MENU]: [VK_MENU, VK_LMENU, VK_RMENU],
 };
 // a key physically held for a moment (a shortcut typed in another window
-// mid-run) keeps auto-repeating over our key-ups, so wait it out before failing
-const MODIFIER_RELEASE_TRIES = 50;
+// mid-run) keeps auto-repeating over our key-ups, so give it a second
+const MODIFIER_RELEASE_TRIES = 10;
+// the keys we last warned about as impossible to release, so a session that
+// stays disconnected doesn't repeat the warning before every test
+let unreleasedWarned = "";
 
 function heldModifierKeys(): [string, number][] {
   return MODIFIER_KEYS.filter(([, vk]) => isKeyDownAsync(vk));
 }
 
+function modifierNames(keys: [string, number][]): string {
+  return keys.map(([name]) => name).join(", ");
+}
+
 export async function ensureModifierKeysUp(): Promise<void> {
-  for (let attempt = 0; attempt < MODIFIER_RELEASE_TRIES; attempt++) {
-    const held = heldModifierKeys();
-    if (held.length === 0) {
-      return;
-    }
-    if (attempt === 0) {
-      console.log(`releasing stuck modifier keys: ${held.map(([name]) => name).join(", ")}`);
-    }
+  let held = heldModifierKeys();
+  if (held.length === 0) {
+    unreleasedWarned = "";
+    return;
+  }
+  const names = modifierNames(held);
+  for (let attempt = 0; attempt < MODIFIER_RELEASE_TRIES && held.length > 0; attempt++) {
     for (const [, vk] of held) {
+      // no key-up for the right mouse button: an injected one pops up a
+      // context menu in whatever window is under the cursor
       for (const variant of KEY_VARIANTS[vk] ?? []) {
         injectKeyUp(variant);
       }
     }
     await sleep(100);
+    held = heldModifierKeys();
   }
-  const names = heldModifierKeys().map(([name]) => name);
-  // injected key-ups are dropped (UIPI) while an elevated window is in front
+  const when = new Date().toLocaleTimeString();
+  if (held.length === 0) {
+    console.log(`released modifier keys stuck down on this machine at ${when}: ${names}`);
+    unreleasedWarned = "";
+    return;
+  }
+  const stuck = modifierNames(held);
+  if (stuck === unreleasedWarned) {
+    return;
+  }
+  unreleasedWarned = stuck;
   const fg = getForegroundWindow();
   const fgDesc = fg ? `"${getWindowText(fg)}" (pid ${getWindowPid(fg)})` : "none";
-  throw new Error(`modifier keys held down on this machine: ${names.join(", ")}; foreground window: ${fgDesc}`);
+  console.log(
+    `⚠ can't release modifier keys held down on this machine at ${when}: ${stuck}; foreground window: ${fgDesc}. ` +
+      "Carrying on: the app under test ignores keys held when it starts.",
+  );
 }
 
 // a null-terminated UTF-16 (wide) string buffer, for LPCWSTR args
