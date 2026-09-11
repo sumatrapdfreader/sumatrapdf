@@ -15265,6 +15265,17 @@ static void SetTabState(WindowTab* tab, TabState* state) {
         SwitchToDisplayMode(win, displayMode);
     }
 
+    // zoom first: Relayout keeps the current pixel Y, so doing it after
+    // SetScrollState lands on the wrong page if the load used a different zoom
+    float zoom = ZoomFromString(state->zoom, kInvalidZoom);
+    if (zoom != kInvalidZoom) {
+        if (dm) {
+            dm->Relayout(zoom, state->rotation);
+        } else {
+            ctrl->SetZoomVirtual(zoom, nullptr);
+        }
+    }
+
     if (dm) {
         ScrollState scrollState = {pageNo, state->scrollPos.x, state->scrollPos.y};
         if (storedPos.bookmark) {
@@ -15274,15 +15285,6 @@ static void SetTabState(WindowTab* tab, TabState* state) {
         dm->SetScrollState(scrollState);
     } else {
         ctrl->GoToPage(pageNo, true);
-    }
-
-    float zoom = ZoomFromString(state->zoom, kInvalidZoom);
-    if (zoom != kInvalidZoom) {
-        if (dm) {
-            dm->Relayout(zoom, state->rotation);
-        } else {
-            ctrl->SetZoomVirtual(zoom, nullptr);
-        }
     }
 }
 
