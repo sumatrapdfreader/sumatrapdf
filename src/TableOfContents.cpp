@@ -704,11 +704,11 @@ static void UpdateDocTocExpansionStateRecur(TreeView* treeView, Vec<int>& tocSta
     while (tocItem) {
         // items without children cannot be toggled
         if (tocItem->child) {
-            // we have to query the state of the tree view item because
-            // isOpenToggled is not kept in sync
-            // TODO: keep toggle state on TocItem in sync
-            // by subscribing to the right notifications
-            bool isExpanded = treeView->IsExpanded((TreeItem)tocItem);
+            // Query loaded items; unloaded ones retain their saved model state.
+            bool isExpanded = tocItem->IsExpanded();
+            if (tocItem->userData) {
+                isExpanded = treeView->IsExpanded((TreeItem)tocItem);
+            }
             bool wasToggled = isExpanded != tocItem->isOpenDefault;
             if (wasToggled) {
                 VecAppend(tocState, tocItem->id);
@@ -897,7 +897,7 @@ static void TocCollapseAll(TreeView* tv) {
     TocExpandToLevel(tv, 1);
     HWND hwnd = tv->hwnd;
     HTREEITEM root = TreeView_GetRoot(hwnd);
-    if (root && !TreeView_GetNextSibling(hwnd, root) && TreeView_GetChild(hwnd, root)) {
+    if (root && !TreeView_GetNextSibling(hwnd, root) && tv->treeModel->ChildCount(tv->GetTreeItemByHandle(root)) > 0) {
         TreeView_Expand(hwnd, root, TVE_EXPAND);
     }
 }
@@ -1885,6 +1885,7 @@ void CreateToc(MainWindow* win) {
     SetWindowSubclass(filterEdit->hwnd, WndProcTocFilterEdit, NextSubclassId(), (DWORD_PTR)win);
 
     auto* treeView = new TreeView();
+    treeView->lazyChildren = true;
     TreeView::CreateArgs args;
     args.parent = win->hwndTocBox;
     args.font = GetAppTreeFont();

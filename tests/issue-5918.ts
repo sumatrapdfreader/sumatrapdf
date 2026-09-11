@@ -11,10 +11,19 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util";
-import { findChildWindow, getWindowText, postMessage, sendMessage, sleep, WM_CLOSE } from "./winapi";
+import {
+  findChildWindow,
+  getWindowText,
+  postMessage,
+  sendMessage,
+  sleep,
+  treeExpandRecursively,
+  TVE_EXPAND,
+  TVM_GETCOUNT,
+  WM_CLOSE,
+} from "./winapi";
 import { killAndWait, launchSumatra, sendCommand, waitForExit, waitForFrame, waitForTitle } from "./win-automation";
 
-const TVM_GETCOUNT = 0x1100 + 5;
 const nFiles = 400;
 const headingsPerFile = 3;
 
@@ -50,6 +59,11 @@ async function waitForTocCount(frame: number, want: number, timeoutMs = 30000): 
   const deadline = Date.now() + timeoutMs;
   let last = -1;
   while (Date.now() < deadline) {
+    // Materialize lazy headings before counting the completed background TOC.
+    const tree = findChildWindow(frame, "SysTreeView32");
+    if (tree) {
+      treeExpandRecursively(tree, TVE_EXPAND);
+    }
     last = tocItemCount(frame);
     if (last === want) {
       return last;

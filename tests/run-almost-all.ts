@@ -214,6 +214,8 @@ import { testit as issue6107 } from "./issue-6107.ts";
 
 import { testit as issue5968 } from "./issue-5968.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
+import { testit as issue6167 } from "./issue-6167.ts";
+import { testit as issue5918 } from "./issue-5918.ts";
 import { testit as issue6101 } from "./issue-6101.ts";
 import { testit as issue5963 } from "./issue-5963.ts";
 import { testit as issue5964 } from "./issue-5964.ts";
@@ -286,6 +288,8 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-5918", issue5918],
+  ["issue-6167", issue6167],
   ["ctx-menu-reload", ctxMenuReload],
   ["home-two-windows", homeTwoWindows],
   ["issue-5870", issue5870],

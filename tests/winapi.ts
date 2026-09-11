@@ -309,9 +309,11 @@ const SIF_ALL = 0x17;
 export const TVM_GETNEXTITEM = 0x110a;
 export const TVM_SELECTITEM = 0x110b;
 export const TVM_EXPAND = 0x1102;
+export const TVM_GETCOUNT = 0x1105;
 export const TVM_GETITEMHEIGHT = 0x111c;
 export const TVGN_ROOT = 0x0;
 export const TVGN_NEXT = 0x1;
+export const TVGN_CHILD = 0x4;
 export const TVGN_CARET = 0x9;
 export const TVGN_NEXTVISIBLE = 0x6;
 export const TVE_COLLAPSE = 0x1;
@@ -648,6 +650,16 @@ export function treeClearSelection(tree: number): void {
 
 export function treeExpand(tree: number, action: number, item: bigint): void {
   sendMessage(tree, TVM_EXPAND, action, item);
+}
+
+export function treeExpandRecursively(tree: number, action: number, item = treeGetRoot(tree)): void {
+  for (let it = item; it !== 0n; it = treeGetNextItem(tree, TVGN_NEXT, it)) {
+    treeExpand(tree, action, it);
+    const child = treeGetNextItem(tree, TVGN_CHILD, it);
+    if (child !== 0n) {
+      treeExpandRecursively(tree, action, child);
+    }
+  }
 }
 
 export function treeGetItemHeight(tree: number): number {

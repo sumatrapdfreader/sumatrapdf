@@ -1051,6 +1051,7 @@ struct TreeView : ControlBase {
     void Clear();
 
     HTREEITEM GetHandleByTreeItem(TreeItem item);
+    void EnsureChildrenPopulated(TreeItem item, HTREEITEM h);
     TempStr GetDefaultTooltipTemp(TreeItem ti);
     TreeItem GetItemAt(int x, int y);
     TreeItem GetTreeItemByHandle(HTREEITEM item);
@@ -1064,6 +1065,7 @@ struct TreeView : ControlBase {
     Size idealSize;
 
     TreeModel* treeModel = nullptr; // not owned by us
+    bool lazyChildren = false;
 
     // for WM_NOTIFY with TVN_GETINFOTIP
     GetTooltipHandler onGetTooltip;

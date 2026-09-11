@@ -25,7 +25,6 @@ import { testit as issue5040 } from "./issue-5040.ts";
 import { testit as reloadDebounce } from "./reload-debounce.ts";
 import { testit as issue2693 } from "./issue-2693.ts";
 import { testit as issue5865 } from "./issue-5865.ts";
-import { testit as issue5918 } from "./issue-5918.ts";
 import { testit as ghsaCrhmW5qrWjj4 } from "./security-ghsa-crhm-w5qr-wjj4.ts";
 import { testit as issue1195 } from "./issue-1195.ts";
 import { testit as issue5870ListDirs } from "./issue-5870-list-dirs.ts";
@@ -70,7 +69,6 @@ export const slowTests: NamedTest[] = [
   ["reload-debounce", reloadDebounce],
   ["issue-2693", issue2693],
   ["issue-5865", issue5865],
-  ["issue-5918", issue5918],
   ["security-ghsa-crhm-w5qr-wjj4", ghsaCrhmW5qrWjj4],
   ["issue-1195", issue1195],
 ];
