@@ -2,8 +2,6 @@ import { existsSync, rmSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { copyFileNormalized } from "./util";
 
-const kCopiedWebsiteFiles = ["sumatra.css", "gen_toc.js", "gen_code_copy.js", "favicon.ico"];
-
 function getWebsiteDir(): string {
   return resolve(join("..", "hack", "webapps", "sumatra-website"));
 }
@@ -47,12 +45,8 @@ function getCurrentBranch(dir: string): string {
   return new TextDecoder().decode(proc.stdout).trim();
 }
 
-function copiedGitPaths(): string[] {
-  return ["www/docs-md", ...kCopiedWebsiteFiles.map((n) => `www/${n}`)];
-}
-
 function shouldCopyFile(name: string): boolean {
-  const bannedSuffixes = [".go", ".bat"];
+  const bannedSuffixes = [".go", ".bat", ".css"];
   for (const s of bannedSuffixes) {
     if (name.endsWith(s)) return false;
   }
@@ -83,9 +77,6 @@ async function copyDocsToWebsite(websiteDir: string): Promise<void> {
   const dstDir = join(websiteDir, "www", "docs-md");
   rmSync(dstDir, { recursive: true, force: true });
   copyFilesRecur(dstDir, srcDir);
-  for (const name of kCopiedWebsiteFiles) {
-    copyFileNormalized(join(websiteDir, "www", name), join("docs", name));
-  }
   rmSync(join(dstDir, ".obsidian"), { recursive: true, force: true });
 }
 
@@ -133,9 +124,8 @@ async function main() {
     die(`docs check failed: ${msg}`);
   }
 
-  const paths = copiedGitPaths();
-  await runGitInDir(websiteDir, "add", "-A", "--", ...paths);
-  const porcelain = (await runGitInDir(websiteDir, "status", "--porcelain", "--", ...paths)).trim();
+  await runGitInDir(websiteDir, "add", "-A", "--", "www/docs-md");
+  const porcelain = (await runGitInDir(websiteDir, "status", "--porcelain", "--", "www/docs-md")).trim();
   if (!porcelain) {
     console.log("no doc changes to commit");
   } else {
