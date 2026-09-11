@@ -17389,6 +17389,19 @@ static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
     if (condStr) {
         b.Append(str::Format(a, "Cond: %s @ %s\n", condStr, fileLine));
     }
+    if (!isCrash) {
+        // Belt and braces for a debug report: we run on the reporting thread,
+        // so walk it now, before any dump machinery gets involved. Released
+        // builds have no local .pdb, so most frames come out as module+offset,
+        // which is still enough to symbolize offline against the build's pdbs.
+        // A crash gets here on the dump thread instead, where our own stack is
+        // worthless, and its .dmp has a real exception context anyway.
+        b.Append(StrL("\n--- reporting thread ---\n"));
+        if (!dbghelp::GetCurrentThreadCallstack(b)) {
+            b.Append(StrL("(callstack not available)\n"));
+        }
+        b.Append(StrL("\n"));
+    }
     GetProgramInfo(b);
     AppendUncaughtMupdfError(a, b);
     Str sysInfo = CrashHandlerSystemInfo();

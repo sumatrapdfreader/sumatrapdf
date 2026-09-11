@@ -208,7 +208,11 @@ void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, 
         return;
     }
 
-    MINIDUMP_TYPE type = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory);
+    // MiniDumpWithThreadInfo adds the real thread start address and TEB for
+    // every thread, which gives the debugger something to anchor a stack walk
+    // to when the stored context is partial. Costs a few hundred bytes.
+    MINIDUMP_TYPE type = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory |
+                                         MiniDumpWithThreadInfo);
     if (fullDump) {
         type =
             (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);

@@ -5,7 +5,8 @@
 
 #include <csignal>
 #include <exception> // set_terminate
-#include <new.h> // _set_new_handler
+#include <intrin.h>  // _ReturnAddress
+#include <new.h>     // _set_new_handler
 
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
@@ -196,8 +197,114 @@ static bool InitializeDbgHelp() {
     return true;
 }
 
+/* A thread cannot dump itself usefully. MiniDumpWriteDump() records a context
+   for the calling thread that it captured from inside dbgcore, and it's partial
+   enough that the walk off it dies right there: such a dump reads as
+   NtGetContextThread -> 0xffffffffffffffff -> dbgcore and nothing else. Every
+   *other* thread comes out fine, which is why both exception handlers below
+   hand the writing to CrashDumpThread. A debug report needs the same, more so:
+   there the thread we want *is* the one calling in.
+
+   The other half is that a debug report has no exception, so without help the
+   .dmp gets no exception stream: no .ecxr, no "interesting" thread (the
+   debugger falls back to thread 0), and every report buckets under dbgcore
+   rather than the ReportIf() that fired. So we synthesize one. */
+
+// Customer-defined code (bit 29 set), so it can't collide with a system one.
+constexpr DWORD kDebugReportExceptionCode = 0xE0444247; // 'DBGR'
+
+struct DebugReportDumpArgs {
+    Str logText;
+    bool shouldUpload;
+    ThreadHandle hReportingThread;
+    ThreadId reportingThreadId;
+    void* exceptionAddr;
+};
+
+// Read by MiniDumpWriteDump() on the dump thread. Static so that writing a
+// report allocates nothing.
+static EXCEPTION_RECORD gDebugReportExcRec{};
+static CONTEXT gDebugReportCtx{};
+static EXCEPTION_POINTERS gDebugReportExcPtrs{};
+static MINIDUMP_EXCEPTION_INFORMATION gDebugReportMei{};
+
+// Builds the exception info for the reporting thread. Runs on the dump thread,
+// with the reporting thread suspended, so the context is consistent with the
+// stack memory the dump is about to capture.
+// ExceptionAddress is the ReportIf() site rather than the context's ip (which
+// is our own wait, a few frames down), so .exr names the assert. Note that
+// !analyze still buckets on the stack top, i.e. on our wait, so the failure
+// bucket is the same for every debug report: the Cond: line in the comment
+// stream is what tells them apart.
+static MINIDUMP_EXCEPTION_INFORMATION* CaptureReportingThreadException(const DebugReportDumpArgs* args) {
+    if (!args->hReportingThread) {
+        return nullptr;
+    }
+    if ((DWORD)-1 == SuspendThread(args->hReportingThread)) {
+        logf("CaptureReportingThreadException: SuspendThread failed, err=%u\n", GetLastError());
+        return nullptr;
+    }
+    gDebugReportCtx.ContextFlags = CONTEXT_FULL;
+    BOOL ok = GetThreadContext(args->hReportingThread, &gDebugReportCtx);
+    ResumeThread(args->hReportingThread);
+    if (!ok) {
+        logf("CaptureReportingThreadException: GetThreadContext failed, err=%u\n", GetLastError());
+        return nullptr;
+    }
+
+    gDebugReportExcRec.ExceptionCode = kDebugReportExceptionCode;
+    gDebugReportExcRec.ExceptionAddress = args->exceptionAddr;
+    gDebugReportExcPtrs.ExceptionRecord = &gDebugReportExcRec;
+    gDebugReportExcPtrs.ContextRecord = &gDebugReportCtx;
+    gDebugReportMei.ThreadId = args->reportingThreadId;
+    gDebugReportMei.ExceptionPointers = &gDebugReportExcPtrs;
+    // we're dumping our own process, so the pointers above are ours to read
+    gDebugReportMei.ClientPointers = FALSE;
+    return &gDebugReportMei;
+}
+
+static DWORD WINAPI DebugReportDumpThread(LPVOID data) {
+    auto args = (DebugReportDumpArgs*)data;
+    MINIDUMP_EXCEPTION_INFORMATION* mei = CaptureReportingThreadException(args);
+    WriteAndUploadMinidump(args->logText, mei, args->shouldUpload);
+    return 0;
+}
+
+// Writes and uploads the debug report .dmp from a thread other than this one,
+// so that this thread's stack is walkable in it. Blocks until that's done, so
+// args can live on our stack.
+static void WriteAndUploadDebugReportMinidump(Str logText, bool shouldUpload, void* exceptionAddr) {
+    DebugReportDumpArgs args{};
+    args.logText = logText;
+    args.shouldUpload = shouldUpload;
+    args.reportingThreadId = GetCurrentThreadId();
+    args.exceptionAddr = exceptionAddr;
+
+    // GetCurrentThread() is a pseudo-handle, meaningless on the dump thread
+    ThreadHandle hSelf = nullptr;
+    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hSelf, 0, FALSE,
+                    DUPLICATE_SAME_ACCESS);
+    args.hReportingThread = hSelf;
+
+    ThreadId tid = 0;
+    ThreadHandle h = CreateThread(nullptr, 0, DebugReportDumpThread, &args, 0, &tid);
+    if (!h) {
+        // better a dump with one bad stack than no dump
+        logf("WriteAndUploadDebugReportMinidump: CreateThread failed, err=%u\n", GetLastError());
+        WriteAndUploadMinidump(logText, nullptr, shouldUpload);
+    } else {
+        WaitForSingleObject(h, INFINITE);
+        CloseHandle(h);
+    }
+    if (hSelf) {
+        CloseHandle(hSelf);
+    }
+}
+
 // like crash report, but can be triggered without a crash
-void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
+// NO_INLINE because _ReturnAddress() below must be our caller, i.e. the
+// ReportIf() that fired
+NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
     // in release builds ReportIf() will break if running under
     // the debugger. In other builds it sends a debug report
     if (condStr) {
@@ -260,9 +367,10 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
 
     logf("_uploadDebugReport: isCrash: %d\n", (int)isCrash);
 
-    // a debug report has no exception, so the .dmp only carries the stacks
+    // build the comment first: it walks this thread's stack, and that has to
+    // happen before we hand ourselves to the dump thread
     Str logText = BuildCrashComment(condStr, fileLine, isCrash);
-    WriteAndUploadMinidump(logText, nullptr, shouldUpload);
+    WriteAndUploadDebugReportMinidump(logText, shouldUpload, _ReturnAddress());
     log(logText);
     log(StrL("_uploadDebugReport() finished\n"));
 }

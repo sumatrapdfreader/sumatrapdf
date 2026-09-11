@@ -120,6 +120,12 @@ function gitFromLog(log: string): string {
   return m ? m[1] : "";
 }
 
+// the ReportIf() that fired, for a debug report. It, not the failure bucket,
+// is what identifies one: the bucket always names the crash handler's own wait
+function condFromLog(log: string): string {
+  return field(log, "Cond");
+}
+
 function analyzeField(txt: string, name: string): string {
   const re = new RegExp(`^${name}:\\s*(.+)$`, "im");
   const m = re.exec(txt);
@@ -152,6 +158,9 @@ function parseInRepoFrames(analyzeTxt: string): StackFrame[] {
   const frames: StackFrame[] = [];
   const seen = new Set<string>();
   const re = /!([^\s\[]+)(?:\s+\[([^\]]+) @ (\d+)\])?/;
+  // a debug report's stack starts inside the crash handler itself (it parks
+  // there while another thread writes the .dmp); the caller is what matters
+  const skipFiles = new Set(["src/base/CrashHandler.cpp", "src/base/DbgHelpDyn.cpp"]);
   for (const line of body.split(/\r?\n/)) {
     const m = re.exec(line);
     if (!m) {
@@ -160,7 +169,7 @@ function parseInRepoFrames(analyzeTxt: string): StackFrame[] {
     const func = m[1].replace(/\+0x[0-9a-f]+$/i, "");
     const file = m[2] ? repoPathFromDbg(m[2]) : "";
     const lineNo = m[3] || "";
-    if (!file) {
+    if (!file || skipFiles.has(file)) {
       continue;
     }
     const key = `${func}|${file}|${lineNo}`;
@@ -200,7 +209,11 @@ function buildSummary(id: string, log: string, analyzeTxt: string): string {
   const writeAddr = analyzeField(analyzeTxt, "WRITE_ADDRESS");
   const frames = parseInRepoFrames(analyzeTxt);
   const site = frames[0] ? `${frames[0].func}  ${frames[0].file}:${frames[0].line}` : "";
+  const cond = condFromLog(log);
   const lines: string[] = [`id: ${id}`, `ver: ${ver || "?"}`, `git: ${git || "?"}`, `exception: ${exception || "?"}`];
+  if (cond) {
+    lines.push(`cond: ${cond}`);
+  }
   if (bucket) {
     lines.push(`bucket: ${bucket}`);
   }
