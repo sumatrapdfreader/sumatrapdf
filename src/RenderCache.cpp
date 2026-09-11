@@ -199,8 +199,6 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     rcLogf("RenderCache::DropCacheEntry: dm: 0x%p, pageNo: %d, rotation: %d, zoom: %.2f\n", entry->dm, entry->pageNo,
            entry->rotation, entry->zoom);
 
-    RecordCacheChange(false, entry);
-
     UnregisterCachedObject((uintptr_t)entry);
     delete entry;
 
@@ -317,11 +315,12 @@ void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
     cache[cacheCount] = entry;
     cacheCount++;
 
-    RecordCacheChange(true, entry);
-
     CachedObject o{};
     o.id = (uintptr_t)entry;
     o.size = (u64)PixmapByteSize(bmp);
+    o.kind = kindCachedRender;
+    o.pageNo = req.pageNo;
+    o.zoom = req.zoom;
     o.engine = req.dm->GetEngine();
     o.canFree = RenderCacheCanFree;
     o.free = RenderCacheFree;
@@ -1503,7 +1502,7 @@ void DebugTextWnd::UpdateTheme() {
 
 void DebugTextWnd::SetTextContent(Str text) {
     if (edit) {
-        edit->SetText(text);
+        edit->SetText(str::LFToCRLFTemp(text));
     }
 }
 
@@ -1523,6 +1522,7 @@ bool DebugTextWnd::Create(Str title, int fontSize) {
     Edit::CreateArgs args;
     args.parent = hwnd;
     args.isMultiLine = true;
+    args.noWrap = true;
     args.withBorder = true;
     edit = new Edit();
     edit->Create(args);
@@ -1537,7 +1537,7 @@ bool DebugTextWnd::Create(Str title, int fontSize) {
     }
     layout = edit;
 
-    int winW = DpiScale(700);
+    int winW = DpiScale(800);
     int winH = DpiScale(500);
     SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
     DoLayout();
@@ -1577,12 +1577,17 @@ static void OnRenderInfoDestroy(WindowBase::DestroyEvent* ev) {
     TeardownDebugTextWnd(&gRenderInfoWnd, (DebugTextWnd*)ev->e->self);
 }
 
+static void TeardownCacheInfoWnd(DebugTextWnd* w) {
+    gOnCachedObjectsChanged = nullptr;
+    TeardownDebugTextWnd(&gCacheInfoWnd, w);
+}
+
 static void OnCacheInfoClose(WindowBase::CloseEvent* ev) {
-    TeardownDebugTextWnd(&gCacheInfoWnd, (DebugTextWnd*)ev->e->self);
+    TeardownCacheInfoWnd((DebugTextWnd*)ev->e->self);
 }
 
 static void OnCacheInfoDestroy(WindowBase::DestroyEvent* ev) {
-    TeardownDebugTextWnd(&gCacheInfoWnd, (DebugTextWnd*)ev->e->self);
+    TeardownCacheInfoWnd((DebugTextWnd*)ev->e->self);
 }
 
 bool IsRenderInfoWindowVisible() {
@@ -1739,89 +1744,10 @@ void ToggleRenderInfoWindow() {
     }
 }
 
-// --------- bitmap cache debug window (CmdDebugToggleCacheInfo) ---------
+// --------- cached-objects debug window (CmdDebugToggleCacheInfo) ---------
 
 bool IsCacheInfoWindowVisible() {
     return gCacheInfoWnd && gCacheInfoWnd->hwnd && IsWindow(gCacheInfoWnd->hwnd);
-}
-
-static TempStr FormatCacheBytesTemp(i64 bytes) {
-    if (bytes < 1024) {
-        return fmt("%d B", (int)bytes);
-    }
-    if (bytes < 1024LL * 1024) {
-        return fmt("%.1f KB", bytes / 1024.0);
-    }
-    return fmt("%.2f MB", bytes / (1024.0 * 1024.0));
-}
-
-static void SetDmFileName(DisplayModel* dm, char* buf, int bufLen) {
-    buf[0] = 0;
-    if (dm && dm->GetEngine()) {
-        TempStr name = path::GetBaseNameTemp(dm->GetEngine()->FilePath());
-        str::BufSet(Str(buf, bufLen), name);
-    }
-}
-
-// record a cache add/remove in cacheHistory (call holding cacheAccess)
-void RenderCache::RecordCacheChange(bool isAdd, BitmapCacheEntry* entry) {
-    ReportIf(!entry);
-    if (!entry) {
-        return;
-    }
-    CacheChangeInfo& ci = cacheHistory[cacheHistoryNext];
-    ci.isAdd = isAdd;
-    ci.pageNo = entry->pageNo;
-    ci.zoom = entry->zoom;
-    ci.rotation = entry->rotation;
-    ci.tile = entry->tile;
-    ci.bytes = entry->bitmap ? PixmapByteSize(entry->bitmap) : 0;
-    ci.timestamp = GetTickCount64();
-    SetDmFileName(entry->dm, ci.fileName, dimof(ci.fileName));
-    cacheHistoryNext = (cacheHistoryNext + 1) % kCacheHistorySize;
-    if (cacheHistoryCount < kCacheHistorySize) {
-        cacheHistoryCount++;
-    }
-    UpdateCacheInfo();
-}
-
-static void SerializeCacheChange(str::Builder& s, CacheChangeInfo* c, u64 now) {
-    Str label = c->isAdd ? StrL("ADD") : StrL("REMOVE");
-    int agoMs = (int)(now - c->timestamp);
-    s.Append(fmt("%-7s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  %8s  %6dms ago", label, c->pageNo,
-                 c->zoom, c->rotation, c->tile.res, c->tile.row, c->tile.col, FormatCacheBytesTemp(c->bytes), agoMs));
-    if (c->fileName[0]) {
-        s.Append(fmt("  %s", Str(c->fileName)));
-    }
-    s.Append(StrL("\n"));
-}
-
-// serialize cache stats and recent changes as plain text for the cache-info
-// debug window
-void RenderCache::SerializeCacheState(str::Builder& s) {
-    ScopedRecursiveMutex scope(&cacheAccess);
-    u64 now = GetTickCount64();
-    i64 totalBytes = 0;
-    for (int i = 0; i < cacheCount; i++) {
-        BitmapCacheEntry* e = cache[i];
-        if (e->bitmap) {
-            totalBytes += PixmapByteSize(e->bitmap);
-        }
-    }
-    s.Append(
-        fmt("Cache: %d / %d entries, %s total\n\n", cacheCount, kMaxBitmapsCached, FormatCacheBytesTemp(totalBytes)));
-
-    if (cacheHistoryCount > 0) {
-        s.Append(fmt("Recent %d changes:\n", cacheHistoryCount));
-        int idx = cacheHistoryNext - 1;
-        for (int n = 0; n < cacheHistoryCount; n++) {
-            if (idx < 0) {
-                idx += kCacheHistorySize;
-            }
-            SerializeCacheChange(s, &cacheHistory[idx], now);
-            idx--;
-        }
-    }
 }
 
 static void SetCacheInfoTextOnUI(Str* s) {
@@ -1832,14 +1758,12 @@ static void SetCacheInfoTextOnUI(Str* s) {
     delete s;
 }
 
-// if the cache-info debug window is shown, refresh it. Cheap no-op when
-// hidden. Safe to call from any thread (and while holding cacheAccess).
-void RenderCache::UpdateCacheInfo() {
+void UpdateCacheInfo() {
     if (!IsCacheInfoWindowVisible()) {
         return;
     }
     str::Builder s;
-    SerializeCacheState(s);
+    SerializeCachedObjects(s);
     auto* dup = new Str(str::Dup(ToStr(s)));
     auto fn = MkFunc0<Str>(SetCacheInfoTextOnUI, dup);
     uitask::Post(fn, "CacheInfo");
@@ -1855,16 +1779,14 @@ static void CreateCacheInfoWindow() {
         return;
     }
     gCacheInfoWnd = wnd;
+    gOnCachedObjectsChanged = UpdateCacheInfo;
 }
 
-// bitmap cache debug window (CmdDebugToggleCacheInfo)
 void ToggleCacheInfoWindow() {
     if (gCacheInfoWnd) {
         CloseDebugTextWnd(&gCacheInfoWnd);
         return;
     }
     CreateCacheInfoWindow();
-    if (gRenderCache) {
-        gRenderCache->UpdateCacheInfo();
-    }
+    UpdateCacheInfo();
 }

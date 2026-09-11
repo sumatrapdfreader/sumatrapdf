@@ -111,5 +111,27 @@ void CachedObjects_UnitTests() {
     utassert(gCachedObjects[0].id == 5);
 
     ClearCachedObjects();
+    for (int i = 0; i < 16; i++) {
+        gFreed[i] = false;
+    }
+    gSaveMemory = 0;
+    a = MkObj(6, 2048, nullptr);
+    a.kind = kindCachedRender;
+    a.pageNo = 4;
+    a.zoom = 125;
+    b = MkObj(7, 4096, nullptr);
+    b.kind = kindCachedImage;
+    b.pageNo = 1;
+    DidAllocateCachedObject(&a);
+    DidAllocateCachedObject(&b);
+    str::Builder dump;
+    SerializeCachedObjects(dump);
+    Str t = ToStr(dump);
+    utassert(str::Contains(t, StrL("render")));
+    utassert(str::Contains(t, StrL("image")));
+    utassert(str::Contains(t, StrL("6.0 KB")));
+    utassert(str::IndexOf(t, StrL("image")) < str::IndexOf(t, StrL("render")));
+
+    ClearCachedObjects();
     gSaveMemory = saved;
 }

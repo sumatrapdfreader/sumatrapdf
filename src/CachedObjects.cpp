@@ -2,16 +2,21 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/File.h"
 
 #include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "CachedObjects.h"
+
+Kind kindCachedRender = "render";
+Kind kindCachedImage = "image";
 
 Vec<CachedObject> gCachedObjects;
 int gSaveMemory = 50;
 
 WindowTab* (*gFindTabByEngine)(EngineBase*) = nullptr;
 WindowTab* (*gCurrentTabForCache)() = nullptr;
+void (*gOnCachedObjectsChanged)() = nullptr;
 
 static RecursiveMutex gCachedObjectsLock;
 static AtomicInt gFreeCachedObjectsReenter;
@@ -50,14 +55,27 @@ static u64 CachedObjectsTotalSize() {
     return n;
 }
 
+static void NotifyCachedObjectsChanged() {
+    if (gOnCachedObjectsChanged) {
+        gOnCachedObjectsChanged();
+    }
+}
+
 void UnregisterCachedObject(uintptr_t id) {
     if (!id) {
         return;
     }
-    ScopedRecursiveMutex scope(&gCachedObjectsLock);
-    int idx = FindCachedObjectIdx(id);
-    if (idx >= 0) {
-        VecRemoveAtFast(gCachedObjects, idx);
+    bool removed = false;
+    {
+        ScopedRecursiveMutex scope(&gCachedObjectsLock);
+        int idx = FindCachedObjectIdx(id);
+        if (idx >= 0) {
+            VecRemoveAtFast(gCachedObjects, idx);
+            removed = true;
+        }
+    }
+    if (removed) {
+        NotifyCachedObjectsChanged();
     }
 }
 
@@ -81,6 +99,7 @@ void DidAllocateCachedObject(CachedObject* o) {
             VecAppend(gCachedObjects, obj);
         }
     }
+    NotifyCachedObjectsChanged();
 
     gSkipFreeId = obj.id;
     TryFreeCachedObjects(obj.size);
@@ -245,3 +264,69 @@ static int InitCachedObjectHooks() {
     return 1;
 }
 static int gCachedObjectHooksInit = InitCachedObjectHooks();
+
+static TempStr FormatCachedSizeTemp(u64 bytes) {
+    if (bytes < 1024) {
+        return fmt("%d B", (int)bytes);
+    }
+    if (bytes < 1024ull * 1024) {
+        return fmt("%.1f KB", bytes / 1024.0);
+    }
+    return fmt("%.2f MB", bytes / (1024.0 * 1024.0));
+}
+
+static int CmpCachedSizeDesc(const CachedObject* a, const CachedObject* b) {
+    if (a->size > b->size) {
+        return -1;
+    }
+    if (a->size < b->size) {
+        return 1;
+    }
+    return 0;
+}
+
+static TempStr CachedObjectFileTemp(const CachedObject* o) {
+    if (!o->engine) {
+        return StrL("-");
+    }
+    Str path = o->engine->FilePath();
+    if (len(path) == 0) {
+        return StrL("-");
+    }
+    TempStr name = path::GetBaseNameTemp(path);
+    if (len(name) == 0) {
+        return StrL("-");
+    }
+    return name;
+}
+
+// One row per registered object, largest first. Columns are fixed-width so
+// the Cache Info window can show them as a table (no wrap).
+void SerializeCachedObjects(str::Builder& s) {
+    Vec<CachedObject> snap;
+    {
+        ScopedRecursiveMutex scope(&gCachedObjectsLock);
+        snap = gCachedObjects;
+    }
+    VecSort(snap, CmpCachedSizeDesc);
+
+    u64 total = 0;
+    for (int i = 0; i < len(snap); i++) {
+        total += snap[i].size;
+    }
+
+    s.Append(fmt("Cached objects: %d  (%s)  SaveMemory %d\n\n", len(snap), FormatCachedSizeTemp(total), gSaveMemory));
+    s.Append(fmt("%s %-8s %10s %5s %7s  %s\n", StrL(" "), StrL("kind"), StrL("size"), StrL("page"), StrL("zoom"),
+                 StrL("file")));
+
+    WindowTab* currTab = CurrTab();
+    for (int i = 0; i < len(snap); i++) {
+        const CachedObject& o = snap[i];
+        Str cur = (o.tab && o.tab == currTab) ? StrL("*") : StrL(" ");
+        Str kindName = o.kind ? Str(o.kind) : StrL("-");
+        TempStr pageS = o.pageNo > 0 ? fmt("%d", o.pageNo) : StrL("-");
+        TempStr zoomS = o.zoom > 0 ? fmt("%.1f", o.zoom) : StrL("-");
+        s.Append(fmt("%s %-8s %10s %5s %7s  %s\n", cur, kindName, FormatCachedSizeTemp(o.size), pageS, zoomS,
+                     CachedObjectFileTemp(&o)));
+    }
+}

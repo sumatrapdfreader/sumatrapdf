@@ -706,6 +706,8 @@ struct Edit : ControlBase {
     struct CreateArgs {
         HWND parent = nullptr;
         bool isMultiLine = false;
+        // multi-line: ES_AUTOHSCROLL so long lines scroll instead of wrapping
+        bool noWrap = false;
         bool withBorder = false;
         // 1px NC underline under the client area (no WS_EX_CLIENTEDGE)
         bool withBottomBorder = false;

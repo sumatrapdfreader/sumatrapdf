@@ -1039,6 +1039,8 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             CachedObject o{};
             o.id = (uintptr_t)result;
             o.size = (u64)PixmapByteSize(pixmap);
+            o.kind = kindCachedImage;
+            o.pageNo = result->pageNo;
             o.engine = this;
             o.canFree = ImagePageCanFree;
             o.free = ImagePageFree;

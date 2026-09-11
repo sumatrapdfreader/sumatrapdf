@@ -234,8 +234,10 @@ HWND Edit::Create(const CreateArgs& args) {
     selectAllOnFocus = args.selectAllOnFocus;
     if (args.isMultiLine) {
         cargs.style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
+        if (args.noWrap) {
+            cargs.style |= ES_AUTOHSCROLL | WS_HSCROLL;
+        }
     } else {
-        // ES_AUTOHSCROLL disable wrapping in multi-line setup
         cargs.style |= ES_AUTOHSCROLL;
     }
     idealSizeLines = args.idealSizeLines;
