@@ -8679,8 +8679,16 @@ static void ZoomToSelection(MainWindow* win) {
     // put the middle of the selection in the middle of the window
     Rect rc = dm->CvtToScreen(pageNo, selPage);
     viewPort = dm->GetViewPort();
-    dm->ScrollXBy(rc.x + (rc.dx / 2) - (viewPort.dx / 2));
-    dm->ScrollYBy(rc.y + (rc.dy / 2) - (viewPort.dy / 2), false);
+    // the selection can already be centered on either axis, in which case
+    // there's nothing to scroll (ScrollYBy asserts on a 0 delta)
+    int dx = rc.x + (rc.dx / 2) - (viewPort.dx / 2);
+    int dy = rc.y + (rc.dy / 2) - (viewPort.dy / 2);
+    if (0 != dx) {
+        dm->ScrollXBy(dx);
+    }
+    if (0 != dy) {
+        dm->ScrollYBy(dy, false);
+    }
 }
 
 /* Zoom document in window 'hwnd' to zoom level 'zoom'.
