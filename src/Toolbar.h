@@ -52,9 +52,9 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut);
 //--- hover drop-down
 
 // A toolbar button can open a drop-down when the mouse rests on it, after the
-// same delay a tooltip takes. The content is any layout, so a caller can put
-// whatever it likes in there; NewToolbarHoverMenu() builds the menu-like rows
-// most of them want.
+// same delay a tooltip takes. Right-click opens it at once if it is not already
+// shown. The content is any layout, so a caller can put whatever it likes in
+// there; NewToolbarHoverMenu() builds the menu-like rows most of them want.
 
 // one item: an icon, a label and the command a click runs. NewToolbarHoverMenu()
 // makes each a menu-like row, NewToolbarHoverStrip() a cell in a pyramid.

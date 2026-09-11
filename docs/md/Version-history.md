@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- Right-clicking a toolbar button that has a drop-down (Zoom In / Zoom Out, Edit PDF Save, Read Aloud) opens that drop-down immediately if it is not already shown
 - **Copy Location To Clipboard** (`CmdCopyLocationToClipboard`, command palette) copies where you are reading as command-line arguments that re-open it: page, zoom, scroll position and file path (discussion #6163)
 - **Save Selection As Image** (`CmdSaveSelectionAsImage`): with a rectangular (Ctrl+drag) selection, export that area as PNG, JPEG or BMP at a chosen DPI, independent of the current zoom (fixes #6127)
 - The annotation **Contents** box, the free-text in-place editor, and Advanced Settings in-place value edits stay open when the Windows on-screen keyboard takes focus, so they can be used on a tablet

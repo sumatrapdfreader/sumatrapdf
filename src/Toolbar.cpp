@@ -1485,9 +1485,11 @@ void ToolbarNoteDropdownClosed() {
     gToolbarDropdownClosedAt = GetTickCount64();
 }
 
+static bool ShowToolbarButtonDropdown(MainWindow*, int cmdId);
+
 static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
     VirtCtrl* w = ev->target;
-    if (!w || !win || !w->IsEnabled()) {
+    if (!w || !win) {
         return;
     }
     int cmdId = w->id;
@@ -1496,6 +1498,16 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
     }
     if (ToolbarDropdownJustClosed() && (cmdId == CmdReadAloud || cmdId == CmdPauseReadAloud)) {
         ev->didHandle = true;
+        return;
+    }
+    // right-click: the drop-down, not the button's command
+    if (ev->button == 1) {
+        if (ShowToolbarButtonDropdown(win, cmdId)) {
+            ev->didHandle = true;
+            return;
+        }
+    }
+    if (!w->IsEnabled()) {
         return;
     }
     if (auto* ib = AsVirtIconButton(w)) {
@@ -2016,6 +2028,9 @@ static void OpenHoverDropdown(MainWindow* win, int cmdId) {
     r = ShiftRectToWorkArea(r, win->hwndFrame, true);
     host->SetPos(r, true);
 
+    tb->host->KillTimer(kOpenHoverDropdownTimerId);
+    tb->host->KillTimer(kCloseHoverDropdownTimerId);
+
     TakeHoverButtonTooltip(win, cmdId);
     if (tb->host->vroot) {
         tb->host->vroot->HideTooltip();
@@ -2023,6 +2038,48 @@ static void OpenHoverDropdown(MainWindow* win, int cmdId) {
     tb->hoverHost = host;
     tb->hoverCmdId = cmdId;
     tb->hoverPendingCmdId = 0;
+}
+
+// Open the drop-down this button has, if any. One already up is left as it is.
+static bool ShowToolbarButtonDropdown(MainWindow* win, int cmdId) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb) {
+        return false;
+    }
+
+    if (auto* ib = AsVirtIconButton(ToolbarItemForCmd(win, cmdId))) {
+        if (ib->hasDropdown) {
+            ShowTtsVoiceMenu(win, GetToolbarButtonScreenRect(win, cmdId));
+            return true;
+        }
+    }
+
+    ToolbarHoverReg* to = FindHoverReg(tb, cmdId);
+    if (!to) {
+        return false;
+    }
+    if (tb->hoverCmdId == cmdId) {
+        if (tb->host) {
+            tb->host->KillTimer(kCloseHoverDropdownTimerId);
+        }
+        return true;
+    }
+    if (tb->hoverCmdId != 0) {
+        ToolbarHoverReg* from = FindHoverReg(tb, tb->hoverCmdId);
+        int group = from ? from->groupId : 0;
+        if (group != 0 && to->groupId == group) {
+            if (tb->host) {
+                tb->host->KillTimer(kCloseHoverDropdownTimerId);
+            }
+            GiveHoverButtonTooltipBack(win);
+            tb->hoverCmdId = cmdId;
+            TakeHoverButtonTooltip(win, cmdId);
+            return true;
+        }
+        HideToolbarHoverDropdown(win);
+    }
+    OpenHoverDropdown(win, cmdId);
+    return true;
 }
 
 // The mouse moved over the toolbar (or left it): open, keep or close the

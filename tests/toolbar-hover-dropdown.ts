@@ -1,13 +1,14 @@
 // Resting the mouse on a toolbar button can open a drop-down, after the delay a
-// tooltip takes, and the tooltip gives way to it. The Edit PDF toolbar's Save
-// button uses it for the three ways to end an editing session, each row showing
-// its keyboard shortcut; Save to a new PDF is no longer its own button. The Zoom
-// In / Zoom Out buttons use it for the zoom levels, laid out as a pyramid: the
-// widest row on top holding the middle of the list, each row below it the levels
-// further out and the last the extremes. The levels above the middle sit on a
-// slightly different background, so which way is bigger can be seen rather than
-// read. The level in use is boxed, and the drop-down opens centred on the
-// button.
+// tooltip takes, and the tooltip gives way to it. Right-click opens it at once
+// if it is not already shown, and does not run the button's command. The Edit
+// PDF toolbar's Save button uses it for the three ways to end an editing
+// session, each row showing its keyboard shortcut; Save to a new PDF is no
+// longer its own button. The Zoom In / Zoom Out buttons use it for the zoom
+// levels, laid out as a pyramid: the widest row on top holding the middle of the
+// list, each row below it the levels further out and the last the extremes. The
+// levels above the middle sit on a slightly different background, so which way
+// is bigger can be seen rather than read. The level in use is boxed, and the
+// drop-down opens centred on the button.
 //
 // Run: bun tests/toolbar-hover-dropdown.ts [--no-build]
 
@@ -28,8 +29,11 @@ import {
   setCursorPos,
   setProcessDpiAware,
   sleep,
+  MK_RBUTTON,
   WM_COMMAND,
   WM_MOUSEMOVE,
+  WM_RBUTTONDOWN,
+  WM_RBUTTONUP,
 } from "./winapi.ts";
 import { clickAt, findChildByClass, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
@@ -196,6 +200,17 @@ function hoverToolbar(toolbar: number, x: number, y: number): void {
   const s = clientToScreen(toolbar, x, y);
   setCursorPos(s.x, s.y);
   sendMessage(toolbar, WM_MOUSEMOVE, 0, packCoords(x, y));
+}
+
+// right-click a toolbar button. The cursor has to be there so the drop-down
+// does not close itself, but the toolbar is not sent a move: that would start
+// the hover timer, and this is the check that right-click does not wait for it
+function rightClickToolbar(toolbar: number, x: number, y: number): void {
+  const s = clientToScreen(toolbar, x, y);
+  setCursorPos(s.x, s.y);
+  const lp = packCoords(x, y);
+  sendMessage(toolbar, WM_RBUTTONDOWN, MK_RBUTTON, lp);
+  sendMessage(toolbar, WM_RBUTTONUP, 0, lp);
 }
 
 // keep resting the mouse on a button until its drop-down is up: something else
@@ -602,7 +617,24 @@ export async function testit(): Promise<void> {
     const zx = zoomIn.x + Math.floor(zoomIn.dx / 2);
     const zy = zoomIn.y + Math.floor(zoomIn.dy / 2);
     const btnCentreX = clientToScreen(toolbar, zx, zy).x;
-    let zoomMenu = await hoverUntilMenu(toolbar, pid, zx, zy, "resting on Zoom In did not open the drop-down");
+
+    // right-click opens it at once and does not run Zoom In
+    rightClickToolbar(toolbar, zx, zy);
+    let zoomMenu = findTopWindow(pid, MENU_CLASS);
+    if (zoomMenu === 0 || !isWindowVisible(zoomMenu)) {
+      throw new Error("toolbar-hover-dropdown: right-click on Zoom In did not open the drop-down");
+    }
+    if ((await zoomLabel(client)) !== "100") {
+      throw new Error("toolbar-hover-dropdown: right-click on Zoom In ran Zoom In");
+    }
+    const afterRightClick = zoomMenu;
+    rightClickToolbar(toolbar, zx, zy);
+    zoomMenu = findTopWindow(pid, MENU_CLASS);
+    if (zoomMenu !== afterRightClick || !isWindowVisible(zoomMenu)) {
+      throw new Error("toolbar-hover-dropdown: right-click recreated a drop-down that was already shown");
+    }
+
+    zoomMenu = await hoverUntilMenu(toolbar, pid, zx, zy, "resting on Zoom In did not open the drop-down");
     await sleep(200);
     captureWindowToPng(zoomMenu, join(dir, "zoom-dropdown.png"));
 

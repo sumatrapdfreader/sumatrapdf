@@ -29,6 +29,8 @@ ToolbarCustomLayout = CmdOpenFile CmdPrint | PageInfo CmdGoToPrevPage CmdGoToNex
 
 Some buttons only show when they apply (the Read Aloud button needs `ToolbarShowReadAloud`, Find needs a document that can be searched, rotate needs a document that can be rotated, and Edit PDF needs an editable PDF), so a button you list may still stay hidden. **Edit PDF** toggles a second row of annotation tools. Highlight, underline, squiggly, and strike out are enabled only while text is selected.
 
+Some buttons have a drop-down: Zoom In / Zoom Out list the zoom levels, Save in Edit PDF lists the ways to end the session, Read Aloud has voice and speed. Resting the mouse on the button opens it after a short delay; right-click opens it at once if it is not already shown.
+
 ## Show, hide or overlay the toolbar
 
 **Ver 3.7+:** the `Toolbar` [advanced setting](Advanced-options-settings.md) controls how the toolbar is shown:
