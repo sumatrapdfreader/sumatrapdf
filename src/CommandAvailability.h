@@ -49,6 +49,7 @@ struct AppCommandCtx {
     bool cursorOnImage = false;
 
     bool supportsAnnots = false;
+    bool hideAnnotations = false;
     bool hasUnsavedAnnotations = false;
     bool hasRedactMarks = false;
     bool canUndo = false;

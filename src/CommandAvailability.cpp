@@ -26,6 +26,8 @@
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 #include "ReadAloud.h"
+#include "Favorites.h"
+#include "UpdateCheck.h"
 #include "CommandAvailability.h"
 
 // clang-format off
@@ -410,6 +412,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
             ctx.isPdfEncrypted = EngineMupdfIsEncrypted(engine);
         }
         ctx.canContinueReadAloud = CanContinueReadAloud(ctx.tab);
+        ctx.hideAnnotations = ctx.tab->hideAnnotations;
     }
 
     ctx.hasSelection = ctx.isDocLoaded && ctx.tab && win->showSelection && ctx.tab->selectionOnPage;
@@ -519,9 +522,22 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (CmdIdInI32List(cmdId, gBlacklistCommandsFromPalette)) {
             return CommandVisibility::Hide;
         }
-        // Copy Image is handled by the canvas context menu, which retains the
-        // page element under the cursor. Palette dispatch has no image element.
-        if (cmdId == CmdCopyImage) {
+        // context menu keeps the page element under the cursor; palette dispatch
+        // has none, so these would no-op
+        if (cmdId == CmdCopyImage || cmdId == CmdCopyLinkTarget || cmdId == CmdCopyComment ||
+            cmdId == CmdShowAnnotationText) {
+            return CommandVisibility::Hide;
+        }
+        if (cmdId == CmdFixDefaultApp) {
+            return CommandVisibility::Hide;
+        }
+        if (origCmdId == CmdFixDefaultApp) {
+            Str ext = GetCommandStringArg(cmd, kCmdArgExt, {});
+            if (len(ext) == 0) {
+                return CommandVisibility::Hide;
+            }
+        }
+        if (cmdId == CmdInstallPrereleaseUpdate && !HasPendingPreReleaseUpdate()) {
             return CommandVisibility::Hide;
         }
     }
@@ -666,7 +682,18 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
-    if (!ctx.hasToc && cmdId == CmdDocumentShowOutline) {
+    if (!ctx.hasToc && (cmdId == CmdDocumentShowOutline || cmdId == CmdExpandToCurrentPage)) {
+        return CommandVisibility::Hide;
+    }
+
+    if (cmdId == CmdShowErrors) {
+        EngineBase* engine = ctx.tab ? ctx.tab->GetEngine() : nullptr;
+        if (!engine || !engine->HasErrors()) {
+            return CommandVisibility::Hide;
+        }
+    }
+
+    if ((cmdId == CmdGoToNextFavorite || cmdId == CmdGoToPrevFavorite) && !HasFavorites()) {
         return CommandVisibility::Hide;
     }
 
@@ -742,7 +769,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if (cmdId == CmdUndo || cmdId == CmdRedo) {
         bool can = (cmdId == CmdUndo) ? ctx.canUndo : ctx.canRedo;
-        return can ? CommandVisibility::Show : CommandVisibility::Disable;
+        return can ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
     }
 
     if (cmdId == CmdCopyAnnotation || cmdId == CmdCutAnnotation) {
@@ -753,14 +780,25 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
             annot = ctx.tab ? ctx.tab->selectedAnnotation : nullptr;
         }
         bool can = AnnotationIsLive(annot) && AnnotationCanBeCopied(annot->type);
-        return can ? CommandVisibility::Show : CommandVisibility::Disable;
+        return can ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
     }
     if (cmdId == CmdPasteAnnotation) {
-        return HasCopiedAnnotation() ? CommandVisibility::Show : CommandVisibility::Disable;
+        return HasCopiedAnnotation() ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
     }
 
     if ((cmdId == CmdSaveAnnotations) || (cmdId == CmdSaveAnnotationsNewFile) || (cmdId == CmdDiscardChanges)) {
-        return ctx.hasUnsavedAnnotations ? CommandVisibility::Show : CommandVisibility::Disable;
+        return ctx.hasUnsavedAnnotations ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
+    }
+
+    if (cmdId == CmdShowAnnotations) {
+        return ctx.hideAnnotations ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
+    }
+    if (cmdId == CmdHideAnnotations) {
+        return ctx.hideAnnotations ? MapForSurface(CommandVisibility::Disable, surface) : CommandVisibility::Show;
+    }
+
+    if (cmdId == CmdCreateAnnotImageFromClipboard && !IsClipboardFormatAvailable(CF_BITMAP)) {
+        return MapForSurface(CommandVisibility::Disable, surface);
     }
 
     if (cmdId == CmdApplyRedactions) {
@@ -818,6 +856,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (cmdId == CmdCopySelectionAsImage || cmdId == CmdSaveSelectionAsImage) {
         bool isRect = ctx.hasSelection && !ctx.hasTextSelection;
         return isRect ? CommandVisibility::Show : CommandVisibility::Hide;
+    }
+    if (cmdId == CmdSearchGoogleLens) {
+        bool can = ctx.isFixedPage && ctx.hasSelection;
+        return can ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
     }
     if (cmdId == CmdSearchGoogleLensPage) {
         if (surface == CommandSurface::Palette) {

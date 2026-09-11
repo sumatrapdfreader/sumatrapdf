@@ -103,6 +103,10 @@ struct UpdateInfo {
 // "Download and update" link downloads & installs it (owned here until then)
 static UpdateInfo* gPendingUpdate = nullptr;
 
+bool HasPendingPreReleaseUpdate() {
+    return gPendingUpdate != nullptr;
+}
+
 /*
 The format of update information downloaded from the server:
 

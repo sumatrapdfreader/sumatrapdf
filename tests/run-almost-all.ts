@@ -207,6 +207,7 @@ import { testit as commandPaletteShortcutFilter } from "./command-palette-shortc
 import { testit as commandPaletteThumbnails } from "./command-palette-thumbnails.ts";
 import { testit as commandPaletteAnnotations } from "./command-palette-annotations.ts";
 import { testit as paletteDeleteAnnotation } from "./palette-delete-annotation.ts";
+import { testit as paletteCommandAvailability } from "./palette-command-availability.ts";
 import { testit as commandPaletteSettings } from "./command-palette-settings.ts";
 import { testit as commandPaletteDeleteTab } from "./command-palette-delete-tab.ts";
 import { testit as issue6104 } from "./issue-6104.ts";
@@ -502,6 +503,7 @@ export const tests: NamedTest[] = [
   ["command-palette-thumbnails", commandPaletteThumbnails],
   ["command-palette-annotations", commandPaletteAnnotations],
   ["palette-delete-annotation", paletteDeleteAnnotation],
+  ["palette-command-availability", paletteCommandAvailability],
   ["command-palette-settings", commandPaletteSettings],
   ["command-palette-delete-tab", commandPaletteDeleteTab],
   ["issue-6104", issue6104],
