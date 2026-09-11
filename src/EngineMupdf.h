@@ -163,6 +163,12 @@ class EngineMupdf : public EngineBase {
     Mutex renderLock;
     RecursiveMutex docLock;
 
+    // last known HasClipOptimizations() per page ([pageNo - 1]: 0 unknown,
+    // 1 no, 2 yes), the answer while pagesLock is busy. A leaf lock: held only
+    // to read or write this vector.
+    Mutex clipOptLock;
+    Vec<u8> clipOptKnown;
+
     // per-FZ_LOCK-index SRW locks used by mupdf via fz_locks_ctx
     // callbacks. Mupdf holds these only momentarily; do not hold them across
     // your own code.

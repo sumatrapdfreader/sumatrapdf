@@ -8840,14 +8840,15 @@ bool EngineMupdfSaveCopy(EngineBase* engine, Str path) {
 }
 
 // caller must hold pagesLock (protects pages[] and pageInfo->images)
-static bool HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
+// returns 1 or 0, or -1 while the page isn't fully loaded
+static int HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
     ReportIf(pageNo < 1 || pageNo > e->pageCount);
     if (pageNo < 1 || pageNo > e->pageCount) {
-        return false;
+        return 0;
     }
     FzPageInfo* pageInfo = e->PageInfoByPageNo(pageNo);
     if (!pageInfo || !pageInfo->page || !pageInfo->fullyLoaded) {
-        return false;
+        return -1;
     }
 
     fz_rect mbox = ToFzRect(e->PageMediabox(pageNo));
@@ -8855,28 +8856,44 @@ static bool HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
     for (auto& img : pageInfo->images) {
         fz_rect ir = img->rect;
         if (FzRectOverlap(mbox, ir) >= 0.9f) {
-            return false;
+            return 0;
         }
     }
-    return true;
+    return 1;
 }
 
 bool EngineMupdf::HasClipOptimizations(int pageNo) {
-    if (!pdfdoc) {
+    if (!pdfdoc || pageNo < 1) {
         return false;
     }
-    // This only tunes tile size (RenderCache::GetTileRes) and the UI thread asks
-    // on every zoom/scroll, so never wait for the answer: pagesLock can be held
-    // for the length of an image decode by a render thread that is itself queued
-    // on renderLock, which stalls the UI mid-mouse-wheel. "false" is what we
-    // already return for a page that isn't loaded yet, i.e. "can't tell, use the
-    // smaller tiles".
-    if (!pagesLock.TryLock()) {
-        return false;
+    // The UI thread asks on every zoom/scroll (RenderCache::GetTileRes), so never
+    // wait for the answer: pagesLock can be held for the length of an image
+    // decode by a render thread that is itself queued on renderLock, which
+    // stalls the UI mid-mouse-wheel.
+    // The answer must not flip-flop, though: it picks the tile resolution, and
+    // RenderCache::Paint frees every tile of a page that isn't at the current
+    // resolution. Answering "no" only while pagesLock happens to be busy made
+    // the visible tiles re-render in a loop at higher zoom (#6154), so fall
+    // back to the last answer we got for the page.
+    if (pagesLock.TryLock()) {
+        int res = HasClipOptimizationsLocked(this, pageNo);
+        pagesLock.Unlock();
+        if (res >= 0) {
+            ScopedMutex scope(&clipOptLock);
+            if (len(clipOptKnown) < pageNo) {
+                int prevLen = len(clipOptKnown);
+                VecResize(clipOptKnown, pageNo);
+                for (int i = prevLen; i < pageNo; i++) {
+                    clipOptKnown[i] = 0;
+                }
+            }
+            clipOptKnown[pageNo - 1] = res ? 2 : 1;
+            return res != 0;
+        }
     }
-    bool res = HasClipOptimizationsLocked(this, pageNo);
-    pagesLock.Unlock();
-    return res;
+    // a page never seen loaded answers "no", same as before it's loaded
+    ScopedMutex scope(&clipOptLock);
+    return pageNo <= len(clipOptKnown) && clipOptKnown[pageNo - 1] == 2;
 }
 
 TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
