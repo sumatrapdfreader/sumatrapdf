@@ -93,6 +93,7 @@ export enum ControlCommand {
   TestSaveSelectionAsImage = 96,
   TestReadingAutoScroll = 97,
   TestReadingBar = 98,
+  TestSeedTextSelection = 99,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -617,6 +618,28 @@ export class ControlClient {
       return { survived: true, pageNo: parseInt(m[1], 10), textSurvived };
     }
     return { survived: false, pageNo: -1, textSurvived };
+  }
+
+  // Seeds a glyph-level (quad) text selection on `pageNo` of the current tab
+  // and reports the flat page numbers it holds. A rectangle selection is
+  // null-guarded when painted; only a quad one reaches CvtToScreen unguarded.
+  async seedTextSelection(pageNo: number): Promise<{ parts: number; quads: number; first: number; last: number }> {
+    const res = await this.request(ControlCommand.TestSeedTextSelection, [pageNo]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      throw new Error(`TestSeedTextSelection failed: ${raw || code}`);
+    }
+    const m = /^OK parts=(\d+) quads=(\d+) first=(\d+) last=(\d+) pageCount=(\d+)$/.exec(raw);
+    if (!m) {
+      throw new Error(`seedTextSelection: could not parse '${raw}'`);
+    }
+    return {
+      parts: parseInt(m[1], 10),
+      quads: parseInt(m[2], 10),
+      first: parseInt(m[3], 10),
+      last: parseInt(m[4], 10),
+    };
   }
 
   close(): void {

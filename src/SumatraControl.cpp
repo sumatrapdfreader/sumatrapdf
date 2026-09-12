@@ -876,6 +876,7 @@ enum class ControlCmd : u16 {
     TestSaveSelectionAsImage = 96,
     TestReadingAutoScroll = 97,
     TestReadingBar = 98,
+    TestSeedTextSelection = 99,
 };
 
 enum class ControlArgType : u16 {
@@ -2134,6 +2135,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 0, layoutChapter); // optional
             int exitCode = 0;
             Str res = RenumberSelResultTemp(layoutChapter, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSeedTextSelection: {
+            i32 pageNo = 1;
+            if (!IntArg(req, 0, pageNo)) {
+                AppendError(req, StrL("TestSeedTextSelection expects int pageNo (1-based)"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = SeedTextSelectionResultTemp(pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

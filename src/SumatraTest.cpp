@@ -2488,3 +2488,71 @@ TempStr HiddenTabGoToPageResultTemp(int* exitCodeOut) {
     }
     return ToStrTemp(out);
 }
+
+// Seeds a glyph-level (quad) text selection on `pageNo` of the current tab, the
+// way a left-drag across the page would, and reports the flat page numbers it
+// holds. Coordinates would have to be hunted for, so select by glyph index.
+//
+// A rectangle selection is useless for the stale-page question: its paint path
+// (SelectionOnPage::GetRect) null-checks GetPageInfo and silently draws
+// nothing. Only a quad selection reaches DisplayModel::CvtToScreen unguarded,
+// which is where crash 2026-09-12-09-59-1328 reported.
+// Used by tests/epub-relayout-stale-page.ts.
+TempStr SeedTextSelectionResultTemp(int pageNo, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab) {
+        return fail(StrL("ERROR no-tab"));
+    }
+    if (!dm->ValidPageNo(pageNo)) {
+        return fail(fmt("ERROR invalid-page pageNo=%d pageCount=%d", pageNo, dm->PageCount()));
+    }
+
+    EngineBase* engine = dm->GetEngine();
+    int textLen = 0;
+    engine->GetTextForPage(pageNo, &textLen);
+    if (textLen < 2) {
+        return fail(fmt("ERROR no-text pageNo=%d", pageNo));
+    }
+
+    DeleteOldSelectionInfo(win, true);
+    dm->textSelection->StartAt(pageNo, 0);
+    dm->textSelection->SelectUpTo(pageNo, textLen - 1);
+    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = tab->selectionOnPage != nullptr;
+    if (!tab->selectionOnPage) {
+        return fail(fmt("ERROR empty-selection pageNo=%d", pageNo));
+    }
+
+    int first = (*tab->selectionOnPage)[0].pageNo;
+    int last = VecLast(*tab->selectionOnPage).pageNo;
+    int quads = 0;
+    for (SelectionOnPage& sel : *tab->selectionOnPage) {
+        if (sel.HasQuad()) {
+            quads++;
+        }
+    }
+    out.Append(fmt("OK parts=%d quads=%d first=%d last=%d pageCount=%d\n", len(*tab->selectionOnPage), quads, first,
+                   last, dm->PageCount()));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
