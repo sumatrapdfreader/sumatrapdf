@@ -127,8 +127,10 @@ bool Synchronizer::NeedsToRebuildIndex() {
     // older file, a copy that preserves mtime), and that's a change too
     i64 newstamp = SyncFileTimestamp();
     if (newstamp != syncfileTimestamp) {
-        // update time stamp
-        syncfileTimestamp = newstamp;
+        // latch it: only MarkIndexWasRebuilt() clears the flag and adopts the
+        // new time stamp, so a rebuild that fails is retried on the next query
+        // instead of leaving us with an index that was never built
+        needsToRebuildIndex = true;
         return true; // the file has changed!
     }
 
@@ -827,7 +829,10 @@ int SyncTex::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
         ReportDebugIf(true);
         return res;
     }
-    ReportIf(!scanner);
+    if (!scanner) {
+        ReportIf(true);
+        return PDFSYNCERR_SYNCFILE_NOTFOUND;
+    }
 
     // Coverity: at this point, this->scanner->flags.has_parsed == 1 and thus
     // synctex_scanner_parse never gets the chance to freeing the scanner
@@ -927,7 +932,10 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     if (res != PDFSYNCERR_SUCCESS) {
         return res;
     }
-    ReportIf(!scanner);
+    if (!scanner) {
+        ReportIf(true);
+        return PDFSYNCERR_SYNCFILE_NOTFOUND;
+    }
 
     TempStr srcfilepath = srcfilename;
     // convert the source file to an absolute path

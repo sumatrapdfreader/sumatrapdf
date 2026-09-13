@@ -1298,6 +1298,9 @@
     <ClCompile Include="..\src\tests\PdfDarkModeOklab_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\tests\PdfSync_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\tests\ReadAloudHighlight_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>

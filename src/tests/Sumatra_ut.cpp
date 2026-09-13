@@ -55,6 +55,7 @@ void WinUtilTest();
 void ChapterTable_UnitTests();
 void MobiDoc_UnitTests();
 void PagePosition_UnitTests();
+void PdfSync_UnitTests();
 void CachedObjects_UnitTests();
 void PageRenderPolicy_UnitTests();
 void PdfDarkModeImageClassifier_UnitTests();
@@ -589,6 +590,7 @@ int RunAppUnitTests(bool forAi) {
     ChapterTable_UnitTests();
     MobiDoc_UnitTests();
     PagePosition_UnitTests();
+    PdfSync_UnitTests();
     PdfDarkModeImageClassifier_UnitTests();
     PdfDarkModeOklab_UnitTests();
     SumatraPDF_UnitTests();
