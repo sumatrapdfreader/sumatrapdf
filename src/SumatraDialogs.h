@@ -25,6 +25,8 @@ struct ChangeColorsArgs {
     bool didSelect = false;
     // true if the user added or removed a color
     bool colorsChanged = false;
+    // show a slider that sets the color's alpha byte
+    bool withOpacity = false;
     // called once, when the dialog closes; args are deleted afterwards
     Func1<ChangeColorsArgs*> onClose;
 };

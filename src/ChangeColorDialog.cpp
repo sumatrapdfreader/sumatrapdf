@@ -41,6 +41,8 @@ static const Color kBgPresetColors[] = {
 // custom swatches are laid out in 2 rows
 static const int kCustomInRow1 = 5;
 
+static const Color kColCheckerDark = MkRgb(204, 204, 204);
+
 static const int kIdPreview = 1;
 static const int kIdPreset0 = 10;
 static const int kIdCustom0 = 20;
@@ -61,12 +63,15 @@ struct ChangeColorWnd : WindowBase {
     Str filePath;
     // non-null: generic color picker mode, owned
     ChangeColorsArgs* colorsArgs = nullptr;
+    // the picked color carries an opacity byte the user can change
+    bool withOpacity = false;
     bool isCbx = false;
     bool isImage = false;
     bool isEbook = false;
 
     Color currentColor = 0;
     bool isCheckered = false;
+    u8 opacity = 0xff;
     Color customColors[kMaxCustomColors]{};
     // how many of customColors are defined; the swatch at this index is the
     // single empty slot for defining the next color
@@ -84,6 +89,10 @@ struct ChangeColorWnd : WindowBase {
     VirtCustom* swatchPreset[kNumPresets]{};
     VirtCustom* swatchCustom[kMaxCustomColors]{};
     ILayout* swatchRow2 = nullptr;
+    ILayout* opacityRow = nullptr;
+    VirtText* opacityLabel = nullptr;
+    VirtSlider* opacitySlider = nullptr;
+    VirtText* opacityValue = nullptr;
     Checkbox* radioThisFile = nullptr;
     Checkbox* radioAllFiles = nullptr;
     VirtButton* btnRemove = nullptr;
@@ -104,6 +113,10 @@ struct ChangeColorWnd : WindowBase {
     void InvalidateSwatches();
     void UpdateSwatchVis();
     void UpdateRemoveBtn();
+    void UpdateOpacityVis();
+    void UpdateOpacityValue();
+    void SyncOpacityFromColor();
+    void OnOpacityChanged();
     void SetCustomColor(int idx, Color);
     void RemoveCustom(int idx);
     void PickFromArea(Point ptLocal);
@@ -192,10 +205,29 @@ static Pixmap* MakeHsvPixmap(int w, int h) {
     return px;
 }
 
-static void PaintCheckerboard(Gfx* gfx, Rect rc) {
+static Color WithAlpha(Color c, u8 a) {
+    return (c & 0xffffff) | ((Color)a << 24);
+}
+
+// an alpha of 0 means "no alpha given" everywhere else, so it reads as opaque
+static u8 OpacityOf(Color c) {
+    u8 a = GetAlpha(c);
+    return a == 0 ? 0xff : a;
+}
+
+static u8 BlendChannel(u8 fg, u8 bg, u8 a) {
+    return (u8)(((int)fg * (int)a + (int)bg * (255 - (int)a)) / 255);
+}
+
+static Color BlendOver(Color col, Color bg, u8 a) {
+    u8 r, g, b, br, bg2, bb;
+    UnpackColor(col, r, g, b);
+    UnpackColor(bg, br, bg2, bb);
+    return MkRgb(BlendChannel(r, br, a), BlendChannel(g, bg2, a), BlendChannel(b, bb, a));
+}
+
+static void PaintCheckerboard(Gfx* gfx, Rect rc, Color light, Color dark) {
     constexpr int kCheckerSize = 8;
-    Color light = kColWhite;
-    Color dark = MkRgb(204, 204, 204);
     for (int cy = 0; cy < rc.dy; cy += kCheckerSize) {
         for (int cx = 0; cx < rc.dx; cx += kCheckerSize) {
             int cellW = kCheckerSize;
@@ -311,6 +343,53 @@ void ChangeColorWnd::UpdateRemoveBtn() {
     btnRemove->SetIsEnabled(selectedCustomIdx >= 0 && selectedCustomIdx < nCustom);
 }
 
+// Visibility on the row only takes it out of the layout, so the controls in it
+// are hidden as well
+void ChangeColorWnd::UpdateOpacityVis() {
+    if (!opacityRow) {
+        return;
+    }
+    Visibility vis = withOpacity ? Visibility::Visible : Visibility::Collapse;
+    opacityRow->SetVisibility(vis);
+    opacityLabel->SetVisibility(vis);
+    opacitySlider->SetVisibility(vis);
+    opacityValue->SetVisibility(vis);
+}
+
+void ChangeColorWnd::UpdateOpacityValue() {
+    if (!opacityValue) {
+        return;
+    }
+    opacityValue->SetText(fmt("%d", (int)opacity));
+    if (hwnd && layout) {
+        DoLayout(HwndClientRect(hwnd).Size());
+        HwndInvalidate(hwnd);
+    }
+}
+
+void ChangeColorWnd::SyncOpacityFromColor() {
+    if (!withOpacity) {
+        return;
+    }
+    opacity = isCheckered ? 0xff : OpacityOf(currentColor);
+    if (opacitySlider) {
+        opacitySlider->SetValue(opacity, false);
+    }
+    UpdateOpacityValue();
+}
+
+void ChangeColorWnd::OnOpacityChanged() {
+    if (!opacitySlider) {
+        return;
+    }
+    opacity = (u8)limitValue(opacitySlider->value, 0, 255);
+    if (!isCheckered) {
+        currentColor = WithAlpha(currentColor, opacity);
+        UpdateEditFromColor();
+    }
+    UpdateOpacityValue();
+}
+
 // setting a color on the empty slot defines it, which opens a new empty slot
 void ChangeColorWnd::SetCustomColor(int idx, Color col) {
     if (idx < 0 || idx >= kMaxCustomColors) {
@@ -397,6 +476,7 @@ void ChangeColorWnd::OnEditChanged() {
     if (!TryParseEdit()) {
         return;
     }
+    SyncOpacityFromColor();
     if (selectedCustomIdx >= 0 && !isCheckered) {
         SetCustomColor(selectedCustomIdx, currentColor);
     }
@@ -432,7 +512,7 @@ void ChangeColorWnd::PickFromArea(Point ptLocal) {
     u8 cr, cg, cb;
     HsvToRgb(hue, 1.0f, val, cr, cg, cb);
     isCheckered = false;
-    currentColor = MkRgb(cr, cg, cb);
+    currentColor = withOpacity ? MkRgba(cr, cg, cb, opacity) : MkRgb(cr, cg, cb);
     UpdateEditFromColor();
 }
 
@@ -472,6 +552,7 @@ void ChangeColorWnd::OnSwatchClick(VirtMouseEvent* ev) {
             currentColor = col;
         }
         SelectPreview();
+        SyncOpacityFromColor();
         UpdateEditFromColor();
         ev->didHandle = true;
         return;
@@ -488,6 +569,7 @@ void ChangeColorWnd::OnSwatchClick(VirtMouseEvent* ev) {
             if (idx < nCustom) {
                 isCheckered = false;
                 currentColor = customColors[idx];
+                SyncOpacityFromColor();
                 UpdateEditFromColor();
             }
         }
@@ -570,9 +652,16 @@ static void PaintSwatch(VirtCustom* sw, VirtPaintCtx* ctx) {
         return;
     }
     if (checkered) {
-        PaintCheckerboard(ctx->gfx, rc);
+        PaintCheckerboard(ctx->gfx, rc, kColWhite, kColCheckerDark);
     } else {
-        ctx->gfx->FillRect(rc, col);
+        u8 a = GetAlpha(col);
+        bool blend = wnd->withOpacity && a != 0 && a != 0xff;
+        if (blend) {
+            // show the color over a checkerboard, so opacity is visible
+            PaintCheckerboard(ctx->gfx, rc, BlendOver(col, kColWhite, a), BlendOver(col, kColCheckerDark, a));
+        } else {
+            ctx->gfx->FillRect(rc, col & 0xffffff);
+        }
     }
     if (sw->HasFlag(vwfFocused) && id >= kIdPreset0 && id < kIdPreset0 + kNumPresets) {
         ctx->gfx->DrawFocusRect(ctx->content);
@@ -792,6 +881,7 @@ void ChangeColorWnd::RelayoutRadios() {
 
 void ChangeColorWnd::SetTargetBackground(MainWindow* mainWin) {
     NotifyColorsArgs(CloseAction::Cancel);
+    withOpacity = false;
     win = mainWin;
     tab = (IsMainWindowValidAndNotClosing(win) && win->CurrentTab() && win->CurrentTab()->ctrl) ? win->CurrentTab()
                                                                                                 : nullptr;
@@ -806,6 +896,8 @@ void ChangeColorWnd::SetTargetBackground(MainWindow* mainWin) {
         RelayoutRadios();
         LoadColors();
         UpdateSwatchVis();
+        UpdateOpacityVis();
+        SyncOpacityFromColor();
         UpdateEditFromColor();
         Relayout();
         UpdateTheme();
@@ -815,6 +907,7 @@ void ChangeColorWnd::SetTargetBackground(MainWindow* mainWin) {
 void ChangeColorWnd::SetTargetColors(ChangeColorsArgs* args) {
     NotifyColorsArgs(CloseAction::Cancel);
     colorsArgs = args;
+    withOpacity = args->withOpacity;
     win = args->win;
     tab = nullptr;
     str::ReplaceWithCopy(&filePath, Str{});
@@ -828,6 +921,8 @@ void ChangeColorWnd::SetTargetColors(ChangeColorsArgs* args) {
         RelayoutRadios();
         LoadColors();
         UpdateSwatchVis();
+        UpdateOpacityVis();
+        SyncOpacityFromColor();
         UpdateEditFromColor();
         Relayout();
         UpdateTheme();
@@ -893,6 +988,38 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
         c->onMouseMove = MkFunc1(OnAreaMouseMove, this);
         colorArea = c;
         vbox->AddChild(c);
+    }
+
+    {
+        auto* row = new HBox();
+        row->alignMain = MainAxisAlign::MainStart;
+        row->alignCross = CrossAxisAlign::CrossCenter;
+        row->gap = DpiScale(4);
+
+        opacityLabel = NewVirtText({
+            .s = Tr("Opacity:"),
+            .font = font,
+            .isRtl = isRtl,
+        });
+        row->AddChild(opacityLabel);
+
+        auto* sl = new VirtSlider();
+        sl->minVal = 0;
+        sl->maxVal = 255;
+        sl->value = opacity;
+        sl->idealDx = DpiScale(200);
+        sl->onValueChanged = MkMethod0<ChangeColorWnd, &ChangeColorWnd::OnOpacityChanged>(this);
+        opacitySlider = sl;
+        row->AddChild(sl);
+
+        opacityValue = NewVirtText({
+            .s = StrL("255"),
+            .font = font,
+            .isRtl = isRtl,
+        });
+        row->AddChild(opacityValue);
+        opacityRow = new Padding(row, DpiScaledInsets(4, 0, 0, 0));
+        vbox->AddChild(opacityRow);
     }
 
     {
@@ -1006,6 +1133,8 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
 
     RelayoutRadios();
     UpdateSwatchVis();
+    UpdateOpacityVis();
+    SyncOpacityFromColor();
     UpdateEditFromColor();
 
     int dx = DpiScale(400);
