@@ -307,6 +307,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdCreateShortcutToFile,
     CmdSetDocumentColorsFollowTheme,
     CmdFileHistory,
+    CmdFavorite,
     0,
 };
 

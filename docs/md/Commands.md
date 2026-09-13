@@ -30,6 +30,7 @@ CmdToggleFilePicker,,SumatraPDF File Picker,"checkbox under File and Settings; t
 CmdToggleBoolSetting,,Toggle Boolean Setting,"in the Command Palette, lists boolean advanced settings; Enter or a click toggles one and closes. Custom shortcuts: `CmdToggleBoolSetting <SettingName>` (case-insensitive leaf or dotted path), e.g. `Fullscreen.ShowMenubar` (fixes #5912), ver 3.7+"
 CmdFixDefaultApp,,Fix Default App For Extension,"`CmdFixDefaultApp .pdf` opens the OS dialog to set the default app for that extension; used by the home-page bottom bar when Sumatra is no longer the default, ver 3.7+"
 CmdFileHistory,,Open Recent File,"`CmdFileHistory <path>` opens that file; used for the recent files listed in the File menu, each of which carries its own path, ver 3.7+"
+CmdFavorite,,Go to Favorite,"`CmdFavorite <path> page=<page>` goes to that favorite; used for the favorites listed in the Favorites menu, each of which carries its own file path and page, ver 3.7+"
 CmdOpenNextFileInFolder,Shift + Ctrl + Right,Open Next File In Folder,
 CmdNavigateFilesInFolder,Shift + Ctrl + Up,Navigate Files in Folder,"directory browser for openable files in the current file's folder (stays open; Enter/double-click replaces the current tab, Ctrl+Enter/Ctrl+double-click switches to the tab already showing the file or opens a new tab, Alt+Up goes to the parent directory, Del moves the selected file to the recycle bin, F5 re-reads the directory); also used when `FilePicker = sumatrapdf`, ver 3.7+"
 CmdOpenPrevFileInFolder,Shift + Ctrl + Left,Open Previous File In Folder,

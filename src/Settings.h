@@ -206,8 +206,6 @@ struct Favorite {
     // position on the page when the favorite was added (document units; -1
     // if not stored)
     PointF scrollPos;
-    // id of this favorite in the menu (assigned by AppendFavMenuItems)
-    int menuId;
     // session-only favorite; omitted when serializing array elements
     bool isTemporary;
 };

@@ -325,6 +325,7 @@ const commandsRaw = [
     "CmdToggleReadingBarInvert", "Reading Bar Invert",
     "CmdNone", "Do nothing",
     "CmdFileHistory", "Open Recent File",
+    "CmdFavorite", "Go to Favorite",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them
@@ -369,11 +370,7 @@ function generateEnum(): string {
   }
 
   lines.push("");
-  lines.push("    /* range for favorites */");
-  lines.push("    CmdFavoriteFirst,");
-  lines.push("    CmdFavoriteLast = CmdFavoriteFirst + 256,");
-  lines.push("");
-  lines.push("    CmdLast = CmdFavoriteLast,");
+  lines.push(`    CmdLast = ${firstCmdId + names.length - 1},`);
   lines.push("    CmdFirstCustom = CmdLast + 100,");
   lines.push("");
   lines.push("    // aliases, at the end to not mess ordering");

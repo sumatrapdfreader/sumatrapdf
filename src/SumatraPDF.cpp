@@ -11536,13 +11536,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return 0;
     }
 
-    // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
-    static_assert(CmdFavoriteLast - CmdFavoriteFirst == 256, "wrong number of favorite menu ids");
-    if ((cmdId >= CmdFavoriteFirst) && (cmdId <= CmdFavoriteLast)) {
-        GoToFavoriteByMenuId(win, cmdId);
-        return 0;
-    }
-
     if (!IsMainWindowValidAndNotClosing(win)) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
@@ -11554,6 +11547,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     CustomCommand* cmd = FindCustomCommand(cmdId);
     if (cmd != nullptr) {
         cmdId = cmd->origId;
+    }
+
+    // a favorite in the Favorites menu carries its file path and page as arguments
+    if (cmdId == CmdFavorite) {
+        GoToFavoriteByCmd(win, cmd);
+        return 0;
     }
 
     // a recent file in the File menu carries its path as an argument

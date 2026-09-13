@@ -132,21 +132,6 @@ uintptr_t FavTreeModel::GetUserData(TreeItem ti) {
     return treeItem->userData;
 }
 
-static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
-    FileState* ds;
-    for (int i = 0; (ds = FileHistoryGet(i)) != nullptr; i++) {
-        for (int j = 0; j < len(*ds->favorites); j++) {
-            if (menuId == (*ds->favorites)[j]->menuId) {
-                if (dsOut) {
-                    *dsOut = ds;
-                }
-                return (*ds->favorites)[j];
-            }
-        }
-    }
-    return nullptr;
-}
-
 static FileState* GetByFavorite(Favorite* fn) {
     FileState* ds;
     for (int i = 0; (ds = FileHistoryGet(i)) != nullptr; i++) {
@@ -155,15 +140,6 @@ static FileState* GetByFavorite(Favorite* fn) {
         }
     }
     return nullptr;
-}
-
-static void ResetFavMenuIds() {
-    FileState* ds;
-    for (int i = 0; (ds = FileHistoryGet(i)) != nullptr; i++) {
-        for (int j = 0; j < len(*ds->favorites); j++) {
-            (*ds->favorites)[j]->menuId = 0;
-        }
-    }
 }
 
 static int idxCache = -1;
@@ -678,7 +654,42 @@ static TempStr FavTreeCompactReadableNameTemp(FileState* fav, Favorite* fn) {
     return fmt("%s : %s", fp, rn);
 }
 
-static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, bool isCurrent) {
+struct FavMenuEntry {
+    Str filePath;
+    Str pageNo;
+    int cmdId;
+};
+
+// A favorite in the menu is a CmdFavorite command carrying the file path and the
+// page as arguments. Custom commands live until the settings are re-read, so reuse
+// the one already made for a favorite instead of making one per menu rebuild.
+// One pass over the commands serves all the entries.
+static void SetFavCmdIds(Vec<FavMenuEntry>& favs) {
+    Vec<CustomCommand*> cmds;
+    GetCommandsWithOrigId(cmds, CmdFavorite);
+    for (CustomCommand* cmd : cmds) {
+        Str filePath = GetCommandStringArg(cmd, kCmdArgFilePath, {});
+        Str pageNo = GetCommandStringArg(cmd, kCmdArgPage, {});
+        for (FavMenuEntry& fe : favs) {
+            if (fe.cmdId == 0 && str::EqI(filePath, fe.filePath) && str::Eq(pageNo, fe.pageNo)) {
+                fe.cmdId = cmd->id;
+                break;
+            }
+        }
+    }
+
+    for (FavMenuEntry& fe : favs) {
+        if (fe.cmdId != 0) {
+            continue;
+        }
+        CommandArg* args = NewStringArg(kCmdArgFilePath, fe.filePath);
+        args->next = NewStringArg(kCmdArgPage, fe.pageNo);
+        fe.cmdId = CreateCustomCommand(StrL("CmdFavorite"), CmdFavorite, args)->id;
+    }
+}
+
+static void AppendFavMenuItems(HMENU m, FileState* f, Vec<FavMenuEntry>& favs, int& idx, bool combined,
+                               bool isCurrent) {
     ReportIf(!f);
     if (!f) {
         return;
@@ -688,7 +699,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
             return;
         }
         Favorite* fn = (*f->favorites)[i];
-        fn->menuId = idx++;
+        int cmdId = favs[idx++].cmdId;
         TempStr s;
         if (combined) {
             s = FavCompactReadableNameTemp(f, fn, isCurrent);
@@ -697,7 +708,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
         }
         auto safeStr = MenuToSafeStringTemp(s);
         WCHAR* ws = CWStrTemp(safeStr);
-        AppendMenuW(m, MF_STRING, (UINT_PTR)fn->menuId, ws);
+        AppendMenuW(m, MF_STRING, (UINT_PTR)cmdId, ws);
     }
 }
 
@@ -762,12 +773,26 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
 
     AppendMenuW(m, MF_SEPARATOR, 0, nullptr);
 
-    ResetFavMenuIds();
-    int menuId = CmdFavoriteFirst;
-
     int menusCount = len(filePathsSorted);
     menusCount = std::min(menusCount, kMaxFavMenus);
 
+    // collect the favorites that will be shown, so that a single pass over the
+    // commands gives all of them their command id
+    Vec<FavMenuEntry> favs;
+    for (int i = 0; i < menusCount; i++) {
+        Str filePath = filePathsSorted[i];
+        FileState* f = GetFavByFilePath(filePath);
+        if (!f) {
+            continue;
+        }
+        for (int j = 0; j < len(*f->favorites) && j < kMaxFavMenus; j++) {
+            Favorite* fn = (*f->favorites)[j];
+            VecAppend(favs, FavMenuEntry{filePath, fn->pageNo, 0});
+        }
+    }
+    SetFavCmdIds(favs);
+
+    int favIdx = 0;
     for (int i = 0; i < menusCount; i++) {
         Str filePath = filePathsSorted[i];
         FileState* f = GetFavByFilePath(filePath);
@@ -780,7 +805,7 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
         if (!combined) {
             sub = CreateMenu();
         }
-        AppendFavMenuItems(sub, f, menuId, combined, f == currFileFav);
+        AppendFavMenuItems(sub, f, favs, favIdx, combined, f == currFileFav);
         if (!combined) {
             Str s = Tr("Current file");
             if (f != currFileFav) {
@@ -919,11 +944,19 @@ void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
     }
 }
 
-void GoToFavoriteByMenuId(MainWindow* win, int cmdId) {
-    FileState* f;
-    Favorite* fn = GetFavByMenuId(cmdId, &f);
-    if (fn) {
-        GoToFavorite(win, f, fn);
+// a favorite in the Favorites menu carries its file path and page as arguments
+void GoToFavoriteByCmd(MainWindow* win, CustomCommand* cmd) {
+    Str filePath = GetCommandStringArg(cmd, kCmdArgFilePath, {});
+    Str pageNo = GetCommandStringArg(cmd, kCmdArgPage, {});
+    FileState* fs = GetFavByFilePath(filePath);
+    if (!fs) {
+        return;
+    }
+    for (Favorite* fn : *fs->favorites) {
+        if (str::Eq(fn->pageNo, pageNo)) {
+            GoToFavorite(win, fs, fn);
+            return;
+        }
     }
 }
 

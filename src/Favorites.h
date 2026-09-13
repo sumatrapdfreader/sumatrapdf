@@ -37,7 +37,7 @@ void ToggleFavoritesTab(MainWindow* win);
 WindowTab* FindFavoritesTab(MainWindow* win);
 void PopulateFavTreeIfNeeded(MainWindow* win);
 void LayoutFavoritesContainer(MainWindow* win);
-void GoToFavoriteByMenuId(MainWindow* win, int cmdId);
+void GoToFavoriteByCmd(MainWindow* win, CustomCommand* cmd);
 void UpdateFavoritesTree(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();
 bool IsPageInFavorites(Str filePath, int pageNo, DocController* ctrl = nullptr);

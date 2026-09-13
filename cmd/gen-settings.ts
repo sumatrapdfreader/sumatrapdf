@@ -890,7 +890,6 @@ const favorite: Field[] = [
   )
     .structName("PointF")
     .ver("3.7"),
-  field("MenuId", Int, 0, "id of this favorite in the menu (assigned by AppendFavMenuItems)").notSaved(),
   // search-start mark ("/") from Find; session-only. Field is in metadata so
   // SerializeStruct can skip array elements with IsTemporary=true; the field
   // itself is never written (SettingsUtil) (issue #5862)
