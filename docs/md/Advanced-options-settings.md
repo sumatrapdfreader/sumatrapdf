@@ -786,13 +786,49 @@ Annotations [
     ; (Arabic, Hebrew, Persian) want right (introduced in version 3.7)
     FreeTextAlignment = left
 
-    ; colors offered by the drop-down on the highlight, underline, squiggly and
-    ; strike out toolbar buttons, separated by space. Picking one sets the color
-    ; of new annotations of that type (introduced in version 3.7)
+    ; colors offered by the drop-down on the annotation toolbar's buttons,
+    ; separated by space. Picking one sets the color of new annotations of that
+    ; type (introduced in version 3.7)
     PresetColors = #ffff00 #8bf05d #99defa #f199d2 #e24745
 
     ; color of newly created text (sticky note) annotations
     TextIconColor = 
+
+    ; color of newly created line annotations. If not set, the PDF engine's
+    ; default (red) is used (introduced in version 3.7)
+    LineColor = 
+
+    ; color of newly created polyline annotations. If not set, the PDF engine's
+    ; default (red) is used (introduced in version 3.7)
+    PolyLineColor = 
+
+    ; color of newly created square annotations. If not set, the PDF engine's
+    ; default (red) is used (introduced in version 3.7)
+    SquareColor = 
+
+    ; color of newly created circle annotations. If not set, the PDF engine's
+    ; default (red) is used (introduced in version 3.7)
+    CircleColor = 
+
+    ; color of newly created polygon annotations. If not set, the PDF engine's
+    ; default (red) is used (introduced in version 3.7)
+    PolygonColor = 
+
+    ; color of newly created ink annotations. If not set, the PDF engine's
+    ; default (red) is used (introduced in version 3.7)
+    InkColor = 
+
+    ; color of newly created stamp annotations. If not set, the PDF engine's
+    ; default (red) is used (introduced in version 3.7)
+    StampColor = 
+
+    ; color of newly created caret annotations. If not set, the PDF engine's
+    ; default (red) is used (introduced in version 3.7)
+    CaretColor = 
+
+    ; color of newly created file attachment annotations. If not set, the PDF
+    ; engine's default (red) is used (introduced in version 3.7)
+    FileAttachmentColor = 
 
     ; icon shown for text (sticky note) annotations: comment, help, insert, key,
     ; new paragraph, note or paragraph. If not set, note is used

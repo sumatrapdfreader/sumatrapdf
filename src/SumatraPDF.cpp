@@ -11147,12 +11147,27 @@ void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
         args.textSize = a.freeTextSize;
         args.borderWidth = a.freeTextBorderWidth;
         args.quadding = QuaddingFromName(a.freeTextAlignment);
-    } else if (typ == AnnotationType::Stamp || typ == AnnotationType::Caret || typ == AnnotationType::Square ||
-               typ == AnnotationType::Circle || typ == AnnotationType::Line || typ == AnnotationType::Polygon ||
-               typ == AnnotationType::PolyLine || typ == AnnotationType::Ink || typ == AnnotationType::Redact ||
-               typ == AnnotationType::FileAttachment) {
-        // MuPDF defaults these to red on create; no separate prefs color.
-        // Leave args.col unset so we keep MuPDF's default.
+    } else if (typ == AnnotationType::Line) {
+        col = GetParsedColor(a.lineColor);
+    } else if (typ == AnnotationType::PolyLine) {
+        col = GetParsedColor(a.polyLineColor);
+    } else if (typ == AnnotationType::Square) {
+        col = GetParsedColor(a.squareColor);
+    } else if (typ == AnnotationType::Circle) {
+        col = GetParsedColor(a.circleColor);
+    } else if (typ == AnnotationType::Polygon) {
+        col = GetParsedColor(a.polygonColor);
+    } else if (typ == AnnotationType::Ink) {
+        col = GetParsedColor(a.inkColor);
+    } else if (typ == AnnotationType::Stamp) {
+        col = GetParsedColor(a.stampColor);
+    } else if (typ == AnnotationType::Caret) {
+        col = GetParsedColor(a.caretColor);
+    } else if (typ == AnnotationType::FileAttachment) {
+        col = GetParsedColor(a.fileAttachmentColor);
+    } else if (typ == AnnotationType::Redact) {
+        // a redaction mark has no color to pick: it's the black box that
+        // replaces the text. MuPDF's default is what we want
     } else {
         logf("SetAnnotCreateArgs: unexpected type %d for default prefs color\n", (int)typ);
         // ReportIf(true);

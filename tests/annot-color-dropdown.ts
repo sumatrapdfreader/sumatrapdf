@@ -2,12 +2,17 @@
 // Edit PDF toolbar's markup buttons have, and the color they apply carries its
 // own opacity, so an annotation with a color chip has no opacity chip.
 // A shape has two of those chips, and its interior can be left out entirely.
+//
+// Every Edit PDF toolbar button that creates a colored annotation has that
+// drop-down too, and picking a color there sets the color of the next one made.
+// Redact is the exception: its color is the box that covers the text.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
+  clientToScreen,
   enumWindows,
   findTopWindow,
   getWindowOwner,
@@ -16,14 +21,23 @@ import {
   getWindowText,
   isWindowAbove,
   isWindowVisible,
+  MK_RBUTTON,
+  packCoords,
   postMessage,
+  sendMessage,
+  setCursorPos,
   sleep,
   VK_ESCAPE,
+  WM_COMMAND,
   WM_KEYDOWN,
+  WM_RBUTTONDOWN,
+  WM_RBUTTONUP,
 } from "./winapi.ts";
-import { clickAt, findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { clickAt, findCanvas, findChildByClass, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 const TOOLBAR_CLASS = "SumatraAnnotEditToolbar";
+const MAIN_TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
+const HOVER_MENU_CLASS = "SumatraToolbarHoverMenu";
 const POPUP_CLASS = "SumatraAnnotColorPopup";
 // the two preset colors the test picks from: translucent red, opaque green
 const PRESETS = "#80ff0000 #00ff00";
@@ -327,9 +341,158 @@ async function testShape(): Promise<void> {
   }
 }
 
+// the buttons that offer the preset colors, and what they make
+const COLOR_BUTTONS = [
+  "CmdCreateAnnotText",
+  "CmdCreateAnnotFreeText",
+  "CmdCreateAnnotLine",
+  "CmdCreateAnnotPolyLine",
+  "CmdCreateAnnotSquare",
+  "CmdCreateAnnotCircle",
+  "CmdCreateAnnotPolygon",
+  "CmdCreateAnnotInk",
+  "CmdCreateAnnotStamp",
+  "CmdCreateAnnotCaret",
+  "CmdCreateAnnotFileAttachment",
+];
+
+// the visible annotation button for a command, in toolbar client coords
+async function annotButtonRect(client: ControlClient, cmd: number): Promise<Rect | null> {
+  const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+  const re = /annotation-idx=\d+ cmd=(\d+) hidden=(\d) enabled=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(raw)) !== null) {
+    if (+m[1]! === cmd && m[2] === "0") {
+      const x = +m[3]!;
+      const y = +m[4]!;
+      return { x, y, dx: +m[5]! - x, dy: +m[6]! - y };
+    }
+  }
+  return null;
+}
+
+// the colors the open drop-down lists, the one in use marked with a *
+async function hoverMenuColors(client: ControlClient): Promise<string[]> {
+  const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+  const re = /^dropdown-item idx=\d+ cmd=\d+ current=(\d) rect=[-\d,]+ text=(.*)$/gm;
+  const res: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(raw)) !== null) {
+    res.push(m[1] === "1" ? `${m[2]}*` : m[2]!);
+  }
+  return res;
+}
+
+// right-click opens the drop-down at once, without waiting for the hover delay.
+// The cursor has to be on the button or the drop-down closes itself.
+function rightClickToolbar(toolbar: number, x: number, y: number): void {
+  const s = clientToScreen(toolbar, x, y);
+  setCursorPos(s.x, s.y);
+  const lp = packCoords(x, y);
+  sendMessage(toolbar, WM_RBUTTONDOWN, MK_RBUTTON, lp);
+  sendMessage(toolbar, WM_RBUTTONUP, 0, lp);
+}
+
+// take the cursor off the toolbar and wait for the drop-down to go away
+async function closeHoverMenu(pid: number, frame: number): Promise<void> {
+  const r = getWindowRect(frame);
+  setCursorPos(r.left + 5, r.bottom - 5);
+  for (let i = 0; i < 30; i++) {
+    const h = findTopWindow(pid, HOVER_MENU_CLASS);
+    if (!h || !isWindowVisible(h)) {
+      return;
+    }
+    await sleep(100);
+  }
+  throw new Error("annot-color-dropdown: the toolbar drop-down would not close");
+}
+
+async function testToolbarButtons(): Promise<void> {
+  const dir = tmpPath("annot-color-dropdown-buttons");
+  rmSync(dir, { recursive: true, force: true });
+  const appdata = join(dir, "appdata");
+  mkdirSync(appdata, { recursive: true });
+  writeSettings(appdata);
+
+  const pdf = join(dir, "blank.pdf");
+  writeFileSync(
+    pdf,
+    assemblePdf([
+      "<< /Type /Catalog /Pages 2 0 R >>",
+      "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
+    ]),
+    "latin1",
+  );
+
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
+  const pid = proc.pid!;
+  try {
+    await client.waitForRenderIdle();
+    await client.setNotificationsEnabled(false);
+    sendCommand(frame, cmdId("CmdToggleEditPDF"));
+    await sleep(600);
+    const toolbar = findChildByClass(frame, MAIN_TOOLBAR_CLASS);
+
+    for (const name of COLOR_BUTTONS) {
+      const b = await annotButtonRect(client, cmdId(name));
+      if (!b) {
+        throw new Error(`annot-color-dropdown: no ${name} button on the Edit PDF toolbar`);
+      }
+      rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
+      await sleep(400);
+      const colors = await hoverMenuColors(client);
+      if (colors.join(" ") !== PRESETS) {
+        throw new Error(`annot-color-dropdown: ${name} offers "${colors.join(" ")}", want "${PRESETS}"`);
+      }
+      await closeHoverMenu(pid, frame);
+    }
+
+    // a redaction mark's color is the box that covers the text, not a choice
+    const redact = await annotButtonRect(client, cmdId("CmdCreateAnnotRedact"));
+    if (redact) {
+      rightClickToolbar(toolbar, redact.x + (redact.dx >> 1), redact.y + (redact.dy >> 1));
+      await sleep(400);
+      const h = findTopWindow(pid, HOVER_MENU_CLASS);
+      if (h && isWindowVisible(h)) {
+        throw new Error("annot-color-dropdown: Redact should have no color drop-down");
+      }
+      await closeHoverMenu(pid, frame);
+    }
+
+    // picking a color is the color the next annotation of that type is made in
+    const square = (await annotButtonRect(client, cmdId("CmdCreateAnnotSquare")))!;
+    rightClickToolbar(toolbar, square.x + (square.dx >> 1), square.y + (square.dy >> 1));
+    await sleep(400);
+    const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+    const item = /^dropdown-item idx=1 cmd=\d+ current=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(raw);
+    if (!item) {
+      throw new Error(`annot-color-dropdown: the Square drop-down has no second swatch\n${raw}`);
+    }
+    const menu = findTopWindow(pid, HOVER_MENU_CLASS);
+    const mr = getWindowRect(menu);
+    const cx = (+item[1]! + +item[3]!) >> 1;
+    const cy = (+item[2]! + +item[4]!) >> 1;
+    await clickAt(menu, cx - mr.left, cy - mr.top);
+    await sleep(400);
+
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotSquare"), packCoords(300, 300));
+    await sleep(600);
+    await client.waitForRenderIdle();
+    const got = await selectedColor(client);
+    if (got.color !== "#00ff00") {
+      throw new Error(`annot-color-dropdown: the new square is ${got.color}, want #00ff00`);
+    }
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
 export async function testit(): Promise<void> {
   await testMarkup();
   await testShape();
+  await testToolbarButtons();
   console.log("annot-color-dropdown: OK");
 }
 

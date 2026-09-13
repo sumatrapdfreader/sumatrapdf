@@ -856,10 +856,64 @@ const annotations: Field[] = [
     "PresetColors",
     Str,
     "#ffff00 #8bf05d #99defa #f199d2 #e24745",
-    "colors offered by the drop-down on the highlight, underline, squiggly and strike out toolbar " +
-      "buttons, separated by space. Picking one sets the color of new annotations of that type",
+    "colors offered by the drop-down on the annotation toolbar's buttons, separated by space. " +
+      "Picking one sets the color of new annotations of that type",
   ).ver("3.7"),
   field("TextIconColor", Color, "", "color of newly created text (sticky note) annotations"),
+  field(
+    "LineColor",
+    Color,
+    "",
+    "color of newly created line annotations. If not set, the PDF engine's default (red) is used",
+  ).ver("3.7"),
+  field(
+    "PolyLineColor",
+    Color,
+    "",
+    "color of newly created polyline annotations. If not set, the PDF engine's default (red) is used",
+  ).ver("3.7"),
+  field(
+    "SquareColor",
+    Color,
+    "",
+    "color of newly created square annotations. If not set, the PDF engine's default (red) is used",
+  ).ver("3.7"),
+  field(
+    "CircleColor",
+    Color,
+    "",
+    "color of newly created circle annotations. If not set, the PDF engine's default (red) is used",
+  ).ver("3.7"),
+  field(
+    "PolygonColor",
+    Color,
+    "",
+    "color of newly created polygon annotations. If not set, the PDF engine's default (red) is used",
+  ).ver("3.7"),
+  field(
+    "InkColor",
+    Color,
+    "",
+    "color of newly created ink annotations. If not set, the PDF engine's default (red) is used",
+  ).ver("3.7"),
+  field(
+    "StampColor",
+    Color,
+    "",
+    "color of newly created stamp annotations. If not set, the PDF engine's default (red) is used",
+  ).ver("3.7"),
+  field(
+    "CaretColor",
+    Color,
+    "",
+    "color of newly created caret annotations. If not set, the PDF engine's default (red) is used",
+  ).ver("3.7"),
+  field(
+    "FileAttachmentColor",
+    Color,
+    "",
+    "color of newly created file attachment annotations. If not set, the PDF engine's default (red) is used",
+  ).ver("3.7"),
   field(
     "TextIconType",
     Str,

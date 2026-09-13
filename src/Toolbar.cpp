@@ -2305,18 +2305,21 @@ static void BuildSaveHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
 
 //--- the annotation buttons' color drop-down
 
-// The highlight / underline / squiggly / strike out buttons offer the colors in
-// Annotations.PresetColors: picking one becomes the color of new annotations of
-// that type, and the pencil opens the color dialog on the whole set.
+// Every annotation button that creates something with a color offers the colors
+// in Annotations.PresetColors: picking one becomes the color of new annotations
+// of that type, and the pencil opens the color dialog on the whole set.
 constexpr int kAnnotSwatchDx = 22;
 // ring space around the circle, where the mark on the color in use goes
 constexpr int kAnnotSwatchPad = 5;
 constexpr int kAnnotColorsPad = 10;
 
 // the buttons that offer the preset colors
+// Redact is left out: its color is the box that covers the text, not a choice
 static const int kAnnotColorCmds[] = {
-    CmdAnnotationHighlightBrush, CmdCreateAnnotHighlight, CmdCreateAnnotUnderline,
-    CmdCreateAnnotSquiggly,      CmdCreateAnnotStrikeOut,
+    CmdAnnotationHighlightBrush, CmdCreateAnnotHighlight, CmdCreateAnnotUnderline, CmdCreateAnnotSquiggly,
+    CmdCreateAnnotStrikeOut,     CmdCreateAnnotText,      CmdCreateAnnotFreeText,  CmdCreateAnnotLine,
+    CmdCreateAnnotPolyLine,      CmdCreateAnnotSquare,    CmdCreateAnnotCircle,    CmdCreateAnnotPolygon,
+    CmdCreateAnnotInk,           CmdCreateAnnotStamp,     CmdCreateAnnotCaret,     CmdCreateAnnotFileAttachment,
 };
 
 static ParsedColor* AnnotPresetColorSetting(int cmdId) {
@@ -2334,6 +2337,29 @@ static ParsedColor* AnnotPresetColorSetting(int cmdId) {
             return &a.squigglyColor;
         case CmdCreateAnnotStrikeOut:
             return &a.strikeOutColor;
+        case CmdCreateAnnotText:
+            return &a.textIconColor;
+        case CmdCreateAnnotFreeText:
+            // the text's color; the box behind it is FreeTextBackgroundColor
+            return &a.freeTextColor;
+        case CmdCreateAnnotLine:
+            return &a.lineColor;
+        case CmdCreateAnnotPolyLine:
+            return &a.polyLineColor;
+        case CmdCreateAnnotSquare:
+            return &a.squareColor;
+        case CmdCreateAnnotCircle:
+            return &a.circleColor;
+        case CmdCreateAnnotPolygon:
+            return &a.polygonColor;
+        case CmdCreateAnnotInk:
+            return &a.inkColor;
+        case CmdCreateAnnotStamp:
+            return &a.stampColor;
+        case CmdCreateAnnotCaret:
+            return &a.caretColor;
+        case CmdCreateAnnotFileAttachment:
+            return &a.fileAttachmentColor;
     }
     return nullptr;
 }
