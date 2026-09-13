@@ -2359,6 +2359,7 @@ struct ToolbarColorSwatch : VirtCtrl {
     Color col = kColorUnset;
     Str text; // owned; the color as text, for the -dbg-control dump
     bool isCurrent = false;
+    bool isNone = false; // no color at all, drawn as an empty circle with a slash
 
     ToolbarColorSwatch() { cursor = CursorId::Hand; }
     ~ToolbarColorSwatch() override { str::Free(text); }
@@ -2386,6 +2387,16 @@ struct ToolbarColorSwatch : VirtCtrl {
         circle.Inflate(-p, -p);
         ctx.gfx->FillEllipse(circle, TbEdgeColor());
         circle.Inflate(-t, -t);
+        if (isNone) {
+            ctx.gfx->FillEllipse(circle, TbBgColor());
+            // a slash from the lower left to the upper right, inset so it
+            // stays inside the circle
+            int inset = (int)((float)circle.dx * 0.15f);
+            Point p1{circle.x + inset, circle.Bottom() - inset};
+            Point p2{circle.Right() - inset, circle.y + inset};
+            ctx.gfx->DrawLineAA(p1, p2, TbTextColor(), (float)t + 0.5f);
+            return;
+        }
         u8 a = GetAlpha(col);
         ctx.gfx->FillEllipse(circle, col & 0xffffff, a == 0 ? 255 : a);
     }
@@ -2484,7 +2495,10 @@ static bool SameColorAndAlpha(Color a, Color b) {
 // The drop-down's content: the preset colors as swatches with the one in use
 // ringed, and a button that opens the color dialog on the whole set. cmdId is 0
 // when this is not a toolbar button's drop-down, and nothing is recorded then.
-static ILayout* MakeAnnotColorsPanel(MainWindow* win, Color current, int cmdId, const Func1<VirtMouseEvent*>& onSwatch,
+// swatchesOut, when given, collects the swatches in the order they are laid
+// out, for the -dbg-control dump
+static ILayout* MakeAnnotColorsPanel(MainWindow* win, Color current, int cmdId, bool withNone,
+                                     Vec<ToolbarColorSwatch*>* swatchesOut, const Func1<VirtMouseEvent*>& onSwatch,
                                      const Func1<VirtMouseEvent*>& onEdit) {
     ToolbarVirt* tb = win->toolbarVirt;
     Vec<Color> colors;
@@ -2492,6 +2506,22 @@ static ILayout* MakeAnnotColorsPanel(MainWindow* win, Color current, int cmdId, 
 
     auto* row = new HBox();
     row->alignCross = CrossAxisAlign::CrossCenter;
+    if (withNone) {
+        // for a color that can be left out, like a shape's interior
+        auto* sw = new ToolbarColorSwatch();
+        sw->id = cmdId;
+        sw->col = kColorUnset;
+        sw->isNone = true;
+        sw->isCurrent = (current == kColorUnset);
+        str::ReplaceWithCopy(&sw->text, StrL("none"));
+        // the named-color menu calls it that, untranslated like the other color names
+        sw->SetTooltip(StrL("Transparent"));
+        sw->onClick = onSwatch;
+        row->AddChild(sw);
+        if (swatchesOut) {
+            VecAppend(*swatchesOut, sw);
+        }
+    }
     for (Color col : colors) {
         auto* sw = new ToolbarColorSwatch();
         sw->id = cmdId;
@@ -2500,6 +2530,9 @@ static ILayout* MakeAnnotColorsPanel(MainWindow* win, Color current, int cmdId, 
         str::ReplaceWithCopy(&sw->text, SerializeColorTemp(col));
         sw->onClick = onSwatch;
         row->AddChild(sw);
+        if (swatchesOut) {
+            VecAppend(*swatchesOut, sw);
+        }
         if (cmdId != 0) {
             RecordHoverItem(tb, sw, sw->text, {{}, sw->text, cmdId, true, sw->isCurrent});
         }
@@ -2536,7 +2569,7 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
         return;
     }
     Color current = GetParsedColor(*setting, kColorUnset);
-    ev->layout = MakeAnnotColorsPanel(win, current, ev->cmdId, MkFunc1(OnAnnotColorClicked, win),
+    ev->layout = MakeAnnotColorsPanel(win, current, ev->cmdId, false, nullptr, MkFunc1(OnAnnotColorClicked, win),
                                       MkFunc1(OnAnnotColorsEditClicked, win));
     ev->centerOnButton = true;
 }
@@ -2552,11 +2585,16 @@ struct AnnotColorPopup {
     Func1<Color> onPick;
     Color picked = kColorUnset;
     bool hasPick = false;
+    bool openDialog = false;
+    // non-owning, for tests; the layout tree owns them
+    Vec<ToolbarColorSwatch*> swatches;
 };
 
 static AnnotColorPopup* gAnnotColorPopup = nullptr;
 
-static void PostedCloseAnnotColorPopup(MainWindow*) {
+static void ShowAnnotColorsDialog(MainWindow* win, Color current, const Func1<Color>& onPick);
+
+static void PostedCloseAnnotColorPopup(MainWindow* win) {
     AnnotColorPopup* p = gAnnotColorPopup;
     if (!p) {
         return;
@@ -2564,11 +2602,18 @@ static void PostedCloseAnnotColorPopup(MainWindow*) {
     gAnnotColorPopup = nullptr;
     Func1<Color> onPick = p->onPick;
     bool hasPick = p->hasPick;
+    bool openDialog = p->openDialog;
     Color col = p->picked;
+    Color current = p->current;
     delete p->host;
     delete p;
     if (hasPick) {
         onPick.Call(col);
+    }
+    if (openDialog) {
+        // only now: destroying the popup activates its owner, which would put
+        // the dialog behind the main window if it were already up
+        ShowAnnotColorsDialog(win, current, onPick);
     }
 }
 
@@ -2591,22 +2636,26 @@ static void OnAnnotColorPopupSwatch(AnnotColorPopup* p, VirtMouseEvent* ev) {
     CloseAnnotColorPopup(p);
 }
 
+static void ShowAnnotColorsDialog(MainWindow* win, Color current, const Func1<Color>& onPick) {
+    auto* target = new AnnotColorsTarget();
+    target->onPick = onPick;
+
+    auto* args = new ChangeColorsArgs();
+    args->win = win;
+    args->title = Tr("Annotation Colors");
+    args->color = current;
+    args->withOpacity = true;
+    AnnotPresetColors(args->colors);
+    args->onClose = MkFunc1(AnnotColorsPicked, target);
+    ShowChangeColorsDialog(args);
+}
+
 static void OnAnnotColorPopupEdit(AnnotColorPopup* p, VirtMouseEvent*) {
     if (p != gAnnotColorPopup) {
         return;
     }
-    auto* target = new AnnotColorsTarget();
-    target->onPick = p->onPick;
-
-    auto* args = new ChangeColorsArgs();
-    args->win = p->win;
-    args->title = Tr("Annotation Colors");
-    args->color = p->current;
-    args->withOpacity = true;
-    AnnotPresetColors(args->colors);
-    args->onClose = MkFunc1(AnnotColorsPicked, target);
+    p->openDialog = true;
     CloseAnnotColorPopup(p);
-    ShowChangeColorsDialog(args);
 }
 
 static void PaintAnnotColorPopupBg(MainWindow*, VirtHostPaintEvent* ev) {
@@ -2641,7 +2690,7 @@ static void AnnotColorPopupNativeMsg(AnnotColorPopup* p, VirtHostNativeMsg* ev) 
     }
 }
 
-void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, const Func1<Color>& onPick) {
+void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withNone, const Func1<Color>& onPick) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb || gAnnotColorPopup) {
         return;
@@ -2650,8 +2699,8 @@ void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, const Func
     p->win = win;
     p->current = current;
     p->onPick = onPick;
-    ILayout* layout =
-        MakeAnnotColorsPanel(win, current, 0, MkFunc1(OnAnnotColorPopupSwatch, p), MkFunc1(OnAnnotColorPopupEdit, p));
+    ILayout* layout = MakeAnnotColorsPanel(win, current, 0, withNone, &p->swatches, MkFunc1(OnAnnotColorPopupSwatch, p),
+                                           MkFunc1(OnAnnotColorPopupEdit, p));
 
     VirtHost::CreateArgs args;
     args.parent = win->hwndFrame;
@@ -2680,6 +2729,27 @@ void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, const Func
     host->SetPos(r, true);
     gAnnotColorPopup = p;
     ::SetCapture(host->native);
+}
+
+// for tests: the swatches of the drop-down that is up, if any
+TempStr AnnotColorPopupStateTemp() {
+    AnnotColorPopup* p = gAnnotColorPopup;
+    if (!p || !p->host) {
+        return fmt("annotColorPopup visible=0 n=0 swatches=\n");
+    }
+    Rect r = p->host->ScreenRect();
+    str::Builder swatches;
+    for (int i = 0; i < len(p->swatches); i++) {
+        if (i > 0) {
+            swatches.AppendChar(';');
+        }
+        ToolbarColorSwatch* sw = p->swatches[i];
+        Rect sr = sw->BoundsInWindow();
+        swatches.Append(
+            fmt("%s:%d,%d,%d,%d:%d", sw->text, r.x + sr.x, r.y + sr.y, sr.dx, sr.dy, sw->isCurrent ? 1 : 0));
+    }
+    return fmt("annotColorPopup visible=1 n=%d placed=%d,%d,%d,%d swatches=%s\n", len(p->swatches), r.x, r.y, r.dx,
+               r.dy, ToStrTemp(swatches));
 }
 
 static void OnToolbarMouseMove(MainWindow* win, Point pt) {

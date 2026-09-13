@@ -92,8 +92,11 @@ void HideToolbarHoverDropdown(MainWindow*);
 bool ToolbarHoverDropdownContainsScreenPoint(MainWindow*, Point);
 
 // the markup buttons' color drop-down, under a rect that is not a toolbar
-// button (the annotation edit toolbar's color chip)
-void ShowAnnotColorPopup(MainWindow*, Rect anchor, Color current, const Func1<Color>& onPick);
+// button (the annotation edit toolbar's color chips). withNone adds a swatch
+// for no color at all, which picks kColorUnset
+void ShowAnnotColorPopup(MainWindow*, Rect anchor, Color current, bool withNone, const Func1<Color>& onPick);
+// for tests: the swatches of the drop-down that is up, if any
+TempStr AnnotColorPopupStateTemp();
 
 //--- internal to Toolbar.cpp, not meant for anyone else
 

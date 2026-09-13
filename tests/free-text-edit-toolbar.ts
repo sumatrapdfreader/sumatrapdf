@@ -191,14 +191,13 @@ export async function testit(): Promise<void> {
       throw new Error(`free-text-edit-toolbar: delete is not the last chip: ${dump}`);
     }
     // free text leads with the colour of its text, and its chips say what they
-    // change rather than just "Color" / "Opacity" / "Border"
+    // change rather than just "Color" / "Border"
     if (!/items=textColor,color,/.test(dump)) {
       throw new Error(`free-text-edit-toolbar: text color is not the first chip: ${dump}`);
     }
     const wantTips: [string, string][] = [
       ["textColor", "Text Color"],
       ["color", "Background Color"],
-      ["opacity", "Text Opacity"],
       ["border", "Border Width"],
       ["contents", "Edit text"],
     ];

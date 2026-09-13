@@ -932,6 +932,8 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
 
     {
         CreateCustomArgs args;
+        // owned by the main window, so it can't end up behind it
+        args.owner = mainWin ? mainWin->hwndFrame : nullptr;
         args.title = colorsArgs ? colorsArgs->title : Tr("Change Background Color");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;

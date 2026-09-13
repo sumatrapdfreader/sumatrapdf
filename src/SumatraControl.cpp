@@ -693,6 +693,7 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
                    tab->selectedAnnotation ? 1 : 0, gWindows[0]->annotationUnderCursor ? 1 : 0,
                    gWindows[0]->pdfAnnotationsToolbarEnabled ? 1 : 0, hasNotification ? 1 : 0, selectedHover ? 1 : 0));
     out.Append(AnnotEditToolbarStateTemp(gWindows[0]));
+    out.Append(AnnotColorPopupStateTemp());
     out.Append(AnnotFilterToolbarStateTemp(gWindows[0]));
     out.Append(AnnotationHoverOverlayStateTemp(gWindows[0]));
     out.Append(FreeTextInPlaceEditStateTemp(gWindows[0]));
