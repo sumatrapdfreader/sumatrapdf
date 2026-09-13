@@ -11562,6 +11562,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
 
     WindowTab* tab = win->CurrentTab();
+
+    // a Shortcuts / toolbar entry is a clone with its own id, so map it back to
+    // the command it stands for before anything dispatches on the id (#6184)
+    CustomCommand* cmd = FindCustomCommand(cmdId);
+    if (cmd != nullptr) {
+        cmdId = cmd->origId;
+    }
+
     if (!win->IsCurrentTabAbout()) {
         if (CmdOpenWithKnownExternalViewerFirst < cmdId && cmdId < CmdOpenWithKnownExternalViewerLast) {
             ViewWithKnownExternalViewer(tab, cmdId);
@@ -11573,11 +11581,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     DisplayModel* dm = win->AsFixed();
 
     Annotation* lastCreatedAnnot = nullptr;
-
-    CustomCommand* cmd = FindCustomCommand(cmdId);
-    if (cmd != nullptr) {
-        cmdId = cmd->origId;
-    }
 
     AnnotationType annotType = CmdIdToAnnotationType(cmdId);
 
