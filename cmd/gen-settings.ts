@@ -852,6 +852,13 @@ const annotations: Field[] = [
     "how text is aligned in newly created free text annotations (Text Alignment in the compact " +
       "property row): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) want right",
   ).ver("3.7"),
+  field(
+    "PresetColors",
+    Str,
+    "#fdef5a #8bf05d #99defa #f199d2 #e24745",
+    "colors offered by the drop-down on the highlight, underline, squiggly and strike out toolbar " +
+      "buttons, separated by space. Picking one sets the color of new annotations of that type",
+  ).ver("3.7"),
   field("TextIconColor", Color, "", "color of newly created text (sticky note) annotations"),
   field(
     "TextIconType",

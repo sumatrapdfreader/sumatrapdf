@@ -695,6 +695,10 @@ struct Annotations {
     // Alignment in the compact property row): left, center or right.
     // Right-to-left scripts (Arabic, Hebrew, Persian) want right
     Str freeTextAlignment;
+    // colors offered by the drop-down on the highlight, underline,
+    // squiggly and strike out toolbar buttons, separated by space. Picking
+    // one sets the color of new annotations of that type
+    Str presetColors;
     // color of newly created text (sticky note) annotations
     ParsedColor textIconColor;
     // icon shown for text (sticky note) annotations: comment, help,
@@ -1477,16 +1481,18 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, freeTextSize), SettingType::Int, 12},
     {offsetof(Annotations, freeTextBorderWidth), SettingType::Int, 1},
     {offsetof(Annotations, freeTextAlignment), SettingType::String, (intptr_t)"left"},
+    {offsetof(Annotations, presetColors), SettingType::String, (intptr_t)"#fdef5a #8bf05d #99defa #f199d2 #e24745"},
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, textIconType), SettingType::String, (intptr_t)""},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
 };
 static const StructInfo gAnnotationsInfo = {
     sizeof(Annotations),
-    13,
+    14,
     gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
-    "city\0FreeTextSize\0FreeTextBorderWidth\0FreeTextAlignment\0TextIconColor\0TextIconType\0DefaultAuthor",
+    "city\0FreeTextSize\0FreeTextBorderWidth\0FreeTextAlignment\0PresetColors\0TextIconColor\0TextIconType\0DefaultAuth"
+    "or",
     "color of newly created highlight annotations. Use an #aarrggbb value to set default opacity (00 = transparent, FF "
     "= opaque); #rrggbb is fully opaque\0color of newly created underline annotations. #aarrggbb sets default opacity "
     "the same way as HighlightColor\0color of newly created squiggly underline annotations. #aarrggbb sets default "
@@ -1496,9 +1502,11 @@ static const StructInfo gAnnotationsInfo = {
     "(invisible), 50 - half transparent, 100 - fully opaque\0font size of free text annotations, in points\0border "
     "width of free text annotations, in points\0how text is aligned in newly created free text annotations (Text "
     "Alignment in the compact property row): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) "
-    "want right\0color of newly created text (sticky note) annotations\0icon shown for text (sticky note) annotations: "
-    "comment, help, insert, key, new paragraph, note or paragraph. If not set, note is used\0author recorded on newly "
-    "created annotations. If not set, the Windows user name is used; set it to (none) to leave the author out entirely",
+    "want right\0colors offered by the drop-down on the highlight, underline, squiggly and strike out toolbar buttons, "
+    "separated by space. Picking one sets the color of new annotations of that type\0color of newly created text "
+    "(sticky note) annotations\0icon shown for text (sticky note) annotations: comment, help, insert, key, new "
+    "paragraph, note or paragraph. If not set, note is used\0author recorded on newly created annotations. If not set, "
+    "the Windows user name is used; set it to (none) to leave the author out entirely",
     false};
 
 static const FieldInfo gExternalViewerFields[] = {

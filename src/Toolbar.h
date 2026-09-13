@@ -70,6 +70,8 @@ struct ToolbarHoverMenuItem {
 // Built every time the drop-down opens, so it shows the current state.
 struct ToolbarHoverBuildEvent {
     MainWindow* win = nullptr;
+    // the button the drop-down is being built for
+    int cmdId = 0;
     // out: the drop-down's content; the drop-down takes ownership
     ILayout* layout = nullptr;
     // out: optional. Hang the drop-down off the middle of the button, instead

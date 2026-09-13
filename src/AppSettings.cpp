@@ -1233,6 +1233,39 @@ static float gZoomLevelsChm[] = {
 };
 // clang-format on
 
+// "#ff0000 #00ff00 ..." => list of colors. maxColors of 0 means no limit
+void ParseColorList(Str s, Vec<Color>& out, int maxColors) {
+    int i = 0;
+    while (i < s.len && (maxColors == 0 || len(out) < maxColors)) {
+        while (i < s.len && s.s[i] == ' ') {
+            i++;
+        }
+        if (i >= s.len) {
+            break;
+        }
+        int start = i;
+        while (i < s.len && s.s[i] != ' ') {
+            i++;
+        }
+        ParsedColor parsed;
+        ParseColor(parsed, Str(s.s + start, i - start));
+        if (parsed.parsedOk) {
+            VecAppend(out, parsed.col);
+        }
+    }
+}
+
+TempStr SerializeColorList(const Vec<Color>& colors) {
+    str::Builder buf;
+    for (Color col : colors) {
+        if (len(buf) > 0) {
+            buf.AppendChar(' ');
+        }
+        buf.Append(SerializeColorTemp(col));
+    }
+    return ToStrTemp(buf);
+}
+
 // Fit/preset zoom values for the zoom combo (Settings) and Custom Zoom dialog.
 void CollectZoomLevels(Vec<float>& out, bool forChm) {
     VecReset(out);

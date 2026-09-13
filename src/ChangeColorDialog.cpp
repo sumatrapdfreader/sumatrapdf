@@ -244,40 +244,11 @@ static void PaintCheckerboard(Gfx* gfx, Rect rc, Color light, Color dark) {
     }
 }
 
-// "#ff0000 #00ff00 ..." => list of colors
-static void ParseColorList(Str s, Vec<Color>& out) {
-    int i = 0;
-    while (i < s.len && len(out) < kMaxCustomColors) {
-        while (i < s.len && s.s[i] == ' ') {
-            i++;
-        }
-        if (i >= s.len) {
-            break;
-        }
-        int start = i;
-        while (i < s.len && s.s[i] != ' ') {
-            i++;
-        }
-        ParsedColor parsed;
-        ParseColor(parsed, Str(s.s + start, i - start));
-        if (parsed.parsedOk) {
-            VecAppend(out, parsed.col);
-        }
-    }
-}
-
 static void SaveCustomColors(const Vec<Color>& colors) {
     if (!gSettings) {
         return;
     }
-    str::Builder buf;
-    for (Color col : colors) {
-        if (len(buf) > 0) {
-            buf.AppendChar(' ');
-        }
-        buf.Append(SerializeColorTemp(col));
-    }
-    str::ReplaceWithCopy(&gSettings->customColors, ToStr(buf));
+    str::ReplaceWithCopy(&gSettings->customColors, SerializeColorList(colors));
     ScheduleSaveSettings();
 }
 
@@ -286,7 +257,7 @@ void ChangeColorWnd::LoadColors() {
     if (colorsArgs) {
         colors = colorsArgs->colors;
     } else if (gSettings) {
-        ParseColorList(gSettings->customColors, colors);
+        ParseColorList(gSettings->customColors, colors, kMaxCustomColors);
     }
     nCustom = 0;
     customColorsChanged = false;
@@ -1244,7 +1215,7 @@ void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab) {
     args->title = Tr("Change Tab Color");
     args->color = tab->tabColor;
     if (gSettings) {
-        ParseColorList(gSettings->customColors, args->colors);
+        ParseColorList(gSettings->customColors, args->colors, kMaxCustomColors);
     }
     args->onClose = MkFunc1(TabColorPicked, target);
     ShowChangeColorsDialog(args);

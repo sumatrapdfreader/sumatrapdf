@@ -786,6 +786,11 @@ Annotations [
     ; (Arabic, Hebrew, Persian) want right (introduced in version 3.7)
     FreeTextAlignment = left
 
+    ; colors offered by the drop-down on the highlight, underline, squiggly and
+    ; strike out toolbar buttons, separated by space. Picking one sets the color
+    ; of new annotations of that type (introduced in version 3.7)
+    PresetColors = #fdef5a #8bf05d #99defa #f199d2 #e24745
+
     ; color of newly created text (sticky note) annotations
     TextIconColor = 
 

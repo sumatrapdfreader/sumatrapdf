@@ -47,6 +47,7 @@
 #include "gui/VirtHost.h"
 #include "gui/win/TabsCtrl.h"
 #include "FindBar.h"
+#include "SumatraDialogs.h"
 #include "Translations.h"
 #include "SvgIcons.h"
 #include "Theme.h"
@@ -1991,6 +1992,7 @@ static void OpenHoverDropdown(MainWindow* win, int cmdId) {
     }
     ToolbarHoverBuildEvent ev;
     ev.win = win;
+    ev.cmdId = cmdId;
     VecReset(tb->hoverItems);
     reg->build.Call(&ev);
     if (!ev.layout) {
@@ -2301,6 +2303,189 @@ static void BuildSaveHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
     ev->layout = NewToolbarHoverMenu(win, items);
 }
 
+//--- the annotation buttons' color drop-down
+
+// The highlight / underline / squiggly / strike out buttons offer the colors in
+// Annotations.PresetColors: picking one becomes the color of new annotations of
+// that type, and the pencil opens the color dialog on the whole set.
+constexpr int kAnnotSwatchDx = 22;
+// ring space around the circle, where the mark on the color in use goes
+constexpr int kAnnotSwatchPad = 5;
+constexpr int kAnnotColorsPad = 10;
+
+// the buttons that offer the preset colors
+static const int kAnnotColorCmds[] = {
+    CmdAnnotationHighlightBrush, CmdCreateAnnotHighlight, CmdCreateAnnotUnderline,
+    CmdCreateAnnotSquiggly,      CmdCreateAnnotStrikeOut,
+};
+
+static ParsedColor* AnnotPresetColorSetting(int cmdId) {
+    if (!gSettings) {
+        return nullptr;
+    }
+    Annotations& a = gSettings->annotations;
+    switch (cmdId) {
+        case CmdAnnotationHighlightBrush:
+        case CmdCreateAnnotHighlight:
+            return &a.highlightColor;
+        case CmdCreateAnnotUnderline:
+            return &a.underlineColor;
+        case CmdCreateAnnotSquiggly:
+            return &a.squigglyColor;
+        case CmdCreateAnnotStrikeOut:
+            return &a.strikeOutColor;
+    }
+    return nullptr;
+}
+
+static void AnnotPresetColors(Vec<Color>& out) {
+    if (gSettings) {
+        ParseColorList(gSettings->annotations.presetColors, out, 0);
+    }
+}
+
+static void SetAnnotPresetColor(int cmdId, Color col) {
+    ParsedColor* setting = AnnotPresetColorSetting(cmdId);
+    if (!setting) {
+        return;
+    }
+    SetColorText(*setting, SerializeColorTemp(col));
+    ScheduleSaveSettings();
+}
+
+// A color as a filled circle, the way a highlighter's colors are shown. The one
+// in use is ringed, and so is the one under the mouse.
+struct ToolbarColorSwatch : VirtCtrl {
+    Color col = kColorUnset;
+    Str text; // owned; the color as text, for the -dbg-control dump
+    bool isCurrent = false;
+
+    ToolbarColorSwatch() { cursor = CursorId::Hand; }
+    ~ToolbarColorSwatch() override { str::Free(text); }
+
+    Size GetIdealSize() override {
+        int dx = DpiScale(kAnnotSwatchDx) + (2 * DpiScale(kAnnotSwatchPad));
+        return {dx, dx};
+    }
+
+    void Paint(VirtPaintCtx& ctx) override {
+        Rect r = ctx.bounds;
+        int d = std::min(r.dx, r.dy);
+        Rect ring{r.x + ((r.dx - d) / 2), r.y + ((r.dy - d) / 2), d, d};
+        int t = DpiScale(1);
+        if (isCurrent || HasFlag(vwfHovered)) {
+            // a filled disc with a smaller one of the background punched out of
+            // it: Gfx fills ellipses but doesn't outline them
+            ctx.gfx->FillEllipse(ring, TbTextColor());
+            Rect hole = ring;
+            hole.Inflate(-t, -t);
+            ctx.gfx->FillEllipse(hole, TbBgColor());
+        }
+        Rect circle = ring;
+        int p = DpiScale(kAnnotSwatchPad);
+        circle.Inflate(-p, -p);
+        ctx.gfx->FillEllipse(circle, TbEdgeColor());
+        circle.Inflate(-t, -t);
+        u8 a = GetAlpha(col);
+        ctx.gfx->FillEllipse(circle, col & 0xffffff, a == 0 ? 255 : a);
+    }
+};
+
+static void OnAnnotColorClicked(MainWindow* win, VirtMouseEvent* ev) {
+    auto* sw = ev ? (ToolbarColorSwatch*)ev->target : nullptr;
+    if (!sw) {
+        return;
+    }
+    SetAnnotPresetColor(sw->id, sw->col);
+    uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
+}
+
+// which button's color the generic color dialog is editing
+struct AnnotColorsTarget {
+    int cmdId = 0;
+};
+
+static void AnnotColorsPicked(AnnotColorsTarget* target, ChangeColorsArgs* args) {
+    if (args->colorsChanged && gSettings) {
+        str::ReplaceWithCopy(&gSettings->annotations.presetColors, SerializeColorList(args->colors));
+        ScheduleSaveSettings();
+    }
+    if (args->didSelect && args->color != kColorUnset) {
+        SetAnnotPresetColor(target->cmdId, args->color);
+    }
+    delete target;
+}
+
+static void OnAnnotColorsEditClicked(MainWindow* win, VirtMouseEvent* ev) {
+    VirtCtrl* w = ev ? ev->target : nullptr;
+    if (!w) {
+        return;
+    }
+    int cmdId = w->id;
+    ParsedColor* setting = AnnotPresetColorSetting(cmdId);
+    uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
+
+    auto* target = new AnnotColorsTarget();
+    target->cmdId = cmdId;
+
+    auto* args = new ChangeColorsArgs();
+    args->win = win;
+    args->title = Tr("Annotation Colors");
+    args->color = setting ? GetParsedColor(*setting, kColorUnset) : kColorUnset;
+    args->withOpacity = true;
+    AnnotPresetColors(args->colors);
+    args->onClose = MkFunc1(AnnotColorsPicked, target);
+    ShowChangeColorsDialog(args);
+}
+
+static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    ParsedColor* setting = AnnotPresetColorSetting(ev->cmdId);
+    if (!tb || !setting) {
+        return;
+    }
+    Color current = GetParsedColor(*setting, kColorUnset);
+    Vec<Color> colors;
+    AnnotPresetColors(colors);
+
+    auto* row = new HBox();
+    row->alignCross = CrossAxisAlign::CrossCenter;
+    for (Color col : colors) {
+        auto* sw = new ToolbarColorSwatch();
+        sw->id = ev->cmdId;
+        sw->col = col;
+        sw->isCurrent = (col == current);
+        str::ReplaceWithCopy(&sw->text, SerializeColorTemp(col));
+        sw->onClick = MkFunc1(OnAnnotColorClicked, win);
+        row->AddChild(sw);
+        RecordHoverItem(tb, sw, sw->text, {{}, sw->text, ev->cmdId, true, sw->isCurrent});
+    }
+
+    auto* edit = new VirtIconButton();
+    int iconSize = tb->iconSize;
+    int pad = DpiScale(kAnnotSwatchPad);
+    edit->id = ev->cmdId;
+    edit->padding = {pad, pad, pad, pad};
+    edit->pixmap = GetCachedPixmapForSvg(Str(gIconEditAnnotations), iconSize, iconSize, TbTextColor(), TbBgColor());
+    edit->SetTooltip(Tr("Edit colors"));
+    edit->onClick = MkFunc1(OnAnnotColorsEditClicked, win);
+    row->AddChild(edit);
+
+    auto* vbox = new VBox();
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    vbox->AddChild(NewVirtText({
+        .s = Tr("Colors"),
+        .font = tb->platformFont,
+        .textColor = TbTextColor(),
+        .isRtl = IsUIRtl(),
+    }));
+    vbox->AddChild(row);
+    int b = DpiScale(kHoverMenuBorder);
+    int p = DpiScale(kAnnotColorsPad);
+    ev->layout = new Padding(vbox, Insets{b + p, b + p, b + p, b + p});
+    ev->centerOnButton = true;
+}
+
 static void OnToolbarMouseMove(MainWindow* win, Point pt) {
     UpdateOverlayToolbarForMouse(win);
     ToolbarHoverDropdownOnMouseMove(win, &pt);
@@ -2478,6 +2663,10 @@ static void BuildToolbarLayout(MainWindow* win) {
     // from one to the other
     SetToolbarHoverDropdown(win, CmdZoomIn, MkFunc1(BuildZoomHoverMenu, win), CmdZoomIn);
     SetToolbarHoverDropdown(win, CmdZoomOut, MkFunc1(BuildZoomHoverMenu, win), CmdZoomIn);
+    // no shared group: each of them shows the color it is set to
+    for (int cmdId : kAnnotColorCmds) {
+        SetToolbarHoverDropdown(win, cmdId, MkFunc1(BuildAnnotColorsHoverMenu, win));
+    }
 
     auto* root = new VBox();
     root->alignCross = CrossAxisAlign::Stretch;
