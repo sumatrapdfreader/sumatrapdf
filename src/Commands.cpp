@@ -323,6 +323,7 @@ static SeqStrings gCommandNames =
     "CmdToggleReadingBar\0"
     "CmdToggleReadingBarInvert\0"
     "CmdNone\0"
+    "CmdFileHistory\0"
     "\0";
 
 static i32 gCommandIds[] = {
@@ -635,6 +636,7 @@ static i32 gCommandIds[] = {
     CmdToggleReadingBar,
     CmdToggleReadingBarInvert,
     CmdNone,
+    CmdFileHistory,
 };
 
 SeqStrings gCommandDescriptions =
@@ -947,6 +949,7 @@ SeqStrings gCommandDescriptions =
     "Reading Bar\0"
     "Reading Bar Invert\0"
     "Do nothing\0"
+    "Open Recent File\0"
     "\0";
 // clang-format on
 // @gen-end cmd-c
@@ -1011,6 +1014,9 @@ static const ArgSpec argSpecs[] = {
 
     // extension including leading dot, e.g. [CmdFixDefaultApp .pdf]
     {CmdFixDefaultApp, kCmdArgExt, CommandArg::Type::String}, // default
+
+    // a recent file in the File menu, e.g. [CmdFileHistory C:\dir\file.pdf]
+    {CmdFileHistory, kCmdArgFilePath, CommandArg::Type::String}, // default
 
     {CmdNone, StrL(""), CommandArg::Type::None}, // sentinel
 };

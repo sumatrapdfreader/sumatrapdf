@@ -324,6 +324,7 @@ const commandsRaw = [
     "CmdToggleReadingBar", "Reading Bar",
     "CmdToggleReadingBarInvert", "Reading Bar Invert",
     "CmdNone", "Do nothing",
+    "CmdFileHistory", "Open Recent File",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them
@@ -367,10 +368,6 @@ function generateEnum(): string {
     lines.push(`    ${cmd} = ${id},`);
   }
 
-  lines.push("");
-  lines.push("    /* range for file history */");
-  lines.push("    CmdFileHistoryFirst,");
-  lines.push("    CmdFileHistoryLast = CmdFileHistoryFirst + 32,");
   lines.push("");
   lines.push("    /* range for favorites */");
   lines.push("    CmdFavoriteFirst,");

@@ -11536,20 +11536,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return 0;
     }
 
-    if (CanAccessDisk()) {
-        // check if the menuId belongs to an entry in the list of
-        // recently opened files and load the referenced file if it does
-        if ((cmdId >= CmdFileHistoryFirst) && (cmdId <= CmdFileHistoryLast)) {
-            int idx = cmdId - (int)CmdFileHistoryFirst;
-            FileState* state = FileHistoryGet(idx);
-            if (state) {
-                LoadArgs args(state->filePath, win);
-                LoadDocument(&args);
-            }
-            return 0;
-        }
-    }
-
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
     static_assert(CmdFavoriteLast - CmdFavoriteFirst == 256, "wrong number of favorite menu ids");
     if ((cmdId >= CmdFavoriteFirst) && (cmdId <= CmdFavoriteLast)) {
@@ -11568,6 +11554,16 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     CustomCommand* cmd = FindCustomCommand(cmdId);
     if (cmd != nullptr) {
         cmdId = cmd->origId;
+    }
+
+    // a recent file in the File menu carries its path as an argument
+    if (cmdId == CmdFileHistory && CanAccessDisk()) {
+        Str filePath = GetCommandStringArg(cmd, kCmdArgFilePath, {});
+        if (len(filePath) > 0) {
+            LoadArgs args(filePath, win);
+            LoadDocument(&args);
+        }
+        return 0;
     }
 
     if (!win->IsCurrentTabAbout() && IsOpenWithKnownExternalViewerCmd(cmdId)) {

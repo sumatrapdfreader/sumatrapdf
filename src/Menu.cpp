@@ -1425,13 +1425,44 @@ static bool CmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 
 #define cmdIdInList(name) CmdIdInList(cmdId, name, dimof(name))
 
-static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
-    ReportIf(len(filePath) == 0 || !menuFile);
-    if (len(filePath) == 0 || !menuFile) {
+struct FileHistoryEntry {
+    Str path;
+    int cmdId;
+};
+
+// A recent file is a CmdFileHistory command carrying the path as an argument.
+// Custom commands live until the settings are re-read, so reuse the one already
+// made for a path instead of making one per menu rebuild. One pass over the
+// commands serves all the entries.
+static void SetFileHistoryCmdIds(Vec<FileHistoryEntry>& files) {
+    Vec<CustomCommand*> cmds;
+    GetCommandsWithOrigId(cmds, CmdFileHistory);
+    for (CustomCommand* cmd : cmds) {
+        Str path = GetCommandStringArg(cmd, kCmdArgFilePath, {});
+        for (FileHistoryEntry& fe : files) {
+            if (fe.cmdId == 0 && str::EqI(path, fe.path)) {
+                fe.cmdId = cmd->id;
+                break;
+            }
+        }
+    }
+
+    for (FileHistoryEntry& fe : files) {
+        if (fe.cmdId != 0) {
+            continue;
+        }
+        CommandArg* arg = NewStringArg(kCmdArgFilePath, fe.path);
+        fe.cmdId = CreateCustomCommand(StrL("CmdFileHistory"), CmdFileHistory, arg)->id;
+    }
+}
+
+static void AddFileMenuItem(HMENU menuFile, const FileHistoryEntry& fe, int index) {
+    ReportIf(!menuFile);
+    if (!menuFile) {
         return;
     }
 
-    TempStr menuString = path::GetBaseNameTemp(filePath);
+    TempStr menuString = path::GetBaseNameTemp(fe.path);
     // shorten very long file names so that menu isn't too wide
     const int kMaxRunes = 70;
     menuString = ShortenStringUtf8InTheMiddleTemp(menuString, kMaxRunes);
@@ -1439,9 +1470,8 @@ static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
     TempStr fileName = MenuToSafeStringTemp(menuString);
     int menuIdx = (index + 1) % 10;
     menuString = fmt("&%d) %s", menuIdx, fileName);
-    uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
-    InsertMenuW(menuFile, CmdExit, flags, menuId, CWStrTemp(menuString));
+    InsertMenuW(menuFile, CmdExit, flags, (uint)fe.cmdId, CWStrTemp(menuString));
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {
@@ -1449,8 +1479,8 @@ static void AppendRecentFilesToMenu(HMENU m) {
         return;
     }
 
-    int i;
-    for (i = 0; i < kFileHistoryMaxRecent; i++) {
+    Vec<FileHistoryEntry> files;
+    for (int i = 0; i < kFileHistoryMaxRecent; i++) {
         FileState* fs = FileHistoryGet(i);
         if (!fs || fs->isMissing) {
             break;
@@ -1460,12 +1490,18 @@ static void AppendRecentFilesToMenu(HMENU m) {
             // comes from settings file so can be missing due to user modifications
             continue;
         }
-        AddFileMenuItem(m, fp, i);
+        VecAppend(files, FileHistoryEntry{fp, 0});
+    }
+    if (len(files) == 0) {
+        return;
     }
 
-    if (i > 0) {
-        InsertMenuW(m, CmdExit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
+    SetFileHistoryCmdIds(files);
+    for (int i = 0; i < len(files); i++) {
+        AddFileMenuItem(m, files[i], i);
     }
+
+    InsertMenuW(m, CmdExit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
 }
 
 static void AppendCommandsToMenu(HMENU m, const Vec<CustomCommand*>& cmds, bool isEnabled) {

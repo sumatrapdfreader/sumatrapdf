@@ -318,10 +318,7 @@ enum {
     CmdToggleReadingBar = 511,
     CmdToggleReadingBarInvert = 512,
     CmdNone = 513,
-
-    /* range for file history */
-    CmdFileHistoryFirst,
-    CmdFileHistoryLast = CmdFileHistoryFirst + 32,
+    CmdFileHistory = 514,
 
     /* range for favorites */
     CmdFavoriteFirst,
@@ -473,3 +470,5 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 #define kCmdArgState StrL("state")
 #define kCmdArgName StrL("name")
 #define kCmdArgExt StrL("ext")
+// path of the file to open, e.g. [CmdFileHistory C:\dir\file.pdf]
+#define kCmdArgFilePath StrL("filepath")
