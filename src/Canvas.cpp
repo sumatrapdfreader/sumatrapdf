@@ -2609,12 +2609,12 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     }
     bool editPdf = win->pdfAnnotationsToolbarEnabled;
 
+    // In Edit PDF mode a click selects the annotation and shows its toolbar.
+    // Text markup clicks through on button-down so that a drag still selects
+    // the glyphs underneath (issue #6166), but a plain click ends up here.
     if (clickedAnnot && tab && editPdf) {
-        bool clickThrough = AnnotationIsTextMarkup(clickedAnnot->type) && !MouseHasCtrl(key);
-        if (!clickThrough) {
-            OpenOrSelectEditAnnotation(tab, clickedAnnot);
-            return;
-        }
+        OpenOrSelectEditAnnotation(tab, clickedAnnot);
+        return;
     }
 
     IPageDestination* dest = link ? link->AsLink() : nullptr;

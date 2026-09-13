@@ -38,6 +38,10 @@ constexpr const WCHAR* kAnnotTextPopupClassName = L"SumatraAnnotTextPopup";
 
 constexpr int kMargin = 8;
 constexpr int kGap = 5;
+// between the author and the date on the header line
+constexpr int kHeaderGap = 12;
+// between the header line and the rule under it
+constexpr int kRuleGap = 4;
 constexpr int kCornerRadius = 6;
 // the card is anchored to the annotation, so it is sized to read comfortably
 // rather than to the annotation's own width
@@ -92,6 +96,55 @@ static Color PopupBg() {
 
 static Color PopupText() {
     return ThemeNotificationsTextColor();
+}
+
+// the date is secondary information: same hue, less contrast
+static Color PopupMutedText() {
+    float units = IsLightColor(PopupBg()) ? 55.0f : -55.0f;
+    return AdjustLightness2(PopupText(), units);
+}
+
+// the rule under the header: a mid-tone that reads on both a light and a dark
+// card (the window edge color is nearly invisible on white)
+static Color PopupRuleColor() {
+    float units = IsLightColor(PopupBg()) ? 120.0f : -120.0f;
+    return AdjustLightness2(PopupText(), units);
+}
+
+// author on the left, date on the right, with a rule underneath. It's a single
+// control rather than an HBox of two labels so that a long author name
+// ellipsizes instead of making the card wider than the comment needs
+struct AnnotPopupHeader : VirtCustom {
+    Str author;
+    Str date;
+    PlatformFont* authorFont = nullptr;
+    PlatformFont* dateFont = nullptr;
+
+    ~AnnotPopupHeader() override {
+        str::Free(author);
+        str::Free(date);
+    }
+};
+
+static void PaintPopupHeader(AnnotPopupHeader* h, VirtPaintCtx* ctx) {
+    Rect r = ctx->bounds;
+    int ruleDy = DpiScale(1);
+    int textDy = r.dy - DpiScale(kRuleGap) - ruleDy;
+    if (textDy <= 0) {
+        return;
+    }
+    int dateDx = 0;
+    if (len(h->date) > 0) {
+        dateDx = ctx->gfx->MeasureText(h->date, h->dateFont).dx;
+        Rect dr{r.x + r.dx - dateDx, r.y, dateDx, textDy};
+        ctx->gfx->DrawText(h->date, dr, gfxTextRight | gfxTextVCenter, h->dateFont, PopupMutedText());
+    }
+    int authorDx = r.dx - dateDx - (dateDx > 0 ? DpiScale(kHeaderGap) : 0);
+    if (authorDx > 0 && len(h->author) > 0) {
+        Rect ar{r.x, r.y, authorDx, textDy};
+        ctx->gfx->DrawText(h->author, ar, gfxTextEllipsis | gfxTextVCenter, h->authorFont, PopupText());
+    }
+    ctx->gfx->FillRect({r.x, r.y + r.dy - ruleDy, r.dx, ruleDy}, PopupRuleColor());
 }
 
 static void PaintPopupBg(AnnotTextPopup*, VirtHostPaintEvent* ev) {
@@ -201,26 +254,50 @@ static int PopupWidth(MainWindow* win) {
     return std::min(wantDx, maxDx);
 }
 
-// "Note" or "Note by Jane Doe", so it is clear whose comment this is
-static TempStr PopupTitleTemp(Annotation* annot) {
-    TempStr type = AnnotationReadableNameTemp(Type(annot));
+// who wrote the comment; the annotation's type name when it has no author, so
+// the header never comes up empty
+static TempStr PopupAuthorTemp(Annotation* annot) {
     Str author = Author(annot);
     if (len(author) == 0) {
-        return type;
+        return AnnotationReadableNameTemp(Type(annot));
     }
-    return fmt("%s — %s", type, author);
+    return str::DupTemp(author);
+}
+
+// local time, like other apps show comment timestamps
+static TempStr PopupDateTemp(Annotation* annot) {
+    time_t secs = ModificationDate(annot);
+    if (secs == 0) {
+        return {};
+    }
+    struct tm tm;
+    if (localtime_s(&tm, &secs) != 0) {
+        return {};
+    }
+    char buf[64];
+    size_t n = strftime(buf, sizeof buf, "%Y-%m-%d %H:%M", &tm);
+    return str::DupTemp(Str(buf, (int)n));
+}
+
+static AnnotPopupHeader* MakePopupHeader(AnnotTextPopup* popup, Annotation* annot, int dx) {
+    auto* h = new AnnotPopupHeader();
+    h->author = str::Dup(PopupAuthorTemp(annot));
+    h->date = str::Dup(PopupDateTemp(annot));
+    h->authorFont = GetBoldPlatformFont(popup->font);
+    h->dateFont = popup->font;
+    int lineDy = PlatformFontLineHeight(popup->font);
+    h->idealSize = {dx, lineDy + DpiScale(kRuleGap) + DpiScale(1)};
+    h->onPaint = MkFunc1(PaintPopupHeader, h);
+    h->SetFlag(vwfNoHitTest, true);
+    return h;
 }
 
 static void BuildPopup(AnnotTextPopup* popup, Annotation* annot) {
     int margin = DpiScale(kMargin);
     int width = PopupWidth(popup->win);
+    int textDx = width - (2 * margin);
 
-    auto* title = NewVirtText({
-        .s = PopupTitleTemp(annot),
-        .font = GetBoldPlatformFont(popup->font),
-        .textColor = PopupText(),
-        .ellipsis = true,
-    });
+    auto* header = MakePopupHeader(popup, annot, textDx);
 
     // CRLF is what a win32 edit expects; annotation text uses bare LF
     TempStr s = str::DupTemp(Contents(annot));
@@ -228,7 +305,6 @@ static void BuildPopup(AnnotTextPopup* popup, Annotation* annot) {
     s = str::LFToCRLFTemp(s);
     popup->edit->SetText(s);
 
-    int textDx = width - (2 * margin);
     popup->edit->idealDx = textDx;
     auto* slot = new AnnotTextSlot();
     slot->edit = popup->edit;
@@ -245,13 +321,16 @@ static void BuildPopup(AnnotTextPopup* popup, Annotation* annot) {
     int maxLines = lineDy > 0 ? std::max(maxTextDy / lineDy, kMinLines) : kMinLines;
     popup->edit->idealSizeLines = std::max(kMinLines, std::min(nLines, maxLines));
     int textDy = std::min(popup->edit->GetIdealSize().dy, maxTextDy);
+    // a multi-line edit always has WS_VSCROLL; show the bar only when the
+    // comment really is taller than the card
+    ShowScrollBar(popup->edit->hwnd, SB_VERT, nLines > maxLines);
     slot->idealSize = {textDx, textDy};
 
     auto* column = new VBox();
     column->alignMain = MainAxisAlign::MainStart;
     column->alignCross = CrossAxisAlign::Stretch;
     column->gap = DpiScale(kGap);
-    column->AddChild(title);
+    column->AddChild(header);
     column->AddChild(slot);
 
     auto* content = new Padding(column, Insets{margin, margin, margin, margin});
@@ -314,15 +393,17 @@ bool ShowAnnotationTextPopup(MainWindow* win, Annotation* annot) {
     Edit::CreateArgs args;
     args.parent = popup->host->native;
     args.isMultiLine = true;
-    args.withFrame = true;
+    // no frame and the card's own background: this is a comment to read, not
+    // a text field to type into
+    args.withFrame = false;
+    // the themed edit draws its own border; we want bare text
+    args.noTheme = true;
     args.idealSizeLines = 6;
-    args.textPadding = 3;
+    args.textPadding = 0;
     args.font = popup->font;
     args.isRtl = IsUIRtl();
     auto* edit = new Edit();
-    bool isDark = !IsLightColor(ThemeWindowBackgroundColor());
-    Color bg = isDark ? ThemeWindowControlBackgroundColor() : MkRgb(255, 255, 255);
-    edit->SetColors(PopupText(), bg);
+    edit->SetColors(PopupText(), PopupBg());
     if (!edit->Create(args)) {
         delete edit;
         return false;
