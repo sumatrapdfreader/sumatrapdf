@@ -94,7 +94,10 @@ bool ToolbarHoverDropdownContainsScreenPoint(MainWindow*, Point);
 // the markup buttons' color drop-down, under a rect that is not a toolbar
 // button (the annotation edit toolbar's color chips). withNone adds a swatch
 // for no color at all, which picks kColorUnset
-void ShowAnnotColorPopup(MainWindow*, Rect anchor, Color current, bool withNone, const Func1<Color>& onPick);
+// thickness >= 0 adds the Thickness slider the ink button's drop-down has,
+// starting there; onThickness gets the width when the slider is let go
+void ShowAnnotColorPopup(MainWindow*, Rect anchor, Color current, bool withNone, const Func1<Color>& onPick,
+                         int thickness = -1, const Func1<int>& onThickness = {});
 // for tests: the swatches of the drop-down that is up, if any
 TempStr AnnotColorPopupStateTemp();
 

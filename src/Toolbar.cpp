@@ -2659,6 +2659,9 @@ struct InkStrokePreview : VirtCtrl {
 struct InkThicknessSlider : VirtSlider {
     InkStrokePreview* preview = nullptr;
     Str text; // owned; what the -dbg-control dump shows for the slider
+    // where the width goes when let go. Without one it's the setting the ink
+    // button makes its strokes with
+    Func1<int> onThickness;
 
     ~InkThicknessSlider() override { str::Free(text); }
 
@@ -2667,20 +2670,32 @@ struct InkThicknessSlider : VirtSlider {
             preview->thickness = value;
             preview->Invalidate();
         }
-        if (gSettings) {
+        if (!onThickness.IsValid() && gSettings) {
             gSettings->annotations.inkBorderWidth = value;
         }
     }
+    // rewriting an annotation is too slow to do on every step of a drag, so
+    // the width lands when the slider is let go
     void OnCommitted() {
         OnChanged();
-        ScheduleSaveSettings();
+        if (onThickness.IsValid()) {
+            onThickness.Call(value);
+        } else {
+            ScheduleSaveSettings();
+        }
     }
 };
 
-// sliderOut gets the slider, for the caller to record once the colors are in
-static ILayout* MakeInkThicknessPanel(MainWindow* win, Color current, InkThicknessSlider** sliderOut) {
+// sliderOut gets the slider, for the caller to record once the colors are in.
+// thickness < 0 starts the slider at Annotations.InkBorderWidth and leaves the
+// width there; otherwise it starts there and onThickness gets it
+static ILayout* MakeInkThicknessPanel(MainWindow* win, Color current, int thickness, const Func1<int>& onThickness,
+                                      InkThicknessSlider** sliderOut) {
     ToolbarVirt* tb = win->toolbarVirt;
-    int thickness = InkThickness();
+    if (thickness < 0) {
+        thickness = InkThickness();
+    }
+    thickness = limitValue(thickness, kInkThicknessMin, kInkThicknessMax);
 
     auto* preview = new InkStrokePreview();
     preview->col = (current == kColorUnset) ? kColRed : current;
@@ -2692,6 +2707,7 @@ static ILayout* MakeInkThicknessPanel(MainWindow* win, Color current, InkThickne
     slider->value = thickness;
     slider->idealDx = DpiScale(kInkSliderDx);
     slider->preview = preview;
+    slider->onThickness = onThickness;
     slider->onValueChanged = MkMethod0<InkThicknessSlider, &InkThicknessSlider::OnChanged>(slider);
     slider->onValueCommitted = MkMethod0<InkThicknessSlider, &InkThicknessSlider::OnCommitted>(slider);
     str::ReplaceWithCopy(&slider->text, fmt("thickness=%d", thickness));
@@ -2735,7 +2751,7 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
     Color current = GetParsedColor(*setting, kColorUnset);
     // ink is the one annotation whose width is a choice too
     InkThicknessSlider* slider = nullptr;
-    ILayout* extra = (ev->cmdId == CmdCreateAnnotInk) ? MakeInkThicknessPanel(win, current, &slider) : nullptr;
+    ILayout* extra = (ev->cmdId == CmdCreateAnnotInk) ? MakeInkThicknessPanel(win, current, -1, {}, &slider) : nullptr;
     ev->layout = MakeAnnotColorsPanel(win, current, ev->cmdId, false, nullptr, MkFunc1(OnAnnotColorClicked, win),
                                       MkFunc1(OnAnnotColorsEditClicked, win), extra);
     if (slider) {
@@ -2758,6 +2774,7 @@ struct AnnotColorPopup {
     bool openDialog = false;
     // non-owning, for tests; the layout tree owns them
     Vec<ToolbarColorSwatch*> swatches;
+    InkThicknessSlider* slider = nullptr;
 };
 
 static AnnotColorPopup* gAnnotColorPopup = nullptr;
@@ -2860,7 +2877,8 @@ static void AnnotColorPopupNativeMsg(AnnotColorPopup* p, VirtHostNativeMsg* ev) 
     }
 }
 
-void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withNone, const Func1<Color>& onPick) {
+void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withNone, const Func1<Color>& onPick,
+                         int thickness, const Func1<int>& onThickness) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb || gAnnotColorPopup) {
         return;
@@ -2869,8 +2887,13 @@ void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withN
     p->win = win;
     p->current = current;
     p->onPick = onPick;
+    // an ink annotation's stroke is as much a choice as its color, so its
+    // popup has the same Thickness slider the ink button's drop-down has
+    InkThicknessSlider* slider = nullptr;
+    ILayout* extra = (thickness >= 0) ? MakeInkThicknessPanel(win, current, thickness, onThickness, &slider) : nullptr;
     ILayout* layout = MakeAnnotColorsPanel(win, current, 0, withNone, &p->swatches, MkFunc1(OnAnnotColorPopupSwatch, p),
-                                           MkFunc1(OnAnnotColorPopupEdit, p));
+                                           MkFunc1(OnAnnotColorPopupEdit, p), extra);
+    p->slider = slider;
 
     VirtHost::CreateArgs args;
     args.parent = win->hwndFrame;
@@ -2905,7 +2928,7 @@ void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withN
 TempStr AnnotColorPopupStateTemp() {
     AnnotColorPopup* p = gAnnotColorPopup;
     if (!p || !p->host) {
-        return fmt("annotColorPopup visible=0 n=0 swatches=\n");
+        return fmt("annotColorPopup visible=0 n=0 thickness= swatches=\n");
     }
     Rect r = p->host->ScreenRect();
     str::Builder swatches;
@@ -2918,8 +2941,13 @@ TempStr AnnotColorPopupStateTemp() {
         swatches.Append(
             fmt("%s:%d,%d,%d,%d:%d", sw->text, r.x + sr.x, r.y + sr.y, sr.dx, sr.dy, sw->isCurrent ? 1 : 0));
     }
-    return fmt("annotColorPopup visible=1 n=%d placed=%d,%d,%d,%d swatches=%s\n", len(p->swatches), r.x, r.y, r.dx,
-               r.dy, ToStrTemp(swatches));
+    Str thickness = StrL("");
+    if (p->slider) {
+        Rect sr = p->slider->BoundsInWindow();
+        thickness = fmt("%d:%d,%d,%d,%d", p->slider->value, r.x + sr.x, r.y + sr.y, sr.dx, sr.dy);
+    }
+    return fmt("annotColorPopup visible=1 n=%d placed=%d,%d,%d,%d thickness=%s swatches=%s\n", len(p->swatches), r.x,
+               r.y, r.dx, r.dy, thickness, ToStrTemp(swatches));
 }
 
 static void OnToolbarMouseMove(MainWindow* win, Point pt) {

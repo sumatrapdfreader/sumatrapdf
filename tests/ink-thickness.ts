@@ -3,6 +3,9 @@
 // slider is Annotations.InkBorderWidth, and the stroke drawn after it is set
 // is that many points wide.
 //
+// A selected ink annotation's color chip opens the same drop-down, where the
+// slider is that annotation's own width, so it has no Border Width chip.
+//
 // Run: bun tests/ink-thickness.ts [--no-build]
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
@@ -18,9 +21,12 @@ import {
   MK_LBUTTON,
   MK_RBUTTON,
   packCoords,
+  postMessage,
   sendMessage,
   setCursorPos,
   sleep,
+  VK_ESCAPE,
+  WM_KEYDOWN,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
@@ -31,6 +37,8 @@ import { clickAt, findCanvas, findChildByClass, killAndWait, launchControlled, s
 
 const MAIN_TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
 const HOVER_MENU_CLASS = "SumatraToolbarHoverMenu";
+const ANNOT_TOOLBAR_CLASS = "SumatraAnnotEditToolbar";
+const POPUP_CLASS = "SumatraAnnotColorPopup";
 // the widest the slider goes, kInkThicknessMax in Toolbar.cpp
 const MAX_THICKNESS = 16;
 
@@ -72,13 +80,34 @@ function rightClickToolbar(toolbar: number, x: number, y: number): void {
   sendMessage(toolbar, WM_RBUTTONUP, 0, lp);
 }
 
+async function markupDump(client: ControlClient): Promise<string> {
+  return String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+}
+
 async function inkAnnotWidth(client: ControlClient): Promise<number> {
-  const raw = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+  const raw = await markupDump(client);
   const m = /ink strokes=\d+ points=\d+ opacity=\d+ width=(-?\d+)/.exec(raw);
   if (!m) {
     throw new Error(`ink-thickness: no ink annotation in the dump\n${raw}`);
   }
   return +m[1]!;
+}
+
+function parseRect(m: RegExpMatchArray | null): Rect {
+  if (!m) {
+    throw new Error("ink-thickness: no rect in the dump");
+  }
+  return { x: +m[1]!, y: +m[2]!, dx: +m[3]!, dy: +m[4]! };
+}
+
+// the chips of the selected annotation's property row
+async function annotChips(client: ControlClient): Promise<{ names: string[]; line: string }> {
+  const raw = await markupDump(client);
+  const line = /annotEditToolbar .*/.exec(raw)?.[0] ?? "";
+  if (!/annotEditToolbar visible=1/.test(line)) {
+    throw new Error(`ink-thickness: the annotation property row is not up\n${raw}`);
+  }
+  return { names: (/ items=(\S+)/.exec(line)?.[1] ?? "").split(","), line };
 }
 
 async function drawStroke(canvas: number, pts: { x: number; y: number }[]): Promise<void> {
@@ -186,6 +215,55 @@ export async function testit(): Promise<void> {
     const width = await inkAnnotWidth(client);
     if (width !== MAX_THICKNESS) {
       throw new Error(`ink-thickness: the stroke is ${width} points wide, want ${MAX_THICKNESS}`);
+    }
+
+    // the ink tool stays on for another stroke; Esc leaves it, and a click on
+    // the stroke selects it
+    postMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
+    await sleep(300 * SLOW_BUILD_FACTOR);
+    await clickAt(canvas, cx - 60, cy);
+    await sleep(400 * SLOW_BUILD_FACTOR);
+
+    // its color chip's drop-down has the slider, set to the annotation's own
+    // width, and there is no Border Width chip
+    const chips = await annotChips(client);
+    if (!chips.names.includes("color")) {
+      throw new Error(`ink-thickness: a selected ink stroke has no color chip: ${chips.names.join(",")}`);
+    }
+    if (chips.names.includes("border")) {
+      throw new Error(`ink-thickness: a selected ink stroke still has a border chip: ${chips.names.join(",")}`);
+    }
+    const placed = parseRect(/ placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(chips.line));
+    const chip = parseRect(/[=;]color:(-?\d+),(-?\d+),(\d+),(\d+)/.exec(chips.line));
+    const annotToolbar = findTopWindow(pid, ANNOT_TOOLBAR_CLASS);
+    if (!annotToolbar) {
+      throw new Error("ink-thickness: no annotation property row window");
+    }
+    await clickAt(annotToolbar, chip.x - placed.x + (chip.dx >> 1), chip.y - placed.y + (chip.dy >> 1));
+    await sleep(500 * SLOW_BUILD_FACTOR);
+
+    const popupLine = /annotColorPopup .*/.exec(await markupDump(client))?.[0] ?? "";
+    const th = /thickness=(\d+):(-?\d+),(-?\d+),(\d+),(\d+)/.exec(popupLine);
+    if (!th) {
+      throw new Error(`ink-thickness: the color chip's drop-down has no thickness slider: ${popupLine}`);
+    }
+    if (+th[1]! !== MAX_THICKNESS) {
+      throw new Error(`ink-thickness: the slider is at ${th[1]}, want the stroke's ${MAX_THICKNESS}`);
+    }
+
+    // dragged back to Thin, the stroke itself gets thinner
+    const popup = findTopWindow(pid, POPUP_CLASS);
+    if (!popup || !isWindowVisible(popup)) {
+      throw new Error("ink-thickness: the color chip's drop-down did not open");
+    }
+    const pr = getWindowRect(popup);
+    const slider = { x: +th[2]!, y: +th[3]!, dx: +th[4]!, dy: +th[5]! };
+    await clickAt(popup, slider.x - pr.left, slider.y + (slider.dy >> 1) - pr.top);
+    await sleep(500 * SLOW_BUILD_FACTOR);
+    await client.waitForRenderIdle();
+    const thin = await inkAnnotWidth(client);
+    if (thin !== 1) {
+      throw new Error(`ink-thickness: the stroke is ${thin} points wide after Thin, want 1`);
     }
   } finally {
     client.close();

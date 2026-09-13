@@ -398,7 +398,9 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         it.tooltip = Tr("Opacity");
         VecAppend(out, it);
     }
-    if (AnnotationSupportsBorder(type)) {
+    // ink has no Border Width chip of its own: the stroke's width is the
+    // Thickness slider of its color chip's drop-down
+    if (AnnotationSupportsBorder(type) && type != AnnotationType::Ink) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Border;
         it.number = BorderWidth(annot);
@@ -1259,6 +1261,21 @@ static void ChipColorPicked(AnnotEditToolbar* tb, Color col) {
     AnnotChanged(tab);
 }
 
+// how wide the stroke of an ink annotation is, from the Thickness slider of
+// its color drop-down
+static void ChipThicknessPicked(AnnotEditToolbar* tb, int width) {
+    WindowTab* tab = tb->tab;
+    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
+    if (!AnnotationIsLive(annot) || annot != tb->annot) {
+        return;
+    }
+    if (BorderWidth(annot) == width) {
+        return;
+    }
+    SetBorderWidth(annot, width);
+    AnnotChanged(tab);
+}
+
 static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
     if (!chip || !chip->tb) {
         return;
@@ -1292,7 +1309,11 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             // draws it in a default one, so offering "none" there is a trap
             bool withNone = !AnnotationIsTextMarkup(Type(annot));
             tb->colorPickKind = kind;
-            ShowAnnotColorPopup(tb->win, chipScreen, current, withNone, MkFunc1(ChipColorPicked, tb));
+            // an ink annotation's drop-down sets how thick its stroke is too
+            bool isInk = (Type(annot) == AnnotationType::Ink) && (kind == AnnotEditKind::Color);
+            int thickness = isInk ? std::max(BorderWidth(annot), 0) : -1;
+            ShowAnnotColorPopup(tb->win, chipScreen, current, withNone, MkFunc1(ChipColorPicked, tb), thickness,
+                                MkFunc1(ChipThicknessPicked, tb));
             break;
         }
         case AnnotEditKind::Opacity: {
