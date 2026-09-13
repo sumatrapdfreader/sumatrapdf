@@ -13,6 +13,7 @@ extern "C" {
 }
 
 #include "ImageReader.h"
+#include "EmbeddedResources.h"
 #include "Theme.h"
 #include "SvgIcons.h"
 
@@ -563,6 +564,12 @@ static Pixmap* RenderSvgToPixmap(Str svgData, int dx, int dy, Color fgCol) {
     }
     memset(px->data, 0, (size_t)px->stride * (size_t)dy);
     px->premultiplied = true;
+
+    // an icon with a <text> needs a base14 font, which mupdf only gets from the
+    // embedded archive; without the loader the render throws and the icon comes
+    // out blank (#6186). EngineMupdf installs it too, but not until a document
+    // is opened, long after the toolbar renders its icons.
+    InstallEmbeddedFontLoader();
 
     fz_context* ctx = fz_new_context_windows();
     fz_pixmap* pixmap = RenderSvgToFzPixmap(ctx, svgData, dx, dy, fgCol);

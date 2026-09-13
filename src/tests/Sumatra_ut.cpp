@@ -8,6 +8,7 @@
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
 #include "base/File.h"
+#include "base/Pixmap.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -23,6 +24,7 @@
 #include "AppSettings.h"
 #include "Flags.h"
 #include "Commands.h"
+#include "SvgIcons.h"
 #include "AppUnitTests.h"
 
 // must be last to over-write assert()
@@ -417,6 +419,36 @@ static void ParseTipExpectLinkCmd(Str input, Str expCmd) {
     delete tip;
 }
 
+static int CountPaintedPixels(Pixmap* px) {
+    int n = 0;
+    for (int y = 0; y < px->height; y++) {
+        u8* d = px->data + ((size_t)px->stride * (size_t)y);
+        for (int x = 0; x < px->width; x++) {
+            if (d[3] != 0) {
+                n++;
+            }
+            d += 4;
+        }
+    }
+    return n;
+}
+
+// issue #6186: an icon whose only paint is a <text> needs a base14 font, which
+// mupdf only has once the embedded font loader is installed
+static void SvgTextIcon_UnitTests() {
+    const char* svgFmt =
+        R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><text x="-1" y="24" font-size="32" font-family="sans-serif" fill="currentColor">%s</text></svg>)";
+
+    // "A" is in Helvetica; the reporter's glyph needs the fallback font
+    Str glyphs[] = {StrL("A"), StrL("\xE2\x96\xA6")};
+    for (Str glyph : glyphs) {
+        TempStr svg = fmt(svgFmt, glyph);
+        Pixmap* px = GetCachedPixmapForSvg(svg, 24, 24, kColBlack, kColWhite);
+        utassert(px != nullptr);
+        utassert(CountPaintedPixels(px) > 0);
+    }
+}
+
 static void ParseTip_UnitTests() {
     // issue #5752: brackets in filenames must not hang
     ParseTipExpectPlainContains(StrL("Loading Apocalypse Bringer Mynoghra_01 [CIW].pdf ..."), StrL("[CIW]"));
@@ -562,6 +594,7 @@ int RunAppUnitTests(bool forAi) {
     SumatraPDF_UnitTests();
 
     ParseTip_UnitTests();
+    SvgTextIcon_UnitTests();
 #if IS_DEBUG
     TextSelection_UnitTests();
     Layout_UnitTests();
