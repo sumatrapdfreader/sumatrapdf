@@ -12,6 +12,25 @@ void ShowChangeLanguageDialog(MainWindow* win);
 void ShowChangeScrollbarDialog(MainWindow* win);
 void ShowChangeThemeDialog(MainWindow* win);
 void ShowSetDocumentColorsFollowThemeDialog(MainWindow* win);
+
+// generic color picker: picks a color and edits the set of predefined colors
+struct ChangeColorsArgs {
+    MainWindow* win = nullptr;
+    Str title;
+    // in: initially picked color, out: the color the user picked
+    Color color = kColorUnset;
+    // in: predefined colors, out: the set as the user left it
+    Vec<Color> colors;
+    // false if the user cancelled, in which case color is meaningless
+    bool didSelect = false;
+    // true if the user added or removed a color
+    bool colorsChanged = false;
+    // called once, when the dialog closes; args are deleted afterwards
+    Func1<ChangeColorsArgs*> onClose;
+};
+// takes ownership of args
+void ShowChangeColorsDialog(ChangeColorsArgs* args);
+
 void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab);
 void ShowCustomZoomDialog(MainWindow* win);
 void ShowPageGridDialog(MainWindow* win);
