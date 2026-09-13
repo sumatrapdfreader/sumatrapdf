@@ -118,6 +118,7 @@ import { testit as issue6050 } from "./issue-6050.ts";
 import { testit as issue5911 } from "./issue-5911.ts";
 import { testit as issue6088 } from "./issue-6088.ts";
 import { testit as annotContentsClickAway } from "./annot-contents-click-away.ts";
+import { testit as annotColorDropdown } from "./annot-color-dropdown.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
 import { testit as toolbarHoverDropdown } from "./toolbar-hover-dropdown.ts";
@@ -476,6 +477,7 @@ export const tests: NamedTest[] = [
   ["issue-5911", issue5911],
   ["issue-6088", issue6088],
   ["annot-contents-click-away", annotContentsClickAway],
+  ["annot-color-dropdown", annotColorDropdown],
   ["issue-6137-contents", issue6137Contents],
   ["issue-6093", issue6093],
   ["issue-6095", issue6095],

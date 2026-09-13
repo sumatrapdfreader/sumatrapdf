@@ -2423,9 +2423,11 @@ static void OnAnnotColorClicked(MainWindow* win, VirtMouseEvent* ev) {
     uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
 }
 
-// which button's color the generic color dialog is editing
+// which button's color the generic color dialog is editing; a valid onPick
+// instead means it was opened for something that is not a toolbar button
 struct AnnotColorsTarget {
     int cmdId = 0;
+    Func1<Color> onPick;
 };
 
 static void AnnotColorsPicked(AnnotColorsTarget* target, ChangeColorsArgs* args) {
@@ -2434,7 +2436,11 @@ static void AnnotColorsPicked(AnnotColorsTarget* target, ChangeColorsArgs* args)
         ScheduleSaveSettings();
     }
     if (args->didSelect && args->color != kColorUnset) {
-        SetAnnotPresetColor(target->cmdId, args->color);
+        if (target->onPick.IsValid()) {
+            target->onPick.Call(args->color);
+        } else {
+            SetAnnotPresetColor(target->cmdId, args->color);
+        }
     }
     delete target;
 }
@@ -2461,13 +2467,26 @@ static void OnAnnotColorsEditClicked(MainWindow* win, VirtMouseEvent* ev) {
     ShowChangeColorsDialog(args);
 }
 
-static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
-    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
-    ParsedColor* setting = AnnotPresetColorSetting(ev->cmdId);
-    if (!tb || !setting) {
-        return;
+// alpha 0 and 0xff both mean opaque, so a palette color matches an
+// annotation's even when only one of the two spells the alpha out
+static bool SameColorAndAlpha(Color a, Color b) {
+    u8 aa = GetAlpha(a);
+    u8 ab = GetAlpha(b);
+    if (aa == 0) {
+        aa = 0xff;
     }
-    Color current = GetParsedColor(*setting, kColorUnset);
+    if (ab == 0) {
+        ab = 0xff;
+    }
+    return ((a & 0xffffff) == (b & 0xffffff)) && (aa == ab);
+}
+
+// The drop-down's content: the preset colors as swatches with the one in use
+// ringed, and a button that opens the color dialog on the whole set. cmdId is 0
+// when this is not a toolbar button's drop-down, and nothing is recorded then.
+static ILayout* MakeAnnotColorsPanel(MainWindow* win, Color current, int cmdId, const Func1<VirtMouseEvent*>& onSwatch,
+                                     const Func1<VirtMouseEvent*>& onEdit) {
+    ToolbarVirt* tb = win->toolbarVirt;
     Vec<Color> colors;
     AnnotPresetColors(colors);
 
@@ -2475,23 +2494,25 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
     row->alignCross = CrossAxisAlign::CrossCenter;
     for (Color col : colors) {
         auto* sw = new ToolbarColorSwatch();
-        sw->id = ev->cmdId;
+        sw->id = cmdId;
         sw->col = col;
-        sw->isCurrent = (col == current);
+        sw->isCurrent = SameColorAndAlpha(col, current);
         str::ReplaceWithCopy(&sw->text, SerializeColorTemp(col));
-        sw->onClick = MkFunc1(OnAnnotColorClicked, win);
+        sw->onClick = onSwatch;
         row->AddChild(sw);
-        RecordHoverItem(tb, sw, sw->text, {{}, sw->text, ev->cmdId, true, sw->isCurrent});
+        if (cmdId != 0) {
+            RecordHoverItem(tb, sw, sw->text, {{}, sw->text, cmdId, true, sw->isCurrent});
+        }
     }
 
     auto* edit = new VirtIconButton();
     int iconSize = tb->iconSize;
     int pad = DpiScale(kAnnotSwatchPad);
-    edit->id = ev->cmdId;
+    edit->id = cmdId;
     edit->padding = {pad, pad, pad, pad};
     edit->pixmap = GetCachedPixmapForSvg(Str(gIconEditAnnotations), iconSize, iconSize, TbTextColor(), TbBgColor());
     edit->SetTooltip(Tr("Edit colors"));
-    edit->onClick = MkFunc1(OnAnnotColorsEditClicked, win);
+    edit->onClick = onEdit;
     row->AddChild(edit);
 
     auto* vbox = new VBox();
@@ -2505,8 +2526,160 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
     vbox->AddChild(row);
     int b = DpiScale(kHoverMenuBorder);
     int p = DpiScale(kAnnotColorsPad);
-    ev->layout = new Padding(vbox, Insets{b + p, b + p, b + p, b + p});
+    return new Padding(vbox, Insets{b + p, b + p, b + p, b + p});
+}
+
+static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    ParsedColor* setting = AnnotPresetColorSetting(ev->cmdId);
+    if (!tb || !setting) {
+        return;
+    }
+    Color current = GetParsedColor(*setting, kColorUnset);
+    ev->layout = MakeAnnotColorsPanel(win, current, ev->cmdId, MkFunc1(OnAnnotColorClicked, win),
+                                      MkFunc1(OnAnnotColorsEditClicked, win));
     ev->centerOnButton = true;
+}
+
+//--- the same drop-down, opened from a chip of the annotation edit toolbar
+
+// There is no toolbar button to hover here, so the popup keeps the mouse and
+// the first click outside it dismisses it, the way a menu does.
+struct AnnotColorPopup {
+    VirtHost* host = nullptr;
+    MainWindow* win = nullptr;
+    Color current = kColorUnset;
+    Func1<Color> onPick;
+    Color picked = kColorUnset;
+    bool hasPick = false;
+};
+
+static AnnotColorPopup* gAnnotColorPopup = nullptr;
+
+static void PostedCloseAnnotColorPopup(MainWindow*) {
+    AnnotColorPopup* p = gAnnotColorPopup;
+    if (!p) {
+        return;
+    }
+    gAnnotColorPopup = nullptr;
+    Func1<Color> onPick = p->onPick;
+    bool hasPick = p->hasPick;
+    Color col = p->picked;
+    delete p->host;
+    delete p;
+    if (hasPick) {
+        onPick.Call(col);
+    }
+}
+
+// the click is handled by the popup's own window, so the window can only be
+// torn down once that returns
+static void CloseAnnotColorPopup(AnnotColorPopup* p) {
+    if (::GetCapture() == p->host->native) {
+        ::ReleaseCapture();
+    }
+    uitask::Post(MkFunc0(PostedCloseAnnotColorPopup, p->win), "CloseAnnotColorPopup");
+}
+
+static void OnAnnotColorPopupSwatch(AnnotColorPopup* p, VirtMouseEvent* ev) {
+    auto* sw = ev ? (ToolbarColorSwatch*)ev->target : nullptr;
+    if (!sw || p != gAnnotColorPopup) {
+        return;
+    }
+    p->picked = sw->col;
+    p->hasPick = true;
+    CloseAnnotColorPopup(p);
+}
+
+static void OnAnnotColorPopupEdit(AnnotColorPopup* p, VirtMouseEvent*) {
+    if (p != gAnnotColorPopup) {
+        return;
+    }
+    auto* target = new AnnotColorsTarget();
+    target->onPick = p->onPick;
+
+    auto* args = new ChangeColorsArgs();
+    args->win = p->win;
+    args->title = Tr("Annotation Colors");
+    args->color = p->current;
+    args->withOpacity = true;
+    AnnotPresetColors(args->colors);
+    args->onClose = MkFunc1(AnnotColorsPicked, target);
+    CloseAnnotColorPopup(p);
+    ShowChangeColorsDialog(args);
+}
+
+static void PaintAnnotColorPopupBg(MainWindow*, VirtHostPaintEvent* ev) {
+    ev->gfx->FillRect(ev->clientRect, TbBgColor());
+    ev->gfx->DrawRect(ev->clientRect, ThemeEdgeColor(), DpiScale(kHoverMenuBorder));
+}
+
+static void AnnotColorPopupNativeMsg(AnnotColorPopup* p, VirtHostNativeMsg* ev) {
+    if (p != gAnnotColorPopup) {
+        return;
+    }
+    switch (ev->msg) {
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN: {
+            // the mouse is captured, so clicks meant for another window come
+            // here too: they dismiss the popup and go no further
+            Point pt{GET_X_LPARAM(ev->lp), GET_Y_LPARAM(ev->lp)};
+            if (p->host->ClientRect().Contains(pt)) {
+                return;
+            }
+            CloseAnnotColorPopup(p);
+            ev->didHandle = true;
+            ev->res = 0;
+            break;
+        }
+        case WM_CAPTURECHANGED:
+            if ((HWND)ev->lp != p->host->native) {
+                CloseAnnotColorPopup(p);
+            }
+            break;
+    }
+}
+
+void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, const Func1<Color>& onPick) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb || gAnnotColorPopup) {
+        return;
+    }
+    auto* p = new AnnotColorPopup();
+    p->win = win;
+    p->current = current;
+    p->onPick = onPick;
+    ILayout* layout =
+        MakeAnnotColorsPanel(win, current, 0, MkFunc1(OnAnnotColorPopupSwatch, p), MkFunc1(OnAnnotColorPopupEdit, p));
+
+    VirtHost::CreateArgs args;
+    args.parent = win->hwndFrame;
+    args.className = WStrL(L"SumatraAnnotColorPopup");
+    args.isPopup = true;
+    args.visible = false;
+    args.noActivate = true;
+    args.userData = win;
+    args.bgColor = TbBgColor();
+    args.isRtl = IsUIRtl();
+    args.initialSize = {100, 100};
+    VirtHost* host = VirtHost::Create(args);
+    if (!host) {
+        delete layout;
+        delete p;
+        return;
+    }
+    p->host = host;
+    host->onPaintBackground = MkFunc1(PaintAnnotColorPopupBg, win);
+    host->onNativeMsg = MkFunc1(AnnotColorPopupNativeMsg, p);
+    Size sz = host->SetLayoutSizedToContent(layout);
+
+    // under the chip, centered on it, kept on the monitor
+    Rect r{anchor.x + ((anchor.dx - sz.dx) / 2), anchor.Bottom(), sz.dx, sz.dy};
+    r = ShiftRectToWorkArea(r, win->hwndFrame, true);
+    host->SetPos(r, true);
+    gAnnotColorPopup = p;
+    ::SetCapture(host->native);
 }
 
 static void OnToolbarMouseMove(MainWindow* win, Point pt) {

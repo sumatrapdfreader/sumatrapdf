@@ -91,6 +91,10 @@ ILayout* NewToolbarHoverStrip(MainWindow*, const Vec<ToolbarHoverMenuItem>&);
 void HideToolbarHoverDropdown(MainWindow*);
 bool ToolbarHoverDropdownContainsScreenPoint(MainWindow*, Point);
 
+// the markup buttons' color drop-down, under a rect that is not a toolbar
+// button (the annotation edit toolbar's color chip)
+void ShowAnnotColorPopup(MainWindow*, Rect anchor, Color current, const Func1<Color>& onPick);
+
 //--- internal to Toolbar.cpp, not meant for anyone else
 
 // those are not real commands but we have to refer to toolbar buttons

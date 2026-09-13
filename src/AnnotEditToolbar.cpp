@@ -202,13 +202,32 @@ static Color PdfToWinColor(PdfColor c) {
     return MkRgb(r, g, b);
 }
 
-static bool PdfColorIsTransparent(PdfColor c) {
+static u8 PdfColorAlpha(PdfColor c) {
     u8 r;
     u8 g;
     u8 b;
     u8 a;
     UnpackPdfColor(c, r, g, b, a);
-    return a == 0;
+    return a;
+}
+
+static Color PdfToWinColorWithAlpha(PdfColor c) {
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
+    UnpackPdfColor(c, r, g, b, a);
+    return MkRgba(r, g, b, a);
+}
+
+static PdfColor WinToPdfColor(Color c) {
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
+    UnpackColor(c, r, g, b, a);
+    // in a Color alpha 0 means opaque, in a PdfColor it means transparent
+    return MkPdfColor(r, g, b, a == 0 ? 0xff : a);
 }
 
 static Str KindName(AnnotEditKind kind) {
@@ -325,10 +344,21 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         it.tooltip = Tr("Text Color");
         VecAppend(out, it);
     }
+    bool isTextMarkup = AnnotationIsTextMarkup(type);
     if (AnnotationSupportsColor(type)) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Color;
         it.color = GetColor(annot);
+        if (isTextMarkup) {
+            // the color chip is also the opacity chip: it shows the color as
+            // it looks on the page and picking one sets both
+            u8 r;
+            u8 g;
+            u8 b;
+            u8 a;
+            UnpackPdfColor(it.color, r, g, b, a);
+            it.color = MkPdfColor(r, g, b, (u8)Opacity(annot));
+        }
         it.tooltip = AnnotationColorIsBackground(type) ? Tr("Background Color") : Tr("Color");
         VecAppend(out, it);
     }
@@ -339,7 +369,7 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         it.tooltip = Tr("Interior Color");
         VecAppend(out, it);
     }
-    if (AnnotationSupportsOpacity(type)) {
+    if (AnnotationSupportsOpacity(type) && !isTextMarkup) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Opacity;
         it.number = Opacity(annot);
@@ -448,8 +478,13 @@ static void PaintSwatch(Gfx* gfx, Rect r, PdfColor col, Color border) {
         sw = r;
         sw.Inflate(-2, -2);
     }
-    if (PdfColorIsTransparent(col)) {
+    u8 alpha = PdfColorAlpha(col);
+    if (alpha == 0) {
         PaintChecker(gfx, sw);
+    } else if (alpha < 0xff) {
+        // a translucent color over the checker, so the opacity can be seen
+        PaintChecker(gfx, sw);
+        gfx->FillRects(&sw, 1, PdfToWinColor(col), alpha);
     } else {
         gfx->FillRoundedRect(sw, DpiScale(3), PdfToWinColor(col), border);
     }
@@ -1253,6 +1288,17 @@ static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int cur
     return PopupPickGlyphs(win, screen, items, current, chipScreen, glyph, lineIsStart);
 }
 
+// a color from the markup drop-down; its alpha is the annotation's opacity
+static void MarkupColorPicked(AnnotEditToolbar* tb, Color col) {
+    WindowTab* tab = tb->tab;
+    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
+    if (!AnnotationIsLive(annot) || annot != tb->annot) {
+        return;
+    }
+    SetColor(annot, WinToPdfColor(col));
+    AnnotChanged(tab);
+}
+
 static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
     if (!chip || !chip->tb) {
         return;
@@ -1280,6 +1326,11 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
         case AnnotEditKind::Color:
         case AnnotEditKind::InteriorColor:
         case AnnotEditKind::TextColor: {
+            if (kind == AnnotEditKind::Color && AnnotationIsTextMarkup(Type(annot))) {
+                ShowAnnotColorPopup(tb->win, chipScreen, PdfToWinColorWithAlpha(chip->item.color),
+                                    MkFunc1(MarkupColorPicked, tb));
+                return;
+            }
             int n = AnnotEditorColorCount();
             int current = -1;
             for (int i = 0; i < n; i++) {
@@ -3359,6 +3410,9 @@ TempStr AnnotEditorLayoutResultTemp(int, int, int* exitCodeOut, int) {
             outline = dm->CvtToScreen(annot->pageNo, win->annotationResizePreviewRect);
         }
         out.Append(fmt(" resizeOutline=%d,%d,%d,%d", outline.x, outline.y, outline.dx, outline.dy));
+        str::Builder colTxt;
+        SerializePdfColor(GetColor(annot), colTxt);
+        out.Append(fmt(" color=%s opacity=%d", ToStrTemp(colTxt), Opacity(annot)));
         // last on the line: the contents can hold anything, including spaces
         out.Append(fmt(" contents=%s", Contents(annot)));
     }
