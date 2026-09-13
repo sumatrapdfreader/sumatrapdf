@@ -647,7 +647,8 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
                 Vec<int> strokeCounts;
                 Vec<PointF> points;
                 GetInkList(a, strokeCounts, points);
-                out.Append(fmt("ink strokes=%d points=%d opacity=%d\n", len(strokeCounts), len(points), Opacity(a)));
+                out.Append(fmt("ink strokes=%d points=%d opacity=%d width=%d\n", len(strokeCounts), len(points),
+                               Opacity(a), BorderWidth(a)));
             }
             n++;
             continue;

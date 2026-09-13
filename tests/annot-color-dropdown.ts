@@ -371,10 +371,12 @@ async function annotButtonRect(client: ControlClient, cmd: number): Promise<Rect
   return null;
 }
 
-// the colors the open drop-down lists, the one in use marked with a *
+// the colors the open drop-down lists, the one in use marked with a *. The ink
+// button's drop-down also has a thickness slider (tests/ink-thickness.ts),
+// which is not a color
 async function hoverMenuColors(client: ControlClient): Promise<string[]> {
   const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
-  const re = /^dropdown-item idx=\d+ cmd=\d+ current=(\d) rect=[-\d,]+ text=(.*)$/gm;
+  const re = /^dropdown-item idx=\d+ cmd=\d+ current=(\d) rect=[-\d,]+ text=(#\S+|none)$/gm;
   const res: string[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(raw)) !== null) {

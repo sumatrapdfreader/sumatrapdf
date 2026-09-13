@@ -719,6 +719,8 @@ struct Annotations {
     // color of newly created ink annotations. If not set, the PDF engine's
     // default (red) is used
     ParsedColor inkColor;
+    // width of the stroke of new ink annotations, in points
+    int inkBorderWidth;
     // color of newly created stamp annotations. If not set, the PDF
     // engine's default (red) is used
     ParsedColor stampColor;
@@ -1516,6 +1518,7 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, circleColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, polygonColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, inkColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Annotations, inkBorderWidth), SettingType::Int, 6},
     {offsetof(Annotations, stampColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, caretColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, fileAttachmentColor), SettingType::Color, (intptr_t)""},
@@ -1524,12 +1527,12 @@ static const FieldInfo gAnnotationsFields[] = {
 };
 static const StructInfo gAnnotationsInfo = {
     sizeof(Annotations),
-    23,
+    24,
     gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
     "city\0FreeTextSize\0FreeTextBorderWidth\0FreeTextAlignment\0PresetColors\0TextIconColor\0LineColor\0PolyLineColor"
-    "\0SquareColor\0CircleColor\0PolygonColor\0InkColor\0StampColor\0CaretColor\0FileAttachmentColor\0TextIconType\0Def"
-    "aultAuthor",
+    "\0SquareColor\0CircleColor\0PolygonColor\0InkColor\0InkBorderWidth\0StampColor\0CaretColor\0FileAttachmentColor\0T"
+    "extIconType\0DefaultAuthor",
     "color of newly created highlight annotations. Use an #aarrggbb value to set default opacity (00 = transparent, FF "
     "= opaque); #rrggbb is fully opaque\0color of newly created underline annotations. #aarrggbb sets default opacity "
     "the same way as HighlightColor\0color of newly created squiggly underline annotations. #aarrggbb sets default "
@@ -1546,12 +1549,12 @@ static const StructInfo gAnnotationsInfo = {
     "annotations. If not set, the PDF engine's default (red) is used\0color of newly created circle annotations. If "
     "not set, the PDF engine's default (red) is used\0color of newly created polygon annotations. If not set, the PDF "
     "engine's default (red) is used\0color of newly created ink annotations. If not set, the PDF engine's default "
-    "(red) is used\0color of newly created stamp annotations. If not set, the PDF engine's default (red) is "
-    "used\0color of newly created caret annotations. If not set, the PDF engine's default (red) is used\0color of "
-    "newly created file attachment annotations. If not set, the PDF engine's default (red) is used\0icon shown for "
-    "text (sticky note) annotations: comment, help, insert, key, new paragraph, note or paragraph. If not set, note is "
-    "used\0author recorded on newly created annotations. If not set, the Windows user name is used; set it to (none) "
-    "to leave the author out entirely",
+    "(red) is used\0width of the stroke of new ink annotations, in points\0color of newly created stamp annotations. "
+    "If not set, the PDF engine's default (red) is used\0color of newly created caret annotations. If not set, the PDF "
+    "engine's default (red) is used\0color of newly created file attachment annotations. If not set, the PDF engine's "
+    "default (red) is used\0icon shown for text (sticky note) annotations: comment, help, insert, key, new paragraph, "
+    "note or paragraph. If not set, note is used\0author recorded on newly created annotations. If not set, the "
+    "Windows user name is used; set it to (none) to leave the author out entirely",
     false};
 
 static const FieldInfo gExternalViewerFields[] = {

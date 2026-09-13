@@ -896,6 +896,7 @@ const annotations: Field[] = [
     "",
     "color of newly created ink annotations. If not set, the PDF engine's default (red) is used",
   ).ver("3.7"),
+  field("InkBorderWidth", Int, 6, "width of the stroke of new ink annotations, in points").ver("3.7"),
   field(
     "StampColor",
     Color,

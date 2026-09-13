@@ -818,6 +818,10 @@ Annotations [
     ; default (red) is used (introduced in version 3.7)
     InkColor = 
 
+    ; width of the stroke of new ink annotations, in points (introduced in
+    ; version 3.7)
+    InkBorderWidth = 6
+
     ; color of newly created stamp annotations. If not set, the PDF engine's
     ; default (red) is used (introduced in version 3.7)
     StampColor = 

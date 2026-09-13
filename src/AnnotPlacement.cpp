@@ -1308,6 +1308,19 @@ static void PaintInkPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     gs.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
     Gdiplus::Color strokeCol(255, 0, 80, 200);
     Gdiplus::REAL width = (Gdiplus::REAL)std::max(DpiScale(2), 1);
+    if (!p.highlightBrush) {
+        // the stroke the ink button's drop-down is set to make, at this zoom
+        Color col = GetParsedColor(gSettings->annotations.inkColor, kColorUnset);
+        if (col != kColorUnset) {
+            u8 r, g, b;
+            UnpackColor(col, r, g, b);
+            strokeCol = Gdiplus::Color(255, r, g, b);
+        }
+        int bw = gSettings->annotations.inkBorderWidth;
+        if (bw > 0) {
+            width = (Gdiplus::REAL)std::max(1.f, (float)bw * PxPerPagePt(dm, pageNo));
+        }
+    }
     if (p.highlightBrush) {
         // preview what the marker will lay down: its color at its opacity,
         // as wide on screen as the saved stroke will be

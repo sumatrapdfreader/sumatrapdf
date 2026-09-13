@@ -11159,6 +11159,7 @@ void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
         col = GetParsedColor(a.polygonColor);
     } else if (typ == AnnotationType::Ink) {
         col = GetParsedColor(a.inkColor);
+        args.borderWidth = a.inkBorderWidth;
     } else if (typ == AnnotationType::Stamp) {
         col = GetParsedColor(a.stampColor);
     } else if (typ == AnnotationType::Caret) {

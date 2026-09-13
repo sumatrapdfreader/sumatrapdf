@@ -2525,7 +2525,7 @@ static bool SameColorAndAlpha(Color a, Color b) {
 // out, for the -dbg-control dump
 static ILayout* MakeAnnotColorsPanel(MainWindow* win, Color current, int cmdId, bool withNone,
                                      Vec<ToolbarColorSwatch*>* swatchesOut, const Func1<VirtMouseEvent*>& onSwatch,
-                                     const Func1<VirtMouseEvent*>& onEdit) {
+                                     const Func1<VirtMouseEvent*>& onEdit, ILayout* extra = nullptr) {
     ToolbarVirt* tb = win->toolbarVirt;
     Vec<Color> colors;
     AnnotPresetColors(colors);
@@ -2583,9 +2583,147 @@ static ILayout* MakeAnnotColorsPanel(MainWindow* win, Color current, int cmdId, 
         .isRtl = IsUIRtl(),
     }));
     vbox->AddChild(row);
+    if (extra) {
+        vbox->AddChild(extra);
+    }
     int b = DpiScale(kHoverMenuBorder);
     int p = DpiScale(kAnnotColorsPad);
     return new Padding(vbox, Insets{b + p, b + p, b + p, b + p});
+}
+
+//--- the ink button's drop-down also sets how thick the stroke is
+
+// Annotations.InkBorderWidth is in PDF points, which is about a pixel at 100%
+constexpr int kInkThicknessMin = 1;
+constexpr int kInkThicknessMax = 16;
+constexpr int kInkPreviewDy = 44;
+constexpr int kInkSliderDx = 190;
+// how far the preview's wave swings, as a part of the room left by the stroke
+constexpr float kInkPreviewWave = 0.42f;
+
+static int InkThickness() {
+    int v = gSettings ? gSettings->annotations.inkBorderWidth : kInkThicknessMin;
+    return limitValue(v, kInkThicknessMin, kInkThicknessMax);
+}
+
+// What the ink button will lay down: the color in use, drawn as thick as the
+// slider is set to. It follows the slider while it's being dragged.
+struct InkStrokePreview : VirtCtrl {
+    Color col = kColRed;
+    int thickness = kInkThicknessMin;
+
+    Size GetIdealSize() override { return {DpiScale(kInkSliderDx), DpiScale(kInkPreviewDy)}; }
+
+    void Paint(VirtPaintCtx& ctx) override {
+        Rect r = ctx.bounds;
+        float w = (float)DpiScale(thickness);
+        // the stroke has to fit the preview whatever the thickness
+        w = std::min(w, (float)r.dy / 2.f);
+        w = std::max(w, 1.f);
+        int inset = (int)(w / 2.f) + DpiScale(2);
+        int x0 = r.x + inset;
+        int x1 = r.Right() - inset;
+        if (x1 <= x0) {
+            return;
+        }
+        float midY = (float)r.y + ((float)r.dy / 2.f);
+        float amp = (((float)r.dy / 2.f) - (float)inset) * kInkPreviewWave;
+        u8 a = GetAlpha(col);
+        Color c = col & 0xffffff;
+        // one period of a sine, as a run of short anti-aliased segments, with a
+        // disc at every joint: the segments are butt-capped and a thick curve
+        // would be notched without them
+        constexpr int kSegs = 48;
+        int d = (int)w;
+        u8 alpha = (a == 0) ? 255 : a;
+        Point prev{};
+        for (int i = 0; i <= kSegs; i++) {
+            float u = (float)i / (float)kSegs;
+            int x = x0 + (int)(u * (float)(x1 - x0));
+            int y = (int)(midY + (amp * sinf(u * 2.f * 3.14159265f)));
+            Point pt{x, y};
+            if (i > 0) {
+                ctx.gfx->DrawLineAA(prev, pt, c, w, alpha);
+            }
+            if (d > 2) {
+                ctx.gfx->FillEllipse(Rect{pt.x - (d / 2), pt.y - (d / 2), d, d}, c, alpha);
+            }
+            prev = pt;
+        }
+    }
+};
+
+// Dragging it is the width of the next ink annotation, and of the stroke the
+// preview shows. The preview is a sibling in the same drop-down, so it lives
+// exactly as long as the slider does.
+struct InkThicknessSlider : VirtSlider {
+    InkStrokePreview* preview = nullptr;
+    Str text; // owned; what the -dbg-control dump shows for the slider
+
+    ~InkThicknessSlider() override { str::Free(text); }
+
+    void OnChanged() {
+        if (preview) {
+            preview->thickness = value;
+            preview->Invalidate();
+        }
+        if (gSettings) {
+            gSettings->annotations.inkBorderWidth = value;
+        }
+    }
+    void OnCommitted() {
+        OnChanged();
+        ScheduleSaveSettings();
+    }
+};
+
+// sliderOut gets the slider, for the caller to record once the colors are in
+static ILayout* MakeInkThicknessPanel(MainWindow* win, Color current, InkThicknessSlider** sliderOut) {
+    ToolbarVirt* tb = win->toolbarVirt;
+    int thickness = InkThickness();
+
+    auto* preview = new InkStrokePreview();
+    preview->col = (current == kColorUnset) ? kColRed : current;
+    preview->thickness = thickness;
+
+    auto* slider = new InkThicknessSlider();
+    slider->minVal = kInkThicknessMin;
+    slider->maxVal = kInkThicknessMax;
+    slider->value = thickness;
+    slider->idealDx = DpiScale(kInkSliderDx);
+    slider->preview = preview;
+    slider->onValueChanged = MkMethod0<InkThicknessSlider, &InkThicknessSlider::OnChanged>(slider);
+    slider->onValueCommitted = MkMethod0<InkThicknessSlider, &InkThicknessSlider::OnCommitted>(slider);
+    str::ReplaceWithCopy(&slider->text, fmt("thickness=%d", thickness));
+
+    auto* ends = new HBox();
+    ends->alignMain = MainAxisAlign::SpaceBetween;
+    ends->alignCross = CrossAxisAlign::CrossCenter;
+    auto mkLabel = [tb](Str s) {
+        return NewVirtText({
+            .s = s,
+            .font = tb->platformFont,
+            .textColor = TbDisabledColor(),
+            .isRtl = IsUIRtl(),
+        });
+    };
+    ends->AddChild(mkLabel(Tr("Thin")));
+    ends->AddChild(mkLabel(Tr("Thick")));
+
+    auto* vbox = new VBox();
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    int gap = DpiScale(6);
+    vbox->AddChild(new Padding(preview, Insets{gap, 0, gap, 0}));
+    vbox->AddChild(NewVirtText({
+        .s = Tr("Thickness"),
+        .font = tb->platformFont,
+        .textColor = TbTextColor(),
+        .isRtl = IsUIRtl(),
+    }));
+    vbox->AddChild(slider);
+    vbox->AddChild(ends);
+    *sliderOut = slider;
+    return vbox;
 }
 
 static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
@@ -2595,8 +2733,14 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
         return;
     }
     Color current = GetParsedColor(*setting, kColorUnset);
+    // ink is the one annotation whose width is a choice too
+    InkThicknessSlider* slider = nullptr;
+    ILayout* extra = (ev->cmdId == CmdCreateAnnotInk) ? MakeInkThicknessPanel(win, current, &slider) : nullptr;
     ev->layout = MakeAnnotColorsPanel(win, current, ev->cmdId, false, nullptr, MkFunc1(OnAnnotColorClicked, win),
-                                      MkFunc1(OnAnnotColorsEditClicked, win));
+                                      MkFunc1(OnAnnotColorsEditClicked, win), extra);
+    if (slider) {
+        RecordHoverItem(tb, slider, slider->text, {{}, slider->text, ev->cmdId, true, false});
+    }
     ev->centerOnButton = true;
 }
 
