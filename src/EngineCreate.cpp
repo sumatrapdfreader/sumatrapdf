@@ -548,6 +548,13 @@ bool EngineHasRedactMarks(EngineBase* engine) {
     return EngineMupdfHasRedactMarks(engine);
 }
 
+bool EngineHasUserRedactMarks(EngineBase* engine) {
+    if (!IsEngineMupdf(engine)) {
+        return false;
+    }
+    return EngineMupdfHasUserRedactMarks(engine);
+}
+
 Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, Annotation* annot) {
     if (!IsEngineMupdf(engine)) {
         return nullptr;

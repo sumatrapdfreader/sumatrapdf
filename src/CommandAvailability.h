@@ -51,7 +51,11 @@ struct AppCommandCtx {
     bool supportsAnnots = false;
     bool hideAnnotations = false;
     bool hasUnsavedAnnotations = false;
+    // any redaction mark in the loaded pages, including marks that came with
+    // the file
     bool hasRedactMarks = false;
+    // redaction marks made in this session (see EngineHasUserRedactMarks)
+    bool hasUserRedactMarks = false;
     bool canUndo = false;
     bool canRedo = false;
 

@@ -9248,6 +9248,17 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     return epdf->modifiedAnnotations;
 }
 
+// redaction marks the user made in this session. Marks that came with the
+// file don't count: they surface only as their page gets loaded, so the button
+// would appear out of nowhere when an annotation is selected
+bool EngineMupdfHasUserRedactMarks(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->createdRedactMark) {
+        return false;
+    }
+    return EngineMupdfHasRedactMarks(engine);
+}
+
 bool EngineMupdfHasRedactMarks(EngineBase* engine) {
     Vec<Annotation*> annots;
     EngineMupdfGetLoadedAnnotations(engine, annots);
@@ -9390,6 +9401,8 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
 
     if (any) {
         e->modifiedAnnotations = true;
+        // the marks are burned in and gone; nothing left to apply
+        e->createdRedactMark = false;
     }
     return any;
 }
@@ -10052,6 +10065,9 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
         ReportIf(removedPos < 0); // must exist in one of the lists
         ValidateAnnotationsInSync(e, pageInfo);
     } else if (change == AnnotationChange::Add) {
+        if (annot->type == AnnotationType::Redact) {
+            e->createdRedactMark = true;
+        }
         int sizeBefore = len(pageInfo->annotations);
         int pos = VecFind(pageInfo->annotations, annot);
         ReportIf(pos >= 0); // shouldn't exist

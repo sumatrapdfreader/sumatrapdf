@@ -211,6 +211,12 @@ class EngineMupdf : public EngineBase {
     // the same annotation, we should be back to 0
     bool modifiedAnnotations = false;
 
+    // set when a Redact annotation is created in this editing session. Apply
+    // Redactions is offered for marks the user made, not for marks that came
+    // with the file (which only show up as pages get loaded, see
+    // EngineMupdfHasUserRedactMarks)
+    bool createdRedactMark = false;
+
     // how many journal operations we have open (see EngineMupdfBeginOperation).
     // MuPDF can't undo / redo while one is, e.g. during a resize drag
     int journalNesting = 0;

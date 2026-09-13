@@ -432,6 +432,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.supportsAnnots = EngineSupportsAnnotations(engine);
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
         ctx.hasRedactMarks = EngineHasRedactMarks(engine);
+        ctx.hasUserRedactMarks = EngineHasUserRedactMarks(engine);
         ctx.canUndo = EngineMupdfCanUndo(engine);
         ctx.canRedo = EngineMupdfCanRedo(engine);
         int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
@@ -806,7 +807,12 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (cmdId == CmdApplyRedactions) {
-        if (ctx.hasRedactMarks) {
+        // the toolbar button is for marks made in this session: marks that came
+        // with the file only surface as their page gets loaded, so the button
+        // would pop up out of nowhere (e.g. when an annotation is selected).
+        // The menu and the palette still offer to apply those
+        bool marks = (surface == CommandSurface::Toolbar) ? ctx.hasUserRedactMarks : ctx.hasRedactMarks;
+        if (marks) {
             return CommandVisibility::Show;
         }
         // the annotation toolbar omits a greyed button; the menu keeps the

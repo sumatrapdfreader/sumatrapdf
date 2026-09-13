@@ -109,6 +109,7 @@ void EngineMupdfStartLoadAllAnnotations(EngineBase*, const Vec<int>& firstPages,
 void EngineMupdfCancelLoadAllAnnotations(EngineBase*);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfHasRedactMarks(EngineBase*);
+bool EngineMupdfHasUserRedactMarks(EngineBase*);
 bool EngineMupdfApplyRedactions(EngineBase*, Vec<Annotation*>& deletedOut);
 void EngineMupdfBeginOperation(EngineBase*, const char* name);
 void EngineMupdfEndOperation(EngineBase*);
@@ -203,5 +204,6 @@ bool EngineSupportsAnnotations(EngineBase*);
 bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineHasUnsavedAnnotations(EngineBase*);
 bool EngineHasRedactMarks(EngineBase*);
+bool EngineHasUserRedactMarks(EngineBase*);
 Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 Annotation* EngineGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
