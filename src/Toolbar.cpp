@@ -2391,12 +2391,35 @@ struct ToolbarColorSwatch : VirtCtrl {
     }
 };
 
+// whether the button's annotation can be made out of the text selected right now
+static bool CanCreateAnnotFromSelection(MainWindow* win, int cmdId) {
+    switch (cmdId) {
+        case CmdCreateAnnotHighlight:
+        case CmdCreateAnnotUnderline:
+        case CmdCreateAnnotSquiggly:
+        case CmdCreateAnnotStrikeOut:
+            break;
+        default:
+            return false;
+    }
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (!tab || !win->showSelection || !tab->selectionOnPage) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    return dm && dm->textSelection && dm->textSelection->result.len > 0;
+}
+
 static void OnAnnotColorClicked(MainWindow* win, VirtMouseEvent* ev) {
     auto* sw = ev ? (ToolbarColorSwatch*)ev->target : nullptr;
     if (!sw) {
         return;
     }
     SetAnnotPresetColor(sw->id, sw->col);
+    if (CanCreateAnnotFromSelection(win, sw->id)) {
+        // with text selected, picking a color is also a request to mark it up
+        ToolbarPostCommand(win, sw->id);
+    }
     uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
 }
 
