@@ -1,6 +1,15 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+struct CustomCommand;
+
+// the CmdOpenWith* commands for viewers we detect ourselves, in menu order,
+// 0-terminated
+extern const int gOpenWithKnownExternalViewerCmds[];
+
+bool IsOpenWithKnownExternalViewerCmd(int cmdId);
+bool IsOpenWithKnownExternalViewerCmd(CustomCommand* cmd);
+
 bool HasKnownExternalViewerForCmd(int cmd);
 
 void DetectExternalViewers();

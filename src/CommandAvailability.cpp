@@ -281,8 +281,6 @@ static UINT_PTR removeIfChm[] = {
 
 static i32 gBlacklistCommandsFromPalette[] = {
     CmdNone,
-    CmdOpenWithKnownExternalViewerFirst,
-    CmdOpenWithKnownExternalViewerLast,
     CmdCommandPalette,
     CmdCommandPaletteTOC,
     CmdCommandPaletteFavorites,
@@ -605,19 +603,23 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
-    if (ctx.tab) {
-        int idFirst = CmdOpenWithKnownExternalViewerFirst + 1;
-        int idLast = CmdOpenWithKnownExternalViewerLast;
-        if (cmdId >= idFirst && cmdId <= idLast) {
-            bool canView = CanViewWithKnownExternalViewer(ctx.tab, cmdId);
-            return canView ? CommandVisibility::Show : CommandVisibility::Hide;
-        }
+    // a Shortcuts / toolbar entry is a clone with its own id, so it's the
+    // command it stands for that decides
+    int knownEVCmdId = 0;
+    if (IsOpenWithKnownExternalViewerCmd(cmdId)) {
+        knownEVCmdId = cmdId;
+    } else if (IsOpenWithKnownExternalViewerCmd(cmd)) {
+        knownEVCmdId = origCmdId;
     }
 
-    bool isKnownEV = (cmdId >= CmdOpenWithKnownExternalViewerFirst) && (cmdId <= CmdOpenWithKnownExternalViewerLast);
-    if (origCmdId == CmdViewWithExternalViewer || isKnownEV) {
-        if (isKnownEV) {
-            bool canView = HasKnownExternalViewerForCmd(cmdId);
+    if (ctx.tab && knownEVCmdId) {
+        bool canView = CanViewWithKnownExternalViewer(ctx.tab, knownEVCmdId);
+        return canView ? CommandVisibility::Show : CommandVisibility::Hide;
+    }
+
+    if (origCmdId == CmdViewWithExternalViewer || knownEVCmdId) {
+        if (knownEVCmdId) {
+            bool canView = HasKnownExternalViewerForCmd(knownEVCmdId);
             return canView ? CommandVisibility::Show : CommandVisibility::Hide;
         }
         Str filter = GetCommandStringArg(cmd, kCmdArgFilter, {});
@@ -836,7 +838,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (CmdIdInList(cmdId, removeIfAnnotsNotSupported)) {
             return CommandVisibility::Hide;
         }
-        if (cmdId >= CmdOpenWithKnownExternalViewerFirst && cmdId <= CmdOpenWithKnownExternalViewerLast) {
+        if (IsOpenWithKnownExternalViewerCmd(cmdId)) {
             return CommandVisibility::Hide;
         }
     }

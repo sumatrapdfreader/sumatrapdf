@@ -112,7 +112,6 @@ static SeqStrings gCommandNames =
     "CmdZoomFitWidthAndContinuous\0"
     "CmdZoomFitPageAndSinglePage\0"
     "CmdContributeTranslation\0"
-    "CmdOpenWithKnownExternalViewerFirst\0"
     "CmdOpenWithExplorer\0"
     "CmdOpenWithDirectoryOpus\0"
     "CmdOpenWithTotalCommander\0"
@@ -124,7 +123,6 @@ static SeqStrings gCommandNames =
     "CmdOpenWithXpsViewer\0"
     "CmdOpenWithHtmlHelp\0"
     "CmdOpenWithPdfDjvuBookmarker\0"
-    "CmdOpenWithKnownExternalViewerLast\0"
     "CmdOpenSelectedDocument\0"
     "CmdPinSelectedDocument\0"
     "CmdForgetSelectedDocument\0"
@@ -426,7 +424,6 @@ static i32 gCommandIds[] = {
     CmdZoomFitWidthAndContinuous,
     CmdZoomFitPageAndSinglePage,
     CmdContributeTranslation,
-    CmdOpenWithKnownExternalViewerFirst,
     CmdOpenWithExplorer,
     CmdOpenWithDirectoryOpus,
     CmdOpenWithTotalCommander,
@@ -438,7 +435,6 @@ static i32 gCommandIds[] = {
     CmdOpenWithXpsViewer,
     CmdOpenWithHtmlHelp,
     CmdOpenWithPdfDjvuBookmarker,
-    CmdOpenWithKnownExternalViewerLast,
     CmdOpenSelectedDocument,
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
@@ -740,7 +736,6 @@ SeqStrings gCommandDescriptions =
     "Zoom: Fit Width And Continuous\0"
     "Zoom: Fit Page and Single Page\0"
     "Contribute Translation\0"
-    "don't use\0"
     "Open Directory In Explorer\0"
     "Open Directory In Directory Opus\0"
     "Open Directory In Total Commander\0"
@@ -752,7 +747,6 @@ SeqStrings gCommandDescriptions =
     "Open in Microsoft XPS Viewer\0"
     "Open in Microsoft HTML Help\0"
     "Open With Pdf&Djvu Bookmarker\0"
-    "don't use\0"
     "Open Selected Document\0"
     "Pin Selected Document\0"
     "Remove Selected Document From History\0"

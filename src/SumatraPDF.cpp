@@ -11570,11 +11570,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         cmdId = cmd->origId;
     }
 
-    if (!win->IsCurrentTabAbout()) {
-        if (CmdOpenWithKnownExternalViewerFirst < cmdId && cmdId < CmdOpenWithKnownExternalViewerLast) {
-            ViewWithKnownExternalViewer(tab, cmdId);
-            return 0;
-        }
+    if (!win->IsCurrentTabAbout() && IsOpenWithKnownExternalViewerCmd(cmdId)) {
+        ViewWithKnownExternalViewer(tab, cmdId);
+        return 0;
     }
 
     auto* ctrl = win->ctrl;

@@ -159,6 +159,38 @@ static ExternalViewerInfo gExternalViewers[] = {
 };
 // clang-format on
 
+// clang-format off
+const int gOpenWithKnownExternalViewerCmds[] = {
+    CmdOpenWithExplorer,
+    CmdOpenWithDirectoryOpus,
+    CmdOpenWithTotalCommander,
+    CmdOpenWithDoubleCommander,
+    CmdOpenWithAcrobat,
+    CmdOpenWithFoxIt,
+    CmdOpenWithFoxItPhantom,
+    CmdOpenWithPdfXchange,
+    CmdOpenWithXpsViewer,
+    CmdOpenWithHtmlHelp,
+    CmdOpenWithPdfDjvuBookmarker,
+    0,
+};
+// clang-format on
+
+bool IsOpenWithKnownExternalViewerCmd(int cmdId) {
+    for (int i = 0; gOpenWithKnownExternalViewerCmds[i]; i++) {
+        if (gOpenWithKnownExternalViewerCmds[i] == cmdId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// a Shortcuts / toolbar entry is a clone with its own id, so it's the command
+// it stands for that decides
+bool IsOpenWithKnownExternalViewerCmd(CustomCommand* cmd) {
+    return cmd && IsOpenWithKnownExternalViewerCmd(cmd->origId);
+}
+
 static ExternalViewerInfo* FindKnownExternalViewerInfoByCmdId(int cmdId) {
     for (ExternalViewerInfo& ev : gExternalViewers) {
         if (ev.cmdId == cmdId) {

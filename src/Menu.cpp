@@ -1555,9 +1555,8 @@ static void DynamicPartOfFileMenu(HMENU menu, BuildMenuCtx* ctx) {
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
-    int idFirst = CmdOpenWithKnownExternalViewerFirst + 1;
-    int idLast = CmdOpenWithKnownExternalViewerLast;
-    for (int cmdId = idFirst; cmdId < idLast; cmdId++) {
+    for (int i = 0; gOpenWithKnownExternalViewerCmds[i]; i++) {
+        int cmdId = gOpenWithKnownExternalViewerCmds[i];
         bool remove, disable;
         GetCommandIdState(ctx, cmdId, &remove, &disable);
         if (remove || disable) {

@@ -1,9 +1,9 @@
 // #6184: a keyboard shortcut bound to one of the "open with <known viewer>"
 // commands did nothing. Every Shortcuts entry gets its own command id (a clone
-// whose origId is the real command), but FrameOnCommand tested the
-// CmdOpenWithKnownExternalViewer* id range *before* mapping the clone back to
-// its origId, so the accelerator fell through to the switch, which has no case
-// for those commands.
+// whose origId is the real command), but FrameOnCommand checked for an
+// "open with <known viewer>" command *before* mapping the clone back to its
+// origId, so the accelerator fell through to the switch, which has no case for
+// those commands.
 //
 // The test stands in for an installed viewer: it points the HKCU "App Paths"
 // entry PDF-XChange is detected by at a .cmd that writes a marker file, binds

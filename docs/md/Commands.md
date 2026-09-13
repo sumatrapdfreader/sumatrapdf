@@ -406,8 +406,6 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdInstallPrereleaseUpdate,,internal,"used by the pre-release update notification link (Update); not for user shortcuts or DDE"
 CmdTogglePdfPreviewLogging,,internal,"toggles PDF shell-preview logging for debugging the Windows preview handler; not for normal use"
 CmdDebugCorruptMemory,,don't use,
-CmdOpenWithKnownExternalViewerFirst,,don't use,
-CmdOpenWithKnownExternalViewerLast,,don't use,
 CmdSelectionHandler,,use SelectionHandlers advanced setting instead,
 CmdSetTheme,,don't use,
 CmdViewWithExternalViewer,,don't use,
