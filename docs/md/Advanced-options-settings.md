@@ -751,15 +751,15 @@ Annotations [
 
     ; color of newly created underline annotations. #aarrggbb sets default
     ; opacity the same way as HighlightColor
-    UnderlineColor = #00ff00
+    UnderlineColor = #8bf05d
 
     ; color of newly created squiggly underline annotations. #aarrggbb sets
     ; default opacity the same way as HighlightColor (introduced in version 3.5)
-    SquigglyColor = #ff00ff
+    SquigglyColor = #f199d2
 
     ; color of newly created strike out annotations. #aarrggbb sets default
     ; opacity the same way as HighlightColor (introduced in version 3.5)
-    StrikeOutColor = #ff0000
+    StrikeOutColor = #e24745
 
     ; text color of newly created free text annotations (introduced in version
     ; 3.5)
@@ -789,7 +789,7 @@ Annotations [
     ; colors offered by the drop-down on the highlight, underline, squiggly and
     ; strike out toolbar buttons, separated by space. Picking one sets the color
     ; of new annotations of that type (introduced in version 3.7)
-    PresetColors = #fdef5a #8bf05d #99defa #f199d2 #e24745
+    PresetColors = #ffff00 #8bf05d #99defa #f199d2 #e24745
 
     ; color of newly created text (sticky note) annotations
     TextIconColor = 

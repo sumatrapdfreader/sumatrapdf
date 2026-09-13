@@ -817,20 +817,20 @@ const annotations: Field[] = [
   field(
     "UnderlineColor",
     Color,
-    rgb(0x00, 0xff, 0x0),
+    rgb(0x8b, 0xf0, 0x5d),
     "color of newly created underline annotations. #aarrggbb sets default opacity " + "the same way as HighlightColor",
   ),
   field(
     "SquigglyColor",
     Color,
-    rgb(0xff, 0x00, 0xff),
+    rgb(0xf1, 0x99, 0xd2),
     "color of newly created squiggly underline annotations. #aarrggbb sets default opacity " +
       "the same way as HighlightColor",
   ).ver("3.5"),
   field(
     "StrikeOutColor",
     Color,
-    rgb(0xff, 0x00, 0x00),
+    rgb(0xe2, 0x47, 0x45),
     "color of newly created strike out annotations. #aarrggbb sets default opacity " + "the same way as HighlightColor",
   ).ver("3.5"),
   field("FreeTextColor", Color, "", "text color of newly created free text annotations").ver("3.5"),
@@ -855,7 +855,7 @@ const annotations: Field[] = [
   field(
     "PresetColors",
     Str,
-    "#fdef5a #8bf05d #99defa #f199d2 #e24745",
+    "#ffff00 #8bf05d #99defa #f199d2 #e24745",
     "colors offered by the drop-down on the highlight, underline, squiggly and strike out toolbar " +
       "buttons, separated by space. Picking one sets the color of new annotations of that type",
   ).ver("3.7"),
