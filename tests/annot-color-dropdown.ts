@@ -42,6 +42,8 @@ const HOVER_MENU_CLASS = "SumatraToolbarHoverMenu";
 const POPUP_CLASS = "SumatraAnnotColorPopup";
 // the two preset colors the test picks from: translucent red, opaque green
 const PRESETS = "#80ff0000 #00ff00";
+// the highlighter's own colors, with the alpha it paints them at
+const BRUSH_PRESETS = "#66ff0000 #4000ff00";
 const COLOR_DIALOG_TITLE = "Annotation Colors";
 const PICKED_COLOR = "#ff0000";
 const PICKED_OPACITY = 0x80;
@@ -559,6 +561,7 @@ async function testCurrentColorAdded(): Promise<void> {
       "Annotations [",
       `\tPresetColors = ${PRESETS}`,
       "\tLineColor = #123456",
+      `\tInkHighlightColors = ${BRUSH_PRESETS}`,
       "]",
       "",
     ].join(nl),
@@ -588,6 +591,9 @@ async function testCurrentColorAdded(): Promise<void> {
       // it stays in the presets, for every button; a square has no color set,
       // so its default joins them too
       ["CmdCreateAnnotSquare", `${PRESETS} #123456 #ff0000*`],
+      // the highlighter has colors of its own, translucent; its default 40%
+      // yellow joins them
+      ["CmdAnnotationHighlightBrush", `${BRUSH_PRESETS} #66ffff00*`],
     ] as const) {
       const b = (await annotButtonRect(client, cmdId(name)))!;
       rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));

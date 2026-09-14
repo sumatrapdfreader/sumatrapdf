@@ -56,14 +56,16 @@ constexpr float kFileAttachmentAnnotDefaultDx = 16.f;
 constexpr float kFileAttachmentAnnotDefaultDy = 16.f;
 
 // The highlighter brush keeps a roughly constant on-screen width whatever the
-// zoom, the way a real marker does, and saves as a translucent stroke.
+// zoom, the way a real marker does. How translucent the stroke is comes from
+// its color's alpha.
 constexpr int kHighlightBrushScreenWidthPx = 22;
-constexpr int kHighlightBrushOpacity = 40;
 constexpr int kInkEraserRadiusPx = 10;
 
-// the marker paints in the same color the selection highlight uses
+// 40% yellow, when the setting is not a color
+constexpr Color kHighlightBrushDefaultColor = 0x6600ffff;
+
 static Color HighlightBrushColor() {
-    return GetParsedColor(gSettings->annotations.highlightColor, kColYellow);
+    return GetParsedColor(gSettings->annotations.inkHighlightColor, kHighlightBrushDefaultColor);
 }
 
 // Free text is placed like a stamp: a preview box the size of the annotation
@@ -1324,9 +1326,12 @@ static void PaintInkPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     if (p.highlightBrush) {
         // preview what the marker will lay down: its color at its opacity,
         // as wide on screen as the saved stroke will be
+        Color col = HighlightBrushColor();
         u8 r, g, b;
-        UnpackColor(HighlightBrushColor(), r, g, b);
-        strokeCol = Gdiplus::Color((u8)((kHighlightBrushOpacity * 255) / 100), r, g, b);
+        UnpackColor(col, r, g, b);
+        u8 a = GetAlpha(col);
+        // no alpha written out is opaque
+        strokeCol = Gdiplus::Color(a == 0 ? 255 : a, r, g, b);
         width = (Gdiplus::REAL)std::max(1.f, p.brushWidthPt * PxPerPagePt(dm, pageNo));
     }
     Gdiplus::Pen pen(strokeCol, width);
@@ -1399,8 +1404,8 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
             args.inkPoints = &p.points;
             if (p.highlightBrush) {
                 args.borderWidth = (int)(p.brushWidthPt + 0.5f);
-                args.opacity = kHighlightBrushOpacity;
-                args.col = *GetParsedColor(gSettings->annotations.highlightColor);
+                // the color's alpha is the stroke's opacity
+                args.col = *GetParsedColor(gSettings->annotations.inkHighlightColor);
             }
             return true;
         case AnnotPlacementKind::Shape: {

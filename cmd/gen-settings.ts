@@ -899,6 +899,21 @@ const annotations: Field[] = [
   ).ver("3.7"),
   field("InkBorderWidth", Int, 6, "width of the stroke of new ink annotations, in points").ver("3.7"),
   field(
+    "InkHighlightColor",
+    Color,
+    rgba(0xff, 0xff, 0x0, 0x66),
+    "color the highlighter paints in, as #aarrggbb: the alpha is how translucent the stroke is " +
+      "(00 = transparent, FF = opaque), so the color is exactly what ends up on the page",
+  ).ver("3.7"),
+  field(
+    "InkHighlightColors",
+    Str,
+    "#66ffff00 #668bf05d #6699defa #66f199d2 #66e24745",
+    "colors offered by the highlighter button's drop-down, separated by space. Use #aarrggbb " +
+      "values: the alpha is the stroke's opacity. The color the highlighter currently paints in " +
+      "is added when it is missing",
+  ).ver("3.7"),
+  field(
     "StampColor",
     Color,
     "",

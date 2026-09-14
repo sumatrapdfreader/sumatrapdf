@@ -827,6 +827,17 @@ Annotations [
     ; version 3.7)
     InkBorderWidth = 6
 
+    ; color the highlighter paints in, as #aarrggbb: the alpha is how
+    ; translucent the stroke is (00 = transparent, FF = opaque), so the color is
+    ; exactly what ends up on the page (introduced in version 3.7)
+    InkHighlightColor = #66ffff00
+
+    ; colors offered by the highlighter button's drop-down, separated by space.
+    ; Use #aarrggbb values: the alpha is the stroke's opacity. The color the
+    ; highlighter currently paints in is added when it is missing (introduced in
+    ; version 3.7)
+    InkHighlightColors = #66ffff00 #668bf05d #6699defa #66f199d2 #66e24745
+
     ; color of newly created stamp annotations. If not set, the PDF engine's
     ; default (red) is used (introduced in version 3.7)
     StampColor = 

@@ -722,6 +722,15 @@ struct Annotations {
     ParsedColor inkColor;
     // width of the stroke of new ink annotations, in points
     int inkBorderWidth;
+    // color the highlighter paints in, as #aarrggbb: the alpha is how
+    // translucent the stroke is (00 = transparent, FF = opaque), so the
+    // color is exactly what ends up on the page
+    ParsedColor inkHighlightColor;
+    // colors offered by the highlighter button's drop-down, separated by
+    // space. Use #aarrggbb values: the alpha is the stroke's opacity. The
+    // color the highlighter currently paints in is added when it is
+    // missing
+    Str inkHighlightColors;
     // color of newly created stamp annotations. If not set, the PDF
     // engine's default (red) is used
     ParsedColor stampColor;
@@ -1524,6 +1533,9 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, polygonColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, inkColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, inkBorderWidth), SettingType::Int, 6},
+    {offsetof(Annotations, inkHighlightColor), SettingType::Color, (intptr_t)"#66ffff00"},
+    {offsetof(Annotations, inkHighlightColors), SettingType::String,
+     (intptr_t)"#66ffff00 #668bf05d #6699defa #66f199d2 #66e24745"},
     {offsetof(Annotations, stampColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, caretColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, fileAttachmentColor), SettingType::Color, (intptr_t)""},
@@ -1532,12 +1544,12 @@ static const FieldInfo gAnnotationsFields[] = {
 };
 static const StructInfo gAnnotationsInfo = {
     sizeof(Annotations),
-    24,
+    26,
     gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
     "city\0FreeTextSize\0FreeTextBorderWidth\0FreeTextAlignment\0PresetColors\0TextIconColor\0LineColor\0PolyLineColor"
-    "\0SquareColor\0CircleColor\0PolygonColor\0InkColor\0InkBorderWidth\0StampColor\0CaretColor\0FileAttachmentColor\0T"
-    "extIconType\0DefaultAuthor",
+    "\0SquareColor\0CircleColor\0PolygonColor\0InkColor\0InkBorderWidth\0InkHighlightColor\0InkHighlightColors\0StampCo"
+    "lor\0CaretColor\0FileAttachmentColor\0TextIconType\0DefaultAuthor",
     "color of newly created highlight annotations. Use an #aarrggbb value to set default opacity (00 = transparent, FF "
     "= opaque); #rrggbb is fully opaque\0color of newly created underline annotations. #aarrggbb sets default opacity "
     "the same way as HighlightColor\0color of newly created squiggly underline annotations. #aarrggbb sets default "
@@ -1555,12 +1567,15 @@ static const StructInfo gAnnotationsInfo = {
     "(red) is used\0color of newly created circle annotations. If not set, the PDF engine's default (red) is "
     "used\0color of newly created polygon annotations. If not set, the PDF engine's default (red) is used\0color of "
     "newly created ink annotations. If not set, the PDF engine's default (red) is used\0width of the stroke of new ink "
-    "annotations, in points\0color of newly created stamp annotations. If not set, the PDF engine's default (red) is "
-    "used\0color of newly created caret annotations. If not set, the PDF engine's default (red) is used\0color of "
-    "newly created file attachment annotations. If not set, the PDF engine's default (red) is used\0icon shown for "
-    "text (sticky note) annotations: comment, help, insert, key, new paragraph, note or paragraph. If not set, note is "
-    "used\0author recorded on newly created annotations. If not set, the Windows user name is used; set it to (none) "
-    "to leave the author out entirely",
+    "annotations, in points\0color the highlighter paints in, as #aarrggbb: the alpha is how translucent the stroke is "
+    "(00 = transparent, FF = opaque), so the color is exactly what ends up on the page\0colors offered by the "
+    "highlighter button's drop-down, separated by space. Use #aarrggbb values: the alpha is the stroke's opacity. The "
+    "color the highlighter currently paints in is added when it is missing\0color of newly created stamp annotations. "
+    "If not set, the PDF engine's default (red) is used\0color of newly created caret annotations. If not set, the PDF "
+    "engine's default (red) is used\0color of newly created file attachment annotations. If not set, the PDF engine's "
+    "default (red) is used\0icon shown for text (sticky note) annotations: comment, help, insert, key, new paragraph, "
+    "note or paragraph. If not set, note is used\0author recorded on newly created annotations. If not set, the "
+    "Windows user name is used; set it to (none) to leave the author out entirely",
     false};
 
 static const FieldInfo gExternalViewerFields[] = {

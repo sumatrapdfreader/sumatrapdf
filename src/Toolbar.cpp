@@ -2341,6 +2341,7 @@ static ParsedColor* AnnotPresetColorSetting(int cmdId) {
     Annotations& a = gSettings->annotations;
     switch (cmdId) {
         case CmdAnnotationHighlightBrush:
+            return &a.inkHighlightColor;
         case CmdCreateAnnotHighlight:
             return &a.highlightColor;
         case CmdCreateAnnotUnderline:
@@ -2406,9 +2407,19 @@ static Color AnnotCurrentColor(int cmdId) {
     return col != kColorUnset ? col : AnnotDefaultColor(cmdId);
 }
 
-static void AnnotPresetColors(Vec<Color>& out) {
-    if (gSettings) {
-        ParseColorList(gSettings->annotations.presetColors, out, 0);
+// The colors a button offers. The highlighter has its own, translucent ones:
+// they are exactly what it paints. cmdId 0 is not a button, and gets the presets
+static Str* AnnotPresetColorList(int cmdId) {
+    if (!gSettings) {
+        return nullptr;
+    }
+    Annotations& a = gSettings->annotations;
+    return (cmdId == CmdAnnotationHighlightBrush) ? &a.inkHighlightColors : &a.presetColors;
+}
+
+static void AnnotPresetColors(int cmdId, Vec<Color>& out) {
+    if (Str* list = AnnotPresetColorList(cmdId)) {
+        ParseColorList(*list, out, 0);
     }
 }
 
@@ -2510,8 +2521,9 @@ struct AnnotColorsTarget {
 };
 
 static void AnnotColorsPicked(AnnotColorsTarget* target, ChangeColorsArgs* args) {
-    if (args->colorsChanged && gSettings) {
-        str::ReplaceWithCopy(&gSettings->annotations.presetColors, SerializeColorList(args->colors));
+    Str* list = AnnotPresetColorList(target->cmdId);
+    if (args->colorsChanged && list) {
+        str::ReplaceWithCopy(list, SerializeColorList(args->colors));
         ScheduleSaveSettings();
     }
     if (args->didSelect && args->color != kColorUnset) {
@@ -2540,7 +2552,7 @@ static void OnAnnotColorsEditClicked(MainWindow* win, VirtMouseEvent* ev) {
     args->title = Tr("Annotation Colors");
     args->color = AnnotCurrentColor(cmdId);
     args->withOpacity = true;
-    AnnotPresetColors(args->colors);
+    AnnotPresetColors(cmdId, args->colors);
     args->onClose = MkFunc1(AnnotColorsPicked, target);
     ShowChangeColorsDialog(args);
 }
@@ -2561,19 +2573,20 @@ static bool SameColorAndAlpha(Color a, Color b) {
 
 // the color a button makes annotations in is always one of the presets, so
 // its drop-down can show it; one set some other way joins the list
-static void EnsureAnnotPresetColor(Color col) {
-    if (!gSettings || col == kColorUnset) {
+static void EnsureAnnotPresetColor(int cmdId, Color col) {
+    Str* list = AnnotPresetColorList(cmdId);
+    if (!list || col == kColorUnset) {
         return;
     }
     Vec<Color> colors;
-    AnnotPresetColors(colors);
+    AnnotPresetColors(cmdId, colors);
     for (Color c : colors) {
         if (SameColorAndAlpha(c, col)) {
             return;
         }
     }
     VecAppend(colors, col);
-    str::ReplaceWithCopy(&gSettings->annotations.presetColors, SerializeColorList(colors));
+    str::ReplaceWithCopy(list, SerializeColorList(colors));
     ScheduleSaveSettings();
 }
 
@@ -2587,7 +2600,7 @@ static ILayout* MakeAnnotColorsPanel(MainWindow* win, Str label, Color current, 
                                      const Func1<VirtMouseEvent*>& onEdit, ILayout* extra = nullptr) {
     ToolbarVirt* tb = win->toolbarVirt;
     Vec<Color> colors;
-    AnnotPresetColors(colors);
+    AnnotPresetColors(cmdId, colors);
 
     auto* row = new HBox();
     row->alignCross = CrossAxisAlign::CrossCenter;
@@ -2845,7 +2858,7 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
         return;
     }
     Color current = AnnotCurrentColor(ev->cmdId);
-    EnsureAnnotPresetColor(current);
+    EnsureAnnotPresetColor(ev->cmdId, current);
     // ink is the one annotation whose width is a choice too
     InkThicknessSlider* slider = nullptr;
     ILayout* extra = (ev->cmdId == CmdCreateAnnotInk)
@@ -2934,7 +2947,7 @@ static void ShowAnnotColorsDialog(MainWindow* win, Color current, const Func1<Co
     args->title = Tr("Annotation Colors");
     args->color = current;
     args->withOpacity = true;
-    AnnotPresetColors(args->colors);
+    AnnotPresetColors(0, args->colors);
     args->onClose = MkFunc1(AnnotColorsPicked, target);
     ShowChangeColorsDialog(args);
 }
