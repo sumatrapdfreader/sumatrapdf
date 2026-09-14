@@ -18,7 +18,7 @@ import {
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { clickAt, findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { clickAt, findCanvas, killAndWait, launchControlled, pressEscape, sendCommand } from "./win-automation.ts";
 
 type Sel = { rect: { x: number; y: number; dx: number; dy: number }; canResize: boolean; raw: string };
 
@@ -96,6 +96,9 @@ export async function testit(): Promise<void> {
     const oy = +m[2]! - (792 - SQUARE[3]!) * scale;
 
     for (const [name, r] of CASES) {
+      // a selected annotation locks the mouse to itself, so the click below
+      // would only deselect the one the previous drag left selected
+      await pressEscape(frame);
       const x = Math.round(ox + r[0]! * scale) + 50;
       const y = Math.round(oy + (792 - r[3]!) * scale) + 50;
       await clickAt(canvas, x, y);

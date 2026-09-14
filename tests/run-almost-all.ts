@@ -300,6 +300,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["annot-moveable-types", annotMoveableTypes],
   ["move-polygon-polyline-ink", movePolygonPolylineInk],
   ["issue-5918", issue5918],
   ["issue-6167", issue6167],
@@ -382,7 +383,6 @@ export const tests: NamedTest[] = [
   ["issue-6111", issue6111],
   ["annot-list-placement", annotListPlacement],
   ["exit-edit-pdf-deselects", exitEditPdfDeselects],
-  ["annot-moveable-types", annotMoveableTypes],
   ["stamp-caret-annotation-placement", stampCaretAnnotationPlacement],
   ["issue-6112", issue6112],
   ["line-annotation-placement", lineAnnotationPlacement],
