@@ -25,6 +25,7 @@ bool IsEditingFreeTextInPlace(MainWindow*);
 bool AnnotContentsEditJustEnded();
 void EndFreeTextInPlaceEdit(bool accept);
 void RepositionFreeTextInPlaceEdit(MainWindow*);
+HBRUSH FreeTextInPlaceEditCtlColor(HWND edit, HDC hdc);
 TempStr FreeTextInPlaceEditStateTemp(MainWindow*);
 
 void DeleteAnnotationAndUpdateUI(WindowTab*, Annotation*);

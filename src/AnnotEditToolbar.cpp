@@ -2081,6 +2081,8 @@ struct FreeTextInPlaceEdit {
     int borderWidth = 0;
     int fontPx = 0;
     float scale = 1.f;
+    // the annotation's text color, for the typed text and the box's border
+    Color textCol = kColBlack;
 };
 
 // MuPDF stacks free text lines 1.2 * the font size apart and wraps at the
@@ -2276,6 +2278,30 @@ static LRESULT CALLBACK WndProcFreeTextInPlaceEdit(HWND hwnd, UINT msg, WPARAM w
                 return 0;
             }
             break;
+        case WM_NCCALCSIZE: {
+            // reserve a 1px frame, drawn in WM_NCPAINT
+            LRESULT res = CallWindowProcW(gInPlaceDefProc, hwnd, msg, wp, lp);
+            RECT* rc = wp ? &((NCCALCSIZE_PARAMS*)lp)->rgrc[0] : (RECT*)lp;
+            if (rc->right - rc->left > 2 && rc->bottom - rc->top > 2) {
+                InflateRect(rc, -1, -1);
+            }
+            return res;
+        }
+        case WM_NCPAINT: {
+            // a frame in the annotation's text color
+            CallWindowProcW(gInPlaceDefProc, hwnd, msg, wp, lp);
+            HDC hdc = GetWindowDC(hwnd);
+            if (hdc) {
+                RECT wr;
+                GetWindowRect(hwnd, &wr);
+                RECT r = {0, 0, wr.right - wr.left, wr.bottom - wr.top};
+                HBRUSH br = CreateSolidBrush(gInPlace.textCol);
+                FrameRect(hdc, &r, br);
+                DeleteObject(br);
+                ReleaseDC(hwnd, hdc);
+            }
+            return 0;
+        }
         case WM_KILLFOCUS: {
             HWND next = (HWND)wp;
             if (!next || HwndIsOnScreenKeyboard(next)) {
@@ -2345,7 +2371,9 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     }
 
     // lines don't wrap: the box grows to fit them instead
-    DWORD style = WS_CHILD | WS_VISIBLE | WS_BORDER | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL;
+    // no WS_BORDER: the 1px frame comes from WM_NCCALCSIZE / WM_NCPAINT so it
+    // can be drawn in the text color
+    DWORD style = WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL;
     HMODULE hmod = GetModuleHandleW(nullptr);
     HWND hwnd =
         CreateWindowExW(0, WC_EDITW, L"", style, rc.x, rc.y, rc.dx, rc.dy, win->hwndCanvas, nullptr, hmod, nullptr);
@@ -2353,6 +2381,8 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
         DeleteObject(font);
         return false;
     }
+    // a themed edit paints its own border over the one we draw in WM_NCPAINT
+    SetWindowTheme(hwnd, L"", L"");
     SetWindowFont(hwnd, font, TRUE);
     int pad = std::max(DpiScale(2), 1);
     SendMessageW(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(pad, pad));
@@ -2376,6 +2406,14 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     gInPlace.borderWidth = borderWidth;
     gInPlace.fontPx = fontPx;
     gInPlace.scale = scale;
+    PdfColor pdfTextCol = DefaultAppearanceTextColor(annot);
+    if (pdfTextCol != kColorUnset) {
+        u8 r, g, b, a;
+        UnpackPdfColor(pdfTextCol, r, g, b, a);
+        gInPlace.textCol = MkRgb(r, g, b);
+    }
+    // the border was painted before we knew the color
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 
     HwndSetFocus(hwnd);
     // caret at the end, nothing selected: this is editing what is there, not
@@ -2403,6 +2441,17 @@ bool StartFreeTextInPlaceEditAt(MainWindow* win, Point pt) {
     }
     SetSelectedAnnotation(tab, annot);
     return StartFreeTextInPlaceEdit(win, annot);
+}
+
+// WM_CTLCOLOREDIT the canvas gets for the in-place box: the annotation's text
+// color on white. nullptr if `edit` isn't the box.
+HBRUSH FreeTextInPlaceEditCtlColor(HWND edit, HDC hdc) {
+    if (!gInPlace.hwnd || edit != gInPlace.hwnd) {
+        return nullptr;
+    }
+    SetTextColor(hdc, gInPlace.textCol);
+    SetBkColor(hdc, kColWhite);
+    return (HBRUSH)GetStockObject(WHITE_BRUSH);
 }
 
 TempStr FreeTextInPlaceEditStateTemp(MainWindow* win) {
