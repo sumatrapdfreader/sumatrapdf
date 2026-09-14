@@ -208,6 +208,10 @@ ShowDocumentFocusIndicator = false
 ; Ctrl+click to edit.") (introduced in version 3.7)
 ShowAnnotationNotification = true
 
+; if true, at the end of a document show a hint to open the next file in the
+; folder. Closing the hint sets it to false (introduced in version 3.7)
+ShowFileNavigateHint = true
+
 ; if true, show the author at the bottom of an annotation tooltip as "Author:
 ; <author>" (introduced in version 3.7)
 ShowAnnotationAuthorInTooltip = false

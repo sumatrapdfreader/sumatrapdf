@@ -505,8 +505,8 @@ bool FinishInkAnnotationPlacement(MainWindow* win) {
     return FinishAnnotationPlacement(win);
 }
 
-static void OnPlacementNotifClosed(MainWindow* win, NotificationWnd* wnd) {
-    RemoveNotification(wnd);
+static void OnPlacementNotifClosed(MainWindow* win, NotificationClosedEvent* ev) {
+    RemoveNotification(ev->wnd);
     if (!win || !IsPlacingAnnotation(win)) {
         return;
     }
@@ -587,7 +587,7 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
     args.corner = NotifCorner::BottomBar;
     args.warning = true;
     args.tab = tab;
-    args.onRemoved = MkFunc1(OnPlacementNotifClosed, win);
+    args.onClosed = MkFunc1(OnPlacementNotifClosed, win);
     ShowNotification(args);
 
     HwndSetFocus(win->hwndFrame);

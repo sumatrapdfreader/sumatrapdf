@@ -1103,6 +1103,9 @@ struct Settings {
     // if true, show a tip when hovering an annotation (e.g. "Highlight
     // annotation. Ctrl+click to edit.")
     bool showAnnotationNotification;
+    // if true, at the end of a document show a hint to open the next file
+    // in the folder. Closing the hint sets it to false
+    bool showFileNavigateHint;
     // if true, show the author at the bottom of an annotation tooltip as
     // "Author: <author>"
     bool showAnnotationAuthorInTooltip;
@@ -2053,6 +2056,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, mouseWheelTurnsPage), SettingType::Bool, false},
     {offsetof(Settings, showDocumentFocusIndicator), SettingType::Bool, false},
     {offsetof(Settings, showAnnotationNotification), SettingType::Bool, true},
+    {offsetof(Settings, showFileNavigateHint), SettingType::Bool, true},
     {offsetof(Settings, showAnnotationAuthorInTooltip), SettingType::Bool, false},
     {offsetof(Settings, showTocPageNumbers), SettingType::Bool, true},
     {offsetof(Settings, showStartPage), SettingType::Bool, true},
@@ -2164,7 +2168,7 @@ static const FieldInfo gSettingsFields[] = {
 };
 static const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    151,
+    152,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
@@ -2172,19 +2176,19 @@ static const StructInfo gSettingsInfo = {
     "\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowPageNumberInTabs\0ShowTips\0CustomColors\0ShowToolbar\0Tool"
     "bar\0ToolbarPosition\0SearchUIFloating\0ShowFavorites\0SortFavoritesByName\0ShowToc\0SidebarOnRight\0ShowLinks\0Hi"
     "ghlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0ExplorerQuickLook\0RememberViewOffsetOnPageTurn\0MouseWheelT"
-    "urnsPage\0ShowDocumentFocusIndicator\0ShowAnnotationNotification\0ShowAnnotationAuthorInTooltip\0ShowTocPageNumber"
-    "s\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmount\0SaveMemory\0Paddin"
-    "gAfterLastPage\0IgnoreDestinationZoom\0HighlightLinkDestination\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSp"
-    "eed\0ReadingAutoScrollSpeed\0ReadingBar\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0LastL"
-    "ightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize"
-    "\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysCol"
-    "ors\0UseTabs\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0Fixed"
-    "PageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBu"
-    "ild\0\0AntiGravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0Ext"
-    "ernalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabG"
-    "roups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowP"
-    "os\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckFor"
-    "Updates\0\0",
+    "urnsPage\0ShowDocumentFocusIndicator\0ShowAnnotationNotification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTool"
+    "tip\0ShowTocPageNumbers\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmou"
+    "nt\0SaveMemory\0PaddingAfterLastPage\0IgnoreDestinationZoom\0HighlightLinkDestination\0CitationHoverDelay\0ReadAlo"
+    "udVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0"
+    "TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarCustomLayout\0ToolbarShow"
+    "ReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0Disab"
+    "leAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0"
+    "ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0"
+    "\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine"
+    "\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Short"
+    "cuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0Wind"
+    "owPos\0SearchUIWindowPos\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek"
+    "\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view, page aspect. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file "
     "uses page 1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered "
@@ -2228,8 +2232,9 @@ static const StructInfo gSettingsInfo = {
     "next / previous page instead of scrolling; combine with RememberViewOffsetOnPageTurn to read zoomed-in pages "
     "without touching the keyboard. Alt + wheel still scrolls, Shift + wheel scrolls horizontally and Ctrl + wheel "
     "zooms\0if true, draw a focus ring around the document when it has keyboard focus (Tab to the page area)\0if true, "
-    "show a tip when hovering an annotation (e.g. \"Highlight annotation. Ctrl+click to edit.\")\0if true, show the "
-    "author at the bottom of an annotation tooltip as \"Author: <author>\"\0if true, show page numbers (labels) "
+    "show a tip when hovering an annotation (e.g. \"Highlight annotation. Ctrl+click to edit.\")\0if true, at the end "
+    "of a document show a hint to open the next file in the folder. Closing the hint sets it to false\0if true, show "
+    "the author at the bottom of an annotation tooltip as \"Author: <author>\"\0if true, show page numbers (labels) "
     "right-aligned on bookmark / table-of-contents entries\0if true, show a list of frequently read documents when no "
     "document is loaded\0width of the favorites / bookmarks sidebar in screen pixels, as last resized (0 means the "
     "default)\0scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay "

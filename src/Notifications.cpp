@@ -97,7 +97,8 @@ struct NotificationWnd : WindowBase {
     void Layout(Str message);
     void BuildTree(ILayout* customContent);
     NotifColors Colors() const;
-    void ScheduleRemove(VirtMouseEvent* ev = nullptr);
+    void ScheduleRemove(NotifCloseReason reason);
+    void CloseByUser(VirtMouseEvent* ev);
 
     int timeoutMs = kNotifDefaultTimeOut; // 0 means no timeout
 
@@ -109,7 +110,8 @@ struct NotificationWnd : WindowBase {
     // reused across layouts because, unlike `msg`, it can't be re-parsed
     VirtRichText* richMsg = nullptr;
 
-    NotificationWndRemoved wndRemovedCb;
+    NotificationClosed closedCb;
+    NotifCloseReason closeReason = NotifCloseReason::Program;
 
     // there can only be a single notification of a given group
     Kind groupId = nullptr;
@@ -389,7 +391,7 @@ void NotificationWnd::BuildTree(ILayout* customContent) {
     row->AddChild(left, 1);
     if (!noClose) {
         closeCtrl = new VirtCloseButton();
-        closeCtrl->onClick = MkMethod1<NotificationWnd, VirtMouseEvent*, &NotificationWnd::ScheduleRemove>(this);
+        closeCtrl->onClick = MkMethod1<NotificationWnd, VirtMouseEvent*, &NotificationWnd::CloseByUser>(this);
         closeCtrl->idealSize = {closeDx, closeDx + 2};
         row->AddChild(new Spacer(closeGap, 0));
         row->AddChild(closeCtrl);
@@ -410,11 +412,7 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
         ReportIf(shrinkLimit < 0.2f);
         shrinkLimit = 1.f;
     }
-    if (args.onRemoved.IsValid()) {
-        wndRemovedCb = args.onRemoved;
-    } else {
-        wndRemovedCb = MkFunc1Void(NotifsRemoveNotification);
-    }
+    closedCb = args.onClosed;
     timeoutMs = args.timeoutMs;
     tab = args.tab;
     corner = args.corner;
@@ -692,23 +690,26 @@ bool UpdateNotificationProgress(NotificationWnd* wnd, Str msg, int perc) {
 }
 
 static void NotifRemove(NotificationWnd* wnd) {
-    wnd->wndRemovedCb.Call(wnd);
-}
-
-static void NotifDelete(NotificationWnd* wnd) {
-    delete wnd;
-}
-
-// Delete off the stack of the message being dispatched (uitask runs after
-// dispatch), so the wnd survives until the handler returns.
-void NotificationWnd::ScheduleRemove(VirtMouseEvent*) {
-    if (wndRemovedCb.IsValid()) {
-        auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
-        uitask::Post(fn, "TaskNotifRemove");
-    } else {
-        auto fn = MkFunc0<NotificationWnd>(NotifDelete, this);
-        uitask::Post(fn, "TaskNotifDelete");
+    if (!wnd->closedCb.IsValid()) {
+        NotifsRemoveNotification(wnd);
+        return;
     }
+    NotificationClosedEvent ev;
+    ev.wnd = wnd;
+    ev.reason = wnd->closeReason;
+    wnd->closedCb.Call(&ev);
+}
+
+void NotificationWnd::CloseByUser(VirtMouseEvent*) {
+    ScheduleRemove(NotifCloseReason::User);
+}
+
+// Remove off the stack of the message being dispatched (uitask runs after
+// dispatch), so the wnd survives until the handler returns.
+void NotificationWnd::ScheduleRemove(NotifCloseReason reason) {
+    closeReason = reason;
+    auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
+    uitask::Post(fn, "TaskNotifRemove");
 }
 
 void NotificationWnd::OnTimer(WindowBase::TimerEvent* ev) {
@@ -726,7 +727,7 @@ void NotificationWnd::OnTimer(WindowBase::TimerEvent* ev) {
         return;
     }
     ReportIf(kNotifTimerTimeoutId != timerId);
-    ScheduleRemove();
+    ScheduleRemove(NotifCloseReason::Timeout);
 }
 
 // If onlyTab is non-null, only remove notifications in this group that are
@@ -906,7 +907,7 @@ void CloseNotification(NotificationWnd* wnd) {
     if (!wnd) {
         return;
     }
-    wnd->ScheduleRemove();
+    wnd->ScheduleRemove(NotifCloseReason::Program);
 }
 
 bool AreNotificationsEnabled() {

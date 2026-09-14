@@ -1101,7 +1101,9 @@ class PrintThreadData {
     ThreadHandle thread = nullptr; // close the print thread handle after execution
 
     // called when printing has been canceled
-    void RemovePrintNotification(NotificationWnd* = nullptr) {
+    void OnNotifClosed(NotificationClosedEvent*) { RemovePrintNotification(); }
+
+    void RemovePrintNotification() {
         isCanceled = true;
         cookie.Abort();
         if (this->wnd && IsMainWindowValid(win)) {
@@ -1116,8 +1118,8 @@ class PrintThreadData {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
         args.timeoutMs = 0;
-        auto fn = MkMethod1<PrintThreadData, NotificationWnd*, &PrintThreadData::RemovePrintNotification>(this);
-        args.onRemoved = fn;
+        auto fn = MkMethod1<PrintThreadData, NotificationClosedEvent*, &PrintThreadData::OnNotifClosed>(this);
+        args.onClosed = fn;
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
         args.groupId = nullptr;

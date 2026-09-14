@@ -1412,6 +1412,12 @@ const globalPrefs: Field[] = [
     'if true, show a tip when hovering an annotation (e.g. "Highlight annotation. Ctrl+click to edit.")',
   ).ver("3.7"),
   field(
+    "ShowFileNavigateHint",
+    Bool,
+    true,
+    "if true, at the end of a document show a hint to open the next file in the folder. Closing the hint sets it to false",
+  ).ver("3.7"),
+  field(
     "ShowAnnotationAuthorInTooltip",
     Bool,
     false,
@@ -1963,6 +1969,7 @@ const globalPrefsLayout = [
   "MouseWheelTurnsPage",
   "ShowDocumentFocusIndicator",
   "ShowAnnotationNotification",
+  "ShowFileNavigateHint",
   "ShowAnnotationAuthorInTooltip",
   "ShowTocPageNumbers",
   "ShowStartPage",

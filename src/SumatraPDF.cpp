@@ -7146,7 +7146,19 @@ void DismissNextFileScrollHint(MainWindow* win) {
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifNextFileHint);
 }
 
+static void OnNextFileHintClosed(NotificationClosedEvent* ev) {
+    RemoveNotification(ev->wnd);
+    if (ev->reason != NotifCloseReason::User) {
+        return;
+    }
+    gSettings->showFileNavigateHint = false;
+    ScheduleSaveSettings();
+}
+
 static void MaybeShowNextFileScrollHint(MainWindow* win) {
+    if (!gSettings->showFileNavigateHint) {
+        return;
+    }
     if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded() || win->IsCurrentTabAbout()) {
         return;
     }
@@ -7177,6 +7189,7 @@ static void MaybeShowNextFileScrollHint(MainWindow* win) {
     args.timeoutMs = kNotifNoTimeout;
     args.tab = win->CurrentTab();
     args.richMsg = rich;
+    args.onClosed = MkFunc1Void(OnNextFileHintClosed);
     // what the window text (and thus NotificationGetMessageTemp) reports
     args.msg = fmt("%s %s · %d/%d · %s", Tr("open"), name, n, m, Tr("browse"));
     ShowNotification(args);
