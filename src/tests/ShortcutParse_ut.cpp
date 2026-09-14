@@ -35,6 +35,17 @@ bool ShortcutParse_UnitTestShiftedPunct() {
     utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_7, StrL("\"")));
     utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_OEM_3, StrL("~")));
     utassert(AccelShowsAs(FSHIFT | FVIRTKEY, 'A', StrL("Shift + A")));
+    // VK codes that equal a punctuation char ('\'' is VK_RIGHT) aren't punctuation
+    utassert(AccelShowsAs(FCONTROL | FSHIFT | FVIRTKEY, VK_RIGHT, StrL("Ctrl + Shift + Right")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_DELETE, StrL("Shift + Del")));
+    utassert(AccelShowsAs(FSHIFT | FVIRTKEY, VK_SNAPSHOT, StrL("Shift + PrtSc")));
+
+    ACCEL a{};
+    utassert(ParseShortcutString(StrL("<"), a));
+    utassert(a.key == VK_OEM_COMMA && a.fVirt == (FSHIFT | FVIRTKEY));
+    a = {};
+    utassert(ParseShortcutString(StrL("Ctrl + \""), a));
+    utassert(a.key == VK_OEM_7 && a.fVirt == (FCONTROL | FSHIFT | FVIRTKEY));
 
     gShortcutLangCode = prevLang;
     return true;

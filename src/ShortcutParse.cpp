@@ -194,6 +194,26 @@ static TempStr getVirtTemp(BYTE key, bool isEng) {
     return SeqStrNumStrByNumber(gVirtKeysNum, key);
 }
 
+// US layout: Shift + these keys is the glyph people type (Shift+/ is "?").
+static const struct {
+    BYTE vk;
+    char unshifted;
+    char shifted;
+} kPunctKeys[] = {
+    {VK_OEM_2, '/', '?'}, {VK_OEM_COMMA, ',', '<'}, {VK_OEM_PERIOD, '.', '>'},
+    {VK_OEM_4, '[', '{'}, {VK_OEM_6, ']', '}'},     {VK_OEM_5, '\\', '|'},
+    {VK_OEM_1, ';', ':'}, {VK_OEM_7, '\'', '"'},    {VK_OEM_3, '`', '~'},
+};
+
+static BYTE PunctVk(char unshifted) {
+    for (auto& p : kPunctKeys) {
+        if (unshifted == p.unshifted) {
+            return p.vk;
+        }
+    }
+    return 0;
+}
+
 // Parses a string like Ctrl+Shift+A into ACCEL structure
 // We accept variants: "Ctrl+A", "Ctrl-A", "Ctrl + A"
 static bool ParseShortcut(Str shortcut, ACCEL& accel) {
@@ -253,6 +273,10 @@ again:
         return true;
     }
     if (usedShiftKeyMap) {
+        BYTE punctVk = PunctVk(buf[0]);
+        if (punctVk) {
+            accel.key = punctVk;
+        }
         return true;
     }
 
@@ -366,20 +390,11 @@ bool ParseShortcutString(Str shortcut, ACCEL& accel) {
     return ParseShortcut(shortcut, accel);
 }
 
-// US layout: Shift + these keys is the glyph people type (Shift+/ is "?").
+// only a VK_OEM code: VK_RIGHT is 0x27, same as '\''
 static char ShiftedPunctGlyph(BYTE key) {
-    static const struct {
-        BYTE vk;
-        char unshifted;
-        char shifted;
-    } kMap[] = {
-        {VK_OEM_2, '/', '?'}, {VK_OEM_COMMA, ',', '<'}, {VK_OEM_PERIOD, '.', '>'},
-        {VK_OEM_4, '[', '{'}, {VK_OEM_6, ']', '}'},     {VK_OEM_5, '\\', '|'},
-        {VK_OEM_1, ';', ':'}, {VK_OEM_7, '\'', '"'},    {VK_OEM_3, '`', '~'},
-    };
-    for (int i = 0; i < dimofi(kMap); i++) {
-        if (key == kMap[i].vk || key == (BYTE)kMap[i].unshifted) {
-            return kMap[i].shifted;
+    for (auto& p : kPunctKeys) {
+        if (key == p.vk) {
+            return p.shifted;
         }
     }
     return 0;
