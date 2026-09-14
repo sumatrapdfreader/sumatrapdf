@@ -17462,6 +17462,14 @@ static TempStr BuildSubmitUrlTemp() {
     return ToStr(url);
 }
 
+#define kOfficialSigner "Krzysztof Kowalczyk"
+
+// crashes from third-party builds (forks, distro rebuilds) aren't ours to fix
+static bool IsOfficialBuild() {
+    TempStr signer = GetExecutableSignerTemp(GetSelfExePathTemp());
+    return str::Eq(signer, StrL(kOfficialSigner));
+}
+
 static void InstallSumatraCrashHandler(bool localOnly) {
     if (gIsAsanBuild) {
         return;
@@ -17486,6 +17494,11 @@ static void InstallSumatraCrashHandler(bool localOnly) {
     cfg.uploadCrashes = !gIsAsanBuild;
     // a debug report carries too much info to send from a release build
     cfg.uploadDebugReports = gIsPreReleaseBuild;
+    if (!gIsDebugBuild && !IsOfficialBuild()) {
+        log(StrL("InstallSumatraCrashHandler: not signed by us, not uploading\n"));
+        cfg.uploadCrashes = false;
+        cfg.uploadDebugReports = false;
+    }
     cfg.getCrashComment = GetCrashComment;
     cfg.onCrashBegin = OnCrashBegin;
     cfg.showCrashMessage = ShowCrashHandlerMessage;
