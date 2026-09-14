@@ -300,6 +300,12 @@ static bool AnnotationColorIsBackground(AnnotationType tp) {
     return tp == AnnotationType::FreeText || tp == AnnotationType::Text;
 }
 
+// shapes whose color is their border's: the color chip's drop-down also sets
+// the border's width, so they have no Border Width chip
+static bool AnnotationBorderInColorChip(AnnotationType tp) {
+    return tp == AnnotationType::Square || tp == AnnotationType::Circle || tp == AnnotationType::Polygon;
+}
+
 static Str DefaultAnnotIconName(AnnotationType type) {
     switch (type) {
         case AnnotationType::Text:
@@ -382,6 +388,9 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         it.kind = AnnotEditKind::Color;
         it.color = ColorWithOpacity(GetColor(annot), annot, colorCarriesOpacity);
         it.tooltip = AnnotationColorIsBackground(type) ? Tr("Background Color") : Tr("Color");
+        if (AnnotationBorderInColorChip(type)) {
+            it.tooltip = Tr("Border Color and Width");
+        }
         VecAppend(out, it);
     }
     if (AnnotationSupportsInteriorColor(type)) {
@@ -399,8 +408,8 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         VecAppend(out, it);
     }
     // ink has no Border Width chip of its own: the stroke's width is the
-    // Thickness slider of its color chip's drop-down
-    if (AnnotationSupportsBorder(type) && type != AnnotationType::Ink) {
+    // Thickness slider of its color chip's drop-down. Same for the shapes.
+    if (AnnotationSupportsBorder(type) && type != AnnotationType::Ink && !AnnotationBorderInColorChip(type)) {
         AnnotEditItem it;
         it.kind = AnnotEditKind::Border;
         it.number = BorderWidth(annot);
@@ -1309,14 +1318,25 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             // draws it in a default one, so offering "none" there is a trap
             bool withNone = !AnnotationIsTextMarkup(Type(annot));
             tb->colorPickKind = kind;
-            // an ink annotation's drop-down sets how thick its stroke is too
-            bool isInk = (Type(annot) == AnnotationType::Ink) && (kind == AnnotEditKind::Color);
-            int thickness = isInk ? std::max(BorderWidth(annot), 0) : -1;
+            // an ink annotation's drop-down sets how thick its stroke is too, a
+            // shape's how wide its border is
+            bool isColor = kind == AnnotEditKind::Color;
+            bool isInk = (Type(annot) == AnnotationType::Ink) && isColor;
+            bool isBorder = AnnotationBorderInColorChip(Type(annot)) && isColor;
+            int thickness = (isInk || isBorder) ? std::max(BorderWidth(annot), 0) : -1;
             // a note's color fills its icon, behind the note
-            bool isNoteColor = (Type(annot) == AnnotationType::Text) && (kind == AnnotEditKind::Color);
+            bool isNoteColor = (Type(annot) == AnnotationType::Text) && isColor;
             Str label = isNoteColor ? Tr("Background Color") : Tr("Color");
+            Str thicknessLabel;
+            int minThickness = 1;
+            if (isBorder) {
+                label = Tr("Border Color");
+                thicknessLabel = Tr("Border Width");
+                // a shape can do without a border
+                minThickness = 0;
+            }
             ShowAnnotColorPopup(tb->win, chipScreen, current, withNone, label, MkFunc1(ChipColorPicked, tb), thickness,
-                                MkFunc1(ChipThicknessPicked, tb));
+                                MkFunc1(ChipThicknessPicked, tb), thicknessLabel, minThickness);
             break;
         }
         case AnnotEditKind::Opacity: {

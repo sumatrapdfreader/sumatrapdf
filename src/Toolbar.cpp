@@ -2668,10 +2668,15 @@ struct InkStrokePreview : VirtCtrl {
 // exactly as long as the slider does.
 struct InkThicknessSlider : VirtSlider {
     InkStrokePreview* preview = nullptr;
+    // the width as a number, under the slider; a sibling like the preview
+    VirtText* valueText = nullptr;
     Str text; // owned; what the -dbg-control dump shows for the slider
     // where the width goes when let go. Without one it's the setting the ink
     // button makes its strokes with
     Func1<int> onThickness;
+    // committed by letting go of a drag, so the mouse capture is about to be
+    // released; the color popup that holds the mouse takes it back
+    bool releasingMouse = false;
 
     ~InkThicknessSlider() override { str::Free(text); }
 
@@ -2680,6 +2685,10 @@ struct InkThicknessSlider : VirtSlider {
             preview->thickness = value;
             preview->Invalidate();
         }
+        if (valueText) {
+            valueText->SetText(fmt("%d", value));
+            valueText->Invalidate();
+        }
         if (!onThickness.IsValid() && gSettings) {
             gSettings->annotations.inkBorderWidth = value;
         }
@@ -2687,6 +2696,8 @@ struct InkThicknessSlider : VirtSlider {
     // rewriting an annotation is too slow to do on every step of a drag, so
     // the width lands when the slider is let go
     void OnCommitted() {
+        // a mouse-up commits while still adjusting, a wheel step doesn't
+        releasingMouse = IsAdjusting();
         OnChanged();
         if (onThickness.IsValid()) {
             onThickness.Call(value);
@@ -2700,19 +2711,19 @@ struct InkThicknessSlider : VirtSlider {
 // thickness < 0 starts the slider at Annotations.InkBorderWidth and leaves the
 // width there; otherwise it starts there and onThickness gets it
 static ILayout* MakeInkThicknessPanel(MainWindow* win, Color current, int thickness, const Func1<int>& onThickness,
-                                      InkThicknessSlider** sliderOut) {
+                                      Str label, int minThickness, InkThicknessSlider** sliderOut) {
     ToolbarVirt* tb = win->toolbarVirt;
     if (thickness < 0) {
         thickness = InkThickness();
     }
-    thickness = limitValue(thickness, kInkThicknessMin, kInkThicknessMax);
+    thickness = limitValue(thickness, minThickness, kInkThicknessMax);
 
     auto* preview = new InkStrokePreview();
     preview->col = (current == kColorUnset) ? kColRed : current;
     preview->thickness = thickness;
 
     auto* slider = new InkThicknessSlider();
-    slider->minVal = kInkThicknessMin;
+    slider->minVal = minThickness;
     slider->maxVal = kInkThicknessMax;
     slider->value = thickness;
     slider->idealDx = DpiScale(kInkSliderDx);
@@ -2733,7 +2744,23 @@ static ILayout* MakeInkThicknessPanel(MainWindow* win, Color current, int thickn
             .isRtl = IsUIRtl(),
         });
     };
+    // the width as a number, centered between the ends. Padded out to the
+    // widest value so it keeps its place when a drag adds a digit.
+    TempStr valueStr = fmt("%d", thickness);
+    int widestDx = PlatformFontMeasureText(tb->platformFont, fmt("%d", kInkThicknessMax)).dx;
+    int extraDx = std::max(widestDx - PlatformFontMeasureText(tb->platformFont, valueStr).dx, 0);
+    auto* valueText = NewVirtText({
+        .s = valueStr,
+        .font = tb->platformFont,
+        .textColor = TbTextColor(),
+        .align = VirtTextAlign::Center,
+        .isRtl = IsUIRtl(),
+        .padding = {.right = extraDx - (extraDx / 2), .left = extraDx / 2},
+    });
+    slider->valueText = valueText;
+
     ends->AddChild(mkLabel(Tr("Thin")));
+    ends->AddChild(valueText);
     ends->AddChild(mkLabel(Tr("Thick")));
 
     auto* vbox = new VBox();
@@ -2741,7 +2768,7 @@ static ILayout* MakeInkThicknessPanel(MainWindow* win, Color current, int thickn
     int gap = DpiScale(6);
     vbox->AddChild(new Padding(preview, Insets{gap, 0, gap, 0}));
     vbox->AddChild(NewVirtText({
-        .s = Tr("Thickness"),
+        .s = label,
         .font = tb->platformFont,
         .textColor = TbTextColor(),
         .isRtl = IsUIRtl(),
@@ -2761,7 +2788,9 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
     Color current = GetParsedColor(*setting, kColorUnset);
     // ink is the one annotation whose width is a choice too
     InkThicknessSlider* slider = nullptr;
-    ILayout* extra = (ev->cmdId == CmdCreateAnnotInk) ? MakeInkThicknessPanel(win, current, -1, {}, &slider) : nullptr;
+    ILayout* extra = (ev->cmdId == CmdCreateAnnotInk)
+                         ? MakeInkThicknessPanel(win, current, -1, {}, Tr("Thickness"), kInkThicknessMin, &slider)
+                         : nullptr;
     // a note's color fills its icon, behind the note
     Str label = (ev->cmdId == CmdCreateAnnotText) ? Tr("Background Color") : Tr("Color");
     ev->layout = MakeAnnotColorsPanel(win, label, current, ev->cmdId, false, nullptr, MkFunc1(OnAnnotColorClicked, win),
@@ -2862,6 +2891,13 @@ static void PaintAnnotColorPopupBg(MainWindow*, VirtHostPaintEvent* ev) {
     ev->gfx->DrawRect(ev->clientRect, ThemeEdgeColor(), DpiScale(kHoverMenuBorder));
 }
 
+static void PostedReclaimAnnotColorPopupCapture(MainWindow*) {
+    AnnotColorPopup* p = gAnnotColorPopup;
+    if (p && p->host) {
+        ::SetCapture(p->host->native);
+    }
+}
+
 static void AnnotColorPopupNativeMsg(AnnotColorPopup* p, VirtHostNativeMsg* ev) {
     if (p != gAnnotColorPopup) {
         return;
@@ -2882,15 +2918,24 @@ static void AnnotColorPopupNativeMsg(AnnotColorPopup* p, VirtHostNativeMsg* ev) 
             break;
         }
         case WM_CAPTURECHANGED:
-            if ((HWND)ev->lp != p->host->native) {
-                CloseAnnotColorPopup(p);
+            if ((HWND)ev->lp == p->host->native) {
+                break;
             }
+            // the slider lets go of the mouse when its drag ends; the popup
+            // takes it back instead of treating that as a click elsewhere
+            if (!ev->lp && p->slider && p->slider->releasingMouse) {
+                p->slider->releasingMouse = false;
+                uitask::Post(MkFunc0(PostedReclaimAnnotColorPopupCapture, p->win), "ReclaimAnnotColorPopupCapture");
+                break;
+            }
+            CloseAnnotColorPopup(p);
             break;
     }
 }
 
 void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withNone, Str label,
-                         const Func1<Color>& onPick, int thickness, const Func1<int>& onThickness) {
+                         const Func1<Color>& onPick, int thickness, const Func1<int>& onThickness, Str thicknessLabel,
+                         int minThickness) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb || gAnnotColorPopup) {
         return;
@@ -2902,7 +2947,11 @@ void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withN
     // an ink annotation's stroke is as much a choice as its color, so its
     // popup has the same Thickness slider the ink button's drop-down has
     InkThicknessSlider* slider = nullptr;
-    ILayout* extra = (thickness >= 0) ? MakeInkThicknessPanel(win, current, thickness, onThickness, &slider) : nullptr;
+    ILayout* extra =
+        (thickness >= 0)
+            ? MakeInkThicknessPanel(win, current, thickness, onThickness,
+                                    len(thicknessLabel) > 0 ? thicknessLabel : Tr("Thickness"), minThickness, &slider)
+            : nullptr;
     ILayout* layout =
         MakeAnnotColorsPanel(win, label, current, 0, withNone, &p->swatches, MkFunc1(OnAnnotColorPopupSwatch, p),
                              MkFunc1(OnAnnotColorPopupEdit, p), extra);
