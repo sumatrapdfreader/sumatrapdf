@@ -2599,7 +2599,8 @@ static void EnsureAnnotPresetColor(int cmdId, Color col) {
 // out, for the -dbg-control dump
 static ILayout* MakeAnnotColorsPanel(MainWindow* win, Str label, Color current, int cmdId, bool withNone,
                                      Vec<ToolbarColorSwatch*>* swatchesOut, const Func1<VirtMouseEvent*>& onSwatch,
-                                     const Func1<VirtMouseEvent*>& onEdit, ILayout* extra = nullptr) {
+                                     const Func1<VirtMouseEvent*>& onEdit, ILayout* extra = nullptr,
+                                     Str title = {}) {
     ToolbarVirt* tb = win->toolbarVirt;
     Vec<Color> colors;
     AnnotPresetColors(cmdId, colors);
@@ -2663,9 +2664,33 @@ static ILayout* MakeAnnotColorsPanel(MainWindow* win, Str label, Color current, 
         labelInsets.left = pad;
     }
 
+    ILayout* labelRow = labelText;
+    if (len(title) > 0) {
+        // what the button is, as its tooltip says, since the drop-down takes
+        // the tooltip's place; on the far end of the label's row
+        auto* hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::SpaceBetween;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        hbox->AddChild(labelText);
+        Insets gap{};
+        if (IsUIRtl()) {
+            gap.right = DpiScale(16);
+        } else {
+            gap.left = DpiScale(16);
+        }
+        hbox->AddChild(new Padding(NewVirtText({
+                                       .s = title,
+                                       .font = tb->platformFont,
+                                       .textColor = TbTextColor(),
+                                       .isRtl = IsUIRtl(),
+                                   }),
+                                   gap));
+        labelRow = hbox;
+    }
+
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
-    vbox->AddChild(new Padding(labelText, labelInsets));
+    vbox->AddChild(new Padding(labelRow, labelInsets));
     vbox->AddChild(row);
     if (extra) {
         vbox->AddChild(extra);
@@ -2868,8 +2893,11 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
                          : nullptr;
     // a note's color fills its icon, behind the note
     Str label = (ev->cmdId == CmdCreateAnnotText) ? Tr("Background Color") : Tr("Color");
+    // the button still has its tooltip; it's taken once the drop-down is up
+    VirtCtrl* btn = ToolbarItemForCmd(win, ev->cmdId);
+    Str title = btn ? btn->tooltip : Str{};
     ev->layout = MakeAnnotColorsPanel(win, label, current, ev->cmdId, false, nullptr, MkFunc1(OnAnnotColorClicked, win),
-                                      MkFunc1(OnAnnotColorsEditClicked, win), extra);
+                                      MkFunc1(OnAnnotColorsEditClicked, win), extra, title);
     if (slider) {
         RecordHoverItem(tb, slider, slider->text, {{}, slider->text, ev->cmdId, true, false});
     }
