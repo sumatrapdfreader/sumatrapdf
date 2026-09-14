@@ -19,7 +19,7 @@ import {
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { findCanvas, killAndWait, launchControlled, pressEscape, sendCommand } from "./win-automation.ts";
 
 const DRAG = 48;
 
@@ -127,6 +127,9 @@ export async function testit(): Promise<void> {
 
     const before = await dumpShapes(client);
     for (const type of ["Polygon", "PolyLine", "Ink"]) {
+      // a drag leaves the annotation selected, and a selected one locks the
+      // mouse to itself, so the next drag would only deselect it
+      await pressEscape(frame);
       const start = requireShape(before.shapes, type, before.raw);
       await dragAnnot(canvas, start);
       await client.waitForRenderIdle();
