@@ -14,6 +14,7 @@ void UpdateAnnotEditToolbar(MainWindow*);
 void HideAnnotEditToolbar(MainWindow*);
 void StartSelectedAnnotContentsEdit(MainWindow*);
 void RepositionAnnotEditToolbar(MainWindow*);
+void SetAnnotEditToolbarClickPos(Annotation*, PointF pagePt);
 void RefreshAnnotEditToolbar(MainWindow*);
 void DeleteAnnotEditToolbar(MainWindow*);
 TempStr AnnotEditToolbarStateTemp(MainWindow*);

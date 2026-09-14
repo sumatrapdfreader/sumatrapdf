@@ -2252,9 +2252,14 @@ static bool MouseHasCtrl(WPARAM key) {
     return IsCtrlPressed() || bit::IsMaskSet(key, (WPARAM)MK_CONTROL);
 }
 
-static void OpenOrSelectEditAnnotation(WindowTab* tab, Annotation* annot) {
+static void OpenOrSelectEditAnnotation(WindowTab* tab, Annotation* annot, Point clickPt) {
     if (!tab || !annot) {
         return;
+    }
+    DisplayModel* dm = tab->win ? tab->win->AsFixed() : nullptr;
+    if (dm && AnnotationIsTextMarkup(annot->type)) {
+        // the toolbar starts at the click, not at the (maybe multi-line) bounds
+        SetAnnotEditToolbarClickPos(annot, dm->CvtFromScreen(clickPt, PageNo(annot)));
     }
     SetSelectedAnnotation(tab, annot);
     HideAnnotationHoverOverlay(tab->win);
@@ -2403,7 +2408,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         // click starts a selection (issue #6166); Ctrl+click still selects.
         bool clickThrough = AnnotationIsTextMarkup(annot->type) && !MouseHasCtrl(key);
         if (!clickThrough) {
-            OpenOrSelectEditAnnotation(tab, annot);
+            OpenOrSelectEditAnnotation(tab, annot, pt);
             win->textDragPending = false;
             return;
         }
@@ -2662,7 +2667,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // Text markup clicks through on button-down so that a drag still selects
     // the glyphs underneath (issue #6166), but a plain click ends up here.
     if (clickedAnnot && tab && editPdf) {
-        OpenOrSelectEditAnnotation(tab, clickedAnnot);
+        OpenOrSelectEditAnnotation(tab, clickedAnnot, pt);
         return;
     }
 

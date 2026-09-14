@@ -232,12 +232,21 @@ export async function testit(): Promise<void> {
     const canvasOrigin = clientToScreen(canvas, 0, 0);
     const topOverlay = state.overlay.rect;
     const topAnnot = state.overlay.anchor;
+    // a highlight's card is centered on the mouse x, kept inside the canvas
+    const canvasRight = canvasOrigin.x + getClientRect(canvas).right;
+    const centeredX = Math.min(
+      Math.max(canvasOrigin.x + editCenterX - Math.floor(topOverlay.dx / 2), canvasOrigin.x),
+      canvasRight - topOverlay.dx,
+    );
     if (
       state.overlay.above ||
-      topOverlay.x !== canvasOrigin.x + topAnnot.x ||
+      Math.abs(topOverlay.x - centeredX) > 1 ||
       topOverlay.y < canvasOrigin.y + topAnnot.y + topAnnot.dy
     ) {
-      throw new Error(`pdf-edit-toolbar-interaction: top annotation card is not left-aligned below it\n${state.raw}`);
+      throw new Error(
+        `pdf-edit-toolbar-interaction: top annotation card is not centered on the mouse below it ` +
+          `(x=${topOverlay.x} want ${centeredX})\n${state.raw}`,
+      );
     }
 
     const bottomAnnot = state.screens[1];

@@ -1607,6 +1607,20 @@ static void RaiseToolbarHost(AnnotEditToolbar* tb) {
     SetWindowPos(tb->host->native, ToolbarZ(tb), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
 }
 
+// where a text markup annotation was clicked to select it, in page
+// coordinates so it follows scrolling and zoom. A highlight can span many
+// lines, so the toolbar starts at the click, not at the bounds' left edge.
+struct AnnotEditClickAnchor {
+    Annotation* annot = nullptr;
+    PointF pt;
+};
+static AnnotEditClickAnchor gClickAnchor;
+
+void SetAnnotEditToolbarClickPos(Annotation* annot, PointF pagePt) {
+    gClickAnchor.annot = annot;
+    gClickAnchor.pt = pagePt;
+}
+
 static bool PositionToolbar(AnnotEditToolbar* tb, const Rect& annot) {
     MainWindow* win = tb->win;
     Rect canvas = HwndClientRect(win->hwndCanvas);
@@ -1615,6 +1629,10 @@ static bool PositionToolbar(AnnotEditToolbar* tb, const Rect& annot) {
     int h = tb->size.dy;
 
     int x = annot.x;
+    DisplayModel* dm = win->AsFixed();
+    if (dm && tb->annot && gClickAnchor.annot == tb->annot) {
+        x = dm->CvtToScreen(PageNo(tb->annot), gClickAnchor.pt).x;
+    }
     int y = annot.y + annot.dy + gap;
     if (y + h > canvas.y + canvas.dy) {
         y = annot.y - gap - h;
@@ -2418,6 +2436,7 @@ void HideAnnotEditToolbar(MainWindow* win) {
     }
     tb->tab = nullptr;
     tb->annot = nullptr;
+    gClickAnchor = {};
     tb->lastPlaced = {};
     tb->lastAnnotBounds = {};
     VecReset(tb->kinds);
@@ -2805,6 +2824,10 @@ struct AnnotationHoverOverlay {
     Str rowsDump;
     int rowCount = 0;
     bool isAbove = false;
+    // text markup: the mouse position (page coordinates) when the card
+    // appeared; the card is centered on it until it hides
+    bool hasMouseAnchor = false;
+    PointF mouseAnchor;
 };
 
 static TempStr AnnotationColorNameTemp(PdfColor color) {
@@ -3047,6 +3070,10 @@ static bool PositionAnnotationHoverOverlay(AnnotationHoverOverlay* overlay) {
     int width = overlay->size.dx;
     int height = std::min(overlay->size.dy, canvas.dy);
     int x = annotRect.x;
+    if (overlay->hasMouseAnchor) {
+        // a highlight can span many lines: center the card where the mouse entered it
+        x = dm->CvtToScreen(PageNo(annot), overlay->mouseAnchor).x - (width / 2);
+    }
     int y = annotRect.y + annotRect.dy + gap;
     overlay->isAbove = y + height > canvas.y + canvas.dy;
     if (overlay->isAbove) {
@@ -3077,6 +3104,7 @@ void HideAnnotationHoverOverlay(MainWindow* win) {
     overlay->tab = nullptr;
     overlay->lastPlaced = {};
     overlay->anchorRect = {};
+    overlay->hasMouseAnchor = false;
     overlay->annotBounds = {};
     overlay->rowCount = 0;
     str::Free(overlay->rowsDump);
@@ -3096,8 +3124,18 @@ void UpdateAnnotationHoverOverlay(MainWindow* win) {
         return;
     }
     RectF bounds = GetRect(annot);
-    bool rebuild = overlay->annot != annot || overlay->tab != win->CurrentTab() ||
-                   !SameRectF(bounds, overlay->annotBounds) || !overlay->host->IsVisible();
+    bool appearing = overlay->annot != annot || overlay->tab != win->CurrentTab() || !overlay->host->IsVisible();
+    if (appearing) {
+        overlay->hasMouseAnchor = false;
+        POINT cursor;
+        DisplayModel* dm = win->AsFixed();
+        if (dm && AnnotationIsTextMarkup(annot->type) && GetCursorPos(&cursor) &&
+            ScreenToClient(win->hwndCanvas, &cursor)) {
+            overlay->mouseAnchor = dm->CvtFromScreen(Point(cursor.x, cursor.y), PageNo(annot));
+            overlay->hasMouseAnchor = true;
+        }
+    }
+    bool rebuild = appearing || !SameRectF(bounds, overlay->annotBounds);
     if (rebuild) {
         BuildAnnotationHoverOverlay(overlay, annot);
     }
