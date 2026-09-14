@@ -21,12 +21,32 @@ const resources = [
 // while premake emits it under the intermediate dir out/<cfg>/obj.
 const sharedLibs = ["libsumatrapdf", "PdfFilter", "PdfPreview"];
 
-function needsGenerate(): boolean {
+// premake globs source dirs, so adding or removing a source file must
+// re-generate too; .generated holds the list the files were generated from
+const sourceDirs = ["src", "ext"];
+const sourceExtRe = /\.(c|cc|cpp|asm)$/;
+
+function sourceList(): string {
+  const paths: string[] = [];
+  for (const dir of sourceDirs) {
+    for (const path of readdirSync(dir, { recursive: true, encoding: "utf8" })) {
+      if (sourceExtRe.test(path)) {
+        paths.push(join(dir, path));
+      }
+    }
+  }
+  return paths.sort().join("\n");
+}
+
+function needsGenerate(sources: string): boolean {
   if (!existsSync(buildFile) || !existsSync(generatedFile)) {
     return true;
   }
   const generated = statSync(generatedFile).mtimeMs;
-  return premakeFiles.some((path) => statSync(path).mtimeMs > generated);
+  if (premakeFiles.some((path) => statSync(path).mtimeMs > generated)) {
+    return true;
+  }
+  return readFileSync(generatedFile, "utf8") !== sources;
 }
 
 function ninjaFiles(dir: string): string[] {
@@ -181,14 +201,15 @@ function createOutputDirs(): void {
 }
 
 export async function ensureNinja(): Promise<void> {
-  const generate = needsGenerate();
+  const sources = sourceList();
+  const generate = needsGenerate(sources);
   if (generate) {
     await runLogged(join("bin", "premake5.exe"), ["--cc=msc-v145", "ninja"]);
   }
   fixEscapes();
   createOutputDirs();
   if (generate) {
-    writeFileSync(generatedFile, "");
+    writeFileSync(generatedFile, sources);
   }
 }
 
