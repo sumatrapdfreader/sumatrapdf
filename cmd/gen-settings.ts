@@ -855,9 +855,10 @@ const annotations: Field[] = [
   field(
     "PresetColors",
     Str,
-    "#ffff00 #8bf05d #99defa #f199d2 #e24745",
+    "#ffff00 #8bf05d #99defa #f199d2 #e24745 #ff0000 #0000ff #000000",
     "colors offered by the drop-down on the annotation toolbar's buttons, separated by space. " +
-      "Picking one sets the color of new annotations of that type",
+      "Picking one sets the color of new annotations of that type. The color a button currently makes " +
+      "annotations in is added when it is missing",
   ).ver("3.7"),
   field("TextIconColor", Color, "", "color of newly created text (sticky note) annotations"),
   field(

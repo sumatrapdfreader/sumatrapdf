@@ -30,6 +30,7 @@ import {
   VK_ESCAPE,
   WM_COMMAND,
   WM_KEYDOWN,
+  WM_MOUSEMOVE,
   WM_RBUTTONDOWN,
   WM_RBUTTONUP,
 } from "./winapi.ts";
@@ -356,6 +357,22 @@ const COLOR_BUTTONS = [
   "CmdCreateAnnotFileAttachment",
 ];
 
+// what each of them makes annotations in when no color is set: the defaults
+// Acrobat, PDF-XChange and Foxit use
+const DEFAULT_COLORS: Record<string, string> = {
+  CmdCreateAnnotText: "#ffff00",
+  CmdCreateAnnotFreeText: "#000000",
+  CmdCreateAnnotLine: "#ff0000",
+  CmdCreateAnnotPolyLine: "#ff0000",
+  CmdCreateAnnotSquare: "#ff0000",
+  CmdCreateAnnotCircle: "#ff0000",
+  CmdCreateAnnotPolygon: "#ff0000",
+  CmdCreateAnnotInk: "#ff0000",
+  CmdCreateAnnotStamp: "#ff0000",
+  CmdCreateAnnotCaret: "#0000ff",
+  CmdCreateAnnotFileAttachment: "#ffff00",
+};
+
 // the visible annotation button for a command, in toolbar client coords
 async function annotButtonRect(client: ControlClient, cmd: number): Promise<Rect | null> {
   const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
@@ -436,6 +453,9 @@ async function testToolbarButtons(): Promise<void> {
     await sleep(600);
     const toolbar = findChildByClass(frame, MAIN_TOOLBAR_CLASS);
 
+    // none of them has a color set, so each one's default is marked as the one
+    // in use, and joins the presets when it is not one of them yet
+    const presets = PRESETS.split(" ");
     for (const name of COLOR_BUTTONS) {
       const b = await annotButtonRect(client, cmdId(name));
       if (!b) {
@@ -443,9 +463,14 @@ async function testToolbarButtons(): Promise<void> {
       }
       rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
       await sleep(400);
+      const def = DEFAULT_COLORS[name]!;
+      if (!presets.includes(def)) {
+        presets.push(def);
+      }
+      const want = presets.map((c) => (c === def ? `${c}*` : c)).join(" ");
       const colors = await hoverMenuColors(client);
-      if (colors.join(" ") !== PRESETS) {
-        throw new Error(`annot-color-dropdown: ${name} offers "${colors.join(" ")}", want "${PRESETS}"`);
+      if (colors.join(" ") !== want) {
+        throw new Error(`annot-color-dropdown: ${name} offers "${colors.join(" ")}", want "${want}"`);
       }
       await closeHoverMenu(pid, frame);
     }
@@ -485,6 +510,94 @@ async function testToolbarButtons(): Promise<void> {
     if (got.color !== "#00ff00") {
       throw new Error(`annot-color-dropdown: the new square is ${got.color}, want #00ff00`);
     }
+
+    // clicking the button picks the tool: its colors go away, and resting on
+    // the button does not bring them back
+    const line = (await annotButtonRect(client, cmdId("CmdCreateAnnotLine")))!;
+    const lx = line.x + (line.dx >> 1);
+    const ly = line.y + (line.dy >> 1);
+    rightClickToolbar(toolbar, lx, ly);
+    await sleep(400);
+    const lineMenu = findTopWindow(pid, HOVER_MENU_CLASS);
+    if (!lineMenu || !isWindowVisible(lineMenu)) {
+      throw new Error("annot-color-dropdown: the Line drop-down did not open");
+    }
+    await clickAt(toolbar, lx, ly, 300);
+    await sleep(300);
+    const stayClosedUntil = Date.now() + 1500;
+    while (Date.now() < stayClosedUntil) {
+      const s = clientToScreen(toolbar, lx, ly);
+      setCursorPos(s.x, s.y);
+      sendMessage(toolbar, WM_MOUSEMOVE, 0, packCoords(lx, ly));
+      const h = findTopWindow(pid, HOVER_MENU_CLASS);
+      if (h && isWindowVisible(h)) {
+        throw new Error("annot-color-dropdown: clicking the Line button left its color drop-down up");
+      }
+      await sleep(100);
+    }
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
+// A button's color that is not one of the presets (set in the settings file by
+// hand, say) is added to them, so its drop-down always shows the color in use.
+async function testCurrentColorAdded(): Promise<void> {
+  const dir = tmpPath("annot-color-dropdown-current");
+  rmSync(dir, { recursive: true, force: true });
+  const appdata = join(dir, "appdata");
+  mkdirSync(appdata, { recursive: true });
+  const nl = String.fromCharCode(10);
+  writeFileSync(
+    join(appdata, "SumatraPDF-settings.txt"),
+    [
+      "UiLanguage = en",
+      "RestoreSession = false",
+      "ShowStartPage = false",
+      "CheckForUpdates = false",
+      "Annotations [",
+      `\tPresetColors = ${PRESETS}`,
+      "\tLineColor = #123456",
+      "]",
+      "",
+    ].join(nl),
+  );
+  const pdf = join(dir, "blank.pdf");
+  writeFileSync(
+    pdf,
+    assemblePdf([
+      "<< /Type /Catalog /Pages 2 0 R >>",
+      "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
+    ]),
+    "latin1",
+  );
+
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
+  const pid = proc.pid!;
+  try {
+    await client.waitForRenderIdle();
+    await client.setNotificationsEnabled(false);
+    sendCommand(frame, cmdId("CmdToggleEditPDF"));
+    await sleep(600);
+    const toolbar = findChildByClass(frame, MAIN_TOOLBAR_CLASS);
+
+    for (const [name, want] of [
+      ["CmdCreateAnnotLine", `${PRESETS} #123456*`],
+      // it stays in the presets, for every button; a square has no color set,
+      // so its default joins them too
+      ["CmdCreateAnnotSquare", `${PRESETS} #123456 #ff0000*`],
+    ] as const) {
+      const b = (await annotButtonRect(client, cmdId(name)))!;
+      rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
+      await sleep(400);
+      const colors = (await hoverMenuColors(client)).join(" ");
+      if (colors !== want) {
+        throw new Error(`annot-color-dropdown: ${name} offers "${colors}", want "${want}"`);
+      }
+      await closeHoverMenu(pid, frame);
+    }
   } finally {
     client.close();
     await killAndWait(proc);
@@ -495,6 +608,7 @@ export async function testit(): Promise<void> {
   await testMarkup();
   await testShape();
   await testToolbarButtons();
+  await testCurrentColorAdded();
   console.log("annot-color-dropdown: OK");
 }
 

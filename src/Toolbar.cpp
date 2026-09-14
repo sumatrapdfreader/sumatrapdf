@@ -1487,6 +1487,7 @@ void ToolbarNoteDropdownClosed() {
 }
 
 static bool ShowToolbarButtonDropdown(MainWindow*, int cmdId);
+static bool IsAnnotColorCmd(int cmdId);
 
 static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
     VirtCtrl* w = ev->target;
@@ -1521,9 +1522,11 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
             }
         }
     }
-    if (cmdId == CmdSaveAnnotations) {
-        // the hover menu's rows end the session; they no longer apply
+    // save: the hover menu's rows end the session; they no longer apply.
+    // an annotation button: picking the tool is done, its colors are in the way
+    if (cmdId == CmdSaveAnnotations || IsAnnotColorCmd(cmdId)) {
         HideToolbarHoverDropdown(win);
+        // not again for as long as the mouse stays on the button
         if (ToolbarVirt* tb = win->toolbarVirt) {
             tb->hoverPendingCmdId = cmdId;
         }
@@ -2322,6 +2325,15 @@ static const int kAnnotColorCmds[] = {
     CmdCreateAnnotInk,           CmdCreateAnnotStamp,     CmdCreateAnnotCaret,     CmdCreateAnnotFileAttachment,
 };
 
+static bool IsAnnotColorCmd(int cmdId) {
+    for (int id : kAnnotColorCmds) {
+        if (id == cmdId) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static ParsedColor* AnnotPresetColorSetting(int cmdId) {
     if (!gSettings) {
         return nullptr;
@@ -2362,6 +2374,36 @@ static ParsedColor* AnnotPresetColorSetting(int cmdId) {
             return &a.fileAttachmentColor;
     }
     return nullptr;
+}
+
+// What an annotation is made in when its setting is empty: MuPDF's defaults,
+// which are also what Acrobat, PDF-XChange and Foxit use
+static Color AnnotDefaultColor(int cmdId) {
+    switch (cmdId) {
+        case CmdCreateAnnotText:
+        case CmdCreateAnnotFileAttachment:
+            return MkRgb(0xff, 0xff, 0);
+        case CmdCreateAnnotFreeText:
+            return MkRgb(0, 0, 0);
+        case CmdCreateAnnotCaret:
+            return MkRgb(0, 0, 0xff);
+        case CmdCreateAnnotLine:
+        case CmdCreateAnnotPolyLine:
+        case CmdCreateAnnotSquare:
+        case CmdCreateAnnotCircle:
+        case CmdCreateAnnotPolygon:
+        case CmdCreateAnnotInk:
+        case CmdCreateAnnotStamp:
+            return MkRgb(0xff, 0, 0);
+    }
+    return kColorUnset;
+}
+
+// the color the button's next annotation is made in
+static Color AnnotCurrentColor(int cmdId) {
+    ParsedColor* setting = AnnotPresetColorSetting(cmdId);
+    Color col = setting ? GetParsedColor(*setting, kColorUnset) : kColorUnset;
+    return col != kColorUnset ? col : AnnotDefaultColor(cmdId);
 }
 
 static void AnnotPresetColors(Vec<Color>& out) {
@@ -2488,7 +2530,6 @@ static void OnAnnotColorsEditClicked(MainWindow* win, VirtMouseEvent* ev) {
         return;
     }
     int cmdId = w->id;
-    ParsedColor* setting = AnnotPresetColorSetting(cmdId);
     uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
 
     auto* target = new AnnotColorsTarget();
@@ -2497,7 +2538,7 @@ static void OnAnnotColorsEditClicked(MainWindow* win, VirtMouseEvent* ev) {
     auto* args = new ChangeColorsArgs();
     args->win = win;
     args->title = Tr("Annotation Colors");
-    args->color = setting ? GetParsedColor(*setting, kColorUnset) : kColorUnset;
+    args->color = AnnotCurrentColor(cmdId);
     args->withOpacity = true;
     AnnotPresetColors(args->colors);
     args->onClose = MkFunc1(AnnotColorsPicked, target);
@@ -2516,6 +2557,24 @@ static bool SameColorAndAlpha(Color a, Color b) {
         ab = 0xff;
     }
     return ((a & 0xffffff) == (b & 0xffffff)) && (aa == ab);
+}
+
+// the color a button makes annotations in is always one of the presets, so
+// its drop-down can show it; one set some other way joins the list
+static void EnsureAnnotPresetColor(Color col) {
+    if (!gSettings || col == kColorUnset) {
+        return;
+    }
+    Vec<Color> colors;
+    AnnotPresetColors(colors);
+    for (Color c : colors) {
+        if (SameColorAndAlpha(c, col)) {
+            return;
+        }
+    }
+    VecAppend(colors, col);
+    str::ReplaceWithCopy(&gSettings->annotations.presetColors, SerializeColorList(colors));
+    ScheduleSaveSettings();
 }
 
 // The drop-down's content: the preset colors as swatches with the one in use
@@ -2785,7 +2844,8 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
     if (!tb || !setting) {
         return;
     }
-    Color current = GetParsedColor(*setting, kColorUnset);
+    Color current = AnnotCurrentColor(ev->cmdId);
+    EnsureAnnotPresetColor(current);
     // ink is the one annotation whose width is a choice too
     InkThicknessSlider* slider = nullptr;
     ILayout* extra = (ev->cmdId == CmdCreateAnnotInk)

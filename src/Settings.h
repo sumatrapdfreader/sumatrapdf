@@ -697,7 +697,8 @@ struct Annotations {
     Str freeTextAlignment;
     // colors offered by the drop-down on the annotation toolbar's buttons,
     // separated by space. Picking one sets the color of new annotations of
-    // that type
+    // that type. The color a button currently makes annotations in is
+    // added when it is missing
     Str presetColors;
     // color of newly created text (sticky note) annotations
     ParsedColor textIconColor;
@@ -1513,7 +1514,8 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, freeTextSize), SettingType::Int, 12},
     {offsetof(Annotations, freeTextBorderWidth), SettingType::Int, 1},
     {offsetof(Annotations, freeTextAlignment), SettingType::String, (intptr_t)"left"},
-    {offsetof(Annotations, presetColors), SettingType::String, (intptr_t)"#ffff00 #8bf05d #99defa #f199d2 #e24745"},
+    {offsetof(Annotations, presetColors), SettingType::String,
+     (intptr_t)"#ffff00 #8bf05d #99defa #f199d2 #e24745 #ff0000 #0000ff #000000"},
     {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, lineColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, polyLineColor), SettingType::Color, (intptr_t)""},
@@ -1546,18 +1548,19 @@ static const StructInfo gAnnotationsInfo = {
     "width of free text annotations, in points\0how text is aligned in newly created free text annotations (Text "
     "Alignment in the compact property row): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) "
     "want right\0colors offered by the drop-down on the annotation toolbar's buttons, separated by space. Picking one "
-    "sets the color of new annotations of that type\0color of newly created text (sticky note) annotations\0color of "
-    "newly created line annotations. If not set, the PDF engine's default (red) is used\0color of newly created "
-    "polyline annotations. If not set, the PDF engine's default (red) is used\0color of newly created square "
-    "annotations. If not set, the PDF engine's default (red) is used\0color of newly created circle annotations. If "
-    "not set, the PDF engine's default (red) is used\0color of newly created polygon annotations. If not set, the PDF "
-    "engine's default (red) is used\0color of newly created ink annotations. If not set, the PDF engine's default "
-    "(red) is used\0width of the stroke of new ink annotations, in points\0color of newly created stamp annotations. "
-    "If not set, the PDF engine's default (red) is used\0color of newly created caret annotations. If not set, the PDF "
-    "engine's default (red) is used\0color of newly created file attachment annotations. If not set, the PDF engine's "
-    "default (red) is used\0icon shown for text (sticky note) annotations: comment, help, insert, key, new paragraph, "
-    "note or paragraph. If not set, note is used\0author recorded on newly created annotations. If not set, the "
-    "Windows user name is used; set it to (none) to leave the author out entirely",
+    "sets the color of new annotations of that type. The color a button currently makes annotations in is added when "
+    "it is missing\0color of newly created text (sticky note) annotations\0color of newly created line annotations. If "
+    "not set, the PDF engine's default (red) is used\0color of newly created polyline annotations. If not set, the PDF "
+    "engine's default (red) is used\0color of newly created square annotations. If not set, the PDF engine's default "
+    "(red) is used\0color of newly created circle annotations. If not set, the PDF engine's default (red) is "
+    "used\0color of newly created polygon annotations. If not set, the PDF engine's default (red) is used\0color of "
+    "newly created ink annotations. If not set, the PDF engine's default (red) is used\0width of the stroke of new ink "
+    "annotations, in points\0color of newly created stamp annotations. If not set, the PDF engine's default (red) is "
+    "used\0color of newly created caret annotations. If not set, the PDF engine's default (red) is used\0color of "
+    "newly created file attachment annotations. If not set, the PDF engine's default (red) is used\0icon shown for "
+    "text (sticky note) annotations: comment, help, insert, key, new paragraph, note or paragraph. If not set, note is "
+    "used\0author recorded on newly created annotations. If not set, the Windows user name is used; set it to (none) "
+    "to leave the author out entirely",
     false};
 
 static const FieldInfo gExternalViewerFields[] = {

@@ -792,8 +792,9 @@ Annotations [
 
     ; colors offered by the drop-down on the annotation toolbar's buttons,
     ; separated by space. Picking one sets the color of new annotations of that
-    ; type (introduced in version 3.7)
-    PresetColors = #ffff00 #8bf05d #99defa #f199d2 #e24745
+    ; type. The color a button currently makes annotations in is added when it
+    ; is missing (introduced in version 3.7)
+    PresetColors = #ffff00 #8bf05d #99defa #f199d2 #e24745 #ff0000 #0000ff #000000
 
     ; color of newly created text (sticky note) annotations
     TextIconColor = 
