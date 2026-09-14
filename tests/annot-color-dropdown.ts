@@ -34,7 +34,15 @@ import {
   WM_RBUTTONDOWN,
   WM_RBUTTONUP,
 } from "./winapi.ts";
-import { clickAt, findCanvas, findChildByClass, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import {
+  clickAt,
+  findCanvas,
+  findChildByClass,
+  killAndWait,
+  launchControlled,
+  pressEscape,
+  sendCommand,
+} from "./win-automation.ts";
 
 const TOOLBAR_CLASS = "SumatraAnnotEditToolbar";
 const MAIN_TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
@@ -499,6 +507,10 @@ async function testToolbarButtons(): Promise<void> {
         throw new Error("annot-color-dropdown: Redact should have no color drop-down");
       }
       await closeHoverMenu(pid, frame);
+      // with no drop-down the right-click picked the tool; leave its mode,
+      // which disables the other buttons
+      await pressEscape(frame);
+      await sleep(300);
     }
 
     // picking a color is the color the next annotation of that type is made in

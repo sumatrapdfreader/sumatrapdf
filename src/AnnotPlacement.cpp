@@ -439,6 +439,7 @@ bool CancelAnnotationPlacement(MainWindow* win) {
     HideAnnotationHoverOverlay(win);
     ScheduleRepaint(win, 0);
     RestoreCanvasCursor(win);
+    ToolbarUpdateStateForWindow(win, false);
     return true;
 }
 
@@ -573,6 +574,10 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
     win->annotationUnderCursor = nullptr;
     HideAnnotationHoverOverlay(win);
     ScheduleRepaint(win, 0);
+
+    // edit PDF toolbar buttons are disabled for the duration of the mode
+    HideToolbarHoverDropdown(win);
+    ToolbarUpdateStateForWindow(win, false);
 
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
@@ -1605,8 +1610,8 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
         bool on = KindOf(win) == AnnotPlacementKind::Highlighter;
         NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifHighlighterPlacement);
         Str message = NotificationGetMessageTemp(notif);
-        out.Append(fmt("highlighterPlacement active=%d notification=%d cmd=%d message=%s\n", on ? 1 : 0,
-                       notif ? 1 : 0, on ? p.cmdId : 0, message));
+        out.Append(fmt("highlighterPlacement active=%d notification=%d cmd=%d message=%s\n", on ? 1 : 0, notif ? 1 : 0,
+                       on ? p.cmdId : 0, message));
     }
     return ToStrTemp(out);
 }

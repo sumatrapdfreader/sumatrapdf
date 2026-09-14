@@ -687,6 +687,8 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
 
     bool showPdfAnnotationsToolbar = win->pdfAnnotationsToolbarEnabled && ctx->isPdf && ctx->supportsAnnots;
     SetPdfAnnotationsToolbarVisible(win, showPdfAnnotationsToolbar);
+    // a placement mode (ink, shape, highlighter...) owns the page until it ends
+    bool annotButtonsEnabled = showPdfAnnotationsToolbar && !IsPlacingAnnotation(win);
     bool annotVisibilityChanged = false;
     for (int i = 0; i < kPdfAnnotationButtonsCount; i++) {
         const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
@@ -696,7 +698,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         CommandVisibility v = GetCommandVisibility(bi.cmdId, *ctx, CommandSurface::Toolbar);
         bool remove = CommandShouldRemove(v);
         annotVisibilityChanged |= SetPdfAnnotationButtonHiddenByIdx(win, i, remove);
-        SetPdfAnnotationButtonEnabledByIdx(win, i, showPdfAnnotationsToolbar && !CommandShouldDisable(v) && !remove);
+        SetPdfAnnotationButtonEnabledByIdx(win, i, annotButtonsEnabled && !CommandShouldDisable(v) && !remove);
         if (bi.cmdId == CmdSaveAnnotations) {
             // name the file it writes to, like the annotation list's Save button
             WindowTab* tab = win->CurrentTab();
@@ -1502,6 +1504,11 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
         ev->didHandle = true;
         return;
     }
+    // annotation buttons are disabled while a placement mode is on
+    ToolbarVirt* tbv = win->toolbarVirt;
+    if (tbv && IsPlacingAnnotation(win) && VecContains(tbv->annotationItems, w)) {
+        return;
+    }
     // right-click: the drop-down, not the button's command
     if (ev->button == 1) {
         if (ShowToolbarButtonDropdown(win, cmdId)) {
@@ -2098,18 +2105,20 @@ static void ToolbarHoverDropdownOnMouseMove(MainWindow* win, const Point* client
     Point ptScreen = UiCursorScreenPos();
     bool overMenu = ToolbarHoverDropdownContainsScreenPoint(win, ptScreen);
     int cmdId = 0;
+    VirtCtrl* w = nullptr;
     if (clientPt) {
-        VirtCtrl* w = ToolbarItemFromPoint(win, *clientPt);
-        if (w && FindHoverReg(tb, w->id)) {
-            cmdId = w->id;
-        }
+        w = ToolbarItemFromPoint(win, *clientPt);
     } else if (HostHasPoint(tb->host, ptScreen)) {
         // a disabled button still gets its drop-down, the way it still gets its
         // tooltip: the rows say what could be done and why they are greyed
-        VirtCtrl* w = ToolbarItemFromPoint(win, tb->host->FromScreen(ptScreen));
-        if (w && FindHoverReg(tb, w->id)) {
-            cmdId = w->id;
-        }
+        w = ToolbarItemFromPoint(win, tb->host->FromScreen(ptScreen));
+    }
+    if (w && FindHoverReg(tb, w->id)) {
+        cmdId = w->id;
+    }
+    // except annotation buttons disabled by a placement mode
+    if (w && IsPlacingAnnotation(win) && VecContains(tb->annotationItems, w)) {
+        cmdId = 0;
     }
 
     if (tb->hoverCmdId != 0) {
@@ -2599,8 +2608,7 @@ static void EnsureAnnotPresetColor(int cmdId, Color col) {
 // out, for the -dbg-control dump
 static ILayout* MakeAnnotColorsPanel(MainWindow* win, Str label, Color current, int cmdId, bool withNone,
                                      Vec<ToolbarColorSwatch*>* swatchesOut, const Func1<VirtMouseEvent*>& onSwatch,
-                                     const Func1<VirtMouseEvent*>& onEdit, ILayout* extra = nullptr,
-                                     Str title = {}) {
+                                     const Func1<VirtMouseEvent*>& onEdit, ILayout* extra = nullptr, Str title = {}) {
     ToolbarVirt* tb = win->toolbarVirt;
     Vec<Color> colors;
     AnnotPresetColors(cmdId, colors);
