@@ -1285,6 +1285,39 @@ static void ChipThicknessPicked(AnnotEditToolbar* tb, int width) {
     AnnotChanged(tab);
 }
 
+// ranges of the number sliders; widths and sizes are in PDF points
+constexpr int kBorderWidthMax = 12;
+constexpr int kFreeTextSizeMin = 6;
+constexpr int kFreeTextSizeMax = 72;
+constexpr int kOpacityPercentMin = 10;
+
+static void ChipOpacityPicked(AnnotEditToolbar* tb, int percent) {
+    WindowTab* tab = tb->tab;
+    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
+    if (!AnnotationIsLive(annot) || annot != tb->annot) {
+        return;
+    }
+    int opacity = ((percent * 255) + 50) / 100;
+    if (Opacity(annot) == opacity) {
+        return;
+    }
+    SetOpacity(annot, opacity);
+    AnnotChanged(tab);
+}
+
+static void ChipTextSizePicked(AnnotEditToolbar* tb, int size) {
+    WindowTab* tab = tb->tab;
+    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
+    if (!AnnotationIsLive(annot) || annot != tb->annot) {
+        return;
+    }
+    if (DefaultAppearanceTextSize(annot) == size) {
+        return;
+    }
+    SetDefaultAppearanceTextSize(annot, size);
+    AnnotChanged(tab);
+}
+
 static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
     if (!chip || !chip->tb) {
         return;
@@ -1340,57 +1373,20 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             break;
         }
         case AnnotEditKind::Opacity: {
-            const int vals[] = {64, 128, 191, 255};
-            StrVec names;
-            int current = -1;
-            for (int i = 0; i < dimofi(vals); i++) {
-                names.Append(fmt("%d%%", ((vals[i] * 100) + 127) / 255));
-                if (abs(vals[i] - chip->item.number) < 20) {
-                    current = i;
-                }
-            }
-            int idx = PopupPick(tb->win, screen, names, current, chipScreen);
-            if (dismissed(idx)) {
-                return;
-            }
-            SetOpacity(annot, vals[idx]);
-            AnnotChanged(tab);
+            // in percent, as the chip shows it; fully transparent would lose the annotation
+            int percent = ((chip->item.number * 100) + 127) / 255;
+            ShowAnnotSliderPopup(tb->win, chipScreen, Tr("Opacity"), percent, kOpacityPercentMin, 100,
+                                 MkFunc1(ChipOpacityPicked, tb));
             break;
         }
         case AnnotEditKind::Border: {
-            const int vals[] = {0, 1, 2, 3, 4, 6, 8, 12};
-            StrVec names;
-            int current = -1;
-            for (int i = 0; i < dimofi(vals); i++) {
-                names.Append(fmt("%d", vals[i]));
-                if (vals[i] == chip->item.number) {
-                    current = i;
-                }
-            }
-            int idx = PopupPick(tb->win, screen, names, current, chipScreen);
-            if (dismissed(idx)) {
-                return;
-            }
-            SetBorderWidth(annot, vals[idx]);
-            AnnotChanged(tab);
+            ShowAnnotSliderPopup(tb->win, chipScreen, Tr("Border Width"), std::max(BorderWidth(annot), 0), 0,
+                                 kBorderWidthMax, MkFunc1(ChipThicknessPicked, tb));
             break;
         }
         case AnnotEditKind::TextSize: {
-            const int vals[] = {8, 10, 12, 14, 16, 18, 24, 36};
-            StrVec names;
-            int current = -1;
-            for (int i = 0; i < dimofi(vals); i++) {
-                names.Append(fmt("%d", vals[i]));
-                if (vals[i] == chip->item.number) {
-                    current = i;
-                }
-            }
-            int idx = PopupPick(tb->win, screen, names, current, chipScreen);
-            if (dismissed(idx)) {
-                return;
-            }
-            SetDefaultAppearanceTextSize(annot, vals[idx]);
-            AnnotChanged(tab);
+            ShowAnnotSliderPopup(tb->win, chipScreen, Tr("Text Size"), chip->item.number, kFreeTextSizeMin,
+                                 kFreeTextSizeMax, MkFunc1(ChipTextSizePicked, tb));
             break;
         }
         case AnnotEditKind::FontName: {

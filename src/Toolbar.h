@@ -100,6 +100,8 @@ bool ToolbarHoverDropdownContainsScreenPoint(MainWindow*, Point);
 void ShowAnnotColorPopup(MainWindow*, Rect anchor, Color current, bool withNone, Str label, const Func1<Color>& onPick,
                          int thickness = -1, const Func1<int>& onThickness = {}, Str thicknessLabel = {},
                          int minThickness = 1);
+void ShowAnnotSliderPopup(MainWindow*, Rect anchor, Str label, int value, int minVal, int maxVal,
+                          const Func1<int>& onValue);
 // for tests: the swatches of the drop-down that is up, if any
 TempStr AnnotColorPopupStateTemp();
 

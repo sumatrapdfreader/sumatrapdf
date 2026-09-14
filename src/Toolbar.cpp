@@ -2821,6 +2821,7 @@ struct AnnotColorPopup {
 static AnnotColorPopup* gAnnotColorPopup = nullptr;
 
 static void ShowAnnotColorsDialog(MainWindow* win, Color current, const Func1<Color>& onPick);
+static void ShowAnnotPopupHost(AnnotColorPopup* p, ILayout* layout, Rect anchor);
 
 static void PostedCloseAnnotColorPopup(MainWindow* win) {
     AnnotColorPopup* p = gAnnotColorPopup;
@@ -2956,7 +2957,81 @@ void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withN
         MakeAnnotColorsPanel(win, label, current, 0, withNone, &p->swatches, MkFunc1(OnAnnotColorPopupSwatch, p),
                              MkFunc1(OnAnnotColorPopupEdit, p), extra);
     p->slider = slider;
+    ShowAnnotPopupHost(p, layout, anchor);
+}
 
+// A number picked with a slider: a label, the slider, and the value under it.
+// onValue gets the value when the slider is let go.
+void ShowAnnotSliderPopup(MainWindow* win, Rect anchor, Str label, int value, int minVal, int maxVal,
+                          const Func1<int>& onValue) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb || gAnnotColorPopup) {
+        return;
+    }
+    auto* p = new AnnotColorPopup();
+    p->win = win;
+    value = limitValue(value, minVal, maxVal);
+
+    auto* slider = new InkThicknessSlider();
+    slider->minVal = minVal;
+    slider->maxVal = maxVal;
+    slider->value = value;
+    slider->idealDx = DpiScale(kInkSliderDx);
+    slider->onThickness = onValue;
+    slider->onValueChanged = MkMethod0<InkThicknessSlider, &InkThicknessSlider::OnChanged>(slider);
+    slider->onValueCommitted = MkMethod0<InkThicknessSlider, &InkThicknessSlider::OnCommitted>(slider);
+    str::ReplaceWithCopy(&slider->text, fmt("thickness=%d", value));
+
+    auto mkEnd = [tb](int v) {
+        return NewVirtText({
+            .s = fmt("%d", v),
+            .font = tb->platformFont,
+            .textColor = TbDisabledColor(),
+            .isRtl = IsUIRtl(),
+        });
+    };
+    // centered between the ends, padded out to the widest value so it keeps
+    // its place when a drag adds a digit
+    TempStr valueStr = fmt("%d", value);
+    int widestDx = PlatformFontMeasureText(tb->platformFont, fmt("%d", maxVal)).dx;
+    int extraDx = std::max(widestDx - PlatformFontMeasureText(tb->platformFont, valueStr).dx, 0);
+    auto* valueText = NewVirtText({
+        .s = valueStr,
+        .font = tb->platformFont,
+        .textColor = TbTextColor(),
+        .align = VirtTextAlign::Center,
+        .isRtl = IsUIRtl(),
+        .padding = {.right = extraDx - (extraDx / 2), .left = extraDx / 2},
+    });
+    slider->valueText = valueText;
+
+    auto* ends = new HBox();
+    ends->alignMain = MainAxisAlign::SpaceBetween;
+    ends->alignCross = CrossAxisAlign::CrossCenter;
+    ends->AddChild(mkEnd(minVal));
+    ends->AddChild(valueText);
+    ends->AddChild(mkEnd(maxVal));
+
+    auto* vbox = new VBox();
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    vbox->AddChild(new Padding(NewVirtText({
+                                   .s = label,
+                                   .font = tb->platformFont,
+                                   .textColor = TbTextColor(),
+                                   .isRtl = IsUIRtl(),
+                               }),
+                               Insets{.bottom = DpiScale(4)}));
+    vbox->AddChild(slider);
+    vbox->AddChild(ends);
+    int b = DpiScale(kHoverMenuBorder);
+    int pad = DpiScale(kAnnotColorsPad);
+    ILayout* layout = new Padding(vbox, Insets{b + pad, b + pad, b + pad, b + pad});
+    p->slider = slider;
+    ShowAnnotPopupHost(p, layout, anchor);
+}
+
+static void ShowAnnotPopupHost(AnnotColorPopup* p, ILayout* layout, Rect anchor) {
+    MainWindow* win = p->win;
     VirtHost::CreateArgs args;
     args.parent = win->hwndFrame;
     args.className = WStrL(L"SumatraAnnotColorPopup");
