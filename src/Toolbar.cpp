@@ -2523,7 +2523,7 @@ static bool SameColorAndAlpha(Color a, Color b) {
 // when this is not a toolbar button's drop-down, and nothing is recorded then.
 // swatchesOut, when given, collects the swatches in the order they are laid
 // out, for the -dbg-control dump
-static ILayout* MakeAnnotColorsPanel(MainWindow* win, Color current, int cmdId, bool withNone,
+static ILayout* MakeAnnotColorsPanel(MainWindow* win, Str label, Color current, int cmdId, bool withNone,
                                      Vec<ToolbarColorSwatch*>* swatchesOut, const Func1<VirtMouseEvent*>& onSwatch,
                                      const Func1<VirtMouseEvent*>& onEdit, ILayout* extra = nullptr) {
     ToolbarVirt* tb = win->toolbarVirt;
@@ -2574,14 +2574,24 @@ static ILayout* MakeAnnotColorsPanel(MainWindow* win, Color current, int cmdId, 
     edit->onClick = onEdit;
     row->AddChild(edit);
 
-    auto* vbox = new VBox();
-    vbox->alignCross = CrossAxisAlign::Stretch;
-    vbox->AddChild(NewVirtText({
-        .s = Tr("Colors"),
+    auto* labelText = NewVirtText({
+        .s = label,
         .font = tb->platformFont,
         .textColor = TbTextColor(),
         .isRtl = IsUIRtl(),
-    }));
+    });
+    // indented by the swatch's padding so the text lines up with the first
+    // color, and 0.25rem above the swatches
+    Insets labelInsets{.bottom = DpiScale(4)};
+    if (IsUIRtl()) {
+        labelInsets.right = pad;
+    } else {
+        labelInsets.left = pad;
+    }
+
+    auto* vbox = new VBox();
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    vbox->AddChild(new Padding(labelText, labelInsets));
     vbox->AddChild(row);
     if (extra) {
         vbox->AddChild(extra);
@@ -2752,7 +2762,9 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
     // ink is the one annotation whose width is a choice too
     InkThicknessSlider* slider = nullptr;
     ILayout* extra = (ev->cmdId == CmdCreateAnnotInk) ? MakeInkThicknessPanel(win, current, -1, {}, &slider) : nullptr;
-    ev->layout = MakeAnnotColorsPanel(win, current, ev->cmdId, false, nullptr, MkFunc1(OnAnnotColorClicked, win),
+    // a note's color fills its icon, behind the note
+    Str label = (ev->cmdId == CmdCreateAnnotText) ? Tr("Background Color") : Tr("Color");
+    ev->layout = MakeAnnotColorsPanel(win, label, current, ev->cmdId, false, nullptr, MkFunc1(OnAnnotColorClicked, win),
                                       MkFunc1(OnAnnotColorsEditClicked, win), extra);
     if (slider) {
         RecordHoverItem(tb, slider, slider->text, {{}, slider->text, ev->cmdId, true, false});
@@ -2877,8 +2889,8 @@ static void AnnotColorPopupNativeMsg(AnnotColorPopup* p, VirtHostNativeMsg* ev) 
     }
 }
 
-void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withNone, const Func1<Color>& onPick,
-                         int thickness, const Func1<int>& onThickness) {
+void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withNone, Str label,
+                         const Func1<Color>& onPick, int thickness, const Func1<int>& onThickness) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb || gAnnotColorPopup) {
         return;
@@ -2891,8 +2903,9 @@ void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withN
     // popup has the same Thickness slider the ink button's drop-down has
     InkThicknessSlider* slider = nullptr;
     ILayout* extra = (thickness >= 0) ? MakeInkThicknessPanel(win, current, thickness, onThickness, &slider) : nullptr;
-    ILayout* layout = MakeAnnotColorsPanel(win, current, 0, withNone, &p->swatches, MkFunc1(OnAnnotColorPopupSwatch, p),
-                                           MkFunc1(OnAnnotColorPopupEdit, p), extra);
+    ILayout* layout =
+        MakeAnnotColorsPanel(win, label, current, 0, withNone, &p->swatches, MkFunc1(OnAnnotColorPopupSwatch, p),
+                             MkFunc1(OnAnnotColorPopupEdit, p), extra);
     p->slider = slider;
 
     VirtHost::CreateArgs args;

@@ -297,7 +297,7 @@ static Str KindName(AnnotEditKind kind) {
 
 // annotation types whose GetColor() is a background, not the ink color
 static bool AnnotationColorIsBackground(AnnotationType tp) {
-    return tp == AnnotationType::FreeText;
+    return tp == AnnotationType::FreeText || tp == AnnotationType::Text;
 }
 
 static Str DefaultAnnotIconName(AnnotationType type) {
@@ -1312,7 +1312,10 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             // an ink annotation's drop-down sets how thick its stroke is too
             bool isInk = (Type(annot) == AnnotationType::Ink) && (kind == AnnotEditKind::Color);
             int thickness = isInk ? std::max(BorderWidth(annot), 0) : -1;
-            ShowAnnotColorPopup(tb->win, chipScreen, current, withNone, MkFunc1(ChipColorPicked, tb), thickness,
+            // a note's color fills its icon, behind the note
+            bool isNoteColor = (Type(annot) == AnnotationType::Text) && (kind == AnnotEditKind::Color);
+            Str label = isNoteColor ? Tr("Background Color") : Tr("Color");
+            ShowAnnotColorPopup(tb->win, chipScreen, current, withNone, label, MkFunc1(ChipColorPicked, tb), thickness,
                                 MkFunc1(ChipThicknessPicked, tb));
             break;
         }
