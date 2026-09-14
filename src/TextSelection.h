@@ -61,3 +61,4 @@ bool isWordChar(int c);
 bool TextPosMoveBy(EngineBase*, int& page, int& glyph, TextSelectUnit unit, int dir);
 void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int textLen, int glyph, int length, Rect mediabox,
                         QuadF* glyphQuads = nullptr);
+int FindClosestGlyphIn(EngineBase* engine, int pageNo, Rect* coords, QuadF* quads, int textLen, double x, double y);

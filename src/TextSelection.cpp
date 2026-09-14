@@ -52,11 +52,8 @@ static bool GlyphContains(Rect coord, const QuadF* quads, int i, PointF pt, Poin
 // returns the index of the glyph closest to the right of the given coordinates
 // (i.e. when over the right half of a glyph, the returned index will be for the
 // glyph following it, which will be the first glyph (not) to be selected)
-static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
-    Rect* coords;
-    QuadF* quads = nullptr;
-    int textLen = 0;
-    ts->engine->GetTextForPage(pageNo, &textLen, &coords, &quads);
+// engine is only consulted for upright glyphs
+int FindClosestGlyphIn(EngineBase* engine, int pageNo, Rect* coords, QuadF* quads, int textLen, double x, double y) {
     PointF pt = PointF((float)x, (float)y);
 
     unsigned int maxDist = UINT_MAX;
@@ -125,20 +122,36 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
             }
         }
     } else {
-        RectF bbox = ts->engine->Transform(ToRectF(coords[result]), pageNo, 1.0, 0);
-        PointF ptT = ts->engine->Transform(pt, pageNo, 1.0, 0);
+        RectF bbox = engine->Transform(ToRectF(coords[result]), pageNo, 1.0, 0);
+        PointF ptT = engine->Transform(pt, pageNo, 1.0, 0);
         pastMid = ptT.x > bbox.x + (0.5 * bbox.dx);
     }
+    // for some (DjVu) documents, all glyphs of a word share the same bbox.
+    // Rotated glyphs are told apart by their quads: small rotated text can
+    // round distinct glyphs to the same int bbox.
+    auto sharesBox = [&](int i) -> bool {
+        if (quads && (quads[i].IsRotated() || quads[i - 1].IsRotated())) {
+            return false;
+        }
+        return coords[i] == coords[i - 1];
+    };
     if (pastMid) {
         result++;
-        // for some (DjVu) documents, all glyphs of a word share the same bbox
-        while (result < textLen && coords[result - 1] == coords[result]) {
+        while (result < textLen && sharesBox(result)) {
             result++;
         }
     }
-    ReportIf(result > 0 && result < textLen && coords[result] == coords[result - 1]);
+    ReportIf(result > 0 && result < textLen && sharesBox(result));
 
     return result;
+}
+
+static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
+    Rect* coords;
+    QuadF* quads = nullptr;
+    int textLen = 0;
+    ts->engine->GetTextForPage(pageNo, &textLen, &coords, &quads);
+    return FindClosestGlyphIn(ts->engine, pageNo, coords, quads, textLen, x, y);
 }
 
 // Dehyphenation removes both the trailing hyphen and the line-separator glyph,

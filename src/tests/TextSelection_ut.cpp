@@ -52,4 +52,16 @@ void TextSelection_UnitTests() {
     free(result.pages);
     free(result.rects);
     free(result.quads);
+
+    // small rotated glyphs: distinct quads, but the rounded int bboxes coincide,
+    // so the "all glyphs of a word share one bbox" (DjVu) rule must not apply
+    Rect tinyCoords[] = {{10, 9, 3, 3}, {10, 9, 3, 3}};
+    QuadF tinyQuads[] = {
+        {PointF(10.0f, 10.0f), PointF(10.7f, 9.3f), PointF(11.4f, 11.4f), PointF(12.1f, 10.7f)},
+        {PointF(10.7f, 9.3f), PointF(11.4f, 8.6f), PointF(12.1f, 10.7f), PointF(12.8f, 10.0f)},
+    };
+    // over the left half of glyph 1
+    utassert(FindClosestGlyphIn(nullptr, 1, tinyCoords, tinyQuads, 2, 11.575, 9.825) == 1);
+    // over the right half of glyph 0: glyph 1 is the first one to select
+    utassert(FindClosestGlyphIn(nullptr, 1, tinyCoords, tinyQuads, 2, 11.225, 10.175) == 1);
 }
