@@ -404,7 +404,7 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
         case AnnotPlacementKind::Ink:
             return Tr("Draw ink annotation. Release to finish. **Esc** to cancel.");
         case AnnotPlacementKind::Highlighter:
-            return Tr("Select text to highlight it. **Esc** to stop highlighting.");
+            return Tr("Select text to highlight it. **Esc** or **Enter** to finish.");
         default:
             return {};
     }
@@ -1062,6 +1062,9 @@ bool AnnotationPlacementOnKeyDown(MainWindow* win, WPARAM key) {
     }
     if ((key == VK_SPACE || key == VK_RETURN) && IsPlacingPolyLineAnnotation(win)) {
         return FinishPolyLineAnnotationPlacement(win);
+    }
+    if (key == VK_RETURN && KindOf(win) == AnnotPlacementKind::Highlighter) {
+        return CancelAnnotationPlacement(win);
     }
     return false;
 }

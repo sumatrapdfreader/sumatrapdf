@@ -20,6 +20,7 @@ import {
   setCursorPos,
   sleep,
   VK_END,
+  VK_RETURN,
   WM_KEYDOWN,
   WM_KEYUP,
   WM_LBUTTONDOWN,
@@ -30,7 +31,7 @@ import { findCanvas, killAndWait, launchControlled, pressEscape, sendCommandSync
 
 type Point = { x: number; y: number };
 
-const HINT = "Select text to highlight it. **Esc** to stop highlighting.";
+const HINT = "Select text to highlight it. **Esc** or **Enter** to finish.";
 
 function makePdf(): string {
   const stream = "BT /F1 24 Tf 72 720 Td (highlight this line) Tj ET";
@@ -207,6 +208,13 @@ export async function testit(): Promise<void> {
     if (s.highlights !== 2) {
       throw new Error(`issue-6137: a selection after Esc was highlighted\n${s.raw}`);
     }
+
+    // Enter leaves it too
+    sendCommandSync(frame, cmdId("CmdAnnotationHighlightBrush"));
+    await waitUntil(client, (st) => st.highlighter, "the highlighter did not start again");
+    postMessage(frame, WM_KEYDOWN, VK_RETURN, 0);
+    postMessage(frame, WM_KEYUP, VK_RETURN, 0);
+    await waitUntil(client, (st) => !st.highlighter, "Enter did not leave the highlighter");
 
     // ink: translucent 40% yellow and 16 points wide by default, stays on
     const canvasRect = getClientRect(canvas);
