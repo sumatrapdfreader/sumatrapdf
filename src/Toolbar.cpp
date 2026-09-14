@@ -99,6 +99,7 @@ constexpr int kButtonsCount = dimof(gToolbarButtons);
 
 static ToolbarButtonInfo gPdfAnnotationButtons[] = {
     {gIconAnnotHighlightBrush, CmdAnnotationHighlightBrush, TrN("Highlighter")},
+    {gIconAnnotInk, CmdCreateAnnotInk, TrN("Ink")},
     {gIconAnnotHighlight, CmdCreateAnnotHighlight, TrN("Highlight")},
     {gIconAnnotUnderline, CmdCreateAnnotUnderline, TrN("Underline")},
     {gIconAnnotSquiggly, CmdCreateAnnotSquiggly, TrN("Squiggly")},
@@ -112,7 +113,6 @@ static ToolbarButtonInfo gPdfAnnotationButtons[] = {
     {gIconAnnotSquare, CmdCreateAnnotSquare, TrN("Square")},
     {gIconAnnotCircle, CmdCreateAnnotCircle, TrN("Circle")},
     {gIconAnnotPolygon, CmdCreateAnnotPolygon, TrN("Polygon")},
-    {gIconAnnotInk, CmdCreateAnnotInk, TrN("Ink")},
     {nullptr, 0, {}},
     {gIconAnnotRedact, CmdCreateAnnotRedact, TrN("Redact")},
     {gIconApplyRedactions, CmdApplyRedactions, TrN("Apply Redactions")},
@@ -2340,8 +2340,8 @@ static ParsedColor* AnnotPresetColorSetting(int cmdId) {
     }
     Annotations& a = gSettings->annotations;
     switch (cmdId) {
+        // the highlighter makes highlight annotations
         case CmdAnnotationHighlightBrush:
-            return &a.inkHighlightColor;
         case CmdCreateAnnotHighlight:
             return &a.highlightColor;
         case CmdCreateAnnotUnderline:
@@ -2393,9 +2393,11 @@ static Color AnnotDefaultColor(int cmdId) {
         case CmdCreateAnnotSquare:
         case CmdCreateAnnotCircle:
         case CmdCreateAnnotPolygon:
-        case CmdCreateAnnotInk:
         case CmdCreateAnnotStamp:
             return MkRgb(0xff, 0, 0);
+        case CmdCreateAnnotInk:
+            // 40% yellow, Annotations.InkColor's default
+            return 0x6600ffff;
     }
     return kColorUnset;
 }
@@ -2407,14 +2409,14 @@ static Color AnnotCurrentColor(int cmdId) {
     return col != kColorUnset ? col : AnnotDefaultColor(cmdId);
 }
 
-// The colors a button offers. The highlighter has its own, translucent ones:
-// they are exactly what it paints. cmdId 0 is not a button, and gets the presets
+// The colors a button offers. Ink has its own, translucent ones: they are
+// exactly what it paints. cmdId 0 is not a button, and gets the presets
 static Str* AnnotPresetColorList(int cmdId) {
     if (!gSettings) {
         return nullptr;
     }
     Annotations& a = gSettings->annotations;
-    return (cmdId == CmdAnnotationHighlightBrush) ? &a.inkHighlightColors : &a.presetColors;
+    return (cmdId == CmdCreateAnnotInk) ? &a.inkColors : &a.presetColors;
 }
 
 static void AnnotPresetColors(int cmdId, Vec<Color>& out) {

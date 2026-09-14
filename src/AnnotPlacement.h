@@ -34,6 +34,7 @@ bool AnnotationPlacementOnMouseMove(MainWindow*, Point, WPARAM);
 bool AnnotationPlacementOnSetCursor(MainWindow*);
 bool AnnotationPlacementOnKeyDown(MainWindow*, WPARAM);
 bool AnnotationPlacementEraseAt(MainWindow*, Point);
+void AnnotationPlacementOnSelectionStop(MainWindow*);
 
 void PaintAnnotationPlacement(MainWindow*, HDC, DisplayModel*);
 bool AnnotationPlacementFillCreate(MainWindow*, AnnotationType, Point&, int&, PointF&, PointF&, AnnotCreateArgs&);

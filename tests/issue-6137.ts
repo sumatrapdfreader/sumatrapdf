@@ -1,5 +1,7 @@
-// #6137: highlighter stays 40% while dragging and after commit, finishes on
-// mouse/pen up, and closing the placement hint finishes ink (touch, no Enter).
+// The highlighter is a mode that highlights text: every text selection finished
+// while it's on becomes a highlight annotation, text already selected when it's
+// picked is highlighted at once, and Esc leaves it. Ink paints the way the old
+// highlighter brush did: 40% yellow by default, 16 points wide.
 //
 // Run: bun tests/issue-6137.ts [--no-build]
 
@@ -8,72 +10,128 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import {
-  captureWindowPixels,
   clientToScreen,
   getClientRect,
   MK_LBUTTON,
   packCoords,
+  postChar,
+  postMessage,
   sendMessage,
   setCursorPos,
   sleep,
+  VK_END,
+  WM_KEYDOWN,
+  WM_KEYUP,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { findCanvas, killAndWait, launchControlled, pressEscape, sendCommandSync } from "./win-automation.ts";
 
 type Point = { x: number; y: number };
 
-type InkState = {
-  active: boolean;
-  strokes: number;
-  annotations: number;
-  opacity: number;
-  raw: string;
-};
+const HINT = "Select text to highlight it. **Esc** to stop highlighting.";
 
-function makeBlankPdf(): string {
+function makePdf(): string {
+  const stream = "BT /F1 24 Tf 72 720 Td (highlight this line) Tj ET";
   return assemblePdf([
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+      "/Resources << /Font << /F1 5 0 R >> >> >>",
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
   ]);
 }
 
-async function inkState(client: ControlClient, args: (string | number)[] = []): Promise<InkState> {
-  const res = await client.request(ControlCommand.TestMarkupAnnots, args);
+type State = {
+  highlighter: boolean;
+  notification: boolean;
+  message: string;
+  ink: boolean;
+  selected: boolean;
+  highlights: number;
+  annotations: number;
+  screen: { x: number; y: number; dx: number; dy: number } | null;
+  raw: string;
+};
+
+async function state(client: ControlClient): Promise<State> {
+  const res = await client.request(ControlCommand.TestMarkupAnnots, []);
   const raw = String(res[1] ?? "");
-  const placement = /inkPlacement active=(\d+).* strokes=(\d+)/.exec(raw);
-  const annotations = /annotations=(\d+)/.exec(raw);
-  const opacity = /ink strokes=\d+ points=\d+ opacity=(\d+)/.exec(raw);
-  if (res[0] !== 0 || !placement || !annotations) {
-    throw new Error(`issue-6137: could not read ink state\n${raw}`);
+  const hl = /highlighterPlacement active=(\d) notification=(\d) cmd=\d+ message=(.*)/.exec(raw);
+  const ink = /inkPlacement active=(\d)/.exec(raw);
+  const sel = /state selected=(\d)/.exec(raw);
+  const count = /annotations=(\d+)/.exec(raw);
+  // the first annotation's, on a line of its own under its type=
+  const screen = /^screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(raw);
+  if (res[0] !== 0 || !hl || !ink || !sel || !count) {
+    throw new Error(`issue-6137: could not read state\n${raw}`);
   }
   return {
-    active: placement[1] === "1",
-    strokes: +placement[2]!,
-    annotations: +annotations[1]!,
-    opacity: opacity ? +opacity[1]! : -1,
+    highlighter: hl[1] === "1",
+    notification: hl[2] === "1",
+    message: hl[3]!.trim(),
+    ink: ink[1] === "1",
+    selected: sel[1] === "1",
+    highlights: (raw.match(/type=Highlight/g) ?? []).length,
+    annotations: +count[1]!,
+    screen: screen ? { x: +screen[1]!, y: +screen[2]!, dx: +screen[3]!, dy: +screen[4]! } : null,
     raw,
   };
 }
 
-function densify(points: Point[], step = 4): Point[] {
-  const out: Point[] = [points[0]!];
-  for (let i = 1; i < points.length; i++) {
-    const a = points[i - 1]!;
-    const b = points[i]!;
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const n = Math.max(1, Math.floor(Math.hypot(dx, dy) / step));
-    for (let k = 1; k <= n; k++) {
-      out.push({ x: Math.round(a.x + (dx * k) / n), y: Math.round(a.y + (dy * k) / n) });
+async function waitUntil(client: ControlClient, pred: (s: State) => boolean, msg: string): Promise<State> {
+  const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+  let s = await state(client);
+  while (Date.now() < deadline) {
+    if (pred(s)) {
+      return s;
     }
+    await sleep(40);
+    s = await state(client);
   }
-  return out;
+  throw new Error(`issue-6137: ${msg}\n${s.raw}`);
 }
 
-async function pressStroke(canvas: number, points: Point[]): Promise<void> {
+// the page's text line, selected with the keyboard (v, End)
+async function selectLineWithKeyboard(client: ControlClient, frame: number): Promise<void> {
+  const deadline = Date.now() + 4_000 * SLOW_BUILD_FACTOR;
+  const waitFor = async (re: RegExp) => {
+    let dump = "";
+    while (Date.now() < deadline) {
+      dump = String((await client.request(ControlCommand.TestSelectTextKeyboard, []))[1] ?? "");
+      if (re.test(dump)) {
+        return;
+      }
+      await sleep(25);
+    }
+    throw new Error(`issue-6137: keyboard selection did not reach ${re}\n${dump}`);
+  };
+  sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
+  await waitFor(/active=1/);
+  await postChar(frame, "v");
+  await waitFor(/visual=1/);
+  postMessage(frame, WM_KEYDOWN, VK_END, 0);
+  postMessage(frame, WM_KEYUP, VK_END, 0);
+  await sleep(200);
+}
+
+async function dragSelect(canvas: number, x0: number, y0: number, x1: number, y1: number): Promise<void> {
+  postMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x0, y0));
+  await sleep(150);
+  const steps = 8;
+  for (let i = 1; i <= steps; i++) {
+    const x = Math.round(x0 + ((x1 - x0) * i) / steps);
+    const y = Math.round(y0 + ((y1 - y0) * i) / steps);
+    postMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(x, y));
+    await sleep(60);
+  }
+  postMessage(canvas, WM_LBUTTONUP, 0, packCoords(x1, y1));
+  await sleep(300);
+}
+
+async function drawStroke(canvas: number, points: Point[]): Promise<void> {
   const first = points[0]!;
   const screen = clientToScreen(canvas, first.x, first.y);
   setCursorPos(screen.x, screen.y);
@@ -81,67 +139,24 @@ async function pressStroke(canvas: number, points: Point[]): Promise<void> {
   sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(first.x, first.y));
   await sleep(50);
   for (let i = 1; i < points.length; i++) {
-    const point = points[i]!;
-    sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(point.x, point.y));
+    sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(points[i]!.x, points[i]!.y));
   }
-}
-
-function releaseStroke(canvas: number, point: Point): void {
-  sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(point.x, point.y));
-}
-
-async function drawStroke(canvas: number, points: Point[]): Promise<void> {
-  await pressStroke(canvas, points);
-  releaseStroke(canvas, points[points.length - 1]!);
-  await sleep(50);
-}
-
-// 40% yellow over white is B≈153. Per-segment DrawLine stacks round caps, so
-// vertices (and a dense stroke) drop toward B≈92 / 55. captureWindowPixels is BGRA.
-function yellowMinBlue(px: { data: Uint8Array } | null): { n: number; minB: number } {
-  let n = 0;
-  let minB = 255;
-  if (!px) {
-    return { n, minB };
-  }
-  for (let i = 0; i < px.data.length; i += 4) {
-    const b = px.data[i]!;
-    const g = px.data[i + 1]!;
-    const r = px.data[i + 2]!;
-    if (r > 200 && g > 200 && b < 200 && r - b > 40 && g - b > 40) {
-      n++;
-      if (b < minB) {
-        minB = b;
-      }
-    }
-  }
-  return { n, minB };
-}
-
-async function waitUntil(client: ControlClient, pred: (s: InkState) => boolean, msg: string): Promise<InkState> {
-  const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
-  let state = await inkState(client);
-  while (Date.now() < deadline) {
-    if (pred(state)) {
-      return state;
-    }
-    await sleep(40);
-    state = await inkState(client);
-  }
-  throw new Error(`issue-6137: ${msg}\n${state.raw}`);
+  const last = points[points.length - 1]!;
+  sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(last.x, last.y));
+  await sleep(100);
 }
 
 export async function testit(): Promise<void> {
   const dir = tmpPath("issue-6137");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
-  const pdf = join(dir, "blank.pdf");
+  const pdf = join(dir, "text.pdf");
   const appdata = join(dir, "appdata");
   mkdirSync(appdata, { recursive: true });
-  writeFileSync(pdf, makeBlankPdf(), "latin1");
+  writeFileSync(pdf, makePdf(), "latin1");
   writeFileSync(
     join(appdata, "SumatraPDF-settings.txt"),
-    "UiLanguage = en\nRestoreSession = false\nCheckForUpdates = false\n",
+    "UiLanguage = en\nRestoreSession = false\nShowStartPage = false\nCheckForUpdates = false\n",
   );
 
   const { proc, client, frame } = await launchControlled([
@@ -156,67 +171,71 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     const canvas = findCanvas(frame);
-    const canvasRect = getClientRect(canvas);
-    const center = { x: Math.floor(canvasRect.right / 2), y: Math.floor(canvasRect.bottom / 2) };
-    const stroke = [
-      { x: center.x - 80, y: center.y - 20 },
-      { x: center.x - 40, y: center.y + 10 },
-      { x: center.x, y: center.y - 15 },
-      { x: center.x + 40, y: center.y + 20 },
-    ];
-
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     await sleep(200);
 
-    sendCommand(frame, cmdId("CmdAnnotationHighlightBrush"));
-    await waitUntil(client, (s) => s.active, "highlighter did not start");
+    // text selected before picking the highlighter is highlighted right away
+    await selectLineWithKeyboard(client, frame);
+    sendCommandSync(frame, cmdId("CmdAnnotationHighlightBrush"));
+    let s = await waitUntil(
+      client,
+      (st) => st.highlighter && st.highlights === 1 && st.screen !== null && st.screen.dx > 4,
+      "picking the highlighter did not highlight the selection and start the mode",
+    );
+    if (!s.notification || s.message !== HINT) {
+      throw new Error(`issue-6137: the highlighter hint is "${s.message}", want "${HINT}"\n${s.raw}`);
+    }
+    if (s.selected) {
+      throw new Error(`issue-6137: the new highlight is selected, which would eat the next press\n${s.raw}`);
+    }
+
+    // a drag over the text makes another highlight, and the mode stays on
     await client.setNotificationsEnabled(false);
-
-    const previewStroke = densify(stroke);
-    await pressStroke(canvas, previewStroke);
-    await waitUntil(client, (s) => s.active && s.strokes >= 1, "highlighter drag did not record a stroke");
-    let preview = { n: 0, minB: 255 };
-    const previewDeadline = Date.now() + 2000 * SLOW_BUILD_FACTOR;
-    while (Date.now() < previewDeadline) {
-      preview = yellowMinBlue(captureWindowPixels(canvas));
-      if (preview.n >= 200) {
-        break;
-      }
-      await sleep(40);
-    }
-    releaseStroke(canvas, previewStroke[previewStroke.length - 1]!);
-    // stacked per-segment caps drop B toward 90; a single 40% stroke stays ~153
-    if (preview.n < 200 || preview.minB < 120) {
-      throw new Error(
-        `issue-6137: highlighter drag preview should stay ~40% (B≳120), got n=${preview.n} minB=${preview.minB}`,
-      );
+    const r = s.screen!;
+    const y = r.y + Math.floor(r.dy / 2);
+    await dragSelect(canvas, r.x + 2, y, r.x + r.dx - 2, y);
+    s = await waitUntil(client, (st) => st.highlights === 2, "selecting text did not highlight it");
+    if (!s.highlighter || s.selected) {
+      throw new Error(`issue-6137: after highlighting, want the mode on and nothing selected\n${s.raw}`);
     }
 
-    await client.setNotificationsEnabled(true);
+    // Esc leaves it; then a selection is just a selection
+    await pressEscape(frame);
+    s = await waitUntil(client, (st) => !st.highlighter, "Esc did not leave the highlighter");
+    await dragSelect(canvas, r.x + 2, y, r.x + r.dx - 2, y);
+    s = await state(client);
+    if (s.highlights !== 2) {
+      throw new Error(`issue-6137: a selection after Esc was highlighted\n${s.raw}`);
+    }
 
-    let state = await waitUntil(
-      client,
-      (s) => !s.active && s.annotations === 1,
-      "highlighter did not commit on mouse up",
-    );
+    // ink: translucent 40% yellow and 16 points wide by default, stays on
+    const canvasRect = getClientRect(canvas);
+    const cx = Math.floor(canvasRect.right / 2);
+    const cy = Math.floor(canvasRect.bottom / 2);
+    sendCommandSync(frame, cmdId("CmdCreateAnnotInk"));
+    await waitUntil(client, (st) => st.ink, "ink tool did not start");
+    await drawStroke(canvas, [
+      { x: cx - 80, y: cy + 40 },
+      { x: cx - 30, y: cy + 70 },
+      { x: cx + 30, y: cy + 40 },
+      { x: cx + 80, y: cy + 70 },
+    ]);
+    s = await waitUntil(client, (st) => /ink strokes=\d+/.test(st.raw), "the ink stroke was not committed");
+    const ink = /ink strokes=\d+ points=\d+ opacity=(\d+) width=(-?\d+)/.exec(s.raw)!;
     // 40% of 255
-    if (state.opacity < 90 || state.opacity > 120) {
-      throw new Error(`issue-6137: highlighter opacity should be ~40% (102), got ${state.opacity}\n${state.raw}`);
+    if (+ink[1]! < 90 || +ink[1]! > 120 || +ink[2]! !== 16) {
+      throw new Error(`issue-6137: ink is opacity ${ink[1]} width ${ink[2]}, want ~102 and 16\n${s.raw}`);
     }
-
-    sendCommand(frame, cmdId("CmdCreateAnnotInk"));
-    await waitUntil(client, (s) => s.active, "ink tool did not start");
-    await drawStroke(canvas, stroke);
-    await inkState(client, ["close-placement-hint", 0, 0]);
-    state = await waitUntil(
-      client,
-      (s) => !s.active && s.annotations === 2,
-      "closing the placement hint did not finish ink",
-    );
+    if (!s.ink) {
+      throw new Error(`issue-6137: the ink tool did not stay on after a stroke\n${s.raw}`);
+    }
+    await pressEscape(frame);
+    await waitUntil(client, (st) => !st.ink, "Esc did not leave the ink tool");
   } finally {
     client.close();
     await killAndWait(proc);
   }
+  console.log("issue-6137: OK");
 }
 
 if (import.meta.main) {

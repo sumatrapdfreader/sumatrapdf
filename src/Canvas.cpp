@@ -2626,6 +2626,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         if (MouseAction::Selecting == ma && win->showSelection) {
             win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
         }
+        AnnotationPlacementOnSelectionStop(win);
         if (FinishSignaturePlacement(win, x, y, !didDragMouse)) {
             win->mouseAction = MouseAction::None;
             return;

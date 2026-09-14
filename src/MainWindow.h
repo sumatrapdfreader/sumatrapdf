@@ -183,6 +183,8 @@ enum class AnnotPlacementKind {
     PolyLine,
     Shape,
     Ink,
+    // not placed: each text selection made while it's on is highlighted
+    Highlighter,
 };
 
 struct AnnotPlacement {
@@ -196,10 +198,6 @@ struct AnnotPlacement {
     Vec<PointF> points;
     Vec<int> strokeCounts;
     bool circle = false;
-    // highlighter brush: an ink stroke painted with a fixed-size translucent
-    // marker instead of the thin pen
-    bool highlightBrush = false;
-    float brushWidthPt = 0.f;
     bool mouseDown = false;
     bool didDrag = false;
     bool constrain = false;

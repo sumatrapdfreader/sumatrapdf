@@ -42,8 +42,10 @@ const HOVER_MENU_CLASS = "SumatraToolbarHoverMenu";
 const POPUP_CLASS = "SumatraAnnotColorPopup";
 // the two preset colors the test picks from: translucent red, opaque green
 const PRESETS = "#80ff0000 #00ff00";
-// the highlighter's own colors, with the alpha it paints them at
-const BRUSH_PRESETS = "#66ff0000 #4000ff00";
+// ink's own colors, with the alpha it paints them at
+const INK_PRESETS = "#66ff0000 #4000ff00";
+// Annotations.InkColors when not set; the first is the default ink color
+const INK_DEFAULT_PRESETS = "#66ffff00* #668bf05d #6699defa #66f199d2 #66e24745";
 const COLOR_DIALOG_TITLE = "Annotation Colors";
 const PICKED_COLOR = "#ff0000";
 const PICKED_OPACITY = 0x80;
@@ -353,7 +355,6 @@ const COLOR_BUTTONS = [
   "CmdCreateAnnotSquare",
   "CmdCreateAnnotCircle",
   "CmdCreateAnnotPolygon",
-  "CmdCreateAnnotInk",
   "CmdCreateAnnotStamp",
   "CmdCreateAnnotCaret",
   "CmdCreateAnnotFileAttachment",
@@ -369,7 +370,6 @@ const DEFAULT_COLORS: Record<string, string> = {
   CmdCreateAnnotSquare: "#ff0000",
   CmdCreateAnnotCircle: "#ff0000",
   CmdCreateAnnotPolygon: "#ff0000",
-  CmdCreateAnnotInk: "#ff0000",
   CmdCreateAnnotStamp: "#ff0000",
   CmdCreateAnnotCaret: "#0000ff",
   CmdCreateAnnotFileAttachment: "#ffff00",
@@ -477,6 +477,18 @@ async function testToolbarButtons(): Promise<void> {
       await closeHoverMenu(pid, frame);
     }
 
+    // ink offers colors of its own, translucent, and its default is the first
+    {
+      const b = (await annotButtonRect(client, cmdId("CmdCreateAnnotInk")))!;
+      rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
+      await sleep(400);
+      const colors = (await hoverMenuColors(client)).join(" ");
+      if (colors !== INK_DEFAULT_PRESETS) {
+        throw new Error(`annot-color-dropdown: CmdCreateAnnotInk offers "${colors}", want "${INK_DEFAULT_PRESETS}"`);
+      }
+      await closeHoverMenu(pid, frame);
+    }
+
     // a redaction mark's color is the box that covers the text, not a choice
     const redact = await annotButtonRect(client, cmdId("CmdCreateAnnotRedact"));
     if (redact) {
@@ -561,7 +573,7 @@ async function testCurrentColorAdded(): Promise<void> {
       "Annotations [",
       `\tPresetColors = ${PRESETS}`,
       "\tLineColor = #123456",
-      `\tInkHighlightColors = ${BRUSH_PRESETS}`,
+      `\tInkColors = ${INK_PRESETS}`,
       "]",
       "",
     ].join(nl),
@@ -591,9 +603,10 @@ async function testCurrentColorAdded(): Promise<void> {
       // it stays in the presets, for every button; a square has no color set,
       // so its default joins them too
       ["CmdCreateAnnotSquare", `${PRESETS} #123456 #ff0000*`],
-      // the highlighter has colors of its own, translucent; its default 40%
-      // yellow joins them
-      ["CmdAnnotationHighlightBrush", `${BRUSH_PRESETS} #66ffff00*`],
+      // the highlighter makes highlights, in HighlightColor (yellow)
+      ["CmdAnnotationHighlightBrush", `${PRESETS} #123456 #ff0000 #ffff00*`],
+      // ink has colors of its own, translucent; its default 40% yellow joins them
+      ["CmdCreateAnnotInk", `${INK_PRESETS} #66ffff00*`],
     ] as const) {
       const b = (await annotButtonRect(client, cmdId(name)))!;
       rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));

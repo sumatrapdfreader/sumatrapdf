@@ -894,25 +894,18 @@ const annotations: Field[] = [
   field(
     "InkColor",
     Color,
-    "",
-    "color of newly created ink annotations. If not set, the PDF engine's default (red) is used",
-  ).ver("3.7"),
-  field("InkBorderWidth", Int, 6, "width of the stroke of new ink annotations, in points").ver("3.7"),
-  field(
-    "InkHighlightColor",
-    Color,
     rgba(0xff, 0xff, 0x0, 0x66),
-    "color the highlighter paints in, as #aarrggbb: the alpha is how translucent the stroke is " +
+    "color of newly created ink annotations, as #aarrggbb: the alpha is how translucent the stroke is " +
       "(00 = transparent, FF = opaque), so the color is exactly what ends up on the page",
   ).ver("3.7"),
   field(
-    "InkHighlightColors",
+    "InkColors",
     Str,
     "#66ffff00 #668bf05d #6699defa #66f199d2 #66e24745",
-    "colors offered by the highlighter button's drop-down, separated by space. Use #aarrggbb " +
-      "values: the alpha is the stroke's opacity. The color the highlighter currently paints in " +
-      "is added when it is missing",
+    "colors offered by the ink button's drop-down, separated by space. Use #aarrggbb values: " +
+      "the alpha is the stroke's opacity. The color ink currently draws in is added when it is missing",
   ).ver("3.7"),
+  field("InkBorderWidth", Int, 16, "width of the stroke of new ink annotations, in points").ver("3.7"),
   field(
     "StampColor",
     Color,

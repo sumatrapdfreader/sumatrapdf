@@ -2788,7 +2788,7 @@ AnnotationType CmdIdToAnnotationType(int cmdId) {
         case CmdCreateAnnotStamp:          return AnnotationType::Stamp;
         case CmdCreateAnnotCaret:          return AnnotationType::Caret;
         case CmdCreateAnnotInk:            return AnnotationType::Ink;
-        case CmdAnnotationHighlightBrush:  return AnnotationType::Ink;
+        case CmdAnnotationHighlightBrush:  return AnnotationType::Highlight;
         case CmdCreateAnnotPopup:          return AnnotationType::Popup;
         case CmdCreateAnnotFileAttachment: return AnnotationType::FileAttachment;
     }

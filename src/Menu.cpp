@@ -2599,8 +2599,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 // the cursor's position after the context menu has closed.
 bool CommandUsesContextMenuPoint(int cmdId) {
     if (cmdId == CmdAnnotationHighlightBrush) {
-        // a drag-to-paint tool, not a point-placed annotation: dispatch it
-        // without a point so it enters brush mode instead of stamping a stroke
+        // a mode that highlights the text selected next, not an annotation
+        // placed at a point: dispatch it without one
         return false;
     }
     if (CmdIdToAnnotationType(cmdId) != AnnotationType::Unknown) {

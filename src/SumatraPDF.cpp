@@ -13186,6 +13186,32 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             return 0;
         }
 
+        case CmdAnnotationHighlightBrush: {
+            // The highlighter is a mode: every text selection finished while
+            // it's on is highlighted (the placement commit), until Esc. Text
+            // already selected when it's picked is highlighted right away.
+            if (!win || !tab) {
+                return 0;
+            }
+            if (isAnnotationPlacementCommit || tab->selectionOnPage) {
+                AnnotCreateArgs args{annotType};
+                SetAnnotCreateArgs(args, cmd);
+                if (MakeAnnotationsFromSelection(tab, &args)) {
+                    // not selected: that would take the next press, which is
+                    // meant to select more text
+                    StopSelectTextWithKeyboard(win);
+                    DeleteOldSelectionInfo(win, true);
+                    RefreshAnnotationLists(tab);
+                    MainWindowRerender(win);
+                    ToolbarUpdateStateForWindow(win, true);
+                }
+            }
+            if (!isAnnotationPlacementCommit) {
+                StartAnnotationPlacement(win, invokedCmdId);
+            }
+            return 0;
+        }
+
         case CmdCreateAnnotHighlight:
             [[fallthrough]];
         case CmdCreateAnnotSquiggly:
@@ -13221,8 +13247,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotPolyLine:
             [[fallthrough]];
         case CmdCreateAnnotInk:
-            [[fallthrough]];
-        case CmdAnnotationHighlightBrush:
             [[fallthrough]];
         case CmdCreateAnnotRedact:
             [[fallthrough]];
