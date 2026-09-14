@@ -16,6 +16,7 @@ bool AnnotationHasText(Annotation*);
 bool ShowAnnotationTextPopup(MainWindow*, Annotation*);
 void HideAnnotationTextPopup(MainWindow*);
 bool IsAnnotationTextPopupShown(MainWindow*);
+bool IsAnnotationTextPopupShownFor(MainWindow*, Annotation*);
 // keeps the popup on its annotation while the page scrolls or zooms
 void RepositionAnnotationTextPopup(MainWindow*);
 void DeleteAnnotationTextPopup(MainWindow*);

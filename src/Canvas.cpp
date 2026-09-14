@@ -4079,9 +4079,10 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
         win->DeleteToolTip();
         return TRUE;
     }
-    // The Edit PDF hover card has the annotation's contents and metadata.
-    // Do not put the old one-line comment tooltip on top of it.
-    if (win->pdfAnnotationsToolbarEnabled && annot && pageEl->Is(kindPageElementComment)) {
+    // The Edit PDF hover card and the text popup have the annotation's contents.
+    // Do not put the old one-line comment tooltip on top of them.
+    bool annotCardShown = win->pdfAnnotationsToolbarEnabled || IsAnnotationTextPopupShownFor(win, annot);
+    if (annotCardShown && annot && pageEl->Is(kindPageElementComment)) {
         win->DeleteToolTip();
         SetCursorCached(IDC_HAND);
         return TRUE;

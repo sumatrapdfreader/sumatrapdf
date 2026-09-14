@@ -43,10 +43,10 @@ constexpr int kHeaderGap = 12;
 // between the header line and the rule under it
 constexpr int kRuleGap = 4;
 constexpr int kCornerRadius = 6;
-// the card is anchored to the annotation, so it is sized to read comfortably
-// rather than to the annotation's own width
-constexpr int kIdealWidth = 380;
-constexpr int kMinWidth = 200;
+// the card is as wide as the comment's longest line; lines longer than this
+// wrap, so a comment with no line breaks doesn't span the canvas
+constexpr int kMaxLineChars = 80;
+constexpr int kMinWidth = 120;
 // how much of the canvas the card may cover before the text starts scrolling
 constexpr int kMaxHeightPercent = 60;
 // a card shorter than this looks like a glitch, however short the comment
@@ -107,7 +107,7 @@ static Color PopupMutedText() {
 // the rule under the header: a mid-tone that reads on both a light and a dark
 // card (the window edge color is nearly invisible on white)
 static Color PopupRuleColor() {
-    float units = IsLightColor(PopupBg()) ? 120.0f : -120.0f;
+    float units = IsLightColor(PopupBg()) ? 190.0f : -190.0f;
     return AdjustLightness2(PopupText(), units);
 }
 
@@ -246,12 +246,25 @@ static AnnotTextPopup* GetOrCreatePopup(MainWindow* win) {
     return popup;
 }
 
-// the card's own width, clamped to what the canvas can hold
-static int PopupWidth(MainWindow* win) {
+// the widest card the canvas can hold
+static int PopupMaxWidth(MainWindow* win) {
     Rect canvas = HwndClientRect(win->hwndCanvas);
-    int wantDx = DpiScale(kIdealWidth);
-    int maxDx = std::max(canvas.dx - DpiScale(24), DpiScale(kMinWidth));
-    return std::min(wantDx, maxDx);
+    return std::max(canvas.dx - DpiScale(24), DpiScale(kMinWidth));
+}
+
+// width of the longest of the LF-separated lines
+static int LongestLineDx(PlatformFont* font, Str s) {
+    int dx = 0;
+    while (len(s) > 0) {
+        int n = str::IndexOfChar(s, '\n');
+        Str line = n < 0 ? s : Str(s.s, n);
+        dx = std::max(dx, PlatformFontMeasureText(font, line).dx);
+        if (n < 0) {
+            break;
+        }
+        s = Str(s.s + n + 1, len(s) - n - 1);
+    }
+    return dx;
 }
 
 // who wrote the comment; the annotation's type name when it has no author, so
@@ -279,12 +292,17 @@ static TempStr PopupDateTemp(Annotation* annot) {
     return str::DupTemp(Str(buf, (int)n));
 }
 
-static AnnotPopupHeader* MakePopupHeader(AnnotTextPopup* popup, Annotation* annot, int dx) {
+// the header's ideal width fits author and date without eliding
+static AnnotPopupHeader* MakePopupHeader(AnnotTextPopup* popup, Annotation* annot) {
     auto* h = new AnnotPopupHeader();
     h->author = str::Dup(PopupAuthorTemp(annot));
     h->date = str::Dup(PopupDateTemp(annot));
     h->authorFont = GetBoldPlatformFont(popup->font);
     h->dateFont = popup->font;
+    int dx = PlatformFontMeasureText(h->authorFont, h->author).dx;
+    if (len(h->date) > 0) {
+        dx += DpiScale(kHeaderGap) + PlatformFontMeasureText(h->dateFont, h->date).dx;
+    }
     int lineDy = PlatformFontLineHeight(popup->font);
     h->idealSize = {dx, lineDy + DpiScale(kRuleGap) + DpiScale(1)};
     h->onPaint = MkFunc1(PaintPopupHeader, h);
@@ -294,16 +312,24 @@ static AnnotPopupHeader* MakePopupHeader(AnnotTextPopup* popup, Annotation* anno
 
 static void BuildPopup(AnnotTextPopup* popup, Annotation* annot) {
     int margin = DpiScale(kMargin);
-    int width = PopupWidth(popup->win);
-    int textDx = width - (2 * margin);
-
-    auto* header = MakePopupHeader(popup, annot, textDx);
+    auto* header = MakePopupHeader(popup, annot);
 
     // CRLF is what a win32 edit expects; annotation text uses bare LF
     TempStr s = str::DupTemp(Contents(annot));
     str::NormalizeNewlinesToLFInPlace(s);
+    int lineDx = LongestLineDx(popup->font, s);
     s = str::LFToCRLFTemp(s);
     popup->edit->SetText(s);
+
+    // as wide as the longest line or the header, capped at kMaxLineChars; the
+    // extra px keeps the edit from wrapping a line that measured exactly
+    int maxLineDx = popup->font->averageCharWidth * kMaxLineChars;
+    LRESULT margins = SendMessageW(popup->edit->hwnd, EM_GETMARGINS, 0, 0);
+    int textDx = std::max(lineDx, header->idealSize.dx);
+    textDx = std::min(textDx, maxLineDx) + LOWORD(margins) + HIWORD(margins) + DpiScale(2);
+    textDx = std::max(textDx, DpiScale(kMinWidth));
+    textDx = std::min(textDx, PopupMaxWidth(popup->win) - (2 * margin));
+    header->idealSize.dx = textDx;
 
     popup->edit->idealDx = textDx;
     auto* slot = new AnnotTextSlot();
@@ -323,8 +349,11 @@ static void BuildPopup(AnnotTextPopup* popup, Annotation* annot) {
     int textDy = std::min(popup->edit->GetIdealSize().dy, maxTextDy);
     // a multi-line edit always has WS_VSCROLL; show the bar only when the
     // comment really is taller than the card
-    ShowScrollBar(popup->edit->hwnd, SB_VERT, nLines > maxLines);
-    slot->idealSize = {textDx, textDy};
+    bool scrolls = nLines > maxLines;
+    ShowScrollBar(popup->edit->hwnd, SB_VERT, scrolls);
+    // the bar takes its width from the text: widen so lines wrap as counted
+    int slotDx = scrolls ? textDx + DpiGetSystemMetrics(SM_CXVSCROLL) : textDx;
+    slot->idealSize = {slotDx, textDy};
 
     auto* column = new VBox();
     column->alignMain = MainAxisAlign::MainStart;
@@ -341,8 +370,8 @@ static void BuildPopup(AnnotTextPopup* popup, Annotation* annot) {
     popup->annotBounds = GetRect(annot);
 }
 
-// below the annotation, flipping above it when there is no room, and always
-// inside the canvas
+// right of the annotation when it fits, else below it, flipping above it when
+// there is no room, and always inside the canvas
 static bool PositionPopup(AnnotTextPopup* popup) {
     MainWindow* win = popup ? popup->win : nullptr;
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
@@ -360,10 +389,14 @@ static bool PositionPopup(AnnotTextPopup* popup) {
     int gap = DpiScale(6);
     int width = popup->size.dx;
     int height = std::min(popup->size.dy, canvas.dy);
-    int x = annotRect.x;
-    int y = annotRect.y + annotRect.dy + gap;
-    if (y + height > canvas.y + canvas.dy) {
-        y = annotRect.y - gap - height;
+    int x = annotRect.x + annotRect.dx + gap;
+    int y = annotRect.y;
+    if (x + width > canvas.x + canvas.dx) {
+        x = annotRect.x;
+        y = annotRect.y + annotRect.dy + gap;
+        if (y + height > canvas.y + canvas.dy) {
+            y = annotRect.y - gap - height;
+        }
     }
 
     int maxX = canvas.x + canvas.dx - width;
@@ -419,6 +452,8 @@ bool ShowAnnotationTextPopup(MainWindow* win, Annotation* annot) {
         HideAnnotationTextPopup(win);
         return false;
     }
+    // the card has the whole text; the one-line tooltip would cover it
+    win->DeleteToolTip();
     popup->host->Show(true);
     popup->host->Invalidate(false);
     SetActiveWindow(popup->host->native);
@@ -448,6 +483,10 @@ void HideAnnotationTextPopup(MainWindow* win) {
 bool IsAnnotationTextPopupShown(MainWindow* win) {
     AnnotTextPopup* popup = win ? win->annotTextPopup : nullptr;
     return popup && popup->host->IsVisible();
+}
+
+bool IsAnnotationTextPopupShownFor(MainWindow* win, Annotation* annot) {
+    return annot && IsAnnotationTextPopupShown(win) && win->annotTextPopup->annot == annot;
 }
 
 void RepositionAnnotationTextPopup(MainWindow* win) {
