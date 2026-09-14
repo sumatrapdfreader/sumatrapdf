@@ -309,7 +309,7 @@ const commandsRaw = [
     "CmdSearchGoogleLens", "Search with Google Lens",
     "CmdNavigateThumbnail", "Navigate Thumbnails",
     "CmdShowAnnotationText", "Show Comment",
-    "CmdAnnotationHighlightBrush", "Highlight with Brush",
+    "CmdAnnotationHighlightBrush", "Highlighter",
     "CmdFindAnnotation", "Find Annotation",
     "CmdOpenFileNoHistory", "Open File Without History...",
     "CmdCopySelectionAsImage", "Copy Selection As Image",

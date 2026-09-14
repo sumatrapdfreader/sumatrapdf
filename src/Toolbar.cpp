@@ -98,9 +98,9 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 constexpr int kButtonsCount = dimof(gToolbarButtons);
 
 static ToolbarButtonInfo gPdfAnnotationButtons[] = {
-    {gIconAnnotHighlightBrush, CmdAnnotationHighlightBrush, TrN("Highlight Selection")},
+    {gIconAnnotHighlightBrush, CmdAnnotationHighlightBrush, TrN("Highlighter: select text to highlight it")},
     {gIconAnnotInk, CmdCreateAnnotInk, TrN("Ink")},
-    {gIconAnnotHighlight, CmdCreateAnnotHighlight, TrN("Highlight")},
+    {gIconAnnotHighlight, CmdCreateAnnotHighlight, TrN("Highlight Selection")},
     {gIconAnnotUnderline, CmdCreateAnnotUnderline, TrN("Underline")},
     {gIconAnnotSquiggly, CmdCreateAnnotSquiggly, TrN("Squiggly")},
     {gIconAnnotStrikeOut, CmdCreateAnnotStrikeOut, TrN("Strike Out")},

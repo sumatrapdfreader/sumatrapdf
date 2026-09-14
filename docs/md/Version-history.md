@@ -306,7 +306,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdNavigateFilesInFolder` : "Navigate Files in Folder" (`Ctrl + Shift + Up`) — directory browser for openable files (stays open; Enter/double-click replaces the current tab or enters a directory, `Ctrl + Enter`/`Ctrl + double-click` uses an existing or new tab, `..` goes up, `Del` deletes the selected file, `F5` refreshes, Esc closes)
 - `CmdGoToPrevFavorite` : "Go to Previous Favorite"
 - `CmdCreateAnnotImageFromClipboard` : "Create Image Annotation From Clipboard"
-- `CmdAnnotationHighlightBrush` : "Highlight with Brush" — freehand highlighter, no text selection needed
+- `CmdAnnotationHighlightBrush` : "Highlighter" — mode that highlights every text selection until Esc or Enter
 - `CmdFindAnnotation` : "Find Annotation" — opens the floating annotation list (fixes #6086)
 - `CmdStopReadAloud` : "Stop Reading"
 - `CmdReadAloudFromTopPage` : "Start Reading From Top"

@@ -1003,7 +1003,7 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
         CmdCreateAnnotFreeText,
     },
     {
-        TrN("&Highlight Selection"),
+        TrN("&Highlighter"),
         CmdAnnotationHighlightBrush,
     },
     {

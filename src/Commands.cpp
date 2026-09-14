@@ -936,7 +936,7 @@ SeqStrings gCommandDescriptions =
     "Search with Google Lens\0"
     "Navigate Thumbnails\0"
     "Show Comment\0"
-    "Highlight with Brush\0"
+    "Highlighter\0"
     "Find Annotation\0"
     "Open File Without History...\0"
     "Copy Selection As Image\0"
