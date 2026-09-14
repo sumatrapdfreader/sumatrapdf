@@ -17,6 +17,7 @@ bool IsPlacingLineAnnotation(MainWindow*);
 bool IsPlacingPolyLineAnnotation(MainWindow*);
 bool IsPlacingShapeAnnotation(MainWindow*);
 bool IsPlacingInkAnnotation(MainWindow*);
+bool IsPlacingHighlighterAnnotation(MainWindow*);
 Point SnapLineEndpoint(Point start, Point end);
 
 void StartAnnotationPlacement(MainWindow*, int cmdId);

@@ -12,6 +12,7 @@ import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from ".
 import {
   clientToScreen,
   getClientRect,
+  MK_CONTROL,
   MK_LBUTTON,
   packCoords,
   postChar,
@@ -51,6 +52,7 @@ type State = {
   message: string;
   ink: boolean;
   selected: boolean;
+  hover: boolean;
   highlights: number;
   annotations: number;
   screen: { x: number; y: number; dx: number; dy: number } | null;
@@ -62,7 +64,7 @@ async function state(client: ControlClient): Promise<State> {
   const raw = String(res[1] ?? "");
   const hl = /highlighterPlacement active=(\d) notification=(\d) cmd=\d+ message=(.*)/.exec(raw);
   const ink = /inkPlacement active=(\d)/.exec(raw);
-  const sel = /state selected=(\d)/.exec(raw);
+  const sel = /state selected=(\d) hover=(\d)/.exec(raw);
   const count = /annotations=(\d+)/.exec(raw);
   // the first annotation's, on a line of its own under its type=
   const screen = /^screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(raw);
@@ -75,6 +77,7 @@ async function state(client: ControlClient): Promise<State> {
     message: hl[3]!.trim(),
     ink: ink[1] === "1",
     selected: sel[1] === "1",
+    hover: sel[2] === "1",
     highlights: (raw.match(/type=Highlight/g) ?? []).length,
     annotations: +count[1]!,
     screen: screen ? { x: +screen[1]!, y: +screen[2]!, dx: +screen[3]!, dy: +screen[4]! } : null,
@@ -198,6 +201,23 @@ export async function testit(): Promise<void> {
     s = await waitUntil(client, (st) => st.highlights === 2, "selecting text did not highlight it");
     if (!s.highlighter || s.selected) {
       throw new Error(`issue-6137: after highlighting, want the mode on and nothing selected\n${s.raw}`);
+    }
+
+    // the mode only selects text: resting on a highlight doesn't hover it, and
+    // Ctrl+click (which selects it in Edit PDF) doesn't pick it
+    const hx = r.x + Math.floor(r.dx / 2);
+    sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(hx, y));
+    await sleep(150);
+    s = await state(client);
+    if (s.hover) {
+      throw new Error(`issue-6137: the highlighter hovers the annotation under the cursor\n${s.raw}`);
+    }
+    sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON | MK_CONTROL, packCoords(hx, y));
+    sendMessage(canvas, WM_LBUTTONUP, MK_CONTROL, packCoords(hx, y));
+    await sleep(300);
+    s = await state(client);
+    if (s.selected || !s.highlighter) {
+      throw new Error(`issue-6137: Ctrl+click in the highlighter selected an annotation\n${s.raw}`);
     }
 
     // Esc leaves it; then a selection is just a selection

@@ -1891,8 +1891,10 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                 HideAnnotationHoverOverlay(win);
                 break;
             }
-            Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
-            bool editPdf = win->pdfAnnotationsToolbarEnabled;
+            // the highlighter only selects text: annotations get no hover
+            bool highlighter = IsPlacingHighlighterAnnotation(win);
+            Annotation* annot = highlighter ? nullptr : dm->GetAnnotationAtPos(pos, nullptr);
+            bool editPdf = win->pdfAnnotationsToolbarEnabled && !highlighter;
             int srcPageNo = -1;
             IPageElement* el = dm->GetElementAtPos(pos, &srcPageNo);
             if (el && el->Is(kindPageElementDest) && gSettings->disableLinks) {
@@ -2398,7 +2400,9 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
+    // the highlighter only selects text: a click never picks an annotation
+    Annotation* annot =
+        IsPlacingHighlighterAnnotation(win) ? nullptr : dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
     if (MouseHasCtrl(key) && annot && tab) {
         EnablePdfAnnotationsToolbar(win);
     }
@@ -2658,7 +2662,10 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // and is stale when WM_MOUSEMOVE did not run (or returned early because
     // dragStartPending was still set from the create gesture). Using it
     // re-selected the new stamp when clicking empty page (issue #5933).
-    Annotation* clickedAnnot = dm->GetAnnotationAtPos(pt, tab ? tab->selectedAnnotation : nullptr);
+    // the highlighter only selects text: a click never picks an annotation
+    Annotation* clickedAnnot = IsPlacingHighlighterAnnotation(win)
+                                   ? nullptr
+                                   : dm->GetAnnotationAtPos(pt, tab ? tab->selectedAnnotation : nullptr);
     if (MouseHasCtrl(key) && clickedAnnot && tab) {
         EnablePdfAnnotationsToolbar(win);
     }
@@ -2808,7 +2815,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
     // a double-click on free text edits its text where it sits on the page
-    if (StartFreeTextInPlaceEditAt(win, Point{x, y})) {
+    if (!IsPlacingHighlighterAnnotation(win) && StartFreeTextInPlaceEditAt(win, Point{x, y})) {
         return;
     }
     auto isLeft = bit::IsMaskSet(key, (WPARAM)MK_LBUTTON);
@@ -4145,7 +4152,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
         }
     }
 
-    Annotation* annot = dm->GetAnnotationAtPos(pt, selected);
+    Annotation* annot = IsPlacingHighlighterAnnotation(win) ? nullptr : dm->GetAnnotationAtPos(pt, selected);
     bool annotEditHover = annot && (win->pdfAnnotationsToolbarEnabled || selected);
 
     int pageNo = 0;

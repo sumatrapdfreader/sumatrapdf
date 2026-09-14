@@ -239,6 +239,10 @@ bool IsPlacingInkAnnotation(MainWindow* win) {
     return KindOf(win) == AnnotPlacementKind::Ink;
 }
 
+bool IsPlacingHighlighterAnnotation(MainWindow* win) {
+    return KindOf(win) == AnnotPlacementKind::Highlighter;
+}
+
 static HCURSOR CreateSvgPlacementCursor(const char* icon, int dx, int dy, Color color, DWORD hotspotX, DWORD hotspotY) {
     Pixmap* px = GetCachedPixmapForSvg(Str(icon), dx, dy, color);
     if (!px || !px->hbmp) {
