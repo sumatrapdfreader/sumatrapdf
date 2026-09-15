@@ -16,6 +16,7 @@ import {
   MK_CONTROL,
   MK_LBUTTON,
   MK_RBUTTON,
+  MK_SHIFT,
   packCoords,
   postMessage,
   sendMessage,
@@ -27,6 +28,7 @@ import {
   WM_COMMAND,
   WM_KEYDOWN,
   WM_LBUTTONDBLCLK,
+  WM_LBUTTONDOWN,
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
   WM_RBUTTONDOWN,
@@ -60,7 +62,7 @@ type PlacementState = {
 
 const notification =
   "Place polyline annotation. **Double-click**, **right-click**, **Space**, or **Enter** to finish, " +
-  "**Ctrl+click** to close it. **Esc** to cancel.";
+  "**Ctrl+click** to close it. **Shift** to snap to multiples of 45 degrees. **Esc** to cancel.";
 
 function makeBlankPdf(): string {
   const objects = [
@@ -173,10 +175,10 @@ async function executeFromCommandPalette(client: ControlClient, frame: number): 
   throw new Error("polyline-annotation-placement: Polyline command was not in the filtered palette");
 }
 
-function moveMouse(canvas: number, point: Point): void {
+function moveMouse(canvas: number, point: Point, key = 0): void {
   const screen = clientToScreen(canvas, point.x, point.y);
   setCursorPos(screen.x, screen.y);
-  sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(point.x, point.y));
+  sendMessage(canvas, WM_MOUSEMOVE, key, packCoords(point.x, point.y));
 }
 
 function countPreviewBlue(shot: { w: number; h: number; data: Uint8Array } | null, start: Point, end: Point): number {
@@ -398,6 +400,52 @@ export async function testit(): Promise<void> {
     }
     await pressEscape(frame);
     await waitForPlacement(client, false);
+
+    // Shift snaps the segment from the previous vertex to 45 degrees (issue #6195)
+    sendCommand(frame, cmdId("CmdCreateAnnotPolyLine"));
+    await waitForPlacement(client, true);
+    await clickAt(canvas, p1.x, p1.y, 80);
+    const nearlyFlat = { x: p1.x + 150, y: p1.y + 12 };
+    moveMouse(canvas, nearlyFlat, MK_SHIFT);
+    state = await placementState(client);
+    const end = /polyLinePlacement [^\n]*end=(-?\d+),(-?\d+)/.exec(state.raw);
+    if (!end || Math.abs(+end[2]! - p1.y) > 1) {
+      throw new Error(`polyline-annotation-placement: Shift did not snap preview to horizontal\n${state.raw}`);
+    }
+    moveMouse(canvas, nearlyFlat);
+    state = await placementState(client);
+    if (!state.raw.includes(`end=${nearlyFlat.x},${nearlyFlat.y}`)) {
+      throw new Error(`polyline-annotation-placement: releasing Shift did not restore the pointer\n${state.raw}`);
+    }
+    await clickAt(canvas, nearlyFlat.x, nearlyFlat.y, 350, MK_SHIFT);
+    await pressEnter(frame);
+    state = await expectFinished(client, 7, "Shift+click");
+    const polys = [...state.raw.matchAll(/polyline vertices=\d+ closed=\d pts=([^\n]*)/g)];
+    const pts = polys[polys.length - 1]?.[1]?.split(";").map((xy) => xy.split(",").map(Number));
+    if (!pts || pts.length !== 2 || Math.abs(pts[0]![1]! - pts[1]![1]!) > 1.5) {
+      throw new Error(`polyline-annotation-placement: Shift+click did not snap the vertex\n${state.raw}`);
+    }
+
+    // Shift-dragging a vertex of the (selected) new polyline snaps it too
+    const vertex = { x: nearlyFlat.x, y: p1.y };
+    const steep = { x: p1.x + 100, y: p1.y + 108 };
+    moveMouse(canvas, vertex);
+    sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON | MK_SHIFT, packCoords(vertex.x, vertex.y));
+    // SetCapture synthesizes a move without Shift; let it land first
+    await sleep(50);
+    sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON | MK_SHIFT, packCoords(steep.x, steep.y));
+    sendMessage(canvas, WM_LBUTTONUP, MK_SHIFT, packCoords(steep.x, steep.y));
+    await client.waitForRenderIdle();
+    state = await placementState(client);
+    const dragged = [...state.raw.matchAll(/polyline vertices=\d+ closed=\d pts=([^\n]*)/g)];
+    const dpts = dragged[dragged.length - 1]?.[1]?.split(";").map((xy) => xy.split(",").map(Number));
+    const ddx = dpts ? Math.abs(dpts[1]![0]! - dpts[0]![0]!) : 0;
+    const ddy = dpts ? Math.abs(dpts[1]![1]! - dpts[0]![1]!) : 0;
+    if (!dpts || dpts.length !== 2 || ddx < 20 || Math.abs(ddx - ddy) > 1.5) {
+      throw new Error(
+        `polyline-annotation-placement: Shift-drag did not snap the vertex (dx=${ddx} dy=${ddy})\n${state.raw}`,
+      );
+    }
   } finally {
     client.close();
     await killAndWait(proc);

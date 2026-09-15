@@ -1977,10 +1977,18 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                         // the drag ends.
                         ScheduleRepaint(win, 0);
                     } else if (IsVertexHandle(handle)) {
-                        PointF pagePt = dm->CvtFromScreen(Point{x, y}, PageNo(annot));
+                        int polyPageNo = PageNo(annot);
+                        Vec<PointF>& pts = win->annotationVertexPreview;
                         int idx = win->annotationResizeVertexIndex;
-                        if (idx >= 0 && idx < len(win->annotationVertexPreview)) {
-                            win->annotationVertexPreview[idx] = pagePt;
+                        if (idx >= 0 && idx < len(pts)) {
+                            Point screenPt{x, y};
+                            // snap to the segment from the previous vertex (next one for the first)
+                            int anchor = idx > 0 ? idx - 1 : idx + 1;
+                            bool shift = IsShiftPressed() || bit::IsMaskSet(key, (WPARAM)MK_SHIFT);
+                            if (shift && anchor < len(pts)) {
+                                screenPt = SnapLineEndpoint(dm->CvtToScreen(polyPageNo, pts[anchor]), screenPt);
+                            }
+                            pts[idx] = dm->CvtFromScreen(screenPt, polyPageNo);
                         }
                         ScheduleRepaint(win, 0);
                     } else if (win->annotationResizeOutlineOnly) {

@@ -641,7 +641,11 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
             if (tp == AnnotationType::PolyLine || tp == AnnotationType::Polygon) {
                 Vec<PointF> pts = GetVertices(a);
                 bool closed = len(pts) > 2 && pts[0] == VecLast(pts);
-                out.Append(fmt("polyline vertices=%d closed=%d\n", len(pts), closed ? 1 : 0));
+                out.Append(fmt("polyline vertices=%d closed=%d pts=", len(pts), closed ? 1 : 0));
+                for (int i = 0; i < len(pts); i++) {
+                    out.Append(fmt(i == 0 ? "%g,%g" : ";%g,%g", pts[i].x, pts[i].y));
+                }
+                out.Append(StrL("\n"));
             }
             if (tp == AnnotationType::Ink) {
                 Vec<int> strokeCounts;

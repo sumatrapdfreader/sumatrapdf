@@ -399,7 +399,7 @@ static Str PlacementNotification(AnnotPlacementKind kind, bool circle, int cmdId
         case AnnotPlacementKind::PolyLine:
             return Tr(
                 "Place polyline annotation. **Double-click**, **right-click**, **Space**, or **Enter** to finish, "
-                "**Ctrl+click** to close it. **Esc** to cancel.");
+                "**Ctrl+click** to close it. **Shift** to snap to multiples of 45 degrees. **Esc** to cancel.");
         case AnnotPlacementKind::Shape:
             return circle
                        ? Tr("Place circle annotation. Drag or click twice. **Shift** for a circle. **Esc** to cancel.")
@@ -721,6 +721,9 @@ static bool HandlePolyLineClick(MainWindow* win, Point pt, WPARAM key) {
     if (!started) {
         p.pageNo = pageNo;
     }
+    if (started && bit::IsMaskSet(key, (WPARAM)MK_SHIFT)) {
+        pt = SnapLineEndpoint(dm->CvtToScreen(pageNo, p.points[len(p.points) - 1]), pt);
+    }
     VecAppend(p.points, dm->CvtFromScreen(pt, pageNo));
     p.end = pt;
     // one point plus this click is a single segment; closing it would just
@@ -1031,9 +1034,13 @@ bool AnnotationPlacementOnMouseMove(MainWindow* win, Point pt, WPARAM key) {
             }
             break;
         case AnnotPlacementKind::PolyLine:
-            if (len(p.points) > 0 && pt != p.end) {
-                p.end = pt;
-                ScheduleRepaint(win, 0);
+            if (len(p.points) > 0) {
+                Point last = dm->CvtToScreen(p.pageNo, p.points[len(p.points) - 1]);
+                Point end = bit::IsMaskSet(key, (WPARAM)MK_SHIFT) ? SnapLineEndpoint(last, pt) : pt;
+                if (end != p.end) {
+                    p.end = end;
+                    ScheduleRepaint(win, 0);
+                }
             }
             break;
         case AnnotPlacementKind::Text:
