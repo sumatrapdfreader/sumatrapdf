@@ -9503,14 +9503,12 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         annot->bounds = GetBounds(annot);
         VecAppend(created, annot);
     }
-    RefreshAnnotationLists(tab);
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
     if (args->copyToClipboard) {
         CopySelectionToClipboard(win);
     }
-    MainWindowRerender(win);
-    ToolbarUpdateStateForWindow(win, true);
+    // callers refresh lists and rerender; doing it here too aborted and redid the page render
     return annot;
 }
 
