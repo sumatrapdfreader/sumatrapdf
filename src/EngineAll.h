@@ -167,7 +167,7 @@ struct PdfSigCert {
 PdfSigCert* EngineMupdfGetSignatureCerts(EngineBase*);
 void FreePdfSigCerts(PdfSigCert*);
 #endif
-Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
+Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, float padding, Annotation*);
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);
 void EngineMupdfGetFormFieldHighlightRects(EngineBase*, int pageNo, Annotation* skip, Vec<RectF>& out);
@@ -205,5 +205,5 @@ bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineHasUnsavedAnnotations(EngineBase*);
 bool EngineHasRedactMarks(EngineBase*);
 bool EngineHasUserRedactMarks(EngineBase*);
-Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
+Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, float padding, Annotation*);
 Annotation* EngineGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);

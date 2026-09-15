@@ -9843,7 +9843,9 @@ Str EngineMupdfLoadAnnotAttachment(EngineBase* engine, int objNum) {
 }
 
 // if an elements fully obscures another, remove it from the list
-Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, Annotation* preferredAnnot) {
+// padding (in page units) grows each annotation's bounds
+Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, float padding,
+                                          Annotation* preferredAnnot) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
         return nullptr;
@@ -9858,6 +9860,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     for (auto& annot : pi->annotations) {
         auto& atp = annot->type;
         RectF bounds = annot->bounds;
+        bounds.Inflate(padding, padding);
         if (!bounds.Contains(pos)) {
             continue;
         }

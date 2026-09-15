@@ -2046,8 +2046,11 @@ Annotation* DisplayModel::GetAnnotationAtPos(Point pt, Annotation* annot) {
         return nullptr;
     }
 
+    // hit the drawn mark, not just the bounds: thin lines are sub-pixel when zoomed out
     PointF pos = CvtFromScreen(pt, pageNo);
-    return EngineGetAnnotationAtPos(engine, pageNo, pos, annot);
+    float zoom = getZoomSafe(this, pageNo, GetPageInfo(pageNo));
+    float padding = (float)kAnnotMarkPadding / zoom;
+    return EngineGetAnnotationAtPos(engine, pageNo, pos, padding, annot);
 }
 
 // form fields (widgets) are hit-tested separately from annotations

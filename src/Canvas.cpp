@@ -3582,7 +3582,7 @@ static void PaintHoveredAnnotationMark(MainWindow* win, HDC hdc, DisplayModel* d
         return;
     }
     Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
-    rect.Inflate(4, 4);
+    rect.Inflate(DisplayModel::kAnnotMarkPadding, DisplayModel::kAnnotMarkPadding);
     Gdiplus::Graphics gs(hdc);
     Gdiplus::Color blue(200, 0, 80, 200);
     Gdiplus::Pen pen(blue, 2);
@@ -3620,7 +3620,7 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
         dm->ScrollScreenToRect(pageNo, rect);
         tab->didScrollToSelectedAnnotation = true;
     }
-    rect.Inflate(4, 4);
+    rect.Inflate(DisplayModel::kAnnotMarkPadding, DisplayModel::kAnnotMarkPadding);
 
     Gdiplus::Graphics gs(hdc);
 
