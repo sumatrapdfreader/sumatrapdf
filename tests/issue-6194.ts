@@ -42,6 +42,19 @@ async function hoverAt(client: ControlClient, canvas: number, x: number, y: numb
   return (await dump(client)).hover;
 }
 
+// Windows re-sends the position of the physical cursor, which sits wherever the
+// last test left it: such a move lands between the posted one and the read and
+// clears the hover, so post again until it sticks.
+async function hoverUntil(client: ControlClient, canvas: number, x: number, y: number): Promise<boolean> {
+  const deadline = Date.now() + 2000 * SLOW_BUILD_FACTOR;
+  do {
+    if (await hoverAt(client, canvas, x, y)) {
+      return true;
+    }
+  } while (Date.now() < deadline);
+  return false;
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("issue-6194");
   rmSync(dir, { recursive: true, force: true });
@@ -79,12 +92,12 @@ export async function testit(): Promise<void> {
     }
 
     const cx = r.x + Math.floor(r.dx / 2);
-    if (!(await hoverAt(client, canvas, cx, r.y + Math.floor(r.dy / 2)))) {
+    if (!(await hoverUntil(client, canvas, cx, r.y + Math.floor(r.dy / 2)))) {
       throw new Error(`issue-6194: not hovered on the annotation\n${(await dump(client)).raw}`);
     }
     for (const y of [r.y - 3, r.y + r.dy + 3]) {
       await hoverAt(client, canvas, cx, r.y - 40);
-      if (!(await hoverAt(client, canvas, cx, y))) {
+      if (!(await hoverUntil(client, canvas, cx, y))) {
         throw new Error(
           `issue-6194: not hovered 3px off a thin annotation at 25% (y=${y})\n${(await dump(client)).raw}`,
         );
