@@ -20,6 +20,9 @@ struct CrashHandlerConfig {
     Str (*getCrashComment)(Arena* a, Str condStr, Str fileLine, bool isCrash);
     void (*onCrashBegin)();
     void (*showCrashMessage)();
+    // for a crash on a thread not started by our exe (or the thread pool): true if
+    // the code at faultAddr is such that ending only that thread is safe
+    bool (*canEndCrashedThread)(void* faultAddr);
 };
 
 void InstallCrashHandler(const CrashHandlerConfig& cfg);

@@ -420,6 +420,75 @@ static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* excepti
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
+// there is no documented Win32 API for a thread's start address
+static void* CurrentThreadStartAddr() {
+    using NtQueryInfoThreadFn = LONG(WINAPI*)(HANDLE, int, void*, ULONG, ULONG*);
+    constexpr int kThreadQuerySetWin32StartAddress = 9;
+    HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+    auto queryInfo =
+        ntdll ? reinterpret_cast<NtQueryInfoThreadFn>(GetProcAddress(ntdll, "NtQueryInformationThread")) : nullptr;
+    if (!queryInfo) {
+        return nullptr;
+    }
+    void* addr = nullptr;
+    LONG status = queryInfo(GetCurrentThread(), kThreadQuerySetWin32StartAddress, (void*)&addr, sizeof(addr), nullptr);
+    return status >= 0 ? addr : nullptr;
+}
+
+static HMODULE ModuleFromAddr(void* addr) {
+    HMODULE mod = nullptr;
+    DWORD flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
+    GetModuleHandleExW(flags, (LPCWSTR)addr, &mod);
+    return mod;
+}
+
+// our threads and thread pool workers (they run our callbacks) must not be ended
+static bool IsForeignThread() {
+    HMODULE mod = ModuleFromAddr(CurrentThreadStartAddr());
+    if (!mod) {
+        return false;
+    }
+    return mod != GetModuleHandleW(nullptr) && mod != GetModuleHandleW(L"ntdll.dll");
+}
+
+static MINIDUMP_EXCEPTION_INFORMATION gEndedThreadMei{};
+static Str gEndedThreadLogText;
+static AtomicBool gEndedCrashedThread = 0;
+
+static DWORD WINAPI EndedThreadDumpThread(LPVOID /*data*/) {
+    bool shouldUpload = gCfg.uploadCrashes && !gCfg.localOnly;
+    WriteAndUploadMinidump(gEndedThreadLogText, &gEndedThreadMei, shouldUpload);
+    return 0;
+}
+
+// A third-party DLL (e.g. a SAPI voice engine) crashed on a thread it started:
+// report it, then end only that thread. Once per session; a repeat crashes.
+static void MaybeEndCrashedThread(EXCEPTION_POINTERS* exceptionInfo) {
+    if (!gCfg.canEndCrashedThread || !IsForeignThread()) {
+        return;
+    }
+    if (!gCfg.canEndCrashedThread(exceptionInfo->ExceptionRecord->ExceptionAddress)) {
+        return;
+    }
+    if (AtomicBoolSwap(&gEndedCrashedThread, true)) {
+        return;
+    }
+
+    log(StrL("MaybeEndCrashedThread: ending crashed thread\n"));
+    gEndedThreadMei.ThreadId = GetCurrentThreadId();
+    gEndedThreadMei.ExceptionPointers = exceptionInfo;
+    gEndedThreadLogText = BuildCrashComment(StrL("crashed thread ended, process kept running"), StrL(""), true);
+    WriteCrashInfoToStdErr(gEndedThreadLogText);
+
+    // a thread can't dump its own stack, see CrashDumpThread
+    ThreadHandle h = CreateThread(nullptr, 0, EndedThreadDumpThread, nullptr, 0, nullptr);
+    if (h) {
+        WaitForSingleObject(h, INFINITE);
+        CloseHandle(h);
+    }
+    ExitThread(1);
+}
+
 static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
     if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode)) {
         log(
@@ -427,6 +496,8 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
                  "exceptionInfo->ExceptionRecord->ExceptionCode\n"));
         return EXCEPTION_CONTINUE_SEARCH;
     }
+
+    MaybeEndCrashedThread(exceptionInfo);
 
     if (!TryStartCrashHandling(StrL("CrashDumpExceptionHandler"))) {
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?

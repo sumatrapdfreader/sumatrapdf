@@ -899,6 +899,7 @@ enum class ControlCmd : u16 {
     TestReadingAutoScroll = 97,
     TestReadingBar = 98,
     TestSeedTextSelection = 99,
+    TestTtsEngineCrash = 100,
 };
 
 enum class ControlArgType : u16 {
@@ -1985,6 +1986,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             log(StrL("ControlCmd::CrashMe\n"));
             CrashMe();
             break;
+
+        case ControlCmd::TestTtsEngineCrash: {
+            Str action = StringArg(req, 0);
+            if (str::EqI(action, StrL("crash"))) {
+                str::ReplaceWithCopy(&gSettings->readAloudVoiceId, StrL("test-voice"));
+                if (!TtsTestEngineCrash()) {
+                    AppendTestResult(req, 1, StrL("FAIL could not start the crashing thread"));
+                    break;
+                }
+            }
+            TempStr state = fmt("crashed=%d voice='%s'", (int)TtsEngineCrashed(), gSettings->readAloudVoiceId);
+            AppendTestResult(req, 0, state);
+            break;
+        }
 
         case ControlCmd::TestCanvasFlags: {
             Str action = StringArg(req, 0);

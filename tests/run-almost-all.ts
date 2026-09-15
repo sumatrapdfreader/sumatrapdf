@@ -131,6 +131,7 @@ import { testit as issue6095 } from "./issue-6095.ts";
 import { testit as epubRelayoutStalePage } from "./epub-relayout-stale-page.ts";
 import { testit as epubThemeRestyle } from "./epub-theme-restyle.ts";
 import { testit as embeddedImageAttachment } from "./embedded-image-attachment.ts";
+import { testit as ttsEngineCrashRecovery } from "./tts-engine-crash-recovery.ts";
 import { testit as issue5943 } from "./issue-5943.ts";
 import { testit as issue6117 } from "./issue-6117.ts";
 import { testit as issue6118 } from "./issue-6118.ts";
@@ -330,6 +331,7 @@ export const tests: NamedTest[] = [
   ["issue-6135", issue6135],
   ["issue-4276", issue4276],
   ["embedded-image-attachment", embeddedImageAttachment],
+  ["tts-engine-crash-recovery", ttsEngineCrashRecovery],
   ["issue-4705", issue4705],
   ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-5956", issue5956],

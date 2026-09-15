@@ -42,6 +42,11 @@ Str TtsGetVoiceId();
 void TtsSetSpeed(float speed);
 float TtsGetSpeed();
 
+bool TtsOnEngineCrash(void* faultAddr);
+bool TtsTakeEngineCrash();
+bool TtsEngineCrashed();
+bool TtsTestEngineCrash();
+
 // --- highlight of the words being spoken ---
 
 constexpr int kReadAloudHighlightTimerID = 8;
