@@ -1,5 +1,6 @@
-// Copy on the floating selection toolbar must keep the text selection and
-// leave the toolbar visible with it. Underline consumes the selection: it
+// Any action on the floating selection toolbar hides it. Copy keeps the text
+// selection, shows "Copied to clipboard", and the toolbar only comes back once
+// the selection changes. Underline consumes the selection: it
 // turns it into an annotation, so the selection and its toolbar go away and
 // the new annotation is not selected (Edit PDF stays off).
 //
@@ -13,6 +14,7 @@ import { killAndWait, launchControlled, sendCommandSync } from "./win-automation
 import { WM_KEYDOWN, WM_KEYUP, postMessage, sleep, postChar } from "./winapi.ts";
 
 const VK_END = 0x23;
+const VK_LEFT = 0x25;
 const LINE = "The quick brown fox jumps over the lazy dog";
 
 function makeTextPdf(): Buffer {
@@ -183,14 +185,30 @@ export async function testit(): Promise<void> {
     await waitForSelection(client, LINE);
     await waitForToolbarVisible(client);
 
+    await client.setNotificationsEnabled(true);
     await clickToolbar(client, "CmdCopySelection");
-    const afterCopy = await toolbarDump(client);
-    if (!toolbarVisible(afterCopy)) {
-      throw new Error(`selection-toolbar-stays: Copy hid the selection toolbar\n${afterCopy}`);
+    let afterCopy = await toolbarDump(client);
+    if (toolbarVisible(afterCopy)) {
+      throw new Error(`selection-toolbar-stays: Copy left the selection toolbar up\n${afterCopy}`);
     }
+    if (!/^notif=Copied to clipboard$/m.test(afterCopy)) {
+      throw new Error(`selection-toolbar-stays: Copy did not show 'Copied to clipboard'\n${afterCopy}`);
+    }
+    await client.setNotificationsEnabled(false);
     if ((await selectedText(client)) !== LINE) {
       throw new Error(`selection-toolbar-stays: Copy cleared the selection`);
     }
+    // repaints re-show the toolbar for a selection; not for the one just acted on
+    await sleep(800 * SLOW_BUILD_FACTOR);
+    afterCopy = await toolbarDump(client);
+    if (toolbarVisible(afterCopy)) {
+      throw new Error(`selection-toolbar-stays: toolbar came back for the same selection\n${afterCopy}`);
+    }
+
+    // a changed selection gets the toolbar again
+    pressVKey(frame, VK_LEFT);
+    await waitForSelection(client, LINE.slice(0, -1));
+    await waitForToolbarVisible(client);
 
     await clickToolbar(client, "CmdCreateAnnotUnderline");
     await waitForUnderline(client);

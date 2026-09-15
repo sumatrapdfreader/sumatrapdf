@@ -4941,6 +4941,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     tab->canvasRc = win->canvasRc;
 
     win->showSelection = tab->selectionOnPage != nullptr;
+    ResetSelectionToolbarDismissed(win);
     if (win->showSelection) {
         ShowSelectionToolbar(win);
     }

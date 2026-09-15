@@ -109,6 +109,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
 
 void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     HideSelectionToolbar(win);
+    ResetSelectionToolbarDismissed(win);
     win->showSelection = false;
     win->selectionMeasure = SizeF();
     win->selectionDragEdge = SelectionDragEdge::None;
