@@ -2226,7 +2226,9 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         return;
     }
 
-    if (addNavPt || ShouldCommitStableNavPointBeforeViewChange(this, GetScrollState())) {
+    // a suppressed nav point ignores the scroll state; don't compute it: when
+    // SyncWithEngineLayout() restores the view, pages aren't laid out yet
+    if (addNavPt || (!stableNavPoint.suppress && ShouldCommitStableNavPointBeforeViewChange(this, GetScrollState()))) {
         AddNavPoint();
     }
 

@@ -29,6 +29,15 @@ async function followToc(client: ControlClient, destNo: number): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
+  // single page: the resync's SetScrollState() -> GoToPage() asked for the
+  // scroll state (to decide on a nav point it then ignored), and outside
+  // continuous mode that answers the stale startPage from the old numbering
+  for (const view of ["continuous", "single page"]) {
+    await restyleIn(view);
+  }
+}
+
+async function restyleIn(view: string): Promise<void> {
   const appdata = writeAppdata(
     "epub-theme-restyle",
     ["UiLanguage = en", "RestoreSession = false", "ShowStartPage = false", "CheckForUpdates = false"].join("\n"),
@@ -53,7 +62,7 @@ export async function testit(): Promise<void> {
         await client.waitForRenderIdle(30000);
       }
     },
-    ["-appdata", appdata, "-window-pos", "1000x900@40x40", "-view", "continuous", epub],
+    ["-appdata", appdata, "-window-pos", "1000x900@40x40", "-view", view, epub],
   );
 }
 
