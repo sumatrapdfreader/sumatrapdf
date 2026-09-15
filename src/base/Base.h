@@ -2161,6 +2161,9 @@ WStr ToWStr(const wstr::Builder&);
 TempStr ToStrTemp(const str::Builder&);
 
 wchar_t WCharToLower(wchar_t c);
+int FoldCaseRune(int c);
+bool IsCombiningMark(int c);
+int FoldDiacriticsRune(int c);
 int WStrFindSubstr(WStr str, WStr substr);
 int WStrCmpNoCase(WStr a, WStr b);
 

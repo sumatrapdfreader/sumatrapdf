@@ -276,22 +276,9 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     forward = true;
 }
 
-// Locale-independent Unicode case folding for search. CharLowerW folds accented
-// letters (e.g. É->é, Ş->ş) regardless of the CRT locale, unlike towlower() or
-// the ASCII-only fast paths we used before.
+// case-insensitive search also ignores diacritics: "lacz" finds "Łącz"
 static int FoldCaseForSearch(int c) {
-    // U+0130 (İ, Latin capital I with dot above) lowercases to 'i' under
-    // standard Unicode case folding, but CharLowerW only does this under a
-    // Turkish system locale and otherwise leaves it unchanged -- so searching
-    // "ibradı" wouldn't find "İbradı" on non-Turkish systems (issue #5597).
-    // Fold it explicitly so search is case-insensitive regardless of locale.
-    if (c == 0x0130) {
-        return L'i';
-    }
-    if (c > 0 && c <= 0xffff) {
-        return WCharToLower((wchar_t)c);
-    }
-    return c;
+    return FoldDiacriticsRune(FoldCaseRune(c));
 }
 
 // German ß (sharp s, U+00DF) is spelled "ss" and the two are often used

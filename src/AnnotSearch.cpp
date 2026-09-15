@@ -5,6 +5,7 @@
 
 #include "Annotation.h"
 #include "AnnotSearch.h"
+#include "FilterUtil.h"
 
 /*
 The annotation filter box takes plain words plus `:` conditions:
@@ -184,7 +185,7 @@ bool AnnotMatchesFields(Str author, Str contents, AnnotationType annotType, cons
                 }
                 break;
             case AnnotMatchCond::Type::ContentMatches:
-                if (!str::ContainsI(contents, c->s)) {
+                if (FilterIndexOf(contents, c->s, nullptr) < 0) {
                     return false;
                 }
                 break;

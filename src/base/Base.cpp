@@ -1882,6 +1882,62 @@ wchar_t WCharToLower(wchar_t c) {
 #endif
 }
 
+// locale-independent lowercase of a codepoint for case-insensitive matching
+int FoldCaseRune(int c) {
+    // CharLowerW maps İ (U+0130) to 'i' only under Turkish locale (issue #5597)
+    if (c == 0x0130) {
+        return 'i';
+    }
+    if (c > 0 && c <= 0xffff) {
+        return WCharToLower((wchar_t)c);
+    }
+    return c;
+}
+
+bool IsCombiningMark(int c) {
+    return c >= 0x300 && c <= 0x36f;
+}
+
+// strip diacritics from a codepoint: 'é' -> 'e', 'ł' -> 'l'. Case is preserved
+int FoldDiacriticsRune(int c) {
+    if (c < 0x80 || c > 0xffff) {
+        return c;
+    }
+
+    // letters that don't decompose into base + combining mark
+    switch (c) {
+        case 0x141: // Ł
+            return 'L';
+        case 0x142: // ł
+            return 'l';
+        case 0x110: // Đ
+            return 'D';
+        case 0x111: // đ
+            return 'd';
+        case 0xd8: // Ø
+            return 'O';
+        case 0xf8: // ø
+            return 'o';
+        case 0x126: // Ħ
+            return 'H';
+        case 0x127: // ħ
+            return 'h';
+        case 0x131: // ı
+            return 'i';
+    }
+
+#if OS_WIN
+    // 'é' -> 'e' + U+0301
+    WCHAR w = (WCHAR)c;
+    WCHAR decomposed[8];
+    int n = FoldStringW(MAP_COMPOSITE, &w, 1, decomposed, dimofi(decomposed));
+    if (n > 1 && IsCombiningMark(decomposed[1])) {
+        return decomposed[0];
+    }
+#endif
+    return c;
+}
+
 // Locale-independent Unicode lowercase folding for case-insensitive matching.
 static void FoldCaseWInPlace(WStr s) {
 #if OS_WIN

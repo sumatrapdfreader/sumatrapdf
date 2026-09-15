@@ -84,4 +84,15 @@ void CommandPaletteModel_UnitTests() {
 
     model.Filter(StrL("missing"));
     utassert(model.Count() == 0);
+
+    // ignore diacritics
+    StrVec words;
+    SplitFilterToWords(StrL("lacz CAFE"), words);
+    utassert(FilterMatches(StrL("\xc5\x81\xc4\x85\x63\x7a caf\xc3\xa9"), words)); // Łącz café
+    int matchLen = 0;
+    utassert(FilterIndexOf(StrL("x\xc5\x81\xc4\x85\x63\x7a"), StrL("lacz"), &matchLen) == 1);
+    utassert(matchLen == 6);
+    utassert(FilterIndexOf(StrL("cafe\xcc\x81!"), StrL("caf\xc3\xa9"), &matchLen) == 0); // decomposed é
+    utassert(matchLen == 6);
+    utassert(FilterIndexOf(StrL("abc"), StrL("\xcc\x81"), &matchLen) < 0);
 }

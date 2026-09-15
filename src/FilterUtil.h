@@ -5,3 +5,4 @@ struct StrVec;
 
 void SplitFilterToWords(Str filter, StrVec& words);
 bool FilterMatches(Str str, const StrVec& words);
+int FilterIndexOf(Str s, Str word, int* matchLenOut);

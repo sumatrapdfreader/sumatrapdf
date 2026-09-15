@@ -424,6 +424,13 @@ void BaseUtilTest() {
     utassert(WCharToLower(0x00C9) == 0x00E9); // É -> é
     utassert(WCharToLower(0x0410) == 0x0430); // А -> а
 
+    utassert(FoldCaseRune(0x0130) == 'i');       // İ -> i
+    utassert(FoldDiacriticsRune(0x00E9) == 'e'); // é -> e
+    utassert(FoldDiacriticsRune(0x0141) == 'L'); // Ł -> L
+    utassert(FoldDiacriticsRune(0x0105) == 'a'); // ą -> a
+    utassert(FoldDiacriticsRune(0x0430) == 0x0430);
+    utassert(IsCombiningMark(0x0301));
+
     utassert(MurmurHash2(nullptr, 0) == 0);
     utassert(MurmurHash2("test", 4) != MurmurHash2("Test", 4));
 
