@@ -1364,7 +1364,9 @@ static void AddExifStringProp(Props& propsOut, DocProp docProp, const ExifParser
 }
 
 TempStr EngineImage::GetPropertyTemp(DocProp prop) {
-    Str data = file::ReadFile(FilePath());
+    // loaded from memory (e.g. a PDF file attachment) has no file path
+    Str path = FilePath();
+    Str data = len(path) > 0 ? file::ReadFile(path) : str::Dup(sourceData);
     if (len(data) == 0) {
         return {};
     }
