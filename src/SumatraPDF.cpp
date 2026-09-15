@@ -13398,9 +13398,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
 
-    // every new annotation is selected, so it can be moved, resized, or edited
-    // from the compact property row
-    SetSelectedAnnotation(tab, lastCreatedAnnot);
+    // in Edit PDF a new annotation is selected, so it can be moved, resized, or
+    // edited from the property row; outside it selection is only a blue border
+    if (win->pdfAnnotationsToolbarEnabled) {
+        SetSelectedAnnotation(tab, lastCreatedAnnot);
+    }
     // a new free text annotation is a box of placeholder text: put the caret
     // in it rather than make the user find it again. Not for a paste, which
     // brings the text it was copied from.

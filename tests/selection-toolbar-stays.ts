@@ -1,7 +1,7 @@
 // Copy on the floating selection toolbar must keep the text selection and
 // leave the toolbar visible with it. Underline consumes the selection: it
 // turns it into an annotation, so the selection and its toolbar go away and
-// the new annotation is selected instead.
+// the new annotation is not selected (Edit PDF stays off).
 //
 // Run: bun tests/selection-toolbar-stays.ts [--no-build]
 
@@ -200,8 +200,9 @@ export async function testit(): Promise<void> {
       throw new Error(`selection-toolbar-stays: Underline left the selection toolbar up\n${afterUnderline}`);
     }
     const markup = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
-    if (!/state selected=1/.test(markup)) {
-      throw new Error(`selection-toolbar-stays: the new underline was not selected\n${markup}`);
+    // outside Edit PDF a selected annotation only gets a stray blue border
+    if (!/state selected=0 [^\n]*editToolbar=0/.test(markup)) {
+      throw new Error(`selection-toolbar-stays: the new underline was selected outside Edit PDF\n${markup}`);
     }
 
     sendCommandSync(frame, cmdId("CmdDiscardChanges"));
