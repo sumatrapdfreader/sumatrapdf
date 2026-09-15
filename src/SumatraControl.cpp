@@ -653,6 +653,16 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
                 GetInkList(a, strokeCounts, points);
                 out.Append(fmt("ink strokes=%d points=%d opacity=%d width=%d\n", len(strokeCounts), len(points),
                                Opacity(a), BorderWidth(a)));
+                // extent of the stroke points, without line width
+                if (len(points) > 0) {
+                    PointF lo = points[0];
+                    PointF hi = points[0];
+                    for (PointF p : points) {
+                        lo = {std::min(lo.x, p.x), std::min(lo.y, p.y)};
+                        hi = {std::max(hi.x, p.x), std::max(hi.y, p.y)};
+                    }
+                    out.Append(fmt("inkRect=%g,%g,%g,%g\n", lo.x, lo.y, hi.x - lo.x, hi.y - lo.y));
+                }
             }
             n++;
             continue;

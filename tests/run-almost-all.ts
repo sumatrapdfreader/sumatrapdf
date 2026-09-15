@@ -56,6 +56,7 @@ import { testit as issue2568 } from "./issue-2568.ts";
 import { testit as issue2799 } from "./issue-2799.ts";
 import { testit as issue6190 } from "./issue-6190.ts";
 import { testit as issue6194 } from "./issue-6194.ts";
+import { testit as inkAnnotationBounds } from "./ink-annotation-bounds.ts";
 import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 import { testit as findResultsSorted } from "./find-results-sorted.ts";
 import { testit as findWindowLayout } from "./find-window-layout.ts";
@@ -413,6 +414,7 @@ export const tests: NamedTest[] = [
   ["issue-2799", issue2799],
   ["issue-6190", issue6190],
   ["issue-6194", issue6194],
+  ["ink-annotation-bounds", inkAnnotationBounds],
   ["issue-find-match-select", findMatchSelect],
   ["find-results-sorted", findResultsSorted],
   ["find-window-layout", findWindowLayout],

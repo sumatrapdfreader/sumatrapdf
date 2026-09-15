@@ -197,16 +197,16 @@ RectF GetBounds(Annotation* annot) {
     auto* a = annot->pdfannot;
     auto* ctx = e->Ctx();
     ScopedRecursiveMutex cs(&e->docLock);
-    fz_rect rc = {};
+    RectF rc;
 
     fz_try(ctx) {
-        rc = pdf_bound_annot(ctx, a);
+        rc = PdfAnnotBounds(ctx, a);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
         logf("GetBounds(): pdf_bound_annot() failed\n");
     }
-    annot->bounds = ToRectF(rc);
+    annot->bounds = rc;
     return annot->bounds;
 }
 

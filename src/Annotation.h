@@ -2,6 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct Pixmap;
+struct fz_context;
+struct pdf_annot;
+
+RectF PdfAnnotBounds(fz_context*, pdf_annot*);
 
 // for fast conversions, must match the order of pdf_annot_type enum in annot.h
 enum class AnnotationType {
