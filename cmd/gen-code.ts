@@ -117,6 +117,12 @@ const virtKeys: [string, string][] = [
     ["VK_OEM_3", "`"],
     ["VK_OEM_4", "["],
     ["VK_OEM_6", "]"],
+    // after "+" so VK_OEM_PLUS still prints as "+"
+    ["VK_OEM_PLUS", "="],
+    ["VK_OEM_COMMA", ","],
+    ["VK_OEM_PERIOD", "."],
+    ["VK_OEM_5", "\\"],
+    ["VK_OEM_7", "'"],
 ];
 
 function uniqueVkNames(): string[] {

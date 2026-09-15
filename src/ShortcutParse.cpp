@@ -114,6 +114,11 @@ static SeqStrNum gVirtKeysNum =
     "`\0" "\x80\x03" \
     "[\0" "\xb6\x03" \
     "]\0" "\xba\x03" \
+    "=\0" "\xf6\x02" \
+    ",\0" "\xf8\x02" \
+    ".\0" "\xfc\x02" \
+    "\\\0" "\xb8\x03" \
+    "'\0" "\xbc\x03" \
     "\0";
 // clang-format on
 // @gen-end virt-keys-num
@@ -249,7 +254,7 @@ again:
     accel.fVirt = fVirt;
 
     // when user puts e.g. "~" it's actually "`" but with SHIFT
-    static Str shiftKeys = Str("~`,<.>/?;:'\"-_=+[{]}\\|");
+    static Str shiftKeys = Str("`~,<.>/?;:'\"-_=+[{]}\\|");
     char buf[2] = {};
     Str toFind = cursor;
     bool usedShiftKeyMap = false;
