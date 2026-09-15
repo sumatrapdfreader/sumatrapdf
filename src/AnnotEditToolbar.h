@@ -48,5 +48,3 @@ TempStr AnnotationHoverOverlayStateTemp(MainWindow*);
 TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeOut = nullptr, int selectLast = 0);
 SeqStrings AnnotationIconNames(Annotation*);
 SeqStrings AnnotEditorLineEndingStyles();
-SeqStrings AnnotEditorFontNames();
-SeqStrings AnnotEditorFontReadableNames();

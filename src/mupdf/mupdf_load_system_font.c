@@ -868,8 +868,9 @@ ExitNoFree:
     buffer = load_and_cache_font(ctx, found, orig_name);
     int use_glyph_bbox = !streq(found->full_name, "DroidSansFallback");
     fz_try(ctx) {
+        // not flagged ft_substitute: pdf_load_substitute_font() does that for a
+        // PDF, and a flagged font can't be embedded in a free text appearance (#6198)
         font = fz_new_font_from_buffer(ctx, orig_name, buffer, found->index, use_glyph_bbox);
-        font->flags.ft_substitute = 1;
     }
     fz_always(ctx) {
         fz_drop_buffer(ctx, buffer);
@@ -918,7 +919,16 @@ static fz_font* load_windows_font(fz_context* ctx, const char* fontname, int bol
         if (clean_name != fontname && !strncmp(clean_name, "Times-", 6)) return NULL;
     }
 
-    font = load_windows_font_by_name(ctx, fontname, needs_exact_metrics);
+    /* a stylesheet asks for "Georgia" with bold set: load the bold face, as a
+       faked bold can't be written into a PDF appearance stream (#6198) */
+    font = NULL;
+    if ((bold || italic) && !strchr(fontname, ',')) {
+        char styled[MAX_FACENAME];
+        const char* style = bold && italic ? "BoldItalic" : bold ? "Bold" : "Italic";
+        fz_snprintf(styled, sizeof(styled), "%s,%s", fontname, style);
+        font = load_windows_font_by_name(ctx, styled, needs_exact_metrics);
+    }
+    if (!font) font = load_windows_font_by_name(ctx, fontname, needs_exact_metrics);
     if (!font) return NULL;
     /* use the font's own metrics for base 14 fonts */
     if (is_base_14) font->flags.ft_substitute = 0;

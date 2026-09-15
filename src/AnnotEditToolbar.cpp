@@ -72,6 +72,9 @@ enum class AnnotEditKind {
     Opacity,
     Border,
     FontName,
+    Bold,
+    Italic,
+    Underline,
     TextColor,
     TextSize,
     Alignment,
@@ -271,6 +274,12 @@ static Str KindName(AnnotEditKind kind) {
             return StrL("border");
         case AnnotEditKind::FontName:
             return StrL("font");
+        case AnnotEditKind::Bold:
+            return StrL("bold");
+        case AnnotEditKind::Italic:
+            return StrL("italic");
+        case AnnotEditKind::Underline:
+            return StrL("underline");
         case AnnotEditKind::TextColor:
             return StrL("textColor");
         case AnnotEditKind::TextSize:
@@ -335,6 +344,83 @@ static Str ResolvedAnnotIconName(Annotation* annot) {
         idx = 0;
     }
     return SeqStrByIndex(icons, idx);
+}
+
+// clang-format off
+// in gBase14FontFamilies order
+static SeqStrings gBase14ReadableNames = "Courier\0Helvetica\0TimesRoman\0";
+// clang-format on
+
+static int StyleBitForKind(AnnotEditKind kind) {
+    switch (kind) {
+        case AnnotEditKind::Bold:
+            return kFreeTextBold;
+        case AnnotEditKind::Italic:
+            return kFreeTextItalic;
+        case AnnotEditKind::Underline:
+            return kFreeTextUnderline;
+        default:
+            return 0;
+    }
+}
+
+// chips paint after the temp arena resets, so a family they show must outlive it
+static Str InternFontFamily(Str family) {
+    static Vec<Str> families;
+    for (Str f : families) {
+        if (str::Eq(f, family)) {
+            return f;
+        }
+    }
+    Str dup = str::Dup(family);
+    VecAppend(families, dup);
+    return dup;
+}
+
+static Str FontFamilyLabel(Str family) {
+    int idx = SeqStrIndexIS(gBase14FontFamilies, family);
+    if (idx >= 0) {
+        return SeqStrByIndex(gBase14ReadableNames, idx);
+    }
+    return InternFontFamily(family);
+}
+
+static TempStr FontDescriptionTemp(Str family, int style) {
+    str::Builder s;
+    s.Append(FontFamilyLabel(family));
+    if (style & kFreeTextBold) {
+        s.Append(fmt(" %s", Tr("Bold")));
+    }
+    if (style & kFreeTextItalic) {
+        s.Append(fmt(" %s", Tr("Italic")));
+    }
+    if (style & kFreeTextUnderline) {
+        s.Append(fmt(" %s", Tr("Underline")));
+    }
+    return ToStrTemp(s);
+}
+
+// Arial / Courier New / Times New Roman have the metrics of the base 14 fonts
+// MuPDF renders free text with
+static WStr WinFontFamilyTemp(Str family) {
+    if (str::EqI(family, StrL("Courier"))) {
+        return WStrL(L"Courier New");
+    }
+    if (str::EqI(family, StrL("Times"))) {
+        return WStrL(L"Times New Roman");
+    }
+    if (len(family) == 0 || str::EqI(family, StrL("Helvetica"))) {
+        return WStrL(L"Arial");
+    }
+    return ToWStrTemp(family);
+}
+
+static void AppendStyleToggle(Vec<AnnotEditItem>& out, AnnotEditKind kind, int style, Str tooltip) {
+    AnnotEditItem it;
+    it.kind = kind;
+    it.number = (style & StyleBitForKind(kind)) ? 1 : 0;
+    it.tooltip = tooltip;
+    VecAppend(out, it);
 }
 
 static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
@@ -420,13 +506,14 @@ static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         {
             AnnotEditItem it;
             it.kind = AnnotEditKind::FontName;
-            Str pdfName = DefaultAppearanceTextFont(annot);
-            int idx = SeqStrIndex(AnnotEditorFontNames(), pdfName);
-            it.number = idx;
-            it.text = idx >= 0 ? SeqStrByIndex(AnnotEditorFontReadableNames(), idx) : pdfName;
+            it.text = FontFamilyLabel(FreeTextFontFamily(annot));
             it.tooltip = Tr("Font");
             VecAppend(out, it);
         }
+        int style = FreeTextFontStyle(annot);
+        AppendStyleToggle(out, AnnotEditKind::Bold, style, Tr("Bold"));
+        AppendStyleToggle(out, AnnotEditKind::Italic, style, Tr("Italic"));
+        AppendStyleToggle(out, AnnotEditKind::Underline, style, Tr("Underline"));
         {
             AnnotEditItem it;
             it.kind = AnnotEditKind::TextSize;
@@ -963,6 +1050,31 @@ static void PaintIconGlyph(Gfx* gfx, Rect r, Str name, Color col, PlatformFont* 
     gfx->DrawText(label, inner, gfxTextCenter | gfxTextVCenter | gfxTextEllipsis, font, col);
 }
 
+static Color BarActiveBg() {
+    if (BarIsDark()) {
+        return AccentColor(ThemeWindowControlBackgroundColor(), 35);
+    }
+    return AccentColor(BarBg(), 22);
+}
+
+// "B" in bold, "I" in italic, "U" underlined
+static void PaintStyleToggle(Gfx* gfx, Rect r, AnnotEditKind kind, Color col, PlatformFont* font) {
+    if (!font) {
+        return;
+    }
+    PlatformFontStyle style = PlatformFontStyle::Bold;
+    Str label = StrL("B");
+    if (kind == AnnotEditKind::Italic) {
+        style = PlatformFontStyle::Italic;
+        label = StrL("I");
+    } else if (kind == AnnotEditKind::Underline) {
+        style = PlatformFontStyle::Underline;
+        label = StrL("U");
+    }
+    PlatformFont* styled = GetPlatformFont(font->name, font->sizePt, style);
+    gfx->DrawText(label, r, gfxTextCenter | gfxTextVCenter, styled ? styled : font, col);
+}
+
 static TempStr ChipLabelTemp(const AnnotEditItem& item) {
     switch (item.kind) {
         case AnnotEditKind::Opacity:
@@ -990,6 +1102,14 @@ void AnnotEditChip::Paint(VirtPaintCtx& ctx) {
             break;
         case AnnotEditKind::Alignment:
             PaintAlignment(ctx.gfx, r, item.number, textCol);
+            break;
+        case AnnotEditKind::Bold:
+        case AnnotEditKind::Italic:
+        case AnnotEditKind::Underline:
+            if (item.number != 0) {
+                ctx.gfx->FillRoundedRect(r, DpiScale(kButtonRadius), BarActiveBg());
+            }
+            PaintStyleToggle(ctx.gfx, r, item.kind, textCol, tb ? tb->font : nullptr);
             break;
         case AnnotEditKind::Icon:
             if (item.mupdfIcon) {
@@ -1233,6 +1353,103 @@ static int PopupPickSeq(MainWindow* win, Point screen, SeqStrings names, int cur
     return PopupPickGlyphs(win, screen, items, current, chipScreen, glyph, lineIsStart);
 }
 
+constexpr UINT kFontMenuCurrent = 100;
+constexpr UINT kFontMenuOther = 101;
+
+// the Windows font dialog; false if canceled
+static bool ChooseSystemFont(HWND hwnd, Str& family, int& style) {
+    LOGFONTW lf{};
+    WStr face = WinFontFamilyTemp(family);
+    lstrcpynW(lf.lfFaceName, face.s, LF_FACESIZE);
+    lf.lfWeight = (style & kFreeTextBold) ? FW_BOLD : FW_NORMAL;
+    lf.lfItalic = (style & kFreeTextItalic) ? TRUE : FALSE;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    CHOOSEFONTW cf{};
+    cf.lStructSize = sizeof(cf);
+    cf.hwndOwner = hwnd;
+    cf.lpLogFont = &lf;
+    cf.Flags = CF_SCREENFONTS | CF_INITTOLOGFONTSTRUCT | CF_NOVERTFONTS | CF_NOSCRIPTSEL | CF_NOSIZESEL;
+    if (!ChooseFontW(&cf)) {
+        return false;
+    }
+    family = ToUtf8Temp(WStr(lf.lfFaceName));
+    style &= kFreeTextUnderline;
+    if (lf.lfWeight >= FW_SEMIBOLD) {
+        style |= kFreeTextBold;
+    }
+    if (lf.lfItalic) {
+        style |= kFreeTextItalic;
+    }
+    return true;
+}
+
+// a font other than the base 14 is embedded in the PDF
+static bool ConfirmFontEmbedding(HWND hwnd) {
+    Str msg = Tr("This font will be embedded in the PDF, which can add hundreds of kilobytes or more to its size.");
+    int res = MessageBoxW(hwnd, ToWStrTemp(msg).s, ToWStrTemp(Tr("Embed Font")).s, MB_OKCANCEL | MB_ICONWARNING);
+    return res == IDOK;
+}
+
+// Font chip menu: the base 14 fonts and any other font from the Windows font dialog
+static void PickFreeTextFont(AnnotEditToolbar* tb, Annotation* annot, Point screen, Rect chipScreen) {
+    HMENU menu = CreatePopupMenu();
+    if (!menu) {
+        return;
+    }
+    Str family = FreeTextFontFamily(annot);
+    int style = FreeTextFontStyle(annot);
+    bool isBase14 = IsBase14FontFamily(family);
+
+    int idx = 0;
+    for (Str name = SeqStrFirst(gBase14ReadableNames); len(name) > 0; name = SeqStrNext(name)) {
+        bool checked = str::EqI(SeqStrByIndex(gBase14FontFamilies, idx), family);
+        AppendMenuW(menu, MF_STRING | (checked ? MF_CHECKED : 0), (UINT)(idx + 1), ToWStrTemp(name).s);
+        idx++;
+    }
+    if (!isBase14) {
+        AppendMenuW(menu, MF_STRING | MF_CHECKED, kFontMenuCurrent, ToWStrTemp(family).s);
+    }
+    AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(menu, MF_STRING, kFontMenuOther, ToWStrTemp(Tr("Other Font (Embedded)...")).s);
+
+    int cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN, screen.x, screen.y, 0,
+                             tb->win->hwndFrame, nullptr);
+    DestroyMenu(menu);
+    EatDismissClickOverRect(chipScreen);
+    if (cmd <= 0) {
+        NotePopupDismissed(tb, AnnotEditKind::FontName);
+        return;
+    }
+
+    HWND hwnd = tb->win->hwndFrame;
+    WindowTab* tab = tb->tab;
+    switch (cmd) {
+        case kFontMenuCurrent:
+            return;
+        case kFontMenuOther: {
+            Str prevFamily = family;
+            if (!ChooseSystemFont(hwnd, family, style)) {
+                return;
+            }
+            // warn only when a font starts being embedded
+            bool newlyEmbedded = !IsBase14FontFamily(family) && !str::EqI(family, prevFamily);
+            if (newlyEmbedded && !ConfirmFontEmbedding(hwnd)) {
+                return;
+            }
+            break;
+        }
+        default:
+            family = SeqStrByIndex(gBase14FontFamilies, cmd - 1);
+            break;
+    }
+    // the dialogs ran a message loop, in which the annotation could have gone
+    if (!AnnotationIsLive(annot) || tab->selectedAnnotation != annot) {
+        return;
+    }
+    SetFreeTextFont(annot, family, style);
+    AnnotChanged(tab);
+}
+
 // a color from the drop-down of the chip that was clicked last; its alpha is
 // the annotation's opacity, kColorUnset means no color at all
 static void ChipColorPicked(AnnotEditToolbar* tb, Color col) {
@@ -1389,15 +1606,15 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
                                  kFreeTextSizeMax, MkFunc1(ChipTextSizePicked, tb));
             break;
         }
-        case AnnotEditKind::FontName: {
-            int idx = PopupPickSeq(tb->win, screen, AnnotEditorFontReadableNames(), chip->item.number, chipScreen);
-            if (dismissed(idx)) {
-                return;
-            }
-            SetDefaultAppearanceTextFont(annot, SeqStrByIndex(AnnotEditorFontNames(), idx));
+        case AnnotEditKind::FontName:
+            PickFreeTextFont(tb, annot, screen, chipScreen);
+            break;
+        case AnnotEditKind::Bold:
+        case AnnotEditKind::Italic:
+        case AnnotEditKind::Underline:
+            SetFreeTextFont(annot, FreeTextFontFamily(annot), FreeTextFontStyle(annot) ^ StyleBitForKind(kind));
             AnnotChanged(tab);
             break;
-        }
         case AnnotEditKind::Alignment: {
             int idx = PopupPickSeq(tb->win, screen, gQuaddingNames, chip->item.number, chipScreen,
                                    PopupGlyphKind::Alignment, false);
@@ -1498,6 +1715,9 @@ static Size ChipSizeFor(const AnnotEditItem& item, PlatformFont* font, int rowDy
         case AnnotEditKind::TextColor:
         case AnnotEditKind::Alignment:
         case AnnotEditKind::Icon:
+        case AnnotEditKind::Bold:
+        case AnnotEditKind::Italic:
+        case AnnotEditKind::Underline:
         case AnnotEditKind::Contents:
         case AnnotEditKind::AttachFile:
         case AnnotEditKind::SaveAttachment:
@@ -2112,18 +2332,6 @@ bool IsEditingFreeTextInPlace(MainWindow* win) {
     return !win || gInPlace.win == win;
 }
 
-// Arial / Courier New / Times New Roman have the metrics of the base 14 fonts
-// MuPDF renders free text with.
-static const WCHAR* WinFontForPdfFontName(Str pdfName) {
-    if (str::EqI(pdfName, StrL("Cour"))) {
-        return L"Courier New";
-    }
-    if (str::EqI(pdfName, StrL("TiRo"))) {
-        return L"Times New Roman";
-    }
-    return L"Arial";
-}
-
 static Size MeasureInPlaceText(Str text) {
     if (!gInPlace.hwnd) {
         return {};
@@ -2359,9 +2567,13 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     }
     int borderWidth = std::max(BorderWidth(annot), 0);
     int fontPx = std::max(6, (int)(((float)textSize * scale) + 0.5f));
-    HFONT font = CreateFontW(-fontPx, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+    int fontStyle = FreeTextFontStyle(annot);
+    int weight = (fontStyle & kFreeTextBold) ? FW_BOLD : FW_NORMAL;
+    BOOL italic = (fontStyle & kFreeTextItalic) ? TRUE : FALSE;
+    BOOL underline = (fontStyle & kFreeTextUnderline) ? TRUE : FALSE;
+    HFONT font = CreateFontW(-fontPx, 0, 0, 0, weight, italic, underline, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                              CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH,
-                             WinFontForPdfFontName(DefaultAppearanceTextFont(annot)));
+                             WinFontFamilyTemp(FreeTextFontFamily(annot)).s);
     if (!font) {
         return false;
     }
@@ -2609,9 +2821,12 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
             iconName = tb->chips[i]->item.iconName;
         }
     }
-    return fmt("annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d iconName=%s chips=%s\n",
-               len(tb->kinds), ToStrTemp(items), r.x, r.y, r.dx, r.dy, tb->editingContents ? 1 : 0, iconName,
-               ToStrTemp(chips));
+    Annotation* annot = LiveToolbarAnnot(tb);
+    return fmt(
+        "annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d iconName=%s fontStyle=%d "
+        "font=%s chips=%s\n",
+        len(tb->kinds), ToStrTemp(items), r.x, r.y, r.dx, r.dy, tb->editingContents ? 1 : 0, iconName,
+        FreeTextFontStyle(annot), FreeTextFontFamily(annot), ToStrTemp(chips));
 }
 
 // clang-format off
@@ -2624,8 +2839,6 @@ static SeqStrings gLineEndingStyles =
     "None\0Square\0Circle\0Diamond\0OpenArrow\0ClosedArrow\0Butt\0ROpenArrow\0RClosedArrow\0Slash\0";
 static SeqStrings gColors =
     "Transparent\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
-static SeqStrings gFontNames = "Cour\0Helv\0TiRo\0";
-static SeqStrings gFontReadableNames = "Courier\0Helvetica\0TimesRoman\0";
 
 static PdfColor gColorsValues[] = {
 	0x00000000, /* transparent */
@@ -2811,14 +3024,6 @@ SeqStrings AnnotEditorLineEndingStyles() {
     return gLineEndingStyles;
 }
 
-SeqStrings AnnotEditorFontNames() {
-    return gFontNames;
-}
-
-SeqStrings AnnotEditorFontReadableNames() {
-    return gFontReadableNames;
-}
-
 SeqStrings AnnotationIconNames(Annotation* annot) {
     SeqStrings items = nullptr;
     if (annot) {
@@ -2932,10 +3137,8 @@ static void CollectAnnotationHoverRows(Annotation* annot, AnnotationHoverRows& r
         int quadding = Quadding(annot);
         rows.Add(StrL("textAlignment"), Tr("Text Alignment:"), SeqStrByIndex(gQuaddingNames, quadding));
 
-        int fontIdx = SeqStrIndex(gFontNames, DefaultAppearanceTextFont(annot));
-        if (fontIdx >= 0) {
-            rows.Add(StrL("textFont"), Tr("Text Font:"), SeqStrByIndex(gFontReadableNames, fontIdx));
-        }
+        rows.Add(StrL("textFont"), Tr("Text Font:"),
+                 FontDescriptionTemp(FreeTextFontFamily(annot), FreeTextFontStyle(annot)));
         rows.Add(StrL("textSize"), Tr("Text Size:"), fmt("%d", DefaultAppearanceTextSize(annot)));
         rows.Add(StrL("textColor"), Tr("Text Color:"), AnnotationColorNameTemp(DefaultAppearanceTextColor(annot)));
     }

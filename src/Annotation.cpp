@@ -5,6 +5,8 @@
 #include "base/File.h"
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
+#include "base/HtmlTags.h"
+#include "base/CssParser.h"
 
 extern "C" {
 #include <mupdf/pdf.h>
@@ -387,6 +389,10 @@ static bool IsValidQuadding(int i) {
     return i >= 0 && i <= 2;
 }
 
+static bool IsCustomFreeTextFont(Str family, int style);
+static void ReadFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str& family, int& style);
+static void WriteFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str family, int style);
+
 // return true if changed
 bool SetQuadding(Annotation* annot, int newQuadding) {
     if (!AnnotationIsLive(annot)) {
@@ -404,6 +410,15 @@ bool SetQuadding(Annotation* annot, int newQuadding) {
         }
         fz_try(ctx) {
             pdf_set_annot_quadding(ctx, a, newQuadding);
+            // /DS has its own text-align, which wins over /Q
+            if (Type(annot) == AnnotationType::FreeText) {
+                Str family;
+                int style = 0;
+                ReadFreeTextFontLocked(ctx, a, family, style);
+                if (IsCustomFreeTextFont(family, style)) {
+                    WriteFreeTextFontLocked(ctx, a, family, style);
+                }
+            }
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -1393,45 +1408,212 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
     return true;
 }
 
-Str DefaultAppearanceTextFont(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
+// clang-format off
+SeqStrings gBase14FontFamilies = "Courier\0Helvetica\0Times\0";
+// the /DA font of each of gBase14FontFamilies
+static SeqStrings gBase14DaFonts = "Cour\0Helv\0TiRo\0";
+static SeqStrings gCssTextAligns = "left\0center\0right\0";
+// clang-format on
+
+bool IsBase14FontFamily(Str family) {
+    return SeqStrIndexIS(gBase14FontFamilies, family) >= 0;
+}
+
+static bool IsCustomFreeTextFont(Str family, int style) {
+    return style != 0 || !IsBase14FontFamily(family);
+}
+
+static Str TrimWS(Str s) {
+    int start = 0;
+    int end = len(s);
+    while (start < end && str::IsWs(s.s[start])) {
+        start++;
+    }
+    while (end > start && str::IsWs(s.s[end - 1])) {
+        end--;
+    }
+    return Str(s.s + start, end - start);
+}
+
+// the first family of a CSS list: Georgia for "'Georgia', serif"
+static TempStr FirstCssFontFamilyTemp(Str families) {
+    int end = 0;
+    while (end < len(families) && families.s[end] != ',') {
+        end++;
+    }
+    TempStr family = str::DupTemp(TrimWS(Str(families.s, end)));
+    family.len -= str::RemoveCharsInPlace(family, StrL("'\""));
+    return family;
+}
+
+static bool IsCssBold(Str v) {
+    return str::EqI(v, StrL("bold")) || str::EqI(v, StrL("bolder")) || atoi(CStrTemp(v)) >= 600;
+}
+
+static bool IsCssItalic(Str v) {
+    return str::EqI(v, StrL("italic")) || str::EqI(v, StrL("oblique"));
+}
+
+// "bold 12pt Georgia" or, the way Acrobat writes it, "Helvetica,sans-serif 12.0pt"
+static void ParseCssFontShorthand(Str v, Str& family, int& style) {
+    str::Builder names;
+    int i = 0;
+    while (i < len(v)) {
+        while (i < len(v) && str::IsWs(v.s[i])) {
+            i++;
+        }
+        int start = i;
+        while (i < len(v) && !str::IsWs(v.s[i])) {
+            i++;
+        }
+        Str token(v.s + start, i - start);
+        if (len(token) == 0) {
+            break;
+        }
+        if (IsCssBold(token)) {
+            style |= kFreeTextBold;
+            continue;
+        }
+        if (IsCssItalic(token)) {
+            style |= kFreeTextItalic;
+            continue;
+        }
+        // a size, a number weight or a keyword like "normal"
+        bool isSize = isdigit((u8)token.s[0]) || token.s[0] == '.';
+        if (isSize || str::EqI(token, StrL("normal")) || str::EqI(token, StrL("small-caps"))) {
+            continue;
+        }
+        if (names.len > 0) {
+            names.AppendChar(' ');
+        }
+        names.Append(token);
+    }
+    if (names.len > 0) {
+        family = FirstCssFontFamilyTemp(ToStrTemp(names));
+    }
+}
+
+// The font of a free text: its /DS style if it has one, else its /DA base-14 font.
+static void ReadFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str& family, int& style) {
+    const char* daFont = nullptr;
+    float size = 0;
+    int n = 0;
+    float color[4]{};
+    pdf_annot_default_appearance(ctx, a, &daFont, &size, &n, color);
+    int idx = daFont ? SeqStrIndexIS(gBase14DaFonts, Str(daFont)) : -1;
+    family = SeqStrByIndex(gBase14FontFamilies, idx >= 0 ? idx : 1);
+    style = 0;
+
+    CssPullParser parser(Str(pdf_annot_rich_defaults(ctx, a)));
+    for (const CssProperty* prop = parser.NextProperty(); prop; prop = parser.NextProperty()) {
+        switch (prop->type) {
+            case Css_Font_Family:
+                family = FirstCssFontFamilyTemp(prop->s);
+                break;
+            case Css_Font_Weight:
+                style |= IsCssBold(TrimWS(prop->s)) ? kFreeTextBold : 0;
+                break;
+            case Css_Font_Style:
+                style |= IsCssItalic(TrimWS(prop->s)) ? kFreeTextItalic : 0;
+                break;
+            case Css_Text_Decoration:
+                style |= str::ContainsI(prop->s, StrL("underline")) ? kFreeTextUnderline : 0;
+                break;
+            case Css_Font:
+                ParseCssFontShorthand(prop->s, family, style);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+// Setting /DA drops /DS, so write both together: /DA names a base-14 font
+// (Helvetica for any other family) for readers that ignore /DS, and /DS, which
+// MuPDF lays the text out with, is only there for a font /DA can't describe.
+static void WriteFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str family, int style) {
+    const char* daFont = nullptr;
+    float size = 0;
+    int n = 0;
+    float color[4]{};
+    pdf_annot_default_appearance(ctx, a, &daFont, &size, &n, color);
+    int idx = SeqStrIndexIS(gBase14FontFamilies, family);
+    Str newDaFont = SeqStrByIndex(gBase14DaFonts, idx >= 0 ? idx : 1);
+    pdf_set_annot_default_appearance(ctx, a, newDaFont.s, size, n, color);
+    if (!IsCustomFreeTextFont(family, style)) {
+        return;
+    }
+
+    TempStr cssFamily = str::DupTemp(family);
+    cssFamily.len -= str::RemoveCharsInPlace(cssFamily, StrL("'\";{}"));
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 alpha;
+    UnpackPdfColor(PdfColorFromFloat(ctx, n, color), r, g, b, alpha);
+    Str align = SeqStrByIndex(gCssTextAligns, std::clamp(pdf_annot_quadding(ctx, a), 0, 2));
+    str::Builder ds;
+    ds.Append(fmt("font-family:'%s';font-size:%gpt;color:#%02x%02x%02x;text-align:%s", cssFamily, size, (int)r, (int)g,
+                  (int)b, align));
+    if (style & kFreeTextBold) {
+        ds.Append(StrL(";font-weight:bold"));
+    }
+    if (style & kFreeTextItalic) {
+        ds.Append(StrL(";font-style:italic"));
+    }
+    if (style & kFreeTextUnderline) {
+        ds.Append(StrL(";text-decoration:underline"));
+    }
+    pdf_set_annot_rich_defaults(ctx, a, CStrTemp(ToStrTemp(ds)));
+}
+
+Str FreeTextFontFamily(Annotation* annot) {
+    if (!AnnotationIsLive(annot) || Type(annot) != AnnotationType::FreeText) {
         return {};
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     auto* ctx = e->Ctx();
     ScopedRecursiveMutex cs(&e->docLock);
-    const char* fontNameZ = nullptr;
-    float sizeF{0.0};
-    int n = 0;
-    float textColor[4]{};
+    Str family;
+    int style = 0;
     fz_try(ctx) {
-        pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
+        ReadFreeTextFontLocked(ctx, annot->pdfannot, family, style);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    return MupdfCStrDupTemp(fontNameZ);
+    return family;
 }
 
-void SetDefaultAppearanceTextFont(Annotation* annot, Str sv) {
-    if (!AnnotationIsLive(annot)) {
+int FreeTextFontStyle(Annotation* annot) {
+    if (!AnnotationIsLive(annot) || Type(annot) != AnnotationType::FreeText) {
+        return 0;
+    }
+    EngineMupdf* e = annot->engine;
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex cs(&e->docLock);
+    Str family;
+    int style = 0;
+    fz_try(ctx) {
+        ReadFreeTextFontLocked(ctx, annot->pdfannot, family, style);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return style;
+}
+
+void SetFreeTextFont(Annotation* annot, Str family, int style) {
+    if (!AnnotationIsLive(annot) || Type(annot) != AnnotationType::FreeText || len(family) == 0) {
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    TempStr fontZ = str::DupTemp(sv);
     {
         auto* ctx = e->Ctx();
         ScopedRecursiveMutex cs(&e->docLock);
-        const char* fontNameZ = nullptr;
-        float sizeF{0.0};
-        int n = 0;
-        float textColor[4]{};
         fz_try(ctx) {
-            pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
-            pdf_set_annot_default_appearance(ctx, a, len(fontZ) == 0 ? "" : fontZ.s, sizeF, n, textColor);
-            pdf_update_annot(ctx, a);
+            WriteFreeTextFontLocked(ctx, annot->pdfannot, family, style);
+            pdf_update_annot(ctx, annot->pdfannot);
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
@@ -1474,9 +1656,15 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
         float sizeF{0.0};
         int n = 0;
         float textColor[4]{};
+        Str family;
+        int style = 0;
         fz_try(ctx) {
+            ReadFreeTextFontLocked(ctx, a, family, style);
             pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
             pdf_set_annot_default_appearance(ctx, a, fontNameZ, (float)textSize, n, textColor);
+            if (IsCustomFreeTextFont(family, style)) {
+                WriteFreeTextFontLocked(ctx, a, family, style);
+            }
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -1521,10 +1709,16 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
         float sizeF{0.0};
         int n = 0;
         float textColor[4]{}; // must be at least 4
+        Str family;
+        int style = 0;
         fz_try(ctx) {
+            ReadFreeTextFontLocked(ctx, a, family, style);
             pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
             PdfColorToFloat(col, textColor);
             pdf_set_annot_default_appearance(ctx, a, fontNameZ, sizeF, 3, textColor);
+            if (IsCustomFreeTextFont(family, style)) {
+                WriteFreeTextFontLocked(ctx, a, family, style);
+            }
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -2399,7 +2593,8 @@ struct AnnotationClipboard {
     RectF rect{};
     Str contents;
     Str iconName;
-    Str fontName;
+    Str fontFamily;
+    int fontStyle = 0;
     PdfColor color = 0;
     bool hasColor = false;
     PdfColor interiorColor = 0;
@@ -2428,7 +2623,8 @@ static void ClearAnnotationClipboard() {
     gPendingCutAnnotation = nullptr;
     str::FreePtr(&gAnnotClipboard.contents);
     str::FreePtr(&gAnnotClipboard.iconName);
-    str::FreePtr(&gAnnotClipboard.fontName);
+    str::FreePtr(&gAnnotClipboard.fontFamily);
+    gAnnotClipboard.fontStyle = 0;
     FreePixmap(gAnnotClipboard.stampImage);
     gAnnotClipboard.stampImage = nullptr;
     gAnnotClipboard.valid = false;
@@ -2616,7 +2812,8 @@ bool CopyAnnotation(Annotation* annot) {
     if (annot->type == AnnotationType::FreeText) {
         gAnnotClipboard.quadding = Quadding(annot);
         gAnnotClipboard.textSize = DefaultAppearanceTextSize(annot);
-        gAnnotClipboard.fontName = str::Dup(DefaultAppearanceTextFont(annot));
+        gAnnotClipboard.fontFamily = str::Dup(FreeTextFontFamily(annot));
+        gAnnotClipboard.fontStyle = FreeTextFontStyle(annot);
         gAnnotClipboard.textColor = DefaultAppearanceTextColor(annot);
         gAnnotClipboard.hasTextColor = true;
         gAnnotClipboard.color = GetColor(annot);
@@ -2722,8 +2919,8 @@ Annotation* PasteCopiedAnnotation(EngineBase* engine, int pageNo, PointF topLeft
     if (clip.iconName) {
         SetIconName(annot, clip.iconName);
     }
-    if (clip.fontName) {
-        SetDefaultAppearanceTextFont(annot, clip.fontName);
+    if (clip.fontFamily) {
+        SetFreeTextFont(annot, clip.fontFamily, clip.fontStyle);
     }
     if (clip.hasLine || clip.type == AnnotationType::PolyLine || clip.type == AnnotationType::Line) {
         SetLineStartStyles(annot, clip.lineStartStyle);

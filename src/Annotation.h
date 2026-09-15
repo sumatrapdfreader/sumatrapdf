@@ -136,7 +136,15 @@ int PopupId(Annotation*); // -1 if not exist
 Str AnnotationReadableNameTemp(AnnotationType tp);
 AnnotationType Type(Annotation*);
 
-Str DefaultAppearanceTextFont(Annotation*);
+// free text font style bits
+constexpr int kFreeTextBold = 1;
+constexpr int kFreeTextItalic = 2;
+constexpr int kFreeTextUnderline = 4;
+extern SeqStrings gBase14FontFamilies; // "Courier\0Helvetica\0Times\0"
+
+bool IsBase14FontFamily(Str);
+Str FreeTextFontFamily(Annotation*);
+int FreeTextFontStyle(Annotation*);
 PdfColor DefaultAppearanceTextColor(Annotation*);
 int DefaultAppearanceTextSize(Annotation*);
 Str Contents(Annotation*);
@@ -167,7 +175,7 @@ void GetInkList(Annotation*, Vec<int>&, Vec<PointF>&);
 bool EraseInkStrokes(Vec<int>&, Vec<PointF>&, PointF, float);
 InkEraseResult EraseAnnotationInk(Annotation*, PointF, float);
 
-void SetDefaultAppearanceTextFont(Annotation*, Str);
+void SetFreeTextFont(Annotation*, Str family, int style);
 void SetDefaultAppearanceTextSize(Annotation*, int);
 void SetDefaultAppearanceTextColor(Annotation*, PdfColor);
 bool SetContents(Annotation*, Str);

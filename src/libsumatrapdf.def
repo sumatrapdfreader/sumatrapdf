@@ -1169,6 +1169,10 @@ EXPORTS
 
 	pdf_set_annot_quadding
 
+	pdf_annot_rich_defaults
+
+	pdf_set_annot_rich_defaults
+
 	pdf_clear_annot_quad_points
 
 	pdf_add_annot_quad_point

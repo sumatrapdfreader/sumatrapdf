@@ -192,6 +192,7 @@ import { testit as annotUndoRedo } from "./annot-undo-redo.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
 import { testit as freeTextAnnotationPlacement } from "./free-text-annotation-placement.ts";
 import { testit as freeTextEditToolbar } from "./free-text-edit-toolbar.ts";
+import { testit as issue6198 } from "./issue-6198.ts";
 import { testit as createAnnotEntersEditMode } from "./create-annot-enters-edit-mode.ts";
 import { testit as issue6111 } from "./issue-6111.ts";
 import { testit as annotListPlacement } from "./annot-list-placement.ts";
@@ -380,6 +381,7 @@ export const tests: NamedTest[] = [
   ["text-annotation-placement", textAnnotationPlacement],
   ["free-text-annotation-placement", freeTextAnnotationPlacement],
   ["free-text-edit-toolbar", freeTextEditToolbar],
+  ["issue-6198", issue6198],
   ["create-annot-enters-edit-mode", createAnnotEntersEditMode],
   ["issue-6166", issue6166],
   ["issue-6169", issue6169],
