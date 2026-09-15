@@ -182,8 +182,10 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     if (!data.Append(ToStr(content))) return false;
 
     Str d = ToStr(data);
-    // unchanged archive: keep the old mtime so the build doesn't relink the exe
-    if (str::Eq(d, prevData)) {
+    // unchanged archive: keep the old mtime so the build doesn't relink the exe.
+    // str::Eq() stops at the first NUL, which an archive has in its header, so
+    // compare the bytes: otherwise every archive stays at its first content
+    if (d.len == prevData.len && MemEq(d.s, prevData.s, d.len)) {
         return true;
     }
     return file::WriteFile(archivePath, d);
