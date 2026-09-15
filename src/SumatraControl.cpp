@@ -669,6 +669,9 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
         }
         Vec<RectF> quads = GetQuadPointsAsRect(a);
         out.Append(fmt("type=%s page=%d quads=%d\n", typeName, PageNo(a), len(quads)));
+        out.Append(StrL("color="));
+        SerializePdfColor(GetColor(a), out);
+        out.Append(StrL("\n"));
         for (int i = 0; i < len(quads); i++) {
             RectF r = quads[i];
             out.Append(fmt("rect=%g,%g,%g,%g\n", r.x, r.y, r.dx, r.dy));

@@ -11107,34 +11107,32 @@ static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* 
         args.interiorCol = interiorCol->colorVal;
     }
 
-    args.opacity = GetCommandIntArg(cmd, kCmdArgOpacity, 100);
-    setMinMax(args.opacity, 0, 100);
-
-    args.textSize = GetCommandIntArg(cmd, kCmdArgTextSize, -1);
-    if (args.textSize >= 0) {
-        // set some reasonable limits
-        setMinMax(args.textSize, 5, 128);
+    if (GetCommandArg(cmd, kCmdArgOpacity)) {
+        args.opacity = GetCommandIntArg(cmd, kCmdArgOpacity, 100);
+        setMinMax(args.opacity, 0, 100);
     }
 
-    args.borderWidth = GetCommandIntArg(cmd, kCmdArgBorderWidth, -1);
-    if (args.borderWidth >= 0) {
+    int textSize = GetCommandIntArg(cmd, kCmdArgTextSize, -1);
+    if (textSize >= 0) {
         // set some reasonable limits
-        setMinMax(args.borderWidth, 0, 128);
+        setMinMax(textSize, 5, 128);
+        args.textSize = textSize;
     }
 
-    args.quadding = QuaddingFromName(GetCommandStringArg(cmd, kCmdArgAlignment, {}));
+    int borderWidth = GetCommandIntArg(cmd, kCmdArgBorderWidth, -1);
+    if (borderWidth >= 0) {
+        // set some reasonable limits
+        setMinMax(borderWidth, 0, 128);
+        args.borderWidth = borderWidth;
+    }
+
+    int quadding = QuaddingFromName(GetCommandStringArg(cmd, kCmdArgAlignment, {}));
+    if (quadding >= 0) {
+        args.quadding = quadding;
+    }
 }
 
 void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
-    // note: test the arguments, not `cmd->id != cmd->origId`. A command without
-    // arguments usually keeps its original id, but not always: a Shortcuts entry
-    // that would collide with an earlier one gets a generated id (#5869).
-    if (cmd && cmd->firstArg) {
-        // a command definition doesn't use values from settings
-        // must specify everything explicitly
-        SetAnnotCreateArgsFromCommand(args, cmd);
-        return;
-    }
     auto& a = gSettings->annotations;
     ParsedColor* col = nullptr;
     ParsedColor* bgCol = nullptr;
@@ -11187,6 +11185,14 @@ void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     }
     if (col && col->parsedOk) {
         args.col = *col;
+    }
+
+    // a command's arguments (e.g. Shift+A's "openedit", or a color) override
+    // the settings; ones it doesn't give keep them (#6197). Test the arguments,
+    // not `cmd->id != cmd->origId`: a colliding Shortcuts entry gets a generated
+    // id even without arguments (#5869).
+    if (cmd && cmd->firstArg) {
+        SetAnnotCreateArgsFromCommand(args, cmd);
     }
 }
 
