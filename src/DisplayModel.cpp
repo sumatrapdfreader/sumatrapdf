@@ -1073,8 +1073,6 @@ void DisplayModel::BuildPagesInfo() {
     // otherwise Relayout() measures the shown pages, on demand in non-continuous mode
 }
 
-// TODO: a better name e.g. ShouldShow() to better distinguish between
-// before-layout info and after-layout visibility checks
 bool DisplayModel::PageShown(int pageNo) const {
     if (!ValidPageNo(pageNo) || !pagesInfo) {
         return false;
@@ -1928,20 +1926,18 @@ int DisplayModel::GetPageNextToPoint(Point pt) const {
     return closest;
 }
 
-// TODO: try to track down why sometimes zoom on a page is 0
-// like https://github.com/sumatrapdfreader/sumatrapdf/issues/2014
+// Relayout() only sets zoomReal for shown pages, so in non-continuous modes the
+// other pages have 0 (issue #2014); compute their zoom for the current mode
 static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo) {
     float zoom = pageInfo->zoomReal;
     if (zoom > 0) {
         return zoom;
     }
-    Str name = dm->GetFilePath();
-    logf(
-        "getZoomSafe: invalid zoom in doc: %s\npageNo: %d\npageInfo->zoomReal\n%.2f\ndm->zoomReal: %.2f\n"
-        "dm->zoomVirtual: %.2f\n",
-        name, pageNo, zoom, pageInfo->zoomReal, dm->zoomReal, dm->zoomVirtual);
-    ReportDebugIf(true);
-
+    zoom = dm->GetZoomReal(pageNo);
+    if (zoom > 0) {
+        return zoom;
+    }
+    // empty viewport (before the canvas is sized)
     if (dm->zoomReal > 0) {
         return dm->zoomReal;
     }
@@ -2202,9 +2198,8 @@ RectF DisplayModel::GetContentBox(int pageNo) const {
         pageInfo->contentBox = engine->PageContentBox(pageNo);
     }
     cbox = pageInfo->contentBox;
-    float zoom = pageInfo->zoomReal;
-    // TODO: must be a better way
-    if (zoom == 0) {
+    float zoom = pageInfo->zoomReal > 0 ? pageInfo->zoomReal : GetZoomReal(pageNo);
+    if (zoom <= 0) {
         zoom = zoomReal;
     }
     return engine->Transform(cbox, pageNo, zoom, rotation);
@@ -2220,7 +2215,6 @@ Point DisplayModel::GetContentStart(int pageNo) const {
     return ToPoint(contentBox.TL());
 }
 
-// TODO: what's GoToPage supposed to do for Facing at 400% zoom?
 void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX) {
     SyncWithEngineLayout();
     if (!ValidPageNo(pageNo)) {
@@ -2282,10 +2276,6 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     // that scrolled a whole page too far right when restoring a view of such a
     // page (tab switch, window resize, session restore) (fixes #3591).
 
-    /* Hack: if an image is smaller in Y axis than the draw area, then we center
-       the image by setting pageInfo->currPos.y in RecalcPagesInfo. So we shouldn't
-       scroll (adjust viewPort.y) there because it defeats the purpose.
-       TODO: is there a better way of y-centering? */
     viewPort.y = scrollY;
     // Move the next page to the top (unless the remaining pages fit onto a single screen)
     if (IsContinuous(GetDisplayMode())) {
@@ -2736,7 +2726,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
                 ReportIf(!ValidPageNo(newPageNo));
                 pageInfo = GetPageInfo(newPageNo);
                 newYOff = pageInfo->pos.dy - viewPort.dy;
-                newYOff = std::max(newYOff, 0); /* TODO: center instead? */
+                newYOff = std::max(newYOff, 0);
                 GoToPrevPage(newYOff);
                 return;
             }
