@@ -86,7 +86,10 @@ export function prepareTestEnvironment(): void {
 // waits sized for a debug build time out against it (a 25600% zoom needs far
 // more than the 30s issue-1195 asks for). Tests don't size their own waits for
 // it: control.ts multiplies its timeouts by this.
-export const SLOW_BUILD_FACTOR = /asan/i.test(EXE) ? 4 : 1;
+// read before prepareTestEnvironment() copies the exe: the copy's name is the
+// same but its path no longer says asan
+export const IS_ASAN = /asan/i.test(EXE);
+export const SLOW_BUILD_FACTOR = IS_ASAN ? 4 : 1;
 
 // Extract page text via the debug -extract-text harness (hex-encoded UTF-8).
 // The GUI exe's stdout often does not reach a Bun pipe on Windows; PowerShell

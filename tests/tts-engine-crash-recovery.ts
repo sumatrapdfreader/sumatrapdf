@@ -3,7 +3,7 @@
 // off and forgets the voice. withControlledSumatra fails on a non-zero exit.
 
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, pollUntil, runStandalone, SLOW_BUILD_FACTOR } from "./util.ts";
+import { EXE, IS_ASAN, pollUntil, runStandalone, SLOW_BUILD_FACTOR } from "./util.ts";
 
 async function engineCrash(client: ControlClient, action: string): Promise<string> {
   const res = await client.request(ControlCommand.TestTtsEngineCrash, [action]);
@@ -15,6 +15,12 @@ async function engineCrash(client: ControlClient, action: string): Promise<strin
 }
 
 export async function testit(): Promise<void> {
+  // ASan reports the fake engine crash and aborts the process before any
+  // handler of ours runs, so only a non-ASan build can test this
+  if (IS_ASAN) {
+    console.log("tts-engine-crash-recovery: skipped, an ASan build ends the process on any crash");
+    return;
+  }
   await withControlledSumatra(EXE, async (client) => {
     await engineCrash(client, "crash");
     await pollUntil(
