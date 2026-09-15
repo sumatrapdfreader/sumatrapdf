@@ -3373,12 +3373,17 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
         PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
         scroll.y = (int)scrollD.y;
     }
-    // TODO: prevent scroll.y from getting too large?
-    scroll.y = std::max(scroll.y, 0); // Adobe Reader never shows the previous page
+    // a top low on (or below) a tall page would make the next page most visible:
+    // stop at the target page's bottom. Adobe Reader never shows the previous page
+    PageInfo* destPage = GetPageInfo(pageNo);
+    if (destPage) {
+        scroll.y = std::min(scroll.y, destPage->pos.dy - viewPort.dy + windowMargin.top);
+    }
+    scroll.y = std::max(scroll.y, 0);
     if (isVirtualZoom) {
-        // already on pageNo; only adjust scroll after fit zoom
+        // already on pageNo; scroll.y is page-relative, ScrollYTo() takes a document offset
         if (scroll.y > 0) {
-            ScrollYTo(scroll.y);
+            GoToPage(pageNo, scroll.y, false, -1);
         }
     } else {
         GoToPage(pageNo, scroll.y, true, -1);
