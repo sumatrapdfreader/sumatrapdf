@@ -120,6 +120,9 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
+    // a new annotation is selected only in Edit PDF mode
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleEditPDF"]);
+    await client.waitForRenderIdle();
     const canvas = findCanvas(frame);
     const cr = getClientRect(canvas);
     const stampX = 80;
