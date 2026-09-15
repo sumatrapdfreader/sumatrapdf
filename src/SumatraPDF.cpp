@@ -13378,11 +13378,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return 0;
     }
     bool openEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
-    if (!openEdit && win->isFullScreen) {
-        AnnotationType t = lastCreatedAnnot->type;
-        openEdit = t == AnnotationType::Highlight || t == AnnotationType::Underline || t == AnnotationType::Squiggly ||
-                   t == AnnotationType::StrikeOut;
-    }
     // CmdCreateAnnot* turns on Edit PDF only when the command has `openedit`
     // (Shift+A / Shift+U). Paste and insert-image still enter the mode.
     bool enterEditPdf = true;
@@ -13412,7 +13407,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if (cmdId == CmdCreateAnnotFreeText && lastCreatedAnnot->type == AnnotationType::FreeText) {
         StartFreeTextInPlaceEdit(win, lastCreatedAnnot);
     } else if (openEdit) {
-        // openedit, and F11 markup: Contents used to never open (issue #6111)
+        // in fullscreen too: Contents used to never open there (issue #6111)
         uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, win), "StartAnnotContentsEdit");
     }
     return 0;
