@@ -89,6 +89,28 @@ static const WCHAR* kOptExtraRotation = L"sumatraExtraRotation";
 // item ids of the rotation option, which is also how its value comes back
 static const WCHAR* kRotationItems[] = {L"0", L"90", L"180", L"270"};
 
+// The printer options the dialog offers, in the order it shows them. Unlike the
+// classic PrintDlgEx dialog, this one has no button that opens the driver's own
+// property sheet, so an option missing from this list can't be reached at all
+// (discussion #6202). Listing them all is safe: Windows leaves out the ones the
+// selected printer doesn't support.
+using StdOptionGetter = HRESULT (STDMETHODCALLTYPE Printing::IStandardPrintTaskOptionsStatic::*)(HSTRING*);
+static const StdOptionGetter kStdOptions[] = {
+    &Printing::IStandardPrintTaskOptionsStatic::get_Copies,
+    &Printing::IStandardPrintTaskOptionsStatic::get_Orientation,
+    &Printing::IStandardPrintTaskOptionsStatic::get_ColorMode,
+    &Printing::IStandardPrintTaskOptionsStatic::get_Duplex,
+    &Printing::IStandardPrintTaskOptionsStatic::get_Collation,
+    &Printing::IStandardPrintTaskOptionsStatic::get_MediaSize,
+    &Printing::IStandardPrintTaskOptionsStatic::get_MediaType,
+    &Printing::IStandardPrintTaskOptionsStatic::get_PrintQuality,
+    &Printing::IStandardPrintTaskOptionsStatic::get_NUp,
+    &Printing::IStandardPrintTaskOptionsStatic::get_InputBin,
+    &Printing::IStandardPrintTaskOptionsStatic::get_Binding,
+    &Printing::IStandardPrintTaskOptionsStatic::get_Staple,
+    &Printing::IStandardPrintTaskOptionsStatic::get_HolePunch,
+};
+
 struct WinRtApi {
     decltype(&RoInitialize) roInitialize = nullptr;
     decltype(&RoGetActivationFactory) roGetActivationFactory = nullptr;
@@ -869,8 +891,8 @@ class Win11PrintSession {
 
     // Sumatra's Advanced print options go into the dialog's "More settings"
     // pane as custom options; PrintDocumentSource reads them back when it lays
-    // the pages out. The paper tray is a standard option the dialog already
-    // knows how to show, it just isn't among the ones it shows by default.
+    // the pages out. The printer's own settings are standard options the dialog
+    // already knows how to show; ShowAdvancedOptions says which (kStdOptions).
     // The rest of Print_Advanced_Data has no equivalent here: autoRotate is on
     // in both paths and settable in neither, and the two paper-size options
     // work by rewriting a DEVMODE, which the system owns in this path.
@@ -936,7 +958,7 @@ class Win11PrintSession {
         return details->add_OptionChanged(handler.Get(), &optionToken);
     }
 
-    // adds our options, plus the printer's paper tray, to what the dialog shows
+    // adds our options, plus the printer's own, to what the dialog shows
     HRESULT ShowAdvancedOptions(Printing::IPrintTaskOptionsCore* options) {
         ComPtr<Printing::IPrintTaskOptionsCoreUIConfiguration> config;
         HRESULT hr = options->QueryInterface(IID_PPV_ARGS(&config));
@@ -951,10 +973,26 @@ class Win11PrintSession {
         ComPtr<Printing::IStandardPrintTaskOptionsStatic> standard;
         HRESULT stdHr = GetActivationFactory(RuntimeClass_Windows_Graphics_Printing_StandardPrintTaskOptions, standard);
         if (SUCCEEDED(stdHr)) {
-            HSTRING inputBin = nullptr;
-            if (SUCCEEDED(standard->get_InputBin(&inputBin)) && inputBin) {
-                displayed->Append(inputBin);
-                gWinRt.windowsDeleteString(inputBin);
+            // the list *is* what the dialog shows, so replace it rather than
+            // appending to it: Windows seeds it with a few options and we want
+            // all of them. Appending a name that's already there would show it
+            // twice, and comparing HSTRINGs to find out costs more than this
+            displayed->Clear();
+            for (StdOptionGetter getter : kStdOptions) {
+                HSTRING name = nullptr;
+                if (SUCCEEDED((standard.Get()->*getter)(&name)) && name) {
+                    displayed->Append(name);
+                    gWinRt.windowsDeleteString(name);
+                }
+            }
+            // added after Windows 10 1803, so it lives on its own interface
+            ComPtr<Printing::IStandardPrintTaskOptionsStatic3> standard3;
+            if (SUCCEEDED(standard.As(&standard3))) {
+                HSTRING ranges = nullptr;
+                if (SUCCEEDED(standard3->get_CustomPageRanges(&ranges)) && ranges) {
+                    displayed->Append(ranges);
+                    gWinRt.windowsDeleteString(ranges);
+                }
             }
         }
         ScopedHStr center(kOptCenterHorizontally);
