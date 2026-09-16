@@ -31,6 +31,7 @@
 #include "Translations.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "DisplayMode.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"
 #include "Notifications.h"
@@ -2806,6 +2807,25 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
     WindowTab* tab = GetReadAloudSourceTab();
     if (!tab || tab->win != win || !tab->readAloudAutoScroll) {
         return;
+    }
+
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        return;
+    }
+
+    // In non-continuous modes (single page, facing, book view) the spoken word
+    // can be on a page that isn't laid out, and scrolling cannot reach it, so
+    // turn to that page first. The scrolling below still runs: zoomed in, the
+    // word can be off screen on a page that is itself visible.
+    if (!IsContinuous(dm->GetDisplayMode())) {
+        int pageNo = 0;
+        int pageCount = 0;
+        if (ReadAloudGetProgressPage(tab, &pageNo, &pageCount) && !dm->PageVisible(pageNo)) {
+            win->readAloudScrollFromCode = true;
+            dm->GoToPage(pageNo, false);
+            win->readAloudScrollFromCode = false;
+        }
     }
 
     Rect wordRect;
