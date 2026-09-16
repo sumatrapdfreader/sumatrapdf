@@ -562,7 +562,8 @@ static bool LitParseHeader(LitFile* lit) {
         int pos = 48;
         for (int j = 0; j < nEntries && pos < dataEnd; j++) {
             int nameLen = LitEncInt(chunk, &pos);
-            if (nameLen <= 0 || pos + nameLen > dataEnd) {
+            // nameLen comes from the file: compare without pos + nameLen overflowing
+            if (nameLen <= 0 || nameLen > dataEnd - pos) {
                 break;
             }
             LitEntry e;
@@ -591,7 +592,7 @@ Str LitFile::GetFile(Str name) {
     }
     if (e->section == 0) {
         i64 off = (i64)contentOffset + e->offset;
-        if (off > len(d) || e->size > len(d) - off) {
+        if (off < 0 || off > len(d) || e->size > len(d) - off) {
             return {};
         }
         return Str(d.s + (int)off, e->size);
@@ -614,9 +615,12 @@ static bool LitParseSectionNames(LitFile* lit) {
     }
     int pos = 4;
     for (int i = 0; i < nSections; i++) {
+        if (pos > len(raw) - 2) {
+            return false;
+        }
         int nChars = (int)LitU16(raw, pos);
         pos += 2;
-        if (pos + (nChars * 2) + 2 > len(raw)) {
+        if ((i64)nChars * 2 + 2 > (i64)len(raw) - pos) {
             return false;
         }
         WStr ws((const WCHAR*)(raw.s + pos), nChars);
@@ -721,7 +725,7 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
     }
 
     u32 ofsEntry32 = LitU32(resetTable, 12);
-    if (ofsEntry32 > (u32)len(resetTable)) {
+    if (ofsEntry32 > (u32)len(resetTable) - 8) {
         LZXteardown(lzx);
         return {};
     }
@@ -918,7 +922,7 @@ static bool LitParseManifest(LitFile* lit) {
     int pos = 0;
     while (pos < len(raw)) {
         int slen = (u8)raw.s[pos++];
-        if (slen == 0 || pos + slen > len(raw)) {
+        if (slen == 0 || slen > len(raw) - pos) {
             break;
         }
         pos += slen; // root name, unused
@@ -930,7 +934,7 @@ static bool LitParseManifest(LitFile* lit) {
                 continue;
             }
             for (int i = 0; i < nFiles; i++) {
-                if (pos + 5 > len(raw)) {
+                if (len(raw) < 5 || pos > len(raw) - 5) {
                     return len(lit->manifest) > 0;
                 }
                 pos += 4; // offset, unused
@@ -1021,7 +1025,7 @@ static void LitParseAtoms(LitFile* lit, Str internal, LitAtoms* atoms) {
             return;
         }
         int size = (u8)data.s[pos++];
-        if (size == 0 || pos + size > len(data)) {
+        if (size == 0 || size > len(data) - pos) {
             return;
         }
         atoms->tags.Append(Str(data.s + pos, size));

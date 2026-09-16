@@ -48,7 +48,7 @@ struct BeWriter {
 };
 
 // PdbReader takes ownership of the returned bytes and free()s them
-static Str MkMobi(u32 imageFirstRec) {
+static Str MkMobi(u32 imageFirstRec, u32 hdrLen = kMobiHdrLen, u32 exthFlags = 0) {
     u8* d = AllocArray<u8>(kFileLen);
     BeWriter w{d};
 
@@ -74,12 +74,13 @@ static Str MkMobi(u32 imageFirstRec) {
     w.Zeros(4);      // currPos
 
     w.Bytes("MOBI", 4);
-    w.U32(kMobiHdrLen);
+    w.U32(hdrLen);
     w.U32(2);     // type: book
     w.U32(65001); // textEncoding: utf-8
     w.Zeros(76);  // uniqueId .. minRequiredMobiFormatVersion
     w.U32(imageFirstRec);
-    w.Zeros(20); // huffman fields, exthFlags
+    w.Zeros(16); // huffman fields
+    w.U32(exthFlags);
 
     w.Bytes("hi\r\n", kRec1Len);
     ReportIf(w.off != kFileLen);
@@ -104,5 +105,12 @@ void MobiDoc_UnitTests() {
         utassert(doc->imageFirstRec == 0);
         utassert(doc->imagesCount == 0);
         delete doc;
+    }
+
+    // hdrLen >= 0x80000000 used to pass as a negative int and the EXTH
+    // header was then read far past the end of record 0
+    {
+        MobiDoc* doc = MobiDoc::CreateFromData(MkMobi(0, 0x80000000, 0x40));
+        utassert(doc == nullptr);
     }
 }
