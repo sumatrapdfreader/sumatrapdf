@@ -4446,8 +4446,6 @@ static bool EbookFontIsAvailable(fz_context* ctx, Str fontName) {
 }
 
 // stm is either freed or retained via _doc
-// TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
-// bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
 bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
@@ -7279,12 +7277,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             return nullptr;
         }
 
-        if (pageRect) {
-            pRect = ToFzRect(*pageRect);
-        } else {
-            // TODO(port): use pageInfo->mediabox?
-            pRect = fz_bound_page(ctx, page);
-        }
+        pRect = ToFzRect(pageRect ? *pageRect : pageInfo->mediabox);
         ctm = viewctm(page, zoom, rotation);
         ibounds = fz_round_rect(fz_transform_rect(pRect, ctm));
 
@@ -7744,7 +7737,6 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     fz_var(bmp);
 
     fz_try(ctx) {
-        // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
         // Match `extract -r`: normalize embedded images to RGB before creating
         // a Windows bitmap for copy/save operations.
