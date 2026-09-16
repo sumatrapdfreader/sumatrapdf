@@ -559,7 +559,9 @@ bool MobiDoc::ParseHeader() {
             imagesCount = pdbReader->GetRecordCount() - imageFirstRec;
         }
     }
-    if (kPalmDocHeaderLen + (int)mobiHdr.hdrLen > recSize) {
+    // compare unsigned: a hdrLen >= 0x80000000 would pass as a negative int
+    // and the EXTH header would be read far past the end of the record
+    if (mobiHdr.hdrLen > (u32)(recSize - kPalmDocHeaderLen)) {
         logf("MobiHeader too big\n");
         return false;
     }
