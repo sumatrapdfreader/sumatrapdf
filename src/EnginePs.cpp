@@ -111,7 +111,10 @@ struct AutoDeleteFile {
     }
 };
 
-static EngineBase* ps2pdf(Str path) {
+// pdfDataOut gets the converted PDF: the temp file is gone by the time we
+// return and mupdf can't re-read its stream, so it's the only copy a clone
+// (or "save as PDF") can use. Caller owns it.
+static EngineBase* ps2pdf(Str path, Str* pdfDataOut) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     TempStr shortPath = path::ShortPathTemp(path);
     TempStr tmpFile = GetTempFilePathTemp(StrL("PsE"));
@@ -162,11 +165,15 @@ static EngineBase* ps2pdf(Str path) {
 
     TempStr nameHint = str::JoinTemp(path, StrL(".pdf"));
     EngineBase* engine = CreateEngineMupdfFromData(pdfData, nameHint, nullptr);
-    str::Free(pdfData);
+    if (!engine) {
+        str::Free(pdfData);
+        return nullptr;
+    }
+    *pdfDataOut = pdfData;
     return engine;
 }
 
-static EngineBase* psgz2pdf(Str fileName) {
+static EngineBase* psgz2pdf(Str fileName, Str* pdfDataOut) {
     TempStr tmpFile = GetTempFilePathTemp(StrL("PsE"));
     AutoDeleteFile tmpFileScope(tmpFile);
     if (len(tmpFile) == 0) {
@@ -208,7 +215,7 @@ static EngineBase* psgz2pdf(Str fileName) {
         return nullptr;
     }
 
-    return ps2pdf(tmpFile);
+    return ps2pdf(tmpFile, pdfDataOut);
 }
 
 // EnginePs is mostly a proxy for a PdfEngine that's fed whatever
@@ -224,10 +231,17 @@ class EnginePs : public EngineBase {
         if (pdfEngine) {
             pdfEngine->Release();
         }
+        str::Free(pdfData);
     }
 
+    // from our copy of the converted PDF: pdfEngine->Clone() can't, and running
+    // Ghostscript again would cost seconds
     EngineBase* Clone() override {
-        EngineBase* newEngine = pdfEngine->Clone();
+        if (len(pdfData) == 0) {
+            return {};
+        }
+        TempStr nameHint = str::JoinTemp(FilePath(), StrL(".pdf"));
+        EngineBase* newEngine = CreateEngineMupdfFromData(pdfData, nameHint, nullptr);
         if (!newEngine) {
             return {};
         }
@@ -236,6 +250,8 @@ class EnginePs : public EngineBase {
             clone->SetFilePath(FilePath());
         }
         clone->pdfEngine = newEngine;
+        clone->pdfData = str::Dup(pdfData);
+        clone->CopyStateFromPdfEngine();
         return clone;
     }
 
@@ -295,6 +311,29 @@ class EnginePs : public EngineBase {
 
     Str GetImageDataForPageElement(IPageElement* ipel) override { return pdfEngine->GetImageDataForPageElement(ipel); }
 
+    // the base version blocks in GetElements(); the pdf engine gives up instead
+    // when a render thread holds its locks
+    bool TryGetElements(int pageNo, Vec<IPageElement*>* out) override { return pdfEngine->TryGetElements(pageNo, out); }
+
+    bool TryExtractPageText(int pageNo, PageText* out) override { return pdfEngine->TryExtractPageText(pageNo, out); }
+
+    void ReleaseTextExtractionThreadContext() override { pdfEngine->ReleaseTextExtractionThreadContext(); }
+
+    void GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) override { pdfEngine->GetPdfPageBoxes(pageNo, out); }
+
+    int GetOpenActionPageNo() override { return pdfEngine->GetOpenActionPageNo(); }
+
+    Location ResolveDest(IPageDestination* dest) override { return pdfEngine->ResolveDest(dest); }
+
+    TempStr GetPageLabeTemp(int pageNo) const override { return pdfEngine->GetPageLabeTemp(pageNo); }
+
+    int GetPageByLabel(Str label) const override { return pdfEngine->GetPageByLabel(label); }
+
+    void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
+                                   Vec<Rect>& skipRects) override {
+        pdfEngine->GetBitmapRecolorSkipRects(pageNo, zoom, rotation, renderPageRect, bmpSize, skipRects);
+    }
+
     // don't delete the result
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override { return pdfEngine->GetElementAtPos(pageNo, pt); }
 
@@ -306,6 +345,21 @@ class EnginePs : public EngineBase {
     TocTree* GetToc() override { return pdfEngine->GetToc(); }
 
     EngineBase* pdfEngine = nullptr;
+    // the PDF Ghostscript made, kept for Clone() and "save as PDF"
+    Str pdfData;
+
+    // the base class keeps this in plain fields, so a clone has to copy it or it
+    // reports one page (EnsureChapterTable) at the default dpi
+    void CopyStateFromPdfEngine() {
+        preferredLayout = pdfEngine->preferredLayout;
+        fileDPI = pdfEngine->GetFileDPI();
+        allowsPrinting = pdfEngine->AllowsPrinting();
+        allowsCopyingText = pdfEngine->AllowsCopyingText();
+        decryptionKey = str::Dup(arena, pdfEngine->decryptionKey);
+        pageCount = pdfEngine->PageCount();
+        hasPageLabels = pdfEngine->HasPageLabels();
+        logicalPageCount = pdfEngine->LogicalPageCount();
+    }
 
     bool Load(Str fileName) {
         pageCount = 0;
@@ -316,9 +370,9 @@ class EnginePs : public EngineBase {
 
         SetFilePath(fileName);
         if (file::StartsWith(fileName, StrL("\x1F\x8B"))) {
-            pdfEngine = psgz2pdf(fileName);
+            pdfEngine = psgz2pdf(fileName, &pdfData);
         } else {
-            pdfEngine = ps2pdf(fileName);
+            pdfEngine = ps2pdf(fileName, &pdfData);
         }
 
         if (!pdfEngine) {
@@ -329,12 +383,7 @@ class EnginePs : public EngineBase {
             defaultExt = str::Dup(StrL(".eps"));
         }
 
-        preferredLayout = pdfEngine->preferredLayout;
-        fileDPI = pdfEngine->GetFileDPI();
-        allowsPrinting = pdfEngine->AllowsPrinting();
-        allowsCopyingText = pdfEngine->AllowsCopyingText();
-        decryptionKey = str::Dup(arena, pdfEngine->decryptionKey);
-        pageCount = pdfEngine->PageCount();
+        CopyStateFromPdfEngine();
 
         return true;
     }
