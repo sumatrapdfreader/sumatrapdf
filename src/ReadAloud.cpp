@@ -31,6 +31,7 @@
 #include "Translations.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "DisplayMode.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"
 #include "Notifications.h"
@@ -2805,6 +2806,32 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
 
     WindowTab* tab = GetReadAloudSourceTab();
     if (!tab || tab->win != win || !tab->readAloudAutoScroll) {
+        return;
+    }
+
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        return;
+    }
+
+    // In non-continuous modes (single page, facing, book view), the
+    // highlighted word may belong to a page that isn't currently laid out
+    // on screen. Follow the spoken page directly when it leaves the
+    // currently visible page or spread.
+    if (!IsContinuous(dm->GetDisplayMode())) {
+        int pageNo = 0;
+        int pageCount = 0;
+        if (!ReadAloudGetProgressPage(tab, &pageNo, &pageCount)) {
+            return;
+        }
+
+        if (dm->PageVisible(pageNo)) {
+            return;
+        }
+
+        win->readAloudScrollFromCode = true;
+        dm->GoToPage(pageNo, false);
+        win->readAloudScrollFromCode = false;
         return;
     }
 
