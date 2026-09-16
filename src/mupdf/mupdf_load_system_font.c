@@ -703,13 +703,6 @@ static void create_system_font_list(fz_context* ctx) {
 #endif
 }
 
-// TODO(port): replace the caller
-static void* fz_resize_array(fz_context* ctx, void* p, unsigned int count, unsigned int size) {
-    void* np = fz_realloc(ctx, p, count * size);
-    if (!np) fz_throw(ctx, FZ_ERROR_GENERIC, "resize array (%d x %d bytes) failed", count, size);
-    return np;
-}
-
 static fz_buffer* load_and_cache_font(fz_context* ctx, win_font_info* fi, const char* font_name) {
     fz_buffer* buffer = NULL;
     font_file* ff = fi->file;
@@ -822,7 +815,7 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     // fourth, try to separate style from basename for prestyled fonts (e.g. "ArialBold")
     if (!comma && (str_ends_with(fontname, "Bold") || str_ends_with(fontname, "Italic"))) {
         int styleLen = str_ends_with(fontname, "Bold") ? 4 : str_ends_with(fontname, "BoldItalic") ? 10 : 6;
-        fontname = (char*)fz_resize_array(ctx, fontname, strlen(fontname) + 2, sizeof(char));
+        fontname = fz_realloc_array(ctx, fontname, strlen(fontname) + 2, char);
         comma = fontname + strlen(fontname) - styleLen;
         memmove(comma + 1, comma, styleLen + 1);
         *comma = '-';
