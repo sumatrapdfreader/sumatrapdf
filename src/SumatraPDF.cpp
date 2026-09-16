@@ -6079,7 +6079,12 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
     } else if (type == kindEnginePostScript) {
+        // also offer the PDF Ghostscript produced (EnginePs::SaveFileAs writes it)
         fileFilter.Append(Tr("PostScript documents"));
+        fileFilter.Append(fmt("\1*%s\1", ctrl->GetDefaultFileExt()));
+        fileFilter.Append(Tr("PDF documents"));
+        fileFilter.Append(StrL("\1*.pdf\1"));
+        return false;
     } else if (type == kindEngineChm) {
         fileFilter.Append(Tr("CHM documents"));
     } else if (type == kindEngineEpub) {

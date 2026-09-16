@@ -269,7 +269,12 @@ class EnginePs : public EngineBase {
 
     Str GetFileData() override { return file::ReadFile(FilePath()); }
 
+    // saving as .pdf writes what Ghostscript produced; anything else is a copy
+    // of the PostScript we opened
     bool SaveFileAs(Str dstPath) override {
+        if (str::EndsWithI(dstPath, StrL(".pdf")) && len(pdfData) > 0) {
+            return file::WriteFile(dstPath, pdfData);
+        }
         Str srcPath = FilePath();
         if (len(srcPath) == 0) {
             return false;
