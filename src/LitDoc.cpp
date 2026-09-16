@@ -495,7 +495,8 @@ static bool LitParseHeader(LitFile* lit) {
         Str sec(d.s + off, std::min(secHdrLen, len(d) - off));
         int pos = (int)LitU32(sec, 4);
         bool haveContentOffset = false;
-        while (pos >= 0 && pos + 8 <= len(sec)) {
+        // pos comes from the file: compare without pos + 8 overflowing
+        while (pos >= 0 && pos <= len(sec) - 8) {
             Str blockTag(sec.s + pos, 4);
             u32 ver = LitU32(sec, pos + 4);
             if (str::Eq(blockTag, StrL("CAOL"))) {
@@ -509,7 +510,11 @@ static bool LitParseHeader(LitFile* lit) {
                 if (ver != 4 || LitU32(sec, pos + 20) != 0) {
                     return false;
                 }
-                lit->contentOffset = (int)LitU32(sec, pos + 16);
+                u32 contentOffset = LitU32(sec, pos + 16);
+                if (contentOffset > (u32)len(d)) {
+                    return false;
+                }
+                lit->contentOffset = (int)contentOffset;
                 haveContentOffset = true;
                 pos += 48;
             } else {
@@ -524,7 +529,7 @@ static bool LitParseHeader(LitFile* lit) {
     // header piece 1 is the directory
     i64 dirOff64 = LitU64(d, hdrLen + 16);
     i64 dirLen64 = LitU64(d, hdrLen + 16 + 8);
-    if (dirOff64 <= 0 || dirLen64 <= 32 || dirOff64 + dirLen64 > len(d)) {
+    if (dirOff64 <= 0 || dirLen64 <= 32 || dirOff64 > len(d) || dirLen64 > len(d) - dirOff64) {
         return false;
     }
     Str dir(d.s + (int)dirOff64, (int)dirLen64);
@@ -580,15 +585,19 @@ Str LitFile::GetFile(Str name) {
     if (!e) {
         return {};
     }
+    // offset / size come from the file: check without offset + size overflowing
+    if (e->offset < 0 || e->size < 0) {
+        return {};
+    }
     if (e->section == 0) {
         i64 off = (i64)contentOffset + e->offset;
-        if (off + e->size > len(d)) {
+        if (off > len(d) || e->size > len(d) - off) {
             return {};
         }
         return Str(d.s + (int)off, e->size);
     }
     Str sec = GetSection(e->section);
-    if (e->offset + e->size > len(sec)) {
+    if (e->offset > len(sec) || e->size > len(sec) - e->offset) {
         return {};
     }
     return Str(sec.s + e->offset, e->size);
@@ -711,7 +720,12 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
         return {};
     }
 
-    int ofsEntry = (int)LitU32(resetTable, 12) + 8;
+    u32 ofsEntry32 = LitU32(resetTable, 12);
+    if (ofsEntry32 > (u32)len(resetTable)) {
+        LZXteardown(lzx);
+        return {};
+    }
+    int ofsEntry = (int)ofsEntry32 + 8;
     int ucLength = (int)LitU32(resetTable, 16);
     if (LitU32(resetTable, 20) != 0) {
         LZXteardown(lzx);
@@ -736,7 +750,7 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
     bool ok = true;
     int base = 0;
     int idx = 0;
-    while (bytesRemaining > 0 && ofsEntry + 8 <= len(resetTable)) {
+    while (bytesRemaining > 0 && ofsEntry <= len(resetTable) - 8) {
         int size = (int)LitU32(resetTable, ofsEntry);
         if (LitU32(resetTable, ofsEntry + 4) != 0 || size > len(content) || size < base) {
             ok = false;
@@ -808,10 +822,11 @@ Str LitFile::GetSection(int section) {
     bool owned = false; // content starts as a view into d
     Str view = content;
     while (len(transform) >= 16) {
-        int csize = ((int)LitU32(control, 0) + 1) * 4;
-        if (csize <= 0 || csize > len(control)) {
+        i64 csize64 = ((i64)LitU32(control, 0) + 1) * 4;
+        if (csize64 > len(control)) {
             break;
         }
+        int csize = (int)csize64;
         TempStr guid = LitGuidTemp(transform);
         if (str::Eq(guid, Str(kDesGuid))) {
             if (drmLevel == 0 || drmLevel == 5) {
@@ -1023,7 +1038,7 @@ static void LitParseAtoms(LitFile* lit, Str internal, LitAtoms* atoms) {
         }
         int size = (int)LitU32(data, pos);
         pos += 4;
-        if (size <= 0 || pos + size > len(data)) {
+        if (size <= 0 || size > len(data) - pos) {
             return;
         }
         atoms->attrs.Append(Str(data.s + pos, size));
