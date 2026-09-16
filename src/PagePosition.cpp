@@ -145,3 +145,29 @@ bool MigrateFileStatePagePos(DocController* ctrl, FileState* fs) {
     }
     return changed;
 }
+
+// "12/62" or "3:5/20" for a chaptered bookmark; empty if pageCount is unknown
+TempStr FormatFileStateProgressTemp(const FileState* fs) {
+    if (!fs) {
+        return {};
+    }
+    StoredPagePos pos = ParseStoredPagePos(fs->pageNo);
+    if (len(pos.bookmark) > 0) {
+        int chapter = 0;
+        int page = 0;
+        int chapterPages = 0;
+        Str end = str::Parse(pos.bookmark, "%d:%d:%d", &chapter, &page, &chapterPages);
+        if (str::IsNull(end) || chapter < 1 || page < 1) {
+            return {};
+        }
+        if (chapterPages >= 1) {
+            return fmt("%d:%d/%d", chapter, page, chapterPages);
+        }
+        return fmt("%d:%d", chapter, page);
+    }
+    if (fs->pageCount <= 0) {
+        return {};
+    }
+    int curr = pos.pageNo < 1 ? 1 : pos.pageNo;
+    return fmt("%d/%d", curr, fs->pageCount);
+}

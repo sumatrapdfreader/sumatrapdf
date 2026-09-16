@@ -125,6 +125,10 @@ ShowMenubarWithTabs = false
 ; in version 3.7)
 ShowPageNumberInTabs = false
 
+; if true, show reading progress (n/N, or chapter:page for ebooks) on home page
+; thumbnails and list rows (introduced in version 3.7)
+ShowHomePageReadingProgress = true
+
 ; if true, show tips on the home page (introduced in version 3.7)
 ShowTips = true
 
@@ -1248,6 +1252,10 @@ FileStates [
     ; number of the last read page, or `bm:<bookmark>` for documents with
     ; chapters (folds in ReparseIdx; see PagePosition.cpp)
     PageNo = 1
+
+    ; number of pages in the document when it was last open; 0 if unknown. Used
+    ; to show reading progress on the home page (introduced in version 3.7)
+    PageCount = 0
 
     ; how far pages have been rotated as a multiple of 90 degrees
     Rotation = 0

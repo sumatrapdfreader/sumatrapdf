@@ -28,3 +28,4 @@ Location BookmarkLocationHint(Str bookmark);
 Location LocationFromFlatPageNo(DocController* ctrl, int flatPageNo);
 bool MigrateStoredPagePos(DocController* ctrl, Str* pageNoStr);
 bool MigrateFileStatePagePos(DocController* ctrl, FileState* fs);
+TempStr FormatFileStateProgressTemp(const FileState* fs);

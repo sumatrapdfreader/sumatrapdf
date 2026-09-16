@@ -501,6 +501,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
 
     ScrollState ss = GetScrollState();
     str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
+    fs->pageCount = PageCount();
     fs->scrollPos = PointF();
     if (!inPresentation) {
         fs->scrollPos = PointF((float)ss.x, (float)ss.y);

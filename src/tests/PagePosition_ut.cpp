@@ -105,6 +105,25 @@ void PagePosition_UnitTests() {
         utassert(str::Eq(FormatStoredBookmarkTemp(StrL("3:5:20")), StrL("bm:3:5:20")));
     }
 
+    // home-page reading progress
+    {
+        utassert(str::IsNull(FormatFileStateProgressTemp(nullptr)));
+
+        FileState fs{};
+        fs.pageNo = StrL("12");
+        fs.pageCount = 62;
+        utassert(str::Eq(FormatFileStateProgressTemp(&fs), StrL("12/62")));
+
+        fs.pageCount = 0;
+        utassert(str::IsNull(FormatFileStateProgressTemp(&fs)));
+
+        fs.pageNo = StrL("bm:3:5:20");
+        utassert(str::Eq(FormatFileStateProgressTemp(&fs), StrL("3:5/20")));
+
+        fs.pageNo = StrL("bm:3:5:20:r10452");
+        utassert(str::Eq(FormatFileStateProgressTemp(&fs), StrL("3:5/20")));
+    }
+
     // BookmarkLocationHint
     {
         Location loc = BookmarkLocationHint(StrL("3:5:20"));

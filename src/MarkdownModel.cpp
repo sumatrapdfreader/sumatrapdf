@@ -959,6 +959,7 @@ void MarkdownModel::GetDisplayState(FileState* fs) {
     str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
     ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
     str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
+    fs->pageCount = PageCount();
     SaveHtmlScrollPos();
     fs->scrollPos = htmlScrollPos;
 }

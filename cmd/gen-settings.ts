@@ -1077,6 +1077,12 @@ const fileState: Field[] = [
     "1",
     "number of the last read page, or `bm:<bookmark>` for documents with chapters (folds in ReparseIdx; see PagePosition.cpp)",
   ),
+  field(
+    "PageCount",
+    Int,
+    0,
+    "number of pages in the document when it was last open; 0 if unknown. Used to show reading progress on the home page",
+  ).ver("3.7"),
   field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit height, fit content"),
   field("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
   field(
@@ -1137,6 +1143,7 @@ const fileStateLayout = [
   "TabCol",
   "OpenCount",
   "PageNo",
+  "PageCount",
   "Rotation",
   "WindowState",
   "SidebarDx",
@@ -1321,6 +1328,12 @@ const globalPrefs: Field[] = [
   field("ShowPageNumberInTabs", Bool, false, "if true, show the current page as n/N after the file name on tabs").ver(
     "3.7",
   ),
+  field(
+    "ShowHomePageReadingProgress",
+    Bool,
+    true,
+    "if true, show reading progress (n/N, or chapter:page for ebooks) on home page thumbnails and list rows",
+  ).ver("3.7"),
   field("ShowTips", Bool, true, "if true, show tips on the home page").ver("3.7"),
   field(
     "CustomColors",
@@ -1995,6 +2008,8 @@ const globalPrefsLayout = [
   "ShowMenubar",
   "ShowMenubarWithTabs",
   "ShowTips",
+  "ShowPageNumberInTabs",
+  "ShowHomePageReadingProgress",
   "ShowToolbar",
   "SearchUIFloating",
   "ShowFavorites",

@@ -284,6 +284,9 @@ struct FileState {
     // number of the last read page, or `bm:<bookmark>` for documents with
     // chapters (folds in ReparseIdx; see PagePosition.cpp)
     Str pageNo;
+    // number of pages in the document when it was last open; 0 if unknown.
+    // Used to show reading progress on the home page
+    int pageCount;
     // how far pages have been rotated as a multiple of 90 degrees
     int rotation;
     // state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4
@@ -779,8 +782,6 @@ struct HtmlUI {
 
 // Preferences are persisted in SumatraPDF-settings.txt
 struct Settings {
-    // if true, show the current page as n/N after the file name on tabs
-    bool showPageNumberInTabs;
     // list of handlers for selected text, shown in context menu when text
     // selection is active. See [docs for more
     // information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
@@ -1061,6 +1062,11 @@ struct Settings {
     bool showMenubarWithTabs;
     // if true, show tips on the home page
     bool showTips;
+    // if true, show the current page as n/N after the file name on tabs
+    bool showPageNumberInTabs;
+    // if true, show reading progress (n/N, or chapter:page for ebooks) on
+    // home page thumbnails and list rows
+    bool showHomePageReadingProgress;
     // legacy bool for toolbar; if Toolbar is empty, derived as show/hide
     // (internal; use Toolbar instead)
     bool showToolbar;
@@ -1916,6 +1922,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, tabCol), SettingType::Color, (intptr_t)""},
     {offsetof(FileState, openCount), SettingType::Int, 0},
     {offsetof(FileState, pageNo), SettingType::String, (intptr_t)"1"},
+    {offsetof(FileState, pageCount), SettingType::Int, 0},
     {offsetof(FileState, rotation), SettingType::Int, 0},
     {offsetof(FileState, windowState), SettingType::Int, 0},
     {offsetof(FileState, sidebarDx), SettingType::Int, 0},
@@ -1931,11 +1938,11 @@ static const FieldInfo gFileStateFields[] = {
 };
 static StructInfo gFileStateInfo = {
     sizeof(FileState),
-    23,
+    24,
     gFileStateFields,
-    "Favorites\0EBookUI\0TocState\0FilePath\0DecryptionKey\0DisplayMode\0Zoom\0BgCol\0TabCol\0OpenCount\0PageNo\0Rotati"
-    "on\0WindowState\0SidebarDx\0ScrollPos\0WindowPos\0IsPinned\0IsMissing\0UseDefaultState\0ShowToc\0DisplayR2L\0Unifo"
-    "rmPageWidth\0TrimEmptyMargins",
+    "Favorites\0EBookUI\0TocState\0FilePath\0DecryptionKey\0DisplayMode\0Zoom\0BgCol\0TabCol\0OpenCount\0PageNo\0PageCo"
+    "unt\0Rotation\0WindowState\0SidebarDx\0ScrollPos\0WindowPos\0IsPinned\0IsMissing\0UseDefaultState\0ShowToc\0Displa"
+    "yR2L\0UniformPageWidth\0TrimEmptyMargins",
     "pages of this document bookmarked in the Favorites menu\0reflowable (ebook) settings for just this document. The "
     "block is absent until you add it; a field left empty or 0 uses the global EBookUI value. The global section's "
     "WindowBgCol and DefaultDisplayMode are already per-document as BgCol and DisplayMode below\0data required to "
@@ -1945,15 +1952,16 @@ static StructInfo gFileStateInfo = {
     "one of those values: fit page, fit width, fit height, fit content\0if given, overrides the background color for "
     "this document\0if given, overrides the tab color for this document\0number of times this document has been opened "
     "recently\0number of the last read page, or `bm:<bookmark>` for documents with chapters (folds in ReparseIdx; see "
-    "PagePosition.cpp)\0how far pages have been rotated as a multiple of 90 degrees\0state of the window. 1 is normal, "
-    "2 is maximized, 3 is fullscreen, 4 is minimized\0width of the bookmarks / favorites sidebar in screen pixels, as "
-    "last resized\0how far this document has been scrolled (in x and y direction)\0default position (can be on any "
-    "monitor)\0if true, the document is \"pinned\" to the Frequently Read list, so that recently opened documents "
-    "don't displace it\0if true, the file is considered missing and won't be shown in any list\0if true, this document "
-    "opens with the global defaults instead of the values below\0if true, show the table of contents (Bookmarks) "
-    "sidebar when the document has one\0if true, the document is displayed right-to-left in facing and book view "
-    "modes\0if true, percentage zoom scales every page to the width page 1 has at that zoom level\0if true, empty "
-    "margins around page content are trimmed from display",
+    "PagePosition.cpp)\0number of pages in the document when it was last open; 0 if unknown. Used to show reading "
+    "progress on the home page\0how far pages have been rotated as a multiple of 90 degrees\0state of the window. 1 is "
+    "normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0width of the bookmarks / favorites sidebar in screen "
+    "pixels, as last resized\0how far this document has been scrolled (in x and y direction)\0default position (can be "
+    "on any monitor)\0if true, the document is \"pinned\" to the Frequently Read list, so that recently opened "
+    "documents don't displace it\0if true, the file is considered missing and won't be shown in any list\0if true, "
+    "this document opens with the global defaults instead of the values below\0if true, show the table of contents "
+    "(Bookmarks) sidebar when the document has one\0if true, the document is displayed right-to-left in facing and "
+    "book view modes\0if true, percentage zoom scales every page to the width page 1 has at that zoom level\0if true, "
+    "empty margins around page content are trimmed from display",
     false};
 
 static const FieldInfo gPointF_2_Fields[] = {
@@ -2068,6 +2076,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, showMenubar), SettingType::Bool, true},
     {offsetof(Settings, showMenubarWithTabs), SettingType::Bool, false},
     {offsetof(Settings, showPageNumberInTabs), SettingType::Bool, false},
+    {offsetof(Settings, showHomePageReadingProgress), SettingType::Bool, true},
     {offsetof(Settings, showTips), SettingType::Bool, true},
     {offsetof(Settings, customColors), SettingType::String, 0, true},
     {offsetof(Settings, showToolbar), SettingType::Bool, true, true},
@@ -2201,27 +2210,27 @@ static const FieldInfo gSettingsFields[] = {
 };
 static const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    155,
+    156,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
     "mePageViewMode\0FilePicker\0PrinterUI\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0Res"
-    "toreSession\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowPageNumberInTabs\0ShowTips\0CustomColors\0ShowTo"
-    "olbar\0Toolbar\0ToolbarPosition\0SearchUIFloating\0ShowFavorites\0SortFavoritesByName\0ShowToc\0SidebarOnRight\0Si"
-    "debarWindowSize\0ShowLinks\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0ExplorerQuickLook\0RememberVie"
-    "wOffsetOnPageTurn\0MouseWheelTurnsPage\0ScrollEdgeTurnsPage\0ShowDocumentFocusIndicator\0ShowAnnotationNotificatio"
-    "n\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPageNumbers\0ShowStartPage\0SidebarDx\0Scrollbars\0"
-    "ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmount\0SaveMemory\0PaddingAfterLastPage\0IgnoreDestinationZoom\0Hi"
-    "ghlightLinkDestination\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0"
-    "FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0LastLightTheme\0LastDarkTheme\0DocumentColorsF"
-    "ollowTheme\0TocDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize"
-    "\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0Selectio"
-    "nToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0Imag"
-    "eUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChatSidebarDx\0"
-    "\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0Printe"
-    "rDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPa"
-    "sswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0HelpWindowPos\0FileStates\0SessionD"
-    "ata\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "toreSession\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowPageNumberInTabs\0ShowHomePageReadingProgress\0S"
+    "howTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloating\0ShowFavorites\0SortFavoritesByName"
+    "\0ShowToc\0SidebarOnRight\0SidebarWindowSize\0ShowLinks\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0E"
+    "xplorerQuickLook\0RememberViewOffsetOnPageTurn\0MouseWheelTurnsPage\0ScrollEdgeTurnsPage\0ShowDocumentFocusIndicat"
+    "or\0ShowAnnotationNotification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPageNumbers\0ShowStart"
+    "Page\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmount\0SaveMemory\0PaddingAfterLastPa"
+    "ge\0IgnoreDestinationZoom\0HighlightLinkDestination\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0Reading"
+    "AutoScrollSpeed\0ReadingBar\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0LastLightTheme\0L"
+    "astDarkTheme\0DocumentColorsFollowTheme\0TocDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontNa"
+    "me\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs"
+    "\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EB"
+    "ookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiG"
+    "ravity\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers"
+    "\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0Cus"
+    "tomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0HelpWind"
+    "owPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view, page aspect. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file "
     "uses page 1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered "
@@ -2243,7 +2252,8 @@ static const StructInfo gSettingsInfo = {
     "FileStates)\0if true and SessionData isn't empty, that session will be restored at startup\0if true, open "
     "documents in the already running SumatraPDF instead of starting a new one\0if true, show the menu bar (F9 toggles "
     "it; the choice is remembered across sessions)\0if true, show the menu bar when using tabs (useTabs = true)\0if "
-    "true, show the current page as n/N after the file name on tabs\0if true, show tips on the home page\0up to 13 "
+    "true, show the current page as n/N after the file name on tabs\0if true, show reading progress (n/N, or "
+    "chapter:page for ebooks) on home page thumbnails and list rows\0if true, show tips on the home page\0up to 13 "
     "custom colors for the background color picker, separated by space (e.g. '#ff0000 #00ff00 #0000ff')\0legacy bool "
     "for toolbar; if Toolbar is empty, derived as show/hide (internal; use Toolbar instead)\0toolbar mode: show "
     "(pinned), hide (no toolbar), overlay (toolbar floats over the page, sized to its natural width and centered, only "

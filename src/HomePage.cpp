@@ -37,6 +37,7 @@
 #include "AppTools.h"
 #include "DarkMode.h"
 #include "SvgIcons.h"
+#include "PagePosition.h"
 #include "HomePage.h"
 
 // how the shared tip code (TipText.cpp) opens a url link
@@ -952,6 +953,7 @@ struct ThumbnailLayout {
     Rect rcListFileName;
     Rect rcListPath;
     Rect rcListSize;
+    Rect rcListProgress;
     Rect rcListRemove;
     Rect rcListPin;
     FileState* fs = nullptr; // info needed to draw the thumbnail
@@ -1847,6 +1849,9 @@ static void LayoutHomePage(HomePageLayout& l) {
         int listIconGap = DpiScale(6);
         // fixed size column — never call file::GetSize during layout (disk/network I/O)
         int listSizeDx = DpiScale(56);
+        bool showProgress = gSettings && gSettings->showHomePageReadingProgress;
+        int listProgressDx = showProgress ? DpiScale(56) : 0;
+        int listProgressGap = listProgressDx > 0 ? listIconGap : 0;
         // one-row margin so a quick scroll still has measured name/path splits ready
         int listPrefetchY = kHomeListRowDy;
         for (int row = 0; row < nFiles; row++) {
@@ -1863,14 +1868,16 @@ static void LayoutHomePage(HomePageLayout& l) {
                        listIconDx);
             Rect rcRemove(rcPin.x - listIconGap - listIconDx, rcPin.y, listIconDx, listIconDx);
             Rect rcSize(rcRemove.x - listIconGap - listSizeDx, rcRow.y, listSizeDx, rcRow.dy);
+            Rect rcProgress(rcSize.x - listProgressGap - listProgressDx, rcRow.y, listProgressDx, rcRow.dy);
             Rect rcFileName(rcThumb.x + rcThumb.dx + kHomeListRowGapDx, rcRow.y,
-                            rcSize.x - (rcThumb.x + rcThumb.dx + kHomeListRowGapDx) - kHomeListRowGapDx, rcRow.dy);
+                            rcProgress.x - (rcThumb.x + rcThumb.dx + kHomeListRowGapDx) - kHomeListRowGapDx, rcRow.dy);
             if (isRtl) {
                 rcThumb.x = rcRow.x + rcRow.dx - rcThumb.dx;
                 rcPin.x = rcRow.x;
                 rcRemove.x = rcPin.x + listIconDx + listIconGap;
                 rcSize.x = rcRemove.x + listIconDx + listIconGap;
-                rcFileName.x = rcSize.x + rcSize.dx + kHomeListRowGapDx;
+                rcProgress.x = rcSize.x + rcSize.dx + listProgressGap;
+                rcFileName.x = rcProgress.x + rcProgress.dx + kHomeListRowGapDx;
                 rcFileName.dx = rcThumb.x - rcFileName.x - kHomeListRowGapDx;
             }
             rcFileName.dx = std::max(rcFileName.dx, 0);
@@ -1883,6 +1890,7 @@ static void LayoutHomePage(HomePageLayout& l) {
             thumb.rcListPin = rcPin;
             thumb.rcListRemove = rcRemove;
             thumb.rcListSize = rcSize;
+            thumb.rcListProgress = rcProgress;
             thumb.rcListFileName = rcFileName;
             // already-cached in-memory thumb size only (no LoadThumbnail / disk)
             if (onScreen && fs->thumbnail) {
@@ -2153,6 +2161,14 @@ static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filt
     Rect sizeRect = thumb.rcListSize;
     gfx->DrawText(fileSize, sizeRect, sizeFmt, fontText, ThemeWindowTextColor());
 
+    if (!thumb.rcListProgress.IsEmpty()) {
+        TempStr progress = FormatFileStateProgressTemp(fs);
+        if (len(progress) > 0) {
+            u32 progFmt = gfxTextVCenter | gfxTextEllipsis | (isRtl ? gfxTextLeft : gfxTextRight);
+            gfx->DrawText(progress, thumb.rcListProgress, progFmt, fontText, ThemeWindowTextColor());
+        }
+    }
+
     if (fs->isPinned) {
         gfx->FillRect(thumb.rcListPin, ThemeControlBackgroundColor());
     }
@@ -2183,6 +2199,24 @@ static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& fi
         gfx->PopClip();
     }
     DrawHomeRoundedOutline(gfx, page, 10, ThemeWindowTextColor(), kThumbsBorderDx);
+
+    if (gSettings && gSettings->showHomePageReadingProgress) {
+        TempStr progress = FormatFileStateProgressTemp(fs);
+        if (len(progress) > 0) {
+            PlatformFont* fontProg = HomePageFont(11);
+            Size sz = gfx->MeasureText(progress, fontProg);
+            int padX = DpiScale(5);
+            int padY = DpiScale(2);
+            int dx = sz.dx + (2 * padX);
+            int dy = sz.dy + (2 * padY);
+            int margin = DpiScale(4);
+            int x = isRtl ? page.x + margin : page.x + page.dx - dx - margin;
+            int y = page.y + page.dy - dy - margin;
+            Rect badge(x, y, dx, dy);
+            gfx->FillRects(&badge, 1, MkRgb(0, 0, 0), 160);
+            gfx->DrawText(progress, badge, gfxTextCenter | gfxTextVCenter, fontProg, kColWhite);
+        }
+    }
 
     const Rect& rect = thumb.rcText;
     Str path = fs->filePath;
@@ -2320,8 +2354,15 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
         Str path = t.fs ? t.fs->filePath : Str{};
         // fileSize is fetched when a row is first drawn, so an off-screen row
         // still reads kSizeNotFetched and its size text is empty
-        out.Append(fmt("row=%d size='%s' sizeRect=%d,%d,%d,%d path=%s\n", i, FileSizeForHomeListTemp(t.fileSize), r.x,
-                       r.y, r.dx, r.dy, path));
+        TempStr progress;
+        if (gSettings && gSettings->showHomePageReadingProgress) {
+            progress = FormatFileStateProgressTemp(t.fs);
+        }
+        if (str::IsNull(progress)) {
+            progress = StrL("");
+        }
+        out.Append(fmt("row=%d size='%s' sizeRect=%d,%d,%d,%d progress='%s' path=%s\n", i,
+                       FileSizeForHomeListTemp(t.fileSize), r.x, r.y, r.dx, r.dy, progress, path));
     }
     return finish(0);
 }

@@ -36,9 +36,11 @@ async function homeListRows(client: ControlClient): Promise<Row[]> {
     if (exitCode === 0) {
       const rows: Row[] = [];
       for (const line of out.split("\n")) {
-        const m = /^row=\d+ size='([^']*)' sizeRect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*)$/.exec(line);
+        const m = /^row=\d+ size='([^']*)' sizeRect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) progress='([^']*)' path=(.*)$/.exec(
+          line,
+        );
         if (m) {
-          rows.push({ size: m[1]!, sizeRect: [+m[2]!, +m[3]!, +m[4]!, +m[5]!], path: m[6]! });
+          rows.push({ size: m[1]!, sizeRect: [+m[2]!, +m[3]!, +m[4]!, +m[5]!], path: m[7]! });
         }
       }
       return rows;

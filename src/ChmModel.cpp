@@ -923,6 +923,7 @@ void ChmModel::GetDisplayState(FileState* fs) {
     ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
 
     str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
+    fs->pageCount = PageCount();
     SaveHtmlScrollPos();
     fs->scrollPos = htmlScrollPos;
 }
