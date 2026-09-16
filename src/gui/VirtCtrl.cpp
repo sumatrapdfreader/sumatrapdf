@@ -2251,11 +2251,12 @@ Size VirtSplitter::GetIdealSize() {
     Size sz = {bounds.dx, bounds.dy};
     if (thickness > 0) {
         // Vert is a vertical bar between two side-by-side panes, so it's the
-        // width that is fixed
+        // width that is fixed. The other axis is 0: reporting the current
+        // bounds kept the stretched parent from ever shrinking (#6203)
         if (type == SplitterType::Vert) {
-            sz.dx = thickness;
+            sz = {thickness, 0};
         } else {
-            sz.dy = thickness;
+            sz = {0, thickness};
         }
     }
     return sz;

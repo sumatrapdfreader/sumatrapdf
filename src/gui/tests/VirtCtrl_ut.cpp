@@ -212,6 +212,30 @@ static void ScrollBox_Test() {
     delete sb;
 }
 
+// #6203: a Horiz splitter between stacked panes must not pin the column to the
+// width it was last laid out at, or the sidebar can grow but never shrink
+static void Splitter_ShrinkTest() {
+    auto* top = new Spacer(300, 50);
+    auto* bottom = new Spacer(300, 50);
+    auto* split = new VirtSplitter();
+    split->type = SplitterType::Horiz;
+    split->thickness = 4;
+    auto* col = new VBox();
+    col->alignCross = CrossAxisAlign::Stretch;
+    col->AddChild(top);
+    col->AddChild(split);
+    col->AddChild(bottom, 1);
+    utassert(col->MinIntrinsicWidth(Inf) == 300);
+    col->Layout(Loose({Inf, 200}));
+    col->SetBounds({0, 0, 300, 200});
+    utassert(split->bounds.dx == 300);
+
+    top->dx = 200;
+    bottom->dx = 200;
+    utassert(col->MinIntrinsicWidth(Inf) == 200);
+    delete col;
+}
+
 void VirtCtrl_UnitTests() {
     Table_TestGrid();
     Table_TestAlign();
@@ -220,4 +244,5 @@ void VirtCtrl_UnitTests() {
     CollectVirtCtrls_Test();
     CollectTabStops_Test();
     ScrollBox_Test();
+    Splitter_ShrinkTest();
 }

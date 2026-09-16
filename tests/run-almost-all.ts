@@ -276,6 +276,7 @@ import { testit as issue6025 } from "./issue-6025.ts";
 import { testit as issue5946 } from "./issue-5946.ts";
 import { testit as issue6012 } from "./issue-6012.ts";
 import { testit as issue6080 } from "./issue-6080.ts";
+import { testit as issue6203 } from "./issue-6203.ts";
 import { testit as issue6205 } from "./issue-6205.ts";
 import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
 import { testit as issue6137AdvSettings } from "./issue-6137-adv-settings.ts";
@@ -575,6 +576,7 @@ export const tests: NamedTest[] = [
   ["issue-5946", issue5946],
   ["issue-6012", issue6012],
   ["issue-6080", issue6080],
+  ["issue-6203", issue6203],
   ["issue-6205", issue6205],
   ["adv-settings-fresh-defaults", advSettingsFreshDefaults],
   ["issue-6137-adv-settings", issue6137AdvSettings],

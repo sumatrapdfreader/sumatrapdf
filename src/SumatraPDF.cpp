@@ -7424,12 +7424,16 @@ static void ClearSlotDefer(HwndSlot* slot) {
 
 // Keep x/width, apply the layout's y/height. Used on a live frame resize so
 // the sidebar is not nudged 1px when the caption-border inset changes.
+// A right sidebar follows the frame's right edge, so it takes x too (#6203).
 static void StretchHwndHeight(DeferWinPosHelper& dh, HWND hwnd, const Rect& want) {
     if (!hwnd) {
         return;
     }
     Rect cur = ChildPosWithinParent(hwnd);
     Rect next{cur.x, want.y, cur.dx, want.dy};
+    if (SidebarOnRightLayout()) {
+        next.x = want.x;
+    }
     if (next != cur) {
         dh.MoveWindow(hwnd, next);
     }
@@ -7437,12 +7441,16 @@ static void StretchHwndHeight(DeferWinPosHelper& dh, HWND hwnd, const Rect& want
 
 // Keep x/y/height, apply a new width. Used on a live sidebar-splitter drag so
 // the TOC (label, filter, tree) is not nudged 1-2px; only the right edge moves.
-static void StretchHwndWidth(DeferWinPosHelper& dh, HWND hwnd, int dx) {
+// A right sidebar's left edge is the one that moves (#6203).
+static void StretchHwndWidth(DeferWinPosHelper& dh, HWND hwnd, const Rect& want) {
     if (!hwnd) {
         return;
     }
     Rect cur = ChildPosWithinParent(hwnd);
-    Rect next{cur.x, cur.y, dx, cur.dy};
+    Rect next{cur.x, cur.y, want.dx, cur.dy};
+    if (SidebarOnRightLayout()) {
+        next.x = want.x;
+    }
     if (next != cur) {
         dh.MoveWindow(hwnd, next);
     }
@@ -7813,10 +7821,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         }
     } else if (isSplitterDrag) {
         if (tocVisible) {
-            StretchHwndWidth(dh, win->hwndTocBox, win->tocSlot->lastBounds.dx);
+            StretchHwndWidth(dh, win->hwndTocBox, win->tocSlot->lastBounds);
         }
         if (sidebarFav) {
-            StretchHwndWidth(dh, win->hwndFavBox, win->favSlot->lastBounds.dx);
+            StretchHwndWidth(dh, win->hwndFavBox, win->favSlot->lastBounds);
         }
     }
 
