@@ -2702,7 +2702,7 @@ void DisplayModel::ScrollXTo(int xOff) {
     }
 
     int currPageNo = CurrentPageNo();
-    viewPort.x = xOff;
+    viewPort.x = limitValue(xOff, 0, std::max(0, canvasSize.dx - viewPort.dx));
     RecalcVisibleParts();
     EnsureMediaBoxesForVisiblePages();
     EnsureTrimEmptyMarginsForVisiblePages();
@@ -2728,7 +2728,7 @@ void DisplayModel::ScrollYTo(int yOff) {
     }
 
     int currPageNo = CurrentPageNo();
-    viewPort.y = yOff;
+    viewPort.y = limitValue(yOff, 0, std::max(0, canvasSize.dy - viewPort.dy));
     RecalcVisibleParts();
     EnsureMediaBoxesForVisiblePages();
     EnsureTrimEmptyMarginsForVisiblePages();
