@@ -2814,25 +2814,18 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
         return;
     }
 
-    // In non-continuous modes (single page, facing, book view), the
-    // highlighted word may belong to a page that isn't currently laid out
-    // on screen. Follow the spoken page directly when it leaves the
-    // currently visible page or spread.
+    // In non-continuous modes (single page, facing, book view) the spoken word
+    // can be on a page that isn't laid out, and scrolling cannot reach it, so
+    // turn to that page first. The scrolling below still runs: zoomed in, the
+    // word can be off screen on a page that is itself visible.
     if (!IsContinuous(dm->GetDisplayMode())) {
         int pageNo = 0;
         int pageCount = 0;
-        if (!ReadAloudGetProgressPage(tab, &pageNo, &pageCount)) {
-            return;
+        if (ReadAloudGetProgressPage(tab, &pageNo, &pageCount) && !dm->PageVisible(pageNo)) {
+            win->readAloudScrollFromCode = true;
+            dm->GoToPage(pageNo, false);
+            win->readAloudScrollFromCode = false;
         }
-
-        if (dm->PageVisible(pageNo)) {
-            return;
-        }
-
-        win->readAloudScrollFromCode = true;
-        dm->GoToPage(pageNo, false);
-        win->readAloudScrollFromCode = false;
-        return;
     }
 
     Rect wordRect;
