@@ -288,6 +288,13 @@ class EnginePs : public EngineBase {
 
     Vec<IPageElement*> GetElements(int pageNo) override { return pdfEngine->GetElements(pageNo); }
 
+    // the elements above are the pdf engine's, so its images are too
+    RenderedBitmap* GetImageForPageElement(IPageElement* ipel) override {
+        return pdfEngine->GetImageForPageElement(ipel);
+    }
+
+    Str GetImageDataForPageElement(IPageElement* ipel) override { return pdfEngine->GetImageDataForPageElement(ipel); }
+
     // don't delete the result
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override { return pdfEngine->GetElementAtPos(pageNo, pt); }
 
