@@ -474,12 +474,15 @@ void NavFilesInFolderWnd::RefreshList() {
         return;
     }
     TempStr sel = SelectedPathTemp();
+    int selIdx = -1;
     // listing still in flight: keep the file we meant to select
     if (len(sel) == 0 && len(pendingSelectPath) > 0) {
         sel = str::DupTemp(pendingSelectPath);
+    } else if (len(sel) == 0 && scanInFlight) {
+        selIdx = pendingSelectIdx;
     }
     TempStr dir = str::DupTemp(currDir);
-    SetDir(dir, sel);
+    SetDir(dir, sel, selIdx);
 }
 
 void NavFilesInFolderWnd::GoUp() {
@@ -1022,4 +1025,32 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath, bool skipHistory) {
             }
         }
     }
+}
+
+// State and actions used by the -dbg-control regression test.
+TempStr NavFilesInFolderStateTemp(Str action, int idx, int* exitCodeOut) {
+    if (exitCodeOut) {
+        *exitCodeOut = 2;
+    }
+    NavFilesInFolderWnd* wnd = gNavFilesWnd;
+    if (!wnd || !wnd->listBox || !wnd->listBox->model) {
+        return str::DupTemp(StrL("NOTREADY no-window"));
+    }
+    if (str::Eq(action, StrL("select"))) {
+        wnd->listBox->SetCurrentSelection(idx);
+    } else if (str::Eq(action, StrL("delete-refresh"))) {
+        wnd->DeleteCurrentSelection();
+        wnd->RefreshList();
+    }
+
+    auto* m = (ListBoxModelNav*)wnd->listBox->model;
+    int sel = wnd->listBox->GetCurrentSelection();
+    Str name;
+    if (sel >= 0 && sel < m->ItemsCount()) {
+        name = m->entries[sel].name;
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return fmt("OK scan=%d sel=%d items=%d name=%s", (int)wnd->scanInFlight, sel, m->ItemsCount(), name);
 }

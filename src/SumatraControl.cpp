@@ -63,6 +63,7 @@
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
+#include "NavFilesInFolder.h"
 #include "PerfLog.h"
 #include "SumatraControl.h"
 
@@ -904,6 +905,7 @@ enum class ControlCmd : u16 {
     StartPerfLog = 101,
     StopPerfLog = 102,
     WaitSessionRestored = 103,
+    TestNavFiles = 104,
 };
 
 enum class ControlArgType : u16 {
@@ -1916,6 +1918,16 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int page = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
             AppendTestResult(req, 0, fmt("path=%s page=%d", tab->filePath, page));
+            break;
+        }
+
+        case ControlCmd::TestNavFiles: {
+            Str action = StringArg(req, 0);
+            i32 idx = -1;
+            IntArg(req, 1, idx);
+            int exitCode = 0;
+            Str res = NavFilesInFolderStateTemp(action, idx, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 
