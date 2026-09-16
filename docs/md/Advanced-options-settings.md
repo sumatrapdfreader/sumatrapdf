@@ -200,6 +200,13 @@ RememberViewOffsetOnPageTurn = false
 ; scrolls horizontally and Ctrl + wheel zooms (introduced in version 3.7)
 MouseWheelTurnsPage = false
 
+; if true, in single page / facing / book view, scrolling past the top or bottom
+; of a zoomed-in page goes to the previous / next page; if false, scrolling
+; stops at the edge and the page is changed only by the keyboard, toolbar or
+; scrollbar. A page that fits the window has nothing to scroll, so a wheel notch
+; turns it either way (introduced in version 3.7)
+ScrollEdgeTurnsPage = true
+
 ; if true, draw a focus ring around the document when it has keyboard focus (Tab
 ; to the page area) (introduced in version 3.7)
 ShowDocumentFocusIndicator = false

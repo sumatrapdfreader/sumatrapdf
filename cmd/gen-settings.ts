@@ -1409,6 +1409,15 @@ const globalPrefs: Field[] = [
       "Alt + wheel still scrolls, Shift + wheel scrolls horizontally and Ctrl + wheel zooms",
   ).ver("3.7"),
   field(
+    "ScrollEdgeTurnsPage",
+    Bool,
+    true,
+    "if true, in single page / facing / book view, scrolling past the top or bottom of a " +
+      "zoomed-in page goes to the previous / next page; if false, scrolling stops at the edge " +
+      "and the page is changed only by the keyboard, toolbar or scrollbar. A page that fits the " +
+      "window has nothing to scroll, so a wheel notch turns it either way",
+  ).ver("3.7"),
+  field(
     "ShowDocumentFocusIndicator",
     Bool,
     false,
@@ -1976,6 +1985,7 @@ const globalPrefsLayout = [
   "ExplorerQuickLook",
   "RememberViewOffsetOnPageTurn",
   "MouseWheelTurnsPage",
+  "ScrollEdgeTurnsPage",
   "ShowDocumentFocusIndicator",
   "ShowAnnotationNotification",
   "ShowFileNavigateHint",

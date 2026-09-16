@@ -4620,7 +4620,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             if (hScroll) {
                 dm->ScrollXBy(scrollBy);
             } else {
-                dm->ScrollYBy(scrollBy, true);
+                dm->ScrollYBy(scrollBy, gSettings->scrollEdgeTurnsPage);
             }
             // ScrollYBy updates the thumb via UpdateScrollbars; also force the
             // thin smart bar to appear for wheel-only reading (#5859).
@@ -4646,7 +4646,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         if (hScroll) {
             dm->ScrollXBy(scrollBy);
         } else {
-            dm->ScrollYBy(scrollBy, true);
+            dm->ScrollYBy(scrollBy, gSettings->scrollEdgeTurnsPage);
         }
         if (ScrollbarsUseOverlay()) {
             OverlayScrollbarNotifyScroll(hScroll ? win->overlayScrollH : win->overlayScrollV);
@@ -4699,8 +4699,9 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             didScrollByLine = true;
         }
     }
-    // in non-continuous mode flip page if necessary
-    if (!vScroll || !isCont) {
+    // in non-continuous mode flip page if necessary (ScrollEdgeTurnsPage off:
+    // stay on this page, it is changed by keyboard / toolbar / scrollbar only)
+    if (!vScroll || !isCont || !gSettings->scrollEdgeTurnsPage) {
         return 0;
     }
     if (!didScrollByLine) {

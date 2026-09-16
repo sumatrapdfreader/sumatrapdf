@@ -55,6 +55,7 @@ import { testit as issue1198 } from "./issue-1198.ts";
 import { testit as issue2568 } from "./issue-2568.ts";
 import { testit as issue2799 } from "./issue-2799.ts";
 import { testit as issue6190 } from "./issue-6190.ts";
+import { testit as issue6201 } from "./issue-6201.ts";
 import { testit as issue6194 } from "./issue-6194.ts";
 import { testit as inkAnnotationBounds } from "./ink-annotation-bounds.ts";
 import { testit as issue6197 } from "./issue-6197.ts";
@@ -422,6 +423,7 @@ export const tests: NamedTest[] = [
   ["issue-2568", issue2568],
   ["issue-2799", issue2799],
   ["issue-6190", issue6190],
+  ["issue-6201", issue6201],
   ["issue-6194", issue6194],
   ["ink-annotation-bounds", inkAnnotationBounds],
   ["issue-6197", issue6197],
