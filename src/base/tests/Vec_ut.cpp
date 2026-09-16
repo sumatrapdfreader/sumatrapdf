@@ -55,6 +55,21 @@ void VecTest() {
     VecReset(ints);
     utassert(len(ints) == 0);
 
+    {
+        Vec<int> g;
+        utassert(VecGrow(g, 10));
+        utassert(len(g) == 0);
+        utassert(VecCap(g) >= 10);
+        VecAppend(g, 1);
+        utassert(len(g) == 1);
+        utassert(VecGrow(g, 10));
+        utassert(VecCap(g) >= 11);
+        VecReset(g);
+        utassert(len(g) == 0);
+        utassert(VecGrow(g, 8));
+        utassert(VecCap(g) >= 8);
+    }
+
     for (int i = 0; i < 1000; i++) {
         VecAppend(ints, i);
     }

@@ -33,7 +33,7 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
 
     // find all match ranges in text
     int textLen = text.len;
-    u8* hl = VecReserve(highlighted, textLen);
+    u8* hl = VecGrow(highlighted, textLen);
     memset(hl, 0, textLen);
     for (int w = 0; w < nWords; w++) {
         Str word = filterWords[w];

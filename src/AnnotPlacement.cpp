@@ -1347,7 +1347,7 @@ static void PaintInkPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     pen.SetLineJoin(Gdiplus::LineJoinRound);
 
     Vec<Gdiplus::Point> pts;
-    VecReserve(pts, len(p.points));
+    VecGrow(pts, len(p.points));
     int pointIdx = 0;
     for (int count : p.strokeCounts) {
         if (count <= 0 || pointIdx >= len(p.points)) {

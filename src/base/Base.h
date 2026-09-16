@@ -1404,6 +1404,14 @@ auto VecReserve(Arena* arena, T& v, int n) -> decltype(v.els);
 template <typename T>
 inline T* VecReserve(Vec<T>& v, int n);
 
+// Ensure capacity for n more elements (cap >= len + n). Same as VecReserve
+// when the vec is empty (just created or after Reset).
+template <typename T>
+auto VecGrow(Arena* arena, T& v, int n) -> decltype(v.els);
+
+template <typename T>
+inline T* VecGrow(Vec<T>& v, int n);
+
 // Set logical length to newSize (std::vector::resize). Grows capacity if
 // needed; zeros unused capacity beyond the new length.
 template <typename T>
@@ -1610,6 +1618,22 @@ inline T* VecReserve(Vec<T>& v, int n) {
 }
 
 template <typename T>
+auto VecGrow(Arena* arena, T& v, int n) -> decltype(v.els) {
+    if (n <= 0) {
+        return v.els;
+    }
+    if (v.len > INT_MAX - n) {
+        return nullptr;
+    }
+    return VecReserve(arena, v, v.len + n);
+}
+
+template <typename T>
+inline T* VecGrow(Vec<T>& v, int n) {
+    return VecGrow(nullptr, v, n);
+}
+
+template <typename T>
 bool VecResize(Vec<T>& v, int newSize) {
     return VecResizeNT(VecNT(v), (int)sizeof(T), newSize);
 }
@@ -1708,7 +1732,7 @@ bool VecInsertAt(Vec<T>& v, int idx, const VecIdentityT<T>& el) {
 
 template <typename T, typename E>
 bool VecPush(Arena* arena, T& v, E el) {
-    if (!VecReserve(arena, v, v.len + 1)) {
+    if (!VecGrow(arena, v, 1)) {
         return false;
     }
     v.els[v.len] = el;

@@ -325,7 +325,7 @@ static void CreateZoomCommands() {
     if (n > 0) {
         // ZoomLevels replaces the built-in levels, for the buttons too
         Vec<int>* cmdIds = new Vec<int>();
-        VecReserve(*cmdIds, n);
+        VecGrow(*cmdIds, n);
         prefs->zoomLevelsCmdIds = cmdIds;
         for (int i = 0; i < n; i++) {
             float zoomLevel = (*prefs->zoomLevels)[i];

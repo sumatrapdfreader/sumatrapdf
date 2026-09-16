@@ -3807,7 +3807,7 @@ bool wstr::BuilderReserve(Builder& b, int cap) {
 }
 
 bool wstr::Builder::AppendChar(WCHAR c) {
-    if (!VecReserve(*this, len + 1)) {
+    if (!VecGrow(*this, 1)) {
         return false;
     }
     els[len++] = c;
@@ -3819,7 +3819,7 @@ bool wstr::Builder::Append(WStr src) {
     if (wstr::IsNull(src) || 0 == src.len) {
         return true;
     }
-    if (!VecReserve(*this, len + src.len)) {
+    if (!VecGrow(*this, src.len)) {
         return false;
     }
     memcpy(els + len, src.s, (size_t)src.len * sizeof(WCHAR));

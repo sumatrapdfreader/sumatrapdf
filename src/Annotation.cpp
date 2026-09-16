@@ -1990,7 +1990,7 @@ InkEraseResult EraseAnnotationInk(Annotation* annot, PointF pt, float radius) {
     }
 
     Vec<fz_point> pts;
-    VecReserve(pts, len(points));
+    VecGrow(pts, len(points));
     for (PointF p : points) {
         VecAppend(pts, {p.x, p.y});
     }

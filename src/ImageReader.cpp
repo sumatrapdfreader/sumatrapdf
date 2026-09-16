@@ -152,7 +152,7 @@ bool DecodeJpegToCmyk(Str jpeg, int& w, int& h, int& stride, Vec<u8>& samples) {
         if (src && src->n == 4 && src->w > 0 && src->h > 0) {
             int rowBytes = src->w * 4;
             i64 nBytes = (i64)rowBytes * src->h;
-            if (nBytes > 0 && nBytes <= INT_MAX && VecReserve(samples, (int)nBytes)) {
+            if (nBytes > 0 && nBytes <= INT_MAX && VecGrow(samples, (int)nBytes)) {
                 samples.len = (int)nBytes;
                 for (int y = 0; y < src->h; y++) {
                     memcpy(samples.els + ((size_t)y * (size_t)rowBytes),

@@ -861,7 +861,7 @@ static const u8* PixmapAsPremulBgra(Pixmap* px, Vec<u8>& scratch, int* strideOut
         return nullptr;
     }
     VecReset(scratch);
-    u8* dst = VecReserve(scratch, (int)nBytes);
+    u8* dst = VecGrow(scratch, (int)nBytes);
     if (!dst) {
         FreePixmap(owned);
         return nullptr;
