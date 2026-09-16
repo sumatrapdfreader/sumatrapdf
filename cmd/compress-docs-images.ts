@@ -45,6 +45,11 @@ async function compressImage(pngPath: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  if (!existsSync(imgDir)) {
+    console.log(`${imgDir} missing (docs images are on files.sumatrapdfreader.org)`);
+    return;
+  }
+
   await ensureZopflipng();
 
   const files = readdirSync(imgDir)

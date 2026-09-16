@@ -4,18 +4,10 @@
 import MarkdownIt from "./markdown-it.min.js";
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
-import {
-  readFileSync,
-  writeFileSync,
-  existsSync,
-  readdirSync,
-  mkdirSync,
-  rmSync,
-  statSync,
-  copyFileSync,
-} from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, rmSync } from "node:fs";
 import { join, resolve, extname } from "node:path";
 import { commands as commandsDef } from "./gen-commands";
+import { checkCdnImages, docsImgToCdnUrl } from "./r2";
 import { copyFileNormalized } from "./util.js";
 
 const docsDir = "docs";
@@ -334,17 +326,10 @@ function mdToHTML(name: string): string {
     return self.renderToken(tokens, idx, options);
   };
 
-  // validate image references exist
+  // img/foo.png in markdown is stored on r2
   md.renderer.rules.image = (tokens: MarkdownIt.Token[], idx: number, options: any, _env: any, self: any) => {
     const tok = tokens[idx];
-    const src = tok.attrGet("src") ?? "";
-    if (!src.startsWith("https://") && !src.startsWith("http://")) {
-      const decoded = src.replace(/%20/g, " ");
-      if (!existsSync(join(mdDir, decoded))) {
-        throw new Error(`image '${decoded}' not found in ${mdDir}`);
-      }
-      tok.attrSet("src", decoded);
-    }
+    tok.attrSet("src", docsImgToCdnUrl(tok.attrGet("src") ?? ""));
     return self.renderToken(tokens, idx, options);
   };
 
@@ -378,19 +363,6 @@ function removeHTMLFiles(dir: string): void {
   for (const entry of readdirSync(dir)) {
     if (entry.endsWith(".html")) {
       rmSync(join(dir, entry));
-    }
-  }
-}
-
-function copyDirRecursive(dst: string, src: string): void {
-  mkdirSync(dst, { recursive: true });
-  for (const entry of readdirSync(src, { withFileTypes: true })) {
-    const s = join(src, entry.name);
-    const d = join(dst, entry.name);
-    if (entry.isDirectory()) {
-      copyDirRecursive(d, s);
-    } else {
-      copyFileSync(s, d);
     }
   }
 }
@@ -445,10 +417,8 @@ function genAllDocsMd(outDir: string): void {
 }
 
 function writePreviewHtmlFiles(): void {
-  const imgOutDir = join(previewOutDir, "img");
-  rmSync(imgOutDir, { recursive: true, force: true });
-  mkdirSync(imgOutDir, { recursive: true });
   removeHTMLFiles(previewOutDir);
+  mkdirSync(previewOutDir, { recursive: true });
 
   for (const [name, html] of mdProcessed) {
     const htmlName = getHTMLFileName(name);
@@ -456,7 +426,6 @@ function writePreviewHtmlFiles(): void {
     writeFileSync(path, html);
   }
 
-  copyDirRecursive(join(previewOutDir, "img"), join(mdDir, "img"));
   genAllDocsMd(previewOutDir);
   for (const name of kManualStaticFiles) {
     const srcPath = join(docsDir, name);
@@ -483,7 +452,7 @@ function writeBundledRenderJs(outDir: string): void {
   writeFileSync(join(outDir, "gen_docs.render.js"), template.replace(marker, bundle));
 }
 
-function writeManualPakFiles(): void {
+async function writeManualPakFiles(): Promise<void> {
   rmSync(manualOutDir, { recursive: true, force: true });
   mkdirSync(manualOutDir, { recursive: true });
 
@@ -495,7 +464,6 @@ function writeManualPakFiles(): void {
   writeFileSync(join(manualOutDir, "manifest.json"), JSON.stringify(manifest, null, 2));
   console.log(`wrote manifest.json (${Object.keys(manifest).length} pages)`);
 
-  copyDirRecursive(join(manualOutDir, "img"), join(mdDir, "img"));
   genAllDocsMd(manualOutDir);
 
   for (const name of kManualStaticFiles) {
@@ -510,34 +478,7 @@ function writeManualPakFiles(): void {
   if (!bundledRender.includes("cmd_ids") || !bundledRender.includes("driver();")) {
     throw new Error("bundled gen_docs.render.js missing Commands search UI");
   }
-  verifyManualImages();
-}
-
-function verifyManualImages(): void {
-  const imgRe = /!\[[^\]]*\]\(([^)]+)\)/g;
-  const missing: string[] = [];
-  let refCount = 0;
-  for (const name of mdProcessed.keys()) {
-    const text = readFileSync(join(mdDir, name), "utf-8");
-    let m: RegExpExecArray | null;
-    while ((m = imgRe.exec(text)) !== null) {
-      const src = m[1].replace(/%20/g, " ");
-      if (src.startsWith("http://") || src.startsWith("https://")) {
-        continue;
-      }
-      refCount++;
-      const packedPath = join(manualOutDir, ...src.split("/"));
-      if (!existsSync(packedPath)) {
-        missing.push(`${name}: ${src}`);
-      }
-    }
-  }
-  const imgDir = join(manualOutDir, "img");
-  const packedCount = existsSync(imgDir) ? readdirSync(imgDir).length : 0;
-  console.log(`packed ${packedCount} manual images (${refCount} local image refs in docs)`);
-  if (missing.length > 0) {
-    throw new Error(`missing manual images:\n${missing.join("\n")}`);
-  }
+  await checkCdnImages([mdDir]);
 }
 
 function extractCommandsFromMarkdown(): string[] {
@@ -591,12 +532,6 @@ function checkCommandsAreDocumented(): void {
   }
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 export async function main() {
   const timeStart = performance.now();
   const previewHtml = process.argv.includes("--preview");
@@ -609,7 +544,7 @@ export async function main() {
     mdToHTML(name);
   }
 
-  writeManualPakFiles();
+  await writeManualPakFiles();
   if (previewHtml) {
     writePreviewHtmlFiles();
   }

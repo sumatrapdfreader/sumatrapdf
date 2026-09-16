@@ -193,6 +193,25 @@
     );
   }
 
+  const kDocsImgCdn = "https://files.sumatrapdfreader.org/assets/sumatrapdf/";
+
+  function docsImgToCdnUrl(src) {
+    let s = (src || "").replace(/%20/g, " ").replace(/\\/g, "/");
+    if (s.indexOf("https://") === 0 || s.indexOf("http://") === 0) {
+      return s;
+    }
+    if (s.indexOf("./") === 0) {
+      s = s.slice(2);
+    }
+    if (s.indexOf("/img/") === 0) {
+      s = s.slice(1);
+    }
+    if (s.indexOf("img/") === 0) {
+      return kDocsImgCdn + s.slice(4);
+    }
+    return s;
+  }
+
   function createMarkdownRenderer(md) {
     md.renderer.rules.paragraph_open = function () {
       return "<div>";
@@ -220,6 +239,12 @@
       const text = getInlineText(tokens[idx - 1]);
       const id = slugify(text);
       return '<a class="hlink" href="#' + id + '"> # </a></' + tok.tag + ">\n";
+    };
+
+    md.renderer.rules.image = function (tokens, idx, options, env, self) {
+      const tok = tokens[idx];
+      tok.attrSet("src", docsImgToCdnUrl(tok.attrGet("src") || ""));
+      return self.renderToken(tokens, idx, options);
     };
 
     md.renderer.rules.link_open = function (tokens, idx, options, env, self) {

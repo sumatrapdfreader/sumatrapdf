@@ -1,5 +1,6 @@
 import { existsSync, rmSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { checkCdnImages } from "./r2";
 import { copyFileNormalized } from "./util";
 
 function getWebsiteDir(): string {
@@ -116,6 +117,7 @@ async function main() {
   }
 
   await copyDocsToWebsite(websiteDir);
+  await checkCdnImages([join("docs", "md")], { required: true });
 
   try {
     await runInDir(websiteDir, "go", ["run", ".", "-check-docs"], { pipeStdout: false });
