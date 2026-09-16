@@ -166,6 +166,9 @@ ShowToc = true
 ; (introduced in version 3.7)
 SidebarOnRight = false
 
+; valid values: (empty), keep, grow (introduced in version 3.7)
+SidebarWindowSize = 
+
 ; if true, draw a blue border around links in the document (introduced in
 ; version 3.6)
 ShowLinks = false

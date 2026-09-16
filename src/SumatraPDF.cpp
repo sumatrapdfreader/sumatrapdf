@@ -9755,8 +9755,12 @@ static int SidebarExtraDx(MainWindow* win) {
     return dx + kSplitterDx;
 }
 
+// SidebarWindowSize = grow opts in; by default the window keeps its size (#6205)
 static bool FrameCanResizeForSidebar(MainWindow* win) {
     if (!win || !win->hwndFrame || gPluginMode) {
+        return false;
+    }
+    if (!str::EqI(gSettings->sidebarWindowSize, StrL("grow"))) {
         return false;
     }
     if (win->isFullScreen || win->presentation) {

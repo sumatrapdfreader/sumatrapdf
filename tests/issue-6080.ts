@@ -1,6 +1,7 @@
 // #6080: showing Bookmarks grows the frame only as much as unused canvas
 // margin does not cover. Fit Width has no unused dx, so the frame grows by
 // the toc. Hide shrinks by the amount we grew. Tab switch does not resize.
+// Growing is opt-in (SidebarWindowSize = grow, #6205).
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -59,7 +60,7 @@ export async function testit(): Promise<void> {
   writeFileSync(pdfB, makePdf(), "latin1");
   writeFileSync(
     join(appdata, "SumatraPDF-settings.txt"),
-    "CheckForUpdates = false\nRestoreSession = false\nShowStartPage = false\nShowToc = false\nShowFavorites = false\nUseTabs = true\n",
+    "CheckForUpdates = false\nRestoreSession = false\nShowStartPage = false\nShowToc = false\nShowFavorites = false\nUseTabs = true\nSidebarWindowSize = grow\n",
   );
 
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdfA]);

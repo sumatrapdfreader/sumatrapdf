@@ -1373,6 +1373,16 @@ const globalPrefs: Field[] = [
     "if true, put the bookmarks / favorites sidebar on the right of the window " +
       "(left is the default; right-to-left UI languages already put it on the right)",
   ).ver("3.7"),
+  field(
+    "SidebarWindowSize",
+    Str,
+    "",
+    "what showing / hiding the bookmarks / favorites sidebar does to the window: empty or keep " +
+      "(the window keeps its size and position, the document area shrinks), or grow (the window " +
+      "grows by the sidebar width where the document can't spare it, and shrinks back on hide)",
+  )
+    .ver("3.7")
+    .doc("valid values: (empty), keep, grow"),
   field("ShowLinks", Bool, false, "if true, draw a blue border around links in the document").ver("3.6"),
   field(
     "HighlightFormFields",
@@ -1991,6 +2001,7 @@ const globalPrefsLayout = [
   "SortFavoritesByName",
   "ShowToc",
   "SidebarOnRight",
+  "SidebarWindowSize",
   "ShowLinks",
   "HighlightFormFields",
   "ClickEdgeToTurnPage",

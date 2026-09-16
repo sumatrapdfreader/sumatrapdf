@@ -1366,6 +1366,7 @@ static const char* gEnumEngineeringDrawingEnhance[] = {"off", "auto", "on", null
 static const char* gEnumDocumentColorsFollowTheme[] = {"off", "smart", "legacy", nullptr};
 static const char* gEnumHomePageViewMode[] = {"thumbnails", "list", nullptr};
 static const char* gEnumFilePicker[] = {"", "os", "sumatrapdf", nullptr};
+static const char* gEnumSidebarWindowSize[] = {"", "keep", "grow", nullptr};
 static const char* gEnumPrinterUI[] = {"", "auto", "modern", "classic", nullptr};
 static const char* gEnumPrintScale[] = {"shrink", "fit", "none", nullptr};
 static const char* gEnumCollate[] = {"default", "collate", "nocollate", nullptr};
@@ -1387,6 +1388,7 @@ static const EnumSettingDef gEnumSettings[] = {
     {"HomePageViewMode", gEnumHomePageViewMode},
     {"FilePicker", gEnumFilePicker},
     {"PrinterUI", gEnumPrinterUI},
+    {"SidebarWindowSize", gEnumSidebarWindowSize},
     {"PrintScale", gEnumPrintScale},
     {"Collate", gEnumCollate},
     {"FreeTextAlignment", gEnumFreeTextAlignment},
