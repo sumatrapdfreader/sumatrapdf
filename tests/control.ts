@@ -97,6 +97,7 @@ export enum ControlCommand {
   TestTtsEngineCrash = 100,
   StartPerfLog = 101,
   StopPerfLog = 102,
+  WaitSessionRestored = 103,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -440,6 +441,16 @@ export class ControlClient {
     const info = String(res[1] ?? "");
     if (code !== 0) {
       throw new Error(`WaitRenderIdle failed: ${info || code}`);
+    }
+    return info;
+  }
+
+  async waitForSessionRestored(timeoutMs = 15000): Promise<string> {
+    const res = await this.request(ControlCommand.WaitSessionRestored, [timeoutMs * SLOW_BUILD_FACTOR]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const info = String(res[1] ?? "");
+    if (code !== 0) {
+      throw new Error(`WaitSessionRestored failed: ${info || code}`);
     }
     return info;
   }

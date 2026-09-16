@@ -20,7 +20,9 @@ void DestroyPerfLog() {}
 #else
 
 constexpr int kMaxPerfDepth = 256;
-constexpr int kMaxPerfLogBytes = 64 * 1024 * 1024;
+constexpr int kMaxPerfLogBytes = 256 * 1024 * 1024;
+// skip deep frames so a restore profile is not 1M str::IsNull lines
+constexpr int kMaxPerfLogDepth = 10;
 constexpr int kSymCap = 64 * 1024;
 constexpr int kLineBuf = 1024;
 
@@ -157,9 +159,11 @@ extern "C" void PerfEnterImpl(void* addr) {
     }
     gPerfDepth++;
 
-    char buf[kLineBuf];
-    int n = FormatLine(buf, depth, GetCurrentThreadId(), addr, false, 0);
-    AppendLine(buf, n);
+    if (depth <= kMaxPerfLogDepth) {
+        char buf[kLineBuf];
+        int n = FormatLine(buf, depth, GetCurrentThreadId(), addr, false, 0);
+        AppendLine(buf, n);
+    }
 
     gInHook = 0;
 }
@@ -188,9 +192,11 @@ extern "C" void PerfExitImpl(void* addr) {
         return;
     }
 
-    char buf[kLineBuf];
-    int n = FormatLine(buf, gPerfDepth, GetCurrentThreadId(), addr, true, us);
-    AppendLine(buf, n);
+    if (gPerfDepth <= kMaxPerfLogDepth) {
+        char buf[kLineBuf];
+        int n = FormatLine(buf, gPerfDepth, GetCurrentThreadId(), addr, true, us);
+        AppendLine(buf, n);
+    }
 
     gInHook = 0;
 }

@@ -192,6 +192,20 @@ bool gRedrawLog = false;
 
 // Test/debug code can inspect every part of the completed layout through win.
 Func1<MainWindow*> gAfterLayout;
+Func0 gOnSessionRestored;
+static AtomicInt gSessionRestoreFinished = 0;
+
+void NotifySessionRestoreFinished() {
+    if (AtomicIntGet(&gSessionRestoreFinished)) {
+        return;
+    }
+    AtomicIntSet(&gSessionRestoreFinished, 1);
+    gOnSessionRestored.Call();
+}
+
+bool IsSessionRestoreFinished() {
+    return AtomicIntGet(&gSessionRestoreFinished) != 0;
+}
 
 // returns false when the relayout was skipped (nothing layout-affecting changed)
 static bool RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sidebarDx = -1);
@@ -339,6 +353,7 @@ LoadArgs* LoadArgs::Clone() {
     res->initialZoom = this->initialZoom;
     res->ebookLayoutAspect = this->ebookLayoutAspect;
     res->skipHistory = this->skipHistory;
+    res->deferTabUpdate = this->deferTabUpdate;
     return res;
 }
 
@@ -3314,7 +3329,8 @@ static MainWindow* CreateMainWindow() {
     // caption / maximized / fullscreen state is applied (the old fix for the
     // dark-theme startup flash, #5421, predates creating the frame hidden).
     ShowWindow(win->hwndCanvas, SW_SHOW);
-    UpdateWindow(win->hwndCanvas);
+    // frame is still hidden; a sync paint here draws the empty/home canvas
+    // that session restore is about to replace
 
     Tooltip::CreateArgs args;
     args.parent = win->hwndCanvas;
@@ -3376,7 +3392,11 @@ static MainWindow* CreateMainWindow() {
     // TODO: this is hackish. in general we should divorce
     // layout re-calculations from MainWindow and creation of windows
     win->UpdateCanvasSize();
-    HomePageRelayout(win);
+    // session restore will select a document tab and never paint home first
+    bool restoring = gIsStartup && SettingsRestoreSession() && gInitialSessionData && len(*gInitialSessionData) > 0;
+    if (!restoring) {
+        HomePageRelayout(win);
+    }
     DarkModeApplyToNewFrame(win);
 
     // show menu bar rebar now that layout is done
@@ -3945,7 +3965,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         tab->SetFilePath(fullPath);
         tab->SetDisplayName(args->DisplayName());
         tab->skipHistory = args->skipHistory;
-        win->currentTabTemp = AddTabToWindow(win, tab);
+        win->currentTabTemp = AddTabToWindow(win, tab, args->deferTabUpdate);
 
         if (!IsMainWindowValidAndNotClosing(win)) {
             // the ctrl was not attached to the tab yet, don't leak it
@@ -4118,6 +4138,21 @@ static int gMaxLoadThreads = 0;
 static Vec<LoadDocumentAsyncData*> gLoadQueue;
 static bool gLoadQueueDispatchPosted = false;
 static UINT_PTR gLoadingMessageTimer = 0;
+
+bool HasPendingDocumentLoads() {
+    if (gLoadThreadsActive > 0 || len(gLoadQueue) > 0) {
+        return true;
+    }
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->loadState == WindowTab::LoadState::Loading ||
+                tab->loadState == WindowTab::LoadState::LoadedPending) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 static void CALLBACK LoadingMessageTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_PTR timerId, DWORD /*time*/) {
     bool hasLoadingTabs = false;
@@ -15449,32 +15484,33 @@ static void SetTabState(WindowTab* tab, TabState* state) {
     }
 }
 
-static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
+static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state, bool deferTabUpdate) {
     logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath);
     FileHistoryMarkFileInexistent(state->filePath, true);
     WindowTab* tab = new WindowTab(win);
     tab->SetFilePath(state->filePath);
     tab->tabState = state;
-    AddTabToWindow(win, tab);
+    AddTabToWindow(win, tab, deferTabUpdate);
 }
 
-static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad = true) {
+static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad, bool deferTabUpdate) {
     logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
     if (!DocumentPathExists(state->filePath)) {
-        RestoreMissingTabOnStartup(win, state);
+        RestoreMissingTabOnStartup(win, state, deferTabUpdate);
         return;
     }
     LoadArgs args(state->filePath, win);
     args.noSavePrefs = true;
     args.showWin = false;
     args.tabState = state;
+    args.deferTabUpdate = deferTabUpdate;
     if (!lazyLoad && SettingsUseTabs()) {
         StartLoadDocument(&args);
         return;
     }
     args.lazyLoad = lazyLoad;
     if (!LoadDocument(&args)) {
-        RestoreMissingTabOnStartup(win, state);
+        RestoreMissingTabOnStartup(win, state, deferTabUpdate);
         return;
     }
     WindowTab* tab = win->CurrentTab();
@@ -16894,10 +16930,12 @@ static void DeleteStaleFilesAsync() {
 
 static void LayoutAndFocusOnStartup(MainWindow* win) {
     if (!win || !IsWindow(win->hwndFrame)) {
+        NotifySessionRestoreFinished();
         return;
     }
     ScheduleUiUpdate(win);
     win->Focus();
+    NotifySessionRestoreFinished();
 }
 
 static int WineDpiFromEnv() {
@@ -18151,12 +18189,24 @@ ContinueOpenWindow:
         for (SessionData* data : *gInitialSessionData) {
             // create window hidden to avoid flashing the about page
             win = CreateAndShowMainWindow(data, false);
+            int nRestore = 0;
+            for (TabState* state : *data->tabStates) {
+                if (len(state->filePath) != 0) {
+                    nRestore++;
+                }
+            }
+            int restored = 0;
             for (TabState* state : *data->tabStates) {
                 if (len(state->filePath) == 0) {
                     logf("WinMain: skipping RestoreTabOnStartup() because state->filePath is empty\n");
                     continue;
                 }
-                RestoreTabOnStartup(win, state, gSettings->lazyLoading);
+                restored++;
+                RestoreTabOnStartup(win, state, gSettings->lazyLoading, restored != nRestore);
+            }
+            win->currentTabTemp = nullptr;
+            if (nRestore > 0) {
+                UpdateTabWidth(win);
             }
             // TabIndex is 1-based among document tabs (home tab is not in TabStates).
             // Also accept legacy sessions that stored a UI index including home.
@@ -18196,10 +18246,12 @@ ContinueOpenWindow:
             }
             ShowMainWindow(win, data->windowState);
             // Docs were loaded while the frame was hidden (normal windowPos size).
-            // After show / maximize / fullscreen, force DisplayModel to match the
+            // After maximize / fullscreen, force DisplayModel to match the
             // final canvas so scroll isn't stuck on the pre-show viewport
-            // (related to #5753 / #5823).
-            if (win->IsDocLoaded()) {
+            // (related to #5753 / #5823). ShowMainWindow already RelayoutFrame'd
+            // a normal window to its restored size.
+            if (win->IsDocLoaded() &&
+                (data->windowState == WIN_STATE_MAXIMIZED || data->windowState == WIN_STATE_FULLSCREEN)) {
                 win->canvasRc = {};
                 win->UpdateCanvasSize();
             }

@@ -569,9 +569,11 @@ static Pixmap* RenderSvgToPixmap(Str svgData, int dx, int dy, Color fgCol) {
     // embedded archive; without the loader the render throws and the icon comes
     // out blank (#6186). EngineMupdf installs it too, but not until a document
     // is opened, long after the toolbar renders its icons.
-    InstallEmbeddedFontLoader();
-
-    fz_context* ctx = fz_new_context_windows();
+    static fz_context* ctx = nullptr;
+    if (!ctx) {
+        InstallEmbeddedFontLoader();
+        ctx = fz_new_context_windows();
+    }
     fz_pixmap* pixmap = RenderSvgToFzPixmap(ctx, svgData, dx, dy, fgCol);
     if (pixmap) {
         BlitFzPixmapBgra(px->data, px->stride, pixmap);
@@ -588,7 +590,6 @@ static Pixmap* RenderSvgToPixmap(Str svgData, int dx, int dy, Color fgCol) {
         }
         fz_drop_pixmap(ctx, pixmap);
     }
-    fz_drop_context_windows(ctx);
     return px;
 }
 

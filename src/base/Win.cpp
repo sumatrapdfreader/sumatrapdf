@@ -3470,6 +3470,9 @@ void HwndRepaintNow(HWND hwnd) {
     if (!hwnd || !::IsWindow(hwnd)) {
         return;
     }
+    if (!IsWindowVisible(hwnd)) {
+        return;
+    }
     HwndInvalidate(hwnd);
     // send WM_PAINT right away (normally would wait for empty msg queue)
     UpdateWindow(hwnd);

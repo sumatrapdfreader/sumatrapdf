@@ -903,6 +903,7 @@ enum class ControlCmd : u16 {
     TestTtsEngineCrash = 100,
     StartPerfLog = 101,
     StopPerfLog = 102,
+    WaitSessionRestored = 103,
 };
 
 enum class ControlArgType : u16 {
@@ -2334,6 +2335,52 @@ static void RunWaitRenderIdle(ControlRequest* req) {
     }
 }
 
+static void SnapshotSessionRestore(ControlRequest* req) {
+    req->idleState = RenderIdleState::NotReady;
+    req->idleInfo[0] = 0;
+    if (!IsSessionRestoreFinished() || gIsStartup) {
+        str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("startup"));
+        SetEvent(req->done);
+        return;
+    }
+    if (HasPendingDocumentLoads()) {
+        str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("loading"));
+        SetEvent(req->done);
+        return;
+    }
+    if (len(gWindows) > 0 && gWindows[0] && gWindows[0]->uiState.updatePending) {
+        str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("ui-pending"));
+        SetEvent(req->done);
+        return;
+    }
+    req->idleState = RenderIdleState::Idle;
+    str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("restored"));
+    SetEvent(req->done);
+}
+
+static void RunWaitSessionRestored(ControlRequest* req) {
+    i32 timeoutMs = 15000;
+    IntArg(req, 0, timeoutMs);
+    if (timeoutMs < 1) {
+        timeoutMs = 1;
+    }
+    u64 deadline = GetTickCount64() + (u64)timeoutMs;
+    for (;;) {
+        ResetEvent(req->done);
+        uitask::Post(MkFunc0<ControlRequest>(SnapshotSessionRestore, req), "WaitSessionRestored");
+        WaitForSingleObject(req->done, INFINITE);
+        if (req->idleState == RenderIdleState::Idle) {
+            AppendTestResult(req, 0, req->idleInfo[0] ? Str(req->idleInfo) : StrL("restored"));
+            return;
+        }
+        if (GetTickCount64() >= deadline) {
+            AppendTestResult(req, 1, req->idleInfo[0] ? fmt("timeout %s", Str(req->idleInfo)) : StrL("timeout"));
+            return;
+        }
+        Sleep(20);
+    }
+}
+
 static bool ReadExact(HANDLE h, void* data, DWORD n) {
     u8* d = (u8*)data;
     DWORD total = 0;
@@ -2414,6 +2461,8 @@ static bool ProcessControlConnection(HANDLE h) {
         // paint (and thereby request the tiles we are waiting for)
         if ((ControlCmd)req->cmd == ControlCmd::WaitRenderIdle) {
             RunWaitRenderIdle(req);
+        } else if ((ControlCmd)req->cmd == ControlCmd::WaitSessionRestored) {
+            RunWaitSessionRestored(req);
         } else {
             uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
             WaitForSingleObject(req->done, INFINITE);

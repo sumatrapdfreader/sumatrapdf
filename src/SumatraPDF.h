@@ -90,6 +90,10 @@ struct Favorites;
 struct FileHistory;
 struct MainWindow;
 extern Func1<MainWindow*> gAfterLayout;
+extern Func0 gOnSessionRestored;
+void NotifySessionRestoreFinished();
+bool IsSessionRestoreFinished();
+bool HasPendingDocumentLoads();
 // tells the frame's virtual tree which splitters exist (they are created
 // with their panes)
 void FrameSyncSplitters(MainWindow*);
@@ -265,6 +269,7 @@ struct LoadArgs {
     bool noSavePrefs = false;
 
     bool lazyLoad = false;
+    bool deferTabUpdate = false;
     bool async = false;
     bool activateExisting = false;
     // do not add to File History / Windows Recent (CmdOpenFileNoHistory)
