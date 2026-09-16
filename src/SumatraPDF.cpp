@@ -1232,12 +1232,16 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
 
 struct CreateThumbnailFromFileData {
     Str filePath;
+    // when set, render from this clone of the open document instead of loading
+    // the file again (owned)
+    EngineBase* engine = nullptr;
     Pixmap* bmp = nullptr;
     // see LoadDocumentAsyncData: the thumbnail is rendered off the UI thread,
     // so the per-document ebook settings have to come along as a copy (#4600)
     FileEBookUI* fileEBookUI = nullptr;
     ~CreateThumbnailFromFileData() {
         str::Free(filePath);
+        SafeEngineRelease(&engine);
         FreePixmap(bmp);
         DeleteFileEBookUI(fileEBookUI);
     }
@@ -1253,10 +1257,13 @@ static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
 }
 
 static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
-    HwndPasswordUI pwdUI(nullptr);
-    SetLoadThreadFileEBookUI(d->fileEBookUI);
-    EngineBase* engine = CreateEngineFromFile(d->filePath, &pwdUI, true);
-    SetLoadThreadFileEBookUI(nullptr);
+    EngineBase* engine = d->engine;
+    if (!engine) {
+        HwndPasswordUI pwdUI(nullptr);
+        SetLoadThreadFileEBookUI(d->fileEBookUI);
+        engine = CreateEngineFromFile(d->filePath, &pwdUI, true);
+        SetLoadThreadFileEBookUI(nullptr);
+    }
     if (!engine) {
         delete d;
         return;
@@ -1274,15 +1281,17 @@ static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
     RenderPageArgs args(1, zoom, 0, &pageRect);
     d->bmp = engine->RenderPage(args);
     engine->Release();
+    d->engine = nullptr;
     auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileFinish, d);
     uitask::Post(fn, "SetThumbnailFromFile");
 }
 
 // create a thumbnail by loading the file with a temporary engine
 // used for lazy-loaded files that don't have a loaded controller
-static void CreateThumbnailFromFileAsync(FileState* ds) {
+static void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine = nullptr) {
     auto* d = new CreateThumbnailFromFileData();
     d->filePath = str::Dup(ds->filePath);
+    d->engine = engine;
     d->fileEBookUI = CopyFileEBookUI(ds->eBookUI);
     auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileThread, d);
     RunAsync(fn, StrL("CreateThumbnailFromFile"));
@@ -1312,10 +1321,19 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
         }
     }
 
-    // always use file-based async thumbnail creation; it's independent
+    // re-opening a PostScript file runs Ghostscript again (seconds for a big
+    // one), so hand the thread a clone of the engine we already have
+    EngineBase* clone = nullptr;
+    DisplayModel* dm = win->IsDocLoaded() ? win->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (engine && engine->kind == kindEnginePostScript && str::Eq(engine->FilePath(), ds->filePath)) {
+        clone = engine->Clone();
+    }
+
+    // otherwise use file-based async thumbnail creation; it's independent
     // of the tab lifecycle so it works even if the tab is closed before
     // the render completes
-    CreateThumbnailFromFileAsync(ds);
+    CreateThumbnailFromFileAsync(ds, clone);
 }
 
 /* Send the request to render a given page to a rendering thread */
