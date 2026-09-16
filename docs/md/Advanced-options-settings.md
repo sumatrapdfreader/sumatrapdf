@@ -91,6 +91,9 @@ HomePageViewMode = thumbnails
 ; valid values: (empty), os, sumatrapdf (introduced in version 3.7)
 FilePicker = 
 
+; valid values: (empty), auto, modern, classic (introduced in version 3.7)
+PrinterUI = 
+
 ; if true, a document will be reloaded automatically whenever it's changed
 ; (currently doesn't work for documents shown in the ebook UI) (introduced in
 ; version 2.5)

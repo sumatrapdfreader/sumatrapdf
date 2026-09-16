@@ -1278,6 +1278,18 @@ const globalPrefs: Field[] = [
     .ver("3.7")
     .doc("valid values: (empty), os, sumatrapdf"),
   field(
+    "PrinterUI",
+    Str,
+    "",
+    "which dialog Print (Ctrl+P) opens: empty or auto (the Windows 11 dialog with print " +
+      "preview where it's available, the classic one everywhere else), modern (the Windows 11 " +
+      "dialog), or classic (the classic dialog, whose Preferences button opens the printer " +
+      "driver's own property sheet). modern falls back to the classic dialog when Windows " +
+      "can't show the modern one",
+  )
+    .ver("3.7")
+    .doc("valid values: (empty), auto, modern, classic"),
+  field(
     "ReloadModifiedDocuments",
     Bool,
     true,
@@ -1919,6 +1931,7 @@ const globalPrefsLayout = [
   "VersionToSkip",
   "ChmUI",
   "MainWindowBackground",
+  "PrinterUI",
   "PrinterDefaults",
   "ForwardSearch",
   "Fullscreen",

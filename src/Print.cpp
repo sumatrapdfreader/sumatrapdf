@@ -1279,6 +1279,19 @@ static int CollateDefaultPref() {
     return -1;
 }
 
+// The PrinterUI setting. Empty, "auto" and "modern" all take the Windows 11
+// dialog where it's available and the classic one everywhere else; they differ
+// only in saying so. "classic" never takes the Windows 11 one: only the classic
+// dialog has a Preferences button, which opens the printer driver's own property
+// sheet. The modern dialog has no way to show that sheet (discussion #6202), so
+// this is how a driver-only setting is reached.
+static bool PrinterUIWantsClassic() {
+    if (!gSettings) {
+        return false;
+    }
+    return str::EqI(gSettings->printerUI, StrL("classic"));
+}
+
 // apply a collate preference (1 = collate, 0 = no-collate) to a DEVMODE handle
 static void SetDevModeCollate(HGLOBAL hDevMode, int collate) {
     if (!hDevMode || collate < 0) {
@@ -1385,7 +1398,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     // the Windows 11 dialog runs the whole job itself; -print-to and friends
     // need the synchronous classic path
-    if (!waitForCompletion) {
+    if (!waitForCompletion && !PrinterUIWantsClassic()) {
         bool usedWin11Dialog = TryPrintCurrentFileWin11(win, defaultScaleAdv);
         logf("PrintCurrentFile: Windows 11 dialog=%d\n", (int)usedWin11Dialog);
         if (usedWin11Dialog) {
