@@ -308,7 +308,7 @@ static void MsSha1Final(MsSha1* s, u8 digest[20]) {
 //--- little-endian readers with bounds checking
 
 static u32 LitU16(Str d, int off) {
-    if (off < 0 || off + 2 > len(d)) {
+    if (off < 0 || (i64)off + 2 > len(d)) {
         return 0;
     }
     const u8* p = (const u8*)d.s + off;
@@ -316,7 +316,7 @@ static u32 LitU16(Str d, int off) {
 }
 
 static u32 LitU32(Str d, int off) {
-    if (off < 0 || off + 4 > len(d)) {
+    if (off < 0 || (i64)off + 4 > len(d)) {
         return 0;
     }
     const u8* p = (const u8*)d.s + off;
@@ -480,7 +480,12 @@ static bool LitParseHeader(LitFile* lit) {
     int hdrLen = (int)LitU32(d, 12);
     int nPieces = (int)LitU32(d, 16);
     int secHdrLen = (int)LitU32(d, 20);
-    if (hdrLen < 0x28 || nPieces < 5 || nPieces > 16) {
+    if (hdrLen < 0x28 || nPieces < 5 || nPieces > 16 || secHdrLen < 0) {
+        return false;
+    }
+    // hdrLen comes from the file; bound it before computing offsets from it
+    // so hdrLen + nPieces * 16 can't overflow into a negative offset
+    if ((i64)hdrLen + (i64)nPieces * 16 > len(d)) {
         return false;
     }
 
