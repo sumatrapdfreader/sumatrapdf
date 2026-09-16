@@ -465,8 +465,16 @@ void DisplayModel::RenderFinished(PageRenderRequest* req) {
             pageInfo->failedToRender = true;
         }
         RepaintDisplay();
-    } else if (PageVisibleNearby(req->pageNo)) {
-        RepaintDisplay();
+    } else if (PageVisible(req->pageNo)) {
+        // a Relayout after this request was queued (fit-page zoom changed with
+        // the real page size, or the window resized) leaves this bitmap at the
+        // old zoom; painting it stretched then replacing it is a visible jump
+        float cur = GetZoomReal(req->pageNo);
+        float a = cur > req->zoom ? cur : req->zoom;
+        bool staleZoom = cur > 0 && a > 0 && fabsf(cur - req->zoom) > 0.02f * a;
+        if (!staleZoom) {
+            RepaintDisplay();
+        }
     }
     // continue chained predictive rendering: render the next predicted page
     // (RequestPredictiveRendering stops the chain if the origin page is no
@@ -1071,7 +1079,7 @@ void DisplayModel::BuildPagesInfo() {
             PageMediaBox(pageNo);
         }
     }
-    // otherwise Relayout() measures the shown pages, on demand in non-continuous mode
+    // non-continuous: Relayout() measures the shown pages before CalcZoomReal
 }
 
 bool DisplayModel::PageShown(int pageNo) const {
@@ -1604,6 +1612,22 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         pendingRelayout = true;
         return;
     }
+
+    // in single/facing/book view the shown pages are the ones on screen. Measure
+    // them before CalcZoomReal so fit-page zoom isn't computed from the estimated
+    // box, which then gets replaced and the page visibly jumps
+    if (useLazyMediaBoxes && !IsContinuous(displayMode)) {
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            if (!PageShown(pageNo)) {
+                continue;
+            }
+            PageInfo* pi = GetPageInfo(pageNo);
+            if (pi && !IsMediaBoxKnown(pi->mediaBox)) {
+                PageMediaBox(pageNo);
+            }
+        }
+    }
+
     bool hideScrollbars = ScrollbarsAreHidden();
     bool useOverlayScrollbar = ScrollbarsUseOverlay();
 
@@ -1791,6 +1815,7 @@ bool DisplayModel::EnsureMediaBoxesForVisiblePages() {
     if (nMeasured > nListed) {
         msg = fmt("%s and %d more", msg, nMeasured - nListed);
     }
+    logf("%s\n", msg);
     NotifyMediaBoxRelayout(this, msg);
     return true;
 }
@@ -1839,9 +1864,23 @@ void DisplayModel::ChangeStartPage(int newStartPage) {
     ReportIf(!ValidPageNo(newStartPage));
     ReportIf(IsContinuous(GetDisplayMode()));
 
-    startPage = newStartPage;
     int first = FirstPageInRow(newStartPage);
     int last = LastPageInRow(newStartPage);
+    if (startPage == newStartPage) {
+        bool same = true;
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            bool isShown = pageNo >= first && pageNo <= last;
+            if (pagesInfo[pageNo - 1].isShown != isShown) {
+                same = false;
+                break;
+            }
+        }
+        if (same) {
+            return;
+        }
+    }
+
+    startPage = newStartPage;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         bool isShown = pageNo >= first && pageNo <= last;
         pagesInfo[pageNo - 1].isShown = isShown;

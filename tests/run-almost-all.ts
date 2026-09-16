@@ -111,6 +111,7 @@ import { testit as issue5993 } from "./issue-5993.ts";
 import { testit as issue5845 } from "./issue-5845.ts";
 import { testit as issue5870 } from "./issue-5870.ts";
 import { testit as issue6199 } from "./issue-6199.ts";
+import { testit as comicFitPageRelayout } from "./comic-fit-page-relayout.ts";
 import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
 import { testit as issue4753 } from "./issue-4753.ts";
 import { testit as issue4055 } from "./issue-4055.ts";
@@ -321,6 +322,7 @@ export const tests: NamedTest[] = [
   ["home-two-windows", homeTwoWindows],
   ["issue-5870", issue5870],
   ["issue-6199", issue6199],
+  ["comic-fit-page-relayout", comicFitPageRelayout],
   ["issue-6133", issue6133],
   ["issue-6184", issue6184],
   ["image-only-palette-items", imageOnlyPaletteItems],
