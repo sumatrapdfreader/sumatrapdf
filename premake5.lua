@@ -188,7 +188,7 @@ function optimized_conf()
   filter "configurations:DebugFull"
   defines { "DEBUG" }
 
-  filter "configurations:Debug or Release or ReleaseAnalyze"
+  filter "configurations:Debug or Release or ReleaseAnalyze or Profile"
   undefines { "DEBUG" }
   defines { "NDEBUG" }
   filter {}
@@ -242,6 +242,15 @@ function warnings_as_errors()
   filter {}
 end
 
+-- MSVC /callcap inserts _CAP_Enter_Function/_CAP_Exit_Function at every
+-- function entry/exit (x86/x64), after the prologue, with the function
+-- address as the argument. Hooks live in uninstrumented base (PerfLog.cpp).
+function perf_log_hooks()
+  filter { "configurations:Profile", "platforms:x86 or x64 or x64_asan" }
+    buildoptions { "/callcap" }
+  filter {}
+end
+
 function zlib_defines()
   includedirs {
     "ext/a-zlib",
@@ -276,18 +285,22 @@ local function for_each_out_config(fn)
   fn("platforms:x86", "configurations:ReleaseAnalyze", "out/rel32_prefast")
   fn("platforms:x86", "configurations:Debug", "out/dbg32")
   fn("platforms:x86", "configurations:DebugFull", "out/dbgfull32")
+  fn("platforms:x86", "configurations:Profile", "out/prf32")
   fn("platforms:x64", "configurations:Release", "out/rel64")
   fn("platforms:x64", "configurations:ReleaseAnalyze", "out/rel64_prefast")
   fn("platforms:x64", "configurations:Debug", "out/dbg64")
   fn("platforms:x64", "configurations:DebugFull", "out/dbgfull64")
+  fn("platforms:x64", "configurations:Profile", "out/prf64")
   fn("platforms:x64_asan", "configurations:Release", "out/rel64_asan")
   fn("platforms:x64_asan", "configurations:ReleaseAnalyze", "out/rel64_prefast_asan")
   fn("platforms:x64_asan", "configurations:Debug", "out/dbg64_asan")
   fn("platforms:x64_asan", "configurations:DebugFull", "out/dbgfull64_asan")
+  fn("platforms:x64_asan", "configurations:Profile", "out/prf64_asan")
   fn("platforms:arm64", "configurations:Release", "out/arm64")
   fn("platforms:arm64", "configurations:ReleaseAnalyze", "out/arm64_prefast")
   fn("platforms:arm64", "configurations:Debug", "out/dbgarm64")
   fn("platforms:arm64", "configurations:DebugFull", "out/dbgfullarm64")
+  fn("platforms:arm64", "configurations:Profile", "out/prfarm64")
   filter {}
 end
 
@@ -375,7 +388,7 @@ function dll_shared_lib_dirs()
 end
 
 workspace "SumatraPDF"
-  configurations { "Debug", "DebugFull", "Release", "ReleaseAnalyze", }
+  configurations { "Debug", "DebugFull", "Release", "ReleaseAnalyze", "Profile" }
   platforms { "x86", "x64", "arm64", "x64_asan" }
   startproject "SumatraPDF"
   characterset "Unicode"
@@ -405,6 +418,9 @@ workspace "SumatraPDF"
   -- without C4668 ("not defined as a preprocessor macro, replacing with 0"),
   -- which is an error under /W4 /WX. Set to 1 to build with Tracy zones.
   defines { "IS_TRACY=0" }
+  filter "configurations:Profile"
+    defines { "IS_PERF_LOG=1" }
+  filter {}
 
   disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
   -- /utf-8 sets both source and execution charset to UTF-8
@@ -433,6 +449,8 @@ workspace "SumatraPDF"
     targetdir "out/dbg32"
   filter { "platforms:x86", "configurations:DebugFull" }
     targetdir "out/dbgfull32"
+  filter { "platforms:x86", "configurations:Profile" }
+    targetdir "out/prf32"
 
   filter { "platforms:x64", "configurations:Release" }
     targetdir "out/rel64"
@@ -442,6 +460,8 @@ workspace "SumatraPDF"
     targetdir "out/dbg64"
   filter { "platforms:x64", "configurations:DebugFull" }
     targetdir "out/dbgfull64"
+  filter { "platforms:x64", "configurations:Profile" }
+    targetdir "out/prf64"
   filter {}
 
   filter { "platforms:x64_asan", "configurations:Release" }
@@ -452,6 +472,8 @@ workspace "SumatraPDF"
     targetdir "out/dbg64_asan"
   filter { "platforms:x64_asan", "configurations:DebugFull" }
     targetdir "out/dbgfull64_asan"
+  filter { "platforms:x64_asan", "configurations:Profile" }
+    targetdir "out/prf64_asan"
   filter {}
 
   filter { "platforms:arm64", "configurations:Release" }
@@ -462,12 +484,14 @@ workspace "SumatraPDF"
     targetdir "out/dbgarm64"
   filter { "platforms:arm64", "configurations:DebugFull" }
     targetdir "out/dbgfullarm64"
+  filter { "platforms:arm64", "configurations:Profile" }
+    targetdir "out/prfarm64"
   filter {}
 
   -- https://github.com/premake/premake-core/wiki/symbols
   -- https://blogs.msdn.microsoft.com/vcblog/2016/10/05/faster-c-build-cycle-in-vs-15-with-debugfastlink/
   symbols "FastLink"
-  filter { "configurations:Release" }
+  filter { "configurations:Release or Profile" }
     symbols "Full"
   filter {}
 
@@ -834,7 +858,7 @@ workspace "SumatraPDF"
       "hb_realloc_impl=sumatra_hb_realloc",
       "hb_free_impl=sumatra_hb_free"
     }
-    filter "configurations:Debug or DebugFull"
+    filter "configurations:Debug or DebugFull or Profile"
       defines { "HAVE_ATEXIT" }
     filter {}
     disablewarnings { "4805", "4100", "4146", "4244", "4245", "4267", "4310", "4456", "4457", "4459", "4505", "4701", "4702", "4706", "4996" }
@@ -1014,6 +1038,17 @@ workspace "SumatraPDF"
       enablepch "Off"
     filter {}
     setup_base_pch()
+
+    filter { "files:src/PerfLog_x64.asm" }
+      buildmessage '%{file.relpath}'
+      buildoutputs { '%{cfg.objdir}/%{file.basename}_asm.obj' }
+      buildcommands {
+        rootDirWin .. '\\bin\\nasm.exe -f win64 -o "%{cfg.objdir}/%{file.basename}_asm.obj" "%{file.relpath}"'
+      }
+    filter {}
+    filter { "configurations:Profile", "platforms:x64 or x64_asan" }
+      files { "src/PerfLog_x64.asm" }
+    filter {}
 
 ---- executables
 
@@ -1229,6 +1264,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
+    perf_log_hooks()
     warnings_as_errors()
     entrypoint "WinMainCRTStartup"
     manifest("Off")
@@ -1332,6 +1368,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
+    perf_log_hooks()
     warnings_as_errors()
     entrypoint "WinMainCRTStartup"
     manifest("Off")

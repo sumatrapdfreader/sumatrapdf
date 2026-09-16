@@ -95,6 +95,8 @@ const args = [
     "ForAi", "for-ai",
     "NewWindowTabs", "new-window-tabs",
     "HtmlBackend", "html-backend",
+    "StartPerfLog", "start-perf-log",
+    "LogPerfFile", "log-perf-file",
 ];
 
 function generateCode(): string {

@@ -137,6 +137,7 @@
 #include "Version.h"
 #include "CachedObjects.h"
 #include "SumatraPDF.h"
+#include "PerfLog.h"
 #include "SumatraLog.h"
 
 using Gdiplus::Graphics;
@@ -17604,6 +17605,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     supressThrowFromNew();
 
     InitDynCalls();
+    InitPerfLog();
     NoDllHijacking();
 
     DisableDataExecution();
@@ -17648,6 +17650,12 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     ParseFlags(GetPermArena(), GetCommandLineW(), flags, Str(gToolNames));
     gCli = &flags;
     gForTesting = flags.forTesting;
+    if (flags.perfLogFile) {
+        SetPerfLogPath(flags.perfLogFile);
+    }
+    if (flags.startPerfLog) {
+        StartPerfLog();
+    }
     ApplyHtmlBackendFlag(flags.htmlBackend);
     // must precede InstallSumatraCrashHandler(): it needs to know whether we're
     // allowed to send the report at all
@@ -18357,6 +18365,7 @@ ContinueOpenWindow:
     CleanUpThumbnailCache();
 
 Exit:
+    SavePerfLog();
     // logf("Exiting with exit code: %d\n", exitCode);
     UnregisterSettingsForFileChanges();
 
@@ -18484,6 +18493,7 @@ Exit:
         UninstallCrashHandler();
     }
     DeleteAppTools();
+    DestroyPerfLog();
     DestroyLogging();
     DestroyTempArena();
     DestroyPermArena();

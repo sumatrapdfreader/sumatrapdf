@@ -69,7 +69,7 @@
 #define COMPILER_MINGW 0
 #endif
 
-// Always 0 or 1 so `#if IS_DEBUG` / `#if IS_ASAN` compile under /W4 /WX (C4668).
+// Always 0 or 1 so `#if IS_DEBUG` / `#if IS_ASAN` / `#if IS_PERF_LOG` compile under /W4 /WX (C4668).
 // The build may pass IS_DEBUG=1 / IS_ASAN=1; otherwise IS_DEBUG follows DEBUG
 // and IS_ASAN follows the compiler (/fsanitize=address, -fsanitize=address).
 #ifndef IS_DEBUG
@@ -78,6 +78,10 @@
 #else
 #define IS_DEBUG 0
 #endif
+#endif
+
+#ifndef IS_PERF_LOG
+#define IS_PERF_LOG 0
 #endif
 
 #ifndef IS_ASAN

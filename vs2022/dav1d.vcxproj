@@ -97,6 +97,30 @@
       <Configuration>ReleaseAnalyze x64_asan</Configuration>
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|Win32">
+      <Configuration>Profile</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|x64">
+      <Configuration>Profile</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|ARM64">
+      <Configuration>Profile</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile x64_asan|Win32">
+      <Configuration>Profile x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile x64_asan|x64">
+      <Configuration>Profile x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile x64_asan|ARM64">
+      <Configuration>Profile x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F5BF470F-61D4-6FC0-2A56-132096296CF1}</ProjectGuid>
@@ -215,6 +239,32 @@
     <PlatformToolset>v143</PlatformToolset>
     <EnableASAN>true</EnableASAN>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -264,6 +314,18 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -360,6 +422,30 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
     <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\</OutDir>
     <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\dav1d\</IntDir>
+    <TargetName>dav1d</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <OutDir>$(ProjectDir)..\out\prf32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\prf32\obj-s\dav1d\</IntDir>
+    <TargetName>dav1d</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <OutDir>$(ProjectDir)..\out\prf64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\prf64\obj-s\dav1d\</IntDir>
+    <TargetName>dav1d</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'">
+    <OutDir>$(ProjectDir)..\out\prfarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\prfarm64\obj-s\dav1d\</IntDir>
+    <TargetName>dav1d</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\prf64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\prf64_asan\obj-s\dav1d\</IntDir>
     <TargetName>dav1d</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -905,6 +991,138 @@
       <BuildInParallel>true</BuildInParallel>
     </CustomBuild>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;IS_PERF_LOG=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=1;ARCH_X86_64=0;__SSE2__;HAVE_ASM=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;IS_PERF_LOG=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;HAVE_ASM=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;IS_PERF_LOG=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;IS_PERF_LOG=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;HAVE_ASM=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\ext\dav1d\include\common\attributes.h" />
     <ClInclude Include="..\ext\dav1d\include\common\bitdepth.h" />
@@ -959,6 +1177,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'">true</ExcludedFromBuild>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
@@ -967,6 +1187,8 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -980,6 +1202,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/cdef16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/cdef16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/cdef16_avx2_asm.obj</Outputs>
@@ -988,6 +1212,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/cdef16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/cdef16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/cdef16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/cdef16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/cdef16_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -996,6 +1222,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\cdef_avx2.asm">
       <FileType>Document</FileType>
@@ -1007,6 +1235,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/cdef_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/cdef_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/cdef_avx2_asm.obj</Outputs>
@@ -1015,6 +1245,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/cdef_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/cdef_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/cdef_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/cdef_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/cdef_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1023,6 +1255,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\cpuid.asm">
       <FileType>Document</FileType>
@@ -1034,6 +1268,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/cpuid_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/cpuid_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/cpuid_asm.obj</Outputs>
@@ -1042,6 +1278,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/cpuid_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/cpuid_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/cpuid_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/cpuid_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/cpuid_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1050,6 +1288,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\filmgrain16_avx2.asm">
       <FileType>Document</FileType>
@@ -1061,6 +1301,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/filmgrain16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/filmgrain16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/filmgrain16_avx2_asm.obj</Outputs>
@@ -1069,6 +1311,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/filmgrain16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/filmgrain16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/filmgrain16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/filmgrain16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/filmgrain16_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1077,6 +1321,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\filmgrain_avx2.asm">
       <FileType>Document</FileType>
@@ -1088,6 +1334,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/filmgrain_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/filmgrain_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/filmgrain_avx2_asm.obj</Outputs>
@@ -1096,6 +1344,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/filmgrain_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/filmgrain_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/filmgrain_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/filmgrain_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/filmgrain_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1104,6 +1354,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\ipred16_avx2.asm">
       <FileType>Document</FileType>
@@ -1115,6 +1367,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/ipred16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/ipred16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/ipred16_avx2_asm.obj</Outputs>
@@ -1123,6 +1377,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/ipred16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/ipred16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/ipred16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/ipred16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/ipred16_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1131,6 +1387,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\ipred_avx2.asm">
       <FileType>Document</FileType>
@@ -1142,6 +1400,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/ipred_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/ipred_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/ipred_avx2_asm.obj</Outputs>
@@ -1150,6 +1410,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/ipred_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/ipred_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/ipred_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/ipred_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/ipred_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1158,6 +1420,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\itx16_avx2.asm">
       <FileType>Document</FileType>
@@ -1169,6 +1433,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/itx16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/itx16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/itx16_avx2_asm.obj</Outputs>
@@ -1177,6 +1443,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/itx16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/itx16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/itx16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/itx16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/itx16_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1185,6 +1453,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\itx_avx2.asm">
       <FileType>Document</FileType>
@@ -1196,6 +1466,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/itx_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/itx_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/itx_avx2_asm.obj</Outputs>
@@ -1204,6 +1476,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/itx_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/itx_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/itx_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/itx_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/itx_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1212,6 +1486,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter16_avx2.asm">
       <FileType>Document</FileType>
@@ -1223,6 +1499,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/loopfilter16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/loopfilter16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/loopfilter16_avx2_asm.obj</Outputs>
@@ -1231,6 +1509,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/loopfilter16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/loopfilter16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/loopfilter16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/loopfilter16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/loopfilter16_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1239,6 +1519,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter_avx2.asm">
       <FileType>Document</FileType>
@@ -1250,6 +1532,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/loopfilter_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/loopfilter_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/loopfilter_avx2_asm.obj</Outputs>
@@ -1258,6 +1542,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/loopfilter_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/loopfilter_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/loopfilter_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/loopfilter_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/loopfilter_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1266,6 +1552,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\looprestoration16_avx2.asm">
       <FileType>Document</FileType>
@@ -1277,6 +1565,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/looprestoration16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/looprestoration16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/looprestoration16_avx2_asm.obj</Outputs>
@@ -1285,6 +1575,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/looprestoration16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/looprestoration16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/looprestoration16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/looprestoration16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/looprestoration16_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1293,6 +1585,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\looprestoration_avx2.asm">
       <FileType>Document</FileType>
@@ -1304,6 +1598,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/looprestoration_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/looprestoration_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/looprestoration_avx2_asm.obj</Outputs>
@@ -1312,6 +1608,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/looprestoration_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/looprestoration_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/looprestoration_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/looprestoration_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/looprestoration_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1320,6 +1618,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\mc16_avx2.asm">
       <FileType>Document</FileType>
@@ -1331,6 +1631,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/mc16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/mc16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/mc16_avx2_asm.obj</Outputs>
@@ -1339,6 +1641,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/mc16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/mc16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/mc16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/mc16_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/mc16_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1347,6 +1651,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\mc_avx2.asm">
       <FileType>Document</FileType>
@@ -1358,6 +1664,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/mc_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/mc_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/mc_avx2_asm.obj</Outputs>
@@ -1366,6 +1674,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/mc_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/mc_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/mc_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/mc_avx2_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/mc_avx2_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1374,6 +1684,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\mc_sse.asm">
       <FileType>Document</FileType>
@@ -1385,6 +1697,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/mc_sse_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/mc_sse_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/mc_sse_asm.obj</Outputs>
@@ -1393,6 +1707,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/mc_sse_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/mc_sse_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/mc_sse_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/mc_sse_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/mc_sse_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1401,6 +1717,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\msac.asm">
       <FileType>Document</FileType>
@@ -1412,6 +1730,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/msac_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/msac_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/msac_asm.obj</Outputs>
@@ -1420,6 +1740,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/msac_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/msac_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/msac_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/msac_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/msac_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1428,6 +1750,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\pal.asm">
       <FileType>Document</FileType>
@@ -1439,6 +1763,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/pal_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/pal_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/pal_asm.obj</Outputs>
@@ -1447,6 +1773,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/pal_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/pal_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/pal_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1455,6 +1783,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\refmvs.asm">
       <FileType>Document</FileType>
@@ -1466,6 +1796,8 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj-s/dav1d/refmvs_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj-s/dav1d/refmvs_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj-s/dav1d/refmvs_asm.obj</Outputs>
@@ -1474,6 +1806,8 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj-s/dav1d/refmvs_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj-s/dav1d/refmvs_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj-s/dav1d/refmvs_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../out/prf64/obj-s/dav1d/refmvs_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">../out/prf64_asan/obj-s/dav1d/refmvs_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
@@ -1482,6 +1816,8 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

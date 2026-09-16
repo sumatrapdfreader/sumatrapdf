@@ -50,6 +50,7 @@ struct Flags {
     Str lang;
     Str installDir;
     Str logFile;
+    Str perfLogFile; // -log-perf-file <path>
     Str updateSelfTo;
     Str deleteFile;
     StrVec fileNames;
@@ -123,6 +124,7 @@ struct Flags {
     bool withPreview = false;
     bool justExtractFiles = false;
     bool log = false;
+    bool startPerfLog = false; // -start-perf-log (profile builds)
     bool allUsers = false;
     bool runInstallNow = false;
     bool storeInstaller = false;

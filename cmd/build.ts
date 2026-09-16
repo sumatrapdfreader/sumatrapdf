@@ -7,7 +7,7 @@ import { ensureNinja, ninjaDir, ninjaToRoot } from "./ninja";
 import { detectVisualStudio2026, runLogged } from "./util";
 
 type BuildMode = "windows" | "all" | "smoke" | "ci" | "daily" | "codeql" | "mingw" | "wine" | "build-no";
-type Config = "debug" | "release";
+type Config = "debug" | "release" | "profile";
 
 interface BuildOptions {
   mode?: BuildMode;
@@ -26,6 +26,7 @@ const usage = `Usage: bun cmd/build.ts <mode> [options]
 
 Windows builds:
   -dbg | -rel             Build SumatraPDF.exe for x64
+  -profile                Build a function-timing profile variant (out/prf64)
   -rel -32                Build the 32-bit release
   -asan [-dbg|-rel]       Build SumatraPDF-static.exe with MSVC ASan
   -all [-clean]           Build release SumatraPDF and SumatraPDF-static
@@ -62,7 +63,9 @@ function setMode(opts: BuildOptions, mode: BuildMode): void {
 
 // the command-line flag that selects a given configuration
 function configFlag(config: Config): string {
-  return config === "debug" ? "-dbg" : "-rel";
+  if (config === "debug") return "-dbg";
+  if (config === "profile") return "-profile";
+  return "-rel";
 }
 
 function setConfig(opts: BuildOptions, config: Config): void {
@@ -99,6 +102,7 @@ function parseArgs(args: string[]): BuildOptions | undefined {
     }
     if (arg === "-dbg") setConfig(opts, "debug");
     else if (arg === "-rel") setConfig(opts, "release");
+    else if (arg === "-profile") setConfig(opts, "profile");
     else if (arg === "-asan") {
       if (opts.asan) throw new CliError("-asan can only be specified once");
       opts.asan = true;
@@ -160,8 +164,9 @@ function validateOptions(opts: BuildOptions): void {
     reject(opts.asan, `-asan is not valid with -${mode}`);
   }
   if (mode === "windows") {
-    reject(!opts.config && !opts.asan, "Windows builds require -dbg, -rel, or -asan");
+    reject(!opts.config && !opts.asan, "Windows builds require -dbg, -rel, -profile, or -asan");
     reject(opts.win32 && (opts.config !== "release" || opts.asan), "-32 requires a non-ASan -rel build");
+    reject(opts.asan && opts.config === "profile", "-asan is not supported with -profile");
   }
   if (mode === "mingw") {
     reject(!opts.config, "-mingw requires -dbg or -rel");
@@ -196,10 +201,23 @@ async function buildApp(msbuildPath: string, configName: string, platform: strin
   }
 }
 
+function windowsConfigName(config: Config): string {
+  if (config === "release") return "Release";
+  if (config === "profile") return "Profile";
+  return "Debug";
+}
+
+function windowsOutDir(config: Config, win32: boolean): string {
+  if (win32) return "rel32";
+  if (config === "release") return "rel64";
+  if (config === "profile") return "prf64";
+  return "dbg64";
+}
+
 async function buildWindows(config: Config, win32: boolean, clean: boolean, ninja: boolean): Promise<void> {
-  const configName = config === "release" ? "Release" : "Debug";
+  const configName = windowsConfigName(config);
   const platform = win32 ? "Win32" : "x64";
-  const outDir = join("out", win32 ? "rel32" : config === "release" ? "rel64" : "dbg64");
+  const outDir = join("out", windowsOutDir(config, win32));
   console.log(`${configName} ${platform} build`);
   if (clean) clearDirPreserveSettings(outDir);
   if (ninja) {

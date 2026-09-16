@@ -21,6 +21,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\PerfLog.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\AppendStore.h">
       <Filter>src\base</Filter>
     </ClInclude>
@@ -125,6 +128,9 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PerfLog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\AppendStore.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -215,5 +221,10 @@
     <ClCompile Include="..\src\gui\Dpi.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\src\PerfLog_x64.asm">
+      <Filter>src</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

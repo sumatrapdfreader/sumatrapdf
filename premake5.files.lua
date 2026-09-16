@@ -511,6 +511,10 @@ function base_files()
     "Win.*",
     "Zip.*",
   })
+  files_in_dir("src", {
+    "PerfLog.h",
+    "PerfLog.cpp",
+  })
   files_in_dir("src/gui", {
     "Dpi.h",
     "Dpi.cpp",

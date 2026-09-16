@@ -95,6 +95,8 @@ export enum ControlCommand {
   TestReadingBar = 98,
   TestSeedTextSelection = 99,
   TestTtsEngineCrash = 100,
+  StartPerfLog = 101,
+  StopPerfLog = 102,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

@@ -63,6 +63,7 @@
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
+#include "PerfLog.h"
 #include "SumatraControl.h"
 
 extern bool gIsStartup;
@@ -900,6 +901,8 @@ enum class ControlCmd : u16 {
     TestReadingBar = 98,
     TestSeedTextSelection = 99,
     TestTtsEngineCrash = 100,
+    StartPerfLog = 101,
+    StopPerfLog = 102,
 };
 
 enum class ControlArgType : u16 {
@@ -2208,6 +2211,16 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendTestResult(req, exitCode, res);
             break;
         }
+
+        case ControlCmd::StartPerfLog:
+            StartPerfLog();
+            AppendTestResult(req, 0, StrL("OK"));
+            break;
+
+        case ControlCmd::StopPerfLog:
+            StopPerfLog();
+            AppendTestResult(req, 0, StrL("OK"));
+            break;
 
         default:
             AppendError(req, StrL("unknown control command"));
