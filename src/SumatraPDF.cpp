@@ -18354,10 +18354,13 @@ Exit:
     LogArenaStats(StrL("temp arena"), GetTempArena());
     LogArenaStats(StrL("perm arena"), gPermArena);
 
-    // don't shell-open the log for -for-testing automation runs: it spawns a
-    // stray editor window per run (and, depending on the .txt association,
-    // could even launch another non-testing SumatraPDF that saves settings)
-    if (!logFileBecauseDebug && !gForTesting) {
+    // Only a bare -log opens the log at exit, as a convenience for finding it.
+    // -log-to-file says where it goes, so opening it just spawns a stray editor
+    // window per run (and, depending on the .txt association, could even launch
+    // another non-testing SumatraPDF that saves settings), which is never what
+    // an automated test driving the app wants.
+    bool openLogAtExit = !logFileBecauseDebug && !gForTesting && len(flags.logFile) == 0;
+    if (openLogAtExit) {
         LaunchFileIfExists(logFilePath);
     }
     str::FreePtr(&logFilePath);

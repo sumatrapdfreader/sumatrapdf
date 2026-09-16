@@ -48,12 +48,8 @@ async function makePsFile(gs: string, dir: string): Promise<string> {
   return dst;
 }
 
-function countGsRuns(logPath: string): number {
-  if (!existsSync(logPath)) {
-    return 0;
-  }
-  const log = readFileSync(logPath, "latin1");
-  return log.split("\n").filter((l) => /EnginePs\.cpp:\d+: using /.test(l)).length;
+function readLog(logPath: string): string {
+  return existsSync(logPath) ? readFileSync(logPath, "latin1") : "";
 }
 
 export async function testit(): Promise<void> {
@@ -69,10 +65,11 @@ export async function testit(): Promise<void> {
   const ps = await makePsFile(gs, dir);
   const appdata = join(dir, "appdata");
   mkdirSync(appdata, { recursive: true });
+
   const logPath = join(dir, "sumatra.log");
 
   // no -for-testing: thumbnails (which used to re-convert) need file history
-  const { proc, client } = await launchControlled(["-appdata", appdata, "-log", "-log-to-file", logPath, ps], {
+  const { proc, client } = await launchControlled(["-appdata", appdata, "-log-to-file", logPath, ps], {
     saveSettings: true,
   });
   try {
@@ -85,7 +82,7 @@ export async function testit(): Promise<void> {
 
     // wait for the thumbnail, the step that used to convert a second time
     const deadline = Date.now() + 20000 * SLOW_BUILD_FACTOR;
-    while (Date.now() < deadline && !/SetThumbnailFromFile/.test(readFileSync(logPath, "latin1"))) {
+    while (Date.now() < deadline && !/SetThumbnailFromFile/.test(readLog(logPath))) {
       await sleep(200);
     }
     await client.quit();
@@ -95,7 +92,11 @@ export async function testit(): Promise<void> {
   }
   await proc.exited;
 
-  const runs = countGsRuns(logPath);
+  const log = readLog(logPath);
+  if (log.length === 0) {
+    throw new Error(`ad-hoc-ps-engine: no log at ${logPath} (needs a debug build)`);
+  }
+  const runs = log.split("\n").filter((l) => /EnginePs\.cpp:\d+: using /.test(l)).length;
   if (runs !== 1) {
     throw new Error(`ad-hoc-ps-engine: ghostscript ran ${runs} times, want 1`);
   }
