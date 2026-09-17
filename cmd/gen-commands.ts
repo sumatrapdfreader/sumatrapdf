@@ -323,6 +323,7 @@ const commandsRaw = [
     "CmdAutomaticallyScrollSlower", "Automatically Scroll Slower",
     "CmdToggleReadingBar", "Reading Bar",
     "CmdToggleReadingBarInvert", "Reading Bar Invert",
+    "CmdToggleGrayscale", "Toggle Grayscale",
     "CmdNone", "Do nothing",
     "CmdFileHistory", "Open Recent File",
     "CmdFavorite", "Go to Favorite",

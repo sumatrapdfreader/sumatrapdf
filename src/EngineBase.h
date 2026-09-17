@@ -497,6 +497,13 @@ struct RenderPageArgs {
     // clear the page pixmap to alpha 0 so the canvas background (solid colour
     // or a checkerboard) shows through unpainted areas (issue #1809)
     bool transparentBackdrop = false;
+
+    // Request-local grayscale. Engines may implement it before overlays that
+    // must keep their original colors. grayscaleApplied tells the caller that
+    // no final whole-page grayscale pass is necessary.
+    bool grayscale = false;
+    bool grayscaleApplied = false;
+
     AbortCookie** cookie_out = nullptr;
     // dark/recolor rendering profile for View renders (see PdfDarkMode.h);
     // owned by the caller, only valid for the duration of RenderPage()

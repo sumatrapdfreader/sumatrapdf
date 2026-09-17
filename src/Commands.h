@@ -317,11 +317,12 @@ enum {
     CmdAutomaticallyScrollSlower = 510,
     CmdToggleReadingBar = 511,
     CmdToggleReadingBarInvert = 512,
-    CmdNone = 513,
-    CmdFileHistory = 514,
-    CmdFavorite = 515,
+    CmdToggleGrayscale = 513,
+    CmdNone = 514,
+    CmdFileHistory = 515,
+    CmdFavorite = 516,
 
-    CmdLast = 515,
+    CmdLast = 516,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

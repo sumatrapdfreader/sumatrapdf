@@ -98,6 +98,7 @@ struct PageRenderRequest {
     bool abort = false;
     AbortCookie* abortCookie = nullptr;
     u32 darkModeEpoch = 0;
+    bool grayscale = false;
     u64 timestamp = 0;
 
     // set by render thread before calling renderFinishedCb
@@ -178,6 +179,10 @@ struct RenderCache {
     Color textColor = 0;
     Color backgroundColor = 0;
     Color linkColor = 0;
+
+    // session-only grayscale for rendered document pixels
+    AtomicBool grayscalePageColors = 0;
+
     // bumped by UpdateDocumentColors when page render colors / the PDF
     // document color mode change; renders started under an older epoch are
     // discarded instead of cached

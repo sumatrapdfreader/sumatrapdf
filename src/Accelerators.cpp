@@ -143,6 +143,7 @@ static ACCEL gBuiltInAccelerators[] = {
     {FVIRTKEY, 'U', CmdCreateAnnotUnderline},
 
     {FVIRTKEY | FSHIFT, 'I', CmdInvertColors},
+    {FVIRTKEY | FSHIFT, 'B', CmdToggleGrayscale},
     {FVIRTKEY, 'I', CmdTogglePageInfo},
 
     {FCONTROL | FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},

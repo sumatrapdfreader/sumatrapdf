@@ -7208,6 +7208,35 @@ static void MarkTransparentBackdropPixmap(Pixmap* pixmap, bool transparentBackdr
     }
 }
 
+// Convert only RGB samples. The render target here is fz_device_rgb() with no
+// separations. Alpha, if present, is deliberately left untouched.
+static bool GrayscaleRenderedFzPixmap(fz_pixmap* pix) {
+    if (!pix || !pix->samples || pix->s != 0) {
+        return false;
+    }
+
+    int colorComponents = (int)pix->n - (int)pix->alpha;
+    if (colorComponents != 3) {
+        return false;
+    }
+
+    for (int y = 0; y < pix->h; y++) {
+        u8* row = pix->samples + ((ptrdiff_t)y * pix->stride);
+        for (int x = 0; x < pix->w; x++) {
+            u8* p = row + ((ptrdiff_t)x * pix->n);
+            u32 r = p[0];
+            u32 g = p[1];
+            u32 b = p[2];
+            u8 gray = (u8)((54 * r + 183 * g + 19 * b + 128) >> 8);
+            p[0] = gray;
+            p[1] = gray;
+            p[2] = gray;
+        }
+    }
+
+    return true;
+}
+
 // An aborted run stops between a clip push and its pop, so the draw device's
 // stack is unbalanced and fz_close_device throws. The pixmap is discarded
 // anyway; skip closing so nothing is reported.
@@ -7256,7 +7285,8 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
 
     // The "View" rendering (no Print, no hideAnnotations) is what
     // fz_new_display_list_from_page produces; safe to cache and re-run lock-free.
-    bool useCache = (args.target == RenderTarget::View) && !hideAnnotations;
+    bool useCache =
+        (args.target == RenderTarget::View) && !hideAnnotations && !(args.grayscale && pdfdoc);
 
     fz_rect pRect;
     fz_matrix ctm;
@@ -7365,27 +7395,119 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     pdf_page* pdfpage = nullptr;
     fz_var(pdfpage);
     if (pdfdoc) {
+        bool objectLevelDark =
+            !hideAnnotations && args.darkProfile && DarkModeProfileUsesObjectLevel(args.darkProfile);
+
+        // Smart Dark analysis continues to use Sumatra's normal full-page
+        // display list. We only split the actual painting into two phases.
+        fz_display_list* darkAnalysisList = nullptr;
+        if (args.grayscale && objectLevelDark) {
+            ScopedRecursiveMutex docScope(&docLock);
+            darkAnalysisList = GetOrBuildPageDisplayList(pageInfo, ctx);
+        }
+
+        // Preserve the original non-grayscale fallback exactly. Only use the
+        // themed page background when grayscale is active and the normal
+        // full-page display list was actually available for Smart Dark.
+        bool applyObjectLevelDark =
+            args.grayscale && objectLevelDark && darkAnalysisList != nullptr;
+
         fz_try(ctx) {
             pdfpage = pdf_page_from_fz_page(ctx, page);
+
+            DarkModePageAnalysis* darkAnalysis = nullptr;
+            DarkModeReplayState replayState{};
+            if (darkAnalysisList) {
+                darkAnalysis = PdfDarkModeGetOrBuildAnalysis(ctx, pageInfo, darkAnalysisList,
+                                                             args.darkProfile->hash, darkModeEngineCache);
+            }
+
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            ClearRenderedPagePixmap(ctx, pix, args, false);
-            dev = fz_new_draw_device(ctx, ctm, pix);
-            if (disableAntiAlias) {
-                fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
-            }
-            if (hideAnnotations) {
-                pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
-                pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
-            } else {
-                pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
-            }
-            if (!RenderAborted(fzcookie)) {
-                fz_close_device(ctx, dev);
-                if (CadEnhanceActive() && cadRasterDominant) {
-                    PdfCadEnhancePixmap(ctx, pix, zoom, true);
+            ClearRenderedPagePixmap(ctx, pix, args, applyObjectLevelDark);
+
+            if (args.grayscale) {
+                // Phase 1: document contents only.
+                dev = fz_new_draw_device(ctx, ctm, pix);
+                if (disableAntiAlias) {
+                    fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
                 }
-                pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
-                MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
+                if (darkAnalysis) {
+                    dev = PdfDarkModeWrapDevice(ctx, dev, darkAnalysis, &args.darkProfile->palette, &replayState,
+                                                darkModeEngineCache, args.darkProfile->hash,
+                                                args.darkProfile->debugOverlay);
+                }
+                if (CadEnhanceActive()) {
+                    dev = PdfCadEnhanceWrapDevice(ctx, dev);
+                }
+
+                pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
+
+                if (!RenderAborted(fzcookie)) {
+                    fz_close_device(ctx, dev);
+                    fz_drop_device(ctx, dev);
+                    dev = nullptr;
+
+                    if (CadEnhanceActive() && cadRasterDominant) {
+                        PdfCadEnhancePixmap(ctx, pix, zoom, true);
+                    }
+
+                    args.grayscaleApplied = GrayscaleRenderedFzPixmap(pix);
+
+                    // Phase 2: annotations/widgets. Reuse the same replayState
+                    // so Smart Dark image occurrence indexing continues from
+                    // the document contents into annotation/widget appearances.
+                    dev = fz_new_draw_device(ctx, ctm, pix);
+                    if (disableAntiAlias) {
+                        fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
+                    }
+                    if (darkAnalysis) {
+                        dev = PdfDarkModeWrapDevice(ctx, dev, darkAnalysis, &args.darkProfile->palette, &replayState,
+                                                    darkModeEngineCache, args.darkProfile->hash,
+                                                    args.darkProfile->debugOverlay);
+                    }
+
+                    if (!hideAnnotations) {
+                        // PdfPreview/PdfFilter link through libsumatrapdf.dll,
+                        // whose import library exports the individual annot
+                        // iteration/rendering APIs, but not the page-level
+                        // annots helpers. Reproduce the page-annotation loop
+                        // explicitly with exported symbols.
+                        for (pdf_annot* annot = pdf_first_annot(ctx, pdfpage); annot;
+                             annot = pdf_next_annot(ctx, annot)) {
+                            if (fzcookie && fzcookie->abort) {
+                                break;
+                            }
+                            pdf_run_annot(ctx, annot, dev, fz_identity, fzcookie);
+                        }
+                    }
+                    pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
+
+                    if (!RenderAborted(fzcookie)) {
+                        fz_close_device(ctx, dev);
+                        pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+                        MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
+                    }
+                }
+            } else {
+                // Original Sumatra rendering path.
+                dev = fz_new_draw_device(ctx, ctm, pix);
+                if (disableAntiAlias) {
+                    fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
+                }
+                if (hideAnnotations) {
+                    pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
+                    pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
+                } else {
+                    pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
+                }
+                if (!RenderAborted(fzcookie)) {
+                    fz_close_device(ctx, dev);
+                    if (CadEnhanceActive() && cadRasterDominant) {
+                        PdfCadEnhancePixmap(ctx, pix, zoom, true);
+                    }
+                    pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+                    MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
+                }
             }
         }
         fz_always(ctx) {
@@ -7393,6 +7515,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 fz_drop_device(ctx, dev);
             }
             fz_drop_pixmap(ctx, pix);
+            if (darkAnalysisList) {
+                fz_drop_display_list(ctx, darkAnalysisList);
+            }
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
