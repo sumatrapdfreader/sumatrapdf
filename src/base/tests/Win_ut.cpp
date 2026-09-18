@@ -185,7 +185,7 @@ void WinUtilTest() {
     {
         Str string = StrL("abcde");
         auto strm = CreateStreamFromData(string);
-        ScopedComPtr<IStream> stream(strm);
+        AutoReleaseComPtr<IStream> stream(strm);
         utassert(stream);
         Str data = ReadIStream(stream);
         utassert((u8*)data.s);
@@ -201,7 +201,7 @@ void WinUtilTest() {
         WStr string = L"abcde";
         size_t stringSize = string.len * sizeof(WCHAR);
         auto strm = CreateStreamFromData(Str((char*)string.s, (int)stringSize));
-        ScopedComPtr<IStream> stream(strm);
+        AutoReleaseComPtr<IStream> stream(strm);
         utassert(stream);
         Str dataTmp = ReadIStream(stream);
         WStr data = WStr((WCHAR*)(u8*)dataTmp.s, (int)((size_t)dataTmp.len / sizeof(WCHAR)));

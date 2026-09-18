@@ -50,7 +50,7 @@ class FilterClassFactory : public IClassFactory {
             return CLASS_E_NOAGGREGATION;
         }
 
-        ScopedComPtr<IFilter> pFilter;
+        AutoReleaseComPtr<IFilter> pFilter;
 
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromString(StrL(kPdfFilterClsid), &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
@@ -113,7 +113,7 @@ STDAPI DllCanUnloadNow(VOID) {
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     *ppv = nullptr;
-    ScopedComPtr<FilterClassFactory> pClassFactory(new FilterClassFactory(rclsid));
+    AutoReleaseComPtr<FilterClassFactory> pClassFactory(new FilterClassFactory(rclsid));
     if (!pClassFactory) {
         return E_OUTOFMEMORY;
     }

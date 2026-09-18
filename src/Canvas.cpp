@@ -3053,7 +3053,7 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
     }
 
     // Draw frame
-    ScopedGdiObj<HPEN> pe(CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : kColPageFrame));
+    AutoDeleteGdiObj<HPEN> pe(CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : kColPageFrame));
     AutoDeleteBrush brush = CreateSolidBrush(gCurrentTheme->window.backgroundColor);
     SelectObject(hdc, pe);
     SelectObject(hdc, brush);

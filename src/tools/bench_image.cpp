@@ -631,7 +631,7 @@ int main(int argc, char** argv) {
     }
 
     ScopedCom com;
-    ScopedGdiPlus gdiplus;
+    AutoGdiPlusShutdown gdiplus;
     heic_init();
 
     StrVec files;

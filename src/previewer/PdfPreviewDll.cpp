@@ -75,7 +75,7 @@ class PreviewClassFactory : public IClassFactory {
             return E_NOINTERFACE;
         }
 
-        ScopedComPtr<IInitializeWithStream> pObject;
+        AutoReleaseComPtr<IInitializeWithStream> pObject;
         pObject = new PdfPreview(&g_lRefCount, type);
 
         if (!pObject) {
@@ -131,7 +131,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     // here rather than in DllMain to avoid file/registry I/O under loader lock.
     StartPdfPreviewLoggingIfEnabled();
     *ppv = nullptr;
-    ScopedComPtr<PreviewClassFactory> pClassFactory(new PreviewClassFactory(rclsid));
+    AutoReleaseComPtr<PreviewClassFactory> pClassFactory(new PreviewClassFactory(rclsid));
     if (!pClassFactory) {
         return E_OUTOFMEMORY;
     }

@@ -67,7 +67,7 @@ void CalcSHA2Digest(Str data, u8 digest[32]) {
     CalcDigestWin(data, digest, 32, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CALG_SHA_256);
 }
 
-static bool ExtractSignature(Str hexSignature, Str& data, ScopedMem<BYTE>& signature, size_t& signatureLen) {
+static bool ExtractSignature(Str hexSignature, Str& data, AutoFree<BYTE>& signature, size_t& signatureLen) {
     // verify hexSignature format - must be either
     // * a string starting with "sha1:" followed by the signature (and optionally whitespace and further content)
     // * empty, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
@@ -109,7 +109,7 @@ bool VerifySHA1Signature(Str data, Str hexSignature, Str pubkey) {
     HCRYPTKEY hPubKey = 0;
     HCRYPTHASH hHash = 0;
     BOOL ok = false;
-    ScopedMem<BYTE> signature;
+    AutoFree<BYTE> signature;
     size_t signatureLen;
     // set after ExtractSignature below, which shortens data
     const BYTE* dataPtr = nullptr;

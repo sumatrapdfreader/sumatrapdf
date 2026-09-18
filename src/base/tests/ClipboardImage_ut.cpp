@@ -174,7 +174,7 @@ static void ClipboardStampRoundTripTest() {
 }
 
 void ClipboardImageTest() {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     TransparentImageTest();
     OpaqueImageTest();
     RoundTripThroughRenderedBitmapTest();

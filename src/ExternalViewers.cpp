@@ -796,12 +796,12 @@ bool SendAsEmailAttachment(WindowTab* tab, HWND /*hwndParent*/) {
     // We use the SendTo drop target provided by SendMail.dll, which should ship with all
     // commonly used Windows versions, instead of MAPISendMail, which doesn't support
     // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
-    ScopedComPtr<IDataObject> pDataObject(GetDataObjectForFile(tab->filePath, hwndParent));
+    AutoReleaseComPtr<IDataObject> pDataObject(GetDataObjectForFile(tab->filePath, hwndParent));
     if (!pDataObject) {
         return false;
     }
 
-    ScopedComPtr<IDropTarget> pDropTarget;
+    AutoReleaseComPtr<IDropTarget> pDropTarget;
     if (!pDropTarget.Create(CLSID_SendMail)) {
         return false;
     }

@@ -181,7 +181,7 @@ int RegressMain() {
 
     InstallCrashHandler();
     InitAllCommonControls();
-    ScopedGdiPlus gdi;
+    AutoGdiPlusShutdown gdi;
 
     RunTests();
 

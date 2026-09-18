@@ -256,7 +256,7 @@ static TempStr PathFromFolderViewTemp(IFolderView* fv) {
     if (FAILED(hr) || idx < 0) {
         return {};
     }
-    ScopedComPtr<IPersistFolder2> persist;
+    AutoReleaseComPtr<IPersistFolder2> persist;
     hr = fv->GetFolder(IID_PPV_ARGS(&persist));
     if (FAILED(hr) || !persist) {
         return {};
@@ -285,21 +285,21 @@ static TempStr PathFromFolderViewTemp(IFolderView* fv) {
 }
 
 static TempStr SelectedPathFromBrowserTemp(IWebBrowserApp* app) {
-    ScopedComQIPtr<IServiceProvider> sp(app);
+    AutoReleaseComQIPtr<IServiceProvider> sp(app);
     if (!sp) {
         return {};
     }
-    ScopedComPtr<IShellBrowser> browser;
+    AutoReleaseComPtr<IShellBrowser> browser;
     HRESULT hr = sp->QueryService(SID_STopLevelBrowser, IID_PPV_ARGS(&browser));
     if (FAILED(hr) || !browser) {
         return {};
     }
-    ScopedComPtr<IShellView> view;
+    AutoReleaseComPtr<IShellView> view;
     hr = browser->QueryActiveShellView(&view);
     if (FAILED(hr) || !view) {
         return {};
     }
-    ScopedComQIPtr<IFolderView> fv(view);
+    AutoReleaseComQIPtr<IFolderView> fv(view);
     return PathFromFolderViewTemp(fv);
 }
 
@@ -309,7 +309,7 @@ static TempStr GetExplorerSelectedPathTemp() {
         return {};
     }
     bool wantDesktop = ClassEq(top, L"Progman") || ClassEq(top, L"WorkerW");
-    ScopedComPtr<IShellWindows> windows;
+    AutoReleaseComPtr<IShellWindows> windows;
     if (!windows.Create(CLSID_ShellWindows)) {
         return {};
     }
@@ -320,12 +320,12 @@ static TempStr GetExplorerSelectedPathTemp() {
         VariantInit(&idx);
         idx.vt = VT_I4;
         idx.lVal = i;
-        ScopedComPtr<IDispatch> disp;
+        AutoReleaseComPtr<IDispatch> disp;
         HRESULT hr = windows->Item(idx, &disp);
         if (FAILED(hr) || !disp) {
             continue;
         }
-        ScopedComQIPtr<IWebBrowserApp> app(disp);
+        AutoReleaseComQIPtr<IWebBrowserApp> app(disp);
         if (!app) {
             continue;
         }

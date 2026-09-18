@@ -2538,13 +2538,13 @@ WStr ToWStr(Str s, Arena* a = nullptr);
 
 // auto-free memory for arbitrary malloc()ed memory of type T*
 template <typename T>
-class ScopedMem {
+class AutoFree {
   public:
     T* ptr = nullptr;
 
-    ScopedMem() = default;
-    explicit ScopedMem(T* ptr) : ptr(ptr) {}
-    ~ScopedMem() { free(ptr); }
+    AutoFree() = default;
+    explicit AutoFree(T* ptr) : ptr(ptr) {}
+    ~AutoFree() { free(ptr); }
     void Set(T* newPtr) {
         free(ptr);
         ptr = newPtr;

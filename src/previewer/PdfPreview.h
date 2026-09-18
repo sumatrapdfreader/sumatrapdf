@@ -109,7 +109,7 @@ class PdfPreview : public IThumbnailProvider,
         if (!m_site) {
             return S_FALSE;
         }
-        ScopedComQIPtr<IPreviewHandlerFrame> frame(m_site);
+        AutoReleaseComQIPtr<IPreviewHandlerFrame> frame(m_site);
         if (!frame) {
             return S_FALSE;
         }
@@ -185,9 +185,9 @@ class PdfPreview : public IThumbnailProvider,
     // the file's bytes, owned; freed once the engine has been built from them
     Str m_data;
     EngineBase* m_engine = nullptr;
-    ScopedGdiPlus* m_gdiScope = nullptr;
+    AutoGdiPlusShutdown* m_gdiScope = nullptr;
     // state for IPreviewHandler
-    ScopedComPtr<IUnknown> m_site;
+    AutoReleaseComPtr<IUnknown> m_site;
     HWND m_hwnd = nullptr;
     HWND m_hwndParent = nullptr;
     Rect m_rcParent;

@@ -744,7 +744,7 @@ PdfPreview::PdfPreview(AtomicInt* plRefCount, PreviewType type) {
     m_plModuleRef = plRefCount;
     AtomicIntInc(m_plModuleRef);
     if (NeedsGdiPlus(type)) {
-        m_gdiScope = new ScopedGdiPlus();
+        m_gdiScope = new AutoGdiPlusShutdown();
     }
 }
 

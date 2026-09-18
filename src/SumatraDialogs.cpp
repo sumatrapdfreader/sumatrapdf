@@ -283,7 +283,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
     return FALSE;
 }
 
-HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate) {
+HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, AutoFree<DLGTEMPLATE>& dlgTemplate) {
     PROPSHEETPAGE psp{};
 
     psp.dwSize = sizeof(PROPSHEETPAGE);

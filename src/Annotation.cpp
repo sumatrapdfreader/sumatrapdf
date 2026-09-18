@@ -1110,7 +1110,7 @@ bool SetEmbeddedFileFromPath(Annotation* annot, Str path) {
     i64 modified = FileTimeToUnixSeconds(file::GetModificationTime(path));
     bool ok = false;
     {
-        ScopedEngineOperation op(e, "Embed file attachment");
+        AutoEndEngineOperation op(e, "Embed file attachment");
         auto* ctx = e->Ctx();
         ScopedRecursiveMutex cs(&e->docLock);
         pdf_obj* fs = nullptr;
@@ -2251,7 +2251,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     fz_context* ctx = epdf->Ctx();
     // creating an annotation is a create plus a handful of property changes;
     // Undo should take all of it back in one go
-    ScopedEngineOperation op(engine, "Add annotation");
+    AutoEndEngineOperation op(engine, "Add annotation");
 
     auto* pageInfo = epdf->GetFzPageInfo(pageNo, true);
     if (!pageInfo || !pageInfo->page) {
@@ -2852,7 +2852,7 @@ Annotation* PasteCopiedAnnotation(EngineBase* engine, int pageNo, PointF topLeft
     if (!gAnnotClipboard.valid || !engine) {
         return nullptr;
     }
-    ScopedEngineOperation op(engine, "Paste annotation");
+    AutoEndEngineOperation op(engine, "Paste annotation");
     AnnotationClipboard& clip = gAnnotClipboard;
     float dx = topLeft.x - clip.rect.x;
     float dy = topLeft.y - clip.rect.y;

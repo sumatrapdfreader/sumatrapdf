@@ -30,15 +30,15 @@ class AutoCloseHandle {
 };
 
 template <class T>
-class ScopedComPtr {
+class AutoReleaseComPtr {
   protected:
     T* ptr = nullptr;
 
   public:
-    ScopedComPtr() = default;
+    AutoReleaseComPtr() = default;
 
-    explicit ScopedComPtr(T* ptr) : ptr(ptr) {}
-    ~ScopedComPtr() {
+    explicit AutoReleaseComPtr(T* ptr) : ptr(ptr) {}
+    ~AutoReleaseComPtr() {
         if (ptr) {
             ptr->Release();
         }
@@ -57,7 +57,7 @@ class ScopedComPtr {
     }
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }
-    ScopedComPtr<T>& operator=(T* newPtr) {
+    AutoReleaseComPtr<T>& operator=(T* newPtr) {
         if (ptr) {
             ptr->Release();
         }
@@ -67,20 +67,20 @@ class ScopedComPtr {
 };
 
 template <class T>
-class ScopedComQIPtr {
+class AutoReleaseComQIPtr {
   protected:
     T* ptr = nullptr;
 
   public:
-    ScopedComQIPtr() = default;
+    AutoReleaseComQIPtr() = default;
 
-    explicit ScopedComQIPtr(IUnknown* unk) {
+    explicit AutoReleaseComQIPtr(IUnknown* unk) {
         HRESULT hr = unk->QueryInterface(&ptr);
         if (FAILED(hr)) {
             ptr = nullptr;
         }
     }
-    ~ScopedComQIPtr() {
+    ~AutoReleaseComQIPtr() {
         if (ptr) {
             ptr->Release();
         }
@@ -91,7 +91,7 @@ class ScopedComQIPtr {
         HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
-    ScopedComQIPtr<T>& operator=(IUnknown* newUnk) {
+    AutoReleaseComQIPtr<T>& operator=(IUnknown* newUnk) {
         if (ptr) {
             ptr->Release();
         }
@@ -106,7 +106,7 @@ class ScopedComQIPtr {
     }
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }
-    ScopedComQIPtr<T>& operator=(T* newPtr) {
+    AutoReleaseComQIPtr<T>& operator=(T* newPtr) {
         if (ptr) {
             ptr->Release();
         }
@@ -141,21 +141,21 @@ struct AutoReleaseDC {
 };
 
 template <typename T>
-class ScopedGdiObj {
+class AutoDeleteGdiObj {
     T obj;
 
   public:
-    ScopedGdiObj(T obj) { // NOLINT
+    AutoDeleteGdiObj(T obj) { // NOLINT
         this->obj = obj;
     }
-    ~ScopedGdiObj() { DeleteObject(obj); }
+    ~AutoDeleteGdiObj() { DeleteObject(obj); }
     operator T() const { // NOLINT
         return obj;
     }
 };
-using AutoDeletePen = ScopedGdiObj<HPEN>;
-using AutoDeleteBrush = ScopedGdiObj<HBRUSH>;
-using AutoDeleteObject = ScopedGdiObj<HGDIOBJ>;
+using AutoDeletePen = AutoDeleteGdiObj<HPEN>;
+using AutoDeleteBrush = AutoDeleteGdiObj<HBRUSH>;
+using AutoDeleteObject = AutoDeleteGdiObj<HGDIOBJ>;
 
 class ScopedGetDC {
     HDC hdc = nullptr;
@@ -249,18 +249,18 @@ class ScopedCom {
     }
 };
 
-class ScopedOle {
+class AutoOleUninitialize {
   public:
     HRESULT hr;
-    ScopedOle() { hr = OleInitialize(nullptr); }
-    ~ScopedOle() {
+    AutoOleUninitialize() { hr = OleInitialize(nullptr); }
+    ~AutoOleUninitialize() {
         if (SUCCEEDED(hr)) {
             OleUninitialize();
         }
     }
 };
 
-class ScopedGdiPlus {
+class AutoGdiPlusShutdown {
   protected:
     Gdiplus::GdiplusStartupInput si;
     Gdiplus::GdiplusStartupOutput so;
@@ -272,14 +272,14 @@ class ScopedGdiPlus {
     // suppress the GDI+ background thread when initiating in WinMain,
     // as that thread causes DDE messages to be sent too early and
     // thus causes unexpected timeouts
-    explicit ScopedGdiPlus(bool inWinMain = false) : noBgThread(inWinMain) {
+    explicit AutoGdiPlusShutdown(bool inWinMain = false) : noBgThread(inWinMain) {
         si.SuppressBackgroundThread = noBgThread;
         Gdiplus::GdiplusStartup(&token, &si, &so);
         if (noBgThread) {
             so.NotificationHook(&hookToken);
         }
     }
-    ~ScopedGdiPlus() {
+    ~AutoGdiPlusShutdown() {
         if (noBgThread) {
             so.NotificationUnhook(hookToken);
         }

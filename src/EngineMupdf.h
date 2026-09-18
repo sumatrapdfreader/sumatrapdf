@@ -289,9 +289,9 @@ int EngineMupdfUndoPos(EngineMupdf* e, int* stepsOut);
 // Everything changed while this is alive becomes one undo step. Use it for a
 // gesture that makes several changes (creating an annotation sets its geometry,
 // colors and contents; a resize drag writes on every mouse move).
-struct ScopedEngineOperation {
+struct AutoEndEngineOperation {
     EngineBase* engine = nullptr;
 
-    ScopedEngineOperation(EngineBase* e, const char* name);
-    ~ScopedEngineOperation();
+    AutoEndEngineOperation(EngineBase* e, const char* name);
+    ~AutoEndEngineOperation();
 };

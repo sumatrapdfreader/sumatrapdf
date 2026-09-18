@@ -1308,12 +1308,12 @@ TempStr ResolveLnkTemp(Str path) {
         return {};
     }
 
-    ScopedComPtr<IShellLink> lnk;
+    AutoReleaseComPtr<IShellLink> lnk;
     if (!lnk.Create(CLSID_ShellLink)) {
         return {};
     }
 
-    ScopedComQIPtr<IPersistFile> file(lnk);
+    AutoReleaseComQIPtr<IPersistFile> file(lnk);
     if (!file) {
         return {};
     }
@@ -1341,12 +1341,12 @@ bool CreateShortcut(Str shortcutPath, Str exePath, Str args, Str description, in
     TempWStr ws;
     ScopedCom com;
 
-    ScopedComPtr<IShellLink> lnk;
+    AutoReleaseComPtr<IShellLink> lnk;
     if (!lnk.Create(CLSID_ShellLink)) {
         return false;
     }
 
-    ScopedComQIPtr<IPersistFile> file(lnk);
+    AutoReleaseComQIPtr<IPersistFile> file(lnk);
     if (!file) {
         return false;
     }
@@ -1377,7 +1377,7 @@ bool CreateShortcut(Str shortcutPath, Str exePath, Str args, Str description, in
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
 IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd) {
-    ScopedComPtr<IShellFolder> pDesktopFolder;
+    AutoReleaseComPtr<IShellFolder> pDesktopFolder;
     HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
     if (FAILED(hr)) {
         return nullptr;
@@ -1389,7 +1389,7 @@ IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd) {
     if (FAILED(hr)) {
         return nullptr;
     }
-    ScopedComPtr<IShellFolder> pShellFolder;
+    AutoReleaseComPtr<IShellFolder> pShellFolder;
     LPCITEMIDLIST pidlChild;
     hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
     CoTaskMemFree(pidl);
@@ -1457,7 +1457,7 @@ int ReleaseThreadKeyState() {
 DWORD GetFileVersion(const WCHAR* path) {
     DWORD fileVersion = 0;
     DWORD size = GetFileVersionInfoSize(path, nullptr);
-    ScopedMem<void> versionInfo(malloc(size));
+    AutoFree<void> versionInfo(malloc(size));
 
     if (versionInfo && GetFileVersionInfo(path, 0, size, versionInfo)) {
         VS_FIXEDFILEINFO* fileInfo;
@@ -2494,7 +2494,7 @@ IStream* CreateStreamFromData(const Str& d) {
 
     const void* data = (u8*)d.s;
     size_t dataLen = (size_t)d.len;
-    ScopedComPtr<IStream> stream;
+    AutoReleaseComPtr<IStream> stream;
     if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
         return nullptr;
     }
@@ -2556,7 +2556,7 @@ Str ReadIStream(IStream* stream) {
 
 uint GuessTextCodepage(Str data, uint defVal) {
     // try to guess the codepage
-    ScopedComPtr<IMultiLanguage2> pMLang;
+    AutoReleaseComPtr<IMultiLanguage2> pMLang;
     if (!pMLang.Create(CLSID_CMultiLanguage)) {
         return defVal;
     }
@@ -2871,7 +2871,7 @@ void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color link
 
     HDC hDC = CreateCompatibleDC(nullptr);
     int bmpBytes = size.dx * size.dy * 4;
-    ScopedMem<u8> bmpData((u8*)malloc(bmpBytes));
+    AutoFree<u8> bmpData((u8*)malloc(bmpBytes));
     ReportIf(!bmpData);
 
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {

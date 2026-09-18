@@ -505,11 +505,11 @@ STDMETHODIMP HW_IInternetProtocolFactory::CreateInstance(IUnknown* pUnkOuter, RE
         return CLASS_E_NOAGGREGATION;
     }
     if (riid == IID_IInternetProtocol) {
-        ScopedComPtr<IInternetProtocol> proto(new HW_IInternetProtocol());
+        AutoReleaseComPtr<IInternetProtocol> proto(new HW_IInternetProtocol());
         return proto->QueryInterface(riid, ppvObject);
     }
     if (riid == IID_IInternetProtocolInfo) {
-        ScopedComPtr<IInternetProtocolInfo> proto(new HW_IInternetProtocolInfo());
+        AutoReleaseComPtr<IInternetProtocolInfo> proto(new HW_IInternetProtocolInfo());
         return proto->QueryInterface(riid, ppvObject);
     }
     return E_NOINTERFACE;
@@ -526,7 +526,7 @@ static void RegisterInternetProtocolFactory() {
         return;
     }
 
-    ScopedComPtr<IInternetSession> internetSession;
+    AutoReleaseComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
     ReportIf(FAILED(hr));
     ReportIf(nullptr != gInternetProtocolFactory);
@@ -541,7 +541,7 @@ static void UnregisterInternetProtocolFactory() {
     if (val > 0) {
         return;
     }
-    ScopedComPtr<IInternetSession> internetSession;
+    AutoReleaseComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
     ReportIf(FAILED(hr));
     internetSession->UnregisterNameSpace(gInternetProtocolFactory, kHwProtoPrefix);
@@ -1001,7 +1001,7 @@ class HW_IServiceProvider : public IServiceProvider {
     // IServiceProvider
     STDMETHODIMP QueryService(REFGUID guidService, REFIID riid, void** ppv) override {
         if (guidService == SID_SDownloadManager) {
-            ScopedComPtr<IDownloadManager> dm(new HW_IDownloadManager());
+            AutoReleaseComPtr<IDownloadManager> dm(new HW_IDownloadManager());
             return dm->QueryInterface(riid, ppv);
         }
         return E_NOINTERFACE;
@@ -1266,7 +1266,7 @@ HtmlWindow::HtmlWindow(HWND parent, HtmlWindowCallback* cb) {
 
 bool HtmlWindow::CreateBrowser() {
     HRESULT hr;
-    ScopedComPtr<IUnknown> p;
+    AutoReleaseComPtr<IUnknown> p;
     if (!p.Create(CLSID_WebBrowser)) {
         return false;
     }
@@ -1288,13 +1288,13 @@ bool HtmlWindow::CreateBrowser() {
     bool invisibleAtRuntime = 0 != (status & OLEMISC_INVISIBLEATRUNTIME);
 
     FrameSite* fs = new FrameSite(this);
-    ScopedComPtr<IUnknown> fsScope(fs);
+    AutoReleaseComPtr<IUnknown> fsScope(fs);
 
     if (setClientSiteFirst) {
         oleObject->SetClientSite(fs->oleClientSite);
     }
 
-    ScopedComQIPtr<IPersistStreamInit> psInit(p);
+    AutoReleaseComQIPtr<IPersistStreamInit> psInit(p);
     if (psInit) {
         hr = psInit->InitNew();
         ReportIf(!SUCCEEDED(hr));
@@ -1333,7 +1333,7 @@ bool HtmlWindow::CreateBrowser() {
         return false;
     }
 
-    ScopedComQIPtr<IConnectionPointContainer> cpContainer(p);
+    AutoReleaseComQIPtr<IConnectionPointContainer> cpContainer(p);
     if (!cpContainer) {
         return false;
     }
@@ -1569,22 +1569,22 @@ void HtmlWindow::SetHtmlReal(Str d) {
     TempStr baseUrl = fmt(kHwProtoPrefixA "://%d/", windowId);
     htmlContent->SetBaseUrl(ToWStrTemp(baseUrl));
 
-    ScopedComPtr<IDispatch> docDispatch;
+    AutoReleaseComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch) {
         return;
     }
 
-    ScopedComQIPtr<IHTMLDocument2> doc(docDispatch);
+    AutoReleaseComQIPtr<IHTMLDocument2> doc(docDispatch);
     if (!doc) {
         return;
     }
 
-    ScopedComQIPtr<IPersistMoniker> perstMon(doc);
+    AutoReleaseComQIPtr<IPersistMoniker> perstMon(doc);
     if (!perstMon) {
         return;
     }
-    ScopedComQIPtr<IMoniker> htmlMon(htmlContent);
+    AutoReleaseComQIPtr<IMoniker> htmlMon(htmlContent);
     hr = perstMon->Load(TRUE, htmlMon, nullptr, STGM_READ);
     ReportIf(FAILED(hr));
 }
@@ -1594,24 +1594,24 @@ void HtmlWindow::SetHtmlReal(Str d) {
 // This is equivalent of <body scroll=auto> but for any html
 // This seems to be the only way to hide vertical scrollbar if it's not necessary
 void HtmlWindow::SetScrollbarToAuto() {
-    ScopedComPtr<IDispatch> docDispatch;
+    AutoReleaseComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch) {
         return;
     }
 
-    ScopedComQIPtr<IHTMLDocument2> doc2(docDispatch);
+    AutoReleaseComQIPtr<IHTMLDocument2> doc2(docDispatch);
     if (!doc2) {
         return;
     }
 
-    ScopedComPtr<IHTMLElement> bodyElement;
+    AutoReleaseComPtr<IHTMLElement> bodyElement;
     hr = doc2->get_body(&bodyElement);
     if (FAILED(hr) || !bodyElement) {
         return;
     }
 
-    ScopedComQIPtr<IHTMLBodyElement> body(bodyElement);
+    AutoReleaseComQIPtr<IHTMLBodyElement> body(bodyElement);
     if (!body) {
         return;
     }
@@ -1632,7 +1632,7 @@ Point HtmlWindow::GetScrollPos() {
         return res;
     }
 
-    ScopedComPtr<IDispatch> docDispatch;
+    AutoReleaseComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch) {
         return res;
@@ -1642,12 +1642,12 @@ Point HtmlWindow::GetScrollPos() {
     long y = 0;
     bool got = false;
 
-    ScopedComQIPtr<IHTMLDocument3> doc3(docDispatch);
+    AutoReleaseComQIPtr<IHTMLDocument3> doc3(docDispatch);
     if (doc3) {
-        ScopedComPtr<IHTMLElement> documentElement;
+        AutoReleaseComPtr<IHTMLElement> documentElement;
         hr = doc3->get_documentElement(&documentElement);
         if (SUCCEEDED(hr) && documentElement) {
-            ScopedComQIPtr<IHTMLElement2> element2(documentElement);
+            AutoReleaseComQIPtr<IHTMLElement2> element2(documentElement);
             if (element2) {
                 long sx = 0;
                 long sy = 0;
@@ -1660,12 +1660,12 @@ Point HtmlWindow::GetScrollPos() {
         }
     }
 
-    ScopedComQIPtr<IHTMLDocument2> doc2(docDispatch);
+    AutoReleaseComQIPtr<IHTMLDocument2> doc2(docDispatch);
     if (doc2) {
-        ScopedComPtr<IHTMLElement> bodyElement;
+        AutoReleaseComPtr<IHTMLElement> bodyElement;
         hr = doc2->get_body(&bodyElement);
         if (SUCCEEDED(hr) && bodyElement) {
-            ScopedComQIPtr<IHTMLElement2> body2(bodyElement);
+            AutoReleaseComQIPtr<IHTMLElement2> body2(bodyElement);
             if (body2) {
                 long sx = 0;
                 long sy = 0;
@@ -1696,18 +1696,18 @@ void HtmlWindow::SetScrollPos(Point pos) {
     pos.x = std::max(pos.x, 0);
     pos.y = std::max(pos.y, 0);
 
-    ScopedComPtr<IDispatch> docDispatch;
+    AutoReleaseComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch) {
         return;
     }
 
-    ScopedComQIPtr<IHTMLDocument3> doc3(docDispatch);
+    AutoReleaseComQIPtr<IHTMLDocument3> doc3(docDispatch);
     if (doc3) {
-        ScopedComPtr<IHTMLElement> documentElement;
+        AutoReleaseComPtr<IHTMLElement> documentElement;
         hr = doc3->get_documentElement(&documentElement);
         if (SUCCEEDED(hr) && documentElement) {
-            ScopedComQIPtr<IHTMLElement2> element2(documentElement);
+            AutoReleaseComQIPtr<IHTMLElement2> element2(documentElement);
             if (element2) {
                 element2->put_scrollLeft(pos.x);
                 element2->put_scrollTop(pos.y);
@@ -1715,22 +1715,22 @@ void HtmlWindow::SetScrollPos(Point pos) {
         }
     }
 
-    ScopedComQIPtr<IHTMLDocument2> doc2(docDispatch);
+    AutoReleaseComQIPtr<IHTMLDocument2> doc2(docDispatch);
     if (!doc2) {
         return;
     }
 
-    ScopedComPtr<IHTMLElement> bodyElement;
+    AutoReleaseComPtr<IHTMLElement> bodyElement;
     hr = doc2->get_body(&bodyElement);
     if (SUCCEEDED(hr) && bodyElement) {
-        ScopedComQIPtr<IHTMLElement2> body2(bodyElement);
+        AutoReleaseComQIPtr<IHTMLElement2> body2(bodyElement);
         if (body2) {
             body2->put_scrollLeft(pos.x);
             body2->put_scrollTop(pos.y);
         }
     }
 
-    ScopedComPtr<IHTMLWindow2> window;
+    AutoReleaseComPtr<IHTMLWindow2> window;
     hr = doc2->get_parentWindow(&window);
     if (SUCCEEDED(hr) && window) {
         window->scrollTo(pos.x, pos.y);
@@ -1741,12 +1741,12 @@ void HtmlWindow::SetScrollPos(Point pos) {
 // it to <finalSize>. It's up to the caller to make sure <area> fits
 // within window (we don't check that's the case)
 HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
-    ScopedComPtr<IDispatch> docDispatch;
+    AutoReleaseComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch) {
         return nullptr;
     }
-    ScopedComQIPtr<IViewObject2> view(docDispatch);
+    AutoReleaseComQIPtr<IViewObject2> view(docDispatch);
     if (!view) {
         return nullptr;
     }
@@ -1835,7 +1835,7 @@ void HtmlWindow::OnDocumentComplete(Str url) {
 }
 
 HRESULT HtmlWindow::OnDragEnter(IDataObject* dataObj) {
-    ScopedComQIPtr<IDataObject> data(dataObj);
+    AutoReleaseComQIPtr<IDataObject> data(dataObj);
     if (!data) {
         return E_INVALIDARG;
     }
@@ -1849,7 +1849,7 @@ HRESULT HtmlWindow::OnDragEnter(IDataObject* dataObj) {
 }
 
 HRESULT HtmlWindow::OnDragDrop(IDataObject* dataObj) {
-    ScopedComQIPtr<IDataObject> data(dataObj);
+    AutoReleaseComQIPtr<IDataObject> data(dataObj);
     if (!data) {
         return E_INVALIDARG;
     }

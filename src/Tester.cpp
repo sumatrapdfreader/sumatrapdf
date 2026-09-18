@@ -78,7 +78,7 @@ int TesterMain() {
     };
 
     // InitAllCommonControls();
-    // ScopedGdiPlus gdi;
+    // AutoGdiPlusShutdown gdi;
 
     StrNode* argNode = argv;
     for (int i = 0; argNode && i < 2; i++) {

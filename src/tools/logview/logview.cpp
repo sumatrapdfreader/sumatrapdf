@@ -1301,7 +1301,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int nCmdShow) {
     InitCommonControlsEx(&icc);
 
     // the virtual controls measure and draw text with gdiplus
-    ScopedGdiPlus gdiPlus(true);
+    AutoGdiPlusShutdown gdiPlus(true);
 
     CreateFonts();
 

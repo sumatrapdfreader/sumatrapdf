@@ -9472,11 +9472,11 @@ void EngineMupdfEndOperation(EngineBase* engine) {
     }
 }
 
-ScopedEngineOperation::ScopedEngineOperation(EngineBase* e, const char* name) : engine(e) {
+AutoEndEngineOperation::AutoEndEngineOperation(EngineBase* e, const char* name) : engine(e) {
     EngineMupdfBeginOperation(e, name);
 }
 
-ScopedEngineOperation::~ScopedEngineOperation() {
+AutoEndEngineOperation::~AutoEndEngineOperation() {
     EngineMupdfEndOperation(engine);
 }
 

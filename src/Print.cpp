@@ -1325,7 +1325,7 @@ enum {
 };
 void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     // we remember some printer settings per process
-    static ScopedMem<DEVMODE> defaultDevMode;
+    static AutoFree<DEVMODE> defaultDevMode;
     static PrintScaleAdv defaultScaleAdv = PrintScaleAdv::Shrink;
     static bool hasDefaults = false;
 
@@ -1426,7 +1426,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     pdex.nStartPage = START_PAGE_GENERAL;
 
     Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
-    ScopedMem<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
+    AutoFree<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
     pdex.lphPropertyPages = &hPsp;
     pdex.nPropertyPages = 1;

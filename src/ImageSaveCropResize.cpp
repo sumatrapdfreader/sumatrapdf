@@ -1705,7 +1705,7 @@ static bool CopyEditedImageToClipboard(ImageEditWindow* ew) {
     if (status != Ok || !tmp) {
         return false;
     }
-    ScopedGdiObj<HBITMAP> hbmp(tmp);
+    AutoDeleteGdiObj<HBITMAP> hbmp(tmp);
     return CopyImageToClipboard(tmp, false);
 }
 

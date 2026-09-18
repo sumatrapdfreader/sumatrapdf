@@ -42,7 +42,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
         LzmaEncProps_Init(&props);
 
         // always apply the BCJ filter for speed (else two or three compression passes would be required)
-        ScopedMem<u8> bcj_enc(AllocArray<u8>((int)uncompressedSize));
+        AutoFree<u8> bcj_enc(AllocArray<u8>((int)uncompressedSize));
         if (bcj_enc) {
             memcpy(bcj_enc, uncompressed, uncompressedSize);
             UInt32 x86State;

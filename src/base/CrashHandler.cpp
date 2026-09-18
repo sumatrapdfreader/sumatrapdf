@@ -73,7 +73,7 @@ static Str CrashInfoTake() {
 // (tests/control.ts) treat it as "assertion fired", so keep the value in sync
 constexpr UINT kDebugReportTestExitCode = 105;
 
-// Note: intentionally not using ScopedMem<> to avoid
+// Note: intentionally not using AutoFree<> to avoid
 // static initializers/destructors, which are bad
 static Str gSystemInfo;
 static HANDLE gDumpEvent = nullptr;

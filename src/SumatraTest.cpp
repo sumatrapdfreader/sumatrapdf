@@ -60,7 +60,7 @@ static void EnsureTestSettings() {
 // the synctex index (decompressing .synctex/.synctex.gz as needed) and runs a
 // SourceToDoc query, returning a machine-readable result line.
 TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -94,7 +94,7 @@ TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line) {
 // Synchronizer, and resolves (page, point) -> (srcfile, line, col) via
 // DocToSource, returning a machine-readable result line.
 TempStr InverseSearchResultTemp(Str pdfPath, int pageNo, int x, int y) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -147,7 +147,7 @@ class TestPasswordUI : public PasswordUI {
 };
 
 TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -175,7 +175,7 @@ TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
 // Headless search restricted to pages first..last (0 = unbounded). Reports
 // every match page in document order. Used by tests/issue-5694.ts.
 TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, Str spec, int* exitCodeOut) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -257,7 +257,7 @@ static TocItem* NthTocItemWithDest(TocItem* item, int target, int& counter) {
 // SumatraPDF units (1.0 == 100%); zoom=0 means "retain current zoom" (what /XYZ
 // ... 0 must map to). Used by tests/issue-5537.ts.
 TempStr DestResultTemp(Str pdfPath, int destNo) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -288,7 +288,7 @@ TempStr DestResultTemp(Str pdfPath, int destNo) {
 // (CleanRemoteDestNameInPlace + GetNamedDest), returning the resolved page.
 // Used by tests/issue-5642.ts.
 TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -315,7 +315,7 @@ TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
 // reads every entry, and optionally loads ChmFile / EngineChm.
 // Used by tests/issue-chm-lzx.ts; not meant for end users.
 TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -976,7 +976,7 @@ static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
 // the middle of <clickWord>, runs the same TextSelection steps as a double-click
 // followed by a triple-click (without the mouse-up trim), and checks the result.
 TempStr TripleClickLineSelectResultTemp(Str pdfPath, Str clickWord, Str expectedLine, int* exitCodeOut) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -1492,7 +1492,7 @@ static void AppendTocItems(str::Builder& out, TocItem* item, int depth = 0) {
 // one line per TOC entry: "title|page=N", indented two spaces per nesting
 // level. Used by tests/issue-1201.ts and tests/issue-5317.ts.
 TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -1523,7 +1523,7 @@ TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
 // Headless test for page link elements. Returns one line per link:
 // "kind=<kind> value=<value>". Used by tests/ad-hoc-md-links.ts.
 TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -1580,7 +1580,7 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
 // Hover-tip strings for annotation comments on a page (issue #5329).
 // Newlines in a tip are reported as "|".
 TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -1629,7 +1629,7 @@ TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut) {
 // on, so a test can tell what that enhancement did to the page's grays. Reports
 // the most common neutral grays as "gray=<value> count=<n>" (issue #5937).
 TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -1706,7 +1706,7 @@ TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* e
 // edge pixels. clipKind=1 uses the slightly-off page rect that Copy Selection
 // produces after CvtFromScreen (issue #3434).
 TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int* exitCodeOut) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
@@ -1782,7 +1782,7 @@ TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int*
 // pixels the render shows. The fixture image is solid red so a successful
 // stamp lights up a block of red.
 TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOut) {
-    ScopedGdiPlus gdiPlus;
+    AutoGdiPlusShutdown gdiPlus;
     EnsureTestSettings();
 
     str::Builder out;
