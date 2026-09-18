@@ -4714,6 +4714,7 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win, bool skipHistory) {
     if (pathsToLoad.IsEmpty()) {
         return;
     }
+    SortNatural(&pathsToLoad);
 
     if (!win->IsCurrentTabAbout()) {
         SaveCurrentWindowTab(win);
@@ -18350,6 +18351,10 @@ ContinueOpenWindow:
     nWithDde = len(gDdeOpenOnStartup);
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
+        // Windows delivers files multi-opened in Explorer one at a time, in
+        // arbitrary arrival order. Sort before creating tabs so that they open
+        // in natural name order (lec1, lec2, ... lec10) (issue #6087)
+        SortNatural(&gDdeOpenOnStartup);
         for (Str path : gDdeOpenOnStartup) {
             // Always skip paths already open or mid-load (not only when restoring a
             // session). Multi-select of password PDFs from Explorer commonly queues
