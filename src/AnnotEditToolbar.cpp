@@ -910,7 +910,7 @@ static Pixmap* PixmapFromAnnotIconFz(fz_pixmap* src) {
     int srcAlpha = src->alpha;
     for (int y = 0; y < src->h; y++) {
         u8* s = src->samples + (src->stride * y);
-        u8* d = px->data + (px->stride * y);
+        u8* d = px->data + ((ptrdiff_t)px->stride * y);
         for (int x = 0; x < src->w; x++) {
             d[0] = s[2];
             d[1] = s[1];
@@ -1256,7 +1256,7 @@ static HBITMAP CreateMenuGlyphBitmap(int dx, int dy, PopupGlyphKind glyph, Str i
                 if (dyOut < 0 || dyOut >= dy) {
                     continue;
                 }
-                u8* s = src->data + (y * src->stride);
+                u8* s = src->data + ((ptrdiff_t)y * src->stride);
                 for (int x = 0; x < src->width; x++) {
                     int dxOut = x + ox;
                     if (dxOut < 0 || dxOut >= dx) {

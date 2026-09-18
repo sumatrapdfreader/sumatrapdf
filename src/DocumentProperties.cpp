@@ -38,8 +38,6 @@
 #endif
 #include "DocumentProperties.h"
 
-void ShowProperties(HWND parent, DocController* ctrl);
-
 constexpr int kButtonPadding = 8;
 
 struct PropertiesWnd : WindowBase {
@@ -831,7 +829,7 @@ static TempStr HexBytesTemp(const BYTE* p, int n, bool reverse) {
     char* buf = AllocArrayTemp<char>((n * 2) + 1);
     for (int i = 0; i < n; i++) {
         BYTE v = reverse ? p[n - 1 - i] : p[i];
-        buf[i * 2] = "0123456789ABCDEF"[v >> 4];
+        buf[(size_t)i * 2] = "0123456789ABCDEF"[v >> 4];
         buf[(i * 2) + 1] = "0123456789ABCDEF"[v & 0xf];
     }
     return Str(buf, n * 2);

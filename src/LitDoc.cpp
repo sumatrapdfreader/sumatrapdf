@@ -209,7 +209,7 @@ static void MsSha1Init(MsSha1* s) {
 
 static void MsSha1Block(MsSha1* s, const u8* p) {
     u32 w[80];
-    for (int i = 0; i < 16; i++) {
+    for (size_t i = 0; i < 16; i++) {
         w[i] = ((u32)p[i * 4] << 24) | ((u32)p[(i * 4) + 1] << 16) | ((u32)p[(i * 4) + 2] << 8) | (u32)p[(i * 4) + 3];
     }
     for (int t = 16; t < 80; t++) {
@@ -297,7 +297,7 @@ static void MsSha1Final(MsSha1* s, u8 digest[20]) {
         lenBuf[i] = (u8)(bitLen >> (56 - (i * 8)));
     }
     MsSha1Update(s, lenBuf, 8);
-    for (int i = 0; i < 5; i++) {
+    for (size_t i = 0; i < 5; i++) {
         digest[i * 4] = (u8)(s->h[i] >> 24);
         digest[(i * 4) + 1] = (u8)(s->h[i] >> 16);
         digest[(i * 4) + 2] = (u8)(s->h[i] >> 8);
@@ -485,7 +485,7 @@ static bool LitParseHeader(LitFile* lit) {
     }
     // hdrLen comes from the file; bound it before computing offsets from it
     // so hdrLen + nPieces * 16 can't overflow into a negative offset
-    if ((i64)hdrLen + (i64)nPieces * 16 > len(d)) {
+    if ((i64)hdrLen + ((i64)nPieces * 16) > len(d)) {
         return false;
     }
 
@@ -620,7 +620,7 @@ static bool LitParseSectionNames(LitFile* lit) {
         }
         int nChars = (int)LitU16(raw, pos);
         pos += 2;
-        if ((i64)nChars * 2 + 2 > (i64)len(raw) - pos) {
+        if (((i64)nChars * 2) + 2 > (i64)len(raw) - pos) {
             return false;
         }
         WStr ws((const WCHAR*)(raw.s + pos), nChars);

@@ -124,7 +124,7 @@ static Rect BandRect(MainWindow* win) {
     if (frac > 1) {
         frac = 1;
     }
-    int y = (int)(frac * (float)canvas.dy + 0.5f);
+    int y = (int)((frac * (float)canvas.dy) + 0.5f);
     if (y < 0) {
         y = 0;
     }
@@ -611,6 +611,6 @@ TempStr ReadingBarStateTemp(int* exitCodeOut) {
     int height = gSettings ? gSettings->readingBar.height : 0;
     float yFrac = (tab && !home) ? tab->readingBar.yFrac : 0;
     out.Append(fmt("OK on=%d invert=%d home=%d auto=%d yFrac=%d height=%d bandY=%d bandH=%d scrollY=%d\n", (int)on,
-                   invert, (int)home, autoOn, (int)(yFrac * 1000.0f + 0.5f), height, band.y, band.dy, scrollY));
+                   invert, (int)home, autoOn, (int)((yFrac * 1000.0f) + 0.5f), height, band.y, band.dy, scrollY));
     return finish(0);
 }

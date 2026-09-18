@@ -323,7 +323,7 @@ void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels) {
             continue;
         }
         char hex[41];
-        for (DWORD i = 0; i < 20; i++) {
+        for (size_t i = 0; i < 20; i++) {
             snprintf(hex + (i * 2), 3, "%02X", hash[i]);
         }
         WCHAR nameW[256]{};

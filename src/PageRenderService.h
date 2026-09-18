@@ -14,7 +14,7 @@ struct PageRenderService {
     PageRenderService& operator=(const PageRenderService&) = delete;
     ~PageRenderService();
 
-    static PageRenderService* Create(EngineBase* engine, const Func0& onPageReady, i64 maxBytes = 96 * 1024 * 1024);
+    static PageRenderService* Create(EngineBase* engine, const Func0& onPageReady, i64 maxBytes = 96LL * 1024 * 1024);
 
     void NewGeneration();
     void Request(PageRenderKey key, PageRenderPriority priority);

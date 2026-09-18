@@ -31,7 +31,7 @@ constexpr float kPreviewZoomMax = 16.f;
 constexpr float kPreviewZoomStep = 1.2f;
 // Render the whole page when it stays under this many pixels (~32 MB at 32bpp).
 // Past that, only the visible region plus a pan slop is rendered.
-constexpr i64 kPreviewMaxFullPagePixels = 8 * 1024 * 1024;
+constexpr i64 kPreviewMaxFullPagePixels = 8LL * 1024 * 1024;
 constexpr int kPreviewPanPad = 256;
 
 static bool SameZoom(float a, float b) {

@@ -89,8 +89,6 @@ using Gdiplus::Font;
 using Gdiplus::Ok;
 using Gdiplus::Status;
 
-PlatformFont* GetPlatformFontForNative(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId);
-
 // the Graphics used for font metrics doesn't draw anything, so its bitmap can
 // be tiny
 constexpr int kMeasureBmpDx = 32;

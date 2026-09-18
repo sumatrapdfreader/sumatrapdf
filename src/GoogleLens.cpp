@@ -30,7 +30,7 @@
 #include "WindowTab.h"
 #include "GoogleLens.h"
 
-constexpr i64 kMaxGoogleLensPngBytes = 32 * 1024 * 1024;
+constexpr i64 kMaxGoogleLensPngBytes = 32LL * 1024 * 1024;
 
 static void GoogleLensNotify(WindowTab* tab, Str message) {
     if (!tab || !tab->win) {

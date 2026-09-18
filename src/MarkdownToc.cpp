@@ -860,8 +860,6 @@ bool MarkdownToc_UnitTestHtmlLinks() {
     return linksOk && anchorsOk;
 }
 
-void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut);
-
 bool MarkdownToc_UnitTestHtmlHeadings() {
     Str html = StrL(
         "<!DOCTYPE html><html><body>\n"

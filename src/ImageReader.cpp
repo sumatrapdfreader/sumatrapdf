@@ -10,7 +10,6 @@
 #endif
 
 extern "C" {
-#include "mupdf/fitz.h"
 #include "../ext/mupdf/source/fitz/color-imp.h"
 }
 

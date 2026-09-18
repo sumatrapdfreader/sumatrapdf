@@ -216,7 +216,7 @@ static u8 OpacityOf(Color c) {
 }
 
 static u8 BlendChannel(u8 fg, u8 bg, u8 a) {
-    return (u8)(((int)fg * (int)a + (int)bg * (255 - (int)a)) / 255);
+    return (u8)((((int)fg * (int)a) + ((int)bg * (255 - (int)a))) / 255);
 }
 
 static Color BlendOver(Color col, Color bg, u8 a) {

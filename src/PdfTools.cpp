@@ -1886,7 +1886,7 @@ void ShowConvertPdfToImagesDialog(MainWindow* win) {
 
 // rectangular selection → PNG / JPEG / BMP at a chosen DPI, independent of
 // the current zoom (issue #6127)
-constexpr i64 kMaxSaveSelectionPixels = 100 * 1000 * 1000;
+constexpr i64 kMaxSaveSelectionPixels = 100LL * 1000 * 1000;
 constexpr int kMaxSaveSelectionSide = 16384;
 constexpr int kSaveSelectionDefaultDpi = 300;
 

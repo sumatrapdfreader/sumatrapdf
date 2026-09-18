@@ -81,7 +81,7 @@ static Pixmap* GrayscalePagePixmap(Pixmap* bmp) {
 
             // Integer approximation of Rec.709 luminance:
             // 0.2126 R + 0.7152 G + 0.0722 B
-            u8 gray = (u8)((54 * r + 183 * g + 19 * b + 128) >> 8);
+            u8 gray = (u8)(((54 * r) + (183 * g) + (19 * b) + 128) >> 8);
 
             p[0] = gray;
             p[1] = gray;
@@ -1542,8 +1542,6 @@ void RenderCache::LogCacheSize() {
 }
 
 // --------- render queue debug window (CmdDebugToggleRenderInfo) ---------
-
-extern RenderCache* gRenderCache;
 
 struct DebugTextWnd : WindowBase {
     Edit* edit = nullptr;

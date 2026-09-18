@@ -9472,6 +9472,14 @@ void EngineMupdfEndOperation(EngineBase* engine) {
     }
 }
 
+ScopedEngineOperation::ScopedEngineOperation(EngineBase* e, const char* name) : engine(e) {
+    EngineMupdfBeginOperation(e, name);
+}
+
+ScopedEngineOperation::~ScopedEngineOperation() {
+    EngineMupdfEndOperation(engine);
+}
+
 bool EngineMupdfCanUndo(EngineBase* engine) {
     EngineMupdf* e = AsEngineMupdf(engine);
     int pos = EngineMupdfUndoPos(e, nullptr);

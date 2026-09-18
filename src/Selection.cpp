@@ -469,7 +469,7 @@ static void PaintTransparentQuads(Gfx* gfx, Rect screenRc, Vec<Point>& pts, Colo
     screenRc.Inflate(1, 1);
     Vec<Point> painted;
     for (int i = 0; i < nQuads; i++) {
-        Point* q = pts.els + (i * 4);
+        Point* q = pts.els + ((ptrdiff_t)i * 4);
         if (QuadScreenBounds(q).Intersect(screenRc).IsEmpty()) {
             continue;
         }
@@ -705,7 +705,7 @@ RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<Sel
         return nullptr;
     }
 
-    constexpr i64 kMaxPixels = 24 * 1000 * 1000;
+    constexpr i64 kMaxPixels = 24LL * 1000 * 1000;
     Vec<Pixmap*> pixmaps;
     i64 totalHeight = 0;
     int maxWidth = 0;

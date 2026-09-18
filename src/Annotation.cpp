@@ -2678,7 +2678,7 @@ static Pixmap* PixmapFromRgbFzPixmap(fz_context* ctx, fz_pixmap* src) {
     int alphaOff = use->alpha ? n - 1 : -1;
     for (int y = 0; y < use->h; y++) {
         const u8* s = use->samples + (y * use->stride);
-        u8* d = p->data + (y * p->stride);
+        u8* d = p->data + ((ptrdiff_t)y * p->stride);
         for (int x = 0; x < use->w; x++) {
             d[0] = s[0];
             d[1] = s[1];

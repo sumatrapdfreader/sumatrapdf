@@ -6,7 +6,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 
-#include "FilterBase.h"
+#include "FilterBase.h" // IWYU pragma: keep
 #include "RegistrySearchFilter.h"
 #include "PdfFilter.h"
 #ifdef BUILD_TEX_IFILTER

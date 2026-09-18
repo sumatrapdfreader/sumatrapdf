@@ -36,9 +36,6 @@
 #include "Favorites.h"
 
 static void RememberFavTreeExpansionStateForAllWindows();
-void LayoutFavoritesContainer(MainWindow* win);
-void PopulateFavTreeIfNeeded(MainWindow* win);
-void UpdateFavoritesTreeForAllWindows();
 
 struct FavTreeItem {
     ~FavTreeItem();
