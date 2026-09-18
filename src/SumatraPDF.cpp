@@ -9394,6 +9394,10 @@ static void OnFrameKeyEsc(MainWindow* win) {
         CloseWindow(win, true, false);
         return;
     }
+    if (win->toolbarVirt && win->toolbarVirt->hoverHost) {
+        HideToolbarHoverDropdown(win);
+        return;
+    }
     if (StopKeyboardLinkFollowing(win)) {
         return;
     }

@@ -2280,6 +2280,8 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    HideToolbarHoverDropdown(win);
+
     if (ReadingBarOnLeftDown(win, x, y)) {
         return;
     }

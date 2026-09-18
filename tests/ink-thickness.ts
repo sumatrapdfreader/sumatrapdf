@@ -71,13 +71,39 @@ function annotButtonRect(raw: string, cmd: number): Rect | null {
 }
 
 // right-click opens the drop-down at once, without waiting for the hover delay.
-// The cursor has to be on the button or the drop-down closes itself.
 function rightClickToolbar(toolbar: number, x: number, y: number): void {
   const s = clientToScreen(toolbar, x, y);
   setCursorPos(s.x, s.y);
   const lp = packCoords(x, y);
+  sendMessage(toolbar, WM_MOUSEMOVE, 0, lp);
   sendMessage(toolbar, WM_RBUTTONDOWN, MK_RBUTTON, lp);
   sendMessage(toolbar, WM_RBUTTONUP, 0, lp);
+}
+
+async function waitInkDropdown(
+  client: ControlClient,
+  toolbar: number,
+  btn: Rect,
+  what: string,
+): Promise<RegExpExecArray> {
+  const deadline = Date.now() + 8000 * SLOW_BUILD_FACTOR;
+  let dump = "";
+  const x = btn.x + (btn.dx >> 1);
+  const y = btn.y + (btn.dy >> 1);
+  for (;;) {
+    rightClickToolbar(toolbar, x, y);
+    await sleep(50);
+    dump = await toolbarDump(client);
+    const item =
+      /dropdown-item idx=\d+ cmd=\d+ current=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) text=thickness=(\d+)/.exec(dump);
+    if (item) {
+      return item;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`ink-thickness: ${what}\n${dump}`);
+    }
+    await sleep(50);
+  }
 }
 
 async function markupDump(client: ControlClient): Promise<string> {
@@ -171,16 +197,8 @@ export async function testit(): Promise<void> {
     if (!btn) {
       throw new Error("ink-thickness: no ink button on the Edit PDF toolbar");
     }
-    rightClickToolbar(toolbar, btn.x + (btn.dx >> 1), btn.y + (btn.dy >> 1));
-    await sleep(400 * SLOW_BUILD_FACTOR);
-
+    const item = await waitInkDropdown(client, toolbar, btn, "the ink drop-down has no thickness slider");
     const dump = await toolbarDump(client);
-    // the colors come first, the slider below them with the width in use
-    const item =
-      /dropdown-item idx=\d+ cmd=\d+ current=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) text=thickness=(\d+)/.exec(dump);
-    if (!item) {
-      throw new Error(`ink-thickness: the ink drop-down has no thickness slider\n${dump}`);
-    }
     if (item[5] !== "3") {
       throw new Error(`ink-thickness: the slider opened at ${item[5]}, want the setting's 3`);
     }

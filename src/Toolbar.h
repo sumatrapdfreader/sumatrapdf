@@ -159,6 +159,8 @@ struct ToolbarVirt {
     VirtHost* hoverHost = nullptr;
     int hoverCmdId = 0;
     int hoverPendingCmdId = 0;
+    // right-click opened this; don't close it just because the cursor isn't on the button
+    bool hoverSticky = false;
     // the open button's tooltip, taken away for as long as the drop-down is up
     Str hoverSavedTip;
 };
