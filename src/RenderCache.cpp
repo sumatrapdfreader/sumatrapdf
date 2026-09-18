@@ -44,6 +44,55 @@ static bool ShouldUpdateBitmapColorsLegacy(EngineBase* engine, RenderCache* cach
     return EngineUsesDocumentColorsFollowTheme(engine);
 }
 
+// Grayscale is applied to the rendered document bitmap only.
+// UI, Read Aloud highlights, selection, search and other overlays are painted later.
+static Pixmap* GrayscalePagePixmap(Pixmap* bmp) {
+    if (!bmp) {
+        return nullptr;
+    }
+
+    if (bmp->format == PixmapFormat::Native) {
+        Pixmap* converted = PixmapCopyAs32bppDIB(bmp);
+        if (!converted) {
+            return bmp;
+        }
+        FreePixmap(bmp);
+        bmp = converted;
+    }
+
+    if (!bmp->data) {
+        return bmp;
+    }
+
+    if (bmp->format != PixmapFormat::BGRA8 && bmp->format != PixmapFormat::BGR8 && bmp->format != PixmapFormat::RGBA8) {
+        return bmp;
+    }
+
+    int bpp = PixmapBytesPerPixel(bmp->format);
+    bool rgba = bmp->format == PixmapFormat::RGBA8;
+
+    for (int y = 0; y < bmp->height; y++) {
+        u8* p = bmp->data + ((size_t)y * bmp->stride);
+
+        for (int x = 0; x < bmp->width; x++, p += bpp) {
+            u32 r = rgba ? p[0] : p[2];
+            u32 g = p[1];
+            u32 b = rgba ? p[2] : p[0];
+
+            // Integer approximation of Rec.709 luminance:
+            // 0.2126 R + 0.7152 G + 0.0722 B
+            u8 gray = (u8)((54 * r + 183 * g + 19 * b + 128) >> 8);
+
+            p[0] = gray;
+            p[1] = gray;
+            p[2] = gray;
+            // Alpha, when present, remains untouched.
+        }
+    }
+
+    return bmp;
+}
+
 // Several preserved regions in one tile -> keep the largest artwork, drop layout
 // ornaments. Always reduce to one region so patchy multi-image pages do not leave
 // dark-recolored holes between photos (#5806).
@@ -310,7 +359,7 @@ void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
     // Copy the PageRenderRequest as it will be reused
     auto* entry = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
     entry->loc = req.loc;
-    entry->darkModeEpoch = darkModeEpoch;
+    entry->darkModeEpoch = req.darkModeEpoch;
     entry->cacheIdx = cacheCount;
     cache[cacheCount] = entry;
     cacheCount++;
@@ -904,6 +953,7 @@ bool RenderCache::GetNextRequest(PageRenderRequest* req, int threadIdx) {
     requestCount = idx;
     *req = requests[idx];
     req->darkModeEpoch = darkModeEpoch;
+    req->grayscale = AtomicBoolGet(&grayscalePageColors);
     curReqs[threadIdx] = req;
     ReportIf(req->abort);
 
@@ -1235,6 +1285,12 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         req.errorCode = bmp ? 0 : 1;
 
         if (bmp) {
+            // before recoloring, so theme colors still apply
+            if (req.grayscale) {
+                bmp = GrayscalePagePixmap(bmp);
+                req.bmp = bmp;
+            }
+
             const DarkModeProfile* profile = args.darkProfile;
             bool recolor;
             if (profile) {
@@ -1402,6 +1458,11 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         args.keepAlpha = true; // see the other RenderPageArgs above (#5844)
         args.transparentBackdrop = ShowTransparencyGrid();
         Pixmap* bmp = dm->GetEngine()->RenderPage(args);
+
+        if (AtomicBoolGet(&grayscalePageColors)) {
+            bmp = GrayscalePagePixmap(bmp);
+        }
+
         bool success = bmp && BlitPixmap(bmp, hdc, bounds);
         FreePixmap(bmp);
 

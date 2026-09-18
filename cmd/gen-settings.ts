@@ -441,6 +441,12 @@ const pageGrid: Field[] = [
 ];
 
 const fixedPageUI: Field[] = [
+  field(
+    "Grayscale",
+    Bool,
+    false,
+    "if true, render document pages in grayscale. Toggle with CmdToggleGrayscale",
+  ).ver("3.7"),
   field("TextColor", Color, rgb(0x00, 0x00, 0x00), "color used instead of black for the document's text"),
   field(
     "BackgroundColor",

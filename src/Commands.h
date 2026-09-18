@@ -321,8 +321,9 @@ enum {
     CmdFileHistory = 514,
     CmdFavorite = 515,
     CmdReadAloudFromCursorPosition = 516,
+    CmdToggleGrayscale = 517,
 
-    CmdLast = 516,
+    CmdLast = 517,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

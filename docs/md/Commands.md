@@ -98,6 +98,7 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdBookView,"Ctrl + 8, Ctrl + Numpad 8",Book View,
 CmdFacingView,"Ctrl + 7, Ctrl + Numpad 7",Facing View,
 CmdInvertColors,Shift + I,Invert Colors,was `i` before 3.6
+CmdToggleGrayscale,,Toggle Grayscale,"ver 3.7+, render document pages in grayscale; saved in `FixedPageUI.Grayscale`"
 CmdRotateLeft,"[, Shift + Ctrl + Subtract",Rotate Left,
 CmdRotateRight,"], Shift + Ctrl + Add",Rotate Right,
 CmdSinglePageView,"Ctrl + 6, Ctrl + Numpad 6",Single Page View,

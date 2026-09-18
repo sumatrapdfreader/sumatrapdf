@@ -78,6 +78,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdToggleWindowsPreviewer,
     CmdToggleWindowsSearchFilter,
     CmdInvertColors,
+    CmdToggleGrayscale,
     CmdFavoriteToggle,
     CmdFavoriteShowInTab,
     CmdShowLog,
