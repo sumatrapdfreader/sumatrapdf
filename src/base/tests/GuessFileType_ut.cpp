@@ -521,10 +521,10 @@ static void jxlTest() {
 static void tgaTest() {
     // header alone: 24-bit truecolor 64x32
     u8 tga[18 + 26] = {};
-    tga[2] = 2;      // imageType: truecolor
-    tga[12] = 64;    // width
-    tga[14] = 32;    // height
-    tga[16] = 24;    // bitDepth
+    tga[2] = 2;   // imageType: truecolor
+    tga[12] = 64; // width
+    tga[14] = 32; // height
+    tga[16] = 24; // bitDepth
     FileTypeInfo fti = infoFromBytes(tga, 18);
     utassert(fti.ft == FileType::Tga);
     utassert(fti.imageDx == 64);
