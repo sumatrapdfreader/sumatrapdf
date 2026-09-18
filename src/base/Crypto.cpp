@@ -67,51 +67,57 @@ void CalcSHA2Digest(Str data, u8 digest[32]) {
     CalcDigestWin(data, digest, 32, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CALG_SHA_256);
 }
 
-static bool ExtractSignature(Str hexSignature, Str& data, AutoFree<BYTE>& signature, size_t& signatureLen) {
-    // verify hexSignature format - must be either
-    // * a string starting with "sha1:" followed by the signature (and optionally whitespace and further content)
-    // * empty, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
+// hexSignature is "sha1:" followed by the hex-encoded signature (and optionally
+// whitespace and further content). Returns the binary signature, empty on error.
+static TempStr ExtractSignatureTemp(Str hexSignature) {
     Str hex = hexSignature;
     if (!str::TrimPrefix(hex, StrL("sha1:"))) {
-        if (len(hex) == 0) {
-            if (data.len < 20 || memchr(data.s, 0, data.len)) {
-                return false;
-            }
-            const char* lastLine = data.s + data.len - 1;
-            while (lastLine > data.s && *(lastLine - 1) != '\n') {
-                lastLine--;
-            }
-            if (lastLine == data.s || !str::Contains(Str(lastLine), StrL(" Signature sha1:"))) {
-                return false;
-            }
-            data.len = (int)(lastLine - data.s);
-            str::Cut(Str(lastLine), StrL(" Signature sha1:"), nullptr, &hex);
-        } else {
-            return false;
-        }
+        return {};
     }
-
-    Vec<BYTE> signatureBytes;
+    int n = 0;
     for (int off = 0; off + 1 < hex.len && !str::IsWs(hex.s[off]); off += 2) {
-        unsigned int val;
-        if (1 != sscanf_s(hex.s + off, "%02x", &val)) {
-            return false;
-        }
-        VecAppend(signatureBytes, (BYTE)val);
+        n++;
     }
-    signatureLen = len(signatureBytes);
-    signature.Set(VecTake(signatureBytes));
-    return true;
+    char* sig = AllocArrayTemp<char>(n + 1);
+    Str res(sig, n);
+    if (n == 0 || !str::HexToMem(hex, res)) {
+        return {};
+    }
+    return res;
 }
 
+// if the signature is embedded in data, shortens data to exclude it
+// and returns hexSignature in "sha1:..." format, empty on error
+static Str ExtractEmbeddedHexSignature(Str& data) {
+    // the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
+    if (data.len < 20 || memchr(data.s, 0, data.len)) {
+        return {};
+    }
+    const char* lastLine = data.s + data.len - 1;
+    while (lastLine > data.s && *(lastLine - 1) != '\n') {
+        lastLine--;
+    }
+    Str after;
+    if (lastLine == data.s || !str::Cut(Str(lastLine), StrL(" Signature sha1:"), nullptr, &after)) {
+        return {};
+    }
+    data.len = (int)(lastLine - data.s);
+    // include "sha1:" which directly precedes after
+    int prefixLen = StrL("sha1:").len;
+    return Str(after.s - prefixLen, after.len + prefixLen);
+}
+
+// hexSignature must be either
+// * a string starting with "sha1:" followed by the signature (and optionally whitespace and further content)
+// * empty, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
 bool VerifySHA1Signature(Str data, Str hexSignature, Str pubkey) {
     HCRYPTPROV hProv = 0;
     HCRYPTKEY hPubKey = 0;
     HCRYPTHASH hHash = 0;
     BOOL ok = false;
-    AutoFree<BYTE> signature;
-    size_t signatureLen;
-    // set after ExtractSignature below, which shortens data
+    TempStr signature;
+    size_t signatureLen = 0;
+    // set after the signature is extracted below, which might shorten data
     const BYTE* dataPtr = nullptr;
     size_t dataLen = 0;
 
@@ -120,7 +126,12 @@ bool VerifySHA1Signature(Str data, Str hexSignature, Str pubkey) {
         ok = (val);                    \
         if (ok == FALSE) goto CleanUp; \
     } while (0)
-    Check(ExtractSignature(hexSignature, data, signature, signatureLen));
+    if (len(hexSignature) == 0) {
+        hexSignature = ExtractEmbeddedHexSignature(data);
+    }
+    signature = ExtractSignatureTemp(hexSignature);
+    signatureLen = (size_t)signature.len;
+    Check(signatureLen > 0);
     dataPtr = (const BYTE*)data.s;
     dataLen = (size_t)data.len;
     Check(CryptAcquireContext(&hProv, nullptr, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT));
@@ -133,7 +144,7 @@ bool VerifySHA1Signature(Str data, Str hexSignature, Str pubkey) {
 #endif
     Check(dataLen <= DWORD_MAX && (size_t)pubkey.len <= DWORD_MAX && signatureLen <= DWORD_MAX);
     Check(CryptHashData(hHash, dataPtr, (DWORD)dataLen, 0));
-    Check(CryptVerifySignature(hHash, signature, (DWORD)signatureLen, hPubKey, nullptr, 0));
+    Check(CryptVerifySignature(hHash, (const BYTE*)signature.s, (DWORD)signatureLen, hPubKey, nullptr, 0));
 #undef Check
 
 CleanUp:

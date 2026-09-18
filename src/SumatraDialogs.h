@@ -97,4 +97,4 @@ struct Print_Advanced_Data {
           extraRotation(extraRotation) {}
 };
 
-HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, AutoFree<DLGTEMPLATE>& dlgTemplate);
+HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data);

@@ -1426,8 +1426,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     pdex.nStartPage = START_PAGE_GENERAL;
 
     Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
-    AutoFree<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
-    HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
+    HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced);
     pdex.lphPropertyPages = &hPsp;
     pdex.nPropertyPages = 1;
 

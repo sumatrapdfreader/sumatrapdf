@@ -37,7 +37,8 @@ struct DLGTEMPLATEEX {
 };
 #pragma pack(pop)
 
-static DLGTEMPLATE* DupTemplate(int dlgId) {
+// allocated in arena, or with malloc() if arena is nullptr
+static DLGTEMPLATE* DupTemplate(int dlgId, Arena* arena = nullptr) {
     HRSRC dialogRC = FindResourceW(nullptr, MAKEINTRESOURCE(dlgId), RT_DIALOG);
     ReportIf(!dialogRC);
     HGLOBAL dlgTemplate = LoadResource(nullptr, dialogRC);
@@ -45,7 +46,7 @@ static DLGTEMPLATE* DupTemplate(int dlgId) {
     void* orig = LockResource(dlgTemplate);
     int size = (int)SizeofResource(nullptr, dialogRC);
     ReportIf(size <= 0);
-    DLGTEMPLATE* ret = (DLGTEMPLATE*)MemDup(nullptr, orig, (size_t)size);
+    DLGTEMPLATE* ret = (DLGTEMPLATE*)MemDup(arena, orig, (size_t)size);
     UnlockResource(orig);
     return ret;
 }
@@ -136,8 +137,8 @@ static void SetDlgTemplateExFont(DLGTEMPLATE* tmp, bool isRtl, int fontSize) {
     *wd = (WORD)fontSize;
 }
 
-static DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
-    DLGTEMPLATE* tpl = DupTemplate(dlgId);
+static DLGTEMPLATE* GetRtLDlgTemplateTemp(int dlgId) {
+    DLGTEMPLATE* tpl = DupTemplate(dlgId, GetTempArena());
     SetDlgTemplateRtl(tpl);
     return tpl;
 }
@@ -283,7 +284,9 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
     return FALSE;
 }
 
-HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, AutoFree<DLGTEMPLATE>& dlgTemplate) {
+// the RTL dialog template is allocated in the temp arena so the returned page
+// must be used before the temp arena is reset (e.g. inside PrintDlgEx())
+HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data) {
     PROPSHEETPAGE psp{};
 
     psp.dwSize = sizeof(PROPSHEETPAGE);
@@ -295,8 +298,7 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, AutoFree<
     psp.pszTitle = CWStrTemp(s);
 
     if (IsUIRtl()) {
-        dlgTemplate.Set(GetRtLDlgTemplate(IDD_PROPSHEET_PRINT_ADVANCED));
-        psp.pResource = dlgTemplate.Get();
+        psp.pResource = GetRtLDlgTemplateTemp(IDD_PROPSHEET_PRINT_ADVANCED);
         psp.dwFlags |= PSP_DLGINDIRECT;
     }
 
