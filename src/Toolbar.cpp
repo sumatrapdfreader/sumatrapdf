@@ -1816,7 +1816,7 @@ static TempStr HoverDropdownStateTemp(MainWindow* win) {
 // the drop-down has to say when the cursor leaves it.
 static void OnHoverDropdownMouseLeave(MainWindow* win) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
-    if (tb && tb->host && tb->hoverCmdId != 0) {
+    if (tb && tb->host && tb->hoverCmdId != 0 && !tb->hoverSticky) {
         tb->host->SetTimer(kCloseHoverDropdownTimerId, kCloseHoverDropdownDelayMs);
     }
 }
@@ -1939,6 +1939,7 @@ void HideToolbarHoverDropdown(MainWindow* win) {
     GiveHoverButtonTooltipBack(win);
     tb->hoverPendingCmdId = 0;
     tb->hoverCmdId = 0;
+    tb->hoverSticky = false;
     if (tb->host) {
         tb->host->KillTimer(kOpenHoverDropdownTimerId);
         tb->host->KillTimer(kCloseHoverDropdownTimerId);
@@ -2074,6 +2075,7 @@ static bool ShowToolbarButtonDropdown(MainWindow* win, int cmdId) {
         if (tb->host) {
             tb->host->KillTimer(kCloseHoverDropdownTimerId);
         }
+        tb->hoverSticky = true;
         return true;
     }
     if (tb->hoverCmdId != 0) {
@@ -2086,11 +2088,13 @@ static bool ShowToolbarButtonDropdown(MainWindow* win, int cmdId) {
             GiveHoverButtonTooltipBack(win);
             tb->hoverCmdId = cmdId;
             TakeHoverButtonTooltip(win, cmdId);
+            tb->hoverSticky = true;
             return true;
         }
         HideToolbarHoverDropdown(win);
     }
     OpenHoverDropdown(win, cmdId);
+    tb->hoverSticky = true;
     return true;
 }
 
@@ -2147,6 +2151,9 @@ static void ToolbarHoverDropdownOnMouseMove(MainWindow* win, const Point* client
             OpenHoverDropdown(win, cmdId);
             return;
         }
+        if (tb->hoverSticky) {
+            return;
+        }
         tb->host->SetTimer(kCloseHoverDropdownTimerId, kCloseHoverDropdownDelayMs);
         return;
     }
@@ -2175,6 +2182,9 @@ static void OnHoverDropdownTimer(MainWindow* win, int timerId) {
         return;
     }
     tb->host->KillTimer(kCloseHoverDropdownTimerId);
+    if (tb->hoverSticky) {
+        return;
+    }
     Point pt = UiCursorScreenPos();
     if (ToolbarHoverDropdownContainsScreenPoint(win, pt)) {
         return;

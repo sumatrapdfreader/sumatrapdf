@@ -422,10 +422,9 @@ function rightClickToolbar(toolbar: number, x: number, y: number): void {
   sendMessage(toolbar, WM_RBUTTONUP, 0, lp);
 }
 
-// take the cursor off the toolbar and wait for the drop-down to go away
+// Esc dismisses a right-click drop-down; moving the mouse away does not
 async function closeHoverMenu(pid: number, frame: number): Promise<void> {
-  const r = getWindowRect(frame);
-  setCursorPos(r.left + 5, r.bottom - 5);
+  await pressEscape(frame);
   for (let i = 0; i < 30; i++) {
     const h = findTopWindow(pid, HOVER_MENU_CLASS);
     if (!h || !isWindowVisible(h)) {
