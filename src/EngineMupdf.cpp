@@ -2466,6 +2466,8 @@ static fz_link* MakePushButtonWidgetLinks(fz_context* ctx, pdf_document* doc, pd
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
+            // pdf_bound_annot() can throw after uri was allocated
+            fz_free(ctx, uri);
             uri = nullptr;
         }
         if (!uri) {
