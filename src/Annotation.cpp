@@ -2482,10 +2482,11 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     fz_rethrow(ctx);
                 }
             }
+            // e.g. [CmdCreateAnnotPolyLine borderwidth=2] (#6208)
+            if (args->borderWidth >= 0 && AnnotationSupportsBorder(typ)) {
+                pdf_set_annot_border_width(ctx, annot, (float)args->borderWidth);
+            }
             if (typ == AnnotationType::FreeText) {
-                if (args->borderWidth >= 0) {
-                    pdf_set_annot_border_width(ctx, annot, (float)args->borderWidth);
-                }
                 // left is MuPDF's default; leave /Q out of the file for it
                 if (args->quadding > kQuaddingLeft) {
                     pdf_set_annot_quadding(ctx, annot, args->quadding);
@@ -2527,9 +2528,6 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
             if (typ == AnnotationType::Ink) {
                 // the highlighter brush is an ink stroke as wide and as
                 // translucent as a marker
-                if (args->borderWidth >= 0) {
-                    pdf_set_annot_border_width(ctx, annot, (float)args->borderWidth);
-                }
                 if (args->opacity < 100) {
                     pdf_set_annot_opacity(ctx, annot, (float)args->opacity / 100.0f);
                 }
