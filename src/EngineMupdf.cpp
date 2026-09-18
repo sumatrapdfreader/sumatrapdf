@@ -7208,30 +7208,6 @@ static void MarkTransparentBackdropPixmap(Pixmap* pixmap, bool transparentBackdr
     }
 }
 
-// Grayscale (FixedPageUI.Grayscale) of an RGB pixmap rendered to fz_device_rgb().
-// Alpha, if present, is left untouched.
-static bool GrayscaleFzPixmap(fz_pixmap* pix) {
-    if (!pix || !pix->samples || pix->s != 0) {
-        return false;
-    }
-    int colorComponents = (int)pix->n - (int)pix->alpha;
-    if (colorComponents != 3) {
-        return false;
-    }
-
-    for (int y = 0; y < pix->h; y++) {
-        u8* p = pix->samples + ((ptrdiff_t)y * pix->stride);
-        for (int x = 0; x < pix->w; x++, p += pix->n) {
-            // Rec.709 luminance: 0.2126 R + 0.7152 G + 0.0722 B
-            u8 gray = (u8)((54 * (u32)p[0] + 183 * (u32)p[1] + 19 * (u32)p[2] + 128) >> 8);
-            p[0] = gray;
-            p[1] = gray;
-            p[2] = gray;
-        }
-    }
-    return true;
-}
-
 // An aborted run stops between a clip push and its pop, so the draw device's
 // stack is unbalanced and fz_close_device throws. The pixmap is discarded
 // anyway; skip closing so nothing is reported.
@@ -7280,8 +7256,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
 
     // The "View" rendering (no Print, no hideAnnotations) is what
     // fz_new_display_list_from_page produces; safe to cache and re-run lock-free.
-    // Grayscale PDF pages run contents and annotations separately (see below).
-    bool useCache = (args.target == RenderTarget::View) && !hideAnnotations && !(args.grayscale && pdfdoc);
+    bool useCache = (args.target == RenderTarget::View) && !hideAnnotations;
 
     fz_rect pRect;
     fz_matrix ctm;
@@ -7389,85 +7364,6 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
 
     pdf_page* pdfpage = nullptr;
     fz_var(pdfpage);
-
-    // Grayscale: run the page contents, turn them gray, then run annotations
-    // and widgets on top so they keep their colors. Annotations are run
-    // directly (not from the cached display list), so hold docLock like the
-    // display list build does: an annotation edit frees what we'd be reading.
-    if (pdfdoc && args.grayscale) {
-        ScopedRecursiveMutex docScope(&docLock);
-
-        // Smart Dark analysis needs the full page display list
-        bool objectLevelDark = !hideAnnotations && args.darkProfile && DarkModeProfileUsesObjectLevel(args.darkProfile);
-        fz_display_list* darkList = objectLevelDark ? GetOrBuildPageDisplayList(pageInfo, ctx) : nullptr;
-
-        fz_try(ctx) {
-            pdfpage = pdf_page_from_fz_page(ctx, page);
-            DarkModePageAnalysis* darkAnalysis = nullptr;
-            if (darkList) {
-                darkAnalysis =
-                    PdfDarkModeGetOrBuildAnalysis(ctx, pageInfo, darkList, args.darkProfile->hash, darkModeEngineCache);
-            }
-            // shared by both passes: Smart Dark image indexing continues into annotations
-            DarkModeReplayState replayState{};
-            auto newDevice = [&]() {
-                dev = fz_new_draw_device(ctx, ctm, pix);
-                if (disableAntiAlias) {
-                    fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
-                }
-                if (darkAnalysis) {
-                    dev = PdfDarkModeWrapDevice(ctx, dev, darkAnalysis, &args.darkProfile->palette, &replayState,
-                                                darkModeEngineCache, args.darkProfile->hash,
-                                                args.darkProfile->debugOverlay);
-                }
-                if (CadEnhanceActive()) {
-                    dev = PdfCadEnhanceWrapDevice(ctx, dev);
-                }
-            };
-
-            pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            ClearRenderedPagePixmap(ctx, pix, args, darkList != nullptr);
-
-            // pass 1: page contents
-            newDevice();
-            pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
-            if (!RenderAborted(fzcookie)) {
-                fz_close_device(ctx, dev);
-                fz_drop_device(ctx, dev);
-                dev = nullptr;
-                if (CadEnhanceActive() && cadRasterDominant) {
-                    PdfCadEnhancePixmap(ctx, pix, zoom, true);
-                }
-                args.grayscaleApplied = GrayscaleFzPixmap(pix);
-
-                // pass 2: annotations and widgets, in color
-                newDevice();
-                if (!hideAnnotations) {
-                    pdf_run_page_annots_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
-                }
-                pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
-            }
-            if (!RenderAborted(fzcookie)) {
-                fz_close_device(ctx, dev);
-                pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
-                MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
-            }
-        }
-        fz_always(ctx) {
-            if (dev) {
-                fz_drop_device(ctx, dev);
-            }
-            fz_drop_pixmap(ctx, pix);
-            fz_drop_display_list(ctx, darkList);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-            FreePixmap(pixmap);
-            return {};
-        }
-        return pixmap;
-    }
-
     if (pdfdoc) {
         fz_try(ctx) {
             pdfpage = pdf_page_from_fz_page(ctx, page);

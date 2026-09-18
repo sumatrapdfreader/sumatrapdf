@@ -445,7 +445,7 @@ const fixedPageUI: Field[] = [
     "Grayscale",
     Bool,
     false,
-    "if true, render document pages in grayscale (annotations keep their colors). Toggle with Shift + B (CmdToggleGrayscale)",
+    "if true, render document pages in grayscale. Toggle with CmdToggleGrayscale",
   ).ver("3.7"),
   field("TextColor", Color, rgb(0x00, 0x00, 0x00), "color used instead of black for the document's text"),
   field(

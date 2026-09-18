@@ -1253,7 +1253,6 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         EngineBase* engine = req.dm->GetEngine();
 
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
-        args.grayscale = req.grayscale;
         if (req.loc.IsValid()) {
             args.loc = req.loc;
         }
@@ -1286,9 +1285,8 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         req.errorCode = bmp ? 0 : 1;
 
         if (bmp) {
-            // before recoloring: same order as EngineMupdf, which grays page
-            // contents while rendering
-            if (req.grayscale && !args.grayscaleApplied) {
+            // before recoloring, so theme colors still apply
+            if (req.grayscale) {
                 bmp = GrayscalePagePixmap(bmp);
                 req.bmp = bmp;
             }
@@ -1454,8 +1452,6 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
 
         RenderPageArgs args(pageNo, zoom, rotation, &area);
-        bool grayscale = AtomicBoolGet(&grayscalePageColors);
-        args.grayscale = grayscale;
         if (pi->loc.IsValid()) {
             args.loc = pi->loc;
         }
@@ -1463,7 +1459,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         args.transparentBackdrop = ShowTransparencyGrid();
         Pixmap* bmp = dm->GetEngine()->RenderPage(args);
 
-        if (grayscale && !args.grayscaleApplied) {
+        if (AtomicBoolGet(&grayscalePageColors)) {
             bmp = GrayscalePagePixmap(bmp);
         }
 

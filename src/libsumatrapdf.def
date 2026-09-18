@@ -108,8 +108,6 @@ EXPORTS
 
 	pdf_run_page_contents_with_usage
 
-	pdf_run_page_annots_with_usage
-
 	pdf_new_vectorize_filter
 
 	fz_stext_page_block_iterator_begin
