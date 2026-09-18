@@ -16,7 +16,7 @@ To write new regression test:
 */
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/WinDynCalls.h"
 #include "base/Archive.h"
 #include "base/DbgHelpDyn.h"

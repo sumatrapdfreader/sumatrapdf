@@ -20,7 +20,7 @@ void ChapterTable::RebuildLocked() {
 // lookups through the table even for a single-chapter document
 void ChapterTable::Init(int nChapters) {
     int n = nChapters < 1 ? 1 : nChapters;
-    ScopedMutex scope(&mutex);
+    AutoUnlockMutex scope(&mutex);
     VecResize(pageCounts, n);
     VecResize(laidOut, n);
     for (int i = 0; i < n; i++) {
@@ -32,7 +32,7 @@ void ChapterTable::Init(int nChapters) {
 }
 
 void ChapterTable::SetPageCount(int chapter, int n) {
-    ScopedMutex scope(&mutex);
+    AutoUnlockMutex scope(&mutex);
     if (chapter < 1 || chapter > len(pageCounts)) {
         ReportIf(true);
         return;
@@ -52,18 +52,18 @@ void ChapterTable::SetPageCount(int chapter, int n) {
 }
 
 int ChapterTable::ChapterCount() {
-    ScopedMutex scope(&mutex);
+    AutoUnlockMutex scope(&mutex);
     return len(pageCounts);
 }
 
 int ChapterTable::TotalPages() {
-    ScopedMutex scope(&mutex);
+    AutoUnlockMutex scope(&mutex);
     int n = len(cumPages);
     return n == 0 ? 0 : cumPages[n - 1];
 }
 
 int ChapterTable::PageCount(int chapter) {
-    ScopedMutex scope(&mutex);
+    AutoUnlockMutex scope(&mutex);
     if (chapter < 1 || chapter > len(pageCounts)) {
         ReportIf(true);
         return 0;
@@ -72,7 +72,7 @@ int ChapterTable::PageCount(int chapter) {
 }
 
 bool ChapterTable::IsLaidOut(int chapter) {
-    ScopedMutex scope(&mutex);
+    AutoUnlockMutex scope(&mutex);
     if (chapter < 1 || chapter > len(laidOut)) {
         ReportIf(true);
         return false;
@@ -81,7 +81,7 @@ bool ChapterTable::IsLaidOut(int chapter) {
 }
 
 Location ChapterTable::LocationFromPageNo(int pageNo) {
-    ScopedMutex scope(&mutex);
+    AutoUnlockMutex scope(&mutex);
     int n = len(cumPages);
     if (pageNo < 1 || n == 0 || pageNo > cumPages[n - 1]) {
         return kInvalidLocation;
@@ -101,7 +101,7 @@ Location ChapterTable::LocationFromPageNo(int pageNo) {
 }
 
 int ChapterTable::PageNoFromLocation(Location loc) {
-    ScopedMutex scope(&mutex);
+    AutoUnlockMutex scope(&mutex);
     int chapter = loc.chapter;
     if (chapter < 1 || chapter > len(pageCounts)) {
         return 0;
@@ -124,7 +124,7 @@ int ChapterTable::Generation() {
 }
 
 void ChapterTable::Reset() {
-    ScopedMutex scope(&mutex);
+    AutoUnlockMutex scope(&mutex);
     int n = len(pageCounts);
     for (int i = 0; i < n; i++) {
         pageCounts[i] = 1;

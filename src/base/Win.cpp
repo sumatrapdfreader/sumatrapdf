@@ -6,7 +6,7 @@
 #include "base/BitManip.h"
 #include "base/File.h"
 #include "base/WinDynCalls.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 
 #include <aclapi.h>
 #include <bitset>
@@ -1339,7 +1339,7 @@ TempStr ResolveLnkTemp(Str path) {
 
 bool CreateShortcut(Str shortcutPath, Str exePath, Str args, Str description, int iconIndex) {
     TempWStr ws;
-    ScopedCom com;
+    AutoCoUninitialize com;
 
     AutoReleaseComPtr<IShellLink> lnk;
     if (!lnk.Create(CLSID_ShellLink)) {
@@ -3513,7 +3513,7 @@ void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi) {
         return;
     }
     {
-        ScopedSelectFont selectFont(dc, font);
+        AutoRestoreFont selectFont(dc, font);
         TEXTMETRICW tm{};
         if (GetTextMetricsW(dc, &tm)) {
             int itemH = tm.tmHeight + tm.tmExternalLeading + MulDiv(4, dpi, 96);
@@ -3653,7 +3653,7 @@ int HdcDrawText(HDC hdc, WStr s, const Rect& r, uint format, HFONT font) {
     if (len(s) == 0) {
         return 0;
     }
-    ScopedSelectFont f(hdc, font);
+    AutoRestoreFont f(hdc, font);
     RECT r2 = ToRECT(r);
     return DrawTextW(hdc, s.s, s.len, &r2, format);
 }
@@ -3676,7 +3676,7 @@ static Rect HdcMeasureWithDrawText(HDC hdc, WStr s, Rect r, uint format, HFONT f
     if (len(s) == 0) {
         return r;
     }
-    ScopedSelectFont f(hdc, font);
+    AutoRestoreFont f(hdc, font);
     RECT r2 = ToRECT(r);
     DrawTextW(hdc, s.s, s.len, &r2, format | DT_CALCRECT);
     return ToRect(r2);

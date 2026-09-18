@@ -171,11 +171,11 @@ class EngineDjvuDec : public EngineBase {
     bool Load(Str fileName);
     bool LoadFromData(Str data);
 
-    struct ScopedRenderSlot {
+    struct AutoReleaseRenderSlot {
         EngineDjvuDec* eng;
         bool acquired = false;
 
-        ScopedRenderSlot(EngineDjvuDec* e, const djvu_abort* ab) : eng(e) {
+        AutoReleaseRenderSlot(EngineDjvuDec* e, const djvu_abort* ab) : eng(e) {
             for (;;) {
                 eng->renderSlotsLock.Lock();
                 if (eng->activeRenders < kMaxConcurrentDjvuRenders) {
@@ -191,7 +191,7 @@ class EngineDjvuDec : public EngineBase {
                 SleepInMs(10);
             }
         }
-        ~ScopedRenderSlot() {
+        ~AutoReleaseRenderSlot() {
             if (!acquired) {
                 return;
             }
@@ -640,7 +640,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         *args.cookie_out = cookie;
         ab = &cookie->ab;
     }
-    ScopedRenderSlot renderSlot(this, ab);
+    AutoReleaseRenderSlot renderSlot(this, ab);
     if (!renderSlot.acquired || (ab && ab->requested)) {
         return nullptr;
     }
@@ -804,7 +804,7 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
     if (pi->gotElements) {
         return pi->allElements;
     }
-    ScopedMutex scope(&cacheLock);
+    AutoUnlockMutex scope(&cacheLock);
     if (pi->gotElements) {
         return pi->allElements;
     }
@@ -925,7 +925,7 @@ TocTree* EngineDjvuDec::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    ScopedMutex scope(&cacheLock);
+    AutoUnlockMutex scope(&cacheLock);
     if (tocTree) {
         return tocTree;
     }
@@ -952,7 +952,7 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
     // Reorder LRU under cacheLock. Size queries and drops re-enter djvuCacheLock
     // via the decoder callbacks — never hold djvuCacheLock here.
     {
-        ScopedMutex scope(&cacheLock);
+        AutoUnlockMutex scope(&cacheLock);
         for (int i = 0; i < len(pageCacheLru); i++) {
             if (pageCacheLru[i] == page0) {
                 VecRemoveAt(pageCacheLru, i);
@@ -967,7 +967,7 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
         int n = 0;
         int dropPage = -1;
         {
-            ScopedMutex scope(&cacheLock);
+            AutoUnlockMutex scope(&cacheLock);
             n = len(pageCacheLru);
             if (n <= 1) {
                 return;

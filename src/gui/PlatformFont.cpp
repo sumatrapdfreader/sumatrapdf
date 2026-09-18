@@ -5,7 +5,7 @@
 
 #if OS_WIN
 #include "base/GdiPlusUtil.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
 #endif
@@ -437,7 +437,7 @@ Size PlatformFontMeasureText(PlatformFont* font, Str s, int maxDx) {
 int PlatformFontLineHeight(PlatformFont* font) {
     HFONT hf = font ? font->GetHFont() : nullptr;
     AutoReleaseDC dc(nullptr);
-    ScopedSelectFont prev(dc, hf);
+    AutoRestoreFont prev(dc, hf);
     TEXTMETRICW tm{};
     GetTextMetricsW(dc, &tm);
     return (int)(tm.tmHeight + tm.tmExternalLeading);

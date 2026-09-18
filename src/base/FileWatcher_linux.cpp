@@ -76,7 +76,7 @@ static bool IsWatchedDirReferenced(WatchedDir* dir) {
 }
 
 static void NotifyChangedFile(int descriptor, Str name) {
-    ScopedMutex lock(&gWatcherMutex);
+    AutoUnlockMutex lock(&gWatcherMutex);
     WatchedDir* dir = FindWatchedDirByDescriptor(descriptor);
     if (!dir) {
         return;
@@ -170,13 +170,13 @@ static bool StartFileWatcher() {
 }
 
 void FileWatcherSetSkipPath(Str path) {
-    ScopedMutex lock(&gWatcherMutex);
+    AutoUnlockMutex lock(&gWatcherMutex);
     str::Free(gSkipPath);
     gSkipPath = str::Dup(path);
 }
 
 void FileWatcherInit(void) {
-    ScopedMutex lock(&gWatcherMutex);
+    AutoUnlockMutex lock(&gWatcherMutex);
     StartFileWatcher();
 }
 
@@ -185,7 +185,7 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool) 
         return nullptr;
     }
 
-    ScopedMutex lock(&gWatcherMutex);
+    AutoUnlockMutex lock(&gWatcherMutex);
     if (path::IsSame(gSkipPath, path) || !StartFileWatcher()) {
         return nullptr;
     }
@@ -220,7 +220,7 @@ void FileWatcherUnsubscribe(WatchedFile* file) {
     if (!file) {
         return;
     }
-    ScopedMutex lock(&gWatcherMutex);
+    AutoUnlockMutex lock(&gWatcherMutex);
     WatchedDir* dir = file->dir;
     bool removed = ListRemove(&gWatchedFiles, file);
     ReportIf(!removed);
@@ -236,14 +236,14 @@ void WatchedFileSetIgnore(WatchedFile* file, bool ignore) {
     if (!file) {
         return;
     }
-    ScopedMutex lock(&gWatcherMutex);
+    AutoUnlockMutex lock(&gWatcherMutex);
     file->ignore = ignore;
 }
 
 void FileWatcherWaitForShutdown(void) {
     pthread_t thread{};
     {
-        ScopedMutex lock(&gWatcherMutex);
+        AutoUnlockMutex lock(&gWatcherMutex);
         if (!gThreadRunning) {
             return;
         }
@@ -254,7 +254,7 @@ void FileWatcherWaitForShutdown(void) {
     }
     pthread_join(thread, nullptr);
 
-    ScopedMutex lock(&gWatcherMutex);
+    AutoUnlockMutex lock(&gWatcherMutex);
     while (gWatchedFiles) {
         WatchedFile* file = gWatchedFiles;
         gWatchedFiles = file->next;

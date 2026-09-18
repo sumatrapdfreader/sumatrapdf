@@ -165,12 +165,12 @@ static str::Builder gAIChatDbgLog;
 constexpr int kAIChatDbgMaxBytes = 256 * 1024;
 
 void AIChatDebugReset() {
-    ScopedMutex lk(&gAIChatDbgMu);
+    AutoUnlockMutex lk(&gAIChatDbgMu);
     gAIChatDbgLog.Reset();
 }
 
 TempStr AIChatDebugGetTemp() {
-    ScopedMutex lk(&gAIChatDbgMu);
+    AutoUnlockMutex lk(&gAIChatDbgMu);
     return str::DupTemp(ToStr(gAIChatDbgLog));
 }
 
@@ -190,7 +190,7 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
     }
 
     {
-        ScopedMutex lk(&gAIChatDbgMu);
+        AutoUnlockMutex lk(&gAIChatDbgMu);
         if (len(gAIChatDbgLog) > kAIChatDbgMaxBytes) {
             gAIChatDbgLog.Reset();
         }

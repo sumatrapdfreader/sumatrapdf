@@ -1138,7 +1138,7 @@
     <ClInclude Include="..\src\base\Log.h" />
     <ClInclude Include="..\src\base\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\base\Pixmap.h" />
-    <ClInclude Include="..\src\base\ScopedWin.h" />
+    <ClInclude Include="..\src\base\AutoWin.h" />
     <ClInclude Include="..\src\base\SettingsUtil.h" />
     <ClInclude Include="..\src\base\SquareTreeParser.h" />
     <ClInclude Include="..\src\base\StrQueue.h" />

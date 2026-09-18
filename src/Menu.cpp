@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/CmdLineArgs.h"
 #include "base/File.h"
 #include "base/BitManip.h"

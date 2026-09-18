@@ -5,7 +5,7 @@
 #include "base/File.h"
 #include "base/GdiPlusUtil.h"
 #include "base/Pixmap.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 

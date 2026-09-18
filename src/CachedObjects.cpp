@@ -67,7 +67,7 @@ void UnregisterCachedObject(uintptr_t id) {
     }
     bool removed = false;
     {
-        ScopedRecursiveMutex scope(&gCachedObjectsLock);
+        AutoUnlockRecursiveMutex scope(&gCachedObjectsLock);
         int idx = FindCachedObjectIdx(id);
         if (idx >= 0) {
             VecRemoveAtFast(gCachedObjects, idx);
@@ -91,7 +91,7 @@ void DidAllocateCachedObject(CachedObject* o) {
     }
 
     {
-        ScopedRecursiveMutex scope(&gCachedObjectsLock);
+        AutoUnlockRecursiveMutex scope(&gCachedObjectsLock);
         int idx = FindCachedObjectIdx(obj.id);
         if (idx >= 0) {
             gCachedObjects[idx] = obj;
@@ -133,7 +133,7 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
     for (int pass = 0; pass < nPasses && freed < wantBytes; pass++) {
         Vec<CachedObject> snap;
         {
-            ScopedRecursiveMutex scope(&gCachedObjectsLock);
+            AutoUnlockRecursiveMutex scope(&gCachedObjectsLock);
             snap = gCachedObjects;
         }
         for (int i = 0; i < len(snap) && freed < wantBytes; i++) {
@@ -194,7 +194,7 @@ static u64 BytesWeWantFreed(u64 newAllocationSize, bool aggressive) {
     u64 avail = ms.ullAvailPhys;
     u64 cached = 0;
     {
-        ScopedRecursiveMutex scope(&gCachedObjectsLock);
+        AutoUnlockRecursiveMutex scope(&gCachedObjectsLock);
         cached = CachedObjectsTotalSize();
     }
 
@@ -235,7 +235,7 @@ void FreeCachedObjectsForEngine(EngineBase* engine) {
 
     Vec<CachedObject> snap;
     {
-        ScopedRecursiveMutex scope(&gCachedObjectsLock);
+        AutoUnlockRecursiveMutex scope(&gCachedObjectsLock);
         snap = gCachedObjects;
     }
     WindowTab* currTab = CurrTab();
@@ -305,7 +305,7 @@ static TempStr CachedObjectFileTemp(const CachedObject* o) {
 void SerializeCachedObjects(str::Builder& s) {
     Vec<CachedObject> snap;
     {
-        ScopedRecursiveMutex scope(&gCachedObjectsLock);
+        AutoUnlockRecursiveMutex scope(&gCachedObjectsLock);
         snap = gCachedObjects;
     }
     VecSort(snap, CmpCachedSizeDesc);

@@ -9,7 +9,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -45,7 +45,7 @@ bool IsUnsignedSignatureWidget(Annotation* widget, TempStr* fieldNameOut) {
         return false;
     }
     fz_context* ctx = e->Ctx();
-    ScopedRecursiveMutex scope(&e->docLock);
+    AutoUnlockRecursiveMutex scope(&e->docLock);
     bool res = false;
     fz_try(ctx) {
         if (pdf_widget_type(ctx, a) == PDF_WIDGET_TYPE_SIGNATURE && !pdf_widget_is_signed(ctx, a)) {
@@ -73,7 +73,7 @@ void EngineMupdfGetUnsignedSignatureFields(EngineBase* engine, StrVec& names, Ve
         return;
     }
     fz_context* ctx = epdf->BaseCtx();
-    ScopedRecursiveMutex scope(&epdf->docLock);
+    AutoUnlockRecursiveMutex scope(&epdf->docLock);
 
     // finding the widgets means loading every page, which is O(pages). The
     // form's field tree says up front whether any signature field exists, so
@@ -170,13 +170,13 @@ static pdf_annot* FindUnsignedSignatureWidget(fz_context* ctx, pdf_document* doc
 // before the signature appearance existed) has to go. The annotation list is
 // left alone: the document is re-loaded right after saving.
 static void DropCachedPageRendering(EngineMupdf* e, int pageNo) {
-    ScopedRecursiveMutex scope(&e->pagesLock);
+    AutoUnlockRecursiveMutex scope(&e->pagesLock);
     FzPageInfo* pageInfo = e->PageInfoByPageNo(pageNo);
     if (!pageInfo) {
         return;
     }
     pageInfo->elementsNeedRebuilding = true;
-    ScopedMutex rl(&e->renderLock);
+    AutoUnlockMutex rl(&e->renderLock);
     if (pageInfo->displayList) {
         fz_drop_display_list(e->Ctx(), pageInfo->displayList);
         pageInfo->displayList = nullptr;
@@ -197,7 +197,7 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
     // signing changes a form field value, which can regenerate appearances and
     // run form JavaScript, so it must happen on the base context (see BaseCtx)
     fz_context* ctx = epdf->BaseCtx();
-    ScopedRecursiveMutex scope(&epdf->docLock);
+    AutoUnlockRecursiveMutex scope(&epdf->docLock);
 
     pdf_pkcs7_signer* signer = nullptr;
     pdf_annot* widget = nullptr;

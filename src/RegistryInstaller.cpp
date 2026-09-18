@@ -5,7 +5,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/DirScan.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 
 #include "SumatraConfig.h"
 #include "Version.h"

@@ -6,7 +6,7 @@
 // Capturing and the picker overlay live in ScreenshotCapture.cpp.
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/File.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"

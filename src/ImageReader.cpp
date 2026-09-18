@@ -15,7 +15,7 @@ extern "C" {
 
 #if OS_WIN
 #include "base/File.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/TgaReader.h"
 #include "base/Win.h"
 #include "base/GdiPlusUtil.h"
@@ -390,7 +390,7 @@ static Bitmap* WICFrameToBitmap(IWICImagingFactory* pFactory, IWICBitmapFrameDec
 }
 
 static Bitmap* WICDecodeImageFromStream(IStream* stream) {
-    ScopedCom com;
+    AutoCoUninitialize com;
 
 #define HR(hr) \
     if (FAILED(hr)) return nullptr;
@@ -539,7 +539,7 @@ static Vec<Pixmap*> PixmapsFromWicFrames(Str bmpData) {
     if (!stream) {
         return res;
     }
-    ScopedCom com;
+    AutoCoUninitialize com;
     AutoReleaseComPtr<IWICImagingFactory> pFactory;
     if (!pFactory.Create(CLSID_WICImagingFactory)) {
         return res;

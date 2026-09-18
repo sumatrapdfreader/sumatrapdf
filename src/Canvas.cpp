@@ -9,7 +9,7 @@
 #include "base/Timer.h"
 #include "base/UITask.h"
 #include "base/Win.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Http.h"
 #include "base/Pixmap.h"
 #include "base/GdiPlusUtil.h"
@@ -3063,8 +3063,8 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
 static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& /*pageRect*/, bool /*presentation*/, Color bgCol) {
     AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
     AutoDeleteBrush brush(CreateSolidBrush(bgCol));
-    ScopedSelectPen restorePen(hdc, pen);
-    ScopedSelectObject restoreBrush(hdc, brush);
+    AutoRestorePen restorePen(hdc, pen);
+    AutoRestoreGdiObject restoreBrush(hdc, brush);
     Rectangle(hdc, bounds.x, bounds.y, bounds.x + bounds.dx + 1, bounds.y + bounds.dy + 1);
 }
 #endif
@@ -3127,7 +3127,7 @@ static void DebugOutlinePageElements(DisplayModel* dm, HDC hdc, bool images) {
 
     // blue for links, green for images, so both can be on at once
     Color col = images ? MkRgb(0x00, 0xa0, 0x00) : kColBlue;
-    ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 1, col), true);
+    AutoRestoreGdiObject autoPen(hdc, CreatePen(PS_SOLID, 1, col), true);
 
     for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo* pi = dm->GetPageInfo(pageNo);
@@ -3511,7 +3511,7 @@ static void PaintPdfPageBoxes(DisplayModel* dm, HDC hdc) {
                 continue;
             }
             Color col = ColorForPdfPageBox(box.kind);
-            ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 1, col), true);
+            AutoRestoreGdiObject autoPen(hdc, CreatePen(PS_SOLID, 1, col), true);
             HdcDrawRect(hdc, rect);
 
             Str name = Str(PdfPageBoxName(box.kind));
@@ -3531,7 +3531,7 @@ static void DebugShowFitContentArea(DisplayModel* dm, HDC hdc) {
         return;
     }
     Rect viewPortRect(Point(), dm->GetViewPort().Size());
-    ScopedSelectObject autoPen(hdc, CreatePen(PS_SOLID, 2, kColRed), true);
+    AutoRestoreGdiObject autoPen(hdc, CreatePen(PS_SOLID, 2, kColRed), true);
 
     for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo* pi = dm->GetPageInfo(pageNo);

@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #if OS_WIN
 #include "base/File.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Win.h"
 
 // MinGW's winhttp.h redefines INTERNET_SCHEME as int after wininet.h (via Base.h)

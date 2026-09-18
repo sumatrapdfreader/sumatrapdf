@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/FileWatcher.h"
@@ -248,7 +248,7 @@ __unused static TempStr GetFileActionNameTemp(int actionId) {
 }
 
 static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytesTransfered, LPOVERLAPPED overlapped) {
-    ScopedMutex cs(&gFileWatcherMutex);
+    AutoUnlockMutex cs(&gFileWatcherMutex);
 
     OverlappedEx* over = (OverlappedEx*)overlapped;
     WatchedDir* wd = (WatchedDir*)over->data;
@@ -313,7 +313,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
 
 static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
     WatchedDir* wd = (WatchedDir*)arg;
-    ScopedMutex cs(&gFileWatcherMutex);
+    AutoUnlockMutex cs(&gFileWatcherMutex);
     wd->startApcQueued--;
     if (wd->stopped) {
         // removed while this was queued: the handle is closed, and this may be
@@ -363,7 +363,7 @@ static void StartMonitoringDirForChanges(WatchedDir* wd) {
 }
 
 static DWORD GetTimeoutInMs() {
-    ScopedMutex cs(&gFileWatcherMutex);
+    AutoUnlockMutex cs(&gFileWatcherMutex);
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->isManualCheck) {
             return kFileWatchDelayInMs;
@@ -393,7 +393,7 @@ static void RunManualChecks() {
     };
     Vec<ManualCheckItem> items;
     {
-        ScopedMutex cs(&gFileWatcherMutex);
+        AutoUnlockMutex cs(&gFileWatcherMutex);
         for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
             if (!wf->isManualCheck) {
                 continue;
@@ -414,7 +414,7 @@ static void RunManualChecks() {
         it.path = {};
     }
 
-    ScopedMutex cs(&gFileWatcherMutex);
+    AutoUnlockMutex cs(&gFileWatcherMutex);
     for (ManualCheckItem& it : items) {
         if (!it.changed) {
             continue;
@@ -481,7 +481,7 @@ static WatchedDir* FindExistingWatchedDir(Str dirPath) {
 
 static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg) {
     WatchedDir* wd = (WatchedDir*)arg;
-    ScopedMutex cs(&gFileWatcherMutex);
+    AutoUnlockMutex cs(&gFileWatcherMutex);
     // logf("StopMonitoringDirAPC() wd=0x%p\n", wd);
     wd->stopped = true;
 
@@ -604,7 +604,7 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool e
         return nullptr;
     }
 #endif
-    ScopedMutex cs(&gFileWatcherMutex);
+    AutoUnlockMutex cs(&gFileWatcherMutex);
     if (!gThreadHandle) {
         logf("FileWatcherSubscribe: starting a thread\n");
         AtomicBoolSet(&gShouldExit, false);
@@ -660,7 +660,7 @@ static bool LogPendingRemovals(Str when) {
     // hold the mutex while reading the count too: ReadDirectoryChangesNotification()
     // unlinks the dir and decrements under the same mutex, so an unlocked read of
     // gRemovalsPending can disagree with the list
-    ScopedMutex cs(&gFileWatcherMutex);
+    AutoUnlockMutex cs(&gFileWatcherMutex);
     int nPending = AtomicIntGet(&gRemovalsPending);
     if (nPending <= 0) {
         return false;
@@ -741,7 +741,7 @@ void FileWatcherUnsubscribe(WatchedFile* wf) {
     }
     ReportIf(!gThreadHandle);
 
-    ScopedMutex cs(&gFileWatcherMutex);
+    AutoUnlockMutex cs(&gFileWatcherMutex);
 
     RemoveWatchedFile(wf);
 }

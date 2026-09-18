@@ -228,7 +228,7 @@ PageRenderService::~PageRenderService() {
 
 void PageRenderService::NewGeneration() {
     auto* serviceData = ServiceData(this);
-    ScopedMutex lock(&serviceData->mutex);
+    AutoUnlockMutex lock(&serviceData->mutex);
     serviceData->generation++;
     VecReset(serviceData->requests);
     ClearCache(serviceData);
@@ -239,7 +239,7 @@ void PageRenderService::NewGeneration() {
 
 void PageRenderService::Request(PageRenderKey key, PageRenderPriority priority) {
     auto* serviceData = ServiceData(this);
-    ScopedMutex lock(&serviceData->mutex);
+    AutoUnlockMutex lock(&serviceData->mutex);
     if (serviceData->stopping || FindCached(serviceData, key) >= 0 ||
         (serviceData->hasActive && serviceData->activeKey == key)) {
         return;
@@ -255,7 +255,7 @@ void PageRenderService::Request(PageRenderKey key, PageRenderPriority priority) 
 
 Pixmap* PageRenderService::CopyPage(PageRenderKey key) {
     auto* serviceData = ServiceData(this);
-    ScopedMutex lock(&serviceData->mutex);
+    AutoUnlockMutex lock(&serviceData->mutex);
     int idx = FindCached(serviceData, key);
     if (idx < 0) {
         return nullptr;
@@ -267,7 +267,7 @@ Pixmap* PageRenderService::CopyPage(PageRenderKey key) {
 
 bool PageRenderService::DrawPage(Gfx* gfx, PageRenderKey key, const Rect& target) {
     auto* serviceData = ServiceData(this);
-    ScopedMutex lock(&serviceData->mutex);
+    AutoUnlockMutex lock(&serviceData->mutex);
     int idx = FindCached(serviceData, key);
     if (idx < 0) {
         return false;
@@ -280,6 +280,6 @@ bool PageRenderService::DrawPage(Gfx* gfx, PageRenderKey key, const Rect& target
 
 i64 PageRenderService::CacheBytes() const {
     auto* serviceData = ServiceData((PageRenderService*)this);
-    ScopedMutex lock(&serviceData->mutex);
+    AutoUnlockMutex lock(&serviceData->mutex);
     return serviceData->cacheBytes;
 }

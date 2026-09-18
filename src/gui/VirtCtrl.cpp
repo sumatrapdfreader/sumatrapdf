@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "gui/Dpi.h"
 #include "base/Pixmap.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Win.h"
 
 #include "gui/UIModels.h"

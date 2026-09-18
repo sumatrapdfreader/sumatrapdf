@@ -34,7 +34,7 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/File.h"
 #include "base/JsonParser.h"
 #include "base/Http.h"

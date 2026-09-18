@@ -25,7 +25,7 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -403,7 +403,7 @@ static void DrainQueue() {
 
     HDC hdc = GetDC(gHwndLog);
     {
-        ScopedSelectFont selectFont(hdc, gMonoFont->GetHFont());
+        AutoRestoreFont selectFont(hdc, gMonoFont->GetHFont());
         for (int i = 0; i < n; i++) {
             PendingLine& pl = local[i];
             IngestLine(hdc, pl.connNo, Str(pl.text));
@@ -662,7 +662,7 @@ static void PaintLog(HWND hwnd) {
     HBITMAP bmp = CreateCompatibleBitmap(hdcWin, clientW, clientH);
     HBITMAP oldBmp = (HBITMAP)SelectObject(hdc, bmp);
     {
-        ScopedSelectFont selectFont(hdc, gMonoFont->GetHFont());
+        AutoRestoreFont selectFont(hdc, gMonoFont->GetHFont());
 
         HBRUSH bgBrush = CreateSolidBrush(kColLogBg);
         FillRect(hdc, &client, bgBrush);
@@ -697,7 +697,7 @@ static void PaintLog(HWND hwnd) {
             SetTextColor(hdc, MkRgb(0x80, 0x80, 0x80));
             RECT rc = client;
             rc.top = clientH / 4;
-            ScopedSelectFont selectUiFont(hdc, gUiFont->GetHFont());
+            AutoRestoreFont selectUiFont(hdc, gUiFont->GetHFont());
             DrawTextW(hdc, msg, -1, &rc, DT_CENTER | DT_SINGLELINE);
         }
 
@@ -1226,7 +1226,7 @@ static void CreateFonts() {
     gMonoFont = GetPlatformFont(StrL("Consolas"), 10, PlatformFontStyle::Regular);
 
     {
-        ScopedSelectFont selectFont(hdc, gMonoFont->GetHFont());
+        AutoRestoreFont selectFont(hdc, gMonoFont->GetHFont());
         TEXTMETRICW tm{};
         GetTextMetricsW(hdc, &tm);
         gLineDy = tm.tmHeight + DpiScale(2);

@@ -499,7 +499,7 @@ function base_files()
     "LzmaSimpleArchive.*",
     "Pixmap.*",
     "RegistryPaths.*",
-    "ScopedWin.h",
+    "AutoWin.h",
     "SettingsUtil.*",
     "SquareTreeParser.*",
     "StrQueue.*",

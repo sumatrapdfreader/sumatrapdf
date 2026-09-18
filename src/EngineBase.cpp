@@ -685,19 +685,19 @@ Location EngineBase::ResolveDest(IPageDestination* dest) {
 
 // document errors (mupdf warnings/errors may arrive from render threads)
 void EngineBase::AppendError(Str msg) {
-    ScopedMutex scope(&errorsLock);
+    AutoUnlockMutex scope(&errorsLock);
     errors.Append(msg);
 }
 
 bool EngineBase::HasErrors() {
-    ScopedMutex scope(&errorsLock);
+    AutoUnlockMutex scope(&errorsLock);
     return len(errors) > 0;
 }
 
 // internal builder buffer (no copy); valid until next AppendError or engine
 // destruction — do not free or keep beyond the current frame
 TempStr EngineBase::GetErrorsTextTemp() {
-    ScopedMutex scope(&errorsLock);
+    AutoUnlockMutex scope(&errorsLock);
     return ToStr(errors);
 }
 
@@ -737,7 +737,7 @@ bool EngineBase::HasTextForPage(int pageNo) {
     if (!loc.IsValid()) {
         return false;
     }
-    ScopedMutex scope(&textCacheLock);
+    AutoUnlockMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Peek(loc.chapter);
     if (!ct || loc.page > len(ct->text)) {
         return false;
@@ -754,7 +754,7 @@ TextExtractionState EngineBase::GetTextExtractionState(int pageNo) {
     if (!loc.IsValid()) {
         return TextExtractionState::NotExtracted;
     }
-    ScopedMutex scope(&textCacheLock);
+    AutoUnlockMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Peek(loc.chapter);
     if (!ct || loc.page > len(ct->state)) {
         return TextExtractionState::NotExtracted;
@@ -774,7 +774,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     int count = ChapterPageCount(loc.chapter);
 
     {
-        ScopedMutex scope(&textCacheLock);
+        AutoUnlockMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
         if (!ct || loc.page > len(ct->text)) {
             return;
@@ -800,7 +800,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     }
 
     {
-        ScopedMutex scope(&textCacheLock);
+        AutoUnlockMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
         if (ct && loc.page <= len(ct->text) && len(ct->text[loc.page - 1].text) == 0) {
             ct->state[loc.page - 1] = TextExtractionState::NotExtracted;
@@ -879,7 +879,7 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, Qu
 
     bool extract = false;
     {
-        ScopedMutex scope(&textCacheLock);
+        AutoUnlockMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
         if (ct->state[loc.page - 1] != TextExtractionState::Finished) {
             extract = true;
@@ -902,7 +902,7 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, Qu
         }
         EnsurePageText(&extracted);
 
-        ScopedMutex scope(&textCacheLock);
+        AutoUnlockMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
         PageText* pt = &ct->text[loc.page - 1];
         if (ct->state[loc.page - 1] != TextExtractionState::Finished) {
@@ -914,7 +914,7 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, Qu
         FreePageText(&extracted);
     }
 
-    ScopedMutex scope(&textCacheLock);
+    AutoUnlockMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
     PageText* pt = &ct->text[loc.page - 1];
     ReturnCachedPageText(pt, lenOut, coordsOut, quadsOut);
@@ -952,7 +952,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF*
 
     bool extract = false;
     {
-        ScopedMutex scope(&textCacheLock);
+        AutoUnlockMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
         // Finished covers textless pages too (the page's text can stay empty). Pending
         // means a background thread was started by RequestTextExtraction but
@@ -967,7 +967,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF*
         PageText extracted = ExtractPageText(pageNo);
         EnsurePageText(&extracted);
 
-        ScopedMutex scope(&textCacheLock);
+        AutoUnlockMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
         PageText* pt = &ct->text[loc.page - 1];
         if (ct->state[loc.page - 1] != TextExtractionState::Finished) {
@@ -979,7 +979,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF*
         FreePageText(&extracted);
     }
 
-    ScopedMutex scope(&textCacheLock);
+    AutoUnlockMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
     PageText* pt = &ct->text[loc.page - 1];
     return ReturnCachedPageText(pt, lenOut, coordsOut, quadsOut);
@@ -993,7 +993,7 @@ void EngineBase::InvalidateTextForPage(int pageNo) {
     if (!loc.IsValid()) {
         return;
     }
-    ScopedMutex scope(&textCacheLock);
+    AutoUnlockMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Peek(loc.chapter);
     if (!ct || loc.page > len(ct->text)) {
         return;

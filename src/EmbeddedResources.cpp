@@ -91,7 +91,7 @@ static EmbeddedFont* gFonts = nullptr;
 // the pointer. Misses are remembered too, as the table names fonts we don't pack.
 static const u8* LoadEmbeddedFont(const char* fileName, int* size) {
     Str name(fileName);
-    ScopedMutex lock(&gFontsMutex);
+    AutoUnlockMutex lock(&gFontsMutex);
     for (EmbeddedFont* f = gFonts; f; f = f->next) {
         if (str::Eq(f->name, name)) {
             *size = f->size;

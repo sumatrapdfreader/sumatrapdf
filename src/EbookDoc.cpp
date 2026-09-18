@@ -667,7 +667,7 @@ Str EpubDoc::GetHtmlData() const {
 }
 
 Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
-    ScopedMutex scope(&zipAccess);
+    AutoUnlockMutex scope(&zipAccess);
 
     if (len(pagePath) == 0) {
         ReportIf(true);
@@ -740,7 +740,7 @@ Str EpubDoc::GetFileData(Str relPath, Str pagePath) {
         return {};
     }
 
-    ScopedMutex scope(&zipAccess);
+    AutoUnlockMutex scope(&zipAccess);
 
     TempStr url = NormalizeURLTemp(relPath, pagePath);
     auto* fi = archive->GetFileDataByName(url);
@@ -886,7 +886,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     }
     Str tocDataStr;
     {
-        ScopedMutex scope(&zipAccess);
+        AutoUnlockMutex scope(&zipAccess);
         auto* fi = archive->GetFileDataByName(tocPath);
         if (fi && fi->data) {
             tocDataStr = Str(fi->data, fi->fileSizeUncompressed);

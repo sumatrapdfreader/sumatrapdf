@@ -6,7 +6,7 @@
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/UITask.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 
 #include "gui/win/HtmlWindow.h"
 #include "gui/win/BrowserDocView.h"
@@ -218,7 +218,7 @@ MarkdownModel::MarkdownModel(DocControllerCallback* cb) : DocController(cb) {
 MarkdownModel::~MarkdownModel() {
     if (tocBuildTask) {
         // a build may still be running; tell it there's nobody to deliver to
-        ScopedMutex scope(&tocBuildTask->lock);
+        AutoUnlockMutex scope(&tocBuildTask->lock);
         tocBuildTask->model = nullptr;
         tocBuildTask = nullptr;
     }
@@ -862,7 +862,7 @@ void MarkdownModel::OnDocumentComplete(Str url) {
 }
 
 Str MarkdownModel::GetDataForUrl(Str url) {
-    ScopedMutex scope(&docAccess);
+    AutoUnlockMutex scope(&docAccess);
     TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
     MarkdownCacheEntry* e = FindDataForUrl(plainUrl);
     if (e) {
@@ -911,7 +911,7 @@ Str MarkdownModel::GetDataForUrl(Str url) {
 // it regenerates when re-selected)
 void MarkdownModel::UpdateTheme() {
     {
-        ScopedMutex scope(&docAccess);
+        AutoUnlockMutex scope(&docAccess);
         DeleteVecMembers(urlDataCache);
         VecReset(urlDataCache);
     }
@@ -1097,7 +1097,7 @@ static TocTree* BuildFullToc(Arena* arena, StrVec& pages, Str baseDir, bool isHt
 // result on the floor.
 static void MarkdownTocBuildFinished(MarkdownTocBuildTask* task) {
     AutoDelete<MarkdownTocBuildTask> delTask(task);
-    ScopedMutex scope(&task->lock);
+    AutoUnlockMutex scope(&task->lock);
     MarkdownModel* mm = task->model;
     // the task is deleted on every path, so the model must drop its pointer
     // even when the result is discarded, or ~MarkdownModel touches freed memory

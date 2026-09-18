@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/File.h"
 #include "base/UITask.h"
 #include "base/Win.h"
@@ -43,7 +43,7 @@ class AbortCookieManager {
     void Abort() {
         // don't call Clear() here: it re-locks cookieAccess, which is a
         // non-recursive SRWLOCK, so we'd self-deadlock. Do the clear inline.
-        ScopedMutex scope(&cookieAccess);
+        AutoUnlockMutex scope(&cookieAccess);
         if (cookie) {
             cookie->Abort();
             delete cookie;
@@ -52,7 +52,7 @@ class AbortCookieManager {
     }
 
     void Clear() {
-        ScopedMutex scope(&cookieAccess);
+        AutoUnlockMutex scope(&cookieAccess);
         if (cookie) {
             delete cookie;
             cookie = nullptr;

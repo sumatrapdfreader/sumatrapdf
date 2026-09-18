@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
 #include "base/Pixmap.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Win.h"
 
 // must be last due to assert() over-write
@@ -176,7 +176,7 @@ static void PixmapFromHICONAlphaTest() {
 }
 
 void WinUtilTest() {
-    ScopedCom comScope;
+    AutoCoUninitialize comScope;
 
     QuoteCmdLineArgTest();
     RecolorLinkAaTest();

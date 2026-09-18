@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 #include "base/Http.h"

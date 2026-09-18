@@ -101,7 +101,7 @@ static Mutex gCmarkInitLock;
 static bool gCmarkInitialized = false;
 
 static void EnsureCmarkPluginsRegistered() {
-    ScopedMutex scope(&gCmarkInitLock);
+    AutoUnlockMutex scope(&gCmarkInitLock);
     if (gCmarkInitialized) {
         return;
     }

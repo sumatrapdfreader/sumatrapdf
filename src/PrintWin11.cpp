@@ -5,7 +5,7 @@
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Pixmap.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 #include "gui/UIModels.h"
@@ -143,19 +143,19 @@ struct WinRtApi {
 static WinRtApi gWinRt;
 
 // an HSTRING that frees itself; the WinRT calls below need a lot of them
-struct ScopedHStr {
+struct AutoDeleteHStr {
     HSTRING h = nullptr;
 
-    ScopedHStr() = default;
-    explicit ScopedHStr(const WCHAR* s) {
+    AutoDeleteHStr() = default;
+    explicit AutoDeleteHStr(const WCHAR* s) {
         if (s) {
             gWinRt.windowsCreateString(s, (UINT32)wcslen(s), &h);
         }
     }
-    ScopedHStr(const ScopedHStr&) = delete;
-    ScopedHStr& operator=(const ScopedHStr&) = delete;
+    AutoDeleteHStr(const AutoDeleteHStr&) = delete;
+    AutoDeleteHStr& operator=(const AutoDeleteHStr&) = delete;
 
-    ~ScopedHStr() {
+    ~AutoDeleteHStr() {
         if (h) {
             gWinRt.windowsDeleteString(h);
         }
@@ -164,7 +164,7 @@ struct ScopedHStr {
 
 template <typename T>
 static HRESULT GetActivationFactory(const WCHAR* runtimeClass, ComPtr<T>& factory) {
-    ScopedHStr cls(runtimeClass);
+    AutoDeleteHStr cls(runtimeClass);
     if (!cls.h) {
         return E_OUTOFMEMORY;
     }
@@ -191,7 +191,7 @@ static HRESULT GetOptionValue(OptDetails::IPrintTaskOptionDetails* details, cons
     if (FAILED(hr)) {
         return hr;
     }
-    ScopedHStr key(optionId);
+    AutoDeleteHStr key(optionId);
     ComPtr<OptDetails::IPrintOptionDetails> option;
     hr = options->Lookup(key.h, &option);
     if (FAILED(hr)) {
@@ -221,7 +221,7 @@ static void SetOptionStr(OptDetails::IPrintOptionDetails* option, const WCHAR* v
     if (FAILED(GetActivationFactory(RuntimeClass_Windows_Foundation_PropertyValue, statics))) {
         return;
     }
-    ScopedHStr str(value);
+    AutoDeleteHStr str(value);
     ComPtr<IInspectable> boxed;
     if (SUCCEEDED(statics->CreateString(str.h, &boxed))) {
         SetOptionValue(option, boxed.Get());
@@ -711,7 +711,7 @@ class PrintDocumentSource final
     // a custom option changed: nothing re-paginates on its own, so ask for the
     // preview to be built again with the new value
     void InvalidatePreview() {
-        ScopedMutex lock(&mutex);
+        AutoUnlockMutex lock(&mutex);
         if (previewTarget) {
             previewTarget->InvalidatePreview();
         }
@@ -737,7 +737,7 @@ class PrintDocumentSource final
         if (!options || !previewTarget) {
             return E_INVALIDARG;
         }
-        ScopedMutex lock(&mutex);
+        AutoUnlockMutex lock(&mutex);
         ReadAdvancedOptions(options);
         ReadPageRanges(options);
         HRESULT hr = options->QueryInterface(IID_PPV_ARGS(&previewOptions));
@@ -755,7 +755,7 @@ class PrintDocumentSource final
         if (!previewTarget || width <= 0 || height <= 0) {
             return E_INVALIDARG;
         }
-        ScopedMutex lock(&mutex);
+        AutoUnlockMutex lock(&mutex);
         UINT32 jobPage = desiredJobPage == JOB_PAGE_APPLICATION_DEFINED ? FirstJobPage() : desiredJobPage;
         int pageNo = DocumentPage(jobPage);
         if (!pageNo || !previewOptions) {
@@ -798,7 +798,7 @@ class PrintDocumentSource final
         if (!options || !packageTarget) {
             return E_INVALIDARG;
         }
-        ScopedMutex lock(&mutex);
+        AutoUnlockMutex lock(&mutex);
         ReadAdvancedOptions(options);
         ReadPageRanges(options);
         ComPtr<Printing::IPrintTaskOptionsCore> optionCore;
@@ -908,8 +908,8 @@ class Win11PrintSession {
         hr = details.As(&details2);
         ComPtr<OptDetails::IPrintOptionDetails> centerOption;
         if (SUCCEEDED(hr)) {
-            ScopedHStr id(kOptCenterHorizontally);
-            ScopedHStr name(OptionLabelTemp(Tr("Center page hori&zontally on the paper")).s);
+            AutoDeleteHStr id(kOptCenterHorizontally);
+            AutoDeleteHStr name(OptionLabelTemp(Tr("Center page hori&zontally on the paper")).s);
             hr = details2->CreateToggleOption(id.h, name.h, &centerOption);
         }
         if (SUCCEEDED(hr)) {
@@ -918,17 +918,17 @@ class Win11PrintSession {
 
         ComPtr<OptDetails::IPrintOptionDetails> rotateOption;
         if (SUCCEEDED(hr)) {
-            ScopedHStr id(kOptExtraRotation);
-            ScopedHStr name(OptionLabelTemp(Tr("&Rotate printout:")).s);
+            AutoDeleteHStr id(kOptExtraRotation);
+            AutoDeleteHStr name(OptionLabelTemp(Tr("&Rotate printout:")).s);
             hr = details->CreateItemListOption(id.h, name.h, &rotateOption);
         }
         if (SUCCEEDED(hr)) {
             ComPtr<OptDetails::IPrintCustomItemListOptionDetails> items;
             hr = rotateOption.As(&items);
             for (int i = 0; SUCCEEDED(hr) && i < dimofi(kRotationItems); i++) {
-                ScopedHStr itemId(kRotationItems[i]);
+                AutoDeleteHStr itemId(kRotationItems[i]);
                 // "None", then the degrees, matching the Advanced page
-                ScopedHStr name(i == 0 ? ToWStrTemp(Tr("None")).s : ToWStrTemp(fmt("%d°", i * 90)).s);
+                AutoDeleteHStr name(i == 0 ? ToWStrTemp(Tr("None")).s : ToWStrTemp(fmt("%d°", i * 90)).s);
                 hr = items->AddItem(itemId.h, name.h);
             }
         }
@@ -995,9 +995,9 @@ class Win11PrintSession {
                 }
             }
         }
-        ScopedHStr center(kOptCenterHorizontally);
+        AutoDeleteHStr center(kOptCenterHorizontally);
         displayed->Append(center.h);
-        ScopedHStr rotate(kOptExtraRotation);
+        AutoDeleteHStr rotate(kOptExtraRotation);
         displayed->Append(rotate.h);
         return S_OK;
     }

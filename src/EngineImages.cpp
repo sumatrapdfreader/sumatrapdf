@@ -191,7 +191,7 @@ EngineImages::EngineImages() {
 fz_context* EngineImages::Ctx() {
     ThreadId tid = GetCurrentThreadId();
     {
-        ScopedMutex scope(&threadCtxsLock);
+        AutoUnlockMutex scope(&threadCtxsLock);
         for (auto& tc : threadCtxs) {
             if (tc.threadID == tid) {
                 return tc.ctx;
@@ -205,7 +205,7 @@ fz_context* EngineImages::Ctx() {
         return fz_ctx; // last-resort fallback; caller will serialize on the root
     }
     {
-        ScopedMutex scope(&threadCtxsLock);
+        AutoUnlockMutex scope(&threadCtxsLock);
         VecAppend(threadCtxs, {tid, newCtx});
     }
     return newCtx;
@@ -696,7 +696,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
     // mupdf), lazy-load/decode the Pixmap on demand for this rare path
     // (rotation, or mupdf decode/scale failure on a small image).
     if (!page->pixmap && !page->failedToLoad) {
-        ScopedMutex scope(&page->drawLock);
+        AutoUnlockMutex scope(&page->drawLock);
         if (!page->pixmap) {
             bool ownPixmap = true;
             page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
@@ -896,7 +896,7 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
     }
 
     if (!page->pixmap && !page->failedToLoad) {
-        ScopedMutex scope(&page->drawLock);
+        AutoUnlockMutex scope(&page->drawLock);
         if (!page->pixmap) {
             bool ownPixmap = true;
             page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
@@ -977,7 +977,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
     bool waitForLoad = false;
 
     {
-        ScopedRecursiveMutex scope(&cacheLock);
+        AutoUnlockRecursiveMutex scope(&cacheLock);
 
         for (int i = 0; i < len(pageCache); i++) {
             if (pageCache[i]->pageNo == pageNo) {
@@ -1027,7 +1027,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             pixmap = LoadPixmapForPage(pageNo, ownPixmap);
         }
         {
-            ScopedRecursiveMutex scope(&cacheLock);
+            AutoUnlockRecursiveMutex scope(&cacheLock);
             result->img = img;
             result->pixmap = pixmap;
             result->ownPixmap = ownPixmap;
@@ -1047,13 +1047,13 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             DidAllocateCachedObject(&o);
         }
         {
-            ScopedMutex scope(&result->loadLock);
+            AutoUnlockMutex scope(&result->loadLock);
             result->loading = false;
             result->loaded.WakeAll();
         }
     } else if (waitForLoad) {
         // Another thread is decoding this same page; wait for it to finish.
-        ScopedMutex scope(&result->loadLock);
+        AutoUnlockMutex scope(&result->loadLock);
         while (result->loading) {
             result->loaded.Wait(&result->loadLock);
         }
@@ -1073,7 +1073,7 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
     }
 
     {
-        ScopedRecursiveMutex scope(&cacheLock);
+        AutoUnlockRecursiveMutex scope(&cacheLock);
         // pageCache.Remove is a no-op if the page was already evicted earlier
         VecRemove(pageCache, page);
     }
@@ -1103,7 +1103,7 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget /*target*/) {
     };
 
     if (!page->pixmap && !page->failedToLoad) {
-        ScopedMutex scope(&page->drawLock);
+        AutoUnlockMutex scope(&page->drawLock);
         if (!page->pixmap) {
             bool ownPixmap = true;
             page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
@@ -1773,7 +1773,7 @@ Pixmap* EngineImage::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 Str EngineImage::GetImageData(int /*pageNo*/) {
-    ScopedRecursiveMutex scope(&cacheLock);
+    AutoUnlockRecursiveMutex scope(&cacheLock);
     auto* pi = pageInfos[0];
     if (len(pi->rawData) == 0) {
         Str path = FilePath();
@@ -2045,7 +2045,7 @@ Pixmap* EngineImageDir::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 Str EngineImageDir::GetImageData(int pageNo) {
-    ScopedRecursiveMutex scope(&cacheLock);
+    AutoUnlockRecursiveMutex scope(&cacheLock);
     auto* pi = pageInfos[pageNo - 1];
     if (len(pi->rawData) == 0) {
         Str path = pageFileNames[pageNo - 1];

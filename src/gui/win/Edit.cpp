@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include "base/BitManip.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Win.h"
 #include "base/UITask.h"
 #include "gui/Dpi.h"
@@ -194,7 +194,7 @@ void Edit::SetIdealWidthFromText(Str s, int extraPx) {
     HDC dc = GetDC(hwnd);
     Size sz;
     {
-        ScopedSelectFont selectFont(dc, GetHFont());
+        AutoRestoreFont selectFont(dc, GetHFont());
         // GetTextExtent, not HwndMeasureText: DT_EDITCONTROL underestimates digits
         sz = HdcGetTextExtentPoint32(dc, s);
     }

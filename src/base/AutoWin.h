@@ -127,19 +127,6 @@ struct AutoDeleteDC {
     }
 };
 
-struct AutoReleaseDC {
-    HWND hwnd = nullptr;
-    HDC hdc = nullptr;
-
-    explicit AutoReleaseDC(HWND hwnd) { hdc = GetWindowDC(hwnd); }
-    AutoReleaseDC() = default;
-
-    ~AutoReleaseDC() { ReleaseDC(hwnd, hdc); }
-    operator HDC() const { // NOLINT
-        return hdc;
-    }
-};
-
 template <typename T>
 class AutoDeleteGdiObj {
     T obj;
@@ -157,28 +144,28 @@ using AutoDeletePen = AutoDeleteGdiObj<HPEN>;
 using AutoDeleteBrush = AutoDeleteGdiObj<HBRUSH>;
 using AutoDeleteObject = AutoDeleteGdiObj<HGDIOBJ>;
 
-class ScopedGetDC {
+class AutoReleaseDC {
     HDC hdc = nullptr;
     HWND hwnd = nullptr;
 
   public:
-    explicit ScopedGetDC(HWND hwnd) {
+    explicit AutoReleaseDC(HWND hwnd) {
         this->hwnd = hwnd;
         this->hdc = GetDC(hwnd);
     }
-    ~ScopedGetDC() { ReleaseDC(hwnd, hdc); }
+    ~AutoReleaseDC() { ReleaseDC(hwnd, hdc); }
     operator HDC() const { // NOLINT
         return hdc;
     }
 };
 
-class ScopedSelectObject {
+class AutoRestoreGdiObject {
     HDC hdc = nullptr;
     HGDIOBJ obj = nullptr;
     HGDIOBJ prev = nullptr;
 
   public:
-    ScopedSelectObject(HDC hdc, HGDIOBJ obj, bool alsoDelete = false) {
+    AutoRestoreGdiObject(HDC hdc, HGDIOBJ obj, bool alsoDelete = false) {
         this->hdc = hdc;
         this->prev = SelectObject(hdc, obj);
         if (alsoDelete) {
@@ -186,7 +173,7 @@ class ScopedSelectObject {
         }
     }
 
-    ~ScopedSelectObject() {
+    ~AutoRestoreGdiObject() {
         SelectObject(hdc, prev);
         if (obj) {
             DeleteObject(obj);
@@ -194,43 +181,43 @@ class ScopedSelectObject {
     }
 };
 
-class ScopedSelectFont {
+class AutoRestoreFont {
     HDC hdc = nullptr;
     HGDIOBJ prev = nullptr;
 
   public:
     // font can be nullptr
-    explicit ScopedSelectFont(HDC hdc, HFONT font) {
+    explicit AutoRestoreFont(HDC hdc, HFONT font) {
         this->hdc = hdc;
         if (font) {
             prev = SelectObject(hdc, font);
         }
     }
 
-    ~ScopedSelectFont() {
+    ~AutoRestoreFont() {
         if (prev) {
             SelectObject(hdc, prev);
         }
     }
 };
 
-struct ScopedSelectPen {
+struct AutoRestorePen {
     HDC hdc = nullptr;
     HPEN prevPen = nullptr;
 
-    explicit ScopedSelectPen(HDC hdc, HPEN pen) : hdc(hdc) { this->prevPen = (HPEN)SelectObject(hdc, pen); }
+    explicit AutoRestorePen(HDC hdc, HPEN pen) : hdc(hdc) { this->prevPen = (HPEN)SelectObject(hdc, pen); }
 
-    ~ScopedSelectPen() { SelectObject(hdc, prevPen); }
+    ~AutoRestorePen() { SelectObject(hdc, prevPen); }
 };
 
-class ScopedSelectBrush {
+class AutoRestoreBrush {
     HDC hdc = nullptr;
     HBRUSH prevBrush = nullptr;
 
   public:
-    explicit ScopedSelectBrush(HDC hdc, HBRUSH pen) { prevBrush = (HBRUSH)SelectObject(hdc, pen); }
+    explicit AutoRestoreBrush(HDC hdc, HBRUSH brush) : hdc(hdc) { prevBrush = (HBRUSH)SelectObject(hdc, brush); }
 
-    ~ScopedSelectBrush() { SelectObject(hdc, prevBrush); }
+    ~AutoRestoreBrush() { SelectObject(hdc, prevBrush); }
 };
 // CoUninitialize() / OleUninitialize() must only be called when the matching
 // Initialize succeeded. On failure (RPC_E_CHANGED_MODE when the thread is
@@ -238,11 +225,11 @@ class ScopedSelectBrush {
 // we never incremented, tearing COM down for the whole thread while other code
 // still expects it. S_FALSE ("already initialized") is a success and does need
 // the matching Uninitialize, so test with SUCCEEDED, not == S_OK.
-class ScopedCom {
+class AutoCoUninitialize {
   public:
     HRESULT hr;
-    ScopedCom() { hr = CoInitialize(nullptr); }
-    ~ScopedCom() {
+    AutoCoUninitialize() { hr = CoInitialize(nullptr); }
+    ~AutoCoUninitialize() {
         if (SUCCEEDED(hr)) {
             CoUninitialize();
         }

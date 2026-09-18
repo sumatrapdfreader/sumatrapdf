@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include <zlib.h>
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Win.h"

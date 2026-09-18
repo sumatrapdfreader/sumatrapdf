@@ -1135,18 +1135,18 @@ struct RecursiveMutex {
 ThreadId GetCurrentThreadId();
 #endif
 
-struct ScopedMutex {
+struct AutoUnlockMutex {
     Mutex* mutex;
 
-    explicit ScopedMutex(Mutex* mutex) : mutex(mutex) { mutex->Lock(); }
-    ~ScopedMutex() { mutex->Unlock(); }
+    explicit AutoUnlockMutex(Mutex* mutex) : mutex(mutex) { mutex->Lock(); }
+    ~AutoUnlockMutex() { mutex->Unlock(); }
 };
 
-struct ScopedRecursiveMutex {
+struct AutoUnlockRecursiveMutex {
     RecursiveMutex* mutex;
 
-    explicit ScopedRecursiveMutex(RecursiveMutex* mutex) : mutex(mutex) { mutex->Lock(); }
-    ~ScopedRecursiveMutex() { mutex->Unlock(); }
+    explicit AutoUnlockRecursiveMutex(RecursiveMutex* mutex) : mutex(mutex) { mutex->Lock(); }
+    ~AutoUnlockRecursiveMutex() { mutex->Unlock(); }
 };
 
 void SetThreadName(Str threadName, ThreadId threadId = 0);

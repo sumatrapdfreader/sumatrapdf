@@ -13,7 +13,7 @@
 #include "base/Base.h"
 #include "base/DirScan.h"
 #include "base/File.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Timer.h"
 #include "base/Win.h"
 
@@ -630,7 +630,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    ScopedCom com;
+    AutoCoUninitialize com;
     AutoGdiPlusShutdown gdiplus;
     heic_init();
 

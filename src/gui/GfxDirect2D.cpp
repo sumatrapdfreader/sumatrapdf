@@ -21,7 +21,7 @@
 
 #if OS_WIN
 #include "base/Pixmap.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Win.h"
 
 // windows.h has DrawText as a macro and d2d1.h declares a DrawText method

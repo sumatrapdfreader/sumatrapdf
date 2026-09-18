@@ -4,7 +4,7 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "base/Base.h"
 
 #if OS_WIN
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Win.h"
 #include "base/WinDynCalls.h"
 

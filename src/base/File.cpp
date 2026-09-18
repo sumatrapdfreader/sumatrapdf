@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #if OS_WIN
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #endif
 
 #include "base/File.h"
@@ -858,7 +858,7 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
         const u64 now = GetTickCount64();
         bool needProbe = false;
         {
-            ScopedMutex lock(&gAttrsCacheMutex);
+            AutoUnlockMutex lock(&gAttrsCacheMutex);
             DriveAvailEntry* e = FindDriveAvailLocked(driveKey, now);
             if (e) {
                 if (!e->isAvailable) {
@@ -871,7 +871,7 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
         }
         if (needProbe) {
             bool avail = ProbeDriveRootAccessible(driveKey);
-            ScopedMutex lock(&gAttrsCacheMutex);
+            AutoUnlockMutex lock(&gAttrsCacheMutex);
             StoreDriveAvailLocked(driveKey, avail, GetTickCount64());
             if (!avail) {
                 return false;
@@ -884,7 +884,7 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
         bool ok = false;
         WIN32_FILE_ATTRIBUTE_DATA data{};
         {
-            ScopedMutex lock(&gAttrsCacheMutex);
+            AutoUnlockMutex lock(&gAttrsCacheMutex);
             if (LookupAttrsCache(path, now, &ok, &data)) {
                 // logf("path::GetCachedAttributesEx: network path='%s' ok=%d attrs=0x%x cache=hit\n", path, (int)ok,
                 //      data.dwFileAttributes);
@@ -904,11 +904,11 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
 
     if (ok) {
         if (hasDriveKey) {
-            ScopedMutex lock(&gAttrsCacheMutex);
+            AutoUnlockMutex lock(&gAttrsCacheMutex);
             StoreDriveAvailLocked(driveKey, true, GetTickCount64());
         }
         if (network) {
-            ScopedMutex lock(&gAttrsCacheMutex);
+            AutoUnlockMutex lock(&gAttrsCacheMutex);
             StoreAttrsCache(path, GetTickCount64(), true, data);
         }
         *out = data;
@@ -922,7 +922,7 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
         const u64 now = GetTickCount64();
         bool needProbe = false;
         {
-            ScopedMutex lock(&gAttrsCacheMutex);
+            AutoUnlockMutex lock(&gAttrsCacheMutex);
             DriveAvailEntry* e = FindDriveAvailLocked(driveKey, now);
             if (!e) {
                 needProbe = true;
@@ -930,7 +930,7 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
         }
         if (needProbe) {
             bool avail = ProbeDriveRootAccessible(driveKey);
-            ScopedMutex lock(&gAttrsCacheMutex);
+            AutoUnlockMutex lock(&gAttrsCacheMutex);
             StoreDriveAvailLocked(driveKey, avail, GetTickCount64());
         }
     }
@@ -938,7 +938,7 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
     if (network) {
         // logf("path::GetCachedAttributesEx: network path='%s' ok=%d attrs=0x%x cache=miss\n", path, (int)(ok != 0),
         //      data.dwFileAttributes);
-        ScopedMutex lock(&gAttrsCacheMutex);
+        AutoUnlockMutex lock(&gAttrsCacheMutex);
         StoreAttrsCache(path, GetTickCount64(), false, data);
     }
     return false;
@@ -1141,7 +1141,7 @@ static bool IsNetworkDriveLetter(char drive) {
     int idx = drive - 'A';
     u64 now = GetTickCount64();
     {
-        ScopedMutex lock(&gDriveIsNetMutex);
+        AutoUnlockMutex lock(&gDriveIsNetMutex);
         u64 tick = gDriveIsNetTick[idx];
         if (tick != 0 && (now - tick) <= kDriveIsNetCacheTtlMs) {
             return gDriveIsNet[idx];
@@ -1151,7 +1151,7 @@ static bool IsNetworkDriveLetter(char drive) {
     root[0] = (WCHAR)drive;
     // resolved locally from the mount point, unlike WNetGetConnection
     bool isNet = GetDriveTypeW(root) == DRIVE_REMOTE;
-    ScopedMutex lock(&gDriveIsNetMutex);
+    AutoUnlockMutex lock(&gDriveIsNetMutex);
     gDriveIsNetTick[idx] = now;
     gDriveIsNet[idx] = isNet;
     return isNet;
@@ -1281,14 +1281,14 @@ bool IsOnAvailableDrive(Str path) {
         Str key(keyBuf);
         const u64 now = GetTickCount64();
         {
-            ScopedMutex lock(&gAttrsCacheMutex);
+            AutoUnlockMutex lock(&gAttrsCacheMutex);
             DriveAvailEntry* e = FindDriveAvailLocked(key, now);
             if (e) {
                 return e->isAvailable;
             }
         }
         bool avail = ProbeDriveRootAccessible(key);
-        ScopedMutex lock(&gAttrsCacheMutex);
+        AutoUnlockMutex lock(&gAttrsCacheMutex);
         StoreDriveAvailLocked(key, avail, GetTickCount64());
         return avail;
     }

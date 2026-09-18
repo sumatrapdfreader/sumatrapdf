@@ -1062,7 +1062,7 @@ void DisplayModel::BuildPagesInfo() {
 
     PageInfo* oldInfo;
     {
-        ScopedMutex scope(&pagesInfoLock);
+        AutoUnlockMutex scope(&pagesInfoLock);
         oldInfo = pagesInfo;
         pagesInfo = newInfo;
         pageCount = newCount;
@@ -1114,7 +1114,7 @@ bool DisplayModel::PageVisibleNearby(int pageNo) const {
 // for RenderCache only: takes pagesInfoLock, so a concurrent
 // SyncWithEngineLayout() can't free pagesInfo underneath the render thread
 bool DisplayModel::PageVisibleNearbyLocked(int pageNo) const {
-    ScopedMutex scope(&pagesInfoLock);
+    AutoUnlockMutex scope(&pagesInfoLock);
     return PageVisibleNearby(pageNo);
 }
 

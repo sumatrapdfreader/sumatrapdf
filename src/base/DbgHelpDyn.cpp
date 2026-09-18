@@ -12,7 +12,7 @@
 #if OS_WIN
 #include "base/WinDynCalls.h"
 #include "base/File.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/DbgHelpDyn.h"
 
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules

@@ -4,7 +4,7 @@
 // code used in both Installer.cpp and Uninstaller.cpp
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/FrameTimeoutCalculator.h"

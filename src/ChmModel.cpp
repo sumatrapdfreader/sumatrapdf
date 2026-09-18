@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/Dict.h"
 #include "base/UITask.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/Win.h"
 
 #include "gui/win/HtmlWindow.h"
@@ -752,7 +752,7 @@ static Str ChmThemeApplyToData(Str raw) {
 }
 
 Str ChmModel::GetDataForUrl(Str url) {
-    ScopedMutex scope(&docAccess);
+    AutoUnlockMutex scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
@@ -773,7 +773,7 @@ Str ChmModel::GetDataForUrl(Str url) {
 // regenerates when re-selected)
 void ChmModel::UpdateTheme() {
     {
-        ScopedMutex scope(&docAccess);
+        AutoUnlockMutex scope(&docAccess);
         DeleteVecMembers(urlDataCache);
         VecReset(urlDataCache);
     }
@@ -990,7 +990,7 @@ void ChmThumbnailTask::StartCreateThumbnail(HtmlWindow* hw) {
 }
 
 Str ChmThumbnailTask::GetDataForUrl(Str url) {
-    ScopedMutex scope(&docAccess);
+    AutoUnlockMutex scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
     Str d = str::Dup(doc->GetDataTemp(plainUrl));
     VecAppend(data, d);

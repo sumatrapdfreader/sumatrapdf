@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/Archive.h"
 #include "base/Pixmap.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 #include "base/GdiPlusUtil.h"
 #include "base/Win.h"
 #include "gui/PlatformFont.h"
@@ -260,14 +260,14 @@ class PageRenderer {
 
     static DWORD WINAPI RenderThread(LPVOID data) {
         log(StrL("PageRenderer::RenderThread started\n"));
-        ScopedCom comScope; // because the engine reads data from a COM IStream
+        AutoCoUninitialize comScope; // because the engine reads data from a COM IStream
 
         PageRenderer* pr = (PageRenderer*)data;
         RenderPageArgs args(pr->reqPage, pr->reqZoom, 0, pr->reqUseClip ? &pr->reqPageRect : nullptr,
                             RenderTarget::View, &pr->abortCookie);
         Pixmap* bmp = pr->engine->RenderPage(args);
 
-        ScopedMutex scope(&pr->currAccess);
+        AutoUnlockMutex scope(&pr->currAccess);
 
         if (bmp && !pr->reqAbort) {
             FreePixmap(pr->currBmp);
@@ -313,7 +313,7 @@ void PageRenderer::Render(HDC hdc, const PreviewLayout& lo, int pageNo) {
         wantClip = wantClip.Intersect(pageRectPx);
     }
 
-    ScopedMutex scope(&currAccess);
+    AutoUnlockMutex scope(&currAccess);
 
     if (currBmp && ClipCovers(currPage, currZoom, currClip, pageNo, lo.zoom, visInPage)) {
         BlitCached(hdc, currBmp, currClip, visInPage, lo.onScreen);
