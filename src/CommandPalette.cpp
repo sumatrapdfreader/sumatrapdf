@@ -50,6 +50,7 @@
 #include "Annotation.h"
 #include "AnnotSearch.h"
 #include "AnnotEditToolbar.h"
+#include "AnnotPlacement.h"
 #include "CommandPalette.h"
 
 struct MainWindow;
@@ -217,8 +218,13 @@ static bool IsCmdInList(i32 cmdId, i32* ids) {
     return false;
 }
 
-// commands that act at the mouse position (annotation create, read aloud from cursor)
+// commands that act at the mouse position (annotation create, read aloud from cursor).
+// Placement-mode tools (ink, line, stamp, ...) start a mode; a point would skip
+// that and create at the remembered cursor, like the context menu.
 static bool CmdUsesCursorPos(i32 cmdId) {
+    if (CommandUsesPlacementMode(cmdId)) {
+        return false;
+    }
     if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
         return true;
     }

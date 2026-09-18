@@ -87,7 +87,7 @@ async function placementState(client: ControlClient): Promise<PlacementState> {
   };
 }
 
-async function waitForPlacement(client: ControlClient, active: boolean): Promise<PlacementState> {
+async function waitForPlacement(client: ControlClient, active: boolean, step: string): Promise<PlacementState> {
   const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
   let state: PlacementState;
   for (;;) {
@@ -96,7 +96,7 @@ async function waitForPlacement(client: ControlClient, active: boolean): Promise
       return state;
     }
     if (Date.now() > deadline) {
-      throw new Error(`ink-annotation-placement: active did not become ${active}\n${state.raw}`);
+      throw new Error(`ink-annotation-placement: ${step}: active did not become ${active}\n${state.raw}`);
     }
     await sleep(40);
   }
@@ -236,7 +236,7 @@ export async function testit(): Promise<void> {
       clickAt(toolbar, button.x + Math.floor(button.dx / 2), button.y + Math.floor(button.dy / 2));
 
     await clickInkToolbar();
-    let state = await waitForPlacement(client, true);
+    let state = await waitForPlacement(client, true, "toolbar");
     moveMouse(canvas, center);
     state = await placementState(client);
     if (
@@ -253,13 +253,13 @@ export async function testit(): Promise<void> {
     }
 
     await clickAt(canvas, outside.x, outside.y);
-    state = await waitForPlacement(client, false);
+    state = await waitForPlacement(client, false, "outside click");
     if (state.notification || state.annotations !== 0) {
       throw new Error(`ink-annotation-placement: outside first click did not cancel cleanly\n${state.raw}`);
     }
 
     await executeFromCommandPalette(client, frame);
-    state = await waitForPlacement(client, true);
+    state = await waitForPlacement(client, true, "palette");
     moveMouse(canvas, center);
     state = await placementState(client);
     if (!state.notification || !state.cursor || state.annotations !== 0) {
@@ -268,7 +268,7 @@ export async function testit(): Promise<void> {
 
     await client.setNotificationsEnabled(false);
     await drawStroke(canvas, stroke1);
-    state = await waitForPlacement(client, true);
+    state = await waitForPlacement(client, true, "first stroke");
     if (state.mouseDown || state.strokes !== 0 || state.annotations !== 1) {
       throw new Error(`ink-annotation-placement: first stroke did not commit on release\n${state.raw}`);
     }
@@ -280,26 +280,26 @@ export async function testit(): Promise<void> {
     }
 
     await pressEscape(frame);
-    state = await waitForPlacement(client, false);
+    state = await waitForPlacement(client, false, "esc after strokes");
     if (state.annotations !== 2) {
       throw new Error(`ink-annotation-placement: Esc dropped committed ink\n${state.raw}`);
     }
 
     await client.setNotificationsEnabled(true);
     sendCommand(frame, cmdId("CmdCreateAnnotInk"));
-    await waitForPlacement(client, true);
+    await waitForPlacement(client, true, "command");
     await pressEscape(frame);
-    state = await waitForPlacement(client, false);
+    state = await waitForPlacement(client, false, "esc empty tool");
     if (state.annotations !== 2) {
       throw new Error(`ink-annotation-placement: Esc on an empty tool created or deleted ink\n${state.raw}`);
     }
 
     sendCommand(frame, cmdId("CmdCreateAnnotInk"));
-    await waitForPlacement(client, true);
+    await waitForPlacement(client, true, "command before line");
     await client.setNotificationsEnabled(false);
     await drawStroke(canvas, stroke1);
     sendCommand(frame, cmdId("CmdCreateAnnotLine"));
-    state = await waitForPlacement(client, false);
+    state = await waitForPlacement(client, false, "switch to line");
     if (state.annotations !== 3 || !state.raw.includes("linePlacement active=1")) {
       throw new Error(`ink-annotation-placement: switching tools lost the last stroke\n${state.raw}`);
     }
