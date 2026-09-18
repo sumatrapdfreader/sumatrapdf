@@ -1091,62 +1091,6 @@ void UpdateDeltaPerLine() {
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
-// Windows snaps the dragged thumb back to where the drag started once the
-// cursor leaves an area around the scrollbar (#6206). Derive the track
-// position from the cursor instead, so it follows the cursor anywhere.
-struct ThumbDrag {
-    HWND hwnd = nullptr;
-    int bar = 0;
-    // cursor minus thumb start, along the bar, in screen pixels
-    int grabOffset = 0;
-};
-static ThumbDrag gThumbDrag;
-
-static int ThumbPosFromCursor(HWND hwnd, int bar, const SCROLLINFO& si, USHORT msg) {
-    bool isThumb = (msg == SB_THUMBTRACK || msg == SB_THUMBPOSITION);
-    if (!isThumb) {
-        gThumbDrag.hwnd = nullptr;
-        return si.nTrackPos;
-    }
-
-    bool isVert = (bar == SB_VERT);
-    SCROLLBARINFO sbi{};
-    sbi.cbSize = sizeof(sbi);
-    if (!GetScrollBarInfo(hwnd, isVert ? OBJID_VSCROLL : OBJID_HSCROLL, &sbi)) {
-        return si.nTrackPos;
-    }
-    RECT rc = sbi.rcScrollBar;
-    int barStart = isVert ? rc.top : rc.left;
-    int barLen = isVert ? (rc.bottom - rc.top) : (rc.right - rc.left);
-    int trackStart = barStart + sbi.dxyLineButton;
-    int trackLen = barLen - (2 * sbi.dxyLineButton);
-    int thumbLen = sbi.xyThumbBottom - sbi.xyThumbTop;
-    int scrollableTrack = trackLen - thumbLen;
-    int scrollableRange = si.nMax - si.nMin + 1 - (int)si.nPage;
-    if (scrollableTrack <= 0 || scrollableRange <= 0) {
-        return si.nTrackPos;
-    }
-
-    POINT pt;
-    GetCursorPos(&pt);
-    int cursor = isVert ? pt.y : pt.x;
-
-    bool isNewDrag = (gThumbDrag.hwnd != hwnd || gThumbDrag.bar != bar);
-    if (isNewDrag) {
-        // first track message: Windows' position is still valid, remember the grab point
-        int thumbStart = trackStart + MulDiv(si.nTrackPos - si.nMin, scrollableTrack, scrollableRange);
-        gThumbDrag = {hwnd, bar, cursor - thumbStart};
-        return si.nTrackPos;
-    }
-
-    int thumbOffset = limitValue(cursor - gThumbDrag.grabOffset - trackStart, 0, scrollableTrack);
-    int pos = si.nMin + MulDiv(thumbOffset, scrollableRange, scrollableTrack);
-    if (msg == SB_THUMBPOSITION) {
-        gThumbDrag.hwnd = nullptr;
-    }
-    return pos;
-}
-
 __unused static Str scrollMsgStr(USHORT msg) {
     switch (msg) {
         case SB_LINEDOWN:
@@ -1183,9 +1127,6 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     }
 
     USHORT msg = LOWORD(wp);
-    if (!useOverlay) {
-        si.nTrackPos = ThumbPosFromCursor(win->hwndCanvas, SB_VERT, si, msg);
-    }
     // for next-file-in-folder tip: scroll intent after handling the action
     bool scrollDown = (msg == SB_LINEDOWN || msg == SB_PAGEDOWN || msg == kSbHalfPageDown || msg == SB_BOTTOM);
     bool scrollUp = (msg == SB_LINEUP || msg == SB_PAGEUP || msg == kSbHalfPageUp || msg == SB_TOP);
@@ -1355,9 +1296,6 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
 
     int currPos = si.nPos;
     USHORT msg = LOWORD(wp);
-    if (!useOverlay) {
-        si.nTrackPos = ThumbPosFromCursor(win->hwndCanvas, SB_HORZ, si, msg);
-    }
     int lineAmount = DpiScale(ScrollLineAmount(gSettings->scrollLineAmount));
     switch (msg) {
         case SB_LEFT:
