@@ -286,6 +286,7 @@ import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-default
 import { testit as issue6137AdvSettings } from "./issue-6137-adv-settings.ts";
 import { testit as advSettingsHomeReload } from "./adv-settings-home-reload.ts";
 import { testit as tocTitleFallback } from "./toc-title-fallback.ts";
+import { testit as tocShowOnOpen } from "./toc-show-on-open.ts";
 import { testit as tocTreeSentClick } from "./toc-tree-sent-click.ts";
 import { testit as issue6132 } from "./issue-6132.ts";
 import { testit as issue6133 } from "./issue-6133.ts";
@@ -590,6 +591,7 @@ export const tests: NamedTest[] = [
   ["issue-6137-adv-settings", issue6137AdvSettings],
   ["adv-settings-home-reload", advSettingsHomeReload],
   ["toc-title-fallback", tocTitleFallback],
+  ["toc-show-on-open", tocShowOnOpen],
   ["issue-6132", issue6132],
   ["toolbar-tab-switch-pos", toolbarTabSwitchPos],
   ["issue-trim-margins", issueTrimMargins],

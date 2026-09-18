@@ -82,6 +82,17 @@ static const KbSectionDef kSections[] = {
     {"Annotations", kSecAnnot, 1},
 };
 
+static bool IsHelpListedCmd(int cmdId) {
+    for (const KbSectionDef& definition : kSections) {
+        for (const int* id = definition.commands; *id; id++) {
+            if (*id == cmdId) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // fallback shortcuts for platforms without an accelerator table (the Windows
 // data source looks up the real bindings instead). {id, ""} means "no default".
 // clang-format off
@@ -354,6 +365,64 @@ static ILayout* BuildKeyboardHelpLayout(KeyboardHelpDataSource* ds, Str title, S
         }
         section->AddChild(table);
         columns[definition.column]->AddChild(section);
+    }
+
+    // Shortcuts from advanced settings that are not already a rebinding of a
+    // command listed above (named entries, commands with args, unlisted cmds)
+    if (gSettings && gSettings->shortcuts) {
+        StrVec keys;
+        StrVec descriptions;
+        for (Shortcut* sc : *gSettings->shortcuts) {
+            if (!sc || str::IsEmptyOrWhiteSpace(sc->key) || sc->cmdId <= 0) {
+                continue;
+            }
+            CustomCommand* cmd = FindCustomCommand(sc->cmdId);
+            int orig = cmd ? cmd->origId : sc->cmdId;
+            bool extra = cmd && cmd->firstArg;
+            if (!extra && len(sc->name) == 0 && IsHelpListedCmd(orig)) {
+                continue;
+            }
+            TempStr k = ShortcutsForCmdTemp(sc->cmdId, 2);
+            if (len(k) == 0) {
+                k = str::DupTemp(sc->key);
+            }
+            TempStr d;
+            if (len(sc->name) > 0) {
+                d = str::DupTemp(sc->name);
+            } else {
+                d = ds->CommandDescriptionTemp(orig);
+                if (len(d) == 0) {
+                    d = str::DupTemp(sc->cmd);
+                }
+            }
+            if (len(k) == 0 || len(d) == 0) {
+                continue;
+            }
+            keys.Append(k);
+            descriptions.Append(d);
+        }
+        int nRows = len(keys);
+        if (nRows > 0) {
+            auto* section = new VBox();
+            section->gap = rowGap;
+            section->AddChild(new VirtText(ds->Translate(StrL("Custom")), fontHeader));
+            auto* table = new Table();
+            table->SetSize(nRows, 2);
+            table->colGap = keysDescriptionGap;
+            table->rowGap = rowGap;
+            for (int i = 0; i < nRows; i++) {
+                auto* caps = new VirtRichText();
+                caps->font = fontRow;
+                ParseTipInto(caps, fmt("(Kbd/%s)", keys.At(i)));
+                TableCell& keysCell = table->SetCell(i, 0, caps);
+                keysCell.alignH = CrossAxisAlign::CrossEnd;
+                keysCell.alignV = CrossAxisAlign::CrossCenter;
+                TableCell& descCell = table->SetCell(i, 1, new VirtText(descriptions.At(i), fontRow));
+                descCell.alignV = CrossAxisAlign::CrossCenter;
+            }
+            section->AddChild(table);
+            columns[0]->AddChild(section);
+        }
     }
 
     auto* header = new HBox();

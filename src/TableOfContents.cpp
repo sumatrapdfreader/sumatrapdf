@@ -1169,11 +1169,9 @@ void LoadTocTree(MainWindow* win) {
         return;
     }
 
-    if (win->tocLoaded) {
+    if (win->tocLoaded && win->tocTreeView && win->tocTreeView->treeModel) {
         return;
     }
-
-    win->tocLoaded = true;
 
     // clear filter when loading new toc
     // null out currToc first so that SetText("") callback doesn't use stale pointer
@@ -1184,12 +1182,13 @@ void LoadTocTree(MainWindow* win) {
         win->tocFilterEdit->SetText(StrL(""));
     }
 
-    auto* tocTree = tab->ctrl->GetToc();
-    if (!tocTree || !tocTree->root) {
+    auto* tocTree = tab->ctrl ? tab->ctrl->GetToc() : nullptr;
+    if (!tocTree || !tocTree->root || !tocTree->root->child) {
         return;
     }
 
     tab->currToc = tocTree;
+    win->tocLoaded = true;
 
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script
@@ -1205,12 +1204,26 @@ void LoadTocTree(MainWindow* win) {
     SetInitialExpandState(tocTree->root, tab->tocState);
     AutoExpandTopLevelItems(tocTree->root->child);
 
-    treeView->SetTreeModel(tocTree);
-
     treeView->onCustomDraw = MkFunc1Void(OnTocCustomDraw);
+    treeView->SetTreeModel(tocTree);
     LayoutTocContainer(win);
-    // uint fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
-    // RedrawWindow(hwnd, nullptr, nullptr, fl);
+}
+
+// TreeView items inserted while the sidebar is hidden or 0-sized stay blank
+// until the native control is rebuilt at a real size (resize used to unstick it).
+void RefreshTocTreeIfNeeded(MainWindow* win) {
+    if (!win || !win->tocLoaded || !win->tocTreeView) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->currToc || !tab->currToc->root) {
+        return;
+    }
+    Rect rc = HwndClientRect(win->hwndTocBox);
+    if (rc.IsEmpty() || !HwndIsVisible(win->hwndTocBox)) {
+        return;
+    }
+    win->tocTreeView->SetTreeModel(tab->currToc);
 }
 
 static TocItem* FindTocItemByTitleAndPage(TocItem* item, Str title, int pageNo) {
@@ -1652,10 +1665,13 @@ static void LayoutTocContainer(MainWindow* win) {
     if (rc.IsEmpty()) {
         return;
     }
-    if (win->tocLayout->lastBounds.dx == rc.dx && win->tocLayout->lastBounds.dy == rc.dy) {
-        return;
+    bool firstLayout = win->tocLayout->lastBounds.IsEmpty();
+    if (win->tocLayout->lastBounds.dx != rc.dx || win->tocLayout->lastBounds.dy != rc.dy) {
+        LayoutTreeToSize(win->hwndTocBox, win->tocLayout, {rc.dx, rc.dy}, &win->tocRoot);
     }
-    LayoutTreeToSize(win->hwndTocBox, win->tocLayout, {rc.dx, rc.dy}, &win->tocRoot);
+    if (firstLayout) {
+        RefreshTocTreeIfNeeded(win);
+    }
 }
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,

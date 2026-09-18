@@ -15,6 +15,8 @@ type BarState = {
   visible: boolean;
   hwnd: number;
   speed: { x: number; y: number; dx: number; dy: number };
+  speedLabel: { x: number; y: number; dx: number; dy: number };
+  speedLabelIdeal: number;
   speedIdx: number;
   speedCount: number;
   label: string;
@@ -36,6 +38,8 @@ async function barState(client: ControlClient): Promise<BarState | null> {
       visible: false,
       hwnd: 0,
       speed: { x: 0, y: 0, dx: 0, dy: 0 },
+      speedLabel: { x: 0, y: 0, dx: 0, dy: 0 },
+      speedLabelIdeal: 0,
       speedIdx: -1,
       speedCount: 0,
       label: "",
@@ -46,8 +50,10 @@ async function barState(client: ControlClient): Promise<BarState | null> {
   }
   const ok = /OK visible=1 resume=\d+ hwnd=(-?\d+)/.exec(out);
   const speed = /speed=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(out);
+  const speedLab = /speedLabel=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(out);
+  const ideal = /speedLabelIdeal=(-?\d+)/.exec(out);
   const idx = /speedIdx=(-?\d+) speedCount=(\d+) label=(\S+)/.exec(out);
-  if (!ok || !speed || !idx) {
+  if (!ok || !speed || !speedLab || !ideal || !idx) {
     throw new Error(`issue-6107: missing slider fields: ${out.trim()}`);
   }
   return {
@@ -56,6 +62,8 @@ async function barState(client: ControlClient): Promise<BarState | null> {
     visible: true,
     hwnd: +ok[1]!,
     speed: { x: +speed[1]!, y: +speed[2]!, dx: +speed[3]!, dy: +speed[4]! },
+    speedLabel: { x: +speedLab[1]!, y: +speedLab[2]!, dx: +speedLab[3]!, dy: +speedLab[4]! },
+    speedLabelIdeal: +ideal[1]!,
     speedIdx: +idx[1]!,
     speedCount: +idx[2]!,
     label: idx[3]!,
@@ -114,6 +122,11 @@ export async function testit(): Promise<void> {
     }
     if (!/^\d+(\.\d+)?x$/.test(st.label)) {
       throw new Error(`issue-6107: bad speed label '${st.label}'`);
+    }
+    if (st.speedLabel.dx + 1 < st.speedLabelIdeal) {
+      throw new Error(
+        `issue-6107: speed label bounds ${st.speedLabel.dx} narrower than text ${st.speedLabelIdeal} (paints over status)`,
+      );
     }
     sendCommand(frame, cmdId("CmdStopReadAloud"));
     console.log("issue-6107: OK");

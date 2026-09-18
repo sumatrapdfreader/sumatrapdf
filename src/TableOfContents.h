@@ -5,6 +5,7 @@ void CreateToc(MainWindow*);
 void ClearTocBox(MainWindow*);
 void ToggleTocBox(MainWindow*);
 void LoadTocTree(MainWindow*);
+void RefreshTocTreeIfNeeded(MainWindow*);
 // rebuild the tree view after the controller replaced its TocTree
 void ReloadTocTree(WindowTab*);
 void UpdateTocSelection(MainWindow*, int currPageNo);

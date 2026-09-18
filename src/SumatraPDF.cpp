@@ -3439,6 +3439,7 @@ void ShowMainWindow(MainWindow* win, int windowState) {
     // Hidden startup windows can miss the final titlebar/menu-bar geometry
     // until they become visible. Force one relayout before the first paint.
     RelayoutFrame(win);
+    RefreshTocTreeIfNeeded(win);
     UpdateWindow(win->hwndFrame);
     UpdateToolbarFindText(win);
     HwndEnsureOnScreen(win->hwndFrame);
@@ -7627,8 +7628,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         return false;
     }
     // only cache for default calls; non-default calls (sidebar dragging etc.)
-    // must not prevent a subsequent default call from running
-    if (updateToolbars && sidebarDx == -1) {
+    // must not prevent a subsequent default call from running. A hidden
+    // frame's layout must not skip the post-show RelayoutFrame (bookmarks
+    // TreeView items inserted while hidden stay blank until rebuilt).
+    if (updateToolbars && sidebarDx == -1 && HwndIsVisible(win->hwndFrame)) {
         win->uiState.layout = curState;
     } else {
         win->uiState.layout = {};
@@ -9931,7 +9934,9 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
 
     if (tocVisible) {
         LoadTocTree(win);
-        ReportIf(!win->tocLoaded);
+        if (!win->tocLoaded) {
+            tocVisible = false;
+        }
     }
 
     if (showFavorites) {

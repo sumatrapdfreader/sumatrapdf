@@ -3039,15 +3039,26 @@ static void SyncSpeedLabel(ReadAloudPlaybackBar* bar) {
     bar->speedLabel->SetText(ReadAloudSpeedLabelTemp(ReadAloudSpeedAt(idx)));
 }
 
+static void RelayoutVisiblePlaybackBars() {
+    for (MainWindow* win : gWindows) {
+        ReadAloudPlaybackBar* bar = win->readAloudPlaybackBar;
+        if (!bar || !bar->hwnd || !HwndIsVisible(bar->hwnd)) {
+            continue;
+        }
+        bar->UpdateLayout(true);
+        HwndInvalidate(bar->hwnd);
+    }
+}
+
 static void OnSpeedSliderDrag(ReadAloudPlaybackBar* bar) {
     SyncSpeedLabel(bar);
-    HwndInvalidate(bar->hwnd);
+    // "1x" vs "1.25x": the label's width changes, so relayout or it paints
+    // over the status text until the window is resized
+    bar->UpdateLayout(true);
 }
 
 static void OnSpeedSliderCommit(ReadAloudPlaybackBar* bar) {
     ReadAloudSetSpeedIdx(bar->speedSlider->value);
-    SyncSpeedLabel(bar);
-    HwndInvalidate(bar->hwnd);
 }
 
 static void OnSpeedSliderTooltip(ReadAloudPlaybackBar* bar, VirtTooltipEvent* ev) {
@@ -3364,8 +3375,12 @@ TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut) {
     out.Append(fmt("stop=%d,%d,%d,%d\n", stop.x, stop.y, stop.dx, stop.dy));
     out.Append(fmt("speed=%d,%d,%d,%d\n", speed.x, speed.y, speed.dx, speed.dy));
     out.Append(fmt("speedLabel=%d,%d,%d,%d\n", speedLab.x, speedLab.y, speedLab.dx, speedLab.dy));
+    int labelIdealDx = bar->speedLabel ? bar->speedLabel->GetIdealSize().dx : 0;
+    out.Append(fmt("speedLabelIdeal=%d\n", labelIdealDx));
     out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", idx, ReadAloudSpeedCount(),
                    ReadAloudSpeedLabelTemp(ReadAloudSpeedAt(idx))));
+    Rect statusRc = bar->status ? bar->status->bounds : Rect{};
+    out.Append(fmt("statusRect=%d,%d,%d,%d\n", statusRc.x, statusRc.y, statusRc.dx, statusRc.dy));
     out.Append(fmt("status=%s\n", bar->status ? bar->status->s : Str{}));
     return finish(0);
 }
@@ -3917,6 +3932,7 @@ static void ReadAloudSetSpeed(float speed) {
     gSettings->readAloudSpeed = TtsGetSpeed();
     dbgtts("SetSpeed: %s\n", ReadAloudSpeedLabelTemp(TtsGetSpeed()));
     ScheduleSaveSettings();
+    RelayoutVisiblePlaybackBars();
 
     // the WinRT backend applies the new speed only to newly synthesized
     // chunks, so re-speak from the current position
