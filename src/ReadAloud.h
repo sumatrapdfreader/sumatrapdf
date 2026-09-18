@@ -134,6 +134,7 @@ void ReadAloudInTab(WindowTab* tab);
 void ReadAloudContinueInTab(WindowTab* tab);
 void ReadAloudSelectionInTab(WindowTab* tab);
 void ReadAloudFromViewportTopInTab(WindowTab* tab);
+void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt);
 void ReadAloudStopRememberPos();
 void ResetReadAloudStateForTab(WindowTab* tab);
 void StopReadAloudIfSourceWindow(MainWindow* win);

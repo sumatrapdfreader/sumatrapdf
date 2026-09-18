@@ -4118,7 +4118,7 @@ static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, Str errMsg)
     ReadAloudStartText(tab, ToStr(cleaned), &map, 0, errMsg);
 }
 
-static void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
+void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
     if (!tab || !tab->win) {
         logf("tts: FromCursorInTab: null tab or window\n");
         return;

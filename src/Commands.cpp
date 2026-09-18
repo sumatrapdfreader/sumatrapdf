@@ -325,6 +325,7 @@ static SeqStrings gCommandNames =
     "CmdNone\0"
     "CmdFileHistory\0"
     "CmdFavorite\0"
+    "CmdReadAloudFromCursorPosition\0"
     "\0";
 
 static i32 gCommandIds[] = {
@@ -639,6 +640,7 @@ static i32 gCommandIds[] = {
     CmdNone,
     CmdFileHistory,
     CmdFavorite,
+    CmdReadAloudFromCursorPosition,
 };
 
 SeqStrings gCommandDescriptions =
@@ -953,6 +955,7 @@ SeqStrings gCommandDescriptions =
     "Do nothing\0"
     "Open Recent File\0"
     "Go to Favorite\0"
+    "Start Reading From Cursor Position\0"
     "\0";
 // clang-format on
 // @gen-end cmd-c

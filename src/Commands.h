@@ -320,8 +320,9 @@ enum {
     CmdNone = 513,
     CmdFileHistory = 514,
     CmdFavorite = 515,
+    CmdReadAloudFromCursorPosition = 516,
 
-    CmdLast = 515,
+    CmdLast = 516,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

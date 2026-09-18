@@ -887,7 +887,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     // No extractable text on comics, image folders, or single images.
     if (cmdId == CmdReadAloud || cmdId == CmdReadAloudFromTopPage || cmdId == CmdReadAloudSelection ||
-        cmdId == CmdPauseReadAloud || cmdId == CmdContinueReadAloud) {
+        cmdId == CmdReadAloudFromCursorPosition || cmdId == CmdPauseReadAloud || cmdId == CmdContinueReadAloud) {
         Kind k = ctx.engineKind;
         bool isImage =
             k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks || ctx.isImageCollection;

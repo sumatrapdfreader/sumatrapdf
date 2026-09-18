@@ -382,6 +382,7 @@ CmdContinueReadAloud,,Continue Reading,"Continue reading text aloud from where i
 CmdStopReadAloud,,Stop Reading,"Stop reading text aloud and clear the resume position. Always in the Read Aloud menu (disabled when nothing is being read) and in the command palette while a session is active, even when the playback bar is not visible, ver 3.7+"
 CmdReadAloudFromTopPage,,Start Reading From Top,"Read from the first visible text in the viewport through the end of the document, ver 3.7+"
 CmdReadAloudSelection,,Start Reading Selection,"Read the current text selection aloud, ver 3.7+"
+CmdReadAloudFromCursorPosition,,Start Reading From Cursor Position,"Read from the text under the mouse cursor through the end of the document, ver 3.7+"
 CmdToggleToolbarShowReadAloud,,Read Aloud: Show In Toolbar,"Show or hide the Read Aloud buttons in the toolbar; remembered in the `ToolbarShowReadAloud` setting, ver 3.7+"
 ```
 

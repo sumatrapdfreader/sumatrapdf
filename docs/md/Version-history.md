@@ -317,6 +317,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdStopReadAloud` : "Stop Reading"
 - `CmdReadAloudFromTopPage` : "Start Reading From Top"
 - `CmdReadAloudSelection` : "Start Reading Selection"
+- `CmdReadAloudFromCursorPosition` : "Start Reading From Cursor Position" — no default shortcut, bind your own (discussion #6213)
 - `CmdConvertImageToPdf` : "Convert Page To PDF" — image editor path for one page
 - `CmdConvertToPDF` : "Convert To PDF..." — comic / image folder / image → multi-page PDF (fixes #4118, #5532)
 - `CmdConvertPdfToImages` : "Convert PDF to Images..." — PDF pages → PNG / JPEG / BMP (fixes #5991)

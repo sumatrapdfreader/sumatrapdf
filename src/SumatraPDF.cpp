@@ -12258,6 +12258,19 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdReadAloudFromCursorPosition: {
+            if (!tab) {
+                break;
+            }
+            if (TtsIsSpeaking()) {
+                TtsStop();
+            }
+            // mouse position in canvas coordinates, same as the context menu uses
+            Point pt = HwndGetCursorPos(win->hwndCanvas);
+            ReadAloudFromCursorInTab(tab, pt);
+            break;
+        }
+
         case CmdInvokeInverseSearch: {
             InvokeInverseSearch(tab);
             break;
