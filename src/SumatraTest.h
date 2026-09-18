@@ -1,6 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+void EnsureTestSettings();
 TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line);
 TempStr InverseSearchResultTemp(Str pdfPath, int pageNo, int x, int y);
 TempStr SearchResultTemp(Str pdfPath, Str needle, Str password = Str());

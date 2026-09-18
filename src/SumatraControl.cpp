@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/ScopedWin.h"
 #include "base/UITask.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
@@ -1153,6 +1154,10 @@ static void AppendTestResult(ControlRequest* req, int exitCode, Str result) {
 }
 
 static void ExecuteControlRequest(ControlRequest* req) {
+    // test commands create engines, which need GDI+ and a few gSettings fields
+    AutoGdiPlusShutdown gdiPlus;
+    EnsureTestSettings();
+
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
             AppendArgString(req->results, StrL("pong"));

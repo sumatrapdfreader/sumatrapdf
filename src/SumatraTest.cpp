@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/ScopedWin.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
 #include "base/ByteReaderWriter.h"
@@ -46,7 +45,7 @@ extern "C" {
 // internal LZX test hook, defined in chm.c but not exposed in chm.h
 extern "C" int LZX_test_pretree_make_decode_table(void);
 
-static void EnsureTestSettings() {
+void EnsureTestSettings() {
     // engine creation reads a few fields off gSettings (e.g. disableAntiAlias)
     if (!gSettings) {
         gSettings = NewSettings({});
@@ -60,9 +59,6 @@ static void EnsureTestSettings() {
 // the synctex index (decompressing .synctex/.synctex.gz as needed) and runs a
 // SourceToDoc query, returning a machine-readable result line.
 TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
@@ -94,9 +90,6 @@ TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line) {
 // Synchronizer, and resolves (page, point) -> (srcfile, line, col) via
 // DocToSource, returning a machine-readable result line.
 TempStr InverseSearchResultTemp(Str pdfPath, int pageNo, int x, int y) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
@@ -147,9 +140,6 @@ class TestPasswordUI : public PasswordUI {
 };
 
 TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     TestPasswordUI pwdUI(password);
     EngineBase* engine = CreateEngineFromFile(pdfPath, password ? &pwdUI : nullptr, false);
@@ -175,9 +165,6 @@ TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
 // Headless search restricted to pages first..last (0 = unbounded). Reports
 // every match page in document order. Used by tests/issue-5694.ts.
 TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, Str spec, int* exitCodeOut) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     auto finish = [&](int code) -> TempStr {
         if (exitCodeOut) {
@@ -257,9 +244,6 @@ static TocItem* NthTocItemWithDest(TocItem* item, int target, int& counter) {
 // SumatraPDF units (1.0 == 100%); zoom=0 means "retain current zoom" (what /XYZ
 // ... 0 must map to). Used by tests/issue-5537.ts.
 TempStr DestResultTemp(Str pdfPath, int destNo) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
@@ -288,9 +272,6 @@ TempStr DestResultTemp(Str pdfPath, int destNo) {
 // (CleanRemoteDestNameInPlace + GetNamedDest), returning the resolved page.
 // Used by tests/issue-5642.ts.
 TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
@@ -315,9 +296,6 @@ TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
 // reads every entry, and optionally loads ChmFile / EngineChm.
 // Used by tests/issue-chm-lzx.ts; not meant for end users.
 TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     bool ok = true;
 
@@ -976,9 +954,6 @@ static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
 // the middle of <clickWord>, runs the same TextSelection steps as a double-click
 // followed by a triple-click (without the mouse-up trim), and checks the result.
 TempStr TripleClickLineSelectResultTemp(Str pdfPath, Str clickWord, Str expectedLine, int* exitCodeOut) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     if (str::IsEmptyOrWhiteSpace(pdfPath) || str::IsEmptyOrWhiteSpace(clickWord) ||
         str::IsEmptyOrWhiteSpace(expectedLine)) {
@@ -1492,9 +1467,6 @@ static void AppendTocItems(str::Builder& out, TocItem* item, int depth = 0) {
 // one line per TOC entry: "title|page=N", indented two spaces per nesting
 // level. Used by tests/issue-1201.ts and tests/issue-5317.ts.
 TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
     if (!engine) {
@@ -1523,9 +1495,6 @@ TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
 // Headless test for page link elements. Returns one line per link:
 // "kind=<kind> value=<value>". Used by tests/ad-hoc-md-links.ts.
 TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
     if (!engine) {
@@ -1580,9 +1549,6 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
 // Hover-tip strings for annotation comments on a page (issue #5329).
 // Newlines in a tip are reported as "|".
 TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
     if (!engine) {
@@ -1629,9 +1595,6 @@ TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut) {
 // on, so a test can tell what that enhancement did to the page's grays. Reports
 // the most common neutral grays as "gray=<value> count=<n>" (issue #5937).
 TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
         if (exitCodeOut) {
@@ -1706,9 +1669,6 @@ TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* e
 // edge pixels. clipKind=1 uses the slightly-off page rect that Copy Selection
 // produces after CvtFromScreen (issue #3434).
 TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int* exitCodeOut) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
         if (exitCodeOut) {
@@ -1782,9 +1742,6 @@ TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int*
 // pixels the render shows. The fixture image is solid red so a successful
 // stamp lights up a block of red.
 TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOut) {
-    AutoGdiPlusShutdown gdiPlus;
-    EnsureTestSettings();
-
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
         if (exitCodeOut) {
@@ -1891,8 +1848,6 @@ TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOut) {
 // red-ish / non-white pixels it has. Used to check that a WebP inside an
 // EPUB actually paints (issue #3415) instead of the IMAGE placeholder.
 TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo) {
-    EnsureTestSettings();
-
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
         if (exitCodeOut) {
@@ -2053,8 +2008,6 @@ static int CountNonWhitePixels(Pixmap* bmp) {
 // View vs Print non-white pixel counts. Print-only OCG content (PrintState ON,
 // off on screen) must still paint when rendering for print (issue #6101).
 TempStr PageRenderViewPrintResultTemp(Str path, int* exitCodeOut) {
-    EnsureTestSettings();
-
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
         if (exitCodeOut) {
@@ -2139,8 +2092,6 @@ TempStr ListSigningCertsResultTemp(int* exitCodeOut) {
 // copy of the source so the signature can be saved incrementally.
 TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword, Str imagePath,
                                int appearanceFlags, int* exitCodeOut) {
-    EnsureTestSettings();
-
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
         if (exitCodeOut) {
@@ -2264,7 +2215,6 @@ static u16 TiffPhotometric(Str tiff) {
 // JPEG must stay CMYK with Adobe invert so it is not a negative; TIFF must
 // stay CMYK (not RGB).
 TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCodeOut) {
-    EnsureTestSettings();
     str::Builder out;
     auto fail = [&](Str msg) -> TempStr {
         if (exitCodeOut) {
