@@ -315,7 +315,14 @@ void SerializeCachedObjects(str::Builder& s) {
         total += snap[i].size;
     }
 
-    s.Append(fmt("Cached objects: %d  (%s)  SaveMemory %d\n\n", len(snap), FormatCachedSizeTemp(total), gSaveMemory));
+    s.Append(fmt("Cached objects: %d  (%s)  SaveMemory %d", len(snap), FormatCachedSizeTemp(total), gSaveMemory));
+    MEMORYSTATUSEX ms{};
+    ms.dwLength = sizeof(ms);
+    if (GlobalMemoryStatusEx(&ms)) {
+        const double gb = 1024.0 * 1024.0 * 1024.0;
+        s.Append(fmt("  Free Mem: %.2f GB of %.1f GB", ms.ullAvailPhys / gb, ms.ullTotalPhys / gb));
+    }
+    s.Append(StrL("\n\n"));
     s.Append(fmt("%s %-8s %10s %5s %7s  %s\n", StrL(" "), StrL("kind"), StrL("size"), StrL("page"), StrL("zoom"),
                  StrL("file")));
 
