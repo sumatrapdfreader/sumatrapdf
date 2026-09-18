@@ -6,6 +6,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 - **Automatically Scroll** (`Ctrl + Shift + H`, View menu, command palette): hands-free continuous pan for reading, like Acrobat / Foxit. A bar at the bottom of the page shows the speed, Pause / Resume, Stop, Reverse, Focus (reading bar), and a short key list. Up/Down change speed, `0`–`9` set it (0 slowest, 9 fastest), minus reverses, Left/Right jump a page, Space pauses, Esc stops. Speed is remembered in `ReadingAutoScrollSpeed`. This is not middle-click auto-scroll (`CmdStartAutoScroll`), which still follows the cursor
 - **Reading Bar** (View menu, command palette): a horizontal band on the page to keep your place while reading, like Skim. Default is a translucent highlight; **Reading Bar Invert** dims the rest of the page (a screen mask). Drag the band to move it, drag the top or bottom edge to resize. Hover shows a close button. Ctrl+Up/Down move it, Ctrl+Shift+Up/Down change its height, Esc hides it (unless Automatically Scroll is on, in which case Esc stops scrolling first). Color, invert and height are in the `ReadingBar` settings. The bar is per tab and is not shown on Home (fixes #5771, discussion #3389)
+- `borderwidth` argument of `CmdCreateAnnot*` commands applies to line, polyline, polygon, square and circle, not only free text and ink (discussion #6208)
 - Right-clicking a toolbar button that has a drop-down (Zoom In / Zoom Out, Edit PDF Save, Read Aloud) opens that drop-down immediately if it is not already shown
 - **Copy Location To Clipboard** (`CmdCopyLocationToClipboard`, command palette) copies where you are reading as command-line arguments that re-open it: page, zoom, scroll position and file path (discussion #6163)
 - **Save Selection As Image** (`CmdSaveSelectionAsImage`): with a rectangular (Ctrl+drag) selection, export that area as PNG, JPEG or BMP at a chosen DPI, independent of the current zoom (fixes #6127)
@@ -316,6 +317,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdStopReadAloud` : "Stop Reading"
 - `CmdReadAloudFromTopPage` : "Start Reading From Top"
 - `CmdReadAloudSelection` : "Start Reading Selection"
+- `CmdReadAloudFromCursorPosition` : "Start Reading From Cursor Position" — no default shortcut, bind your own (discussion #6213)
 - `CmdConvertImageToPdf` : "Convert Page To PDF" — image editor path for one page
 - `CmdConvertToPDF` : "Convert To PDF..." — comic / image folder / image → multi-page PDF (fixes #4118, #5532)
 - `CmdConvertPdfToImages` : "Convert PDF to Images..." — PDF pages → PNG / JPEG / BMP (fixes #5991)

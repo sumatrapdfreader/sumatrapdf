@@ -322,10 +322,11 @@ static SeqStrings gCommandNames =
     "CmdAutomaticallyScrollSlower\0"
     "CmdToggleReadingBar\0"
     "CmdToggleReadingBarInvert\0"
-    "CmdToggleGrayscale\0"
     "CmdNone\0"
     "CmdFileHistory\0"
     "CmdFavorite\0"
+    "CmdReadAloudFromCursorPosition\0"
+    "CmdToggleGrayscale\0"
     "\0";
 
 static i32 gCommandIds[] = {
@@ -637,10 +638,11 @@ static i32 gCommandIds[] = {
     CmdAutomaticallyScrollSlower,
     CmdToggleReadingBar,
     CmdToggleReadingBarInvert,
-    CmdToggleGrayscale,
     CmdNone,
     CmdFileHistory,
     CmdFavorite,
+    CmdReadAloudFromCursorPosition,
+    CmdToggleGrayscale,
 };
 
 SeqStrings gCommandDescriptions =
@@ -952,10 +954,11 @@ SeqStrings gCommandDescriptions =
     "Automatically Scroll Slower\0"
     "Reading Bar\0"
     "Reading Bar Invert\0"
-    "Toggle Grayscale\0"
     "Do nothing\0"
     "Open Recent File\0"
     "Go to Favorite\0"
+    "Start Reading From Cursor Position\0"
+    "Toggle Grayscale\0"
     "\0";
 // clang-format on
 // @gen-end cmd-c

@@ -187,9 +187,11 @@ void RemoveTab(WindowTab* tab) {
     }
     UpdateTabFileDisplayStateForTab(tab);
     VecRemove(*win->tabSelectionHistory, tab);
+    // ask before removing: afterwards CurrentTab() follows the strip's new
+    // selection unless currentTabTemp happens to be set
+    bool closedCurrentTab = (tab == win->CurrentTab());
     WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
     ReportIf(tab != tab2);
-    bool closedCurrentTab = (tab == win->CurrentTab());
     if (closedCurrentTab) {
         win->ctrl = nullptr;
         win->currentTabTemp = nullptr;

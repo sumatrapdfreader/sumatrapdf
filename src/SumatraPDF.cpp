@@ -4872,10 +4872,19 @@ void LoadModelIntoTab(WindowTab* tab) {
         args.msg = fmt(Tr("Please wait - loading...").s);
         args.warning = true;
         ShowNotification(args);
+        // the tab bar already selected tab but win->ctrl is still the outgoing
+        // document; paint that document's tab so CurrentTab() matches win->ctrl
+        WindowTab* prevTabTemp = win->currentTabTemp;
+        win->currentTabTemp = FindTabByController(win->ctrl);
         // Use ShowMainWindow so SW_SHOW does not drop a pending maximize (#5529)
         ShowMainWindow(win, gSettings->windowState);
         // display the notification ASAP
         win->RedrawAll(true);
+        if (IsMainWindowValid(win)) {
+            // the pump may have closed prevTabTemp
+            bool prevAlive = !prevTabTemp || win->GetTabIdx(prevTabTemp) >= 0;
+            win->currentTabTemp = prevAlive ? prevTabTemp : nullptr;
+        }
     }
     // ShowWindow / RedrawAll can pump messages, potentially destroying win
     if (!IsMainWindowValidAndNotClosing(win)) {
@@ -12246,6 +12255,19 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 TtsStop();
             }
             ReadAloudSelectionInTab(tab);
+            break;
+        }
+
+        case CmdReadAloudFromCursorPosition: {
+            if (!tab) {
+                break;
+            }
+            if (TtsIsSpeaking()) {
+                TtsStop();
+            }
+            // mouse position in canvas coordinates, same as the context menu uses
+            Point pt = HwndGetCursorPos(win->hwndCanvas);
+            ReadAloudFromCursorInTab(tab, pt);
             break;
         }
 

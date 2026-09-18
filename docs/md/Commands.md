@@ -382,6 +382,7 @@ CmdContinueReadAloud,,Continue Reading,"Continue reading text aloud from where i
 CmdStopReadAloud,,Stop Reading,"Stop reading text aloud and clear the resume position. Always in the Read Aloud menu (disabled when nothing is being read) and in the command palette while a session is active, even when the playback bar is not visible, ver 3.7+"
 CmdReadAloudFromTopPage,,Start Reading From Top,"Read from the first visible text in the viewport through the end of the document, ver 3.7+"
 CmdReadAloudSelection,,Start Reading Selection,"Read the current text selection aloud, ver 3.7+"
+CmdReadAloudFromCursorPosition,,Start Reading From Cursor Position,"Read from the text under the mouse cursor through the end of the document, ver 3.7+"
 CmdToggleToolbarShowReadAloud,,Read Aloud: Show In Toolbar,"Show or hide the Read Aloud buttons in the toolbar; remembered in the `ToolbarShowReadAloud` setting, ver 3.7+"
 ```
 
@@ -544,7 +545,7 @@ Arguments for `CmdCreateAnnotHighlight` plus:
 - `color` : default, color of text and border, black if not given
 - `bgcolor` : background color of annotation, fully transparent if not given
 - `textsize` : size of annotation text, 12 if not given
-- `borderwidth` : border width, 1 if not given
+- `borderwidth` : border width of free text, ink, line, polyline, polygon, square and circle annotations, 1 if not given
 - `alignment` : **ver 3.7+**, how free text is aligned in its box: `left`, `center`, or `right`. Left if not given
 - `opacity` : opacity of annotation, 0 = fully transparent (i.e. invisible), 100 = fully opaque (default if not given)
 - `interiorcolor` : interior color for circle, square, etc. annotations, fully transparent if not given
