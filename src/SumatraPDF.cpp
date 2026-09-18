@@ -12268,8 +12268,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (TtsIsSpeaking()) {
                 TtsStop();
             }
-            // mouse position in canvas coordinates, same as the context menu uses
+            // mouse position in canvas coordinates; from the command palette
+            // it's encoded in lp (the live cursor is over the palette)
             Point pt = HwndGetCursorPos(win->hwndCanvas);
+            if (lp != 0) {
+                pt.x = GET_X_LPARAM(lp);
+                pt.y = GET_Y_LPARAM(lp);
+            }
             ReadAloudFromCursorInTab(tab, pt);
             break;
         }

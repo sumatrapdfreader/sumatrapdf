@@ -217,6 +217,14 @@ static bool IsCmdInList(i32 cmdId, i32* ids) {
     return false;
 }
 
+// commands that act at the mouse position (annotation create, read aloud from cursor)
+static bool CmdUsesCursorPos(i32 cmdId) {
+    if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
+        return true;
+    }
+    return cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdReadAloudFromCursorPosition;
+}
+
 // UI language (and the debug RTL toggle), not the palette hwnd: that window
 // stays LTR so virtual-control coords and clicks are not mirrored (#5956).
 bool CommandPaletteUiRtl() {
@@ -236,6 +244,9 @@ static int gPaletteOpDepth = 0;
 static HWND gHwndToActivateOnClose = nullptr;
 static WindowTab* gTabToSelectOnClose = nullptr;
 static i32 gCmdIdToExecOnClose = 0;
+// canvas mouse position when the palette was opened, as WM_COMMAND LPARAM
+// (0 if the mouse was not over the canvas); the live cursor is over the palette
+static LPARAM gCursorPosLParam = 0;
 static FileState* gFavFsToGoToOnClose = nullptr;
 static Favorite* gFavToGoToOnClose = nullptr;
 
@@ -862,7 +873,8 @@ void SafeDeleteCommandPaletteWnd() {
         i32 cmdId = gCmdIdToExecOnClose;
         gCmdIdToExecOnClose = 0;
         if (IsMainWindowValidAndNotClosing(win)) {
-            HwndPostCommand(win->hwndFrame, cmdId);
+            LPARAM lp = CmdUsesCursorPos(cmdId) ? gCursorPosLParam : 0;
+            HwndPostCommand(win->hwndFrame, cmdId, lp);
         }
     }
     if (gFavToGoToOnClose) {
@@ -1779,6 +1791,12 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
             return;
         }
         ScheduleDeleteAndExecCommand();
+    }
+
+    gCursorPosLParam = 0;
+    if (HwndIsCursorOverWindow(win->hwndCanvas)) {
+        Point pt = HwndGetCursorPos(win->hwndCanvas);
+        gCursorPosLParam = MAKELPARAM(pt.x, pt.y);
     }
 
     auto* wnd = new CommandPaletteWnd();
