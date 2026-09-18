@@ -340,7 +340,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdPdfEncrypt` : "Encrypt PDF"
 - `CmdPdfExtractPages` : "Extract Pages From PDF"
 - `CmdPdShowInfo` : "Show PDF Info"
-- `CmdReadAloud` : "Read Aloud"
+- `CmdToggleReadAloud` : "Toggle Read Aloud"
 - `CmdRemoveDeletedFilesFromHistory` : "Remove Deleted Files From History"
 - `CmdDeleteCachedFiles` : "Delete Cached Files" — deletes local network-drive comic book cache (`cbx-cache`)
 - `CmdResizeImage` : "Resize Image"

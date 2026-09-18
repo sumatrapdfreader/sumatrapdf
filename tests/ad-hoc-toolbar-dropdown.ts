@@ -58,7 +58,7 @@ function findFrame(): number {
 
 // the visible Read Aloud button's rect, in toolbar client coords
 function readAloudRect(dump: string): [number, number, number, number] {
-  const wanted = cmdId("CmdReadAloud");
+  const wanted = cmdId("CmdToggleReadAloud");
   for (const line of dump.split("\n")) {
     const m = /^idx=\d+ cmd=(\d+) hidden=(\d) rect=(\d+),(\d+),(\d+),(\d+)/.exec(line);
     if (m && Number(m[1]) === wanted && m[2] === "0") {

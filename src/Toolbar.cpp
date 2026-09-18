@@ -80,7 +80,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {gIconNavigateBack, CmdNavigateBack, TrN("Back")},
     {gIconNavigateForward, CmdNavigateForward, TrN("Forward")},
     {nullptr, 0, {}}, // separator
-    {gIconSpeak, CmdReadAloud, TrN("Read Aloud")},
+    {gIconSpeak, CmdToggleReadAloud, TrN("Read Aloud")},
     {nullptr, 0, {}}, // separator
     {gIconLayoutContinuous, CmdZoomFitWidthAndContinuous, TrN("Fit Width and Show Pages Continuously")},
     {gIconLayoutSinglePage, CmdZoomFitPageAndSinglePage, TrN("Fit a Single Page")},
@@ -454,7 +454,7 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId, AppCommandCtx* ctx) {
         case CmdFindToggleMatchCase:
         case CmdFindToggleMatchWholeWord:
             return NeedsFindUI(win);
-        case CmdReadAloud:
+        case CmdToggleReadAloud:
             // opt-in: the button and its drop-down only show if asked for
             return gSettings->toolbarShowReadAloud;
         case PageInfoId:
@@ -671,7 +671,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         bool isEnabled = IsCmdEnabled(win, cmdId, ctx);
         SetToolbarButtonEnabledByIdx(win, i, isEnabled);
 
-        if (cmdId == CmdReadAloud || cmdId == CmdPauseReadAloud) {
+        if (cmdId == CmdToggleReadAloud || cmdId == CmdPauseReadAloud) {
             bool speaking = TtsIsSpeaking();
             SetToolbarButtonImageByIdx(win, i, speaking ? gIconPauseSpeaking : gIconSpeak);
             // tooltip reflects what clicking the button will do
@@ -1500,7 +1500,7 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
     if (cmdId == PageInfoId || cmdId == 0) {
         return;
     }
-    if (ToolbarDropdownJustClosed() && (cmdId == CmdReadAloud || cmdId == CmdPauseReadAloud)) {
+    if (ToolbarDropdownJustClosed() && (cmdId == CmdToggleReadAloud || cmdId == CmdPauseReadAloud)) {
         ev->didHandle = true;
         return;
     }
@@ -3319,7 +3319,7 @@ static void BuildToolbarLayout(MainWindow* win) {
         } else {
             auto* ib = new VirtIconButton();
             ib->padding = {cyPad, iconPad, cyPad, iconPad};
-            ib->hasDropdown = (bi.cmdId == CmdReadAloud);
+            ib->hasDropdown = (bi.cmdId == CmdToggleReadAloud);
             Str svg = bi.svgIcon ? bi.svgIcon : Str(bi.icon);
             ib->pixmap = GetCachedPixmapForSvg(svg, tb->iconSize, tb->iconSize, fg, TbBgColor());
             ib->pixmapDisabled = GetCachedPixmapForSvg(svg, tb->iconSize, tb->iconSize, dis, TbBgColor());

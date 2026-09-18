@@ -221,7 +221,7 @@ enum {
     CmdDocumentExtractText = 414,
     CmdDocumentShowOutline = 415,
     CmdSetScreenshotHotkey = 416,
-    CmdReadAloud = 417,
+    CmdToggleReadAloud = 417,
     CmdPauseReadAloud = 418,
     CmdContinueReadAloud = 419,
     CmdStopReadAloud = 420,

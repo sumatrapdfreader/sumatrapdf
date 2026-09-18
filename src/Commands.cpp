@@ -226,7 +226,7 @@ static SeqStrings gCommandNames =
     "CmdDocumentExtractText\0"
     "CmdDocumentShowOutline\0"
     "CmdSetScreenshotHotkey\0"
-    "CmdReadAloud\0"
+    "CmdToggleReadAloud\0"
     "CmdPauseReadAloud\0"
     "CmdContinueReadAloud\0"
     "CmdStopReadAloud\0"
@@ -542,7 +542,7 @@ static i32 gCommandIds[] = {
     CmdDocumentExtractText,
     CmdDocumentShowOutline,
     CmdSetScreenshotHotkey,
-    CmdReadAloud,
+    CmdToggleReadAloud,
     CmdPauseReadAloud,
     CmdContinueReadAloud,
     CmdStopReadAloud,
@@ -858,7 +858,7 @@ SeqStrings gCommandDescriptions =
     "Extract Text From Document...\0"
     "Show Document Bookmarks...\0"
     "Set Screenshot Hotkey...\0"
-    "Read Aloud\0"
+    "Toggle Read Aloud\0"
     "Pause Reading\0"
     "Continue Reading\0"
     "Stop Reading\0"
@@ -1074,6 +1074,9 @@ int GetCommandIdByName(Str cmdName) {
     }
     if (str::EqI(cmdName, StrL("CmdTogglePdfAnnotationsToolbar"))) {
         return CmdToggleEditPDF;
+    }
+    if (str::EqI(cmdName, StrL("CmdReadAloud"))) {
+        return CmdToggleReadAloud;
     }
     return -1;
 }

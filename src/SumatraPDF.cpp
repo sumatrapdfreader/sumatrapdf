@@ -12206,7 +12206,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
-        case CmdReadAloud: {
+        case CmdToggleReadAloud: {
             if (!tab) {
                 break;
             }

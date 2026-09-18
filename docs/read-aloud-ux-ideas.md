@@ -49,7 +49,7 @@ Implication: toolbar and menus always target the **current tab**, which is also 
 
 ### What works well
 
-- **Multiple explicit start scopes** — selection, first visible text in viewport (“From Top”), cursor position (context menu), plus smart default on toolbar / `CmdReadAloud` (selection if present, else viewport).
+- **Multiple explicit start scopes** — selection, first visible text in viewport (“From Top”), cursor position (context menu), plus smart default on toolbar / `CmdToggleReadAloud` (selection if present, else viewport).
 - **Continuous listening** — viewport / cursor / smart builds read from the start point through the **end of the document**; selection reads selection only. 1 KB TTS chunks chain automatically.
 - **Word follow-along** — current spoken word highlighted on the canvas (selection color; timer-driven repaint).
 - **Auto-scroll** — viewport follows the spoken word while reading; **stops permanently** if the user scrolls the highlight fully off-screen (respects manual navigation).
@@ -70,7 +70,7 @@ Implication: toolbar and menus always target the **current tab**, which is also 
 | Issue                                    | Why it hurts                                                                                                                                                                                                                                                                      |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Toolbar button still triple-duty**     | One click = start _or_ pause _or_ continue. Tooltip helps but users must read it; no Stop on main click.                                                                                                                                                                          |
-| **Two mental models for “start”**        | Smart (`CmdReadAloud`) vs explicit menu items (viewport-only, selection-only, cursor). Power users benefit; casual users may not know which to pick. Scope label on the bar helps _after_ start, not before.                                                                      |
+| **Two mental models for “start”**        | Smart (`CmdToggleReadAloud`) vs explicit menu items (viewport-only, selection-only, cursor). Power users benefit; casual users may not know which to pick. Scope label on the bar helps _after_ start, not before.                                                                |
 | **“From Top” wording**                   | Menu says **Start Reading From Top**; bar says **From top**. Same behavior (first visible text → end) but labels differ slightly.                                                                                                                                                 |
 | **Global audio, second window**          | TTS is app-global. If one window is reading and the user focuses another SumatraPDF window, the focused window has no playback bar (only toolbar tooltip reflects global speaking state). Rare with single-window use; tab switch within a window is not affected (speech stops). |
 | **Tab switch ends session**              | Intentional and coherent, but users who pause and switch tabs lose resume position without warning — a one-line toast (“Reading stopped”) on tab change could set expectations.                                                                                                   |
@@ -240,7 +240,7 @@ The largest **remaining** gap is **toolbar triple-duty** (start / pause / contin
 
 ## Related implementation map (for developers)
 
-- **Commands:** `CmdReadAloud`, `CmdPauseReadAloud`, `CmdContinueReadAloud`, `CmdStopReadAloud`, `CmdReadAloudFromTopPage`, `CmdReadAloudSelection` — palette; no default shortcut
+- **Commands:** `CmdToggleReadAloud`, `CmdPauseReadAloud`, `CmdContinueReadAloud`, `CmdStopReadAloud`, `CmdReadAloudFromTopPage`, `CmdReadAloudSelection` — palette; no default shortcut
 - **TTS menu ids:** `CmdTtsMenuReadCurrentPage`, `CmdTtsMenuContinueReading`, `CmdTtsMenuReadSelection`, `CmdTtsMenuPauseReading`, `CmdTtsMenuReadFromCursor`, `CmdTtsMenuStopReading`, `CmdTtsVoice*`
 - **Menus:** `BuildReadAloudMenuItems` / `RebuildReadAloudMenu` in `SumatraPDF.cpp`; menubar + context in `Menu.cpp`
 - **Toolbar:** speak + dropdown (`ShowTtsVoiceMenu`); dynamic tooltip/icon in `Toolbar.cpp`

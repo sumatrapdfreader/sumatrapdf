@@ -227,7 +227,7 @@ const commandsRaw = [
     "CmdDocumentExtractText", "Extract Text From Document...",
     "CmdDocumentShowOutline", "Show Document Bookmarks...",
     "CmdSetScreenshotHotkey", "Set Screenshot Hotkey...",
-    "CmdReadAloud", "Read Aloud",
+    "CmdToggleReadAloud", "Toggle Read Aloud",
     "CmdPauseReadAloud", "Pause Reading",
     "CmdContinueReadAloud", "Continue Reading",
     "CmdStopReadAloud", "Stop Reading",

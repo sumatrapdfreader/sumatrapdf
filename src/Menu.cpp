@@ -888,7 +888,7 @@ static MenuDef menuDefReadAloud[] = {
     },
     {
         TrN("Start Reading From Top"),
-        CmdReadAloud,
+        CmdReadAloudFromTopPage,
     },
     {
         {},
@@ -905,7 +905,7 @@ static MenuDef menuDefContextReadAloud[] = {
     },
     {
         TrN("Start Reading From Top"),
-        CmdReadAloud,
+        CmdReadAloudFromTopPage,
     },
     {
         {},

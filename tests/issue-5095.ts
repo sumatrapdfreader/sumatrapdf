@@ -23,7 +23,7 @@ type Button = { visible: boolean; idx: number };
 // gives users this string as the starting point for their own
 const DEFAULT_LAYOUT =
   "CmdOpenFile CmdPrint | PageInfo CmdGoToPrevPage CmdGoToNextPage | " +
-  "CmdNavigateBack CmdNavigateForward | CmdReadAloud | " +
+  "CmdNavigateBack CmdNavigateForward | CmdToggleReadAloud | " +
   "CmdZoomFitWidthAndContinuous CmdZoomFitPageAndSinglePage CmdRotateLeft CmdRotateRight " +
   "CmdZoomOut CmdZoomIn | CmdFindFirst | CmdToggleEditPDF";
 

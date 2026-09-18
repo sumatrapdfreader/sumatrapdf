@@ -79,7 +79,7 @@ export async function testit(): Promise<void> {
       return;
     }
 
-    sendCommand(frame, cmdId("CmdReadAloud"));
+    sendCommand(frame, cmdId("CmdToggleReadAloud"));
     const startDeadline = Date.now() + 12_000;
     for (;;) {
       st = await barState(client);

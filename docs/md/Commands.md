@@ -377,13 +377,13 @@ CmdPdfExtractPages,,Extract Pages From PDF,"Extract pages from a PDF file using 
 CmdPdfEncrypt,,Encrypt PDF,"Encrypt a PDF file with a password using AES-256 encryption, ver 3.7+"
 CmdPdfDecrypt,,Decrypt PDF,"Decrypt an encrypted PDF file, removing password protection, ver 3.7+"
 CmdSetScreenshotHotkey,,Set Screenshot Hotkey,"Open dialog to set or remove a global hotkey for taking screenshots, ver 3.7+"
-CmdReadAloud,,Read Aloud,"Read selected text (or from the viewport if no selection) through the end of the document using Windows text-to-speech. Invoking again pauses reading. Voice is chosen in the Read Aloud Voice submenu and remembered in ReadAloudVoiceId, ver 3.7+"
+CmdToggleReadAloud,,Toggle Read Aloud,"Read aloud using Windows text-to-speech. Reads the selection if there is one, otherwise from the first visible text through the end of the document. Invoking again pauses reading; invoking when paused continues. Voice is chosen in the Read Aloud Voice submenu and remembered in ReadAloudVoiceId, ver 3.7+"
 CmdPauseReadAloud,,Pause Reading,"Pause reading text aloud; resume with CmdContinueReadAloud, ver 3.7+"
 CmdContinueReadAloud,,Continue Reading,"Continue reading text aloud from where it was paused, ver 3.7+"
 CmdStopReadAloud,,Stop Reading,"Stop reading text aloud and clear the resume position. Always in the Read Aloud menu (disabled when nothing is being read) and in the command palette while a session is active, even when the playback bar is not visible, ver 3.7+"
 CmdReadAloudFromTopPage,,Start Reading From Top,"Read from the first visible text in the viewport through the end of the document, ver 3.7+"
 CmdReadAloudSelection,,Start Reading Selection,"Read the current text selection aloud, ver 3.7+"
-CmdReadAloudFromCursorPosition,,Start Reading From Cursor Position,"Read from the text under the mouse cursor through the end of the document, ver 3.7+"
+CmdReadAloudFromCursorPosition,,Start Reading From Cursor Position,"Read from the text under the mouse cursor through the end of the document. From the command palette, uses the mouse position from before the palette was opened, ver 3.7+"
 CmdToggleToolbarShowReadAloud,,Read Aloud: Show In Toolbar,"Show or hide the Read Aloud buttons in the toolbar; remembered in the `ToolbarShowReadAloud` setting, ver 3.7+"
 ```
 
