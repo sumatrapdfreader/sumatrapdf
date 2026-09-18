@@ -5161,15 +5161,18 @@ void UpdateDocumentColors() {
     static int s_lastDocumentColorsFollowTheme = -1;
     bool preservePdfImages = pagesDark && GetPreservePdfImagesInDarkMode();
     int documentColorsFollowTheme = (int)GetDocumentColorsFollowTheme();
+    bool grayscale = gSettings->fixedPageUI.grayscale;
 
     if ((text == gRenderCache->textColor) && (bg == gRenderCache->backgroundColor) &&
         (link == gRenderCache->linkColor) && preservePdfImages == s_lastPreservePdfImages &&
-        documentColorsFollowTheme == s_lastDocumentColorsFollowTheme) {
+        documentColorsFollowTheme == s_lastDocumentColorsFollowTheme &&
+        grayscale == AtomicBoolGet(&gRenderCache->grayscalePageColors)) {
         return; // colors didn't change
     }
     s_lastPreservePdfImages = preservePdfImages;
     s_lastDocumentColorsFollowTheme = documentColorsFollowTheme;
 
+    AtomicBoolSet(&gRenderCache->grayscalePageColors, grayscale);
     gRenderCache->textColor = text;
     gRenderCache->backgroundColor = bg;
     gRenderCache->linkColor = link;
@@ -13158,13 +13161,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
         case CmdToggleGrayscale: {
-            bool enabled = !AtomicBoolGet(&gRenderCache->grayscalePageColors);
-            AtomicBoolSet(&gRenderCache->grayscalePageColors, enabled);
-
-            // Page pixels changed. Invalidate cached and in-flight renders.
-            // Overlays are outside this rendering path and keep their colors.
-            gRenderCache->darkModeEpoch++;
-            RerenderEverything();
+            gSettings->fixedPageUI.grayscale = !gSettings->fixedPageUI.grayscale;
+            UpdateDocumentColors();
+            ScheduleSaveSettings();
             break;
         }
 
@@ -18018,8 +18017,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     LoadSettings();
     UpdateSettings(flags);
 
-    // FixedPageUI.Grayscale defines the startup state. Shift+B changes only
-    // the current session and does not modify the persisted preference.
+    // UpdateDocumentColors() keeps it in sync after this
     AtomicBoolSet(&gRenderCache->grayscalePageColors, gSettings->fixedPageUI.grayscale);
 
     if (gMyWindowWasEmbedded) {

@@ -51,7 +51,6 @@ static Pixmap* GrayscalePagePixmap(Pixmap* bmp) {
         return nullptr;
     }
 
-#if OS_WIN
     if (bmp->format == PixmapFormat::Native) {
         Pixmap* converted = PixmapCopyAs32bppDIB(bmp);
         if (!converted) {
@@ -60,19 +59,12 @@ static Pixmap* GrayscalePagePixmap(Pixmap* bmp) {
         FreePixmap(bmp);
         bmp = converted;
     }
-#else
-    if (bmp->format == PixmapFormat::Native) {
-        return bmp;
-    }
-#endif
 
     if (!bmp->data) {
         return bmp;
     }
 
-    if (bmp->format != PixmapFormat::BGRA8 &&
-        bmp->format != PixmapFormat::BGR8 &&
-        bmp->format != PixmapFormat::RGBA8) {
+    if (bmp->format != PixmapFormat::BGRA8 && bmp->format != PixmapFormat::BGR8 && bmp->format != PixmapFormat::RGBA8) {
         return bmp;
     }
 
@@ -1294,6 +1286,13 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         req.errorCode = bmp ? 0 : 1;
 
         if (bmp) {
+            // before recoloring: same order as EngineMupdf, which grays page
+            // contents while rendering
+            if (req.grayscale && !args.grayscaleApplied) {
+                bmp = GrayscalePagePixmap(bmp);
+                req.bmp = bmp;
+            }
+
             const DarkModeProfile* profile = args.darkProfile;
             bool recolor;
             if (profile) {
@@ -1320,12 +1319,6 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
                 Color linkCol = profile ? profile->linkColor : cache->linkColor;
                 RecolorPixmap(bmp, textCol, bgCol, linkCol, skipRectsPtr);
             }
-
-            if (req.grayscale && !args.grayscaleApplied) {
-                bmp = GrayscalePagePixmap(bmp);
-                req.bmp = bmp;
-            }
-
             if (req.abort || req.darkModeEpoch != cache->darkModeEpoch) {
                 // colors changed while recoloring - discard result
                 FreePixmap(bmp);

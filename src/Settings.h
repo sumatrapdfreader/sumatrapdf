@@ -640,8 +640,8 @@ struct PageGrid {
 
 // customization options for PDF, XPS, DjVu and PostScript UI
 struct FixedPageUI {
-    // if true, start document pages in grayscale; Shift+B toggles
-    // grayscale for the current session
+    // if true, render document pages in grayscale (annotations keep their
+    // colors). Toggle with Shift + B (CmdToggleGrayscale)
     bool grayscale;
     // color used instead of black for the document's text
     ParsedColor textColor;
@@ -1302,17 +1302,17 @@ static const StructInfo gFixedPageUIInfo = {
     gFixedPageUIFields,
     "Grayscale\0TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0WindowBgCol\0Pag"
     "eGrid",
-    "if true, start document pages in grayscale; Shift+B toggles grayscale for the current session\0color used instead "
-    "of black for the document's text\0color used instead of white for the document's page background\0color value for "
-    "the text selection rectangle (also used to highlight found text). Use an #aarrggbb value to control opacity: a "
-    "smaller alpha (e.g. #40ffff00) makes the selection more transparent so the selected text stays crisp; #rrggbb "
-    "uses the default opacity\0top, right, bottom and left margin (in that order) between window and "
-    "document\0horizontal and vertical gap between pages (between columns in facing/book view, between rows in "
-    "continuous view)\0experimental: instead of a single background color, fade through these colors from the top of "
-    "the document to the bottom (stops are spread evenly, at most 3 colors). The shifting background is meant to give "
-    "a subconscious sense of reading progress. Suggested values: #2828aa #28aa28 #aa2828\0if given, sets the canvas "
-    "background color for PDF files\0measurement grid overlay (View > Page Grid). Spacing and style are saved; showing "
-    "the grid is session-only",
+    "if true, render document pages in grayscale (annotations keep their colors). Toggle with Shift + B "
+    "(CmdToggleGrayscale)\0color used instead of black for the document's text\0color used instead of white for the "
+    "document's page background\0color value for the text selection rectangle (also used to highlight found text). Use "
+    "an #aarrggbb value to control opacity: a smaller alpha (e.g. #40ffff00) makes the selection more transparent so "
+    "the selected text stays crisp; #rrggbb uses the default opacity\0top, right, bottom and left margin (in that "
+    "order) between window and document\0horizontal and vertical gap between pages (between columns in facing/book "
+    "view, between rows in continuous view)\0experimental: instead of a single background color, fade through these "
+    "colors from the top of the document to the bottom (stops are spread evenly, at most 3 colors). The shifting "
+    "background is meant to give a subconscious sense of reading progress. Suggested values: #2828aa #28aa28 "
+    "#aa2828\0if given, sets the canvas background color for PDF files\0measurement grid overlay (View > Page Grid). "
+    "Spacing and style are saved; showing the grid is session-only",
     false};
 
 static const FieldInfo gEBookUIFields[] = {

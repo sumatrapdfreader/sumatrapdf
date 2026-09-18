@@ -180,7 +180,7 @@ struct RenderCache {
     Color backgroundColor = 0;
     Color linkColor = 0;
 
-    // session-only grayscale for rendered document pixels
+    // FixedPageUI.Grayscale, copied by UpdateDocumentColors() for render threads
     AtomicBool grayscalePageColors = 0;
 
     // bumped by UpdateDocumentColors when page render colors / the PDF

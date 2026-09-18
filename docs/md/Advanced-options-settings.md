@@ -444,8 +444,9 @@ ZoomIncrement = 0
 
 ; customization options for PDF, XPS, DjVu and PostScript UI
 FixedPageUI [
-    ; if true, start document pages in grayscale; Shift+B toggles grayscale for
-    ; the current session (introduced in version 3.7)
+    ; if true, render document pages in grayscale (annotations keep their
+    ; colors). Toggle with Shift + B (CmdToggleGrayscale) (introduced in version
+    ; 3.7)
     Grayscale = false
 
     ; color used instead of black for the document's text
