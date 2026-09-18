@@ -733,8 +733,8 @@ CodexBuild [
 
 ; settings for the Antigravity chat sidebar (introduced in version 3.7)
 AntiGravity [
-    ; Antigravity model ID for --model (e.g. gemini-3.6-flash)
-    Model = gemini-3.6-flash
+    ; Antigravity model ID for --model (e.g. gemini-3.8-flash-medium)
+    Model = gemini-3.8-flash-medium
 
     ; extra Antigravity model IDs for the dropdown, comma-separated
     Models = 

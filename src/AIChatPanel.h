@@ -16,6 +16,7 @@ bool IsCodexBuildInstalled();
 TempStr CodexBuildExecutablePathTemp();
 AIChatProvider* GetCodexBuildProvider();
 
+constexpr char kAntiGravityDefaultModel[] = "gemini-3.8-flash-medium";
 bool IsAntiGravityInstalled();
 TempStr AntiGravityExecutablePathTemp();
 AIChatProvider* GetAntiGravityProvider();

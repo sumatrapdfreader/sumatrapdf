@@ -547,6 +547,42 @@ bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunch
     return true;
 }
 
+constexpr int kAIChatMaxCaptureBytes = 1024 * 1024;
+
+// Run cmdLine and collect its stdout and stderr into out. Stops after
+// timeoutMs and kills the process if it's still running.
+bool AIChatRunCapture(Str cmdLine, int timeoutMs, str::Builder& out) {
+    AIChatProcessLaunchResult launch;
+    if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, {}, &launch)) {
+        return false;
+    }
+
+    ULONGLONG deadline = GetTickCount64() + timeoutMs;
+    while (GetTickCount64() < deadline && out.len < kAIChatMaxCaptureBytes) {
+        DWORD available = 0;
+        if (!PeekNamedPipe(launch.hReadPipe, nullptr, 0, nullptr, &available, nullptr)) {
+            break;
+        }
+        if (available > 0) {
+            char buf[4096];
+            DWORD nRead = 0;
+            DWORD toRead = std::min<DWORD>(available, dimof(buf));
+            if (!ReadFile(launch.hReadPipe, buf, toRead, &nRead, nullptr) || nRead == 0) {
+                break;
+            }
+            out.Append(Str(buf, (int)nRead));
+            continue;
+        }
+        if (WaitForSingleObject(launch.hProcess, 10) != WAIT_TIMEOUT) {
+            break;
+        }
+        Sleep(10);
+    }
+    CloseHandle(launch.hReadPipe);
+    AIChatCloseProcess(&launch.hProcess, true);
+    return true;
+}
+
 constexpr int kAIChatLabelCloseBtnDx = 16;
 constexpr int kAIChatLabelCloseBtnSpaceDx = 8;
 constexpr int kAIChatLabelPadX = 2;

@@ -71,6 +71,42 @@ TempStr AntiGravityExecutablePathTemp() {
 
 static Mutex gAntiGravityLogMutex;
 static AIChatLogger gAntiGravityLogger = {&gAntiGravityLogMutex, StrL("antigravity-log.txt"), StrL("antigravity")};
+static bool gTriedAntiGravityModels = false;
+static StrVec gAntiGravityModels;
+
+// used when `agy models` fails
+static const char* kAntiGravityModels[] = {
+    "gemini-3.8-flash-high",    "gemini-3.8-flash-medium", "gemini-3.8-flash-low",  "gemini-3.7-flash-high",
+    "gemini-3.7-flash-medium",  "gemini-3.7-flash-low",    "gemini-3.6-flash-high", "gemini-3.6-flash-medium",
+    "gemini-3.6-flash-low",     "gemini-3.1-pro-high",     "gemini-3.1-pro-low",    "claude-sonnet-4-6",
+    "claude-opus-4-6-thinking", "gpt-oss-120b-medium",
+};
+
+// `agy models` prints a status line, then one "<model id>\t<display name>" line per model
+static bool ParseAntiGravityModelsOutput(Str output, StrVec& models) {
+    Str rest = output;
+    Str line;
+    while (str::NextLine(rest, line, rest)) {
+        int tabIdx = str::IndexOfChar(line, '\t');
+        if (tabIdx <= 0) {
+            continue;
+        }
+        AIChatAppendModelUnique(models, Str(line.s, tabIdx));
+    }
+    return len(models) > 0;
+}
+
+// `agy models` reports the models available to the current login.
+// Cache it for this app session; on failure use the built-in list.
+static bool QueryAntiGravityModels(Str exePath, StrVec& models) {
+    TempStr cmdLine = fmt("%s models", QuoteCmdLineArgTemp(exePath));
+    str::Builder output;
+    if (!AIChatRunCapture(cmdLine, 5000, output)) {
+        return false;
+    }
+    AIChatLog(&gAntiGravityLogger, StrL("<<< models"), ToStr(output));
+    return ParseAntiGravityModelsOutput(ToStr(output), models);
+}
 
 // --- Session history ---
 
@@ -281,7 +317,7 @@ struct AntiGravityProvider : AIChatProvider {
         virtualHostW = L"https://sumatrapdf.antigravity/";
         webViewDataDirPrefix = StrL("AntiGravityWebView");
         docUri = StrL("/AI-Chat-with-document#antigravity");
-        defaultModel = StrL("gemini-3.6-flash");
+        defaultModel = Str(kAntiGravityDefaultModel);
         optionItems = "Low\0Medium\0High\0Max\0";
         optionCount = 4;
         optionDefault = 1;
@@ -300,10 +336,22 @@ struct AntiGravityProvider : AIChatProvider {
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
-        AIChatAppendModelUnique(models, StrL("gemini-3.6-flash"));
-        AIChatAppendModelUnique(models, StrL("gemini-3.6-pro"));
-        AIChatAppendModelUnique(models, StrL("claude-3-5-sonnet"));
-        AIChatAppendModelUnique(models, StrL("gpt-4o"));
+        if (!gTriedAntiGravityModels) {
+            gTriedAntiGravityModels = true;
+            TempStr exePath = FindAntiGravityExecutableTemp();
+            if (exePath) {
+                QueryAntiGravityModels(exePath, gAntiGravityModels);
+            }
+        }
+        if (len(gAntiGravityModels) > 0) {
+            for (int i = 0; i < len(gAntiGravityModels); i++) {
+                AIChatAppendModelUnique(models, gAntiGravityModels[i]);
+            }
+        } else {
+            for (const char* model : kAntiGravityModels) {
+                AIChatAppendModelUnique(models, Str(model));
+            }
+        }
         Str extra = gSettings->antiGravity.models;
         if (len(extra) > 0) {
             StrVec parts;

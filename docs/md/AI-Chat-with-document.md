@@ -4,7 +4,9 @@
 
 SumatraPDF can show a chat sidebar where you ask questions about the document you are reading. Answers come from an AI agent CLI running on your computer — SumatraPDF does not send your files to its own servers.
 
-Three backends are supported: [Claude Code](#claude-code), [Grok Build](#grok-build), and [OpenAI Codex](#openai-codex).
+**Nothing happens unless you explicitly invoke it.** SumatraPDF never starts an AI agent or sends document content to an AI service on its own. An agent CLI runs only when you open a chat panel, send a message, or use an AI translate-selection command. To decide whether to show AI commands in menus, SumatraPDF only checks if the CLI executable exists on disk.
+
+Four backends are supported: [Claude Code](#claude-code), [Grok Build](#grok-build), [OpenAI Codex](#openai-codex), and [Antigravity](#antigravity).
 
 ## Claude Code
 
@@ -54,6 +56,20 @@ Codex settings are in the `CodexBuild` section of [advanced settings](Advanced-o
 
 The first time you open the Codex chat panel in an app session, SumatraPDF asks the signed-in Codex CLI which models are available and uses them in the model picker. If that query fails, the picker falls back to `gpt-5.5`, `gpt-5.4`, and `o3`. You can also pick a sandbox mode: **Read-only**, **Workspace write**, or **Full access**.
 
+## Antigravity
+
+This feature can also use Google's **[Antigravity](https://antigravity.google/)** CLI (the `antigravity` or `agy` command-line tool).
+
+If Antigravity is missing, the chat panel shows an error such as _Cannot find antigravity. Is Antigravity installed?_
+
+Install Antigravity and sign in using Google's instructions. SumatraPDF looks for `antigravity.exe` or `agy.exe` on `PATH`, in `%USERPROFILE%\.local\bin\`, `%USERPROFILE%\.gemini\antigravity-cli\bin\`, `%USERPROFILE%\AppData\Local\agy\bin\`, `%USERPROFILE%\AppData\Roaming\Antigravity\bin\`, `%USERPROFILE%\AppData\Local\Programs\`, and `%USERPROFILE%\AppData\Roaming\npm\`.
+
+Open the panel with **View → Antigravity chat** (`CmdAIChatWithAntiGravity`), or search for `Antigravity` in the command palette.
+
+Antigravity settings are in the `AntiGravity` section of [advanced settings](Advanced-options-settings.md). The **Auto Approve** checkbox passes `--dangerously-skip-permissions` to Antigravity. It is **on by default**: the CLI can't ask for permissions when run non-interactively, so without it the agent can't read the document. It also lets the agent use other tools without asking.
+
+The first time you open the Antigravity chat panel in an app session, SumatraPDF runs `agy models` and uses the models available to the signed-in CLI in the model picker. If that query fails, the picker falls back to a built-in list of Gemini 3.8 / 3.7 / 3.6 Flash, Gemini 3.1 Pro, Claude Sonnet / Opus 4.6, and GPT-OSS 120B models. The default is `gemini-3.8-flash-medium`. Add more model IDs, comma-separated, with the `Models` setting.
+
 ## How to use
 
 1. Open a supported document (see below).
@@ -61,8 +77,9 @@ The first time you open the Codex chat panel in an app session, SumatraPDF asks 
    - **View → Claude chat** (`CmdAIChatWithClaudeCode`)
    - **View → Grok chat** (`CmdAIChatWithGrokBuild`)
    - **View → Codex chat** (`CmdAIChatWithOpenAICodex`)
+   - **View → Antigravity chat** (`CmdAIChatWithAntiGravity`)
 
-   Or open the [command palette](Command-Palette.md) (`Ctrl + K`) and search for `Claude`, `Grok`, or `Codex`.
+   Or open the [command palette](Command-Palette.md) (`Ctrl + K`) and search for `Claude`, `Grok`, `Codex`, or `Antigravity`.
 
 3. Type a question in the input box at the bottom of the sidebar and press `Enter`.
 4. Drag the splitter between the document and the chat panel to resize the sidebar.
@@ -74,6 +91,7 @@ You can pick a previous session from the session dropdown and choose model optio
 - **Claude Code:** model, effort level, and optionally **Skip Permissions** (passes `--dangerously-skip-permissions` — use only if you understand the security implications).
 - **Grok Build:** model, effort level, and optionally **Always Approve** (passes `--always-approve`).
 - **OpenAI Codex:** model, sandbox mode, and optionally **Skip Sandbox**.
+- **Antigravity:** model, effort level, and **Auto Approve** (on by default).
 
 While the agent is working on a reply, use **Stop** to cancel the current request.
 
@@ -92,6 +110,7 @@ Backend-specific options are in [advanced settings](Advanced-options-settings.md
 - `ClaudeCode` — default model, effort level, **Skip Permissions**, background color
 - `GrokBuild` — default model, effort level, **Always Approve**, background color
 - `CodexBuild` — default model, extra models, sandbox mode, **Skip Sandbox**, background color
+- `AntiGravity` — default model, extra models, effort level, **Auto Approve**, background color
 
 You can assign your own keyboard shortcut to any of the chat commands — there is no default key binding. See [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md).
 
@@ -103,14 +122,16 @@ You can assign your own keyboard shortcut to any of the chat commands — there 
   - Claude Code: `~/.claude/projects/` (encoded by project directory)
   - Grok Build: `~/.grok/sessions/`
   - OpenAI Codex: `~/.codex/sessions/` (with descriptions from `~/.codex/history.jsonl`)
+  - Antigravity: `~/.gemini/antigravity/projects/`, `~/.gemini/antigravity-cli/projects/`, or `~/.gemini/projects/` (encoded by project directory)
 - Each agent runs as a separate process; behavior, models, and billing follow that provider's terms and your account.
 
 ## See also
 
-- [Commands](Commands.md) — `CmdAIChatWithClaudeCode`, `CmdAIChatWithGrokBuild`, `CmdAIChatWithOpenAICodex`
+- [Commands](Commands.md) — `CmdAIChatWithClaudeCode`, `CmdAIChatWithGrokBuild`, `CmdAIChatWithOpenAICodex`, `CmdAIChatWithAntiGravity`
 - [Command Palette](Command-Palette.md)
-- [Advanced options / settings](Advanced-options-settings.md) — `ClaudeCode`, `GrokBuild`, and `CodexBuild` sections
+- [Advanced options / settings](Advanced-options-settings.md) — `ClaudeCode`, `GrokBuild`, `CodexBuild`, and `AntiGravity` sections
 - [Version history](Version-history.md) — 3.7 AI Chat entry
 - [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code) (Anthropic)
 - [Grok Build](https://x.ai/news/grok-build-cli) (xAI)
 - [OpenAI Codex CLI](https://developers.openai.com/codex/cli) (OpenAI)
+- [Antigravity](https://antigravity.google/) (Google)

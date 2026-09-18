@@ -500,7 +500,7 @@ struct CodexBuild {
 
 // settings for the Antigravity chat sidebar
 struct AntiGravity {
-    // Antigravity model ID for --model (e.g. gemini-3.6-flash)
+    // Antigravity model ID for --model (e.g. gemini-3.8-flash-medium)
     Str model;
     // extra Antigravity model IDs for the dropdown, comma-separated
     Str models;
@@ -1520,7 +1520,7 @@ static const StructInfo gCodexBuildInfo = {
     false};
 
 static const FieldInfo gAntiGravityFields[] = {
-    {offsetof(AntiGravity, model), SettingType::String, (intptr_t)"gemini-3.6-flash"},
+    {offsetof(AntiGravity, model), SettingType::String, (intptr_t)"gemini-3.8-flash-medium"},
     {offsetof(AntiGravity, models), SettingType::String, (intptr_t)""},
     {offsetof(AntiGravity, effort), SettingType::Int, 1},
     {offsetof(AntiGravity, autoApprove), SettingType::Bool, true},
@@ -1531,7 +1531,7 @@ static const StructInfo gAntiGravityInfo = {
     5,
     gAntiGravityFields,
     "Model\0Models\0Effort\0AutoApprove\0BgColor",
-    "Antigravity model ID for --model (e.g. gemini-3.6-flash)\0extra Antigravity model IDs for the dropdown, "
+    "Antigravity model ID for --model (e.g. gemini-3.8-flash-medium)\0extra Antigravity model IDs for the dropdown, "
     "comma-separated\0Antigravity effort level: 0=Low, 1=Medium, 2=High, 3=Max\0if true, pass "
     "--dangerously-skip-permissions to Antigravity CLI so it can read the current file etc. in headless print mode "
     "(agy cannot prompt for permissions with -p)\0background color of the Antigravity chat panel",

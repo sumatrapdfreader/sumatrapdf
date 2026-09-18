@@ -655,7 +655,7 @@ static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) 
 static TempStr BuildAntiGravityTranslateCmdLineTemp(Str exePath, Str prompt) {
     Str model = gSettings->antiGravity.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
-        model = StrL("gemini-3.6-flash");
+        model = Str(kAntiGravityDefaultModel);
     }
     // agy takes -p/--print's next argument as the prompt and ignores flags
     // after it (see AIAntiGravity.cpp). Putting -p first made the prompt

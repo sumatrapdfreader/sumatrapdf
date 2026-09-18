@@ -81,35 +81,10 @@ static bool ParseGrokModelsOutput(Str output, StrVec& models) {
 // Cache it for this app session; old CLIs and all other failures use the built-in model.
 static bool QueryGrokModels(Str exePath, StrVec& models) {
     TempStr cmdLine = fmt("%s models", QuoteCmdLineArgTemp(exePath));
-    AIChatProcessLaunchResult launch;
-    if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, {}, &launch)) {
+    str::Builder output;
+    if (!AIChatRunCapture(cmdLine, 3000, output)) {
         return false;
     }
-
-    str::Builder output;
-    ULONGLONG deadline = GetTickCount64() + 3000;
-    while (GetTickCount64() < deadline && output.len < 1024 * 1024) {
-        DWORD available = 0;
-        if (!PeekNamedPipe(launch.hReadPipe, nullptr, 0, nullptr, &available, nullptr)) {
-            break;
-        }
-        if (available > 0) {
-            char buf[4096];
-            DWORD nRead = 0;
-            DWORD toRead = std::min<DWORD>(available, dimof(buf));
-            if (!ReadFile(launch.hReadPipe, buf, toRead, &nRead, nullptr) || nRead == 0) {
-                break;
-            }
-            output.Append(Str(buf, (int)nRead));
-            continue;
-        }
-        if (WaitForSingleObject(launch.hProcess, 10) != WAIT_TIMEOUT) {
-            break;
-        }
-        Sleep(10);
-    }
-    CloseHandle(launch.hReadPipe);
-    AIChatCloseProcess(&launch.hProcess, true);
     return ParseGrokModelsOutput(ToStr(output), models);
 }
 

@@ -167,6 +167,7 @@ TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor);
 
 void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning);
 bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunchResult* out);
+bool AIChatRunCapture(Str cmdLine, int timeoutMs, str::Builder& out);
 
 int AIChatLabelMaxTextDx(int labelDx);
 TempStr AIChatFitPanelTitleTemp(PlatformFont* font, Str prefix, Str docName, int maxDx);
