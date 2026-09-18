@@ -286,6 +286,19 @@ static win_font_info* find_font_name(const char* name, int use_clean_name) {
     return find_font(name, (int)strlen(name), use_clean_name);
 }
 
+/* full_name equal to name: unlike find_font(), "Times New Roman,Bold" doesn't
+   match the regular "Times New Roman" (#6210) */
+static win_font_info* find_font_exact(const char* name) {
+    int name_len = (int)strlen(name);
+    win_font_info* fi;
+    for (fi = g_win_fonts; fi; fi = fi->next) {
+        if (fi->full_name_len == name_len && _strnicmp(fi->full_name, name, (size_t)name_len) == 0) {
+            return fi;
+        }
+    }
+    return NULL;
+}
+
 /* source and dest can be same */
 static void decode_unicode_BE(fz_context* ctx, char* source, int sourcelen, char* dest, int destlen) {
     WCHAR* tmp;
@@ -778,7 +791,7 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     // the name as given, before any normalizing: a font that spells its name
     // that way is a better answer than one that only matches once both sides
     // have had their spaces taken out
-    found = find_font_name(orig_name, 0);
+    found = find_font_exact(orig_name);
     if (found) {
         goto ExitNoFree;
     }
