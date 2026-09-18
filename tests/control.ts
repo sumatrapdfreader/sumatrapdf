@@ -1,6 +1,6 @@
 import { Socket, createConnection } from "node:net";
 import { ensureModifierKeysUp, killAndWait, testWindowPos } from "./winapi.ts";
-import { SLOW_BUILD_FACTOR } from "./util.ts";
+import { drainProcStderr, SLOW_BUILD_FACTOR } from "./util.ts";
 
 export enum ControlCommand {
   Ping = 1,
@@ -333,6 +333,9 @@ function waitForReadable(socket: Socket): Promise<void> {
   });
 }
 
+// EventEmitter requires a listener or Bun prints EPIPE when the app closes the pipe
+function swallowSocketError(_e: Error): void {}
+
 function connectSocket(path: string): Promise<Socket> {
   return new Promise((resolve, reject) => {
     const socket = createConnection(path);
@@ -342,6 +345,7 @@ function connectSocket(path: string): Promise<Socket> {
     };
     const onConnect = () => {
       cleanup();
+      socket.on("error", swallowSocketError);
       resolve(socket);
     };
     const onError = (err: Error) => {
@@ -370,7 +374,9 @@ function cleanEnv(env: Record<string, string | undefined> | undefined): Record<s
 export class ControlClient {
   private nextId = 1;
 
-  constructor(readonly socket: Socket) {}
+  constructor(readonly socket: Socket) {
+    socket.on("error", swallowSocketError);
+  }
 
   static async connect(pipeName: string, timeoutMs = 10000 * SLOW_BUILD_FACTOR): Promise<ControlClient> {
     const path = pipePath(pipeName);
@@ -423,7 +429,11 @@ export class ControlClient {
   }
 
   async quit(): Promise<void> {
-    await this.request(ControlCommand.Quit);
+    try {
+      await this.request(ControlCommand.Quit);
+    } finally {
+      this.close();
+    }
   }
 
   // Fire-and-forget: the process dies in the crash handler, so there is no reply.
@@ -658,7 +668,10 @@ export class ControlClient {
   }
 
   close(): void {
-    this.socket.end();
+    if (this.socket.destroyed) {
+      return;
+    }
+    this.socket.destroy();
   }
 }
 
@@ -704,7 +717,7 @@ export async function withControlledSumatra<T>(
     cwd: options.cwd,
     env: cleanEnv(options.env),
   });
-  const stderrPromise: Promise<string> = proc.stderr ? new Response(proc.stderr).text() : Promise.resolve("");
+  const stderrPromise = drainProcStderr(proc.stderr);
   let client: ControlClient | undefined;
   let killed = false;
   let result: T | undefined;

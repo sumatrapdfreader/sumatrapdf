@@ -91,6 +91,34 @@ export function prepareTestEnvironment(): void {
 export const IS_ASAN = /asan/i.test(EXE);
 export const SLOW_BUILD_FACTOR = IS_ASAN ? 4 : 1;
 
+export function isClosedPipeError(e: unknown): boolean {
+  const err = e as { code?: string; message?: string };
+  return /EPIPE|ECONNRESET|ERR_SOCKET_CLOSED|broken pipe/i.test(`${err?.code ?? ""} ${err?.message ?? e}`);
+}
+
+export function drainProcStderr(stderr: Bun.Subprocess["stderr"]): Promise<string> {
+  if (!stderr) {
+    return Promise.resolve("");
+  }
+  const stream = stderr as unknown as { on?: (ev: string, fn: (e: Error) => void) => void };
+  stream.on?.("error", () => {});
+  return new Response(stderr).text().catch((e: unknown) => {
+    if (isClosedPipeError(e)) {
+      return "";
+    }
+    throw e;
+  });
+}
+
+// Quit / kill closing a control pipe or stderr can reject after the test has
+// already passed; Bun would print EPIPE into the next test's progress line
+process.on("unhandledRejection", (reason) => {
+  if (isClosedPipeError(reason)) {
+    return;
+  }
+  console.error("unhandledRejection:", reason);
+});
+
 // Extract page text via the debug -extract-text harness (hex-encoded UTF-8).
 // The GUI exe's stdout often does not reach a Bun pipe on Windows; PowerShell
 // (a console app) relays it. pageNo -1 means all pages (same as the flag).

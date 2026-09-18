@@ -12,7 +12,7 @@
 // These are for *ad-hoc* tests (not checked in). Put reusable helpers here, not
 // in the individual ad-hoc scripts.
 
-import { cmdId, EXE, setFailureContext } from "./util.ts";
+import { cmdId, drainProcStderr, EXE, setFailureContext } from "./util.ts";
 import {
   testWindowPos,
   waitForWindowIdle,
@@ -75,10 +75,7 @@ const gStderrDrains = new Set<Promise<string>>();
 const gStderrByProc = new WeakMap<Bun.Subprocess, Promise<string>>();
 
 function drainStderr(proc: Bun.Subprocess): Promise<string> {
-  if (!proc.stderr) {
-    return Promise.resolve("");
-  }
-  const p = new Response(proc.stderr).text();
+  const p = drainProcStderr(proc.stderr);
   gStderrDrains.add(p);
   gStderrByProc.set(proc, p);
   void p.finally(() => gStderrDrains.delete(p));
