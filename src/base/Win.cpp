@@ -760,15 +760,12 @@ TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
 }
 
 // temp directory
-TempStr GetTempDirTemp() {
-    // not GetTempPath2W(): it only differs for processes running as SYSTEM,
-    // which we never are
-    return GetTempDirTemp(MAX_PATH);
-}
 
 // GetTempPathW() returns the size the path needs, including the terminator,
 // when the buffer is too small, and writes nothing. Retry with that size.
 // initialCch is a parameter so tests can force the retry.
+// not GetTempPath2W(): it only differs for processes running as SYSTEM,
+// which we never are
 TempStr GetTempDirTemp(int initialCch) {
     int cchBuf = initialCch < 1 ? 1 : initialCch;
     WCHAR* dir = AllocArrayTemp<WCHAR>(cchBuf + 1);

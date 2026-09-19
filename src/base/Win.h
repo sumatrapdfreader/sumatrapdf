@@ -339,9 +339,8 @@ TempStr GetLastErrorStrTemp(DWORD& err);
 void LogLastError(DWORD err = 0);
 Str GetLastErrorAsStr(Arena* arena);
 TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
-TempStr GetTempDirTemp();
 // initialCch is only a starting guess; tests pass a tiny value to force the retry
-TempStr GetTempDirTemp(int initialCch);
+TempStr GetTempDirTemp(int initialCch = MAX_PATH);
 void ChangeCurrDirToDocuments();
 TempStr ResolveLnkTemp(Str path);
 bool CreateShortcut(Str shortcutPath, Str exePath, Str args = Str(), Str description = Str(), int iconIndex = 0);

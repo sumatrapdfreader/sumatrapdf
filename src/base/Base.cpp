@@ -1443,28 +1443,21 @@ void StrNodeListPop(StrNodeList* list) {
 namespace str {
 
 // return true if s1 == s2, case sensitive
+// length up to the first NUL within len: a Str may span more than its C string
+static int CStrLen(Str s) {
+    int n = 0;
+    while (s.s && n < s.len && s.s[n]) {
+        n++;
+    }
+    return n;
+}
+
 bool Eq(Str s1, Str s2) {
     if (s1.s == s2.s) {
         return true;
     }
-    int len1 = 0;
-    while (!str::IsNull(s1) && len1 < s1.len && s1.s[len1]) {
-        len1++;
-    }
-    int len2 = 0;
-    while (!str::IsNull(s2) && len2 < s2.len && s2.s[len2]) {
-        len2++;
-    }
-    if (len1 != len2) {
-        return false;
-    }
-    if (len1 == 0) {
-        return true;
-    }
-    if (str::IsNull(s1) || str::IsNull(s2)) {
-        return false;
-    }
-    return MemEq(s1.s, s2.s, len1);
+    int n = CStrLen(s1);
+    return n == CStrLen(s2) && (n == 0 || MemEq(s1.s, s2.s, n));
 }
 
 // return true if s1 == s2, case insensitive
@@ -1475,13 +1468,7 @@ bool EqI(Str s1, Str s2) {
     if (s1.len != s2.len) {
         return false;
     }
-    if (len(s1) == 0) {
-        return true;
-    }
-    if (str::IsNull(s1) || str::IsNull(s2)) {
-        return false;
-    }
-    return 0 == _strnicmp(s1.s, s2.s, (size_t)s1.len);
+    return len(s1) == 0 || (s1.s && s2.s && 0 == _strnicmp(s1.s, s2.s, (size_t)s1.len));
 }
 
 // compares two strings ignoring case and whitespace
@@ -2938,13 +2925,7 @@ bool EqI(WStr s1, WStr s2) {
     if (s1.len != s2.len) {
         return false;
     }
-    if (len(s1) == 0) {
-        return true;
-    }
-    if (wstr::IsNull(s1) || wstr::IsNull(s2)) {
-        return false;
-    }
-    return EqNI(s1, s2, s1.len);
+    return len(s1) == 0 || (s1.s && s2.s && EqNI(s1, s2, s1.len));
 }
 
 bool EqN(WStr s1, WStr s2, int n) {

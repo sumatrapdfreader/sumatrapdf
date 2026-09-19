@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// Directory iteration and background scanning (implemented in DirScan*.cpp).
+// Directory iteration.
 // Not self-sufficient: include after base/Base.h.
 
 struct StrQueue;

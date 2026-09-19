@@ -174,52 +174,22 @@ Str GroupPrefix(IfdGroup g) {
     return StrL("");
 }
 
+// TIFF types are 1..10; name and element size, indexed by type
+static const struct {
+    Str name;
+    int elemSize;
+} kTiffTypes[] = {
+    {StrL("Unknown"), 0},      {StrL("Byte"), 1},        {StrL("ASCII"), 1},        {StrL("Short"), 2},
+    {StrL("Long"), 4},         {StrL("Ratio"), 8},       {StrL("Signed Byte"), 1},  {StrL("Undefined"), 1},
+    {StrL("Signed Short"), 2}, {StrL("Signed Long"), 4}, {StrL("Signed Ratio"), 8},
+};
+
 Str TypeName(u16 type) {
-    switch (type) {
-        case TiffByte:
-            return StrL("Byte");
-        case TiffAscii:
-            return StrL("ASCII");
-        case TiffShort:
-            return StrL("Short");
-        case TiffLong:
-            return StrL("Long");
-        case TiffRational:
-            return StrL("Ratio");
-        case TiffSByte:
-            return StrL("Signed Byte");
-        case TiffUndefined:
-            return StrL("Undefined");
-        case TiffSShort:
-            return StrL("Signed Short");
-        case TiffSLong:
-            return StrL("Signed Long");
-        case TiffSRational:
-            return StrL("Signed Ratio");
-        default:
-            return StrL("Unknown");
-    }
+    return type < dimof(kTiffTypes) ? kTiffTypes[type].name : StrL("Unknown");
 }
 
 int TypeElemSize(u16 type) {
-    switch (type) {
-        case TiffByte:
-        case TiffAscii:
-        case TiffSByte:
-        case TiffUndefined:
-            return 1;
-        case TiffShort:
-        case TiffSShort:
-            return 2;
-        case TiffLong:
-        case TiffSLong:
-            return 4;
-        case TiffRational:
-        case TiffSRational:
-            return 8;
-        default:
-            return 0;
-    }
+    return type < dimof(kTiffTypes) ? kTiffTypes[type].elemSize : 0;
 }
 
 const TagDef* TagsForGroup(IfdGroup g, int& n) {
@@ -366,8 +336,7 @@ Str FormatSceneType(u8 val) {
 }
 
 bool IsXpProp(ExifProp prop) {
-    return prop == ExifProp::XPTitle || prop == ExifProp::XPComment || prop == ExifProp::XPAuthor ||
-           prop == ExifProp::XPKeywords || prop == ExifProp::XPSubject;
+    return prop >= ExifProp::XPTitle && prop <= ExifProp::XPSubject;
 }
 
 bool IsAsciiUndefinedProp(ExifProp prop) {
@@ -650,64 +619,39 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
         return ToStrTemp(s);
     }
 
-    if (type == TiffShort || type == TiffSShort) {
+    int elemSize = TypeElemSize(type);
+    bool isInt = type == TiffByte || type == TiffSByte || type == TiffShort || type == TiffSShort || type == TiffLong ||
+                 type == TiffSLong;
+    if (isInt) {
+        bool isSigned = type == TiffSByte || type == TiffSShort || type == TiffSLong;
+        if (type == TiffShort && g == IfdGroup::Exif && tag == (u16)ExifProp::Flash && count == 1) {
+            Str fs = LookupEnumName(g, tag, ReadWord(parser, off));
+            if (fs) {
+                return fs;
+            }
+        }
+        // byte arrays and SubjectArea (0x9214) are shown in brackets
+        bool brackets = elemSize == 1 || (count > 1 && tag == 0x9214);
         char sScratch[256]{};
         str::Builder s;
         s.UseExternalBuffer(Str(sScratch, sizeofi(sScratch)));
+        if (brackets) {
+            s.AppendChar('[');
+        }
         for (u32 i = 0; i < count; i++) {
-            int eoff = off + ((int)i * 2);
+            int eoff = off + ((int)i * elemSize);
             if (i > 0) {
                 s.Append(StrL(", "));
             }
-            if (type == TiffSShort) {
-                s.Append(fmt("%d", (i16)ReadWord(parser, eoff)));
-            } else {
-                u32 v = ReadWord(parser, eoff);
-                if (g == IfdGroup::Exif && tag == (u16)ExifProp::Flash && count == 1) {
-                    Str fs = LookupEnumName(g, tag, v);
-                    if (fs) {
-                        return fs;
-                    }
-                }
-                s.Append(fmt("%u", v));
+            i64 v = elemSize == 1 ? r.UInt8(eoff) : elemSize == 2 ? ReadWord(parser, eoff) : ReadDWord(parser, eoff);
+            if (isSigned) {
+                v = elemSize == 1 ? (i8)v : elemSize == 2 ? (i16)v : (i32)v;
             }
+            s.Append(fmt("%lld", v));
         }
-        if (count > 1 && tag == 0x9214) {
-            return fmt("[%s]", ToStr(s));
+        if (brackets) {
+            s.AppendChar(']');
         }
-        return ToStrTemp(s);
-    }
-
-    if (type == TiffLong || type == TiffSLong) {
-        char sScratch[256]{};
-        str::Builder s;
-        s.UseExternalBuffer(Str(sScratch, sizeofi(sScratch)));
-        for (u32 i = 0; i < count; i++) {
-            int eoff = off + ((int)i * 4);
-            if (i > 0) {
-                s.Append(StrL(", "));
-            }
-            if (type == TiffSLong) {
-                s.Append(fmt("%d", (i32)ReadDWord(parser, eoff)));
-            } else {
-                s.Append(fmt("%u", ReadDWord(parser, eoff)));
-            }
-        }
-        return ToStrTemp(s);
-    }
-
-    if (type == TiffByte || type == TiffSByte) {
-        char sScratch[256]{};
-        str::Builder s;
-        s.UseExternalBuffer(Str(sScratch, sizeofi(sScratch)));
-        s.Append(StrL("["));
-        for (u32 i = 0; i < count; i++) {
-            if (i > 0) {
-                s.Append(StrL(", "));
-            }
-            s.Append(fmt("%u", r.UInt8(off + i)));
-        }
-        s.Append(StrL("]"));
         return ToStrTemp(s);
     }
 
