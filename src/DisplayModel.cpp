@@ -883,9 +883,14 @@ RectF DisplayModel::PageMediaBoxForLayout(int pageNo) const {
 }
 
 // Pick the media box to lay out not-yet-measured pages with: the most common
-// size among the visible pages, since comic book pages are usually all the same
-// size. Falls back to the pages measured so far (right after switching to
-// continuous mode nothing is visible yet) and finally to A4.
+// size among all the pages measured so far, since comic book pages are usually
+// all the same size. Falls back to A4 when nothing is measured yet.
+// Deliberately not "the most common size among the visible pages": scrolling
+// a double-page spread into view would flip the estimate to the spread size,
+// re-lay out every unmeasured page at half height (fit width) and flip back
+// on the next scroll tick, which made the scrollbar thumb bounce up and down
+// while dragging through a long comic (#6219). Counting every measured page
+// means a few spreads can't outvote the hundreds of single pages.
 void DisplayModel::UpdateEstimatedMediaBox() {
     if (!useLazyMediaBoxes) {
         return;
@@ -898,8 +903,7 @@ void DisplayModel::UpdateEstimatedMediaBox() {
 
     struct SizeCount {
         SizeF size;
-        int nVisible;
-        int nTotal;
+        int n;
     };
     SizeCount sizes[kMaxSizes];
     int nSizes = 0;
@@ -922,30 +926,24 @@ void DisplayModel::UpdateEstimatedMediaBox() {
                 continue;
             }
             idx = nSizes++;
-            sizes[idx] = {size, 0, 0};
+            sizes[idx] = {size, 0};
         }
-        sizes[idx].nTotal++;
-        if (pi->visibleRatio > 0) {
-            sizes[idx].nVisible++;
-        }
+        sizes[idx].n++;
     }
 
     SizeF best;
-    int bestVisible = 0;
-    int bestTotal = 0;
+    int bestN = 0;
     for (int i = 0; i < nSizes; i++) {
         const SizeCount& sc = sizes[i];
-        // most common among the visible pages; only if none of them is measured
-        // does the count over all measured pages decide
-        bool better = (sc.nVisible > bestVisible) || (bestVisible == 0 && sc.nTotal > bestTotal);
-        if (better) {
+        // strictly greater: on a tie keep the earlier size so the estimate
+        // doesn't flip back and forth between two equally common sizes
+        if (sc.n > bestN) {
             best = sc.size;
-            bestVisible = sc.nVisible;
-            bestTotal = sc.nTotal;
+            bestN = sc.n;
         }
     }
 
-    if (bestTotal == 0 || best.dx < kMinEstimateSize || best.dy < kMinEstimateSize) {
+    if (bestN == 0 || best.dx < kMinEstimateSize || best.dy < kMinEstimateSize) {
         estimatedMediaBox = DefaultMediaBox(engine);
         return;
     }
@@ -3239,6 +3237,20 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
     }
 
     PointF newPtD((float)std::max(st.x, (double)0), (float)std::max(st.y, (double)0));
+    // GetScrollState() maps the pixel it's at to (pixel - 0.499) page units
+    // (CvtFromScreen) and CvtToScreen() adds the 0.499 back and truncates, so
+    // the pixel to restore computes as X +/- float noise. Between float math
+    // and ScrollPos being saved with 6 significant digits it comes out a hair
+    // below X about half the time, truncating to X - 1: a restored session
+    // crept up by a pixel on every start (#6220). Aim a quarter pixel into the
+    // pixel instead so truncation can't miss it. Done as a screen-space step
+    // mapped through CvtFromScreen so it's right for any rotation.
+    if (st.x >= 0 || st.y >= 0) {
+        PointF p0 = CvtFromScreen(Point(0, 0), st.page);
+        PointF p1 = CvtFromScreen(Point(1, 1), st.page);
+        newPtD.x += (p1.x - p0.x) * 0.25f;
+        newPtD.y += (p1.y - p0.y) * 0.25f;
+    }
     Point newPt = CvtToScreen(st.page, newPtD);
     if (gLogScrollState) {
         logf("  newPtD: %d,%d\n", (int)newPtD.x, (int)newPtD.y);
