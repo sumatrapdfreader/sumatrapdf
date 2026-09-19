@@ -101,11 +101,8 @@ const utils: LibDef = {
     {
       dir: "src/base",
       patterns: [
-        "AppendStore.h",
-        "AppendStore.cpp",
         "ApiHook.*",
         "Archive.*",
-        "Arena.cpp",
         "Base.h",
         "Base.cpp",
         "ByteReaderWriter.*",
