@@ -2337,6 +2337,108 @@ TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+static TempStr PixmapRgbHexTemp(Pixmap* px, int x, int y) {
+    int bpp = PixmapBytesPerPixel(px->format);
+    u8* p = px->data + ((size_t)y * (size_t)px->stride) + ((size_t)x * (size_t)bpp);
+    // BGR order in memory
+    return fmt("%02x%02x%02x", (int)p[2], (int)p[1], (int)p[0]);
+}
+
+// Extracts the first image of a page the way Copy Image / Save Image do and
+// reports its size and corner colors, so a test can check it is oriented the
+// way it is drawn on the page (issue #6214).
+// writes px as a 24-bit BMP, for eyeballing the extracted image
+static void SavePixmapAsBmp(Pixmap* px, Str bmpPath) {
+    int w = px->width;
+    int h = px->height;
+    int bpp = PixmapBytesPerPixel(px->format);
+    int rowBytes = ((w * 3) + 3) & ~3;
+    int dataSize = rowBytes * h;
+    BITMAPFILEHEADER bfh{};
+    BITMAPINFOHEADER bih{};
+    bfh.bfType = 0x4d42; // "BM"
+    bfh.bfOffBits = sizeof(bfh) + sizeof(bih);
+    bfh.bfSize = bfh.bfOffBits + dataSize;
+    bih.biSize = sizeof(bih);
+    bih.biWidth = w;
+    bih.biHeight = h; // bottom-up
+    bih.biPlanes = 1;
+    bih.biBitCount = 24;
+    bih.biSizeImage = dataSize;
+    str::Builder out;
+    out.Append(Str((char*)&bfh, sizeof(bfh)));
+    out.Append(Str((char*)&bih, sizeof(bih)));
+    Vec<u8> row;
+    u8* rowData = VecAppendBlanks(row, rowBytes);
+    for (int y = h - 1; y >= 0; y--) {
+        const u8* sp = px->data + ((size_t)y * (size_t)px->stride);
+        u8* dp = rowData;
+        for (int x = 0; x < w; x++) {
+            dp[0] = sp[0];
+            dp[1] = sp[1];
+            dp[2] = sp[2];
+            sp += bpp;
+            dp += 3;
+        }
+        out.Append(Str((char*)rowData, rowBytes));
+    }
+    file::WriteFile(bmpPath, ToStrTemp(out));
+}
+
+TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, Str bmpPath, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        out.AppendChar('\n');
+        return ToStrTemp(out);
+    };
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        return fail(StrL("ERROR engine-create-failed"));
+    }
+    if (!engine->BenchLoadPage(pageNo)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR page-load-failed"));
+    }
+    IPageElement* imgEl = nullptr;
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    for (IPageElement* el : els) {
+        if (el && el->Is(kindPageElementImage)) {
+            imgEl = el;
+            break;
+        }
+    }
+    if (!imgEl) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR no-image-element"));
+    }
+    RenderedBitmap* bmp = engine->GetImageForPageElement(imgEl);
+    SafeEngineRelease(&engine);
+    if (!bmp) {
+        return fail(StrL("ERROR no-image"));
+    }
+    Pixmap* px = PixmapFromRenderedBitmap(bmp); // takes ownership of bmp
+    if (!px || !px->data) {
+        FreePixmap(px);
+        return fail(StrL("ERROR no-pixmap"));
+    }
+    int w = px->width;
+    int h = px->height;
+    out.Append(fmt("w=%d h=%d tl=%s tr=%s bl=%s br=%s\n", w, h, PixmapRgbHexTemp(px, 0, 0),
+                   PixmapRgbHexTemp(px, w - 1, 0), PixmapRgbHexTemp(px, 0, h - 1), PixmapRgbHexTemp(px, w - 1, h - 1)));
+    if (len(bmpPath) > 0) {
+        SavePixmapAsBmp(px, bmpPath);
+    }
+    FreePixmap(px);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // Current chapter/page and chapter table state of the front window's doc.
 // Used by tests/ad-hoc-chapters.ts.
 TempStr ChapterInfoResultTemp(int* exitCodeOut) {

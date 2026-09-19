@@ -2051,9 +2051,8 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Location loc, Vec<
         }
         image = block->u.i.image;
         if (image->colorspace != nullptr) {
-            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1480
-            // fz_convert_pixmap_samples doesn't handle src without colorspace
-            // TODO: this is probably not right
+            // no colorspace = stencil mask painted with the fill color, not a
+            // picture (#1480). FzFindImageAtIdx must skip the same blocks
             FitzPageImageInfo* img = new FitzPageImageInfo{block->bbox, block->u.i.transform};
             img->image = fz_keep_image(ctx, image);
             auto* pel = new PageElementImage();
@@ -2068,7 +2067,9 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Location loc, Vec<
     }
 }
 
-static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx) {
+// ctmOut, when given, receives the matrix the image is drawn with (unit
+// square to page space, mupdf's flip already applied)
+static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx, fz_matrix* ctmOut = nullptr) {
     fz_stext_options opts = NewTextPageOptions(FZ_STEXT_PRESERVE_IMAGES);
     fz_stext_page* stext = nullptr;
     fz_var(stext);
@@ -2090,12 +2091,12 @@ static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx
         }
         fz_image* image = block->u.i.image;
         if (image->colorspace != nullptr) {
-            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1480
-            // fz_convert_pixmap_samples doesn't handle src without colorspace
-            // TODO: this is probably not right
+            // same skip as FzFindImagePositions, so imageID stays aligned
             if (idx == 0) {
-                // TODO: or maybe get pixmap here
                 image = fz_keep_image(ctx, image);
+                if (ctmOut) {
+                    *ctmOut = block->u.i.transform;
+                }
                 fz_drop_stext_page(ctx, stext);
                 return image;
             }
@@ -7573,8 +7574,13 @@ Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
     }
     auto* ctx = Ctx();
     AutoUnlockRecursiveMutex scope(&docLock);
-    fz_image* image = FzFindImageAtIdx(ctx, pageInfo, pel->imageID);
+    fz_matrix imgCtm = fz_identity;
+    fz_image* image = FzFindImageAtIdx(ctx, pageInfo, pel->imageID, &imgCtm);
     if (!image) {
+        return {};
+    }
+    // a flipped / rotated image is saved from the reoriented bitmap instead
+    if (imgCtm.a <= 0 || imgCtm.d <= 0 || imgCtm.b != 0 || imgCtm.c != 0) {
         return {};
     }
     fz_compressed_buffer* cbuf = fz_compressed_image_buffer(ctx, image);
@@ -7630,6 +7636,57 @@ fz_matrix EngineMupdf::viewctm(fz_page* page, float zoom, int rotation) const {
     return FzCreateViewCtm(bounds, zoom, rotation);
 }
 
+// True for the flips and 90-degree rotations a cm matrix can apply to an
+// image; anything else (skew, arbitrary angle) is left in stored orientation.
+static bool FzIsOrthogonal(fz_matrix m) {
+    bool axisAligned = m.b == 0 && m.c == 0 && m.a != 0 && m.d != 0;
+    bool rotated = m.a == 0 && m.d == 0 && m.b != 0 && m.c != 0;
+    return axisAligned || rotated;
+}
+
+// Returns the pixmap turned the way ctm draws it on the page (#6214), or
+// nullptr when it's already upright. Samples are copied, not resampled.
+//
+//   stored          ctm = [w 0 0 -h x y]      ctm = [0 h -w 0 x y]
+//   +-----+         +-----+                   +---+
+//   |A   B|   =>    |C   D|    (v-flip)       |B D|  (90 deg ccw)
+//   |C   D|         |A   B|                   |A C|
+//   +-----+         +-----+                   +---+
+static fz_pixmap* FzOrientPixmap(fz_context* ctx, fz_pixmap* src, fz_matrix ctm) {
+    if (!FzIsOrthogonal(ctm)) {
+        return nullptr;
+    }
+    bool rotated = ctm.a == 0;
+    if (!rotated && ctm.a > 0 && ctm.d > 0) {
+        return nullptr;
+    }
+    int w = src->w;
+    int h = src->h;
+    int dstW = rotated ? h : w;
+    int dstH = rotated ? w : h;
+    fz_pixmap* dst = fz_new_pixmap(ctx, src->colorspace, dstW, dstH, src->seps, src->alpha);
+    dst->xres = src->xres;
+    dst->yres = src->yres;
+    int n = src->n;
+    for (int sy = 0; sy < h; sy++) {
+        const u8* sp = src->samples + ((size_t)sy * src->stride);
+        for (int sx = 0; sx < w; sx++) {
+            int dx, dy;
+            if (rotated) {
+                // unit (u, v) lands at (c*v + e, b*u + f): x follows the row, y the column
+                dx = ctm.c > 0 ? sy : h - 1 - sy;
+                dy = ctm.b > 0 ? sx : w - 1 - sx;
+            } else {
+                dx = ctm.a > 0 ? sx : w - 1 - sx;
+                dy = ctm.d > 0 ? sy : h - 1 - sy;
+            }
+            u8* dp = dst->samples + ((size_t)dy * dst->stride) + ((size_t)dx * n);
+            memcpy(dp, sp + ((size_t)sx * n), n);
+        }
+    }
+    return dst;
+}
+
 RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     auto* ctx = Ctx();
 
@@ -7652,7 +7709,8 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
 
     AutoUnlockRecursiveMutex scope(&docLock);
 
-    fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx);
+    fz_matrix imgCtm = fz_identity;
+    fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx, &imgCtm);
     // can happen when the file becomes unreadable (e.g. network drive read errors)
     if (!image) {
         return nullptr;
@@ -7661,8 +7719,10 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     RenderedBitmap* bmp = nullptr;
     fz_pixmap* pixmap = nullptr;
     fz_pixmap* mask = nullptr;
+    fz_pixmap* oriented = nullptr;
     fz_var(pixmap);
     fz_var(mask);
+    fz_var(oriented);
     fz_var(bmp);
 
     fz_try(ctx) {
@@ -7700,9 +7760,11 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
                 }
             }
         }
-        bmp = NewRenderedFzPixmap(ctx, pixmap);
+        oriented = FzOrientPixmap(ctx, pixmap, imgCtm);
+        bmp = NewRenderedFzPixmap(ctx, oriented ? oriented : pixmap);
     }
     fz_always(ctx) {
+        fz_drop_pixmap(ctx, oriented);
         fz_drop_pixmap(ctx, mask);
         fz_drop_pixmap(ctx, pixmap);
     }

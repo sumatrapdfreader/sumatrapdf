@@ -28,6 +28,7 @@ import { testit as issue5840 } from "./issue-5840.ts";
 import { testit as issue5844 } from "./issue-5844.ts";
 import { testit as issue3434 } from "./issue-3434.ts";
 import { testit as cmykImageSave } from "./cmyk-image-save.ts";
+import { testit as issue6214 } from "./issue-6214.ts";
 import { testit as issue1809 } from "./issue-1809.ts";
 import { testit as issue4398 } from "./issue-4398.ts";
 import { testit as issue6039 } from "./issue-6039.ts";
@@ -368,6 +369,7 @@ export const tests: NamedTest[] = [
   ["issue-893", issue893],
   ["annotation clipboard tests", annotationClipboardTests],
   ["cmyk-image-save", cmykImageSave],
+  ["issue-6214", issue6214],
   ["issue-5868", issue5868],
   ["issue-2252", issue2252],
   ["issue-5944", issue5944],

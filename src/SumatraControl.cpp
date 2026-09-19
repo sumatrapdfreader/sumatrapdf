@@ -906,6 +906,7 @@ enum class ControlCmd : u16 {
     WaitSessionRestored = 103,
     TestNavFiles = 104,
     TestSaveFileAs = 105,
+    TestImageOrientation = 106,
 };
 
 enum class ControlArgType : u16 {
@@ -1943,6 +1944,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = SaveFileAsResultTemp(dstPath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestImageOrientation: {
+            Str pdfPath = StringArg(req, 0);
+            i32 pageNo = 0;
+            if (len(pdfPath) == 0 || !IntArg(req, 1, pageNo) || pageNo < 1) {
+                AppendError(req, StrL("TestImageOrientation expects string pdfPath, int pageNo"));
+                break;
+            }
+            Str bmpPath = StringArg(req, 2); // optional
+            int exitCode = 0;
+            Str res = ImageOrientationResultTemp(pdfPath, pageNo, bmpPath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
