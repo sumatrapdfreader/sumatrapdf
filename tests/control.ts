@@ -99,6 +99,7 @@ export enum ControlCommand {
   StopPerfLog = 102,
   WaitSessionRestored = 103,
   TestNavFiles = 104,
+  TestSaveFileAs = 105,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

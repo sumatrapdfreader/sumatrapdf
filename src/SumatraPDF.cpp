@@ -6153,6 +6153,8 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
     return true;
 }
 
+static bool SaveDocAs(MainWindow* win, Str dstPath);
+
 static void SaveCurrentFileAs(MainWindow* win) {
     if (!CanAccessDisk()) {
         return;
@@ -6230,10 +6232,11 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ofn.lpstrFilter = CWStrTemp(fileFilterStr);
     ofn.nFilterIndex = 1;
     // defExt can be null, we want to skip '.'
-    if (len(defExt) > 0 && defExt.s[0] == '.') {
-        defExt = Str(defExt.s + 1, defExt.len - 1);
+    Str defExtNoDot = defExt;
+    if (len(defExtNoDot) > 0 && defExtNoDot.s[0] == '.') {
+        defExtNoDot = Str(defExtNoDot.s + 1, defExtNoDot.len - 1);
     }
-    ofn.lpstrDefExt = CWStrTemp(defExt);
+    ofn.lpstrDefExt = CWStrTemp(defExtNoDot);
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     // note: explicitly not setting lpstrInitialDir so that the OS
     // picks a reasonable default (in particular, we don't want this
@@ -6259,8 +6262,14 @@ static void SaveCurrentFileAs(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
-    ctrl = win->ctrl;
-    srcFileName = ctrl->GetFilePath();
+    SaveDocAs(win, ToUtf8Temp(dstFileName));
+}
+
+// Writes the open document to dstPath. A PostScript document saved as .pdf gets
+// the PDF Ghostscript produced; anything else is a copy of the source file.
+static bool SaveDocAs(MainWindow* win, Str dstPath) {
+    auto* ctrl = win->ctrl;
+    TempStr srcFileName = ctrl->GetFilePath();
     if (gPluginMode) {
         srcFileName = StrL("filename");
         TempStr urlName = url::GetFileNameTemp(gPluginURL);
@@ -6270,19 +6279,17 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
     if (len(srcFileName) == 0) {
         ShowTemporaryNotification(win->hwndCanvas, Tr("File path not available"), kNotif5SecsTimeOut);
-        return;
+        return false;
     }
-    defExt = ctrl->GetDefaultFileExt();
-    if (len(defExt) > 0 && defExt.s[0] == '.') {
-        defExt = Str(defExt.s + 1, defExt.len - 1);
-    }
-    dm = win->AsFixed();
-    engine = dm ? dm->GetEngine() : nullptr;
+    DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
 
-    TempStr realDstFileName = ToUtf8Temp(dstFileName);
+    TempStr realDstFileName = str::DupTemp(dstPath);
+    bool psAsPdf = engine && engine->kind == kindEnginePostScript && str::EndsWithI(realDstFileName, StrL(".pdf"));
 
     // Make sure that the file has a valid extension
-    if (!str::EndsWithI(realDstFileName, defExt)) {
+    Str defExt = ctrl->GetDefaultFileExt();
+    if (!psAsPdf && !str::EndsWithI(realDstFileName, defExt)) {
         realDstFileName = str::JoinTemp(realDstFileName, defExt);
     }
 
@@ -6290,8 +6297,9 @@ static void SaveCurrentFileAs(MainWindow* win) {
 
     // TODO: engine->SaveFileA() is stupid
     // Replace with EngineGetDocumentData() and save that if not empty
+    bool ok = true;
     TempStr errorMsg;
-    if (!file::Exists(srcFileName) && engine) {
+    if (psAsPdf || (!file::Exists(srcFileName) && engine)) {
         // Recreate nonexistent files from memory...
         logf("calling engine->SaveFileAs(%s)\n", realDstFileName);
         ok = engine->SaveFileAs(realDstFileName);
@@ -6316,19 +6324,34 @@ static void SaveCurrentFileAs(MainWindow* win) {
     // than MAX_PATH) can report success while nothing was actually written, so
     // the user has no way to tell the save silently failed (issue #1016).
     if (ok && !file::Exists(realDstFileName)) {
-        logf("SaveCurrentFileAs(): '%s' doesn't exist after a reportedly successful save\n", realDstFileName);
+        logf("SaveDocAs(): '%s' doesn't exist after a reportedly successful save\n", realDstFileName);
         ok = false;
     }
     if (!ok) {
         TempStr msg = errorMsg ? errorMsg : Str(Tr("Failed to save a file"));
-        logf("SaveCurrentFileAs() failed with '%s'\n", msg);
+        logf("SaveDocAs() failed with '%s'\n", msg);
         MessageBoxWarning(win->hwndFrame, msg);
+        return false;
     }
 
     auto path = ctrl->GetFilePath();
-    if (ok && IsUntrustedFile(path, gPluginURL)) {
+    if (IsUntrustedFile(path, gPluginURL)) {
         file::SetZoneIdentifier(realDstFileName);
     }
+    return true;
+}
+
+// -dbg-control TestSaveFileAs: Save As without the dialog
+TempStr SaveFileAsResultTemp(Str dstPath, int* exitCodeOut) {
+    *exitCodeOut = 1;
+    if (len(gWindows) == 0 || !gWindows[0] || !gWindows[0]->IsDocLoaded()) {
+        return StrL("NOTREADY no-document");
+    }
+    if (!SaveDocAs(gWindows[0], dstPath)) {
+        return StrL("FAIL save");
+    }
+    *exitCodeOut = 0;
+    return StrL("OK");
 }
 
 // FilePicker: empty/os = Windows dialog; sumatrapdf = Navigate Files in Folder.

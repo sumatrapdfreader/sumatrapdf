@@ -8,43 +8,18 @@
 //
 // Run: bun tests/ad-hoc-ps-engine.ts [--no-build]
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { findGhostscript, pdfToPs, ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
 
 const PS_PAGE_COUNT = 2;
 
-function findGhostscript(): string {
-  for (const base of ["C:\\Program Files\\gs", "C:\\Program Files (x86)\\gs"]) {
-    if (!existsSync(base)) {
-      continue;
-    }
-    for (const ver of readdirSync(base)) {
-      for (const exe of ["gswin64c.exe", "gswin32c.exe"]) {
-        const path = join(base, ver, "bin", exe);
-        if (existsSync(path)) {
-          return path;
-        }
-      }
-    }
-  }
-  return "";
-}
-
 // a 2-page PDF from the repo, converted to PostScript
 async function makePsFile(gs: string, dir: string): Promise<string> {
-  const src = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
   const dst = join(dir, "multipage.ps");
-  const proc = Bun.spawn([gs, "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=ps2write", `-sOutputFile=${dst}`, src], {
-    stdout: "ignore",
-    stderr: "ignore",
-  });
-  const code = await proc.exited;
-  if (code !== 0 || !existsSync(dst)) {
-    throw new Error(`ad-hoc-ps-engine: ghostscript could not make ${dst} (exit ${code})`);
-  }
+  await pdfToPs(gs, join(ROOT, "ext", "a-zlib", "zlib.3.pdf"), dst);
   return dst;
 }
 

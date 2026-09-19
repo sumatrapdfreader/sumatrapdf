@@ -339,6 +339,7 @@ void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);
 
 TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCodeOut = nullptr);
 TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
+TempStr SaveFileAsResultTemp(Str dstPath, int* exitCodeOut);
 bool DocIsSupportedFileType(FileType);
 void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, bool showWin = true);
 void ShowFileInFolder(MainWindow* win, Str path);

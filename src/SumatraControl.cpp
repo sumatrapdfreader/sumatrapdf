@@ -905,6 +905,7 @@ enum class ControlCmd : u16 {
     StopPerfLog = 102,
     WaitSessionRestored = 103,
     TestNavFiles = 104,
+    TestSaveFileAs = 105,
 };
 
 enum class ControlArgType : u16 {
@@ -1930,6 +1931,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 1, idx);
             int exitCode = 0;
             Str res = NavFilesInFolderStateTemp(action, idx, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSaveFileAs: {
+            Str dstPath = StringArg(req, 0);
+            if (len(dstPath) == 0) {
+                AppendError(req, StrL("TestSaveFileAs expects string dstPath"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = SaveFileAsResultTemp(dstPath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

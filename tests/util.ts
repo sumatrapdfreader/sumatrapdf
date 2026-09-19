@@ -10,6 +10,7 @@ import {
   copyFileSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
   statSync,
@@ -338,6 +339,36 @@ export const TMP_DIR = join(TESTS_TMP_DIR, "tmp");
 export function tmpPath(name: string): string {
   mkdirSync(TMP_DIR, { recursive: true });
   return join(TMP_DIR, name);
+}
+
+// path of an installed Ghostscript console exe, "" when none
+export function findGhostscript(): string {
+  for (const base of ["C:\\Program Files\\gs", "C:\\Program Files (x86)\\gs"]) {
+    if (!existsSync(base)) {
+      continue;
+    }
+    for (const ver of readdirSync(base)) {
+      for (const exe of ["gswin64c.exe", "gswin32c.exe"]) {
+        const path = join(base, ver, "bin", exe);
+        if (existsSync(path)) {
+          return path;
+        }
+      }
+    }
+  }
+  return "";
+}
+
+// convert a PDF to PostScript with Ghostscript
+export async function pdfToPs(gs: string, src: string, dst: string): Promise<void> {
+  const proc = Bun.spawn([gs, "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=ps2write", `-sOutputFile=${dst}`, src], {
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  const code = await proc.exited;
+  if (code !== 0 || !existsSync(dst)) {
+    throw new Error(`ghostscript could not make ${dst} (exit ${code})`);
+  }
 }
 
 // format a duration in ms for test output (e.g. 34.3ms, 2.3s, 3m 2.3s)
