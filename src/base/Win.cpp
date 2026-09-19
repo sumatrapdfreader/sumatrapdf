@@ -2523,20 +2523,6 @@ void LogConsole(Str s) {
     }
 }
 
-void SendEnterIfLoggedToConsole() {
-    InitConsoleState();
-    if (!gLoggedToConsole) {
-        return;
-    }
-    if (gConsoleState != ConsoleState::AttachedToParent) {
-        return;
-    }
-    if (!gStartupForegroundWindow) {
-        return;
-    }
-    SendEnterToParentConsole(gStartupForegroundWindow);
-}
-
 //--- registry
 
 bool gLogRegistryCalls = false;

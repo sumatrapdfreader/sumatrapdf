@@ -161,8 +161,6 @@ int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
 void* AtomicPtrExchange(AtomicPtr* p, void* v);
 
-i64 UnixTimeMsNow();
-
 struct Arena;
 
 struct Str {
@@ -247,8 +245,6 @@ inline int len(const wchar_t* s) {
 #define FORCEINLINE inline __attribute__((always_inline))
 #endif
 
-#define NoOp() ((void)0)
-
 template <typename T, size_t N>
 char (&DimofSizeHelper(T (&array)[N]))[N];
 #define dimof(array) (sizeof(DimofSizeHelper(array)))
@@ -260,12 +256,6 @@ char (&DimofSizeHelper(T (&array)[N]))[N];
 // enable msvc equivalent of -Wundef gcc option, warns when doing "#if FOO" and FOO is not defined
 // can't be turned on globally because windows headers have those
 #pragma warning(default : 4668)
-#endif
-
-#if COMPILER_MSVC
-#define IS_UNUSED
-#else
-#define IS_UNUSED __attribute__((unused))
 #endif
 
 // __analysis_assume is defined by msvc for prefast analysis
@@ -394,41 +384,6 @@ inline bool addOverflows(T val, T n) {
     ReportIf(val < 0);
     T res = val + n;
     return val > res;
-}
-
-// return false if adding n to val overflows. Only valid for n > 0
-template <typename T>
-inline bool addSafe(T* valInOut, T n) {
-    if (n == 0 || *valInOut == 0) {
-        valInOut = 0;
-        return true;
-    }
-    ReportIf(n < 0);
-    ReportIf(*valInOut < 0);
-    T res = *valInOut + n;
-    if (res < *valInOut) {
-        return false;
-    }
-    *valInOut = res;
-    return true;
-}
-
-// return false if multiplying val by n overflows. Only valid for n > 0
-template <typename T>
-inline bool mulSafe(T* valInOut, T n) {
-    if (n == 0 || *valInOut == 0) {
-        *valInOut = 0;
-        return true;
-    }
-    ReportIf(n < 0);
-    ReportIf(*valInOut < 0);
-    T res = *valInOut * n;
-    if (res < *valInOut || res < n) {
-        // multiplication overflowed
-        return false;
-    }
-    *valInOut = res;
-    return true;
 }
 
 bool MemEq(const void* s1, const void* s2, int n);
@@ -1215,10 +1170,6 @@ T* VecAppendBlanks(Vec<T>& v, int count);
 template <typename T>
 bool VecInsertAt(Vec<T>& v, int idx, const VecIdentityT<T>& el);
 
-// Append to any vec-shaped struct, from an arena or the heap.
-template <typename T, typename E>
-bool VecPush(Arena* arena, T& v, E el);
-
 //--- removing ---------------------------------------------------------------
 
 // Remove count elements at idx, moving the rest down.
@@ -1470,16 +1421,6 @@ bool VecInsertAt(Vec<T>& v, int idx, const VecIdentityT<T>& el) {
         return false;
     }
     p[0] = el;
-    return true;
-}
-
-template <typename T, typename E>
-bool VecPush(Arena* arena, T& v, E el) {
-    if (!VecGrow(arena, v, 1)) {
-        return false;
-    }
-    v.els[v.len] = el;
-    v.len++;
     return true;
 }
 

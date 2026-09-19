@@ -364,7 +364,6 @@ bool RedirectIOToConsole();
 bool RedirectIOToExistingConsole();
 void HandleRedirectedConsoleOnShutdown();
 void LogConsole(Str s);
-void SendEnterIfLoggedToConsole();
 bool WasLaunchedByPowershellWithPipeRedirect();
 
 //--- registry

@@ -80,14 +80,8 @@ bool Exists(Str path);
 FILE* OpenFILE(Str path);
 FileHandle OpenReadOnly(Str path);
 
-// handle-based i/o, for files kept open across many reads / appends
-FileHandle OpenReadWrite(Str path, bool createIfMissing);
 void Close(FileHandle);
-i64 SeekEnd(FileHandle);
-bool WriteAll(FileHandle, Str data);
-bool ReadAt(FileHandle, i64 offset, void* buf, int size);
 bool Flush(FileHandle);
-TempStr LastErrorTemp();
 
 Str ReadFileWithArena(Str path, Arena*);
 Str ReadFile(Str path);
