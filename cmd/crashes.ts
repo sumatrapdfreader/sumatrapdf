@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSyn
 import { join, resolve, relative } from "node:path";
 import { homedir, cpus } from "node:os";
 import { spawn, spawnSync } from "node:child_process";
+import { inflateRawSync } from "node:zlib";
 
 const ROOT = resolve(join(import.meta.dir, ".."));
 const CACHE_DIR = join(ROOT, ".work", "crashes");
@@ -453,7 +454,7 @@ function symbolCacheKey(version: string): string {
   return version.trim().replace(/[^\w.-]+/g, "_") || "unknown";
 }
 
-// ext is ".pdb.lzsa" or ".exe"; the arch part of the name is the same for both
+// ext is ".pdb.zip" or ".exe"; the arch part of the name is the same for both
 function dlUrlForVersion(version: string, ext: string): string {
   const v = version.trim();
   const arch = archSuffix(v);
@@ -471,163 +472,65 @@ function dlUrlForVersion(version: string, ext: string): string {
   return "";
 }
 
+function readU16(buf: Uint8Array, off: number): number {
+  return buf[off] | (buf[off + 1] << 8);
+}
+
 function readU32(buf: Uint8Array, off: number): number {
-  return buf[off] | (buf[off + 1] << 8) | (buf[off + 2] << 16) | (buf[off + 3] << 24);
+  return (buf[off] | (buf[off + 1] << 8) | (buf[off + 2] << 16) | (buf[off + 3] << 24)) >>> 0;
 }
 
-function readCString(buf: Uint8Array, off: number): string {
-  let end = off;
-  while (end < buf.length && buf[end] !== 0) {
-    end++;
-  }
-  return new TextDecoder("utf-8").decode(buf.subarray(off, end));
-}
-
-function x86BcjDecode(data: Uint8Array): void {
-  const kMaskToAllowedStatus = [1, 1, 1, 0, 1, 0, 0, 0];
-  const kMaskToBitNumber = [0, 1, 2, 2, 3, 3, 3, 3];
-  const testMs = (b: number) => b === 0 || b === 0xff;
-  const size = data.length;
-  if (size < 5) {
-    return;
-  }
-  let bufferPos = 0;
-  let prevPosT = -1;
-  let prevMask = 0;
-  let ip = 5;
-  for (;;) {
-    let p = bufferPos;
-    const limit = size - 4;
-    while (p < limit && (data[p] & 0xfe) !== 0xe8) {
-      p++;
-    }
-    bufferPos = p;
-    if (p >= limit) {
+// minimal .zip reader: walks the central directory, supports stored (0) and
+// deflate (8) entries, which is all 7z -tzip produces for our .pdb.zip
+function extractZipPdb(archive: Uint8Array, destDir: string): void {
+  // end of central directory record: signature 0x06054b50, min 22 bytes, at most 64k comment
+  let eocd = -1;
+  for (let i = archive.length - 22; i >= Math.max(0, archive.length - 22 - 0xffff); i--) {
+    if (readU32(archive, i) === 0x06054b50) {
+      eocd = i;
       break;
     }
-    prevPosT = bufferPos - prevPosT;
-    if (prevPosT > 3) {
-      prevMask = 0;
-    } else {
-      prevMask = (prevMask << (prevPosT - 1)) & 0x7;
-      if (prevMask !== 0) {
-        const b = data[p + 4 - kMaskToBitNumber[prevMask]];
-        if (!kMaskToAllowedStatus[prevMask] || testMs(b)) {
-          prevPosT = bufferPos;
-          prevMask = ((prevMask << 1) & 0x7) | 1;
-          bufferPos++;
-          continue;
-        }
-      }
-    }
-    prevPosT = bufferPos;
-    if (testMs(data[p + 4])) {
-      let src = (data[p + 4] << 24) | (data[p + 3] << 16) | (data[p + 2] << 8) | data[p + 1];
-      src = src >>> 0;
-      let dest = 0;
-      for (;;) {
-        dest = (src - (ip + bufferPos)) >>> 0;
-        if (prevMask === 0) {
-          break;
-        }
-        const index = kMaskToBitNumber[prevMask] * 8;
-        const b = (dest >>> (24 - index)) & 0xff;
-        if (!testMs(b)) {
-          break;
-        }
-        src = (dest ^ ((1 << (32 - index)) - 1)) >>> 0;
-      }
-      data[p + 4] = ~((((dest >>> 24) & 1) - 1) >>> 0) & 0xff;
-      data[p + 3] = (dest >>> 16) & 0xff;
-      data[p + 2] = (dest >>> 8) & 0xff;
-      data[p + 1] = dest & 0xff;
-      bufferPos += 5;
-    } else {
-      prevMask = ((prevMask << 1) & 0x7) | 1;
-      bufferPos++;
-    }
   }
-}
-
-function pythonLzma(): string[] | null {
-  for (const cmd of [["py", "-3"], ["python"], ["python3"]]) {
-    const r = spawnSync(cmd[0], [...cmd.slice(1), "-c", "import lzma"], { encoding: "utf8" });
-    if (r.status === 0) {
-      return cmd;
-    }
+  if (eocd < 0) {
+    throw new Error("not a zip archive (no end of central directory)");
   }
-  return null;
-}
-
-function lzmaDecompress(propsAndPayload: Uint8Array, unpackedSize: number): Uint8Array {
-  const py = pythonLzma();
-  if (!py) {
-    throw new Error("python with lzma is required to unpack .pdb.lzsa");
-  }
-  const script = `
-import lzma, sys
-n = int(sys.argv[1])
-d = sys.stdin.buffer.read()
-# LzSA stores no unpacked size in the LZMA header; -1 is FORMAT_ALONE "unknown"
-header = d[:5] + (0xFFFFFFFFFFFFFFFF).to_bytes(8, "little")
-out = lzma.decompress(header + d[5:], format=lzma.FORMAT_ALONE)
-if len(out) != n:
-    raise SystemExit(f"lzma size {len(out)} want {n}")
-sys.stdout.buffer.write(out)
-`;
-  const r = spawnSync(py[0], [...py.slice(1), "-c", script, String(unpackedSize)], {
-    input: Buffer.from(propsAndPayload),
-    encoding: "buffer",
-    maxBuffer: unpackedSize + 16 * 1024 * 1024,
-  });
-  if (r.status !== 0) {
-    throw new Error(`lzma decompress failed: ${r.stderr?.toString() || r.status}`);
-  }
-  return new Uint8Array(r.stdout);
-}
-
-function extractLzsaPdb(archive: Uint8Array, destDir: string): void {
-  if (archive.length < 8) {
-    throw new Error("lzsa too small");
-  }
-  const magic = readU32(archive, 0);
-  if (magic !== 0x41537a4c) {
-    throw new Error("not an LzSA archive");
-  }
-  const nFiles = readU32(archive, 4);
-  type FileEnt = { name: string; compressedSize: number; uncompressedSize: number; dataOff: number };
-  const files: FileEnt[] = [];
-  let off = 8;
-  for (let i = 0; i < nFiles; i++) {
-    const hdrSize = readU32(archive, off);
-    const compressedSize = readU32(archive, off + 4);
-    const uncompressedSize = readU32(archive, off + 8);
-    const name = readCString(archive, off + 24);
-    files.push({ name, compressedSize, uncompressedSize, dataOff: 0 });
-    off += hdrSize;
-  }
-  off += 4; // header crc
-  for (const f of files) {
-    f.dataOff = off;
-    off += f.compressedSize;
-  }
+  const nEntries = readU16(archive, eocd + 10);
+  let off = readU32(archive, eocd + 16); // central directory offset
   mkdirSync(destDir, { recursive: true });
-  for (const f of files) {
-    const chunk = archive.subarray(f.dataOff, f.dataOff + f.compressedSize);
-    if (chunk.length < 1) {
-      throw new Error(`empty lzsa file ${f.name}`);
+  for (let i = 0; i < nEntries; i++) {
+    if (readU32(archive, off) !== 0x02014b50) {
+      throw new Error(`bad central directory entry at ${off}`);
     }
+    const method = readU16(archive, off + 10);
+    const compressedSize = readU32(archive, off + 20);
+    const uncompressedSize = readU32(archive, off + 24);
+    const nameLen = readU16(archive, off + 28);
+    const extraLen = readU16(archive, off + 30);
+    const commentLen = readU16(archive, off + 32);
+    const localOff = readU32(archive, off + 42);
+    const name = new TextDecoder("utf-8").decode(archive.subarray(off + 46, off + 46 + nameLen));
+    off += 46 + nameLen + extraLen + commentLen;
+    if (name.endsWith("/")) {
+      continue;
+    }
+    if (readU32(archive, localOff) !== 0x04034b50) {
+      throw new Error(`bad local header for ${name}`);
+    }
+    const dataOff = localOff + 30 + readU16(archive, localOff + 26) + readU16(archive, localOff + 28);
+    const chunk = archive.subarray(dataOff, dataOff + compressedSize);
     let raw: Uint8Array;
-    const filter = chunk[0];
-    if (filter === 0xff) {
-      raw = chunk.subarray(1);
+    if (method === 0) {
+      raw = chunk;
+    } else if (method === 8) {
+      raw = new Uint8Array(inflateRawSync(chunk));
     } else {
-      raw = lzmaDecompress(chunk.subarray(1), f.uncompressedSize);
-      if (filter === 1) {
-        x86BcjDecode(raw);
-      }
+      throw new Error(`unsupported zip method ${method} for ${name}`);
     }
-    writeFileSync(join(destDir, f.name), raw);
+    if (raw.length !== uncompressedSize) {
+      throw new Error(`zip size mismatch for ${name}: ${raw.length} want ${uncompressedSize}`);
+    }
+    // flatten: we only care about the .pdb files at the top level
+    writeFileSync(join(destDir, name.split("/").pop()!), raw);
   }
 }
 
@@ -664,19 +567,19 @@ async function ensureSymbols(row: DumpRow): Promise<string> {
     return await p;
   }
   p = (async () => {
-    const url = dlUrlForVersion(row.version, ".pdb.lzsa");
+    const url = dlUrlForVersion(row.version, ".pdb.zip");
     if (!url) {
       throw new Error(`no pdb source for version '${row.version}'`);
     }
     mkdirSync(dir, { recursive: true });
-    const lzsaPath = join(dir, "pdb.lzsa");
-    if (!existsSync(lzsaPath) || statSync(lzsaPath).size === 0) {
+    const zipPath = join(dir, "pdb.zip");
+    if (!existsSync(zipPath) || statSync(zipPath).size === 0) {
       console.log(`pdb: downloading ${url}`);
-      writeFileSync(lzsaPath, await fetchBytes(url));
+      writeFileSync(zipPath, await fetchBytes(url));
     }
-    extractLzsaPdb(readFileSync(lzsaPath), dir);
+    extractZipPdb(readFileSync(zipPath), dir);
     if (!hasSumatraPdbs(dir)) {
-      throw new Error(`pdb lzsa missing SumatraPDF.pdb or libsumatrapdf.pdb (${url})`);
+      throw new Error(`pdb zip missing SumatraPDF.pdb or libsumatrapdf.pdb (${url})`);
     }
     return dir;
   })();
