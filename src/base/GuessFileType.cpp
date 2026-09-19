@@ -188,21 +188,7 @@ static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
 
 // PDF files have %PDF-${ver} somewhere in the beginning of the file
 static bool IsPdfFileContent(Str d) {
-    if (d.len < 8) {
-        return false;
-    }
-    Str data = Str((char*)((u8*)d.s), d.len - 5);
-    while (data.len >= 5) {
-        int idx = str::IndexOfChar(data, '%');
-        if (idx < 0) {
-            return false;
-        }
-        if (str::EqN(Str(data.s + idx, data.len - idx), StrL("%PDF-"), 5)) {
-            return true;
-        }
-        data = Str(data.s + idx + 1, data.len - idx - 1);
-    }
-    return false;
+    return d.len >= 8 && str::IndexOf(d, StrL("%PDF-")) >= 0;
 }
 
 static bool IsPSFileContent(Str d) {
@@ -239,40 +225,24 @@ static bool IsPSFileContent(Str d) {
 // https://nokiatech.github.io/heif/technical.html
 // HEIF is the container, HEIC is its HEVC-coded flavour. We decode both
 // the same way, so .heif and .heic share one FileType.
+// ftyp brands per https://github.com/strukturag/libheif/issues/83
 static FileType DetectHicAndAvif(Str d) {
     if (d.len < 0x18) {
         return FileType::Unknown;
     }
-    Str s = d;
-    Str hdr = Str(s.s + 4, s.len - 4);
-    // ftyp values per https://github.com/strukturag/libheif/issues/83
-    /*
-        'heic': the usual HEIF images
-        'heix': 10bit images, or anything that uses h265 with range extension
-        'hevc', 'hevx': brands for image sequences
-        'heim': multiview
-        'heis': scalable
-        'hevm': multiview sequence
-        'hevs': scalable sequence
-
-        'mif1' also happens?
-    */
-    // TODO: support more ftyp types?
-    if (str::StartsWith(hdr, StrL("ftypheic"))) {
-        return FileType::Heic;
-    }
-    if (str::StartsWith(hdr, StrL("ftypheix"))) {
-        return FileType::Heic;
-    }
-    if (str::StartsWith(hdr, StrL("ftypmif1"))) {
-        return FileType::Heic;
-    }
-    if (str::StartsWith(hdr, StrL("ftypavif"))) {
-        return FileType::Avif;
-    }
-    hdr = Str(s.s + 16, s.len - 16);
-    if (str::StartsWith(hdr, StrL("mif1heic"))) {
-        return FileType::Heic;
+    static const struct {
+        int off;
+        Str brand;
+        FileType type;
+    } kBrands[] = {
+        {4, StrL("ftypheic"), FileType::Heic},  {4, StrL("ftypheix"), FileType::Heic},
+        {4, StrL("ftypmif1"), FileType::Heic},  {4, StrL("ftypavif"), FileType::Avif},
+        {16, StrL("mif1heic"), FileType::Heic},
+    };
+    for (auto& b : kBrands) {
+        if (str::StartsWith(Str(d.s + b.off, d.len - b.off), b.brand)) {
+            return b.type;
+        }
     }
     return FileType::Unknown;
 }
@@ -420,69 +390,66 @@ static void ParsePng(ByteReader r, FileTypeInfo& res) {
 
 // try to get image dimensions from EXIF sub-IFD (tags 0xA002/0xA003)
 // tiffBase is the offset into r where the TIFF header starts
+// Offset of the entry for `tag` in the IFD at ifdAbs (12 bytes each, after a
+// 2-byte count), or -1
+static int FindIfdEntry(ByteReader r, int ifdAbs, bool isBE, u16 tag) {
+    if (ifdAbs < 0 || ifdAbs + 2 > r.len) {
+        return -1;
+    }
+    u16 count = r.UInt16(ifdAbs, isBE);
+    for (u16 i = 0; i < count; i++) {
+        int entryOff = ifdAbs + 2 + (i * 12);
+        if (entryOff + 12 > r.len) {
+            break;
+        }
+        if (r.UInt16(entryOff, isBE) == tag) {
+            return entryOff;
+        }
+    }
+    return -1;
+}
+
+// SHORT or LONG value of an IFD entry, 0 for anything else
+static int IfdEntryInt(ByteReader r, int entryOff, bool isBE) {
+    u16 type = r.UInt16(entryOff + 2, isBE);
+    if (type == 4) {
+        return (int)r.UInt32(entryOff + 8, isBE);
+    }
+    if (type == 3) {
+        return r.UInt16(entryOff + 8, isBE);
+    }
+    return 0;
+}
+
+// tiffBase is the start of the TIFF header inside an EXIF APP1 segment
 static bool JpegSizeFromExif(ByteReader r, int tiffBase, FileTypeInfo& res) {
-    int n = r.len;
-    if (tiffBase + 8 > n) {
+    if (tiffBase + 8 > r.len) {
         return false;
     }
     bool isBE = r.UInt8(tiffBase) == 'M';
-    // read IFD0 offset
-    int ifdOff = (int)r.UInt32(tiffBase + 4, isBE);
-    int ifdAbs = tiffBase + ifdOff;
-    if (ifdAbs + 2 > n) {
+    int ifd0 = tiffBase + (int)r.UInt32(tiffBase + 4, isBE);
+    int exifPtr = FindIfdEntry(r, ifd0, isBE, 0x8769); // ExifIFD pointer
+    if (exifPtr < 0) {
         return false;
     }
-    u16 count = r.UInt16(ifdAbs, isBE);
-    int exifIfdOff = 0;
-    // scan IFD0 for ExifIFD pointer (tag 0x8769)
-    for (u16 i = 0; i < count; i++) {
-        int entryOff = ifdAbs + 2 + (i * 12);
-        if (entryOff + 12 > n) {
-            break;
-        }
-        u16 tag = r.UInt16(entryOff, isBE);
-        if (tag == 0x8769) {
-            exifIfdOff = (int)r.UInt32(entryOff + 8, isBE);
-            break;
-        }
+    int exifIfd = tiffBase + (int)r.UInt32(exifPtr + 8, isBE);
+    int dx = FindIfdEntry(r, exifIfd, isBE, 0xA002); // PixelXDimension
+    int dy = FindIfdEntry(r, exifIfd, isBE, 0xA003); // PixelYDimension
+    if (dx >= 0) {
+        res.imageDx = IfdEntryInt(r, dx, isBE);
     }
-    if (exifIfdOff == 0) {
-        return false;
-    }
-    // read EXIF sub-IFD
-    int exifAbs = tiffBase + exifIfdOff;
-    if (exifAbs + 2 > n) {
-        return false;
-    }
-    count = r.UInt16(exifAbs, isBE);
-    for (u16 i = 0; i < count; i++) {
-        int entryOff = exifAbs + 2 + (i * 12);
-        if (entryOff + 12 > n) {
-            break;
-        }
-        u16 tag = r.UInt16(entryOff, isBE);
-        u16 type = r.UInt16(entryOff + 2, isBE);
-        if (tag == 0xA002) {
-            // PixelXDimension
-            if (type == 4) {
-                res.imageDx = (int)r.UInt32(entryOff + 8, isBE);
-            } else if (type == 3) {
-                res.imageDx = r.UInt16(entryOff + 8, isBE);
-            }
-        } else if (tag == 0xA003) {
-            // PixelYDimension
-            if (type == 4) {
-                res.imageDy = (int)r.UInt32(entryOff + 8, isBE);
-            } else if (type == 3) {
-                res.imageDy = r.UInt16(entryOff + 8, isBE);
-            }
-        }
+    if (dy >= 0) {
+        res.imageDy = IfdEntryInt(r, dy, isBE);
     }
     return res.imageDx > 0 && res.imageDy > 0;
 }
 
-static void ParseJpeg(ByteReader r, FileTypeInfo& res) {
-    res.nImages = 1;
+static int ExifOrientationFromTiff(ByteReader r, int tiffBase);
+
+// Walks the JPEG marker segments. With res, records the frame size (from the
+// start-of-frame, else from EXIF); with orientationOut, the EXIF orientation.
+// Stops at the start of frame / scan / end of image.
+static void ParseJpeg(ByteReader r, FileTypeInfo* res, int* orientationOut) {
     int n = r.len;
     int idx = 2;
     for (;;) {
@@ -501,11 +468,10 @@ static void ParseJpeg(ByteReader r, FileTypeInfo& res) {
         if (0xC0 <= marker && marker <= 0xC3 || 0xC9 <= marker && marker <= 0xCB) {
             // start of frame for non-differential Huffman/arithmetic coding:
             // segment length, precision, then height and width
-            if (idx + 7 > n) {
-                return;
+            if (res && idx + 7 <= n) {
+                res->imageDy = r.UInt16BE(idx + 3);
+                res->imageDx = r.UInt16BE(idx + 5);
             }
-            res.imageDy = r.UInt16BE(idx + 3);
-            res.imageDx = r.UInt16BE(idx + 5);
             return;
         }
         if (marker == 0xDA || marker == 0xD9) {
@@ -520,13 +486,18 @@ static void ParseJpeg(ByteReader r, FileTypeInfo& res) {
         if (segLen < 2) {
             return;
         }
-        if (marker == 0xE1 && idx + 8 <= n) {
-            // APP1: if it's EXIF, opportunistically parse dimensions from it;
-            // a start of frame later in the buffer overwrites them, but for a
-            // truncated buffer this may be the only size available
-            if (r.UInt8(idx + 2) == 'E' && r.UInt8(idx + 3) == 'x' && r.UInt8(idx + 4) == 'i' &&
-                r.UInt8(idx + 5) == 'f' && r.UInt8(idx + 6) == 0 && r.UInt8(idx + 7) == 0) {
-                JpegSizeFromExif(r, idx + 8, res);
+        bool isExif = marker == 0xE1 && idx + 8 <= n && r.UInt8(idx + 2) == 'E' && r.UInt8(idx + 3) == 'x' &&
+                      r.UInt8(idx + 4) == 'i' && r.UInt8(idx + 5) == 'f' && r.UInt8(idx + 6) == 0 &&
+                      r.UInt8(idx + 7) == 0;
+        if (isExif) {
+            // a start of frame later overwrites the size, but for a truncated
+            // buffer this may be the only one available
+            if (res) {
+                JpegSizeFromExif(r, idx + 8, *res);
+            }
+            if (orientationOut) {
+                *orientationOut = ExifOrientationFromTiff(r, idx + 8);
+                return;
             }
         }
         idx += segLen;
@@ -802,67 +773,13 @@ bool ExifOrientationSwapsDimensions(int orientation) {
 // Read EXIF orientation from IFD0 (tag 0x0112). Returns 1-8 or 0 if not found.
 // tiffBase is the offset into r where the TIFF header starts
 static int ExifOrientationFromTiff(ByteReader r, int tiffBase) {
-    int n = r.len;
-    if (tiffBase + 8 > n) {
+    if (tiffBase + 8 > r.len) {
         return 0;
     }
     bool isBE = r.UInt8(tiffBase) == 'M';
-    int ifdOff = (int)r.UInt32(tiffBase + 4, isBE);
-    int ifdAbs = tiffBase + ifdOff;
-    if (ifdAbs + 2 > n) {
-        return 0;
-    }
-    u16 count = r.UInt16(ifdAbs, isBE);
-    for (u16 i = 0; i < count; i++) {
-        int entryOff = ifdAbs + 2 + (i * 12);
-        if (entryOff + 12 > n) {
-            break;
-        }
-        u16 tag = r.UInt16(entryOff, isBE);
-        if (tag == 0x0112) { // Orientation tag
-            return r.UInt16(entryOff + 8, isBE);
-        }
-    }
-    return 0;
-}
-
-// Read EXIF orientation from JPEG data. Returns 1-8 or 0 if not found.
-static int JpegExifOrientation(ByteReader r) {
-    int n = r.len;
-    int idx = 2;
-    for (;;) {
-        // resync to the next marker, skipping garbage and 0xff fill bytes
-        while (idx < n && r.UInt8(idx) != 0xff) {
-            idx++;
-        }
-        while (idx < n && r.UInt8(idx) == 0xff) {
-            idx++;
-        }
-        if (idx >= n) {
-            return 0;
-        }
-        u8 marker = r.UInt8(idx);
-        idx++;
-        if (marker == 0xDA || marker == 0xD9) { // start of scan / end of image, stop
-            return 0;
-        }
-        if (marker == 0x01 || (0xD0 <= marker && marker <= 0xD8)) {
-            // standalone marker without a segment
-            continue;
-        }
-        if (marker == 0xE1 && idx + 8 <= n) {
-            // APP1 - check for EXIF
-            if (r.UInt8(idx + 2) == 'E' && r.UInt8(idx + 3) == 'x' && r.UInt8(idx + 4) == 'i' &&
-                r.UInt8(idx + 5) == 'f' && r.UInt8(idx + 6) == 0 && r.UInt8(idx + 7) == 0) {
-                return ExifOrientationFromTiff(r, idx + 8);
-            }
-        }
-        int segLen = r.UInt16BE(idx);
-        if (segLen < 2) {
-            return 0;
-        }
-        idx += segLen;
-    }
+    int ifd0 = tiffBase + (int)r.UInt32(tiffBase + 4, isBE);
+    int entry = FindIfdEntry(r, ifd0, isBE, 0x0112); // Orientation
+    return entry < 0 ? 0 : r.UInt16(entry + 8, isBE);
 }
 
 // Read EXIF orientation from a WebP EXIF chunk. Returns 1-8 or 0 if not found.
@@ -1111,7 +1028,8 @@ FileTypeInfo GuessFileInfoFromData(Str d) {
             ParsePng(r, res);
             break;
         case FileType::Jpeg:
-            ParseJpeg(r, res);
+            res.nImages = 1;
+            ParseJpeg(r, &res, nullptr);
             break;
         case FileType::Gif:
             ParseGif(r, res);
@@ -1148,7 +1066,7 @@ FileTypeInfo GuessFileInfoFromData(Str d) {
             break;
     }
     if (res.ft == FileType::Jpeg) {
-        res.orientation = JpegExifOrientation(r);
+        ParseJpeg(r, nullptr, &res.orientation);
     } else if (res.ft == FileType::Webp) {
         res.orientation = WebpExifOrientation(d);
     }
@@ -1411,14 +1329,8 @@ FileType GuessFileTypeFromFile(Str path) {
 }
 
 FileType GuessFileType(Str path, bool sniff) {
-    if (sniff) {
-        FileType ft = GuessFileTypeFromFile(path);
-        if (ft != FileType::Unknown) {
-            return ft;
-        }
-        return GuessFileTypeFromName(path);
-    }
-    return GuessFileTypeFromName(path);
+    FileType ft = sniff ? GuessFileTypeFromFile(path) : FileType::Unknown;
+    return ft != FileType::Unknown ? ft : GuessFileTypeFromName(path);
 }
 
 // compares the guessed type's canonical extension (the first extension

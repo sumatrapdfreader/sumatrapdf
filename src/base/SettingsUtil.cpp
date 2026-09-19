@@ -227,20 +227,9 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
         case SettingType::Float:
             out.Append(fmt("%g", *(float*)fieldPtr));
             return true;
-        case SettingType::String: {
-            Str str = *(Str*)fieldPtr;
-            if (len(str) == 0) {
-                return false; // skip empty strings
-            }
-            if (!NeedsEscaping(str)) {
-                out.Append(str);
-            } else {
-                EscapeStr(out, str);
-            }
-            return true;
-        }
+        case SettingType::String:
         case SettingType::Color: {
-            Str str = ((ParsedColor*)fieldPtr)->s;
+            Str str = field.type == SettingType::String ? *(Str*)fieldPtr : ((ParsedColor*)fieldPtr)->s;
             if (len(str) == 0) {
                 return false; // skip empty strings
             }
@@ -261,20 +250,19 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
             }
             return true;
         case SettingType::FloatArray:
-        case SettingType::IntArray:
-            for (int i = 0; i < len(**(Vec<int>**)fieldPtr); i++) {
-                FieldInfo info{};
-                info.type = SettingType::Int;
-                if (field.type == SettingType::FloatArray) {
-                    info.type = SettingType::Float;
-                }
+        case SettingType::IntArray: {
+            FieldInfo info{};
+            info.type = field.type == SettingType::FloatArray ? SettingType::Float : SettingType::Int;
+            Vec<int>& v = **(Vec<int>**)fieldPtr;
+            for (int i = 0; i < len(v); i++) {
                 if (i > 0) {
                     out.AppendChar(' ');
                 }
-                SerializeField(out, (const u8*)&(*(*(Vec<int>**)fieldPtr))[i], info);
+                SerializeField(out, (const u8*)&v[i], info);
             }
             // prevent empty arrays from being replaced with the defaults
-            return len(**(Vec<int>**)fieldPtr) > 0 || field.value != 0;
+            return len(v) > 0 || field.value != 0;
+        }
         case SettingType::ColorArray:
         case SettingType::StringArray: {
             Str serialized = SerializeUtf8StringArray(*(Vec<Str>**)fieldPtr);
@@ -385,16 +373,10 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             delete v;
             v = new Vec<int>();
             *(Vec<int>**)fieldPtr = v;
+            FieldInfo info{};
+            info.type = field.type == SettingType::FloatArray ? SettingType::Float : SettingType::Int;
             int off = 0;
             while (src && off < src.len) {
-                FieldInfo info{};
-                if (field.type == SettingType::IntArray) {
-                    info.type = SettingType::Int;
-                } else if (field.type == SettingType::FloatArray) {
-                    info.type = SettingType::Float;
-                } else {
-                    ReportIf(true);
-                }
                 Str token = Str(src.s + off, src.len - off);
                 deserializeField(info, (u8*)VecAppendBlanks(*v, 1), token);
                 off = SkipNonWhitespaceOff(src, off);
@@ -444,10 +426,6 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
             node->RemoveDataAt(off - 1);
         }
     }
-}
-
-static void SerializeUnknownFields(str::Builder& out, SquareTreeNode* node, int indent) {
-    SerializeSquareTreeNode(out, node, StrL("\t"), StrL("\n"), indent);
 }
 
 // If the struct defines a Bool field named IsTemporary and it is true, the
@@ -545,7 +523,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
         }
         MarkFieldKnown(prevNode, fieldNameStr, field.type);
     }
-    SerializeUnknownFields(out, prevNode, indent);
+    SerializeSquareTreeNode(out, prevNode, StrL("\t"), StrL("\n"), indent);
 }
 
 static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, u8* base, bool useDefaults) {

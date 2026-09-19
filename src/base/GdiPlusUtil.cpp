@@ -49,12 +49,7 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, WStr s) {
     Region r;
     Status status = g->MeasureCharacterRanges(s.s, n, f, layoutRect, &sf, 1, &r);
     if (status != Ok) {
-        // TODO: remove whem we figure out why we crash
-        WStr logW = s ? s : WStr(L"<null>");
-        TempStr s2 = ToUtf8Temp(logW);
-        Str logStr = s2.len > 256 ? Str(s2.s, 256) : s2;
-        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, n, logStr);
-        // ReportIf(status != Ok);
+        logf("MeasureTextAccurate: status: %d, font: %p, len: %d\n", (int)status, f, n);
     }
     Gdiplus::RectF bbox;
     r.GetBounds(&bbox, g);
@@ -177,42 +172,22 @@ int StringLenForWidth(Graphics* g, Font* f, WStr s, float dx, TextMeasureAlgorit
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
 float GetSpaceDx(Graphics* g, Font* f, TextMeasureAlgorithm algo) {
-    RectF bbox;
-#if 0
-    bbox = MeasureText(g, f, L" ", 1, algo);
-    float spaceDx1 = bbox.dx;
-    return spaceDx1;
-#else
-    // this method seems to return (much) smaller size that measuring
-    // the space itself
-    bbox = MeasureText(g, f, WStr(L"wa", 2), algo);
-    float l1 = bbox.dx;
-    bbox = MeasureText(g, f, WStr(L"w a", 3), algo);
-    float l2 = bbox.dx;
-    float spaceDx2 = l2 - l1;
-    return spaceDx2;
-#endif
+    // measuring " " itself returns a (much) smaller width
+    float l1 = MeasureText(g, f, WStr(L"wa", 2), algo).dx;
+    float l2 = MeasureText(g, f, WStr(L"w a", 3), algo).dx;
+    return l2 - l1;
 }
 
-// float     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=nullptr);
-// int   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm
-// algo=nullptr);
 void GetBaseTransform(Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation) {
     rotation = rotation % 360;
     if (rotation < 0) {
         rotation = rotation + 360;
     }
-    if (90 == rotation) {
-        m.Translate(0, -pageRect.Height, MatrixOrderAppend);
-    } else if (180 == rotation) {
-        m.Translate(-pageRect.Width, -pageRect.Height, MatrixOrderAppend);
-    } else if (270 == rotation) {
-        m.Translate(-pageRect.Width, 0, MatrixOrderAppend);
-    } else if (0 == rotation) {
-        m.Translate(0, 0, MatrixOrderAppend);
-    } else {
-        ReportIf(true);
-    }
+    // move the rotated page back to the origin
+    ReportIf(rotation % 90 != 0);
+    float dx = (rotation == 180 || rotation == 270) ? -pageRect.Width : 0;
+    float dy = (rotation == 90 || rotation == 180) ? -pageRect.Height : 0;
+    m.Translate(dx, dy, MatrixOrderAppend);
 
     m.Scale(zoom, zoom, MatrixOrderAppend);
     m.Rotate((float)rotation, MatrixOrderAppend);

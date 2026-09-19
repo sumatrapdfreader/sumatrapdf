@@ -80,12 +80,37 @@ constexpr const WCHAR* kUserAgent = L"SumatraPdfHTTP";
 
 // returns false if failed to download or status code is not 200
 // for other scenarios, check HttpRsp
+// InternetOpen + InternetOpenUrl + status query. On failure both handles are
+// null and the caller reads GetLastError().
+static bool OpenHttpRequest(Str urlA, DWORD flags, HINTERNET* hInetOut, HINTERNET* hReqOut, DWORD* statusOut) {
+    *hInetOut = nullptr;
+    *hReqOut = nullptr;
+    HINTERNET hInet = InternetOpenW(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    if (!hInet) {
+        logf("OpenHttpRequest: InternetOpen failed\n");
+        return false;
+    }
+    HINTERNET hReq = InternetOpenUrlW(hInet, CWStrTemp(urlA), nullptr, 0, flags, 0);
+    DWORD size = sizeof(DWORD);
+    if (!hReq || !HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, statusOut, &size, nullptr)) {
+        logf("OpenHttpRequest: %s failed\n", hReq ? StrL("HttpQueryInfoW") : StrL("InternetOpenUrl"));
+        DWORD err = GetLastError();
+        if (hReq) {
+            InternetCloseHandle(hReq);
+        }
+        InternetCloseHandle(hInet);
+        SetLastError(err);
+        return false;
+    }
+    *hInetOut = hInet;
+    *hReqOut = hReq;
+    return true;
+}
+
 bool HttpGet(Str urlA, HttpRsp* rspOut) {
     logf("HttpGet: url: '%s'\n", urlA);
     HINTERNET hReq = nullptr;
-    DWORD infoLevel;
-    DWORD headerBuffSize = sizeof(DWORD);
-    WCHAR* url = CWStrTemp(urlA);
+    HINTERNET hInet = nullptr;
     // NB: do NOT add INTERNET_FLAG_IGNORE_CERT_CN_INVALID here - it disables TLS
     // hostname validation, letting a network attacker with any trusted cert
     // impersonate our update-check / crash-symbol hosts (GHSA-mjwr-9w29-jp96).
@@ -96,23 +121,7 @@ bool HttpGet(Str urlA, HttpRsp* rspOut) {
     }
 
     rspOut->error = ERROR_SUCCESS;
-    HINTERNET hInet = InternetOpenW(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
-    if (!hInet) {
-        logf("HttpGet: InternetOpen failed\n");
-        LogLastError();
-        goto Error;
-    }
-
-    hReq = InternetOpenUrlW(hInet, url, nullptr, 0, flags, 0);
-    if (!hReq) {
-        logf("HttpGet: InternetOpenUrl failed\n");
-        LogLastError();
-        goto Error;
-    }
-
-    infoLevel = HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER;
-    if (!HttpQueryInfoW(hReq, infoLevel, &rspOut->httpStatusCode, &headerBuffSize, nullptr)) {
-        logf("HttpGet: HttpQueryInfoW failed\n");
+    if (!OpenHttpRequest(urlA, flags, &hInet, &hReq, &rspOut->httpStatusCode)) {
         LogLastError();
         goto Error;
     }
@@ -162,9 +171,7 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
     bool ok = false;
     HINTERNET hReq = nullptr, hInet = nullptr;
     DWORD dwRead = 0;
-    DWORD headerBuffSize = sizeof(DWORD);
     DWORD statusCode = 0;
-    WCHAR* url = CWStrTemp(urlA);
     char* buf = nullptr;
 
     HttpProgress progress{};
@@ -183,21 +190,7 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
         goto Exit;
     }
 
-    hInet = InternetOpenW(kUserAgent, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
-    if (!hInet) {
-        goto Exit;
-    }
-
-    hReq = InternetOpenUrlW(hInet, url, nullptr, 0, 0, 0);
-    if (!hReq) {
-        goto Exit;
-    }
-
-    if (!HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &statusCode, &headerBuffSize, nullptr)) {
-        goto Exit;
-    }
-
-    if (statusCode != 200) {
+    if (!OpenHttpRequest(urlA, 0, &hInet, &hReq, &statusCode) || statusCode != 200) {
         goto Exit;
     }
 

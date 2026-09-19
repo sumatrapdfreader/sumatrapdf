@@ -336,15 +336,42 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
     s.Append(StrL("\n"));
 }
 
-static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT* ctx, ThreadHandle hThread) {
 #ifdef _WIN64
-    int machineType = IMAGE_FILE_MACHINE_AMD64;
+constexpr int kMachineType = IMAGE_FILE_MACHINE_AMD64;
 #else
-    int machineType = IMAGE_FILE_MACHINE_I386;
+constexpr int kMachineType = IMAGE_FILE_MACHINE_I386;
 #endif
-    BOOL ok = DynStackWalk64(machineType, GetCurrentProcess(), hThread, stackFrame, ctx, nullptr,
-                             DynSymFunctionTableAccess64, DynSymGetModuleBase64, nullptr);
-    if (!ok) {
+
+static STACKFRAME64 InitStackFrame(const CONTEXT& ctx) {
+    STACKFRAME64 sf{};
+#if IS_INTEL_64 == 1
+    sf.AddrPC.Offset = ctx.Rip;
+    sf.AddrFrame.Offset = ctx.Rbp;
+    sf.AddrStack.Offset = ctx.Rsp;
+#elif IS_INTEL_32 == 1
+    sf.AddrPC.Offset = ctx.Eip;
+    sf.AddrFrame.Offset = ctx.Ebp;
+    sf.AddrStack.Offset = ctx.Esp;
+#elif IS_ARM_64 == 1
+    sf.AddrPC.Offset = ctx.Pc;
+    sf.AddrFrame.Offset = ctx.Fp;
+    sf.AddrStack.Offset = ctx.Sp;
+#else
+#error "Unsupported CPU architecture"
+#endif
+    sf.AddrPC.Mode = AddrModeFlat;
+    sf.AddrFrame.Mode = AddrModeFlat;
+    sf.AddrStack.Mode = AddrModeFlat;
+    return sf;
+}
+
+static BOOL WalkOneFrame(STACKFRAME64* sf, CONTEXT* ctx, ThreadHandle hThread) {
+    return DynStackWalk64(kMachineType, GetCurrentProcess(), hThread, sf, ctx, nullptr, DynSymFunctionTableAccess64,
+                          DynSymGetModuleBase64, nullptr);
+}
+
+static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT* ctx, ThreadHandle hThread) {
+    if (!WalkOneFrame(stackFrame, ctx, hThread)) {
         return false;
     }
 
@@ -367,27 +394,7 @@ static bool GetCallstack(str::Builder& s, CONTEXT& ctx, ThreadHandle hThread) {
         return false;
     }
 
-    STACKFRAME64 stackFrame;
-    memset(&stackFrame, 0, sizeof(stackFrame));
-#if IS_INTEL_64 == 1
-    stackFrame.AddrPC.Offset = ctx.Rip;
-    stackFrame.AddrFrame.Offset = ctx.Rbp;
-    stackFrame.AddrStack.Offset = ctx.Rsp;
-#elif IS_INTEL_32 == 1
-    stackFrame.AddrPC.Offset = ctx.Eip;
-    stackFrame.AddrFrame.Offset = ctx.Ebp;
-    stackFrame.AddrStack.Offset = ctx.Esp;
-#elif IS_ARM_64 == 1
-    stackFrame.AddrPC.Offset = ctx.Pc;
-    stackFrame.AddrFrame.Offset = ctx.Fp;
-    stackFrame.AddrStack.Offset = ctx.Sp;
-#else
-#error "Unsupported CPU architecture"
-#endif
-    stackFrame.AddrPC.Mode = AddrModeFlat;
-    stackFrame.AddrFrame.Mode = AddrModeFlat;
-    stackFrame.AddrStack.Mode = AddrModeFlat;
-
+    STACKFRAME64 stackFrame = InitStackFrame(ctx);
     int framesCount = 0;
     static const int maxFrames = 48;
     while (framesCount < maxFrames) {
@@ -419,37 +426,10 @@ int GetSuspendedThreadCallstackAddrs(ThreadHandle hThread, u64* addrs, int maxAd
         return 0;
     }
 
-    STACKFRAME64 stackFrame;
-    memset(&stackFrame, 0, sizeof(stackFrame));
-#if IS_INTEL_64 == 1
-    stackFrame.AddrPC.Offset = ctx.Rip;
-    stackFrame.AddrFrame.Offset = ctx.Rbp;
-    stackFrame.AddrStack.Offset = ctx.Rsp;
-#elif IS_INTEL_32 == 1
-    stackFrame.AddrPC.Offset = ctx.Eip;
-    stackFrame.AddrFrame.Offset = ctx.Ebp;
-    stackFrame.AddrStack.Offset = ctx.Esp;
-#elif IS_ARM_64 == 1
-    stackFrame.AddrPC.Offset = ctx.Pc;
-    stackFrame.AddrFrame.Offset = ctx.Fp;
-    stackFrame.AddrStack.Offset = ctx.Sp;
-#else
-#error "Unsupported CPU architecture"
-#endif
-    stackFrame.AddrPC.Mode = AddrModeFlat;
-    stackFrame.AddrFrame.Mode = AddrModeFlat;
-    stackFrame.AddrStack.Mode = AddrModeFlat;
-
-#ifdef _WIN64
-    int machineType = IMAGE_FILE_MACHINE_AMD64;
-#else
-    int machineType = IMAGE_FILE_MACHINE_I386;
-#endif
+    STACKFRAME64 stackFrame = InitStackFrame(ctx);
     int n = 0;
     while (n < maxAddrs) {
-        BOOL ok = DynStackWalk64(machineType, GetCurrentProcess(), hThread, &stackFrame, &ctx, nullptr,
-                                 DynSymFunctionTableAccess64, DynSymGetModuleBase64, nullptr);
-        if (!ok) {
+        if (!WalkOneFrame(&stackFrame, &ctx, hThread)) {
             break;
         }
         u64 addr = (u64)stackFrame.AddrPC.Offset;
@@ -511,7 +491,7 @@ NO_INLINE bool GetCurrentThreadCallstack(str::Builder& s) {
     RtlCaptureContext(&ctx);
     return GetCallstack(s, ctx, GetCurrentThread());
 }
-#pragma optimize("", off)
+#pragma optimize("", on)
 
 TempStr GetCurrentThreadCallstackTemp() {
     str::Builder s;
@@ -559,14 +539,13 @@ void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {
     if ((EXCEPTION_ACCESS_VIOLATION == excCode) || (EXCEPTION_IN_PAGE_ERROR == excCode)) {
         int readWriteFlag = (int)excRecord->ExceptionInformation[0];
         DWORD64 dataVirtAddr = (DWORD64)excRecord->ExceptionInformation[1];
-        if (0 == readWriteFlag) {
-            s.Append(StrL("Fault reading address "));
-            AppendAddress(s, dataVirtAddr);
-        } else if (1 == readWriteFlag) {
-            s.Append(StrL("Fault writing address "));
-            AppendAddress(s, dataVirtAddr);
-        } else if (8 == readWriteFlag) {
-            s.Append(StrL("DEP violation at address "));
+        // 0 = read, 1 = write, 8 = DEP
+        Str what = readWriteFlag == 0   ? StrL("Fault reading address ")
+                   : readWriteFlag == 1 ? StrL("Fault writing address ")
+                   : readWriteFlag == 8 ? StrL("DEP violation at address ")
+                                        : Str{};
+        if (what.s) {
+            s.Append(what);
             AppendAddress(s, dataVirtAddr);
         } else {
             s.Append(fmt("unknown readWriteFlag: %d", readWriteFlag));

@@ -140,25 +140,14 @@ static void GetFileState(Str path, FileWatcherState* fs) {
     }
 }
 
-static bool FileStateEq(FileWatcherState* fs1, FileWatcherState* fs2) {
-    if (0 != CompareFileTime(&fs1->time, &fs2->time)) {
-        return false;
-    }
-    if (fs1->size != fs2->size) {
-        return false;
-    }
-    return true;
-}
-
+// updates fs and returns true when the file's write time or size changed
 static bool FileStateChanged(Str filePath, FileWatcherState* fs) {
-    FileWatcherState fsTmp;
-
-    GetFileState(filePath, &fsTmp);
-    if (FileStateEq(fs, &fsTmp)) {
+    FileWatcherState curr{};
+    GetFileState(filePath, &curr);
+    if (0 == CompareFileTime(&fs->time, &curr.time) && fs->size == curr.size) {
         return false;
     }
-
-    memcpy(fs, &fsTmp, sizeof(*fs));
+    *fs = curr;
     return true;
 }
 

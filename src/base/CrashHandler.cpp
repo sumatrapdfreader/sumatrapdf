@@ -392,16 +392,9 @@ static DWORD WINAPI CrashDumpThread(LPVOID /*data*/) {
 // This is needed to intercept memory corruption reports from windows heap manager
 // https://peteronprogramming.wordpress.com/2017/07/30/crashes-you-cant-handle-easily-3-status_heap_corruption-on-windows/
 // https://phabricator.services.mozilla.com/D83753
-static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
-    if (exceptionInfo->ExceptionRecord->ExceptionCode != STATUS_HEAP_CORRUPTION) {
-        return EXCEPTION_CONTINUE_SEARCH;
-    }
-
-    if (!TryStartCrashHandling(StrL("CrashDumpVectoredExceptionHandler"))) {
-        return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
-    }
-
-    log(StrL("CrashDumpVectoredExceptionHandler\n"));
+// writes the dump on the dump thread, shows the crash message and exits
+static LONG HandleCrash(EXCEPTION_POINTERS* exceptionInfo, Str who) {
+    logf("%s\n", who);
     gCrashed = true;
 
     gMei.ThreadId = GetCurrentThreadId();
@@ -416,8 +409,19 @@ static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* excepti
         CallCb(gCfg.showCrashMessage);
     }
     TerminateProcess(GetCurrentProcess(), 1);
-
     return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
+    if (exceptionInfo->ExceptionRecord->ExceptionCode != STATUS_HEAP_CORRUPTION) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    if (!TryStartCrashHandling(StrL("CrashDumpVectoredExceptionHandler"))) {
+        return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
+    }
+
+    return HandleCrash(exceptionInfo, StrL("CrashDumpVectoredExceptionHandler"));
 }
 
 // there is no documented Win32 API for a thread's start address
@@ -503,23 +507,7 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     }
 
-    log(StrL("CrashDumpExceptionHandler\n"));
-    gCrashed = true;
-
-    gMei.ThreadId = GetCurrentThreadId();
-    gMei.ExceptionPointers = exceptionInfo;
-    // per msdn (which is backed by my experience), MiniDumpWriteDump() doesn't
-    // write callstack for the calling thread correctly. We use msdn-recommended
-    // work-around of spinning a thread to do the writing
-    SetEvent(gDumpEvent);
-    WaitForSingleObject(gDumpThread, INFINITE);
-
-    if (!gCfg.localOnly) {
-        CallCb(gCfg.showCrashMessage);
-    }
-    TerminateProcess(GetCurrentProcess(), 1);
-
-    return EXCEPTION_CONTINUE_SEARCH;
+    return HandleCrash(exceptionInfo, StrL("CrashDumpExceptionHandler"));
 }
 
 static void GetOsVersion() {
