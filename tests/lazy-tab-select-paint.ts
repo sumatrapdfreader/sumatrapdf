@@ -65,6 +65,11 @@ export async function testit(): Promise<void> {
     await client.waitForSessionRestored(30000);
     await client.waitForRenderIdle(30000);
 
+    // an active placement is cancelled while closing the outgoing document,
+    // which refreshes the toolbar through IsDocLoaded (crash 2026-09-19-12-22-8c3a)
+    sendCommand(frame, cmdId("CmdCreateAnnotSquare"));
+    await sleep(300 * SLOW_BUILD_FACTOR);
+
     // selecting the lazy tab paints the outgoing document under a notification
     // posted: SendMessage would deadlock with the app writing the report to our stderr
     sendCommand(frame, cmdId("CmdPrevTab"));

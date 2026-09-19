@@ -137,6 +137,7 @@ import { testit as epubThemeRestyle } from "./epub-theme-restyle.ts";
 import { testit as embeddedImageAttachment } from "./embedded-image-attachment.ts";
 import { testit as ttsEngineCrashRecovery } from "./tts-engine-crash-recovery.ts";
 import { testit as lazyTabStateAfterSave } from "./lazy-tab-state-after-save.ts";
+import { testit as lazyTabSelectPaint } from "./lazy-tab-select-paint.ts";
 import { testit as issue5943 } from "./issue-5943.ts";
 import { testit as issue6117 } from "./issue-6117.ts";
 import { testit as issue6118 } from "./issue-6118.ts";
@@ -347,6 +348,7 @@ export const tests: NamedTest[] = [
   ["embedded-image-attachment", embeddedImageAttachment],
   ["tts-engine-crash-recovery", ttsEngineCrashRecovery],
   ["lazy-tab-state-after-save", lazyTabStateAfterSave],
+  ["lazy-tab-select-paint", lazyTabSelectPaint],
   ["issue-4705", issue4705],
   ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-5956", issue5956],
