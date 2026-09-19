@@ -218,8 +218,6 @@ struct RenderedBitmap {
     bool IsValid();
 };
 
-void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor = 0,
-                        Vec<Rect>* skipRects = nullptr);
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 
 inline bool IsPrinterDC(HDC hdc) {
@@ -252,10 +250,9 @@ class DeferWinPosHelper {
     DeferWinPosHelper();
     ~DeferWinPosHelper();
     void End();
-    void SetWindowPos(HWND hwnd, Rect rc);
-    void SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
-    void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE);
     void MoveWindow(HWND hWnd, Rect r);
+    // A transparent WebView canvas growing into a sibling's old rectangle must
+    // discard those screen bits or the sibling remains visible until composition.
     void MoveWindowNoCopyBits(HWND hWnd, Rect r);
 };
 

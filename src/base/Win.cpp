@@ -872,36 +872,14 @@ static void RedirectStdioToConsole(bool redirectStdin = false) {
     }
 }
 
-static bool AttachToParentConsole() {
-    InitConsoleState();
-    if (gConsoleState == ConsoleState::AttachedToParent || gConsoleState == ConsoleState::AllocatedNew) {
-        return true;
-    }
-    if (StdoutRedirected()) {
-        return true;
-    }
-    if (gConsoleState != ConsoleState::NoConsole) {
-        return false;
-    }
-
-    if (!AttachConsole(ATTACH_PARENT_PROCESS)) {
-        return false;
-    }
-    gConsoleState = ConsoleState::AttachedToParent;
-    RedirectStdioToConsole(true);
-    return true;
-}
-
-// returns true if a new console window was allocated
-static bool AttachOrAllocateConsole() {
+// Attaches stdio to the parent's console; with allocIfNone, creates a console
+// window when there is no parent console. Returns true when a new one was made.
+static bool InitConsole(bool allocIfNone) {
     InitConsoleState();
     if (gConsoleState == ConsoleState::AllocatedNew) {
         return true;
     }
-    if (gConsoleState == ConsoleState::AttachedToParent) {
-        return false;
-    }
-    if (StdoutRedirected()) {
+    if (gConsoleState == ConsoleState::AttachedToParent || StdoutRedirected()) {
         return false;
     }
     if (gConsoleState != ConsoleState::NoConsole) {
@@ -911,6 +889,9 @@ static bool AttachOrAllocateConsole() {
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
         gConsoleState = ConsoleState::AttachedToParent;
         RedirectStdioToConsole(true);
+        return false;
+    }
+    if (!allocIfNone) {
         return false;
     }
 
@@ -924,16 +905,16 @@ static bool AttachOrAllocateConsole() {
     return true;
 }
 
+// true if stdio now goes to a console (the parent's, one we made, or a pipe)
 bool RedirectIOToExistingConsole() {
-    return AttachToParentConsole();
+    InitConsole(false);
+    return gConsoleState != ConsoleState::NoConsole || StdoutRedirected();
 }
 
 // returns true if had to allocate new console (i.e. show console window)
 // false if redirected to existing console, which means it was launched from a shell
-//--- console
-
 bool RedirectIOToConsole() {
-    return AttachOrAllocateConsole();
+    return InitConsole(true);
 }
 
 static void SendEnterToParentConsole(HWND foregroundWnd) {
@@ -1597,14 +1578,11 @@ static HWND GetClipboardOwnerWnd() {
     if (gClipboardOwnerWnd && IsWindow(gClipboardOwnerWnd)) {
         return gClipboardOwnerWnd;
     }
-    static bool registered = false;
     static WCHAR className[] = L"SumatraPDFClipboardOwner";
+    static bool registered = false;
     if (!registered) {
-        WNDCLASSEX wcex{};
-        wcex.cbSize = sizeof(WNDCLASSEX);
-        wcex.lpfnWndProc = DefWindowProcW;
-        wcex.hInstance = GetModuleHandle(nullptr);
-        wcex.lpszClassName = className;
+        WNDCLASSEX wcex;
+        FillWndClassEx(wcex, className, DefWindowProcW);
         RegisterClassExW(&wcex);
         registered = true;
     }
@@ -1876,32 +1854,14 @@ void DeferWinPosHelper::End() {
     }
 }
 
-void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags) {
-    hdwp = ::DeferWindowPos(hdwp, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
-}
-
-void DeferWinPosHelper::SetWindowPos(HWND hwnd, const Rect rc) {
-    uint flags = SWP_NOZORDER;
-    hdwp = ::DeferWindowPos(hdwp, hwnd, nullptr, rc.x, rc.y, rc.dx, rc.dy, flags);
-}
-
-void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint) {
-    uint uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
-    if (!bRepaint) {
-        uFlags |= SWP_NOREDRAW;
-    }
-    this->SetWindowPos(hWnd, nullptr, x, y, cx, cy, uFlags);
-}
-
 void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
-    this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
+    uint flags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+    hdwp = ::DeferWindowPos(hdwp, hWnd, nullptr, r.x, r.y, r.dx, r.dy, flags);
 }
 
-// A transparent WebView canvas growing into a sibling's old rectangle must
-// discard those screen bits or the sibling remains visible until composition.
 void DeferWinPosHelper::MoveWindowNoCopyBits(HWND hWnd, Rect r) {
     uint flags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOCOPYBITS;
-    this->SetWindowPos(hWnd, nullptr, r.x, r.y, r.dx, r.dy, flags);
+    hdwp = ::DeferWindowPos(hdwp, hWnd, nullptr, r.x, r.y, r.dx, r.dy, flags);
 }
 
 void MenuSetChecked(HMENU m, int id, bool isChecked) {
@@ -2129,14 +2089,7 @@ TempWStr HwndGetTextWTemp(HWND hwnd) {
 
 // return text of window or edit control, nullptr in case of an error
 TempStr HwndGetTextTemp(HWND hwnd) {
-    int cch = HwndGetTextLen(hwnd);
-    WCHAR* buf = AllocArrayTemp<WCHAR>(cch + 2); // +2 jic
-    if (!buf) {
-        return {};
-    }
-    LRESULT copied = SendMessageW(hwnd, WM_GETTEXT, cch + 1, (LPARAM)buf);
-    WStr txt(buf, (int)copied);
-    return ToUtf8Temp(txt);
+    return ToUtf8Temp(HwndGetTextWTemp(hwnd));
 }
 
 bool HwndIsVisible(HWND hwnd) {
@@ -2151,180 +2104,6 @@ void HwndSetVisible(HWND hwnd, bool visible) {
 }
 
 //--- GDI: bitmaps / pixmaps
-
-// cf. fz_mul255 in fitz.h
-static inline int mul255(int a, int b) {
-    int x = (a * b) + 128;
-    x += x >> 8;
-    return x >> 8;
-}
-
-// Recolor a rendered page bitmap: map black->textColor and white->bgColor
-// (proportionally in between). Blue-ish pixels map to linkColor using R/G as
-// coverage so anti-aliased edges stay smooth. skipRects keep original colors.
-void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
-    if (!hbmp) {
-        return;
-    }
-    if ((textColor & 0xFFFFFF) == kColBlack && (bgColor & 0xFFFFFF) == kColWhite && !linkColor && !skipRects) {
-        return;
-    }
-
-    byte linkR = 0, linkG = 0, linkB = 0;
-    bool recolorLinks = linkColor != 0;
-    if (recolorLinks) {
-        UnpackColor(linkColor, linkR, linkG, linkB);
-    }
-
-    auto isLikelyLinkPixel = [](u8 r, u8 g, u8 b) -> bool {
-        int maxRG = r > g ? r : g;
-        if (b < maxRG + 25) {
-            return false;
-        }
-        if (b < 72) {
-            return false;
-        }
-        int lum = (int(r) + g + b) / 3;
-        if (lum > 230) {
-            return false;
-        }
-        return true;
-    };
-
-    // color order in DIB is blue-green-red-alpha
-    byte rt, gt, bt;
-    UnpackColor(textColor, rt, gt, bt);
-    const int base[4] = {bt, gt, rt, 0};
-    byte rb, gb, bb;
-    UnpackColor(bgColor, rb, gb, bb);
-    int const diff[4] = {(int)bb - base[0], (int)gb - base[1], (int)rb - base[2], 255};
-
-    auto setLinkPixel = [&](u8* px) {
-        int rg = ((int)px[1] + px[2]) / 2;
-        px[0] = (u8)(linkB + mul255(rg, (int)bb - linkB));
-        px[1] = (u8)(linkG + mul255(rg, (int)gb - linkG));
-        px[2] = (u8)(linkR + mul255(rg, (int)rb - linkR));
-    };
-
-    DIBSECTION info{};
-    int ret = GetObject(hbmp, sizeof(info), &info);
-    ReportIf(ret < sizeof(info.dsBm));
-    Size size(info.dsBm.bmWidth, info.dsBm.bmHeight);
-
-    auto skipPixel = [&](int x, int y) -> bool {
-        if (!skipRects) {
-            return false;
-        }
-        for (Rect& sr : *skipRects) {
-            if (sr.Contains(x, y)) {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    // for mapped 32-bit DI bitmaps: directly access the pixel data
-    if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 32 == info.dsBm.bmBitsPixel &&
-        size.dx * 4 == info.dsBm.bmWidthBytes) {
-        int bmpBytes = size.dx * size.dy * 4;
-        u8* bmpData = (u8*)info.dsBm.bmBits;
-        for (int i = 0; i < bmpBytes; i += 4) {
-            int x = (i / 4) % size.dx;
-            int y = (i / 4) / size.dx;
-            u8 b = bmpData[i];
-            u8 g = bmpData[i + 1];
-            u8 r = bmpData[i + 2];
-            if (skipPixel(x, y)) {
-                continue;
-            }
-            if (recolorLinks && isLikelyLinkPixel(r, g, b)) {
-                setLinkPixel(&bmpData[i]);
-                continue;
-            }
-            for (int k = 0; k < 4; k++) {
-                bmpData[i + k] = (u8)(base[k] + mul255(bmpData[i + k], diff[k]));
-            }
-        }
-        return;
-    }
-
-    // for mapped 24-bit DI bitmaps: directly access the pixel data
-    if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 24 == info.dsBm.bmBitsPixel &&
-        info.dsBm.bmWidthBytes >= size.dx * 3) {
-        u8* bmpData = (u8*)info.dsBm.bmBits;
-        for (int y = 0; y < size.dy; y++) {
-            for (int x = 0; x < size.dx; x++) {
-                u8* px = bmpData + ((size_t)y * info.dsBm.bmWidthBytes) + ((size_t)x * 3);
-                u8 b = px[0];
-                u8 g = px[1];
-                u8 r = px[2];
-                if (skipPixel(x, y)) {
-                    continue;
-                }
-                if (recolorLinks && isLikelyLinkPixel(r, g, b)) {
-                    setLinkPixel(px);
-                    continue;
-                }
-                for (int k = 0; k < 3; k++) {
-                    px[k] = (u8)(base[k] + mul255(px[k], diff[k]));
-                }
-            }
-        }
-        return;
-    }
-
-    // for paletted DI bitmaps: only update the color palette
-    if (sizeof(info) == ret && info.dsBmih.biBitCount && info.dsBmih.biBitCount <= 8) {
-        ReportIf(info.dsBmih.biBitCount != 8);
-        RGBQUAD palette[256];
-        HDC hDC = CreateCompatibleDC(nullptr);
-        DeleteObject(SelectObject(hDC, hbmp));
-        uint num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
-        for (uint i = 0; i < num; i++) {
-            u8 r = palette[i].rgbRed;
-            u8 g = palette[i].rgbGreen;
-            u8 b = palette[i].rgbBlue;
-            if (recolorLinks && isLikelyLinkPixel(r, g, b)) {
-                int rg = ((int)r + g) / 2;
-                palette[i].rgbRed = (u8)(linkR + mul255(rg, (int)rb - linkR));
-                palette[i].rgbGreen = (u8)(linkG + mul255(rg, (int)gb - linkG));
-                palette[i].rgbBlue = (u8)(linkB + mul255(rg, (int)bb - linkB));
-                continue;
-            }
-            palette[i].rgbRed = (u8)(base[2] + mul255(palette[i].rgbRed, diff[2]));
-            palette[i].rgbGreen = (u8)(base[1] + mul255(palette[i].rgbGreen, diff[1]));
-            palette[i].rgbBlue = (u8)(base[0] + mul255(palette[i].rgbBlue, diff[0]));
-        }
-        if (num > 0) {
-            SetDIBColorTable(hDC, 0, num, palette);
-        }
-        DeleteDC(hDC);
-        return;
-    }
-
-    BITMAPINFO bmi{};
-    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biWidth = size.dx;
-    bmi.bmiHeader.biHeight = size.dy;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-
-    HDC hDC = CreateCompatibleDC(nullptr);
-    int bmpBytes = size.dx * size.dy * 4;
-    AutoFree<u8> bmpData((u8*)malloc(bmpBytes));
-    ReportIf(!bmpData);
-
-    if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
-        for (int i = 0; i < bmpBytes; i++) {
-            int k = i % 4;
-            bmpData[i] = (u8)(base[k] + mul255(bmpData[i], diff[k]));
-        }
-        SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
-    }
-
-    DeleteDC(hDC);
-}
 
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping) {
     BITMAPINFO bmi{};
@@ -2629,14 +2408,7 @@ bool LockDataResource(int resId, LoadedDataResource* res, HMODULE mod) {
 }
 
 bool IsValidDelayType(int type) {
-    switch (type) {
-        case TTDT_AUTOPOP:
-        case TTDT_INITIAL:
-        case TTDT_RESHOW:
-        case TTDT_AUTOMATIC:
-            return true;
-    }
-    return false;
+    return type == TTDT_AUTOPOP || type == TTDT_INITIAL || type == TTDT_RESHOW || type == TTDT_AUTOMATIC;
 }
 
 //--- HWND: text / font / icon / paint / position / messages
@@ -3300,73 +3072,42 @@ Str GetLastErrorAsStr(Arena* arena) {
     if (!err) {
         return str::Dup(arena, StrL("no error"));
     }
-    wchar_t* msgBuf = nullptr;
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
-                   err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&msgBuf, 0, nullptr);
-    if (!msgBuf) {
-        return str::Dup(arena, StrL("FormatMessageW() failed"));
-    }
-    auto ws = WStr(msgBuf);
-    Str temp = ToUtf8(GetTempArena(), WStr(msgBuf));
-    str::TrimSuffixWhitespace(temp);
-    Str result = fmt("0x%08lX '%s'", err, temp);
-    LocalFree(msgBuf);
-    return str::Dup(arena, result);
+    TempStr msg = GetLastErrorStrTemp(err);
+    str::TrimSuffixWhitespace(msg);
+    return str::Dup(arena, fmt("0x%08lX '%s'", err, msg));
 }
 
 // Check if we were launched by PowerShell with stdout redirected to a pipe.
 // PowerShell's pipe redirection has known issues with GUI apps using WriteFile.
-bool WasLaunchedByPowershellWithPipeRedirect() {
-    // Check if stdout is a pipe
-    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hStdout == INVALID_HANDLE_VALUE || hStdout == nullptr) {
-        return false;
+static bool FindProcessEntry(HANDLE hSnapshot, DWORD pid, PROCESSENTRY32W* pe) {
+    pe->dwSize = sizeof(*pe);
+    for (BOOL ok = Process32FirstW(hSnapshot, pe); ok; ok = Process32NextW(hSnapshot, pe)) {
+        if (pe->th32ProcessID == pid) {
+            return true;
+        }
     }
-    if (GetFileType(hStdout) != FILE_TYPE_PIPE) {
-        return false;
-    }
+    return false;
+}
 
-    // Get our parent process ID
-    DWORD parentPid = 0;
-    DWORD myPid = GetCurrentProcessId();
+bool WasLaunchedByPowershellWithPipeRedirect() {
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hStdout == INVALID_HANDLE_VALUE || hStdout == nullptr || GetFileType(hStdout) != FILE_TYPE_PIPE) {
+        return false;
+    }
 
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE) {
         return false;
     }
+    AutoCall closeSnapshot(CloseHandle, hSnapshot);
 
+    // our entry gives the parent pid, the parent's entry its exe name
     PROCESSENTRY32W pe = {};
-    pe.dwSize = sizeof(pe);
-
-    if (Process32FirstW(hSnapshot, &pe)) {
-        do {
-            if (pe.th32ProcessID == myPid) {
-                parentPid = pe.th32ParentProcessID;
-                break;
-            }
-        } while (Process32NextW(hSnapshot, &pe));
-    }
-
-    if (parentPid == 0) {
-        CloseHandle(hSnapshot);
+    if (!FindProcessEntry(hSnapshot, GetCurrentProcessId(), &pe) ||
+        !FindProcessEntry(hSnapshot, pe.th32ParentProcessID, &pe)) {
         return false;
     }
-
-    // Find parent process name
-    Str parentName;
-    pe.dwSize = sizeof(pe);
-
-    if (Process32FirstW(hSnapshot, &pe)) {
-        do {
-            if (pe.th32ProcessID == parentPid) {
-                parentName = ToUtf8Temp(WStr(pe.szExeFile));
-                break;
-            }
-        } while (Process32NextW(hSnapshot, &pe));
-    }
-
-    CloseHandle(hSnapshot);
-
+    TempStr parentName = ToUtf8Temp(WStr(pe.szExeFile));
     return str::StartsWithI(parentName, StrL("pwsh.exe")) || str::StartsWithI(parentName, StrL("powershell"));
 }
 

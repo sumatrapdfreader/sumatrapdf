@@ -592,31 +592,22 @@ static int Mul255(int a, int b) {
     return n >> 8;
 }
 
-void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
-    if (!px) {
-        return;
-    }
-    if (px->hbmp) {
-        UpdateBitmapColors(px->hbmp, textColor, bgColor, linkColor, skipRects);
-        return;
-    }
-    if (!px->data || px->width <= 0 || px->height <= 0 || px->format == PixmapFormat::RGBA8) {
-        return;
-    }
-    if ((textColor & 0xffffff) == kColBlack && (bgColor & 0xffffff) == kColWhite && !linkColor && !skipRects) {
-        return;
-    }
+// Maps black-on-white pixels to textColor-on-bgColor (interpolating the rest),
+// turns blue-ish "link" pixels into linkColor, and leaves skipRects alone.
+// Pixel bytes are B,G,R[,A]; rows are stride bytes apart.
+static void RecolorPixels(u8* data, int w, int h, size_t stride, int bpp, Color textColor, Color bgColor,
+                          Color linkColor, Vec<Rect>* skipRects) {
     byte linkR = 0, linkG = 0, linkB = 0;
     UnpackColor(linkColor, linkR, linkG, linkB);
     byte textR, textG, textB, bgR, bgG, bgB;
     UnpackColor(textColor, textR, textG, textB);
     UnpackColor(bgColor, bgR, bgG, bgB);
-    const int base[3] = {textB, textG, textR};
-    const int diff[3] = {(int)bgB - textB, (int)bgG - textG, (int)bgR - textR};
-    int bpp = PixmapBytesPerPixel(px->format);
-    for (int y = 0; y < px->height; y++) {
-        u8* pixel = px->data + ((size_t)y * px->stride);
-        for (int x = 0; x < px->width; x++, pixel += bpp) {
+    const int base[4] = {textB, textG, textR, 0};
+    const int diff[4] = {(int)bgB - textB, (int)bgG - textG, (int)bgR - textR, 255};
+    int nChannels = std::min(bpp, 4);
+    for (int y = 0; y < h; y++) {
+        u8* pixel = data + ((size_t)y * stride);
+        for (int x = 0; x < w; x++, pixel += bpp) {
             if (SkipRecolorPixel(x, y, skipRects)) {
                 continue;
             }
@@ -629,11 +620,80 @@ void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, 
                 pixel[2] = (u8)(linkR + Mul255(rg, (int)bgR - linkR));
                 continue;
             }
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < nChannels; i++) {
                 pixel[i] = (u8)(base[i] + Mul255(pixel[i], diff[i]));
             }
         }
     }
+}
+
+// same, for an HBITMAP: in place for mapped 24/32-bit DIBs, via the palette
+// for 8-bit ones, else through GetDIBits/SetDIBits
+static void RecolorHbitmap(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
+    DIBSECTION info{};
+    int ret = GetObject(hbmp, sizeof(info), &info);
+    ReportIf(ret < sizeof(info.dsBm));
+    int w = info.dsBm.bmWidth;
+    int h = info.dsBm.bmHeight;
+    u8* bits = (u8*)info.dsBm.bmBits;
+    int bitsPixel = info.dsBm.bmBitsPixel;
+
+    if (ret >= sizeof(info.dsBm) && bits && (bitsPixel == 32 || bitsPixel == 24) &&
+        info.dsBm.bmWidthBytes >= w * bitsPixel / 8) {
+        RecolorPixels(bits, w, h, info.dsBm.bmWidthBytes, bitsPixel / 8, textColor, bgColor, linkColor, skipRects);
+        return;
+    }
+
+    if (sizeof(info) == ret && info.dsBmih.biBitCount && info.dsBmih.biBitCount <= 8) {
+        ReportIf(info.dsBmih.biBitCount != 8);
+        RGBQUAD palette[256];
+        HDC hDC = CreateCompatibleDC(nullptr);
+        DeleteObject(SelectObject(hDC, hbmp));
+        uint num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
+        // RGBQUAD is B,G,R,reserved: the same layout a 32-bit pixel has
+        RecolorPixels((u8*)palette, (int)num, 1, sizeof(palette), 4, textColor, bgColor, linkColor, nullptr);
+        if (num > 0) {
+            SetDIBColorTable(hDC, 0, num, palette);
+        }
+        DeleteDC(hDC);
+        return;
+    }
+
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = w;
+    bmi.bmiHeader.biHeight = h;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    HDC hDC = CreateCompatibleDC(nullptr);
+    size_t stride = (size_t)w * 4;
+    AutoFree<u8> bmpData((u8*)malloc(stride * h));
+    ReportIf(!bmpData);
+    if (GetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS)) {
+        RecolorPixels(bmpData, w, h, stride, 4, textColor, bgColor, linkColor, skipRects);
+        SetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS);
+    }
+    DeleteDC(hDC);
+}
+
+void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
+    if (!px) {
+        return;
+    }
+    if ((textColor & 0xffffff) == kColBlack && (bgColor & 0xffffff) == kColWhite && !linkColor && !skipRects) {
+        return;
+    }
+    if (px->hbmp) {
+        RecolorHbitmap(px->hbmp, textColor, bgColor, linkColor, skipRects);
+        return;
+    }
+    if (!px->data || px->width <= 0 || px->height <= 0 || px->format == PixmapFormat::RGBA8) {
+        return;
+    }
+    RecolorPixels(px->data, px->width, px->height, px->stride, PixmapBytesPerPixel(px->format), textColor, bgColor,
+                  linkColor, skipRects);
 }
 
 static Size GetBitmapSize(HBITMAP hbmp) {
