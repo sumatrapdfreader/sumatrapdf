@@ -82,6 +82,11 @@ struct Print_Advanced_Data {
     // on top of the automatic rotation; lets the user fix wrong orientation
     // (e.g. upside-down output on virtual printers), issue #1246
     int extraRotation;
+    // when > 0, the document's resolution to assume instead of what the file
+    // says: 1:1 printing of a scan depends on its DPI, which images often lack
+    // or have wrong, and image folders / comic books ignore it altogether
+    // (#6223). Set via -print-settings "dpi=<n>" or PrinterDefaults.PrintDpi
+    float dpiOverride = 0;
 
     explicit Print_Advanced_Data(PrintRangeAdv range = PrintRangeAdv::All, PrintScaleAdv scale = PrintScaleAdv::Shrink,
                                  PrintRotationAdv rotation = PrintRotationAdv::Auto, bool autoRotate = true,

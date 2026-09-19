@@ -69,6 +69,7 @@ For a detailed printing guide with examples for common tasks, see [Printing](Pri
     - `disable-auto-rotation` : by default a page wider than it is tall is rotated 90 degrees to fit the paper; this prints the content in its original orientation instead (available since 3.5)
     - `rotate=<degrees>` : rotate the printout by an extra `90`, `180` or `270` degrees (on top of the automatic rotation). Useful to fix a wrong orientation, e.g. upside-down (`rotate=180`) output on virtual printers
     - `noscale`, `shrink`, `fit` and `stretch` (`stretch` fills the paper in both dimensions, ignoring the aspect ratio)
+    - `dpi=<n>` : the resolution to assume for the document, e.g. `dpi=300` for a 300 dpi scan whose file doesn't record it. Decides how big `noscale` prints an image; ignored for documents with real page sizes like PDF (available since 3.7, [details](Printing.md#printing-at-actual-size-11))
     - `center` : horizontally center the page on the paper. Useful with `noscale` when the page is smaller than the paper (e.g. envelopes or A5 stock fed through a tray that centers the paper)
     - `color` or `monochrome`
     - `collate` or `nocollate` : when printing multiple copies, collate (1,2,3,1,2,3) or don't (1,1,2,2,3,3)

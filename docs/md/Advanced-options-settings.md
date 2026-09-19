@@ -933,6 +933,11 @@ PrinterDefaults [
     ; default value for collate in the print dialog (default, collate,
     ; nocollate) (introduced in version 3.7)
     Collate = default
+
+    ; resolution to assume for the document when printing at original size (e.g.
+    ; 300 for a 300 dpi scan whose file doesn't say); 0 uses the resolution
+    ; recorded in the file (introduced in version 3.7)
+    PrintDpi = 0
 ]
 
 ; options for fullscreen mode (introduced in version 3.7)

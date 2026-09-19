@@ -389,6 +389,10 @@ struct PrinterDefaults {
     // default value for collate in the print dialog (default, collate,
     // nocollate)
     Str collate;
+    // resolution to assume for the document when printing at original size
+    // (e.g. 300 for a 300 dpi scan whose file doesn't say); 0 uses the
+    // resolution recorded in the file
+    float printDpi;
 };
 
 // customization options for how forward search results are shown (used
@@ -1643,14 +1647,17 @@ static const StructInfo gForwardSearchInfo = {
 static const FieldInfo gPrinterDefaultsFields[] = {
     {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t)"shrink"},
     {offsetof(PrinterDefaults, collate), SettingType::String, (intptr_t)"default"},
+    {offsetof(PrinterDefaults, printDpi), SettingType::Float, (intptr_t)"0"},
 };
-static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults),
-                                                2,
-                                                gPrinterDefaultsFields,
-                                                "PrintScale\0Collate",
-                                                "default value for scaling (shrink, fit, none)\0default value for "
-                                                "collate in the print dialog (default, collate, nocollate)",
-                                                false};
+static const StructInfo gPrinterDefaultsInfo = {
+    sizeof(PrinterDefaults),
+    3,
+    gPrinterDefaultsFields,
+    "PrintScale\0Collate\0PrintDpi",
+    "default value for scaling (shrink, fit, none)\0default value for collate in the print dialog (default, collate, "
+    "nocollate)\0resolution to assume for the document when printing at original size (e.g. 300 for a 300 dpi scan "
+    "whose file doesn't say); 0 uses the resolution recorded in the file",
+    false};
 
 static const FieldInfo gFullscreenFields[] = {
     {offsetof(Fullscreen, showToolbar), SettingType::Bool, false, true},

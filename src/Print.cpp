@@ -612,13 +612,30 @@ static float SanitizePrintZoom(float zoom, float fallback, Str why, Size paperSi
     return 1.f;
 }
 
-PrintPageLayout CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanced_Data& advanced,
-                                         Size paperSize, Rect printable, float dpiX, float dpiY, bool printPortrait,
-                                         Str printerName) {
-    float fileDPI = engine.GetFileDPI();
+// the document's resolution the print scaling is based on: for images (a
+// scan, an image folder, a comic book) a user override (-print-settings "dpi=",
+// PrinterDefaults.PrintDpi) beats the file's, which is often missing or wrong
+// (#6223). Documents with real page sizes (PDF, XPS, ...) ignore the override:
+// their "file DPI" is the unit of their coordinate system, not a resolution.
+// Anything unusable falls back to 96
+static float PrintFileDPI(EngineBase& engine, const Print_Advanced_Data& advanced) {
+    float fileDPI = 0;
+    if (IsEngineImages(&engine)) {
+        fileDPI = advanced.dpiOverride;
+    }
+    if (!(fileDPI > 0) || !isfinite(fileDPI)) {
+        fileDPI = engine.GetFileDPI();
+    }
     if (!(fileDPI > 0) || !isfinite(fileDPI)) {
         fileDPI = 96.f;
     }
+    return fileDPI;
+}
+
+PrintPageLayout CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanced_Data& advanced,
+                                         Size paperSize, Rect printable, float dpiX, float dpiY, bool printPortrait,
+                                         Str printerName) {
+    float fileDPI = PrintFileDPI(engine, advanced);
     float dpiFactor = std::min(SafePrintDiv(dpiX, fileDPI), SafePrintDiv(dpiY, fileDPI));
     if (!IsValidPrintZoom(dpiFactor)) {
         dpiFactor = 1.f;
@@ -887,10 +904,9 @@ static bool PrintToDevice(const PrintData& pd) {
     // Positive x is to the right; positive y is down.
     SetMapMode(hdc, MM_TEXT);
 
-    float fileDPI = engine.GetFileDPI();
-    if (!(fileDPI > 0) || !isfinite(fileDPI)) {
-        logf("PrintToDevice: bad fileDPI=%g, using 96\n", fileDPI);
-        fileDPI = 96.f;
+    float fileDPI = PrintFileDPI(engine, pd.advData);
+    if (fileDPI != engine.GetFileDPI()) {
+        logf("PrintToDevice: dpi override %g (file says %g)\n", fileDPI, engine.GetFileDPI());
     }
     // paper geometry; recomputed per page when printing mixed page sizes (#533)
     Size paperSize;
@@ -1433,6 +1449,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByD
     pdex.nStartPage = START_PAGE_GENERAL;
 
     Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
+    advanced.dpiOverride = gSettings->printerDefaults.printDpi;
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced);
     pdex.lphPropertyPages = &hPsp;
     pdex.nPropertyPages = 1;
@@ -1986,6 +2003,12 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
                     advanced.extraRotation = deg;
                 }
             }
+        } else if (str::TrimPrefixI(s, StrL("dpi="))) {
+            // the resolution to assume for the document, see Print_Advanced_Data::dpiOverride
+            float dpi = 0;
+            if (!str::IsNull(str::Parse(s, "%f%$", &dpi)) && dpi > 0) {
+                advanced.dpiOverride = dpi;
+            }
         } else if (str::EqI(s, StrL("center"))) {
             advanced.centerHorizontally = true;
         } else if (!str::IsNull(str::Parse(s, "%dx%$", &val))) {
@@ -2156,6 +2179,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
     devMode->dmPaperSize = GetPaperSize(engine);
     {
         Print_Advanced_Data advanced;
+        advanced.dpiOverride = gSettings->printerDefaults.printDpi;
         Vec<PRINTPAGERANGE> ranges;
 
         // apply print defaults from the PDF's /ViewerPreferences (issue #534),
