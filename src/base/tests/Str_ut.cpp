@@ -588,10 +588,6 @@ static void StrTrimWsTest() {
     trimmed = {};
     utassert(str::TrimWsBoth(trimmed) == 0 && str::IsNull(trimmed));
 
-    trimmed = StrL("name.ext");
-    utassert(str::TrimSuffix(trimmed, StrL(".ext")) == 4 && str::Eq(trimmed, StrL("name")));
-    utassert(str::TrimSuffix(trimmed, StrL(".ext")) == 0 && str::Eq(trimmed, StrL("name")));
-
     trimmed = StrL("---name");
     utassert(str::TrimChar(trimmed, '-') == 3 && str::Eq(trimmed, StrL("name")));
 
@@ -692,63 +688,6 @@ static void StrStartsWithTest() {
     utassert(str::Eq(t4, StrL("PageDown")));
 }
 
-static void StrArenaTest() {
-    Arena* a = ArenaNew();
-    utassert(a != nullptr);
-
-    utassert(StrArenaToStr(a, 0).s == nullptr);
-    utassert(len(StrArenaToStr(a, 0)) == 0);
-
-    StrArena empty = StrArenaDupStr(a, StrL(""));
-    utassert(empty != 0);
-    Str emptyS = StrArenaToStr(a, empty);
-    utassert(len(emptyS) == 0);
-    utassert(emptyS.s != nullptr);
-    utassert(emptyS.s[0] == 0);
-
-    StrArena sa = StrArenaDupStr(a, StrL("hello"));
-    utassert(sa != 0);
-    Str s = StrArenaToStr(a, sa);
-    utassert(str::Eq(s, StrL("hello")));
-    utassert(s.s[5] == 0); // C terminator after payload
-
-    // multi-byte LEB128 length: 200 > 127
-    StrArena big = StrArenaAlloc(a, 200);
-    utassert(big != 0);
-    Str bigS = StrArenaToStr(a, big);
-    utassert(bigS.len == 200);
-    utassert(bigS.s != nullptr);
-    memset(bigS.s, 'x', 200);
-    utassert(bigS.s[200] == 0);
-    utassert(str::Eq(StrArenaToStr(a, big), Str(bigS.s, 200)));
-
-    // multi-block arena: force a second chain block, then store a string there
-    {
-        ArenaParams params = ArenaDefaultParams();
-        params.reserveSize = 4 * 1024;
-        params.commitSize = 4 * 1024;
-        Arena* a2 = ArenaNew(params);
-        utassert(a2 != nullptr);
-        // ArenaNew rounds the reserve up to a page, and a page is 16K on arm64
-        // macOS, not 4K - so size the pushes from the block we actually got
-        u64 half = a2->reserved / 2;
-        void* filler = a2->Push(half, 8, true);
-        utassert(filler != nullptr);
-        // second large push forces a chained block (two halves + the header
-        // don't fit in one)
-        void* filler2 = a2->Push(half, 8, true);
-        utassert(filler2 != nullptr);
-        utassert(a2->current != a2);
-        StrArena sa2 = StrArenaDupStr(a2, StrL("second-block"));
-        utassert(sa2 != 0);
-        utassert(sa2 >= (u32)a2->reserved); // compressed offset past first block
-        utassert(str::Eq(StrArenaToStr(a2, sa2), StrL("second-block")));
-        ArenaDelete(a2);
-    }
-
-    ArenaDelete(a);
-}
-
 // nothing to allocate is an empty Str, not an allocation of nothing - and a
 // negative length asks for close to 2^64 bytes once it is widened, so it is
 // the same answer rather than a terminator written at a negative offset
@@ -765,7 +704,6 @@ static void AllocStrTempTest() {
 }
 
 void StrTest() {
-    StrArenaTest();
     AllocStrTempTest();
 
     char buf[32];
@@ -995,18 +933,6 @@ void StrTest() {
                        &f[5]);
         utassert(!str::IsNull(s) && f[0] == 1 && f[1] == 2 && f[2] == 3 && b[0] == 0 && b[1] == 1 && f[4] == 20 &&
                  f[5] == -20);
-    }
-
-    {
-// the test string should only contain ASCII characters,
-// as all others might not be available in all code pages
-#define kTestString "aBc"
-        char* strA = strconv::WStrToAnsi(TEXT(kTestString)).s;
-        AutoCall freeStrA(free, (void*)strA);
-        utassert(str::Eq(Str(strA), StrL(kTestString)));
-        auto res = strconv::AnsiToWStrTemp(Str(strA));
-        utassert(wstr::Eq(res, TEXT(kTestString)));
-#undef kTestString
     }
 
     utassert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));

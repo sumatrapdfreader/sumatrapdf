@@ -511,7 +511,7 @@ class EngineBase {
     Kind kind = nullptr;
 
     Arena* arena = nullptr;
-    AtomicRefCount refCount = 1; // starts life as acquired
+    AtomicInt refCount = 1; // starts life as acquired
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
     Str defaultExt;

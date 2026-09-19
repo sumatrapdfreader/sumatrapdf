@@ -1181,7 +1181,6 @@
     <ClCompile Include="..\ext\lzma\C\LzmaDec.c" />
     <ClCompile Include="..\ext\lzma\C\LzmaEnc.c" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
-    <ClCompile Include="..\src\base\Arena.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgs.cpp" />

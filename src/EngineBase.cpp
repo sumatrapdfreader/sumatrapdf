@@ -487,12 +487,12 @@ struct PageTextCache {
 };
 
 int EngineBase::AddRef() {
-    return AtomicRefCountAdd(&refCount);
+    return AtomicIntInc(&refCount);
 }
 
 // return true if deleted the object
 bool EngineBase::Release() {
-    int rc = AtomicRefCountDec(&refCount);
+    int rc = AtomicIntDec(&refCount);
     if (rc == 0) {
         delete this;
         return true;

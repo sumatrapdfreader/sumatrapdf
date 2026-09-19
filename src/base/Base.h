@@ -148,7 +148,6 @@ using uint = unsigned int;
 
 using AtomicBool = volatile LONG;
 using AtomicInt = volatile LONG;
-using AtomicRefCount = volatile LONG;
 using AtomicPtr = void* volatile;
 
 bool AtomicBoolGet(AtomicBool* p);
@@ -160,8 +159,6 @@ void AtomicIntSet(AtomicInt* p, int v);
 int AtomicIntAdd(AtomicInt* p, int v);
 int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
-int AtomicRefCountAdd(AtomicRefCount* v);
-int AtomicRefCountDec(AtomicRefCount* v);
 void* AtomicPtrExchange(AtomicPtr* p, void* v);
 
 i64 UnixTimeMsNow();
@@ -240,12 +237,6 @@ inline int len(const wchar_t* s) {
     }
     return n;
 }
-
-struct VecStr {
-    int len;
-    int cap;
-    Str* els;
-};
 
 #if COMPILER_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -365,12 +356,6 @@ FORCEINLINE T* AllocStruct() {
 template <typename T>
 inline void ZeroStruct(T* s) {
     ZeroMemory((void*)s, sizeof(T));
-}
-
-template <typename T>
-inline void ZeroArray(T& a) {
-    size_t size = sizeof(a);
-    ZeroMemory((void*)&a, size);
 }
 
 int limitValue(int val, int min, int max);
@@ -715,14 +700,6 @@ Func1<T2> MkFunc1Void(void (*fn)(T2)) {
     return res;
 }
 
-template <typename T1, typename T2>
-Func1<T2>* NewFunc1(void (*fn)(T1*, T2), T1* d) {
-    auto res = new Func1<T2>{};
-    res->fn = (void*)fn;
-    res->SetData((void*)d, false);
-    return res;
-}
-
 // Func1 with an intrusive next pointer, so several callbacks can share one slot.
 // Embed a node in the client and Register() it onto a list head.
 template <typename T>
@@ -822,7 +799,6 @@ struct Size {
 
     bool IsEmpty() const;
 
-    bool Equals(const Size& other) const;
     bool operator==(const Size& other) const;
     bool operator!=(const Size& other) const;
 };
@@ -853,7 +829,6 @@ struct Rect {
     Rect(const Point pt, const Size sz) : x(pt.x), y(pt.y), dx(sz.dx), dy(sz.dy) {}
     Rect(Point min, Point max);
 
-    bool EqSize(int otherDx, int otherDy) const;
     int Right() const;
     int Bottom() const;
     static Rect FromXY(int xs, int ys, int xe, int ye);
@@ -873,7 +848,6 @@ struct Rect {
     struct Size Size() const;
     void SetSize(const struct Size&);
     void SetPos(const Point&);
-    bool Equals(const Rect& other) const;
     bool operator==(const Rect& other) const;
     bool operator!=(const Rect& other) const;
 };
@@ -892,7 +866,6 @@ struct RectF {
     RectF(PointF pt, SizeF size);
     RectF(PointF min, PointF max);
 
-    bool EqSize(float otherDx, float otherDy) const;
     float Right() const;
     float Bottom() const;
     static RectF FromXY(float xs, float ys, float xe, float ye);
@@ -912,9 +885,6 @@ struct RectF {
 };
 
 Point ToPoint(PointF p);
-
-SizeF ToSizeFl(Size s);
-Size ToSize(SizeF s);
 
 RectF ToRectF(const Rect& r);
 Rect ToRect(const RectF& r);
@@ -1013,51 +983,25 @@ bool AreDangerousThreadsPending();
 
 //--- Arena.h ------------------------------------------------------------------
 
-// Reserve/commit arena allocator (implemented in Arena.cpp).
-// Not self-sufficient: include after the part of utils/Base.h that defines
-// u64 and pulls in <windows.h> / <utility>. Base.h includes this header.
-
-// Standalone reserve/commit arena
+// Reserve/commit arena: a chain of VirtualAlloc'ed blocks, each with this
+// header at its start. The head block carries the chain and the stats.
 // 256 (not 128) to leave room in the header for the allocation stats below
 static const u64 kArenaHeaderSize = 256;
 
-typedef u64 ArenaFlags;
-enum : ArenaFlags {
-    ArenaFlagNoChain = 1ull << 0,
-    ArenaFlagLargePages = 1ull << 1,
-};
-
 struct ArenaParams {
-    ArenaFlags flags = 0;
     u64 reserveSize = 0;
     u64 commitSize = 0;
-    void* optionalBackingBuffer = nullptr;
-    const char* allocationSiteFile = nullptr;
-    int allocationSiteLine = 0;
-    const char* name = nullptr;
-};
-
-struct Arena;
-
-struct ArenaSavepoint {
-    Arena* arena;
-    u64 pos;
 };
 
 struct Arena {
     Arena* prev;    // Previous arena in chain
     Arena* current; // Current arena in chain
-    ArenaFlags flags;
     u64 commitChunkSize;
     u64 reserveChunkSize;
     u64 basePos;
     u64 pos;
     u64 committed;
     u64 reserved;
-    const char* allocationSiteFile;
-    int allocationSiteLine;
-    const char* name;
-    bool usesExternalBuffer;
     Mutex lock;
 
     // allocation statistics, updated after every successful allocation
@@ -1069,7 +1013,6 @@ struct Arena {
     u64 peakBytesSinceReset; // largest total size reached since the last Reset()
 
     void* Alloc(int size);
-    void Free(void* ptr);
     void Reset();
     void* Push(u64 size, u64 align = 8, bool zero = true);
     u64 Pos();
@@ -1082,16 +1025,9 @@ struct Arena {
 
 static_assert(sizeof(Arena) <= kArenaHeaderSize, "Arena header must fit in reserved header bytes");
 
-extern u64 gArenaDefaultReserveSize;
-extern u64 gArenaDefaultCommitSize;
-extern ArenaFlags gArenaDefaultFlags;
-
 ArenaParams ArenaDefaultParams();
 Arena* ArenaNew(const ArenaParams& params = ArenaDefaultParams());
 void ArenaDelete(Arena* arena);
-
-ArenaSavepoint GetArenaSavepoint(Arena* arena);
-void RestoreArenaSavepoint(ArenaSavepoint temp);
 
 u32 ArenaPtrCompress(Arena* arena, void* ptr);
 void* ArenaPtrUncompress(Arena* arena, u32 compressed);
@@ -1111,15 +1047,17 @@ void DestroyTempArena();
 // rewinds it to the entry position on scope exit, so code that allocates
 // scratch in a loop or on a hot path doesn't grow the arena unbounded.
 struct AutoArenaSavepoint {
-    ArenaSavepoint sp;
-    AutoArenaSavepoint(Arena* a = GetTempArena()) { // NOLINT
-        sp = GetArenaSavepoint(a);
+    Arena* arena;
+    u64 pos;
+    AutoArenaSavepoint(Arena* a = GetTempArena()) : arena(a), pos(a ? a->Pos() : 0) { // NOLINT
     }
-    AutoArenaSavepoint(AutoArenaSavepoint& other) = delete;
-    AutoArenaSavepoint(AutoArenaSavepoint&& other) = delete;
-    AutoArenaSavepoint(const AutoArenaSavepoint& other) = delete;
-    AutoArenaSavepoint(const AutoArenaSavepoint&& other) = delete;
-    ~AutoArenaSavepoint() { RestoreArenaSavepoint(sp); }
+    AutoArenaSavepoint(const AutoArenaSavepoint&) = delete;
+    AutoArenaSavepoint(AutoArenaSavepoint&&) = delete;
+    ~AutoArenaSavepoint() {
+        if (arena) {
+            arena->PopTo(pos);
+        }
+    }
 };
 
 // Arena for allocations that live for the whole lifetime of the program (i.e.
@@ -1128,26 +1066,6 @@ struct AutoArenaSavepoint {
 extern Arena* gPermArena;
 Arena* GetPermArena();
 void DestroyPermArena();
-
-template <typename T>
-inline T* PushArrayNoZeroAligned(Arena* arena, u64 count, u64 align) {
-    return (T*)arena->Push(sizeof(T) * count, align, false);
-}
-
-template <typename T>
-inline T* PushArrayAligned(Arena* arena, u64 count, u64 align) {
-    return (T*)arena->Push(sizeof(T) * count, align, true);
-}
-
-template <typename T>
-inline T* PushArrayNoZero(Arena* arena, u64 count) {
-    return PushArrayNoZeroAligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
-}
-
-template <typename T>
-inline T* PushArray(Arena* arena, u64 count) {
-    return PushArrayAligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
-}
 
 void* Alloc(struct Arena* arena, int size);
 void Free(struct Arena* arena, void* mem);
@@ -1205,7 +1123,7 @@ struct VecIdentity {
 template <typename T>
 using VecIdentityT = typename VecIdentity<T>::type;
 
-//--- the type-erased layer: bodies in Arena.cpp, compiled once ---------------
+//--- the type-erased layer: bodies in Base.cpp, compiled once ----------------
 
 // Vec<T> with the element type erased. Vec<T>'s layout does not depend on T,
 // so VecNT() is a cast rather than a copy and the shims below cost nothing
@@ -1269,10 +1187,6 @@ void VecClear(Vec<T>& v);
 // Free the storage, leaving the vec empty (len, cap and els all 0).
 template <typename T>
 void VecReset(Vec<T>& v);
-
-// free() every element, then reset. Only for a vec of pointers.
-template <typename T>
-void VecFreeMembers(Vec<T>& v);
 
 // Perf hack for using a vec as a buffer: hand the storage to the caller
 // without a second allocation. Since a vec over-allocates this is likely to
@@ -1495,14 +1409,6 @@ void VecReset(Vec<T>& v) {
 }
 
 template <typename T>
-void VecFreeMembers(Vec<T>& v) {
-    for (int i = 0; i < v.len; i++) {
-        free(v.els[i]);
-    }
-    VecReset(v);
-}
-
-template <typename T>
 T* VecTake(Vec<T>& v) {
     return (T*)VecTakeNT(VecNT(v), (int)sizeof(T));
 }
@@ -1691,37 +1597,11 @@ void VecReverse(Vec<T>& v) {
     }
 }
 
-// Iterator wrapper for range-based for loops over Vec types (structs with len/els)
-template <typename Vec>
-class VecIterator {
-    Vec* vec;
-
-  public:
-    VecIterator(Vec* v) : vec(v) {}
-    auto begin() { return vec ? vec->els : nullptr; }
-    auto end() { return vec && vec->els ? vec->els + vec->len : nullptr; }
-};
-
-// Helper functions for type deduction (works with both Vec& and Vec*)
-template <typename Vec>
-VecIterator<Vec> VecIter(Vec& v) {
-    return VecIterator<Vec>(&v);
-}
-template <typename Vec>
-VecIterator<Vec> VecIter(Vec* v) {
-    return VecIterator<Vec>(v);
-}
-
 //--- Str.h ------------------------------------------------------------------
 
 #define kUtf8Bom "\xEF\xBB\xBF"
 #define kUtf16Bom "\xFF\xFE"
 #define kUtf16BeBom "\xFE\xFF"
-
-using StrArena = u32;
-StrArena StrArenaAlloc(Arena* a, int size);
-StrArena StrArenaDupStr(Arena* a, Str s);
-Str StrArenaToStr(Arena* a, StrArena sa);
 
 // Singly-linked string node; AllocStrNode places the string bytes immediately
 // after the node in one allocation (s.s points into that block).
@@ -1801,8 +1681,6 @@ bool EqNIx(Str s, int n, Str s2);
 
 Str ToLowerInPlace(Str s);
 
-Str ToLower(Str s);
-
 Str ToUpperInPlace(Str s);
 
 bool IsDigit(char c);
@@ -1825,7 +1703,6 @@ bool ContainsI(Str s, Str sub);
 bool ContainsChar(Str s, char c);
 bool ContainsCharAny(Str s, Str chars);
 
-int TrimSuffix(Str& s, Str suffix);
 int LastIndexOfChar(Str s, char c);
 int TrimSuffixWhitespace(Str& s);
 
@@ -1890,7 +1767,6 @@ bool StartsWith(WStr str, WStr prefix);
 bool StartsWithI(WStr str, WStr prefix);
 bool EndsWith(WStr txt, WStr end);
 bool EndsWithI(WStr txt, WStr end);
-WStr ToLower(WStr s);
 WStr ToLowerInPlace(WStr s);
 int BufSet(WStr dst, WStr src);
 int NormalizeWSInPlace(WStr str);
@@ -2242,6 +2118,8 @@ bool StrLessNoCase(Str s1, Str s2);
 bool StrLessNatural(Str s1, Str s2);
 
 struct StrVecPage;
+StrVecPage* StrVecPageNext(StrVecPage*);
+int StrVecPageSize(StrVecPage*);
 
 struct StrVec {
     StrVecPage* first = nullptr;
@@ -2337,9 +2215,6 @@ int Split(StrVec* v, Str s, Str separator, bool collapse = false, int max = -1);
 Str Join(StrVec* v, Str sep = {});
 TempStr JoinTemp(StrVec* v, Str sep);
 
-StrVecPage* StrVecPageNext(StrVecPage*);
-int StrVecPageSize(StrVecPage*);
-
 //--- Strconv.h ------------------------------------------------------------------
 
 namespace strconv {
@@ -2354,8 +2229,6 @@ TempWStr StrCPToWStrTemp(Str src, uint codePage);
 TempStr StrToUtf8Temp(Str src, uint codePage);
 
 TempStr UnknownToUtf8Temp(Str s);
-
-Str WStrToAnsi(WStr src);
 
 TempWStr AnsiToWStrTemp(Str src);
 Str AnsiToUtf8(Str src);
@@ -2545,7 +2418,6 @@ constexpr Color MkGray(u8 x) {
 constexpr Color kColWhite = MkRgb(0xff, 0xff, 0xff);
 constexpr Color kColBlack = MkRgb(0, 0, 0);
 constexpr Color kColRed = MkRgb(0xff, 0, 0);
-constexpr Color kColGreen = MkRgb(0, 0xff, 0);
 constexpr Color kColBlue = MkRgb(0, 0, 0xff);
 constexpr Color kColYellow = MkRgb(0xff, 0xff, 0);
 constexpr Color kColGray = MkGray(0xdd);

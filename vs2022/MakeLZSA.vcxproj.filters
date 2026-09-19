@@ -86,9 +86,6 @@
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\Arena.cpp">
-      <Filter>src\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\Base.cpp">
       <Filter>src\base</Filter>
     </ClCompile>

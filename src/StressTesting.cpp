@@ -326,17 +326,17 @@ static void MakeRandomSelection(MainWindow* win, int pageNo) {
 // encapsulates the logic of getting the next file to test, so
 // that we can implement different strategies
 struct TestFileProvider {
-    AtomicRefCount refCount = 1;
+    AtomicInt refCount = 1;
     virtual ~TestFileProvider() {}
     // returns path of the next file to test or nullptr if done (caller needs to free() the result)
     virtual TempStr NextFile() = 0;
     virtual void Restart() = 0;
     virtual int GetFilesCount() = 0;
 
-    void AddRef() { AtomicRefCountAdd(&refCount); }
+    void AddRef() { AtomicIntInc(&refCount); }
     // returns new ref count
     int Release() {
-        int n = AtomicRefCountDec(&refCount);
+        int n = AtomicIntDec(&refCount);
         ReportIf(n < 0);
         if (n == 0) {
             delete this;

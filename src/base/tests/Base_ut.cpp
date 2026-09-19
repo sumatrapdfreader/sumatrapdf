@@ -138,10 +138,7 @@ static void GeomTest() {
 
     SizeF szD(7.7f, -3.3f);
     utassert(szD.dx == 7.7f && szD.dy == -3.3f);
-    Size szI = ToSize(szD);
-    utassert(szI.dx == 8 && szI.dy == -3);
-    szD = ToSizeFl(szI);
-    utassert(SizeF(8, -3) == szD);
+    Size szI(8, -3);
 
     utassert(!szD.IsEmpty() && !szI.IsEmpty());
     utassert(Size().IsEmpty() && SizeF().IsEmpty());

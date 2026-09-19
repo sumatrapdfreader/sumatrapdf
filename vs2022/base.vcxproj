@@ -1160,7 +1160,6 @@
     </ClCompile>
     <ClCompile Include="..\src\PerfLog.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
-    <ClCompile Include="..\src\base\Arena.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp" />
     <ClCompile Include="..\src\base\CmdLineArgs.cpp" />
