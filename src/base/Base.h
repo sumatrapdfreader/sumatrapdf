@@ -2243,6 +2243,26 @@ AutoCall(Result (*)(Arg), Arg) -> AutoCall<Result (*)(Arg)>;
 template <typename Result, typename Arg1, typename Arg2>
 AutoCall(Result (*)(Arg1, Arg2), Arg1, Arg2) -> AutoCall<Result (*)(Arg1, Arg2)>;
 
+// on x86 Win32 API functions (CloseHandle etc.) are __stdcall, a distinct
+// pointer type; on x64 it is the same as __cdecl and would redefine the above
+#if defined(_M_IX86)
+template <typename Result, typename Arg>
+struct AutoCall<Result(__stdcall*)(Arg)> : NonCopyable {
+    Result(__stdcall* fn)(Arg) = nullptr;
+    Arg arg{};
+    AutoCall() = default;
+    AutoCall(Result(__stdcall* fn)(Arg), Arg arg) : fn(fn), arg(arg) {} // NOLINT
+    ~AutoCall() {
+        if (fn) {
+            fn(arg);
+        }
+    }
+};
+
+template <typename Result, typename Arg>
+AutoCall(Result(__stdcall*)(Arg), Arg) -> AutoCall<Result(__stdcall*)(Arg)>;
+#endif
+
 //--- Color.h ------------------------------------------------------------------
 
 // Win32 COLORREF layout (0x00bbggrr); typically no alpha
