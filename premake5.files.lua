@@ -426,8 +426,6 @@ function sumatrapdf_files()
     "*.cpp",
     "UtAssert.h",
   })
-  -- linux-only, like the FileWatcher_linux.cpp it tests
-  removefiles { "src/base/tests/FileWatcher_linux_ut.cpp" }
   files_in_dir("src/base", {
     "Archive.*",
   })
