@@ -3590,7 +3590,7 @@ int utf8RuneLen(const u8* s) {
 }
 
 // note: include Base.h instead of including directly
-bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
+static bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
     int n = utf8RuneLen(source);
     if (source + n > sourceEnd) {
         return false;
@@ -3598,7 +3598,7 @@ bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
     return isLegalUTF8(source, n);
 }
 
-bool isLegalUTF8String(const u8** source, const u8* sourceEnd) {
+static bool isLegalUTF8String(const u8** source, const u8* sourceEnd) {
     const u8* s = *source;
     while (s != sourceEnd) {
         int n = utf8RuneLen(s);
@@ -3646,7 +3646,7 @@ void str::Utf8Encode(char* buf, int& off, int c) {
     off = (int)((char*)tmp - buf);
 }
 
-bool Utf8IsContinuationByte(char c) {
+static bool Utf8IsContinuationByte(char c) {
     return ((u8)c & 0xC0) == 0x80;
 }
 
@@ -3723,38 +3723,23 @@ int Utf8CodepointPrev(Str s, int& byteIdx) {
         return 0;
     }
     byteIdx = std::min(byteIdx, s.len);
-    int prevByte = byteIdx - 1;
-    while (prevByte > 0 && (((u8)s.s[prevByte] & 0xc0) == 0x80)) {
-        prevByte--;
-    }
-    byteIdx = prevByte;
+    byteIdx = Utf8CodepointStartByte(s, byteIdx - 1);
     return Utf8CodepointAtByte(s, byteIdx);
 }
 
-int Utf8CodepointToByteIndex(Str s, int codepointIdx) {
-    if (len(s) == 0 || codepointIdx <= 0) {
-        return 0;
-    }
-    int byteIdx = 0;
-    int cp = 0;
-    while (byteIdx < s.len && cp < codepointIdx) {
-        Utf8CodepointNext(s, byteIdx);
-        cp++;
-    }
-    return byteIdx;
-}
-
-int Utf8AdvanceCodepoints(Str s, int byteIdx, int nCodepoints) {
+static int Utf8AdvanceCodepoints(Str s, int byteIdx, int nCodepoints) {
     if (len(s) == 0 || byteIdx < 0) {
         return 0;
     }
-    if (byteIdx > s.len) {
-        return s.len;
-    }
+    byteIdx = std::min(byteIdx, s.len);
     for (int i = 0; i < nCodepoints && byteIdx < s.len; i++) {
         Utf8CodepointNext(s, byteIdx);
     }
     return byteIdx;
+}
+
+int Utf8CodepointToByteIndex(Str s, int codepointIdx) {
+    return Utf8AdvanceCodepoints(s, 0, codepointIdx);
 }
 
 Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints) {
@@ -5501,7 +5486,7 @@ static int* AllocateSortIndexes(StrVec* v) {
     return res;
 }
 
-void SortIndex(StrVec* v, StrLessFunc lessFn) {
+static void SortIndex(StrVec* v, StrLessFunc lessFn) {
     if (len(*v) < 2) {
         return;
     }
@@ -5797,11 +5782,8 @@ void UnpackColor(Color c, u8& r, u8& g, u8& b, u8& a) {
 
 // format: bgr
 void UnpackColor(Color c, u8& r, u8& g, u8& b) {
-    r = (u8)(c & 0xff);
-    c = c >> 8;
-    g = (u8)(c & 0xff);
-    c = c >> 8;
-    b = (u8)(c & 0xff);
+    u8 a;
+    UnpackColor(c, r, g, b, a);
 }
 
 Gdiplus::Color GdiRgbFromColor(Color c) {
@@ -5921,7 +5903,7 @@ void UnpackPdfColor(PdfColor c, u8& r, u8& g, u8& b, u8& a) {
     a = (u8)(c & 0xff);
 }
 
-Color AdjustLightness(Color c, float factor) {
+static Color AdjustLightness(Color c, float factor) {
     u8 R, G, B;
     UnpackColor(c, R, G, B);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma

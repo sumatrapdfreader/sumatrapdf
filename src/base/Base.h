@@ -1842,8 +1842,6 @@ TempStr FormatFileSizeTemp(u64 size);
 
 //--- StrUtf8.h ------------------------------------------------------------------
 
-bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd);
-bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 int utf8StrLen(const u8* s);
 int utf8RuneLen(const u8* s);
 
@@ -1852,7 +1850,6 @@ void Utf8Encode(char* buf, int& off, int c);
 int VsnprintfUtf8(Str buf, const char* fmt, va_list args);
 } // namespace str
 
-bool Utf8IsContinuationByte(char c);
 int Utf8CodepointCount(Str s);
 int Utf8CodepointAtByte(Str s, int byteIdx, int* bytesOut = nullptr);
 // byteIdx may point into the middle of a sequence, unlike in the functions above
@@ -1861,7 +1858,6 @@ int Utf8CodepointContaining(Str s, int byteIdx);
 int Utf8CodepointNext(Str s, int& byteIdx);
 int Utf8CodepointPrev(Str s, int& byteIdx);
 int Utf8CodepointToByteIndex(Str s, int codepointIdx);
-int Utf8AdvanceCodepoints(Str s, int byteIdx, int nCodepoints);
 Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints);
 
 TempStr ShortenStringUtf8Temp(Str s, int maxRunes);
@@ -2126,7 +2122,6 @@ struct StrVecWithData : StrVec {
 int AppendIfNotExists(StrVec* v, Str s);
 
 void Sort(StrVec* v, StrLessFunc lessFn = StrLess);
-void SortIndex(StrVec* v, StrLessFunc lessFn = StrLess);
 void SortNoCase(StrVec*);
 void SortNatural(StrVec*);
 
@@ -2320,7 +2315,6 @@ PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a = 0xff); // 0xff is opaque
 void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
 void SerializePdfColor(PdfColor c, str::Builder& out);
 
-Color AdjustLightness(Color c, float factor);
 Color AdjustLightness2(Color c, float units);
 float GetLightness(Color c);
 bool IsLightColor(Color c);
