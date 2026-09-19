@@ -1236,7 +1236,6 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
             si.nPos += (int)si.nPage;
             break;
         case SB_THUMBTRACK:
-        case SB_THUMBPOSITION:
             si.nPos = si.nTrackPos;
             break;
     }
@@ -1248,24 +1247,31 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     bool showScrollbar = !ScrollbarsAreHidden();
     BOOL showWinScrollbar = showScrollbar && !overlayMode;
     BOOL showOverScrollbar = showScrollbar && useOverlay;
-    bool isThumb = (msg == SB_THUMBTRACK || msg == SB_THUMBPOSITION);
-    if (useSmoothScroll || overlayMode) {
-        // Overlay: clamp here. GetScrollInfo on the hidden Windows bar can
-        // return the old nPos and the thumb springs back (#6206).
-        // SmoothScroll: don't move the thumb ahead of the view (#4662).
+    if (useSmoothScroll) {
+        // Don't hand the target to the scrollbar: the thumb would jump ahead of
+        // the view and be pulled back by the next animation tick (which updates
+        // it via ScrollYTo -> UpdateScrollbars as the view actually moves).
+        // Clamp the way SetScrollInfo would have, so the target stays in range.
         int maxPos = si.nMax - (int)si.nPage + 1;
         si.nPos = limitValue(si.nPos, si.nMin, std::max(si.nMin, maxPos));
-        if (showOverScrollbar && !isThumb) {
+        // Still reveal the thin smart bar on wheel / key input (without moving
+        // the thumb to the pending target). Mouse-move tracking alone is not
+        // enough when the user scrolls with the wheel while the cursor is still
+        // (#5859).
+        if (showOverScrollbar) {
             OverlayScrollbarNotifyScroll(win->overlayScrollV);
         }
     } else {
         SetScrollInfo(win->hwndCanvas, SB_VERT, &si, showWinScrollbar);
         GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
+        if (showOverScrollbar) {
+            OverlayScrollbarSetInfo(win->overlayScrollV, &si, TRUE);
+        }
     }
 
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
-    if (si.nPos != currPos || isThumb) {
+    if (si.nPos != currPos || msg == SB_THUMBTRACK) {
         if (useSmoothScroll) {
             StartOrUpdateSmoothScrollY(win, si.nPos);
         } else {
@@ -1317,7 +1323,6 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
             si.nPos += (int)si.nPage;
             break;
         case SB_THUMBTRACK:
-        case SB_THUMBPOSITION:
             si.nPos = si.nTrackPos;
             break;
     }
@@ -1325,18 +1330,15 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
     // Set the position and then retrieve it.  Due to adjustments
     // by Windows it may not be the same as the value set.
     si.fMask = SIF_POS;
-    bool isThumb = (msg == SB_THUMBTRACK || msg == SB_THUMBPOSITION);
-    if (overlayMode) {
-        int maxPos = si.nMax - (int)si.nPage + 1;
-        si.nPos = limitValue(si.nPos, si.nMin, std::max(si.nMin, maxPos));
-    } else {
-        SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
-        GetScrollInfo(win->hwndCanvas, SB_HORZ, &si);
+    SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, !overlayMode);
+    GetScrollInfo(win->hwndCanvas, SB_HORZ, &si);
+    if (useOverlay) {
+        OverlayScrollbarSetInfo(win->overlayScrollH, &si, TRUE);
     }
 
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
-    if (si.nPos != currPos || isThumb) {
+    if (si.nPos != currPos || msg == SB_THUMBTRACK) {
         win->AsFixed()->ScrollXTo(si.nPos);
         ReadAloudOnUserViewChanged(win);
     }

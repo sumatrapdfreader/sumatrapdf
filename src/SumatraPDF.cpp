@@ -1718,7 +1718,7 @@ void ControllerCallbackHandler::UpdateScrollbars(DisplayModel* dm, Size canvas) 
             si.nMax = canvas.dy - 1;
             si.nPage = viewPort.dy;
 
-            if (kZoomFitPage != dm->GetZoomVirtual() && IsContinuous(dm->GetDisplayMode())) {
+            if (kZoomFitPage != dm->GetZoomVirtual()) {
                 // keep the top/bottom 5% of the previous page visible after paging down/up
                 si.nPage = (uint)(si.nPage * 0.95);
                 si.nMax -= viewPort.dy - (int)si.nPage;
