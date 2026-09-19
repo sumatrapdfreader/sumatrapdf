@@ -1055,6 +1055,226 @@ void LogArenaStats(Str what, Arena* a) {
 
 //--- Str.cpp ----------------------------------------------------------------
 
+//--- bodies shared by the str:: and wstr:: twins ------------------------------
+
+template <typename S>
+static S DupT(Arena* a, S s) {
+    if (!s.s || s.len < 0) {
+        return {};
+    }
+    using C = std::remove_pointer_t<decltype(s.s)>;
+    return S((C*)MemDup(a, s.s, (size_t)s.len * sizeof(C)), s.len);
+}
+
+static int LowerChar(char c) {
+    return tolower((u8)c);
+}
+static int LowerChar(WCHAR c) {
+    return WCharToLower(c);
+}
+
+// strcmp-style (<0, 0, >0), unsigned per char. Empty/null sorts before non-empty.
+template <typename S>
+static int CmpT(S a, S b, bool ignoreCase) {
+    if (a.s == b.s && a.len == b.len) {
+        return 0;
+    }
+    if (len(a) == 0) {
+        return len(b) == 0 ? 0 : -1;
+    }
+    if (len(b) == 0) {
+        return 1;
+    }
+    using U = std::make_unsigned_t<std::remove_pointer_t<decltype(a.s)>>;
+    int n = std::min(a.len, b.len);
+    for (int i = 0; i < n; i++) {
+        int c1 = ignoreCase ? LowerChar(a.s[i]) : (int)(U)a.s[i];
+        int c2 = ignoreCase ? LowerChar(b.s[i]) : (int)(U)b.s[i];
+        if (c1 != c2) {
+            return c1 < c2 ? -1 : 1;
+        }
+    }
+    return a.len - b.len;
+}
+
+template <typename S>
+static bool EndsWithT(S txt, S end, bool (*eq)(S, S)) {
+    if (len(txt) == 0 || len(end) == 0 || end.len > txt.len) {
+        return false;
+    }
+    return eq(S(txt.s + txt.len - end.len, end.len), end);
+}
+
+template <typename S, typename C>
+static int IndexOfCharT(S s, C c) {
+    for (int i = 0; i < s.len; i++) {
+        if (s.s[i] == c) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+template <typename S, typename C>
+static S SliceFromCharT(S s, C c) {
+    int idx = IndexOfCharT(s, c);
+    return idx < 0 ? S{} : S(s.s + idx, s.len - idx);
+}
+
+template <typename S>
+static void TransCharsInPlaceT(S& s, S oldChars, S newChars) {
+    int nDiff = len(oldChars) - len(newChars);
+    ReportIf(nDiff < 0);
+    int nChanged = 0;
+    for (int i = 0; i < s.len; i++) {
+        int idx = IndexOfCharT(oldChars, s.s[i]);
+        if (idx >= 0) {
+            s.s[i] = newChars.s[idx];
+            nChanged++;
+        }
+    }
+    if (nChanged * nDiff > 0) {
+        s.s[s.len] = 0;
+    }
+}
+
+template <typename S>
+static int RemoveCharsInPlaceT(S s, S toRemove) {
+    if (len(s) == 0) {
+        return 0;
+    }
+    int dst = 0;
+    for (int src = 0; src < s.len; src++) {
+        if (IndexOfCharT(toRemove, s.s[src]) < 0) {
+            s.s[dst++] = s.s[src];
+        }
+    }
+    s.s[dst] = 0;
+    return s.len - dst;
+}
+
+// replaces all whitespace characters with spaces, collapses several
+// consecutive spaces into one and strips heading/trailing ones
+// returns the number of removed characters
+template <typename S, typename C>
+static int NormalizeWSInPlaceT(S s, bool (*isWs)(C)) {
+    if (len(s) == 0) {
+        return 0;
+    }
+    int dst = 0;
+    bool addedSpace = true;
+    for (int src = 0; src < s.len; src++) {
+        if (!isWs(s.s[src])) {
+            s.s[dst++] = s.s[src];
+            addedSpace = false;
+        } else if (!addedSpace) {
+            s.s[dst++] = ' ';
+            addedSpace = true;
+        }
+    }
+    if (dst > 0 && isWs(s.s[dst - 1])) {
+        dst--;
+    }
+    s.s[dst] = 0;
+    return s.len - dst;
+}
+
+namespace str {
+
+void Free(Str s) {
+    free(s.s);
+}
+void FreePtr(Str* s) {
+    free(s->s);
+    *s = {};
+}
+Str Dup(Arena* a, Str s) {
+    return DupT(a, s);
+}
+Str Dup(Str s) {
+    return DupT(nullptr, s);
+}
+int Cmp(Str a, Str b) {
+    return CmpT(a, b, false);
+}
+int CmpI(Str a, Str b) {
+    return CmpT(a, b, true);
+}
+bool EndsWith(Str txt, Str end) {
+    return EndsWithT(txt, end, str::Eq);
+}
+bool EndsWithI(Str txt, Str end) {
+    return EndsWithT(txt, end, str::EqI);
+}
+int IndexOfChar(Str s, char c) {
+    return IndexOfCharT(s, c);
+}
+bool ContainsChar(Str s, char c) {
+    return IndexOfCharT(s, c) >= 0;
+}
+Str SliceFromChar(Str s, char c) {
+    return SliceFromCharT(s, c);
+}
+void TransCharsInPlace(Str& s, Str oldChars, Str newChars) {
+    TransCharsInPlaceT(s, oldChars, newChars);
+}
+int RemoveCharsInPlace(Str s, Str toRemove) {
+    return RemoveCharsInPlaceT(s, toRemove);
+}
+int NormalizeWSInPlace(Str s) {
+    return NormalizeWSInPlaceT(s, str::IsWs);
+}
+
+} // namespace str
+
+namespace wstr {
+
+void Free(WStr s) {
+    free(s.s);
+}
+void FreePtr(WStr* s) {
+    free(s->s);
+    *s = {};
+}
+WStr Dup(Arena* a, WStr s) {
+    return DupT(a, s);
+}
+WStr Dup(WStr s) {
+    return DupT(nullptr, s);
+}
+int Cmp(WStr a, WStr b) {
+    return CmpT(a, b, false);
+}
+int CmpI(WStr a, WStr b) {
+    return CmpT(a, b, true);
+}
+bool EndsWith(WStr txt, WStr end) {
+    return EndsWithT(txt, end, wstr::Eq);
+}
+bool EndsWithI(WStr txt, WStr end) {
+    return EndsWithT(txt, end, wstr::EqI);
+}
+int IndexOfChar(WStr s, WCHAR c) {
+    return IndexOfCharT(s, c);
+}
+bool ContainsChar(WStr s, WCHAR c) {
+    return IndexOfCharT(s, c) >= 0;
+}
+WStr SliceFromChar(WStr s, WCHAR c) {
+    return SliceFromCharT(s, c);
+}
+void TransCharsInPlace(WStr& s, WStr oldChars, WStr newChars) {
+    TransCharsInPlaceT(s, oldChars, newChars);
+}
+int RemoveCharsInPlace(WStr s, WStr toRemove) {
+    return RemoveCharsInPlaceT(s, toRemove);
+}
+int NormalizeWSInPlace(WStr s) {
+    return NormalizeWSInPlaceT(s, wstr::IsWs);
+}
+
+} // namespace wstr
+
 #ifndef _MSC_VER
 #define _strdup strdup
 #define _stricmp strcasecmp
@@ -1232,86 +1452,6 @@ void StrNodeListPop(StrNodeList* list) {
 
 namespace str {
 
-void Free(Str s) {
-    free(s.s);
-}
-
-} // namespace str
-namespace wstr {
-
-void Free(WStr s) {
-    free(s.s);
-}
-
-} // namespace wstr
-namespace str {
-
-void FreePtr(Str* s) {
-    str::Free(*s);
-    *s = {};
-}
-
-} // namespace str
-namespace wstr {
-
-void FreePtr(WStr* s) {
-    wstr::Free(*s);
-    *s = {};
-}
-
-} // namespace wstr
-namespace str {
-
-static Str WrapAllocated(char* s, int cch = -1) {
-    if (!s) {
-        return {};
-    }
-    if (cch < 0) {
-        return Str(s);
-    }
-    return Str(s, cch);
-}
-
-Str Dup(Arena* a, Str s) {
-    if (str::IsNull(s) || s.len < 0) {
-        return {};
-    }
-    int cch = s.len;
-    return WrapAllocated((char*)MemDup(a, s.s, (size_t)cch * sizeof(char), sizeof(char)), cch);
-}
-
-Str Dup(Str s) {
-    return Dup(nullptr, s);
-}
-
-} // namespace str
-namespace wstr {
-
-static WStr WrapAllocatedW(WCHAR* s, int cch = -1) {
-    if (!s) {
-        return {};
-    }
-    if (cch < 0) {
-        return WStr(s);
-    }
-    return WStr(s, cch);
-}
-
-WStr Dup(Arena* a, WStr s) {
-    if (wstr::IsNull(s) || s.len < 0) {
-        return {};
-    }
-    int cch = s.len;
-    return WrapAllocatedW((WCHAR*)MemDup(a, s.s, (size_t)cch * sizeof(WCHAR), sizeof(WCHAR)), cch);
-}
-
-WStr Dup(WStr s) {
-    return Dup(nullptr, s);
-}
-
-} // namespace wstr
-namespace str {
-
 // return true if s1 == s2, case sensitive
 bool Eq(Str s1, Str s2) {
     if (s1.s == s2.s) {
@@ -1352,47 +1492,6 @@ bool EqI(Str s1, Str s2) {
         return false;
     }
     return 0 == _strnicmp(s1.s, s2.s, (size_t)s1.len);
-}
-
-// strcmp-style (<0, 0, >0). Empty/null sorts before non-empty. Prefer Eq when only equality matters.
-int Cmp(Str a, Str b) {
-    if (a.s == b.s && a.len == b.len) {
-        return 0;
-    }
-    if (len(a) == 0) {
-        return len(b) == 0 ? 0 : -1;
-    }
-    if (len(b) == 0) {
-        return 1;
-    }
-    int n = std::min(a.len, b.len);
-    int r = memcmp(a.s, b.s, (size_t)n);
-    if (r != 0) {
-        return r;
-    }
-    return a.len - b.len;
-}
-
-// strcasecmp-style (<0, 0, >0). Prefer EqI when only equality matters.
-int CmpI(Str a, Str b) {
-    if (a.s == b.s && a.len == b.len) {
-        return 0;
-    }
-    if (len(a) == 0) {
-        return len(b) == 0 ? 0 : -1;
-    }
-    if (len(b) == 0) {
-        return 1;
-    }
-    int n = std::min(a.len, b.len);
-    for (int i = 0; i < n; i++) {
-        int c1 = tolower((u8)a.s[i]);
-        int c2 = tolower((u8)b.s[i]);
-        if (c1 != c2) {
-            return c1 - c2;
-        }
-    }
-    return a.len - b.len;
 }
 
 // compares two strings ignoring case and whitespace
@@ -1522,30 +1621,6 @@ bool Contains(Str s, Str sub) {
 
 bool ContainsI(Str s, Str sub) {
     return str::IndexOfI(s, sub) >= 0;
-}
-
-bool EndsWith(Str txt, Str end) {
-    if (len(txt) == 0 || len(end) == 0) {
-        return false;
-    }
-    int txtLen = len(txt);
-    int endLen = len(end);
-    if (endLen > txtLen) {
-        return false;
-    }
-    return str::Eq(Str(txt.s + txtLen - endLen, endLen), end);
-}
-
-bool EndsWithI(Str txt, Str end) {
-    if (len(txt) == 0 || len(end) == 0) {
-        return false;
-    }
-    int txtLen = len(txt);
-    int endLen = len(end);
-    if (endLen > txtLen) {
-        return false;
-    }
-    return str::EqI(Str(txt.s + txtLen - endLen, endLen), end);
 }
 
 bool EqNIx(Str s, int n, Str s2) {
@@ -1732,19 +1807,6 @@ bool IsWs(char c) {
     return false;
 }
 
-int IndexOfChar(Str s, char c) {
-    for (int i = 0; i < s.len; i++) {
-        if (s.s[i] == c) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-bool ContainsChar(Str s, char c) {
-    return IndexOfChar(s, c) >= 0;
-}
-
 // true if s contains any one of the chars (each char of `chars` is a candidate,
 // not a substring to find)
 bool ContainsCharAny(Str s, Str chars) {
@@ -1754,14 +1816,6 @@ bool ContainsCharAny(Str s, Str chars) {
         }
     }
     return false;
-}
-
-Str SliceFromChar(Str str, char c) {
-    int idx = IndexOfChar(str, c);
-    if (idx < 0) {
-        return {};
-    }
-    return Str(str.s + idx, str.len - idx);
 }
 
 Str SliceFromCharLast(Str str, char c) {
@@ -1871,24 +1925,6 @@ bool NextLine(Str s, Str& line, Str& rest) {
     return true;
 }
 
-// replace in str the chars from oldChars with their equivalents from newChars
-// (similar to UNIX's tr command).
-void TransCharsInPlace(Str& str, Str oldChars, Str newChars) {
-    int nDiff = len(oldChars) - len(newChars);
-    ReportIf(nDiff < 0);
-    int nChanged = 0;
-    for (int i = 0; i < str.len; i++) {
-        int idx = str::IndexOfChar(oldChars, str.s[i]);
-        if (idx >= 0) {
-            str.s[i] = newChars.s[idx];
-            nChanged++;
-        }
-    }
-    if (nChanged * nDiff > 0) {
-        str.s[str.len] = '\0';
-    }
-}
-
 // Trim whitespace characters, in-place, inside s.
 // Updates s.len. Returns number of trimmed characters.
 int TrimWSInPlace(Str& s, TrimOpt opt) {
@@ -1917,34 +1953,6 @@ int TrimWSInPlace(Str& s, TrimOpt opt) {
     }
     s.len = end - start;
     return trimmed;
-}
-
-// replaces all whitespace characters with spaces, collapses several
-// consecutive spaces into one and strips heading/trailing ones
-// returns the number of removed characters
-int NormalizeWSInPlace(Str s) {
-    if (len(s) == 0) {
-        return 0;
-    }
-    int dst = 0;
-    bool addedSpace = true;
-
-    for (int src = 0; src < s.len; src++) {
-        if (!IsWs(s.s[src])) {
-            s.s[dst++] = s.s[src];
-            addedSpace = false;
-        } else if (!addedSpace) {
-            s.s[dst++] = ' ';
-            addedSpace = true;
-        }
-    }
-
-    if (dst > 0 && IsWs(s.s[dst - 1])) {
-        dst--;
-    }
-    s.s[dst] = '\0';
-
-    return s.len - dst;
 }
 
 // like NormalizeWSInPlace but non-mutating: returns s with whitespace runs
@@ -2033,49 +2041,6 @@ TempStr LFToCRLFTemp(Str s) {
 
 // Remove all characters in "toRemove" from "str", in place.
 // Returns number of removed characters.
-int RemoveCharsInPlace(Str str, Str toRemove) {
-    if (len(str) == 0) {
-        return 0;
-    }
-    int removed = 0;
-    int dst = 0;
-    for (int src = 0; src < str.len; src++) {
-        char c = str.s[src];
-        if (!str::ContainsChar(toRemove, c)) {
-            str.s[dst++] = c;
-        } else {
-            ++removed;
-        }
-    }
-    str.s[dst] = '\0';
-    return removed;
-}
-
-// Remove all characters in "toRemove" from "str", in place.
-// Returns number of removed characters.
-} // namespace str
-namespace wstr {
-
-int RemoveCharsInPlace(WStr str, WStr toRemove) {
-    if (len(str) == 0) {
-        return 0;
-    }
-    int removed = 0;
-    int dst = 0;
-    for (int src = 0; src < str.len; src++) {
-        WCHAR c = str.s[src];
-        if (!wstr::ContainsChar(toRemove, c)) {
-            str.s[dst++] = c;
-        } else {
-            ++removed;
-        }
-    }
-    str.s[dst] = '\0';
-    return removed;
-}
-
-} // namespace wstr
-namespace str {
 
 /* Convert binary data in <buf> to a hex-encoded string */
 TempStr MemToHexTemp(Str buf) {
@@ -3007,48 +2972,6 @@ bool EqI(WStr s1, WStr s2) {
     return EqNI(s1, s2, s1.len);
 }
 
-// wcscmp-style (<0, 0, >0). Empty/null sorts before non-empty.
-int Cmp(WStr a, WStr b) {
-    if (a.s == b.s) {
-        return 0;
-    }
-    if (len(a) == 0) {
-        return len(b) == 0 ? 0 : -1;
-    }
-    if (len(b) == 0) {
-        return 1;
-    }
-    int n = std::min(a.len, b.len);
-    for (int i = 0; i < n; i++) {
-        if (a.s[i] != b.s[i]) {
-            return a.s[i] < b.s[i] ? -1 : 1;
-        }
-    }
-    return a.len - b.len;
-}
-
-// case-insensitive WCHAR compare (<0, 0, >0). Prefer EqI when only equality matters.
-int CmpI(WStr a, WStr b) {
-    if (a.s == b.s) {
-        return 0;
-    }
-    if (len(a) == 0) {
-        return len(b) == 0 ? 0 : -1;
-    }
-    if (len(b) == 0) {
-        return 1;
-    }
-    int n = std::min(a.len, b.len);
-    for (int i = 0; i < n; i++) {
-        int c1 = WCharToLower(a.s[i]);
-        int c2 = WCharToLower(b.s[i]);
-        if (c1 != c2) {
-            return c1 < c2 ? -1 : 1;
-        }
-    }
-    return a.len - b.len;
-}
-
 bool EqN(WStr s1, WStr s2, int n) {
     if (s1.s == s2.s) {
         return true;
@@ -3083,47 +3006,6 @@ bool StartsWithI(WStr str, WStr prefix) {
     return EqNI(str, prefix, prefix.len);
 }
 
-bool EndsWith(WStr txt, WStr end) {
-    if (len(txt) == 0 || len(end) == 0) {
-        return false;
-    }
-    if (end.len > txt.len) {
-        return false;
-    }
-    return Eq(WStr(txt.s + txt.len - end.len, end.len), end);
-}
-
-bool EndsWithI(WStr txt, WStr end) {
-    if (len(txt) == 0 || len(end) == 0) {
-        return false;
-    }
-    if (end.len > txt.len) {
-        return false;
-    }
-    return EqI(WStr(txt.s + txt.len - end.len, end.len), end);
-}
-
-int IndexOfChar(WStr s, WCHAR c) {
-    for (int i = 0; i < s.len; i++) {
-        if (s.s[i] == c) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-bool ContainsChar(WStr s, WCHAR c) {
-    return IndexOfChar(s, c) >= 0;
-}
-
-WStr SliceFromChar(WStr str, WCHAR c) {
-    int idx = IndexOfChar(str, c);
-    if (idx < 0) {
-        return {};
-    }
-    return WStr(str.s + idx, str.len - idx);
-}
-
 WStr FindFrom(WStr str, WStr find) {
     if (len(str) == 0 || len(find) == 0 || find.len > str.len) {
         return {};
@@ -3156,22 +3038,6 @@ WStr ToLowerInPlace(WStr s) {
     return s;
 }
 
-void TransCharsInPlace(WStr& str, WStr oldChars, WStr newChars) {
-    int nDiff = len(oldChars) - len(newChars);
-    ReportIf(nDiff < 0);
-    int nChanged = 0;
-    for (int i = 0; i < str.len; i++) {
-        int idx = wstr::IndexOfChar(oldChars, str.s[i]);
-        if (idx >= 0) {
-            str.s[i] = newChars.s[idx];
-            nChanged++;
-        }
-    }
-    if (nChanged * nDiff > 0) {
-        str.s[str.len] = L'\0';
-    }
-}
-
 // free() the result via str::Free(s) or str::FreePtr(&s)
 WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
     if (len(s) == 0 || len(toReplace) == 0 || len(replaceWith) == 0) {
@@ -3195,36 +3061,6 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
         start = matchOff + findLen;
     }
     return result.TakeStr();
-}
-
-// replaces all whitespace characters with spaces, collapses several
-// consecutive spaces into one and strips heading/trailing ones
-// returns the number of removed characters
-int NormalizeWSInPlace(WStr s) {
-    if (len(s) == 0) {
-        return 0;
-    }
-    int src = 0;
-    int dst = 0;
-    bool addedSpace = true;
-
-    while (src < s.len) {
-        if (!IsWs(s.s[src])) {
-            s.s[dst++] = s.s[src];
-            addedSpace = false;
-        } else if (!addedSpace) {
-            s.s[dst++] = L' ';
-            addedSpace = true;
-        }
-        src++;
-    }
-
-    if (dst > 0 && IsWs(s.s[dst - 1])) {
-        dst--;
-    }
-    s.s[dst] = L'\0';
-
-    return src - dst;
 }
 
 } // namespace wstr
