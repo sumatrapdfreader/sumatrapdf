@@ -207,15 +207,12 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     OverlappedEx* over = (OverlappedEx*)overlapped;
     WatchedDir* wd = (WatchedDir*)over->data;
 
-    // logf("ReadDirectoryChangesNotification() dir: %s, numBytes: %d\n", wd->dirPath, (int)bytesTransfered);
-
     ReportIf(wd != wd->overlapped.data);
 
     // whatever the outcome, this read is done
     wd->ioPending = false;
 
     if (errCode == ERROR_OPERATION_ABORTED) {
-        // logf("ReadDirectoryChangesNotification: ERROR_OPERATION_ABORTED\n");
         CompleteRemovalIfDone(wd);
         return;
     }
@@ -377,7 +374,6 @@ static void RunManualChecks() {
             continue;
         }
         it.wf->fileState = it.state;
-        // logf("RunManualCheck() %s changed\n", it.wf->filePath);
         it.wf->onFileChangedCb.Call();
     }
 }
@@ -403,7 +399,6 @@ static void FileWatcherThread() {
 
         if (WAIT_IO_COMPLETION == obj) {
             // APC complete. Nothing to do
-            // logf("FileWatcherThread(): APC complete\n");
             continue;
         }
 
@@ -412,7 +407,6 @@ static void FileWatcherThread() {
         if (n == 0) {
             // a thread was explicitly awaken
             ResetEvent(gThreadControlHandle);
-            // logf("FileWatcherThread(): gThreadControlHandle signalled\n");
         } else {
             logf("FileWatcherThread(): n=%d\n", n);
             ReportIf(true);
@@ -435,7 +429,6 @@ static WatchedDir* FindExistingWatchedDir(Str dirPath) {
 static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg) {
     WatchedDir* wd = (WatchedDir*)arg;
     AutoUnlockMutex cs(&gFileWatcherMutex);
-    // logf("StopMonitoringDirAPC() wd=0x%p\n", wd);
     wd->stopped = true;
 
     // with a read in flight this makes ReadDirectoryChangesNotification() run
@@ -537,8 +530,6 @@ Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
 way we can support multiple callers subscribing to the same file.
 */
 WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool enableManualCheck) {
-    // logf("FileWatcherSubscribe() path: %s\n", path);
-
     if (!file::Exists(path)) {
         logf("FileWatcherSubscribe: '%s' doesn't exist\n", path);
         return nullptr;

@@ -81,8 +81,6 @@ static Str ExceptionNameFromCode(DWORD excCode) {
     }
 #undef EXC
 
-    //    EXC(EXCEPTION_POSSIBLE_DEADLOCK)
-
     excNameBuf[0] = 0;
     HMODULE h = GetModuleHandleA("ntdll.dll");
     DWORD flags = FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_HMODULE;
@@ -168,7 +166,6 @@ bool Initialize(WStr symPathW, bool force) {
     symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
     DynSymSetOptions(symOptions);
 
-    // SetupSymbolPath();
     return true;
 }
 

@@ -167,12 +167,6 @@ static void StrIsDigitTest() {
     Str nonDigits = StrL("/:.bz{}");
     Str digits = StrL("0123456789");
     for (int i = 0; i < len(nonDigits); i++) {
-#if 0
-        if (str::IsDigit(nonDigits[i])) {
-            char c = nonDigits[i];
-            printf("%c is incorrectly determined as a digit\n", c);
-        }
-#endif
         utassert(!str::IsDigit(nonDigits.s[i]));
     }
     for (int i = 0; i < len(digits); i++) {
@@ -764,12 +758,6 @@ void StrTest() {
     str = str::Join({}, StrL("ab"));
     utassert(str::Eq(str, StrL("ab")));
     str::Free(str);
-
-#if 0
-    str = str::Join("\uFDEF", StrL("\uFFFF"));
-    utassert(str::Eq(str, StrL("\uFDEF\uFFFF")));
-    str::Free(str);
-#endif
 
     str::BufSet(Str(buf, dimof(buf)), StrL("abc\1efg\1"));
     Str bufStr(buf, 9);

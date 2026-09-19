@@ -124,60 +124,6 @@ RectF MeasureText(Graphics* g, Font* f, WStr s, TextMeasureAlgorithm algo) {
     return MeasureTextAccurate(g, f, s);
 }
 
-// returns number of characters of string s that fits in a given width dx
-// note: could be speed up a bit because in our use case we already know
-// the width of the whole string so we could supply it to the function, but
-// this shouldn't happen often, so that's fine. It's also possible that
-// a smarter approach is possible, but this usually only does 3 MeasureText
-// calls, so it's not that bad
-int StringLenForWidth(Graphics* g, Font* f, WStr s, float dx, TextMeasureAlgorithm algo) {
-    int sLen = s.len;
-    auto r = MeasureText(g, f, s, algo);
-    if (r.dx <= dx) {
-        return sLen;
-    }
-    // make the best guess of the length that fits
-    int n = (int)((dx / r.dx) * (float)sLen);
-    ReportIf(n > sLen);
-    if (n == 0) {
-        // nothing fits in the remaining space; caller flushes the line and
-        // re-lays the run at full width. Don't Measure an empty string.
-        return 0;
-    }
-    r = MeasureText(g, f, WStr(s.s, n), algo);
-    // find the length len of s that fits within dx iff width of len+1 exceeds dx
-    int dir = 1; // increasing length
-    if (r.dx > dx) {
-        dir = -1; // decreasing length
-    }
-    for (;;) {
-        n += dir;
-        r = MeasureText(g, f, WStr(s.s, n), algo);
-        if (1 == dir) {
-            // if advancing length, we know that previous string did fit, so if
-            // the new one doesn't fit, the previous length was the right one
-            if (r.dx > dx) {
-                return n - 1;
-            }
-        } else {
-            // if decreasing length, we know that previous string didn't fit, so if
-            // the one one fits, it's of the correct length
-            if (r.dx < dx) {
-                return n;
-            }
-        }
-    }
-}
-
-// TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
-// is smaller and looks as better spacing to me
-float GetSpaceDx(Graphics* g, Font* f, TextMeasureAlgorithm algo) {
-    // measuring " " itself returns a (much) smaller width
-    float l1 = MeasureText(g, f, WStr(L"wa", 2), algo).dx;
-    float l2 = MeasureText(g, f, WStr(L"w a", 3), algo).dx;
-    return l2 - l1;
-}
-
 void GetBaseTransform(Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation) {
     rotation = rotation % 360;
     if (rotation < 0) {
