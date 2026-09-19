@@ -15,6 +15,13 @@
 // optimize huge files; typical screenshots are well under this
 constexpr int kMaxPngSizeToOptimize = 16 * 1024 * 1024;
 
+// zopfli's default tries every PNG filter at 15 iterations each; on a
+// 300 dpi page (8.7 Mpx) that is half a minute. Above this many pixels use
+// one filter and one iteration
+constexpr i64 kLargePngPixels = 2 * 1000 * 1000;
+constexpr int kLargePngIterations = 1;
+static ZopfliPNGFilterStrategy gLargePngFilter = kStrategyMinSum;
+
 // After optimizing we insert this tEXt chunk ("Software" keyword + text, the
 // standard PNG way of naming the producing program) directly after IHDR, so
 // that a later OptimizePngFileAsync() on the same file recognizes it as our
@@ -59,6 +66,29 @@ static bool HasOptimizedMarker(const u8* d, int n) {
     return memcmp(d + kMarkerOffset, chunk, kMarkerChunkSize) == 0;
 }
 
+// IHDR width * height, 0 if not a PNG
+static i64 PngPixelCount(const u8* d, int n) {
+    if (!IsPngWithIhdr(d, n)) {
+        return 0;
+    }
+    const u8* p = d + 16; // signature + IHDR length + type
+    u32 w = ((u32)p[0] << 24) | ((u32)p[1] << 16) | ((u32)p[2] << 8) | p[3];
+    u32 h = ((u32)p[4] << 24) | ((u32)p[5] << 16) | ((u32)p[6] << 8) | p[7];
+    return (i64)w * h;
+}
+
+static void SetZopfliOpts(CZopfliPNGOptions* opts, const u8* png, int n) {
+    CZopfliPNGSetDefaults(opts);
+    if (PngPixelCount(png, n) <= kLargePngPixels) {
+        return;
+    }
+    opts->auto_filter_strategy = 0;
+    opts->filter_strategies = &gLargePngFilter;
+    opts->num_filter_strategies = 1;
+    opts->num_iterations = kLargePngIterations;
+    opts->num_iterations_large = kLargePngIterations;
+}
+
 // Losslessly recompress the PNG file at path with zopflipng and replace it if
 // the result is smaller. The new content is written to a temp file which is
 // then atomically swapped in, so anyone reading the file concurrently (e.g.
@@ -78,7 +108,7 @@ static void OptimizePngFile(Str path) {
         return;
     }
     CZopfliPNGOptions opts;
-    CZopfliPNGSetDefaults(&opts);
+    SetZopfliOpts(&opts, (const u8*)d.s, nOrig);
     unsigned char* out = nullptr;
     size_t outSize = 0;
     int err = CZopfliPNGOptimize((const unsigned char*)d.s, (size_t)nOrig, &opts, 0, &out, &outSize);
@@ -244,7 +274,7 @@ static Str OptimizePngBytesOwned(Str png) {
         return str::Dup(png);
     }
     CZopfliPNGOptions opts;
-    CZopfliPNGSetDefaults(&opts);
+    SetZopfliOpts(&opts, (const u8*)png.s, nOrig);
     unsigned char* out = nullptr;
     size_t outSize = 0;
     int err = CZopfliPNGOptimize((const unsigned char*)png.s, (size_t)nOrig, &opts, 0, &out, &outSize);
@@ -257,7 +287,8 @@ static Str OptimizePngBytesOwned(Str png) {
     return res;
 }
 
-Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
+// plain lodepng encode, no zopfli. Caller frees
+Str EncodePngFromPixmap(const Pixmap* px) {
     if (!px) {
         return {};
     }
@@ -271,15 +302,25 @@ Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
     free(rgba);
     if (err != 0 || !pngOut || pngSize == 0) {
         free(pngOut);
-        logf("EncodeAndOptimizePngFromPixmap: lodepng_encode32 failed, err=%u\n", err);
+        logf("EncodePngFromPixmap: lodepng_encode32 failed, err=%u\n", err);
         return {};
     }
-    Str rawPng((char*)pngOut, (int)pngSize);
-    Str optimized = OptimizePngBytesOwned(rawPng);
+    Str res = str::Dup(Str((char*)pngOut, (int)pngSize));
     free(pngOut);
+    return res;
+}
+
+// encode and recompress with zopfli, for embedding in a PDF. Caller frees
+Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
+    Str rawPng = EncodePngFromPixmap(px);
+    if (len(rawPng) == 0) {
+        return {};
+    }
+    Str optimized = OptimizePngBytesOwned(rawPng);
     if (len(optimized) > 0) {
-        logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, (int)pngSize,
+        logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, len(rawPng),
              len(optimized));
     }
+    str::Free(rawPng);
     return optimized;
 }

@@ -1958,14 +1958,15 @@ static bool WriteSelectionPixmap(Pixmap* px, Str destPath) {
     }
     bool ok = false;
     if (str::EndsWithI(destPath, StrL(".png"))) {
-        // lodepng has no pHYs, so EngineImages displays 1:1. Encode+zopfli
-        // here so the file is final before we open it (GDI+ then async zopfli
-        // used to open a tiny pHYs page, then reload after rewrite).
-        Str png = EncodeAndOptimizePngFromPixmap(px);
+        // lodepng (no pHYs, so EngineImages displays 1:1) now, zopfli in the
+        // background: a 300 dpi page takes it many seconds
+        Str png = EncodePngFromPixmap(px);
         ok = len(png) > 0 && file::WriteFile(destPath, png);
         str::Free(png);
         if (!ok) {
             file::Delete(destPath);
+        } else {
+            OptimizePngFileAsync(destPath);
         }
     } else {
         ok = SavePixmapAsImageFile(px, destPath);
