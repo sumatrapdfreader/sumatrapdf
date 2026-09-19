@@ -43,16 +43,6 @@ Size RenderedBitmap::GetSize() {
     return size;
 }
 
-// approximate size, we assume 4 bytes per pixel and don't count stride
-i64 RenderedBitmapByteSize(RenderedBitmap* bmp) {
-    if (!bmp) {
-        return 0;
-    }
-    Size s = bmp->GetSize();
-    i64 res = i64(s.dx) * i64(s.dy) * i64(4);
-    return res;
-}
-
 RenderedBitmap::RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap) {
     this->hbmp = hbmp;
     this->hMap = hMap;
@@ -75,11 +65,6 @@ RenderedBitmap* RenderedBitmap::Clone() const {
 
 bool RenderedBitmap::IsValid() {
     return hbmp != nullptr;
-}
-
-// render the bitmap into the target rectangle (streching and skewing as requird)
-bool RenderedBitmap::Blit(HDC hdc, Rect target) {
-    return BlitHBITMAP(hbmp, hdc, target);
 }
 
 // callers must not delete this (use Clone if you have to modify it)
@@ -165,10 +150,6 @@ void EditSetPasswordVisible(HWND hwnd, bool show) {
 
 //--- list box
 
-void LbResetContent(HWND hwnd) {
-    SendMessageW(hwnd, LB_RESETCONTENT, 0, 0);
-}
-
 int LbAddString(HWND hwnd, WStr text) {
     return (int)SendMessageW(hwnd, LB_ADDSTRING, 0, (LPARAM)CWStrTemp(text));
 }
@@ -183,10 +164,6 @@ int LbInsertString(HWND hwnd, int idx, WStr text) {
 
 int LbInsertString(HWND hwnd, int idx, Str text) {
     return LbInsertString(hwnd, idx, ToWStrTemp(text));
-}
-
-int LbGetCount(HWND hwnd) {
-    return (int)SendMessageW(hwnd, LB_GETCOUNT, 0, 0);
 }
 
 int LbGetCurrentSelection(HWND hwnd) {
@@ -212,110 +189,11 @@ TempWStr LbGetTextTemp(HWND hwnd, int idx) {
     return text;
 }
 
-int LbGetItemHeight(HWND hwnd, int idx) {
-    return (int)SendMessageW(hwnd, LB_GETITEMHEIGHT, (WPARAM)idx, 0);
-}
-
 void LbSetItemHeight(HWND hwnd, int idx, int height) {
     SendMessageW(hwnd, LB_SETITEMHEIGHT, (WPARAM)idx, (LPARAM)height);
 }
 
-Rect LbGetItemRect(HWND hwnd, int idx) {
-    RECT rect{};
-    LRESULT res = SendMessageW(hwnd, LB_GETITEMRECT, (WPARAM)idx, (LPARAM)&rect);
-    if (res == LB_ERR) {
-        return {};
-    }
-    return {rect};
-}
-
-int LbItemFromPoint(HWND hwnd, Point point, bool* outside) {
-    LRESULT res = SendMessageW(hwnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(point.x, point.y));
-    *outside = HIWORD(res) != 0;
-    return (int)LOWORD(res);
-}
-
-int LbGetTopIndex(HWND hwnd) {
-    return (int)SendMessageW(hwnd, LB_GETTOPINDEX, 0, 0);
-}
-
-bool LbSetTopIndex(HWND hwnd, int idx) {
-    LRESULT res = SendMessageW(hwnd, LB_SETTOPINDEX, (WPARAM)idx, 0);
-    return res != LB_ERR;
-}
-
-void LbInitStorage(HWND hwnd, int count) {
-    SendMessageW(hwnd, LB_INITSTORAGE, (WPARAM)count, 0);
-}
-
 //--- list view
-
-int LvGetItemCount(HWND hwnd) {
-    return (int)SendMessageW(hwnd, LVM_GETITEMCOUNT, 0, 0);
-}
-
-int LvGetNextItem(HWND hwnd, int start, UINT flags) {
-    return (int)SendMessageW(hwnd, LVM_GETNEXTITEM, (WPARAM)start, MAKELPARAM(flags, 0));
-}
-
-void LvSetItemState(HWND hwnd, int i, UINT state, UINT mask) {
-    LVITEMW item = {};
-    item.stateMask = mask;
-    item.state = state;
-    SendMessageW(hwnd, LVM_SETITEMSTATE, (WPARAM)i, (LPARAM)&item);
-}
-
-UINT LvGetItemState(HWND hwnd, int i, UINT mask) {
-    return (UINT)SendMessageW(hwnd, LVM_GETITEMSTATE, (WPARAM)i, (LPARAM)mask);
-}
-
-void LvEnsureVisible(HWND hwnd, int i, bool partialOk) {
-    SendMessageW(hwnd, LVM_ENSUREVISIBLE, (WPARAM)i, (LPARAM)(partialOk ? TRUE : FALSE));
-}
-
-HWND LvGetEditControl(HWND hwnd) {
-    return (HWND)SendMessageW(hwnd, LVM_GETEDITCONTROL, 0, 0);
-}
-
-int LvInsertItem(HWND hwnd, const LVITEMW* item) {
-    return (int)SendMessageW(hwnd, LVM_INSERTITEMW, 0, (LPARAM)item);
-}
-
-bool LvEditLabel(HWND hwnd, int i) {
-    return SendMessageW(hwnd, LVM_EDITLABELW, (WPARAM)i, 0) != 0;
-}
-
-void LvDeleteItem(HWND hwnd, int i) {
-    SendMessageW(hwnd, LVM_DELETEITEM, (WPARAM)i, 0);
-}
-
-void LvDeleteAllItems(HWND hwnd) {
-    SendMessageW(hwnd, LVM_DELETEALLITEMS, 0, 0);
-}
-
-// empty Rect on failure
-Rect LvGetItemRect(HWND hwnd, int i, int code) {
-    RECT rc = {};
-    rc.left = code;
-    if (!SendMessageW(hwnd, LVM_GETITEMRECT, (WPARAM)i, (LPARAM)&rc)) {
-        return {};
-    }
-    return {rc};
-}
-
-Rect LvGetSubItemRect(HWND hwnd, int iItem, int iSub, int code) {
-    RECT rc = {};
-    rc.top = iSub;
-    rc.left = code;
-    if (!SendMessageW(hwnd, LVM_GETSUBITEMRECT, (WPARAM)iItem, (LPARAM)&rc)) {
-        return {};
-    }
-    return {rc};
-}
-
-void LvSetColumnWidth(HWND hwnd, int iCol, int cx) {
-    SendMessageW(hwnd, LVM_SETCOLUMNWIDTH, (WPARAM)iCol, MAKELPARAM(cx, 0));
-}
 
 void LvSetItemText(HWND hwnd, int i, int iSub, WStr text) {
     LVITEMW item = {};
@@ -326,44 +204,6 @@ void LvSetItemText(HWND hwnd, int i, int iSub, WStr text) {
 
 void LvSetItemText(HWND hwnd, int i, int iSub, Str text) {
     LvSetItemText(hwnd, i, iSub, ToWStrTemp(text));
-}
-
-TempWStr LvGetItemTextTemp(HWND hwnd, int i, int iSub) {
-    // LVM_GETITEMTEXT needs a buffer; grow until it fits
-    int cch = 256;
-    for (;;) {
-        TempWStr text = AllocArrayTemp<WCHAR>(cch);
-        LVITEMW item = {};
-        item.iSubItem = iSub;
-        item.pszText = text.s;
-        item.cchTextMax = cch;
-        int n = (int)SendMessageW(hwnd, LVM_GETITEMTEXTW, (WPARAM)i, (LPARAM)&item);
-        if (n + 1 < cch || cch >= 32 * 1024) {
-            text.len = n;
-            return text;
-        }
-        cch *= 2;
-    }
-}
-
-// client coords; flagsOut optional (LVHT_*)
-int LvHitTest(HWND hwnd, Point pt, UINT* flagsOut) {
-    LVHITTESTINFO info = {};
-    info.pt.x = pt.x;
-    info.pt.y = pt.y;
-    int i = (int)SendMessageW(hwnd, LVM_HITTEST, 0, (LPARAM)&info);
-    if (flagsOut) {
-        *flagsOut = info.flags;
-    }
-    return i;
-}
-
-DWORD LvSetExtendedStyle(HWND hwnd, DWORD ex) {
-    return (DWORD)SendMessageW(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)ex);
-}
-
-int LvInsertColumn(HWND hwnd, int iCol, const LVCOLUMNW* col) {
-    return (int)SendMessageW(hwnd, LVM_INSERTCOLUMNW, (WPARAM)iCol, (LPARAM)col);
 }
 
 //--- resources / instance / common controls
@@ -465,12 +305,6 @@ Point GetCursorPosition() {
 }
 
 //--- HWND: focus / visibility / Z-order
-
-// move window to top of Z order (i.e. make it visible to the user)
-// but without activation (i.e. capturing focus)
-void HwndShowWithoutActivate(HWND hwnd) {
-    SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-}
 
 //--- HWND: geometry (move)
 
@@ -1213,10 +1047,6 @@ void HandleRedirectedConsoleOnShutdown() {
     }
 }
 
-void InitConsoleOutput() {
-    InitConsoleState();
-}
-
 void LogConsole(Str s) {
     if (s.len <= 0) {
         return;
@@ -1264,42 +1094,12 @@ void SendEnterIfLoggedToConsole() {
     SendEnterToParentConsole(gStartupForegroundWindow);
 }
 
-void WaitForConsoleClose() {
-    SendEnterIfLoggedToConsole();
-    InitConsoleState();
-    if (gConsoleState != ConsoleState::AllocatedNew) {
-        return;
-    }
-
-    const char* msg = "press Enter to exit";
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hConsole != INVALID_HANDLE_VALUE) {
-        DWORD written;
-        WriteConsoleA(hConsole, msg, (DWORD)strlen(msg), &written, nullptr);
-    }
-
-    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
-    if (hInput != INVALID_HANDLE_VALUE) {
-        FlushConsoleInputBuffer(hInput);
-        char c;
-        DWORD read;
-        ReadConsoleA(hInput, &c, 1, &read, nullptr);
-    }
-}
-
 //--- environment / paths (shell helpers)
 
 void ChangeCurrDirToDocuments() {
     TempStr dir = GetSpecialFolderTemp(CSIDL_MYDOCUMENTS);
     WCHAR* dirW = CWStrTemp(dir);
     SetCurrentDirectoryW(dirW);
-}
-
-static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
-    ULARGE_INTEGER res;
-    res.LowPart = ft.dwLowDateTime;
-    res.HighPart = ft.dwHighDateTime;
-    return res;
 }
 
 TempStr ResolveLnkTemp(Str path) {
@@ -1614,47 +1414,6 @@ bool IsProcessRunningElevated() {
 }
 #endif
 
-// returns the exe path of the parent process, or nullptr on failure
-// if pidOut is not nullptr, it receives the parent process ID
-TempStr GetParentProcessPath(DWORD* pidOut) {
-    if (pidOut) {
-        *pidOut = 0;
-    }
-    DWORD pid = GetCurrentProcessId();
-    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (INVALID_HANDLE_VALUE == snap) {
-        return {};
-    }
-    PROCESSENTRY32W pe{};
-    pe.dwSize = sizeof(pe);
-    DWORD parentPid = 0;
-    if (!Process32FirstW(snap, &pe)) {
-        return {};
-    }
-    do {
-        if (pe.th32ProcessID == pid) {
-            parentPid = pe.th32ParentProcessID;
-            break;
-        }
-    } while (Process32NextW(snap, &pe));
-    if (parentPid == 0) {
-        return {};
-    }
-    if (pidOut) {
-        *pidOut = parentPid;
-    }
-    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, parentPid);
-    if (!hProc.IsValid()) {
-        return {};
-    }
-    WCHAR path[MAX_PATH]{};
-    DWORD pathLen = MAX_PATH;
-    if (!QueryFullProcessImageNameW(hProc, 0, path, &pathLen)) {
-        return {};
-    }
-    return ToUtf8Temp(path);
-}
-
 // We assume that if OpenProcess() works, we are at the same or greater
 // elevation level
 // I tried to run IsProcessRunningElevated() on 2 processes but this didn't
@@ -1676,90 +1435,6 @@ static const DWORD groupsToCheck[] = {
     DOMAIN_ALIAS_RID_POWER_USERS,
     DOMAIN_ALIAS_RID_ADMINS,
 };
-
-// return true if the account has admin privileges
-// https://github.com/kichik/nsis/blob/de09827b5b651b1d467c17be17bc7e5a98dae70f/Contrib/UserInfo/UserInfo.c#L70
-static DWORD GetAccountTypeHelper(bool checkTokenForGroupDeny) {
-    HANDLE hToken = nullptr;
-    BOOL isMember = FALSE;
-    DWORD highestGroup = 0;
-    BOOL validTokenGroups = FALSE;
-    TOKEN_GROUPS* ptg = nullptr;
-    DWORD cbTokenGroups;
-
-    BOOL ok = OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken) ||
-              OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken);
-    if (!ok) {
-        return false;
-    }
-
-    // Use "old school" membership check?
-    if (!checkTokenForGroupDeny) {
-        // We must query the size of the group information associated with
-        // the token. Note that we expect a FALSE result from GetTokenInformation
-        // because we've given it a NULL buffer. On exit cbTokenGroups will tell
-        // the size of the group information.
-        if (!GetTokenInformation(hToken, TokenGroups, nullptr, 0, &cbTokenGroups) &&
-            GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-            // Allocate buffer and ask for the group information again.
-            // This may fail if an administrator has added this account
-            // to an additional group between our first call to
-            // GetTokenInformation and this one.
-            ptg = (TOKEN_GROUPS*)GlobalAlloc(GPTR, cbTokenGroups);
-            if (ptg && GetTokenInformation(hToken, TokenGroups, ptg, cbTokenGroups, &cbTokenGroups)) {
-                validTokenGroups = TRUE;
-            }
-        }
-    }
-
-    SID_IDENTIFIER_AUTHORITY systemSid = {SECURITY_NT_AUTHORITY};
-    if (validTokenGroups || checkTokenForGroupDeny) {
-        PSID psid = nullptr;
-        for (DWORD groupID : groupsToCheck) {
-            // Create a SID for the local group and then check if it exists in our token
-            DWORD sub1 = SECURITY_BUILTIN_DOMAIN_RID;
-            ok = AllocateAndInitializeSid(&systemSid, 2, sub1, groupID, 0, 0, 0, 0, 0, 0, &psid);
-            if (!ok) {
-                continue;
-            }
-
-            if (checkTokenForGroupDeny) {
-                CheckTokenMembership(nullptr, psid, &isMember);
-            } else if (validTokenGroups) {
-                isMember = FALSE;
-                for (DWORD j = 0; !isMember && (j < ptg->GroupCount); j++) {
-                    if (EqualSid(ptg->Groups[j].Sid, psid)) {
-                        isMember = TRUE;
-                    }
-                }
-            }
-            if (isMember) {
-                highestGroup = groupID;
-            }
-            FreeSid(psid);
-        }
-    }
-
-    if (ptg) {
-        GlobalFree(ptg);
-    }
-    CloseHandle(hToken);
-    return highestGroup;
-}
-
-// Get highest account type based on current elevation level i.e. the
-// account is admin (DOMAIN_ALIAS_RID_ADMINS) only if the user is running elevated
-// see groupsToCheck for possible values
-DWORD GetAccountType() {
-    return GetAccountTypeHelper(true);
-}
-
-// Get highest account type of the user. Can return admin (DOMAIN_ALIAS_RID_ADMINS)
-// when not running elevated but the account belong to administrator group
-// see groupsToCheck for possible values
-DWORD GetOriginalAccountType() {
-    return GetAccountTypeHelper(false);
-}
 
 bool LaunchElevated(Str path, Str cmdline) {
     return LaunchFileShell(path, cmdline, StrL("runas"));
@@ -1900,11 +1575,6 @@ void HdcFillRect(HDC hdc, const Rect& rect, Color col) {
     ::FillRect(hdc, &r, br);
 }
 
-void HdcDrawLine(HDC hdc, const Rect& rect) {
-    MoveToEx(hdc, rect.x, rect.y, nullptr);
-    LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
-}
-
 // returns previously focused window
 //--- HWND: focus / identity / cursor
 
@@ -2027,11 +1697,6 @@ Point& UnmirrorRtl(HWND hwnd, Point& p) {
     if (!HwndIsRtl(hwnd)) return p;
     p.x = HwndClientRect(hwnd).dx - 1 - p.x;
     return p;
-}
-
-bool HwndIsMouseOverRect(HWND hwnd, const Rect& r) {
-    Point curPos = HwndGetCursorPos(hwnd);
-    return r.Contains(curPos);
 }
 
 void HwndCenterDialog(HWND hDlg, HWND hParent) {
@@ -2222,11 +1887,6 @@ bool HwndIsWindowStyleSet(HWND hwnd, DWORD flags) {
     return bit::IsMaskSet<DWORD>(style, flags);
 }
 
-bool HwndIsWindowStyleExSet(HWND hwnd, DWORD flags) {
-    DWORD style = GetWindowLongW(hwnd, GWL_EXSTYLE);
-    return (style != flags) != 0;
-}
-
 bool HwndIsRtl(HWND hwnd) {
     DWORD style = GetWindowLongW(hwnd, GWL_EXSTYLE);
     return bit::IsMaskSet<DWORD>(style, WS_EX_LAYOUTRTL);
@@ -2251,14 +1911,6 @@ Rect ChildPosWithinParent(HWND hwnd) {
     Rect rc = HwndWindowRect(hwnd);
     rc.Offset(-pt.x, -pt.y);
     return rc;
-}
-
-int GetSizeOfDefaultGuiFont() {
-    NONCLIENTMETRICS ncm{};
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    int res = std::abs(ncm.lfMessageFont.lfHeight);
-    return res;
 }
 
 // fills ncm with non-client metrics (incl. font sizes) scaled for the given
@@ -2635,17 +2287,6 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
     return ok;
 }
 
-bool RegisterServerDLL(Str dllPath, Str args) {
-    return RegisterOrUnregisterServerDLL(dllPath, true, args);
-}
-
-bool UnRegisterServerDLL(Str dllPath, Str args) {
-    if (!file::Exists(dllPath)) {
-        return true;
-    }
-    return RegisterOrUnregisterServerDLL(dllPath, false, args);
-}
-
 //--- HWND: text / visibility / chrome / Z-order
 
 void HwndToForeground(HWND hwnd) {
@@ -2682,14 +2323,6 @@ TempStr HwndGetTextTemp(HWND hwnd) {
     return ToUtf8Temp(txt);
 }
 
-bool HwndHasFrameThickness(HWND hwnd) {
-    return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_THICKFRAME);
-}
-
-bool HwndHasCaption(HWND hwnd) {
-    return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_CAPTION);
-}
-
 bool HwndIsVisible(HWND hwnd) {
     return ::IsWindowVisible(hwnd);
 }
@@ -2699,14 +2332,6 @@ void HwndSetVisible(HWND hwnd, bool visible) {
         return;
     }
     ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
-}
-
-void HwndShow(HWND hwnd) {
-    HwndSetVisible(hwnd, true);
-}
-
-void HwndHide(HWND hwnd) {
-    HwndSetVisible(hwnd, false);
 }
 
 //--- GDI: bitmaps / pixmaps
@@ -2944,28 +2569,6 @@ bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target) {
     return ok;
 }
 
-// This is meant to measure program startup time from the user perspective.
-// One place to measure it is at the beginning of WinMain().
-// Another place is on the first run of WM_PAINT of the message loop of main window.
-double GetProcessRunningTime() {
-    FILETIME currTime, startTime, d1, d2, d3;
-    GetSystemTimeAsFileTime(&currTime);
-    HANDLE hproc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
-    double timeInMs = 0;
-    if (!hproc) {
-        return 0;
-    }
-    if (GetProcessTimes(hproc, &startTime, &d1, &d2, &d3)) {
-        ULARGE_INTEGER start = FileTimeToLargeInteger(startTime);
-        ULARGE_INTEGER curr = FileTimeToLargeInteger(currTime);
-        ULONGLONG diff = curr.QuadPart - start.QuadPart;
-        // FILETIME is in 100 ns chunks
-        timeInMs = ((double)(diff * 100)) / (double)1000000;
-    }
-    CloseHandle(hproc);
-    return timeInMs;
-}
-
 bool IsValidHandle(HANDLE h) {
     return !(h == nullptr || h == INVALID_HANDLE_VALUE);
 }
@@ -3052,28 +2655,12 @@ void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu) {
     MoveWindow(hwnd, x, y, dx, dy, TRUE);
 }
 
-// -1 to use existing value
-void ResizeWindow(HWND hwnd, int dx, int dy) {
-    Rect rc = HwndWindowRect(hwnd);
-    if (dx == -1) {
-        dx = rc.dx;
-    }
-    if (dy == -1) {
-        dy = rc.dy;
-    }
-    SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, SWP_NOMOVE | SWP_NOZORDER);
-}
-
 void MessageBoxWarningSimple(HWND hwnd, WStr msg, WStr title) {
     uint type = MB_OK | MB_ICONEXCLAMATION;
     if (len(title) == 0) {
         title = WStrL(L"Warning");
     }
     MessageBoxW(hwnd, msg.s, title.s, type);
-}
-
-void MessageBoxNYI(HWND hwnd) {
-    MessageBoxWarningSimple(hwnd, L"Not Yet Implemented!", L"NYI");
 }
 
 void VariantInitBstr(VARIANT& urlVar, WStr s) {
@@ -3463,12 +3050,6 @@ HICON HwndSetIcon(HWND hwnd, HICON icon) {
     return res;
 }
 
-// https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-geticon
-HICON HwndGetIcon(HWND hwnd) {
-    HICON res = (HICON)SendMessageW(hwnd, WM_GETICON, ICON_BIG, 0);
-    return res;
-}
-
 // schedule WM_PAINT at window's leasure
 void HwndScheduleRepaint(HWND hwnd) {
     if (!hwnd || !::IsWindow(hwnd)) {
@@ -3549,21 +3130,6 @@ void HwndResizeClientSize(HWND hwnd, int dx, int dy) {
     int dy2 = RectDy(r);
     ok = SetWindowPos(hwnd, nullptr, 0, 0, dx2, dy2, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOREPOSITION);
     ReportIf(!ok);
-}
-
-// position hwnd on the right of hwndRelative
-void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
-    Rect rHwnd = HwndWindowRect(hwnd);
-    Rect rHwndRelative = HwndWindowRect(hwndRelative);
-    rHwnd.x = rHwndRelative.x + rHwndRelative.dx;
-    rHwnd.y = rHwndRelative.y;
-    // position hwnd vertically in the middle of hwndRelative
-    int dyDiff = rHwndRelative.dy - rHwnd.dy;
-    if (dyDiff > 0) {
-        rHwnd.y += dyDiff / 2;
-    }
-    Rect r = ShiftRectToWorkArea(rHwnd, hwndRelative, true);
-    SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative) {
@@ -3649,15 +3215,6 @@ bool DeleteBrushSafe(HBRUSH* br) {
     return DeleteObjectSafe((HGDIOBJ*)br);
 }
 
-bool DestroyIconSafe(HICON* h) {
-    if (!h || !*h) {
-        return false;
-    }
-    auto res = ::DestroyIcon(*h);
-    *h = nullptr;
-    return ToBool(res);
-}
-
 //--- GDI: draw / measure (text)
 
 int HdcDrawText(HDC hdc, WStr s, const Rect& r, uint format, HFONT font) {
@@ -3706,11 +3263,6 @@ bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, WStr text)
 
 bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, Str text) {
     return HdcExTextOut(hdc, pos, options, rect, ToWStrTemp(text));
-}
-
-void HdcFillRectWithBkColor(HDC hdc, const Rect& rect) {
-    RECT r = ToRECT(rect);
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &r, nullptr, 0, nullptr);
 }
 
 // uses the same logic as HdcDrawText
@@ -3815,11 +3367,6 @@ HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags) {
     }
     GlobalUnlock(h);
     return h;
-}
-
-HGLOBAL StrToHGLOBAL(Str s, UINT flags) {
-    int cb = len(s) + 1;
-    return MemToHGLOBAL((void*)s.s, cb, flags);
 }
 
 TempStr AtomToStrTemp(ATOM a) {
@@ -3969,20 +3516,6 @@ Str LatestSupportedSIMD() {
 
 //--- timing
 
-LARGE_INTEGER TimeNow() {
-    LARGE_INTEGER now;
-    QueryPerformanceCounter(&now);
-    return now;
-}
-
-double TimeDiffSecs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
-    LARGE_INTEGER freq;
-    QueryPerformanceFrequency(&freq);
-    auto diff = end.QuadPart - start.QuadPart;
-    double res = (double)diff / (double)freq.QuadPart;
-    return res;
-}
-
 double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
     LARGE_INTEGER freq;
     QueryPerformanceFrequency(&freq);
@@ -4018,24 +3551,6 @@ void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h) {
 
 //--- DC state
 
-SavedDCState SaveDCState(HWND hwnd) {
-    SavedDCState state = {};
-    state.hwnd = hwnd;
-    state.hdc = GetDC(hwnd);
-    HFONT hFont = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    if (hFont) {
-        state.oldFont = (HFONT)SelectObject(state.hdc, hFont);
-    }
-    return state;
-}
-
-void RestoreDCState(SavedDCState* state) {
-    if (state->oldFont) {
-        SelectObject(state->hdc, state->oldFont);
-    }
-    ReleaseDC(state->hwnd, state->hdc);
-}
-
 Size HdcGetTextExtentPoint32(HDC hdc, WStr str) {
     SIZE size{};
     GetTextExtentPoint32W(hdc, str.s, str.len, &size);
@@ -4044,10 +3559,6 @@ Size HdcGetTextExtentPoint32(HDC hdc, WStr str) {
 
 Size HdcGetTextExtentPoint32(HDC hdc, Str str) {
     return HdcGetTextExtentPoint32(hdc, ToWStrTemp(str));
-}
-
-int HdcMeasureStringWidth(HDC hdc, WStr str) {
-    return HdcGetTextExtentPoint32(hdc, str).dx;
 }
 
 Str GetLastErrorAsStr(Arena* arena) {
@@ -4125,14 +3636,4 @@ bool WasLaunchedByPowershellWithPipeRedirect() {
     return str::StartsWithI(parentName, StrL("pwsh.exe")) || str::StartsWithI(parentName, StrL("powershell"));
 }
 
-Str GetAppLocalDataDirTemp() {
-    wchar_t* path = nullptr;
-    HRESULT hr = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path);
-    if (FAILED(hr) || !path) {
-        return {};
-    }
-    Str result = ToUtf8Temp(WStr(path));
-    CoTaskMemFree(path);
-    return result;
-}
 // --- end: merged from former src/common/win_util.cpp ---

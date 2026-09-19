@@ -142,7 +142,6 @@ bool RenameReplace(Str newPath, Str oldPath);
 bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs);
 
 bool SetAccessTime(Str path, FILETIME accessTime);
-FILETIME GetAccessTime(Str path);
 
 } // namespace file
 
@@ -160,11 +159,7 @@ bool HasWriteAccess(Str dir);
 
 } // namespace dir
 
-bool FileSystemEntryExists(Str s);
-Str FindFirstValidParentDir(Str path);
 Str PathGetDirTemp(Str path);
-Str PathGetNameTemp(Str path);
-Str SmartResolveDirectory(Str dir);
 
 bool FileTimeEq(const FILETIME& a, const FILETIME& b);
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);

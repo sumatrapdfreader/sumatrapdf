@@ -162,8 +162,6 @@ int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
 int AtomicRefCountAdd(AtomicRefCount* v);
 int AtomicRefCountDec(AtomicRefCount* v);
-void* AtomicPtrGet(AtomicPtr* p);
-void AtomicPtrSet(AtomicPtr* p, void* v);
 void* AtomicPtrExchange(AtomicPtr* p, void* v);
 
 i64 UnixTimeMsNow();
@@ -432,8 +430,6 @@ int RoundToPowerOf2(int size);
 u32 MurmurHash2(const void* key, int n);
 u32 MurmurHash2(Str s);
 u32 MurmurHash2(WStr s);
-u32 MurmurHashWStrI(WStr str);
-u32 MurmurHashStrI(Str s);
 
 int RoundUp(int n, int rounding);
 void* RoundUp(void* d, int rounding);
@@ -915,7 +911,6 @@ struct RectF {
     bool operator!=(const RectF& other) const;
 };
 
-PointF ToPointFl(Point p);
 Point ToPoint(PointF p);
 
 SizeF ToSizeFl(Size s);
@@ -1080,8 +1075,6 @@ struct Arena {
     u64 Pos();
     void PopTo(u64 pos);
     void Pop(u64 amt);
-    void* GetAvailableSpace(int* bufSizeOut);
-    void* CommitReserved(void* mem, int size);
 
     Arena() = delete;  // use ArenaNew()
     ~Arena() = delete; // use ArenaDelete()
@@ -1871,8 +1864,6 @@ int BufSet(WCHAR* dst, int dstCchSize, Str src);
 WStr CastStrToWStr(Str s);
 } // namespace str
 
-void SplitStrByWhitespace(Arena* arena, const Str& s, VecStr& vecOut);
-
 namespace wstr {
 
 void Free(WStr s);
@@ -2037,7 +2028,6 @@ int FoldCaseRune(int c);
 bool IsCombiningMark(int c);
 int FoldDiacriticsRune(int c);
 int WStrFindSubstr(WStr str, WStr substr);
-int WStrCmpNoCase(WStr a, WStr b);
 
 // human readable size, e.g. "1.23 GB", "456 KB", "17 B"
 TempStr FormatFileSizeTemp(u64 size);
@@ -2366,7 +2356,6 @@ TempStr StrToUtf8Temp(Str src, uint codePage);
 TempStr UnknownToUtf8Temp(Str s);
 
 Str WStrToAnsi(WStr src);
-Str Utf8ToAnsi(Str s);
 
 TempWStr AnsiToWStrTemp(Str src);
 Str AnsiToUtf8(Str src);
@@ -2589,9 +2578,7 @@ bool IsNearBlack(Color c);
 DWORD PremultiplyPixel(Color c, u8 alpha);
 
 // GDI+ only exists on Windows; portable code works with Color
-Gdiplus::Color Unblend(Color c, u8 alpha);
 Gdiplus::Color GdiRgbFromColor(Color c);
-Gdiplus::Color GdiRgbaFromColor(Color c);
 
 constexpr Color RgbToColor(Color rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);

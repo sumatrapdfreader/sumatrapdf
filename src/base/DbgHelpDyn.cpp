@@ -524,12 +524,6 @@ TempStr GetCurrentThreadCallstackTemp() {
     return ToStrTemp(s);
 }
 
-// start remembering callstack logs done with LogCallstack()
-void RememberCallstackLogs() {
-    ReportIf(gCallstackLogs);
-    gCallstackLogs = new str::Builder();
-}
-
 void FreeCallstackLogs() {
     delete gCallstackLogs;
     gCallstackLogs = nullptr;

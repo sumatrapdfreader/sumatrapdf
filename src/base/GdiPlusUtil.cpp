@@ -27,10 +27,6 @@ void InitGraphicsMode(Graphics* g) {
     g->SetPageUnit(Gdiplus::UnitPixel);
 }
 
-Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
-    return {(float)r.X, (float)r.Y, (float)r.Width, (float)r.Height};
-}
-
 // note: gdi+ seems to under-report the width, the longer the text, the
 // bigger the difference. I'm trying to correct for that with those magic values
 constexpr float kPerCharDxAdjust = .2f;

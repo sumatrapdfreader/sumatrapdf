@@ -12,7 +12,6 @@ struct StrQueue {
     Str PopFront();
     static bool IsSentinel(Str s);
     void MarkFinished();
-    bool IsFinished();
     bool Access(const Func1<StrQueue*>& fn);
 
     StrVec strings;

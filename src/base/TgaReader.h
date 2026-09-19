@@ -13,6 +13,5 @@ bool HasSignature(Str);
 Pixmap* PixmapFromData(Str);
 
 Str PixmapToTgaFormat(Pixmap* pixmap);
-Str SerializeBitmap(HBITMAP hbmp);
 
 } // namespace tga

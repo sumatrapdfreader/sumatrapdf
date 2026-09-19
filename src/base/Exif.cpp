@@ -1108,27 +1108,6 @@ bool ExifParser::Parse(Str imageData) {
     return ParseTiff(*this);
 }
 
-bool ExifParser::HasProp(ExifProp prop) const {
-    return FindEntry(*this, prop) != nullptr;
-}
-
-ExifValueKind ExifParser::GetPropKind(ExifProp prop) const {
-    const ExifEntry* entry = FindEntry(*this, prop);
-    if (!entry) {
-        return ExifValueKind::Unknown;
-    }
-    if (entry->type == TiffAscii || IsXpProp(prop) || IsAsciiUndefinedProp(prop) || prop == ExifProp::UserComment) {
-        return ExifValueKind::String;
-    }
-    if (entry->type == TiffShort || entry->type == TiffLong || entry->type == TiffSShort || entry->type == TiffSLong) {
-        return ExifValueKind::Int;
-    }
-    if (entry->type == TiffRational || entry->type == TiffSRational) {
-        return ExifValueKind::Rational;
-    }
-    return ExifValueKind::Bytes;
-}
-
 TempStr ExifParser::GetStringProp(ExifProp prop, ExifProp altProp) const {
     const ExifEntry* entry = FindEntry(*this, prop);
     if (!entry) {
@@ -1226,10 +1205,4 @@ TempStr ExifParser::GetFormattedPropTemp(ExifProp prop) const {
         return {};
     }
     return FormatValuesTemp(*this, (IfdGroup)entry->group, entry->tag, entry->type, entry->count, entry->dataOff);
-}
-
-void ExifParser::GetDumpLines(StrVec& linesOut) const {
-    for (Str line : dumpLines) {
-        linesOut.Append(line);
-    }
 }

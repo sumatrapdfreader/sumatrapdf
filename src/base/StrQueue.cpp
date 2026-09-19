@@ -24,13 +24,6 @@ void StrQueue::MarkFinished() {
     nonEmpty.WakeAll();
 }
 
-bool StrQueue::IsFinished() {
-    Lock();
-    auto res = isFinished;
-    Unlock();
-    return res;
-}
-
 int len(StrQueue& q) {
     q.Lock();
     int res = len(q.strings);

@@ -53,4 +53,3 @@ bool AppendStoreAppend(AppendStore* store, const AppendStoreAppendOptions& opts,
 Str AppendStoreReadPayload(AppendStore* store, const AppendStoreRecord* rec);
 Str AppendStoreReadPayloadPart(AppendStore* store, const AppendStoreRecord* rec, i64 maxBytes);
 Str AppendStoreReadFile(AppendStore* store, const AppendStoreRecord* rec);
-Str AppendStoreError(AppendStore* store);

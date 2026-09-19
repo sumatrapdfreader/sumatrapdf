@@ -253,14 +253,6 @@ i32 ByteReader::Int32BE() {
     return (i32)UInt32BE();
 }
 
-i64 ByteReader::Int64LE() {
-    return (i64)UInt64LE();
-}
-
-i64 ByteReader::Int64BE() {
-    return (i64)UInt64BE();
-}
-
 void ByteReader::Bytes(void* dst, int n) {
     if (!ok || n < 0 || off > len - n) {
         ok = false;
@@ -299,14 +291,6 @@ const u8* ByteReader::Find(int off, u8 byte) const {
         return nullptr;
     }
     return (const u8*)memchr(d + off, byte, (size_t)(len - off));
-}
-
-bool ByteReader::UnpackLE(void* strct, int size, Str format, int off) const {
-    return Unpack(strct, size, format, off, false);
-}
-
-bool ByteReader::UnpackBE(void* strct, int size, Str format, int off) const {
-    return Unpack(strct, size, format, off, true);
 }
 
 // Unpacks a structure from the data according to the given format
@@ -370,18 +354,6 @@ void ByteWriter::Write32(u32 val) {
     }
     Write8x2(b4, b3);
     Write8x2(b2, b1);
-}
-
-void ByteWriter::Write64(u64 val) {
-    u32 v1 = val & 0xFFFFFFFF;
-    u32 v2 = (val >> 32) & 0xFFFFFFFF;
-    if (isLE) {
-        Write32(v1);
-        Write32(v2);
-        return;
-    }
-    Write32(v2);
-    Write32(v1);
 }
 
 int ByteWriter::Size() const {

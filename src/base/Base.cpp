@@ -147,40 +147,6 @@ u32 MurmurHash2(WStr s) {
     return MurmurHash2(s.s, s.len * sizeofi(wchar_t));
 }
 
-// variation of MurmurHash2 which deals with strings that are
-// mostly ASCII and should be treated case independently
-u32 MurmurHashWStrI(WStr str) {
-    auto* a = GetTempArena();
-    u8* data = (u8*)a->Alloc(str.len);
-    u8* dst = data;
-    for (int i = 0; i < str.len; i++) {
-        wchar_t c = str.s[i];
-        if (c & 0xFF80) {
-            *dst++ = 0x80;
-            continue;
-        }
-        if ('A' <= c && c <= 'Z') {
-            *dst++ = (u8)(c + 'a' - 'A');
-            continue;
-        }
-        *dst++ = (u8)c;
-    }
-    return MurmurHash2(data, (int)(dst - data));
-}
-
-// variation of MurmurHash2 which deals with strings that are
-// mostly ASCII and should be treated case independently
-u32 MurmurHashStrI(Str s) {
-    TempStr dst = str::DupTemp(s);
-    for (int i = 0; i < dst.len; i++) {
-        char c = dst.s[i];
-        if ('A' <= c && c <= 'Z') {
-            dst.s[i] = (char)(c + 'a' - 'A');
-        }
-    }
-    return MurmurHash2(dst);
-}
-
 int limitValue(int val, int min, int max) {
     if (min > max) {
         std::swap(min, max);
@@ -665,10 +631,6 @@ bool RectF::operator!=(const RectF& other) const {
 
 // ------------- conversion functions
 
-PointF ToPointFl(const Point p) {
-    return {(float)p.x, (float)p.y};
-}
-
 Point ToPoint(const PointF p) {
     return Point{(int)p.x, (int)p.y};
 }
@@ -850,29 +812,6 @@ void ArenaReleaseMemory(void* base, u64 size);
 
 static void ArenaRelease(Arena* arena) {
     ArenaReleaseMemory(arena, arena->reserved);
-}
-
-static void* ArenaGetAvailableSpaceLocked(Arena* arena, int* bufSizeOut) {
-    if (!bufSizeOut) {
-        return nullptr;
-    }
-
-    Arena* current = arena ? arena->current : nullptr;
-    if (!current) {
-        *bufSizeOut = 0;
-        return nullptr;
-    }
-
-    u64 pos = ArenaAlignPow2(current->pos, 8);
-    if (pos >= current->committed) {
-        *bufSizeOut = 0;
-        return nullptr;
-    }
-
-    u64 available = current->committed - pos;
-    available = std::min<u64>(available, 0x7fffffff);
-    *bufSizeOut = (int)available;
-    return (char*)current + pos;
 }
 
 static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
@@ -1196,46 +1135,6 @@ void Arena::Reset() {
     PopTo(0);
     nAllocsSinceReset = 0;
     peakBytesSinceReset = 0;
-}
-
-void* Arena::GetAvailableSpace(int* bufSizeOut) {
-    if (!this) {
-        if (bufSizeOut) {
-            *bufSizeOut = 0;
-        }
-        return nullptr;
-    }
-
-    lock.Lock();
-    void* mem = ArenaGetAvailableSpaceLocked(this, bufSizeOut);
-    lock.Unlock();
-    return mem;
-}
-
-void* Arena::CommitReserved(void* mem, int size) {
-    if (size <= 0) {
-        return nullptr;
-    }
-
-    lock.Lock();
-
-    int availSize = 0;
-    void* availMem = ArenaGetAvailableSpaceLocked(this, &availSize);
-    if (mem == availMem && size <= availSize) {
-        void* committed = ArenaPushLocked(this, (u64)size, 8, false);
-        lock.Unlock();
-        return committed;
-    }
-
-    void* dst = ArenaPushLocked(this, (u64)size, 8, false);
-    lock.Unlock();
-    if (!dst) {
-        return nullptr;
-    }
-    if (mem) {
-        memcpy(dst, mem, (size_t)size);
-    }
-    return dst;
 }
 
 // size_t overloads that match the legacy Allocator::* static helper API
@@ -4376,16 +4275,6 @@ int WStrFindSubstr(WStr str, WStr substr) {
     return -1;
 }
 
-int WStrCmpNoCase(WStr a, WStr b) {
-    int minLen = a.len < b.len ? a.len : b.len;
-    for (int i = 0; i < minLen; i++) {
-        wchar_t ca = WCharToLower(a.s[i]);
-        wchar_t cb = WCharToLower(b.s[i]);
-        if (ca != cb) return ca - cb;
-    }
-    return a.len - b.len;
-}
-
 // Format size in human readable form (e.g., "1.23 GB", "456 KB")
 TempStr FormatFileSizeTemp(u64 size) {
     const u64 TB = 1024ULL * 1024 * 1024 * 1024;
@@ -4431,17 +4320,6 @@ TempStr FormatFileSizeTemp(u64 size) {
     return str::DupTemp(Str(buf, n));
 }
 
-void SplitStrByWhitespace(Arena* arena, const Str& s, VecStr& vecOut) {
-    vecOut.len = 0;
-    vecOut.cap = 0;
-    vecOut.els = nullptr;
-
-    Str rest = s;
-    // the tokens point into the original string, no allocation
-    while (Str token = str::NextWord(rest)) {
-        VecPush(arena, vecOut, token);
-    }
-}
 // --- end: merged from former src/common/str_util.cpp ---
 
 //--- StrUtf8.cpp ----------------------------------------------------------------
@@ -7013,11 +6891,6 @@ Str WStrToAnsi(WStr src) {
     return WStrToCodePage(CP_ACP, src);
 }
 
-Str Utf8ToAnsi(Str s) {
-    TempWStr ws = ToWStrTemp(s);
-    return WStrToAnsi(ws);
-}
-
 } // namespace strconv
 
 // short names because frequently used
@@ -7057,27 +6930,10 @@ void UnpackColor(Color c, u8& r, u8& g, u8& b) {
     b = (u8)(c & 0xff);
 }
 
-// TODO: use AdjustLightness instead to compensate for the alpha?
-Gdiplus::Color Unblend(Color c, u8 alpha) {
-    u8 r, g, b, a;
-    UnpackColor(c, r, g, b, a);
-    u8 ralpha = (u8)((float)alpha * (float)a / 255.f);
-    float falpha = ((float)alpha * (float)a / 255.f);
-    float tmp = 255.0f / (falpha + 0.5f);
-    u8 R = (u8)floorf((float)std::max(r - (255 - ralpha), 0) * tmp);
-    u8 G = (u8)floorf((float)std::max(g - (255 - ralpha), 0) * tmp);
-    u8 B = (u8)floorf((float)std::max(b - (255 - ralpha), 0) * tmp);
-    return {alpha, R, G, B};
-}
-
 Gdiplus::Color GdiRgbFromColor(Color c) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);
     return {r, g, b};
-}
-
-Gdiplus::Color GdiRgbaFromColor(Color c) {
-    return {c};
 }
 
 TempStr SerializeColorTemp(Color c) {
@@ -7378,16 +7234,6 @@ int AtomicIntInc(AtomicInt* p) {
 
 int AtomicIntDec(AtomicInt* p) {
     return (int)InterlockedDecrement(p);
-}
-
-void* AtomicPtrGet(AtomicPtr* p) {
-    // comparing nullptr against nullptr never stores, so this is just an
-    // atomic read - there is no InterlockedGetPointer
-    return InterlockedCompareExchangePointer(p, nullptr, nullptr);
-}
-
-void AtomicPtrSet(AtomicPtr* p, void* v) {
-    InterlockedExchangePointer(p, v);
 }
 
 // stores v and returns what was there before

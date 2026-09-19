@@ -53,8 +53,6 @@ struct ByteReader {
     i32 Int32BE();
     u64 UInt64LE();
     u64 UInt64BE();
-    i64 Int64LE();
-    i64 Int64BE();
     void Bytes(void* dst, int n);
     void Skip(int n);
     void Unskip(int n);
@@ -62,8 +60,6 @@ struct ByteReader {
     bool IsOk() const;
 
     const u8* Find(int off, u8 byte) const;
-    bool UnpackLE(void* strct, int size, Str format, int off = 0) const;
-    bool UnpackBE(void* strct, int size, Str format, int off = 0) const;
     bool Unpack(void* strct, int size, Str format, bool isBE, int off = 0) const;
 };
 
@@ -84,7 +80,6 @@ struct ByteWriter {
     void Write8x2(u8 b1, u8 b2);
     void Write16(u16 val);
     void Write32(u32 val);
-    void Write64(u64 val);
 
     int Size() const;
     Str AsByteSlice() const;

@@ -20,12 +20,6 @@ constexpr int kZeroPaddingCount = 3;
 
 thread_local ArchiveExtractProgressCb gArchiveProgressCb{};
 
-FILETIME Archive::FileInfo::GetWinFileTime() const {
-    FILETIME ft = {(DWORD)-1, (DWORD)-1};
-    LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
-    return ft;
-}
-
 Archive::Archive() {
     a = ArenaNew();
 }
