@@ -5408,35 +5408,37 @@ static StrVecPage* PageForIdx(const StrVec* v, int idx, int* idxInPageOut) {
     return page;
 }
 
+// callers use logical (sorted) indexes, pages use physical order
+static int PhysIdx(const StrVec* v, int idx) {
+    return v->sortIndexes ? v->sortIndexes[idx] : idx;
+}
+
+// SetAt / InsertAt: try the page holding idx first; when it has no room,
+// compact all pages with extra space (assuming more calls will follow) and
+// retry on the single page that leaves.
+static Str SetOrInsertAt(StrVec* v, int idx, Str s, PageOpResult (StrVecPage::*op)(int, Str)) {
+    idx = PhysIdx(v, idx);
+    int idxInPage;
+    auto* page = PageForIdx(v, idx, &idxInPage);
+    auto res = (page->*op)(idxInPage, s);
+    if (res.noSpace) {
+        // s might point into one of our pages, which CompactPages() frees
+        if (!str::IsNull(s)) {
+            s = str::DupTemp(s);
+        }
+        CompactPages(v, RoundUp(s.len + 1, 2048));
+        res = (v->first->*op)(idx, s);
+        ReportIf(res.noSpace);
+    }
+    InvalidateSortIndexes(v);
+    return res.s;
+}
+
 // returns a string
 // note: this might invalidate previously returned strings because
 // it might re-allocate memory used for those strings
 Str StrVec::SetAt(int idx, Str s) {
-    if (sortIndexes) {
-        // callers use logical (sorted) indexes, pages use physical order
-        idx = sortIndexes[idx];
-    }
-    {
-        int idxInPage;
-        auto* page = PageForIdx(this, idx, &idxInPage);
-        auto res = page->SetAt(idxInPage, s);
-        if (!res.noSpace) {
-            InvalidateSortIndexes(this);
-            return res.s;
-        }
-    }
-    // s might point into one of our pages, which CompactPages() frees
-    if (!str::IsNull(s)) {
-        s = str::DupTemp(s);
-    }
-    // perf: we assume that there will be more SetAt() calls so pre-allocate
-    // extra space to make many SetAt() calls less expensive
-    int extraSpace = RoundUp(s.len + 1, 2048);
-    CompactPages(this, extraSpace);
-    auto res = first->SetAt(idx, s);
-    ReportIf(res.noSpace);
-    InvalidateSortIndexes(this);
-    return res.s;
+    return SetOrInsertAt(this, idx, s, &StrVecPage::SetAt);
 }
 
 // returns a string
@@ -5446,67 +5448,49 @@ Str StrVec::InsertAt(int idx, Str s) {
     if (idx == size) {
         return Append(s);
     }
-    if (sortIndexes) {
-        // callers use logical (sorted) indexes, pages use physical order
-        idx = sortIndexes[idx];
-    }
+    Str res = SetOrInsertAt(this, idx, s, &StrVecPage::InsertAt);
+    size++;
+    return res;
+}
 
-    {
-        int idxInPage;
-        auto* page = PageForIdx(this, idx, &idxInPage);
-        auto res = page->InsertAt(idxInPage, s);
-        if (!res.noSpace) {
-            size++;
-            InvalidateSortIndexes(this);
-            return res.s;
+static Str RemoveAtHelper(StrVec* v, int idx, Str (StrVecPage::*op)(int)) {
+    int idxInPage;
+    auto* page = PageForIdx(v, PhysIdx(v, idx), &idxInPage);
+    Str removed = page->AtStr(idxInPage);
+    (page->*op)(idxInPage);
+    v->size--;
+    InvalidateSortIndexes(v);
+    return removed;
+}
+
+Str StrVec::RemoveAt(int idx) {
+    return RemoveAtHelper(this, idx, &StrVecPage::RemoveAt);
+}
+
+Str StrVec::RemoveAtFast(int idx) {
+    return RemoveAtHelper(this, idx, &StrVecPage::RemoveAtFast);
+}
+
+static int FindHelper(const StrVec* v, Str s, int startAt, bool (*eq)(Str, Str)) {
+    if (startAt < 0 || startAt >= v->size) {
+        return -1;
+    }
+    auto end = v->end();
+    for (auto it = v->begin() + startAt; it != end; it++) {
+        Str s2 = *it;
+        if (s2.len == s.len && eq(s, s2)) {
+            return it.idx;
         }
     }
-
-    // s might point into one of our pages, which CompactPages() frees
-    if (!str::IsNull(s)) {
-        s = str::DupTemp(s);
-    }
-    // perf: we assume that there will be more InsertAt() calls so pre-allocate
-    // extra space to make many InsertAt() calls less expensive
-    int extraSpace = RoundUp(s.len + 1, 2048);
-    CompactPages(this, extraSpace);
-    auto res = first->InsertAt(idx, s);
-    ReportIf(res.noSpace);
-    size++;
-    InvalidateSortIndexes(this);
-    return res.s;
+    return -1;
 }
 
-// remove string at idx and return it
-// return value is valid as long as StrVec is valid
-Str StrVec::RemoveAt(int idx) {
-    if (sortIndexes) {
-        // callers use logical (sorted) indexes, pages use physical order
-        idx = sortIndexes[idx];
-    }
-    int idxInPage;
-    auto* page = PageForIdx(this, idx, &idxInPage);
-    Str removed = page->AtStr(idxInPage);
-    page->RemoveAt(idxInPage);
-    size--;
-    InvalidateSortIndexes(this);
-    return removed;
+int StrVec::Find(Str s, int startAt) const {
+    return FindHelper(this, s, startAt, str::Eq);
 }
 
-// remove string at idx more quickly but will change order of string
-// return value is valid as long as StrVec is valid
-Str StrVec::RemoveAtFast(int idx) {
-    if (sortIndexes) {
-        // callers use logical (sorted) indexes, pages use physical order
-        idx = sortIndexes[idx];
-    }
-    int idxInPage;
-    auto* page = PageForIdx(this, idx, &idxInPage);
-    Str removed = page->AtStr(idxInPage);
-    page->RemoveAtFast(idxInPage);
-    size--;
-    InvalidateSortIndexes(this);
-    return removed;
+int StrVec::FindI(Str s, int startAt) const {
+    return FindHelper(this, s, startAt, str::EqI);
 }
 
 // return true if did remove
@@ -5520,57 +5504,21 @@ bool StrVec::Remove(Str s) {
 }
 
 Str StrVec::At(int idx) const {
-    if (sortIndexes) {
-        idx = sortIndexes[idx];
-    }
     int idxInPage;
-    auto* page = PageForIdx(this, idx, &idxInPage);
+    auto* page = PageForIdx(this, PhysIdx(this, idx), &idxInPage);
     return page->AtStr(idxInPage);
 }
 
 void* StrVec::AtDataRaw(int idx) const {
     ReportIf(dataSize == 0); // shouldn't call
-    if (sortIndexes) {
-        idx = sortIndexes[idx];
-    }
     int idxInPage;
-    auto* page = PageForIdx(this, idx, &idxInPage);
+    auto* page = PageForIdx(this, PhysIdx(this, idx), &idxInPage);
     return page->AtDataRaw(idxInPage);
 }
 
 Str StrVec::operator[](int idx) const {
     ReportIf(idx < 0);
     return At(idx);
-}
-
-int StrVec::Find(Str s, int startAt) const {
-    if (startAt < 0 || startAt >= size) {
-        return -1;
-    }
-    int sLen = s.len;
-    auto end = this->end();
-    for (auto it = this->begin() + startAt; it != end; it++) {
-        Str s2 = *it;
-        if (s2.len == sLen && str::Eq(s, s2)) {
-            return it.idx;
-        }
-    }
-    return -1;
-}
-
-int StrVec::FindI(Str s, int startAt) const {
-    if (startAt < 0 || startAt >= size) {
-        return -1;
-    }
-    int sLen = s.len;
-    auto end = this->end();
-    for (auto it = this->begin() + startAt; it != end; it++) {
-        Str s2 = *it;
-        if (s2.len == sLen && str::EqI(s, s2)) {
-            return it.idx;
-        }
-    }
-    return -1;
 }
 
 bool StrVec::Contains(Str s) const {
