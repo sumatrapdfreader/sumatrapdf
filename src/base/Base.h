@@ -1737,6 +1737,7 @@ using SeqStrings = const char*;
 Str SeqStrFirst(SeqStrings strs);
 Str SeqStrNext(Str s);
 int SeqStrIndex(SeqStrings strs, Str toFind);
+int SeqStrIndexI(SeqStrings strs, Str toFind);
 int SeqStrIndexIS(SeqStrings strs, Str toFind);
 TempStr SeqStrByIndex(SeqStrings strs, int idx);
 

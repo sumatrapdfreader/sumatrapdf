@@ -2444,6 +2444,17 @@ int SeqStrIndex(SeqStrings strs, Str toFind) {
 }
 
 // like SeqStrIndex but ignores case and whitespace
+// case-insensitive SeqStrIndex
+int SeqStrIndexI(SeqStrings strs, Str toFind) {
+    int idx = 0;
+    for (Str s = SeqStrFirst(strs); len(s) > 0; s = SeqStrNext(s), idx++) {
+        if (str::EqI(s, toFind)) {
+            return idx;
+        }
+    }
+    return -1;
+}
+
 int SeqStrIndexIS(SeqStrings strs, Str toFind) {
     if (!strs || len(toFind) == 0) {
         return -1;
