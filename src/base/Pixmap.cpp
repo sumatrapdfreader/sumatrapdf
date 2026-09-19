@@ -141,6 +141,16 @@ Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap) {
     return p;
 }
 
+// alpha = 0xff on every pixel of a 32-bit pixmap
+static void SetOpaqueAlpha(Pixmap* p) {
+    for (int y = 0; y < p->height; y++) {
+        u8* d = p->data + ((size_t)y * p->stride);
+        for (int x = 0; x < p->width; x++, d += 4) {
+            d[3] = 0xff;
+        }
+    }
+}
+
 Pixmap* PixmapCopyAs32bppDIB(const Pixmap* p) {
     if (!p || !p->hbmp || p->width <= 0 || p->height <= 0) {
         return nullptr;
@@ -174,12 +184,7 @@ Pixmap* PixmapCopyAs32bppDIB(const Pixmap* p) {
     }
     // BitBlt leaves the alpha channel alone (i.e. at the zero CreateDIBSection
     // gave us), which would make the copy fully transparent
-    for (int y = 0; y < dst->height; y++) {
-        u8* d = dst->data + ((size_t)y * dst->stride);
-        for (int x = 0; x < dst->width; x++, d += 4) {
-            d[3] = 0xff;
-        }
-    }
+    SetOpaqueAlpha(dst);
     dst->xres = p->xres;
     dst->yres = p->yres;
     return dst;
@@ -695,12 +700,7 @@ static Pixmap* PixmapFromHBITMAPPixels(HBITMAP hbmp) {
     }
     // CF_BITMAP has no alpha; GetDIBits leaves it 0, which would make a stamp
     // fully transparent.
-    for (int y = 0; y < pixmap->height; y++) {
-        u8* d = pixmap->data + ((size_t)y * pixmap->stride);
-        for (int x = 0; x < pixmap->width; x++, d += 4) {
-            d[3] = 0xff;
-        }
-    }
+    SetOpaqueAlpha(pixmap);
     return pixmap;
 }
 

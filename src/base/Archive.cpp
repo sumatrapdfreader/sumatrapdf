@@ -72,6 +72,18 @@ static void EagerLoadEntry(struct archive* a, Archive::FileInfo* fileInfo) {
     fileInfo->failed = true;
 }
 
+// final progress callback, now that the total is known
+static void ReportAllDecoded(const ArchiveExtractProgressCb& cb, ArchiveExtractProgress& prog,
+                             Vec<Archive::FileInfo*>& infos, int nDecoded) {
+    if (nDecoded == 0) {
+        return;
+    }
+    prog.fileInfo = infos[nDecoded - 1];
+    prog.nDecoded = nDecoded;
+    prog.nTotal = nDecoded;
+    cb.Call(&prog);
+}
+
 bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     constexpr i64 kMaxEagerArchiveSize = 256LL * 1024 * 1024;
     constexpr int kMaxArchiveEntries = 100'000;
@@ -122,13 +134,7 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
         prog.nDecoded = fileId;
         cbProgress.Call(&prog);
     }
-    if (fileId > 0) {
-        // final callback with total known
-        prog.fileInfo = fileInfos_[fileId - 1];
-        prog.nDecoded = fileId;
-        prog.nTotal = fileId;
-        cbProgress.Call(&prog);
-    }
+    ReportAllDecoded(cbProgress, prog, fileInfos_, fileId);
     return fileId > 0;
 }
 
@@ -183,7 +189,7 @@ bool Archive::Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExt
         return false;
     }
     if (eagerLoad) {
-        // Discard the paths so LoadFileDataByIdLibarchive / LoadFileDataByIdUnrarDll
+        // Discard the paths so ReadEntry
         // can't re-open the archive to fetch a missing entry. Entries whose
         // decompression failed above have failed=true and data=nullptr, and
         // later GetFileDataById will see archivePath_==nullptr and mark
@@ -354,80 +360,73 @@ Archive::FileInfo* Archive::GetFileDataByName(Str fileName) {
 // nullptr / ->failed if extraction failed). The buffer stays owned by
 // this archive; callers that want to keep the data past the archive's
 // lifetime should set ->data = nullptr to transfer ownership.
+// Walks the libarchive entries to fi and decompresses its first toRead bytes.
+// Returns {} on failure; *permanent is set when retrying can't help
+// (transient I/O failures leave it false so a later call retries).
+Str Archive::ReadLibarchiveEntry(FileInfo* fi, int toRead, bool* permanent) {
+    *permanent = false;
+    struct archive* a = OpenLibarchiveSource(this);
+    if (!a) {
+        *permanent = len(archivePath_) == 0 && len(archiveData_) == 0;
+        return {};
+    }
+    AutoCall freeArchive(archive_read_free, a);
+    if (addOverflows<int>(toRead, kZeroPaddingCount)) {
+        *permanent = true;
+        return {};
+    }
+
+    struct archive_entry* entry;
+    for (int idx = 0; archive_read_next_header(a, &entry) == ARCHIVE_OK; idx++) {
+        if (idx != fi->fileId) {
+            archive_read_data_skip(a);
+            continue;
+        }
+        u8* data = AllocArray<u8>(toRead + kZeroPaddingCount);
+        if (!data) {
+            return {}; // OOM: retry later
+        }
+        la_ssize_t n = archive_read_data(a, data, (size_t)toRead);
+        if (n < 0) {
+            free(data);
+            return {}; // I/O error: retry later
+        }
+        if (toRead == fi->fileSizeUncompressed && (int)n != toRead) {
+            free(data);
+            *permanent = true; // truncated / corrupt entry
+            return {};
+        }
+        return Str((char*)data, (int)n);
+    }
+    *permanent = true; // no such entry
+    return {};
+}
+
+// first toRead bytes of an entry, through whichever library opened the archive
+Str Archive::ReadEntry(FileInfo* fi, int toRead, bool* permanent) {
+    if (LoadedUsingUnrarDll()) {
+        return ReadUnrarEntry(fi, toRead, permanent);
+    }
+    return ReadLibarchiveEntry(fi, toRead, permanent);
+}
+
 Archive::FileInfo* Archive::GetFileDataById(int fileId) {
     if (fileId < 0) {
         return nullptr;
     }
     ReportIf(fileId >= len(fileInfos_));
-
-    auto* fileInfo = fileInfos_[fileId];
-    ReportIf(fileInfo->fileId != fileId);
-
-    if (fileInfo->data != nullptr) {
-        return fileInfo; // cached
+    auto* fi = fileInfos_[fileId];
+    ReportIf(fi->fileId != fileId);
+    if (fi->data || fi->failed) {
+        return fi; // cached, or already tried
     }
-    if (fileInfo->failed) {
-        return fileInfo; // already tried
+    bool permanent;
+    Str d = ReadEntry(fi, fi->fileSizeUncompressed, &permanent);
+    fi->data = d.s;
+    if (!d.s && permanent) {
+        fi->failed = true;
     }
-
-    if (LoadedUsingUnrarDll()) {
-        LoadFileDataByIdUnrarDll(fileId);
-    } else {
-        LoadFileDataByIdLibarchive(fileId);
-    }
-    return fileInfo;
-}
-
-void Archive::LoadFileDataByIdLibarchive(int fileId) {
-    auto* fileInfo = fileInfos_[fileId];
-    // re-open the archive (from the file or from kept in-memory bytes)
-    // and skip to the right entry
-    struct archive* a = OpenLibarchiveSource(this);
-    if (!a) {
-        if (len(archivePath_) == 0 && len(archiveData_) == 0) {
-            fileInfo->failed = true;
-            return;
-        }
-        // Transient I/O (sleep, network drop). Leave failed=false so
-        // the next GetFileDataById retries.
-        return;
-    }
-
-    struct archive_entry* entry;
-    int idx = 0;
-    while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-        if (idx != fileId) {
-            archive_read_data_skip(a);
-            idx++;
-            continue;
-        }
-        int size = fileInfo->fileSizeUncompressed;
-        if (addOverflows<int>(size, kZeroPaddingCount)) {
-            archive_read_free(a);
-            fileInfo->failed = true;
-            return;
-        }
-        u8* data = AllocArray<u8>(size + kZeroPaddingCount);
-        if (!data) {
-            archive_read_free(a);
-            return; // OOM: retry later
-        }
-        la_ssize_t n = archive_read_data(a, data, (size_t)size);
-        archive_read_free(a);
-        if (n < 0) {
-            free(data);
-            return; // I/O error: retry later
-        }
-        if ((int)n != size) {
-            free(data);
-            fileInfo->failed = true; // truncated/corrupt entry
-            return;
-        }
-        fileInfo->data = (char*)data;
-        return;
-    }
-    archive_read_free(a);
-    fileInfo->failed = true;
+    return fi;
 }
 
 Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
@@ -435,52 +434,19 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
         return {};
     }
     ReportIf(fileId >= len(fileInfos_));
-
-    auto* fileInfo = fileInfos_[fileId];
+    auto* fi = fileInfos_[fileId];
+    int n = std::min(fi->fileSizeUncompressed, sizeHint);
     // if full data is cached, return a copy of the prefix
-    if (fileInfo->data != nullptr) {
-        int n = std::min(fileInfo->fileSizeUncompressed, sizeHint);
+    if (fi->data) {
         u8* data = AllocArray<u8>(n + kZeroPaddingCount);
         if (!data) {
             return {};
         }
-        memcpy(data, fileInfo->data, (size_t)n);
+        memcpy(data, fi->data, (size_t)n);
         return Str((char*)data, n);
     }
-
-    if (LoadedUsingUnrarDll()) {
-        return GetFileDataPartByIdUnrarDll(fileId, sizeHint);
-    }
-
-    struct archive* a = OpenLibarchiveSource(this);
-    if (!a) {
-        return {};
-    }
-
-    struct archive_entry* entry;
-    int idx = 0;
-    while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-        if (idx == fileId) {
-            int fullSize = fileInfo->fileSizeUncompressed;
-            int toRead = std::min(fullSize, sizeHint);
-            u8* data = AllocArray<u8>(toRead + kZeroPaddingCount);
-            if (!data) {
-                archive_read_free(a);
-                return {};
-            }
-            la_ssize_t n = archive_read_data(a, data, (size_t)toRead);
-            archive_read_free(a);
-            if (n < 0) {
-                free(data);
-                return {};
-            }
-            return Str((char*)data, (int)n);
-        }
-        archive_read_data_skip(a);
-        idx++;
-    }
-    archive_read_free(a);
-    return {};
+    bool permanent;
+    return ReadEntry(fi, n, &permanent);
 }
 
 ///// format specific handling /////
@@ -646,36 +612,6 @@ Str Archive::ReadUnrarEntry(FileInfo* fi, int toRead, bool* permanent) {
     return Str(data, got);
 }
 
-void Archive::LoadFileDataByIdUnrarDll(int fileId) {
-    auto* fi = fileInfos_[fileId];
-    ReportIf(fi->fileId != fileId);
-    if (fi->data) {
-        return; // already loaded
-    }
-    bool permanent;
-    Str d = ReadUnrarEntry(fi, fi->fileSizeUncompressed, &permanent);
-    fi->data = d.s;
-    if (!d.s && permanent) {
-        fi->failed = true;
-    }
-}
-
-Str Archive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
-    auto* fi = fileInfos_[fileId];
-    ReportIf(fi->fileId != fileId);
-    int n = std::min(fi->fileSizeUncompressed, sizeHint);
-    if (fi->data) {
-        u8* data = AllocArray<u8>(n + kZeroPaddingCount);
-        if (!data) {
-            return {};
-        }
-        memcpy(data, fi->data, (size_t)n);
-        return Str((char*)data, n);
-    }
-    bool permanent;
-    return ReadUnrarEntry(fi, n, &permanent);
-}
-
 // asan build crashes in UnRAR code
 // see https://codeeval.dev/gist/801ad556960e59be41690d0c2fa7cba0
 bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
@@ -763,13 +699,7 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
         prog.nDecoded = fileId;
         cbProgress.Call(&prog);
     }
-    if (fileId > 0) {
-        prog.fileInfo = fileInfos_[fileId - 1];
-        prog.nDecoded = fileId;
-        prog.nTotal = fileId;
-        cbProgress.Call(&prog);
-    }
-
+    ReportAllDecoded(cbProgress, prog, fileInfos_, fileId);
     RARCloseArchive(hArc);
 
     rarFilePath_ = str::Dup(a, rarPath);

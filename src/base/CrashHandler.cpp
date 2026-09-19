@@ -526,14 +526,11 @@ static void GetOsVersion() {
     if (IsProcess32()) {
         arch = IsRunningInWow64() ? "Wow64" : "32-bit";
     }
-    if (0 == servicePackMajor) {
-        CrashInfoAppend(fmt("OS: Windows %s build %d %s\n", os, buildNumber, Str(arch)));
-    } else if (0 == servicePackMinor) {
-        CrashInfoAppend(fmt("OS: Windows %s SP%d build %d %s\n", os, servicePackMajor, buildNumber, Str(arch)));
-    } else {
-        CrashInfoAppend(
-            fmt("OS: Windows %s %d.%d build %d %s\n", os, servicePackMajor, servicePackMinor, buildNumber, Str(arch)));
+    TempStr sp = StrL("");
+    if (servicePackMajor != 0) {
+        sp = servicePackMinor == 0 ? fmt(" SP%d", servicePackMajor) : fmt(" %d.%d", servicePackMajor, servicePackMinor);
     }
+    CrashInfoAppend(fmt("OS: Windows %s%s build %d %s\n", os, sp, buildNumber, Str(arch)));
 }
 
 static void GetProcessorName() {
