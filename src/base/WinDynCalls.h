@@ -3,8 +3,6 @@ License: Simplified BSD (see COPYING.BSD) */
 
 void InitDynCalls();
 
-#if OS_WIN
-
 // as an exception, we include system headers needed for the calls that we dynamically load
 // (and a few related headers that call sites historically got via this include)
 #include <windows.h>
@@ -102,5 +100,3 @@ DBGHELP_API_LIST(API_DECLARATION2)
 
 void NoDllHijacking();
 void PrioritizeSystemDirectoriesForDllLoad();
-
-#endif

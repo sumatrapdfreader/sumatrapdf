@@ -26,7 +26,6 @@ struct PlatformFont;
 struct Pixmap;
 struct HwndBase;
 
-#if OS_WIN
 namespace Gdiplus {
 class Font;
 class Graphics;
@@ -35,10 +34,6 @@ class Graphics;
 struct ID2D1DCRenderTarget;
 struct ID2D1SolidColorBrush;
 struct ID2D1StrokeStyle;
-#elif OS_LINUX
-struct _cairo;
-using cairo_t = struct _cairo;
-#endif
 
 // how text is placed in the rect it is drawn into
 // gfxTextLeft / gfxTextRight are physical edges (GDI DT_LEFT / DT_RIGHT).
@@ -74,14 +69,10 @@ inline bool GfxTextAlignToReadingStart(u32 flags) {
 
 struct Gfx {
     Gfx() = default;
-#if OS_WIN
     virtual ~Gfx();
     HDC doubleBufferTarget = nullptr;
     HDC doubleBufferSource = nullptr;
     Size doubleBufferSize;
-#else
-    virtual ~Gfx() = default;
-#endif
 
     // kColorTransparent / kColorUnset skip the fill
     virtual void FillRect(const Rect&, Color) = 0;
@@ -117,7 +108,6 @@ struct Gfx {
     virtual bool SetMirrored(bool) = 0;
 };
 
-#if OS_WIN
 // Draws with plain gdi, immediately and without anti-aliasing. Kept for the
 // surfaces that interleave raw gdi drawing with Gfx drawing on the same HDC
 // (the caption frame and installer): GfxDirect2D writes to the
@@ -257,10 +247,3 @@ Gfx* GfxCreateWithDoubleBuffer(HWND, HDC, GfxDoubleBuffer*);
 Gfx* GfxCreateWithDoubleBuffer(HwndBase*, HDC);
 void GfxDestroyDoubleBuffer(GfxDoubleBuffer*);
 void GfxDestroyDoubleBuffer(HwndBase*);
-#endif
-
-#if OS_LINUX
-Gfx* GfxCreate(cairo_t*);
-#elif OS_DARWIN
-Gfx* GfxCreate(void*);
-#endif

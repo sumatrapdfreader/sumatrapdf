@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
 #include "base/Win.h"
 #include "gui/Dpi.h"
 
@@ -325,5 +324,3 @@ void VirtHost::SetFont(PlatformFont* f) {
         HwndSetFont(native, f->GetHFont());
     }
 }
-
-#endif

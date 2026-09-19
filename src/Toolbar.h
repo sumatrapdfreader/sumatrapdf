@@ -6,7 +6,7 @@
 // tree they live in, and when the overlay toolbar shows and hides. It reaches
 // its window through VirtHost, so it names no OS windowing API.
 //
-// Its OS_WIN section owns what is left of Win32: the native page-number edit, the
+// Its Win32 section owns what is left of Win32: the native page-number edit, the
 // messages VirtHost doesn't model (the edit's colors, dragging the frame by the
 // toolbar), eating the click that dismissed a drop-down, and the handful of
 // calls that reach the frame and canvas windows, which are not hosts yet.

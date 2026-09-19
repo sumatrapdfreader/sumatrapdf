@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#if OS_WIN
 #include "base/File.h"
 #include "base/AutoWin.h"
 #include "base/Win.h"
@@ -57,7 +56,6 @@ BOOL WINAPI WinHttpCloseHandle(HINTERNET);
 #include <winhttp.h>
 #pragma comment(lib, "winhttp.lib")
 #endif
-#endif
 
 #include "base/Http.h"
 
@@ -76,8 +74,6 @@ bool IsHttpRspOk(const HttpRsp* rsp) {
     }
     return true;
 }
-
-#if OS_WIN
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 constexpr const WCHAR* kUserAgent = L"SumatraPdfHTTP";
@@ -481,5 +477,3 @@ Exit2:
     }
     return ok;
 }
-
-#endif

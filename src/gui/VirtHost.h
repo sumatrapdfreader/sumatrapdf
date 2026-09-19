@@ -22,11 +22,7 @@ struct VirtHost;
 struct GfxDoubleBuffer;
 
 // the platform's window handle; only the platform-specific files touch it
-#if OS_WIN
 using NativeWnd = HWND;
-#else
-using NativeWnd = void*;
-#endif
 
 struct VirtHostPaintEvent {
     VirtHost* host = nullptr;
@@ -34,7 +30,6 @@ struct VirtHostPaintEvent {
     Rect clientRect;
 };
 
-#if OS_WIN
 struct VirtHostNativeMsg {
     VirtHost* host = nullptr;
     UINT msg = 0;
@@ -44,7 +39,6 @@ struct VirtHostNativeMsg {
     LRESULT res = 0;
     bool didHandle = false;
 };
-#endif
 
 struct VirtHost {
     struct CreateArgs {
@@ -69,9 +63,7 @@ struct VirtHost {
     };
 
     NativeWnd native = nullptr;
-#if OS_WIN
     GfxDoubleBuffer* gfxBuf = nullptr;
-#endif
     // the tree of controls the host shows; owned
     ILayout* layout = nullptr;
     // the virtual controls of the tree, created on demand by Relayout(); owned
@@ -90,9 +82,7 @@ struct VirtHost {
     Func0 onMouseLeave;
     // a timer started with SetTimer() fired; the argument is the timer's id
     Func1<int> onTimer;
-#if OS_WIN
     Func1<VirtHostNativeMsg*> onNativeMsg;
-#endif
 
     VirtHost() = default;
     VirtHost(const VirtHost&) = delete;

@@ -459,8 +459,6 @@ Str PixmapToTgaFormat(Pixmap* pixmap) {
 }
 } // namespace tga
 
-#if OS_WIN
-
 namespace tga {
 
 Str SerializeBitmap(HBITMAP hbmp) {
@@ -497,5 +495,3 @@ Str SerializeBitmap(HBITMAP hbmp) {
 }
 
 } // namespace tga
-
-#endif

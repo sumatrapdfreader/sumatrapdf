@@ -17496,7 +17496,6 @@ void CrashHandlerSetSettings(Str settings) {
 // so we do not need a hard link for every tool that builds CrashHandlerNoOp.
 // libsumatrapdf.dll (or the static main module) exports fz_last_uncaught_error.
 static const char* LookupUncaughtMupdfError() {
-#if OS_WIN
     using Fn = const char* (*)();
     HMODULE modules[2] = {
         GetModuleHandleW(L"libsumatrapdf.dll"),
@@ -17514,7 +17513,6 @@ static const char* LookupUncaughtMupdfError() {
             }
         }
     }
-#endif
     return nullptr;
 }
 

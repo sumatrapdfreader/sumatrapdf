@@ -7,9 +7,7 @@
 struct StrQueue;
 
 struct DirIterEntry {
-#if OS_WIN
     WIN32_FIND_DATAW* fd = nullptr;
-#endif
     Str name;
     Str filePath;
     i64 size = 0;
@@ -36,13 +34,9 @@ struct DirIter {
 
         StrVec dirsToVisit;
         TempStr currDir;
-#if OS_WIN
         WStr pattern;
         WIN32_FIND_DATAW fd{};
         HANDLE h = nullptr;
-#else
-        void* dirHandle = nullptr;
-#endif
         DirIterEntry data;
 
         iterator(const DirIter*, bool);

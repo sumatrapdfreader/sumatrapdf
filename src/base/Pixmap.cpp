@@ -2,9 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#if OS_WIN
 #include "base/Win.h"
-#endif
 
 #include "base/Pixmap.h"
 
@@ -86,8 +84,6 @@ Str PixmapToBmpFormat(const Pixmap* pixmap) {
 
     return bmpData.TakeStr();
 }
-
-#if OS_WIN
 
 Pixmap* AllocPixmapDIB(int w, int h) {
     if (w <= 0 || h <= 0) {
@@ -713,5 +709,3 @@ Pixmap* GetClipboardImageAsPixmap() {
     CloseClipboard();
     return pixmap;
 }
-
-#endif

@@ -5,12 +5,10 @@ namespace dict {
 class MapStrToInt;
 }
 
-#if OS_WIN
 namespace Gdiplus {
 class Color;
 class Graphics;
 } // namespace Gdiplus
-#endif
 
 // PlatformFont / PlatformFontStyle live in gui/PlatformFont.h and the text
 // measuring API in gui/PlatformText.h; include them before this header
@@ -312,10 +310,8 @@ struct HtmlFormatter {
     Vec<HtmlPage*>* FormatAllPages(bool skipEmptyPages = true);
 };
 
-#if OS_WIN
 void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
                   float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr);
-#endif
 
 PlatformTextMeasureMethod GetTextRenderMethod();
 void SetTextRenderMethod(PlatformTextMeasureMethod method);

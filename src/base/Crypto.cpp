@@ -3,8 +3,6 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
-
 #include <wincrypt.h>
 #include <wintrust.h>
 #include <softpub.h>
@@ -273,5 +271,3 @@ TempStr GetExecutableSignerTemp(Str exePath) {
     CertCloseStore(hStore, 0);
     return res;
 }
-
-#endif

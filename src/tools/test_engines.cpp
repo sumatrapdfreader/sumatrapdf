@@ -5,9 +5,7 @@
 #include "base/Pixmap.h"
 #include "base/Timer.h"
 
-#if OS_WIN
 #include <shlwapi.h>
-#endif
 
 #include "DocProperties.h"
 #include "gui/UIModels.h"
@@ -322,7 +320,6 @@ static bool BenchIsOnNetworkDrive(Str path) {
 // Compares path::IsOnNetworkDrive() against PathIsNetworkPathW() (what it used
 // to call) over a spread of path shapes. Windows-only: PathIsNetworkPathW and
 // the drive-letter cases are Win32.
-#if OS_WIN
 static bool CheckIsOnNetworkDrive() {
     // X: is a mapped network drive here, Q: is unmapped
     struct TestCase {
@@ -358,7 +355,6 @@ static bool CheckIsOnNetworkDrive() {
     }
     return ok;
 }
-#endif
 
 // Times file::ReadN(): reads the first 64 KB of every file in a directory,
 // which is what EngineImageDir::LoadMediabox() does per page.
@@ -458,13 +454,11 @@ int main(int argc, char** argv) {
         DestroyTempArena();
         return ok ? 0 : 1;
     }
-#if OS_WIN
     if (argc == 2 && str::Eq(argv[1], StrL("-check-netdrive"))) {
         bool ok = CheckIsOnNetworkDrive();
         DestroyTempArena();
         return ok ? 0 : 1;
     }
-#endif
     if (argc == 3 && str::Eq(argv[2], StrL("-bench-netdrive"))) {
         bool ok = BenchIsOnNetworkDrive(Str(argv[1]));
         DestroyTempArena();

@@ -17,7 +17,6 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
 #include "base/GdiPlusUtil.h"
 #include "base/Pixmap.h"
 #include "base/AutoWin.h"
@@ -401,5 +400,3 @@ void GfxGdiplus::PopClip() {
 bool GfxGdiplus::SetMirrored(bool) {
     return false;
 }
-
-#endif

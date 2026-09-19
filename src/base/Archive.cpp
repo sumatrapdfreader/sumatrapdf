@@ -3,20 +3,14 @@
 
 #include "base/Base.h"
 
-#if !OS_WIN
-#include <locale.h>
-#endif
-
 #include "base/File.h"
 #include "base/GuessFileType.h"
 
 #include "libarchive/archive.h"
 #include "libarchive/archive_entry.h"
 
-#if OS_WIN
 // TODO: set include path to ext/ dir
 #include "../../ext/a-unrar/dll.hpp"
-#endif
 #include "base/Archive.h"
 
 // we pad data read with 3 zeros for convenience. That way returned
@@ -26,21 +20,11 @@ constexpr int kZeroPaddingCount = 3;
 
 thread_local ArchiveExtractProgressCb gArchiveProgressCb{};
 
-#if OS_WIN
 FILETIME Archive::FileInfo::GetWinFileTime() const {
     FILETIME ft = {(DWORD)-1, (DWORD)-1};
     LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
     return ft;
 }
-#else
-FILETIME Archive::FileInfo::GetWinFileTime() const {
-    if (fileTime < 0) {
-        return {(DWORD)-1, (DWORD)-1};
-    }
-    u64 ns = (u64)fileTime * 1000000000ULL;
-    return {(DWORD)ns, (DWORD)(ns >> 32)};
-}
-#endif
 
 Archive::Archive() {
     a = ArenaNew();
@@ -156,7 +140,6 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
 // unfortunately libarchive's rar support is weak
 static bool gUnrarFirst = true;
 
-#if OS_WIN
 static bool TryOpenUnrarFallback(Archive* archive, Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress,
                                  bool isRar) {
     if (!isRar) {
@@ -168,11 +151,6 @@ static bool TryOpenUnrarFallback(Archive* archive, Str path, bool eagerLoad, con
     }
     return ok;
 }
-#else
-static bool TryOpenUnrarFallback(Archive*, Str, bool, const ArchiveExtractProgressCb&, bool) {
-    return false;
-}
-#endif
 
 // hintType is the result of a prior GuessFileTypeFromData() done
 // by the caller. When not Unknown we skip the internal 2 KiB sniff and
@@ -239,25 +217,12 @@ static void SetArchivePassword(struct archive* a, Str password) {
     }
 }
 
-#if OS_WIN
 static int ArchiveReadOpenFilename(struct archive* a, Str path) {
     WCHAR* pathW = CWStrTemp(path);
     return archive_read_open_filename_w(a, pathW, 10240);
 }
-#else
-static int ArchiveReadOpenFilename(struct archive* a, Str path) {
-    return archive_read_open_filename(a, CStrTemp(path), 10240);
-}
-#endif
 
 static struct archive* NewLibarchiveReader(Str password) {
-#if !OS_WIN
-    // libarchive converts archive member names through the C locale. Programs
-    // start in the ASCII-only "C" locale even when the environment requests
-    // UTF-8, which makes valid Unicode ZIP path fields come back as null.
-    static const char* locale = setlocale(LC_CTYPE, "");
-    (void)locale;
-#endif
     struct archive* a = archive_read_new();
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
@@ -566,7 +531,6 @@ Archive* OpenArchiveFromData(Str data) {
     return archive;
 }
 
-#if OS_WIN
 struct UnrarData {
     u8* d = nullptr;
     int sz = 0;
@@ -886,18 +850,3 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
     rarFilePath_ = str::Dup(a, rarPath);
     return true;
 }
-#else
-// Populate fileInfos_[fileId]->data via the respective backend; set
-// ->failed when extraction didn't produce the expected bytes.
-void Archive::LoadFileDataByIdUnrarDll(int fileId) {
-    fileInfos_[fileId]->failed = true;
-}
-
-Str Archive::GetFileDataPartByIdUnrarDll(int, int) {
-    return {};
-}
-
-bool Archive::OpenUnrarFallback(Str, bool, const ArchiveExtractProgressCb&) {
-    return false;
-}
-#endif

@@ -4,10 +4,7 @@
 #include "base/Base.h"
 #include "gui/Dpi.h"
 
-#if OS_WIN
 #include "base/Win.h"
-
-#endif
 
 #include "gui/Layout.h"
 
@@ -1820,8 +1817,6 @@ void Wrap::SetBounds(Rect bounds) {
     }
 }
 
-#if OS_WIN
-
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
     DpiSetFromHwnd(hwnd);
     dbglayout(fmt("\nLayoutAndSizeToContent() %d,%d\n", minDx, minDy));
@@ -1885,5 +1880,3 @@ void HwndSlot::SetBounds(Rect bounds) {
     }
     HwndMoveWindow(hwnd, &bounds);
 }
-
-#endif

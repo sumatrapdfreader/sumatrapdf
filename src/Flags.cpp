@@ -3,18 +3,12 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
-#if OS_WIN
 #include "base/Win.h"
-#endif
 
 #include "Settings.h"
 #include "DisplayMode.h"
-#if OS_WIN
 #include "Print.h"
-#endif
-#if OS_WIN
 #include "Translations.h"
-#endif
 #include "Flags.h"
 #include "SumatraLog.h"
 
@@ -76,7 +70,6 @@ static SeqStrings gArgNames =
 // clang-format on
 // @gen-end flags
 
-#if OS_WIN
 // consoleOnly: skip the GUI text dialog (CLI -list-printers with -console/-silent)
 void ShowPrintersDialog(bool consoleOnly) {
     str::Builder out;
@@ -101,18 +94,6 @@ void ShowPrintersDialog(bool consoleOnly) {
         ShowTextInWindowDialog(Tr("SumatraPDF - Show Printers"), ToStr(out));
     }
 }
-#else
-static TempStr GetDefaultPrinterNameTemp() {
-    return {};
-}
-
-static TempStr ResolveLnkTemp(Str path) {
-    return str::DupTemp(path);
-}
-
-// consoleOnly: skip the GUI text dialog (CLI -list-printers with -console/-silent)
-void ShowPrintersDialog(bool) {}
-#endif
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
@@ -379,7 +360,6 @@ FileArgs* ParseFileArgs(Str path) {
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-#if OS_WIN
 void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
     ReportIf(!a);
     // logf("ParseFlags: cmdLine: '%s'\n", ToUtf8Temp(cmdLine));
@@ -864,4 +844,3 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
     }
 }
-#endif

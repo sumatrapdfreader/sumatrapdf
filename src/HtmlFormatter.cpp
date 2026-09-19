@@ -13,9 +13,7 @@
 #include "gui/PlatformFont.h"
 #include "gui/PlatformText.h"
 
-#if OS_WIN
 #include "base/GdiPlusUtil.h"
-#endif
 #include "HtmlFormatter.h"
 
 /*
@@ -1531,7 +1529,6 @@ Vec<HtmlPage*>* HtmlFormatter::FormatAllPages(bool skipEmptyPages) {
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
-#if OS_WIN
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
 using Gdiplus::Graphics;
@@ -1628,7 +1625,6 @@ void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawIn
         }
     }
 }
-#endif
 
 static PlatformTextMeasureMethod gTextRenderMethod = PlatformTextMeasureMethod::Gdi;
 // static TextRenderMethod gTextRenderMethod = TextRenderMethodGdiplus;

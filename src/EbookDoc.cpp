@@ -6,9 +6,7 @@
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/HtmlTags.h"
-#if OS_WIN
 #include "base/Win.h"
-#endif
 
 #include "DocProperties.h"
 #include "DocController.h"
@@ -17,12 +15,6 @@
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
 #include "EbookDoc.h"
-
-#if !OS_WIN
-static uint GuessTextCodepage(Str, uint defVal) {
-    return defVal;
-}
-#endif
 
 static void SkipXmlPIAttrName(Str s, int& off) {
     while (off < s.len) {

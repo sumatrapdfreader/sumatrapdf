@@ -13,7 +13,6 @@ extern "C" {
 #include "../ext/mupdf/source/fitz/color-imp.h"
 }
 
-#if OS_WIN
 #include "base/File.h"
 #include "base/AutoWin.h"
 #include "base/TgaReader.h"
@@ -27,7 +26,6 @@ extern "C" {
 #pragma warning(disable : 4668)
 #endif
 #include <wincodec.h>
-#endif
 
 #include "ImageReader.h"
 
@@ -305,8 +303,6 @@ Size ImageSizeFromData(Str d) {
     }
     return result;
 }
-
-#if OS_WIN
 
 using Gdiplus::Bitmap;
 using Gdiplus::BitmapData;
@@ -691,5 +687,3 @@ RenderedBitmap* LoadRenderedBitmap(Str path) {
 
     return rendered;
 }
-
-#endif

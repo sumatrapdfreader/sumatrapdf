@@ -12,7 +12,5 @@ bool IsValidShortcutString(Str shortcut);
 bool IsGlobalShortcut(Str shortcut);
 int TrimGlobalPrefix(Str& shortcut);
 
-#if OS_WIN
 bool ParseShortcutString(Str shortcut, ACCEL& accel);
 TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a);
-#endif

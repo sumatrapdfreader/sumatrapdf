@@ -401,8 +401,6 @@ void LogConstraints(Constraints c, Str suffix);
 void Layout_UnitTests();
 #endif
 
-#if OS_WIN
-
 class DeferWinPosHelper;
 
 // MoveWindow of an HWND that is not itself an ILayout (frame canvas, lazy webview).
@@ -431,6 +429,4 @@ void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 
 #if IS_DEBUG
 void LayoutWin_UnitTests();
-#endif
-
 #endif

@@ -1119,6 +1119,7 @@
     <ClInclude Include="..\src\PerfLog.h" />
     <ClInclude Include="..\src\base\AppendStore.h" />
     <ClInclude Include="..\src\base\Archive.h" />
+    <ClInclude Include="..\src\base\AutoWin.h" />
     <ClInclude Include="..\src\base\Base.h" />
     <ClInclude Include="..\src\base\ByteReaderWriter.h" />
     <ClInclude Include="..\src\base\CmdLineArgs.h" />
@@ -1138,7 +1139,6 @@
     <ClInclude Include="..\src\base\Log.h" />
     <ClInclude Include="..\src\base\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\base\Pixmap.h" />
-    <ClInclude Include="..\src\base\AutoWin.h" />
     <ClInclude Include="..\src\base\SettingsUtil.h" />
     <ClInclude Include="..\src\base\SquareTreeParser.h" />
     <ClInclude Include="..\src\base\StrQueue.h" />

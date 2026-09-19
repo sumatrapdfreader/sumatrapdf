@@ -50,18 +50,15 @@ struct Pixmap {
     float yres = 96.0f;
     u8* data = nullptr; // pixel buffer; owned by malloc, or by hbmp when DIB-section-backed
 
-#if OS_WIN
     // When non-null, the Pixmap is backed by a GDI DIB section: `data` is its pixels and
     // the bitmap is directly blittable (BlitPixmap). Owns these handles.
     HBITMAP hbmp = nullptr;
     HANDLE hMap = nullptr; // optional file mapping backing hbmp
-#endif
 };
 
 Str PixmapToBmpFormat(const Pixmap* pixmap);
 Pixmap* GetClipboardImageAsPixmap();
 
-#if OS_WIN
 struct RenderedBitmap;
 
 // DIB-section-backed 32bpp BGRA8. Use only when this pixmap must be SelectObject'd
@@ -81,7 +78,6 @@ RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
 void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor = 0, Vec<Rect>* skipRects = nullptr);
 
 void FreePixmapNativeBitmap(Pixmap* p);
-#endif
 
 inline int PixmapBytesPerPixel(PixmapFormat fmt) {
     return fmt == PixmapFormat::BGR8 ? 3 : 4;
@@ -120,24 +116,15 @@ inline Pixmap* AllocPixmap(int w, int h, PixmapFormat fmt = PixmapFormat::BGRA8,
     return p;
 }
 
-#if !OS_WIN
-// No GDI DIB section off Windows; same heap buffer as AllocPixmap.
-inline Pixmap* AllocPixmapDIB(int w, int h) {
-    return AllocPixmap(w, h);
-}
-#endif
-
 inline void FreePixmap(Pixmap* p) {
     if (!p) {
         return;
     }
-#if OS_WIN
     if (p->hbmp) {
         FreePixmapNativeBitmap(p);
         delete p;
         return;
     }
-#endif
     free(p->data);
     delete p;
 }

@@ -14,10 +14,8 @@
 #include "base/Timer.h"
 #include "base/DirScan.h"
 
-#if OS_WIN
 #include "base/Win.h"
 #include "base/GdiPlusUtil.h"
-#endif
 
 extern "C" {
 #include <mupdf/fitz.h>
@@ -719,7 +717,6 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
 
-#if OS_WIN
     // read before DropPage() below, which can free page->pixmap, i.e. src
     bool srcHasAlpha = src->format == PixmapFormat::BGRA8;
 
@@ -767,7 +764,6 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
             }
         }
     }
-#endif
 
     // Fallback: nearest-neighbor (rotation, non-Windows, or GDI+ failure).
     Pixmap* result = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGRA8, true);
@@ -880,10 +876,6 @@ IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
 }
 
 RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
-#if !OS_WIN
-    (void)pel;
-    return nullptr;
-#else
     ReportIf(pel->GetKind() != kindPageElementImage);
     auto* ipel = (PageElementImage*)pel;
     int pageNo = ipel->pageNo;
@@ -915,7 +907,6 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
     Pixmap* pixmap = ClonePixmap(page->pixmap);
     DropPage(page, false);
     return RenderedBitmapFromPixmap(pixmap);
-#endif
 }
 
 Str EngineImages::GetImageDataForPageElement(IPageElement* pel) {
@@ -1822,9 +1813,7 @@ EngineBase* EngineImage::CreateFromFile(Str path) {
     bool ok = engine->LoadSingleFile(path);
     // decoding might run a 3rd-party WIC codec (e.g. CopyTrans HEIC) that
     // unmasks fp exceptions on this thread, which would crash later float math
-#if OS_WIN
     MaskFpExceptions();
-#endif
     if (!ok) {
         SafeEngineRelease(&engine);
         return nullptr;
@@ -1835,9 +1824,7 @@ EngineBase* EngineImage::CreateFromFile(Str path) {
 EngineBase* EngineImage::CreateFromData(Str data) {
     EngineImage* engine = new EngineImage();
     bool ok = engine->LoadFromData(data);
-#if OS_WIN
     MaskFpExceptions();
-#endif
     if (!ok) {
         SafeEngineRelease(&engine);
         return nullptr;

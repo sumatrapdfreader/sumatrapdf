@@ -9,7 +9,6 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
 #include "base/Win.h"
 #include "gui/Dpi.h"
 
@@ -67,5 +66,3 @@ void UiSetCursor(CursorId id) {
         SetCursorCached(win32Id);
     }
 }
-
-#endif

@@ -8,7 +8,6 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
 #include <commdlg.h>
 #include "gui/Dpi.h"
 
@@ -231,5 +230,3 @@ void DarkModeApplyToFrameAfterThemeChange(MainWindow* win) {
     DarkMode::setWindowMenuBarSubclass(win->hwndFrame);
     ApplyToInfotip(win);
 }
-
-#endif

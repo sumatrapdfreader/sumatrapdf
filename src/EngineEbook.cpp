@@ -26,16 +26,13 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
-#if OS_WIN
 #include "base/AutoWin.h"
 #include "base/GdiPlusUtil.h"
 #include "base/Win.h"
 #include "base/Zip.h"
-#endif
 
 #include "EngineAll.h"
 
-#if OS_WIN
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
 using Gdiplus::FontFamily;
@@ -45,7 +42,6 @@ using Gdiplus::MatrixOrderAppend;
 using Gdiplus::Ok;
 using Gdiplus::SolidBrush;
 using Gdiplus::Status;
-#endif
 
 Kind kindEngineEpub = "engineEpub";
 Kind kindEngineFb2 = "engineFb2";
@@ -175,9 +171,7 @@ class EngineEbook : public EngineBase {
     RectF pageRect;
     float pageBorder;
 
-#if OS_WIN
     void GetTransform(Matrix& m, float zoom, int rotation);
-#endif
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
     bool ExtractPageAnchors();
     TempStr ExtractFontListTemp();
@@ -287,11 +281,9 @@ bool EngineEbook::BenchLoadPage(int) {
     return true;
 }
 
-#if OS_WIN
 void EngineEbook::GetTransform(Matrix& m, float zoom, int rotation) {
     GetBaseTransform(m, ToGdipRectF(pageRect), zoom, rotation);
 }
-#endif
 
 Vec<DrawInstr>* EngineEbook::GetHtmlPage(int pageNo) {
     return GetHtmlPage(LocationFromPageNo(pageNo));
@@ -395,31 +387,6 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     Point screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
 
-#if !OS_WIN
-    EbookAbortCookie* cookie = nullptr;
-    if (args.cookie_out) {
-        cookie = new EbookAbortCookie();
-        *args.cookie_out = cookie;
-    }
-    if (cookie && cookie->abort) {
-        return nullptr;
-    }
-    Pixmap* pixmap = AllocPixmap(screen.dx, screen.dy);
-    if (!pixmap) {
-        return nullptr;
-    }
-    for (int y = 0; y < pixmap->height; y++) {
-        u8* dst = pixmap->data + (size_t)y * pixmap->stride;
-        for (int x = 0; x < pixmap->width; x++) {
-            dst[0] = 0xff;
-            dst[1] = 0xff;
-            dst[2] = 0xff;
-            dst[3] = 0xff;
-            dst += 4;
-        }
-    }
-    return pixmap;
-#else
     HANDLE hMap = nullptr;
     HBITMAP hbmp = CreateMemoryBitmap(screen.Size(), &hMap);
     HDC hDC = CreateCompatibleDC(nullptr);
@@ -460,7 +427,6 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     }
 
     return PixmapFromHBITMAP(hbmp, screen.Size(), hMap);
-#endif
 }
 
 static Rect GetInstrBbox(DrawInstr& instr, float pageBorder) {
@@ -616,7 +582,6 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
     return els;
 }
 
-#if OS_WIN
 static RenderedBitmap* getImageFromData(Str imageData) {
     HBITMAP hbmp = nullptr;
     Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(imageData));
@@ -628,13 +593,8 @@ static RenderedBitmap* getImageFromData(Str imageData) {
     delete bmp;
     return new RenderedBitmap(hbmp, size);
 }
-#endif
 
 RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
-#if !OS_WIN
-    (void)iel;
-    return nullptr;
-#else
     ReportIf(iel->GetKind() != kindPageElementImage);
     PageElementImage* el = (PageElementImage*)iel;
     int idx = el->imageID;
@@ -642,7 +602,6 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
     auto&& i = (*pageInstrs)[idx];
     ReportIf(i.type != DrawInstrType::Image);
     return getImageFromData(i.GetImage());
-#endif
 }
 
 Str EngineEbook::GetImageDataForPageElement(IPageElement* iel) {
@@ -766,7 +725,6 @@ void EngineEbook::ExtractFontListFromPage(Location loc, Vec<PlatformFont*>& seen
         }
         VecAppend(seenFonts, i.font);
 
-#if OS_WIN
         PlatformFont* font = i.font;
         FontFamily family;
         if (!font || !font->gdiFont) {
@@ -785,9 +743,6 @@ void EngineEbook::ExtractFontListFromPage(Location loc, Vec<PlatformFont*>& seen
         }
         TempStr fontName = ToUtf8Temp(fontNameW);
         AppendIfNotExists(&fonts, fontName);
-#else
-        AppendIfNotExists(&fonts, i.font->GetName());
-#endif
     }
 }
 
@@ -920,7 +875,6 @@ EngineBase* EngineEpub::Clone() {
 
 bool EngineEpub::Load(Str fileName) {
     SetFilePath(fileName);
-#if OS_WIN
     if (dir::Exists(fileName)) {
         // load uncompressed documents as recompressed ZIP data
         Str data = ZipDirToData(fileName, true);
@@ -931,7 +885,6 @@ bool EngineEpub::Load(Str fileName) {
         str::Free(data);
         return ok;
     }
-#endif
     doc = EpubDoc::CreateFromFile(fileName);
     return FinishLoading();
 }

@@ -7,11 +7,7 @@
 struct Gfx;
 enum class CursorId;
 
-#if OS_WIN
 using NativeWnd = HWND;
-#else
-using NativeWnd = void*;
-#endif
 
 struct PlatformWindow;
 

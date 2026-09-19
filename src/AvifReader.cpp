@@ -5,9 +5,7 @@
 #include "base/Exif.h"
 #include "base/Pixmap.h"
 
-#if OS_WIN
 #include "base/GdiPlusUtil.h"
-#endif
 
 #ifndef NO_AVIF
 #include "heic.h"
@@ -111,12 +109,10 @@ Pixmap* PixmapFromAvifData(Str d) {
             ExifParser parser;
             if (parser.Parse(Str((const char*)exif, (int)n))) {
                 ApplyExifDensity(px, parser);
-#if OS_WIN
                 i64 orient = 0;
                 if (parser.GetIntProp(ExifProp::Orientation, &orient)) {
                     px = PixmapApplyExifOrientation(px, (int)orient);
                 }
-#endif
             }
             heic_free(ctx, exif);
         }

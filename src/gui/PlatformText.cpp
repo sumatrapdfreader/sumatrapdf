@@ -4,10 +4,8 @@
 #include "base/Base.h"
 
 #include "gui/PlatformFont.h"
-#if OS_WIN
 #include "base/GdiPlusUtil.h"
 #include "base/Win.h"
-#endif
 
 #include "gui/PlatformText.h"
 
@@ -102,29 +100,14 @@ struct StubTextRender : PlatformTextRender {
     void Draw(Str, RectF, bool) override {}
 };
 
-#if OS_WIN
-// defined in the OS_WIN section below
 PlatformTextRender* CreateNativeTextRender(PlatformTextMeasureMethod method);
-#endif
 
 PlatformTextRender* CreatePlatformTextRender(PlatformTextMeasureMethod method) {
-#if OS_WIN
     if (method != PlatformTextMeasureMethod::Stub) {
         return CreateNativeTextRender(method);
     }
-#else
-    (void)method;
-#endif
     return new StubTextRender();
 }
-
-#if !OS_WIN
-void PlatformFontDestroy() {
-    // nothing is allocated lazily by the stub renderer
-}
-#endif
-
-#if OS_WIN
 
 /*
 TODO:
@@ -657,5 +640,3 @@ PlatformTextRender* CreateNativeTextRender(PlatformTextMeasureMethod method) {
     res->ownsGfx = true;
     return res;
 }
-
-#endif

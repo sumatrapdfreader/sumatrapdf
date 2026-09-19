@@ -392,12 +392,8 @@ void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc
         VecAppend(threads, StartThread(fn, StrL("MdTocParse")));
     }
     for (ThreadHandle h : threads) {
-#if OS_WIN
         WaitForSingleObject(h, INFINITE);
         SafeCloseThreadHandle(&h);
-#else
-        SafeCloseThreadHandle(&h);
-#endif
     }
 }
 

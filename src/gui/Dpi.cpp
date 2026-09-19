@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
 #include "base/WinDynCalls.h"
 #include "base/AutoWin.h"
 #include "gui/Dpi.h"
@@ -259,5 +258,3 @@ int DpiGetSystemMetrics(int index, int dpi) {
 int DpiGetSystemMetrics(int index) {
     return DpiGetSystemMetrics(index, DpiGet());
 }
-
-#endif

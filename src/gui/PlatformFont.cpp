@@ -3,12 +3,10 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
 #include "base/GdiPlusUtil.h"
 #include "base/AutoWin.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#endif
 
 #include "gui/PlatformFont.h"
 
@@ -80,7 +78,6 @@ void PlatformFontShutdown() {
     PlatformFontShutdownNative();
 }
 
-#if OS_WIN
 PlatformFont* GetPlatformFontForNative(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId) {
     return GetPlatformFontInternal(name, sizePt, style, nativeId);
 }
@@ -442,5 +439,3 @@ int PlatformFontLineHeight(PlatformFont* font) {
     GetTextMetricsW(dc, &tm);
     return (int)(tm.tmHeight + tm.tmExternalLeading);
 }
-
-#endif

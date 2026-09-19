@@ -2,9 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#if OS_WIN
 #include "base/AutoWin.h"
-#endif
 
 #include "base/File.h"
 
@@ -20,7 +18,7 @@ TempStr ToAbsolutePathTemp(Str path);
 namespace path {
 
 bool IsSep(char c) {
-    return c == kPathSepChar || (OS_WIN && c == '/');
+    return c == kPathSepChar || c == '/';
 }
 
 bool IsDriveRoot(Str path) {
@@ -34,7 +32,7 @@ bool IsDriveRoot(Str path) {
 }
 
 static bool IsSep(WCHAR c) {
-    return c == kPathSepWChar || (OS_WIN && c == L'/');
+    return c == kPathSepWChar || c == L'/';
 }
 
 static void SkipLeadingPathSep(Str& path) {
@@ -112,11 +110,7 @@ TempStr JoinTemp(Str dir, Str name, Str name2) {
 }
 
 TempStr ToOSTemp(Str path) {
-#if OS_WIN
     return str::ReplaceTemp(path, StrL("/"), StrL("\\"));
-#else
-    return str::ReplaceTemp(path, StrL("\\"), StrL("/"));
-#endif
 }
 
 Str Join(Arena* a, Str dir, Str name) {
@@ -307,73 +301,9 @@ namespace file {
 
 thread_local CopyProgressCb gFileCopyProgressCb;
 
-#if !OS_WIN
-// Windows has its own ReadFileWithArena() below that skips the CRT
-Str ReadFileWithArena(Str filePath, Arena* a) {
-    char* d = nullptr;
-    int res;
-    int size = 0;
-    FILE* fp = OpenFILE(filePath);
-    if (!fp) {
-        return {};
-    }
-    AutoCall closeFile(fclose, fp);
-    res = fseek(fp, 0, SEEK_END);
-    if (res != 0) {
-        return {};
-    }
-    long fileSize = ftell(fp);
-    size_t nRead = 0;
-    if (fileSize < 0 || fileSize > INT_MAX - kZeroPaddingCount) {
-        goto Error;
-    }
-    size = (int)fileSize;
-    d = AllocArray<char>(a, size + kZeroPaddingCount);
-    if (!d) {
-        goto Error;
-    }
-    res = fseek(fp, 0, SEEK_SET);
-    if (res != 0) {
-        goto Error;
-    }
-
-    nRead = fread((void*)d, 1, size, fp);
-    if (nRead != (size_t)size) {
-        int err = ferror(fp);
-        int isEof = feof(fp);
-        logf("ReadFileWithArena: fread() failed, path: '%s', size: %d, nRead: %d, err: %d, isEof: %d\n", filePath,
-             (int)size, (int)nRead, err, isEof);
-        ReportIf(!(isEof || (err != 0)));
-        goto Error;
-    }
-
-    return Str(d, size);
-Error:
-    Free(a, (void*)d);
-    return {};
-}
-#endif
-
 Str ReadFile(Str path) {
     return ReadFileWithArena(path, nullptr);
 }
-
-#if !OS_WIN
-// Windows has its own ReadN() below that skips the CRT
-int ReadN(Str path, u8* buf, size_t toRead) {
-    FILE* fp = OpenFILE(path);
-    if (!fp) {
-        return -1;
-    }
-    AutoCall closeFile(fclose, fp);
-    ZeroMemory(buf, toRead);
-    size_t nRead = fread((void*)buf, 1, toRead, fp);
-    if (nRead == 0 && ferror(fp)) {
-        return -1;
-    }
-    return (int)nRead;
-}
-#endif
 
 bool StartsWithN(Str path, Str s) {
     u8* buf = AllocArrayTemp<u8>(s.len);
@@ -393,8 +323,6 @@ bool StartsWith(Str path, Str s) {
 } // namespace file
 
 namespace dir {
-
-// CreateAll is platform-specific (the OS_WIN section below / File_posix.cpp).
 
 // errOut (optional) gets the OS error when creation fails, so callers can log why.
 // 0 there means the create itself reported success but the directory wasn't there
@@ -566,8 +494,6 @@ Str SmartResolveDirectory(Str dir) {
 
     return ToAbsolutePathTemp(result);
 }
-
-#if OS_WIN
 
 // Defined in Win.cpp; avoid pulling all of Win.h into this file.
 void LogLastError(DWORD err = 0);
@@ -2108,5 +2034,3 @@ TempStr ToAbsolutePathTemp(Str path) {
     }
     return path;
 }
-
-#endif

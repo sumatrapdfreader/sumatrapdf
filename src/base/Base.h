@@ -1,26 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-/* OS_DARWIN - Any Darwin-based OS, including Mac OS X and iPhone OS */
-#ifdef __APPLE__
-#define OS_DARWIN 1
-#else
-#define OS_DARWIN 0
-#endif
-
-/* OS_LINUX - Linux */
-#ifdef __linux__
-#define OS_LINUX 1
-#else
-#define OS_LINUX 0
-#endif
-
-#ifdef _WIN32
-#define OS_WIN 1
-#else
-#define OS_WIN 0
-#endif
-
 // https://learn.microsoft.com/en-us/cpp/preprocessor/predefined-macros
 #if defined(_M_IX86) || defined(__i386__)
 #define IS_INTEL_32 1
@@ -36,13 +16,6 @@
 #define IS_ARM_64 1
 #else
 #error "unsupported arch"
-#endif
-
-/* OS_POSIX - Any POSIX-like system */
-#if OS_DARWIN || OS_LINUX || defined(unix) || defined(__unix) || defined(__unix__)
-#define OS_POSIX 1
-#else
-#define OS_POSIX 0
 #endif
 
 #ifdef _MSC_VER
@@ -120,19 +93,11 @@
 #include <new>       // for placement new
 #include <algorithm> // for std::min, std::max
 #include <utility>   // for std::forward
-#if OS_POSIX
-// pthread.h first: glibc mutex structs have a field named __unused
-#include <pthread.h>
-#include <strings.h>
-#endif
-
-// after system headers so we don't rewrite pthread's __unused field
 #define __unused [[maybe_unused]]
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#if OS_WIN
 #define NOMINMAX
 #include <winsock2.h> // must include before <windows.h>
 #include <windows.h>
@@ -171,58 +136,6 @@
 #undef min
 #undef max
 
-#else
-using BYTE = uint8_t;
-using WORD = uint16_t;
-using DWORD = uint32_t;
-using DWORD64 = uint64_t;
-using UINT = unsigned int;
-using UINT_PTR = uintptr_t;
-using LONG = int32_t;
-using BOOL = int;
-using WCHAR = wchar_t;
-using WPARAM = uintptr_t;
-using LPARAM = intptr_t;
-using LRESULT = intptr_t;
-using LCID = uint32_t;
-
-struct HWND__;
-using HWND = HWND__*;
-struct HDC__;
-using HDC = HDC__*;
-struct HFONT__;
-using HFONT = HFONT__*;
-struct HIMAGELIST__;
-using HIMAGELIST = HIMAGELIST__*;
-struct HTREEITEM__;
-using HTREEITEM = HTREEITEM__*;
-struct HBITMAP__;
-using HBITMAP = HBITMAP__*;
-struct HBRUSH__;
-using HBRUSH = HBRUSH__*;
-using LPWSTR = WCHAR*;
-
-struct EXCEPTION_POINTERS;
-struct MINIDUMP_EXCEPTION_INFORMATION;
-
-struct FILETIME {
-    DWORD dwLowDateTime;
-    DWORD dwHighDateTime;
-};
-
-constexpr UINT CP_ACP = 0;
-constexpr UINT CP_UTF8 = 65001;
-constexpr LCID LOCALE_USER_DEFAULT = 0;
-constexpr LCID LOCALE_INVARIANT = 0;
-#define __TEXT(s) L##s
-#define TEXT(s) __TEXT(s)
-constexpr int MAX_PATH = 4096;
-constexpr int URLZONE_INVALID = -1;
-constexpr int URLZONE_INTERNET = 3;
-
-#define ZeroMemory(Destination, Length) memset((Destination), 0, (Length))
-#endif
-
 using i8 = int8_t;
 using u8 = uint8_t;
 using i16 = int16_t;
@@ -233,17 +146,10 @@ using i64 = int64_t;
 using u64 = uint64_t;
 using uint = unsigned int;
 
-#if OS_WIN
 using AtomicBool = volatile LONG;
 using AtomicInt = volatile LONG;
 using AtomicRefCount = volatile LONG;
 using AtomicPtr = void* volatile;
-#else
-using AtomicBool = volatile int;
-using AtomicInt = volatile int;
-using AtomicRefCount = volatile int;
-using AtomicPtr = void* volatile;
-#endif
 
 bool AtomicBoolGet(AtomicBool* p);
 void AtomicBoolSet(AtomicBool* p, bool v);
@@ -259,10 +165,6 @@ int AtomicRefCountDec(AtomicRefCount* v);
 void* AtomicPtrGet(AtomicPtr* p);
 void AtomicPtrSet(AtomicPtr* p, void* v);
 void* AtomicPtrExchange(AtomicPtr* p, void* v);
-
-#if !OS_WIN
-u64 GetTickCount64();
-#endif
 
 i64 UnixTimeMsNow();
 
@@ -949,10 +851,8 @@ struct Rect {
     int dy = 0;
 
     Rect() = default;
-#if OS_WIN
     Rect(RECT r);           // NOLINT
     Rect(Gdiplus::RectF r); // NOLINT
-#endif
     Rect(int x, int y, int dx, int dy);
     Rect(const Point pt, const Size sz) : x(pt.x), y(pt.y), dx(sz.dx), dy(sz.dy) {}
     Rect(Point min, Point max);
@@ -990,10 +890,8 @@ struct RectF {
 
     RectF() = default;
 
-#if OS_WIN
     explicit RectF(RECT r);
     RectF(Gdiplus::RectF r); // NOLINT
-#endif
     RectF(float x, float y, float dx, float dy);
     RectF(PointF pt, SizeF size);
     RectF(PointF min, PointF max);
@@ -1029,7 +927,6 @@ Rect ToRect(const RectF& r);
 // conversions to and from the Win32 / GDI+ geometry types. Those types only
 // exist on Windows, so the whole group is Windows-only; portable code uses the
 // types above
-#if OS_WIN
 int RectDx(const RECT& r);
 int RectDy(const RECT& r);
 
@@ -1045,13 +942,11 @@ Gdiplus::RectF ToGdipRectF(const Rect& r);
 
 Gdiplus::Rect ToGdipRect(const RectF& r);
 Gdiplus::RectF ToGdipRectF(const RectF& r);
-#endif
 
 int NormalizeRotation(int rotation);
 
 //--- Thread.h ------------------------------------------------------------------
 
-#if OS_WIN
 using ThreadId = DWORD;
 using ThreadHandle = HANDLE;
 
@@ -1087,53 +982,6 @@ struct RecursiveMutex {
     void Unlock() { LeaveCriticalSection(&lock); }
     bool TryLock() { return TryEnterCriticalSection(&lock); }
 };
-#else
-using ThreadId = u64;
-
-struct ThreadHandlePosix;
-using ThreadHandle = ThreadHandlePosix*;
-
-struct Mutex {
-    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-
-    Mutex() = default;
-    ~Mutex() = default;
-
-    void Lock() { pthread_mutex_lock(&lock); }
-    void Unlock() { pthread_mutex_unlock(&lock); }
-    bool TryLock() { return pthread_mutex_trylock(&lock) == 0; }
-};
-
-struct ConditionVariable {
-    pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-
-    ConditionVariable() = default;
-    ~ConditionVariable() { pthread_cond_destroy(&cond); }
-
-    void Wait(Mutex* mutex) { pthread_cond_wait(&cond, &mutex->lock); }
-    void Wake() { pthread_cond_signal(&cond); }
-    void WakeAll() { pthread_cond_broadcast(&cond); }
-};
-
-struct RecursiveMutex {
-    pthread_mutex_t lock;
-
-    RecursiveMutex() {
-        pthread_mutexattr_t attr;
-        pthread_mutexattr_init(&attr);
-        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-        pthread_mutex_init(&lock, &attr);
-        pthread_mutexattr_destroy(&attr);
-    }
-    ~RecursiveMutex() { pthread_mutex_destroy(&lock); }
-
-    void Lock() { pthread_mutex_lock(&lock); }
-    void Unlock() { pthread_mutex_unlock(&lock); }
-    bool TryLock() { return pthread_mutex_trylock(&lock) == 0; }
-};
-
-ThreadId GetCurrentThreadId();
-#endif
 
 struct AutoUnlockMutex {
     Mutex* mutex;
@@ -1154,7 +1002,6 @@ void SleepInMs(int ms);
 
 void RunAsync(const Func0&, Str threadName = {});
 ThreadHandle StartThread(const Func0&, Str threadName = {});
-#if OS_WIN
 inline bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
     ThreadHandle h = *hPtr;
     if (!h || h == INVALID_HANDLE_VALUE) {
@@ -1165,9 +1012,6 @@ inline bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
     *hPtr = nullptr;
     return !!ok;
 }
-#else
-bool SafeCloseThreadHandle(ThreadHandle*);
-#endif
 
 extern AtomicInt gDangerousThreadCount;
 bool AreDangerousThreadsPending();
@@ -2671,11 +2515,7 @@ AutoCall(Result (*)(Arg1, Arg2), Arg1, Arg2) -> AutoCall<Result (*)(Arg1, Arg2)>
 //--- Color.h ------------------------------------------------------------------
 
 // Win32 COLORREF layout (0x00bbggrr); typically no alpha
-#if OS_WIN
 using Color = COLORREF;
-#else
-using Color = uint32_t;
-#endif
 
 // a "unset" state for Color value. technically all colors are valid
 // this one is hopefully not used in practice
@@ -2749,11 +2589,9 @@ bool IsNearBlack(Color c);
 DWORD PremultiplyPixel(Color c, u8 alpha);
 
 // GDI+ only exists on Windows; portable code works with Color
-#if OS_WIN
 Gdiplus::Color Unblend(Color c, u8 alpha);
 Gdiplus::Color GdiRgbFromColor(Color c);
 Gdiplus::Color GdiRgbaFromColor(Color c);
-#endif
 
 constexpr Color RgbToColor(Color rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);

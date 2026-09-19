@@ -26,17 +26,7 @@ static bool IsAsciiAlnum(WCHAR c) {
 // towlower() only folds ASCII, so accented dictionary words ("sección",
 // "capítulo") would never match all-caps headings ("SECCIÓN 2").
 static WCHAR FoldCaseW(WCHAR c) {
-#if OS_WIN
     return (WCHAR)(uintptr_t)CharLowerW((LPWSTR)(uintptr_t)c);
-#else
-    if (c >= L'A' && c <= L'Z') {
-        return c + 32;
-    }
-    if (c >= 0x00C0 && c <= 0x00DE && c != 0x00D7) {
-        return c + 32;
-    }
-    return (WCHAR)towlower(c);
-#endif
 }
 
 // Caption / heading keyword tables, \0-separated utf8 strings. Each entry

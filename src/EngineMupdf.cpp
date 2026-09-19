@@ -3,23 +3,17 @@
 
 #include "base/Base.h"
 #include "base/Archive.h"
-#if OS_WIN
 #include "base/AutoWin.h"
-#endif
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Pixmap.h"
-#if OS_WIN
 #include "base/Win.h"
-#endif
 #include "base/Timer.h"
 #include "base/UITask.h"
 
 extern "C" {
 #include <mupdf/pdf.h>
-#if OS_WIN
 #include "mupdf/pkcs7-windows.h"
-#endif
 #include "../ext/mupdf/source/fitz/color-imp.h"
 }
 
@@ -65,9 +59,7 @@ float EngineMupdfSetEbookLayoutAspect(float dyOverDx) {
 }
 
 // in mupdf_load_system_font.c
-#if OS_WIN
 extern "C" void install_load_windows_font_funcs(fz_context* ctx);
-#endif
 
 static AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
     return (AnnotationType)tp;
@@ -834,17 +826,10 @@ static fz_stream* FzOpenOrReadFile(fz_context* ctx, Str path) {
             return stm;
         }
     }
-#if OS_WIN
     WCHAR* pathW = CWStrTemp(path);
     fz_try(ctx) {
         stm = fz_open_file_w(ctx, pathW);
     }
-#else
-    char* pathZ = CStrTemp(path);
-    fz_try(ctx) {
-        stm = fz_open_file(ctx, pathZ);
-    }
-#endif
     fz_catch(ctx) {
         stm = nullptr;
         fz_report_error(ctx);
@@ -1652,7 +1637,6 @@ static LinkRectList* LinkifyText(Utf8PageText pageText, Rect* coords) {
 }
 
 // try to produce an 8-bit palette for saving some memory
-#if OS_WIN
 static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
     int w = pixmap->w;
     int h = pixmap->h;
@@ -1758,7 +1742,6 @@ static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
     }
     return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
-#endif
 
 // had to create a copy of fz_convert_pixmap to ensure we always get the alpha
 static fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
@@ -1792,7 +1775,6 @@ static fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspac
     return cvt;
 }
 
-#if OS_WIN
 // preserveAlpha: palettizing drops the alpha channel, so skip it when the
 // caller needs transparent holes to composite over the canvas (issue #1809).
 static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap, bool preserveAlpha = false) {
@@ -1872,45 +1854,9 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap, b
     // (and in the latter case retry using smaller target rectangles)
     return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
-#endif
 
 static Pixmap* NewPixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pixmap, bool preserveAlpha = false) {
-#if OS_WIN
     return PixmapFromRenderedBitmap(NewRenderedFzPixmap(ctx, pixmap, preserveAlpha));
-#else
-    fz_pixmap* bgrPixmap = nullptr;
-    fz_var(bgrPixmap);
-
-    fz_try(ctx) {
-        bgrPixmap = FzConvertPixmap2(ctx, pixmap, fz_device_bgr(ctx), nullptr, nullptr, fz_default_color_params, 1);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        return nullptr;
-    }
-    if (!bgrPixmap || !bgrPixmap->samples) {
-        if (bgrPixmap) {
-            fz_drop_pixmap(ctx, bgrPixmap);
-        }
-        return nullptr;
-    }
-
-    Pixmap* res = AllocPixmap(bgrPixmap->w, bgrPixmap->h, PixmapFormat::BGRA8, false);
-    if (res) {
-        res->xres = (float)bgrPixmap->xres;
-        res->yres = (float)bgrPixmap->yres;
-        u8* dst = res->data;
-        u8* src = bgrPixmap->samples;
-        size_t rowBytes = (size_t)bgrPixmap->w * 4;
-        for (int y = 0; y < bgrPixmap->h; y++) {
-            memcpy(dst, src, rowBytes);
-            dst += res->stride;
-            src += bgrPixmap->stride;
-        }
-    }
-    fz_drop_pixmap(ctx, bgrPixmap);
-    return res;
-#endif
 }
 
 static TocItem* NewTocItemWithDestination(Arena* arena, TocItem* parent, Str title, IPageDestination* dest) {
@@ -3684,9 +3630,7 @@ EngineMupdf::EngineMupdf() {
     }
     InstallFitzErrorCallbacks(this, _ctx);
 
-#if OS_WIN
     install_load_windows_font_funcs(_ctx);
-#endif
     InstallEmbeddedFontLoader();
     fz_register_document_handlers(_ctx);
 }
@@ -4454,9 +4398,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     }
     // a 3rd-party DLL might have unmasked fp exceptions on this thread, which
     // would crash mupdf on benign NaN comparisons e.g. in pdf_resolve_link_dest()
-#if OS_WIN
     MaskFpExceptions();
-#endif
     auto* ctx = Ctx();
 
 #if 0
@@ -4625,7 +4567,6 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         ok = fz_authenticate_password(ctx, _doc, pwdA.s);
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
-#if OS_WIN
         if (!ok) {
             // TODO: this is only part of SASLprep
             TempStr normalized = NormalizeString(pwd, 5 /* NormalizationKC */);
@@ -4634,17 +4575,14 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
                 ok = fz_authenticate_password(ctx, _doc, pwdA.s);
             }
         }
-#endif
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
         // note: such passwords aren't portable when stored as Unicode text
-#if OS_WIN
         if (!ok && GetACP() != 1252) {
             TempStr pwd_ansi = pwdA;
             TempWStr pwdCp1252 = strconv::StrCPToWStrTemp(pwd_ansi, 1252);
             pwdA = ToUtf8Temp(pwdCp1252);
             ok = fz_authenticate_password(ctx, _doc, pwdA.s);
         }
-#endif
         if (ok) {
             str::ReplaceWithCopy(&pdfPassword, pwdA);
         }
@@ -7567,17 +7505,12 @@ bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) 
 }
 
 RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {
-#if OS_WIN
     ReportIf(kindPageElementImage != ipel->GetKind());
     auto* pel = (PageElementImage*)ipel;
     auto r = pel->rect;
     int pageNo = pel->loc.IsValid() ? PageNoFromLocation(pel->loc) : pel->pageNo;
     int imageID = pel->imageID;
     return GetPageImage(pageNo, r, imageID);
-#else
-    (void)ipel;
-    return nullptr;
-#endif
 }
 
 // PDF-embedded CMYK JPEG uses PDF polarity (0 = no ink). A standalone JPEG
@@ -7698,12 +7631,6 @@ fz_matrix EngineMupdf::viewctm(fz_page* page, float zoom, int rotation) const {
 }
 
 RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
-#if !OS_WIN
-    (void)pageNo;
-    (void)rect;
-    (void)imageIdx;
-    return nullptr;
-#else
     auto* ctx = Ctx();
 
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
@@ -7787,7 +7714,6 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     }
 
     return bmp;
-#endif
 }
 
 static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
@@ -7999,16 +7925,12 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         }
 
         info.Reset();
-#if OS_WIN
         if (name.s[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name.s, -1, nullptr, 0)) {
             TempStr s = strconv::ToMultiByteTemp(name, 936, CP_UTF8);
             info.Append(s);
         } else {
             info.Append(name);
         }
-#else
-        info.Append(name);
-#endif
         if (len(encoding) > 0 || len(type) > 0 || embedded) {
             info.Append(StrL(" ("));
             if (len(type) > 0) {
@@ -8171,7 +8093,6 @@ static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
     return str::DupTemp(Str(buf, (int)((size_t)n - 1)));
 }
 
-#if OS_WIN
 static bool (*gEutlLookupFn)(const u8* der, int derLen) = nullptr;
 
 void SetEutlLookupFn(bool (*fn)(const u8* der, int derLen)) {
@@ -8562,13 +8483,11 @@ PdfSigCert* EngineMupdfGetSignatureCerts(EngineBase* engine) {
 void FreePdfSigCerts(PdfSigCert* certs) {
     ListDelete(certs);
 }
-#endif
 
 static TempStr GetSignatures(EngineMupdf* e) {
     // pdf signatures (signed form widgets). Walks each page's widget set;
     // for each signature widget, pulls signer DN + cert/digest verdict via
     // the Windows CryptoAPI pdf_pkcs7_verifier.
-#if OS_WIN
     auto pdfdoc = e->pdfdoc;
     if (!pdfdoc) return {};
     auto ctx = e->Ctx();
@@ -8607,7 +8526,6 @@ static TempStr GetSignatures(EngineMupdf* e) {
         fz_report_error(ctx);
     }
     return len(sigs) > 0 ? str::DupTemp(ToStr(sigs)) : TempStr{};
-#endif
 }
 
 void EngineMupdf::GetProperties(Props& propsOut) {

@@ -18,9 +18,7 @@ License: GPLv3 */
 #include "DarkMode.h"
 #include "Translations.h"
 #include "PdfDarkMode.h"
-#if OS_WIN
 #include "base/Win.h"
-#endif
 
 #include "Theme.h"
 
@@ -1228,8 +1226,6 @@ bool ThemeColorizeControls() {
     return !IsMenuFontSizeDefault();
 }
 
-#if OS_WIN
-
 // The colors Windows draws its own UI in. The default theme defers to them so
 // the app follows the system appearance, and every theme defers to them in high
 // contrast mode, where the user's palette is the whole point. The rest of the
@@ -1262,5 +1258,3 @@ Color SysHighlightBgColor() {
 Color SysHighlightTextColor() {
     return GetSysColor(COLOR_HIGHLIGHTTEXT);
 }
-
-#endif

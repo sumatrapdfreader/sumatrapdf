@@ -1010,11 +1010,7 @@ void StrTest() {
     }
 
     utassert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));
-#if OS_WIN
     utassert(iswdigit(L'\u0660') && !str::IsDigit(L'\xB2'));
-#else
-    utassert(!str::IsDigit(L'\xB2'));
-#endif
 
     utassert(str::CmpNatural(StrL(".hg"), StrL("2.pdf")) < 0);
     utassert(str::CmpNatural(StrL("100.pdf"), StrL("2.pdf")) > 0);

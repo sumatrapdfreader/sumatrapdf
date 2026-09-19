@@ -5,9 +5,7 @@
 #include "base/File.h"
 #include "base/StrQueue.h"
 
-#if OS_WIN
 #include "base/Win.h"
-#endif
 
 #include "base/DirScan.h"
 
@@ -20,9 +18,7 @@ DirIter::iterator::iterator(const DirIter* di, bool didFinish) {
     this->di = di;
     this->dirsToVisit.Append(di->dir);
     this->didFinish = didFinish;
-#if OS_WIN
     this->data.fd = &this->fd;
-#endif
     AdvanceDirIter(this, 1);
 }
 
@@ -40,10 +36,8 @@ DirIter::iterator& DirIter::iterator::operator=(const iterator& that) {
     this->dirsToVisit = that.dirsToVisit;
     this->currDir = that.currDir;
     this->data = that.data;
-#if OS_WIN
     this->fd = that.fd;
     this->data.fd = &this->fd;
-#endif
     return *this;
 }
 
@@ -590,8 +584,6 @@ static void DirScanWorkerThread(DirScanWorker* w) {
     }
 }
 
-#if OS_WIN
-
 static i64 GetWinFileSize(WIN32_FIND_DATAW* fd) {
     ULARGE_INTEGER ul;
     ul.HighPart = fd->nFileSizeHigh;
@@ -922,5 +914,3 @@ void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
     MemoryBarrier();
     dv->len = temp.len;
 }
-
-#endif

@@ -9,7 +9,6 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
 #include "base/WinDynCalls.h"
 #include "base/File.h"
 #include "base/AutoWin.h"
@@ -645,5 +644,3 @@ void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {
 }
 
 } // namespace dbghelp
-
-#endif

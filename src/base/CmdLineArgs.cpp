@@ -3,9 +3,7 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
 #include "base/File.h"
-#endif
 
 #include "base/CmdLineArgs.h"
 
@@ -58,8 +56,6 @@ bool CouldBeArg(Str s) {
     return (c == '-') || (c == '/');
 }
 
-#if OS_WIN
-
 StrNode* ParseCmdLine(WStr cmdLine) {
     StrNode* root = nullptr;
     StrNode* tail = nullptr;
@@ -86,5 +82,3 @@ StrNode* ParseCmdLine(Str cmdLine) {
     TempWStr s = ToWStrTemp(cmdLine);
     return ParseCmdLine(s);
 }
-
-#endif

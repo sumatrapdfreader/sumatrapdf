@@ -51,10 +51,8 @@ struct PlatformTextRender {
 // is nothing to initialize first
 PlatformTextRender* CreatePlatformTextRender(PlatformTextMeasureMethod method);
 
-#if OS_WIN
 // draws into a Graphics owned by the caller
 PlatformTextRender* CreateGdiplusTextRender(Gdiplus::Graphics* gfx);
-#endif
 
 // frees what measuring text allocated along the way. Only worth calling at
 // shutdown; measuring after it just allocates again

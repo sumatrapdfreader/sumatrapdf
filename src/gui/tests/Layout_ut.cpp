@@ -2,9 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#if OS_WIN
 #include "base/Win.h"
-#endif
 
 #include "gui/Layout.h"
 
@@ -373,8 +371,6 @@ void Layout_UnitTests() {
     Layout_TestHBoxRtl();
 }
 
-#if OS_WIN
-
 void LayoutWin_UnitTests() {
     // A slot without an HWND still records its bounds for lazily-created windows.
     HwndSlot slot(nullptr, 30, 20);
@@ -384,5 +380,3 @@ void LayoutWin_UnitTests() {
     utassert(slot.lastBounds.x == 5 && slot.lastBounds.y == 6);
     utassert(slot.lastBounds.dx == 40 && slot.lastBounds.dy == 41);
 }
-
-#endif

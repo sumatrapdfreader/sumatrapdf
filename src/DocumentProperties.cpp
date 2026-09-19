@@ -33,9 +33,7 @@
 #include "DarkMode.h"
 #include "EutlTrust.h"
 
-#if OS_WIN
 #include <wincrypt.h>
-#endif
 #include "DocumentProperties.h"
 
 constexpr int kButtonPadding = 8;
@@ -49,9 +47,7 @@ struct PropertiesWnd : WindowBase {
     PlatformFont* propsFont = nullptr;
     str::Builder propsText;
     Point initialPos;
-#if OS_WIN
     PdfSigCert* certs = nullptr;
-#endif
 
     ~PropertiesWnd() override;
     bool Create(HWND parent);
@@ -792,13 +788,10 @@ void PropertiesWnd::CopyToClipboard(VirtMouseEvent*) {
 }
 
 PropertiesWnd::~PropertiesWnd() {
-#if OS_WIN
     FreePdfSigCerts(certs);
     certs = nullptr;
-#endif
 }
 
-#if OS_WIN
 // CryptUIDlgViewContext is in cryptui.dll. MSVC can pull that via
 // #pragma comment; mingw-w64 often has no import lib, so load it here.
 static void ViewCertDer(HWND parent, Str der) {
@@ -958,7 +951,6 @@ void PropertiesWnd::UpdateEutl(VirtMouseEvent*) {
     auto fn = MkFunc0<EutlUpdateJob>(EutlUpdateThread, job);
     RunAsync(fn, StrL("EutlUpdate"));
 }
-#endif
 
 void PropertiesWnd::SetPropsText(Str text) {
     if (!editProps) {
@@ -1140,7 +1132,6 @@ bool PropertiesWnd::Create(HWND parent) {
         btnCopyToClipboard = NewThemedButton(hwnd, Tr("Copy To Clipboard"), GetAppFont(), true);
         btnCopyToClipboard->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::CopyToClipboard>(this);
         btnRow->AddChild(new Padding(btnCopyToClipboard, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
-#if OS_WIN
         if (certs) {
             btnViewCert = NewThemedButton(hwnd, Tr("View Certificate..."), GetAppFont(), true);
             btnViewCert->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::ViewCertificate>(this);
@@ -1149,7 +1140,6 @@ bool PropertiesWnd::Create(HWND parent) {
             btnUpdateEutl->onClick = MkMethod1<PropertiesWnd, VirtMouseEvent*, &PropertiesWnd::UpdateEutl>(this);
             btnRow->AddChild(new Padding(btnUpdateEutl, DpiScaledInsets(kButtonPadding, 0, 0, 0)));
         }
-#endif
         vbox->AddChild(btnRow);
     }
 
@@ -1222,16 +1212,12 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     VecAppend(gPropertiesWindows, wnd);
     DisplayModel* dm = ctrl->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-#if OS_WIN
     if (EngineMupdfIsPdf(engine)) {
         EutlRegisterLookup();
         wnd->certs = EngineMupdfGetSignatureCerts(engine);
     }
-#endif
     GetPropsText(ctrl, wnd->propsText);
-#if OS_WIN
     AppendCertsText(wnd->propsText, wnd->certs);
-#endif
     AlignPropertiesText(wnd->propsText);
     EndWithSingleNewline(wnd->propsText);
     wnd->propsText.Append(StrL("\n"));

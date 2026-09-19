@@ -3,8 +3,6 @@
 
 #include "base/Base.h"
 
-#if OS_WIN
-
 u64 ArenaPageSize() {
     static u64 pageSize = 0;
     if (pageSize == 0) {
@@ -51,5 +49,3 @@ void ArenaReleaseMemory(void* base, u64 size) {
     (void)size;
     VirtualFree(base, 0, MEM_RELEASE);
 }
-
-#endif

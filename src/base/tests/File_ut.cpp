@@ -9,7 +9,6 @@
 #include "base/tests/UtAssert.h"
 
 void FileUtilTest() {
-#if OS_WIN
     Str path1 = StrL("C:\\Program Files\\SumatraPDF\\SumatraPDF.exe");
 
     TempStr baseName = path::GetBaseNameTemp(path1);
@@ -114,45 +113,6 @@ void FileUtilTest() {
         TempStr norm = path::NormalizeTemp(p);
         utassert(str::EqI(norm, p));
     }
-#else
-    Str path1 = "/Applications/SumatraPDF/SumatraPDF";
-
-    TempStr baseName = path::GetBaseNameTemp(path1);
-    utassert(str::Eq(baseName, StrL("SumatraPDF")));
-
-    TempStr dirName = path::GetDirTemp(path1);
-    utassert(str::Eq(dirName, StrL("/Applications/SumatraPDF")));
-    baseName = path::GetBaseNameTemp(dirName);
-    utassert(str::Eq(baseName, StrL("SumatraPDF")));
-
-    dirName = path::GetDirTemp(StrL("/etc"));
-    utassert(str::Eq(dirName, StrL("/")));
-    dirName = path::GetDirTemp(StrL("file"));
-    utassert(str::Eq(dirName, StrL(".")));
-
-    Str path2 = path::Join("/Applications", StrL("SumatraPDF"));
-    utassert(str::Eq(path2, StrL("/Applications/SumatraPDF")));
-    str::Free(path2);
-    path2 = path::Join("/Applications/", StrL("/SumatraPDF"));
-    utassert(str::Eq(path2, StrL("/Applications/SumatraPDF")));
-    str::Free(path2);
-
-    utassert(path::Match(StrL("/tmp/file.pdf"), StrL("*.pdf")));
-    utassert(path::Match(StrL("/tmp/file.pdf"), StrL("file.*")));
-    utassert(path::Match(StrL("/tmp/file.pdf"), StrL("*.xps;*.pdf")));
-    utassert(!path::Match(StrL("/tmp/file.pdf"), StrL("*.xps;*.djvu")));
-
-    TempStr path = path::JoinTemp("foo", StrL("bar"));
-    utassert(str::Eq(path, StrL("foo/bar")));
-    path = path::JoinTemp("foo/", StrL("/bar"));
-    utassert(str::Eq(path, StrL("foo/bar")));
-    path = path::JoinTemp("foo/", StrL("/bar/"), "/z");
-    utassert(str::Eq(path, StrL("foo/bar/z")));
-
-    Str joined = path::Join("foo", StrL("bar"));
-    utassert(str::Eq(joined, StrL("foo/bar")));
-    str::Free(joined);
-#endif
 
     {
         // a temp dir that doesn't fit the first buffer must come back whole:
@@ -198,7 +158,6 @@ void FileUtilTest() {
     }
 }
 
-#if OS_WIN
 static void MakeDirTree(Str root) {
     utassert(dir::CreateAll(path::JoinTemp(root, StrL("a\\b"))));
     utassert(file::WriteFile(path::JoinTemp(root, StrL("top.txt")), StrL("x")));
@@ -226,13 +185,11 @@ static void RemoveAllWorkerFn(RemoveAllWorker* w) {
         }
     }
 }
-#endif
 
 // dir::RemoveAll must remove nested and read-only content and must be safe
 // to call from several threads at once (the shutdown WebView profile removal
 // races the DeleteStaleFilesAsync sweep)
 void DirRemoveAllTest() {
-#if OS_WIN
     TempStr root = GetTempFilePathTemp(StrL("rmall"));
     file::Delete(root);
     MakeDirTree(root);
@@ -266,5 +223,4 @@ void DirRemoveAllTest() {
         utassert(workers[i].ok);
         str::Free(workers[i].root);
     }
-#endif
 }
