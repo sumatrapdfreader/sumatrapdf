@@ -1063,7 +1063,7 @@ static S DupT(Arena* a, S s) {
         return {};
     }
     using C = std::remove_pointer_t<decltype(s.s)>;
-    return S((C*)MemDup(a, s.s, (size_t)s.len * sizeof(C)), s.len);
+    return S((C*)MemDup(a, s.s, (size_t)s.len * sizeof(C), sizeof(C)), s.len);
 }
 
 static int LowerChar(char c) {
