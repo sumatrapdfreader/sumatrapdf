@@ -119,7 +119,7 @@ function chipNames(dump: string): string[] {
 
 // clicks the named chip, which opens its color drop-down, and returns the
 // screen rects of the swatches in it
-async function openChipDropdown(client: ControlClient, pid: number, kind: string): Promise<Rect[]> {
+export async function openChipDropdown(client: ControlClient, pid: number, kind: string): Promise<Rect[]> {
   const dump = await toolbarDump(client);
   if (!chipNames(dump).includes(kind)) {
     throw new Error(`annot-color-dropdown: no ${kind} chip: ${dump}`);
@@ -200,7 +200,7 @@ async function checkEditColors(pid: number, frame: number, swatches: Rect[]): Pr
 }
 
 // picks one of the swatches of the open drop-down
-async function pickSwatch(client: ControlClient, pid: number, swatches: Rect[], idx: number): Promise<void> {
+export async function pickSwatch(client: ControlClient, pid: number, swatches: Rect[], idx: number): Promise<void> {
   const popup = findTopWindow(pid, POPUP_CLASS);
   const r = getWindowRect(popup);
   const sw = swatches[idx]!;

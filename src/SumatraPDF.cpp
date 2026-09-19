@@ -9589,6 +9589,9 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
 
     Annotation* annot = nullptr;
     Vec<Annotation*> created;
+    // creating the annotation and setting its quad points are separate journal
+    // operations; one gesture must be one undo step (issue #6217)
+    EngineMupdfBeginOperation(engine, "Mark up selection");
     for (auto pageNo : pageNos) {
         Vec<RectF> rects;
         for (auto& sel : *s) {
@@ -9604,12 +9607,14 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
             for (Annotation* a : created) {
                 DeleteAnnotation(a);
             }
+            EngineMupdfEndOperation(engine);
             return nullptr;
         }
         SetQuadPointsAsRect(annot, rects);
         annot->bounds = GetBounds(annot);
         VecAppend(created, annot);
     }
+    EngineMupdfEndOperation(engine);
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
     if (args->copyToClipboard) {

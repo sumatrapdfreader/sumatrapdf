@@ -1463,6 +1463,8 @@ static void ChipColorPicked(AnnotEditToolbar* tb, Color col) {
     PdfColor pdfCol = isNone ? 0 : WinToPdfColor(col);
     u8 opacity = isNone ? 0 : PdfColorAlpha(pdfCol);
     bool setsOpacity = !isNone && AnnotationSupportsOpacity(type);
+    // a color and its opacity: one undo step
+    AutoEndEngineOperation op(annot->engine, "Set color");
     switch (tb->colorPickKind) {
         case AnnotEditKind::Color:
             // SetColor() takes the opacity from the color's alpha
@@ -2432,6 +2434,8 @@ void EndFreeTextInPlaceEdit(bool accept) {
         HwndSetFocus(win->hwndCanvas);
     }
     if (accept && AnnotationIsLive(annot)) {
+        // the box may be enlarged and the text set: one undo step
+        AutoEndEngineOperation op(annot->engine, "Edit text");
         DisplayModel* dm = winOk ? win->AsFixed() : nullptr;
         int pageNo = PageNo(annot);
         if (dm && dm->ValidPageNo(pageNo)) {

@@ -9232,6 +9232,8 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
 
     auto* ctx = e->Ctx();
     bool any = false;
+    // MuPDF journals each page on its own; applying is one undo step
+    AutoEndEngineOperation op(engine, "Apply redactions");
     AutoUnlockRecursiveMutex pagesScope(&e->pagesLock);
     AutoUnlockMutex renderScope(&e->renderLock);
 
