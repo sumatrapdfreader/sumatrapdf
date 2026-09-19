@@ -1318,26 +1318,16 @@ int FoldDiacriticsRune(int c) {
         return c;
     }
 
-    // letters that don't decompose into base + combining mark
-    switch (c) {
-        case 0x141: // Ł
-            return 'L';
-        case 0x142: // ł
-            return 'l';
-        case 0x110: // Đ
-            return 'D';
-        case 0x111: // đ
-            return 'd';
-        case 0xd8: // Ø
-            return 'O';
-        case 0xf8: // ø
-            return 'o';
-        case 0x126: // Ħ
-            return 'H';
-        case 0x127: // ħ
-            return 'h';
-        case 0x131: // ı
-            return 'i';
+    // letters that don't decompose into base + combining mark: ŁłĐđØøĦħı
+    static const struct {
+        u16 cp;
+        char ch;
+    } kNoDecomp[] = {{0x141, 'L'}, {0x142, 'l'}, {0x110, 'D'}, {0x111, 'd'}, {0xd8, 'O'},
+                     {0xf8, 'o'},  {0x126, 'H'}, {0x127, 'h'}, {0x131, 'i'}};
+    for (auto& e : kNoDecomp) {
+        if (e.cp == c) {
+            return e.ch;
+        }
     }
 
     // 'é' -> 'e' + U+0301
@@ -2656,14 +2646,13 @@ bool SeqStrNumAdvance(SeqStrNum strs, int& off, int* idxInOut) {
     return true;
 }
 
-int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut) {
+static int SeqStrNumIndexBy(SeqStrNum strs, Str toFind, i64* numOut, bool (*eq)(Str, Str)) {
     if (len(toFind) == 0) {
         return -1;
     }
     int off = 0;
-    int idx = 0;
-    while (strs && strs[off]) {
-        if (str::Eq(SeqStrNumAt(strs, off), toFind)) {
+    for (int idx = 0; strs && strs[off]; idx++) {
+        if (eq(SeqStrNumAt(strs, off), toFind)) {
             if (numOut) {
                 SeqStrNumEntryParts(strs, off, nullptr, numOut);
             }
@@ -2672,30 +2661,16 @@ int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut) {
         if (!SeqStrNumAdvance(strs, off)) {
             break;
         }
-        idx++;
     }
     return -1;
 }
 
+int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut) {
+    return SeqStrNumIndexBy(strs, toFind, numOut, str::Eq);
+}
+
 int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut) {
-    if (len(toFind) == 0) {
-        return -1;
-    }
-    int off = 0;
-    int idx = 0;
-    while (strs && strs[off]) {
-        if (str::EqIS(SeqStrNumAt(strs, off), toFind)) {
-            if (numOut) {
-                SeqStrNumEntryParts(strs, off, nullptr, numOut);
-            }
-            return idx;
-        }
-        if (!SeqStrNumAdvance(strs, off)) {
-            break;
-        }
-        idx++;
-    }
-    return -1;
+    return SeqStrNumIndexBy(strs, toFind, numOut, str::EqIS);
 }
 
 TempStr SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
@@ -3447,47 +3422,27 @@ int WStrFindSubstr(WStr str, WStr substr) {
 
 // Format size in human readable form (e.g., "1.23 GB", "456 KB")
 TempStr FormatFileSizeTemp(u64 size) {
-    const u64 TB = 1024ULL * 1024 * 1024 * 1024;
-    const u64 GB = 1024ULL * 1024 * 1024;
-    const u64 MB = 1024ULL * 1024;
-    const u64 KB = 1024ULL;
-
-    char buf[32];
-    Str suffix;
-    u64 divisor;
-
-    if (size >= TB) {
-        suffix = StrL(" TB");
-        divisor = TB;
-    } else if (size >= GB) {
-        suffix = StrL(" GB");
-        divisor = GB;
-    } else if (size >= MB) {
-        suffix = StrL(" MB");
-        divisor = MB;
-    } else if (size >= KB) {
-        suffix = StrL(" KB");
-        divisor = KB;
-    } else {
-        // Bytes - just format as integer
-        int n = snprintf(buf, sizeof(buf), "%llu B", size);
-        return str::DupTemp(Str(buf, n));
+    static const struct {
+        u64 divisor;
+        Str suffix;
+    } kUnits[] = {
+        {1ULL << 40, StrL("TB")}, {1ULL << 30, StrL("GB")}, {1ULL << 20, StrL("MB")}, {1ULL << 10, StrL("KB")}};
+    for (auto& u : kUnits) {
+        if (size < u.divisor) {
+            continue;
+        }
+        // up to 2 decimals, trailing zeros dropped: "1 GB", "1.5 GB", "1.23 GB"
+        u64 whole = size / u.divisor;
+        int frac = (int)(((size % u.divisor) * 100) / u.divisor);
+        if (frac == 0) {
+            return fmt("%llu %s", whole, u.suffix);
+        }
+        if (frac % 10 == 0) {
+            return fmt("%llu.%d %s", whole, frac / 10, u.suffix);
+        }
+        return fmt("%llu.%02d %s", whole, frac, u.suffix);
     }
-
-    // Calculate with 2 decimal precision
-    u64 whole = size / divisor;
-    u64 remainder = size % divisor;
-    int frac = (int)((remainder * 100) / divisor);
-
-    int n;
-    if (frac == 0) {
-        n = snprintf(buf, sizeof(buf), "%llu%s", whole, suffix.s);
-    } else if (frac % 10 == 0) {
-        n = snprintf(buf, sizeof(buf), "%llu.%d%s", whole, frac / 10, suffix.s);
-    } else {
-        n = snprintf(buf, sizeof(buf), "%llu.%02d%s", whole, frac, suffix.s);
-    }
-    return str::DupTemp(Str(buf, n));
+    return fmt("%llu B", size);
 }
 
 // --- end: merged from former src/common/str_util.cpp ---
@@ -3874,23 +3829,10 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
     int n;
     for (int i = 0; i < keep; i++) {
         n = utf8RuneLen((const u8*)(s.s + src));
-        ReportIf(n <= 0);
-        switch (n) {
-            default:
-                ReportIf(true);
-                break;
-            case 4:
-                ret[tmp++] = s.s[src++];
-                [[fallthrough]];
-            case 3:
-                ret[tmp++] = s.s[src++];
-                [[fallthrough]];
-            case 2:
-                ret[tmp++] = s.s[src++];
-                [[fallthrough]];
-            case 1:
-                ret[tmp++] = s.s[src++];
-        }
+        ReportIf(n <= 0 || n > 4);
+        memcpy(ret + tmp, s.s + src, n);
+        tmp += n;
+        src += n;
     }
     ret[tmp++] = '.';
     ret[tmp++] = '.';
@@ -3917,22 +3859,10 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
         n = utf8RuneLen((const u8*)(s.s + src));
         ReportIf(n <= 0);
         if (i < removeStartingAt || i >= removeStartingAt + toRemove) {
-            switch (n) {
-                default:
-                    ReportIf(true);
-                    break;
-                case 4:
-                    ret[tmp++] = s.s[src++];
-                    [[fallthrough]];
-                case 3:
-                    ret[tmp++] = s.s[src++];
-                    [[fallthrough]];
-                case 2:
-                    ret[tmp++] = s.s[src++];
-                    [[fallthrough]];
-                case 1:
-                    ret[tmp++] = s.s[src++];
-            }
+            ReportIf(n > 4);
+            memcpy(ret + tmp, s.s + src, n);
+            tmp += n;
+            src += n;
         } else if (i == removeStartingAt) {
             ret[tmp++] = '.';
             ret[tmp++] = '.';
@@ -3947,30 +3877,15 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
 
 static wchar_t emptyWideStr[1] = {0};
 
-Str ToUtf8(Arena* arena, WStr wide) {
-    if (len(wide) == 0) {
-        return {};
-    }
-    int n = WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, nullptr, 0, nullptr, nullptr);
-    char* utf8 = (char*)Alloc(arena, n + 1);
-    WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, utf8, n, nullptr, nullptr);
-    utf8[n] = 0;
-    return Str(utf8, n);
-}
-
 Str ToUtf8Temp(WStr wide) {
-    return ToUtf8(GetTempArena(), wide);
+    return strconv::WStrToCodePage(CP_UTF8, wide, GetTempArena());
 }
 
 WStr ToWStrTemp(Str s) {
     if (len(s) == 0) {
         return WStr(&emptyWideStr[0], 0);
     }
-    int wideLen = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);
-    wchar_t* wide = (wchar_t*)AllocTemp((int)((wideLen + 1) * sizeof(wchar_t)));
-    MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, wide, wideLen);
-    wide[wideLen] = 0;
-    return WStr(wide, wideLen);
+    return strconv::CodePageToWStr(CP_UTF8, s, GetTempArena());
 }
 
 // Converts a UTF-8 Str to a NUL-terminated WCHAR* temp. Use when the wide
@@ -4188,26 +4103,20 @@ static int parseArgDefPerc(Fmt& fmt, int off) {
     }
     int fwpEnd = off;
     // length modifier; determine integer width (32/64 on LLP64 / win64)
+    // long is 32-bit on win64; z/j/t/I (size_t, intmax_t, ptrdiff_t, MS
+    // size_t) are 64. Longer modifiers first so "I" doesn't eat "I64".
+    static const struct {
+        const char* mod;
+        int bits;
+    } kLenMods[] = {{"I64", 64}, {"I32", 32}, {"ll", 64}, {"hh", 32}, {"l", 32}, {"h", 32},
+                    {"L", 32},   {"w", 32},   {"z", 64},  {"j", 64},  {"t", 64}, {"I", 64}};
     int bits = 32;
-    char lenMod = (off < f.len) ? f.s[off] : 0;
-    bool is32BitLenMod = lenMod == 'l' || lenMod == 'h' || lenMod == 'L' || lenMod == 'w';
-    // size_t / intmax_t / ptrdiff_t / MS size_t
-    bool is64BitLenMod = lenMod == 'z' || lenMod == 'j' || lenMod == 't' || lenMod == 'I';
-    if (startsWith(f, off, "I64")) {
-        bits = 64;
-        off += 3;
-    } else if (startsWith(f, off, "I32")) {
-        off += 3;
-    } else if (startsWith(f, off, "ll")) {
-        bits = 64;
-        off += 2;
-    } else if (startsWith(f, off, "hh")) {
-        off += 2;
-    } else if (is32BitLenMod) {
-        off++; // long is 32-bit on win64
-    } else if (is64BitLenMod) {
-        bits = 64;
-        off++;
+    for (auto& m : kLenMods) {
+        if (startsWith(f, off, m.mod)) {
+            bits = m.bits;
+            off += (int)strlen(m.mod);
+            break;
+        }
     }
     char conv = (off < f.len) ? f.s[off] : 0;
     off++;
@@ -4441,34 +4350,25 @@ static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
     switch (conv) {
         case 'd':
         case 'i':
-            if (inst.intBits == 64) {
-                fbuf[k++] = 'l';
-                fbuf[k++] = 'l';
-                fbuf[k++] = 'd';
-                fbuf[k] = 0;
-                ok = appendConv(fmt, fbuf, (long long)ival);
-            } else {
-                fbuf[k++] = 'd';
-                fbuf[k] = 0;
-                ok = appendConv(fmt, fbuf, (int)ival);
-            }
-            break;
         case 'u':
         case 'o':
         case 'x':
-        case 'X':
-            if (inst.intBits == 64) {
+        case 'X': {
+            bool isSigned = conv == 'd' || conv == 'i';
+            bool is64 = inst.intBits == 64;
+            if (is64) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = 'l';
-                fbuf[k++] = conv;
-                fbuf[k] = 0;
-                ok = appendConv(fmt, fbuf, (unsigned long long)ival);
-            } else {
-                fbuf[k++] = conv;
-                fbuf[k] = 0;
-                ok = appendConv(fmt, fbuf, (unsigned int)(unsigned long long)ival);
             }
-            break;
+            fbuf[k++] = isSigned ? 'd' : conv;
+            fbuf[k] = 0;
+            if (is64) {
+                ok =
+                    isSigned ? appendConv(fmt, fbuf, (long long)ival) : appendConv(fmt, fbuf, (unsigned long long)ival);
+            } else {
+                ok = isSigned ? appendConv(fmt, fbuf, (int)ival) : appendConv(fmt, fbuf, (unsigned int)ival);
+            }
+        } break;
         case 'c':
             fbuf[k++] = 'c';
             fbuf[k] = 0;
@@ -4584,10 +4484,6 @@ Str FormatArgs(Arena* a, const char* fmt, const FmtArg** args, int nArgs) {
         return {};
     }
     return f.res.TakeStr();
-}
-
-TempStr FormatTempArgs(const char* fmt, const FmtArg** args, int nArgs) {
-    return FormatArgs(GetTempArena(), fmt, args, nArgs);
 }
 
 // advance s past n already-consumed bytes
@@ -4910,16 +4806,11 @@ TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits) {
     if (!sizeUnits) {
         sizeUnits = sizeUnitsEnglish;
     }
-    if (s > kGb) {
-        s = s / kGb;
-        unit = sizeUnits[0];
-    } else if (s > kMb) {
-        s = s / kMb;
-        unit = sizeUnits[1];
-    } else {
-        s = s / kKb;
-        unit = sizeUnits[2];
-    }
+    // sizeUnits is GB, MB, KB
+    const double kDivisors[] = {kGb, kMb, kKb};
+    int i = s > kGb ? 0 : (s > kMb ? 1 : 2);
+    s /= kDivisors[i];
+    unit = sizeUnits[i];
 
     TempStr sizestr = str::FormatFloatWithThousandSepTemp(s, LOCALE_USER_DEFAULT, false);
     if (len(unit) == 0) {
@@ -5326,19 +5217,12 @@ int StrVecPageSize(StrVecPage* page) {
     return page->nStrings;
 }
 
+// grow fast at first (256 -> 1K -> 4K), then double, capped at 64 kB
 static int CalcNextPageSize(int currSize) {
-    // at the beginning grow faster
-    if (currSize == 256) {
-        return 1024;
-    }
-    if (currSize == 1024) {
-        return 4 * 1024;
-    }
     if (currSize >= 64 * 1024) {
-        // cap the page size at 64 kB
         return currSize;
     }
-    return currSize * 2;
+    return std::min(currSize < 4 * 1024 ? currSize * 4 : currSize * 2, 64 * 1024);
 }
 
 static StrVecPage* AllocatePage(StrVec* v, StrVecPage* last, int nBytesNeeded) {
@@ -5778,38 +5662,20 @@ TempStr JoinTemp(StrVec* v, Str sep) {
 
 namespace strconv {
 
-static WStr WrapAllocatedWStr(WCHAR* s, int n) {
-    if (!s) {
-        return {};
-    }
-    return WStr(s, n);
-}
-
-static Str WrapAllocatedStr(char* s, int n) {
-    if (!s) {
-        return {};
-    }
-    return Str(s, n);
-}
-
-WStr Utf8ToWStr(Str s, Arena* a) {
-    // subtle: if s.s is nullptr, we return empty. if empty string => we return empty string
+// null in => null out; empty in => allocated empty out
+WStr CodePageToWStr(uint codePage, Str s, Arena* a) {
     if (str::IsNull(s)) {
         return {};
     }
-    if (len(s) == 0) {
-        WCHAR* res = AllocArray<WCHAR>(a, 1);
-        return WrapAllocatedWStr(res, 0);
-    }
-    // ask for the size of buffer needed for converted string
-    int cchNeeded = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);
-    WCHAR* res = AllocArray<WCHAR>(a, cchNeeded + 1);
+    int cch = len(s) == 0 ? 0 : MultiByteToWideChar(codePage, 0, s.s, s.len, nullptr, 0);
+    WCHAR* res = AllocArray<WCHAR>(a, cch + 1);
     if (!res) {
         return {};
     }
-    int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, res, cchNeeded);
-    ReportIf(cchConverted != cchNeeded);
-    return WrapAllocatedWStr(res, cchConverted);
+    if (cch > 0) {
+        MultiByteToWideChar(codePage, 0, s.s, s.len, res, cch);
+    }
+    return WStr(res, cch);
 }
 
 Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
@@ -5817,63 +5683,24 @@ Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
     if (wstr::IsNull(s)) {
         return {};
     }
-    if (len(s) == 0) {
-        char* res = AllocArray<char>(a, 1);
-        return WrapAllocatedStr(res, 0);
-    }
-    // ask for the size of buffer needed for converted string
-    int cbNeeded = WideCharToMultiByte(codePage, 0, s.s, s.len, nullptr, 0, nullptr, nullptr);
-    if (cbNeeded == 0) {
-        return {};
-    }
-    char* res = AllocArray<char>(a, cbNeeded + 1);
+    int cb = len(s) == 0 ? 0 : WideCharToMultiByte(codePage, 0, s.s, s.len, nullptr, 0, nullptr, nullptr);
+    char* res = AllocArray<char>(a, cb + 1);
     if (!res) {
         return {};
     }
-    int cbConverted = WideCharToMultiByte(codePage, 0, s.s, s.len, res, cbNeeded, nullptr, nullptr);
-    ReportIf(cbConverted != cbNeeded);
-    return WrapAllocatedStr(res, cbConverted);
-}
-
-Str WStrToUtf8(WStr s, Arena* a) {
-    return WStrToCodePage(CP_UTF8, s, a);
+    if (cb > 0) {
+        WideCharToMultiByte(codePage, 0, s.s, s.len, res, cb, nullptr, nullptr);
+    }
+    return Str(res, cb);
 }
 
 // caller needs to free() the result
 WStr StrCPToWStr(Str src, uint codePage) {
-    ReportIf(str::IsNull(src));
-    if (str::IsNull(src)) {
-        return {};
-    }
-
-    int requiredBufSize = MultiByteToWideChar(codePage, 0, src.s, src.len, nullptr, 0);
-    if (0 == requiredBufSize) {
-        return {};
-    }
-    WCHAR* res = AllocArray<WCHAR>(requiredBufSize + 1);
-    if (!res) {
-        return {};
-    }
-    MultiByteToWideChar(codePage, 0, src.s, src.len, res, requiredBufSize);
-    return WrapAllocatedWStr(res, requiredBufSize);
+    return CodePageToWStr(codePage, src, nullptr);
 }
 
 TempWStr StrCPToWStrTemp(Str src, uint codePage) {
-    ReportIf(str::IsNull(src));
-    if (str::IsNull(src)) {
-        return {};
-    }
-
-    int requiredBufSize = MultiByteToWideChar(codePage, 0, src.s, src.len, nullptr, 0);
-    if (0 == requiredBufSize) {
-        return {};
-    }
-    WCHAR* res = AllocArrayTemp<WCHAR>(requiredBufSize + 1);
-    if (!res) {
-        return {};
-    }
-    MultiByteToWideChar(codePage, 0, src.s, src.len, res, requiredBufSize);
-    return WrapAllocatedWStr(res, requiredBufSize);
+    return CodePageToWStr(codePage, src, GetTempArena());
 }
 
 TempStr ToMultiByteTemp(Str src, uint codePageSrc, uint codePageDest) {
@@ -5953,28 +5780,21 @@ TempWStr AnsiToWStrTemp(Str src) {
 }
 
 TempStr AnsiToUtf8Temp(Str src) {
-    TempWStr ws = StrCPToWStrTemp(src, CP_ACP);
-    TempStr res = ToUtf8Temp(ws);
-    return res;
+    return ToUtf8Temp(AnsiToWStrTemp(src));
 }
 
 Str AnsiToUtf8(Str src) {
-    TempWStr ws = StrCPToWStrTemp(src, CP_ACP);
-    Str res = ToUtf8(ws);
-    return res;
+    return ToUtf8(AnsiToWStrTemp(src));
 }
 
 } // namespace strconv
 
-// short names because frequently used
-// shorter names
-// TODO: eventually we want to migrate all strconv:: to them
 Str ToUtf8(WStr s, Arena* a) {
-    return strconv::WStrToUtf8(s, a);
+    return strconv::WStrToCodePage(CP_UTF8, s, a);
 }
 
 WStr ToWStr(Str s, Arena* a) {
-    return strconv::Utf8ToWStr(s, a);
+    return strconv::CodePageToWStr(CP_UTF8, s, a);
 }
 
 //--- Color.cpp ----------------------------------------------------------------

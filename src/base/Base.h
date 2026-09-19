@@ -1927,7 +1927,6 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes);
 TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes);
 
 WStr ToWStrTemp(Str s);
-Str ToUtf8(Arena* arena, WStr wide);
 Str ToUtf8Temp(WStr wide);
 WCHAR* CWStrTemp(Str s);
 WCHAR* CWStrTemp(Str s, int& cch);
@@ -2011,23 +2010,6 @@ struct FmtArg {
     FmtArg(const wchar_t*) = delete;
 };
 
-TempStr FormatTempArgs(const char* fmt, const FmtArg** args, int nArgs);
-
-inline TempStr FormatTemp(const char* fmt) {
-    return FormatTempArgs(fmt, nullptr, 0);
-}
-
-template <typename... TArgs>
-TempStr FormatTemp(const char* fmt, const TArgs&... args) {
-    const FmtArg argv[] = {FmtArg(args)...};
-    const FmtArg* argp[sizeof...(TArgs)];
-    int n = (int)sizeof...(TArgs);
-    for (int i = 0; i < n; i++) {
-        argp[i] = &argv[i];
-    }
-    return FormatTempArgs(fmt, argp, n);
-}
-
 Str FormatArgs(Arena* a, const char* fmt, const FmtArg** args, int nArgs);
 
 inline Str Format(Arena* a, const char* fmt) {
@@ -2043,6 +2025,11 @@ Str Format(Arena* a, const char* fmt, const TArgs&... args) {
         argp[i] = &argv[i];
     }
     return FormatArgs(a, fmt, argp, n);
+}
+
+template <typename... TArgs>
+TempStr FormatTemp(const char* fmt, const TArgs&... args) {
+    return Format(GetTempArena(), fmt, args...);
 }
 
 // Type-safe scanf-style parsing (analogous to str::Format). Each output arg
@@ -2210,9 +2197,7 @@ TempStr JoinTemp(StrVec* v, Str sep);
 
 namespace strconv {
 
-WStr Utf8ToWStr(Str s, Arena* a = nullptr);
-Str WStrToUtf8(WStr s, Arena* a = nullptr);
-
+WStr CodePageToWStr(uint codePage, Str s, Arena* a = nullptr);
 Str WStrToCodePage(uint codePage, WStr s, Arena* a = nullptr);
 TempStr ToMultiByteTemp(Str src, uint codePageSrc, uint codePageDest);
 WStr StrCPToWStr(Str src, uint codePage);
