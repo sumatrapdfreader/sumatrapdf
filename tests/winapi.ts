@@ -31,6 +31,7 @@ const user32 = dlopen("user32.dll", {
     returns: FFIType.bool,
   },
   GetWindowLongW: { args: [FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
+  SetParent: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.ptr },
   SetWindowLongW: { args: [FFIType.ptr, FFIType.i32, FFIType.i32], returns: FFIType.i32 },
   ShowWindow: { args: [FFIType.ptr, FFIType.i32], returns: FFIType.bool },
   InvalidateRect: { args: [FFIType.ptr, FFIType.ptr, FFIType.bool], returns: FFIType.bool },
@@ -706,6 +707,10 @@ export const SWP_FRAMECHANGED = 0x0020;
 export const GWL_STYLE = -16;
 export const GWL_EXSTYLE = -20;
 export const WS_MAXIMIZE = 0x01000000;
+export const WS_CHILD = 0x40000000;
+export const WS_POPUP = 0x80000000;
+export const WS_CAPTION = 0x00c00000;
+export const WS_THICKFRAME = 0x00040000;
 
 export function getWindowLong(hwnd: number, index: number): number {
   return user32.symbols.GetWindowLongW(hwnd, index);
@@ -713,6 +718,15 @@ export function getWindowLong(hwnd: number, index: number): number {
 
 export function setWindowLong(hwnd: number, index: number, value: number): number {
   return user32.symbols.SetWindowLongW(hwnd, index, value);
+}
+
+// reparent hwnd under parent, the way an embedding host (e.g. Total Commander's
+// lister) does: strip top-level styles, add WS_CHILD, then SetParent
+export function embedWindow(hwnd: number, parent: number): void {
+  let style = getWindowLong(hwnd, GWL_STYLE);
+  style = (style & ~(WS_POPUP | WS_CAPTION | WS_THICKFRAME)) | WS_CHILD;
+  setWindowLong(hwnd, GWL_STYLE, style | 0);
+  user32.symbols.SetParent(hwnd, parent);
 }
 
 export function setWindowPos(

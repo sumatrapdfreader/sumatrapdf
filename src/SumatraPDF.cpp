@@ -1537,6 +1537,11 @@ static void HideCanvasScrollbars(MainWindow* win) {
 SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
 
 int ScrollbarModeFromPrefs() {
+    // embedded hosts get native scrollbars; override here, not in gSettings,
+    // so the user's choice isn't written back to the settings file
+    if (gMyWindowWasEmbedded) {
+        return kScrollbarWindows;
+    }
     int idx = SeqStrIndexIS(gScrollbarModeNames, gSettings->scrollbars);
     if (idx < 0) {
         idx = kScrollbarWindows;
@@ -14599,7 +14604,6 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
     if (win && !gMyWindowWasEmbedded && isChildWindow) {
         logf("Detected window embedded in another window\n");
         gMyWindowWasEmbedded = true;
-        str::ReplaceWithCopy(&gSettings->scrollbars, StrL("windows"));
         uitask::Post(MkFunc0(ApplyEmbeddedWindowChrome, win), "ApplyEmbeddedWindowChrome");
     }
     // custom caption is incompatible with WS_CHILD hosts; skip even before
@@ -18061,9 +18065,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     // UpdateDocumentColors() keeps it in sync after this
     AtomicBoolSet(&gRenderCache->grayscalePageColors, gSettings->fixedPageUI.grayscale);
 
-    if (gMyWindowWasEmbedded) {
-        str::ReplaceWithCopy(&gSettings->scrollbars, StrL("windows"));
-    }
     SetCurrentLang(flags.lang ? flags.lang : gSettings->uiLanguage);
     if (flags.showPrintersDialog) {
         // -console / -silent: list to stdout only, no dialog window (#5810)
