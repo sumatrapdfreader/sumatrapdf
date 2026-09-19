@@ -2,21 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/ByteReaderWriter.h"
 #include "base/Win.h"
 
 #include "base/Pixmap.h"
-
-static void AppendLE16(str::Builder& data, u16 v) {
-    data.AppendChar((char)(v & 0xff));
-    data.AppendChar((char)((v >> 8) & 0xff));
-}
-
-static void AppendLE32(str::Builder& data, u32 v) {
-    data.AppendChar((char)(v & 0xff));
-    data.AppendChar((char)((v >> 8) & 0xff));
-    data.AppendChar((char)((v >> 16) & 0xff));
-    data.AppendChar((char)((v >> 24) & 0xff));
-}
 
 static void AppendPixmapPixelBGR(str::Builder& data, const Pixmap* pixmap, int x, int y) {
     const u8* src = pixmap->data + ((size_t)y * pixmap->stride) + ((size_t)x * PixmapBytesPerPixel(pixmap->format));
@@ -52,25 +41,25 @@ Str PixmapToBmpFormat(const Pixmap* pixmap) {
         return {};
     }
 
-    str::Builder bmpData;
-    str::BuilderReserve(bmpData, (int)bmpBytes);
-    AppendLE16(bmpData, 0x4d42); // "BM"
-    AppendLE32(bmpData, (u32)bmpBytes);
-    AppendLE16(bmpData, 0);
-    AppendLE16(bmpData, 0);
-    AppendLE32(bmpData, (u32)headerLen);
+    ByteWriterLE w2((int)bmpBytes);
+    str::Builder& bmpData = w2.d;
+    w2.Write16(0x4d42); // "BM"
+    w2.Write32((u32)bmpBytes);
+    w2.Write16(0);
+    w2.Write16(0);
+    w2.Write32((u32)headerLen);
 
-    AppendLE32(bmpData, 40); // BITMAPINFOHEADER size
-    AppendLE32(bmpData, (u32)w);
-    AppendLE32(bmpData, (u32)h);
-    AppendLE16(bmpData, 1);  // planes
-    AppendLE16(bmpData, 24); // bit count
-    AppendLE32(bmpData, 0);  // BI_RGB
-    AppendLE32(bmpData, (u32)(rowStride * h));
-    AppendLE32(bmpData, 0);
-    AppendLE32(bmpData, 0);
-    AppendLE32(bmpData, 0);
-    AppendLE32(bmpData, 0);
+    w2.Write32(40); // BITMAPINFOHEADER size
+    w2.Write32((u32)w);
+    w2.Write32((u32)h);
+    w2.Write16(1);  // planes
+    w2.Write16(24); // bit count
+    w2.Write32(0);  // BI_RGB
+    w2.Write32((u32)(rowStride * h));
+    w2.Write32(0);
+    w2.Write32(0);
+    w2.Write32(0);
+    w2.Write32(0);
 
     int padding = (int)rowStride - (pixmap->width * 3);
     for (int y = pixmap->height - 1; y >= 0; y--) {

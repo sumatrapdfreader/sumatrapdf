@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/ByteReaderWriter.h"
 #include "base/Pixmap.h"
 #include "base/TgaReader.h"
 
@@ -71,30 +72,6 @@ static_assert(sizeof(TgaHeader) == 18, "wrong size of TgaHeader structure");
 static_assert(sizeof(TgaFooter) == 26, "wrong size of TgaFooter structure");
 static_assert(sizeof(TgaExtArea) == 495, "wrong size of TgaExtArea structure");
 
-static u16 readLE16(u8* data) {
-    u16 v0 = *data++;
-    u16 v1 = (u16)*data << 8;
-    return v0 | v1;
-}
-
-static u16 convLE(u16 x) {
-    u8* data = (u8*)&x;
-    return readLE16(data);
-}
-
-static u32 readLE32(u8* data) {
-    u32 v0 = *data++;
-    u32 v1 = (u32)*data++ << 8;
-    u32 v2 = (u32)*data++ << 16;
-    u32 v3 = (u32)*data << 24;
-    return v0 | v1 | v2 | v3;
-}
-
-static u32 convLE(u32 x) {
-    u8* data = (u8*)&x;
-    return readLE32(data);
-}
-
 static bool HasVersion2Footer(const u8* data, size_t n) {
     if (n < sizeof(TgaHeader) + sizeof(TgaFooter)) {
         return false;
@@ -112,12 +89,12 @@ static const TgaExtArea* GetExtAreaPtr(const u8* data, size_t n) {
         return nullptr;
     }
     const TgaFooter* footerLE = (const TgaFooter*)(data + n - sizeof(TgaFooter));
-    if (convLE(footerLE->extAreaOffset) < sizeof(TgaHeader) ||
-        convLE(footerLE->extAreaOffset) + sizeof(TgaExtArea) + sizeof(TgaFooter) > n) {
+    if (footerLE->extAreaOffset < sizeof(TgaHeader) ||
+        footerLE->extAreaOffset + sizeof(TgaExtArea) + sizeof(TgaFooter) > n) {
         return nullptr;
     }
-    const TgaExtArea* extAreaLE = (const TgaExtArea*)(data + convLE(footerLE->extAreaOffset));
-    if (convLE(extAreaLE->size) < sizeof(TgaExtArea)) {
+    const TgaExtArea* extAreaLE = (const TgaExtArea*)(data + footerLE->extAreaOffset);
+    if (extAreaLE->size < sizeof(TgaExtArea)) {
         return nullptr;
     }
     return extAreaLE;
@@ -144,28 +121,10 @@ static int GetPixelBits(const TgaHeader* headerLE, ImageAlpha aType = Alpha_Norm
     }
 
     int alphaBits = (headerLE->flags & Flag_Alpha);
-    if (15 == bits && 0 == alphaBits) {
-        return bits;
-    }
-    if (16 == bits && (0 == alphaBits || Alpha_Ignore == aType)) {
-        return bits;
-    }
-    if (16 == bits && 1 == alphaBits) {
-        return bits;
-    }
-    if (24 == bits && 0 == alphaBits) {
-        return bits;
-    }
-    if (32 == bits && (0 == alphaBits || Alpha_Ignore == aType)) {
-        return bits;
-    }
-    if (32 == bits && 8 == alphaBits && Alpha_Normal == aType) {
-        return bits;
-    }
-    if (32 == bits && 8 == alphaBits && Alpha_Premultiplied == aType) {
-        return bits;
-    }
-    return 0;
+    bool ignoreAlpha = Alpha_Ignore == aType;
+    bool ok = (15 == bits && 0 == alphaBits) || (16 == bits && (alphaBits <= 1 || ignoreAlpha)) ||
+              (24 == bits && 0 == alphaBits) || (32 == bits && (0 == alphaBits || 8 == alphaBits || ignoreAlpha));
+    return ok ? bits : 0;
 }
 
 static ImageAlpha GetAlphaType(const u8* data, size_t n) {
@@ -232,7 +191,7 @@ static void CopyPixelToBGRA(u8* dst, const u8* src, int bits, int alphaBits, Ima
     switch (bits) {
         case 15:
         case 16: {
-            u16 v = readLE16((u8*)src);
+            u16 v = UInt16LE((const u8*)src);
             dst[0] = Scale5To8(v & 0x1f);
             dst[1] = Scale5To8((v >> 5) & 0x1f);
             dst[2] = Scale5To8((v >> 10) & 0x1f);
@@ -321,8 +280,8 @@ Pixmap* PixmapFromData(Str d) {
     if (1 == headerLE->cmapType) {
         s.cmap.data = s.data;
         s.cmap.n = (headerLE->cmapBitDepth + 7) / 8;
-        s.cmap.length = convLE(headerLE->cmapLength);
-        s.cmap.firstEntry = convLE(headerLE->cmapFirstEntry);
+        s.cmap.length = headerLE->cmapLength;
+        s.cmap.firstEntry = headerLE->cmapFirstEntry;
         s.data += (size_t)s.cmap.length * s.cmap.n;
         if (s.data > s.end) {
             return nullptr;
@@ -338,8 +297,8 @@ Pixmap* PixmapFromData(Str d) {
         return nullptr;
     }
 
-    int w = convLE(headerLE->width);
-    int h = convLE(headerLE->height);
+    int w = headerLE->width;
+    int h = headerLE->height;
     if (w <= 0 || h <= 0) {
         return nullptr;
     }
@@ -364,10 +323,6 @@ Pixmap* PixmapFromData(Str d) {
     return pixmap;
 }
 
-static inline bool memeq3(const char* pix1, const char* pix2) {
-    return pix1[0] == pix2[0] && pix1[1] == pix2[1] && pix1[2] == pix2[2];
-}
-
 static void GetPixmapPixelBGR(Pixmap* pixmap, int x, int y, char bgr[3]) {
     const u8* src = pixmap->data + ((size_t)y * pixmap->stride) + ((size_t)x * PixmapBytesPerPixel(pixmap->format));
     if (pixmap->format == PixmapFormat::RGBA8) {
@@ -385,7 +340,7 @@ static bool PixmapPixelEq3(Pixmap* pixmap, int x1, int x2, int y) {
     char p1[3], p2[3];
     GetPixmapPixelBGR(pixmap, x1, y, p1);
     GetPixmapPixelBGR(pixmap, x2, y, p2);
-    return memeq3(p1, p2);
+    return MemEq(p1, p2, 3);
 }
 
 Str PixmapToTgaFormat(Pixmap* pixmap) {
@@ -401,8 +356,8 @@ Str PixmapToTgaFormat(Pixmap* pixmap) {
     u16 h = (u16)pixmap->height;
     TgaHeader headerLE{};
     headerLE.imageType = Type_Truecolor_RLE;
-    headerLE.width = convLE(w);
-    headerLE.height = convLE(h);
+    headerLE.width = w;
+    headerLE.height = h;
     headerLE.bitDepth = 24;
     TgaFooter footerLE = {0, 0, kTgaFooterSignature};
 
@@ -458,5 +413,3 @@ Str PixmapToTgaFormat(Pixmap* pixmap) {
     return tgaData.TakeStr();
 }
 } // namespace tga
-
-namespace tga {} // namespace tga

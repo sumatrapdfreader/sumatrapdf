@@ -636,46 +636,7 @@ static void GetSystemInfo() {
         CrashInfoAppend(fmt("Lang: %s %s\n", Str(lang), Str(country)));
     }
     GetGraphicsDriverInfo();
-    {
-        auto cpu = CpuID();
-        CrashInfoAppend(StrL("CPU: "));
-        if (cpu & kCpuMMX) {
-            CrashInfoAppend(StrL("MMX "));
-        }
-        if (cpu & kCpuSSE) {
-            CrashInfoAppend(StrL("SSE "));
-        }
-        if (cpu & kCpuSSE2) {
-            CrashInfoAppend(StrL("SSE2 "));
-        }
-        if (cpu & kCpuSSE3) {
-            CrashInfoAppend(StrL("SSE3 "));
-        }
-        if (cpu & kCpuSSE41) {
-            CrashInfoAppend(StrL("SSE41 "));
-        }
-        if (cpu & kCpuSSE42) {
-            CrashInfoAppend(StrL("SSE42 "));
-        }
-        if (cpu & kCpuAVX) {
-            CrashInfoAppend(StrL("AVX "));
-        }
-        if (cpu & kCpuAVX2) {
-            CrashInfoAppend(StrL("AVX2 "));
-        }
-        if (cpu & kCpuNEON) {
-            CrashInfoAppend(StrL("NEON "));
-        }
-        if (cpu & kCpuArmCrypto) {
-            CrashInfoAppend(StrL("Crypto "));
-        }
-        if (cpu & kCpuArmAtomics) {
-            CrashInfoAppend(StrL("Atomics "));
-        }
-        if (cpu & kCpuArmDotProd) {
-            CrashInfoAppend(StrL("DotProd "));
-        }
-    }
+    CrashInfoAppend(fmt("CPU: %s\n", CpuFeaturesTemp()));
 }
 
 static void BuildSystemInfo() {
@@ -719,10 +680,6 @@ static void __cdecl onInvalidParameter(const wchar_t*, const wchar_t*, const wch
 static int __cdecl onNewFailed(size_t) {
     CrashMe();
     return 0;
-}
-
-__unused static void onUnexpected() {
-    CrashMe();
 }
 
 // shadow crt's _purecall() so that we're called instead of CRT.
@@ -807,8 +764,6 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     // ever sees
     _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
     std::set_terminate(onTerminate);
-    // set_unexpected() is unavailable with MSVC 17.3+ (_HAS_CXX17 / P0003R5).
-    //::set_unexpected(onUnexpected);
 #endif
 }
 
@@ -847,7 +802,3 @@ void UninstallCrashHandler() {
     gDumpThreadId = 0;
     AtomicBoolSet(&gCrashHandlerStarted, false);
 }
-
-// Tests that various ways to crash will generate crash report.
-// Commented-out because they are ad-hoc. Left in code because
-// I don't want to write them again if I ever need to test crash reporting

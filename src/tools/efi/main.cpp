@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/BitManip.h"
 #include "base/Dict.h"
 #include "base/AutoWin.h"
 

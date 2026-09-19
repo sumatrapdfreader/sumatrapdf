@@ -915,7 +915,6 @@ function efi_files()
     "CrashHandlerNoOp.cpp",
     "src/base/Base.h",
     "src/base/Base.cpp",
-    "src/base/BitManip.h",
     "src/base/Dict*",
     "src/tools/efi/*.cpp",
     "src/tools/efi/*.h",

@@ -358,6 +358,17 @@ inline void ZeroStruct(T* s) {
     ZeroMemory((void*)s, sizeof(T));
 }
 
+namespace bit {
+template <typename T>
+bool IsSet(T v, int bitNo) {
+    return (v & ((T)1 << bitNo)) != 0;
+}
+template <typename T, typename M>
+bool IsMaskSet(T v, M mask) {
+    return (v & (T)mask) != 0;
+}
+} // namespace bit
+
 int limitValue(int val, int min, int max);
 DWORD limitValue(DWORD val, DWORD min, DWORD max);
 float limitValue(float val, float min, float max);

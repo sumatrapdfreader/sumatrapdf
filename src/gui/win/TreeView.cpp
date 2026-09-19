@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/BitManip.h"
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
@@ -156,7 +155,7 @@ static void TreeViewToggle(TreeView* tree, HTREEITEM hItem, bool recursive) {
         return;
     }
     uint flag = TVE_EXPAND;
-    bool isExpanded = bitmask::IsSet(item->state, TVIS_EXPANDED);
+    bool isExpanded = bit::IsMaskSet(item->state, TVIS_EXPANDED);
     if (isExpanded) {
         flag = TVE_COLLAPSE;
     }
@@ -168,8 +167,8 @@ static void TreeViewToggle(TreeView* tree, HTREEITEM hItem, bool recursive) {
 }
 
 static void SetTreeItemState(uint uState, TreeItemState& state) {
-    state.isExpanded = bitmask::IsSet(uState, TVIS_EXPANDED);
-    state.isSelected = bitmask::IsSet(uState, TVIS_SELECTED);
+    state.isExpanded = bit::IsMaskSet(uState, TVIS_EXPANDED);
+    state.isSelected = bit::IsMaskSet(uState, TVIS_SELECTED);
     uint n = (uState >> 12) - 1;
     state.isChecked = n != 0;
 }

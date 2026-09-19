@@ -19,12 +19,6 @@ Our hash table uses the same parameters as the one in redis
 (but without complexity of incremental hashing):
 - we use chaining on collisions
 - size of the hash table is power of two
-
-TODO:
-- add iterator for keys/values
-- would hash function be faster if we got bytes one at a time
-  but only with a single pass vs. getting 4 at a time but
-  doing 2 passes (the first to calculate the length)?
 */
 
 #include "base/Base.h"
@@ -44,10 +38,6 @@ static Str KeyAsStr(uintptr_t key) {
     return Str((char*)key);
 }
 
-static WStr KeyAsWStr(uintptr_t key) {
-    return WStr((wchar_t*)key);
-}
-
 class StrKeyHasherComparator : public HasherComparator {
     size_t Hash(uintptr_t key) override {
         Str s = KeyAsStr(key);
@@ -56,16 +46,7 @@ class StrKeyHasherComparator : public HasherComparator {
     bool Equal(uintptr_t k1, uintptr_t k2) override { return str::Eq(KeyAsStr(k1), KeyAsStr(k2)); }
 };
 
-class WStrKeyHasherComparator : public HasherComparator {
-    size_t Hash(uintptr_t key) override {
-        WStr s = KeyAsWStr(key);
-        return MurmurHash2(s);
-    }
-    bool Equal(uintptr_t k1, uintptr_t k2) override { return wstr::Eq(KeyAsWStr(k1), KeyAsWStr(k2)); }
-};
-
 static StrKeyHasherComparator gStrKeyHasherComparator;
-static WStrKeyHasherComparator gWStrKeyHasherComparator;
 
 struct HashTableEntry {
     uintptr_t key;
@@ -80,10 +61,6 @@ struct HashTable {
 
     int nEntries;
     int nUsed; // total number of inserted entries
-
-    // for debugging
-    int nResizes;
-    int nCollisions;
 };
 
 static HashTable* NewHashTable(int size, Arena* a) {
@@ -124,7 +101,6 @@ static void HashTableResize(HashTable* h, HasherComparator* hc) {
     free((void*)h->entries);
     h->entries = newEntries;
     h->nEntries = newSize;
-    h->nResizes += 1;
 
     ReportIf(h->nUsed >= (h->nEntries * 3) / 2);
 }
@@ -166,9 +142,6 @@ static HashTableEntry* GetOrCreateEntry(HashTable* h, HasherComparator* hc, uint
     e->next = h->entries[pos];
     h->entries[pos] = e;
     h->nUsed++;
-    if (e->next != nullptr) {
-        h->nCollisions++;
-    }
     newEntry = true;
     return e;
 }

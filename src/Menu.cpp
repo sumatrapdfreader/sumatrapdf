@@ -5,7 +5,6 @@
 #include "base/AutoWin.h"
 #include "base/CmdLineArgs.h"
 #include "base/File.h"
-#include "base/BitManip.h"
 #include "gui/Dpi.h"
 #include "base/Win.h"
 #include "base/Pixmap.h"

@@ -6,6 +6,7 @@
 #include "base/File.h"
 #include "base/ByteReaderWriter.h"
 #include "base/Archive.h"
+#include "base/TgaReader.h"
 #include "base/GuessFileType.h"
 
 // http://en.wikipedia.org/wiki/.nfo
@@ -319,91 +320,6 @@ static bool HasJxlSignature(Str d) {
            (d.len >= sizeofi(jxlContainer) && MemEq(data, jxlContainer, sizeofi(jxlContainer)));
 }
 
-#pragma pack(push, 1)
-struct TgaHeader {
-    u8 idLength;
-    u8 cmapType;
-    u8 imageType;
-    u16 cmapFirstEntry;
-    u16 cmapLength;
-    u8 cmapBitDepth;
-    u16 offsetX;
-    u16 offsetY;
-    u16 width;
-    u16 height;
-    u8 bitDepth;
-    u8 flags;
-};
-
-struct TgaFooter {
-    u32 extAreaOffset;
-    u32 devAreaOffset;
-    char signature[18];
-};
-#pragma pack(pop)
-
-static_assert(sizeof(TgaHeader) == 18);
-static_assert(sizeof(TgaFooter) == 26);
-
-static bool HasTgaVersion2Footer(const u8* data, size_t n) {
-    if (n < sizeof(TgaHeader) + sizeof(TgaFooter)) {
-        return false;
-    }
-    const TgaFooter* footer = (const TgaFooter*)(data + n - sizeof(TgaFooter));
-    // signature is a fixed-size field, not necessarily NUL-terminated, so we
-    // must not strlen() it. Also, comparing all 18 bytes would never match
-    // because the literal is 17 chars long
-    Str sig{footer->signature, (int)sizeof(footer->signature)};
-    return str::StartsWith(sig, StrL("TRUEVISION-XFILE."));
-}
-
-static bool IsSupportedTgaPixelFormat(const TgaHeader* header) {
-    const u8 typePalette = 1;
-    const u8 typeTruecolor = 2;
-    const u8 typeGrayscale = 3;
-    const u8 typePaletteRle = 9;
-    const u8 typeTruecolorRle = 10;
-    const u8 typeGrayscaleRle = 11;
-    const u8 alphaMask = 0x0f;
-
-    int bits;
-    if (header->imageType == typePalette || header->imageType == typePaletteRle) {
-        if (header->cmapType != 1 || (header->bitDepth != 8 && header->bitDepth != 16)) {
-            return false;
-        }
-        bits = header->cmapBitDepth;
-    } else if (header->imageType == typeTruecolor || header->imageType == typeTruecolorRle) {
-        bits = header->bitDepth;
-    } else if (header->imageType == typeGrayscale || header->imageType == typeGrayscaleRle) {
-        return header->bitDepth == 8 && (header->flags & alphaMask) == 0;
-    } else {
-        return false;
-    }
-
-    int alphaBits = header->flags & alphaMask;
-    return (bits == 15 && alphaBits == 0) || (bits == 16 && (alphaBits == 0 || alphaBits == 1)) ||
-           (bits == 24 && alphaBits == 0) || (bits == 32 && (alphaBits == 0 || alphaBits == 8));
-}
-
-static bool HasTgaSignature(Str d) {
-    size_t n = (size_t)d.len;
-    const u8* data = (const u8*)d.s;
-    if (HasTgaVersion2Footer(data, n)) {
-        return true;
-    }
-    if (n < sizeof(TgaHeader)) {
-        return false;
-    }
-    const TgaHeader* header = (const TgaHeader*)data;
-    if (header->cmapType != 0 && header->cmapType != 1) {
-        return false;
-    }
-    if (header->flags & 0xc0) {
-        return false;
-    }
-    return IsSupportedTgaPixelFormat(header);
-}
-
 // detect file type based on file content
 static FileType DetectFileTypeFromData(Str d) {
     // TODO: sniff .fb2 content
@@ -432,7 +348,7 @@ static FileType DetectFileTypeFromData(Str d) {
     if (IsPSFileContent(d)) {
         return FileType::PS;
     }
-    if (HasTgaSignature(d)) {
+    if (tga::HasSignature(d)) {
         return FileType::Tga;
     }
     if (HasWebpSignature(d)) {

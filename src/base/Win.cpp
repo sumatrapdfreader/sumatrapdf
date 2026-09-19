@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "gui/Dpi.h"
-#include "base/BitManip.h"
 #include "base/File.h"
 #include "base/WinDynCalls.h"
 #include "base/AutoWin.h"
@@ -3211,7 +3210,6 @@ u32 CpuID() {
     std::bitset<32> f_1_ECX_;
     std::bitset<32> f_1_EDX_;
     std::bitset<32> f_7_EBX_;
-    std::bitset<32> f_7_ECX_;
 
     u32 res = 0;
     int cpuInfo[4]{};
@@ -3237,72 +3235,66 @@ u32 CpuID() {
         __cpuid(cpuInfo, 7);
 #endif
         f_7_EBX_ = cpuInfo[1];
-        f_7_ECX_ = cpuInfo[2];
     }
 
-    if (f_1_EDX_[23]) {
-        res = res | kCpuMMX;
-    }
-    if (f_1_EDX_[25]) {
-        res = res | kCpuSSE;
-    }
-    if (f_1_EDX_[26]) {
-        res = res | kCpuSSE2;
-    }
-    if (f_1_ECX_[0]) {
-        res = res | kCpuSSE3;
-    }
-    if (f_1_ECX_[9]) {
-        res = res | kCpuSSE3;
-    }
-    if (f_1_ECX_[19]) {
-        res = res | kCpuSSE41;
-    }
-    if (f_1_ECX_[20]) {
-        res = res | kCpuSSE42;
-    }
-    if (f_1_ECX_[28]) {
-        res = res | kCpuAVX;
-    }
-    if (f_7_EBX_[5]) {
-        res = res | kCpuAVX2;
+    // {register bits, bit no, flag}
+    const struct {
+        const std::bitset<32>& reg;
+        int bit;
+        u32 flag;
+    } kBits[] = {
+        {f_1_EDX_, 23, kCpuMMX},   {f_1_EDX_, 25, kCpuSSE},   {f_1_EDX_, 26, kCpuSSE2}, {f_1_ECX_, 0, kCpuSSE3},
+        {f_1_ECX_, 19, kCpuSSE41}, {f_1_ECX_, 20, kCpuSSE42}, {f_1_ECX_, 28, kCpuAVX},  {f_7_EBX_, 5, kCpuAVX2},
+    };
+    for (auto& b : kBits) {
+        if (b.reg[b.bit]) {
+            res |= b.flag;
+        }
     }
     return res;
 #endif
 }
 
+// most capable first, so the first match is the latest supported
+static const struct {
+    u32 flag;
+    Str name;
+} kCpuFeatures[] = {
+    {kCpuAVX2, StrL("avx2")},
+    {kCpuAVX, StrL("avx")},
+    {kCpuSSE42, StrL("sse42")},
+    {kCpuSSE41, StrL("sse41")},
+    {kCpuSSE3, StrL("sse3")},
+    {kCpuSSE2, StrL("sse2")},
+    {kCpuSSE, StrL("sse")},
+    {kCpuMMX, StrL("mmx")},
+    {kCpuArmDotProd, StrL("dotprod")},
+    {kCpuArmAtomics, StrL("atomics")},
+    {kCpuArmCrypto, StrL("crypto")},
+    {kCpuNEON, StrL("neon")},
+};
+
 Str LatestSupportedSIMD() {
     u32 id = CpuID();
-    // x86/x64
-    if (id & kCpuAVX2) {
-        return StrL("avx2");
-    }
-    if (id & kCpuAVX) {
-        return StrL("avx");
-    }
-    if (id & kCpuSSE42) {
-        return StrL("sse42");
-    }
-    if (id & kCpuSSE41) {
-        return StrL("sse41");
-    }
-    if (id & kCpuSSE3) {
-        return StrL("sse3");
-    }
-    if (id & kCpuSSE2) {
-        return StrL("sse2");
-    }
-    if (id & kCpuSSE) {
-        return StrL("sse");
-    }
-    // ARM
-    if (id & kCpuArmDotProd) {
-        return StrL("dotprod");
-    }
-    if (id & kCpuNEON) {
-        return StrL("neon");
+    for (auto& f : kCpuFeatures) {
+        if ((id & f.flag) && f.flag != kCpuMMX) {
+            return f.name;
+        }
     }
     return StrL("none");
+}
+
+// space-separated names of every feature the CPU has, for the crash report
+TempStr CpuFeaturesTemp() {
+    u32 id = CpuID();
+    str::Builder sb;
+    for (auto& f : kCpuFeatures) {
+        if (id & f.flag) {
+            sb.Append(f.name);
+            sb.AppendChar(' ');
+        }
+    }
+    return ToStrTemp(sb);
 }
 
 //--- GDI: draw (misc) / DC state

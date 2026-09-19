@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/BitManip.h"
 #include "base/Pixmap.h"
 #include "base/GdiPlusUtil.h"
 #include "base/GuessFileType.h"

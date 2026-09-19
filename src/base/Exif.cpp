@@ -1092,7 +1092,6 @@ void ExifParser::Reset() {
     VecReset(entries);
     free(ownedExif);
     ownedExif = nullptr;
-    data = {};
     exifBlob = {};
     isBE = false;
     tiffBase = 0;
@@ -1101,7 +1100,6 @@ void ExifParser::Reset() {
 
 bool ExifParser::Parse(Str imageData) {
     Reset();
-    data = imageData;
     if (!ExtractExifBlob(imageData, exifBlob, &ownedExif)) {
         return false;
     }

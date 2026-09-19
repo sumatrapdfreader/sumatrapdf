@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/BitManip.h"
 #include "base/WinDynCalls.h"
 #include "gui/Dpi.h"
 #include "base/File.h"

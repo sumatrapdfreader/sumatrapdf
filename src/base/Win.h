@@ -317,8 +317,8 @@ bool CanTalkToProcess(DWORD procId);
 void DisableDataExecution();
 void MaskFpExceptions();
 
-constexpr u32 kCpuMMX = 1 << 1;
-constexpr u32 kCpuSSE = 1 << 2;
+constexpr u32 kCpuMMX = 1 << 0;
+constexpr u32 kCpuSSE = 1 << 1;
 constexpr u32 kCpuSSE2 = 1 << 2;
 constexpr u32 kCpuSSE3 = 1 << 3;
 constexpr u32 kCpuSSE41 = 1 << 4;
@@ -333,6 +333,7 @@ constexpr u32 kCpuArmDotProd = 1 << 11;
 
 u32 CpuID();
 Str LatestSupportedSIMD();
+TempStr CpuFeaturesTemp();
 
 //--- environment / errors / paths
 
