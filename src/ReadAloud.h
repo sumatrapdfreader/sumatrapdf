@@ -8,9 +8,6 @@ struct MainWindow;
 struct WindowTab;
 struct TextSelection;
 struct ReadAloudPlaybackBar;
-namespace str {
-struct Builder;
-}
 
 // --- text-to-speech backend (WinRT speech synthesis, SAPI 5 fallback) ---
 

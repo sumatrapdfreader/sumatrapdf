@@ -58,8 +58,6 @@ struct EmbeddedPdfName {
 };
 EmbeddedPdfName ParseEmbeddedPdfName(Str path);
 
-struct Size;
-
 struct FileTypeInfo {
     FileType ft = FileType::Unknown;
     // if false, callers can fall back to a more expensive way of getting the size

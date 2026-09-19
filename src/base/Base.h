@@ -369,9 +369,20 @@ bool IsMaskSet(T v, M mask) {
 }
 } // namespace bit
 
-int limitValue(int val, int min, int max);
-DWORD limitValue(DWORD val, DWORD min, DWORD max);
-float limitValue(float val, float min, float max);
+// base for RAII guards: no copies, no moves
+struct NonCopyable {
+    NonCopyable() = default;
+    NonCopyable(const NonCopyable&) = delete;
+    NonCopyable& operator=(const NonCopyable&) = delete;
+};
+
+template <typename T>
+T limitValue(T val, T min, T max) {
+    if (min > max) {
+        std::swap(min, max);
+    }
+    return val < min ? min : (val > max ? max : val);
+}
 
 // return true if adding n to val overflows. Only valid for n > 0
 template <typename T>
@@ -762,31 +773,24 @@ extern u64 (*gFreeCachedObjects)();
 
 //--- Geom.h ------------------------------------------------------------------
 
-struct Point {
-    int x = 0;
-    int y = 0;
+// int and float geometry share one template each: Point/PointF, Size/SizeF,
+// Rect/RectF. Bodies with logic live in Base.cpp (explicitly instantiated).
 
-    Point() = default;
-    Point(int x, int y);
+template <typename T>
+struct PointG {
+    T x = 0;
+    T y = 0;
 
-    bool IsEmpty() const;
-    bool Eq(int x, int y) const;
-    bool operator==(const Point& other) const;
-    bool operator!=(const Point& other) const;
+    PointG() = default;
+    PointG(T x, T y) : x(x), y(y) {}
+
+    bool IsEmpty() const { return x == 0 && y == 0; }
+    bool Eq(T ox, T oy) const { return x == ox && y == oy; }
+    bool operator==(const PointG& o) const { return x == o.x && y == o.y; }
+    bool operator!=(const PointG& o) const { return !(*this == o); }
 };
-
-struct PointF {
-    float x = 0;
-    float y = 0;
-
-    PointF() = default;
-
-    PointF(float x, float y);
-
-    bool IsEmpty() const;
-    bool operator==(const PointF& other) const;
-    bool operator!=(const PointF& other) const;
-};
+using Point = PointG<int>;
+using PointF = PointG<float>;
 
 // Four corners of a (possibly rotated) glyph box. Order matches MuPDF fz_quad.
 struct QuadF {
@@ -801,99 +805,82 @@ struct QuadF {
     PointF Center() const;
 };
 
-struct Size {
-    int dx = 0;
-    int dy = 0;
+template <typename T>
+struct SizeG {
+    T dx = 0;
+    T dy = 0;
 
-    Size() = default;
-    Size(int dx, int dy);
+    SizeG() = default;
+    SizeG(T dx, T dy) : dx(dx), dy(dy) {}
 
-    bool IsEmpty() const;
-
-    bool operator==(const Size& other) const;
-    bool operator!=(const Size& other) const;
+    bool IsEmpty() const { return dx == 0 || dy == 0; }
+    bool operator==(const SizeG& o) const { return dx == o.dx && dy == o.dy; }
+    bool operator!=(const SizeG& o) const { return !(*this == o); }
 };
+using Size = SizeG<int>;
+using SizeF = SizeG<float>;
 
-struct SizeF {
-    float dx = 0;
-    float dy = 0;
+template <typename T>
+struct RectG {
+    T x = 0;
+    T y = 0;
+    T dx = 0;
+    T dy = 0;
 
-    SizeF() = default;
-    SizeF(float dx, float dy);
+    RectG() = default;
+    // implicit for Rect, explicit for RectF, as before
+    explicit(!std::is_same_v<T, int>) RectG(RECT r)
+        : x((T)r.left), y((T)r.top), dx((T)(r.right - r.left)), dy((T)(r.bottom - r.top)) {}
+    RectG(Gdiplus::RectF r) : x((T)r.X), y((T)r.Y), dx((T)r.Width), dy((T)r.Height) {} // NOLINT
+    RectG(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) {}
+    RectG(PointG<T> pt, SizeG<T> sz) : x(pt.x), y(pt.y), dx(sz.dx), dy(sz.dy) {}
+    RectG(PointG<T> min, PointG<T> max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {}
 
-    bool IsEmpty() const;
-
-    bool operator==(const SizeF& other) const;
-    bool operator!=(const SizeF& other) const;
+    T Right() const { return x + dx; }
+    T Bottom() const { return y + dy; }
+    static RectG FromXY(T xs, T ys, T xe, T ye);
+    static RectG FromXY(PointG<T> tl, PointG<T> br) { return FromXY(tl.x, tl.y, br.x, br.y); }
+    RectG<int> Round() const;
+    bool IsZero() const { return x == 0 && y == 0 && dx == 0 && dy == 0; }
+    bool IsEmpty() const { return dx == 0 || dy == 0; }
+    bool Contains(T px, T py) const;
+    bool Contains(PointG<T> pt) const { return Contains(pt.x, pt.y); }
+    RectG Intersect(RectG other) const;
+    RectG Union(RectG other) const;
+    void Offset(T ox, T oy) {
+        x += ox;
+        y += oy;
+    }
+    void Inflate(T ix, T iy) {
+        x -= ix;
+        dx += 2 * ix;
+        y -= iy;
+        dy += 2 * iy;
+    }
+    void SubTB(T t, T b) {
+        y += t;
+        dy -= t + b;
+    }
+    void SubLR(T l, T r) {
+        x += l;
+        dx -= l + r;
+    }
+    PointG<T> TL() const { return {x, y}; }
+    PointG<T> BR() const { return {x + dx, y + dy}; }
+    SizeG<T> Size() const { return {dx, dy}; }
+    void SetSize(const SizeG<T>& sz) {
+        dx = sz.dx;
+        dy = sz.dy;
+    }
+    void SetPos(const PointG<T>& p) {
+        x = p.x;
+        y = p.y;
+    }
+    bool operator==(const RectG& o) const { return x == o.x && y == o.y && dx == o.dx && dy == o.dy; }
+    bool operator!=(const RectG& o) const { return !(*this == o); }
 };
-
-struct Rect {
-    int x = 0;
-    int y = 0;
-    int dx = 0;
-    int dy = 0;
-
-    Rect() = default;
-    Rect(RECT r);           // NOLINT
-    Rect(Gdiplus::RectF r); // NOLINT
-    Rect(int x, int y, int dx, int dy);
-    Rect(const Point pt, const Size sz) : x(pt.x), y(pt.y), dx(sz.dx), dy(sz.dy) {}
-    Rect(Point min, Point max);
-
-    int Right() const;
-    int Bottom() const;
-    static Rect FromXY(int xs, int ys, int xe, int ye);
-    static Rect FromXY(Point TL, Point BR);
-    bool IsZero() const;
-    bool IsEmpty() const;
-    bool Contains(int x, int y) const;
-    bool Contains(Point pt) const;
-    Rect Intersect(Rect other) const;
-    Rect Union(Rect other) const;
-    void Offset(int _x, int _y);
-    void Inflate(int _x, int _y);
-    void SubTB(int t, int b);
-    void SubLR(int l, int r);
-    Point TL() const;
-    Point BR() const;
-    struct Size Size() const;
-    void SetSize(const struct Size&);
-    void SetPos(const Point&);
-    bool operator==(const Rect& other) const;
-    bool operator!=(const Rect& other) const;
-};
-
-struct RectF {
-    float x = 0;
-    float y = 0;
-    float dx = 0;
-    float dy = 0;
-
-    RectF() = default;
-
-    explicit RectF(RECT r);
-    RectF(Gdiplus::RectF r); // NOLINT
-    RectF(float x, float y, float dx, float dy);
-    RectF(PointF pt, SizeF size);
-    RectF(PointF min, PointF max);
-
-    float Right() const;
-    float Bottom() const;
-    static RectF FromXY(float xs, float ys, float xe, float ye);
-    static RectF FromXY(PointF TL, PointF BR);
-    Rect Round() const;
-    bool IsEmpty() const;
-    bool Contains(PointF pt) const;
-    RectF Intersect(RectF other) const;
-    RectF Union(RectF other);
-    void Offset(float _x, float _y);
-    void Inflate(float _x, float _y);
-    PointF TL() const;
-    PointF BR() const;
-    SizeF Size() const;
-    bool operator==(const RectF& other) const;
-    bool operator!=(const RectF& other) const;
-};
+using Rect = RectG<int>;
+using RectF = RectG<float>;
 
 Point ToPoint(PointF p);
 
@@ -1057,13 +1044,11 @@ void DestroyTempArena();
 // RAII scratch scope for an arena (the temp arena unless told otherwise):
 // rewinds it to the entry position on scope exit, so code that allocates
 // scratch in a loop or on a hot path doesn't grow the arena unbounded.
-struct AutoArenaSavepoint {
+struct AutoArenaSavepoint : NonCopyable {
     Arena* arena;
     u64 pos;
     AutoArenaSavepoint(Arena* a = GetTempArena()) : arena(a), pos(a ? a->Pos() : 0) { // NOLINT
     }
-    AutoArenaSavepoint(const AutoArenaSavepoint&) = delete;
-    AutoArenaSavepoint(AutoArenaSavepoint&&) = delete;
     ~AutoArenaSavepoint() {
         if (arena) {
             arena->PopTo(pos);
@@ -2303,79 +2288,42 @@ template <typename Fn>
 struct AutoCall;
 
 template <typename Result>
-struct AutoCall<Result (*)()> {
-    using Fn = Result (*)();
-    Fn fn = nullptr;
+struct AutoCall<Result (*)()> : NonCopyable {
+    Result (*fn)() = nullptr;
     AutoCall() = default;
-    AutoCall(Fn fn) { this->fn = fn; } // NOLINT
-    AutoCall(AutoCall& other) = delete;
-    AutoCall(AutoCall&& other) = delete;
-    AutoCall(const AutoCall& other) = delete;
-    AutoCall(const AutoCall&& other) = delete;
+    AutoCall(Result (*fn)()) : fn(fn) {} // NOLINT
     ~AutoCall() {
         if (fn) {
             fn();
         }
     }
-
-    AutoCall& operator=(AutoCall& other) = delete;
-    AutoCall& operator=(AutoCall&& other) = delete;
-    AutoCall& operator=(const AutoCall& other) = delete;
-    AutoCall& operator=(const AutoCall&& other) = delete;
 };
 
 template <typename Result, typename Arg>
-struct AutoCall<Result (*)(Arg)> {
-    using Fn = Result (*)(Arg);
-    Fn fn = nullptr;
+struct AutoCall<Result (*)(Arg)> : NonCopyable {
+    Result (*fn)(Arg) = nullptr;
     Arg arg{};
     AutoCall() = default;
-    AutoCall(Fn fn, Arg arg) { // NOLINT
-        this->fn = fn;
-        this->arg = arg;
-    }
-    AutoCall(AutoCall& other) = delete;
-    AutoCall(AutoCall&& other) = delete;
-    AutoCall(const AutoCall& other) = delete;
-    AutoCall(const AutoCall&& other) = delete;
+    AutoCall(Result (*fn)(Arg), Arg arg) : fn(fn), arg(arg) {} // NOLINT
     ~AutoCall() {
         if (fn) {
             fn(arg);
         }
     }
-
-    AutoCall& operator=(AutoCall& other) = delete;
-    AutoCall& operator=(AutoCall&& other) = delete;
-    AutoCall& operator=(const AutoCall& other) = delete;
-    AutoCall& operator=(const AutoCall&& other) = delete;
 };
 
 template <typename Result, typename Arg1, typename Arg2>
-struct AutoCall<Result (*)(Arg1, Arg2)> {
-    using Fn = Result (*)(Arg1, Arg2);
-    Fn fn = nullptr;
+struct AutoCall<Result (*)(Arg1, Arg2)> : NonCopyable {
+    Result (*fn)(Arg1, Arg2) = nullptr;
     Arg1 arg1{};
     Arg2 arg2{};
     AutoCall() = default;
-    AutoCall(Fn fn, Arg1 arg1, Arg2 arg2) { // NOLINT
-        this->fn = fn;
-        this->arg1 = arg1;
-        this->arg2 = arg2;
-    }
-    AutoCall(AutoCall& other) = delete;
-    AutoCall(AutoCall&& other) = delete;
-    AutoCall(const AutoCall& other) = delete;
-    AutoCall(const AutoCall&& other) = delete;
+    AutoCall(Result (*fn)(Arg1, Arg2), Arg1 arg1, Arg2 arg2) : fn(fn), arg1(arg1), arg2(arg2) {} // NOLINT
     ~AutoCall() {
         if (fn) {
             fn(arg1, arg2);
         }
     }
-
-    AutoCall& operator=(AutoCall& other) = delete;
-    AutoCall& operator=(AutoCall&& other) = delete;
-    AutoCall& operator=(const AutoCall& other) = delete;
-    AutoCall& operator=(const AutoCall&& other) = delete;
 };
 
 template <typename Result>

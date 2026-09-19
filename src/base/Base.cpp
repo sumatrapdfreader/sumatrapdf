@@ -147,48 +147,6 @@ u32 MurmurHash2(WStr s) {
     return MurmurHash2(s.s, s.len * sizeofi(wchar_t));
 }
 
-int limitValue(int val, int min, int max) {
-    if (min > max) {
-        std::swap(min, max);
-    }
-    ReportIf(min > max);
-    if (val < min) {
-        return min;
-    }
-    if (val > max) {
-        return max;
-    }
-    return val;
-}
-
-DWORD limitValue(DWORD val, DWORD min, DWORD max) {
-    if (min > max) {
-        std::swap(min, max);
-    }
-    ReportIf(min > max);
-    if (val < min) {
-        return min;
-    }
-    if (val > max) {
-        return max;
-    }
-    return val;
-}
-
-float limitValue(float val, float min, float max) {
-    if (min > max) {
-        std::swap(min, max);
-    }
-    ReportIf(min > max);
-    if (val < min) {
-        return min;
-    }
-    if (val > max) {
-        return max;
-    }
-    return val;
-}
-
 Func0 MkFunc0Void(funcVoidPtr fn) {
     auto res = Func0{};
     res.fn = (void*)fn;
@@ -203,42 +161,6 @@ int setMinMax(int& v, int minVal, int maxVal) {
 }
 
 //--- Geom.cpp ----------------------------------------------------------------
-
-// ------------- Point
-
-Point::Point(int x, int y) : x(x), y(y) {}
-
-bool Point::IsEmpty() const {
-    return x == 0 && y == 0;
-}
-
-bool Point::Eq(int x, int y) const {
-    return x == this->x && y == this->y;
-}
-
-bool Point::operator==(const Point& other) const {
-    return this->x == other.x && this->y == other.y;
-}
-
-bool Point::operator!=(const Point& other) const {
-    return !this->operator==(other);
-}
-
-// ------------- PointF
-
-PointF::PointF(float x, float y) : x(x), y(y) {}
-
-bool PointF::IsEmpty() const {
-    return x == 0 && y == 0;
-}
-
-bool PointF::operator==(const PointF& other) const {
-    return this->x == other.x && this->y == other.y;
-}
-
-bool PointF::operator!=(const PointF& other) const {
-    return !this->operator==(other);
-}
 
 bool QuadF::IsEmpty() const {
     return ul == ur && ul == ll && ul == lr;
@@ -281,67 +203,8 @@ bool QuadF::Contains(PointF p) const {
     return true;
 }
 
-// ------------- Size
-
-Size::Size(int dx, int dy) : dx(dx), dy(dy) {}
-
-bool Size::IsEmpty() const {
-    return dx == 0 || dy == 0;
-}
-
-bool Size::operator==(const Size& other) const {
-    return this->dx == other.dx && this->dy == other.dy;
-}
-
-bool Size::operator!=(const Size& other) const {
-    return !this->operator==(other);
-}
-
-// ------------- SizeF
-
-SizeF::SizeF(float dx, float dy) : dx(dx), dy(dy) {}
-
-bool SizeF::IsEmpty() const {
-    return dx == 0 || dy == 0;
-}
-
-bool SizeF::operator==(const SizeF& other) const {
-    return this->dx == other.dx && this->dy == other.dy;
-}
-
-bool SizeF::operator!=(const SizeF& other) const {
-    return !this->operator==(other);
-}
-
-// ------------- Rect
-
-Rect::Rect(const RECT r) {
-    x = r.left;
-    y = r.top;
-    dx = r.right - r.left;
-    dy = r.bottom - r.top;
-}
-
-Rect::Rect(const Gdiplus::RectF r) {
-    x = (int)r.X;
-    y = (int)r.Y;
-    dx = (int)r.Width;
-    dy = (int)r.Height;
-}
-
-Rect::Rect(int x, int y, int dx, int dy) : x(x), y(y), dx(dx), dy(dy) {}
-
-Rect::Rect(const Point min, const Point max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {}
-
-int Rect::Right() const {
-    return x + dx;
-}
-
-int Rect::Bottom() const {
-    return y + dy;
-}
-
-Rect Rect::FromXY(int xs, int ys, int xe, int ye) {
+template <typename T>
+RectG<T> RectG<T>::FromXY(T xs, T ys, T xe, T ye) {
     if (xs > xe) {
         std::swap(xs, xe);
     }
@@ -350,221 +213,45 @@ Rect Rect::FromXY(int xs, int ys, int xe, int ye) {
     }
     return {xs, ys, xe - xs, ye - ys};
 }
-
-Rect Rect::FromXY(Point TL, Point BR) {
-    return FromXY(TL.x, TL.y, BR.x, BR.y);
-}
-
-bool Rect::IsZero() const {
-    return x == 0 && y == 0 && dx == 0 && dy == 0;
-}
-
-bool Rect::IsEmpty() const {
-    return dx == 0 || dy == 0;
-}
-
-// endpoint-exclusive, like RECT: https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
-bool Rect::Contains(int x, int y) const {
-    if (x < this->x) {
-        return false;
-    }
-    if (x >= this->x + this->dx) {
-        return false;
-    }
-    if (y < this->y) {
-        return false;
-    }
-    if (y >= this->y + this->dy) {
-        return false;
-    }
-    return true;
-}
-
-bool Rect::Contains(Point pt) const {
-    return Contains(pt.x, pt.y);
-}
-
-/* Returns an empty rectangle if there's no intersection (see IsEmpty). */
-Rect Rect::Intersect(Rect other) const {
-    /* The intersection starts with the larger of the start coordinates
-        and ends with the smaller of the end coordinates */
-    int _x = std::max(this->x, other.x);
-    int _y = std::max(this->y, other.y);
-    int _dx = std::min(this->x + this->dx, other.x + other.dx) - _x;
-    int _dy = std::min(this->y + this->dy, other.y + other.dy) - _y;
-
-    /* return an empty rectangle if the dimensions aren't positive */
-    if (_dx <= 0 || _dy <= 0) {
-        return {};
-    }
-    return {_x, _y, _dx, _dy};
-}
-
-Rect Rect::Union(Rect other) const {
-    if (this->dx <= 0 || this->dy <= 0) {
-        return other;
-    }
-    if (other.dx <= 0 || other.dy <= 0) {
-        return *this;
-    }
-
-    /* The union starts with the smaller of the start coordinates
-        and ends with the larger of the end coordinates */
-    int _x = std::min(this->x, other.x);
-    int _y = std::min(this->y, other.y);
-    int _dx = std::max(this->x + this->dx, other.x + other.dx) - _x;
-    int _dy = std::max(this->y + this->dy, other.y + other.dy) - _y;
-
-    return {_x, _y, _dx, _dy};
-}
-
-void Rect::Offset(int _x, int _y) {
-    x += _x;
-    y += _y;
-}
-
-void Rect::Inflate(int _x, int _y) {
-    x -= _x;
-    dx += 2 * _x;
-    y -= _y;
-    dy += 2 * _y;
-}
-
-void Rect::SubTB(int t, int b) {
-    y += t;
-    dy -= t;
-    dy -= b;
-}
-
-void Rect::SubLR(int l, int r) {
-    x += l;
-    dx -= l;
-    dx -= r;
-}
-
-Point Rect::TL() const {
-    return {x, y};
-}
-
-Point Rect::BR() const {
-    return {x + dx, y + dy};
-}
-
-Size Rect::Size() const {
-    return {dx, dy};
-}
-
-void Rect::SetSize(const struct Size& sz) {
-    dx = sz.dx;
-    dy = sz.dy;
-}
-
-void Rect::SetPos(const Point& pos) {
-    x = pos.x;
-    y = pos.y;
-}
-
-bool Rect::operator==(const Rect& other) const {
-    return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
-}
-
-bool Rect::operator!=(const Rect& other) const {
-    return !this->operator==(other);
-}
-
-// ------------- RectF
 
 // cf. fz_roundrect in mupdf/fitz/base_geometry.c
 #ifndef FLT_EPSILON
 constexpr float FLT_EPSILON = 1.192092896e-07f;
 #endif
 
-RectF::RectF(const RECT r) {
-    x = (float)r.left;
-    y = (float)r.top;
-    dx = (float)(r.right - r.left);
-    dy = (float)(r.bottom - r.top);
-}
-
-RectF::RectF(const Gdiplus::RectF r) {
-    x = r.X;
-    y = r.Y;
-    dx = r.Width;
-    dy = r.Height;
-}
-
-RectF::RectF(float x, float y, float dx, float dy) : x(x), y(y), dx(dx), dy(dy) {}
-
-RectF::RectF(PointF pt, SizeF size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {}
-
-RectF::RectF(PointF min, PointF max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {}
-
-float RectF::Right() const {
-    return x + dx;
-}
-
-float RectF::Bottom() const {
-    return y + dy;
-}
-
-RectF RectF::FromXY(float xs, float ys, float xe, float ye) {
-    if (xs > xe) {
-        std::swap(xs, xe);
-    }
-    if (ys > ye) {
-        std::swap(ys, ye);
-    }
-    return {xs, ys, xe - xs, ye - ys};
-}
-
-RectF RectF::FromXY(PointF TL, PointF BR) {
-    return FromXY(TL.x, TL.y, BR.x, BR.y);
-}
-
-Rect RectF::Round() const {
-    return Rect::FromXY((int)floorf(x + FLT_EPSILON), (int)floorf(y + FLT_EPSILON), (int)ceilf(x + dx - FLT_EPSILON),
-                        (int)ceilf(y + dy - FLT_EPSILON));
-}
-
-bool RectF::IsEmpty() const {
-    return dx == 0 || dy == 0;
+template <typename T>
+RectG<int> RectG<T>::Round() const {
+    float fx = (float)x, fy = (float)y, fdx = (float)dx, fdy = (float)dy;
+    return Rect::FromXY((int)floorf(fx + FLT_EPSILON), (int)floorf(fy + FLT_EPSILON),
+                        (int)ceilf(fx + fdx - FLT_EPSILON), (int)ceilf(fy + fdy - FLT_EPSILON));
 }
 
 // endpoint-exclusive, like RECT: https://devblogs.microsoft.com/oldnewthing/20040218-00/?p=40563
-bool RectF::Contains(PointF pt) const {
-    if (pt.x < this->x) {
-        return false;
-    }
-    if (pt.x >= this->x + this->dx) {
-        return false;
-    }
-    if (pt.y < this->y) {
-        return false;
-    }
-    if (pt.y >= this->y + this->dy) {
-        return false;
-    }
-    return true;
+template <typename T>
+bool RectG<T>::Contains(T px, T py) const {
+    return px >= x && px < x + dx && py >= y && py < y + dy;
 }
 
 /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
-RectF RectF::Intersect(RectF other) const {
+template <typename T>
+RectG<T> RectG<T>::Intersect(RectG other) const {
     /* The intersection starts with the larger of the start coordinates
         and ends with the smaller of the end coordinates */
-    float _x = std::max(this->x, other.x);
-    float _y = std::max(this->y, other.y);
-    float _dx = std::min(this->x + this->dx, other.x + other.dx) - _x;
-    float _dy = std::min(this->y + this->dy, other.y + other.dy) - _y;
+    T nx = std::max(x, other.x);
+    T ny = std::max(y, other.y);
+    T ndx = std::min(x + dx, other.x + other.dx) - nx;
+    T ndy = std::min(y + dy, other.y + other.dy) - ny;
 
     /* return an empty rectangle if the dimensions aren't positive */
-    if (_dx <= 0 || _dy <= 0) {
+    if (ndx <= 0 || ndy <= 0) {
         return {};
     }
-    return {_x, _y, _dx, _dy};
+    return {nx, ny, ndx, ndy};
 }
 
-RectF RectF::Union(RectF other) {
-    if (this->dx <= 0 || this->dy <= 0) {
+template <typename T>
+RectG<T> RectG<T>::Union(RectG other) const {
+    if (dx <= 0 || dy <= 0) {
         return other;
     }
     if (other.dx <= 0 || other.dy <= 0) {
@@ -573,45 +260,16 @@ RectF RectF::Union(RectF other) {
 
     /* The union starts with the smaller of the start coordinates
         and ends with the larger of the end coordinates */
-    float _x = std::min(this->x, other.x);
-    float _y = std::min(this->y, other.y);
-    float _dx = std::max(this->x + this->dx, other.x + other.dx) - _x;
-    float _dy = std::max(this->y + this->dy, other.y + other.dy) - _y;
+    T nx = std::min(x, other.x);
+    T ny = std::min(y, other.y);
+    T ndx = std::max(x + dx, other.x + other.dx) - nx;
+    T ndy = std::max(y + dy, other.y + other.dy) - ny;
 
-    return {_x, _y, _dx, _dy};
+    return {nx, ny, ndx, ndy};
 }
 
-void RectF::Offset(float _x, float _y) {
-    x += _x;
-    y += _y;
-}
-
-void RectF::Inflate(float _x, float _y) {
-    x -= _x;
-    dx += 2 * _x;
-    y -= _y;
-    dy += 2 * _y;
-}
-
-PointF RectF::TL() const {
-    return {x, y};
-}
-
-PointF RectF::BR() const {
-    return {x + dx, y + dy};
-}
-
-SizeF RectF::Size() const {
-    return {dx, dy};
-}
-
-bool RectF::operator==(const RectF& other) const {
-    return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
-}
-
-bool RectF::operator!=(const RectF& other) const {
-    return !this->operator==(other);
-}
+template struct RectG<int>;
+template struct RectG<float>;
 
 // ------------- conversion functions
 
@@ -1698,7 +1356,7 @@ bool EqI(Str s1, Str s2) {
 
 // strcmp-style (<0, 0, >0). Empty/null sorts before non-empty. Prefer Eq when only equality matters.
 int Cmp(Str a, Str b) {
-    if (a.s == b.s) {
+    if (a.s == b.s && a.len == b.len) {
         return 0;
     }
     if (len(a) == 0) {
@@ -1717,7 +1375,7 @@ int Cmp(Str a, Str b) {
 
 // strcasecmp-style (<0, 0, >0). Prefer EqI when only equality matters.
 int CmpI(Str a, Str b) {
-    if (a.s == b.s) {
+    if (a.s == b.s && a.len == b.len) {
         return 0;
     }
     if (len(a) == 0) {
@@ -2503,16 +2161,6 @@ static char CmpNaturalAt(Str s, int i) {
     return s.s[i];
 }
 
-static int CmpNaturalLex(Str a, Str b) {
-    int minLen = std::min(a.len, b.len);
-    for (int i = 0; i < minLen; i++) {
-        if (a.s[i] != b.s[i]) {
-            return (unsigned char)a.s[i] - (unsigned char)b.s[i];
-        }
-    }
-    return a.len - b.len;
-}
-
 int CmpNatural(Str aIn, Str bIn) {
     ReportIf(len(aIn) == 0 || len(bIn) == 0);
     int ai = 0;
@@ -2533,7 +2181,7 @@ int CmpNatural(Str aIn, Str bIn) {
         // if two strings are identical when ignoring case, leading zeroes and
         // whitespace, compare them traditionally for a stable sort order
         if (CmpNaturalAtEnd(aIn, ai) && CmpNaturalAtEnd(bIn, bi)) {
-            return CmpNaturalLex(aIn, bIn);
+            return str::Cmp(aIn, bIn);
         }
 
         char ca = CmpNaturalAt(aIn, ai);
@@ -5581,56 +5229,6 @@ TempStr FormatRomanNumeralTemp(int n) {
 // represents null string
 constexpr u32 kNullOffset = (u32)-2;
 
-static int StrCmp(Str s1, Str s2) {
-    int n = std::min(s1.len, s2.len);
-    int cmp = n > 0 ? memcmp(s1.s, s2.s, (size_t)n) : 0;
-    if (cmp != 0) {
-        return cmp;
-    }
-    return s1.len - s2.len;
-}
-
-static int StrCmpI(Str s1, Str s2) {
-    int n = std::min(s1.len, s2.len);
-    for (int i = 0; i < n; i++) {
-        int c1 = tolower((u8)s1.s[i]);
-        int c2 = tolower((u8)s2.s[i]);
-        if (c1 != c2) {
-            return c1 - c2;
-        }
-    }
-    return s1.len - s2.len;
-}
-
-bool StrLess(Str s1, Str s2) {
-    if (len(s1) == 0) {
-        if (len(s2) == 0) {
-            return false;
-        }
-        return true;
-    }
-    if (len(s2) == 0) {
-        return false;
-    }
-    int n = StrCmp(s1, s2);
-    return n < 0;
-}
-
-bool StrLessNoCase(Str s1, Str s2) {
-    if (len(s1) == 0) {
-        // null / empty string is smallest
-        if (len(s2) == 0) {
-            return false;
-        }
-        return true;
-    }
-    if (len(s2) == 0) {
-        return false;
-    }
-    int n = StrCmpI(s1, s2);
-    return n < 0;
-}
-
 bool StrLessNatural(Str s1, Str s2) {
     int n = str::CmpNatural(s1, s2);
     return n < 0;
@@ -6363,6 +5961,15 @@ void SortIndex(StrVec* v, StrLessFunc lessFn) {
         return ret;
     });
     v->sortIndexes = indexes;
+}
+
+// null / empty string is smallest
+bool StrLess(Str s1, Str s2) {
+    return str::Cmp(s1, s2) < 0;
+}
+
+bool StrLessNoCase(Str s1, Str s2) {
+    return str::CmpI(s1, s2) < 0;
 }
 
 void Sort(StrVec* v, StrLessFunc lessFn) {

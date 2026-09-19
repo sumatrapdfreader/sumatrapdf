@@ -5,9 +5,6 @@ struct SelectionOnPage;
 struct WatchedFile;
 struct MainWindow;
 struct LoadArgs;
-namespace str {
-struct Builder;
-}
 struct ReadAloudHighlightMap;
 
 struct AutoScroll {
