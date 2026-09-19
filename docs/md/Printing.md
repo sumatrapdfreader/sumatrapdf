@@ -23,6 +23,22 @@ This is reliable across document types (PDF, XPS, CBZ, etc.) but means:
 Press `Ctrl + P` (or toolbar / menu) to open the system print dialog. There you
 pick the printer, number of copies, and page range.
 
+### Printing part of a page
+
+To print only a fragment of a page (a detail of a drawing, one table):
+
+1. Select the area as a rectangle: hold `Ctrl` and drag with the left mouse
+   button (or drag with the right mouse button).
+2. Right-click the selection and choose **Print Selection...**, or press
+   `Ctrl + P` and pick **Selection** under *Page Range* in the print dialog.
+3. To print the fragment at its real size choose **Use original page sizes**
+   under *Advanced*; **Shrink** / **Fit** scale it to the paper instead.
+
+The selection prints on one sheet, at the top-left (or centered with
+**Center page horizontally**). Only rectangular selections can be printed;
+a text selection is not offered. The Windows 11 print dialog can't print a
+selection, so SumatraPDF uses the classic dialog for it.
+
 ### The Advanced options
 
 The system print dialog has an **Advanced** tab (a second tab next to

@@ -11550,6 +11550,13 @@ static void PrintCurrentFileDeferred(MainWindow* win) {
     PrintCurrentFile(win);
 }
 
+static void PrintSelectionDeferred(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    PrintCurrentFile(win, false, true);
+}
+
 // A gesture that writes to the document as it goes (a resize drag writes the
 // annotation on every mouse move) should still be a single undo step, so it
 // holds one journal operation open from start to end. Both calls are safe to
@@ -11919,6 +11926,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdPrint:
             // not PrintCurrentFile(win): see PrintCurrentFileDeferred
             uitask::Post(MkFunc0(PrintCurrentFileDeferred, win), "CmdPrint");
+            break;
+
+        case CmdPrintSelection:
+            // the print dialog with "Selection" pre-selected; the selection
+            // can also be printed via CmdPrint by picking that radio button
+            uitask::Post(MkFunc0(PrintSelectionDeferred, win), "CmdPrintSelection");
             break;
 
         case CmdCopyFilePath:

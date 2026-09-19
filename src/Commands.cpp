@@ -327,6 +327,7 @@ static SeqStrings gCommandNames =
     "CmdFavorite\0"
     "CmdReadAloudFromCursorPosition\0"
     "CmdToggleGrayscale\0"
+    "CmdPrintSelection\0"
     "\0";
 
 static i32 gCommandIds[] = {
@@ -643,6 +644,7 @@ static i32 gCommandIds[] = {
     CmdFavorite,
     CmdReadAloudFromCursorPosition,
     CmdToggleGrayscale,
+    CmdPrintSelection,
 };
 
 SeqStrings gCommandDescriptions =
@@ -959,6 +961,7 @@ SeqStrings gCommandDescriptions =
     "Go to Favorite\0"
     "Start Reading From Cursor Position\0"
     "Toggle Grayscale\0"
+    "Print Selection...\0"
     "\0";
 // clang-format on
 // @gen-end cmd-c

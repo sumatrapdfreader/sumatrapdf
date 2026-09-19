@@ -68,6 +68,7 @@ CmdCopyLinkTarget,,Copy Link Target,
 CmdCopySelection,"Ctrl + C, Ctrl + Insert",Copy Selection,"in Edit PDF mode with an annotation selected, copies that annotation instead of text"
 CmdCopySelectionAsImage,,Copy Selection As Image,"copy a rectangular selection as an image, ver 3.7+"
 CmdSaveSelectionAsImage,,Save As Image...,"save a rectangular (Ctrl+drag) selection as PNG, JPEG or BMP at a chosen DPI, independent of the current zoom, ver 3.7+ (fixes #6127)"
+CmdPrintSelection,,Print Selection...,"open the print dialog with Selection pre-selected to print only the rectangular (Ctrl+drag) selection; also in the selection context menu, ver 3.7+ (fixes #6222)"
 CmdSearchGoogleLens,,Search with Google Lens,"opens the selection, image under the cursor, or current page in Google Lens, ver 3.7+"
 CmdSearchGoogleLensPage,,Search Page with Google Lens,"current page (or the page under the cursor from the context menu), ver 3.7+"
 CmdSearchGoogleLensImage,,Search Image with Google Lens,"image under the cursor, ver 3.7+"

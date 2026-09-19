@@ -1323,7 +1323,7 @@ static void SetDevModeCopies(HGLOBAL hDevMode, short copies) {
 enum {
     MAXPAGERANGES = 10
 };
-void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
+void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
     // we remember some printer settings per process
     static AutoFree<DEVMODE> defaultDevMode;
     static PrintScaleAdv defaultScaleAdv = PrintScaleAdv::Shrink;
@@ -1398,7 +1398,10 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     // the Windows 11 dialog runs the whole job itself; -print-to and friends
     // need the synchronous classic path
-    if (!waitForCompletion && !PrinterUIWantsClassic()) {
+    // the Windows 11 dialog can't print a selection (TryPrintCurrentFileWin11
+    // declines when there is one), so a selection request goes straight to the
+    // classic dialog
+    if (!waitForCompletion && !selectionByDefault && !PrinterUIWantsClassic()) {
         bool usedWin11Dialog = TryPrintCurrentFileWin11(win, defaultScaleAdv);
         logf("PrintCurrentFile: Windows 11 dialog=%d\n", (int)usedWin11Dialog);
         if (usedWin11Dialog) {
@@ -1412,6 +1415,10 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     pdex.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
     if (!win->CurrentTab()->selectionOnPage) {
         pdex.Flags |= PD_NOSELECTION;
+    } else if (selectionByDefault) {
+        // "Print Selection..." from the selection context menu: start on the
+        // Selection radio button instead of All (#6222)
+        pdex.Flags |= PD_SELECTION;
     }
     pdex.nCopies = 1;
     /* by default print all pages */

@@ -837,7 +837,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (!HasPermission(Perm::SavePreferences) && CmdIdInList(cmdId, removeIfNoPrefsPerms)) {
         return CommandVisibility::Hide;
     }
-    if (!HasPermission(Perm::PrinterAccess) && cmdId == CmdPrint) {
+    if (!HasPermission(Perm::PrinterAccess) && (cmdId == CmdPrint || cmdId == CmdPrintSelection)) {
         return CommandVisibility::Hide;
     }
     if (!CanAccessDisk()) {
@@ -864,7 +864,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (!ctx.cursorOnImage && cmdId == CmdCopyImage) {
         return CommandVisibility::Hide;
     }
-    if (cmdId == CmdCopySelectionAsImage || cmdId == CmdSaveSelectionAsImage) {
+    if (cmdId == CmdCopySelectionAsImage || cmdId == CmdSaveSelectionAsImage || cmdId == CmdPrintSelection) {
         bool isRect = ctx.hasSelection && !ctx.hasTextSelection;
         return isRect ? CommandVisibility::Show : CommandVisibility::Hide;
     }

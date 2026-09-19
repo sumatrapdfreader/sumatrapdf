@@ -328,6 +328,7 @@ const commandsRaw = [
     "CmdFavorite", "Go to Favorite",
     "CmdReadAloudFromCursorPosition", "Start Reading From Cursor Position",
     "CmdToggleGrayscale", "Toggle Grayscale",
+    "CmdPrintSelection", "Print Selection...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them
