@@ -1319,11 +1319,15 @@ int FoldDiacriticsRune(int c) {
     }
 
     // letters that don't decompose into base + combining mark: ŁłĐđØøĦħı
-    static const struct {
-        u16 cp;
-        char ch;
-    } kNoDecomp[] = {{0x141, 'L'}, {0x142, 'l'}, {0x110, 'D'}, {0x111, 'd'}, {0xd8, 'O'},
-                     {0xf8, 'o'},  {0x126, 'H'}, {0x127, 'h'}, {0x131, 'i'}};
+    // clang-format off
+static const struct {
+    u16 cp;
+    char ch;
+} kNoDecomp[] = {
+    {0x141, 'L'}, {0x142, 'l'}, {0x110, 'D'}, {0x111, 'd'}, {0xd8, 'O'},
+    {0xf8, 'o'},  {0x126, 'H'}, {0x127, 'h'}, {0x131, 'i'},
+};
+    // clang-format on
     for (auto& e : kNoDecomp) {
         if (e.cp == c) {
             return e.ch;
@@ -2275,16 +2279,8 @@ TempStr DecodeTemp(Str url) {
 // (including URL delimiters ? # & = / and quotes) is %HH so the result is
 // safe as a query value, not parsed as more URL syntax (discussion #6029).
 static bool UrlUnreserved(u8 c) {
-    if (c >= '0' && c <= '9') {
-        return true;
-    }
-    if (c >= 'A' && c <= 'Z') {
-        return true;
-    }
-    if (c >= 'a' && c <= 'z') {
-        return true;
-    }
-    return c == '-' || c == '.' || c == '_' || c == '~';
+    bool alpha = (c | 0x20) >= 'a' && (c | 0x20) <= 'z';
+    return alpha || str::IsDigit((char)c) || c == '-' || c == '.' || c == '_' || c == '~';
 }
 
 static int UrlEncodedByteLen(u8 c) {
@@ -2302,38 +2298,18 @@ static void UrlAppendEncodedByte(char* dst, int& n, u8 c) {
     dst[n++] = kHex[c & 0xF];
 }
 
-TempStr EncodeTemp(Str s) {
+// keepSlash: '/' stays a path separator, so a relative path with spaces or
+// non-ASCII ("dir/Test Test.md") is a valid URI path
+static TempStr EncodeT(Str s, bool keepSlash) {
     if (str::IsNull(s)) {
         return {};
-    }
-    if (len(s) == 0) {
-        return str::DupTemp(StrL(""));
     }
     int n = len(s);
     char* buf = AllocArrayTemp<char>((n * 3) + 1);
     int dst = 0;
     for (int i = 0; i < n; i++) {
-        UrlAppendEncodedByte(buf, dst, (u8)s.s[i]);
-    }
-    buf[dst] = '\0';
-    return Str(buf, dst);
-}
-
-// Like EncodeTemp but '/' stays a path separator, so a relative path with
-// spaces or non-ASCII ("dir/Test Test.md") is a valid URI path.
-TempStr EncodePathTemp(Str path) {
-    if (str::IsNull(path)) {
-        return {};
-    }
-    if (len(path) == 0) {
-        return str::DupTemp(StrL(""));
-    }
-    int n = len(path);
-    char* buf = AllocArrayTemp<char>((n * 3) + 1);
-    int dst = 0;
-    for (int i = 0; i < n; i++) {
-        u8 c = (u8)path.s[i];
-        if (c == '/') {
+        u8 c = (u8)s.s[i];
+        if (keepSlash && c == '/') {
             buf[dst++] = '/';
         } else {
             UrlAppendEncodedByte(buf, dst, c);
@@ -2341,6 +2317,16 @@ TempStr EncodePathTemp(Str path) {
     }
     buf[dst] = '\0';
     return Str(buf, dst);
+}
+
+TempStr EncodeTemp(Str s) {
+    return EncodeT(s, false);
+}
+
+// Like EncodeTemp but '/' stays a path separator, so a relative path with
+// spaces or non-ASCII ("dir/Test Test.md") is a valid URI path.
+TempStr EncodePathTemp(Str path) {
+    return EncodeT(path, true);
 }
 
 // Encoded length depends on the bytes, not the rune count: ASCII stays 1, a
@@ -2356,9 +2342,6 @@ TempStr EncodeMayTruncateTemp(Str s, int maxEncodedLen, bool* didTruncateOut) {
     }
     if (maxEncodedLen <= 0) {
         return EncodeTemp(s);
-    }
-    if (len(s) == 0) {
-        return str::DupTemp(StrL(""));
     }
     char* buf = AllocArrayTemp<char>(maxEncodedLen + 1);
     int dst = 0;
@@ -3118,28 +3101,27 @@ bool IsAbsolute(Str url) {
     return hash < 0 || hash > colon;
 }
 
-TempStr GetFullPathTemp(Str url) {
-    TempStr path = str::DupTemp(url);
-    str::TransCharsInPlace(path, StrL("#?"), StrL("\0\0"));
-    path.len = len(path.s);
-    return DecodeTemp(path);
+// url up to its query / fragment, still encoded
+static Str PathPart(Str url) {
+    int n = 0;
+    while (n < url.len && url.s[n] != '#' && url.s[n] != '?') {
+        n++;
+    }
+    return Str(url.s, n);
 }
 
+TempStr GetFullPathTemp(Str url) {
+    return DecodeTemp(PathPart(url));
+}
+
+// the last path segment, decoded after the split so an encoded '/' stays in the name
 TempStr GetFileNameTemp(Str url) {
-    TempStr path = str::DupTemp(url);
-    str::TransCharsInPlace(path, StrL("#?"), StrL("\0\0"));
-    path.len = len(path.s);
+    Str path = PathPart(url);
     int base = path.len;
-    for (; base > 0; base--) {
-        if ('/' == path.s[base - 1] || '\\' == path.s[base - 1]) {
-            break;
-        }
+    while (base > 0 && path.s[base - 1] != '/' && path.s[base - 1] != '\\') {
+        base--;
     }
-    Str baseStr(path.s + base, path.len - base);
-    if (len(baseStr) == 0) {
-        return {};
-    }
-    return DecodeTemp(baseStr);
+    return base < path.len ? DecodeTemp(Str(path.s + base, path.len - base)) : Str{};
 }
 
 } // namespace url
@@ -3414,11 +3396,14 @@ int WStrFindSubstr(WStr str, WStr substr) {
 
 // Format size in human readable form (e.g., "1.23 GB", "456 KB")
 TempStr FormatFileSizeTemp(u64 size) {
-    static const struct {
-        u64 divisor;
-        Str suffix;
-    } kUnits[] = {
-        {1ULL << 40, StrL("TB")}, {1ULL << 30, StrL("GB")}, {1ULL << 20, StrL("MB")}, {1ULL << 10, StrL("KB")}};
+    // clang-format off
+static const struct {
+    u64 divisor;
+    Str suffix;
+} kUnits[] = {
+    {1ULL << 40, StrL("TB")}, {1ULL << 30, StrL("GB")}, {1ULL << 20, StrL("MB")}, {1ULL << 10, StrL("KB")},
+};
+    // clang-format on
     for (auto& u : kUnits) {
         if (size < u.divisor) {
             continue;
@@ -4082,11 +4067,15 @@ static int parseArgDefPerc(Fmt& fmt, int off) {
     // length modifier; determine integer width (32/64 on LLP64 / win64)
     // long is 32-bit on win64; z/j/t/I (size_t, intmax_t, ptrdiff_t, MS
     // size_t) are 64. Longer modifiers first so "I" doesn't eat "I64".
-    static const struct {
-        const char* mod;
-        int bits;
-    } kLenMods[] = {{"I64", 64}, {"I32", 32}, {"ll", 64}, {"hh", 32}, {"l", 32}, {"h", 32},
-                    {"L", 32},   {"w", 32},   {"z", 64},  {"j", 64},  {"t", 64}, {"I", 64}};
+    // clang-format off
+static const struct {
+    const char* mod;
+    int bits;
+} kLenMods[] = {
+    {"I64", 64}, {"I32", 32}, {"ll", 64}, {"hh", 32}, {"l", 32}, {"h", 32},
+    {"L", 32},   {"w", 32},   {"z", 64},  {"j", 64},  {"t", 64}, {"I", 64},
+};
+    // clang-format on
     int bits = 32;
     for (auto& m : kLenMods) {
         if (startsWith(f, off, m.mod)) {

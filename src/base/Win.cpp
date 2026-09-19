@@ -1932,23 +1932,18 @@ u32 CpuID() {
 }
 
 // most capable first, so the first match is the latest supported
+// clang-format off
 static const struct {
     u32 flag;
     Str name;
 } kCpuFeatures[] = {
-    {kCpuAVX2, StrL("avx2")},
-    {kCpuAVX, StrL("avx")},
-    {kCpuSSE42, StrL("sse42")},
-    {kCpuSSE41, StrL("sse41")},
-    {kCpuSSE3, StrL("sse3")},
-    {kCpuSSE2, StrL("sse2")},
-    {kCpuSSE, StrL("sse")},
-    {kCpuMMX, StrL("mmx")},
-    {kCpuArmDotProd, StrL("dotprod")},
-    {kCpuArmAtomics, StrL("atomics")},
-    {kCpuArmCrypto, StrL("crypto")},
+    {kCpuAVX2, StrL("avx2")},   {kCpuAVX, StrL("avx")},   {kCpuSSE42, StrL("sse42")},
+    {kCpuSSE41, StrL("sse41")}, {kCpuSSE3, StrL("sse3")}, {kCpuSSE2, StrL("sse2")},
+    {kCpuSSE, StrL("sse")},     {kCpuMMX, StrL("mmx")},
+    {kCpuArmDotProd, StrL("dotprod")}, {kCpuArmAtomics, StrL("atomics")}, {kCpuArmCrypto, StrL("crypto")},
     {kCpuNEON, StrL("neon")},
 };
+// clang-format on
 
 Str LatestSupportedSIMD() {
     u32 id = CpuID();

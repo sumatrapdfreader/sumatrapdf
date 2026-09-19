@@ -230,15 +230,17 @@ static FileType DetectHicAndAvif(Str d) {
     if (d.len < 0x18) {
         return FileType::Unknown;
     }
-    static const struct {
-        int off;
-        Str brand;
-        FileType type;
-    } kBrands[] = {
-        {4, StrL("ftypheic"), FileType::Heic},  {4, StrL("ftypheix"), FileType::Heic},
-        {4, StrL("ftypmif1"), FileType::Heic},  {4, StrL("ftypavif"), FileType::Avif},
-        {16, StrL("mif1heic"), FileType::Heic},
-    };
+    // clang-format off
+static const struct {
+    int off;
+    Str brand;
+    FileType type;
+} kBrands[] = {
+    {4, StrL("ftypheic"), FileType::Heic}, {4, StrL("ftypheix"), FileType::Heic},
+    {4, StrL("ftypmif1"), FileType::Heic}, {4, StrL("ftypavif"), FileType::Avif},
+    {16, StrL("mif1heic"), FileType::Heic},
+};
+    // clang-format on
     for (auto& b : kBrands) {
         if (str::StartsWith(Str(d.s + b.off, d.len - b.off), b.brand)) {
             return b.type;

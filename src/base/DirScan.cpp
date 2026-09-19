@@ -131,13 +131,7 @@ static i64 GetWinFileSize(WIN32_FIND_DATAW* fd) {
 // only there when the entry is a reparse point.
 static bool IsRegularFile(const WIN32_FIND_DATAW& fd) {
     DWORD fileAttr = fd.dwFileAttributes;
-    if (fileAttr & FILE_ATTRIBUTE_DEVICE) {
-        return false;
-    }
-    if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
-        return false;
-    }
-    if (fileAttr & FILE_ATTRIBUTE_TEMPORARY) {
+    if (fileAttr & (FILE_ATTRIBUTE_DEVICE | FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_TEMPORARY)) {
         return false;
     }
     if (fileAttr & FILE_ATTRIBUTE_REPARSE_POINT) {
@@ -149,10 +143,7 @@ static bool IsRegularFile(const WIN32_FIND_DATAW& fd) {
     // Offline with no reparse point is the older kind of archived storage,
     // where reading can block for a very long time. A cloud placeholder is
     // marked offline as well, but it was already let through above.
-    if (fileAttr & FILE_ATTRIBUTE_OFFLINE) {
-        return false;
-    }
-    return true;
+    return !(fileAttr & FILE_ATTRIBUTE_OFFLINE);
 }
 
 static bool IsDirectoryAttr(DWORD fileAttr) {

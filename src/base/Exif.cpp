@@ -175,14 +175,16 @@ Str GroupPrefix(IfdGroup g) {
 }
 
 // TIFF types are 1..10; name and element size, indexed by type
+// clang-format off
 static const struct {
     Str name;
     int elemSize;
 } kTiffTypes[] = {
-    {StrL("Unknown"), 0},      {StrL("Byte"), 1},        {StrL("ASCII"), 1},        {StrL("Short"), 2},
-    {StrL("Long"), 4},         {StrL("Ratio"), 8},       {StrL("Signed Byte"), 1},  {StrL("Undefined"), 1},
+    {StrL("Unknown"), 0},      {StrL("Byte"), 1},        {StrL("ASCII"), 1},       {StrL("Short"), 2},
+    {StrL("Long"), 4},         {StrL("Ratio"), 8},       {StrL("Signed Byte"), 1}, {StrL("Undefined"), 1},
     {StrL("Signed Short"), 2}, {StrL("Signed Long"), 4}, {StrL("Signed Ratio"), 8},
 };
+// clang-format on
 
 Str TypeName(u16 type) {
     return type < dimof(kTiffTypes) ? kTiffTypes[type].name : StrL("Unknown");
@@ -230,6 +232,7 @@ struct EnumName {
 };
 
 #define IMG(prop) (u16) ExifProp::prop
+// clang-format off
 static const EnumName kImageEnumNames[] = {
     {IMG(Orientation), 1, StrL("Horizontal (normal)")},
     {IMG(Orientation), 2, StrL("Mirrored horizontal")},
@@ -246,51 +249,32 @@ static const EnumName kImageEnumNames[] = {
     {IMG(Compression), 6, StrL("JPEG (old-style)")},
     {IMG(Compression), 7, StrL("JPEG")},
 };
+// clang-format on
 
+// clang-format off
 static const EnumName kExifEnumNames[] = {
-    {IMG(ExposureProgram), 0, StrL("Unidentified")},
-    {IMG(ExposureProgram), 1, StrL("Manual")},
-    {IMG(ExposureProgram), 2, StrL("Program Normal")},
-    {IMG(ExposureProgram), 3, StrL("Aperture Priority")},
-    {IMG(ExposureProgram), 4, StrL("Shutter Priority")},
-    {IMG(ExposureProgram), 5, StrL("Program Creative")},
-    {IMG(ExposureProgram), 6, StrL("Program Action")},
-    {IMG(ExposureProgram), 7, StrL("Portrait Mode")},
+    {IMG(ExposureProgram), 0, StrL("Unidentified")},   {IMG(ExposureProgram), 1, StrL("Manual")},
+    {IMG(ExposureProgram), 2, StrL("Program Normal")}, {IMG(ExposureProgram), 3, StrL("Aperture Priority")},
+    {IMG(ExposureProgram), 4, StrL("Shutter Priority")}, {IMG(ExposureProgram), 5, StrL("Program Creative")},
+    {IMG(ExposureProgram), 6, StrL("Program Action")}, {IMG(ExposureProgram), 7, StrL("Portrait Mode")},
     {IMG(ExposureProgram), 8, StrL("Landscape Mode")},
-    {IMG(MeteringMode), 0, StrL("Unidentified")},
-    {IMG(MeteringMode), 1, StrL("Average")},
-    {IMG(MeteringMode), 2, StrL("CenterWeightedAverage")},
-    {IMG(MeteringMode), 3, StrL("Spot")},
-    {IMG(MeteringMode), 4, StrL("MultiSpot")},
-    {IMG(MeteringMode), 5, StrL("Pattern")},
+    {IMG(MeteringMode), 0, StrL("Unidentified")}, {IMG(MeteringMode), 1, StrL("Average")},
+    {IMG(MeteringMode), 2, StrL("CenterWeightedAverage")}, {IMG(MeteringMode), 3, StrL("Spot")},
+    {IMG(MeteringMode), 4, StrL("MultiSpot")}, {IMG(MeteringMode), 5, StrL("Pattern")},
     {IMG(MeteringMode), 6, StrL("Partial")},
-    {IMG(ColorSpace), 1, StrL("sRGB")},
-    {IMG(ColorSpace), 0xFFFF, StrL("Uncalibrated")},
-    {IMG(WhiteBalance), 0, StrL("Auto")},
-    {IMG(WhiteBalance), 1, StrL("Manual")},
-    {IMG(ExposureMode), 0, StrL("Auto Exposure")},
-    {IMG(ExposureMode), 1, StrL("Manual Exposure")},
+    {IMG(ColorSpace), 1, StrL("sRGB")}, {IMG(ColorSpace), 0xFFFF, StrL("Uncalibrated")},
+    {IMG(WhiteBalance), 0, StrL("Auto")}, {IMG(WhiteBalance), 1, StrL("Manual")},
+    {IMG(ExposureMode), 0, StrL("Auto Exposure")}, {IMG(ExposureMode), 1, StrL("Manual Exposure")},
     {IMG(ExposureMode), 2, StrL("Auto Bracket")},
-    {IMG(SceneCaptureType), 0, StrL("Standard")},
-    {IMG(SceneCaptureType), 1, StrL("Landscape")},
-    {IMG(SceneCaptureType), 2, StrL("Portrait")},
-    {IMG(SceneCaptureType), 3, StrL("Night")},
-    {IMG(GainControl), 0, StrL("None")},
-    {IMG(GainControl), 1, StrL("Low gain up")},
-    {IMG(GainControl), 2, StrL("High gain up")},
-    {IMG(GainControl), 3, StrL("Low gain down")},
+    {IMG(SceneCaptureType), 0, StrL("Standard")}, {IMG(SceneCaptureType), 1, StrL("Landscape")},
+    {IMG(SceneCaptureType), 2, StrL("Portrait")}, {IMG(SceneCaptureType), 3, StrL("Night")},
+    {IMG(GainControl), 0, StrL("None")}, {IMG(GainControl), 1, StrL("Low gain up")},
+    {IMG(GainControl), 2, StrL("High gain up")}, {IMG(GainControl), 3, StrL("Low gain down")},
     {IMG(GainControl), 4, StrL("High gain down")},
-    {IMG(Contrast), 0, StrL("Normal")},
-    {IMG(Contrast), 1, StrL("Soft")},
-    {IMG(Contrast), 2, StrL("Hard")},
-    {IMG(Saturation), 0, StrL("Normal")},
-    {IMG(Saturation), 1, StrL("Soft")},
-    {IMG(Saturation), 2, StrL("Hard")},
-    {IMG(Sharpness), 0, StrL("Normal")},
-    {IMG(Sharpness), 1, StrL("Soft")},
-    {IMG(Sharpness), 2, StrL("Hard")},
-    {0xA401, 0, StrL("Normal")}, // CustomRendered
-    {0xA401, 1, StrL("Custom")},
+    {IMG(Contrast), 0, StrL("Normal")}, {IMG(Contrast), 1, StrL("Soft")}, {IMG(Contrast), 2, StrL("Hard")},
+    {IMG(Saturation), 0, StrL("Normal")}, {IMG(Saturation), 1, StrL("Soft")}, {IMG(Saturation), 2, StrL("Hard")},
+    {IMG(Sharpness), 0, StrL("Normal")}, {IMG(Sharpness), 1, StrL("Soft")}, {IMG(Sharpness), 2, StrL("Hard")},
+    {0xA401, 0, StrL("Normal")}, {0xA401, 1, StrL("Custom")}, // CustomRendered
     {IMG(SensitivityType), 0, StrL("Unknown")},
     {IMG(SensitivityType), 1, StrL("Standard Output Sensitivity")},
     {IMG(SensitivityType), 2, StrL("Recommended Exposure Index")},
@@ -299,15 +283,13 @@ static const EnumName kExifEnumNames[] = {
     {IMG(SensitivityType), 5, StrL("Standard Output Sensitivity and ISO Speed")},
     {IMG(SensitivityType), 6, StrL("Recommended Exposure Index and ISO Speed")},
     {IMG(SensitivityType), 7, StrL("Standard Output Sensitivity, Recommended Exposure Index and ISO Speed")},
-    {IMG(Flash), 0, StrL("Flash did not fire")},
-    {IMG(Flash), 1, StrL("Flash fired")},
-    {IMG(Flash), 5, StrL("Strobe return light not detected")},
-    {IMG(Flash), 7, StrL("Strobe return light detected")},
+    {IMG(Flash), 0, StrL("Flash did not fire")}, {IMG(Flash), 1, StrL("Flash fired")},
+    {IMG(Flash), 5, StrL("Strobe return light not detected")}, {IMG(Flash), 7, StrL("Strobe return light detected")},
     {IMG(Flash), 9, StrL("Flash fired, compulsory flash mode")},
     {IMG(Flash), 16, StrL("Flash did not fire, compulsory flash mode")},
-    {IMG(Flash), 24, StrL("Flash did not fire, auto mode")},
-    {IMG(Flash), 25, StrL("Flash fired, auto mode")},
+    {IMG(Flash), 24, StrL("Flash did not fire, auto mode")}, {IMG(Flash), 25, StrL("Flash fired, auto mode")},
 };
+// clang-format on
 #undef IMG
 
 static Str LookupEnumName(IfdGroup g, u16 tag, u32 val) {

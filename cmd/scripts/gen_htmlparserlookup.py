@@ -22,14 +22,29 @@ def enum_name(name, prefix):
     return "_".join([prefix] + parts)
 
 
+# joins items with sep into lines of at most ~110 chars
+def pack(items, sep, width=110):
+    lines = []
+    cur = ""
+    for it in items:
+        if cur and len(cur) + len(sep) + len(it) > width:
+            lines.append(cur)
+            cur = it
+        else:
+            cur = cur + sep + it if cur else it
+    if cur:
+        lines.append(cur)
+    return lines
+
+
 def enum_decl(kind, type_name, values):
     return "%s %s {\n    %s\n};\n" % (kind, type_name, ",\n    ".join(values))
 
 
 # a SeqStrings literal: names in enum order, NUL-separated
 def seq_strings(var, names):
-    # one literal per name, so clang-format only breaks lines between names
-    return "static SeqStrings %s = %s;\n" % (var, " ".join('"%s\\0"' % n for n in names))
+    lines = pack(['"%s\\0"' % n for n in names], " ")
+    return "// clang-format off\nstatic SeqStrings %s =\n    %s;\n// clang-format on\n" % (var, "\n    ".join(lines))
 
 
 ########## HTML tags and attributes ##########
@@ -104,7 +119,9 @@ CssProp FindCssProp(Str name) {
 // per tag: bit 0 = self-closing, bit 1 = inline
 constexpr u8 kSelfClosing = 1;
 constexpr u8 kInline = 2;
+// clang-format off
 static const u8 gTagFlags[Tag_NotFound] = {%(tag_flags)s};
+// clang-format on
 
 bool IsTagSelfClosing(HtmlTag tag) {
     return tag < Tag_NotFound && (gTagFlags[tag] & kSelfClosing) != 0;
@@ -117,10 +134,14 @@ bool IsInlineTag(HtmlTag tag) {
 // entity names to their Unicode runes, sorted for binary search (str::Cmp order), cf.
 // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
 // and http://www.w3.org/TR/MathML2/bycodes.html
+// clang-format off
 static const struct {
     const char* name;
     u32 rune;
-} gHtmlEntities[] = {%(entities)s};
+} gHtmlEntities[] = {
+    %(entities)s
+};
+// clang-format on
 
 u32 FindHtmlEntityRune(Str name) {
     int lo = 0;
@@ -151,7 +172,7 @@ def main():
 
     self_closing = set(List_Self_Closing_Tags.split())
     inline = set(List_Inline_Tags.split())
-    tag_flags = ", ".join(str((t in self_closing) + 2 * (t in inline)) for t in tags)
+    tag_flags = ", ".join(str((t in self_closing) + 2 * (t in inline)) for t in tags)  # per tag in enum order
 
     entitydefs["apos"] = "'"  # only XML entity that isn't an HTML entity as well
     entities = [(name, ord(value)) for name, value in entitydefs.items()]
@@ -160,7 +181,7 @@ def main():
         entities.append((name, value))
     # str::Cmp compares unsigned bytes then length, which sorted() matches for ASCII
     entities.sort()
-    entities_str = ", ".join('{"%s", %d}' % e for e in entities)
+    entities_str = "\n    ".join(pack(['{"%s", %d},' % e for e in entities], " "))
 
     header = Header % {
         "enum_htmltag": enum_decl("enum", "HtmlTag", [enum_name(t, "Tag") for t in tags] + ["Tag_NotFound"]),

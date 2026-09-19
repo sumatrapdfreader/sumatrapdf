@@ -2181,18 +2181,11 @@ class AutoFree {
 
 // deletes an object at the end of the scope
 template <typename T>
-struct AutoDelete {
+struct AutoDelete : NonCopyable {
     T* o = nullptr;
     AutoDelete() = default;
-    AutoDelete(T* p) { // NOLINT
-        o = p;
-    }
+    AutoDelete(T* p) : o(p) {} // NOLINT
     ~AutoDelete() { delete o; }
-
-    AutoDelete& operator=(AutoDelete& other) = delete;
-    AutoDelete& operator=(AutoDelete&& other) = delete;
-    AutoDelete& operator=(const AutoDelete& other) = delete;
-    AutoDelete& operator=(const AutoDelete&& other) = delete;
     operator T*() const { // NOLINT
         return o;
     }

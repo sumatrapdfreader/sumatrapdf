@@ -7,111 +7,29 @@
 #include "base/HtmlTags.h"
 
 // names in enum order, so the index of a name is its enum value
+// clang-format off
 static SeqStrings gHtmlTagNames =
-    "a\0"
-    "abbr\0"
-    "acronym\0"
-    "area\0"
-    "audio\0"
-    "b\0"
-    "base\0"
-    "basefont\0"
-    "blockquote\0"
-    "body\0"
-    "br\0"
-    "center\0"
-    "code\0"
-    "col\0"
-    "dd\0"
-    "div\0"
-    "dl\0"
-    "dt\0"
-    "em\0"
-    "font\0"
-    "frame\0"
-    "h1\0"
-    "h2\0"
-    "h3\0"
-    "h4\0"
-    "h5\0"
-    "h6\0"
-    "head\0"
-    "hr\0"
-    "html\0"
-    "i\0"
-    "image\0"
-    "img\0"
-    "input\0"
-    "lh\0"
-    "li\0"
-    "link\0"
-    "mbp:pagebreak\0"
-    "meta\0"
-    "nav\0"
-    "object\0"
-    "ol\0"
-    "p\0"
-    "pagebreak\0"
-    "param\0"
-    "pre\0"
-    "s\0"
-    "script\0"
-    "section\0"
-    "small\0"
-    "span\0"
-    "strike\0"
-    "strong\0"
-    "style\0"
-    "sub\0"
-    "subtitle\0"
-    "sup\0"
-    "svg\0"
-    "svg:image\0"
-    "table\0"
-    "td\0"
-    "th\0"
-    "title\0"
-    "tr\0"
-    "tt\0"
-    "u\0"
-    "ul\0"
-    "video\0";
+    "a\0" "abbr\0" "acronym\0" "area\0" "audio\0" "b\0" "base\0" "basefont\0" "blockquote\0" "body\0" "br\0"
+    "center\0" "code\0" "col\0" "dd\0" "div\0" "dl\0" "dt\0" "em\0" "font\0" "frame\0" "h1\0" "h2\0" "h3\0" "h4\0"
+    "h5\0" "h6\0" "head\0" "hr\0" "html\0" "i\0" "image\0" "img\0" "input\0" "lh\0" "li\0" "link\0"
+    "mbp:pagebreak\0" "meta\0" "nav\0" "object\0" "ol\0" "p\0" "pagebreak\0" "param\0" "pre\0" "s\0" "script\0"
+    "section\0" "small\0" "span\0" "strike\0" "strong\0" "style\0" "sub\0" "subtitle\0" "sup\0" "svg\0"
+    "svg:image\0" "table\0" "td\0" "th\0" "title\0" "tr\0" "tt\0" "u\0" "ul\0" "video\0";
+// clang-format on
 
+// clang-format off
 static SeqStrings gAlignAttrNames =
-    "center\0"
-    "justify\0"
-    "left\0"
-    "right\0";
+    "center\0" "justify\0" "left\0" "right\0";
+// clang-format on
 
+// clang-format off
 static SeqStrings gCssPropNames =
-    "color\0"
-    "display\0"
-    "font\0"
-    "font-family\0"
-    "font-size\0"
-    "font-style\0"
-    "font-weight\0"
-    "list-style\0"
-    "margin\0"
-    "margin-bottom\0"
-    "margin-left\0"
-    "margin-right\0"
-    "margin-top\0"
-    "max-width\0"
-    "opacity\0"
-    "padding\0"
-    "padding-bottom\0"
-    "padding-left\0"
-    "padding-right\0"
-    "padding-top\0"
-    "page-break-after\0"
-    "page-break-before\0"
-    "text-align\0"
-    "text-decoration\0"
-    "text-indent\0"
-    "text-underline\0"
-    "white-space\0"
+    "color\0" "display\0" "font\0" "font-family\0" "font-size\0" "font-style\0" "font-weight\0" "list-style\0"
+    "margin\0" "margin-bottom\0" "margin-left\0" "margin-right\0" "margin-top\0" "max-width\0" "opacity\0"
+    "padding\0" "padding-bottom\0" "padding-left\0" "padding-right\0" "padding-top\0" "page-break-after\0"
+    "page-break-before\0" "text-align\0" "text-decoration\0" "text-indent\0" "text-underline\0" "white-space\0"
     "word-wrap\0";
+// clang-format on
 
 HtmlTag FindHtmlTag(Str name) {
     int idx = SeqStrIndexI(gHtmlTagNames, name);
@@ -131,9 +49,9 @@ CssProp FindCssProp(Str name) {
 // per tag: bit 0 = self-closing, bit 1 = inline
 constexpr u8 kSelfClosing = 1;
 constexpr u8 kInline = 2;
-static const u8 gTagFlags[Tag_NotFound] = {2, 2, 2, 1, 2, 2, 1, 1, 0, 0, 1, 0, 2, 1, 0, 0, 0, 0, 2, 2, 1, 0, 0,
-                                           0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0,
-                                           2, 0, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2};
+// clang-format off
+static const u8 gTagFlags[Tag_NotFound] = {2, 2, 2, 1, 2, 2, 1, 1, 0, 0, 1, 0, 2, 1, 0, 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 2, 0, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2};
+// clang-format on
 
 bool IsTagSelfClosing(HtmlTag tag) {
     return tag < Tag_NotFound && (gTagFlags[tag] & kSelfClosing) != 0;
@@ -146,404 +64,77 @@ bool IsInlineTag(HtmlTag tag) {
 // entity names to their Unicode runes, sorted for binary search (str::Cmp order), cf.
 // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
 // and http://www.w3.org/TR/MathML2/bycodes.html
+// clang-format off
 static const struct {
     const char* name;
     u32 rune;
-} gHtmlEntities[] = {{"AElig", 198},
-                     {"Aacute", 193},
-                     {"Abreve", 258},
-                     {"Acirc", 194},
-                     {"Agrave", 192},
-                     {"Alpha", 913},
-                     {"Amacr", 256},
-                     {"Aogon", 260},
-                     {"Aring", 197},
-                     {"Atilde", 195},
-                     {"Auml", 196},
-                     {"Beta", 914},
-                     {"Breve", 728},
-                     {"Cacute", 262},
-                     {"Ccaron", 268},
-                     {"Ccedil", 199},
-                     {"Ccirc", 264},
-                     {"Cdot", 266},
-                     {"Cedilla", 184},
-                     {"Chi", 935},
-                     {"Dagger", 8225},
-                     {"Dcaron", 270},
-                     {"Delta", 916},
-                     {"DiacriticalDot", 729},
-                     {"DiacriticalDoubleAcute", 733},
-                     {"DiacriticalTilde", 732},
-                     {"DoubleDot", 168},
-                     {"DownBreve", 785},
-                     {"Dstrok", 272},
-                     {"ENG", 330},
-                     {"ETH", 208},
-                     {"Eacute", 201},
-                     {"Ecaron", 282},
-                     {"Ecirc", 202},
-                     {"Edot", 278},
-                     {"Egrave", 200},
-                     {"Emacr", 274},
-                     {"Eogon", 280},
-                     {"Epsilon", 917},
-                     {"Eta", 919},
-                     {"Euml", 203},
-                     {"Gamma", 915},
-                     {"Gammad", 988},
-                     {"Gbreve", 286},
-                     {"Gcedil", 290},
-                     {"Gcirc", 284},
-                     {"Gdot", 288},
-                     {"Hacek", 711},
-                     {"Hcirc", 292},
-                     {"Hstrok", 294},
-                     {"IJlig", 306},
-                     {"Iacute", 205},
-                     {"Icirc", 206},
-                     {"Idot", 304},
-                     {"Igrave", 204},
-                     {"Imacr", 298},
-                     {"Iogon", 302},
-                     {"Iota", 921},
-                     {"Itilde", 296},
-                     {"Iuml", 207},
-                     {"Jcirc", 308},
-                     {"Kappa", 922},
-                     {"Kcedil", 310},
-                     {"Lacute", 313},
-                     {"Lambda", 923},
-                     {"Lcaron", 317},
-                     {"Lcedil", 315},
-                     {"Lmidot", 319},
-                     {"Lstrok", 321},
-                     {"Mu", 924},
-                     {"Nacute", 323},
-                     {"Ncaron", 327},
-                     {"Ncedil", 325},
-                     {"Ntilde", 209},
-                     {"Nu", 925},
-                     {"OElig", 338},
-                     {"Oacute", 211},
-                     {"Ocirc", 212},
-                     {"Odblac", 336},
-                     {"Ograve", 210},
-                     {"Omacr", 332},
-                     {"Omega", 937},
-                     {"Omicron", 927},
-                     {"Oslash", 216},
-                     {"Otilde", 213},
-                     {"Ouml", 214},
-                     {"OverBar", 175},
-                     {"Phi", 934},
-                     {"Pi", 928},
-                     {"PlusMinus", 177},
-                     {"Prime", 8243},
-                     {"Psi", 936},
-                     {"Racute", 340},
-                     {"Rcaron", 344},
-                     {"Rcedil", 342},
-                     {"Rho", 929},
-                     {"Sacute", 346},
-                     {"Scaron", 352},
-                     {"Scedil", 350},
-                     {"Scirc", 348},
-                     {"Sigma", 931},
-                     {"THORN", 222},
-                     {"Tau", 932},
-                     {"Tcaron", 356},
-                     {"Tcedil", 354},
-                     {"Theta", 920},
-                     {"Tstrok", 358},
-                     {"Uacute", 218},
-                     {"Ubreve", 364},
-                     {"Ucirc", 219},
-                     {"Udblac", 368},
-                     {"Ugrave", 217},
-                     {"Umacr", 362},
-                     {"UnderBar", 818},
-                     {"Uogon", 370},
-                     {"Upsi", 978},
-                     {"Upsilon", 933},
-                     {"Uring", 366},
-                     {"Utilde", 360},
-                     {"Uuml", 220},
-                     {"Wcirc", 372},
-                     {"Xi", 926},
-                     {"Yacute", 221},
-                     {"Ycirc", 374},
-                     {"Yuml", 376},
-                     {"Zacute", 377},
-                     {"Zcaron", 381},
-                     {"Zdot", 379},
-                     {"Zeta", 918},
-                     {"aacute", 225},
-                     {"abreve", 259},
-                     {"acirc", 226},
-                     {"acute", 180},
-                     {"aelig", 230},
-                     {"agrave", 224},
-                     {"alefsym", 8501},
-                     {"alpha", 945},
-                     {"amacr", 257},
-                     {"amp", 38},
-                     {"and", 8743},
-                     {"ang", 8736},
-                     {"aogon", 261},
-                     {"apos", 39},
-                     {"aring", 229},
-                     {"asymp", 8776},
-                     {"atilde", 227},
-                     {"auml", 228},
-                     {"backepsilon", 1014},
-                     {"bdquo", 8222},
-                     {"beta", 946},
-                     {"brvbar", 166},
-                     {"bull", 8226},
-                     {"cacute", 263},
-                     {"cap", 8745},
-                     {"ccaron", 269},
-                     {"ccedil", 231},
-                     {"ccirc", 265},
-                     {"cdot", 267},
-                     {"cedil", 184},
-                     {"cent", 162},
-                     {"chi", 967},
-                     {"circ", 710},
-                     {"clubs", 9827},
-                     {"cong", 8773},
-                     {"copy", 169},
-                     {"crarr", 8629},
-                     {"cup", 8746},
-                     {"curren", 164},
-                     {"dArr", 8659},
-                     {"dagger", 8224},
-                     {"darr", 8595},
-                     {"dcaron", 271},
-                     {"deg", 176},
-                     {"delta", 948},
-                     {"diams", 9830},
-                     {"digamma", 989},
-                     {"divide", 247},
-                     {"dstrok", 273},
-                     {"eacute", 233},
-                     {"ecaron", 283},
-                     {"ecirc", 234},
-                     {"edot", 279},
-                     {"egrave", 232},
-                     {"emacr", 275},
-                     {"empty", 8709},
-                     {"emsp", 8195},
-                     {"eng", 331},
-                     {"ensp", 8194},
-                     {"eogon", 281},
-                     {"epsilon", 949},
-                     {"equiv", 8801},
-                     {"eta", 951},
-                     {"eth", 240},
-                     {"euml", 235},
-                     {"euro", 8364},
-                     {"exist", 8707},
-                     {"fnof", 402},
-                     {"forall", 8704},
-                     {"frac12", 189},
-                     {"frac14", 188},
-                     {"frac34", 190},
-                     {"frasl", 8260},
-                     {"gacute", 501},
-                     {"gamma", 947},
-                     {"gbreve", 287},
-                     {"gcirc", 285},
-                     {"gdot", 289},
-                     {"ge", 8805},
-                     {"gt", 62},
-                     {"hArr", 8660},
-                     {"harr", 8596},
-                     {"hcirc", 293},
-                     {"hearts", 9829},
-                     {"hellip", 8230},
-                     {"hstrok", 295},
-                     {"iacute", 237},
-                     {"icirc", 238},
-                     {"iexcl", 161},
-                     {"igrave", 236},
-                     {"ijlig", 307},
-                     {"imacr", 299},
-                     {"image", 8465},
-                     {"imped", 437},
-                     {"infin", 8734},
-                     {"int", 8747},
-                     {"iogon", 303},
-                     {"iota", 953},
-                     {"iquest", 191},
-                     {"isin", 8712},
-                     {"itilde", 297},
-                     {"iuml", 239},
-                     {"jcirc", 309},
-                     {"kappa", 954},
-                     {"kcedil", 311},
-                     {"kgreen", 312},
-                     {"lArr", 8656},
-                     {"lacute", 314},
-                     {"lambda", 955},
-                     {"lang", 9001},
-                     {"laquo", 171},
-                     {"larr", 8592},
-                     {"lcaron", 318},
-                     {"lcedil", 316},
-                     {"lceil", 8968},
-                     {"ldquo", 8220},
-                     {"le", 8804},
-                     {"lfloor", 8970},
-                     {"lmidot", 320},
-                     {"lowast", 8727},
-                     {"loz", 9674},
-                     {"lrm", 8206},
-                     {"lsaquo", 8249},
-                     {"lsquo", 8216},
-                     {"lstrok", 322},
-                     {"lt", 60},
-                     {"macr", 175},
-                     {"mdash", 8212},
-                     {"micro", 181},
-                     {"middot", 183},
-                     {"minus", 8722},
-                     {"mu", 956},
-                     {"nabla", 8711},
-                     {"nacute", 324},
-                     {"napos", 329},
-                     {"nbsp", 160},
-                     {"ncaron", 328},
-                     {"ncedil", 326},
-                     {"ndash", 8211},
-                     {"ne", 8800},
-                     {"ni", 8715},
-                     {"not", 172},
-                     {"notin", 8713},
-                     {"nsub", 8836},
-                     {"ntilde", 241},
-                     {"nu", 957},
-                     {"oacute", 243},
-                     {"ocirc", 244},
-                     {"odblac", 337},
-                     {"oelig", 339},
-                     {"ogon", 731},
-                     {"ograve", 242},
-                     {"oline", 8254},
-                     {"omacr", 333},
-                     {"omega", 969},
-                     {"omicron", 959},
-                     {"oplus", 8853},
-                     {"or", 8744},
-                     {"ordf", 170},
-                     {"ordm", 186},
-                     {"oslash", 248},
-                     {"otilde", 245},
-                     {"otimes", 8855},
-                     {"ouml", 246},
-                     {"para", 182},
-                     {"part", 8706},
-                     {"permil", 8240},
-                     {"perp", 8869},
-                     {"phi", 966},
-                     {"pi", 960},
-                     {"piv", 982},
-                     {"plusmn", 177},
-                     {"pound", 163},
-                     {"prime", 8242},
-                     {"prod", 8719},
-                     {"prop", 8733},
-                     {"psi", 968},
-                     {"quot", 34},
-                     {"rArr", 8658},
-                     {"racute", 341},
-                     {"radic", 8730},
-                     {"rang", 9002},
-                     {"raquo", 187},
-                     {"rarr", 8594},
-                     {"rcaron", 345},
-                     {"rcedil", 343},
-                     {"rceil", 8969},
-                     {"rdquo", 8221},
-                     {"real", 8476},
-                     {"reg", 174},
-                     {"rfloor", 8971},
-                     {"rho", 961},
-                     {"ring", 730},
-                     {"rlm", 8207},
-                     {"rsaquo", 8250},
-                     {"rsquo", 8217},
-                     {"sacute", 347},
-                     {"sbquo", 8218},
-                     {"scaron", 353},
-                     {"scedil", 351},
-                     {"scirc", 349},
-                     {"sdot", 8901},
-                     {"sect", 167},
-                     {"shy", 173},
-                     {"sigma", 963},
-                     {"sigmaf", 962},
-                     {"sim", 8764},
-                     {"spades", 9824},
-                     {"straightepsilon", 1013},
-                     {"straightphi", 981},
-                     {"sub", 8834},
-                     {"sube", 8838},
-                     {"sum", 8721},
-                     {"sup", 8835},
-                     {"sup1", 185},
-                     {"sup2", 178},
-                     {"sup3", 179},
-                     {"supe", 8839},
-                     {"szlig", 223},
-                     {"tau", 964},
-                     {"tcaron", 357},
-                     {"tcedil", 355},
-                     {"there4", 8756},
-                     {"theta", 952},
-                     {"thetasym", 977},
-                     {"thinsp", 8201},
-                     {"thorn", 254},
-                     {"tilde", 732},
-                     {"times", 215},
-                     {"trade", 8482},
-                     {"tstrok", 359},
-                     {"uArr", 8657},
-                     {"uacute", 250},
-                     {"uarr", 8593},
-                     {"ubreve", 365},
-                     {"ucirc", 251},
-                     {"udblac", 369},
-                     {"ugrave", 249},
-                     {"umacr", 363},
-                     {"uml", 168},
-                     {"uogon", 371},
-                     {"upsih", 978},
-                     {"upsilon", 965},
-                     {"uring", 367},
-                     {"utilde", 361},
-                     {"uuml", 252},
-                     {"varepsilon", 949},
-                     {"varkappa", 1008},
-                     {"varphi", 966},
-                     {"varpi", 982},
-                     {"varrho", 1009},
-                     {"varsigma", 962},
-                     {"vartheta", 977},
-                     {"wcirc", 373},
-                     {"weierp", 8472},
-                     {"xi", 958},
-                     {"yacute", 253},
-                     {"ycirc", 375},
-                     {"yen", 165},
-                     {"yuml", 255},
-                     {"zacute", 378},
-                     {"zcaron", 382},
-                     {"zdot", 380},
-                     {"zeta", 950},
-                     {"zwj", 8205},
-                     {"zwnj", 8204}};
+} gHtmlEntities[] = {
+    {"AElig", 198}, {"Aacute", 193}, {"Abreve", 258}, {"Acirc", 194}, {"Agrave", 192}, {"Alpha", 913},
+    {"Amacr", 256}, {"Aogon", 260}, {"Aring", 197}, {"Atilde", 195}, {"Auml", 196}, {"Beta", 914}, {"Breve", 728},
+    {"Cacute", 262}, {"Ccaron", 268}, {"Ccedil", 199}, {"Ccirc", 264}, {"Cdot", 266}, {"Cedilla", 184},
+    {"Chi", 935}, {"Dagger", 8225}, {"Dcaron", 270}, {"Delta", 916}, {"DiacriticalDot", 729},
+    {"DiacriticalDoubleAcute", 733}, {"DiacriticalTilde", 732}, {"DoubleDot", 168}, {"DownBreve", 785},
+    {"Dstrok", 272}, {"ENG", 330}, {"ETH", 208}, {"Eacute", 201}, {"Ecaron", 282}, {"Ecirc", 202}, {"Edot", 278},
+    {"Egrave", 200}, {"Emacr", 274}, {"Eogon", 280}, {"Epsilon", 917}, {"Eta", 919}, {"Euml", 203},
+    {"Gamma", 915}, {"Gammad", 988}, {"Gbreve", 286}, {"Gcedil", 290}, {"Gcirc", 284}, {"Gdot", 288},
+    {"Hacek", 711}, {"Hcirc", 292}, {"Hstrok", 294}, {"IJlig", 306}, {"Iacute", 205}, {"Icirc", 206},
+    {"Idot", 304}, {"Igrave", 204}, {"Imacr", 298}, {"Iogon", 302}, {"Iota", 921}, {"Itilde", 296}, {"Iuml", 207},
+    {"Jcirc", 308}, {"Kappa", 922}, {"Kcedil", 310}, {"Lacute", 313}, {"Lambda", 923}, {"Lcaron", 317},
+    {"Lcedil", 315}, {"Lmidot", 319}, {"Lstrok", 321}, {"Mu", 924}, {"Nacute", 323}, {"Ncaron", 327},
+    {"Ncedil", 325}, {"Ntilde", 209}, {"Nu", 925}, {"OElig", 338}, {"Oacute", 211}, {"Ocirc", 212},
+    {"Odblac", 336}, {"Ograve", 210}, {"Omacr", 332}, {"Omega", 937}, {"Omicron", 927}, {"Oslash", 216},
+    {"Otilde", 213}, {"Ouml", 214}, {"OverBar", 175}, {"Phi", 934}, {"Pi", 928}, {"PlusMinus", 177},
+    {"Prime", 8243}, {"Psi", 936}, {"Racute", 340}, {"Rcaron", 344}, {"Rcedil", 342}, {"Rho", 929},
+    {"Sacute", 346}, {"Scaron", 352}, {"Scedil", 350}, {"Scirc", 348}, {"Sigma", 931}, {"THORN", 222},
+    {"Tau", 932}, {"Tcaron", 356}, {"Tcedil", 354}, {"Theta", 920}, {"Tstrok", 358}, {"Uacute", 218},
+    {"Ubreve", 364}, {"Ucirc", 219}, {"Udblac", 368}, {"Ugrave", 217}, {"Umacr", 362}, {"UnderBar", 818},
+    {"Uogon", 370}, {"Upsi", 978}, {"Upsilon", 933}, {"Uring", 366}, {"Utilde", 360}, {"Uuml", 220},
+    {"Wcirc", 372}, {"Xi", 926}, {"Yacute", 221}, {"Ycirc", 374}, {"Yuml", 376}, {"Zacute", 377}, {"Zcaron", 381},
+    {"Zdot", 379}, {"Zeta", 918}, {"aacute", 225}, {"abreve", 259}, {"acirc", 226}, {"acute", 180},
+    {"aelig", 230}, {"agrave", 224}, {"alefsym", 8501}, {"alpha", 945}, {"amacr", 257}, {"amp", 38},
+    {"and", 8743}, {"ang", 8736}, {"aogon", 261}, {"apos", 39}, {"aring", 229}, {"asymp", 8776}, {"atilde", 227},
+    {"auml", 228}, {"backepsilon", 1014}, {"bdquo", 8222}, {"beta", 946}, {"brvbar", 166}, {"bull", 8226},
+    {"cacute", 263}, {"cap", 8745}, {"ccaron", 269}, {"ccedil", 231}, {"ccirc", 265}, {"cdot", 267},
+    {"cedil", 184}, {"cent", 162}, {"chi", 967}, {"circ", 710}, {"clubs", 9827}, {"cong", 8773}, {"copy", 169},
+    {"crarr", 8629}, {"cup", 8746}, {"curren", 164}, {"dArr", 8659}, {"dagger", 8224}, {"darr", 8595},
+    {"dcaron", 271}, {"deg", 176}, {"delta", 948}, {"diams", 9830}, {"digamma", 989}, {"divide", 247},
+    {"dstrok", 273}, {"eacute", 233}, {"ecaron", 283}, {"ecirc", 234}, {"edot", 279}, {"egrave", 232},
+    {"emacr", 275}, {"empty", 8709}, {"emsp", 8195}, {"eng", 331}, {"ensp", 8194}, {"eogon", 281},
+    {"epsilon", 949}, {"equiv", 8801}, {"eta", 951}, {"eth", 240}, {"euml", 235}, {"euro", 8364}, {"exist", 8707},
+    {"fnof", 402}, {"forall", 8704}, {"frac12", 189}, {"frac14", 188}, {"frac34", 190}, {"frasl", 8260},
+    {"gacute", 501}, {"gamma", 947}, {"gbreve", 287}, {"gcirc", 285}, {"gdot", 289}, {"ge", 8805}, {"gt", 62},
+    {"hArr", 8660}, {"harr", 8596}, {"hcirc", 293}, {"hearts", 9829}, {"hellip", 8230}, {"hstrok", 295},
+    {"iacute", 237}, {"icirc", 238}, {"iexcl", 161}, {"igrave", 236}, {"ijlig", 307}, {"imacr", 299},
+    {"image", 8465}, {"imped", 437}, {"infin", 8734}, {"int", 8747}, {"iogon", 303}, {"iota", 953},
+    {"iquest", 191}, {"isin", 8712}, {"itilde", 297}, {"iuml", 239}, {"jcirc", 309}, {"kappa", 954},
+    {"kcedil", 311}, {"kgreen", 312}, {"lArr", 8656}, {"lacute", 314}, {"lambda", 955}, {"lang", 9001},
+    {"laquo", 171}, {"larr", 8592}, {"lcaron", 318}, {"lcedil", 316}, {"lceil", 8968}, {"ldquo", 8220},
+    {"le", 8804}, {"lfloor", 8970}, {"lmidot", 320}, {"lowast", 8727}, {"loz", 9674}, {"lrm", 8206},
+    {"lsaquo", 8249}, {"lsquo", 8216}, {"lstrok", 322}, {"lt", 60}, {"macr", 175}, {"mdash", 8212},
+    {"micro", 181}, {"middot", 183}, {"minus", 8722}, {"mu", 956}, {"nabla", 8711}, {"nacute", 324},
+    {"napos", 329}, {"nbsp", 160}, {"ncaron", 328}, {"ncedil", 326}, {"ndash", 8211}, {"ne", 8800}, {"ni", 8715},
+    {"not", 172}, {"notin", 8713}, {"nsub", 8836}, {"ntilde", 241}, {"nu", 957}, {"oacute", 243}, {"ocirc", 244},
+    {"odblac", 337}, {"oelig", 339}, {"ogon", 731}, {"ograve", 242}, {"oline", 8254}, {"omacr", 333},
+    {"omega", 969}, {"omicron", 959}, {"oplus", 8853}, {"or", 8744}, {"ordf", 170}, {"ordm", 186},
+    {"oslash", 248}, {"otilde", 245}, {"otimes", 8855}, {"ouml", 246}, {"para", 182}, {"part", 8706},
+    {"permil", 8240}, {"perp", 8869}, {"phi", 966}, {"pi", 960}, {"piv", 982}, {"plusmn", 177}, {"pound", 163},
+    {"prime", 8242}, {"prod", 8719}, {"prop", 8733}, {"psi", 968}, {"quot", 34}, {"rArr", 8658}, {"racute", 341},
+    {"radic", 8730}, {"rang", 9002}, {"raquo", 187}, {"rarr", 8594}, {"rcaron", 345}, {"rcedil", 343},
+    {"rceil", 8969}, {"rdquo", 8221}, {"real", 8476}, {"reg", 174}, {"rfloor", 8971}, {"rho", 961}, {"ring", 730},
+    {"rlm", 8207}, {"rsaquo", 8250}, {"rsquo", 8217}, {"sacute", 347}, {"sbquo", 8218}, {"scaron", 353},
+    {"scedil", 351}, {"scirc", 349}, {"sdot", 8901}, {"sect", 167}, {"shy", 173}, {"sigma", 963}, {"sigmaf", 962},
+    {"sim", 8764}, {"spades", 9824}, {"straightepsilon", 1013}, {"straightphi", 981}, {"sub", 8834},
+    {"sube", 8838}, {"sum", 8721}, {"sup", 8835}, {"sup1", 185}, {"sup2", 178}, {"sup3", 179}, {"supe", 8839},
+    {"szlig", 223}, {"tau", 964}, {"tcaron", 357}, {"tcedil", 355}, {"there4", 8756}, {"theta", 952},
+    {"thetasym", 977}, {"thinsp", 8201}, {"thorn", 254}, {"tilde", 732}, {"times", 215}, {"trade", 8482},
+    {"tstrok", 359}, {"uArr", 8657}, {"uacute", 250}, {"uarr", 8593}, {"ubreve", 365}, {"ucirc", 251},
+    {"udblac", 369}, {"ugrave", 249}, {"umacr", 363}, {"uml", 168}, {"uogon", 371}, {"upsih", 978},
+    {"upsilon", 965}, {"uring", 367}, {"utilde", 361}, {"uuml", 252}, {"varepsilon", 949}, {"varkappa", 1008},
+    {"varphi", 966}, {"varpi", 982}, {"varrho", 1009}, {"varsigma", 962}, {"vartheta", 977}, {"wcirc", 373},
+    {"weierp", 8472}, {"xi", 958}, {"yacute", 253}, {"ycirc", 375}, {"yen", 165}, {"yuml", 255}, {"zacute", 378},
+    {"zcaron", 382}, {"zdot", 380}, {"zeta", 950}, {"zwj", 8205}, {"zwnj", 8204},
+};
+// clang-format on
 
 u32 FindHtmlEntityRune(Str name) {
     int lo = 0;

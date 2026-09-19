@@ -26,14 +26,16 @@ Archive::Archive() {
 
 static Archive::Format FormatFromArchive(struct archive* a) {
     // archive_format returns a bitmask; the high bits identify the family
-    static const struct {
-        int mask;
-        Archive::Format format;
-    } kFormats[] = {
-        {ARCHIVE_FORMAT_ZIP, Archive::Format::Zip},    {ARCHIVE_FORMAT_RAR, Archive::Format::Rar},
-        {ARCHIVE_FORMAT_RAR_V5, Archive::Format::Rar}, {ARCHIVE_FORMAT_7ZIP, Archive::Format::SevenZip},
-        {ARCHIVE_FORMAT_TAR, Archive::Format::Tar},
-    };
+    // clang-format off
+static const struct {
+    int mask;
+    Archive::Format format;
+} kFormats[] = {
+    {ARCHIVE_FORMAT_ZIP, Archive::Format::Zip},   {ARCHIVE_FORMAT_RAR, Archive::Format::Rar},
+    {ARCHIVE_FORMAT_RAR_V5, Archive::Format::Rar}, {ARCHIVE_FORMAT_7ZIP, Archive::Format::SevenZip},
+    {ARCHIVE_FORMAT_TAR, Archive::Format::Tar},
+};
+    // clang-format on
     int fmt = archive_format(a);
     for (auto& f : kFormats) {
         if ((fmt & f.mask) == f.mask) {
