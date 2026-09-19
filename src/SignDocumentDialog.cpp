@@ -529,7 +529,7 @@ void SignDocumentWnd::OnBrowse(VirtMouseEvent*) {
     }
 
     str::Builder fileFilter;
-    str::BuilderReserve(fileFilter, 256);
+    fileFilter.Reserve(256);
     fileFilter.Append(Tr("Certificate files"));
     fileFilter.Append(StrL("\1*.pfx;*.p12\1"));
     fileFilter.Append(Tr("All files"));
@@ -562,7 +562,7 @@ void SignDocumentWnd::OnBrowseImage(VirtMouseEvent*) {
     }
 
     str::Builder fileFilter;
-    str::BuilderReserve(fileFilter, 256);
+    fileFilter.Reserve(256);
     fileFilter.Append(Tr("Image files"));
     fileFilter.Append(StrL("\1*.png;*.jpg;*.jpeg\1"));
     fileFilter.Append(Tr("All files"));

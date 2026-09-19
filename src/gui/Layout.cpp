@@ -32,7 +32,7 @@ void LogConstraints(Constraints c, Str suffix) {
     // Debug-only; "dx: Inf - Inf dy: Inf - Inf <suffix>" is tiny.
     char sScratch[128]{};
     str::Builder s;
-    str::BuilderUseExternalBuffer(s, Str(sScratch, sizeofi(sScratch)));
+    s.UseExternalBuffer(Str(sScratch, sizeofi(sScratch)));
     if (c.min.dx == c.max.dx) {
         dbglayout(StrL("dx: "));
         LogAppendNum(s, c.min.dx, StrL(" "));

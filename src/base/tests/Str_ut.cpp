@@ -291,7 +291,7 @@ static void StrBuilderRunTwice(void (*fn)(str::Builder&)) {
         char stack[128];
         int n = 1 + (rand() % 128); // 1..128
         str::Builder b;
-        str::BuilderUseExternalBuffer(b, Str(stack, n));
+        b.UseExternalBuffer(Str(stack, n));
         fn(b);
     }
 }
@@ -374,7 +374,7 @@ static void StrBuilderTakeStr(str::Builder& str) {
 // reallocates
 static void StrBuilderReserve() {
     str::Builder str;
-    str::BuilderReserve(str, 1024);
+    str.Reserve(1024);
     uintptr_t heap = (uintptr_t)str.begin();
     utassert(heap != 0);
     for (int i = 0; i < 50; i++) {
@@ -386,8 +386,8 @@ static void StrBuilderReserve() {
     // reserving less than an external buf already holds keeps the buf
     char stack[64];
     str::Builder str2;
-    str::BuilderUseExternalBuffer(str2, Str(stack, sizeofi(stack)));
-    str::BuilderReserve(str2, 16);
+    str2.UseExternalBuffer(Str(stack, sizeofi(stack)));
+    str2.Reserve(16);
     utassert(UsesExternalBuf(str2));
     utassert((uintptr_t)str2.begin() == (uintptr_t)stack);
 }
@@ -413,14 +413,14 @@ void strStrTest() {
     StrBuilderArena();
 }
 
-// --- wstr::Builder: only AppendChar/Append/RemoveLast/LastChar/TakeWStr and
+// --- wstr::Builder: AppendChar/Append/RemoveLast/LastChar/TakeStr and
 // the lent buffer are left, so that is all there is to cover ---
 
 static void wstrBuilderTest() {
     // grows out of the lent buffer and keeps the content
     WCHAR stack[8];
     wstr::Builder b;
-    wstr::BuilderUseExternalBuffer(b, WStr(stack, dimofi(stack)));
+    b.UseExternalBuffer(WStr(stack, dimofi(stack)));
     utassert(b.els == stack);
     for (int i = 0; i < 100; i++) {
         b.AppendChar((WCHAR)(L'a' + (i % 26)));
@@ -437,19 +437,19 @@ static void wstrBuilderTest() {
     utassert(len(b) == 102);
     utassert(wstr::EndsWith(ToWStr(b), L"xyz"));
 
-    // TakeWStr hands the heap block over and leaves the Builder empty
-    WStr taken = b.TakeWStr();
+    // TakeStr hands the heap block over and leaves the Builder empty
+    WStr taken = b.TakeStr();
     utassert(len(taken) == 102);
     utassert(wstr::EndsWith(taken, L"xyz"));
     wstr::Free(taken);
     utassert(len(b) == 0);
 
-    // content that still fits the lent buffer stays in it, and TakeWStr copies
+    // content that still fits the lent buffer stays in it, and TakeStr copies
     wstr::Builder b2;
-    wstr::BuilderUseExternalBuffer(b2, WStr(stack, dimofi(stack)));
+    b2.UseExternalBuffer(WStr(stack, dimofi(stack)));
     b2.Append(L"abc");
     utassert(b2.els == stack);
-    WStr taken2 = b2.TakeWStr();
+    WStr taken2 = b2.TakeStr();
     utassert(wstr::Eq(taken2, L"abc"));
     utassert(taken2.s != stack);
     wstr::Free(taken2);

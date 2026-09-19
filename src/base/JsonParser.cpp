@@ -53,7 +53,7 @@ class ParseArgs {
     void PushKey(Str key) {
         char scratch[512]{};
         str::Builder b;
-        str::BuilderUseExternalBuffer(b, Str(scratch, sizeofi(scratch)));
+        b.UseExternalBuffer(Str(scratch, sizeofi(scratch)));
         b.AppendChar(kSegKey);
         b.Append(key);
         StrNodeListPush(&path, AllocStrNode(arena, ToStr(b)));
@@ -142,7 +142,7 @@ static int ParseString(ParseArgs& args, Str data, int off) {
     // Most JSON string values fit in a few hundred bytes; grow to heap if not.
     char stringScratch[512]{};
     str::Builder string;
-    str::BuilderUseExternalBuffer(string, Str(stringScratch, sizeofi(stringScratch)));
+    string.UseExternalBuffer(Str(stringScratch, sizeofi(stringScratch)));
     int end = ExtractString(string, data, off);
     if (end >= 0) {
         VisitValue(args, ToStr(string), Type::String);
@@ -208,7 +208,7 @@ static int ParseObject(ParseArgs& args, Str data, int off, int depth) {
         }
         char keyScratch[512]{};
         str::Builder key;
-        str::BuilderUseExternalBuffer(key, Str(keyScratch, sizeofi(keyScratch)));
+        key.UseExternalBuffer(Str(keyScratch, sizeofi(keyScratch)));
         off = ExtractString(key, data, off);
         if (off < 0) {
             return kParseFail;

@@ -14,7 +14,7 @@ TempStr QuoteCmdLineArgTemp(Str arg) {
 
     char resScratch[1024]{};
     str::Builder res;
-    str::BuilderUseExternalBuffer(res, Str(resScratch, sizeof(resScratch)));
+    res.UseExternalBuffer(Str(resScratch, sizeof(resScratch)));
     res.AppendChar('"');
     int n = arg.len;
     int i = 0;

@@ -1436,7 +1436,7 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
 
     str::Builder raw;
 
-    str::BuilderReserve(raw, (int)palm.uncompressedDocSize);
+    raw.Reserve((int)palm.uncompressedDocSize);
     for (int i = 1; i <= recCount; i++) {
         auto rec = pdb->GetRecord(i);
         if (len(rec) == 0) {

@@ -142,7 +142,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     // 3-line band of page text; most citations fit in a few hundred WCHARs.
     WCHAR chunkScratch[512]{};
     wstr::Builder chunk;
-    wstr::BuilderUseExternalBuffer(chunk, WStr(chunkScratch, dimofi(chunkScratch)));
+    chunk.UseExternalBuffer(WStr(chunkScratch, dimofi(chunkScratch)));
     Vec<int> chunkGlyphs;
     int cursorChunkPos = -1;
     int prevY = INT_MIN;
@@ -349,7 +349,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     // Build surname string (author names are short).
     WCHAR surnameScratch[128]{};
     wstr::Builder surnameW;
-    wstr::BuilderUseExternalBuffer(surnameW, WStr(surnameScratch, dimofi(surnameScratch)));
+    surnameW.UseExternalBuffer(WStr(surnameScratch, dimofi(surnameScratch)));
     for (int j = surnameStart; j < surnameEnd; j++) {
         surnameW.AppendChar(s.s[j]);
     }

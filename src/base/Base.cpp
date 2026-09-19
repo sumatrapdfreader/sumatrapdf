@@ -2773,20 +2773,16 @@ static constexpr int kPadding = 1;
 
 // storage that isn't a heap block of ours: a lent buffer, an arena block, or
 // nothing at all
-static bool IsNotOurHeapBlock(const str::Builder* s) {
-    return !s->els || s->cap < 0;
+template <typename C>
+static bool IsNotOurHeapBlock(const BuilderT<C>& b) {
+    return !b.els || b.cap < 0;
 }
-
-// wstr::Builder still has its own storage, so it needs Vec<T>'s layout to reach
-// the VecNonTemplated helpers (str::Builder is a Vec<char>, so it's a given)
-static_assert(offsetof(wstr::Builder, len) == offsetof(VecNonTemplated, len));
-static_assert(offsetof(wstr::Builder, cap) == offsetof(VecNonTemplated, cap));
-static_assert(offsetof(wstr::Builder, els) == offsetof(VecNonTemplated, els));
 
 // Vec allocates one element past the capacity and zeroes what it isn't using,
 // so there is always room for the NUL. Writing it after every change keeps it
 // right for lent buffers too, which nobody zeroes.
-static void Terminate(str::Builder& b) {
+template <typename C>
+static void Terminate(BuilderT<C>& b) {
     if (b.els) {
         b.els[b.len] = 0;
     }
@@ -2795,8 +2791,9 @@ static void Terminate(str::Builder& b) {
 // VecReserve() marks arena storage with a positive cap, which would have ~Vec()
 // free() arena memory. Flip the sign, so it reads as "not ours", like a lent
 // buffer does.
-static char* BuilderEnsureCap(str::Builder& b, int needed) {
-    char* els = VecReserve(b.a, b, needed);
+template <typename C>
+static C* BuilderEnsureCap(BuilderT<C>& b, int needed) {
+    C* els = VecReserve(b.a, b, needed);
     if (!els) {
         return nullptr;
     }
@@ -2806,210 +2803,119 @@ static char* BuilderEnsureCap(str::Builder& b, int needed) {
     return els;
 }
 
-void str::Builder::Reset(Str s) {
+template <typename C>
+void BuilderT<C>::Reset(S s) {
     // keeps the storage (heap or borrowed) for re-use, only empties it
-    len = 0;
+    this->len = 0;
     Terminate(*this);
     Append(s); // no-op if s is empty
 }
 
-void str::BuilderUseExternalBuffer(Builder& b, Str buf) {
-    ReportIf(b.els || b.len != 0);
+template <typename C>
+void BuilderT<C>::UseExternalBuffer(S buf) {
+    ReportIf(this->els || this->len != 0);
     if (buf.s && buf.len > kPadding) {
-        b.els = buf.s;
+        this->els = buf.s;
         // one char of the caller's buffer is held back for the NUL
-        b.cap = -(buf.len - kPadding);
-        b.els[0] = 0;
+        this->cap = -(buf.len - kPadding);
+        this->els[0] = 0;
     }
 }
 
-bool str::BuilderReserve(Builder& b, int cap) {
-    if (!BuilderEnsureCap(b, cap)) {
+template <typename C>
+bool BuilderT<C>::Reserve(int cap) {
+    if (!BuilderEnsureCap(*this, cap)) {
         return false;
     }
-    Terminate(b);
+    Terminate(*this);
     return true;
 }
 
-bool str::BuilderAppendChar(Builder& b, char c) {
-    if (!BuilderEnsureCap(b, b.len + 1)) {
+template <typename C>
+bool BuilderT<C>::AppendChar(C c) {
+    if (!BuilderEnsureCap(*this, this->len + 1)) {
         return false;
     }
-    b.els[b.len++] = c;
-    Terminate(b);
+    this->els[this->len++] = c;
+    Terminate(*this);
     return true;
 }
 
-bool str::BuilderAppend(Builder& b, Str src) {
-    if (str::IsNull(src) || 0 == src.len) {
+template <typename C>
+bool BuilderT<C>::Append(S src) {
+    if (!src.s || 0 == src.len) {
         return true;
     }
-    if (!BuilderEnsureCap(b, b.len + src.len)) {
+    if (!BuilderEnsureCap(*this, this->len + src.len)) {
         return false;
     }
-    memcpy(b.els + b.len, src.s, (size_t)src.len);
-    b.len += src.len;
-    Terminate(b);
+    memcpy(this->els + this->len, src.s, (size_t)src.len * sizeof(C));
+    this->len += src.len;
+    Terminate(*this);
     return true;
 }
 
-bool str::Builder::Reserve(int cap) {
-    return str::BuilderReserve(*this, cap);
-}
-
-bool str::Builder::AppendChar(char c) {
-    return str::BuilderAppendChar(*this, c);
-}
-
-bool str::Builder::Append(Str src) {
-    return str::BuilderAppend(*this, src);
-}
-
-bool str::Builder::AppendNonEmpty(Str src) {
+template <typename C>
+bool BuilderT<C>::AppendNonEmpty(S src) {
     if (::len(src) == 0) {
         return true;
     }
     return Append(src);
 }
 
-char str::Builder::RemoveAt(int idx, int count) {
-    char res = els[idx];
+template <typename C>
+C BuilderT<C>::RemoveAt(int idx, int count) {
+    C res = this->els[idx];
     // VecRemoveAtN() zeroes the chars it frees at the end, so the NUL is there
     VecRemoveAtN(*this, idx, count);
     return res;
 }
 
-char str::Builder::RemoveLast() {
-    if (len == 0) {
+template <typename C>
+C BuilderT<C>::RemoveLast() {
+    if (this->len == 0) {
         return 0;
     }
-    return RemoveAt(len - 1);
+    return RemoveAt(this->len - 1);
 }
 
 // perf hack for using as a buffer: client can get accumulated data
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
-// it doesn't matter
-Str str::BuilderTakeStr(Builder& b) {
-    int n = b.len;
-    char* res = b.els;
-    if (!b.els || n == 0) {
-        b.Reset();
-        return Str{};
+// it doesn't matter. A lent buffer or arena block is copied out instead,
+// since the caller gets to free the result.
+template <typename C>
+typename BuilderT<C>::S BuilderT<C>::TakeStr() {
+    int n = this->len;
+    C* res = this->els;
+    if (!res || n == 0) {
+        Reset();
+        return S{};
     }
-    if (IsNotOurHeapBlock(&b)) {
-        // storage we can't hand over: a lent buffer, or an arena block the arena
-        // owns. The chars are copied out and the Builder keeps using it.
-        res = (char*)MemDup(b.a, b.els, (size_t)n + kPadding);
+    if (IsNotOurHeapBlock(*this)) {
+        res = (C*)MemDup(a, res, (size_t)(n + kPadding) * sizeof(C));
     } else {
         // hand the block (heap or arena) to the caller and start over
-        b.els = nullptr;
-        b.cap = 0;
+        this->els = nullptr;
+        this->cap = 0;
     }
-
-    b.Reset();
-    return Str(res, n);
+    Reset();
+    return S(res, n);
 }
 
-Str str::Builder::TakeStr() {
-    return str::BuilderTakeStr(*this);
+template <typename C>
+C BuilderT<C>::LastChar() const {
+    if (this->len == 0) {
+        return 0;
+    }
+    return this->els[this->len - 1];
 }
+
+template struct BuilderT<char>;
+template struct BuilderT<WCHAR>;
 
 bool str::Contains(const str::Builder& b, Str sub) {
     return str::Contains(ToStr(b), sub);
-}
-
-char str::Builder::LastChar() const {
-    if (len == 0) {
-        return 0;
-    }
-    return els[len - 1];
-}
-
-// using external scratch, or no storage yet (not heap)
-static bool IsNotOurHeapBlock(const wstr::Builder* s) {
-    return !s->els || s->cap < 0;
-}
-
-// see the str::Builder version
-static void Terminate(wstr::Builder& b) {
-    if (b.els) {
-        b.els[b.len] = 0;
-    }
-}
-
-void wstr::BuilderUseExternalBuffer(Builder& b, WStr buf) {
-    ReportIf(b.els || b.len != 0);
-    if (buf.s && buf.len > kPadding) {
-        b.els = buf.s;
-        // one WCHAR of the caller's buffer is held back for the NUL
-        b.cap = -(buf.len - kPadding);
-        b.els[0] = 0;
-    }
-}
-
-bool wstr::BuilderReserve(Builder& b, int cap) {
-    if (!VecReserve(b, cap)) {
-        return false;
-    }
-    Terminate(b);
-    return true;
-}
-
-bool wstr::Builder::AppendChar(WCHAR c) {
-    if (!VecGrow(*this, 1)) {
-        return false;
-    }
-    els[len++] = c;
-    Terminate(*this);
-    return true;
-}
-
-bool wstr::Builder::Append(WStr src) {
-    if (wstr::IsNull(src) || 0 == src.len) {
-        return true;
-    }
-    if (!VecGrow(*this, src.len)) {
-        return false;
-    }
-    memcpy(els + len, src.s, (size_t)src.len * sizeof(WCHAR));
-    len += src.len;
-    Terminate(*this);
-    return true;
-}
-
-// hands the storage over to the caller, leaving the Builder empty. A lent
-// buffer is copied out first, since the caller gets to free the result.
-WStr wstr::Builder::TakeWStr() {
-    int n = len;
-    WCHAR* res = els;
-    if (!els || n == 0) {
-        return WStr{};
-    }
-    if (IsNotOurHeapBlock(this)) {
-        res = (WCHAR*)MemDup(nullptr, els, (size_t)(n + kPadding) * sizeof(WCHAR));
-    } else {
-        els = nullptr;
-        cap = 0;
-    }
-    len = 0;
-    Terminate(*this);
-    return WStr(res, n);
-}
-
-WCHAR wstr::Builder::RemoveLast() {
-    if (len == 0) {
-        return 0;
-    }
-    // VecPop() zeroes the char it drops, so the NUL is there
-    return VecPop(*this);
-}
-
-WCHAR wstr::Builder::LastChar() const {
-    if (len == 0) {
-        return 0;
-    }
-    return els[len - 1];
 }
 
 namespace wstr {
@@ -3273,7 +3179,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
     }
 
     wstr::Builder result;
-    wstr::BuilderReserve(result, s.len);
+    result.Reserve(s.len);
     int findLen = toReplace.len;
     int start = 0;
     while (start < s.len) {
@@ -3288,7 +3194,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
         result.Append(replaceWith);
         start = matchOff + findLen;
     }
-    return result.TakeWStr();
+    return result.TakeStr();
 }
 
 // replaces all whitespace characters with spaces, collapses several
@@ -3613,7 +3519,7 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     }
     // heuristic: allow 6 replacements without reallocating
     str::Builder result;
-    str::BuilderReserve(result, s.len + 1 + (lenDiff * 6));
+    result.Reserve(s.len + 1 + (lenDiff * 6));
     bool ok;
     while (idx >= 0) {
         ok = result.Append(Str(curr.s, idx));
@@ -5109,7 +5015,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
     // i64 with thousand seps is well under 48 bytes (e.g. "9,223,372,036,854,775,807").
     char resScratch[48]{};
     str::Builder res;
-    str::BuilderUseExternalBuffer(res, Str(resScratch, sizeofi(resScratch)));
+    res.UseExternalBuffer(Str(resScratch, sizeofi(resScratch)));
     int i = 3 - (buf.len % 3);
     for (int src = 0; src < buf.len; src++) {
         res.AppendChar(buf.s[src]);
@@ -5213,7 +5119,7 @@ TempStr FormatRomanNumeralTemp(int n) {
     // Page numbers in roman are short (e.g. 3999 -> "MMMCMXCIX" = 9 chars).
     char romanScratch[32]{};
     str::Builder roman;
-    str::BuilderUseExternalBuffer(roman, Str(romanScratch, sizeofi(romanScratch)));
+    roman.UseExternalBuffer(Str(romanScratch, sizeofi(romanScratch)));
     for (auto& el : romandata) {
         for (; n >= el.value; n -= el.value) {
             roman.Append(el.numeral);

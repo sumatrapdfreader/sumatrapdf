@@ -1820,63 +1820,58 @@ int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut);
 TempStr SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut);
 TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
 
-namespace str {
-// A Vec<char> that always keeps a NUL after the last char, so the storage is
+// A Vec<C> that always keeps a NUL after the last char, so the storage is
 // also a C string. Vec supplies the fields, operator[], begin/end and the
 // destructor; only what needs the terminator or an arena is left here.
-struct Builder : Vec<char> {
+// str::Builder is BuilderT<char>, wstr::Builder is BuilderT<WCHAR>.
+template <typename C>
+struct StrOf;
+template <>
+struct StrOf<char> {
+    using type = Str;
+};
+template <>
+struct StrOf<WCHAR> {
+    using type = WStr;
+};
+
+template <typename C>
+struct BuilderT : Vec<C> {
+    using S = typename StrOf<C>::type;
     // growth allocator; null means the heap. Arena storage is never freed by
     // the Builder (the arena owns it).
     Arena* a = nullptr;
 
-    Builder() = default;
-    explicit Builder(Arena* arena) : a(arena) {}
+    BuilderT() = default;
+    explicit BuilderT(Arena* arena) : a(arena) {}
 
-    void Reset(Str s = {});
+    void Reset(S s = {});
     bool Reserve(int cap);
-    bool AppendChar(char c);
-    bool Append(Str src);
-    bool AppendNonEmpty(Str src);
-    char RemoveAt(int idx, int count = 1);
-    char RemoveLast();
-    Str TakeStr();
-    char LastChar() const;
+    bool AppendChar(C c);
+    bool Append(S src);
+    bool AppendNonEmpty(S src);
+    C RemoveAt(int idx, int count = 1);
+    C RemoveLast();
+    S TakeStr();
+    C LastChar() const;
+    // Lend a buffer to start in, instead of the first allocation, the way
+    // VecUseExternalBuffer() does. Must be empty with no storage yet. Appends
+    // go into buf until it is full; the append past that allocates and copies.
+    // Nothing frees buf, so it must outlive the builder.
+    void UseExternalBuffer(S buf);
 };
 
+namespace str {
+using Builder = BuilderT<char>;
 bool Contains(const Builder& b, Str sub);
-
-// Lend b a buffer to start in, instead of its first allocation, the way
-// VecUseExternalBuffer() does. b must be empty and have no storage yet. It
-// appends into buf until buf is full; the append past that allocates and
-// copies, leaving buf alone. Nothing frees buf, so it must outlive b.
-void BuilderUseExternalBuffer(Builder& b, Str buf);
-
-bool BuilderReserve(Builder& b, int cap);
-bool BuilderAppendChar(Builder& b, char c);
-bool BuilderAppend(Builder& b, Str s);
-Str BuilderTakeStr(Builder& b);
 } // namespace str
+
+namespace wstr {
+using Builder = BuilderT<WCHAR>;
+}
 
 void SeqStrNumAppend(str::Builder* b, Str s, i64 num);
 void SeqStrNumFinish(str::Builder* b);
-
-namespace wstr {
-// see str::Builder: a Vec<WCHAR> that always keeps a NUL after the last char
-struct Builder : Vec<WCHAR> {
-    bool AppendChar(WCHAR);
-    bool Append(WStr src);
-    WCHAR RemoveLast();
-    WCHAR LastChar() const;
-    WStr TakeWStr();
-};
-
-// see str::BuilderUseExternalBuffer()
-void BuilderUseExternalBuffer(Builder& b, WStr buf);
-
-// see str::BuilderReserve()
-bool BuilderReserve(Builder& b, int cap);
-
-} // namespace wstr
 
 int ParseInt(Str s);
 i64 ParseInt64(Str s);

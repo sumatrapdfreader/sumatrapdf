@@ -1676,7 +1676,7 @@ static TempStr DecompressTcrTextTemp(Str data) {
     }
 
     str::Builder text;
-    str::BuilderReserve(text, data.len * 2);
+    text.Reserve(data.len * 2);
     AtomicIntInc(&gAllowAllocFailure);
     AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
 

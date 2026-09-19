@@ -24,7 +24,7 @@ static int VecCap(const Vec<T>& v) {
 
 static size_t VecTestAppendFmt() {
     str::Builder v;
-    str::BuilderReserve(v, 256);
+    v.Reserve(256);
     i64 val = 1;
     for (int i = 0; i < 10000; i++) {
         v.Append(fmt("i%" PRId64 "e", val));
@@ -132,7 +132,7 @@ void VecTest() {
 
     {
         str::Builder v;
-        str::BuilderReserve(v, 128);
+        v.Reserve(128);
         v.Append(StrL("boo"));
         utassert(str::Eq(StrL("boo"), ToStr(v)));
         utassert(len(v) == 3);
