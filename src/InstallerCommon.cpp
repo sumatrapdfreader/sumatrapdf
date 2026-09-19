@@ -683,7 +683,7 @@ static void SetCloseProcessMsg() {
             procNames = str::JoinTemp(procNames, StrL(" and "), name);
         }
     }
-    TempStr s = fmt(Tr("Please close %s to proceed!").s, procNames);
+    TempStr s = fmt(Tr("Close %s to continue.").s, procNames);
     SetMsg(s, kColorMsgFailed);
 }
 

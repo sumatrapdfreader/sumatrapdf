@@ -1385,7 +1385,7 @@ static bool ChooseSystemFont(HWND hwnd, Str& family, int& style) {
 
 // a font other than the base 14 is embedded in the PDF
 static bool ConfirmFontEmbedding(HWND hwnd) {
-    Str msg = Tr("This font will be embedded in the PDF, which can add hundreds of kilobytes or more to its size.");
+    Str msg = Tr("Embedding this font can add hundreds of kilobytes to the PDF.");
     int res = MessageBoxW(hwnd, ToWStrTemp(msg).s, ToWStrTemp(Tr("Embed Font")).s, MB_OKCANCEL | MB_ICONWARNING);
     return res == IDOK;
 }

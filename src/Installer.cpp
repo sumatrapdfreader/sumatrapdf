@@ -974,8 +974,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
 
         if (!uncompressed) {
             logf("  GetFileDataByIdx failed for '%s'\n", fi->name);
-            NotifyFailed(
-                Tr("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
+            NotifyFailed(Tr("The installer has been corrupted. Please download it again."));
             return false;
         }
         TempStr filePath = path::JoinTemp(destDir, fi->name);
@@ -1502,9 +1501,7 @@ static HRESULT CALLBACK InstallationFailedDialogCallback(HWND /*hwnd*/, UINT msg
 static void ShowInstallationFailedUi(HWND hwndParent) {
     log(StrL("ShowInstallationFailedUi\n"));
     Str firstErr = gFirstError ? gFirstError : StrL("(no details)");
-    TempStr content =
-        fmt("%s\n\n%s\n\n%s", firstErr, Tr("Installation could not be completed."),
-            Tr("If a previous version is running or Windows Explorer is previewing a PDF, close it and try again."));
+    TempStr content = fmt("%s\n\n%s", firstErr, Tr("Installation could not be completed."));
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = kBtnIdShowInstallLog;

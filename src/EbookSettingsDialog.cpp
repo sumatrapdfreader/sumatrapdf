@@ -320,7 +320,7 @@ void EbookSettingsWnd::UpdateCssPreview() {
     // the same DPI the engine used: it takes it from DpiGet() when the document
     // is opened (EngineCreate.cpp)
     TempStr css = EbookGeneratedCssTemp(font, &margin, ParseFloatTemp(editSpacing), DpiGet());
-    Str text = css ? css : Tr("(the document's own styling is used as-is)");
+    Str text = css ? css : Tr("The document's own styling is used.");
     editCss->SetText(ToEditTextTemp(text));
 }
 
@@ -574,7 +574,7 @@ bool EbookSettingsWnd::Create(MainWindow* mainWin) {
     {
         Checkbox::CreateArgs args;
         args.parent = hwnd;
-        args.text = Tr("&Custom CSS (edit the rules below)");
+        args.text = Tr("&Custom CSS");
         args.isRtl = isRtl;
         cbCustomCss = new Checkbox();
         cbCustomCss->SetInsetsPt(8, 0, 0, 0);

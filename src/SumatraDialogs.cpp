@@ -182,10 +182,10 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_EVEN, Tr("&Even pages only"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_ODD, Tr("&Odd pages only"));
             HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_SCALE, Tr("Page scaling"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_SHRINK, Tr("&Shrink pages to printable area (if necessary)"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_SHRINK, Tr("&Shrink pages to printable area"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_FIT, Tr("&Fit pages to printable area"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_STRETCH, Tr("S&tretch pages to fill paper (ignore aspect ratio)"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_NONE, Tr("&Use original page sizes (actual size, 1:1)"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_STRETCH, Tr("S&tretch pages to fill paper"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_NONE, Tr("&Actual size (1:1)"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_CENTER_HORIZONTALLY, Tr("Center page hori&zontally on the paper"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE, Tr("Choose &paper source by document page size"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE,

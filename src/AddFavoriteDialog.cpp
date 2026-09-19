@@ -58,9 +58,9 @@ static void ClearAddFavoriteWnd() {
 static TempStr FavoritePromptTemp(Str pageLabel) {
     int chapter = 0, page = 0;
     if (str::Parse(pageLabel, "%d/%d%$", &chapter, &page)) {
-        return fmt(Tr("Add chapter %d page %d to favorites with (optional) name:").s, chapter, page);
+        return fmt(Tr("Name for chapter %d page %d (optional):").s, chapter, page);
     }
-    return fmt(Tr("Add page %s to favorites with (optional) name:").s, pageLabel);
+    return fmt(Tr("Name for page %s (optional):").s, pageLabel);
 }
 
 void AddFavoriteWnd::SetTarget(MainWindow* win, Str path, int page, Str labelIn, Str name) {

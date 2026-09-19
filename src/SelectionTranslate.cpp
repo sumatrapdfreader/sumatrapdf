@@ -405,10 +405,10 @@ static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str r
                    "then try again."));
         }
         if (backend == AIChatBackend::Grok) {
-            return str::DupTemp(Tr("Grok Build is not signed in. Sign in to Grok Build, then try again."));
+            return str::DupTemp(Tr("Grok Build is not signed in."));
         }
         if (backend == AIChatBackend::Codex) {
-            return str::DupTemp(Tr("OpenAI Codex is not signed in. Sign in to Codex, then try again."));
+            return str::DupTemp(Tr("OpenAI Codex is not signed in."));
         }
         if (backend == AIChatBackend::AntiGravity) {
             return str::DupTemp(Tr(

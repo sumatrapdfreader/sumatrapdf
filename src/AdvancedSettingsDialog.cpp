@@ -1328,7 +1328,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
         auto* c = NewVirtText({
-            .s = Tr("Enter or double-click to edit. Bold value: different from default"),
+            .s = Tr("Bold: differs from default"),
             .font = font,
             .isRtl = isRtl,
         });

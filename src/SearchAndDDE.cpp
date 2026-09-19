@@ -2183,7 +2183,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
-    args.msg = Tr("Cannot start inverse search command. Please check the command line in the settings.");
+    args.msg = Tr("Cannot start the inverse search command. Check its command line in Settings.");
     if (len(cmdLine) > 0) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
         TempStr appDir = GetSelfExeDirTemp();

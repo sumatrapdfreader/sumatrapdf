@@ -31,7 +31,7 @@ To print only a fragment of a page (a detail of a drawing, one table):
    button (or drag with the right mouse button).
 2. Right-click the selection and choose **Print Selection...**, or press
    `Ctrl + P` and pick **Selection** under *Page Range* in the print dialog.
-3. To print the fragment at its real size choose **Use original page sizes (actual size, 1:1)**
+3. To print the fragment at its real size choose **Actual size (1:1)**
    under *Advanced*; **Shrink** / **Fit** scale it to the paper instead.
 
 The selection prints on one sheet, at the top-left (or centered with
@@ -52,13 +52,13 @@ The system print dialog has an **Advanced** tab (a second tab next to
 
 **Page scaling**
 
-- **Shrink pages to printable area (if necessary)** – default; only scales down
+- **Shrink pages to printable area** – default; only scales down
   pages that are too big for the paper, leaves smaller pages at original size
 - **Fit pages to printable area** – scale every page up or down so it fills the
   printable area, keeping the aspect ratio
-- **Stretch pages to fill paper (ignore aspect ratio)** – fill the paper in both
+- **Stretch pages to fill paper** – fill the paper in both
   dimensions, *not* keeping the aspect ratio (the page is distorted to fit)
-- **Use original page sizes (actual size, 1:1)** – print at 100%, no scaling
+- **Actual size (1:1)** – print at 100%, no scaling
   (best for forms, labels, technical drawings and anything that must print at
   an exact size). For images the size comes from the resolution
   recorded in the file; see [Printing at actual size](#printing-at-actual-size-11)
@@ -262,7 +262,7 @@ PrinterDefaults [
 
 ## Printing at actual size (1:1)
 
-"Actual size" needs two things: no scaling (**Use original page sizes (actual size, 1:1)** in the
+"Actual size" needs two things: no scaling (**Actual size (1:1)** in the
 dialog, `noscale` on the command line) and a correct idea of how big the
 document is.
 
@@ -281,13 +281,13 @@ document is.
 When the file's resolution is missing or wrong, tell SumatraPDF what it is:
 
 - from the window: set `PrinterDefaults.PrintDpi` (Settings → Advanced Options),
-  e.g. `PrintDpi = 300`, then print with **Use original page sizes (actual size, 1:1)**
+  e.g. `PrintDpi = 300`, then print with **Actual size (1:1)**
 - from the command line: `-print-settings "noscale,dpi=300"`
 
 The override only sets the size; the pixels are still sent at full resolution.
 
 Printing a rectangular selection (see [Printing part of a page](#printing-part-of-a-page))
-at actual size works the same way: choose **Use original page sizes (actual size, 1:1)**.
+at actual size works the same way: choose **Actual size (1:1)**.
 
 ## Recipes for common tasks
 
