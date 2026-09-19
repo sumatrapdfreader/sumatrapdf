@@ -112,7 +112,7 @@ async function runDumpExif(absPath: string): Promise<string[]> {
     stderr: "ignore",
   });
   let timedOut = false;
-  const timer = setTimeout(() => {
+  const timer = setTimeout(async () => {
     timedOut = true;
     await killAndWait(proc);
   }, SPAWN_TIMEOUT_MS);

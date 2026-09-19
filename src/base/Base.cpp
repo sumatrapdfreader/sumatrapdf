@@ -1442,7 +1442,6 @@ void StrNodeListPop(StrNodeList* list) {
 
 namespace str {
 
-// return true if s1 == s2, case sensitive
 // length up to the first NUL within len: a Str may span more than its C string
 static int CStrLen(Str s) {
     int n = 0;
@@ -1452,6 +1451,7 @@ static int CStrLen(Str s) {
     return n;
 }
 
+// return true if s1 == s2, case sensitive
 bool Eq(Str s1, Str s2) {
     if (s1.s == s2.s) {
         return true;
