@@ -11,6 +11,118 @@
 // 3 is for absolute worst case of WCHAR* where last char was partially written
 constexpr int kZeroPaddingCount = 3;
 
+TempStr MakeUniqueFilePathTemp(Str path) {
+    if (!file::Exists(path)) {
+        return str::DupTemp(path);
+    }
+    TempStr noExt = path::GetPathNoExtTemp(path);
+    TempStr ext = path::GetExtTemp(path);
+    for (int i = 1; i < 10000; i++) {
+        TempStr candidate = fmt("%s.%d%s", noExt, i, ext);
+        if (!file::Exists(candidate)) {
+            return candidate;
+        }
+    }
+    return str::DupTemp(path);
+}
+
+bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
+    return a.dwLowDateTime == b.dwLowDateTime && a.dwHighDateTime == b.dwHighDateTime;
+}
+
+// Defined in Win.cpp; avoid pulling all of Win.h into this file.
+void LogLastError(DWORD err = 0);
+Str GetLastErrorAsStr(Arena* arena);
+
+// Same value as HINSTANCE in WinMain for this image (exe or DLL).
+// Using __ImageBase (not GetModuleHandle(nullptr)) so DLL builds report the
+// DLL path, not the host process path.
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+TempStr GetTempFilePathTemp(Str filePrefix) {
+    WCHAR tempDir[MAX_PATH]{};
+    DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
+    if (!res || res >= dimof(tempDir)) {
+        return {};
+    }
+    if (len(filePrefix) == 0) {
+        return ToUtf8Temp(tempDir);
+    }
+    WCHAR path[MAX_PATH]{};
+    WCHAR* filePrefixW = CWStrTemp(filePrefix);
+    if (!GetTempFileNameW(tempDir, filePrefixW, 0, path)) {
+        DWORD err = GetLastError();
+        logf("GetTempFilePathTemp: GetTempFileNameW failed tempDir='%s' prefix='%s' lastError=%u\n", WStr(tempDir),
+             filePrefix, err);
+        LogLastError(err);
+        return {};
+    }
+    return ToUtf8Temp(path);
+}
+
+// GetModuleFileNameW() truncates silently: on a buffer that is too small it
+// fills it, returns the buffer size and sets ERROR_INSUFFICIENT_BUFFER, so a
+// short read is the only way to know the whole path arrived. Grow until it
+// does. initialCch is a parameter so tests can force the growing.
+// kMaxPathCch is the longest path Windows itself accepts.
+constexpr int kMaxPathCch = 32 * 1024;
+
+TempWStr GetModulePathTemp(HMODULE mod, int initialCch) {
+    int cch = initialCch < 1 ? 1 : initialCch;
+    for (;;) {
+        WCHAR* buf = AllocArrayTemp<WCHAR>(cch + 1);
+        if (!buf) {
+            return {};
+        }
+        DWORD n = GetModuleFileNameW(mod, buf, (DWORD)cch);
+        if (n == 0) {
+            LogLastError();
+            return {};
+        }
+        if ((int)n < cch) {
+            return WStr(buf, (int)n);
+        }
+        if (cch >= kMaxPathCch) {
+            logf("GetModulePathTemp: path longer than %d chars\n", kMaxPathCch);
+            return WStr(buf, (int)n);
+        }
+        cch *= 2;
+    }
+}
+
+// Path of this process image (exe or DLL that contains this code).
+TempStr GetSelfExePathTemp() {
+    return ToUtf8Temp(GetModulePathTemp((HMODULE)&__ImageBase, MAX_PATH + 1));
+}
+
+// Directory containing GetSelfExePathTemp().
+TempStr GetSelfExeDirTemp() {
+    TempStr path = GetSelfExePathTemp();
+    return path::GetDirTemp(path);
+}
+
+TempStr GetPathInExeDirTemp(Str fileName) {
+    TempStr dir = GetSelfExeDirTemp();
+    TempStr path = path::JoinTemp(dir, fileName);
+    path = path::NormalizeTemp(path);
+    return path;
+}
+
+static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
+    ULARGE_INTEGER res;
+    res.LowPart = ft.dwLowDateTime;
+    res.HighPart = ft.dwHighDateTime;
+    return res;
+}
+
+int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
+    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
+    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
+    LONGLONG diff = (LONGLONG)t1.QuadPart - (LONGLONG)t2.QuadPart;
+    diff = diff / (LONGLONG)10000000L;
+    return (int)diff;
+}
+
 namespace path {
 
 bool IsSep(char c) {
@@ -243,109 +355,12 @@ TempStr WindowsToWslMountTemp(Str path) {
     return fmt("/mnt/%c/%s", drive, rest);
 }
 
-} // namespace path
-
-TempStr MakeUniqueFilePathTemp(Str path) {
-    if (!file::Exists(path)) {
-        return str::DupTemp(path);
-    }
-    TempStr noExt = path::GetPathNoExtTemp(path);
-    TempStr ext = path::GetExtTemp(path);
-    for (int i = 1; i < 10000; i++) {
-        TempStr candidate = fmt("%s.%d%s", noExt, i, ext);
-        if (!file::Exists(candidate)) {
-            return candidate;
-        }
-    }
-    return str::DupTemp(path);
-}
-
-namespace file {
-
-thread_local CopyProgressCb gFileCopyProgressCb;
-
-Str ReadFile(Str path) {
-    return ReadFileWithArena(path, nullptr);
-}
-
-bool StartsWith(Str path, Str s) {
-    u8* buf = AllocArrayTemp<u8>(s.len);
-    if (!buf) {
-        return false;
-    }
-    if (ReadN(path, buf, s.len) != s.len) {
-        return false;
-    }
-    return MemEq(buf, s.s, s.len);
-}
-
-} // namespace file
-
-namespace dir {
-
-// errOut (optional) gets the OS error when creation fails, so callers can log why.
-// 0 there means the create itself reported success but the directory wasn't there
-// afterwards.
-bool CreateForFile(Str path, int* errOut) {
-    TempStr dir = path::GetDirTemp(path);
-    return CreateAll(dir, errOut);
-}
-
-} // namespace dir
-
-bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
-    return a.dwLowDateTime == b.dwLowDateTime && a.dwHighDateTime == b.dwHighDateTime;
-}
-
-Str PathGetDirTemp(Str path) {
-    if (len(path) == 0) {
-        return {};
-    }
-    while (path.len > 1 && path::IsSep(path.s[path.len - 1])) {
-        path.len--;
-    }
-    int idx = -1;
-    for (int i = 0; i < path.len; i++) {
-        if (path::IsSep(path.s[i])) {
-            idx = i;
-        }
-    }
-    if (idx < 0) {
-        return {};
-    }
-    int n = idx;
-    if (idx == 0) {
-        n = 1;
-    } else if (idx == 2 && path.s[1] == ':') {
-        n = 3;
-    }
-    return str::DupTemp(Str(path.s, n));
-}
-
-// Defined in Win.cpp; avoid pulling all of Win.h into this file.
-void LogLastError(DWORD err = 0);
-Str GetLastErrorAsStr(Arena* arena);
-
-// Same value as HINSTANCE in WinMain for this image (exe or DLL).
-// Using __ImageBase (not GetModuleHandle(nullptr)) so DLL builds report the
-// DLL path, not the host process path.
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-
-namespace path {
-
-Type GetType(Str pathA) {
-    if (len(pathA) == 0) {
-        return Type::None;
-    }
-
-    DWORD attrs = GetCachedAttributes(pathA);
+Type GetType(Str path) {
+    DWORD attrs = GetCachedAttributes(path);
     if (attrs == INVALID_FILE_ATTRIBUTES) {
         return Type::None;
     }
-    if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
-        return Type::Dir;
-    }
-    return Type::File;
+    return (attrs & FILE_ATTRIBUTE_DIRECTORY) ? Type::Dir : Type::File;
 }
 
 // Network-drive attribute cache: GetFileAttributesExW on UNC/mapped drives is
@@ -711,11 +726,7 @@ DWORD GetCachedAttributes(Str path) {
 }
 
 bool IsDirectory(Str path) {
-    DWORD attrs = GetCachedAttributes(path);
-    if (INVALID_FILE_ATTRIBUTES == attrs) {
-        return false;
-    }
-    return (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
+    return GetType(path) == Type::Dir;
 }
 
 static TempWStr NormalizeTemp(WStr path) {
@@ -1080,76 +1091,24 @@ TempStr GetNonVirtualTemp(Str virtualPath) {
 
 } // namespace path
 
-TempStr GetTempFilePathTemp(Str filePrefix) {
-    WCHAR tempDir[MAX_PATH]{};
-    DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
-    if (!res || res >= dimof(tempDir)) {
-        return {};
-    }
-    if (len(filePrefix) == 0) {
-        return ToUtf8Temp(tempDir);
-    }
-    WCHAR path[MAX_PATH]{};
-    WCHAR* filePrefixW = CWStrTemp(filePrefix);
-    if (!GetTempFileNameW(tempDir, filePrefixW, 0, path)) {
-        DWORD err = GetLastError();
-        logf("GetTempFilePathTemp: GetTempFileNameW failed tempDir='%s' prefix='%s' lastError=%u\n", WStr(tempDir),
-             filePrefix, err);
-        LogLastError(err);
-        return {};
-    }
-    return ToUtf8Temp(path);
-}
-
-// GetModuleFileNameW() truncates silently: on a buffer that is too small it
-// fills it, returns the buffer size and sets ERROR_INSUFFICIENT_BUFFER, so a
-// short read is the only way to know the whole path arrived. Grow until it
-// does. initialCch is a parameter so tests can force the growing.
-// kMaxPathCch is the longest path Windows itself accepts.
-constexpr int kMaxPathCch = 32 * 1024;
-
-TempWStr GetModulePathTemp(HMODULE mod, int initialCch) {
-    int cch = initialCch < 1 ? 1 : initialCch;
-    for (;;) {
-        WCHAR* buf = AllocArrayTemp<WCHAR>(cch + 1);
-        if (!buf) {
-            return {};
-        }
-        DWORD n = GetModuleFileNameW(mod, buf, (DWORD)cch);
-        if (n == 0) {
-            LogLastError();
-            return {};
-        }
-        if ((int)n < cch) {
-            return WStr(buf, (int)n);
-        }
-        if (cch >= kMaxPathCch) {
-            logf("GetModulePathTemp: path longer than %d chars\n", kMaxPathCch);
-            return WStr(buf, (int)n);
-        }
-        cch *= 2;
-    }
-}
-
-// Path of this process image (exe or DLL that contains this code).
-TempStr GetSelfExePathTemp() {
-    return ToUtf8Temp(GetModulePathTemp((HMODULE)&__ImageBase, MAX_PATH + 1));
-}
-
-// Directory containing GetSelfExePathTemp().
-TempStr GetSelfExeDirTemp() {
-    TempStr path = GetSelfExePathTemp();
-    return path::GetDirTemp(path);
-}
-
-TempStr GetPathInExeDirTemp(Str fileName) {
-    TempStr dir = GetSelfExeDirTemp();
-    TempStr path = path::JoinTemp(dir, fileName);
-    path = path::NormalizeTemp(path);
-    return path;
-}
-
 namespace file {
+
+thread_local CopyProgressCb gFileCopyProgressCb;
+
+Str ReadFile(Str path) {
+    return ReadFileWithArena(path, nullptr);
+}
+
+bool StartsWith(Str path, Str s) {
+    u8* buf = AllocArrayTemp<u8>(s.len);
+    if (!buf) {
+        return false;
+    }
+    if (ReadN(path, buf, s.len) != s.len) {
+        return false;
+    }
+    return MemEq(buf, s.s, s.len);
+}
 
 FILE* OpenFILE(Str path) {
     ReportIf(len(path) == 0);
@@ -1207,16 +1166,20 @@ bool Flush(FileHandle h) {
 // the CRT allocates a FILE and its buffer, takes the lowio handle-table lock and
 // copies through that buffer before calling CreateFileW anyway. This runs once
 // per page when opening an image directory, so that overhead is worth skipping.
+// share flags match what the CRT's "rb" mode uses, plus DELETE so we don't
+// block someone else from replacing the file while we read it
+static HANDLE OpenForSequentialRead(Str path) {
+    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    DWORD flags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN;
+    return CreateFileW(CWStrTemp(path), GENERIC_READ, share, nullptr, OPEN_EXISTING, flags, nullptr);
+}
+
 int ReadN(Str path, u8* buf, size_t toRead) {
     ReportIf(len(path) == 0);
     if (len(path) == 0 || !buf || toRead > (size_t)UINT32_MAX) {
         return -1;
     }
-    // share flags match what the CRT's "rb" mode uses, plus DELETE so we don't
-    // block someone else from replacing the file while we peek at its header
-    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-    DWORD flags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN;
-    HANDLE h = CreateFileW(CWStrTemp(path), GENERIC_READ, share, nullptr, OPEN_EXISTING, flags, nullptr);
+    HANDLE h = OpenForSequentialRead(path);
     if (h == INVALID_HANDLE_VALUE) {
         return -1;
     }
@@ -1257,9 +1220,7 @@ Str ReadFileWithArena(Str filePath, Arena* a) {
     if (len(filePath) == 0) {
         return {};
     }
-    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-    DWORD flags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN;
-    HANDLE h = CreateFileW(CWStrTemp(filePath), GENERIC_READ, share, nullptr, OPEN_EXISTING, flags, nullptr);
+    HANDLE h = OpenForSequentialRead(filePath);
     if (h == INVALID_HANDLE_VALUE) {
         return {};
     }
@@ -1298,17 +1259,10 @@ Str ReadFileWithArena(Str filePath, Arena* a) {
     return Str(d, size);
 }
 
+// GetCachedAttributes: network paths cached 1hr (avoids UI-thread stalls in
+// menu/toolbar rebuild -> CanViewExternally -> file::Exists).
 bool Exists(Str path) {
-    if (len(path) == 0) {
-        return false;
-    }
-    // GetCachedAttributes: network paths cached 1hr (avoids UI-thread stalls in
-    // menu/toolbar rebuild → CanViewExternally → file::Exists).
-    DWORD attrs = path::GetCachedAttributes(path);
-    if (attrs == INVALID_FILE_ATTRIBUTES) {
-        return false;
-    }
-    return (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0;
+    return path::GetType(path) == path::Type::File;
 }
 
 // Maps the whole file at path into memory as a read-only view backed by the
@@ -1576,39 +1530,22 @@ bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
 
 } // namespace file
 
-static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
-    ULARGE_INTEGER res;
-    res.LowPart = ft.dwLowDateTime;
-    res.HighPart = ft.dwHighDateTime;
-    return res;
-}
-
-int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
-    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
-    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
-    LONGLONG diff = (LONGLONG)t1.QuadPart - (LONGLONG)t2.QuadPart;
-    diff = diff / (LONGLONG)10000000L;
-    return (int)diff;
-}
-
 namespace dir {
 
+// errOut (optional) gets the OS error when creation fails, so callers can log why.
+// 0 there means the create itself reported success but the directory wasn't there
+// afterwards.
+bool CreateForFile(Str path, int* errOut) {
+    TempStr dir = path::GetDirTemp(path);
+    return CreateAll(dir, errOut);
+}
+
 bool Exists(WStr dir) {
-    if (len(dir) == 0) {
-        return false;
-    }
     return Exists(ToUtf8Temp(dir));
 }
 
 bool Exists(Str dir) {
-    if (len(dir) == 0) {
-        return false;
-    }
-    DWORD attrs = path::GetCachedAttributes(dir);
-    if (attrs == INVALID_FILE_ATTRIBUTES) {
-        return false;
-    }
-    return (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
+    return path::IsDirectory(dir);
 }
 
 bool Create(Str dir) {
