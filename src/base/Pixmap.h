@@ -65,8 +65,8 @@ Pixmap* GetClipboardImageAsPixmap();
 struct RenderedBitmap;
 
 // DIB-section-backed 32bpp BGRA8. Use only when this pixmap must be SelectObject'd
-// or must adopt a GDI HBITMAP / Native DIB. Heap pixels blit via StretchDIBits
-// with no extra copy (BlitPixmap / BlitPixmapAlpha).
+// or must adopt a GDI HBITMAP / Native DIB. Heap pixels blit via SetDIBitsToDevice
+// (1:1) or StretchDIBits (BlitPixmap / BlitPixmapAlpha).
 Pixmap* AllocPixmapDIB(int w, int h);
 Pixmap* PixmapFromHICON(HICON);
 bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);

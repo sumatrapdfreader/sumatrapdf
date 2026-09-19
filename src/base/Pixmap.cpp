@@ -385,6 +385,38 @@ Pixmap* PixmapFromHICON(HICON hicon) {
 
 static bool BlitPixmapRegionComposited(Pixmap* p, HDC hdc, Rect target, Rect source);
 
+static void SetBlitStretchMode(HDC hdc) {
+    if (IsPrinterDC(hdc)) {
+        SetStretchBltMode(hdc, COLORONCOLOR);
+        return;
+    }
+    SetStretchBltMode(hdc, HALFTONE);
+    SetBrushOrgEx(hdc, 0, 0, nullptr);
+}
+
+static bool BlitDibBits(HDC hdc, Rect target, Rect source, const Pixmap* p) {
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = p->width;
+    bmi.bmiHeader.biHeight = -source.dy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = p->format == PixmapFormat::BGR8 ? 24 : 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    const u8* rows = p->data + ((size_t)source.y * p->stride);
+    int n;
+    // StretchDIBits even at 1:1 is what Xerox PCL turns into white stripes
+    // (issue #919). SetDIBitsToDevice is a straight DIB transfer.
+    if (target.dx == source.dx && target.dy == source.dy) {
+        n = SetDIBitsToDevice(hdc, target.x, target.y, (DWORD)source.dx, (DWORD)source.dy, source.x, 0, 0,
+                              (UINT)source.dy, rows, &bmi, DIB_RGB_COLORS);
+    } else {
+        SetBlitStretchMode(hdc);
+        n = StretchDIBits(hdc, target.x, target.y, target.dx, target.dy, source.x, 0, source.dx, source.dy, rows, &bmi,
+                          DIB_RGB_COLORS, SRCCOPY);
+    }
+    return n != GDI_ERROR && n != 0;
+}
+
 bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {
     if (!p || !p->data || target.IsEmpty() || source.IsEmpty()) {
         return false;
@@ -396,17 +428,23 @@ bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {
     if (p->hasAlpha && p->format == PixmapFormat::BGRA8) {
         return BlitPixmapRegionComposited(p, hdc, target, source);
     }
-    SetStretchBltMode(hdc, HALFTONE);
-    if (p->hbmp) {
+    source = Rect(0, 0, p->width, p->height).Intersect(source);
+    if (source.IsEmpty()) {
+        return false;
+    }
+    bool sameSize = target.dx == source.dx && target.dy == source.dy;
+    // printer: send DIB bits, not StretchBlt. screen DIB: BitBlt is faster
+    if (p->hbmp && !(IsPrinterDC(hdc) && sameSize)) {
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (!bmpDC) {
             return false;
         }
         HGDIOBJ oldBmp = SelectObject(bmpDC, p->hbmp);
         bool ok = false;
-        if (oldBmp && target.dx == source.dx && target.dy == source.dy) {
+        if (oldBmp && sameSize) {
             ok = BitBlt(hdc, target.x, target.y, target.dx, target.dy, bmpDC, source.x, source.y, SRCCOPY) != 0;
         } else if (oldBmp) {
+            SetBlitStretchMode(hdc);
             ok = StretchBlt(hdc, target.x, target.y, target.dx, target.dy, bmpDC, source.x, source.y, source.dx,
                             source.dy, SRCCOPY) != 0;
         }
@@ -416,29 +454,12 @@ bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {
         DeleteDC(bmpDC);
         return ok;
     }
-    source = Rect(0, 0, p->width, p->height).Intersect(source);
-    if (source.IsEmpty()) {
-        return false;
-    }
-    BITMAPINFO bmi{};
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = p->width;
-    bmi.bmiHeader.biHeight = -source.dy;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = p->format == PixmapFormat::BGR8 ? 24 : 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-    const u8* rows = p->data + ((size_t)source.y * p->stride);
-    int n = StretchDIBits(hdc, target.x, target.y, target.dx, target.dy, source.x, 0, source.dx, source.dy, rows, &bmi,
-                          DIB_RGB_COLORS, SRCCOPY);
-    return n != GDI_ERROR && n != 0;
+    return BlitDibBits(hdc, target, source, p);
 }
 
 bool BlitPixmap(Pixmap* p, HDC hdc, Rect target) {
     if (!p || !p->data) {
         return false;
-    }
-    if (p->hbmp) {
-        return BlitHBITMAP(p->hbmp, hdc, target);
     }
     return BlitPixmapRegion(p, hdc, target, Rect(0, 0, p->width, p->height));
 }

@@ -2921,12 +2921,24 @@ bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target) {
         DeleteDC(bmpDC);
         return false;
     }
-    SetStretchBltMode(hdc, HALFTONE);
     int x = target.x;
     int y = target.y;
     int tdx = target.dx;
     int tdy = target.dy;
-    bool ok = StretchBlt(hdc, x, y, tdx, tdy, bmpDC, 0, 0, dx, dy, SRCCOPY) ? true : false;
+    bool ok = false;
+    // StretchBlt(HALFTONE) even at 1:1 smears scanlines; some printer drivers
+    // (Xerox PCL) turn that into regular white stripes (issue #919).
+    if (tdx == dx && tdy == dy) {
+        ok = BitBlt(hdc, x, y, tdx, tdy, bmpDC, 0, 0, SRCCOPY) != 0;
+    } else {
+        if (IsPrinterDC(hdc)) {
+            SetStretchBltMode(hdc, COLORONCOLOR);
+        } else {
+            SetStretchBltMode(hdc, HALFTONE);
+            SetBrushOrgEx(hdc, 0, 0, nullptr);
+        }
+        ok = StretchBlt(hdc, x, y, tdx, tdy, bmpDC, 0, 0, dx, dy, SRCCOPY) != 0;
+    }
     SelectObject(bmpDC, oldBmp);
     DeleteDC(bmpDC);
     return ok;

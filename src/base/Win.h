@@ -276,6 +276,11 @@ void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color link
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 
+inline bool IsPrinterDC(HDC hdc) {
+    int tech = GetDeviceCaps(hdc, TECHNOLOGY);
+    return tech == DT_RASPRINTER || tech == DT_PLOTTER;
+}
+
 //--- double-buffer / deferred window positioning
 
 struct DoubleBuffer {

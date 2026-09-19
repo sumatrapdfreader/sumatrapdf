@@ -159,6 +159,88 @@ static HICON MakeMaskedRedIcon() {
     return hicon;
 }
 
+// Distinct per-row pattern so a 1:1 blit that smears scanlines (HALFTONE
+// StretchBlt / StretchDIBits) fails instead of accidentally matching.
+static void FillBlitPattern(Pixmap* p) {
+    for (int y = 0; y < p->height; y++) {
+        u8* d = p->data + ((size_t)y * p->stride);
+        u8 v = (u8)(40 + (y % 17) * 7);
+        int bpp = PixmapBytesPerPixel(p->format);
+        for (int x = 0; x < p->width; x++, d += bpp) {
+            d[0] = v;
+            d[1] = (u8)(v + (x % 3));
+            d[2] = (u8)(200 - (y % 17) * 5);
+            if (bpp == 4) {
+                d[3] = 255;
+            }
+        }
+    }
+}
+
+static bool PixmapRowsEqual(const Pixmap* a, const Pixmap* b) {
+    if (!a || !b || a->width != b->width || a->height != b->height) {
+        return false;
+    }
+    int bpp = PixmapBytesPerPixel(a->format);
+    int rowBytes = a->width * bpp;
+    for (int y = 0; y < a->height; y++) {
+        if (memcmp(a->data + ((size_t)y * a->stride), b->data + ((size_t)y * b->stride), (size_t)rowBytes) != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static void BlitPixmapExactTest() {
+    const int w = 48;
+    const int h = 96;
+
+    auto blitToDib = [](Pixmap* src, int dw, int dh) -> Pixmap* {
+        Pixmap* dst = AllocPixmapDIB(dw, dh);
+        if (!dst) {
+            return nullptr;
+        }
+        memset(dst->data, 0x7f, (size_t)dst->stride * (size_t)dst->height);
+        HDC hdc = CreateCompatibleDC(nullptr);
+        if (!hdc) {
+            FreePixmap(dst);
+            return nullptr;
+        }
+        HGDIOBJ old = SelectObject(hdc, dst->hbmp);
+        bool ok = old && BlitPixmap(src, hdc, Rect(0, 0, dw, dh));
+        GdiFlush();
+        if (old) {
+            SelectObject(hdc, old);
+        }
+        DeleteDC(hdc);
+        if (!ok) {
+            FreePixmap(dst);
+            return nullptr;
+        }
+        return dst;
+    };
+
+    // DIB-backed: EngineMupdf print path (BlitPixmap -> BlitHBITMAP)
+    Pixmap* dib = AllocPixmapDIB(w, h);
+    utassert(dib && dib->data && dib->hbmp);
+    FillBlitPattern(dib);
+    Pixmap* outDib = blitToDib(dib, w, h);
+    utassert(outDib);
+    utassert(PixmapRowsEqual(dib, outDib));
+    FreePixmap(outDib);
+    FreePixmap(dib);
+
+    // heap pixmap: image-engine print path (StretchDIBits)
+    Pixmap* heap = AllocPixmap(w, h, PixmapFormat::BGRA8);
+    utassert(heap && heap->data && !heap->hbmp);
+    FillBlitPattern(heap);
+    Pixmap* outHeap = blitToDib(heap, w, h);
+    utassert(outHeap);
+    utassert(PixmapRowsEqual(heap, outHeap));
+    FreePixmap(outHeap);
+    FreePixmap(heap);
+}
+
 static void PixmapFromHICONAlphaTest() {
     HICON hicon = MakeMaskedRedIcon();
     utassert(hicon);
@@ -181,6 +263,7 @@ void WinUtilTest() {
     QuoteCmdLineArgTest();
     RecolorLinkAaTest();
     PixmapFromHICONAlphaTest();
+    BlitPixmapExactTest();
 
     {
         Str string = StrL("abcde");

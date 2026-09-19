@@ -750,10 +750,10 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
         if (abortCookie) {
             abortCookie->Clear();
         }
-        // BlitPixmap() draws a heap-backed pixmap through StretchDIBits, so only
-        // a missing pixel buffer is a failure. Requiring a DIB section (hbmp)
-        // threw away every band the image engine rendered -- it returns heap
-        // pixmaps -- and printed a blank page (issue #6150).
+        // BlitPixmap() draws a heap-backed pixmap through SetDIBitsToDevice /
+        // StretchDIBits, so only a missing pixel buffer is a failure. Requiring
+        // a DIB section (hbmp) threw away every band the image engine rendered
+        // -- it returns heap pixmaps -- and printed a blank page (issue #6150).
         if (!bmp || !bmp->data) {
             FreePixmap(bmp);
             // couldn't allocate even a band: try thinner bands before giving up,
