@@ -81,6 +81,7 @@ struct Archive {
     bool ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
 
     bool OpenUnrarFallback(Str rarPathUtf, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
+    Str ReadUnrarEntry(FileInfo* fi, int toRead, bool* permanent);
     void LoadFileDataByIdUnrarDll(int fileId);
     void LoadFileDataByIdLibarchive(int fileId);
     Str GetFileDataPartByIdUnrarDll(int fileId, int sizeHint);

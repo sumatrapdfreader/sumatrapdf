@@ -25,19 +25,20 @@ Archive::Archive() {
 }
 
 static Archive::Format FormatFromArchive(struct archive* a) {
-    int fmt = archive_format(a);
     // archive_format returns a bitmask; the high bits identify the family
-    if ((fmt & ARCHIVE_FORMAT_ZIP) == ARCHIVE_FORMAT_ZIP) {
-        return Archive::Format::Zip;
-    }
-    if ((fmt & ARCHIVE_FORMAT_RAR) == ARCHIVE_FORMAT_RAR || (fmt & ARCHIVE_FORMAT_RAR_V5) == ARCHIVE_FORMAT_RAR_V5) {
-        return Archive::Format::Rar;
-    }
-    if ((fmt & ARCHIVE_FORMAT_7ZIP) == ARCHIVE_FORMAT_7ZIP) {
-        return Archive::Format::SevenZip;
-    }
-    if ((fmt & ARCHIVE_FORMAT_TAR) == ARCHIVE_FORMAT_TAR) {
-        return Archive::Format::Tar;
+    static const struct {
+        int mask;
+        Archive::Format format;
+    } kFormats[] = {
+        {ARCHIVE_FORMAT_ZIP, Archive::Format::Zip},    {ARCHIVE_FORMAT_RAR, Archive::Format::Rar},
+        {ARCHIVE_FORMAT_RAR_V5, Archive::Format::Rar}, {ARCHIVE_FORMAT_7ZIP, Archive::Format::SevenZip},
+        {ARCHIVE_FORMAT_TAR, Archive::Format::Tar},
+    };
+    int fmt = archive_format(a);
+    for (auto& f : kFormats) {
+        if ((fmt & f.mask) == f.mask) {
+            return f.format;
+        }
     }
     return Archive::Format::Unknown;
 }
@@ -605,133 +606,74 @@ static HANDLE OpenUnrarFile(WCHAR* rarPath, UnrarData* uncompressedBuf) {
 
 // Populate fileInfos_[fileId]->data via the respective backend; set
 // ->failed when extraction didn't produce the expected bytes.
-void Archive::LoadFileDataByIdUnrarDll(int fileId) {
-    auto* fileInfo = fileInfos_[fileId];
-    ReportIf(fileInfo->fileId != fileId);
-    if (fileInfo->data != nullptr) {
-        return; // already loaded
+// Decompresses the first toRead bytes of an entry with unrar.dll. Returns {}
+// on failure; *permanent is set when retrying can't help (transient I/O
+// failures leave it false so a later call retries).
+Str Archive::ReadUnrarEntry(FileInfo* fi, int toRead, bool* permanent) {
+    *permanent = false;
+    if (len(rarFilePath_) == 0 || addOverflows<int>(toRead, kZeroPaddingCount)) {
+        *permanent = true;
+        return {};
     }
-    if (len(rarFilePath_) == 0) {
-        fileInfo->failed = true;
-        return;
-    }
 
-    WCHAR* rarPath = CWStrTemp(rarFilePath_);
-
-    UnrarData uncompressedBuf;
-    uncompressedBuf.password = password;
-
-    HANDLE hArc = OpenUnrarFile(rarPath, &uncompressedBuf);
+    UnrarData buf;
+    buf.password = password;
+    HANDLE hArc = OpenUnrarFile(CWStrTemp(rarFilePath_), &buf);
     if (!hArc) {
-        // Transient I/O (sleep, network drop). Leave failed=false so
-        // the next GetFileDataById retries.
-        return;
+        return {};
     }
+    AutoCall closeArc(RARCloseArchive, hArc);
 
-    char* data = nullptr;
-    int size = 0;
-    auto fileName = ToWStrTemp(fileInfo->name);
     RARHeaderDataEx rarHeader{};
-    int res;
-    bool permanent = false;
-    bool ok = FindFile(hArc, &rarHeader, fileName);
-    if (!ok) {
-        goto Exit; // I/O or missing entry: retry later
+    if (!FindFile(hArc, &rarHeader, ToWStrTemp(fi->name))) {
+        return {};
     }
-    size = fileInfo->fileSizeUncompressed;
-    ReportIf(size != (int)rarHeader.UnpSize);
-    if (addOverflows<int>(size, kZeroPaddingCount)) {
-        permanent = true;
-        ok = false;
-        goto Exit;
-    }
-
-    data = AllocArray<char>(size + kZeroPaddingCount);
+    char* data = AllocArray<char>(toRead + kZeroPaddingCount);
     if (!data) {
-        ok = false;
-        goto Exit; // OOM: retry later
+        return {};
     }
-
-    uncompressedBuf.d = (u8*)data;
-    uncompressedBuf.curr = (u8*)data;
-    uncompressedBuf.sz = size;
-    res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
-    ok = (res == 0) && (DataLeft(uncompressedBuf) == 0);
-
-Exit:
-    RARCloseArchive(hArc);
+    buf.d = buf.curr = (u8*)data;
+    buf.sz = toRead;
+    int res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
+    int got = (int)(buf.curr - buf.d);
+    // asking for less than the whole entry makes the callback stop early and
+    // RARProcessFile report an error; that's expected
+    bool ok = toRead < fi->fileSizeUncompressed ? got > 0 : (res == 0 && got == toRead);
     if (!ok) {
         free(data);
-        if (permanent) {
-            fileInfo->failed = true;
-        }
-        return;
+        return {};
     }
-    fileInfo->data = data;
+    return Str(data, got);
+}
+
+void Archive::LoadFileDataByIdUnrarDll(int fileId) {
+    auto* fi = fileInfos_[fileId];
+    ReportIf(fi->fileId != fileId);
+    if (fi->data) {
+        return; // already loaded
+    }
+    bool permanent;
+    Str d = ReadUnrarEntry(fi, fi->fileSizeUncompressed, &permanent);
+    fi->data = d.s;
+    if (!d.s && permanent) {
+        fi->failed = true;
+    }
 }
 
 Str Archive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
-    ReportIf(len(rarFilePath_) == 0);
-
-    auto* fileInfo = fileInfos_[fileId];
-    ReportIf(fileInfo->fileId != fileId);
-    if (fileInfo->data != nullptr) {
-        int n = std::min(fileInfo->fileSizeUncompressed, sizeHint);
+    auto* fi = fileInfos_[fileId];
+    ReportIf(fi->fileId != fileId);
+    int n = std::min(fi->fileSizeUncompressed, sizeHint);
+    if (fi->data) {
         u8* data = AllocArray<u8>(n + kZeroPaddingCount);
         if (!data) {
             return {};
         }
-        memcpy(data, fileInfo->data, (size_t)n);
+        memcpy(data, fi->data, (size_t)n);
         return Str((char*)data, n);
     }
-
-    WCHAR* rarPath = CWStrTemp(rarFilePath_);
-
-    UnrarData uncompressedBuf;
-    uncompressedBuf.password = password;
-
-    HANDLE hArc = OpenUnrarFile(rarPath, &uncompressedBuf);
-    if (!hArc) {
-        return {};
-    }
-
-    char* data = nullptr;
-    int size = 0;
-    auto fileName = ToWStrTemp(fileInfo->name);
-    RARHeaderDataEx rarHeader{};
-    bool ok = FindFile(hArc, &rarHeader, fileName);
-    if (!ok) {
-        goto Exit;
-    }
-    // allocate only sizeHint bytes; the callback will stop when the buffer is full
-    size = std::min(fileInfo->fileSizeUncompressed, sizeHint);
-    if (addOverflows<int>(size, kZeroPaddingCount)) {
-        ok = false;
-        goto Exit;
-    }
-
-    data = AllocArray<char>(size + kZeroPaddingCount);
-    if (!data) {
-        ok = false;
-        goto Exit;
-    }
-
-    uncompressedBuf.d = (u8*)data;
-    uncompressedBuf.curr = (u8*)data;
-    uncompressedBuf.sz = size;
-    RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
-    // if we requested less than full size, the callback returns -1 when full,
-    // causing RARProcessFile to return an error; that's expected
-    ok = (uncompressedBuf.curr > uncompressedBuf.d);
-
-Exit:
-    RARCloseArchive(hArc);
-    if (!ok) {
-        free(data);
-        return {};
-    }
-    int got = (int)(uncompressedBuf.curr - uncompressedBuf.d);
-    return Str((char*)((u8*)data), got);
+    bool permanent;
+    return ReadUnrarEntry(fi, n, &permanent);
 }
 
 // asan build crashes in UnRAR code

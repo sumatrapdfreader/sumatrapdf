@@ -17,6 +17,10 @@ bool IsSep(char c) {
     return c == kPathSepChar || c == '/';
 }
 
+static bool IsSep(WCHAR c) {
+    return c == kPathSepWChar || c == L'/';
+}
+
 bool IsDriveRoot(Str path) {
     if (!path.s) {
         return false;
@@ -27,40 +31,81 @@ bool IsDriveRoot(Str path) {
     return path.len == 3 && path.s[1] == ':' && IsSep(path.s[2]);
 }
 
-static bool IsSep(WCHAR c) {
-    return c == kPathSepWChar || c == L'/';
+// the Str / WStr path helpers share these bodies
+
+template <typename S>
+static S BaseNameT(S path) {
+    int start = path.len;
+    while (start > 0 && !IsSep(path.s[start - 1])) {
+        start--;
+    }
+    return S(path.s + start, path.len - start);
 }
 
-static void SkipLeadingPathSep(Str& path) {
-    if (path && IsSep(path.s[0])) {
-        path.s++;
-        path.len--;
+template <typename S>
+static S JoinTempT(S dir, S name, S name2, S sep) {
+    if (name && IsSep(name.s[0])) {
+        name = S(name.s + 1, name.len - 1);
     }
+    if (len(dir) == 0 || IsSep(dir.s[dir.len - 1])) {
+        sep = {};
+    }
+    S res = str::JoinTemp(dir, sep, name);
+    if (name2) {
+        res = JoinTempT(res, name2, S{}, sep);
+    }
+    return res;
 }
 
-static void SkipLeadingPathSep(WStr& path) {
-    if (path && IsSep(path.s[0])) {
-        path.s++;
-        path.len--;
+// "." for a bare name, the root ("\", "C:\" or a UNC "\\server") when the
+// name sits right under it, else everything before the separator
+template <typename S>
+static S DirTempT(S path) {
+    S baseName = BaseNameT(path);
+    int n = (int)(baseName.s - path.s);
+    if (n == 0) {
+        return S{};
     }
+    if (n == 2 && IsSep(path.s[0]) && IsSep(path.s[1])) {
+        return str::DupTemp(path);
+    }
+    if (n == 1 || (n == 3 && path.s[1] == ':')) {
+        return str::DupTemp(S(path.s, n));
+    }
+    return str::DupTemp(S(path.s, n - 1));
 }
 
 TempStr GetBaseNameTemp(Str path) {
-    int end = path.len;
-    int start = end;
-    while (start > 0 && !IsSep(path.s[start - 1])) {
-        start--;
-    }
-    return Str(path.s + start, end - start);
+    return BaseNameT(path);
 }
 
-static WStr GetBaseNameTemp(WStr path) {
-    int end = path.len;
-    int start = end;
-    while (start > 0 && !IsSep(path.s[start - 1])) {
-        start--;
-    }
-    return WStr(path.s + start, end - start);
+TempStr JoinTemp(Str dir, Str name, Str name2) {
+    return JoinTempT(dir, name, name2, StrL(kPathSep));
+}
+
+TempWStr JoinTemp(WStr dir, WStr name, WStr name2) {
+    return JoinTempT(dir, name, name2, WStrL(L"\\"));
+}
+
+Str Join(Arena* a, Str dir, Str name) {
+    return str::Dup(a, JoinTemp(dir, name));
+}
+
+Str Join(Str dir, Str name) {
+    return Join(nullptr, dir, name);
+}
+
+WStr Join(WStr dir, WStr name, WStr name2) {
+    return wstr::Dup(JoinTemp(dir, name, name2));
+}
+
+TempStr GetDirTemp(Str path) {
+    TempStr res = DirTempT(path);
+    return res.s ? res : str::DupTemp(StrL("."));
+}
+
+TempWStr GetDirTemp(WStr path) {
+    return DirTempT(path);
 }
 
 static int GetExtPos(Str path) {
@@ -92,86 +137,8 @@ TempStr GetPathNoExtTemp(Str path) {
     return str::DupTemp(Str(path.s, ext));
 }
 
-TempStr JoinTemp(Str dir, Str name, Str name2) {
-    SkipLeadingPathSep(name);
-    Str sepStr = {};
-    if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
-        sepStr = StrL(kPathSep);
-    }
-    TempStr res = str::JoinTemp(dir, sepStr, name);
-    if (name2) {
-        res = JoinTemp(res, name2);
-    }
-    return res;
-}
-
 TempStr ToOSTemp(Str path) {
     return str::ReplaceTemp(path, StrL("/"), StrL("\\"));
-}
-
-Str Join(Arena* a, Str dir, Str name) {
-    SkipLeadingPathSep(name);
-    Str sepStr = {};
-    if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
-        sepStr = StrL(kPathSep);
-    }
-    return str::Join(a, dir, sepStr, name);
-}
-
-Str Join(Str dir, Str name) {
-    return Join(nullptr, dir, name);
-}
-
-TempWStr JoinTemp(WStr dir, WStr name, WStr name2) {
-    SkipLeadingPathSep(name);
-    WStr sepStr;
-    if (len(dir) > 0 && !IsSep(dir.s[dir.len - 1])) {
-        sepStr = kPathSepWStr;
-    }
-    TempWStr res = str::JoinTemp(dir, sepStr, name);
-    if (name2) {
-        res = JoinTemp(res, name2);
-    }
-    return res;
-}
-
-WStr Join(WStr dir, WStr name, WStr name2) {
-    TempWStr res = JoinTemp(dir, name, name2);
-    return wstr::Dup(res);
-}
-
-TempWStr GetDirTemp(WStr path) {
-    WStr baseName = GetBaseNameTemp(path);
-    if (baseName.s == path.s) {
-        return str::DupTemp(L".");
-    }
-    if (baseName.s == path.s + 1) {
-        return str::DupTemp(WStr(path.s, 1));
-    }
-    if (baseName.s == path.s + 3 && path.s[1] == L':') {
-        return str::DupTemp(WStr(path.s, 3));
-    }
-    if (baseName.s == path.s + 2 && path.len >= 2 && IsSep(path.s[0]) && IsSep(path.s[1])) {
-        return str::DupTemp(path);
-    }
-    return str::DupTemp(WStr(path.s, (int)(baseName.s - path.s - 1)));
-}
-
-TempStr GetDirTemp(Str path) {
-    Str baseName = GetBaseNameTemp(path);
-    if (baseName.s == path.s) {
-        return str::DupTemp(StrL("."));
-    }
-    if (baseName.s == path.s + 1) {
-        return str::DupTemp(Str(path.s, 1));
-    }
-    if (baseName.s == path.s + 3 && path.s[1] == ':') {
-        return str::DupTemp(Str(path.s, 3));
-    }
-    if (baseName.s == path.s + 2 && path.len >= 2 && IsSep(path.s[0]) && IsSep(path.s[1])) {
-        return str::DupTemp(path);
-    }
-    return str::DupTemp(Str(path.s, (int)(baseName.s - path.s - 1)));
 }
 
 static Str AdvanceUntilWildcardMatch(Str fileName, Str filter);
@@ -826,34 +793,11 @@ TempStr ShortPathTemp(Str path) {
 }
 
 static bool IsSameFileHandleInformation(BY_HANDLE_FILE_INFORMATION& fi1, BY_HANDLE_FILE_INFORMATION fi2) {
-    if (fi1.dwVolumeSerialNumber != fi2.dwVolumeSerialNumber) {
-        return false;
-    }
-    if (fi1.nFileIndexLow != fi2.nFileIndexLow) {
-        return false;
-    }
-    if (fi1.nFileIndexHigh != fi2.nFileIndexHigh) {
-        return false;
-    }
-    if (fi1.nFileSizeLow != fi2.nFileSizeLow) {
-        return false;
-    }
-    if (fi1.nFileSizeHigh != fi2.nFileSizeHigh) {
-        return false;
-    }
-    if (fi1.dwFileAttributes != fi2.dwFileAttributes) {
-        return false;
-    }
-    if (fi1.nNumberOfLinks != fi2.nNumberOfLinks) {
-        return false;
-    }
-    if (!FileTimeEq(fi1.ftLastWriteTime, fi2.ftLastWriteTime)) {
-        return false;
-    }
-    if (!FileTimeEq(fi1.ftCreationTime, fi2.ftCreationTime)) {
-        return false;
-    }
-    return true;
+    return fi1.dwVolumeSerialNumber == fi2.dwVolumeSerialNumber && fi1.nFileIndexLow == fi2.nFileIndexLow &&
+           fi1.nFileIndexHigh == fi2.nFileIndexHigh && fi1.nFileSizeLow == fi2.nFileSizeLow &&
+           fi1.nFileSizeHigh == fi2.nFileSizeHigh && fi1.dwFileAttributes == fi2.dwFileAttributes &&
+           fi1.nNumberOfLinks == fi2.nNumberOfLinks && FileTimeEq(fi1.ftLastWriteTime, fi2.ftLastWriteTime) &&
+           FileTimeEq(fi1.ftCreationTime, fi2.ftCreationTime);
 }
 
 bool IsSame(Str path1, Str path2) {
@@ -995,22 +939,13 @@ bool IsCloudPlaceholder(Str path) {
 // True if this directory name is one used by OneNote / Outlook / IE to extract
 // an attachment that the host still needs to rewrite or delete.
 static bool IsEphemeralHostDirName(Str name) {
-    if (str::EqI(name, StrL("OneNote"))) {
-        return true;
+    static SeqStrings kNames = "OneNote\0Content.Outlook\0INetCache\0Temporary Internet Files\0";
+    for (Str n = SeqStrFirst(kNames); len(n) > 0; n = SeqStrNext(n)) {
+        if (str::EqI(n, name)) {
+            return true;
+        }
     }
-    if (str::StartsWithI(name, StrL("Microsoft.Office.OneNote"))) {
-        return true;
-    }
-    if (str::EqI(name, StrL("Content.Outlook"))) {
-        return true;
-    }
-    if (str::EqI(name, StrL("INetCache"))) {
-        return true;
-    }
-    if (str::EqI(name, StrL("Temporary Internet Files"))) {
-        return true;
-    }
-    return false;
+    return str::StartsWithI(name, StrL("Microsoft.Office.OneNote"));
 }
 
 // Files extracted by OneNote, Outlook, and similar hosts into a cache folder.
