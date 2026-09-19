@@ -86,62 +86,6 @@ void ByteOrderTests() {
     }
 
     {
-        i16 v16;
-        i32 v32;
-        char b[3];
-        ByteReader d(d1, sizeof(d1));
-        v16 = d.Int16LE();
-        utassert(v16 == 0x100);
-        d.Skip(1);
-        v16 = d.Int16LE();
-        utassert(v16 == 0x1);
-        v16 = d.Int16LE();
-        utassert(v16 == -257);
-        d.Skip(2);
-
-        v32 = d.Int32LE();
-        utassert(v32 == 0x1000000);
-        v32 = d.Int32LE();
-        utassert(v32 == 1);
-        v32 = d.Int32LE();
-        utassert(v32 == -16777217);
-
-        v16 = d.Int16LE();
-        utassert(v16 == 0x2);
-        d.Bytes(b, 3);
-        utassert(MemEq(kAbc, b, 3));
-        utassert(26 == d.Offset());
-    }
-
-    {
-        i16 v16;
-        i32 v32;
-        char b[3];
-        ByteReader d(d1, sizeof(d1));
-        v16 = d.Int16BE();
-        utassert(v16 == 0x1);
-        d.Skip(1);
-        v16 = d.Int16BE();
-        utassert(v16 == 0x100);
-        v16 = d.Int16BE();
-        utassert(v16 == -2);
-        d.Skip(2);
-
-        v32 = d.Int32BE();
-        utassert(v32 == 1);
-        v32 = d.Int32BE();
-        utassert(v32 == 0x1000000);
-        v32 = d.Int32BE();
-        utassert(v32 == -2);
-
-        v16 = d.Int16BE();
-        utassert(v16 == 0x200);
-        d.Bytes(b, 3);
-        utassert(MemEq(kAbc, b, 3));
-        utassert(26 == d.Offset());
-    }
-
-    {
         // sizeHint must allocate; setting cap without els used to drop writes
         ByteWriterLE wr(64);
         wr.Write8x2('I', 'I');

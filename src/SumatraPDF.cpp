@@ -16037,7 +16037,6 @@ static void ShutdownCommon() {
     uitask::Destroy();
     FreeLibsumatrapdfDll();
     UninstallCrashHandler();
-    dbghelp::FreeCallstackLogs();
 }
 
 static void ReplaceColor(ParsedColor& col, Str maybeColor) {
@@ -18042,7 +18041,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         ShowPrintersDialog(flags.silent || flags.showConsole);
         goto Exit;
     }
-    FileWatcherInit();
 
     if (flags.testRenderPage) {
         TestRenderPage(flags);
@@ -18573,8 +18571,6 @@ Exit:
 
     FileWatcherWaitForShutdown();
     delete gRenderCache;
-    SaveCallstackLogs();
-    dbghelp::FreeCallstackLogs();
 
     // must be after uitask::Destroy() because we might have queued ReloadSettings()
     // which crashes if gSettings is freed

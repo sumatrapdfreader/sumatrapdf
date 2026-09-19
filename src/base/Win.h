@@ -11,10 +11,6 @@ inline BOOL toBOOL(bool b) {
     return b ? TRUE : FALSE;
 }
 
-inline bool fromBOOL(BOOL b) {
-    return b != 0;
-}
-
 inline bool tobool(BOOL b) {
     return b != 0;
 }
@@ -122,17 +118,12 @@ void EditSetPasswordVisible(HWND hwnd, bool);
 
 int LbAddString(HWND hwnd, WStr text);
 int LbAddString(HWND hwnd, Str text);
-int LbInsertString(HWND hwnd, int idx, WStr text);
-int LbInsertString(HWND hwnd, int idx, Str text);
 int LbGetCurrentSelection(HWND hwnd);
 bool LbSetCurrentSelection(HWND hwnd, int idx);
 TempWStr LbGetTextTemp(HWND hwnd, int idx);
 void LbSetItemHeight(HWND hwnd, int idx, int height);
 
 //--- list view
-
-void LvSetItemText(HWND hwnd, int i, int iSub, WStr text);
-void LvSetItemText(HWND hwnd, int i, int iSub, Str text);
 
 //--- combo box
 // all no-op (or return a zero value) on a null hwnd. gui/win/WinGui.h overloads
@@ -230,7 +221,6 @@ struct RenderedBitmap {
 void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor = 0,
                         Vec<Rect>* skipRects = nullptr);
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
-bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 
 inline bool IsPrinterDC(HDC hdc) {
     int tech = GetDeviceCaps(hdc, TECHNOLOGY);
@@ -267,14 +257,6 @@ class DeferWinPosHelper {
     void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE);
     void MoveWindow(HWND hWnd, Rect r);
     void MoveWindowNoCopyBits(HWND hWnd, Rect r);
-};
-
-//--- DC state
-
-struct SavedDCState {
-    HWND hwnd;
-    HDC hdc;
-    HFONT oldFont;
 };
 
 //--- clipboard
@@ -357,7 +339,6 @@ Str LatestSupportedSIMD();
 TempStr GetEnvVariableTemp(Str name);
 TempStr GetLastErrorStrTemp(DWORD& err);
 void LogLastError(DWORD err = 0);
-void DbgOutLastError(DWORD err = 0);
 Str GetLastErrorAsStr(Arena* arena);
 TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 TempStr GetTempDirTemp();
@@ -421,7 +402,6 @@ uint GuessTextCodepage(Str data, uint defVal = CP_ACP);
 TempStr NormalizeString(Str str, int /* NORM_FORM */ form);
 void VariantInitBstr(VARIANT& urlVar, WStr s);
 bool DDEExecute(WStr server, WStr topic, WStr command);
-bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args = Str());
 
 //--- resources / instance / common controls
 
@@ -445,10 +425,7 @@ TempStr AtomToStrTemp(ATOM a);
 
 //--- timing
 
-double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end);
-
 //--- misc
 
 TempStr GetDefaultPrinterNameTemp();
 int GetMeasurementSystem();
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

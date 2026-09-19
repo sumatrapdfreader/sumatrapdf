@@ -220,7 +220,7 @@ static void BlitPixmapExactTest() {
         return dst;
     };
 
-    // DIB-backed: EngineMupdf print path (BlitPixmap -> BlitHBITMAP)
+    // DIB-backed: EngineMupdf print path
     Pixmap* dib = AllocPixmapDIB(w, h);
     utassert(dib && dib->data && dib->hbmp);
     FillBlitPattern(dib);

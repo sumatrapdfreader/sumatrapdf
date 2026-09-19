@@ -6,7 +6,6 @@ class BitReader {
 
   public:
     BitReader(u8* data, int n);
-    ~BitReader();
     u32 Peek(int nBits);
     int BitsLeft() const;
     bool Eat(int nBits);
@@ -45,13 +44,8 @@ struct ByteReader {
     char Char();
     u16 UInt16LE();
     u16 UInt16BE();
-    i16 Int16LE();
-    i16 Int16BE();
     u32 UInt32LE();
     u32 UInt32BE();
-    i32 Int32LE();
-    i32 Int32BE();
-    u64 UInt64LE();
     u64 UInt64BE();
     void Bytes(void* dst, int n);
     void Skip(int n);

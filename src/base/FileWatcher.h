@@ -4,7 +4,6 @@
 struct WatchedFile;
 
 void FileWatcherSetSkipPath(Str path);
-void FileWatcherInit(void);
 WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool enableManualCheck = false);
 void FileWatcherUnsubscribe(WatchedFile* wf);
 void FileWatcherWaitForShutdown(void);

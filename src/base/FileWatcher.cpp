@@ -41,23 +41,6 @@ so for those files, we do manual checks, by using a timeout to
 periodically wake up thread.
 */
 
-/*
-TODO:
-  - should I end the thread when there are no files to watch?
-
-  - a single file copy can generate multiple notifications for the same
-    file. add some delay mechanism so that subsequent change notifications
-    cancel a previous, delayed one ? E.g. a copy f2.pdf f.pdf generates 3
-    notifications if f2.pdf is 2 MB.
-
-  - try to handle short file names as well: http://blogs.msdn.com/b/ericgu/archive/2005/10/07/478396.aspx
-    but how to test it?
-
-- I could try to remove the need for gFileWatcherMutex by queing all code
-    that touches gWatchedDirs/gWatchedFiles onto a thread via APC, but that's
-    probably an overkill
-*/
-
 // there's a balance between responsiveness to changes and efficiency
 constexpr int kFileWatchDelayInMs = 1000;
 
@@ -229,24 +212,6 @@ static void CompleteRemovalIfDone(WatchedDir* wd) {
     AtomicIntDec(&gRemovalsPending);
 }
 
-// clang-format off
-SeqStrings gFileActionNames =
-    "FILE_ACTION_ADDED\0" \
-    "FILE_ACTION_REMOVED\0" \
-    "FILE_ACTION_MODIFIED\0" \
-    "FILE_ACTION_RENAMED_OLD_NAME\0" \
-    "FILE_ACTION_RENAMED_NEW_NAME\0";
-// clang-format on
-
-// only used by the commented-out log in ReadDirectoryChangesNotification()
-__unused static TempStr GetFileActionNameTemp(int actionId) {
-    if (actionId < 1 || actionId > 5) {
-        return StrL("(unknown)");
-    }
-    int n = actionId - 1;
-    return SeqStrByIndex(gFileActionNames, n);
-}
-
 static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytesTransfered, LPOVERLAPPED overlapped) {
     AutoUnlockMutex cs(&gFileWatcherMutex);
 
@@ -290,7 +255,6 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         // files can get updated either by writing to them directly or
         // by writing to a .tmp file first and then moving that file in place
         // (the latter only yields a RENAMED action with the expected file name)
-        // logf("ReadDirectoryChangesNotification: %s '%s'\n", GetFileActionNameTemp(notify->Action), fileName);
         if (notify->Action == FILE_ACTION_ADDED || notify->Action == FILE_ACTION_MODIFIED ||
             notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
             AppendIfNotExists(&changedFiles, fileName);
@@ -575,8 +539,6 @@ static void DeleteWatchedFile(WatchedFile* wf) {
     free(wf);
 }
 
-void FileWatcherInit(void) {}
-
 /* Subscribe for notifications about file changes. When a file changes, we'll
 call observer->OnFileChanged().
 
@@ -597,13 +559,6 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool e
         logf("FileWatcherSubscribe: '%s' is our own log file\n", path);
         return nullptr;
     }
-#if 0
-    if (IsProcess32()) {
-        // https://github.com/sumatrapdfreader/sumatrapdf/issues/4111
-        logf("FileWatcherSubscribe: not starting a file watcher thread due to 32-bit miscompilation\n");
-        return nullptr;
-    }
-#endif
     AutoUnlockMutex cs(&gFileWatcherMutex);
     if (!gThreadHandle) {
         logf("FileWatcherSubscribe: starting a thread\n");

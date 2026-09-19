@@ -513,8 +513,6 @@ NO_INLINE bool GetCurrentThreadCallstack(str::Builder& s) {
 }
 #pragma optimize("", off)
 
-static str::Builder* gCallstackLogs = nullptr;
-
 TempStr GetCurrentThreadCallstackTemp() {
     str::Builder s;
     s.Reserve(2048);
@@ -524,33 +522,7 @@ TempStr GetCurrentThreadCallstackTemp() {
     return ToStrTemp(s);
 }
 
-void FreeCallstackLogs() {
-    delete gCallstackLogs;
-    gCallstackLogs = nullptr;
-}
-
-Str GetCallstacks() {
-    if (!gCallstackLogs) {
-        return {};
-    }
-    char* s = str::Dup(ToStr(*gCallstackLogs)).s;
-    return Str(s);
-}
-
-void LogCallstack() {
-    str::Builder s;
-    s.Reserve(2048);
-    if (!GetCurrentThreadCallstack(s)) {
-        return;
-    }
-
-    s.Append(StrL("\n"));
-    if (gCallstackLogs) {
-        gCallstackLogs->Append(ToStr(s));
-    }
-}
-
-void GetAllThreadsCallstacksExcept(str::Builder& s, ThreadId skipThreadId) {
+void GetAllThreadsCallstacks(str::Builder& s) {
     HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (threadSnap == INVALID_HANDLE_VALUE) {
         return;
@@ -562,7 +534,7 @@ void GetAllThreadsCallstacksExcept(str::Builder& s, ThreadId skipThreadId) {
     DWORD pid = GetCurrentProcessId();
     BOOL ok = Thread32First(threadSnap, &te32);
     while (ok) {
-        if (te32.th32OwnerProcessID == pid && te32.th32ThreadID != skipThreadId) {
+        if (te32.th32OwnerProcessID == pid) {
             GetThreadCallstack(s, te32.th32ThreadID);
         }
         ok = Thread32Next(threadSnap, &te32);
@@ -571,9 +543,6 @@ void GetAllThreadsCallstacksExcept(str::Builder& s, ThreadId skipThreadId) {
     CloseHandle(threadSnap);
 }
 
-void GetAllThreadsCallstacks(str::Builder& s) {
-    GetAllThreadsCallstacksExcept(s, 0);
-}
 #pragma warning(pop)
 
 void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {

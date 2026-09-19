@@ -158,14 +158,6 @@ int LbAddString(HWND hwnd, Str text) {
     return LbAddString(hwnd, ToWStrTemp(text));
 }
 
-int LbInsertString(HWND hwnd, int idx, WStr text) {
-    return (int)SendMessageW(hwnd, LB_INSERTSTRING, (WPARAM)idx, (LPARAM)CWStrTemp(text));
-}
-
-int LbInsertString(HWND hwnd, int idx, Str text) {
-    return LbInsertString(hwnd, idx, ToWStrTemp(text));
-}
-
 int LbGetCurrentSelection(HWND hwnd) {
     return (int)SendMessageW(hwnd, LB_GETCURSEL, 0, 0);
 }
@@ -194,17 +186,6 @@ void LbSetItemHeight(HWND hwnd, int idx, int height) {
 }
 
 //--- list view
-
-void LvSetItemText(HWND hwnd, int i, int iSub, WStr text) {
-    LVITEMW item = {};
-    item.iSubItem = iSub;
-    item.pszText = CWStrTemp(text);
-    SendMessageW(hwnd, LVM_SETITEMTEXTW, (WPARAM)i, (LPARAM)&item);
-}
-
-void LvSetItemText(HWND hwnd, int i, int iSub, Str text) {
-    LvSetItemText(hwnd, i, iSub, ToWStrTemp(text));
-}
 
 //--- resources / instance / common controls
 
@@ -341,18 +322,6 @@ TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1) {
         return str::DupTemp(StrL("7")); // or Server 2008 R2
     }
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0) {
-        return str::DupTemp(StrL("Vista")); // or Server 2008
-    }
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2) {
-        return str::DupTemp(StrL("Server 2003"));
-    }
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1) {
-        return str::DupTemp(StrL("XP"));
-    }
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0) {
-        return str::DupTemp(StrL("2000"));
-    }
     if (ver.dwMajorVersion == 10) {
         // ver.dwMinorVersion seems to always be 0
         int buildNo = (int)(ver.dwBuildNumber & 0xFFFF);
@@ -365,16 +334,7 @@ TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
 
 TempStr GetWindowsVerTemp() {
     OSVERSIONINFOEX ver{};
-    ver.dwOSVersionInfoSize = sizeof(ver);
-#pragma warning(push)
-#pragma warning(disable : 4996)  // 'GetVersionEx': was declared deprecated
-#pragma warning(disable : 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
-    // see: https://msdn.microsoft.com/en-us/library/windows/desktop/dn424972(v=vs.85).aspx
-    // starting with Windows 8.1, GetVersionEx will report a wrong version number
-    // unless the OS's GUID has been explicitly added to the compatibility manifest
-    BOOL ok = GetVersionExW((OSVERSIONINFO*)&ver); // NOLINT
-#pragma warning(pop)
-    if (!ok) {
+    if (!GetOsVersion(ver)) {
         return str::DupTemp(StrL("unknown"));
     }
     return OsNameFromVerTemp(ver);
@@ -541,11 +501,6 @@ void LogLastError(DWORD err) {
     }
     str::TrimWSInPlace(msg, str::TrimOpt::Both);
     logf("LogLastError: 0x%x (%d) '%s'\n", (int)err, (int)err, msg);
-}
-
-void DbgOutLastError(DWORD err) {
-    TempStr msg = GetLastErrorStrTemp(err);
-    OutputDebugStringA(msg.s);
 }
 
 //--- registry
@@ -733,10 +688,6 @@ TempStr RegKeyNameTemp(HKEY key) {
     return StrL("RegKeyName: unknown key");
 }
 
-static TempStr RegKeyNameWTemp(HKEY key) {
-    return RegKeyNameTemp(key);
-}
-
 // Open a registry key's DACL so we can delete protected uninstall/keys.
 // Uses an explicit Everyone FULL_CONTROL ACL (not a NULL DACL, which CodeQL flags).
 static void ResetRegKeyAcl(HKEY hkey, Str keyName) {
@@ -797,7 +748,7 @@ bool LoggedDeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst) {
     }
     WCHAR* keyNameW = CWStrTemp(keyName);
     LSTATUS res = SHDeleteKeyW(keySub, keyNameW);
-    logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(keySub), keyName, resetACLFirst, res);
+    logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameTemp(keySub), keyName, resetACLFirst, res);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
     if (!ok) {
         LogLastError(res);
@@ -822,7 +773,7 @@ bool LoggedDeleteRegValue(HKEY keySub, Str keyName, Str val) {
 
     auto res = SHDeleteValueW(keySub, keyNameW, valW);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
-    logf("LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(keySub), keyName, val, res);
+    logf("LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameTemp(keySub), keyName, val, res);
     if (!ok) {
         LogLastError(res);
     }
@@ -1252,25 +1203,6 @@ int ReleaseThreadKeyState() {
     return nDown;
 }
 
-#if 0
-// The result value contains major and minor version in the high resp. the low WORD
-DWORD GetFileVersion(const WCHAR* path) {
-    DWORD fileVersion = 0;
-    DWORD size = GetFileVersionInfoSize(path, nullptr);
-    AutoFree<void> versionInfo(malloc(size));
-
-    if (versionInfo && GetFileVersionInfo(path, 0, size, versionInfo)) {
-        VS_FIXEDFILEINFO* fileInfo;
-        uint n;
-        if (VerQueryValue(versionInfo, L"\\", (LPVOID*)&fileInfo, &n)) {
-            fileVersion = fileInfo->dwFileVersionMS;
-        }
-    }
-
-    return fileVersion;
-}
-#endif
-
 bool LaunchFileShell(Str path, Str params, Str verb, bool hidden) {
     if (len(path) == 0) {
         return false;
@@ -1392,28 +1324,6 @@ bool IsProcessRunningElevated() {
     return elevation.TokenIsElevated != 0;
 }
 
-#if 0
-// return true if the app is running in elevated (as admin)
-bool IsProcessRunningElevated() {
-    PSID adminsGroup = nullptr;
-
-    // Allocate and initialize a SID of the administrators group
-    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
-    DWORD sub1 = SECURITY_BUILTIN_DOMAIN_RID;
-    DWORD sub2 = DOMAIN_ALIAS_RID_ADMINS;
-    if (!AllocateAndInitializeSid(&NtAuthority, 2, sub1, sub2, 0, 0, 0, 0, 0, 0, &adminsGroup)) {
-        return false;
-    }
-
-    // Determine whether the SID of administrators group is enabled in
-    // the primary access token of the process
-    BOOL isAdmin = FALSE;
-    CheckTokenMembership(nullptr, adminsGroup, &isAdmin);
-    FreeSid(adminsGroup);
-    return tobool(isAdmin);
-}
-#endif
-
 // We assume that if OpenProcess() works, we are at the same or greater
 // elevation level
 // I tried to run IsProcessRunningElevated() on 2 processes but this didn't
@@ -1427,14 +1337,6 @@ bool CanTalkToProcess(DWORD procId) {
     }
     return false;
 }
-
-static const DWORD groupsToCheck[] = {
-    DOMAIN_ALIAS_RID_USERS,
-    // every user belongs to the users group, hence users come before guests
-    DOMAIN_ALIAS_RID_GUESTS,
-    DOMAIN_ALIAS_RID_POWER_USERS,
-    DOMAIN_ALIAS_RID_ADMINS,
-};
 
 bool LaunchElevated(Str path, Str cmdline) {
     return LaunchFileShell(path, cmdline, StrL("runas"));
@@ -2241,52 +2143,6 @@ TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
     return ToUtf8Temp(WStr(res));
 }
 
-bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
-    if (FAILED(OleInitialize(nullptr))) {
-        return false;
-    }
-
-    // make sure that the DLL can find any DLLs it depends on and
-    // which reside in the same directory (in this case: libsumatrapdf.dll)
-    TempStr dllDir = path::GetDirTemp(dllPath);
-    SetDllDirectoryW(CWStrTemp(dllDir));
-
-    defer {
-        SetDllDirectoryW(L"");
-        OleUninitialize();
-    };
-
-    HMODULE lib = LoadLibraryA(dllPath.s);
-    if (!lib) {
-        return false;
-    }
-    defer {
-        FreeLibrary(lib);
-    };
-
-    bool ok = false;
-    typedef HRESULT(WINAPI * DllInstallProc)(BOOL, LPCWSTR);
-    typedef HRESULT(WINAPI * DllRegUnregProc)(VOID);
-    if (args) {
-        DllInstallProc DllInstall = (DllInstallProc)GetProcAddress(lib, "DllInstall");
-        if (DllInstall) {
-            WCHAR* argsW = CWStrTemp(args);
-            ok = SUCCEEDED(DllInstall(install, argsW));
-        } else {
-            args = {};
-        }
-    }
-
-    if (len(args) == 0) {
-        Str func = install ? StrL("DllRegisterServer") : StrL("DllUnregisterServer");
-        DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func.s);
-        if (DllRegUnreg) {
-            ok = SUCCEEDED(DllRegUnreg());
-        }
-    }
-    return ok;
-}
-
 //--- HWND: text / visibility / chrome / Z-order
 
 void HwndToForeground(HWND hwnd) {
@@ -2529,46 +2385,6 @@ HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping) {
     return CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hDataMapping ? *hDataMapping : nullptr, 0);
 }
 
-// render the bitmap into the target rectangle (streching and skewing as requird)
-bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target) {
-    HDC bmpDC = CreateCompatibleDC(hdc);
-    if (!bmpDC) {
-        return false;
-    }
-
-    BITMAP bi{};
-    GetObject(hbmp, sizeof(BITMAP), &bi);
-    int dx = bi.bmWidth;
-    int dy = bi.bmHeight;
-
-    HGDIOBJ oldBmp = SelectObject(bmpDC, hbmp);
-    if (!oldBmp) {
-        DeleteDC(bmpDC);
-        return false;
-    }
-    int x = target.x;
-    int y = target.y;
-    int tdx = target.dx;
-    int tdy = target.dy;
-    bool ok = false;
-    // StretchBlt(HALFTONE) even at 1:1 smears scanlines; some printer drivers
-    // (Xerox PCL) turn that into regular white stripes (issue #919).
-    if (tdx == dx && tdy == dy) {
-        ok = BitBlt(hdc, x, y, tdx, tdy, bmpDC, 0, 0, SRCCOPY) != 0;
-    } else {
-        if (IsPrinterDC(hdc)) {
-            SetStretchBltMode(hdc, COLORONCOLOR);
-        } else {
-            SetStretchBltMode(hdc, HALFTONE);
-            SetBrushOrgEx(hdc, 0, 0, nullptr);
-        }
-        ok = StretchBlt(hdc, x, y, tdx, tdy, bmpDC, 0, 0, dx, dy, SRCCOPY) != 0;
-    }
-    SelectObject(bmpDC, oldBmp);
-    DeleteDC(bmpDC);
-    return ok;
-}
-
 bool IsValidHandle(HANDLE h) {
     return !(h == nullptr || h == INVALID_HANDLE_VALUE);
 }
@@ -2744,30 +2560,6 @@ static int GetCursorIndex(LPWSTR cursorId) {
     return -1;
 }
 
-#if 0
-static const char* cursorNames =
-    "IDC_ARROW\0IDC_BEAM\0IDC_HAND\0IDC_SIZEALL\0IDC_SIZEWE\0IDC_SIZENS\0IDC_SIZENWSE\0IDC_SIZENESW\0IDC_NO\0IDC_CROSS\0";
-
-static const char* GetCursorName(LPWSTR cursorId) {
-    int i = GetCursorIndex(cursorId);
-    if (i == -1) {
-        return "unknown";
-    }
-    return SeqStrByIndex(cursorNames, i);
-}
-
-static void LogCursor(LPWSTR cursorId) {
-    static int n = 0;
-    const char* name = GetCursorName(cursorId);
-    logf("SetCursor %s 0x%x %d\n", name, (int)(intptr_t)cursorId, n);
-    n++;
-}
-#else
-static void LogCursor(LPWSTR /*cursorId*/) {
-    // no-op
-}
-#endif
-
 HCURSOR GetCachedCursor(LPWSTR cursorId) {
     int i = GetCursorIndex(cursorId);
     ReportIf(i < 0);
@@ -2782,7 +2574,6 @@ HCURSOR GetCachedCursor(LPWSTR cursorId) {
 }
 
 void SetCursorCached(LPWSTR cursorId) {
-    LogCursor(cursorId);
     HCURSOR c = GetCachedCursor(cursorId);
     HCURSOR prevCursor = GetCursor();
     if (c == prevCursor) {
@@ -3512,16 +3303,6 @@ Str LatestSupportedSIMD() {
         return StrL("neon");
     }
     return StrL("none");
-}
-
-//--- timing
-
-double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
-    LARGE_INTEGER freq;
-    QueryPerformanceFrequency(&freq);
-    auto diff = end.QuadPart - start.QuadPart;
-    double res = (double)diff / (double)freq.QuadPart;
-    return res * 1000;
 }
 
 //--- GDI: draw (misc) / DC state

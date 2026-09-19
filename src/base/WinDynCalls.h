@@ -47,29 +47,15 @@ constexpr DWORD DWMWA_COLOR_NONE = 0xFFFFFFFE;
 #endif
 
 // kernel32.dll — only APIs not guaranteed on stock Windows 7
-#define KERNEL32_API_LIST(V)    \
-    V(SetDefaultDllDirectories) \
-    V(SetThreadDescription)
+#define KERNEL32_API_LIST(V) V(SetThreadDescription)
 
 KERNEL32_API_LIST(API_DECLARATION2)
 
-// not declared in SDK headers with _WIN32_WINNT=0x0601, define manually
-typedef BOOL(WINAPI* Sig_GetProcessInformation)(HANDLE, int, LPVOID, DWORD);
-typedef BOOL(WINAPI* Sig_SetProcessMitigationPolicy)(int, PVOID, SIZE_T);
-extern Sig_GetProcessInformation DynGetProcessInformation;
-extern Sig_SetProcessMitigationPolicy DynSetProcessMitigationPolicy;
-
-// not declared in SDK headers with _WIN32_WINNT=0x0601, define manually
+// user32.dll, not declared in SDK headers with _WIN32_WINNT=0x0601
 typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
-typedef HANDLE(WINAPI* Sig_GetThreadDpiAwarenessContext)(void);
-typedef int(WINAPI* Sig_GetAwarenessFromDpiAwarenessContext)(HANDLE);
-typedef HANDLE(WINAPI* Sig_SetThreadDpiAwarenessContext)(HANDLE);
 typedef BOOL(WINAPI* Sig_SystemParametersInfoForDpi)(UINT, UINT, PVOID, UINT, UINT);
 typedef int(WINAPI* Sig_GetSystemMetricsForDpi)(int, UINT);
 extern Sig_GetDpiForWindow DynGetDpiForWindow;
-extern Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext;
-extern Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext;
-extern Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext;
 extern Sig_SystemParametersInfoForDpi DynSystemParametersInfoForDpi;
 extern Sig_GetSystemMetricsForDpi DynGetSystemMetricsForDpi;
 

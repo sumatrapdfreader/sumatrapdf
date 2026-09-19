@@ -13,8 +13,6 @@ BitReader::BitReader(u8* data, int n) : data(data), dataLen(n) {
     bitsCount = n * 8;
 }
 
-BitReader::~BitReader() = default;
-
 u8 BitReader::GetByte(int pos) const {
     if (pos >= dataLen) {
         return 0;
@@ -232,26 +230,9 @@ SEQUENTIAL_READ(UInt16LE, u16, 2)
 SEQUENTIAL_READ(UInt16BE, u16, 2)
 SEQUENTIAL_READ(UInt32LE, u32, 4)
 SEQUENTIAL_READ(UInt32BE, u32, 4)
-SEQUENTIAL_READ(UInt64LE, u64, 8)
 SEQUENTIAL_READ(UInt64BE, u64, 8)
 
 #undef SEQUENTIAL_READ
-
-i16 ByteReader::Int16LE() {
-    return (i16)UInt16LE();
-}
-
-i16 ByteReader::Int16BE() {
-    return (i16)UInt16BE();
-}
-
-i32 ByteReader::Int32LE() {
-    return (i32)UInt32LE();
-}
-
-i32 ByteReader::Int32BE() {
-    return (i32)UInt32BE();
-}
 
 void ByteReader::Bytes(void* dst, int n) {
     if (!ok || n < 0 || off > len - n) {

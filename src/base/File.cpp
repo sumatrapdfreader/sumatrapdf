@@ -11,10 +11,6 @@
 // 3 is for absolute worst case of WCHAR* where last char was partially written
 constexpr int kZeroPaddingCount = 3;
 
-TempStr GetHomeDirTemp();
-TempStr ExpandEnvVarTemp(Str varName);
-TempStr ToAbsolutePathTemp(Str path);
-
 namespace path {
 
 bool IsSep(char c) {
@@ -305,7 +301,7 @@ Str ReadFile(Str path) {
     return ReadFileWithArena(path, nullptr);
 }
 
-bool StartsWithN(Str path, Str s) {
+bool StartsWith(Str path, Str s) {
     u8* buf = AllocArrayTemp<u8>(s.len);
     if (!buf) {
         return false;
@@ -314,10 +310,6 @@ bool StartsWithN(Str path, Str s) {
         return false;
     }
     return MemEq(buf, s.s, s.len);
-}
-
-bool StartsWith(Str path, Str s) {
-    return file::StartsWithN(path, s);
 }
 
 } // namespace file
@@ -1204,14 +1196,9 @@ TempWStr GetModulePathTemp(HMODULE mod, int initialCch) {
     }
 }
 
-TempWStr GetSelfExePathW() {
-    return GetModulePathTemp((HMODULE)&__ImageBase, MAX_PATH + 1);
-}
-
 // Path of this process image (exe or DLL that contains this code).
 TempStr GetSelfExePathTemp() {
-    TempWStr ws = GetSelfExePathW();
-    return ToUtf8Temp(ws);
+    return ToUtf8Temp(GetModulePathTemp((HMODULE)&__ImageBase, MAX_PATH + 1));
 }
 
 // Directory containing GetSelfExePathTemp().
@@ -1849,47 +1836,3 @@ bool HasWriteAccess(Str dir) {
 }
 
 } // namespace dir
-
-TempStr GetHomeDirTemp() {
-    WCHAR buf[MAX_PATH];
-    DWORD n = GetEnvironmentVariableW(L"USERPROFILE", buf, MAX_PATH);
-    if (n > 0 && n < MAX_PATH) {
-        return ToUtf8Temp(WStr(buf, (int)n));
-    }
-
-    WCHAR drive[MAX_PATH];
-    WCHAR path[MAX_PATH];
-    DWORD driveLen = GetEnvironmentVariableW(L"HOMEDRIVE", drive, MAX_PATH);
-    DWORD pathLen = GetEnvironmentVariableW(L"HOMEPATH", path, MAX_PATH);
-    if (driveLen > 0 && pathLen > 0) {
-        WCHAR combined[MAX_PATH * 2];
-        int pos = 0;
-        for (DWORD i = 0; i < driveLen && pos < MAX_PATH * 2 - 1; i++) {
-            combined[pos++] = drive[i];
-        }
-        for (DWORD i = 0; i < pathLen && pos < MAX_PATH * 2 - 1; i++) {
-            combined[pos++] = path[i];
-        }
-        combined[pos] = 0;
-        return ToUtf8Temp(WStr(combined, pos));
-    }
-    return {};
-}
-
-TempStr ExpandEnvVarTemp(Str varName) {
-    WCHAR buf[MAX_PATH];
-    DWORD n = GetEnvironmentVariableW(CWStrTemp(varName), buf, MAX_PATH);
-    if (n > 0 && n < MAX_PATH) {
-        return ToUtf8Temp(WStr(buf, (int)n));
-    }
-    return {};
-}
-
-TempStr ToAbsolutePathTemp(Str path) {
-    WCHAR buf[MAX_PATH];
-    DWORD n = GetFullPathNameW(CWStrTemp(path), MAX_PATH, buf, nullptr);
-    if (n > 0 && n < MAX_PATH) {
-        return ToUtf8Temp(WStr(buf, (int)n));
-    }
-    return path;
-}

@@ -72,11 +72,6 @@ DirIter::iterator& DirIter::iterator::operator++() {
     return *this;
 }
 
-DirIter::iterator& DirIter::iterator::operator+(int n) {
-    AdvanceDirIter(this, n);
-    return *this;
-}
-
 bool operator==(const DirIter::iterator& a, const DirIter::iterator& b) {
     return (a.di == b.di) && (a.didFinish == b.didFinish);
 };

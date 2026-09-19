@@ -142,7 +142,6 @@ class AutoDeleteGdiObj {
 };
 using AutoDeletePen = AutoDeleteGdiObj<HPEN>;
 using AutoDeleteBrush = AutoDeleteGdiObj<HBRUSH>;
-using AutoDeleteObject = AutoDeleteGdiObj<HGDIOBJ>;
 
 class AutoReleaseDC {
     HDC hdc = nullptr;

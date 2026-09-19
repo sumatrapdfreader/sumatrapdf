@@ -31,7 +31,6 @@
 #include "base/tests/UtAssert.h"
 
 // in src/base/tests/
-void AppendStoreTest();
 void BaseUtilTest();
 void ByteOrderTests();
 void ClipboardImageTest();
@@ -564,7 +563,6 @@ int RunAppUnitTests(bool forAi) {
     }
     printf("Running unit tests\n");
 
-    AppendStoreTest();
     BaseUtilTest();
     ByteOrderTests();
     ClipboardImageTest();

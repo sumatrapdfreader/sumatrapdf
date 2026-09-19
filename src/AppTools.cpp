@@ -454,16 +454,6 @@ Rect GetDefaultWindowPos() {
     return r;
 }
 
-void SaveCallstackLogs() {
-    Str s = dbghelp::GetCallstacks();
-    if (len(s) == 0) {
-        return;
-    }
-    TempStr filePath = GetPathInAppDataDirTemp(StrL("callstacks.txt"));
-    file::WriteFile(filePath, s);
-    str::Free(s);
-}
-
 // cache because calculating sha1 of the whole executable
 // might be relatively expensive
 // sha1 is 20 bytes => 40 hex chars + null terminator

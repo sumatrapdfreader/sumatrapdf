@@ -16,7 +16,6 @@ struct DirIterEntry {
     bool isDir = false;
     bool isFile = false;
     bool stopTraversal = false;
-    bool fileMatches = false;
 };
 
 struct DirIter {
@@ -47,7 +46,6 @@ struct DirIter {
         DirIterEntry* operator*();
         iterator& operator++();   // ++it
         iterator operator++(int); // it++
-        iterator& operator+(int); // it += n
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };

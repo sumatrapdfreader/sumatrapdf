@@ -131,14 +131,9 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
     return fileId > 0;
 }
 
-// unfortunately libarchive's rar support is weak
-static bool gUnrarFirst = true;
-
-static bool TryOpenUnrarFallback(Archive* archive, Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress,
-                                 bool isRar) {
-    if (!isRar) {
-        return false;
-    }
+// unfortunately libarchive's rar support is weak, so rar goes to unrar.dll first
+static bool TryOpenUnrarFallback(Archive* archive, Str path, bool eagerLoad,
+                                 const ArchiveExtractProgressCb& cbProgress) {
     bool ok = archive->OpenUnrarFallback(path, eagerLoad, cbProgress);
     if (ok) {
         archive->format = Archive::Format::Rar;
@@ -176,18 +171,12 @@ bool Archive::Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExt
         eagerLoad = true;
     }
 
-    bool isRar = ft == FileType::Rar;
     bool ok = false;
-    if (gUnrarFirst && isRar) {
-        ok = TryOpenUnrarFallback(this, path, eagerLoad, cbProgress, isRar);
+    if (ft == FileType::Rar) {
+        ok = TryOpenUnrarFallback(this, path, eagerLoad, cbProgress);
     }
     if (!ok) {
         ok = OpenArchive(path, eagerLoad, cbProgress);
-    }
-    if (!ok && !gUnrarFirst && isRar) {
-        // libarchive can open rar files but then fail to read them — fall
-        // back to unrar.dll.
-        ok = TryOpenUnrarFallback(this, path, eagerLoad, cbProgress, isRar);
     }
     if (!ok) {
         return false;
