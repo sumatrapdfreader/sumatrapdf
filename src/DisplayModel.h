@@ -171,6 +171,7 @@ struct DisplayModel : DocController {
     RectF PageMediaBoxForLayout(int pageNo) const;
     void UpdateEstimatedMediaBox();
     bool EnsureMediaBoxesForVisiblePages();
+    void EnsureMediaBoxForRender(int pageNo);
     void RelayoutKeepingView();
 
     int GetRotation() const;

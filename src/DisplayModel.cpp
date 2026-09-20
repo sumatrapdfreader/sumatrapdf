@@ -1818,6 +1818,16 @@ bool DisplayModel::EnsureMediaBoxesForVisiblePages() {
     return true;
 }
 
+// Measure before rendering: a bitmap rendered for the estimated box keeps
+// matching the cache after the page is measured, and paints stretched (#6225)
+void DisplayModel::EnsureMediaBoxForRender(int pageNo) {
+    PageInfo* pi = GetPageInfo(pageNo);
+    if (!useLazyMediaBoxes || !pi || IsMediaBoxKnown(pi->mediaBox)) {
+        return;
+    }
+    PageMediaBox(pageNo);
+}
+
 bool DisplayModel::EnsureTrimEmptyMarginsForVisiblePages() {
     if (!trimEmptyMargins || !pagesInfo || inTrimMarginsUpdate) {
         return false;

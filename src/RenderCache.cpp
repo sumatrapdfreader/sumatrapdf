@@ -679,6 +679,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
     if (dm->GetZoomReal(pageNo) <= 0) {
         return;
     }
+    dm->EnsureMediaBoxForRender(pageNo);
     TilePosition tile(GetTileRes(dm, pageNo), 0, 0);
     // only honor the request if there's a good chance that the
     // rendered tile will actually be used
@@ -795,6 +796,7 @@ void RenderCache::RequestPredictiveRendering(DisplayModel* dm, int originPageNo,
         if (zoom <= 0) {
             continue;
         }
+        dm->EnsureMediaBoxForRender(pageNo);
         TilePosition tile(GetTileRes(dm, pageNo), 0, 0);
         if (tile.res > 1) {
             continue;
