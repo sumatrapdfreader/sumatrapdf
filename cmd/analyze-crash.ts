@@ -1,25 +1,24 @@
-// Analyze one cached (or downloaded) minidump: symbols + cdb → analyze.txt.
+// Analyze one cached (or downloaded) minidump: symbols + cdb → analyze.txt,
+// summary.txt. Same cache files as cmd/crashes.ts, so neither redoes the other's work.
 //
 //   bun cmd/analyze-crash.ts <crash-id>
 //   bun cmd/analyze-crash.ts -reanalyze <crash-id>
 //   bun cmd/analyze-crash.ts --local <crash-id>
-import { existsSync, readdirSync, writeFileSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 
 import {
   CACHE_DIR,
   LOCAL_SERVER,
   PROD_SERVER,
-  analyzePath,
   downloadDumpIfMissing,
   dumpPath,
   extractDumpLog,
+  field,
   isAnalyzed,
   isLogExtracted,
-  isSettingsExtracted,
   logPath,
-  relLog,
   runAnalysis,
+  writeSummary,
   type DumpRow,
 } from "./crashes";
 
@@ -101,156 +100,6 @@ function resolveId(raw: string): string {
   return id;
 }
 
-function readIf(p: string): string {
-  return existsSync(p) ? readFileSync(p, "utf8") : "";
-}
-
-function field(text: string, name: string): string {
-  const re = new RegExp(`^${name}:\\s*(.+)$`, "im");
-  const m = re.exec(text);
-  return m ? m[1].trim() : "";
-}
-
-function versionFromLog(log: string): string {
-  return field(log, "Ver");
-}
-
-function gitFromLog(log: string): string {
-  const m = /^Git:\s*([0-9a-f]{7,40})/im.exec(log);
-  return m ? m[1] : "";
-}
-
-// the ReportIf() that fired, for a debug report. It, not the failure bucket,
-// is what identifies one: the bucket always names the crash handler's own wait
-function condFromLog(log: string): string {
-  return field(log, "Cond");
-}
-
-function analyzeField(txt: string, name: string): string {
-  const re = new RegExp(`^${name}:\\s*(.+)$`, "im");
-  const m = re.exec(txt);
-  return m ? m[1].trim() : "";
-}
-
-type StackFrame = {
-  func: string;
-  file: string;
-  line: string;
-};
-
-function repoPathFromDbg(p: string): string {
-  const n = p.replaceAll("/", "\\");
-  const m = n.match(/sumatrapdf\\(src|ext)\\(.+)$/i);
-  if (!m) {
-    return "";
-  }
-  return `${m[1].toLowerCase() === "ext" ? "ext" : "src"}/${m[2].replaceAll("\\", "/")}`;
-}
-
-function parseInRepoFrames(analyzeTxt: string): StackFrame[] {
-  const crashed = analyzeTxt.indexOf("=== crashed thread ===");
-  let body = analyzeTxt;
-  if (crashed >= 0) {
-    const rest = analyzeTxt.slice(crashed);
-    const next = rest.search(/\n=== /);
-    body = next >= 0 ? rest.slice(0, next) : rest;
-  }
-  const frames: StackFrame[] = [];
-  const seen = new Set<string>();
-  const re = /!([^\s\[]+)(?:\s+\[([^\]]+) @ (\d+)\])?/;
-  // a debug report's stack starts inside the crash handler itself (it parks
-  // there while another thread writes the .dmp); the caller is what matters
-  const skipFiles = new Set(["src/base/CrashHandler.cpp", "src/base/DbgHelpDyn.cpp"]);
-  for (const line of body.split(/\r?\n/)) {
-    const m = re.exec(line);
-    if (!m) {
-      continue;
-    }
-    const func = m[1].replace(/\+0x[0-9a-f]+$/i, "");
-    const file = m[2] ? repoPathFromDbg(m[2]) : "";
-    const lineNo = m[3] || "";
-    if (!file || skipFiles.has(file)) {
-      continue;
-    }
-    const key = `${func}|${file}|${lineNo}`;
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    frames.push({ func, file, line: lineNo });
-  }
-  return frames;
-}
-
-function logTail(log: string, n: number): string {
-  const idx = log.search(/^-------- Log[- ]/m);
-  const body = idx >= 0 ? log.slice(idx) : log;
-  const lines = body.replace(/\s+$/, "").split(/\r?\n/);
-  if (lines.length <= n) {
-    return lines.join("\n");
-  }
-  return lines.slice(-n).join("\n");
-}
-
-function summaryPath(id: string): string {
-  return join(CACHE_DIR, id, "summary.txt");
-}
-
-function relCrashFile(id: string, name: string): string {
-  return join(".work", "crashes", id, name).replaceAll("\\", "/");
-}
-
-function buildSummary(id: string, log: string, analyzeTxt: string): string {
-  const ver = versionFromLog(log);
-  const git = gitFromLog(log);
-  const exception = analyzeField(analyzeTxt, "EXCEPTION_CODE_STR") || analyzeField(analyzeTxt, "ExceptionCode");
-  const bucket = analyzeField(analyzeTxt, "FAILURE_BUCKET_ID");
-  const readAddr = analyzeField(analyzeTxt, "READ_ADDRESS");
-  const writeAddr = analyzeField(analyzeTxt, "WRITE_ADDRESS");
-  const frames = parseInRepoFrames(analyzeTxt);
-  const site = frames[0] ? `${frames[0].func}  ${frames[0].file}:${frames[0].line}` : "";
-  const cond = condFromLog(log);
-  const lines: string[] = [`id: ${id}`, `ver: ${ver || "?"}`, `git: ${git || "?"}`, `exception: ${exception || "?"}`];
-  if (cond) {
-    lines.push(`cond: ${cond}`);
-  }
-  if (bucket) {
-    lines.push(`bucket: ${bucket}`);
-  }
-  if (readAddr) {
-    lines.push(`read_address: ${readAddr}`);
-  }
-  if (writeAddr) {
-    lines.push(`write_address: ${writeAddr}`);
-  }
-  if (site) {
-    lines.push(`site: ${site}`);
-  }
-  lines.push("");
-  if (frames.length) {
-    lines.push("stack (in-repo):");
-    for (const f of frames) {
-      lines.push(`  ${f.func}  ${f.file}:${f.line}`);
-    }
-    lines.push("");
-  }
-  lines.push("files:");
-  lines.push(`  ${relCrashFile(id, "analyze.txt")}`);
-  if (isLogExtracted(id)) {
-    lines.push(`  ${relCrashFile(id, "log.txt")}`);
-  }
-  if (isSettingsExtracted(id)) {
-    lines.push(`  ${relCrashFile(id, "settings.txt")}`);
-  }
-  lines.push(`  ${relCrashFile(id, "summary.txt")}`);
-  lines.push("");
-  const tail = logTail(log, 40);
-  if (tail) {
-    lines.push("log tail:", tail, "");
-  }
-  return `${lines.join("\n")}\n`;
-}
-
 async function main(): Promise<void> {
   const { server, id: rawId, reanalyze } = parseArgs(process.argv.slice(2));
   const id = resolveId(rawId);
@@ -262,19 +111,13 @@ async function main(): Promise<void> {
     throw new Error(`no minidump at ${dmp} (and download failed or was skipped)`);
   }
   extractDumpLog(id, reanalyze);
-  const log = isLogExtracted(id) ? readIf(logPath(id)) : "";
-  const version = versionFromLog(log);
-  if (!version) {
-    throw new Error(`no Ver: in ${relLog(id) || "log"}; cannot pick PDBs`);
-  }
-  const row: DumpRow = { id, version, date: "", size: 0, ip: "" };
+  const log = isLogExtracted(id) ? readFileSync(logPath(id), "utf8") : "";
+  // no Ver: in the log means no pdbs; cdb still runs (unsymbolicated)
+  const row: DumpRow = { id, version: field(log, "Ver"), date: "", size: 0, ip: "" };
   if (reanalyze || !isAnalyzed(id)) {
     await runAnalysis(row, reanalyze);
   }
-  const analyzeTxt = isAnalyzed(id) ? readIf(analyzePath(id)) : "";
-  const summary = buildSummary(id, log, analyzeTxt);
-  writeFileSync(summaryPath(id), summary);
-  process.stdout.write(summary);
+  process.stdout.write(writeSummary(id));
 }
 
 if (import.meta.main) {

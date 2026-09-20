@@ -19,6 +19,8 @@ bun cmd/analyze-crash.ts <crash-id>
 
 The helper: finds or downloads the `.dmp`, extracts `log.txt` / `settings.txt`, fetches PDBs for that build, runs `cdb` (`!analyze -v`, crashed-thread `kb`, `~*kb`), writes `analyze.txt` and `summary.txt`, prints the summary.
 
+A build whose PDBs the server lacks (404, or a custom build) still gets cdb run: the summary then has a `symbols:` line, the exception code and an unsymbolicated `stack` (module+offset). That is a `no-fix: unsymbolicated` unless the log tail alone explains it. The 404 is remembered in `.work/crashes/symbols/<build>/pdb-missing.txt`; `-reanalyze` retries it.
+
 If the dump is missing and download fails, stop and say so.
 
 ## 2. Read artifacts

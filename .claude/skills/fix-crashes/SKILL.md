@@ -55,7 +55,9 @@ bun cmd/analyze-crash.ts <crash-id>
 ```
 
 Writes `.work/crashes/<id>/{analyze.txt,log.txt,settings.txt,summary.txt}` and prints
-the summary (exception, bucket, in-repo stack, log tail).
+the summary (exception, bucket, in-repo stack, log tail). Without PDBs for that
+build (`symbols:` line in the summary) the stack is module+offset only: record
+`no-fix: unsymbolicated` unless the log tail alone explains the crash.
 
 Build the signature from `exception` + the first in-repo frame + `bucket`. If it
 matches a `fixed.md` entry, append that id to the entry's `ids:`, write a `dup of`

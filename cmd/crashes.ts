@@ -3,6 +3,11 @@
 //   bun cmd/crashes.ts              list (oldest first); analyze missing
 //   bun cmd/crashes.ts --local      same, against http://127.0.0.1:9321
 //   bun cmd/crashes.ts <id>         download dump + pdb + exe, run !analyze
+//
+// Everything is cached under .work/crashes/<id>/ (dump, log.txt, settings.txt,
+// analyze.txt, summary.txt) and .work/crashes/symbols/<build>/ (pdb, exe, or a
+// *-missing.txt for a 404), shared with cmd/analyze-crash.ts, so a second run
+// only fetches the list and serves.
 import { existsSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSync, copyFileSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
 import { homedir, cpus } from "node:os";
@@ -162,6 +167,14 @@ function relLog(id: string): string {
 
 function relSettings(id: string): string {
   return relative(ROOT, settingsPath(id)).replaceAll("\\", "/");
+}
+
+function summaryPath(id: string): string {
+  return join(dumpDir(id), "summary.txt");
+}
+
+function relSummary(id: string): string {
+  return relative(ROOT, summaryPath(id)).replaceAll("\\", "/");
 }
 
 function toLF(s: string): string {
@@ -351,6 +364,9 @@ function printRows(rows: DumpRow[]): void {
     }
     if (isSettingsExtracted(r.id)) {
       console.log(relSettings(r.id));
+    }
+    if (fileNonEmpty(summaryPath(r.id))) {
+      console.log(relSummary(r.id));
     }
   }
   console.log(`${rows.length} minidump${rows.length === 1 ? "" : "s"}`);
@@ -550,36 +566,70 @@ function localDbgSymDir(version: string): string {
   return "";
 }
 
+// a failed pdb / exe download is remembered per build in these files, so a
+// build the server never had (a 404) costs one request, not one per run
+const kMissingPdb = "pdb-missing.txt";
+const kMissingExe = "exe-missing.txt";
+
+function symbolsDir(version: string): string {
+  return join(CACHE_DIR, "symbols", symbolCacheKey(version));
+}
+
+function missingReason(version: string, name: string): string {
+  const p = join(symbolsDir(version), name);
+  return existsSync(p) ? readFileSync(p, "utf8").trim() : "";
+}
+
+function pdbMissingReason(version: string): string {
+  return missingReason(version, kMissingPdb);
+}
+
 const inFlightSymbols = new Map<string, Promise<string>>();
 
-async function ensureSymbols(row: DumpRow): Promise<string> {
+// dir with SumatraPDF.pdb + libsumatrapdf.pdb for the build, "" if the server
+// doesn't have them (remembered in pdb-missing.txt until retry)
+async function ensureSymbols(row: DumpRow, retry = false): Promise<string> {
   const local = localDbgSymDir(row.version);
   if (local) {
     return local;
   }
   const key = symbolCacheKey(row.version);
-  const dir = join(CACHE_DIR, "symbols", key);
+  const dir = symbolsDir(row.version);
   if (hasSumatraPdbs(dir)) {
     return dir;
+  }
+  const missingPath = join(dir, kMissingPdb);
+  if (!retry && existsSync(missingPath)) {
+    return "";
   }
   let p = inFlightSymbols.get(key);
   if (p) {
     return await p;
   }
   p = (async () => {
-    const url = dlUrlForVersion(row.version, ".pdb.zip");
-    if (!url) {
-      throw new Error(`no pdb source for version '${row.version}'`);
-    }
     mkdirSync(dir, { recursive: true });
-    const zipPath = join(dir, "pdb.zip");
-    if (!existsSync(zipPath) || statSync(zipPath).size === 0) {
-      console.log(`pdb: downloading ${url}`);
-      writeFileSync(zipPath, await fetchBytes(url));
+    const url = dlUrlForVersion(row.version, ".pdb.zip");
+    try {
+      if (!url) {
+        throw new Error(`no pdb source for version '${row.version}'`);
+      }
+      const zipPath = join(dir, "pdb.zip");
+      if (!existsSync(zipPath) || statSync(zipPath).size === 0) {
+        console.log(`pdb: downloading ${url}`);
+        writeFileSync(zipPath, await fetchBytes(url));
+      }
+      extractZipPdb(readFileSync(zipPath), dir);
+      if (!hasSumatraPdbs(dir)) {
+        throw new Error(`pdb zip missing SumatraPDF.pdb or libsumatrapdf.pdb (${url})`);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.log(`pdb: ${msg}`);
+      writeFileSync(missingPath, `${msg}\n`);
+      return "";
     }
-    extractZipPdb(readFileSync(zipPath), dir);
-    if (!hasSumatraPdbs(dir)) {
-      throw new Error(`pdb zip missing SumatraPDF.pdb or libsumatrapdf.pdb (${url})`);
+    if (existsSync(missingPath)) {
+      unlinkSync(missingPath);
     }
     return dir;
   })();
@@ -594,30 +644,45 @@ async function ensureSymbols(row: DumpRow): Promise<string> {
 const inFlightExe = new Map<string, Promise<string>>();
 
 // cdb needs SumatraPDF.exe to map the image (the dump has no code pages), otherwise
-// it prints "Unable to load image ... Win32 error 0n2" and can't disassemble
-async function ensureExe(row: DumpRow): Promise<string> {
+// it prints "Unable to load image ... Win32 error 0n2" and can't disassemble.
+// A missing exe only degrades the analysis: returns "" (remembered in exe-missing.txt)
+async function ensureExe(row: DumpRow, retry = false): Promise<string> {
   const local = localDbgSymDir(row.version);
   if (local && existsSync(join(local, "SumatraPDF.exe"))) {
     return local;
   }
   const key = symbolCacheKey(row.version);
-  const dir = join(CACHE_DIR, "symbols", key);
+  const dir = symbolsDir(row.version);
   const exePath = join(dir, "SumatraPDF.exe");
   if (existsSync(exePath) && statSync(exePath).size > 0) {
     return dir;
+  }
+  const missingPath = join(dir, kMissingExe);
+  if (!retry && existsSync(missingPath)) {
+    return "";
   }
   let p = inFlightExe.get(key);
   if (p) {
     return await p;
   }
   p = (async () => {
-    const url = dlUrlForVersion(row.version, ".exe");
-    if (!url) {
-      throw new Error(`no exe source for version '${row.version}'`);
-    }
     mkdirSync(dir, { recursive: true });
-    console.log(`exe: downloading ${url}`);
-    writeFileSync(exePath, await fetchBytes(url));
+    const url = dlUrlForVersion(row.version, ".exe");
+    try {
+      if (!url) {
+        throw new Error(`no exe source for version '${row.version}'`);
+      }
+      console.log(`exe: downloading ${url}`);
+      writeFileSync(exePath, await fetchBytes(url));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.log(`exe: ${msg}`);
+      writeFileSync(missingPath, `${msg}\n`);
+      return "";
+    }
+    if (existsSync(missingPath)) {
+      unlinkSync(missingPath);
+    }
     return dir;
   })();
   inFlightExe.set(key, p);
@@ -625,16 +690,6 @@ async function ensureExe(row: DumpRow): Promise<string> {
     return await p;
   } finally {
     inFlightExe.delete(key);
-  }
-}
-
-// missing exe only degrades the analysis, so never fail on it
-async function ensureExeQuiet(row: DumpRow): Promise<string> {
-  try {
-    return await ensureExe(row);
-  } catch (e) {
-    console.log(`exe: ${e instanceof Error ? e.message : e}`);
-    return "";
   }
 }
 
@@ -685,8 +740,8 @@ async function downloadDumpIfMissing(server: string, id: string): Promise<void> 
 async function ensureDownloaded(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
   await downloadDumpIfMissing(server, row.id);
   extractDumpLog(row.id, reanalyze);
-  await ensureSymbols(row);
-  await ensureExeQuiet(row);
+  await ensureSymbols(row, reanalyze);
+  await ensureExe(row, reanalyze);
 }
 
 const MARK_CRASHED = "---CRASHED-STACK---";
@@ -784,8 +839,8 @@ async function runAnalysis(row: DumpRow, reanalyze: boolean): Promise<void> {
   if (reanalyze && existsSync(outPath)) {
     unlinkSync(outPath);
   }
-  const symDir = await ensureSymbols(row);
-  const exeDir = await ensureExeQuiet(row);
+  const symDir = await ensureSymbols(row, reanalyze);
+  const exeDir = await ensureExe(row, reanalyze);
   const cdb = findCdb();
   if (!cdb) {
     console.log(`dump: ${dmpPath}`);
@@ -795,13 +850,19 @@ async function runAnalysis(row: DumpRow, reanalyze: boolean): Promise<void> {
   }
   mkdirSync(WIN_SYM_CACHE, { recursive: true });
   const nt = process.env._NT_SYMBOL_PATH?.trim();
-  const symParts = [symDir, `srv*${WIN_SYM_CACHE}*${MS_SYMBOL_SERVER}`];
+  // without our pdbs cdb still gives the exception record, the faulting module
+  // and OS frames, so run it anyway and say so at the top of analyze.txt
+  const symParts = [`srv*${WIN_SYM_CACHE}*${MS_SYMBOL_SERVER}`];
+  if (symDir) {
+    symParts.unshift(symDir);
+  }
   if (nt) {
     symParts.push(nt);
   }
   const symPath = symParts.join(";");
   console.log(`cdb: ${cdb} (${row.id})`);
-  console.log(`pdb: ${relative(ROOT, symDir).replaceAll("\\", "/")}`);
+  const pdbNote = symDir ? relative(ROOT, symDir).replaceAll("\\", "/") : `missing (${pdbMissingReason(row.version)})`;
+  console.log(`pdb: ${pdbNote}`);
   const args = ["-z", dmpPath, "-y", symPath, "-lines"];
   const imgDirs = [exeDir, renamedExeDir(row.id, exeDir)].filter((d) => d !== "");
   if (imgDirs.length > 0) {
@@ -809,7 +870,14 @@ async function runAnalysis(row: DumpRow, reanalyze: boolean): Promise<void> {
   }
   args.push("-logo", outPath, "-c", CDB_CMD);
   await runCdbAsync(cdb, args, outPath);
+  if (!symDir && existsSync(outPath)) {
+    const note = `${kNoSymbolsMark} ${pdbMissingReason(row.version)}`;
+    writeFileSync(outPath, `${note}\n\n${readFileSync(outPath, "utf8")}`);
+  }
+  writeSummary(row.id);
 }
+
+const kNoSymbolsMark = "=== no SumatraPDF symbols ===";
 
 async function analyze(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
   if (!reanalyze && isAnalyzed(row.id)) {
@@ -822,6 +890,7 @@ async function analyze(server: string, row: DumpRow, reanalyze: boolean): Promis
 async function ensureAnalyzed(server: string, row: DumpRow, reanalyze: boolean): Promise<void> {
   if (!reanalyze && isAnalyzed(row.id)) {
     extractDumpLog(row.id);
+    ensureSummary(row.id);
     return;
   }
   await analyze(server, row, reanalyze);
@@ -838,6 +907,202 @@ async function mapConcurrent<T>(items: T[], limit: number, fn: (item: T) => Prom
   await Promise.all(workers);
 }
 
+function field(text: string, name: string): string {
+  const re = new RegExp(`^${name}:\\s*(.+)$`, "im");
+  const m = re.exec(text);
+  return m ? m[1].trim() : "";
+}
+
+function gitFromLog(log: string): string {
+  const m = /^Git:\s*([0-9a-f]{7,40})/im.exec(log);
+  return m ? m[1] : "";
+}
+
+type StackFrame = {
+  func: string;
+  file: string;
+  line: string;
+};
+
+function repoPathFromDbg(p: string): string {
+  const n = p.replaceAll("/", "\\");
+  const m = n.match(/sumatrapdf\\(src|ext)\\(.+)$/i);
+  if (!m) {
+    return "";
+  }
+  return `${m[1].toLowerCase() === "ext" ? "ext" : "src"}/${m[2].replaceAll("\\", "/")}`;
+}
+
+function crashedThreadSection(analyzeTxt: string): string {
+  const crashed = analyzeTxt.indexOf("=== crashed thread ===");
+  if (crashed < 0) {
+    return analyzeTxt;
+  }
+  const rest = analyzeTxt.slice(crashed);
+  const next = rest.search(/\n=== /);
+  return next >= 0 ? rest.slice(0, next) : rest;
+}
+
+function parseInRepoFrames(analyzeTxt: string): StackFrame[] {
+  const body = crashedThreadSection(analyzeTxt);
+  const frames: StackFrame[] = [];
+  const seen = new Set<string>();
+  const re = /!([^\s\[]+)(?:\s+\[([^\]]+) @ (\d+)\])?/;
+  // a debug report's stack starts inside the crash handler itself (it parks
+  // there while another thread writes the .dmp); the caller is what matters
+  const skipFiles = new Set(["src/base/CrashHandler.cpp", "src/base/DbgHelpDyn.cpp"]);
+  for (const line of body.split(/\r?\n/)) {
+    const m = re.exec(line);
+    if (!m) {
+      continue;
+    }
+    const func = m[1].replace(/\+0x[0-9a-f]+$/i, "");
+    const file = m[2] ? repoPathFromDbg(m[2]) : "";
+    const lineNo = m[3] || "";
+    if (!file || skipFiles.has(file)) {
+      continue;
+    }
+    const key = `${func}|${file}|${lineNo}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    frames.push({ func, file, line: lineNo });
+  }
+  return frames;
+}
+
+// unsymbolicated stack: "SumatraPDF_prerel_64+0x1234" frames of the crashed thread
+function parseModuleFrames(analyzeTxt: string): string[] {
+  const out: string[] = [];
+  const re = / : ([A-Za-z0-9_.]+(?:\+0x[0-9a-f]+|![^\s\[]+))/;
+  for (const line of crashedThreadSection(analyzeTxt).split(/\r?\n/)) {
+    const m = re.exec(line);
+    if (m && !out.includes(m[1])) {
+      out.push(m[1]);
+    }
+  }
+  return out;
+}
+
+function logTail(log: string, n: number): string {
+  const idx = log.search(/^-------- Log[- ]/m);
+  const body = idx >= 0 ? log.slice(idx) : log;
+  const lines = body.replace(/\s+$/, "").split(/\r?\n/);
+  if (lines.length <= n) {
+    return lines.join("\n");
+  }
+  return lines.slice(-n).join("\n");
+}
+
+function relCrashFile(id: string, name: string): string {
+  return join(".work", "crashes", id, name).replaceAll("\\", "/");
+}
+
+// summary.txt: what the skill and the web index read. Built from the log
+// (always there: it's the minidump comment) and analyze.txt (if cdb ran)
+function buildSummary(id: string, log: string, analyzeTxt: string): string {
+  const exception = field(analyzeTxt, "EXCEPTION_CODE_STR") || field(analyzeTxt, "ExceptionCode");
+  const bucket = field(analyzeTxt, "FAILURE_BUCKET_ID");
+  const readAddr = field(analyzeTxt, "READ_ADDRESS");
+  const writeAddr = field(analyzeTxt, "WRITE_ADDRESS");
+  const noSymbols = analyzeTxt.startsWith(kNoSymbolsMark)
+    ? analyzeTxt.slice(kNoSymbolsMark.length).split("\n")[0].trim()
+    : "";
+  const frames = noSymbols ? [] : parseInRepoFrames(analyzeTxt);
+  const site = frames[0] ? `${frames[0].func}  ${frames[0].file}:${frames[0].line}` : "";
+  const cond = field(log, "Cond");
+  const type = /^Type:\s*hang/im.test(log) ? "hang" : cond ? "debug report" : "crash";
+  const lines: string[] = [
+    `id: ${id}`,
+    `type: ${type}`,
+    `ver: ${field(log, "Ver") || "?"}`,
+    `git: ${gitFromLog(log) || "?"}`,
+    `exe: ${field(log, "Exe").replace(/\s+\d[\d.,]* [KMG]?B \(.*$/, "") || "?"}`,
+    `os: ${field(log, "OS") || "?"}`,
+    `exception: ${exception || "?"}`,
+  ];
+  if (cond) {
+    lines.push(`cond: ${cond}`);
+  }
+  if (!analyzeTxt) {
+    lines.push("analyze: none (cdb did not run)");
+  }
+  if (noSymbols) {
+    lines.push(`symbols: ${noSymbols}`);
+  }
+  if (bucket) {
+    lines.push(`bucket: ${bucket}`);
+  }
+  if (readAddr) {
+    lines.push(`read_address: ${readAddr}`);
+  }
+  if (writeAddr) {
+    lines.push(`write_address: ${writeAddr}`);
+  }
+  if (site) {
+    lines.push(`site: ${site}`);
+  }
+  lines.push("");
+  if (frames.length) {
+    lines.push("stack (in-repo):");
+    for (const f of frames) {
+      lines.push(`  ${f.func}  ${f.file}:${f.line}`);
+    }
+    lines.push("");
+  } else if (analyzeTxt) {
+    const mods = parseModuleFrames(analyzeTxt);
+    if (mods.length) {
+      lines.push("stack (unsymbolicated):");
+      for (const m of mods) {
+        lines.push(`  ${m}`);
+      }
+      lines.push("");
+    }
+  }
+  lines.push("files:");
+  if (analyzeTxt) {
+    lines.push(`  ${relCrashFile(id, "analyze.txt")}`);
+  }
+  if (isLogExtracted(id)) {
+    lines.push(`  ${relCrashFile(id, "log.txt")}`);
+  }
+  if (isSettingsExtracted(id)) {
+    lines.push(`  ${relCrashFile(id, "settings.txt")}`);
+  }
+  lines.push(`  ${relCrashFile(id, "summary.txt")}`);
+  lines.push("");
+  const tail = logTail(log, 40);
+  if (tail) {
+    lines.push("log tail:", tail, "");
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function writeSummary(id: string): string {
+  const log = isLogExtracted(id) ? readFileSync(logPath(id), "utf8") : "";
+  const analyzeTxt = isAnalyzed(id) ? readFileSync(analyzePath(id), "utf8") : "";
+  const summary = buildSummary(id, log, analyzeTxt);
+  writeFileSync(summaryPath(id), summary);
+  return summary;
+}
+
+// (re)build summary.txt only when missing or older than its inputs
+function ensureSummary(id: string): void {
+  const sp = summaryPath(id);
+  if (!existsSync(dumpPath(id))) {
+    return;
+  }
+  if (fileNonEmpty(sp)) {
+    const t = statSync(sp).mtimeMs;
+    const newer = [analyzePath(id), logPath(id)].some((p) => existsSync(p) && statSync(p).mtimeMs > t);
+    if (!newer) {
+      return;
+    }
+  }
+  writeSummary(id);
+}
+
 type ApiCrash = {
   Day: string;
   FileNameTxt: string;
@@ -849,37 +1114,24 @@ type ApiCrash = {
   IsCrash: boolean;
 };
 
-function parseAnalyzeSummary(txt: string): { crashLine: string; srcLoc: string; isCrash: boolean } {
-  const isCrash = !/Type:\s*hang/i.test(txt);
-  let body = txt;
-  const crashed = txt.indexOf("=== crashed thread ===");
-  if (crashed >= 0) {
-    const rest = txt.slice(crashed);
-    const next = rest.search(/\n=== /);
-    body = next >= 0 ? rest.slice(0, next) : rest;
-  }
-  const siteRe = / : ([A-Za-z0-9_.]+![^\s\[]+)/;
-  const srcRe = /\[([^\]]+?) @ (\d+)\]/;
+function crashApiRow(row: DumpRow): ApiCrash {
+  const summary = readSummary(row.id);
+  const site = field(summary, "site");
+  const cond = field(summary, "cond");
+  const symbols = field(summary, "symbols");
+  const exception = field(summary, "exception");
   let crashLine = "";
   let srcLoc = "";
-  for (const line of body.split(/\r?\n/)) {
-    const sm = siteRe.exec(line);
-    if (!sm) {
-      continue;
-    }
-    crashLine = sm[1];
-    const src = srcRe.exec(line);
-    if (src) {
-      srcLoc = `${src[1]}:${src[2]}`;
-    }
-    break;
+  if (site) {
+    const sp = site.indexOf("  ");
+    crashLine = sp < 0 ? site : site.slice(0, sp);
+    srcLoc = sp < 0 ? "" : site.slice(sp).trim();
+  } else if (cond) {
+    crashLine = cond;
+  } else if (symbols) {
+    crashLine = `no symbols: ${symbols}`;
+    srcLoc = exception;
   }
-  return { crashLine, srcLoc, isCrash };
-}
-
-function crashApiRow(row: DumpRow): ApiCrash {
-  const txt = isAnalyzed(row.id) ? readFileSync(analyzePath(row.id), "utf8") : "";
-  const { crashLine, srcLoc, isCrash } = parseAnalyzeSummary(txt);
   return {
     Day: row.date.slice(0, 10),
     FileNameTxt: row.id,
@@ -887,8 +1139,8 @@ function crashApiRow(row: DumpRow): ApiCrash {
     Ver: row.version,
     CrashLine: crashLine,
     SrcLoc: srcLoc,
-    GitSha1: "",
-    IsCrash: isCrash,
+    GitSha1: field(summary, "git").replace(/^\?$/, ""),
+    IsCrash: field(summary, "type") !== "hang",
   };
 }
 
@@ -900,9 +1152,16 @@ function readSettings(id: string): string {
   return isSettingsExtracted(id) ? toLF(readFileSync(settingsPath(id), "utf8")) : "";
 }
 
-// analyze.txt with the minidump log and settings appended
+function readSummary(id: string): string {
+  return fileNonEmpty(summaryPath(id)) ? readFileSync(summaryPath(id), "utf8") : "";
+}
+
+// summary, analyze.txt, minidump log and settings, one after another
 function crashText(id: string, analyzeTxt: string): string {
-  const parts = [analyzeTxt.replace(/\s+$/, "")];
+  const parts = [readSummary(id).replace(/\s+$/, "")];
+  if (analyzeTxt) {
+    parts.push("=== cdb ===", analyzeTxt.replace(/\s+$/, ""));
+  }
   const log = readLog(id);
   if (log) {
     parts.push("=== minidump log ===", log.replace(/\s+$/, ""));
@@ -922,6 +1181,9 @@ function crashHtml(id: string, analyzeTxt: string): string {
   const enc = encodeURIComponent(id);
   const logTxt = readLog(id);
   const settingsTxt = readSettings(id);
+  const summaryTxt = readSummary(id);
+  const summaryBlock = summaryTxt ? `<h2>summary</h2>\n<pre>${escapeHtml(summaryTxt)}</pre>` : "";
+  const analyzeBlock = analyzeTxt ? `<h2>cdb !analyze</h2>\n<pre>${escapeHtml(analyzeTxt)}</pre>` : "";
   const logBlock = logTxt ? `<h2>minidump log</h2>\n<pre>${escapeHtml(logTxt)}</pre>` : "";
   const settingsBlock = settingsTxt ? `<h2>settings</h2>\n<pre>${escapeHtml(settingsTxt)}</pre>` : "";
   return `<!doctype html>
@@ -940,8 +1202,8 @@ function crashHtml(id: string, analyzeTxt: string): string {
   ${logTxt ? `<a href="/crash/${enc}.log">log.txt</a>` : ""}
   ${settingsTxt ? `<a href="/crash/${enc}.settings">settings.txt</a>` : ""}
 </nav>
-<h2>cdb !analyze</h2>
-<pre>${escapeHtml(analyzeTxt)}</pre>
+${summaryBlock}
+${analyzeBlock}
 ${logBlock}
 ${settingsBlock}
 `;
@@ -1092,10 +1354,7 @@ function handleCrashHttp(req: Request, rows: DumpRow[]): Response {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     }
-    if (!isAnalyzed(id)) {
-      return new Response("not found", { status: 404 });
-    }
-    const body = readFileSync(analyzePath(id), "utf8");
+    const body = isAnalyzed(id) ? readFileSync(analyzePath(id), "utf8") : "";
     if (ext === ".html") {
       return new Response(crashHtml(id, body), { headers: { "content-type": "text/html; charset=utf-8" } });
     }
@@ -1155,13 +1414,7 @@ async function main(): Promise<void> {
       throw new Error(`minidump '${id}' not in ${server}/app/${APP}/minidumps.txt`);
     }
     await ensureAnalyzed(server, row, reanalyze);
-    console.log(relAnalyze(row.id));
-    if (isLogExtracted(row.id)) {
-      console.log(relLog(row.id));
-    }
-    if (isSettingsExtracted(row.id)) {
-      console.log(relSettings(row.id));
-    }
+    process.stdout.write(readSummary(row.id));
   } else {
     await mapConcurrent(list, 4, async (row) => {
       try {
@@ -1174,6 +1427,7 @@ async function main(): Promise<void> {
     await mapConcurrent(list, cdbWorkers, async (row) => {
       try {
         await runAnalysis(row, reanalyze);
+        ensureSummary(row.id);
       } catch (e) {
         console.error(`${row.id}: analyze: ${e instanceof Error ? e.message : e}`);
       }
@@ -1196,6 +1450,8 @@ export {
   relAnalyze,
   relLog,
   relSettings,
+  summaryPath,
+  relSummary,
   extractDumpLog,
   isAnalyzed,
   isLogExtracted,
@@ -1203,7 +1459,10 @@ export {
   downloadDumpIfMissing,
   ensureSymbols,
   runAnalysis,
-  parseAnalyzeSummary,
+  writeSummary,
+  ensureSummary,
+  readSummary,
+  field,
 };
 
 if (import.meta.main) {
