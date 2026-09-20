@@ -78,11 +78,12 @@ The system print dialog has an **Advanced** tab (a second tab next to
 ### Windows 11: the "Advanced" tab is missing
 
 On Windows 11 (22H2 and later) Windows replaced the classic print dialog with a
-new "modern" one that does **not** show application-provided tabs. As a result
-SumatraPDF's **Advanced** options (and print preview) don't appear, even though
-SumatraPDF still asks for them.
+new "modern" one that does **not** show application-provided tabs. SumatraPDF
+puts the most used **Advanced** options in its **More settings** pane instead:
+**Page scaling** (the same four choices as above), **Center page horizontally**
+and **Rotate printout**. The paper-source options are not available there.
 
-You have two options:
+For the rest you have two options:
 
 1. **Use command-line printing** (below) — it doesn't depend on the dialog and
    exposes every Advanced option.

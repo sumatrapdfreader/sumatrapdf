@@ -85,9 +85,23 @@ using OptionChangedHandler =
 // so they only have to be unique within the print task
 static const WCHAR* kOptCenterHorizontally = L"sumatraCenterHorizontally";
 static const WCHAR* kOptExtraRotation = L"sumatraExtraRotation";
+static const WCHAR* kOptPageScaling = L"sumatraPageScaling";
 
 // item ids of the rotation option, which is also how its value comes back
 static const WCHAR* kRotationItems[] = {L"0", L"90", L"180", L"270"};
+
+// the page scaling option's items, in the Advanced tab's order
+struct ScaleItem {
+    const WCHAR* id;
+    PrintScaleAdv scale;
+    const char* label; // Tr() key, shared with the Advanced tab
+};
+static const ScaleItem kScaleItems[] = {
+    {L"shrink", PrintScaleAdv::Shrink, "&Shrink pages to printable area"},
+    {L"fit", PrintScaleAdv::Fit, "&Fit pages to printable area"},
+    {L"stretch", PrintScaleAdv::Stretch, "S&tretch pages to fill paper"},
+    {L"none", PrintScaleAdv::None, "&Actual size (1:1)"},
+};
 
 // The printer options the dialog offers, in the order it shows them. Unlike the
 // classic PrintDlgEx dialog, this one has no button that opens the driver's own
@@ -240,26 +254,51 @@ static bool UnboxBool(IInspectable* value, bool defVal) {
     return res != 0;
 }
 
-// the rotation option's value is the item id, i.e. "0", "90", "180" or "270"
-static int UnboxRotation(IInspectable* value, int defVal) {
+// an item list option's value is the id of the picked item; returns its index
+// in ids, or defIdx when the value isn't one of them
+static int UnboxItemIndex(IInspectable* value, const WCHAR* const* ids, int nIds, int defIdx) {
     ComPtr<Foundation::IPropertyValue> prop;
     if (!value || FAILED(value->QueryInterface(IID_PPV_ARGS(&prop)))) {
-        return defVal;
+        return defIdx;
     }
     HSTRING hstr = nullptr;
     if (FAILED(prop->GetString(&hstr)) || !hstr) {
-        return defVal;
+        return defIdx;
     }
     const WCHAR* str = gWinRt.windowsGetStringRawBuffer(hstr, nullptr);
-    int res = defVal;
-    for (int i = 0; str && i < dimofi(kRotationItems); i++) {
-        if (wstr::Eq(str, kRotationItems[i])) {
-            res = i * 90;
+    int res = defIdx;
+    for (int i = 0; str && i < nIds; i++) {
+        if (wstr::Eq(str, ids[i])) {
+            res = i;
             break;
         }
     }
     gWinRt.windowsDeleteString(hstr);
     return res;
+}
+
+// the rotation option's value is the item id, i.e. "0", "90", "180" or "270"
+static int UnboxRotation(IInspectable* value, int defVal) {
+    int idx = UnboxItemIndex(value, kRotationItems, dimofi(kRotationItems), -1);
+    return idx < 0 ? defVal : idx * 90;
+}
+
+static int ScaleItemIndex(PrintScaleAdv scale) {
+    for (int i = 0; i < dimofi(kScaleItems); i++) {
+        if (kScaleItems[i].scale == scale) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+static PrintScaleAdv UnboxScale(IInspectable* value, PrintScaleAdv defVal) {
+    const WCHAR* ids[dimofi(kScaleItems)];
+    for (int i = 0; i < dimofi(kScaleItems); i++) {
+        ids[i] = kScaleItems[i].id;
+    }
+    int idx = UnboxItemIndex(value, ids, dimofi(kScaleItems), -1);
+    return idx < 0 ? defVal : kScaleItems[idx].scale;
 }
 
 // the Advanced page's labels carry an accelerator marker the print dialog has
@@ -555,6 +594,10 @@ class PrintDocumentSource final
         value.Reset();
         if (SUCCEEDED(GetOptionValue(details.Get(), kOptExtraRotation, value))) {
             advanced.extraRotation = UnboxRotation(value.Get(), advanced.extraRotation);
+        }
+        value.Reset();
+        if (SUCCEEDED(GetOptionValue(details.Get(), kOptPageScaling, value))) {
+            advanced.scale = UnboxScale(value.Get(), advanced.scale);
         }
     }
 
@@ -936,6 +979,25 @@ class Win11PrintSession {
             int idx = (advanced.extraRotation / 90) % dimofi(kRotationItems);
             SetOptionStr(rotateOption.Get(), kRotationItems[idx]);
         }
+
+        ComPtr<OptDetails::IPrintOptionDetails> scaleOption;
+        if (SUCCEEDED(hr)) {
+            AutoDeleteHStr id(kOptPageScaling);
+            AutoDeleteHStr name(ToWStrTemp(Tr("Page scaling")).s);
+            hr = details->CreateItemListOption(id.h, name.h, &scaleOption);
+        }
+        if (SUCCEEDED(hr)) {
+            ComPtr<OptDetails::IPrintCustomItemListOptionDetails> items;
+            hr = scaleOption.As(&items);
+            for (int i = 0; SUCCEEDED(hr) && i < dimofi(kScaleItems); i++) {
+                AutoDeleteHStr itemId(kScaleItems[i].id);
+                AutoDeleteHStr name(OptionLabelTemp(Tr(kScaleItems[i].label)).s);
+                hr = items->AddItem(itemId.h, name.h);
+            }
+        }
+        if (SUCCEEDED(hr)) {
+            SetOptionStr(scaleOption.Get(), kScaleItems[ScaleItemIndex(advanced.scale)].id);
+        }
         if (FAILED(hr)) {
             return hr;
         }
@@ -999,6 +1061,8 @@ class Win11PrintSession {
         displayed->Append(center.h);
         AutoDeleteHStr rotate(kOptExtraRotation);
         displayed->Append(rotate.h);
+        AutoDeleteHStr scale(kOptPageScaling);
+        displayed->Append(scale.h);
         return S_OK;
     }
 
