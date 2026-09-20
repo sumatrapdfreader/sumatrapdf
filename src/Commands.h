@@ -323,8 +323,9 @@ enum {
     CmdReadAloudFromCursorPosition = 516,
     CmdToggleGrayscale = 517,
     CmdPrintSelection = 518,
+    CmdAutoGenerateTOC = 519,
 
-    CmdLast = 518,
+    CmdLast = 519,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

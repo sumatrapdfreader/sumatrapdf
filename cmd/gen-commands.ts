@@ -329,6 +329,7 @@ const commandsRaw = [
     "CmdReadAloudFromCursorPosition", "Start Reading From Cursor Position",
     "CmdToggleGrayscale", "Toggle Grayscale",
     "CmdPrintSelection", "Print Selection...",
+    "CmdAutoGenerateTOC", "Generate Table Of Contents",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

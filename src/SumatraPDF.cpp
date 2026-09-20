@@ -12401,6 +12401,21 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ExpandTocToCurrentPage(win);
             break;
 
+        case CmdAutoGenerateTOC: {
+            DisplayModel* fixed = win->AsFixed();
+            if (!fixed) {
+                break;
+            }
+            // shown when the headings arrive (TocChanged), or now if the
+            // document already has a TOC
+            win->CurrentTab()->showToc = true;
+            fixed->StartHeadingToc(HeadingTocStart::Always);
+            if (!EngineMupdfHeadingTocPending(fixed->GetEngine())) {
+                SetSidebarVisibility(win, true, gSettings->showFavorites);
+            }
+            break;
+        }
+
         case CmdStartAutoScroll:
             // start middle-click-style auto-scroll without needing a middle button
             StartAutoScrollAtCursor(win);

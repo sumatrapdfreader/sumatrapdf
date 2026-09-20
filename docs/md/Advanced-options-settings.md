@@ -237,6 +237,11 @@ ShowAnnotationAuthorInTooltip = false
 ; table-of-contents entries (introduced in version 3.7)
 ShowTocPageNumbers = true
 
+; if true, a PDF without an outline gets a table of contents built from numbered
+; headings in its text (Generate Table Of Contents command does it on demand)
+; (introduced in version 3.7)
+AutoGenerateTOC = false
+
 ; if true, show a list of frequently read documents when no document is loaded
 ShowStartPage = true
 

@@ -692,6 +692,13 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
+    if (cmdId == CmdAutoGenerateTOC) {
+        EngineBase* engine = ctx.tab ? ctx.tab->GetEngine() : nullptr;
+        if (!engine || !IsOfKind(engine, kindEngineMupdf)) {
+            return CommandVisibility::Hide;
+        }
+    }
+
     if (cmdId == CmdShowErrors) {
         EngineBase* engine = ctx.tab ? ctx.tab->GetEngine() : nullptr;
         if (!engine || !engine->HasErrors()) {

@@ -1491,6 +1491,12 @@ const globalPrefs: Field[] = [
     true,
     "if true, show page numbers (labels) right-aligned on bookmark / table-of-contents entries",
   ).ver("3.7"),
+  field(
+    "AutoGenerateTOC",
+    Bool,
+    false,
+    "if true, a PDF without an outline gets a table of contents built from numbered headings in its text (Generate Table Of Contents command does it on demand)",
+  ).ver("3.7"),
   field("ShowStartPage", Bool, true, "if true, show a list of frequently read documents when no document is loaded"),
   field(
     "SidebarDx",

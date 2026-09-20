@@ -89,6 +89,8 @@ struct Synchronizer;
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
    API and re-displaying things based on new display information */
+enum class HeadingTocStart;
+
 struct DisplayModel : DocController {
     DisplayModel(EngineBase* engine, DocControllerCallback* cb);
     DisplayModel(DisplayModel const&) = delete;
@@ -173,6 +175,7 @@ struct DisplayModel : DocController {
     bool EnsureMediaBoxesForVisiblePages();
     void EnsureMediaBoxForRender(int pageNo);
     void RelayoutKeepingView();
+    void StartHeadingToc(HeadingTocStart start);
 
     int GetRotation() const;
     float GetZoomReal(int pageNo) const;

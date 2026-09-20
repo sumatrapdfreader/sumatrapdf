@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { ControlCommand, runControlCommand } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
-function makePdf(opts: { outlines?: boolean }): Buffer {
+export function makePdf(opts: { outlines?: boolean }): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
   const page1 =
     "BT /F1 14 Tf 72 720 Td (I. Introduction) Tj ET\n" +
@@ -58,8 +58,12 @@ function makePdf(opts: { outlines?: boolean }): Buffer {
   return Buffer.concat(parts);
 }
 
-async function getToc(path: string): Promise<string> {
-  const [exitCode, raw] = await runControlCommand(EXE, ControlCommand.TestGetToc, [path]);
+// appdata: the heading scan is opt-in (AutoGenerateTOC, #6227)
+async function getToc(path: string, appdata: string): Promise<string> {
+  const [exitCode, raw] = await runControlCommand(EXE, ControlCommand.TestGetToc, [path], ["-appdata", appdata]);
+  if (exitCode !== 0 && String(raw ?? "").includes("no-toc")) {
+    return "";
+  }
   if (exitCode !== 0) {
     throw new Error(`issue-5724: TestGetToc failed: ${String(raw ?? "").trim()}`);
   }
@@ -73,7 +77,18 @@ export async function testit(): Promise<void> {
 
   const noOutline = join(dir, "no-outline.pdf");
   writeFileSync(noOutline, makePdf({ outlines: false }));
-  const got = await getToc(noOutline);
+
+  const off = join(dir, "off");
+  mkdirSync(off, { recursive: true });
+  const gotOff = await getToc(noOutline, off);
+  if (gotOff.trim() !== "") {
+    throw new Error(`issue-5724: headings must not be scanned by default (AutoGenerateTOC = false), got:\n${gotOff}`);
+  }
+
+  const on = join(dir, "on");
+  mkdirSync(on, { recursive: true });
+  writeFileSync(join(on, "SumatraPDF-settings.txt"), "AutoGenerateTOC = true\n");
+  const got = await getToc(noOutline, on);
   const expected = "I. Introduction|page=1\n" + "II. Methods|page=2\n" + "  II.A. Nested section|page=2\n";
   if (got !== expected) {
     throw new Error(`issue-5724: generated TOC mismatch.\nexpected:\n${expected}got:\n${got}`);
@@ -82,7 +97,7 @@ export async function testit(): Promise<void> {
 
   const withOutline = join(dir, "with-outline.pdf");
   writeFileSync(withOutline, makePdf({ outlines: true }));
-  const gotOutline = await getToc(withOutline);
+  const gotOutline = await getToc(withOutline, on);
   if (!gotOutline.includes("From File|page=1")) {
     throw new Error(`issue-5724: real outline should win, got:\n${gotOutline}`);
   }

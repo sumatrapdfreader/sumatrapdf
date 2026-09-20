@@ -123,7 +123,12 @@ bool EngineMupdfSupportsAnnotations(EngineBase*);
 bool EngineMupdfIsPdf(EngineBase* engine);
 bool EngineMupdfIsEncrypted(EngineBase* engine);
 bool EngineMupdfHeadingTocPending(EngineBase* engine);
-void EngineMupdfStartHeadingToc(EngineBase* engine, const Func0& onDone);
+// IfEnabled: only when the AutoGenerateTOC setting is on; Always: on demand
+enum class HeadingTocStart {
+    IfEnabled,
+    Always
+};
+void EngineMupdfStartHeadingToc(EngineBase* engine, const Func0& onDone, HeadingTocStart start);
 void EngineMupdfCancelHeadingToc(EngineBase* engine);
 Str EngineMupdfGetPassword(EngineBase* engine);
 bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& showErrorFunc);
@@ -172,6 +177,7 @@ void EngineMupdfGetFormFieldHighlightRects(EngineBase*, int pageNo, Annotation* 
 void EngineMupdfSetDisableJavaScript(bool disable);
 float EngineMupdfSetEbookLayoutAspect(float dyOverDx);
 void EngineMupdfSetAllowExternalImages(bool allow);
+void EngineMupdfSetAutoHeadingToc(bool enable);
 enum class AnnotAuthorVisibility {
     Hide,
     Show

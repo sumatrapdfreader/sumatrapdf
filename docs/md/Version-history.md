@@ -8,6 +8,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - **Reading Bar** (View menu, command palette): a horizontal band on the page to keep your place while reading, like Skim. Default is a translucent highlight; **Reading Bar Invert** dims the rest of the page (a screen mask). Drag the band to move it, drag the top or bottom edge to resize. Hover shows a close button. Ctrl+Up/Down move it, Ctrl+Shift+Up/Down change its height, Esc hides it (unless Automatically Scroll is on, in which case Esc stops scrolling first). Color, invert and height are in the `ReadingBar` settings. The bar is per tab and is not shown on Home (fixes #5771, discussion #3389)
 - `borderwidth` argument of `CmdCreateAnnot*` commands applies to line, polyline, polygon, square and circle, not only free text and ink (discussion #6208)
 - Right-clicking a toolbar button that has a drop-down (Zoom In / Zoom Out, Edit PDF Save, Read Aloud) opens that drop-down immediately if it is not already shown
+- Building Bookmarks from numbered headings for a PDF without an outline is now opt-in: `AutoGenerateTOC = true` does it on open, **Generate Table Of Contents** (`CmdAutoGenerateTOC`, command palette) does it on demand. Badly OCRed text made the automatic scan slow and its result useless (fixes #6227)
 - **Copy Location To Clipboard** (`CmdCopyLocationToClipboard`, command palette) copies where you are reading as command-line arguments that re-open it: page, zoom, scroll position and file path (discussion #6163)
 - **Save Selection As Image** (`CmdSaveSelectionAsImage`): with a rectangular (Ctrl+drag) selection, export that area as PNG, JPEG or BMP at a chosen DPI, independent of the current zoom (fixes #6127)
 - Printing at actual size (1:1): `-print-settings "dpi=<n>"` and the `PrinterDefaults.PrintDpi` advanced setting tell SumatraPDF the resolution of a scan / image whose file records none or a wrong one, so **Actual size (1:1)** (the print dialog's Advanced tab; the option was called "Use original page sizes") / `noscale` prints it at its real size. [Printing at actual size](Printing.md#printing-at-actual-size-11) explains where the size of an image comes from (fixes #6223)
@@ -277,6 +278,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 **New commands:**
 
+- `CmdAutoGenerateTOC` : "Generate Table Of Contents" — Bookmarks from numbered headings, on demand (fixes #6227)
 - `CmdApplyRedactions` : "Apply Redactions" — permanently removes content marked with the Redact tool
 - `CmdToggleEditPDF` : "Toggle Edit PDF" — shows or hides Edit PDF mode
 - `CmdUndo` : "Undo" — take back the last change to the PDF (`Ctrl + Z`)

@@ -775,7 +775,12 @@ DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocC
 
     engine->SetOnLayoutChanged(MkFunc0(OnEngineLayoutChanged, this));
 
-    EngineMupdfStartHeadingToc(engine, MkFunc0(OnHeadingTocDone, this));
+    StartHeadingToc(HeadingTocStart::IfEnabled);
+}
+
+// build Bookmarks from numbered headings for a document without an outline
+void DisplayModel::StartHeadingToc(HeadingTocStart start) {
+    EngineMupdfStartHeadingToc(engine, MkFunc0(OnHeadingTocDone, this), start);
 }
 
 // WindowMargin and PageSpacing are screen-space sizes written by the user at

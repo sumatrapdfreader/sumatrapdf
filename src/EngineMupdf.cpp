@@ -86,6 +86,13 @@ void EngineMupdfSetAllowExternalImages(bool allow) {
     gAllowExternalImages = allow;
 }
 
+// build a TOC from numbered headings when a document has no outline; set
+// from gSettings->autoGenerateTOC. CmdAutoGenerateTOC builds one regardless
+static bool gAutoHeadingToc = false;
+void EngineMupdfSetAutoHeadingToc(bool enable) {
+    gAutoHeadingToc = enable;
+}
+
 static bool gShowAnnotAuthorInTooltip = false;
 void EngineMupdfSetAnnotAuthorInTooltip(AnnotAuthorVisibility visibility) {
     gShowAnnotAuthorInTooltip = visibility == AnnotAuthorVisibility::Show;
@@ -103,9 +110,12 @@ bool EngineMupdfHeadingTocPending(EngineBase* engine) {
     return e && e->HeadingTocPending();
 }
 
-void EngineMupdfStartHeadingToc(EngineBase* engine, const Func0& onDone) {
+void EngineMupdfStartHeadingToc(EngineBase* engine, const Func0& onDone, HeadingTocStart start) {
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e) {
+        return;
+    }
+    if (start == HeadingTocStart::IfEnabled && !gAutoHeadingToc) {
         return;
     }
     e->headingTocDoneCb = onDone;
@@ -5673,7 +5683,7 @@ TocTree* EngineMupdf::GetToc() {
     // No DisplayModel (tests, -dump): generate headings now. The UI path starts
     // StartHeadingTocIfNeeded() instead so opening a long document does not
     // freeze the message loop. Skipped for a chaptered doc (see StartHeadingTocIfNeeded).
-    if (!outline && !headingTocStarted && !HasChapters()) {
+    if (gAutoHeadingToc && !outline && !headingTocStarted && !HasChapters()) {
         headingTocStarted = true;
         int idCounter = 0;
         TocItem* headings = GenerateTocFromHeadings(this, idCounter);
