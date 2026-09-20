@@ -384,24 +384,58 @@ static void SetBlitStretchMode(HDC hdc) {
     SetBrushOrgEx(hdc, 0, 0, nullptr);
 }
 
-static bool BlitDibBits(HDC hdc, Rect target, Rect source, const Pixmap* p) {
-    BITMAPINFO bmi{};
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = p->width;
-    bmi.bmiHeader.biHeight = -source.dy;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = p->format == PixmapFormat::BGR8 ? 24 : 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
+// Fills bmi's color table from a palette DIB section. Returns its bit depth,
+// 0 if hbmp isn't a <= 8bpp DIB.
+static int GetDibPalette(HBITMAP hbmp, BITMAPINFO* bmi) {
+    DIBSECTION ds{};
+    if (!hbmp || GetObject(hbmp, sizeof(ds), &ds) != sizeof(ds) || ds.dsBm.bmBitsPixel > 8) {
+        return 0;
+    }
+    HDC dc = CreateCompatibleDC(nullptr);
+    if (!dc) {
+        return 0;
+    }
+    HGDIOBJ old = SelectObject(dc, hbmp);
+    int n = 0;
+    if (old) {
+        n = (int)GetDIBColorTable(dc, 0, 1 << ds.dsBm.bmBitsPixel, bmi->bmiColors);
+        SelectObject(dc, old);
+    }
+    DeleteDC(dc);
+    if (n <= 0) {
+        return 0;
+    }
+    bmi->bmiHeader.biClrUsed = n;
+    return ds.dsBm.bmBitsPixel;
+}
+
+// A Native pixmap is a palette DIB (EngineMupdf renders low-color pages as
+// 8bpp): send it at its own depth, or GDI reads 4x past its bits.
+bool BlitPixmapDibBits(const Pixmap* p, HDC hdc, Rect target, Rect source) {
+    auto* bmi = (BITMAPINFO*)AllocArrayTemp<u8>(sizeofi(BITMAPINFO) + (255 * sizeofi(RGBQUAD)));
+    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi->bmiHeader.biWidth = p->width;
+    bmi->bmiHeader.biHeight = -source.dy;
+    bmi->bmiHeader.biPlanes = 1;
+    bmi->bmiHeader.biCompression = BI_RGB;
+    int bpp = p->format == PixmapFormat::BGR8 ? 24 : 32;
+    if (p->format == PixmapFormat::Native) {
+        bpp = GetDibPalette(p->hbmp, bmi);
+        if (bpp == 0) {
+            return false;
+        }
+    }
+    bmi->bmiHeader.biBitCount = (WORD)bpp;
     const u8* rows = p->data + ((size_t)source.y * p->stride);
     int n;
     // StretchDIBits even at 1:1 is what Xerox PCL turns into white stripes
     // (issue #919). SetDIBitsToDevice is a straight DIB transfer.
     if (target.dx == source.dx && target.dy == source.dy) {
         n = SetDIBitsToDevice(hdc, target.x, target.y, (DWORD)source.dx, (DWORD)source.dy, source.x, 0, 0,
-                              (UINT)source.dy, rows, &bmi, DIB_RGB_COLORS);
+                              (UINT)source.dy, rows, bmi, DIB_RGB_COLORS);
     } else {
         SetBlitStretchMode(hdc);
-        n = StretchDIBits(hdc, target.x, target.y, target.dx, target.dy, source.x, 0, source.dx, source.dy, rows, &bmi,
+        n = StretchDIBits(hdc, target.x, target.y, target.dx, target.dy, source.x, 0, source.dx, source.dy, rows, bmi,
                           DIB_RGB_COLORS, SRCCOPY);
     }
     return n != GDI_ERROR && n != 0;
@@ -444,7 +478,7 @@ bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source) {
         DeleteDC(bmpDC);
         return ok;
     }
-    return BlitDibBits(hdc, target, source, p);
+    return BlitPixmapDibBits(p, hdc, target, source);
 }
 
 bool BlitPixmap(Pixmap* p, HDC hdc, Rect target) {

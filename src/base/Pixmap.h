@@ -69,6 +69,7 @@ Pixmap* PixmapFromHICON(HICON);
 bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
 bool BlitPixmapAlpha(Pixmap* p, HDC hdc, Rect target);
 bool BlitPixmapRegion(Pixmap* p, HDC hdc, Rect target, Rect source);
+bool BlitPixmapDibBits(const Pixmap* p, HDC hdc, Rect target, Rect source);
 Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
 // an opaque 32bpp copy of a DIB-backed Pixmap, for code that needs to read pixels
 // out of one whose format is Native. Returns null if there's nothing to copy

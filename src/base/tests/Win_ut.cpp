@@ -241,6 +241,67 @@ static void BlitPixmapExactTest() {
     FreePixmap(heap);
 }
 
+// 8bpp palette DIB, what EngineMupdf renders low-color pages into. Color table:
+// 0 = red, 1 = blue; pixel (x, y) is index (x + y) % 2.
+static Pixmap* MakePaletteDib(int w, int h) {
+    auto* bmi = (BITMAPINFO*)AllocArrayTemp<u8>(sizeofi(BITMAPINFO) + (255 * sizeofi(RGBQUAD)));
+    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi->bmiHeader.biWidth = w;
+    bmi->bmiHeader.biHeight = -h;
+    bmi->bmiHeader.biPlanes = 1;
+    bmi->bmiHeader.biBitCount = 8;
+    bmi->bmiHeader.biCompression = BI_RGB;
+    bmi->bmiHeader.biClrUsed = 2;
+    bmi->bmiColors[0] = RGBQUAD{0, 0, 255, 0};
+    bmi->bmiColors[1] = RGBQUAD{255, 0, 0, 0};
+    void* bits = nullptr;
+    HBITMAP hbmp = CreateDIBSection(nullptr, bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!hbmp || !bits) {
+        DeleteObject(hbmp);
+        return nullptr;
+    }
+    Pixmap* p = PixmapFromHBITMAP(hbmp, Size(w, h));
+    for (int y = 0; y < h; y++) {
+        u8* d = p->data + ((size_t)y * p->stride);
+        for (int x = 0; x < w; x++) {
+            d[x] = (u8)((x + y) % 2);
+        }
+    }
+    return p;
+}
+
+// printer 1:1 route: a palette DIB must be sent with its own depth and
+// color table, not described as 32bpp (crash 2026-09-20-00-32-0ce1)
+static void BlitPaletteDibTest() {
+    const int w = 5;
+    const int h = 3;
+    Pixmap* src = MakePaletteDib(w, h);
+    utassert(src && src->data && src->format == PixmapFormat::Native);
+
+    Pixmap* dst = AllocPixmapDIB(w, h);
+    utassert(dst);
+    memset(dst->data, 0x7f, (size_t)dst->stride * (size_t)h);
+    HDC hdc = CreateCompatibleDC(nullptr);
+    HGDIOBJ old = SelectObject(hdc, dst->hbmp);
+    bool ok = BlitPixmapDibBits(src, hdc, Rect(0, 0, w, h), Rect(0, 0, w, h));
+    GdiFlush();
+    SelectObject(hdc, old);
+    DeleteDC(hdc);
+    utassert(ok);
+
+    for (int y = 0; y < h; y++) {
+        const u8* d = dst->data + ((size_t)y * dst->stride);
+        for (int x = 0; x < w; x++, d += 4) {
+            bool blue = ((x + y) % 2) == 1;
+            utassert(d[0] == (blue ? 255 : 0));
+            utassert(d[1] == 0);
+            utassert(d[2] == (blue ? 0 : 255));
+        }
+    }
+    FreePixmap(dst);
+    FreePixmap(src);
+}
+
 static void PixmapFromHICONAlphaTest() {
     HICON hicon = MakeMaskedRedIcon();
     utassert(hicon);
@@ -264,6 +325,7 @@ void WinUtilTest() {
     RecolorLinkAaTest();
     PixmapFromHICONAlphaTest();
     BlitPixmapExactTest();
+    BlitPaletteDibTest();
 
     {
         Str string = StrL("abcde");
