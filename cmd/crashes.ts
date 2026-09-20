@@ -1129,7 +1129,7 @@ function crashApiRow(row: DumpRow): ApiCrash {
   } else if (cond) {
     crashLine = cond;
   } else if (symbols) {
-    crashLine = `no symbols: ${symbols}`;
+    crashLine = "no symbols";
     srcLoc = exception;
   }
   return {
