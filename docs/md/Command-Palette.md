@@ -106,10 +106,12 @@ value: the query becomes `=<name> = <value>`, and
 - any other setting takes what you type, starting from the current value
 
 The change takes effect immediately, exactly as if it had been saved from
-Advanced Options - no restart. You can also type the whole thing at once, e.g.
-`=ZoomIncrement = 25`; the name can be the last part of a dotted setting
-(`Units` for `FixedPageUI.PageGrid.Units`) as long as only one setting ends
-with it.
+Advanced Options - no restart. The palette stays open and shows the settings
+again, so several can be changed in a row; `Esc` closes it. `Esc` while a value
+is being asked for goes back to the settings instead. You can also type the
+whole thing at once, e.g. `=ZoomIncrement = 25`; the name can be the last part
+of a dotted setting (`Units` for `FixedPageUI.PageGrid.Units`) as long as only
+one setting ends with it.
 
 ## Combined view
 

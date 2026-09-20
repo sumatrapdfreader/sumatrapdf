@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
-import { WM_KEYDOWN, VK_RETURN, getFocusedHwnd, postMessage, sendText, sleep } from "./winapi.ts";
+import { WM_KEYDOWN, VK_ESCAPE, VK_RETURN, getFocusedHwnd, postMessage, sendText, sleep } from "./winapi.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -75,11 +75,23 @@ async function typeQuery(client: ControlClient, frame: number, query: string, wa
   );
 }
 
-async function enter(client: ControlClient, frame: number, what: string, pred: (p: Palette) => boolean) {
+async function pressKey(client: ControlClient, frame: number, vk: number, what: string, pred: (p: Palette) => boolean) {
   const edit = await openPalette(client, frame);
-  postMessage(edit, WM_KEYDOWN, VK_RETURN, 0);
+  postMessage(edit, WM_KEYDOWN, vk, 0);
   return waitFor(client, what, pred);
 }
+
+async function enter(client: ControlClient, frame: number, what: string, pred: (p: Palette) => boolean) {
+  return pressKey(client, frame, VK_RETURN, what, pred);
+}
+
+async function escape(client: ControlClient, frame: number, what: string, pred: (p: Palette) => boolean) {
+  return pressKey(client, frame, VK_ESCAPE, what, pred);
+}
+
+// the palette is back in the setting-picking stage: query is "=" and the list
+// holds every setting again
+const backToSettings = (p: Palette) => p.open && p.queryLen === 1 && p.items > 1;
 
 // "name=value" for every setting that differs from its default
 async function nonDefaultSettings(client: ControlClient, frame: number): Promise<Map<string, string>> {
@@ -132,7 +144,11 @@ export async function testit(): Promise<void> {
     await typeQuery(client, frame, "=Toolbar =", 3);
     await typeQuery(client, frame, "=Toolbar = over", 1);
 
-    // apply one of each kind; a leaf name resolves to its full dotted path
+    // Esc in the value stage goes back to the settings, not out of the palette
+    await escape(client, frame, "Esc in the value stage did not return to the settings", backToSettings);
+
+    // apply one of each kind; a leaf name resolves to its full dotted path.
+    // The palette stays open, showing the settings again
     for (const q of [
       "=ZoomIncrement = 25",
       "=ToolbarPosition = bottom",
@@ -141,8 +157,9 @@ export async function testit(): Promise<void> {
       "=SmoothScroll",
     ]) {
       await typeQuery(client, frame, q, 1);
-      await enter(client, frame, `'${q}' did not close the palette`, (p) => !p.open);
+      await enter(client, frame, `'${q}' did not return to the settings`, backToSettings);
     }
+    await escape(client, frame, "Esc in the settings stage did not close the palette", (p) => !p.open);
 
     const want: Record<string, string> = {
       ZoomIncrement: "25",

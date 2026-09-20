@@ -163,6 +163,8 @@ struct CommandPaletteWnd : WindowBase {
     void SwitchToFavorites();
     void SwitchToSettings();
     void BeginEditSettingValue(Str path);
+    void ReturnToSettings();
+    bool IsEditingSettingValue();
     void FillSettingValueRows(Str path, Str value, StrVecCP& out);
     void SetThumbnailMode(ThumbnailMode mode);
     void OnSelectionChange();
@@ -180,6 +182,7 @@ void ScheduleDeleteAndExecCommand(i32 cmdId = 0);
 void SafeDeleteCommandPaletteWnd();
 void PositionCommandPalette(HWND hwnd, HWND hwndRelative);
 static TempStr FormatSettingValueTemp(SettingType type, const u8* p);
+static bool SplitSettingValueQuery(Str query, Str& path, Str& value);
 
 // clang-format off
 static i32 gCommandsNoActivate[] = {
@@ -1035,6 +1038,23 @@ void CommandPaletteWnd::BeginEditSettingValue(Str path) {
                         fmt("%s%s %s %s", Str(kPalettePrefixBoolSettings), path, Str(kPaletteSettingValueSep), value));
 }
 
+// Back to the setting-picking stage. Applying a value reloads gSettings, so
+// every row pointing into it (settings, file history, favorites) is rebuilt.
+void CommandPaletteWnd::ReturnToSettings() {
+    CollectStrings(win);
+    SwitchToSettings();
+}
+
+// true in the "=<path> = <value>" stage
+bool CommandPaletteWnd::IsEditingSettingValue() {
+    Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
+    if (!str::TrimPrefix(filter, Str(kPalettePrefixBoolSettings))) {
+        return false;
+    }
+    Str path, value;
+    return SplitSettingValueQuery(filter, path, value);
+}
+
 void CommandPaletteWnd::OnActivate(WindowBase::ActivateEvent* ev) {
     if (ev->state == WA_INACTIVE) {
         // -for-testing runs in the background, so this popup never stays
@@ -1157,6 +1177,11 @@ bool CommandPaletteWnd::RemoveSelectedItem() {
 
 void CommandPaletteWnd::OnKeyDown(KeyEvent* ev) {
     if (ev->vkey == VK_ESCAPE) {
+        if (IsEditingSettingValue()) {
+            ReturnToSettings();
+            ev->didHandle = true;
+            return;
+        }
         ScheduleDeleteAndExecCommand();
         ev->didHandle = true;
         return;
@@ -1315,12 +1340,12 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         if (len(data->settingPath) > 0) {
             // a value picked for a setting: the row text is the value
             SetSettingsValueFromStr(data->settingPath, itemText);
-            ScheduleDeleteAndExecCommand();
+            ReturnToSettings();
             return;
         }
         if (data->settingType == SettingType::Bool) {
             ToggleSettingsBool((bool*)data->settingPtr);
-            ScheduleDeleteAndExecCommand();
+            ReturnToSettings();
             return;
         }
         // anything else needs a value: stay open and ask for one
