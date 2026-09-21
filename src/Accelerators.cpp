@@ -588,7 +588,8 @@ bool Accelerators_UnitTestTreeTakesLetters() {
     pgDn.fVirt = FVIRTKEY;
     pgDn.key = VK_NEXT;
     pgDn.cmd = (WORD)CmdScrollDownPage;
-    if (isSafeTreeAccel(pgDn)) {
+    // PageDown scrolls the document even from the tree (issue #1841)
+    if (!isSafeTreeAccel(pgDn)) {
         return false;
     }
     ACCEL enter{};
