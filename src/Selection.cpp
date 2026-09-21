@@ -700,6 +700,23 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
     return s;
 }
 
+// takes px. The engine renders a page with few colors to an 8-bit palette DIB
+// (or 24bpp); the rows are combined below as 32bpp
+static Pixmap* PixmapAs32bppDIB(Pixmap* px) {
+    if (!px) {
+        return nullptr;
+    }
+    if (!px->hbmp) {
+        return PixmapFromRenderedBitmap(RenderedBitmapFromPixmap(px));
+    }
+    if (px->format == PixmapFormat::BGRA8) {
+        return px;
+    }
+    Pixmap* dib = PixmapCopyAs32bppDIB(px);
+    FreePixmap(px);
+    return dib;
+}
+
 RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections) {
     if (!dm || len(selections) == 0) {
         return nullptr;
@@ -717,15 +734,7 @@ RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<Sel
         float zoom = dm->GetZoomReal(selection.pageNo);
         RectF rect = selection.rect;
         RenderPageArgs args(selection.pageNo, zoom, dm->GetRotation(), &rect, RenderTarget::Export);
-        Pixmap* pixmap = dm->GetEngine()->RenderPage(args);
-        if (!pixmap) {
-            continue;
-        }
-        RenderedBitmap* rendered = RenderedBitmapFromPixmap(pixmap);
-        if (!rendered) {
-            continue;
-        }
-        Pixmap* dib = PixmapFromRenderedBitmap(rendered);
+        Pixmap* dib = PixmapAs32bppDIB(dm->GetEngine()->RenderPage(args));
         if (!dib) {
             continue;
         }

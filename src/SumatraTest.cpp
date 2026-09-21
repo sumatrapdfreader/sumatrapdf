@@ -2620,3 +2620,55 @@ TempStr SeedTextSelectionResultTemp(int pageNo, int* exitCodeOut) {
     }
     return ToStrTemp(out);
 }
+
+// Renders a blank strip of pages 1 and 2 as one selection image and counts
+// its white pixels. Used by tests/render-selections-8bpp.ts.
+TempStr RenderSelectionsResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm || dm->PageCount() < 2) {
+        return fail(StrL("NOTREADY need-two-pages"), 2);
+    }
+
+    Vec<SelectionOnPage> sels;
+    RectF r(72, 300, 200, 40);
+    VecAppend(sels, SelectionOnPage(1, &r, nullptr));
+    VecAppend(sels, SelectionOnPage(2, &r, nullptr));
+    RenderedBitmap* rb = RenderSelectionsAsRenderedBitmap(dm, sels);
+    Pixmap* px = PixmapFromRenderedBitmap(rb);
+    if (!px || !px->data) {
+        FreePixmap(px);
+        return fail(StrL("ERROR no-bitmap"));
+    }
+    int white = 0;
+    int total = px->width * px->height;
+    if (px->format == PixmapFormat::BGRA8) {
+        for (int y = 0; y < px->height; y++) {
+            const u32* row = (const u32*)(px->data + ((size_t)y * px->stride));
+            for (int x = 0; x < px->width; x++) {
+                if ((row[x] & 0xffffff) == 0xffffff) {
+                    white++;
+                }
+            }
+        }
+    }
+    TempStr res = fmt("OK w=%d h=%d format=%d white=%d total=%d", px->width, px->height, (int)px->format, white, total);
+    FreePixmap(px);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return res;
+}

@@ -908,6 +908,7 @@ enum class ControlCmd : u16 {
     TestSaveFileAs = 105,
     TestImageOrientation = 106,
     TestTtsPumpOnSpeak = 107,
+    TestRenderSelections = 108,
 };
 
 enum class ControlArgType : u16 {
@@ -2226,6 +2227,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 0, layoutChapter); // optional
             int exitCode = 0;
             Str res = RenumberSelResultTemp(layoutChapter, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRenderSelections: {
+            int exitCode = 0;
+            Str res = RenderSelectionsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

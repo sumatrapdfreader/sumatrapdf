@@ -41,3 +41,4 @@ TempStr ChapterInfoResultTemp(int* exitCodeOut = nullptr);
 TempStr GoToLocationResultTemp(int chapter, int page, int* exitCodeOut = nullptr);
 TempStr HiddenTabGoToPageResultTemp(int* exitCodeOut = nullptr);
 TempStr SeedTextSelectionResultTemp(int pageNo, int* exitCodeOut = nullptr);
+TempStr RenderSelectionsResultTemp(int* exitCodeOut = nullptr);
