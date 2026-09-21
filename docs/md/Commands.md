@@ -145,6 +145,7 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdCloseAllTabs,,Close All Tabs,ver 3.6+
 CmdCloseTabsToTheLeft,,Close Tabs To The Left,ver 3.6+
 CmdCloseTabsToTheRight,,Close Tabs To The Right,ver 3.6+
+CmdGoToHomePage,,Go To Home Page,"switches to the Home tab; adds it as the first tab when `NoHomeTab` removed it (fixes #6228), ver 3.7+"
 CmdCloseOtherTabs,,Close Other Tabs,ver 3.6+
 CmdNextTab,Ctrl + PageUp,Next Tab,
 CmdPrevTab,Ctrl + PageDown,Previous Tab,

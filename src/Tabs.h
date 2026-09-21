@@ -14,6 +14,7 @@ void TabsOnCloseWindow(MainWindow*);
 void TabsOnChangedDoc(MainWindow*);
 void UpdateTabPageText(WindowTab*);
 void TabsSelect(MainWindow* win, int tabIndex);
+void GoToHomeTab(MainWindow*);
 void TabsOnCtrlTab(MainWindow* win, bool reverse);
 void UpdateTabWidth(MainWindow*);
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);

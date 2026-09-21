@@ -81,6 +81,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     CmdToggleGrayscale,
     CmdFavoriteToggle,
     CmdFavoriteShowInTab,
+    CmdGoToHomePage,
     CmdShowLog,
     CmdClearHistory,
     CmdRemoveDeletedFilesFromHistory,
@@ -562,6 +563,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
         bool enabled = ctx.tab && ctx.tab->win && HasOpenedDocuments(ctx.tab->win);
         return enabled ? CommandVisibility::Show : CommandVisibility::Disable;
+    }
+    if (cmdId == CmdGoToHomePage) {
+        return SettingsUseTabs() ? CommandVisibility::Show : CommandVisibility::Hide;
     }
     if (cmdId == CmdNextTab || cmdId == CmdPrevTab || cmdId == CmdNextTabSmart || cmdId == CmdPrevTabSmart ||
         cmdId == CmdMoveTabLeft || cmdId == CmdMoveTabRight) {
