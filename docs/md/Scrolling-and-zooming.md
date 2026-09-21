@@ -104,6 +104,7 @@ Actions that add navigation points:
 - clicking on links within documents
 - going to a page via Bookmarks tree view
 - navigating via favorites (`Ctrl + b`)
+- starting a search (`Ctrl + f`): the view the search started from, once per search, so `Backspace` returns there after find-as-you-type and Find Next moved through matches
 
 ## Navigating between tabs
 

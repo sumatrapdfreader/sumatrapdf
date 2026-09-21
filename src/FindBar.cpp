@@ -760,6 +760,7 @@ void ShowFindBar(MainWindow* win) {
 }
 
 void HideFindBar(MainWindow* win) {
+    win->searchStartMarked = false;
     // drop the cached results: they belong to this search/document and must not
     // be shown or navigated into after the find UI is reopened (e.g. on another
     // tab, which would carry the previous document's page/glyph coordinates)

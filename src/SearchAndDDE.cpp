@@ -146,6 +146,21 @@ static DocController* BrowserFindCtrl(MainWindow* win) {
     return nullptr;
 }
 
+// A find session's first real search records the view it starts from: as the
+// session-only "/" favorite (#5862) and as a nav point, so Back returns there
+// even after find-as-you-type moved through intermediate matches (#6230).
+// The session ends when the find UI is closed or reopened from the document.
+static void MarkSearchStart(MainWindow* win) {
+    if (win->searchStartMarked) {
+        return;
+    }
+    win->searchStartMarked = true;
+    SetSearchStartFavorite(win);
+    if (DisplayModel* dm = win->AsFixed()) {
+        dm->AddNavPoint();
+    }
+}
+
 // start a new find in the browser-hosted (chm / markdown) webview for the
 // find bar's text: highlight
 // the current page and sweep all pages for the match list. Results arrive
@@ -156,8 +171,7 @@ static void BrowserFindStartSearch(MainWindow* win, DocController* md) {
         return;
     }
     RememberFindQuery(term);
-    // intentional search start (Sioyek-style "/" mark; session-only, #5862)
-    SetSearchStartFavorite(win);
+    MarkSearchStart(win);
     str::ReplaceWithCopy(&win->browserFindTerm, term);
     ClearFindMatches(win); // also resets browserFindPageCurrent / browserFindCurrent / browserFindTotal
     win->browserFindGen++;
@@ -361,6 +375,9 @@ void FindFirst(MainWindow* win) {
         return;
     }
     bool hadFindFocus = win->findEdit && win->findEdit->IsFocused();
+    if (!hadFindFocus) {
+        win->searchStartMarked = false;
+    }
 
     if (BrowserFindCtrl(win)) {
         // chm / markdown in a webview: our own find bar drives the search
@@ -430,7 +447,7 @@ static void StartIncrementalFind(MainWindow* win) {
     }
     // find-as-you-type is an intentional search start even when Edit_GetModify
     // is false (e.g. Ctrl+F copied selection via HwndSetText after SetLastResult)
-    SetSearchStartFavorite(win);
+    MarkSearchStart(win);
     // the full-document count (n/m + results list) is kicked from FindEndTask,
     // after this find thread exits, so the two never touch the engine's text
     // extraction concurrently (mupdf isn't safe for that)
@@ -735,22 +752,30 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
     AbortFinding(win, false); // cancel "find as you type"
     dm->textSearch->SetLastResult(dm->textSelection);
 
-    // wasModified stays false so FindNext continues from the selection; still
-    // record the search-start page as session-only favorite "/" (#5726 / #5862)
-    SetSearchStartFavorite(win);
+    // wasModified stays false so FindNext continues from the selection; the
+    // search itself is a new session starting at the selection
+    win->searchStartMarked = false;
+    MarkSearchStart(win);
     FindTextOnThread(win, direction, true);
 }
 
-static void ShowSearchResult(MainWindow* win, TextSel* result, bool addNavPt) {
+// goToPage: scroll to the match's page even when it's already shown (a new
+// search). Moving between matches never adds a nav point: the search's start
+// view is already in the history (MarkSearchStart), so Back returns there
+static void ShowSearchResult(MainWindow* win, TextSel* result, bool goToPage) {
     ReportIf(0 == result->len || !result->pages || !result->rects);
     if (0 == result->len || !result->pages || !result->rects) {
         return;
     }
 
     DisplayModel* dm = win->AsFixed();
-    if (addNavPt || !dm->PageShown(result->pages[0]) ||
+    if (goToPage || !dm->PageShown(result->pages[0]) ||
         (dm->GetZoomVirtual() == kZoomFitPage || dm->GetZoomVirtual() == kZoomFitContent)) {
-        win->ctrl->GoToPage(result->pages[0], addNavPt);
+        // nor must dwelling on a match turn it into a history entry
+        bool suppress = dm->stableNavPoint.suppress;
+        dm->stableNavPoint.suppress = true;
+        win->ctrl->GoToPage(result->pages[0], false);
+        dm->stableNavPoint.suppress = suppress;
     }
 
     // Find never changes the text selection: all matches (including the active
@@ -1736,10 +1761,10 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
     if (!str::Eq(searchText, dm->textSearch->lastText)) {
         wasModified = true;
     }
-    // New/changed term: record search-start page as session-only favorite "/"
-    // (issue #5726 / #5862). Find Next/Prev for the same term does not update it.
+    // a new/changed term starts a search if the find UI didn't (e.g. F3 after
+    // a tab switch); Find Next/Prev for the same term doesn't
     if (wasModified) {
-        SetSearchStartFavorite(win);
+        MarkSearchStart(win);
     }
     FindThreadData* ftd = new FindThreadData(win, direction, text, wasModified);
     ftd->ShowUI(showProgress);
@@ -1766,6 +1791,7 @@ void StartSearchFromCommandLine(MainWindow* win, Str text) {
     // Command-line search should leave the same find UI visible as Ctrl+F,
     // with the search term ready for another search or navigation (#6067).
     ShowFindBar(win);
+    win->searchStartMarked = false;
     if (win->findEdit) {
         win->findEdit->SetText(text);
     }

@@ -604,6 +604,9 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // search a short while after the last keystroke (see SearchAndDDE.cpp).
     // true while that timer is armed and hasn't fired yet.
     bool findDebouncePending = false;
+    // the current find session already recorded its start view (see
+    // MarkSearchStart in SearchAndDDE.cpp)
+    bool searchStartMarked = false;
 
     // find bar "n / m" match counter (see SearchAndDDE.cpp). The positions of all
     // matches for findCountText are cached so prev/next is instant; a background
