@@ -1635,6 +1635,13 @@ const globalPrefs: Field[] = [
         "Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, " +
         "GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, Ayu, Palenight, System",
     ),
+  field(
+    "HelpTheme",
+    Str,
+    "app",
+    "color theme of the in-app manual (F1): app (follow the app's theme), light or dark. " +
+      "The switch in the manual's top-right corner changes it",
+  ).ver("3.7"),
   // remembered by the light/dark toggle and System theme; not user-facing knobs
   field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to")
     .internal()
@@ -1986,6 +1993,7 @@ const globalPrefsLayout = [
   "Theme",
   "LastLightTheme",
   "LastDarkTheme",
+  "HelpTheme",
   "DocumentColorsFollowTheme",
   "ToolbarCustomLayout",
   "TreeFontName",

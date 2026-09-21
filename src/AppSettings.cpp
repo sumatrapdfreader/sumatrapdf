@@ -1372,6 +1372,7 @@ static const char* gEnumPrinterUI[] = {"", "auto", "modern", "classic", nullptr}
 static const char* gEnumPrintScale[] = {"shrink", "fit", "none", nullptr};
 static const char* gEnumCollate[] = {"default", "collate", "nocollate", nullptr};
 static const char* gEnumFreeTextAlignment[] = {"left", "center", "right", nullptr};
+static const char* gEnumHelpTheme[] = {"app", "light", "dark", nullptr};
 
 struct EnumSettingDef {
     const char* name; // full path or leaf name (last dotted segment)
@@ -1393,6 +1394,7 @@ static const EnumSettingDef gEnumSettings[] = {
     {"PrintScale", gEnumPrintScale},
     {"Collate", gEnumCollate},
     {"FreeTextAlignment", gEnumFreeTextAlignment},
+    {"HelpTheme", gEnumHelpTheme},
 };
 // clang-format on
 

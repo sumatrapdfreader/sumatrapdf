@@ -11046,33 +11046,77 @@ static TempStr ManualArchiveLookupPathTemp(Str path) {
     return lookupPath;
 }
 
-// The website stylesheet deliberately leaves the page canvas transparent and
-// uses inherited colors for most prose. Add the current app theme after its
-// stylesheets so the in-app Manual matches its native window without changing
-// the files served on sumatrapdfreader.org.
+static const char* kHelpThemeValues[] = {"app", "light", "dark"};
+
+// HelpTheme setting, "app" unless it holds one of the known values
+static Str HelpThemePref() {
+    for (const char* v : kHelpThemeValues) {
+        if (str::EqI(gSettings->helpTheme, Str(v))) {
+            return Str(v);
+        }
+    }
+    return StrL("app");
+}
+
+// theme.js reports a click on the manual's switch via
+// window.__sumatra__.notify("manualTheme", "<system|light|dark>")
+static void ManualOnJsNotify(void*, Str method, Str paramsJson) {
+    if (!str::Eq(method, StrL("manualTheme"))) {
+        return;
+    }
+    // params is a JSON array with one string, e.g. ["dark"]; "system" is what
+    // theme.js calls the follow-the-app option
+    Str v{};
+    if (str::Contains(paramsJson, StrL("\"system\""))) {
+        v = StrL("app");
+    }
+    for (const char* known : kHelpThemeValues) {
+        if (str::Contains(paramsJson, fmt("\"%s\"", Str(known)))) {
+            v = Str(known);
+        }
+    }
+    if (len(v) == 0 || str::Eq(gSettings->helpTheme, v)) {
+        return;
+    }
+    str::ReplaceWithCopy(&gSettings->helpTheme, v);
+    ScheduleSaveSettings();
+}
+
+// The manual's theme switch (docs/theme.js) has a third option that follows the
+// app: announce the app's scheme and the HelpTheme setting before the script
+// runs, and hand the exact window colors to manual.css so "app" mode matches
+// the native window.
 static Str ManualInjectThemeCss(Str html) {
     TempStr bg = SerializeColorTemp(ThemeWindowBackgroundColor());
     TempStr fg = SerializeColorTemp(ThemeWindowTextColor());
     TempStr link = SerializeColorTemp(ThemeWindowLinkColor());
-    Str colorScheme = IsLightColor(ThemeWindowBackgroundColor()) ? StrL("light") : StrL("dark");
+    Str scheme = IsLightColor(ThemeWindowBackgroundColor()) ? StrL("light") : StrL("dark");
+    // theme.js calls the follow-the-app option "system"
+    Str pref = HelpThemePref();
+    if (str::Eq(pref, StrL("app"))) {
+        pref = StrL("system");
+    }
+    TempStr script =
+        fmt("<script>window.SumatraAppTheme=\"%s\";window.SumatraManualTheme=\"%s\"</script>", scheme, pref);
     TempStr css =
         fmt("<style id=\"sumatra-manual-theme\">"
-            ":root{color-scheme:%s}"
-            "html,body{background-color:%s;color:%s}"
-            "a:not(.hlink){color:%s}"
-            ".sidebar-toc a{color:%s}"
+            "html[data-theme-pref=\"system\"]{--bg-primary:%s;--bg-elevated:%s;--text-primary:%s;--link-color:%s}"
             "</style>",
-            colorScheme, bg, fg, link, fg);
+            bg, bg, fg, link);
 
-    int insertAt = str::IndexOfI(html, StrL("</head>"));
-    if (insertAt < 0) {
-        insertAt = 0;
+    int scriptAt = str::IndexOfI(html, StrL("<head>"));
+    scriptAt = scriptAt < 0 ? 0 : scriptAt + len(StrL("<head>"));
+    int cssAt = str::IndexOfI(html, StrL("</head>"));
+    if (cssAt < scriptAt) {
+        cssAt = scriptAt;
     }
     str::Builder result;
-    result.Reserve(len(html) + len(css));
-    result.Append(Str(html.s, insertAt));
+    result.Reserve(len(html) + len(script) + len(css));
+    result.Append(Str(html.s, scriptAt));
+    result.Append(script);
+    result.Append(Str(html.s + scriptAt, cssAt - scriptAt));
     result.Append(css);
-    result.Append(Str(html.s + insertAt, len(html) - insertAt));
+    result.Append(Str(html.s + cssAt, len(html) - cssAt));
     return result.TakeStr();
 }
 
@@ -11215,6 +11259,7 @@ void LaunchDocumentation(Str docURI) {
             // closing here means that UI can never see it (issues #5942, #6084).
             // F1 opened the window and F1 dismisses it, Ctrl+W too.
             gManualBrowserWindow->closeOnF1 = true;
+            gManualBrowserWindow->webView->events.jsNotify = ManualOnJsNotify;
             gManualBrowserWindow->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnCloseManualBrowserWindow);
             gManualBrowserWindow->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroyManualBrowserWindow);
             gManualBrowserWindow->onPosChanged = MkFunc0Void(SaveManualBrowserPosNow);

@@ -351,6 +351,11 @@ TabWidth = 300
 ; Ayu, Palenight, System (introduced in version 3.5)
 Theme = Light
 
+; color theme of the in-app manual (F1): app (follow the app's theme), light or
+; dark. The switch in the manual's top-right corner changes it (introduced in
+; version 3.7)
+HelpTheme = app
+
 ; the light theme the light/dark toggle and the System theme switch to
 ; (introduced in version 3.7)
 LastLightTheme = 

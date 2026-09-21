@@ -1,0 +1,232 @@
+/* Theme for the in-app manual (F1) and the local preview. Mirrors the color
+   variables and dark rules of the website's website.css so the shared
+   sumatra.css needs no changes. */
+:root {
+  --border: rgb(234, 234, 234);
+  --bg-primary: #ffffff;
+  --bg-elevated: #ffffff;
+  --text-primary: rgb(35 35 35);
+  --text-secondary: #6b6b6b;
+  --link-color: inherit;
+  --nav-track-bg: #f3f3f1;
+  --nav-track-border: #e6e6e2;
+  --nav-btn-color: #333;
+  --search-bg: #f7f7f7;
+  --search-border: #ddd;
+  --search-color: #555;
+  --kbd-bg: #f7f7f7;
+  --kbd-border: #ccc;
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  --border: #2c2c2c;
+  --bg-primary: #121212;
+  --bg-elevated: #1a1a1a;
+  --text-primary: #e8e8e6;
+  --text-secondary: #c8c8c4;
+  --nav-track-bg: #1e1e1e;
+  --nav-track-border: #2e2e2e;
+  --nav-btn-color: #ddd;
+  --search-bg: #1e1e1e;
+  --search-border: #333;
+  --search-color: #bbb;
+  --kbd-bg: #1e1e1e;
+  --kbd-border: #444;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+a:not(.hlink) {
+  color: var(--link-color);
+}
+
+.sidebar-toc {
+  border-right-color: var(--border);
+}
+
+.sidebar-toc a {
+  color: var(--text-secondary);
+}
+
+.sidebar-toc a:hover,
+.sidebar-toc a.toc-current {
+  color: var(--text-primary);
+}
+
+/* Theme switch: current theme only; hover / focus expands to all three. */
+.manual-theme-switch {
+  position: fixed;
+  top: 6px;
+  right: 14px;
+  z-index: 60;
+}
+
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .theme-switch {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.theme-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.theme-opt svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: block;
+  flex-shrink: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .theme-switch {
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .theme-switch .theme-opt:not([aria-pressed="true"]) {
+    width: 0;
+    min-width: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .theme-switch:is(:hover, :focus-within):not(.is-locked) {
+    gap: 2px;
+  }
+
+  .theme-switch:is(:hover, :focus-within):not(.is-locked) .theme-opt:not([aria-pressed="true"]) {
+    width: 2rem;
+    min-width: 2rem;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.theme-opt:hover {
+  color: var(--text-primary);
+}
+
+.theme-opt-active,
+.theme-opt[aria-pressed="true"] {
+  background: #fff;
+  color: #111;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="dark"] .theme-opt-active,
+html[data-theme="dark"] .theme-opt[aria-pressed="true"] {
+  background: #374151;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* Dark rules for the docs prose, from website.css */
+html[data-theme="dark"] .search-trigger-2 {
+  background-color: #1e1e1e;
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] kbd {
+  background: var(--kbd-bg);
+  border-color: var(--kbd-border);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .code,
+html[data-theme="dark"] code {
+  background: #1e1e1e;
+  color: #d0d0cc;
+}
+
+html[data-theme="dark"] pre {
+  background: #1e1e1e;
+}
+
+html[data-theme="dark"] pre code.hljs {
+  background: transparent;
+  color: #e6edf3;
+}
+
+html[data-theme="dark"] .code > code {
+  background: none;
+  color: inherit;
+}
+
+html[data-theme="dark"] .sum-code-copy-btn {
+  background: #2a2a2a;
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] table,
+html[data-theme="dark"] th,
+html[data-theme="dark"] td {
+  border-color: #8a8a86;
+}
+
+html[data-theme="dark"] th {
+  color: #e8e8e6;
+  background-color: #242424;
+}
+
+html[data-theme="dark"] .toc-mini:hover,
+html[data-theme="dark"] .toc-wrapper.toc-open > .toc-mini {
+  background-color: #2a2a2a;
+}
+
+html[data-theme="dark"] .toc-list {
+  background-color: #1e1e1e;
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    rgba(0, 0, 0, 0.55) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.45) 0px 3px 6px,
+    rgba(0, 0, 0, 0.6) 0px 9px 24px;
+}
+
+html[data-theme="dark"] .toc-list::-webkit-scrollbar-thumb {
+  background-color: #555;
+}
+
+html[data-theme="dark"] .toc-list::-webkit-scrollbar-track {
+  background-color: #1a1a1a;
+}
+
+html[data-theme="dark"] .toc-item:hover {
+  background-color: #2e2e2e;
+}
+
+html[data-theme="dark"] .toc-light {
+  color: #5c5c5c;
+}

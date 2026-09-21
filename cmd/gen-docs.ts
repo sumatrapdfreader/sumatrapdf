@@ -27,6 +27,8 @@ const kExcludeFromAllDocs = new Set(["SumatraPDF-all-docs-for-llm-ai.md"]);
 
 const kManualStaticFiles = [
   "sumatra.css",
+  "manual.css",
+  "theme.js",
   "gen_toc.js",
   "gen_code_copy.js",
   "gen_docs.fulltext_search.js",
