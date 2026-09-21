@@ -29,7 +29,7 @@ You can add more web services using [advanced settings](https://www.sumatrapdfre
 
 To configure a selection handler:
 
-- use the `Settings / Advanced Settings...` menu to open the configuration file
+- open the configuration file: Command Palette (`Ctrl + K`), select `Open Settings File...`
 - modify the `SelectionHandlers` section
 
 Here is an example that adds the [DuckDuckGo](https://duckduckgo.com/) search engine:

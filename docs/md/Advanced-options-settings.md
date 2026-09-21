@@ -4,10 +4,12 @@ SumatraPDF has many [advanced settings](https://www.sumatrapdfreader.org/setting
 
 To edit advanced settings:
 
-- menu `Settings` / `Advanced options...` opens a dialog for viewing and editing them
+- menu `Settings` / `Advanced Options...` opens a dialog for viewing and editing them
 - or with Command Palette: `Ctrl + K`, type `adv` to narrow down to command, press `Enter` to select `Advanced Options...` command
 
-To edit the settings file directly, use Command Palette: `Ctrl + K`, type `open settings`, press `Enter` to select `Open Settings File...` command. This opens the settings text file in default .txt editor. Make changes and save the file.
+The dialog edits single values (booleans, numbers, strings, colors, enums, compact ones like `WindowMargin`). Lists (`Shortcuts`, `Themes`, `ExternalViewers`, `SelectionHandlers`, ...) are edited in the settings file.
+
+To edit the settings file directly, use Command Palette: `Ctrl + K`, type `open settings`, press `Enter` to select `Open Settings File...` command (or the **Open Settings File** button in the dialog). This opens the settings text file in default .txt editor. Make changes and save the file.
 
 To reset to default settings, delete settings file. SumatraPDF will re-create it with default values.
 

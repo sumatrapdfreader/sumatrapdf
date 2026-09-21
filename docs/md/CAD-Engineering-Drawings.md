@@ -26,7 +26,7 @@ EngineeringDrawingEnhance = off
 
 - **Advanced Settings** dialog: `Settings` → **Advanced Settings...**, filter `EngineeringDrawingEnhance`, pick `off` / `auto` / `on`, Save. Or Command Palette (`Ctrl + K`), type `adv`, choose **Advanced Settings...**.
 - **Command Palette settings:** `Ctrl + K`, type `=EngineeringDrawingEnhance`, Enter, pick a value. Takes effect immediately, no restart.
-- **Advanced Options** text file: `Settings` → **Advanced Options...**, edit `EngineeringDrawingEnhance = …`, save.
+- **Settings file:** Command Palette (`Ctrl + K`), choose **Open Settings File...**, edit `EngineeringDrawingEnhance = …`, save.
 
 The setting is global: it applies to every PDF. If a file is already open, reopen it (or use the toggle below) so rendering picks up the new value.
 

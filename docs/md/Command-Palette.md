@@ -95,8 +95,9 @@ Type `=` to change a setting without opening
 [Advanced Options](./Advanced-options-settings.md). Every setting holding a
 single value is listed by its dotted name, with its current value on the right;
 a value that isn't the default is shown in bold, and those settings are listed
-first. Type to filter by name or by value. Settings holding a list, and the
-compact ones like `WindowMargin`, are only editable in Advanced Options.
+first. Type to filter by name or by value. Compact settings like `WindowMargin`
+are only editable in Advanced Options; settings holding a list only in the
+settings file (**Open Settings File...**).
 
 `Enter` on a `true` / `false` setting toggles it. Any other setting asks for a
 value: the query becomes `=<name> = <value>`, and
