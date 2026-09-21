@@ -100,7 +100,7 @@ static const ScaleItem kScaleItems[] = {
     {L"shrink", PrintScaleAdv::Shrink, "&Shrink pages to printable area"},
     {L"fit", PrintScaleAdv::Fit, "&Fit pages to printable area"},
     {L"stretch", PrintScaleAdv::Stretch, "S&tretch pages to fill paper"},
-    {L"none", PrintScaleAdv::None, "&Actual size (1:1)"},
+    {L"none", PrintScaleAdv::None, "A&ctual size (1:1)"},
 };
 
 // The printer options the dialog offers, in the order it shows them. Unlike the

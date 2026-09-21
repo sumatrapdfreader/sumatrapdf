@@ -1,3 +1,16 @@
+// Looks for access key collisions in menus and dialogs, in every translation.
+//
+// Items shown together are marked in the sources as
+//   //[ ACCESSKEY_GROUP <name>
+//   ... TrN("&Item") ... TrN("&Another") ...
+//   //] ACCESSKEY_GROUP <name>
+// Within a group, items that never appear together (only one of them is
+// shown at a time) may share an access key when listed as alternatives:
+//   //[ ACCESSKEY_ALTERNATIVE
+//   ... TrN("&Foo") ...
+//   //| ACCESSKEY_ALTERNATIVE
+//   ... TrN("&Bar") ...
+//   //] ACCESSKEY_ALTERNATIVE
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, extname } from "node:path";
 
@@ -138,178 +151,199 @@ function getFilesToProcess(): string[] {
   return res;
 }
 
+// [alternative block index, branch index] of a string within its group
+type Alternative = [number, number];
+
 interface AccessGroup {
-  group: string[];
-  inAltGroup: boolean;
-  altGroup: string[];
+  strings: string[];
+  alternatives: Map<string, Alternative>;
 }
 
-function isGroupStartOrEnd(s: string): boolean {
-  return s.startsWith("//[ ACCESSKEY_GROUP ") || s.startsWith("//] ACCESSKEY_GROUP ");
+const kGroupMarker = "ACCESSKEY_GROUP ";
+const kAltMarker = "ACCESSKEY_ALTERNATIVE";
+
+// "[", "|" or "]" of a "//[ MARKER" line, null when not a marker line
+function markerKind(line: string, marker: string): string | null {
+  if (!line.startsWith("//")) return null;
+  const kind = line[2];
+  if (kind !== "[" && kind !== "|" && kind !== "]") return null;
+  if (line.substring(4, 4 + marker.length) !== marker) return null;
+  return kind;
 }
 
-function isAltGroupStartOrEnd(s: string): boolean {
-  return (
-    s.startsWith("//[ ACCESSKEY_ALTERNATIVE") ||
-    s.startsWith("//| ACCESSKEY_ALTERNATIVE") ||
-    s.startsWith("//] ACCESSKEY_ALTERNATIVE")
-  );
-}
-
-function extractAccesskeyGroups(path: string): Map<string, AccessGroup> {
-  const content = readFileSync(path, "utf-8");
-  const lines = content.split(/\r?\n/);
-  const groups = new Map<string, AccessGroup>();
+function extractAccesskeyGroups(path: string, groups: Map<string, AccessGroup>): void {
+  const lines = readFileSync(path, "utf-8").split(/\r?\n/);
   let groupName = "";
   let group: AccessGroup | null = null;
+  let altIdx = -1;
+  let branch: Alternative | null = null;
 
   for (let line of lines) {
     line = line.trim();
-    if (isGroupStartOrEnd(line)) {
-      const newName = line.substring(20);
-      if (line[2] === "[") {
-        if (group) throw new Error(`Group '${groupName}' doesn't end before group '${newName}' starts`);
+    const groupKind = markerKind(line, kGroupMarker);
+    if (groupKind) {
+      const newName = line.substring(4 + kGroupMarker.length).trim();
+      if (groupKind === "[") {
+        if (group) throw new Error(`${path}: group '${groupName}' doesn't end before group '${newName}' starts`);
         groupName = newName;
-        group = groups.get(groupName) || { group: [], inAltGroup: false, altGroup: [] };
+        group = groups.get(groupName) || { strings: [], alternatives: new Map() };
         groups.set(groupName, group);
-      } else {
-        if (!group) throw new Error(`Unexpected group end ('${newName}')`);
-        if (groupName !== newName) throw new Error(`Group end mismatch: '${newName}' != '${groupName}'`);
-        group = null;
+        continue;
       }
-    } else if (isAltGroupStartOrEnd(line)) {
-      if (!group) throw new Error("Can't use ACCESSKEY_ALTERNATIVE outside of group");
-      if (line[2] === "[") {
-        if (group.inAltGroup) throw new Error("Nested ACCESSKEY_ALTERNATIVE isn't supported");
-        group.inAltGroup = true;
-      } else if (line[2] === "|") {
-        if (!group.inAltGroup) throw new Error("Unexpected ACCESSKEY_ALTERNATIVE alternative");
+      if (!group) throw new Error(`${path}: unexpected end of group '${newName}'`);
+      if (groupName !== newName) throw new Error(`${path}: group end mismatch: '${newName}' != '${groupName}'`);
+      if (branch) throw new Error(`${path}: ${kAltMarker} not closed in group '${groupName}'`);
+      group = null;
+      continue;
+    }
+
+    const altKind = markerKind(line, kAltMarker);
+    if (altKind) {
+      if (!group) throw new Error(`${path}: ${kAltMarker} outside of a group`);
+      const next = line[4 + kAltMarker.length];
+      if (next !== undefined && !/\s/.test(next)) throw new Error(`${path}: typo in '${line}'?`);
+      if (altKind === "[") {
+        if (branch) throw new Error(`${path}: nested ${kAltMarker} isn't supported`);
+        altIdx++;
+        branch = [altIdx, 0];
+      } else if (altKind === "|") {
+        if (!branch) throw new Error(`${path}: unexpected '//| ${kAltMarker}'`);
+        branch = [branch[0], branch[1] + 1];
       } else {
-        if (!group.inAltGroup) throw new Error("Unexpected ACCESSKEY_ALTERNATIVE end");
-        group.inAltGroup = false;
+        if (!branch) throw new Error(`${path}: unexpected '//] ${kAltMarker}'`);
+        branch = null;
       }
-    } else if (group) {
-      const strs = extractTranslationStrings(line);
-      for (const str of strs) {
-        const exists = group.group.includes(str);
-        const n = (str.match(/&/g) || []).length;
-        if (n > 1) throw new Error("TODO: handle multiple '&' in strings");
-        if (exists) {
-          group.group.push(str);
-        }
-        if (group.inAltGroup) {
-          group.altGroup.push(str);
-        }
+      continue;
+    }
+
+    if (!group) continue;
+    for (const str of extractTranslationStrings(line)) {
+      const n = (str.match(/&/g) || []).length;
+      if (n > 1) throw new Error(`${path}: more than one '&' in "${str}"`);
+      if (!group.strings.includes(str)) {
+        group.strings.push(str);
+      }
+      if (branch) {
+        group.alternatives.set(str, branch);
       }
     }
   }
-  return groups;
+  if (group) throw new Error(`${path}: group '${groupName}' isn't closed`);
 }
 
 function isAlnum(s: string): boolean {
-  const c = s.charCodeAt(0);
-  return (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57);
+  return /^[A-Za-z0-9]$/.test(s);
 }
 
-function detectAccesskeyClashes(allGroups: Map<string, AccessGroup>, translations: Map<string, Translation[]>): void {
-  for (const lang of gLangs) {
-    const langCode = lang[0];
-    const langName = lang[1];
-    console.log(`Accesskey issues for '${langName}'${"=".repeat(23 + langName.length)}'`);
-    const warnings: string[] = [];
-    for (const [, group] of allGroups) {
-      const usedKeys: Map<string, string> = new Map();
-      const strs = group.group;
-      for (const str of strs.slice(1)) {
-        let trans = str;
-        const transItems = translations.get(str);
-        if (transItems) {
-          for (const item of transItems) {
-            if (item.lang === langCode) {
-              trans = item.translation;
-              break;
-            }
-          }
-        }
-        const ix = trans.indexOf("&");
-        if (ix === -1) {
-          if (str.includes("&")) {
-            warnings.push("WARNING: Translation has no accesskey where original does:");
-            warnings.push(`         "${strs}", "${trans}"`);
-            continue;
-          }
-        }
-        if (ix === trans.length - 1) {
-          warnings.push(`ERROR: '&' must be followed by a letter ("${trans}")`);
-          continue;
-        }
-        if (!str.includes("&")) {
-          warnings.push("WARNING: Translation has accesskey where original doesn't:");
-          warnings.push(`         "${str}", "${trans}"`);
-        }
-        if (ix >= 0) {
-          const key = trans[ix + 1].toUpperCase();
-          if (usedKeys.has(key)) {
-            // clash detected (placeholder for full duplicate reporting)
-          } else {
-            if (!isAlnum(key)) {
-              warnings.push(`WARNING: Access key '${key}' might not work on all keyboards ("${trans}")`);
-            }
-            usedKeys.set(key, trans);
-          }
-        }
+// sharing a key is fine only between different branches of the same
+// alternative block: those are never shown together
+function areExclusive(a: Alternative | undefined, b: Alternative | undefined): boolean {
+  return !!a && !!b && a[0] === b[0] && a[1] !== b[1];
+}
+
+interface KeyUse {
+  str: string;
+  trans: string;
+}
+
+function translate(str: string, langCode: string, translations: Map<string, Translation[]>): string {
+  for (const item of translations.get(str) || []) {
+    if (item.lang === langCode) return item.translation;
+  }
+  return str;
+}
+
+// the issues found in one group for one language, empty when none
+function checkGroup(
+  name: string,
+  group: AccessGroup,
+  langCode: string,
+  translations: Map<string, Translation[]>,
+): string[] {
+  const warnings: string[] = [];
+  const clashes: string[] = [];
+  const usedKeys = new Map<string, KeyUse[]>();
+
+  for (const str of group.strings) {
+    const trans = translate(str, langCode, translations);
+    const ix = trans.indexOf("&");
+    if (ix === -1) {
+      if (str.includes("&")) {
+        warnings.push(`no access key where the original has one: "${str}" -> "${trans}"`);
+      }
+      continue;
+    }
+    if (ix === trans.length - 1) {
+      warnings.push(`'&' must be followed by a letter: "${trans}"`);
+      continue;
+    }
+    if (!str.includes("&")) {
+      warnings.push(`access key where the original has none: "${str}" -> "${trans}"`);
+    }
+
+    const key = trans[ix + 1].toUpperCase();
+    if (!isAlnum(key)) {
+      warnings.push(`access key '${key}' might not work on all keyboards: "${trans}"`);
+    }
+    const uses = usedKeys.get(key) || [];
+    const mine = group.alternatives.get(str);
+    for (const use of uses) {
+      if (!areExclusive(mine, group.alternatives.get(use.str))) {
+        clashes.push(`${key}: "${trans}" and "${use.trans}"`);
       }
     }
-    console.log("");
+    uses.push({ str, trans });
+    usedKeys.set(key, uses);
   }
-}
 
-function printGroups(file: string, groups: Map<string, AccessGroup>): void {
-  if (groups.size === 0) return;
-  console.log(file);
-  for (const [name, g] of groups) {
-    console.log(`  ${name}`);
-    for (const s of g.group) {
-      console.log(`    ${s}`);
+  const res: string[] = [];
+  if (clashes.length > 0) {
+    res.push(`  clashes in group '${name}':`);
+    for (const c of clashes) res.push(`    * ${c}`);
+    const available: string[] = [];
+    for (let c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
+      const key = String.fromCharCode(c);
+      if (!usedKeys.has(key)) available.push(key);
     }
-    if (g.altGroup.length > 0) {
-      console.log("    alt groups:");
-      for (const s of g.altGroup) {
-        console.log(`    ${s}`);
-      }
-    }
+    res.push(`      (available keys: ${available.join("")})`);
   }
-}
-
-function updateGroups(m1: Map<string, AccessGroup>, m2: Map<string, AccessGroup>): Map<string, AccessGroup> {
-  for (const [k, g2] of m2) {
-    const g1 = m1.get(k);
-    if (!g1) {
-      m1.set(k, g2);
-    } else {
-      g1.group.push(...g2.group);
-      g1.altGroup.push(...g2.altGroup);
-    }
-  }
-  return m1;
+  for (const w of warnings) res.push(`  ${w}`);
+  return res;
 }
 
 function main() {
-  const cFiles = getFilesToProcess();
-  const allGroups = new Map<string, AccessGroup>();
-  for (const file of cFiles) {
-    const groups = extractAccesskeyGroups(file);
-    printGroups(file, groups);
-    updateGroups(allGroups, groups);
-  }
   const translationsTxtPath = join(".work", "translations.txt");
   if (!existsSync(translationsTxtPath)) {
     console.error(`Missing ${translationsTxtPath}. Run: bun cmd/trans-dl.ts`);
     process.exit(1);
   }
-  const d = readFileSync(translationsTxtPath, "utf-8");
-  const translations = parseTranslations(d);
-  detectAccesskeyClashes(allGroups, translations);
+  const translations = parseTranslations(readFileSync(translationsTxtPath, "utf-8"));
+
+  const groups = new Map<string, AccessGroup>();
+  for (const file of getFilesToProcess()) {
+    extractAccesskeyGroups(file, groups);
+  }
+
+  let nLangsWithIssues = 0;
+  let englishHasIssues = false;
+  for (const [langCode, langName] of gLangs) {
+    const issues: string[] = [];
+    for (const [name, group] of groups) {
+      issues.push(...checkGroup(name, group, langCode, translations));
+    }
+    if (issues.length === 0) continue;
+    nLangsWithIssues++;
+    if (langCode === "en") englishHasIssues = true;
+    console.log(`${langName} (${langCode}):`);
+    for (const line of issues) console.log(line);
+    console.log("");
+  }
+  const nStrings = [...groups.values()].reduce((n, g) => n + g.strings.length, 0);
+  console.log(
+    `checked ${nStrings} strings in ${groups.size} groups, ${nLangsWithIssues} of ${gLangs.length} languages have issues`,
+  );
+  // English is what the sources say; the rest is up to translators
+  process.exit(englishHasIssues ? 1 : 0);
 }
 
 main();

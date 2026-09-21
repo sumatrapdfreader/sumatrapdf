@@ -93,7 +93,7 @@ static MenuDef menuDefFile[] = {
         CmdClose,
     },
     {
-        TrN("Show in &folder"),
+        TrN("Show in fo&lder"),
         CmdShowInFolder,
     },
     {
@@ -135,7 +135,7 @@ static MenuDef menuDefFile[] = {
 //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
     {
-        TrN("Save S&hortcut..."),
+        TrN("Save Shortc&ut..."),
         CmdCreateShortcutToFile,
     },
 //| ACCESSKEY_ALTERNATIVE
@@ -168,7 +168,7 @@ static MenuDef menuDefFile[] = {
         CmdOpenWithExplorer,
     },
     {
-        TrN("Open Directory in Directory &Opus"),
+        TrN("Open Directory in Director&y Opus"),
         CmdOpenWithDirectoryOpus,
     },
     {
@@ -204,7 +204,7 @@ static MenuDef menuDefFile[] = {
     //] ACCESSKEY_ALTERNATIVE
     // further entries are added if specified in gSettings.vecCommandLine
     {
-        TrN("Send by &E-mail..."),
+        TrN("Send &by E-mail..."),
         CmdSendByEmail,
     },
     {
@@ -290,15 +290,15 @@ static MenuDef menuDefView[] = {
         CmdTogglePresentationMode,
     },
     {
-        TrN("F&ullscreen"),
+        TrN("Fulls&creen"),
         CmdToggleFullscreen,
     },
     {
-        TrN("A&utomatically Scroll"),
+        TrN("&Automatically Scroll"),
         CmdToggleAutomaticallyScroll,
     },
     {
-        TrN("Reading &Bar"),
+        TrN("Read&ing Bar"),
         CmdToggleReadingBar,
     },
     {
@@ -310,11 +310,11 @@ static MenuDef menuDefView[] = {
         CmdToggleBookmarks,
     },
     {
-        TrN("Show &Menu"),
+        TrN("Show Me&nu"),
         CmdToggleMenuBar,
     },
     {
-        TrN("Show &Toolbar"),
+        TrN("Sh&ow Toolbar"),
         CmdToggleToolbar,
     },
     {
@@ -443,7 +443,7 @@ static MenuDef menuDefZoomShort[] = {
         CmdZoomCustom,
     },
     {
-        TrN("To &Selection"),
+        TrN("&To Selection"),
         CmdZoomToSelection,
     },
     {
@@ -491,7 +491,7 @@ static MenuDef menuDefZoom[] = {
         CmdZoomCustom,
     },
     {
-        TrN("To &Selection"),
+        TrN("&To Selection"),
         CmdZoomToSelection,
     },
     {
@@ -728,7 +728,7 @@ static MenuDef menuDefDebug[] = {
 //[ ACCESSKEY_GROUP Context Menu (Google Lens)
 static MenuDef menuDefGoogleLens[] = {
     {
-        TrN("Selection As &Image"),
+        TrN("&Selection As Image"),
         CmdSearchGoogleLens,
     },
     {
@@ -789,19 +789,19 @@ static MenuDef menuDefSelection[] = {
         CmdTranslateSelectionWithDeepL,
     },
     {
-        TrN("Translate with &Grok Build"),
+        TrN("Translate with G&rok Build"),
         CmdTranslateSelectionWithGrokBuild,
     },
     {
-        TrN("Translate with &Claude Code"),
+        TrN("Translate with Claude C&ode"),
         CmdTranslateSelectionWithClaudeCode,
     },
     {
-        TrN("Translate with OpenAI &Codex"),
+        TrN("Translate with OpenAI Code&x"),
         CmdTranslateSelectionWithOpenAICodex,
     },
     {
-        TrN("Translate with &Antigravity"),
+        TrN("Translate with A&ntigravity"),
         CmdTranslateSelectionWithAntiGravity,
     },
     {
@@ -817,7 +817,7 @@ static MenuDef menuDefSelection[] = {
         CmdSearchSelectionWithWikipedia,
     },
     {
-        TrN("Search with &Google Scholar"),
+        TrN("Search with Google Sc&holar"),
         CmdSearchSelectionWithGoogleScholar,
     },
     {
@@ -842,19 +842,19 @@ static MenuDef menuDefMainSelection[] = {
         CmdTranslateSelectionWithDeepL,
     },
     {
-        TrN("Translate with &Grok Build"),
+        TrN("Translate with G&rok Build"),
         CmdTranslateSelectionWithGrokBuild,
     },
     {
-        TrN("Translate with &Claude Code"),
+        TrN("Translate with Claude C&ode"),
         CmdTranslateSelectionWithClaudeCode,
     },
     {
-        TrN("Translate with OpenAI &Codex"),
+        TrN("Translate with OpenAI Code&x"),
         CmdTranslateSelectionWithOpenAICodex,
     },
     {
-        TrN("Translate with &Antigravity"),
+        TrN("Translate with A&ntigravity"),
         CmdTranslateSelectionWithAntiGravity,
     },
     {
@@ -870,7 +870,7 @@ static MenuDef menuDefMainSelection[] = {
         CmdSearchSelectionWithWikipedia,
     },
     {
-        TrN("Search with &Google Scholar"),
+        TrN("Search with Google Sc&holar"),
         CmdSearchSelectionWithGoogleScholar,
     },
     {
@@ -1022,7 +1022,7 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
         CmdCreateAnnotImageFromClipboard,
     },
     {
-        TrN("Image From &File..."),
+        TrN("Image From Fi&le..."),
         CmdInsertImage,
     },
     {
@@ -1183,7 +1183,7 @@ static MenuDef menuDefDocumentAIChat[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Document AI chat)
 
-//[ ACCESSKEY_GROUP Context Menu (Document )
+//[ ACCESSKEY_GROUP Context Menu (Document)
 static MenuDef menuDefDocumentOperations[] = {
     {
         TrN("P&roperties"),
@@ -1246,7 +1246,7 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdConvertPdfToImages,
     },
     {
-        TrN("Show in &folder"),
+        TrN("Show in fo&lder"),
         CmdShowInFolder,
     },
     {
@@ -1267,7 +1267,7 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefGoogleLens,
     },
     {
-        TrN("Copy &Link Address"),
+        TrN("Copy Link &Address"),
         CmdCopyLinkTarget,
     },
     {
@@ -1304,7 +1304,7 @@ static MenuDef menuDefContext[] = {
         CmdToggleBookmarks,
     },
     {
-        TrN("Show &Toolbar"),
+        TrN("Sh&ow Toolbar"),
         CmdToggleToolbar,
     },
     {
