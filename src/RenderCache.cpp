@@ -316,13 +316,30 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
 
 extern RenderCache* gRenderCache;
 
+// a CachedObject id is a snapshot taken without cacheAccess, so the entry may
+// have been dropped (and freed) by another thread since: check before reading it
+bool RenderCache::IsCached(BitmapCacheEntry* entry) {
+    AutoUnlockRecursiveMutex scope(&cacheAccess);
+    for (int i = 0; i < cacheCount; i++) {
+        if (cache[i] == entry) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static bool RenderCacheCanFree(WindowTab* currTab, CachedObject* o) {
     (void)currTab;
-    auto* entry = (BitmapCacheEntry*)o->id;
-    if (!entry || entry->refs > 1) {
+    if (!gRenderCache) {
         return false;
     }
-    if (entry->dm && entry->dm->PageVisibleNearby(entry->pageNo)) {
+    auto* entry = (BitmapCacheEntry*)o->id;
+    AutoUnlockRecursiveMutex scope(&gRenderCache->cacheAccess);
+    if (!gRenderCache->IsCached(entry) || entry->refs > 1) {
+        return false;
+    }
+    // called from any thread that allocates, so lock against a relayout
+    if (entry->dm && entry->dm->PageVisibleNearbyLocked(entry->pageNo)) {
         return false;
     }
     return true;
@@ -334,6 +351,10 @@ static bool RenderCacheFree(WindowTab* currTab, CachedObject* o) {
         return false;
     }
     auto* entry = (BitmapCacheEntry*)o->id;
+    AutoUnlockRecursiveMutex scope(&gRenderCache->cacheAccess);
+    if (!gRenderCache->IsCached(entry)) {
+        return false;
+    }
     return gRenderCache->DropCacheEntryIfNotUsed(entry);
 }
 

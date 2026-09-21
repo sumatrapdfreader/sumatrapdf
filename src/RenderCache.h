@@ -239,6 +239,7 @@ struct RenderCache {
                            TilePosition* tile = nullptr);
     bool DropCacheEntry(BitmapCacheEntry* entry);
     bool DropCacheEntryIfNotUsed(BitmapCacheEntry* entry);
+    bool IsCached(BitmapCacheEntry* entry);
     void FreePage(DisplayModel* dm, int pageNo, TilePosition* tile = nullptr);
     void FreeNotVisible();
 
