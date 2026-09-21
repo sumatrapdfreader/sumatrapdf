@@ -1040,13 +1040,14 @@ void NavFilesInFolderWnd::OnKeyDown(KeyEvent* ev) {
         }
     }
     // Alt + Up / Left / Right go up / back / forward, like Explorer. They
-    // arrive as WM_SYSKEYDOWN; swallowing them also avoids the system-menu beep
-    if (ev->vkey == VK_UP && ev->isAlt) {
+    // arrive as WM_SYSKEYDOWN; swallowing them also avoids the system-menu beep.
+    // Backspace goes up, like the classic Explorer / file dialogs
+    if ((ev->vkey == VK_UP && ev->isAlt) || ev->vkey == VK_BACK) {
         GoUp();
         ev->didHandle = true;
         return;
     }
-    if ((ev->vkey == VK_LEFT && ev->isAlt) || ev->vkey == VK_BACK) {
+    if (ev->vkey == VK_LEFT && ev->isAlt) {
         GoBack();
         ev->didHandle = true;
         return;
@@ -1092,7 +1093,7 @@ static void NavButtonClicked(NavFilesInFolderWnd* w, VirtMouseEvent* ev) {
 void NavFilesInFolderWnd::CreateNavButtons(Color fg, Color bg) {
     static const char* icons[NavBtnCount] = {gIconNavigateBack, gIconNavigateForward, gIconArrowUp, gIconHome};
     Str tips[NavBtnCount] = {fmt("%s (Alt + Left)", Tr("Back")), fmt("%s (Alt + Right)", Tr("Forward")),
-                             fmt("%s (Alt + Up)", Tr("Up")), Tr("Home")};
+                             fmt("%s (Alt + Up, Backspace)", Tr("Up")), Tr("Home")};
     int isz = RoundUp(DpiScale(16), 4);
     int pad = DpiScale(4);
     Color dis = ThemeWindowTextDisabledColor();
