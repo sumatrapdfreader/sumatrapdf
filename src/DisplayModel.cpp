@@ -2521,24 +2521,29 @@ bool DisplayModel::GoToNextPage() {
 // notch would flip another page
 bool DisplayModel::GoToNextPage(bool keepViewOffset) {
     SyncWithEngineLayout();
+    int currPageNo = CurrentPageNo();
     if (engine->HasChapters()) {
-        Location current = CurrentLocation();
-        Location target = engine->NextLocation(current);
-        if (target == current) {
-            // NextLocation() returns its input unchanged at the last page
-            // of the last chapter
-            return false;
-        }
-        int pageNo = PageNoFromLocation(target);
+        // step past every page of the row on screen (Facing / Book view)
+        Location target = CurrentLocation();
+        int pageNo;
+        do {
+            Location next = engine->NextLocation(target);
+            if (next == target) {
+                // NextLocation() returns its input unchanged at the last page
+                // of the last chapter
+                return false;
+            }
+            target = next;
+            pageNo = PageNoFromLocation(target);
+        } while (pageNo <= LastPageInRow(currPageNo));
         int scrollY = 0;
         int scrollX = -1;
         if (keepViewOffset) {
-            GetRememberedViewOffset(this, CurrentPageNo(), &scrollX, &scrollY);
+            GetRememberedViewOffset(this, currPageNo, &scrollX, &scrollY);
         }
         GoToPage(pageNo, scrollY, false, scrollX);
         return true;
     }
-    int currPageNo = CurrentPageNo();
     int first = FirstPageInRow(currPageNo);
     int prevFirst = first > 1 ? FirstPageInRow(first - 1) : 0;
     // Fully display the current page, if the previous page is still visible
@@ -2568,7 +2573,7 @@ bool DisplayModel::IsAtDocumentEnd() const {
     if (engine && engine->HasChapters()) {
         // mirrors GoToNextPage()'s chaptered check: NextLocation() returns its
         // input unchanged at the last page of the last chapter
-        int pageNo = CurrentPageNo();
+        int pageNo = LastPageInRow(CurrentPageNo());
         PageInfo* pi = GetPageInfo(pageNo);
         Location current = (pi && pi->loc.IsValid()) ? pi->loc : engine->LocationFromPageNo(pageNo);
         return engine->NextLocation(current) == current;
@@ -2586,13 +2591,20 @@ bool DisplayModel::IsAtDocumentEnd() const {
 bool DisplayModel::GoToPrevPage(int scrollY) {
     SyncWithEngineLayout();
     if (engine->HasChapters()) {
-        Location current = CurrentLocation();
-        Location target = engine->PrevLocation(current);
-        if (target == current) {
-            // PrevLocation() returns its input unchanged at page 1 of chapter 1
-            return false;
-        }
-        int pageNo = PageNoFromLocation(target);
+        // step before every page of the row on screen (Facing / Book view)
+        int first = FirstPageInRow(CurrentPageNo());
+        Location target = CurrentLocation();
+        int pageNo;
+        do {
+            Location prev = engine->PrevLocation(target);
+            if (prev == target) {
+                // PrevLocation() returns its input unchanged at page 1 of chapter 1
+                return false;
+            }
+            target = prev;
+            pageNo = PageNoFromLocation(target);
+        } while (pageNo >= first);
+        pageNo = FirstPageInRow(pageNo);
         int sy = scrollY;
         if (-1 == sy) {
             PageInfo* pi = GetPageInfo(pageNo);
