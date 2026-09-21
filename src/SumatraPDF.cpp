@@ -1297,6 +1297,14 @@ static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
         HwndPasswordUI pwdUI(nullptr);
         engine = CreateEngineFromFile(cover, &pwdUI, true);
     }
+    if (!engine && GuessFileTypeFromName(d->filePath, true) == FileType::Epub) {
+        // the cover the book itself declares, which isn't always page 1
+        Str coverData = EpubCoverImageData(d->filePath);
+        if (len(coverData) > 0) {
+            engine = CreateEngineImageFromData(coverData);
+        }
+        str::Free(coverData);
+    }
     if (!engine) {
         HwndPasswordUI pwdUI(nullptr);
         SetLoadThreadFileEBookUI(d->fileEBookUI);

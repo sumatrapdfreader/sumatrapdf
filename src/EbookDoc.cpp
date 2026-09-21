@@ -932,6 +932,72 @@ EpubDoc* EpubDoc::CreateFromData(Str data) {
     return doc;
 }
 
+// cover image bytes named by the OPF, either <meta name="cover" content="id">
+// (EPUB 2) or a manifest item with properties="cover-image" (EPUB 3); empty
+// when the book declares none. Owned by the caller.
+Str EpubCoverImageData(Str path) {
+    Archive* archive = OpenArchiveFromFile(path, false, gArchiveProgressCb);
+    if (!archive) {
+        return {};
+    }
+    Str res{};
+    auto* containerFi = archive->GetFileDataByName(StrL("META-INF/container.xml"));
+    if (!containerFi || !containerFi->data) {
+        delete archive;
+        return {};
+    }
+    Str container = Str(containerFi->data, containerFi->fileSizeUncompressed);
+    GumboDoc containerDoc(container, true);
+    const GumboNode* node = GumboFindDescendantByTagNS(containerDoc.Document(), StrL("rootfile"), EPUB_CONTAINER_NS());
+    TempStr contentPath = url::DecodeTemp(GumboAttributeValueTemp(node, "full-path"));
+    auto* contentFi = len(contentPath) > 0 ? archive->GetFileDataByName(contentPath) : nullptr;
+    if (!contentFi || !contentFi->data) {
+        delete archive;
+        return {};
+    }
+    Str content = Str(contentFi->data, contentFi->fileSizeUncompressed);
+    GumboDoc contentDoc(content, true);
+
+    TempStr coverId{};
+    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("metadata"), EPUB_OPF_NS());
+    const GumboVector* children = GumboChildrenOf(node);
+    for (unsigned int i = 0; children && i < children->length; i++) {
+        node = (const GumboNode*)children->data[i];
+        if (str::EqI(GumboAttributeValueTemp(node, "name"), StrL("cover"))) {
+            coverId = GumboAttributeValueTemp(node, "content");
+            break;
+        }
+    }
+
+    TempStr href{};
+    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("manifest"), EPUB_OPF_NS());
+    children = GumboChildrenOf(node);
+    for (unsigned int i = 0; children && i < children->length; i++) {
+        node = (const GumboNode*)children->data[i];
+        if (!isImageMediaType(GumboAttributeValueTemp(node, "media-type"))) {
+            continue;
+        }
+        TempStr properties = GumboAttributeValueTemp(node, "properties");
+        bool isCover = len(coverId) > 0 && str::Eq(GumboAttributeValueTemp(node, "id"), coverId);
+        if (!isCover && properties) {
+            isCover = str::Contains(properties, StrL("cover-image"));
+        }
+        if (isCover) {
+            href = GumboAttributeValueTemp(node, "href");
+            break;
+        }
+    }
+    if (len(href) > 0) {
+        TempStr imgPath = NormalizeURLTemp(url::DecodeTemp(href), contentPath);
+        auto* imgFi = archive->GetFileDataByName(imgPath);
+        if (imgFi && imgFi->data) {
+            res = str::Dup(Str(imgFi->data, imgFi->fileSizeUncompressed));
+        }
+    }
+    delete archive;
+    return res;
+}
+
 /* ********** FictionBook (FB2) ********** */
 
 static Str FB2_MAIN_NS() {

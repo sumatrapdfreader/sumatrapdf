@@ -63,6 +63,8 @@ struct EpubDoc {
     static EpubDoc* CreateFromData(Str data);
 };
 
+Str EpubCoverImageData(Str path);
+
 /* ********** FictionBook (FB2) ********** */
 
 #define kFb2TocEntryMark "ToC!Entry!"
