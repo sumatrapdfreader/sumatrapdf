@@ -933,6 +933,9 @@ constexpr int kThumbsBorderDx = 1;
 #define kThumbsMarginBottom DpiScale(40)
 #define kThumbsSpaceBetweenX DpiScale(38)
 #define kThumbsSpaceBetweenY DpiScale(58)
+// caption (file name + type icon) drawn below each thumbnail
+#define kThumbsCaptionGapY DpiScale(3)
+#define kThumbsCaptionDy DpiScale(20)
 #define kThumbsBottomBoxDy DpiScale(50)
 #define kHomeListThumbDx DpiScale(30)
 #define kHomeListThumbDy DpiScale(40)
@@ -1822,7 +1825,9 @@ static void LayoutHomePage(HomePageLayout& l) {
     } else {
         thumbsRows = (nFiles + thumbsColsForLayout - 1) / thumbsColsForLayout;
         if (thumbsRows > 0) {
-            thumbsContentDy = (thumbsRows * (kThumbnailDy + kThumbsSpaceBetweenY)) - kThumbsSpaceBetweenY;
+            // the last row's caption hangs below its thumbnails (issue #6234)
+            thumbsContentDy = (thumbsRows * (kThumbnailDy + kThumbsSpaceBetweenY)) - kThumbsSpaceBetweenY +
+                              kThumbsCaptionGapY + kThumbsCaptionDy;
         }
     }
     if (thumbsContentDy > 0) {
@@ -1928,8 +1933,9 @@ static void LayoutHomePage(HomePageLayout& l) {
                     thumb.szThumb = szThumb;
                 }
                 thumb.rcPage = rcPage;
-                int iconSpace = DpiScale(20);
-                Rect rcText(rcPage.x + iconSpace, rcPage.y + rcPage.dy + 3, rcPage.dx - iconSpace, iconSpace);
+                int iconSpace = kThumbsCaptionDy;
+                Rect rcText(rcPage.x + iconSpace, rcPage.y + rcPage.dy + kThumbsCaptionGapY, rcPage.dx - iconSpace,
+                            kThumbsCaptionDy);
                 if (isRtl) {
                     rcText.x -= iconSpace;
                 }
@@ -2312,10 +2318,17 @@ TempStr HomeSelectionResultTemp(int* exitCodeOut) {
         outlineFull = HomeSelectionOutlineRect(c.thumbs[sel]);
         outline = outlineFull.Intersect(HomeOutlinePaintClip(c.rcThumbsArea, c.rcSearchBorder, c.rcTip, c.hasTip));
     }
+    // caption rect of the last thumbnail: with the band scrolled to the bottom
+    // it must fit inside the thumbs area (issue #6234)
+    Rect lastCaption;
+    if (!HomePageIsListView() && len(c.thumbs) > 0) {
+        lastCaption = c.thumbs[len(c.thumbs) - 1].rcText;
+    }
     return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
-                         "listView=%d listIcon=%s",
+                         "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s",
                          sel, len(c.thumbs), searchFocus, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
-                         RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(c.rcIconListView)));
+                         RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(c.rcIconListView),
+                         RectCsvTemp(c.rcThumbsArea), RectCsvTemp(lastCaption)));
 }
 
 // What the home page list drew for each row: the path, the size text as drawn,

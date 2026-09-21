@@ -176,6 +176,7 @@ import { testit as issue6232 } from "./issue-6232.ts";
 import { testit as issue6232Filter } from "./issue-6232-filter.ts";
 import { testit as issue6232Refresh } from "./issue-6232-refresh.ts";
 import { testit as issue6232PathEdit } from "./issue-6232-path-edit.ts";
+import { testit as issue6234 } from "./issue-6234.ts";
 import { testit as issue6224 } from "./issue-6224.ts";
 import { testit as issue6062 } from "./issue-6062.ts";
 import { testit as issue5969 } from "./issue-5969.ts";
@@ -570,6 +571,7 @@ export const tests: NamedTest[] = [
   ["issue-6232-filter", issue6232Filter],
   ["issue-6232-refresh", issue6232Refresh],
   ["issue-6232-path-edit", issue6232PathEdit],
+  ["issue-6234", issue6234],
   ["issue-6224", issue6224],
   ["issue-5969", issue5969],
   ["issue-5867", issue5867],

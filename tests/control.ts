@@ -118,6 +118,8 @@ export type HomeSelection = {
   path: string;
   listView: boolean;
   listIcon: number[];
+  thumbsArea: number[];
+  lastCaption: number[];
   raw: string;
 };
 
@@ -489,11 +491,13 @@ export class ControlClient {
         path: "",
         listView: false,
         listIcon: [0, 0, 0, 0],
+        thumbsArea: [0, 0, 0, 0],
+        lastCaption: [0, 0, 0, 0],
         raw,
       };
     }
     const m =
-      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*) listView=(\d) listIcon=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(
+      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*) listView=(\d) listIcon=(-?\d+),(-?\d+),(-?\d+),(-?\d+) thumbsArea=(-?\d+),(-?\d+),(-?\d+),(-?\d+) lastCaption=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(
         raw,
       );
     if (!m) {
@@ -511,6 +515,8 @@ export class ControlClient {
       path: m[17].trim(),
       listView: m[18] === "1",
       listIcon: [parseInt(m[19], 10), parseInt(m[20], 10), parseInt(m[21], 10), parseInt(m[22], 10)],
+      thumbsArea: [parseInt(m[23], 10), parseInt(m[24], 10), parseInt(m[25], 10), parseInt(m[26], 10)],
+      lastCaption: [parseInt(m[27], 10), parseInt(m[28], 10), parseInt(m[29], 10), parseInt(m[30], 10)],
       raw,
     };
   }
