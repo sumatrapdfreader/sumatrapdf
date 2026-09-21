@@ -10891,9 +10891,11 @@ static Rect ClampHelpWindowRect(Rect r, HWND hwndForMonitor) {
 }
 
 // First open: upper half of the parent, on the side with more leftover space.
+// Wide enough for the manual's table-of-contents sidebar, which the page CSS
+// shows only from a 950px viewport (docs/manual.shell.html).
 static Rect DefaultHelpWindowRect(HWND parent) {
     int dpi = parent ? DpiGetForHwnd(parent) : DpiGet();
-    Size size{DpiScaleByDpi(dpi, 720), DpiScaleByDpi(dpi, 860)};
+    Size size{DpiScaleByDpi(dpi, 1000), DpiScaleByDpi(dpi, 860)};
 
     Rect frame;
     if (parent) {
