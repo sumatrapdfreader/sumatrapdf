@@ -14,7 +14,7 @@ import { runStandalone, tmpPath } from "./util.ts";
 
 // a 4-page PDF with 4 top-level bookmarks (one per page), /UseOutlines so the
 // bookmarks panel opens automatically
-function makeBookmarkedPdf(): Buffer {
+export function makeBookmarkedPdf(): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
   const titles = ["Chapter One", "Chapter Two", "Chapter Three", "Chapter Four"];
   const body: Record<number, Buffer> = {};

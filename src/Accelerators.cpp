@@ -337,6 +337,7 @@ static bool isSafeOutsideEditAccel(const ACCEL& a) {
 
 // keys the tree uses to move / activate; those stay with the control even
 // when a command is bound to them. Ctrl/Alt chords are still accelerators.
+// PageUp / PageDown are not here: they scroll the document (issue #1841)
 static bool isTreeNavKey(WORD k) {
     switch (k) {
         case VK_LEFT:
@@ -345,8 +346,6 @@ static bool isTreeNavKey(WORD k) {
         case VK_DOWN:
         case VK_HOME:
         case VK_END:
-        case VK_PRIOR:
-        case VK_NEXT:
         case VK_SPACE:
         case VK_RETURN:
         case VK_TAB:

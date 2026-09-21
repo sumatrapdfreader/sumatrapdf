@@ -1624,21 +1624,6 @@ static void TocTreeKeyDown(TreeView::KeyDownEvent* ev) {
 }
 
 void TocTreeKeyDown2(TreeView::KeyDownEvent* ev) {
-    // TODO: trying to fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1841
-    // doesn't work i.e. page up / page down seems to be processed anyway by TreeCtrl
-#if 0
-    if ((ev->keyCode == VK_PRIOR) || (ev->keyCode == VK_NEXT)) {
-        // up/down in tree is not very useful, so instead
-        // send it to frame so that it scrolls document instead
-        MainWindow* win = FindMainWindowByHwnd(ev->hwnd);
-        // this is sent as WM_NOTIFY to TreeCtrl but for frame it's WM_KEYDOWN
-        // alternatively, we could call FrameOnKeydown(ev->wp, ev->lp, false);
-        SendMessageW(win->hwndFrame, WM_KEYDOWN, ev->wp, ev->lp);
-        ev->didHandle = true;
-        ev->result = 1;
-        return;
-    }
-#endif
     if (ev->keyCode != VK_TAB) {
         ev->result = 0;
         return;
