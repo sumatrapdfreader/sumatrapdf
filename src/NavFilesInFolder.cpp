@@ -55,6 +55,14 @@ enum NavBtn {
 
 constexpr int kNavHistoryMax = 100;
 
+// Clear: show ".." alone until the listing arrives (new folder).
+// Keep: leave the current listing on screen while it is re-read (F5,
+// activation); the result replaces it only if something changed
+enum class NavListReset {
+    Clear,
+    Keep
+};
+
 // logical (pre-DPI) sizes for placement / sizing of the nav window
 constexpr int kNavDockMinFreeDx = 320;  // free strip beside main must be wider than this to dock
 constexpr int kNavDockMaxWidthDx = 480; // docked outer width = min(this, free strip)
@@ -117,7 +125,7 @@ struct NavFilesInFolderWnd : WindowBase {
     bool Create(MainWindow* win, Str filePath);
     void CreateNavButtons(Color fg, Color bg);
     bool IsHome() const;
-    void SetDir(Str dir, Str selectPath, int selectIdx = -1);
+    void SetDir(Str dir, Str selectPath, int selectIdx = -1, NavListReset reset = NavListReset::Clear);
     void Navigate(Str dir, Str selectPath = {});
     TempStr SelectedPathTemp();
     void RefreshList();
@@ -258,6 +266,20 @@ static void FilterNavEntries(ListBoxModelNav* m, const StrVec& words) {
 static void ClearNavModel(ListBoxModelNav* m) {
     FreeNavEntries(m->all);
     VecReset(m->entries);
+}
+
+static bool SameNavEntries(const Vec<NavFileEntry>& a, const Vec<NavFileEntry>& b) {
+    if (len(a) != len(b)) {
+        return false;
+    }
+    for (int i = 0; i < len(a); i++) {
+        const NavFileEntry& ea = a[i];
+        const NavFileEntry& eb = b[i];
+        if (ea.isDir != eb.isDir || ea.size != eb.size || !str::Eq(ea.name, eb.name)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 static bool DirHasParent(Str dir) {
@@ -418,13 +440,15 @@ static void SelectAndEnsureVisible(VirtListBox* lb, int idx);
 struct NavDirScanReq {
     NavFilesInFolderWnd* wnd = nullptr;
     int gen = 0;
-    Str dir; // owned
+    bool isRefresh = false; // re-read of the dir already shown
+    Str dir;                // owned
     ~NavDirScanReq() { str::Free(dir); }
 };
 
 struct NavDirScanResult {
     NavFilesInFolderWnd* wnd = nullptr;
     int gen = 0;
+    bool isRefresh = false;
     Str dir; // owned
     Vec<NavFileEntry> entries;
     double totalMs = 0;
@@ -450,9 +474,14 @@ static void FinishNavDirScan(NavDirScanResult* r) {
     if (!m) {
         m = new ListBoxModelNav();
     }
+    wnd->scanInFlight = false;
+    // a re-read that found nothing new leaves the list alone: no repaint at all
+    if (r->isRefresh && SameNavEntries(m->all, r->entries)) {
+        return;
+    }
+    int scrollY = wnd->listBox->scrollY;
     StealNavEntries(m->all, r->entries);
     FilterNavEntries(m, wnd->filterWords);
-    wnd->scanInFlight = false;
     wnd->listBox->SetModel(m);
     wnd->UpdateDirLabel();
 
@@ -462,7 +491,12 @@ static void FinishNavDirScan(NavDirScanResult* r) {
     } else if (wnd->pendingSelectIdx >= 0) {
         selIdx = wnd->pendingSelectIdx;
     }
-    if (m->ItemsCount() > 0) {
+    if (m->ItemsCount() > 0 && r->isRefresh) {
+        // the user is looking at this list: keep the viewport where it was
+        selIdx = std::min(selIdx, m->ItemsCount() - 1);
+        wnd->listBox->SetCurrentSelection(selIdx);
+        wnd->listBox->ScrollTo(scrollY);
+    } else if (m->ItemsCount() > 0) {
         SelectAndEnsureVisible(wnd->listBox, selIdx);
     }
     wnd->listBox->Invalidate();
@@ -479,6 +513,7 @@ static void NavDirScanThread(NavDirScanReq* req) {
     auto* r = new NavDirScanResult;
     r->wnd = req->wnd;
     r->gen = req->gen;
+    r->isRefresh = req->isRefresh;
     r->dir = str::Dup(req->dir);
     CollectNavEntriesForDir(req->dir, r->entries);
     if (comInited) {
@@ -633,7 +668,7 @@ void NavFilesInFolderWnd::Navigate(Str dir, Str selectPath) {
     SetDir(dir, selectPath);
 }
 
-void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath, int selectIdx) {
+void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath, int selectIdx, NavListReset reset) {
     // the filter is per folder, like Explorer's search box
     if (!str::EqI(dir, currDir)) {
         ClearFilter();
@@ -649,22 +684,25 @@ void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath, int selectIdx) {
     if (!m) {
         m = new ListBoxModelNav();
     }
-    // show ".." immediately so the window is usable while the listing runs
-    ClearNavModel(m);
-    if (!IsHome()) {
-        AppendParentEntry(m->all);
+    if (reset == NavListReset::Clear) {
+        // show ".." immediately so the window is usable while the listing runs
+        ClearNavModel(m);
+        if (!IsHome()) {
+            AppendParentEntry(m->all);
+        }
+        FilterNavEntries(m, filterWords);
+        listBox->SetModel(m);
+        UpdateDirLabel();
+        if (m->ItemsCount() > 0) {
+            SelectAndEnsureVisible(listBox, 0);
+        }
+        listBox->Invalidate();
     }
-    FilterNavEntries(m, filterWords);
-    listBox->SetModel(m);
-    UpdateDirLabel();
-    if (m->ItemsCount() > 0) {
-        SelectAndEnsureVisible(listBox, 0);
-    }
-    listBox->Invalidate();
 
     auto* req = new NavDirScanReq;
     req->wnd = this;
     req->gen = scanGen;
+    req->isRefresh = reset == NavListReset::Keep;
     req->dir = str::Dup(currDir);
     logf("NavDirScan: start %s gen=%d (UI thread=%d)\n", currDir, scanGen, (int)uitask::IsMainUIThread());
     auto fn = MkFunc0(NavDirScanThread, req);
@@ -706,7 +744,7 @@ void NavFilesInFolderWnd::RefreshList() {
         selIdx = pendingSelectIdx;
     }
     TempStr dir = str::DupTemp(currDir);
-    SetDir(dir, sel, selIdx);
+    SetDir(dir, sel, selIdx, NavListReset::Keep);
 }
 
 // from a root directory (C:\) Up goes to the home view
@@ -1424,6 +1462,8 @@ TempStr NavFilesInFolderStateTemp(Str action, int idx, int* exitCodeOut) {
         wnd->GoHome();
     } else if (str::Eq(action, StrL("execute"))) {
         wnd->ExecuteCurrentSelection();
+    } else if (str::Eq(action, StrL("refresh"))) {
+        wnd->RefreshList();
     } else if (str::TrimPrefix(action, StrL("filter:"))) {
         wnd->filterEdit->SetText(action);
         wnd->OnFilterChanged();
