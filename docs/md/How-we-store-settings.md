@@ -62,4 +62,4 @@ Delete `SumatraPDF-settings.txt`. SumatraPDF recreates it on next launch with fa
 
 - [FAQ](FAQ.md)
 - [Tabs and windows](Tabs-and-windows.md) — `UseTabs`, `ReuseInstance`, `RestoreSession`
-- [Advanced options / settings](Advanced-options-settings.md)
+- [Advanced settings](Advanced-options-settings.md)

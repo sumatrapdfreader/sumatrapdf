@@ -30,9 +30,9 @@ To print only a fragment of a page (a detail of a drawing, one table):
 1. Select the area as a rectangle: hold `Ctrl` and drag with the left mouse
    button (or drag with the right mouse button).
 2. Right-click the selection and choose **Print Selection...**, or press
-   `Ctrl + P` and pick **Selection** under *Page Range* in the print dialog.
+   `Ctrl + P` and pick **Selection** under _Page Range_ in the print dialog.
 3. To print the fragment at its real size choose **Actual size (1:1)**
-   under *Advanced*; **Shrink** / **Fit** scale it to the paper instead.
+   under _Advanced_; **Shrink** / **Fit** scale it to the paper instead.
 
 The selection prints on one sheet, at the top-left (or centered with
 **Center page horizontally**). Only rectangular selections can be printed;
@@ -42,7 +42,7 @@ selection, so SumatraPDF uses the classic dialog for it.
 ### The Advanced options
 
 The system print dialog has an **Advanced** tab (a second tab next to
-*General*) with SumatraPDF's own options:
+_General_) with SumatraPDF's own options:
 
 **Print range**
 
@@ -57,7 +57,7 @@ The system print dialog has an **Advanced** tab (a second tab next to
 - **Fit pages to printable area** – scale every page up or down so it fills the
   printable area, keeping the aspect ratio
 - **Stretch pages to fill paper** – fill the paper in both
-  dimensions, *not* keeping the aspect ratio (the page is distorted to fit)
+  dimensions, _not_ keeping the aspect ratio (the page is distorted to fit)
 - **Actual size (1:1)** – print at 100%, no scaling
   (best for forms, labels, technical drawings and anything that must print at
   an exact size). For images the size comes from the resolution
@@ -116,20 +116,20 @@ SumatraPDF exits; check the process exit code for success/failure.
 
 ### Exit codes
 
-For unattended/silent printing, the process exit code tells you *why* a print
+For unattended/silent printing, the process exit code tells you _why_ a print
 failed:
 
-| Exit code | Meaning |
-| --- | --- |
-| `0` | success |
-| `2` | couldn't open the file (not found or unsupported format) |
-| `3` | the document doesn't allow printing |
-| `4` | the printer (named, or default) doesn't exist |
-| `5` | the printer driver / device failed |
-| `6` | printing is disabled by restriction policy |
+| Exit code | Meaning                                                  |
+| --------- | -------------------------------------------------------- |
+| `0`       | success                                                  |
+| `2`       | couldn't open the file (not found or unsupported format) |
+| `3`       | the document doesn't allow printing                      |
+| `4`       | the printer (named, or default) doesn't exist            |
+| `5`       | the printer driver / device failed                       |
+| `6`       | printing is disabled by restriction policy               |
 
 With several files, the code is `0` only if all printed, otherwise the category
-of the first failure. Anything that goes wrong inside the spooler/driver *after*
+of the first failure. Anything that goes wrong inside the spooler/driver _after_
 the job is submitted (out of paper, printer offline, jam) can't be reported —
 SumatraPDF only knows whether the job was handed off.
 
@@ -146,66 +146,66 @@ Order doesn't matter. Available tokens:
 
 **Which pages**
 
-| Option | Meaning |
-| --- | --- |
-| `5` | a single page |
-| `2-6` | a page range |
-| `10-8` | a reversed range (prints 10, 9, 8) |
-| `last` | the last page |
-| `-1`, `-2` | count from the end (`-1` = last page, `-2` = second-to-last) |
-| `-3--1` | a range using negatives (here, the last 3 pages) |
-| `even` / `odd` | only even / only odd pages of the selected range |
+| Option         | Meaning                                                      |
+| -------------- | ------------------------------------------------------------ |
+| `5`            | a single page                                                |
+| `2-6`          | a page range                                                 |
+| `10-8`         | a reversed range (prints 10, 9, 8)                           |
+| `last`         | the last page                                                |
+| `-1`, `-2`     | count from the end (`-1` = last page, `-2` = second-to-last) |
+| `-3--1`        | a range using negatives (here, the last 3 pages)             |
+| `even` / `odd` | only even / only odd pages of the selected range             |
 
 **Scaling and placement**
 
-| Option | Meaning |
-| --- | --- |
-| `noscale` | print at 100% (no scaling), i.e. actual size / 1:1 |
+| Option    | Meaning                                                                                                                                               |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `noscale` | print at 100% (no scaling), i.e. actual size / 1:1                                                                                                    |
 | `dpi=<n>` | resolution to assume for the document, e.g. `dpi=300` for a 300 dpi scan whose file says otherwise (or nothing); decides the size `noscale` prints at |
-| `shrink` | scale down only pages too big for the paper (default) |
-| `fit` | scale every page to fill the printable area, keeping aspect ratio |
-| `stretch` | fill the paper in both dimensions, ignoring aspect ratio |
-| `center` | center the page horizontally on the paper |
+| `shrink`  | scale down only pages too big for the paper (default)                                                                                                 |
+| `fit`     | scale every page to fill the printable area, keeping aspect ratio                                                                                     |
+| `stretch` | fill the paper in both dimensions, ignoring aspect ratio                                                                                              |
+| `center`  | center the page horizontally on the paper                                                                                                             |
 
 **Orientation**
 
-| Option | Meaning |
-| --- | --- |
-| `portrait` / `landscape` | rotate the *content* 90° (this is content rotation, **not** the paper orientation, which is set by the printer/driver) |
-| `disable-auto-rotation` | don't auto-rotate a wide page 90° to fit the paper; print it in its original orientation |
+| Option                                    | Meaning                                                                                                                                                                                                        |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `portrait` / `landscape`                  | rotate the _content_ 90° (this is content rotation, **not** the paper orientation, which is set by the printer/driver)                                                                                         |
+| `disable-auto-rotation`                   | don't auto-rotate a wide page 90° to fit the paper; print it in its original orientation                                                                                                                       |
 | `rotate=90` / `rotate=180` / `rotate=270` | rotate the printout by extra degrees, to fix a wrong orientation (e.g. `rotate=180` for upside-down output on virtual printers). In the window, use the **Rotate printout** dropdown on the Advanced print tab |
 
 **Paper and tray**
 
-| Option | Meaning |
-| --- | --- |
-| `paper=A4` | standard size: `A2`, `A3`, `A4`, `A5`, `A6`, `letter`, `legal`, `tabloid`, `statement`, or a name the printer reports (e.g. `A3 297 x 420 mm`) |
-| `paper=76mm x 130mm` | a custom paper size |
-| `paper=auto` | set the paper size from each page's own size (for mixed page sizes) |
-| `paperkind=<num>` | paper size by Windows `DMPAPER_*` id; use when `paper=A3` doesn't match the driver's paper name |
-| `bin=<num or name>` | select the input tray (by number or name) |
-| `bin=auto` | let the printer pick the tray whose paper matches the page size |
+| Option               | Meaning                                                                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paper=A4`           | standard size: `A2`, `A3`, `A4`, `A5`, `A6`, `letter`, `legal`, `tabloid`, `statement`, or a name the printer reports (e.g. `A3 297 x 420 mm`) |
+| `paper=76mm x 130mm` | a custom paper size                                                                                                                            |
+| `paper=auto`         | set the paper size from each page's own size (for mixed page sizes)                                                                            |
+| `paperkind=<num>`    | paper size by Windows `DMPAPER_*` id; use when `paper=A3` doesn't match the driver's paper name                                                |
+| `bin=<num or name>`  | select the input tray (by number or name)                                                                                                      |
+| `bin=auto`           | let the printer pick the tray whose paper matches the page size                                                                                |
 
 Use `SumatraPDF.exe -list-printers` to list installed printers, paper names, `paperkind=` IDs and tray names.
 
 **Copies, sides and color**
 
-| Option | Meaning |
-| --- | --- |
-| `3x` | number of copies (here, 3) |
+| Option                  | Meaning                                                     |
+| ----------------------- | ----------------------------------------------------------- |
+| `3x`                    | number of copies (here, 3)                                  |
 | `collate` / `nocollate` | collate copies (`1,2,3 / 1,2,3`) or not (`1,1 / 2,2 / 3,3`) |
-| `simplex` | one-sided |
-| `duplex` / `duplexlong` | two-sided, flip on long edge |
-| `duplexshort` | two-sided, flip on short edge |
-| `color` | force color |
-| `monochrome` | force grayscale/black-and-white |
+| `simplex`               | one-sided                                                   |
+| `duplex` / `duplexlong` | two-sided, flip on long edge                                |
+| `duplexshort`           | two-sided, flip on short edge                               |
+| `color`                 | force color                                                 |
+| `monochrome`            | force grayscale/black-and-white                             |
 
 **Output (advanced)**
 
-| Option | Meaning |
-| --- | --- |
-| `output=<file>` | write to a file (for "print to file" style printers) |
-| `docname=<name>` | set the print job name shown in the print queue |
+| Option                      | Meaning                                                   |
+| --------------------------- | --------------------------------------------------------- |
+| `output=<file>`             | write to a file (for "print to file" style printers)      |
+| `docname=<name>`            | set the print job name shown in the print queue           |
 | `ignore-pdf-print-settings` | ignore the print defaults embedded in the PDF (see below) |
 
 > If `paper=A4` doesn't take effect, the driver may report the size under a
@@ -218,12 +218,12 @@ A PDF can carry print hints in its `ViewerPreferences` dictionary. When you
 print a **PDF** from the command line, SumatraPDF reads them and uses them as
 defaults:
 
-| ViewerPreferences key | Effect |
-| --- | --- |
-| `PrintScaling` | `/None` prints at original size (no scaling); `/AppDefault` uses SumatraPDF's default |
-| `NumCopies` | number of copies |
-| `Duplex` | `Simplex`, `DuplexFlipShortEdge` or `DuplexFlipLongEdge` |
-| `PickTrayByPDFSize` | when true, pick the input tray by page size (same as `bin=auto`) |
+| ViewerPreferences key | Effect                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| `PrintScaling`        | `/None` prints at original size (no scaling); `/AppDefault` uses SumatraPDF's default |
+| `NumCopies`           | number of copies                                                                      |
+| `Duplex`              | `Simplex`, `DuplexFlipShortEdge` or `DuplexFlipLongEdge`                              |
+| `PickTrayByPDFSize`   | when true, pick the input tray by page size (same as `bin=auto`)                      |
 
 These are **defaults only**. Anything you pass in `-print-settings` overrides the
 PDF's value — e.g. `-print-settings "2x"` prints 2 copies even if the PDF asks
@@ -240,7 +240,7 @@ print dialog's own values are used.
 ## Print dialog defaults
 
 You can change some defaults used by the print dialog with the `PrinterDefaults`
-advanced setting (in `Settings → Advanced Options`):
+advanced setting (in `Settings → Advanced Settings`):
 
 ```
 PrinterDefaults [
@@ -275,13 +275,13 @@ document is.
   scanner wrote 300 dpi into the file; a file with no resolution prints about
   3x too large, and a file that claims 72 dpi comes out bigger still. The
   resolution SumatraPDF read is shown in Document Properties (`Ctrl + D`) as
-  *DPI*.
+  _DPI_.
 - **Image folders and comic books** (CBZ, CBR, a directory of images) are always
   treated as 96 dpi, whatever the images say, so their pages fit a screen.
 
 When the file's resolution is missing or wrong, tell SumatraPDF what it is:
 
-- from the window: set `PrinterDefaults.PrintDpi` (Settings → Advanced Options),
+- from the window: set `PrinterDefaults.PrintDpi` (Settings → Advanced Settings),
   e.g. `PrintDpi = 300`, then print with **Actual size (1:1)**
 - from the command line: `-print-settings "noscale,dpi=300"`
 
@@ -399,11 +399,11 @@ Combine with `ignore-pdf-print-settings` if the PDF embeds conflicting `ViewerPr
 
 Check the [exit code](#exit-codes). Common results:
 
-| Code | Check |
-| --- | --- |
-| `4` | Printer name typo or no default printer |
-| `5` | Driver error — update driver, try printing to "Microsoft Print to PDF" to isolate |
-| `6` | `sumatrapdfrestrict.ini` has `PrinterAccess = 0` |
+| Code | Check                                                                             |
+| ---- | --------------------------------------------------------------------------------- |
+| `4`  | Printer name typo or no default printer                                           |
+| `5`  | Driver error — update driver, try printing to "Microsoft Print to PDF" to isolate |
+| `6`  | `sumatrapdfrestrict.ini` has `PrinterAccess = 0`                                  |
 
 Add `-silent` only after confirming the command works interactively (without `-silent`, error dialogs explain failures).
 

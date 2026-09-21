@@ -6,7 +6,7 @@ You can add new keyboard shortcuts or reassign an existing shortcut to a differe
 
 To customize keyboard shortcuts:
 
-- open the Command Palette with `Ctrl + K`, type `open settings` to narrow the results, and select the `Open Settings File...` command (the `Settings` / `Advanced Options...` dialog also has an **Open Settings File** button)
+- open the Command Palette with `Ctrl + K`, type `open settings` to narrow the results, and select the `Open Settings File...` command (the `Settings` / `Advanced Settings...` dialog also has an **Open Settings File** button)
 - this opens the advanced settings file in your default text editor
 - find the `Shortcuts` array and add new shortcut definitions
 

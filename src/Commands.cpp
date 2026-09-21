@@ -772,7 +772,7 @@ SeqStrings gCommandDescriptions =
     "Open Embedded PDF\0"
     "Save Attachment...\0"
     "Open Attachment\0"
-    "Options...\0"
+    "Settings...\0"
     "Advanced Settings...\0"
     "Change Language...\0"
     "Check For Updates\0"
@@ -975,12 +975,10 @@ SeqStrings gCommandDescriptions =
 
 SeqStrings gCommandAltDescs =
     "Browse Files In Folder...\0"
-    "Advanced Options...\0"
     "\0";
 
 i32 gCommandAltDescIds[] = {
     CmdNavigateFilesInFolder,
-    CmdAdvancedSettings,
 };
 // clang-format on
 // @gen-end cmd-c

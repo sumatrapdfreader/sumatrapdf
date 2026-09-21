@@ -130,7 +130,7 @@ const commandsRaw = [
     "CmdOpenEmbeddedPDF", "Open Embedded PDF",
     "CmdSaveAttachment", "Save Attachment...",
     "CmdOpenAttachment", "Open Attachment",
-    "CmdOptions", "Options...",
+    "CmdOptions", "Settings...",
     "", "removed: CmdAdvancedOptions",
     "CmdAdvancedSettings", "Advanced Settings...",
     "CmdChangeLanguage", "Change Language...",
@@ -343,7 +343,6 @@ export const commands: string[] = commandsRaw.filter((_, i) => commandsRaw[i - (
 // prettier-ignore
 export const commandAltDescs: [string, string][] = [
     ["CmdNavigateFilesInFolder", "Browse Files In Folder..."],
-    ["CmdAdvancedSettings", "Advanced Options..."],
 ];
 
 function getNames(): string[] {

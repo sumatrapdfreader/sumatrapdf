@@ -15,7 +15,7 @@ Compile with SyncTeX enabled (most tools use `-synctex=1` or an equivalent). Tha
 
 Forward search is usually configured **in the editor** (viewer command / external PDF viewer). Inverse search is configured **in Sumatra** via the inverse-search command line (below).
 
-Recommended Sumatra settings (Advanced Options or once via the inverse-search dialog):
+Recommended Sumatra settings (Advanced Settings or once via the inverse-search dialog):
 
 ```
 EnableTeXEnhancements = true
@@ -93,7 +93,7 @@ Install the [LaTeX Workshop](https://marketplace.visualstudio.com/items?itemName
 
 **1. Inverse search (in Sumatra)**
 
-Set this once (`Ctrl + K` → **Set Inverse Search Command Line**, or Advanced Options). Overwrite `InverseSearchCmdLine` in place; do not paste it under the “Settings below are not recognized” footer, or Sumatra ignores it.
+Set this once (`Ctrl + K` → **Set Inverse Search Command Line**, or Advanced Settings). Overwrite `InverseSearchCmdLine` in place; do not paste it under the “Settings below are not recognized” footer, or Sumatra ignores it.
 
 Prefer the `code` / `cursor` CLI on `PATH`, or a full path to the `.cmd` launcher:
 

@@ -36,7 +36,7 @@ Scope labels on the playback bar: **Smart start**, **From top**, **From cursor**
 
 ## Voice
 
-Open **Voice** in any Read Aloud menu to pick **System default** or an installed Windows voice (WinRT OneCore voices and SAPI voices, including those from [NaturalVoiceSAPIAdapter](https://github.com/gexgd0419/NaturalVoiceSAPIAdapter)). Your choice is remembered in `ReadAloudVoiceId` in [Advanced options](Advanced-options-settings.md) (`SumatraPDF-settings.txt`). Leave it empty for the system default.
+Open **Voice** in any Read Aloud menu to pick **System default** or an installed Windows voice (WinRT OneCore voices and SAPI voices, including those from [NaturalVoiceSAPIAdapter](https://github.com/gexgd0419/NaturalVoiceSAPIAdapter)). Your choice is remembered in `ReadAloudVoiceId` in [Advanced settings](Advanced-options-settings.md) (`SumatraPDF-settings.txt`). Leave it empty for the system default.
 
 ## Limitations
 
@@ -49,6 +49,6 @@ Open **Voice** in any Read Aloud menu to pick **System default** or an installed
 ## See also
 
 - [Commands](Commands.md) — Read Aloud commands
-- [Advanced options](Advanced-options-settings.md) — `ReadAloudVoiceId`
+- [Advanced settings](Advanced-options-settings.md) — `ReadAloudVoiceId`
 - [Version history](Version-history.md) — 3.7 Read Aloud entry
 - [Accessibility](Accessibility.md) — screen readers and other accessibility features

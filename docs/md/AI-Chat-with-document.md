@@ -129,7 +129,7 @@ You can assign your own keyboard shortcut to any of the chat commands — there 
 
 - [Commands](Commands.md) — `CmdAIChatWithClaudeCode`, `CmdAIChatWithGrokBuild`, `CmdAIChatWithOpenAICodex`, `CmdAIChatWithAntiGravity`
 - [Command Palette](Command-Palette.md)
-- [Advanced options / settings](Advanced-options-settings.md) — `ClaudeCode`, `GrokBuild`, `CodexBuild`, and `AntiGravity` sections
+- [Advanced settings](Advanced-options-settings.md) — `ClaudeCode`, `GrokBuild`, `CodexBuild`, and `AntiGravity` sections
 - [Version history](Version-history.md) — 3.7 AI Chat entry
 - [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code) (Anthropic)
 - [Grok Build](https://x.ai/news/grok-build-cli) (xAI)

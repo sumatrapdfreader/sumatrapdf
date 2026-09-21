@@ -1,6 +1,6 @@
 // A command can be listed in the command palette under more than one name:
 // "Browse Files In Folder..." finds CmdNavigateFilesInFolder as well as its
-// own "Navigate Files in Folder..." does; "Advanced Options..." is the dialog.
+// own "Navigate Files in Folder..." does.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
@@ -79,7 +79,6 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     const cases: [string, string[]][] = [
       ["CmdNavigateFilesInFolder", ["Browse Files In Folder...", "Navigate Files in Folder..."]],
-      ["CmdAdvancedSettings", ["Advanced Options...", "Advanced Settings..."]],
     ];
     for (const [cmd, texts] of cases) {
       const expected = cmdId(cmd);

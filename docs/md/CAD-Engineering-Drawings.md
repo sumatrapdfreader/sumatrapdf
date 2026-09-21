@@ -51,6 +51,6 @@ This override is **session-only**. It is not saved in `FileStates`. Closing the 
 
 ## See also
 
-- [Advanced options / settings](Advanced-options-settings.md)
+- [Advanced settings](Advanced-options-settings.md)
 - [Commands](Commands.md) (`CmdToggleEngineeringDrawingEnhance`)
 - [Command Palette](Command-Palette.md)

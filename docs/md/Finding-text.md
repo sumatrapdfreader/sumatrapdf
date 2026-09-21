@@ -32,7 +32,7 @@ Switch between them with the diagonal-arrows button on the right of the find UI
 
 The choice is remembered across launches via the `SearchUIFloating` advanced
 setting (`true` = floating window). The floating window's position and size are
-remembered via `SearchUIWindowPos`. See [Advanced options / settings](Advanced-options-settings.md).
+remembered via `SearchUIWindowPos`. See [Advanced settings](Advanced-options-settings.md).
 
 ## Results list (floating window)
 

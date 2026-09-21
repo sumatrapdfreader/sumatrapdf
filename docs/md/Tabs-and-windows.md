@@ -9,7 +9,7 @@ SumatraPDF can open documents in **tabs** inside one window, or in **separate wi
 | `UseTabs`       | `true`  | New documents open as **tabs** in an existing window instead of always spawning a new window      |
 | `ReuseInstance` | `true`  | Opening a file from Explorer or the command line **reuses** an already running SumatraPDF process |
 
-Both live in [advanced settings](Advanced-options-settings.md) (`Settings → Advanced Options...`).
+Both live in [advanced settings](Advanced-options-settings.md) (`Settings → Advanced Settings...`).
 
 ### Common confusion: tabs enabled but new window every time
 

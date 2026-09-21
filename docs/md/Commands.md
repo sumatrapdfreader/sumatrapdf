@@ -331,7 +331,7 @@ CmdInvokeInverseSearch,,Invoke Inverse Search,ver 3.6+
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdOpenSettingsFile,,Open Settings File...,"Opens the settings file in the text editor associated with .txt files, ver 3.7+"
-CmdAdvancedSettings,,Advanced Settings...,"ver 3.7+, opens a dialog for viewing and editing the advanced settings: filter by name, click a setting to toggle / pick / edit its value, then Save; also listed in the command palette as `Advanced Options...`, and `CmdAdvancedOptions` in a shortcut definition still means this command"
+CmdAdvancedSettings,,Advanced Settings...,"ver 3.7+, opens a dialog for viewing and editing the advanced settings: filter by name, click a setting to toggle / pick / edit its value, then Save; `CmdAdvancedOptions` in a shortcut definition still means this command"
 CmdChangeLanguage,,Change Language...,
 CmdCheckUpdate,,Check For Updates,
 CmdClearHistory,,Clear History,Clears history of opened files (for recently opened list in home page)
@@ -340,7 +340,7 @@ CmdDeleteCachedFiles,,Delete Cached Files,"ver 3.7+, deletes local copies of com
 CmdContributeTranslation,,Contribute Translation,
 CmdForgetSelectedDocument,,Remove Selected Document From History,
 CmdListPrinters,,List Printers,ver 3.7+
-CmdOptions,,Options...,
+CmdOptions,,Settings...,
 CmdSetInverseSearch,,Set Inverse Search Command Line,"ver 3.7+, opens a dialog to set the SyncTeX inverse-search command and enables TeX enhancements"
 CmdScreenshot,,Take Screenshot,"ver 3.7+, can be registered as a global hotkey via Shortcuts entry (e.g. Key = Global PrtSc) or through the Settings menu"
 CmdCropImage,,Crop Image,ver 3.7+

@@ -269,7 +269,7 @@ bool SettingsWnd::Create(MainWindow* mainWin) {
 
     {
         CreateCustomArgs args;
-        args.title = Tr("SumatraPDF Options");
+        args.title = Tr("Settings");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
         args.font = GetFont();

@@ -49,7 +49,7 @@ Using AI? You can ask an AI assistant questions about SumatraPDF. Ask [Grok](htt
 
 [LaTeX integration](LaTeX-integration.md)
 
-[Advanced options / settings](Advanced-options-settings.md)
+[Advanced settings](Advanced-options-settings.md)
 
 [DDE Commands](DDE-Commands.md)
 

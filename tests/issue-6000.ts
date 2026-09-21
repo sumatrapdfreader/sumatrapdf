@@ -278,14 +278,14 @@ RememberOpenedFiles = false
     let opts = { dlg: 0, combo: 0 };
     const optsDeadline = Date.now() + 5_000;
     while (Date.now() < optsDeadline) {
-      opts = findDialogCombo(proc.pid!, "SumatraPDF Options");
+      opts = findDialogCombo(proc.pid!, "Settings");
       if (opts.combo) {
         break;
       }
       await sleep(50);
     }
     if (!opts.combo) {
-      throw new Error("issue-6000: Options ComboBox not found");
+      throw new Error("issue-6000: Settings ComboBox not found");
     }
     const optsList = await openComboList(proc.pid!, opts.combo);
     if (!optsList) {

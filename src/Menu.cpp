@@ -580,11 +580,11 @@ static MenuDef menuDefSettings[] = {
         CmdToggleFilePicker,
     },
     {
-        TrN("&Options..."),
+        TrN("&Settings..."),
         CmdOptions,
     },
     {
-        TrN("&Advanced Options..."),
+        TrN("&Advanced Settings..."),
         CmdAdvancedSettings,
     },
     {

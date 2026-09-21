@@ -203,7 +203,7 @@ ImageUI [
 ]
 ```
 
-Full field comments: [Advanced options / settings](Advanced-options-settings.md).
+Full field comments: [Advanced settings](Advanced-options-settings.md).
 
 ### Related commands
 
@@ -223,6 +223,6 @@ Full field comments: [Advanced options / settings](Advanced-options-settings.md)
 - [Convert to PDF](Convert-to-PDF.md)
 - [Supported document formats](Supported-document-formats.md)
 - [Scrolling and zooming](Scrolling-and-zooming.md)
-- [Advanced options / settings](Advanced-options-settings.md)
+- [Advanced settings](Advanced-options-settings.md)
 - [Commands](Commands.md)
 - [How we store settings](How-we-store-settings.md)

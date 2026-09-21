@@ -29,7 +29,7 @@ there is no font or CSS to change.
 
 ## What you can customize
 
-The same settings, and a few more, are in **Settings → Advanced Options...**,
+The same settings, and a few more, are in **Settings → Advanced Settings...**,
 in the `EBookUI` section:
 
 ```
@@ -57,7 +57,7 @@ EBookUI [
 | `CustomCSS`             | Extra CSS rules. A declaration marked `!important` beats the document's own CSS and its inline styles, so `IgnoreDocumentCSS` is rarely needed                                                                                                                                                                          |
 | `WindowBgCol`           | Canvas background around the reflowed text (**ver 3.7+**)                                                                                                                                                                                                                                                               |
 
-Full field reference: [Advanced options / settings](Advanced-options-settings.md).
+Full field reference: [Advanced settings](Advanced-options-settings.md).
 
 ## Settings for a single document (**ver 3.7+**)
 
@@ -132,4 +132,4 @@ CHM uses a separate `ChmUI` section. Set `ChmUI.UseFixedPageUI = true` to render
 
 - [Supported document formats](Supported-document-formats.md)
 - [FAQ](FAQ.md) — dark mode / invert questions
-- [Advanced options / settings](Advanced-options-settings.md)
+- [Advanced settings](Advanced-options-settings.md)
