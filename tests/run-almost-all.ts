@@ -117,6 +117,7 @@ import { testit as issue6216 } from "./issue-6216.ts";
 import { testit as issue6217 } from "./issue-6217.ts";
 import { testit as comicFitPageRelayout } from "./comic-fit-page-relayout.ts";
 import { testit as issue6225 } from "./issue-6225.ts";
+import { testit as issue6229 } from "./issue-6229.ts";
 import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
 import { testit as issue4753 } from "./issue-4753.ts";
 import { testit as issue4055 } from "./issue-4055.ts";
@@ -340,6 +341,7 @@ export const tests: NamedTest[] = [
   ["issue-6217", issue6217],
   ["comic-fit-page-relayout", comicFitPageRelayout],
   ["issue-6225", issue6225],
+  ["issue-6229", issue6229],
   ["issue-6133", issue6133],
   ["issue-6184", issue6184],
   ["image-only-palette-items", imageOnlyPaletteItems],

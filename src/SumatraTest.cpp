@@ -1668,6 +1668,10 @@ TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* e
 // Render an image page and report dest size plus the RGB of the left and right
 // edge pixels. clipKind=1 uses the slightly-off page rect that Copy Selection
 // produces after CvtFromScreen (issue #3434).
+// clipKind values of ImageRenderEdgesResultTemp
+constexpr int kClipSelection = 1;
+constexpr int kClipRightHalfTile = 2;
+
 TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
@@ -1686,10 +1690,18 @@ TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int*
     float zoom = (float)zoomPercent / 100.f;
     RectF clip;
     RectF* pageRect = nullptr;
-    if (clipKind != 0) {
+    if (clipKind == kClipSelection) {
         // same half-pixel pull-back CvtFromScreen applies to a pixel-aligned
         // selection of the whole image
         clip = RectF(-0.499f, -0.499f, box.dx, box.dy);
+        pageRect = &clip;
+    }
+    if (clipKind == kClipRightHalfTile) {
+        // full render first so mupdf caches the whole decoded image, then a
+        // tile of the right half (#6229)
+        RenderPageArgs full(1, zoom, 0, nullptr, RenderTarget::Export);
+        FreePixmap(engine->RenderPage(full));
+        clip = RectF(box.dx / 2, 0, box.dx / 2, box.dy);
         pageRect = &clip;
     }
     RenderPageArgs args(1, zoom, 0, pageRect, RenderTarget::Export);

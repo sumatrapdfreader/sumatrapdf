@@ -563,6 +563,37 @@ static void GetPixmapPixelBgraKeepAlpha(const Pixmap* pixmap, int x, int y, u8* 
     bgra[3] = pixmap->format == PixmapFormat::BGR8 ? 255 : src[3];
 }
 
+// mupdf may answer a subarea request with a different area: its cached full
+// decode, or the subarea grown to the subsampling grid. The returned ctm maps
+// the pixmap into the full page at reqW x reqH, so scale it into screen space
+// and cut out the tile (discussion #6229). Returns nullptr if the tile isn't
+// covered.
+static fz_pixmap* ScaleDecodedToTile(fz_context* ctx, fz_pixmap* decoded, fz_matrix ctm, int reqW, int reqH,
+                                     Rect mediaScreen, Rect screen) {
+    float kx = (float)mediaScreen.dx / (float)reqW;
+    float ky = (float)mediaScreen.dy / (float)reqH;
+    // whole pixels: a fractional dest makes fz_scale_pixmap add alpha and
+    // feather the edges, which shows as seams between tiles
+    int x0 = (int)floorf(ctm.e * kx + 0.5f);
+    int y0 = (int)floorf(ctm.f * ky + 0.5f);
+    int x1 = (int)floorf((ctm.e + ctm.a) * kx + 0.5f);
+    int y1 = (int)floorf((ctm.f + ctm.d) * ky + 0.5f);
+    fz_irect tile;
+    tile.x0 = screen.x - mediaScreen.x;
+    tile.y0 = screen.y - mediaScreen.y;
+    tile.x1 = tile.x0 + screen.dx;
+    tile.y1 = tile.y0 + screen.dy;
+    if (tile.x0 < x0 || tile.y0 < y0 || tile.x1 > x1 || tile.y1 > y1) {
+        return nullptr;
+    }
+    fz_pixmap* res = fz_scale_pixmap(ctx, decoded, (float)x0, (float)y0, (float)(x1 - x0), (float)(y1 - y0), &tile);
+    if (res && (res->w != screen.dx || res->h != screen.dy)) {
+        fz_drop_pixmap(ctx, res);
+        return nullptr;
+    }
+    return res;
+}
+
 Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
     auto* pageRect = args.pageRect;
@@ -658,12 +689,20 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         fz_try(ctx) {
             int dw = 0, dh = 0;
             decoded = fz_get_pixmap_from_image(ctx, page->img, subPtr, &ctm, &dw, &dh);
-            if (decoded && (decoded->w != screen.dx || decoded->h != screen.dy)) {
+            if (decoded && !subPtr && (decoded->w != screen.dx || decoded->h != screen.dy)) {
                 scaled = fz_scale_pixmap(ctx, decoded, 0, 0, (float)screen.dx, (float)screen.dy, nullptr);
+            }
+            if (decoded && subPtr) {
+                scaled = ScaleDecodedToTile(ctx, decoded, ctm, reqW, reqH, mediaScreen, screen);
             }
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
+        }
+        if (subPtr && !scaled) {
+            // decoded area doesn't cover the tile; use the Pixmap path below
+            fz_drop_pixmap(ctx, decoded);
+            decoded = nullptr;
         }
         fz_pixmap* final = scaled ? scaled : decoded;
         if (final) {
