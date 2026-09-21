@@ -18296,6 +18296,15 @@ ContinueOpenWindow:
                 RestoreTabOnStartup(win, state, gSettings->lazyLoading, restored != nRestore);
             }
             win->currentTabTemp = nullptr;
+            // a browser-view (CHM / markdown) tab loads synchronously and is
+            // win->ctrl, but AddTabToWindow selected the last restored tab.
+            // Select the loaded tab so TabsSelect closes it when switching away
+            if (win->ctrl) {
+                WindowTab* loaded = FindTabByController(win->ctrl);
+                if (loaded) {
+                    win->tabsCtrl->SetSelected(win->GetTabIdx(loaded));
+                }
+            }
             if (nRestore > 0) {
                 UpdateTabWidth(win);
             }

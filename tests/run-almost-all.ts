@@ -142,6 +142,7 @@ import { testit as embeddedImageAttachment } from "./embedded-image-attachment.t
 import { testit as ttsEngineCrashRecovery } from "./tts-engine-crash-recovery.ts";
 import { testit as lazyTabStateAfterSave } from "./lazy-tab-state-after-save.ts";
 import { testit as lazyTabSelectPaint } from "./lazy-tab-select-paint.ts";
+import { testit as restoreChmMissingTab } from "./restore-chm-missing-tab.ts";
 import { testit as issue5943 } from "./issue-5943.ts";
 import { testit as issue6117 } from "./issue-6117.ts";
 import { testit as issue6118 } from "./issue-6118.ts";
@@ -357,6 +358,7 @@ export const tests: NamedTest[] = [
   ["tts-engine-crash-recovery", ttsEngineCrashRecovery],
   ["lazy-tab-state-after-save", lazyTabStateAfterSave],
   ["lazy-tab-select-paint", lazyTabSelectPaint],
+  ["restore-chm-missing-tab", restoreChmMissingTab],
   ["issue-4705", issue4705],
   ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-5956", issue5956],
