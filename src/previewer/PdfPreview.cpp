@@ -53,8 +53,9 @@ FileEBookUI* GetFileEBookUI(Str) {
 // Copy a rendered page into the 32bpp DIB the shell gets, rather than going
 // through GetDIBits(bmp->hbmp): only the mupdf engines render into a DIB
 // section, so for DjVu and the image engines hbmp is null and GetDIBits failed,
-// which is why those never had a thumbnail (issue #1530). Pixmap::data is
-// always there.
+// which is why those never had a thumbnail (issue #1530). The caller makes
+// the pixels BGRA8 first: mupdf renders a page with few colors to an 8-bit
+// palette DIB, whose bytes are indices, not colors.
 // Rows are written bottom-up (the DIB has a positive biHeight) and anything
 // translucent is composited over white, the same paper the preview window
 // paints behind a page. Alpha ends up opaque, matching WTSAT_RGB:
@@ -110,7 +111,7 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
 
     page = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
     RenderPageArgs args(1, zoom, 0, &page);
-    Pixmap* bmp = engine->RenderPage(args);
+    Pixmap* bmp = PixmapToBgra(engine->RenderPage(args));
     if (!bmp || !bmp->data) {
         log(StrL("PdfPreview::GetThumbnail: RenderPage() failed\n"));
         FreePixmap(bmp);
