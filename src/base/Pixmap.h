@@ -74,13 +74,18 @@ Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
 // an opaque 32bpp copy of a DIB-backed Pixmap, for code that needs to read pixels
 // out of one whose format is Native. Returns null if there's nothing to copy
 Pixmap* PixmapCopyAs32bppDIB(const Pixmap* p);
+Pixmap* PixmapToBgra(Pixmap* p);
 Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb);
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
 void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor = 0, Vec<Rect>* skipRects = nullptr);
 
 void FreePixmapNativeBitmap(Pixmap* p);
 
+// 0 for Native: those pixels can only be read through GDI
 inline int PixmapBytesPerPixel(PixmapFormat fmt) {
+    if (fmt == PixmapFormat::Native) {
+        return 0;
+    }
     return fmt == PixmapFormat::BGR8 ? 3 : 4;
 }
 
@@ -97,6 +102,9 @@ inline Pixmap* AllocPixmap(int w, int h, PixmapFormat fmt = PixmapFormat::BGRA8,
         return nullptr;
     }
     size_t bpp = (size_t)PixmapBytesPerPixel(fmt);
+    if (bpp == 0) {
+        return nullptr;
+    }
     size_t stride = (((size_t)w * bpp) + 3) & ~(size_t)3;
     size_t nBytes = stride * (size_t)h;
     // guard against overflow on absurd dimensions

@@ -214,6 +214,61 @@ static void UnpremultiplyBgra(u8* d) {
     d[2] = (u8)std::min<u32>(255, (((u32)d[2] * 255) + (a / 2)) / a);
 }
 
+// a 32bpp straight-alpha DIB copy of a heap-backed BGR8 / RGBA8 / BGRA8 pixmap
+static Pixmap* CopyHeapPixmapAsBgraDib(const Pixmap* px) {
+    if (!px->data || PixmapBytesPerPixel(px->format) == 0) {
+        return nullptr;
+    }
+    Pixmap* dib = AllocPixmapDIB(px->width, px->height);
+    if (!dib) {
+        return nullptr;
+    }
+    for (int y = 0; y < px->height; y++) {
+        const u8* src = px->data + ((size_t)y * px->stride);
+        u8* dst = dib->data + ((size_t)y * dib->stride);
+        for (int x = 0; x < px->width; x++) {
+            if (px->format == PixmapFormat::BGR8) {
+                dst[0] = src[0];
+                dst[1] = src[1];
+                dst[2] = src[2];
+                dst[3] = 0xff;
+                src += 3;
+            } else if (px->format == PixmapFormat::RGBA8) {
+                dst[0] = src[2];
+                dst[1] = src[1];
+                dst[2] = src[0];
+                dst[3] = src[3];
+                src += 4;
+            } else {
+                memcpy(dst, src, 4);
+                src += 4;
+            }
+            if (px->premultiplied) {
+                UnpremultiplyBgra(dst);
+            }
+            dst += 4;
+        }
+    }
+    dib->xres = px->xres;
+    dib->yres = px->yres;
+    return dib;
+}
+
+// Takes p. Returns it when its pixels already read as BGRA8; otherwise a
+// 32bpp DIB copy (the engine renders a page with few colors to an 8-bit
+// palette DIB, image engines decode to 24bpp) and p is freed.
+Pixmap* PixmapToBgra(Pixmap* p) {
+    if (!p) {
+        return nullptr;
+    }
+    if (p->format == PixmapFormat::BGRA8 && p->data) {
+        return p;
+    }
+    Pixmap* dib = p->hbmp ? PixmapCopyAs32bppDIB(p) : CopyHeapPixmapAsBgraDib(p);
+    FreePixmap(p);
+    return dib;
+}
+
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
     if (!px) {
         return nullptr;
@@ -223,38 +278,11 @@ RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
             FreePixmap(px);
             return nullptr;
         }
-        Pixmap* dib = AllocPixmapDIB(px->width, px->height);
+        Pixmap* dib = CopyHeapPixmapAsBgraDib(px);
+        FreePixmap(px);
         if (!dib) {
-            FreePixmap(px);
             return nullptr;
         }
-        for (int y = 0; y < px->height; y++) {
-            const u8* src = px->data + ((size_t)y * px->stride);
-            u8* dst = dib->data + ((size_t)y * dib->stride);
-            for (int x = 0; x < px->width; x++) {
-                if (px->format == PixmapFormat::BGR8) {
-                    dst[0] = src[0];
-                    dst[1] = src[1];
-                    dst[2] = src[2];
-                    dst[3] = 0xff;
-                    src += 3;
-                } else if (px->format == PixmapFormat::RGBA8) {
-                    dst[0] = src[2];
-                    dst[1] = src[1];
-                    dst[2] = src[0];
-                    dst[3] = src[3];
-                    src += 4;
-                } else {
-                    memcpy(dst, src, 4);
-                    src += 4;
-                }
-                if (px->premultiplied) {
-                    UnpremultiplyBgra(dst);
-                }
-                dst += 4;
-            }
-        }
-        FreePixmap(px);
         px = dib;
     }
     auto* rb = new RenderedBitmap(px->hbmp, Size(px->width, px->height), px->hMap);

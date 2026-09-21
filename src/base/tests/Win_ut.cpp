@@ -318,6 +318,51 @@ static void PixmapFromHICONAlphaTest() {
     FreePixmap(px);
 }
 
+// PixmapToBgra: palette and 24bpp pixels come back as readable BGRA8,
+// a BGRA8 pixmap is returned as is
+static void PixmapToBgraTest() {
+    const int w = 5;
+    const int h = 3;
+    Pixmap* got = PixmapToBgra(MakePaletteDib(w, h));
+    utassert(got && got->data && got->format == PixmapFormat::BGRA8);
+    utassert(got->width == w && got->height == h);
+    for (int y = 0; y < h; y++) {
+        const u8* d = got->data + ((size_t)y * got->stride);
+        for (int x = 0; x < w; x++, d += 4) {
+            bool blue = ((x + y) % 2) == 1;
+            utassert(d[0] == (blue ? 255 : 0));
+            utassert(d[1] == 0);
+            utassert(d[2] == (blue ? 0 : 255));
+        }
+    }
+    FreePixmap(got);
+
+    Pixmap* bgr = AllocPixmap(w, h, PixmapFormat::BGR8);
+    utassert(bgr);
+    for (int y = 0; y < h; y++) {
+        u8* d = bgr->data + ((size_t)y * bgr->stride);
+        for (int x = 0; x < w; x++, d += 3) {
+            d[0] = 10;
+            d[1] = 20;
+            d[2] = 30;
+        }
+    }
+    got = PixmapToBgra(bgr);
+    utassert(got && got->format == PixmapFormat::BGRA8 && got->stride == w * 4);
+    for (int y = 0; y < h; y++) {
+        const u8* d = got->data + ((size_t)y * got->stride);
+        for (int x = 0; x < w; x++, d += 4) {
+            utassert(d[0] == 10 && d[1] == 20 && d[2] == 30 && d[3] == 255);
+        }
+    }
+    FreePixmap(got);
+
+    Pixmap* bgra = AllocPixmap(w, h);
+    utassert(PixmapToBgra(bgra) == bgra);
+    FreePixmap(bgra);
+    utassert(PixmapToBgra(nullptr) == nullptr);
+}
+
 void WinUtilTest() {
     AutoCoUninitialize comScope;
 
@@ -326,6 +371,7 @@ void WinUtilTest() {
     PixmapFromHICONAlphaTest();
     BlitPixmapExactTest();
     BlitPaletteDibTest();
+    PixmapToBgraTest();
 
     {
         Str string = StrL("abcde");
