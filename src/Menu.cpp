@@ -588,6 +588,10 @@ static MenuDef menuDefSettings[] = {
         CmdAdvancedSettings,
     },
     {
+        TrN("&Open Settings File..."),
+        CmdOpenSettingsFile,
+    },
+    {
         TrN("&Theme"),
         (UINT_PTR)menuDefThemes,
     },

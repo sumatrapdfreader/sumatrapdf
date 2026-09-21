@@ -330,7 +330,7 @@ CmdInvokeInverseSearch,,Invoke Inverse Search,ver 3.6+
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
-CmdOpenSettingsFile,,Open Settings File...,"Opens the settings file in the text editor associated with .txt files, ver 3.7+"
+CmdOpenSettingsFile,,Open Settings File...,"Opens the settings file in the text editor associated with .txt files; menu `Settings` / `Open Settings File...`, ver 3.7+"
 CmdAdvancedSettings,,Advanced Settings...,"ver 3.7+, opens a dialog for viewing and editing the advanced settings: filter by name, click a setting to toggle / pick / edit its value, then Save; `CmdAdvancedOptions` in a shortcut definition still means this command"
 CmdChangeLanguage,,Change Language...,
 CmdCheckUpdate,,Check For Updates,

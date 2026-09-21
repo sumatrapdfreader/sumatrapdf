@@ -8,7 +8,7 @@ You can add custom viewers using [advanced settings](https://www.sumatrapdfreade
 
 To configure an external viewer:
 
-- open the configuration file: Command Palette (`Ctrl + K`), select `Open Settings File...`
+- use the `Settings` / `Open Settings File...` menu to open the configuration file
 - modify `ExternalViewers` section
 
 Relevant settings:
