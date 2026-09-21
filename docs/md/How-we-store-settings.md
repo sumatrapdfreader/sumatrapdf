@@ -41,11 +41,16 @@ Some settings apply only after restarting SumatraPDF:
 
 ### Session restore
 
-| Setting                      | Effect                                                                 |
-| ---------------------------- | ---------------------------------------------------------------------- |
-| `RestoreSession = true`      | On startup, reopen tabs and window layout from `SessionData`           |
-| `RememberOpenedFiles = true` | Track history for Home / `#` command palette                           |
-| `LazyLoading = true`         | When restoring session, load tab content only when the tab is selected |
+| Setting                      | Effect                                                                                                               |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `RestoreSession = true`      | On startup, reopen the tabs and windows still open at last close (`SessionData`)                                     |
+| `RememberOpenedFiles = true` | Keep a history of opened files (`FileStates`) for Home / `#` command palette; also required for saving `SessionData` |
+| `LazyLoading = true`         | When restoring session, load tab content only when the tab is selected                                               |
+
+`FileStates` and `SessionData` answer different questions. `FileStates` is the history: a file stays there after
+you close it, until it drops off the list or you clear the history (File > Clear History). `SessionData` only lists
+what was still open when the last window closed. Close a tab before closing the window and it is gone from
+`SessionData` but remains in `FileStates`.
 
 `-for-testing` skips restore and does not save settings.
 

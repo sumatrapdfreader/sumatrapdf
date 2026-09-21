@@ -101,14 +101,17 @@ PrinterUI =
 ; version 2.5)
 ReloadModifiedDocuments = true
 
-; if true, remember which documents were opened and their display settings
+; if true, keep a history of opened documents and their display settings
+; (FileStates); closing a document doesn't remove it from the history. Also
+; required for saving SessionData
 RememberOpenedFiles = true
 
 ; if true, store display settings for each document separately (i.e. everything
 ; after UseDefaultState in FileStates)
 RememberStatePerDocument = true
 
-; if true and SessionData isn't empty, that session will be restored at startup
+; if true, documents that were still open when the last window was closed
+; (SessionData) are reopened at startup
 RestoreSession = true
 
 ; if true, open documents in the already running SumatraPDF instead of starting
@@ -1169,7 +1172,8 @@ SearchUIWindowPos = 0 0 0 0
 ; position/size of the in-app Help: Manual window (introduced in version 3.7)
 HelpWindowPos = 0 0 0 0
 
-; information about opened files (in most recently used order)
+; history of opened files, most recently used first. A closed file stays here
+; until it drops off the list or the history is cleared
 FileStates [
   [
     ; pages of this document bookmarked in the Favorites menu
@@ -1323,8 +1327,8 @@ FileStates [
   ]
 ]
 
-; state of the last session, usage depends on RestoreSession (introduced in
-; version 3.1)
+; windows and tabs still open when SumatraPDF was last closed; reopened at
+; startup if RestoreSession is true (introduced in version 3.1)
 SessionData [
   [
     ; data required for restoring the view state of a single tab

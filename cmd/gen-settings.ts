@@ -1319,7 +1319,14 @@ const globalPrefs: Field[] = [
     "if true, a document will be reloaded automatically whenever it's changed " +
       "(currently doesn't work for documents shown in the ebook UI)",
   ).ver("2.5"),
-  field("RememberOpenedFiles", Bool, true, "if true, remember which documents were opened and their display settings"),
+  field(
+    "RememberOpenedFiles",
+    Bool,
+    true,
+    "if true, keep a history of opened documents and their display settings " +
+      "(FileStates); closing a document doesn't remove it from the history. " +
+      "Also required for saving SessionData",
+  ),
   field(
     "RememberStatePerDocument",
     Bool,
@@ -1327,7 +1334,13 @@ const globalPrefs: Field[] = [
     "if true, store display settings for each document separately (i.e. everything " +
       "after UseDefaultState in FileStates)",
   ),
-  field("RestoreSession", Bool, true, "if true and SessionData isn't empty, that session will be restored at startup"),
+  field(
+    "RestoreSession",
+    Bool,
+    true,
+    "if true, documents that were still open when the last window was closed " +
+      "(SessionData) are reopened at startup",
+  ),
   field(
     "ReuseInstance",
     Bool,
@@ -1902,8 +1915,17 @@ const globalPrefs: Field[] = [
     .ver("3.7")
     .internal(),
 
-  array("FileStates", fileState, "information about opened files (in most recently used order)"),
-  array("SessionData", sessionData, "state of the last session, usage depends on RestoreSession").ver("3.1"),
+  array(
+    "FileStates",
+    fileState,
+    "history of opened files, most recently used first. A closed file stays " +
+      "here until it drops off the list or the history is cleared",
+  ),
+  array(
+    "SessionData",
+    sessionData,
+    "windows and tabs still open when SumatraPDF was last closed; " + "reopened at startup if RestoreSession is true",
+  ).ver("3.1"),
 
   compactArray(
     "ReopenOnce",
