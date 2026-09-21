@@ -212,7 +212,7 @@ To add a new advanced setting:
 
 To add a new command:
 
-- add to cmd/gen-commands.ts, always at the end of the list (before the "CmdNone" command)
+- add to cmd/gen-commands.ts, always at the very end of the list (after the last command, not before "CmdNone"): ids are assigned by position, so inserting earlier renumbers every command after it and bloats the src/Commands.h diff
 - run "bun cmd/gen-code.ts" (or "bun cmd/gen-commands.ts") to regenerate src/Commands.h and src/Commands.cpp
 - document in docs/md/Commands.md
 - add an entry to the **New commands** list at the end of the **next** section in docs/md/Version-history.md (see below)

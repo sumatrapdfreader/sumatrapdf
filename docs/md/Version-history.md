@@ -281,6 +281,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 **New commands:**
 
+- `CmdOpenSettingsFile` : "Open Settings File..." — opens the settings file in the .txt editor (what Advanced Options did before it became a dialog)
 - `CmdToggleFreePan` : "Toggle Free Pan" — scroll room past the page edges so a corner can be centered on screen; remembered per document (discussions #6224, #6164)
 - `CmdGoToHomePage` : "Go To Home Page" — switch to the Home tab, adding it when `NoHomeTab` hid it (fixes #6228)
 - `CmdAutoGenerateTOC` : "Generate Table Of Contents" — Bookmarks from numbered headings, on demand (fixes #6227)

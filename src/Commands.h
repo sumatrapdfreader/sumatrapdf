@@ -326,8 +326,9 @@ enum {
     CmdToggleGrayscale = 519,
     CmdPrintSelection = 520,
     CmdAutoGenerateTOC = 521,
+    CmdOpenSettingsFile = 522,
 
-    CmdLast = 521,
+    CmdLast = 522,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

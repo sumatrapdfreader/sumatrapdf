@@ -12775,6 +12775,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowAdvancedSettingsDialog(win);
             break;
 
+        case CmdOpenSettingsFile:
+            OpenSettingsFileInEditor();
+            break;
+
         case CmdChangeTheme:
             ShowChangeThemeDialog(win);
             break;

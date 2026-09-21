@@ -332,6 +332,7 @@ const commandsRaw = [
     "CmdToggleGrayscale", "Toggle Grayscale",
     "CmdPrintSelection", "Print Selection...",
     "CmdAutoGenerateTOC", "Generate Table Of Contents",
+    "CmdOpenSettingsFile", "Open Settings File...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

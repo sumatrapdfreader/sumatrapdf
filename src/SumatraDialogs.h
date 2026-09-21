@@ -6,6 +6,7 @@ struct WindowTab;
 
 void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
 void ShowAdvancedSettingsDialog(MainWindow* win);
+void OpenSettingsFileInEditor();
 TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut);
 void ShowChangeBackgroundColorDialog(MainWindow* win);
 void ShowChangeLanguageDialog(MainWindow* win);

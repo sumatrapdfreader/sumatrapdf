@@ -331,6 +331,7 @@ static SeqStrings gCommandNames =
     "CmdToggleGrayscale\0"
     "CmdPrintSelection\0"
     "CmdAutoGenerateTOC\0"
+    "CmdOpenSettingsFile\0"
     "\0";
 
 static i32 gCommandIds[] = {
@@ -651,6 +652,7 @@ static i32 gCommandIds[] = {
     CmdToggleGrayscale,
     CmdPrintSelection,
     CmdAutoGenerateTOC,
+    CmdOpenSettingsFile,
 };
 
 SeqStrings gCommandDescriptions =
@@ -971,6 +973,7 @@ SeqStrings gCommandDescriptions =
     "Toggle Grayscale\0"
     "Print Selection...\0"
     "Generate Table Of Contents\0"
+    "Open Settings File...\0"
     "\0";
 // clang-format on
 // @gen-end cmd-c

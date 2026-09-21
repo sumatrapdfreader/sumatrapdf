@@ -995,12 +995,17 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
     ApplyChangedSettingsAndRelayout(before);
 }
 
-void AdvancedSettingsWnd::OnOpenSettingsFile(VirtMouseEvent*) {
+// opens the settings file in the editor associated with .txt files
+void OpenSettingsFileInEditor() {
     if (!CanAccessDisk()) {
         return;
     }
     TempStr path = GetSettingsPathTemp();
     LaunchFileIfExists(path);
+}
+
+void AdvancedSettingsWnd::OnOpenSettingsFile(VirtMouseEvent*) {
+    OpenSettingsFileInEditor();
 }
 
 void AdvancedSettingsWnd::OnHelp(VirtMouseEvent*) {
