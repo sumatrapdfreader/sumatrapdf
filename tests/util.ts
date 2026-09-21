@@ -66,6 +66,8 @@ const SOURCE_EXE = EXE_FROM_ARGV || process.env.SUMATRA_TEST_EXE || join(ROOT, "
 // every test run. This prevents a manual run, or an earlier test that saves
 // settings, from changing the starting state of later tests.
 export const TESTS_TMP_DIR = join(ROOT, ".work", "tests-tmp");
+// scratch files of tests (see tmpPath())
+export const TMP_DIR = join(TESTS_TMP_DIR, "tmp");
 export let EXE = SOURCE_EXE;
 
 export function prepareTestEnvironment(): void {
@@ -76,7 +78,8 @@ export function prepareTestEnvironment(): void {
     throw new Error(`test executable PDB not found: ${sourcePdb}`);
   }
   rmSync(TESTS_TMP_DIR, { recursive: true, force: true });
-  mkdirSync(TESTS_TMP_DIR, { recursive: true });
+  // a test may have resolved a tmpPath() at import, before this wipe
+  mkdirSync(TMP_DIR, { recursive: true });
   const testExe = join(TESTS_TMP_DIR, exeName);
   copyFileSync(sourceExe, testExe);
   copyFileSync(sourcePdb, join(TESTS_TMP_DIR, sourcePdb.split("\\").pop()!));
@@ -334,8 +337,6 @@ export function requireDpiShrank(name: string, high: number, low: number): void 
 // TESTS_TMP_DIR so explicit -appdata directories are isolated from the user's
 // settings and from the executable used by the test. Use tmpPath() to get a
 // path inside it (dir created on demand).
-export const TMP_DIR = join(TESTS_TMP_DIR, "tmp");
-
 export function tmpPath(name: string): string {
   mkdirSync(TMP_DIR, { recursive: true });
   return join(TMP_DIR, name);
