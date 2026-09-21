@@ -196,6 +196,10 @@ static void CalcZoomReal(DocumentLayout& layout, float zoomVirtual) {
     }
 }
 
+Size FreePanSlack(Size viewPort) {
+    return Size(viewPort.dx / 2, viewPort.dy / 2);
+}
+
 static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, bool isFitContent) {
     const DocumentLayoutParams& params = layout.params;
     Rect& viewPort = layout.viewPort;
@@ -238,6 +242,22 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
             int minCanvasDy = lastPageTop + viewPort.dy;
             canvasDy = std::max(canvasDy, minCanvasDy);
         }
+    }
+
+    // Free pan: pad the canvas by half a viewport on every side. Unlike
+    // windowMargin this is scroll room only: fit zooms and where a page lands
+    // when navigated to don't change, the view can just go past the page edges
+    if (params.freePan) {
+        Size slack = FreePanSlack(viewPort.Size());
+        for (int pageNo = 1; pageNo <= layout.pages.len; pageNo++) {
+            DocumentLayoutPage* page = layout.GetPage(pageNo);
+            if (page->isShown) {
+                page->pos.x += slack.dx;
+                page->pos.y += slack.dy;
+            }
+        }
+        canvasDx = std::max(canvasDx, viewPort.dx) + 2 * slack.dx;
+        canvasDy = std::max(canvasDy, viewPort.dy) + 2 * slack.dy;
     }
 
     layout.canvasSize = Size(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));

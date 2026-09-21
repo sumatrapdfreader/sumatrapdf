@@ -35,6 +35,9 @@ struct DocumentLayoutParams {
     // the whole two-page row (issues #1324, #872)
     bool landscapeAsSpread = false;
     Vec<u8> spreadFlags;
+    // half a viewport of scroll room around the pages, so any point of a page
+    // can be brought to the center of the window
+    bool freePan = false;
     DocumentLayoutMargin windowMargin{};
     Size pageSpacing;
 };
@@ -46,6 +49,7 @@ struct FacingRow {
 };
 
 void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const Vec<u8>& spreadFlags);
+Size FreePanSlack(Size viewPort);
 
 struct DocumentLayout {
     Vec<DocumentLayoutPage> pages;

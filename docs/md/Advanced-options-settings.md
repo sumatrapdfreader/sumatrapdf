@@ -1314,6 +1314,10 @@ FileStates [
     ; if true, empty margins around page content are trimmed from display
     ; (introduced in version 3.7)
     TrimEmptyMargins = false
+
+    ; if true, the view can be panned past the page edges, so any part of a page
+    ; can be brought to the center of the window (introduced in version 3.7)
+    FreePan = false
   ]
 ]
 

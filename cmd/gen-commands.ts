@@ -324,6 +324,7 @@ const commandsRaw = [
     "CmdToggleReadingBar", "Reading Bar",
     "CmdToggleReadingBarInvert", "Reading Bar Invert",
     "CmdGoToHomePage", "Go To Home Page",
+    "CmdToggleFreePan", "Toggle Free Pan",
     "CmdNone", "Do nothing",
     "CmdFileHistory", "Open Recent File",
     "CmdFavorite", "Go to Favorite",

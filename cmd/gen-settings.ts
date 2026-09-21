@@ -1113,6 +1113,12 @@ const fileState: Field[] = [
   field("TrimEmptyMargins", Bool, false, "if true, empty margins around page content are trimmed from display").ver(
     "3.7",
   ),
+  field(
+    "FreePan",
+    Bool,
+    false,
+    "if true, the view can be panned past the page edges, so any part of a page can be brought to the center of the window",
+  ).ver("3.7"),
   field("BgCol", Color, "", "if given, overrides the background color for this document").ver("3.7"),
   field("TabCol", Color, "", "if given, overrides the tab color for this document").ver("3.7"),
   compactArray(
@@ -1167,6 +1173,7 @@ const fileStateLayout = [
   "DisplayR2L",
   "UniformPageWidth",
   "TrimEmptyMargins",
+  "FreePan",
 ];
 fileState.sort((a, b) => fileStateLayout.indexOf(a.Name) - fileStateLayout.indexOf(b.Name));
 

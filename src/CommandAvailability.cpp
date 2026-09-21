@@ -760,6 +760,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
+    if (cmdId == CmdToggleFreePan && !ctx.isFixedPage) {
+        return CommandVisibility::Hide;
+    }
+
     if (cmdId == CmdConvertToPDF) {
         // comic books, image folders, single images (issue #4118)
         Kind k = ctx.engineKind;

@@ -24,6 +24,10 @@ There are many ways to navigate around the document.
 - mouse over scrollbar : scrolls faster (by half page instead of by line)
 - hold the **right mouse button** and drag : pan the page (a click without dragging opens the context menu)
 
+## Free pan
+
+Scrolling normally stops when a page edge meets the window edge, so a detail in the corner of a page can only ever be viewed in the corner of the screen. **Toggle Free Pan** (`CmdToggleFreePan`, command palette, no default shortcut) adds half a window of scroll room on every side, so any part of a page can be dragged or scrolled to the center. Fit Page / Fit Width and where a page lands when you navigate to it are unchanged. It is remembered per document.
+
 ## Reading zoomed-in pages without the keyboard
 
 When a page is zoomed past the window you usually care about one band of it — the music staves, the text inside wide scan margins — and want the next page to open at that same place. Two advanced settings do that:

@@ -323,6 +323,7 @@ static SeqStrings gCommandNames =
     "CmdToggleReadingBar\0"
     "CmdToggleReadingBarInvert\0"
     "CmdGoToHomePage\0"
+    "CmdToggleFreePan\0"
     "CmdNone\0"
     "CmdFileHistory\0"
     "CmdFavorite\0"
@@ -642,6 +643,7 @@ static i32 gCommandIds[] = {
     CmdToggleReadingBar,
     CmdToggleReadingBarInvert,
     CmdGoToHomePage,
+    CmdToggleFreePan,
     CmdNone,
     CmdFileHistory,
     CmdFavorite,
@@ -961,6 +963,7 @@ SeqStrings gCommandDescriptions =
     "Reading Bar\0"
     "Reading Bar Invert\0"
     "Go To Home Page\0"
+    "Toggle Free Pan\0"
     "Do nothing\0"
     "Open Recent File\0"
     "Go to Favorite\0"

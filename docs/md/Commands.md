@@ -111,6 +111,7 @@ CmdToggleFullscreen,"f, Shift + Ctrl + L, F11",Toggle Fullscreen,
 CmdToggleMangaMode,,Toggle Manga Mode,"Right-to-left facing/book layout for fixed-page documents; before 3.7 this was limited to comic books"
 CmdToggleUniformPageWidth,,Toggle Uniform Page Width,"At percentage zoom levels, scales every page to the width page 1 has at that zoom; remembered per document (fixes #5512)"
 CmdToggleTrimEmptyMargins,,Toggle Trim Empty Margins,"Trims empty margins around page content from display on demand, ver 3.7+"
+CmdToggleFreePan,,Toggle Free Pan,"Lets the view go past the page edges by half a window, so any part of a page (a corner of a drawing) can be brought to the center of the screen; remembered per document, ver 3.7+"
 CmdToggleMenuBar,F9,Toggle Menu Bar,
 CmdTogglePageInfo,i,Show / Hide Current Page Number,was Shift + i before 3.6
 CmdTogglePageBoxes,,Toggle Page Boxes,"ver 3.7+, outlines the PDF MediaBox, CropBox, BleedBox, TrimBox and ArtBox on each page (only boxes that page actually has) and labels them. Palette and Debug menu. No default shortcut (fixes #814)"

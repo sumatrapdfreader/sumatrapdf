@@ -328,6 +328,38 @@ bool DisplayModel::GetTrimEmptyMargins() const {
     return trimEmptyMargins;
 }
 
+// Free pan lets the view go past the page edges by half a window, so a
+// corner of a drawing can be looked at in the middle of the screen
+void DisplayModel::SetFreePan(bool enable) {
+    if (freePan == enable) {
+        return;
+    }
+    freePan = enable;
+    // set from the remembered file state before the first layout
+    if (!pagesInfo) {
+        return;
+    }
+    Relayout(zoomVirtual, rotation);
+    RecalcVisibleParts();
+    RenderVisibleParts();
+    if (cb) {
+        cb->UpdateScrollbars(this, canvasSize);
+    }
+    RepaintDisplay();
+}
+
+bool DisplayModel::GetFreePan() const {
+    return freePan;
+}
+
+// scroll room past the page edges that the current layout has
+Size DisplayModel::PanSlack() const {
+    if (!freePan || inPresentation) {
+        return {};
+    }
+    return FreePanSlack(viewPort.Size());
+}
+
 // toRight: user moved/keyed toward the right (VK_RIGHT, swipe right).
 // LTR: right = next page; manga R2L: left = next page (issue #3964).
 bool DisplayModel::GoToPageHorizontal(bool toRight) {
@@ -518,6 +550,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->displayR2L = displayR2L;
     fs->uniformPageWidth = uniformPageWidth;
     fs->trimEmptyMargins = trimEmptyMargins;
+    fs->freePan = freePan;
 
     str::Free(fs->decryptionKey);
     fs->decryptionKey = engine->decryptionKey ? str::Dup(engine->decryptionKey) : Str();
@@ -1685,6 +1718,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         params.windowMargin = ToDocumentLayoutMargin(windowMargin);
         params.pageSpacing = pageSpacing;
         params.paddingAfterLastPage = gSettings->paddingAfterLastPage;
+        params.freePan = freePan && !inPresentation;
         params.landscapeAsSpread = ShouldTreatLandscapeAsSpread();
         if (params.landscapeAsSpread) {
             EnsureSpreadFlags();
@@ -1707,10 +1741,20 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         break;
     }
 
+    bool firstLayout = zoomReal < 0.01f;
     viewPort = layout.viewPort;
     canvasSize = layout.canvasSize;
     zoomReal = layout.zoomReal;
     CopyDocumentLayoutToPageInfo(this, layout);
+
+    // with free pan the canvas starts with its slack, not with the pages:
+    // open past it, where the view is without free pan
+    Size slack = PanSlack();
+    if (firstLayout && (slack.dx > 0 || slack.dy > 0)) {
+        viewPort.x = slack.dx;
+        viewPort.y = slack.dy;
+        RecalcVisibleParts();
+    }
 }
 
 // Re-do the layout after page sizes changed, keeping the user looking at the
@@ -2334,14 +2378,16 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     // that scrolled a whole page too far right when restoring a view of such a
     // page (tab switch, window resize, session restore) (fixes #3591).
 
-    viewPort.y = scrollY;
-    // Move the next page to the top (unless the remaining pages fit onto a single screen)
-    if (IsContinuous(GetDisplayMode())) {
-        viewPort.y = pageInfo->pos.y - windowMargin.top + scrollY;
-    }
+    // the page's top (less the window margin) lands at the top of the window,
+    // scrollY down from there. Same for non-continuous modes: their shown page
+    // sits at the window margin, or at free pan's slack above it
+    viewPort.y = pageInfo->pos.y - windowMargin.top + scrollY;
 
-    viewPort.x = limitValue(viewPort.x, 0, canvasSize.dx - viewPort.dx);
-    viewPort.y = limitValue(viewPort.y, 0, canvasSize.dy - viewPort.dy);
+    // navigating lands the page as without free pan; only scrolling and an
+    // exact restore of a view (SetScrollState) use the slack past the page edges
+    Size slack = restoringExactPan ? Size() : PanSlack();
+    viewPort.x = limitValue(viewPort.x, slack.dx, canvasSize.dx - viewPort.dx - slack.dx);
+    viewPort.y = limitValue(viewPort.y, slack.dy, canvasSize.dy - viewPort.dy - slack.dy);
 
     RecalcVisibleParts();
     EnsureMediaBoxesForVisiblePages();
@@ -2900,7 +2946,10 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
     // content the zoom must fit
     exactFitContent = (kZoomFitContent == zoomLevel);
     Relayout(zoomLevel, rotation);
-    SetScrollState(ss);
+    // a fit zoom is a fresh look at the page, not a view to keep panned past
+    // its edges (free pan)
+    RestorePan pan = IsVirtualFitZoom(zoomLevel) ? RestorePan::WithinPages : RestorePan::Exact;
+    SetScrollState(ss, pan);
     exactFitContent = false;
 
     if (fixPt) {
@@ -3187,6 +3236,15 @@ ScrollState DisplayModel::GetScrollState() {
     }
 
     PageInfo* pageInfo = GetPageInfo(state.page);
+    // with free pan the window's top-left can be outside the page, so the
+    // offsets are exact and can be negative; there is no "not scrolled"
+    if (freePan && pageInfo) {
+        PointF ptD = CvtFromScreen(Point(0, 0), state.page);
+        state.x = ptD.x;
+        state.y = ptD.y;
+        state.loc = pageInfo->loc;
+        return state;
+    }
     // Shortcut: don't calculate precise positions, if the
     // page wasn't scrolled right/down at all
     if (!pageInfo || pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0) {
@@ -3229,8 +3287,12 @@ ScrollState DisplayModel::GetScrollState() {
     return state;
 }
 
-void DisplayModel::SetScrollState(const ScrollState& state) {
+void DisplayModel::SetScrollState(const ScrollState& state, RestorePan pan) {
     ScrollState st = state;
+    restoringExactPan = freePan && pan == RestorePan::Exact;
+    defer {
+        restoringExactPan = false;
+    };
     if (st.loc.IsValid() && engine && engine->HasChapters()) {
         st.page = PageNoFromLocation(st.loc);
     }
@@ -3242,8 +3304,11 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
     stableNavPoint.suppress = true;
     // must have both GoToPage() calls
     GoToPage(st.page, false);
-    // Bail out, if the page wasn't scrolled
-    if (st.x < 0 && st.y < 0) {
+    // Bail out, if the page wasn't scrolled. With free pan a negative offset
+    // is a real position (the window's top-left outside the page) and only
+    // the (-1, -1) placeholder means "not scrolled"
+    bool notScrolled = freePan ? (st.x == -1 && st.y == -1) : (st.x < 0 && st.y < 0);
+    if (notScrolled) {
         if (gLogScrollState) {
             logf("  exit because not scrolled\n");
         }
@@ -3251,7 +3316,9 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
         return;
     }
 
-    PointF newPtD((float)std::max(st.x, (double)0), (float)std::max(st.y, (double)0));
+    bool showMarginX = st.x < 0 && !freePan;
+    bool showMarginY = st.y < 0 && !freePan;
+    PointF newPtD((float)(showMarginX ? 0 : st.x), (float)(showMarginY ? 0 : st.y));
     // GetScrollState() maps the pixel it's at to (pixel - 0.499) page units
     // (CvtFromScreen) and CvtToScreen() adds the 0.499 back and truncates, so
     // the pixel to restore computes as X +/- float noise. Between float math
@@ -3260,7 +3327,7 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
     // crept up by a pixel on every start (#6220). Aim a quarter pixel into the
     // pixel instead so truncation can't miss it. Done as a screen-space step
     // mapped through CvtFromScreen so it's right for any rotation.
-    if (st.x >= 0 || st.y >= 0) {
+    if (!showMarginX || !showMarginY) {
         PointF p0 = CvtFromScreen(Point(0, 0), st.page);
         PointF p1 = CvtFromScreen(Point(1, 1), st.page);
         newPtD.x += (p1.x - p0.x) * 0.25f;
@@ -3273,7 +3340,7 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
     }
 
     // Also show the margins, if this has been requested
-    if (st.x < 0) {
+    if (showMarginX) {
         newPt.x = -1;
     } else {
         if (gLogScrollState) {
@@ -3281,7 +3348,7 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
         }
         newPt.x += viewPort.x;
     }
-    if (st.y < 0) {
+    if (showMarginY) {
         newPt.y = 0;
     }
     if (gLogScrollState) {

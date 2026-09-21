@@ -230,7 +230,12 @@ struct DisplayModel : DocController {
     bool ScrollScreenToRect(int pageNo, Rect rec);
 
     ScrollState GetScrollState();
-    void SetScrollState(const ScrollState& state);
+    // how SetScrollState() treats a view panned past the page edges (free pan)
+    enum class RestorePan {
+        Exact,
+        WithinPages
+    };
+    void SetScrollState(const ScrollState& state, RestorePan pan = RestorePan::Exact);
 
     void CopyNavHistory(DisplayModel& orig);
 
@@ -242,6 +247,9 @@ struct DisplayModel : DocController {
     bool GetUniformPageWidth() const;
     void SetTrimEmptyMargins(bool enable);
     bool GetTrimEmptyMargins() const;
+    void SetFreePan(bool enable);
+    bool GetFreePan() const;
+    Size PanSlack() const;
     bool EnsureTrimEmptyMarginsForVisiblePages();
     bool GoToPageHorizontal(bool toRight);
 
@@ -364,6 +372,10 @@ struct DisplayModel : DocController {
     bool uniformPageWidth = false;
     bool trimEmptyMargins = false;
     bool inTrimMarginsUpdate = false;
+    bool freePan = false;
+    // set while SetScrollState() restores a view exactly: GoToPage() may then
+    // land in free pan's slack past the page edges
+    bool restoringExactPan = false;
 
     /* landscape image pages that occupy a full facing/book row
        (ComicBookUI / ImageUI LandscapeAsSpread; issues #1324, #872) */
