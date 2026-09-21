@@ -128,7 +128,6 @@ enum {
     CmdSaveAttachment = 319,
     CmdOpenAttachment = 320,
     CmdOptions = 321,
-    CmdAdvancedOptions = 322,
     CmdAdvancedSettings = 323,
     CmdChangeLanguage = 324,
     CmdCheckUpdate = 325,
@@ -417,6 +416,9 @@ void FreeCustomCommand(CustomCommand* cmd);
 
 extern CustomCommand* gFirstCustomCommand;
 extern SeqStrings gCommandDescriptions;
+// alternate command palette texts, parallel to gCommandAltDescIds
+extern SeqStrings gCommandAltDescs;
+extern i32 gCommandAltDescIds[];
 
 int GetCommandIdByName(Str);
 int GetCommandIdByDesc(Str);

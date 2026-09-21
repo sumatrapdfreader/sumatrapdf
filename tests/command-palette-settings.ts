@@ -95,7 +95,7 @@ const backToSettings = (p: Palette) => p.open && p.queryLen === 1 && p.items > 1
 
 // "name=value" for every setting that differs from its default
 async function nonDefaultSettings(client: ControlClient, frame: number): Promise<Map<string, string>> {
-  sendCommand(frame, cmdId("CmdAdvancedOptions"));
+  sendCommand(frame, cmdId("CmdAdvancedSettings"));
   const deadline = Date.now() + 10_000;
   for (;;) {
     const res = await client.request(ControlCommand.TestAdvSettingsRows, ["nondefault", 0]);

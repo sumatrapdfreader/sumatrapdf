@@ -2494,6 +2494,20 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         tempCommands.Append(nameUpdated, data);
     }
 
+    // the same command under another wording a user may search for
+    int altIdx = 0;
+    for (Str name = SeqStrFirst(gCommandAltDescs); len(name) > 0; name = SeqStrNext(name), altIdx++) {
+        cmdId = gCommandAltDescIds[altIdx];
+        if (!AllowCommand(ctx, (i32)cmdId)) {
+            continue;
+        }
+        ItemDataCP data;
+        data.cmdId = (i32)cmdId;
+        auto nameTranslated = trans::GetTranslation(name);
+        auto nameUpdated = UpdateCommandNameTemp(mainWin, cmdId, nameTranslated);
+        tempCommands.Append(nameUpdated, data);
+    }
+
     auto* curr = gFirstCustomCommand;
     while (curr) {
         TempStr name = curr->name;

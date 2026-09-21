@@ -585,7 +585,7 @@ static MenuDef menuDefSettings[] = {
     },
     {
         TrN("&Advanced Options..."),
-        CmdAdvancedOptions,
+        CmdAdvancedSettings,
     },
     {
         TrN("&Theme"),

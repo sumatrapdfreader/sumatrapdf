@@ -32,7 +32,7 @@ How to use it:
 - `Enter` executes the selected match (or double-click it with the mouse)
 - `Escape` closes the window (or click outside it)
 
-By default, it shows the available commands.
+By default, it shows the available commands. A command can be listed under more than one name so that a different wording finds it: **Navigate Files in Folder...** is also **Browse Files In Folder...**.
 
 ## Switching between tabs
 
