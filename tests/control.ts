@@ -101,6 +101,7 @@ export enum ControlCommand {
   TestNavFiles = 104,
   TestSaveFileAs = 105,
   TestImageOrientation = 106,
+  TestTtsPumpOnSpeak = 107,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

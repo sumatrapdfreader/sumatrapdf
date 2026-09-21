@@ -67,6 +67,7 @@ bool TtsDidStartQueued() {
 }
 void TtsStop() {}
 void TtsRelease() {}
+void TtsTestPumpOnNextSpeak() {}
 bool TtsIsSpeaking() {
     return false;
 }
@@ -1537,6 +1538,39 @@ void TtsProcessEvents() {
     }
 }
 
+static bool gTtsTestPumpOnSpeak = false;
+constexpr DWORD kTtsTestPumpMs = 3000;
+
+// -for-testing: the next TtsSpeakUtf8 dispatches window messages the way a
+// COM call's modal loop does, until the app quits or a few seconds pass, then fails
+void TtsTestPumpOnNextSpeak() {
+    gTtsTestPumpOnSpeak = gForTesting;
+}
+
+static bool TtsTestPumpMessages() {
+    if (!gTtsTestPumpOnSpeak) {
+        return false;
+    }
+    gTtsTestPumpOnSpeak = false;
+    DWORD deadline = GetTickCount() + kTtsTestPumpMs;
+    MSG msg;
+    for (;;) {
+        while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                PostQuitMessage((int)msg.wParam);
+                return true;
+            }
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+        DWORD now = GetTickCount();
+        if (now >= deadline) {
+            return true;
+        }
+        MsgWaitForMultipleObjects(0, nullptr, FALSE, deadline - now, QS_ALLINPUT);
+    }
+}
+
 bool TtsSpeakUtf8(Str text) {
     if (len(text) == 0) {
         return false;
@@ -1544,6 +1578,10 @@ bool TtsSpeakUtf8(Str text) {
 
     TempWStr textW = ToWStrTemp(text);
     if (len(textW) == 0) {
+        return false;
+    }
+
+    if (TtsTestPumpMessages()) {
         return false;
     }
 
@@ -3418,6 +3456,13 @@ void ReadAloudPlaybackBarUpdateSession(WindowTab* tab) {
 
 static WindowTab* gReadAloudSourceTab = nullptr;
 static WindowTab* gReadAloudSessionTab = nullptr;
+
+enum class SpeakChunkResult {
+    Ok,
+    Failed,
+    TabGone
+};
+
 static HMENU gReadAloudAppSubmenu = nullptr;
 static HMENU gReadAloudContextSubmenu = nullptr;
 
@@ -3543,7 +3588,7 @@ static void ReadAloudQueueNext(WindowTab* tab) {
     }
 
     TempStr chunk = str::DupTemp(Str(tab->readAloudText.s + start, end - start));
-    if (!TtsQueueUtf8(chunk)) {
+    if (!TtsQueueUtf8(chunk) || !IsWindowTabValid(tab)) {
         return;
     }
     tab->readAloudQueuedEnd = end;
@@ -3631,25 +3676,35 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
     }
 }
 
-static bool ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
+static SpeakChunkResult ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
     if (!tab || len(tab->readAloudText) == 0) {
-        return false;
+        return SpeakChunkResult::Failed;
     }
 
     int start = tab->readAloudChunkEnd;
     int textLen = tab->readAloudText.len;
     int end = ReadAloudFindChunkEnd(tab->readAloudText, start, kReadAloudMaxChunkLen);
     if (start >= end) {
-        return false;
+        return SpeakChunkResult::Failed;
     }
 
     int chunkLen = end - start;
     TempStr chunk = str::DupTemp(Str(tab->readAloudText.s + start, (int)((size_t)chunkLen)));
-    if (!TtsSpeakUtf8(chunk)) {
+    // the backend call pumps messages (COM's modal loop), so the user can close
+    // the tab's window inside it; ~WindowTab already reset the session then
+    bool ok = TtsSpeakUtf8(chunk);
+    if (!IsWindowTabValid(tab)) {
+        logf("tts: SpeakChunk: tab closed during speak\n");
+        if (ok) {
+            TtsStop();
+        }
+        return SpeakChunkResult::TabGone;
+    }
+    if (!ok) {
         logf("tts: SpeakChunk: TtsSpeakUtf8 failed\n");
         dbgtts("chunk speak failed %d..%d of %d\n", start, end, textLen);
         ReadAloudShowNotif(tab, errMsg);
-        return false;
+        return SpeakChunkResult::Failed;
     }
     dbgtts("chunk %d..%d of %d mapBase=%d\n", start, end, textLen, tab->readAloudHighlightBase);
 
@@ -3657,9 +3712,14 @@ static bool ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
     tab->readAloudChunkEnd = end;
     tab->readAloudQueuedEnd = 0;
     ReadAloudQueueNext(tab);
+    if (!IsWindowTabValid(tab)) {
+        logf("tts: SpeakChunk: tab closed during queue\n");
+        TtsStop();
+        return SpeakChunkResult::TabGone;
+    }
     ToolbarUpdateStateForWindow(tab->win, true);
     HwndInvalidate(tab->win->hwndCanvas);
-    return true;
+    return SpeakChunkResult::Ok;
 }
 
 // Text cleanup for speech
@@ -4025,7 +4085,11 @@ static void ReadAloudStartText(WindowTab* tab, Str cleaned, ReadAloudHighlightMa
     ReadAloudSetSourceTab(tab);
     ReadAloudHighlightTimerStart(tab->win);
 
-    if (!ReadAloudSpeakChunk(tab, errMsg)) {
+    SpeakChunkResult res = ReadAloudSpeakChunk(tab, errMsg);
+    if (res == SpeakChunkResult::TabGone) {
+        return;
+    }
+    if (res == SpeakChunkResult::Failed) {
         ReadAloudFinishSession(tab, tab->win);
         return;
     }
@@ -4211,7 +4275,11 @@ void ReadAloudContinueInTab(WindowTab* tab) {
     ReadAloudSetSourceTab(tab);
     ReadAloudHighlightTimerStart(tab->win);
 
-    if (!ReadAloudSpeakChunk(tab, Tr("No text available to read aloud"))) {
+    SpeakChunkResult res = ReadAloudSpeakChunk(tab, Tr("No text available to read aloud"));
+    if (res == SpeakChunkResult::TabGone) {
+        return;
+    }
+    if (res == SpeakChunkResult::Failed) {
         ReadAloudFinishSession(tab, tab->win);
         return;
     }
@@ -4483,8 +4551,11 @@ void ReadAloudOnTtsEvent(MainWindow* win) {
     }
     dbgtts("event idle hasMore=%d chunkEnd=%d textLen=%d\n", (int)ReadAloudHasMoreChunks(tab), tab->readAloudChunkEnd,
            tab->readAloudText.len);
-    if (ReadAloudHasMoreChunks(tab) && ReadAloudSpeakChunk(tab, Tr("No text available to read aloud"))) {
-        return;
+    if (ReadAloudHasMoreChunks(tab)) {
+        SpeakChunkResult res = ReadAloudSpeakChunk(tab, Tr("No text available to read aloud"));
+        if (res != SpeakChunkResult::Failed) {
+            return;
+        }
     }
     ReadAloudFinishSession(tab, win);
 }

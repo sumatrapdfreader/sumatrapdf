@@ -907,6 +907,7 @@ enum class ControlCmd : u16 {
     TestNavFiles = 104,
     TestSaveFileAs = 105,
     TestImageOrientation = 106,
+    TestTtsPumpOnSpeak = 107,
 };
 
 enum class ControlArgType : u16 {
@@ -2045,6 +2046,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             TempStr state = fmt("crashed=%d voice='%s'", (int)TtsEngineCrashed(), gSettings->readAloudVoiceId);
             AppendTestResult(req, 0, state);
+            break;
+        }
+
+        case ControlCmd::TestTtsPumpOnSpeak: {
+            TtsTestPumpOnNextSpeak();
+            AppendTestResult(req, 0, StrL("OK"));
             break;
         }
 

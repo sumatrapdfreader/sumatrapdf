@@ -43,6 +43,7 @@ bool TtsOnEngineCrash(void* faultAddr);
 bool TtsTakeEngineCrash();
 bool TtsEngineCrashed();
 bool TtsTestEngineCrash();
+void TtsTestPumpOnNextSpeak();
 
 // --- highlight of the words being spoken ---
 

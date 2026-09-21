@@ -141,6 +141,7 @@ import { testit as epubRelayoutStalePage } from "./epub-relayout-stale-page.ts";
 import { testit as epubThemeRestyle } from "./epub-theme-restyle.ts";
 import { testit as embeddedImageAttachment } from "./embedded-image-attachment.ts";
 import { testit as ttsEngineCrashRecovery } from "./tts-engine-crash-recovery.ts";
+import { testit as readAloudCloseDuringSpeak } from "./read-aloud-close-during-speak.ts";
 import { testit as lazyTabStateAfterSave } from "./lazy-tab-state-after-save.ts";
 import { testit as lazyTabSelectPaint } from "./lazy-tab-select-paint.ts";
 import { testit as restoreChmMissingTab } from "./restore-chm-missing-tab.ts";
@@ -367,6 +368,7 @@ export const tests: NamedTest[] = [
   ["issue-4276", issue4276],
   ["embedded-image-attachment", embeddedImageAttachment],
   ["tts-engine-crash-recovery", ttsEngineCrashRecovery],
+  ["read-aloud-close-during-speak", readAloudCloseDuringSpeak],
   ["lazy-tab-state-after-save", lazyTabStateAfterSave],
   ["lazy-tab-select-paint", lazyTabSelectPaint],
   ["restore-chm-missing-tab", restoreChmMissingTab],
