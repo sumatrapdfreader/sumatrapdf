@@ -1272,8 +1272,31 @@ static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
     delete d;
 }
 
+// an image next to the document with the same base name (Calibre puts a
+// "Title.jpg" cover next to "Title.epub") beats page 1 as the thumbnail
+static TempStr FindCoverImageTemp(Str docPath) {
+    static const char* kCoverExts[] = {".jpg", ".jpeg", ".png"};
+    TempStr noExt = path::GetPathNoExtTemp(docPath);
+    for (const char* ext : kCoverExts) {
+        TempStr cover = str::JoinTemp(noExt, Str(ext));
+        if (str::EqI(cover, docPath)) {
+            continue;
+        }
+        if (file::Exists(cover)) {
+            return cover;
+        }
+    }
+    return {};
+}
+
 static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
     EngineBase* engine = d->engine;
+    TempStr cover = FindCoverImageTemp(d->filePath);
+    if (len(cover) > 0) {
+        SafeEngineRelease(&d->engine);
+        HwndPasswordUI pwdUI(nullptr);
+        engine = CreateEngineFromFile(cover, &pwdUI, true);
+    }
     if (!engine) {
         HwndPasswordUI pwdUI(nullptr);
         SetLoadThreadFileEBookUI(d->fileEBookUI);

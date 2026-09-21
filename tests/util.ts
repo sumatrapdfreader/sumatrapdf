@@ -17,6 +17,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { inflateSync } from "node:zlib";
 import { ensureModifierKeysUp, enumWindows, getWindowPid, getWindowText, hasInteractiveDesktop } from "./winapi.ts";
 
 export const ROOT = join(import.meta.dir, "..");
@@ -613,4 +614,82 @@ export async function runStandalone(testit: () => void | Promise<void>, name?: s
     process.exit(1);
   }
   process.exit(0);
+}
+
+export type PngImage = { w: number; h: number; nComp: number; data: Uint8Array };
+
+function paethPredictor(a: number, b: number, c: number): number {
+  const p = a + b - c;
+  const pa = Math.abs(p - a);
+  const pb = Math.abs(p - b);
+  const pc = Math.abs(p - c);
+  if (pa <= pb && pa <= pc) {
+    return a;
+  }
+  return pb <= pc ? b : c;
+}
+
+// Minimal PNG reader: 8-bit RGB or RGBA, no interlace (what the app and
+// captureWindowToPng write).
+export function loadPng(path: string): PngImage {
+  const buf = readFileSync(path);
+  let off = 8;
+  let w = 0;
+  let h = 0;
+  let colorType = 0;
+  const idat: Buffer[] = [];
+  while (off + 8 <= buf.length) {
+    const n = buf.readUInt32BE(off);
+    const type = buf.toString("latin1", off + 4, off + 8);
+    const data = buf.subarray(off + 8, off + 8 + n);
+    if (type === "IHDR") {
+      w = data.readUInt32BE(0);
+      h = data.readUInt32BE(4);
+      colorType = data[9]!;
+    } else if (type === "IDAT") {
+      idat.push(data);
+    } else if (type === "IEND") {
+      break;
+    }
+    off += 12 + n;
+  }
+  const nComp = colorType === 6 ? 4 : colorType === 2 ? 3 : 0;
+  if (!nComp || w <= 0 || h <= 0) {
+    throw new Error(`loadPng: unsupported png ${path} ct=${colorType} ${w}x${h}`);
+  }
+  const raw = inflateSync(Buffer.concat(idat));
+  const stride = w * nComp;
+  const data = new Uint8Array(h * stride);
+  let src = 0;
+  for (let y = 0; y < h; y++) {
+    const filter = raw[src++]!;
+    const row = y * stride;
+    const prev = (y - 1) * stride;
+    for (let x = 0; x < stride; x++) {
+      const left = x >= nComp ? data[row + x - nComp]! : 0;
+      const up = y > 0 ? data[prev + x]! : 0;
+      const ul = y > 0 && x >= nComp ? data[prev + x - nComp]! : 0;
+      const v = raw[src++]!;
+      let recon = v;
+      if (filter === 1) {
+        recon = (v + left) & 255;
+      } else if (filter === 2) {
+        recon = (v + up) & 255;
+      } else if (filter === 3) {
+        recon = (v + ((left + up) >> 1)) & 255;
+      } else if (filter === 4) {
+        recon = (v + paethPredictor(left, up, ul)) & 255;
+      } else if (filter !== 0) {
+        throw new Error(`loadPng: png filter ${filter}`);
+      }
+      data[row + x] = recon;
+    }
+  }
+  return { w, h, nComp, data };
+}
+
+// [r, g, b] of one pixel
+export function pngPixel(img: PngImage, x: number, y: number): [number, number, number] {
+  const i = (y * img.w + x) * img.nComp;
+  return [img.data[i]!, img.data[i + 1]!, img.data[i + 2]!];
 }
