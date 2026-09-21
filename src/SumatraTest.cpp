@@ -2432,7 +2432,7 @@ TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, Str bmpPath, int* ex
     if (!bmp) {
         return fail(StrL("ERROR no-image"));
     }
-    Pixmap* px = PixmapFromRenderedBitmap(bmp); // takes ownership of bmp
+    Pixmap* px = PixmapToBgra(PixmapFromRenderedBitmap(bmp)); // takes ownership of bmp
     if (!px || !px->data) {
         FreePixmap(px);
         return fail(StrL("ERROR no-pixmap"));

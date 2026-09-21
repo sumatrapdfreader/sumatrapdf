@@ -469,52 +469,6 @@ class PrintGraphics {
     }
 };
 
-static Pixmap* ConvertToBgra(Pixmap* source) {
-    if (!source) {
-        return nullptr;
-    }
-    if (source->format == PixmapFormat::BGRA8 && source->data) {
-        return source;
-    }
-    if (source->hbmp) {
-        Pixmap* converted = PixmapCopyAs32bppDIB(source);
-        FreePixmap(source);
-        return converted;
-    }
-    if (!source->data) {
-        FreePixmap(source);
-        return nullptr;
-    }
-
-    Pixmap* converted = AllocPixmap(source->width, source->height, PixmapFormat::BGRA8);
-    if (!converted) {
-        FreePixmap(source);
-        return nullptr;
-    }
-    for (int y = 0; y < source->height; y++) {
-        const u8* src = source->data + ((size_t)y * source->stride);
-        u8* dst = converted->data + ((size_t)y * converted->stride);
-        for (int x = 0; x < source->width; x++) {
-            if (source->format == PixmapFormat::BGR8) {
-                dst[0] = src[0];
-                dst[1] = src[1];
-                dst[2] = src[2];
-                dst[3] = 255;
-                src += 3;
-            } else {
-                dst[0] = src[2];
-                dst[1] = src[1];
-                dst[2] = src[0];
-                dst[3] = src[3];
-                src += 4;
-            }
-            dst += 4;
-        }
-    }
-    FreePixmap(source);
-    return converted;
-}
-
 class PrintDocumentSource final
     : public RuntimeClass<RuntimeClassFlags<WinRtClassicComMix>, Printing::IPrintDocumentSource,
                           IPrintDocumentPageSource, IPrintPreviewPageCollection> {
@@ -675,7 +629,7 @@ class PrintDocumentSource final
             RectF devBand(devFull.x, devFull.y + (float)dy, devFull.dx, (float)h);
             RectF pageBand = engine->Transform(devBand, pageNo, layout.zoom, layout.rotation, /* inverse */ true);
             RenderPageArgs args(pageNo, layout.zoom, layout.rotation, &pageBand, RenderTarget::Print);
-            Pixmap* band = ConvertToBgra(engine->RenderPage(args));
+            Pixmap* band = PixmapToBgra(engine->RenderPage(args));
             if (!band || !band->data) {
                 FreePixmap(band);
                 // couldn't allocate even a band: try thinner ones before giving
