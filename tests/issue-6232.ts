@@ -15,7 +15,7 @@ async function navState(client: ControlClient, action = "", idx = -1): Promise<N
   const res = await client.request(ControlCommand.TestNavFiles, [action, idx]);
   const raw = String(res[1] ?? "").trim();
   lastNavRaw = raw;
-  if (res[0] !== 0) {
+  if (res[0] !== 0 || raw === "OK closed") {
     return null;
   }
   const m = /^OK scan=(\d) sel=(-?\d+) items=(\d+) back=(\d) fwd=(\d) dir="([^"]*)" name="([^"]*)"$/.exec(raw);
@@ -85,15 +85,27 @@ export async function testit(): Promise<void> {
     await navState(client, "up");
     await waitNav(client, "up drops forward", (s) => !sameDir(s.dir, root) && s.fwd === 0 && s.back === 1);
 
-    // Up from a drive root lands on the home view
+    // a drive root still lists "..": Enter on it, like Up, lands on the home view
     for (let i = 0; i < 32; i++) {
       const s = await waitNav(client, "up to root", () => true);
-      if (s.dir === "") {
+      if (/^[A-Z]:\\$/.test(s.dir)) {
         break;
       }
       await navState(client, "up");
     }
+    await navState(client, "select", 0);
+    await waitNav(client, "root lists ..", (s) => s.sel === 0 && s.name === "..");
+    await navState(client, "execute");
     await waitNav(client, "up from root", (s) => s.dir === "" && s.back === 1);
+
+    // history outlives the window: a re-opened dialog can go Back to where
+    // the previous one was (the home view)
+    await navState(client, "close");
+    await sleep(200);
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdNavigateFilesInFolder"]);
+    await waitNav(client, "reopened", (s) => sameDir(s.dir, sub) && s.name === "a.pdf" && s.back === 1);
+    await navState(client, "back");
+    await waitNav(client, "back across launches", (s) => s.dir === "" && s.fwd === 1);
   } finally {
     client.close();
     await killAndWait(proc);

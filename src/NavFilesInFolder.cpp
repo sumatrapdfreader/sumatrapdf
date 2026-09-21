@@ -32,6 +32,8 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SvgIcons.h"
+#include "FilterUtil.h"
+#include "FilterHighlightDraw.h"
 #include "NavFilesInFolder.h"
 
 // A modeless directory browser listing sub-directories and files SumatraPDF
@@ -78,10 +80,11 @@ static void FreeNavEntry(NavFileEntry& e) {
 }
 
 struct ListBoxModelNav : ListBoxModel {
-    Vec<NavFileEntry> entries;
+    Vec<NavFileEntry> all;     // owned; the whole listing
+    Vec<NavFileEntry> entries; // shown: the entries of `all` that pass the filter
 
     ~ListBoxModelNav() override {
-        for (NavFileEntry& e : entries) {
+        for (NavFileEntry& e : all) {
             FreeNavEntry(e);
         }
     }
@@ -93,14 +96,14 @@ struct NavFilesInFolderWnd : WindowBase {
     ~NavFilesInFolderWnd() override;
 
     MainWindow* win = nullptr;
-    // the label, the list and the hints are virtual controls; this window has
-    // no HWND children at all
+    // the label, the buttons, the list and the hints are virtual controls
     VirtText* dirLabel = nullptr;
     VirtIconButton* navBtns[NavBtnCount]{};
+    Edit* filterEdit = nullptr; // the only HWND child
+    StrVec filterWords;
+    Vec<u8> highlighted; // scratch for DrawMaybeHighlightedText
     VirtListBox* listBox = nullptr;
-    Str currDir;    // owned; empty in the home view
-    StrVec history; // dirs visited this session, "" for home
-    int histIdx = -1;
+    Str currDir; // owned; empty in the home view
     int scanGen = 0;
     bool scanInFlight = false;
     Str pendingSelectPath; // owned; file to select when a scan finishes
@@ -125,6 +128,10 @@ struct NavFilesInFolderWnd : WindowBase {
     void GoBack();
     void GoForward();
     void GoHome();
+    void OnFilterChanged();
+    void ApplyFilter();
+    void ClearFilter();
+    void OnListChar(VirtCharEvent* ev);
     void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
     void UpdateDirLabel();
     void UpdateNavButtons();
@@ -132,6 +139,10 @@ struct NavFilesInFolderWnd : WindowBase {
 
 static NavFilesInFolderWnd* gNavFilesWnd = nullptr;
 static HWND gHwndToActivateOnNavClose = nullptr;
+// dirs visited ("" for home), kept for the whole session so a re-opened
+// window can still go Back to where the previous one was
+static StrVec gNavHistory;
+static int gNavHistIdx = -1;
 
 NavFilesInFolderWnd::~NavFilesInFolderWnd() {
     scanGen++; // in-flight scans must not apply to a destroyed window
@@ -224,6 +235,29 @@ static void StealNavEntries(Vec<NavFileEntry>& dst, Vec<NavFileEntry>& src) {
     src.els = nullptr;
     src.len = 0;
     src.cap = 0;
+}
+
+static Str NavEntryBaseName(const NavFileEntry& e);
+
+// rebuild the shown entries: all of them without a filter, else those whose
+// name has every filter word (the command palette's matching), without ".."
+static void FilterNavEntries(ListBoxModelNav* m, const StrVec& words) {
+    VecReset(m->entries);
+    bool filtering = len(words) > 0;
+    for (NavFileEntry& e : m->all) {
+        if (filtering && str::Eq(e.name, StrL(".."))) {
+            continue;
+        }
+        if (filtering && !FilterMatches(NavEntryBaseName(e), words)) {
+            continue;
+        }
+        VecAppend(m->entries, e);
+    }
+}
+
+static void ClearNavModel(ListBoxModelNav* m) {
+    FreeNavEntries(m->all);
+    VecReset(m->entries);
 }
 
 static bool DirHasParent(Str dir) {
@@ -332,11 +366,9 @@ static void CollectNavEntriesForDir(Str dir, Vec<NavFileEntry>& out) {
         CollectHomeEntries(out);
         return;
     }
-    int firstIdx = 0;
-    if (DirHasParent(dir)) {
-        AppendParentEntry(out);
-        firstIdx = 1; // keep ".." at the top when sorting
-    }
+    // ".." also in a drive root, where it leads to the home view
+    AppendParentEntry(out);
+    int firstIdx = 1; // keep ".." at the top when sorting
 
     DirIter di{dir};
     di.includeFiles = true;
@@ -418,7 +450,8 @@ static void FinishNavDirScan(NavDirScanResult* r) {
     if (!m) {
         m = new ListBoxModelNav();
     }
-    StealNavEntries(m->entries, r->entries);
+    StealNavEntries(m->all, r->entries);
+    FilterNavEntries(m, wnd->filterWords);
     wnd->scanInFlight = false;
     wnd->listBox->SetModel(m);
     wnd->UpdateDirLabel();
@@ -529,7 +562,7 @@ void NavFilesInFolderWnd::UpdateDirLabel() {
 }
 
 void NavFilesInFolderWnd::UpdateNavButtons() {
-    bool enabled[NavBtnCount] = {histIdx > 0, histIdx + 1 < len(history), !IsHome(), !IsHome()};
+    bool enabled[NavBtnCount] = {gNavHistIdx > 0, gNavHistIdx + 1 < len(gNavHistory), !IsHome(), !IsHome()};
     for (int i = 0; i < NavBtnCount; i++) {
         if (navBtns[i]) {
             navBtns[i]->SetIsEnabled(enabled[i]);
@@ -541,23 +574,70 @@ bool NavFilesInFolderWnd::IsHome() const {
     return len(currDir) == 0;
 }
 
+void NavFilesInFolderWnd::OnFilterChanged() {
+    TempStr s = filterEdit->GetTextTemp();
+    filterWords.Reset();
+    SplitFilterToWords(s, filterWords);
+    ApplyFilter();
+}
+
+// re-filter the current listing; a filter selects its first match
+void NavFilesInFolderWnd::ApplyFilter() {
+    auto* m = (ListBoxModelNav*)listBox->model;
+    if (!m) {
+        return;
+    }
+    TempStr sel = SelectedPathTemp();
+    FilterNavEntries(m, filterWords);
+    listBox->SetModel(m);
+    if (m->ItemsCount() == 0) {
+        listBox->SetCurrentSelection(-1);
+    } else {
+        int idx = len(filterWords) > 0 ? 0 : FindEntryIndex(this, m, sel);
+        SelectAndEnsureVisible(listBox, idx);
+    }
+    listBox->Invalidate();
+}
+
+void NavFilesInFolderWnd::ClearFilter() {
+    if (!filterEdit || len(filterWords) == 0) {
+        return;
+    }
+    filterWords.Reset();
+    filterEdit->SetText(Str{}); // EN_CHANGE re-applies the (now empty) filter
+}
+
+// typing while the list has focus goes into the search field
+void NavFilesInFolderWnd::OnListChar(VirtCharEvent* ev) {
+    if (ev->c < ' ' || IsCtrlPressed() || !filterEdit) {
+        return;
+    }
+    EditSetFocus(filterEdit);
+    SendMessageW(filterEdit->hwnd, WM_CHAR, (WPARAM)ev->c, 0);
+    ev->didHandle = true;
+}
+
 // show dir and record it in the session history, dropping the forward entries
 void NavFilesInFolderWnd::Navigate(Str dir, Str selectPath) {
-    bool same = histIdx >= 0 && str::EqI(history[histIdx], dir);
+    bool same = gNavHistIdx >= 0 && str::EqI(gNavHistory[gNavHistIdx], dir);
     if (!same) {
-        while (len(history) > histIdx + 1) {
-            history.RemoveAt(len(history) - 1);
+        while (len(gNavHistory) > gNavHistIdx + 1) {
+            gNavHistory.RemoveAt(len(gNavHistory) - 1);
         }
-        if (len(history) >= kNavHistoryMax) {
-            history.RemoveAt(0);
+        if (len(gNavHistory) >= kNavHistoryMax) {
+            gNavHistory.RemoveAt(0);
         }
-        history.Append(dir);
-        histIdx = len(history) - 1;
+        gNavHistory.Append(dir);
+        gNavHistIdx = len(gNavHistory) - 1;
     }
     SetDir(dir, selectPath);
 }
 
 void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath, int selectIdx) {
+    // the filter is per folder, like Explorer's search box
+    if (!str::EqI(dir, currDir)) {
+        ClearFilter();
+    }
     str::ReplaceWithCopy(&currDir, dir);
     UpdateNavButtons();
     scanGen++;
@@ -570,10 +650,11 @@ void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath, int selectIdx) {
         m = new ListBoxModelNav();
     }
     // show ".." immediately so the window is usable while the listing runs
-    FreeNavEntries(m->entries);
-    if (DirHasParent(currDir)) {
-        AppendParentEntry(m->entries);
+    ClearNavModel(m);
+    if (!IsHome()) {
+        AppendParentEntry(m->all);
     }
+    FilterNavEntries(m, filterWords);
     listBox->SetModel(m);
     UpdateDirLabel();
     if (m->ItemsCount() > 0) {
@@ -654,22 +735,22 @@ static Str SelectIfChildOf(Str cameFrom, Str dir) {
 }
 
 void NavFilesInFolderWnd::GoBack() {
-    if (histIdx <= 0) {
+    if (gNavHistIdx <= 0) {
         return;
     }
     TempStr cameFrom = str::DupTemp(currDir);
-    histIdx--;
-    Str dir = history[histIdx];
+    gNavHistIdx--;
+    Str dir = gNavHistory[gNavHistIdx];
     SetDir(dir, SelectIfChildOf(cameFrom, dir));
 }
 
 void NavFilesInFolderWnd::GoForward() {
-    if (histIdx + 1 >= len(history)) {
+    if (gNavHistIdx + 1 >= len(gNavHistory)) {
         return;
     }
     TempStr cameFrom = str::DupTemp(currDir);
-    histIdx++;
-    Str dir = history[histIdx];
+    gNavHistIdx++;
+    Str dir = gNavHistory[gNavHistIdx];
     SetDir(dir, SelectIfChildOf(cameFrom, dir));
 }
 
@@ -802,6 +883,42 @@ void NavFilesInFolderWnd::OnKeyDown(KeyEvent* ev) {
         ExecuteCurrentSelection(ev->isCtrl);
         ev->didHandle = true;
         return;
+    }
+    if (ev->vkey == 'F' && ev->isCtrl && !ev->isAlt && filterEdit) {
+        EditSetFocus(filterEdit);
+        EditSelectAll(filterEdit);
+        ev->didHandle = true;
+        return;
+    }
+    bool editFocused = filterEdit && ev->hwnd == filterEdit->hwnd;
+    if (editFocused && !ev->isAlt) {
+        // Up / Down / PgUp / PgDn move the list selection while typing;
+        // Esc clears the filter; the edit keeps its other keys (Backspace, Del)
+        switch (ev->vkey) {
+            case VK_UP:
+            case VK_DOWN:
+            case VK_PRIOR:
+            case VK_NEXT: {
+                VirtKeyEvent kev;
+                kev.target = listBox;
+                kev.vkey = ev->vkey;
+                kev.isCtrl = ev->isCtrl;
+                kev.isShift = ev->isShift;
+                listBox->OnKeyDown(&kev);
+                ev->didHandle = true;
+                return;
+            }
+            case VK_ESCAPE:
+                if (len(filterWords) > 0) {
+                    ClearFilter();
+                    ev->didHandle = true;
+                }
+                return;
+            case VK_F5:
+                break;
+            default:
+                return;
+        }
     }
     // Alt + Up / Left / Right go up / back / forward, like Explorer. They
     // arrive as WM_SYSKEYDOWN; swallowing them also avoids the system-menu beep
@@ -945,9 +1062,12 @@ void NavFilesInFolderWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     }
 
     {
+        // directories in bold, without the trailing "\"; filter matches highlighted
         u32 drawFmt = gfxTextEllipsis | gfxTextVCenter;
         drawFmt |= isRtl ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
-        gfx->DrawText(e.name, rcText, drawFmt, lb->font, colText);
+        PlatformFont* font = e.isDir ? GetBoldPlatformFont(lb->font) : lb->font;
+        DrawMaybeHighlightedText(gfx, rcText, NavEntryBaseName(e), filterWords, highlighted, colBg, isRtl, false,
+                                 drawFmt, font, colText);
     }
 
     if (sizeStr) {
@@ -1123,11 +1243,27 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin, Str filePath) {
     }
 
     {
+        // second row: filters the list below as you type
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.withBorder = true;
+        args.cueText = Tr("Search");
+        args.font = font;
+        args.isRtl = IsUIRtl();
+        filterEdit = new Edit();
+        filterEdit->SetColors(colTxt, colBg);
+        filterEdit->Create(args);
+        filterEdit->onTextChanged = MkMethod0<NavFilesInFolderWnd, &NavFilesInFolderWnd::OnFilterChanged>(this);
+        vbox->AddChild(new Padding(filterEdit, Insets{0, 0, 4, 0}));
+    }
+
+    {
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
         c->font = font;
         c->padding = DpiScaledInsets(4, 0);
         c->onDoubleClick = MkMethod0<NavFilesInFolderWnd, &NavFilesInFolderWnd::OnListDoubleClick>(this);
+        c->onChar = MkMethod1<NavFilesInFolderWnd, VirtCharEvent*, &NavFilesInFolderWnd::OnListChar>(this);
         c->onDrawItem =
             MkMethod1<NavFilesInFolderWnd, VirtListBox::DrawItemEvent*, &NavFilesInFolderWnd::DrawListBoxItem>(this);
         listBox = c;
@@ -1286,6 +1422,17 @@ TempStr NavFilesInFolderStateTemp(Str action, int idx, int* exitCodeOut) {
         wnd->GoForward();
     } else if (str::Eq(action, StrL("home"))) {
         wnd->GoHome();
+    } else if (str::Eq(action, StrL("execute"))) {
+        wnd->ExecuteCurrentSelection();
+    } else if (str::TrimPrefix(action, StrL("filter:"))) {
+        wnd->filterEdit->SetText(action);
+        wnd->OnFilterChanged();
+    } else if (str::Eq(action, StrL("close"))) {
+        wnd->Close();
+        if (exitCodeOut) {
+            *exitCodeOut = 0;
+        }
+        return str::DupTemp(StrL("OK closed"));
     }
 
     auto* m = (ListBoxModelNav*)wnd->listBox->model;
