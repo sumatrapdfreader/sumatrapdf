@@ -11,12 +11,15 @@
  *   2. POST them to /api/dltransfor (marks active strings; returns sha1 + translations)
  *   3. Fix suspicious translations (trailing whitespace / \n / \r) via /api/edittranslation
  *      as user "ai fix"
- *   4. If any language is missing translations:
+ *   4. GET /api/dltranshist (every string the server ever had) and index it by
+ *      English text with '&' stripped: a string that only moved or lost its
+ *      access key reuses the old translations, submitted as user "ai auto"
+ *   5. If any language is still missing translations:
  *        - translate with Claude or Grok
  *        - submit each via /api/edittranslation as user "ai claude" / "ai grok"
  *          only when that lang+string has no translation yet (never overwrite)
- *   5. Re-download (should now include submitted translations)
- *   6. Write filtered .work/translations.txt
+ *   6. Re-download (should now include submitted translations)
+ *   7. Write filtered .work/translations.txt
  *
  * Usage:
  *   bun cmd/trans-dl.ts                 # production apptranslator + Claude if key set
@@ -427,40 +430,179 @@ function parseTranslations(d: string): ParsedTranslations {
   return { perLang, allStrings, fromServer: clonePerLang(perLang) };
 }
 
+function existingTranslation(
+  perLang: Map<string, Map<string, string>>,
+  lang: string,
+  english: string,
+): string | undefined {
+  const t = perLang.get(lang)?.get(english);
+  return t !== undefined && t.length > 0 ? t : undefined;
+}
+
 function stripAmpersand(s: string): string {
   return s.replaceAll("&", "");
 }
 
-/** Fill untranslated no-& strings from matching & translations (local only until submitted). */
-function autoAddNoPrefixTranslations(pt: ParsedTranslations): Map<string, Map<string, string>> {
+// RFC 4180: fields separated by ',', quoted with '"', '""' inside quotes is
+// a literal quote, newlines allowed inside quotes
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+  const n = text.length;
+  for (let i = 0; i < n; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c !== '"') {
+        field += c;
+      } else if (text[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else {
+        inQuotes = false;
+      }
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = true;
+    } else if (c === ",") {
+      row.push(field);
+      field = "";
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else {
+      field += c;
+    }
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+// latest translation of every string the server ever had, active or not:
+// lang -> english -> translation. Empty translation means removed.
+type ServerHistory = Map<string, Map<string, string>>;
+
+const kHistoryRecordTrans = "t";
+const kHistoryRecordFields = 6; // t, time, user, lang, english, translation
+
+// GET /api/dltranshist returns the whole edits log, oldest first, so the
+// last edit of a (lang, english) pair wins
+async function downloadHistory(server: string): Promise<ServerHistory> {
+  const timeStart = performance.now();
+  const uri = `${server}/api/dltranshist?app=${encodeURIComponent(APP_NAME)}&size=0`;
+  const resp = await fetch(uri);
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`dltranshist HTTP ${resp.status}: ${body.slice(0, 200)}`);
+  }
+  const text = await resp.text();
+  const hist: ServerHistory = new Map();
+  let nEdits = 0;
+  for (const rec of parseCsv(text)) {
+    if (rec[0] !== kHistoryRecordTrans || rec.length !== kHistoryRecordFields) continue;
+    const [, , , lang, english, translation] = rec;
+    let m = hist.get(lang);
+    if (!m) {
+      m = new Map();
+      hist.set(lang, m);
+    }
+    m.set(english, translation);
+    nEdits++;
+  }
+  const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
+  console.log(`history: ${nEdits} edits, ${hist.size} langs, ${text.length} bytes in ${elapsed}s`);
+  return hist;
+}
+
+// translations found under the same English text with '&' removed
+interface StrippedMatch {
+  english: string;
+  translation: string;
+}
+
+// lang -> english without '&' -> translated strings that share it
+type StrippedIndex = Map<string, Map<string, StrippedMatch[]>>;
+
+function addToIndex(index: StrippedIndex, lang: string, english: string, translation: string): void {
+  if (translation.length === 0) return;
+  let byStripped = index.get(lang);
+  if (!byStripped) {
+    byStripped = new Map();
+    index.set(lang, byStripped);
+  }
+  const key = stripAmpersand(english);
+  let matches = byStripped.get(key);
+  if (!matches) {
+    matches = [];
+    byStripped.set(key, matches);
+  }
+  const existing = matches.find((m) => m.english === english);
+  if (existing) {
+    existing.translation = translation;
+  } else {
+    matches.push({ english, translation });
+  }
+}
+
+// server history first, then the current download on top (it is newer)
+function buildStrippedIndex(hist: ServerHistory | null, pt: ParsedTranslations): StrippedIndex {
+  const index: StrippedIndex = new Map();
+  for (const [lang, m] of hist ?? []) {
+    for (const [english, translation] of m) addToIndex(index, lang, english, translation);
+  }
+  for (const [lang, m] of pt.fromServer) {
+    for (const [english, translation] of m) addToIndex(index, lang, english, translation);
+  }
+  return index;
+}
+
+// "Show &Toolbar" -> "Sh&ow Toolbar" keeps the translation as is (its own
+// '&' stays where the translator put it); "Show Toolbar" from "Show &Toolbar"
+// drops the '&'. A match whose '&' status equals ours is preferred.
+function pickStrippedMatch(english: string, matches: StrippedMatch[]): string | undefined {
+  const wantAmp = english.includes("&");
+  const others = matches.filter((m) => m.english !== english);
+  const same = others.filter((m) => m.english.includes("&") === wantAmp);
+  const m = same[same.length - 1] ?? others[others.length - 1];
+  if (!m) return undefined;
+  return wantAmp ? m.translation : stripAmpersand(m.translation);
+}
+
+/** Fill untranslated strings from translations of the same text modulo '&' (local only until submitted). */
+function autoAddStrippedMatches(pt: ParsedTranslations, index: StrippedIndex): Map<string, Map<string, string>> {
   const { perLang, allStrings } = pt;
   const added = new Map<string, Map<string, string>>();
   let nAdded = 0;
   for (const [lang, translations] of perLang) {
-    const cache = new Map<string, string>();
-    for (const [orig, trans] of translations) {
-      if (orig.includes("&")) {
-        cache.set(stripAmpersand(orig), stripAmpersand(trans));
-      }
-    }
+    if (lang === "en") continue;
+    const byStripped = index.get(lang);
+    if (!byStripped) continue;
     for (const s of allStrings) {
-      if (s.includes("&")) continue;
-      if (translations.has(s)) continue;
-      const trans = cache.get(s);
-      if (trans) {
-        translations.set(s, trans);
-        let m = added.get(lang);
-        if (!m) {
-          m = new Map();
-          added.set(lang, m);
-        }
-        m.set(s, trans);
-        nAdded++;
+      if (existingTranslation(perLang, lang, s) !== undefined) continue;
+      const matches = byStripped.get(stripAmpersand(s));
+      if (!matches) continue;
+      const trans = pickStrippedMatch(s, matches);
+      if (!trans) continue;
+      translations.set(s, trans);
+      let m = added.get(lang);
+      if (!m) {
+        m = new Map();
+        added.set(lang, m);
       }
+      m.set(s, trans);
+      nAdded++;
     }
   }
   if (nAdded > 0) {
-    console.log(`autoAddNoPrefixTranslations: ${nAdded} candidates to submit`);
+    console.log(`autoAddStrippedMatches: ${nAdded} candidates to submit`);
   }
   return added;
 }
@@ -726,15 +868,6 @@ async function submitTranslation(
 
 function previewEnglish(s: string): string {
   return s.length > 70 ? s.slice(0, 70) + "…" : s;
-}
-
-function existingTranslation(
-  perLang: Map<string, Map<string, string>>,
-  lang: string,
-  english: string,
-): string | undefined {
-  const t = perLang.get(lang)?.get(english);
-  return t !== undefined && t.length > 0 ? t : undefined;
 }
 
 function setTranslation(
@@ -1069,14 +1202,14 @@ async function fillMissingWithAiAndSubmit(
   const user = args.ai === "grok" ? "ai grok" : "ai claude";
   const submitted = { n: 0 };
 
-  // submit auto-derived no-prefix translations in popularity order
+  // submit translations reused across '&' variants, in popularity order
   for (const lang of sortLangsByPopularity(autoAdded.keys())) {
     if (args.langs && !args.langs.has(lang)) continue;
     if (args.maxSubmit > 0 && submitted.n >= args.maxSubmit) break;
     const pairs = autoAdded.get(lang)!;
     const n = await submitMany(args.server, secret, "ai auto", lang, pairs, args.maxSubmit, submitted, pt);
     if (n > 0) {
-      console.log(`submitted ${n} auto no-prefix translations for ${lang}`);
+      console.log(`submitted ${n} reused translations for ${lang}`);
     }
   }
 
@@ -1248,9 +1381,17 @@ async function main() {
   // 2) push cleaned suspicious translations back to apptranslator (always, even --no-ai)
   let nFixed = await submitFixedSuspicious(args.server, secret, badTranslations);
 
-  // parse + auto-fill no-prefix candidates
+  // parse + reuse translations of the same text modulo '&' (a renamed
+  // access key is a new string to the server, but the history has the old one)
   let pt = parseTranslations(fullText);
-  const autoAdded = autoAddNoPrefixTranslations(pt);
+  let hist: ServerHistory | null = null;
+  try {
+    hist = await downloadHistory(args.server);
+  } catch (e) {
+    console.log(`history download failed (${e}); reusing only from the current download`);
+  }
+  const index = buildStrippedIndex(hist, pt);
+  const autoAdded = autoAddStrippedMatches(pt, index);
 
   if (args.retranslate && args.langs) {
     await markRetranslateAsMissing(args.server, args.langs, pt);
@@ -1262,7 +1403,7 @@ async function main() {
   const ensureLangs =
     args.langs && args.langs.size > 0 ? [...args.langs] : pt.perLang.size > 0 ? [...pt.perLang.keys()] : null;
 
-  // missing after in-memory auto-fill (auto-added still need server submit)
+  // missing after in-memory reuse (reused ones still need server submit)
   const missingAfterAuto = findMissing(pt, args.langs, ensureLangs);
   let nMissing = 0;
   for (const list of missingAfterAuto.values()) nMissing += list.length;
@@ -1270,7 +1411,7 @@ async function main() {
   for (const m of autoAdded.values()) nAuto += m.size;
 
   console.log(
-    `missing after auto no-prefix: ${nMissing} across ${missingAfterAuto.size} langs (auto-derived to submit: ${nAuto}); supported=${supportedLangs.length}`,
+    `missing after reuse: ${nMissing} across ${missingAfterAuto.size} langs (auto-derived to submit: ${nAuto}); supported=${supportedLangs.length}`,
   );
 
   let nAiSubmitted = 0;
@@ -1281,7 +1422,7 @@ async function main() {
       );
     }
   } else if (nMissing > 0 || nAuto > 0) {
-    // 3) AI translate + submit (and auto no-prefix submit)
+    // 3) submit reused, then AI translate + submit
     nAiSubmitted = await fillMissingWithAiAndSubmit(args, secret, pt, autoAdded, ensureLangs);
   }
 
@@ -1296,8 +1437,8 @@ async function main() {
     }
     fullText = `AppTranslator: ${APP_NAME}\n${dl.sha1}\n${fixed2.fixed}\n`;
     pt = parseTranslations(fullText);
-    // local-only auto no-prefix for good subset (already on server if submitted above)
-    autoAddNoPrefixTranslations(pt);
+    // local-only reuse for what --max-submit left out (the rest is on the server now)
+    autoAddStrippedMatches(pt, buildStrippedIndex(hist, pt));
   }
 
   // 5) write filtered translations for the binary; the exe's prebuild packs
