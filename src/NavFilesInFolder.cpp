@@ -63,6 +63,12 @@ enum class NavListReset {
     Keep
 };
 
+// how in-place editing of the path ends: Enter navigates, Esc restores
+enum class NavPathEditEnd {
+    Commit,
+    Cancel
+};
+
 // logical (pre-DPI) sizes for placement / sizing of the nav window
 constexpr int kNavDockMinFreeDx = 320;  // free strip beside main must be wider than this to dock
 constexpr int kNavDockMaxWidthDx = 480; // docked outer width = min(this, free strip)
@@ -106,8 +112,10 @@ struct NavFilesInFolderWnd : WindowBase {
     MainWindow* win = nullptr;
     // the label, the buttons, the list and the hints are virtual controls
     VirtText* dirLabel = nullptr;
+    Edit* dirEdit = nullptr; // HWND; shown over dirLabel while editing the path
+    bool editingPath = false;
     VirtIconButton* navBtns[NavBtnCount]{};
-    Edit* filterEdit = nullptr; // the only HWND child
+    Edit* filterEdit = nullptr; // HWND
     StrVec filterWords;
     Vec<u8> highlighted; // scratch for DrawMaybeHighlightedText
     VirtListBox* listBox = nullptr;
@@ -140,6 +148,11 @@ struct NavFilesInFolderWnd : WindowBase {
     void ApplyFilter();
     void ClearFilter();
     void OnListChar(VirtCharEvent* ev);
+    void OnDirLabelClick(VirtMouseEvent* ev);
+    void OnDirEditKillFocus();
+    void BeginEditPath();
+    void EndEditPath(NavPathEditEnd how);
+    Rect PathEditRect();
     void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
     void UpdateDirLabel();
     void UpdateNavButtons();
@@ -642,6 +655,64 @@ void NavFilesInFolderWnd::ClearFilter() {
     filterEdit->SetText(Str{}); // EN_CHANGE re-applies the (now empty) filter
 }
 
+void NavFilesInFolderWnd::OnDirLabelClick(VirtMouseEvent*) {
+    BeginEditPath();
+}
+
+// clicking away restores the label, like Esc
+void NavFilesInFolderWnd::OnDirEditKillFocus() {
+    EndEditPath(NavPathEditEnd::Cancel);
+}
+
+// edit the path in place: the edit covers the label until Enter / Esc
+void NavFilesInFolderWnd::BeginEditPath() {
+    if (!dirEdit || editingPath) {
+        return;
+    }
+    editingPath = true;
+    dirEdit->SetText(currDir);
+    dirEdit->SetBounds(PathEditRect());
+    dirEdit->SetIsVisible(true);
+    EditSetFocus(dirEdit);
+    EditSelectAll(dirEdit);
+}
+
+// a little taller than the label so the border doesn't crowd the text
+Rect NavFilesInFolderWnd::PathEditRect() {
+    Rect r = dirLabel->VisibleRectInWindow();
+    int pad = DpiScale(2);
+    r.y -= pad;
+    r.dy += 2 * pad;
+    return r;
+}
+
+// Commit: a directory is navigated to, a file's directory with that file
+// selected; anything else leaves the current dir (the label never changed)
+void NavFilesInFolderWnd::EndEditPath(NavPathEditEnd how) {
+    if (!editingPath) {
+        return;
+    }
+    editingPath = false; // before hiding: that fires kill-focus
+    TempStr path = dirEdit->GetTextTemp();
+    dirEdit->SetIsVisible(false);
+    // hiding the child doesn't repaint the label it covered
+    HwndInvalidateRect(hwnd, PathEditRect(), true);
+    SetFocusTo(listBox);
+    if (how == NavPathEditEnd::Cancel) {
+        return;
+    }
+    // Explorer's "Copy as path" wraps the path in quotes
+    str::TrimWSInPlace(path, str::TrimOpt::Both);
+    if (len(path) >= 2 && path.s[0] == '"' && path.s[len(path) - 1] == '"') {
+        path = Str(path.s + 1, len(path) - 2);
+    }
+    if (dir::Exists(path)) {
+        Navigate(path);
+    } else if (file::Exists(path)) {
+        Navigate(path::GetDirTemp(path), path);
+    }
+}
+
 // typing while the list has focus goes into the search field
 void NavFilesInFolderWnd::OnListChar(VirtCharEvent* ev) {
     if (ev->c < ' ' || IsCtrlPressed() || !filterEdit) {
@@ -915,6 +986,16 @@ void NavFilesInFolderWnd::OnListDoubleClick() {
 
 void NavFilesInFolderWnd::OnKeyDown(KeyEvent* ev) {
     if (hwnd && ev->hwnd != hwnd && !IsChild(hwnd, ev->hwnd)) {
+        return;
+    }
+    if (dirEdit && ev->hwnd == dirEdit->hwnd) {
+        if (ev->vkey == VK_RETURN) {
+            EndEditPath(NavPathEditEnd::Commit);
+            ev->didHandle = true;
+        } else if (ev->vkey == VK_ESCAPE) {
+            EndEditPath(NavPathEditEnd::Cancel);
+            ev->didHandle = true;
+        }
         return;
     }
     if (ev->vkey == VK_RETURN) {
@@ -1276,8 +1357,26 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin, Str filePath) {
             .ellipsis = true,
         });
         dirLabel = c;
+        c->SetFlag(vwfNoHitTest, false); // plain text ignores the mouse
+        c->cursor = CursorId::IBeam;
+        c->SetTooltip(Tr("Click to edit the path"));
+        c->onClick = MkMethod1<NavFilesInFolderWnd, VirtMouseEvent*, &NavFilesInFolderWnd::OnDirLabelClick>(this);
         row->AddChild(new Padding(c, Insets{0, 4, 0, 4}), 1);
         vbox->AddChild(new Padding(row, Insets{0, 0, 4, 0}));
+    }
+
+    {
+        // path editor: not in the layout, placed over dirLabel while editing
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.withBorder = true;
+        args.font = font;
+        args.isRtl = IsUIRtl();
+        dirEdit = new Edit();
+        dirEdit->SetColors(colTxt, colBg);
+        dirEdit->Create(args);
+        dirEdit->SetIsVisible(false);
+        dirEdit->onKillFocus = MkMethod0<NavFilesInFolderWnd, &NavFilesInFolderWnd::OnDirEditKillFocus>(this);
     }
 
     {
@@ -1464,6 +1563,30 @@ TempStr NavFilesInFolderStateTemp(Str action, int idx, int* exitCodeOut) {
         wnd->ExecuteCurrentSelection();
     } else if (str::Eq(action, StrL("refresh"))) {
         wnd->RefreshList();
+    } else if (str::Eq(action, StrL("path-label-rect"))) {
+        // where a test must click to start editing the path (client coords)
+        Rect r = wnd->dirLabel->VisibleRectInWindow();
+        if (exitCodeOut) {
+            *exitCodeOut = 0;
+        }
+        return fmt("OK %d %d %d %d", r.x, r.y, r.dx, r.dy);
+    } else if (str::Eq(action, StrL("edit-path")) || str::TrimPrefix(action, StrL("path-"))) {
+        // path editing: edit-path, path-text:<text>, path-commit, path-cancel,
+        // path-state (report only)
+        if (str::Eq(action, StrL("edit-path"))) {
+            wnd->BeginEditPath();
+        } else if (str::Eq(action, StrL("commit"))) {
+            wnd->EndEditPath(NavPathEditEnd::Commit);
+        } else if (str::Eq(action, StrL("cancel"))) {
+            wnd->EndEditPath(NavPathEditEnd::Cancel);
+        } else if (str::TrimPrefix(action, StrL("text:"))) {
+            wnd->dirEdit->SetText(action);
+        }
+        if (exitCodeOut) {
+            *exitCodeOut = 0;
+        }
+        TempStr text = wnd->dirEdit->GetTextTemp();
+        return fmt("OK editing=%d text=\"%s\"", (int)wnd->editingPath, text);
     } else if (str::TrimPrefix(action, StrL("filter:"))) {
         wnd->filterEdit->SetText(action);
         wnd->OnFilterChanged();
