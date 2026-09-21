@@ -63,6 +63,8 @@ function ninjaFiles(dir: string): string[] {
 }
 
 function addResources(text: string, path: string): string {
+  // one pack rule + always-dirty phony per project file, shared by its configs
+  const packRules = new Set<string>();
   for (const [project, target, source] of resources) {
     if (!path.endsWith(`${project}.ninja`)) {
       continue;
@@ -84,17 +86,63 @@ function addResources(text: string, path: string): string {
       // reads as out<CR>el64). "\.." and "/rel64" are both left alone.
       let deps = "";
       let flags = "";
+      let pack = "";
       if (project === "SumatraPDF") {
-        deps = ` | ../../out/${config}/obj/SumatraPDF/SumatraPDF.prebuild`;
+        const stamp = `../../out/${config}/obj/SumatraPDF/SumatraPDF.prebuild`;
+        const archive = `../../out/${config}/embedded.lzsa`;
+        const bins = ["libsumatrapdf.dll", "PdfFilter.dll", "PdfPreview.dll", "sumatrapdf-tool.exe"];
+        const bin = bins.map((name) => `../../out/${config}/${name}`);
+        pack = packArchiveEdge(text, project, archive, stamp, bin, packRules);
+        deps = ` | ${archive}`;
         flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out/${config}/embedded.lzsa`;
       } else if (project === "SumatraPDF-static") {
-        deps = ` | ../../out/${config}/obj-s/SumatraPDF-static/SumatraPDF-static.prebuild`;
+        const stamp = `../../out/${config}/obj-s/SumatraPDF-static/SumatraPDF-static.prebuild`;
+        const archive = `../../out/${config}/embedded-static.lzsa`;
+        pack = packArchiveEdge(text, project, archive, stamp, [], packRules);
+        deps = ` | ${archive}`;
         flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out/${config}/embedded-static.lzsa`;
       }
-      return `build ${resource}: rc_msc-v145 ${source}${deps}${flags}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
+      return `${pack}build ${resource}: rc_msc-v145 ${source}${deps}${flags}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
     });
   }
   return text;
+}
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// The premake prebuild stamp has no inputs, so Ninja runs it once per clean
+// build and the archive it packed then went stale for good (a manual generated
+// later never made it into the exe). Re-pack on every invocation instead: the
+// edge depends on a phony target that never exists, so it is always dirty, and
+// restat stops there when MakeLZSA left the archive (and its mtime) unchanged.
+// The .res then depends on the archive itself. The prebuild stamp keeps its
+// command (every .obj waits for it); ordering after it avoids two packs racing.
+function packArchiveEdge(
+  text: string,
+  project: string,
+  archive: string,
+  stamp: string,
+  bins: string[],
+  packRules: Set<string>,
+): string {
+  const cmdRe = new RegExp(
+    `^build ${escapeRe(stamp)}: prebuild[^\\n]*\\n  prebuildcommands = cmd /C "(call [^\\n]*?pack-embedded-prebuild\\.cmd[^\\n]*?) && type nul`,
+    "m",
+  );
+  const packCmd = text.match(cmdRe)?.[1];
+  if (!packCmd) {
+    throw new Error(`ninja: no pack-embedded-prebuild command found for ${stamp}`);
+  }
+  const always = `always_pack_${project}`;
+  let out = "";
+  if (!packRules.has(project)) {
+    packRules.add(project);
+    out += `rule pack_${project}\n  command = cmd /C "$packcmd"\n  description = Packing $out\n  restat = 1\nbuild ${always}: phony\n`;
+  }
+  out += `build ${archive}: pack_${project} | ${always} || ${[stamp, ...bins].join(" ")}\n  packcmd = ${packCmd}\n`;
+  return out;
 }
 
 function fixEscapes(): void {

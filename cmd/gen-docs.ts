@@ -4,7 +4,7 @@
 import MarkdownIt from "./markdown-it.min.js";
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
-import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { join, resolve, extname } from "node:path";
 import { commands as commandsDef } from "./gen-commands";
 import { checkCdnImages, docsImgToCdnUrl } from "./r2";
@@ -454,33 +454,67 @@ function writeBundledRenderJs(outDir: string): void {
   writeFileSync(join(outDir, "gen_docs.render.js"), template.replace(marker, bundle));
 }
 
-async function writeManualPakFiles(): Promise<void> {
-  rmSync(manualOutDir, { recursive: true, force: true });
-  mkdirSync(manualOutDir, { recursive: true });
+// Build the manual in a scratch dir and swap it in at the end: a build's
+// prebuild (cmd/pack-embedded-prebuild.cmd) mirrors .work/docs and packs
+// without the manual when the dir is missing, so it must never see a
+// half-written one.
+function writeManualPakFiles(): void {
+  const outDir = `${manualOutDir}.tmp`;
+  rmSync(outDir, { recursive: true, force: true });
+  mkdirSync(outDir, { recursive: true });
 
   const manifest: Record<string, string> = {};
   for (const name of mdProcessed.keys()) {
-    copyFileNormalized(join(manualOutDir, name), join(mdDir, name));
+    copyFileNormalized(join(outDir, name), join(mdDir, name));
     manifest[getHTMLFileName(name)] = name;
   }
-  writeFileSync(join(manualOutDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+  writeFileSync(join(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
   console.log(`wrote manifest.json (${Object.keys(manifest).length} pages)`);
 
-  genAllDocsMd(manualOutDir);
+  genAllDocsMd(outDir);
 
   for (const name of kManualStaticFiles) {
     if (name === "gen_docs.render.js") {
       continue;
     }
-    copyFileNormalized(join(manualOutDir, name), join(docsDir, name));
+    copyFileNormalized(join(outDir, name), join(docsDir, name));
   }
-  writeBundledRenderJs(manualOutDir);
-  copyFileNormalized(join(manualOutDir, "markdown-it.min.js"), join("cmd", "markdown-it.min.js"));
-  const bundledRender = readFileSync(join(manualOutDir, "gen_docs.render.js"), "utf-8");
+  writeBundledRenderJs(outDir);
+  copyFileNormalized(join(outDir, "markdown-it.min.js"), join("cmd", "markdown-it.min.js"));
+  const bundledRender = readFileSync(join(outDir, "gen_docs.render.js"), "utf-8");
   if (!bundledRender.includes("cmd_ids") || !bundledRender.includes("driver();")) {
     throw new Error("bundled gen_docs.render.js missing Commands search UI");
   }
-  await checkCdnImages([mdDir]);
+
+  // MakeLZSA stores file mtimes, so replacing identical files would still
+  // change the archive and relink the exe on every build
+  if (sameDirContents(outDir, manualOutDir)) {
+    rmSync(outDir, { recursive: true, force: true });
+    return;
+  }
+  rmSync(manualOutDir, { recursive: true, force: true });
+  renameSync(outDir, manualOutDir);
+}
+
+function sameDirContents(a: string, b: string): boolean {
+  if (!existsSync(a) || !existsSync(b)) {
+    return false;
+  }
+  const list = (dir: string) => readdirSync(dir, { recursive: true, encoding: "utf8" }).sort();
+  const filesA = list(a);
+  if (filesA.join("\n") !== list(b).join("\n")) {
+    return false;
+  }
+  for (const rel of filesA) {
+    const pa = join(a, rel);
+    if (statSync(pa).isDirectory()) {
+      continue;
+    }
+    if (!readFileSync(pa).equals(readFileSync(join(b, rel)))) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function extractCommandsFromMarkdown(): string[] {
@@ -534,9 +568,16 @@ function checkCommandsAreDocumented(): void {
   }
 }
 
-export async function main() {
+export type GenDocsOptions = {
+  preview?: boolean;
+  // called from the build scripts: no network (r2 image check) and no
+  // Commands.md audit, just a fresh .work/docs for the prebuild to pack
+  forBuild?: boolean;
+};
+
+export async function main(opts: GenDocsOptions = {}) {
   const timeStart = performance.now();
-  const previewHtml = process.argv.includes("--preview");
+  const previewHtml = opts.preview ?? process.argv.includes("--preview");
   console.log("gen-docs starting");
 
   // validate links by walking the doc graph from the main page
@@ -546,9 +587,12 @@ export async function main() {
     mdToHTML(name);
   }
 
-  await writeManualPakFiles();
+  writeManualPakFiles();
   if (previewHtml) {
     writePreviewHtmlFiles();
+  }
+  if (!opts.forBuild) {
+    await checkCdnImages([mdDir]);
   }
 
   // the build's prebuild (cmd/pack-embedded-prebuild.cmd) stages .work/docs
@@ -564,10 +608,17 @@ export async function main() {
     );
   }
 
-  checkCommandsAreDocumented();
+  if (!opts.forBuild) {
+    checkCommandsAreDocumented();
+  }
 
   const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
   console.log(`gen-docs finished in ${elapsed}s`);
+}
+
+// the exe embeds .work/docs, so every local build regenerates it first
+export async function genDocsForBuild(): Promise<void> {
+  await main({ forBuild: true });
 }
 
 if (import.meta.main) {

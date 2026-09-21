@@ -126,6 +126,8 @@ async function main() {
   const { platform, target, exeName, outDir, logName } = configFor(kind);
   const { msbuildPath, vsRoot } = detectVisualStudio2026();
 
+  const { genDocsForBuild } = await import("./gen-docs");
+  await genDocsForBuild();
   await runLogged(join("bin", "premake5.exe"), ["vs2022"]);
   await runLogged(msbuildPath, [
     String.raw`vs2022\SumatraPDF.sln`,

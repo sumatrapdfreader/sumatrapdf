@@ -387,6 +387,11 @@ async function runWslLauncher(args: string[]): Promise<void> {
 
 async function runBuild(opts: BuildOptions): Promise<void> {
   const mode = opts.mode!;
+  if (["windows", "all", "smoke"].includes(mode)) {
+    // the exe embeds the manual from .work/docs (ci / daily do this themselves)
+    const { genDocsForBuild } = await import("./gen-docs");
+    await genDocsForBuild();
+  }
   if (mode === "windows") {
     const config = opts.config ?? "debug";
     if (opts.asan) await buildWindowsAsan(config, opts.clean, opts.ninja);
