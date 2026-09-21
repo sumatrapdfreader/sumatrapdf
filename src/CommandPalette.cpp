@@ -89,6 +89,7 @@ struct ItemDataCP {
     u8* settingPtr = nullptr;
     intptr_t settingDefault = 0; // FieldInfo::value, decoded per type
     Str settingPath;
+    Str settingComment; // its doc comment, from the settings metadata
 };
 
 using StrVecCP = StrVecWithData<ItemDataCP>;
@@ -120,6 +121,9 @@ struct CommandPaletteWnd : WindowBase {
     HBox* switchRow = nullptr;
     HBox* helpRow = nullptr;
     int helpKind = -1;
+    // the selected setting's doc comment, shown under the list in "= settings"
+    ILayout* settingHelpBox = nullptr;
+    VirtFixedLinesText* settingHelp = nullptr;
 
     StrVec filterWords;
     Vec<u8> highlighted;
@@ -149,6 +153,7 @@ struct CommandPaletteWnd : WindowBase {
     bool Create(MainWindow* win, Str prefix, int smartTabAdvance);
     void QueryChanged();
     void UpdateHelpRow();
+    void UpdateSettingHelp();
 
     void ExecuteCurrentSelection();
     bool AdvanceSelection(int dir);
@@ -163,9 +168,12 @@ struct CommandPaletteWnd : WindowBase {
     void SwitchToFavorites();
     void SwitchToSettings();
     void BeginEditSettingValue(Str path);
-    void ReturnToSettings();
+    void ReturnToSettings(Str selPath);
     bool IsEditingSettingValue();
+    TempStr EditedSettingPathTemp();
+    ItemDataCP* FindSetting(Str path, Str& foundPath);
     void FillSettingValueRows(Str path, Str value, StrVecCP& out);
+    void SelectSetting(Str path);
     void SetThumbnailMode(ThumbnailMode mode);
     void OnSelectionChange();
     void OnListDoubleClick();
@@ -1038,11 +1046,35 @@ void CommandPaletteWnd::BeginEditSettingValue(Str path) {
                         fmt("%s%s %s %s", Str(kPalettePrefixBoolSettings), path, Str(kPaletteSettingValueSep), value));
 }
 
-// Back to the setting-picking stage. Applying a value reloads gSettings, so
-// every row pointing into it (settings, file history, favorites) is rebuilt.
-void CommandPaletteWnd::ReturnToSettings() {
+// Back to the setting-picking stage with selPath selected. Applying a value
+// reloads gSettings, so every row pointing into it (settings, file history,
+// favorites) is rebuilt; selPath usually points into those rows, hence the copy.
+void CommandPaletteWnd::ReturnToSettings(Str selPath) {
+    TempStr path = str::DupTemp(selPath);
     CollectStrings(win);
     SwitchToSettings();
+    SelectSetting(path);
+}
+
+// the full path of the setting named in the "=<path> = <value>" query
+TempStr CommandPaletteWnd::EditedSettingPathTemp() {
+    Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
+    str::TrimPrefix(filter, Str(kPalettePrefixBoolSettings));
+    Str path, value, foundPath;
+    if (!SplitSettingValueQuery(filter, path, value) || !FindSetting(path, foundPath)) {
+        return {};
+    }
+    return str::DupTemp(foundPath);
+}
+
+void CommandPaletteWnd::SelectSetting(Str path) {
+    auto* m = (ListBoxModelCP*)listBox->model;
+    for (int i = 0; i < m->ItemsCount(); i++) {
+        if (str::Eq(m->strings[i], path)) {
+            CommandPaletteSetCurrentSelection(this, i);
+            return;
+        }
+    }
 }
 
 // true in the "=<path> = <value>" stage
@@ -1099,6 +1131,7 @@ void CommandPaletteWnd::OnCommand(WindowBase::CommandEvent* ev) {
 }
 
 void CommandPaletteWnd::OnSelectionChange() {
+    UpdateSettingHelp();
     int idx = listBox->GetCurrentSelection();
     if (!smartTabMode) {
         return;
@@ -1178,7 +1211,7 @@ bool CommandPaletteWnd::RemoveSelectedItem() {
 void CommandPaletteWnd::OnKeyDown(KeyEvent* ev) {
     if (ev->vkey == VK_ESCAPE) {
         if (IsEditingSettingValue()) {
-            ReturnToSettings();
+            ReturnToSettings(EditedSettingPathTemp());
             ev->didHandle = true;
             return;
         }
@@ -1340,12 +1373,12 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         if (len(data->settingPath) > 0) {
             // a value picked for a setting: the row text is the value
             SetSettingsValueFromStr(data->settingPath, itemText);
-            ReturnToSettings();
+            ReturnToSettings(data->settingPath);
             return;
         }
         if (data->settingType == SettingType::Bool) {
             ToggleSettingsBool((bool*)data->settingPtr);
-            ReturnToSettings();
+            ReturnToSettings(itemText);
             return;
         }
         // anything else needs a value: stay open and ask for one
@@ -1562,6 +1595,7 @@ enum {
     kHelpFavorites,
     kHelpAnnotations,
     kHelpSettings,
+    kHelpSettingValue,
     kHelpToc,
     kHelpEverything,
     kHelpThumbnails,
@@ -1589,8 +1623,9 @@ static int PaletteHelpKind(Str filter, bool smartTab) {
     if (str::StartsWith(filter, Str(kPalettePrefixAnnotations))) {
         return kHelpAnnotations;
     }
-    if (str::StartsWith(filter, Str(kPalettePrefixBoolSettings))) {
-        return kHelpSettings;
+    if (str::TrimPrefix(filter, Str(kPalettePrefixBoolSettings))) {
+        Str path, value;
+        return SplitSettingValueQuery(filter, path, value) ? kHelpSettingValue : kHelpSettings;
     }
     if (str::StartsWith(filter, Str(kPalettePrefixThumbnails))) {
         return kHelpThumbnails;
@@ -1649,6 +1684,10 @@ void CommandPaletteWnd::UpdateHelpRow() {
             strings[nHelp++] = Tr("Enter change");
             strings[nHelp++] = Tr("Esc close");
             break;
+        case kHelpSettingValue:
+            strings[nHelp++] = Tr("Enter apply");
+            strings[nHelp++] = Tr("Esc go back");
+            break;
         case kHelpThumbnails:
             strings[nHelp++] = Tr("Enter go to");
             strings[nHelp++] = Tr("Esc close");
@@ -1672,9 +1711,28 @@ void CommandPaletteWnd::UpdateHelpRow() {
     for (int i = 0; i < nHelp; i++) {
         helpRow->AddChild(NewHelpText(st, WithKbdMarkupTemp(strings[i])));
     }
+    if (settingHelpBox) {
+        bool show = kind == kHelpSettings || kind == kHelpSettingValue;
+        settingHelpBox->SetVisibility(show ? Visibility::Visible : Visibility::Collapse);
+    }
     if (layout) {
         DoLayout();
     }
+    UpdateSettingHelp();
+}
+
+// the doc comment of the selected setting, like the advanced settings dialog
+void CommandPaletteWnd::UpdateSettingHelp() {
+    if (!settingHelpBox || IsCollapsed(settingHelpBox)) {
+        return;
+    }
+    Str comment;
+    int idx = listBox->GetCurrentSelection();
+    auto* m = (ListBoxModelCP*)listBox->model;
+    if (idx >= 0 && idx < m->ItemsCount()) {
+        comment = m->Data(idx)->settingComment;
+    }
+    settingHelp->SetText(comment);
 }
 
 bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance) {
@@ -1761,6 +1819,21 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             overlay->AddChild(thumbnailCtrl);
         }
         vbox->AddChild(overlay, 1);
+    }
+
+    {
+        auto* c = new VirtFixedLinesText();
+        c->font = font;
+        c->SetColor(kColRichText, colTxt);
+        c->SetColor(kColRichLink, colTxt);
+        c->SetColor(kColRichBg, colBg);
+        c->borderCol = ThemeEdgeColor();
+        c->padding = DpiScaledInsets(4);
+        settingHelp = c;
+        auto* box = new Padding(c, DpiScaledInsets(4, 0));
+        box->SetVisibility(Visibility::Collapse);
+        settingHelpBox = box;
+        vbox->AddChild(box);
     }
 
     {
@@ -1929,8 +2002,10 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     int n = wnd->listBox ? wnd->listBox->ItemsCount() : 0;
     int selectedCmdId = 0;
     int annotPage = 0;
+    Str selText;
     if (sel >= 0 && sel < n) {
         auto* model = (ListBoxModelCP*)wnd->listBox->model;
+        selText = model->Item(sel);
         ItemDataCP* data = model->Data(sel);
         selectedCmdId = data ? data->cmdId : 0;
         if (data && data->annot) {
@@ -1947,9 +2022,9 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     int annotsDone = EngineMupdfAnnotsLoadDone(engine) ? 1 : 0;
     out.Append(
         fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d thumb=%d page=%d rendered=%d annots=%d "
-            "annotPage=%d annotsDone=%d\n",
+            "annotPage=%d annotsDone=%d selText=%s\n",
             sel, n, qStart, qEnd, qLen, selectedCmdId, (int)CommandPaletteUiRtl(), (int)wnd->thumbnailMode, thumbPage,
-            rendered, nAnnots, annotPage, annotsDone));
+            rendered, nAnnots, annotPage, annotsDone, selText));
     return finish(0);
 }
 
@@ -2401,10 +2476,16 @@ static void CollectSettingsInStruct(StrVecCP& out, const StructInfo* info, u8* b
         return;
     }
     const char* fieldName = info->fieldNames;
+    const char* fieldComment = info->fieldComments; // parallel to fieldNames
     for (u16 i = 0; i < info->fieldCount; i++) {
         const FieldInfo& field = info->fields[i];
         Str fname(fieldName);
         fieldName += len(fname) + 1;
+        Str comment;
+        if (fieldComment) {
+            comment = Str(fieldComment);
+            fieldComment += len(comment) + 1;
+        }
         if (field.internal || field.type == SettingType::Comment || field.offset == (size_t)-1) {
             continue;
         }
@@ -2421,6 +2502,7 @@ static void CollectSettingsInStruct(StrVecCP& out, const StructInfo* info, u8* b
         data.settingType = field.type;
         data.settingPtr = fieldPtr;
         data.settingDefault = field.value;
+        data.settingComment = comment;
         out.Append(path, data);
     }
 }
@@ -2748,14 +2830,10 @@ static bool SplitSettingValueQuery(Str query, Str& path, Str& value) {
     return len(path) > 0;
 }
 
-// Rows for the value stage: an enum offers its allowed values, anything else
-// offers the one value being typed. Enter on a row applies it (see
-// ExecuteCurrentSelection).
-void CommandPaletteWnd::FillSettingValueRows(Str path, Str value, StrVecCP& out) {
-    // the full dotted path, or an unambiguous leaf ("Units" for
-    // "FixedPageUI.PageGrid.Units") so the name can be typed by hand
+// The setting at a full dotted path, or an unambiguous leaf ("Units" for
+// "FixedPageUI.PageGrid.Units") so the name can be typed by hand
+ItemDataCP* CommandPaletteWnd::FindSetting(Str path, Str& foundPath) {
     ItemDataCP* found = nullptr;
-    Str foundPath;
     int nLeaf = 0;
     for (int i = 0; i < len(settings); i++) {
         Str s = settings[i];
@@ -2773,8 +2851,17 @@ void CommandPaletteWnd::FillSettingValueRows(Str path, Str value, StrVecCP& out)
         }
     }
     if (nLeaf != 1) {
-        found = nullptr;
+        return nullptr;
     }
+    return found;
+}
+
+// Rows for the value stage: an enum offers its allowed values, anything else
+// offers the one value being typed. Enter on a row applies it (see
+// ExecuteCurrentSelection).
+void CommandPaletteWnd::FillSettingValueRows(Str path, Str value, StrVecCP& out) {
+    Str foundPath;
+    ItemDataCP* found = FindSetting(path, foundPath);
     if (!found || found->settingType == SettingType::Bool) {
         return;
     }
@@ -2835,6 +2922,8 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
         if (SplitSettingValueQuery(filter, path, value)) {
             SplitFilterToWords(value, filterWords);
             FillSettingValueRows(path, value, strings);
+            // the rows are the values themselves: nothing to highlight
+            filterWords.Reset();
             return;
         }
     }

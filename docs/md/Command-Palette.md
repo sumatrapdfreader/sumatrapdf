@@ -95,9 +95,10 @@ Type `=` to change a setting without opening
 [Advanced Settings](./Advanced-options-settings.md). Every setting holding a
 single value is listed by its dotted name, with its current value on the right;
 a value that isn't the default is shown in bold, and those settings are listed
-first. Type to filter by name or by value. Compact settings like `WindowMargin`
-are only editable in Advanced Settings; settings holding a list only in the
-settings file (**Open Settings File...**).
+first. Type to filter by name or by value. The selected setting's description,
+the same as in Advanced Settings, is shown under the list. Compact settings like
+`WindowMargin` are only editable in Advanced Settings; settings holding a list
+only in the settings file (**Open Settings File...**).
 
 `Enter` on a `true` / `false` setting toggles it. Any other setting asks for a
 value: the query becomes `=<name> = <value>`, and
@@ -108,8 +109,9 @@ value: the query becomes `=<name> = <value>`, and
 
 The change takes effect immediately, exactly as if it had been saved from
 Advanced Settings - no restart. The palette stays open and shows the settings
-again, so several can be changed in a row; `Esc` closes it. `Esc` while a value
-is being asked for goes back to the settings instead. You can also type the
+again with the same setting selected, so several can be changed in a row;
+`Esc` closes it. `Esc` while a value is being asked for goes back to the
+settings instead, also with that setting selected. You can also type the
 whole thing at once, e.g. `=ZoomIncrement = 25`; the name can be the last part
 of a dotted setting (`Units` for `FixedPageUI.PageGrid.Units`) as long as only
 one setting ends with it.

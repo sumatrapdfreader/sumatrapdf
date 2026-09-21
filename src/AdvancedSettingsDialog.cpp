@@ -318,62 +318,6 @@ struct ListBoxModelSettings : ListBoxModel {
     }
 };
 
-// The doc comment of the selected setting, wrapped to the dialog's width.
-// Its height is fixed to a number of lines so the rest of the dialog doesn't
-// jump around as comments of different lengths come and go
-struct CommentText : VirtRichText {
-    int nLines = 6;
-
-    int FixedDy() {
-        int lineDy = PlatformFontMeasureText(font, StrL("Ag")).dy;
-        return (lineDy * nLines) + padding.top + padding.bottom;
-    }
-
-    // the height is ours in all three, or the box would follow the text: it is
-    // laid out (and sized) while empty, and every comment is a different length
-    Size GetIdealSize() override {
-        Size sz = VirtRichText::GetIdealSize();
-        sz.dy = FixedDy();
-        return sz;
-    }
-
-    int MinIntrinsicHeight(int width) override {
-        VirtRichText::MinIntrinsicHeight(width); // wraps to `width`
-        return FixedDy();
-    }
-
-    Size Layout(Constraints bc) override {
-        Size sz = VirtRichText::Layout(bc);
-        sz.dy = FixedDy();
-        return bc.Constrain(sz);
-    }
-
-    // the box is a fixed number of lines, so a longer comment has to be cut off
-    // rather than spill over the hints below it
-    void Paint(VirtPaintCtx& ctx) override {
-        Rect clip = ctx.bounds.Intersect(ctx.clip);
-        if (clip.IsEmpty()) {
-            return;
-        }
-        ctx.gfx->PushClip(clip);
-        Color bg = GetColor(kColRichBg);
-        if (!ColorSkipsPaint(bg)) {
-            ctx.gfx->FillRect(ctx.bounds, bg);
-        }
-        VirtRichText::Paint(ctx);
-        ctx.gfx->DrawRect(ctx.bounds, ThemeEdgeColor());
-        ctx.gfx->PopClip();
-    }
-
-    // Reset() drops the word layout, so re-wrap to the width we already have
-    void SetText(Str s) {
-        Reset();
-        AddPlainText(s);
-        LayoutText(ContentRectInWindow().dx);
-        Invalidate();
-    }
-};
-
 struct AdvancedSettingsWnd : WindowBase {
     ~AdvancedSettingsWnd() override;
 
@@ -384,8 +328,8 @@ struct AdvancedSettingsWnd : WindowBase {
     // controls; the filter and the in-place editors are real HWNDs
     Edit* editFilter = nullptr;
     VirtListBox* listBox = nullptr;
-    ListBoxModelSettings* model = nullptr; // owned by listBox
-    CommentText* commentText = nullptr;    // shows the selected setting's doc comment
+    ListBoxModelSettings* model = nullptr;     // owned by listBox
+    VirtFixedLinesText* commentText = nullptr; // shows the selected setting's doc comment
     // "changed settings: n" under the list, above the setting help; collapsed when n == 0
     ILayout* changedCountRow = nullptr;
     VirtFill* changedCountBg = nullptr;
@@ -1319,8 +1263,9 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
 
     // selected setting's doc comment (the help area)
     {
-        auto* c = new CommentText();
+        auto* c = new VirtFixedLinesText();
         c->font = font;
+        c->borderCol = ThemeEdgeColor();
         // don't let the doc text touch the edges of the dialog
         c->padding = DpiScaledInsets(4);
         commentText = c;

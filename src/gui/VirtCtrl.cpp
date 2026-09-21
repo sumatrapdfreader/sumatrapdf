@@ -4134,6 +4134,56 @@ TipLink* VirtRichText::LinkAt(Point ptLocal) {
 }
 
 // a click on a link runs it; anything else bubbles up to whoever hosts us
+int VirtFixedLinesText::FixedDy() {
+    int lineDy = PlatformFontMeasureText(font, StrL("Ag")).dy;
+    return (lineDy * nLines) + padding.top + padding.bottom;
+}
+
+// the height is ours in all three, or the box would follow the text: it is
+// laid out (and sized) while empty, and every text is a different length
+Size VirtFixedLinesText::GetIdealSize() {
+    Size sz = VirtRichText::GetIdealSize();
+    sz.dy = FixedDy();
+    return sz;
+}
+
+int VirtFixedLinesText::MinIntrinsicHeight(int width) {
+    VirtRichText::MinIntrinsicHeight(width); // wraps to `width`
+    return FixedDy();
+}
+
+Size VirtFixedLinesText::Layout(Constraints bc) {
+    Size sz = VirtRichText::Layout(bc);
+    sz.dy = FixedDy();
+    return bc.Constrain(sz);
+}
+
+// a longer text is cut off rather than spilling over what sits below
+void VirtFixedLinesText::Paint(VirtPaintCtx& ctx) {
+    Rect clip = ctx.bounds.Intersect(ctx.clip);
+    if (clip.IsEmpty()) {
+        return;
+    }
+    ctx.gfx->PushClip(clip);
+    Color bg = GetColor(kColRichBg);
+    if (!ColorSkipsPaint(bg)) {
+        ctx.gfx->FillRect(ctx.bounds, bg);
+    }
+    VirtRichText::Paint(ctx);
+    if (!ColorSkipsPaint(borderCol)) {
+        ctx.gfx->DrawRect(ctx.bounds, borderCol);
+    }
+    ctx.gfx->PopClip();
+}
+
+// Reset() drops the word layout, so re-wrap to the width we already have
+void VirtFixedLinesText::SetText(Str s) {
+    Reset();
+    AddPlainText(s);
+    LayoutText(ContentRectInWindow().dx);
+    Invalidate();
+}
+
 void VirtRichText::OnMouseDown(VirtMouseEvent* ev) {
     if (LinkAt(ev->pt)) {
         ev->didHandle = true;

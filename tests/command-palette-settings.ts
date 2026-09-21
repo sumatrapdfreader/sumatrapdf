@@ -20,19 +20,20 @@ CheckForUpdates = false
 RestoreSession = false
 `;
 
-type Palette = { open: boolean; items: number; queryLen: number };
+type Palette = { open: boolean; items: number; queryLen: number; sel: number; selText: string };
 
 async function paletteState(client: ControlClient): Promise<Palette> {
   const res = await client.request(ControlCommand.TestCommandPalette, []);
   const out = String(res[1] ?? "").trim();
   if (res[0] === 2) {
-    return { open: false, items: 0, queryLen: 0 };
+    return { open: false, items: 0, queryLen: 0, sel: -1, selText: "" };
   }
-  const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+)/.exec(out);
+  const m = /sel=(-?\d+) items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+)/.exec(out);
   if (res[0] !== 0 || !m) {
     throw new Error(`command-palette-settings: TestCommandPalette failed: ${out}`);
   }
-  return { open: true, items: +m[1]!, queryLen: +m[2]! };
+  const selText = /selText=(.*)$/.exec(out)?.[1] ?? "";
+  return { open: true, items: +m[2]!, queryLen: +m[3]!, sel: +m[1]!, selText };
 }
 
 // the palette re-filters its list asynchronously, so every step waits for the
@@ -140,6 +141,15 @@ export async function testit(): Promise<void> {
       (p) => p.open && p.queryLen > name.length,
     );
 
+    // Esc from the value stage returns to the settings with that setting still
+    // selected. It is not the first row: the changed settings come first
+    const back = await escape(client, frame, "Esc after Enter did not return to the settings", backToSettings);
+    if (back.selText !== "ZoomIncrement" || back.sel === 0) {
+      throw new Error(
+        `command-palette-settings: after Esc row ${back.sel} '${back.selText}' is selected, not ZoomIncrement`,
+      );
+    }
+
     // an enum offers its allowed values: "show", "hide" and "overlay" for Toolbar
     await typeQuery(client, frame, "=Toolbar =", 3);
     await typeQuery(client, frame, "=Toolbar = over", 1);
@@ -148,16 +158,20 @@ export async function testit(): Promise<void> {
     await escape(client, frame, "Esc in the value stage did not return to the settings", backToSettings);
 
     // apply one of each kind; a leaf name resolves to its full dotted path.
-    // The palette stays open, showing the settings again
-    for (const q of [
-      "=ZoomIncrement = 25",
-      "=ToolbarPosition = bottom",
-      "=Units = cm",
-      "=FixedPageUI.TextColor = #112233",
-      "=SmoothScroll",
+    // The palette stays open, showing the settings again with the changed
+    // setting selected
+    for (const [q, path] of [
+      ["=ZoomIncrement = 25", "ZoomIncrement"],
+      ["=ToolbarPosition = bottom", "ToolbarPosition"],
+      ["=Units = cm", "FixedPageUI.PageGrid.Units"],
+      ["=FixedPageUI.TextColor = #112233", "FixedPageUI.TextColor"],
+      ["=SmoothScroll", "SmoothScroll"],
     ]) {
       await typeQuery(client, frame, q, 1);
-      await enter(client, frame, `'${q}' did not return to the settings`, backToSettings);
+      const p = await enter(client, frame, `'${q}' did not return to the settings`, backToSettings);
+      if (p.selText !== path) {
+        throw new Error(`command-palette-settings: after '${q}' row ${p.sel} '${p.selText}' is selected, not ${path}`);
+      }
     }
     await escape(client, frame, "Esc in the settings stage did not close the palette", (p) => !p.open);
 

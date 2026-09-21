@@ -942,6 +942,21 @@ struct VirtRichText : VirtCtrl {
     void OnGetTooltip(VirtTooltipEvent*); // link under cursor
 };
 
+// always nLines tall: the text wraps to the width and is cut off past the
+// last line, so the layout around it doesn't move as texts of different
+// lengths come and go
+struct VirtFixedLinesText : VirtRichText {
+    int nLines = 6;
+    Color borderCol = kColorUnset;
+
+    int FixedDy();
+    int MinIntrinsicHeight(int width) override;
+    Size Layout(Constraints bc) override;
+    Size GetIdealSize() override;
+    void Paint(VirtPaintCtx&) override;
+    void SetText(Str);
+};
+
 VirtRichText* ParseTip(Str s);
 // same, but into a VirtRichText the caller made (e.g. a subclass of it)
 void ParseTipInto(VirtRichText*, Str s);
