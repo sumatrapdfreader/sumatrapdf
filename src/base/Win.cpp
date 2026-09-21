@@ -2926,6 +2926,52 @@ HRESULT CLSIDFromString(Str lpsz, LPCLSID pclsid) {
     return CLSIDFromString(ws, pclsid);
 }
 
+// roots of all logical drives: "C:\", "D:\", ...
+void ListDriveRoots(StrVec& out) {
+    char root[] = "A:\\";
+    for (DWORD mask = GetLogicalDrives(); mask; mask >>= 1) {
+        if (mask & 1) {
+            out.Append(Str(root, 3));
+        }
+        root[0]++;
+    }
+}
+
+// Explorer's Quick access (pinned and frequent folders, recent files) as
+// file-system paths, in Explorer's order. Slow: the shell resolves every
+// entry, so callers cache the result. Needs COM initialized on this thread.
+bool ListShellQuickAccess(StrVec& dirsOut, StrVec& filesOut) {
+    const WCHAR* kQuickAccess = L"shell:::{679f85cb-0220-4080-b29b-5540cc05aab6}";
+    AutoReleaseComPtr<IShellItem> folder;
+    HRESULT hr = SHCreateItemFromParsingName(kQuickAccess, nullptr, IID_PPV_ARGS(&folder));
+    if (FAILED(hr)) {
+        return false;
+    }
+    AutoReleaseComPtr<IEnumShellItems> items;
+    hr = folder->BindToHandler(nullptr, BHID_EnumItems, IID_PPV_ARGS(&items));
+    if (FAILED(hr)) {
+        return false;
+    }
+    for (;;) {
+        IShellItem* item = nullptr;
+        if (items->Next(1, &item, nullptr) != S_OK || !item) {
+            break;
+        }
+        AutoReleaseComPtr<IShellItem> rel(item);
+        WCHAR* pathW = nullptr;
+        // virtual entries (libraries, network locations) have no path: skip
+        if (FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, &pathW)) || !pathW) {
+            continue;
+        }
+        SFGAOF attrs = 0;
+        item->GetAttributes(SFGAO_FOLDER, &attrs);
+        StrVec& out = (attrs & SFGAO_FOLDER) ? dirsOut : filesOut;
+        out.Append(ToUtf8Temp(WStr(pathW)));
+        CoTaskMemFree(pathW);
+    }
+    return true;
+}
+
 //--- resources / instance / common controls
 
 // http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx

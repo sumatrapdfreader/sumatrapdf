@@ -17,7 +17,7 @@ async function navState(client: ControlClient, action = "", idx = -1): Promise<N
   if (res[0] !== 0) {
     return null;
   }
-  const m = /^OK scan=(\d) sel=(-?\d+) items=(\d+) name=(.*)$/.exec(raw);
+  const m = /^OK scan=(\d) sel=(-?\d+) items=(\d+) back=\d fwd=\d dir="[^"]*" name="(.*)"$/.exec(raw);
   if (!m) {
     throw new Error(`navigate files: could not parse state: ${raw}`);
   }
