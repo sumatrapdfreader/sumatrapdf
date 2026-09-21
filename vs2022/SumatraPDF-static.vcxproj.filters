@@ -1280,6 +1280,9 @@
     <ClCompile Include="..\src\tests\CommandPalette_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\tests\EngineDjvuDec_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\tests\LitDoc_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>

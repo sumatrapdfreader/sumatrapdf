@@ -8,10 +8,12 @@ struct PasswordUI;
 struct FileArgs;
 struct AnnotCreateArgs;
 struct PropValue;
+struct djvu_text_zone;
 
 bool IsEngineDjVuSupportedFileType(FileType kind);
 EngineBase* CreateEngineDjvuDecFromFile(Str path);
 EngineBase* CreateEngineDjvuDecFromData(Str data);
+PageText DjvuZonesToPageText(djvu_text_zone* root, float dpiF);
 extern bool gMemoryMapLargeFiles;
 
 EngineBase* CreateEngineEpubFromFile(Str fileName);

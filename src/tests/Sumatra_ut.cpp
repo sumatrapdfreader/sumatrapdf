@@ -64,6 +64,7 @@ void SimpleLogTest();
 
 void CommandPaletteModel_UnitTests();
 void TextSelection_UnitTests();
+void EngineDjvuDec_UnitTests();
 void Layout_UnitTests();
 void VirtCtrl_UnitTests();
 bool TableOfContents_UnitTestSnapshotNamedDest();
@@ -596,6 +597,7 @@ int RunAppUnitTests(bool forAi) {
     SvgTextIcon_UnitTests();
 #if IS_DEBUG
     TextSelection_UnitTests();
+    EngineDjvuDec_UnitTests();
     Layout_UnitTests();
     LayoutWin_UnitTests();
     VirtCtrl_UnitTests();
