@@ -5884,6 +5884,26 @@ bool MaybeSaveAnnotations(WindowTab* tab) {
     return true;
 }
 
+// Answer the "Unsaved changes" prompt for tab without showing it (tests).
+// Discard leaves the changes in memory but lets the tab close silently.
+bool ResolveUnsavedChanges(WindowTab* tab, UnsavedChangesAction action, Str newPath) {
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    if (!engine || !EngineHasUnsavedAnnotations(engine)) {
+        return true;
+    }
+    switch (action) {
+        case UnsavedChangesAction::Discard:
+            tab->askedToSaveAnnotations = true;
+            return true;
+        case UnsavedChangesAction::SaveExisting:
+            tab->ignoreNextAutoReload = true;
+            return EngineMupdfSaveUpdated(engine, {}, {});
+        case UnsavedChangesAction::SaveNew:
+            return EngineMupdfSaveUpdated(engine, newPath, {});
+    }
+    return false;
+}
+
 // After a message pump, a nested DDE CloseAllTabs / CloseWindow may have
 // already removed this tab. GetTabIdx does not dereference `tab`, so a freed
 // pointer just comes back as -1. Do not delete it again.

@@ -103,6 +103,8 @@ export enum ControlCommand {
   TestImageOrientation = 106,
   TestTtsPumpOnSpeak = 107,
   TestRenderSelections = 108,
+  TestToggleFormButton = 109,
+  ResolveUnsavedChanges = 110,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -436,11 +438,27 @@ export class ControlClient {
     }
   }
 
+  // Discards unsaved changes in every tab first, so quitting never waits on
+  // the "Unsaved changes" prompt. Call resolveUnsavedChanges("save") before
+  // to keep them.
   async quit(): Promise<void> {
     try {
       await this.request(ControlCommand.Quit);
     } finally {
       this.close();
+    }
+  }
+
+  // Answers the "Unsaved changes" prompt up front, so a later tab close, file
+  // switch or quit does not show it: "discard" / "save" apply to every tab,
+  // "save-as" writes the current tab's document to `path`.
+  async resolveUnsavedChanges(action: "discard" | "save" | "save-as", path?: string): Promise<void> {
+    const args: ControlArg[] = action === "save-as" ? [action, path ?? ""] : [action];
+    const res = await this.request(ControlCommand.ResolveUnsavedChanges, args);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      throw new Error(`ResolveUnsavedChanges failed: ${raw || code}`);
     }
   }
 
@@ -657,6 +675,22 @@ export class ControlClient {
       return { survived: true, pageNo: parseInt(m[1], 10), textSurvived };
     }
     return { survived: false, pageNo: -1, textSurvived };
+  }
+
+  // Toggles the idx-th (0-based) checkbox / radio widget on pageNo of the
+  // current tab, as a click on it would.
+  async toggleFormButton(pageNo: number, idx: number): Promise<{ toggled: boolean; before: string; after: string }> {
+    const res = await this.request(ControlCommand.TestToggleFormButton, [pageNo, idx]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      throw new Error(`TestToggleFormButton failed: ${raw || code}`);
+    }
+    const m = /^OK toggled=(\d) before='(.*)' after='(.*)' buttons=\d+$/.exec(raw);
+    if (!m) {
+      throw new Error(`toggleFormButton: could not parse '${raw}'`);
+    }
+    return { toggled: m[1] === "1", before: m[2]!, after: m[3]! };
   }
 
   // Seeds a glyph-level (quad) text selection on `pageNo` of the current tab

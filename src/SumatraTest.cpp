@@ -8,6 +8,7 @@
 
 extern "C" {
 #include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
 }
 
 #include "Settings.h"
@@ -28,6 +29,7 @@ extern "C" {
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "MainWindow.h"
+#include "SumatraPDF.h"
 #include "WindowTab.h"
 #include "PagePosition.h"
 #include "Selection.h"
@@ -2571,6 +2573,121 @@ TempStr HiddenTabGoToPageResultTemp(int* exitCodeOut) {
 // nothing. Only a quad selection reaches DisplayModel::CvtToScreen unguarded,
 // which is where crash 2026-09-12-09-59-1328 reported.
 // Used by tests/epub-relayout-stale-page.ts.
+void DiscardUnsavedChangesInAllTabs() {
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            ResolveUnsavedChanges(tab, UnsavedChangesAction::Discard);
+        }
+    }
+}
+
+// action: "discard" | "save" (every tab) | "save-as" <path> (current tab).
+TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    if (str::Eq(action, StrL("save-as"))) {
+        WindowTab* tab = gWindows[0]->CurrentTab();
+        if (len(path) == 0 || !tab) {
+            return fail(StrL("ERROR save-as needs a path and a document"));
+        }
+        if (!ResolveUnsavedChanges(tab, UnsavedChangesAction::SaveNew, path)) {
+            return fail(fmt("ERROR save-as '%s' failed", path));
+        }
+        if (exitCodeOut) {
+            *exitCodeOut = 0;
+        }
+        out.Append(StrL("OK tabs=1\n"));
+        return ToStrTemp(out);
+    }
+
+    UnsavedChangesAction act;
+    if (str::Eq(action, StrL("discard"))) {
+        act = UnsavedChangesAction::Discard;
+    } else if (str::Eq(action, StrL("save"))) {
+        act = UnsavedChangesAction::SaveExisting;
+    } else {
+        return fail(fmt("ERROR unknown action '%s'", action));
+    }
+    int nTabs = 0;
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            if (!ResolveUnsavedChanges(tab, act)) {
+                return fail(fmt("ERROR save of '%s' failed", tab->filePath));
+            }
+            nTabs++;
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    out.Append(fmt("OK tabs=%d\n", nTabs));
+    return ToStrTemp(out);
+}
+
+// Toggle the idx-th (0-based) checkbox / radio widget on pageNo, as a click
+// on it would. Reports the field value before and after.
+TempStr ToggleFormButtonResultTemp(int pageNo, int idx, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    if (!dm->ValidPageNo(pageNo)) {
+        return fail(fmt("ERROR invalid-page pageNo=%d pageCount=%d", pageNo, dm->PageCount()));
+    }
+
+    Vec<Annotation*> widgets;
+    EngineMupdfGetPageWidgets(dm->GetEngine(), pageNo, widgets);
+    Annotation* button = nullptr;
+    int nButtons = 0;
+    for (Annotation* w : widgets) {
+        int wt = GetWidgetType(w);
+        if (wt != PDF_WIDGET_TYPE_CHECKBOX && wt != PDF_WIDGET_TYPE_RADIOBUTTON) {
+            continue;
+        }
+        if (nButtons == idx) {
+            button = w;
+        }
+        nButtons++;
+    }
+    if (!button) {
+        return fail(fmt("ERROR no-button idx=%d buttons=%d", idx, nButtons));
+    }
+
+    TempStr before = str::DupTemp(GetWidgetValue(button));
+    bool toggled = ToggleFormButton(button);
+    TempStr after = str::DupTemp(GetWidgetValue(button));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    out.Append(fmt("OK toggled=%d before='%s' after='%s' buttons=%d\n", (int)toggled, before, after, nButtons));
+    return ToStrTemp(out);
+}
+
 TempStr SeedTextSelectionResultTemp(int pageNo, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg, int code = 1) -> TempStr {

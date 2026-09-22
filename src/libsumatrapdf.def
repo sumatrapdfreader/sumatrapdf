@@ -1892,6 +1892,8 @@ EXPORTS
 
 	pdf_end_operation
 
+	pdf_abandon_operation
+
 	pdf_undoredo_state
 
 	pdf_undo

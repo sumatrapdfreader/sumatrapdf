@@ -145,6 +145,12 @@ bool OpenFileExternally(Str path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
 bool MaybeSaveAnnotations(WindowTab* tab);
+enum class UnsavedChangesAction {
+    Discard,
+    SaveExisting,
+    SaveNew
+};
+bool ResolveUnsavedChanges(WindowTab* tab, UnsavedChangesAction action, Str newPath = {});
 void DeleteFileFromDiskAndHistory(Str path);
 WindowTab* FindTabByFilePath(Str path);
 // the tab that currently owns this controller, null if it is no longer shown

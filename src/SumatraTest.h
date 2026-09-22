@@ -42,3 +42,6 @@ TempStr GoToLocationResultTemp(int chapter, int page, int* exitCodeOut = nullptr
 TempStr HiddenTabGoToPageResultTemp(int* exitCodeOut = nullptr);
 TempStr SeedTextSelectionResultTemp(int pageNo, int* exitCodeOut = nullptr);
 TempStr RenderSelectionsResultTemp(int* exitCodeOut = nullptr);
+TempStr ToggleFormButtonResultTemp(int pageNo, int idx, int* exitCodeOut = nullptr);
+void DiscardUnsavedChangesInAllTabs();
+TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut = nullptr);

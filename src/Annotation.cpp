@@ -584,7 +584,19 @@ bool ToggleFormButton(Annotation* annot) {
                 bool isOn = curAS && !pdf_name_eq(ctx, curAS, PDF_NAME(Off));
                 bool noToggleOff = (flags & PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF) != 0;
                 Str onName = Str(pdf_to_name(ctx, pdf_button_field_on_state(ctx, kid)));
-                pdf_set_field_value(ctx, e->pdfdoc, grp, CStrTemp((isOn && !noToggleOff) ? StrL("Off") : onName), 0);
+                char* val = CStrTemp((isOn && !noToggleOff) ? StrL("Off") : onName);
+                // unlike pdf_toggle_widget, pdf_set_field_value doesn't open a
+                // journal operation itself, and the journalled doc throws on
+                // a write outside one
+                pdf_begin_operation(ctx, e->pdfdoc, "Toggle radio button");
+                fz_try(ctx) {
+                    pdf_set_field_value(ctx, e->pdfdoc, grp, val, 0);
+                    pdf_end_operation(ctx, e->pdfdoc);
+                }
+                fz_catch(ctx) {
+                    pdf_abandon_operation(ctx, e->pdfdoc);
+                    fz_rethrow(ctx);
+                }
                 pdf_update_annot(ctx, a);
                 UpdateFormFieldPage(ctx, a); // refresh all radio-group siblings
                 changed = true;

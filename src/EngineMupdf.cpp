@@ -10017,6 +10017,23 @@ static bool FormFieldValueIsEmpty(int wt, const char* val) {
     return str::IsEmptyOrWhiteSpace(Str(val));
 }
 
+// Form-field widgets of pageNo, in page order. Loads the page if needed.
+void EngineMupdfGetPageWidgets(EngineBase* engine, int pageNo, Vec<Annotation*>& out) {
+    VecClear(out);
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !epdf->pdfdoc) {
+        return;
+    }
+    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
+    if (!pi) {
+        return;
+    }
+    AutoUnlockRecursiveMutex cs(&epdf->docLock);
+    for (Annotation* w : pi->widgets) {
+        VecAppend(out, w);
+    }
+}
+
 // Page-space rects of empty fillable fields on pageNo (issue #5966). skip is
 // the field currently being edited, if any, so its overlay isn't double-tinted.
 void EngineMupdfGetFormFieldHighlightRects(EngineBase* engine, int pageNo, Annotation* skip, Vec<RectF>& out) {
