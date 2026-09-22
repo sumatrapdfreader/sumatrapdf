@@ -5915,6 +5915,10 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         HideFindBar(win);
         HideSelectionToolbar(win);
         HideAnnotationHoverOverlay(win);
+        // cancel now, while win->ctrl still matches this tab: RemoveTab nulls
+        // win->ctrl before LoadModelIntoTab cancels it, and the toolbar update
+        // would then see the newly selected tab loaded but no win->ctrl
+        CancelAnnotationPlacement(win);
         if (!TabStillInWindow(win, tab)) {
             return;
         }
