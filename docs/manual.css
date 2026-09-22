@@ -179,11 +179,6 @@ html[data-theme="dark"] .theme-opt[aria-pressed="true"] {
 }
 
 /* Dark rules for the docs prose, from website.css */
-html[data-theme="dark"] .search-trigger-2 {
-  background-color: #1e1e1e;
-  color: var(--text-secondary);
-}
-
 html[data-theme="dark"] kbd {
   background: var(--kbd-bg);
   border-color: var(--kbd-border);
@@ -198,11 +193,6 @@ html[data-theme="dark"] code {
 
 html[data-theme="dark"] pre {
   background: #1e1e1e;
-}
-
-html[data-theme="dark"] pre code.hljs {
-  background: transparent;
-  color: #e6edf3;
 }
 
 html[data-theme="dark"] .code > code {
@@ -404,7 +394,12 @@ html[data-theme="dark"] .docs-ask-hint {
   color: #8d8d89;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   scroll-margin-top: calc(var(--docs-bar-h) + 1rem);
 }
 

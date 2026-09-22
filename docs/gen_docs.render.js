@@ -189,11 +189,7 @@
         items.push("<a" + cls + ' href="' + href + '">' + title + "</a>");
       }
     }
-    const searchHint =
-      '<div onclick="window.openSearchDialog()" class="search-trigger-2"><kbd>Ctrl + K</kbd> to search...</div>\n';
-    return (
-      '<nav class="sidebar-toc">\n' + searchHint + '<div class="toc-title"></div>\n' + items.join("\n") + "\n</nav>"
-    );
+    return '<nav class="sidebar-toc">\n' + items.join("\n") + "\n</nav>";
   }
 
   const kDocsImgCdn = "https://files.sumatrapdfreader.org/assets/sumatrapdf/";
