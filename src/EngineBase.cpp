@@ -520,11 +520,24 @@ void EngineBase::EnsureChapterTable() {
     }
 }
 
+// background chapter layout must not resync the view after every chapter: a
+// long book would relayout hundreds of times. the thread bumps this and the
+// one SetPageCountFromChapters() after the loop notifies
+static thread_local int gChapterLayoutQuiet = 0;
+
+struct ChapterLayoutQuiet {
+    ChapterLayoutQuiet() { gChapterLayoutQuiet++; }
+    ~ChapterLayoutQuiet() { gChapterLayoutQuiet--; }
+};
+
 // keeps the flat pageCount total in sync with the chapter table and notifies
 // onLayoutChanged (if set) when the generation actually moved, so a
 // DisplayModel resyncs even when the layout happened on a render thread
 void EngineBase::SetPageCountFromChapters() {
     pageCount = chapters.TotalPages();
+    if (gChapterLayoutQuiet > 0) {
+        return;
+    }
     int gen = chapters.Generation();
     if (gen == notifiedGeneration) {
         return;
@@ -634,6 +647,116 @@ void EngineBase::EnsureAllChaptersLaidOut() {
     for (int c = 1; c <= n; c++) {
         ChapterPageCount(c);
     }
+}
+
+int EngineBase::ChaptersLaidOut() {
+    EnsureChapterTable();
+    int n = ChapterCount();
+    int laid = 0;
+    for (int c = 1; c <= n; c++) {
+        if (IsChapterLaidOut(c)) {
+            laid++;
+        }
+    }
+    return laid;
+}
+
+struct ChapterLayoutJob {
+    EngineBase* engine = nullptr;
+    int job = 0;
+};
+
+bool EngineBase::LayoutJobCurrent(int id) {
+    return AtomicIntGet(&layoutJob) == id;
+}
+
+void EngineBase::FlushPageCount() {
+    SetPageCountFromChapters();
+}
+
+void EngineBase::ReportLayoutProgress(int done, int total, bool finished) {
+    if (!onChapterLayoutProgress.IsValid()) {
+        return;
+    }
+    ChapterLayoutProgress prog;
+    prog.done = done;
+    prog.total = total;
+    prog.finished = finished;
+    onChapterLayoutProgress.Call(&prog);
+}
+
+// one chapter at a time, then a single page-count notification. stops when a
+// newer job starts (the document closed, or a restyle reset the chapters)
+static void ChapterLayoutThread(ChapterLayoutJob* job) {
+    EngineBase* engine = job->engine;
+    int id = job->job;
+    delete job;
+
+    int total = engine->ChapterCount();
+    int done = 0;
+    bool cancelled = false;
+    {
+        ChapterLayoutQuiet quiet;
+        for (int c = 1; c <= total; c++) {
+            if (!engine->LayoutJobCurrent(id)) {
+                cancelled = true;
+                break;
+            }
+            if (!engine->IsChapterLaidOut(c)) {
+                // count only. publishing here shifts flat page numbers under
+                // whatever the UI thread is doing with them (GoToPage, render)
+                engine->WarmChapter(c);
+            }
+            if (!engine->LayoutJobCurrent(id)) {
+                cancelled = true;
+                break;
+            }
+            done++;
+            engine->ReportLayoutProgress(done, total, false);
+        }
+    }
+    if (!cancelled && engine->LayoutJobCurrent(id)) {
+        // the UI thread publishes the counts (LayOutChapter is cheap once
+        // WarmChapter has paginated) and then resyncs the page total
+        engine->ReportLayoutProgress(done, total, true);
+    }
+    engine->Release();
+}
+
+// the open path lays out the chapter being read first; this counts the rest
+// so the flat page total can update without blocking open
+void EngineBase::StartBackgroundChapterLayout() {
+    if (!HasChapters()) {
+        return;
+    }
+    int total = ChapterCount();
+    if (ChaptersLaidOut() >= total) {
+        return;
+    }
+    int id = AtomicIntInc(&layoutJob);
+    AddRef();
+    auto* job = new ChapterLayoutJob();
+    job->engine = this;
+    job->job = id;
+    RunAsync(MkFunc0(ChapterLayoutThread, job), StrL("ChapterLayout"));
+}
+
+void EngineBase::CancelBackgroundChapterLayout() {
+    AtomicIntInc(&layoutJob);
+}
+
+// default: do the full layout. MuPDF overrides this with a count that does
+// not publish, so a background thread can't shift flat page numbers
+void EngineBase::WarmChapter(int chapter) {
+    LayOutChapter(chapter);
+}
+
+void EngineBase::PublishWarmedChapters() {
+    {
+        ChapterLayoutQuiet quiet;
+        EnsureAllChaptersLaidOut();
+    }
+    FlushPageCount();
 }
 
 // default: single-chapter (or already laid-out) engines have nothing to do

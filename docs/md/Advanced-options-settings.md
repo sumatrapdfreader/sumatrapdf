@@ -134,6 +134,13 @@ ShowPageNumberInTabs = false
 ; thumbnails and list rows (introduced in version 3.7)
 ShowHomePageReadingProgress = true
 
+; if true, a document with chapters (EPUB, MOBI) shows the current place as a
+; chapter and a page within that chapter, in the toolbar, Go to Page and the
+; page-info tip. if false, those show one page number for the whole document.
+; the saved position stays a chapter bookmark either way, and next / previous
+; page still cross chapters (introduced in version 3.7)
+ShowChaptersInEbooks = false
+
 ; if true, show tips on the home page (introduced in version 3.7)
 ShowTips = true
 

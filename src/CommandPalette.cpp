@@ -38,6 +38,7 @@
 #include "FileHistory.h"
 #include "Menu.h"
 #include "Translations.h"
+#include "PagePosition.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
@@ -554,7 +555,7 @@ void ThumbnailPaletteCtrl::DrawRow(DrawItemEvent* ev) {
     int lastPage = std::min(pageCount, firstPage + cols - 1);
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    bool chapters = engine && engine->HasChapters();
+    bool chapters = ShowChapterUi(dm);
     for (int pageNo = firstPage; pageNo <= lastPage; pageNo++) {
         int col = pageNo - firstPage;
         int x = left + (col * (thumbDx + gap));

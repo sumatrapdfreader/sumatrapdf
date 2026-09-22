@@ -29,6 +29,7 @@ extern "C" {
 #include "TextSearch.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
+#include "PagePosition.h"
 #include "Selection.h"
 #include "SearchAndDDE.h"
 #include "ReadAloud.h"
@@ -2474,9 +2475,17 @@ TempStr ChapterInfoResultTemp(int* exitCodeOut) {
     DocController* ctrl = win->ctrl;
     Location cur = ctrl->CurrentLocation();
     bool hasChapters = ctrl->HasChapters();
-    out.Append(fmt("OK chapter=%d page=%d chapterCount=%d chapterPageCount=%d pageCount=%d hasChapters=%d\n",
-                   cur.chapter, cur.page, ctrl->ChapterCount(), ctrl->ChapterPageCount(cur.chapter), ctrl->PageCount(),
-                   hasChapters ? 1 : 0));
+    int laidOut = 0;
+    DisplayModel* dm = ctrl->AsFixed();
+    if (dm && dm->GetEngine()) {
+        laidOut = dm->GetEngine()->ChaptersLaidOut();
+    }
+    bool chapterUi = ShowChapterUi(ctrl);
+    out.Append(
+        fmt("OK chapter=%d page=%d chapterCount=%d chapterPageCount=%d pageCount=%d hasChapters=%d "
+            "laidOut=%d chapterUi=%d\n",
+            cur.chapter, cur.page, ctrl->ChapterCount(), ctrl->ChapterPageCount(cur.chapter), ctrl->PageCount(),
+            hasChapters ? 1 : 0, laidOut, chapterUi ? 1 : 0));
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }

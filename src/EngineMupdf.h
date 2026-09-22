@@ -112,6 +112,7 @@ class EngineMupdf : public EngineBase {
     bool HasToc() override;
     TocTree* GetToc() override;
     int LayOutChapter(int chapter) override;
+    void WarmChapter(int chapter) override;
     Location ResolveDest(IPageDestination* dest) override;
     TocTree* BuildToc();
     void StartHeadingTocIfNeeded();

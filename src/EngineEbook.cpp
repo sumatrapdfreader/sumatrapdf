@@ -1224,9 +1224,9 @@ bool EngineMobi::LoadFromData(Str data) {
     return FinishLoading();
 }
 
-// formats only chapter 1 when the book has chapter markers, so opening a
-// long, many-chapter mobi (e.g. one page per <mbp:pagebreak>) stays fast;
-// other chapters are formatted on demand by LayOutChapter()
+// chapter markers: don't format any chapter here, so opening a long mobi
+// stays fast. the open path formats the chapter being read; the rest run
+// on a background thread. a book with no markers is still formatted whole
 bool EngineMobi::FinishLoading() {
     if (!doc || PdbDocType::Mobipocket != doc->GetDocType()) {
         return false;
@@ -1261,13 +1261,14 @@ bool EngineMobi::FinishLoading() {
         chapterPages[i] = nullptr;
     }
 
-    int n1 = LayOutChapter(1);
+    // placeholders only. the open path lays out the chapter being read;
+    // the rest are counted on a background thread
     SetPageCountFromChapters();
     // load already runs off the UI thread; build ToC now so HasToc()/GetToc()
     // from the menu/toolbar/sidebar do not gumbo-parse the book on the UI thread
     GetToc();
-    logf("EngineMobi::FinishLoading: %d chapters, chapter 1 has %d pages\n", nCh, n1);
-    return n1 > 0;
+    logf("EngineMobi::FinishLoading: %d chapters, layout deferred\n", nCh);
+    return pageCount > 0;
 }
 
 // formats one chapter's html slice; called lazily (from the render thread

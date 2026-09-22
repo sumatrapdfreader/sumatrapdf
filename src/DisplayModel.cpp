@@ -795,6 +795,8 @@ static void RememberStableNavPointCandidateAfterViewChange(DisplayModel* dm, con
     nav.hasPending = true;
 }
 
+static void OnChapterLayoutProgress(DisplayModel* dm, ChapterLayoutProgress* p);
+
 // must call SetInitialViewSettings() after creation
 DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocController(cb) {
     this->engine = engine;
@@ -807,6 +809,7 @@ DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocC
     textSearch = new TextSearch(engine);
 
     engine->SetOnLayoutChanged(MkFunc0(OnEngineLayoutChanged, this));
+    engine->SetOnChapterLayoutProgress(MkFunc1(OnChapterLayoutProgress, this));
 
     StartHeadingToc(HeadingTocStart::IfEnabled);
 }
@@ -860,6 +863,8 @@ DisplayModel::~DisplayModel() {
     delete textSearch;
     delete textSelection;
     if (engine) {
+        engine->CancelBackgroundChapterLayout();
+        engine->SetOnChapterLayoutProgress({});
         engine->SetOnLayoutChanged(Func0{});
     }
     SafeEngineRelease(&engine);
@@ -1781,6 +1786,90 @@ void DisplayModel::RelayoutKeepingView() {
     RenderVisibleParts();
     cb->UpdateScrollbars(this, canvasSize);
     RepaintDisplay();
+}
+
+struct ChapterLayoutProgressMsg {
+    DisplayModel* dm = nullptr;
+    int done = 0;
+    int total = 0;
+    bool finished = false;
+};
+
+// debug build: bottom-left tip updated after each chapter of a background layout
+static void ShowChapterLayoutProgress(ChapterLayoutProgressMsg* msg) {
+    AutoDelete delMsg(msg);
+    if (!msg->dm || !IsDisplayModelValid(msg->dm)) {
+        return;
+    }
+    // publish even in release builds: this is what updates the page total
+    if (msg->finished) {
+        EngineBase* engine = msg->dm->GetEngine();
+        if (engine) {
+            engine->PublishWarmedChapters();
+            msg->dm->SyncWithEngineLayout();
+        }
+    }
+    if (!gIsDebugBuild) {
+        return;
+    }
+    MainWindow* found = nullptr;
+    WindowTab* tab = nullptr;
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* t : win->Tabs()) {
+            if (t->AsFixed() == msg->dm) {
+                found = win;
+                tab = t;
+                break;
+            }
+        }
+        if (found) {
+            break;
+        }
+    }
+    if (!found) {
+        return;
+    }
+    EngineBase* engine = msg->dm->GetEngine();
+    int pages = engine ? engine->PageCount() : msg->dm->PageCount();
+    TempStr text;
+    int timeout = kNotifNoTimeout;
+    if (msg->finished) {
+        text = fmt("Chapters laid out: %d, %d pages", msg->total, pages);
+        timeout = kNotif5SecsTimeOut;
+    } else {
+        text = fmt("Laying out chapters: %d / %d", msg->done, msg->total);
+    }
+    NotificationWnd* wnd = GetNotificationForGroup(found->hwndCanvas, kNotifChapterLayout);
+    if (wnd) {
+        NotificationUpdateMessage(wnd, text, timeout);
+        return;
+    }
+    NotificationCreateArgs args;
+    args.hwndParent = found->hwndCanvas;
+    args.groupId = kNotifChapterLayout;
+    args.timeoutMs = timeout;
+    args.corner = NotifCorner::BottomLeft;
+    args.msg = text;
+    args.plainText = true;
+    args.tab = tab;
+    ShowNotification(args);
+}
+
+static void OnChapterLayoutProgress(DisplayModel* dm, ChapterLayoutProgress* p) {
+    if (!p) {
+        return;
+    }
+    // per-chapter tips are debug-only; the finished message publishes the
+    // page total in every build
+    if (!p->finished && !gIsDebugBuild) {
+        return;
+    }
+    auto* msg = new ChapterLayoutProgressMsg();
+    msg->dm = dm;
+    msg->done = p->done;
+    msg->total = p->total;
+    msg->finished = p->finished;
+    uitask::Post(MkFunc0(ShowChapterLayoutProgress, msg), "ChapterLayoutProgress");
 }
 
 static void NotifyMediaBoxRelayout(DisplayModel* dm, Str msg) {

@@ -604,6 +604,7 @@ bool HasFavorites() {
 TempStr FavReadableNameTemp(Favorite* fn) {
     StoredPagePos pos = ParseStoredPagePos(fn->pageNo);
     bool isChaptered = len(pos.bookmark) > 0;
+    bool showChapter = isChaptered && gSettings && gSettings->showChaptersInEbooks;
     int chapter = 0, page = 0;
     if (isChaptered) {
         Location loc = BookmarkLocationHint(pos.bookmark);
@@ -615,17 +616,21 @@ TempStr FavReadableNameTemp(Favorite* fn) {
     if (len(label) == 0 && !isChaptered) {
         label = fmt("%d", pos.pageNo);
     }
+    // no flat page was stored; the bookmark's page is the page within the chapter
+    if (len(label) == 0 && isChaptered && !showChapter && page >= 1) {
+        label = fmt("%d", page);
+    }
 
     if (fn->name) {
         TempStr loc;
-        if (isChaptered) {
+        if (showChapter) {
             loc = fmt(Tr("(chapter %d page %d)").s, chapter, page);
         } else {
             loc = fmt(Tr("(page %s)").s, label);
         }
         return str::JoinTemp(fn->name, StrL(" "), loc);
     }
-    if (isChaptered) {
+    if (showChapter) {
         return fmt(Tr("Chapter %d Page %d").s, chapter, page);
     }
     return fmt(Tr("Page %s").s, label);
@@ -1370,7 +1375,7 @@ void AddFavoriteForPage(MainWindow* win, int pageNo) {
         }
     }
     TempStr pageLabel;
-    if (ctrl->HasChapters()) {
+    if (ShowChapterUi(ctrl)) {
         Location loc = ctrl->LocationFromPageNo(pageNo);
         pageLabel = fmt("%d/%d", loc.chapter, loc.page);
     } else {

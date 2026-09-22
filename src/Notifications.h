@@ -13,6 +13,7 @@ extern Kind kNotifActionResponse;
 extern Kind kNotifPageInfo;
 extern Kind kNotifAdHoc;
 extern Kind kNotifLazyLayout;
+extern Kind kNotifChapterLayout;
 
 enum class NotifCloseReason {
     User,    // close button

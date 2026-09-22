@@ -23,6 +23,7 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "PagePosition.h"
 
 // Labels and buttons are VirtCtrl; the page field is a real HWND Edit.
 // Same WindowBase layout pattern as Change Theme / Add Favorite.
@@ -139,7 +140,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
     int chapterCur = 0;
     if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded() && win->ctrl) {
         DocController* ctrl = win->ctrl;
-        hasChapters = ctrl->HasChapters();
+        hasChapters = ShowChapterUi(ctrl);
         if (hasChapters) {
             Location cur = ctrl->CurrentLocation();
             chapterCount = ctrl->ChapterCount();
@@ -289,7 +290,7 @@ void ShowGoToPageDialog(MainWindow* win) {
         return;
     }
     // the chapter row is only built in Create(); rebuild if the doc kind changed
-    bool hasChapters = win->ctrl && win->ctrl->HasChapters();
+    bool hasChapters = ShowChapterUi(win->ctrl);
     if (gGoToPageWnd && gGoToPageWnd->hasChapters != hasChapters) {
         gGoToPageWnd->ScheduleDelete();
         gGoToPageWnd = nullptr;

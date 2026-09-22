@@ -1363,6 +1363,15 @@ const globalPrefs: Field[] = [
     true,
     "if true, show reading progress (n/N, or chapter:page for ebooks) on home page thumbnails and list rows",
   ).ver("3.7"),
+  field(
+    "ShowChaptersInEbooks",
+    Bool,
+    false,
+    "if true, a document with chapters (EPUB, MOBI) shows the current place as a chapter and a page " +
+      "within that chapter, in the toolbar, Go to Page and the page-info tip. if false, those show one " +
+      "page number for the whole document. the saved position stays a chapter bookmark either way, and " +
+      "next / previous page still cross chapters",
+  ).ver("3.7"),
   field("ShowTips", Bool, true, "if true, show tips on the home page").ver("3.7"),
   field(
     "CustomColors",
@@ -2062,6 +2071,7 @@ const globalPrefsLayout = [
   "ShowTips",
   "ShowPageNumberInTabs",
   "ShowHomePageReadingProgress",
+  "ShowChaptersInEbooks",
   "ShowToolbar",
   "SearchUIFloating",
   "ShowFavorites",

@@ -38,6 +38,7 @@
 #include "HomePage.h"
 #include "Translations.h"
 #include "Toolbar.h"
+#include "PagePosition.h"
 #include "resource.h"
 #include "DarkMode.h"
 #include "Tabs.h"
@@ -2305,7 +2306,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     onImage = onImage || (engine && engine->kind == kindEngineImage);
     if (pageNoUnderCursor > 0) {
         TempStr pageItem;
-        if (win->ctrl->HasChapters()) {
+        if (ShowChapterUi(win->ctrl)) {
             Location loc = win->ctrl->LocationFromPageNo(pageNoUnderCursor);
             pageItem = fmt(Tr("Chapter %d Page %d").s, loc.chapter, loc.page);
         } else {
@@ -2401,7 +2402,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
             TempStr addText;
             TempStr delText;
-            if (win->ctrl->HasChapters()) {
+            if (ShowChapterUi(win->ctrl)) {
                 Location loc = win->ctrl->LocationFromPageNo(pageNoUnderCursor);
                 addText = fmt(Tr("Add chapter %d page %d to favorites").s, loc.chapter, loc.page);
                 delText = fmt(Tr("Remove chapter %d page %d from favorites").s, loc.chapter, loc.page);

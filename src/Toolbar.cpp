@@ -37,6 +37,7 @@
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
 #include "Tabs.h"
+#include "PagePosition.h"
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
@@ -1118,7 +1119,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         return;
     }
 
-    bool hasChapters = win->ctrl && win->ctrl->HasChapters();
+    bool hasChapters = ShowChapterUi(win->ctrl);
     if (tb->pageLabel) {
         tb->pageLabel->SetText(hasChapters ? Tr("Chapter:") : Tr("Page:"));
     }
@@ -3469,7 +3470,7 @@ void CreateToolbar(MainWindow* win) {
     DocController* ctrl = win->ctrl;
     UpdateToolbarPageText(win, ctrl ? ctrl->PageCount() : -1);
     if (ctrl && win->pageEdit) {
-        if (ctrl->HasChapters()) {
+        if (ShowChapterUi(ctrl)) {
             Location cur = ctrl->CurrentLocation();
             win->pageEdit->SetText(fmt("%d", cur.page));
             if (win->chapterEdit) {
@@ -3572,7 +3573,7 @@ static void OnLocationEditChar(MainWindow* win, Edit::CharEvent* ev) {
     switch ((Key)ev->c) {
         case Key::Enter: {
             DocController* ctrl = win->ctrl;
-            if (ctrl->HasChapters()) {
+            if (ShowChapterUi(ctrl)) {
                 int chapter = win->chapterEdit ? ParseInt(win->chapterEdit->GetTextTemp()) : 1;
                 int page = win->pageEdit ? ParseInt(win->pageEdit->GetTextTemp()) : 1;
                 Location loc = ctrl->ClampLocation({chapter, page});

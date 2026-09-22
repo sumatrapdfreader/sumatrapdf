@@ -1864,7 +1864,7 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
     }
     int nPages = ctrl->PageCount();
     TempStr pageInfo;
-    if (ctrl->HasChapters()) {
+    if (ShowChapterUi(ctrl)) {
         Location loc = ctrl->LocationFromPageNo(pageNo);
         int chapterPages = ctrl->ChapterPageCount(loc.chapter);
         pageInfo = fmt("%s %d / %d, %s %d / %d", Tr("Chapter:"), loc.chapter, ctrl->ChapterCount(), Tr("Page:"),
@@ -2014,7 +2014,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
 
     if (pageChanged && kInvalidPageNo != pageNo) {
         // HwndSetText is a no-op when the text is unchanged
-        if (win->ctrl->HasChapters()) {
+        if (ShowChapterUi(win->ctrl)) {
             Location cur = win->ctrl->CurrentLocation();
             if (win->chapterEdit) {
                 win->chapterEdit->SetText(fmt("%d", cur.chapter));
@@ -2027,7 +2027,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
             win->pageEdit->SetText(label);
         }
         ToolbarUpdateStateForWindow(win, false);
-        if (win->ctrl->HasPageLabels() || win->ctrl->HasChapters()) {
+        if (win->ctrl->HasPageLabels() || ShowChapterUi(win->ctrl)) {
             // page-in-chapter total changes with every chapter
             UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
         }
@@ -2302,7 +2302,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle);
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
-    bool hasChapters = win->ctrl && win->ctrl->HasChapters();
+    bool hasChapters = ShowChapterUi(win->ctrl);
     if (win->pageEdit) {
         EditSetNumbersOnly(win->pageEdit, onlyNumbers);
         // a tab without a document (home page, failed load) has no page to go
@@ -2436,6 +2436,9 @@ static void FinishPendingDocumentRelayout(MainWindow* win) {
         dm->pauseRendering = false;
         dm->RenderVisibleParts();
         dm->RepaintDisplay();
+    }
+    if (dm->GetEngine()) {
+        dm->GetEngine()->StartBackgroundChapterLayout();
     }
 }
 
@@ -2613,6 +2616,24 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 ss.page = PageNoFromStoredPagePos(win->ctrl, fs->pageNo);
                 if (pos.bookmark) {
                     ss.loc = win->ctrl->LocationFromPageNo(ss.page);
+                }
+            }
+            // one chapter before the first paint: the one the file was closed
+            // on, or chapter 1. the rest are counted after the view is up
+            EngineBase* chapterEngine = dm->GetEngine();
+            if (chapterEngine && chapterEngine->HasChapters()) {
+                int chapter = 1;
+                if (fs) {
+                    Location hint = BookmarkLocationHint(ParseStoredPagePos(fs->pageNo).bookmark);
+                    if (hint.IsValid()) {
+                        chapter = hint.chapter;
+                    }
+                }
+                if (chapter > chapterEngine->ChapterCount()) {
+                    chapter = 1;
+                }
+                if (!chapterEngine->IsChapterLaidOut(chapter)) {
+                    chapterEngine->ChapterPageCount(chapter);
                 }
             }
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
@@ -2806,6 +2827,11 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             // restore scroll state after the canvas size has been restored
             if (args->showWin || ss.page != 1) {
                 dm->SetScrollState(ss);
+            }
+            // after the remembered page is on screen. the pending-relayout
+            // path starts the same count from FinishPendingDocumentRelayout
+            if (dm->GetEngine()) {
+                dm->GetEngine()->StartBackgroundChapterLayout();
             }
         }
     }
@@ -5224,6 +5250,9 @@ void UpdateDocumentColors() {
                 gRenderCache->AbortRendering(dm);
                 EngineMupdfInvalidateDarkMode(dm->GetEngine());
                 dm->SyncWithEngineLayout();
+                if (dm->GetEngine()) {
+                    dm->GetEngine()->StartBackgroundChapterLayout();
+                }
                 continue;
             }
             MarkdownModel* mm = tab->AsMarkdown();
@@ -8918,7 +8947,7 @@ static void OnMenuGoToPage(MainWindow* win) {
     // In overlay mode the toolbar is only visible while revealed, so reveal it
     // first; focusing the hidden page box did nothing at all (#5916).
     // chaptered docs start at the chapter box, the natural first field
-    bool hasChapters = win->ctrl && win->ctrl->HasChapters();
+    bool hasChapters = ShowChapterUi(win->ctrl);
     Edit* target = (hasChapters && win->chapterEdit) ? win->chapterEdit : win->pageEdit;
     if (target && !win->presentation) {
         if (win->isToolbarOverlay) {
@@ -9231,7 +9260,7 @@ void AdvanceFocus(MainWindow* win) {
     constexpr int kMaxWindows = 6;
     HWND tabOrder[kMaxWindows] = {win->hwndFrame};
     int nWindows = 1;
-    if (hasToolbar && win->ctrl && win->ctrl->HasChapters() && win->chapterEdit) {
+    if (hasToolbar && ShowChapterUi(win->ctrl) && win->chapterEdit) {
         tabOrder[nWindows++] = win->chapterEdit->hwnd;
     }
     if (hasToolbar && win->pageEdit) {
@@ -10499,6 +10528,77 @@ static void ApplyMenuBarVisibility(MainWindow* win) {
     }
 }
 
+static void AppendLayoutFloats(str::Builder& b, Vec<float>* vals) {
+    if (!vals) {
+        return;
+    }
+    for (float v : *vals) {
+        b.Append(fmt("%g,", v));
+    }
+}
+
+// font, page size, spacing and CSS: what a reload has to re-paginate
+static Str EbookLayoutSnapshot() {
+    str::Builder b;
+    if (!gSettings) {
+        return b.TakeStr();
+    }
+    b.Append(fmt("dpi=%d\n", gSettings->customScreenDPI));
+    EBookUI* g = &gSettings->eBookUI;
+    b.Append(fmt("g|%s|%g|%g|%g|%d|%g|", g->fontName, g->fontSize, g->layoutDx, g->layoutDy,
+                 g->ignoreDocumentCSS ? 1 : 0, g->lineSpacing));
+    AppendLayoutFloats(b, g->margin);
+    b.Append(fmt("|%s\n", g->customCSS));
+    if (gSettings->fileStates) {
+        for (FileState* fs : *gSettings->fileStates) {
+            FileEBookUI* f = fs->eBookUI;
+            if (!f) {
+                continue;
+            }
+            b.Append(fmt("f|%s|%s|%g|%g|%g|%s|%g|", fs->filePath, f->fontName, f->fontSize, f->layoutDx, f->layoutDy,
+                         f->ignoreDocumentCSS, f->lineSpacing));
+            AppendLayoutFloats(b, f->margin);
+            b.Append(fmt("|%s\n", f->customCSS));
+        }
+    }
+    return b.TakeStr();
+}
+
+// reflowable docs, and anything with chapters (MOBI): their page count follows
+// the ebook font / page size / CSS
+static bool LayoutFollowsEbookSettings(EngineBase* engine) {
+    if (!engine) {
+        return false;
+    }
+    if (engine->isReflowable || engine->HasChapters()) {
+        return true;
+    }
+    Kind k = engine->kind;
+    return k == kindEngineMobi || k == kindEngineFb2 || k == kindEnginePdb || k == kindEngineHtml ||
+           k == kindEngineTxt || k == kindEngineEpub;
+}
+
+static void ReloadEbookLayoutDocs() {
+    for (MainWindow* w : gWindows) {
+        Vec<WindowTab*> tabs;
+        for (WindowTab* tab : w->Tabs()) {
+            VecAppend(tabs, tab);
+        }
+        for (WindowTab* tab : tabs) {
+            DisplayModel* dm = tab->AsFixed();
+            EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+            if (!LayoutFollowsEbookSettings(engine)) {
+                continue;
+            }
+            if (tab == w->CurrentTab()) {
+                ReloadDocument(w, false);
+            } else {
+                tab->reloadOnFocus = true;
+            }
+        }
+    }
+}
+
 SettingsApplyState GetSettingsApplyState() {
     Settings* p = gSettings;
     SettingsApplyState s;
@@ -10509,6 +10609,7 @@ SettingsApplyState GetSettingsApplyState() {
     s.chmUseFixedPageUI = p->chmUI.useFixedPageUI;
     s.markdownUseFixedPageUI = p->markdownUI.useFixedPageUI;
     s.explorerQuickLook = p->explorerQuickLook;
+    s.ebookLayout = EbookLayoutSnapshot();
     return s;
 }
 
@@ -10556,6 +10657,15 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
 
     // re-layout so toolbar / menu / findbox changes take effect
     ApplySettingsToOpenWindows();
+
+    Str prevLayout = before.ebookLayout;
+    Str nowLayout = EbookLayoutSnapshot();
+    bool ebookLayoutChanged = !str::Eq(prevLayout, nowLayout);
+    str::Free(prevLayout);
+    str::Free(nowLayout);
+    if (ebookLayoutChanged) {
+        ReloadEbookLayoutDocs();
+    }
 
     // UseTabs converts existing windows <-> tabs (closes and reopens windows);
     // post it so it runs after the settings dialog has been torn down

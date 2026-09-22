@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "gui/UIModels.h"
 #include "Settings.h"
+#include "AppSettings.h"
 #include "EngineBase.h"
 #include "DocController.h"
 #include "PagePosition.h"
@@ -144,6 +145,12 @@ bool MigrateFileStatePagePos(DocController* ctrl, FileState* fs) {
         }
     }
     return changed;
+}
+
+// chapter + page in the toolbar and Go to Page. Off: one page number for the book.
+// Storage and next/previous page stay chapter-based either way.
+bool ShowChapterUi(DocController* ctrl) {
+    return ctrl && ctrl->HasChapters() && gSettings && gSettings->showChaptersInEbooks;
 }
 
 // "12/62" or "3:5/20" for a chaptered bookmark; empty if pageCount is unknown

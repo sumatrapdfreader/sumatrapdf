@@ -131,6 +131,8 @@ export type ChapterInfo = {
   chapterPageCount: number;
   pageCount: number;
   hasChapters: boolean;
+  laidOut: number;
+  chapterUi: boolean;
 };
 
 export type LayoutRect = { x: number; y: number; dx: number; dy: number };
@@ -585,7 +587,7 @@ export class ControlClient {
       throw new Error(`TestChapterInfo failed: ${raw || code}`);
     }
     const m =
-      /^OK chapter=(\d+) page=(\d+) chapterCount=(\d+) chapterPageCount=(\d+) pageCount=(\d+) hasChapters=(\d)$/.exec(
+      /^OK chapter=(\d+) page=(\d+) chapterCount=(\d+) chapterPageCount=(\d+) pageCount=(\d+) hasChapters=(\d+) laidOut=(\d+) chapterUi=(\d+)$/.exec(
         raw,
       );
     if (!m) {
@@ -598,6 +600,8 @@ export class ControlClient {
       chapterPageCount: parseInt(m[4], 10),
       pageCount: parseInt(m[5], 10),
       hasChapters: m[6] === "1",
+      laidOut: parseInt(m[7], 10),
+      chapterUi: m[8] === "1",
     };
   }
 

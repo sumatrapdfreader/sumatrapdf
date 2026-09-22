@@ -328,6 +328,8 @@ struct SettingsApplyState {
     bool chmUseFixedPageUI = false;
     bool markdownUseFixedPageUI = false;
     bool explorerQuickLook = false;
+    // owned copy of the ebook layout inputs; ApplyChangedSettingsAndRelayout frees it
+    Str ebookLayout;
 };
 SettingsApplyState GetSettingsApplyState();
 void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before);

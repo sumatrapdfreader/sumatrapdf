@@ -29,3 +29,6 @@ Location LocationFromFlatPageNo(DocController* ctrl, int flatPageNo);
 bool MigrateStoredPagePos(DocController* ctrl, Str* pageNoStr);
 bool MigrateFileStatePagePos(DocController* ctrl, FileState* fs);
 TempStr FormatFileStateProgressTemp(const FileState* fs);
+
+// toolbar, Go to Page, page info: chapter and page, instead of one flat page number
+bool ShowChapterUi(DocController* ctrl);
