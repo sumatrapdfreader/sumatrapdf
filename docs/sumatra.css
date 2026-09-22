@@ -672,6 +672,10 @@ h6 {
   /* background-color: aliceblue; */
 }
 
+.notion-page table {
+  margin-bottom: 0.4rem;
+}
+
 .notion-page .doc-columns > div {
   margin-bottom: 0.1rem;
 }
