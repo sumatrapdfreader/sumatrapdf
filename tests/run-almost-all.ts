@@ -326,6 +326,7 @@ import { testit as toolbarTabSwitchPos } from "./toolbar-tab-switch-pos.ts";
 import { testit as mdMissingFile } from "./ad-hoc-md-missing-file.ts";
 import { testit as issue6148 } from "./issue-6148.ts";
 import { testit as issue6184 } from "./issue-6184.ts";
+import { testit as issue6220 } from "./issue-6220.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -648,6 +649,7 @@ export const tests: NamedTest[] = [
   ["toolbar-tab-switch-pos", toolbarTabSwitchPos],
   ["issue-trim-margins", issueTrimMargins],
   ["trim-empty-margins-restore", trimEmptyMarginsRestore],
+  ["issue-6220", issue6220],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

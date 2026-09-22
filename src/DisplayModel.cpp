@@ -540,7 +540,10 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     ZoomToString(&fs->zoom, savedZoom, fs);
 
     ScrollState ss = GetScrollState();
-    str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
+    // ss.page, not CurrentPageNo(): scrollPos is relative to the scroll state's
+    // page (the first visible one); saving the most visible page with it
+    // restored a page further whenever the next page showed more (#6220)
+    str::ReplaceWithCopy(&fs->pageNo, StoredPagePosForPageTemp(this, ss.page));
     fs->pageCount = PageCount();
     fs->scrollPos = PointF();
     if (!inPresentation) {
@@ -1766,6 +1769,14 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
 // same place: pages before the first visible one may have grown or shrunk, so
 // the scroll position has to move with it.
 void DisplayModel::RelayoutKeepingView() {
+    // a restored view goes back to its exact page units: keeping the pixel
+    // across a zoom change (a measured page) and re-deriving them drifts
+    if (AtExactScroll()) {
+        Relayout(zoomVirtual, rotation);
+        SetScrollState(exactScroll, exactScrollPan);
+        return;
+    }
+
     int anchorPageNo = FirstVisiblePageNo();
     if (!ValidPageNo(anchorPageNo)) {
         anchorPageNo = CurrentPageNo();
@@ -2341,8 +2352,10 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
     ScrollState ss;
 
     bool hadLayout = zoomReal >= 0.01f;
+    bool atExact = false;
     if (hadLayout) {
         ss = GetScrollState();
+        atExact = AtExactScroll();
     }
 
     totalViewPortSize = newViewPortSize;
@@ -2362,10 +2375,14 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
         SetScrollState(pendingScroll);
     } else if (hadLayout) {
         // when fitting to content, let GoToPage do the necessary scrolling
-        if (zoomVirtual != kZoomFitContent) {
-            SetScrollState(ss);
-        } else {
+        if (zoomVirtual == kZoomFitContent) {
             GoToPage(ss.page, 0);
+        } else if (atExact) {
+            // not from ss: that's the pixel the restore truncated to at the
+            // zoom before the window had its final size, a pixel off per start
+            SetScrollState(exactScroll, exactScrollPan);
+        } else {
+            SetScrollState(ss);
         }
     } else {
         RecalcVisibleParts();
@@ -3414,6 +3431,7 @@ void DisplayModel::SetScrollState(const ScrollState& state, RestorePan pan) {
             logf("  exit because not scrolled\n");
         }
         stableNavPoint.suppress = false;
+        RememberExactScroll(state, pan, st.page);
         return;
     }
 
@@ -3457,6 +3475,33 @@ void DisplayModel::SetScrollState(const ScrollState& state, RestorePan pan) {
     }
     GoToPage(st.page, newPt.y, false, newPt.x);
     stableNavPoint.suppress = false;
+    RememberExactScroll(state, pan, st.page);
+}
+
+void DisplayModel::RememberExactScroll(const ScrollState& state, RestorePan pan, int pageNo) {
+    PageInfo* pi = GetPageInfo(pageNo);
+    hasExactScroll = pi != nullptr;
+    if (!pi) {
+        return;
+    }
+    exactScroll = state;
+    exactScrollPan = pan;
+    exactScrollPageNo = pageNo;
+    exactScrollOffset = Point(viewPort.x - pi->pos.x, viewPort.y - pi->pos.y);
+}
+
+// true while nothing moved the viewport since SetScrollState() placed it. An
+// offset into the page, so a relayout shifting the pages above doesn't count
+bool DisplayModel::AtExactScroll() const {
+    if (!hasExactScroll) {
+        return false;
+    }
+    PageInfo* pi = GetPageInfo(exactScrollPageNo);
+    if (!pi) {
+        return false;
+    }
+    Point off(viewPort.x - pi->pos.x, viewPort.y - pi->pos.y);
+    return off == exactScrollOffset;
 }
 
 // don't remember more than "enough" history entries (same number as Firefox uses)

@@ -394,6 +394,17 @@ struct DisplayModel : DocController {
     bool hasPendingScroll = false;
     ScrollState pendingScroll;
 
+    // the view SetScrollState() last restored and where that put the viewport.
+    // A relayout that finds the viewport still there restores it again from
+    // these page units instead of from the pixel they truncated to (#6220)
+    bool hasExactScroll = false;
+    ScrollState exactScroll;
+    RestorePan exactScrollPan = RestorePan::Exact;
+    int exactScrollPageNo = 0;
+    Point exactScrollOffset;
+    void RememberExactScroll(const ScrollState& state, RestorePan pan, int pageNo);
+    bool AtExactScroll() const;
+
     void RenderFinished(PageRenderRequest* req);
     void RenderFinishedAsync(PageRenderRequest* req);
 };
