@@ -71,9 +71,8 @@ SumatraPDF will execute whenever you double-click a location in the PDF.
 
 To configure it:
 
-1. Open the Command Palette (`Ctrl+K`).
-2. Select **Set Inverse Search Command Line**.
-3. Enter the command that should open your editor at a specific file and
+1. `Ctrl + K`, `Set Inverse Search Command Line` command in Command Palette.
+2. Enter the command that should open your editor at a specific file and
    line number.
 
 The command should have the general form:

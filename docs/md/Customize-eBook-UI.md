@@ -4,8 +4,8 @@ EPUB, MOBI, FB2, and similar formats use SumatraPDF's **eBook UI** (HTML-based l
 
 ## The eBook Settings dialog (**ver 3.7+**)
 
-With an ebook open, run **Change eBook Settings** (`CmdChangeEbookSettings`) from
-the [command palette](Command-Palette.md) (`Ctrl + K`). It has the font, size,
+With an ebook open, use `Ctrl + K`, `Change eBook Settings` command in
+[Command Palette](Command-Palette.md) (`CmdChangeEbookSettings`). It has the font, size,
 margin and line spacing, and shows the CSS those values produce in a read-only
 box, so you can see exactly what is applied. **Margin** is a single field, but it
 takes the same one, two or four values as the setting. Tick **Custom CSS** and the box becomes

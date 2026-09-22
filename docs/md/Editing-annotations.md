@@ -71,7 +71,7 @@ Pick a PNG (or JPEG, etc.). The image is stamped on the page and you can drag or
 
 The **Highlighter** is a marker pen: drag on the page and it paints a wide translucent stroke wherever the mouse goes, over pictures and blank areas as well as text. The selection-based **Highlight** (`a`) still needs text to attach to.
 
-Start it from the **Annotations** toolbar, from the command palette, or with right-click → **Create annotation under cursor → Highlighter**. Drag to paint, release the mouse or pen to finish, `Esc` to cancel. Closing the hint at the bottom of the window also finishes polyline. The stroke keeps a constant on-screen width while you draw, whatever the zoom.
+Start it from the **Annotations** toolbar, with `Ctrl + K`, `Highlighter` command in Command Palette, or with right-click → **Create annotation under cursor → Highlighter**. Drag to paint, release the mouse or pen to finish, `Esc` to cancel. Closing the hint at the bottom of the window also finishes polyline. The stroke keeps a constant on-screen width while you draw, whatever the zoom.
 
 **Ink** is the same on a tablet: release commits that stroke and the tool stays selected so you can draw another. `Esc` or closing the hint leaves the tool.
 
@@ -134,12 +134,12 @@ Add annotation commands to the toolbar via the `Shortcuts` array — see [Custom
 
 ## Saving workflow
 
-| Action                   | Shortcut / command                                                                                                     |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`), or the save button at the end of the Edit PDF toolbar                       |
-| Save to a new PDF        | `CmdSaveAnnotationsNewFile` (tab context menu, command palette, or the last button of the Edit PDF toolbar)            |
-| Discard unsaved changes  | `CmdDiscardChanges` (tab context menu **Discard changes**, or `Ctrl + K` command palette) — reloads the file from disk |
-| Save when closing        | Prompt dialog — choose existing file, new file, or discard                                                             |
+| Action                   | Shortcut / command                                                                                                                                   |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`), or the save button at the end of the Edit PDF toolbar                                                     |
+| Save to a new PDF        | `CmdSaveAnnotationsNewFile` (tab context menu, command palette, or the last button of the Edit PDF toolbar)                                          |
+| Discard unsaved changes  | `CmdDiscardChanges` (tab context menu **Discard changes**, or `Ctrl + K`, `Discard Changes` command in Command Palette) — reloads the file from disk |
+| Save when closing        | Prompt dialog — choose existing file, new file, or discard                                                                                           |
 
 `Ctrl + Z` undoes the last change and `Ctrl + Shift + Z` redoes it (see **Undo and redo** above). Delete an annotation with `Delete` when it is selected, or with **Delete Annotation** in the floating list.
 

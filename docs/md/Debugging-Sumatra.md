@@ -14,7 +14,7 @@ These instructions require SumatraPDF 3.2 or later.
 
 We log information that might be helpful in diagnosing issues.
 
-To see the logs, open the [Command Palette](Command-Palette.md) with `Ctrl + K` and type `show log`.
+To see the logs: `Ctrl + K`, `Show Logs` command in [Command Palette](Command-Palette.md).
 
 This saves the logs to a file and opens it in the default editor for `.txt` files.
 

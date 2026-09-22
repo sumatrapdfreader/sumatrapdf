@@ -33,7 +33,7 @@ ReloadModifiedDocuments = true
 
 **Where to set it (any one of these):**
 
-1. `Ctrl + K` [command palette](Command-Palette.md) → **Set Inverse Search Command Line** (detects common editors; enables TeX enhancements on OK)
+1. `Ctrl + K`, `Set Inverse Search Command Line` command in [Command Palette](Command-Palette.md) (detects common editors; enables TeX enhancements on OK)
 2. **Settings → Options** (when TeX enhancements are on) → inverse-search field
 3. Advanced setting `InverseSearchCmdLine` in `SumatraPDF-settings.txt`
 4. One-shot via command line: `-inverse-search "<command-line>"` (writes the same setting)
@@ -93,7 +93,7 @@ Install the [LaTeX Workshop](https://marketplace.visualstudio.com/items?itemName
 
 **1. Inverse search (in Sumatra)**
 
-Set this once (`Ctrl + K` → **Set Inverse Search Command Line**, or Advanced Settings). Overwrite `InverseSearchCmdLine` in place; do not paste it under the “Settings below are not recognized” footer, or Sumatra ignores it.
+Set this once (`Ctrl + K`, `Set Inverse Search Command Line` command in Command Palette, or Advanced Settings). Overwrite `InverseSearchCmdLine` in place; do not paste it under the “Settings below are not recognized” footer, or Sumatra ignores it.
 
 Prefer the `code` / `cursor` CLI on `PATH`, or a full path to the `.cmd` launcher:
 

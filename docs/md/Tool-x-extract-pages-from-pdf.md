@@ -9,8 +9,7 @@
 To extract pages from a PDF in SumatraPDF:
 
 - open a PDF document
-- press `Ctrl + K` to open the [command palette](Command-Palette.md)
-- select `Extract Pages From PDF`
+- `Ctrl + K`, `Extract Pages From PDF` command in [Command Palette](Command-Palette.md)
 
 Or:
 

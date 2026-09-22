@@ -9,8 +9,7 @@
 To decrypt a PDF in SumatraPDF:
 
 - open an encrypted PDF document
-- press `Ctrl + K` to open the [command palette](Command-Palette.md)
-- select `Decrypt PDF`
+- `Ctrl + K`, `Decrypt PDF` command in [Command Palette](Command-Palette.md)
 
 Or:
 

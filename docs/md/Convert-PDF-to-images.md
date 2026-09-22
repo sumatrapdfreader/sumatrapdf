@@ -15,7 +15,7 @@ The command appears only when the open document is a **PDF**. It is hidden for c
 1. Open a PDF.
 2. Start **Convert PDF to Images…** in any of these ways:
    - Right-click the document → **Document → Convert PDF to Images…**
-   - [Command palette](Command-Palette.md) (`Ctrl + k`) → type “Convert PDF to Images”
+   - `Ctrl + K`, `Convert PDF to Images...` command in [Command Palette](Command-Palette.md)
 3. A dialog shows the source path and a destination **template**:
    - Default is the same folder and base name as the PDF, with `-<N>.png` (for `book.pdf`, `book-<N>.png`).
    - `<N>` is replaced by the 1-based page number (`book-1.png`, `book-2.png`, …).

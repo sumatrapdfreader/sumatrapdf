@@ -9,8 +9,7 @@
 To decompress a PDF in SumatraPDF:
 
 - open a PDF document
-- press `Ctrl + K` to open the [command palette](Command-Palette.md)
-- select `Decompress PDF`
+- `Ctrl + K`, `Decompress PDF` command in [Command Palette](Command-Palette.md)
 
 Or:
 

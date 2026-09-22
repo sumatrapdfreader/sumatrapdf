@@ -35,7 +35,7 @@ The difference is that `SumatraPDF.exe` is a GUI application, so it won't work a
 | Inspect PDF structure                          | `info`, `show`, `pages` — [Tool info](Tool-info.md)                                                              |
 | Run JavaScript on PDFs                         | `run` — [Tool run](Tool-run.md)                                                                                  |
 
-The same page-delete operations are also available in the app: `Ctrl + K` → **Delete Pages From PDF**, or context menu **Document → Delete Pages From PDF**.
+The same page-delete operations are also available in the app: `Ctrl + K`, `Delete Pages From PDF` command in Command Palette, or context menu **Document → Delete Pages From PDF**.
 
 ```
 sumatrapdf-tool.exe <command> [options]

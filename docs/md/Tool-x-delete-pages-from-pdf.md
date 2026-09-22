@@ -9,8 +9,7 @@
 To delete pages from a PDF in SumatraPDF:
 
 - open a PDF document
-- press `Ctrl + K` to open the [command palette](Command-Palette.md)
-- select `Delete Pages From PDF`
+- `Ctrl + K`, `Delete Pages From PDF` command in [Command Palette](Command-Palette.md)
 
 Or:
 

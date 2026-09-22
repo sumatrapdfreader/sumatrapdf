@@ -9,8 +9,7 @@
 To extract text from a PDF in SumatraPDF:
 
 - open a PDF document
-- press `Ctrl + K` to open the [command palette](Command-Palette.md)
-- select `Extract Text From Document`
+- `Ctrl + K`, `Extract Text From Document` command in [Command Palette](Command-Palette.md)
 
 Or:
 

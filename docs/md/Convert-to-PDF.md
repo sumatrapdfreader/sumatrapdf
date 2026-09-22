@@ -25,7 +25,7 @@ It is **hidden** for PDF, EPUB, DjVu, CHM, and other non-image documents. See [C
 2. Start **Convert to PDF…** in any of these ways:
    - **File → Convert to PDF…**
    - Right-click the document → **Document → Convert to PDF…**
-   - [Command palette](Command-Palette.md) (`Ctrl + k`) → type “Convert to PDF”
+   - `Ctrl + K`, `Convert To PDF` command in [Command Palette](Command-Palette.md)
 3. A dialog shows the source path and a suggested destination:
    - Default path is the same location and base name with a `.pdf` extension.
    - If that file already exists, the name is made unique (e.g. `book.1.pdf`).

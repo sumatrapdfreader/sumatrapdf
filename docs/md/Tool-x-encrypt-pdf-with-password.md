@@ -9,8 +9,7 @@
 To encrypt a PDF in SumatraPDF:
 
 - open an unencrypted PDF document
-- press `Ctrl + K` to open the [command palette](Command-Palette.md)
-- select `Encrypt PDF`
+- `Ctrl + K`, `Encrypt PDF` command in [Command Palette](Command-Palette.md)
 
 Or:
 

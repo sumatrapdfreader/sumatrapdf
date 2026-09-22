@@ -84,7 +84,7 @@ Use `sumatrapdf-tool clean` with `N` as the last-page marker, e.g. `1-N-1` keeps
 
 **Can SumatraPDF read a document aloud?**
 
-Yes — **pre-release 3.7+** adds Read Aloud via the command palette (`Ctrl + K`, type `read aloud`) using Windows text-to-speech. See [Read Aloud (TTS)](Read-Aloud.md).
+Yes — **pre-release 3.7+** adds Read Aloud (`Ctrl + K`, `Read Aloud` command in Command Palette) using Windows text-to-speech. See [Read Aloud (TTS)](Read-Aloud.md).
 
 ## Default PDF viewer
 

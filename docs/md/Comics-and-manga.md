@@ -11,7 +11,7 @@ SumatraPDF can open comic-book archives and folders of images as multi-page docu
 | Image folder        | open a directory of images (each file is a page)                                                                     |
 | Single image        | PNG, JPEG, WebP, AVIF, HEIC, GIF (including animation), TIFF, and [other image types](Supported-document-formats.md) |
 
-Encrypted `.cbz` / `.cbr` files are supported (password prompt when needed). Archives opened from a **network drive** that are 32 MB or smaller are loaded into memory; larger ones may be copied into a local cache (`cbx-cache` under the [settings data directory](How-we-store-settings.md)) so page turns stay fast. Clear that cache with **Delete Cached Files** in the [command palette](Command-Palette.md) (`CmdDeleteCachedFiles`).
+Encrypted `.cbz` / `.cbr` files are supported (password prompt when needed). Archives opened from a **network drive** that are 32 MB or smaller are loaded into memory; larger ones may be copied into a local cache (`cbx-cache` under the [settings data directory](How-we-store-settings.md)) so page turns stay fast. Clear that cache with `Ctrl + K`, `Delete Cached Files` command in [Command Palette](Command-Palette.md) (`CmdDeleteCachedFiles`).
 
 Document properties (`Ctrl + D`) for comic archives list image files and, where present, EXIF and ComicInfo / ComicBookInfo metadata.
 
@@ -42,7 +42,7 @@ To turn the page by clicking the left or right edge of the window (like many com
 **Manga mode** displays pages right-to-left in facing and book views (typical for Japanese manga and
 right-to-left documents).
 
-- **View** menu or command palette: **Toggle Manga Mode** (`CmdToggleMangaMode`)
+- **View** menu, or `Ctrl + K`, `Toggle Manga Mode` command in Command Palette (`CmdToggleMangaMode`)
 - Available for PDF, XPS, DjVu, ebooks, comic books, images and other fixed-page documents
 - When manga mode is on, **Left** advances and **Right** goes back (and horizontal swipe matches that), so navigation follows right-to-left reading
 
@@ -130,7 +130,7 @@ ImageUI [
 ]
 ```
 
-Values accept normal colors or `checkered` for a transparency checkerboard. You can also use **Change Background Color** (`CmdChangeBackgroundColor`) from the command palette. UI theme colors are separate — see [Customize theme colors](Customize-theme-colors.md).
+Values accept normal colors or `checkered` for a transparency checkerboard. You can also use `Ctrl + K`, `Change Background Color` command in Command Palette (`CmdChangeBackgroundColor`). UI theme colors are separate — see [Customize theme colors](Customize-theme-colors.md).
 
 ## Margins and page spacing
 
