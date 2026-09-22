@@ -89,7 +89,7 @@ On many laptops the `F1`–`F12` keys control volume and brightness unless you h
 
 ## Command Palette
 
-`Ctrl + K`, `Find` command in Command Palette runs Find without the keyboard shortcut.
+`Ctrl + K`, `Find` command in [Command Palette](Command-Palette.md) runs Find without the keyboard shortcut.
 
 ## Command-line and automation
 

@@ -13,10 +13,10 @@ You can send selected text to the Google or Bing search engine, or to the Google
 
 ![Context Menu Translate](img/context-menu-translate-e2f3.png)
 
-You can also use the Command Palette:
+You can also use the [Command Palette](Command-Palette.md):
 
 - select text
-- `Ctrl + K`, `Translate with DeepL` command in Command Palette (type `deepl` to find it)
+- `Ctrl + K`, `Translate with DeepL` command in [Command Palette](Command-Palette.md) (type `deepl` to find it)
 
 ![Using Command Palette](img/cmd-palette-translate-c1af.png)
 

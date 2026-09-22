@@ -30,7 +30,7 @@ If Grok Build is missing, the chat panel shows an error such as _Cannot find gro
 
 Install Grok Build and sign in using xAI's instructions. SumatraPDF looks for `grok.exe` on `PATH`, in `%USERPROFILE%\.grok\bin\`, and in `%USERPROFILE%\.local\bin\`.
 
-Open the panel with **View → Grok chat** (`CmdAIChatWithGrokBuild`), or `Ctrl + K`, `AI Chat with document using Grok Build` command in Command Palette.
+Open the panel with **View → Grok chat** (`CmdAIChatWithGrokBuild`), or `Ctrl + K`, `AI Chat with document using Grok Build` command in [Command Palette](Command-Palette.md).
 
 Grok Build settings are in the `GrokBuild` section of [advanced settings](Advanced-options-settings.md). The **Always Approve** checkbox passes `--always-approve` to Grok Build.
 
@@ -50,7 +50,7 @@ Install and sign in using OpenAI's official guides:
 
 After installation, make sure `codex` (or `codex.exe`) is on your `PATH`, or in `%USERPROFILE%\.codex\bin\` or `%USERPROFILE%\.local\bin\`.
 
-Open the panel with **View → Codex chat** (`CmdAIChatWithOpenAICodex`), or `Ctrl + K`, `AI Chat with document using OpenAI Codex` command in Command Palette.
+Open the panel with **View → Codex chat** (`CmdAIChatWithOpenAICodex`), or `Ctrl + K`, `AI Chat with document using OpenAI Codex` command in [Command Palette](Command-Palette.md).
 
 Codex settings are in the `CodexBuild` section of [advanced settings](Advanced-options-settings.md). The **Skip Sandbox** checkbox passes `--dangerously-bypass-approvals-and-sandbox` to Codex — use only if you understand the security implications.
 
@@ -64,7 +64,7 @@ If Antigravity is missing, the chat panel shows an error such as _Cannot find an
 
 Install Antigravity and sign in using Google's instructions. SumatraPDF looks for `antigravity.exe` or `agy.exe` on `PATH`, in `%USERPROFILE%\.local\bin\`, `%USERPROFILE%\.gemini\antigravity-cli\bin\`, `%USERPROFILE%\AppData\Local\agy\bin\`, `%USERPROFILE%\AppData\Roaming\Antigravity\bin\`, `%USERPROFILE%\AppData\Local\Programs\`, and `%USERPROFILE%\AppData\Roaming\npm\`.
 
-Open the panel with **View → Antigravity chat** (`CmdAIChatWithAntiGravity`), or `Ctrl + K`, `AI Chat with document using Antigravity` command in Command Palette.
+Open the panel with **View → Antigravity chat** (`CmdAIChatWithAntiGravity`), or `Ctrl + K`, `AI Chat with document using Antigravity` command in [Command Palette](Command-Palette.md).
 
 Antigravity settings are in the `AntiGravity` section of [advanced settings](Advanced-options-settings.md). The **Auto Approve** checkbox passes `--dangerously-skip-permissions` to Antigravity. It is **on by default**: the CLI can't ask for permissions when run non-interactively, so without it the agent can't read the document. It also lets the agent use other tools without asking.
 

@@ -6,7 +6,7 @@ If you have a reproducible crash:
 
 - download symbols:
   - menu: `Debug` / `Download Symbols`
-  - `Ctrl + K`, `Debug: Download Symbols` command in Command Palette
+  - `Ctrl + K`, `Debug: Download Symbols` command in [Command Palette](Command-Palette.md)
 - trigger the crash
 - when you see the crash dialog, press `Cancel` to open the crash report in the default text editor
 - post the crash log as a gist at [https://gist.github.com/](https://gist.github.com/). For example, press `Ctrl + A` to select all text, `Ctrl + C` to copy it to the clipboard, and then `Ctrl + V` to paste it into the gist

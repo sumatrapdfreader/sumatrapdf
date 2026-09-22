@@ -42,7 +42,7 @@ To turn the page by clicking the left or right edge of the window (like many com
 **Manga mode** displays pages right-to-left in facing and book views (typical for Japanese manga and
 right-to-left documents).
 
-- **View** menu, or `Ctrl + K`, `Toggle Manga Mode` command in Command Palette (`CmdToggleMangaMode`)
+- **View** menu, or `Ctrl + K`, `Toggle Manga Mode` command in [Command Palette](Command-Palette.md) (`CmdToggleMangaMode`)
 - Available for PDF, XPS, DjVu, ebooks, comic books, images and other fixed-page documents
 - When manga mode is on, **Left** advances and **Right** goes back (and horizontal swipe matches that), so navigation follows right-to-left reading
 
@@ -130,7 +130,7 @@ ImageUI [
 ]
 ```
 
-Values accept normal colors or `checkered` for a transparency checkerboard. You can also use `Ctrl + K`, `Change Background Color` command in Command Palette (`CmdChangeBackgroundColor`). UI theme colors are separate — see [Customize theme colors](Customize-theme-colors.md).
+Values accept normal colors or `checkered` for a transparency checkerboard. You can also use `Ctrl + K`, `Change Background Color` command in [Command Palette](Command-Palette.md) (`CmdChangeBackgroundColor`). UI theme colors are separate — see [Customize theme colors](Customize-theme-colors.md).
 
 ## Margins and page spacing
 

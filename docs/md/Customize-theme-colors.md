@@ -6,7 +6,7 @@ You can change the colors of the SumatraPDF UI by creating a custom theme with t
 
 To create a theme:
 
-- Use the `Settings` / `Open Advanced Settings File...` menu (or `Ctrl + K`, `Open Advanced Settings File...` command in Command Palette)
+- Use the `Settings` / `Open Advanced Settings File...` menu (or `Ctrl + K`, `Open Advanced Settings File...` command in [Command Palette](Command-Palette.md))
 - This opens the `SumatraPDF-settings.txt` file in your default text editor
 - Scroll to the bottom, find the `Themes` array, and add new theme definitions
 
@@ -63,7 +63,7 @@ UI themes only recolor chrome (menus, tabs, toolbars). Separately, **document pa
 
 How to change it:
 
-- **Settings → Theme…** or **Settings → Make Document Colors Follow Theme** (or `Ctrl + K`, `Set Document Colors Follow Theme` command in Command Palette; `CmdSetDocumentColorsFollowTheme`) for a drop-down including **`legacy`**.
+- **Settings → Theme…** or **Settings → Make Document Colors Follow Theme** (or `Ctrl + K`, `Set Document Colors Follow Theme` command in [Command Palette](Command-Palette.md); `CmdSetDocumentColorsFollowTheme`) for a drop-down including **`legacy`**.
 - Advanced settings: `DocumentColorsFollowTheme = off` / `smart` / `legacy`.
 
 `Shift + I` (`CmdInvertColors`) is a different thing: it swaps the page colors for the rest of the session, whatever `DocumentColorsFollowTheme` and `FixedPageUI` are set to, and is not saved to the settings file.
@@ -83,7 +83,7 @@ This is independent of `Theme = ...`. You can use a dark UI theme with `Document
 After you save the settings file, there are three main ways to choose a theme that you created:
 
 1. Change the value of `Theme = ` in `SumatraPDF-settings.txt` (e.g. `Theme = Solarized Dark`).
-2. `Ctrl + K`, `Set theme '<name>'` command in Command Palette.
+2. `Ctrl + K`, `Set theme '<name>'` command in [Command Palette](Command-Palette.md).
 3. Navigate to `Settings` / `Theme` and choose a theme.
 
 ## Built-in Themes

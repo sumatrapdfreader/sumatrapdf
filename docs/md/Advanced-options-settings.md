@@ -5,7 +5,7 @@ You can cusotmize SumatraPDF using [advanced settings](https://www.sumatrapdfrea
 To edit advanced settings:
 
 - menu `Settings` / `Advanced Settings...` opens setting editor
-- or `Ctrl + K` `Advanced Settings...` command in Command Palette
+- or `Ctrl + K` `Advanced Settings...` command in [Command Palette](Command-Palette.md)
 - or directly in `Ctrl + K` Command Palette: type `=` for settings editor
 
 Some settings, like keyboard shortcuts, can only be set by editing settings file:

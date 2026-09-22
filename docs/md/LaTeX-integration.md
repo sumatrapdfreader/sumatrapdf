@@ -93,7 +93,7 @@ Install the [LaTeX Workshop](https://marketplace.visualstudio.com/items?itemName
 
 **1. Inverse search (in Sumatra)**
 
-Set this once (`Ctrl + K`, `Set Inverse Search Command Line` command in Command Palette, or Advanced Settings). Overwrite `InverseSearchCmdLine` in place; do not paste it under the “Settings below are not recognized” footer, or Sumatra ignores it.
+Set this once (`Ctrl + K`, `Set Inverse Search Command Line` command in [Command Palette](Command-Palette.md), or Advanced Settings). Overwrite `InverseSearchCmdLine` in place; do not paste it under the “Settings below are not recognized” footer, or Sumatra ignores it.
 
 Prefer the `code` / `cursor` CLI on `PATH`, or a full path to the `.cmd` launcher:
 

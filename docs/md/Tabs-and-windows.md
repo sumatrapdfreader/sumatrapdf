@@ -26,7 +26,7 @@ This is the most frequent tabs question on the [forum](https://github.com/sumatr
 | `ReuseInstance` | No — takes effect on the next file open |
 | `UseTabs`       | **Yes** — close and restart SumatraPDF  |
 
-You can also change `ReuseInstance` and `UseTabs` at runtime (**ver 3.7+**) via `Ctrl + K`, `Advanced Settings...` command in Command Palette (`CmdAdvancedSettings`). Changing `UseTabs` affects **new** windows only; switching between tabbed and non-tabbed layout for an existing window may still need a restart.
+You can also change `ReuseInstance` and `UseTabs` at runtime (**ver 3.7+**) via `Ctrl + K`, `Advanced Settings...` command in [Command Palette](Command-Palette.md) (`CmdAdvancedSettings`). Changing `UseTabs` affects **new** windows only; switching between tabbed and non-tabbed layout for an existing window may still need a restart.
 
 ## Command-line flags
 
@@ -90,7 +90,7 @@ Note: the advanced setting `TabsMru` only changes the **order** of tabs inside t
 
 ## Home tab
 
-When `UseTabs = true`, an empty window may show a **Home** tab. Set `NoHomeTab = true` in advanced settings to skip it. You can close the Home tab when other tabs are open; reopen it with `Ctrl + K`, `Go To Home Page` command in Command Palette if needed.
+When `UseTabs = true`, an empty window may show a **Home** tab. Set `NoHomeTab = true` in advanced settings to skip it. You can close the Home tab when other tabs are open; reopen it with `Ctrl + K`, `Go To Home Page` command in [Command Palette](Command-Palette.md) if needed.
 
 ## See also
 

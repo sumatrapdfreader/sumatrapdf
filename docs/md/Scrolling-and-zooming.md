@@ -26,7 +26,7 @@ There are many ways to navigate around the document.
 
 ## Free pan
 
-Scrolling normally stops when a page edge meets the window edge, so a detail in the corner of a page can only ever be viewed in the corner of the screen. **Toggle Free Pan** (`CmdToggleFreePan`; `Ctrl + K`, `Toggle Free Pan` command in Command Palette; no default shortcut) adds half a window of scroll room on every side, so any part of a page can be dragged or scrolled to the center. Fit Page / Fit Width and where a page lands when you navigate to it are unchanged. It is remembered per document.
+Scrolling normally stops when a page edge meets the window edge, so a detail in the corner of a page can only ever be viewed in the corner of the screen. **Toggle Free Pan** (`CmdToggleFreePan`; `Ctrl + K`, `Toggle Free Pan` command in [Command Palette](Command-Palette.md); no default shortcut) adds half a window of scroll room on every side, so any part of a page can be dragged or scrolled to the center. Fit Page / Fit Width and where a page lands when you navigate to it are unchanged. It is remembered per document.
 
 ## Reading zoomed-in pages without the keyboard
 
@@ -60,7 +60,7 @@ Shortcuts [
 - `Ctrl + 1` : set 100% zoom
 - `Ctrl + 2` : set zoom to fit width of page (or pages in multi-column view)
 - `Ctrl + 3` : set zoom to fit content (like fit whole page but we auto-remove borders)
-- Fit Height (View / Zoom menu, or `Ctrl + K`, `Zoom: Fit Height` command in Command Palette): scale so the page fills the window height (may scroll horizontally)
+- Fit Height (View / Zoom menu, or `Ctrl + K`, `Zoom: Fit Height` command in [Command Palette](Command-Palette.md)): scale so the page fills the window height (may scroll horizontally)
 - `Ctrl + 6` : single page view i.e. single column
 - `Ctrl + 7` : facing view i.e. 2 columns (pages)
 - `Ctrl + 8` : 2 columns (pages) but offset by one page

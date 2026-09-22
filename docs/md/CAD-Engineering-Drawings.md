@@ -24,8 +24,8 @@ EngineeringDrawingEnhance = off
 
 ### How to change it
 
-- **Advanced Settings** dialog: `Settings` → **Advanced Settings...**, filter `EngineeringDrawingEnhance`, pick `off` / `auto` / `on`, Save. Or `Ctrl + K`, `Advanced Settings...` command in Command Palette.
-- **Command Palette settings:** `Ctrl + K`, type `=EngineeringDrawingEnhance`, Enter, pick a value. Takes effect immediately, no restart.
+- **Advanced Settings** dialog: `Settings` → **Advanced Settings...**, filter `EngineeringDrawingEnhance`, pick `off` / `auto` / `on`, Save. Or `Ctrl + K`, `Advanced Settings...` command in [Command Palette](Command-Palette.md).
+- **[Command Palette](Command-Palette.md) settings:** `Ctrl + K`, type `=EngineeringDrawingEnhance`, Enter, pick a value. Takes effect immediately, no restart.
 - **Settings file:** `Settings` → **Open Advanced Settings File...**, edit `EngineeringDrawingEnhance = …`, save.
 
 The setting is global: it applies to every PDF. If a file is already open, reopen it (or use the toggle below) so rendering picks up the new value.
@@ -34,7 +34,7 @@ The setting is global: it applies to every PDF. If a file is already open, reope
 
 **Toggle Engineering Drawing Enhancement** (`CmdToggleEngineeringDrawingEnhance`) flips enhancement for the **current PDF only**.
 
-- `Ctrl + K`, `Toggle Engineering Drawing Enhancement` command in Command Palette
+- `Ctrl + K`, `Toggle Engineering Drawing Enhancement` command in [Command Palette](Command-Palette.md)
 - No default keyboard shortcut; bind one in [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md)
 
 The first use flips away from whatever is in effect (so with the default `off`, it turns enhancement on). After that it alternates on/off for that document.
