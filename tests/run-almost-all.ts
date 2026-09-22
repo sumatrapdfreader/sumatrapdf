@@ -310,6 +310,7 @@ import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-default
 import { testit as issue6137AdvSettings } from "./issue-6137-adv-settings.ts";
 import { testit as advSettingsHomeReload } from "./adv-settings-home-reload.ts";
 import { testit as advSettingsExternalReload } from "./adv-settings-external-reload.ts";
+import { testit as commandPaletteExternalReload } from "./command-palette-external-reload.ts";
 import { testit as tocTitleFallback } from "./toc-title-fallback.ts";
 import { testit as tocShowOnOpen } from "./toc-show-on-open.ts";
 import { testit as tocTreeSentClick } from "./toc-tree-sent-click.ts";
@@ -640,6 +641,7 @@ export const tests: NamedTest[] = [
   ["issue-6137-adv-settings", issue6137AdvSettings],
   ["adv-settings-home-reload", advSettingsHomeReload],
   ["adv-settings-external-reload", advSettingsExternalReload],
+  ["command-palette-external-reload", commandPaletteExternalReload],
   ["toc-title-fallback", tocTitleFallback],
   ["toc-show-on-open", tocShowOnOpen],
   ["issue-6132", issue6132],

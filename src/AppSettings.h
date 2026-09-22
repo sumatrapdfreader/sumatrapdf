@@ -61,6 +61,19 @@ void ToggleSettingsBool(bool*);
 const char** GetSettingsEnumValues(Str path);
 bool SetSettingsValueFromStr(Str path, Str value);
 
+struct FieldInfo;
+
+// an editable leaf of gSettings, addressed by offset: a settings reload
+// re-creates gSettings, so a pointer into it would dangle
+struct SettingField {
+    Str path;    // dotted, e.g. "FixedPageUI.TextColor"; temp-allocated
+    Str comment; // doc comment from the settings metadata
+    const FieldInfo* field = nullptr;
+    int offset = 0;
+};
+void CollectSettingFields(Vec<SettingField>& out);
+u8* SettingFieldPtr(int offset);
+
 FileState* NewFileState(Str);
 void DeleteFileState(FileState*);
 void DeleteFileStates(Vec<FileState*>*);

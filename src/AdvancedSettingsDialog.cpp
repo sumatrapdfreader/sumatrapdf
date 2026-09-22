@@ -188,12 +188,8 @@ static void EndPreviewSettingChange() {
     UpdateDocumentColors();
 }
 
-static u8* FieldPtr(const SettingItem* item) {
-    return (u8*)gSettings + item->fieldOffset;
-}
-
 static void SetItemChanged(SettingItem* item) {
-    u8* p = FieldPtr(item);
+    u8* p = SettingFieldPtr(item->fieldOffset);
     switch (item->type) {
         case SettingType::Bool:
             item->changed = item->boolVal != *(bool*)p;
@@ -216,97 +212,63 @@ static void SetItemChanged(SettingItem* item) {
     }
 }
 
-// collect editable leaf settings from the metadata, recursing into
-// sub-structs with a dotted path prefix
-static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, int baseOffset, Str prefix) {
-    const char* fieldName = info->fieldNames;
-    const char* fieldComment = info->fieldComments; // parallel to fieldNames
-    for (size_t i = 0; i < info->fieldCount; i++) {
-        const FieldInfo& field = info->fields[i];
-        Str name(fieldName);
-        fieldName += len(name) + 1;
-        Str comment;
-        if (fieldComment) {
-            comment = Str(fieldComment);
-            fieldComment += len(comment) + 1;
-        }
-        // internal settings (WindowState, OpenCountWeek, deprecated keys ...) are
-        // app-managed and not shown to the user. The generated metadata marks
-        // them, so no comment-string matching is needed here.
-        if (field.internal) {
+// one dialog item per editable setting, seeded with the current value
+static void CollectSettings(Vec<SettingItem*>& items) {
+    Vec<SettingField> fields;
+    CollectSettingFields(fields);
+    for (const SettingField& sf : fields) {
+        const FieldInfo& field = *sf.field;
+        u8* fieldPtr = SettingFieldPtr(sf.offset);
+        if (field.type == SettingType::Compact) {
+            // only all-int compact structs; the "Open Settings File" button
+            // covers the rest
+            const auto* sub = (const StructInfo*)field.value;
+            if (!CompactIsAllInts(sub)) {
+                continue;
+            }
+            auto* item = new SettingItem();
+            item->name = str::Dup(sf.path);
+            item->comment = str::Dup(sf.comment);
+            item->type = field.type;
+            item->fieldOffset = sf.offset;
+            item->compactInfo = sub;
+            item->strVal = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, false));
+            item->defStr = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, true));
+            VecAppend(items, item);
             continue;
         }
-        if (field.type == SettingType::Comment) {
-            continue;
-        }
-        int fieldOffset = baseOffset + (int)field.offset;
-        u8* fieldPtr = (u8*)gSettings + fieldOffset;
-        TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, name) : str::DupTemp(name);
+
+        auto* item = new SettingItem();
+        item->name = str::Dup(sf.path);
+        item->comment = str::Dup(sf.comment);
+        item->type = field.type;
+        item->fieldOffset = sf.offset;
+        // field.value holds the default: the value itself for Bool/Int,
+        // a string pointer for Float/String/Color (null == empty). It's
+        // NOT a valid pointer for Bool/Int, so only deref it for the
+        // string-backed types.
         switch (field.type) {
-            case SettingType::Struct: {
-                const auto* sub = (const StructInfo*)field.value;
-                CollectSettings(items, sub, fieldOffset, path);
-                break;
-            }
-            case SettingType::Compact: {
-                const auto* sub = (const StructInfo*)field.value;
-                if (!CompactIsAllInts(sub)) {
-                    break;
-                }
-                auto* item = new SettingItem();
-                item->name = str::Dup(path);
-                item->comment = str::Dup(comment);
-                item->type = field.type;
-                item->fieldOffset = fieldOffset;
-                item->compactInfo = sub;
-                item->strVal = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, false));
-                item->defStr = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, true));
-                VecAppend(items, item);
-                break;
-            }
             case SettingType::Bool:
-            case SettingType::Int:
-            case SettingType::Float:
-            case SettingType::String:
-            case SettingType::Color: {
-                auto* item = new SettingItem();
-                item->name = str::Dup(path);
-                item->comment = str::Dup(comment);
-                item->type = field.type;
-                item->fieldOffset = fieldOffset;
-                // field.value holds the default: the value itself for Bool/Int,
-                // a string pointer for Float/String/Color (null == empty). It's
-                // NOT a valid pointer for Bool/Int, so only deref it for the
-                // string-backed types.
-                switch (field.type) {
-                    case SettingType::Bool:
-                        item->boolVal = *(bool*)fieldPtr;
-                        item->defBool = field.value != 0;
-                        break;
-                    case SettingType::Int:
-                        item->intVal = *(int*)fieldPtr;
-                        item->defInt = (int)field.value;
-                        break;
-                    case SettingType::Float:
-                        item->floatVal = *(float*)fieldPtr;
-                        str::Parse(Str((const char*)field.value), "%f", &item->defFloat);
-                        break;
-                    default:
-                        item->strVal = str::Dup(*(Str*)fieldPtr);
-                        item->defStr = str::Dup(Str((const char*)field.value));
-                        if (field.type == SettingType::String) {
-                            item->enumValues = GetSettingsEnumValues(path);
-                        }
-                        break;
-                }
-                VecAppend(items, item);
+                item->boolVal = *(bool*)fieldPtr;
+                item->defBool = field.value != 0;
                 break;
-            }
+            case SettingType::Int:
+                item->intVal = *(int*)fieldPtr;
+                item->defInt = (int)field.value;
+                break;
+            case SettingType::Float:
+                item->floatVal = *(float*)fieldPtr;
+                str::Parse(Str((const char*)field.value), "%f", &item->defFloat);
+                break;
             default:
-                // arrays and non-int compact structs; the "Open Settings File"
-                // button covers those
+                item->strVal = str::Dup(*(Str*)fieldPtr);
+                item->defStr = str::Dup(Str((const char*)field.value));
+                if (field.type == SettingType::String) {
+                    item->enumValues = GetSettingsEnumValues(sf.path);
+                }
                 break;
         }
+        VecAppend(items, item);
     }
 }
 
@@ -903,7 +865,7 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
             continue;
         }
         didChange = true;
-        u8* p = FieldPtr(item);
+        u8* p = SettingFieldPtr(item->fieldOffset);
         switch (item->type) {
             case SettingType::Bool:
                 *(bool*)p = item->boolVal;
@@ -1181,7 +1143,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     // OnSize repositions in-place editors after DoLayout; skip the generic path
     autoLayout = false;
-    CollectSettings(items, &gSettingsInfo, 0, {});
+    CollectSettings(items);
 
     {
         CreateCustomArgs args;

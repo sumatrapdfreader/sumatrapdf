@@ -87,13 +87,21 @@ struct ItemDataCP {
     // setting's dotted path; in the value-picking stage it is a candidate value
     // and settingPath names the setting it belongs to.
     SettingType settingType = SettingType::Comment; // Comment: not a setting row
-    u8* settingPtr = nullptr;
-    intptr_t settingDefault = 0; // FieldInfo::value, decoded per type
+    int settingOffset = 0;                          // into gSettings, see SettingFieldPtr()
+    intptr_t settingDefault = 0;                    // FieldInfo::value, decoded per type
     Str settingPath;
     Str settingComment; // its doc comment, from the settings metadata
 };
 
 using StrVecCP = StrVecWithData<ItemDataCP>;
+
+static bool IsSettingRow(const ItemDataCP* d) {
+    return d->settingType != SettingType::Comment;
+}
+
+static const u8* SettingRowPtr(const ItemDataCP* d) {
+    return SettingFieldPtr(d->settingOffset);
+}
 
 struct ListBoxModelCP : ListBoxModel {
     StrVecCP strings;
@@ -1038,7 +1046,7 @@ void CommandPaletteWnd::BeginEditSettingValue(Str path) {
     if (!GetSettingsEnumValues(path)) {
         for (int i = 0; i < len(settings); i++) {
             if (str::Eq(settings[i], path)) {
-                value = FormatSettingValueTemp(settings.AtData(i)->settingType, settings.AtData(i)->settingPtr);
+                value = FormatSettingValueTemp(settings.AtData(i)->settingType, SettingRowPtr(settings.AtData(i)));
                 break;
             }
         }
@@ -1048,7 +1056,7 @@ void CommandPaletteWnd::BeginEditSettingValue(Str path) {
 }
 
 // Back to the setting-picking stage with selPath selected. Applying a value
-// reloads gSettings, so every row pointing into it (settings, file history,
+// reloads gSettings, so the rows built from it (settings, file history,
 // favorites) is rebuilt; selPath usually points into those rows, hence the copy.
 void CommandPaletteWnd::ReturnToSettings(Str selPath) {
     TempStr path = str::DupTemp(selPath);
@@ -1369,7 +1377,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         return;
     }
 
-    if (data->settingPtr) {
+    if (IsSettingRow(data)) {
         Str itemText = m->strings[idx];
         if (len(data->settingPath) > 0) {
             // a value picked for a setting: the row text is the value
@@ -1378,7 +1386,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
             return;
         }
         if (data->settingType == SettingType::Bool) {
-            ToggleSettingsBool((bool*)data->settingPtr);
+            ToggleSettingsBool((bool*)SettingRowPtr(data));
             ReturnToSettings(itemText);
             return;
         }
@@ -2004,6 +2012,7 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     int selectedCmdId = 0;
     int annotPage = 0;
     Str selText;
+    Str selValue; // a setting row: its current value
     if (sel >= 0 && sel < n) {
         auto* model = (ListBoxModelCP*)wnd->listBox->model;
         selText = model->Item(sel);
@@ -2011,6 +2020,9 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
         selectedCmdId = data ? data->cmdId : 0;
         if (data && data->annot) {
             annotPage = data->annot->pageNo;
+        }
+        if (data && IsSettingRow(data) && len(data->settingPath) == 0) {
+            selValue = FormatSettingValueTemp(data->settingType, SettingRowPtr(data));
         }
     }
     int qStart = 0, qEnd = 0, qLen = 0;
@@ -2023,9 +2035,9 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     int annotsDone = EngineMupdfAnnotsLoadDone(engine) ? 1 : 0;
     out.Append(
         fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d thumb=%d page=%d rendered=%d annots=%d "
-            "annotPage=%d annotsDone=%d selText=%s\n",
+            "annotPage=%d annotsDone=%d selValue=%s selText=%s\n",
             sel, n, qStart, qEnd, qLen, selectedCmdId, (int)CommandPaletteUiRtl(), (int)wnd->thumbnailMode, thumbPage,
-            rendered, nAnnots, annotPage, annotsDone, selText));
+            rendered, nAnnots, annotPage, annotsDone, selValue, selText));
     return finish(0);
 }
 
@@ -2466,54 +2478,33 @@ static bool SettingDiffersFromDefault(const ItemDataCP* d) {
     if (d->settingType == SettingType::Float) {
         float def = 0;
         str::Parse(Str((const char*)d->settingDefault), "%f", &def);
-        return *(const float*)d->settingPtr != def;
+        return *(const float*)SettingRowPtr(d) != def;
     }
-    TempStr val = FormatSettingValueTemp(d->settingType, d->settingPtr);
+    TempStr val = FormatSettingValueTemp(d->settingType, SettingRowPtr(d));
     return !str::Eq(val, FormatSettingDefaultTemp(d->settingType, d->settingDefault));
 }
 
-static void CollectSettingsInStruct(StrVecCP& out, const StructInfo* info, u8* base, Str prefix) {
-    if (!info || !base) {
-        return;
-    }
-    const char* fieldName = info->fieldNames;
-    const char* fieldComment = info->fieldComments; // parallel to fieldNames
-    for (u16 i = 0; i < info->fieldCount; i++) {
-        const FieldInfo& field = info->fields[i];
-        Str fname(fieldName);
-        fieldName += len(fname) + 1;
-        Str comment;
-        if (fieldComment) {
-            comment = Str(fieldComment);
-            fieldComment += len(comment) + 1;
-        }
-        if (field.internal || field.type == SettingType::Comment || field.offset == (size_t)-1) {
-            continue;
-        }
-        u8* fieldPtr = base + field.offset;
-        TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, fname) : str::DupTemp(fname);
-        if (field.type == SettingType::Struct) {
-            CollectSettingsInStruct(out, (const StructInfo*)field.value, fieldPtr, path);
-            continue;
-        }
-        if (!IsPaletteSettingType(field.type) || len(path) == 0) {
+// one "= settings" row per scalar setting; compact structs and arrays need
+// the advanced settings dialog
+static void CollectSettingRows(StrVecCP& out) {
+    Vec<SettingField> fields;
+    CollectSettingFields(fields);
+    for (const SettingField& sf : fields) {
+        if (!IsPaletteSettingType(sf.field->type) || len(sf.path) == 0) {
             continue;
         }
         ItemDataCP data;
-        data.settingType = field.type;
-        data.settingPtr = fieldPtr;
-        data.settingDefault = field.value;
-        data.settingComment = comment;
-        out.Append(path, data);
+        data.settingType = sf.field->type;
+        data.settingOffset = sf.offset;
+        data.settingDefault = sf.field->value;
+        data.settingComment = sf.comment;
+        out.Append(sf.path, data);
     }
 }
 
 void CommandPaletteWnd::CollectSettings() {
     settings.Reset();
-    if (!gSettings) {
-        return;
-    }
-    CollectSettingsInStruct(settings, &gSettingsInfo, (u8*)gSettings, {});
+    CollectSettingRows(settings);
     SortNoCase(&settings);
 
     // changed values first, then the rest; both groups stay alphabetical
@@ -2682,8 +2673,8 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     Color rightCol = AccentColor(colText, 80);
     if (data->cmdId != 0) {
         rightStr = CommandPaletteShortcutTemp(data->cmdId);
-    } else if (data->settingPtr && len(data->settingPath) == 0) {
-        rightStr = FormatSettingValueTemp(data->settingType, data->settingPtr);
+    } else if (IsSettingRow(data) && len(data->settingPath) == 0) {
+        rightStr = FormatSettingValueTemp(data->settingType, SettingRowPtr(data));
         rightCol = colText;
         if (SettingDiffersFromDefault(data)) {
             PlatformFont* bold = GetBoldPlatformFont(lb->font);
@@ -2806,8 +2797,8 @@ static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matched
             TempStr shortcut = CommandPaletteShortcutTemp(data->cmdId);
             matches = FilterMatches(shortcut, words);
         }
-        if (!matches && data && data->settingPtr) {
-            TempStr val = FormatSettingValueTemp(data->settingType, data->settingPtr);
+        if (!matches && data && IsSettingRow(data)) {
+            TempStr val = FormatSettingValueTemp(data->settingType, SettingRowPtr(data));
             matches = FilterMatches(val, words);
         }
         if (!matches) {
