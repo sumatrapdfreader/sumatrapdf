@@ -1,13 +1,16 @@
 # Installation
 
-You can download an installer or self-contained, portable version.
+You can download:
+* [latest release](https://www.sumatrapdfreader.org/download-free-pdf-viewer)
+* [pre-release](https://www.sumatrapdfreader.org/prerelease)
 
 ## Download flavors
 
-| Flavor | What you get | Best for |
-| --- | --- | --- |
-| **Installer** (`SumatraPDF-<ver>-install.exe`) | Installs to `%LOCALAPPDATA%\SumatraPDF` (or `%PROGRAMFILES%` with `-all-users`), registers file associations, optional preview handler | Most users |
-| **Portable** (`SumatraPDF-<ver>.exe` downloaded as `SumatraPDF-<ver>.zip`) | Single self-contained `.exe` — no separate `libsumatrapdf.dll`, settings live next to the exe | USB stick, custom folder, no installer |
+SumatraPDF has two flavors: installer and portable.
+
+**Portable** (`SumatraPDF-<ver>.exe` downloaded as `SumatraPDF-<ver>.zip`) is a single, self-contained `.exe`. 
+
+**Installer** (`SumatraPDF-<ver>-install.exe`) installs to `%LOCALAPPDATA%\SumatraPDF` (or `%PROGRAMFILES%` with `-all-users`), registers file associations, and optional preview handler.
 
 Download from [sumatrapdfreader.org](https://www.sumatrapdfreader.org/download-free-pdf-viewer) or [pre-release](https://www.sumatrapdfreader.org/prerelease).
 
@@ -21,7 +24,7 @@ You can run it silently (no installation UI):
 SumatraPDF-<ver>-install.exe -install -silent
 ```
 
-Common options — full list in [Installer cmd-line arguments](Installer-cmd-line-arguments.md):
+Common options - full list in [Installer cmd-line arguments](Installer-cmd-line-arguments.md):
 
 | Option | Meaning |
 | --- | --- |
