@@ -52,6 +52,7 @@ static InstallerWnd* gWnd = nullptr;
 static lzma::SimpleArchive* gArchive = nullptr;
 static bool gInstallStarted = false; // a bit of a hack
 static bool gInstallFailed = false;
+static bool gInstallAborted = false; // the user gave up in the move-aside dialog
 
 static PreviousInstallationInfo gPrevInstall;
 static Flags gCliNew;
@@ -805,6 +806,7 @@ static bool MoveAsideInstallFile(Str installDir, Str fileName, bool silent) {
     // Interactive: blocking dialog that retries every 3s until success or abort.
     if (!ShowMoveAsideBlockedDialog(path, copyPath, fileName)) {
         logf("MoveAsideInstallFile: user aborted for '%s'\n", path);
+        gInstallAborted = true;
         NotifyMoveAsideFailed(fileName, path, true);
         return false;
     }
@@ -1287,7 +1289,8 @@ Exit:
     StartWindowsSearchService();
     // Pre-release debug report (no symbols download) so we learn about failed
     // upgrades (e.g. locked libsumatrapdf.dll) with the install log attached.
-    if (gInstallFailed) {
+    // Not when the user aborted: that is their machine blocking us, not a bug
+    if (gInstallFailed && !gInstallAborted) {
         TempStr cond = fmt("Installation failed: %s", gFirstError ? gFirstError : StrL("(no details)"));
         logf("InstallerThread: upload debug report: %s\n", cond);
         _uploadDebugReport(cond, StrL(FILE_LINE), false);
