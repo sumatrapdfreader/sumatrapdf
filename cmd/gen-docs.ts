@@ -208,7 +208,7 @@ function stripMiscDocsSection(text: string): string {
   return text.slice(0, startIdx) + text.slice(endIdx);
 }
 
-// Replace :columns markers with HTML div tags.
+// Replace :columns and :askai markers with HTML div tags.
 // markdown-it with html:true will pass the divs through and parse
 // the markdown between them normally.
 function preProcess(text: string): string {
@@ -224,6 +224,10 @@ function preProcess(text: string): string {
           inCols = false;
           return "\n</div>\n";
         }
+      }
+      // filled in by gen_docs.fulltext_search.js
+      if (line.trim() === ":askai") {
+        return '\n<div class="askai"></div>\n';
       }
       return line;
     })

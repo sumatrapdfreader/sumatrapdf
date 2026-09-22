@@ -1,6 +1,6 @@
 [SumatraPDF](https://www.sumatrapdfreader.org/) is a free [PDF, EPUB, MOBI, CHM, XPS, DjVu, CBZ and CBR](Supported-document-formats.md) reader for Windows. It's small, fast, customizable and full of features.
 
-You can ask an AI a question about SumatraPDF. Ask [Grok](https://grok.com/?q=Read%20this%20page%20from%20the%20SumatraPDF%20docs%3A%20https%3A%2F%2Fwww.sumatrapdfreader.org%2Fdocs%2FSumatraPDF-all-docs-for-llm-ai.md%20and%20answer%20questions%20about%20the%20content.), [ChatGPT](https://chatgpt.com/?q=Read%20this%20page%20from%20the%20SumatraPDF%20docs%3A%20https%3A%2F%2Fwww.sumatrapdfreader.org%2Fdocs%2FSumatraPDF-all-docs-for-llm-ai.md%20and%20answer%20questions%20about%20the%20content.), or [Claude](https://claude.ai/new?q=Read%20this%20page%20from%20the%20SumatraPDF%20docs%3A%20https%3A%2F%2Fwww.sumatrapdfreader.org%2Fdocs%2FSumatraPDF-all-docs-for-llm-ai.md%20and%20answer%20questions%20about%20the%20content.).
+:askai
 
 ## Documentation for users
 

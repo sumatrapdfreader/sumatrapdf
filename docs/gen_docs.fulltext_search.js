@@ -173,15 +173,11 @@
             </svg>
           </button>
           <div id="search-mode-row">
-            <div id="search-ask">
-              <span class="search-ask-label">Ask:</span>
-              <button type="button" class="search-ask-btn" data-ai="grok" disabled>Grok</button>
-              <button type="button" class="search-ask-btn" data-ai="chatgpt" disabled>ChatGPT</button>
-              <button type="button" class="search-ask-btn" data-ai="claude" disabled>Claude</button>
-            </div>
             <div id="search-mode" role="radiogroup" aria-label="Search or ask">
               <button type="button" class="search-mode-btn is-selected" data-mode="search" role="radio" aria-checked="true">Search</button>
               <button type="button" class="search-mode-btn" data-mode="ask" role="radio" aria-checked="false">Ask a question</button>
+            </div>
+            <div id="search-ask">${ASK_BUTTONS_HTML}
             </div>
           </div>
         </div>
@@ -309,11 +305,8 @@
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        justify-content: flex-end;
-        gap: 8px 12px;
-      }
-      #search-dialog.is-ask #search-mode-row {
-        justify-content: space-between;
+        justify-content: flex-start;
+        gap: 8px 1rem;
       }
       #search-mode {
         display: inline-flex;
@@ -355,33 +348,6 @@
       }
       #search-dialog.is-ask #search-ask {
         display: flex;
-      }
-      .search-ask-label {
-        color: inherit;
-      }
-      .search-ask-btn {
-        display: inline-flex;
-        align-items: center;
-        font: inherit;
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--search-color, #555);
-        padding: 0.3rem 0.7rem;
-        border: 1px solid var(--search-border, #ddd);
-        border-radius: 9999px;
-        background: var(--search-bg, #f7f7f7);
-        cursor: pointer;
-        white-space: nowrap;
-      }
-      .search-ask-btn:hover:not(:disabled) {
-        background-color: #efefef;
-      }
-      html[data-theme="dark"] .search-ask-btn:hover:not(:disabled) {
-        background-color: #2a2a2a;
-      }
-      .search-ask-btn:disabled {
-        opacity: 0.45;
-        cursor: default;
       }
       #search-results {
         max-height: min(60vh, 520px);
@@ -634,14 +600,124 @@
     });
   }
 
-  function openAsk(provider) {
-    const q = input.value.trim();
-    if (!q) return;
+  // opens the question in a new tab of the chosen AI service
+  function sendToAi(provider, q) {
     const base = AI_URLS[provider];
     if (!base) return;
     window.open(base + encodeURIComponent(ASK_PREFIX + q), "_blank", "noopener,noreferrer");
+  }
+
+  function openAsk(provider) {
+    const q = input.value.trim();
+    if (!q) return;
+    sendToAi(provider, q);
     closeDialog();
   }
+
+  const ASK_BUTTONS_HTML = `
+      <span class="search-ask-label">Ask:</span>
+      <button type="button" class="search-ask-btn" data-ai="grok" disabled>Grok</button>
+      <button type="button" class="search-ask-btn" data-ai="chatgpt" disabled>ChatGPT</button>
+      <button type="button" class="search-ask-btn" data-ai="claude" disabled>Claude</button>`;
+
+  // shared by the Ctrl+K dialog and the inline ":askai" widget
+  const sharedStyle = document.createElement("style");
+  sharedStyle.textContent = `
+      .search-ask-label {
+        color: inherit;
+      }
+      .search-ask-btn {
+        display: inline-flex;
+        align-items: center;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--search-color, #555);
+        padding: 0.3rem 0.7rem;
+        border: 1px solid var(--search-border, #ddd);
+        border-radius: 9999px;
+        background: var(--search-bg, #f7f7f7);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .search-ask-btn:hover:not(:disabled) {
+        background-color: #efefef;
+      }
+      html[data-theme="dark"] .search-ask-btn:hover:not(:disabled) {
+        background-color: #2a2a2a;
+      }
+      .search-ask-btn:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      .askai {
+        margin: 0.8rem 0;
+        max-width: 700px;
+      }
+      .askai-input {
+        display: block;
+        width: 100%;
+        padding: 0.5rem 0.7rem;
+        border: 1px solid var(--search-border, #ddd);
+        border-radius: 8px;
+        background: var(--search-bg, #f7f7f7);
+        color: var(--text-primary, #232323);
+        font: inherit;
+        font-size: 15px;
+        line-height: 1.35;
+        resize: vertical;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .askai-input::placeholder {
+        color: var(--search-color, #555);
+        opacity: 1;
+      }
+      .askai-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        color: #666;
+        font-size: 14px;
+        line-height: 1;
+      }
+      html[data-theme="dark"] .askai-row {
+        color: var(--text-secondary, #c8c8c4);
+      }
+  `;
+  document.head.appendChild(sharedStyle);
+
+  // fills empty <div class="askai"> placeholders (from the ":askai" markdown
+  // line) with a question box and the Ask buttons
+  function initAskAi() {
+    document.querySelectorAll(".askai:empty").forEach(function (el) {
+      el.innerHTML = `
+      <textarea class="askai-input" rows="3" placeholder="${PLACEHOLDER_ASK}"></textarea>
+      <div class="askai-row">${ASK_BUTTONS_HTML}</div>`;
+    });
+  }
+
+  window.initAskAi = initAskAi;
+  initAskAi();
+
+  document.addEventListener("input", function (e) {
+    const ta = e.target.closest(".askai-input");
+    if (!ta) return;
+    const on = ta.value.trim().length > 0;
+    ta.parentElement.querySelectorAll(".search-ask-btn").forEach(function (btn) {
+      btn.disabled = !on;
+    });
+  });
+
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".askai .search-ask-btn[data-ai]");
+    if (!btn || btn.disabled) return;
+    const q = btn.closest(".askai").querySelector(".askai-input").value.trim();
+    if (!q) return;
+    sendToAi(btn.getAttribute("data-ai"), q);
+  });
 
   function closeDialog() {
     if (!dialog) return;

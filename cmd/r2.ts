@@ -168,7 +168,18 @@ export async function checkCdnImages(mdDirs: string[], opts?: { required?: boole
   }
 
   const uris = collectMdFilesUrls(mdDirs);
-  const keys = await listR2Keys(r2Prefix);
+  // urls live under several top-level dirs (assets/, software/, ...), so
+  // list each referenced one rather than only r2Prefix
+  const prefixes = new Set<string>();
+  for (const uri of uris.keys()) {
+    prefixes.add(filesUrlToKey(uri).split("/")[0] + "/");
+  }
+  const keys = new Set<string>();
+  for (const prefix of prefixes) {
+    for (const k of await listR2Keys(prefix)) {
+      keys.add(k);
+    }
+  }
   const missing: string[] = [];
   for (const [uri, path] of uris) {
     if (!keys.has(filesUrlToKey(uri))) {
@@ -179,7 +190,8 @@ export async function checkCdnImages(mdDirs: string[], opts?: { required?: boole
     missing.sort();
     throw new Error(`checkCdnImages: ${missing.length} urls missing in r2:\n${missing.join("\n")}`);
   }
+  const under = [...prefixes].sort().join(", ");
   console.log(
-    `checkCdnImages: all ${uris.size} files.sumatrapdfreader.org urls exist in r2 (${keys.size} objects under ${r2Prefix})`,
+    `checkCdnImages: all ${uris.size} files.sumatrapdfreader.org urls exist in r2 (${keys.size} objects under ${under})`,
   );
 }

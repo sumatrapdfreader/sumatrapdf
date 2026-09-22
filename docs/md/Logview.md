@@ -6,7 +6,7 @@ When Logview is running, you can see SumatraPDF logs in its window. Logs contain
 
 ## Download
 
-Download [Logview 0.2](https://files2.sumatrapdfreader.org/software/logview/rel/logview-0.2.exe).
+Download [Logview 0.2](https://files.sumatrapdfreader.org/software/logview/rel/logview-0.2.exe).
 
 ## More info
 

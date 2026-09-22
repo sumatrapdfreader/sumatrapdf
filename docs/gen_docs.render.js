@@ -59,6 +59,9 @@
           inCols = false;
           return "\n</div>\n";
         }
+        if (line.trim() === ":askai") {
+          return '\n<div class="askai"></div>\n';
+        }
         return line;
       })
       .join("\n");
@@ -406,6 +409,9 @@
         }
         if (typeof window.rebuildPageToc === "function") {
           window.rebuildPageToc();
+        }
+        if (typeof window.initAskAi === "function") {
+          window.initAskAi();
         }
         if (titleEl) {
           const title = currentHtml.replace(".html", "").replace(/-/g, " ");
