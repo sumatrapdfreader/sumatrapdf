@@ -1,19 +1,21 @@
 # Advanced settings
 
-SumatraPDF has many [advanced settings](https://www.sumatrapdfreader.org/settings/settings) to customize look and behavior.
+You can cusotmize SumatraPDF using [advanced settings](https://www.sumatrapdfreader.org/settings/settings), stored in `SumatraPDF-settings.txt` file.
 
 To edit advanced settings:
 
-- menu `Settings` / `Advanced Settings...` opens a dialog for viewing and editing them
-- or with Command Palette: `Ctrl + K`, type `adv` to narrow down to command, press `Enter` to select `Advanced Settings...` command
+- menu `Settings` / `Advanced Settings...` opens setting editor
+- or `Ctrl + K` `Advanced Settings...` command in Command Palette
+- or directly in `Ctrl + K` Command Palette: type `=` for settings editor
 
-The dialog edits single values (booleans, numbers, strings, colors, enums, compact ones like `WindowMargin`). Lists (`Shortcuts`, `Themes`, `ExternalViewers`, `SelectionHandlers`, ...) are edited in the settings file.
+Some settings, like keyboard shortcuts, can only be set by editing settings file:
+-  menu `Settings` / `Open Advanced Settings File...`
+-  or with Command Palette: `Ctrl + K`, type `open settings`, press `Enter`
+- or the **Open Settings File** button in the Advanced Settings dialog
 
-To edit the settings file directly, use menu `Settings` / `Open Advanced Settings File...` (or the same command in Command Palette: `Ctrl + K`, type `open settings`, press `Enter`; or the **Open Settings File** button in the Advanced Settings dialog). This opens the settings text file in default .txt editor. Make changes and save the file.
+This opens `SumatraPDF-settings.txt` file in default .txt editor.  Make changes and save the file.
 
 To reset to default settings, delete settings file. SumatraPDF will re-create it with default values.
-
-Most settings take effect immediately after saving the settings file. Some settings (e.g. `UseTabs`) require closing and re-starting SumatraPDF.
 
 Documentation for all settings is at [https://www.sumatrapdfreader.org/settings/settings](https://www.sumatrapdfreader.org/settings/settings)
 
@@ -24,7 +26,7 @@ Here are some things you can customize:
 - window background color with `FixedPageUI.BackgroundColor`
 - color used to highlight text with `FixedPageUI.SelectionColor`
 - control scrollbar mode with `FixedPageUI.Scrollbars` (values: `windows`, `smart`, `overlay`, `hidden`)
-- CAD / engineering-drawing line rendering with `EngineeringDrawingEnhance` — [CAD / Engineering Drawings](CAD-Engineering-Drawings.md)
+- CAD / engineering-drawing line rendering enhancements `EngineeringDrawingEnhance` — [CAD / Engineering Drawings](CAD-Engineering-Drawings.md)
 
 Advanced settings file also stores the history and state of opened files so that we can e.g. re-open on the page
 
