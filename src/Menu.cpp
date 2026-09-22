@@ -573,10 +573,6 @@ static MenuDef menuDefThemes[] = {
 
 //[ ACCESSKEY_GROUP Settings Menu
 static MenuDef menuDefSettings[] = {
-    {
-        TrN("Change Language"),
-        CmdChangeLanguage,
-    },
 #if 0
     { TrN("Contribute Translation"),       CmdContributeTranslation },
     { StrL(kMenuSeparator),                       0                  },
@@ -592,6 +588,10 @@ static MenuDef menuDefSettings[] = {
     {
         TrN("&Open Advanced Settings File..."),
         CmdOpenSettingsFile,
+    },
+    {
+        TrN("Change Language"),
+        CmdChangeLanguage,
     },
     {
         TrN("&Theme"),
