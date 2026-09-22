@@ -314,6 +314,9 @@ LoadArgs::LoadArgs(Str origPath, MainWindow* win) {
 }
 
 LoadArgs::~LoadArgs() {
+    if (ownsTabState) {
+        DeleteTabState(tabState);
+    }
     // async load may leave an engine if the finish path never ran (e.g. tab
     // destroyed with pendingLoadArgs); never leave a leaked EngineBase
     SafeEngineRelease(&engine);
@@ -341,7 +344,10 @@ void LoadArgs::SetDisplayName(Str name) {
 LoadArgs* LoadArgs::Clone() {
     LoadArgs* res = new LoadArgs(fileName, win);
     res->SetDisplayName(displayName);
-    res->tabState = this->tabState;
+    if (tabState) {
+        res->tabState = CloneTabState(tabState);
+        res->ownsTabState = true;
+    }
     res->targetTab = this->targetTab;
     res->forceReuse = this->forceReuse;
     res->forceNewWindow = this->forceNewWindow;

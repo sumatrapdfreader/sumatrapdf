@@ -96,6 +96,7 @@ void DeleteSettings(Settings*);
 SessionData* NewSessionData();
 TabState* NewTabState(FileState*);
 void DeleteTabState(TabState*);
+TabState* CloneTabState(const TabState*);
 void FreeSessionData(SessionData*);
 void FreeSessionDataVec(Vec<SessionData*>*);
 // A color setting's parse, done on first use and cached in the setting itself.

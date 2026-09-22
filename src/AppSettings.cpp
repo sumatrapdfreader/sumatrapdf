@@ -415,7 +415,7 @@ static void UpdateCrashHandlerSettings() {
     str::Free(d);
 }
 
-static TabState* CloneTabState(const TabState* src) {
+TabState* CloneTabState(const TabState* src) {
     TabState* dst = (TabState*)AllocStruct<TabState>();
     str::ReplaceWithCopy(&dst->filePath, src->filePath);
     str::ReplaceWithCopy(&dst->displayMode, src->displayMode);

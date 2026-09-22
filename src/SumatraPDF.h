@@ -287,6 +287,9 @@ struct LoadArgs {
     FileArgs* fileArgs = nullptr;
 
     TabState* tabState = nullptr;
+    // Clone() deep-copies tabState so an async or parked load never reads a
+    // session snapshot that SaveSettings() has since rebuilt
+    bool ownsTabState = false;
     WindowTab* targetTab = nullptr;
 
     // if set, called on the UI thread when the load finishes,
