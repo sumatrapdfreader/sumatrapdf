@@ -43,14 +43,16 @@ constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/setti
 // smallest client width the user can drag the dialog to (96 dpi pixels)
 constexpr int kAdvSettingsMinClientDx = 480;
 
-// a single editable setting; fieldPtr points into gSettings, the pending
-// (possibly edited) value is kept here and only written back on Save
+// a single editable setting; the pending (possibly edited) value is kept
+// here and only written back on Save. The field is addressed by its offset
+// into gSettings, not a pointer: a settings reload (file watcher, Save)
+// frees and re-creates gSettings while the dialog stays open
 namespace {
 struct SettingItem {
     Str name;    // dotted path, e.g. "FixedPageUI.TextColor", owned
     Str comment; // doc comment describing the setting, owned
     SettingType type = SettingType::Bool;
-    u8* fieldPtr = nullptr;
+    int fieldOffset = 0;
     const char** enumValues = nullptr; // non-null for enum (string) settings
 
     // pending value; strVal (owned) is used for String, Color and Compact
@@ -186,8 +188,12 @@ static void EndPreviewSettingChange() {
     UpdateDocumentColors();
 }
 
+static u8* FieldPtr(const SettingItem* item) {
+    return (u8*)gSettings + item->fieldOffset;
+}
+
 static void SetItemChanged(SettingItem* item) {
-    u8* p = item->fieldPtr;
+    u8* p = FieldPtr(item);
     switch (item->type) {
         case SettingType::Bool:
             item->changed = item->boolVal != *(bool*)p;
@@ -212,7 +218,7 @@ static void SetItemChanged(SettingItem* item) {
 
 // collect editable leaf settings from the metadata, recursing into
 // sub-structs with a dotted path prefix
-static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8* base, Str prefix) {
+static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, int baseOffset, Str prefix) {
     const char* fieldName = info->fieldNames;
     const char* fieldComment = info->fieldComments; // parallel to fieldNames
     for (size_t i = 0; i < info->fieldCount; i++) {
@@ -233,12 +239,13 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
         if (field.type == SettingType::Comment) {
             continue;
         }
-        u8* fieldPtr = base + field.offset;
+        int fieldOffset = baseOffset + (int)field.offset;
+        u8* fieldPtr = (u8*)gSettings + fieldOffset;
         TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, name) : str::DupTemp(name);
         switch (field.type) {
             case SettingType::Struct: {
                 const auto* sub = (const StructInfo*)field.value;
-                CollectSettings(items, sub, fieldPtr, path);
+                CollectSettings(items, sub, fieldOffset, path);
                 break;
             }
             case SettingType::Compact: {
@@ -250,7 +257,7 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
                 item->name = str::Dup(path);
                 item->comment = str::Dup(comment);
                 item->type = field.type;
-                item->fieldPtr = fieldPtr;
+                item->fieldOffset = fieldOffset;
                 item->compactInfo = sub;
                 item->strVal = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, false));
                 item->defStr = str::Dup(FormatCompactIntsTemp(sub, fieldPtr, true));
@@ -266,7 +273,7 @@ static void CollectSettings(Vec<SettingItem*>& items, const StructInfo* info, u8
                 item->name = str::Dup(path);
                 item->comment = str::Dup(comment);
                 item->type = field.type;
-                item->fieldPtr = fieldPtr;
+                item->fieldOffset = fieldOffset;
                 // field.value holds the default: the value itself for Bool/Int,
                 // a string pointer for Float/String/Color (null == empty). It's
                 // NOT a valid pointer for Bool/Int, so only deref it for the
@@ -896,7 +903,7 @@ void AdvancedSettingsWnd::ApplyChangesAndSave() {
             continue;
         }
         didChange = true;
-        u8* p = item->fieldPtr;
+        u8* p = FieldPtr(item);
         switch (item->type) {
             case SettingType::Bool:
                 *(bool*)p = item->boolVal;
@@ -1174,7 +1181,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     // OnSize repositions in-place editors after DoLayout; skip the generic path
     autoLayout = false;
-    CollectSettings(items, &gSettingsInfo, (u8*)gSettings, {});
+    CollectSettings(items, &gSettingsInfo, 0, {});
 
     {
         CreateCustomArgs args;
