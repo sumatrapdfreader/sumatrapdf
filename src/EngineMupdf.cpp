@@ -7187,6 +7187,18 @@ static bool RenderAborted(fz_cookie* cookie) {
     return cookie && cookie->abort;
 }
 
+// An aborted run stops between a clip push and its pop, so the draw device
+// can't be closed ("items left on stack"). Unhook close on it and on the
+// wrappers that forward to it, so dropping them doesn't warn either.
+static void UnhookAbortedDevices(fz_device* drawDev, fz_device* darkDev, fz_device* outer) {
+    fz_device* devs[] = {drawDev, darkDev, outer};
+    for (fz_device* d : devs) {
+        if (d) {
+            d->close_device = nullptr;
+        }
+    }
+}
+
 Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto* ctx = Ctx();
     auto pageNo = args.pageNo;
@@ -7278,6 +7290,8 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             bool objectLevelDark = args.darkProfile && DarkModeProfileUsesObjectLevel(args.darkProfile);
             ClearRenderedPagePixmap(ctx, pix, args, objectLevelDark);
             dev = fz_new_draw_device(ctx, ctm, pix);
+            fz_device* drawDev = dev;
+            fz_device* darkDev = nullptr;
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
             }
@@ -7289,13 +7303,16 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                     dev = PdfDarkModeWrapDevice(ctx, dev, analysis, &args.darkProfile->palette, &replayState,
                                                 darkModeEngineCache, args.darkProfile->hash,
                                                 args.darkProfile->debugOverlay);
+                    darkDev = dev;
                 }
             }
             if (CadEnhanceActive()) {
                 dev = PdfCadEnhanceWrapDevice(ctx, dev);
             }
             fz_run_display_list(ctx, keptList, dev, fz_identity, pRect, fzcookie);
-            if (!RenderAborted(fzcookie)) {
+            if (RenderAborted(fzcookie)) {
+                UnhookAbortedDevices(drawDev, darkDev, dev);
+            } else {
                 fz_close_device(ctx, dev);
                 if (CadEnhanceActive() && cadRasterDominant) {
                     PdfCadEnhancePixmap(ctx, pix, zoom, true);
@@ -7351,7 +7368,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             } else {
                 pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
             }
-            if (!RenderAborted(fzcookie)) {
+            if (RenderAborted(fzcookie)) {
+                UnhookAbortedDevices(dev, nullptr, nullptr);
+            } else {
                 fz_close_device(ctx, dev);
                 if (CadEnhanceActive() && cadRasterDominant) {
                     PdfCadEnhancePixmap(ctx, pix, zoom, true);
