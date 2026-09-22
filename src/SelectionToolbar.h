@@ -3,7 +3,13 @@
 
 struct MainWindow;
 
-void ShowSelectionToolbar(MainWindow* win);
+// Now: the gesture ended (mouse released); Settled: wait for the selection to
+// stop changing first (keyboard nudges, repaints)
+enum class SelToolbarShow {
+    Now,
+    Settled
+};
+void ShowSelectionToolbar(MainWindow* win, SelToolbarShow when);
 void SelectionToolbarOnShowTimer(MainWindow* win);
 void UpdateSelectionToolbarPosition(MainWindow* win);
 void RepositionSelectionToolbar(MainWindow* win);

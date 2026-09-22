@@ -1072,6 +1072,6 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
     // show the floating selection toolbar for a finished text selection
     // (self-guards: needs a non-empty on-screen text selection)
     if (!aborted || editingRect) {
-        ShowSelectionToolbar(win);
+        ShowSelectionToolbar(win, SelToolbarShow::Now);
     }
 }

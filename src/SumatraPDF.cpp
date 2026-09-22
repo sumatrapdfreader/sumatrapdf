@@ -5072,7 +5072,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     win->showSelection = tab->selectionOnPage != nullptr;
     ResetSelectionToolbarDismissed(win);
     if (win->showSelection) {
-        ShowSelectionToolbar(win);
+        ShowSelectionToolbar(win, SelToolbarShow::Settled);
     }
     if (win->uiaProvider) {
         win->uiaProvider->OnSelectionChanged();
