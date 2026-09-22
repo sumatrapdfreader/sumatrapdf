@@ -4090,6 +4090,10 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     } else if (currTab->tabState) {
         SetTabState(currTab, currTab->tabState);
         currTab->tabState = nullptr;
+    } else if (currTab->ctrl && args->tabState) {
+        // a session tab loaded right away (StartLoadDocument finishes here
+        // asynchronously, so RestoreTabOnStartup can't do it after the load)
+        SetTabState(currTab, args->tabState);
     }
     // forceReuse / targetTab loads skip CloseDocumentInCurrentTab, so the
     // previous document's watcher can still be set (e.g. open next file in
@@ -15822,11 +15826,6 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad,
     args.lazyLoad = lazyLoad;
     if (!LoadDocument(&args)) {
         RestoreMissingTabOnStartup(win, state, deferTabUpdate);
-        return;
-    }
-    WindowTab* tab = win->CurrentTab();
-    if (!lazyLoad) {
-        SetTabState(tab, state);
     }
 }
 
