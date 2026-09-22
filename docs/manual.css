@@ -2,6 +2,9 @@
    variables and dark rules of the website's website.css so the shared
    sumatra.css needs no changes. */
 :root {
+  /* San Francisco on Mac, Segoe UI on Windows. */
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: var(--font-body);
   --border: rgb(234, 234, 234);
   --bg-primary: #ffffff;
   --bg-elevated: #ffffff;
@@ -41,10 +44,33 @@ html,
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  font-family: var(--font-body);
+  font-optical-sizing: auto;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-optical-sizing: auto;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+h1 {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  letter-spacing: -0.005em;
 }
 
 a:not(.hlink) {
-  color: var(--link-color);
+  color: inherit;
 }
 
 .sidebar-toc {
@@ -380,4 +406,44 @@ html[data-theme="dark"] .docs-ask-hint {
 
 h1, h2, h3, h4, h5, h6 {
   scroll-margin-top: calc(var(--docs-bar-h) + 1rem);
+}
+
+.notion-page {
+  line-height: 1.6;
+  letter-spacing: -0.011em;
+}
+
+/* Article links: gray underline, full color on hover. */
+.notion-page a {
+  text-decoration-color: #bbb;
+  text-underline-offset: 2px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.notion-page a:hover {
+  text-decoration-color: currentColor;
+}
+
+html[data-theme="dark"] .notion-page a {
+  text-decoration-color: #606060;
+}
+
+html[data-theme="dark"] .notion-page a:hover {
+  text-decoration-color: currentColor;
+}
+
+.breadcrumbs > a {
+  text-decoration: none;
+}
+
+.page-content h2 {
+  font-size: 1.75rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.page-content h3 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
 }

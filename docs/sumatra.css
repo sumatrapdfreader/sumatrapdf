@@ -638,7 +638,7 @@ h6 {
 }
 
 .notion-page {
-  margin-left: 2rem;
+  margin-left: 2.1rem;
   margin-right: 1rem;
 }
 
@@ -670,6 +670,10 @@ h6 {
 .notion-page div {
   margin-bottom: 0.4rem;
   /* background-color: aliceblue; */
+}
+
+.notion-page .doc-columns > div {
+  margin-bottom: 0.1rem;
 }
 
 .notion-page div.notion-page ul {

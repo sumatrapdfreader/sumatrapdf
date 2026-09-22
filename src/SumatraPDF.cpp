@@ -11233,7 +11233,6 @@ static void ManualOnJsNotify(void*, Str method, Str paramsJson) {
 static Str ManualInjectThemeCss(Str html) {
     TempStr bg = SerializeColorTemp(ThemeWindowBackgroundColor());
     TempStr fg = SerializeColorTemp(ThemeWindowTextColor());
-    TempStr link = SerializeColorTemp(ThemeWindowLinkColor());
     Str scheme = IsLightColor(ThemeWindowBackgroundColor()) ? StrL("light") : StrL("dark");
     // theme.js calls the follow-the-app option "system"
     Str pref = HelpThemePref();
@@ -11246,7 +11245,7 @@ static Str ManualInjectThemeCss(Str html) {
         fmt("<style id=\"sumatra-manual-theme\">"
             "html[data-theme-pref=\"system\"]{--bg-primary:%s;--bg-elevated:%s;--text-primary:%s;--link-color:%s}"
             "</style>",
-            bg, bg, fg, link);
+            bg, bg, fg, fg);
 
     int scriptAt = str::IndexOfI(html, StrL("<head>"));
     scriptAt = scriptAt < 0 ? 0 : scriptAt + len(StrL("<head>"));
