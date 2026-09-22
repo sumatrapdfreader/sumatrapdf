@@ -79,6 +79,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     const cases: [string, string[]][] = [
       ["CmdNavigateFilesInFolder", ["Browse Files In Folder...", "Navigate Files in Folder..."]],
+      ["CmdAdvancedSettings", ["Advanced Options...", "Advanced Settings..."]],
     ];
     for (const [cmd, texts] of cases) {
       const expected = cmdId(cmd);

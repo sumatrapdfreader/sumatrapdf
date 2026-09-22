@@ -29,7 +29,7 @@ Favorites from the current document are listed first. Favorites from other docum
 
 You can bind `CmdCommandPaletteFavorites` to a key in [advanced settings](Advanced-options-settings.md).
 
-Open `Settings` / `Open Settings File...`, find the `Shortcuts` section and add:
+Open `Settings` / `Open Advanced Settings File...`, find the `Shortcuts` section and add:
 
 ```
 Shortcuts [

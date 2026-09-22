@@ -548,8 +548,8 @@ function checkCommandsAreDocumented(): void {
   const docCmds = extractCommandsFromMarkdown();
 
   // special-case: remove old name which is still documented but not present in code
-  let idx = docCmds.indexOf("CmdOpen");
-  docCmds.splice(idx, 1);
+  const idx = docCmds.indexOf("CmdOpen");
+  if (idx >= 0) docCmds.splice(idx, 1);
 
   console.log(`${docCmds.length} commands in Commands.md`);
 

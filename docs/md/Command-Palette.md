@@ -32,7 +32,7 @@ How to use it:
 - `Enter` executes the selected match (or double-click it with the mouse)
 - `Escape` closes the window (or click outside it)
 
-By default, it shows the available commands. A command can be listed under more than one name so that a different wording finds it: **Navigate Files in Folder...** is also **Browse Files In Folder...**.
+By default, it shows the available commands. A command can be listed under more than one name so that a different wording finds it: **Navigate Files in Folder...** is also **Browse Files In Folder...**, and **Advanced Settings...** is also **Advanced Options...**.
 
 ## Switching between tabs
 
@@ -98,7 +98,7 @@ a value that isn't the default is shown in bold, and those settings are listed
 first. Type to filter by name or by value. The selected setting's description,
 the same as in Advanced Settings, is shown under the list. Compact settings like
 `WindowMargin` are only editable in Advanced Settings; settings holding a list
-only in the settings file (**Open Settings File...**).
+only in the settings file (**Open Advanced Settings File...**).
 
 `Enter` on a `true` / `false` setting toggles it. Any other setting asks for a
 value: the query becomes `=<name> = <value>`, and

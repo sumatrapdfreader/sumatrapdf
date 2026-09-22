@@ -60,7 +60,6 @@ Click a selected shape annotation (including polygon, polyline, and ink) and dra
 
 To put a picture of your signature (or any other image) on a PDF page:
 
-- **File → Insert Image...**, or
 - right-click the page → **Document → Insert Image...**, or
 - right-click the page → **Create annotation under cursor → Image From File...**
 
@@ -104,7 +103,7 @@ To move an annotation on the page, left-click it and drag it in Edit PDF mode.
 
 ## Default colors, size, and opacity
 
-Open **Settings → Advanced Settings...** and edit the `Annotations.*` settings (or the `Annotations` block in the settings file, via **Open Settings File...**):
+Open **Settings → Advanced Settings...** and edit the `Annotations.*` settings (or the `Annotations` block in the settings file, via **Open Advanced Settings File...**):
 
 | Setting                                     | Used for                                       |
 | ------------------------------------------- | ---------------------------------------------- |
