@@ -98,8 +98,8 @@ function tocGoTo(n) {
   let el = tocItems[n].element;
   let y = el.getBoundingClientRect().top + window.scrollY;
   let offY = 12;
-  // for website: account for nav bar at the top covering top of page
-  let navEl = document.getElementsByClassName("nav")[0];
+  // account for the sticky bar covering the top of the page
+  let navEl = document.querySelector(".docs-bar") || document.querySelector(".nav");
   if (navEl) {
     offY = navEl.clientHeight;
   }

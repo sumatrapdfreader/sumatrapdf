@@ -15,7 +15,8 @@
   <style>
     .page-layout {
       display: flex;
-      min-height: 100vh;
+      min-height: calc(100vh - var(--docs-bar-h) - 0.5rem);
+      margin-top: 0.5rem;
     }
 
     .sidebar-toc {
@@ -25,8 +26,8 @@
       padding: 0.25rem 0.75rem 1rem 0.75rem;
       border-right: 1px solid var(--border, lightgray);
       position: sticky;
-      top: 0;
-      height: 100vh;
+      top: calc(var(--docs-bar-h) + 0.5rem);
+      height: calc(100vh - var(--docs-bar-h) - 0.5rem);
       overflow-y: auto;
     }
 
@@ -69,6 +70,17 @@
 </head>
 
 <body>
+  <header class="docs-bar">
+    <div class="docs-search">
+      <input id="docs-search-input" class="docs-search-input" type="text" placeholder="Search docs, or Enter for AI help chat..." autocomplete="off" spellcheck="false" aria-label="Search documentation" />
+      <div id="docs-search-panel" class="docs-search-panel" hidden>
+        <div id="docs-search-results"></div>
+        <div id="docs-ask" class="docs-ask" hidden>
+          <div class="docs-ask-hint">Write a question e.g. <tt>How to configure keyboard shortcuts</tt> and send to AI of your choice</div>
+        </div>
+      </div>
+    </div>
+  </header>
   <div class="manual-theme-switch theme-switch" role="radiogroup" aria-label="Color theme">
     <button type="button" class="theme-opt" data-theme-set="system" title="System theme" aria-label="System theme" aria-pressed="true">
       <svg viewBox="0 0 28 28" fill="none" aria-hidden="true">

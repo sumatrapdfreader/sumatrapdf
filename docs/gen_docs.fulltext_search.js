@@ -7,6 +7,7 @@
   let debounceTimer = null;
   let selectedIndex = -1;
   let mode = "search";
+  let docsApi = null;
   const PLACEHOLDER_SEARCH = "Search documentation";
   const PLACEHOLDER_ASK = "Ask a question about SumatraPDF e.g. 'How to configure keyboard shortcuts'";
   const ASK_PREFIX =
@@ -590,7 +591,13 @@
     });
   }
 
-  window.openSearchDialog = openDialog;
+  window.openSearchDialog = function () {
+    if (docsApi) {
+      docsApi.focus();
+      return;
+    }
+    openDialog();
+  };
 
   function updateAskButtons() {
     if (!askRow) return;
@@ -820,9 +827,226 @@
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  // check for ?ftsearch= on startup
+  const DOCS_PLACEHOLDER_SEARCH = "Search docs, or Enter for AI help chat...";
+  const DOCS_PLACEHOLDER_ASK = "Ask AI, or Enter to search docs";
+
+  function initDocsBar() {
+    const bar = document.querySelector(".docs-bar");
+    if (!bar) return null;
+    const inputEl = document.getElementById("docs-search-input");
+    const panel = document.getElementById("docs-search-panel");
+    const resultsEl = document.getElementById("docs-search-results");
+    const askEl = document.getElementById("docs-ask");
+    if (!inputEl || !panel || !resultsEl || !askEl) return null;
+
+    let docsMode = "search";
+    let docsSelected = -1;
+    let docsTimer = null;
+    let docsSeq = 0;
+    askEl.insertAdjacentHTML("beforeend", ASK_BUTTONS_HTML);
+
+    function openPanel() {
+      panel.hidden = false;
+    }
+
+    function closePanel() {
+      panel.hidden = true;
+    }
+
+    function setAskEnabled() {
+      const on = inputEl.value.trim().length > 0;
+      askEl.querySelectorAll(".search-ask-btn").forEach(function (btn) {
+        btn.disabled = !on;
+      });
+    }
+
+    function paintBarResults(query, results) {
+      resultsEl.innerHTML = "";
+      if (!results || results.length === 0) {
+        resultsEl.innerHTML = '<div class="search-no-results">No results found</div>';
+        docsSelected = -1;
+        return;
+      }
+      results.forEach(function (item, index) {
+        const div = document.createElement("div");
+        div.className = "search-result";
+
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "search-result-file";
+        const name = item.title || item.file.replace(/\.md$/, "").replace(/-/g, " ");
+        fileDiv.innerHTML = highlightText(name, query);
+
+        const ctxDiv = document.createElement("div");
+        ctxDiv.className = "search-result-context";
+        ctxDiv.innerHTML = highlightText(item.text, query);
+
+        div.appendChild(fileDiv);
+        div.appendChild(ctxDiv);
+        div.addEventListener("click", function () {
+          const matchedLine = findMatchedLine(item.text, query);
+          let url = mdNameToHtml(item.file);
+          if (matchedLine) {
+            url += "#:~:text=" + encodeURIComponent(matchedLine);
+          }
+          window.location.href = url;
+        });
+        div.addEventListener("mouseenter", function () {
+          setDocsSelected(index);
+        });
+        resultsEl.appendChild(div);
+      });
+      const items = resultsEl.querySelectorAll(".search-result");
+      docsSelected = -1;
+      if (items.length > 0) setDocsSelected(0, items);
+    }
+
+    function runSearch() {
+      if (docsMode !== "search") return;
+      const query = inputEl.value.trim();
+      if (!query) {
+        resultsEl.innerHTML = "";
+        docsSelected = -1;
+        closePanel();
+        return;
+      }
+      const seq = ++docsSeq;
+      ensureAllDocsLoaded()
+        .then(function (files) {
+          if (seq !== docsSeq || docsMode !== "search") return;
+          if (inputEl.value.trim() !== query) return;
+          paintBarResults(query, searchAllDocs(files, query));
+          openPanel();
+        })
+        .catch(function () {
+          if (seq !== docsSeq || docsMode !== "search") return;
+          resultsEl.innerHTML = '<div class="search-load-error">Could not load documentation index</div>';
+          docsSelected = -1;
+          openPanel();
+        });
+    }
+
+    function setDocsSelected(index, items) {
+      if (!items) items = resultsEl.querySelectorAll(".search-result");
+      if (docsSelected >= 0 && docsSelected < items.length) {
+        items[docsSelected].classList.remove("selected");
+      }
+      docsSelected = index;
+      if (docsSelected >= 0 && docsSelected < items.length) {
+        items[docsSelected].classList.add("selected");
+        items[docsSelected].scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    function setDocsMode(next) {
+      if (next !== "search" && next !== "ask") return;
+      docsMode = next;
+      const ask = docsMode === "ask";
+      inputEl.placeholder = ask ? DOCS_PLACEHOLDER_ASK : DOCS_PLACEHOLDER_SEARCH;
+      if (ask) {
+        clearTimeout(docsTimer);
+        resultsEl.innerHTML = "";
+        docsSelected = -1;
+        resultsEl.hidden = true;
+        askEl.hidden = false;
+        setAskEnabled();
+        openPanel();
+      } else {
+        askEl.hidden = true;
+        resultsEl.hidden = false;
+        if (inputEl.value.trim()) runSearch();
+        else closePanel();
+      }
+    }
+
+    function toggleDocsMode() {
+      setDocsMode(docsMode === "search" ? "ask" : "search");
+    }
+
+    inputEl.addEventListener("input", function () {
+      if (docsMode === "ask") {
+        setAskEnabled();
+        openPanel();
+        return;
+      }
+      clearTimeout(docsTimer);
+      docsTimer = setTimeout(runSearch, 250);
+    });
+
+    inputEl.addEventListener("focus", function () {
+      if (docsMode === "ask") openPanel();
+      else if (inputEl.value.trim()) openPanel();
+    });
+
+    inputEl.addEventListener("keydown", function (e) {
+      if (e.isComposing) return;
+      if (e.key === "Escape") {
+        if (!panel.hidden) {
+          e.stopPropagation();
+          closePanel();
+        }
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (inputEl.value.trim() === "") {
+          toggleDocsMode();
+          return;
+        }
+        if (docsMode !== "search") return;
+        const items = resultsEl.querySelectorAll(".search-result");
+        if (docsSelected >= 0 && docsSelected < items.length) items[docsSelected].click();
+      }
+      if (docsMode !== "search") return;
+      const items = resultsEl.querySelectorAll(".search-result");
+      if (items.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setDocsSelected(Math.min(docsSelected + 1, items.length - 1), items);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setDocsSelected(Math.max(docsSelected - 1, 0), items);
+      }
+    });
+
+    askEl.addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-ai]");
+      if (!btn || btn.disabled) return;
+      const q = inputEl.value.trim();
+      if (!q) return;
+      sendToAi(btn.getAttribute("data-ai"), q);
+    });
+
+    document.addEventListener("click", function (e) {
+      if (!bar.contains(e.target)) closePanel();
+    });
+
+    const preset = new URLSearchParams(window.location.search).get("ftsearch");
+    if (preset) {
+      inputEl.value = preset;
+      setDocsMode("search");
+      inputEl.focus();
+    }
+
+    return {
+      focus: function () {
+        inputEl.focus();
+        inputEl.select();
+      },
+      isFocused: function () {
+        return document.activeElement === inputEl;
+      },
+      dismiss: function () {
+        closePanel();
+        inputEl.blur();
+      },
+    };
+  }
+
+  docsApi = initDocsBar();
+
+  // check for ?ftsearch= on startup (pages without the docs bar)
   const initQuery = new URLSearchParams(window.location.search).get("ftsearch");
-  if (initQuery) {
+  if (initQuery && !docsApi) {
     if (!dialog) createDialog();
     dialog.style.display = "block";
 
@@ -837,6 +1061,11 @@
     const modKey = isMac ? e.metaKey : e.ctrlKey;
     if (modKey && e.key === "k") {
       e.preventDefault();
+      if (docsApi) {
+        if (docsApi.isFocused()) docsApi.dismiss();
+        else docsApi.focus();
+        return;
+      }
       if (dialog && dialog.style.display === "block") {
         closeDialog();
       } else {
