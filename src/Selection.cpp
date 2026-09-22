@@ -890,6 +890,26 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
     ScheduleRepaint(win, 0);
 }
 
+// like Select All, but only the text of the current page
+void OnSelectCurrentPage(MainWindow* win) {
+    if (!HasPermission(Perm::CopySelection)) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    int pageNo = dm->CurrentPageNo();
+    if (!win->ctrl->ValidPageNo(pageNo)) {
+        return;
+    }
+    dm->textSelection->StartAt(pageNo, 0);
+    dm->textSelection->SelectUpTo(pageNo, -1);
+    win->selectionRect = Rect::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
+    UpdateTextSelection(win, false);
+    ScheduleRepaint(win, 0);
+}
+
 #define kSelectAutoscrollAreaWidth DpiScale(15)
 #define kSelectAutoscrollStepLength DpiScale(10)
 

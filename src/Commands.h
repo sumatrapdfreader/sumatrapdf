@@ -327,8 +327,9 @@ enum {
     CmdAutoGenerateTOC = 521,
     CmdOpenSettingsFile = 522,
     CmdOpenFileWithSumatraFilePicker = 523,
+    CmdSelectCurrentPage = 524,
 
-    CmdLast = 523,
+    CmdLast = 524,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

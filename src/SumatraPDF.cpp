@@ -13190,6 +13190,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnSelectAll(win);
             break;
 
+        case CmdSelectCurrentPage:
+            OnSelectCurrentPage(win);
+            break;
+
         // no default shortcut: Ctrl+Shift+Left / Right and friends are taken, so
         // these exist for the user to bind in the Shortcuts settings (#5922)
         case CmdExtendSelectionCharLeft:

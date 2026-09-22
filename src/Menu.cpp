@@ -748,12 +748,67 @@ static MenuDef menuDefGoogleLens[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Google Lens)
 
+//[ ACCESSKEY_GROUP Translate With Menu
+// shared by the Selection menu and the selection context menu
+static MenuDef menuDefTranslateWith[] = {
+    {
+        TrN("&Google"),
+        CmdTranslateSelectionWithGoogle,
+    },
+    {
+        TrN("&DeepL"),
+        CmdTranslateSelectionWithDeepL,
+    },
+    {
+        TrN("G&rok Build"),
+        CmdTranslateSelectionWithGrokBuild,
+    },
+    {
+        TrN("Claude C&ode"),
+        CmdTranslateSelectionWithClaudeCode,
+    },
+    {
+        TrN("OpenAI Code&x"),
+        CmdTranslateSelectionWithOpenAICodex,
+    },
+    {
+        TrN("A&ntigravity"),
+        CmdTranslateSelectionWithAntiGravity,
+    },
+    {
+        {},
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Translate With Menu
+
+//[ ACCESSKEY_GROUP Search With Menu
+static MenuDef menuDefSearchWith[] = {
+    {
+        TrN("&Google"),
+        CmdSearchSelectionWithGoogle,
+    },
+    {
+        TrN("&Bing"),
+        CmdSearchSelectionWithBing,
+    },
+    {
+        TrN("&Wikipedia"),
+        CmdSearchSelectionWithWikipedia,
+    },
+    {
+        TrN("Google Sc&holar"),
+        CmdSearchSelectionWithGoogleScholar,
+    },
+    {
+        {},
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Search With Menu
+
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
-    {
-        TrN("Select &All"),
-        CmdSelectAll,
-    },
     {
         TrN("&Copy To Clipboard"),
         CmdCopySelection,
@@ -783,44 +838,20 @@ static MenuDef menuDefSelection[] = {
         kMenuSeparatorID,
     },
     {
-        TrN("&Translate With Google"),
-        CmdTranslateSelectionWithGoogle,
+        TrN("&Translate with"),
+        (UINT_PTR)menuDefTranslateWith,
     },
     {
-        TrN("Translate with &DeepL"),
-        CmdTranslateSelectionWithDeepL,
+        TrN("S&earch with"),
+        (UINT_PTR)menuDefSearchWith,
     },
     {
-        TrN("Translate with G&rok Build"),
-        CmdTranslateSelectionWithGrokBuild,
+        TrN("Select C&urrent Page"),
+        CmdSelectCurrentPage,
     },
     {
-        TrN("Translate with Claude C&ode"),
-        CmdTranslateSelectionWithClaudeCode,
-    },
-    {
-        TrN("Translate with OpenAI Code&x"),
-        CmdTranslateSelectionWithOpenAICodex,
-    },
-    {
-        TrN("Translate with A&ntigravity"),
-        CmdTranslateSelectionWithAntiGravity,
-    },
-    {
-        TrN("Search With &Google"),
-        CmdSearchSelectionWithGoogle,
-    },
-    {
-        TrN("Search With &Bing"),
-        CmdSearchSelectionWithBing,
-    },
-    {
-        TrN("Search with &Wikipedia"),
-        CmdSearchSelectionWithWikipedia,
-    },
-    {
-        TrN("Search with Google Sc&holar"),
-        CmdSearchSelectionWithGoogleScholar,
+        TrN("Select &All"),
+        CmdSelectAll,
     },
     {
         {},
@@ -836,44 +867,16 @@ static MenuDef menuDefMainSelection[] = {
         CmdCopySelection,
     },
     {
-        TrN("&Translate With Google"),
-        CmdTranslateSelectionWithGoogle,
+        TrN("&Translate with"),
+        (UINT_PTR)menuDefTranslateWith,
     },
     {
-        TrN("Translate with &DeepL"),
-        CmdTranslateSelectionWithDeepL,
+        TrN("S&earch with"),
+        (UINT_PTR)menuDefSearchWith,
     },
     {
-        TrN("Translate with G&rok Build"),
-        CmdTranslateSelectionWithGrokBuild,
-    },
-    {
-        TrN("Translate with Claude C&ode"),
-        CmdTranslateSelectionWithClaudeCode,
-    },
-    {
-        TrN("Translate with OpenAI Code&x"),
-        CmdTranslateSelectionWithOpenAICodex,
-    },
-    {
-        TrN("Translate with A&ntigravity"),
-        CmdTranslateSelectionWithAntiGravity,
-    },
-    {
-        TrN("&Search With Google"),
-        CmdSearchSelectionWithGoogle,
-    },
-    {
-        TrN("Search With &Bing"),
-        CmdSearchSelectionWithBing,
-    },
-    {
-        TrN("Search with &Wikipedia"),
-        CmdSearchSelectionWithWikipedia,
-    },
-    {
-        TrN("Search with Google Sc&holar"),
-        CmdSearchSelectionWithGoogleScholar,
+        TrN("Select C&urrent Page"),
+        CmdSelectCurrentPage,
     },
     {
         TrN("Select &All"),
@@ -1391,20 +1394,6 @@ static int disableIfDirectoryOrBrokenPDF[] = {
     CmdShowInFolder, // TODO: why?
 };
 
-// translate / search selection commands need selected text to operate on
-static UINT_PTR selectionTextCmds[] = {
-    CmdTranslateSelectionWithGoogle,
-    CmdTranslateSelectionWithDeepL,
-    CmdTranslateSelectionWithGrokBuild,
-    CmdTranslateSelectionWithClaudeCode,
-    CmdTranslateSelectionWithOpenAICodex,
-    CmdTranslateSelectionWithAntiGravity,
-    CmdSearchSelectionWithGoogle,
-    CmdSearchSelectionWithBing,
-    CmdSearchSelectionWithWikipedia,
-    CmdSearchSelectionWithGoogleScholar,
-};
-
 static UINT_PTR menusNoTranslate[] = {
     CmdZoom6400,
     CmdZoom3200,
@@ -1661,11 +1650,6 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
     bool isDebugMenu = menuDef == menuDefDebug;
     int i = 0;
 
-    // insert before built-in selection handlers
-    if (menuDef == menuDefSelection) {
-        AppendSelectionHandlersToMenu(menu, ctx ? ctx->hasSelection : false);
-    }
-
     if (menuDef == menuDefThemes) {
         AppendThemesToMenu(menu);
     }
@@ -1693,8 +1677,13 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             addExternalViewersNext = true;
         }
 
-        if (menuDef == menuDefMainSelection && cmdId == CmdTranslateSelectionWithGoogle) {
-            AppendSelectionHandlersToMenu(menu, true);
+        // custom selection handlers go before the built-in translate / search submenus
+        if (md.idOrSubmenu == (UINT_PTR)menuDefTranslateWith) {
+            if (menuDef == menuDefMainSelection) {
+                AppendSelectionHandlersToMenu(menu, true);
+            } else if (menuDef == menuDefSelection) {
+                AppendSelectionHandlersToMenu(menu, ctx ? ctx->hasSelection : false);
+            }
         }
 
         MenuDef* subMenuDef = (MenuDef*)md.idOrSubmenu;
@@ -1732,7 +1721,8 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             // in the context menu only show translate / search items for a text
             // selection (the menubar variant is live-updated via
             // SetMenuStateForSelection instead)
-            removeMenu |= (menuDef == menuDefSelection) && !ctx->hasTextSelection && cmdIdInList(selectionTextCmds);
+            bool isTextSelSubMenu = (subMenuDef == menuDefTranslateWith) || (subMenuDef == menuDefSearchWith);
+            removeMenu |= (menuDef == menuDefSelection) && !ctx->hasTextSelection && isTextSelSubMenu;
             bool isRectSel = ctx->hasSelection && !ctx->hasTextSelection;
             if (menuDef == menuDefSelection) {
                 removeMenu |= !ctx->hasSelection && cmdId == CmdCopySelection;

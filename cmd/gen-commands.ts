@@ -334,6 +334,7 @@ const commandsRaw = [
     "CmdAutoGenerateTOC", "Generate Table Of Contents",
     "CmdOpenSettingsFile", "Open Advanced Settings File...",
     "CmdOpenFileWithSumatraFilePicker", "Open File With SumatraPDF File Picker...",
+    "CmdSelectCurrentPage", "Select Current Page",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

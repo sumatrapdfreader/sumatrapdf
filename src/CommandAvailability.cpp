@@ -178,6 +178,7 @@ static UINT_PTR removeIfNoCopyPerms[] = {
     CmdSearchSelectionWithWikipedia,
     CmdSearchSelectionWithGoogleScholar,
     CmdSelectAll,
+    CmdSelectCurrentPage,
     CmdCopySelection,
     CmdCopyLinkTarget,
     CmdCopyComment,

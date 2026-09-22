@@ -9,7 +9,7 @@ You can send selected text to the Google or Bing search engine, or to the Google
 
 ![Context Menu Selection](img/context-menu-selection-90e6.png)
 
-- use the `Selection` submenu and select the web service to use for translation or search:
+- use the `Selection` submenu, then `Translate with` or `Search with`, and select the web service:
 
 ![Context Menu Translate](img/context-menu-translate-e2f3.png)
 

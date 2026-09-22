@@ -59,6 +59,7 @@ CmdOpenEmbeddedPDF,,Open Embedded PDF,
 CmdSaveEmbeddedFile,,Save Embedded File...,
 CmdCreateShortcutToFile,,Create .lnk Shortcut,
 CmdSelectAll,Ctrl + A,Select All,
+CmdSelectCurrentPage,,Select Current Page,"selects the text of the current page only; Selection menu and selection context menu, ver 3.7+"
 CmdExtendSelectionCharLeft,,Extend Selection One Character Left,"ver 3.7+, no default shortcut; grows or shrinks the existing text selection (see below)"
 CmdExtendSelectionCharRight,,Extend Selection One Character Right,"ver 3.7+, no default shortcut; grows or shrinks the existing text selection (see below)"
 CmdExtendSelectionWordLeft,,Extend Selection One Word Left,"ver 3.7+, no default shortcut; grows or shrinks the existing text selection (see below)"

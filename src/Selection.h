@@ -44,6 +44,7 @@ void UpdateTextSelection(MainWindow* win, bool select = true);
 void CopySelectionToClipboard(MainWindow* win);
 void CopySelectionAsImageToClipboard(MainWindow* win);
 void OnSelectAll(MainWindow* win, bool textOnly = false);
+void OnSelectCurrentPage(MainWindow* win);
 bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
 void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
 void OnSelectionStart(MainWindow* win, int x, int y, WPARAM key, bool forceRect = false);
