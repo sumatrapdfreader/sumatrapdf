@@ -536,7 +536,7 @@ const comicBookUI: Field[] = [
     Str,
     "",
     "default zoom for comic books; empty uses fit page. " +
-      "valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
+      "valid values: fit page, fit width, fit height, fit content, fit visible, shrink to fit or percent like 100%",
   ).ver("3.7"),
   field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
   field(
@@ -555,7 +555,7 @@ const imageUI: Field[] = [
     "DefaultZoom",
     Str,
     "shrink to fit",
-    "default zoom for image files. valid values: fit page, fit width, fit height, fit content, shrink to fit or percent like 100%",
+    "default zoom for image files. valid values: fit page, fit width, fit height, fit content, fit visible, shrink to fit or percent like 100%",
   ).ver("3.7"),
   field("DefaultZoomFloat", Float, 0, "value of DefaultZoom for internal usage").notSaved(),
   field(
@@ -1092,7 +1092,12 @@ const fileState: Field[] = [
     0,
     "number of pages in the document when it was last open; 0 if unknown. Used to show reading progress on the home page",
   ).ver("3.7"),
-  field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit height, fit content"),
+  field(
+    "Zoom",
+    Str,
+    "fit page",
+    "zoom (in %) or one of those values: fit page, fit width, fit height, fit content, fit visible",
+  ),
   field("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
   field(
     "WindowState",
@@ -1192,7 +1197,12 @@ const tabState: Field[] = [
     "1",
     "number of the last read page, or `bm:<bookmark>` for documents with chapters (see PagePosition.cpp)",
   ),
-  field("Zoom", Str, "fit page", "zoom (in %) or one of those values: fit page, fit width, fit height, fit content"),
+  field(
+    "Zoom",
+    Str,
+    "fit page",
+    "zoom (in %) or one of those values: fit page, fit width, fit height, fit content, fit visible",
+  ),
   field("Rotation", Int, 0, "how far pages have been rotated as a multiple of 90 degrees"),
   compactStruct("ScrollPos", scrollPos, "how far this document has been scrolled (in x and y direction)").structName(
     "PointF",
@@ -1236,7 +1246,7 @@ const globalPrefs: Field[] = [
     "DefaultZoom",
     Str,
     "fit page",
-    "default zoom. valid values: fit page, fit width, fit height, fit content or percent like 100%",
+    "default zoom. valid values: fit page, fit width, fit height, fit content, fit visible or percent like 100%",
   ),
   field(
     "DisableJavaScript",
@@ -2389,6 +2399,7 @@ constexpr float kZoomFitContent = -3.F;
 constexpr float kZoomShrinkToFit = -4.F;
 constexpr float kZoomFitByOrientation = -5.F;
 constexpr float kZoomFitHeight = -6.F;
+constexpr float kZoomFitVisible = -7.F;
 constexpr float kZoomActualSize = 100.0F;
 constexpr float kZoomMaxDefault = 6400.F;     /* max zoom in %, unless ZoomLevels raises it */
 constexpr float kZoomMaxAllowed = 1000000.F;  /* the highest ZoomLevels can raise it to */

@@ -192,7 +192,8 @@ static void ScrollToDestination(DocumentView* view, int pageNo, RectF rect, floa
     }
 
     bool isVirtualZoom = zoom == kZoomFitPage || zoom == kZoomFitWidth || zoom == kZoomFitHeight ||
-                         zoom == kZoomFitContent || zoom == kZoomShrinkToFit || zoom == kZoomFitByOrientation;
+                         zoom == kZoomFitContent || zoom == kZoomFitVisible || zoom == kZoomShrinkToFit ||
+                         zoom == kZoomFitByOrientation;
     if (isVirtualZoom) {
         view->SetZoom(zoom);
     } else if (zoom > 0) {

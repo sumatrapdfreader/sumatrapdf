@@ -441,6 +441,10 @@ static MenuDef menuDefZoomShort[] = {
         CmdZoomFitContent,
     },
     {
+        TrN("Fit &Visible"),
+        CmdZoomFitVisible,
+    },
+    {
         TrN("&Shrink To Fit"),
         CmdZoomShrinkToFit,
     },
@@ -487,6 +491,10 @@ static MenuDef menuDefZoom[] = {
     {
         TrN("Fit &Content"),
         CmdZoomFitContent,
+    },
+    {
+        TrN("Fit &Visible"),
+        CmdZoomFitVisible,
     },
     {
         TrN("&Shrink To Fit"),
@@ -1814,6 +1822,7 @@ static struct {
     { CmdZoomFitHeight,  kZoomFitHeight  },
     { CmdZoomFitByOrientation, kZoomFitByOrientation },
     { CmdZoomFitContent, kZoomFitContent },
+    { CmdZoomFitVisible, kZoomFitVisible },
     { CmdZoomShrinkToFit, kZoomShrinkToFit },
     { CmdZoomActualSize, kZoomActualSize },
 };

@@ -41,7 +41,7 @@ Anything that is not recognized as a known option is interpreted as a file path,
 
   Combine with `-reuse-instance` if the document is already open.
 
-- `-zoom <zoom-level>` : sets the zoom level for the first indicated file. Alternatives are `"fit page"`, `"fit width"`, `"fit height"`, `"fit content"`, or any percentage value. Combine with `-reuse-instance` if the document is already open.
+- `-zoom <zoom-level>` : sets the zoom level for the first indicated file. Alternatives are `"fit page"`, `"fit width"`, `"fit height"`, `"fit content"`, `"fit visible"`, or any percentage value. Combine with `-reuse-instance` if the document is already open.
 - `-scroll <x,y>` : scrolls to the given coordinates for the first indicated file. Combine with `-reuse-instance` if the document is already open.
 - `-search <term>` : start a search for a given term when opening a document, e.g. `SumatraPDF -search "foo" bar.pdf`. **Ver 3.4+**. The leading `-` is required.
 - `/A "<params>"` : Adobe Reader-compatible open parameters for the first file (**ver 3.5+**). `params` is a list of `name=value` pairs separated by `;`, `#`, or `&`. Recognized names:

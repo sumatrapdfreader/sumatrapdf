@@ -2704,7 +2704,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         ReportIf(!win->IsDocLoaded());
         zoomVirtual = ZoomFromString(fs->zoom, kZoomFitPage);
         if (win->ctrl->ValidPageNo(ss.page)) {
-            if (kZoomFitContent != zoomVirtual) {
+            if (kZoomFitContent != zoomVirtual && kZoomFitVisible != zoomVirtual) {
                 ss.x = fs->scrollPos.x;
                 ss.y = fs->scrollPos.y;
             }
@@ -6761,6 +6761,8 @@ static void CreateLnkShortcut(MainWindow* win) {
         zoomVirtual = StrL("fitheight");
     } else if (kZoomFitContent == ctrl->GetZoomVirtual()) {
         zoomVirtual = StrL("fitcontent");
+    } else if (kZoomFitVisible == ctrl->GetZoomVirtual()) {
+        zoomVirtual = StrL("fitvisible");
     }
 
     TempStr args = fmt("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page, viewMode, zoomVirtual,
@@ -10771,6 +10773,9 @@ static TempStr ZoomArgTemp(DocController* ctrl) {
     }
     if (kZoomFitContent == zoom) {
         return StrL("fit content");
+    }
+    if (kZoomFitVisible == zoom) {
+        return StrL("fit visible");
     }
     return fmt("%g%%", ctrl->GetZoomVirtual(true));
 }

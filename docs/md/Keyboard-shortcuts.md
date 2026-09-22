@@ -79,7 +79,7 @@ You can [customize keyboard shortcuts](Customize-keyboard-shortcuts.md). Also se
 - `+` / `-` zoom in/out
 - `Ctrl + scroll wheel` zoom in/out
 - `Right Mouse + scroll wheel` zoom in/out (hold the button; a click without moving still opens the context menu)
-- `z` cycle zoom: Fit Page → Fit Width → Fit Height → Fit Content → Shrink To Fit → Fit Page
+- `z` cycle zoom: Fit Page → Fit Width → Fit Height → Fit Content → Fit Visible → Shrink To Fit → Fit Page
 - `c` toggle between continuous/non-continuous mode
 - `Ctrl + Shift + -` rotate left
 - `/` on numeric keypad rotate left

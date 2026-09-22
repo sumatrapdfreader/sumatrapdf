@@ -333,6 +333,7 @@ static SeqStrings gCommandNames =
     "CmdOpenSettingsFile\0"
     "CmdOpenFileWithSumatraFilePicker\0"
     "CmdSelectCurrentPage\0"
+    "CmdZoomFitVisible\0"
     "\0";
 
 static i32 gCommandIds[] = {
@@ -655,6 +656,7 @@ static i32 gCommandIds[] = {
     CmdOpenSettingsFile,
     CmdOpenFileWithSumatraFilePicker,
     CmdSelectCurrentPage,
+    CmdZoomFitVisible,
 };
 
 SeqStrings gCommandDescriptions =
@@ -977,6 +979,7 @@ SeqStrings gCommandDescriptions =
     "Open Advanced Settings File...\0"
     "Open File With SumatraPDF File Picker...\0"
     "Select Current Page\0"
+    "Zoom: Fit Visible\0"
     "\0";
 
 SeqStrings gCommandAltDescs =

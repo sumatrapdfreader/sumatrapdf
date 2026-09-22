@@ -1178,6 +1178,9 @@ TempStr ZoomLevelStr(float zoom) {
     if (zoom == kZoomFitContent) {
         return Tr("Fit Content");
     }
+    if (zoom == kZoomFitVisible) {
+        return Tr("Fit Visible");
+    }
     if (zoom == kZoomShrinkToFit) {
         return Tr("Shrink To Fit");
     }
@@ -1207,6 +1210,7 @@ static float gZoomLevels[] = {
     kZoomFitHeight,
     kZoomFitByOrientation,
     kZoomFitContent,
+    kZoomFitVisible,
     kZoomShrinkToFit,
     6400.0,
     3200.0,

@@ -147,9 +147,10 @@ static SeqStrings zoomValues =
     "fit page\0fitpage\0fit-page\0"
     "fit width\0fitwidth\0fit-width\0"
     "fit height\0fitheight\0fit-height\0"
-    "fit content\0fitcontent\0fit-content\0";
+    "fit content\0fitcontent\0fit-content\0"
+    "fit visible\0fitvisible\0fit-visible\0";
 
-// -zoom [fitwidth|fitheight|fitpage|fitcontent|n]
+// -zoom [fitwidth|fitheight|fitpage|fitcontent|fitvisible|n]
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
 static void ParseZoomValue(float* zoom, Str txtOrig) {
@@ -161,7 +162,11 @@ static void ParseZoomValue(float* zoom, Str txtOrig) {
         // 3-5 : fit width
         // 6-8 : fit height
         // 9-11: fit content
-        *zoom = kZoomFitContent;
+        // 12-14: fit visible
+        *zoom = kZoomFitVisible;
+        if (zoomVal <= 11) {
+            *zoom = kZoomFitContent;
+        }
         if (zoomVal <= 8) {
             *zoom = kZoomFitHeight;
         }

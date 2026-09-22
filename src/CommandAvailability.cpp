@@ -273,6 +273,7 @@ static UINT_PTR removeIfChm[] = {
     CmdZoomFitWidth,
     CmdZoomFitHeight,
     CmdZoomFitContent,
+    CmdZoomFitVisible,
     CmdDebugShowFitContentArea,
     CmdZoomShrinkToFit,
     CmdZoom6400,

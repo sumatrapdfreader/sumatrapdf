@@ -23,6 +23,7 @@ constexpr float kZoomFitContent = -3.F;
 constexpr float kZoomShrinkToFit = -4.F;
 constexpr float kZoomFitByOrientation = -5.F;
 constexpr float kZoomFitHeight = -6.F;
+constexpr float kZoomFitVisible = -7.F;
 constexpr float kZoomActualSize = 100.0F;
 constexpr float kZoomMaxDefault = 6400.F;    /* max zoom in %, unless ZoomLevels raises it */
 constexpr float kZoomMaxAllowed = 1000000.F; /* the highest ZoomLevels can raise it to */
@@ -272,7 +273,7 @@ struct FileState {
     // deserialization and written back before serialization
     Str displayMode;
     // zoom (in %) or one of those values: fit page, fit width, fit height,
-    // fit content
+    // fit content, fit visible
     Str zoom;
     // if given, overrides the background color for this document
     ParsedColor bgCol;
@@ -342,7 +343,7 @@ struct TabState {
     // chapters (see PagePosition.cpp)
     Str pageNo;
     // zoom (in %) or one of those values: fit page, fit width, fit height,
-    // fit content
+    // fit content, fit visible
     Str zoom;
     // how far pages have been rotated as a multiple of 90 degrees
     int rotation;
@@ -442,7 +443,7 @@ struct ImageUI {
     // if given, sets the canvas background color for image files
     ParsedColor windowBgCol;
     // default zoom for image files. valid values: fit page, fit width, fit
-    // height, fit content, shrink to fit or percent like 100%
+    // height, fit content, fit visible, shrink to fit or percent like 100%
     Str defaultZoom;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
@@ -612,8 +613,8 @@ struct ComicBookUI {
     // book view, continuous, continuous facing, continuous book view
     Str defaultDisplayMode;
     // default zoom for comic books; empty uses fit page. valid values: fit
-    // page, fit width, fit height, fit content, shrink to fit or percent
-    // like 100%
+    // page, fit width, fit height, fit content, fit visible, shrink to fit
+    // or percent like 100%
     Str defaultZoom;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
@@ -836,7 +837,7 @@ struct Settings {
     // written back before serialization
     Str defaultDisplayMode;
     // default zoom. valid values: fit page, fit width, fit height, fit
-    // content or percent like 100%
+    // content, fit visible or percent like 100%
     Str defaultZoom;
     // pattern used to launch the LaTeX editor when doing inverse search
     Str inverseSearchCmdLine;
@@ -1431,9 +1432,9 @@ static const StructInfo gComicBookUIInfo = {
     "(each page is capped at Fit Height)\0default page layout for comic books; empty uses the global "
     "DefaultDisplayMode. valid values: automatic, single page, facing, book view, continuous, continuous facing, "
     "continuous book view\0default zoom for comic books; empty uses fit page. valid values: fit page, fit width, fit "
-    "height, fit content, shrink to fit or percent like 100%\0if true, in facing and book view a landscape page (wider "
-    "than tall) occupies the whole two-page row instead of pairing with the next page. For comics that store "
-    "double-page spreads as one image (issues #1324, #872)",
+    "height, fit content, fit visible, shrink to fit or percent like 100%\0if true, in facing and book view a "
+    "landscape page (wider than tall) occupies the whole two-page row instead of pairing with the next page. For "
+    "comics that store double-page spreads as one image (issues #1324, #872)",
     false};
 
 static const FieldInfo gImageUIFields[] = {
@@ -1449,10 +1450,10 @@ static const StructInfo gImageUIInfo = {
     gImageUIFields,
     "WindowBgCol\0DefaultZoom\0LimitToWindowWidth\0LimitToWindowHeight\0LandscapeAsSpread",
     "if given, sets the canvas background color for image files\0default zoom for image files. valid values: fit page, "
-    "fit width, fit height, fit content, shrink to fit or percent like 100%\0if true, absolute zoom never makes a page "
-    "wider than the window (each page is capped at Fit Width). Useful for image folders with mixed aspect ratios "
-    "(issue #2197)\0if true, absolute zoom never makes a page taller than the window (each page is capped at Fit "
-    "Height)\0if true, in facing and book view a landscape page (wider than tall) occupies the whole two-page row "
+    "fit width, fit height, fit content, fit visible, shrink to fit or percent like 100%\0if true, absolute zoom never "
+    "makes a page wider than the window (each page is capped at Fit Width). Useful for image folders with mixed aspect "
+    "ratios (issue #2197)\0if true, absolute zoom never makes a page taller than the window (each page is capped at "
+    "Fit Height)\0if true, in facing and book view a landscape page (wider than tall) occupies the whole two-page row "
     "instead of pairing with the next page (issues #1324, #872)",
     false};
 
@@ -1984,20 +1985,20 @@ static StructInfo gFileStateInfo = {
     "determine which parts of the table of contents have been expanded\0path of the document\0data required to open a "
     "password protected document without having to ask for the password again\0layout of pages. valid values: "
     "automatic, single page, facing, book view, continuous, continuous facing, continuous book view\0zoom (in %) or "
-    "one of those values: fit page, fit width, fit height, fit content\0if given, overrides the background color for "
-    "this document\0if given, overrides the tab color for this document\0number of times this document has been opened "
-    "recently\0number of the last read page, or `bm:<bookmark>` for documents with chapters (folds in ReparseIdx; see "
-    "PagePosition.cpp)\0number of pages in the document when it was last open; 0 if unknown. Used to show reading "
-    "progress on the home page\0how far pages have been rotated as a multiple of 90 degrees\0state of the window. 1 is "
-    "normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0width of the bookmarks / favorites sidebar in screen "
-    "pixels, as last resized\0how far this document has been scrolled (in x and y direction)\0default position (can be "
-    "on any monitor)\0if true, the document is \"pinned\" to the Frequently Read list, so that recently opened "
-    "documents don't displace it\0if true, the file is considered missing and won't be shown in any list\0if true, "
-    "this document opens with the global defaults instead of the values below\0if true, show the table of contents "
-    "(Bookmarks) sidebar when the document has one\0if true, the document is displayed right-to-left in facing and "
-    "book view modes\0if true, percentage zoom scales every page to the width page 1 has at that zoom level\0if true, "
-    "empty margins around page content are trimmed from display\0if true, the view can be panned past the page edges, "
-    "so any part of a page can be brought to the center of the window",
+    "one of those values: fit page, fit width, fit height, fit content, fit visible\0if given, overrides the "
+    "background color for this document\0if given, overrides the tab color for this document\0number of times this "
+    "document has been opened recently\0number of the last read page, or `bm:<bookmark>` for documents with chapters "
+    "(folds in ReparseIdx; see PagePosition.cpp)\0number of pages in the document when it was last open; 0 if unknown. "
+    "Used to show reading progress on the home page\0how far pages have been rotated as a multiple of 90 "
+    "degrees\0state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0width of the "
+    "bookmarks / favorites sidebar in screen pixels, as last resized\0how far this document has been scrolled (in x "
+    "and y direction)\0default position (can be on any monitor)\0if true, the document is \"pinned\" to the Frequently "
+    "Read list, so that recently opened documents don't displace it\0if true, the file is considered missing and won't "
+    "be shown in any list\0if true, this document opens with the global defaults instead of the values below\0if true, "
+    "show the table of contents (Bookmarks) sidebar when the document has one\0if true, the document is displayed "
+    "right-to-left in facing and book view modes\0if true, percentage zoom scales every page to the width page 1 has "
+    "at that zoom level\0if true, empty margins around page content are trimmed from display\0if true, the view can be "
+    "panned past the page edges, so any part of a page can be brought to the center of the window",
     false};
 
 static const FieldInfo gPointF_2_Fields[] = {
@@ -2030,9 +2031,9 @@ static const StructInfo gTabStateInfo = {
     "path of the document\0layout of pages in this tab. valid values: automatic, single page, facing, book view, "
     "continuous, continuous facing, continuous book view\0number of the last read page, or `bm:<bookmark>` for "
     "documents with chapters (see PagePosition.cpp)\0zoom (in %) or one of those values: fit page, fit width, fit "
-    "height, fit content\0how far pages have been rotated as a multiple of 90 degrees\0how far this document has been "
-    "scrolled (in x and y direction)\0if true, the table of contents was shown when the document was closed\0which "
-    "table of contents items were expanded (see FileStates -> TocState)",
+    "height, fit content, fit visible\0how far pages have been rotated as a multiple of 90 degrees\0how far this "
+    "document has been scrolled (in x and y direction)\0if true, the table of contents was shown when the document was "
+    "closed\0which table of contents items were expanded (see FileStates -> TocState)",
     false};
 
 static const FieldInfo gRect_4_Fields[] = {
@@ -2274,16 +2275,16 @@ static const StructInfo gSettingsInfo = {
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view, page aspect. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file "
     "uses page 1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered "
-    "FileState still wins\0default zoom. valid values: fit page, fit width, fit height, fit content or percent like "
-    "100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a PDF "
-    "may load an image stored in a separate file referenced by name (an external image stream); the file must sit next "
-    "to the PDF. Off by default for security (matches Acrobat)\0if true, show the SyncTeX inverse search command line "
-    "in Settings -> Options, so a double-click in the document can jump to the matching line in a LaTeX editor\0if "
-    "true, Esc key closes SumatraPDF\0if true, show the full path to the document in the title bar\0pattern used to "
-    "launch the LaTeX editor when doing inverse search\0if true, restoring a session delays loading each document "
-    "until its tab is selected\0background color of the area around the document, traditionally yellow. Only applies "
-    "to the Light theme; the default #80fff200 is a marker meaning \"use the theme's color\", so setting any other "
-    "value also colorizes the toolbar and sidebars\0if true, doesn't open Home tab\0if true, the home page lists "
+    "FileState still wins\0default zoom. valid values: fit page, fit width, fit height, fit content, fit visible or "
+    "percent like 100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if "
+    "true, a PDF may load an image stored in a separate file referenced by name (an external image stream); the file "
+    "must sit next to the PDF. Off by default for security (matches Acrobat)\0if true, show the SyncTeX inverse search "
+    "command line in Settings -> Options, so a double-click in the document can jump to the matching line in a LaTeX "
+    "editor\0if true, Esc key closes SumatraPDF\0if true, show the full path to the document in the title bar\0pattern "
+    "used to launch the LaTeX editor when doing inverse search\0if true, restoring a session delays loading each "
+    "document until its tab is selected\0background color of the area around the document, traditionally yellow. Only "
+    "applies to the Light theme; the default #80fff200 is a marker meaning \"use the theme's color\", so setting any "
+    "other value also colorizes the toolbar and sidebars\0if true, doesn't open Home tab\0if true, the home page lists "
     "documents by how often they've been opened (the pre-3.6 behavior); if false, the most recently opened come "
     "first\0valid values: thumbnails, list\0valid values: (empty), os, sumatrapdf\0valid values: (empty), auto, "
     "modern, classic\0if true, a document will be reloaded automatically whenever it's changed (currently doesn't work "

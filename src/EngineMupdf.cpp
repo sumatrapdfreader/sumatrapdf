@@ -311,7 +311,7 @@ static void DestFromFzLinkDest(const fz_link_dest& ldest, RectF* rectOut, float*
             break;
         case FZ_LINK_DEST_FIT_BH:
             // Fit content width; optional top (y)
-            zoom = kZoomFitContent;
+            zoom = kZoomFitVisible;
             x = w = h = kDestUseDefault;
             break;
         case FZ_LINK_DEST_FIT_BV:

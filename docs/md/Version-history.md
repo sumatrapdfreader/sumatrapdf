@@ -4,6 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- **Zoom: Fit Visible** (`CmdZoomFitVisible`, Zoom menu, command palette, `z` cycle after Fit Content): fits the width of the page content to the window, cropping the blank margins down to 2pt, and scrolls vertically, like Fit Width without the margins (Foxit's Fit Visible). Also `-zoom "fit visible"`, the `fit visible` value of the `DefaultZoom` settings, and PDF links with a FitBH destination now use it (fixes #6241)
 - **Select Current Page** (`CmdSelectCurrentPage`, Selection menu, selection context menu, command palette) selects the text of the current page only, where Select All selects every page
 - The **Selection** menu and the selection context menu group the web services under **Translate with** (Google, DeepL, Grok Build, Claude Code, OpenAI Codex, Antigravity) and **Search with** (Google, Bing, Wikipedia, Google Scholar) submenus
 - The **File** menu has an **Open** submenu: **Open...**, **Open using Windows File Picker...**, **Open using SumatraPDF File Picker...** (`CmdOpenFileWithSumatraFilePicker`, always the in-app Navigate Files in Folder window), the **Use SumatraPDF File Picker** check (moved from the Settings menu), **Next / Previous File In Folder** and **Browse Files In Folder...**. **Delete and Open Next File** and **Save Annotations to existing PDF** are no longer in the File menu; the commands remain in the command palette and keep their shortcuts
@@ -294,6 +295,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdOpenSettingsFile` : "Open Advanced Settings File..." — opens the settings file in the .txt editor (what Advanced Options did before it became a dialog)
 - `CmdToggleFreePan` : "Toggle Free Pan" — scroll room past the page edges so a corner can be centered on screen; remembered per document (discussions #6224, #6164)
 - `CmdGoToHomePage` : "Go To Home Page" — switch to the Home tab, adding it when `NoHomeTab` hid it (fixes #6228)
+- `CmdZoomFitVisible` : "Zoom: Fit Visible" — content width fills the window (fixes #6241)
 - `CmdAutoGenerateTOC` : "Generate Table Of Contents" — Bookmarks from numbered headings, on demand (fixes #6227)
 - `CmdApplyRedactions` : "Apply Redactions" — permanently removes content marked with the Redact tool
 - `CmdToggleEditPDF` : "Toggle Edit PDF" — shows or hides Edit PDF mode

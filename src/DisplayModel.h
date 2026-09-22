@@ -264,7 +264,7 @@ struct DisplayModel : DocController {
 
     void BuildPagesInfo();
     float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
-    SizeF PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
+    SizeF PageSizeAfterRotation(int pageNo, bool fitToContent = false, float contentPad = 0) const;
     bool ShouldTreatLandscapeAsSpread() const;
     void EnsureSpreadFlags() const;
     int FirstPageInRow(int pageNo) const;
@@ -274,7 +274,7 @@ struct DisplayModel : DocController {
     void RecalcVisibleParts() const;
     void RenderVisibleParts();
     void AddNavPoint(bool rememberZoom = false);
-    RectF GetContentBox(int pageNo) const;
+    RectF GetContentBox(int pageNo, float pad = 0) const;
     void CalcZoomReal(float zoomVirtual);
     void GoToPage(int pageNo, int scrollY, bool addNavPt = false, int scrollX = -1);
     bool GoToNextPage(bool keepViewOffset);

@@ -262,6 +262,9 @@ static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
     }
 
     bool reportR2L = str::EqI(action, StrL("r2l"));
+    if (str::EqI(action, StrL("zoom-real"))) {
+        return finish(fmt("OK zoomReal=%g", win->ctrl->GetZoomVirtual(true)), 0);
+    }
     if (len(action) == 0 || str::EqI(action, StrL("get")) || reportR2L) {
         // report only
     } else if (str::EqI(action, StrL("presentation"))) {

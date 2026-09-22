@@ -442,8 +442,8 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
     // take Fit Page's canvas clamp below: it zooms past the page fit and relies
     // on DisplayModel::GoToPage() scrolling the margins off-screen.
     // ShrinkToFit never zooms past the page fit, so the clamp is a no-op there.
-    bool isFitContent = (params.zoomVirtual == kZoomFitContent);
-    if (params.zoomVirtual == kZoomFitContent || params.zoomVirtual == kZoomShrinkToFit) {
+    bool isFitContent = params.zoomVirtual == kZoomFitContent || params.zoomVirtual == kZoomFitVisible;
+    if (isFitContent || params.zoomVirtual == kZoomShrinkToFit) {
         params.zoomVirtual = kZoomFitPage;
     }
 

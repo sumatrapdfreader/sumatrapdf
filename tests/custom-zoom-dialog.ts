@@ -38,6 +38,7 @@ const ZOOM_LEVELS = [
   "Fit Height",
   "Fit by Orientation",
   "Fit Content",
+  "Fit Visible",
   "Shrink To Fit",
   "6400%",
   "3200%",

@@ -44,8 +44,8 @@ If you add or remove lines with square brackets, **make sure to always add/remov
 ; fit page; a remembered FileState still wins
 DefaultDisplayMode = automatic
 
-; default zoom. valid values: fit page, fit width, fit height, fit content or
-; percent like 100%
+; default zoom. valid values: fit page, fit width, fit height, fit content, fit
+; visible or percent like 100%
 DefaultZoom = fit page
 
 ; if true, JavaScript in PDF documents is disabled (e.g. form-field calculations
@@ -628,8 +628,8 @@ ComicBookUI [
     DefaultDisplayMode = 
 
     ; default zoom for comic books; empty uses fit page. valid values: fit page,
-    ; fit width, fit height, fit content, shrink to fit or percent like 100%
-    ; (introduced in version 3.7)
+    ; fit width, fit height, fit content, fit visible, shrink to fit or percent
+    ; like 100% (introduced in version 3.7)
     DefaultZoom = 
 
     ; if true, in facing and book view a landscape page (wider than tall)
@@ -646,8 +646,8 @@ ImageUI [
     WindowBgCol = 
 
     ; default zoom for image files. valid values: fit page, fit width, fit
-    ; height, fit content, shrink to fit or percent like 100% (introduced in
-    ; version 3.7)
+    ; height, fit content, fit visible, shrink to fit or percent like 100%
+    ; (introduced in version 3.7)
     DefaultZoom = shrink to fit
 
     ; if true, absolute zoom never makes a page wider than the window (each page
@@ -1269,7 +1269,7 @@ FileStates [
     DisplayMode = automatic
 
     ; zoom (in %) or one of those values: fit page, fit width, fit height, fit
-    ; content
+    ; content, fit visible
     Zoom = fit page
 
     ; if given, overrides the background color for this document (introduced in
@@ -1360,7 +1360,7 @@ SessionData [
         PageNo = 1
 
         ; zoom (in %) or one of those values: fit page, fit width, fit height,
-        ; fit content
+        ; fit content, fit visible
         Zoom = fit page
 
         ; how far pages have been rotated as a multiple of 90 degrees

@@ -570,7 +570,24 @@ static SizeF SizeAfterDisplayRotation(SizeF size, int rotation) {
     return size;
 }
 
-SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
+// Fit Visible keeps this much of the page margin (in page units, pt for a
+// PDF) around the content so it doesn't touch the window edge
+constexpr float kFitVisiblePadding = 2;
+
+static float ContentFitPadding(float zoomVirtual) {
+    return zoomVirtual == kZoomFitVisible ? kFitVisiblePadding : 0;
+}
+
+// content box grown by pad on every side, never past the page
+static RectF PadContentBox(RectF cbox, RectF pageBox, float pad) {
+    if (pad <= 0 || cbox.IsEmpty()) {
+        return cbox;
+    }
+    cbox.Inflate(pad, pad);
+    return cbox.Intersect(pageBox);
+}
+
+SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent, float contentPad) const {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     ReportIf(!pageInfo);
 
@@ -582,7 +599,7 @@ SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
     }
 
     RectF pageBox = PageMediaBoxForLayout(pageNo);
-    RectF box = fitToContent ? pageInfo->contentBox : pageBox;
+    RectF box = fitToContent ? PadContentBox(pageInfo->contentBox, pageBox, contentPad) : pageBox;
     // EngineImages::Transform calls PageMediabox, which extracts (and may
     // decode) that page. Continuous fit-width walks every page here; for
     // un-measured comic/image pages we only have an estimate and must not
@@ -1210,9 +1227,15 @@ static void GetImageLimitToWindowFlags(EngineBase* engine, bool& limitWidth, boo
     }
 }
 
+// Fit Content fits the content box on both axes, Fit Visible (Foxit's name)
+// fits its width and scrolls, like Fit Width without the page margins
+static bool IsFitContentZoom(float zoomVirtual) {
+    return zoomVirtual == kZoomFitContent || zoomVirtual == kZoomFitVisible;
+}
+
 static bool IsVirtualFitZoom(float zoomVirtual) {
     return zoomVirtual == kZoomFitWidth || zoomVirtual == kZoomFitHeight || zoomVirtual == kZoomFitPage ||
-           zoomVirtual == kZoomFitContent || zoomVirtual == kZoomShrinkToFit || zoomVirtual == kZoomFitByOrientation;
+           IsFitContentZoom(zoomVirtual) || zoomVirtual == kZoomShrinkToFit || zoomVirtual == kZoomFitByOrientation;
 }
 
 // Comics / image collections often have pages of different pixel sizes. In facing
@@ -1237,11 +1260,11 @@ static float ZoomRealMatchFacingHeights(const DisplayModel* dm, float zoomVirtua
         zoomVirtual = kZoomFitPage;
     }
     if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitHeight && zoomVirtual != kZoomFitPage &&
-        zoomVirtual != kZoomFitContent) {
+        !IsFitContentZoom(zoomVirtual)) {
         return 0;
     }
 
-    bool fitToContent = (kZoomFitContent == zoomVirtual);
+    bool fitToContent = IsFitContentZoom(zoomVirtual);
     int first = dm->FirstPageInRow(pageNo);
     int last = dm->LastPageInRow(pageNo);
 
@@ -1256,7 +1279,7 @@ static float ZoomRealMatchFacingHeights(const DisplayModel* dm, float zoomVirtua
     float aspectSum = 0;
     int nInRow = 0;
     for (int i = first; i <= last; i++) {
-        SizeF sz = dm->PageSizeAfterRotation(i, fitToContent);
+        SizeF sz = dm->PageSizeAfterRotation(i, fitToContent, ContentFitPadding(zoomVirtual));
         if (sz.dx <= 0 || sz.dy <= 0) {
             continue;
         }
@@ -1275,7 +1298,7 @@ static float ZoomRealMatchFacingHeights(const DisplayModel* dm, float zoomVirtua
     float targetHFromWidth = usableDx / aspectSum;
     float targetHFromHeight = (float)areaDy;
     float targetH;
-    if (kZoomFitWidth == zoomVirtual) {
+    if (kZoomFitWidth == zoomVirtual || kZoomFitVisible == zoomVirtual) {
         targetH = targetHFromWidth;
     } else if (kZoomFitHeight == zoomVirtual) {
         targetH = targetHFromHeight;
@@ -1287,7 +1310,7 @@ static float ZoomRealMatchFacingHeights(const DisplayModel* dm, float zoomVirtua
         return 0;
     }
 
-    SizeF mySz = dm->PageSizeAfterRotation(pageNo, fitToContent);
+    SizeF mySz = dm->PageSizeAfterRotation(pageNo, fitToContent, ContentFitPadding(zoomVirtual));
     if (mySz.dy <= 0) {
         return 0;
     }
@@ -1312,7 +1335,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         zoomVirtual = kZoomFitPage;
     }
     if (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitHeight && zoomVirtual != kZoomFitPage &&
-        zoomVirtual != kZoomFitContent) {
+        !IsFitContentZoom(zoomVirtual)) {
         // Absolute zoom (e.g. 150%). Optionally cap each image/comic page so it
         // never exceeds the window width and/or height — lets single pages stay
         // large while double-page spreads shrink to fit (issue #2197).
@@ -1353,7 +1376,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     SizeF row;
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
 
-    bool fitToContent = (kZoomFitContent == zoomVirtual);
+    bool fitToContent = IsFitContentZoom(zoomVirtual);
     if (fitToContent && columns > 1) {
         // Fit the content of all the pages in the same row into the visible area
         // (i.e. don't crop inner margins but just the left-most, right-most, etc.)
@@ -1368,7 +1391,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
 
             RectF mbox = PageMediaBoxForLayout(i);
             RectF pageBox = engine->Transform(mbox, i, 1.0, rotation);
-            RectF contentBox = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
+            RectF padded = PadContentBox(pageInfo->contentBox, mbox, ContentFitPadding(zoomVirtual));
+            RectF contentBox = engine->Transform(padded, i, 1.0, rotation);
             if (contentBox.IsEmpty()) {
                 contentBox = pageBox;
             }
@@ -1379,7 +1403,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         }
         row = box.Size();
     } else {
-        row = PageSizeAfterRotation(pageNo, fitToContent);
+        row = PageSizeAfterRotation(pageNo, fitToContent, ContentFitPadding(zoomVirtual));
         int nCols = columns;
         if (columns > 1 && ShouldTreatLandscapeAsSpread() && FirstPageInRow(pageNo) == LastPageInRow(pageNo) &&
             spreadFlags.len >= pageNo && spreadFlags[pageNo - 1] != 0) {
@@ -1403,7 +1427,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     float zoomY = (float)areaForPagesDy / row.dy;
     float zoom;
     // NOLINTNEXTLINE(bugprone-branch-clone): distinct fit modes that happen to pick the same axis
-    if (kZoomFitWidth == zoomVirtual) {
+    if (kZoomFitWidth == zoomVirtual || kZoomFitVisible == zoomVirtual) {
         zoom = zoomX;
     } else if (kZoomFitHeight == zoomVirtual) { // NOLINT(bugprone-branch-clone)
         zoom = zoomY;                           // issue #1714
@@ -1536,7 +1560,7 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
             return;
         }
         zoomReal = minZoom;
-    } else if (kZoomFitContent == newZoomVirtual) {
+    } else if (IsFitContentZoom(newZoomVirtual)) {
         float newZoom = ZoomRealFromVirtualForPage(newZoomVirtual, CurrentPageNo());
         // limit zooming in to 800% on almost empty pages. zoomReal is a percentage
         // premultiplied by dpiFactor (see the absolute zoom below), so the cap has
@@ -2375,7 +2399,7 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
         SetScrollState(pendingScroll);
     } else if (hadLayout) {
         // when fitting to content, let GoToPage do the necessary scrolling
-        if (zoomVirtual == kZoomFitContent) {
+        if (IsFitContentZoom(zoomVirtual)) {
             GoToPage(ss.page, 0);
         } else if (atExact) {
             // not from ss: that's the pixel the restore truncated to at the
@@ -2393,7 +2417,7 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
     }
 }
 
-RectF DisplayModel::GetContentBox(int pageNo) const {
+RectF DisplayModel::GetContentBox(int pageNo, float pad) const {
     RectF cbox{};
     // we cache the contentBox
     PageInfo* pageInfo = GetPageInfo(pageNo);
@@ -2403,7 +2427,7 @@ RectF DisplayModel::GetContentBox(int pageNo) const {
     if (pageInfo->contentBox.IsEmpty()) {
         pageInfo->contentBox = engine->PageContentBox(pageNo);
     }
-    cbox = pageInfo->contentBox;
+    cbox = PadContentBox(pageInfo->contentBox, PageMediaBoxForLayout(pageNo), pad);
     float zoom = pageInfo->zoomReal > 0 ? pageInfo->zoomReal : GetZoomReal(pageNo);
     if (zoom <= 0) {
         zoom = zoomReal;
@@ -2414,7 +2438,7 @@ RectF DisplayModel::GetContentBox(int pageNo) const {
 /* get the (screen) coordinates of the point where a page's actual
    content begins (relative to the page's top left corner) */
 Point DisplayModel::GetContentStart(int pageNo) const {
-    RectF contentBox = GetContentBox(pageNo);
+    RectF contentBox = GetContentBox(pageNo, ContentFitPadding(zoomVirtual));
     if (contentBox.IsEmpty()) {
         return {0, 0};
     }
@@ -2444,7 +2468,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         /* in single page mode going to another page involves recalculating
            the size of canvas */
         ChangeStartPage(pageNo);
-    } else if (kZoomFitContent == zoomVirtual) {
+    } else if (IsFitContentZoom(zoomVirtual)) {
         // make sure that CalcZoomReal uses the correct page to calculate
         // the zoom level for (visibility will be recalculated below anyway)
         for (int i = PageCount(); i > 0; i--) {
@@ -2456,7 +2480,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     PageInfo* pageInfo = GetPageInfo(pageNo);
 
     // intentionally ignore scrollX and scrollY when fitting to content
-    if (kZoomFitContent == zoomVirtual) {
+    if (IsFitContentZoom(zoomVirtual)) {
         // scroll down to where the actual content starts
         Point start = GetContentStart(pageNo);
         scrollX = start.x;
@@ -3062,7 +3086,7 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
     // content. Held across SetScrollState() too: in continuous mode GoToPage()
     // relayouts again for the page it scrolls to, and that is the page whose
     // content the zoom must fit
-    exactFitContent = (kZoomFitContent == zoomLevel);
+    exactFitContent = IsFitContentZoom(zoomLevel);
     Relayout(zoomLevel, rotation);
     // a fit zoom is a fresh look at the page, not a view to keep panned past
     // its edges (free pan)
@@ -3603,7 +3627,7 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
         zoom = 0;
     }
     bool isVirtualZoom = zoom == kZoomFitPage || zoom == kZoomFitWidth || zoom == kZoomFitHeight ||
-                         zoom == kZoomFitContent || zoom == kZoomShrinkToFit || zoom == kZoomFitByOrientation;
+                         IsFitContentZoom(zoom) || zoom == kZoomShrinkToFit || zoom == kZoomFitByOrientation;
     bool isAbsZoom = zoom > 0;
 
     if (isVirtualZoom) {

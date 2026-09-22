@@ -1,6 +1,6 @@
 # Installation
 
-SumatraPDF is distributed in several forms. Pick the one that matches how you want to deploy it.
+You can download an installer or self-contained, portable version.
 
 ## Download flavors
 
@@ -8,13 +8,14 @@ SumatraPDF is distributed in several forms. Pick the one that matches how you wa
 | --- | --- | --- |
 | **Installer** (`SumatraPDF-<ver>-install.exe`) | Installs to `%LOCALAPPDATA%\SumatraPDF` (or `%PROGRAMFILES%` with `-all-users`), registers file associations, optional preview handler | Most users |
 | **Portable** (`SumatraPDF-<ver>.exe` downloaded as `SumatraPDF-<ver>.zip`) | Single self-contained `.exe` — no separate `libsumatrapdf.dll`, settings live next to the exe | USB stick, custom folder, no installer |
-| **Extract only** (`-x`) | Unpack files without installing | IT scripts, inspection |
 
 Download from [sumatrapdfreader.org](https://www.sumatrapdfreader.org/download-free-pdf-viewer) or [pre-release](https://www.sumatrapdfreader.org/prerelease).
 
 ## Running the installer
 
-Double-click the installer, or silently:
+Double-click the installer to start interactive installation.
+
+You can run it silently (no installation UI):
 
 ```
 SumatraPDF-<ver>-install.exe -install -silent
