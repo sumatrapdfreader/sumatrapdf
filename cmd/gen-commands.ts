@@ -332,7 +332,8 @@ const commandsRaw = [
     "CmdToggleGrayscale", "Toggle Grayscale",
     "CmdPrintSelection", "Print Selection...",
     "CmdAutoGenerateTOC", "Generate Table Of Contents",
-    "CmdOpenSettingsFile", "Open Settings File...",
+    "CmdOpenSettingsFile", "Open Advanced Settings File...",
+    "CmdOpenFileWithSumatraFilePicker", "Open File With SumatraPDF File Picker...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them
@@ -343,6 +344,7 @@ export const commands: string[] = commandsRaw.filter((_, i) => commandsRaw[i - (
 // prettier-ignore
 export const commandAltDescs: [string, string][] = [
     ["CmdNavigateFilesInFolder", "Browse Files In Folder..."],
+    ["CmdAdvancedSettings", "Advanced Options..."],
 ];
 
 function getNames(): string[] {

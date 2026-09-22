@@ -6426,7 +6426,7 @@ static bool FilePickerIsSumatraPDF() {
     return gSettings && str::EqI(gSettings->filePicker, StrL("sumatrapdf"));
 }
 
-// Show in folder: Explorer (and select the file) unless File / Use SumatraPDF
+// Show in folder: Explorer (and select the file) unless File / Open / Use SumatraPDF
 // file picker is on, in which case open Navigate Files in Folder on that dir.
 void ShowFileInFolder(MainWindow* win, Str path) {
     if (!win || len(path) == 0) {
@@ -12063,6 +12063,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdOpenFileWithOSFilePicker:
             OpenFileWithOSFilePicker(win);
+            break;
+
+        case CmdOpenFileWithSumatraFilePicker:
+            if (CanAccessDisk() && !gPluginMode) {
+                ShowNavFilesInFolder(win);
+            }
             break;
 
         case CmdToggleFilePicker:

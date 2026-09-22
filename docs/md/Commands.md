@@ -26,7 +26,8 @@ CmdNewWindow,Ctrl + N,Open New SumatraPDF Window,
 CmdOpenFile,Ctrl + O,Open File...,"uses the Windows file picker or Navigate Files in Folder according to the `FilePicker` advanced setting (empty/os = Windows, sumatrapdf = in-app), ver 3.7+"
 CmdOpenFileNoHistory,,Open File Without History...,"same picker as Open File, but the document is not added to File History or Windows Recent Documents (fixes #6121), ver 3.7+"
 CmdOpenFileWithOSFilePicker,,Open File With Windows File Picker...,"always the standard Windows multi-select file open dialog, ver 3.7+"
-CmdToggleFilePicker,,SumatraPDF File Picker,"checkbox under File and Settings; toggles `FilePicker` empty/os ↔ sumatrapdf, ver 3.7+"
+CmdOpenFileWithSumatraFilePicker,,Open File With SumatraPDF File Picker...,"always the in-app Navigate Files in Folder window, ver 3.7+"
+CmdToggleFilePicker,,SumatraPDF File Picker,"checkbox under File / Open; toggles `FilePicker` empty/os ↔ sumatrapdf, ver 3.7+"
 CmdToggleBoolSetting,,Toggle Boolean Setting,"in the Command Palette, lists boolean advanced settings; Enter or a click toggles one and closes. Custom shortcuts: `CmdToggleBoolSetting <SettingName>` (case-insensitive leaf or dotted path), e.g. `Fullscreen.ShowMenubar` (fixes #5912), ver 3.7+"
 CmdFixDefaultApp,,Fix Default App For Extension,"`CmdFixDefaultApp .pdf` opens the OS dialog to set the default app for that extension; used by the home-page bottom bar when Sumatra is no longer the default, ver 3.7+"
 CmdFileHistory,,Open Recent File,"`CmdFileHistory <path>` opens that file; used for the recent files listed in the File menu, each of which carries its own path, ver 3.7+"
@@ -330,8 +331,8 @@ CmdInvokeInverseSearch,,Invoke Inverse Search,ver 3.6+
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
-CmdOpenSettingsFile,,Open Settings File...,"Opens the settings file in the text editor associated with .txt files; menu `Settings` / `Open Settings File...`, ver 3.7+"
-CmdAdvancedSettings,,Advanced Settings...,"ver 3.7+, opens a dialog for viewing and editing the advanced settings: filter by name, click a setting to toggle / pick / edit its value, then Save; `CmdAdvancedOptions` in a shortcut definition still means this command"
+CmdOpenSettingsFile,,Open Advanced Settings File...,"Opens the settings file in the text editor associated with .txt files; menu `Settings` / `Open Advanced Settings File...`, ver 3.7+"
+CmdAdvancedSettings,,Advanced Settings...,"ver 3.7+, opens a dialog for viewing and editing the advanced settings: filter by name, click a setting to toggle / pick / edit its value, then Save; `CmdAdvancedOptions` in a shortcut definition still means this command; also listed in the command palette as `Advanced Options...`"
 CmdChangeLanguage,,Change Language...,
 CmdCheckUpdate,,Check For Updates,
 CmdClearHistory,,Clear History,Clears history of opened files (for recently opened list in home page)

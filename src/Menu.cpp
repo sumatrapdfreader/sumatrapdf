@@ -75,6 +75,47 @@ static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are 
 static_assert(CmdZoomLast - CmdZoomFirst == 19, "zoom ids are not in a continuous range");
 
 // clang-format off
+//[ ACCESSKEY_GROUP File Open Menu
+static MenuDef menuDefFileOpen[] = {
+    {
+        TrN("&Open..."),
+        CmdOpenFile,
+    },
+    {
+        TrN("Open using &Windows File Picker..."),
+        CmdOpenFileWithOSFilePicker,
+    },
+    {
+        TrN("Open using &SumatraPDF File Picker..."),
+        CmdOpenFileWithSumatraFilePicker,
+    },
+    {
+        TrN("Use SumatraPDF File Picker"),
+        CmdToggleFilePicker,
+    },
+    {
+        StrL(kMenuSeparator),
+        0,
+    },
+    {
+        TrN("&Next File In Folder"),
+        CmdOpenNextFileInFolder,
+    },
+    {
+        TrN("&Previous File In Folder"),
+        CmdOpenPrevFileInFolder,
+    },
+    {
+        TrN("&Browse Files In Folder..."),
+        CmdNavigateFilesInFolder,
+    },
+    {
+        {},
+        0,
+    },
+};
+//] ACCESSKEY_GROUP File Open Menu
+
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
     {
@@ -82,12 +123,8 @@ static MenuDef menuDefFile[] = {
         CmdNewWindow,
     },
     {
-        TrN("&Open..."),
-        CmdOpenFile,
-    },
-    {
-        TrN("Use SumatraPDF File Picker"),
-        CmdToggleFilePicker,
+        TrN("&Open"),
+        (UINT_PTR)menuDefFileOpen,
     },
     {
         TrN("&Close"),
@@ -98,40 +135,12 @@ static MenuDef menuDefFile[] = {
         CmdShowInFolder,
     },
     {
-        TrN("Open Next File In Folder"),
-        CmdOpenNextFileInFolder,
-    },
-    {
-        TrN("Open Previous File In Folder"),
-        CmdOpenPrevFileInFolder,
-    },
-    {
         TrN("&Save As..."),
         CmdSaveAs,
     },
     {
         TrN("Convert to PDF..."),
         CmdConvertToPDF,
-    },
-    {
-        TrN("Convert PDF to Images..."),
-        CmdConvertPdfToImages,
-    },
-    {
-        TrN("Save Annotations to existing PDF"),
-        CmdSaveAnnotations,
-    },
-    {
-        TrN("Apply Redactions"),
-        CmdApplyRedactions,
-    },
-    {
-        TrN("Insert Image..."),
-        CmdInsertImage,
-    },
-    {
-        TrN("Sign Document..."),
-        CmdSignDocument,
     },
 //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
@@ -150,10 +159,6 @@ static MenuDef menuDefFile[] = {
     {
         TrN("Delete"),
         CmdDeleteFile,
-    },
-    {
-        TrN("Delete and Open Next File"),
-        CmdDeleteFileAndOpenNext,
     },
     {
         TrN("&Print..."),
@@ -577,10 +582,6 @@ static MenuDef menuDefSettings[] = {
     { StrL(kMenuSeparator),                       0                  },
 #endif
     {
-        TrN("Use SumatraPDF File Picker"),
-        CmdToggleFilePicker,
-    },
-    {
         TrN("&Settings..."),
         CmdOptions,
     },
@@ -589,7 +590,7 @@ static MenuDef menuDefSettings[] = {
         CmdAdvancedSettings,
     },
     {
-        TrN("&Open Settings File..."),
+        TrN("&Open Advanced Settings File..."),
         CmdOpenSettingsFile,
     },
     {

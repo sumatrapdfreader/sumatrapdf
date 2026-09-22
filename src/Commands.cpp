@@ -331,6 +331,7 @@ static SeqStrings gCommandNames =
     "CmdPrintSelection\0"
     "CmdAutoGenerateTOC\0"
     "CmdOpenSettingsFile\0"
+    "CmdOpenFileWithSumatraFilePicker\0"
     "\0";
 
 static i32 gCommandIds[] = {
@@ -651,6 +652,7 @@ static i32 gCommandIds[] = {
     CmdPrintSelection,
     CmdAutoGenerateTOC,
     CmdOpenSettingsFile,
+    CmdOpenFileWithSumatraFilePicker,
 };
 
 SeqStrings gCommandDescriptions =
@@ -970,15 +972,18 @@ SeqStrings gCommandDescriptions =
     "Toggle Grayscale\0"
     "Print Selection...\0"
     "Generate Table Of Contents\0"
-    "Open Settings File...\0"
+    "Open Advanced Settings File...\0"
+    "Open File With SumatraPDF File Picker...\0"
     "\0";
 
 SeqStrings gCommandAltDescs =
     "Browse Files In Folder...\0"
+    "Advanced Options...\0"
     "\0";
 
 i32 gCommandAltDescIds[] = {
     CmdNavigateFilesInFolder,
+    CmdAdvancedSettings,
 };
 // clang-format on
 // @gen-end cmd-c
