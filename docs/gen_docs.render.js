@@ -202,7 +202,29 @@
     return '<nav class="sidebar-toc">\n' + items.join("\n") + "\n</nav>";
   }
 
-  const kDocsImgCdn = "https://files.sumatrapdfreader.org/assets/sumatrapdf/";
+  // Keep the sidebar's scroll position when a sidebar link loads another page.
+  const kSidebarScrollKey = "docs-sidebar-scroll";
+
+  function keepSidebarScroll(toc) {
+    toc.addEventListener("click", function (e) {
+      if (!e.target.closest("a")) {
+        return;
+      }
+      try {
+        localStorage.setItem(kSidebarScrollKey, JSON.stringify({ top: toc.scrollTop, time: Date.now() }));
+      } catch (err) {}
+    });
+    try {
+      const saved = JSON.parse(localStorage.getItem(kSidebarScrollKey) || "null");
+      localStorage.removeItem(kSidebarScrollKey);
+      if (saved && Date.now() - saved.time < 60 * 1000) {
+        toc.scrollTop = saved.top;
+      }
+    } catch (err) {}
+  }
+
+  // docs screenshots are stored in R2 under assets/sumatrapdf/docs/img/
+  const kDocsImgCdn = "https://files.sumatrapdfreader.org/assets/sumatrapdf/docs/img/";
 
   function docsImgToCdnUrl(src) {
     let s = (src || "").replace(/%20/g, " ").replace(/\\/g, "/");
@@ -404,6 +426,10 @@
         const titleEl = document.getElementById("doc-title");
         if (tocSlot) {
           tocSlot.innerHTML = buildTocHTML(currentHtml);
+          const toc = tocSlot.querySelector(".sidebar-toc");
+          if (toc) {
+            keepSidebarScroll(toc);
+          }
         }
         if (innerSlot) {
           innerSlot.innerHTML = rendered.innerHTML;

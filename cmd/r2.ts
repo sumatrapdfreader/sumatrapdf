@@ -5,7 +5,8 @@ import * as Minio from "minio";
 export const filesHost = "files.sumatrapdfreader.org";
 export const filesUrlPrefix = `https://${filesHost}/`;
 export const r2Prefix = "assets/sumatrapdf/";
-export const docsImgCdnPrefix = filesUrlPrefix + r2Prefix;
+// docs screenshots (img/<name> in the website's www/docs/*.md)
+export const docsImgCdnPrefix = filesUrlPrefix + r2Prefix + "docs/img/";
 
 export function docsImgToCdnUrl(src: string): string {
   let s = src.replace(/%20/g, " ").replace(/\\/g, "/");
