@@ -1,0 +1,40 @@
+pdfmerge: exit non-zero when an input or the output fails
+
+A missing or non-PDF input was skipped with an error message but the
+tool still returned 0, as did a failed save, so scripts could not tell.
+The remaining inputs are still merged and saved.
+---
+diff --git a/source/tools/pdfmerge.c b/source/tools/pdfmerge.c
+index fa1f09d81..00aeb6ecf 100644
+--- a/source/tools/pdfmerge.c
++++ b/source/tools/pdfmerge.c
+@@ -321,6 +321,7 @@ int pdfmerge_main(int argc, char **argv)
+ 	char *flags = "";
+ 	char *input;
+ 	int c;
++	int failed = 0;
+ 	fz_context *ctx;
+ 
+ 	while ((c = fz_getopt(argc, argv, "o:O:")) != -1)
+@@ -380,6 +381,7 @@ int pdfmerge_main(int argc, char **argv)
+ 		{
+ 			fz_report_error(ctx);
+ 			fz_log_error_printf(ctx, "Cannot merge document '%s'.", input);
++			failed = 1;
+ 		}
+ 	}
+ 
+@@ -391,11 +393,12 @@ int pdfmerge_main(int argc, char **argv)
+ 		{
+ 			fz_report_error(ctx);
+ 			fz_log_error_printf(ctx, "Cannot save output file: '%s'.", output);
++			failed = 1;
+ 		}
+ 	}
+ 
+ 	pdf_drop_document(ctx, doc_des);
+ 	fz_flush_warnings(ctx);
+ 	fz_drop_context(ctx);
+-	return 0;
++	return failed;
+ }

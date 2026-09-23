@@ -1,0 +1,19 @@
+pdfmerge: renumber bookmarks for a backwards page range
+
+position_in_range() counted a descending range ("3-1") from its low
+end, so bookmarks kept their old page numbers. Page start comes first
+in such a range.
+---
+diff --git a/source/tools/pdfmerge.c b/source/tools/pdfmerge.c
+index fa1f09d81..da352218e 100644
+--- a/source/tools/pdfmerge.c
++++ b/source/tools/pdfmerge.c
+@@ -125,7 +125,7 @@ position_in_range(fz_context *ctx, const char *range, int count, int page)
+ 		else
+ 		{
+ 			if (end <= page && page <= start)
+-				return n + page - end + 1;
++				return n + start - page + 1;
+ 			n += start - end + 1;
+ 		}
+ 	}

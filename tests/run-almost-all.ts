@@ -335,6 +335,7 @@ import { testit as issue6220 } from "./issue-6220.ts";
 import { testit as sessionRestoreTabState } from "./session-restore-tab-state.ts";
 import { testit as issue6239 } from "./issue-6239.ts";
 import { testit as toolPoster } from "./tool-poster.ts";
+import { testit as toolMerge } from "./tool-merge.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -666,6 +667,7 @@ export const tests: NamedTest[] = [
   ["session-restore-tab-state", sessionRestoreTabState],
   ["issue-6239", issue6239],
   ["tool-poster", toolPoster],
+  ["tool-merge", toolMerge],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
