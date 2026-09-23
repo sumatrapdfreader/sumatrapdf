@@ -226,6 +226,20 @@ pre > code {
   margin-bottom: 1rem;
 }
 
+/* :video in the docs markdown: an embedded YouTube player */
+.doc-video {
+  margin: 1rem 0;
+}
+
+.doc-video iframe {
+  display: block;
+  width: 100%;
+  max-width: 1040px;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border: 0;
+}
+
 .doc-columns {
   columns: 2;
   margin-top: 1rem;

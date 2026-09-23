@@ -46,11 +46,29 @@
     return text.slice(0, startIdx) + text.slice(endIdx);
   }
 
+  // ":video <youtube link> <r2 link>": a video recorded for the docs, shown as an embedded
+  // YouTube player; the r2 link is the same video on files.sumatrapdfreader.org
+  // (see youTubeEmbedHTML() in the website's server/gen_manual.go)
+  const rxVideoLine =
+    /^:video[ \t]+https:\/\/(?:youtu\.be\/|(?:www\.)?youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})\S*[ \t]+https:\/\/files\.sumatrapdfreader\.org\/\S+[ \t]*$/;
+
+  function videoHTML(youTubeId) {
+    return (
+      '\n<div class="doc-video"><iframe src="https://www.youtube-nocookie.com/embed/' +
+      youTubeId +
+      '" title="Video" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>\n'
+    );
+  }
+
   function preProcess(text) {
     const lines = text.split("\n");
     let inCols = false;
     return lines
       .map(function (line) {
+        const video = rxVideoLine.exec(line.trim());
+        if (video) {
+          return videoHTML(video[1]);
+        }
         if (line.trim() === ":columns") {
           if (!inCols) {
             inCols = true;

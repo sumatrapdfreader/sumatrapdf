@@ -30,6 +30,14 @@ Short pages (troubleshooting, one-off how-tos) only need 1, 2 and the content.
 - Link the first mention of another feature to its page.
 - Don't document bugs or history; say how it works now. Keep `(ver 3.7+)` markers where behavior differs by version.
 
+## Videos
+
+A video goes on its own line, e.g. right after the title:
+`:video <youtube link> <r2 link>` (the R2 link is the web version under
+`https://files.sumatrapdfreader.org/assets/sumatrapdf/docs/video/`). The website and the
+in-app manual (`gen_docs.render.js`) render it as an embedded YouTube player. How to record
+and upload one: "Doc videos" in the website's `agents.md`.
+
 ## Index
 
 `SumatraPDF-documentation.md` groups pages by task (getting started, reading, ...).
