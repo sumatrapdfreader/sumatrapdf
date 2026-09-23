@@ -4,7 +4,7 @@
 
 ## Commands
 
-Use `Ctrl + K` to invoke the command palette, or click the command-palette button to the left of the **SumatraPDF** title on the home page:
+Press `Ctrl + K` to summon the command palette:
 
 ![Command Palette](img/command-palette-commands-423d.png)
 
@@ -18,7 +18,6 @@ The command palette is a fast and convenient way to:
 - `$` : jump to a favorite (current document's favorites first, then others)
 - `*` : jump to an annotation in the current PDF
 - `=` : change a setting
-- `:` : combined view (replicates behavior before ver 3.6)
 
 How to use it:
 
