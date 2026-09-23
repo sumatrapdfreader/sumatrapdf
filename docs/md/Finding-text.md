@@ -105,7 +105,7 @@ Use the `sumatrapdf-tool grep` command-line tool. See [Tool grep](Tool-grep.md) 
 
 ## Search the web or translate a selection
 
-To send **selected** text to Google, Bing, DeepL, etc., see [Customize search / translation services](Customize-search-translation-services.md). That is separate from in-document find.
+To send **selected** text to Google, Bing, DeepL, etc., see [Customize search / translation](Customize-search-translation-services.md). That is separate from in-document find.
 
 ## How search works
 

@@ -1,4 +1,4 @@
-# Customize search / translation services
+# Customize search / translation
 
 Send selected text to a web search engine, a translation service, an API or a local program. Built-in services are in the selection context menu; add your own with the `SelectionHandlers` [advanced setting](https://www.sumatrapdfreader.org/settings/settings.html).
 

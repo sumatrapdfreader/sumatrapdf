@@ -174,10 +174,20 @@
     const items = [];
     const lines = mainDocText.split("\n");
     let inColumns = false;
+    // "## Section" heading of the index, shown above its links
+    let section = "";
     for (let li = 0; li < lines.length; li++) {
       const line = lines[li];
+      if (line.startsWith("## ")) {
+        section = line.slice(3).trim();
+        continue;
+      }
       if (line.trim() === ":columns") {
         inColumns = !inColumns;
+        if (inColumns && section) {
+          items.push('<div class="toc-section">' + section + "</div>");
+          section = "";
+        }
         continue;
       }
       if (!inColumns) continue;

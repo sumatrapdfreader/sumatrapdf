@@ -77,7 +77,7 @@ New here? Start with [Installation](Installation.md), then learn the [Command Pa
 
 [Customize external viewers](Customize-external-viewers.md)
 
-[Customize search / translation services](Customize-search-translation-services.md)
+[Customize search / translation](Customize-search-translation-services.md)
 
 [Advanced settings](Advanced-options-settings.md)
 
@@ -98,7 +98,7 @@ New here? Start with [Installation](Installation.md), then learn the [Command Pa
 [Installer cmd-line arguments](Installer-cmd-line-arguments.md)
 :columns
 
-## Using SumatraPDF to convert and modify PDF and other files
+## Command-line tools
 
 Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you can use `sumatrapdf-tool.exe <tool> <option> <files>` or [SumatraPDF.exe <tool>](Tools.md) to convert, extract, search PDF and other files.
 
@@ -140,7 +140,11 @@ Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you c
 [run JavaScript examples](Tool-run-javascript-examples.md)
 
 [run JavaScript API reference](Tool-run-javascript-reference.md)
+:columns
 
+## PDF how-tos
+
+:columns
 [Extract text from PDF](Tool-x-extract-text-from-pdf.md)
 
 [Convert text file to a PDF](Tool-x-convert-text-to-pdf.md)

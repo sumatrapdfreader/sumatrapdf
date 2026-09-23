@@ -81,6 +81,10 @@ a:not(.hlink) {
   color: var(--text-secondary);
 }
 
+.sidebar-toc .toc-section {
+  color: var(--text-primary);
+}
+
 .sidebar-toc a:hover,
 .sidebar-toc a.toc-current {
   color: var(--text-primary);
