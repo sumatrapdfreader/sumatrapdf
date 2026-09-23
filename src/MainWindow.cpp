@@ -556,7 +556,13 @@ static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
         str::Free(data);
         return;
     }
-    SumatraLaunchBrowser(tmpPath);
+    // a type the shell isn't allowed to open is shown in the file manager instead
+    if (OpenFileExternally(tmpPath)) {
+        logf("LaunchEmbeddedDestination: opened '%s'\n", tmpPath);
+    } else {
+        logf("LaunchEmbeddedDestination: showing '%s' in the file manager\n", tmpPath);
+        OpenPathInDefaultFileManager(tmpPath);
+    }
     str::Free(data);
 }
 

@@ -153,14 +153,17 @@ export function launchSumatra(args: string[], opts?: { defaultWindowPos?: boolea
 
 // Launch with -dbg-control so the test can wait for render-idle (and other
 // control commands) instead of sleeping. saveSettings: skip -for-testing when
-// the test has to read back the settings file.
+// the test has to read back the settings file. env: extra environment variables.
 export async function launchControlled(
   args: string[],
-  opts?: { defaultWindowPos?: boolean; saveSettings?: boolean },
+  opts?: { defaultWindowPos?: boolean; saveSettings?: boolean; env?: Record<string, string> },
 ): Promise<{ proc: Bun.Subprocess; client: ControlClient; frame: number }> {
   // many tests post keys and clicks directly; a held modifier would chord them
   await ensureModifierKeysUp();
   if (sharedSession) {
+    if (opts?.env) {
+      throw new Error("a shared controlled session can't take env; register the test after the shared group");
+    }
     const path = args[args.length - 1];
     if (!path || path.startsWith("-")) {
       throw new Error("shared controlled session needs a document path as its last argument");
@@ -183,6 +186,7 @@ export async function launchControlled(
   const proc = Bun.spawn([EXE, ...testing, ...posArgs, "-dbg-control", pipe, ...args], {
     stdout: "ignore",
     stderr: "pipe",
+    env: opts?.env ? { ...process.env, ...opts.env } : undefined,
   });
   drainStderr(proc);
   gLastProc = proc;
