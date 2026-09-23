@@ -15592,6 +15592,9 @@ static bool IsSimpleOpenCase(const Flags& i, bool isFirstWin) {
     if (i.search) {
         return false;
     }
+    if (i.enterPresentation || i.enterFullScreen) {
+        return false;
+    }
     return true;
 }
 
@@ -15684,6 +15687,10 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
         // TODO: quote if i.search has '"' in it
         cmd.Append(fmt("[Search(\"%s\",\"%s\")]", fullPath, i.search));
     }
+    if ((i.enterPresentation || i.enterFullScreen) && isFirstWin) {
+        Str name = i.enterPresentation ? StrL("Presentation") : StrL("FullScreen");
+        cmd.Append(fmt("[%s(\"%s\")]", name, fullPath));
+    }
 
     if (i.reuseDdeInstance) {
         targetHwnd = nullptr; // force DDEExecute
@@ -15691,15 +15698,20 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
     SendMyselfDDE(ToStr(cmd), targetHwnd);
 }
 
+// enters presentation or fullscreen, leaving the other one first
+void SwitchToFullScreen(MainWindow* win, bool presentation) {
+    if (presentation ? win->isFullScreen : win->presentation) {
+        ExitFullScreen(win);
+    }
+    EnterFullScreen(win, presentation);
+}
+
 static void FlagsEnterFullscreen(const Flags& flags, MainWindow* win) {
     if (!win || !win->IsDocLoaded()) {
         return;
     }
     if (flags.enterPresentation || flags.enterFullScreen) {
-        if (flags.enterPresentation && win->isFullScreen || flags.enterFullScreen && win->presentation) {
-            ExitFullScreen(win);
-        }
-        EnterFullScreen(win, flags.enterPresentation);
+        SwitchToFullScreen(win, flags.enterPresentation);
     }
 }
 

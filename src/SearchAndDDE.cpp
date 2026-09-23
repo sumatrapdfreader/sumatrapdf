@@ -2873,6 +2873,34 @@ static Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
 }
 
 /*
+Show the document in presentation or fullscreen mode, like -presentation /
+-fullscreen do for a file opened on the command line.
+
+[Presentation("<pdffile>")]
+[FullScreen("<pdffile>")]
+*/
+static Str HandleFullScreenCmd(HWND hwnd, Str cmd, bool* ack) {
+    TempStr filePath;
+    bool presentation = true;
+    Str next = str::Parse(cmd, R"([Presentation("%s")])", &filePath);
+    if (str::IsNull(next)) {
+        presentation = false;
+        next = str::Parse(cmd, R"([FullScreen("%s")])", &filePath);
+    }
+    if (str::IsNull(next)) {
+        return {};
+    }
+
+    MainWindow* win = FindDdeTargetWindow(hwnd, filePath, true);
+    if (!win || !win->IsDocLoaded()) {
+        return next;
+    }
+    SwitchToFullScreen(win, presentation);
+    *ack = true;
+    return next;
+}
+
+/*
 Open new window.
 
 [NewWindow]
@@ -3098,6 +3126,9 @@ static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
         }
         if (str::IsNull(nextCmd)) {
             nextCmd = HandleSetViewCmd(hwnd, cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleFullScreenCmd(hwnd, cmd, &didHandle);
         }
         if (str::IsNull(nextCmd)) {
             nextCmd = HandleSearchCmd(hwnd, cmd, &didHandle);

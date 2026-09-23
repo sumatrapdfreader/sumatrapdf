@@ -323,6 +323,7 @@ void MessageBoxWarning(HWND hwnd, Str msg, Str title = {});
 void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd);
 void EnterFullScreen(MainWindow* win, bool presentation = false);
 void ExitFullScreen(MainWindow* win);
+void SwitchToFullScreen(MainWindow* win, bool presentation);
 void SetCurrentLang(Str langCode);
 void RebuildMenuBarForWindow(MainWindow* win);
 void DeleteMainWindow(MainWindow* win);
