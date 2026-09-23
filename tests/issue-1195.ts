@@ -45,7 +45,7 @@ const WINDOW_POS = ["-window-pos", "900x700@40x40"];
 
 type Result = { zoom: number; dark: number };
 
-// the built-in zoom levels written out, which docs/md/Scrolling-and-zooming.md
+// the built-in zoom levels written out, which sumatra-website/www/docs/Scrolling-and-zooming.md
 // gives users as the ZoomLevels line to copy and edit
 const DEFAULT_LEVELS =
   "ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 " +

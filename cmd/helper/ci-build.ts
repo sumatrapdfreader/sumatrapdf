@@ -82,16 +82,6 @@ async function revertBuildConfig(): Promise<void> {
   await proc.exited;
 }
 
-// gen-docs.ts writes the in-app manual to .work/docs; the exe's prebuild
-// (cmd/pack-embedded-prebuild.cmd) packs it into IDR_EMBEDDED_PAK. Without it
-// the build still succeeds but ships without the manual, so fail early.
-function ensureDocsGenerated(): void {
-  const path = join(".work", "docs", "manual.shell.html");
-  if (!existsSync(path)) {
-    throw new Error(`'${path}' missing which indicates gen-docs didn't run`);
-  }
-}
-
 // === Command Execution ===
 
 async function runCaptureOutput(cmd: string, args: string[], cwd?: string): Promise<Uint8Array> {
@@ -225,7 +215,6 @@ function removeReleaseBuilds(): void {
 }
 
 async function buildPreRelease(preRelVer: string, sha1: string, vsplatform: string): Promise<void> {
-  ensureDocsGenerated();
   console.log(`building pre-release version ${preRelVer}`);
   const buildStart = performance.now();
 

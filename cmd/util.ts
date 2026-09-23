@@ -1,5 +1,9 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, dirname, extname } from "node:path";
+import { join, dirname, extname, resolve } from "node:path";
+
+// user docs live in the sumatra-website repo, checked out next to this one
+export const websiteDir = resolve(import.meta.dir, "..", "..", "hack", "webapps", "sumatra-website");
+export const websiteDocsDir = join(websiteDir, "www", "docs");
 
 const msBuildRelPath = String.raw`MSBuild\Current\Bin\MSBuild.exe`;
 // VS 2022 ships llvm tools in Llvm\bin, VS 18 in Llvm\x64\bin

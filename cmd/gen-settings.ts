@@ -3,7 +3,7 @@
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
-import { extractSumatraVersion, clangFormatFiles, runLogged, isGitClean } from "./util";
+import { extractSumatraVersion, clangFormatFiles, runLogged, isGitClean, websiteDocsDir } from "./util";
 
 async function runCapture(cmd: string, args: string[], cwd?: string): Promise<string> {
   const proc = Bun.spawn([cmd, ...args], { stdout: "pipe", stderr: "pipe", cwd });
@@ -2969,10 +2969,12 @@ export async function main(opts?: { formatOutput?: boolean }) {
   console.log(`Wrote '${settingsPath}'`);
 
   // Generate settings markdown
-  {
+  const mdPath = join(websiteDocsDir, "Advanced-options-settings.md");
+  if (!existsSync(mdPath)) {
+    console.log(`skipping settings markdown: '${mdPath}' missing (needs sumatra-website checkout)`);
+  } else {
     const inside = genStructMarkdown(globalPrefsStruct, "");
     const mdContent = tmplMarkdown.replaceAll("%INSIDE%", inside);
-    const mdPath = join("docs", "md", "Advanced-options-settings.md");
     const existing = readFileSync(mdPath, "utf-8");
     const marker = "## Settings";
     const idx = existing.indexOf(marker);

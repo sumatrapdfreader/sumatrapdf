@@ -1,16 +1,16 @@
-// Stages the in-app manual under .work/docs: the markdown pages reachable
-// from SumatraPDF-documentation.md, a manifest, the concatenated all-docs.md
-// and the static files the on-demand renderer (docs/gen_docs.render.js)
-// needs. The build's prebuild packs that dir into IDR_EMBEDDED_PAK.
+// Stages the in-app manual under .work/docs: the markdown pages (from the
+// sumatra-website repo) reachable from SumatraPDF-documentation.md, a
+// manifest, the concatenated all-docs.md and the static files the on-demand
+// renderer (docs/gen_docs.render.js) needs. The build's prebuild packs that dir into IDR_EMBEDDED_PAK.
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { commands as commandsDef } from "./gen-commands";
 import { checkCdnImages } from "./r2";
-import { copyFileNormalized } from "./util.js";
+import { copyFileNormalized, websiteDocsDir } from "./util.js";
 
 const docsDir = "docs";
-const mdDir = join(docsDir, "md");
 const manualOutDir = join(".work", "docs");
+const mdDir = websiteDocsDir;
 
 const kMainPage = "SumatraPDF-documentation.md";
 const kAllDocsFile = "all-docs.md";
@@ -257,6 +257,12 @@ export type GenDocsOptions = {
 export async function main(opts: GenDocsOptions = {}) {
   const timeStart = performance.now();
   console.log("gen-docs starting");
+
+  // CI has no (private) sumatra-website checkout; the exe ships without the manual
+  if (!existsSync(mdDir)) {
+    console.log(`gen-docs: skipping, '${mdDir}' missing (needs sumatra-website checkout)`);
+    return;
+  }
 
   // validates links by walking the doc graph from the main page
   const pages = collectPages();

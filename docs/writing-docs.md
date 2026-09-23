@@ -1,4 +1,4 @@
-# Writing user docs (docs/md)
+# Writing user docs (sumatra-website www/docs)
 
 Pattern for feature pages, modeled on https://outliner.tana.inc/learn/features/sidebar.
 

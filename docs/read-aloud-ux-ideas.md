@@ -256,4 +256,4 @@ The largest **remaining** gap is **toolbar triple-duty** (start / pause / contin
 - **Tab switch:** `LoadModelIntoTab` → `CloseDocumentInCurrentTab` → `ResetReadAloudStateForTab` (stops TTS, clears session)
 - **Copy permission:** silent return in read-aloud entry paths when `Perm::CopySelection` denied
 - **TTS:** `TextToSpeech.cpp` — WinRT + SAPI; `ReadAloudVoiceId` in settings
-- **User docs:** `docs/md/Accessibility-and-Text-to-Speech.md`, `docs/md/Commands.md`, version-history 3.7 entry
+- **User docs:** `sumatra-website/www/docs/Accessibility-and-Text-to-Speech.md`, `sumatra-website/www/docs/Commands.md`, version-history 3.7 entry

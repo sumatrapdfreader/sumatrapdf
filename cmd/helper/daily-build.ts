@@ -56,16 +56,6 @@ async function revertBuildConfig(): Promise<void> {
   await $`git checkout ${buildConfigPath()}`;
 }
 
-// gen-docs.ts writes the in-app manual to .work/docs; the exe's prebuild
-// (cmd/pack-embedded-prebuild.cmd) packs it into IDR_EMBEDDED_PAK. Without it
-// the build still succeeds but ships without the manual, so fail early.
-function ensureDocsGenerated(): void {
-  const path = join(".work", "docs", "manual.shell.html");
-  if (!existsSync(path)) {
-    throw new Error(`'${path}' missing which indicates gen-docs didn't run`);
-  }
-}
-
 export async function buildDaily() {
   if (!(await isGithubMyMasterBranch())) {
     console.log("buildCiDaily: skipping build because not on master branch");
@@ -87,7 +77,6 @@ export async function buildDaily() {
   // generate HTML docs
   const { main: genDocs } = await import("../gen-docs");
   await genDocs();
-  ensureDocsGenerated();
 
   setBuildConfigPreRelease(sha1, preRelVer);
 

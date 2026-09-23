@@ -19,7 +19,7 @@ import { cmdId, EXE, runStandalone, tmpPath, assemblePdf } from "./util.ts";
 
 type Button = { visible: boolean; idx: number };
 
-// the standard toolbar written out as a layout; docs/md/Customize-toolbar.md
+// the standard toolbar written out as a layout; sumatra-website/www/docs/Customize-toolbar.md
 // gives users this string as the starting point for their own
 const DEFAULT_LAYOUT =
   "CmdOpenFile CmdPrint | PageInfo CmdGoToPrevPage CmdGoToNextPage | " +

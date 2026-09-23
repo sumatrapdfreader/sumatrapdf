@@ -32,7 +32,7 @@ forces laying out every chapter before the first page shows:
 3. In mupdf only EPUB has >1 chapter (`epub_count_chapters` = spine length).
    fb2/html/txt/md are `htdoc` single-chapter; XPS/PDF single-chapter. EPUB
    chapter layout is already lazy inside mupdf (`count_chapter_pages` lays out
-   one chapter on demand); what forces the full layout is *our* use of
+   one chapter on demand); what forces the full layout is _our_ use of
    `fz_count_pages` / `fz_load_page` / `fz_load_outline`.
 4. `fz_load_outline` resolves every outline node with `fz_resolve_link`
    (`outline.c:118`), which lays out every chapter a fragment link points into.
@@ -56,7 +56,7 @@ struct Location {
 inline Location LocFromPageNo(int pageNo) { return {1, pageNo}; } // single-chapter docs
 ```
 
-### Flat `pageNo` stays the view index; chapters may be *unlaid*
+### Flat `pageNo` stays the view index; chapters may be _unlaid_
 
 The app keeps using a flat 1-based `pageNo` (DisplayModel, RenderCache, text
 selection, etc.). What changes: a chapter that has not been laid out counts as
@@ -133,7 +133,7 @@ Structs carrying a page: `IPageDestination`, `TocItem`, `IPageElement`,
 
 - `EngineMupdf`: TOC built from `fz_new_outline_iterator` (no `fz_load_outline`).
   For chaptered docs a TOC item stores only the URI and gets `loc = {chapter,0}`
-  by resolving the URI *without its fragment* (`epub_resolve_link` returns the
+  by resolving the URI _without its fragment_ (`epub_resolve_link` returns the
   spine index without layout when there is no `#`). `ResolveDest` does the full
   `fz_resolve_link_dest` (lays out one chapter) and caches `loc`/`pageNo`.
 - `EngineEbook` (mobi): TOC and links are `filepos` byte offsets. Chapter =
@@ -156,7 +156,7 @@ Structs carrying a page: `IPageDestination`, `TocItem`, `IPageElement`,
   (= `PageNoFromLocation` → sync → `GoToPage`).
 - `GoToNextPage`/`GoToPrevPage`/`GoToLastPage` for chaptered docs go through
   `NextLocation`/`PrevLocation`/`LastLocation` so "prev" from chapter 6 page 1
-  lands on the *last* page of chapter 5 even if chapter 5 was never laid out.
+  lands on the _last_ page of chapter 5 even if chapter 5 was never laid out.
   Single-chapter docs keep the current row-based code path untouched.
 - `ScrollState` gains `Location loc`; `GetScrollState` fills it,
   `SetScrollState` prefers `loc` when valid (nav history survives shifts).
@@ -219,6 +219,7 @@ Each phase: implement, `clang-format` touched `src/` files, build debug,
 fix warnings, run the named checks. Report what was verified and what was not.
 
 ### Phase 1 – `Location` + `ChapterTable` + `EngineBase` contract
+
 Files: `src/EngineBase.h/.cpp`, new `src/ChapterTable.h/.cpp` (+ premake
 file list `premake5.files.lua`), `src/AppUnitTests.cpp` or a `_ut.cpp` next to
 it for `ChapterTable` tests (`bun cmd/run-unit-tests.ts -dbg`).
@@ -230,6 +231,7 @@ bookmark defaults, `ResolveDest`, `loc` fields on `IPageDestination`,
 chapter on first use. No behavior change for existing engines.
 
 ### Phase 2 – `EngineMupdf` lazy EPUB chapters
+
 - `FinishLoading`: `chapters.Init(fz_count_chapters)`; count chapter 1 only
   (`fz_count_chapter_pages(ctx, doc, 0)`); no `fz_count_pages` when
   `ChapterCount() > 1`. `LayOutChapter(ch)` = `fz_count_chapter_pages` under
@@ -254,6 +256,7 @@ chapter on first use. No behavior change for existing engines.
   `CmdGoToNextPage` via `-dbg-control` and confirm no crash and page count grows.
 
 ### Phase 3 – `EngineEbook` lazy MOBI chapters
+
 - `EngineEbook` gains chapter starts: scan `doc->GetHtmlData()` once for
   `<mbp:pagebreak` (case-insensitive) → `Vec<int> chapterStart` (chapter 1
   starts at 0). Only `EngineMobi` enables it; when no marker is found the
@@ -275,6 +278,7 @@ chapter on first use. No behavior change for existing engines.
   next/prev across a chapter edge, TOC click into a far chapter.
 
 ### Phase 4 – `DisplayModel` / `RenderCache` / `DocController`
+
 As in the design: `PageInfo::loc`, snapshot `PageCount`, `SyncWithEngineLayout`,
 `CurrentLocation`/`GoToLocation`, chapter-aware next/prev/last, `ScrollState::loc`,
 `RenderCache` re-keying + `RenderPageArgs::loc`, `PagesRenumbered` callback,
@@ -286,25 +290,28 @@ grep as page-navigation related), EPUB/MOBI continuous mode scrolls through
 chapter edges without position jumps.
 
 ### Phase 5 – persistence
+
 `cmd/gen-settings.ts` (`PageNo` → `Str` in `FileState` and `TabState`, doc
 strings updated), `bun cmd/gen-code.ts`, `src/PagePosition.h/.cpp`, all
-read/write sites listed in the design, `docs/md/Advanced-options-settings.md`
+read/write sites listed in the design, `sumatra-website/www/docs/Advanced-options-settings.md`
 regenerated. Check: a settings file with `PageNo = 12` still opens a PDF at
 page 12; closing an EPUB at chapter 37 and reopening lands in chapter 37; an
 old-style int for an EPUB still opens at that flat page.
 
 ### Phase 6 – UI for chaptered documents
+
 Toolbar, Go To Page dialog, page-info notification, tab suffix, TOC selection,
 `EnsureAllChaptersLaidOut` at print / dump / full search / PDF export /
 stress. Check with `-dbg-control` + screenshot (see `verify` skill).
 
 ### Phase 7 – tests + docs
+
 - `tests/ad-hoc-chapters.ts`: opens `1000.mobi` and an EPUB, asserts load time
   and chapter navigation through `-dbg-control` (add `ChapterInfo` /
   `GoToLocation` control commands if needed).
 - `tests/issue-*.ts`-style regression for settings backward compat.
-- `docs/md/Version-history.md` entry (behavior change: chapter/page toolbar for
-  multi-chapter ebooks, much faster open), `docs/md/Commands.md` only if a
+- `sumatra-website/www/docs/Version-history.md` entry (behavior change: chapter/page toolbar for
+  multi-chapter ebooks, much faster open), `sumatra-website/www/docs/Commands.md` only if a
   command was added.
 
 ## Outcome

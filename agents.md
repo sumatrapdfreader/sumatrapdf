@@ -34,7 +34,7 @@ When launching SumatraPDF.exe for ad-hoc testing, always pass the `-for-testing`
 
 After making a change to a .cpp, .c or .h file under `src/` (and before running build.ts), run clang-format on those files to reformat them in place. Do **not** clang-format third-party / vendored code (`ext/`, etc.) — keep edits there minimal and match the existing local style.
 
-After changing a .ts file under `cmd/` or `tests/`, run `bun cmd/format.ts` — it runs prettier over `cmd/**/*.ts` and `tests/**/*.ts` and then clang-formats the C/C++ sources. Use `bun cmd/format.ts -ts` to run only the prettier pass (no Visual Studio / clang-format needed). Prettier settings live in `.prettierrc.json` (`printWidth` 120, `endOfLine` lf) and `.prettierignore` (vendored code, build output, scratch `tmp/` dirs, and the generated `docs/md/Advanced-options-settings.md`). For other prettier-owned files (.js / .json / .md) run `bunx prettier --write <files>` on the files you touched.
+After changing a .ts file under `cmd/` or `tests/`, run `bun cmd/format.ts` — it runs prettier over `cmd/**/*.ts` and `tests/**/*.ts` and then clang-formats the C/C++ sources. Use `bun cmd/format.ts -ts` to run only the prettier pass (no Visual Studio / clang-format needed). Prettier settings live in `.prettierrc.json` (`printWidth` 120, `endOfLine` lf) and `.prettierignore` (vendored code, build output, scratch `tmp/` dirs). For other prettier-owned files (.js / .json / .md) run `bunx prettier --write <files>` on the files you touched.
 
 Never commit changes automatically. Always wait for explicit command to commit changes.
 
@@ -214,8 +214,8 @@ To add a new command:
 
 - add to cmd/gen-commands.ts, always at the very end of the list (after the last command, not before "CmdNone"): ids are assigned by position, so inserting earlier renumbers every command after it and bloats the src/Commands.h diff
 - run "bun cmd/gen-code.ts" (or "bun cmd/gen-commands.ts") to regenerate src/Commands.h and src/Commands.cpp
-- document in docs/md/Commands.md
-- add an entry to the **New commands** list at the end of the **next** section in docs/md/Version-history.md (see below)
+- document in `www/docs/Commands.md`
+- add an entry to the **New commands** list at the end of the **next** section in `www/docs/Version-history.md` (see below)
 
 ## DocProp name maps are generated
 
@@ -228,14 +228,16 @@ To add a new cmd-line flag:
 - add to cmd/gen-flags.ts
 - run "bun cmd/gen-code.ts" (or "bun cmd/gen-flags.ts") to regenerate src/Flags.cpp
 - implement handling in Flags.cpp
-- document in docs/md/Command-line-arguments.md when appropriate
-- add an entry to the **New command-line arguments** list at the end of the **next** section in docs/md/Version-history.md (see below)
+- document in `www/docs/Command-line-arguments.md` when appropriate
+- add an entry to the **New command-line arguments** list at the end of the **next** section in `www/docs/Version-history.md` (see below)
 
-## User docs (docs/md)
+## User docs (www/docs)
 
-When writing or restructuring a feature page in `docs/md`, follow `docs/writing-docs.md`.
+User docs live in the sumatra-website repo, in `../hack/webapps/sumatra-website/www/docs` (called `www/docs` below); it is the source of truth. `bun cmd/gen-docs.ts` copies the pages reachable from `SumatraPDF-documentation.md` into `.work/docs` for the in-app manual; without a website checkout (CI) it skips and the exe ships without the manual. `cmd/gen-settings.ts` and `cmd/gen-js-reference-md.ts` write their generated pages there. Commit doc changes in the website repo.
 
-## Version history (docs/md/Version-history.md)
+When writing or restructuring a feature page in `www/docs`, follow `docs/writing-docs.md`.
+
+## Version history (www/docs/Version-history.md)
 
 When documenting a release (usually the **next** section at the top):
 
