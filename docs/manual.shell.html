@@ -75,12 +75,11 @@
 <body>
   <header class="docs-bar">
     <div class="docs-search">
-      <input id="docs-search-input" class="docs-search-input" type="text" placeholder="Search docs, or Enter for AI help chat..." autocomplete="off" spellcheck="false" aria-label="Search documentation" />
+      <input id="docs-search-input" class="docs-search-input" type="text" placeholder="Search docs or write a question..." autocomplete="off" spellcheck="false" aria-label="Search docs or write a question" />
       <div id="docs-search-panel" class="docs-search-panel" hidden>
+        <div class="docs-search-lead">Search docs or ask AI a question e.g. <tt>How to configure keyboard shortcuts</tt></div>
+        <div id="docs-ask" class="docs-ask"></div>
         <div id="docs-search-results"></div>
-        <div id="docs-ask" class="docs-ask" hidden>
-          <div class="docs-ask-hint">Write a question e.g. <tt>How to configure keyboard shortcuts</tt> and send to AI of your choice</div>
-        </div>
       </div>
     </div>
   </header>

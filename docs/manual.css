@@ -252,7 +252,7 @@ html[data-theme="dark"] .toc-light {
   color: #5c5c5c;
 }
 
-/* Sticky search bar. No Home or Search/Ask AI buttons; the theme switch stays at the right. */
+/* Sticky search bar. No Home button; the theme switch stays at the right. */
 .docs-bar {
   position: sticky;
   top: 0;
@@ -310,7 +310,8 @@ html[data-theme="dark"] .docs-bar {
   left: 0;
   right: 0;
   top: calc(100% + 6px);
-  max-height: min(60vh, 480px);
+  max-height: calc(100vh - var(--docs-bar-h) - 1.5rem);
+  max-height: calc(100dvh - var(--docs-bar-h) - 1.5rem);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 6px;
@@ -367,26 +368,14 @@ html[data-theme="dark"] .docs-search-panel .search-result.selected {
   text-align: center;
 }
 
-.docs-ask {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 0.45rem 0.35rem;
+.docs-search-lead {
+  padding: 0.45rem 0.75rem 0.15rem;
   color: var(--text-secondary, #666);
   font-size: 14px;
-  line-height: 1;
+  line-height: 1.35;
 }
 
-.docs-ask-hint {
-  flex: 1 0 100%;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.4;
-  color: #9a9a96;
-}
-
-.docs-ask-hint tt {
+.docs-search-lead tt {
   font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
   background: #f2f2f0;
   color: #333;
@@ -394,8 +383,30 @@ html[data-theme="dark"] .docs-search-panel .search-result.selected {
   border-radius: 3px;
 }
 
-html[data-theme="dark"] .docs-ask-hint {
-  color: #8d8d89;
+html[data-theme="dark"] .docs-search-lead {
+  color: #c8c8c4;
+}
+
+html[data-theme="dark"] .docs-search-lead tt {
+  background: #2a2a2a;
+  color: #e8e8e6;
+}
+
+.docs-ask {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0.35rem 0.55rem 0.55rem;
+  overflow-x: auto;
+  color: var(--text-secondary, #666);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.docs-search-panel:has(.search-result, .search-no-results, .search-load-error) .docs-ask {
+  border-bottom: 1px solid var(--border, #e5e5e5);
+  margin-bottom: 4px;
 }
 
 h1,

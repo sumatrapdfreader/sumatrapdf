@@ -16,6 +16,8 @@
     grok: "https://grok.com/?q=",
     chatgpt: "https://chatgpt.com/?q=",
     claude: "https://claude.ai/new?q=",
+    perplexity: "https://www.perplexity.ai/search?q=",
+    copilot: "https://www.bing.com/copilotsearch?q=",
   };
   const kAllDocsFile = "all-docs.md";
   const kMaxResults = 32;
@@ -622,10 +624,12 @@
   }
 
   const ASK_BUTTONS_HTML = `
-      <span class="search-ask-label">Ask:</span>
+      <span class="search-ask-label">Ask</span>
       <button type="button" class="search-ask-btn" data-ai="grok" disabled>Grok</button>
       <button type="button" class="search-ask-btn" data-ai="chatgpt" disabled>ChatGPT</button>
-      <button type="button" class="search-ask-btn" data-ai="claude" disabled>Claude</button>`;
+      <button type="button" class="search-ask-btn" data-ai="claude" disabled>Claude</button>
+      <button type="button" class="search-ask-btn" data-ai="perplexity" disabled>Perplexity</button>
+      <button type="button" class="search-ask-btn" data-ai="copilot" disabled>Copilot</button>`;
 
   // shared by the Ctrl+K dialog and the inline ":askai" widget
   const sharedStyle = document.createElement("style");
@@ -827,9 +831,6 @@
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  const DOCS_PLACEHOLDER_SEARCH = "Search docs, or Enter for AI help chat...";
-  const DOCS_PLACEHOLDER_ASK = "Ask AI, or Enter to search docs";
-
   function initDocsBar() {
     const bar = document.querySelector(".docs-bar");
     if (!bar) return null;
@@ -839,7 +840,6 @@
     const askEl = document.getElementById("docs-ask");
     if (!inputEl || !panel || !resultsEl || !askEl) return null;
 
-    let docsMode = "search";
     let docsSelected = -1;
     let docsTimer = null;
     let docsSeq = 0;
@@ -900,25 +900,28 @@
       if (items.length > 0) setDocsSelected(0, items);
     }
 
+    function clearResults() {
+      resultsEl.innerHTML = "";
+      docsSelected = -1;
+    }
+
     function runSearch() {
-      if (docsMode !== "search") return;
       const query = inputEl.value.trim();
       if (!query) {
-        resultsEl.innerHTML = "";
-        docsSelected = -1;
-        closePanel();
+        clearResults();
+        openPanel();
         return;
       }
       const seq = ++docsSeq;
       ensureAllDocsLoaded()
         .then(function (files) {
-          if (seq !== docsSeq || docsMode !== "search") return;
+          if (seq !== docsSeq) return;
           if (inputEl.value.trim() !== query) return;
           paintBarResults(query, searchAllDocs(files, query));
           openPanel();
         })
         .catch(function () {
-          if (seq !== docsSeq || docsMode !== "search") return;
+          if (seq !== docsSeq) return;
           resultsEl.innerHTML = '<div class="search-load-error">Could not load documentation index</div>';
           docsSelected = -1;
           openPanel();
@@ -937,67 +940,41 @@
       }
     }
 
-    function setDocsMode(next) {
-      if (next !== "search" && next !== "ask") return;
-      docsMode = next;
-      const ask = docsMode === "ask";
-      inputEl.placeholder = ask ? DOCS_PLACEHOLDER_ASK : DOCS_PLACEHOLDER_SEARCH;
-      if (ask) {
-        clearTimeout(docsTimer);
-        resultsEl.innerHTML = "";
-        docsSelected = -1;
-        resultsEl.hidden = true;
-        askEl.hidden = false;
-        setAskEnabled();
-        openPanel();
-      } else {
-        askEl.hidden = true;
-        resultsEl.hidden = false;
-        if (inputEl.value.trim()) runSearch();
-        else closePanel();
-      }
-    }
-
-    function toggleDocsMode() {
-      setDocsMode(docsMode === "search" ? "ask" : "search");
-    }
-
     inputEl.addEventListener("input", function () {
-      if (docsMode === "ask") {
-        setAskEnabled();
+      setAskEnabled();
+      clearTimeout(docsTimer);
+      if (!inputEl.value.trim()) {
+        clearResults();
         openPanel();
         return;
       }
-      clearTimeout(docsTimer);
       docsTimer = setTimeout(runSearch, 250);
     });
 
     inputEl.addEventListener("focus", function () {
-      if (docsMode === "ask") openPanel();
-      else if (inputEl.value.trim()) openPanel();
+      openPanel();
+      if (inputEl.value.trim()) runSearch();
     });
 
     inputEl.addEventListener("keydown", function (e) {
       if (e.isComposing) return;
       if (e.key === "Escape") {
-        if (!panel.hidden) {
-          e.stopPropagation();
-          closePanel();
-        }
+        if (inputEl.value === "" && panel.hidden) return;
+        e.preventDefault();
+        e.stopPropagation();
+        clearTimeout(docsTimer);
+        inputEl.value = "";
+        clearResults();
+        setAskEnabled();
+        closePanel();
         return;
       }
+      const items = resultsEl.querySelectorAll(".search-result");
       if (e.key === "Enter") {
         e.preventDefault();
-        if (inputEl.value.trim() === "") {
-          toggleDocsMode();
-          return;
-        }
-        if (docsMode !== "search") return;
-        const items = resultsEl.querySelectorAll(".search-result");
         if (docsSelected >= 0 && docsSelected < items.length) items[docsSelected].click();
+        return;
       }
-      if (docsMode !== "search") return;
-      const items = resultsEl.querySelectorAll(".search-result");
       if (items.length === 0) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -1023,7 +1000,7 @@
     const preset = new URLSearchParams(window.location.search).get("ftsearch");
     if (preset) {
       inputEl.value = preset;
-      setDocsMode("search");
+      setAskEnabled();
       inputEl.focus();
     }
 
