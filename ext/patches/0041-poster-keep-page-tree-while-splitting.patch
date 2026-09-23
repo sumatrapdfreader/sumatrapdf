@@ -1,0 +1,32 @@
+pdfposter: keep the old page tree until the new one is built
+
+decimatepages() replaced /Kids with an empty array and then looked the
+pages up with pdf_lookup_page_obj(), so every file failed with
+"malformed page tree". Build the new kids array detached and put it in
+after the loop.
+---
+diff --git a/source/tools/pdfposter.c b/source/tools/pdfposter.c
+index 2d8159d19..838aa2883 100644
+--- a/source/tools/pdfposter.c
++++ b/source/tools/pdfposter.c
+@@ -110,8 +110,9 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
+ 	fz_catch(ctx)
+ 		fz_rethrow(ctx);
+ 
+-	/* Create a new kids array with our new pages in */
+-	kids = pdf_dict_put_array(ctx, pages, PDF_NAME(Kids), 1);
++	/* Create a new kids array with our new pages in. It replaces the old
++	 * one at the end: until then pages are looked up in the old tree. */
++	kids = pdf_new_array(ctx, doc, 1);
+ 
+ 	kidcount = 0;
+ 	for (page=0; page < num_pages; page++)
+@@ -229,6 +230,8 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
+ 		}
+ 	}
+ 
++	pdf_dict_put_drop(ctx, pages, PDF_NAME(Kids), kids);
++
+ 	/* Update page count */
+ 	pdf_dict_put_int(ctx, pages, PDF_NAME(Count), kidcount);
+ }

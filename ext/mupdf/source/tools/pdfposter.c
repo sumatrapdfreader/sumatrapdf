@@ -110,8 +110,9 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
-	/* Create a new kids array with our new pages in */
-	kids = pdf_dict_put_array(ctx, pages, PDF_NAME(Kids), 1);
+	/* Create a new kids array with our new pages in. It replaces the old
+	 * one at the end: until then pages are looked up in the old tree. */
+	kids = pdf_new_array(ctx, doc, 1);
 
 	kidcount = 0;
 	for (page=0; page < num_pages; page++)
@@ -228,6 +229,8 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
 			}
 		}
 	}
+
+	pdf_dict_put_drop(ctx, pages, PDF_NAME(Kids), kids);
 
 	/* Update page count */
 	pdf_dict_put_int(ctx, pages, PDF_NAME(Count), kidcount);
