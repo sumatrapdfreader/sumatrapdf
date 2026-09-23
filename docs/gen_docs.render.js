@@ -4,8 +4,18 @@
 
   /*COMMANDS_SEARCH_BUNDLE*/
 
+  // hides / shows the sidebar TOC, at the start of the breadcrumbs above the page
+  // (see setupSidebarToggle)
+  const tocToggleHTML =
+    '<button type="button" class="toc-toggle" aria-label="Hide sidebar" title="Hide sidebar">' +
+    '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true">' +
+    '<rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M6 2.5v11"/></svg></button>';
   const h1BreadcrumbsStart =
     '<div class="breadcrumbs"><div><a href="SumatraPDF-documentation.html">SumatraPDF documentation</a></div><div>/</div><div>';
+  const h1BreadcrumbsStartWithToggle =
+    '<div class="breadcrumbs">' +
+    tocToggleHTML +
+    '<div><a href="SumatraPDF-documentation.html">SumatraPDF documentation</a></div><div>/</div><div>';
   const h1BreadcrumbsEnd = "</div></div>";
 
   let manifest = null;
@@ -241,6 +251,77 @@
     } catch (err) {}
   }
 
+  // Hide / show the sidebar: the button at the start of the breadcrumbs or
+  // Ctrl + B (Cmd + B on Mac). While hidden, the mouse at the left edge of the
+  // window shows it over the page until the mouse leaves it. manual.shell.html
+  // applies the saved state before the first paint.
+  const kSidebarCollapsedKey = "docs-sidebar-collapsed";
+  let sidebarToggleReady = false;
+
+  function setupSidebarToggle(toc) {
+    if (sidebarToggleReady) {
+      return;
+    }
+    sidebarToggleReady = true;
+    const root = document.documentElement;
+    const btn = document.querySelector(".toc-toggle");
+    const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    const shortcut = isMac ? "Cmd + B" : "Ctrl + B";
+    const kEdgePx = 8;
+    function isCollapsed() {
+      return root.classList.contains("toc-collapsed");
+    }
+    function update() {
+      if (!btn) {
+        return;
+      }
+      const label = isCollapsed() ? "Show sidebar" : "Hide sidebar";
+      btn.title = label + " (" + shortcut + ")";
+      btn.setAttribute("aria-label", label);
+      btn.setAttribute("aria-expanded", String(!isCollapsed()));
+    }
+    function toggle() {
+      const collapsed = root.classList.toggle("toc-collapsed");
+      root.classList.remove("toc-peek");
+      try {
+        localStorage.setItem(kSidebarCollapsedKey, collapsed ? "1" : "0");
+      } catch (err) {}
+      update();
+    }
+    if (btn) {
+      btn.addEventListener("click", toggle);
+    }
+    document.addEventListener("keydown", function (e) {
+      if (e.key.toLowerCase() !== "b" || e.altKey || e.shiftKey) {
+        return;
+      }
+      if (!(isMac ? e.metaKey : e.ctrlKey)) {
+        return;
+      }
+      e.preventDefault();
+      toggle();
+    });
+    document.addEventListener("mousemove", function (e) {
+      if (!isCollapsed()) {
+        return;
+      }
+      if (!root.classList.contains("toc-peek")) {
+        if (e.clientX <= kEdgePx) {
+          root.classList.add("toc-peek");
+        }
+        return;
+      }
+      // shown but the mouse never went into it (e.g. moved right from the edge)
+      if (e.clientX > toc.getBoundingClientRect().right) {
+        root.classList.remove("toc-peek");
+      }
+    });
+    toc.addEventListener("mouseleave", function () {
+      root.classList.remove("toc-peek");
+    });
+    update();
+  }
+
   // docs screenshots are stored in R2 under assets/sumatrapdf/docs/img/
   const kDocsImgCdn = "https://files.sumatrapdfreader.org/assets/sumatrapdf/docs/img/";
 
@@ -354,8 +435,12 @@
     let innerHTML = md.render(text);
 
     if (h1Text && !isMainPage) {
+      const bcTop = h1BreadcrumbsStartWithToggle + h1Text + h1BreadcrumbsEnd;
       const bc = h1BreadcrumbsStart + h1Text + h1BreadcrumbsEnd;
-      innerHTML = bc + innerHTML + "<div>&nbsp;</div>" + bc;
+      innerHTML = bcTop + innerHTML + "<div>&nbsp;</div>" + bc;
+    } else {
+      // the main page has no breadcrumbs, only the sidebar toggle
+      innerHTML = '<div class="breadcrumbs">' + tocToggleHTML + "</div>" + innerHTML;
     }
 
     innerHTML = '<div class="notion-page">' + innerHTML + "</div>";
@@ -451,6 +536,10 @@
         }
         if (innerSlot) {
           innerSlot.innerHTML = rendered.innerHTML;
+        }
+        const sidebar = tocSlot ? tocSlot.querySelector(".sidebar-toc") : null;
+        if (sidebar) {
+          setupSidebarToggle(sidebar);
         }
         // Ensure code Copy handlers are bound (gen_code_copy.js). Delegation
         // covers late-injected buttons; this is a safe no-op if already bound.

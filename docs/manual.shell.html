@@ -12,6 +12,12 @@
   <link rel="stylesheet" type="text/css" href="sumatra.css" />
   <link rel="stylesheet" type="text/css" href="manual.css" />
   <script src="theme.js"></script>
+  <script>
+    // before the first paint, so a collapsed sidebar doesn't flash (see setupSidebarToggle)
+    try {
+      if (localStorage.getItem("docs-sidebar-collapsed") === "1") document.documentElement.classList.add("toc-collapsed");
+    } catch (err) {}
+  </script>
   <style>
     .page-layout {
       display: flex;
@@ -67,6 +73,73 @@
     @media (min-width: 950px) {
       .sidebar-toc {
         display: block;
+      }
+    }
+
+    /* sidebar toggle at the start of the breadcrumbs (and Ctrl + B). Collapsed: the
+       sidebar is hidden; the mouse at the left edge shows it over the page until the
+       mouse leaves it. No transitions. */
+    /* the toggle and the text are centered on each other: the text items lose their
+       bottom margin (.notion-page div), which the row gets as padding instead */
+    .breadcrumbs:has(.toc-toggle) {
+      align-items: center;
+      padding-bottom: 0.4rem;
+    }
+
+    .breadcrumbs:has(.toc-toggle) > div {
+      margin-bottom: 0;
+    }
+
+    .toc-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      padding: 0;
+      margin-left: 0.5em;
+      border: 0;
+      border-radius: 4px;
+      background: none;
+      color: inherit;
+      opacity: 0.55;
+      cursor: pointer;
+    }
+
+    .toc-toggle:hover,
+    .toc-toggle:focus-visible {
+      opacity: 1;
+      background: rgba(128, 128, 128, 0.15);
+    }
+
+    @media (min-width: 950px) {
+      .toc-toggle {
+        display: inline-flex;
+      }
+
+      html.toc-collapsed .sidebar-toc {
+        display: none;
+      }
+
+      /* the page's mini TOC moves into the left gutter, clear of the edge that shows the sidebar */
+      html.toc-collapsed .toc-wrapper {
+        left: 0.9rem;
+      }
+
+      /* the same space between the mini TOC and the page as with the sidebar shown
+         (there: 0.25rem and 2.1rem after the sidebar) */
+      html.toc-collapsed .notion-page {
+        margin-left: 2.75rem;
+      }
+
+      html.toc-collapsed.toc-peek .sidebar-toc {
+        display: block;
+        position: fixed;
+        left: 0;
+        z-index: 60; /* above the page's mini TOC (.toc-wrapper) */
+        background: var(--bg-primary);
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
       }
     }
   </style>
