@@ -1,16 +1,23 @@
 # Customize theme (colors)
 
+Change the colors of the SumatraPDF UI (menus, tabs, toolbars) by defining your own theme with the [`Themes` advanced setting](Advanced-options-settings.md), and optionally make document pages follow it.
+
 **Available in version 3.6 or later.**
 
-You can change the colors of the SumatraPDF UI by creating a custom theme with the [`Themes` advanced setting](Advanced-options-settings.md).
+**Most people copy a built-in theme, rename it and change a few colors.** At a glance:
 
-To create a theme:
+- **Pick a theme:** **Settings → Theme**, `Ctrl + K` then `Set theme '<name>'`, or `Theme = <name>`.
+- **Create a theme:** add an entry to the `Themes` array.
+- **Customize a built-in theme:** copy its definition (below), give it a new `Name`.
+- **Recolor document pages:** `DocumentColorsFollowTheme = off / smart / legacy`.
+- **Invert page colors for this session:** `Shift + I` (`CmdInvertColors`).
 
-- Use the `Settings` / `Open Advanced Settings File...` menu (or `Ctrl + K`, `Open Advanced Settings File...` command in [Command Palette](Command-Palette.md))
-- This opens the `SumatraPDF-settings.txt` file in your default text editor
-- Scroll to the bottom, find the `Themes` array, and add new theme definitions
+## Create a theme
 
-Example of customization:
+1. Open the settings file:
+   - Menu: **Settings → Open Advanced Settings File...**
+   - [Command Palette](Command-Palette.md): `Ctrl + K`, then `Open Advanced Settings File...`
+2. `SumatraPDF-settings.txt` opens in your default text editor. Scroll to the bottom, find the `Themes` array and add theme definitions.
 
 ```
 Themes [
@@ -37,11 +44,53 @@ Themes [
 ]
 ```
 
-The above will provide you with a custom theme named `My Dark Theme`. Built-in themes already ship with these colors filled in; their definitions are listed below.
+This creates a theme named `My Dark Theme`. Built-in themes already ship with these colors filled in; their definitions are [listed below](#built-in-themes).
 
-To customize an existing theme, copy its definition from `src/Theme.cpp` into your `Themes` setting, give it a new `Name`, and change the colors you want. For example, copy `Dracula`, rename it `My Dracula`, and set `ActiveTabBackgroundColor` and `InactiveTabBackgroundColor` to your preferred tab colors. Select `My Dracula` in Settings / Theme after saving.
+## Customize a built-in theme
 
-Meaning of the parameters:
+Copy its definition from [Built-in themes](#built-in-themes) (or `src/Theme.cpp`) into your `Themes` setting, give it a new `Name`, and change the colors you want.
+
+For example, copy `Dracula`, rename it `My Dracula`, and set `ActiveTabBackgroundColor` and `InactiveTabBackgroundColor` to your preferred tab colors. Select `My Dracula` in **Settings → Theme** after saving.
+
+## Choose a theme
+
+After you save the settings file:
+
+- Menu: **Settings → Theme**, then choose a theme
+- [Command Palette](Command-Palette.md): `Ctrl + K`, then `Set theme '<name>'`
+- Settings file: change `Theme = ` in `SumatraPDF-settings.txt` (e.g. `Theme = Solarized Dark`)
+
+## Make document pages follow the theme
+
+UI themes only recolor chrome (menus, tabs, toolbars). Separately, **document pages** (PDF, XPS, DjVu, EPUB, MOBI, FB2, comics, images, and other MuPDF-rendered formats) can follow the theme via **`DocumentColorsFollowTheme`**:
+
+| Value               | Effect                                                                                                                                                                                                                                                                                                                                             |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`off`** (default) | Keep the document’s own page colors.                                                                                                                                                                                                                                                                                                               |
+| **`smart`**         | Recolor text and page background using `FixedPageUI.TextColor` / `FixedPageUI.BackgroundColor` when set, otherwise the current theme’s text/background. **Photos and other images stay as in the file** — preferred for dark reading. Reflowable MuPDF formats (EPUB, HTML, FB2, MOBI) do this with CSS rather than by recoloring the page bitmap. |
+| **`legacy`**        | Also recolor images on PDF, XPS, and DjVu (older invert / colorize behavior). Reflowable MuPDF formats still use CSS, so images stay original.                                                                                                                                                                                                     |
+
+To change it:
+
+- Menu: **Settings → Theme…** or **Settings → Make Document Colors Follow Theme**
+- [Command Palette](Command-Palette.md): `Ctrl + K`, then `Set Document Colors Follow Theme` (`CmdSetDocumentColorsFollowTheme`) for a drop-down including **`legacy`**
+- Advanced settings: `DocumentColorsFollowTheme = off` / `smart` / `legacy`
+
+This is independent of `Theme = ...`: use a dark UI theme with `DocumentColorsFollowTheme = off` (original white PDF pages), or a light UI with `smart` page recoloring.
+
+## Invert page colors temporarily
+
+Press `Shift + I` (`CmdInvertColors`). It swaps the page colors for the rest of the session, whatever `DocumentColorsFollowTheme` and `FixedPageUI` are set to, and is not saved to the settings file.
+
+## Tips
+
+- Start from a built-in theme close to what you want instead of writing all colors.
+- Keep `ColorizeControls = true`; with `false` much of the UI ignores the theme.
+- Set the optional colors when a tinted `TextColor` makes derived disabled / hover colors look wrong.
+- Use `DocumentColorsFollowTheme = smart` for dark reading that keeps photos intact.
+- Use `Shift + I` for a one-off inversion that isn't saved.
+
+## Theme color reference
 
 **Required / base colors**
 
@@ -50,25 +99,6 @@ Meaning of the parameters:
 - `ActiveTabBackgroundColor` and `InactiveTabBackgroundColor` set the backgrounds of active and inactive tabs. If empty, they use the control background and its derived inactive shade.
 - `LinkColor` sets the color of links. It is typically blue.
 - `ColorizeControls` should be `true`. If it is `false`, we won't try to change the colors of standard Windows controls (menus, toolbars, buttons, etc.), so much of the UI will not respect the theme colors.
-
-## Document page colors (`DocumentColorsFollowTheme`)
-
-UI themes only recolor chrome (menus, tabs, toolbars). Separately, **document pages** (PDF, XPS, DjVu, EPUB, MOBI, FB2, comics, images, and other MuPDF-rendered formats) can follow the theme via the advanced setting **`DocumentColorsFollowTheme`**:
-
-| Value               | Effect                                                                                                                                                                                                                                                                                                                                             |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`off`** (default) | Keep the document’s own page colors.                                                                                                                                                                                                                                                                                                               |
-| **`smart`**         | Recolor text and page background using `FixedPageUI.TextColor` / `FixedPageUI.BackgroundColor` when set, otherwise the current theme’s text/background. **Photos and other images stay as in the file** — preferred for dark reading. Reflowable MuPDF formats (EPUB, HTML, FB2, MOBI) do this with CSS rather than by recoloring the page bitmap. |
-| **`legacy`**        | Also recolor images on PDF, XPS, and DjVu (older invert / colorize behavior). Reflowable MuPDF formats still use CSS, so images stay original.                                                                                                                                                                                                     |
-
-How to change it:
-
-- **Settings → Theme…** or **Settings → Make Document Colors Follow Theme** (or `Ctrl + K`, `Set Document Colors Follow Theme` command in [Command Palette](Command-Palette.md); `CmdSetDocumentColorsFollowTheme`) for a drop-down including **`legacy`**.
-- Advanced settings: `DocumentColorsFollowTheme = off` / `smart` / `legacy`.
-
-`Shift + I` (`CmdInvertColors`) is a different thing: it swaps the page colors for the rest of the session, whatever `DocumentColorsFollowTheme` and `FixedPageUI` are set to, and is not saved to the settings file.
-
-This is independent of `Theme = ...`. You can use a dark UI theme with `DocumentColorsFollowTheme = off` (original white PDF pages) or a light UI with `smart` page recoloring.
 
 **Optional UI colors** (leave empty to derive from the base colors; set them when a warm or tinted `TextColor` would make derived disabled/hover colors look wrong — e.g. Dracula’s near-white foreground)
 
@@ -79,12 +109,6 @@ This is independent of `Theme = ...`. You can use a dark UI theme with `Document
 - `ErrorBackgroundColor` — error surfaces
 - `NotificationBackgroundColor` / `NotificationHighlightColor` / `NotificationHighlightTextColor` — in-app notification tips
 - `ActiveTabBackgroundColor` / `InactiveTabBackgroundColor` — active and inactive tab backgrounds
-
-After you save the settings file, there are three main ways to choose a theme that you created:
-
-1. Change the value of `Theme = ` in `SumatraPDF-settings.txt` (e.g. `Theme = Solarized Dark`).
-2. `Ctrl + K`, `Set theme '<name>'` command in [Command Palette](Command-Palette.md).
-3. Navigate to `Settings` / `Theme` and choose a theme.
 
 ## Built-in Themes
 
@@ -534,3 +558,8 @@ Themes [
     ]
 ]
 ```
+
+## See also
+
+- [Advanced settings](Advanced-options-settings.md) — `Themes`, `Theme`, `DocumentColorsFollowTheme`, `FixedPageUI`
+- [Command Palette](Command-Palette.md) — switch themes by name

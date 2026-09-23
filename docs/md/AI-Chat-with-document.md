@@ -1,14 +1,72 @@
 # AI Chat with document
 
+AI Chat is a sidebar where you ask questions about the PDF you are reading. Answers come from an AI agent CLI running on your computer — SumatraPDF does not send your files to its own servers.
+
 **Available in pre-release 3.7+ on Windows 10 or later.**
 
-SumatraPDF can show a chat sidebar where you ask questions about the document you are reading. Answers come from an AI agent CLI running on your computer — SumatraPDF does not send your files to its own servers.
+**Most often you open View → Claude chat (or another backend) and type a question.** At a glance:
+
+- **Four backends:** [Claude Code](#claude-code), [Grok Build](#grok-build), [OpenAI Codex](#openai-codex), and [Antigravity](#antigravity).
+- **Per-tab sessions:** each document tab has its own conversation.
+- **Resume:** pick a previous session from the session dropdown.
+- **Options:** model, effort level or sandbox mode, per backend.
+- **Stop:** cancel a reply in progress.
 
 **Nothing happens unless you explicitly invoke it.** SumatraPDF never starts an AI agent or sends document content to an AI service on its own. An agent CLI runs only when you open a chat panel, send a message, or use an AI translate-selection command. To decide whether to show AI commands in menus, SumatraPDF only checks if the CLI executable exists on disk.
 
-Four backends are supported: [Claude Code](#claude-code), [Grok Build](#grok-build), [OpenAI Codex](#openai-codex), and [Antigravity](#antigravity).
+## Open a chat
 
-## Claude Code
+Open a PDF (see [Supported documents](#supported-documents)), then:
+
+- **Menu:** **View → Claude chat** (`CmdAIChatWithClaudeCode`), **View → Grok chat** (`CmdAIChatWithGrokBuild`), **View → Codex chat** (`CmdAIChatWithOpenAICodex`), or **View → Antigravity chat** (`CmdAIChatWithAntiGravity`).
+- **Context menu:** **AI chat with document using** → **Grok Build**, **OpenAI Codex**, **Claude Code**, or **Antigravity**.
+- **Command Palette:** `Ctrl + K`, then `Claude chat...`, `Codex chat...`, `Grok chat...` or `Antigravity chat...`.
+- **Keyboard:** no default key binding; assign your own — see [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md).
+
+Drag the splitter between the document and the chat panel to resize the sidebar.
+
+## Ask a question
+
+Type a question in the input box at the bottom of the sidebar and press `Enter`. While the agent is working on a reply, use **Stop** to cancel the current request.
+
+Each document tab has its own chat session. Switching tabs switches the sidebar to that tab's conversation history.
+
+## Resume a previous session
+
+Pick a previous session from the session dropdown. SumatraPDF lists and resumes sessions for the current document's folder. Each CLI stores history in its own location:
+
+- Claude Code: `~/.claude/projects/` (encoded by project directory)
+- Grok Build: `~/.grok/sessions/`
+- OpenAI Codex: `~/.codex/sessions/` (with descriptions from `~/.codex/history.jsonl`)
+- Antigravity: `~/.gemini/antigravity/projects/`, `~/.gemini/antigravity-cli/projects/`, or `~/.gemini/projects/` (encoded by project directory)
+
+## Choose model and options
+
+Backend-specific controls in the sidebar:
+
+- **Claude Code:** model, effort level, and optionally **Skip Permissions** (passes `--dangerously-skip-permissions` — use only if you understand the security implications).
+- **Grok Build:** model, effort level, and optionally **Always Approve** (passes `--always-approve`).
+- **OpenAI Codex:** model, sandbox mode, and optionally **Skip Sandbox**.
+- **Antigravity:** model, effort level, and **Auto Approve** (on by default).
+
+Defaults are saved in [advanced settings](Advanced-options-settings.md) (see [Settings](#settings)).
+
+## Tips
+
+- Assign a shortcut to your preferred chat command; there is none by default.
+- Leave **Skip Permissions** / **Skip Sandbox** off unless you understand the security implications.
+- Keep **Auto Approve** on for Antigravity; without it the agent can't read the document.
+- If a CLI isn't found, put it on `PATH` or in one of the folders listed for that backend below.
+
+## Supported documents
+
+AI Chat is available only for **PDF** (`.pdf`) files.
+
+It is **not** available for single images, comic archives (`.cbr`, `.cbz`, etc.), folders of images, DjVu, ebooks (EPUB, MOBI, …), CHM, XPS, PostScript, plain text, and other formats. On those tabs the **AI chat with document** commands and context-menu submenu are hidden.
+
+## Set up a backend
+
+### Claude Code
 
 This feature requires **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** to be installed and available on your system. SumatraPDF launches the `claude` command-line tool when you send a message.
 
@@ -22,7 +80,7 @@ After installation, make sure `claude` (or `claude.exe`) is on your `PATH`. Suma
 
 The model picker includes Claude Code's documented aliases: `default`, `best`, `sonnet`, `opus`, `haiku`, `sonnet[1m]`, `opus[1m]`, and `opusplan`. Claude Code resolves these aliases according to the user's account and configured provider.
 
-## Grok Build
+### Grok Build
 
 This feature can also use **[Grok Build](https://x.ai/news/grok-build-cli)** (the `grok` command-line tool).
 
@@ -30,13 +88,13 @@ If Grok Build is missing, the chat panel shows an error such as _Cannot find gro
 
 Install Grok Build and sign in using xAI's instructions. SumatraPDF looks for `grok.exe` on `PATH`, in `%USERPROFILE%\.grok\bin\`, and in `%USERPROFILE%\.local\bin\`.
 
-Open the panel with **View → Grok chat** (`CmdAIChatWithGrokBuild`), or `Ctrl + K`, `AI Chat with document using Grok Build` command in [Command Palette](Command-Palette.md).
+Open the panel with **View → Grok chat** (`CmdAIChatWithGrokBuild`), or `Ctrl + K`, `Grok chat...` command in [Command Palette](Command-Palette.md).
 
 Grok Build settings are in the `GrokBuild` section of [advanced settings](Advanced-options-settings.md). The **Always Approve** checkbox passes `--always-approve` to Grok Build.
 
 The first time you open the Grok chat panel in an app session, SumatraPDF runs `grok models` and uses the models available to the signed-in Grok CLI in the model picker. If that query fails, the picker falls back to `grok-4.5`.
 
-## OpenAI Codex
+### OpenAI Codex
 
 This feature can also use **[OpenAI Codex](https://developers.openai.com/codex/cli)** (the `codex` command-line tool).
 
@@ -50,13 +108,13 @@ Install and sign in using OpenAI's official guides:
 
 After installation, make sure `codex` (or `codex.exe`) is on your `PATH`, or in `%USERPROFILE%\.codex\bin\` or `%USERPROFILE%\.local\bin\`.
 
-Open the panel with **View → Codex chat** (`CmdAIChatWithOpenAICodex`), or `Ctrl + K`, `AI Chat with document using OpenAI Codex` command in [Command Palette](Command-Palette.md).
+Open the panel with **View → Codex chat** (`CmdAIChatWithOpenAICodex`), or `Ctrl + K`, `Codex chat...` command in [Command Palette](Command-Palette.md).
 
 Codex settings are in the `CodexBuild` section of [advanced settings](Advanced-options-settings.md). The **Skip Sandbox** checkbox passes `--dangerously-bypass-approvals-and-sandbox` to Codex — use only if you understand the security implications.
 
 The first time you open the Codex chat panel in an app session, SumatraPDF asks the signed-in Codex CLI which models are available and uses them in the model picker. If that query fails, the picker falls back to `gpt-5.5`, `gpt-5.4`, and `o3`. You can also pick a sandbox mode: **Read-only**, **Workspace write**, or **Full access**.
 
-## Antigravity
+### Antigravity
 
 This feature can also use Google's **[Antigravity](https://antigravity.google/)** CLI (the `antigravity` or `agy` command-line tool).
 
@@ -64,42 +122,11 @@ If Antigravity is missing, the chat panel shows an error such as _Cannot find an
 
 Install Antigravity and sign in using Google's instructions. SumatraPDF looks for `antigravity.exe` or `agy.exe` on `PATH`, in `%USERPROFILE%\.local\bin\`, `%USERPROFILE%\.gemini\antigravity-cli\bin\`, `%USERPROFILE%\AppData\Local\agy\bin\`, `%USERPROFILE%\AppData\Roaming\Antigravity\bin\`, `%USERPROFILE%\AppData\Local\Programs\`, and `%USERPROFILE%\AppData\Roaming\npm\`.
 
-Open the panel with **View → Antigravity chat** (`CmdAIChatWithAntiGravity`), or `Ctrl + K`, `AI Chat with document using Antigravity` command in [Command Palette](Command-Palette.md).
+Open the panel with **View → Antigravity chat** (`CmdAIChatWithAntiGravity`), or `Ctrl + K`, `Antigravity chat...` command in [Command Palette](Command-Palette.md).
 
 Antigravity settings are in the `AntiGravity` section of [advanced settings](Advanced-options-settings.md). The **Auto Approve** checkbox passes `--dangerously-skip-permissions` to Antigravity. It is **on by default**: the CLI can't ask for permissions when run non-interactively, so without it the agent can't read the document. It also lets the agent use other tools without asking.
 
 The first time you open the Antigravity chat panel in an app session, SumatraPDF runs `agy models` and uses the models available to the signed-in CLI in the model picker. If that query fails, the picker falls back to a built-in list of Gemini 3.8 / 3.7 / 3.6 Flash, Gemini 3.1 Pro, Claude Sonnet / Opus 4.6, and GPT-OSS 120B models. The default is `gemini-3.8-flash-medium`. Add more model IDs, comma-separated, with the `Models` setting.
-
-## How to use
-
-1. Open a supported document (see below).
-2. Open a chat sidebar for your preferred backend:
-   - **View → Claude chat** (`CmdAIChatWithClaudeCode`)
-   - **View → Grok chat** (`CmdAIChatWithGrokBuild`)
-   - **View → Codex chat** (`CmdAIChatWithOpenAICodex`)
-   - **View → Antigravity chat** (`CmdAIChatWithAntiGravity`)
-
-   Or `Ctrl + K`, `AI Chat with document using ...` command in [Command Palette](Command-Palette.md).
-
-3. Type a question in the input box at the bottom of the sidebar and press `Enter`.
-4. Drag the splitter between the document and the chat panel to resize the sidebar.
-
-Each document tab has its own chat session. Switching tabs switches the sidebar to that tab's conversation history.
-
-You can pick a previous session from the session dropdown and choose model options. Backend-specific controls:
-
-- **Claude Code:** model, effort level, and optionally **Skip Permissions** (passes `--dangerously-skip-permissions` — use only if you understand the security implications).
-- **Grok Build:** model, effort level, and optionally **Always Approve** (passes `--always-approve`).
-- **OpenAI Codex:** model, sandbox mode, and optionally **Skip Sandbox**.
-- **Antigravity:** model, effort level, and **Auto Approve** (on by default).
-
-While the agent is working on a reply, use **Stop** to cancel the current request.
-
-## Supported documents
-
-AI Chat is available only for **PDF** (`.pdf`) files.
-
-It is **not** available for single images, comic archives (`.cbr`, `.cbz`, etc.), folders of images, DjVu, ebooks (EPUB, MOBI, …), CHM, XPS, PostScript, plain text, and other formats. On those tabs the **AI chat with document** commands and context-menu submenu are hidden.
 
 ## Settings
 
@@ -112,17 +139,10 @@ Backend-specific options are in [advanced settings](Advanced-options-settings.md
 - `CodexBuild` — default model, extra models, sandbox mode, **Skip Sandbox**, background color
 - `AntiGravity` — default model, extra models, effort level, **Auto Approve**, background color
 
-You can assign your own keyboard shortcut to any of the chat commands — there is no default key binding. See [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md).
-
 ## Requirements and limitations
 
 - **Windows 10+** only (uses WebView2 for the chat UI).
 - Requires a working installation of at least one supported agent CLI and network access as required by that CLI.
-- Session history is stored by each CLI in its own location; SumatraPDF can list and resume sessions for the current document's folder:
-  - Claude Code: `~/.claude/projects/` (encoded by project directory)
-  - Grok Build: `~/.grok/sessions/`
-  - OpenAI Codex: `~/.codex/sessions/` (with descriptions from `~/.codex/history.jsonl`)
-  - Antigravity: `~/.gemini/antigravity/projects/`, `~/.gemini/antigravity-cli/projects/`, or `~/.gemini/projects/` (encoded by project directory)
 - Each agent runs as a separate process; behavior, models, and billing follow that provider's terms and your account.
 
 ## See also

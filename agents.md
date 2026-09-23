@@ -231,6 +231,10 @@ To add a new cmd-line flag:
 - document in docs/md/Command-line-arguments.md when appropriate
 - add an entry to the **New command-line arguments** list at the end of the **next** section in docs/md/Version-history.md (see below)
 
+## User docs (docs/md)
+
+When writing or restructuring a feature page in `docs/md`, follow `docs/writing-docs.md`.
+
 ## Version history (docs/md/Version-history.md)
 
 When documenting a release (usually the **next** section at the top):

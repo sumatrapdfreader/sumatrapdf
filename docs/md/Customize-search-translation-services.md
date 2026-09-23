@@ -1,10 +1,26 @@
 # Customize search / translation services
 
+Send selected text to a web search engine, a translation service, an API or a local program. Built-in services are in the selection context menu; add your own with the `SelectionHandlers` [advanced setting](https://www.sumatrapdfreader.org/settings/settings.html).
+
 **Available in version 3.4 or later.**
 
-You can send selected text to the Google or Bing search engine, or to the Google or DeepL translation service:
+**Most people use it to search or translate a selected word or phrase.** At a glance:
 
-- select text using the mouse
+- **Search / translate:** right-click selection → `Selection` → `Search with` / `Translate with` (Google, Bing, DeepL, ...).
+- **Command Palette:** `Ctrl + K`, then e.g. `deepl`.
+- **Add a service:** an entry in `SelectionHandlers` with `URL`, `Name`, optional `Key` (ver 3.6+).
+- **Selection toolbar button (ver 3.7+):** `SelectToolbarNameOrSvg`.
+- **Main toolbar button (ver 3.7+):** `ToolbarText` / `ToolbarSvgIcon`.
+- **Long text, APIs (ver 3.7+):** `Method = POST` / `POST-VIA-BROWSER`.
+- **Run a program:** `Exe` instead of `URL`.
+
+## Search or translate the selection
+
+You can send selected text to the Google or Bing search engine, or to the Google or DeepL translation service.
+
+With the mouse:
+
+- select text
 - right-click to open the context menu
 
 ![Context Menu Selection](img/context-menu-selection-90e6.png)
@@ -13,25 +29,21 @@ You can send selected text to the Google or Bing search engine, or to the Google
 
 ![Context Menu Translate](img/context-menu-translate-e2f3.png)
 
-You can also use the [Command Palette](Command-Palette.md):
+With the [Command Palette](Command-Palette.md):
 
 - select text
-- `Ctrl + K`, `Translate with DeepL` command in [Command Palette](Command-Palette.md) (type `deepl` to find it)
+- `Ctrl + K`, `Translate Selection With DeepL` command (type `deepl` to find it)
 
 ![Using Command Palette](img/cmd-palette-translate-c1af.png)
 
 - press `Enter` (or double-click with the mouse) to execute the action
 
-## Adding more services
+## Add a service
 
-You can add more web services using [advanced settings](https://www.sumatrapdfreader.org/settings/settings.html).
+1. Menu: **Settings → Open Advanced Settings File...** to open the configuration file.
+2. Modify the `SelectionHandlers` section.
 
-To configure a selection handler:
-
-- use the `Settings` / `Open Advanced Settings File...` menu to open the configuration file
-- modify the `SelectionHandlers` section
-
-Here is an example that adds the [DuckDuckGo](https://duckduckgo.com/) search engine:
+This adds the [DuckDuckGo](https://duckduckgo.com/) search engine:
 
 ```
 SelectionHandlers [
@@ -43,18 +55,13 @@ SelectionHandlers [
 ]
 ```
 
-`URL` is the website that will be launched. `${selection}` will be replaced with the current selection, URL-encoded as a query value (spaces become `%20`, and reserved characters such as `?`, `"`, `&` and `#` become `%XX` so they are not parsed as more URL syntax).
+- `URL` is the website that will be launched. `${selection}` is replaced with the current selection, URL-encoded as a query value (spaces become `%20`, and reserved characters such as `?`, `"`, `&` and `#` become `%XX` so they are not parsed as more URL syntax).
+- `Name` is what appears in the menu. Use an `&` character to add a Windows hotkey for keyboard-only invocation.
+- **Ver 3.6+:** `Key` is a keyboard shortcut in the same format as in the [`Shortcuts`](Customize-keyboard-shortcuts.md) advanced setting.
 
-`Name` is what appears in the menu. You can use an `&` character to add a Windows hotkey for keyboard-only invocation.
+## Add a button to the selection toolbar (ver 3.7+)
 
-**Ver 3.6+:** `Key` is a keyboard shortcut in the same format as in the [`Shortcuts`](Customize-keyboard-shortcuts.md) advanced setting.
-
-## A button on the selection toolbar (ver 3.7+)
-
-Selecting text pops up a small toolbar over the selection (turn it off with
-`SelectionToolbar` in advanced settings). `SelectToolbarNameOrSvg` puts the
-handler on it, so sending the selection to a service is one click instead of a
-trip through the context menu:
+Selecting text pops up a small toolbar over the selection (turn it off with `SelectionToolbar` in advanced settings). `SelectToolbarNameOrSvg` puts the handler on it, so sending the selection to a service is one click instead of a trip through the context menu:
 
 ```
 SelectionHandlers [
@@ -68,18 +75,9 @@ SelectionHandlers [
 
 ![Selection toolbar with a handler button](img/selection-toolbar-handler-e520.png)
 
-The value is the button's text. Keep it short — the toolbar sits over what you
-are reading, and every handler you add makes it wider. Unlike `Name`, it is
-shown as you typed it: no `&` hotkey handling, and no translation.
+The value is the button's text. Keep it short — the toolbar sits over what you are reading, and every handler you add makes it wider. Unlike `Name`, it is shown as you typed it: no `&` hotkey handling, and no translation.
 
-If the value starts with `<svg`, it is an SVG icon and is drawn instead of the
-text, in the same format as `ToolbarSvgIcon` in
-[Customize toolbar](Customize-toolbar.md#using-svg-icons): 24x24,
-`stroke="currentColor"` and `fill="none"` so the icon picks up the theme's text
-color, and a full-size `<rect>` so its background comes out transparent. The
-icon is rendered at `ToolbarSize`, matching main-toolbar icons, and the
-handler's `Name` is its tooltip.
-[Tabler Icons](https://tabler.io/icons) are already in that shape:
+If the value starts with `<svg`, it is an SVG icon drawn instead of the text, in the same format as `ToolbarSvgIcon` in [Customize toolbar](Customize-toolbar.md#using-svg-icons): 24x24, `stroke="currentColor"` and `fill="none"` so the icon picks up the theme's text color, and a full-size `<rect>` so its background comes out transparent. The icon is rendered at `ToolbarSize`, matching main-toolbar icons, and the handler's `Name` is its tooltip. [Tabler Icons](https://tabler.io/icons) are already in that shape:
 
 ```
 SelectionHandlers [
@@ -91,12 +89,11 @@ SelectionHandlers [
 ]
 ```
 
-Handlers without `SelectToolbarNameOrSvg` are unaffected: they stay in the
-context menu and the command palette as before.
+Handlers without `SelectToolbarNameOrSvg` are unaffected: they stay in the context menu and the command palette.
 
-To put the same handler on the **main** toolbar, set `ToolbarText` (a short
-label) or `ToolbarSvgIcon` (same SVG format as [Customize toolbar](Customize-toolbar.md#using-svg-icons)).
-If both are set, the icon is used:
+## Add a button to the main toolbar (ver 3.7+)
+
+Set `ToolbarText` (a short label) or `ToolbarSvgIcon` (same SVG format as [Customize toolbar](Customize-toolbar.md#using-svg-icons)). If both are set, the icon is used:
 
 ```
 SelectionHandlers [
@@ -110,8 +107,7 @@ SelectionHandlers [
 
 ## Choose which buttons are on the selection toolbar (Ver 3.7+)
 
-`SelectionToolbarLayout` lists the built-in buttons you want, in the order you
-want them — the same idea as `ToolbarCustomLayout` for the main toolbar:
+`SelectionToolbarLayout` lists the built-in buttons you want, in the order you want them — the same idea as `ToolbarCustomLayout` for the main toolbar:
 
 ```
 SelectionToolbarLayout = CmdCopySelection | CmdCreateAnnotHighlight CmdCreateAnnotUnderline
@@ -124,13 +120,13 @@ SelectionToolbarLayout = CmdCopySelection | CmdCreateAnnotHighlight CmdCreateAnn
 - names that aren't selection-toolbar buttons are ignored (see the log with `-log`)
 - handler buttons from `SelectToolbarNameOrSvg` still come last
 
-This is the standard selection toolbar written out:
+The standard selection toolbar written out:
 
 ```
 SelectionToolbarLayout = CmdCopySelection CmdTranslateSelection CmdReadAloudSelection CmdCreateAnnotHighlight CmdCreateAnnotUnderline CmdCreateAnnotSquiggly CmdCreateAnnotStrikeOut CmdCreateAnnotText
 ```
 
-## Sending long text (ver 3.7+)
+## Send long text (ver 3.7+)
 
 A URL can only hold so much text. If you select several paragraphs and send them
 to a service with the default settings, the text is shortened to fit and you get
@@ -230,28 +226,7 @@ Some sites reject a form submitted from a local file (CSRF protection). If that
 happens, `POST` with an API key, or `${selectionfile}` with a helper program, is
 the way around it.
 
-## Placeholders
-
-These can be used in `URL`, `Exe`, and `Body`:
-
-| Placeholder            | Replaced with                                                       |
-| ---------------------- | ------------------------------------------------------------------- |
-| `${selection}`         | the selected text. URL-encoded in `URL`, raw in `Body` / `Exe`      |
-| `${selectionjson}`     | the selected text escaped for a JSON string (no surrounding quotes) |
-| `${selectionfile}`     | path to a temporary UTF-8 file holding the selection                |
-| `${selectionPosition}` | the selection's bounding box in screen pixels, `x,y,dx,dy`          |
-| `${userlang}`          | language code of the current UI language, e.g. `de` for German      |
-
-`${selectionjson}` matters more than it looks. Selected text routinely contains
-quotes and newlines, and dropping those into a JSON body raw produces invalid
-JSON that the service rejects. Inside a JSON body always use `${selectionjson}`,
-never `${selection}`:
-
-```
-Body = {"text": "${selectionjson}", "target": "de"}
-```
-
-## Running a program instead of a web service
+## Run a program instead of a web service
 
 `${selectionPosition}` is for a helper that wants to sit next to the selection
 (a dictionary popup, Anki helper, …). The four integers are the bounding box
@@ -273,6 +248,36 @@ SelectionHandlers [
 
 The temporary file is UTF-8 and lives in your temp directory. It is reused (and
 overwritten) the next time a handler runs.
+
+## Tips
+
+- Use `POST` or `POST-VIA-BROWSER` to send more than ~8000 Latin (about 900 CJK) characters.
+- Inside a JSON `Body` always use `${selectionjson}`, not `${selection}`.
+- Use `Exe` with `${selectionfile}` for no length limit and no encoding to worry about.
+- Try a local LLM via Ollama first: no API key, nothing leaves your computer.
+- Keep `SelectToolbarNameOrSvg` labels short; every one widens the selection toolbar.
+- Remove API keys from `Headers` before sharing your settings file.
+
+## Placeholders
+
+These can be used in `URL`, `Exe`, and `Body`:
+
+| Placeholder            | Replaced with                                                       |
+| ---------------------- | ------------------------------------------------------------------- |
+| `${selection}`         | the selected text. URL-encoded in `URL`, raw in `Body` / `Exe`      |
+| `${selectionjson}`     | the selected text escaped for a JSON string (no surrounding quotes) |
+| `${selectionfile}`     | path to a temporary UTF-8 file holding the selection                |
+| `${selectionPosition}` | the selection's bounding box in screen pixels, `x,y,dx,dy`          |
+| `${userlang}`          | language code of the current UI language, e.g. `de` for German      |
+
+`${selectionjson}` matters more than it looks. Selected text routinely contains
+quotes and newlines, and dropping those into a JSON body raw produces invalid
+JSON that the service rejects. Inside a JSON body always use `${selectionjson}`,
+never `${selection}`:
+
+```
+Body = {"text": "${selectionjson}", "target": "de"}
+```
 
 ## Examples for real services
 
@@ -348,3 +353,10 @@ that are scoped and revocable.
 `POST` also sends your selected text to whichever server you configured. That is
 the point of the feature, but it's worth being deliberate about which documents
 you use it on.
+
+## See also
+
+- [Customize toolbar](Customize-toolbar.md) — `ToolbarCustomLayout`, SVG icon format
+- [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md) — `Key` format
+- [Command Palette](Command-Palette.md) — run handlers by name
+- [Commands](Commands.md) — ids for `SelectionToolbarLayout`

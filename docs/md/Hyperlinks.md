@@ -1,36 +1,52 @@
 # Hyperlinks in documents
 
-SumatraPDF supports two different kinds of "links" in PDF and other documents. They behave differently and are controlled differently.
+SumatraPDF supports two kinds of links in PDF and other documents: **embedded hyperlinks** stored in the file, and **auto-detected links** it finds in plain text. They behave and are controlled differently.
 
-## Embedded hyperlinks
+**Click a link to follow it; press `Alt + Left` to come back.**
 
-These are **part of the PDF file** — created by the author in Word, LaTeX, Acrobat, etc. They appear in every standards-compliant viewer. SumatraPDF follows them on click:
+- **Embedded hyperlinks:** created by the document author; jump within the file, open another file, or open a URL
+- **Auto-detected links:** plain-text URLs, email addresses and DOIs become clickable — disable with `DisableAutoLinks`
+- **Navigate back / forward:** `Alt + Left` / `Alt + Right`
+- **Restrict links:** `LinkProtocols` in `sumatrapdfrestrict.ini`
+
+## Follow a link
+
+Click it. Embedded hyperlinks are **part of the PDF file** — created by the author in Word, LaTeX, Acrobat, etc. — and work in every standards-compliant viewer. They can:
 
 - jump to another page or destination in the same file
 - open another file
 - open a URL in the default browser (`http://`, `https://`, `mailto:`, …)
 
-In [restricted mode](Configure-for-restricted-use.md), launching external URLs can be limited with `LinkProtocols` in `sumatrapdfrestrict.ini` (default: `http,https,mailto`).
-
-## Auto-detected links (plain text)
-
 SumatraPDF also turns **plain text** that _looks_ like a URL, email address, or DOI into a clickable link, even when the PDF contains no hyperlink annotation. For example, exporting `www.example.com` as plain text from a word processor creates a clickable link in SumatraPDF but not necessarily in every other viewer. A printed DOI such as `10.1109/WICSA.2015.29` opens as `https://doi.org/10.1109/WICSA.2015.29`.
 
-This follows a long-standing PDF viewer convention (Adobe Reader does something similar). Users who treat unexpected links as a security concern often ask about disabling it — see [discussion #5703](https://github.com/sumatrapdfreader/sumatrapdf/discussions/5703).
+This follows a long-standing PDF viewer convention (Adobe Reader does something similar).
 
-### Disable auto-detected links only
+## Go back after following a link
 
-In [advanced settings](Advanced-options-settings.md):
+Internal links (footnotes, table of contents, cross-references) move you within the document. To return:
+
+- `Alt + Left` or `Backspace` — go back in navigation history
+- `Alt + Right` or `Shift + Backspace` — go forward
+
+See [Scrolling and zooming](Scrolling-and-zooming.md).
+
+## Disable auto-detected links
+
+Users who treat unexpected links as a security concern often ask about this — see [discussion #5703](https://github.com/sumatrapdfreader/sumatrapdf/discussions/5703).
+
+In [advanced settings](Advanced-options-settings.md) set:
 
 ```
 DisableAutoLinks = true
 ```
 
-Save the settings file. Embedded hyperlinks that exist in the PDF file itself are **not** removed — only automatic detection of URL-like text, email addresses, and plain-text DOIs is disabled.
+Save the settings file. Embedded hyperlinks in the PDF file are **not** removed — only automatic detection of URL-like text, email addresses, and plain-text DOIs is disabled.
 
-### Restricted mode: block following links
+## Block following links (restricted mode)
 
-`sumatrapdfrestrict.ini` can disable opening URLs from documents entirely:
+In [restricted mode](Configure-for-restricted-use.md), `sumatrapdfrestrict.ini` controls which links open. `LinkProtocols` defaults to `http,https,mailto`.
+
+Disable opening URLs from documents entirely:
 
 ```
 [Policies]
@@ -47,16 +63,15 @@ An empty `LinkProtocols` value blocks all protocol handlers. This is stricter th
 
 See [Configure for restricted use](Configure-for-restricted-use.md) and the [full restrict.ini reference](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/sumatrapdfrestrict.ini).
 
-## Navigating after following a link
+## Tips
 
-Internal links (footnotes, table of contents, cross-references) move you within the document. To return:
+- Use `Alt + Left` to return after jumping to a footnote or cross-reference.
+- Use `DisableAutoLinks = true` to stop plain text becoming clickable while keeping the author's links.
+- Use an empty `LinkProtocols` in restricted mode to block all links, embedded ones included.
 
-- `Alt + Left` or `Backspace` — go back in navigation history
-- `Alt + Right` or `Shift + Backspace` — go forward
+## Reference
 
-See [Scrolling and zooming](Scrolling-and-zooming.md).
-
-## CHM and EPUB
+### CHM and EPUB
 
 - **CHM** files use HTML links; some `ms-its:` links open topics inside the help file.
 - **EPUB** links are HTML anchors; external URLs open in the browser.

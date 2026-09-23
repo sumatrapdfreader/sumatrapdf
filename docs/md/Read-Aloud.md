@@ -1,24 +1,27 @@
 # Read Aloud (TTS)
 
-_Pre-release 3.7+_
+Read Aloud reads document text with Windows text-to-speech. Start it from the toolbar, the main or context menu, or the [Command Palette](Command-Palette.md).
 
-Read document text using Windows text-to-speech. You can start from a text selection, from the first visible text in the viewport, or (from the context menu) from the position where you right-clicked.
+**Available in pre-release 3.7+.**
 
-## How to use
+**Most often you click the toolbar Read Aloud button to listen from the current position.** At a glance:
 
-1. Open a document with selectable text (PDF, EPUB, etc.).
-2. Start reading from one of these places:
-   - **Toolbar** — Read Aloud button (click to start / pause / continue; the icon shows a speaker when idle or paused, and a pause symbol while speaking). Use the dropdown arrow for explicit start scopes and **Voice**.
-   - **Main menu** — **Read Aloud (TTS)** (after Selection)
-   - **Context menu** — **Read Aloud (TTS)** (after Document)
-   - `Ctrl + K`, `Read Aloud` command in [Command Palette](Command-Palette.md); also **Start Reading From Top**, **Start Reading Selection**, **Pause Reading**, **Continue Reading**, **Stop Reading** (transport commands appear only when they apply)
-3. While a session is active (speaking or paused), a **playback bar** at the bottom of the canvas shows the document name, **page X of Y**, start scope, and **Pause** / **Resume** and **Stop** buttons on the left. The spoken sentence is underlined, and the current word is underlined in a different color. **Stop Reading** is always in the Read Aloud menus (main menu, context menu, toolbar dropdown), even if the playback bar is not visible; it is disabled when nothing is being read. **Pause Reading**, **Continue Reading**, and **Stop Reading** appear in the command palette when they apply.
+- **Read Aloud:** reads the selection if there is one, otherwise from the first visible text to the end of the document.
+- **Start scopes:** from top of the viewport, from the right-click position, or the selection only.
+- **Follow-along:** the spoken sentence and word are underlined; the view scrolls to keep them visible.
+- **Playback bar:** document name, page, scope, **Pause** / **Resume** and **Stop**.
+- **Voice:** pick any installed Windows voice.
 
-**Pause** stops speech and remembers your position so you can **Continue Reading** later. **Stop** ends the session and clears the resume position.
+## Start reading
 
-Switching to another tab stops reading and clears the resume position on the tab you left.
+Open a document with selectable text (PDF, EPUB, etc.), then use one of:
 
-## Start scopes
+- **Toolbar:** Read Aloud button. Click to start / pause / continue. The icon shows a speaker when idle or paused, a pause symbol while speaking. The dropdown arrow has the explicit start scopes and **Voice**.
+- **Main menu:** **Read Aloud (TTS)** (after Selection).
+- **Context menu:** **Read Aloud (TTS)** (after Document).
+- **Command Palette:** `Ctrl + K`, then `Read Aloud` (`CmdToggleReadAloud`). Also **Start Reading From Top**, **Start Reading Selection**.
+
+### Choose where to start
 
 | Command                                | Behavior                                                                                                       |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -29,14 +32,35 @@ Switching to another tab stops reading and clears the resume position on the tab
 
 Scope labels on the playback bar: **Smart start**, **From top**, **From cursor**, or **Selection**.
 
-## While listening
+## Follow along
 
-- **Follow-along** — the spoken sentence is underlined in blue, and the current word is underlined in amber.
-- **Auto-scroll** — the viewport scrolls to keep the spoken word in view. If you scroll the highlight fully off-screen, auto-scroll stops for that session so manual navigation is respected.
+While a session is active (speaking or paused), a **playback bar** at the bottom of the canvas shows the document name, **page X of Y**, start scope, and **Pause** / **Resume** and **Stop** buttons on the left.
 
-## Voice
+- **Follow-along:** the spoken sentence is underlined in blue, the current word in amber.
+- **Auto-scroll:** the viewport scrolls to keep the spoken word in view. If you scroll the highlight fully off-screen, auto-scroll stops for that session so manual navigation is respected.
 
-Open **Voice** in any Read Aloud menu to pick **System default** or an installed Windows voice (WinRT OneCore voices and SAPI voices, including those from [NaturalVoiceSAPIAdapter](https://github.com/gexgd0419/NaturalVoiceSAPIAdapter)). Your choice is remembered in `ReadAloudVoiceId` in [Advanced settings](Advanced-options-settings.md) (`SumatraPDF-settings.txt`). Leave it empty for the system default.
+## Pause, continue or stop
+
+- **Pause** stops speech and remembers your position so you can **Continue Reading** later.
+- **Stop** ends the session and clears the resume position.
+- **Playback bar:** **Pause** / **Resume** and **Stop** buttons.
+- **Menus:** **Stop Reading** is always in the Read Aloud menus (main menu, context menu, toolbar dropdown), even if the playback bar is not visible; it is disabled when nothing is being read.
+- **Command Palette:** **Pause Reading**, **Continue Reading**, and **Stop Reading** appear when they apply.
+
+Switching to another tab stops reading and clears the resume position on the tab you left.
+
+## Change the voice
+
+Open **Voice** in any Read Aloud menu and pick **System default** or an installed Windows voice (WinRT OneCore voices and SAPI voices, including those from [NaturalVoiceSAPIAdapter](https://github.com/gexgd0419/NaturalVoiceSAPIAdapter)).
+
+The choice is saved in `ReadAloudVoiceId` in [Advanced settings](Advanced-options-settings.md) (`SumatraPDF-settings.txt`). Leave it empty for the system default.
+
+## Tips
+
+- Select a paragraph, then use **Start Reading Selection** to hear only that part.
+- Right-click a spot and use **Start Reading From Cursor Position** to start mid-page.
+- Scroll the highlight off-screen to stop auto-scroll and browse while listening.
+- Install [NaturalVoiceSAPIAdapter](https://github.com/gexgd0419/NaturalVoiceSAPIAdapter) for more voices.
 
 ## Limitations
 

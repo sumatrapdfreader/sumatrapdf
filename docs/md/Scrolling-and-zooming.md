@@ -1,21 +1,34 @@
-# Scrolling and navigating
+# Scrolling, zooming and navigating
 
-There are many ways to navigate around the document.
+Move around a document with the keyboard, mouse or touchpad, change zoom and page layout, and jump back and forth between tabs, files and earlier positions. Page navigation is in the **Go To** menu, zoom in the **Zoom** menu, layout in the **View** menu.
 
-## Scrolling with keyboard
+**Scroll with the mouse wheel or arrow keys; zoom with `Ctrl` + wheel or `+` / `-`.**
 
-`Up`, `Down`, `Left`, and `Right` refer to the arrow keys.
+- **Scroll:** arrow keys, `j` / `k`, mouse wheel, right-mouse drag
+- **Turn pages:** `n` / `p`, `Space` / `Shift + Space`, `Home` / `End`
+- **Go to page:** `g` or `Ctrl + g`
+- **Zoom:** `+` / `-`, `Ctrl` + wheel, pinch
+- **Fit:** `Ctrl + 0` (page), `Ctrl + 2` (width), `Ctrl + 3` (content)
+- **Layout:** `Ctrl + 6` / `7` / `8` (single, facing, book), `c` (continuous)
+- **Back / forward:** `Alt + Left` / `Alt + Right`
+- **Free pan:** scroll any part of a page to the center
+
+## Scroll with the keyboard
+
+`Up`, `Down`, `Left`, and `Right` refer to the arrow keys. `Left` / `Right` change pages only when the page fits the window width; otherwise they scroll. In manga (right-to-left) mode they are swapped.
 
 - `k`, `j`, `h`, `l` : scroll up / down / left / right
 - `Up`, `Down` : scroll up / down
-- `n`, `Left` : go to next page (aligns top of page with top of window)
-- `p`, `Right` : go to previous page (aligns top of page with top of window)
+- `n`, `Right` : go to next page (aligns top of page with top of window)
+- `p`, `Left` : go to previous page (aligns top of page with top of window)
 - `Shift + Down`, `Shift + Up` : scroll forward / backward by a page
 - `Space`, `Shift + Space` : scroll forward / backward by a page
 - `Home`, `End` : go to first / last page
 - `g`, `Ctrl + g` : go to page (text field in toolbar or dialog if toolbar not shown)
 
-## Scrolling with a mouse and touchpad
+The **Go To** menu has **Next Page**, **Previous Page**, **First Page**, **Last Page** and **Page...**.
+
+## Scroll with a mouse or touchpad
 
 - click the scrollbar to scroll up or down by a page
 - `Shift` + click the scrollbar : scroll to that position
@@ -24,18 +37,22 @@ There are many ways to navigate around the document.
 - mouse over scrollbar : scrolls faster (by half page instead of by line)
 - hold the **right mouse button** and drag : pan the page (a click without dragging opens the context menu)
 
-## Free pan
+## Scroll a page corner to the center (free pan)
 
-Scrolling normally stops when a page edge meets the window edge, so a detail in the corner of a page can only ever be viewed in the corner of the screen. **Toggle Free Pan** (`CmdToggleFreePan`; `Ctrl + K`, `Toggle Free Pan` command in [Command Palette](Command-Palette.md); no default shortcut) adds half a window of scroll room on every side, so any part of a page can be dragged or scrolled to the center. Fit Page / Fit Width and where a page lands when you navigate to it are unchanged. It is remembered per document.
+Scrolling normally stops when a page edge meets the window edge, so a detail in the corner of a page can only be viewed in the corner of the screen. **Toggle Free Pan** adds half a window of scroll room on every side, so any part of a page can be dragged or scrolled to the center.
 
-## Reading zoomed-in pages without the keyboard
+- [Command Palette](Command-Palette.md): `Ctrl + K`, then `Toggle Free Pan` (`CmdToggleFreePan`; no default shortcut).
 
-When a page is zoomed past the window you usually care about one band of it — the music staves, the text inside wide scan margins — and want the next page to open at that same place. Two advanced settings do that:
+Fit Page / Fit Width and where a page lands when you navigate to it are unchanged. It is remembered per document.
 
-- `RememberViewOffsetOnPageTurn = true` : next / previous page keeps the view where it is instead of jumping to the top of the new page. It applies to page turns you ask for (`n` / `p`, click-to-turn, the toolbar arrows). Wheeling off the bottom of a page still opens the next page at its top, since that is you reading on, not turning a page.
+## Turn pages with the mouse wheel
+
+When a page is zoomed past the window you usually care about one band of it (music staves, text inside wide scan margins) and want the next page to open at that same place. Two advanced settings do that:
+
+- `RememberViewOffsetOnPageTurn = true` : next / previous page keeps the view where it is instead of jumping to the top of the new page. It applies to page turns you ask for (`n` / `p`, click-to-turn, the toolbar arrows). Wheeling off the bottom of a page still opens the next page at its top, since that is reading on, not turning a page.
 - `MouseWheelTurnsPage = true` : one wheel notch is a page turn rather than a scroll. `Alt + wheel` still scrolls, so you can always reach the rest of the page; `Shift + wheel` (horizontal) and `Ctrl + wheel` (zoom) are unchanged.
 
-Turn on both and the wheel becomes a page turner while the view stays parked where you put it. To switch the mode on and off without editing the settings file, bind it to a key or a toolbar button with [`CmdToggleBoolSetting`](Commands.md#cmdtoggleboolsetting):
+Turn on both and the wheel becomes a page turner while the view stays where you put it. To switch the mode on and off without editing the settings file, bind it to a key or a toolbar button with [`CmdToggleBoolSetting`](Commands.md#cmdtoggleboolsetting):
 
 ```
 Shortcuts [
@@ -48,26 +65,18 @@ Shortcuts [
 ]
 ```
 
-# Zooming and changing view
-
-## With keyboard
+## Zoom with the keyboard
 
 - `+`, `-` : zoom in / out
 - `Ctrl + +`, `Ctrl + -` : zoom in / out
 - `Ctrl + y` : dialog to set custom zoom level (between 8.3% and 6400%)
-- `c` : toggle continuous view
 - `Ctrl + 0` : set zoom to fit whole page (or pages in multi-column view)
 - `Ctrl + 1` : set 100% zoom
 - `Ctrl + 2` : set zoom to fit width of page (or pages in multi-column view)
 - `Ctrl + 3` : set zoom to fit content (like fit whole page but we auto-remove borders)
 - Fit Height (View / Zoom menu, or `Ctrl + K`, `Zoom: Fit Height` command in [Command Palette](Command-Palette.md)): scale so the page fills the window height (may scroll horizontally)
-- `Ctrl + 6` : single page view i.e. single column
-- `Ctrl + 7` : facing view i.e. 2 columns (pages)
-- `Ctrl + 8` : 2 columns (pages) but offset by one page
 
-For comic books and manga (right-to-left reading, double-page spreads, `LimitToWindowWidth`), see [Comics and manga](Comics-and-manga.md).
-
-## With mouse
+## Zoom with the mouse
 
 - `Ctrl` + mouse scroll wheel : zoom in / out
 - hold the **right mouse button** + mouse scroll wheel : zoom in / out (same as Ctrl + wheel; the context menu does not open if you zoomed)
@@ -75,30 +84,21 @@ For comic books and manga (right-to-left reading, double-page spreads, `LimitToW
 - pinch-to-zoom gesture on a touchscreen
 - with `ClickEdgeToTurnPage = true` (advanced setting): click the left fifth of the page area for the previous page, the right fifth for the next page (sides reverse in manga mode)
 
-## Zoom levels
+## Change page layout
 
-Zooming in and out steps through a fixed list of zoom levels. This is the built-in list, and also the value of the `ZoomLevels` [advanced setting](Advanced-options-settings.md) that reproduces it:
+- `c` : toggle continuous view (**View → Show Pages Continuously**)
+- `Ctrl + 6` : single page view i.e. single column (**View → Single Page**)
+- `Ctrl + 7` : facing view i.e. 2 columns (pages) (**View → Facing**)
+- `Ctrl + 8` : 2 columns (pages) but offset by one page (**View → Book View**)
 
-```
-ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400
-```
+For comic books and manga (right-to-left reading, double-page spreads, `LimitToWindowWidth`), see [Comics and manga](Comics-and-manga.md).
 
-Setting `ZoomLevels` replaces the built-in list rather than adding to it, so the way to change the steps is to copy the line above and edit it. Fit Page, Fit Width and Fit Content are always available regardless of the list.
+## Go back to where you were
 
-**Ver 3.7+:** the largest level in the list is also the highest zoom that can be set at all, in the Custom Zoom dialog (`Ctrl + y`) and everywhere else. So to zoom further than 6400% — into a large map, say, where the detail is in the file but the old limit hid it — add the levels you want on the end:
+Certain actions add navigation points. Go back and forward through them like a browser's back button:
 
-```
-ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400 12800 25600 51200 102400
-```
-
-Levels up to 1000000 (10000x) are accepted; anything larger is ignored. How far a particular document can be zoomed also depends on its size: all of its pages are laid out on a single canvas measured in pixels, so a long document stops zooming in earlier than a short one does.
-
-## Navigating history
-
-Certain actions add navigation points. You can go back and forward in the history of navigation points (similar to a browser's back button) with:
-
-- `Alt + Left`, `Backspace` : go back in history
-- `Alt + Right`, `Shift + Backspace` : go forward in history
+- `Alt + Left`, `Backspace` : go back in history (**Go To → Back**)
+- `Alt + Right`, `Shift + Backspace` : go forward in history (**Go To → Forward**)
 
 After following an internal hyperlink (footnote, TOC entry), use `Alt + Left` to go back. See [Hyperlinks](Hyperlinks.md).
 
@@ -110,27 +110,55 @@ Actions that add navigation points:
 - navigating via favorites (`Ctrl + b`)
 - starting a search (`Ctrl + f`): the view the search started from, once per search, so `Backspace` returns there after find-as-you-type and Find Next moved through matches
 
-## Navigating between tabs
+## Switch tabs
 
 - `Ctrl + Tab` / `Ctrl + Shift + Tab` : next / previous tab. **Ver 3.6+:** **Smart Tab Switch** (tab list while Ctrl is held). To get pre-3.6 immediate strip-order switching on those keys, [rebind](Customize-keyboard-shortcuts.md) them to `CmdNextTab` / `CmdPrevTab` — see [Tabs and windows](Tabs-and-windows.md#restore-pre-36-ctrltab-no-switcher-popup)
 - `Ctrl + Page Down` : next tab (strip order, no popup)
 - `Ctrl + Page Up` : previous tab (strip order, no popup)
 
-## Moving tabs
+## Move tabs
 
 **v.3.6+**
 
 - `Ctrl + Shift + Page Down` : move tab right
 - `Ctrl + Shift + Page Up` : move tab left
 
-## Navigating between files
+## Open the next file in the folder
 
 - `Shift + Control + Right` : go to next file in current folder
 - `Shift + Control + Left` : go to previous file in current folder
 
-# Related commands
+## Tips
 
-You can [assign your own keyboard shortcuts](Customize-keyboard-shortcuts.md). Here are related commands:
+- Use `Alt` + wheel to scroll by half a page.
+- Use `Ctrl + 3` on scans with wide margins; it fits content and removes borders.
+- Press `Alt + Left` or `Backspace` to return to where you were before a search or a link.
+- Combine `MouseWheelTurnsPage` and `RememberViewOffsetOnPageTurn` to read zoomed-in pages with the wheel only.
+- Use free pan to center a detail that sits in a page corner.
+
+## Zoom levels
+
+Zooming in and out steps through a fixed list of zoom levels. This is the built-in list, and also the value of the `ZoomLevels` [advanced setting](Advanced-options-settings.md) that reproduces it:
+
+```
+ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400
+```
+
+Setting `ZoomLevels` replaces the built-in list rather than adding to it: to change the steps, copy the line above and edit it. Fit Page, Fit Width and Fit Content are always available regardless of the list.
+
+**Ver 3.7+:** the largest level in the list is also the highest zoom that can be set at all, in the Custom Zoom dialog (`Ctrl + y`) and everywhere else. To zoom further than 6400% (e.g. into a large map where the detail is in the file), add the levels you want on the end:
+
+```
+ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400 12800 25600 51200 102400
+```
+
+Levels up to 1000000 (10000x) are accepted; anything larger is ignored. How far a document can be zoomed also depends on its size: all its pages are laid out on a single canvas measured in pixels, so a long document stops zooming in earlier than a short one.
+
+## Related commands
+
+You can [assign your own keyboard shortcuts](Customize-keyboard-shortcuts.md) to these commands.
+
+Scrolling and navigation:
 
 - `CmdScrollUp`, `CmdScrollDown`
 - `CmdScrollLeft`, `CmdScrollRight`
@@ -142,11 +170,11 @@ You can [assign your own keyboard shortcuts](Customize-keyboard-shortcuts.md). H
 - `CmdNavigateBack`, `CmdNavigateForward`
 - `CmdOpenNextFileInFolder`, `CmdOpenPrevFileInFolder`
 
-Tab commands:
+Tabs:
 
 - `CmdNextTab`, `CmdPrevTab`, `CmdNextTabSmart`, `CmdPrevTabSmart`
 
-Zooming and view commands:
+Zoom and view:
 
 - `CmdZoomIn`, `CmdZoomOut`
 - `CmdZoomCustom`
@@ -154,3 +182,10 @@ Zooming and view commands:
 - `CmdZoomActualSize`
 - `CmdZoomFitWidth`
 - `CmdZoomFitContent`
+
+## See also
+
+- [Comics and manga](Comics-and-manga.md) — right-to-left reading, double-page spreads
+- [Tabs and windows](Tabs-and-windows.md) — tab switching and layout
+- [Hyperlinks](Hyperlinks.md) — following and returning from links
+- [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md) — rebind any command above

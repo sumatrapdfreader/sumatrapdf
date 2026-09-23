@@ -1,17 +1,24 @@
 # Customize external viewers
 
-SumatraPDF makes it easy to open the current document in a different program.
+Open the current document in a different program from the `File` menu. SumatraPDF auto-detects some popular apps (Adobe, Foxit, PDF-XChange, etc.) and you can add your own with the `ExternalViewers` [advanced setting](https://www.sumatrapdfreader.org/settings/settings.html).
 
-For example, if you also have Adobe Reader installed, you can use the `File` menu to open the PDF document you're viewing in Adobe Reader. We auto-detect some popular apps (Adobe, Foxit, PDF-XChange, etc.).
+**Most people use it to open the PDF they're viewing in another reader, e.g. Adobe Reader.** At a glance:
 
-You can add custom viewers using [advanced settings](https://www.sumatrapdfreader.org/settings/settings.html).
+- **Open in another program:** pick it in the `File` menu.
+- **Add a viewer:** an entry in `ExternalViewers` with `CommandLine`, `Name`, `Filter`.
+- **Keyboard shortcut (ver 3.6+):** `Key`.
+- **Toolbar button (ver 3.7+):** `ToolbarText` or `ToolbarSvgIcon`.
 
-To configure an external viewer:
+## Open the document in another program
 
-- use the `Settings` / `Open Advanced Settings File...` menu to open the configuration file
-- modify `ExternalViewers` section
+Use the `File` menu and pick the viewer. Viewers you add appear there under their `Name`.
 
-Relevant settings:
+## Add a custom viewer
+
+1. Menu: **Settings → Open Advanced Settings File...** to open the configuration file.
+2. Modify the `ExternalViewers` section.
+
+Available fields:
 
 ```
 ExternalViewers [
@@ -44,25 +51,46 @@ ExternalViewers [
 ]
 ```
 
-`CommandLine` is the full path of the executable used to open a file, followed by its arguments.
+## Add a shortcut or toolbar button
 
-Arguments can use special values:
+- `Key` (ver 3.6+) is an optional keyboard shortcut that invokes the viewer.
+- `ToolbarText` (ver 3.7+) is optional and adds a toolbar button for the viewer.
+- `ToolbarSvgIcon` (ver 3.7+) is optional and sets an SVG icon for that button. If both are set, the SVG icon is used. See [Customize toolbar](Customize-toolbar.md#using-svg-icons) for the icon format.
 
-- `"%1"` : will be replaced with the full path of the current document
-- `%p` : will be replaced with the current page number. Not all viewers support page numbers
-- `"%d"` : will be replaced with the directory of the current document. Useful for launching file managers. Available in version **3.5** and later
-- `%%` : will be replaced with a literal `%`. Use this to pass a `%` to the external program; for example, `%%d` reaches it as `%d` (handy for tools like `sumatrapdf-tool draw -o page-%d.png`). Available in version **3.7** and later
+## Tips
 
-Please make sure to use quotes around file / directory special values (i.e. `"%1"` and `"%d"`) to avoid issues with file paths that have spaces in them.
+- Always quote file / directory values (`"%1"`, `"%d"`) so paths with spaces work.
+- Use `Filter = *` and `"%d"` to open the document's folder in a file manager.
+- Use `%p` to open the viewer at the current page, if it supports page numbers.
+- Use `%%` to pass a literal `%`, e.g. `sumatrapdf-tool draw -o page-%%d.png`.
 
-`Name` will be displayed in the `File` menu.
+## Reference
 
-`Filter` restricts which files can be opened by the viewer. For example:
+### `CommandLine`
 
-- to only activate it for PDF files, use `*.pdf`
-- to activate for PNG and JPEG files, use `*.png;*.jpg;*.jpeg`
-- to allow all files, use `*` (useful for file managers)
+Full path of the executable used to open a file, followed by its arguments. Arguments can use special values:
 
-`Key` is optional and is a keyboard shortcut to invoke that viewer. Available in **3.6** and later.
+- `"%1"` : the full path of the current document
+- `%p` : the current page number. Not all viewers support page numbers
+- `"%d"` : the directory of the current document. Useful for launching file managers. Available in version **3.5** and later
+- `%%` : a literal `%`. Use this to pass a `%` to the external program; for example, `%%d` reaches it as `%d` (handy for tools like `sumatrapdf-tool draw -o page-%d.png`). Available in version **3.7** and later
 
-`ToolbarText` is optional and adds a toolbar button for that viewer. `ToolbarSvgIcon` is optional and sets an SVG icon for that toolbar button. If both are set, the SVG icon is used. Available in **3.7** and later.
+Use quotes around file / directory special values (i.e. `"%1"` and `"%d"`) to avoid issues with paths that have spaces in them.
+
+### `Name`
+
+Displayed in the `File` menu.
+
+### `Filter`
+
+Restricts which files the viewer can open:
+
+- only PDF files: `*.pdf`
+- PNG and JPEG files: `*.png;*.jpg;*.jpeg`
+- all files: `*` (useful for file managers)
+
+## See also
+
+- [Customize toolbar](Customize-toolbar.md) — toolbar buttons and SVG icons
+- [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md) — key names and modifiers
+- [Advanced settings](https://www.sumatrapdfreader.org/settings/settings.html) — all settings

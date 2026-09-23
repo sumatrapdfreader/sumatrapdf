@@ -1,94 +1,70 @@
 # Printing
 
-This page collects everything about printing in SumatraPDF: printing from the
-window, printing from the command line, every `-print-settings` option and what
-it's good for, and recipes for common printing tasks.
+Print a document, a page range or a rectangular part of a page, from the print dialog or the command line.
 
-If a printout looks wrong (banding, wrong colors, stalls), see
-[Reporting printing bugs](Reporting-printing-bugs.md) first — most such problems
-come from the printer driver, not SumatraPDF.
+**Press `Ctrl + P` to print the current document.** At a glance:
 
-## How SumatraPDF prints
+- **Print dialog:** printer, copies, page range. `Ctrl + P`
+- **Print Selection:** print a rectangular fragment of a page.
+- **Advanced options:** odd/even pages, page scaling, centering, paper source.
+- **Command-line printing:** unattended printing with every option, on every Windows version.
+- **Actual size (1:1):** print at exact size, including scans with a wrong or missing DPI.
 
-SumatraPDF renders each page to an image and sends that image to the printer.
-This is reliable across document types (PDF, XPS, CBZ, etc.) but means:
+If a printout looks wrong (banding, wrong colors, stalls), see [Reporting printing bugs](Reporting-printing-bugs.md) first — most such problems come from the printer driver, not SumatraPDF.
 
-- the print spool can be large and printing can be slower than text-based printers
-- print quality follows the printer resolution, not a vector path
-- screen-only settings (anti-aliasing, color range, background color) do **not**
-  change the printout
+## Print a document
 
-## Printing from the window
+Open the system print dialog, then pick the printer, number of copies and page range:
 
-Press `Ctrl + P` (or toolbar / menu) to open the system print dialog. There you
-pick the printer, number of copies, and page range.
+- **File → Print...**, or the toolbar button
+- `Ctrl + P`
+- `Ctrl + K`, then `Print Document...` in [Command Palette](Command-Palette.md) (`CmdPrint`)
 
-### Printing part of a page
+## Print part of a page
 
 To print only a fragment of a page (a detail of a drawing, one table):
 
-1. Select the area as a rectangle: hold `Ctrl` and drag with the left mouse
-   button (or drag with the right mouse button).
-2. Right-click the selection and choose **Print Selection...**, or press
-   `Ctrl + P` and pick **Selection** under _Page Range_ in the print dialog.
-3. To print the fragment at its real size choose **Actual size (1:1)**
-   under _Advanced_; **Shrink** / **Fit** scale it to the paper instead.
+1. Select the area as a rectangle: hold `Ctrl` and drag with the left mouse button (or drag with the right mouse button).
+2. Right-click the selection and choose **Print Selection...**, or press `Ctrl + P` and pick **Selection** under _Page Range_ in the print dialog.
+3. To print the fragment at its real size choose **Actual size (1:1)** under _Advanced_; **Shrink** / **Fit** scale it to the paper instead.
 
-The selection prints on one sheet, at the top-left (or centered with
-**Center page horizontally**). Only rectangular selections can be printed;
-a text selection is not offered. The Windows 11 print dialog can't print a
-selection, so SumatraPDF uses the classic dialog for it.
+The selection prints on one sheet, at the top-left (or centered with **Center page horizontally**).
 
-### The Advanced options
+Note: only rectangular selections can be printed; a text selection is not offered.
 
-The system print dialog has an **Advanced** tab (a second tab next to
-_General_) with SumatraPDF's own options:
+Note: the Windows 11 print dialog can't print a selection, so SumatraPDF uses the classic dialog for it.
+
+## Choose advanced print options
+
+The system print dialog has an **Advanced** tab (a second tab next to _General_) with SumatraPDF's own options.
 
 **Print range**
 
 - **All selected pages** – print the chosen range as-is
-- **Odd pages only** / **Even pages only** – print only odd/even pages of the
-  range (useful for manual two-sided printing)
+- **Odd pages only** / **Even pages only** – print only odd/even pages of the range (useful for manual two-sided printing)
 
 **Page scaling**
 
-- **Shrink pages to printable area** – default; only scales down
-  pages that are too big for the paper, leaves smaller pages at original size
-- **Fit pages to printable area** – scale every page up or down so it fills the
-  printable area, keeping the aspect ratio
-- **Stretch pages to fill paper** – fill the paper in both
-  dimensions, _not_ keeping the aspect ratio (the page is distorted to fit)
-- **Actual size (1:1)** – print at 100%, no scaling
-  (best for forms, labels, technical drawings and anything that must print at
-  an exact size). For images the size comes from the resolution
-  recorded in the file; see [Printing at actual size](#printing-at-actual-size-11)
+- **Shrink pages to printable area** – default; only scales down pages that are too big for the paper, leaves smaller pages at original size
+- **Fit pages to printable area** – scale every page up or down so it fills the printable area, keeping the aspect ratio
+- **Stretch pages to fill paper** – fill the paper in both dimensions, _not_ keeping the aspect ratio (the page is distorted to fit)
+- **Actual size (1:1)** – print at 100%, no scaling (best for forms, labels, technical drawings and anything that must print at an exact size). For images the size comes from the resolution recorded in the file; see [Printing at actual size](#printing-at-actual-size-11)
 
 **Other**
 
-- **Center page horizontally on the paper** – center a page that is smaller than
-  the paper; otherwise such a page is aligned to the top-left corner. Useful for
-  envelopes or smaller stock fed through a tray that centers the paper
-- **Choose paper source by document page size** – let the printer pick the input
-  tray whose paper matches the page size (the same idea as Adobe's "Choose paper
-  source by PDF page size")
-- **Print each page at its document page size (mixed sizes)** – for documents
-  whose pages have different sizes, set the paper size per page so each page goes
-  to the right paper/tray instead of all pages using the first page's size
+- **Center page horizontally on the paper** – center a page that is smaller than the paper; otherwise such a page is aligned to the top-left corner. Useful for envelopes or smaller stock fed through a tray that centers the paper
+- **Choose paper source by document page size** – let the printer pick the input tray whose paper matches the page size (the same idea as Adobe's "Choose paper source by PDF page size")
+- **Print each page at its document page size (mixed sizes)** – for documents whose pages have different sizes, set the paper size per page so each page goes to the right paper/tray instead of all pages using the first page's size
+- **Rotate printout** – rotate the printout by extra degrees to fix a wrong orientation (same as `rotate=` in `-print-settings`)
 
-### Windows 11: the "Advanced" tab is missing
+## Get the Advanced options on Windows 11
 
-On Windows 11 (22H2 and later) Windows replaced the classic print dialog with a
-new "modern" one that does **not** show application-provided tabs. SumatraPDF
-puts the most used **Advanced** options in its **More settings** pane instead:
-**Page scaling** (the same four choices as above), **Center page horizontally**
-and **Rotate printout**. The paper-source options are not available there.
+On Windows 11 (22H2 and later) Windows replaced the classic print dialog with a new "modern" one that does **not** show application-provided tabs. SumatraPDF puts the most used **Advanced** options in its **More settings** pane instead: **Page scaling** (the same four choices as above), **Center page horizontally** and **Rotate printout**. The paper-source options are not available there.
 
 For the rest you have two options:
 
-1. **Use command-line printing** (below) — it doesn't depend on the dialog and
-   exposes every Advanced option.
-2. **Restore the legacy print dialog** for your user account. This affects all
-   apps, not just SumatraPDF:
+1. **Use [command-line printing](#print-from-the-command-line)** — it doesn't depend on the dialog and exposes every Advanced option.
+2. **Restore the legacy print dialog** for your user account. This affects all apps, not just SumatraPDF:
 
    ```
    reg add "HKCU\Software\Microsoft\Print\UnifiedPrintDialog" /v PreferLegacyPrintDialog /t REG_DWORD /d 1 /f
@@ -96,28 +72,203 @@ For the rest you have two options:
 
    Then sign out and back in. To undo, delete that value.
 
-## Command-line printing
+## Print from the command line
 
-Command-line printing never shows a dialog (unless you ask for one) and exposes
-every option, so it works the same on every Windows version. After printing,
-SumatraPDF exits; check the process exit code for success/failure.
+Command-line printing never shows a dialog (unless you ask for one) and exposes every option, so it works the same on every Windows version. After printing, SumatraPDF exits; check the process [exit code](#exit-codes) for success/failure.
 
 - `-print-to-default` — print to the system default printer
-- `-print-to "<printer-name>"` — print to a named printer, e.g.
-  `-print-to "Microsoft Print to PDF"`
-- `-print-settings "<list>"` — tweak printing without the dialog (see below)
+- `-print-to "<printer-name>"` — print to a named printer, e.g. `-print-to "Microsoft Print to PDF"`
+- `-print-settings "<list>"` — tweak printing without the dialog (see [`-print-settings` options](#-print-settings-options))
 - `-silent` — suppress error message boxes (for unattended/background printing)
 - `-print-dialog` — show the print dialog instead of printing silently
 - `/p` — Adobe Reader alias for `-print-dialog`
-- `/t <file> <printer>` — Adobe Reader silent print (`/t <printer>` if the file is
-  already on the command line); optional driver/port args are ignored
-- `-exit-when-done` — used with `-print-dialog` (and `-stress-test`); exit after
-  the dialog is dismissed and the document printed
+- `/t <file> <printer>` — Adobe Reader silent print (`/t <printer>` if the file is already on the command line); optional driver/port args are ignored
+- `-exit-when-done` — used with `-print-dialog` (and `-stress-test`); exit after the dialog is dismissed and the document printed
 
-### Exit codes
+You can print several files in one command; the settings apply to all of them:
 
-For unattended/silent printing, the process exit code tells you _why_ a print
-failed:
+```
+SumatraPDF.exe -print-to "HP LaserJet" -print-settings "fit" a.pdf b.pdf c.pdf
+```
+
+Use `SumatraPDF.exe -list-printers` to list installed printers, paper names, `paperkind=` IDs and tray names.
+
+## Printing at actual size (1:1)
+
+"Actual size" needs two things: no scaling (**Actual size (1:1)** in the dialog, `noscale` on the command line) and a correct idea of how big the document is.
+
+- **PDF, XPS, DjVu, EPUB...** have real page sizes, so no scaling is all it takes.
+- **Images** (TIFF, PNG, JPEG, BMP, scans) are only pixels; their physical size is pixels divided by the resolution stored in the file (TIFF resolution tags, PNG `pHYs`, JPEG JFIF density, EXIF). SumatraPDF uses that, and assumes 96 dpi when the file has none. A 300 dpi A3 scan therefore prints as A3 only if the scanner wrote 300 dpi into the file; a file with no resolution prints about 3x too large, and a file that claims 72 dpi comes out bigger still. The resolution SumatraPDF read is shown in Document Properties (`Ctrl + D`) as _DPI_.
+- **Image folders and comic books** (CBZ, CBR, a directory of images) are always treated as 96 dpi, whatever the images say, so their pages fit a screen.
+
+When the file's resolution is missing or wrong, tell SumatraPDF what it is:
+
+- from the window: set `PrinterDefaults.PrintDpi` (**Settings → Advanced Settings...**), e.g. `PrintDpi = 300`, then print with **Actual size (1:1)**
+- from the command line: `-print-settings "noscale,dpi=300"`
+
+The override only sets the size; the pixels are still sent at full resolution.
+
+Printing a rectangular selection (see [Print part of a page](#print-part-of-a-page)) at actual size works the same way: choose **Actual size (1:1)**.
+
+## Change print dialog defaults
+
+Change some defaults used by the print dialog with the `PrinterDefaults` advanced setting (**Settings → Advanced Settings...**):
+
+```
+PrinterDefaults [
+	PrintScale = none
+	Collate = collate
+	PrintDpi = 0
+]
+```
+
+- `PrintScale` — default page scaling. Values: `shrink` (default), `fit`, `stretch`, `none`.
+- `Collate` — default for the print dialog's Collate checkbox. Values: `default` (leave the printer/driver default), `collate`, `nocollate`. You can still change it per print in the dialog. For command-line printing, use the `collate` / `nocollate` `-print-settings` tokens instead.
+- `PrintDpi` — resolution to assume for the document when printing at original size; `0` (default) uses what the file says. The same as `dpi=<n>` in `-print-settings`, for printing from the window. See [Printing at actual size](#printing-at-actual-size-11).
+
+## Recipes for common tasks
+
+**Print a PDF to the default printer, unattended**
+
+```
+SumatraPDF.exe -print-to-default -silent document.pdf
+```
+
+**Print at exact size (no scaling) — forms, labels, pre-printed stationery**
+
+```
+SumatraPDF.exe -print-to "Label Printer" -print-settings "noscale" label.pdf
+```
+
+**Print a scan at its real size when the file lacks (or lies about) its DPI**
+
+```
+SumatraPDF.exe -print-to "Plotter" -print-settings "noscale,dpi=300" drawing.tif
+```
+
+**Print a small page centered on larger paper (e.g. an envelope)**
+
+```
+SumatraPDF.exe -print-to "HP LaserJet" -print-settings "noscale,center" envelope.pdf
+```
+
+**Fit every page to the paper, in grayscale, 2 copies**
+
+```
+SumatraPDF.exe -print-to "Office Printer" -print-settings "fit,monochrome,2x" report.pdf
+```
+
+**Two-sided, long-edge binding, fit to page**
+
+```
+SumatraPDF.exe -print-to "Office Printer" -print-settings "fit,duplexlong" report.pdf
+```
+
+**Manual two-sided on a one-sided printer** (print odd pages, flip the stack, then print even pages)
+
+```
+SumatraPDF.exe -print-to "Office Printer" -print-settings "odd,fit" report.pdf
+SumatraPDF.exe -print-to "Office Printer" -print-settings "even,fit" report.pdf
+```
+
+**Print only the last 3 pages**
+
+```
+SumatraPDF.exe -print-to-default -print-settings "-3--1" document.pdf
+```
+
+**Print a specific paper size from a specific tray**
+
+```
+SumatraPDF.exe -print-to "Office Printer" -print-settings "paper=A5,bin=2,fit" booklet.pdf
+```
+
+**Print a document with mixed page sizes to matching paper/trays**
+
+```
+SumatraPDF.exe -print-to "Multi-tray Printer" -print-settings "paper=auto,bin=auto" mixed.pdf
+```
+
+**Print a wide (landscape) page in its original orientation (no 90° rotation)**
+
+```
+SumatraPDF.exe -print-to "Receipt Printer" -print-settings "disable-auto-rotation" wide.pdf
+```
+
+**Fix an upside-down printout (e.g. when printing to XPS / Print to PDF)**
+
+```
+SumatraPDF.exe -print-to "Microsoft Print to PDF" -print-settings "rotate=180" doc.pdf
+```
+
+**"Print" to a PDF file**
+
+```
+SumatraPDF.exe -print-to "Microsoft Print to PDF" -print-settings "output=C:\out\result.pdf" input.pdf
+```
+
+## Tips
+
+- Use **Odd pages only**, then **Even pages only** (or `odd` / `even`) for manual two-sided printing.
+- Use **Actual size (1:1)** / `noscale` for forms, labels and technical drawings.
+- Use `-print-to "Microsoft Print to PDF"` to tell a driver problem from a SumatraPDF one.
+- Run a command without `-silent` first; error dialogs explain failures.
+- Use `-print-to-default` to avoid printer-name mismatches.
+
+## Troubleshooting
+
+### Paper size or tray ignored
+
+Drivers often report paper sizes under non-obvious names. If `paper=A4` has no effect:
+
+1. Print once from the Windows dialog and note the exact paper name in the driver, or list names with `-list-printers`.
+2. Use that string: `-print-settings "paper=A3 297 x 420 mm"`.
+3. Or use `paperkind=<num>` with the Windows `DMPAPER_*` id.
+4. For mixed page sizes: `paper=auto,bin=auto`.
+
+Combine with `ignore-pdf-print-settings` if the PDF embeds conflicting `ViewerPreferences`.
+
+### Wrong orientation or margins
+
+- Wide pages auto-rotate 90° to fit — add `disable-auto-rotation` to keep original orientation.
+- Upside-down virtual printer output — try `rotate=180`.
+- Content too small — use `fit` or `shrink` (default); exact size — `noscale`.
+
+### Job prints to wrong printer
+
+`-print-to` requires the **exact** printer name from Windows Settings → Printers. `-print-to-default` avoids name mismatches.
+
+### Silent script reports failure
+
+Check the [exit code](#exit-codes). Common results:
+
+| Code | Check                                                                             |
+| ---- | --------------------------------------------------------------------------------- |
+| `4`  | Printer name typo or no default printer                                           |
+| `5`  | Driver error — update driver, try printing to "Microsoft Print to PDF" to isolate |
+| `6`  | `sumatrapdfrestrict.ini` has `PrinterAccess = 0`                                  |
+
+Add `-silent` only after confirming the command works interactively (without `-silent`, error dialogs explain failures).
+
+### Lines or barcodes missing
+
+SumatraPDF renders each page to a bitmap before printing (see [How SumatraPDF prints](#how-sumatrapdf-prints)). Very fine lines, hairline barcodes, or light gray rules may disappear at printer resolution. Try `noscale` with a higher-DPI driver, or print from a vector-aware tool. See [Reporting printing bugs](Reporting-printing-bugs.md) — often driver/resolution, not SumatraPDF logic.
+
+### Windows 11: no Advanced tab in print dialog
+
+Use [command-line printing](#print-from-the-command-line) or enable the [legacy print dialog](#get-the-advanced-options-on-windows-11) — CLI exposes every Advanced option on all Windows versions.
+
+## How SumatraPDF prints
+
+SumatraPDF renders each page to an image and sends that image to the printer. This is reliable across document types (PDF, XPS, CBZ, etc.) but means:
+
+- the print spool can be large and printing can be slower than text-based printers
+- print quality follows the printer resolution, not a vector path
+- screen-only settings (anti-aliasing, color range, background color) do **not** change the printout
+
+## Exit codes
+
+For unattended/silent printing, the process exit code tells you _why_ a print failed:
 
 | Exit code | Meaning                                                  |
 | --------- | -------------------------------------------------------- |
@@ -128,21 +279,11 @@ failed:
 | `5`       | the printer driver / device failed                       |
 | `6`       | printing is disabled by restriction policy               |
 
-With several files, the code is `0` only if all printed, otherwise the category
-of the first failure. Anything that goes wrong inside the spooler/driver _after_
-the job is submitted (out of paper, printer offline, jam) can't be reported —
-SumatraPDF only knows whether the job was handed off.
+With several files, the code is `0` only if all printed, otherwise the category of the first failure. Anything that goes wrong inside the spooler/driver _after_ the job is submitted (out of paper, printer offline, jam) can't be reported — SumatraPDF only knows whether the job was handed off.
 
-You can print several files in one command; the settings apply to all of them:
+## `-print-settings` options
 
-```
-SumatraPDF.exe -print-to "HP LaserJet" -print-settings "fit" a.pdf b.pdf c.pdf
-```
-
-### `-print-settings` options
-
-The list is comma-separated, e.g. `-print-settings "1-5,odd,fit,monochrome"`.
-Order doesn't matter. Available tokens:
+The list is comma-separated, e.g. `-print-settings "1-5,odd,fit,monochrome"`. Order doesn't matter. Available tokens:
 
 **Which pages**
 
@@ -186,7 +327,7 @@ Order doesn't matter. Available tokens:
 | `bin=<num or name>`  | select the input tray (by number or name)                                                                                                      |
 | `bin=auto`           | let the printer pick the tray whose paper matches the page size                                                                                |
 
-Use `SumatraPDF.exe -list-printers` to list installed printers, paper names, `paperkind=` IDs and tray names.
+Note: if `paper=A4` doesn't take effect, the driver may report the size under a different name. List the exact names your printer accepts (`-list-printers`) and use one of them, or fall back to `paperkind=<num>`.
 
 **Copies, sides and color**
 
@@ -202,21 +343,15 @@ Use `SumatraPDF.exe -list-printers` to list installed printers, paper names, `pa
 
 **Output (advanced)**
 
-| Option                      | Meaning                                                   |
-| --------------------------- | --------------------------------------------------------- |
-| `output=<file>`             | write to a file (for "print to file" style printers)      |
-| `docname=<name>`            | set the print job name shown in the print queue           |
-| `ignore-pdf-print-settings` | ignore the print defaults embedded in the PDF (see below) |
-
-> If `paper=A4` doesn't take effect, the driver may report the size under a
-> different name. List the exact names your printer accepts and use one of them,
-> or fall back to `paperkind=<num>`.
+| Option                      | Meaning                                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `output=<file>`             | write to a file (for "print to file" style printers)                                           |
+| `docname=<name>`            | set the print job name shown in the print queue                                                |
+| `ignore-pdf-print-settings` | ignore the print defaults embedded in the PDF (see [below](#print-defaults-embedded-in-a-pdf)) |
 
 ## Print defaults embedded in a PDF
 
-A PDF can carry print hints in its `ViewerPreferences` dictionary. When you
-print a **PDF** from the command line, SumatraPDF reads them and uses them as
-defaults:
+A PDF can carry print hints in its `ViewerPreferences` dictionary. When you print a **PDF** from the command line, SumatraPDF reads them and uses them as defaults:
 
 | ViewerPreferences key | Effect                                                                                |
 | --------------------- | ------------------------------------------------------------------------------------- |
@@ -225,199 +360,16 @@ defaults:
 | `Duplex`              | `Simplex`, `DuplexFlipShortEdge` or `DuplexFlipLongEdge`                              |
 | `PickTrayByPDFSize`   | when true, pick the input tray by page size (same as `bin=auto`)                      |
 
-These are **defaults only**. Anything you pass in `-print-settings` overrides the
-PDF's value — e.g. `-print-settings "2x"` prints 2 copies even if the PDF asks
-for 3. To ignore the PDF's embedded values completely, add
-`ignore-pdf-print-settings`:
+These are **defaults only**. Anything you pass in `-print-settings` overrides the PDF's value — e.g. `-print-settings "2x"` prints 2 copies even if the PDF asks for 3. To ignore the PDF's embedded values completely, add `ignore-pdf-print-settings`:
 
 ```
 SumatraPDF.exe -print-to-default -print-settings "ignore-pdf-print-settings" document.pdf
 ```
 
-This applies to command-line printing only; when you print from the window, the
-print dialog's own values are used.
-
-## Print dialog defaults
-
-You can change some defaults used by the print dialog with the `PrinterDefaults`
-advanced setting (in `Settings → Advanced Settings`):
-
-```
-PrinterDefaults [
-	PrintScale = none
-	Collate = collate
-	PrintDpi = 0
-]
-```
-
-- `PrintScale` — default page scaling. Values: `shrink` (default), `fit`,
-  `stretch`, `none`.
-- `Collate` — default for the print dialog's Collate checkbox. Values: `default`
-  (leave the printer/driver default), `collate`, `nocollate`. You can still
-  change it per print in the dialog. For command-line printing, use the
-  `collate` / `nocollate` `-print-settings` tokens instead.
-- `PrintDpi` — resolution to assume for the document when printing at original
-  size; `0` (default) uses what the file says. The same as `dpi=<n>` in
-  `-print-settings`, for printing from the window. See
-  [Printing at actual size](#printing-at-actual-size-11).
-
-## Printing at actual size (1:1)
-
-"Actual size" needs two things: no scaling (**Actual size (1:1)** in the
-dialog, `noscale` on the command line) and a correct idea of how big the
-document is.
-
-- **PDF, XPS, DjVu, EPUB...** have real page sizes, so no scaling is all it takes.
-- **Images** (TIFF, PNG, JPEG, BMP, scans) are only pixels; their physical size is
-  pixels divided by the resolution stored in the file (TIFF resolution tags,
-  PNG `pHYs`, JPEG JFIF density, EXIF). SumatraPDF uses that, and assumes 96 dpi
-  when the file has none. A 300 dpi A3 scan therefore prints as A3 only if the
-  scanner wrote 300 dpi into the file; a file with no resolution prints about
-  3x too large, and a file that claims 72 dpi comes out bigger still. The
-  resolution SumatraPDF read is shown in Document Properties (`Ctrl + D`) as
-  _DPI_.
-- **Image folders and comic books** (CBZ, CBR, a directory of images) are always
-  treated as 96 dpi, whatever the images say, so their pages fit a screen.
-
-When the file's resolution is missing or wrong, tell SumatraPDF what it is:
-
-- from the window: set `PrinterDefaults.PrintDpi` (Settings → Advanced Settings),
-  e.g. `PrintDpi = 300`, then print with **Actual size (1:1)**
-- from the command line: `-print-settings "noscale,dpi=300"`
-
-The override only sets the size; the pixels are still sent at full resolution.
-
-Printing a rectangular selection (see [Printing part of a page](#printing-part-of-a-page))
-at actual size works the same way: choose **Actual size (1:1)**.
-
-## Recipes for common tasks
-
-**Print a PDF to the default printer, unattended**
-
-```
-SumatraPDF.exe -print-to-default -silent document.pdf
-```
-
-**Print at exact size (no scaling) — forms, labels, pre-printed stationery**
-
-```
-SumatraPDF.exe -print-to "Label Printer" -print-settings "noscale" label.pdf
-```
-
-**Print a scan at its real size when the file lacks (or lies about) its DPI**
-
-```
-SumatraPDF.exe -print-to "Plotter" -print-settings "noscale,dpi=300" drawing.tif
-```
-
-**Print a small page centered on larger paper (e.g. an envelope)**
-
-```
-SumatraPDF.exe -print-to "HP LaserJet" -print-settings "noscale,center" envelope.pdf
-```
-
-**Fit every page to the paper, in grayscale, 2 copies**
-
-```
-SumatraPDF.exe -print-to "Office Printer" -print-settings "fit,monochrome,2x" report.pdf
-```
-
-**Two-sided, long-edge binding, fit to page**
-
-```
-SumatraPDF.exe -print-to "Office Printer" -print-settings "fit,duplexlong" report.pdf
-```
-
-**Manual two-sided on a one-sided printer** (print odd pages, flip the stack,
-then print even pages)
-
-```
-SumatraPDF.exe -print-to "Office Printer" -print-settings "odd,fit" report.pdf
-SumatraPDF.exe -print-to "Office Printer" -print-settings "even,fit" report.pdf
-```
-
-**Print only the last 3 pages**
-
-```
-SumatraPDF.exe -print-to-default -print-settings "-3--1" document.pdf
-```
-
-**Print a specific paper size from a specific tray**
-
-```
-SumatraPDF.exe -print-to "Office Printer" -print-settings "paper=A5,bin=2,fit" booklet.pdf
-```
-
-**Print a document with mixed page sizes to matching paper/trays**
-
-```
-SumatraPDF.exe -print-to "Multi-tray Printer" -print-settings "paper=auto,bin=auto" mixed.pdf
-```
-
-**Print a wide (landscape) page in its original orientation (no 90° rotation)**
-
-```
-SumatraPDF.exe -print-to "Receipt Printer" -print-settings "disable-auto-rotation" wide.pdf
-```
-
-**Fix an upside-down printout (e.g. when printing to XPS / Print to PDF)**
-
-```
-SumatraPDF.exe -print-to "Microsoft Print to PDF" -print-settings "rotate=180" doc.pdf
-```
-
-**"Print" to a PDF file**
-
-```
-SumatraPDF.exe -print-to "Microsoft Print to PDF" -print-settings "output=C:\out\result.pdf" input.pdf
-```
-
-## Common command-line printing problems
-
-### Paper size or tray ignored
-
-Drivers often report paper sizes under non-obvious names. If `paper=A4` has no effect:
-
-1. Print once from the Windows dialog and note the exact paper name in the driver.
-2. Use that string: `-print-settings "paper=A3 297 x 420 mm"`.
-3. Or use `paperkind=<num>` with the Windows `DMPAPER_*` id.
-4. For mixed page sizes: `paper=auto,bin=auto`.
-
-Combine with `ignore-pdf-print-settings` if the PDF embeds conflicting `ViewerPreferences`.
-
-### Wrong orientation or margins
-
-- Wide pages auto-rotate 90° to fit — add `disable-auto-rotation` to keep original orientation.
-- Upside-down virtual printer output — try `rotate=180`.
-- Content too small — use `fit` or `shrink` (default); exact size — `noscale`.
-
-### Job prints to wrong printer
-
-`-print-to` requires the **exact** printer name from Windows Settings → Printers. `-print-to-default` avoids name mismatches.
-
-### Silent script reports failure
-
-Check the [exit code](#exit-codes). Common results:
-
-| Code | Check                                                                             |
-| ---- | --------------------------------------------------------------------------------- |
-| `4`  | Printer name typo or no default printer                                           |
-| `5`  | Driver error — update driver, try printing to "Microsoft Print to PDF" to isolate |
-| `6`  | `sumatrapdfrestrict.ini` has `PrinterAccess = 0`                                  |
-
-Add `-silent` only after confirming the command works interactively (without `-silent`, error dialogs explain failures).
-
-### Lines or barcodes missing
-
-SumatraPDF renders each page to a bitmap before printing. Very fine lines, hairline barcodes, or light gray rules may disappear at printer resolution. Try `noscale` with a higher-DPI driver, or print from a vector-aware tool. See [Reporting printing bugs](Reporting-printing-bugs.md) — often driver/resolution, not SumatraPDF logic.
-
-### Windows 11: no Advanced tab in print dialog
-
-Use command-line printing (this section) or enable the [legacy print dialog](#windows-11-the-advanced-tab-is-missing) — CLI exposes every Advanced option on all Windows versions.
+This applies to command-line printing only; when you print from the window, the print dialog's own values are used.
 
 ## See also
 
 - [FAQ](FAQ.md) — printing quick answers
 - [Command-line arguments](Command-line-arguments.md) — all command-line options
-- [Reporting printing bugs](Reporting-printing-bugs.md) — what to include when a
-  printout is wrong
+- [Reporting printing bugs](Reporting-printing-bugs.md) — what to include when a printout is wrong

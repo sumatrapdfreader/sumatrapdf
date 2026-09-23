@@ -1,80 +1,101 @@
 [SumatraPDF](https://www.sumatrapdfreader.org/) is a free [PDF, EPUB, MOBI, CHM, XPS, DjVu, CBZ and CBR](Supported-document-formats.md) reader for Windows. It's small, fast, customizable and full of features.
 
-## Documentation for users
+New here? Start with [Installation](Installation.md), then learn the [Command Palette](Command-Palette.md) (`Ctrl + K`): type a few letters to find and run a command, no need to memorize menus or shortcuts.
+
+## Getting started
 
 :columns
+[Installation](Installation.md)
+
+[Portable vs installer](SumatraPDF-portable.md)
+
+[Set as default PDF viewer](Set-as-default-pdf-viewer.md)
+
+[Supported document formats](Supported-document-formats.md)
+
 [FAQ / troubleshooting](FAQ.md)
 
 [Version history](Version-history.md)
 
-[Installation](Installation.md)
+[Uninstalling SumatraPDF](Uninstalling-SumatraPDF.md)
+:columns
 
+## Reading and navigating
+
+:columns
+[Tabs and windows](Tabs-and-windows.md)
+
+[Scrolling, zooming, navigating](Scrolling-and-zooming.md)
+
+[Finding text](Finding-text.md)
+
+[Hyperlinks](Hyperlinks.md)
+
+[Managing favorites](Managing-favorites.md)
+
+[Comics and manga](Comics-and-manga.md)
+
+[CAD / Engineering Drawings](CAD-Engineering-Drawings.md)
+
+[Accessibility](Accessibility.md)
+:columns
+
+## Working with documents
+
+:columns
+[Editing annotations](Editing-annotations.md)
+
+[Printing](Printing.md)
+
+[Read Aloud (TTS)](Read-Aloud.md)
+
+[AI Chat with document](AI-Chat-with-document.md)
+
+[Convert to PDF](Convert-to-PDF.md) (comics, image folders, images → multi-page PDF)
+:columns
+
+## Commands and shortcuts
+
+:columns
 [Command Palette](Command-Palette.md)
 
 [Keyboard shortcuts](Keyboard-shortcuts.md)
 
 [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md)
 
-[Tabs and windows](Tabs-and-windows.md)
-
-[Finding text](Finding-text.md)
-
-[Hyperlinks](Hyperlinks.md)
-
-[Scrolling, zooming, navigating](Scrolling-and-zooming.md)
-
-[Managing favorites](Managing-favorites.md)
-
-[Editing annotations](Editing-annotations.md)
-
-[AI Chat with document](AI-Chat-with-document.md)
-
-[Printing](Printing.md)
-
-[Read Aloud (TTS)](Read-Aloud.md)
-
 [Commands](Commands.md)
+:columns
 
-[Command-line arguments](Command-line-arguments.md)
+## Customizing
 
+:columns
 [Customize toolbar](Customize-toolbar.md)
 
 [Customize UI colors / theme](Customize-theme-colors.md)
+
+[Customize eBook UI](Customize-eBook-UI.md)
 
 [Customize external viewers](Customize-external-viewers.md)
 
 [Customize search / translation services](Customize-search-translation-services.md)
 
-[LaTeX integration](LaTeX-integration.md)
-
 [Advanced settings](Advanced-options-settings.md)
+
+[How we store settings](How-we-store-settings.md)
+:columns
+
+## Automation and deployment
+
+:columns
+[Command-line arguments](Command-line-arguments.md)
 
 [DDE Commands](DDE-Commands.md)
 
-[Set as default PDF viewer](Set-as-default-pdf-viewer.md)
+[LaTeX integration](LaTeX-integration.md)
 
 [Configure for restricted use](Configure-for-restricted-use.md)
 
-[Supported document formats](Supported-document-formats.md)
-
-[Comics and manga](Comics-and-manga.md)
-
-[CAD / Engineering Drawings](CAD-Engineering-Drawings.md)
-
-[Convert to PDF](Convert-to-PDF.md) (comics, image folders, images → multi-page PDF)
-
-[Customize eBook UI](Customize-eBook-UI.md)
-
-[Accessibility](Accessibility.md)
-
-[How we store settings](How-we-store-settings.md)
-
 [Installer cmd-line arguments](Installer-cmd-line-arguments.md)
-
-[Uninstalling SumatraPDF](Uninstalling-SumatraPDF.md)
-
-[Portable vs installer](SumatraPDF-portable.md)
-
 :columns
 
 ## Using SumatraPDF to convert and modify PDF and other files
