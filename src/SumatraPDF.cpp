@@ -3672,6 +3672,7 @@ void UpdateAfterThemeChange() {
         uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
         RedrawWindow(win->hwndFrame, nullptr, nullptr, flags);
     }
+    CommandPaletteUpdateTheme();
     UpdateDocumentColors();
 }
 

@@ -163,6 +163,7 @@ struct CommandPaletteWnd : WindowBase {
     void QueryChanged();
     void UpdateHelpRow();
     void UpdateSettingHelp();
+    void UpdateColors();
 
     void ExecuteCurrentSelection();
     bool AdvanceSelection(int dir);
@@ -1744,6 +1745,31 @@ void CommandPaletteWnd::UpdateSettingHelp() {
     settingHelp->SetText(comment);
 }
 
+// the theme changed while the palette is open: the colors were set at creation
+void CommandPaletteWnd::UpdateColors() {
+    auto colBg = ThemeWindowControlBackgroundColor();
+    auto colTxt = ThemeWindowTextColor();
+    // recolors the window and its native children (the query edit)
+    UpdateTheme();
+
+    listBox->SetColor(kColListText, colTxt);
+    listBox->SetColor(kColListBg, colBg);
+    if (thumbnailCtrl) {
+        thumbnailCtrl->SetColor(kColListText, colTxt);
+        thumbnailCtrl->SetColor(kColListBg, colBg);
+    }
+    settingHelp->SetColor(kColRichText, colTxt);
+    settingHelp->SetColor(kColRichLink, colTxt);
+    settingHelp->SetColor(kColRichBg, colBg);
+    settingHelp->borderCol = ThemeEdgeColor();
+
+    // the help rows bake the colors into their items, so rebuild them
+    FillSwitchRow();
+    helpKind = kHelpNone;
+    UpdateHelpRow();
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+}
+
 bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance) {
     if (str::Eq(prefix, Str(kPalettePrefixTabs))) {
         smartTabMode = smartTabAdvance != 0;
@@ -1926,6 +1952,14 @@ void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     bool ok = wnd->Create(win, prefix, smartTabAdvance);
     ReportIf(!ok);
     gHwndToActivateOnClose = win->hwndFrame;
+}
+
+void CommandPaletteUpdateTheme() {
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    if (!wnd || !wnd->hwnd) {
+        return;
+    }
+    wnd->UpdateColors();
 }
 
 void CommandPaletteOnAnnotationsChanged() {
