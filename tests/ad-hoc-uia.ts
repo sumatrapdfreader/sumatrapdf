@@ -203,6 +203,11 @@ export async function testit(): Promise<void> {
       throw new Error(`a one-page range reported ${kv.get("children.count")} child pages, expected 1`);
     }
 
+    // GetText on a range half-moved onto a null selection must not reach page -1
+    if (need("nullsel.hr") !== "0x00000000" || proc.exitCode !== null) {
+      throw new Error(`GetText after moving onto a null selection: hr=${kv.get("nullsel.hr")}, exit=${proc.exitCode}`);
+    }
+
     // each Move() must land on new text, or a screen reader repeats one unit
     // forever (that was the bug: Move() reported success without moving)
     for (const [key, steps] of [

@@ -863,6 +863,13 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByRange(Text
 
     SumatraUIAutomationTextRange* target = (SumatraUIAutomationTextRange*)range;
 
+    // moving one endpoint to "nowhere" (e.g. GetSelection() with nothing selected)
+    // would leave a half-null range whose page -1 reaches GetTextForPage()
+    if (target->IsNullRange()) {
+        SetToNullRange();
+        return S_OK;
+    }
+
     // extract target location
     int target_page, target_idx;
     if (targetEndPoint == TextPatternRangeEndpoint_Start) {

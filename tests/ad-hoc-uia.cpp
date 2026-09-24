@@ -255,6 +255,38 @@ int main(int argc, char** argv) {
         }
     }
 
+    // with nothing selected GetSelection() is a null range; moving an endpoint
+    // onto it left the other endpoint on a page and GetText() read page -1
+    {
+        IUIAutomationTextRangeArray* sels = nullptr;
+        IUIAutomationTextRange* sel = nullptr;
+        IUIAutomationTextRange* r = nullptr;
+        tp->GetSelection(&sels);
+        if (sels) {
+            sels->GetElement(0, &sel);
+        }
+        tp->get_DocumentRange(&r);
+        if (sel && r) {
+            r->MoveEndpointByRange(TextPatternRangeEndpoint_Start, sel, TextPatternRangeEndpoint_Start);
+            BSTR s = nullptr;
+            HRESULT hrT = r->GetText(40, &s);
+            printf("nullsel.hr=0x%08x\n", (unsigned)hrT);
+            PrintEscaped("nullsel.text", s);
+            if (s) {
+                SysFreeString(s);
+            }
+        }
+        if (r) {
+            r->Release();
+        }
+        if (sel) {
+            sel->Release();
+        }
+        if (sels) {
+            sels->Release();
+        }
+    }
+
     if (docRange) {
         docRange->Release();
     }
