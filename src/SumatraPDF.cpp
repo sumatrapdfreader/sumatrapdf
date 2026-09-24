@@ -2336,14 +2336,17 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     }
 }
 
-static bool showTocByDefault(Str path) {
+static bool showTocByDefault(Str path, EngineBase* engine) {
     if (!gSettings->showToc) {
         return false;
     }
-    // we don't want to show toc by default for comic book files
+    // comic book bookmarks are usually just the list of files: only show
+    // ones from ComicInfo.xml (#6244)
     FileType kind = GuessFileTypeFromName(path);
-    bool showByDefault = !IsEngineCbxSupportedFileType(kind);
-    return showByDefault;
+    if (!IsEngineCbxSupportedFileType(kind)) {
+        return true;
+    }
+    return EngineCbxHasComicInfoToc(engine);
 }
 
 static bool IsEbookFileType(FileType ft) {
@@ -2502,7 +2505,8 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     ScrollState ss(1, -1, -1);
     int rotation = 0;
     Str path = args->FilePath();
-    bool showToc = showTocByDefault(path);
+    DisplayModel* dmForToc = ctrl ? ctrl->AsFixed() : nullptr;
+    bool showToc = showTocByDefault(path, dmForToc ? dmForToc->GetEngine() : nullptr);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gSettings->windowState;
     int showType = SW_NORMAL;
     if (gSettings->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {

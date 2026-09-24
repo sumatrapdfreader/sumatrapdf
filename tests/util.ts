@@ -343,6 +343,56 @@ export function tmpPath(name: string): string {
   return join(TMP_DIR, name);
 }
 
+function zipCrc32(buf: Uint8Array): number {
+  let c = 0xffffffff;
+  for (const b of buf) {
+    c ^= b;
+    for (let i = 0; i < 8; i++) {
+      c = (c >>> 1) ^ (c & 1 ? 0xedb88320 : 0);
+    }
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+// Store-only (uncompressed) zip, e.g. a .cbz. Names may include '/' for folders.
+export function writeStoredZip(path: string, files: { name: string; data: Buffer }[]): void {
+  const locals: Buffer[] = [];
+  const centrals: Buffer[] = [];
+  let offset = 0;
+  for (const f of files) {
+    const name = Buffer.from(f.name, "utf8");
+    const crc = zipCrc32(f.data);
+    const lh = Buffer.alloc(30);
+    lh.writeUInt32LE(0x04034b50, 0);
+    lh.writeUInt16LE(20, 4);
+    lh.writeUInt32LE(crc, 14);
+    lh.writeUInt32LE(f.data.length, 18);
+    lh.writeUInt32LE(f.data.length, 22);
+    lh.writeUInt16LE(name.length, 26);
+    locals.push(lh, name, f.data);
+
+    const ch = Buffer.alloc(46);
+    ch.writeUInt32LE(0x02014b50, 0);
+    ch.writeUInt16LE(20, 4);
+    ch.writeUInt16LE(20, 6);
+    ch.writeUInt32LE(crc, 16);
+    ch.writeUInt32LE(f.data.length, 20);
+    ch.writeUInt32LE(f.data.length, 24);
+    ch.writeUInt16LE(name.length, 28);
+    ch.writeUInt32LE(offset, 42);
+    centrals.push(ch, name);
+    offset += lh.length + name.length + f.data.length;
+  }
+  const central = Buffer.concat(centrals);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(files.length, 8);
+  end.writeUInt16LE(files.length, 10);
+  end.writeUInt32LE(central.length, 12);
+  end.writeUInt32LE(offset, 16);
+  writeFileSync(path, Buffer.concat([...locals, central, end]));
+}
+
 // path of an installed Ghostscript console exe, "" when none
 export function findGhostscript(): string {
   for (const base of ["C:\\Program Files\\gs", "C:\\Program Files (x86)\\gs"]) {

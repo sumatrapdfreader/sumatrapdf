@@ -2429,6 +2429,9 @@ class EngineCbx : public EngineImages {
                                       Str realPath = {});
     static EngineBase* CreateFromData(Str data);
 
+    // tocTree comes from ComicInfo.xml, not synthesized from file / folder names
+    bool tocFromComicInfo = false;
+
   protected:
     Pixmap* LoadPixmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
@@ -2776,6 +2779,7 @@ bool EngineCbx::FinishLoading() {
             auto* realRoot = AllocTocItem(arena, {}, 0);
             realRoot->child = tocBuildRoot;
             tocTree = AllocTocTree(arena, realRoot);
+            tocFromComicInfo = true;
         }
     } else {
         TocItem* folderRoot = BuildCbxFolderToc(arena, files);
@@ -3053,6 +3057,15 @@ EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, FileType hintTy
 
 EngineBase* CreateEngineCbxFromData(Str data) {
     return EngineCbx::CreateFromData(data);
+}
+
+// Comic archive bookmarks are synthesized from file / folder names unless they
+// come from ComicInfo.xml; only those are worth showing the sidebar for (#6244).
+bool EngineCbxHasComicInfoToc(EngineBase* engine) {
+    if (!IsOfKind(engine, kindEngineComicBooks)) {
+        return false;
+    }
+    return ((EngineCbx*)engine)->tocFromComicInfo;
 }
 
 bool IsEngineImages(EngineBase* engine) {

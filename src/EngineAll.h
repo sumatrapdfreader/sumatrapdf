@@ -85,6 +85,7 @@ bool IsEngineCbxSupportedFileType(FileType kind);
 EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI = nullptr, FileType hintType = FileType::Unknown,
                                     Str realPath = {});
 EngineBase* CreateEngineCbxFromData(Str data);
+bool EngineCbxHasComicInfoToc(EngineBase*);
 
 bool IsEngineImages(EngineBase*);
 void EngineImagesGetImageProperties(EngineBase*, int pageNo, Vec<PropValue>& propsOut);
