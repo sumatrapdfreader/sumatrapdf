@@ -592,7 +592,7 @@ int main(int argc, char** argv) {
     Str root{};
 
     for (int i = 1; i < argc; i++) {
-        Str arg = argv[i];
+        Str arg(argv[i]);
         if (str::EqI(arg, StrL("-jpeg")) || str::EqI(arg, StrL("--jpeg"))) {
             fmt = BenchFormat::Jpeg;
             haveFmt = true;
