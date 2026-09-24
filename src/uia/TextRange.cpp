@@ -214,17 +214,45 @@ int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool
     return idx;
 }
 
+// Page text joins the wrapped lines of a paragraph with a space (#5793), so a
+// space between glyphs on different visual lines is a line break too.
+static bool IsLineBreak(int c, Rect* coords, int textLen, int i) {
+    if (c == '\n') {
+        return true;
+    }
+    if (c != ' ' || !coords) {
+        return false;
+    }
+    int prev = i - 1;
+    while (prev >= 0 && coords[prev].IsEmpty()) {
+        prev--;
+    }
+    int next = i + 1;
+    while (next < textLen && coords[next].IsEmpty()) {
+        next++;
+    }
+    if (prev < 0 || next >= textLen) {
+        return false;
+    }
+    // font boxes can be taller than the line pitch, so compare centers
+    Rect a = coords[prev];
+    Rect b = coords[next];
+    int bCenterY = b.y + (b.dy / 2);
+    return bCenterY >= a.y + a.dy || bCenterY <= a.y;
+}
+
 int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
     auto* engine = document->GetDM()->GetEngine();
-    Str pageText = engine->GetTextForPage(pageno, &textLen);
+    Rect* coords = nullptr;
+    Str pageText = engine->GetTextForPage(pageno, &textLen, &coords);
 
     int byteIdx = Utf8CodepointToByteIndex(pageText, idx);
     if (dontReturnInitial) {
         while (idx > 0) {
             int prevByte = byteIdx;
             int c = Utf8CodepointPrev(pageText, prevByte);
-            if (c != '\n') {
+            if (!IsLineBreak(c, coords, textLen, idx - 1)) {
                 break;
             }
             byteIdx = prevByte;
@@ -235,7 +263,7 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
     while (idx > 0) {
         int prevByte = byteIdx;
         int c = Utf8CodepointPrev(pageText, prevByte);
-        if (c == '\n') {
+        if (IsLineBreak(c, coords, textLen, idx - 1)) {
             break;
         }
         byteIdx = prevByte;
@@ -247,14 +275,15 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
 int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
     auto* engine = document->GetDM()->GetEngine();
-    Str pageText = engine->GetTextForPage(pageno, &textLen);
+    Rect* coords = nullptr;
+    Str pageText = engine->GetTextForPage(pageno, &textLen, &coords);
 
     int byteIdx = Utf8CodepointToByteIndex(pageText, idx);
     if (dontReturnInitial) {
         while (idx < textLen) {
             int nextByte = byteIdx;
             int c = Utf8CodepointNext(pageText, nextByte);
-            if (c != '\n') {
+            if (!IsLineBreak(c, coords, textLen, idx)) {
                 break;
             }
             byteIdx = nextByte;
@@ -265,7 +294,7 @@ int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool
     while (idx < textLen) {
         int nextByte = byteIdx;
         int c = Utf8CodepointNext(pageText, nextByte);
-        if (c == '\n') {
+        if (IsLineBreak(c, coords, textLen, idx)) {
             break;
         }
         byteIdx = nextByte;
