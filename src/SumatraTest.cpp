@@ -1674,6 +1674,7 @@ TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* e
 // clipKind values of ImageRenderEdgesResultTemp
 constexpr int kClipSelection = 1;
 constexpr int kClipRightHalfTile = 2;
+constexpr int kClipFullPageTile = 3;
 
 TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int* exitCodeOut) {
     str::Builder out;
@@ -1705,6 +1706,14 @@ TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int*
         RenderPageArgs full(1, zoom, 0, nullptr, RenderTarget::Export);
         FreePixmap(engine->RenderPage(full));
         clip = RectF(box.dx / 2, 0, box.dx / 2, box.dy);
+        pageRect = &clip;
+    }
+    Rect tile;
+    if (clipKind == kClipFullPageTile) {
+        // the page -> pixels -> page round trip RenderCache's GetTileRectUser
+        // makes for a single-tile page (#6245)
+        tile = engine->Transform(box, 1, zoom, 0).Round();
+        clip = engine->Transform(ToRectF(tile), 1, zoom, 0, true);
         pageRect = &clip;
     }
     RenderPageArgs args(1, zoom, 0, pageRect, RenderTarget::Export);
@@ -1742,7 +1751,11 @@ TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int*
     int lr, lg, lb, rr, rg, rb;
     pixel(0, bmp->height / 2, &lr, &lg, &lb);
     pixel(bmp->width - 1, bmp->height / 2, &rr, &rg, &rb);
-    out.Append(fmt("size=%dx%d left=%d,%d,%d right=%d,%d,%d\n", bmp->width, bmp->height, lr, lg, lb, rr, rg, rb));
+    out.Append(fmt("size=%dx%d left=%d,%d,%d right=%d,%d,%d", bmp->width, bmp->height, lr, lg, lb, rr, rg, rb));
+    if (clipKind == kClipFullPageTile) {
+        out.Append(fmt(" tile=%dx%d", tile.dx, tile.dy));
+    }
+    out.Append(StrL("\n"));
 
     FreePixmap(bmp);
     SafeEngineRelease(&engine);

@@ -22,6 +22,7 @@ extern "C" {
 }
 
 #include "ImageReader.h"
+#include "JxlReader.h"
 #include "DocProperties.h"
 #include "DocController.h"
 #include "gui/UIModels.h"
@@ -237,6 +238,67 @@ EngineImages::~EngineImages() {
     str::Free(sourceData);
 }
 
+struct JxlFzDst {
+    fz_context* ctx = nullptr;
+    fz_pixmap* pix = nullptr;
+};
+
+static u8* AllocJxlFzPixmap(void* user, int dx, int dy, bool hasAlpha, int* stride) {
+    auto* d = (JxlFzDst*)user;
+    fz_context* ctx = d->ctx;
+    // must not throw: we're called from inside the jxl decoder
+    fz_try(ctx) {
+        d->pix = fz_new_pixmap(ctx, fz_device_rgb(ctx), dx, dy, nullptr, hasAlpha ? 1 : 0);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return nullptr;
+    }
+    *stride = (int)d->pix->stride;
+    return d->pix->samples;
+}
+
+// fz_pixmap with alpha must be premultiplied; jxl gives straight alpha
+static void PremultiplyRgba(fz_pixmap* pix) {
+    for (int y = 0; y < pix->h; y++) {
+        u8* p = pix->samples + (size_t)y * pix->stride;
+        for (int x = 0; x < pix->w; x++, p += 4) {
+            int a = p[3];
+            if (a == 255) {
+                continue;
+            }
+            p[0] = (u8)((p[0] * a + 127) / 255);
+            p[1] = (u8)((p[1] * a + 127) / 255);
+            p[2] = (u8)((p[2] * a + 127) / 255);
+        }
+    }
+}
+
+// mupdf can't decode JPEG XL: decode it ourselves into an fz_pixmap so the page
+// takes the same render/scale path as JPEG/PNG pages.
+static fz_image* FzImageFromJxl(fz_context* ctx, Str data) {
+    JxlFzDst dst;
+    dst.ctx = ctx;
+    fz_image* img = nullptr;
+    fz_var(img);
+    fz_try(ctx) {
+        if (jxl::DecodeRgbInto(data, AllocJxlFzPixmap, &dst)) {
+            if (dst.pix->alpha) {
+                PremultiplyRgba(dst.pix);
+            }
+            img = fz_new_image_from_pixmap(ctx, dst.pix, nullptr);
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_pixmap(ctx, dst.pix);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        img = nullptr;
+    }
+    return img;
+}
+
 // Wrap the page's raw image bytes in an fz_image for lazy mupdf decoding.
 // The actual JPEG/PNG decode happens later in RenderPage at near-target
 // scale, much cheaper than decoding at full resolution up front.
@@ -253,6 +315,9 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     FileType kind = GuessFileTypeFromData(data);
     if (FileType::Webp == kind || FileType::Heic == kind || FileType::Avif == kind || FileType::Ico == kind) {
         return nullptr;
+    }
+    if (FileType::Jxl == kind) {
+        return FzImageFromJxl(ctx, data);
     }
     fz_image* img = nullptr;
     fz_buffer* buf = nullptr;
@@ -632,7 +697,11 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
             pageRc.dy = -pageRc.dy;
         }
     }
-    Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
+    // A tile's pageRect is its screen pixel box mapped back to page space: round to
+    // nearest to get that box back. Rounding the snapped pageRc outward came out 1px
+    // bigger than the tile at many zooms, which missed the mupdf path (#6245).
+    Rect screen = pageRect ? ToRect(Transform(*pageRect, pageNo, zoom, rotation))
+                           : Transform(pageRc, pageNo, zoom, rotation).Round();
     if (screen.IsEmpty()) {
         DropPage(page, false);
         return nullptr;

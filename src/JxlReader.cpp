@@ -61,6 +61,37 @@ Pixmap* PixmapFromData(Str d) {
     return px;
 }
 
+// Decodes to RGB24, or RGBA32 (straight alpha) if the image has alpha, into
+// the buffer allocDst returns. Skips the copy PixmapFromData makes.
+bool DecodeRgbInto(Str d, AllocDstFn allocDst, void* user) {
+    if (len(d) == 0) {
+        return false;
+    }
+    jxl_ctx* ctx = jxl_ctx_new(nullptr, nullptr, nullptr, nullptr);
+    if (!ctx) {
+        return false;
+    }
+    jxl_ctx_set_srgb_output(ctx, 1);
+    bool ok = false;
+    jxl_doc* doc = jxl_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
+    jxl_image_info info{};
+    if (doc && jxl_doc_info(doc, &info) == 0) {
+        bool hasAlpha = info.alpha_bits > 0;
+        jxl_format fmt = hasAlpha ? JXLDEC_FORMAT_RGBA32 : JXLDEC_FORMAT_RGB24;
+        jxl_render_info ri{};
+        if (jxl_frame_render_info(doc, 0, fmt, &ri) == 0 && ri.width > 0 && ri.height > 0) {
+            int stride = 0;
+            u8* dst = allocDst(user, ri.width, ri.height, hasAlpha, &stride);
+            ok = dst && jxl_frame_render_into(doc, 0, fmt, dst, stride) == 0;
+        }
+    }
+    if (doc) {
+        jxl_doc_close(doc);
+    }
+    jxl_ctx_free(ctx);
+    return ok;
+}
+
 Size SizeFromData(Str d) {
     Size size;
     if (len(d) == 0) {
@@ -84,6 +115,9 @@ Size SizeFromData(Str d) {
 
 namespace jxl {
 bool HasSignature(Str) {
+    return false;
+}
+bool DecodeRgbInto(Str, AllocDstFn, void*) {
     return false;
 }
 Size SizeFromData(Str) {

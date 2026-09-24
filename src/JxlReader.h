@@ -8,5 +8,7 @@ namespace jxl {
 bool HasSignature(Str);
 Size SizeFromData(Str);
 Pixmap* PixmapFromData(Str);
+typedef u8* (*AllocDstFn)(void* user, int dx, int dy, bool hasAlpha, int* stride);
+bool DecodeRgbInto(Str, AllocDstFn, void* user);
 
 } // namespace jxl

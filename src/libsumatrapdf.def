@@ -1845,6 +1845,11 @@ EXPORTS
 	jxl_decode
 	jxl_decode_size
 	jxl_image_destroy
+	jxl_doc_open
+	jxl_doc_close
+	jxl_doc_info
+	jxl_frame_render_info
+	jxl_frame_render_into
 
 
 
