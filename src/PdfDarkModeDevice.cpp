@@ -50,9 +50,9 @@ static void dm_map_fill_color(pdf_dark_mode_device* d, fz_context* ctx, fz_color
 
 static void dm_forward_close(fz_context* ctx, fz_device* dev) {
     pdf_dark_mode_device* d = (pdf_dark_mode_device*)dev;
-    if (d->inner && d->inner->close_device) {
-        d->inner->close_device(ctx, d->inner);
-    }
+    // not inner->close_device(): only fz_close_device marks it closed, else
+    // dropping it warns "dropping unclosed device"
+    fz_close_device(ctx, d->inner);
 }
 
 static void dm_forward_drop(fz_context* ctx, fz_device* dev) {

@@ -1651,6 +1651,10 @@ TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* e
         }
     }
     out.Append(fmt("size=%dx%d\n", rgb->width, rgb->height));
+    // mupdf warnings during the render, e.g. "dropping unclosed device"
+    if (engine->HasErrors()) {
+        out.Append(fmt("errors=%s\n", engine->GetErrorsTextTemp()));
+    }
     // every gray with a meaningful area, so the test can see what survived
     for (int i = 0; i < 256; i++) {
         if (counts[i] >= 64) {

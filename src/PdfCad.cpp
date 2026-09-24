@@ -631,9 +631,9 @@ static void CadMapColor(fz_context* ctx, fz_colorspace* cs, const float* color, 
 
 static void cad_forward_close(fz_context* ctx, fz_device* dev) {
     pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    if (d->inner && d->inner->close_device) {
-        d->inner->close_device(ctx, d->inner);
-    }
+    // not inner->close_device(): only fz_close_device marks it closed, else
+    // dropping it warns "dropping unclosed device"
+    fz_close_device(ctx, d->inner);
 }
 
 static void cad_forward_drop(fz_context* ctx, fz_device* dev) {

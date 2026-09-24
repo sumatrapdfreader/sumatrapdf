@@ -64,6 +64,13 @@ export async function testit(): Promise<void> {
     [],
   );
 
+  // the enhancing wrapper device must close the device it wraps; mupdf
+  // otherwise warns "dropping unclosed device" on every page
+  const errors = raw.indexOf("errors=");
+  if (errors >= 0) {
+    throw new Error(`issue-5937: render reported mupdf errors: ${raw.slice(errors).trim()}`);
+  }
+
   const grays = parseGrays(raw);
   // the block is 400x300 device px; allow for the antialiased edge
   const areaCount = grays.get(AREA_GRAY) ?? 0;
