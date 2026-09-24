@@ -7,11 +7,13 @@
 //    of all zoom levels the render came out 1px bigger than the tile. That
 //    missed the fast mupdf path and decoded the page a second time. A
 //    single-tile render must come back at exactly the tile's size.
-// 2. JXL pages now decode straight into an fz_image (mupdf render path) instead
-//    of a BGRA Pixmap scaled by GDI+. Colors must match the old decode.
+// 2. JXL and WebP pages now decode straight into an fz_image (mupdf render
+//    path) instead of a BGRA Pixmap scaled by GDI+. Colors must match the old
+//    decode; EXIF-rotated WebP still goes through the Pixmap path.
 //
-// tests/issue-6245.jxl is 64px_cvo9xd_keong_macan_srgb8.v_d1.jxl from the
-// jxldec corpus (https://github.com/kjk/jxldec, deps/corpus/gen).
+// issue-6245-data/keong_macan.jxl is 64px_cvo9xd_keong_macan_srgb8.v_d1.jxl
+// from the jxldec corpus (https://github.com/kjk/jxldec, deps/corpus/gen).
+// The .webp files come from issue-6245-data/make-webp.ts.
 //
 // Run: bun tests/issue-6245.ts [--no-build]
 
@@ -22,7 +24,7 @@ import { deflateSync } from "node:zlib";
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
-const JXL = join(dirname(fileURLToPath(import.meta.url)), "issue-6245.jxl");
+const DATA = join(dirname(fileURLToPath(import.meta.url)), "issue-6245-data");
 
 // odd size + zooms where the round trip used to grow the render by 1px
 const PNG_W = 997;
@@ -33,11 +35,20 @@ const MISMATCH_ZOOMS = [19, 41, 57];
 const kClipNone = 0;
 const kClipFullPageTile = 3;
 
-// edge colors of the JXL fixture decoded by the old (Pixmap) path
-const JXL_EDGES: Record<number, { left: number[]; right: number[] }> = {
-  100: { left: [91, 128, 170], right: [6, 12, 19] },
-  50: { left: [93, 129, 170], right: [6, 12, 17] },
-};
+type Edges = { file: string; zoom: number; w: number; h: number; left?: number[]; right?: number[] };
+
+// size and edge colors the old (Pixmap) path rendered
+const EDGES: Edges[] = [
+  { file: "keong_macan.jxl", zoom: 100, w: 64, h: 64, left: [91, 128, 170], right: [6, 12, 19] },
+  { file: "keong_macan.jxl", zoom: 50, w: 32, h: 32, left: [93, 129, 170], right: [6, 12, 17] },
+  { file: "halves.webp", zoom: 100, w: 64, h: 64, left: [39, 90, 200], right: [231, 120, 30] },
+  { file: "halves.webp", zoom: 50, w: 32, h: 32, left: [39, 90, 200], right: [231, 120, 30] },
+  // right half is 50% transparent, composited on white
+  { file: "halves-alpha.webp", zoom: 100, w: 64, h: 64, left: [40, 90, 200], right: [241, 186, 141] },
+  { file: "halves-alpha.webp", zoom: 50, w: 32, h: 32, left: [40, 90, 200], right: [241, 186, 141] },
+  // stored 64x32, EXIF orientation 6
+  { file: "halves-rot90.webp", zoom: 100, w: 32, h: 64 },
+];
 const COLOR_TOLERANCE = 6;
 
 function crc32(buf: Buffer): number {
@@ -124,15 +135,18 @@ export async function testit(): Promise<void> {
       console.log(`  png ${zoom}%: ${r.w}x${r.h} matches tile ✓`);
     }
 
-    for (const [zoomStr, want] of Object.entries(JXL_EDGES)) {
-      const zoom = +zoomStr;
-      const r = await render(client, JXL, zoom, kClipNone);
-      if (!near(r.left, want.left) || !near(r.right, want.right)) {
+    for (const want of EDGES) {
+      const r = await render(client, join(DATA, want.file), want.zoom, kClipNone);
+      const name = `${want.file} ${want.zoom}%`;
+      if (r.w !== want.w || r.h !== want.h) {
+        throw new Error(`issue-6245 ${name}: rendered ${r.w}x${r.h}, want ${want.w}x${want.h}`);
+      }
+      if (want.left && want.right && (!near(r.left, want.left) || !near(r.right, want.right))) {
         throw new Error(
-          `issue-6245 jxl ${zoom}%: edges ${r.left} / ${r.right}, want ${want.left} / ${want.right} (±${COLOR_TOLERANCE})`,
+          `issue-6245 ${name}: edges ${r.left} / ${r.right}, want ${want.left} / ${want.right} (±${COLOR_TOLERANCE})`,
         );
       }
-      console.log(`  jxl ${zoom}%: ${r.w}x${r.h} edges ${r.left} / ${r.right} ✓`);
+      console.log(`  ${name}: ${r.w}x${r.h} edges ${r.left} / ${r.right} ✓`);
     }
   });
 }

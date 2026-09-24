@@ -63,7 +63,7 @@ Pixmap* PixmapFromData(Str d) {
 
 // Decodes to RGB24, or RGBA32 (straight alpha) if the image has alpha, into
 // the buffer allocDst returns. Skips the copy PixmapFromData makes.
-bool DecodeRgbInto(Str d, AllocDstFn allocDst, void* user) {
+bool DecodeRgbInto(Str d, DecodeDstAllocFn allocDst, void* user) {
     if (len(d) == 0) {
         return false;
     }
@@ -117,7 +117,7 @@ namespace jxl {
 bool HasSignature(Str) {
     return false;
 }
-bool DecodeRgbInto(Str, AllocDstFn, void*) {
+bool DecodeRgbInto(Str, DecodeDstAllocFn, void*) {
     return false;
 }
 Size SizeFromData(Str) {

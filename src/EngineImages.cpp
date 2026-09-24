@@ -23,6 +23,7 @@ extern "C" {
 
 #include "ImageReader.h"
 #include "JxlReader.h"
+#include "WebpReader.h"
 #include "DocProperties.h"
 #include "DocController.h"
 #include "gui/UIModels.h"
@@ -238,15 +239,15 @@ EngineImages::~EngineImages() {
     str::Free(sourceData);
 }
 
-struct JxlFzDst {
+struct FzDecodeDst {
     fz_context* ctx = nullptr;
     fz_pixmap* pix = nullptr;
 };
 
-static u8* AllocJxlFzPixmap(void* user, int dx, int dy, bool hasAlpha, int* stride) {
-    auto* d = (JxlFzDst*)user;
+static u8* AllocFzDecodeDst(void* user, int dx, int dy, bool hasAlpha, int* stride) {
+    auto* d = (FzDecodeDst*)user;
     fz_context* ctx = d->ctx;
-    // must not throw: we're called from inside the jxl decoder
+    // must not throw: we're called from inside the decoder
     fz_try(ctx) {
         d->pix = fz_new_pixmap(ctx, fz_device_rgb(ctx), dx, dy, nullptr, hasAlpha ? 1 : 0);
     }
@@ -258,7 +259,7 @@ static u8* AllocJxlFzPixmap(void* user, int dx, int dy, bool hasAlpha, int* stri
     return d->pix->samples;
 }
 
-// fz_pixmap with alpha must be premultiplied; jxl gives straight alpha
+// fz_pixmap with alpha must be premultiplied; decoders give straight alpha
 static void PremultiplyRgba(fz_pixmap* pix) {
     for (int y = 0; y < pix->h; y++) {
         u8* p = pix->samples + (size_t)y * pix->stride;
@@ -274,15 +275,23 @@ static void PremultiplyRgba(fz_pixmap* pix) {
     }
 }
 
-// mupdf can't decode JPEG XL: decode it ourselves into an fz_pixmap so the page
-// takes the same render/scale path as JPEG/PNG pages.
-static fz_image* FzImageFromJxl(fz_context* ctx, Str data) {
-    JxlFzDst dst;
+typedef bool (*DecodeRgbIntoFn)(Str, DecodeDstAllocFn, void*);
+
+// LoadFzImageForPage decodes these itself, so EngineImage mustn't also decode
+// them on open (#6245)
+static bool DecodedByFzDecoder(FileType kind) {
+    return FileType::Jxl == kind || FileType::Webp == kind;
+}
+
+// For formats mupdf can't decode (JPEG XL, WebP): decode into an fz_pixmap so
+// the page takes the same render/scale path as JPEG/PNG pages.
+static fz_image* FzImageFromDecoder(fz_context* ctx, Str data, DecodeRgbIntoFn decode) {
+    FzDecodeDst dst;
     dst.ctx = ctx;
     fz_image* img = nullptr;
     fz_var(img);
     fz_try(ctx) {
-        if (jxl::DecodeRgbInto(data, AllocJxlFzPixmap, &dst)) {
+        if (decode(data, AllocFzDecodeDst, &dst)) {
             if (dst.pix->alpha) {
                 PremultiplyRgba(dst.pix);
             }
@@ -310,14 +319,17 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     }
     // Prefer PixmapFromData / LoadPixmapForPage over mupdf for formats where a
     // dedicated path is faster and we do not need mupdf's scaled JPEG decode:
-    //   WebP     → libwebp (bench_image: faster than WIC)
     //   HEIC/AVIF→ Debug: heicdec then WIC; Release: WIC then heicdec
     FileType kind = GuessFileTypeFromData(data);
-    if (FileType::Webp == kind || FileType::Heic == kind || FileType::Avif == kind || FileType::Ico == kind) {
+    if (FileType::Heic == kind || FileType::Avif == kind || FileType::Ico == kind) {
         return nullptr;
     }
+    // nullptr (e.g. EXIF-rotated WebP) falls back to PixmapFromData
     if (FileType::Jxl == kind) {
-        return FzImageFromJxl(ctx, data);
+        return FzImageFromDecoder(ctx, data, jxl::DecodeRgbInto);
+    }
+    if (FileType::Webp == kind) {
+        return FzImageFromDecoder(ctx, data, webp::DecodeRgbInto);
     }
     fz_image* img = nullptr;
     fz_buffer* buf = nullptr;
@@ -1384,9 +1396,10 @@ bool EngineImage::LoadSingleFile(Str path) {
     // Huge scans (e.g. 39137x22279 JPEG ≈ 3.5GB BGRA) must not be fully
     // decoded on open. 3.5.2 kept a GDI+ Bitmap and drew it at window size;
     // we keep the encoded bytes and let RenderPage decode at display scale.
-    if (!ImageDecodedPixmapWouldBeHuge(data)) {
+    bool isHuge = ImageDecodedPixmapWouldBeHuge(data);
+    if (!isHuge && !DecodedByFzDecoder(imageFormat)) {
         frames = PixmapsFromData(data);
-    } else {
+    } else if (isHuge) {
         logf("EngineImage::LoadSingleFile: skip eager decode of %dx%d '%s'\n", fallbackSize.dx, fallbackSize.dy, path);
     }
     bool ok = FinishLoading(fallbackSize);
@@ -1411,7 +1424,7 @@ bool EngineImage::LoadFromData(Str data) {
     SetDefaultExt(defaultExt, path::GetExtTemp(fileExt));
 
     Size fallbackSize = ImageSizeFromDataPortable(data);
-    if (!ImageDecodedPixmapWouldBeHuge(data)) {
+    if (!DecodedByFzDecoder(GuessFileTypeFromData(data)) && !ImageDecodedPixmapWouldBeHuge(data)) {
         frames = PixmapsFromData(data);
     }
     bool ok = FinishLoading(fallbackSize);

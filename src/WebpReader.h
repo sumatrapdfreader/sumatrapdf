@@ -6,5 +6,6 @@ struct Pixmap;
 namespace webp {
 
 Pixmap* PixmapFromData(const Str&);
+bool DecodeRgbInto(Str, DecodeDstAllocFn, void* user);
 
 } // namespace webp

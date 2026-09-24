@@ -1832,6 +1832,9 @@ EXPORTS
 	WebPDecodeBGRAInto
 
 	WebPGetInfo
+	WebPDecodeRGBInto
+	WebPDecodeRGBAInto
+	WebPGetFeaturesInternal
 
 
 

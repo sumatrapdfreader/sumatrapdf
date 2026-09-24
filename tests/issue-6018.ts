@@ -1,8 +1,7 @@
 // #6018: ComicBookUI.PageSpacing must change the gap between CBZ pages in
 // continuous view, PageSpacing must appear in Advanced Settings, and 0 0 must
 // not leave a canvas seam. Layout size must match EngineImages/tile Round, and
-// the GDI+ bicubic path used for WebP must not darken page edges toward the
-// black comic canvas.
+// scaling must not darken page edges toward the black comic canvas.
 //
 // CBZ files read ComicBookUI.PageSpacing, not FixedPageUI.PageSpacing.
 //
@@ -27,9 +26,9 @@ function crc32(buf: Buffer): number {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
-// Lossless 400x51 solid-color WebP (VP8L). WebP uses EngineImages' GDI+ scale
-// path (mupdf is not used), which is what left a 1-2px dark seam at
-// PageSpacing 0 0. 400x51 so fit-width zoom * height is not an integer.
+// Lossless 400x51 solid-color WebP (VP8L). WebP used EngineImages' GDI+ scale
+// path then (#6245 moved it to mupdf's), which is what left a 1-2px dark seam
+// at PageSpacing 0 0. 400x51 so fit-width zoom * height is not an integer.
 const kWebpRed400x51 = Buffer.from([
   82, 73, 70, 70, 36, 0, 0, 0, 87, 69, 66, 80, 86, 80, 56, 76, 23, 0, 0, 0, 47, 143, 129, 12, 0, 7, 80, 148, 34, 23,
   165, 255, 1, 0, 69, 250, 255, 95, 34, 250, 159, 210, 7, 0,

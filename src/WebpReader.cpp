@@ -34,12 +34,45 @@ Pixmap* PixmapFromData(const Str& d) {
     return PixmapApplyExifOrientation(px, WebpExifOrientation(d));
 }
 
+// Decodes to RGB24, or RGBA32 (straight alpha) if the image has alpha, into
+// the buffer allocDst returns. Fails for EXIF-rotated images: PixmapFromData
+// handles those.
+bool DecodeRgbInto(Str d, DecodeDstAllocFn allocDst, void* user) {
+    int orientation = WebpExifOrientation(d);
+    if (orientation > 1) {
+        return false;
+    }
+    WebPBitstreamFeatures features{};
+    if (WebPGetFeatures((const u8*)d.s, (size_t)d.len, &features) != VP8_STATUS_OK) {
+        return false;
+    }
+    int w = features.width;
+    int h = features.height;
+    if (features.has_animation || w <= 0 || h <= 0) {
+        return false;
+    }
+    bool hasAlpha = features.has_alpha != 0;
+    int stride = 0;
+    u8* dst = allocDst(user, w, h, hasAlpha, &stride);
+    if (!dst) {
+        return false;
+    }
+    size_t size = (size_t)stride * h;
+    if (hasAlpha) {
+        return WebPDecodeRGBAInto((const u8*)d.s, (size_t)d.len, dst, size, stride) != nullptr;
+    }
+    return WebPDecodeRGBInto((const u8*)d.s, (size_t)d.len, dst, size, stride) != nullptr;
+}
+
 } // namespace webp
 
 #else
 namespace webp {
 Pixmap* PixmapFromData(const Str&) {
     return nullptr;
+}
+bool DecodeRgbInto(Str, DecodeDstAllocFn, void*) {
+    return false;
 }
 } // namespace webp
 
