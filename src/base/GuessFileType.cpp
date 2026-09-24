@@ -790,7 +790,11 @@ int WebpExifOrientation(Str d) {
     if (!FindWebpChunk(d, "EXIF", exif) || exif.len < 8) {
         return 0;
     }
-    return ExifOrientationFromTiff(ByteReader(exif), 0);
+    // the spec wants raw TIFF, but libvips (e.g. sharp) writes the JPEG-style
+    // "Exif\0\0" prefix first
+    Str prefix = StrL("Exif\0\0");
+    int tiffBase = str::StartsWith(exif, prefix) ? len(prefix) : 0;
+    return ExifOrientationFromTiff(ByteReader(exif), tiffBase);
 }
 
 // find a box of the given type among the ISO BMFF boxes in [idx, end).

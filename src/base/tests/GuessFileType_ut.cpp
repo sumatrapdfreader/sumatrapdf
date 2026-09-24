@@ -345,6 +345,26 @@ static void webpTest() {
     utassert(payload.len == 4 && MemEq(payload.s, "acsp", 4));
     utassert(!FindWebpChunk(chunkFile, "XMP ", payload));
     utassert(!FindWebpChunk(Str((char*)webp, dimofi(webp)), "ICCP", payload));
+
+    // EXIF chunk with orientation 6: raw TIFF (per spec) and with the
+    // "Exif\0\0" prefix libvips / sharp write
+    static const u8 webpExif[] = {
+        'R',  'I',  'F', 'F', 38, 0, 0,   0,   'W', 'E', 'B', 'P', 'E', 'X',
+        'I',  'F',  26,  0,   0,  0, 'I', 'I', 42,  0,   8,   0,   0,   0, // TIFF header, IFD0 at 8
+        1,    0,                                                           // 1 entry
+        0x12, 0x01, 3,   0,   1,  0, 0,   0,   6,   0,   0,   0,           // Orientation (short) 6
+        0,    0,    0,   0,                                                // no next IFD
+    };
+    utassert(WebpExifOrientation(Str((char*)webpExif, dimofi(webpExif))) == 6);
+    static const u8 webpExifPrefixed[] = {
+        'R',  'I',  'F', 'F', 44, 0, 0, 0,   'W', 'E', 'B', 'P', 'E',
+        'X',  'I',  'F', 32,  0,  0, 0, 'E', 'x', 'i', 'f', 0,   0, // prefix
+        'I',  'I',  42,  0,   8,  0, 0, 0,                          // TIFF header, IFD0 at 8
+        1,    0,                                                    // 1 entry
+        0x12, 0x01, 3,   0,   1,  0, 0, 0,   6,   0,   0,   0,      // Orientation (short) 6
+        0,    0,    0,   0,                                         // no next IFD
+    };
+    utassert(WebpExifOrientation(Str((char*)webpExifPrefixed, dimofi(webpExifPrefixed))) == 6);
     FreeFileTypeInfo(&fti);
 }
 
