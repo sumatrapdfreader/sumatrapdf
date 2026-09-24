@@ -765,11 +765,7 @@
       div.appendChild(fileDiv);
       div.appendChild(ctxDiv);
       div.addEventListener("click", function () {
-        const matchedLine = findMatchedLine(item.text, query);
-        let url = mdNameToHtml(item.file);
-        if (matchedLine) {
-          url += "#:~:text=" + encodeURIComponent(matchedLine);
-        }
+        const url = mdNameToHtml(item.file) + textFragment(item.text, query);
         closeDialog();
         window.location.href = url;
       });
@@ -808,6 +804,33 @@
       }
     }
     return "";
+  }
+
+  // "#:~:text=..." to highlight the match in the destination page
+  function textFragment(text, query) {
+    let fragment = findMatchedLine(text, query);
+    const terms = query.split(/\s+/).filter(Boolean);
+    if (terms.length === 1) {
+      // the markdown line (with **, links, `code`) often doesn't match the
+      // rendered text, so highlight only the word
+      fragment = wordAround(fragment, terms[0]) || terms[0];
+    }
+    if (!fragment) return "";
+    // "-" separates prefix/suffix in a text fragment, so it must be escaped
+    return "#:~:text=" + encodeURIComponent(fragment).replace(/-/g, "%2D");
+  }
+
+  // the whole word in line that contains term, e.g. "Zooming" for "zoom":
+  // text fragments only match at word boundaries
+  function wordAround(line, term) {
+    const i = line.toLowerCase().indexOf(term.toLowerCase());
+    if (i < 0) return "";
+    const isWordChar = (c) => /[\p{L}\p{N}_]/u.test(c);
+    let start = i;
+    while (start > 0 && isWordChar(line[start - 1])) start--;
+    let end = i + term.length;
+    while (end < line.length && isWordChar(line[end])) end++;
+    return line.slice(start, end);
   }
 
   function escapeHtml(s) {
@@ -883,12 +906,7 @@
         div.appendChild(fileDiv);
         div.appendChild(ctxDiv);
         div.addEventListener("click", function () {
-          const matchedLine = findMatchedLine(item.text, query);
-          let url = mdNameToHtml(item.file);
-          if (matchedLine) {
-            url += "#:~:text=" + encodeURIComponent(matchedLine);
-          }
-          window.location.href = url;
+          window.location.href = mdNameToHtml(item.file) + textFragment(item.text, query);
         });
         div.addEventListener("mouseenter", function () {
           setDocsSelected(index);
