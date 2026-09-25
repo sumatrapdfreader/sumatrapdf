@@ -22,6 +22,7 @@ bool LoadSettings();
 void ScheduleSaveSettings();
 void FlushScheduledSaveSettings();
 void ForceReloadSettings();
+void ReloadDeferredSettings();
 void ApplySettingsToOpenWindows();
 void CleanUpSettings();
 void RegisterSettingsForFileChanges();

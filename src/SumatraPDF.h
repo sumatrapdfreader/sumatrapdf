@@ -94,6 +94,7 @@ extern Func0 gOnSessionRestored;
 void NotifySessionRestoreFinished();
 bool IsSessionRestoreFinished();
 bool HasPendingDocumentLoads();
+bool AreLoadThreadsActive();
 // tells the frame's virtual tree which splitters exist (they are created
 // with their panes)
 void FrameSyncSplitters(MainWindow*);

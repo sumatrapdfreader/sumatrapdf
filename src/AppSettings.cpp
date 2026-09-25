@@ -896,7 +896,19 @@ bool LoadSettings() {
 
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
+// a reload that waits for document load threads to finish
+static bool gReloadDeferred = false;
+static bool gReloadDeferredForce = false;
+
 static void ReloadSettings(bool force = false) {
+    // load threads read gSettings and file history; freeing them under a
+    // running load crashed LoadDocumentAsync
+    if (AreLoadThreadsActive()) {
+        gReloadDeferred = true;
+        gReloadDeferredForce |= force;
+        return;
+    }
+
     TempStr settingsPath = GetSettingsPathTemp();
     if (!file::Exists(settingsPath)) {
         return;
@@ -986,6 +998,16 @@ void ForceReloadSettings() {
     // a pending scheduled save must reach the file before we re-read it
     FlushScheduledSaveSettings();
     ReloadSettings(true);
+}
+
+void ReloadDeferredSettings() {
+    if (!gReloadDeferred || AreLoadThreadsActive()) {
+        return;
+    }
+    bool force = gReloadDeferredForce;
+    gReloadDeferred = false;
+    gReloadDeferredForce = false;
+    ReloadSettings(force);
 }
 
 static void ReloadSettingsFromWatcher() {
