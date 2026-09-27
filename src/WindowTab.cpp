@@ -244,7 +244,6 @@ float WindowTab::NextToggleZoom() const {
 }
 
 void WindowTab::ToggleZoom() const {
-    ReportIf(!ctrl);
     if (!IsDocLoaded()) {
         return;
     }
