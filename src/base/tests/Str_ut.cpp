@@ -932,6 +932,10 @@ void StrTest() {
     utassert(str::CmpNatural(StrL("abc"), StrL(".svn")) > 0);
     utassert(str::CmpNatural(StrL("ab0200"), StrL("AB333")) < 0);
     utassert(str::CmpNatural(StrL("a b"), StrL("a  c")) < 0);
+    // base name of "D:\" is empty
+    utassert(str::CmpNatural(Str{}, StrL(".pdf")) < 0);
+    utassert(str::CmpNatural(StrL("a.pdf"), StrL("")) > 0);
+    utassert(str::CmpNatural(Str{}, Str{}) == 0);
 
 #ifndef LOCALE_INVARIANT
 #define LOCALE_INVARIANT (MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT))

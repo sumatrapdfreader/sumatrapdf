@@ -2108,7 +2108,6 @@ static char CmpNaturalAt(Str s, int i) {
 }
 
 int CmpNatural(Str aIn, Str bIn) {
-    ReportIf(len(aIn) == 0 || len(bIn) == 0);
     int ai = 0;
     int bi = 0;
     int diff = 0;
