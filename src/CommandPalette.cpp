@@ -1724,6 +1724,8 @@ void CommandPaletteWnd::UpdateHelpRow() {
     if (settingHelpBox) {
         bool show = kind == kHelpSettings || kind == kHelpSettingValue;
         settingHelpBox->SetVisibility(show ? Visibility::Visible : Visibility::Collapse);
+        // a collapsed box is not laid out, but its virtual child still paints
+        settingHelp->SetIsVisible(show);
     }
     if (layout) {
         DoLayout();
@@ -2067,11 +2069,19 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     int nAnnots = len(wnd->annotations);
     EngineBase* engine = wnd->win && wnd->win->CurrentTab() ? wnd->win->CurrentTab()->GetEngine() : nullptr;
     int annotsDone = EngineMupdfAnnotsLoadDone(engine) ? 1 : 0;
+    // the setting help paints when it is a visible top of the window's virtual tree
+    bool helpShown = false;
+    if (wnd->vroot && wnd->settingHelp && wnd->settingHelp->IsVisible()) {
+        for (VirtCtrl* w : wnd->vroot->tops) {
+            helpShown |= w == wnd->settingHelp;
+        }
+    }
     out.Append(
         fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d thumb=%d page=%d rendered=%d annots=%d "
-            "annotPage=%d annotsDone=%d selValue=%s selText=%s\n",
+            "annotPage=%d annotsDone=%d ",
             sel, n, qStart, qEnd, qLen, selectedCmdId, (int)CommandPaletteUiRtl(), (int)wnd->thumbnailMode, thumbPage,
-            rendered, nAnnots, annotPage, annotsDone, selValue, selText));
+            rendered, nAnnots, annotPage, annotsDone));
+    out.Append(fmt("settingHelp=%d selValue=%s selText=%s\n", (int)helpShown, selValue, selText));
     return finish(0);
 }
 
