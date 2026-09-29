@@ -121,6 +121,8 @@ FileState* FileHistoryMarkFileLoaded(Str filePath) {
 
 bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
     ReportIf(len(filePath) == 0);
+    // hiding or reordering the entry changes what the home page shows
+    HomePageInvalidateLayoutCache();
     FileState* state = FileHistoryFindByPath(filePath);
     if (!state) {
         // keep a record so IsMissing can be persisted in settings (fixes #5585)
