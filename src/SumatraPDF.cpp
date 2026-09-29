@@ -18048,9 +18048,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     if (ExeHasNameOfStoreInstaller()) {
         InstallSumatraCrashHandler(false);
         logf("Running store installer\n");
-        flags.install = true;
+        flags.installer.install = true;
         flags.silent = true;
-        flags.storeInstaller = true;
+        flags.installer.storeInstaller = true;
         gCli = &flags;
         int ret = RunInstaller();
         uitask::Destroy();
@@ -18105,11 +18105,12 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         }
     }
 
-    bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
-    if (flags.justExtractFiles) {
+    bool isInstaller = flags.installer.install || flags.installer.runInstallNow || flags.installer.fastInstall ||
+                       IsInstallerAndNamedAsSuch();
+    if (flags.installer.justExtractFiles) {
         isInstaller = false;
     }
-    bool isUninstaller = flags.uninstall;
+    bool isUninstaller = flags.installer.uninstall;
     bool noLogHere = isInstaller || isUninstaller;
 
     if (gCli->silent) {
@@ -18158,7 +18159,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     }
 #endif
 
-    if (flags.showHelp && IsInstallerButNotInstalled()) {
+    if (flags.installer.showHelp && IsInstallerButNotInstalled()) {
         ShowInstallerHelp();
         HandleRedirectedConsoleOnShutdown();
         return 0;
@@ -18258,7 +18259,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     // ParseFlags skips flag parsing when argv[1] is a mutool name (poster, …),
     // so poster’s own -x never sets justExtractFiles; MaybeRunMutool still runs
     // for tools after we load the DLL below.
-    if (flags.justExtractFiles) {
+    if (flags.installer.justExtractFiles) {
         bool attached = RedirectIOToExistingConsole();
         auto printExtractErr = [attached](Str msg) {
             logf("%s\n", msg);
@@ -18273,7 +18274,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
             return 1;
         }
         exitCode = 0;
-        if (!ExtractInstallerFiles(gCli->installDir)) {
+        if (!ExtractInstallerFiles(gCli->installer.installDir)) {
             Str err = gFirstError ? gFirstError : StrL("failed to extract files");
             printExtractErr(err);
             LogLastError();

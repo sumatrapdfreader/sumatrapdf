@@ -477,7 +477,7 @@ void ExplorerQuickLookApplyFromSettings() {
     if (gForTesting || gPluginMode) {
         return;
     }
-    if (gCli && (gCli->install || gCli->uninstall || gCli->quickLookAgent || gCli->forTesting)) {
+    if (gCli && (gCli->installer.install || gCli->installer.uninstall || gCli->quickLookAgent || gCli->forTesting)) {
         return;
     }
     bool on = gSettings && gSettings->explorerQuickLook;

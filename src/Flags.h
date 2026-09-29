@@ -29,6 +29,23 @@ struct FileArgs {
 
 FileArgs* ParseFileArgs(Str path);
 
+// installer / uninstaller flags
+struct InstallerFlags {
+    Str installDir;
+    bool showHelp = false;
+    bool install = false;
+    bool uninstall = false;
+    bool withFilter = false;
+    bool withPreview = false;
+    bool noDesktopShortcut = false;
+    bool justExtractFiles = false;
+    bool allUsers = false;
+    bool runInstallNow = false;
+    bool storeInstaller = false;
+    // starts the install immediately and launches the app at end
+    bool fastInstall = false;
+};
+
 struct Flags {
     HWND hwndPluginParent = nullptr;
     Str printerName;
@@ -48,7 +65,6 @@ struct Flags {
     Str upgradeFrom;
     Str dde;
     Str lang;
-    Str installDir;
     Str logFile;
     Str perfLogFile; // -log-perf-file <path>
     Str updateSelfTo;
@@ -87,8 +103,6 @@ struct Flags {
     bool exitImmediately = false;
     // installer: doesn't show any UI
     bool silent = false;
-    // installer: starts the install immediately and launches the app at end
-    bool fastInstall = false;
     bool invertColors = false;
     bool regress = false;
     bool tester = false;
@@ -116,22 +130,12 @@ struct Flags {
     bool forAi = false;      // -for-ai (AI-friendly unit test output)
     bool showPrintersDialog = false;
     bool crashOnOpen = false;
-    // related to installer
-    bool showHelp = false;
-    bool install = false;
-    bool uninstall = false;
-    bool withFilter = false;
-    bool withPreview = false;
-    bool noDesktopShortcut = false;
-    bool justExtractFiles = false;
     bool log = false;
     bool startPerfLog = false; // -start-perf-log (profile builds)
-    bool allUsers = false;
-    bool runInstallNow = false;
-    bool storeInstaller = false;
     // -html-backend ie|webview2: force the embedded browser hosting CHM /
     // markdown. Empty (the default) picks WebView2 when it's installed.
     Str htmlBackend;
+    InstallerFlags installer;
 
     Flags() = default;
     ~Flags() = default;

@@ -446,7 +446,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             continue;
         }
         if (arg == Arg::Help || arg == Arg::Help2 || arg == Arg::Help3) {
-            i.showHelp = true;
+            i.installer.showHelp = true;
             continue;
         }
         if (arg == Arg::ExitWhenDone || arg == Arg::ExitOnPrint) {
@@ -478,27 +478,27 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             continue;
         }
         if (arg == Arg::Install) {
-            i.install = true;
+            i.installer.install = true;
             continue;
         }
         if (arg == Arg::FastInstall) {
-            i.fastInstall = true;
+            i.installer.fastInstall = true;
             continue;
         }
         if (arg == Arg::UnInstall) {
-            i.uninstall = true;
+            i.installer.uninstall = true;
             continue;
         }
         if (arg == Arg::WithFilter || arg == Arg::WithSearch) {
-            i.withFilter = true;
+            i.installer.withFilter = true;
             continue;
         }
         if (arg == Arg::WithPreview) {
-            i.withPreview = true;
+            i.installer.withPreview = true;
             continue;
         }
         if (arg == Arg::NoDesktopShortcut) {
-            i.noDesktopShortcut = true;
+            i.installer.noDesktopShortcut = true;
             continue;
         }
         if (arg == Arg::Rand) {
@@ -510,7 +510,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             continue;
         }
         if (arg == Arg::Extract) {
-            i.justExtractFiles = true;
+            i.installer.justExtractFiles = true;
             continue;
         }
         if (arg == Arg::Tester) {
@@ -569,11 +569,11 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             continue;
         }
         if (arg == Arg::RunInstallNow) {
-            i.runInstallNow = true;
+            i.installer.runInstallNow = true;
             continue;
         }
         if ((arg == Arg::AllUsers) || (arg == Arg::AllUsers2)) {
-            i.allUsers = true;
+            i.installer.allUsers = true;
             continue;
         }
         if (arg == Arg::CrashOnOpen) {
@@ -765,7 +765,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             continue;
         }
         if (arg == Arg::Dir || arg == Arg::InstallDir) {
-            i.installDir = str::Dup(a, param);
+            i.installer.installDir = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::DDE) {
@@ -844,12 +844,12 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
     }
 
-    if (i.justExtractFiles) {
+    if (i.installer.justExtractFiles) {
         // silently extract files to directory given if /d
         // or current directory if no /d given
         i.silent = true;
-        if (len(i.installDir) == 0) {
-            i.installDir = str::Dup(a, StrL("."));
+        if (len(i.installer.installDir) == 0) {
+            i.installer.installDir = str::Dup(a, StrL("."));
         }
     }
 }

@@ -1217,11 +1217,14 @@ static void InstallerThread(Flags* cli) {
 
     gInstallFailed = true;
 
-    TempStr installedExePath = path::JoinTemp(cli->installDir, Str(kExeName));
-    auto allUsers = cli->allUsers;
-    logf("InstallerThread: cli->allUsers: %d, cli->withFilter: %d, cli->withPreview: %d, installerExePath: '%s'\n",
-         (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, installedExePath);
-    HKEY key = cli->allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+    TempStr installedExePath = path::JoinTemp(cli->installer.installDir, Str(kExeName));
+    auto allUsers = cli->installer.allUsers;
+    logf(
+        "InstallerThread: cli->installer.allUsers: %d, cli->installer.withFilter: %d, cli->installer.withPreview: %d, "
+        "installerExePath: '%s'\n",
+        (int)cli->installer.allUsers, (int)cli->installer.withFilter, (int)cli->installer.withPreview,
+        installedExePath);
+    HKEY key = cli->installer.allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
     // Unregister shell extensions and kill holders BEFORE extract. PdfFilter.dll
     // stays locked by SearchFilterHost/dllhost while the filter is registered;
@@ -1229,12 +1232,12 @@ static void InstallerThread(Flags* cli) {
     // Prefer previous install's allUsers when restoring after a failed extract.
     bool freeAllUsers = gPrevInstall.allUsers || allUsers;
     ShellExtInstallState removedExts{};
-    FreeInstallationFilesInUse(cli->installDir, freeAllUsers, &removedExts);
+    FreeInstallationFilesInUse(cli->installer.installDir, freeAllUsers, &removedExts);
     // SearchIndexer often keeps PdfFilter.dll mapped after unregister; stop it
     // before renames (started again in Exit).
     StopWindowsSearchService();
 
-    if (!ExtractInstallerFiles(cli->installDir)) {
+    if (!ExtractInstallerFiles(cli->installer.installDir)) {
         log(StrL("ExtractInstallerFiles() failed\n"));
         // Put shell extensions back so the user keeps search/preview until they retry.
         RestoreShellExtensions(removedExts);
@@ -1260,34 +1263,34 @@ static void InstallerThread(Flags* cli) {
     gPrevInstall.searchFilterInstalled = false;
     gPrevInstall.previewInstalled = false;
 
-    if (cli->withFilter) {
-        RegisterSearchFilter(allUsers, cli->installDir);
+    if (cli->installer.withFilter) {
+        RegisterSearchFilter(allUsers, cli->installer.installDir);
     }
 
-    if (cli->withPreview) {
-        RegisterPreviewer(allUsers, cli->installDir);
+    if (cli->installer.withPreview) {
+        RegisterPreviewer(allUsers, cli->installer.installDir);
     }
 
-    CreateAppShortcuts(allUsers, !cli->noDesktopShortcut, installedExePath);
+    CreateAppShortcuts(allUsers, !cli->installer.noDesktopShortcut, installedExePath);
 
     // consider installation a success from here on
     // (still warn, if we've failed to create the uninstaller, though)
     gInstallFailed = false;
 
-    ok = WriteUninstallerRegistryInfo(key, allUsers, cli->installDir);
+    ok = WriteUninstallerRegistryInfo(key, allUsers, cli->installer.installDir);
     if (!ok) {
         NotifyFailed(Tr("Failed to write the uninstallation information to the registry"));
     }
     // remembered for the next upgrade (GetPreviousInstallInfo)
     LoggedWriteRegDWORD(key, GetRegPathUninstTemp(StrL(kAppName)), StrL(kRegDesktopShortcut),
-                        cli->noDesktopShortcut ? 0 : 1);
+                        cli->installer.noDesktopShortcut ? 0 : 1);
 
     ok = WriteExtendedFileExtensionInfo(key, installedExePath);
     if (!ok) {
         NotifyFailed(Tr("Failed to write the extended file extension information to the registry"));
     }
 
-    AddInstallDirToPath(allUsers, cli->installDir);
+    AddInstallDirToPath(allUsers, cli->installer.installDir);
 
     ProgressStep();
     log(StrL("Installer thread finished\n"));
@@ -1315,31 +1318,31 @@ static void RestartElevatedForAllUsers(Flags* cli) {
     TempStr exePath = GetSelfExePathTemp();
     TempStr cmdLine = StrL("-run-install-now");
     bool allUsersChecked = gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
-    bool allUsers = cli->allUsers || allUsersChecked;
-    logf("RestartElevatedForAllUsers: cli->allUsers: %d, allUsersChecked: %d, allUsers: %d\n", (int)cli->allUsers,
-         (int)allUsersChecked, (int)allUsers);
+    bool allUsers = cli->installer.allUsers || allUsersChecked;
+    logf("RestartElevatedForAllUsers: cli->installer.allUsers: %d, allUsersChecked: %d, allUsers: %d\n",
+         (int)cli->installer.allUsers, (int)allUsersChecked, (int)allUsers);
     if (allUsers) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -all-users"));
     }
-    if (cli->withFilter) {
+    if (cli->installer.withFilter) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -with-filter"));
     }
-    if (cli->withPreview) {
+    if (cli->installer.withPreview) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -with-preview"));
     }
-    if (cli->noDesktopShortcut) {
+    if (cli->installer.noDesktopShortcut) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -no-desktop-shortcut"));
     }
     if (cli->silent) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -silent"));
     }
-    if (cli->fastInstall) {
+    if (cli->installer.fastInstall) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -fast-install"));
     }
     if (cli->log) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -log"));
     }
-    Str dir = cli->installDir;
+    Str dir = cli->installer.installDir;
     cmdLine = str::JoinTemp(cmdLine, StrL(" -install-dir \""), dir);
     cmdLine = str::JoinTemp(cmdLine, StrL("\""));
     logf("LaunchElevated('%s', '%s')\n", exePath, cmdLine);
@@ -1411,7 +1414,7 @@ static void StartInstallation(InstallerWnd* wnd) {
 static void OnButtonOptions(InstallerWnd* wnd);
 
 static TempStr GetInstalledExePathTemp(Flags* cli) {
-    TempStr dir = cli->installDir;
+    TempStr dir = cli->installer.installDir;
     return path::JoinTemp(dir, Str(kExeName));
 }
 
@@ -1450,25 +1453,26 @@ static void OnButtonInstall(InstallerWnd* wnd) {
 
     TempStr userInstallDir = HwndGetTextTemp(wnd->editInstallationDir->hwnd);
     if (len(userInstallDir) > 0) {
-        str::ReplaceWithCopy(&cli->installDir, userInstallDir);
+        str::ReplaceWithCopy(&cli->installer.installDir, userInstallDir);
     }
 
-    cli->allUsers = wnd->checkboxForAllUsers->IsChecked();
+    cli->installer.allUsers = wnd->checkboxForAllUsers->IsChecked();
     // note: this checkbox isn't created when running inside Wow64
-    cli->withFilter = wnd->checkboxRegisterSearchFilter && wnd->checkboxRegisterSearchFilter->IsChecked();
+    cli->installer.withFilter = wnd->checkboxRegisterSearchFilter && wnd->checkboxRegisterSearchFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
-    cli->withPreview = wnd->checkboxRegisterPreview && wnd->checkboxRegisterPreview->IsChecked();
-    cli->noDesktopShortcut = !wnd->checkboxDesktopShortcut->IsChecked();
+    cli->installer.withPreview = wnd->checkboxRegisterPreview && wnd->checkboxRegisterPreview->IsChecked();
+    cli->installer.noDesktopShortcut = !wnd->checkboxDesktopShortcut->IsChecked();
 
     // Program Files always needs machine-style install + elevation
-    if (IsPathUnderProgramFiles(cli->installDir) && !cli->allUsers) {
+    if (IsPathUnderProgramFiles(cli->installer.installDir) && !cli->installer.allUsers) {
         logf("OnButtonInstall: install dir under Program Files; forcing allUsers\n");
-        cli->allUsers = true;
+        cli->installer.allUsers = true;
     }
 
-    bool needsElevation = InstallNeedsElevation(cli->installDir, cli->allUsers || gPrevInstall.allUsers);
+    bool needsElevation =
+        InstallNeedsElevation(cli->installer.installDir, cli->installer.allUsers || gPrevInstall.allUsers);
     logf("OnButtonInstall: needsElevation=%d elevated=%d allUsers=%d dir='%s'\n", (int)needsElevation,
-         (int)IsProcessRunningElevated(), (int)cli->allUsers, cli->installDir);
+         (int)IsProcessRunningElevated(), (int)cli->installer.allUsers, cli->installer.installDir);
     if (needsElevation && !IsProcessRunningElevated()) {
         RestartElevatedForAllUsers(cli);
         ::ExitProcess(0);
@@ -1546,7 +1550,7 @@ static void ShowInstallationFailedUi(HWND hwndParent) {
 }
 
 static void OnInstallationFinished(Flags* cli) {
-    logf("OnInstallationFinished: cli->fastInstall: %d gInstallFailed: %d\n", (int)cli->fastInstall,
+    logf("OnInstallationFinished: cli->installer.fastInstall: %d gInstallFailed: %d\n", (int)cli->installer.fastInstall,
          (int)gInstallFailed);
 
     SafeCloseThreadHandle(&gWnd->hThread);
@@ -1576,7 +1580,7 @@ static void OnInstallationFinished(Flags* cli) {
     DeleteWnd(&gWnd->btnInstall);
     DeleteWnd(&gWnd->progressBar);
     auto isRtl = IsUIRtl();
-    if (!cli->fastInstall) {
+    if (!cli->installer.fastInstall) {
         gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, Tr("Start SumatraPDF"), isRtl);
         gWnd->btnRunSumatra->onClick = MkFunc0Void(OnButtonStartSumatra);
     }
@@ -1584,7 +1588,7 @@ static void OnInstallationFinished(Flags* cli) {
     gMsgError = gFirstError;
     HwndRepaintNow(gWnd->hwnd);
 
-    if (cli->fastInstall) {
+    if (cli->installer.fastInstall) {
         StartSumatra();
         ::ExitProcess(0);
     }
@@ -1631,7 +1635,7 @@ static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) 
 
 static void SetInstallButtonElevationState() {
     bool forAllUsers = gWnd->checkboxForAllUsers->IsChecked();
-    Str dir = gCliNew.installDir;
+    Str dir = gCliNew.installer.installDir;
     if (gWnd->editInstallationDir && gWnd->editInstallationDir->hwnd) {
         TempStr editDir = HwndGetTextTemp(gWnd->editInstallationDir->hwnd);
         if (editDir && editDir.s[0]) {
@@ -1649,12 +1653,12 @@ static void ForAllUsersStateChanged() {
     bool forAllUsers = gWnd->checkboxForAllUsers->IsChecked();
     logf("ForAllUsersStateChanged() to %d\n", (int)forAllUsers);
     SetInstallButtonElevationState();
-    cli->allUsers = forAllUsers;
-    auto dir = GetDefaultInstallationDirTemp(cli->allUsers, true);
-    str::ReplaceWithCopy(&cli->installDir, dir);
-    gWnd->editInstallationDir->SetText(cli->installDir);
-    logf("ForAllUsersStateChanged: cli->allUsers: %d, cli->installDir: '%s', forAllUsers: %d\n", (int)cli->allUsers,
-         cli->installDir, (int)forAllUsers);
+    cli->installer.allUsers = forAllUsers;
+    auto dir = GetDefaultInstallationDirTemp(cli->installer.allUsers, true);
+    str::ReplaceWithCopy(&cli->installer.installDir, dir);
+    gWnd->editInstallationDir->SetText(cli->installer.installDir);
+    logf("ForAllUsersStateChanged: cli->installer.allUsers: %d, cli->installer.installDir: '%s', forAllUsers: %d\n",
+         (int)cli->installer.allUsers, cli->installer.installDir, (int)forAllUsers);
 }
 
 static void RelayoutInstaller(InstallerWnd* wnd) {
@@ -1829,9 +1833,11 @@ static void SetTabOrder(HWND* hwnds, int nHwnds) {
 //[ ACCESSKEY_GROUP Installer
 static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     logf(
-        "CreateInstallerWindowControls: cli->allUsers: %d, cli->withPreview: %d, cli->withFilter: %d, install dir: "
+        "CreateInstallerWindowControls: cli->installer.allUsers: %d, cli->installer.withPreview: %d, "
+        "cli->installer.withFilter: %d, install dir: "
         "'%s'\n",
-        (int)cli->allUsers, (int)cli->withPreview, (int)cli->withFilter, cli->installDir);
+        (int)cli->installer.allUsers, (int)cli->installer.withPreview, (int)cli->installer.withFilter,
+        cli->installer.installDir);
     // show options if user chose non-defaults via cmd-line
     // or if previous install had them enabled
     bool showOptions = false;
@@ -1839,7 +1845,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     HWND hwnd = wnd->hwnd;
     int margin = DpiScale(kInstallerWinMargin);
     bool isRtl = IsUIRtl();
-    bool showInstallButton = !cli->fastInstall;
+    bool showInstallButton = !cli->installer.fastInstall;
 
     wnd->btnInstall = CreateDefaultButton(hwnd, Tr("Install SumatraPDF"), isRtl);
     wnd->btnInstall->onClick = MkFunc0(OnButtonInstall, wnd);
@@ -1856,13 +1862,13 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     if (IsProcessAndOsArchSame()) {
         // for Windows XP, this means only basic thumbnail support
         Str s = Tr("Let Windows show &previews of PDF documents");
-        bool isChecked = cli->withPreview || IsPreviewInstalled();
+        bool isChecked = cli->installer.withPreview || IsPreviewInstalled();
         if (isChecked) {
             showOptions = true;
         }
         wnd->checkboxRegisterPreview = CreateCheckbox(hwnd, s, isChecked);
 
-        isChecked = cli->withFilter || IsSearchFilterInstalled();
+        isChecked = cli->installer.withFilter || IsSearchFilterInstalled();
         if (isChecked) {
             showOptions = true;
         }
@@ -1871,7 +1877,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     }
 
     {
-        bool isChecked = !cli->noDesktopShortcut;
+        bool isChecked = !cli->installer.noDesktopShortcut;
         if (!isChecked) {
             showOptions = true;
         }
@@ -1880,7 +1886,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
 
     {
         Str s = Tr("Install for all users");
-        bool isChecked = cli->allUsers;
+        bool isChecked = cli->installer.allUsers;
         if (isChecked) {
             showOptions = true;
         }
@@ -1898,7 +1904,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
 
     wnd->editInstallationDir = new Edit();
     wnd->editInstallationDir->Create(eargs);
-    wnd->editInstallationDir->SetText(cli->installDir);
+    wnd->editInstallationDir->SetText(cli->installer.installDir);
 
     wnd->staticInstDir = NewVirtText({
         .s = Tr("Install SumatraPDF in &folder:"),
@@ -2095,7 +2101,7 @@ static bool CreateInstallerWindow(Flags* cli) {
     if (!CreateInstallerWnd(cli)) {
         return false;
     }
-    auto autoStartInstall = cli->runInstallNow || cli->fastInstall;
+    auto autoStartInstall = cli->installer.runInstallNow || cli->installer.fastInstall;
     // TODO: gHwndFrame is shared between installer and uninstaller windows
     gHwndFrame = gWnd->hwnd;
     if (autoStartInstall) {
@@ -2311,7 +2317,7 @@ bool ExtractInstallerFiles(Str dir) {
     // extract. Dialog retries every 3s if a file stays locked; user can abort.
     // Legacy libmupdf.dll (through 3.6) is moved/deleted best-effort (different name).
     bool silent = gCliNew.silent || (gCli && gCli->silent);
-    bool skipSelfExe = gCli && gCli->justExtractFiles && IsExtractingOverSelf(dir);
+    bool skipSelfExe = gCli && gCli->installer.justExtractFiles && IsExtractingOverSelf(dir);
     if (!PrepareInstallDirByRenaming(dir, silent, skipSelfExe)) {
         log(StrL("ExtractInstallerFiles: PrepareInstallDirByRenaming failed\n"));
         // Some files may already be *.copy; put them back before aborting.
@@ -2397,16 +2403,16 @@ int RunInstaller() {
     Str installerLogPath;
 
     gCliNew.log = gCli->log;
-    gCliNew.allUsers = gCli->allUsers;
-    gCliNew.withFilter = gCli->withFilter;
-    gCliNew.withPreview = gCli->withPreview;
-    gCliNew.noDesktopShortcut = gCli->noDesktopShortcut;
+    gCliNew.installer.allUsers = gCli->installer.allUsers;
+    gCliNew.installer.withFilter = gCli->installer.withFilter;
+    gCliNew.installer.withPreview = gCli->installer.withPreview;
+    gCliNew.installer.noDesktopShortcut = gCli->installer.noDesktopShortcut;
     gCliNew.silent = gCli->silent;
-    gCliNew.runInstallNow = gCli->runInstallNow;
-    gCliNew.fastInstall = gCli->fastInstall;
+    gCliNew.installer.runInstallNow = gCli->installer.runInstallNow;
+    gCliNew.installer.fastInstall = gCli->installer.fastInstall;
     if (gCli->log) {
         installerLogPath = GetInstallerLogPath();
-        bool removeLog = !gCli->runInstallNow;
+        bool removeLog = !gCli->installer.runInstallNow;
         StartLogToFile(installerLogPath, removeLog);
     }
     logf("------------- Starting SumatraPDF installation\n");
@@ -2421,53 +2427,56 @@ int RunInstaller() {
     GetPreviousInstallInfo(&gPrevInstall);
     // with -run-install all values should be explicitly set
     // otherwise we inherit values from previous install
-    if (HasPreviousInstall() && !gCli->runInstallNow) {
+    if (HasPreviousInstall() && !gCli->installer.runInstallNow) {
         logf("!gCli->runInstallNew so inheriting prev install state\n");
-        if (!gCliNew.allUsers) {
-            gCliNew.allUsers = gPrevInstall.allUsers;
+        if (!gCliNew.installer.allUsers) {
+            gCliNew.installer.allUsers = gPrevInstall.allUsers;
         }
         // if not set explicitly, default to state from previous installation
-        if (!gCliNew.withFilter) {
-            gCliNew.withFilter = gPrevInstall.searchFilterInstalled;
+        if (!gCliNew.installer.withFilter) {
+            gCliNew.installer.withFilter = gPrevInstall.searchFilterInstalled;
         }
-        if (!gCliNew.withPreview) {
-            gCliNew.withPreview = gPrevInstall.previewInstalled;
+        if (!gCliNew.installer.withPreview) {
+            gCliNew.installer.withPreview = gPrevInstall.previewInstalled;
         }
-        if (!gCliNew.noDesktopShortcut) {
-            gCliNew.noDesktopShortcut = !gPrevInstall.desktopShortcut;
+        if (!gCliNew.installer.noDesktopShortcut) {
+            gCliNew.installer.noDesktopShortcut = !gPrevInstall.desktopShortcut;
         }
     }
 
-    gCliNew.installDir = str::Dup(gCli->installDir);
-    if (len(gCliNew.installDir) == 0) {
-        auto dir = GetDefaultInstallationDirTemp(gCliNew.allUsers, false);
-        gCliNew.installDir = str::Dup(dir);
+    gCliNew.installer.installDir = str::Dup(gCli->installer.installDir);
+    if (len(gCliNew.installer.installDir) == 0) {
+        auto dir = GetDefaultInstallationDirTemp(gCliNew.installer.allUsers, false);
+        gCliNew.installer.installDir = str::Dup(dir);
     }
     // Program Files installs must be all-users (and will elevate below)
-    if (IsPathUnderProgramFiles(gCliNew.installDir) && !gCliNew.allUsers) {
+    if (IsPathUnderProgramFiles(gCliNew.installer.installDir) && !gCliNew.installer.allUsers) {
         logf("RunInstaller: install dir under Program Files; forcing allUsers\n");
-        gCliNew.allUsers = true;
+        gCliNew.installer.allUsers = true;
     }
     TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
     logf("RunInstaller: '%s', cmdLine: '%s', installing into dir '%s'\n", GetSelfExePathTemp(), cmdLine,
-         gCliNew.installDir);
+         gCliNew.installer.installDir);
 
     int ret = 0;
 
     // restart as admin if necessary. in non-silent mode it happens after clicking
     // Install button
-    bool requiresSilentElevation = gCli->silent || gCli->fastInstall || gCli->runInstallNow;
+    bool requiresSilentElevation = gCli->silent || gCli->installer.fastInstall || gCli->installer.runInstallNow;
     bool isElevated = IsProcessRunningElevated();
     logf("RunInstaller: requiresSilentElevation: %d, isElevated: %d\n", (int)requiresSilentElevation, (int)isElevated);
     if (requiresSilentElevation && !isElevated) {
-        bool needsElevation = InstallNeedsElevation(gCliNew.installDir, gCliNew.allUsers || gPrevInstall.allUsers);
+        bool needsElevation =
+            InstallNeedsElevation(gCliNew.installer.installDir, gCliNew.installer.allUsers || gPrevInstall.allUsers);
         logf("RunInstaller: needsElevation: %d (allUsers=%d prevAllUsers=%d underPF=%d)\n", (int)needsElevation,
-             (int)gCliNew.allUsers, (int)gPrevInstall.allUsers, (int)IsPathUnderProgramFiles(gCliNew.installDir));
+             (int)gCliNew.installer.allUsers, (int)gPrevInstall.allUsers,
+             (int)IsPathUnderProgramFiles(gCliNew.installer.installDir));
         if (needsElevation) {
             logf(
-                "Restarting as elevated: gCli->silent: %d, gCli->fastInstall: %d, isElevated: %d, gCli->allUsers: %d, "
+                "Restarting as elevated: gCli->silent: %d, gCli->installer.fastInstall: %d, isElevated: %d, "
+                "gCli->installer.allUsers: %d, "
                 "prevInstall.needsElevation: %d\n",
-                (int)gCli->silent, (int)gCli->fastInstall, (int)isElevated, (int)gCli->allUsers,
+                (int)gCli->silent, (int)gCli->installer.fastInstall, (int)isElevated, (int)gCli->installer.allUsers,
                 (int)gPrevInstall.allUsers);
             RestartElevatedForAllUsers(&gCliNew);
             ::ExitProcess(0);
@@ -2475,11 +2484,12 @@ int RunInstaller() {
     }
 
     logf(
-        "RunInstaller: gCliNew.silent: %d, gCliNew.allUsers: %d, gCliNew.runInstallNow: %d, gCliNew.withFilter: "
+        "RunInstaller: gCliNew.silent: %d, gCliNew.installer.allUsers: %d, gCliNew.installer.runInstallNow: %d, "
+        "gCliNew.installer.withFilter: "
         "%d, "
-        "gCliNew.withPreview: %d, gCliNew.fastInstall: %d\n",
-        (int)gCliNew.silent, (int)gCliNew.allUsers, (int)gCliNew.runInstallNow, (int)gCliNew.withFilter,
-        (int)gCliNew.withPreview, (int)gCliNew.fastInstall);
+        "gCliNew.installer.withPreview: %d, gCliNew.installer.fastInstall: %d\n",
+        (int)gCliNew.silent, (int)gCliNew.installer.allUsers, (int)gCliNew.installer.runInstallNow,
+        (int)gCliNew.installer.withFilter, (int)gCliNew.installer.withPreview, (int)gCliNew.installer.fastInstall);
 
     // Shell-extension unregister + process kill happens inside InstallerThread
     // (FreeInstallationFilesInUse) before extract — including elevated -run-install-now.
