@@ -745,6 +745,12 @@ const externalViewer: Field[] = [
   ).ver("3.7"),
 ];
 
+const textSnippet: Field[] = [
+  field("Name", Str, null, "name shown in the context menu and the command palette"),
+  field("Text", Str, null, "text of the free text annotation it inserts; \\n starts a new line"),
+  field("Key", Str, null, "keyboard shortcut"),
+];
+
 const selectionHandler: Field[] = [
   field(
     "URL",
@@ -947,6 +953,13 @@ const annotations: Field[] = [
     "author recorded on newly created annotations. If not set, the Windows user name is used; " +
       "set it to (none) to leave the author out entirely",
   ).ver("3.4"),
+  field(
+    "SignatureImage",
+    Str,
+    null,
+    "image (e.g. a transparent .png of your signature) that Sign With Image stamps on the page. " +
+      "If not set, or the file is missing, Sign With Image asks for an image",
+  ).ver("3.7"),
 ];
 
 const favorite: Field[] = [
@@ -1433,6 +1446,13 @@ const globalPrefs: Field[] = [
   ).ver("3.7"),
   field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
   field(
+    "AlwaysShowSidebar",
+    Bool,
+    false,
+    "if true, every document with bookmarks opens with the Bookmarks sidebar, " +
+      "even one that was closed with it hidden",
+  ).ver("3.7"),
+  field(
     "SidebarOnRight",
     Bool,
     false,
@@ -1903,6 +1923,12 @@ const globalPrefs: Field[] = [
     "list of handlers for selected text, shown in context menu when text selection is active. See [docs for more information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)",
   ),
   emptyLine(),
+  array(
+    "TextSnippets",
+    textSnippet,
+    "predefined text inserted as a free text annotation from the context menu or the command palette",
+  ).ver("3.7"),
+  emptyLine(),
   array("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
   emptyLine(),
   array("Themes", theme, "color themes").ver("3.6"),
@@ -2092,6 +2118,7 @@ const globalPrefsLayout = [
   "ShowFavorites",
   "SortFavoritesByName",
   "ShowToc",
+  "AlwaysShowSidebar",
   "SidebarOnRight",
   "SidebarWindowSize",
   "ShowLinks",
@@ -2190,7 +2217,7 @@ function cdefault(f: Field, built: Record<string, number>): string {
     if (f.Default === null || f.Default === undefined) {
       return "0";
     }
-    return `(intptr_t)"${f.Default}"`;
+    return `(intptr_t)"${escapeCStr(f.Default)}"`;
   }
   const typeName = f.Type.name;
   if (["Struct", "StructPtr", "Array", "Compact"].includes(typeName)) {

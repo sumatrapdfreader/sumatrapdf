@@ -299,6 +299,16 @@ void SetRect(Annotation* annot, RectF r) {
                 if (nStrokes > 0) {
                     pdf_set_annot_ink_list(ctx, a, nStrokes, strokeCounts.els, pts.els);
                 }
+            } else if (r.dx == annot->bounds.dx && r.dy == annot->bounds.dy) {
+                // a move: shift /Rect itself. The bounds can be bigger than
+                // /Rect (a border), so setting them as /Rect grew the
+                // annotation on every move
+                fz_rect rect = pdf_annot_rect(ctx, a);
+                rect.x0 += dx;
+                rect.x1 += dx;
+                rect.y0 += dy;
+                rect.y1 += dy;
+                pdf_set_annot_rect(ctx, a, rect);
             } else {
                 pdf_set_annot_rect(ctx, a, ToFzRect(r));
             }

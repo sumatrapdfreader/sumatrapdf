@@ -283,6 +283,19 @@ static void CreateSelectionHandlerCommands() {
     }
 }
 
+// a command per TextSnippets entry, for the context menu, the palette and its Key
+static void CreateTextSnippetCommands() {
+    for (TextSnippet* ts : *gSettings->textSnippets) {
+        if (!ts || str::IsEmptyOrWhiteSpace(ts->name) || str::IsEmptyOrWhiteSpace(ts->text)) {
+            continue;
+        }
+        // settings values are single-line: \n in Text is a line break
+        TempStr text = str::ReplaceTemp(ts->text, StrL("\\n"), StrL("\n"));
+        CommandArg* args = NewStringArg(kCmdArgText, text);
+        CreateCustomCommand(StrL(""), CmdInsertTextSnippet, args, ts->name, ts->key);
+    }
+}
+
 static void CreateExternalViewersCommands() {
     for (ExternalViewer* ev : *gSettings->externalViewers) {
         if (!ev || str::IsEmptyOrWhiteSpace(ev->commandLine)) {
@@ -873,6 +886,7 @@ bool LoadSettings() {
     CreateThemeCommands();
     CreateExternalViewersCommands();
     CreateSelectionHandlerCommands();
+    CreateTextSnippetCommands();
     CreateCustomShortcuts();
 
     // re-create accelerators

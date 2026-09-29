@@ -329,8 +329,10 @@ enum {
     CmdOpenFileWithSumatraFilePicker = 523,
     CmdSelectCurrentPage = 524,
     CmdZoomFitVisible = 525,
+    CmdSignWithImage = 526,
+    CmdInsertTextSnippet = 527,
 
-    CmdLast = 525,
+    CmdLast = 527,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering
@@ -449,6 +451,8 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 #define kCmdArgOpacity StrL("opacity")
 #define kCmdArgOpenEdit StrL("openedit")
 #define kCmdArgTextSize StrL("textsize")
+// TextSnippets: the text a CmdInsertTextSnippet inserts
+#define kCmdArgText StrL("text")
 #define kCmdArgBorderWidth StrL("borderwidth")
 #define kCmdArgAlignment StrL("alignment")
 #define kCmdArgInteriorColor StrL("interiorcolor")

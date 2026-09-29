@@ -1537,6 +1537,64 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
     return true;
 }
 
+// arrow keys nudge the selected annotation by a pixel, Shift+arrow by 10
+bool NudgeSelectedAnnotation(MainWindow* win, WPARAM key) {
+    constexpr int kNudgeStep = 1;
+    constexpr int kNudgeStepShift = 10;
+
+    Point dir;
+    switch (key) {
+        case VK_LEFT:
+            dir = {-1, 0};
+            break;
+        case VK_RIGHT:
+            dir = {1, 0};
+            break;
+        case VK_UP:
+            dir = {0, -1};
+            break;
+        case VK_DOWN:
+            dir = {0, 1};
+            break;
+        default:
+            return false;
+    }
+
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
+    if (!dm || !AnnotationIsLive(annot) || win->annotationBeingDragged) {
+        return false;
+    }
+    if (!AnnotationCanBeMoved(annot->type) || annot->type == AnnotationType::Widget) {
+        return false;
+    }
+
+    // the screen step as a page-space offset (handles zoom and rotation);
+    // moving in page space avoids rounding back to the old spot at odd zooms
+    int step = DpiScale(IsShiftPressed() ? kNudgeStepShift : kNudgeStep);
+    int pageNo = PageNo(annot);
+    RectF ar = GetRect(annot);
+    Point from = dm->CvtToScreen(pageNo, PointF{ar.x, ar.y});
+    Point to{from.x + (dir.x * step), from.y + (dir.y * step)};
+    if (dm->GetPageNoByPoint(to) != pageNo) {
+        return true;
+    }
+    PointF pFrom = dm->CvtFromScreen(from, pageNo);
+    PointF pTo = dm->CvtFromScreen(to, pageNo);
+    RectF r = ar;
+    r.x += pTo.x - pFrom.x;
+    r.y += pTo.y - pFrom.y;
+    SetRect(annot, r);
+
+    NotifyAnnotationsChanged(tab);
+    MainWindowRerender(win);
+    ToolbarUpdateStateForWindow(win, true);
+    UpdateAnnotFilterToolbar(win);
+    RepositionAnnotEditToolbar(win);
+    return true;
+}
+
 static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted) {
     if (GetCapture() != win->hwndCanvas) {
         return;

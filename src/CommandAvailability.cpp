@@ -250,6 +250,7 @@ static UINT_PTR removeIfAnnotsNotSupported[] = {
     // range check doesn't catch it
     CmdCreateAnnotImageFromClipboard,
     CmdInsertImage,
+    CmdSignWithImage,
     CmdAnnotationHighlightBrush,
     CmdFindAnnotation,
     CmdCutAnnotation,
@@ -649,6 +650,14 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if (cmdId == CmdToggleMenuBar) {
         return ctx.allowToggleMenuBar ? CommandVisibility::Show : CommandVisibility::Hide;
+    }
+
+    // the bare command has no text: only the TextSnippets commands made from it
+    if (cmdId == CmdInsertTextSnippet) {
+        return CommandVisibility::Hide;
+    }
+    if (origCmdId == CmdInsertTextSnippet && !ctx.supportsAnnots) {
+        return CommandVisibility::Hide;
     }
 
     if (!ctx.supportsAnnots) {

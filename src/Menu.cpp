@@ -1039,6 +1039,10 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
         CmdInsertImage,
     },
     {
+        TrN("Si&gn With Image"),
+        CmdSignWithImage,
+    },
+    {
         TrN("&Caret"),
         CmdCreateAnnotCaret,
     },
@@ -1245,6 +1249,10 @@ static MenuDef menuDefDocumentOperations[] = {
     {
         TrN("Insert Image..."),
         CmdInsertImage,
+    },
+    {
+        TrN("Sign With Image"),
+        CmdSignWithImage,
     },
     {
         TrN("Sign Document..."),
@@ -1537,6 +1545,19 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
     AppendCommandsToMenu(m, cmds, isEnabled);
 }
 
+// TextSnippets: one is an item of its own, several get a submenu
+static void AppendTextSnippetsToMenu(HMENU m) {
+    Vec<CustomCommand*> cmds;
+    GetCommandsWithOrigId(cmds, CmdInsertTextSnippet);
+    if (len(cmds) < 2) {
+        AppendCommandsToMenu(m, cmds, true);
+        return;
+    }
+    HMENU sub = CreatePopupMenu();
+    AppendCommandsToMenu(sub, cmds, true);
+    AppendMenuW(m, MF_POPUP | MF_ENABLED, (UINT_PTR)sub, ToWStrTemp(Tr("Insert Te&xt")).s);
+}
+
 static void AppendExternalViewersToMenu(HMENU menuFile, Str filePath) {
     if (!CanAccessDisk() || (filePath && !file::Exists(filePath))) {
         return;
@@ -1685,6 +1706,12 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             addExternalViewersNext = true;
         }
 
+        // TextSnippets go right after Free Text
+        bool snippetsHere = menuDef == menuDefCreateAnnotUnderCursor && md.idOrSubmenu == CmdAnnotationHighlightBrush;
+        if (snippetsHere && ctx && ctx->supportsAnnots) {
+            AppendTextSnippetsToMenu(menu);
+        }
+
         // custom selection handlers go before the built-in translate / search submenus
         if (md.idOrSubmenu == (UINT_PTR)menuDefTranslateWith) {
             if (menuDef == menuDefMainSelection) {
@@ -1748,6 +1775,8 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             }
         }
         removeMenu |= ((subMenuDef == menuDefDebug) && !ShowDebugMenu());
+        // without Annotations.SignatureImage it would just be Insert Image
+        removeMenu |= !isSubMenu && cmdId == CmdSignWithImage && len(gSettings->annotations.signatureImage) == 0;
         if (removeMenu) {
             continue;
         }
@@ -2464,6 +2493,11 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         HwndSendCommand(win->hwndFrame, cmd->id);
         return;
     }
+    // a text snippet goes where the menu was opened
+    if (cmd && cmd->origId == CmdInsertTextSnippet) {
+        HwndSendCommand(win->hwndFrame, cmd->id, MAKELPARAM(x, y));
+        return;
+    }
 
     // handle in FrameOnCommand() in SumatraPDF.cpp
     if (CommandUsesContextMenuPoint(cmdId)) {
@@ -2616,7 +2650,8 @@ bool CommandUsesContextMenuPoint(int cmdId) {
         return true;
     }
     return cmdId == CmdDeleteAnnotation || cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdInsertImage ||
-           cmdId == CmdPasteAnnotation || cmdId == CmdCopyAnnotation || cmdId == CmdCutAnnotation;
+           cmdId == CmdSignWithImage || cmdId == CmdPasteAnnotation || cmdId == CmdCopyAnnotation ||
+           cmdId == CmdCutAnnotation;
 }
 
 // so that we can do free everything at exit

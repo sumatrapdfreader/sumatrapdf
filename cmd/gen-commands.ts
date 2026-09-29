@@ -336,6 +336,8 @@ const commandsRaw = [
     "CmdOpenFileWithSumatraFilePicker", "Open File With SumatraPDF File Picker...",
     "CmdSelectCurrentPage", "Select Current Page",
     "CmdZoomFitVisible", "Zoom: Fit Visible",
+    "CmdSignWithImage", "Sign With Image",
+    "CmdInsertTextSnippet", "Insert Text Snippet",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

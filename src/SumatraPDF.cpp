@@ -2337,6 +2337,9 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
 }
 
 static bool showTocByDefault(Str path, EngineBase* engine) {
+    if (gSettings->alwaysShowSidebar) {
+        return true;
+    }
     if (!gSettings->showToc) {
         return false;
     }
@@ -2525,7 +2528,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         } else if (fs->windowState == WIN_STATE_MINIMIZED) {
             showType = SW_MINIMIZE;
         }
-        showToc = fs->showToc;
+        showToc = fs->showToc || gSettings->alwaysShowSidebar;
         if (win->ctrl && win->presentation) {
             showToc = tab->showTocPresentation;
         }
@@ -13764,6 +13767,34 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
         } break;
 
+        case CmdInsertTextSnippet: {
+            // a free text box with the snippet's text, at the context menu
+            // point (lp) or else the cursor
+            if (!win || !tab || !dm || !cmd) {
+                return 0;
+            }
+            EngineBase* engine = dm->GetEngine();
+            if (!engine || !EngineSupportsAnnotations(engine)) {
+                return 0;
+            }
+            Point pt = HwndGetCursorPos(win->hwndCanvas);
+            if (lp != 0) {
+                pt = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+            }
+            int pageNo = dm->GetPageNoByPoint(pt);
+            if (pageNo < 0 && !SetPointToVisiblePage(dm, pt, pageNo)) {
+                return 0;
+            }
+            PointF ptOnPage = dm->CvtFromScreen(pt, pageNo);
+            AnnotCreateArgs args{AnnotationType::FreeText};
+            SetAnnotCreateArgs(args, cmd);
+            args.content = GetCommandStringArg(cmd, kCmdArgText, {});
+            SizeF sz = FreeTextPlacementPageSize(args);
+            args.hasRect = true;
+            args.rect = {ptOnPage.x, ptOnPage.y, sz.dx, sz.dy};
+            lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNo, ptOnPage, &args);
+        } break;
+
         case CmdCreateAnnotImageFromClipboard: {
             Pixmap* image = GetClipboardImageAsPixmap();
             if (!image) {
@@ -13778,6 +13809,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             FreePixmap(image);
         } break;
 
+        case CmdSignWithImage:
         case CmdInsertImage: {
             // File / document menu: pick a PNG (or other image) and stamp it on
             // the page — the Fill & Sign-style electronic signature (#1744).
@@ -13788,7 +13820,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!engine || !EngineSupportsAnnotations(engine)) {
                 return 0;
             }
-            TempStr path = PickImageFilePathTemp(win->hwndFrame);
+            // Sign With Image stamps Annotations.SignatureImage without asking
+            TempStr path{};
+            Str sigPath = gSettings->annotations.signatureImage;
+            if (cmdId == CmdSignWithImage && len(sigPath) > 0 && file::Exists(sigPath)) {
+                path = str::DupTemp(sigPath);
+            }
+            if (len(path) == 0) {
+                path = PickImageFilePathTemp(win->hwndFrame);
+            }
             if (len(path) == 0) {
                 return 0;
             }
@@ -16259,6 +16299,16 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
     if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsAltPressed() && !IsShiftPressed()) {
         if (KeyboardLinkFollowingCapturesKey(FindMainWindowByHwnd(msg.hwnd), msg.wParam)) {
             return false;
+        }
+    }
+
+    // arrows nudge a selected annotation instead of scrolling. Only for the
+    // canvas / frame: the in-place text editor keeps its caret keys
+    if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsAltPressed()) {
+        MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
+        bool isFrameOrCanvas = win && (msg.hwnd == win->hwndFrame || msg.hwnd == win->hwndCanvas);
+        if (isFrameOrCanvas && NudgeSelectedAnnotation(win, msg.wParam)) {
+            return true;
         }
     }
 

@@ -129,6 +129,10 @@ import { testit as issue6252 } from "./issue-6252.ts";
 import { testit as installerDesktopShortcut } from "./installer-desktop-shortcut.ts";
 import { testit as issue6248 } from "./issue-6248.ts";
 import { testit as issue6256 } from "./issue-6256.ts";
+import { testit as annotNudge } from "./annot-nudge.ts";
+import { testit as textSnippets } from "./text-snippets.ts";
+import { testit as signWithImage } from "./sign-with-image.ts";
+import { testit as alwaysShowSidebar } from "./always-show-sidebar.ts";
 import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
 import { testit as issue4753 } from "./issue-4753.ts";
 import { testit as issue4055 } from "./issue-4055.ts";
@@ -393,6 +397,10 @@ export const tests: NamedTest[] = [
   ["installer-desktop-shortcut", installerDesktopShortcut],
   ["issue-6248", issue6248],
   ["issue-6256", issue6256],
+  ["annot-nudge", annotNudge],
+  ["text-snippets", textSnippets],
+  ["sign-with-image", signWithImage],
+  ["always-show-sidebar", alwaysShowSidebar],
   ["issue-6133", issue6133],
   ["issue-6184", issue6184],
   ["image-only-palette-items", imageOnlyPaletteItems],

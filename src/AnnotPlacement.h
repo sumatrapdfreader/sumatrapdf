@@ -39,6 +39,7 @@ void AnnotationPlacementOnSelectionStop(MainWindow*);
 
 void PaintAnnotationPlacement(MainWindow*, HDC, DisplayModel*);
 bool AnnotationPlacementFillCreate(MainWindow*, AnnotationType, Point&, int&, PointF&, PointF&, AnnotCreateArgs&);
+SizeF FreeTextPlacementPageSize(const AnnotCreateArgs&);
 
 void DeleteAnnotationPlacementCursors();
 TempStr AnnotationPlacementStateTemp(MainWindow*);
