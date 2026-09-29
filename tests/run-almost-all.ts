@@ -127,6 +127,7 @@ import { testit as issue6247 } from "./issue-6247.ts";
 import { testit as issue6250 } from "./issue-6250.ts";
 import { testit as issue6252 } from "./issue-6252.ts";
 import { testit as installerDesktopShortcut } from "./installer-desktop-shortcut.ts";
+import { testit as issue6248 } from "./issue-6248.ts";
 import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
 import { testit as issue4753 } from "./issue-4753.ts";
 import { testit as issue4055 } from "./issue-4055.ts";
@@ -389,6 +390,7 @@ export const tests: NamedTest[] = [
   ["issue-6250", issue6250],
   ["issue-6252", issue6252],
   ["installer-desktop-shortcut", installerDesktopShortcut],
+  ["issue-6248", issue6248],
   ["issue-6133", issue6133],
   ["issue-6184", issue6184],
   ["image-only-palette-items", imageOnlyPaletteItems],

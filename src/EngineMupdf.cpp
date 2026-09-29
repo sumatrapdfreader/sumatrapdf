@@ -8971,7 +8971,7 @@ bool IsEngineMupdfSupportedFileType(FileType kind) {
     if (kind == FileType::Svg) {
         return true;
     }
-    if (kind == FileType::Xps) {
+    if (kind == FileType::Xps || IsOfficeFileType(kind)) {
         return true;
     }
     if (kind == FileType::Txt) {

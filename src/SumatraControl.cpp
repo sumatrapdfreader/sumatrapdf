@@ -808,6 +808,10 @@ static TempStr DocumentPropertiesResultTemp(int* exitCodeOut) {
         out.Append(StrL("="));
         out.Append(props[i].val);
     }
+    // what Save As offers, and the sniffed type Properties shows
+    out.Append(fmt("\ndefaultExt=%s", engine->defaultExt));
+    FileType ft = GuessFileTypeFromFile(engine->FilePath());
+    out.Append(fmt("\nfileTypeExt=%s", GetExtForFileTypeTemp(ft)));
     return finish(ToStrTemp(out), 0);
 }
 

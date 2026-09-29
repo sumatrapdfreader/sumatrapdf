@@ -135,7 +135,22 @@ TempStr GetExtForFileTypeTemp(FileType ft) {
     if (idx >= 0) {
         return SeqStrByIndex(gFileExts, idx);
     }
-    return {};
+    // Office types aren't in the extension table: name-based lists (Browse
+    // Files in Folder, Explorer preview) shouldn't claim Office files
+    switch (ft) {
+        case FileType::Docx:
+            return StrL(".docx");
+        case FileType::Xlsx:
+            return StrL(".xlsx");
+        case FileType::Pptx:
+            return StrL(".pptx");
+        default:
+            return {};
+    }
+}
+
+bool IsOfficeFileType(FileType ft) {
+    return ft == FileType::Docx || ft == FileType::Xlsx || ft == FileType::Pptx;
 }
 
 int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
@@ -1273,6 +1288,21 @@ static bool IsEpubArchive(Archive* archive) {
     return str::Eq(mtStr, StrL("application/x-ibooks+zip"));
 }
 
+// Office Open XML has the XPS container (_rels/.rels) too; its main part
+// tells which kind it is
+static FileType OfficeArchiveType(Archive* archive) {
+    if (archive->GetFileId(StrL("word/document.xml")) >= 0) {
+        return FileType::Docx;
+    }
+    if (archive->GetFileId(StrL("xl/workbook.xml")) >= 0) {
+        return FileType::Xlsx;
+    }
+    if (archive->GetFileId(StrL("ppt/presentation.xml")) >= 0) {
+        return FileType::Pptx;
+    }
+    return FileType::Unknown;
+}
+
 static bool IsXpsArchive(Archive* archive) {
     bool res = archive->GetFileId(StrL("_rels/.rels")) >= 0 || archive->GetFileId(StrL("_rels/.rels/[0].piece")) >= 0 ||
                archive->GetFileId(StrL("_rels/.rels/[0].last.piece")) >= 0;
@@ -1323,6 +1353,10 @@ FileType GuessFileTypeFromFile(Str path) {
     }
     if (IsXpsArchive(archive)) {
         res = FileType::Xps;
+        FileType office = OfficeArchiveType(archive);
+        if (office != FileType::Unknown) {
+            res = office;
+        }
     }
     if (IsEpubArchive(archive)) {
         res = FileType::Epub;

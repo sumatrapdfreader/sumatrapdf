@@ -6223,6 +6223,12 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
     auto ext = ctrl->GetDefaultFileExt();
     if (str::EqI(ext, StrL(".xps"))) {
         fileFilter.Append(Tr("XPS documents"));
+    } else if (str::EqI(ext, StrL(".docx"))) {
+        fileFilter.Append(Tr("Word documents"));
+    } else if (str::EqI(ext, StrL(".xlsx"))) {
+        fileFilter.Append(Tr("Excel workbooks"));
+    } else if (str::EqI(ext, StrL(".pptx"))) {
+        fileFilter.Append(Tr("PowerPoint presentations"));
     } else if (str::EqI(ext, StrL(".epub"))) { // NOLINT(bugprone-branch-clone): see kindEngineEpub below
         // .epub can be handled by kindEngineMupdf
         fileFilter.Append(Tr("EPUB ebooks"));

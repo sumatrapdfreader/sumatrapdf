@@ -285,7 +285,7 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     EngineBase* engine = nullptr;
     // markdown has no native SumatraPDF engine; always use mupdf (cmark-gfm),
     // regardless of gEnableEpubWithPdfEngine.
-    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown) {
+    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown || IsOfficeFileType(kind)) {
         engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
         return engine;
     }
