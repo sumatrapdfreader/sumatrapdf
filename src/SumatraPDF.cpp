@@ -16953,7 +16953,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
 
 static Str kInstallerHelpTmpl() {
     return StrL(R"(${appName} installer options:
-[-s] [-d <path>] [-with-filter] [-with-preview] [-x]
+[-s] [-d <path>] [-with-filter] [-with-preview] [-no-desktop-shortcut] [-x]
 
 -s
     installs ${appName} silently (without user interaction)
@@ -16963,6 +16963,8 @@ static Str kInstallerHelpTmpl() {
     install search filter
 -with-preview
     install shell preview
+-no-desktop-shortcut
+    don't create a desktop shortcut
 -x
     extracts the files, doesn't install
 -log

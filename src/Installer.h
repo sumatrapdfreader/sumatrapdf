@@ -5,6 +5,9 @@ struct VirtRoot;
 
 constexpr int kInstallerWinDy = 340;
 
+// DWORD 0|1 in the uninstall key: whether the install created a desktop shortcut
+#define kRegDesktopShortcut "DesktopShortcut"
+
 enum class PreviousInstallationType {
     None = 0,
     User = 1,
@@ -18,6 +21,8 @@ struct PreviousInstallationInfo {
     bool searchFilterInstalled = false;
     bool previewInstalled = false;
     bool allUsers = false;
+    // installs before the DesktopShortcut registry value always created one
+    bool desktopShortcut = true;
 
     PreviousInstallationInfo() = default;
     ~PreviousInstallationInfo();

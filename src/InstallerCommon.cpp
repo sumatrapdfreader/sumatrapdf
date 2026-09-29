@@ -283,6 +283,12 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
         logf("GetPreviousInstallInfo: dir under Program Files with only HKCU key; forcing allUsers\n");
         info->allUsers = true;
     }
+    DWORD desktopShortcut = 1;
+    HKEY hkey = dirLM ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+    if (ReadRegDWORD(hkey, regPathUninst, StrL(kRegDesktopShortcut), desktopShortcut)) {
+        info->desktopShortcut = desktopShortcut != 0;
+    }
+    logf("GetPreviousInstallInfo: desktop shortcut: %d\n", (int)info->desktopShortcut);
     logf("GetPreviousInstallInfo: dir '%s', search filter: %d, preview: %d, typ: %d, needsElevation: %d\n",
          info->installationDir, (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ,
          (int)info->allUsers);

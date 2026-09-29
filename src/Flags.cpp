@@ -39,7 +39,7 @@ enum class Arg {
     UpgradeFrom = 80, ForTesting = 81, QuickLook = 82, QuickLookAgent = 83,
     WindowPos = 84, DumpExif = 85, DumpChm = 86, Control = 87,
     UnitTests = 88, ForAi = 89, NewWindowTabs = 90, HtmlBackend = 91,
-    StartPerfLog = 92, LogPerfFile = 93,
+    StartPerfLog = 92, LogPerfFile = 93, NoDesktopShortcut = 94,
 };
 
 static SeqStrings gArgNames =
@@ -66,7 +66,7 @@ static SeqStrings gArgNames =
     "upgrade-from\0" "for-testing\0" "quicklook\0" "quicklook-agent\0"
     "window-pos\0" "dump-exif\0" "dump-chm\0" "dbg-control\0"
     "unit-tests\0" "for-ai\0" "new-window-tabs\0" "html-backend\0"
-    "start-perf-log\0" "log-perf-file\0";
+    "start-perf-log\0" "log-perf-file\0" "no-desktop-shortcut\0";
 // clang-format on
 // @gen-end flags
 
@@ -495,6 +495,10 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         }
         if (arg == Arg::WithPreview) {
             i.withPreview = true;
+            continue;
+        }
+        if (arg == Arg::NoDesktopShortcut) {
+            i.noDesktopShortcut = true;
             continue;
         }
         if (arg == Arg::Rand) {

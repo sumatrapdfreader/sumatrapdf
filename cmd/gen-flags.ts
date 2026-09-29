@@ -97,6 +97,7 @@ const args = [
     "HtmlBackend", "html-backend",
     "StartPerfLog", "start-perf-log",
     "LogPerfFile", "log-perf-file",
+    "NoDesktopShortcut", "no-desktop-shortcut",
 ];
 
 function generateCode(): string {

@@ -122,6 +122,7 @@ struct Flags {
     bool uninstall = false;
     bool withFilter = false;
     bool withPreview = false;
+    bool noDesktopShortcut = false;
     bool justExtractFiles = false;
     bool log = false;
     bool startPerfLog = false; // -start-perf-log (profile builds)

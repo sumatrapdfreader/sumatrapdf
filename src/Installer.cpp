@@ -72,6 +72,7 @@ struct InstallerWnd {
     Checkbox* checkboxForAllUsers = nullptr;
     Checkbox* checkboxRegisterSearchFilter = nullptr;
     Checkbox* checkboxRegisterPreview = nullptr;
+    Checkbox* checkboxDesktopShortcut = nullptr;
     int currProgress = 0;
     Progress* progressBar = nullptr;
     Button* btnExit = nullptr;
@@ -1135,12 +1136,16 @@ static bool CreateAppShortcut(int csidl, Str installedExePath) {
 // CSIDL_PROGRAMS - Programs item in Start menu for current user. Settings\username\Start Menu\Programs
 static int shortcutDirs[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_PROGRAMS, CSIDL_DESKTOP, CSIDL_PROGRAMS};
 
-static void CreateAppShortcuts(bool forAllUsers, Str installedExePath) {
-    logf("CreateAppShortcuts(forAllUsers=%d)\n", (int)forAllUsers);
+static void CreateAppShortcuts(bool forAllUsers, bool withDesktop, Str installedExePath) {
+    logf("CreateAppShortcuts(forAllUsers=%d, withDesktop=%d)\n", (int)forAllUsers, (int)withDesktop);
     size_t start = forAllUsers ? 0 : 2;
     size_t end = forAllUsers ? 2 : dimof(shortcutDirs);
     for (size_t i = start; i < end; i++) {
         int csidl = shortcutDirs[i];
+        bool isDesktop = csidl == CSIDL_COMMON_DESKTOPDIRECTORY || csidl == CSIDL_DESKTOP;
+        if (isDesktop && !withDesktop) {
+            continue;
+        }
         CreateAppShortcut(csidl, installedExePath);
     }
 }
@@ -1263,7 +1268,7 @@ static void InstallerThread(Flags* cli) {
         RegisterPreviewer(allUsers, cli->installDir);
     }
 
-    CreateAppShortcuts(allUsers, installedExePath);
+    CreateAppShortcuts(allUsers, !cli->noDesktopShortcut, installedExePath);
 
     // consider installation a success from here on
     // (still warn, if we've failed to create the uninstaller, though)
@@ -1273,6 +1278,9 @@ static void InstallerThread(Flags* cli) {
     if (!ok) {
         NotifyFailed(Tr("Failed to write the uninstallation information to the registry"));
     }
+    // remembered for the next upgrade (GetPreviousInstallInfo)
+    LoggedWriteRegDWORD(key, GetRegPathUninstTemp(StrL(kAppName)), StrL(kRegDesktopShortcut),
+                        cli->noDesktopShortcut ? 0 : 1);
 
     ok = WriteExtendedFileExtensionInfo(key, installedExePath);
     if (!ok) {
@@ -1318,6 +1326,9 @@ static void RestartElevatedForAllUsers(Flags* cli) {
     }
     if (cli->withPreview) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -with-preview"));
+    }
+    if (cli->noDesktopShortcut) {
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -no-desktop-shortcut"));
     }
     if (cli->silent) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -silent"));
@@ -1387,6 +1398,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     DeleteWnd(&wnd->checkboxForAllUsers);
     DeleteWnd(&wnd->checkboxRegisterSearchFilter);
     DeleteWnd(&wnd->checkboxRegisterPreview);
+    DeleteWnd(&wnd->checkboxDesktopShortcut);
     DeleteWnd(&wnd->btnOptions);
 
     SetMsg(Tr("Installation in progress..."), kColorMsgInstallation);
@@ -1446,6 +1458,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     cli->withFilter = wnd->checkboxRegisterSearchFilter && wnd->checkboxRegisterSearchFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
     cli->withPreview = wnd->checkboxRegisterPreview && wnd->checkboxRegisterPreview->IsChecked();
+    cli->noDesktopShortcut = !wnd->checkboxDesktopShortcut->IsChecked();
 
     // Program Files always needs machine-style install + elevation
     if (IsPathUnderProgramFiles(cli->installDir) && !cli->allUsers) {
@@ -1683,6 +1696,7 @@ static void UpdateUIForOptionsState(InstallerWnd* wnd) {
     ShowAndEnable(wnd->checkboxForAllUsers, showOpts);
     ShowAndEnable(wnd->checkboxRegisterSearchFilter, showOpts);
     ShowAndEnable(wnd->checkboxRegisterPreview, showOpts);
+    ShowAndEnable(wnd->checkboxDesktopShortcut, showOpts);
 
     auto* btnOptions = wnd->btnOptions;
     //[ ACCESSKEY_GROUP Installer
@@ -1857,6 +1871,14 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     }
 
     {
+        bool isChecked = !cli->noDesktopShortcut;
+        if (!isChecked) {
+            showOptions = true;
+        }
+        wnd->checkboxDesktopShortcut = CreateCheckbox(hwnd, Tr("Install &desktop shortcut"), isChecked);
+    }
+
+    {
         Str s = Tr("Install for all users");
         bool isChecked = cli->allUsers;
         if (isChecked) {
@@ -1911,6 +1933,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     opts->AddChild(new Spacer(0, gap + margin));
     addCheck(wnd->checkboxForAllUsers, opts);
     addCheck(wnd->checkboxRegisterSearchFilter, opts);
+    addCheck(wnd->checkboxDesktopShortcut, opts);
     addCheck(wnd->checkboxRegisterPreview, opts);
     wnd->optionsBox = new Padding(opts, Insets{0, margin, 0, margin});
 
@@ -1938,7 +1961,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     wnd->showOptions = showOptions;
     UpdateUIForOptionsState(wnd);
 
-    HWND hwnds[8] = {};
+    HWND hwnds[10] = {};
     int nHwnds = 0;
     if (showInstallButton) {
         hwnds[nHwnds++] = wnd->btnInstall->hwnd;
@@ -1949,6 +1972,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     if (wnd->checkboxRegisterSearchFilter) {
         hwnds[nHwnds++] = wnd->checkboxRegisterSearchFilter->hwnd;
     }
+    hwnds[nHwnds++] = wnd->checkboxDesktopShortcut->hwnd;
     if (wnd->checkboxRegisterPreview) {
         hwnds[nHwnds++] = wnd->checkboxRegisterPreview->hwnd;
     }
@@ -2376,6 +2400,7 @@ int RunInstaller() {
     gCliNew.allUsers = gCli->allUsers;
     gCliNew.withFilter = gCli->withFilter;
     gCliNew.withPreview = gCli->withPreview;
+    gCliNew.noDesktopShortcut = gCli->noDesktopShortcut;
     gCliNew.silent = gCli->silent;
     gCliNew.runInstallNow = gCli->runInstallNow;
     gCliNew.fastInstall = gCli->fastInstall;
@@ -2407,6 +2432,9 @@ int RunInstaller() {
         }
         if (!gCliNew.withPreview) {
             gCliNew.withPreview = gPrevInstall.previewInstalled;
+        }
+        if (!gCliNew.noDesktopShortcut) {
+            gCliNew.noDesktopShortcut = !gPrevInstall.desktopShortcut;
         }
     }
 
