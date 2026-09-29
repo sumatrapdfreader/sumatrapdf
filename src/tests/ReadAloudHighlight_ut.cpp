@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 
+#include "ChapterTable.h"
 #include "ReadAloud.h"
 
 // must be last due to assert() over-write

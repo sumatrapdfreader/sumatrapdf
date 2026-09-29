@@ -440,6 +440,31 @@ int DisplayModel::RemapPageNo(int oldPageNo) {
     return pageNo >= 1 ? pageNo : kInvalidPageNo;
 }
 
+// pageNo of loc in the current pagesInfo, kInvalidPageNo if that page isn't
+// laid out (e.g. its chapter is a placeholder after a restyle). Unlike
+// PageNoFromLocation() it never lays out a chapter, so it's safe while painting
+int DisplayModel::FindPageNoByLoc(Location loc) const {
+    if (!loc.IsValid() || !pagesInfo) {
+        return kInvalidPageNo;
+    }
+    int lo = 0;
+    int hi = pageCount - 1;
+    while (lo <= hi) {
+        int mid = (lo + hi) / 2;
+        Location m = pagesInfo[mid].loc;
+        if (m == loc) {
+            return mid + 1;
+        }
+        bool before = m.chapter < loc.chapter || (m.chapter == loc.chapter && m.page < loc.page);
+        if (before) {
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return kInvalidPageNo;
+}
+
 static bool IsDisplayModelValid(DisplayModel* dm) {
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
