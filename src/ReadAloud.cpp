@@ -2779,6 +2779,10 @@ static bool ReadAloudGetCurrentWordScreenRect(MainWindow* win, Rect* rectOut) {
         if (!ReadAloudByteLocHasRect(loc)) {
             continue;
         }
+        // an EPUB restyle collapses the page count under the map's page numbers
+        if (!dm->GetPageInfo(loc.pageNo)) {
+            continue;
+        }
         Rect sr = dm->CvtToScreen(loc.pageNo, ToRectF(ReadAloudByteLocToRect(loc)));
         if (!hasRect) {
             unionRect = sr;

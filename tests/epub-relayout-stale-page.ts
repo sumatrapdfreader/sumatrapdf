@@ -146,7 +146,7 @@ function chapterHtml(n: number): string {
   );
 }
 
-function makeEpub(): Buffer {
+export function makeEpub(): Buffer {
   const enc = new TextEncoder();
   const container =
     `<?xml version="1.0"?>\n<container version="1.0" ` +

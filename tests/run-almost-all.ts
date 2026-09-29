@@ -147,6 +147,7 @@ import { testit as showChaptersInEbooks } from "./show-chapters-in-ebooks.ts";
 import { testit as embeddedImageAttachment } from "./embedded-image-attachment.ts";
 import { testit as ttsEngineCrashRecovery } from "./tts-engine-crash-recovery.ts";
 import { testit as readAloudCloseDuringSpeak } from "./read-aloud-close-during-speak.ts";
+import { testit as readAloudRestyleStalePage } from "./read-aloud-restyle-stale-page.ts";
 import { testit as lazyTabStateAfterSave } from "./lazy-tab-state-after-save.ts";
 import { testit as lazyTabSelectPaint } from "./lazy-tab-select-paint.ts";
 import { testit as pendingTabFreedSessionState } from "./pending-tab-freed-session-state.ts";
@@ -395,6 +396,7 @@ export const tests: NamedTest[] = [
   ["embedded-image-attachment", embeddedImageAttachment],
   ["tts-engine-crash-recovery", ttsEngineCrashRecovery],
   ["read-aloud-close-during-speak", readAloudCloseDuringSpeak],
+  ["read-aloud-restyle-stale-page", readAloudRestyleStalePage],
   ["lazy-tab-state-after-save", lazyTabStateAfterSave],
   ["lazy-tab-select-paint", lazyTabSelectPaint],
   ["pending-tab-freed-session-state", pendingTabFreedSessionState],
