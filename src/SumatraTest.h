@@ -45,3 +45,4 @@ TempStr RenderSelectionsResultTemp(int* exitCodeOut = nullptr);
 TempStr ToggleFormButtonResultTemp(int pageNo, int idx, int* exitCodeOut = nullptr);
 void DiscardUnsavedChangesInAllTabs();
 TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut = nullptr);
+TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut = nullptr);

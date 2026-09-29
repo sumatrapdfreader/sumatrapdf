@@ -5,6 +5,7 @@
 #include "base/File.h"
 #include "base/Pixmap.h"
 #include "base/ByteReaderWriter.h"
+#include "base/Win.h"
 
 extern "C" {
 #include <mupdf/fitz.h>
@@ -43,6 +44,7 @@ extern "C" {
 #include <chm.h>
 #include "EbookBase.h"
 #include "ChmFile.h"
+#include "RefHover.h"
 #include "SumatraTest.h"
 
 // internal LZX test hook, defined in chm.c but not exposed in chm.h
@@ -2814,4 +2816,36 @@ TempStr RenderSelectionsResultTemp(int* exitCodeOut) {
         *exitCodeOut = 0;
     }
     return res;
+}
+
+// Citation hover popup state. action "show" first opens the popup for the link
+// at canvas point (x, y), as hovering does: a test's cursor can't hold a hover.
+// Used by tests/issue-6252.ts.
+TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (str::Eq(action, StrL("show")) && dm) {
+        if (!win->refHover) {
+            win->refHover = RefHoverCreate(win->hwndCanvas);
+        }
+        win->refHover->ctrl = win->ctrl;
+        win->refHover->linkHandler = win->linkHandler;
+        IPageElement* el = dm->GetElementAtPos({x, y}, nullptr);
+        if (!RefHoverScheduleLink(win->refHover, win->hwndCanvas, dm, x, y, el, 0)) {
+            if (exitCodeOut) {
+                *exitCodeOut = 1;
+            }
+            return fmt("ERROR no-link x=%d y=%d", x, y);
+        }
+    }
+    RefHoverState* s = win ? win->refHover : nullptr;
+    if (!s || !s->hwndPopup || !HwndIsVisible(s->hwndPopup)) {
+        return fmt("OK visible=0");
+    }
+    auto& d = s->displayed;
+    return fmt("OK visible=1 hwnd=%d page=%d y=%d zoom=%d", (int)(INT_PTR)s->hwndPopup, d.destPage, (int)d.region.y,
+               (int)(d.userZoom * 100));
 }

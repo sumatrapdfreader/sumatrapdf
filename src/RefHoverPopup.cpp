@@ -101,6 +101,14 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     if (msg == WM_ERASEBKGND) {
         return 1;
     }
+    // the cursor moved onto the popup: the wheel is for it, no modifier needed
+    if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL) {
+        RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+        if (s && s->hitEngine) {
+            RefHoverOnWheel(s, s->hitEngine, msg, wp);
+        }
+        return 0;
+    }
     if (msg == WM_LBUTTONDOWN) {
         RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
         if (s) {
@@ -348,4 +356,21 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     }
 
     return RefHoverRerenderDisplayedRegion(s, engine, page, region);
+}
+
+// A wheel message meant for the popup: Ctrl + wheel zooms, any other wheel
+// scrolls. So does a horizontal wheel, which is how mouse software often sends
+// Shift + wheel (issue #6252); right scrolls down, as Shift + wheel down does.
+void RefHoverOnWheel(RefHoverState* s, EngineBase* engine, UINT msg, WPARAM wp) {
+    int delta = GET_WHEEL_DELTA_WPARAM(wp);
+    if (msg == WM_MOUSEHWHEEL) {
+        RefHoverWheelScroll(s, engine, -delta);
+        return;
+    }
+    bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
+    if (isCtrl) {
+        RefHoverWheelZoom(s, engine, delta);
+        return;
+    }
+    RefHoverWheelScroll(s, engine, delta);
 }

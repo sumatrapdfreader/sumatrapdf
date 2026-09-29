@@ -50,6 +50,25 @@ static Rect PageScreenRectToScreen(HWND hwndCanvas, DisplayModel* dm, int srcPag
     return pageScreenRect;
 }
 
+// schedules the popup for el, an internal link at canvas point (x, y)
+bool RefHoverScheduleLink(RefHoverState* s, HWND hwndCanvas, DisplayModel* dm, int x, int y, IPageElement* el,
+                          int delayMs) {
+    if (!RefHoverIsInternalLink(el, dm)) {
+        return false;
+    }
+    IPageDestination* dest = el->AsLink();
+    int destPage = PageDestGetPageNo(dest);
+    RectF destPt = PageDestGetDestPoint(dest);
+    float destZoom = PageDestGetZoom(dest);
+    Point screenPt = HwndClientToScreen(hwndCanvas, Point(x, y));
+    int srcPage = el->GetPageNo();
+    RectF srcRect = el->GetRect();
+    Rect pageScreenRect = PageScreenRectToScreen(hwndCanvas, dm, srcPage);
+    RefHoverSchedule(s, hwndCanvas, delayMs, screenPt, destPage, destPt.x, destPt.y, destZoom, srcPage, srcRect,
+                     pageScreenRect);
+    return true;
+}
+
 void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs) {
     if (hoverDelayMs < 0) {
@@ -69,18 +88,8 @@ void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController
     s->linkHandler = linkHandler;
 
     bool scheduled = false;
-    if (RefHoverIsInternalLink(el, dm)) {
+    if (RefHoverScheduleLink(s, hwndCanvas, dm, x, y, el, hoverDelayMs)) {
         TrackMouseLeave(hwndCanvas);
-        IPageDestination* dest = el->AsLink();
-        int destPage = PageDestGetPageNo(dest);
-        RectF destPt = PageDestGetDestPoint(dest);
-        float destZoom = PageDestGetZoom(dest);
-        Point screenPt = HwndClientToScreen(hwndCanvas, Point(x, y));
-        int srcPage = el->GetPageNo();
-        RectF srcRect = el->GetRect();
-        Rect pageScreenRect = PageScreenRectToScreen(hwndCanvas, dm, srcPage);
-        RefHoverSchedule(s, hwndCanvas, hoverDelayMs, screenPt, destPage, destPt.x, destPt.y, destZoom, srcPage,
-                         srcRect, pageScreenRect);
         scheduled = true;
     } else if (srcPageNo > 0) {
         PointF pagePtF = dm->CvtFromScreen({x, y}, srcPageNo);

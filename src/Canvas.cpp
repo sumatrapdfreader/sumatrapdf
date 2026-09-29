@@ -4407,6 +4407,42 @@ static void OnWheelPageTurn(MainWindow* win) {
     win->wheelPageTurnTime = TimeGet();
 }
 
+// Mouse-wheel on the citation-hover popup (cursor still on the citation
+// link that opened it; on the popup itself, the popup gets the wheel).
+//   shift+wheel → scroll popup content (rolls over to prev/next page)
+//   ctrl+wheel  → zoom popup content
+//   plain wheel → falls through to scroll the main document, as if the
+//                 popup weren't there (modifier-less wheel scrolling a
+//                 document shouldn't get hijacked by the hover popup)
+//   horizontal wheel → scroll popup content: mouse software often sends
+//                 shift+wheel as one (issue #6252)
+static bool RefHoverTakesWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
+    RefHoverState* s = win->refHover;
+    if (!s || !s->hwndPopup || !HwndIsVisible(s->hwndPopup)) {
+        return false;
+    }
+    bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
+    bool isShift = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
+    if (msg == WM_MOUSEWHEEL && !isCtrl && !isShift) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    int srcPage = s->displayed.srcPage;
+    if (!dm || !dm->ValidPageNo(srcPage)) {
+        return false;
+    }
+    // Is the wheel (lp, screen coordinates) on the link that opened the popup?
+    // Test its kept rect: the engine's link lookup fails while the popup
+    // renders, which sent the next wheel notches to the document.
+    Point pt = HwndScreenToClient(win->hwndCanvas, {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)});
+    PointF pagePt = dm->CvtFromScreen(pt, srcPage);
+    if (!s->displayed.srcRect.Contains(pagePt)) {
+        return false;
+    }
+    RefHoverOnWheel(s, dm->GetEngine(), msg, wp);
+    return true;
+}
+
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win->uiState.tocVisible && HwndIsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
@@ -4425,33 +4461,8 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         gInMouseWheelScroll = wasInMouseWheelScroll;
     };
 
-    // Mouse-wheel on the citation-hover popup (cursor still on the citation
-    // link that opened it). Avoids moving the cursor onto the popup itself,
-    // which would dismiss the hover.
-    //   shift+wheel → scroll popup content (rolls over to prev/next page)
-    //   ctrl+wheel  → zoom popup content
-    //   plain wheel → falls through to scroll the main document, as if the
-    //                 popup weren't there (modifier-less wheel scrolling a
-    //                 document shouldn't get hijacked by the hover popup)
-    if (win->refHover && win->refHover->hwndPopup && HwndIsVisible(win->refHover->hwndPopup)) {
-        bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
-        bool isShift = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
-        if (isCtrl || isShift) {
-            DisplayModel* dmHover = win->AsFixed();
-            if (dmHover) {
-                Point pt = HwndGetCursorPos(win->hwndCanvas);
-                IPageElement* elHover = dmHover->GetElementAtPos(pt, nullptr);
-                if (RefHoverIsInternalLink(elHover, dmHover)) {
-                    short delta = GET_WHEEL_DELTA_WPARAM(wp);
-                    if (isCtrl) {
-                        RefHoverWheelZoom(win->refHover, dmHover->GetEngine(), delta);
-                    } else {
-                        RefHoverWheelScroll(win->refHover, dmHover->GetEngine(), delta);
-                    }
-                    return 0;
-                }
-            }
-        }
+    if (RefHoverTakesWheel(win, msg, wp, lp)) {
+        return 0;
     }
 
     // ignore wheel events while middle-button drag-scrolling is active
@@ -4747,6 +4758,10 @@ static LRESULT CanvasOnMouseHWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM 
         LRESULT res = SendMessageW(win->tocTreeView->hwnd, msg, wp, lp);
         gWheelMsgRedirect = false;
         return res;
+    }
+
+    if (RefHoverTakesWheel(win, msg, wp, lp)) {
+        return 0;
     }
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);

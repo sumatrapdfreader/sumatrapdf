@@ -914,6 +914,7 @@ enum class ControlCmd : u16 {
     TestRenderSelections = 108,
     TestToggleFormButton = 109,
     ResolveUnsavedChanges = 110,
+    TestRefHover = 111,
 };
 
 enum class ControlArgType : u16 {
@@ -1185,6 +1186,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str path = StringArg(req, 1);
             int exitCode = 0;
             Str res = ResolveUnsavedChangesResultTemp(action, path, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRefHover: {
+            // optional: "show", x, y (canvas point of a link)
+            Str action = StringArg(req, 0);
+            i32 x = 0;
+            i32 y = 0;
+            IntArg(req, 1, x);
+            IntArg(req, 2, y);
+            int exitCode = 0;
+            Str res = RefHoverResultTemp(action, x, y, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

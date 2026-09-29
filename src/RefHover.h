@@ -133,6 +133,8 @@ constexpr UINT_PTR kRefHoverHideTimerID = 10;
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 void RefHoverDestroy(RefHoverState* s);
 bool RefHoverIsInternalLink(IPageElement* el, DisplayModel* dm);
+bool RefHoverScheduleLink(RefHoverState* s, HWND hwndCanvas, DisplayModel* dm, int x, int y, IPageElement* el,
+                          int delayMs);
 void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs);
 void RefHoverOnCanvasMouseLeave(RefHoverState* s, HWND hwndCanvas, int hoverDelayMs);
@@ -147,6 +149,7 @@ void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest);
 void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom);
 bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta);
 bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta);
+void RefHoverOnWheel(RefHoverState* s, EngineBase* engine, UINT msg, WPARAM wp);
 
 //--- layout detection (RefHoverDetect.cpp)
 
