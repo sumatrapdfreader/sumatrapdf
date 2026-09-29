@@ -142,6 +142,8 @@ EXPORTS
 
 	pdf_can_be_saved_incrementally
 
+	pdf_has_unsaved_sigs
+
 	pdf_annot_page
 
 	pdf_drop_page_tree
@@ -800,6 +802,8 @@ EXPORTS
 	fz_drop_outline
 
 
+
+	fz_new_output
 
 	fz_new_output_with_buffer
 

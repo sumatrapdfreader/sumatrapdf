@@ -730,8 +730,8 @@ static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
     return res;
 }
 
-static fz_stream* FzStreamFromData(fz_context* ctx, const u8* data, int size) {
-    fz_stream* stm = nullptr;
+// a copy of data in a buffer owned by mupdf, nullptr on failure
+static fz_buffer* FzBufferFromData(fz_context* ctx, const u8* data, int size) {
     // TODO: we copy so that the memory ends up in chunk allocated
     // by libsumatrapdf so that it works across dll boundaries.
     // We can either use  fz_new_buffer_from_shared_data
@@ -741,11 +741,30 @@ static fz_stream* FzStreamFromData(fz_context* ctx, const u8* data, int size) {
     if (!dataCopy) {
         return nullptr;
     }
+    fz_buffer* buf = nullptr;
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_data(ctx, (u8*)dataCopy, size);
+    }
+    fz_catch(ctx) {
+        fz_free(ctx, dataCopy);
+        fz_report_error(ctx);
+    }
+    return buf;
+}
 
-    fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)dataCopy, size);
+// bytesOut, if given, gets a reference to the buffer the stream reads from
+static fz_stream* FzStreamFromData(fz_context* ctx, const u8* data, int size, fz_buffer** bytesOut = nullptr) {
+    fz_stream* stm = nullptr;
+    fz_buffer* buf = FzBufferFromData(ctx, data, size);
+    if (!buf) {
+        return nullptr;
+    }
     fz_var(buf);
     fz_try(ctx) {
         stm = fz_open_buffer(ctx, buf);
+        if (bytesOut) {
+            *bytesOut = fz_keep_buffer(ctx, buf);
+        }
     }
     fz_always(ctx) {
         fz_drop_buffer(ctx, buf);
@@ -762,7 +781,7 @@ static fz_stream* FzStreamFromData(fz_context* ctx, const u8* data, int size) {
 // so that their content can be loaded on demand in order to preserve memory
 constexpr i64 kMaxMemoryFileSize = 32LL * 1024 * 1024;
 
-static fz_stream* FzReadFileIfSmall(fz_context* ctx, Str path) {
+static fz_stream* FzReadFileIfSmall(fz_context* ctx, Str path, fz_buffer** bytesOut) {
     fz_stream* stm = nullptr;
     i64 fileSize = file::GetSize(path);
     // load small files entirely into memory so that they can be
@@ -778,7 +797,7 @@ static fz_stream* FzReadFileIfSmall(fz_context* ctx, Str path) {
         return nullptr;
     }
 
-    stm = FzStreamFromData(ctx, (u8*)d.s, len(d));
+    stm = FzStreamFromData(ctx, (u8*)d.s, len(d), bytesOut);
     str::Free(d);
     return stm;
 }
@@ -817,21 +836,22 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, Str path) {
     return stm;
 }
 
-static fz_stream* FzOpenOrReadFile(fz_context* ctx, Str path) {
+// bytesOut gets the whole file when it was read into memory
+static fz_stream* FzOpenOrReadFile(fz_context* ctx, Str path, fz_buffer** bytesOut) {
     fz_stream* stm = nullptr;
     // OneNote/Outlook cache files: always load fully so we drop the original
     // handle even when the copy-on-open path could not run (issue #4705).
     if (path::IsEphemeralHostFile(path)) {
         Str d = file::ReadFile(path);
         if (len(d) > 0) {
-            stm = FzStreamFromData(ctx, (u8*)d.s, len(d));
+            stm = FzStreamFromData(ctx, (u8*)d.s, len(d), bytesOut);
         }
         str::Free(d);
         if (stm) {
             return stm;
         }
     } else {
-        stm = FzReadFileIfSmall(ctx, path);
+        stm = FzReadFileIfSmall(ctx, path, bytesOut);
         if (stm) {
             return stm;
         }
@@ -3709,6 +3729,7 @@ EngineMupdf::~EngineMupdf() {
     }
 
     fz_drop_document(ctx, _doc);
+    fz_drop_buffer(ctx, fileBytes);
     // Drop per-thread clones only after the document (and any JS tied to _ctx) is gone.
     ReleaseAllPerThreadContexts(this);
     if (ctx) {
@@ -4021,7 +4042,10 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
         return FinishLoading();
     }
 
-    fz_stream* file = FzOpenOrReadFile(ctx, fnCopy);
+    auto timeStart = TimeGet();
+    i64 fileSize = file::GetSize(fnCopy);
+    FILETIME fileTime = file::GetModificationTime(fnCopy);
+    fz_stream* file = FzOpenOrReadFile(ctx, fnCopy, &fileBytes);
     ok = LoadFromStream(file, FilePath(), pwdUI);
     if (!ok) {
         return false;
@@ -4030,8 +4054,19 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     if (streamNo < 0) {
         ok = FinishLoading();
         if (ok) {
+            fileSizeAtLoad = fileSize;
+            fileTimeAtLoad = fileTime;
+            // a big file is read on demand: every read waits on the drive
+            if (fileSize >= kMaxMemoryFileSize) {
+                logf("EngineMupdf::Load: '%s', %d MB on %s, in memory: %d, opened in %.1f ms\n", fnCopy,
+                     (int)(fileSize >> 20), path::StorageInfoTemp(fnCopy), (int)(fileBytes != nullptr),
+                     TimeSinceInMs(timeStart));
+            }
             return true;
         }
+        // the retry below strips garbage: the bytes no longer match the file
+        fz_drop_buffer(ctx, fileBytes);
+        fileBytes = nullptr;
         fz_drop_document(ctx, _doc);
         _doc = nullptr;
         file = FzReadMaybeFixPDF(ctx, FilePath());
@@ -8773,6 +8808,242 @@ Str EngineMupdfGetPassword(EngineBase* engine) {
     return epdf->pdfPassword;
 }
 
+//--- saving a file whose bytes are in memory (discussion #6256)
+
+// the file on disk is still the one we loaded
+static bool FileUnchangedSinceLoad(EngineMupdf* e, Str path) {
+    if (e->fileSizeAtLoad < 0 || file::GetSize(path) != e->fileSizeAtLoad) {
+        return false;
+    }
+    FILETIME t = file::GetModificationTime(path);
+    return CompareFileTime(&t, &e->fileTimeAtLoad) == 0;
+}
+
+// Point the document at the whole file in memory. Takes the locks every
+// page-reading path takes, in the same order, so no thread is mid-read.
+static bool SwapDocFileToMemory(EngineMupdf* e, fz_buffer* bytes) {
+    auto* ctx = e->Ctx();
+    AutoUnlockRecursiveMutex pagesScope(&e->pagesLock);
+    AutoUnlockMutex renderScope(&e->renderLock);
+    AutoUnlockRecursiveMutex docScope(&e->docLock);
+    pdf_document* doc = e->pdfdoc;
+    if (!doc || e->fileBytes || (i64)bytes->len != doc->file_size) {
+        return false;
+    }
+    fz_stream* stm = nullptr;
+    fz_try(ctx) {
+        stm = fz_open_buffer(ctx, bytes);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    if (!stm) {
+        return false;
+    }
+    // streams opened from the old one keep their own reference to it
+    fz_drop_stream(ctx, doc->file);
+    doc->file = stm;
+    e->fileBytes = fz_keep_buffer(ctx, bytes);
+    return true;
+}
+
+// data is the whole file, read after load; call on the UI thread
+static bool UseFileBytes(EngineMupdf* e, Str data) {
+    if (len(data) == 0 || e->fileBytes || (i64)len(data) != e->fileSizeAtLoad ||
+        !FileUnchangedSinceLoad(e, e->FilePath())) {
+        return false;
+    }
+    auto* ctx = e->Ctx();
+    fz_buffer* buf = FzBufferFromData(ctx, (u8*)data.s, len(data));
+    if (!buf) {
+        return false;
+    }
+    bool ok = SwapDocFileToMemory(e, buf);
+    fz_drop_buffer(ctx, buf);
+    return ok;
+}
+
+// reads the whole file, logging how long the drive took
+static Str ReadFileLogged(Str path, Str why) {
+    auto timeStart = TimeGet();
+    Str data = file::ReadFile(path);
+    double ms = TimeSinceInMs(timeStart);
+    double mbPerSec = ms > 0 ? ((double)len(data) / (1024.0 * 1024.0)) / (ms / 1000.0) : 0;
+    logf("ReadFileLogged(%s): '%s', %d MB in %.1f ms (%.1f MB/s) from %s\n", why, path, len(data) >> 20, ms, mbPerSec,
+         path::StorageInfoTemp(path));
+    return data;
+}
+
+struct FileBytesLoad {
+    EngineMupdf* engine = nullptr;
+    Str path;
+    Str data;
+};
+
+static void FileBytesLoaded(FileBytesLoad* d) {
+    bool ok = UseFileBytes(d->engine, d->data);
+    logf("FileBytesLoaded: '%s', in memory: %d\n", d->path, (int)ok);
+    str::Free(d->data);
+    str::Free(d->path);
+    AtomicIntDec(&gDangerousThreadCount);
+    d->engine->Release();
+    delete d;
+}
+
+static void FileBytesLoadThread(FileBytesLoad* d) {
+    d->data = ReadFileLogged(d->path, StrL("first change"));
+    auto fn = MkFunc0(FileBytesLoaded, d);
+    uitask::Post(fn, "FileBytesLoaded");
+}
+
+// On the first change of a document read from disk on demand (a big file),
+// read the whole file in the background: saving then compares against memory
+// instead of re-reading the file, which takes seconds on a slow drive
+static void StartLoadingFileBytes(EngineMupdf* e) {
+    if (!e->pdfdoc || e->fileBytes || e->fileBytesLoadStarted || e->fileSizeAtLoad <= 0) {
+        return;
+    }
+    e->fileBytesLoadStarted = true;
+    auto* d = new FileBytesLoad;
+    d->engine = e;
+    d->path = str::Dup(e->FilePath());
+    e->AddRef();
+    AtomicIntInc(&gDangerousThreadCount);
+    auto fn = MkFunc0(FileBytesLoadThread, d);
+    ThreadHandle th = StartThread(fn, StrL("LoadFileBytes"));
+    if (!th) {
+        str::Free(d->path);
+        delete d;
+        AtomicIntDec(&gDangerousThreadCount);
+        e->Release();
+        return;
+    }
+    SafeCloseThreadHandle(&th);
+}
+
+// An incremental save first checks that the file still holds the document's
+// original bytes (MuPDF reads the whole file back, 4 KB at a time), then
+// appends. This output answers that check from memory, so the drive only sees
+// the appended bytes.
+struct AppendOutput {
+    HANDLE h = INVALID_HANDLE_VALUE;
+    fz_buffer* original = nullptr;
+};
+
+static void AppendOutWrite(fz_context* ctx, void* state, const void* data, size_t n) {
+    auto* s = (AppendOutput*)state;
+    DWORD written = 0;
+    if (!WriteFile(s->h, data, (DWORD)n, &written, nullptr) || written != (DWORD)n) {
+        fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot write file: error %d", (int)GetLastError());
+    }
+}
+
+static void AppendOutSeek(fz_context* ctx, void* state, int64_t offset, int whence) {
+    auto* s = (AppendOutput*)state;
+    DWORD method = FILE_BEGIN;
+    if (whence == SEEK_CUR) {
+        method = FILE_CURRENT;
+    } else if (whence == SEEK_END) {
+        method = FILE_END;
+    }
+    LARGE_INTEGER off;
+    off.QuadPart = offset;
+    if (!SetFilePointerEx(s->h, off, nullptr, method)) {
+        fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot seek file: error %d", (int)GetLastError());
+    }
+}
+
+static int64_t AppendOutTell(fz_context* ctx, void* state) {
+    auto* s = (AppendOutput*)state;
+    LARGE_INTEGER zero{};
+    LARGE_INTEGER pos{};
+    if (!SetFilePointerEx(s->h, zero, &pos, FILE_CURRENT)) {
+        fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot tell file position: error %d", (int)GetLastError());
+    }
+    return pos.QuadPart;
+}
+
+static void AppendOutTruncate(fz_context* ctx, void* state) {
+    auto* s = (AppendOutput*)state;
+    if (!SetEndOfFile(s->h)) {
+        fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot truncate file: error %d", (int)GetLastError());
+    }
+}
+
+static fz_stream* AppendOutAsStream(fz_context* ctx, void* state) {
+    auto* s = (AppendOutput*)state;
+    return fz_open_buffer(ctx, s->original);
+}
+
+static void AppendOutClose(fz_context* ctx, void* state) {
+    auto* s = (AppendOutput*)state;
+    BOOL ok = CloseHandle(s->h);
+    s->h = INVALID_HANDLE_VALUE;
+    if (!ok) {
+        fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot close file: error %d", (int)GetLastError());
+    }
+}
+
+// throws like pdf_save_document()
+static void SaveIncrementalFromMemory(EngineMupdf* e, Str path, const pdf_write_options* opts) {
+    auto* ctx = e->Ctx();
+    AppendOutput state;
+    state.original = e->fileBytes;
+    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    state.h = CreateFileW(CWStrTemp(path), GENERIC_READ | GENERIC_WRITE, share, nullptr, OPEN_EXISTING,
+                          FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (state.h == INVALID_HANDLE_VALUE) {
+        fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot open file for writing: error %d", (int)GetLastError());
+    }
+    fz_output* out = nullptr;
+    fz_var(out);
+    fz_try(ctx) {
+        out = fz_new_output(ctx, 64 * 1024, &state, AppendOutWrite, AppendOutClose, nullptr);
+        out->seek = AppendOutSeek;
+        out->tell = AppendOutTell;
+        out->truncate = AppendOutTruncate;
+        out->as_stream = AppendOutAsStream;
+        pdf_write_document(ctx, e->pdfdoc, out, opts);
+        fz_close_output(ctx, out);
+    }
+    fz_always(ctx) {
+        fz_drop_output(ctx, out);
+        if (state.h != INVALID_HANDLE_VALUE) {
+            CloseHandle(state.h);
+        }
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+}
+
+// why an incremental save of path can't compare against memory, {} if it can.
+// Caller holds docLock.
+static Str WhyNotSaveFromMemory(EngineMupdf* e, Str path, const pdf_write_options& opts) {
+    pdf_document* doc = e->pdfdoc;
+    if (!opts.do_incremental) {
+        return StrL("not incremental");
+    }
+    if (!str::Eq(path, e->FilePath())) {
+        return StrL("other file");
+    }
+    if (!e->fileBytes || (i64)e->fileBytes->len != doc->file_size) {
+        return StrL("not in memory");
+    }
+    // pdf_write_document() doesn't apply the bias pdf_save_document() does
+    if (doc->bias != 0) {
+        return StrL("leading garbage");
+    }
+    // signing reads the new file back through the output
+    if (pdf_has_unsaved_sigs(e->Ctx(), doc)) {
+        return StrL("signatures");
+    }
+    if (!FileUnchangedSinceLoad(e, path)) {
+        return StrL("changed on disk");
+    }
+    return {};
+}
+
 // re-save current pdf document using mupdf (as opposed to just saving the data)
 // this is used after the PDF was modified by the user (e.g. by adding / changing
 // annotations).
@@ -8797,6 +9068,14 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
         path = currPath;
     }
     auto* ctx = epdf->Ctx();
+    // the first change started reading the file; finish now if it hasn't.
+    // Before docLock: the swap takes pagesLock first
+    bool inPlace = str::Eq(path, currPath);
+    if (inPlace && !epdf->fileBytes && epdf->fileSizeAtLoad > 0 && pdf_can_be_saved_incrementally(ctx, epdf->pdfdoc)) {
+        Str data = ReadFileLogged(path, StrL("save"));
+        UseFileBytes(epdf, data);
+        str::Free(data);
+    }
     AutoUnlockRecursiveMutex scope(&epdf->docLock);
 
     pdf_write_options save_opts{};
@@ -8811,13 +9090,22 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
         save_opts.do_garbage = 1;
     }
 
+    Str whyNotFromMemory = WhyNotSaveFromMemory(epdf, path, save_opts);
+    bool fromMemory = len(whyNotFromMemory) == 0;
     bool ok = false;
     fz_var(ok);
     fz_try(ctx) {
-        pdf_save_document(ctx, epdf->pdfdoc, CStrTemp(path), &save_opts);
+        if (fromMemory) {
+            SaveIncrementalFromMemory(epdf, path, &save_opts);
+        } else {
+            pdf_save_document(ctx, epdf->pdfdoc, CStrTemp(path), &save_opts);
+        }
         ok = true;
         auto dur = TimeSinceInMs(timeStart);
-        logf("Saved annotations to '%s' in  %.2f ms, incremental: %d\n", path, dur, save_opts.do_incremental);
+        i64 size = file::GetSize(path);
+        logf("Saved annotations to '%s' in %.2f ms, incremental: %d, from memory: %d%s%s, %d MB on %s\n", path, dur,
+             save_opts.do_incremental, (int)fromMemory, fromMemory ? StrL("") : StrL(", because: "), whyNotFromMemory,
+             (int)(size >> 20), path::StorageInfoTemp(path));
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -10103,6 +10391,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     if (!e->pdfdoc) {
         return;
     }
+    StartLoadingFileBytes(e);
     int pageNo = annot->pageNo;
     ReportIf(pageNo < 1 || pageNo > e->pageCount);
 

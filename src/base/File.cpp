@@ -945,6 +945,47 @@ bool IsCloudPlaceholder(Str path) {
     return (attrs & cloudBits) != 0;
 }
 
+// For logs: what kind of storage a file is on, e.g. "remote NTFS" or
+// "fixed NTFS cloud-placeholder". Slow saves / opens are usually explained by
+// the drive, not by the document. Can be slow on a network drive: log only.
+TempStr StorageInfoTemp(Str path) {
+    WCHAR fullPath[MAX_PATH]{};
+    if (!GetFullPathNameW(CWStrTemp(path), dimof(fullPath), fullPath, nullptr)) {
+        return str::DupTemp(StrL("unknown"));
+    }
+    WCHAR root[MAX_PATH]{};
+    if (!GetVolumePathNameW(fullPath, root, dimof(root))) {
+        return str::DupTemp(StrL("unknown"));
+    }
+    Str type = StrL("unknown");
+    switch (GetDriveTypeW(root)) {
+        case DRIVE_FIXED:
+            type = StrL("fixed");
+            break;
+        case DRIVE_REMOTE:
+            type = StrL("remote");
+            break;
+        case DRIVE_REMOVABLE:
+            type = StrL("removable");
+            break;
+        case DRIVE_CDROM:
+            type = StrL("cdrom");
+            break;
+        case DRIVE_RAMDISK:
+            type = StrL("ramdisk");
+            break;
+    }
+    WCHAR fsName[64]{};
+    if (!GetVolumeInformationW(root, nullptr, 0, nullptr, nullptr, nullptr, fsName, dimof(fsName))) {
+        fsName[0] = 0;
+    }
+    TempStr res = fmt("%s %s", type, WStr(fsName));
+    if (IsCloudPlaceholder(path)) {
+        res = str::JoinTemp(res, StrL(" cloud-placeholder"));
+    }
+    return res;
+}
+
 // True if this directory name is one used by OneNote / Outlook / IE to extract
 // an attachment that the host still needs to rewrite or delete.
 static bool IsEphemeralHostDirName(Str name) {

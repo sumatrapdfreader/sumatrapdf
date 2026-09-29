@@ -224,6 +224,15 @@ class EngineMupdf : public EngineBase {
     // position in the undo history the file was last saved at
     int savedUndoPos = 0;
 
+    // The whole file, once the document reads from memory (a small file at
+    // load, a big one after its first change). Saving then never re-reads the
+    // file, which is slow on a network / cloud drive (discussion #6256)
+    fz_buffer* fileBytes = nullptr;
+    bool fileBytesLoadStarted = false;
+    // the file as loaded, to tell whether it changed on disk since
+    i64 fileSizeAtLoad = -1;
+    FILETIME fileTimeAtLoad{};
+
     // smart dark mode: engine-level image feature/processed caches
     DarkModeEngineCache* darkModeEngineCache = nullptr;
 
