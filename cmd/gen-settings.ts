@@ -1268,7 +1268,12 @@ const globalPrefs: Field[] = [
     "if true, show the SyncTeX inverse search command line in Settings -> Options, so a " +
       "double-click in the document can jump to the matching line in a LaTeX editor",
   ),
-  field("EscToExit", Bool, false, "if true, Esc key closes SumatraPDF"),
+  field(
+    "EscToExit",
+    Bool,
+    false,
+    "if true, Esc key closes SumatraPDF. In presentation or fullscreen mode, Esc leaves that mode first",
+  ),
   field("FullPathInTitle", Bool, false, "if true, show the full path to the document in the title bar").ver("3.0"),
   field("InverseSearchCmdLine", Str, null, "pattern used to launch the LaTeX editor when doing inverse search"),
   field(

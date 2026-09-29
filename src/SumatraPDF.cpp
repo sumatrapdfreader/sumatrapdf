@@ -9598,15 +9598,16 @@ static void OnFrameKeyEsc(MainWindow* win) {
         ToolbarUpdateStateForWindow(win, false);
         return;
     }
+    // leave presentation / fullscreen before EscToExit quits (issue #6250)
+    if (win->presentation || win->isFullScreen) {
+        ToggleFullScreen(win, win->presentation != PM_DISABLED);
+        return;
+    }
     // Esc is the cancel key while the Edit PDF toolbar is up ("Place text
     // annotation. Esc to cancel"), so it must not also quit: the press after a
     // cancelled placement was closing the document (issue #6118).
     if (!win->pdfAnnotationsToolbarEnabled && gSettings->escToExit && CanCloseWindow(win)) {
         CloseWindow(win, true, false);
-        return;
-    }
-    if (win->presentation || win->isFullScreen) {
-        ToggleFullScreen(win, win->presentation != PM_DISABLED);
         return;
     }
     if (gPluginMode) {
