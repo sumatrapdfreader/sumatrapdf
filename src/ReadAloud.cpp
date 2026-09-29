@@ -2274,11 +2274,13 @@ bool ReadAloudHighlightBuildFromDocument(DisplayModel* dm, int startPage, int st
         return false;
     }
 
+    // walk in the engine's numbering: extracting a placeholder chapter's text
+    // lays it out, which grows engine->PageCount() past the view's page count
+    int enginePage = engine->PageNoFromLocation(dm->GetPageInfo(startPage)->loc);
     Vec<ReadAloudRawByte> raw;
-    int pageCount = dm->PageCount();
-    dbgtts("BuildFromDocument: startPage=%d startGlyph=%d pageCount=%d\n", startPage, startGlyph, pageCount);
-    for (int page = startPage; page <= pageCount; page++) {
-        int glyph = page == startPage ? startGlyph : 0;
+    dbgtts("BuildFromDocument: startPage=%d enginePage=%d startGlyph=%d\n", startPage, enginePage, startGlyph);
+    for (int page = enginePage; page <= engine->PageCount(); page++) {
+        int glyph = page == enginePage ? startGlyph : 0;
         ReadAloudAppendPageGlyphs(raw, engine, page, glyph, -1);
     }
 
@@ -3409,6 +3411,30 @@ TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut) {
         progressLoc = pi ? pi->loc : kInvalidLocation;
     }
     out.Append(fmt("progress page=%d loc=%d:%d\n", progressPage, progressLoc.chapter, progressLoc.page));
+
+    // pages the map covers: a complete map has one entry per page of its span
+    ReadAloudHighlightMap* map = srcTab ? srcTab->readAloudHighlight : nullptr;
+    Location mapStart;
+    Location mapEnd;
+    int mapPages = 0;
+    for (int i = 0; map && i < map->len; i++) {
+        Location l = map->locs[i].pageLoc;
+        if (!l.IsValid() || l == mapEnd) {
+            continue;
+        }
+        if (!mapStart.IsValid()) {
+            mapStart = l;
+        }
+        mapEnd = l;
+        mapPages++;
+    }
+    int mapSpan = 0;
+    if (srcTab && srcTab->AsFixed() && mapPages > 0) {
+        DisplayModel* srcDm = srcTab->AsFixed();
+        mapSpan = srcDm->FindPageNoByLoc(mapEnd) - srcDm->FindPageNoByLoc(mapStart) + 1;
+    }
+    out.Append(fmt("map start=%d:%d end=%d:%d pages=%d span=%d\n", mapStart.chapter, mapStart.page, mapEnd.chapter,
+                   mapEnd.page, mapPages, mapSpan));
 
     if (len(gWindows) == 0) {
         out.Append(StrL("NOTREADY no-window\n"));
