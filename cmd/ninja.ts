@@ -172,6 +172,11 @@ function fixEscapes(): void {
         ) {
           return `${line} /FS`;
         }
+        // Premake's Ninja backend drops `symbols`: without /DEBUG an exe names no
+        // PDB, and dbghelp / cdb load a stale one by name (wrong callstacks).
+        if (line.startsWith("ldflags_") && !line.includes("/DEBUG")) {
+          line = `${line} /DEBUG:FULL`;
+        }
         // PCH compiles must scan headers. Without /showIncludes, a Base.h
         // change leaves a stale .pch and /Yu compiles against that snapshot.
         if (line.includes("/Yc$pchheader") && !line.includes("/showIncludes")) {
