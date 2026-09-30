@@ -1467,6 +1467,7 @@
     <ClInclude Include="..\src\PagePosition.h" />
     <ClInclude Include="..\src\PageRenderPolicy.h" />
     <ClInclude Include="..\src\PageRenderService.h" />
+    <ClInclude Include="..\src\PageThumbnails.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
     <ClInclude Include="..\src\PdfCad.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
@@ -1689,6 +1690,7 @@
     <ClCompile Include="..\src\PagePosition.cpp" />
     <ClCompile Include="..\src\PageRenderPolicy.cpp" />
     <ClCompile Include="..\src\PageRenderService.cpp" />
+    <ClCompile Include="..\src\PageThumbnails.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\PdfCad.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />

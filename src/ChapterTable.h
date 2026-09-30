@@ -33,6 +33,7 @@ struct ChapterTable {
     Location LocationFromPageNo(int pageNo);
     int PageNoFromLocation(Location loc);
     int Generation();
+    void BumpGeneration();
     void Reset();
 
   private:

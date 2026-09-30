@@ -106,6 +106,8 @@ export enum ControlCommand {
   TestToggleFormButton = 109,
   ResolveUnsavedChanges = 110,
   TestRefHover = 111,
+  TestPageEdit = 112,
+  TestSidebarThumbnails = 113,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

@@ -13,6 +13,7 @@
 
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -34,9 +35,12 @@
 #include "Accelerators.h"
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
+#include "PageThumbnails.h"
 #include "TableOfContents.h"
 
 static void LayoutTocContainer(MainWindow* win);
+static void OnBookmarksLabelClick(MainWindow* win, VirtMouseEvent*);
+static void OnThumbnailsLabelClick(MainWindow* win, VirtMouseEvent*);
 
 // When true, multi-highlight every TOC item that matches the current page
 // (issue #4642). Easy to flip for comparison with single-selection behavior.
@@ -418,6 +422,20 @@ void ClearTocBox(MainWindow* win) {
     win->currPageNo = 0;
 }
 
+static void FocusSidebarView(MainWindow* win) {
+    if (!win->uiState.tocVisible) {
+        return;
+    }
+    if (!SidebarShowsThumbnails(win)) {
+        HwndSetFocus(win->tocTreeView->hwnd);
+        return;
+    }
+    HwndSetFocus(win->hwndTocBox);
+    if (win->tocRoot) {
+        win->tocRoot->SetFocus(win->pageThumbs);
+    }
+}
+
 void ToggleTocBox(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
@@ -427,9 +445,7 @@ void ToggleTocBox(MainWindow* win) {
         return;
     }
     SetSidebarVisibility(win, true, gSettings->showFavorites, SidebarResizeFrame::Adjust);
-    if (win->uiState.tocVisible) {
-        HwndSetFocus(win->tocTreeView->hwnd);
-    }
+    FocusSidebarView(win);
 }
 
 struct VistorForPageNoData {
@@ -622,6 +638,9 @@ static TocItem* FindVisibleParentTreeItem(TreeView* treeView, TocItem* ti) {
 }
 
 void UpdateTocSelection(MainWindow* win, int currPageNo) {
+    if (win->pageThumbs && win->pageThumbs->active) {
+        win->pageThumbs->SetCurrentPage(currPageNo);
+    }
     auto* treeView = win->tocTreeView;
     if (!win->tocLoaded || !win->uiState.tocVisible || !treeView) {
         return;
@@ -1671,6 +1690,20 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         return res;
     }
 
+    // the focus ring shows while the thumbnails have the keyboard
+    if ((msg == WM_SETFOCUS || msg == WM_KILLFOCUS) && win->tocRoot && SidebarShowsThumbnails(win)) {
+        win->tocRoot->SetFocus(msg == WM_SETFOCUS ? win->pageThumbs : nullptr);
+    }
+
+    // with the thumbnails focused, every key they don't take goes to the canvas,
+    // as if it had the focus (Tab included: it moves the focus on)
+    bool isKey = msg == WM_KEYDOWN || msg == WM_CHAR;
+    bool thumbsKey = msg == WM_KEYDOWN && ThumbnailsTakeKey(win, hwnd, wp);
+    if (isKey && SidebarShowsThumbnails(win) && !thumbsKey) {
+        SendMessageW(win->hwndFrame, msg, wp, lp);
+        return 0;
+    }
+
     // the panel header (label + close button) is a virtual control tree, so
     // this window paints it and hands it its input
     if (VirtHostOnMessage(hwnd, win->tocRoot, msg, wp, lp, res, ThemeControlBackgroundColor())) {
@@ -1700,6 +1733,7 @@ static void SubclassToc(MainWindow* win) {
 }
 
 void UnsubclassToc(MainWindow* win) {
+    RevokeThumbnailsDropTarget(win->hwndTocBox);
     if (win->tocBoxSubclassId != 0) {
         RemoveWindowSubclass(win->hwndTocBox, WndProcTocBox, win->tocBoxSubclassId);
         win->tocBoxSubclassId = 0;
@@ -1869,7 +1903,24 @@ void CreateToc(MainWindow* win) {
     auto header = NewLabelWithClose(win->hwndTocBox, labelFont, MkFunc0(ToggleTocBox, win));
     win->tocLabel = header.label;
     win->tocCloseBtn = header.closeBtn;
-    // label text is set in UpdateToolbarSidebarText()
+    // label texts are set in UpdateToolbarSidebarText(). Text is click-through
+    // by default; these two switch the view
+    win->tocLabel->SetFlag(vwfNoHitTest, false);
+    win->tocLabel->onClick = MkFunc1(OnBookmarksLabelClick, win);
+    win->tocThumbnailsLabel = NewVirtText({
+        .font = labelFont,
+        .isRtl = HwndIsRtl(win->hwndTocBox),
+        .ellipsis = true,
+    });
+    win->tocThumbnailsLabel->SetFlag(vwfNoHitTest, false);
+    win->tocThumbnailsLabel->padding = win->tocLabel->padding;
+    win->tocThumbnailsLabel->onClick = MkFunc1(OnThumbnailsLabelClick, win);
+    win->tocThumbnailsLabel->SetIsVisible(false);
+    // [Bookmarks (flex)][x] => [Bookmarks][Thumbnails][flex][x]
+    HBox* headerBox = header.box;
+    headerBox->children[0].flex = 0;
+    VecInsertAt(headerBox->children, 1, boxElementInfo{.layout = win->tocThumbnailsLabel});
+    VecInsertAt(headerBox->children, 2, boxElementInfo{.layout = new Spacer(0, 0), .flex = 1});
 
     auto* filterEdit = new Edit();
     {
@@ -1913,9 +1964,145 @@ void CreateToc(MainWindow* win) {
     vbox->AddChild(filterEdit);
     vbox->AddChild(new Spacer(0, 2)); // gap under the search field
     vbox->AddChild(treeView, 1);
+
+    int dpi = DpiGetForHwnd(win->hwndTocBox);
+    win->pageThumbs = new PageThumbnailsCtrl(win, GetAppFont(), dpi, ThumbnailsHost::Sidebar);
+    win->pageThumbs->SetIsVisible(false);
+    vbox->AddChild(win->pageThumbs, 1);
     win->tocLayout = vbox;
 
     SubclassToc(win);
+    RegisterThumbnailsDropTarget(win->pageThumbs, win->hwndTocBox);
 
     UpdateControlsColors(win);
+}
+
+//--- Thumbnails view
+
+bool CanShowThumbnails(WindowTab* tab) {
+    return tab && tab->IsDocLoaded() && tab->AsFixed();
+}
+
+bool SidebarShowsThumbnails(MainWindow* win) {
+    WindowTab* tab = win->CurrentTab();
+    return tab && tab->showThumbnails && CanShowThumbnails(tab);
+}
+
+static void OnBookmarksLabelClick(MainWindow* win, VirtMouseEvent*) {
+    SetSidebarView(win, SidebarView::Bookmarks);
+}
+
+static void OnThumbnailsLabelClick(MainWindow* win, VirtMouseEvent*) {
+    SetSidebarView(win, SidebarView::Thumbnails);
+}
+
+// Show the sidebar with the given view; Thumbnails opens it for documents without
+// bookmarks, too
+void SetSidebarView(MainWindow* win, SidebarView view) {
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->IsDocLoaded()) {
+        return;
+    }
+    bool thumbnails = view == SidebarView::Thumbnails;
+    if (thumbnails && !CanShowThumbnails(tab)) {
+        return;
+    }
+    tab->showThumbnails = thumbnails;
+    if (!win->uiState.tocVisible) {
+        SetSidebarVisibility(win, true, gSettings->showFavorites, SidebarResizeFrame::Adjust);
+    } else {
+        UpdateSidebarView(win);
+    }
+    FocusSidebarView(win);
+}
+
+// the view not shown is dimmed, the shown one underlined; with one view there's
+// nothing to switch to and the label is plain
+static void StyleViewLabel(VirtText* label, bool isShown, bool canSwitch) {
+    bool dimmed = canSwitch && !isShown;
+    label->withUnderline = canSwitch && isShown;
+    label->SetColor(kColText, dimmed ? ThemeWindowTextDisabledColor() : kColorUnset);
+    label->cursor = dimmed ? CursorId::Hand : CursorId::None;
+    label->Invalidate();
+}
+
+void UpdateSidebarColors(MainWindow* win) {
+    if (!win->pageThumbs) {
+        return;
+    }
+    win->pageThumbs->SetColor(kColListText, ThemeWindowTextColor());
+    win->pageThumbs->SetColor(kColListBg, ThemeControlBackgroundColor());
+    UpdateSidebarView(win);
+}
+
+// Shows the bookmarks (filter edit + tree) or the page thumbnails, and the
+// header labels that go with them
+void UpdateSidebarView(MainWindow* win) {
+    PageThumbnailsCtrl* thumbs = win->pageThumbs;
+    if (!thumbs) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    bool showThumbs = SidebarShowsThumbnails(win);
+    bool hasBookmarks = win->tocLoaded;
+    bool hasThumbnails = CanShowThumbnails(tab);
+    bool canSwitch = hasBookmarks && hasThumbnails;
+
+    win->tocLabel->SetIsVisible(hasBookmarks || !showThumbs);
+    win->tocThumbnailsLabel->SetIsVisible(hasThumbnails && (showThumbs || hasBookmarks));
+    StyleViewLabel(win->tocLabel, !showThumbs, canSwitch);
+    StyleViewLabel(win->tocThumbnailsLabel, showThumbs, canSwitch);
+    // SetIsVisible() only flips WS_VISIBLE, which Windows doesn't act on: the
+    // tree would stay on screen. ShowWindow() first, it's a no-op after
+    int show = showThumbs ? SW_HIDE : SW_SHOW;
+    ShowWindow(win->tocFilterEdit->hwnd, show);
+    ShowWindow(win->tocTreeView->hwnd, show);
+    win->tocFilterEdit->SetIsVisible(!showThumbs);
+    win->tocTreeView->SetIsVisible(!showThumbs);
+    thumbs->SetIsVisible(showThumbs);
+
+    if (showThumbs && win->uiState.tocVisible) {
+        DisplayModel* dm = tab->AsFixed();
+        if (thumbs->tab != tab || thumbs->dm != dm || thumbs->pageCount != dm->PageCount()) {
+            thumbs->SetTab(tab);
+        }
+        thumbs->Activate();
+    } else {
+        thumbs->Deactivate();
+    }
+
+    if (win->tocLayout) {
+        win->tocLayout->lastBounds = {};
+    }
+    LayoutTocContainer(win);
+}
+
+// Keys the focused thumbnails handle rather than the canvas: Up / Down, and
+// Esc while dragging pages. The message loop skips accelerators for them
+bool ThumbnailsTakeKey(MainWindow* win, HWND hwnd, WPARAM key) {
+    if (!win || hwnd != win->hwndTocBox || !win->uiState.tocVisible || !SidebarShowsThumbnails(win)) {
+        return false;
+    }
+    if (IsCtrlPressed() || IsAltPressed()) {
+        return false;
+    }
+    return key == VK_UP || key == VK_DOWN || (key == VK_ESCAPE && win->pageThumbs->dragging);
+}
+
+// The document is going away: the thumbnails let go of it
+void ClearSidebarThumbnails(MainWindow* win) {
+    if (!win->pageThumbs) {
+        return;
+    }
+    win->pageThumbs->Deactivate();
+    win->pageThumbs->SetTab(nullptr);
+}
+
+// pages were moved, inserted or removed: the thumbnails start over
+void SidebarPagesChanged(MainWindow* win) {
+    PageThumbnailsCtrl* thumbs = win->pageThumbs;
+    if (!thumbs || !thumbs->tab || thumbs->tab != win->CurrentTab()) {
+        return;
+    }
+    thumbs->SetTab(thumbs->tab);
 }

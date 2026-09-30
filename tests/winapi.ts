@@ -285,6 +285,7 @@ export const VK_RMENU = 0xa5;
 export const VK_RETURN = 0x0d;
 export const VK_ESCAPE = 0x1b;
 export const VK_SPACE = 0x20;
+export const VK_NEXT = 0x22;
 export const VK_END = 0x23;
 export const VK_HOME = 0x24;
 export const VK_LEFT = 0x25;

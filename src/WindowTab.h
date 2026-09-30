@@ -118,6 +118,8 @@ struct WindowTab {
     // state of the table of contents
     bool showToc = false;
     bool showTocPresentation = false;
+    // the sidebar shows Pages (thumbnails) instead of Bookmarks
+    bool showThumbnails = false;
     // whether to auto-reload the document when the tab is selected
     bool reloadOnFocus = false;
     // opened via CmdOpenFileNoHistory: do not write File History / Windows Recent

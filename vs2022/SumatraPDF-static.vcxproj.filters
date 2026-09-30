@@ -324,6 +324,9 @@
     <ClInclude Include="..\src\PageRenderService.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\PageThumbnails.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\PalmDbReader.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -879,6 +882,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PageRenderService.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PageThumbnails.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PalmDbReader.cpp">

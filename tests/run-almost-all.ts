@@ -266,6 +266,8 @@ import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as commandPaletteShortcutFilter } from "./command-palette-shortcut-filter.ts";
 import { testit as commandPaletteAltNames } from "./command-palette-alt-names.ts";
 import { testit as commandPaletteThumbnails } from "./command-palette-thumbnails.ts";
+import { testit as pageEdit } from "./page-edit.ts";
+import { testit as sidebarThumbnails } from "./sidebar-thumbnails.ts";
 import { testit as commandPaletteAnnotations } from "./command-palette-annotations.ts";
 import { testit as paletteDeleteAnnotation } from "./palette-delete-annotation.ts";
 import { testit as paletteCommandAvailability } from "./palette-command-availability.ts";
@@ -645,6 +647,8 @@ export const tests: NamedTest[] = [
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
   ["command-palette-alt-names", commandPaletteAltNames],
   ["command-palette-thumbnails", commandPaletteThumbnails],
+  ["page-edit", pageEdit],
+  ["sidebar-thumbnails", sidebarThumbnails],
   ["command-palette-annotations", commandPaletteAnnotations],
   ["palette-delete-annotation", paletteDeleteAnnotation],
   ["palette-command-availability", paletteCommandAvailability],

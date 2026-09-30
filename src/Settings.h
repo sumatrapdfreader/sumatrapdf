@@ -328,6 +328,8 @@ struct FileState {
     // if true, show the table of contents (Bookmarks) sidebar when the
     // document has one
     bool showToc;
+    // if true, the sidebar shows page thumbnails instead of bookmarks
+    bool showThumbnails;
     // if true, the document is displayed right-to-left in facing and book
     // view modes
     bool displayR2L;
@@ -363,6 +365,8 @@ struct TabState {
     // if true, the table of contents was shown when the document was
     // closed
     bool showToc;
+    // if true, the sidebar showed page thumbnails instead of bookmarks
+    bool showThumbnails;
     // which table of contents items were expanded (see FileStates ->
     // TocState)
     Vec<int>* tocState;
@@ -2005,6 +2009,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, isMissing), SettingType::Bool, false},
     {offsetof(FileState, useDefaultState), SettingType::Bool, false},
     {offsetof(FileState, showToc), SettingType::Bool, true},
+    {offsetof(FileState, showThumbnails), SettingType::Bool, false},
     {offsetof(FileState, displayR2L), SettingType::Bool, false},
     {offsetof(FileState, uniformPageWidth), SettingType::Bool, false},
     {offsetof(FileState, trimEmptyMargins), SettingType::Bool, false},
@@ -2012,11 +2017,11 @@ static const FieldInfo gFileStateFields[] = {
 };
 static StructInfo gFileStateInfo = {
     sizeof(FileState),
-    25,
+    26,
     gFileStateFields,
     "Favorites\0EBookUI\0TocState\0FilePath\0DecryptionKey\0DisplayMode\0Zoom\0BgCol\0TabCol\0OpenCount\0PageNo\0PageCo"
-    "unt\0Rotation\0WindowState\0SidebarDx\0ScrollPos\0WindowPos\0IsPinned\0IsMissing\0UseDefaultState\0ShowToc\0Displa"
-    "yR2L\0UniformPageWidth\0TrimEmptyMargins\0FreePan",
+    "unt\0Rotation\0WindowState\0SidebarDx\0ScrollPos\0WindowPos\0IsPinned\0IsMissing\0UseDefaultState\0ShowToc\0ShowTh"
+    "umbnails\0DisplayR2L\0UniformPageWidth\0TrimEmptyMargins\0FreePan",
     "pages of this document bookmarked in the Favorites menu\0reflowable (ebook) settings for just this document. The "
     "block is absent until you add it; a field left empty or 0 uses the global EBookUI value. The global section's "
     "WindowBgCol and DefaultDisplayMode are already per-document as BgCol and DisplayMode below\0data required to "
@@ -2033,10 +2038,11 @@ static StructInfo gFileStateInfo = {
     "and y direction)\0default position (can be on any monitor)\0if true, the document is \"pinned\" to the Frequently "
     "Read list, so that recently opened documents don't displace it\0if true, the file is considered missing and won't "
     "be shown in any list\0if true, this document opens with the global defaults instead of the values below\0if true, "
-    "show the table of contents (Bookmarks) sidebar when the document has one\0if true, the document is displayed "
-    "right-to-left in facing and book view modes\0if true, percentage zoom scales every page to the width page 1 has "
-    "at that zoom level\0if true, empty margins around page content are trimmed from display\0if true, the view can be "
-    "panned past the page edges, so any part of a page can be brought to the center of the window",
+    "show the table of contents (Bookmarks) sidebar when the document has one\0if true, the sidebar shows page "
+    "thumbnails instead of bookmarks\0if true, the document is displayed right-to-left in facing and book view "
+    "modes\0if true, percentage zoom scales every page to the width page 1 has at that zoom level\0if true, empty "
+    "margins around page content are trimmed from display\0if true, the view can be panned past the page edges, so any "
+    "part of a page can be brought to the center of the window",
     false};
 
 static const FieldInfo gPointF_2_Fields[] = {
@@ -2059,19 +2065,21 @@ static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, rotation), SettingType::Int, 0},
     {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_2_Info},
     {offsetof(TabState, showToc), SettingType::Bool, true},
+    {offsetof(TabState, showThumbnails), SettingType::Bool, false},
     {offsetof(TabState, tocState), SettingType::IntArray, 0},
 };
 static const StructInfo gTabStateInfo = {
     sizeof(TabState),
-    8,
+    9,
     gTabStateFields,
-    "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState",
+    "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0ShowThumbnails\0TocState",
     "path of the document\0layout of pages in this tab. valid values: automatic, single page, facing, book view, "
     "continuous, continuous facing, continuous book view\0number of the last read page, or `bm:<bookmark>` for "
     "documents with chapters (see PagePosition.cpp)\0zoom (in %) or one of those values: fit page, fit width, fit "
     "height, fit content, fit visible\0how far pages have been rotated as a multiple of 90 degrees\0how far this "
     "document has been scrolled (in x and y direction)\0if true, the table of contents was shown when the document was "
-    "closed\0which table of contents items were expanded (see FileStates -> TocState)",
+    "closed\0if true, the sidebar showed page thumbnails instead of bookmarks\0which table of contents items were "
+    "expanded (see FileStates -> TocState)",
     false};
 
 static const FieldInfo gRect_4_Fields[] = {

@@ -14,6 +14,21 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeView*, TocTree*);
 void UnsubclassToc(MainWindow*);
 void TocFilterChanged(MainWindow*);
 
+// what the sidebar shows: the document's bookmarks or its page thumbnails
+enum class SidebarView {
+    Bookmarks,
+    Thumbnails,
+};
+
+bool CanShowThumbnails(WindowTab*);
+bool SidebarShowsThumbnails(MainWindow*);
+void SetSidebarView(MainWindow*, SidebarView);
+void UpdateSidebarView(MainWindow*);
+void SidebarPagesChanged(MainWindow*);
+void ClearSidebarThumbnails(MainWindow*);
+void UpdateSidebarColors(MainWindow*);
+bool ThumbnailsTakeKey(MainWindow*, HWND, WPARAM key);
+
 // When true (default), the bookmarks pane highlights every TOC entry that
 // matches the current page (same page number as the best match, plus the
 // ancestor chain), not only the single TreeView selection (issue #4642).

@@ -15,6 +15,11 @@ extern "C" {
 #include "Settings.h"
 #include "AppSettings.h"
 #include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/GuiColors.h"
+#include "gui/VirtCtrl.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
@@ -38,6 +43,7 @@ extern "C" {
 #include "ReadAloud.h"
 #include "Translations.h"
 #include "MarkdownModel.h"
+#include "PageThumbnails.h"
 #include "TableOfContents.h"
 #include "gui/win/BrowserDocView.h"
 
@@ -2848,4 +2854,86 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
     auto& d = s->displayed;
     return fmt("OK visible=1 hwnd=%d page=%d y=%d zoom=%d", (int)(INT_PTR)s->hwndPopup, d.destPage, (int)d.region.y,
                (int)(d.userZoom * 100));
+}
+
+// Edit the current tab's page structure and report it. action: "move" (arg:
+// 1-based pages like "1,3", beforePage), "insert" (arg: a PDF path,
+// beforePage) or "" (report only). Reports each page's width, which a test
+// gives a unique value per page, and where the bookmarks point.
+// Used by tests/page-edit.ts.
+TempStr PageEditResultTemp(Str action, Str arg, int beforePage, int* exitCodeOut) {
+    auto finish = [exitCodeOut](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    if (!dm) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-document")));
+    }
+    str::Builder out;
+    if (str::Eq(action, StrL("move"))) {
+        Vec<int> pages;
+        StrVec parts;
+        Split(&parts, arg, StrL(","), true);
+        for (Str p : parts) {
+            VecAppend(pages, ParseInt(p));
+        }
+        out.Append(fmt("moved=%d ", (int)MovePagesInTab(tab, pages, beforePage)));
+    } else if (str::Eq(action, StrL("insert"))) {
+        out.Append(fmt("inserted=%d ", InsertPdfInTab(tab, arg, beforePage)));
+    }
+    EngineBase* engine = dm->GetEngine();
+    out.Append(fmt("pages=%d widths=", engine->PageCount()));
+    for (int i = 1; i <= engine->PageCount(); i++) {
+        out.Append(fmt(i == 1 ? "%d" : ",%d", (int)(engine->PageMediabox(i).dx + 0.5f)));
+    }
+    out.Append(StrL(" toc="));
+    TocTree* toc = engine->GetToc();
+    for (TocItem* it = toc && toc->root ? toc->root->child : nullptr; it; it = it->next) {
+        out.Append(fmt("%s:%d;", it->title, it->pageNo));
+    }
+    out.Append(fmt(" canEdit=%d", (int)CanEditPagesInTab(tab)));
+    return finish(0, fmt("OK %s", ToStrTemp(out)));
+}
+
+// The sidebar's Thumbnails view: whether it shows, the current and selected pages
+// and, for clicking and dragging, each visible thumbnail in hwndTocBox client
+// coords. Used by tests/sidebar-thumbnails.ts.
+TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    PageThumbnailsCtrl* thumbs = win ? win->pageThumbs : nullptr;
+    if (!thumbs) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-window"));
+    }
+    Vec<int> marked;
+    thumbs->MarkedPages(marked);
+    str::Builder sb;
+    sb.Append(fmt("hwnd=%d visible=%d thumbnails=%d count=%d current=%d rendered=%d marked=",
+                  (int)(intptr_t)win->hwndTocBox, (int)win->uiState.tocVisible, (int)thumbs->IsVisible(),
+                  thumbs->pageCount, thumbs->selectedPage, thumbs->RenderedCount()));
+    for (int i = 0; i < len(marked); i++) {
+        sb.Append(fmt(i == 0 ? "%d" : ",%d", marked[i]));
+    }
+    Rect bl = win->tocLabel->BoundsInWindow();
+    Rect pl = win->tocThumbnailsLabel->BoundsInWindow();
+    // the focus ring is drawn while the thumbnails have the (virtual) focus
+    sb.Append(fmt(" ring=%d", (int)thumbs->HasFlag(vwfFocused)));
+    sb.Append(fmt(" bookmarksLabel=%d thumbnailsLabel=%d labelRects=%d,%d,%d,%d;%d,%d,%d,%d rects=",
+                  (int)win->tocLabel->IsVisible(), (int)win->tocThumbnailsLabel->IsVisible(), bl.x, bl.y, bl.dx, bl.dy,
+                  pl.x, pl.y, pl.dx, pl.dy));
+    for (int pageNo = 1; pageNo <= thumbs->pageCount; pageNo++) {
+        Rect r = thumbs->PageRect(pageNo);
+        sb.Append(fmt("%d:%d,%d,%d,%d;", pageNo, r.x, r.y, r.dx, r.dy));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(sb);
 }

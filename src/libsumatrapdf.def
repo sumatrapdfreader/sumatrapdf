@@ -298,6 +298,10 @@ EXPORTS
 
 	pdf_drop_graft_map
 
+	pdf_graft_mapped_page
+
+	pdf_bake_document
+
 	pdf_graft_mapped_object
 
 	pdf_add_object

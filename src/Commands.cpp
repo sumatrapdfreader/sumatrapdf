@@ -336,6 +336,7 @@ static SeqStrings gCommandNames =
     "CmdZoomFitVisible\0"
     "CmdSignWithImage\0"
     "CmdInsertTextSnippet\0"
+    "CmdToggleThumbnails\0"
     "\0";
 
 static i32 gCommandIds[] = {
@@ -661,6 +662,7 @@ static i32 gCommandIds[] = {
     CmdZoomFitVisible,
     CmdSignWithImage,
     CmdInsertTextSnippet,
+    CmdToggleThumbnails,
 };
 
 SeqStrings gCommandDescriptions =
@@ -986,6 +988,7 @@ SeqStrings gCommandDescriptions =
     "Zoom: Fit Visible\0"
     "Sign With Image\0"
     "Insert Text Snippet\0"
+    "Toggle Thumbnails\0"
     "\0";
 
 SeqStrings gCommandAltDescs =
@@ -1054,6 +1057,7 @@ static const ArgSpec argSpecs[] = {
     {CmdTogglePresentationMode, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdToggleBookmarks, kCmdArgState, CommandArg::Type::Bool},        // default
     {CmdToggleTableOfContents, kCmdArgState, CommandArg::Type::Bool},  // default
+    {CmdToggleThumbnails, kCmdArgState, CommandArg::Type::Bool},       // default
 
     // default string is the setting name, e.g. [CmdToggleBoolSetting Fullscreen.ShowMenubar]
     {CmdToggleBoolSetting, kCmdArgName, CommandArg::Type::String}, // default

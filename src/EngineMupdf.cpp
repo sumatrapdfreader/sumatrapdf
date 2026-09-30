@@ -3674,6 +3674,63 @@ fz_context* EngineMupdf::Ctx() const {
     return GetOrClonePerThreadContext(const_cast<EngineMupdf*>(this), _ctx);
 }
 
+// Frees what a page holds and leaves it empty but valid: RebuildPages() drops
+// pages that a render may still hold, which sees page == nullptr under
+// renderLock and gives up. Annotation wrappers go to removedOut, detached from
+// the document, if given; else they're deleted
+static void FreePageInfo(fz_context* ctx, FzPageInfo* pi, Vec<Annotation*>* removedOut) {
+    DeleteVecMembers(pi->links);
+    DeleteVecMembers(pi->autoLinks);
+    DeleteVecMembers(pi->comments);
+    for (FitzPageImageInfo* img : pi->images) {
+        if (img && img->image) {
+            fz_drop_image(ctx, img->image);
+            img->image = nullptr;
+        }
+    }
+    DeleteVecMembers(pi->images);
+    if (removedOut) {
+        auto detach = [removedOut](Vec<Annotation*>& list) {
+            for (Annotation* a : list) {
+                // its pdf_annot goes with the page: must not reach MuPDF again
+                a->pdfannot = nullptr;
+                VecAppend(*removedOut, a);
+            }
+            VecReset(list);
+        };
+        detach(pi->annotations);
+        detach(pi->widgets);
+    } else {
+        DeleteVecMembers(pi->annotations);
+        DeleteVecMembers(pi->widgets);
+    }
+    if (pi->retainedLinks) {
+        fz_drop_link(ctx, pi->retainedLinks);
+        pi->retainedLinks = nullptr;
+    }
+    if (pi->displayList) {
+        fz_drop_display_list(ctx, pi->displayList);
+        pi->displayList = nullptr;
+    }
+    PdfDarkModeInvalidatePage(ctx, pi);
+    if (pi->page) {
+        fz_drop_page(ctx, pi->page);
+        pi->page = nullptr;
+    }
+    // free the buffers, not just the elements: a dropped page is never destroyed
+    VecReset(pi->links);
+    VecReset(pi->autoLinks);
+    VecReset(pi->comments);
+    VecReset(pi->images);
+    VecReset(pi->annotations);
+    VecReset(pi->widgets);
+    VecReset(pi->allElements);
+    VecReset(pi->darkLegacySkipDevAbs);
+    pi->annotsLoaded = false;
+    pi->fullyLoaded = false;
+    pi->elementsNeedRebuilding = true;
+}
+
 EngineMupdf::~EngineMupdf() {
     pagesLock.Lock();
 
@@ -3687,31 +3744,8 @@ EngineMupdf::~EngineMupdf() {
             continue;
         }
         for (FzPageInfo* pi : *v) {
-            DeleteVecMembers(pi->links);
-            DeleteVecMembers(pi->autoLinks);
-            DeleteVecMembers(pi->comments);
-            for (FitzPageImageInfo* img : pi->images) {
-                if (img && img->image) {
-                    fz_drop_image(ctx, img->image);
-                    img->image = nullptr;
-                }
-            }
-            DeleteVecMembers(pi->images);
-            DeleteVecMembers(pi->annotations);
-            DeleteVecMembers(pi->widgets);
-            if (pi->retainedLinks) {
-                fz_drop_link(ctx, pi->retainedLinks);
-            }
-            if (pi->displayList) {
-                fz_drop_display_list(ctx, pi->displayList);
-            }
-            PdfDarkModeInvalidatePage(ctx, pi);
-            if (pi->page) {
-                fz_drop_page(ctx, pi->page);
-            }
-            // storage is arena-owned; run the destructor in place so the inner
-            // Vec<>s free their heap-allocated els buffers, then leave the
-            // memory to the arena.
+            FreePageInfo(ctx, pi, nullptr);
+            // storage is arena-owned: destroy in place, the arena frees it
             pi->~FzPageInfo();
         }
         v->~Vec<FzPageInfo*>();
@@ -4795,6 +4829,72 @@ static bool IsLinearizedFile(EngineMupdf* e) {
 }
 
 // one vector, pageCount full entries: PDF, XPS and single-chapter reflow docs
+// size of each page of a PDF, from its page object. Caller holds docLock
+static void LoadPdfPageMediaboxes(EngineMupdf* e) {
+    auto* ctx = e->Ctx();
+    for (int pageNo = 0; pageNo < e->pageCount; pageNo++) {
+        pdf_obj* pageref = nullptr;
+        fz_rect mbox{};
+        fz_matrix page_ctm{};
+        fz_var(pageref);
+        fz_var(mbox);
+        fz_try(ctx) {
+            // note: don't pdf_drop_obj() this
+            pageref = pdf_lookup_page_obj(ctx, e->pdfdoc, pageNo);
+            pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
+            mbox = fz_transform_rect(mbox, page_ctm);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            mbox = {};
+        }
+        if (fz_is_empty_rect(mbox)) {
+            logf("cannot find page size for page %d", pageNo);
+            mbox.x0 = 0;
+            mbox.y0 = 0;
+            mbox.x1 = 612;
+            mbox.y1 = 792;
+        }
+        FzPageInfo* pageInfo = (*e->chapterPages[0])[pageNo];
+        pageInfo->mediabox = ToRectF(mbox);
+    }
+}
+
+// Caller holds docLock
+static void LoadPdfPageLabels(EngineMupdf* e) {
+    auto* ctx = e->Ctx();
+    if (e->pageLabels) {
+        e->pageLabels->~StrVec();
+        e->pageLabels = nullptr;
+    }
+    e->hasPageLabels = false;
+    pdf_obj* labels = nullptr;
+    fz_var(labels);
+    fz_try(ctx) {
+        labels = pdf_dict_getp(ctx, pdf_trailer(ctx, e->pdfdoc), "Root/PageLabels");
+        if (labels) {
+            e->pageLabels = BuildPageLabelVec(e->arena, ctx, labels, e->PageCount());
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        fz_warn(ctx, "Couldn't load page labels");
+    }
+    if (!e->pageLabels) {
+        return;
+    }
+    e->hasPageLabels = true;
+    int maxN = 0;
+    int n = len(*e->pageLabels);
+    for (int i = 0; i < n; i++) {
+        int v = 0;
+        if (str::Parse((*e->pageLabels)[i], "%d%$", &v).s && v > maxN) {
+            maxN = v;
+        }
+    }
+    e->logicalPageCount = maxN;
+}
+
 static void InitChapterPagesFlat(EngineMupdf* e) {
     VecResize(e->chapterPages, 1);
     auto* v = New<Vec<FzPageInfo*>>(e->arena);
@@ -5040,32 +5140,7 @@ bool EngineMupdf::FinishLoading() {
 
     AutoUnlockRecursiveMutex scope(&docLock);
 
-    for (int pageNo = 0; pageNo < pageCount; pageNo++) {
-        pdf_obj* pageref = nullptr;
-        fz_rect mbox{};
-        fz_matrix page_ctm{};
-        fz_var(pageref);
-        fz_var(mbox);
-        fz_try(ctx) {
-            // note: don't pdf_drop_obj() this
-            pageref = pdf_lookup_page_obj(ctx, pdfdoc, pageNo);
-            pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
-            mbox = fz_transform_rect(mbox, page_ctm);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-            mbox = {};
-        }
-        if (fz_is_empty_rect(mbox)) {
-            logf("cannot find page size for page %d", pageNo);
-            mbox.x0 = 0;
-            mbox.y0 = 0;
-            mbox.x1 = 612;
-            mbox.y1 = 792;
-        }
-        FzPageInfo* pageInfo = (*chapterPages[0])[pageNo];
-        pageInfo->mediabox = ToRectF(mbox);
-    }
+    LoadPdfPageMediaboxes(this);
 
     fz_try(ctx) {
         outline = fz_load_outline(ctx, _doc);
@@ -5133,30 +5208,7 @@ bool EngineMupdf::FinishLoading() {
         pdfInfo = nullptr;
     }
 
-    pdf_obj* labels = nullptr;
-    fz_var(labels);
-    fz_try(ctx) {
-        labels = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/PageLabels");
-        if (labels) {
-            pageLabels = BuildPageLabelVec(arena, ctx, labels, PageCount());
-        }
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        fz_warn(ctx, "Couldn't load page labels");
-    }
-    if (pageLabels) {
-        hasPageLabels = true;
-        int maxN = 0;
-        int n = len(*pageLabels);
-        for (int i = 0; i < n; i++) {
-            int v = 0;
-            if (str::Parse((*pageLabels)[i], "%d%$", &v).s && v > maxN) {
-                maxN = v;
-            }
-        }
-        logicalPageCount = maxN;
-    }
+    LoadPdfPageLabels(this);
 
     // enable mupdf's JavaScript engine so form-field calculate / validate /
     // format actions run (e.g. auto-summed totals on a fillable form). mujs is
@@ -9922,11 +9974,240 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
     });
 }
 
+//--- editing the page structure: move pages, insert pages from another PDF
+
+// object numbers of the pages, in page order. Caller holds docLock
+static void PageTreeObjNums(EngineMupdf* e, Vec<int>& out) {
+    VecReset(out);
+    auto* ctx = e->Ctx();
+    fz_try(ctx) {
+        int n = pdf_count_pages(ctx, e->pdfdoc);
+        for (int i = 0; i < n; i++) {
+            VecAppend(out, pdf_to_num(ctx, pdf_lookup_page_obj(ctx, e->pdfdoc, i)));
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        VecReset(out);
+    }
+}
+
+// The page tree changed: pages moved, were inserted, or that was undone. Page
+// N may be another page now, so rather than patch per-page state, build it
+// again from the document the way loading does. The annotation wrappers go to
+// removedOut (detached) and the table of contents to *oldTocOut, for the
+// caller to take out of the UI before deleting them.
+static void RebuildPages(EngineMupdf* e, Vec<Annotation*>& removedOut, TocTree** oldTocOut) {
+    auto* ctx = e->Ctx();
+    {
+        AutoUnlockRecursiveMutex pagesScope(&e->pagesLock);
+        AutoUnlockMutex renderScope(&e->renderLock);
+        AutoUnlockRecursiveMutex docScope(&e->docLock);
+
+        int n = 0;
+        fz_try(ctx) {
+            n = pdf_count_pages(ctx, e->pdfdoc);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+        }
+        int nOld = e->pageCount;
+        for (FzPageInfo* pi : *e->chapterPages[0]) {
+            FreePageInfo(ctx, pi, &removedOut);
+        }
+        e->chapterPages[0]->~Vec<FzPageInfo*>();
+        e->pageCount = std::max(n, 1);
+        InitChapterPagesFlat(e);
+        LoadPdfPageMediaboxes(e);
+        LoadPdfPageLabels(e);
+
+        // bookmarks point at page objects: loading them again gets the new
+        // page numbers
+        fz_drop_outline(ctx, e->outline);
+        e->outline = nullptr;
+        fz_try(ctx) {
+            e->outline = fz_load_outline(ctx, e->_doc);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+        }
+        *oldTocOut = e->tocTree;
+        e->tocTree = nullptr;
+
+        if (e->darkModeEngineCache) {
+            PdfDarkModeEngineCacheClear(ctx, e->darkModeEngineCache);
+        }
+        for (int i = 1; i <= std::max(n, nOld); i++) {
+            e->InvalidateTextForPage(i);
+        }
+        {
+            AutoUnlockMutex clipScope(&e->clipOptLock);
+            VecReset(e->clipOptKnown);
+        }
+        // the Find Annotation list loads all pages' annotations once; the new
+        // pages need it again
+        if (e->annotLoadDone) {
+            e->annotLoadDone = false;
+            e->annotLoadStarted = false;
+        }
+    }
+    e->PagesChanged();
+}
+
+// only a plain PDF: its page tree is the page order
+bool EngineMupdfCanEditPages(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    return e && e->pdfdoc && !e->HasChapters() && e->journalNesting == 0;
+}
+
+// Move pages (1-based, ascending) together in front of the page now at
+// beforePage (pageCount + 1: to the end), keeping their order. One undo step.
+// False if nothing would move. removedOut / oldTocOut: see RebuildPages().
+bool EngineMupdfMovePages(EngineBase* engine, const Vec<int>& pages, int beforePage, Vec<Annotation*>& removedOut,
+                          TocTree** oldTocOut) {
+    *oldTocOut = nullptr;
+    if (!EngineMupdfCanEditPages(engine)) {
+        return false;
+    }
+    EngineMupdf* e = AsEngineMupdf(engine);
+    int n = e->PageCount();
+    int k = len(pages);
+    if (k == 0 || beforePage < 1 || beforePage > n + 1) {
+        return false;
+    }
+    int nBefore = 0; // moved pages in front of beforePage
+    for (int i = 0; i < k; i++) {
+        if (pages[i] < 1 || pages[i] > n || (i > 0 && pages[i] <= pages[i - 1])) {
+            return false;
+        }
+        nBefore += pages[i] < beforePage ? 1 : 0;
+    }
+    // where the first moved page lands (0-based), once the moved pages are out
+    int at = beforePage - 1 - nBefore;
+    bool unchanged = pages[k - 1] - pages[0] == k - 1 && at == pages[0] - 1;
+    if (unchanged) {
+        return false;
+    }
+
+    auto* ctx = e->Ctx();
+    bool ok = false;
+    {
+        AutoUnlockRecursiveMutex docScope(&e->docLock);
+        pdf_document* doc = e->pdfdoc;
+        Vec<pdf_obj*> objs;
+        fz_var(ok);
+        fz_try(ctx) {
+            pdf_begin_operation(ctx, doc, k == 1 ? "Move page" : "Move pages");
+            fz_try(ctx) {
+                for (int pageNo : pages) {
+                    pdf_obj* page = pdf_lookup_page_obj(ctx, doc, pageNo - 1);
+                    // it may inherit its size or resources from its parent in
+                    // the page tree; it can have another parent after the move
+                    pdf_flatten_inheritable_page_items(ctx, page);
+                    VecAppend(objs, pdf_keep_obj(ctx, page));
+                }
+                // from the back, so the indexes still to delete stay valid
+                for (int i = k - 1; i >= 0; i--) {
+                    pdf_delete_page(ctx, doc, pages[i] - 1);
+                }
+                for (int i = 0; i < k; i++) {
+                    pdf_insert_page(ctx, doc, at + i, objs[i]);
+                }
+                pdf_end_operation(ctx, doc);
+                ok = true;
+            }
+            fz_catch(ctx) {
+                pdf_abandon_operation(ctx, doc);
+                fz_rethrow(ctx);
+            }
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("EngineMupdfMovePages: moving %d page(s) in front of page %d failed\n", k, beforePage);
+        }
+        for (pdf_obj* obj : objs) {
+            pdf_drop_obj(ctx, obj);
+        }
+    }
+    if (!ok) {
+        return false;
+    }
+    e->modifiedAnnotations = true;
+    RebuildPages(e, removedOut, oldTocOut);
+    return true;
+}
+
+// Insert all pages of the PDF at path in front of the page now at beforePage
+// (pageCount + 1: at the end). One undo step. Its annotations come along;
+// form fields are flattened into the page, as they'd lose their form. Returns
+// the number of pages inserted, 0 on failure. removedOut / oldTocOut: see
+// RebuildPages().
+int EngineMupdfInsertPdf(EngineBase* engine, Str path, int beforePage, Vec<Annotation*>& removedOut,
+                         TocTree** oldTocOut) {
+    *oldTocOut = nullptr;
+    if (!EngineMupdfCanEditPages(engine)) {
+        return 0;
+    }
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (beforePage < 1 || beforePage > e->PageCount() + 1) {
+        return 0;
+    }
+    auto* ctx = e->Ctx();
+    int nInserted = 0;
+    {
+        AutoUnlockRecursiveMutex docScope(&e->docLock);
+        pdf_document* doc = e->pdfdoc;
+        pdf_document* src = nullptr;
+        pdf_graft_map* map = nullptr;
+        fz_var(src);
+        fz_var(map);
+        fz_var(nInserted);
+        fz_try(ctx) {
+            src = pdf_open_document(ctx, CStrTemp(path));
+            if (pdf_needs_password(ctx, src)) {
+                fz_throw(ctx, FZ_ERROR_ARGUMENT, "the PDF is password protected");
+            }
+            // in memory only: the file isn't changed
+            pdf_bake_document(ctx, src, 0, 1);
+            int n = pdf_count_pages(ctx, src);
+            map = pdf_new_graft_map(ctx, doc);
+            pdf_begin_operation(ctx, doc, "Insert pages");
+            fz_try(ctx) {
+                for (int i = 0; i < n; i++) {
+                    pdf_graft_mapped_page(ctx, map, beforePage - 1 + i, src, i);
+                }
+                pdf_end_operation(ctx, doc);
+                nInserted = n;
+            }
+            fz_catch(ctx) {
+                pdf_abandon_operation(ctx, doc);
+                fz_rethrow(ctx);
+            }
+        }
+        fz_always(ctx) {
+            pdf_drop_graft_map(ctx, map);
+            pdf_drop_document(ctx, src);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("EngineMupdfInsertPdf: inserting '%s' failed\n", path);
+            nInserted = 0;
+        }
+    }
+    if (nInserted == 0) {
+        return 0;
+    }
+    e->modifiedAnnotations = true;
+    RebuildPages(e, removedOut, oldTocOut);
+    return nInserted;
+}
+
 // Step one operation back (or forward with redo). Returns false if there was
 // nothing to step to. The wrappers in removedOut are detached from the document
 // already; the caller must take them out of the UI and delete them.
-static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>& removedOut) {
+static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>& removedOut, TocTree** oldTocOut) {
     VecReset(removedOut);
+    *oldTocOut = nullptr;
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
         return false;
@@ -9937,8 +10218,12 @@ static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>&
     }
     auto* ctx = e->Ctx();
     bool ok = false;
+    // a page move / insert changes the page tree: that needs a rebuild
+    Vec<int> pagesBefore;
+    Vec<int> pagesAfter;
     {
         AutoUnlockRecursiveMutex docScope(&e->docLock);
+        PageTreeObjNums(e, pagesBefore);
         fz_try(ctx) {
             if (redo) {
                 pdf_redo(ctx, e->pdfdoc);
@@ -9951,20 +10236,29 @@ static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>&
             fz_report_error(ctx);
             logf("EngineMupdfUndoRedo: pdf_%s() failed\n", redo ? StrL("redo") : StrL("undo"));
         }
+        PageTreeObjNums(e, pagesAfter);
     }
     if (!ok) {
         return false;
     }
-    SyncPagesAfterUndoRedo(e, removedOut);
+    bool samePages = len(pagesBefore) == len(pagesAfter);
+    for (int i = 0; samePages && i < len(pagesBefore); i++) {
+        samePages = pagesBefore[i] == pagesAfter[i];
+    }
+    if (samePages) {
+        SyncPagesAfterUndoRedo(e, removedOut);
+    } else {
+        RebuildPages(e, removedOut, oldTocOut);
+    }
     return true;
 }
 
-bool EngineMupdfUndo(EngineBase* engine, Vec<Annotation*>& removedOut) {
-    return EngineMupdfUndoRedo(engine, false, removedOut);
+bool EngineMupdfUndo(EngineBase* engine, Vec<Annotation*>& removedOut, TocTree** oldTocOut) {
+    return EngineMupdfUndoRedo(engine, false, removedOut, oldTocOut);
 }
 
-bool EngineMupdfRedo(EngineBase* engine, Vec<Annotation*>& removedOut) {
-    return EngineMupdfUndoRedo(engine, true, removedOut);
+bool EngineMupdfRedo(EngineBase* engine, Vec<Annotation*>& removedOut, TocTree** oldTocOut) {
+    return EngineMupdfUndoRedo(engine, true, removedOut, oldTocOut);
 }
 
 // The journal knows exactly whether the document differs from the file, which

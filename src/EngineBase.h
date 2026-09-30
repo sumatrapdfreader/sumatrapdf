@@ -572,6 +572,7 @@ class EngineBase {
     Location LastLocation();
     Location ClampLocation(Location loc);
     int LayoutGeneration();
+    void PagesChanged();
     void EnsureAllChaptersLaidOut();
     int ChaptersLaidOut();
     // lay out every chapter that isn't yet, off the UI thread. the chapter the

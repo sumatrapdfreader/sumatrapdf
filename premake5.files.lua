@@ -274,6 +274,7 @@ function sumatrapdf_files()
     "PagePosition.*",
     "AppTools.*",
     "Canvas.*",
+    "PageThumbnails.*",
     "AnnotPlacement.*",
     "AnnotTextPopup.*",
     "AnnotEditToolbar.*",

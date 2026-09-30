@@ -97,6 +97,7 @@
 #include "HomePage.h"
 #include "DocumentProperties.h"
 #include "TabGroupsManage.h"
+#include "PageThumbnails.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
 #include "Toolbar.h"
@@ -898,6 +899,7 @@ static void UpdateSidebarDisplayState(WindowTab* tab, FileState* fs) {
     ReportIf(!tab);
     MainWindow* win = tab->win;
     fs->showToc = tab->showToc;
+    fs->showThumbnails = tab->showThumbnails;
     if (win->tocLoaded && tab == win->CurrentTab()) {
         TocTree* tocTree = tab->ctrl->GetToc();
         UpdateTocExpansionState(tab->tocState, win->tocTreeView, tocTree);
@@ -1205,6 +1207,7 @@ void ControllerCallbackHandler::PagesRenumbered(DisplayModel* dm) {
     }
     UpdateToolbarPageText(win, dm->PageCount());
     UpdateTabPageText(win->CurrentTab());
+    SidebarPagesChanged(win);
     UpdateTocSelection(win, dm->CurrentPageNo());
     win->RedrawAll();
 }
@@ -2516,6 +2519,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         showType = SW_MAXIMIZE;
     }
 
+    tab->showThumbnails = false;
     if (fs) {
         // resolved to a real Location once win->ctrl exists, below
         ss.page = ParseStoredPagePos(fs->pageNo).pageNo;
@@ -2529,6 +2533,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             showType = SW_MINIMIZE;
         }
         showToc = fs->showToc || gSettings->alwaysShowSidebar;
+        tab->showThumbnails = fs->showThumbnails;
         if (win->ctrl && win->presentation) {
             showToc = tab->showTocPresentation;
         }
@@ -2598,6 +2603,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // delete them before destroying the whole DisplayModel
     // (same for linkOnLastButtonDown)
     ClearTocBox(win);
+    ClearSidebarThumbnails(win);
     ClearMouseState(win);
 
     if (win->ctrl) {
@@ -3287,6 +3293,8 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
 
     win->tocLabel->SetText(Tr("Bookmarks"));
     win->tocLabel->Invalidate();
+    win->tocThumbnailsLabel->SetText(Tr("Thumbnails"));
+    win->tocThumbnailsLabel->Invalidate();
     win->favLabel->SetText(Tr("Favorites"));
     win->favLabel->Invalidate();
 }
@@ -5206,6 +5214,9 @@ void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
     // after this is either still valid or dropped by the darkModeEpoch check
     gRenderCache->AbortRendering(dm);
     gRenderCache->KeepForDisplayModel(dm, dm);
+    if (win->pageThumbs && win->pageThumbs->active) {
+        win->pageThumbs->Refresh();
+    }
     if (includeNonClientArea) {
         win->RedrawAllIncludingNonClient();
     } else {
@@ -5384,6 +5395,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         win->AsMarkdown()->RemoveParentHwnd();
     }
     ClearTocBox(win);
+    ClearSidebarThumbnails(win);
     // stop render threads before waiting on find: they hold pagesLock/renderLock
     // that the find thread needs for text extraction (issue: stress-test hang in
     // AbortFinding while RenderCacheThread holds engine locks).
@@ -6806,6 +6818,7 @@ static TabState* NewTabStateFromTab(WindowTab* tab) {
     FileState* fs = NewFileState(tab->filePath);
     tab->ctrl->GetDisplayState(fs);
     fs->showToc = tab->showToc;
+    fs->showThumbnails = tab->showThumbnails;
     *fs->tocState = tab->tocState;
 
     TabState* state = NewTabState(fs);
@@ -8330,6 +8343,15 @@ static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
         win->favLabel->font = labelFont;
     }
     ApplyLabelWithCloseDpi(win->tocLabel, win->tocCloseBtn, dpi);
+    if (win->tocThumbnailsLabel) {
+        win->tocThumbnailsLabel->font = labelFont;
+        win->tocThumbnailsLabel->padding = win->tocLabel->padding;
+    }
+    if (win->pageThumbs) {
+        win->pageThumbs->font = appFont;
+        win->pageThumbs->dpi = dpi;
+        SidebarPagesChanged(win);
+    }
     ApplyLabelWithCloseDpi(win->favLabel, win->favCloseBtn, dpi);
     // force a layout even if the box size in pixels is unchanged (the ✕
     // ideal size is what changed)
@@ -9329,7 +9351,9 @@ void AdvanceFocus(MainWindow* win) {
     }
     // note: the find edit is no longer in the toolbar tab order; it lives in the
     // floating findBar and is reached via Ctrl+F / the search toolbar icon
-    if (win->tocLoaded && win->uiState.tocVisible) {
+    if (win->uiState.tocVisible && SidebarShowsThumbnails(win)) {
+        tabOrder[nWindows++] = win->hwndTocBox;
+    } else if (win->tocLoaded && win->uiState.tocVisible) {
         tabOrder[nWindows++] = win->tocTreeView->hwnd;
     }
     if (gSettings->showFavorites) {
@@ -10086,8 +10110,9 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     bool requestedToc = tocVisible;
     EngineBase* engine = win->CurrentTab() ? win->CurrentTab()->GetEngine() : nullptr;
     bool headingPending = EngineMupdfHeadingTocPending(engine);
+    bool showsThumbnails = SidebarShowsThumbnails(win);
 
-    if (!win->IsDocLoaded() || !win->ctrl || !win->ctrl->HasToc()) {
+    if (!win->IsDocLoaded() || !win->ctrl || !(win->ctrl->HasToc() || showsThumbnails)) {
         tocVisible = false;
     }
 
@@ -10097,8 +10122,10 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     }
 
     if (tocVisible) {
-        LoadTocTree(win);
-        if (!win->tocLoaded) {
+        if (win->ctrl->HasToc()) {
+            LoadTocTree(win);
+        }
+        if (!win->tocLoaded && !showsThumbnails) {
             tocVisible = false;
         }
     }
@@ -10110,7 +10137,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     if (!win->CurrentTab()) {
         ReportIf(tocVisible);
     } else if (!win->presentation) {
-        if (win->ctrl && (win->ctrl->HasToc() || headingPending)) {
+        if (win->ctrl && (win->ctrl->HasToc() || headingPending || showsThumbnails)) {
             win->CurrentTab()->showToc = requestedToc;
         } else {
             win->CurrentTab()->showToc = tocVisible;
@@ -10125,14 +10152,15 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     // When the Favorites tab is selected, the tree is focused there — don't
     // steal focus just because the sidebar panel is off.
     bool favTabActive = win->CurrentTab() && win->CurrentTab()->IsFavoritesTab();
-    if ((!tocVisible && HwndIsFocused(win->tocTreeView->hwnd)) ||
-        (!showFavorites && !favTabActive && HwndIsFocused(win->favTreeView->hwnd))) {
+    bool tocFocused = HwndIsFocused(win->tocTreeView->hwnd) || HwndIsFocused(win->hwndTocBox);
+    if ((!tocVisible && tocFocused) || (!showFavorites && !favTabActive && HwndIsFocused(win->favTreeView->hwnd))) {
         HwndSetFocus(win->hwndFrame);
     }
 
     bool wasSidebar = win->uiState.tocVisible || win->uiState.favVisible;
     win->uiState.tocVisible = tocVisible;
     win->uiState.favVisible = showFavorites;
+    UpdateSidebarView(win);
     bool nowSidebar = tocVisible || showFavorites;
     if (resizeFrame == SidebarResizeFrame::Adjust && wasSidebar != nowSidebar) {
         AdjustFrameForSidebar(win, nowSidebar);
@@ -11854,6 +11882,105 @@ void EndPdfEditOperation(MainWindow* win) {
     }
 }
 
+// After the engine rebuilt its pages (moved, inserted, or that undone): page N
+// may show another page now, so drop what was rendered for the old pages and
+// lay out again. oldToc: the table of contents the engine replaced
+static void UpdateUIAfterPagesChanged(WindowTab* tab, TocTree* oldToc) {
+    MainWindow* win = tab->win;
+    DisplayModel* dm = tab->AsFixed();
+    if (gRenderCache) {
+        gRenderCache->FreeForDisplayModel(dm);
+    }
+    dm->SyncWithEngineLayout();
+    if (oldToc) {
+        // the tree view points into the old tree until it's reloaded
+        ReloadTocTree(tab);
+        DestroyTocTree(oldToc);
+    }
+    SidebarPagesChanged(win);
+    UpdateToolbarPageText(win, dm->PageCount());
+    UpdateToolbarState(win);
+}
+
+// what an edit of the page structure does to the UI before and after the engine
+struct PageEditUI {
+    WindowTab* tab = nullptr;
+    Vec<Annotation*> removed;
+    TocTree* oldToc = nullptr;
+};
+
+static bool BeginPageEdit(PageEditUI& ui, WindowTab* tab) {
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    if (!dm || !tab->win || !EngineMupdfCanEditPages(dm->GetEngine())) {
+        return false;
+    }
+    ui.tab = tab;
+    // an in-flight placement or drag would write to a page that's going away
+    CancelAnnotationPlacement(tab->win);
+    CancelDrag(tab->win);
+    SetSelectedAnnotation(tab, nullptr);
+    if (gRenderCache) {
+        gRenderCache->AbortRendering(dm);
+    }
+    return true;
+}
+
+static void EndPageEdit(PageEditUI& ui) {
+    WindowTab* tab = ui.tab;
+    MainWindow* win = tab->win;
+    for (Annotation* a : ui.removed) {
+        DetachAnnotationFromUI(a);
+        DeleteAnnotation(a);
+    }
+    UpdateUIAfterPagesChanged(tab, ui.oldToc);
+    DeleteOldSelectionInfo(win, true);
+    RefreshAnnotationLists(tab);
+    NotifyAnnotationsChanged(tab);
+    ToolbarUpdateStateForWindow(win, true);
+    MainWindowRerender(win, true);
+}
+
+bool CanEditPagesInTab(WindowTab* tab) {
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    return dm && EngineMupdfCanEditPages(dm->GetEngine());
+}
+
+// pages: 1-based, ascending. They go together in front of beforePage
+// (pageCount + 1: to the end). Returns false if nothing moved
+bool MovePagesInTab(WindowTab* tab, const Vec<int>& pages, int beforePage) {
+    PageEditUI ui;
+    if (!BeginPageEdit(ui, tab)) {
+        return false;
+    }
+    EngineBase* engine = tab->AsFixed()->GetEngine();
+    bool ok = EngineMupdfMovePages(engine, pages, beforePage, ui.removed, &ui.oldToc);
+    if (ok) {
+        EndPageEdit(ui);
+    }
+    return ok;
+}
+
+// every page of the PDF at path goes in front of beforePage. Returns the
+// number of pages inserted
+int InsertPdfInTab(WindowTab* tab, Str path, int beforePage) {
+    PageEditUI ui;
+    if (!BeginPageEdit(ui, tab)) {
+        return 0;
+    }
+    EngineBase* engine = tab->AsFixed()->GetEngine();
+    int n = EngineMupdfInsertPdf(engine, path, beforePage, ui.removed, &ui.oldToc);
+    if (n > 0) {
+        EndPageEdit(ui);
+    } else {
+        NotificationCreateArgs nargs;
+        nargs.hwndParent = tab->win->hwndCanvas;
+        nargs.warning = true;
+        nargs.msg = fmt(Tr("Couldn't insert pages from '%s'").s, path::GetBaseNameTemp(path));
+        ShowNotification(nargs);
+    }
+    return n;
+}
+
 // Step the document's edit history. MuPDF restores the objects; every wrapper,
 // selection and cached rendering that pointed at the old state has to go.
 static void UndoRedoInTab(WindowTab* tab, bool redo) {
@@ -11883,10 +12010,16 @@ static void UndoRedoInTab(WindowTab* tab, bool redo) {
     }
 
     Vec<Annotation*> removed;
-    bool ok = redo ? EngineMupdfRedo(engine, removed) : EngineMupdfUndo(engine, removed);
+    TocTree* oldToc = nullptr;
+    int layoutGen = engine->LayoutGeneration();
+    bool ok = redo ? EngineMupdfRedo(engine, removed, &oldToc) : EngineMupdfUndo(engine, removed, &oldToc);
     for (Annotation* a : removed) {
         DetachAnnotationFromUI(a);
         DeleteAnnotation(a);
+    }
+    // it undid / redid a page move or insert
+    if (engine->LayoutGeneration() != layoutGen) {
+        UpdateUIAfterPagesChanged(tab, oldToc);
     }
     // the wrapper deletes above mark the document modified; the journal knows better
     EngineMupdfRefreshModifiedState(engine);
@@ -12664,11 +12797,33 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdToggleBookmarks:
-        case CmdToggleTableOfContents:
+        case CmdToggleTableOfContents: {
+            // from Thumbnails, Bookmarks switches the view rather than hiding it
+            bool thumbnailsShown = win->uiState.tocVisible && SidebarShowsThumbnails(win);
+            if (thumbnailsShown && win->ctrl->HasToc()) {
+                if (ShouldToggle(cmd, false)) {
+                    SetSidebarView(win, SidebarView::Bookmarks);
+                }
+                break;
+            }
             if (ShouldToggle(cmd, win->uiState.tocVisible)) {
                 ToggleTocBox(win);
             }
             break;
+        }
+
+        case CmdToggleThumbnails: {
+            bool thumbnailsShown = win->uiState.tocVisible && SidebarShowsThumbnails(win);
+            if (!ShouldToggle(cmd, thumbnailsShown)) {
+                break;
+            }
+            if (thumbnailsShown) {
+                ToggleTocBox(win);
+            } else {
+                SetSidebarView(win, SidebarView::Thumbnails);
+            }
+            break;
+        }
 
         case CmdExpandToCurrentPage:
             ExpandTocToCurrentPage(win);
@@ -15888,6 +16043,7 @@ static void SetTabState(WindowTab* tab, TabState* state) {
     }
 
     tab->tocState = *state->tocState;
+    tab->showThumbnails = state->showThumbnails;
     SetSidebarVisibility(win, state->showToc, gSettings->showFavorites);
 
     DisplayMode displayMode = DisplayModeFromString(state->displayMode, DisplayMode::Automatic);
@@ -16300,6 +16456,11 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
         if (KeyboardLinkFollowingCapturesKey(FindMainWindowByHwnd(msg.hwnd), msg.wParam)) {
             return false;
         }
+    }
+
+    // Up / Down in the focused thumbnails panel go through its pages
+    if (msg.message == WM_KEYDOWN && ThumbnailsTakeKey(FindMainWindowByHwnd(msg.hwnd), msg.hwnd, msg.wParam)) {
+        return false;
     }
 
     // arrows nudge a selected annotation instead of scrolling. Only for the
