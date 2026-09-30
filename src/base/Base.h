@@ -374,6 +374,20 @@ T limitValue(T val, T min, T max) {
     return val < min ? min : (val > max ? max : val);
 }
 
+inline float clampf(float v, float min, float max) {
+    return v < min ? min : (v > max ? max : v);
+}
+
+inline int clampi(int v, int vmin, int vmax) {
+    if (v > vmax) {
+        return vmax;
+    }
+    if (v < vmin) {
+        return vmin;
+    }
+    return v;
+}
+
 // return true if adding n to val overflows. Only valid for n > 0
 template <typename T>
 inline bool addOverflows(T val, T n) {

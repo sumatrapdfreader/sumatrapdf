@@ -90,16 +90,6 @@ void MoveXY(Rect& r, int x, int y) {
     r.y += y;
 }
 
-int Clamp(int v, int vmin, int vmax) {
-    if (v > vmax) {
-        return vmax;
-    }
-    if (v < vmin) {
-        return vmin;
-    }
-    return v;
-}
-
 int Scale(int v, i64 num, i64 den) {
     if (den == 0) {
         return 0;
@@ -148,8 +138,8 @@ Constraints TightHeight(int height) {
 }
 
 Size Constraints::Constrain(Size size) const {
-    int w = Clamp(size.dx, min.dx, max.dx);
-    int h = Clamp(size.dy, min.dy, max.dy);
+    int w = clampi(size.dx, min.dx, max.dx);
+    int h = clampi(size.dy, min.dy, max.dy);
     return Size{w, h};
 }
 
@@ -185,11 +175,11 @@ Size Constraints::ConstrainAndAttemptToPreserveAspectRatio(const Size size) cons
 }
 
 int Constraints::ConstrainHeight(int height) const {
-    return Clamp(height, min.dy, max.dy);
+    return clampi(height, min.dy, max.dy);
 }
 
 int Constraints::ConstrainWidth(int width) const {
-    return Clamp(width, min.dx, max.dx);
+    return clampi(width, min.dx, max.dx);
 }
 
 bool Constraints::HasBoundedHeight() const {
@@ -258,16 +248,16 @@ Constraints Constraints::LoosenWidth() const {
 
 Constraints Constraints::Tighten(Size size) const {
     Constraints bc = *this;
-    bc.min.dx = Clamp(size.dx, bc.min.dx, bc.max.dx);
+    bc.min.dx = clampi(size.dx, bc.min.dx, bc.max.dx);
     bc.max.dx = bc.min.dx;
-    bc.min.dy = Clamp(size.dy, bc.min.dy, bc.max.dy);
+    bc.min.dy = clampi(size.dy, bc.min.dy, bc.max.dy);
     bc.max.dy = bc.min.dy;
     return bc;
 }
 
 Constraints Constraints::TightenHeight(int height) const {
     Constraints bc = *this;
-    bc.min.dy = Clamp(height, bc.min.dy, bc.max.dy);
+    bc.min.dy = clampi(height, bc.min.dy, bc.max.dy);
     bc.max.dy = bc.min.dy;
     return bc;
 }
@@ -275,7 +265,7 @@ Constraints Constraints::TightenHeight(int height) const {
 Constraints Constraints::TightenWidth(int width) const {
     Constraints bc = *this;
 
-    bc.min.dx = Clamp(width, bc.min.dx, bc.max.dx);
+    bc.min.dx = clampi(width, bc.min.dx, bc.max.dx);
     bc.max.dx = bc.min.dx;
     return bc;
 }

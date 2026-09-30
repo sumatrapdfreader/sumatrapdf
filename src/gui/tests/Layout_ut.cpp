@@ -18,9 +18,9 @@ static bool LayoutRectEq(const Rect& r, int x, int y, int dx, int dy) {
 }
 
 static void Layout_TestPrimitives() {
-    utassert(Clamp(5, 0, 10) == 5);
-    utassert(Clamp(-3, 0, 10) == 0);
-    utassert(Clamp(50, 0, 10) == 10);
+    utassert(clampi(5, 0, 10) == 5);
+    utassert(clampi(-3, 0, 10) == 0);
+    utassert(clampi(50, 0, 10) == 10);
 
     utassert(Scale(10, 3, 2) == 15);
     utassert(Scale(10, 1, 0) == 0);   // divide-by-zero is guarded

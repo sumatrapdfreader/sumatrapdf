@@ -600,7 +600,7 @@ static void SelectAndEnsureVisible(VirtListBox* lb, int idx) {
 
     int itemH = lb->GetItemHeight();
     int visible = std::max(lb->UsableDy() / itemH, 1);
-    int top = Clamp(idx - (visible / 2), 0, std::max(n - visible, 0));
+    int top = clampi(idx - (visible / 2), 0, std::max(n - visible, 0));
     lb->ScrollTo(top * itemH);
 }
 

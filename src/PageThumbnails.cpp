@@ -276,7 +276,7 @@ void PageThumbnailsCtrl::SetTab(WindowTab* newTab) {
 
     dm = tab ? tab->AsFixed() : nullptr;
     pageCount = dm ? dm->PageCount() : 0;
-    selectedPage = dm ? Clamp(dm->CurrentPageNo(), 1, std::max(pageCount, 1)) : 1;
+    selectedPage = dm ? clampi(dm->CurrentPageNo(), 1, std::max(pageCount, 1)) : 1;
     VecReset(marked);
     VecAppendBlanks(marked, pageCount);
     anchorPage = 0;
@@ -321,7 +321,7 @@ void PageThumbnailsCtrl::SetBounds(Rect r) {
     int reservedScrollbarDx = DpiScaleByDpi(dpi, 10);
     int availableDx = r.dx - padding.left - padding.right - reservedScrollbarDx;
     int newCols = (availableDx + gap) / (thumbDx + gap);
-    newCols = Clamp(newCols, 1, kThumbnailMaxCols);
+    newCols = clampi(newCols, 1, kThumbnailMaxCols);
     if (newCols != cols) {
         cols = newCols;
         rowsModel->rows = (pageCount + cols - 1) / cols;
@@ -500,7 +500,7 @@ int PageThumbnailsCtrl::DropPosition(Point pt) {
             return 0;
         }
         int left = r.x - OriginInWindow().x;
-        slot = Clamp((pos - left + (gap / 2) + (step / 2)) / step, 0, cols);
+        slot = clampi((pos - left + (gap / 2) + (step / 2)) / step, 0, cols);
     }
     return std::min((row * cols) + slot + 1, pageCount + 1);
 }
@@ -525,7 +525,7 @@ void PageThumbnailsCtrl::SelectPage(int pageNo) {
     if (pageCount <= 0) {
         return;
     }
-    pageNo = Clamp(pageNo, 1, pageCount);
+    pageNo = clampi(pageNo, 1, pageCount);
     if (pageNo == selectedPage) {
         return;
     }
@@ -782,7 +782,7 @@ static int PageForKey(PageThumbnailsCtrl* c, int vkey) {
         default:
             return 0;
     }
-    return Clamp(pageNo, 1, c->pageCount);
+    return clampi(pageNo, 1, c->pageCount);
 }
 
 void PageThumbnailsCtrl::HandleKey(int vkey) {

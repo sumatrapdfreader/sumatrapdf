@@ -1939,11 +1939,7 @@ static float PointSegmentDistSq(PointF p, PointF a, PointF b) {
     float t = 0.f;
     if (lengthSq > 0.f) {
         t = (((p.x - a.x) * dx) + ((p.y - a.y) * dy)) / lengthSq;
-        if (t < 0.f) {
-            t = 0.f;
-        } else if (t > 1.f) {
-            t = 1.f;
-        }
+        t = clampf(t, 0.f, 1.f);
     }
     float px = a.x + (t * dx);
     float py = a.y + (t * dy);

@@ -255,11 +255,7 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     }
     float factor = (wheelDelta > 0) ? kRefHoverUserZoomStep : (1.f / kRefHoverUserZoomStep);
     float newZoom = s->displayed.userZoom * factor;
-    if (newZoom < kRefHoverMinUserZoom) {
-        newZoom = kRefHoverMinUserZoom;
-    } else if (newZoom > kRefHoverMaxUserZoom) {
-        newZoom = kRefHoverMaxUserZoom;
-    }
+    newZoom = clampf(newZoom, kRefHoverMinUserZoom, kRefHoverMaxUserZoom);
     if (newZoom == s->displayed.userZoom) {
         return false;
     }

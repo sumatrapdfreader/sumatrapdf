@@ -1254,7 +1254,7 @@ int VirtScroll::MaxScrollY() const {
 
 bool VirtScroll::ScrollTo(int y) {
     int maxY = MaxScrollY();
-    y = Clamp(y, 0, maxY);
+    y = clampi(y, 0, maxY);
     if (y == scrollY) {
         return false;
     }
@@ -1451,7 +1451,7 @@ int ScrollBox::MaxScrollY() const {
 
 bool ScrollBox::ScrollTo(int y) {
     int maxY = MaxScrollY();
-    y = Clamp(y, 0, maxY);
+    y = clampi(y, 0, maxY);
     if (y == scrollY) {
         UpdateScrollbar();
         return false;
@@ -1635,7 +1635,7 @@ Rect VirtListBox::ThumbRectLocal() {
     int visibleDy = UsableDy();
     int minDy = DpiScaleByDpi(GetDpi(), 20);
     int thumbDy = Scale(sb.dy, visibleDy, contentDy);
-    thumbDy = Clamp(thumbDy, std::min(minDy, sb.dy), sb.dy);
+    thumbDy = clampi(thumbDy, std::min(minDy, sb.dy), sb.dy);
     int maxY = MaxScrollY();
     int y = (maxY > 0) ? Scale(sb.dy - thumbDy, scrollY, maxY) : 0;
     return {sb.x, sb.y + y, sb.dx, thumbDy};
@@ -1655,7 +1655,7 @@ Size VirtListBox::GetIdealSize() {
 void VirtListBox::SetBounds(Rect r) {
     VirtCtrl::SetBounds(r);
     // a taller viewport can make the current scroll position invalid
-    scrollY = Clamp(scrollY, 0, MaxScrollY());
+    scrollY = clampi(scrollY, 0, MaxScrollY());
     if (pendingVisibleIdx >= 0) {
         int idx = pendingVisibleIdx;
         pendingVisibleIdx = -1;
@@ -1664,7 +1664,7 @@ void VirtListBox::SetBounds(Rect r) {
 }
 
 bool VirtListBox::ScrollTo(int y) {
-    y = Clamp(y, 0, MaxScrollY());
+    y = clampi(y, 0, MaxScrollY());
     if (y == scrollY) {
         return false;
     }
@@ -1778,8 +1778,8 @@ void VirtListBox::SelectRange(int from, int to) {
     if (n == 0) {
         return;
     }
-    from = Clamp(from, 0, n - 1);
-    to = Clamp(to, 0, n - 1);
+    from = clampi(from, 0, n - 1);
+    to = clampi(to, 0, n - 1);
     if (!multiSelect) {
         SetCurrentSelection(to);
         return;
@@ -2138,7 +2138,7 @@ void VirtListBox::OnKeyDown(VirtKeyEvent* ev) {
         default:
             return;
     }
-    idx = Clamp(idx, 0, n - 1);
+    idx = clampi(idx, 0, n - 1);
     ApplyNav(idx, ev->isCtrl, ev->isShift);
     ev->didHandle = true;
     return;
@@ -3128,12 +3128,7 @@ int VirtSlider::ValueFromLocalX(int xLocal) {
     if (track.dx > 0) {
         t = (float)(x - track.x) / (float)track.dx;
     }
-    if (t < 0) {
-        t = 0;
-    }
-    if (t > 1) {
-        t = 1;
-    }
+    t = clampf(t, 0, 1);
     int n = maxVal - minVal;
     return minVal + (int)lroundf(t * (float)n);
 }
@@ -3146,12 +3141,7 @@ void VirtSlider::SetValue(int v, bool notify) {
     if (maxVal < minVal) {
         maxVal = minVal;
     }
-    if (v < minVal) {
-        v = minVal;
-    }
-    if (v > maxVal) {
-        v = maxVal;
-    }
+    v = clampi(v, minVal, maxVal);
     if (v == value) {
         if (!adjusting) {
             committed = v;

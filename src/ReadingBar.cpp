@@ -72,12 +72,7 @@ static void SetHeightPx(int px, bool save) {
     }
     int dpi = DpiGet();
     int unscaled = (dpi > 0) ? MulDiv(px, 96, dpi) : px;
-    if (unscaled < kMinHeight96) {
-        unscaled = kMinHeight96;
-    }
-    if (unscaled > 400) {
-        unscaled = 400;
-    }
+    unscaled = clampi(unscaled, kMinHeight96, 400);
     if (gSettings->readingBar.height == unscaled) {
         if (save) {
             ScheduleSaveSettings();
@@ -118,12 +113,7 @@ static Rect BandRect(MainWindow* win) {
         return {};
     }
     float frac = tab->readingBar.yFrac;
-    if (frac < 0) {
-        frac = 0;
-    }
-    if (frac > 1) {
-        frac = 1;
-    }
+    frac = clampf(frac, 0, 1);
     int y = (int)((frac * (float)canvas.dy) + 0.5f);
     if (y < 0) {
         y = 0;
@@ -142,12 +132,7 @@ static void SetBandY(WindowTab* tab, int y, int canvasDy) {
     if (!tab || canvasDy <= 0) {
         return;
     }
-    if (y < 0) {
-        y = 0;
-    }
-    if (y > canvasDy) {
-        y = canvasDy;
-    }
+    y = clampi(y, 0, canvasDy);
     tab->readingBar.yFrac = (float)y / (float)canvasDy;
 }
 
@@ -170,12 +155,8 @@ static ReadingBarHit HitTest(MainWindow* win, Point pt) {
         return ReadingBarHit::Close;
     }
     int edge = DpiScale(kEdgeHit96);
-    if (edge > band.dy / 3) {
-        edge = band.dy / 3;
-    }
-    if (edge < 1) {
-        edge = 1;
-    }
+    // at least 1 even when the band is too thin for a third of it
+    edge = clampi(edge, 1, std::max(band.dy / 3, 1));
     if (pt.y < band.y + edge) {
         return ReadingBarHit::ResizeTop;
     }

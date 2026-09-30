@@ -8,7 +8,6 @@ const int Inf = INT_MAX;
 void PositionRB(const Rect& container, Rect& r);
 void MoveXY(Rect& r, int x, int y);
 
-int Clamp(int v, int vmin, int vmax);
 int Scale(int v, i64 num, i64 den);
 int GuardInf(int a, int b);
 
