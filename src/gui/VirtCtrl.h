@@ -314,6 +314,7 @@ struct VirtRoot {
     void SetChild(VirtCtrl*);
     // the tops found in a layout tree; not owned
     void SetTops(const Vec<VirtCtrl*>&);
+    void ForgetTops();
     void SetBounds(Rect);
     void LayoutIfNeeded();
     void RequestLayout();

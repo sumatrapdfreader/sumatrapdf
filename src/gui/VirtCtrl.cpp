@@ -595,9 +595,7 @@ VirtRoot::VirtRoot(HWND hwnd) {
 VirtRoot::~VirtRoot() {
     // `tops` belong to the layout tree and can outlive us; make sure they don't
     // report their destruction to a root that is gone
-    for (VirtCtrl* w : tops) {
-        w->SetRoot(nullptr);
-    }
+    ForgetTops();
     delete owned;
     delete tooltip;
     GfxDestroyDoubleBuffer(gfxBuf);
@@ -629,8 +627,19 @@ void VirtRoot::SetChild(VirtCtrl* c) {
     needsLayout = true;
 }
 
+// the tops let go of this root, unless another root took them since
+void VirtRoot::ForgetTops() {
+    for (VirtCtrl* w : tops) {
+        if (w->root == this) {
+            w->SetRoot(nullptr);
+        }
+    }
+}
+
 void VirtRoot::SetTops(const Vec<VirtCtrl*>& newTops) {
     ReportIf(owned);
+    // a dropped top can outlive this root (e.g. a view that moved elsewhere)
+    ForgetTops();
     VecReset(tops);
     hovered = nullptr;
     captured = nullptr;
