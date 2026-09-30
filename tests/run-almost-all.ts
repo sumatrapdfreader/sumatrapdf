@@ -266,7 +266,6 @@ import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as commandPaletteShortcutFilter } from "./command-palette-shortcut-filter.ts";
 import { testit as commandPaletteAltNames } from "./command-palette-alt-names.ts";
 import { testit as commandPaletteThumbnails } from "./command-palette-thumbnails.ts";
-import { testit as pageEdit } from "./page-edit.ts";
 import { testit as sidebarThumbnails } from "./sidebar-thumbnails.ts";
 import { testit as sidebarThumbnailsWheel } from "./sidebar-thumbnails-wheel.ts";
 import { testit as sidebarThumbnailsClose } from "./sidebar-thumbnails-close.ts";
@@ -652,7 +651,6 @@ export const tests: NamedTest[] = [
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
   ["command-palette-alt-names", commandPaletteAltNames],
   ["command-palette-thumbnails", commandPaletteThumbnails],
-  ["page-edit", pageEdit],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["sidebar-thumbnails-wheel", sidebarThumbnailsWheel],
   ["sidebar-thumbnails-close", sidebarThumbnailsClose],

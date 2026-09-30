@@ -11,8 +11,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { makePdf } from "./page-edit.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import {
   clientToScreen,
   enumWindows,
@@ -100,7 +99,7 @@ async function wantItems(client: ControlClient, items: string, what: string) {
 
 // widths and bookmarks of the current tab's document
 async function pageState(client: ControlClient): Promise<string> {
-  const res = await client.request(ControlCommand.TestPageEdit, ["", "", 0]);
+  const res = await client.request(ControlCommand.TestPageInfo, []);
   const m = /widths=([\d,]+) toc=(\S*)/.exec(String(res[1] ?? ""));
   return m ? `${m[1]} ${m[2]}` : "";
 }

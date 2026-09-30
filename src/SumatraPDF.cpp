@@ -11932,105 +11932,6 @@ void EndPdfEditOperation(MainWindow* win) {
     }
 }
 
-// After the engine rebuilt its pages (moved, inserted, or that undone): page N
-// may show another page now, so drop what was rendered for the old pages and
-// lay out again. oldToc: the table of contents the engine replaced
-static void UpdateUIAfterPagesChanged(WindowTab* tab, TocTree* oldToc) {
-    MainWindow* win = tab->win;
-    DisplayModel* dm = tab->AsFixed();
-    if (gRenderCache) {
-        gRenderCache->FreeForDisplayModel(dm);
-    }
-    dm->SyncWithEngineLayout();
-    if (oldToc) {
-        // the tree view points into the old tree until it's reloaded
-        ReloadTocTree(tab);
-        DestroyTocTree(oldToc);
-    }
-    SidebarPagesChanged(win);
-    UpdateToolbarPageText(win, dm->PageCount());
-    UpdateToolbarState(win);
-}
-
-// what an edit of the page structure does to the UI before and after the engine
-struct PageEditUI {
-    WindowTab* tab = nullptr;
-    Vec<Annotation*> removed;
-    TocTree* oldToc = nullptr;
-};
-
-static bool BeginPageEdit(PageEditUI& ui, WindowTab* tab) {
-    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
-    if (!dm || !tab->win || !EngineMupdfCanEditPages(dm->GetEngine())) {
-        return false;
-    }
-    ui.tab = tab;
-    // an in-flight placement or drag would write to a page that's going away
-    CancelAnnotationPlacement(tab->win);
-    CancelDrag(tab->win);
-    SetSelectedAnnotation(tab, nullptr);
-    if (gRenderCache) {
-        gRenderCache->AbortRendering(dm);
-    }
-    return true;
-}
-
-static void EndPageEdit(PageEditUI& ui) {
-    WindowTab* tab = ui.tab;
-    MainWindow* win = tab->win;
-    for (Annotation* a : ui.removed) {
-        DetachAnnotationFromUI(a);
-        DeleteAnnotation(a);
-    }
-    UpdateUIAfterPagesChanged(tab, ui.oldToc);
-    DeleteOldSelectionInfo(win, true);
-    RefreshAnnotationLists(tab);
-    NotifyAnnotationsChanged(tab);
-    ToolbarUpdateStateForWindow(win, true);
-    MainWindowRerender(win, true);
-}
-
-bool CanEditPagesInTab(WindowTab* tab) {
-    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
-    return dm && EngineMupdfCanEditPages(dm->GetEngine());
-}
-
-// pages: 1-based, ascending. They go together in front of beforePage
-// (pageCount + 1: to the end). Returns false if nothing moved
-bool MovePagesInTab(WindowTab* tab, const Vec<int>& pages, int beforePage) {
-    PageEditUI ui;
-    if (!BeginPageEdit(ui, tab)) {
-        return false;
-    }
-    EngineBase* engine = tab->AsFixed()->GetEngine();
-    bool ok = EngineMupdfMovePages(engine, pages, beforePage, ui.removed, &ui.oldToc);
-    if (ok) {
-        EndPageEdit(ui);
-    }
-    return ok;
-}
-
-// every page of the PDF at path goes in front of beforePage. Returns the
-// number of pages inserted
-int InsertPdfInTab(WindowTab* tab, Str path, int beforePage) {
-    PageEditUI ui;
-    if (!BeginPageEdit(ui, tab)) {
-        return 0;
-    }
-    EngineBase* engine = tab->AsFixed()->GetEngine();
-    int n = EngineMupdfInsertPdf(engine, path, beforePage, ui.removed, &ui.oldToc);
-    if (n > 0) {
-        EndPageEdit(ui);
-    } else {
-        NotificationCreateArgs nargs;
-        nargs.hwndParent = tab->win->hwndCanvas;
-        nargs.warning = true;
-        nargs.msg = fmt(Tr("Couldn't insert pages from '%s'").s, path::GetBaseNameTemp(path));
-        ShowNotification(nargs);
-    }
-    return n;
-}
-
 // Step the document's edit history. MuPDF restores the objects; every wrapper,
 // selection and cached rendering that pointed at the old state has to go.
 static void UndoRedoInTab(WindowTab* tab, bool redo) {
@@ -12060,16 +11961,10 @@ static void UndoRedoInTab(WindowTab* tab, bool redo) {
     }
 
     Vec<Annotation*> removed;
-    TocTree* oldToc = nullptr;
-    int layoutGen = engine->LayoutGeneration();
-    bool ok = redo ? EngineMupdfRedo(engine, removed, &oldToc) : EngineMupdfUndo(engine, removed, &oldToc);
+    bool ok = redo ? EngineMupdfRedo(engine, removed) : EngineMupdfUndo(engine, removed);
     for (Annotation* a : removed) {
         DetachAnnotationFromUI(a);
         DeleteAnnotation(a);
-    }
-    // it undid / redid a page move or insert
-    if (engine->LayoutGeneration() != layoutGen) {
-        UpdateUIAfterPagesChanged(tab, oldToc);
     }
     // the wrapper deletes above mark the document modified; the journal knows better
     EngineMupdfRefreshModifiedState(engine);

@@ -639,15 +639,6 @@ int EngineBase::LayoutGeneration() {
     return chapters.Generation();
 }
 
-// Pages were moved or inserted (or that was undone). Page N may be another
-// page now even if the count is the same: everything laid out from the pages
-// has to be redone, so move the generation and tell the DisplayModel.
-void EngineBase::PagesChanged() {
-    EnsureChapterTable();
-    chapters.BumpGeneration();
-    SetPageCountFromChapters();
-}
-
 // print / dump / full-document search / PDF export / stress test: today's open
 // cost, paid only when the caller actually needs every chapter laid out
 void EngineBase::EnsureAllChaptersLaidOut() {

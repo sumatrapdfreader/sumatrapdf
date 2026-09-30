@@ -6,8 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { makePdf } from "./page-edit.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import { clientToScreen, getScrollPos, packCoords, sendMessage, SB_HORZ, SB_VERT, sleep } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 

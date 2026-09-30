@@ -930,7 +930,7 @@ enum class ControlCmd : u16 {
     TestToggleFormButton = 109,
     ResolveUnsavedChanges = 110,
     TestRefHover = 111,
-    TestPageEdit = 112,
+    TestPageInfo = 112,
     TestSidebarThumbnails = 113,
     TestFrameNcStrips = 114,
     TestMergePdf = 115,
@@ -1209,14 +1209,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
-        case ControlCmd::TestPageEdit: {
-            // action ("move" / "insert" / ""), arg, beforePage
-            Str action = StringArg(req, 0);
-            Str arg = StringArg(req, 1);
-            i32 beforePage = 0;
-            IntArg(req, 2, beforePage);
+        case ControlCmd::TestPageInfo: {
             int exitCode = 0;
-            Str res = PageEditResultTemp(action, arg, beforePage, &exitCode);
+            Str res = PageInfoResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

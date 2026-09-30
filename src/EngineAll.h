@@ -118,13 +118,9 @@ void EngineMupdfBeginOperation(EngineBase*, const char* name);
 void EngineMupdfEndOperation(EngineBase*);
 bool EngineMupdfCanUndo(EngineBase*);
 bool EngineMupdfCanRedo(EngineBase*);
-bool EngineMupdfUndo(EngineBase*, Vec<Annotation*>& removedOut, TocTree** oldTocOut);
-bool EngineMupdfRedo(EngineBase*, Vec<Annotation*>& removedOut, TocTree** oldTocOut);
+bool EngineMupdfUndo(EngineBase*, Vec<Annotation*>& removedOut);
+bool EngineMupdfRedo(EngineBase*, Vec<Annotation*>& removedOut);
 void EngineMupdfRefreshModifiedState(EngineBase*);
-bool EngineMupdfCanEditPages(EngineBase*);
-bool EngineMupdfMovePages(EngineBase*, const Vec<int>& pages, int beforePage, Vec<Annotation*>& removedOut,
-                          TocTree** oldTocOut);
-int EngineMupdfInsertPdf(EngineBase*, Str path, int beforePage, Vec<Annotation*>& removedOut, TocTree** oldTocOut);
 // a PDF EngineMupdfMergePdfs() reads pages from
 struct PdfMergeSource {
     Str path;

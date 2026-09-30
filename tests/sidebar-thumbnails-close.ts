@@ -8,8 +8,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { makePdf } from "./page-edit.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import { sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 

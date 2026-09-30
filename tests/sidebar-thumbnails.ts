@@ -8,8 +8,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { makePdf } from "./page-edit.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import {
   clientToScreen,
   getFocusedHwnd,
@@ -118,7 +117,7 @@ async function waitFor(what: string, f: () => Promise<boolean>) {
 }
 
 async function widths(client: ControlClient): Promise<string> {
-  const res = await client.request(ControlCommand.TestPageEdit, ["", "", 0]);
+  const res = await client.request(ControlCommand.TestPageInfo, []);
   return /widths=([\d,]+)/.exec(String(res[1] ?? ""))?.[1] ?? "";
 }
 

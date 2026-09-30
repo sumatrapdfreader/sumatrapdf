@@ -743,3 +743,26 @@ export function pngPixel(img: PngImage, x: number, y: number): [number, number, 
   const i = (y * img.w + x) * img.nComp;
   return [img.data[i]!, img.data[i + 1]!, img.data[i + 2]!];
 }
+
+// n pages of widths first, first+1, ...; bookmark "Target" to page tocPage;
+// a square annotation on page annotPage (0: none), drawn as a filled red square
+export function makePdf(n: number, first: number, tocPage: number, annotPage: number): string {
+  const objs: string[] = [];
+  const pageObj = (i: number) => 5 + i; // objects 5.. are the pages
+  objs[1] = `<< /Type /Catalog /Pages 2 0 R${tocPage ? " /Outlines 3 0 R" : ""} >>`;
+  const kids = Array.from({ length: n }, (_, i) => `${pageObj(i)} 0 R`).join(" ");
+  objs[2] = `<< /Type /Pages /Count ${n} /Kids [${kids}] >>`;
+  objs[3] = "<< /Type /Outlines /First 4 0 R /Last 4 0 R /Count 1 >>";
+  objs[4] = tocPage ? `<< /Title (Target) /Parent 3 0 R /Dest [${pageObj(tocPage - 1)} 0 R /Fit] >>` : "<< >>";
+  const annotObj = 5 + n;
+  for (let i = 0; i < n; i++) {
+    const annots = i + 1 === annotPage ? ` /Annots [${annotObj} 0 R]` : "";
+    objs[pageObj(i)] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${first + i} 792]${annots} >>`;
+  }
+  const apObj = annotObj + 1;
+  objs[annotObj] =
+    `<< /Type /Annot /Subtype /Square /Rect [72 420 192 540] /C [1 0 0] /F 4 /AP << /N ${apObj} 0 R >> >>`;
+  const ap = "1 0 0 rg 0 0 120 120 re f\n";
+  objs[apObj] = `<< /Type /XObject /Subtype /Form /BBox [0 0 120 120] /Length ${ap.length} >>\nstream\n${ap}endstream`;
+  return assemblePdf(objs.slice(1));
+}

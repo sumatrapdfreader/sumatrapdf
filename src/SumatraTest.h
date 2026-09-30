@@ -46,6 +46,6 @@ TempStr ToggleFormButtonResultTemp(int pageNo, int idx, int* exitCodeOut = nullp
 void DiscardUnsavedChangesInAllTabs();
 TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut = nullptr);
 TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut = nullptr);
-TempStr PageEditResultTemp(Str action, Str arg, int beforePage, int* exitCodeOut = nullptr);
+TempStr PageInfoResultTemp(int* exitCodeOut = nullptr);
 TempStr SidebarThumbnailsResultTemp(int* exitCodeOut = nullptr);
 TempStr FrameNcStripsResultTemp(int* exitCodeOut = nullptr);

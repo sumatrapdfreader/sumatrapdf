@@ -2857,12 +2857,9 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
                (int)(d.userZoom * 100));
 }
 
-// Edit the current tab's page structure and report it. action: "move" (arg:
-// 1-based pages like "1,3", beforePage), "insert" (arg: a PDF path,
-// beforePage) or "" (report only). Reports each page's width, which a test
-// gives a unique value per page, and where the bookmarks point.
-// Used by tests/page-edit.ts.
-TempStr PageEditResultTemp(Str action, Str arg, int beforePage, int* exitCodeOut) {
+// The current tab's pages: each page's width, which a test gives a unique value
+// per page, and where the bookmarks point. Used by tests/issue-6070.ts.
+TempStr PageInfoResultTemp(int* exitCodeOut) {
     auto finish = [exitCodeOut](int code, TempStr s) -> TempStr {
         if (exitCodeOut) {
             *exitCodeOut = code;
@@ -2876,17 +2873,6 @@ TempStr PageEditResultTemp(Str action, Str arg, int beforePage, int* exitCodeOut
         return finish(2, str::DupTemp(StrL("NOTREADY no-document")));
     }
     str::Builder out;
-    if (str::Eq(action, StrL("move"))) {
-        Vec<int> pages;
-        StrVec parts;
-        Split(&parts, arg, StrL(","), true);
-        for (Str p : parts) {
-            VecAppend(pages, ParseInt(p));
-        }
-        out.Append(fmt("moved=%d ", (int)MovePagesInTab(tab, pages, beforePage)));
-    } else if (str::Eq(action, StrL("insert"))) {
-        out.Append(fmt("inserted=%d ", InsertPdfInTab(tab, arg, beforePage)));
-    }
     EngineBase* engine = dm->GetEngine();
     out.Append(fmt("pages=%d widths=", engine->PageCount()));
     for (int i = 1; i <= engine->PageCount(); i++) {
@@ -2897,7 +2883,6 @@ TempStr PageEditResultTemp(Str action, Str arg, int beforePage, int* exitCodeOut
     for (TocItem* it = toc && toc->root ? toc->root->child : nullptr; it; it = it->next) {
         out.Append(fmt("%s:%d;", it->title, it->pageNo));
     }
-    out.Append(fmt(" canEdit=%d", (int)CanEditPagesInTab(tab)));
     return finish(0, fmt("OK %s", ToStrTemp(out)));
 }
 
