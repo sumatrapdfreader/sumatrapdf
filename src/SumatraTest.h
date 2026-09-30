@@ -49,3 +49,4 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut = nullptr)
 TempStr PageInfoResultTemp(int* exitCodeOut = nullptr);
 TempStr SidebarThumbnailsResultTemp(int* exitCodeOut = nullptr);
 TempStr FrameNcStripsResultTemp(int* exitCodeOut = nullptr);
+TempStr WheelWhileClosingResultTemp(int* exitCodeOut = nullptr);

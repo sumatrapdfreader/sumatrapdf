@@ -110,6 +110,7 @@ export enum ControlCommand {
   TestSidebarThumbnails = 113,
   TestFrameNcStrips = 114,
   TestMergePdf = 115,
+  TestWheelWhileClosing = 116,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

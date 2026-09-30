@@ -934,6 +934,7 @@ enum class ControlCmd : u16 {
     TestSidebarThumbnails = 113,
     TestFrameNcStrips = 114,
     TestMergePdf = 115,
+    TestWheelWhileClosing = 116,
 };
 
 enum class ControlArgType : u16 {
@@ -1226,6 +1227,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSidebarThumbnails: {
             int exitCode = 0;
             Str res = SidebarThumbnailsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestWheelWhileClosing: {
+            int exitCode = 0;
+            Str res = WheelWhileClosingResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

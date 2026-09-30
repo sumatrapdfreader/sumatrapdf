@@ -2960,3 +2960,22 @@ TempStr FrameNcStripsResultTemp(int* exitCodeOut) {
     }
     return ToStrTemp(sb);
 }
+
+// Sends the frame a mouse wheel while the window is marked as being closed, as
+// when a wheel arrives during CloseWindow(). Used by tests/wheel-while-closing.ts.
+TempStr WheelWhileClosingResultTemp(int* exitCodeOut) {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win || !win->IsDocLoaded()) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-document"));
+    }
+    win->isBeingClosed = true;
+    SendMessageW(win->hwndFrame, WM_MOUSEWHEEL, MAKEWPARAM(0, -WHEEL_DELTA), 0);
+    win->isBeingClosed = false;
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return str::DupTemp(StrL("OK"));
+}

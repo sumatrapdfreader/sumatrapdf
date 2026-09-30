@@ -6312,14 +6312,17 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
     }
 
+    // the frame forwards the wheel here and DefWindowProc would hand it back to
+    // the frame: recursion until the stack overflows
+    bool isWheel = msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL;
     if (!win) {
-        return DefWindowProc(hwnd, msg, wp, lp);
+        return isWheel ? 0 : DefWindowProc(hwnd, msg, wp, lp);
     }
 
     // Window close deletes controllers while DestroyWindow (WebView2, etc.) can
     // still deliver canvas messages; don't touch win->ctrl after that starts.
     if (win->isBeingClosed) {
-        return DefWindowProc(hwnd, msg, wp, lp);
+        return isWheel ? 0 : DefWindowProc(hwnd, msg, wp, lp);
     }
 
     // reveal/hide the floating overlay toolbar as the mouse approaches the top;

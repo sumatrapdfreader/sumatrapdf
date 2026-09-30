@@ -270,6 +270,7 @@ import { testit as sidebarThumbnails } from "./sidebar-thumbnails.ts";
 import { testit as sidebarThumbnailsWheel } from "./sidebar-thumbnails-wheel.ts";
 import { testit as sidebarThumbnailsClose } from "./sidebar-thumbnails-close.ts";
 import { testit as issue6070 } from "./issue-6070.ts";
+import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
 import { testit as issue6259 } from "./issue-6259.ts";
 import { testit as issue6261 } from "./issue-6261.ts";
 import { testit as commandPaletteAnnotations } from "./command-palette-annotations.ts";
@@ -655,6 +656,7 @@ export const tests: NamedTest[] = [
   ["sidebar-thumbnails-wheel", sidebarThumbnailsWheel],
   ["sidebar-thumbnails-close", sidebarThumbnailsClose],
   ["issue-6070", issue6070],
+  ["wheel-while-closing", wheelWhileClosing],
   ["issue-6259", issue6259],
   ["issue-6261", issue6261],
   ["command-palette-annotations", commandPaletteAnnotations],
