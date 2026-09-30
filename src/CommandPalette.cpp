@@ -378,9 +378,10 @@ static void ApplyRemoveItem(RemoveItemOp* op) {
     FileState* favFs = op->favFs;
     Str filePath = op->filePath;
     int currSel = op->currSel;
+
+    AutoDelete opDel(op);
     defer {
         str::Free(filePath);
-        delete op;
     };
 
     if (gCommandPaletteWnd != wnd) {
