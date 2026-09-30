@@ -156,6 +156,11 @@ static void ClipboardStampRoundTripTest() {
         utassert(CopyPixmapToClipboard(src, false));
         Pixmap* got = GetClipboardImageAsPixmap();
         utassert(got != nullptr);
+        // utassert does not return
+        if (!got) {
+            FreePixmap(src);
+            return;
+        }
         utassert(got->width == w);
         utassert(got->height == h);
         utassert(got->format == PixmapFormat::BGRA8);

@@ -1,5 +1,6 @@
-// Pre-release suite: fast regular tests, then the slow WebView TOC test,
-// then LaTeX / SyncTeX.
+// Pre-release suite. issue-5842 is first: it runs the app unit tests, then the
+// slow WebView TOC check, so a failure there shows up before the fast suite.
+// Then the fast tests, issue-6003, and LaTeX / SyncTeX.
 //
 // Run:  bun tests/run-pre-release.ts [--no-build] [-silent] [-exe <SumatraPDF.exe>]
 
@@ -22,8 +23,8 @@ export async function testit(opts?: SuiteOptions): Promise<void> {
   resetTestTimes();
   // + issue-5842, issue-6003, latex
   startSuiteProgress(almostAllTests.length + 3);
-  await runAlmostAll({ silent, keepTestTimes: true, summary: false });
   await runTest("issue-5842", issue5842, { silent });
+  await runAlmostAll({ silent, keepTestTimes: true, summary: false });
   await runTest("issue-6003", issue6003, { silent });
 
   if (!silent) {
