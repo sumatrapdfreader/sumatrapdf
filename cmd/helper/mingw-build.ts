@@ -271,6 +271,8 @@ const sumatraFiles: FileGroup[] = [
       "AppTools.*",
       "Caption.*",
       "Canvas.*",
+      "PageThumbnails.*",
+      "MergePdf.*",
       "AnnotPlacement.*",
       "AnnotTextPopup.*",
       "AnnotEditToolbar.*",

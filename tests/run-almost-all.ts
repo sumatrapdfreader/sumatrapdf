@@ -378,6 +378,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["lint-mingw-sources", lintMingwSources],
   ["issue-2799", issue2799],
   ["ink-thickness", inkThickness],
   ["ink-annotation-placement", inkAnnotationPlacement],
@@ -440,7 +441,6 @@ export const tests: NamedTest[] = [
   ["issue-6137", issue6137],
   ["free-text-edit-matches-render", freeTextEditMatchesRender],
   ["free-text-in-place-edit", freeTextInPlaceEdit],
-  ["lint-mingw-sources", lintMingwSources],
   ["toolbar-hover-dropdown", toolbarHoverDropdown],
   ["issue-6103", issue6103],
   ["issue-6062", issue6062],
