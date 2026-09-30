@@ -48,3 +48,4 @@ TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut =
 TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut = nullptr);
 TempStr PageEditResultTemp(Str action, Str arg, int beforePage, int* exitCodeOut = nullptr);
 TempStr SidebarThumbnailsResultTemp(int* exitCodeOut = nullptr);
+TempStr FrameNcStripsResultTemp(int* exitCodeOut = nullptr);

@@ -5203,6 +5203,37 @@ void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd
 }
 
 // re-render the document currently displayed in this window
+// The frame's non-client strips WM_NCPAINT fills, in window coordinates.
+// Left unpainted they show as a white / wrong-color glitch (#5851)
+void GetFrameNcStrips(MainWindow* win, Vec<Rect>& out) {
+    HWND hwnd = win->hwndFrame;
+    // maximized, the client is the whole work area and the non-client area hangs
+    // over the monitor's edges: painting it showed on the next monitor (#6259)
+    if (IsZoomed(hwnd)) {
+        return;
+    }
+    Rect wr = HwndWindowRect(hwnd);
+    Rect cr = HwndClientRect(hwnd);
+    // client origin in window coordinates (window DC origin = top-left of frame)
+    Point clientScreen = HwndClientToScreen(hwnd, Point(0, 0));
+    int clientX = clientScreen.x - wr.x;
+    int clientY = clientScreen.y - wr.y;
+    int bottomNcTop = clientY + cr.dy;
+    int rightNcLeft = clientX + cr.dx;
+    if (clientY > 0) {
+        VecAppend(out, Rect{0, 0, wr.dx, clientY});
+    }
+    if (bottomNcTop < wr.dy) {
+        VecAppend(out, Rect{0, bottomNcTop, wr.dx, wr.dy - bottomNcTop});
+    }
+    if (clientX > 0) {
+        VecAppend(out, Rect{0, clientY, clientX, bottomNcTop - clientY});
+    }
+    if (rightNcLeft < wr.dx) {
+        VecAppend(out, Rect{rightNcLeft, clientY, wr.dx - rightNcLeft, bottomNcTop - clientY});
+    }
+}
+
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
@@ -14657,35 +14688,13 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 *callDef = false;
                 return 0;
             }
-            // Paint residual NC strips (top 1px for DWM; bottom only if present).
-            // Leaving them unpainted shows as a white/wrong-color glitch (#5851).
-            HDC hdc = GetWindowDC(hwnd);
+            Vec<Rect> strips;
+            GetFrameNcStrips(win, strips);
+            HDC hdc = len(strips) > 0 ? GetWindowDC(hwnd) : nullptr;
             if (hdc) {
-                Rect wr = HwndWindowRect(hwnd);
-                Rect cr = HwndClientRect(hwnd);
-                // client origin in window coordinates (window DC origin = top-left of frame)
-                Point clientScreen = HwndClientToScreen(hwnd, Point(0, 0));
-                int clientX = clientScreen.x - wr.x;
-                int clientY = clientScreen.y - wr.y;
                 HBRUSH br = CreateSolidBrush(ThemeControlBackgroundColor());
-                if (clientY > 0) {
-                    RECT rc = {0, 0, wr.dx, clientY};
-                    HdcFillRect(hdc, ToRect(rc), br);
-                }
-                int bottomNcTop = clientY + cr.dy;
-                if (bottomNcTop < wr.dy) {
-                    RECT rc = {0, bottomNcTop, wr.dx, wr.dy};
-                    HdcFillRect(hdc, ToRect(rc), br);
-                }
-                // side NC (left/right frame borders when not maximized)
-                if (clientX > 0) {
-                    RECT rc = {0, clientY, clientX, bottomNcTop};
-                    HdcFillRect(hdc, ToRect(rc), br);
-                }
-                int rightNcLeft = clientX + cr.dx;
-                if (rightNcLeft < wr.dx) {
-                    RECT rc = {rightNcLeft, clientY, wr.dx, bottomNcTop};
-                    HdcFillRect(hdc, ToRect(rc), br);
+                for (Rect& rc : strips) {
+                    HdcFillRect(hdc, rc, br);
                 }
                 DeleteObject(br);
                 ReleaseDC(hwnd, hdc);

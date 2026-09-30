@@ -1123,8 +1123,13 @@ export function readWindowDCRow(hwnd: number, x: number, y: number, count: numbe
 // them back as BGRA bytes (4 per pixel, top-down). Unlike GetPixel on a window
 // DC this works for occluded / background windows, and unlike captureWindowToPng
 // it needs no PNG decoder to assert on what was painted.
-export function captureWindowPixels(hwnd: number): { w: number; h: number; data: Uint8Array } | null {
-  const rc = getClientRect(hwnd);
+// "window" includes the non-client area, even parts off the screen (a
+// maximized window's borders hang over the monitor's edges).
+export function captureWindowPixels(
+  hwnd: number,
+  area: "client" | "window" = "client",
+): { w: number; h: number; data: Uint8Array } | null {
+  const rc = area === "client" ? getClientRect(hwnd) : getWindowRect(hwnd);
   const w = rc.right - rc.left;
   const h = rc.bottom - rc.top;
   if (w <= 0 || h <= 0) {
@@ -1149,7 +1154,8 @@ export function captureWindowPixels(hwnd: number): { w: number; h: number; data:
     return null;
   }
   const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
-  user32.symbols.PrintWindow(hwnd, memDC, PW_CLIENTONLY | PW_RENDERFULLCONTENT);
+  const flags = area === "client" ? PW_CLIENTONLY | PW_RENDERFULLCONTENT : PW_RENDERFULLCONTENT;
+  user32.symbols.PrintWindow(hwnd, memDC, flags);
   gdi32.symbols.SelectObject(memDC, oldObj);
 
   // bun wants the pointer as a number, not the bigint CreateDIBSection wrote

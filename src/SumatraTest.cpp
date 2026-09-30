@@ -2937,3 +2937,26 @@ TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     }
     return ToStrTemp(sb);
 }
+
+// The first window's frame: whether it's maximized and the non-client strips
+// its WM_NCPAINT fills (window coords). Used by tests/issue-6259.ts.
+TempStr FrameNcStripsResultTemp(int* exitCodeOut) {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-window"));
+    }
+    Vec<Rect> strips;
+    GetFrameNcStrips(win, strips);
+    str::Builder sb;
+    sb.Append(fmt("zoomed=%d strips=%d", (int)IsZoomed(win->hwndFrame), len(strips)));
+    for (Rect& r : strips) {
+        sb.Append(fmt(" %d,%d,%d,%d", r.x, r.y, r.dx, r.dy));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(sb);
+}

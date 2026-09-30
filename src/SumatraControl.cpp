@@ -921,6 +921,7 @@ enum class ControlCmd : u16 {
     TestRefHover = 111,
     TestPageEdit = 112,
     TestSidebarThumbnails = 113,
+    TestFrameNcStrips = 114,
 };
 
 enum class ControlArgType : u16 {
@@ -1204,6 +1205,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, beforePage);
             int exitCode = 0;
             Str res = PageEditResultTemp(action, arg, beforePage, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFrameNcStrips: {
+            int exitCode = 0;
+            Str res = FrameNcStripsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
