@@ -10138,9 +10138,9 @@ bool EngineMupdfMovePages(EngineBase* engine, const Vec<int>& pages, int beforeP
 }
 
 // Insert all pages of the PDF at path in front of the page now at beforePage
-// (pageCount + 1: at the end). One undo step. Its annotations come along;
-// form fields are flattened into the page, as they'd lose their form. Returns
-// the number of pages inserted, 0 on failure. removedOut / oldTocOut: see
+// (pageCount + 1: at the end). One undo step. Its annotations and form fields
+// are flattened into the pages: grafting a page copies only its content, they'd
+// be lost. Returns the number of pages inserted, 0 on failure. removedOut / oldTocOut: see
 // RebuildPages().
 int EngineMupdfInsertPdf(EngineBase* engine, Str path, int beforePage, Vec<Annotation*>& removedOut,
                          TocTree** oldTocOut) {
@@ -10168,7 +10168,7 @@ int EngineMupdfInsertPdf(EngineBase* engine, Str path, int beforePage, Vec<Annot
                 fz_throw(ctx, FZ_ERROR_ARGUMENT, "the PDF is password protected");
             }
             // in memory only: the file isn't changed
-            pdf_bake_document(ctx, src, 0, 1);
+            pdf_bake_document(ctx, src, 1, 1);
             int n = pdf_count_pages(ctx, src);
             map = pdf_new_graft_map(ctx, doc);
             pdf_begin_operation(ctx, doc, "Insert pages");
