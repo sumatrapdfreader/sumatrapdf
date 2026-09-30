@@ -2167,6 +2167,34 @@ static void ToolbarHoverDropdownOnMouseMove(MainWindow* win, const Point* client
     }
 }
 
+// Cursor is on this drop-down, or on a button that shares it.
+static bool CursorKeepsHoverMenu(MainWindow* win, Point pt) {
+    ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
+    if (!tb || tb->hoverCmdId == 0) {
+        return false;
+    }
+    if (ToolbarHoverDropdownContainsScreenPoint(win, pt)) {
+        return true;
+    }
+    if (GetToolbarButtonScreenRect(win, tb->hoverCmdId).Contains(pt)) {
+        return true;
+    }
+    ToolbarHoverReg* from = FindHoverReg(tb, tb->hoverCmdId);
+    int group = from ? from->groupId : 0;
+    if (group == 0) {
+        return false;
+    }
+    for (ToolbarHoverReg& reg : tb->hoverRegs) {
+        if (reg.groupId != group) {
+            continue;
+        }
+        if (GetToolbarButtonScreenRect(win, reg.cmdId).Contains(pt)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void OnHoverDropdownTimer(MainWindow* win, int timerId) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     if (!tb || !tb->host) {
@@ -2185,12 +2213,7 @@ static void OnHoverDropdownTimer(MainWindow* win, int timerId) {
     if (tb->hoverSticky) {
         return;
     }
-    Point pt = UiCursorScreenPos();
-    if (ToolbarHoverDropdownContainsScreenPoint(win, pt)) {
-        return;
-    }
-    // still on the button that opened it: leave it up
-    if (GetToolbarButtonScreenRect(win, tb->hoverCmdId).Contains(pt)) {
+    if (CursorKeepsHoverMenu(win, UiCursorScreenPos())) {
         return;
     }
     HideToolbarHoverDropdown(win);
