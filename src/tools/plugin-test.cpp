@@ -69,7 +69,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         HdcFillRect(hDC, ToRect(rcClient), brushBg);
         LOGFONTW lf{};
         lf.lfHeight = -14;
-        str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), "MS Shell Dlg");
+        str::BufSet(lf.lfFaceName, dimofi(lf.lfFaceName), StrL("MS Shell Dlg"));
         HFONT hFont = CreateFontIndirectW(&lf);
         hFont = (HFONT)SelectObject(hDC, hFont);
         SetTextColor(hDC, 0x000000);
@@ -89,7 +89,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
 WStr GetSumatraExePath() {
     // run SumatraPDF.exe either from plugin-test.exe's or the current directory
-    TempStr path = GetPathInExeDirTemp("SumatraPDF.exe");
+    TempStr path = GetPathInExeDirTemp(StrL("SumatraPDF.exe"));
     if (!file::Exists(path)) {
         return wstr::Dup(WStrL(L"SumatraPDF.exe"));
     }
@@ -98,9 +98,7 @@ WStr GetSumatraExePath() {
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     StrNode* parsedArgs = ParseCmdLine(GetCommandLineW());
-    defer {
-        FreeStrNode(nullptr, parsedArgs);
-    };
+    AutoFreeStrNode freeParsedArgs(parsedArgs);
     StrVec args;
     for (StrNode* n = parsedArgs; n; n = n->next) {
         args.Append(n->s);
@@ -109,14 +107,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     if (len(args) == 1) {
         TempStr name = path::GetBaseNameTemp(args[0]);
         TempStr msg = fmt("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name);
-        MsgBox(nullptr, msg, kPluginTestNameA, MB_OK | MB_ICONINFORMATION);
+        MsgBox(nullptr, msg, StrL(kPluginTestNameA), MB_OK | MB_ICONINFORMATION);
         return 1;
     }
     if (len(args) == 2 || !str::EndsWithI(args[1], StrL(".exe"))) {
         args.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
     }
     if (len(args) == 3) {
-        args.InsertAt(2, nullptr);
+        // no URL to show in its place
+        args.InsertAt(2, Str());
     }
 
     WNDCLASS wc{};
