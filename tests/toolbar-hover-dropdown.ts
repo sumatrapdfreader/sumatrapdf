@@ -459,8 +459,40 @@ function checkCurrentBoxed(items: Item[], want: string): void {
   if (current.length !== 1 || current[0]!.text !== want) {
     throw new Error(
       `toolbar-hover-dropdown: want only ${want} marked as the current zoom, got ` +
-        `[${current.map((it) => it.text).join()}]`,
+        `[${current.map((it) => it.text).join()}] of [${items.map((it) => it.text).join()}]`,
     );
+  }
+}
+
+// The close timer is 150ms and it reads the real cursor. Hold the cursor on
+// the button and re-read until the level is boxed: one read after a sleep
+// sees an empty strip when the cursor was yanked off.
+async function waitCurrentZoom(
+  client: ControlClient,
+  toolbar: number,
+  pid: number,
+  x: number,
+  y: number,
+  want: string,
+): Promise<{ menu: number; items: Item[] }> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let last: Item[] = [];
+  for (;;) {
+    hoverToolbar(toolbar, x, y);
+    const menu = menuShowing(pid);
+    if (menu !== 0) {
+      last = await dropdownItems(client);
+      const current = last.filter((it) => it.current);
+      if (current.length === 1 && current[0]!.text === want && menuShowing(pid) === menu) {
+        hoverToolbar(toolbar, x, y);
+        return { menu, items: last };
+      }
+    }
+    if (Date.now() > deadline) {
+      checkCurrentBoxed(last, want);
+      throw new Error(`toolbar-hover-dropdown: want only ${want} marked as the current zoom`);
+    }
+    await sleep(40);
   }
 }
 
@@ -781,10 +813,11 @@ export async function testit(): Promise<void> {
 
     // and now that level is the one boxed. The drop-down itself opens exactly
     // where it did before: it hangs off the button, not off the zoom
-    zoomMenu = await hoverUntilMenu(toolbar, pid, zx, zy, "the zoom drop-down did not open again");
-    await sleep(200);
-    items = await dropdownItems(client);
-    checkCurrentBoxed(items, "300%");
+    {
+      const boxed = await waitCurrentZoom(client, toolbar, pid, zx, zy, "300%");
+      zoomMenu = boxed.menu;
+      items = boxed.items;
+    }
     checkCentredOnButton(zoomMenu, btnCentreX);
     if (JSON.stringify(getWindowRect(zoomMenu)) !== zoomMenuRect) {
       throw new Error("toolbar-hover-dropdown: the drop-down opened somewhere else once the zoom had changed");

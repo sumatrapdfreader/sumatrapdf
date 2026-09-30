@@ -161,6 +161,8 @@ struct ToolbarVirt {
     int hoverPendingCmdId = 0;
     // right-click opened this; don't close it just because the cursor isn't on the button
     bool hoverSticky = false;
+    // GetTickCount64 of the last move on this drop-down's button, or one that shares it
+    u64 hoverMoveTick = 0;
     // the open button's tooltip, taken away for as long as the drop-down is up
     Str hoverSavedTip;
 };
