@@ -369,9 +369,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
     ReportIf(!a);
     // logf("ParseFlags: cmdLine: '%s'\n", ToUtf8Temp(cmdLine));
     StrNode* root = ParseCmdLine(cmdLine);
-    defer {
-        FreeStrNode(nullptr, root);
-    };
+    AutoFreeStrNode freeRoot(root);
     StrNode* firstArg = root ? root->next : nullptr;
 
     // if the first argument is a tool name, skip parsing flags entirely

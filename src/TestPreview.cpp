@@ -20,9 +20,7 @@ typedef HRESULT DllGetClassObjectFn(REFCLSID rclsid, REFIID riid, void** ppv);
 
 void TestPreview(WStr cmdLine) {
     StrNode* argList = ParseCmdLine(cmdLine);
-    defer {
-        FreeStrNode(nullptr, argList);
-    };
+    AutoFreeStrNode freeArgList(argList);
 
     // find args after -test-preview
     int idx = -1;

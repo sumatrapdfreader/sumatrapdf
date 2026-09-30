@@ -821,9 +821,7 @@ static bool PrintToDevice(const PrintData& pd) {
     EnsureFullLayout(pd.engine);
 
     pd.engine->AddRef();
-    defer {
-        pd.engine->Release();
-    };
+    AutoRelease releaseEngine(pd.engine);
 
     DOCINFOW di{};
     di.cbSize = sizeof(DOCINFO);

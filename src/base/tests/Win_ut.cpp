@@ -19,9 +19,7 @@ static void QuoteCmdLineArgTest() {
         // ParseCmdLine uses CommandLineToArgvW; prefix a dummy argv[0].
         TempStr cmdLine = fmt("exe %s", quoted);
         StrNode* args = ParseCmdLine(cmdLine);
-        defer {
-            FreeStrNode(nullptr, args);
-        };
+        AutoFreeStrNode freeArgs(args);
         utassert(args != nullptr);
         utassert(str::Eq(args->s, StrL("exe")));
         if (len(input) == 0) {

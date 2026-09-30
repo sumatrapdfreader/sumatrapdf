@@ -1586,9 +1586,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, Str filePath) {
         if (str::IsEmptyOrWhiteSpace(cmd->name)) {
             if (str::IsEmptyOrWhiteSpace(name)) {
                 StrNode* args = ParseCmdLine(ToWStrTemp(commandLine));
-                defer {
-                    FreeStrNode(nullptr, args);
-                };
+                AutoFreeStrNode freeArgs(args);
                 StrNode* arg0 = args;
                 for (int i = 0; arg0 && i < 2; i++) {
                     arg0 = arg0->next;

@@ -73,9 +73,7 @@ int TesterMain() {
     WCHAR* cmdLine = GetCommandLine();
 
     StrNode* argv = ParseCmdLine(cmdLine);
-    defer {
-        FreeStrNode(nullptr, argv);
-    };
+    AutoFreeStrNode freeArgv(argv);
 
     // InitAllCommonControls();
     // AutoGdiPlusShutdown gdi;

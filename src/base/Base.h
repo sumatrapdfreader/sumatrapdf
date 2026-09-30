@@ -717,7 +717,7 @@ struct Func1List : Func1<T> {
 
 int setMinMax(int& v, int minVal, int maxVal);
 
-/* Usage: defer { instance->Release(); }; */
+/* Usage: defer { inLayout = false; }; */
 #define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
 
 extern AtomicInt gAllowAllocFailure;
@@ -2191,6 +2191,26 @@ struct AutoDelete : NonCopyable {
     }
     T* operator->() const { // NOLINT
         return o;
+    }
+};
+
+// frees a StrNode list (FreeStrNode(nullptr, head)) at the end of the scope
+struct AutoFreeStrNode : NonCopyable {
+    StrNode* head = nullptr;
+    explicit AutoFreeStrNode(StrNode* head) : head(head) {}
+    ~AutoFreeStrNode() { FreeStrNode(nullptr, head); }
+};
+
+// calls Release() on a ref-counted object (engine, COM interface) at the end of
+// the scope
+template <typename T>
+struct AutoRelease : NonCopyable {
+    T* o = nullptr;
+    explicit AutoRelease(T* p) : o(p) {}
+    ~AutoRelease() {
+        if (o) {
+            o->Release();
+        }
     }
 };
 

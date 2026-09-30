@@ -457,9 +457,7 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
         if (!quads) {
             return;
         }
-        defer {
-            free(quads);
-        };
+        AutoFree<fz_quad> freeQuads(quads);
         for (int i = 0; i < n; i++) {
             RectF rect = rects[i];
             fz_rect r = ToFzRect(rect);

@@ -220,18 +220,12 @@ static Graphics* AllocGraphicsForMeasureTextNoLock() {
 }
 
 static Graphics* AllocGraphicsForMeasureText() {
-    gGraphicsCacheMutex.Lock();
-    defer {
-        gGraphicsCacheMutex.Unlock();
-    };
+    AutoUnlockMutex lock(&gGraphicsCacheMutex);
     return AllocGraphicsForMeasureTextNoLock();
 }
 
 static void FreeGraphicsForMeasureText(Graphics* gfx) {
-    gGraphicsCacheMutex.Lock();
-    defer {
-        gGraphicsCacheMutex.Unlock();
-    };
+    AutoUnlockMutex lock(&gGraphicsCacheMutex);
     if (!gGraphicsCache) {
         // PlatformFontDestroy() already ran on the main thread (shutdown) and
         // freed every entry, including ours. Happens when a background thread
@@ -251,10 +245,7 @@ static void FreeGraphicsForMeasureText(Graphics* gfx) {
 }
 
 void PlatformFontDestroy() {
-    gGraphicsCacheMutex.Lock();
-    defer {
-        gGraphicsCacheMutex.Unlock();
-    };
+    AutoUnlockMutex lock(&gGraphicsCacheMutex);
     if (!gGraphicsCache) {
         return;
     }

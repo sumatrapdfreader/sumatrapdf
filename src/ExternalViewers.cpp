@@ -288,9 +288,7 @@ static TempStr GetRegisteredOpenExeTemp(Str progId) {
         return {};
     }
     StrNode* args = ParseCmdLine(command);
-    defer {
-        FreeStrNode(nullptr, args);
-    };
+    AutoFreeStrNode freeArgs(args);
     if (!args || !file::Exists(args->s)) {
         return {};
     }
