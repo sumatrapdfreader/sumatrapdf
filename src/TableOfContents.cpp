@@ -1829,9 +1829,6 @@ void CreateToc(MainWindow* win) {
     int dpi = DpiGetForHwnd(parent);
     win->pageThumbs = new PageThumbnailsCtrl(win, GetAppFont(), dpi, ThumbnailsHost::Sidebar);
     win->pageThumbs->SetIsVisible(false);
-    // either panel may show the thumbnails, so both take dropped PDFs
-    RegisterThumbnailsDropTarget(win->pageThumbs, win->sidebarTop->hwnd);
-    RegisterThumbnailsDropTarget(win->pageThumbs, win->sidebarBottom->hwnd);
 
     UpdateControlsColors(win);
 }
@@ -1869,8 +1866,8 @@ void UpdateSidebarThumbnails(MainWindow* win) {
     thumbs->Activate();
 }
 
-// Keys the focused thumbnails handle rather than the canvas: Up / Down, and
-// Esc while dragging pages. The message loop skips accelerators for them
+// Keys the focused thumbnails handle rather than the canvas: Up / Down. The
+// message loop skips accelerators for them
 bool ThumbnailsTakeKey(MainWindow* win, HWND hwnd, WPARAM key) {
     SidebarPanel* p = win ? SidebarPanelShowing(win, SidebarView::Thumbnails) : nullptr;
     if (!p || hwnd != p->hwnd || !CanShowThumbnails(win->CurrentTab())) {
@@ -1879,7 +1876,7 @@ bool ThumbnailsTakeKey(MainWindow* win, HWND hwnd, WPARAM key) {
     if (IsCtrlPressed() || IsAltPressed()) {
         return false;
     }
-    return key == VK_UP || key == VK_DOWN || (key == VK_ESCAPE && win->pageThumbs->dragging);
+    return key == VK_UP || key == VK_DOWN;
 }
 
 // The document is going away: the thumbnails let go of it

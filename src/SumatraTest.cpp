@@ -2903,7 +2903,7 @@ TempStr PageEditResultTemp(Str action, Str arg, int beforePage, int* exitCodeOut
 
 // The sidebar's panels (HWND, visible, view, the view icons' enabled / selected
 // state and client rects) and its Thumbnails view: whether it shows, the current
-// and selected pages and, for clicking and dragging, each visible thumbnail in
+// page and, for clicking, each visible thumbnail in
 // its panel's client coords. Used by tests/sidebar-thumbnails.ts.
 TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
@@ -2914,16 +2914,11 @@ TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
         }
         return str::DupTemp(StrL("NOTREADY no-window"));
     }
-    Vec<int> marked;
-    thumbs->MarkedPages(marked);
     SidebarPanel* shows = SidebarPanelShowing(win, SidebarView::Thumbnails);
     HWND hwnd = shows ? shows->hwnd : win->sidebarTop->hwnd;
     str::Builder sb;
-    sb.Append(fmt("hwnd=%d thumbnails=%d count=%d current=%d rendered=%d marked=", (int)(intptr_t)hwnd,
+    sb.Append(fmt("hwnd=%d thumbnails=%d count=%d current=%d rendered=%d", (int)(intptr_t)hwnd,
                   (int)thumbs->IsVisible(), thumbs->pageCount, thumbs->selectedPage, thumbs->RenderedCount()));
-    for (int i = 0; i < len(marked); i++) {
-        sb.Append(fmt(i == 0 ? "%d" : ",%d", marked[i]));
-    }
     // the focus ring is drawn while the thumbnails have the (virtual) focus
     sb.Append(fmt(" ring=%d", (int)thumbs->HasFlag(vwfFocused)));
     // e.g. top=1234,1,thumbnails,110,010:2,2,22,22;26,2,22,22;50,2,22,22

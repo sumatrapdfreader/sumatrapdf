@@ -337,6 +337,7 @@ static SeqStrings gCommandNames =
     "CmdSignWithImage\0"
     "CmdInsertTextSnippet\0"
     "CmdToggleThumbnails\0"
+    "CmdMergePDF\0"
     "\0";
 
 static i32 gCommandIds[] = {
@@ -663,6 +664,7 @@ static i32 gCommandIds[] = {
     CmdSignWithImage,
     CmdInsertTextSnippet,
     CmdToggleThumbnails,
+    CmdMergePDF,
 };
 
 SeqStrings gCommandDescriptions =
@@ -989,6 +991,7 @@ SeqStrings gCommandDescriptions =
     "Sign With Image\0"
     "Insert Text Snippet\0"
     "Toggle Thumbnails\0"
+    "Merge PDF...\0"
     "\0";
 
 SeqStrings gCommandAltDescs =

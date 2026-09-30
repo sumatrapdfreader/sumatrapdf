@@ -339,6 +339,7 @@ const commandsRaw = [
     "CmdSignWithImage", "Sign With Image",
     "CmdInsertTextSnippet", "Insert Text Snippet",
     "CmdToggleThumbnails", "Toggle Thumbnails",
+    "CmdMergePDF", "Merge PDF...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

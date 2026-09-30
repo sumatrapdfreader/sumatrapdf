@@ -450,7 +450,6 @@ void DeleteSidebarPanel(SidebarPanel* p) {
     if (!p) {
         return;
     }
-    RevokeThumbnailsDropTarget(p->hwnd);
     if (p->subclassId != 0) {
         RemoveWindowSubclass(p->hwnd, WndProcSidebarPanel, p->subclassId);
     }

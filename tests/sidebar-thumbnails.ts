@@ -1,7 +1,7 @@
 // The sidebar's panels and its Thumbnails view: which panel a command opens a
-// view in, a view icon switching (or swapping) panel views, a click going to a page, Shift / Ctrl click selecting several and dragging them to
-// another place, undone with CmdUndo. Each page of the test PDF has a unique
-// width (601, 602, ...) so the page order can be read back.
+// view in, a view icon switching (or swapping) panel views, a click going to a
+// page and a drag not moving pages (that is Merge PDF's job). Each page of the
+// test PDF has a unique width (601, 602, ...) so the page order can be read back.
 //
 // Run: bun tests/sidebar-thumbnails.ts [--no-build]
 
@@ -13,9 +13,7 @@ import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   clientToScreen,
   getFocusedHwnd,
-  MK_CONTROL,
   MK_LBUTTON,
-  MK_SHIFT,
   packCoords,
   postMessage,
   sendMessage,
@@ -51,7 +49,6 @@ type Sidebar = {
   thumbnails: boolean;
   current: number;
   rendered: number;
-  marked: string;
   top: Panel;
   bottom: Panel;
   rects: Map<number, Rect>;
@@ -81,14 +78,14 @@ async function sidebar(client: ControlClient): Promise<Sidebar> {
   const res = await client.request(ControlCommand.TestSidebarThumbnails, []);
   const raw = String(res[1] ?? "");
   const m =
-    /hwnd=(\d+) thumbnails=(\d) count=\d+ current=(\d+) rendered=(\d+) marked=(\S*) ring=\d top=(\S+) bottom=(\S+) rects=(\S*)/.exec(
+    /hwnd=(\d+) thumbnails=(\d) count=\d+ current=(\d+) rendered=(\d+) ring=\d top=(\S+) bottom=(\S+) rects=(\S*)/.exec(
       raw,
     );
   if (res[0] !== 0 || !m) {
     throw new Error(`sidebar-thumbnails: TestSidebarThumbnails: ${raw}`);
   }
   const rects = new Map<number, Rect>();
-  for (const part of m[8]!.split(";").filter(Boolean)) {
+  for (const part of m[7]!.split(";").filter(Boolean)) {
     const [page, coords] = part.split(":");
     rects.set(+page!, parseRect(coords!));
   }
@@ -97,9 +94,8 @@ async function sidebar(client: ControlClient): Promise<Sidebar> {
     thumbnails: m[2] === "1",
     current: +m[3]!,
     rendered: +m[4]!,
-    marked: m[5]!,
-    top: parsePanel(m[6]!),
-    bottom: parsePanel(m[7]!),
+    top: parsePanel(m[5]!),
+    bottom: parsePanel(m[6]!),
     rects,
     raw,
   };
@@ -253,15 +249,10 @@ export async function testit(): Promise<void> {
     await waitFor("showing Thumbnails didn't focus them", panelFocused);
     const currentIs = (n: number) => async () => (await sidebar(client)).current === n;
     await waitFor("the document isn't on page 1", currentIs(1));
-    // the thumbnails' own Up / Down also select the page; the canvas's don't
-    const onPage = (n: number) => async () => {
-      const t = await sidebar(client);
-      return t.current === n && t.marked === `${n}`;
-    };
     postMessage(hwndPanel, WM_KEYDOWN, VK_DOWN, 0);
-    await waitFor("Down didn't go to thumbnail 2", onPage(2));
+    await waitFor("Down didn't go to thumbnail 2", currentIs(2));
     postMessage(hwndPanel, WM_KEYDOWN, VK_UP, 0);
-    await waitFor("Up didn't go to thumbnail 1", onPage(1));
+    await waitFor("Up didn't go to thumbnail 1", currentIs(1));
     // the canvas turns one page; the thumbnails would jump a screenful
     postMessage(hwndPanel, WM_KEYDOWN, VK_NEXT, 0);
     await waitFor("Page Down didn't reach the canvas", currentIs(2));
@@ -292,56 +283,19 @@ export async function testit(): Promise<void> {
       throw new Error(`sidebar-thumbnails: the current page has a selection border: ${row.map((c) => c.toString(16))}`);
     }
 
-    // Shift selects a range, Ctrl toggles one page
-    s = await sidebar(client);
-    click(s, 1);
-    click(s, 2, MK_SHIFT);
-    s = await sidebar(client);
-    if (s.marked !== "1,2") {
-      throw new Error(`sidebar-thumbnails: Shift click: want marked=1,2: ${s.raw}`);
-    }
-    click(s, 3, MK_CONTROL);
-    click(s, 3, MK_CONTROL);
-    s = await sidebar(client);
-    if (s.marked !== "1,2") {
-      throw new Error(`sidebar-thumbnails: Ctrl click twice: want marked=1,2: ${s.raw}`);
-    }
-
-    // pages 1 and 2 dragged behind page 3
-    const dragBehind3 = (t: Sidebar) => {
-      const from = pointIn(t, 1, 0.5, 0.5);
-      const to = pointIn(t, 3, 0.9, 0.9);
-      mouse(t.hwnd, WM_LBUTTONDOWN, MK_LBUTTON, from);
-      mouse(t.hwnd, WM_MOUSEMOVE, MK_LBUTTON, to);
-      mouse(t.hwnd, WM_LBUTTONUP, 0, to);
-    };
-    // only in Edit PDF mode
-    dragBehind3(s);
-    await sleep(500);
-    if ((await widths(client)) !== "601,602,603,604") {
-      throw new Error("sidebar-thumbnails: pages moved outside Edit PDF mode");
-    }
+    // dragging a page doesn't move it, even in Edit PDF mode
     sendCommand(frame, cmdId("CmdToggleEditPDF"));
     await sleep(300);
-    // the drag that didn't happen was a click on page 1: select 1 and 2 again
     s = await sidebar(client);
-    click(s, 1);
-    click(s, 2, MK_SHIFT);
-    s = await sidebar(client);
-    if (s.marked !== "1,2") {
-      throw new Error(`sidebar-thumbnails: selecting pages again: want marked=1,2: ${s.raw}`);
+    const from = pointIn(s, 1, 0.5, 0.5);
+    const to = pointIn(s, 3, 0.9, 0.9);
+    mouse(s.hwnd, WM_LBUTTONDOWN, MK_LBUTTON, from);
+    mouse(s.hwnd, WM_MOUSEMOVE, MK_LBUTTON, to);
+    mouse(s.hwnd, WM_LBUTTONUP, 0, to);
+    await sleep(500);
+    if ((await widths(client)) !== "601,602,603,604") {
+      throw new Error("sidebar-thumbnails: dragging a thumbnail moved pages");
     }
-    dragBehind3(s);
-    await waitFor("dragging didn't move the pages", async () => (await widths(client)) === "603,601,602,604");
-    // the move reloads the bookmarks, which must stay hidden
-    await waitFor("moving pages showed the bookmarks tree", async () => frameOnScreen(await sidebar(client)));
-    s = await sidebar(client);
-    if (s.marked !== "2,3") {
-      throw new Error(`sidebar-thumbnails: the moved pages must stay selected: ${s.raw}`);
-    }
-
-    sendCommand(frame, cmdId("CmdUndo"));
-    await waitFor("undo didn't restore the order", async () => (await widths(client)) === "601,602,603,604");
 
     sendCommand(frame, cmdId("CmdToggleThumbnails"));
     await want("Thumbnails didn't hide the sidebar", "-/-");

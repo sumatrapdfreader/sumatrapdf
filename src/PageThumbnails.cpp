@@ -37,7 +37,6 @@ constexpr int kThumbnailSidebarPadding = 8;
 constexpr int kThumbnailMaxCols = 6;
 constexpr int kThumbnailRenderScreens = 1;
 constexpr int kThumbnailKeepScreens = 2;
-constexpr int kDropMarkerDx = 3;
 constexpr Color kCurrentPageColor = MkRgb(0, 120, 215);
 
 static Pixmap* const kThumbnailRenderFailed = (Pixmap*)(intptr_t)-1;
@@ -125,8 +124,7 @@ static void DetachThumbnailCache(PageThumbnailsCache* cache) {
     DeleteThumbnailCache(cache);
 }
 
-static Pixmap* RenderPageThumbnail(EngineBase* engine, int pageNo, Location loc, int rotation, int thumbDx,
-                                   int thumbDy) {
+Pixmap* RenderPageThumbnail(EngineBase* engine, int pageNo, Location loc, int rotation, int thumbDx, int thumbDy) {
     // reflow docs share one mediabox; don't use a flat pageNo that a clone's
     // chapter layout may have already shifted
     int boxPage = loc.IsValid() && engine->isReflowable ? 1 : pageNo;
@@ -217,11 +215,6 @@ static void RenderThumbnailsInBackground(ThumbnailRenderWorker* worker) {
     delete worker;
 }
 
-// Moving pages and dropping PDFs in edit the PDF: only in Edit PDF mode
-static bool CanDropPages(PageThumbnailsCtrl* c) {
-    return c->win && c->win->pdfAnnotationsToolbarEnabled && CanEditPagesInTab(c->tab);
-}
-
 // the tab's document, unless the window has moved on to another tab (which
 // may have closed this one)
 static DisplayModel* CurrentDoc(PageThumbnailsCtrl* c) {
@@ -246,13 +239,11 @@ PageThumbnailsCtrl::PageThumbnailsCtrl(MainWindow* win, PlatformFont* font, int 
     onDrawItem = MkMethod1<PageThumbnailsCtrl, DrawItemEvent*, &PageThumbnailsCtrl::DrawRow>(this);
     VirtCtrl::onMouseDown = MkMethod1<PageThumbnailsCtrl, VirtMouseEvent*, &PageThumbnailsCtrl::OnThumbMouseDown>(this);
     VirtCtrl::onMouseMove = MkMethod1<PageThumbnailsCtrl, VirtMouseEvent*, &PageThumbnailsCtrl::OnThumbMouseMove>(this);
-    VirtCtrl::onMouseUp = MkMethod1<PageThumbnailsCtrl, VirtMouseEvent*, &PageThumbnailsCtrl::OnThumbMouseUp>(this);
     VirtCtrl::onMouseWheel =
         MkMethod1<PageThumbnailsCtrl, VirtMouseEvent*, &PageThumbnailsCtrl::OnThumbMouseWheel>(this);
     VirtCtrl::onDoubleClick =
         MkMethod1<PageThumbnailsCtrl, VirtMouseEvent*, &PageThumbnailsCtrl::OnThumbDoubleClick>(this);
     VirtCtrl::onKeyDown = MkMethod1<PageThumbnailsCtrl, VirtKeyEvent*, &PageThumbnailsCtrl::OnThumbKeyDown>(this);
-    VirtCtrl::onCaptureLost = MkMethod0<PageThumbnailsCtrl, &PageThumbnailsCtrl::OnThumbCaptureLost>(this);
 
     SetTab(win->CurrentTab());
 }
@@ -277,12 +268,6 @@ void PageThumbnailsCtrl::SetTab(WindowTab* newTab) {
     dm = tab ? tab->AsFixed() : nullptr;
     pageCount = dm ? dm->PageCount() : 0;
     selectedPage = dm ? clampi(dm->CurrentPageNo(), 1, std::max(pageCount, 1)) : 1;
-    VecReset(marked);
-    VecAppendBlanks(marked, pageCount);
-    anchorPage = 0;
-    pressedPage = 0;
-    dragging = false;
-    dropBefore = 0;
 
     rowsModel->rows = (pageCount + cols - 1) / cols;
     SetModel(rowsModel);
@@ -370,19 +355,11 @@ void PageThumbnailsCtrl::DrawRow(DrawItemEvent* ev) {
     DisplayModel* dm = CurrentDoc(this);
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     bool chapters = ShowChapterUi(dm);
-    Color colMarked = AccentColor(GetColor(kColListBg), HasFlag(vwfFocused) ? 45 : 25);
     for (int pageNo = firstPage; pageNo <= lastPage; pageNo++) {
         int col = pageNo - firstPage;
         int x = left + (col * (thumbDx + gap));
         Rect pageRect{x, ev->itemRect.y, thumbDx, thumbDy};
-        // the current page's blue frame marks it: no selection border too
         bool isCurrent = pageNo == selectedPage;
-        if (host == ThumbnailsHost::Sidebar && marked[pageNo - 1] && !isCurrent) {
-            Rect r = pageRect;
-            int d = gap / 3;
-            r.Inflate(d, d);
-            ev->gfx->FillRect(r, colMarked);
-        }
         ev->gfx->FillRect(pageRect, kColWhite);
 
         Pixmap* thumbnail = ThumbnailToDraw(cache, pageNo - 1);
@@ -422,32 +399,6 @@ void PageThumbnailsCtrl::DrawRow(DrawItemEvent* ev) {
     }
 }
 
-// the rows, then where dragged pages or files would go: a bar in the gap in
-// front of dropBefore (or after the last page)
-void PageThumbnailsCtrl::Paint(VirtPaintCtx& ctx) {
-    VirtListBox::Paint(ctx);
-    if (dropBefore <= 0 || pageCount <= 0) {
-        return;
-    }
-    bool atEnd = dropBefore > pageCount;
-    Rect r = PageRect(atEnd ? pageCount : dropBefore);
-    if (r.IsEmpty()) {
-        return;
-    }
-    int barDx = DpiScaleByDpi(dpi, kDropMarkerDx);
-    Rect bar;
-    if (cols == 1) {
-        int y = atEnd ? r.y + thumbDy + (rowGap / 2) : r.y - (rowGap / 2);
-        bar = {r.x, y - (barDx / 2), thumbDx, barDx};
-    } else {
-        int x = atEnd ? r.x + thumbDx + (gap / 2) : r.x - (gap / 2);
-        bar = {x - (barDx / 2), r.y, barDx, thumbDy};
-    }
-    ctx.gfx->PushClip(ctx.clip.Intersect(ctx.bounds));
-    ctx.gfx->FillRect(bar, kCurrentPageColor);
-    ctx.gfx->PopClip();
-}
-
 int PageThumbnailsCtrl::PageAtPoint(Point pt) {
     int row = ItemFromPoint(pt);
     if (row < 0) {
@@ -474,53 +425,6 @@ int PageThumbnailsCtrl::PageAtPoint(Point pt) {
     }
     int pageNo = (row * cols) + col + 1;
     return pageNo <= pageCount ? pageNo : -1;
-}
-
-// Where pages dropped at ptLocal go: in front of the returned page, at the
-// gap nearest to the point (pageCount + 1: after the last). 0 when outside.
-int PageThumbnailsCtrl::DropPosition(Point pt) {
-    if (pageCount <= 0 || pt.x < 0 || pt.y < 0 || pt.x >= bounds.dx || pt.y >= bounds.dy) {
-        return 0;
-    }
-    int row = (pt.y - padding.top + scrollY) / itemDy;
-    int rows = rowsModel->rows;
-    if (pt.y - padding.top + scrollY < 0) {
-        row = 0;
-    }
-    if (row >= rows) {
-        return pageCount + 1;
-    }
-    int step = cols == 1 ? itemDy : thumbDx + gap;
-    int pos = cols == 1 ? pt.y - padding.top + scrollY - (row * itemDy) : pt.x;
-    int slot = 0;
-    if (cols == 1) {
-        // the upper half of a page is in front of it, the lower half after it
-        slot = pos < thumbDy / 2 ? 0 : 1;
-    } else {
-        Rect r = PageRect((row * cols) + 1);
-        if (r.IsEmpty()) {
-            return 0;
-        }
-        int left = r.x - OriginInWindow().x;
-        slot = clampi((pos - left + (gap / 2) + (step / 2)) / step, 0, cols);
-    }
-    return std::min((row * cols) + slot + 1, pageCount + 1);
-}
-
-void PageThumbnailsCtrl::SetDropPosition(int before) {
-    if (before == dropBefore) {
-        return;
-    }
-    dropBefore = before;
-    Invalidate();
-}
-
-void PageThumbnailsCtrl::MarkedPages(Vec<int>& out) {
-    for (int i = 0; i < len(marked); i++) {
-        if (marked[i]) {
-            VecAppend(out, i + 1);
-        }
-    }
 }
 
 void PageThumbnailsCtrl::SelectPage(int pageNo) {
@@ -554,71 +458,6 @@ void PageThumbnailsCtrl::OpenSelectedPage() {
     onPageOpened.Call();
 }
 
-void PageThumbnailsCtrl::MarkOnly(int pageNo) {
-    for (u8& m : marked) {
-        m = 0;
-    }
-    marked[pageNo - 1] = 1;
-    anchorPage = pageNo;
-    Invalidate();
-}
-
-// sidebar: Ctrl adds or removes a page, Shift selects from the anchor to it
-void PageThumbnailsCtrl::ClickPage(int pageNo, bool ctrl, bool shift) {
-    if (!shift) {
-        if (!ctrl) {
-            MarkOnly(pageNo);
-            return;
-        }
-        marked[pageNo - 1] = !marked[pageNo - 1];
-        anchorPage = pageNo;
-        Invalidate();
-        return;
-    }
-    int from = anchorPage > 0 ? anchorPage : selectedPage;
-    if (!ctrl) {
-        for (u8& m : marked) {
-            m = 0;
-        }
-    }
-    for (int p = std::min(from, pageNo); p <= std::max(from, pageNo); p++) {
-        marked[p - 1] = 1;
-    }
-    Invalidate();
-}
-
-void PageThumbnailsCtrl::EndPress() {
-    pressedPage = 0;
-    dragging = false;
-    SetDropPosition(0);
-    if (root && root->captured == this) {
-        root->ReleaseCapture();
-    }
-}
-
-// the selected pages go together in front of dropBefore and stay selected
-void PageThumbnailsCtrl::DropMarkedPages() {
-    Vec<int> pages;
-    MarkedPages(pages);
-    int before = dropBefore;
-    if (len(pages) == 0 || before <= 0 || !MovePagesInTab(tab, pages, before)) {
-        return;
-    }
-    // the move called SetTab(), which cleared the selection
-    int nInFront = 0;
-    for (int p : pages) {
-        if (p < before) {
-            nInFront++;
-        }
-    }
-    int first = before - nInFront;
-    for (int i = 0; i < len(pages) && first - 1 + i < len(marked); i++) {
-        marked[first - 1 + i] = 1;
-    }
-    anchorPage = first;
-    Invalidate();
-}
-
 void PageThumbnailsCtrl::OnThumbMouseDown(VirtMouseEvent* ev) {
     int pageNo = PageAtPoint(ev->pt);
     if (pageNo > 0 && host == ThumbnailsHost::Palette) {
@@ -627,22 +466,8 @@ void PageThumbnailsCtrl::OnThumbMouseDown(VirtMouseEvent* ev) {
         return;
     }
     if (pageNo > 0 && ev->button == 0) {
-        // a plain click on a selected page may start dragging all of them, so
-        // only on release does it select just that page
-        if (ev->isCtrl || ev->isShift) {
-            ClickPage(pageNo, ev->isCtrl, ev->isShift);
-        } else {
-            if (!marked[pageNo - 1]) {
-                MarkOnly(pageNo);
-            }
-            SelectPage(pageNo);
-            OpenSelectedPage();
-        }
-        pressedPage = pageNo;
-        pressPt = ev->ptWindow;
-        if (root) {
-            root->SetCapture(this);
-        }
+        SelectPage(pageNo);
+        OpenSelectedPage();
         ev->didHandle = true;
         return;
     }
@@ -666,69 +491,14 @@ void PageThumbnailsCtrl::OnThumbMouseMove(VirtMouseEvent* ev) {
     if (ev->didHandle) {
         return;
     }
-    if (host == ThumbnailsHost::Palette) {
-        int pageNo = PageAtPoint(ev->pt);
-        if (pageNo > 0) {
-            SelectPage(pageNo);
-            ev->didHandle = true;
-        }
+    if (host != ThumbnailsHost::Palette) {
         return;
     }
-    if (pressedPage <= 0) {
-        return;
+    int pageNo = PageAtPoint(ev->pt);
+    if (pageNo > 0) {
+        SelectPage(pageNo);
+        ev->didHandle = true;
     }
-    ev->didHandle = true;
-    // captured: ev->pt is in window coords
-    Point origin = OriginInWindow();
-    Point pt{ev->ptWindow.x - origin.x, ev->ptWindow.y - origin.y};
-    if (!dragging) {
-        int dx = std::abs(ev->ptWindow.x - pressPt.x);
-        int dy = std::abs(ev->ptWindow.y - pressPt.y);
-        bool moved = dx > GetSystemMetrics(SM_CXDRAG) || dy > GetSystemMetrics(SM_CYDRAG);
-        if (!moved || !CanDropPages(this)) {
-            return;
-        }
-        dragging = true;
-        if (!marked[pressedPage - 1]) {
-            MarkOnly(pressedPage);
-        }
-    }
-    // near the top or bottom edge the list scrolls towards it
-    int edge = thumbDy / 4;
-    int scrollDy = 0;
-    if (pt.y < edge) {
-        scrollDy = -edge / 2;
-    } else if (pt.y > bounds.dy - edge) {
-        scrollDy = edge / 2;
-    }
-    if (scrollDy != 0 && ScrollBy(scrollDy)) {
-        StartRendering();
-    }
-    SetDropPosition(DropPosition(pt));
-}
-
-void PageThumbnailsCtrl::OnThumbMouseUp(VirtMouseEvent* ev) {
-    VirtListBox::OnMouseUp(ev);
-    if (host == ThumbnailsHost::Palette || pressedPage <= 0) {
-        return;
-    }
-    int pageNo = pressedPage;
-    bool wasDragging = dragging;
-    bool modifiers = ev->isCtrl || ev->isShift;
-    if (wasDragging) {
-        DropMarkedPages();
-    }
-    EndPress();
-    if (!wasDragging && !modifiers && pageNo <= pageCount) {
-        MarkOnly(pageNo);
-    }
-}
-
-void PageThumbnailsCtrl::OnThumbCaptureLost() {
-    VirtListBox::OnCaptureLost();
-    pressedPage = 0;
-    dragging = false;
-    SetDropPosition(0);
 }
 
 // Scrolls in proportion to the delta, 3 thumbnails a notch, so a touchpad's
@@ -804,26 +574,15 @@ void PageThumbnailsCtrl::HandleKey(int vkey) {
     }
 }
 
-// sidebar: Up / Down go to a page, with Shift they select up to it; Esc
-// cancels a drag. The sidebar sends every other key to the canvas
+// sidebar: Up / Down go to a page. The sidebar sends every other key to the canvas
 void PageThumbnailsCtrl::OnThumbKeyDown(VirtKeyEvent* ev) {
     if (host == ThumbnailsHost::Palette || pageCount <= 0) {
-        return;
-    }
-    if (ev->vkey == VK_ESCAPE && dragging) {
-        EndPress();
-        ev->didHandle = true;
         return;
     }
     if (ev->vkey != VK_UP && ev->vkey != VK_DOWN) {
         return;
     }
     int pageNo = PageForKey(this, ev->vkey);
-    if (ev->isShift) {
-        ClickPage(pageNo, false, true);
-    } else {
-        MarkOnly(pageNo);
-    }
     SelectPage(pageNo);
     OpenSelectedPage();
     ev->didHandle = true;
@@ -928,135 +687,4 @@ void PageThumbnailsCtrl::StartRendering() {
     AtomicIntSet(&cache->cancelRendering, 0);
     cache->workerRunning = true;
     RunAsync(MkFunc0<ThumbnailRenderWorker>(RenderThumbnailsInBackground, worker), StrL("PageThumbnailsRender"));
-}
-
-//--- dropping PDF files on the sidebar's thumbnails
-
-static bool IsPdfPath(Str path) {
-    return str::EndsWithI(path, StrL(".pdf"));
-}
-
-static void PdfPathsFromDataObject(IDataObject* dataObj, StrVec& out) {
-    FORMATETC fmt = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    STGMEDIUM medium{};
-    if (FAILED(dataObj->GetData(&fmt, &medium)) || !medium.hGlobal) {
-        return;
-    }
-    HDROP hDrop = (HDROP)medium.hGlobal;
-    int nFiles = DragQueryFileW(hDrop, DRAGQUERY_NUMFILES, nullptr, 0);
-    WCHAR pathW[MAX_PATH]{};
-    for (int i = 0; i < nFiles; i++) {
-        DragQueryFileW(hDrop, i, pathW, dimof(pathW));
-        TempStr path = ToUtf8Temp(pathW);
-        if (IsPdfPath(path)) {
-            out.Append(path);
-        }
-    }
-    ReleaseStgMedium(&medium);
-}
-
-struct InsertDroppedPdfs {
-    MainWindow* win = nullptr;
-    WindowTab* tab = nullptr;
-    StrVec paths;
-    int before = 0;
-};
-
-// after Drop() returned, so the drag source isn't kept waiting
-static void InsertDroppedPdfsNow(InsertDroppedPdfs* d) {
-    if (IsMainWindowValidAndNotClosing(d->win) && d->win->CurrentTab() == d->tab) {
-        int before = d->before;
-        for (Str path : d->paths) {
-            before += InsertPdfInTab(d->tab, path, before);
-        }
-    }
-    delete d;
-}
-
-class ThumbnailsDropTarget : public IDropTarget {
-    AtomicInt refCount = 1;
-    HWND hwnd = nullptr;
-    PageThumbnailsCtrl* ctrl = nullptr;
-    bool hasPdf = false;
-
-    int PositionAt(POINTL ptScreen) {
-        // either sidebar panel may host the thumbnails: only that one takes the drop
-        bool hosts = ctrl->GetHwnd() == hwnd;
-        if (!hasPdf || !hosts || !ctrl->IsVisible() || !CanDropPages(ctrl)) {
-            return 0;
-        }
-        POINT p{ptScreen.x, ptScreen.y};
-        ScreenToClient(hwnd, &p);
-        Point pt{p.x, p.y};
-        UnmirrorRtl(hwnd, pt);
-        Point origin = ctrl->OriginInWindow();
-        return ctrl->DropPosition({pt.x - origin.x, pt.y - origin.y});
-    }
-
-  public:
-    ThumbnailsDropTarget(PageThumbnailsCtrl* c, HWND h) : hwnd(h), ctrl(c) {}
-
-    STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
-        if (riid == IID_IUnknown || riid == IID_IDropTarget) {
-            *ppv = this;
-            AddRef();
-            return S_OK;
-        }
-        *ppv = nullptr;
-        return E_NOINTERFACE;
-    }
-    ULONG STDMETHODCALLTYPE AddRef() override { return AtomicIntInc(&refCount); }
-    ULONG STDMETHODCALLTYPE Release() override {
-        LONG r = InterlockedDecrement(&refCount);
-        if (r == 0) {
-            delete this;
-        }
-        return r;
-    }
-
-    STDMETHODIMP DragEnter(IDataObject* dataObj, DWORD keys, POINTL pt, DWORD* pdwEffect) override {
-        StrVec paths;
-        PdfPathsFromDataObject(dataObj, paths);
-        hasPdf = len(paths) > 0;
-        return DragOver(keys, pt, pdwEffect);
-    }
-
-    STDMETHODIMP DragOver(DWORD /*keys*/, POINTL pt, DWORD* pdwEffect) override {
-        int before = PositionAt(pt);
-        ctrl->SetDropPosition(before);
-        *pdwEffect = before > 0 ? DROPEFFECT_COPY : DROPEFFECT_NONE;
-        return S_OK;
-    }
-
-    STDMETHODIMP DragLeave() override {
-        ctrl->SetDropPosition(0);
-        return S_OK;
-    }
-
-    STDMETHODIMP Drop(IDataObject* dataObj, DWORD /*keys*/, POINTL pt, DWORD* pdwEffect) override {
-        int before = PositionAt(pt);
-        ctrl->SetDropPosition(0);
-        *pdwEffect = DROPEFFECT_NONE;
-        if (before <= 0) {
-            return S_OK;
-        }
-        auto* d = new InsertDroppedPdfs();
-        PdfPathsFromDataObject(dataObj, d->paths);
-        d->win = ctrl->win;
-        d->tab = ctrl->tab;
-        d->before = before;
-        uitask::Post(MkFunc0<InsertDroppedPdfs>(InsertDroppedPdfsNow, d));
-        *pdwEffect = DROPEFFECT_COPY;
-        return S_OK;
-    }
-};
-
-void RegisterThumbnailsDropTarget(PageThumbnailsCtrl* ctrl, HWND hwnd) {
-    auto* dt = new ThumbnailsDropTarget(ctrl, hwnd);
-    RegisterDragDrop(hwnd, dt);
-    dt->Release(); // RegisterDragDrop AddRef'd it
-}
-
-void RevokeThumbnailsDropTarget(HWND hwnd) {
-    RevokeDragDrop(hwnd);
 }

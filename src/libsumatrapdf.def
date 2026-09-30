@@ -302,6 +302,8 @@ EXPORTS
 
 	pdf_bake_document
 
+	pdf_rearrange_pages
+
 	pdf_graft_mapped_object
 
 	pdf_add_object

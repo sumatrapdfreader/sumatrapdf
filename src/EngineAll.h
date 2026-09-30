@@ -125,6 +125,17 @@ bool EngineMupdfCanEditPages(EngineBase*);
 bool EngineMupdfMovePages(EngineBase*, const Vec<int>& pages, int beforePage, Vec<Annotation*>& removedOut,
                           TocTree** oldTocOut);
 int EngineMupdfInsertPdf(EngineBase*, Str path, int beforePage, Vec<Annotation*>& removedOut, TocTree** oldTocOut);
+// a PDF EngineMupdfMergePdfs() reads pages from
+struct PdfMergeSource {
+    Str path;
+    Str password;
+};
+// page pageNo (1-based) of source src
+struct PdfMergePage {
+    int src = 0;
+    int pageNo = 0;
+};
+bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePage>& pages, Str destPath);
 
 bool EngineMupdfSupportsAnnotations(EngineBase*);
 bool EngineMupdfIsPdf(EngineBase* engine);

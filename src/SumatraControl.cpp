@@ -62,6 +62,7 @@
 #include "EutlTrust.h"
 #include "CommandPalette.h"
 #include "PdfTools.h"
+#include "MergePdf.h"
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
@@ -932,6 +933,7 @@ enum class ControlCmd : u16 {
     TestPageEdit = 112,
     TestSidebarThumbnails = 113,
     TestFrameNcStrips = 114,
+    TestMergePdf = 115,
 };
 
 enum class ControlArgType : u16 {
@@ -1229,6 +1231,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSidebarThumbnails: {
             int exitCode = 0;
             Str res = SidebarThumbnailsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestMergePdf: {
+            // action, arg, n: see MergePdfResultTemp()
+            Str action = StringArg(req, 0);
+            Str arg = StringArg(req, 1);
+            i32 n = 0;
+            IntArg(req, 2, n);
+            int exitCode = 0;
+            Str res = MergePdfResultTemp(action, arg, n, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

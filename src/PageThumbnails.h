@@ -3,13 +3,14 @@
 
 struct PageThumbnailsCache;
 struct ThumbnailRowsModel;
+struct Location;
+struct Pixmap;
 
 enum class ThumbnailsHost {
     // the command palette's "&" mode: the page under the mouse is selected,
     // Enter or double click goes to it
     Palette,
-    // the sidebar's Thumbnails view: a click goes to a page, Ctrl / Shift click
-    // select several, dragging moves them, dropping PDF files inserts them
+    // the sidebar's Thumbnails view: a click goes to a page
     Sidebar,
 };
 
@@ -34,31 +35,17 @@ struct PageThumbnailsCtrl : VirtListBox {
     // palette: after going to a page on Enter or double click
     Func0 onPageOpened;
 
-    // sidebar: pages selected for moving, indexed by pageNo - 1
-    Vec<u8> marked;
-    int anchorPage = 0;
-    // sidebar: the page the left button went down on, until it goes up
-    int pressedPage = 0;
-    Point pressPt;
-    bool dragging = false;
-    // while dragging pages or files: they'd go in front of this page
-    // (pageCount + 1: at the end); 0 when not over the grid
-    int dropBefore = 0;
-
     PageThumbnailsCtrl(MainWindow*, PlatformFont*, int dpi, ThumbnailsHost);
     ~PageThumbnailsCtrl() override;
 
     void SetTab(WindowTab*);
     void SetBounds(Rect) override;
-    void Paint(VirtPaintCtx&) override;
     void DrawRow(DrawItemEvent*);
     void OnThumbMouseDown(VirtMouseEvent*);
     void OnThumbMouseMove(VirtMouseEvent*);
-    void OnThumbMouseUp(VirtMouseEvent*);
     void OnThumbMouseWheel(VirtMouseEvent*);
     void OnThumbDoubleClick(VirtMouseEvent*);
     void OnThumbKeyDown(VirtKeyEvent*);
-    void OnThumbCaptureLost();
     void Activate();
     void Deactivate();
     void HandleKey(int vkey);
@@ -67,20 +54,12 @@ struct PageThumbnailsCtrl : VirtListBox {
     int RenderedCount() const;
     void SelectPage(int);
     void SetCurrentPage(int);
-    int DropPosition(Point ptLocal);
-    void SetDropPosition(int);
-    void MarkedPages(Vec<int>& out);
     Rect PageRect(int pageNo);
 
   protected:
     int PageAtPoint(Point);
     void OpenSelectedPage();
     void ResetCache();
-    void MarkOnly(int pageNo);
-    void ClickPage(int pageNo, bool ctrl, bool shift);
-    void DropMarkedPages();
-    void EndPress();
 };
 
-void RegisterThumbnailsDropTarget(PageThumbnailsCtrl*, HWND);
-void RevokeThumbnailsDropTarget(HWND);
+Pixmap* RenderPageThumbnail(EngineBase*, int pageNo, Location, int rotation, int thumbDx, int thumbDy);

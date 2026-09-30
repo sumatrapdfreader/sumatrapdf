@@ -332,8 +332,9 @@ enum {
     CmdSignWithImage = 526,
     CmdInsertTextSnippet = 527,
     CmdToggleThumbnails = 528,
+    CmdMergePDF = 529,
 
-    CmdLast = 528,
+    CmdLast = 529,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering
