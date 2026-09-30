@@ -6,7 +6,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { findTopWindow, packCoords, sendMessage, sleep, WM_COMMAND } from "./winapi.ts";
+import { findTopWindow, getControlText, packCoords, sendMessage, sleep, WM_COMMAND } from "./winapi.ts";
 import {
   clickAt,
   findCanvas,
@@ -122,6 +122,13 @@ export async function testit(): Promise<void> {
     await typeIntoInput(edit, TEXT, false);
     await sleep(200);
 
+    // a stray real keystroke can land in the focused box; the check is that
+    // whatever it holds survives the click away
+    const typed = getControlText(edit);
+    if (!typed.includes(TEXT)) {
+      throw new Error(`annot-contents-click-away: edit box holds "${typed}", want "${TEXT}"`);
+    }
+
     // click the page well away from the annotation
     await clickAt(canvas, 420, 620);
     await sleep(600);
@@ -132,8 +139,8 @@ export async function testit(): Promise<void> {
       throw new Error(`annot-contents-click-away: annotation was not left selected: ${dump}`);
     }
     const contents = await selectedContents(client);
-    if (contents !== TEXT) {
-      throw new Error(`annot-contents-click-away: contents are "${contents}", want "${TEXT}"`);
+    if (contents !== typed) {
+      throw new Error(`annot-contents-click-away: contents are "${contents}", want "${typed}"`);
     }
   } finally {
     client.close();
