@@ -362,6 +362,9 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     Vec<WindowTab*>* tabSelectionHistory = nullptr;
 
     ButtonInfo captionBtn[CB_BTN_COUNT];
+    // where a caption button was pressed (client coords): dragging the app icon
+    // from there moves the window
+    Point captionPressPt;
     bool isMenuOpen = false;
     Rect captionRect;
 

@@ -14937,6 +14937,18 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
         case WM_MOUSEMOVE: {
             Point ptm{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+            // dragging the app icon moves the window, like the title bar: a
+            // bigger target for touch than the gap next to the tabs (#6261)
+            ButtonInfo& sysMenu = win->captionBtn[CB_SYSTEM_MENU];
+            Point pressPt = win->captionPressPt;
+            if (sysMenu.pressed && (wp & MK_LBUTTON) && IsDragDistance(pressPt.x, ptm.x, pressPt.y, ptm.y)) {
+                sysMenu.pressed = false;
+                RepaintButton(hwnd, CB_SYSTEM_MENU, win);
+                ReleaseCapture();
+                SendMessageW(hwnd, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+                *callDef = false;
+                return 0;
+            }
             int btnIdx = CaptionButtonAt(win, ptm);
             for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
                 bool shouldHighlight = (i == btnIdx);
@@ -14959,6 +14971,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             int btnIdx = CaptionButtonAt(win, ptd);
             if (btnIdx >= 0) {
                 win->captionBtn[btnIdx].pressed = true;
+                win->captionPressPt = ptd;
                 RepaintButton(hwnd, btnIdx, win);
                 SetCapture(hwnd);
                 *callDef = false;
