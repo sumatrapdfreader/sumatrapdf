@@ -99,6 +99,7 @@ Str EngineImagesGetImageData(EngineBase*, int pageNo);
 using ShowErrorCb = Func1<Str>;
 
 bool IsEngineMupdfSupportedFileType(FileType);
+int EngineMupdfCount();
 EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEngineMupdfFromData(Str data, Str nameHint, PasswordUI* pwdUI);
 Str LoadEmbeddedPDFFile(Str path);

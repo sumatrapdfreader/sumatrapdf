@@ -778,7 +778,7 @@ export async function withControlledSumatra<T>(
   let fnErr: unknown;
   let fnOk = false;
   try {
-    client = await ControlClient.connect(pipeName, options.connectTimeoutMs ?? 10000);
+    client = await ControlClient.connect(pipeName, options.connectTimeoutMs ?? 10_000 * SLOW_BUILD_FACTOR);
     result = await fn(client, proc);
     fnOk = true;
   } catch (e) {

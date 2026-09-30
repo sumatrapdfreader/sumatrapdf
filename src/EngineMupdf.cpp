@@ -3578,6 +3578,12 @@ static void DeInitializeEngineMupdf() {
     gPerThreadContexts = nullptr;
 }
 
+// Shutdown waits for this to hit zero before freeing the system-font cache.
+// FreeType faces alias those bytes until ~EngineMupdf drops the document.
+int EngineMupdfCount() {
+    return AtomicIntGet(&gEngineCount);
+}
+
 static fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
     ThreadId threadID = GetCurrentThreadId();
     {

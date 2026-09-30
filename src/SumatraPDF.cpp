@@ -19024,8 +19024,6 @@ Exit:
     // all frame/canvas windows are destroyed by now
     DeleteBrush(gWinClassBgBrush);
 
-    destroy_system_font_list();
-
     // TODO: if needed, I could replace it with AtomicBool gFileExistenceInProgress
     // alternatively I can set AtomicBool gAppShutdown and have various threads
     // abort quickly if IsAppShuttingDown()
@@ -19041,6 +19039,23 @@ Exit:
     // must run before uitask::Destroy() (these deletes are queued as ui tasks)
     // and before gRenderCache goes away (the waiting threads use it)
     WaitForPendingControllerDeletes();
+
+    // FreeType faces alias the system-font cache until the engine is destroyed.
+    if (EngineMupdfCount() > 0) {
+        log(StrL("waiting for engines before freeing system fonts\n"));
+        TimeStamp fontWaitStart = TimeGet();
+        while (EngineMupdfCount() > 0) {
+            uitask::DrainQueue();
+            if (TimeSinceInMs(fontWaitStart) > 90000) {
+                log(StrL("timed out waiting for engines; leaking system font cache\n"));
+                break;
+            }
+            ::Sleep(50);
+        }
+    }
+    if (EngineMupdfCount() == 0) {
+        destroy_system_font_list();
+    }
 
     PlatformFontDestroy();
     uitask::Destroy();

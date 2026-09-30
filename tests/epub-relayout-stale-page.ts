@@ -130,23 +130,31 @@ function zip(entries: ZipEntry[]): Buffer {
 
 // each chapter must be several pages so the flat page count grows well past
 // the per-chapter placeholder count a restyle collapses it to
-function chapterHtml(n: number): string {
-  const paras: string[] = [];
-  for (let i = 1; i <= PARAS_PER_CHAPTER; i++) {
+function chapterHtml(n: number, paras = PARAS_PER_CHAPTER): string {
+  const head =
+    `<?xml version="1.0" encoding="utf-8"?>\n` +
+    `<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter ${n}</title></head>` +
+    `<body><h1>Chapter ${n}</h1>`;
+  const tail = `</body></html>`;
+  // repeated text: building tens of thousands of unique words is the slow part
+  if (paras > 200) {
+    return head + `<p>${"word ".repeat(40)}</p>`.repeat(paras) + tail;
+  }
+  const parasHtml: string[] = [];
+  for (let i = 1; i <= paras; i++) {
     const words: string[] = [];
     for (let w = 0; w < 60; w++) {
       words.push(`ch${n}p${i}w${w}`);
     }
-    paras.push(`<p>${words.join(" ")}</p>`);
+    parasHtml.push(`<p>${words.join(" ")}</p>`);
   }
-  return (
-    `<?xml version="1.0" encoding="utf-8"?>\n` +
-    `<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter ${n}</title></head>` +
-    `<body><h1>Chapter ${n}</h1>${paras.join("")}</body></html>`
-  );
+  return head + parasHtml.join("") + tail;
 }
 
-export function makeEpub(): Buffer {
+export function makeEpub(opts?: { chapterCount?: number; parasPerChapter?: number | number[] }): Buffer {
+  const parasPerChapter = opts?.parasPerChapter ?? PARAS_PER_CHAPTER;
+  const parasList = Array.isArray(parasPerChapter) ? parasPerChapter : null;
+  const chapterCount = parasList ? parasList.length : (opts?.chapterCount ?? CHAPTER_COUNT);
   const enc = new TextEncoder();
   const container =
     `<?xml version="1.0"?>\n<container version="1.0" ` +
@@ -161,11 +169,12 @@ export function makeEpub(): Buffer {
     { name: "mimetype", data: enc.encode("application/epub+zip"), store: true },
     { name: "META-INF/container.xml", data: enc.encode(container) },
   ];
-  for (let n = 1; n <= CHAPTER_COUNT; n++) {
+  for (let n = 1; n <= chapterCount; n++) {
     items.push(`<item id="c${n}" href="c${n}.xhtml" media-type="application/xhtml+xml"/>`);
     refs.push(`<itemref idref="c${n}"/>`);
     navLis.push(`<li><a href="c${n}.xhtml">Chapter ${n}</a></li>`);
-    entries.push({ name: `OEBPS/c${n}.xhtml`, data: enc.encode(chapterHtml(n)) });
+    const paras = parasList ? parasList[n - 1]! : (parasPerChapter as number);
+    entries.push({ name: `OEBPS/c${n}.xhtml`, data: enc.encode(chapterHtml(n, paras)) });
   }
 
   const nav =
