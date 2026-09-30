@@ -10,7 +10,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, pollUntil, runStandalone, tmpPath } from "./util.ts";
 import {
   clientToScreen,
   enumWindows,
@@ -41,8 +41,8 @@ import {
   killAndWait,
   launchControlled,
   parkCursorAway,
-  pressEscape,
-  sendCommand,
+  pressKey,
+  sendCommandSync,
 } from "./win-automation.ts";
 
 const TOOLBAR_CLASS = "SumatraAnnotEditToolbar";
@@ -131,16 +131,20 @@ export async function openChipDropdown(client: ControlClient, pid: number, kind:
   if (!tbHwnd) {
     throw new Error("annot-color-dropdown: annotation toolbar window not found");
   }
-  await clickAt(tbHwnd, chip.x - placed.x + Math.floor(chip.dx / 2), chip.y - placed.y + Math.floor(chip.dy / 2));
-  await sleep(500);
+  await clickAt(tbHwnd, chip.x - placed.x + Math.floor(chip.dx / 2), chip.y - placed.y + Math.floor(chip.dy / 2), 0);
 
-  const popup = findTopWindow(pid, POPUP_CLASS);
-  if (!popup || !isWindowVisible(popup)) {
-    throw new Error(
-      `annot-color-dropdown: the ${kind} drop-down did not open, chip at ${JSON.stringify(chip)} of ${dump}`,
-    );
-  }
-  const line = /annotColorPopup .*/.exec(await markupDump(client))?.[0] ?? "";
+  await pollUntil(
+    () => findTopWindow(pid, POPUP_CLASS),
+    (popup) => popup !== 0 && isWindowVisible(popup),
+    {
+      error: `annot-color-dropdown: the ${kind} drop-down did not open, chip at ${JSON.stringify(chip)} of ${dump}`,
+    },
+  );
+  const line = await pollUntil(
+    async () => /annotColorPopup .*/.exec(await markupDump(client))?.[0] ?? "",
+    (s) => /annotColorPopup visible=1/.test(s),
+    { error: (s) => `annot-color-dropdown: the ${kind} drop-down is not in the dump: ${s}` },
+  );
   if (!/annotColorPopup visible=1/.test(line)) {
     throw new Error(`annot-color-dropdown: the ${kind} drop-down is not in the dump: ${line}`);
   }
@@ -179,13 +183,15 @@ async function checkEditColors(pid: number, frame: number, swatches: Rect[]): Pr
   const r = getWindowRect(popup);
   const last = swatches[swatches.length - 1]!;
   const x = last.x + last.dx + Math.floor((r.right - (last.x + last.dx)) / 2);
-  await clickAt(popup, x - r.left, last.y + Math.floor(last.dy / 2) - r.top);
-  await sleep(800);
+  await clickAt(popup, x - r.left, last.y + Math.floor(last.dy / 2) - r.top, 0);
 
-  const dlg = findColorDialog(pid);
-  if (!dlg) {
-    throw new Error("annot-color-dropdown: Edit colors did not open the color dialog");
-  }
+  const dlg = await pollUntil(
+    () => findColorDialog(pid),
+    (hwnd) => hwnd !== 0,
+    {
+      error: "annot-color-dropdown: Edit colors did not open the color dialog",
+    },
+  );
   if (getWindowOwner(dlg) !== frame || !isWindowAbove(dlg, frame)) {
     throw new Error("annot-color-dropdown: the color dialog is not in front of the main window");
   }
@@ -194,10 +200,13 @@ async function checkEditColors(pid: number, frame: number, swatches: Rect[]): Pr
     throw new Error("annot-color-dropdown: the drop-down stayed up under the color dialog");
   }
   postMessage(dlg, WM_KEYDOWN, VK_ESCAPE, 0);
-  await sleep(400);
-  if (findColorDialog(pid)) {
-    throw new Error("annot-color-dropdown: the color dialog did not close");
-  }
+  await pollUntil(
+    () => findColorDialog(pid),
+    (hwnd) => hwnd === 0,
+    {
+      error: "annot-color-dropdown: the color dialog did not close",
+    },
+  );
 }
 
 // picks one of the swatches of the open drop-down
@@ -205,13 +214,13 @@ export async function pickSwatch(client: ControlClient, pid: number, swatches: R
   const popup = findTopWindow(pid, POPUP_CLASS);
   const r = getWindowRect(popup);
   const sw = swatches[idx]!;
-  await clickAt(popup, sw.x - r.left + Math.floor(sw.dx / 2), sw.y - r.top + Math.floor(sw.dy / 2));
-  await sleep(600);
+  await clickAt(popup, sw.x - r.left + Math.floor(sw.dx / 2), sw.y - r.top + Math.floor(sw.dy / 2), 0);
+  await pollUntil(
+    () => findTopWindow(pid, POPUP_CLASS),
+    (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
+    { error: "annot-color-dropdown: the drop-down stayed up after picking a color" },
+  );
   await client.waitForRenderIdle();
-  const stillUp = findTopWindow(pid, POPUP_CLASS);
-  if (stillUp && isWindowVisible(stillUp)) {
-    throw new Error("annot-color-dropdown: the drop-down stayed up after picking a color");
-  }
 }
 
 // A highlight: one color chip, no opacity chip, and no "none" swatch (mupdf
@@ -230,13 +239,11 @@ async function testMarkup(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(400);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     // a highlight over the text of page 1, which leaves it selected
     await client.seedTextSelection(1);
-    sendCommand(frame, cmdId("CmdCreateAnnotHighlight"));
-    await sleep(600);
+    sendCommandSync(frame, cmdId("CmdCreateAnnotHighlight"));
     await client.waitForRenderIdle();
 
     const dump = await toolbarDump(client);
@@ -298,16 +305,18 @@ async function testShape(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(400);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     const raw = await markupDump(client);
     const sq = parseRect(/type=Square[^\n]*screen=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(raw));
     if (sq.dx === 0) {
       throw new Error(`annot-color-dropdown: no square on the page\n${raw}`);
     }
-    await clickAt(canvas, sq.x + Math.floor(sq.dx / 2), sq.y + Math.floor(sq.dy / 2));
-    await sleep(400);
+    await clickAt(canvas, sq.x + Math.floor(sq.dx / 2), sq.y + Math.floor(sq.dy / 2), 0);
+    await pollUntil(
+      () => toolbarDump(client),
+      (s) => chipNames(s).includes("interiorColor"),
+    );
     await client.waitForRenderIdle();
 
     const items = chipNames(await toolbarDump(client));
@@ -415,6 +424,14 @@ async function hoverMenuColors(client: ControlClient): Promise<string[]> {
   return res;
 }
 
+async function waitForHoverColors(client: ControlClient, want?: string): Promise<string[]> {
+  return pollUntil(
+    () => hoverMenuColors(client),
+    (colors) => colors.length > 0 && (want === undefined || colors.join(" ") === want),
+    { error: (colors) => `annot-color-dropdown: color drop-down has "${colors.join(" ")}", want "${want}"` },
+  );
+}
+
 // right-click opens the drop-down at once, without waiting for the hover delay.
 // The real cursor stays parked off the window: on a button, its moves swap to
 // that button's drop-down.
@@ -426,7 +443,7 @@ function rightClickToolbar(toolbar: number, x: number, y: number): void {
 
 // Esc dismisses a right-click drop-down; moving the mouse away does not
 async function closeHoverMenu(pid: number, frame: number): Promise<void> {
-  await pressEscape(frame);
+  await pressKey(frame, VK_ESCAPE, 0);
   for (let i = 0; i < 30; i++) {
     const h = findTopWindow(pid, HOVER_MENU_CLASS);
     if (!h || !isWindowVisible(h)) {
@@ -461,8 +478,7 @@ async function testToolbarButtons(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(600);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     const toolbar = findChildByClass(frame, MAIN_TOOLBAR_CLASS);
 
     // none of them has a color set, so each one's default is marked as the one
@@ -474,13 +490,12 @@ async function testToolbarButtons(): Promise<void> {
         throw new Error(`annot-color-dropdown: no ${name} button on the Edit PDF toolbar`);
       }
       rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
-      await sleep(400);
       const def = DEFAULT_COLORS[name]!;
       if (!presets.includes(def)) {
         presets.push(def);
       }
       const want = presets.map((c) => (c === def ? `${c}*` : c)).join(" ");
-      const colors = await hoverMenuColors(client);
+      const colors = await waitForHoverColors(client, want);
       if (colors.join(" ") !== want) {
         throw new Error(`annot-color-dropdown: ${name} offers "${colors.join(" ")}", want "${want}"`);
       }
@@ -491,8 +506,7 @@ async function testToolbarButtons(): Promise<void> {
     {
       const b = (await annotButtonRect(client, cmdId("CmdCreateAnnotInk")))!;
       rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
-      await sleep(400);
-      const colors = (await hoverMenuColors(client)).join(" ");
+      const colors = (await waitForHoverColors(client, INK_DEFAULT_PRESETS)).join(" ");
       if (colors !== INK_DEFAULT_PRESETS) {
         throw new Error(`annot-color-dropdown: CmdCreateAnnotInk offers "${colors}", want "${INK_DEFAULT_PRESETS}"`);
       }
@@ -503,7 +517,6 @@ async function testToolbarButtons(): Promise<void> {
     const redact = await annotButtonRect(client, cmdId("CmdCreateAnnotRedact"));
     if (redact) {
       rightClickToolbar(toolbar, redact.x + (redact.dx >> 1), redact.y + (redact.dy >> 1));
-      await sleep(400);
       const h = findTopWindow(pid, HOVER_MENU_CLASS);
       if (h && isWindowVisible(h)) {
         throw new Error("annot-color-dropdown: Redact should have no color drop-down");
@@ -511,15 +524,16 @@ async function testToolbarButtons(): Promise<void> {
       await closeHoverMenu(pid, frame);
       // with no drop-down the right-click picked the tool; leave its mode,
       // which disables the other buttons
-      await pressEscape(frame);
-      await sleep(300);
+      await pressKey(frame, VK_ESCAPE, 0);
     }
 
     // picking a color is the color the next annotation of that type is made in
     const square = (await annotButtonRect(client, cmdId("CmdCreateAnnotSquare")))!;
     rightClickToolbar(toolbar, square.x + (square.dx >> 1), square.y + (square.dy >> 1));
-    await sleep(400);
-    const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+    const raw = await pollUntil(
+      async () => String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? ""),
+      (s) => /^dropdown-item idx=1 /m.test(s),
+    );
     const item = /^dropdown-item idx=1 cmd=\d+ current=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(raw);
     if (!item) {
       throw new Error(`annot-color-dropdown: the Square drop-down has no second swatch\n${raw}`);
@@ -528,11 +542,13 @@ async function testToolbarButtons(): Promise<void> {
     const mr = getWindowRect(menu);
     const cx = (+item[1]! + +item[3]!) >> 1;
     const cy = (+item[2]! + +item[4]!) >> 1;
-    await clickAt(menu, cx - mr.left, cy - mr.top);
-    await sleep(400);
+    await clickAt(menu, cx - mr.left, cy - mr.top, 0);
+    await pollUntil(
+      () => findTopWindow(pid, HOVER_MENU_CLASS),
+      (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
+    );
 
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotSquare"), packCoords(300, 300));
-    await sleep(600);
     await client.waitForRenderIdle();
     const got = await selectedColor(client);
     if (got.color !== "#00ff00") {
@@ -545,13 +561,13 @@ async function testToolbarButtons(): Promise<void> {
     const lx = line.x + (line.dx >> 1);
     const ly = line.y + (line.dy >> 1);
     rightClickToolbar(toolbar, lx, ly);
-    await sleep(400);
-    const lineMenu = findTopWindow(pid, HOVER_MENU_CLASS);
-    if (!lineMenu || !isWindowVisible(lineMenu)) {
-      throw new Error("annot-color-dropdown: the Line drop-down did not open");
-    }
-    await clickAt(toolbar, lx, ly, 300);
-    await sleep(300);
+    await waitForHoverColors(client);
+    await clickAt(toolbar, lx, ly, 0);
+    await pollUntil(
+      () => findTopWindow(pid, HOVER_MENU_CLASS),
+      (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
+      { error: "annot-color-dropdown: clicking the Line button left its color drop-down up" },
+    );
     const stayClosedUntil = Date.now() + 1500;
     while (Date.now() < stayClosedUntil) {
       const s = clientToScreen(toolbar, lx, ly);
@@ -609,8 +625,7 @@ async function testCurrentColorAdded(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(600);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     const toolbar = findChildByClass(frame, MAIN_TOOLBAR_CLASS);
 
     for (const [name, want] of [
@@ -625,8 +640,7 @@ async function testCurrentColorAdded(): Promise<void> {
     ] as const) {
       const b = (await annotButtonRect(client, cmdId(name)))!;
       rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
-      await sleep(400);
-      const colors = (await hoverMenuColors(client)).join(" ");
+      const colors = (await waitForHoverColors(client, want)).join(" ");
       if (colors !== want) {
         throw new Error(`annot-color-dropdown: ${name} offers "${colors}", want "${want}"`);
       }

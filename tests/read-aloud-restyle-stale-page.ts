@@ -38,7 +38,7 @@ export async function testit(): Promise<void> {
   const dir = tmpPath("read-aloud-restyle-stale-page-data");
   mkdirSync(dir, { recursive: true });
   const epub = join(dir, "chapters.epub");
-  writeFileSync(epub, makeEpub());
+  writeFileSync(epub, makeEpub({ parasPerChapter: 12 }));
 
   // with the default DocumentColorsFollowTheme only the first toggle restyles
   const appdata = writeAppdata(

@@ -33,8 +33,7 @@ import { deflateRawSync } from "node:zlib";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, withControlledSumatra } from "./control.ts";
-import { cmdId, EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath, writeAppdata } from "./util.ts";
-import { sleep } from "./winapi.ts";
+import { cmdId, EXE, runStandalone, tmpPath, writeAppdata } from "./util.ts";
 import { sendCommandSync, waitForFrame } from "./win-automation.ts";
 
 // the crash doc had 36+ chapters and reached flat page 95
@@ -136,19 +135,8 @@ function chapterHtml(n: number, paras = PARAS_PER_CHAPTER): string {
     `<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter ${n}</title></head>` +
     `<body><h1>Chapter ${n}</h1>`;
   const tail = `</body></html>`;
-  // repeated text: building tens of thousands of unique words is the slow part
-  if (paras > 200) {
-    return head + `<p>${"word ".repeat(40)}</p>`.repeat(paras) + tail;
-  }
-  const parasHtml: string[] = [];
-  for (let i = 1; i <= paras; i++) {
-    const words: string[] = [];
-    for (let w = 0; w < 60; w++) {
-      words.push(`ch${n}p${i}w${w}`);
-    }
-    parasHtml.push(`<p>${words.join(" ")}</p>`);
-  }
-  return head + parasHtml.join("") + tail;
+  const para = paras > 200 ? `<p>${"word ".repeat(40)}</p>` : `<p>${"chapterword ".repeat(60)}</p>`;
+  return head + para.repeat(paras) + tail;
 }
 
 export function makeEpub(opts?: { chapterCount?: number; parasPerChapter?: number | number[] }): Buffer {
@@ -260,18 +248,15 @@ async function runLayout(l: Layout, epub: string, epub2: string, log: string): P
       // across a theme toggle, and nothing else about it is exercised.
       const sel = await client.seedTextSelection(deep.page);
       selParts = sel.parts;
-      await sleep(200 * SLOW_BUILD_FACTOR);
 
       for (let i = 0; i < THEME_TOGGLES; i++) {
         // resets the chapter table: pageCount collapses to one placeholder
         // page per chapter while holders still have the old flat numbers
         sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
-        await sleep(500 * SLOW_BUILD_FACTOR);
 
         // force the progressive re-layout the crash log shows after the reset
         await walkToChapter(client, DEEP_CHAPTER);
         sendCommandSync(frame, cmdId("CmdScrollDownPage"));
-        await sleep(200 * SLOW_BUILD_FACTOR);
         await client.waitForRenderIdle(30000);
       }
 
@@ -282,16 +267,13 @@ async function runLayout(l: Layout, epub: string, epub2: string, log: string): P
       // RemapTextSelection() never run for the other one. Switching back then
       // paints a selection whose pageNo is from the pre-restyle numbering.
       sendCommandSync(frame, cmdId("CmdPrevTab"));
-      await sleep(300 * SLOW_BUILD_FACTOR);
       await client.waitForRenderIdle(30000);
       sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
-      await sleep(500 * SLOW_BUILD_FACTOR);
       await client.waitForRenderIdle(30000);
 
       // back to the tab holding the stale selection, and paint it before
       // anything re-lays-out the chapters it was numbered against
       sendCommandSync(frame, cmdId("CmdNextTab"));
-      await sleep(300 * SLOW_BUILD_FACTOR);
       await client.waitForRenderIdle(30000);
 
       const after = await client.chapterInfo();
@@ -323,7 +305,7 @@ export async function testit(): Promise<void> {
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   const epub = join(dir, "chapters.epub");
-  const bytes = makeEpub();
+  const bytes = makeEpub({ parasPerChapter: 12 });
   writeFileSync(epub, bytes);
   // a second tab, like the two-tab window in the crash log
   const epub2 = join(dir, "chapters-2.epub");

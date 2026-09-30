@@ -46,7 +46,7 @@ export async function testit(): Promise<void> {
   const dir = tmpPath("read-aloud-lazy-chapters-data");
   mkdirSync(dir, { recursive: true });
   const epub = join(dir, "chapters.epub");
-  writeFileSync(epub, makeEpub());
+  writeFileSync(epub, makeEpub({ parasPerChapter: 20 }));
 
   const appdata = writeAppdata(
     "read-aloud-lazy-chapters",
