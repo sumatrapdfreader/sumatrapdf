@@ -206,7 +206,7 @@ across calls) — keep the caller's stable string instead.
 To add a new advanced setting:
 
 - add definition in cmd/gen-settings.ts
-- run "bun cmd/gen-code.ts" (or "bun cmd/gen-settings.ts") to regenerate src/Settings.h (it also re-emits the settings docs)
+- run "bun cmd/gen-code.ts" (or "bun cmd/gen-settings.ts") to regenerate src/Settings.h and src/Settings.cpp (it also re-emits the settings docs)
 
 ## Adding a new command
 

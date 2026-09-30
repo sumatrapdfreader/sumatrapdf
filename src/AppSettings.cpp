@@ -15,7 +15,6 @@
 
 #include "gui/UIModels.h"
 
-#define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "Settings.h"
 #include "Commands.h"
 #include "DisplayMode.h"

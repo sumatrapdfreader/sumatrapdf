@@ -18,6 +18,7 @@ const generatedCppFiles = [
   "src/PdfCreator.cpp",
   "src/EngineMupdf.cpp",
   "src/Settings.h",
+  "src/Settings.cpp",
 ];
 
 // prettier-ignore

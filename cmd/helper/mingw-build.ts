@@ -377,7 +377,7 @@ const sumatraFiles: FileGroup[] = [
       "GoogleLens.*",
       "SelectionToolbar.*",
       "SelectTextKeyboard.*",
-      "SettingsStructs.*",
+      "Settings.*",
       "SimpleBrowserWindow.*",
       "SumatraControl.*",
       "SumatraLog.cpp",
