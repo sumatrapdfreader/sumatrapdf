@@ -473,7 +473,8 @@ class PrintDocumentSource final
     : public RuntimeClass<RuntimeClassFlags<WinRtClassicComMix>, Printing::IPrintDocumentSource,
                           IPrintDocumentPageSource, IPrintPreviewPageCollection> {
   public:
-    HRESULT STDMETHODCALLTYPE GetRuntimeClassName(HSTRING* runtimeName) override {
+    // nothrow like WRL's STDMETHOD base versions (clang: -Wmicrosoft-exception-spec)
+    COM_DECLSPEC_NOTHROW HRESULT STDMETHODCALLTYPE GetRuntimeClassName(HSTRING* runtimeName) override {
         if (!runtimeName) {
             return E_POINTER;
         }
@@ -485,7 +486,7 @@ class PrintDocumentSource final
         return gWinRt.windowsCreateString(name, (UINT32)wcslen(name), runtimeName);
     }
 
-    HRESULT STDMETHODCALLTYPE GetTrustLevel(TrustLevel* trustLevel) override {
+    COM_DECLSPEC_NOTHROW HRESULT STDMETHODCALLTYPE GetTrustLevel(TrustLevel* trustLevel) override {
         if (!trustLevel) {
             return E_POINTER;
         }
