@@ -49,8 +49,8 @@ export async function testit(): Promise<void> {
     while (Date.now() < deadline) {
       const layout = await client.layout();
       const canvas = rect(layout, "canvas");
-      const toc = rect(layout, "toc");
-      const fav = rect(layout, "favorites");
+      const toc = rect(layout, "sidebarTop");
+      const fav = rect(layout, "sidebarBottom");
       const canvasRight = canvas.x + canvas.dx;
       msg = `canvas right=${canvasRight} toc x=${toc.x} fav x=${fav.x}`;
       if (toc.x >= canvasRight && fav.x >= canvasRight && toc.x === fav.x) {

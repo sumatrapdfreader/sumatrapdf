@@ -36,7 +36,6 @@ void ToggleFavorites(MainWindow* win); // sidebar
 void ToggleFavoritesTab(MainWindow* win);
 WindowTab* FindFavoritesTab(MainWindow* win);
 void PopulateFavTreeIfNeeded(MainWindow* win);
-void LayoutFavoritesContainer(MainWindow* win);
 void GoToFavoriteByCmd(MainWindow* win, CustomCommand* cmd);
 void UpdateFavoritesTree(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();

@@ -45,6 +45,7 @@ extern "C" {
 #include "MarkdownModel.h"
 #include "PageThumbnails.h"
 #include "TableOfContents.h"
+#include "SidebarPanel.h"
 #include "gui/win/BrowserDocView.h"
 
 #include <chm.h>
@@ -2900,9 +2901,10 @@ TempStr PageEditResultTemp(Str action, Str arg, int beforePage, int* exitCodeOut
     return finish(0, fmt("OK %s", ToStrTemp(out)));
 }
 
-// The sidebar's Thumbnails view: whether it shows, the current and selected pages
-// and, for clicking and dragging, each visible thumbnail in hwndTocBox client
-// coords. Used by tests/sidebar-thumbnails.ts.
+// The sidebar's panels (HWND, visible, view, the view icons' enabled / selected
+// state and client rects) and its Thumbnails view: whether it shows, the current
+// and selected pages and, for clicking and dragging, each visible thumbnail in
+// its panel's client coords. Used by tests/sidebar-thumbnails.ts.
 TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
     PageThumbnailsCtrl* thumbs = win ? win->pageThumbs : nullptr;
@@ -2914,20 +2916,38 @@ TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     }
     Vec<int> marked;
     thumbs->MarkedPages(marked);
+    SidebarPanel* shows = SidebarPanelShowing(win, SidebarView::Thumbnails);
+    HWND hwnd = shows ? shows->hwnd : win->sidebarTop->hwnd;
     str::Builder sb;
-    sb.Append(fmt("hwnd=%d visible=%d thumbnails=%d count=%d current=%d rendered=%d marked=",
-                  (int)(intptr_t)win->hwndTocBox, (int)win->uiState.tocVisible, (int)thumbs->IsVisible(),
-                  thumbs->pageCount, thumbs->selectedPage, thumbs->RenderedCount()));
+    sb.Append(fmt("hwnd=%d thumbnails=%d count=%d current=%d rendered=%d marked=", (int)(intptr_t)hwnd,
+                  (int)thumbs->IsVisible(), thumbs->pageCount, thumbs->selectedPage, thumbs->RenderedCount()));
     for (int i = 0; i < len(marked); i++) {
         sb.Append(fmt(i == 0 ? "%d" : ",%d", marked[i]));
     }
-    Rect bl = win->tocLabel->BoundsInWindow();
-    Rect pl = win->tocThumbnailsLabel->BoundsInWindow();
     // the focus ring is drawn while the thumbnails have the (virtual) focus
     sb.Append(fmt(" ring=%d", (int)thumbs->HasFlag(vwfFocused)));
-    sb.Append(fmt(" bookmarksLabel=%d thumbnailsLabel=%d labelRects=%d,%d,%d,%d;%d,%d,%d,%d rects=",
-                  (int)win->tocLabel->IsVisible(), (int)win->tocThumbnailsLabel->IsVisible(), bl.x, bl.y, bl.dx, bl.dy,
-                  pl.x, pl.y, pl.dx, pl.dy));
+    // e.g. top=1234,1,thumbnails,110,010:2,2,22,22;26,2,22,22;50,2,22,22
+    // (enabled icons, selected icon, icon rects in order B, T, F)
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarBottom};
+    bool visible[] = {win->uiState.sidebarTopVisible, win->uiState.sidebarBottomVisible};
+    Str names[] = {StrL("top"), StrL("bottom")};
+    for (int i = 0; i < 2; i++) {
+        SidebarPanel* p = panels[i];
+        sb.Append(fmt(" %s=%d,%d,%s,", names[i], (int)(intptr_t)p->hwnd, (int)visible[i], SidebarViewToStr(p->view)));
+        for (VirtIconButton* b : p->viewBtns) {
+            sb.Append(fmt("%d", (int)b->IsEnabled()));
+        }
+        sb.Append(StrL(","));
+        for (VirtIconButton* b : p->viewBtns) {
+            sb.Append(fmt("%d", (int)b->isSelected));
+        }
+        sb.Append(StrL(":"));
+        for (int j = 0; j < kSidebarViewCount; j++) {
+            Rect r = p->viewBtns[j]->BoundsInWindow();
+            sb.Append(fmt(j == 0 ? "%d,%d,%d,%d" : ";%d,%d,%d,%d", r.x, r.y, r.dx, r.dy));
+        }
+    }
+    sb.Append(StrL(" rects="));
     for (int pageNo = 1; pageNo <= thumbs->pageCount; pageNo++) {
         Rect r = thumbs->PageRect(pageNo);
         sb.Append(fmt("%d:%d,%d,%d,%d;", pageNo, r.x, r.y, r.dx, r.dy));

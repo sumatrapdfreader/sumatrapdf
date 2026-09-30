@@ -35,6 +35,8 @@ extern const char* gIconArrowsDiagonalMinimize;
 extern const char* gIconMatchWholeWord;
 extern const char* gIconHomeList;
 extern const char* gIconHomeThumbnails;
+extern const char* gIconSidebarBookmarks;
+extern const char* gIconSidebarFavorites;
 extern const char* gIconPin;
 extern const char* gIconEditAnnotations;
 extern const char* gIconAnnotHighlight;

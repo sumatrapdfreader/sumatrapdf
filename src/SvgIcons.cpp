@@ -314,6 +314,20 @@ const char* gIconHomeList =
   <line x1="5" y1="18" x2="5" y2="18.01" />
 </svg>)";
 
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/bookmark.svg
+const char* gIconSidebarBookmarks =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z" />
+</svg>)";
+
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/star.svg
+const char* gIconSidebarFavorites =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
+</svg>)";
+
 // https://github.com/tabler/tabler-icons/blob/main/icons/outline/layout-grid.svg
 const char* gIconHomeThumbnails =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">

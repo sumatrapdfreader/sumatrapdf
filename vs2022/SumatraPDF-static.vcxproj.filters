@@ -414,6 +414,9 @@
     <ClInclude Include="..\src\ShortcutParse.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SidebarPanel.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SimpleBrowserWindow.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -1032,6 +1035,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ShortcutParse.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SidebarPanel.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SignDocumentDialog.cpp">

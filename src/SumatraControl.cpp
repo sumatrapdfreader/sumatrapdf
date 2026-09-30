@@ -39,6 +39,7 @@
 #include "SelectionHandlers.h"
 #include "FileHistory.h"
 #include "Favorites.h"
+#include "SidebarPanel.h"
 #include "PagePosition.h"
 #include "SelectionTranslate.h"
 #include "ImageSaveCropResize.h"
@@ -119,14 +120,15 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
         findH = FindBarFontHeight(win);
     }
     int findBarDy = FindBarWindowHeight(win);
+    SidebarPanel* top = win->sidebarTop;
+    SidebarPanel* bottom = win->sidebarBottom;
     out.Append(fmt(
-        "frame=%d current=%d home=%d tocLabel=%d tocEdit=%d tocClose=%d favClose=%d aiLabel=%d aiInput=%d "
+        "frame=%d current=%d home=%d tocIcon=%d tocEdit=%d tocClose=%d favClose=%d aiLabel=%d aiInput=%d "
         "aiCheckbox=%d aiClose=%d find=%d findBarDy=%d\n",
         win->frameDpi, DpiGet(), FontHeight(win->homeSearch ? win->homeSearch->GetFont() : nullptr),
-        FontHeight(win->tocLabel ? win->tocLabel->font : nullptr),
-        FontHeight(win->tocFilterEdit ? win->tocFilterEdit->GetFont() : nullptr),
-        win->tocCloseBtn ? win->tocCloseBtn->idealSize.dy : 0, win->favCloseBtn ? win->favCloseBtn->idealSize.dy : 0,
-        FontHeight(win->aiChatLabel ? win->aiChatLabel->font : nullptr),
+        top ? top->viewBtns[(int)SidebarView::Bookmarks]->GetIdealSize().dy : 0,
+        FontHeight(win->tocFilterEdit ? win->tocFilterEdit->GetFont() : nullptr), top ? top->closeBtn->idealSize.dy : 0,
+        bottom ? bottom->closeBtn->idealSize.dy : 0, FontHeight(win->aiChatLabel ? win->aiChatLabel->font : nullptr),
         FontHeight(win->aiChatInput ? win->aiChatInput->GetFont() : nullptr),
         FontHeight(win->aiChatCheckbox ? win->aiChatCheckbox->GetFont() : nullptr), aiClose, findH, findBarDy));
     return finish(0);
@@ -364,13 +366,17 @@ static TempStr SidebarLayoutResultTemp(int* exitCodeOut) {
     };
 
     bool pref = gSettings && gSettings->sidebarOnRight;
-    bool tocVis = win->hwndTocBox && HwndIsVisible(win->hwndTocBox);
-    bool favVis = win->hwndFavBox && HwndIsVisible(win->hwndFavBox);
-    int tocX = clientX(win->hwndTocBox);
-    int favX = clientX(win->hwndFavBox);
+    HWND top = win->sidebarTop ? win->sidebarTop->hwnd : nullptr;
+    HWND bottom = win->sidebarBottom ? win->sidebarBottom->hwnd : nullptr;
+    bool topVis = top && HwndIsVisible(top);
+    bool bottomVis = bottom && HwndIsVisible(bottom);
+    Str topView = win->sidebarTop ? SidebarViewToStr(win->sidebarTop->view) : StrL("none");
+    Str bottomView = win->sidebarBottom ? SidebarViewToStr(win->sidebarBottom->view) : StrL("none");
+    int topX = clientX(top);
+    int bottomX = clientX(bottom);
     int canvasX = clientX(win->hwndCanvas);
-    return finish(fmt("OK pref=%d tocVis=%d favVis=%d tocX=%d favX=%d canvasX=%d", pref ? 1 : 0, tocVis ? 1 : 0,
-                      favVis ? 1 : 0, tocX, favX, canvasX),
+    return finish(fmt("OK pref=%d topVis=%d bottomVis=%d topX=%d bottomX=%d canvasX=%d topView=%s bottomView=%s",
+                      pref ? 1 : 0, topVis ? 1 : 0, bottomVis ? 1 : 0, topX, bottomX, canvasX, topView, bottomView),
                   0);
 }
 
@@ -453,15 +459,19 @@ static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
     AppendHwndLayoutRect(out, win, StrL("toolbar"), win->hwndToolbar);
     AppendHwndLayoutRect(out, win, StrL("tabs"), win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr);
     AppendHwndLayoutRect(out, win, StrL("menu"), win->hwndMenuReBar);
-    AppendHwndLayoutRect(out, win, StrL("toc"), win->hwndTocBox);
-    AppendHwndLayoutRect(out, win, StrL("favorites"), win->hwndFavBox);
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarBottom, win->favoritesTabPanel};
+    Str panelNames[] = {StrL("sidebarTop"), StrL("sidebarBottom"), StrL("favoritesTab")};
+    for (int i = 0; i < 3; i++) {
+        AppendHwndLayoutRect(out, win, panelNames[i], panels[i] ? panels[i]->hwnd : nullptr);
+    }
     AppendHwndLayoutRect(out, win, StrL("aiChat"), win->hwndAiChatBox);
 
     AppendLayoutTree(out, StrL("chrome"), win->chromeLayout);
     AppendLayoutTree(out, StrL("frameLayout"), win->frameLayout);
     AppendLayoutTree(out, StrL("caption"), win->captionLayout);
-    AppendLayoutTree(out, StrL("toc"), win->tocLayout);
-    AppendLayoutTree(out, StrL("favorites"), win->favLayout);
+    for (int i = 0; i < 3; i++) {
+        AppendLayoutTree(out, panelNames[i], panels[i] ? panels[i]->layout : nullptr);
+    }
     AppendLayoutTree(out, StrL("aiChat"), win->aiChatLayout);
     AppendLayoutTree(out, StrL("homeSearch"), win->homeSearchLayout);
 

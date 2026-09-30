@@ -382,6 +382,7 @@ function sumatrapdf_files()
     "SumatraLog.*",
     "SumatraTest.*",
     "SvgIcons.*",
+    "SidebarPanel.*",
     "TableOfContents.*",
     "Tabs.*",
     "TabGroupsManage.*",

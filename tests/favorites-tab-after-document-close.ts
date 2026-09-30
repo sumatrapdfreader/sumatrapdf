@@ -44,13 +44,13 @@ export async function testit(): Promise<void> {
 
     sendCommandSync(frame, cmdId("CmdFavoriteShowInTab"));
     let layout = await client.layout();
-    requireVisible("Favorites content", layout.items.favorites?.visible);
+    requireVisible("Favorites content", layout.items.favoritesTab?.visible);
     requireVisible("tab bar with document and Favorites tabs", layout.items.tabs?.visible);
 
     sendCommandSync(frame, cmdId("CmdPrevTab"));
     sendCommandSync(frame, cmdId("CmdClose"));
     layout = await client.layout();
-    requireVisible("Favorites content after closing the document", layout.items.favorites?.visible);
+    requireVisible("Favorites content after closing the document", layout.items.favoritesTab?.visible);
     requireVisible("lone Favorites tab after closing the document", layout.items.tabs?.visible);
   } finally {
     client.close();

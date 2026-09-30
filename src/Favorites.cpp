@@ -33,6 +33,7 @@
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
 #include "PagePosition.h"
+#include "SidebarPanel.h"
 #include "Favorites.h"
 
 static void RememberFavTreeExpansionStateForAllWindows();
@@ -1175,7 +1176,7 @@ static void PrepareFavoritesTabUi(MainWindow* win) {
     }
     PopulateFavTreeIfNeeded(win);
     ExpandAllFavTree(win);
-    LayoutFavoritesContainer(win);
+    LayoutSidebarPanel(win->favoritesTabPanel);
     FocusFavFilterEdit(win);
     if (win->favTreeView) {
         RedrawWindow(win->favTreeView->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
@@ -1233,14 +1234,13 @@ void PopulateFavTreeIfNeeded(MainWindow* win) {
     treeView->SetTreeModel(tm);
 }
 
+// in a sidebar panel (independent of the Favorites tab)
 void ToggleFavorites(MainWindow* win) {
-    // Sidebar Favorites panel (independent of the Favorites tab)
-    if (gSettings->showFavorites) {
-        SetSidebarVisibility(win, win->uiState.tocVisible, false, SidebarResizeFrame::Adjust);
-    } else {
-        SetSidebarVisibility(win, win->uiState.tocVisible, true, SidebarResizeFrame::Adjust);
-        HwndSetFocus(win->favTreeView->hwnd);
+    if (IsSidebarViewShown(win, SidebarView::Favorites)) {
+        HideSidebarView(win, SidebarView::Favorites);
+        return;
     }
+    ShowSidebarView(win, SidebarView::Favorites);
 }
 
 // open/select full-window Favorites tab (can use with sidebar Favorites)
@@ -1288,16 +1288,16 @@ void UpdateFavoritesTree(MainWindow* win) {
         if (WindowTab* favTab = FindFavoritesTab(win)) {
             CloseTab(favTab, false);
         }
-        if (gSettings->showFavorites) {
-            SetSidebarVisibility(win, win->uiState.tocVisible, false);
+        if (IsSidebarViewShown(win, SidebarView::Favorites)) {
+            HideSidebarView(win, SidebarView::Favorites);
         } else {
             ScheduleUiUpdate(win, kUiForceRelayout | kUiSidebarDirty);
         }
         return;
     }
-    // refresh sidebar visibility only when the sidebar panel is supposed to be open
-    if (gSettings->showFavorites) {
-        SetSidebarVisibility(win, win->uiState.tocVisible, true);
+    // refresh the sidebar only when a panel is supposed to show favorites
+    if (IsSidebarViewShown(win, SidebarView::Favorites)) {
+        ApplySidebarPanels(win);
     } else if (FindFavoritesTab(win)) {
         ScheduleUiUpdate(win, kUiForceRelayout | kUiSidebarDirty);
     }
@@ -1670,75 +1670,13 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     }
 }
 
-static WNDPROC gWndProcFavBox = nullptr;
-// Position label, filter edit and tree within favorites container using the
-// wingui layout engine (VBox built in CreateFavorites).
-// layout label + tree inside hwndFavBox (call after resizing the box)
-void LayoutFavoritesContainer(MainWindow* win) {
-    if (!win || !win->favLayout || !win->hwndFavBox) {
-        return;
-    }
-    // HwndClientRect: layout is in parent client coordinates
-    Rect rc = HwndClientRect(win->hwndFavBox);
-    if (rc.IsEmpty()) {
-        return;
-    }
-    if (win->favLayout->lastBounds.dx == rc.dx && win->favLayout->lastBounds.dy == rc.dy) {
-        return;
-    }
-    LayoutTreeToSize(win->hwndFavBox, win->favLayout, {rc.dx, rc.dy}, &win->favRoot);
-}
-
-static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    MainWindow* win = FindMainWindowByHwnd(hwnd);
-    if (!win) {
-        return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
-    }
-
-    LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
-    if (res) {
-        return res;
-    }
-
-    // the panel header (label + close button) is a virtual control tree, so
-    // this window paints it and hands it its input
-    if (VirtHostOnMessage(hwnd, win->favRoot, msg, wp, lp, res, ThemeControlBackgroundColor())) {
-        return res;
-    }
-
-    switch (msg) {
-        case WM_SIZE:
-            LayoutFavoritesContainer(win);
-            break;
-    }
-    return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
-}
-
-// Full-window Favorites tab: close the tab. Sidebar panel: hide it.
-static void FavCloseClicked(MainWindow* win, VirtMouseEvent*) {
-    if (WindowTab* favTab = FindFavoritesTab(win); favTab && win->CurrentTab() == favTab) {
-        CloseTab(favTab, false);
-    } else {
-        ToggleFavorites(win);
-    }
-}
-
+// The Favorites view; a sidebar panel or the Favorites tab shows it (SidebarPanel.cpp)
 void CreateFavorites(MainWindow* win) {
-    HMODULE h = GetModuleHandleW(nullptr);
-    int dx = gSettings->sidebarDx;
-    DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
-    win->hwndFavBox = CreateWindowW(WC_STATICW, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU) nullptr, h, nullptr);
-
-    PlatformFont* labelFont = GetAppSidebarLabelFont();
-    auto header = NewLabelWithClose(win->hwndFavBox, labelFont, MkFunc1(FavCloseClicked, win));
-    win->favLabel = header.label;
-    win->favCloseBtn = header.closeBtn;
-    // label text is set in UpdateToolbarSidebarText()
-
+    HWND parent = win->sidebarBottom->hwnd;
     auto* filterEdit = new Edit();
     {
         Edit::CreateArgs eargs;
-        eargs.parent = win->hwndFavBox;
+        eargs.parent = parent;
         eargs.withBorder = true;
         eargs.cueText = Tr("Search Favorites");
         eargs.font = GetAppFont();
@@ -1750,7 +1688,7 @@ void CreateFavorites(MainWindow* win) {
 
     auto* treeView = new TreeView();
     TreeView::CreateArgs args;
-    args.parent = win->hwndFavBox;
+    args.parent = parent;
     args.font = GetAppTreeFont();
     args.fullRowSelect = true;
     args.exStyle = 0;
@@ -1768,21 +1706,14 @@ void CreateFavorites(MainWindow* win) {
 
     win->favTreeView = treeView;
 
-    // stack label, filter edit and tree vertically; the tree flexes to fill
-    // the remaining height. The VBox owns these controls/spacer (freed in ~MainWindow).
+    // the filter edit over the tree, which takes the remaining height
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
-    vbox->AddChild(header.box);
     vbox->AddChild(filterEdit);
     vbox->AddChild(new Spacer(0, 2)); // gap under the search field
     vbox->AddChild(treeView, 1);
-    win->favLayout = vbox;
-
-    if (nullptr == gWndProcFavBox) {
-        gWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
-    }
-    SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcFavBox);
+    win->favViewLayout = vbox;
 
     UpdateControlsColors(win);
 }

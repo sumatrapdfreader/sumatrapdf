@@ -55,7 +55,7 @@ async function queryLayout(client: ControlClient): Promise<Layout> {
     const exitCode = res[0] as number;
     const raw = String(res[1] ?? "").trim();
     if (exitCode === 0) {
-      const m = /OK pref=(\d+) tocVis=\d+ favVis=(\d+) tocX=-?\d+ favX=(-?\d+) canvasX=(-?\d+)/.exec(raw);
+      const m = /OK pref=(\d+) topVis=\d+ bottomVis=(\d+) topX=-?\d+ bottomX=(-?\d+) canvasX=(-?\d+)/.exec(raw);
       if (!m) {
         throw new Error(`issue-2165: could not parse: ${raw}`);
       }

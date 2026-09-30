@@ -279,6 +279,9 @@ struct FileState {
     // hex encoded MD5 fingerprint of the file content (32 chars) followed
     // by the crypt key (64 chars); only applies to PDF documents
     Str decryptionKey;
+    // what the sidebar's top panel shows: bookmarks (the default),
+    // thumbnails or favorites
+    Str sidebarView;
     // how pages are laid out for this document. The string is the
     // persisted form of DisplayModel::displayMode, so it's parsed after
     // deserialization and written back before serialization
@@ -328,8 +331,6 @@ struct FileState {
     // if true, show the table of contents (Bookmarks) sidebar when the
     // document has one
     bool showToc;
-    // if true, the sidebar shows page thumbnails instead of bookmarks
-    bool showThumbnails;
     // if true, the document is displayed right-to-left in facing and book
     // view modes
     bool displayR2L;
@@ -365,8 +366,9 @@ struct TabState {
     // if true, the table of contents was shown when the document was
     // closed
     bool showToc;
-    // if true, the sidebar showed page thumbnails instead of bookmarks
-    bool showThumbnails;
+    // what the sidebar's top panel showed: bookmarks, thumbnails or
+    // favorites
+    Str sidebarView;
     // which table of contents items were expanded (see FileStates ->
     // TocState)
     Vec<int>* tocState;
@@ -814,6 +816,9 @@ struct HtmlUI {
 
 // Preferences are persisted in SumatraPDF-settings.txt
 struct Settings {
+    // what the sidebar's bottom panel shows: favorites (the default),
+    // bookmarks or thumbnails
+    Str sidebarBottomView;
     // if true, a PDF without an outline gets a table of contents built
     // from numbered headings in its text (Generate Table Of Contents
     // command does it on demand)
@@ -1126,7 +1131,8 @@ struct Settings {
     // if true, the find UI is a floating, movable window with a results
     // list instead of the compact toolbar overlay
     bool searchUIFloating;
-    // if true, show the Favorites sidebar
+    // if true, show the sidebar's bottom panel: Favorites, unless
+    // SidebarBottomView says otherwise
     bool showFavorites;
     // if true, favorites within each file are sorted alphabetically by
     // name (or page label); if false (the default), they are sorted by

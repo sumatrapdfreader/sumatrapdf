@@ -28,7 +28,7 @@ export async function testit(): Promise<void> {
     const low = await waitForDpiFrame(home.client, 72, (s) => (s.home ?? 0) > 0 && (s.tocEdit ?? 0) > 0);
 
     requireDpiShrank("Home search", high.fields.home ?? 0, low.fields.home ?? 0);
-    requireDpiShrank("Bookmarks label", high.fields.tocLabel ?? 0, low.fields.tocLabel ?? 0);
+    requireDpiShrank("Bookmarks icon", high.fields.tocIcon ?? 0, low.fields.tocIcon ?? 0);
     requireDpiShrank("Bookmarks search", high.fields.tocEdit ?? 0, low.fields.tocEdit ?? 0);
   } finally {
     home.client.close();

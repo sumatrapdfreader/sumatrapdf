@@ -1,5 +1,5 @@
-// The sidebar's Thumbnails view: switching between Bookmarks and Thumbnails, a click
-// going to a page, Shift / Ctrl click selecting several and dragging them to
+// The sidebar's panels and its Thumbnails view: which panel a command opens a
+// view in, a view icon switching (or swapping) panel views, a click going to a page, Shift / Ctrl click selecting several and dragging them to
 // another place, undone with CmdUndo. Each page of the test PDF has a unique
 // width (601, 602, ...) so the page order can be read back.
 //
@@ -34,51 +34,81 @@ import {
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 type Rect = { x: number; y: number; dx: number; dy: number };
-type Sidebar = {
+type View = "bookmarks" | "thumbnails" | "favorites";
+const views: View[] = ["bookmarks", "thumbnails", "favorites"];
+type Panel = {
   hwnd: number;
   visible: boolean;
+  view: View;
+  // per view icon, in order Bookmarks, Thumbnails, Favorites
+  enabled: string;
+  selected: string;
+  iconRects: Rect[];
+};
+type Sidebar = {
+  // the panel showing the thumbnails, else the top one
+  hwnd: number;
   thumbnails: boolean;
   current: number;
   rendered: number;
   marked: string;
-  labels: string;
-  // the header's Bookmarks and Thumbnails labels
-  labelRects: Rect[];
+  top: Panel;
+  bottom: Panel;
   rects: Map<number, Rect>;
   raw: string;
 };
+
+function parseRect(s: string): Rect {
+  const [x, y, dx, dy] = s.split(",").map(Number);
+  return { x: x!, y: y!, dx: dx!, dy: dy! };
+}
+
+// e.g. 1234,1,thumbnails,111,010:2,2,22,22;26,2,22,22;50,2,22,22
+function parsePanel(s: string): Panel {
+  const [head, rects] = s.split(":");
+  const [hwnd, visible, view, enabled, selected] = head!.split(",");
+  return {
+    hwnd: +hwnd!,
+    visible: visible === "1",
+    view: view as View,
+    enabled: enabled!,
+    selected: selected!,
+    iconRects: rects!.split(";").map(parseRect),
+  };
+}
 
 async function sidebar(client: ControlClient): Promise<Sidebar> {
   const res = await client.request(ControlCommand.TestSidebarThumbnails, []);
   const raw = String(res[1] ?? "");
   const m =
-    /hwnd=(\d+) visible=(\d) thumbnails=(\d) count=\d+ current=(\d+) rendered=(\d+) marked=(\S*) ring=\d bookmarksLabel=(\d) thumbnailsLabel=(\d) labelRects=(\S*) rects=(\S*)/.exec(
+    /hwnd=(\d+) thumbnails=(\d) count=\d+ current=(\d+) rendered=(\d+) marked=(\S*) ring=\d top=(\S+) bottom=(\S+) rects=(\S*)/.exec(
       raw,
     );
   if (res[0] !== 0 || !m) {
     throw new Error(`sidebar-thumbnails: TestSidebarThumbnails: ${raw}`);
   }
   const rects = new Map<number, Rect>();
-  for (const part of m[10]!.split(";").filter(Boolean)) {
+  for (const part of m[8]!.split(";").filter(Boolean)) {
     const [page, coords] = part.split(":");
-    const [x, y, dx, dy] = coords!.split(",").map(Number);
-    rects.set(+page!, { x: x!, y: y!, dx: dx!, dy: dy! });
+    rects.set(+page!, parseRect(coords!));
   }
   return {
     hwnd: +m[1]!,
-    visible: m[2] === "1",
-    thumbnails: m[3] === "1",
-    current: +m[4]!,
-    rendered: +m[5]!,
-    marked: m[6]!,
-    labels: `${m[7]}${m[8]}`,
-    labelRects: m[9]!.split(";").map((part) => {
-      const [x, y, dx, dy] = part.split(",").map(Number);
-      return { x: x!, y: y!, dx: dx!, dy: dy! };
-    }),
+    thumbnails: m[2] === "1",
+    current: +m[3]!,
+    rendered: +m[4]!,
+    marked: m[5]!,
+    top: parsePanel(m[6]!),
+    bottom: parsePanel(m[7]!),
     rects,
     raw,
   };
+}
+
+// what the panels show, e.g. "thumbnails/-": top shows thumbnails, bottom is hidden
+function panels(s: Sidebar): string {
+  const one = (p: Panel) => (p.visible ? p.view : "-");
+  return `${one(s.top)}/${one(s.bottom)}`;
 }
 
 async function waitFor(what: string, f: () => Promise<boolean>) {
@@ -142,13 +172,13 @@ function frameOnScreen(s: Sidebar): boolean {
   return row.slice(0, edge).some(isFrameBlue) && row.slice(-edge).some(isFrameBlue);
 }
 
-// label 0 is Bookmarks, 1 is Thumbnails
-function clickLabel(s: Sidebar, label: number) {
-  const r = s.labelRects[label]!;
+// clicks a panel's view icon
+function clickIcon(p: Panel, view: View) {
+  const r = p.iconRects[views.indexOf(view)]!;
   if (r.dx <= 0) {
-    throw new Error(`sidebar-thumbnails: header label ${label} isn't visible: ${s.raw}`);
+    throw new Error(`sidebar-thumbnails: the ${view} icon isn't visible`);
   }
-  clickPt(s.hwnd, { x: r.x + Math.floor(r.dx / 2), y: r.y + Math.floor(r.dy / 2) });
+  clickPt(p.hwnd, { x: r.x + Math.floor(r.dx / 2), y: r.y + Math.floor(r.dy / 2) });
 }
 
 export async function testit(): Promise<void> {
@@ -163,29 +193,54 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
 
-    // Bookmarks and Thumbnails switch the view, by command or by clicking the
-    // header; Thumbnails again hides the sidebar
+    const want = async (what: string, layout: string) => {
+      await waitFor(`${what}: want ${layout}`, async () => panels(await sidebar(client)) === layout).catch(
+        async (e) => {
+          throw new Error(`${e.message}: ${(await sidebar(client)).raw}`);
+        },
+      );
+    };
+
+    // a command opens its view in the first free panel: the top one, then the
+    // bottom one; with both showing, the top one switches to it. The document
+    // has bookmarks, so they show on opening
+    await want("the bookmarks didn't show on opening", "bookmarks/-");
     sendCommand(frame, cmdId("CmdToggleThumbnails"));
-    await waitFor("Thumbnails didn't show", async () => (await sidebar(client)).thumbnails);
+    await want("Thumbnails didn't show in the bottom panel", "bookmarks/thumbnails");
     let s = await sidebar(client);
-    if (!s.visible || s.labels !== "11") {
-      throw new Error(`sidebar-thumbnails: want both view labels: ${s.raw}`);
+    if (s.bottom.enabled !== "111" || s.bottom.selected !== "010") {
+      throw new Error(`sidebar-thumbnails: want all view icons, Thumbnails selected: ${s.raw}`);
     }
     sendCommand(frame, cmdId("CmdToggleBookmarks"));
-    await waitFor("Bookmarks didn't replace Thumbnails", async () => {
-      const b = await sidebar(client);
-      return b.visible && !b.thumbnails;
-    });
-    clickLabel(await sidebar(client), 1);
-    await waitFor("clicking Thumbnails didn't show Thumbnails", async () => (await sidebar(client)).thumbnails);
+    await want("Bookmarks didn't hide the top panel", "-/thumbnails");
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("Bookmarks didn't show in the top panel", "bookmarks/thumbnails");
+    sendCommand(frame, cmdId("CmdFavoriteToggle"));
+    await want("Favorites didn't replace Bookmarks on top", "favorites/thumbnails");
+
+    // clicking an icon switches the panel's view; the other panel's view swaps
+    clickIcon((await sidebar(client)).top, "bookmarks");
+    await want("clicking Bookmarks didn't show Bookmarks", "bookmarks/thumbnails");
+    clickIcon((await sidebar(client)).top, "thumbnails");
+    await want("clicking Thumbnails on top didn't swap the panels", "thumbnails/bookmarks");
     await waitFor("clicking Thumbnails didn't repaint the sidebar", async () => frameOnScreen(await sidebar(client)));
-    clickLabel(await sidebar(client), 0);
-    await waitFor("clicking Bookmarks didn't show Bookmarks", async () => {
-      const b = await sidebar(client);
-      return b.visible && !b.thumbnails;
-    });
+    s = await sidebar(client);
+    if (s.hwnd !== s.top.hwnd || s.top.selected !== "010" || s.bottom.selected !== "100") {
+      throw new Error(`sidebar-thumbnails: after the swap: ${s.raw}`);
+    }
+    clickIcon(s.bottom, "thumbnails");
+    await want("clicking Thumbnails in the bottom panel didn't swap back", "bookmarks/thumbnails");
+    await waitFor("the thumbnails didn't repaint in the bottom panel", async () =>
+      frameOnScreen(await sidebar(client)),
+    );
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("Bookmarks again didn't hide the top panel", "-/thumbnails");
+
+    // shown again to take the focus
     sendCommand(frame, cmdId("CmdToggleThumbnails"));
-    await waitFor("Thumbnails didn't show again", async () => (await sidebar(client)).thumbnails);
+    await want("Thumbnails didn't hide", "-/-");
+    sendCommand(frame, cmdId("CmdToggleThumbnails"));
+    await want("Thumbnails didn't show again", "thumbnails/-");
     await waitFor("no thumbnail rendered", async () => (await sidebar(client)).rendered > 0);
 
     // With the keyboard in the panel (ring drawn), Up / Down go through the
@@ -228,6 +283,14 @@ export async function testit(): Promise<void> {
     s = await sidebar(client);
     click(s, 3);
     await waitFor("a click on page 3 didn't go there", async () => (await sidebar(client)).current === 3);
+    // the clicked page has the blue frame only, no selection border around it
+    await waitFor("the click didn't frame page 3", async () => frameOnScreen(await sidebar(client)));
+    s = await sidebar(client);
+    const r3 = s.rects.get(3)!;
+    const row = readWindowDCRow(s.hwnd, r3.x - 12, r3.y + Math.floor(r3.dy / 2), 12);
+    if (!row.slice(8, 11).every((c) => c === row[0])) {
+      throw new Error(`sidebar-thumbnails: the current page has a selection border: ${row.map((c) => c.toString(16))}`);
+    }
 
     // Shift selects a range, Ctrl toggles one page
     s = await sidebar(client);
@@ -281,7 +344,7 @@ export async function testit(): Promise<void> {
     await waitFor("undo didn't restore the order", async () => (await widths(client)) === "601,602,603,604");
 
     sendCommand(frame, cmdId("CmdToggleThumbnails"));
-    await waitFor("Thumbnails didn't hide the sidebar", async () => !(await sidebar(client)).visible);
+    await want("Thumbnails didn't hide the sidebar", "-/-");
     console.log("sidebar-thumbnails: OK");
   } finally {
     client.close();

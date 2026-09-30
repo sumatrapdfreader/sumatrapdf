@@ -40,7 +40,7 @@ async function waitToc(
   while (Date.now() < deadline) {
     const layout = await client.layout();
     last = layout.raw;
-    if (item(layout, "toc").visible === want) {
+    if (item(layout, "sidebarTop").visible === want) {
       return layout;
     }
     await sleep(50);
@@ -79,7 +79,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     const canvasFw1 = item(openFw, "canvas").rect;
     const frameFw1 = item(openFw, "frame").rect;
-    const tocFw = item(openFw, "toc").rect;
+    const tocFw = item(openFw, "sidebarTop").rect;
 
     if (Math.abs(canvasFw1.dx - canvasFw0.dx) > 2) {
       throw new Error(
@@ -139,7 +139,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     const canvasSm1 = item(openSm, "canvas").rect;
     const frameSm1 = item(openSm, "frame").rect;
-    const tocSm = item(openSm, "toc").rect;
+    const tocSm = item(openSm, "sidebarTop").rect;
 
     const frameGrew = frameSm1.dx - frameSm0.dx;
     const canvasLost = canvasSm0.dx - canvasSm1.dx;

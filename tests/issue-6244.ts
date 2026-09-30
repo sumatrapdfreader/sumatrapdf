@@ -47,7 +47,7 @@ async function tocVisibleOnOpen(cbz: string, appdata: string): Promise<boolean> 
       await client.waitForRenderIdle();
       const res = await client.request(ControlCommand.TestSidebarLayout, []);
       const raw = String(res[1] ?? "").trim();
-      const m = /OK .*tocVis=(\d)/.exec(raw);
+      const m = /OK .*topVis=(\d)/.exec(raw);
       if (res[0] !== 0 || !m) {
         throw new Error(`issue-6244: TestSidebarLayout: ${raw}`);
       }

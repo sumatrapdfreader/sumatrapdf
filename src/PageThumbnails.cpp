@@ -375,7 +375,9 @@ void PageThumbnailsCtrl::DrawRow(DrawItemEvent* ev) {
         int col = pageNo - firstPage;
         int x = left + (col * (thumbDx + gap));
         Rect pageRect{x, ev->itemRect.y, thumbDx, thumbDy};
-        if (host == ThumbnailsHost::Sidebar && marked[pageNo - 1]) {
+        // the current page's blue frame marks it: no selection border too
+        bool isCurrent = pageNo == selectedPage;
+        if (host == ThumbnailsHost::Sidebar && marked[pageNo - 1] && !isCurrent) {
             Rect r = pageRect;
             int d = gap / 3;
             r.Inflate(d, d);
@@ -391,7 +393,7 @@ void PageThumbnailsCtrl::DrawRow(DrawItemEvent* ev) {
             ev->gfx->DrawPixmap(thumbnail, target);
         }
 
-        if (pageNo == selectedPage) {
+        if (isCurrent) {
             ev->gfx->DrawRect(pageRect, kCurrentPageColor, 3);
         }
 
@@ -729,10 +731,13 @@ void PageThumbnailsCtrl::OnThumbCaptureLost() {
     SetDropPosition(0);
 }
 
+// Scrolls in proportion to the delta, 3 thumbnails a notch, so a touchpad's
+// small deltas scroll too. The wheel is ours even at the list's ends: unhandled,
+// it would scroll the document
 void PageThumbnailsCtrl::OnThumbMouseWheel(VirtMouseEvent* ev) {
-    int oldScrollY = scrollY;
-    VirtListBox::OnMouseWheel(ev);
-    if (scrollY != oldScrollY) {
+    ev->didHandle = true;
+    int dy = -(ev->wheelDelta * 3 * GetItemHeight()) / WHEEL_DELTA;
+    if (ScrollBy(dy)) {
         StartRendering();
     }
 }
@@ -975,7 +980,9 @@ class ThumbnailsDropTarget : public IDropTarget {
     bool hasPdf = false;
 
     int PositionAt(POINTL ptScreen) {
-        if (!hasPdf || !ctrl->IsVisible() || !CanDropPages(ctrl)) {
+        // either sidebar panel may host the thumbnails: only that one takes the drop
+        bool hosts = ctrl->GetHwnd() == hwnd;
+        if (!hasPdf || !hosts || !ctrl->IsVisible() || !CanDropPages(ctrl)) {
             return 0;
         }
         POINT p{ptScreen.x, ptScreen.y};

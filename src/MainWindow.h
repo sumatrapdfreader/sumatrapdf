@@ -13,6 +13,7 @@ struct ReadingAutoScrollBar;
 struct VirtText;
 struct VirtCloseButton;
 struct PageThumbnailsCtrl;
+struct SidebarPanel;
 struct VirtRoot;
 struct VirtSplitter;
 struct HBox;
@@ -260,26 +261,19 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // chapter number edit, next to pageEdit; only for HasChapters() docs
     Edit* chapterEdit = nullptr;
 
-    // state related to table of contents (PDF bookmarks etc.)
-    HWND hwndTocBox = nullptr;
-    UINT_PTR tocBoxSubclassId = 0;
+    // the sidebar's two panels, top and bottom, and the full-window Favorites
+    // tab's; each shows one of the views below (see SidebarPanel.h)
+    SidebarPanel* sidebarTop = nullptr;
+    SidebarPanel* sidebarBottom = nullptr;
+    SidebarPanel* favoritesTabPanel = nullptr;
 
-    // the panel header's label; the ✕ next to it closes the panel
-    VirtText* tocLabel = nullptr;
-    VirtCloseButton* tocCloseBtn = nullptr;
-    // the virtual controls of the header, hosted in hwndTocBox
-    VirtRoot* tocRoot = nullptr;
+    // the Bookmarks view (PDF bookmarks etc.): VBox(filter edit, tree), owns them
+    ILayout* tocViewLayout = nullptr;
     Edit* tocFilterEdit = nullptr;
     TreeView* tocTreeView = nullptr;
-    // "Thumbnails" in the header, next to tocLabel ("Bookmarks"); a click on either
-    // switches the view
-    VirtText* tocThumbnailsLabel = nullptr;
     // the Thumbnails view: the document's page thumbnails
     PageThumbnailsCtrl* pageThumbs = nullptr;
     TocTree* tocFilteredTree = nullptr;
-    // VBox(header, filter edit, tree, thumbnails); owns those controls and lays
-    // them out in hwndTocBox
-    ILayout* tocLayout = nullptr;
 
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
@@ -297,15 +291,10 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // extra frame width added so showing the sidebar does not shrink the canvas
     int sidebarGrewFrameDx = 0;
 
-    // state related to favorites
-    HWND hwndFavBox = nullptr;
-    VirtText* favLabel = nullptr;
-    VirtCloseButton* favCloseBtn = nullptr;
-    VirtRoot* favRoot = nullptr;
+    // the Favorites view: VBox(filter edit, tree), owns them
+    ILayout* favViewLayout = nullptr;
     Edit* favFilterEdit = nullptr;
     TreeView* favTreeView = nullptr;
-    // VBox(label, filter edit, tree); owns those controls and lays them out in hwndFavBox
-    ILayout* favLayout = nullptr;
     Vec<FileState*> expandedFavorites;
 
     // AI chat sidebar (right side); a single set of controls shared by all
@@ -341,8 +330,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // (frameRoot), not child windows
     VirtSplitter* sidebarSplitter = nullptr;
 
-    // horizontal splitter for resizing favorites and bookmars parts
-    VirtSplitter* favSplitter = nullptr;
+    // horizontal splitter between the sidebar's top and bottom panels
+    VirtSplitter* sidebarPanelsSplitter = nullptr;
 
     TabsCtrl* tabsCtrl = nullptr;
     bool tabsVisible = false;
@@ -479,11 +468,11 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // content row: sidebar | splitter | (canvas / full-window favorites) |
     // splitter | AI chat
     HBox* frameLayout = nullptr;
-    HwndSlot* tocSlot = nullptr;
-    HwndSlot* favSlot = nullptr;
-    // same hwndFavBox as favSlot; shown instead of the canvas when the
-    // Favorites tab is selected
-    HwndSlot* fullFavSlot = nullptr;
+    HwndSlot* sidebarTopSlot = nullptr;
+    HwndSlot* sidebarBottomSlot = nullptr;
+    // favoritesTabPanel; shown instead of the canvas when the Favorites tab is
+    // selected
+    HwndSlot* favoritesTabSlot = nullptr;
     HwndSlot* canvasSlot = nullptr;
     HwndSlot* aiChatSlot = nullptr;
     HwndSlot* tabsSlot = nullptr;
@@ -557,8 +546,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
             bool tabsVisible = false;
             bool isToolbarVisible = false;
             bool isToolbarOverlay = false;
-            bool tocVisible = false;
-            bool showFavorites = false;
+            bool sidebarTopVisible = false;
+            bool sidebarBottomVisible = false;
             // full-window Favorites tab vs. sidebar panel: different geometry
             bool favoritesAsTab = false;
             bool showMenuBarRebar = false;
@@ -570,13 +559,13 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
         Rect lastFrameRc; // previous frame client size; a change skips WM_SETREDRAW
         // desired visibility of the sidebar / AI chat panels; applied
         // (HwndSetVisible) by RelayoutFrame
-        bool tocVisible = false;
-        bool favVisible = false;
+        bool sidebarTopVisible = false;
+        bool sidebarBottomVisible = false;
         bool aiChatVisible = false;
         bool updatePending = false; // a FrameUpdateUi uitask is queued
         bool toolbarDirty = false;  // repaint the toolbar on the next update
         bool tabsDirty = false;     // repaint the tab bar on the next update
-        bool sidebarDirty = false;  // repaint toc/favorites boxes on the next update
+        bool sidebarDirty = false;  // repaint the sidebar panels on the next update
         // RelayoutFrame args for the pending update: updateToolbars is the OR
         // of all pending requests, sidebarDx is last-request-wins (-1 = keep
         // the current sidebar width)

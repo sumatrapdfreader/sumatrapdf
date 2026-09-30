@@ -2927,19 +2927,28 @@ constexpr int kLabelPad = 2;
 constexpr int kCloseBtnDx = 16;
 constexpr int kCloseBtnGapDx = 8;
 
+// Scale a panel header's ✕ for this window's DPI.
+void ApplyCloseButtonDpi(VirtCloseButton* closeBtn, int dpi) {
+    if (!closeBtn || dpi <= 0) {
+        return;
+    }
+    int pad = DpiScaleByDpi(dpi, kLabelPad);
+    int btnDx = DpiScaleByDpi(dpi, kCloseBtnDx);
+    int gap = DpiScaleByDpi(dpi, kCloseBtnGapDx);
+    // the padding is part of the ideal size, so it enlarges the hit area
+    // without shrinking the ✕ itself
+    closeBtn->padding = Insets{0, pad, 0, gap};
+    closeBtn->idealSize = {btnDx + pad + gap, btnDx};
+}
+
 // Scale the header ✕ and label padding for this window's DPI.
 void ApplyLabelWithCloseDpi(VirtText* label, VirtCloseButton* closeBtn, int dpi) {
     if (!label || !closeBtn || dpi <= 0) {
         return;
     }
     int pad = DpiScaleByDpi(dpi, kLabelPad);
-    int btnDx = DpiScaleByDpi(dpi, kCloseBtnDx);
-    int gap = DpiScaleByDpi(dpi, kCloseBtnGapDx);
     label->padding = Insets{pad, pad, pad, pad};
-    // the padding is part of the ideal size, so it enlarges the hit area
-    // without shrinking the ✕ itself
-    closeBtn->padding = Insets{0, pad, 0, gap};
-    closeBtn->idealSize = {btnDx + pad + gap, btnDx};
+    ApplyCloseButtonDpi(closeBtn, dpi);
 }
 
 LabelWithClose NewLabelWithClose(HWND hwnd, PlatformFont* font, const VirtMouseHandler& onClose) {

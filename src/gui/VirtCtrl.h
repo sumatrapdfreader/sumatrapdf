@@ -753,6 +753,7 @@ struct LabelWithClose {
 VirtCloseButton* AsVirtCloseButton(ILayout*);
 LabelWithClose NewLabelWithClose(HWND hwndForDpi, PlatformFont*, const VirtMouseHandler& onClose);
 void ApplyLabelWithCloseDpi(VirtText*, VirtCloseButton*, int dpi);
+void ApplyCloseButtonDpi(VirtCloseButton*, int dpi);
 
 struct VirtImage : VirtCtrl {
     Pixmap* pixmap = nullptr; // not owned

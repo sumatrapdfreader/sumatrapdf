@@ -11,8 +11,10 @@
 #include "base/GdiPlusUtil.h"
 
 #include "gui/UIModels.h"
+#include "gui/Layout.h"
 #include "gui/Gfx.h"
 #include "gui/PlatformFont.h"
+#include "gui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -50,6 +52,7 @@
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
 #include "TableOfContents.h"
+#include "SidebarPanel.h"
 #include "Menu.h"
 
 // value associated with menu item for owner-drawn purposes
@@ -2108,13 +2111,13 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetEnabled(win->menu, CmdToggleBookmarks, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
-    bool thumbnailsShown = win->uiState.tocVisible && SidebarShowsThumbnails(win);
-    bool checked = documentSpecific ? win->uiState.tocVisible && !thumbnailsShown : gSettings->showToc;
+    bool bookmarksShown = IsSidebarViewShown(win, SidebarView::Bookmarks);
+    bool checked = documentSpecific ? bookmarksShown : gSettings->showToc;
     MenuSetChecked(win->menu, CmdToggleBookmarks, checked);
     MenuSetEnabled(win->menu, CmdToggleThumbnails, CanShowThumbnails(tab));
-    MenuSetChecked(win->menu, CmdToggleThumbnails, thumbnailsShown);
+    MenuSetChecked(win->menu, CmdToggleThumbnails, IsSidebarViewShown(win, SidebarView::Thumbnails));
 
-    MenuSetChecked(win->menu, CmdFavoriteToggle, gSettings->showFavorites);
+    MenuSetChecked(win->menu, CmdFavoriteToggle, IsSidebarViewShown(win, SidebarView::Favorites));
     MenuSetChecked(win->menu, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
     {
         // checked when mode is not "hide" (show or overlay)
@@ -2425,14 +2428,13 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     SetMenuStateForSelection(tab, popup);
 
     MenuUpdatePrintItem(win, popup, true);
-    bool thumbnailsShown = win->uiState.tocVisible && SidebarShowsThumbnails(win);
     MenuSetEnabled(popup, CmdToggleBookmarks, win->ctrl->HasToc());
-    MenuSetChecked(popup, CmdToggleBookmarks, win->uiState.tocVisible && !thumbnailsShown);
+    MenuSetChecked(popup, CmdToggleBookmarks, IsSidebarViewShown(win, SidebarView::Bookmarks));
     MenuSetEnabled(popup, CmdToggleThumbnails, CanShowThumbnails(tab));
-    MenuSetChecked(popup, CmdToggleThumbnails, thumbnailsShown);
+    MenuSetChecked(popup, CmdToggleThumbnails, IsSidebarViewShown(win, SidebarView::Thumbnails));
 
     MenuSetEnabled(popup, CmdFavoriteToggle, HasFavorites());
-    MenuSetChecked(popup, CmdFavoriteToggle, gSettings->showFavorites);
+    MenuSetChecked(popup, CmdFavoriteToggle, IsSidebarViewShown(win, SidebarView::Favorites));
     MenuSetEnabled(popup, CmdFavoriteShowInTab, HasFavorites() && SettingsUseTabs());
     MenuSetChecked(popup, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
 

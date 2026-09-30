@@ -268,6 +268,7 @@ import { testit as commandPaletteAltNames } from "./command-palette-alt-names.ts
 import { testit as commandPaletteThumbnails } from "./command-palette-thumbnails.ts";
 import { testit as pageEdit } from "./page-edit.ts";
 import { testit as sidebarThumbnails } from "./sidebar-thumbnails.ts";
+import { testit as sidebarThumbnailsWheel } from "./sidebar-thumbnails-wheel.ts";
 import { testit as issue6259 } from "./issue-6259.ts";
 import { testit as issue6261 } from "./issue-6261.ts";
 import { testit as commandPaletteAnnotations } from "./command-palette-annotations.ts";
@@ -651,6 +652,7 @@ export const tests: NamedTest[] = [
   ["command-palette-thumbnails", commandPaletteThumbnails],
   ["page-edit", pageEdit],
   ["sidebar-thumbnails", sidebarThumbnails],
+  ["sidebar-thumbnails-wheel", sidebarThumbnailsWheel],
   ["issue-6259", issue6259],
   ["issue-6261", issue6261],
   ["command-palette-annotations", commandPaletteAnnotations],

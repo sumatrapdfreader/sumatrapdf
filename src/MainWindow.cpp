@@ -46,6 +46,8 @@
 #include "SearchAndDDE.h"
 #include "RefHover.h"
 #include "WindowTab.h"
+#include "PageThumbnails.h"
+#include "SidebarPanel.h"
 #include "TableOfContents.h"
 #include "StressTesting.h"
 #include "uia/Provider.h"
@@ -149,7 +151,11 @@ MainWindow::~MainWindow() {
     str::Free(urlOnLastButtonDown);
     str::Free(homeSearchQuery);
 
-    UnsubclassToc(this);
+    // the panels hand the views' layouts back before those are deleted
+    DeleteSidebarPanel(sidebarTop);
+    DeleteSidebarPanel(sidebarBottom);
+    DeleteSidebarPanel(favoritesTabPanel);
+    sidebarTop = sidebarBottom = favoritesTabPanel = nullptr;
     HomePageDestroySearch(this);
     HomePageDestroyChrome(this);
 
@@ -232,17 +238,14 @@ MainWindow::~MainWindow() {
     UnregisterOnWindowMoved(&overlayScrollOnMoved);
     ReportIf(onWindowMoved);
     delete infotip;
-    // tocLayout (VBox) owns the header, tocFilterEdit and tocTreeView; the
-    // root only points at the header's virtual controls, so it outlives them
-    delete tocLayout;
-    delete tocRoot;
+    // the views' layouts own their controls
+    delete tocViewLayout;
+    delete pageThumbs;
     delete tocFilteredTree;
     if (favTreeView) {
         delete favTreeView->treeModel;
     }
-    // favLayout (VBox) owns the header, favFilterEdit and favTreeView
-    delete favLayout;
-    delete favRoot;
+    delete favViewLayout;
 
     DestroyAIChatPanel(this);
 
@@ -1046,9 +1049,8 @@ void UpdateControlsColors(MainWindow* win) {
 
     // the panel labels and the splitters are virtual controls: they follow the
     // gui/ color defaults, which SumatraUpdateTheme() already refreshed
-    {
-        auto* tocTreeView = win->tocTreeView;
-        tocTreeView->SetColors(txtCol, bgCol);
+    if (win->tocTreeView) {
+        win->tocTreeView->SetColors(txtCol, bgCol);
 
         if (win->tocFilterEdit) {
             win->tocFilterEdit->SetColors(txtCol, bgCol);

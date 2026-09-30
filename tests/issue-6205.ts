@@ -28,7 +28,7 @@ async function waitToc(
   while (Date.now() < deadline) {
     const layout = await client.layout();
     last = layout.raw;
-    if (layout.items["toc"]?.visible === want) {
+    if (layout.items["sidebarTop"]?.visible === want) {
       return layout;
     }
     await sleep(50);

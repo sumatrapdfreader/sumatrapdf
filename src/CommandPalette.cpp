@@ -33,6 +33,7 @@
 #include "SumatraPDF.h"
 #include "Canvas.h"
 #include "TableOfContents.h"
+#include "SidebarPanel.h"
 #include "Favorites.h"
 #include "FileHistory.h"
 #include "Menu.h"
@@ -1554,13 +1555,12 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents: {
-            // from Thumbnails the command switches to Bookmarks: it turns them on
             isToggle = true;
-            newIsOn = !win->uiState.tocVisible || SidebarShowsThumbnails(win);
+            newIsOn = !IsSidebarViewShown(win, SidebarView::Bookmarks);
         } break;
         case CmdToggleThumbnails: {
             isToggle = true;
-            newIsOn = !(win->uiState.tocVisible && SidebarShowsThumbnails(win));
+            newIsOn = !IsSidebarViewShown(win, SidebarView::Thumbnails);
         } break;
         case CmdTogglePresentationMode: {
             isToggle = true;

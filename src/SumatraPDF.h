@@ -163,7 +163,7 @@ enum class SidebarResizeFrame {
     Keep,
     Adjust
 };
-void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites,
+void SetSidebarVisibility(MainWindow* win, bool topVisible, bool bottomVisible,
                           SidebarResizeFrame = SidebarResizeFrame::Keep);
 void RememberFavTreeExpansionState(MainWindow* win);
 void AdvanceFocus(MainWindow* win);
