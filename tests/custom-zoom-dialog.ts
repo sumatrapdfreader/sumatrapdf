@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR, writeAppdata } from "./util.ts";
 import {
+  ensureModifierKeysUp,
   enumWindows,
   findChildWindow,
   getClassName,
@@ -95,8 +96,10 @@ async function waitForDialogGone(pid: number, frame: number): Promise<void> {
 }
 
 // a key the dialog's own handler sees: it reads them off the message queue of
-// whatever has the focus, which is the edit field
+// whatever has the focus, which is the edit field. A Ctrl stuck down mid-run
+// (RDP) makes it ignore Enter, so release modifiers first
 async function pressKey(hwnd: number, vkey: number): Promise<void> {
+  await ensureModifierKeysUp();
   postMessage(hwnd, WM_KEYDOWN, vkey, 0);
   postMessage(hwnd, WM_KEYUP, vkey, 0);
   await sleep(150 * SLOW_BUILD_FACTOR);

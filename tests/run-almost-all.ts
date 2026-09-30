@@ -378,6 +378,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["custom-zoom-dialog", customZoomDialog],
   ["annot-color-dropdown", annotColorDropdown],
   ["annot-contents-click-away", annotContentsClickAway],
   ["toolbar-hover-dropdown", toolbarHoverDropdown],
@@ -614,7 +615,6 @@ export const tests: NamedTest[] = [
   ["annot-filter-close-window", annotFilterCloseWindow],
   ["issue-6136", issue6136],
   ["issue-1930", issue1930],
-  ["custom-zoom-dialog", customZoomDialog],
   ["issue-1106", issue1106],
   ["issue-814", issue814],
   ["issue-1422", issue1422],
