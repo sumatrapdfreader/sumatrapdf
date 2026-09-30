@@ -40,6 +40,7 @@ import {
   findChildByClass,
   killAndWait,
   launchControlled,
+  parkCursorAway,
   pressEscape,
   sendCommand,
 } from "./win-automation.ts";
@@ -224,6 +225,7 @@ async function testMarkup(): Promise<void> {
   writeSettings(appdata);
 
   const pdf = join(process.cwd(), "ext", "a-zlib", "zlib.3.pdf");
+  parkCursorAway();
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   try {
     await client.waitForRenderIdle();
@@ -290,6 +292,7 @@ async function testShape(): Promise<void> {
     "latin1",
   );
 
+  parkCursorAway();
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   try {
     await client.waitForRenderIdle();
@@ -413,10 +416,9 @@ async function hoverMenuColors(client: ControlClient): Promise<string[]> {
 }
 
 // right-click opens the drop-down at once, without waiting for the hover delay.
-// The cursor has to be on the button or the drop-down closes itself.
+// The real cursor stays parked off the window: on a button, its moves swap to
+// that button's drop-down.
 function rightClickToolbar(toolbar: number, x: number, y: number): void {
-  const s = clientToScreen(toolbar, x, y);
-  setCursorPos(s.x, s.y);
   const lp = packCoords(x, y);
   sendMessage(toolbar, WM_RBUTTONDOWN, MK_RBUTTON, lp);
   sendMessage(toolbar, WM_RBUTTONUP, 0, lp);
@@ -453,6 +455,7 @@ async function testToolbarButtons(): Promise<void> {
     "latin1",
   );
 
+  parkCursorAway();
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   const pid = proc.pid!;
   try {
@@ -600,6 +603,7 @@ async function testCurrentColorAdded(): Promise<void> {
     "latin1",
   );
 
+  parkCursorAway();
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   const pid = proc.pid!;
   try {

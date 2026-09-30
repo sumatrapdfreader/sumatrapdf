@@ -21,7 +21,6 @@ import {
   getWorkArea,
   clientToScreen,
   findTopWindow,
-  getCursorPos,
   getWindowRect,
   isWindowVisible,
   readWindowDCRow,
@@ -37,7 +36,14 @@ import {
   WM_RBUTTONDOWN,
   WM_RBUTTONUP,
 } from "./winapi.ts";
-import { clickAt, findChildByClass, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import {
+  clickAt,
+  findChildByClass,
+  killAndWait,
+  launchControlled,
+  parkCursorAway,
+  sendCommand,
+} from "./win-automation.ts";
 
 const TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
 const MENU_CLASS = "SumatraToolbarHoverMenu";
@@ -199,36 +205,6 @@ async function waitMenu(pid: number, want: boolean, what: string): Promise<numbe
 function menuShowing(pid: number): number {
   const h = findTopWindow(pid, MENU_CLASS);
   return h !== 0 && isWindowVisible(h) ? h : 0;
-}
-
-function rectHasPoint(r: { left: number; top: number; right: number; bottom: number }, x: number, y: number): boolean {
-  return x >= r.left && x < r.right && y >= r.top && y < r.bottom;
-}
-
-// A point outside the frame and the drop-down. SetCursorPos clamps to the
-// screen, so try each side and keep the one that actually landed outside.
-function parkCursorAway(frame: number, menu: number): boolean {
-  const avoid = [getWindowRect(frame)];
-  if (menu !== 0) {
-    avoid.push(getWindowRect(menu));
-  }
-  const fr = avoid[0]!;
-  const candidates = [
-    { x: fr.left - 40, y: fr.top + 100 },
-    { x: fr.right + 40, y: fr.top + 100 },
-    { x: fr.left + 100, y: fr.bottom + 40 },
-    { x: fr.left + 100, y: fr.top - 40 },
-  ];
-  for (const p of candidates) {
-    if (!setCursorPos(p.x, p.y)) {
-      continue;
-    }
-    const c = getCursorPos();
-    if (!avoid.some((r) => rectHasPoint(r, c.x, c.y))) {
-      return true;
-    }
-  }
-  return false;
 }
 
 // A hwnd read before an await can already be a different drop-down: the cursor
@@ -689,7 +665,7 @@ export async function testit(): Promise<void> {
       if (menu === 0) {
         break;
       }
-      parkCursorAway(frame, menu);
+      parkCursorAway([getWindowRect(frame), getWindowRect(menu)]);
       sendMessage(menu, WM_MOUSELEAVE, 0, 0);
       sendMessage(toolbar, WM_MOUSELEAVE, 0, 0);
       const sliceEnd = Date.now() + 400;
