@@ -561,6 +561,7 @@ function engines_files()
     "EngineMupdf.*",
     "EngineMupdfImpl.*",
     "EnginePs.*",
+    "EngineDvi.*",
     "GumboHtmlParser.*",
     "GumboHelpers.*",
     "HtmlFormatter.*",

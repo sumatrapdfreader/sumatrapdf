@@ -628,6 +628,12 @@ static void extMapTest() {
     utassert(GuessFileTypeFromName(StrL("foo.epub")) == FileType::Epub);
     utassert(GuessFileTypeFromName(StrL("foo.tar")) == FileType::Tar);
     utassert(GuessFileTypeFromName(StrL("foo.ico")) == FileType::Ico);
+    utassert(GuessFileTypeFromName(StrL("paper.dvi")) == FileType::Dvi);
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Dvi), StrL(".dvi")));
+    static const u8 dvi[] = {247, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    utassert(GuessFileTypeFromData(Str((char*)dvi, dimofi(dvi))) == FileType::Dvi);
+    static const u8 notDvi[] = {247, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    utassert(GuessFileTypeFromData(Str((char*)notDvi, dimofi(notDvi))) == FileType::Unknown);
     utassert(GuessFileTypeFromName(StrL("foo.unknown-ext")) == FileType::Unknown);
     // multi-dot / FB2 zip containers: longest registered suffix wins over bare .zip
     utassert(GuessFileTypeFromName(StrL("book.fb2.zip")) == FileType::Fb2z);

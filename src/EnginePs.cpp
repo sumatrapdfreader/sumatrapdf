@@ -17,7 +17,7 @@
 
 Kind kindEnginePostScript = "enginePostScript";
 
-static TempStr GetGhostscriptPathTemp() {
+TempStr GetGhostscriptPathTemp() {
     static const Str gsProducts[] = {
         StrL("AFPL Ghostscript"),
         StrL("Aladdin Ghostscript"),

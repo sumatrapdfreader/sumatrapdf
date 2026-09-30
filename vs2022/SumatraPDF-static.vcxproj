@@ -1648,6 +1648,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\EnginePs.cpp" />
+    <ClCompile Include="..\src\EngineDvi.cpp" />
     <ClCompile Include="..\src\EutlTrust.cpp" />
     <ClCompile Include="..\src\ExifDump.cpp" />
     <ClCompile Include="..\src\ExplorerQuickLook.cpp" />

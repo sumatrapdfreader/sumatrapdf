@@ -203,6 +203,12 @@ TempStr EngineMupdfGetPdfOutline(Str path);
 bool IsEnginePsAvailable();
 bool IsEnginePsSupportedFileType(FileType);
 EngineBase* CreateEnginePsFromFile(Str fileName);
+TempStr GetGhostscriptPathTemp();
+
+bool IsEngineDviAvailable();
+bool IsEngineDviSupportedFileType(FileType);
+EngineBase* CreateEngineDviFromFile(Str fileName);
+void DeleteStaleDviCache();
 
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks);
 

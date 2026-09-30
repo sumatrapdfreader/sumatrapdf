@@ -31,6 +31,7 @@
     V(".ps", FileType::PS)             \
     V(".ps.gz", FileType::PS)          \
     V(".eps", FileType::PS)            \
+    V(".dvi", FileType::Dvi)           \
     V(".lit", FileType::Lit)           \
     V(".fb2", FileType::Fb2)           \
     V(".fb2z", FileType::Fb2z)         \
@@ -206,6 +207,21 @@ static bool IsPdfFileContent(Str d) {
     return d.len >= 8 && str::IndexOf(d, StrL("%PDF-")) >= 0;
 }
 
+// TeX DVI preamble: pre (247), format id 2 (classic) or 3 (pTeX), then
+// num/den/mag and a comment length. The id check keeps a stray 0xF7 from
+// matching.
+static bool IsDviFileContent(Str d) {
+    if (d.len < 15) {
+        return false;
+    }
+    const u8* p = (const u8*)d.s;
+    if (p[0] != 247 || (p[1] != 2 && p[1] != 3)) {
+        return false;
+    }
+    int commentLen = p[14];
+    return d.len >= 15 + commentLen;
+}
+
 static bool IsPSFileContent(Str d) {
     Str header = d;
     int n = d.len;
@@ -334,6 +350,9 @@ static FileType DetectFileTypeFromData(Str d) {
     }
     if (IsPSFileContent(d)) {
         return FileType::PS;
+    }
+    if (IsDviFileContent(d)) {
+        return FileType::Dvi;
     }
     if (tga::HasSignature(d)) {
         return FileType::Tga;

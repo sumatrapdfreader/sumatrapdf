@@ -244,6 +244,9 @@ bool IsSupportedFileType(FileType kind, bool enableEngineEbooks) {
     if (IsEnginePsSupportedFileType(kind)) {
         return true;
     }
+    if (IsEngineDviSupportedFileType(kind)) {
+        return true;
+    }
     if (kind == FileType::Lit) {
         return true;
     }
@@ -321,6 +324,10 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     }
     if (IsEnginePsSupportedFileType(kind)) {
         engine = CreateEnginePsFromFile(path);
+        return engine;
+    }
+    if (IsEngineDviSupportedFileType(kind)) {
+        engine = CreateEngineDviFromFile(path);
         return engine;
     }
     if (kind == FileType::Lit) {
