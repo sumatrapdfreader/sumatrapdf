@@ -97,13 +97,11 @@ export async function testit(): Promise<void> {
 
     sendCommandSync(frame, cmdId("CmdToggleFullscreen"));
     await client.waitForRenderIdle();
-    await sleep(200);
 
     // plain `a` behaves as in a window: no Edit PDF mode (issue #6196)
     await selectLineWithKeyboard(client, frame);
     sendCommandSync(frame, cmdId("CmdCreateAnnotHighlight"));
     await client.waitForRenderIdle();
-    await sleep(300);
     const plain = await markupDump(client);
     if (!/annotations=1\b/.test(plain) || !/ editToolbar=0/.test(plain)) {
       throw new Error(`issue-6111: plain highlight in fullscreen turned on Edit PDF\n${plain}`);
@@ -142,7 +140,6 @@ export async function testit(): Promise<void> {
       throw new Error("issue-6111: contents edit box not found");
     }
     await typeIntoInput(edit, NOTE, false);
-    await sleep(200);
     sendCommandSync(frame, cmdId("CmdToggleFullscreen"));
   } finally {
     client.close();
