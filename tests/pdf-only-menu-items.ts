@@ -5,7 +5,8 @@
 // it now asks the engine whether there is really a pdf_document behind the tab.
 
 import { ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone } from "./util.ts";
+import { cmdId, EXE, runStandalone } from "./util.ts";
+import { sendCommandSync, waitForFrame } from "./win-automation.ts";
 
 const kPdfCmds = ["CmdPdShowInfo", "CmdPdfCompress", "CmdPdfExtractPages", "CmdPdfEncrypt"];
 
@@ -22,34 +23,29 @@ async function vis(client: { request: Function }, cmd: string): Promise<string> 
 export async function testit(): Promise<void> {
   await withControlledSumatra(
     EXE,
-    async (client) => {
-      await client.waitForRenderIdle();
-      for (const cmd of kPdfCmds) {
-        const v = await vis(client, cmd);
-        if (v !== "hide") {
-          throw new Error(`pdf-only-menu-items: epub still shows ${cmd} vis=${v}`);
+    async (client, proc) => {
+      const frame = await waitForFrame(proc.pid!);
+      for (const type of ["pdf", "epub"]) {
+        await client.waitForRenderIdle();
+        const shown = [];
+        for (const cmd of kPdfCmds) {
+          const v = await vis(client, cmd);
+          if (v === "show") {
+            shown.push(cmd);
+          }
+          if (type === "epub" && v !== "hide") {
+            throw new Error(`pdf-only-menu-items: epub still shows ${cmd} vis=${v}`);
+          }
+        }
+        if (type === "pdf" && shown.length === 0) {
+          throw new Error("pdf-only-menu-items: pdf hid every PDF command");
+        }
+        if (type === "pdf") {
+          sendCommandSync(frame, cmdId("CmdPrevTab"));
         }
       }
     },
-    ["tests/issue-5846.epub"],
-  );
-
-  await withControlledSumatra(
-    EXE,
-    async (client) => {
-      await client.waitForRenderIdle();
-      const shown = [];
-      for (const cmd of kPdfCmds) {
-        const v = await vis(client, cmd);
-        if (v === "show") {
-          shown.push(cmd);
-        }
-      }
-      if (shown.length === 0) {
-        throw new Error("pdf-only-menu-items: pdf hid every PDF command");
-      }
-    },
-    ["tests/issue-1189.pdf"],
+    ["tests/issue-5846.epub", "tests/issue-1189.pdf"],
   );
 }
 
