@@ -13,8 +13,7 @@
 
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { cmdId, EXE, ROOT, runStandalone, SLOW_BUILD_FACTOR, writeAppdata } from "./util.ts";
-import { sleep } from "./winapi.ts";
+import { cmdId, EXE, ROOT, runStandalone, writeAppdata } from "./util.ts";
 import { sendCommandSync, waitForFrame } from "./win-automation.ts";
 
 // annotations.xhtml#annotation-45, i.e. a page in the second chapter
@@ -57,7 +56,6 @@ async function restyleIn(view: string): Promise<void> {
 
       // the toggle restyles and collapses the chapter table
       sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
-      await sleep(500 * SLOW_BUILD_FACTOR);
       await client.waitForRenderIdle(30000);
     },
     ["-appdata", appdata, "-window-pos", "1000x900@40x40", "-view", view, epub],
