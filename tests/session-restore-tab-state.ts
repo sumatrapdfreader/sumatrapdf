@@ -84,9 +84,10 @@ export async function testit(): Promise<void> {
   }
 
   const text = readFileSync(join(dir, "SumatraPDF-settings.txt"), "utf8");
-  const m = /TabStates \[\s*\[[^\]]*?DisplayMode = ([^\n]+)\n[^\]]*?PageNo = (\S+)\n[^\]]*?Zoom = ([^\n]+)\n/.exec(
-    text,
-  );
+  const m =
+    /TabStates \[\s*\[[^\]]*?DisplayMode = ([^\r\n]+)\r?\n[^\]]*?PageNo = (\S+)\r?\n[^\]]*?Zoom = ([^\r\n]+)\r?\n/.exec(
+      text,
+    );
   if (!m) {
     throw new Error("session-restore-tab-state: no TabState in saved settings");
   }

@@ -384,6 +384,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
+  ["session-restore-tab-state", sessionRestoreTabState],
   ["exit-edit-pdf-deselects", exitEditPdfDeselects],
   ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6113", issue6113],
@@ -722,7 +723,6 @@ export const tests: NamedTest[] = [
   ["issue-trim-margins", issueTrimMargins],
   ["trim-empty-margins-restore", trimEmptyMarginsRestore],
   ["issue-6220", issue6220],
-  ["session-restore-tab-state", sessionRestoreTabState],
   ["issue-6239", issue6239],
   ["tool-poster", toolPoster],
   ["tool-merge", toolMerge],
