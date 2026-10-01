@@ -22,6 +22,7 @@ import {
   setCursorPos,
   sleep,
   VK_DOWN,
+  VK_RETURN,
   WM_COMMAND,
   WM_KEYDOWN,
   WM_LBUTTONDOWN,
@@ -34,9 +35,9 @@ import {
   findCanvas,
   killAndWait,
   launchControlled,
-  pressEnter,
   pressEscape,
   sendCommand,
+  sendCommandSync,
 } from "./win-automation.ts";
 
 type Point = { x: number; y: number };
@@ -163,7 +164,7 @@ async function executeFromCommandPalette(client: ControlClient, frame: number, c
     const raw = String(res[1] ?? "");
     const m = /cmd=(-?\d+)/.exec(raw);
     if (res[0] === 0 && m && +m[1]! === cmdId(command)) {
-      await pressEnter(edit);
+      postMessage(edit, WM_KEYDOWN, VK_RETURN, 0);
       return;
     }
     postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
@@ -255,8 +256,7 @@ export async function testit(): Promise<void> {
     const circleEnd = { x: center.x + 70, y: center.y + 10 };
     const outside = { x: 2, y: center.y };
 
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
     const squareButton = toolbarButtonRect(toolbarDump, "CmdCreateAnnotSquare");
     const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
@@ -265,6 +265,7 @@ export async function testit(): Promise<void> {
         toolbar,
         squareButton.x + Math.floor(squareButton.dx / 2),
         squareButton.y + Math.floor(squareButton.dy / 2),
+        0,
       );
 
     await clickSquareToolbar();
@@ -283,7 +284,7 @@ export async function testit(): Promise<void> {
       throw new Error(`shape-annotation-placement: toolbar did not start clean rectangle placement\n${state.raw}`);
     }
 
-    await clickAt(canvas, outside.x, outside.y);
+    await clickAt(canvas, outside.x, outside.y, 0);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 0) {
       throw new Error(`shape-annotation-placement: outside first click did not cancel cleanly\n${state.raw}`);
@@ -291,7 +292,7 @@ export async function testit(): Promise<void> {
 
     await clickSquareToolbar();
     await waitForPlacement(client, true);
-    await clickAt(canvas, start.x, start.y);
+    await clickAt(canvas, start.x, start.y, 0);
     state = await placementState(client);
     if (!state.active || state.mouseDown || state.dragged || state.page !== 1 || state.annotations !== 0) {
       throw new Error(`shape-annotation-placement: first page click did not anchor the rectangle\n${state.raw}`);
@@ -319,7 +320,7 @@ export async function testit(): Promise<void> {
       );
     }
 
-    await clickAt(canvas, rectangleEnd.x, rectangleEnd.y);
+    await clickAt(canvas, rectangleEnd.x, rectangleEnd.y, 0);
     state = await waitForPlacement(client, false);
     const squareRect = shapeScreenRect(state.raw, "Square");
     if (
@@ -378,7 +379,7 @@ export async function testit(): Promise<void> {
     await client.setNotificationsEnabled(true);
     sendCommand(frame, cmdId("CmdCreateAnnotSquare"));
     await waitForPlacement(client, true);
-    await clickAt(canvas, start.x, start.y);
+    await clickAt(canvas, start.x, start.y, 0);
     await pressEscape(frame);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 2) {
