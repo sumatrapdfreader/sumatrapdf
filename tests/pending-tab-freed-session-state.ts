@@ -13,7 +13,8 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { ControlClient, ControlCommand } from "./control.ts";
+import { cmdId, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { killAndWait, killProcessesNamed, launchControlled, sendCommand, takeStderr } from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
 
@@ -59,6 +60,16 @@ ${tabState(PENDING_PDF)}
   writeFileSync(join(APPDATA, "SumatraPDF-settings.txt"), seed, "utf8");
 }
 
+async function currentPath(client: ControlClient): Promise<string> {
+  const res = await client.request(ControlCommand.TestCurrentTab, []);
+  const raw = String(res[1] ?? "").trim();
+  const m = /^path=(.+?) page=/.exec(raw);
+  if (res[0] !== 0 || !m) {
+    throw new Error(`pending-tab-freed-session-state: could not read current tab: ${raw}`);
+  }
+  return resolve(m[1]!);
+}
+
 export async function testit(): Promise<void> {
   await killProcessesNamed("SumatraPDF.exe");
   seedSettings();
@@ -74,9 +85,17 @@ export async function testit(): Promise<void> {
     // freeing the snapshot the third tab's parked LoadArgs still point into;
     // the second close selects that third tab. Posted: SendMessage would
     // deadlock with the app writing a report to our stderr
+    const expected = [SECOND_PDF, PENDING_PDF];
     for (let i = 0; i < 2; i++) {
       sendCommand(frame, cmdId("CmdClose"));
-      await sleep(500 * SLOW_BUILD_FACTOR);
+      await pollUntil(
+        () => currentPath(client),
+        (path) => path === expected[i],
+        {
+          timeoutMs: 5000 * SLOW_BUILD_FACTOR,
+          error: (path) => `pending-tab-freed-session-state: selected ${path}, want ${expected[i]}`,
+        },
+      );
       await client.waitForRenderIdle(30000);
     }
 
