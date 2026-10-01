@@ -4924,8 +4924,8 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
     auto* ctx = e->Ctx();
     if (e->isReflowable && e->HasChapters()) {
         // don't fz_load_chapter_page here: that lays out chapter 1, and the
-        // chapter the user is reopening may be a different one. every reflow
-        // page shares the size passed to fz_layout_document
+        // chapter the user is reopening may be a different one. placeholder
+        // until LayOutChapter(); a viewport can make the real page larger
         float dx = e->ebookLayoutW > 1 ? e->ebookLayoutW : 612;
         float dy = e->ebookLayoutH > 1 ? e->ebookLayoutH : 792;
         RectF mediabox(0, 0, dx, dy);
@@ -5242,6 +5242,81 @@ void EngineMupdf::WarmChapter(int chapter) {
     }
 }
 
+static bool RectNear(RectF a, RectF b) {
+    auto delta = [](float x, float y) {
+        float d = x - y;
+        return d < 0 ? -d : d;
+    };
+    return delta(a.x, b.x) < 1.f && delta(a.y, b.y) < 1.f && delta(a.dx, b.dx) < 1.f && delta(a.dy, b.dy) < 1.f;
+}
+
+// caller holds pagesLock. Fixed-layout viewports are larger than the A5
+// placeholder; matching chapters share one box, a different size is per page.
+// True when a display model that cached the old size must rebuild.
+static bool ApplyChapterMediabox(EngineMupdf* e, int chapter, RectF measured) {
+    if (measured.IsEmpty() || chapter < 1 || chapter > len(e->chapterPages)) {
+        return false;
+    }
+    Vec<FzPageInfo*>* v = e->chapterPages[chapter - 1];
+    if (!v) {
+        return false;
+    }
+    RectF previous = len(*v) > 0 ? (*v)[0]->mediabox : RectF{};
+    for (FzPageInfo* pi : *v) {
+        pi->mediabox = measured;
+    }
+
+    int nCh = len(e->chapterPages);
+    int had = len(e->chapterBoxMeasured);
+    if (had < nCh) {
+        VecResize(e->chapterBoxMeasured, nCh);
+        for (int i = had; i < nCh; i++) {
+            e->chapterBoxMeasured[i] = 0;
+        }
+    }
+    e->chapterBoxMeasured[chapter - 1] = 1;
+
+    if (e->reflowPagesVary) {
+        return !RectNear(previous, measured);
+    }
+    if (RectNear(measured, e->reflowMediabox)) {
+        return false;
+    }
+
+    for (int i = 0; i < nCh; i++) {
+        if (i == chapter - 1 || !e->chapterBoxMeasured[i]) {
+            continue;
+        }
+        Vec<FzPageInfo*>* other = e->chapterPages[i];
+        if (!other || len(*other) < 1) {
+            continue;
+        }
+        if (!RectNear((*other)[0]->mediabox, measured)) {
+            e->reflowPagesVary = true;
+            return true;
+        }
+    }
+
+    // this is the book's page size until some chapter measures otherwise
+    RectF old = e->reflowMediabox;
+    e->reflowMediabox = measured;
+    for (int i = 0; i < nCh; i++) {
+        if (e->chapterBoxMeasured[i]) {
+            continue;
+        }
+        Vec<FzPageInfo*>* other = e->chapterPages[i];
+        if (!other) {
+            continue;
+        }
+        for (FzPageInfo* pi : *other) {
+            if (pi->mediabox.IsEmpty() || RectNear(pi->mediabox, old)) {
+                pi->mediabox = measured;
+            }
+        }
+    }
+    return !RectNear(old, measured);
+}
+
 // Lays out one EPUB chapter on demand; single-chapter docs are laid out at
 // FinishLoading. IsLaidOut() makes repeat/racing calls and a post-reset
 // re-layout idempotent, trusting the freshly counted page total each time.
@@ -5255,21 +5330,36 @@ int EngineMupdf::LayOutChapter(int chapter) {
 
     auto* ctx = Ctx();
     int n = 1;
+    fz_rect bound = fz_empty_rect;
     {
         AutoUnlockRecursiveMutex docScope(&docLock);
+        fz_page* page = nullptr;
         fz_var(n);
+        fz_var(page);
+        fz_var(bound);
         fz_try(ctx) {
             n = fz_count_chapter_pages(ctx, _doc, chapter - 1);
+            if (n >= 1) {
+                // every page of one HTML chapter shares html->page_w/h
+                page = fz_load_chapter_page(ctx, _doc, chapter - 1, 0);
+                bound = fz_bound_page(ctx, page);
+            }
+        }
+        fz_always(ctx) {
+            fz_drop_page(ctx, page);
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
             n = 1;
+            bound = fz_empty_rect;
         }
     }
     if (n < 1) {
         n = 1;
     }
+    RectF measured = fz_is_empty_rect(bound) ? RectF{} : ToRectF(bound);
 
+    bool staleBox = false;
     {
         AutoUnlockRecursiveMutex pagesScope(&pagesLock);
         if (chapters.Generation() != gen) {
@@ -5292,7 +5382,11 @@ int EngineMupdf::LayOutChapter(int chapter) {
                 pi->~FzPageInfo();
                 VecRemoveLast(*v);
             }
+            staleBox = ApplyChapterMediabox(this, chapter, measured);
         }
+    }
+    if (staleBox) {
+        chapters.BumpGeneration();
     }
 
     chapters.SetPageCount(chapter, n);
@@ -6434,9 +6528,18 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(Location loc, bool loadQuick, fz_cookie* 
 RectF EngineMupdf::PageMediabox(int pageNo) {
     // a reflow doc has one mediabox for every page, so answer even for a page
     // number a caller hasn't resynced yet: a restyle (ApplyReflowThemeCss)
-    // resets the chapter table, shrinking pageCount under DisplayModel
-    if (isReflowable) {
+    // resets the chapter table, shrinking pageCount under DisplayModel.
+    // reflowPagesVary: fixed-layout chapters measured to different sizes.
+    if (isReflowable && !reflowPagesVary) {
         return reflowMediabox;
+    }
+    if (isReflowable) {
+        if (pageNo < 1 || pageNo > pageCount) {
+            return reflowMediabox;
+        }
+        AutoUnlockRecursiveMutex scope(&pagesLock);
+        FzPageInfo* pi = PageInfoByPageNo(pageNo);
+        return pi && !pi->mediabox.IsEmpty() ? pi->mediabox : reflowMediabox;
     }
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {

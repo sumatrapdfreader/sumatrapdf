@@ -184,9 +184,11 @@ class EngineMupdf : public EngineBase {
     // (index [page - 1] within). An unlaid chapter has a single placeholder
     // entry; LayOutChapter() appends the rest once the real count is known.
     Vec<Vec<FzPageInfo*>*> chapterPages;
-    // every page of a reflowable doc shares this mediabox (set once in
-    // FinishNonPDFLoading); lets PageMediabox() skip pagesLock on the hot path
+    // Shared reflow page size so PageMediabox() can skip pagesLock.
+    // reflowPagesVary: laid-out chapters measured to different sizes.
     RectF reflowMediabox;
+    bool reflowPagesVary = false;
+    Vec<u8> chapterBoxMeasured; // 1 once that chapter's box came from fz_bound_page
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;
     pdf_obj* pdfInfo = nullptr;
