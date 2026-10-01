@@ -351,6 +351,7 @@ import { testit as issue6142 } from "./issue-6142.ts";
 import { testit as issue6143 } from "./issue-6143.ts";
 import { testit as issue6144 } from "./issue-6144.ts";
 import { testit as toolbarTabSwitchPos } from "./toolbar-tab-switch-pos.ts";
+import { testit as facingFitTinyViewport } from "./facing-fit-tiny-viewport.ts";
 import { testit as mdMissingFile } from "./ad-hoc-md-missing-file.ts";
 import { testit as issue6148 } from "./issue-6148.ts";
 import { testit as issue6184 } from "./issue-6184.ts";
@@ -709,6 +710,7 @@ export const tests: NamedTest[] = [
   ["toc-show-on-open", tocShowOnOpen],
   ["issue-6132", issue6132],
   ["toolbar-tab-switch-pos", toolbarTabSwitchPos],
+  ["facing-fit-tiny-viewport", facingFitTinyViewport],
   ["issue-trim-margins", issueTrimMargins],
   ["trim-empty-margins-restore", trimEmptyMarginsRestore],
   ["issue-6220", issue6220],

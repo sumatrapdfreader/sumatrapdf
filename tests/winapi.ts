@@ -706,6 +706,7 @@ export function moveWindow(hwnd: number, x: number, y: number, w: number, h: num
 export const SWP_NOZORDER = 0x0004;
 export const SWP_NOACTIVATE = 0x0010;
 export const SWP_FRAMECHANGED = 0x0020;
+export const SWP_NOSENDCHANGING = 0x0400;
 export const GWL_STYLE = -16;
 export const GWL_EXSTYLE = -20;
 export const WS_MAXIMIZE = 0x01000000;

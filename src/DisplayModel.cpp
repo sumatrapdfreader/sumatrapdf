@@ -1632,7 +1632,21 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
     }
 }
 
+// A viewport narrower than the window margins (squeezed or DPI-changed window)
+// has no fit zoom; keep the zoom the pages were last laid out with.
 float DisplayModel::GetZoomReal(int pageNo) const {
+    float zoom = ComputeZoomReal(pageNo);
+    if (zoom > 0) {
+        return zoom;
+    }
+    PageInfo* pageInfo = GetPageInfo(pageNo);
+    if (!pageInfo || pageInfo->zoomReal <= 0) {
+        return zoom;
+    }
+    return pageInfo->zoomReal;
+}
+
+float DisplayModel::ComputeZoomReal(int pageNo) const {
     DisplayMode mode = GetDisplayMode();
     if (IsContinuous(mode)) {
         PageInfo* pageInfo = GetPageInfo(pageNo);
