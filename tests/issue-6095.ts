@@ -16,8 +16,8 @@
 
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, ROOT, runStandalone, SLOW_BUILD_FACTOR, writeAppdata } from "./util.ts";
-import { captureWindowPixels, sleep } from "./winapi.ts";
+import { EXE, ROOT, runStandalone, writeAppdata } from "./util.ts";
+import { captureWindowPixels } from "./winapi.ts";
 import { findCanvas, waitForFrame } from "./win-automation.ts";
 
 // the third TOC entry is annotations.xhtml#annotation-45
@@ -68,7 +68,6 @@ export async function testit(): Promise<void> {
       await client.setNotificationsEnabled(false);
 
       await followToc(client, TOC_DEST);
-      await sleep(500 * SLOW_BUILD_FACTOR);
       await client.waitForRenderIdle(30000);
 
       const canvas = findCanvas(frame);
