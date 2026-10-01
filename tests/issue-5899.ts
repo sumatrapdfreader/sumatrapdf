@@ -10,16 +10,8 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
-import { postMessage, WM_CLOSE } from "./winapi";
-import {
-  launchControlled,
-  pressKey,
-  sendCommand,
-  typeIntoInput,
-  waitForExit,
-  waitForFocusClass,
-  killAndWait,
-} from "./win-automation";
+import { postMessage, sendText, WM_CLOSE } from "./winapi";
+import { launchControlled, pressKey, sendCommand, waitForExit, waitForFocusClass, killAndWait } from "./win-automation";
 
 const VK_RETURN = 0x0d;
 
@@ -67,8 +59,8 @@ export async function testit(): Promise<void> {
   await run(searchDir, async (frame) => {
     sendCommand(frame, cmdId("CmdFindFirst"));
     const edit = await waitForFocusClass(frame, "Edit");
-    await typeIntoInput(edit, "CAF", false);
-    await pressKey(edit, VK_RETURN);
+    sendText(edit, "CAF");
+    await pressKey(edit, VK_RETURN, 0);
   });
   const afterSearch = readFileStates(searchDir);
   if (afterSearch.includes("FilePath")) {
@@ -78,7 +70,7 @@ export async function testit(): Promise<void> {
   const favDir = makeAppDir("favorite");
   await run(favDir, async (frame) => {
     sendCommand(frame, cmdId("CmdFavoriteAdd"));
-    await pressKey(await waitForFocusClass(frame, "Edit"), VK_RETURN);
+    await pressKey(await waitForFocusClass(frame, "Edit"), VK_RETURN, 0);
   });
   const afterFav = readFileStates(favDir);
   if (!afterFav.includes("FilePath") || !afterFav.includes("PageNo")) {
