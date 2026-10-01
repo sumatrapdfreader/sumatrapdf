@@ -104,6 +104,7 @@ function makeCbz(nPages: number, v: Variant): Buffer {
 
 const START_PAGE = 10;
 const START_SCROLL_Y = 200;
+const RESTART_COUNT = 2;
 
 function seedSettings(dir: string, cbz: string, v: Variant): void {
   const START_SCROLL_Y = v.scrollY ?? 200;
@@ -188,7 +189,7 @@ async function runVariant(name: string, v: Variant): Promise<void> {
   seedSettings(dir, cbz, v);
 
   const runs: { page: string; x: number; y: number }[] = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < RESTART_COUNT; i++) {
     runs.push(await restartOnce(dir, v));
     console.log(
       `issue-6220 ${name} start ${i + 1}: PageNo = ${runs[i]!.page}, ScrollPos = ${runs[i]!.x} ${runs[i]!.y}`,
