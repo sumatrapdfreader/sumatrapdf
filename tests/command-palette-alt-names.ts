@@ -5,8 +5,8 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { getClassName, getFocusedHwnd, getRootWindow, sendText, sleep } from "./winapi.ts";
-import { killAndWait, launchControlled, pressEscape, sendCommand } from "./win-automation.ts";
+import { getClassName, getFocusedHwnd, getRootWindow, sendText, sleep, VK_ESCAPE } from "./winapi.ts";
+import { killAndWait, launchControlled, pressKey, sendCommand } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -63,7 +63,14 @@ async function queryPalette(client: ControlClient, frame: number, query: string)
   if (!state) {
     throw new Error(`command-palette-alt-names: no palette state for '${query}'`);
   }
-  await pressEscape(edit);
+  await pressKey(edit, VK_ESCAPE, 0);
+  const closeDeadline = Date.now() + 3_000;
+  while (await paletteState(client)) {
+    if (Date.now() > closeDeadline) {
+      throw new Error(`command-palette-alt-names: palette did not close after '${query}'`);
+    }
+    await sleep(10);
+  }
   return state;
 }
 
