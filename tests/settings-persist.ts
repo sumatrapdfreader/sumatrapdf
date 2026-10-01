@@ -44,8 +44,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdClose"));
-    // homepage has no document; waitForRenderIdle would report no-doc
-    await sleep(500);
+    await waitHome(client);
     postMessage(frame, WM_CLOSE, 0, 0);
     if (!(await waitForExit(proc))) {
       throw new Error("settings-persist: SumatraPDF didn't exit after WM_CLOSE");
@@ -85,8 +84,13 @@ export async function testit(): Promise<void> {
     if (!canvas) {
       throw new Error("settings-persist: no canvas");
     }
-    await clickAt(canvas, ix + Math.floor(idx / 2), iy + Math.floor(idy / 2), 400);
-    const afterClick = await second.client.homeSelection();
+    await clickAt(canvas, ix + Math.floor(idx / 2), iy + Math.floor(idy / 2), 0);
+    const toggleDeadline = Date.now() + 5000;
+    let afterClick = await second.client.homeSelection();
+    while (!afterClick.listView && Date.now() < toggleDeadline) {
+      await sleep(50);
+      afterClick = await second.client.homeSelection();
+    }
     if (!afterClick.listView) {
       throw new Error(`settings-persist: click did not switch to list: ${afterClick.raw}`);
     }
