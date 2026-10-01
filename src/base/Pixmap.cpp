@@ -522,6 +522,58 @@ static inline u8 BlendOver(u8 src, u8 dst, u32 srcAlpha, bool premultiplied) {
     return (u8)std::min<u32>(255, s + ((((u32)dst * inv) + 127) / 255));
 }
 
+static bool IsPaletteDib(HBITMAP hbmp) {
+    DIBSECTION ds{};
+    return hbmp && GetObject(hbmp, sizeof(ds), &ds) == sizeof(ds) && ds.dsBm.bmBitsPixel <= 8;
+}
+
+// Takes p. Returns an opaque 24bpp BGR8 copy, transparency composited over white:
+// 3/4 the memory of 32bpp, for cached thumbnails. BGR8, and palette DIBs (smaller
+// still), are returned as is; so is p when the copy can't be allocated.
+Pixmap* PixmapToBgr(Pixmap* p) {
+    if (!p || p->format == PixmapFormat::BGR8) {
+        return p;
+    }
+    if (p->format == PixmapFormat::Native || !p->data) {
+        if (IsPaletteDib(p->hbmp)) {
+            return p;
+        }
+        Pixmap* bgra = PixmapCopyAs32bppDIB(p);
+        FreePixmap(p);
+        if (!bgra) {
+            return nullptr;
+        }
+        p = bgra;
+    }
+
+    Pixmap* res = AllocPixmap(p->width, p->height, PixmapFormat::BGR8);
+    if (!res) {
+        return p;
+    }
+    bool isRgba = p->format == PixmapFormat::RGBA8;
+    for (int y = 0; y < p->height; y++) {
+        const u8* s = p->data + ((size_t)y * p->stride);
+        u8* d = res->data + ((size_t)y * res->stride);
+        for (int x = 0; x < p->width; x++, s += 4, d += 3) {
+            u8 b = isRgba ? s[2] : s[0];
+            u8 g = s[1];
+            u8 r = isRgba ? s[0] : s[2];
+            if (p->hasAlpha) {
+                b = BlendOver(b, 255, s[3], p->premultiplied);
+                g = BlendOver(g, 255, s[3], p->premultiplied);
+                r = BlendOver(r, 255, s[3], p->premultiplied);
+            }
+            d[0] = b;
+            d[1] = g;
+            d[2] = r;
+        }
+    }
+    res->xres = p->xres;
+    res->yres = p->yres;
+    FreePixmap(p);
+    return res;
+}
+
 // Like BlitPixmap(), but honours the source alpha. BlitPixmap() is a straight
 // SRCCOPY, which paints the transparent parts of an icon black; anything drawn
 // over an arbitrary background (toolbar icons on the home page) needs this.

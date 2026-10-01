@@ -79,6 +79,7 @@ Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
 // out of one whose format is Native. Returns null if there's nothing to copy
 Pixmap* PixmapCopyAs32bppDIB(const Pixmap* p);
 Pixmap* PixmapToBgra(Pixmap* p);
+Pixmap* PixmapToBgr(Pixmap* p);
 Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb);
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
 void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor = 0, Vec<Rect>* skipRects = nullptr);

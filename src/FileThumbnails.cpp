@@ -84,7 +84,8 @@ Pixmap* LoadThumbnail(FileState* fs) {
     if (len(data) == 0) {
         return nullptr;
     }
-    Pixmap* px = PixmapFromData(data);
+    // 24bpp: thumbnails stay in memory for every Home entry shown
+    Pixmap* px = PixmapToBgr(PixmapFromData(data));
     str::Free(data);
     if (PixmapIsEmpty(px)) {
         FreePixmap(px);
@@ -127,7 +128,7 @@ void SetThumbnail(FileState* fs, Pixmap* bmp) {
         return;
     }
     FreePixmap(fs->thumbnail);
-    fs->thumbnail = bmp;
+    fs->thumbnail = PixmapToBgr(bmp);
     SaveThumbnail(fs);
 }
 

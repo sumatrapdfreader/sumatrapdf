@@ -142,7 +142,7 @@ Pixmap* RenderPageThumbnail(EngineBase* engine, int pageNo, Location loc, int ro
     pageRect = engine->Transform(pageRect, boxPage, 1.0f, rotation, true);
     RenderPageArgs args(pageNo, zoom, rotation, &pageRect, RenderTarget::View);
     args.loc = loc;
-    return engine->RenderPage(args);
+    return PixmapToBgr(engine->RenderPage(args));
 }
 
 static void FinishThumbnailRender(ThumbnailRenderTask* task) {
