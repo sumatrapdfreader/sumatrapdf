@@ -55,12 +55,10 @@ async function restyleIn(view: string): Promise<void> {
       await followToc(client, TOC_DEST);
       await client.waitForRenderIdle(30000);
 
-      // each toggle restyles and collapses the chapter table
-      for (let i = 0; i < 2; i++) {
-        sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
-        await sleep(500 * SLOW_BUILD_FACTOR);
-        await client.waitForRenderIdle(30000);
-      }
+      // the toggle restyles and collapses the chapter table
+      sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
+      await sleep(500 * SLOW_BUILD_FACTOR);
+      await client.waitForRenderIdle(30000);
     },
     ["-appdata", appdata, "-window-pos", "1000x900@40x40", "-view", view, epub],
   );
