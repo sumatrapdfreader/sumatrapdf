@@ -23,7 +23,7 @@ const kMenuBarCmdFirst = 50000;
 // index of "F&avorites" in menuDefMenubar
 const kFavoritesMenuIdx = 6;
 // a re-open within 500ms of dismissing the popup is treated as toggle-close
-const kMenuBarToggleMs = 700;
+const kMenuReopenMs = 510;
 
 function makePdf(): string {
   const objects = [
@@ -58,7 +58,7 @@ async function favoritesMenuIds(frame: number, names: string[]): Promise<number[
   const popup = await waitForContextMenu();
   const ids = new Array(names.length).fill(0);
   collectIds(getPopupMenuHandle(popup), names, ids);
-  await pressKey(frame, VK_ESCAPE);
+  await pressKey(frame, VK_ESCAPE, 0);
   return ids;
 }
 
@@ -87,7 +87,6 @@ export async function testit(): Promise<void> {
 
     // the Favorites menu only exists as a menu bar, which is off by default here
     sendMessage(frame, WM_COMMAND, cmdId("CmdToggleMenuBar"), 0);
-    await Bun.sleep(kMenuBarToggleMs);
 
     const names = ["Page 1", "Page 2"];
     const [id1, id2] = await favoritesMenuIds(frame, names);
@@ -98,7 +97,7 @@ export async function testit(): Promise<void> {
       throw new Error(`favorites share command id ${id1}`);
     }
 
-    await Bun.sleep(kMenuBarToggleMs);
+    await Bun.sleep(kMenuReopenMs);
     const [id1Again] = await favoritesMenuIds(frame, names);
     if (id1Again !== id1) {
       throw new Error(`command id changed when the menu was rebuilt: ${id1} -> ${id1Again}`);
