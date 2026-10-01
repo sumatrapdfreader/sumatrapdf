@@ -260,10 +260,20 @@ export async function testit(): Promise<void> {
     await client.setNotificationsEnabled(false);
     const before = captureWindowPixels(canvas);
     const blueBefore = countPreviewBlue(before, start, end);
+    // SetCursorPos queues a WM_MOUSEMOVE with no Shift, which can land after the
+    // synthetic one and undo the snap. Resend until the 45-degree preview sticks.
     moveMouse(canvas, end, MK_SHIFT);
-    state = await placementState(client);
-    const snapped = /end=(-?\d+),(-?\d+)/.exec(state.raw);
-    if (!snapped || Math.abs(+snapped[1]! - start.x - (+snapped[2]! - start.y)) > 2) {
+    let snapped: RegExpExecArray | null = null;
+    for (let i = 0; i < 4; i++) {
+      sendMessage(canvas, WM_MOUSEMOVE, MK_SHIFT, packCoords(end.x, end.y));
+      state = await placementState(client);
+      snapped = /end=(-?\d+),(-?\d+)/.exec(state.raw);
+      if (snapped && Math.abs(+snapped[1]! - start.x - (+snapped[2]! - start.y)) <= 2) {
+        break;
+      }
+      snapped = null;
+    }
+    if (!snapped) {
       throw new Error(`line-annotation-placement: Shift did not snap preview to 45 degrees\n${state.raw}`);
     }
 

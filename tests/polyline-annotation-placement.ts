@@ -398,15 +398,22 @@ export async function testit(): Promise<void> {
     await pressKey(frame, VK_ESCAPE, 0);
     await waitForPlacement(client, false);
 
-    // Shift snaps the segment from the previous vertex to 45 degrees (issue #6195)
+    // Shift snaps the segment from the previous vertex to 45 degrees (issue #6195).
+    // SetCursorPos queues a WM_MOUSEMOVE with no Shift, which can land after the
+    // synthetic one and undo the snap. Resend until the horizontal preview sticks.
     sendCommand(frame, cmdId("CmdCreateAnnotPolyLine"));
     await waitForPlacement(client, true);
     await clickAt(canvas, p1.x, p1.y, 0);
     const nearlyFlat = { x: p1.x + 150, y: p1.y + 12 };
     moveMouse(canvas, nearlyFlat, MK_SHIFT);
-    state = await placementState(client);
-    const end = /polyLinePlacement [^\n]*end=(-?\d+),(-?\d+)/.exec(state.raw);
-    if (!end || Math.abs(+end[2]! - p1.y) > 1) {
+    let snapped = false;
+    for (let i = 0; i < 4 && !snapped; i++) {
+      sendMessage(canvas, WM_MOUSEMOVE, MK_SHIFT, packCoords(nearlyFlat.x, nearlyFlat.y));
+      state = await placementState(client);
+      const end = /polyLinePlacement [^\n]*end=(-?\d+),(-?\d+)/.exec(state.raw);
+      snapped = !!end && Math.abs(+end[2]! - p1.y) <= 1 && Math.abs(+end[1]! - p1.x) > 40;
+    }
+    if (!snapped) {
       throw new Error(`polyline-annotation-placement: Shift did not snap preview to horizontal\n${state.raw}`);
     }
     moveMouse(canvas, nearlyFlat);

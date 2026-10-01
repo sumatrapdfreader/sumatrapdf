@@ -1840,6 +1840,50 @@ static Annotation* AnnotationLockingMouse(MainWindow* win) {
 // started must not act on the page
 static bool gPressOnlyDeselected = false;
 
+// Shift snaps a line end or polyline vertex. Mouse-up applies this too: SetCapture
+// posts a move at the real cursor with no key flags, after the last drag sample.
+static void UpdateDraggedLineOrVertex(MainWindow* win, DisplayModel* dm, int x, int y, WPARAM key) {
+    Annotation* annot = win->annotationBeingDragged;
+    if (!annot || !dm) {
+        return;
+    }
+    auto handle = (ResizeHandle)win->resizeHandle;
+    bool shift = IsShiftPressed() || bit::IsMaskSet(key, (WPARAM)MK_SHIFT);
+    if (IsLineEndpointHandle(handle)) {
+        int linePageNo = PageNo(annot);
+        Point screenPt{x, y};
+        if (shift) {
+            Point fixed = handle == ResizeHandle::LineStart
+                              ? dm->CvtToScreen(linePageNo, win->annotationOriginalLineEnd)
+                              : dm->CvtToScreen(linePageNo, win->annotationOriginalLineStart);
+            screenPt = SnapLineEndpoint(fixed, screenPt);
+        }
+        PointF pagePt = dm->CvtFromScreen(screenPt, linePageNo);
+        if (handle == ResizeHandle::LineStart) {
+            win->annotationLinePreviewStart = pagePt;
+        } else {
+            win->annotationLinePreviewEnd = pagePt;
+        }
+        return;
+    }
+    if (!IsVertexHandle(handle)) {
+        return;
+    }
+    Vec<PointF>& pts = win->annotationVertexPreview;
+    int idx = win->annotationResizeVertexIndex;
+    if (idx < 0 || idx >= len(pts)) {
+        return;
+    }
+    Point screenPt{x, y};
+    // snap to the segment from the previous vertex (next one for the first)
+    int anchor = idx > 0 ? idx - 1 : idx + 1;
+    if (shift && anchor < len(pts)) {
+        int polyPageNo = PageNo(annot);
+        screenPt = SnapLineEndpoint(dm->CvtToScreen(polyPageNo, pts[anchor]), screenPt);
+    }
+    pts[idx] = dm->CvtFromScreen(screenPt, PageNo(annot));
+}
+
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
     if (ReadingBarOnMouseMove(win, x, y)) {
         return;
@@ -2041,38 +2085,9 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                     auto handle = (ResizeHandle)win->resizeHandle;
                     SetCursorCached(GetCursorForResizeHandle(handle));
 
-                    if (IsLineEndpointHandle(handle)) {
-                        int linePageNo = PageNo(annot);
-                        Point screenPt{x, y};
-                        if (IsShiftPressed() || bit::IsMaskSet(key, (WPARAM)MK_SHIFT)) {
-                            Point fixed = handle == ResizeHandle::LineStart
-                                              ? dm->CvtToScreen(linePageNo, win->annotationOriginalLineEnd)
-                                              : dm->CvtToScreen(linePageNo, win->annotationOriginalLineStart);
-                            screenPt = SnapLineEndpoint(fixed, screenPt);
-                        }
-                        PointF pagePt = dm->CvtFromScreen(screenPt, linePageNo);
-                        if (handle == ResizeHandle::LineStart) {
-                            win->annotationLinePreviewStart = pagePt;
-                        } else {
-                            win->annotationLinePreviewEnd = pagePt;
-                        }
-                        // Overlay only: leave the PDF page bitmap alone until
-                        // the drag ends.
-                        ScheduleRepaint(win, 0);
-                    } else if (IsVertexHandle(handle)) {
-                        int polyPageNo = PageNo(annot);
-                        Vec<PointF>& pts = win->annotationVertexPreview;
-                        int idx = win->annotationResizeVertexIndex;
-                        if (idx >= 0 && idx < len(pts)) {
-                            Point screenPt{x, y};
-                            // snap to the segment from the previous vertex (next one for the first)
-                            int anchor = idx > 0 ? idx - 1 : idx + 1;
-                            bool shift = IsShiftPressed() || bit::IsMaskSet(key, (WPARAM)MK_SHIFT);
-                            if (shift && anchor < len(pts)) {
-                                screenPt = SnapLineEndpoint(dm->CvtToScreen(polyPageNo, pts[anchor]), screenPt);
-                            }
-                            pts[idx] = dm->CvtFromScreen(screenPt, polyPageNo);
-                        }
+                    if (IsLineEndpointHandle(handle) || IsVertexHandle(handle)) {
+                        // Overlay only: leave the PDF page bitmap alone until the drag ends.
+                        UpdateDraggedLineOrVertex(win, dm, x, y, key);
                         ScheduleRepaint(win, 0);
                     } else if (win->annotationResizeOutlineOnly) {
                         // Outline only: writing the annotation re-lays out its
@@ -2712,6 +2727,9 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     bool didDragMouse = !win->dragStartPending || IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
         if (win->annotationBeingResized) {
+            if (didDragMouse) {
+                UpdateDraggedLineOrVertex(win, dm, x, y, key);
+            }
             StopAnnotationResize(win, !didDragMouse);
             // Trigger cursor update after resize
             SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);

@@ -1032,10 +1032,16 @@ bool AnnotationPlacementOnMouseMove(MainWindow* win, Point pt, WPARAM key) {
             }
             break;
         case AnnotPlacementKind::Line:
-            if (p.pageNo > 0 && pt != p.end) {
+            if (p.pageNo > 0) {
                 Point start = dm->CvtToScreen(p.pageNo, p.start);
-                p.end = bit::IsMaskSet(key, (WPARAM)MK_SHIFT) ? SnapLineEndpoint(start, pt) : pt;
-                ScheduleRepaint(win, 0);
+                bool shift = bit::IsMaskSet(key, (WPARAM)MK_SHIFT);
+                Point end = shift ? SnapLineEndpoint(start, pt) : pt;
+                // Compare the snapped point, not the pointer: Shift at the same
+                // spot still has to move the preview, and releasing it has to put it back.
+                if (end != p.end) {
+                    p.end = end;
+                    ScheduleRepaint(win, 0);
+                }
             }
             break;
         case AnnotPlacementKind::PolyLine:
