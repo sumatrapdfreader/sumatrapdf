@@ -19,22 +19,27 @@ import {
 } from "./winapi";
 import { killAndWait, launchControlled, pressKey, sendCommand, waitForExit } from "./win-automation";
 
-async function waitForChangeThemeDialog(pid: number, timeoutMs = 5000): Promise<number> {
+function findChangeThemeDialog(pid: number): number {
+  let found = 0;
+  enumWindows((hwnd) => {
+    if (getWindowPid(hwnd) === pid && getWindowText(hwnd) === "Change Theme") {
+      found = hwnd;
+    }
+    return true;
+  });
+  return found;
+}
+
+async function waitForChangeThemeDialog(pid: number, open: boolean, timeoutMs = 5000): Promise<number> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    let found = 0;
-    enumWindows((hwnd) => {
-      if (getWindowPid(hwnd) === pid && getWindowText(hwnd) === "Change Theme") {
-        found = hwnd;
-      }
-      return true;
-    });
-    if (found) {
+    const found = findChangeThemeDialog(pid);
+    if (open === (found !== 0)) {
       return found;
     }
     await sleep(30);
   }
-  throw new Error("issue-5995: Change Theme dialog did not appear");
+  throw new Error(`issue-5995: Change Theme dialog did not ${open ? "appear" : "close"}`);
 }
 
 function savedTheme(settingsPath: string): string {
@@ -47,9 +52,10 @@ async function chooseAdjacentTheme(appDataDir: string, key: number): Promise<voi
   const { proc, client, frame } = await launchControlled(["-appdata", appDataDir], { saveSettings: true });
   try {
     sendCommand(frame, cmdId("CmdChangeTheme"));
-    const dialog = await waitForChangeThemeDialog(proc.pid!);
-    await pressKey(dialog, key);
-    await pressKey(dialog, VK_RETURN);
+    const dialog = await waitForChangeThemeDialog(proc.pid!, true);
+    await pressKey(dialog, key, 0);
+    await pressKey(dialog, VK_RETURN, 0);
+    await waitForChangeThemeDialog(proc.pid!, false);
     postMessage(frame, WM_CLOSE, 0, 0);
     if (!(await waitForExit(proc))) {
       throw new Error("issue-5995: SumatraPDF did not exit after WM_CLOSE");
