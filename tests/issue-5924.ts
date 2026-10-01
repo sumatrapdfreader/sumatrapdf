@@ -14,8 +14,8 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control";
-import { EXE, makeMinimalPdf, runStandalone, tmpPath } from "./util";
-import { FRAME_CLASS } from "./win-automation";
+import { cmdId, EXE, makeMinimalPdf, runStandalone, tmpPath } from "./util";
+import { FRAME_CLASS, sendCommandSync } from "./win-automation";
 import { sleep, waitForTopWindow } from "./winapi";
 
 const HOST = "https://sumatrapdf.markdown/";
@@ -131,20 +131,23 @@ export async function testit(): Promise<void> {
       if (r.tabs.length !== 2) {
         fail(`opening sub/deep.pdf should have left 2 tabs, there are ${r.tabs.length}`, r);
       }
-    },
-    [join(dir, "index.md")],
-  );
 
-  // deep.pdf became the current tab, so a second run for the other url form: a
-  // full virtual url, as a TOC destination or a new-window request has it
-  await withControlledSumatra(
-    EXE,
-    async (client, proc) => {
-      const frame = await waitForTopWindow(proc.pid!, FRAME_CLASS);
-      if (!frame) {
-        throw new Error("issue-5924: no frame window");
+      // Return to the markdown tab and reuse the process for the full virtual
+      // URL form used by TOC destinations and new-window requests.
+      sendCommandSync(frame, cmdId("CmdClose"));
+      const closeDeadline = Date.now() + 4000;
+      let markdownCurrent = false;
+      while (Date.now() < closeDeadline) {
+        const closed = parse(String((await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]))[1] ?? ""));
+        if (closed.tabs.length === 1 && closed.tabs[0]!.file.toLowerCase().endsWith("\\index.md")) {
+          markdownCurrent = true;
+          break;
+        }
+        await sleep(30);
       }
-      await client.waitForRenderIdle();
+      if (!markdownCurrent) {
+        throw new Error("issue-5924: closing deep.pdf did not return to index.md");
+      }
 
       const res = await client.request(ControlCommand.TestMarkdownFollowLink, [`${HOST}doc.pdf`, 1]);
       const clicked = parse(String(res[1] ?? ""));
