@@ -2744,7 +2744,7 @@ bool EngineCbx::FinishLoading() {
         auto* pi = new ImagePageInfo();
         VecAppend(pageInfos, pi);
     }
-    files = std::move(pageFiles);
+    files = pageFiles;
     pageCount = nFiles;
 
     TocItem* tocBuildRoot = nullptr;
