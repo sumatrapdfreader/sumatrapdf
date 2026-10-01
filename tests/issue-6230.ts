@@ -4,8 +4,8 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { launchControlled, sendCommand, waitForFocusClass, killAndWait } from "./win-automation.ts";
-import { sendMessage, WM_CHAR } from "./winapi.ts";
+import { launchControlled, sendCommand, waitForFocusClass, killAndWait, pressKey } from "./win-automation.ts";
+import { sendMessage, VK_RETURN, WM_CHAR } from "./winapi.ts";
 
 // "x" matches on page 40 and page 80, "xy" only on page 80. Page filler text
 // avoids the letters x and y so each search moves the view.
@@ -106,10 +106,12 @@ export async function testit(): Promise<void> {
 
     sendCommand(frame, cmdId("CmdFindFirst"));
     const edit = await waitForFocusClass(frame, "Edit");
-    // typed with a pause so both incremental searches run and move the view
+    // Run both incremental searches so each moves the view.
     sendMessage(edit, WM_CHAR, "x".charCodeAt(0), 0);
+    await pressKey(edit, VK_RETURN, 0);
     await expectPage(client, firstMatchPage, "search for 'x'");
     sendMessage(edit, WM_CHAR, "y".charCodeAt(0), 0);
+    await pressKey(edit, VK_RETURN, 0);
     await expectPage(client, secondMatchPage, "search for 'xy'");
 
     sendCommand(frame, cmdId("CmdNavigateBack"));
