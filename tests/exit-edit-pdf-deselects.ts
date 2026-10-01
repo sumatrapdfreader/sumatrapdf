@@ -7,14 +7,17 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { sleep } from "./winapi.ts";
 import { clickAt, findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
+
+type Rect = { x: number; y: number; dx: number; dy: number };
 
 type State = {
   selected: boolean;
   editToolbar: boolean;
   propertyRow: boolean;
   placing: boolean;
-  square: { x: number; y: number; dx: number; dy: number } | null;
+  square: Rect | null;
   raw: string;
 };
 
@@ -47,6 +50,33 @@ async function state(client: ControlClient): Promise<State> {
   };
 }
 
+function sameRect(a: Rect | null, b: Rect | null): boolean {
+  return !!a && !!b && a.x === b.x && a.y === b.y && a.dx === b.dx && a.dy === b.dy;
+}
+
+function clickSquare(canvas: number, sq: Rect): Promise<void> {
+  return clickAt(canvas, sq.x + Math.floor(sq.dx / 2), sq.y + Math.floor(sq.dy / 2), 0);
+}
+
+// The Edit PDF toolbar row shrinks the canvas and fit-page zooms again. Two
+// matching reads means that move has finished, so the click lands on the square.
+async function stableState(client: ControlClient): Promise<State> {
+  await client.waitForRenderIdle();
+  let prev = await state(client);
+  const deadline = Date.now() + 2000;
+  for (;;) {
+    await sleep(40);
+    const cur = await state(client);
+    if (sameRect(prev.square, cur.square)) {
+      return cur;
+    }
+    if (Date.now() > deadline) {
+      return cur;
+    }
+    prev = cur;
+  }
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("exit-edit-pdf-deselects");
   rmSync(dir, { recursive: true, force: true });
@@ -75,15 +105,22 @@ export async function testit(): Promise<void> {
     const canvas = findCanvas(frame);
 
     sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
-    let s = await state(client);
+    let s = await stableState(client);
     if (!s.editToolbar || !s.square) {
       throw new Error(`exit-edit-pdf-deselects: Edit PDF mode did not turn on\n${s.raw}`);
     }
-    const sq = s.square;
-    await clickAt(canvas, sq.x + Math.floor(sq.dx / 2), sq.y + Math.floor(sq.dy / 2), 0);
+    const aimed = s.square;
+    await clickSquare(canvas, aimed);
     s = await state(client);
+    // one more click if fit-page moved the square after the stable sample
+    if ((!s.selected || !s.propertyRow) && s.square && !sameRect(s.square, aimed)) {
+      await clickSquare(canvas, s.square);
+      s = await state(client);
+    }
     if (!s.selected || !s.propertyRow) {
-      throw new Error(`exit-edit-pdf-deselects: the click did not select the square\n${s.raw}`);
+      throw new Error(
+        `exit-edit-pdf-deselects: the click did not select the square\naimed=${aimed.x},${aimed.y},${aimed.dx},${aimed.dy}\n${s.raw}`,
+      );
     }
 
     sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
