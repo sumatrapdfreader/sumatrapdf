@@ -133,87 +133,90 @@ function pressVKey(hwnd: number, vk: number): void {
   postMessage(hwnd, WM_KEYUP, vk, 0);
 }
 
-async function testTextPdf(): Promise<void> {
-  const pdf = tmpPath("issue-4684.pdf");
-  writeFileSync(pdf, makeTextPdf());
+async function testTextPdf(client: ControlClient, frame: number): Promise<void> {
+  await client.waitForRenderIdle();
 
-  await withControlledSumatra(
-    EXE,
-    async (client, proc) => {
-      const frame = await waitForTopWindow(proc.pid!, FRAME_CLASS);
-      if (!frame) {
-        throw new Error("no frame window");
-      }
-      await client.waitForRenderIdle();
+  const fail = (msg: string, dump: string) => {
+    throw new Error(`${msg}\nstate dump:\n${dump}`);
+  };
 
-      const fail = (msg: string, dump: string) => {
-        throw new Error(`${msg}\nstate dump:\n${dump}`);
-      };
+  let { state, dump } = await getState(client);
+  if (!state.canSelect) {
+    fail("keyboard selection should be available for a text PDF", dump);
+  }
+  if (state.active) {
+    fail("mode should start off", dump);
+  }
 
-      let { state, dump } = await getState(client);
-      if (!state.canSelect) {
-        fail("keyboard selection should be available for a text PDF", dump);
-      }
-      if (state.active) {
-        fail("mode should start off", dump);
-      }
+  // turn the mode on
+  sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
+  ({ state, dump } = await waitForState(client, (s) => s.active));
+  if (state.page !== 1 || state.glyph !== 0) {
+    fail("caret should start at the first glyph of page 1", dump);
+  }
+  if (!state.hasCaret) {
+    fail("caret should have a screen rect", dump);
+  }
+  if (state.selRects !== 0) {
+    fail("moving in without selecting should not select anything", dump);
+  }
 
-      // turn the mode on
-      sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
-      ({ state, dump } = await waitForState(client, (s) => s.active));
-      if (state.page !== 1 || state.glyph !== 0) {
-        fail("caret should start at the first glyph of page 1", dump);
-      }
-      if (!state.hasCaret) {
-        fail("caret should have a screen rect", dump);
-      }
-      if (state.selRects !== 0) {
-        fail("moving in without selecting should not select anything", dump);
-      }
+  // visual mode: plain arrows extend the selection
+  await postChar(frame, "v");
+  ({ state, dump } = await waitForState(client, (s) => s.visual));
 
-      // visual mode: plain arrows extend the selection
-      await postChar(frame, "v");
-      ({ state, dump } = await waitForState(client, (s) => s.visual));
+  for (let i = 0; i < 9; i++) {
+    pressVKey(frame, VK_RIGHT);
+  }
+  ({ state, dump } = await waitForState(client, (s) => s.glyph === 9 && s.selRects !== 0));
+  if (state.glyph !== 9) {
+    fail("9 right arrows should move the caret 9 glyphs", dump);
+  }
+  if (state.selRects === 0) {
+    fail("arrows in visual mode should select text", dump);
+  }
+  if (state.text !== LINE1.slice(0, 9)) {
+    fail(`selected text should be "${LINE1.slice(0, 9)}", is "${state.text}"`, dump);
+  }
 
-      for (let i = 0; i < 9; i++) {
-        pressVKey(frame, VK_RIGHT);
-      }
-      ({ state, dump } = await waitForState(client, (s) => s.glyph === 9 && s.selRects !== 0));
-      if (state.glyph !== 9) {
-        fail("9 right arrows should move the caret 9 glyphs", dump);
-      }
-      if (state.selRects === 0) {
-        fail("arrows in visual mode should select text", dump);
-      }
-      if (state.text !== LINE1.slice(0, 9)) {
-        fail(`selected text should be "${LINE1.slice(0, 9)}", is "${state.text}"`, dump);
-      }
+  // End extends to the end of the line
+  pressVKey(frame, VK_END);
+  ({ state, dump } = await waitForState(client, (s) => s.text === LINE1));
 
-      // End extends to the end of the line
-      pressVKey(frame, VK_END);
-      ({ state, dump } = await waitForState(client, (s) => s.text === LINE1));
+  // Home from there collapses back toward the line start
+  pressVKey(frame, VK_HOME);
+  ({ state, dump } = await waitForState(client, (s) => s.glyph === 0));
 
-      // Home from there collapses back toward the line start
-      pressVKey(frame, VK_HOME);
-      ({ state, dump } = await waitForState(client, (s) => s.glyph === 0));
+  // 'y' copies the selection and leaves the mode
+  pressVKey(frame, VK_END); // select something again
+  await waitForState(client, (s) => s.text === LINE1);
+  await postChar(frame, "y");
+  ({ state, dump } = await waitForState(client, (s) => !s.active));
 
-      // 'y' copies the selection and leaves the mode
-      pressVKey(frame, VK_END); // select something again
-      await waitForState(client, (s) => s.text === LINE1);
-      await postChar(frame, "y");
-      ({ state, dump } = await waitForState(client, (s) => !s.active));
-
-      // and the command toggles the mode back off
-      sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
-      ({ state, dump } = await waitForState(client, (s) => s.active));
-      sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
-      ({ state, dump } = await waitForState(client, (s) => !s.active));
-    },
-    [pdf],
-  );
+  // and the command toggles the mode back off
+  sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
+  ({ state, dump } = await waitForState(client, (s) => s.active));
+  sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
+  ({ state, dump } = await waitForState(client, (s) => !s.active));
 }
 
-async function testImageDoc(): Promise<void> {
+async function testImageDoc(client: ControlClient, frame: number): Promise<void> {
+  await client.waitForRenderIdle();
+  let { state, dump } = await getState(client);
+  if (state.canSelect) {
+    throw new Error(`keyboard selection must be unavailable for an image\n${dump}`);
+  }
+  // and the command must not turn it on
+  sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
+  ({ state, dump } = await getState(client));
+  if (state.active) {
+    throw new Error(`mode must not turn on for an image\n${dump}`);
+  }
+}
+
+export async function testit(): Promise<void> {
+  const pdf = tmpPath("issue-4684.pdf");
+  writeFileSync(pdf, makeTextPdf());
   const png = tmpPath("issue-4684.png");
   writeFileSync(png, PNG_1PX);
 
@@ -224,25 +227,12 @@ async function testImageDoc(): Promise<void> {
       if (!frame) {
         throw new Error("no frame window");
       }
-      await client.waitForRenderIdle();
-      let { state, dump } = await getState(client);
-      if (state.canSelect) {
-        throw new Error(`keyboard selection must be unavailable for an image\n${dump}`);
-      }
-      // and the command must not turn it on
-      sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
-      ({ state, dump } = await getState(client));
-      if (state.active) {
-        throw new Error(`mode must not turn on for an image\n${dump}`);
-      }
+      await testImageDoc(client, frame);
+      sendCommandSync(frame, cmdId("CmdPrevTab"));
+      await testTextPdf(client, frame);
     },
-    [png],
+    [pdf, png],
   );
-}
-
-export async function testit(): Promise<void> {
-  await testTextPdf();
-  await testImageDoc();
   console.log("issue-4684: OK");
 }
 
