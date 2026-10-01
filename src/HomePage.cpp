@@ -100,6 +100,7 @@ constexpr int kAboutLineOuterSize = 1;
 #endif
 constexpr int kAboutLineSepSize = 1;
 
+// one tip per line; cmd/trans-dl.ts extracts each line for translation
 static Str sumatraTips = StrL(R"tips(You can [customize scrollbar](CmdChangeScrollbar).
 You can [customize keyboard shortcuts](Help/Customize-keyboard-shortcuts).
 You can [customize toolbar](Help/Customize-toolbar).
@@ -141,7 +142,7 @@ static bool gTipsParsed = false;
 static bool gSelectedIsPromo = false;
 static int gSelectedTipIdx = -1;
 
-static void CollectTipsFromString(Str src, Str prefix, StrVec* out) {
+static void CollectTipsFromString(Str src, StrVec* out) {
     StrVec lines;
     Split(&lines, src, StrL("\n"));
     for (int i = 0; i < len(lines); i++) {
@@ -149,11 +150,7 @@ static void CollectTipsFromString(Str src, Str prefix, StrVec* out) {
         if (str::IsEmptyOrWhiteSpace(line)) {
             continue;
         }
-        if (prefix) {
-            out->Append(str::JoinTemp(prefix, line));
-        } else {
-            out->Append(line);
-        }
+        out->Append(line);
     }
 }
 
@@ -166,7 +163,11 @@ static Str SelectedTipLine() {
     if (gSelectedTipIdx >= len(v)) {
         return {};
     }
-    return v[gSelectedTipIdx];
+    if (gSelectedIsPromo) {
+        return v[gSelectedTipIdx];
+    }
+    // translated when shown, so a language change applies without re-parsing
+    return str::JoinTemp(Tr("Tip:"), StrL(" "), Tr(v[gSelectedTipIdx]));
 }
 
 static void PickRandomTipOrPromo() {
@@ -184,8 +185,8 @@ static void EnsureTipsParsed() {
     if (gTipsParsed) {
         return;
     }
-    CollectTipsFromString(sumatraTips, StrL("Tip: "), &gTipLines);
-    CollectTipsFromString(sumatraPromos, {}, &gPromoLines);
+    CollectTipsFromString(sumatraTips, &gTipLines);
+    CollectTipsFromString(sumatraPromos, &gPromoLines);
     gTipsParsed = true;
     PickRandomTipOrPromo();
 }

@@ -7,7 +7,7 @@
  *   marked/mermaid/manual into out/<cfg>/embedded[-static].lzsa = IDR_EMBEDDED_PAK)
  *
  * Flow:
- *   1. Extract Tr() / TrN() strings from src + command names
+ *   1. Extract Tr() / TrN() strings from src + command names + home page tips
  *   2. POST them to /api/dltransfor (marks active strings; returns sha1 + translations)
  *   3. Fix suspicious translations (trailing whitespace / \n / \r) via /api/edittranslation
  *      as user "ai fix"
@@ -158,8 +158,27 @@ function extractStringsFromCFilesNoPaths(): string[] {
   return unique;
 }
 
+// home page tips: one per line of the sumatraTips raw string, translated at
+// runtime with Tr(line). Their markup ([text](link), (Kbd/...)) must survive
+const tipsSrcPath = join("src", "HomePage.cpp");
+const tipsPattern = /static Str sumatraTips = StrL\(R"tips\(([\s\S]*?)\)tips"\);/;
+
+function extractTips(): string[] {
+  const m = tipsPattern.exec(readFileSync(tipsSrcPath, "utf-8"));
+  if (!m) {
+    throw new Error(`sumatraTips not found in ${tipsSrcPath}`);
+  }
+  const tips = m[1]
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  console.log(`${tips.length} tips`);
+  return tips;
+}
+
 function extractStringsToTranslate(): string[] {
   const strs = extractStringsFromCFilesNoPaths();
+  strs.push(...extractTips());
   for (let i = 1; i < commands.length; i += 2) {
     strs.push(commands[i]);
   }
@@ -949,6 +968,7 @@ For each index i, output the marker <<<i>>> on its own line, then the translatio
 Do not put the marker inside the translation. Do not renumber. Do not skip indices.
 You may use quotes, newlines, and HTML freely inside translations — only the <<<i>>> lines are special.
 Keep placeholders like %s, %d, %1 unchanged.
+Some strings have markup: in [text](target) translate only the text and keep (target) as is; keep (Kbd/...) and (Key/...) unchanged.
 Keep access-key ampersands if present (e.g. "&File" → localized with & before the hotkey letter).
 No markdown fences. No explanation before or after.
 
