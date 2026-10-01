@@ -20,7 +20,7 @@ import {
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { clickAt, findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { clickAt, findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 type Rect = { x: number; y: number; dx: number; dy: number };
 
@@ -126,12 +126,10 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     // the point form creates immediately and selects the annotation
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(150, 300));
-    await sleep(400);
     await client.waitForRenderIdle();
 
     const before = await annotState(client);
@@ -149,7 +147,6 @@ export async function testit(): Promise<void> {
     sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(endX, endY));
     sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(hx, hy));
     sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(endX, endY));
-    await sleep(200);
 
     const grown = { x: before.rect.x, y: before.rect.y, dx: before.rect.dx + 60, dy: before.rect.dy + 40 };
     // the drag has mouse capture, so a real mouse move landing on the canvas
@@ -174,7 +171,6 @@ export async function testit(): Promise<void> {
     }
 
     sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(endX, endY));
-    await sleep(300);
     await client.waitForRenderIdle();
 
     const after = await annotState(client);
@@ -220,7 +216,7 @@ export async function testit(): Promise<void> {
     if (!tbHwnd) {
       throw new Error("free-text-edit-toolbar: property row window not found");
     }
-    await clickAt(tbHwnd, del.x - placed.x + Math.floor(del.dx / 2), del.y - placed.y + Math.floor(del.dy / 2));
+    await clickAt(tbHwnd, del.x - placed.x + Math.floor(del.dx / 2), del.y - placed.y + Math.floor(del.dy / 2), 0);
     const deadline = Date.now() + 5_000;
     let n = await annotCount(client);
     while (n !== 0 && Date.now() < deadline) {
