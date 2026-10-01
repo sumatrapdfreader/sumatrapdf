@@ -19,6 +19,7 @@ import {
   setCursorPos,
   sleep,
   VK_DOWN,
+  VK_RETURN,
   WM_COMMAND,
   WM_KEYDOWN,
   WM_MOUSEMOVE,
@@ -29,9 +30,9 @@ import {
   findCanvas,
   killAndWait,
   launchControlled,
-  pressEnter,
   pressEscape,
   sendCommand,
+  sendCommandSync,
 } from "./win-automation.ts";
 
 type PlacementState = {
@@ -141,7 +142,7 @@ async function executeFromCommandPalette(client: ControlClient, frame: number): 
     const raw = String(res[1] ?? "");
     const m = /cmd=(-?\d+)/.exec(raw);
     if (res[0] === 0 && m && +m[1]! === cmdId("CmdCreateAnnotText")) {
-      await pressEnter(edit);
+      postMessage(edit, WM_KEYDOWN, VK_RETURN, 0);
       return;
     }
     postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
@@ -178,12 +179,16 @@ export async function testit(): Promise<void> {
     const canvasRect = getClientRect(canvas);
     const pagePoint = { x: Math.floor(canvasRect.right / 2), y: Math.floor(canvasRect.bottom / 2) };
 
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
     const textButton = textToolbarRect(toolbarDump);
     const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
-    await clickAt(toolbar, textButton.x + Math.floor(textButton.dx / 2), textButton.y + Math.floor(textButton.dy / 2));
+    await clickAt(
+      toolbar,
+      textButton.x + Math.floor(textButton.dx / 2),
+      textButton.y + Math.floor(textButton.dy / 2),
+      0,
+    );
 
     let state = await waitForPlacement(client, true);
     if (
@@ -202,13 +207,13 @@ export async function testit(): Promise<void> {
       throw new Error(`text-annotation-placement: SVG placement cursor was not active\n${state.raw}`);
     }
 
-    await clickAt(canvas, 2, Math.floor(canvasRect.bottom / 2));
+    await clickAt(canvas, 2, Math.floor(canvasRect.bottom / 2), 0);
     state = await placementState(client);
     if (!state.active || state.annotations !== 0) {
       throw new Error(`text-annotation-placement: click outside the page ended placement\n${state.raw}`);
     }
 
-    await clickAt(canvas, pagePoint.x, pagePoint.y);
+    await clickAt(canvas, pagePoint.x, pagePoint.y, 0);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 1) {
       throw new Error(`text-annotation-placement: page click did not place exactly one annotation\n${state.raw}`);
