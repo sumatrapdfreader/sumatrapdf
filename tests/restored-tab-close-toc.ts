@@ -10,9 +10,9 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { cmdId, pollUntil, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, killProcessesNamed, launchControlled, sendCommand, takeStderr } from "./win-automation.ts";
-import { getWindowText, sleep } from "./winapi.ts";
+import { getWindowText } from "./winapi.ts";
 
 const OTHER_PDF = resolve("tests/issue-1809.pdf");
 // has an outline, so the TOC tree view shows its items
@@ -67,9 +67,12 @@ export async function testit(): Promise<void> {
     // close the restored, current tab; the other tab must become current.
     // Posted: SendMessage would deadlock with the app writing a report to our stderr
     sendCommand(frame, cmdId("CmdClose"));
-    await sleep(500 * SLOW_BUILD_FACTOR);
+    title = await pollUntil(
+      () => getWindowText(frame),
+      (s) => s.includes("issue-1809.pdf"),
+      { error: (s) => `restored-tab-close-toc: title '${s}', want the remaining tab issue-1809.pdf` },
+    );
     await client.waitForRenderIdle(30000);
-    title = getWindowText(frame);
 
     await client.quit();
   } catch (e) {
