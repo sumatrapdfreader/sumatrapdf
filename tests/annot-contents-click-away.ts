@@ -6,14 +6,14 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { findTopWindow, getControlText, packCoords, sendMessage, sleep, WM_COMMAND } from "./winapi.ts";
+import { findTopWindow, getControlText, packCoords, sendMessage, WM_COMMAND } from "./winapi.ts";
 import {
   clickAt,
   findCanvas,
   findChildByClass,
   killAndWait,
   launchControlled,
-  sendCommand,
+  sendCommandSync,
   typeIntoInput,
 } from "./win-automation.ts";
 
@@ -84,13 +84,11 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     // a text (sticky note) annotation: its Contents chip opens the edit box on
     // the property row, not the free text in-place editor
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotText"), packCoords(150, 300));
-    await sleep(400);
     await client.waitForRenderIdle();
 
     let dump = await toolbarDump(client);
@@ -108,8 +106,8 @@ export async function testit(): Promise<void> {
       tbHwnd,
       contentsChip.x - placed.x + Math.floor(contentsChip.dx / 2),
       contentsChip.y - placed.y + Math.floor(contentsChip.dy / 2),
+      0,
     );
-    await sleep(400);
     dump = await toolbarDump(client);
     if (!/ editing=1/.test(dump)) {
       throw new Error(`annot-contents-click-away: contents editor did not open: ${dump}`);
@@ -120,7 +118,6 @@ export async function testit(): Promise<void> {
       throw new Error("annot-contents-click-away: contents edit box not found");
     }
     await typeIntoInput(edit, TEXT, false);
-    await sleep(200);
 
     // a stray real keystroke can land in the focused box; the check is that
     // whatever it holds survives the click away
@@ -130,8 +127,7 @@ export async function testit(): Promise<void> {
     }
 
     // click the page well away from the annotation
-    await clickAt(canvas, 420, 620);
-    await sleep(600);
+    await clickAt(canvas, 420, 620, 0);
     await client.waitForRenderIdle();
 
     dump = await toolbarDump(client);
