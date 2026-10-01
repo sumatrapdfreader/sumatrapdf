@@ -2569,7 +2569,7 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
         textSize = 12;
     }
     int borderWidth = std::max(BorderWidth(annot), 0);
-    int fontPx = std::max(6, (int)(((float)textSize * scale) + 0.5f));
+    int fontPx = std::max(6, (int)lroundf((float)textSize * scale));
     int fontStyle = FreeTextFontStyle(annot);
     int weight = (fontStyle & kFreeTextBold) ? FW_BOLD : FW_NORMAL;
     BOOL italic = (fontStyle & kFreeTextItalic) ? TRUE : FALSE;

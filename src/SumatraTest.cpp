@@ -2876,7 +2876,7 @@ TempStr PageInfoResultTemp(int* exitCodeOut) {
     EngineBase* engine = dm->GetEngine();
     out.Append(fmt("pages=%d widths=", engine->PageCount()));
     for (int i = 1; i <= engine->PageCount(); i++) {
-        out.Append(fmt(i == 1 ? "%d" : ",%d", (int)(engine->PageMediabox(i).dx + 0.5f)));
+        out.Append(fmt(i == 1 ? "%d" : ",%d", (int)lroundf(engine->PageMediabox(i).dx)));
     }
     out.Append(StrL(" toc="));
     TocTree* toc = engine->GetToc();

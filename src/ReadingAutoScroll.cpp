@@ -130,7 +130,7 @@ static void StepSpeed(int dir) {
 
 static TempStr SpeedLabelTemp(WindowTab* tab) {
     const char* arrow = (!tab || tab->autoScroll.dir >= 0) ? "\xE2\x86\x93" : "\xE2\x86\x91";
-    return fmt("%s %d px/s", Str(arrow), (int)(CurrentSpeed() + 0.5f));
+    return fmt("%s %d px/s", Str(arrow), (int)lroundf(CurrentSpeed()));
 }
 
 static TempStr StatusTextTemp(WindowTab* tab) {
@@ -544,7 +544,7 @@ static void OnSpeedSliderCommit(ReadingAutoScrollBar* bar) {
 static void OnSpeedSliderTooltip(ReadingAutoScrollBar* bar, VirtTooltipEvent* ev) {
     int idx = bar->speedSlider->ValueFromLocalX(ev->ptLocal.x);
     idx = limitValue(idx, 0, SpeedCount() - 1);
-    ev->tip = fmt("%d px/s", (int)(kSpeeds[idx] + 0.5f));
+    ev->tip = fmt("%d px/s", (int)lroundf(kSpeeds[idx]));
 }
 
 HWND ReadingAutoScrollBar::Create(HWND parentCanvas) {
@@ -824,7 +824,7 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
     Rect speed = bar->speedSlider->bounds;
     out.Append(fmt("OK visible=1 paused=%d atEnd=%d dir=%d speed=%d scrollY=%d page=%d pages=%d hwnd=%d\n",
                    (int)tab->autoScroll.paused, (int)tab->autoScroll.atEnd, tab->autoScroll.dir,
-                   (int)(CurrentSpeed() + 0.5f), scrollY, page, pages, (int)(uintptr_t)bar->hwnd));
+                   (int)lroundf(CurrentSpeed()), scrollY, page, pages, (int)(uintptr_t)bar->hwnd));
     out.Append(fmt("pause=%d,%d,%d,%d\n", pause.x, pause.y, pause.dx, pause.dy));
     out.Append(fmt("stop=%d,%d,%d,%d\n", stop.x, stop.y, stop.dx, stop.dy));
     out.Append(fmt("reverse=%d,%d,%d,%d\n", reverse.x, reverse.y, reverse.dx, reverse.dy));
