@@ -3,7 +3,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
 import { FRAME_CLASS, killAndWait, launchControlled, sendCommandSync } from "./win-automation";
-import { enumWindows, getClassName, getWindowPid, isWindowVisible, postMessage, sleep, WM_CLOSE } from "./winapi";
+import { enumWindows, getClassName, getWindowPid, isWindowVisible, sendMessage, sleep } from "./winapi";
 
 const WM_ACTIVATE = 0x0006;
 const WA_ACTIVE = 1;
@@ -52,8 +52,7 @@ export async function testit(): Promise<void> {
     }
 
     // Trigger global hotkey
-    postMessage(frame, WM_HOTKEY, kGlobalHotkeyBaseId, 0);
-    await sleep(300);
+    sendMessage(frame, WM_HOTKEY, kGlobalHotkeyBaseId, 0);
 
     const afterInfo = await client.chapterInfo();
     if (afterInfo.page !== 2) {
@@ -62,21 +61,22 @@ export async function testit(): Promise<void> {
 
     // Duplicate window to create a second window
     sendCommandSync(frame, cmdId("CmdDuplicateInNewWindow"));
-    await sleep(600);
-
-    const frames = getFrames(proc.pid!);
+    const deadline = Date.now() + 3000;
+    let frames = getFrames(proc.pid!);
+    while (frames.length < 2 && Date.now() < deadline) {
+      await sleep(50);
+      frames = getFrames(proc.pid!);
+    }
     if (frames.length !== 2) {
       throw new Error(`expected 2 frames after duplicate, got ${frames.length}`);
     }
     const frame2 = frames.find((f) => f !== frame)!;
 
     // Activate window 2
-    postMessage(frame2, WM_ACTIVATE, WA_ACTIVE, 0);
-    await sleep(200);
+    sendMessage(frame2, WM_ACTIVATE, WA_ACTIVE, 0);
 
     // Global hotkey should target window 2 (most recently activated)
-    postMessage(frame, WM_HOTKEY, kGlobalHotkeyBaseId, 0);
-    await sleep(300);
+    sendMessage(frame, WM_HOTKEY, kGlobalHotkeyBaseId, 0);
 
     // Window 1 should still be at page 2
     const w1Info = await client.chapterInfo();
@@ -86,14 +86,13 @@ export async function testit(): Promise<void> {
 
     // Close window 2
     sendCommandSync(frame2, cmdId("CmdClose"));
-    const deadline = Date.now() + 3000;
-    while (getFrames(proc.pid!).length > 1 && Date.now() < deadline) {
+    const closeDeadline = Date.now() + 3000;
+    while (getFrames(proc.pid!).length > 1 && Date.now() < closeDeadline) {
       await sleep(50);
     }
 
     // Global hotkey should fall back to window 1
-    postMessage(frame, WM_HOTKEY, kGlobalHotkeyBaseId, 0);
-    await sleep(300);
+    sendMessage(frame, WM_HOTKEY, kGlobalHotkeyBaseId, 0);
 
     const finalInfo = await client.chapterInfo();
     if (finalInfo.page !== 3) {
