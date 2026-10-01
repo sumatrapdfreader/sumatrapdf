@@ -16,7 +16,7 @@ import { sleep } from "./winapi.ts";
 import { sendCommandSync, waitForFrame } from "./win-automation.ts";
 
 const DEEP_CHAPTER = 34;
-const THEME_TOGGLES = 4;
+const THEME_TOGGLES = 2;
 
 const SAMPLES_PER_TOGGLE = 6;
 
