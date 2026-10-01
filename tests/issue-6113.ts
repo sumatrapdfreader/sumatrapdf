@@ -215,7 +215,9 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-6113: LTR Z-bar should be on the left (mid=${ltr.mid} w=${ltrShot.w})`);
     }
 
-    await waitNotif(canvas, false, 4000);
+    await client.setNotificationsEnabled(false);
+    await waitNotif(canvas, false);
+    await client.setNotificationsEnabled(true);
 
     sendCommandSync(frame, cmdId("CmdDebugToggleRtl"));
     await client.waitForRenderIdle();
