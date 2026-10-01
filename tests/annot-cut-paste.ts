@@ -30,8 +30,8 @@ import {
   killAndWait,
   launchControlled,
   openContextMenu,
-  pressEscape,
-  sendCommand,
+  pressKey,
+  sendCommandSync,
   waitForContextMenu,
 } from "./win-automation.ts";
 
@@ -130,8 +130,7 @@ function findMenuItem(items: MenuItem[], text: string): MenuItem | null {
 // The hover card shows the annotation's date. It is not shown for the selected
 // annotation, so deselect first.
 async function hoverDate(client: ControlClient, frame: number, canvas: number, x: number, y: number): Promise<string> {
-  await pressEscape(frame);
-  await sleep(150);
+  await pressKey(frame, VK_ESCAPE, 0);
   const s = clientToScreen(canvas, x, y);
   setCursorPos(s.x, s.y);
   sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(x, y));
@@ -200,8 +199,7 @@ export async function testit(): Promise<void> {
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
 
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     let state = await markupState(client);
     if (state.squares.length !== 1) {
@@ -209,7 +207,7 @@ export async function testit(): Promise<void> {
     }
     const original = state.squares[0]!;
     const mid = { x: original.x + Math.floor(original.dx / 2), y: original.y + Math.floor(original.dy / 2) };
-    await clickAt(canvas, mid.x, mid.y);
+    await clickAt(canvas, mid.x, mid.y, 0);
     state = await markupState(client);
     if (!state.selected) {
       throw new Error(`annot-cut-paste: click did not select the square\n${state.raw}`);
@@ -236,7 +234,6 @@ export async function testit(): Promise<void> {
 
     // cut: the annotation must still be there, it goes away on paste
     sendMessage(frame, WM_COMMAND, cmdId("CmdCutAnnotation"), packCoords(mid.x, mid.y));
-    await sleep(150);
     state = await markupState(client);
     if (state.annotations !== 1) {
       throw new Error(`annot-cut-paste: cut must not delete the annotation yet\n${state.raw}`);
@@ -303,7 +300,6 @@ export async function testit(): Promise<void> {
       y: doomed.y + Math.floor(doomed.dy / 2),
     };
     sendMessage(frame, WM_COMMAND, cmdId("CmdCutAnnotation"), packCoords(doomedMid.x, doomedMid.y));
-    await sleep(150);
     sendMessage(frame, WM_COMMAND, cmdId("CmdDeleteAnnotation"), packCoords(doomedMid.x, doomedMid.y));
     await client.waitForRenderIdle();
     await waitForAnnotCount(client, 1, "Delete must remove the cut annotation");
@@ -319,8 +315,7 @@ export async function testit(): Promise<void> {
       cmdId("CmdCutAnnotation"),
       packCoords(last.x + Math.floor(last.dx / 2), last.y + Math.floor(last.dy / 2)),
     );
-    await sleep(150);
-    sendCommand(frame, cmdId("CmdDiscardChanges"));
+    sendCommandSync(frame, cmdId("CmdDiscardChanges"));
     await client.waitForRenderIdle();
     await waitForAnnotCount(client, 1, "discarding changes must restore the file's single annotation");
     sendMessage(frame, WM_COMMAND, cmdId("CmdPasteAnnotation"), packCoords(paste.x, paste.y));
