@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels, findTopWindow, packCoords, sendMessage, sleep, WM_COMMAND } from "./winapi.ts";
-import { findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 const TOOLBAR_CLASS = "SumatraAnnotEditToolbar";
 
@@ -108,11 +108,9 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     findCanvas(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFileAttachment"), packCoords(150, 300));
-    await sleep(400);
     await client.waitForRenderIdle();
 
     const dump = await toolbarDump(client);
