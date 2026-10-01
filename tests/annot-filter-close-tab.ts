@@ -9,7 +9,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
-import { runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { runStandalone, tmpPath } from "./util";
 import { sleep } from "./winapi";
 import { killAndWait, launchControlled } from "./win-automation";
 
@@ -54,14 +54,12 @@ export async function testit(): Promise<void> {
     if (!/floatVisible=1/.test(String(opened[1] ?? ""))) {
       throw new Error(`annot-filter-close-tab: the Annotations window did not open: ${String(opened[1] ?? "")}`);
     }
-    await sleep(300 * SLOW_BUILD_FACTOR);
 
     await client.request(ControlCommand.TestInvokeCommand, ["CmdClose"]);
-    await sleep(400 * SLOW_BUILD_FACTOR);
 
     for (let i = 0; i < 3; i++) {
       await client.request(ControlCommand.TestAnnotFilter, ["paint"]);
-      await sleep(150 * SLOW_BUILD_FACTOR);
+      await sleep(50);
     }
     if (proc.exitCode !== null) {
       throw new Error(`annot-filter-close-tab: the app died after closing the tab (exit ${proc.exitCode})`);
