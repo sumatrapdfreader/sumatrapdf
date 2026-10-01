@@ -302,6 +302,16 @@ void PageThumbnailsCtrl::Refresh() {
     StartRendering();
 }
 
+// one page was re-rendered (e.g. an annotation on it moved)
+void PageThumbnailsCtrl::RefreshPage(int pageNo) {
+    int idx = pageNo - 1;
+    if (idx < 0 || idx >= len(cache->thumbnails)) {
+        return;
+    }
+    cache->stale[idx] = cache->thumbnails[idx] ? 1 : 0;
+    StartRendering();
+}
+
 void PageThumbnailsCtrl::SetBounds(Rect r) {
     int reservedScrollbarDx = DpiScaleByDpi(dpi, 10);
     int availableDx = r.dx - padding.left - padding.right - reservedScrollbarDx;

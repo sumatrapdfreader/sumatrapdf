@@ -5262,6 +5262,24 @@ void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
     }
 }
 
+// re-render one page (e.g. an annotation on it changed): unlike MainWindowRerender
+// leaves the other pages, their thumbnails and the rest of the window alone
+void RerenderTabPage(WindowTab* tab, int pageNo) {
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    if (!dm || pageNo < 1 || pageNo > dm->PageCount()) {
+        return;
+    }
+    gRenderCache->Invalidate(dm, pageNo, dm->GetEngine()->PageMediabox(pageNo));
+    MainWindow* win = tab->win;
+    if (win->CurrentTab() != tab) {
+        return;
+    }
+    if (win->pageThumbs && win->pageThumbs->active) {
+        win->pageThumbs->RefreshPage(pageNo);
+    }
+    HwndInvalidate(win->hwndCanvas);
+}
+
 static void RerenderEverything() {
     for (auto* win : gWindows) {
         // rerender the currently displayed tab right away

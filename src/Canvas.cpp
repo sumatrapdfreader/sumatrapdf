@@ -1589,12 +1589,36 @@ bool NudgeSelectedAnnotation(MainWindow* win, WPARAM key) {
     r.y += pTo.y - pFrom.y;
     SetRect(annot, r);
 
-    NotifyAnnotationsChanged(tab);
-    MainWindowRerender(win);
-    ToolbarUpdateStateForWindow(win, true);
-    UpdateAnnotFilterToolbar(win);
+    // the selection box and edit toolbar follow right away, over the old page
+    // bitmap; the page and the rest of the UI update once the keys pause
+    HwndInvalidate(win->hwndCanvas);
     RepositionAnnotEditToolbar(win);
+    if (win->annotationNudgeTab != tab || win->annotationNudgePageNo != pageNo) {
+        FinishAnnotationNudge(win);
+    }
+    win->annotationNudgeTab = tab;
+    win->annotationNudgePageNo = pageNo;
+    SetTimer(win->hwndCanvas, kAnnotationNudgeTimerID, kAnnotationNudgeDelayMs, nullptr);
     return true;
+}
+
+// the debounced half of NudgeSelectedAnnotation
+void FinishAnnotationNudge(MainWindow* win) {
+    if (!win || !win->annotationNudgeTab) {
+        return;
+    }
+    KillTimer(win->hwndCanvas, kAnnotationNudgeTimerID);
+    WindowTab* tab = win->annotationNudgeTab;
+    int pageNo = win->annotationNudgePageNo;
+    win->annotationNudgeTab = nullptr;
+    win->annotationNudgePageNo = 0;
+    // the tab may have been closed meanwhile
+    if (!VecContains(win->Tabs(), tab)) {
+        return;
+    }
+    RerenderTabPage(tab, pageNo);
+    NotifyAnnotationsChanged(tab);
+    ToolbarUpdateStateForWindow(win, true);
 }
 
 static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted) {
@@ -5651,6 +5675,10 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case kAnnotationResizeRerenderTimerID:
             CancelAnnotationResizeRerender(win);
             MainWindowRerender(win);
+            break;
+
+        case kAnnotationNudgeTimerID:
+            FinishAnnotationNudge(win);
             break;
 
         case kTouchLongPressTimerID: {

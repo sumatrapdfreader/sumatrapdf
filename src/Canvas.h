@@ -8,6 +8,7 @@ LRESULT WndProcCanvasAbout(MainWindow*, HWND, UINT, WPARAM, LPARAM);
 bool IsDragDistance(int x1, int x2, int y1, int y2);
 void CancelDrag(MainWindow*);
 bool NudgeSelectedAnnotation(MainWindow*, WPARAM key);
+void FinishAnnotationNudge(MainWindow*);
 void StartAutoScrollAtCursor(MainWindow*);
 bool ShowImageOutlines();
 void ToggleShowImageOutlines();
@@ -51,5 +52,8 @@ constexpr UINT_PTR kTouchLongPressTimerID = 14;
 // Debounce PDF page rendering while an annotation resize is in progress.
 constexpr UINT_PTR kAnnotationResizeRerenderTimerID = 15;
 constexpr uint kAnnotationResizeRerenderDelayMs = 125;
+// Debounce re-rendering the page while arrow keys move an annotation
+constexpr UINT_PTR kAnnotationNudgeTimerID = 17;
+constexpr uint kAnnotationNudgeDelayMs = 150;
 
 void CancelAnnotationResizeRerender(MainWindow* win);

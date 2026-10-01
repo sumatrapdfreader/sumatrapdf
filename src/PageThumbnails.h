@@ -51,6 +51,7 @@ struct PageThumbnailsCtrl : VirtListBox {
     void HandleKey(int vkey);
     void StartRendering();
     void Refresh();
+    void RefreshPage(int pageNo);
     int RenderedCount() const;
     void SelectPage(int);
     void SetCurrentPage(int);

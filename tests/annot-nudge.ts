@@ -7,7 +7,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { postMessage, sleep, WM_KEYDOWN } from "./winapi.ts";
+import { captureWindowPixels, postMessage, sleep, WM_KEYDOWN } from "./winapi.ts";
 import { clickAt, findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 const VK_LEFT = 0x25;
@@ -78,11 +78,43 @@ export async function testit(): Promise<void> {
     s = await waitSquare(client, "Down did not move it down", (q) => q.y > s.y && q.x === s.x);
     const size = { dx: s.dx, dy: s.dy };
     postMessage(canvas, WM_KEYDOWN, VK_LEFT, 0);
-    await waitSquare(
+    s = await waitSquare(
       client,
       "Left did not move it left, same size",
       (q) => q.x < s.x && q.y === s.y && q.dx === size.dx && q.dy === size.dy,
     );
+
+    // a burst of nudges re-renders the page once the keys pause: the red
+    // border must end up drawn where the square now is, not where it was
+    const kBurst = 30;
+    for (let i = 0; i < kBurst; i++) {
+      postMessage(canvas, WM_KEYDOWN, VK_RIGHT, 0);
+    }
+    const moved = await waitSquare(client, "the burst did not move it", (q) => q.x >= s.x + kBurst);
+    const isRed = (cap: { w: number; data: Uint8Array }, x: number, y: number) => {
+      const i = (y * cap.w + x) * 4;
+      return cap.data[i + 2]! > 200 && cap.data[i + 1]! < 80 && cap.data[i]! < 80;
+    };
+    // the left border column, at mid-height; client coords
+    const midY = moved.y + Math.floor(moved.dy / 2);
+    const redAt = (x: number) => {
+      const cap = captureWindowPixels(canvas)!;
+      for (let dx = -2; dx <= 2; dx++) {
+        if (isRed(cap, x + dx, midY)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    const deadline = Date.now() + 5000;
+    while (!(redAt(moved.x) && !redAt(s.x))) {
+      if (Date.now() > deadline) {
+        throw new Error(
+          `annot-nudge: page not re-rendered after the burst: red at new ${redAt(moved.x)} old ${redAt(s.x)}`,
+        );
+      }
+      await sleep(50);
+    }
     console.log("annot-nudge: OK");
   } finally {
     client.close();

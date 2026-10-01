@@ -398,6 +398,9 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     int annotationResizeVertexIndex = -1;
     float annotationResizeAspectRatio = 0;
     UINT_PTR annotationResizeRerenderTimer = 0;
+    // where arrow keys moved an annotation; re-rendered once the keys pause
+    WindowTab* annotationNudgeTab = nullptr;
+    int annotationNudgePageNo = 0;
     // free text is re-laid out on every write, which is too slow to do per
     // mouse move: only the outline follows the pointer and the annotation is
     // rewritten once, on mouse up
