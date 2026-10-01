@@ -1,0 +1,271 @@
+svg: size an image that omits width and height (#6266)
+
+Manga EPUBs wrap each JPEG in <svg width="100%" height="100%"> with no
+viewBox, and the <image> has no width or height. The renderer skipped any
+image with a non-positive size, so the page was a blank letter sheet.
+A missing side is the raster's pixel size (one side missing keeps the
+aspect). When the root svg itself has only a percentage size and no
+viewBox, that pixel size becomes the page.
+---
+diff --git a/source/svg/svg-run.c b/source/svg/svg-run.c
+index 2193a731d..251663388 100644
+--- a/source/svg/svg-run.c
++++ b/source/svg/svg-run.c
+@@ -1495,15 +1495,117 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
+ 		fz_rethrow(ctx);
+ }
+ 
++/* SumatraPDF: load the raster an <image> points at. NULL if it cannot be read. */
++static fz_image *
++svg_load_image_href(fz_context *ctx, svg_document *doc, const char *href)
++{
++	static const char *jpeg_uri = "data:image/jpeg;base64,";
++	static const char *png_uri = "data:image/png;base64,";
++	const char *data = NULL;
++	fz_buffer *buf = NULL;
++	fz_image *img = NULL;
++
++	if (!strncmp(href, jpeg_uri, strlen(jpeg_uri)))
++		data = href + strlen(jpeg_uri);
++	else if (!strncmp(href, png_uri, strlen(png_uri)))
++		data = href + strlen(png_uri);
++
++	fz_var(buf);
++	fz_var(img);
++	fz_try(ctx)
++	{
++		if (data)
++			buf = fz_new_buffer_from_base64(ctx, data, 0);
++		else if (doc->zip)
++		{
++			char path[2048];
++			fz_strlcpy(path, doc->base_uri, sizeof path);
++			fz_strlcat(path, "/", sizeof path);
++			fz_strlcat(path, href, sizeof path);
++			fz_urldecode(path);
++			buf = fz_read_archive_entry(ctx, doc->zip, path);
++		}
++		if (buf)
++			img = fz_new_image_from_buffer(ctx, buf);
++	}
++	fz_always(ctx)
++		fz_drop_buffer(ctx, buf);
++	fz_catch(ctx)
++	{
++		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
++		fz_report_error(ctx);
++		img = NULL;
++	}
++	return img;
++}
++
++/* Fill in a missing width or height from the raster. Both missing -> pixel size. */
++static void
++svg_image_intrinsic_size(fz_image *img, float *w, float *h)
++{
++	float iw = img->w;
++	float ih = img->h;
++
++	if (iw <= 0 || ih <= 0)
++		return;
++	if (*w <= 0 && *h <= 0)
++	{
++		*w = iw;
++		*h = ih;
++	}
++	else if (*w <= 0)
++		*w = iw * (*h) / ih;
++	else if (*h <= 0)
++		*h = ih * (*w) / iw;
++}
++
++static int
++svg_length_is_auto(const char *att)
++{
++	return att == NULL || strchr(att, '%') != NULL;
++}
++
++/* First <image> with no width and no height. Nested <svg> is its own viewport. */
++static int
++svg_unsized_image_box(fz_context *ctx, svg_document *doc, fz_xml *node, float *w, float *h)
++{
++	fz_xml *child;
++
++	for (child = fz_xml_down(node); child; child = fz_xml_next(child))
++	{
++		if (fz_xml_is_tag(child, "image"))
++		{
++			char *wa = fz_xml_att(child, "width");
++			char *ha = fz_xml_att(child, "height");
++			char *href = fz_xml_att_alt(child, "xlink:href", "href");
++			fz_image *img;
++
++			if (wa || ha || !href)
++				continue;
++			img = svg_load_image_href(ctx, doc, href);
++			if (!img)
++				continue;
++			*w = img->w;
++			*h = img->h;
++			fz_drop_image(ctx, img);
++			if (*w > 0 && *h > 0)
++				return 1;
++		}
++		else if (!fz_xml_is_tag(child, "svg"))
++		{
++			if (svg_unsized_image_box(ctx, doc, child, w, h))
++				return 1;
++		}
++	}
++	return 0;
++}
++
+ static void
+ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *inherit_state)
+ {
+ 	svg_state local_state;
+ 	float x=0, y=0, w=0, h=0;
+-	const char *data;
+-
+-	static const char *jpeg_uri = "data:image/jpeg;base64,";
+-	static const char *png_uri = "data:image/png;base64,";
++	fz_image *img = NULL;
+ 
+ 	char *href_att = fz_xml_att_alt(root, "xlink:href", "href");
+ 	char *x_att = fz_xml_att(root, "x");
+@@ -1512,6 +1614,7 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
+ 	char *h_att = fz_xml_att(root, "height");
+ 
+ 	svg_begin_state(ctx, &local_state, inherit_state);
++	fz_var(img);
+ 	fz_try(ctx)
+ 	{
+ 		svg_parse_common(ctx, doc, root, &local_state);
+@@ -1520,92 +1623,32 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
+ 		if (w_att) w = svg_parse_length(w_att, local_state.viewbox_w, local_state.fontsize);
+ 		if (h_att) h = svg_parse_length(h_att, local_state.viewbox_h, local_state.fontsize);
+ 
+-		if (w <= 0 || h <= 0)
+-			break; // out of try-catch
+-
+ 		if (!href_att)
+ 			break; // out of try-catch
+ 
+-		local_state.transform = fz_concat(fz_translate(x, y), local_state.transform);
+-		local_state.transform = fz_concat(fz_scale(w, h), local_state.transform);
+-
+-		if (!strncmp(href_att, jpeg_uri, strlen(jpeg_uri)))
+-			data = href_att + strlen(jpeg_uri);
+-		else if (!strncmp(href_att, png_uri, strlen(png_uri)))
+-			data = href_att + strlen(png_uri);
+-		else
+-			data = NULL;
+-		if (data)
++		img = svg_load_image_href(ctx, doc, href_att);
++		if (!img)
+ 		{
+-			fz_image *img = NULL;
+-			fz_buffer *buf;
+-
+-			fz_var(img);
+-
+-			buf = fz_new_buffer_from_base64(ctx, data, 0);
+-			fz_try(ctx)
+-			{
+-				fz_matrix orient;
+-				img = fz_new_image_from_buffer(ctx, buf);
+-				orient = fz_image_orientation_matrix(ctx, img);
+-				local_state.transform = fz_concat(orient, local_state.transform);
+-				fz_fill_image(ctx, dev, img, local_state.transform, 1, fz_default_color_params);
+-			}
+-			fz_always(ctx)
+-			{
+-				fz_drop_buffer(ctx, buf);
+-				fz_drop_image(ctx, img);
+-			}
+-			fz_catch(ctx)
+-			{
+-				fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+-				fz_report_error(ctx);
+-				fz_warn(ctx, "svg: ignoring embedded image '%s'", href_att);
+-			}
++			fz_warn(ctx, "svg: ignoring image '%s'", href_att);
++			break; // out of try-catch
+ 		}
+-		else if (doc->zip)
+-		{
+-			char path[2048];
+-			fz_buffer *buf = NULL;
+-			fz_image *img = NULL;
+ 
+-			fz_var(buf);
+-			fz_var(img);
+-
+-			fz_strlcpy(path, doc->base_uri, sizeof path);
+-			fz_strlcat(path, "/", sizeof path);
+-			fz_strlcat(path, href_att, sizeof path);
+-			fz_urldecode(path);
+-
+-			fz_try(ctx)
+-			{
+-				fz_matrix orient;
+-				buf = fz_read_archive_entry(ctx, doc->zip, path);
+-				img = fz_new_image_from_buffer(ctx, buf);
+-				orient = fz_image_orientation_matrix(ctx, img);
+-				local_state.transform = fz_concat(orient, local_state.transform);
+-				fz_fill_image(ctx, dev, img, local_state.transform, 1, fz_default_color_params);
+-			}
+-			fz_always(ctx)
+-			{
+-				fz_drop_buffer(ctx, buf);
+-				fz_drop_image(ctx, img);
+-			}
+-			fz_catch(ctx)
+-			{
+-				fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+-				fz_report_error(ctx);
+-				fz_warn(ctx, "svg: ignoring external image '%s'", href_att);
+-			}
+-		}
+-		else
+-		{
+-			fz_warn(ctx, "svg: ignoring external image '%s'", href_att);
+-		}
++		/* SumatraPDF: omitted width/height is the raster's pixel size (#6266) */
++		if (w <= 0 || h <= 0)
++			svg_image_intrinsic_size(img, &w, &h);
++		if (w <= 0 || h <= 0)
++			break; // out of try-catch
+ 
++		local_state.transform = fz_concat(fz_translate(x, y), local_state.transform);
++		local_state.transform = fz_concat(fz_scale(w, h), local_state.transform);
++		local_state.transform = fz_concat(fz_image_orientation_matrix(ctx, img), local_state.transform);
++		fz_fill_image(ctx, dev, img, local_state.transform, 1, fz_default_color_params);
+ 	}
+ 	fz_always(ctx)
++	{
++		fz_drop_image(ctx, img);
+ 		svg_end_state(ctx, &local_state);
++	}
+ 	fz_catch(ctx)
+ 		fz_rethrow(ctx);
+ }
+@@ -1877,6 +1920,18 @@ svg_parse_document_bounds(fz_context *ctx, svg_document *doc, fz_xml *root)
+ 		if (h_att)
+ 			doc->height = svg_parse_length(h_att, doc->height, DEF_FONTSIZE);
+ 	}
++
++	/* SumatraPDF: no viewBox and a percentage size. An unsized <image>
++	 * was skipped, leaving a blank letter page. Use its pixel size (#6266). */
++	if (!viewbox_att && svg_length_is_auto(w_att) && svg_length_is_auto(h_att))
++	{
++		float iw = 0, ih = 0;
++		if (svg_unsized_image_box(ctx, doc, root, &iw, &ih))
++		{
++			doc->width = iw;
++			doc->height = ih;
++		}
++	}
+ }
+ 
+ void
