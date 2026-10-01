@@ -7,8 +7,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { sleep } from "./winapi.ts";
-import { clickAt, findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { clickAt, findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 type State = {
   selected: boolean;
@@ -75,22 +74,19 @@ export async function testit(): Promise<void> {
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
 
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     let s = await state(client);
     if (!s.editToolbar || !s.square) {
       throw new Error(`exit-edit-pdf-deselects: Edit PDF mode did not turn on\n${s.raw}`);
     }
     const sq = s.square;
-    await clickAt(canvas, sq.x + Math.floor(sq.dx / 2), sq.y + Math.floor(sq.dy / 2));
-    await sleep(300);
+    await clickAt(canvas, sq.x + Math.floor(sq.dx / 2), sq.y + Math.floor(sq.dy / 2), 0);
     s = await state(client);
     if (!s.selected || !s.propertyRow) {
       throw new Error(`exit-edit-pdf-deselects: the click did not select the square\n${s.raw}`);
     }
 
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     s = await state(client);
     if (s.editToolbar) {
       throw new Error(`exit-edit-pdf-deselects: Edit PDF mode did not turn off\n${s.raw}`);
@@ -103,16 +99,13 @@ export async function testit(): Promise<void> {
     }
 
     // a placement started but not finished must not outlive the mode either
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
-    sendCommand(frame, cmdId("CmdCreateAnnotLine"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
+    sendCommandSync(frame, cmdId("CmdCreateAnnotLine"));
     s = await state(client);
     if (!s.placing) {
       throw new Error(`exit-edit-pdf-deselects: line placement did not start\n${s.raw}`);
     }
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     s = await state(client);
     if (s.placing) {
       throw new Error(`exit-edit-pdf-deselects: placement mode outlived Edit PDF mode\n${s.raw}`);
