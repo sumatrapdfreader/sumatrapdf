@@ -838,7 +838,7 @@ static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
         str::ReplaceWithCopy(&rsp->url, uri);
         bool ok = HttpGet(uri, rsp);
         logf("UpdateCheckAsync: response from '%s': error=%d, status=%d, %d bytes\n%s\n", rsp->url, (int)rsp->error,
-             (int)rsp->httpStatusCode, (int)len(rsp->data), ToStr(rsp->data));
+             (int)rsp->httpStatusCode, len(rsp->data), ToStr(rsp->data));
         if (ok) {
             break;
         }

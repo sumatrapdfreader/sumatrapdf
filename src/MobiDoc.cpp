@@ -497,7 +497,7 @@ bool MobiDoc::ParseHeader() {
     DecodePalmDocHeader(firstRecData, &palmDocHdr);
     compressionType = palmDocHdr.compressionType;
     if (!IsValidCompression(compressionType)) {
-        logf("MobiDoc::ParseHeader: unknown compression type %d\n", (int)compressionType);
+        logf("MobiDoc::ParseHeader: unknown compression type %d\n", compressionType);
         return false;
     }
     if (PdbDocType::Mobipocket == docType) {

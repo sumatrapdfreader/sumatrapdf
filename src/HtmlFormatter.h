@@ -57,7 +57,7 @@ struct DrawInstr {
     explicit DrawInstr(DrawInstrType t, RectF bbox = {}) : type(t), bbox(bbox) {}
     Str GetImage() {
         ReportIf(type != DrawInstrType::Image);
-        return Str((char*)str.s, (int)str.len);
+        return Str(str.s, str.len);
     }
 
     static DrawInstr Text(::Str s, RectF bbox, bool rtl = false);

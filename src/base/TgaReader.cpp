@@ -191,7 +191,7 @@ static void CopyPixelToBGRA(u8* dst, const u8* src, int bits, int alphaBits, Ima
     switch (bits) {
         case 15:
         case 16: {
-            u16 v = UInt16LE((const u8*)src);
+            u16 v = UInt16LE(src);
             dst[0] = Scale5To8(v & 0x1f);
             dst[1] = Scale5To8((v >> 5) & 0x1f);
             dst[2] = Scale5To8((v >> 10) & 0x1f);
