@@ -17960,6 +17960,10 @@ void CrashHandlerSetSettings(Str settings) {
         return;
     }
     gSettingsFile = str::Dup(a, settings);
+    // The file is UTF-8 BOM + CRLF. This comment is LF text; a BOM or CR
+    // here shows up as a blank line after every settings line.
+    str::TrimPrefix(gSettingsFile, StrL(kUtf8Bom));
+    str::NormalizeNewlinesToLFInPlace(gSettingsFile);
 }
 
 // Message from MuPDF's uncaught-throw abort (error.c). Looked up at crash time

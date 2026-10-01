@@ -464,27 +464,27 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
         if (SettingType::Struct == field.type) {
             Indent(out, indent);
             out.Append(fieldNameStr);
-            out.Append(StrL(" [\n"));
+            out.Append(StrL(" [\r\n"));
             SerializeStructRec(out, GetSubstruct(field), base + field.offset,
                                prevNode ? prevNode->GetChild(fieldNameStr) : nullptr, indent + 1);
             Indent(out, indent);
-            out.Append(StrL("]\n"));
+            out.Append(StrL("]\r\n"));
         } else if (SettingType::StructPtr == field.type) {
             // an optional sub-struct: nothing is written when it isn't set
             const void* sub = *(void* const*)(base + field.offset);
             if (sub) {
                 Indent(out, indent);
                 out.Append(fieldNameStr);
-                out.Append(StrL(" [\n"));
+                out.Append(StrL(" [\r\n"));
                 SerializeStructRec(out, GetSubstruct(field), sub, prevNode ? prevNode->GetChild(fieldNameStr) : nullptr,
                                    indent + 1);
                 Indent(out, indent);
-                out.Append(StrL("]\n"));
+                out.Append(StrL("]\r\n"));
             }
         } else if (SettingType::Array == field.type) {
             Indent(out, indent);
             out.Append(fieldNameStr);
-            out.Append(StrL(" [\n"));
+            out.Append(StrL(" [\r\n"));
             Vec<void*>* array = *(Vec<void*>**)(base + field.offset);
             if (array && len(*array) > 0) {
                 const StructInfo* elemInfo = GetSubstruct(field);
@@ -494,21 +494,21 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
                         continue;
                     }
                     Indent(out, indent + 1);
-                    out.Append(StrL("[\n"));
+                    out.Append(StrL("[\r\n"));
                     SerializeStructRec(out, elemInfo, elem, nullptr, indent + 2);
                     Indent(out, indent + 1);
-                    out.Append(StrL("]\n"));
+                    out.Append(StrL("]\r\n"));
                 }
             }
             Indent(out, indent);
-            out.Append(StrL("]\n"));
+            out.Append(StrL("]\r\n"));
         } else if (SettingType::Comment == field.type) {
             if (field.value) {
                 Indent(out, indent);
                 out.Append(StrL("# "));
                 out.Append(FieldDefaultStr(field));
             }
-            out.Append(StrL("\n"));
+            out.Append(StrL("\r\n"));
         } else {
             int offset = len(out);
             Indent(out, indent);
@@ -516,14 +516,14 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
             out.Append(StrL(" = "));
             bool keep = SerializeField(out, base, field);
             if (keep) {
-                out.Append(StrL("\n"));
+                out.Append(StrL("\r\n"));
             } else {
                 out.RemoveAt(offset, len(out) - offset);
             }
         }
         MarkFieldKnown(prevNode, fieldNameStr, field.type);
     }
-    SerializeSquareTreeNode(out, prevNode, StrL("\t"), StrL("\n"), indent);
+    SerializeSquareTreeNode(out, prevNode, StrL("\t"), StrL("\r\n"), indent);
 }
 
 static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, u8* base, bool useDefaults) {
@@ -590,6 +590,9 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
 
 Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
     str::Builder out;
+    // UTF-8 BOM and CRLF. Windows 7 Notepad only breaks lines on CRLF and
+    // only treats the file as UTF-8 when a BOM is present (issue #6264).
+    out.Append(StrL(kUtf8Bom));
     SquareTreeNode* root = ParseSquareTree(prevData);
     SerializeStructRec(out, info, strct, root);
     delete root;
