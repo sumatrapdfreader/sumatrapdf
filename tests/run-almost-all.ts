@@ -276,6 +276,7 @@ import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
 import { testit as issue6259 } from "./issue-6259.ts";
 import { testit as fullscreenSessionRestore } from "./fullscreen-session-restore.ts";
 import { testit as stampEditToolbarName } from "./stamp-edit-toolbar-name.ts";
+import { testit as homeTipDoubleClick } from "./home-tip-double-click.ts";
 import { testit as issue6261 } from "./issue-6261.ts";
 import { testit as commandPaletteAnnotations } from "./command-palette-annotations.ts";
 import { testit as paletteDeleteAnnotation } from "./palette-delete-annotation.ts";
@@ -668,6 +669,7 @@ export const tests: NamedTest[] = [
   ["issue-6259", issue6259],
   ["fullscreen-session-restore", fullscreenSessionRestore],
   ["stamp-edit-toolbar-name", stampEditToolbarName],
+  ["home-tip-double-click", homeTipDoubleClick],
   ["issue-6261", issue6261],
   ["command-palette-annotations", commandPaletteAnnotations],
   ["palette-delete-annotation", paletteDeleteAnnotation],
