@@ -18,7 +18,7 @@ const WM_COMMAND = 0x0111;
 // the menu bar toolbar posts kMenuBarCmdFirst + <top level menu index> (Menu.cpp)
 const kMenuBarCmdFirst = 50000;
 // a re-open within 500ms of dismissing the popup is treated as toggle-close
-const kMenuBarToggleMs = 700;
+const kMenuReopenMs = 510;
 
 const docA = join(ROOT, "tests", "issue-1189.pdf");
 const docB = join(ROOT, "tests", "issue-3219.pdf");
@@ -36,7 +36,7 @@ async function fileMenuIds(frame: number, names: string[]): Promise<number[]> {
       ids[idx] = getMenuItemId(menu, i);
     }
   }
-  await pressKey(frame, VK_ESCAPE);
+  await pressKey(frame, VK_ESCAPE, 0);
   return ids;
 }
 
@@ -46,7 +46,6 @@ export async function testit(): Promise<void> {
     await waitForTitle(frame, (t) => t.includes("issue-3219"));
     // the File menu only exists as a menu bar, which is off by default here
     sendMessage(frame, WM_COMMAND, cmdId("CmdToggleMenuBar"), 0);
-    await Bun.sleep(kMenuBarToggleMs);
 
     const [idA, idB] = await fileMenuIds(frame, ["issue-1189", "issue-3219"]);
     if (!idA || !idB) {
@@ -56,7 +55,7 @@ export async function testit(): Promise<void> {
       throw new Error(`recent files share command id ${idA}`);
     }
 
-    await Bun.sleep(kMenuBarToggleMs);
+    await Bun.sleep(kMenuReopenMs);
     const [idA2] = await fileMenuIds(frame, ["issue-1189"]);
     if (idA2 !== idA) {
       throw new Error(`command id changed when the menu was rebuilt: ${idA} -> ${idA2}`);
