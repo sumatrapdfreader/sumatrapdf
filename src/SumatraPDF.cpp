@@ -2810,19 +2810,13 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             }
         }
 
-#if 0
-        // fix https://github.com/sumatrapdfreader/sumatrapdf/issues/5456
-        // bad initial layout with RememberOpenedFiles = false
-        // it's redundant with LayoutAndFocusOnStartup()
-
         // Fire deferred SWP_FRAMECHANGED for custom caption so the
         // non-client area is recalculated and the client rect is correct.
         // ShowMainWindow normally does this, but this code path bypasses it.
-        if (win->tabsInTitlebar) {
+        if (args->showWin && args->isNewWindow && win->tabsInTitlebar) {
             uint swpFlags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
             SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, swpFlags);
         }
-#endif
 
         if (win) {
             UpdateWindow(win->hwndFrame);
@@ -7883,11 +7877,12 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // inset by border for resize hit-testing (only with custom caption, not when maximized/fullscreen)
     if (win->tabsInTitlebar && !IsZoomed(win->hwndFrame) && !win->isFullScreen && !win->presentation) {
         rc.x += kFrameBorderSize;
-        // top border is kFrameBorderSize - 1 because 1px is already NC area
+        // on Wine top border is kFrameBorderSize - 1 because 1px is already NC area
         // (WM_NCCALCSIZE keeps 1px NC to prevent DWM transparent flash)
-        rc.y += kFrameBorderSize - 1;
+        int topBorder = IsRunningOnWine() ? kFrameBorderSize - 1 : kFrameBorderSize;
+        rc.y += topBorder;
         rc.dx -= 2 * kFrameBorderSize;
-        rc.dy -= kFrameBorderSize + (kFrameBorderSize - 1);
+        rc.dy -= kFrameBorderSize + topBorder;
     }
 
     // hide overlay scrollbars before relayout so they don't appear at
@@ -14586,6 +14581,11 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 *callDef = false;
                 return 0;
             }
+            // painting the non-client area ourselves turns off DWM frame rendering:
+            // the maximized window's overhang then counts as visible (#6259)
+            if (!IsRunningOnWine()) {
+                break;
+            }
             Vec<Rect> strips;
             GetFrameNcStrips(win, strips);
             HDC hdc = len(strips) > 0 ? GetWindowDC(hwnd) : nullptr;
@@ -14713,10 +14713,16 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                     r->right -= frameX;
                     r->bottom -= frameY;
                 }
-            } else if (!isFullScreen) {
+            } else if (!isFullScreen && IsRunningOnWine()) {
                 // keep 1px non-client area at top so DWM preserves content
                 // during resize (returning 0 makes DWM clear the surface)
                 r->top += 1;
+            } else if (!isFullScreen) {
+                // keep the standard side / bottom borders, DWM draws them as invisible
+                // resize borders; the caption is ours
+                int top = r->top;
+                DefWindowProcW(hwnd, msg, wp, lp);
+                r->top = top;
             }
             if (IsRunningOnWine()) {
                 logf("WM_NCCALCSIZE: after=(%ld,%ld,%ld,%ld) clientDy=%ld cyFrame=%d cyCaption=%d\n", r->left, r->top,

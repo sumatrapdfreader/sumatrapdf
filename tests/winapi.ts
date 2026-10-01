@@ -143,6 +143,10 @@ const shell32 = dlopen("shell32.dll", {
   SHAppBarMessage: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.u64 },
 });
 
+const dwmapi = dlopen("dwmapi.dll", {
+  DwmGetWindowAttribute: { args: [FFIType.ptr, FFIType.u32, FFIType.ptr, FFIType.u32], returns: FFIType.i32 },
+});
+
 const gdiplus = dlopen("gdiplus.dll", {
   GdiplusStartup: { args: [FFIType.ptr, FFIType.ptr, FFIType.ptr], returns: FFIType.u32 },
   GdipCreateBitmapFromHBITMAP: { args: [FFIType.u64, FFIType.u64, FFIType.ptr], returns: FFIType.u32 },
@@ -972,6 +976,15 @@ export function getWindowRect(hwnd: number): Rect {
   const buf = new Int32Array(4);
   user32.symbols.GetWindowRect(hwnd, ptr(buf));
   return { left: buf[0], top: buf[1], right: buf[2], bottom: buf[3] };
+}
+
+// the part of the window DWM shows (window rect minus invisible resize borders),
+// in screen coordinates; it's what Alt+PrtScn captures
+export function getExtendedFrameBounds(hwnd: number): Rect {
+  const DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+  const buf = new Int32Array(4);
+  dwmapi.symbols.DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, ptr(buf), buf.byteLength);
+  return { left: buf[0]!, top: buf[1]!, right: buf[2]!, bottom: buf[3]! };
 }
 
 // A hidden window keeps its last rect, so getWindowRect can't tell you whether a
