@@ -21,6 +21,7 @@ import {
   setCursorPos,
   sleep,
   VK_END,
+  VK_ESCAPE,
   VK_RETURN,
   WM_KEYDOWN,
   WM_KEYUP,
@@ -28,7 +29,7 @@ import {
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { findCanvas, killAndWait, launchControlled, pressEscape, sendCommandSync } from "./win-automation.ts";
+import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 type Point = { x: number; y: number };
 
@@ -122,17 +123,18 @@ async function selectLineWithKeyboard(client: ControlClient, frame: number): Pro
 }
 
 async function dragSelect(canvas: number, x0: number, y0: number, x1: number, y1: number): Promise<void> {
-  postMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x0, y0));
-  await sleep(150);
+  const start = clientToScreen(canvas, x0, y0);
+  setCursorPos(start.x, start.y);
+  sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(x0, y0));
+  sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x0, y0));
+  await sleep(50);
   const steps = 8;
   for (let i = 1; i <= steps; i++) {
     const x = Math.round(x0 + ((x1 - x0) * i) / steps);
     const y = Math.round(y0 + ((y1 - y0) * i) / steps);
-    postMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(x, y));
-    await sleep(60);
+    sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(x, y));
   }
-  postMessage(canvas, WM_LBUTTONUP, 0, packCoords(x1, y1));
-  await sleep(300);
+  sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(x1, y1));
 }
 
 async function drawStroke(canvas: number, points: Point[]): Promise<void> {
@@ -176,7 +178,6 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     const canvas = findCanvas(frame);
     sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(200);
 
     // text selected before picking the highlighter is highlighted right away
     await selectLineWithKeyboard(client, frame);
@@ -207,21 +208,20 @@ export async function testit(): Promise<void> {
     // Ctrl+click (which selects it in Edit PDF) doesn't pick it
     const hx = r.x + Math.floor(r.dx / 2);
     sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(hx, y));
-    await sleep(150);
     s = await state(client);
     if (s.hover) {
       throw new Error(`issue-6137: the highlighter hovers the annotation under the cursor\n${s.raw}`);
     }
     sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON | MK_CONTROL, packCoords(hx, y));
     sendMessage(canvas, WM_LBUTTONUP, MK_CONTROL, packCoords(hx, y));
-    await sleep(300);
     s = await state(client);
     if (s.selected || !s.highlighter) {
       throw new Error(`issue-6137: Ctrl+click in the highlighter selected an annotation\n${s.raw}`);
     }
 
     // Esc leaves it; then a selection is just a selection
-    await pressEscape(frame);
+    postMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
+    postMessage(frame, WM_KEYUP, VK_ESCAPE, 0);
     s = await waitUntil(client, (st) => !st.highlighter, "Esc did not leave the highlighter");
     await dragSelect(canvas, r.x + 2, y, r.x + r.dx - 2, y);
     s = await state(client);
@@ -257,7 +257,8 @@ export async function testit(): Promise<void> {
     if (!s.ink) {
       throw new Error(`issue-6137: the ink tool did not stay on after a stroke\n${s.raw}`);
     }
-    await pressEscape(frame);
+    postMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
+    postMessage(frame, WM_KEYUP, VK_ESCAPE, 0);
     await waitUntil(client, (st) => !st.ink, "Esc did not leave the ink tool");
   } finally {
     client.close();
