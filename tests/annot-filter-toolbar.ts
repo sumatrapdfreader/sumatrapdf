@@ -40,6 +40,7 @@ import {
   pressEscape,
   pressKey,
   sendCommand,
+  sendCommandSync,
 } from "./win-automation";
 
 const TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
@@ -182,8 +183,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     const pid = getWindowPid(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     // the main toolbar no longer carries a filter box (#6086)
     const toolbar = findChildByClass(frame, TOOLBAR_CLASS);
