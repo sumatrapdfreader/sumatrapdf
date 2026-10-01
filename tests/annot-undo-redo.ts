@@ -25,7 +25,7 @@ import {
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { clickAt, findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { clickAt, findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 type Square = { x: number; y: number; dx: number; dy: number };
 type State = {
@@ -77,16 +77,14 @@ async function state(client: ControlClient): Promise<State> {
 }
 
 async function undo(client: ControlClient, frame: number): Promise<State> {
-  sendCommand(frame, cmdId("CmdUndo"));
+  sendCommandSync(frame, cmdId("CmdUndo"));
   await client.waitForRenderIdle();
-  await sleep(150);
   return state(client);
 }
 
 async function redo(client: ControlClient, frame: number): Promise<State> {
-  sendCommand(frame, cmdId("CmdRedo"));
+  sendCommandSync(frame, cmdId("CmdRedo"));
   await client.waitForRenderIdle();
-  await sleep(150);
   return state(client);
 }
 
@@ -151,8 +149,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     let s = await state(client);
     want(s, "expected one square on the page", s.squares.length === 1);
@@ -210,9 +207,8 @@ export async function testit(): Promise<void> {
     want(s, "second undo did not bring the annotation back", s.annotations === 1);
 
     // a paste writes the annotation and its properties: one undo step
-    await clickAt(canvas, mid.x, mid.y);
+    await clickAt(canvas, mid.x, mid.y, 0);
     sendMessage(frame, WM_COMMAND, cmdId("CmdCopyAnnotation"), packCoords(mid.x, mid.y));
-    await sleep(150);
     sendMessage(frame, WM_COMMAND, cmdId("CmdPasteAnnotation"), packCoords(mid.x + 150, mid.y + 100));
     await client.waitForRenderIdle();
     s = await state(client);
@@ -223,7 +219,7 @@ export async function testit(): Promise<void> {
     // a resize drag rewrites the annotation on every mouse move: one undo step
     s = await state(client);
     const before = s.squares[0]!;
-    await clickAt(canvas, before.x + Math.floor(before.dx / 2), before.y + Math.floor(before.dy / 2));
+    await clickAt(canvas, before.x + Math.floor(before.dx / 2), before.y + Math.floor(before.dy / 2), 0);
     const corner = { x: before.x + before.dx, y: before.y + before.dy };
     const start = clientToScreen(canvas, corner.x, corner.y);
     setCursorPos(start.x, start.y);
@@ -233,11 +229,9 @@ export async function testit(): Promise<void> {
       const sp = clientToScreen(canvas, p.x, p.y);
       setCursorPos(sp.x, sp.y);
       sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(p.x, p.y));
-      await sleep(30);
     }
     sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(corner.x + 36, corner.y + 36));
     await client.waitForRenderIdle();
-    await sleep(200);
     s = await state(client);
     const resized = s.squares[0]!;
     want(s, `the resize drag did not grow the square (${resized.dx}x${resized.dy})`, resized.dx > before.dx + 8);
