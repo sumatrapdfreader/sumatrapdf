@@ -22,6 +22,7 @@ clangtidy.out.txt
 node_modules
 
 .claude/settings.local.json
+.playwright-mcp/
 pipe-preview-results
 nul
 docs/scratch.txt
