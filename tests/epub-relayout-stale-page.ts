@@ -41,7 +41,7 @@ const CHAPTER_COUNT = 40;
 const PARAS_PER_CHAPTER = 40;
 // stop short of the last chapter, like the reader who was at chapter 34 of 36+
 const DEEP_CHAPTER = 34;
-const THEME_TOGGLES = 3;
+const THEME_TOGGLES = 1;
 // the flat page number the crash was holding
 const CRASH_PAGE_NO = 95;
 
