@@ -180,7 +180,7 @@ static void icoTest() {
     utassert(fti.hasImageSize);
 
     // two sizes; 0 in the directory means 256
-    u8 icoTwo[6 + 16 * 2] = {};
+    u8 icoTwo[6 + (16 * 2)] = {};
     icoTwo[2] = 1;
     icoTwo[4] = 2;
     icoTwo[6] = 16;

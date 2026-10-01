@@ -256,8 +256,8 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
                 page->pos.y += slack.dy;
             }
         }
-        canvasDx = std::max(canvasDx, viewPort.dx) + 2 * slack.dx;
-        canvasDy = std::max(canvasDy, viewPort.dy) + 2 * slack.dy;
+        canvasDx = std::max(canvasDx, viewPort.dx) + (2 * slack.dx);
+        canvasDy = std::max(canvasDy, viewPort.dy) + (2 * slack.dy);
     }
 
     layout.canvasSize = Size(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));

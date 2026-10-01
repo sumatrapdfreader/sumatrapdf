@@ -266,7 +266,7 @@ static bool ParseU32Pair(Str s, DWORD& hi, DWORD& lo) {
         }
         u64 v = 0;
         while (p < end && *p >= '0' && *p <= '9') {
-            v = v * 10 + (u64)(*p - '0');
+            v = (v * 10) + (u64)(*p - '0');
             if (v > 0xffffffffu) {
                 return false;
             }

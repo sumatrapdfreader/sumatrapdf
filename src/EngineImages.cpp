@@ -262,15 +262,15 @@ static u8* AllocFzDecodeDst(void* user, int dx, int dy, bool hasAlpha, int* stri
 // fz_pixmap with alpha must be premultiplied; decoders give straight alpha
 static void PremultiplyRgba(fz_pixmap* pix) {
     for (int y = 0; y < pix->h; y++) {
-        u8* p = pix->samples + (size_t)y * pix->stride;
+        u8* p = pix->samples + ((size_t)y * pix->stride);
         for (int x = 0; x < pix->w; x++, p += 4) {
             int a = p[3];
             if (a == 255) {
                 continue;
             }
-            p[0] = (u8)((p[0] * a + 127) / 255);
-            p[1] = (u8)((p[1] * a + 127) / 255);
-            p[2] = (u8)((p[2] * a + 127) / 255);
+            p[0] = (u8)(((p[0] * a) + 127) / 255);
+            p[1] = (u8)(((p[1] * a) + 127) / 255);
+            p[2] = (u8)(((p[2] * a) + 127) / 255);
         }
     }
 }
@@ -651,10 +651,10 @@ static fz_pixmap* ScaleDecodedToTile(fz_context* ctx, fz_pixmap* decoded, fz_mat
     float ky = (float)mediaScreen.dy / (float)reqH;
     // whole pixels: a fractional dest makes fz_scale_pixmap add alpha and
     // feather the edges, which shows as seams between tiles
-    int x0 = (int)floorf(ctm.e * kx + 0.5f);
-    int y0 = (int)floorf(ctm.f * ky + 0.5f);
-    int x1 = (int)floorf((ctm.e + ctm.a) * kx + 0.5f);
-    int y1 = (int)floorf((ctm.f + ctm.d) * ky + 0.5f);
+    int x0 = (int)floorf((ctm.e * kx) + 0.5f);
+    int y0 = (int)floorf((ctm.f * ky) + 0.5f);
+    int x1 = (int)floorf(((ctm.e + ctm.a) * kx) + 0.5f);
+    int y1 = (int)floorf(((ctm.f + ctm.d) * ky) + 0.5f);
     fz_irect tile;
     tile.x0 = screen.x - mediaScreen.x;
     tile.y0 = screen.y - mediaScreen.y;

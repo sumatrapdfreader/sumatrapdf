@@ -90,9 +90,9 @@ static Str MkLitPosOverflow() {
     constexpr int kHdrLen = 40;
     constexpr int kNPieces = 5;
     constexpr int kSecHdrLen = 16;
-    constexpr int kFileLen = kHdrLen + kNPieces * 16 + kSecHdrLen;
+    constexpr int kFileLen = kHdrLen + (kNPieces * 16) + kSecHdrLen;
     Str s = MkLitBuf(kFileLen, kHdrLen, kNPieces, kSecHdrLen);
-    PutU32((u8*)s.s, kHdrLen + kNPieces * 16 + 4, 0x7fffffff);
+    PutU32((u8*)s.s, kHdrLen + (kNPieces * 16) + 4, 0x7fffffff);
     return s;
 }
 
@@ -101,14 +101,14 @@ static Str MkLitDirRangeWrap() {
     constexpr int kHdrLen = 40;
     constexpr int kNPieces = 5;
     constexpr int kSecHdrLen = 56;
-    constexpr int kFileLen = kHdrLen + kNPieces * 16 + kSecHdrLen;
+    constexpr int kFileLen = kHdrLen + (kNPieces * 16) + kSecHdrLen;
     Str s = MkLitBuf(kFileLen, kHdrLen, kNPieces, kSecHdrLen);
     u8* d = (u8*)s.s;
     LeWriter w{d, kFileLen};
     w.off = kHdrLen + 16; // piece 1
     w.U64(0x7ffffffff0000000ull);
     w.U64(0x10000010ull);
-    w.off = kHdrLen + kNPieces * 16;
+    w.off = kHdrLen + (kNPieces * 16);
     w.U32(0);
     w.U32(8); // pos of ITSF
     w.Bytes("ITSF", 4);
@@ -121,7 +121,7 @@ static Str MkLitContentOffsetNeg() {
     constexpr int kHdrLen = 40;
     constexpr int kNPieces = 5;
     constexpr int kSecHdrLen = 56;
-    constexpr int kDirOff = kHdrLen + kNPieces * 16 + kSecHdrLen; // 176
+    constexpr int kDirOff = kHdrLen + (kNPieces * 16) + kSecHdrLen; // 176
     constexpr int kChunkSize = 128;
     constexpr int kDirLen = 32 + kChunkSize;
     constexpr int kFileLen = kDirOff + kDirLen; // 336
@@ -133,7 +133,7 @@ static Str MkLitContentOffsetNeg() {
     w.U64(kDirOff);
     w.U64(kDirLen);
 
-    w.off = kHdrLen + kNPieces * 16;
+    w.off = kHdrLen + (kNPieces * 16);
     w.U32(0);
     w.U32(8);
     w.Bytes("ITSF", 4);
@@ -165,7 +165,7 @@ static Str MkLitSectionOffsetWrap() {
     constexpr int kHdrLen = 40;
     constexpr int kNPieces = 5;
     constexpr int kSecHdrLen = 56;
-    constexpr int kDirOff = kHdrLen + kNPieces * 16 + kSecHdrLen; // 176
+    constexpr int kDirOff = kHdrLen + (kNPieces * 16) + kSecHdrLen; // 176
     constexpr int kChunkSize = 256;
     constexpr int kDirLen = 32 + kChunkSize;       // 288
     constexpr int kContentOff = kDirOff + kDirLen; // 464
@@ -178,7 +178,7 @@ static Str MkLitSectionOffsetWrap() {
     w.U64(kDirOff);
     w.U64(kDirLen);
 
-    w.off = kHdrLen + kNPieces * 16;
+    w.off = kHdrLen + (kNPieces * 16);
     w.U32(0);
     w.U32(8);
     w.Bytes("ITSF", 4);

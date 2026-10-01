@@ -73,8 +73,8 @@ static void FillLinkAaPixels(u8* p, int bpp) {
     p[bpp + 2] = 0;
     // ~50% coverage (R/G halfway to paper)
     p[2 * bpp] = 255;
-    p[2 * bpp + 1] = 128;
-    p[2 * bpp + 2] = 128;
+    p[(2 * bpp) + 1] = 128;
+    p[(2 * bpp) + 2] = 128;
 }
 
 static void CheckLinkAaPixels(u8* p, int bpp) {
@@ -91,8 +91,8 @@ static void CheckLinkAaPixels(u8* p, int bpp) {
     utassert(p[bpp] == lb && p[bpp + 1] == lg && p[bpp + 2] == lr);
     // fringe interpolates toward background, not snapped to link
     utassert(p[2 * bpp] == RecolorLerp(lb, bb, 128));
-    utassert(p[2 * bpp + 1] == RecolorLerp(lg, bgc, 128));
-    utassert(p[2 * bpp + 2] == RecolorLerp(lr, br, 128));
+    utassert(p[(2 * bpp) + 1] == RecolorLerp(lg, bgc, 128));
+    utassert(p[(2 * bpp) + 2] == RecolorLerp(lr, br, 128));
 }
 
 static void RecolorLinkAaTest() {
@@ -140,7 +140,7 @@ static HICON MakeMaskedRedIcon() {
     memset(maskBits, 0xFF, sizeof(maskBits));
     for (int y = 4; y < 12; y++) {
         maskBits[y * 2] = 0xF0;
-        maskBits[y * 2 + 1] = 0x0F;
+        maskBits[(y * 2) + 1] = 0x0F;
     }
     HBITMAP hbmMask = CreateBitmap(n, n, 1, 1, maskBits);
     if (!hbmMask) {
@@ -162,12 +162,12 @@ static HICON MakeMaskedRedIcon() {
 static void FillBlitPattern(Pixmap* p) {
     for (int y = 0; y < p->height; y++) {
         u8* d = p->data + ((size_t)y * p->stride);
-        u8 v = (u8)(40 + (y % 17) * 7);
+        u8 v = (u8)(40 + ((y % 17) * 7));
         int bpp = PixmapBytesPerPixel(p->format);
         for (int x = 0; x < p->width; x++, d += bpp) {
             d[0] = v;
             d[1] = (u8)(v + (x % 3));
-            d[2] = (u8)(200 - (y % 17) * 5);
+            d[2] = (u8)(200 - ((y % 17) * 5));
             if (bpp == 4) {
                 d[3] = 255;
             }

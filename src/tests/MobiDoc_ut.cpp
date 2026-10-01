@@ -21,7 +21,7 @@ constexpr int kPalmDocLen = 16;
 constexpr int kMobiHdrLen = 116;
 
 constexpr int kNumRecs = 2;
-constexpr int kRec0Off = kPdbHeaderLen + kNumRecs * kRecHeaderLen;
+constexpr int kRec0Off = kPdbHeaderLen + (kNumRecs * kRecHeaderLen);
 constexpr int kRec0Len = kPalmDocLen + kMobiHdrLen;
 constexpr int kRec1Off = kRec0Off + kRec0Len;
 constexpr int kRec1Len = 4;

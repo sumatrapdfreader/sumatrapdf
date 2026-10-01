@@ -90,8 +90,8 @@ static void TransparentImageTest() {
     utassert(bi->bV5Width == p->width);
     utassert(bi->bV5Height == -p->height); // top-down
     const u8* bits = (const u8*)dib.s + sizeof(BITMAPV5HEADER);
-    utassert(bits[3] == 255);                            // first pixel: opaque
-    utassert(bits[((size_t)p->width - 1) * 4 + 3] == 0); // last pixel of row 0: transparent
+    utassert(bits[3] == 255);                              // first pixel: opaque
+    utassert(bits[(((size_t)p->width - 1) * 4) + 3] == 0); // last pixel of row 0: transparent
     CloseClipboard();
 
     FreePixmap(p);
@@ -126,8 +126,8 @@ static void RoundTripThroughRenderedBitmapTest() {
     utassert(back != nullptr);
     utassert(back->format == PixmapFormat::BGRA8);
     utassert(back->data != nullptr);
-    utassert(back->data[3] == 255);                               // opaque half
-    utassert(back->data[((size_t)back->width - 1) * 4 + 3] == 0); // transparent half
+    utassert(back->data[3] == 255);                                 // opaque half
+    utassert(back->data[(((size_t)back->width - 1) * 4) + 3] == 0); // transparent half
 
     utassert(CopyPixmapToClipboard(back, false));
     utassert(IsClipboardFormatAvailable(cfPng));
@@ -147,9 +147,9 @@ static void ClipboardStampRoundTripTest() {
         for (int y = 0; y < h; y++) {
             u8* d = src->data + ((size_t)y * src->stride);
             for (int x = 0; x < w; x++, d += 4) {
-                d[0] = (u8)(x * 17 + y); // b
-                d[1] = (u8)(y * 40 + 10);
-                d[2] = (u8)(x * 40 + 20);
+                d[0] = (u8)((x * 17) + y); // b
+                d[1] = (u8)((y * 40) + 10);
+                d[2] = (u8)((x * 40) + 20);
                 d[3] = 255;
             }
         }
