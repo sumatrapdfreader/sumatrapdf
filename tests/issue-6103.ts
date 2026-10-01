@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { findTopWindow, getWindowPid, packCoords, sendMessage, sleep, WM_COMMAND } from "./winapi.ts";
-import { clickAt, killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
+import { clickAt, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 const FLOAT_CLASS = "SUMATRA_ANNOT_FILTER_WND";
 
@@ -68,8 +68,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     sendCommandSync(frame, cmdId("CmdFindAnnotation"));
     const listDeadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
@@ -102,7 +101,6 @@ export async function testit(): Promise<void> {
     }
 
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFileAttachment"), packCoords(40, 40));
-    await sleep(400);
     await client.waitForRenderIdle();
 
     const empty = await toolbarDump(client, "empty file attachment toolbar did not appear");
