@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, pollUntil, runStandalone, tmpPath } from "./util.ts";
 import { sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
@@ -27,6 +27,10 @@ async function state(client: ControlClient): Promise<State> {
     }
     await sleep(50);
   }
+}
+
+async function waitState(client: ControlClient, done: (s: State) => boolean): Promise<State> {
+  return pollUntil(() => state(client), done, { error: (s) => `issue-6217: markup state did not change\n${s.raw}` });
 }
 
 function want(s: State, what: string, cond: boolean): void {
@@ -53,15 +57,11 @@ export async function testit(): Promise<void> {
 
     await client.seedTextSelection(1);
     sendCommand(frame, cmdId("CmdCreateAnnotHighlight"));
-    await sleep(300);
-    await client.waitForRenderIdle();
-    let s = await state(client);
+    let s = await waitState(client, (v) => v.annotations === 1 && v.canUndo && v.modified);
     want(s, "the highlight was not created", s.annotations === 1 && s.canUndo && s.modified);
 
     sendCommand(frame, cmdId("CmdUndo"));
-    await client.waitForRenderIdle();
-    await sleep(150);
-    s = await state(client);
+    s = await waitState(client, (v) => v.annotations === 0 && !v.canUndo && !v.modified);
     want(s, "one undo must remove the highlight", s.annotations === 0);
     want(s, "one undo must leave nothing else to undo", !s.canUndo);
     want(s, "one undo must leave the document unmodified", !s.modified);
