@@ -7902,12 +7902,14 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // would hide the frame on every mouse move and flash the TOC through the
     // transparent WebView2 in the strip the canvas just inherited
     bool isSplitterDrag = sidebarDx != -1;
+    // dragging the splitter between the sidebar panels is just as live
+    bool isLiveDrag = isSplitterDrag || win->uiState.panelsDrag;
     // Fullscreen changes both the canvas origin and size while frame redraw is
     // disabled. Preserving its old screen bits copies the normal-window tabs,
     // toolbar, and document into the fullscreen surface until a later paint.
     bool discardCanvasBits = win->suppressFrameRedraw || (isSplitterDrag && IsBrowserDocController(win->ctrl));
     bool suppressIntermediateRedraws =
-        !isSplitterDrag && !isFrameResize && !win->suppressFrameRedraw && HwndIsVisible(win->hwndFrame);
+        !isLiveDrag && !isFrameResize && !win->suppressFrameRedraw && HwndIsVisible(win->hwndFrame);
     if (suppressIntermediateRedraws) {
         // suppress intermediate repaints during relayout
         SendMessageW(win->hwndFrame, WM_SETREDRAW, FALSE, 0);
@@ -8173,7 +8175,11 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
     // during a live splitter drag we must paint synchronously: WM_PAINT is
     // starved by the stream of WM_MOUSEMOVE messages
-    if (isSplitterDrag) {
+    if (win->uiState.panelsDrag && bottomVisible) {
+        // the bottom panel moved: its children (filter box) aren't invalidated by that
+        RedrawWindow(bottomHwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
+    }
+    if (isLiveDrag) {
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
     }
     if (updateToolbars && win->tabsInTitlebar && !win->isFullScreen) {
@@ -8276,6 +8282,7 @@ static void FrameUpdateUi(MainWindow* win) {
     // RelayoutFrame skips when nothing layout-affecting changed (a force is
     // requested by clearing win->uiState.layout)
     bool didLayout = RelayoutFrame(win, updateToolbars, sidebarDx);
+    ui.panelsDrag = false;
     if (!didLayout) {
         // layout snapshot unchanged, so RelayoutFrame returned early; still
         // finish a LoadDocument Relayout that was waiting for the canvas
@@ -8359,6 +8366,9 @@ void ScheduleUiUpdate(MainWindow* win, u32 flags, int sidebarDx) {
     }
     if (flags & kUiSidebarDirty) {
         ui.sidebarDirty = true;
+    }
+    if (flags & kUiPanelsDrag) {
+        ui.panelsDrag = true;
     }
     if (ui.updatePending) {
         return; // one FrameUpdateUi is already queued; it'll pick this up
@@ -10017,7 +10027,7 @@ static void OnPanelsSplitterMove(VirtSplitter::MoveEvent* ev) {
     gSettings->tocDy = tocDy;
     // the sidebar width is unchanged (win->sidebarDx); kUiNoToolbars makes
     // the relayout run unconditionally
-    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars);
+    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiPanelsDrag);
 }
 
 static int SidebarExtraDx(MainWindow* win) {

@@ -566,6 +566,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
         bool toolbarDirty = false;  // repaint the toolbar on the next update
         bool tabsDirty = false;     // repaint the tab bar on the next update
         bool sidebarDirty = false;  // repaint the sidebar panels on the next update
+        bool panelsDrag = false;    // the pending update is a sidebar panels splitter drag
         // RelayoutFrame args for the pending update: updateToolbars is the OR
         // of all pending requests, sidebarDx is last-request-wins (-1 = keep
         // the current sidebar width)

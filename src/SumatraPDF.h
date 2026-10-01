@@ -222,6 +222,7 @@ constexpr u32 kUiTabsDirty = 0x8;    // repaint the tab bar
 // ignored if another pending request wants them updated
 constexpr u32 kUiNoToolbars = 0x10;
 constexpr u32 kUiSidebarDirty = 0x20; // repaint toc/favorites boxes and their splitters
+constexpr u32 kUiPanelsDrag = 0x40;   // live drag of the splitter between the sidebar panels
 
 void ScheduleUiUpdate(MainWindow* win, u32 flags = kUiRelayout, int sidebarDx = -1);
 void DuplicateTabInNewWindow(WindowTab* tab);
