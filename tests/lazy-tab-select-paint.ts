@@ -12,9 +12,9 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { ControlClient, ControlCommand } from "./control.ts";
+import { cmdId, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { killAndWait, killProcessesNamed, launchControlled, sendCommand, takeStderr } from "./win-automation.ts";
-import { sleep } from "./winapi.ts";
 
 const LAZY_PDF = resolve("tests/issue-1189.pdf");
 const LOADED_PDF = resolve("tests/issue-1809.pdf");
@@ -57,6 +57,25 @@ ${tabState(LOADED_PDF)}
   writeFileSync(join(APPDATA, "SumatraPDF-settings.txt"), seed, "utf8");
 }
 
+async function currentPath(client: ControlClient): Promise<string> {
+  const res = await client.request(ControlCommand.TestCurrentTab, []);
+  const raw = String(res[1] ?? "").trim();
+  const m = /^path=(.+?) page=/.exec(raw);
+  if (res[0] !== 0 || !m) {
+    throw new Error(`lazy-tab-select-paint: could not read current tab: ${raw}`);
+  }
+  return resolve(m[1]!);
+}
+
+async function placementActive(client: ControlClient): Promise<boolean> {
+  const res = await client.request(ControlCommand.TestMarkupAnnots, []);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0) {
+    throw new Error(`lazy-tab-select-paint: could not read placement state: ${raw.trim()}`);
+  }
+  return /Placement active=1/.test(raw);
+}
+
 export async function testit(): Promise<void> {
   await killProcessesNamed("SumatraPDF.exe");
   seedSettings();
@@ -68,12 +87,26 @@ export async function testit(): Promise<void> {
     // an active placement is cancelled while closing the outgoing document,
     // which refreshes the toolbar through IsDocLoaded (crash 2026-09-19-12-22-8c3a)
     sendCommand(frame, cmdId("CmdCreateAnnotSquare"));
-    await sleep(300 * SLOW_BUILD_FACTOR);
+    await pollUntil(
+      () => placementActive(client),
+      (active) => active,
+      {
+        timeoutMs: 5000 * SLOW_BUILD_FACTOR,
+        error: "lazy-tab-select-paint: square placement did not start",
+      },
+    );
 
     // selecting the lazy tab paints the outgoing document under a notification
     // posted: SendMessage would deadlock with the app writing the report to our stderr
     sendCommand(frame, cmdId("CmdPrevTab"));
-    await sleep(500 * SLOW_BUILD_FACTOR);
+    await pollUntil(
+      () => currentPath(client),
+      (path) => path === LAZY_PDF,
+      {
+        timeoutMs: 5000 * SLOW_BUILD_FACTOR,
+        error: (path) => `lazy-tab-select-paint: selected ${path}, want ${LAZY_PDF}`,
+      },
+    );
     await client.waitForRenderIdle(30000);
 
     await client.quit();
