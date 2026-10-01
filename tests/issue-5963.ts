@@ -168,7 +168,6 @@ export async function testit(): Promise<void> {
     const dlg = await waitFor("Sign Document dialog", () =>
       findTopWindow(pid, "SumatraWgDefaultWinClass", "Sign Document"),
     );
-    await sleep(400);
 
     let boxes = new Map<string, number>();
     for (const deadline = Date.now() + 3000; Date.now() < deadline;) {
