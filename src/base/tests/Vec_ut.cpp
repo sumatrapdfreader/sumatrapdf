@@ -156,10 +156,7 @@ void VecTest() {
         for (int i = 0; i < 32; i++) {
             utassert(len(v) == i * 6);
             v.Append(StrL("lambd"));
-            if (i % 2 == 0)
-                v.AppendChar('a');
-            else
-                v.AppendChar('a');
+            v.AppendChar('a');
         }
 
         for (int i = 1; i <= 16; i++) {

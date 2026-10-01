@@ -16077,9 +16077,8 @@ static bool SetupPluginMode(Flags& i) {
             int pageNo;
             if (str::TrimPrefixI(pageArg, StrL("page=")) && !str::IsNull(str::Parse(pageArg, "%d%$", &pageNo))) {
                 i.pageNumber = pageNo;
-            } else if (str::TrimPrefixI(part, StrL("nameddest=")) && part) {
-                i.namedDest = str::Dup(part);
-            } else if (!str::ContainsChar(part, '=') && part) {
+            } else if ((str::TrimPrefixI(part, StrL("nameddest=")) || !str::ContainsChar(part, '=')) && part) {
+                // "nameddest=foo" or a bare fragment with no '='
                 i.namedDest = str::Dup(part);
             }
         }
@@ -18648,12 +18647,10 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
             Str path = flags.fileNames[n];
             bool isFirstWindow = (0 == n);
             bool savedInNewWindow = flags.inNewWindow;
-            if (reuseInNewWindow && n == 0) {
+            if ((reuseInNewWindow && n == 0) || userNewWindowEach) {
                 flags.inNewWindow = true;
             } else if (userNewWindowTabs) {
                 flags.inNewWindow = (n == 0);
-            } else if (userNewWindowEach) {
-                flags.inNewWindow = true;
             }
             OpenUsingDDE(existingHwnd, path, flags, isFirstWindow);
             flags.inNewWindow = savedInNewWindow;

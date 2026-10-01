@@ -462,10 +462,9 @@ static const char* NativeLongName(BenchFormat fmt) {
             return "libjpeg";
         case BenchFormat::Webp:
             return "libwebp";
-        case BenchFormat::Avif:
-            return "heicdec"; // AV1 via dav1d
-        case BenchFormat::Heif:
-            return "heicdec"; // HEVC pure-C
+        case BenchFormat::Avif: // AV1 via dav1d
+        case BenchFormat::Heif: // HEVC pure-C
+            return "heicdec";
         case BenchFormat::Jxl:
             return "jxldec";
     }

@@ -1118,6 +1118,8 @@ void CommandPaletteWnd::UpdateHelpRow() {
             strings[nHelp++] = Tr("Esc close");
             break;
         case kHelpAnnotations:
+        case kHelpThumbnails:
+        case kHelpToc:
             strings[nHelp++] = Tr("Enter go to");
             strings[nHelp++] = Tr("Esc close");
             break;
@@ -1128,14 +1130,6 @@ void CommandPaletteWnd::UpdateHelpRow() {
         case kHelpSettingValue:
             strings[nHelp++] = Tr("Enter apply");
             strings[nHelp++] = Tr("Esc go back");
-            break;
-        case kHelpThumbnails:
-            strings[nHelp++] = Tr("Enter go to");
-            strings[nHelp++] = Tr("Esc close");
-            break;
-        case kHelpToc:
-            strings[nHelp++] = Tr("Enter go to");
-            strings[nHelp++] = Tr("Esc close");
             break;
         case kHelpEverything:
             strings[nHelp++] = Tr("Enter select");

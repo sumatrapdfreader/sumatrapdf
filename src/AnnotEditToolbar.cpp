@@ -882,9 +882,8 @@ static fz_path* ParseMupdfIconPath(fz_context* ctx, const char* s) {
                 float b = PdfPathPop(stk, top);
                 float a = PdfPathPop(stk, top);
                 ctm = fz_concat(fz_make_matrix(a, b, c, d, e, f), ctm);
-            } else if (nOp == 1 && op[0] == 'f') {
-                top = 0;
             } else {
+                // 'f' and unknown ops: drop the operands, keep the path
                 top = 0;
             }
         }

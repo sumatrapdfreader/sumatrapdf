@@ -5788,12 +5788,10 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
                     // reloadOnFocus set or a later tab focus would reload
                     tab->ignoreNextAutoReload = false;
                     tab->reloadOnFocus = false;
-                } else if (IsThreadInMenuMode()) {
+                } else if (IsThreadInMenuMode() || AutoReloadFileStillChanging(tab)) {
                     // an open menu's nested loop dispatches this timer while
                     // OnWindowContextMenu still holds the controller, engine and
-                    // page element it cached: reload once the menu is gone
-                    SetTimer(hwnd, kAutoReloadTimerID, kAutoReloadDelayInMs, nullptr);
-                } else if (AutoReloadFileStillChanging(tab)) {
+                    // page element it cached: reload once the menu is gone.
                     // a writer (LaTeX etc.) is still producing the file: reloading
                     // now shows a half-written document ("cannot find startxref",
                     // "document has no pages") and costs a second reload once the
