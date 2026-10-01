@@ -12,13 +12,12 @@ import {
   packCoords,
   sendMessage,
   setCursorPos,
-  sleep,
   MK_LBUTTON,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { clickAt, findCanvas, killAndWait, launchControlled, pressEscape, sendCommand } from "./win-automation.ts";
+import { clickAt, findCanvas, killAndWait, launchControlled, pressEscape, sendCommandSync } from "./win-automation.ts";
 
 type Sel = { rect: { x: number; y: number; dx: number; dy: number }; canResize: boolean; raw: string };
 
@@ -81,8 +80,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     // the square tells us where the page is on screen; neither RichMedia nor
     // 3D is in the markup-annots dump
@@ -101,8 +99,7 @@ export async function testit(): Promise<void> {
       await pressEscape(frame);
       const x = Math.round(ox + r[0]! * scale) + 50;
       const y = Math.round(oy + (792 - r[3]!) * scale) + 50;
-      await clickAt(canvas, x, y);
-      await sleep(250);
+      await clickAt(canvas, x, y, 0);
       const before = await selected(client);
       if (!before) {
         throw new Error(`annot-moveable-types: a ${name} annotation could not be selected`);
@@ -118,7 +115,6 @@ export async function testit(): Promise<void> {
       sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x, y));
       sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(to.x, to.y));
       sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(to.x, to.y));
-      await sleep(300);
       await client.waitForRenderIdle();
 
       const after = await selected(client);
