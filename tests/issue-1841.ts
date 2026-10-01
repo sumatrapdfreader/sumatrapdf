@@ -10,18 +10,20 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient } from "./control.ts";
 import { makeBookmarkedPdf } from "./toc-tree-sent-click.ts";
-import { runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { pollUntil, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
-import { findVisibleChildWindow, postMessage, sleep, WM_KEYDOWN } from "./winapi.ts";
+import { findVisibleChildWindow, postMessage, WM_KEYDOWN } from "./winapi.ts";
 
 const VK_PRIOR = 0x21;
 const VK_NEXT = 0x22;
 
-async function pageAfterKey(client: ControlClient, tree: number, vk: number): Promise<number> {
+async function pageAfterKey(client: ControlClient, tree: number, vk: number, want: number): Promise<number> {
   postMessage(tree, WM_KEYDOWN, vk, 0);
-  await sleep(300 * SLOW_BUILD_FACTOR);
-  await client.waitForRenderIdle();
-  return (await client.chapterInfo()).page;
+  return pollUntil(
+    async () => (await client.chapterInfo()).page,
+    (page) => page === want,
+    { error: (page) => `issue-1841: key left document on page ${page}, want ${want}` },
+  );
 }
 
 export async function testit(): Promise<void> {
@@ -37,11 +39,11 @@ export async function testit(): Promise<void> {
     if (!tree) {
       throw new Error("issue-1841: bookmarks tree not found");
     }
-    const down = await pageAfterKey(client, tree, VK_NEXT);
+    const down = await pageAfterKey(client, tree, VK_NEXT, 2);
     if (down !== 2) {
       throw new Error(`issue-1841: PageDown in the bookmarks tree went to page ${down}, want 2`);
     }
-    const up = await pageAfterKey(client, tree, VK_PRIOR);
+    const up = await pageAfterKey(client, tree, VK_PRIOR, 1);
     if (up !== 1) {
       throw new Error(`issue-1841: PageUp in the bookmarks tree went to page ${up}, want 1`);
     }
