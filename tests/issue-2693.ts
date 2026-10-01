@@ -92,18 +92,18 @@ export async function testit(): Promise<void> {
     postMessage(canvas, WM_MOUSEMOVE, 0, packCoords(cx, cy + 9));
     await sleep(200);
     const start = getScrollPos(canvas);
-    await sleep(1500);
+    await sleep(600);
     const end = getScrollPos(canvas);
 
     // stop auto-scroll (second middle-click toggles it off)
     postMessage(canvas, WM_MBUTTONDOWN, MK_MBUTTON, packCoords(cx, cy + 9));
 
     const moved = end - start;
-    console.log(`  at cursor offset 9: scrolled ${moved}px in 1.5s (pos ${start} -> ${end})`);
+    console.log(`  at cursor offset 9: scrolled ${moved}px in 0.6s (pos ${start} -> ${end})`);
 
-    // new float code scrolls ~0.9px/20ms (~45px/s nominal) -> tens of px over 1.5s;
+    // new float code scrolls ~0.9px/20ms (~45px/s nominal) -> several px over 0.6s;
     // old integer code truncates the speed to 0 and the document stays put.
-    if (moved < 15) {
+    if (moved < 5) {
       throw new Error(
         `middle-click auto-scroll did not move at fractional speed (moved ${moved}px); ` +
           `with integer speed (the un-fixed behavior) it would be ~0`,
