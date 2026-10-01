@@ -168,6 +168,8 @@ export async function launchControlled(
     if (!path || path.startsWith("-")) {
       throw new Error("shared controlled session needs a document path as its last argument");
     }
+    // Cancel a gesture left by the prior test, or the next click only resets it.
+    sendMessage(sharedSession.frame, WM_KEYDOWN, VK_ESCAPE, 0);
     sendMessage(sharedSession.frame, WM_COMMAND, cmdId("CmdDiscardChanges"), 0);
     sendMessage(sharedSession.frame, WM_COMMAND, cmdId("CmdToggleEditPDF"), 0);
     const command = `[Open("${path}", 0, 1, 0)]`;
