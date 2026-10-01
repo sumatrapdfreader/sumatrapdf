@@ -8,6 +8,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, killProcessesNamed, launchControlled, sendCommandSync } from "./win-automation.ts";
+import { getClipboardText } from "./winapi.ts";
 
 function makePdf(nPages: number): Buffer {
   const kids: string[] = [];
@@ -22,15 +23,6 @@ function makePdf(nPages: number): Buffer {
     ...pages,
   ];
   return Buffer.from(assemblePdf(objs, { header: "%PDF-1.7\n" }), "latin1");
-}
-
-function getClipboardText(): string {
-  const r = Bun.spawnSync(["powershell", "-NoProfile", "-Command", "Get-Clipboard -Raw"]);
-  return r.stdout.toString().trim();
-}
-
-function setClipboardText(s: string): void {
-  Bun.spawnSync(["powershell", "-NoProfile", "-Command", `Set-Clipboard -Value '${s}'`]);
 }
 
 // split "-page 3 -zoom "400%" -scroll 0,12 "c:\a b\f.pdf"" into argv
@@ -52,9 +44,8 @@ async function copyLocation(args: string[], nScrolls: number): Promise<string> {
     }
     await client.waitForRenderIdle();
 
-    setClipboardText("nothing-copied-yet");
     sendCommandSync(frame, cmdId("CmdCopyLocationToClipboard"));
-    return getClipboardText();
+    return (await getClipboardText()).trim();
   } finally {
     client.close();
     await killAndWait(proc);

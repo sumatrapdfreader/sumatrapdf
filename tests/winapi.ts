@@ -81,6 +81,9 @@ const user32 = dlopen("user32.dll", {
   GetSubMenu: { args: [FFIType.u64, FFIType.i32], returns: FFIType.u64 },
   GetMenuStringW: { args: [FFIType.u64, FFIType.u32, FFIType.ptr, FFIType.i32, FFIType.u32], returns: FFIType.i32 },
   GetMenuState: { args: [FFIType.u64, FFIType.u32, FFIType.u32], returns: FFIType.u32 },
+  OpenClipboard: { args: [FFIType.ptr], returns: FFIType.bool },
+  CloseClipboard: { args: [], returns: FFIType.bool },
+  GetClipboardData: { args: [FFIType.u32], returns: FFIType.u64 },
 });
 
 // GDI + GDI+ for capturing a window to a PNG (see captureWindowToPng). Capturing
@@ -176,6 +179,9 @@ const kernel32 = dlopen("kernel32.dll", {
     returns: FFIType.u64,
   },
   DeleteFileW: { args: [FFIType.ptr], returns: FFIType.bool },
+  GlobalLock: { args: [FFIType.u64], returns: FFIType.ptr },
+  GlobalUnlock: { args: [FFIType.u64], returns: FFIType.bool },
+  GlobalSize: { args: [FFIType.u64], returns: FFIType.u64 },
 });
 
 // Authenticode helpers (mirror src/base/Crypto.cpp GetExecutableSignerTemp / IsPEFileSigned).
@@ -888,6 +894,47 @@ export function getWindowText(hwnd: number): string {
     s += String.fromCharCode(buf[i]);
   }
   return s;
+}
+
+function readClipboardText(): string | null {
+  const CF_UNICODETEXT = 13;
+  if (!user32.symbols.OpenClipboard(null)) {
+    return null;
+  }
+  try {
+    const data = user32.symbols.GetClipboardData(CF_UNICODETEXT);
+    if (!data) {
+      return "";
+    }
+    const mem = kernel32.symbols.GlobalLock(data);
+    if (!mem) {
+      throw new Error(`GlobalLock failed: ${kernel32.symbols.GetLastError()}`);
+    }
+    try {
+      const size = Number(kernel32.symbols.GlobalSize(data));
+      const text = Buffer.from(toArrayBuffer(mem, 0, size)).toString("utf16le");
+      const end = text.indexOf("\0");
+      return end >= 0 ? text.slice(0, end) : text;
+    } finally {
+      kernel32.symbols.GlobalUnlock(data);
+    }
+  } finally {
+    user32.symbols.CloseClipboard();
+  }
+}
+
+export async function getClipboardText(timeoutMs = 1000): Promise<string> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const text = readClipboardText();
+    if (text !== null) {
+      return text;
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`OpenClipboard failed: ${kernel32.symbols.GetLastError()}`);
+    }
+    await sleep(10);
+  }
 }
 
 // Text of a control (Edit, Static, ...) in another process. GetWindowTextW only
