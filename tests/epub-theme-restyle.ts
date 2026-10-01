@@ -28,15 +28,6 @@ async function followToc(client: ControlClient, destNo: number): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
-  // single page: the resync's SetScrollState() -> GoToPage() asked for the
-  // scroll state (to decide on a nav point it then ignored), and outside
-  // continuous mode that answers the stale startPage from the old numbering
-  for (const view of ["continuous", "single page"]) {
-    await restyleIn(view);
-  }
-}
-
-async function restyleIn(view: string): Promise<void> {
   const appdata = writeAppdata(
     "epub-theme-restyle",
     ["UiLanguage = en", "RestoreSession = false", "ShowStartPage = false", "CheckForUpdates = false"].join("\n"),
@@ -50,15 +41,23 @@ async function restyleIn(view: string): Promise<void> {
       await client.waitForRenderIdle(30000);
       await client.setNotificationsEnabled(false);
 
-      // lay out the second chapter so the flat page count is past chapter 1
-      await followToc(client, TOC_DEST);
-      await client.waitForRenderIdle(30000);
+      // Single-page mode reads the stale startPage while restoring scroll state.
+      for (const view of ["continuous", "single page"]) {
+        if (view === "single page") {
+          sendCommandSync(frame, cmdId("CmdSinglePageView"));
+          await client.waitForRenderIdle(30000);
+        }
 
-      // the toggle restyles and collapses the chapter table
-      sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
-      await client.waitForRenderIdle(30000);
+        // lay out the second chapter so the flat page count is past chapter 1
+        await followToc(client, TOC_DEST);
+        await client.waitForRenderIdle(30000);
+
+        // the toggle restyles and collapses the chapter table
+        sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
+        await client.waitForRenderIdle(30000);
+      }
     },
-    ["-appdata", appdata, "-window-pos", "1000x900@40x40", "-view", view, epub],
+    ["-appdata", appdata, "-window-pos", "1000x900@40x40", "-view", "continuous", epub],
   );
 }
 
