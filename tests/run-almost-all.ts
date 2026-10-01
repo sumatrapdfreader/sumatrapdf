@@ -383,6 +383,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6113", issue6113],
   ["issue-5933", issue5933],
   ["issue-6117", issue6117],
   ["custom-zoom-dialog", customZoomDialog],
@@ -467,7 +468,6 @@ export const tests: NamedTest[] = [
   ["issue-4398", issue4398],
   ["issue-5964", issue5964],
   ["issue-6013", issue6013],
-  ["issue-6113", issue6113],
   ["issue-5989", issue5989],
 
   // --- no Sumatra process -------------------------------------------------

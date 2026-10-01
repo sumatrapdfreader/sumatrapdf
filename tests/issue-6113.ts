@@ -1,6 +1,6 @@
 // #6113: notification toasts on RTL UI (Hebrew) drew English text backwards.
 // WS_EX_LAYOUTRTL plus BitBlt of an LTR Gfx buffer mirrored every glyph.
-// "Zoom: 125%" has a long bar on the Z; that bar must stay in the left half.
+// "Zoom: N%" has a long bar on the Z; that bar must stay in the left half.
 //
 // Run: bun tests/issue-6113.ts [--no-build]
 
@@ -8,17 +8,21 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { inflateSync } from "node:zlib";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { captureWindowToPng, enumChildWindows, getClassName, isWindowVisible, sleep } from "./winapi.ts";
+import { captureWindowToPng, enumChildWindows, getClassName, getWindowText, isWindowVisible, sleep } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 const NOTIF_CLASS = "SumatraWgDefaultWinClass";
 
 type Shot = { w: number; h: number; data: Uint8Array };
 
-function findNotif(canvas: number): number {
+function findNotif(canvas: number, expected = ""): number {
   let found = 0;
   enumChildWindows(canvas, (hwnd) => {
-    if (getClassName(hwnd) === NOTIF_CLASS && isWindowVisible(hwnd)) {
+    if (
+      getClassName(hwnd) === NOTIF_CLASS &&
+      isWindowVisible(hwnd) &&
+      (!expected || getWindowText(hwnd) === expected)
+    ) {
       found = hwnd;
       return false;
     }
@@ -27,10 +31,10 @@ function findNotif(canvas: number): number {
   return found;
 }
 
-async function waitNotif(canvas: number, want: boolean, timeoutMs = 4000): Promise<number> {
+async function waitNotif(canvas: number, want: boolean, expected = "", timeoutMs = 4000): Promise<number> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
-    const hwnd = findNotif(canvas);
+    const hwnd = findNotif(canvas, expected);
     if (want ? hwnd !== 0 : hwnd === 0) {
       return hwnd;
     }
@@ -120,7 +124,7 @@ function isDark(shot: Shot, x: number, y: number): boolean {
 
 type Bar = { y: number; x: number; dx: number };
 
-// Longest solid dark run on the ink-densest row. For "Zoom: 125%" that run is
+// Longest solid dark run on the ink-densest row. For "Zoom: N%" that run is
 // the Z's bar. dx is 0 when the shot has no ink yet.
 function longestBar(shot: Shot): Bar {
   let bestY = 0;
@@ -181,9 +185,15 @@ function hasInk(shot: Shot): boolean {
   return longestBarDx(shot) >= MIN_BAR_DX;
 }
 
-async function grabZoomToast(frame: number, canvas: number, label: string): Promise<Shot> {
-  sendCommandSync(frame, cmdId("CmdZoom125"));
-  const hwnd = await waitNotif(canvas, true);
+async function grabZoomToast(
+  frame: number,
+  canvas: number,
+  command: string,
+  message: string,
+  label: string,
+): Promise<Shot> {
+  sendCommandSync(frame, cmdId(command));
+  const hwnd = await waitNotif(canvas, true, message);
   const png = tmpPath(`6113-${label}.png`);
   const deadline = Date.now() + TOAST_PAINT_TIMEOUT_MS;
   for (;;) {
@@ -209,7 +219,7 @@ export async function testit(): Promise<void> {
       throw new Error("issue-6113: canvas not found");
     }
 
-    const ltrShot = await grabZoomToast(frame, canvas, "ltr");
+    const ltrShot = await grabZoomToast(frame, canvas, "CmdZoom125", "Zoom: 125%", "ltr");
     const ltr = longestBarMid(ltrShot);
     if (ltr.mid > ltrShot.w / 2) {
       throw new Error(`issue-6113: LTR Z-bar should be on the left (mid=${ltr.mid} w=${ltrShot.w})`);
@@ -222,7 +232,7 @@ export async function testit(): Promise<void> {
     sendCommandSync(frame, cmdId("CmdDebugToggleRtl"));
     await client.waitForRenderIdle();
 
-    const rtlShot = await grabZoomToast(frame, canvas, "rtl");
+    const rtlShot = await grabZoomToast(frame, canvas, "CmdZoom150", "Zoom: 150%", "rtl");
     const rtl = longestBarMid(rtlShot);
     if (rtl.mid > rtlShot.w / 2) {
       throw new Error(
