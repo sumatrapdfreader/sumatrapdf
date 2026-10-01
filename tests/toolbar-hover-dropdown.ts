@@ -43,6 +43,7 @@ import {
   launchControlled,
   parkCursorAway,
   sendCommand,
+  sendCommandSync,
 } from "./win-automation.ts";
 
 const TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
@@ -229,7 +230,7 @@ async function clickMenuItem(client: ControlClient, pid: number, cmd: number, wh
         const r = getWindowRect(h);
         const x = Math.floor((it.x + it.x2) / 2) - r.left;
         const y = Math.floor((it.y + it.y2) / 2) - r.top;
-        await clickAt(h, x, y, 80);
+        await clickAt(h, x, y, 0);
         clicked = true;
         detail = `${it.text} @${x},${y}`;
         if (menuShowing(pid) === 0) {
@@ -527,7 +528,8 @@ async function checkCustomZoomLevels(dir: string, pdf: string): Promise<void> {
     }
     const zx = zoomIn.x + Math.floor(zoomIn.dx / 2);
     const zy = zoomIn.y + Math.floor(zoomIn.dy / 2);
-    await hoverUntilMenu(toolbar, proc.pid!, zx, zy, "resting on Zoom In did not open the drop-down");
+    rightClickToolbar(toolbar, zx, zy);
+    await waitMenu(proc.pid!, true, "right-clicking Zoom In did not open the custom drop-down");
     await sleep(200);
     const items = await dropdownItems(client);
     if (items.map((it) => it.text).join() !== CUSTOM_ZOOM_STRIP.join()) {
@@ -553,7 +555,7 @@ async function checkCustomZoomLevels(dir: string, pdf: string): Promise<void> {
       menu,
       Math.floor((cell150.x + cell150.x2) / 2) - r.left,
       Math.floor((cell150.y + cell150.y2) / 2) - r.top,
-      300,
+      0,
     );
     await waitZoom(client, "150", "clicking a custom level did not zoom to it");
   } finally {
@@ -591,8 +593,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     const pid = proc.pid!;
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     const save = await waitAnnotButton(client, cmdId("CmdSaveAnnotations"), "no Save button on the Edit PDF toolbar");
     if ((await annotButtons(client)).some((b) => b.cmd === cmdId("CmdSaveAnnotationsNewFile"))) {
@@ -696,8 +697,9 @@ export async function testit(): Promise<void> {
     );
     const sx = save3.x + Math.floor(save3.dx / 2);
     const sy = save3.y + Math.floor(save3.dy / 2);
-    await hoverUntilMenu(toolbar, pid, sx, sy, "resting on Save did not open the drop-down before the icon click");
-    await clickAt(toolbar, sx, sy, 300);
+    rightClickToolbar(toolbar, sx, sy);
+    await waitMenu(pid, true, "right-clicking Save did not open the drop-down before the icon click");
+    await clickAt(toolbar, sx, sy, 0);
     await waitMenu(pid, false, "clicking the Save icon did not close the drop-down");
     const stayClosedUntil = Date.now() + 1500;
     while (Date.now() < stayClosedUntil) {
@@ -782,7 +784,7 @@ export async function testit(): Promise<void> {
       zoomMenu,
       Math.floor((cell300.x + cell300.x2) / 2) - zr.left,
       Math.floor((cell300.y + cell300.y2) / 2) - zr.top,
-      300,
+      0,
     );
     await waitMenu(pid, false, "clicking a zoom level did not close the drop-down");
     await waitZoom(client, "300", "clicking the 300% cell did not zoom to it");
@@ -790,6 +792,7 @@ export async function testit(): Promise<void> {
     // and now that level is the one boxed. The drop-down itself opens exactly
     // where it did before: it hangs off the button, not off the zoom
     {
+      rightClickToolbar(toolbar, zx, zy);
       const boxed = await waitCurrentZoom(client, toolbar, pid, zx, zy, "300%");
       zoomMenu = boxed.menu;
       items = boxed.items;
@@ -815,8 +818,8 @@ export async function testit(): Promise<void> {
     }
 
     // a zoom that is none of them leaves nothing boxed
-    sendCommand(frame, cmdId("CmdZoomFitContent"));
-    await sleep(300 * SLOW_BUILD_FACTOR);
+    sendCommandSync(frame, cmdId("CmdZoomFitContent"));
+    await waitZoom(client, "fit content", "could not set Fit Content zoom");
     boxed = (await dropdownItems(client)).filter((it) => it.current).map((it) => it.text);
     if (boxed.length !== 0) {
       throw new Error(`toolbar-hover-dropdown: a zoom off the list still boxes [${boxed.join()}]`);
