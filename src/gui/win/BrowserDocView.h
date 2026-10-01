@@ -29,7 +29,7 @@ class BrowserDocView {
     // show/hide without destroying the browser (tab switch). Creating a WebView2
     // is expensive, so markdown/CHM keep the view and only hide it when leaving
     // the tab; SetVisible(true) reattaches the canvas subclass and shows it.
-    void SetVisible(bool visible);
+    void SetVisible(bool show);
     bool IsVisible() const;
     void RefreshControllerSurface();
     HWND GetParentHwnd() const { return hwndParent; }

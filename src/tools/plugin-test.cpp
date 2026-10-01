@@ -96,7 +96,7 @@ WStr GetSumatraExePath() {
     return ToWStr(path);
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nShowCmd) {
     StrNode* parsedArgs = ParseCmdLine(GetCommandLineW());
     AutoFreeStrNode freeParsedArgs(parsedArgs);
     StrVec args;
@@ -128,7 +128,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     PluginStartData data = {args[1], args[3], args[2]};
     HWND hwnd = CreateWindowExW(0, kPluginTestName, kPluginTestName, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
                                 CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, &data);
-    ShowWindow(hwnd, nCmdShow);
+    ShowWindow(hwnd, nShowCmd);
 
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0)) {

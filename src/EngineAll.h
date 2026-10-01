@@ -75,7 +75,7 @@ TempStr EbookGeneratedCssTemp(Str fontName, const Vec<float>* margin, float line
 constexpr int kImageSizeFromDataPartialSize = 64 * 1024;
 
 bool IsEngineImageSupportedFileType(FileType);
-EngineBase* CreateEngineImageFromFile(Str fileName);
+EngineBase* CreateEngineImageFromFile(Str path);
 EngineBase* CreateEngineImageFromData(Str data);
 
 bool IsEngineImageDirSupportedFile(Str fileName, bool sniff = false);

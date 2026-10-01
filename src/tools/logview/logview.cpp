@@ -1266,7 +1266,7 @@ static bool HandleKey(MSG* msg) {
     return false;
 }
 
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int nCmdShow) {
+int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int nShowCmd) {
     SetProcessDPIAware();
 
     // register the v6 common controls so the edit box / buttons pick up the
@@ -1286,7 +1286,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int nCmdShow) {
         return 1;
     }
     gWnd->DoLayout();
-    ShowWindow(gHwndMain, nCmdShow);
+    ShowWindow(gHwndMain, nShowCmd);
     UpdateWindow(gHwndMain);
 
     CreateThread(nullptr, 0, PipeAcceptThread, nullptr, 0, nullptr);
