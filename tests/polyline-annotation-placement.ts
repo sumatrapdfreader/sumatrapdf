@@ -24,6 +24,8 @@ import {
   setCursorPos,
   sleep,
   VK_DOWN,
+  VK_ESCAPE,
+  VK_RETURN,
   VK_SPACE,
   WM_COMMAND,
   WM_KEYDOWN,
@@ -40,8 +42,6 @@ import {
   findCanvas,
   killAndWait,
   launchControlled,
-  pressEnter,
-  pressEscape,
   pressKey,
   sendCommand,
 } from "./win-automation.ts";
@@ -166,11 +166,10 @@ async function executeFromCommandPalette(client: ControlClient, frame: number): 
     const raw = String(res[1] ?? "");
     const m = /cmd=(-?\d+)/.exec(raw);
     if (res[0] === 0 && m && +m[1]! === cmdId("CmdCreateAnnotPolyLine")) {
-      await pressEnter(edit);
+      await pressKey(edit, VK_RETURN, 0);
       return;
     }
     postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
-    await sleep(80);
   }
   throw new Error("polyline-annotation-placement: Polyline command was not in the filtered palette");
 }
@@ -206,7 +205,7 @@ function countPreviewBlue(shot: { w: number; h: number; data: Uint8Array } | nul
 
 async function clickPoints(canvas: number, points: Point[]): Promise<void> {
   for (const point of points) {
-    await clickAt(canvas, point.x, point.y, 80);
+    await clickAt(canvas, point.x, point.y, 0);
   }
 }
 
@@ -251,13 +250,12 @@ export async function testit(): Promise<void> {
     const p4 = { x: center.x + 60, y: center.y + 60 };
     const outside = { x: 2, y: center.y };
 
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendMessage(frame, WM_COMMAND, cmdId("CmdToggleEditPDF"), 0);
     const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
     const button = toolbarButtonRect(toolbarDump);
     const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
     const clickToolbar = () =>
-      clickAt(toolbar, button.x + Math.floor(button.dx / 2), button.y + Math.floor(button.dy / 2));
+      clickAt(toolbar, button.x + Math.floor(button.dx / 2), button.y + Math.floor(button.dy / 2), 0);
 
     await clickToolbar();
     let state = await waitForPlacement(client, true);
@@ -274,7 +272,7 @@ export async function testit(): Promise<void> {
       throw new Error(`polyline-annotation-placement: toolbar did not start clean placement mode\n${state.raw}`);
     }
 
-    await clickAt(canvas, outside.x, outside.y);
+    await clickAt(canvas, outside.x, outside.y, 0);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 0) {
       throw new Error(`polyline-annotation-placement: outside first click did not cancel cleanly\n${state.raw}`);
@@ -282,13 +280,12 @@ export async function testit(): Promise<void> {
 
     await clickToolbar();
     await waitForPlacement(client, true);
-    await clickAt(canvas, p1.x, p1.y);
+    await clickAt(canvas, p1.x, p1.y, 0);
     state = await placementState(client);
     if (!state.active || state.points !== 1 || state.page !== 1 || state.annotations !== 0) {
       throw new Error(`polyline-annotation-placement: first page click did not anchor the path\n${state.raw}`);
     }
     await client.setNotificationsEnabled(false);
-    await sleep(100);
     const before = captureWindowPixels(canvas);
     const blueBefore = countPreviewBlue(before, p1, p2);
     moveMouse(canvas, p2);
@@ -325,26 +322,26 @@ export async function testit(): Promise<void> {
 
     sendCommand(frame, cmdId("CmdCreateAnnotPolyLine"));
     await waitForPlacement(client, true);
-    await clickAt(canvas, p1.x, p1.y, 80);
-    await pressEnter(frame);
+    await clickAt(canvas, p1.x, p1.y, 0);
+    await pressKey(frame, VK_RETURN, 0);
     state = await placementState(client);
     if (!state.active || state.points !== 1 || state.annotations !== 2) {
       throw new Error(`polyline-annotation-placement: Enter finished an invalid one-point path\n${state.raw}`);
     }
-    await clickAt(canvas, p2.x, p2.y, 80);
-    await pressEnter(frame);
+    await clickAt(canvas, p2.x, p2.y, 0);
+    await pressKey(frame, VK_RETURN, 0);
     await expectFinished(client, 3, "Enter");
 
     sendCommand(frame, cmdId("CmdCreateAnnotPolyLine"));
     await waitForPlacement(client, true);
     await clickPoints(canvas, [p1, p2, p3]);
-    await pressKey(frame, VK_SPACE);
+    await pressKey(frame, VK_SPACE, 0);
     await expectFinished(client, 4, "Space");
 
     sendCommand(frame, cmdId("CmdCreateAnnotPolyLine"));
     await waitForPlacement(client, true);
     await clickPoints(canvas, [p1, p2]);
-    await pressEscape(frame);
+    await pressKey(frame, VK_ESCAPE, 0);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 4) {
       throw new Error(`polyline-annotation-placement: Esc did not cancel without creating\n${state.raw}`);
@@ -353,7 +350,7 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdCreateAnnotPolyLine"));
     await waitForPlacement(client, true);
     await clickPoints(canvas, [p1, p2]);
-    await clickAt(canvas, outside.x, outside.y);
+    await clickAt(canvas, outside.x, outside.y, 0);
     state = await waitForPlacement(client, false);
     if (state.annotations !== 4) {
       throw new Error(`polyline-annotation-placement: outside later click created an annotation\n${state.raw}`);
@@ -374,7 +371,7 @@ export async function testit(): Promise<void> {
     // enough vertices that closing the path grows the point vec: appending an
     // element of the vec to itself used to read the freed buffer
     await clickPoints(canvas, [p1, p2, p3]);
-    await clickAt(canvas, p4.x, p4.y, 350, MK_CONTROL);
+    await clickAt(canvas, p4.x, p4.y, 0, MK_CONTROL);
     state = await expectFinished(client, 6, "Ctrl+click");
     // the dump lists every annotation; the one just placed is the last
     const all = [...state.raw.matchAll(/polyline vertices=(\d+) closed=(\d)/g)];
@@ -392,19 +389,19 @@ export async function testit(): Promise<void> {
     // Ctrl+click keeps collecting instead
     await executeFromCommandPalette(client, frame);
     await waitForPlacement(client, true);
-    await clickAt(canvas, p1.x, p1.y);
-    await clickAt(canvas, p2.x, p2.y, 350, MK_CONTROL);
+    await clickAt(canvas, p1.x, p1.y, 0);
+    await clickAt(canvas, p2.x, p2.y, 0, MK_CONTROL);
     state = await placementState(client);
     if (!state.active || state.points !== 2) {
       throw new Error(`polyline-annotation-placement: Ctrl+click closed a single segment\n${state.raw}`);
     }
-    await pressEscape(frame);
+    await pressKey(frame, VK_ESCAPE, 0);
     await waitForPlacement(client, false);
 
     // Shift snaps the segment from the previous vertex to 45 degrees (issue #6195)
     sendCommand(frame, cmdId("CmdCreateAnnotPolyLine"));
     await waitForPlacement(client, true);
-    await clickAt(canvas, p1.x, p1.y, 80);
+    await clickAt(canvas, p1.x, p1.y, 0);
     const nearlyFlat = { x: p1.x + 150, y: p1.y + 12 };
     moveMouse(canvas, nearlyFlat, MK_SHIFT);
     state = await placementState(client);
@@ -417,8 +414,8 @@ export async function testit(): Promise<void> {
     if (!state.raw.includes(`end=${nearlyFlat.x},${nearlyFlat.y}`)) {
       throw new Error(`polyline-annotation-placement: releasing Shift did not restore the pointer\n${state.raw}`);
     }
-    await clickAt(canvas, nearlyFlat.x, nearlyFlat.y, 350, MK_SHIFT);
-    await pressEnter(frame);
+    await clickAt(canvas, nearlyFlat.x, nearlyFlat.y, 0, MK_SHIFT);
+    await pressKey(frame, VK_RETURN, 0);
     state = await expectFinished(client, 7, "Shift+click");
     const polys = [...state.raw.matchAll(/polyline vertices=\d+ closed=\d pts=([^\n]*)/g)];
     const pts = polys[polys.length - 1]?.[1]?.split(";").map((xy) => xy.split(",").map(Number));

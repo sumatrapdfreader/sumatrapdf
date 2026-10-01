@@ -70,7 +70,6 @@ async function currentPage(client: ControlClient): Promise<number> {
 async function wheel(canvas: number, wp: bigint): Promise<void> {
   await ensureModifierKeysUp();
   sendMessage(canvas, WM_MOUSEWHEEL, wp, 0n);
-  await sleep(130);
 }
 
 export async function testit(): Promise<void> {
@@ -97,7 +96,6 @@ export async function testit(): Promise<void> {
   const canvas = findCanvas(frame);
   try {
     await client.waitForRenderIdle();
-    await sleep(300);
 
     // wheel down until the page stops moving: it must stay on page 1
     let y = getScrollPos(canvas, SB_VERT);

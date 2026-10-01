@@ -10,9 +10,9 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
-import { getFocusedHwnd, isWindowVisible, postMessage, sleep, WM_KEYDOWN } from "./winapi";
-import { clickAt, findChildByClass, killAndWait, launchControlled, sendCommand } from "./win-automation";
+import { ROOT, cmdId, pollUntil, runStandalone, tmpPath } from "./util";
+import { getFocusedHwnd, isWindowVisible, postMessage, WM_KEYDOWN } from "./winapi";
+import { clickAt, findChildByClass, killAndWait, launchControlled, sendCommandSync } from "./win-automation";
 
 const VK_ESCAPE = 0x1b;
 const SRC_PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
@@ -29,9 +29,8 @@ async function placementActive(client: ControlClient): Promise<boolean> {
 
 // Only WM_KEYDOWN: the app's own message loop calls TranslateMessage, which
 // makes the WM_CHAR. Posting both would be two Esc presses, not one.
-async function pressEsc(hwnd: number): Promise<void> {
+function pressEsc(hwnd: number): void {
   postMessage(hwnd, WM_KEYDOWN, VK_ESCAPE, 0);
-  await sleep(700 * SLOW_BUILD_FACTOR);
 }
 
 export async function testit(): Promise<void> {
@@ -50,8 +49,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
 
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(400 * SLOW_BUILD_FACTOR);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     // start placement from the toolbar button, the way a user does
     const dump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
@@ -64,33 +62,45 @@ export async function testit(): Promise<void> {
     const x = +m[1]!;
     const y = +m[2]!;
     const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
-    await clickAt(toolbar, x + Math.floor((+m[3]! - x) / 2), y + Math.floor((+m[4]! - y) / 2), 400);
-    if (!(await placementActive(client))) {
-      throw new Error("issue-6118: the toolbar button did not start placement mode");
-    }
+    await clickAt(toolbar, x + Math.floor((+m[3]! - x) / 2), y + Math.floor((+m[4]! - y) / 2), 0);
+    await pollUntil(
+      () => placementActive(client),
+      (active) => active,
+      {
+        error: "issue-6118: the toolbar button did not start placement mode",
+      },
+    );
 
     const focus = getFocusedHwnd(frame);
-    await pressEsc(focus);
-    if (await placementActive(client)) {
-      throw new Error("issue-6118: Esc did not cancel the placement");
-    }
+    pressEsc(focus);
+    await pollUntil(
+      () => placementActive(client),
+      (active) => !active,
+      {
+        error: "issue-6118: Esc did not cancel the placement",
+      },
+    );
     if (!isWindowVisible(frame)) {
       throw new Error("issue-6118: the Esc that cancelled the placement also closed the document");
     }
 
     // the press after the cancel is the one that used to quit
-    await pressEsc(focus);
+    pressEsc(focus);
+    await placementActive(client);
     if (!isWindowVisible(frame) || proc.exitCode !== null) {
       throw new Error("issue-6118: Esc closed the document while the Edit PDF toolbar was up");
     }
 
     // EscToExit still works once Edit PDF is off
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(400 * SLOW_BUILD_FACTOR);
-    await pressEsc(getFocusedHwnd(frame));
-    if (isWindowVisible(frame)) {
-      throw new Error("issue-6118: EscToExit stopped working outside Edit PDF mode");
-    }
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
+    pressEsc(getFocusedHwnd(frame));
+    await pollUntil(
+      () => isWindowVisible(frame),
+      (visible) => !visible,
+      {
+        error: "issue-6118: EscToExit stopped working outside Edit PDF mode",
+      },
+    );
   } finally {
     client.close();
     await killAndWait(proc);

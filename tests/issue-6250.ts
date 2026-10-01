@@ -4,8 +4,8 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
-import { getFocusedHwnd, isWindowVisible, postMessage, sleep, WM_KEYDOWN } from "./winapi";
+import { pollUntil, ROOT, runStandalone, tmpPath } from "./util";
+import { getFocusedHwnd, isWindowVisible, postMessage, WM_KEYDOWN } from "./winapi";
 import { killAndWait, launchControlled } from "./win-automation";
 
 const VK_ESCAPE = 0x1b;
@@ -25,9 +25,8 @@ async function displayMode(client: ControlClient, action: string): Promise<Mode>
 }
 
 // only WM_KEYDOWN: the app's message loop makes the WM_CHAR
-async function pressEsc(frame: number): Promise<void> {
+function pressEsc(frame: number): void {
   postMessage(getFocusedHwnd(frame), WM_KEYDOWN, VK_ESCAPE, 0);
-  await sleep(700 * SLOW_BUILD_FACTOR);
 }
 
 async function escLeavesMode(client: ControlClient, frame: number, action: string): Promise<void> {
@@ -35,11 +34,15 @@ async function escLeavesMode(client: ControlClient, frame: number, action: strin
   if (!on.presentation && !on.fullscreen) {
     throw new Error(`issue-6250: could not enter ${action} mode`);
   }
-  await pressEsc(frame);
+  pressEsc(frame);
   if (!isWindowVisible(frame)) {
     throw new Error(`issue-6250: Esc in ${action} mode closed the window`);
   }
-  const off = await displayMode(client, "get");
+  const off = await pollUntil(
+    () => displayMode(client, "get"),
+    (mode) => !mode.presentation && !mode.fullscreen,
+    { error: `issue-6250: Esc did not leave ${action} mode` },
+  );
   if (off.presentation || off.fullscreen) {
     throw new Error(`issue-6250: Esc did not leave ${action} mode`);
   }
@@ -65,10 +68,14 @@ export async function testit(): Promise<void> {
     await escLeavesMode(client, frame, "fullscreen");
 
     // out of both modes, EscToExit still closes
-    await pressEsc(frame);
-    if (isWindowVisible(frame)) {
-      throw new Error("issue-6250: EscToExit stopped working outside presentation / fullscreen");
-    }
+    pressEsc(frame);
+    await pollUntil(
+      () => isWindowVisible(frame),
+      (visible) => !visible,
+      {
+        error: "issue-6250: EscToExit stopped working outside presentation / fullscreen",
+      },
+    );
   } finally {
     client.close();
     await killAndWait(proc);

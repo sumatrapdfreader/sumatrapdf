@@ -11,7 +11,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, pollUntil, runStandalone, tmpPath } from "./util.ts";
 import {
   clientToScreen,
   findTopWindow,
@@ -24,7 +24,6 @@ import {
   postMessage,
   sendMessage,
   setCursorPos,
-  sleep,
   VK_ESCAPE,
   WM_KEYDOWN,
   WM_LBUTTONDOWN,
@@ -33,7 +32,14 @@ import {
   WM_RBUTTONDOWN,
   WM_RBUTTONUP,
 } from "./winapi.ts";
-import { clickAt, findCanvas, findChildByClass, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import {
+  clickAt,
+  findCanvas,
+  findChildByClass,
+  killAndWait,
+  launchControlled,
+  sendCommandSync,
+} from "./win-automation.ts";
 
 const MAIN_TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
 const HOVER_MENU_CLASS = "SumatraToolbarHoverMenu";
@@ -86,24 +92,18 @@ async function waitInkDropdown(
   btn: Rect,
   what: string,
 ): Promise<RegExpExecArray> {
-  const deadline = Date.now() + 8000 * SLOW_BUILD_FACTOR;
-  let dump = "";
   const x = btn.x + (btn.dx >> 1);
   const y = btn.y + (btn.dy >> 1);
-  for (;;) {
-    rightClickToolbar(toolbar, x, y);
-    await sleep(50);
-    dump = await toolbarDump(client);
-    const item =
-      /dropdown-item idx=\d+ cmd=\d+ current=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) text=thickness=(\d+)/.exec(dump);
-    if (item) {
-      return item;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`ink-thickness: ${what}\n${dump}`);
-    }
-    await sleep(50);
-  }
+  rightClickToolbar(toolbar, x, y);
+  const re = /dropdown-item idx=\d+ cmd=\d+ current=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) text=thickness=(\d+)/;
+  const dump = await pollUntil(
+    () => toolbarDump(client),
+    (s) => re.test(s),
+    {
+      error: (s) => `ink-thickness: ${what}\n${s}`,
+    },
+  );
+  return re.exec(dump)!;
 }
 
 async function markupDump(client: ControlClient): Promise<string> {
@@ -117,6 +117,15 @@ async function inkAnnotWidth(client: ControlClient): Promise<number> {
     throw new Error(`ink-thickness: no ink annotation in the dump\n${raw}`);
   }
   return +m[1]!;
+}
+
+async function inkActive(client: ControlClient): Promise<boolean> {
+  const raw = await markupDump(client);
+  const m = /inkPlacement active=(\d+)/.exec(raw);
+  if (!m) {
+    throw new Error(`ink-thickness: no ink placement state\n${raw}`);
+  }
+  return m[1] === "1";
 }
 
 function parseRect(m: RegExpMatchArray | null): Rect {
@@ -136,19 +145,17 @@ async function annotChips(client: ControlClient): Promise<{ names: string[]; lin
   return { names: (/ items=(\S+)/.exec(line)?.[1] ?? "").split(","), line };
 }
 
-async function drawStroke(canvas: number, pts: { x: number; y: number }[]): Promise<void> {
+function drawStroke(canvas: number, pts: { x: number; y: number }[]): void {
   const first = pts[0]!;
   const s = clientToScreen(canvas, first.x, first.y);
   setCursorPos(s.x, s.y);
   sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(first.x, first.y));
   sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(first.x, first.y));
-  await sleep(50);
   for (let i = 1; i < pts.length; i++) {
     sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(pts[i]!.x, pts[i]!.y));
   }
   const last = pts[pts.length - 1]!;
   sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(last.x, last.y));
-  await sleep(100 * SLOW_BUILD_FACTOR);
 }
 
 export async function testit(): Promise<void> {
@@ -188,8 +195,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(600 * SLOW_BUILD_FACTOR);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     const toolbar = findChildByClass(frame, MAIN_TOOLBAR_CLASS);
     const canvas = findCanvas(frame);
 
@@ -215,15 +221,13 @@ export async function testit(): Promise<void> {
     }
     const mr = getWindowRect(menu);
     const sy = (+item[2]! + +item[4]!) >> 1;
-    await clickAt(menu, +item[3]! - 1 - mr.left, sy - mr.top);
-    await sleep(300 * SLOW_BUILD_FACTOR);
+    await clickAt(menu, +item[3]! - 1 - mr.left, sy - mr.top, 0);
 
     const canvasRect = getClientRect(canvas);
     const cx = Math.floor(canvasRect.right / 2);
     const cy = Math.floor(canvasRect.bottom / 2);
-    sendCommand(frame, cmdId("CmdCreateAnnotInk"));
-    await sleep(300 * SLOW_BUILD_FACTOR);
-    await drawStroke(canvas, [
+    sendCommandSync(frame, cmdId("CmdCreateAnnotInk"));
+    drawStroke(canvas, [
       { x: cx - 60, y: cy },
       { x: cx - 20, y: cy + 20 },
       { x: cx + 20, y: cy - 20 },
@@ -238,9 +242,19 @@ export async function testit(): Promise<void> {
     // the ink tool stays on for another stroke; Esc leaves it, and a click on
     // the stroke selects it
     postMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
-    await sleep(300 * SLOW_BUILD_FACTOR);
-    await clickAt(canvas, cx - 60, cy);
-    await sleep(400 * SLOW_BUILD_FACTOR);
+    await pollUntil(
+      () => inkActive(client),
+      (active) => !active,
+      {
+        error: "ink-thickness: Esc did not leave the ink tool",
+      },
+    );
+    await clickAt(canvas, cx - 60, cy, 0);
+    await pollUntil(
+      async () => /annotEditToolbar .*/.exec(await markupDump(client))?.[0] ?? "",
+      (line) => /annotEditToolbar visible=1/.test(line),
+      { error: "ink-thickness: selecting the stroke did not show its properties" },
+    );
 
     // its color chip's drop-down has the slider, set to the annotation's own
     // width, and there is no Border Width chip
@@ -257,10 +271,12 @@ export async function testit(): Promise<void> {
     if (!annotToolbar) {
       throw new Error("ink-thickness: no annotation property row window");
     }
-    await clickAt(annotToolbar, chip.x - placed.x + (chip.dx >> 1), chip.y - placed.y + (chip.dy >> 1));
-    await sleep(500 * SLOW_BUILD_FACTOR);
-
-    const popupLine = /annotColorPopup .*/.exec(await markupDump(client))?.[0] ?? "";
+    await clickAt(annotToolbar, chip.x - placed.x + (chip.dx >> 1), chip.y - placed.y + (chip.dy >> 1), 0);
+    const popupLine = await pollUntil(
+      async () => /annotColorPopup .*/.exec(await markupDump(client))?.[0] ?? "",
+      (line) => /annotColorPopup visible=1/.test(line),
+      { error: "ink-thickness: the color chip's drop-down did not open" },
+    );
     const th = /thickness=(\d+):(-?\d+),(-?\d+),(\d+),(\d+)/.exec(popupLine);
     if (!th) {
       throw new Error(`ink-thickness: the color chip's drop-down has no thickness slider: ${popupLine}`);
@@ -276,10 +292,15 @@ export async function testit(): Promise<void> {
     }
     const pr = getWindowRect(popup);
     const slider = { x: +th[2]!, y: +th[3]!, dx: +th[4]!, dy: +th[5]! };
-    await clickAt(popup, slider.x - pr.left, slider.y + (slider.dy >> 1) - pr.top);
-    await sleep(500 * SLOW_BUILD_FACTOR);
+    await clickAt(popup, slider.x - pr.left, slider.y + (slider.dy >> 1) - pr.top, 0);
     await client.waitForRenderIdle();
-    const thin = await inkAnnotWidth(client);
+    const thin = await pollUntil(
+      () => inkAnnotWidth(client),
+      (width) => width === 1,
+      {
+        error: (width) => `ink-thickness: the stroke stayed ${width} points wide after Thin`,
+      },
+    );
     if (thin !== 1) {
       throw new Error(`ink-thickness: the stroke is ${thin} points wide after Thin, want 1`);
     }
