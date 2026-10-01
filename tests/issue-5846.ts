@@ -9,7 +9,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, ROOT, runStandalone } from "./util.ts";
+import { ROOT, runAppUnitTests, runStandalone } from "./util.ts";
 
 const FIXTURE = join(ROOT, "tests", "issue-5846.epub");
 
@@ -18,17 +18,7 @@ export async function testit(): Promise<void> {
     throw new Error(`issue-5846: missing fixture ${FIXTURE}`);
   }
 
-  const proc = Bun.spawn([EXE, "-unit-tests"], { stdout: "pipe", stderr: "pipe" });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-  const out = (stdout + stderr).trim();
-  if (exitCode !== 0) {
-    throw new Error(`issue-5846: -unit-tests failed (exit ${exitCode}):\n${out}`);
-  }
-  console.log(out || "issue-5846: NormalizeURLTemp unit tests passed");
+  await runAppUnitTests();
 }
 
 if (import.meta.main) {

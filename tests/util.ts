@@ -84,6 +84,10 @@ export function prepareTestEnvironment(): void {
   const testExe = join(TESTS_TMP_DIR, exeName);
   copyFileSync(sourceExe, testExe);
   copyFileSync(sourcePdb, join(TESTS_TMP_DIR, sourcePdb.split("\\").pop()!));
+  const sourceDll = join(dirname(sourceExe), "libsumatrapdf.dll");
+  if (existsSync(sourceDll)) {
+    copyFileSync(sourceDll, join(TESTS_TMP_DIR, "libsumatrapdf.dll"));
+  }
   EXE = testExe;
 }
 
@@ -113,6 +117,27 @@ export function drainProcStderr(stderr: Bun.Subprocess["stderr"]): Promise<strin
     }
     throw e;
   });
+}
+
+let appUnitTests: Promise<void> | null = null;
+
+export function runAppUnitTests(): Promise<void> {
+  if (appUnitTests) {
+    return appUnitTests;
+  }
+
+  appUnitTests = (async () => {
+    const proc = Bun.spawn([EXE, "-unit-tests", "-for-ai"], { stdout: "pipe", stderr: "pipe" });
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ]);
+    if (exitCode !== 0) {
+      throw new Error(`app unit tests failed (exit ${exitCode}):\n${(stdout + stderr).trim()}`);
+    }
+  })();
+  return appUnitTests;
 }
 
 // Quit / kill closing a control pipe or stderr can reject after the test has

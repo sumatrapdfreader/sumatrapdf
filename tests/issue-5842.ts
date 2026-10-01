@@ -4,7 +4,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { EXE, runAppUnitTests, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 
 const TARGET_DEST_NO = 3;
 const MIN_TARGET_SCROLL_Y = 500;
@@ -36,19 +36,7 @@ async function requestUntilReady(
 }
 
 export async function testit(): Promise<void> {
-  const proc = Bun.spawn([EXE, "-unit-tests"], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-  const output = (stdout + stderr).trim();
-  if (exitCode !== 0) {
-    throw new Error(`#5842 app unit tests failed (exit ${exitCode}):\n${output}`);
-  }
+  await runAppUnitTests();
 
   const fixtureDir = tmpPath("issue-5842-data");
   rmSync(fixtureDir, { recursive: true, force: true });
