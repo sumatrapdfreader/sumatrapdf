@@ -10,7 +10,7 @@
 // Uses a scratch -appdata dir and no -for-testing, so the session is restored and
 // ScheduleSaveSettings() is not suppressed.
 
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { killAndWait, killProcessesNamed, launchControlled, sendCommandSync } from "./win-automation.ts";
@@ -66,12 +66,25 @@ export async function testit(): Promise<void> {
 
     // frees gInitialSessionData; the still-lazy first tab borrows from it
     sendCommandSync(frame, cmdId("CmdToggleFavoritesSort"));
-    await sleep(500 * SLOW_BUILD_FACTOR);
-    await client.waitForRenderIdle(30000);
+    const settingsPath = join(APPDATA, "SumatraPDF-settings.txt");
+    const saveDeadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+    let previous = "";
+    let saved = false;
+    while (Date.now() < saveDeadline) {
+      const current = readFileSync(settingsPath, "utf8");
+      if (current === previous && !current.includes(`FilePath = ${LAZY_PDF}`)) {
+        saved = true;
+        break;
+      }
+      previous = current;
+      await sleep(50);
+    }
+    if (!saved) {
+      throw new Error("lazy-tab-state-after-save: settings save did not drop session data");
+    }
 
     // selecting the lazy tab loads it and reads its TabState
     sendCommandSync(frame, cmdId("CmdPrevTab"));
-    await sleep(500 * SLOW_BUILD_FACTOR);
     await client.waitForRenderIdle(30000);
 
     await client.quit();
