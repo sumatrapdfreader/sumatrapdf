@@ -109,7 +109,6 @@ async function nonDefaultSettings(client: ControlClient, frame: number): Promise
         }
       }
       await client.request(ControlCommand.TestAdvSettingsRows, ["esc", 0]);
-      await sleep(400);
       return rows;
     }
     if (Date.now() > deadline) {
