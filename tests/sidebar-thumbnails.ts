@@ -28,7 +28,7 @@ import {
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
 
 type Rect = { x: number; y: number; dx: number; dy: number };
 type View = "bookmarks" | "thumbnails" | "favorites";
@@ -283,15 +283,13 @@ export async function testit(): Promise<void> {
     }
 
     // dragging a page doesn't move it, even in Edit PDF mode
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
     s = await sidebar(client);
     const from = pointIn(s, 1, 0.5, 0.5);
     const to = pointIn(s, 3, 0.9, 0.9);
     mouse(s.hwnd, WM_LBUTTONDOWN, MK_LBUTTON, from);
     mouse(s.hwnd, WM_MOUSEMOVE, MK_LBUTTON, to);
     mouse(s.hwnd, WM_LBUTTONUP, 0, to);
-    await sleep(500);
     if ((await widths(client)) !== "601,602,603,604") {
       throw new Error("sidebar-thumbnails: dragging a thumbnail moved pages");
     }
