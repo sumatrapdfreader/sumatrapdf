@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { getClientRect, packCoords, sendMessage, sleep, WM_COMMAND } from "./winapi.ts";
-import { clickAt, findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { clickAt, findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 type Square = { x: number; y: number; dx: number; dy: number; w: number; h: number };
 
@@ -102,22 +102,20 @@ export async function testit(): Promise<void> {
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
 
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     let state = await markupState(client);
     if (state.squares.length !== 1 || state.squares[0]!.dx <= 0 || state.squares[0]!.dy <= 0) {
       throw new Error(`annot-copy-paste: expected one square on the page\n${state.raw}`);
     }
     const original = state.squares[0]!;
-    await clickAt(canvas, original.x + Math.floor(original.dx / 2), original.y + Math.floor(original.dy / 2));
+    await clickAt(canvas, original.x + Math.floor(original.dx / 2), original.y + Math.floor(original.dy / 2), 0);
     state = await markupState(client);
     if (!state.selected) {
       throw new Error(`annot-copy-paste: click did not select the square\n${state.raw}`);
     }
 
-    sendCommand(frame, cmdId("CmdCopySelection"));
-    await sleep(100);
+    sendCommandSync(frame, cmdId("CmdCopySelection"));
 
     const cr = getClientRect(canvas);
     const paste = {
@@ -171,7 +169,7 @@ export async function testit(): Promise<void> {
     }
 
     // save and look at the file: the pasted square must stay unfilled
-    sendCommand(frame, cmdId("CmdSaveAnnotations"));
+    sendCommandSync(frame, cmdId("CmdSaveAnnotations"));
     const saveDeadline = Date.now() + 5_000;
     let saved = "";
     for (;;) {
