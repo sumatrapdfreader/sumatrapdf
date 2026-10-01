@@ -131,7 +131,6 @@ export async function testit(): Promise<void> {
     const awayY = Math.max(40, cr.bottom - 40);
 
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotStamp"), packCoords(stampX, stampY));
-    await sleep(400);
     await client.waitForRenderIdle();
 
     const stampBeforeRight = await selectedAnnotState(client);
@@ -198,7 +197,6 @@ export async function testit(): Promise<void> {
 
     // click empty page without a hover update first — that's the regression
     clickAt(canvas, awayX, awayY);
-    await sleep(400);
     await client.waitForRenderIdle();
     const afterClickPng = join(dir, "after-click.png");
     if (!captureWindowToPng(canvas, afterClickPng)) {
@@ -206,7 +204,6 @@ export async function testit(): Promise<void> {
     }
 
     sendMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
-    await sleep(200);
     await client.waitForRenderIdle();
     const afterEscPng = join(dir, "after-esc.png");
     if (!captureWindowToPng(canvas, afterEscPng)) {
@@ -224,21 +221,18 @@ export async function testit(): Promise<void> {
     }
 
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotStamp"), packCoords(stampX, stampY));
-    await sleep(400);
     await client.waitForRenderIdle();
     const selected2Png = join(dir, "selected2.png");
     if (!captureWindowToPng(canvas, selected2Png)) {
       throw new Error("issue-5933: capture selected2 failed");
     }
     clickAwayWithJitter(canvas, awayX, awayY);
-    await sleep(400);
     await client.waitForRenderIdle();
     const afterJitterPng = join(dir, "after-jitter.png");
     if (!captureWindowToPng(canvas, afterJitterPng)) {
       throw new Error("issue-5933: capture after jitter click failed");
     }
     sendMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
-    await sleep(200);
     await client.waitForRenderIdle();
     const afterEsc2Png = join(dir, "after-esc2.png");
     if (!captureWindowToPng(canvas, afterEsc2Png)) {
@@ -261,7 +255,6 @@ export async function testit(): Promise<void> {
     const freeTextX = 100;
     const freeTextY = 300;
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(freeTextX, freeTextY));
-    await sleep(400);
     await client.waitForRenderIdle();
 
     // At fit-page zoom the default FreeText rectangle's bottom-right handle
@@ -277,7 +270,6 @@ export async function testit(): Promise<void> {
     setCursorPos(pResized.x, pResized.y);
     sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(resizedX, resizedY));
     sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(resizedX, resizedY));
-    await sleep(300);
     await client.waitForRenderIdle();
     const afterResizeUpPng = join(dir, "after-resize-up.png");
     if (!captureWindowToPng(canvas, afterResizeUpPng)) {
@@ -285,7 +277,6 @@ export async function testit(): Promise<void> {
     }
 
     sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(resizedX + 60, resizedY + 60));
-    await sleep(300);
     await client.waitForRenderIdle();
     const afterUnpressedMovePng = join(dir, "after-unpressed-move.png");
     if (!captureWindowToPng(canvas, afterUnpressedMovePng)) {
