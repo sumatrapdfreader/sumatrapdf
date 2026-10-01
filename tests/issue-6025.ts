@@ -34,7 +34,7 @@ function pixelAt(data: Uint8Array, w: number, x: number, y: number): [number, nu
   return [data[i]!, data[i + 1]!, data[i + 2]!];
 }
 
-function assertLettersFit(label: string, data: Uint8Array, w: number, h: number): void {
+function lettersFit(label: string, data: Uint8Array, w: number, h: number): boolean {
   let letterRow = -1;
   let left = w;
   let right = -1;
@@ -61,7 +61,7 @@ function assertLettersFit(label: string, data: Uint8Array, w: number, h: number)
     }
   }
   if (letterRow < 0) {
-    throw new Error(`issue-6025 ${label}: no installer letters painted in the logo band`);
+    return false;
   }
   const margin = Math.max(4, Math.round(w * 0.015));
   if (left < margin || right > w - 1 - margin) {
@@ -69,6 +69,7 @@ function assertLettersFit(label: string, data: Uint8Array, w: number, h: number)
       `issue-6025 ${label}: letters overflow the window (left=${left} right=${right} w=${w} margin=${margin})`,
     );
   }
+  return true;
 }
 
 async function captureLogoBand(hwnd: number): Promise<{ w: number; h: number; data: Uint8Array }> {
@@ -101,11 +102,29 @@ async function runAtDpi(dpiPercent: number, installDir: string, legacy = false):
     if (!hwnd) {
       throw new Error(`issue-6025: installer window did not appear at ${dpiPercent}%`);
     }
-    await sleep(2500 * SLOW_BUILD_FACTOR);
+    const label = `${legacy ? "legacy " : ""}${dpiPercent}%`;
+    const deadline = Date.now() + 2500 * SLOW_BUILD_FACTOR;
+    let lastError: unknown = null;
+    for (;;) {
+      try {
+        const band = await captureLogoBand(hwnd);
+        if (lettersFit(label, band.data, band.w, band.h)) {
+          break;
+        }
+        lastError = null;
+      } catch (e) {
+        lastError = e;
+      }
+      if (Date.now() >= deadline) {
+        if (lastError) {
+          throw lastError;
+        }
+        throw new Error(`issue-6025 ${label}: no installer letters painted in the logo band`);
+      }
+      await sleep(50);
+    }
     const png = tmpPath(`issue-6025-${legacy ? "legacy-" : ""}${dpiPercent}.png`);
     captureWindowDCToPng(hwnd, png);
-    const band = await captureLogoBand(hwnd);
-    assertLettersFit(`${dpiPercent}%`, band.data, band.w, band.h);
     const clientWidth = getClientRect(hwnd).right;
     postMessage(hwnd, WM_CLOSE, 0, 0);
     await killAndWait(proc);
