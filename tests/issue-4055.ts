@@ -14,7 +14,8 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
+import { sendCommandSync, waitForFrame } from "./win-automation.ts";
 
 const SETTINGS_HEAD = `UiLanguage = en
 CheckForUpdates = false
@@ -91,17 +92,20 @@ export async function testit(): Promise<void> {
   writeFileSync(portrait, makePdf(612, 792));
   writeFileSync(landscape, makePdf(792, 612));
 
-  expectView(
-    await run(portrait, "DefaultDisplayMode = page aspect", "portrait-on"),
-    "continuous",
-    "fit width",
-    "portrait with page aspect",
-  );
-  expectView(
-    await run(landscape, "DefaultDisplayMode = page aspect", "landscape-on"),
-    "single page",
-    "fit page",
-    "landscape with page aspect",
+  const aspectDir = tmpPath("issue-4055-page-aspect");
+  rmSync(aspectDir, { recursive: true, force: true });
+  mkdirSync(aspectDir, { recursive: true });
+  writeFileSync(join(aspectDir, "SumatraPDF-settings.txt"), `${SETTINGS_HEAD}DefaultDisplayMode = page aspect\n`);
+  await withControlledSumatra(
+    EXE,
+    async (client, proc) => {
+      const frame = await waitForFrame(proc.pid!);
+      expectView(await queryMode(client), "single page", "fit page", "landscape with page aspect");
+
+      sendCommandSync(frame, cmdId("CmdPrevTab"));
+      expectView(await queryMode(client), "continuous", "fit width", "portrait with page aspect");
+    },
+    ["-appdata", aspectDir, portrait, landscape],
   );
   expectView(
     await run(portrait, "DefaultDisplayMode = single page", "portrait-off"),
