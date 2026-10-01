@@ -20,7 +20,7 @@ import {
   WM_CHAR,
   WM_COMMAND,
 } from "./winapi.ts";
-import { findCanvas, killAndWait, launchControlled, pressEscape, sendCommand } from "./win-automation.ts";
+import { findCanvas, killAndWait, launchControlled, pressEscape, sendCommandSync } from "./win-automation.ts";
 
 type Rect = { x: number; y: number; dx: number; dy: number };
 
@@ -138,8 +138,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     // creating a free text annotation opens the in-place editor on it
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(120, 250));
@@ -166,7 +165,6 @@ export async function testit(): Promise<void> {
     const rendered = await selectedRect(client);
     // deselect, so the marker and its handles are not counted as text
     await pressEscape(frame);
-    await sleep(400);
     await client.waitForRenderIdle();
 
     const lines = countTextLines(canvas, rendered);
