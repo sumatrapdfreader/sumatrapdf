@@ -16,7 +16,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { EXE, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 
 const BACKENDS = ["webview2", "ie"];
 const MD_NAMES = ["Test Test.md", "100% & C#1 (v2)+[a]@b;c=d!.md", "Ünïcode Tëst.md"];
@@ -44,6 +44,11 @@ async function tocNavigate(client: ControlClient, what: string, destNo: number, 
   }
 }
 
+async function currentTabPath(client: ControlClient): Promise<string> {
+  const tab = await client.request(ControlCommand.TestCurrentTab, []);
+  return /^path=(.*) page=\d+$/.exec(String(tab[1] ?? ""))?.[1] ?? "";
+}
+
 // each name gets its own folder so the TOC always has the same shape
 function makeDoc(dir: string, idx: number, mdName: string): string {
   // folder-with-space is the reporter's path; it is not the bug, but keep it
@@ -68,25 +73,59 @@ export async function testit(): Promise<void> {
   mkdirSync(appdata, { recursive: true });
   writeFileSync(
     join(appdata, "SumatraPDF-settings.txt"),
-    ["MarkdownUI [", "\tUseFixedPageUI = false", "]", "RestoreSession = false", "ShowStartPage = false", ""].join("\n"),
+    [
+      "MarkdownUI [",
+      "\tUseFixedPageUI = false",
+      "]",
+      "RestoreSession = false",
+      "ShowStartPage = false",
+      "UseTabs = true",
+      "",
+    ].join("\n"),
   );
 
   for (const backend of BACKENDS) {
-    for (let i = 0; i < mdPaths.length; i++) {
-      const what = `${backend}: '${MD_NAMES[i]}'`;
-      await withControlledSumatra(
-        EXE,
-        async (client) => {
+    await withControlledSumatra(
+      EXE,
+      async (client) => {
+        const seen = new Set<number>();
+        let path = await pollUntil(
+          () => currentTabPath(client),
+          (p) => mdPaths.some((candidate) => candidate.toLowerCase() === p.toLowerCase()),
+        );
+        for (let n = 0; n < mdPaths.length; n++) {
+          const i = mdPaths.findIndex((p) => p.toLowerCase() === path.toLowerCase());
+          if (i < 0 || seen.has(i)) {
+            throw new Error(`issue-6140: ${backend}: unexpected current tab '${path}'`);
+          }
+          seen.add(i);
+
+          const what = `${backend}: '${MD_NAMES[i]}'`;
           const started = await tocNavigate(client, what, TARGET_DEST_NO, "NAVIGATING");
           if (!started.includes("target-heading")) {
             throw new Error(`issue-6140: ${what}: dest ${TARGET_DEST_NO} is not the target heading: ${started}`);
           }
           const landed = await tocNavigate(client, what, 0, "OK");
           console.log(`issue-6140: ${what} ${landed}`);
-        },
-        ["-appdata", appdata, "-html-backend", backend, mdPaths[i]],
-      );
-    }
+
+          if (n + 1 < mdPaths.length) {
+            for (;;) {
+              const previous = path;
+              await client.request(ControlCommand.TestInvokeCommand, ["CmdNextTab"]);
+              path = await pollUntil(
+                () => currentTabPath(client),
+                (p) => p !== previous,
+              );
+              const next = mdPaths.findIndex((p) => p.toLowerCase() === path.toLowerCase());
+              if (next >= 0 && !seen.has(next)) {
+                break;
+              }
+            }
+          }
+        }
+      },
+      ["-appdata", appdata, "-html-backend", backend, "-new-window-tabs", ...mdPaths],
+    );
   }
 
   console.log("issue-6140: OK");
