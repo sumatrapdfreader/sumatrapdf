@@ -65,6 +65,19 @@ async function resultsSel(client: ControlClient): Promise<number> {
   throw new Error(`issue-6117: the result scan never finished\n${raw}`);
 }
 
+async function waitForSel(client: ControlClient, pred: (sel: number) => boolean, what: string): Promise<number> {
+  const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+  let sel = await resultsSel(client);
+  while (!pred(sel) && Date.now() < deadline) {
+    await sleep(25);
+    sel = await resultsSel(client);
+  }
+  if (!pred(sel)) {
+    throw new Error(`issue-6117: ${what} (selection ${sel})`);
+  }
+  return sel;
+}
+
 export async function testit(): Promise<void> {
   const appData = tmpPath("issue-6117");
   rmSync(appData, { recursive: true, force: true });
@@ -110,21 +123,15 @@ export async function testit(): Promise<void> {
 
     // PageDown must move the list by more than one row and must not be eaten
     // by the document's scroll accelerator
-    // one read per key: TestFindResultsOrder re-arms the scan when it is not
-    // ready, so polling it in a loop disturbs what we are measuring
     postMessage(findWnd, WM_KEYDOWN, VK_NEXT, 0);
-    await sleep(800 * SLOW_BUILD_FACTOR);
-    const afterDown = await resultsSel(client);
-    if (afterDown <= start + 1) {
-      throw new Error(`issue-6117: PageDown moved the selection ${start} -> ${afterDown}, expected a whole page`);
-    }
+    const afterDown = await waitForSel(
+      client,
+      (sel) => sel > start + 1,
+      `PageDown did not move a whole page from ${start}`,
+    );
 
     postMessage(findWnd, WM_KEYDOWN, VK_PRIOR, 0);
-    await sleep(800 * SLOW_BUILD_FACTOR);
-    const afterUp = await resultsSel(client);
-    if (afterUp >= afterDown) {
-      throw new Error(`issue-6117: PageUp moved the selection ${afterDown} -> ${afterUp}, expected it to go back`);
-    }
+    await waitForSel(client, (sel) => sel < afterDown, `PageUp did not move back from ${afterDown}`);
   } finally {
     client.close();
     await killAndWait(proc);
