@@ -11,7 +11,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { runStandalone, tmpPath } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
-import { getScrollInfo, sleep } from "./winapi.ts";
+import { getScrollInfo } from "./winapi.ts";
 
 const PAGE_COUNT = 2;
 
@@ -84,7 +84,6 @@ async function scrollExtent(dir: string, pdf: string, trim: boolean): Promise<nu
   const { proc, client, frame } = launched;
   try {
     await client.waitForRenderIdle();
-    await sleep(1200);
     const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error("trim-empty-margins-restore: no canvas");
