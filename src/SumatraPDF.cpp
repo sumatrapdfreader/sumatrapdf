@@ -2524,7 +2524,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     bool showToc = showTocByDefault(path, dmForToc ? dmForToc->GetEngine() : nullptr);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gSettings->windowState;
     int showType = SW_NORMAL;
-    if (gSettings->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {
+    if (gSettings->windowState == WIN_STATE_MAXIMIZED) {
         showType = SW_MAXIMIZE;
     }
 
@@ -2534,9 +2534,10 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         ss.page = ParseStoredPagePos(fs->pageNo).pageNo;
         displayMode = DisplayModeFromString(fs->displayMode, DisplayMode::Automatic);
         showAsFullScreen = WIN_STATE_FULLSCREEN == fs->windowState;
-        if (fs->windowState == WIN_STATE_NORMAL) {
+        // fullscreen enters from the normal window (see ShowMainWindow)
+        if (fs->windowState == WIN_STATE_NORMAL || showAsFullScreen) {
             showType = SW_NORMAL;
-        } else if (fs->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {
+        } else if (fs->windowState == WIN_STATE_MAXIMIZED) {
             showType = SW_MAXIMIZE;
         } else if (fs->windowState == WIN_STATE_MINIMIZED) {
             showType = SW_MINIMIZE;
@@ -3495,7 +3496,9 @@ static MainWindow* CreateMainWindow() {
 }
 
 void ShowMainWindow(MainWindow* win, int windowState) {
-    if (WIN_STATE_FULLSCREEN == windowState || WIN_STATE_MAXIMIZED == windowState) {
+    // fullscreen enters from the normal window: exiting fullscreen returns to
+    // the state it was entered from, which a saved session doesn't record
+    if (WIN_STATE_MAXIMIZED == windowState) {
         ShowWindow(win->hwndFrame, SW_MAXIMIZE);
     } else {
         ShowWindow(win->hwndFrame, SW_SHOW);
