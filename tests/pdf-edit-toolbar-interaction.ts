@@ -174,13 +174,13 @@ export async function testit(): Promise<void> {
     if (!stamp || stamp.dx <= 0 || stamp.dy <= 0) {
       throw new Error(`pdf-edit-toolbar-interaction: stamp screen rect missing\n${state.raw}`);
     }
-    await clickAt(canvas, stamp.x + Math.floor(stamp.dx / 2), stamp.y + Math.floor(stamp.dy / 2));
+    await clickAt(canvas, stamp.x + Math.floor(stamp.dx / 2), stamp.y + Math.floor(stamp.dy / 2), 0);
     state = await annotState(client);
     if (state.selected || state.editToolbar) {
       throw new Error(`pdf-edit-toolbar-interaction: click selected a stamp outside Edit PDF mode\n${state.raw}`);
     }
 
-    await clickAt(canvas, centerX, centerY, 200, MK_CONTROL);
+    await clickAt(canvas, centerX, centerY, 0, MK_CONTROL);
     state = await annotState(client);
     if (!state.editToolbar || !state.selected || state.notification) {
       throw new Error(
@@ -193,7 +193,7 @@ export async function testit(): Promise<void> {
     }
 
     const cr = getClientRect(canvas);
-    await clickAt(canvas, Math.max(5, cr.right - 10), Math.max(5, cr.bottom - 10));
+    await clickAt(canvas, Math.max(5, cr.right - 10), Math.max(5, cr.bottom - 10), 0);
     state = await annotState(client);
     if (state.selected || !state.editToolbar) {
       throw new Error(
@@ -297,7 +297,7 @@ export async function testit(): Promise<void> {
       throw new Error("pdf-edit-toolbar-interaction: hover did not draw an annotation bounding box");
     }
 
-    await clickAt(canvas, editCenterX, editCenterY, 200, MK_CONTROL);
+    await clickAt(canvas, editCenterX, editCenterY, 0, MK_CONTROL);
     state = await annotState(client);
     if (!state.selected || !state.selectedHover) {
       throw new Error("pdf-edit-toolbar-interaction: Ctrl+click did not select the highlight");
@@ -311,14 +311,14 @@ export async function testit(): Promise<void> {
     const bottomX = bottomAnnot.x + Math.floor(bottomAnnot.dx / 2);
     const bottomY = bottomAnnot.y + Math.floor(bottomAnnot.dy / 2);
     await moveAndWaitForHover(client, canvas, bottomX, bottomY, false);
-    await clickAt(canvas, bottomX, bottomY, 200, MK_CONTROL);
+    await clickAt(canvas, bottomX, bottomY, 0, MK_CONTROL);
     state = await annotState(client);
     if (state.selected) {
       throw new Error("pdf-edit-toolbar-interaction: a click on another annotation did more than deselect");
     }
 
     state = await moveAndWaitForHover(client, canvas, bottomX, bottomY, true);
-    await clickAt(canvas, bottomX, bottomY, 200, MK_CONTROL);
+    await clickAt(canvas, bottomX, bottomY, 0, MK_CONTROL);
     state = await annotState(client);
     if (!state.selected || !state.selectedHover) {
       throw new Error("pdf-edit-toolbar-interaction: later Ctrl+click did not select the highlight");
