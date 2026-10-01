@@ -20,6 +20,7 @@ import {
   setCursorPos,
   sleep,
   VK_DOWN,
+  VK_RETURN,
   WM_COMMAND,
   WM_KEYDOWN,
   WM_MOUSEMOVE,
@@ -30,9 +31,9 @@ import {
   findCanvas,
   killAndWait,
   launchControlled,
-  pressEnter,
   pressEscape,
   sendCommand,
+  sendCommandSync,
 } from "./win-automation.ts";
 
 type Rect = { x: number; y: number; dx: number; dy: number };
@@ -163,7 +164,7 @@ async function executeFromCommandPalette(client: ControlClient, frame: number): 
     const raw = String(res[1] ?? "");
     const m = /cmd=(-?\d+)/.exec(raw);
     if (res[0] === 0 && m && +m[1]! === want) {
-      await pressEnter(edit);
+      postMessage(edit, WM_KEYDOWN, VK_RETURN, 0);
       return;
     }
     postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
@@ -197,8 +198,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     const canvas = findCanvas(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
     const canvasRect = getClientRect(canvas);
     const pagePoint = { x: Math.floor(canvasRect.right / 2), y: Math.floor(canvasRect.bottom / 2) };
@@ -207,7 +207,7 @@ export async function testit(): Promise<void> {
     const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
     const button = toolbarRect(toolbarDump);
     const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
-    await clickAt(toolbar, button.x + Math.floor(button.dx / 2), button.y + Math.floor(button.dy / 2));
+    await clickAt(toolbar, button.x + Math.floor(button.dx / 2), button.y + Math.floor(button.dy / 2), 0);
 
     let state = await waitForPlacement(client, true);
     if (!state.notification || state.annotations !== 0 || state.message !== kExpectedMessage) {
@@ -232,7 +232,7 @@ export async function testit(): Promise<void> {
       );
     }
 
-    await clickAt(canvas, 2, Math.floor(canvasRect.bottom / 2));
+    await clickAt(canvas, 2, Math.floor(canvasRect.bottom / 2), 0);
     state = await placementState(client);
     if (!state.active || state.annotations !== 0) {
       throw new Error(`free-text-annotation-placement: click outside the page ended placement\n${state.raw}`);
@@ -240,7 +240,7 @@ export async function testit(): Promise<void> {
 
     setCursorPos(screenPoint.x, screenPoint.y);
     sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(pagePoint.x, pagePoint.y));
-    await clickAt(canvas, pagePoint.x, pagePoint.y);
+    await clickAt(canvas, pagePoint.x, pagePoint.y, 0);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 1) {
       throw new Error(`free-text-annotation-placement: page click did not place one annotation\n${state.raw}`);
