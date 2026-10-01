@@ -21,6 +21,8 @@ import {
   sleep,
   MK_SHIFT,
   VK_DOWN,
+  VK_ESCAPE,
+  VK_RETURN,
   WM_COMMAND,
   WM_KEYDOWN,
   WM_MOUSEMOVE,
@@ -31,8 +33,7 @@ import {
   findCanvas,
   killAndWait,
   launchControlled,
-  pressEnter,
-  pressEscape,
+  pressKey,
   sendCommand,
 } from "./win-automation.ts";
 
@@ -152,11 +153,10 @@ async function executeFromCommandPalette(client: ControlClient, frame: number): 
     const raw = String(res[1] ?? "");
     const m = /cmd=(-?\d+)/.exec(raw);
     if (res[0] === 0 && m && +m[1]! === cmdId("CmdCreateAnnotLine")) {
-      await pressEnter(edit);
+      await pressKey(edit, VK_RETURN, 0);
       return;
     }
     postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
-    await sleep(80);
   }
   throw new Error("line-annotation-placement: Line annotation command was not in the filtered palette");
 }
@@ -221,13 +221,12 @@ export async function testit(): Promise<void> {
     const end = { x: center.x + 100, y: center.y + 80 };
     const outside = { x: 2, y: center.y };
 
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendMessage(frame, WM_COMMAND, cmdId("CmdToggleEditPDF"), 0);
     const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
     const lineButton = toolbarButtonRect(toolbarDump, "CmdCreateAnnotLine");
     const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
     const clickLineToolbar = () =>
-      clickAt(toolbar, lineButton.x + Math.floor(lineButton.dx / 2), lineButton.y + Math.floor(lineButton.dy / 2));
+      clickAt(toolbar, lineButton.x + Math.floor(lineButton.dx / 2), lineButton.y + Math.floor(lineButton.dy / 2), 0);
 
     await clickLineToolbar();
     let state = await waitForPlacement(client, true);
@@ -244,7 +243,7 @@ export async function testit(): Promise<void> {
       throw new Error(`line-annotation-placement: toolbar did not start clean placement mode\n${state.raw}`);
     }
 
-    await clickAt(canvas, outside.x, outside.y);
+    await clickAt(canvas, outside.x, outside.y, 0);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 0) {
       throw new Error(`line-annotation-placement: outside first click did not cancel cleanly\n${state.raw}`);
@@ -252,14 +251,13 @@ export async function testit(): Promise<void> {
 
     await clickLineToolbar();
     await waitForPlacement(client, true);
-    await clickAt(canvas, start.x, start.y);
+    await clickAt(canvas, start.x, start.y, 0);
     state = await placementState(client);
     if (!state.active || !state.started || state.page !== 1 || state.annotations !== 0) {
       throw new Error(`line-annotation-placement: first page click did not anchor the line\n${state.raw}`);
     }
 
     await client.setNotificationsEnabled(false);
-    await sleep(100);
     const before = captureWindowPixels(canvas);
     const blueBefore = countPreviewBlue(before, start, end);
     moveMouse(canvas, end, MK_SHIFT);
@@ -283,7 +281,7 @@ export async function testit(): Promise<void> {
       );
     }
 
-    await clickAt(canvas, outside.x, outside.y);
+    await clickAt(canvas, outside.x, outside.y, 0);
     state = await waitForPlacement(client, false);
     if (state.annotations !== 0) {
       throw new Error(`line-annotation-placement: outside second click created an annotation\n${state.raw}`);
@@ -295,9 +293,9 @@ export async function testit(): Promise<void> {
     if (!state.notification || state.started || state.annotations !== 0) {
       throw new Error(`line-annotation-placement: palette did not start placement mode\n${state.raw}`);
     }
-    await clickAt(canvas, start.x, start.y);
+    await clickAt(canvas, start.x, start.y, 0);
     moveMouse(canvas, end, MK_SHIFT);
-    await clickAt(canvas, end.x, end.y, 350, MK_SHIFT);
+    await clickAt(canvas, end.x, end.y, 0, MK_SHIFT);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 1) {
       throw new Error(`line-annotation-placement: second page click did not create exactly one line\n${state.raw}`);
@@ -305,8 +303,8 @@ export async function testit(): Promise<void> {
 
     await executeFromCommandPalette(client, frame);
     await waitForPlacement(client, true);
-    await clickAt(canvas, start.x, start.y);
-    await pressEscape(frame);
+    await clickAt(canvas, start.x, start.y, 0);
+    await pressKey(frame, VK_ESCAPE, 0);
     state = await waitForPlacement(client, false);
     if (state.notification || state.annotations !== 1) {
       throw new Error(`line-annotation-placement: Esc did not cancel without creating\n${state.raw}`);

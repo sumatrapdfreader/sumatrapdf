@@ -7,8 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { launchControlled, sendCommand, killAndWait, killProcessesNamed } from "./win-automation.ts";
-import { sleep } from "./winapi.ts";
+import { killAndWait, killProcessesNamed, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 function makePdf(nPages: number): Buffer {
   const kids: string[] = [];
@@ -49,14 +48,12 @@ async function copyLocation(args: string[], nScrolls: number): Promise<string> {
     await client.waitForRenderIdle();
 
     for (let i = 0; i < nScrolls; i++) {
-      sendCommand(frame, cmdId("CmdScrollDown"));
+      sendCommandSync(frame, cmdId("CmdScrollDown"));
     }
-    await sleep(1500);
     await client.waitForRenderIdle();
 
     setClipboardText("nothing-copied-yet");
-    sendCommand(frame, cmdId("CmdCopyLocationToClipboard"));
-    await sleep(500);
+    sendCommandSync(frame, cmdId("CmdCopyLocationToClipboard"));
     return getClipboardText();
   } finally {
     client.close();

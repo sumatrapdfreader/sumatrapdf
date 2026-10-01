@@ -11,6 +11,7 @@ import { findCanvas, killAndWait, launchControlled, openContextMenu, waitForCont
 
 // auto-reload waits for two 500ms ticks that see an unchanged file
 const kReloadWaitMs = 8000;
+const kReloadDeferralProbeMs = 1500;
 
 function reloaded(logPath: string): boolean {
   try {
@@ -69,7 +70,7 @@ export async function testit(): Promise<void> {
     // replace the document under the open menu. The file watcher must not
     // reload it while the menu's nested message loop is running.
     copyFileSync("tests/issue-1201-data/002.png", img);
-    await sleep(4000);
+    await sleep(kReloadDeferralProbeMs);
     if (reloaded(logPath)) {
       postMessage(popup, WM_KEYDOWN, VK_ESCAPE, 0);
       throw new Error("ctx-menu-reload: document reloaded while the context menu was open");
@@ -77,7 +78,7 @@ export async function testit(): Promise<void> {
 
     // "Selected &Image" then "C&opy To Clipboard"
     postMessage(popup, WM_CHAR, "i".charCodeAt(0), 0);
-    await sleep(600);
+    await sleep(100);
     postMessage(popup, WM_CHAR, "o".charCodeAt(0), 0);
 
     // the deferred reload still has to happen once the menu is gone

@@ -20,6 +20,8 @@ import {
   setCursorPos,
   sleep,
   VK_DOWN,
+  VK_ESCAPE,
+  VK_RETURN,
   WM_COMMAND,
   WM_KEYDOWN,
   WM_MOUSEMOVE,
@@ -30,8 +32,7 @@ import {
   findCanvas,
   killAndWait,
   launchControlled,
-  pressEnter,
-  pressEscape,
+  pressKey,
   sendCommand,
 } from "./win-automation.ts";
 
@@ -190,11 +191,10 @@ async function executeFromCommandPalette(client: ControlClient, frame: number, k
     const raw = String(res[1] ?? "");
     const m = /cmd=(-?\d+)/.exec(raw);
     if (res[0] === 0 && m && +m[1]! === want) {
-      await pressEnter(edit);
+      await pressKey(edit, VK_RETURN, 0);
       return;
     }
     postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
-    await sleep(80);
   }
   throw new Error(`stamp-caret-annotation-placement: ${kind} command was not in the filtered palette`);
 }
@@ -213,7 +213,7 @@ async function testKind(
   const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
   const button = toolbarRect(toolbarDump, kind);
   const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
-  await clickAt(toolbar, button.x + Math.floor(button.dx / 2), button.y + Math.floor(button.dy / 2));
+  await clickAt(toolbar, button.x + Math.floor(button.dx / 2), button.y + Math.floor(button.dy / 2), 0);
 
   let state = await waitForPlacement(client, kind, true);
   if (!state.notification || state.annotations !== annotationsBefore || state.message !== expectedMessage(kind)) {
@@ -228,13 +228,13 @@ async function testKind(
     throw new Error(`stamp-caret-annotation-placement: ${kind} preview/cursor was not active\n${state.raw}`);
   }
 
-  await clickAt(canvas, 2, Math.floor(canvasRect.bottom / 2));
+  await clickAt(canvas, 2, Math.floor(canvasRect.bottom / 2), 0);
   state = await placementState(client, kind);
   if (!state.active || state.annotations !== annotationsBefore) {
     throw new Error(`stamp-caret-annotation-placement: ${kind} click outside the page ended placement\n${state.raw}`);
   }
 
-  await clickAt(canvas, pagePoint.x, pagePoint.y);
+  await clickAt(canvas, pagePoint.x, pagePoint.y, 0);
   state = await waitForPlacement(client, kind, false);
   if (state.notification || state.annotations !== annotationsBefore + 1) {
     throw new Error(`stamp-caret-annotation-placement: ${kind} page click did not place one annotation\n${state.raw}`);
@@ -251,7 +251,7 @@ async function testKind(
   if (!state.notification || state.annotations !== annotationsBefore + 2 || state.command !== wantCmd) {
     throw new Error(`stamp-caret-annotation-placement: palette did not start ${kind} placement\n${state.raw}`);
   }
-  await pressEscape(frame);
+  await pressKey(frame, VK_ESCAPE, 0);
   state = await waitForPlacement(client, kind, false);
   if (state.notification || state.annotations !== annotationsBefore + 2) {
     throw new Error(`stamp-caret-annotation-placement: Esc did not cancel ${kind} without creating\n${state.raw}`);
@@ -284,8 +284,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     const canvas = findCanvas(frame);
-    sendCommand(frame, cmdId("CmdToggleEditPDF"));
-    await sleep(300);
+    sendMessage(frame, WM_COMMAND, cmdId("CmdToggleEditPDF"), 0);
 
     let n = await testKind(client, frame, canvas, "stamp", 0);
     n = await testKind(client, frame, canvas, "caret", n);
