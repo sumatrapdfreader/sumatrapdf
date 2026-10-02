@@ -971,6 +971,16 @@ void VirtRoot::TrackMouseLeaveIfNeeded() {
     }
 }
 
+// WS_EX_NOACTIVATE cannot take focus. SetFocus on it drops the foreground
+// window: the home-page About popup then closes on the Copy button's mouse-down.
+static bool HwndTakesFocus(HWND hwnd) {
+    if (!hwnd) {
+        return false;
+    }
+    DWORD ex = (DWORD)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    return (ex & WS_EX_NOACTIVATE) == 0;
+}
+
 // press a virtual control (mouse down, or a DBLCLK that is really a second click)
 static bool BeginVirtPress(VirtRoot* root, VirtCtrl* target, Point ptWindow, Point ptLocal, int button, WPARAM wp = 0) {
     root->ClearPressed();
@@ -979,7 +989,7 @@ static bool BeginVirtPress(VirtRoot* root, VirtCtrl* target, Point ptWindow, Poi
         // virtual controls have no HWND. Keys go to whoever has Win32
         // focus, so a child Edit (Contents, filter) would keep them
         // after this click unless we take them back (issue #6033).
-        if (hwnd && ::GetFocus() != hwnd) {
+        if (hwnd && HwndTakesFocus(hwnd) && ::GetFocus() != hwnd) {
             ::SetFocus(hwnd);
         }
         root->SetFocus(target);
