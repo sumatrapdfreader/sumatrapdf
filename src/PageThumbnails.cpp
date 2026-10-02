@@ -464,7 +464,10 @@ void PageThumbnailsCtrl::OpenSelectedPage() {
     if (!dm) {
         return;
     }
-    dm->GoToPage(selectedPage, 0, true);
+    // Facing and book view report the row's first page, which clears this highlight.
+    int pageNo = selectedPage;
+    dm->GoToPage(pageNo, 0, true);
+    SelectPage(pageNo);
     onPageOpened.Call();
 }
 
