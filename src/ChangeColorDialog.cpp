@@ -466,18 +466,8 @@ void ChangeColorWnd::PickFromArea(Point ptLocal) {
     if (dx <= 0 || dy <= 0) {
         return;
     }
-    if (x < 0) {
-        x = 0;
-    }
-    if (y < 0) {
-        y = 0;
-    }
-    if (x >= dx) {
-        x = dx - 1;
-    }
-    if (y >= dy) {
-        y = dy - 1;
-    }
+    x = ClampI(x, 0, dx - 1);
+    y = ClampI(y, 0, dy - 1);
     float hue = (float)x / (float)dx * 360.0f;
     float val = 1.0f - ((float)y / (float)dy);
     u8 cr, cg, cb;

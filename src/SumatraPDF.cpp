@@ -10117,14 +10117,8 @@ static void AdjustFrameForSidebar(MainWindow* win, bool show) {
         if (DisplayModel* dm = win->AsFixed()) {
             unused = dm->UnusedCanvasDx();
         }
-        int grow = extra - unused;
-        if (grow < 0) {
-            grow = 0;
-        }
         int spare = work.dx - wr.dx;
-        if (grow > spare) {
-            grow = spare;
-        }
+        int grow = ClampI(extra - unused, 0, spare);
         if (grow <= 0) {
             win->sidebarGrewFrameDx = 0;
             return;

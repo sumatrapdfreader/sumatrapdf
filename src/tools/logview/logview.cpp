@@ -216,7 +216,7 @@ static void UpdateLogScrollbars() {
         maxTop = 0;
     }
     int top = tab ? tab->scrollTop : 0;
-    top = clampi(top, 0, maxTop);
+    top = ClampI(top, 0, maxTop);
     if (tab) {
         tab->scrollTop = top;
     }
@@ -233,7 +233,7 @@ static void UpdateLogScrollbars() {
     int maxW = tab ? tab->maxWidth : 0;
     int sx = tab ? tab->scrollX : 0;
     // 0 when the lines are narrower than the window
-    sx = clampi(sx, 0, std::max(maxW - clientW, 0));
+    sx = ClampI(sx, 0, std::max(maxW - clientW, 0));
     if (tab) {
         tab->scrollX = sx;
     }
@@ -712,7 +712,7 @@ static void ScrollByLines(HWND hwnd, int dLines) {
     }
     int top = tab->scrollTop + dLines;
     int maxTop = MaxScrollTop(tab);
-    top = clampi(top, 0, maxTop);
+    top = ClampI(top, 0, maxTop);
     if (top != tab->scrollTop) {
         tab->scrollTop = top;
         tab->follow = IsAtBottom(tab); // re-arm follow only when the user lands at the end
@@ -762,7 +762,7 @@ static void LogVScroll(HWND hwnd, int code) {
             break;
         }
     }
-    top = clampi(top, 0, maxTop);
+    top = ClampI(top, 0, maxTop);
     if (top != tab->scrollTop) {
         tab->scrollTop = top;
         tab->follow = IsAtBottom(tab); // re-arm follow only when the user lands at the end
@@ -808,7 +808,7 @@ static void LogHScroll(HWND hwnd, int code) {
             break;
         }
     }
-    x = clampi(x, 0, maxX);
+    x = ClampI(x, 0, maxX);
     if (x != tab->scrollX) {
         tab->scrollX = x;
         SetScrollPos(hwnd, SB_HORZ, x, TRUE);

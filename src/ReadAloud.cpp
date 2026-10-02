@@ -1734,7 +1734,7 @@ Str TtsGetVoiceId() {
 // with the WinRT backend the new speed applies from the next spoken chunk;
 // SAPI adjusts speech in progress
 void TtsSetSpeed(float speed) {
-    speed = clampf(speed, kTtsSpeedMin, kTtsSpeedMax);
+    speed = ClampF(speed, kTtsSpeedMin, kTtsSpeedMax);
     gTtsSpeed = speed;
 
     // both no-op if that backend is not initialized
@@ -2484,7 +2484,7 @@ static void ReadAloudFlushLine(DisplayModel* dm, Rect canvasRc, const ReadAloudL
     }
     int thick = thickDiv > 0 ? sr.dy / thickDiv : minThick;
     // a line cut by the canvas edge can be thinner than minThick: then it's sr.dy
-    thick = std::max(clampi(thick, std::min(minThick, sr.dy), sr.dy), 1);
+    thick = std::max(ClampI(thick, std::min(minThick, sr.dy), sr.dy), 1);
     Rect u = {sr.x, sr.y + sr.dy - thick, sr.dx, thick};
     if (!u.IsEmpty()) {
         VecAppend(out, u);
@@ -2895,8 +2895,8 @@ void ReadAloudUpdateAutoScroll(MainWindow* win) {
     }
 
     int maxStep = std::max(canvas.dy / 4, DpiScale(120));
-    dx = clampi(dx, -maxStep, maxStep);
-    dy = clampi(dy, -maxStep, maxStep);
+    dx = ClampI(dx, -maxStep, maxStep);
+    dy = ClampI(dy, -maxStep, maxStep);
 
     win->readAloudScrollFromCode = true;
     win->MoveDocBy(dx, dy);
@@ -3987,12 +3987,7 @@ int ReadAloudSpeedCount() {
 
 float ReadAloudSpeedAt(int idx) {
     int n = dimofi(kReadAloudSpeeds);
-    if (idx < 0) {
-        idx = 0;
-    }
-    if (idx >= n) {
-        idx = n - 1;
-    }
+    idx = ClampI(idx, 0, n - 1);
     return kReadAloudSpeeds[idx];
 }
 

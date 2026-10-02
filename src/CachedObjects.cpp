@@ -172,7 +172,7 @@ static u64 BytesWeWantFreed(u64 newAllocationSize, bool aggressive) {
     }
 
     int level = gSaveMemory;
-    level = clampi(level, 0, 100);
+    level = ClampI(level, 0, 100);
     if (level == 0) {
         return 0;
     }

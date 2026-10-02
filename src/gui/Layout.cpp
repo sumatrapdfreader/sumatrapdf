@@ -138,8 +138,8 @@ Constraints TightHeight(int height) {
 }
 
 Size Constraints::Constrain(Size size) const {
-    int w = clampi(size.dx, min.dx, max.dx);
-    int h = clampi(size.dy, min.dy, max.dy);
+    int w = ClampI(size.dx, min.dx, max.dx);
+    int h = ClampI(size.dy, min.dy, max.dy);
     return Size{w, h};
 }
 
@@ -175,11 +175,11 @@ Size Constraints::ConstrainAndAttemptToPreserveAspectRatio(const Size size) cons
 }
 
 int Constraints::ConstrainHeight(int height) const {
-    return clampi(height, min.dy, max.dy);
+    return ClampI(height, min.dy, max.dy);
 }
 
 int Constraints::ConstrainWidth(int width) const {
-    return clampi(width, min.dx, max.dx);
+    return ClampI(width, min.dx, max.dx);
 }
 
 bool Constraints::HasBoundedHeight() const {
@@ -248,16 +248,16 @@ Constraints Constraints::LoosenWidth() const {
 
 Constraints Constraints::Tighten(Size size) const {
     Constraints bc = *this;
-    bc.min.dx = clampi(size.dx, bc.min.dx, bc.max.dx);
+    bc.min.dx = ClampI(size.dx, bc.min.dx, bc.max.dx);
     bc.max.dx = bc.min.dx;
-    bc.min.dy = clampi(size.dy, bc.min.dy, bc.max.dy);
+    bc.min.dy = ClampI(size.dy, bc.min.dy, bc.max.dy);
     bc.max.dy = bc.min.dy;
     return bc;
 }
 
 Constraints Constraints::TightenHeight(int height) const {
     Constraints bc = *this;
-    bc.min.dy = clampi(height, bc.min.dy, bc.max.dy);
+    bc.min.dy = ClampI(height, bc.min.dy, bc.max.dy);
     bc.max.dy = bc.min.dy;
     return bc;
 }
@@ -265,7 +265,7 @@ Constraints Constraints::TightenHeight(int height) const {
 Constraints Constraints::TightenWidth(int width) const {
     Constraints bc = *this;
 
-    bc.min.dx = clampi(width, bc.min.dx, bc.max.dx);
+    bc.min.dx = ClampI(width, bc.min.dx, bc.max.dx);
     bc.max.dx = bc.min.dx;
     return bc;
 }

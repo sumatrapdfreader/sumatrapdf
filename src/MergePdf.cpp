@@ -357,8 +357,8 @@ void MergeGrid::ItemsChanged() {
     rowsModel->rows = (len(items) + cols - 1) / cols;
     SetModel(rowsModel);
     ScrollTo(oldScrollY);
-    focusIdx = clampi(focusIdx, 0, std::max(0, len(items) - 1));
-    anchorIdx = clampi(anchorIdx, 0, std::max(0, len(items) - 1));
+    focusIdx = ClampI(focusIdx, 0, std::max(0, len(items) - 1));
+    anchorIdx = ClampI(anchorIdx, 0, std::max(0, len(items) - 1));
     hoverIdx = -1;
     Changed();
     StartRendering();
@@ -440,7 +440,7 @@ int MergeGrid::DropPositionAt(Point pt) {
     // left of a thumbnail's middle: in front of it
     int step = thumbDx + gap;
     int x = pt.x - GridLeft() - (thumbDx / 2);
-    int slot = x < 0 ? 0 : clampi((x / step) + 1, 0, cols);
+    int slot = x < 0 ? 0 : ClampI((x / step) + 1, 0, cols);
     return std::min((row * cols) + slot, n);
 }
 
@@ -679,7 +679,7 @@ void MergeGrid::InsertPages(MergeSource* src, int at) {
     for (MergeItem& it : items) {
         it.selected = false;
     }
-    at = clampi(at, 0, len(items));
+    at = ClampI(at, 0, len(items));
     for (int i = 0; i < src->pageCount; i++) {
         MergeItem it;
         it.src = src;
@@ -943,7 +943,7 @@ void MergeGrid::OnGridTooltip(VirtTooltipEvent* ev) {
 
 // the keyboard's page moves; Shift selects from the anchor to it
 void MergeGrid::MoveFocus(int idx, bool shift) {
-    idx = clampi(idx, 0, len(items) - 1);
+    idx = ClampI(idx, 0, len(items) - 1);
     if (!shift) {
         SelectOnly(idx);
     } else {
@@ -1388,7 +1388,7 @@ void InsertPosWnd::OnOk(VirtMouseEvent*) {
     if (rbStart->IsChecked()) {
         at = 0;
     } else if (rbAfter->IsChecked()) {
-        at = clampi(ParseInt(editPage->GetTextTemp()), 0, nItems);
+        at = ClampI(ParseInt(editPage->GetTextTemp()), 0, nItems);
     }
     *atOut = at;
     ScheduleDelete();
@@ -1730,7 +1730,7 @@ bool MergePdfWnd::Create(MainWindow* w, WindowTab* tab) {
     layout = new Padding(vbox, Insets{gap, gap, gap, gap});
 
     grid->InsertPages(sources->all[0], 0);
-    grid->SelectOnly(clampi(tab->ctrl->CurrentPageNo() - 1, 0, len(grid->items) - 1));
+    grid->SelectOnly(ClampI(tab->ctrl->CurrentPageNo() - 1, 0, std::max(len(grid->items) - 1, 0)));
 
     // most of the work area of the document's monitor
     Rect work = GetWorkAreaRect(HwndWindowRect(w->hwndFrame), w->hwndFrame);

@@ -107,14 +107,8 @@ int ChapterTable::PageNoFromLocation(Location loc) {
         return 0;
     }
     int idx = chapter - 1;
-    int page = loc.page;
-    if (page < 1) {
-        page = 1;
-    }
     int count = pageCounts[idx];
-    if (page > count) {
-        page = count;
-    }
+    int page = ClampI(loc.page, 1, count);
     int before = idx == 0 ? 0 : cumPages[idx - 1];
     return before + page;
 }

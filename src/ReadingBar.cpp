@@ -72,7 +72,7 @@ static void SetHeightPx(int px, bool save) {
     }
     int dpi = DpiGet();
     int unscaled = (dpi > 0) ? MulDiv(px, 96, dpi) : px;
-    unscaled = clampi(unscaled, kMinHeight96, 400);
+    unscaled = ClampI(unscaled, kMinHeight96, 400);
     if (gSettings->readingBar.height == unscaled) {
         if (save) {
             ScheduleSaveSettings();
@@ -113,7 +113,7 @@ static Rect BandRect(MainWindow* win) {
         return {};
     }
     float frac = tab->readingBar.yFrac;
-    frac = clampf(frac, 0, 1);
+    frac = ClampF(frac, 0, 1);
     int y = (int)lroundf(frac * (float)canvas.dy);
     if (y < 0) {
         y = 0;
@@ -132,7 +132,7 @@ static void SetBandY(WindowTab* tab, int y, int canvasDy) {
     if (!tab || canvasDy <= 0) {
         return;
     }
-    y = clampi(y, 0, canvasDy);
+    y = ClampI(y, 0, canvasDy);
     tab->readingBar.yFrac = (float)y / (float)canvasDy;
 }
 
@@ -156,7 +156,7 @@ static ReadingBarHit HitTest(MainWindow* win, Point pt) {
     }
     int edge = DpiScale(kEdgeHit96);
     // at least 1 even when the band is too thin for a third of it
-    edge = clampi(edge, 1, std::max(band.dy / 3, 1));
+    edge = ClampI(edge, 1, std::max(band.dy / 3, 1));
     if (pt.y < band.y + edge) {
         return ReadingBarHit::ResizeTop;
     }
@@ -367,18 +367,12 @@ static void ApplyResizeBottom(MainWindow* win, int y) {
     }
     int newBottom = y - win->readingBarDragOff;
     int minH = DpiScale(kMinHeight96);
-    int newH = newBottom - band.y;
-    if (newH < minH) {
-        newH = minH;
-    }
     int maxH = canvas.dy - band.y;
     int cap = canvas.dy * 4 / 5;
     if (maxH > cap) {
         maxH = cap;
     }
-    if (newH > maxH) {
-        newH = maxH;
-    }
+    int newH = ClampI(newBottom - band.y, minH, maxH);
     SetHeightPx(newH, false);
     InvalidateCanvas(win);
 }
@@ -515,15 +509,9 @@ static void NudgeHeight(MainWindow* win, int dir) {
         return;
     }
     int step = DpiScale(8);
-    int newH = band.dy + (dir * step);
     int minH = DpiScale(kMinHeight96);
-    if (newH < minH) {
-        newH = minH;
-    }
     int maxH = canvas.dy * 4 / 5;
-    if (newH > maxH) {
-        newH = maxH;
-    }
+    int newH = ClampI(band.dy + (dir * step), minH, maxH);
     SetHeightPx(newH, true);
     InvalidateCanvas(win);
 }
