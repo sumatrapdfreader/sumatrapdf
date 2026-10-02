@@ -16,9 +16,9 @@ mujs           1.3.9
 bzip2           1.0.8      2019-07-21
   https://www.sourceware.org/bzip2/
 
-chmdec          dist       2026-07-28
+chmdec          dist       2026-10-02
   https://github.com/kjk/chmdec
-  commit dbf9c5a899709543724dca344ecfb0b6a21d45a4
+  commit 19d91e5c1b362fa8be6f6e30a02b49b1167e7823
   amalgamated dist/chm.c + dist/chm.h only (was ext/libchm)
 
 freetype        2.14.3

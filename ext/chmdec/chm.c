@@ -954,7 +954,7 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
     }
 
     if (togo != 0) return DECR_ILLEGALDATA;
-    // Ring buffer: a frame that crosses the end is [size - head, size) then [0, end).
+
     if (outlen < 0 || (uint32_t)outlen > window_size || window_posn > window_size) return DECR_ILLEGALDATA;
     {
         uint32_t end = window_posn ? window_posn : window_size;
