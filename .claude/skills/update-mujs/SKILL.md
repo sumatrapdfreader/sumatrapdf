@@ -23,7 +23,7 @@ description: Regenerate the amalgamated MuJS copy in ext/a-mujs from upstream wi
    bun cmd/amalgam.ts -mujs <repo-url> <tag-or-commit>
    ```
 
-   It writes `mujs.h`, `mujs.c`, `regexp.h` (used by MuPDF text search), `COPYING` and `version.txt` into `ext/a-mujs/`.
+   It writes `mujs.h`, `mujs.c`, `COPYING` and `version.txt` into `ext/a-mujs/`.
    Add `-keep` to reuse the existing checkout while iterating on the amalgamation rules.
 
 2. Check `ext/a-mujs/version.txt` — it records the project homepage, source repo URL, requested

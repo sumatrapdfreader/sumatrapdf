@@ -1125,7 +1125,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\ext\a-mujs\mujs.h" />
-    <ClInclude Include="..\ext\a-mujs\regexp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\a-mujs\mujs.c" />

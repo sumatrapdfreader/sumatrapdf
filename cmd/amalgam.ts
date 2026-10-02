@@ -1835,11 +1835,10 @@ const libs: Lib[] = [
     name: "mujs",
     homepage: "https://mujs.com/",
     repo: "https://github.com/ArtifexSoftware/mujs",
-    rev: "e892c9fdbbddba94e52f656ccb378ed4885e30cc",
-    writes: "mujs.h, mujs.c, regexp.h, COPYING",
+    rev: "2c61a7bed7e7625c03c6e82e644a711ac4471c1e",
+    writes: "mujs.h, mujs.c, COPYING",
     generate: genMujs,
-    // regexp.h is used directly by MuPDF text search.
-    copies: ["regexp.h", "COPYING"],
+    copies: ["COPYING"],
     compile: {
       file: "mujs.c",
       args: [

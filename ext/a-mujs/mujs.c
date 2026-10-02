@@ -1086,7 +1086,7 @@ static void Ap_slice(js_State *J)
 static int Ap_sort_cmp(js_State *J, int idx_a, int idx_b)
 {
 	js_Object *obj = js_tovalue(J, 0)->u.object;
-	if (obj->u.a.simple && idx_b < obj->u.a.flat_length) {
+	if (obj->type == JS_CARRAY && obj->u.a.simple && idx_b < obj->u.a.flat_length) {
 		js_Value *val_a = &obj->u.a.array[idx_a];
 		js_Value *val_b = &obj->u.a.array[idx_b];
 		int und_a = val_a->t.type == JS_TUNDEFINED;
@@ -1172,7 +1172,7 @@ static int Ap_sort_cmp(js_State *J, int idx_a, int idx_b)
 static void Ap_sort_swap(js_State *J, int idx_a, int idx_b)
 {
 	js_Object *obj = js_tovalue(J, 0)->u.object;
-	if (obj->u.a.simple && idx_b < obj->u.a.flat_length) {
+	if (obj->type == JS_CARRAY && obj->u.a.simple && idx_b < obj->u.a.flat_length) {
 		js_Value tmp = obj->u.a.array[idx_a];
 		obj->u.a.array[idx_a] = obj->u.a.array[idx_b];
 		obj->u.a.array[idx_b] = tmp;
@@ -1732,6 +1732,7 @@ enum {
 	REG_NEWLINE = 2,
 
 	REG_NOTBOL = 4,
+	REG_RUNAWAY = 8,
 };
 
 #ifndef REG_MAXSUB
@@ -9367,6 +9368,9 @@ void js_RegExp_prototype_exec(js_State *J, js_Regexp *re, const char *text)
 		}
 	}
 
+	if (J->runlimit)
+		opts |= REG_RUNAWAY;
+
 	result = js_regexec(re->prog, haystack, &m, opts);
 	if (result < 0)
 		js_error(J, "regexec failed");
@@ -9415,6 +9419,9 @@ static void Rp_test(js_State *J)
 				opts |= REG_NOTBOL;
 		}
 	}
+
+	if (J->runlimit)
+		opts |= REG_RUNAWAY;
 
 	result = js_regexec(re->prog, text, &m, opts);
 	if (result < 0)
@@ -10470,6 +10477,7 @@ static void jsR_getindex(js_State *J, js_Object *obj, int k)
 static void jsR_setarrayindex(js_State *J, js_Object *obj, int k, js_Value *value)
 {
 	int newlen = k + 1;
+	assert(obj->type == JS_CARRAY);
 	assert(obj->u.a.simple);
 	assert(k >= 0);
 	if (newlen > JS_ARRAYLIMIT)
@@ -12187,7 +12195,10 @@ js_State *js_newstate(js_Alloc alloc, void *actx, int flags)
 
 static int js_doregexec(js_State *J, Reprog *prog, const char *string, Resub *sub, int eflags)
 {
-	int result = js_regexec(prog, string, sub, eflags);
+	int result;
+	if (J->runlimit)
+		eflags |= REG_RUNAWAY;
+	result = js_regexec(prog, string, sub, eflags);
 	if (result < 0)
 		js_error(J, "regexec failed");
 	return result;
@@ -13754,6 +13765,10 @@ int js_strictequal(js_State *J)
 #define REG_MAXCLASS 128
 #endif
 
+#ifndef REG_MAXRUN
+#define REG_MAXRUN (1<<20)
+#endif
+
 typedef struct Reclass Reclass;
 typedef struct Renode Renode;
 typedef struct Reinst Reinst;
@@ -14779,7 +14794,7 @@ static int strncmpcanon(const char *a, const char *b, int n)
 	return 0;
 }
 
-static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *out, int depth)
+static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *out, int depth, int *runaway)
 {
 	Resub scratch;
 	int result;
@@ -14790,6 +14805,9 @@ static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *
 		return -1;
 
 	for (;;) {
+		if (flags & REG_RUNAWAY)
+			if (++(*runaway) >= REG_MAXRUN)
+				return -1;
 		switch (pc->opcode) {
 		case I_END:
 			return 0;
@@ -14798,7 +14816,7 @@ static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *
 			break;
 		case I_SPLIT:
 			scratch = *out;
-			result = match(pc->x, sp, bol, flags, &scratch, depth+1);
+			result = match(pc->x, sp, bol, flags, &scratch, depth+1, runaway);
 			if (result == -1)
 				return -1;
 			if (result == 0) {
@@ -14809,7 +14827,7 @@ static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *
 			break;
 
 		case I_PLA:
-			result = match(pc->x, sp, bol, flags, out, depth+1);
+			result = match(pc->x, sp, bol, flags, out, depth+1, runaway);
 			if (result == -1)
 				return -1;
 			if (result == 1)
@@ -14818,7 +14836,7 @@ static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *
 			break;
 		case I_NLA:
 			scratch = *out;
-			result = match(pc->x, sp, bol, flags, &scratch, depth+1);
+			result = match(pc->x, sp, bol, flags, &scratch, depth+1, runaway);
 			if (result == -1)
 				return -1;
 			if (result == 0)
@@ -14941,6 +14959,7 @@ static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *
 int regexec(Reprog *prog, const char *sp, Resub *sub, int eflags)
 {
 	Resub scratch;
+	int runaway = 0;
 	int i;
 
 	if (!sub)
@@ -14950,7 +14969,7 @@ int regexec(Reprog *prog, const char *sp, Resub *sub, int eflags)
 	for (i = 0; i < REG_MAXSUB; ++i)
 		sub->sub[i].sp = sub->sub[i].ep = NULL;
 
-	return match(prog->start, sp, sp, prog->flags | eflags, sub, 0);
+	return match(prog->start, sp, sp, prog->flags | eflags, sub, 0, &runaway);
 }
 
 #ifdef TEST
@@ -14972,7 +14991,7 @@ int main(int argc, char **argv)
 		if (argc > 2) {
 			s = argv[2];
 			printf("nsub = %d\n", p->nsub);
-			if (!regexec(p, s, &m, 0)) {
+			if (!regexec(p, s, &m, REG_RUNAWAY)) {
 				for (i = 0; i < m.nsub; ++i) {
 					int n = m.sub[i].ep - m.sub[i].sp;
 					if (n > 0)
