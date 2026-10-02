@@ -4,10 +4,10 @@ Stock MuPDF throws FZ_ERROR_UNSUPPORTED when these subtypes have no
 /AP. Draw a labelled placeholder box instead so they display.
 
 diff --git a/source/pdf/pdf-appearance.c b/source/pdf/pdf-appearance.c
-index ab82fa347..d1a2a11de 100644
+index af6275e..d38971b 100644
 --- a/source/pdf/pdf-appearance.c
 +++ b/source/pdf/pdf-appearance.c
-@@ -2988,6 +2988,82 @@ pdf_write_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
+@@ -3019,6 +3019,82 @@ pdf_write_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
  	}
  }
  
@@ -90,7 +90,7 @@ index ab82fa347..d1a2a11de 100644
  static void
  pdf_write_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
  	fz_rect *rect, fz_rect *bbox, fz_matrix *matrix, pdf_obj **res)
-@@ -2995,8 +3071,8 @@ pdf_write_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
+@@ -3026,8 +3102,8 @@ pdf_write_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
  	switch (pdf_annot_type(ctx, annot))
  	{
  	default:

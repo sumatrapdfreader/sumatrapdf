@@ -7,10 +7,10 @@ means the save_* locals have to be assigned after the guard rather than at
 their declarations.
 ---
 diff --git a/source/html/html-parse.c b/source/html/html-parse.c
-index 8e297c0..5329044 100644
+index 4adc450..3917933 100644
 --- a/source/html/html-parse.c
 +++ b/source/html/html-parse.c
-@@ -1404,12 +1404,21 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
+@@ -1409,12 +1409,21 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
  	const char *lang_att;
  	const char *dir_att;
  
@@ -36,7 +36,7 @@ index 8e297c0..5329044 100644
  
  	if (g->depth > 100)
  	{
-@@ -1554,6 +1563,7 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
+@@ -1559,6 +1568,7 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
  	}
  
  end:

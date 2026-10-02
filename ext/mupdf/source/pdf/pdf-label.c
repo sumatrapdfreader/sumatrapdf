@@ -133,7 +133,7 @@ pdf_load_object_labels(fz_context *ctx, pdf_document *doc)
 {
 	pdf_object_labels *g = NULL;
 	fz_pool *pool;
-	int i, n, page_count;
+	int i, n, x, page_count;
 
 	n = pdf_count_objects(ctx, doc);
 
@@ -152,7 +152,11 @@ pdf_load_object_labels(fz_context *ctx, pdf_document *doc)
 
 		page_count = pdf_count_pages(ctx, doc);
 		for (i = 0; i < page_count; ++i)
-			g->pages[pdf_to_num(ctx, pdf_lookup_page_obj(ctx, doc, i))] = i+1;
+		{
+			x = pdf_to_num(ctx, pdf_lookup_page_obj(ctx, doc, i));
+			if (x > 0 && x < g->object_count)
+				g->pages[x] = i+1;
+		}
 
 		for (i = 1; i < n; ++i)
 			scan_object_label(ctx, doc, g, i);

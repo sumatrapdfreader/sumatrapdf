@@ -23,6 +23,7 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 #include "pdf-annot-imp.h"
+#include "pdf-imp.h"
 
 #include <string.h>
 #include <math.h>
@@ -221,12 +222,25 @@ pdf_outline_iterator_down(fz_context *ctx, fz_outline_iterator *iter_)
 	return 0;
 }
 
+static pdf_obj *upd(fz_context *ctx, pdf_obj *parent, void *arg)
+{
+	int open_delta = *(int *)arg;
+	pdf_obj *cobj = pdf_dict_get(ctx, parent, PDF_NAME(Count));
+	int count = pdf_to_int(ctx, cobj);
+	if (open_delta || cobj == NULL)
+		pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count > 0 ? count + open_delta : count - open_delta);
+	if (count < 0)
+		return PDF_NAME(A); // Anything non-NULL to break out of the traversal
+
+	return NULL;
+}
+
 static void
 do_outline_update(fz_context *ctx, pdf_obj *obj, fz_outline_item *item, int is_new_node)
 {
 	int count;
-	int open_delta = 0;
 	pdf_obj *parent;
+	int open_delta = 0;
 
 	/* If the open/closed state changes, update. */
 	count = pdf_dict_get_int(ctx, obj, PDF_NAME(Count));
@@ -239,16 +253,7 @@ do_outline_update(fz_context *ctx, pdf_obj *obj, fz_outline_item *item, int is_n
 		open_delta = 1;
 
 	parent = pdf_dict_get(ctx, obj, PDF_NAME(Parent));
-	while (parent)
-	{
-		pdf_obj *cobj = pdf_dict_get(ctx, parent, PDF_NAME(Count));
-		count = pdf_to_int(ctx, cobj);
-		if (open_delta || cobj == NULL)
-			pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count > 0 ? count + open_delta : count - open_delta);
-		if (count < 0)
-			break;
-		parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));
-	}
+	pdf_walk_parent(ctx, parent, NULL, upd, &open_delta);
 
 	if (item->title)
 		pdf_dict_put_text_string(ctx, obj, PDF_NAME(Title), item->title);
@@ -398,6 +403,18 @@ pdf_outline_iterator_update(fz_context *ctx, fz_outline_iterator *iter_, fz_outl
 	}
 }
 
+static pdf_obj *
+do_count(fz_context *ctx, pdf_obj *up, void *arg)
+{
+	int count = *(int *)arg;
+	int c = pdf_dict_get_int(ctx, up, PDF_NAME(Count));
+	pdf_dict_put_int(ctx, up, PDF_NAME(Count), (c > 0 ? c - count : c + count));
+	if (c < 0)
+		return PDF_NAME(A); /* Anything non-NULL to break out */
+
+	return NULL;
+}
+
 static int
 pdf_outline_iterator_del(fz_context *ctx, fz_outline_iterator *iter_)
 {
@@ -424,15 +441,7 @@ pdf_outline_iterator_del(fz_context *ctx, fz_outline_iterator *iter_)
 
 	fz_try(ctx)
 	{
-		pdf_obj *up = parent;
-		while (up)
-		{
-			int c = pdf_dict_get_int(ctx, up, PDF_NAME(Count));
-			pdf_dict_put_int(ctx, up, PDF_NAME(Count), (c > 0 ? c - count : c + count));
-			if (c < 0)
-				break;
-			up = pdf_dict_get(ctx, up, PDF_NAME(Parent));
-		}
+		pdf_walk_parent(ctx, parent, NULL, do_count, &count);
 
 		if (prev)
 		{

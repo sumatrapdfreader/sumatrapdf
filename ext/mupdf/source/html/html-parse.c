@@ -1630,6 +1630,23 @@ static void gen2_children(fz_context *ctx, struct genstate *g, fz_html_box *root
 			{
 				gen2_col(ctx, g, root_box, node, &match);
 			}
+			else if (tag[0]=='t')
+			{
+				// ignore any display value other than "table(-row-group|-row|-cell)" or "none" on table elements
+				if (display != DIS_NONE)
+				{
+					if (!strcmp(tag, "table"))
+						gen2_tag(ctx, g, root_box, node, &match, DIS_TABLE, &style);
+					else if (!strcmp(tag, "thead") || !strcmp(tag, "tbody") || !strcmp(tag, "tfoot"))
+						gen2_tag(ctx, g, root_box, node, &match, DIS_TABLE_GROUP, &style);
+					else if (!strcmp(tag, "tr"))
+						gen2_tag(ctx, g, root_box, node, &match, DIS_TABLE_ROW, &style);
+					else if (!strcmp(tag, "td") || !strcmp(tag, "th"))
+						gen2_tag(ctx, g, root_box, node, &match, DIS_TABLE_CELL, &style);
+					else
+						gen2_tag(ctx, g, root_box, node, &match, display, &style);
+				}
+			}
 			else
 			{
 				gen2_tag(ctx, g, root_box, node, &match, display, &style);
@@ -2288,7 +2305,7 @@ xml_to_boxes(fz_context *ctx,
 			move_background_color_up(ctx, &g, tree->root);
 
 			// Parse meta viewport size.
-			if (meta_w && meta_h)
+			if (publisher_css && meta_w && meta_h)
 			{
 				node = fz_xml_find_down_match(head, "meta", "name", "viewport");
 				if (node)

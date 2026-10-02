@@ -130,9 +130,12 @@ next_lzwd(fz_context *ctx, fz_stream *stm, size_t len)
 			continue;
 		}
 
-		/* if stream starts without a clear code, old_code is undefined... */
 		if (old_code == -1)
 		{
+			/* We've just done a clear, and this is the first of a new
+			 * sequence. It must be one of our existing dictionary entries. */
+			if (code >= LZW_FIRST(lzw))
+				fz_throw(ctx, FZ_ERROR_FORMAT, "out of range code encountered in lzw decode");
 			old_code = code;
 		}
 		else if (!lzw->old_tiff && next_code == NUM_CODES)

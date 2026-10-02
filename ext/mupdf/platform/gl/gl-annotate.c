@@ -374,6 +374,8 @@ static int step_high_security_save(int cancel)
 	/* Otherwise, do the next page. */
 	nextpage = fz_load_page(ctx, (fz_document *)pdf, hss_state.i-1);
 
+	fz_var(nextpage);
+
 	fz_try(ctx)
 	{
 		dev = fz_begin_page(ctx, hss_state.writer, fz_bound_page(ctx, nextpage));

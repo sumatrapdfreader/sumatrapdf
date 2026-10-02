@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -390,6 +390,8 @@ add_html_outline(fz_context *ctx, struct outline_parser *x, fz_html_box *box)
 	}
 	fz_catch(ctx)
 	{
+		fz_free(ctx, node->uri);
+		fz_free(ctx, node->title);
 		fz_free(ctx, node);
 		fz_rethrow(ctx);
 	}

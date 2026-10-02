@@ -15,7 +15,7 @@ https://bugs.ghostscript.com/show_bug.cgi?id=697749
 
 ---
 diff --git a/include/mupdf/fitz/compressed-buffer.h b/include/mupdf/fitz/compressed-buffer.h
-index 326d524dd..296079618 100644
+index 326d524..2960796 100644
 --- a/include/mupdf/fitz/compressed-buffer.h
 +++ b/include/mupdf/fitz/compressed-buffer.h
 @@ -133,10 +133,10 @@ fz_stream *fz_open_image_decomp_stream_from_buffer(fz_context *ctx, fz_compresse
@@ -40,7 +40,7 @@ index 326d524dd..296079618 100644
  
  /**
 diff --git a/scripts/wrap/make_cppyy.py b/scripts/wrap/make_cppyy.py
-index a37456d81..69604a377 100644
+index a37456d..69604a3 100644
 --- a/scripts/wrap/make_cppyy.py
 +++ b/scripts/wrap/make_cppyy.py
 @@ -763,7 +763,7 @@ def make_cppyy(
@@ -53,7 +53,7 @@ index a37456d81..69604a377 100644
              cppyy.cppdef(f'''
                      namespace mupdf
 diff --git a/source/cbz/mucbz.c b/source/cbz/mucbz.c
-index c295f6903..1d0d93bb2 100644
+index c295f69..1d0d93b 100644
 --- a/source/cbz/mucbz.c
 +++ b/source/cbz/mucbz.c
 @@ -49,6 +49,7 @@ static const char *cbz_ext_list[] = {
@@ -65,7 +65,7 @@ index c295f6903..1d0d93bb2 100644
  };
  
 diff --git a/source/cbz/muimg.c b/source/cbz/muimg.c
-index 69d1f990f..f96804e55 100644
+index 69d1f99..f96804e 100644
 --- a/source/cbz/muimg.c
 +++ b/source/cbz/muimg.c
 @@ -191,8 +191,14 @@ img_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream
@@ -106,7 +106,7 @@ index 69d1f990f..f96804e55 100644
  
  	fmt = fz_recognize_image_format(ctx, data);
 diff --git a/source/fitz/image-imp.h b/source/fitz/image-imp.h
-index 960ab9bbf..999ddbc1f 100644
+index 960ab9b..999ddbc 100644
 --- a/source/fitz/image-imp.h
 +++ b/source/fitz/image-imp.h
 @@ -32,6 +32,7 @@ fz_pixmap *fz_load_gif(fz_context *ctx, const unsigned char *data, size_t size);
@@ -126,7 +126,7 @@ index 960ab9bbf..999ddbc1f 100644
  /*
   * The defcs parameter is used as a default colorspace if the image doesn't
 diff --git a/source/fitz/image.c b/source/fitz/image.c
-index 41b5cb516..565433c97 100644
+index 3862475..0ab603f 100644
 --- a/source/fitz/image.c
 +++ b/source/fitz/image.c
 @@ -830,6 +830,9 @@ compressed_image_get_pixmap(fz_context *ctx, fz_image *image_, fz_irect *subarea
@@ -139,7 +139,7 @@ index 41b5cb516..565433c97 100644
  	case FZ_IMAGE_TIFF:
  		tile = fz_load_tiff(ctx, image->buffer->buffer->data, image->buffer->buffer->len);
  		break;
-@@ -1431,6 +1434,7 @@ fz_image_type_name(int type)
+@@ -1432,6 +1435,7 @@ fz_image_type_name(int type)
  	case FZ_IMAGE_PNG: return "png";
  	case FZ_IMAGE_PNM: return "pnm";
  	case FZ_IMAGE_TIFF: return "tiff";
@@ -147,7 +147,7 @@ index 41b5cb516..565433c97 100644
  	}
  }
  
-@@ -1453,11 +1457,12 @@ fz_lookup_image_type(const char *type)
+@@ -1454,11 +1458,12 @@ fz_lookup_image_type(const char *type)
  	if (!strcmp(type, "png")) return FZ_IMAGE_PNG;
  	if (!strcmp(type, "pnm")) return FZ_IMAGE_PNM;
  	if (!strcmp(type, "tiff")) return FZ_IMAGE_TIFF;
@@ -161,7 +161,7 @@ index 41b5cb516..565433c97 100644
  {
  	if (p[0] == 'P' && p[1] >= '1' && p[1] <= '7')
  		return FZ_IMAGE_PNM;
-@@ -1490,6 +1495,9 @@ fz_recognize_image_format(fz_context *ctx, unsigned char p[8])
+@@ -1491,6 +1496,9 @@ fz_recognize_image_format(fz_context *ctx, unsigned char p[8])
  		return FZ_IMAGE_JBIG2;
  	if (p[0] == '8' && p[1] == 'B' && p[2] == 'P' && p[3] == 'S')
  		return FZ_IMAGE_PSD;
@@ -171,7 +171,7 @@ index 41b5cb516..565433c97 100644
  	return FZ_IMAGE_UNKNOWN;
  }
  
-@@ -1509,7 +1517,14 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
+@@ -1510,7 +1518,14 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
  	if (len < 8)
  		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown image file format");
  
@@ -187,7 +187,7 @@ index 41b5cb516..565433c97 100644
  	bpc = 8;
  	switch (type)
  	{
-@@ -1544,6 +1559,9 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
+@@ -1545,6 +1560,9 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
  		fz_load_jbig2_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
  		bpc = 1;
  		break;
@@ -199,7 +199,7 @@ index 41b5cb516..565433c97 100644
  	}
 diff --git a/source/fitz/load-webp.c b/source/fitz/load-webp.c
 new file mode 100644
-index 000000000..ef3574ca2
+index 0000000..ef3574c
 --- /dev/null
 +++ b/source/fitz/load-webp.c
 @@ -0,0 +1,136 @@
@@ -340,7 +340,7 @@ index 000000000..ef3574ca2
 +
 +#endif /* HAVE_WEBP */
 diff --git a/source/html/html-parse.c b/source/html/html-parse.c
-index 5352b152d..02bf77486 100644
+index 3917933..d4c33dc 100644
 --- a/source/html/html-parse.c
 +++ b/source/html/html-parse.c
 @@ -696,6 +696,8 @@ static fz_image *load_html_image(fz_context *ctx, fz_archive *zip, const char *b
@@ -353,7 +353,7 @@ index 5352b152d..02bf77486 100644
  		{
  			fz_strlcpy(path, base_uri, sizeof path);
 diff --git a/source/html/mobi.c b/source/html/mobi.c
-index 4edb1f4aa..23b9e24dd 100644
+index 4edb1f4..23b9e24 100644
 --- a/source/html/mobi.c
 +++ b/source/html/mobi.c
 @@ -317,7 +317,7 @@ fz_extract_html_from_mobi(fz_context *ctx, fz_buffer *mobi)

@@ -45,7 +45,7 @@ static int usage(void)
 int pdfbake_main(int argc, char **argv)
 {
 	fz_context *ctx;
-	pdf_document *doc;
+	pdf_document *doc = NULL;
 	pdf_write_options opts = pdf_default_write_options;
 	int bake_annots = 1;
 	int bake_widgets = 1;
@@ -88,6 +88,8 @@ int pdfbake_main(int argc, char **argv)
 		exit(1);
 	}
 
+	fz_var(doc);
+
 	fz_try(ctx)
 	{
 		doc = pdf_open_document(ctx, input);
@@ -97,13 +99,16 @@ int pdfbake_main(int argc, char **argv)
 		pdf_parse_write_options(ctx, &opts, flags);
 		pdf_save_document(ctx, doc, output, &opts);
 	}
+	fz_always(ctx)
+	{
+		pdf_drop_document(ctx, doc);
+	}
 	fz_catch(ctx)
 	{
 		fz_report_error(ctx);
 		code = EXIT_FAILURE;
 	}
 
-	pdf_drop_document(ctx, doc);
 	fz_flush_warnings(ctx);
 	fz_drop_context(ctx);
 	return code;

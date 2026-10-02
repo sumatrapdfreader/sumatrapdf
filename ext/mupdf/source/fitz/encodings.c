@@ -139,8 +139,29 @@ fz_unicode_from_glyph_name(const char *name)
 		code = read_num(buf+1, 16);
 	else if (buf[0] == 'a' && buf[1] != 0 && buf[2] != 0)
 		code = read_num(buf+1, 10);
+
+	else if (buf[0] == 'G')
+	{
+		// Bug 709466: Ancient Acrobat Distiller windows/DOS fonts use
+		// G%x glyph names with DOS CP-437 encoding.
+		code = read_num(buf+1, 16);
+		code = (code > 0 && code < 256) ? fz_unicode_from_dos_437[code] : 0;
+	}
+
+	else if (buf[0] == 'g')
+	{
+		// https://bugzilla.mozilla.org/show_bug.cgi?id=1027533
+		// g%x glyph names might be WinAnsiEncoding subsetted fonts from
+		// ancient versions of ghostscript, using gXXXX as original glyph
+		// index. Use TrueType-UCS2 mapping for these.
+		code = read_num(buf+1, 16);
+		code = (code > 0 && code < 258) ? fz_unicode_from_true_type_glyph_index[code] : 0;
+	}
+
 	else
+	{
 		code = read_num(buf, 10);
+	}
 
 	return (code > 0 && code <= 0x10ffff) ? code : FZ_REPLACEMENT_CHARACTER;
 }

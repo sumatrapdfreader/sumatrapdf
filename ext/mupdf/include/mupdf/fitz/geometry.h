@@ -26,6 +26,7 @@
 #include "mupdf/fitz/system.h"
 
 #include <math.h>
+#include <limits.h>
 #include <assert.h>
 
 #ifndef M_PI
@@ -177,8 +178,6 @@ static inline void *fz_clampp(void *x, void *min, void *max)
 {
 	return x < min ? min : x > max ? max : x;
 }
-
-#define DIV_BY_ZERO(a, b, min, max) (((a) < 0) ^ ((b) < 0) ? (min) : (max))
 
 /**
 	fz_point is a point in a two-dimensional space.
@@ -346,9 +345,8 @@ fz_irect_width(fz_irect r)
 	 * if it does, it's pretty likely an indication of a severe
 	 * problem. */
 	w = (unsigned int)r.x1 - r.x0;
-	assert((int)w >= 0);
 	if ((int)w < 0)
-		return 0;
+		return INT_MAX;
 	return (int)w;
 }
 
@@ -365,9 +363,8 @@ fz_irect_height(fz_irect r)
 	 * if it does, it's pretty likely an indication of a severe
 	 * problem. */
 	h = (unsigned int)(r.y1 - r.y0);
-	assert((int)h >= 0);
 	if ((int)h < 0)
-		return 0;
+		return INT_MAX;
 	return (int)h;
 }
 

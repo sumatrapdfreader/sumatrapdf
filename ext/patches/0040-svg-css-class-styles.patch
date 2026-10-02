@@ -13,7 +13,7 @@ still win over the sheet. Anything more than a plain class selector
 skipped rather than half-supported.
 ---
 diff --git a/source/svg/svg-doc.c b/source/svg/svg-doc.c
-index 21f2e8407..b7b136f20 100644
+index 21f2e84..b7b136f 100644
 --- a/source/svg/svg-doc.c
 +++ b/source/svg/svg-doc.c
 @@ -33,6 +33,7 @@ static void
@@ -251,7 +251,7 @@ index 21f2e8407..b7b136f20 100644
  	fz_catch(ctx)
  	{
 diff --git a/source/svg/svg-imp.h b/source/svg/svg-imp.h
-index 8ea0c2005..2e84e48de 100644
+index 8ea0c20..2e84e48 100644
 --- a/source/svg/svg-imp.h
 +++ b/source/svg/svg-imp.h
 @@ -31,12 +31,23 @@ struct svg_cycle_list_s {
@@ -289,7 +289,7 @@ index 8ea0c2005..2e84e48de 100644
  void svg_run_document(fz_context *ctx, svg_document *doc, fz_xml *root, fz_device *dev, fz_matrix ctm);
  
 diff --git a/source/svg/svg-run.c b/source/svg/svg-run.c
-index 3291831ed..2193a731d 100644
+index 2819829..8438c60 100644
 --- a/source/svg/svg-run.c
 +++ b/source/svg/svg-run.c
 @@ -1041,9 +1041,69 @@ svg_parse_viewbox(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *s

@@ -39,7 +39,7 @@ index 4df07ae..e368ccd 100644
  
  pdf_document *pdf_create_document(fz_context *ctx);
 diff --git a/source/pdf/pdf-stream.c b/source/pdf/pdf-stream.c
-index 082cab6..c61dee9 100644
+index a33a008..2da7c7d 100644
 --- a/source/pdf/pdf-stream.c
 +++ b/source/pdf/pdf-stream.c
 @@ -376,6 +376,72 @@ pdf_open_raw_filter(fz_context *ctx, fz_stream *file_stm, pdf_document *doc, pdf

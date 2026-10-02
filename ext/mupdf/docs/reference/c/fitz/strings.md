@@ -47,6 +47,7 @@ I/O module as well.
 	size_t fz_vsnprintf(char *buffer, size_t space, const char *fmt, va_list args);
 	size_t fz_snprintf(char *buffer, size_t space, const char *fmt, ...);
 	char *fz_asprintf(fz_context *ctx, const char *fmt, ...);
+	char *fz_pool_asprintf(fz_context *ctx, fz_pool *pool, const char *fmt, ...);
 
 `%%`, `%c`, `%e`, `%f`, `%p`, `%x`, `%d`, `%u`, `%s`
 :	These behave as usual, but only take padding (+,0,space), width, and precision arguments.

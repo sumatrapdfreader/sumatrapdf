@@ -23,6 +23,8 @@
 #include "mupdf/fitz.h"
 #include "html-imp.h"
 
+#include <limits.h>
+
 #undef DEBUG_OFFICE_TO_HTML
 
 /* Defaults are all 0's. FIXME: Very subject to change. Possibly might be removed entirely. */
@@ -65,6 +67,7 @@ typedef struct
 	int shared_string_len;
 	char **shared_strings;
 
+	int footnotes_len;
 	int footnotes_max;
 	char **footnotes;
 
@@ -177,7 +180,7 @@ show_footnote(fz_context *ctx, fz_xml *v, doc_info *info)
 {
 	int n = fz_atoi(fz_xml_att(v, "w:id"));
 
-	if (n < 0 || n >= info->footnotes_max)
+	if (n < 0 || n >= info->footnotes_len)
 		return;
 
 	if (info->footnotes[n] == NULL ||
@@ -945,6 +948,7 @@ load_footnotes(fz_context *ctx, fz_archive *arch, fz_xml *rels, doc_info *info, 
 	char *resolved = NULL;
 	fz_xml *xml = NULL;
 	char *str = NULL;
+	int i;
 
 	fz_var(xml);
 	fz_var(str);
@@ -970,18 +974,25 @@ load_footnotes(fz_context *ctx, fz_archive *arch, fz_xml *rels, doc_info *info, 
 			{
 				if (n >= info->footnotes_max)
 				{
-					int max = info->footnotes_max;
-					int newmax = max ? max * 2 : 1024;
-					char **arr;
+					int newmax = info->footnotes_max ? info->footnotes_max : 1024;
+					while (n >= newmax)
+					{
+						newmax = newmax * 2;
+						if (newmax < info->footnotes_max) // check for integer overflow
+							newmax = INT_MAX;
+					}
+
 					if (newmax < n)
-						newmax = n+1;
-					arr = fz_realloc(ctx, info->footnotes, sizeof(*arr) * newmax);
-					memset(&arr[max], 0, sizeof(*arr) * (newmax - max));
-					info->footnotes = arr;
+						fz_throw(ctx, FZ_ERROR_LIMIT, "integer overflow when extending array");
+
+					info->footnotes = fz_realloc_array(ctx, info->footnotes, newmax, char*);
+					for (i = info->footnotes_max; i < newmax; ++i)
+						info->footnotes[i] = NULL;
 					info->footnotes_max = newmax;
 				}
 
 				info->footnotes[n] = str;
+				info->footnotes_len = n + 1;
 				str = NULL;
 			}
 			pos = fz_xml_find_next_dfs(pos, "footnote", NULL, NULL);
@@ -1205,7 +1216,7 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 		for (i = 0; i < info.shared_string_len; ++i)
 			fz_free(ctx, info.shared_strings[i]);
 		fz_free(ctx, info.shared_strings);
-		for (i = 0; i < info.footnotes_max; ++i)
+		for (i = 0; i < info.footnotes_len; ++i)
 			fz_free(ctx, info.footnotes[i]);
 		fz_free(ctx, info.footnotes);
 		fz_drop_output(ctx, info.out);

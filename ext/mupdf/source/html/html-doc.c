@@ -22,6 +22,7 @@
 
 #include "mupdf/fitz.h"
 #include "html-imp.h"
+#include "../fitz/fitz-imp.h"
 
 #include <string.h>
 #include <math.h>
@@ -171,6 +172,10 @@ static int
 htdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, size_t size)
 {
 	html_document *doc = (html_document *)doc_;
+
+	if (doc->html == NULL)
+		fz_ensure_styled(ctx, doc_);
+
 	if (!strcmp(key, FZ_META_FORMAT))
 		return 1 + (int)fz_strlcpy(buf, doc->format->format_name, size);
 	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->metadata.title)

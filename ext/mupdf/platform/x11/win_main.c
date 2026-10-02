@@ -467,7 +467,7 @@ dlogchoiceproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return FALSE;
 }
 
-char *winpassword(pdfapp_t *app, char *filename)
+char *winpassword(pdfapp_t *app, char *fname)
 {
 	int code;
 

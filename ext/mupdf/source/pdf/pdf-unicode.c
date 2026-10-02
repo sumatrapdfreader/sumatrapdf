@@ -45,12 +45,47 @@ pdf_remap_cmap_range(fz_context *ctx, pdf_cmap *ucs_from_gid,
 	}
 }
 
+/* This routine should check "Is a identity on all the places that b is defined?",
+ * but for now, we just spot the trivial identity case, and live with that. */
+static int
+is_effectively_identity(pdf_cmap *a, pdf_cmap *b)
+{
+	/* For now, just spot identity within the rlen's. */
+	if (b->mlen || a->mlen)
+		return 0;
+
+	if (a->rlen == 1)
+	{
+		if (a->ranges[0].low != 0 ||
+			a->ranges[0].high != 65535 ||
+			a->ranges[0].out != 0)
+			return 0;
+	}
+	else if (a->rlen > 1)
+		return 0;
+
+	if (a->usecmap)
+		return is_effectively_identity(a->usecmap, b);
+
+	return 1;
+}
+
 static pdf_cmap *
 pdf_remap_cmap(fz_context *ctx, pdf_cmap *gid_from_cpt, pdf_cmap *ucs_from_cpt)
 {
 	pdf_cmap *ucs_from_gid;
 	unsigned int a, b, x;
 	int i;
+
+	/* We have gid_from_cpt, and ucs_from_cpt. We want to form ucs_from_gid.
+	 * So: from cpt->gid and cpt->ucs, we need to form gid->ucs.
+	 * This means we need to reverse cpt->gid, so we can form gid->cpt->ucs.
+	 *
+	 * If cpt->gid is identity (at least for all the domain of cpt->ucs), then
+	 * we can just use cpt->ucs and save ourselves the hassle.
+	 */
+	if (is_effectively_identity(gid_from_cpt, ucs_from_cpt))
+		return pdf_keep_cmap(ctx, ucs_from_cpt);
 
 	ucs_from_gid = pdf_new_cmap(ctx);
 

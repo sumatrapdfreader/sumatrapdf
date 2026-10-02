@@ -1175,7 +1175,7 @@ g_extra_definitions = textwrap.dedent(f'''
             int e2 = fz_lookup_metadata(ctx, doc, key, buf, e);
             assert(e2 == e);
             std::string ret = buf;
-            free(buf);
+            fz_free(ctx, buf);
             return ret;
         }}
 
@@ -1192,7 +1192,7 @@ g_extra_definitions = textwrap.dedent(f'''
             int e2 = pdf_lookup_metadata(ctx, doc, key, buf, e);
             assert(e2 == e);
             std::string ret = buf;
-            free(buf);
+            fz_free(ctx, buf);
             return ret;
         }}
 
@@ -1299,13 +1299,6 @@ g_extra_definitions = textwrap.dedent(f'''
         {{
             int n = pdf_choice_widget_options(ctx, tw, exportval, nullptr);
             std::vector<std::string> ret(n);
-            #if 0
-            if (n==0)
-            {{
-                /* Evaluating &opts[0] causes assert failure on linx in debug builds. */
-                return ret;
-            }}
-            #endif
             std::vector<const char*> opts(n);
             int n2 = pdf_choice_widget_options(ctx, tw, exportval, opts.data());
             assert(n2 == n);

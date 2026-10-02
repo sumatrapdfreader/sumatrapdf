@@ -9,7 +9,7 @@ Walk [0, len) instead. Null buffer throws.
 Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/6143
 ---
 diff --git a/source/html/md.c b/source/html/md.c
-index 15b25a2d5..9e3d363cc 100644
+index 15b25a2..9e3d363 100644
 --- a/source/html/md.c
 +++ b/source/html/md.c
 @@ -92,8 +92,12 @@ fz_md_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, fz_a

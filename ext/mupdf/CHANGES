@@ -1,3 +1,7 @@
+List of changes in MuPDF 1.28.3
+
+	mutool poster restored to working order (the command was broken in 1.28.0 through 1.28.2)
+
 List of changes in MuPDF 1.28
 
 	Markdown document format support!

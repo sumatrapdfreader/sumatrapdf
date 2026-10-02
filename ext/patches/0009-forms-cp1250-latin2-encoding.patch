@@ -38,7 +38,7 @@ index 577a473..921338b 100644
  /* The contents of this structure are defined publicly just so we can
   * define this on the stack. */
 diff --git a/source/pdf/pdf-appearance.c b/source/pdf/pdf-appearance.c
-index 45a41b8..6395623 100644
+index 7a47bd9..af6275e 100644
 --- a/source/pdf/pdf-appearance.c
 +++ b/source/pdf/pdf-appearance.c
 @@ -1593,6 +1593,7 @@ add_required_fonts(fz_context *ctx, pdf_document *doc, pdf_obj *res_font,
@@ -64,7 +64,7 @@ index 45a41b8..6395623 100644
  		case UCDN_SCRIPT_GREEK: add_greek = 1; break;
  		case UCDN_SCRIPT_CYRILLIC: add_cyrillic = 1; break;
  		case UCDN_SCRIPT_HANGUL: add_korean = 1; break;
-@@ -1652,6 +1659,14 @@ add_required_fonts(fz_context *ctx, pdf_document *doc, pdf_obj *res_font,
+@@ -1660,6 +1667,14 @@ add_required_fonts(fz_context *ctx, pdf_document *doc, pdf_obj *res_font,
  			pdf_dict_puts_drop(ctx, res_font, fontname,
  				pdf_add_simple_font(ctx, doc, font, PDF_SIMPLE_ENCODING_LATIN));
  	}
@@ -79,7 +79,7 @@ index 45a41b8..6395623 100644
  	if (add_greek)
  	{
  		fz_snprintf(buf, sizeof buf, "%sGRK", fontname);
-@@ -1712,7 +1727,8 @@ static int find_initial_script(const char *text)
+@@ -1720,7 +1735,8 @@ static int find_initial_script(const char *text)
  	return script;
  }
  
@@ -89,7 +89,7 @@ index 45a41b8..6395623 100644
  
  struct text_walk_state
  {
-@@ -1757,8 +1773,21 @@ static int next_text_walk(fz_context *ctx, struct text_walk_state *state)
+@@ -1774,8 +1790,21 @@ static int next_text_walk(fz_context *ctx, struct text_walk_state *state)
  		state->c = REPLACEMENT;
  		break;
  	case UCDN_SCRIPT_LATIN:
@@ -112,7 +112,7 @@ index 45a41b8..6395623 100644
  		break;
  	case UCDN_SCRIPT_GREEK:
  		state->enc = ENC_GREEK;
-@@ -1876,6 +1905,7 @@ write_string(fz_context *ctx, fz_buffer *buf,
+@@ -1893,6 +1922,7 @@ write_string(fz_context *ctx, fz_buffer *buf,
  			switch (state.enc)
  			{
  			case ENC_LATIN: fz_append_printf(ctx, buf, "/%s %g Tf\n", fontname, size); break;
@@ -120,7 +120,7 @@ index 45a41b8..6395623 100644
  			case ENC_GREEK: fz_append_printf(ctx, buf, "/%sGRK %g Tf\n", fontname, size); break;
  			case ENC_CYRILLIC: fz_append_printf(ctx, buf, "/%sCYR %g Tf\n", fontname, size); break;
  			case ENC_KOREAN: fz_append_printf(ctx, buf, "/Batang %g Tf\n", size); break;
-@@ -1965,6 +1995,7 @@ write_comb_string(fz_context *ctx, fz_buffer *buf,
+@@ -1984,6 +2014,7 @@ write_comb_string(fz_context *ctx, fz_buffer *buf,
  			switch (state.enc)
  			{
  			case ENC_LATIN: fz_append_printf(ctx, buf, "/%s %g Tf\n", fontname, size); break;
@@ -128,7 +128,7 @@ index 45a41b8..6395623 100644
  			case ENC_GREEK: fz_append_printf(ctx, buf, "/%sGRK %g Tf\n", fontname, size); break;
  			case ENC_CYRILLIC: fz_append_printf(ctx, buf, "/%sCYR %g Tf\n", fontname, size); break;
  			case ENC_KOREAN: fz_append_printf(ctx, buf, "/Batang %g Tf\n", size); break;
-@@ -2367,6 +2398,11 @@ static int text_needs_rich_layout(fz_context *ctx, const char *s)
+@@ -2389,6 +2420,11 @@ static int text_needs_rich_layout(fz_context *ctx, const char *s)
  		// base 14 fonts
  		if (fz_windows_1252_from_unicode(c) > 0)
  			continue;

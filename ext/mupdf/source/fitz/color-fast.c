@@ -250,6 +250,10 @@ static void fast_gray_to_rgb(fz_context *ctx, const fz_pixmap *src, fz_pixmap *d
 	if ((int)w < 0 || h < 0)
 		return;
 
+	/* Alpha-only pixmaps count as device_gray with no alpha. */
+	if (sn == 1 && sa)
+		sa = 0;
+
 	if (d_line_inc == 0 && s_line_inc == 0)
 	{
 		w *= h;
@@ -383,6 +387,10 @@ static void fast_gray_to_cmyk(fz_context *ctx, const fz_pixmap *src, fz_pixmap *
 
 	if ((int)w < 0 || h < 0)
 		fz_throw(ctx, FZ_ERROR_LIMIT, "integer overflow");
+
+	/* Alpha-only pixmaps count as device_gray with no alpha. */
+	if (sn == 1 && sa)
+		sa = 0;
 
 	while (h--)
 	{

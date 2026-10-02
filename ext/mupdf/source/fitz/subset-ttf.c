@@ -457,6 +457,7 @@ subset_name_table(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	d = t->data;
 
 	fz_var(new_name_data);
+	fz_var(pl);
 
 	fz_try(ctx)
 	{
@@ -528,7 +529,7 @@ load_enc_tab0(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 	encoding_t *enc;
 	int i;
 
-	if (data_size < offset + 262)
+	if (offset > UINT32_MAX - 262 || data_size < offset + 262)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated cmap 0 format table");
 
 	enc = fz_malloc_struct(ctx, encoding_t);
@@ -548,7 +549,7 @@ load_enc_tab4(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 	uint16_t seg_count;
 	uint32_t i;
 
-	if (data_size < offset + 26)
+	if (offset > UINT32_MAX - 26 || data_size < offset + 26)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "cmap4 too small");
 
 	seg_count = get16(d+offset+6); /* 2 * seg_count */
@@ -567,8 +568,9 @@ load_enc_tab4(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 		{
 			uint16_t seg_end, seg_start, delta, target, inner_offset;
 			uint32_t offset_ptr, s;
+			uint32_t dmax =  14 + 6 * seg_count + 2 + 2 * i + 2;
 
-			if (data_size < offset + 14 + 6 * seg_count + 2 + 2 * i + 2)
+			if (offset > UINT32_MAX - dmax || data_size < offset + dmax)
 				fz_throw(ctx, FZ_ERROR_FORMAT, "cmap4 too small");
 
 			seg_end = get16(d + offset + 14 + 2 * i);
@@ -619,8 +621,9 @@ load_enc_tab6(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 	uint16_t entry_count;
 	uint16_t length;
 	uint32_t i;
+	uint32_t dmax;
 
-	if (data_size + offset < 10)
+	if (offset > UINT32_MAX - 10 || data_size < (size_t) offset + 10)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "cmap6 too small");
 
 	length = get16(d+offset+2);
@@ -629,7 +632,8 @@ load_enc_tab6(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 
 	if (length < entry_count*2 + 10)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed cmap6 table");
-	if (data_size < (size_t)offset + 10 + (size_t)entry_count * 2)
+	dmax = 10 + (size_t)entry_count * 2;
+	if (offset > UINT32_MAX - dmax || data_size < (size_t)offset + dmax)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "cmap6 too small");
 
 	enc = fz_calloc(ctx, 1, sizeof(encoding_t) + sizeof(uint16_t) * (first_code + entry_count - 256));
@@ -684,7 +688,7 @@ load_enc(fz_context *ctx, fz_buffer *t, int pid, int psid)
 		if (plat_id != pid || plat_spec_id != psid)
 			continue;
 
-		if (offset < 4 + 8 * n || offset + 2 >= data_size)
+		if (offset < 4 + 8 * n || offset > UINT32_MAX - 2 || offset + 2 >= data_size)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "cmap table data out of range");
 
 		fmt = get16(d+offset);
@@ -1066,7 +1070,7 @@ put_loca(fz_context *ctx, ttf_t *ttf, uint32_t n, uint32_t off)
 static void
 glyph_used(fz_context *ctx, ttf_t *ttf, fz_buffer *glyf, uint16_t i)
 {
-	uint32_t offset, len;
+	uint32_t offset, len, next_offset;
 	const uint8_t *data;
 	uint16_t flags;
 
@@ -1083,10 +1087,16 @@ glyph_used(fz_context *ctx, ttf_t *ttf, fz_buffer *glyf, uint16_t i)
 
 	/* If this glyf is composite, then we need to add any dependencies of it. */
 	offset = get_loca(ctx, ttf, i);
-	len = get_loca(ctx, ttf, i+1) - offset;
+	next_offset = get_loca(ctx, ttf, i+1);
+	if (next_offset < offset)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Non-monotonic loca table");
+	len = next_offset - offset;
 	if (len == 0)
 		return;
-	if (offset+2 > glyf->len)
+	if (offset > UINT32_MAX - 2 || offset+2 > glyf->len)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "Corrupt glyf data");
+	/* loca is only checked at the end */
+	if (len > glyf->len - offset)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Corrupt glyf data");
 	data = glyf->data + offset;
 	if ((int16_t)get16(data) >= 0)
@@ -1677,7 +1687,7 @@ find_macroman_string(const char *s)
 	int comparison;
 
 	l = 0;
-	r = nelem(macroman);
+	r = nelem(macroman)-1;
 	while (l <= r)
 	{
 		m = (l + r) >> 1;

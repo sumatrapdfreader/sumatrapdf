@@ -10,10 +10,10 @@ GetProcAddress), then write through a null pointer so the unhandled-exception
 filter runs and produces a dump.
 ---
 diff --git a/include/mupdf/fitz/context.h b/include/mupdf/fitz/context.h
-index 91267fb..57a48c8 100644
+index e2553b7..afb77ff 100644
 --- a/include/mupdf/fitz/context.h
 +++ b/include/mupdf/fitz/context.h
-@@ -131,6 +131,13 @@ void fz_warn(fz_context *ctx, const char *fmt, ...) FZ_PRINTFLIKE(2,3);
+@@ -132,6 +132,13 @@ void fz_warn(fz_context *ctx, const char *fmt, ...) FZ_PRINTFLIKE(2,3);
  */
  const char *fz_caught_message(fz_context *ctx);
  

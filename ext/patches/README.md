@@ -10,7 +10,7 @@ does and why. Whole files of our own that are compiled into the `mupdf` project
 are not patches: they live in `src/mupdf/` (see its README) and are not part
 of the vendored tree at all.
 
-**Base revision: mupdf `1.28.2`** (tag `1.28.2`, commit `fe374accd`), the
+**Base revision: mupdf `1.28.5`** (tag `1.28.5`, commit `8ad45e92f`), the
 version recorded for mupdf in `ext/versions.txt`. Paths in the patches are
 relative to `ext/mupdf`, so `-p1` from inside that directory.
 
@@ -33,45 +33,20 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0013-xml-recover-from-mismatched-close-tags` | badly nested FB2 / HTML (#5792) |
 | `0014-html-bound-generate-boxes-recursion` | stack overflow on deeply nested markup |
 | `0015-css-user-stylesheet-important-wins` | user-origin `!important` outranks inline style |
-| `0016-stext-search-mujs-include-path` | we build the amalgamated `ext/a-mujs` |
-| `0017-svg-font-attributes-on-groups` | children of `<g>` inherit the font family |
-| `0018-pdf-op-run-avoid-double-free` | double free when structure-tree repair throws |
 | `0019-freetype-enable-zlib-and-brotli` | our freetype has them; upstream's slim config does not |
 | `0025-webp-images` | decode WebP via libwebp (`HAVE_WEBP`) so EPUB/HTML/MOBI/CBZ can show `.webp` (#3415) |
 | `0027-webp-iccp-without-demux` | apply a WebP `ICCP` chunk via our own RIFF walk (no libwebp demux) |
-| `0030-backport-709661-subset-prefix-font-name` | ignore `ABCDEF+` subset tags when matching builtin font names (covers #4655) |
-| `0031-backport-709663-image-page-height` | fit reflow images to the fixed page height, not the advancing block bounds (covers #6007) |
 | `0032-pdf-appearance-unrendered-annots` | placeholder AP for Movie/Screen/3D/RichMedia/Watermark/PrinterMark/TrapNet/Projection |
 | `0033-pdf-appearance-markup-movie-poster` | highlight default yellow, markup `/Rect` if no QuadPoints, skip 0-width unfilled Square/Circle, Movie `/Poster` as AP |
-| `0034-backport-709678-cjk-fullwidth-punctuation` | half/fullwidth forms and CJK punctuation stay on the non-embedded CJK path (covers #6082) |
-| `0035-backport-709680-flow-anchor-top` | HTML/EPUB link targets use the top of the flow node, not its baseline (covers #6095) |
 | `0036-ocg-usage-event-on-visible` | PrintState/ViewState ON draws the OCG even if it is in the config `/OFF` list (#6101) |
-| `0037-backport-709648-inline-context-after-block` | stop adding to an inline context after a block interrupts it (covers #5943) |
 | `0038-html-css-background-image` | CSS `background-image` / `-size` / `-position` / `-repeat` on block boxes; fixed-layout scan EPUBs were blank (#6131) |
 | `0039-md-empty-buffer-nul-scan` | empty markdown: `len-1` underflow in `fz_md_to_html` (#6143) |
 | `0040-svg-css-class-styles` | SVG `class="st0"` resolved against the `<style>` sheet; such files drew all black (#2155) |
-| `0041-poster-keep-page-tree-while-splitting` | `poster` failed on every file: it emptied `/Kids` before reading pages from it |
 | `0042-merge-backwards-range-bookmarks` | `merge` with a range like `3-1` renumbers the bookmarks too |
 | `0043-merge-exit-code-on-failure` | `merge` exits 1 when an input or the save fails |
 | `0044-svg-unsized-image` | `<image>` with no width/height uses the raster's pixel size; a percentage `<svg>` with no viewBox adopts that size (#6266) |
 
-And eleven that are not ours but that we carry ahead of the release we vendor:
-
-| Patch | What |
-| --- | --- |
-| `0021-backport-709471-single-line-field-box` | upstream fix for the single-line field content box and a zero `/DA` font size |
-| `0022-backport-709480-bound-xml-recursion` | upstream depth limits for XPS metadata and epub outlines (covers #5032) |
-| `0023-backport-709574-html-metadata` | upstream title/author/subject metadata for HTML and FB2 (covers #2254) |
-| `0024-backport-5e5ef9e-pool-asprintf` | upstream `fz_pool_asprintf` (needed by 0026) |
-| `0026-backport-709657-fb2-author` | upstream FB2 author walk: every `<author>`, first-name + last-name (covers #2254) |
-| `0029-backport-709660-tj-array-tc-tw` | recover after `Tc`/`Tw` inside a `TJ` array so the rest of the page still draws (covers #4157) |
-| `0030-backport-709661-subset-prefix-font-name` | ignore `ABCDEF+` subset tags when matching builtin font names (covers #4655) |
-| `0031-backport-709663-image-page-height` | reflow images shrink to the fixed page height on every page, not just the first (#6007) |
-| `0034-backport-709678-cjk-fullwidth-punctuation` | half/fullwidth forms and CJK punctuation use the CJK fonts, not an embedded fallback (#6082) |
-| `0035-backport-709680-flow-anchor-top` | HTML/EPUB link targets use the top of the flow node, not its baseline (#6095) |
-| `0037-backport-709648-inline-context-after-block` | nested `<span id>` wrapping a block no longer all jump to the chapter start (#5943) |
-
-That is the whole list: `ext/mupdf` is byte-for-byte `1.28.2` plus these
+That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.
 
 ## Backports
@@ -84,20 +59,18 @@ a change the base already contains.
 
 Prefer a backport to a patch of our own whenever upstream has fixed the same
 thing: it is code we do not have to re-merge, and upstream usually covers more
-cases. `0022` replaced our own XPS depth limit for exactly that reason — it
-guards the two epub outline parsers as well, and `0023` is our own FB2 metadata
-patch after Artifex upstreamed it ("Based on a patch from Krzysztof Kowalczyk of
-SumatraPDF"). `0026` replaced our FB2 author-name helper the same way, `0029`
-replaced our TJ `Tc`/`Tw` break, `0030` replaced our subset-tag strip for
-base-14 names, and `0031` replaced our own reflow image page-height fix. Check
-before writing a new patch, and check again at each update, since upstream may
-have caught up.
+cases. Check before writing a new patch, and check again at each update, since
+upstream may have caught up. At 1.28.5 every backport we carried was in the
+release, and so were our own svg `<g>` font attributes, the pdf-op-run double
+free, the poster page-tree fix and the mujs regexp include (mupdf now has its
+own regex engine).
 
 ## Applying them
 
 ```sh
 git -C ~/src/mupdf worktree add /tmp/mupdf-new <new-tag>
 cd /tmp/mupdf-new
+git config core.autocrlf false   # else git apply writes CRLF on Windows
 for p in ~/src/sumatrapdf/ext/patches/0*.patch; do
     git apply --3way "$p" || echo "needs hand-merging: $p"
 done
@@ -119,13 +92,13 @@ Applying every patch to a pristine base must reproduce `ext/mupdf` exactly:
 
 ```sh
 mkdir /tmp/check
-git -C ~/src/mupdf -c core.autocrlf=false -c core.eol=lf archive 1.28.2 | tar -x -C /tmp/check
+git -C ~/src/mupdf -c core.autocrlf=false -c core.eol=lf archive 1.28.5 | tar -x -C /tmp/check
 cd /tmp/check
-for p in ~/src/sumatrapdf/ext/patches/*.patch; do git apply "$p" || echo "FAIL $p"; done
+for p in ~/src/sumatrapdf/ext/patches/*.patch; do git -c core.autocrlf=false apply "$p" || echo "FAIL $p"; done
 diff -r /tmp/check ~/src/sumatrapdf/ext/mupdf   # only reports files we do not vendor
 ```
 
-That is a byte comparison, and it passes for all 1407 vendored files as of this
+That is a byte comparison, and it passes for all 1410 vendored files as of this
 writing. Keep it that way: if it starts reporting a vendored file, either a
 patch is missing or the vendored tree drifted.
 

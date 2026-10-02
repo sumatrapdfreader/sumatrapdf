@@ -214,6 +214,7 @@ SYS_TESSERACT_LIBS := -ltesseract
 SYS_LEPTONICA_LIBS := -llept
 SYS_LIBARCHIVE_LIBS := -larchive
 SYS_ZXINGCPP_LIBS := -lzxing-cpp -lzint
+SYS_CMARK_GFM_LIBS := -lcmark-gfm -lcmark-gfm-extensions
 
 ifneq "$(CLUSTER)" ""
   CFLAGS += -DCLUSTER
@@ -282,6 +283,10 @@ else
   ifeq ($(shell pkg-config --exists 'libbrotlidec libbrotlienc >= 0.6.0' && echo yes),yes)
     SYS_BROTLI_CFLAGS := $(shell pkg-config --cflags libbrotlidec libbrotlienc)
     SYS_BROTLI_LIBS := $(shell pkg-config --libs libbrotlidec libbrotlienc)
+  endif
+  ifeq ($(shell pkg-config --exists libcmark-gfm && echo yes),yes)
+    SYS_CMARK_GFM_CFLAGS := $(shell pkg-config --cflags libcmark-gfm)
+    SYS_CMARK_GFM_LIBS := $(shell pkg-config --libs libcmark-gfm)
   endif
 
   HAVE_SYS_LEPTONICA := $(shell pkg-config --exists 'lept >= 1.7.4' && echo yes)

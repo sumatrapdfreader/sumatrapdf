@@ -28,17 +28,6 @@
 extern fz_alloc_context fz_alloc_default;
 extern fz_locks_context fz_locks_default;
 
-/* FIXME: Make all these static? */
-double fz_drand48(fz_context *ctx);
-int32_t fz_lrand48(fz_context *ctx);
-int32_t fz_mrand48(fz_context *ctx);
-double fz_erand48(fz_context *ctx, uint16_t xsubi[3]);
-int32_t fz_jrand48(fz_context *ctx, uint16_t xsubi[3]);
-int32_t fz_nrand48(fz_context *ctx, uint16_t xsubi[3]);
-void fz_lcong48(fz_context *ctx, uint16_t param[7]);
-uint16_t *fz_seed48(fz_context *ctx, uint16_t seed16v[3]);
-void fz_srand48(fz_context *ctx, int32_t seedval);
-
 void fz_new_colorspace_context(fz_context *ctx);
 fz_colorspace_context *fz_keep_colorspace_context(fz_context *ctx);
 void fz_drop_colorspace_context(fz_context *ctx);

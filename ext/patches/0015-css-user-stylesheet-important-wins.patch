@@ -10,10 +10,10 @@ file == "<user>") and give their !important declarations a specificity above
 INLINE_SPECIFICITY.
 ---
 diff --git a/source/html/css-apply.c b/source/html/css-apply.c
-index 0da95cb..fd483ff 100644
+index 1500f8e..ed31152 100644
 --- a/source/html/css-apply.c
 +++ b/source/html/css-apply.c
-@@ -435,12 +435,20 @@ count_selector_names(fz_css_selector *sel)
+@@ -420,12 +420,20 @@ count_selector_names(fz_css_selector *sel)
  
  #define INLINE_SPECIFICITY 10000
  
@@ -35,7 +35,7 @@ index 0da95cb..fd483ff 100644
  	return important * 1000 + b * 100 + c * 10 + d;
  }
  
-@@ -1088,7 +1096,7 @@ fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css
+@@ -1073,7 +1081,7 @@ fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css
  			if (match_selector(sel, node, pseudo))
  			{
  				for (prop = rule->declaration; prop; prop = prop->next)
@@ -44,7 +44,7 @@ index 0da95cb..fd483ff 100644
  				break;
  			}
  			sel = sel->next;
-@@ -1143,7 +1151,7 @@ fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css)
+@@ -1128,7 +1136,7 @@ fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css)
  			if (sel->name && !strcmp(sel->name, "@page"))
  			{
  				for (prop = rule->declaration; prop; prop = prop->next)
@@ -53,7 +53,7 @@ index 0da95cb..fd483ff 100644
  				break;
  			}
  			sel = sel->next;
-@@ -2330,7 +2338,7 @@ static void print_rule(fz_css_rule *rule)
+@@ -2315,7 +2323,7 @@ static void print_rule(fz_css_rule *rule)
  	for (sel = rule->selector; sel; sel = sel->next)
  	{
  		print_selector(sel);
@@ -90,7 +90,7 @@ index 3b97063..49dc692 100644
 +	}
  }
 diff --git a/source/html/html-imp.h b/source/html/html-imp.h
-index 6901c78..ce0be26 100644
+index 1447843..f4f51be 100644
 --- a/source/html/html-imp.h
 +++ b/source/html/html-imp.h
 @@ -90,6 +90,10 @@ struct fz_css_rule_s

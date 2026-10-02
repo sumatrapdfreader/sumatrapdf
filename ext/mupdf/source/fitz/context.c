@@ -155,22 +155,6 @@ void fz_tune_image_rendering(fz_context *ctx, int quality)
 	ctx->tuning->image_rendering = quality;
 }
 
-static void fz_init_random_context(fz_context *ctx)
-{
-	if (!ctx)
-		return;
-
-	ctx->seed48[0] = 0;
-	ctx->seed48[1] = 0;
-	ctx->seed48[2] = 0;
-	ctx->seed48[3] = 0xe66d;
-	ctx->seed48[4] = 0xdeec;
-	ctx->seed48[5] = 0x5;
-	ctx->seed48[6] = 0xb;
-
-	fz_srand48(ctx, (uint32_t)time(NULL));
-}
-
 void
 fz_drop_context(fz_context *ctx)
 {
@@ -290,7 +274,6 @@ fz_new_context_imp(const fz_alloc_context *alloc, const fz_locks_context *locks,
 
 	fz_init_error_context(ctx);
 	fz_init_aa_context(ctx);
-	fz_init_random_context(ctx);
 
 	/* Now initialise sections that are shared */
 	fz_try(ctx)

@@ -579,6 +579,8 @@ bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *begin, 
 	unsigned int rtrunc, gtrunc, btrunc, atrunc;
 	uint32_t x;
 	int32_t y;
+	uint64_t tmp_u64;
+	size_t tmp_size;
 
 	assert(info->width > 0 && info->width <= SHRT_MAX);
 	assert(info->height > 0 && info->height <= SHRT_MAX);
@@ -602,15 +604,24 @@ bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *begin, 
 	width = info->width;
 	height = info->height;
 
-	sstride = ((width * bitcount + 31) / 32) * 4;
-	if (ssp + sstride * height > end)
+	tmp_u64 = (width * (uint64_t)bitcount + 31)/32 * 4;
+	sstride = (uint32_t)tmp_u64;
+	if (tmp_u64 != sstride || fz_ckd_mul_size(&tmp_size, sstride, (size_t)height))
+	{
+		fz_free(ctx, decompressed);
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image dimensions out of range in bmp image");
+	}
+
+	if (ssp + tmp_size > end)
 	{
 		int32_t h = (end - ssp) / sstride;
-		if (h == 0 || h > SHRT_MAX)
+		if (h <= 0 || h > SHRT_MAX)
 		{
 			fz_free(ctx, decompressed);
 			fz_throw(ctx, FZ_ERROR_LIMIT, "image dimensions out of range in bmp image");
 		}
+		fz_warn(ctx, "premature end in bitmap data in bmp image");
+		height = (uint32_t)h;
 	}
 
 	fz_try(ctx)
@@ -631,12 +642,6 @@ bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *begin, 
 	{
 		ddp = pix->samples + ((size_t) (height - 1)) * ((size_t) dstride);
 		dstride = -dstride;
-	}
-
-	if (ssp + sstride * height > end)
-	{
-		fz_warn(ctx, "premature end in bitmap data in bmp image");
-		height = (end - ssp) / sstride;
 	}
 
 	/* These are only used for 16- and 32-bit components

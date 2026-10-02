@@ -47,7 +47,7 @@ fz_recolor_shade_type1(fz_context *ctx, pdf_obj *shade, pdf_function **func, rec
 	float x1 = 1;
 	float y1 = 1;
 	float in[FZ_MAX_COLORS] = { 0 };
-	float out[(FUNSEGS+1)*(FUNSEGS+1)*FZ_MAX_COLORS];
+	float *out;
 	float *p;
 	float fv[2];
 	int xx, yy;
@@ -72,9 +72,7 @@ fz_recolor_shade_type1(fz_context *ctx, pdf_obj *shade, pdf_function **func, rec
 	}
 
 	if (rd->funcs != 1 && rd->funcs != n_in)
-	{
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "Unexpected function-arity.");
-	}
 
 	/* Sample the function, rewriting it. */
 	for (i = 0; i < n_out; i++)
@@ -82,87 +80,100 @@ fz_recolor_shade_type1(fz_context *ctx, pdf_obj *shade, pdf_function **func, rec
 		range[2 * i] = FLT_MAX;
 		range[2 * i + 1] = -FLT_MAX;
 	}
-	p = out;
-	for (yy = 0; yy <= FUNSEGS; yy++)
+	out = fz_malloc(ctx, sizeof(float) * (FUNSEGS+1) * (FUNSEGS+1) * n_out);
+
+	fz_var(output);
+
+	fz_try(ctx)
 	{
-		fv[1] = y0 + (y1 - y0) * yy / FUNSEGS;
-
-		for (xx = 0; xx <= FUNSEGS; xx++)
+		p = out;
+		for (yy = 0; yy <= FUNSEGS; yy++)
 		{
-			fv[0] = x0 + (x1 - x0) * xx / FUNSEGS;
+			fv[1] = y0 + (y1 - y0) * yy / FUNSEGS;
 
-			if (rd->funcs == 1)
-				pdf_eval_function(ctx, func[0], fv, 2, in, n_in);
-			else
+			for (xx = 0; xx <= FUNSEGS; xx++)
 			{
-				int zz;
-				for (zz = 0; zz < n_in; zz++)
-					pdf_eval_function(ctx, func[zz], fv, 2, &in[zz], 1);
-			}
+				fv[0] = x0 + (x1 - x0) * xx / FUNSEGS;
 
-			rd->recolor(ctx, rd->opaque, rd->dst_cs, p, rd->src_cs, in);
+				if (rd->funcs == 1)
+					pdf_eval_function(ctx, func[0], fv, 2, in, n_in);
+				else
+				{
+					int zz;
+					for (zz = 0; zz < n_in; zz++)
+						pdf_eval_function(ctx, func[zz], fv, 2, &in[zz], 1);
+				}
 
-			for (i = 0; i < n_out; i++)
-			{
-				if (range[2 * i] > p[i])
-					range[2 * i] = p[i];
-				if (range[2 * i + 1] < p[i])
-					range[2 * i + 1] = p[i];
+				rd->recolor(ctx, rd->opaque, rd->dst_cs, p, rd->src_cs, in);
+
+				for (i = 0; i < n_out; i++)
+				{
+					if (range[2 * i] > p[i])
+						range[2 * i] = p[i];
+					if (range[2 * i + 1] < p[i])
+						range[2 * i + 1] = p[i];
+				}
+				p += n_out;
 			}
-			p += n_out;
 		}
+
+		/* Now write the function out again. */
+		fun_obj = pdf_new_dict(ctx, doc, 3);
+		pdf_dict_put_int(ctx, fun_obj, PDF_NAME(FunctionType), 0);
+
+		/* Domain */
+		obj = pdf_dict_put_array(ctx, fun_obj, PDF_NAME(Domain), 4);
+		pdf_array_push_real(ctx, obj, x0);
+		pdf_array_push_real(ctx, obj, x1);
+		pdf_array_push_real(ctx, obj, y0);
+		pdf_array_push_real(ctx, obj, y1);
+
+		/* Range */
+		obj = pdf_dict_put_array(ctx, fun_obj, PDF_NAME(Range), 4);
+		for (i = 0; i < 2*n_out; i++)
+			pdf_array_push_real(ctx, obj, range[i]);
+
+		/* Size */
+		obj = pdf_dict_put_array(ctx, fun_obj, PDF_NAME(Size), 2);
+		pdf_array_push_int(ctx, obj, FUNSEGS+1);
+		pdf_array_push_int(ctx, obj, FUNSEGS+1);
+
+		/* BitsPerSample */
+		pdf_dict_put_int(ctx, fun_obj, PDF_NAME(BitsPerSample), FUNBPS);
+
+		buf = fz_new_buffer(ctx, 1);
+		output = fz_new_output_with_buffer(ctx, buf);
+
+		p = out;
+		for (yy = 0; yy <= FUNSEGS; yy++)
+		{
+			for (xx = 0; xx <= FUNSEGS; xx++)
+			{
+				for (i = 0; i < n_out; i++)
+				{
+					float v = p[i];
+					float d = range[2 * i + 1] - range[2 * i];
+					int iv;
+
+					v -= range[2 * i];
+					if (d != 0)
+						v = v * ((1<<FUNBPS)-1) / d;
+					iv = (int)(v + 0.5f);
+					fz_write_bits(ctx, output, iv, FUNBPS);
+				}
+				p += n_out;
+			}
+		}
+		fz_write_bits_sync(ctx, output);
+		fz_close_output(ctx, output);
 	}
-
-	/* Now write the function out again. */
-	fun_obj = pdf_new_dict(ctx, doc, 3);
-	pdf_dict_put_int(ctx, fun_obj, PDF_NAME(FunctionType), 0);
-
-	/* Domain */
-	obj = pdf_dict_put_array(ctx, fun_obj, PDF_NAME(Domain), 4);
-	pdf_array_push_real(ctx, obj, x0);
-	pdf_array_push_real(ctx, obj, x1);
-	pdf_array_push_real(ctx, obj, y0);
-	pdf_array_push_real(ctx, obj, y1);
-
-	/* Range */
-	obj = pdf_dict_put_array(ctx, fun_obj, PDF_NAME(Range), 4);
-	for (i = 0; i < 2*n_out; i++)
-		pdf_array_push_real(ctx, obj, range[i]);
-
-	/* Size */
-	obj = pdf_dict_put_array(ctx, fun_obj, PDF_NAME(Size), 2);
-	pdf_array_push_int(ctx, obj, FUNSEGS+1);
-	pdf_array_push_int(ctx, obj, FUNSEGS+1);
-
-	/* BitsPerSample */
-	pdf_dict_put_int(ctx, fun_obj, PDF_NAME(BitsPerSample), FUNBPS);
-
-	buf = fz_new_buffer(ctx, 1);
-	output = fz_new_output_with_buffer(ctx, buf);
-
-	p = out;
-	for (yy = 0; yy <= FUNSEGS; yy++)
+	fz_always(ctx)
 	{
-		for (xx = 0; xx <= FUNSEGS; xx++)
-		{
-			for (i = 0; i < n_out; i++)
-			{
-				float v = p[i];
-				float d = range[2 * i + 1] - range[2 * i];
-				int iv;
-
-				v -= range[2 * i];
-				if (d != 0)
-					v = v * ((1<<FUNBPS)-1) / d;
-				iv = (int)(v + 0.5f);
-				fz_write_bits(ctx, output, iv, FUNBPS);
-			}
-			p += n_out;
-		}
+		fz_drop_output(ctx, output);
+		fz_free(ctx, out);
 	}
-	fz_write_bits_sync(ctx, output);
-	fz_close_output(ctx, output);
-	fz_drop_output(ctx, output);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	ref = pdf_add_object(ctx, doc, fun_obj);
 	pdf_update_stream(ctx, doc, ref, buf, 0);
@@ -176,8 +187,8 @@ fz_recolor_shade_function(fz_context *ctx, pdf_obj *shade, float *samples, int s
 	int i;
 	int n_in = fz_colorspace_n(ctx, rd->src_cs);
 	int n_out = fz_colorspace_n(ctx, rd->dst_cs);
-	float localp[256*FZ_MAX_COLORS];
-	float *q = localp;
+	float *localp;
+	float *q;
 	float p[FZ_MAX_COLORS];
 	pdf_obj *fun_obj = NULL;
 	pdf_document *doc = pdf_get_bound_document(ctx, shade);
@@ -202,31 +213,35 @@ fz_recolor_shade_function(fz_context *ctx, pdf_obj *shade, float *samples, int s
 		range[2 * i] = FLT_MAX;
 		range[2 * i + 1] = -FLT_MAX;
 	}
-	for (t = 0; t < 256; t++)
-	{
-		for (i = 0; i < n_in; i++)
-			p[i] = samples[t*stride+i];
 
-		rd->recolor(ctx, rd->opaque, rd->dst_cs, q, rd->src_cs, p);
-
-		for (i = 0; i < n_out; i++)
-		{
-			if (range[2 * i] > q[i])
-				range[2 * i] = q[i];
-			if (range[2 * i + 1] < q[i])
-				range[2 * i + 1] = q[i];
-		}
-		q += n_out;
-	}
+	localp = fz_malloc(ctx, sizeof(float) * 256 * FZ_MAX_COLORS);
 
 	fz_var(buf);
 	fz_var(ref);
 	fz_var(output);
 
-	/* Now write the function out again. */
-	fun_obj = pdf_new_dict(ctx, doc, 3);
 	fz_try(ctx)
 	{
+		q = localp;
+		for (t = 0; t < 256; t++)
+		{
+			for (i = 0; i < n_in; i++)
+				p[i] = samples[t*stride+i];
+
+			rd->recolor(ctx, rd->opaque, rd->dst_cs, q, rd->src_cs, p);
+
+			for (i = 0; i < n_out; i++)
+			{
+				if (range[2 * i] > q[i])
+					range[2 * i] = q[i];
+				if (range[2 * i + 1] < q[i])
+					range[2 * i + 1] = q[i];
+			}
+			q += n_out;
+		}
+
+		/* Now write the function out again. */
+		fun_obj = pdf_new_dict(ctx, doc, 3);
 		pdf_dict_put_int(ctx, fun_obj, PDF_NAME(FunctionType), 0);
 
 		/* Domain */
@@ -277,6 +292,7 @@ fz_recolor_shade_function(fz_context *ctx, pdf_obj *shade, float *samples, int s
 		fz_drop_buffer(ctx, buf);
 		pdf_drop_obj(ctx, fun_obj);
 		pdf_drop_obj(ctx, ref);
+		fz_free(ctx, localp);
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);

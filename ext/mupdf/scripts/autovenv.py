@@ -70,20 +70,30 @@ def bits():
     return int.bit_length(sys.maxsize+1)
 
 
-def shlex_join_windows(argv):
+def shlex_quote(arg):
     '''
-    shlex not reliable on Windows.
-    Use crude quoting with "...". Seems to work.
+    On Windows we simply enclose <arg> within "..." or raise an exception if
+    <arg> contains double-quotes.
+
+    Otherwise we simply use shlex.quote().
     '''
-    argv2 = list()
-    for arg in argv:
-        if arg.startswith('"') and arg.endswith('"'):
-            assert '"' not in arg, f'Cannot quote {arg=}.'
-            argv2.append(arg)
-        else:
-            assert '"' not in arg, f'Cannot quote {arg=}.'
-            argv2.append(f'"{arg}"')
-    return ' '.join(argv2)
+    if platform.system() == 'Windows':
+        if '"' in arg:
+            raise Exception(f'Cannot quote {arg=}.')
+        return f'"{arg}"'
+    else:
+        return shlex.quote(arg)
+
+
+def shlex_join(argv):
+    '''
+    Like shlex.join(), but on Windows we use shlex_quote().
+    '''
+    if platform.system() == 'Windows':
+        argv = [shlex_quote(arg) for arg in argv]
+        return ' '.join(argv)
+    else:
+        return shlex.join(argv)
 
 
 def enter(*,
@@ -141,7 +151,7 @@ def enter(*,
         log(f'Already in a venv, {sys.prefix=}.', verbose, t0)
         for package in packages:
             if package:
-                run(f'pip install --upgrade {shlex.quote(package)}', verbose, t0)
+                run(f'pip install --upgrade {shlex_quote(package)}', verbose, t0)
         return
 
     # We are not in a venv.
@@ -165,38 +175,21 @@ def enter(*,
         packages = list()
     else:
         # Create venv.
-        if platform.system() == 'Windows':
-            executable = f'"{sys.executable}"'
-        else:
-            executable = shlex.quote(sys.executable)
-        run(f'{executable} -m venv {venv_name}', verbose, t0)
+        run(f'{shlex_quote(sys.executable)} -m venv {venv_name}', verbose, t0)
 
     # Get command to enter venv.
     if platform.system() == 'Windows':
-        # shlex not reliable on Windows.
-        # Use crude quoting with "...". Seems to work.
         venv_enter = f'{venv_name}\\Scripts\\activate'
-        argv_string = ''
-        for arg in sys.argv:
-            if arg.startswith('"') and arg.endswith('"'):
-                argv_string += f' {arg}'
-            else:
-                assert '"' not in arg, f'Cannot handle arg containing double quote on windows: {arg=}'
-                argv_string += f' "{arg}"'
     else:
         venv_enter = f'. {venv_name}/bin/activate'
-        argv_string = shlex.join(sys.argv)
 
     # Install packages.
     for package in (packages or list()):
         if package:
-            run(f'{venv_enter} && pip install --upgrade {shlex.quote(package)}', verbose, t0)
+            run(f'{venv_enter} && pip install --upgrade {shlex_quote(package)}', verbose, t0)
 
     # Rerun ourselves in the venv.
-    if platform.system() == 'Windows':
-        command = f'{venv_enter} && python {shlex_join_windows(sys.argv)}'
-    else:
-        command = f'{venv_enter} && python {shlex.join(sys.argv)}'
+    command = f'{venv_enter} && python {shlex_join(sys.argv)}'
 
     cp = run(command, verbose, t0, check=0, batch=0)
     sys.exit(cp.returncode)

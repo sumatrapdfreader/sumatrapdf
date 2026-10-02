@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -62,7 +62,7 @@ typedef struct {
 	float alpha;
 	fz_matrix ctm;
 	float xstep, ystep;
-	fz_irect area;
+	fz_rect area;
 	int flags;
 	int in_smask;
 } fz_draw_state;
@@ -2840,7 +2840,7 @@ fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view,
 			state[1].id = id;
 			state[1].doc_id = doc_id;
 			state[1].encache = 0;
-			state[1].area = fz_irect_from_rect(area);
+			state[1].area = area;
 			state[1].ctm = ctm;
 			state[1].scissor = bbox;
 
@@ -2875,7 +2875,7 @@ fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view,
 	state[1].id = id;
 	state[1].doc_id = doc_id;
 	state[1].encache = 1;
-	state[1].area = fz_irect_from_rect(area);
+	state[1].area = area;
 	state[1].ctm = ctm;
 	state[1].scissor = bbox;
 
@@ -2892,13 +2892,15 @@ fz_draw_end_tile(fz_context *ctx, fz_device *devp)
 	fz_draw_device *dev = (fz_draw_device*)devp;
 	float xstep, ystep;
 	fz_matrix ttm, ctm, shapectm, gactm;
-	fz_irect area, scissor, tile_bbox;
-	fz_rect scissor_tmp, tile_tmp;
-	int x0, y0, x1, y1, x, y, extra_x, extra_y;
+	fz_irect tile_bbox;
+	fz_rect area;
+	fz_rect scissor, tile_tmp;
+	int x0, y0, x1, y1, x, y, extra_x, extra_y, aa_bits, abandon;
 	fz_draw_state *state;
 	fz_pixmap *dest = NULL;
 	fz_pixmap *shape = NULL;
 	fz_pixmap *group_alpha = NULL;
+	float threshold;
 
 	if (dev->top == 0)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unexpected end tile");
@@ -2911,14 +2913,47 @@ fz_draw_end_tile(fz_context *ctx, fz_device *devp)
 	area = state[1].area;
 	ctm = state[1].ctm;
 
+	/* Malicious authors, might give us xstep and ystep as being ludicrously
+	 * small, in an attempt to cause a DOS. We have to be careful here as
+	 * this is permitted by the spec. The approach taken here is based upon
+	 * the following observation: in the absence of AA, repeating a tile
+	 * with an xstep/ystep change (in destination space) of less than 1 pixel
+	 * cannot make a meaningful visible difference.
+	 *
+	 * We therefore look at the difference caused by xstep/ystep, and if it
+	 * is too small, we attempt to double them until just before that would
+	 * cause a noticeable difference. */
+	abandon = 0;
+	aa_bits = fz_graphics_aa_level(ctx);
+	if (aa_bits > 8)
+		aa_bits = 1;
+	threshold = 1.0f/(1<<((aa_bits+1)>>1));
+	for (x = 0; x < 128; x++)
+	{
+		ttm = fz_pre_translate(ctm, xstep, 0);
+		if (fabsf(ttm.e - ctm.e) > threshold || fabsf(ttm.f - ctm.f) > threshold)
+			break;
+		xstep *= 2;
+	}
+	if (x == 128)
+		abandon = xstep = 1;
+	for (y = 0; y < 128; y++)
+	{
+		ttm = fz_pre_translate(ctm, 0, ystep);
+		if (fabsf(ttm.e - ctm.e) > threshold || fabsf(ttm.f - ctm.f) > threshold)
+			break;
+		ystep *= 2;
+	}
+	if (y == 128)
+		abandon = ystep = 1;
+
 	/* Fudge the scissor bbox a little to allow for inaccuracies in the
 	 * matrix inversion. */
 	ttm = fz_invert_matrix(ctm);
-	scissor_tmp = fz_rect_from_irect(state[0].scissor);
-	scissor_tmp = fz_expand_rect(scissor_tmp, 1);
-	scissor_tmp = fz_transform_rect(scissor_tmp, ttm);
-	scissor = fz_irect_from_rect(scissor_tmp);
-	area = fz_intersect_irect(area, scissor);
+	scissor = fz_rect_from_irect(state[0].scissor);
+	scissor = fz_expand_rect(scissor, 1);
+	scissor = fz_transform_rect(scissor, ttm);
+	area = fz_intersect_rect(area, scissor);
 
 	tile_bbox.x0 = state[1].dest->x;
 	tile_bbox.y0 = state[1].dest->y;
@@ -2940,10 +2975,10 @@ fz_draw_end_tile(fz_context *ctx, fz_device *devp)
 	extra_y = tile_tmp.y1 - tile_tmp.y0 - ystep;
 	if (extra_y < 0)
 		extra_y = 0;
-	x0 = floorf((area.x0 - tile_tmp.x0 - extra_x) / xstep);
-	y0 = floorf((area.y0 - tile_tmp.y0 - extra_y) / ystep);
-	x1 = ceilf((area.x1 - tile_tmp.x0 + extra_x) / xstep);
-	y1 = ceilf((area.y1 - tile_tmp.y0 + extra_y) / ystep);
+	x0 = floorf((area.x0-1 - tile_tmp.x0 - extra_x) / xstep);
+	y0 = floorf((area.y0-1 - tile_tmp.y0 - extra_y) / ystep);
+	x1 = ceilf((area.x1+1 - tile_tmp.x0 + extra_x) / xstep);
+	y1 = ceilf((area.y1+1 - tile_tmp.y0 + extra_y) / ystep);
 
 	ctm.e = state[1].dest->x;
 	ctm.f = state[1].dest->y;
@@ -2979,6 +3014,9 @@ fz_draw_end_tile(fz_context *ctx, fz_device *devp)
 
 	fz_try(ctx)
 	{
+		if (abandon)
+			break;
+
 		dest = fz_new_pixmap_from_pixmap(ctx, state[1].dest, NULL);
 
 		shape = fz_new_pixmap_from_pixmap(ctx, state[1].shape, NULL);
@@ -3229,34 +3267,34 @@ new_draw_device(fz_context *ctx, fz_matrix transform, fz_pixmap *dest, const fz_
 			dev->stack[0].scissor.y1 = clip->y1;
 	}
 
-	/* If we have no separations structure at all, then we want a
-	 * simple composite rendering (with no overprint simulation).
-	 * If we do have a separations structure, so: 1) Any
-	 * 'disabled' separations are ignored. 2) Any 'composite'
-	 * separations means we will need to do an overprint
-	 * simulation.
-	 *
-	 * The supplied pixmaps 's' will match the number of
-	 * 'spots' separations. If we have any 'composite'
-	 * separations therefore, we'll need to make a new pixmap
-	 * with a new (completely 'spots') separations structure,
-	 * render to that, and then map down at the end.
-	 *
-	 * Unfortunately we can't produce this until we know what
-	 * the default_colorspaces etc are, so set a flag for us
-	 * to trigger on later.
-	 */
-	if (dest->seps || dev->proof_cs != NULL)
-#if FZ_ENABLE_SPOT_RENDERING
-		dev->resolve_spots = 1;
-#else
-		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Spot rendering (and overprint/overprint simulation) not available in this build");
-#endif
-
-	dev->overprint_possible = (dest->seps != NULL);
-
 	fz_try(ctx)
 	{
+		/* If we have no separations structure at all, then we want a
+		 * simple composite rendering (with no overprint simulation).
+		 * If we do have a separations structure, so: 1) Any
+		 * 'disabled' separations are ignored. 2) Any 'composite'
+		 * separations means we will need to do an overprint
+		 * simulation.
+		 *
+		 * The supplied pixmaps 's' will match the number of
+		 * 'spots' separations. If we have any 'composite'
+		 * separations therefore, we'll need to make a new pixmap
+		 * with a new (completely 'spots') separations structure,
+		 * render to that, and then map down at the end.
+		 *
+		 * Unfortunately we can't produce this until we know what
+		 * the default_colorspaces etc are, so set a flag for us
+		 * to trigger on later.
+		 */
+		if (dest->seps || dev->proof_cs != NULL)
+#if FZ_ENABLE_SPOT_RENDERING
+			dev->resolve_spots = 1;
+#else
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Spot rendering (and overprint/overprint simulation) not available in this build");
+#endif
+
+		dev->overprint_possible = (dest->seps != NULL);
+
 		dev->rast = fz_new_rasterizer(ctx, aa);
 		dev->cache_x = fz_new_scale_cache(ctx);
 		dev->cache_y = fz_new_scale_cache(ctx);

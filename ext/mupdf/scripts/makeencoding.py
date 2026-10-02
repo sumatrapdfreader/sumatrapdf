@@ -2,12 +2,14 @@
 
 # Convert unicode mapping table to C arrays mapping glyph names and unicode values.
 #
-# ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/MISC/KOI8-U.TXT
-# ftp://ftp.unicode.org/Public/MAPPINGS/ISO8859/8859-1.TXT
-# ftp://ftp.unicode.org/Public/MAPPINGS/ISO8859/8859-7.TXT
-# ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1250.TXT
-# ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1251.TXT
-# ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1252.TXT
+# https://www.unicode.org/Public/MAPPINGS/VENDORS/MISC/KOI8-U.TXT
+# https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-1.TXT
+# https://www.unicode.org/Public/MAPPINGS/ISO8859/8859-7.TXT
+# https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1250.TXT
+# https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1251.TXT
+# https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1252.TXT
+# https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1252.TXT
+# https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP437.TXT
 #
 
 BANNED = [
@@ -83,3 +85,4 @@ dump_table("koi8u", load_table("scripts/KOI8-U.TXT"))
 dump_table("windows_1250", load_table("scripts/CP1250.TXT"))
 dump_table("windows_1251", load_table("scripts/CP1251.TXT"))
 dump_table("windows_1252", load_table("scripts/CP1252.TXT"))
+dump_table("dos_437", load_table("scripts/CP437.TXT"))

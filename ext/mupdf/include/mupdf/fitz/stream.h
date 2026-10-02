@@ -404,13 +404,14 @@ void fz_skip_space(fz_context *ctx, fz_stream *stm);
 */
 static inline size_t fz_available(fz_context *ctx, fz_stream *stm, size_t max)
 {
-	size_t len = stm->wp - stm->rp;
+	size_t len;
 	int c = EOF;
 
+	if (stm == NULL || stm->eof)
+		return 0;
+	len = stm->wp - stm->rp;
 	if (len)
 		return len;
-	if (stm->eof)
-		return 0;
 
 	fz_try(ctx)
 		c = stm->next(ctx, stm, max);

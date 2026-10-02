@@ -419,6 +419,29 @@ fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 		colorspace = extract_icc_profile(ctx, cinfo.marker_list, cinfo.output_components, colorspace);
 		if (!colorspace)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "cannot determine colorspace");
+		else
+		{
+			switch (colorspace->type)
+			{
+			case FZ_COLORSPACE_NONE:
+			case FZ_COLORSPACE_GRAY:
+				if (cinfo.output_components != 1)
+					fz_throw(ctx, FZ_ERROR_FORMAT, "wrong number of components for grayscale JPEG");
+				break;
+			case FZ_COLORSPACE_RGB:
+			case FZ_COLORSPACE_BGR:
+			case FZ_COLORSPACE_LAB:
+				if (cinfo.output_components != 3)
+					fz_throw(ctx, FZ_ERROR_FORMAT, "wrong number of components for rgb or lab JPEG");
+				break;
+			case FZ_COLORSPACE_CMYK:
+				if (cinfo.output_components != 4)
+					fz_throw(ctx, FZ_ERROR_FORMAT, "wrong number of components for cmyk JPEG");
+				break;
+			default:
+				fz_throw(ctx, FZ_ERROR_FORMAT, "unknown colorspace in JPEG");
+			}
+		}
 
 		image = fz_new_pixmap(ctx, colorspace, cinfo.output_width, cinfo.output_height, NULL, 0);
 
@@ -542,6 +565,29 @@ fz_load_jpeg_info(fz_context *ctx, const unsigned char *rbuf, size_t rlen, int *
 		*cspacep = extract_icc_profile(ctx, cinfo.marker_list, cinfo.num_components, *cspacep);
 		if (!*cspacep)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "cannot determine colorspace");
+		else
+		{
+			switch ((*cspacep)->type)
+			{
+			case FZ_COLORSPACE_NONE:
+			case FZ_COLORSPACE_GRAY:
+				if (cinfo.num_components != 1)
+					fz_throw(ctx, FZ_ERROR_FORMAT, "wrong number of components for grayscale JPEG");
+				break;
+			case FZ_COLORSPACE_RGB:
+			case FZ_COLORSPACE_BGR:
+			case FZ_COLORSPACE_LAB:
+				if (cinfo.num_components != 3)
+					fz_throw(ctx, FZ_ERROR_FORMAT, "wrong number of components for rgb or lab JPEG");
+				break;
+			case FZ_COLORSPACE_CMYK:
+				if (cinfo.num_components != 4)
+					fz_throw(ctx, FZ_ERROR_FORMAT, "wrong number of components for cmyk JPEG");
+				break;
+			default:
+				fz_throw(ctx, FZ_ERROR_FORMAT, "unknown colorspace in JPEG");
+			}
+		}
 
 		if (extract_exif_resolution(cinfo.marker_list, xresp, yresp, orientation))
 			/* XPS prefers EXIF resolution to JFIF density */;

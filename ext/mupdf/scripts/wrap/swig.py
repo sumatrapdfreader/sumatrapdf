@@ -740,7 +740,7 @@ def build_swig(
                 {
                     message += "Traceback (from traceback.format_tb()):\\n";
                     PyObject* traceback_dict = PyModule_GetDict(traceback);
-                    PyObject* format_tb = PyDict_GetItem(traceback_dict, PyString_FromString("format_tb"));
+                    PyObject* format_tb = PyDict_GetItem(traceback_dict, PyUnicode_FromString("format_tb"));
                     PyObject* ret = PyObject_CallFunctionObjArgs(format_tb, trace, NULL);
                     PyObject* iter = PyObject_GetIter(ret);
                     for(;;)

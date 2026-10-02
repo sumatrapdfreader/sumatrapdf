@@ -274,6 +274,7 @@ gif_read_tbid(fz_context *ctx, struct info *info, const unsigned char *p, const 
 	fz_stream *stm = NULL, *lzwstm = NULL;
 	unsigned int mincodesize, y;
 	fz_buffer *compressed = NULL, *uncompressed = NULL;
+	size_t usize;
 	const unsigned char *ct;
 	unsigned char *sp;
 	int ct_entries;
@@ -303,11 +304,12 @@ gif_read_tbid(fz_context *ctx, struct info *info, const unsigned char *p, const 
 		stm = fz_open_buffer(ctx, compressed);
 		lzwstm = fz_open_lzwd(ctx, stm, 0, mincodesize + 1, 1, 1);
 
-		uncompressed = fz_read_all(ctx, lzwstm, 0);
-		if (uncompressed->len < (size_t)info->image_width * info->image_height)
+		usize = (size_t)info->image_width * info->image_height;
+		uncompressed = fz_read_all(ctx, lzwstm, usize);
+		if (uncompressed->len < usize)
 		{
 			fz_warn(ctx, "premature end in compressed table based image data in gif image");
-			while (uncompressed->len < (size_t)info->image_width * info->image_height)
+			while (uncompressed->len < usize)
 				fz_append_byte(ctx, uncompressed, 0x00);
 		}
 

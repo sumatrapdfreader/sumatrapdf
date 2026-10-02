@@ -1211,11 +1211,18 @@ fz_pixmap *
 fz_convert_pixmap(fz_context *ctx, const fz_pixmap *pix, fz_colorspace *ds, fz_colorspace *prf, fz_default_colorspaces *default_cs, fz_color_params color_params, int keep_alpha)
 {
 	fz_pixmap *cvt;
+	int src_alpha = pix->alpha;
 
 	if (!ds && !keep_alpha)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot both throw away and keep alpha");
 
-	cvt = fz_new_pixmap(ctx, ds, pix->w, pix->h, pix->seps, keep_alpha && pix->alpha);
+	if (pix->colorspace == NULL)
+	{
+		/* Alpha only pixmaps are treated as devicegray, with no alpha. */
+		src_alpha = 0;
+	}
+
+	cvt = fz_new_pixmap(ctx, ds, pix->w, pix->h, pix->seps, keep_alpha && src_alpha);
 
 	cvt->xres = pix->xres;
 	cvt->yres = pix->yres;

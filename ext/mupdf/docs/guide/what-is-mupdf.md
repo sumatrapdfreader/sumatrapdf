@@ -17,6 +17,7 @@ As you can tell by the name, we support reading PDF files. But that's not all!
 - ComicBook (CBZ and CBT)
 - Images (TIFF, JPEG, PNG, etc)
 - SVG (a limited subset only)
+- Markdown (MD)
 
 ## Viewers
 

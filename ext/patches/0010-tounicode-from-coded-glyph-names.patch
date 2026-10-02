@@ -9,10 +9,10 @@ Applies the same heuristics pdf.js uses in _simpleFontToUnicode().
 Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/3219
 ---
 diff --git a/source/pdf/pdf-unicode.c b/source/pdf/pdf-unicode.c
-index 9a990c3..4d6250c 100644
+index 1c50312..bbed290 100644
 --- a/source/pdf/pdf-unicode.c
 +++ b/source/pdf/pdf-unicode.c
-@@ -90,6 +90,38 @@ pdf_remap_cmap(fz_context *ctx, pdf_cmap *gid_from_cpt, pdf_cmap *ucs_from_cpt)
+@@ -125,6 +125,38 @@ pdf_remap_cmap(fz_context *ctx, pdf_cmap *gid_from_cpt, pdf_cmap *ucs_from_cpt)
  	return ucs_from_gid;
  }
  
@@ -51,7 +51,7 @@ index 9a990c3..4d6250c 100644
  void
  pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
  	const char **strings, char *collection, pdf_obj *cmapstm)
-@@ -143,7 +175,16 @@ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
+@@ -178,7 +210,16 @@ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
  		for (cpt = 0; cpt < 256; cpt++)
  		{
  			if (strings[cpt])

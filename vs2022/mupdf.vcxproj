@@ -1099,6 +1099,7 @@
     <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\path.h" />
     <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\pixmap.h" />
     <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\pool.h" />
+    <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\regexp.h" />
     <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\separation.h" />
     <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\shade.h" />
     <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\store.h" />
@@ -1152,6 +1153,7 @@
     <ClInclude Include="..\ext\mupdf\source\fitz\deskew_sse.h" />
     <ClInclude Include="..\ext\mupdf\source\fitz\draw-imp.h" />
     <ClInclude Include="..\ext\mupdf\source\fitz\encodings.h" />
+    <ClInclude Include="..\ext\mupdf\source\fitz\fitz-imp.h" />
     <ClInclude Include="..\ext\mupdf\source\fitz\font-table.h" />
     <ClInclude Include="..\ext\mupdf\source\fitz\glyph-imp.h" />
     <ClInclude Include="..\ext\mupdf\source\fitz\glyphbox.h" />
@@ -1197,6 +1199,7 @@
     <ClCompile Include="..\ext\mupdf\source\fitz\context.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\crypt-aes.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\crypt-arc4.c" />
+    <ClCompile Include="..\ext\mupdf\source\fitz\crypt-chacha20.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\crypt-md5.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\crypt-sha2.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\cull-device.c" />
@@ -1307,6 +1310,7 @@
     <ClCompile Include="..\ext\mupdf\source\fitz\pool.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\printf.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\random.c" />
+    <ClCompile Include="..\ext\mupdf\source\fitz\regexp.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\separation.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\shade.c" />
     <ClCompile Include="..\ext\mupdf\source\fitz\skew.c" />

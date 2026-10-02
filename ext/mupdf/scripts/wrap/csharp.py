@@ -3,6 +3,7 @@ Things for generating C#-specific output.
 '''
 import textwrap
 import os
+import platform
 
 import pipcl
 
@@ -35,7 +36,7 @@ def make_outparam_helper_csharp(
     def write(text):
         generated.swig_csharp.write(text)
 
-    main_name = rename.ll_fn(cursor.mangled_name)
+    main_name = rename.ll_fn(cursor.spelling)
     return_void = cursor.result_type.spelling == 'void'
     if fnname == 'fz_buffer_extract':
         # Write custom wrapper that returns the binary data as a C# bytes
@@ -329,6 +330,8 @@ def csharp_settings(build_dirs):
         if state.state_.linux:
             csc = 'mono-csc'
         elif state.state_.openbsd:
+            csc = 'csc'
+        elif state.state_.macos:
             csc = 'csc'
         else:
             assert 0, f'Do not know where to find mono. {platform.platform()=}'

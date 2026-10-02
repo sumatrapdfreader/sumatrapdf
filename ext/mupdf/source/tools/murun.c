@@ -367,9 +367,9 @@ static const char *postfix_js =
 	"}\n"
 	"\n"
 	"mupdf.Rect = {\n"
-	"	empty: [ 0x80000000, 0x80000000, 0x7fffff80, 0x7fffff80 ],\n"
+	"	empty: [ 0x7fffff80, 0x7fffff80, -1 << 31, -1 << 31 ],\n"
 	"	invalid: [ 0, 0, -1, -1 ],\n"
-	"	infinite: [ 0x7fffff80, 0x7fffff80, 0x80000000, 0x80000000 ],\n"
+	"	infinite: [ -1 << 31, -1 << 31, 0x7fffff80, 0x7fffff80 ],\n"
 	"	isEmpty: function (rect) {\n"
 	"		return rect[0] >= rect[2] || rect[1] >= rect[3]\n"
 	"	},\n"
@@ -378,10 +378,10 @@ static const char *postfix_js =
 	"	},\n"
 	"	isInfinite: function (rect) {\n"
 	"		return (\n"
-	"			rect[0] === 0x7fffff80 &&\n"
-	"			rect[1] === 0x7fffff80 &&\n"
-	"			rect[2] === 0x80000000 &&\n"
-	"			rect[3] === 0x80000000\n"
+	"			rect[0] === -1 << 31 &&\n"
+	"			rect[1] === -1 << 31 &&\n"
+	"			rect[2] === 0x7fffff80 &&\n"
+	"			rect[3] === 0x7fffff80\n"
 	"		)\n"
 	"	},\n"
 	"	transform: function (rect, matrix) {\n"
@@ -416,9 +416,9 @@ static const char *postfix_js =
 	"		return p[0] >= r[0] && p[0] < r[1] && p[1] >= r[2] && p[1] < r[3]\n"
 	"	},\n"
 	"	rectFromQuad: function (q) {\n"
-	"		if (!Quad.isValid(r))\n"
+	"		if (!Quad.isValid(q))\n"
 	"			return Rect.invalid\n"
-	"		if (Quad.isInfinite(r))\n"
+	"		if (Quad.isInfinite(q))\n"
 	"			return Rect.infinite\n"
 	"		return [\n"
 	"			Math.min(q[0], q[2], q[4], q[6]),\n"
@@ -4261,7 +4261,7 @@ static void ffi_Document_resolveLink(js_State *J)
 
 	if (js_isuserdata(J, 1, "fz_link"))
 	{
-		fz_link *link = js_touserdata(J, 0, "fz_link");
+		fz_link *link = js_touserdata(J, 1, "fz_link");
 		uri = link->uri;
 	}
 	else
@@ -4284,7 +4284,7 @@ static void ffi_Document_resolveLinkDestination(js_State *J)
 
 	if (js_isuserdata(J, 1, "fz_link"))
 	{
-		fz_link *link = js_touserdata(J, 0, "fz_link");
+		fz_link *link = js_touserdata(J, 1, "fz_link");
 		uri = link->uri;
 	}
 	else
@@ -7770,6 +7770,8 @@ static void ffi_PDFDocument_addEmbeddedFile(js_State *J)
 
 	if (created >= 0) created /= 1000;
 	if (modified >= 0) modified /= 1000;
+
+	fz_var(ind);
 
 	fz_try(ctx)
 		ind = pdf_add_embedded_file(ctx, pdf, filename, mimetype, contents,

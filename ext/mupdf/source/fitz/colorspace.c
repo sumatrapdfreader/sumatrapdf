@@ -1871,6 +1871,7 @@ fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 	fz_pixmap *base_idx = NULL;
 	fz_pixmap *base_sep = NULL;
 	fz_icc_link *link = NULL;
+	int src_alpha = src->alpha;
 
 	fz_var(link);
 	fz_var(base_idx);
@@ -1884,9 +1885,12 @@ fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 
 	fz_try(ctx)
 	{
-		/* Treat any alpha-only pixmap as being device gray here. */
+		/* Treat any alpha-only pixmap as being device gray with no alpha here. */
 		if (!ss)
+		{
 			ss = fz_device_gray(ctx);
+			src_alpha = 0;
+		}
 
 		/* Convert indexed into base colorspace. */
 		if (ss->type == FZ_COLORSPACE_INDEXED)
@@ -1970,7 +1974,7 @@ fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 		{
 			fz_try(ctx)
 			{
-				int sx = src->s + src->alpha;
+				int sx = src->s + src_alpha;
 				int dx = dst->s + dst->alpha;
 				/* If there are no spots to copy, we might as well copy spots! */
 				int effectively_copying_spots = copy_spots || (src->s == 0 && dst->s == 0);
@@ -1978,7 +1982,7 @@ fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 				 * of 'extra' (non process, spots+alpha) channels (i.e. sx == dx), then
 				 * we get lcms2 to do the premultiplication handling for us. If not,
 				 * fz_icc_transform_pixmap will have to do it by steam. */
-				int premult = src->alpha && (sx == dx) && effectively_copying_spots;
+				int premult = src_alpha && (sx == dx) && effectively_copying_spots;
 				link = fz_find_icc_link(ctx, ss, sx, ds, dx, prf, params, 0, effectively_copying_spots, premult);
 				fz_icc_transform_pixmap(ctx, link, src, dst, effectively_copying_spots);
 			}

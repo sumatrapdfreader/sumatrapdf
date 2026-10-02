@@ -8,10 +8,10 @@ aspect). When the root svg itself has only a percentage size and no
 viewBox, that pixel size becomes the page.
 ---
 diff --git a/source/svg/svg-run.c b/source/svg/svg-run.c
-index 2193a731d..251663388 100644
+index 8438c60..c69bfd1 100644
 --- a/source/svg/svg-run.c
 +++ b/source/svg/svg-run.c
-@@ -1495,15 +1495,117 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
+@@ -1493,15 +1493,117 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
  		fz_rethrow(ctx);
  }
  
@@ -133,7 +133,7 @@ index 2193a731d..251663388 100644
  
  	char *href_att = fz_xml_att_alt(root, "xlink:href", "href");
  	char *x_att = fz_xml_att(root, "x");
-@@ -1512,6 +1614,7 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
+@@ -1510,6 +1612,7 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
  	char *h_att = fz_xml_att(root, "height");
  
  	svg_begin_state(ctx, &local_state, inherit_state);
@@ -141,7 +141,7 @@ index 2193a731d..251663388 100644
  	fz_try(ctx)
  	{
  		svg_parse_common(ctx, doc, root, &local_state);
-@@ -1520,92 +1623,32 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
+@@ -1518,92 +1621,32 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
  		if (w_att) w = svg_parse_length(w_att, local_state.viewbox_w, local_state.fontsize);
  		if (h_att) h = svg_parse_length(h_att, local_state.viewbox_h, local_state.fontsize);
  
@@ -250,7 +250,7 @@ index 2193a731d..251663388 100644
  	fz_catch(ctx)
  		fz_rethrow(ctx);
  }
-@@ -1877,6 +1920,18 @@ svg_parse_document_bounds(fz_context *ctx, svg_document *doc, fz_xml *root)
+@@ -1875,6 +1918,18 @@ svg_parse_document_bounds(fz_context *ctx, svg_document *doc, fz_xml *root)
  		if (h_att)
  			doc->height = svg_parse_length(h_att, doc->height, DEF_FONTSIZE);
  	}

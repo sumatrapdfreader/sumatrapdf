@@ -8,7 +8,7 @@ murun.c call pkcs7_windows_* in place of pkcs7_openssl_*.
 
 ---
 diff --git a/source/tools/murun.c b/source/tools/murun.c
-index caac0b1..82b90bd 100644
+index 61b6219..733f986 100644
 --- a/source/tools/murun.c
 +++ b/source/tools/murun.c
 @@ -24,7 +24,7 @@
@@ -20,7 +20,7 @@ index caac0b1..82b90bd 100644
  #endif
  
  #if FZ_ENABLE_JS
-@@ -11958,7 +11958,7 @@ static void ffi_PDFWidget_checkCertificate(js_State *J)
+@@ -11960,7 +11960,7 @@ static void ffi_PDFWidget_checkCertificate(js_State *J)
  	fz_var(verifier);
  	fz_try(ctx)
  	{
@@ -29,7 +29,7 @@ index caac0b1..82b90bd 100644
  		val = pdf_check_widget_certificate(ctx, verifier, widget);
  	}
  	fz_always(ctx)
-@@ -11977,7 +11977,7 @@ static void ffi_PDFWidget_checkDigest(js_State *J)
+@@ -11979,7 +11979,7 @@ static void ffi_PDFWidget_checkDigest(js_State *J)
  	fz_var(verifier);
  	fz_try(ctx)
  	{
@@ -38,7 +38,7 @@ index caac0b1..82b90bd 100644
  		val = pdf_check_widget_digest(ctx, verifier, widget);
  	}
  	fz_always(ctx)
-@@ -12010,7 +12010,7 @@ static void ffi_PDFWidget_getSignatory(js_State *J)
+@@ -12012,7 +12012,7 @@ static void ffi_PDFWidget_getSignatory(js_State *J)
  	fz_var(dn);
  	fz_try(ctx)
  	{
@@ -47,7 +47,7 @@ index caac0b1..82b90bd 100644
  		dn = pdf_signature_get_widget_signatory(ctx, verifier, widget);
  		if (dn)
  		{
-@@ -12323,7 +12323,7 @@ static void ffi_new_PDFPKCS7Signer(js_State *J)
+@@ -12325,7 +12325,7 @@ static void ffi_new_PDFPKCS7Signer(js_State *J)
  	{
  		fz_buffer *buf = ffi_tonewbuffer(J, 1);
  		fz_try(ctx)
@@ -56,7 +56,7 @@ index caac0b1..82b90bd 100644
  		fz_always(ctx)
  			fz_drop_buffer(ctx, buf);
  		fz_catch(ctx)
-@@ -12333,7 +12333,7 @@ static void ffi_new_PDFPKCS7Signer(js_State *J)
+@@ -12335,7 +12335,7 @@ static void ffi_new_PDFPKCS7Signer(js_State *J)
  	{
  		const char *filename = js_tostring(J, 1);
  		fz_try(ctx)
@@ -66,7 +66,7 @@ index caac0b1..82b90bd 100644
  			rethrow(J);
  	}
 diff --git a/source/tools/pdfsign.c b/source/tools/pdfsign.c
-index 0041b5a..4dcc2b7 100644
+index b524dbd..501dcc4 100644
 --- a/source/tools/pdfsign.c
 +++ b/source/tools/pdfsign.c
 @@ -26,7 +26,7 @@

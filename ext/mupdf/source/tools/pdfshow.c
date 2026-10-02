@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -674,6 +674,7 @@ int pdfshow_main(int argc, char **argv)
 
 	fz_var(doc);
 	fz_var(labels);
+
 	fz_try(ctx)
 	{
 		doc = pdf_open_document(ctx, filename);

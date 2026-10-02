@@ -994,6 +994,10 @@ static char *convert_to_utf8(fz_context *ctx, unsigned char *s, size_t n, int *d
 	int m;
 	int c;
 
+	// limit input size to 256MB to prevent 32-bit integer overflow (and other shenanigans)
+	if (n > (1<<30)/FZ_UTFMAX)
+		fz_throw(ctx, FZ_ERROR_LIMIT, "text too large");
+
 	if (s[0] == 0xFE && s[1] == 0xFF) {
 		s += 2;
 		dst = d = Memento_label(fz_malloc(ctx, n * FZ_UTFMAX), "utf8_from_be");

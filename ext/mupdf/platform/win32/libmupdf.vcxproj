@@ -1082,6 +1082,7 @@
     <ClCompile Include="..\..\source\fitz\context.c" />
     <ClCompile Include="..\..\source\fitz\crypt-aes.c" />
     <ClCompile Include="..\..\source\fitz\crypt-arc4.c" />
+    <ClCompile Include="..\..\source\fitz\crypt-chacha20.c" />
     <ClCompile Include="..\..\source\fitz\crypt-md5.c" />
     <ClCompile Include="..\..\source\fitz\crypt-sha2.c" />
     <ClCompile Include="..\..\source\fitz\cull-device.c" />
@@ -1387,6 +1388,7 @@
     <ClInclude Include="..\..\source\fitz\deskew_neon.h" />
     <ClInclude Include="..\..\source\fitz\deskew_sse.h" />
     <ClInclude Include="..\..\source\fitz\draw-imp.h" />
+    <ClInclude Include="..\..\source\fitz\fitz-imp.h" />
     <ClInclude Include="..\..\source\fitz\font-table.h" />
     <ClInclude Include="..\..\source\fitz\glyph-imp.h" />
     <ClInclude Include="..\..\source\fitz\glyphbox.h" />

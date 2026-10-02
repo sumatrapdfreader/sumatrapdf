@@ -1,7 +1,7 @@
 Project         Version    Date
 ----------------------------------
-mupdf           1.28.2     2026-08-03
-  https://github.com/ArtifexSoftware/mupdf/releases/tag/1.28.2
+mupdf           1.28.5     2026-09-24
+  https://github.com/ArtifexSoftware/mupdf/releases/tag/1.28.5
   our changes to the vendored tree are recorded in ext/patches/ (see its README)
 
 libarchive     3.8.8      2026-06-23

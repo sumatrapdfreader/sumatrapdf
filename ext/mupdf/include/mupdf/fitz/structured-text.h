@@ -597,6 +597,7 @@ FZ_DATA extern const char *fz_stext_options_usage;
 */
 fz_stext_page *fz_new_stext_page(fz_context *ctx, fz_rect mediabox);
 void fz_drop_stext_page(fz_context *ctx, fz_stext_page *page);
+void fz_release_stext_block_run_resources(fz_context *ctx, fz_stext_block *block);
 
 /**
 	Output structured text to a file in HTML (visual) format.

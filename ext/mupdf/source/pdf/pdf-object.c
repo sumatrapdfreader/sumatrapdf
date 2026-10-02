@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <zlib.h> /* for crc32 */
 
 #define PDF_MAKE_NAME(STRING,NAME) STRING,
 static const char *PDF_NAME_LIST[] = {
@@ -247,7 +248,7 @@ pdf_new_indirect(fz_context *ctx, pdf_document *doc, int64_t num, int gen)
 	pdf_obj_ref *obj;
 	if (num < 0 || num > PDF_MAX_OBJECT_NUMBER)
 	{
-		fz_warn(ctx, "invalid object number (%ld)", num);
+		fz_warn(ctx, "invalid object number (%d)", (int)num);
 		return PDF_NULL;
 	}
 	if (gen < 0 || gen > PDF_MAX_GEN_NUMBER)
@@ -3778,125 +3779,43 @@ int pdf_obj_refs(fz_context *ctx, pdf_obj *obj)
 
 /* Convenience functions */
 
-/*
-	Uses Floyd's cycle finding algorithm, modified to avoid starting
-	the 'slow' pointer for a while.
+static pdf_obj *dgi(fz_context *ctx, pdf_obj *node, void *key_)
+{
+	pdf_obj *key = (pdf_obj *)key_;
 
-	https://www.geeksforgeeks.org/floyds-cycle-finding-algorithm/
-*/
+	return pdf_dict_get(ctx, node, key);
+}
+
 pdf_obj *
 pdf_dict_get_inheritable(fz_context *ctx, pdf_obj *start, pdf_obj *key)
 {
-	pdf_obj *node;
-	pdf_obj *slow;
-	int halfbeat;
-	int repaired = 0;
+	return pdf_walk_parent(ctx, start, pdf_repair_page_tree_parents, dgi, key);
+}
 
-retry_after_repair:
-	node = start;
-	slow = node;
-	halfbeat = 11; /* Don't start moving slow pointer for a while. */
-	while (node)
-	{
-		pdf_obj *val = pdf_dict_get(ctx, node, key);
-		if (val)
-			return val;
-		node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
-		if (node == slow)
-		{
-			if (repaired == 0)
-			{
-				repaired = 1;
-				pdf_repair_page_tree_parents(ctx, pdf_get_bound_document(ctx, start));
-				goto retry_after_repair;
-			}
-			fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in resources");
-		}
-		if (--halfbeat == 0)
-		{
-			slow = pdf_dict_get(ctx, slow, PDF_NAME(Parent));
-			halfbeat = 2;
-		}
-	}
+static pdf_obj *dgpi(fz_context *ctx, pdf_obj *node, void *key_)
+{
+	const char *key = (const char *)key_;
 
-	return NULL;
-
+	return pdf_dict_getp(ctx, node, key);
 }
 
 pdf_obj *
 pdf_dict_getp_inheritable(fz_context *ctx, pdf_obj *start, const char *path)
 {
-	pdf_obj *node;
-	pdf_obj *slow;
-	int halfbeat;
-	int repaired = 0;
+	return pdf_walk_parent(ctx, start, pdf_repair_page_tree_parents, dgpi, fz_unconst(path));
+}
 
-retry_after_repair:
-	node = start;
-	slow = node;
-	halfbeat = 11; /* Don't start moving slow pointer for a while. */
-	while (node)
-	{
-		pdf_obj *val = pdf_dict_getp(ctx, node, path);
-		if (val)
-			return val;
-		node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
-		if (node == slow)
-		{
-			if (repaired == 0)
-			{
-				repaired = 1;
-				pdf_repair_page_tree_parents(ctx, pdf_get_bound_document(ctx, start));
-				goto retry_after_repair;
-			}
-			fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in resources");
-		}
-		if (--halfbeat == 0)
-		{
-			slow = pdf_dict_get(ctx, slow, PDF_NAME(Parent));
-			halfbeat = 2;
-		}
-	}
+static pdf_obj *dgsi(fz_context *ctx, pdf_obj *node, void *key_)
+{
+	const char *key = (const char *)key_;
 
-	return NULL;
+	return pdf_dict_gets(ctx, node, key);
 }
 
 pdf_obj *
 pdf_dict_gets_inheritable(fz_context *ctx, pdf_obj *start, const char *key)
 {
-	pdf_obj *node;
-	pdf_obj *slow;
-	int halfbeat;
-	int repaired = 0;
-
-retry_after_repair:
-	node = start;
-	slow = node;
-	halfbeat = 11; /* Don't start moving slow pointer for a while. */
-	while (node)
-	{
-		pdf_obj *val = pdf_dict_gets(ctx, node, key);
-		if (val)
-			return val;
-		node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
-		if (node == slow)
-		{
-			if (repaired == 0)
-			{
-				repaired = 1;
-				pdf_repair_page_tree_parents(ctx, pdf_get_bound_document(ctx, start));
-				goto retry_after_repair;
-			}
-			fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in resources");
-		}
-		if (--halfbeat == 0)
-		{
-			slow = pdf_dict_get(ctx, slow, PDF_NAME(Parent));
-			halfbeat = 2;
-		}
-	}
-
-	return NULL;
+	return pdf_walk_parent(ctx, start, pdf_repair_page_tree_parents, dgsi, fz_unconst(key));
 }
 
 
@@ -4243,3 +4162,119 @@ void pdf_verify_name_table_sanity(void)
 	}
 }
 #endif
+
+/* We use zlib's crc32 routine, despite it having an awful signature. */
+
+#define CRC32(SUM, P) crc32(SUM, (const Bytef *)&(P), (uInt)(sizeof(P)))
+
+static uLong
+crc32_buffer(uLong sum, const fz_buffer *buf)
+{
+	const Bytef *data = buf->data;
+	size_t len = buf->len;
+
+	while (len > 0)
+	{
+		size_t len2 = len;
+		if (len2 > UINT_MAX)
+			len2 = UINT_MAX;
+		sum = crc32(sum, data, (uInt)len2);
+		data += len2;
+		len -= len2;
+	}
+
+	return sum;
+}
+
+static uLong
+crc32_block(uLong sum, const void *p, size_t len)
+{
+	const Bytef *data = p;
+
+	while (len > 0)
+	{
+		size_t len2 = len;
+		if (len2 > UINT_MAX)
+			len2 = UINT_MAX;
+		sum = crc32(sum, data, (uInt)len2);
+		data += len2;
+		len -= len2;
+	}
+
+	return sum;
+}
+
+static uLong
+do_hash(fz_context *ctx, pdf_obj *obj, uLong sum)
+{
+	if (obj < PDF_LIMIT)
+		return CRC32(sum, obj);
+
+	switch (obj->kind)
+	{
+	case PDF_INT:
+		return CRC32(sum, NUM(obj)->u.i);
+	case PDF_REAL:
+		return CRC32(sum, NUM(obj)->u.f);
+	case PDF_STRING:
+		return crc32_block(sum, STRING(obj)->buf, STRING(obj)->len);
+	case PDF_NAME:
+		return crc32_block(sum, NAME(obj)->n, strlen(NAME(obj)->n));
+	case PDF_ARRAY:
+	{
+		pdf_obj_array *o = ARRAY(obj);
+		int n = o->len;
+		int i;
+		for (i = 0; i < n; i++)
+			sum = do_hash(ctx, pdf_array_get(ctx, obj, i), sum);
+		break;
+	}
+	case PDF_DICT:
+	{
+		pdf_obj_dict *o = DICT(obj);
+		int n = o->len;
+		int i;
+		for (i = 0; i < n; i++)
+		{
+			sum = do_hash(ctx, pdf_dict_get_key(ctx, obj, i), sum);
+			sum = do_hash(ctx, pdf_dict_get_val(ctx, obj, i), sum);
+		}
+		break;
+	}
+	case PDF_INDIRECT:
+		sum = CRC32(sum, REF(obj)->num);
+		sum = CRC32(sum, REF(obj)->gen);
+		break;
+	}
+
+	return sum;
+}
+
+pdf_obj *
+pdf_hash_obj(fz_context *ctx, pdf_document *doc, int num, int include_streams, uint32_t *sump)
+{
+	uLong sum = 0;
+	pdf_xref_entry *entry = pdf_get_xref_entry_no_null(ctx, doc, num);
+
+	if (entry->obj)
+		sum = do_hash(ctx, entry->obj, sum);
+
+	if (include_streams && entry->type == 'n')
+	{
+		if (entry->stm_buf)
+			sum = crc32_buffer(sum, entry->stm_buf);
+		else if (entry->stm_ofs != 0)
+		{
+			fz_buffer *buf = pdf_load_raw_stream_number(ctx, doc, num);
+			if (buf)
+			{
+				sum = crc32_buffer(sum, buf);
+				fz_drop_buffer(ctx, buf);
+			}
+		}
+	}
+
+	*sump = (uint32_t)sum;
+
+	return entry->obj;
+}

@@ -210,6 +210,7 @@ void fz_write_stabilized_story(
 	fz_var(positions);
 	fz_var(story);
 	fz_var(content);
+	fz_var(content_prev);
 
 	fz_try(ctx)
 	{

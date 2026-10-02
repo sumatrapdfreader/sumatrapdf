@@ -23,7 +23,7 @@ Text
 
 	Set the appearance with the Icon attribute.
 
-	Attributes: `Rect`_, :ref:`color-attribute`, :ref:`icon-attribute`.
+	Attributes: :ref:`rect-attribute`, :ref:`color-attribute`, :ref:`icon-attribute`.
 
 FreeText
 	Text in a rectangle on the page.

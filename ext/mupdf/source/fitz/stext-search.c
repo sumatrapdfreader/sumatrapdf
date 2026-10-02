@@ -21,10 +21,7 @@
 // CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
-
-/* SumatraPDF: different location (amalgamated a-mujs) */
-#include "../../../ext/a-mujs/regexp.h"
-
+#include "mupdf/fitz/regexp.h"
 #include "mupdf/ucdn.h"
 
 #include <string.h>
@@ -710,13 +707,13 @@ static const char *find_rev_exact(fz_context *ctx, void *dummy, const char *s, c
 
 static const char *find_regexp(fz_context *ctx, void *arg, const char *s, const char *p, const char *needle, const char **endp)
 {
-	Reprog **prog = (Reprog **)arg;
-	Resub m;
+	struct fz_regex **prog = (struct fz_regex **)arg;
+	struct fz_regmatch m;
 
 	while (p)
 	{
 		int bol = (p == s) || (p[-1] == '\n');
-		int result = js_regexec(*prog, p, &m, bol ? 0 : REG_NOTBOL);
+		int result = fz_regexec(ctx, *prog, p, &m, (bol ? 0 : REG_NOTBOL) | REG_RUNAWAY);
 		if (result < 0)
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "regexec failure");
 		if (result == 1)
@@ -806,28 +803,22 @@ static const fz_match_finder simple_finder =
 static void
 init_regexp(fz_context *ctx, void *find_arg, const char *needle)
 {
-	Reprog **progp = (void *)find_arg;
-
-	*progp = js_regcomp(needle, REG_NEWLINE, NULL);
-	if (*progp == NULL)
-		fz_throw(ctx, FZ_ERROR_ARGUMENT, "regcomp failure");
+	struct fz_regex **progp = (void *)find_arg;
+	*progp = fz_regcomp(ctx, needle, REG_NEWLINE);
 }
 
 static void
 init_regexp_insensitive(fz_context *ctx, void *find_arg, const char *needle)
 {
-	Reprog **progp = (void *)find_arg;
-
-	*progp = js_regcomp(needle, REG_NEWLINE | REG_ICASE, NULL);
-	if (*progp == NULL)
-		fz_throw(ctx, FZ_ERROR_ARGUMENT, "regcomp failure");
+	struct fz_regex **progp = (void *)find_arg;
+	*progp = fz_regcomp(ctx, needle, REG_NEWLINE | REG_ICASE);
 }
 
 static void
 fin_regexp(fz_context *ctx, void *find_arg)
 {
-	Reprog **progp = (void *)find_arg;
-	js_regfree(*progp);
+	struct fz_regex **progp = (void *)find_arg;
+	fz_regfree(ctx, *progp);
 }
 
 static const fz_match_finder regexp_finder =
@@ -1350,30 +1341,38 @@ fz_search *fz_new_search(fz_context *ctx, const char *needle, fz_search_options 
 {
 	fz_search *search = fz_malloc_struct(ctx, fz_search);
 
-	search->hfuzz = 0.5f; /* merge large gaps */
-	search->vfuzz = 0.1f;
+	fz_try(ctx)
+	{
+		search->hfuzz = 0.5f; /* merge large gaps */
+		search->vfuzz = 0.1f;
 
-	/* for the initial page feed before we start requesting pages */
-	search->req_seq = 0;
-	search->req_target = NULL;
+		/* for the initial page feed before we start requesting pages */
+		search->req_seq = 0;
+		search->req_target = NULL;
 
-	if (needle == NULL)
-		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't search for a non-existent needle");
+		if (needle == NULL)
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't search for a non-existent needle");
 
-	search->transform = init_transform_and_finder(options, &search->finder);
+		search->transform = init_transform_and_finder(options, &search->finder);
 
-	/* Make sure we have a copy of the needle. */
-	search->needle = fz_strdup(ctx, needle);
+		/* Make sure we have a copy of the needle. */
+		search->needle = fz_strdup(ctx, needle);
 
-	/* Spin that needle into gold (to match the haystack) */
-	if (search->transform == FZ_TEXT_TRANSFORM_NONE)
-		search->spun_needle = search->needle;
-	else
-		search->spun_needle = transform_text_without_index(ctx, search->transform, search->needle);
+		/* Spin that needle into gold (to match the haystack) */
+		if (search->transform == FZ_TEXT_TRANSFORM_NONE)
+			search->spun_needle = search->needle;
+		else
+			search->spun_needle = transform_text_without_index(ctx, search->transform, search->needle);
 
-	/* Compile the needle if required. */
-	if (search->finder->init)
-		search->finder->init(ctx, &search->compiled_needle, search->spun_needle);
+		/* Compile the needle if required. */
+		if (search->finder->init)
+			search->finder->init(ctx, &search->compiled_needle, search->spun_needle);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_search(ctx, search);
+		fz_rethrow(ctx);
+	}
 
 	return search;
 }

@@ -12,7 +12,7 @@ The upstream function is kept under `#if 0`.
 Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/5792
 ---
 diff --git a/source/fitz/xml.c b/source/fitz/xml.c
-index d6016dd..f434c82 100644
+index c0783e7..b9816ed 100644
 --- a/source/fitz/xml.c
 +++ b/source/fitz/xml.c
 @@ -620,6 +620,7 @@ static void xml_emit_cdata(fz_context *ctx, struct parser *parser, const char *a

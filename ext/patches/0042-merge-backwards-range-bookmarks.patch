@@ -5,7 +5,7 @@ end, so bookmarks kept their old page numbers. Page start comes first
 in such a range.
 ---
 diff --git a/source/tools/pdfmerge.c b/source/tools/pdfmerge.c
-index fa1f09d81..da352218e 100644
+index fa1f09d..da35221 100644
 --- a/source/tools/pdfmerge.c
 +++ b/source/tools/pdfmerge.c
 @@ -125,7 +125,7 @@ position_in_range(fz_context *ctx, const char *range, int count, int page)

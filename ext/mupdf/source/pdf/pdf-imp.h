@@ -34,4 +34,31 @@ pdf_obj *pdf_lookup_mcid_in_mcids(fz_context *ctx, int id, pdf_obj *mcids);
 
 void pdf_repair_page_tree_parents(fz_context *ctx, pdf_document *doc);
 
+pdf_obj *pdf_hash_obj(fz_context *ctx, pdf_document *doc, int num, int include_streams, uint32_t *hash);
+
+/*
+	Walk up a /Parent chain from 'start' and return the root object.
+
+	Checks for cycles as it goes. If a cycle is detected, then
+	(if supplied) the optional repair function will be called.
+	The traversal will then start again. If a cycle is detected
+	again (or the repair function was not supplied), an exception
+	will be thrown.
+*/
+pdf_obj *pdf_parent_root(fz_context *ctx, pdf_obj *start, void (*repair)(fz_context *, pdf_document *doc));
+
+/*
+	Walk up a /Parent chain from 'start', calling 'step' at each
+	point (including the initial node). If step returns non-NULL
+	the traversal is stopped, and that value is returned. If the
+	traversal completes, NULL will be returned.
+
+	If a cycle is detected, and repair is non-NULL, then repair
+	will be called, and the complete traversal will be retried.
+	If a cycle is detect again (or the repair function was not
+	supplied), an exception will be thrown.
+*/
+pdf_obj *pdf_walk_parent(fz_context *ctx, pdf_obj *start, void (*repair)(fz_context *, pdf_document *doc), pdf_obj *(*step)(fz_context *, pdf_obj *, void *), void *step_arg);
+
+
 #endif /* MUPDF_PDF_PDF_IMP_H */

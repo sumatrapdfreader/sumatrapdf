@@ -5,7 +5,7 @@ tool still returned 0, as did a failed save, so scripts could not tell.
 The remaining inputs are still merged and saved.
 ---
 diff --git a/source/tools/pdfmerge.c b/source/tools/pdfmerge.c
-index fa1f09d81..00aeb6ecf 100644
+index da35221..cbc7351 100644
 --- a/source/tools/pdfmerge.c
 +++ b/source/tools/pdfmerge.c
 @@ -321,6 +321,7 @@ int pdfmerge_main(int argc, char **argv)

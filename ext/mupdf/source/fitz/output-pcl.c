@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1564,9 +1564,10 @@ fz_new_pcl_writer_with_output(fz_context *ctx, fz_output *out, const char *optio
 		wri->out = out;
 		fz_throw_on_unused_options(ctx, options, "pcl");
 	}
+	fz_always(ctx)
+		fz_drop_options(ctx, options);
 	fz_catch(ctx)
 	{
-		fz_drop_options(ctx, options);
 		fz_drop_output(ctx, out);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);

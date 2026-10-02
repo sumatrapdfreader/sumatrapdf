@@ -938,8 +938,8 @@ use_sub_char(fz_context *ctx, cff_t *cff, int code)
 	usage_list_add(ctx, &cff->extra_gids_to_keep, gid);
 }
 
-#define ATLEAST(n) if (sp < n) goto atleast_fail;
-#define POP(n) if (sp < n) goto atleast_fail;
+#define ATLEAST(n) if (sp < n) goto atleast_fail
+#define POP(n) do { if (sp < n) goto atleast_fail; sp -= n; } while (0)
 #define PUSH(n) \
 do { if (sp + n > (int)(sizeof(stack)/sizeof(*stack))) fz_throw(ctx, FZ_ERROR_FORMAT, "Stack overflow"); sp += n; } while (0)
 
@@ -1146,9 +1146,9 @@ overflow:
 				int i;
 				ATLEAST(1);
 				i = (int)stack[sp-1];
-				ATLEAST(i+1);
 				if (i < 0 || i > sp-1)
 					i = 0;
+				ATLEAST(i+1);
 				stack[sp-1] = stack[sp-2-i];
 				break;
 			}
@@ -1160,7 +1160,7 @@ overflow:
 				N = stack[sp-2];
 				if (N == 0)
 					break;
-				if (N < 0)
+				if (N < 0 || N >= INT_MAX-2)
 					fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid roll");
 				ATLEAST(2+N);
 				if (J < 0)
@@ -1206,10 +1206,26 @@ overflow:
 			sp = 0;
 			break;
 		case 16: /* blend */
-			/* Consumes a lot of operators, leaves n, where n = stack[sp-1]. */
+		{
+			double d;
+			int n;
+			int k = 1;
+			int nkp1; /* n * (k+1) */
+			/* Reads a single operand, n, then consumes a further n*(k+1), producing n.
+			 * k is supposed to be the "number of regions for which variation adjustment
+			 * deltas are defined". "This value is determined by the ItemVariationData
+			 * subtable that is currently active for the CharString (see vsindex)."
+			 * For now, we hardwire k as 1.
+			 */
 			ATLEAST(1);
-			sp = stack[sp-1];
+			d = stack[sp-1];
+			n = (int)d;
+			if (d != n || n < 0 || k == INT_MAX || fz_ckd_mul_int(&nkp1, n, k+1) || nkp1 == INT_MAX || sp < 1 + nkp1)
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Illegal n value in charstring blend operation");
+			/* net, we lose 1+n*(k+1) operands. */
+			sp -= 1 + nkp1;
 			break;
+		}
 		case 29: /* callgsubr */
 			ATLEAST(1);
 			mark_subr_used(ctx, cff, stack[sp-1], 1, subr_bias, local_usage);

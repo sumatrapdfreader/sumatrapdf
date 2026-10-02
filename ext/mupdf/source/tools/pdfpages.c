@@ -165,6 +165,8 @@ pdfpages_pages(fz_context *ctx, fz_output *out, char *filename, char *password, 
 	pdf_document *doc = NULL;
 	int ret = 0;
 
+	fz_var(doc);
+
 	fz_try(ctx)
 	{
 		state = NO_FILE_OPENED;

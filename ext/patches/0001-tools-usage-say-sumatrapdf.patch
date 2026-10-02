@@ -33,7 +33,7 @@ index ef740d4..3357e43 100644
  		"\n"
  		"\t-o -\toutput file name (%%d for page number)\n"
 diff --git a/source/tools/mugrep.c b/source/tools/mugrep.c
-index fbaa66a..dffee5f 100644
+index c2c08bf..42c21b3 100644
 --- a/source/tools/mugrep.c
 +++ b/source/tools/mugrep.c
 @@ -45,7 +45,7 @@ static const char *mark_close = "";
@@ -73,7 +73,7 @@ index 2c2efd1..06b5cb9 100644
  		"\n"
  		"\t-b -\tuse named page box (MediaBox, CropBox, BleedBox, TrimBox, or ArtBox)\n"
 diff --git a/source/tools/pdfaudit.c b/source/tools/pdfaudit.c
-index 92b289f..7dbf9b7 100644
+index a531c40..f250907 100644
 --- a/source/tools/pdfaudit.c
 +++ b/source/tools/pdfaudit.c
 @@ -2091,7 +2091,7 @@ filter_file(fz_context *ctx, fz_output *out, const char *filename)
@@ -86,7 +86,7 @@ index 92b289f..7dbf9b7 100644
  		);
  	return 1;
 diff --git a/source/tools/pdfbake.c b/source/tools/pdfbake.c
-index 9976664..4faddd0 100644
+index 8a2a3be..6934327 100644
 --- a/source/tools/pdfbake.c
 +++ b/source/tools/pdfbake.c
 @@ -34,7 +34,7 @@
@@ -164,7 +164,7 @@ index 85a78e1..fa1f09d 100644
  		"\t-O -\tcomma separated list of output options\n"
  		"\tinput.pdf\tname of input file from which to copy pages\n"
 diff --git a/source/tools/pdfpages.c b/source/tools/pdfpages.c
-index cfca188..e59c5a3 100644
+index 48847ba..8417911 100644
 --- a/source/tools/pdfpages.c
 +++ b/source/tools/pdfpages.c
 @@ -35,7 +35,7 @@ static int
@@ -177,7 +177,7 @@ index cfca188..e59c5a3 100644
  		"\tpages\tcomma separated list of page numbers and ranges\n"
  		);
 diff --git a/source/tools/pdfposter.c b/source/tools/pdfposter.c
-index b655623..2d8159d 100644
+index 25af258..6a96352 100644
 --- a/source/tools/pdfposter.c
 +++ b/source/tools/pdfposter.c
 @@ -40,7 +40,7 @@ static int x_dir = 1;
@@ -188,7 +188,7 @@ index b655623..2d8159d 100644
 +		"Usage: SumatraPDF poster [options] input.pdf [output.pdf]\n"
  		"\t-p -\tpassword\n"
  		"\t-m -\tmargin (overlap) between pages (pts, or %%)\n"
- 		"\t-x\tx decimation factor\n"
+ 		"\t-x -\tx decimation factor\n"
 diff --git a/source/tools/pdfrecolor.c b/source/tools/pdfrecolor.c
 index 2eb2ca3..4904aa5 100644
 --- a/source/tools/pdfrecolor.c
@@ -203,7 +203,7 @@ index 2eb2ca3..4904aa5 100644
  	fprintf(stderr, "\t-o -\tOutput file\n");
  	fprintf(stderr, "\t-r\tRemove OutputIntent(s)\n");
 diff --git a/source/tools/pdfshow.c b/source/tools/pdfshow.c
-index 36444ee..fae4c86 100644
+index 54e0d24..c37fcfb 100644
 --- a/source/tools/pdfshow.c
 +++ b/source/tools/pdfshow.c
 @@ -44,7 +44,7 @@ static int showcolumn;
@@ -216,7 +216,7 @@ index 36444ee..fae4c86 100644
  		"\t-o -\toutput file\n"
  		"\t-e\tleave stream contents in their original form\n"
 diff --git a/source/tools/pdfsign.c b/source/tools/pdfsign.c
-index e3e1746..0041b5a 100644
+index d6f83e5..b524dbd 100644
 --- a/source/tools/pdfsign.c
 +++ b/source/tools/pdfsign.c
 @@ -44,7 +44,7 @@ static int list = 1;

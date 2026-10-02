@@ -258,8 +258,8 @@ fz_new_stext_page(fz_context *ctx, fz_rect mediabox)
 	return page;
 }
 
-static void
-drop_run(fz_context *ctx, fz_stext_block *block)
+void
+fz_release_stext_block_run_resources(fz_context *ctx, fz_stext_block *block)
 {
 	fz_stext_line *line;
 	fz_stext_char *ch;
@@ -269,14 +269,18 @@ drop_run(fz_context *ctx, fz_stext_block *block)
 		{
 		case FZ_STEXT_BLOCK_IMAGE:
 			fz_drop_image(ctx, block->u.i.image);
+			block->u.i.image = NULL;
 			break;
 		case FZ_STEXT_BLOCK_TEXT:
 			for (line = block->u.t.first_line; line; line = line->next)
 				for (ch = line->first_char; ch; ch = ch->next)
+				{
 					fz_drop_font(ctx, ch->font);
+					ch->font = NULL;
+				}
 			break;
 		case FZ_STEXT_BLOCK_STRUCT:
-			drop_run(ctx, block->u.s.down->first_block);
+			fz_release_stext_block_run_resources(ctx, block->u.s.down->first_block);
 			break;
 		default:
 			break;
@@ -307,7 +311,7 @@ fz_drop_stext_page(fz_context *ctx, fz_stext_page *page)
 
 	if (fz_drop_imp(ctx, page, &page->refs))
 	{
-		drop_run(ctx, page->first_block);
+		fz_release_stext_block_run_resources(ctx, page->first_block);
 		fz_drop_pool(ctx, page->pool);
 	}
 }
@@ -2512,12 +2516,16 @@ segment_finished(fz_context *ctx, split_path_data *sp)
 		}
 		if (rect)
 		{
+			if (sp->stroke)
+				bounds = fz_expand_rect(bounds, sp->stroke->linewidth/2);
 			add_vector(ctx, sp, bounds, FZ_STEXT_VECTOR_IS_RECTANGLE);
 			return;
 		}
 	}
 
 	/* We aren't a rectangle! */
+	if (sp->stroke)
+		bounds = fz_adjust_rect_for_stroke(ctx, bounds, sp->stroke, fz_identity);
 
 	if (sp->dev->flags & (FZ_STEXT_CLIP_RECT | FZ_STEXT_CLIP))
 		bounds = fz_intersect_rect(bounds, current_clip(ctx, sp->dev));
@@ -2678,7 +2686,12 @@ add_vectors_from_path(fz_context *ctx, fz_stext_page *page, fz_stext_device *tde
 		segment_finished(ctx, &sp);
 
 	/* And flush any leftovers (not a rect - by construction!) */
-	add_vector(ctx, &sp, sp.leftovers, 0);
+	if (!fz_is_empty_rect(sp.leftovers))
+	{
+		if (sp.stroke)
+			sp.leftovers = fz_adjust_rect_for_stroke(ctx, sp.leftovers, sp.stroke, fz_identity);
+		add_vector(ctx, &sp, sp.leftovers, 0);
+	}
 
 	return sp.rect_block;
 }

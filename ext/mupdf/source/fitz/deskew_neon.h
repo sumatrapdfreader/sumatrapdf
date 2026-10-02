@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -623,7 +623,6 @@ zoom_y3_neon(uint8_t * dst,
 
 		if (j == 4)
 		{
-			const weight_t *w = &weights[index->index];
 			uint8x8_t	   pix0, pix1, pix2, pix3;
 			int16x4_t	   vw0, vw1, vw2, vw3;
 			pix0 = vld1_u8(&tmp[off]);

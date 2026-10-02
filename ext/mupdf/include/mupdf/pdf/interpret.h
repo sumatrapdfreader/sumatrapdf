@@ -504,6 +504,7 @@ typedef struct
 typedef struct
 {
 	fz_text *clip_text; /* accumulator for clip mode text */
+	fz_rect clip_text_bbox;
 	fz_text *text;
 	fz_rect text_bbox;
 	fz_matrix tlm;

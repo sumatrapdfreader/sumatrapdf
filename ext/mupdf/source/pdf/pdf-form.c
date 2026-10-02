@@ -22,6 +22,7 @@
 
 #include "mupdf/fitz.h"
 #include "pdf-annot-imp.h"
+#include "pdf-imp.h"
 
 #include <string.h>
 
@@ -108,14 +109,19 @@ const char *pdf_field_type_string(fz_context *ctx, pdf_obj *obj)
 	}
 }
 
+static pdf_obj *
+hofg(fz_context *ctx, pdf_obj *obj, void *arg)
+{
+	if (pdf_dict_get(ctx, obj, PDF_NAME(T)) != NULL)
+		return obj;
+	return NULL;
+}
+
 /* Find the point in a field hierarchy where all descendants
  * share the same name */
 static pdf_obj *find_head_of_field_group(fz_context *ctx, pdf_obj *obj)
 {
-	if (obj == NULL || pdf_dict_get(ctx, obj, PDF_NAME(T)))
-		return obj;
-	else
-		return find_head_of_field_group(ctx, pdf_dict_get(ctx, obj, PDF_NAME(Parent)));
+	return pdf_walk_parent(ctx, obj, NULL, hofg, NULL);
 }
 
 static void pdf_field_mark_dirty(fz_context *ctx, pdf_obj *field)

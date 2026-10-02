@@ -1695,12 +1695,11 @@ typedef struct
 static void
 walk(fz_context *ctx, walk_stack_t *ws, int n, obj_info_t *oi, pdf_obj *obj, audit_type_t type)
 {
-	int num = 0;
 	do
 	{
 		if (pdf_is_indirect(ctx, obj))
 		{
-			num = pdf_to_num(ctx, obj);
+			int num = pdf_to_num(ctx, obj);
 			if (num < 0 || num >= n)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "object outside of xref range");
 			if (oi[num].type != AUDIT_UNKNOWN)
@@ -1768,7 +1767,9 @@ walk(fz_context *ctx, walk_stack_t *ws, int n, obj_info_t *oi, pdf_obj *obj, aud
 		/* Record its type. */
 		if (type != AUDIT_UNKNOWN)
 		{
-			num = pdf_obj_parent_num(ctx, obj);
+			int num = pdf_obj_parent_num(ctx, obj);
+			if (num < 0 || num >= n)
+				goto pop;
 			oi[num].type = type;
 		}
 
@@ -1841,7 +1842,6 @@ visited:
 			/* We should either have stepped up to a dict or an array. */
 			obj = ws->stack[ws->len-1].obj;
 			type = ws->stack[ws->len-1].state;
-			num = pdf_obj_parent_num(ctx, obj);
 			if (pdf_is_dict(ctx, obj))
 				goto step_next_dict_child;
 			else if (pdf_is_array(ctx, obj))

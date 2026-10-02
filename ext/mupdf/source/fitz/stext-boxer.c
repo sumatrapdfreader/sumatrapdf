@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Artifex Software, Inc.
+// Copyright (C) 2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -107,9 +107,17 @@ boxer_create_length(fz_context *ctx, fz_rect *mediabox, int len, int tight)
 	if (boxer == NULL)
 		return NULL;
 
-	memcpy(&boxer->mediabox, mediabox, sizeof(*mediabox));
-	boxer->list = rectlist_create(ctx, len, tight ? 0 : 4);
-	boxer->tight = tight;
+	fz_try(ctx)
+	{
+		memcpy(&boxer->mediabox, mediabox, sizeof(*mediabox));
+		boxer->list = rectlist_create(ctx, len, tight ? 0 : 4);
+		boxer->tight = tight;
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, boxer);
+		fz_rethrow(ctx);
+	}
 
 	return boxer;
 }
@@ -479,7 +487,7 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, fz_re
 	fz_stext_block *last = NULL; /* The last block in our target list */
 	fz_stext_struct *target_parent = NULL;
 	fz_stext_block *after = NULL; /* The block we want to insert after (NULL=start of list) */
-	fz_stext_block *newblock;
+	fz_stext_block *newblock = NULL;
 	int idx = 0;
 	int idx2;
 #ifdef DEBUG_STRUCT
@@ -487,239 +495,252 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, fz_re
 #endif
 
 	block = parent ? parent->first_block : page->first_block;
-	while (block != NULL)
+
+	fz_var(target);
+	fz_var(newblock);
+
+	fz_try(ctx)
 	{
-		fz_rect bbox;
-
-		next_block = block->next;
-
-		bbox = block->bbox;
-
-		/* Can we take the whole block? */
-		if (bbox.x0 >= mediabox.x0 && bbox.y0 >= mediabox.y0 && bbox.x1 <= mediabox.x1 && bbox.y1 <= mediabox.y1)
+		while (block != NULL)
 		{
-			/* Unlink block from the current list. */
-			if (block->prev)
-				block->prev->next = next_block;
-			else if (parent)
-				parent->first_block = next_block;
-			else
-				page->first_block = next_block;
-			if (next_block)
-				next_block->prev = block->prev;
-			else if (parent)
-				parent->last_block = block->prev;
-			else
-				page->last_block = block->prev;
+			fz_rect bbox;
 
-			/* Add block onto our target list */
-			if (target == NULL)
+			next_block = block->next;
+
+			bbox = block->bbox;
+
+			/* Can we take the whole block? */
+			if (bbox.x0 >= mediabox.x0 && bbox.y0 >= mediabox.y0 && bbox.x1 <= mediabox.x1 && bbox.y1 <= mediabox.y1)
 			{
-				target = block;
-				target_parent = parent;
-				after = block->prev;
-				block->prev = NULL;
-			}
-			else
-			{
-				last->next = block;
-				block->prev = last;
-			}
-			last = block;
-			block->next = NULL;
-		}
-		else if (fz_is_empty_rect(fz_intersect_rect(bbox, mediabox)))
-		{
-		}
-		else if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
-		{
-			parent = block->u.s.down;
-			next_block = parent->first_block;
-		}
-		else if (block->type == FZ_STEXT_BLOCK_TEXT)
-		{
-			/* Need to look at the parts. */
-			fz_stext_line *line, *next_line;
+				/* Unlink block from the current list. */
+				if (block->prev)
+					block->prev->next = next_block;
+				else if (parent)
+					parent->first_block = next_block;
+				else
+					page->first_block = next_block;
+				if (next_block)
+					next_block->prev = block->prev;
+				else if (parent)
+					parent->last_block = block->prev;
+				else
+					page->last_block = block->prev;
 
-			newblock = NULL;
-			for (line = block->u.t.first_line; line != NULL; line = next_line)
-			{
-				next_line = line->next;
-				if (line->bbox.x0 >= mediabox.x0 && line->bbox.y0 >= mediabox.y0 && line->bbox.x1 <= mediabox.x1 && line->bbox.y1 <= mediabox.y1)
+				/* Add block onto our target list */
+				if (target == NULL)
 				{
-					/* We need to take this line */
-					if (newblock == NULL)
-					{
-						newblock = fz_pool_alloc(ctx, page->pool, sizeof(fz_stext_block));
+					target = block;
+					target_parent = parent;
+					after = block->prev;
+					block->prev = NULL;
+				}
+				else
+				{
+					last->next = block;
+					block->prev = last;
+				}
+				last = block;
+				block->next = NULL;
+			}
+			else if (fz_is_empty_rect(fz_intersect_rect(bbox, mediabox)))
+			{
+			}
+			else if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
+			{
+				parent = block->u.s.down;
+				next_block = parent->first_block;
+			}
+			else if (block->type == FZ_STEXT_BLOCK_TEXT)
+			{
+				/* Need to look at the parts. */
+				fz_stext_line *line, *next_line;
 
-						/* Add the block onto our target list */
-						if (target == NULL)
+				for (line = block->u.t.first_line; line != NULL; line = next_line)
+				{
+					next_line = line->next;
+					if (line->bbox.x0 >= mediabox.x0 && line->bbox.y0 >= mediabox.y0 && line->bbox.x1 <= mediabox.x1 && line->bbox.y1 <= mediabox.y1)
+					{
+						/* We need to take this line */
+						if (newblock == NULL)
 						{
-							target = newblock;
-							target_parent = parent;
-							if (line == block->u.t.first_line)
-								after = block->prev;
+							newblock = fz_pool_alloc(ctx, page->pool, sizeof(fz_stext_block));
+
+							/* Add the block onto our target list */
+							if (target == NULL)
+							{
+								target = newblock;
+								target_parent = parent;
+								if (line == block->u.t.first_line)
+									after = block->prev;
+								else
+									after = block;
+							}
 							else
-								after = block;
+							{
+								last->next = newblock;
+								newblock->prev = last;
+							}
+							last = newblock;
+							newblock->id = block->id;
+						}
+
+						/* Unlink line from the current list. */
+						if (line->prev)
+							line->prev->next = next_line;
+						else
+							block->u.t.first_line = next_line;
+						if (next_line)
+							next_line->prev = line->prev;
+						else
+							block->u.t.last_line = line->prev;
+
+						/* Add line onto our new block */
+						if (newblock->u.t.last_line == NULL)
+						{
+							newblock->u.t.first_line = newblock->u.t.last_line = line;
+							line->prev = NULL;
 						}
 						else
 						{
-							last->next = newblock;
-							newblock->prev = last;
+							line->prev = newblock->u.t.last_line;
+							newblock->u.t.last_line->next = line;
+							newblock->u.t.last_line = line;
 						}
-						last = newblock;
-						newblock->id = block->id;
+						line->next = NULL;
 					}
+				}
 
-					/* Unlink line from the current list. */
-					if (line->prev)
-						line->prev->next = next_line;
-					else
-						block->u.t.first_line = next_line;
-					if (next_line)
-						next_line->prev = line->prev;
-					else
-						block->u.t.last_line = line->prev;
-
-					/* Add line onto our new block */
-					if (newblock->u.t.last_line == NULL)
-					{
-						newblock->u.t.first_line = newblock->u.t.last_line = line;
-						line->prev = NULL;
-					}
-					else
-					{
-						line->prev = newblock->u.t.last_line;
-						newblock->u.t.last_line->next = line;
-						newblock->u.t.last_line = line;
-					}
-					line->next = NULL;
+				if (newblock)
+				{
+					recalc_bbox(block);
+					recalc_bbox(newblock);
 				}
 			}
-			if (newblock)
+
+			/* Step onwards (or upwards) */
+			block = next_block;
+			while (block == NULL)
 			{
-				recalc_bbox(block);
-				recalc_bbox(newblock);
+				if (parent == NULL)
+					break;
+				block = parent->up->next;
+				parent = parent->parent;
 			}
 		}
 
-		/* Step onwards (or upwards) */
-		block = next_block;
-		while (block == NULL)
-		{
-			if (parent == NULL)
-				break;
-			block = parent->up->next;
-			parent = parent->parent;
-		}
-	}
+		/* If no content to add, bale! */
+		if (target == NULL)
+			break;
 
-	/* If no content to add, bale! */
-	if (target == NULL)
-		return NULL;
-
-	/* We want to insert a structure node that contains target after 'after'. */
-	block = target_parent ? target_parent->first_block : page->first_block;
-	if (after != NULL)
-	{
-		while (1)
+		/* We want to insert a structure node that contains target after 'after'. */
+		block = target_parent ? target_parent->first_block : page->first_block;
+		if (after != NULL)
 		{
-			if (block->type == FZ_STEXT_BLOCK_STRUCT)
-				idx = block->u.s.index+1;
-			if (block == after)
-				break;
+			while (1)
+			{
+				if (block->type == FZ_STEXT_BLOCK_STRUCT)
+					idx = block->u.s.index+1;
+				if (block == after)
+					break;
+				block = block->next;
+			}
 			block = block->next;
 		}
-		block = block->next;
-	}
-	/* So we want to insert a structure node with index 'idx' after 'after' */
-	/* Ensure that the following structure nodes have sane index values */
-	idx2 = idx+1;
-	for (; block != NULL; block = block->next)
-	{
-		if (block->type != FZ_STEXT_BLOCK_STRUCT)
-			continue;
-		if (block->u.s.index >= idx2)
-			break;
-		block->u.s.index = idx2;
-		idx2++;
-	}
+		/* So we want to insert a structure node with index 'idx' after 'after' */
+		/* Ensure that the following structure nodes have sane index values */
+		idx2 = idx+1;
+		for (; block != NULL; block = block->next)
+		{
+			if (block->type != FZ_STEXT_BLOCK_STRUCT)
+				continue;
+			if (block->u.s.index >= idx2)
+				break;
+			block->u.s.index = idx2;
+			idx2++;
+		}
 
-	/* Convert from 'after' to 'before'. */
-	if (after)
-		block = after->next;
-	else if (target_parent)
-		block = target_parent->first_block;
-	else
-		block = page->first_block;
+		/* Convert from 'after' to 'before'. */
+		if (after)
+			block = after->next;
+		else if (target_parent)
+			block = target_parent->first_block;
+		else
+			block = page->first_block;
 
-	/* So we want to insert just before block, with index 'idx'. */
+		/* So we want to insert just before block, with index 'idx'. */
 
-	/* We are going to need to create a new block. Create a complete unlinked one here. */
-	newblock = fz_new_stext_struct(ctx, page, FZ_STRUCTURE_DIV, "Split", idx);
-	if (block)
-		newblock->prev = block->prev;
-	else if (target_parent)
-		newblock->prev = target_parent->last_block;
-	else
-		newblock->prev = page->last_block;
-	newblock->next = block;
-	newblock->id = target->id;
+		/* We are going to need to create a new block. Create a complete unlinked one here. */
+		newblock = fz_new_stext_struct(ctx, page, FZ_STRUCTURE_DIV, "Split", idx);
 
-	/* Now insert newblock just before block */
-	/* If block was first, now we are. */
-	if (target_parent)
-	{
-		if (target_parent->first_block == block)
-			target_parent->first_block = newblock;
-	}
-	else if (page->first_block == block)
-		page->first_block = newblock;
-	if (block == NULL)
-	{
-		/* Inserting at the end! */
+		if (block)
+			newblock->prev = block->prev;
+		else if (target_parent)
+			newblock->prev = target_parent->last_block;
+		else
+			newblock->prev = page->last_block;
+		newblock->next = block;
+		newblock->id = target->id;
+
+		/* Now insert newblock just before block */
+		/* If block was first, now we are. */
 		if (target_parent)
 		{
-			if (target_parent->last_block)
-				target_parent->last_block->next = newblock;
-			target_parent->last_block = newblock;
+			if (target_parent->first_block == block)
+				target_parent->first_block = newblock;
+		}
+		else if (page->first_block == block)
+			page->first_block = newblock;
+		if (block == NULL)
+		{
+			/* Inserting at the end! */
+			if (target_parent)
+			{
+				if (target_parent->last_block)
+					target_parent->last_block->next = newblock;
+				target_parent->last_block = newblock;
+			}
+			else
+			{
+				if (page->last_block)
+					page->last_block->next = newblock;
+				page->last_block = newblock;
+			}
 		}
 		else
 		{
-			if (page->last_block)
-				page->last_block->next = newblock;
-			page->last_block = newblock;
+			if (block->prev)
+				block->prev->next = newblock;
+			block->prev = newblock;
 		}
-	}
-	else
-	{
-		if (block->prev)
-			block->prev->next = newblock;
-		block->prev = newblock;
-	}
 
-	newblock->u.s.down->first_block = target;
-	newblock->u.s.down->last_block = last;
-	newblock->u.s.down->parent = target_parent;
-	target->prev = NULL;
+		newblock->u.s.down->first_block = target;
+		newblock->u.s.down->last_block = last;
+		newblock->u.s.down->parent = target_parent;
+		target->prev = NULL;
 
-	for (block = target; block->next != NULL; block = block->next)
-	{
-		newblock->bbox = fz_union_rect(newblock->bbox, block->bbox);
+		for (block = target; block->next != NULL; block = block->next)
+		{
+			newblock->bbox = fz_union_rect(newblock->bbox, block->bbox);
+			if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
+				block->u.s.down->parent = newblock->u.s.down;
+		}
 		if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
 			block->u.s.down->parent = newblock->u.s.down;
-	}
-	if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
-		block->u.s.down->parent = newblock->u.s.down;
 
-	newblock->bbox = fz_union_rect(newblock->bbox, block->bbox);
-	newblock->u.s.down->last_block = block;
+		newblock->bbox = fz_union_rect(newblock->bbox, block->bbox);
+		newblock->u.s.down->last_block = block;
 
 #ifdef DEBUG_STRUCT
-	dump_stext("AFTER", parent ? parent->first_block : page->first_block);
+		dump_stext("AFTER", parent ? parent->first_block : page->first_block);
 #endif
+	}
+	fz_catch(ctx)
+	{
+		fz_release_stext_block_run_resources(ctx, target);
+		fz_rethrow(ctx);
+	}
 
-	return newblock->u.s.down;
+	return target ? newblock->u.s.down : NULL;
 }
 
 enum {
@@ -1021,6 +1042,10 @@ fz_stext_remove_page_fill(fz_context *ctx, fz_stext_page *page)
 			else
 				iter.page->last_block = NULL;
 		}
+
+		iter.block->next = NULL;
+		iter.block->prev = NULL;
+		fz_release_stext_block_run_resources(ctx, iter.block);
 
 		dropped = 1;
 	}

@@ -935,17 +935,22 @@ void pdf_rewrite_images(fz_context *ctx, pdf_document *doc, pdf_image_rewriter_o
 		opts->gray_lossless_image_recompress_method == FZ_RECOMPRESS_NEVER)
 		return;
 
-	/* Pass 1: Gather information */
-	for (i = 0; i < n; i++)
+	fz_try(ctx)
 	{
-		gather_image_info(ctx, doc, i, &info);
-	}
+		/* Pass 1: Gather information */
+		for (i = 0; i < n; i++)
+		{
+			gather_image_info(ctx, doc, i, &info);
+		}
 
-	/* Pass 2: Resample as required */
-	for (i = 0; i < n; i++)
-	{
-		rewrite_image_info(ctx, doc, i, &info);
+		/* Pass 2: Resample as required */
+		for (i = 0; i < n; i++)
+		{
+			rewrite_image_info(ctx, doc, i, &info);
+		}
 	}
-
-	fz_free(ctx, info.uilist.img);
+	fz_always(ctx)
+		fz_free(ctx, info.uilist.img);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }

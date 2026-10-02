@@ -20,38 +20,11 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-/* BarcodeInfo interface */
+#ifndef FITZ_IMP_H
+#define FITZ_IMP_H
 
-JNIEXPORT jstring JNICALL
-FUN(BarcodeInfo_toString)(JNIEnv *env, jobject self)
-{
-	fz_context *ctx = get_context(env);
-	fz_barcode_type barcode_type = FZ_BARCODE_NONE;
-	jobject jcontents;
-	const char *contents = NULL;
-	char *str = NULL;
-	jobject jstr;
+#include "mupdf/fitz.h"
 
-	if (!ctx || !self) return NULL;
+void fz_ensure_styled(fz_context *ctx, fz_document *doc);
 
-	barcode_type = (*env)->GetIntField(env, self, fid_BarcodeInfo_type);
-	jcontents = (*env)->GetObjectField(env, self, fid_BarcodeInfo_contents);
-
-	contents = (*env)->GetStringUTFChars(env, jcontents, NULL);
-	if (!contents) jni_throw_run(env, "can not get contents UTF string");
-
-	fz_try(ctx)
-		str = fz_asprintf(ctx, "{ type = %d, contents = %s }",
-			barcode_type, contents);
-	fz_always(ctx)
-		(*env)->ReleaseStringUTFChars(env, jcontents, contents);
-	fz_catch(ctx)
-		jni_rethrow(env, ctx);
-
-	jstr = (*env)->NewStringUTF(env, str);
-	fz_free(ctx, str);
-	if (!jstr || (*env)->ExceptionCheck(env))
-		return NULL;
-
-	return jstr;
-}
+#endif

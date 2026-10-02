@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -194,7 +194,6 @@ pdf_load_name_tree_imp(fz_context *ctx, pdf_obj *dict, pdf_document *doc, pdf_ob
 	}
 }
 
-/* FIXME: fz_try/fz_catch needed here */
 pdf_obj *
 pdf_load_name_tree(fz_context *ctx, pdf_document *doc, pdf_obj *which)
 {
@@ -204,7 +203,13 @@ pdf_load_name_tree(fz_context *ctx, pdf_document *doc, pdf_obj *which)
 	if (pdf_is_dict(ctx, tree))
 	{
 		pdf_obj *dict = pdf_new_dict(ctx, doc, 100);
-		pdf_load_name_tree_imp(ctx, dict, doc, tree, NULL);
+		fz_try(ctx)
+			pdf_load_name_tree_imp(ctx, dict, doc, tree, NULL);
+		fz_catch(ctx)
+		{
+			pdf_drop_obj(ctx, dict);
+			fz_rethrow(ctx);
+		}
 		return dict;
 	}
 	return NULL;

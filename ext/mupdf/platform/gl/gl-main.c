@@ -1602,7 +1602,7 @@ static void do_page_selection(void)
 
 		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_BLEND);
-		glColor4f(0.0, 0.1, 0.4, 0.3f);
+		glColor4f(0.0f, 0.1f, 0.4f, 0.3f);
 
 		glBegin(GL_QUADS);
 		for (i = 0; i < n; ++i)
@@ -3162,6 +3162,7 @@ static void usage(const char *argv0)
 	fprintf(stderr, "\t-Y -\tset the UI scaling factor\n");
 	fprintf(stderr, "\t-R -\tenable reflow and set the text extraction options\n");
 	fprintf(stderr, "\t\t\texample: -R dehyphenate,preserve-images\n");
+	fprintf(stderr, "\t-f\tstart in fullscreen mode\n");
 	exit(1);
 }
 
@@ -3270,7 +3271,7 @@ int main(int argc, char **argv)
 
 	glutInit(&argc, argv);
 
-	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJb:A:B:C:T:Y:R:c:v")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJb:A:B:C:T:Y:R:c:vf")) != -1)
 	{
 		switch (c)
 		{
@@ -3293,6 +3294,7 @@ int main(int argc, char **argv)
 		case 'R': reflow_options = fz_optarg; break;
 		case 'T': trace_file_name = fz_optpath(fz_optarg); break;
 		case 'Y': scale = fz_atof(fz_optarg); break;
+		case 'f': isfullscreen = 1; break;
 		}
 	}
 
@@ -3423,6 +3425,9 @@ int main(int argc, char **argv)
 #if FZ_ENABLE_JS
 	console_h *= ui.lineheight;
 #endif
+
+	if (isfullscreen)
+		glutFullScreen();
 
 	glutMainLoop();
 

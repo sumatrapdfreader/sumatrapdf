@@ -93,6 +93,19 @@ fz_toupper(int c)
 	return c;
 }
 
+int
+fz_isalpha(int c)
+{
+	const int *p;
+	p = fz_ucd_bsearch(c, ucd_alpha2, nelem(ucd_alpha2)/2, 2);
+	if(p && c >= p[0] && c <= p[1])
+		return 1;
+	p = fz_ucd_bsearch(c, ucd_alpha1, nelem(ucd_alpha1), 1);
+	if(p && c == p[0])
+		return 1;
+	return 0;
+}
+
 size_t
 fz_strnlen(const char *s, size_t n)
 {
@@ -151,6 +164,22 @@ fz_strcasecmp(const char *a, const char *b)
 		else
 			return ucs_a - ucs_b;
 	}
+}
+
+static inline int fz_tolower_ascii(int c)
+{
+	if ((unsigned int)c - 'A' < 26)
+		return c | 32;
+	return c;
+}
+
+int
+fz_strcasecmp_ascii(const char *a, const char *b)
+{
+	const unsigned char *l = (void *)a, *r = (void *)b;
+	while (*l && *r && (*l == *r || fz_tolower_ascii(*l) == fz_tolower_ascii(*r)))
+		l++, r++;
+	return fz_tolower_ascii(*l) - fz_tolower_ascii(*r);
 }
 
 char *

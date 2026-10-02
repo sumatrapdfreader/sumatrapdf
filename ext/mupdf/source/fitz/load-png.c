@@ -374,7 +374,7 @@ png_read_icc(fz_context *ctx, struct info *info, const unsigned char *p, unsigne
 	{
 		mstm = fz_open_memory(ctx, p + n + 2, size - n - 2);
 		zstm = fz_open_flated(ctx, mstm, 15);
-		buf = fz_read_all(ctx, zstm, 0);
+		buf = fz_read_all(ctx, zstm, fz_mini(1 << 10, size * 4));
 		cs = fz_new_icc_colorspace(ctx, info->type, 0, NULL, buf);
 		fz_drop_colorspace(ctx, info->cs);
 		info->cs = cs;

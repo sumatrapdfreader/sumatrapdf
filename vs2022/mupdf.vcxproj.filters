@@ -180,6 +180,9 @@
     <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\pool.h">
       <Filter>ext\mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\regexp.h">
+      <Filter>ext\mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\mupdf\include\mupdf\fitz\separation.h">
       <Filter>ext\mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
@@ -339,6 +342,9 @@
     <ClInclude Include="..\ext\mupdf\source\fitz\encodings.h">
       <Filter>ext\mupdf\source\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\mupdf\source\fitz\fitz-imp.h">
+      <Filter>ext\mupdf\source\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\mupdf\source\fitz\font-table.h">
       <Filter>ext\mupdf\source\fitz</Filter>
     </ClInclude>
@@ -468,6 +474,9 @@
       <Filter>ext\mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\crypt-arc4.c">
+      <Filter>ext\mupdf\source\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\mupdf\source\fitz\crypt-chacha20.c">
       <Filter>ext\mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\crypt-md5.c">
@@ -735,6 +744,9 @@
       <Filter>ext\mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\random.c">
+      <Filter>ext\mupdf\source\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\mupdf\source\fitz\regexp.c">
       <Filter>ext\mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\fitz\separation.c">

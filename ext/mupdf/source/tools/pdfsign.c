@@ -311,6 +311,7 @@ int pdfsign_main(int argc, char **argv)
 	fz_context *ctx;
 	pdf_document *doc = NULL;
 	char *password = "";
+	pdf_obj *field = NULL;
 	int c;
 
 	while ((c = fz_getopt(argc, argv, "co:p:s:vP:")) != -1)
@@ -346,6 +347,7 @@ int pdfsign_main(int argc, char **argv)
 	}
 
 	fz_var(doc);
+	fz_var(field);
 
 	fz_try(ctx)
 	{
@@ -366,9 +368,10 @@ int pdfsign_main(int argc, char **argv)
 		{
 			while (argc - fz_optind)
 			{
-				pdf_obj *field = pdf_new_indirect(ctx, doc, fz_atoi(argv[fz_optind]), 0);
+				field = pdf_new_indirect(ctx, doc, fz_atoi(argv[fz_optind]), 0);
 				process_field(ctx, doc, field);
 				pdf_drop_obj(ctx, field);
+				field = NULL;
 				fz_optind++;
 			}
 		}
@@ -383,7 +386,10 @@ int pdfsign_main(int argc, char **argv)
 		}
 	}
 	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, field);
 		pdf_drop_document(ctx, doc);
+	}
 	fz_catch(ctx)
 	{
 		fz_report_error(ctx);

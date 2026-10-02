@@ -67,11 +67,17 @@ static int mugrep_usage(void)
 	return EXIT_FAILURE;
 }
 
+/* Show every char between begin and end inclusive (i.e. begin_ch and end_ch are shown) */
 static int
-show_match_rec(fz_stext_block *block, fz_stext_line *begin_line, fz_stext_char *begin_ch, fz_stext_line *end_line, fz_stext_char *end_ch, int *last)
+show_segment_inc(fz_stext_block *block, fz_stext_line *begin_line, fz_stext_char *begin_ch, fz_stext_line *end_line, fz_stext_char *end_ch, int *last)
 {
 	fz_stext_line *line;
 	fz_stext_char *ch;
+
+	/* If begin_ch != NULL, we are skipping, looking for a matching char.
+	 * if begin_ch == NULL, we have met begin_ch already, and are now emitting.
+	 * If end_line == NULL, we want to carry on to the end of the page. */
+
 	while (block)
 	{
 		switch (block->type)
@@ -79,35 +85,98 @@ show_match_rec(fz_stext_block *block, fz_stext_line *begin_line, fz_stext_char *
 		case FZ_STEXT_BLOCK_TEXT:
 			for (line = block->u.t.first_line; line; line = line->next)
 			{
-				if (line == begin_line)
-					begin_line = NULL;
-				if (!begin_line)
+				if (begin_line)
 				{
-					for (ch = line->first_char; ch; ch = ch->next)
+					if (begin_line != line)
+						continue;
+					begin_line = NULL;
+				}
+				for (ch = line->first_char; ch; ch = ch->next)
+				{
+					if (begin_ch)
 					{
-						if (ch == begin_ch)
-							fz_write_string(ctx, out, mark_open);
-						if (ch->c < 32)
-							fz_write_byte(ctx, out, ' ');
-						else if (ch->c != 0xad)
-							fz_write_rune(ctx, out, ch->c);
-						if (ch == end_ch)
-							fz_write_string(ctx, out, mark_close);
-						*last = ch->c;
+						if (ch != begin_ch)
+							continue;
+						begin_ch = NULL;
 					}
-					if (!fz_is_unicode_whitespace(*last) && *last != 0xad)
-						fz_write_string(ctx, out, " ");
+					if (ch->c < 32)
+						fz_write_byte(ctx, out, ' ');
+					else if (ch->c != 0xad)
+						fz_write_rune(ctx, out, ch->c);
+					*last = ch->c;
+					if (ch == end_ch)
+						return 1;
 				}
 				if (line == end_line)
-				{
 					return 1;
-				}
+				if (!fz_is_unicode_whitespace(*last) && *last != 0xad)
+					fz_write_string(ctx, out, " ");
 			}
 			break;
 		case FZ_STEXT_BLOCK_STRUCT:
 			if (block->u.s.down)
 			{
-				if (show_match_rec(block->u.s.down->first_block, begin_line, begin_ch, end_line, end_ch, last))
+				if (show_segment_inc(block->u.s.down->first_block, begin_line, begin_ch, end_line, end_ch, last))
+					return 1;
+			}
+			break;
+		}
+		block = block->next;
+	}
+	return 0;
+}
+
+/* Show every char between begin and end exclusive (i.e. begin_ch and end_ch themselves are not shown) */
+static int
+show_segment_ex(fz_stext_block *block, fz_stext_line *begin_line, fz_stext_char *begin_ch, fz_stext_line *end_line, fz_stext_char *end_ch, int *last)
+{
+	fz_stext_line *line;
+	fz_stext_char *ch;
+
+	/* If begin_ch != NULL, we are skipping, looking for a matching char.
+	 * if begin_ch == NULL, we have met begin_ch already, and are now emitting.
+	 * If end_line == NULL, we want to carry on to the end of the page. */
+
+	while (block)
+	{
+		switch (block->type)
+		{
+		case FZ_STEXT_BLOCK_TEXT:
+			for (line = block->u.t.first_line; line; line = line->next)
+			{
+				if (begin_line)
+				{
+					if (begin_line != line)
+						continue;
+					begin_line = NULL;
+				}
+				for (ch = line->first_char; ch; ch = ch->next)
+				{
+					if (ch == end_ch)
+						return 1;
+					if (begin_ch)
+					{
+						if (ch != begin_ch)
+							continue;
+						begin_ch = NULL;
+						continue;
+					}
+					if (ch->c < 32)
+						fz_write_byte(ctx, out, ' ');
+					else if (ch->c != 0xad)
+						fz_write_rune(ctx, out, ch->c);
+					*last = ch->c;
+				}
+				if (line == end_line)
+					return 1;
+				if (!fz_is_unicode_whitespace(*last) && *last != 0xad)
+					fz_write_string(ctx, out, " ");
+			}
+			break;
+		case FZ_STEXT_BLOCK_STRUCT:
+			if (block->u.s.down)
+			{
+				if (show_segment_ex(block->u.s.down->first_block, begin_line, begin_ch, end_line, end_ch, last))
 					return 1;
 			}
 			break;
@@ -118,26 +187,59 @@ show_match_rec(fz_stext_block *block, fz_stext_line *begin_line, fz_stext_char *
 }
 
 static void
-show_match_snippet(char *file_name, int page_number, fz_stext_position begin, fz_stext_position end)
+show_match_snippet(char *file_name, int page_number, fz_stext_position begin, fz_stext_position end, fz_stext_position *prev_pos)
 {
 	int last = 0;
+	int continuation = 0;
 
-	if (show_file_name)
-		fz_write_printf(ctx, out, "%s\t", file_name);
-	if (show_page_number)
-		fz_write_printf(ctx, out, "%d\t", page_number);
-
-	if (begin.page == end.page)
+	if (prev_pos->page)
 	{
-		(void)show_match_rec(begin.page->first_block, begin.line, begin.ch, end.line, end.ch, &last);
+		/* We are in the middle of showing a line. */
+		if (begin.page == prev_pos->page && begin.block == prev_pos->block && begin.line == prev_pos->line)
+		{
+			/* We are part of the previous line. */
+			continuation = 1;
+		}
+		else
+		{
+			/* We need to flush the rest of the previous line we were showing. */
+			show_segment_ex(prev_pos->block, prev_pos->line, prev_pos->ch, prev_pos->line, NULL, &last);
+
+			fz_write_byte(ctx, out, '\n');
+		}
+	}
+
+	if (continuation)
+	{
+		/* Show the text between the end of the previous match, and the start of this one. */
+		(void)show_segment_ex(prev_pos->block, prev_pos->line, prev_pos->ch, begin.line, begin.ch, &last);
 	}
 	else
 	{
-		(void)show_match_rec(begin.page->first_block, begin.line, begin.ch, NULL, NULL, &last);
-		(void)show_match_rec(end.page->first_block, NULL, NULL, end.line, end.ch, &last);
+		if (show_file_name)
+			fz_write_printf(ctx, out, "%s\t", file_name);
+		if (show_page_number)
+			fz_write_printf(ctx, out, "%d\t", page_number);
+
+		/* Show the text from the start of the line to this match. */
+		(void)show_segment_ex(begin.block, begin.line, NULL, begin.line, begin.ch, &last);
 	}
 
-	fz_write_byte(ctx, out, '\n');
+	fz_write_string(ctx, out, mark_open);
+	if (begin.page == end.page)
+	{
+		(void)show_segment_inc(begin.block, begin.line, begin.ch, end.line, end.ch, &last);
+	}
+	else
+	{
+		(void)show_segment_inc(begin.block, begin.line, begin.ch, NULL, NULL, &last);
+		(void)show_segment_inc(end.page->first_block, NULL, NULL, end.line, end.ch, &last);
+	}
+	fz_write_string(ctx, out, mark_close);
+	prev_pos->page = end.page;
+	prev_pos->block = end.block;
+	prev_pos->line = end.line;
+	prev_pos->ch = end.ch;
 }
 
 static int
@@ -147,6 +249,7 @@ mugrep_run(char *filename, fz_document *doc, char *pattern, fz_search_options op
 	fz_search *search = NULL;
 	fz_search_result res;
 	int found = 0;
+	fz_stext_position prev_pos = { 0 };
 
 	fz_var(search);
 
@@ -182,7 +285,7 @@ mugrep_run(char *filename, fz_document *doc, char *pattern, fz_search_options op
 					printf("MATCH: %d quads (starting on page %d)\n", details->num_quads, details->quads[0].seq+1);
 				}
 
-				show_match_snippet(filename, details->num_quads > 0 ? (details->quads[0].seq + 1) : 0, details->begin, details->end);
+				show_match_snippet(filename, details->num_quads > 0 ? (details->quads[0].seq + 1) : 0, details->begin, details->end, &prev_pos);
 			}
 			else if (res.reason == FZ_SEARCH_MORE_INPUT)
 			{
@@ -203,6 +306,16 @@ mugrep_run(char *filename, fz_document *doc, char *pattern, fz_search_options op
 			}
 			else if (res.reason == FZ_SEARCH_COMPLETE)
 				break;
+		}
+
+		if (prev_pos.page)
+		{
+			int last;
+
+			/* We need to flush the rest of the previous line we were showing. */
+			show_segment_ex(prev_pos.block, prev_pos.line, prev_pos.ch, prev_pos.line, NULL, &last);
+
+			fz_write_byte(ctx, out, '\n');
 		}
 	}
 	fz_always(ctx)

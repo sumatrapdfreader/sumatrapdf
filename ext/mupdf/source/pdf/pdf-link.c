@@ -704,6 +704,8 @@ pdf_load_link_annots(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_obj
 	pdf_obj *obj;
 	int i, n;
 
+	fz_var(head);
+
 	head = tail = NULL;
 
 	n = pdf_array_len(ctx, annots);

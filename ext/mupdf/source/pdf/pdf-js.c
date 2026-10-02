@@ -807,8 +807,7 @@ static void util_printf(js_State *J)
 					w = w * 10 + (c - '0');
 					c = *fmt++;
 				}
-				if (w < 0)
-					w = 0;
+				/* w is unsigned, so never < 0 */
 				if (!c)
 					break;
 

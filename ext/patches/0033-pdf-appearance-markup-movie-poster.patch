@@ -5,7 +5,7 @@ falls back to /Rect. Square/Circle with width 0 and no fill are skipped
 (hairline). Movie /Poster image streams become the appearance.
 
 diff --git a/source/pdf/pdf-appearance.c b/source/pdf/pdf-appearance.c
-index d1a2a11de..4cd48587e 100644
+index d38971b..4db105a 100644
 --- a/source/pdf/pdf-appearance.c
 +++ b/source/pdf/pdf-appearance.c
 @@ -722,6 +722,11 @@ pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
@@ -345,7 +345,7 @@ index d1a2a11de..4cd48587e 100644
  	}
  }
  
-@@ -2988,6 +3029,28 @@ pdf_write_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
+@@ -3019,6 +3060,28 @@ pdf_write_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
  	}
  }
  
@@ -374,7 +374,7 @@ index d1a2a11de..4cd48587e 100644
  /* Movie, Screen, 3D, RichMedia, Watermark, PrinterMark, TrapNet, Projection
   * (and unknown subtypes) have no synthesised AP in stock MuPDF. Draw a
   * placeholder box, labelled with /Contents when present, so they display
-@@ -3073,6 +3136,10 @@ pdf_write_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
+@@ -3104,6 +3167,10 @@ pdf_write_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
  	default:
  		pdf_write_unrendered_appearance(ctx, annot, buf, rect, bbox, matrix, res);
  		break;

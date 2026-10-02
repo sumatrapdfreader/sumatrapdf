@@ -135,20 +135,9 @@ typedef struct string_walker
 	int graphemes;
 } string_walker;
 
-static int quick_ligature_mov(fz_context *ctx, string_walker *walker, unsigned int i, unsigned int n, int unicode)
+static int quick_ligature(fz_context *ctx, string_walker *walker, unsigned int *in)
 {
-	unsigned int k;
-	for (k = i + n + 1; k < walker->glyph_count; ++k)
-	{
-		walker->glyph_info[k-n] = walker->glyph_info[k];
-		walker->glyph_pos[k-n] = walker->glyph_pos[k];
-	}
-	walker->glyph_count -= n;
-	return unicode;
-}
-
-static int quick_ligature(fz_context *ctx, string_walker *walker, unsigned int i)
-{
+	unsigned int i = *in;
 	if (walker->glyph_info[i].codepoint == 'f' && i + 1 < walker->glyph_count && !fz_font_flags(walker->font)->is_mono)
 	{
 		if (walker->glyph_info[i+1].codepoint == 'f')
@@ -156,28 +145,28 @@ static int quick_ligature(fz_context *ctx, string_walker *walker, unsigned int i
 			if (i + 2 < walker->glyph_count && walker->glyph_info[i+2].codepoint == 'i')
 			{
 				if (fz_encode_character(ctx, walker->font, 0xFB03))
-					return quick_ligature_mov(ctx, walker, i, 2, 0xFB03);
+					return *in += 3, 0xFB03;
 			}
 			if (i + 2 < walker->glyph_count && walker->glyph_info[i+2].codepoint == 'l')
 			{
 				if (fz_encode_character(ctx, walker->font, 0xFB04))
-					return quick_ligature_mov(ctx, walker, i, 2, 0xFB04);
+					return *in += 3, 0xFB04;
 			}
 			if (fz_encode_character(ctx, walker->font, 0xFB00))
-				return quick_ligature_mov(ctx, walker, i, 1, 0xFB00);
+				return *in += 2, 0xFB00;
 		}
 		if (walker->glyph_info[i+1].codepoint == 'i')
 		{
 			if (fz_encode_character(ctx, walker->font, 0xFB01))
-				return quick_ligature_mov(ctx, walker, i, 1, 0xFB01);
+				return *in += 2, 0xFB01;
 		}
 		if (walker->glyph_info[i+1].codepoint == 'l')
 		{
 			if (fz_encode_character(ctx, walker->font, 0xFB02))
-				return quick_ligature_mov(ctx, walker, i, 1, 0xFB02);
+				return *in += 2, 0xFB02;
 		}
 	}
-	return walker->glyph_info[i].codepoint;
+	return *in += 1, walker->glyph_info[i].codepoint;
 }
 
 static void init_string_walker(fz_context *ctx, string_walker *walker, hb_buffer_t *hb_buf, int rtl, fz_font *font, int script, int language, int small_caps, const char *text, int cluster_as_graphemes)
@@ -305,21 +294,27 @@ static int walk_string(string_walker *walker)
 
 	if (quickshape)
 	{
-		unsigned int i;
-		for (i = 0; i < walker->glyph_count; ++i)
+		unsigned int i, k;
+		for (i = k = 0; i < walker->glyph_count; ++k)
 		{
 			int glyph, unicode;
-			unicode = quick_ligature(ctx, walker, i);
+			if (i != k)
+			{
+				walker->glyph_info[k] = walker->glyph_info[i];
+				walker->glyph_pos[k] = walker->glyph_pos[i];
+			}
+			unicode = quick_ligature(ctx, walker, &i);
 			if (walker->small_caps)
 				glyph = fz_encode_character_sc(ctx, walker->font, unicode);
 			else
 				glyph = fz_encode_character(ctx, walker->font, unicode);
-			walker->glyph_info[i].codepoint = glyph;
-			walker->glyph_pos[i].x_offset = 0;
-			walker->glyph_pos[i].y_offset = 0;
-			walker->glyph_pos[i].x_advance = fz_advance_glyph(ctx, walker->font, glyph, 0) * face->units_per_EM;
-			walker->glyph_pos[i].y_advance = 0;
+			walker->glyph_info[k].codepoint = glyph;
+			walker->glyph_pos[k].x_offset = 0;
+			walker->glyph_pos[k].y_offset = 0;
+			walker->glyph_pos[k].x_advance = fz_advance_glyph(ctx, walker->font, glyph, 0) * face->units_per_EM;
+			walker->glyph_pos[k].y_advance = 0;
 		}
+		walker->glyph_count = k;
 	}
 
 	return 1;

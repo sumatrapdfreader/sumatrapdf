@@ -267,4 +267,17 @@ void fz_aes_crypt_cbc(fz_aes *ctx, int mode, size_t length,
 	const unsigned char *input,
 	unsigned char *output );
 
+/* ## ChaCha20 stream cipher (RFC 7539) */
+
+/* The ChaCha20 state is a vector of sixteen 32-bit words. Word 12 is the block counter. */
+typedef struct fz_chacha20 {
+	uint32_t s[16];
+} fz_chacha20;
+
+/* Setup ChaCha20 stream cipher with 256-bit key, 96-bit nonce, and counter. */
+void fz_chacha20_init(fz_chacha20 *stm, unsigned char *key, unsigned char *nonce, uint32_t counter);
+
+/* Encrypt bytes with ChaCha20 stream cipher. */
+void fz_chacha20_encrypt(fz_chacha20 *seed, unsigned char *dst, const unsigned char *src, uint32_t size);
+
 #endif

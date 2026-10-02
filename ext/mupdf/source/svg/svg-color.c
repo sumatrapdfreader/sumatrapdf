@@ -286,7 +286,7 @@ svg_parse_color(fz_context *ctx, svg_document *doc, const char *str, float *rgb)
 		char keyword[50], *p;
 		fz_strlcpy(keyword, str, sizeof keyword);
 		p = keyword;
-		while (*p && *p >= 'a' && *p <= 'z')
+		while ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z'))
 			++p;
 		*p = 0;
 
@@ -296,7 +296,7 @@ svg_parse_color(fz_context *ctx, svg_document *doc, const char *str, float *rgb)
 		while (l <= r)
 		{
 			m = (l + r) / 2;
-			cmp = strcmp(svg_predefined_colors[m].name, keyword);
+			cmp = fz_strcasecmp_ascii(svg_predefined_colors[m].name, keyword);
 			if (cmp > 0)
 				r = m - 1;
 			else if (cmp < 0)

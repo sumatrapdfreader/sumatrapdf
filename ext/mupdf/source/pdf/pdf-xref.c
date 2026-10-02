@@ -3445,6 +3445,10 @@ pdf_load_hints(fz_context *ctx, pdf_document *doc, int objnum)
 			}
 		}
 
+		if (shared_obj_count_page1 > shared_obj_count_total)
+			fz_throw(ctx, FZ_ERROR_FORMAT,
+				"malformed hint stream (page1 shared count exceeds total)");
+
 		doc->hint_shared = fz_realloc_array(ctx, doc->hint_shared, shared_obj_count_total+1, pdf_hint_shared);
 		memset(doc->hint_shared, 0, sizeof(*doc->hint_shared) * (shared_obj_count_total+1));
 
@@ -4944,11 +4948,13 @@ static int
 validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_locked_fields *locked)
 {
 	int o_xref_base;
-	pdf_changes *changes;
+	pdf_changes *changes = NULL;
 	int num_objs;
 	int i, n;
 	int all_indirects = 1;
 	int repaired = 0;
+
+	fz_var(changes);
 
 retry_on_repair:
 	pdf_start_throw_on_repair(ctx, doc, &o_xref_base);

@@ -635,6 +635,9 @@ fz_closepath(fz_context *ctx, fz_path *path)
 	if (path->begin.x != path->current.x && path->begin.y != path->current.y)
 		path->only_right_angles = 0;
 
+	if (LAST_CMD(path) == FZ_MOVETO)
+		update_bounds(path, path->current.x, path->current.y);
+
 	switch(LAST_CMD(path))
 	{
 	case FZ_MOVETO:

@@ -803,9 +803,10 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		writer->ctx = NULL;
 		fz_validate_options(ctx, options, "docx");
 	}
+	fz_always(ctx)
+		fz_drop_options(ctx, options);
 	fz_catch(ctx)
 	{
-		fz_drop_options(ctx, options);
 		/* fz_drop_document_writer() drops its output so we only need to call
 		fz_drop_output() if we failed before creating the writer. */
 		if (writer)

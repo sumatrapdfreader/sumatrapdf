@@ -17,10 +17,10 @@ css-properties.h is regenerated from css-properties.gperf with gperf 3.2.1.
 Fixes https://github.com/sumatrapdfreader/sumatrapdf/issues/6131
 ---
 diff --git a/source/html/css-apply.c b/source/html/css-apply.c
-index fd483ffe6..46ee3eaa6 100644
+index ed31152..9b4e13d 100644
 --- a/source/html/css-apply.c
 +++ b/source/html/css-apply.c
-@@ -1008,11 +1008,71 @@ add_shorthand_font(fz_css_match *match, fz_css_value *value, int spec)
+@@ -993,11 +993,71 @@ add_shorthand_font(fz_css_match *match, fz_css_value *value, int spec)
  		add_property(match, PRO_FONT_WEIGHT, &static_value_normal, spec);
  }
  
@@ -94,7 +94,7 @@ index fd483ffe6..46ee3eaa6 100644
  }
  
  static void
-@@ -1838,6 +1898,94 @@ page_break_from_property(fz_css_match *match, int prop)
+@@ -1823,6 +1883,94 @@ page_break_from_property(fz_css_match *match, int prop)
  	return PB_AUTO;
  }
  
@@ -189,7 +189,7 @@ index fd483ffe6..46ee3eaa6 100644
  void
  fz_default_css_style(fz_context *ctx, fz_css_style *style)
  {
-@@ -2015,6 +2163,10 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style,
+@@ -2000,6 +2148,10 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style,
  	style->text_fill_color = color_from_properties(match, PRO_TEXT_FILL_COLOR, PRO_COLOR, black);
  	style->text_stroke_color = color_from_property(match, PRO_TEXT_STROKE_COLOR, transparent);
  	style->background_color = color_from_property(match, PRO_BACKGROUND_COLOR, transparent);
@@ -201,7 +201,7 @@ index fd483ffe6..46ee3eaa6 100644
  	style->border_spacing = number_from_property(match, PRO_BORDER_SPACING, 0, N_LENGTH);
  
 diff --git a/source/html/css-properties.gperf b/source/html/css-properties.gperf
-index a5ab5f2cc..53befbfe5 100644
+index a5ab5f2..53befbf 100644
 --- a/source/html/css-properties.gperf
 +++ b/source/html/css-properties.gperf
 @@ -11,6 +11,10 @@ struct css_property_info { const char *name; int key; };
@@ -216,7 +216,7 @@ index a5ab5f2cc..53befbfe5 100644
  border-bottom,PRO_BORDER_BOTTOM
  border-bottom-color,PRO_BORDER_BOTTOM_COLOR
 diff --git a/source/html/css-properties.h b/source/html/css-properties.h
-index 66fde479c..f6a977b62 100644
+index 66fde47..f6a977b 100644
 --- a/source/html/css-properties.h
 +++ b/source/html/css-properties.h
 @@ -32,12 +32,12 @@
@@ -301,10 +301,17 @@ index 66fde479c..f6a977b62 100644
    {
 -    {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
 -#line 82 "source/html/css-properties.gperf"
+-    {"top",PRO_INSET_TOP},
+-#line 53 "source/html/css-properties.gperf"
+-    {"left",PRO_INSET_LEFT},
+-    {""}, {""},
+-#line 40 "source/html/css-properties.gperf"
+-    {"content",PRO_CONTENT},
 +    {""}, {""}, {""}, {""}, {""}, {""}, {""},
 +#line 71 "source/html/css-properties.gperf"
 +    {"padding",PRO_PADDING},
-+    {""}, {""}, {""},
+     {""}, {""}, {""},
+-#line 80 "source/html/css-properties.gperf"
 +#line 75 "source/html/css-properties.gperf"
 +    {"padding-top",PRO_PADDING_TOP},
 +#line 73 "source/html/css-properties.gperf"
@@ -313,31 +320,24 @@ index 66fde479c..f6a977b62 100644
 +    {"padding-right",PRO_PADDING_RIGHT},
 +    {""}, {""},
 +#line 84 "source/html/css-properties.gperf"
-+    {"text-indent",PRO_TEXT_INDENT},
+     {"text-indent",PRO_TEXT_INDENT},
 +    {""},
 +#line 86 "source/html/css-properties.gperf"
-     {"top",PRO_INSET_TOP},
--#line 53 "source/html/css-properties.gperf"
--    {"left",PRO_INSET_LEFT},
-+    {""}, {""}, {""},
++    {"top",PRO_INSET_TOP},
+     {""}, {""}, {""},
+-#line 31 "source/html/css-properties.gperf"
 +#line 77 "source/html/css-properties.gperf"
 +    {"page-break-before",PRO_PAGE_BREAK_BEFORE},
 +    {""}, {""}, {""}, {""},
 +#line 16 "source/html/css-properties.gperf"
 +    {"background-repeat",PRO_BACKGROUND_REPEAT},
-     {""}, {""},
--#line 40 "source/html/css-properties.gperf"
++    {""}, {""},
 +#line 17 "source/html/css-properties.gperf"
 +    {"background-size",PRO_BACKGROUND_SIZE},
 +#line 14 "source/html/css-properties.gperf"
 +    {"background-image",PRO_BACKGROUND_IMAGE},
 +#line 44 "source/html/css-properties.gperf"
-     {"content",PRO_CONTENT},
--    {""}, {""}, {""},
--#line 80 "source/html/css-properties.gperf"
--    {"text-indent",PRO_TEXT_INDENT},
--    {""}, {""}, {""},
--#line 31 "source/html/css-properties.gperf"
++    {"content",PRO_CONTENT},
 +    {""}, {""},
 +#line 35 "source/html/css-properties.gperf"
      {"border-top",PRO_BORDER_TOP},
@@ -450,33 +450,33 @@ index 66fde479c..f6a977b62 100644
 +#line 83 "source/html/css-properties.gperf"
      {"text-decoration",PRO_TEXT_DECORATION},
 -#line 72 "source/html/css-properties.gperf"
+-    {"page-break-after",PRO_PAGE_BREAK_AFTER},
+-#line 88 "source/html/css-properties.gperf"
 +#line 40 "source/html/css-properties.gperf"
 +    {"bottom",PRO_INSET_BOTTOM},
 +#line 92 "source/html/css-properties.gperf"
-+    {"word-spacing",PRO_WORD_SPACING},
+     {"word-spacing",PRO_WORD_SPACING},
 +#line 78 "source/html/css-properties.gperf"
 +    {"position",PRO_POSITION},
-+    {""},
+     {""},
+-#line 29 "source/html/css-properties.gperf"
+-    {"border-spacing",PRO_BORDER_SPACING},
 +#line 56 "source/html/css-properties.gperf"
 +    {"inset",PRO_INSET},
 +#line 76 "source/html/css-properties.gperf"
-     {"page-break-after",PRO_PAGE_BREAK_AFTER},
-+    {""},
++    {"page-break-after",PRO_PAGE_BREAK_AFTER},
+     {""},
 +#line 19 "source/html/css-properties.gperf"
 +    {"border-bottom",PRO_BORDER_BOTTOM},
 +#line 15 "source/html/css-properties.gperf"
 +    {"background-position",PRO_BACKGROUND_POSITION},
- #line 88 "source/html/css-properties.gperf"
--    {"word-spacing",PRO_WORD_SPACING},
--    {""},
--#line 29 "source/html/css-properties.gperf"
--    {"border-spacing",PRO_BORDER_SPACING},
++#line 88 "source/html/css-properties.gperf"
 +    {"visibility",PRO_VISIBILITY},
 +#line 54 "source/html/css-properties.gperf"
 +    {"height",PRO_HEIGHT},
 +#line 43 "source/html/css-properties.gperf"
 +    {"columns",PRO_COLUMNS},
-     {""},
++    {""},
 +#line 57 "source/html/css-properties.gperf"
 +    {"left",PRO_INSET_LEFT},
 +#line 80 "source/html/css-properties.gperf"
@@ -528,26 +528,25 @@ index 66fde479c..f6a977b62 100644
 -    {"list-style-type",PRO_LIST_STYLE_TYPE},
 -#line 57 "source/html/css-properties.gperf"
 -    {"list-style-image",PRO_LIST_STYLE_IMAGE},
--    {""},
++    {"line-height",PRO_LINE_HEIGHT},
++#line 39 "source/html/css-properties.gperf"
++    {"border-width",PRO_BORDER_WIDTH},
+     {""},
 -#line 9 "source/html/css-properties.gperf"
 -    {"-webkit-text-fill-color",PRO_TEXT_FILL_COLOR},
 -#line 83 "source/html/css-properties.gperf"
--    {"vertical-align",PRO_VERTICAL_ALIGN},
++#line 87 "source/html/css-properties.gperf"
+     {"vertical-align",PRO_VERTICAL_ALIGN},
 -#line 10 "source/html/css-properties.gperf"
 -    {"-webkit-text-stroke-color",PRO_TEXT_STROKE_COLOR},
 -#line 85 "source/html/css-properties.gperf"
 -    {"white-space",PRO_WHITE_SPACE},
 -#line 35 "source/html/css-properties.gperf"
-+    {"line-height",PRO_LINE_HEIGHT},
-+#line 39 "source/html/css-properties.gperf"
-     {"border-width",PRO_BORDER_WIDTH},
+-    {"border-width",PRO_BORDER_WIDTH},
 -#line 77 "source/html/css-properties.gperf"
 -    {"src",PRO_SRC},
 -    {""}, {""},
 -#line 34 "source/html/css-properties.gperf"
-+    {""},
-+#line 87 "source/html/css-properties.gperf"
-+    {"vertical-align",PRO_VERTICAL_ALIGN},
 +#line 60 "source/html/css-properties.gperf"
 +    {"list-style",PRO_LIST_STYLE},
 +#line 38 "source/html/css-properties.gperf"
@@ -618,10 +617,10 @@ index 66fde479c..f6a977b62 100644
      {"font-family",PRO_FONT_FAMILY},
 +#line 55 "source/html/css-properties.gperf"
 +    {"hyphens",PRO_HYPHENS},
-     {""}, {""},
++    {""}, {""},
 +#line 91 "source/html/css-properties.gperf"
 +    {"width",PRO_WIDTH},
-+    {""}, {""},
+     {""}, {""},
 +#line 9 "source/html/css-properties.gperf"
 +    {"-webkit-text-fill-color",PRO_TEXT_FILL_COLOR},
 +    {""},
@@ -656,7 +655,7 @@ index 66fde479c..f6a977b62 100644
  #if (defined __GNUC__ && __GNUC__ + (__GNUC_MINOR__ >= 6) > 4) || (defined __clang__ && __clang_major__ >= 3)
  #pragma GCC diagnostic pop
 diff --git a/source/html/html-imp.h b/source/html/html-imp.h
-index f4f51be74..813fb2296 100644
+index f4f51be..813fb22 100644
 --- a/source/html/html-imp.h
 +++ b/source/html/html-imp.h
 @@ -134,6 +134,10 @@ struct fz_css_value_s
@@ -707,10 +706,10 @@ index f4f51be74..813fb2296 100644
  	int seq;
  #endif
 diff --git a/source/html/html-layout.c b/source/html/html-layout.c
-index e3fc9bf98..207a238a1 100644
+index 409e9b4..a529359 100644
 --- a/source/html/html-layout.c
 +++ b/source/html/html-layout.c
-@@ -3663,6 +3663,100 @@ static void draw_rect(fz_context *ctx, fz_device *dev, fz_matrix ctm, float page
+@@ -3655,6 +3655,100 @@ static void draw_rect(fz_context *ctx, fz_device *dev, fz_matrix ctm, float page
  		fz_rethrow(ctx);
  }
  
@@ -811,7 +810,7 @@ index e3fc9bf98..207a238a1 100644
  static void draw_quad(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_css_color color,
  	float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3)
  {
-@@ -4449,7 +4543,11 @@ static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, flo
+@@ -4441,7 +4535,11 @@ static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, flo
  		 * we might find the end-of-skip point inside this box. If there is no content
  		 * then the box height will be 0, so nothing will be drawn. */
  		if (y1 > y0)
@@ -824,7 +823,7 @@ index e3fc9bf98..207a238a1 100644
  		if (!skipping)
  		{
 diff --git a/source/html/html-parse.c b/source/html/html-parse.c
-index 09f899cc9..177ea3a21 100644
+index d4c33dc..ace4bb6 100644
 --- a/source/html/html-parse.c
 +++ b/source/html/html-parse.c
 @@ -781,6 +781,7 @@ static void fz_drop_html_box(fz_context *ctx, fz_html_box *box)

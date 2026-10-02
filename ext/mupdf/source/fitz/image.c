@@ -1021,7 +1021,7 @@ fz_find_image_tile(fz_context *ctx, fz_image *image, fz_image_key *key, fz_matri
 fz_pixmap *
 fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subarea, fz_matrix *ctm, int *dw, int *dh)
 {
-	fz_pixmap *tile;
+	fz_pixmap *tile = NULL;
 	int l2factor, l2factor_remaining;
 	fz_image_key key;
 	fz_image_key *keyp = NULL;
@@ -1029,6 +1029,7 @@ fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subar
 	int h;
 
 	fz_var(keyp);
+	fz_var(tile);
 
 	if (!image)
 		return NULL;

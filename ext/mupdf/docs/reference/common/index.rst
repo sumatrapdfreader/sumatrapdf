@@ -10,3 +10,5 @@ Concepts
 	document-writer-options
 	pdf-write-options
 	stext-options
+	search-options
+	table-hunt-options

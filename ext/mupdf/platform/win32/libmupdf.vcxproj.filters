@@ -135,6 +135,9 @@
     <ClCompile Include="..\..\source\fitz\crypt-arc4.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\crypt-chacha20.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\source\fitz\crypt-md5.c">
       <Filter>fitz</Filter>
     </ClCompile>
@@ -1042,6 +1045,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\options.h">
       <Filter>!include\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\fitz-imp.h">
+      <Filter>fitz</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

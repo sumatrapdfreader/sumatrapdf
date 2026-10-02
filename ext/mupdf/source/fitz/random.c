@@ -22,90 +22,88 @@
 
 #include "mupdf/fitz.h"
 
-/* The pseudo-random number generator in this file is based on the MIT licensed
- * implementation in musl libc. */
-
 #include <string.h>
 
-/* The seed is initialized in context.c as follows:
- * static uint16_t __seed48[7] = { 0, 0, 0, 0xe66d, 0xdeec, 0x5, 0xb };
- */
+#ifdef _WIN32
+#include <windows.h> // for GetSystemTime and CryptGenRandom
+#else
+#include <sys/time.h> // for gettimeofday()
+#include <stdlib.h> // for srandom(), random(), arc4random_buf()
+#ifdef __APPLE__
+#include <sys/random.h> // for getentropy()
+#else
+#include <unistd.h> // for getentropy()
+#endif
+#endif
 
-static uint64_t fz_rand48_step(uint16_t *xi, uint16_t *lc)
+#ifdef _WIN32
+
+static void getentropy_fallback(unsigned char *s, int n)
 {
-	uint64_t a, x;
-	x = xi[0] | (xi[1]+0U)<<16 | (xi[2]+0ULL)<<32;
-	a = lc[0] | (lc[1]+0U)<<16 | (lc[2]+0ULL)<<32;
-	x = a*x + lc[3];
-	xi[0] = x;
-	xi[1] = x>>16;
-	xi[2] = x>>32;
-	return x & 0xffffffffffffull;
+	int i;
+	SYSTEMTIME system_time;
+
+	GetSystemTime(&system_time);
+	srand(system_time.wSecond ^ system_time.wMilliseconds);
+	for (i = 0; i < n; i += 4)
+		fz_pack_uint32_le(s + i, rand());
 }
 
-double fz_erand48(fz_context *ctx, uint16_t s[3])
+static int getentropy_win32(unsigned char *entropy, size_t len)
 {
-	union {
-		uint64_t u;
-		double f;
-	} x = { 0x3ff0000000000000ULL | fz_rand48_step(s, ctx->seed48+3)<<4 };
-	return x.f - 1.0;
+	HCRYPTPROV prov;
+	BOOL ok;
+	if (!CryptAcquireContextA(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+		return 1;
+	ok = CryptGenRandom(prov, (DWORD)len, entropy);
+	CryptReleaseContext(prov, 0);
+	return !ok;
 }
 
-/*
-	Pseudo-random numbers using a linear congruential algorithm and 48-bit
-	integer arithmetic.
-*/
-double fz_drand48(fz_context *ctx)
+#else
+
+static void getentropy_fallback(unsigned char *s, int n)
 {
-	return fz_erand48(ctx, ctx->seed48);
+	struct timeval now;
+	int i;
+	gettimeofday(&now, NULL);
+	srandom(now.tv_sec ^ now.tv_usec);
+	for (i = 0; i < n; i += 4)
+		fz_pack_uint32_le(s + i, random());
 }
 
-int32_t fz_nrand48(fz_context *ctx, uint16_t s[3])
-{
-	return fz_rand48_step(s, ctx->seed48+3) >> 17;
-}
-
-int32_t fz_lrand48(fz_context *ctx)
-{
-	return fz_nrand48(ctx, ctx->seed48);
-}
-
-int32_t fz_jrand48(fz_context *ctx, uint16_t s[3])
-{
-	return (int32_t)(fz_rand48_step(s, ctx->seed48+3) >> 16);
-}
-
-int32_t fz_mrand48(fz_context *ctx)
-{
-	return fz_jrand48(ctx, ctx->seed48);
-}
-
-void fz_lcong48(fz_context *ctx, uint16_t p[7])
-{
-	memcpy(ctx->seed48, p, sizeof ctx->seed48);
-}
-
-uint16_t *fz_seed48(fz_context *ctx, uint16_t *s)
-{
-	static uint16_t p[3];
-	memcpy(p, ctx->seed48, sizeof p);
-	memcpy(ctx->seed48, s, sizeof p);
-	return p;
-}
-
-void fz_srand48(fz_context *ctx, int32_t seed)
-{
-	uint16_t p[3] = { 0x330e, seed, seed>>16 };
-	fz_seed48(ctx, p);
-}
+#endif
 
 void fz_memrnd(fz_context *ctx, unsigned char *data, int len)
 {
 #ifdef CLUSTER
 	memset(data, 0x55, len);
 #else
-	while (len-- > 0)
-		*data++ = (unsigned char)fz_lrand48(ctx);
-#endif
+	// (Re-)initialize chacha20 stream cipher on first invocation,
+	// or when the counter wraps around.
+	if (ctx->seed.s[12] == 0)
+	{
+		unsigned char entropy[44];
+
+#if defined(_WIN32)
+		if (getentropy_win32(entropy, sizeof entropy))
+			getentropy_fallback(entropy, sizeof entropy);
+#elif defined(EMSCRIPTEN)
+		// __wasi_random_get is not yet widely supported, so we can't call getentropy
+		getentropy_fallback(entropy, sizeof entropy);
+#elif defined(__ANDROID__) && (__ANDROID_API__ < 28)
+		// Android before 9.0 does not have getentropy(), but does have
+		// arc4random_buf that sources from /dev/urandom.
+		arc4random_buf(entropy, sizeof entropy);
+#else
+		if (getentropy(entropy, sizeof entropy) < 0)
+			getentropy_fallback(entropy, sizeof entropy);
+#endif /* EMSCRIPTEN */
+
+		fz_chacha20_init(&ctx->seed, entropy, entropy + 32, 0);
+	}
+
+	memset(data, 0, len);
+	fz_chacha20_encrypt(&ctx->seed, data, data, len);
+#endif /* CLUSTER */
 }

@@ -22,6 +22,7 @@
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
+#include "pdf-imp.h"
 
 #include <string.h>
 
@@ -294,6 +295,7 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 	fz_var(page_object_nums);
 	fz_var(kids);
 	fz_var(marks);
+	fz_var(olddests);
 
 	fz_try(ctx)
 	{
@@ -360,6 +362,7 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 			}
 
 			pdf_drop_obj(ctx, olddests);
+			olddests = NULL;
 		}
 
 		/* Edit each pages /Annot list to remove any links that point to nowhere. */
@@ -415,8 +418,7 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 		{
 			pdf_obj *f = pdf_array_get(ctx, allfields, i);
 
-			while (pdf_dict_get(ctx, f, PDF_NAME(Parent)))
-				f = pdf_dict_get(ctx, f, PDF_NAME(Parent));
+			f = pdf_parent_root(ctx, f, NULL);
 
 			strip_stale_annot_refs(ctx, f, pagecount, page_object_nums);
 		}
@@ -445,6 +447,7 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 		pdf_drop_obj(ctx, root);
 		pdf_drop_obj(ctx, kids);
 		pdf_drop_obj(ctx, structparents);
+		pdf_drop_obj(ctx, olddests);
 	}
 	fz_catch(ctx)
 	{

@@ -286,7 +286,8 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 		fz_throw(ctx, FZ_ERROR_LIMIT, "image too wide");
 	srcstride = (srcstride + 7) / 8;
 
-	if (tiff->stride < 0 || srcstride > (unsigned int)tiff->stride)
+	/* tiff->stride >= 0 as unsigned */
+	if (srcstride > (unsigned int)tiff->stride)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "insufficient data for format");
 
 	/* Multiplying by two at the end because each component value in the colormap is 16 bits wide. */

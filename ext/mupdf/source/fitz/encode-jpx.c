@@ -22,9 +22,9 @@
 
 #include "mupdf/fitz.h"
 
-#include <openjpeg.h>
-
 #if FZ_ENABLE_JPX
+
+#include <openjpeg.h>
 
 static opj_image_t *
 image_from_pixmap(fz_context *ctx, fz_pixmap *pix)

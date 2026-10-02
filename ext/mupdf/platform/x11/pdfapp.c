@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -216,7 +216,7 @@ char *pdfapp_version(pdfapp_t *app)
 {
 	return
 		"MuPDF " FZ_VERSION "\n"
-		"Copyright 2006-2022 Artifex Software, Inc.\n";
+		"Copyright 2006-2026 Artifex Software, Inc.\n";
 }
 
 char *pdfapp_usage(pdfapp_t *app)
@@ -387,6 +387,7 @@ static int make_fake_doc(pdfapp_t *app)
 
 	fz_var(contents);
 	fz_var(page_obj);
+	fz_var(pdf);
 
 	fz_try(ctx)
 	{

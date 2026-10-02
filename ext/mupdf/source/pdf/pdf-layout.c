@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -163,6 +163,8 @@ fz_text *pdf_layout_fit_text(fz_context *ctx, fz_font *font, fz_text_language la
 	lines = fz_malloc_array(ctx, LINE_LIMIT, struct line);
 
 	fz_var(info);
+	fz_var(text);
+
 	fz_try(ctx)
 	{
 		fz_matrix trm;

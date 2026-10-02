@@ -6,7 +6,7 @@ EXIF and hand the payload to fz_new_icc_colorspace.
 
 ---
 diff --git a/source/fitz/load-webp.c b/source/fitz/load-webp.c
-index ef3574ca2..b69284829 100644
+index ef3574c..b692848 100644
 --- a/source/fitz/load-webp.c
 +++ b/source/fitz/load-webp.c
 @@ -3,8 +3,8 @@

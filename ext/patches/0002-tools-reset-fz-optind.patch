@@ -55,7 +55,7 @@ index cdc755f..faf1d64 100644
  	{
  		switch (c)
 diff --git a/source/tools/pdfbake.c b/source/tools/pdfbake.c
-index 4faddd0..7e59f3d 100644
+index 6934327..c255ebc 100644
 --- a/source/tools/pdfbake.c
 +++ b/source/tools/pdfbake.c
 @@ -54,6 +54,8 @@ int pdfbake_main(int argc, char **argv)

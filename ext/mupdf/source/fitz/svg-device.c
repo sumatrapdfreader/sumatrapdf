@@ -478,6 +478,9 @@ svg_dev_text_span_as_paths_defs(fz_context *ctx, fz_device *dev, fz_text_span *s
 	fz_buffer *out = sdev->out;
 	int i, font_idx;
 	svg_font *fnt;
+	fz_path *path = NULL;
+
+	fz_var(path);
 
 	for (font_idx = 0; font_idx < sdev->num_fonts; font_idx++)
 	{
@@ -502,53 +505,76 @@ svg_dev_text_span_as_paths_defs(fz_context *ctx, fz_device *dev, fz_text_span *s
 	}
 	fnt = &sdev->fonts[font_idx];
 
-	for (i=0; i < span->len; i++)
+	fz_try(ctx)
 	{
-		fz_text_item *it = &span->items[i];
-		int gid = it->gid;
+		for (i=0; i < span->len; i++)
+		{
+			fz_text_item *it = &span->items[i];
+			int gid = it->gid;
 
-		if (gid < 0)
-			continue;
-		if (gid >= fnt->max_sentlist)
-		{
-			int j;
-			fnt->sentlist = fz_realloc_array(ctx, fnt->sentlist, gid+1, char);
-			for (j = fnt->max_sentlist; j <= gid; j++)
-				fnt->sentlist[j] = 0;
-			fnt->max_sentlist = gid+1;
-		}
-		if (!fnt->sentlist[gid])
-		{
-			/* Need to send this one */
-			fz_path *path;
-			out = start_def(ctx, sdev, 1);
-			if (fz_font_ft_face(ctx, span->font))
+			if (gid < 0)
+				continue;
+			if (gid >= fnt->max_sentlist)
 			{
-				path = fz_outline_glyph(ctx, span->font, gid, fz_identity);
-				if (path)
-				{
-					fz_append_printf(ctx, out, "<path id=\"font_%d_%d\"", fnt->id, gid);
-					svg_dev_path(ctx, sdev, path);
-					fz_append_printf(ctx, out, "/>\n");
-					fz_drop_path(ctx, path);
-				}
-				else
-				{
-					fz_append_printf(ctx, out, "<g id=\"font_%d_%d\"></g>\n", fnt->id, gid);
-				}
+				int j;
+				fnt->sentlist = fz_realloc_array(ctx, fnt->sentlist, gid+1, char);
+				for (j = fnt->max_sentlist; j <= gid; j++)
+					fnt->sentlist[j] = 0;
+				fnt->max_sentlist = gid+1;
 			}
-			else if (fz_font_t3_procs(ctx, span->font))
+			if (!fnt->sentlist[gid])
 			{
-				fz_append_printf(ctx, out, "<g id=\"font_%d_%d\">\n", fnt->id, gid);
-				fz_run_t3_glyph(ctx, span->font, gid, fz_identity, dev);
-				fnt = &sdev->fonts[font_idx]; /* recursion may realloc the font array! */
-				fz_append_printf(ctx, out, "</g>\n");
+				/* Need to send this one */
+				out = start_def(ctx, sdev, 1);
+				if (fz_font_ft_face(ctx, span->font))
+				{
+					path = fz_outline_glyph(ctx, span->font, gid, fz_identity);
+					if (path)
+					{
+						fz_append_printf(ctx, out, "<path id=\"font_%d_%d\"", fnt->id, gid);
+						svg_dev_path(ctx, sdev, path);
+						fz_append_printf(ctx, out, "/>\n");
+						fz_drop_path(ctx, path);
+						path = NULL;
+					}
+					else
+					{
+						fz_append_printf(ctx, out, "<g id=\"font_%d_%d\"></g>\n", fnt->id, gid);
+					}
+				}
+				else if (fz_font_t3_procs(ctx, span->font))
+				{
+					fz_append_printf(ctx, out, "<g id=\"font_%d_%d\">\n", fnt->id, gid);
+					fz_run_t3_glyph(ctx, span->font, gid, fz_identity, dev);
+					fnt = &sdev->fonts[font_idx]; /* recursion may realloc the font array! */
+					fz_append_printf(ctx, out, "</g>\n");
+				}
+				out = end_def(ctx, sdev, 1);
+				fnt->sentlist[gid] = 1;
 			}
-			out = end_def(ctx, sdev, 1);
-			fnt->sentlist[gid] = 1;
 		}
 	}
+	fz_catch(ctx)
+	{
+		fz_drop_path(ctx, path);
+		fz_rethrow(ctx);
+	}
+
 	return fnt;
+}
+
+static int is_valid_xml_char(int c)
+{
+	/* exclude C0 (except tab and newline) and C1 and surrogates */
+	return (
+		c == 0x9 ||
+		c == 0xA ||
+		c == 0xD ||
+		(c >= 0x20 && c <= 0x7E) ||
+		(c >= 0xA0 && c <= 0xD7FF) ||
+		(c >= 0xE000 && c <= 0xFFFD) ||
+		(c >= 0x10000 && c <= 0x10FFFF)
+	);
 }
 
 static void
@@ -563,8 +589,8 @@ svg_dev_data_text(fz_context *ctx, fz_buffer *out, int c)
 			fz_append_string(ctx, out, "&quot;");
 		else if (c >= 32 && c < 127 && c != '<' && c != '>')
 			fz_append_byte(ctx, out, c);
-		else if (c >= 0xD800 && c <= 0xDFFF)
-			/* no surrogate characters in SVG */
+		else if (!is_valid_xml_char(c))
+			/* no surrogate or other invalid characters in SVG */
 			fz_append_printf(ctx, out, "&#xFFFD;");
 		else
 			fz_append_printf(ctx, out, "&#x%04x;", c);
@@ -1456,53 +1482,61 @@ fz_device *fz_new_svg_device_with_options(fz_context *ctx, fz_output *out, float
 {
 	svg_device *dev = fz_new_derived_device(ctx, svg_device);
 
-	dev->super.close_device = svg_dev_close_device;
-	dev->super.drop_device = svg_dev_drop_device;
+	fz_try(ctx)
+	{
+		dev->super.close_device = svg_dev_close_device;
+		dev->super.drop_device = svg_dev_drop_device;
 
-	dev->super.fill_path = svg_dev_fill_path;
-	dev->super.stroke_path = svg_dev_stroke_path;
-	dev->super.clip_path = svg_dev_clip_path;
-	dev->super.clip_stroke_path = svg_dev_clip_stroke_path;
+		dev->super.fill_path = svg_dev_fill_path;
+		dev->super.stroke_path = svg_dev_stroke_path;
+		dev->super.clip_path = svg_dev_clip_path;
+		dev->super.clip_stroke_path = svg_dev_clip_stroke_path;
 
-	dev->super.fill_text = svg_dev_fill_text;
-	dev->super.stroke_text = svg_dev_stroke_text;
-	dev->super.clip_text = svg_dev_clip_text;
-	dev->super.clip_stroke_text = svg_dev_clip_stroke_text;
-	dev->super.ignore_text = svg_dev_ignore_text;
+		dev->super.fill_text = svg_dev_fill_text;
+		dev->super.stroke_text = svg_dev_stroke_text;
+		dev->super.clip_text = svg_dev_clip_text;
+		dev->super.clip_stroke_text = svg_dev_clip_stroke_text;
+		dev->super.ignore_text = svg_dev_ignore_text;
 
-	dev->super.fill_shade = svg_dev_fill_shade;
-	dev->super.fill_image = svg_dev_fill_image;
-	dev->super.fill_image_mask = svg_dev_fill_image_mask;
-	dev->super.clip_image_mask = svg_dev_clip_image_mask;
+		dev->super.fill_shade = svg_dev_fill_shade;
+		dev->super.fill_image = svg_dev_fill_image;
+		dev->super.fill_image_mask = svg_dev_fill_image_mask;
+		dev->super.clip_image_mask = svg_dev_clip_image_mask;
 
-	dev->super.pop_clip = svg_dev_pop_clip;
+		dev->super.pop_clip = svg_dev_pop_clip;
 
-	dev->super.begin_mask = svg_dev_begin_mask;
-	dev->super.end_mask = svg_dev_end_mask;
-	dev->super.begin_group = svg_dev_begin_group;
-	dev->super.end_group = svg_dev_end_group;
+		dev->super.begin_mask = svg_dev_begin_mask;
+		dev->super.end_mask = svg_dev_end_mask;
+		dev->super.begin_group = svg_dev_begin_group;
+		dev->super.end_group = svg_dev_end_group;
 
-	dev->super.begin_tile = svg_dev_begin_tile;
-	dev->super.end_tile = svg_dev_end_tile;
+		dev->super.begin_tile = svg_dev_begin_tile;
+		dev->super.end_tile = svg_dev_end_tile;
 
-	dev->super.begin_layer = svg_dev_begin_layer;
-	dev->super.end_layer = svg_dev_end_layer;
+		dev->super.begin_layer = svg_dev_begin_layer;
+		dev->super.end_layer = svg_dev_end_layer;
 
-	dev->real_out = out;
-	dev->in_defs = 0;
-	dev->defs = fz_new_buffer(ctx, 4096);
-	dev->main = fz_new_buffer(ctx, 4096);
-	dev->out = dev->main;
+		dev->real_out = out;
+		dev->in_defs = 0;
+		dev->defs = fz_new_buffer(ctx, 4096);
+		dev->main = fz_new_buffer(ctx, 4096);
+		dev->out = dev->main;
 
-	dev->save_id = opts->id;
-	dev->id = opts->id ? *opts->id : 1;
-	dev->layers = 0;
-	dev->text_as_text = (opts->text_format == FZ_SVG_TEXT_AS_TEXT);
-	dev->reuse_images = opts->reuse_images;
-	dev->page_width = page_width;
-	dev->page_height = page_height;
+		dev->save_id = opts->id;
+		dev->id = opts->id ? *opts->id : 1;
+		dev->layers = 0;
+		dev->text_as_text = (opts->text_format == FZ_SVG_TEXT_AS_TEXT);
+		dev->reuse_images = opts->reuse_images;
+		dev->page_width = page_width;
+		dev->page_height = page_height;
 
-	dev->raster_scale = opts->resolution / 72.0f;
+		dev->raster_scale = opts->resolution / 72.0f;
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_device(ctx, &dev->super);
+		fz_rethrow(ctx);
+	}
 
 	return (fz_device*)dev;
 }
