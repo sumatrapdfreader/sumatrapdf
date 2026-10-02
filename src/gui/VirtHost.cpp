@@ -127,6 +127,13 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             break;
         }
         case WM_MOUSELEAVE:
+            // a jump inside the window (SetCursorPos) still posts leave. The
+            // cursor is outside on a real leave; re-arm tracking when it is not.
+            if (HwndWindowRect(hwnd).Contains(GetCursorPosition())) {
+                TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT), TME_LEAVE, hwnd, 0};
+                TrackMouseEvent(&tme);
+                break;
+            }
             host->onMouseLeave.Call();
             break;
     }
