@@ -186,26 +186,31 @@ static char gFontsFailedToLoad[256];
 static int gFontsFailedToLoadLen = 0;
 
 static int is_font_failed(const char* name) {
+    int res = 0;
     int nameLen = (int)strlen(name);
     int pos = 0;
+    EnterCriticalSection(&cs_fonts);
     while (pos < gFontsFailedToLoadLen) {
         const char* entry = gFontsFailedToLoad + pos;
         int entryLen = (int)strlen(entry);
         if (entryLen == nameLen && memcmp(entry, name, nameLen) == 0) {
-            return 1;
+            res = 1;
+            break;
         }
         pos += entryLen + 1;
     }
-    return 0;
+    LeaveCriticalSection(&cs_fonts);
+    return res;
 }
 
 static void add_font_failed(const char* name) {
     int n = (int)strlen(name) + 1;
-    if (gFontsFailedToLoadLen + n > (int)sizeof(gFontsFailedToLoad)) {
-        return; // buffer full, just skip
+    EnterCriticalSection(&cs_fonts);
+    if (gFontsFailedToLoadLen + n <= (int)sizeof(gFontsFailedToLoad)) {
+        memcpy(gFontsFailedToLoad + gFontsFailedToLoadLen, name, n);
+        gFontsFailedToLoadLen += n;
     }
-    memcpy(gFontsFailedToLoad + gFontsFailedToLoadLen, name, n);
-    gFontsFailedToLoadLen += n;
+    LeaveCriticalSection(&cs_fonts);
 }
 
 static void remove_spaces(char* srcDest);
