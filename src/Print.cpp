@@ -31,8 +31,9 @@
 #include "PrintWin11.h"
 #include "Print.h"
 
-class AbortCookieManager {
+class AbortCookieManager : NonCopyable {
     Mutex cookieAccess;
+    bool isAborted = false;
 
   public:
     AbortCookie* cookie = nullptr;
@@ -41,22 +42,26 @@ class AbortCookieManager {
     ~AbortCookieManager() { Clear(); }
 
     void Abort() {
-        // don't call Clear() here: it re-locks cookieAccess, which is a
-        // non-recursive SRWLOCK, so we'd self-deadlock. Do the clear inline.
         AutoUnlockMutex scope(&cookieAccess);
+        isAborted = true;
         if (cookie) {
             cookie->Abort();
-            delete cookie;
-            cookie = nullptr;
         }
     }
 
-    void Clear() {
+    bool IsAborted() {
         AutoUnlockMutex scope(&cookieAccess);
-        if (cookie) {
-            delete cookie;
+        return isAborted;
+    }
+
+    void Clear() {
+        AbortCookie* toDelete = nullptr;
+        {
+            AutoUnlockMutex scope(&cookieAccess);
+            toDelete = cookie;
             cookie = nullptr;
         }
+        delete toDelete;
     }
 };
 
@@ -749,7 +754,7 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
     bool anyOk = false;
     int dy0 = 0;
     while (dy0 < fullH) {
-        if (WasCanceled(progressCb)) {
+        if (WasCanceled(progressCb) || (abortCookie && abortCookie->IsAborted())) {
             break;
         }
         int h = std::min(bandH, fullH - dy0);
@@ -761,6 +766,9 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
 
         RenderPageArgs args(pageNo, zoom, rotation, &pageBand, target);
         if (abortCookie) {
+            if (abortCookie->IsAborted()) {
+                break;
+            }
             args.cookie_out = &abortCookie->cookie;
         }
         Pixmap* bmp = engine.RenderPage(args);
