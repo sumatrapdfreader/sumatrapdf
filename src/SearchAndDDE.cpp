@@ -1583,6 +1583,23 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     ShowMatchCount(win);
 }
 
+// progressCb on the document's TextSearch points at ftd. Drop it before ftd is
+// deleted: a later search on the UI thread (DDE GotoPageWord) calls it.
+static void DropFindProgressCb(MainWindow* win, FindThreadData* ftd) {
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSearch) {
+        return;
+    }
+    ProgressUpdateCb& cb = dm->textSearch->progressCb;
+    if ((cb.userData & ~ProgressUpdateCb::kDropsArgBit) != (uintptr_t)ftd) {
+        return;
+    }
+    cb = {};
+}
+
 static void FindEndTask(FindEndTaskData* d) {
     auto* win = d->win;
     auto* ftd = d->ftd;
@@ -1591,6 +1608,7 @@ static void FindEndTask(FindEndTaskData* d) {
     auto loopedAround = d->loopedAround;
 
     AutoDelete delData(d);
+    DropFindProgressCb(win, ftd);
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }

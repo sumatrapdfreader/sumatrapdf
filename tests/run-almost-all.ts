@@ -66,6 +66,7 @@ import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 import { testit as findResultsSorted } from "./find-results-sorted.ts";
 import { testit as findWindowLayout } from "./find-window-layout.ts";
 import { testit as findUiState } from "./find-ui-state.ts";
+import { testit as gotoPageWordAfterFind } from "./goto-page-word-after-find.ts";
 import { testit as issue5874 } from "./issue-5874.ts";
 import { testit as issue6055 } from "./issue-6055.ts";
 import { testit as sessionRestoreSearch } from "./session-restore-search.ts";
@@ -545,6 +546,7 @@ export const tests: NamedTest[] = [
   ["find-results-sorted", findResultsSorted],
   ["find-window-layout", findWindowLayout],
   ["find-ui-state", findUiState],
+  ["goto-page-word-after-find", gotoPageWordAfterFind],
   ["issue-5874", issue5874],
   ["issue-6055", issue6055],
   ["session-restore-search", sessionRestoreSearch],
