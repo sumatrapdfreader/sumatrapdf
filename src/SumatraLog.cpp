@@ -103,18 +103,14 @@ static void logToPipe(Str s) {
 }
 
 void log(Str s) {
-    bool skipLog = gSkipDuplicateLines && gLogBuf && str::Contains(*gLogBuf, s);
-
-    if (!skipLog) {
-        // in reduced logging mode, we do want to log to at least the debugger
-        if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
-            OutputDebugStringA(s.s);
-        }
-    }
     if (gDestroyedLogging) {
         return;
     }
     if (gReducedLogging) {
+        // in reduced logging mode, we do want to log to at least the debugger
+        if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
+            OutputDebugStringA(s.s);
+        }
         // if the pipe already connected, do log to it even if disabled
         // we do want easy logging, just want to reduce doing stuff
         // that can break crash handling
@@ -123,7 +119,18 @@ void log(Str s) {
         }
         return;
     }
-    gLogMutex.Lock();
+
+    AutoUnlockMutex lk(&gLogMutex);
+    if (gDestroyedLogging) {
+        return;
+    }
+
+    bool skipLog = gSkipDuplicateLines && gLogBuf && str::Contains(*gLogBuf, s);
+    if (!skipLog) {
+        if (gLogToDebugger || IsDebuggerPresent()) {
+            OutputDebugStringA(s.s);
+        }
+    }
 
     AtomicIntInc(&gAllowAllocFailure);
     AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
@@ -160,7 +167,6 @@ void log(Str s) {
         }
     }
     logToPipe(s);
-    gLogMutex.Unlock();
 }
 
 void StartLogToFile(Str path, bool removeIfExists) {
@@ -173,11 +179,20 @@ void StartLogToFile(Str path, bool removeIfExists) {
 }
 
 bool WriteCurrentLogToFile(Str path) {
-    if (!gLogBuf) return false;
-    Str slice = ToStr(*gLogBuf);
-    if (len(slice) == 0) {
-        return false;
+    Str slice;
+    {
+        AutoUnlockMutex lk(&gLogMutex);
+        if (!gLogBuf) {
+            return false;
+        }
+        Str curr = ToStr(*gLogBuf);
+        if (len(curr) == 0) {
+            return false;
+        }
+        slice = str::Dup(curr);
     }
+    AutoCall freeSlice((void (*)(Str))str::Free, slice);
+
     bool ok = dir::CreateForFile(path);
     if (!ok) {
         logf("WriteCurrentLogToFile: dir::CreateForFile('%s') failed\n", path);
@@ -192,13 +207,14 @@ bool WriteCurrentLogToFile(Str path) {
 
 void DestroyLogging() {
     gDestroyedLogging = true;
-    gLogMutex.Lock();
-    delete gLogBuf;
-    gLogBuf = nullptr;
-    ArenaDelete(gLogAllocator);
-    gLogAllocator = nullptr;
-    gLogMutex.Unlock();
-    str::FreePtr(&gLogFilePath);
+    {
+        AutoUnlockMutex lk(&gLogMutex);
+        delete gLogBuf;
+        gLogBuf = nullptr;
+        ArenaDelete(gLogAllocator);
+        gLogAllocator = nullptr;
+        str::FreePtr(&gLogFilePath);
+    }
     FileWatcherSetSkipPath(Str());
 }
 
