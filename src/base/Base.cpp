@@ -564,28 +564,21 @@ void* Arena::Push(u64 size, u64 align, bool zero) {
     if (!this) {
         return nullptr;
     }
-    lock.Lock();
-    void* mem = ArenaPushLocked(this, size, align, zero);
-    lock.Unlock();
-    return mem;
+    AutoUnlockMutex cs(&lock);
+    return ArenaPushLocked(this, size, align, zero);
 }
 
 u64 Arena::Pos() {
     if (!this) {
         return 0;
     }
+    AutoUnlockMutex cs(&lock);
     return current->basePos + current->pos;
 }
 
-void Arena::PopTo(u64 pos) {
-    if (!this) {
-        return;
-    }
-
-    lock.Lock();
-
+static void ArenaPopToLocked(Arena* arena, u64 pos) {
     u64 bigPos = std::max(kArenaHeaderSize, pos);
-    Arena* curr = current;
+    Arena* curr = arena->current;
     while (curr && curr->basePos >= bigPos) {
         Arena* prev = curr->prev;
         ArenaRelease(curr);
@@ -593,21 +586,32 @@ void Arena::PopTo(u64 pos) {
     }
 
     if (!curr) {
-        lock.Unlock();
         return;
     }
 
-    current = curr;
+    arena->current = curr;
     u64 newPos = bigPos - curr->basePos;
     ReportIf(newPos > curr->pos);
     curr->pos = newPos;
-    lock.Unlock();
+}
+
+void Arena::PopTo(u64 pos) {
+    if (!this) {
+        return;
+    }
+
+    AutoUnlockMutex cs(&lock);
+    ArenaPopToLocked(this, pos);
 }
 
 void Arena::Pop(u64 amt) {
-    u64 posOld = Pos();
+    if (!this) {
+        return;
+    }
+    AutoUnlockMutex cs(&lock);
+    u64 posOld = current->basePos + current->pos;
     u64 posNew = (amt < posOld) ? (posOld - amt) : 0;
-    PopTo(posNew);
+    ArenaPopToLocked(this, posNew);
 }
 
 // ArenaPtrCompress / ArenaPtrUncompress: store a pointer as a u32 offset from
@@ -640,15 +644,13 @@ u32 ArenaPtrCompress(Arena* arena, void* ptr) {
     if (!arena || !ptr) {
         return 0;
     }
-    arena->lock.Lock();
+    AutoUnlockMutex cs(&arena->lock);
     Arena* block = ArenaFindBlockContaining(arena, ptr);
     if (!block) {
-        arena->lock.Unlock();
         ReportIf(true);
         return 0;
     }
     u64 off = block->basePos + (u64)((char*)ptr - (char*)block);
-    arena->lock.Unlock();
     if (off > 0xffffffffull) {
         ReportIf(true);
         return 0;
@@ -660,16 +662,13 @@ void* ArenaPtrUncompress(Arena* arena, u32 compressed) {
     if (!arena || compressed == 0) {
         return nullptr;
     }
-    arena->lock.Lock();
+    AutoUnlockMutex cs(&arena->lock);
     Arena* block = ArenaFindBlockForOffset(arena, compressed);
     if (!block) {
-        arena->lock.Unlock();
         ReportIf(true);
         return nullptr;
     }
-    void* ptr = (char*)block + (compressed - block->basePos);
-    arena->lock.Unlock();
-    return ptr;
+    return (char*)block + (compressed - block->basePos);
 }
 
 void* Arena::Alloc(int size) {
@@ -680,7 +679,11 @@ void* Arena::Alloc(int size) {
 }
 
 void Arena::Reset() {
-    PopTo(0);
+    if (!this) {
+        return;
+    }
+    AutoUnlockMutex cs(&lock);
+    ArenaPopToLocked(this, 0);
     nAllocsSinceReset = 0;
     peakBytesSinceReset = 0;
 }
