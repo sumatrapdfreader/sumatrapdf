@@ -3559,23 +3559,20 @@ struct ContextThreadID {
     ThreadId threadID = 0;
 };
 
-static Vec<ContextThreadID>* gPerThreadContexts;
+static Vec<ContextThreadID> gPerThreadContexts;
 static Mutex gPerThreadContextsCs;
 static AtomicInt gEngineCount = 0;
 
 static void InitializeEngineMupdf() {
-    auto n = AtomicIntInc(&gEngineCount);
-    if (n != 1) return;
-    ReportIf(gPerThreadContexts);
-    gPerThreadContexts = new Vec<ContextThreadID>();
+    AtomicIntInc(&gEngineCount);
 }
 
 static void DeInitializeEngineMupdf() {
     auto n = AtomicIntDec(&gEngineCount);
     if (n > 0) return;
     ReportIf(n < 0);
-    delete gPerThreadContexts;
-    gPerThreadContexts = nullptr;
+    AutoUnlockMutex cs(&gPerThreadContextsCs);
+    VecReset(gPerThreadContexts);
 }
 
 // Shutdown waits for this to hit zero before freeing the system-font cache.
@@ -3588,7 +3585,7 @@ static fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* c
     ThreadId threadID = GetCurrentThreadId();
     {
         AutoUnlockMutex cs(&gPerThreadContextsCs);
-        for (auto& el : *gPerThreadContexts) {
+        for (auto& el : gPerThreadContexts) {
             if (el.engine == engine && el.threadID == threadID) {
                 return el.ctx;
             }
@@ -3606,7 +3603,7 @@ static fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* c
     {
         AutoUnlockMutex cs(&gPerThreadContextsCs);
         ContextThreadID el{engine, newCtx, threadID};
-        VecAppend(*gPerThreadContexts, el);
+        VecAppend(gPerThreadContexts, el);
     }
     return newCtx;
 }
@@ -3616,12 +3613,12 @@ static void ReleasePerThreadContext(EngineMupdf* engine) {
     fz_context* ctxToDrop = nullptr;
     {
         AutoUnlockMutex cs(&gPerThreadContextsCs);
-        auto n = len(*gPerThreadContexts);
+        auto n = len(gPerThreadContexts);
         for (int i = 0; i < n; i++) {
-            auto& el = (*gPerThreadContexts)[i];
+            auto& el = gPerThreadContexts[i];
             if (el.engine == engine && el.threadID == threadID) {
                 ctxToDrop = el.ctx;
-                VecRemoveAtFast(*gPerThreadContexts, i);
+                VecRemoveAtFast(gPerThreadContexts, i);
                 break;
             }
         }
@@ -3636,11 +3633,11 @@ static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
     Vec<fz_context*> ctxsToDrop;
     {
         AutoUnlockMutex cs(&gPerThreadContextsCs);
-        for (int i = len(*gPerThreadContexts) - 1; i >= 0; i--) {
-            auto& el = (*gPerThreadContexts)[i];
+        for (int i = len(gPerThreadContexts) - 1; i >= 0; i--) {
+            auto& el = gPerThreadContexts[i];
             if (el.engine == engine) {
                 VecAppend(ctxsToDrop, el.ctx);
-                VecRemoveAtFast(*gPerThreadContexts, i);
+                VecRemoveAtFast(gPerThreadContexts, i);
             }
         }
     }
