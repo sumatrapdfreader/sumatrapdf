@@ -985,15 +985,22 @@ bool RenderCache::GetNextRequest(PageRenderRequest* req, int threadIdx) {
 }
 
 bool RenderCache::ClearCurrentRequest(int threadIdx) {
-    AutoUnlockRecursiveMutex scope(&requestAccess);
-    if (curReqs[threadIdx]) {
-        RecordFinishedRequest(curReqs[threadIdx]);
-        delete curReqs[threadIdx]->abortCookie;
-    }
-    curReqs[threadIdx] = nullptr;
+    AbortCookie* abortCookie = nullptr;
+    bool isQueueEmpty = false;
+    {
+        AutoUnlockRecursiveMutex scope(&requestAccess);
+        if (curReqs[threadIdx]) {
+            RecordFinishedRequest(curReqs[threadIdx]);
+            abortCookie = curReqs[threadIdx]->abortCookie;
+        }
+        curReqs[threadIdx] = nullptr;
 
-    UpdateRenderInfo();
-    bool isQueueEmpty = requestCount == 0;
+        UpdateRenderInfo();
+        isQueueEmpty = requestCount == 0;
+    }
+
+    // Cookie cleanup must not hold up UI cancellation on requestAccess.
+    delete abortCookie;
     return isQueueEmpty;
 }
 

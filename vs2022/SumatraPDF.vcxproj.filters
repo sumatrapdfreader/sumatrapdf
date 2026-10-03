@@ -1334,6 +1334,9 @@
     <ClCompile Include="..\src\tests\ReadAloudHighlight_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\tests\RenderCache_ut.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\tests\ShortcutParse_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>

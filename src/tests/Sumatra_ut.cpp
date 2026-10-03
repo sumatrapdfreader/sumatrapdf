@@ -87,6 +87,7 @@ bool Accelerators_UnitTestCustomShortcutShown();
 bool ShortcutParse_UnitTestShiftedPunct();
 bool AnnotSearch_UnitTests();
 void ReadAloudHighlight_UnitTests();
+bool RenderCache_UnitTestCookieUnlocked();
 
 static void ParseFileArgsTest() {
     FileArgs* fa = ParseFileArgs(StrL("C:\\foo.pdf?page=4"));
@@ -631,6 +632,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(Accelerators_UnitTestCustomShortcutShown());
     utassert(ShortcutParse_UnitTestShiftedPunct());
     utassert(AnnotSearch_UnitTests());
+    utassert(RenderCache_UnitTestCookieUnlocked());
     ReadAloudHighlight_UnitTests();
 #endif
     return utassert_print_results();
