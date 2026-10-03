@@ -155,7 +155,7 @@ static bool FileStateChanged(Str filePath, FileWatcherState* fs) {
 // don't handle that. It is mostly reported for renames, which we do act on
 // (FILE_ACTION_RENAMED_NEW_NAME below), so the case is not ruled out.
 
-static void NotifyAboutFile(WatchedDir* d, Str fileName) {
+static void CollectNotificationsAboutFile(WatchedDir* d, Str fileName, Vec<Func0>& toNotify) {
     int i = 0;
 
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
@@ -177,7 +177,7 @@ static void NotifyAboutFile(WatchedDir* d, Str fileName) {
         // because the time granularity is so big that this can cause genuine
         // file notifications to be ignored. (This happens for instance for
         // PDF files produced by pdftex from small.tex document)
-        wf->onFileChangedCb.Call();
+        VecAppend(toNotify, wf->onFileChangedCb);
     }
 }
 
@@ -202,62 +202,69 @@ static void CompleteRemovalIfDone(WatchedDir* wd) {
 }
 
 static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytesTransfered, LPOVERLAPPED overlapped) {
-    AutoUnlockMutex cs(&gFileWatcherMutex);
+    Vec<Func0> toNotify;
+    {
+        AutoUnlockMutex cs(&gFileWatcherMutex);
 
-    OverlappedEx* over = (OverlappedEx*)overlapped;
-    WatchedDir* wd = (WatchedDir*)over->data;
+        OverlappedEx* over = (OverlappedEx*)overlapped;
+        WatchedDir* wd = (WatchedDir*)over->data;
 
-    ReportIf(wd != wd->overlapped.data);
+        ReportIf(wd != wd->overlapped.data);
 
-    // whatever the outcome, this read is done
-    wd->ioPending = false;
+        // whatever the outcome, this read is done
+        wd->ioPending = false;
 
-    if (errCode == ERROR_OPERATION_ABORTED) {
-        CompleteRemovalIfDone(wd);
-        return;
-    }
-    if (wd->stopped) {
-        // removed while this completion was already queued: don't re-arm a
-        // handle that StopMonitoringDirAPC() closed
-        CompleteRemovalIfDone(wd);
-        return;
-    }
+        if (errCode == ERROR_OPERATION_ABORTED) {
+            CompleteRemovalIfDone(wd);
+            return;
+        }
+        if (wd->stopped) {
+            // removed while this completion was already queued: don't re-arm a
+            // handle that StopMonitoringDirAPC() closed
+            CompleteRemovalIfDone(wd);
+            return;
+        }
 
-    wd->startMonitoring = false;
+        wd->startMonitoring = false;
 
-    // This might mean overflow? Not sure.
-    if (!bytesTransfered) {
+        // This might mean overflow? Not sure.
+        if (!bytesTransfered) {
+            StartMonitoringDirForChanges(wd);
+            return;
+        }
+
+        FILE_NOTIFY_INFORMATION* notify = (FILE_NOTIFY_INFORMATION*)wd->buf;
+
+        // collect files that changed, removing duplicates
+        StrVec changedFiles;
+        for (;;) {
+            size_t fnLen = notify->FileNameLength / sizeof(WCHAR);
+            TempStr fileName = ToUtf8Temp(WStr(notify->FileName, (int)fnLen));
+            // files can get updated either by writing to them directly or
+            // by writing to a .tmp file first and then moving that file in place
+            // (the latter only yields a RENAMED action with the expected file name)
+            if (notify->Action == FILE_ACTION_ADDED || notify->Action == FILE_ACTION_MODIFIED ||
+                notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
+                AppendIfNotExists(&changedFiles, fileName);
+            }
+
+            // step to the next entry if there is one
+            DWORD nextOff = notify->NextEntryOffset;
+            if (!nextOff) {
+                break;
+            }
+            notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff);
+        }
+
         StartMonitoringDirForChanges(wd);
-        return;
+
+        for (Str f : changedFiles) {
+            CollectNotificationsAboutFile(wd, f, toNotify);
+        }
     }
 
-    FILE_NOTIFY_INFORMATION* notify = (FILE_NOTIFY_INFORMATION*)wd->buf;
-
-    // collect files that changed, removing duplicates
-    StrVec changedFiles;
-    for (;;) {
-        size_t fnLen = notify->FileNameLength / sizeof(WCHAR);
-        TempStr fileName = ToUtf8Temp(WStr(notify->FileName, (int)fnLen));
-        // files can get updated either by writing to them directly or
-        // by writing to a .tmp file first and then moving that file in place
-        // (the latter only yields a RENAMED action with the expected file name)
-        if (notify->Action == FILE_ACTION_ADDED || notify->Action == FILE_ACTION_MODIFIED ||
-            notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
-            AppendIfNotExists(&changedFiles, fileName);
-        }
-
-        // step to the next entry if there is one
-        DWORD nextOff = notify->NextEntryOffset;
-        if (!nextOff) {
-            break;
-        }
-        notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff);
-    }
-
-    StartMonitoringDirForChanges(wd);
-
-    for (Str f : changedFiles) {
-        NotifyAboutFile(wd, f);
+    for (const auto& cb : toNotify) {
+        cb.Call();
     }
 }
 
@@ -364,17 +371,24 @@ static void RunManualChecks() {
         it.path = {};
     }
 
-    AutoUnlockMutex cs(&gFileWatcherMutex);
-    for (ManualCheckItem& it : items) {
-        if (!it.changed) {
-            continue;
+    Vec<Func0> toNotify;
+    {
+        AutoUnlockMutex cs(&gFileWatcherMutex);
+        for (ManualCheckItem& it : items) {
+            if (!it.changed) {
+                continue;
+            }
+            // Unwatch may have removed/freed wf while we were querying attributes
+            if (!WatchedFileStillActive(it.wf)) {
+                continue;
+            }
+            it.wf->fileState = it.state;
+            VecAppend(toNotify, it.wf->onFileChangedCb);
         }
-        // Unwatch may have removed/freed wf while we were querying attributes
-        if (!WatchedFileStillActive(it.wf)) {
-            continue;
-        }
-        it.wf->fileState = it.state;
-        it.wf->onFileChangedCb.Call();
+    }
+
+    for (const auto& cb : toNotify) {
+        cb.Call();
     }
 }
 
