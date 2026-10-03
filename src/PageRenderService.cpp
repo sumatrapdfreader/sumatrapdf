@@ -30,7 +30,7 @@ struct PageRenderServiceData {
     ConditionVariable condition;
     ThreadHandle worker = nullptr;
     EngineBase* engine = nullptr;
-    AbortCookie* activeCookie = nullptr;
+    AbortCookie* volatile activeCookie = nullptr;
     Vec<PageRenderPolicyRequest> requests;
     Vec<PageRenderCacheEntry> cache;
     PageRenderNotify* notify = nullptr;
@@ -149,14 +149,19 @@ static void RenderWorker(PageRenderServiceData* data) {
         data->activeKey = request.key;
         data->hasActive = true;
         data->activeCookie = nullptr;
+        if (data->stopping || request.generation != data->generation) {
+            data->hasActive = false;
+            data->mutex.Unlock();
+            continue;
+        }
         data->mutex.Unlock();
 
         RenderPageArgs args(request.key.pageNo, request.key.zoom, request.key.rotation, nullptr, RenderTarget::View,
-                            &data->activeCookie);
+                            (AbortCookie**)&data->activeCookie);
         Pixmap* pixmap = data->engine->RenderPage(args);
 
         data->mutex.Lock();
-        delete data->activeCookie;
+        AbortCookie* toDelete = data->activeCookie;
         data->activeCookie = nullptr;
         data->hasActive = false;
         bool accepted = false;
@@ -165,6 +170,7 @@ static void RenderWorker(PageRenderServiceData* data) {
             pixmap = nullptr;
         }
         data->mutex.Unlock();
+        delete toDelete;
         FreePixmap(pixmap);
         if (accepted) {
             PostNotify(data->notify);
