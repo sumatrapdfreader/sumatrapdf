@@ -188,7 +188,7 @@ class PageRenderer {
     RectF reqPageRect;
     bool reqUseClip = false;
     bool reqAbort = false;
-    AbortCookie* abortCookie = nullptr;
+    AbortCookie* volatile abortCookie = nullptr;
 
     Mutex currAccess;
     ThreadHandle thread = nullptr;
@@ -206,8 +206,19 @@ class PageRenderer {
         this->hwnd = hwnd;
     }
     ~PageRenderer() {
-        if (thread) {
-            WaitForSingleObject(thread, INFINITE);
+        ThreadHandle th = nullptr;
+        {
+            AutoUnlockMutex scope(&currAccess);
+            if (abortCookie) {
+                abortCookie->Abort();
+            }
+            reqAbort = true;
+            th = thread;
+            thread = nullptr;
+        }
+        if (th) {
+            WaitForSingleObject(th, INFINITE);
+            SafeCloseThreadHandle(&th);
         }
         FreePixmap(currBmp);
     }
@@ -265,25 +276,30 @@ class PageRenderer {
 
         PageRenderer* pr = (PageRenderer*)data;
         RenderPageArgs args(pr->reqPage, pr->reqZoom, 0, pr->reqUseClip ? &pr->reqPageRect : nullptr,
-                            RenderTarget::View, &pr->abortCookie);
+                            RenderTarget::View, (AbortCookie**)&pr->abortCookie);
         Pixmap* bmp = pr->engine->RenderPage(args);
 
-        AutoUnlockMutex scope(&pr->currAccess);
+        AbortCookie* toDelete = nullptr;
+        ThreadHandle th = nullptr;
+        {
+            AutoUnlockMutex scope(&pr->currAccess);
+            if (bmp && !pr->reqAbort) {
+                FreePixmap(pr->currBmp);
+                pr->currBmp = bmp;
+                pr->currPage = pr->reqPage;
+                pr->currZoom = pr->reqZoom;
+                pr->currClip = pr->reqClip;
+            } else {
+                FreePixmap(bmp);
+            }
+            toDelete = pr->abortCookie;
+            pr->abortCookie = nullptr;
 
-        if (bmp && !pr->reqAbort) {
-            FreePixmap(pr->currBmp);
-            pr->currBmp = bmp;
-            pr->currPage = pr->reqPage;
-            pr->currZoom = pr->reqZoom;
-            pr->currClip = pr->reqClip;
-        } else {
-            FreePixmap(bmp);
+            th = pr->thread;
+            pr->thread = nullptr;
         }
-        delete pr->abortCookie;
-        pr->abortCookie = nullptr;
+        delete toDelete;
 
-        ThreadHandle th = pr->thread;
-        pr->thread = nullptr;
         PostMessageW(pr->hwnd, kUwmPaintAgain, 0, 0);
 
         SafeCloseThreadHandle(&th);
