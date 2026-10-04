@@ -101,7 +101,7 @@ static ExternalViewerInfo gExternalViewers[] = {
     },
     {
         StrL("Foxit Reader"),
-        CmdOpenWithFoxIt,
+        CmdOpenWithFoxit,
         StrL(".pdf"),
         StrL(R"(Foxit Software\Foxit Reader\FoxitReader.exe)"),
         // Foxit: filename [-n page] [-z zoom]
@@ -111,7 +111,7 @@ static ExternalViewerInfo gExternalViewers[] = {
     },
     {
         StrL("Foxit PhantomPDF"),
-        CmdOpenWithFoxItPhantom,
+        CmdOpenWithFoxitPhantom,
         StrL(".pdf"),
         StrL(R"(Foxit Software\Foxit PhantomPDF\FoxitPhantomPDF.exe)"),
         StrL(R"("%1" /A page=%p -z %z)"),
@@ -166,8 +166,8 @@ const int gOpenWithKnownExternalViewerCmds[] = {
     CmdOpenWithTotalCommander,
     CmdOpenWithDoubleCommander,
     CmdOpenWithAcrobat,
-    CmdOpenWithFoxIt,
-    CmdOpenWithFoxItPhantom,
+    CmdOpenWithFoxit,
+    CmdOpenWithFoxitPhantom,
     CmdOpenWithPdfXchange,
     CmdOpenWithXpsViewer,
     CmdOpenWithHtmlHelp,
@@ -438,7 +438,7 @@ void DetectExternalViewers() {
     SetKnownExternalViewerExePath(CmdOpenWithAcrobat, exePath);
 
     exePath = GetFoxitPathTemp();
-    SetKnownExternalViewerExePath(CmdOpenWithFoxIt, exePath);
+    SetKnownExternalViewerExePath(CmdOpenWithFoxit, exePath);
 }
 
 static bool filterMatchesEverything(Str ext) {

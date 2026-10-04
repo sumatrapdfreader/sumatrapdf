@@ -304,6 +304,12 @@ static void parseCommandsTest() {
     CommandArg* arg;
 
     {
+        // names match case-insensitively, so a re-cased name keeps old shortcuts working
+        utassert(GetCommandIdByName(StrL("CmdOpenWithFoxit")) == CmdOpenWithFoxit);
+        utassert(GetCommandIdByName(StrL("CmdOpenWithFoxIt")) == CmdOpenWithFoxit);
+        utassert(GetCommandIdByName(StrL("cmdopenwithfoxitphantom")) == CmdOpenWithFoxitPhantom);
+    }
+    {
         auto* cmd = CreateCommandFromDefinition(StrL(" CmdCreateAnnotHighlight   #00ff00 openEdit copytoclipboard"));
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 

@@ -117,8 +117,8 @@ static SeqStrings gCommandNames =
     "CmdOpenWithTotalCommander\0"
     "CmdOpenWithDoubleCommander\0"
     "CmdOpenWithAcrobat\0"
-    "CmdOpenWithFoxIt\0"
-    "CmdOpenWithFoxItPhantom\0"
+    "CmdOpenWithFoxit\0"
+    "CmdOpenWithFoxitPhantom\0"
     "CmdOpenWithPdfXchange\0"
     "CmdOpenWithXpsViewer\0"
     "CmdOpenWithHtmlHelp\0"
@@ -444,8 +444,8 @@ static i32 gCommandIds[] = {
     CmdOpenWithTotalCommander,
     CmdOpenWithDoubleCommander,
     CmdOpenWithAcrobat,
-    CmdOpenWithFoxIt,
-    CmdOpenWithFoxItPhantom,
+    CmdOpenWithFoxit,
+    CmdOpenWithFoxitPhantom,
     CmdOpenWithPdfXchange,
     CmdOpenWithXpsViewer,
     CmdOpenWithHtmlHelp,
