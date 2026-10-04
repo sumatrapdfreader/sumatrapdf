@@ -216,7 +216,7 @@ enum {
     CmdPdfEncrypt = 410,
     CmdPdfDecrypt = 411,
     CmdPdfBake = 412,
-    CmdPdShowInfo = 413,
+    CmdPdfShowInfo = 413,
     CmdDocumentExtractText = 414,
     CmdDocumentShowOutline = 415,
     CmdSetScreenshotHotkey = 416,

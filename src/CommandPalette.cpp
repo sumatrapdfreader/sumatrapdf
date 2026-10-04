@@ -217,7 +217,7 @@ static i32 gCommandsNoActivate[] = {
     CmdProperties,
     CmdNewWindow,
     CmdDuplicateInNewWindow,
-    CmdPdShowInfo,
+    CmdPdfShowInfo,
     CmdDocumentShowOutline,
     CmdListPrinters,
     CmdCropImage,

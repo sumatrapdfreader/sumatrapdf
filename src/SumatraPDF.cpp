@@ -13149,7 +13149,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
-        case CmdPdShowInfo: {
+        case CmdPdfShowInfo: {
             if (tab && tab->filePath && CouldBePDFDoc(tab)) {
                 if (tab->hwndPDFInfo && IsWindow(tab->hwndPDFInfo)) {
                     SetForegroundWindow(tab->hwndPDFInfo);
