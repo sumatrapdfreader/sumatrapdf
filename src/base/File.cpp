@@ -727,6 +727,22 @@ bool IsDirectory(Str path) {
     return GetType(path) == Type::Dir;
 }
 
+// Prefix needed by Win32 for paths >= MAX_PATH, e.g.
+// C:\dir\x => \\?\C:\dir\x and \\server\share\x => \\?\UNC\server\share\x
+static TempWStr LongPathTemp(WStr path) {
+    WStr prefix = WStrL(L"\\\\?\\");
+    if (len(path) < MAX_PATH || wstr::StartsWith(path.s, prefix)) {
+        return path;
+    }
+
+    WStr uncStart = WStrL(L"\\\\");
+    if (!wstr::StartsWith(path.s, uncStart)) {
+        return str::JoinTemp(prefix, path);
+    }
+    WStr serverAndRest(path.s + len(uncStart), len(path) - len(uncStart));
+    return str::JoinTemp(WStrL(L"\\\\?\\UNC\\"), serverAndRest);
+}
+
 static TempWStr NormalizeTemp(WStr path) {
     WCHAR* pathZ = CWStrTemp(path);
     // GetFullPathNameW is path-string math only (relative→absolute, collapse
@@ -746,13 +762,7 @@ static TempWStr NormalizeTemp(WStr path) {
     // thread (open, tab switch, menu rebuild). Skip them for network paths —
     // absolute form from GetFullPathNameW is enough.
     if (PathIsNetworkPathW(fullPath.s) || PathIsNetworkPathW(pathZ)) {
-        if (wstr::StartsWith(fullPath.s, WStrL(L"\\\\?\\"))) {
-            return fullPath;
-        }
-        if (len(fullPath) >= MAX_PATH) {
-            return str::JoinTemp(WStrL(L"\\\\?\\"), fullPath);
-        }
-        return fullPath;
+        return LongPathTemp(fullPath);
     }
 
     TempWStr normPath = fullPath;
@@ -772,13 +782,7 @@ static TempWStr NormalizeTemp(WStr path) {
         DWORD nShort = GetShortPathNameW(fullPath.s, shortBuf, cch);
         return WStr(shortBuf, (int)nShort);
     }
-    if (wstr::StartsWith(normPath.s, WStrL(L"\\\\?\\"))) {
-        return normPath;
-    }
-    if (len(normPath) >= MAX_PATH) {
-        return str::JoinTemp(WStrL(L"\\\\?\\"), normPath);
-    }
-    return normPath;
+    return LongPathTemp(normPath);
 }
 
 // Absolute path form. Local drives also expand 8.3 names via GetLongPathNameW;

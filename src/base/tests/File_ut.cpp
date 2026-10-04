@@ -113,6 +113,22 @@ void FileUtilTest() {
         TempStr norm = path::NormalizeTemp(p);
         utassert(str::EqI(norm, p));
     }
+    {
+        // a UNC path is \\?\UNC\server\share when extended, not \\?\\\server\share
+        Str shortUnc = StrL("\\\\server\\share\\doc.pdf");
+        utassert(str::Eq(path::NormalizeTemp(shortUnc), shortUnc));
+
+        str::Builder longName;
+        for (int i = 0; i < MAX_PATH; i++) {
+            longName.AppendChar('a');
+        }
+        TempStr longUnc = fmt("\\\\server\\share\\%s.pdf", ToStr(longName));
+        TempStr expected = fmt("\\\\?\\UNC\\server\\share\\%s.pdf", ToStr(longName));
+        TempStr norm = path::NormalizeTemp(longUnc);
+        utassert(str::Eq(norm, expected));
+        // already extended: unchanged
+        utassert(str::Eq(path::NormalizeTemp(norm), expected));
+    }
 
     {
         // a temp dir that doesn't fit the first buffer must come back whole:
