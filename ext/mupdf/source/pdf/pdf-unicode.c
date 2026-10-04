@@ -157,6 +157,16 @@ unicode_from_coded_glyph_name(const char *name)
 	return 0;
 }
 
+/* ASCII-only: fz_strncasecmp asserts on the UTF-8 in a CJK font name. */
+static int
+name_has_prefix(const char *s, const char *lower_prefix)
+{
+	for (; *lower_prefix; s++, lower_prefix++)
+		if (fz_tolower((unsigned char)*s) != *lower_prefix)
+			return 0;
+	return 1;
+}
+
 /* Distiller Type1 ToUnicode is often identity Latin-1 even for CP1251
  * faces that reuse Latin Encoding names. Treat the font as CP1251 when
  * the name is a known family / has a Cyrillic tag, or the document
@@ -172,13 +182,13 @@ pdf_simple_font_looks_cp1251(fz_context *ctx, pdf_document *doc, pdf_font_desc *
 	if (strlen(name) > 7 && name[6] == '+')
 		name += 7;
 
-	if (fz_strncasecmp(name, "literaturnaya", 13) == 0)
+	if (name_has_prefix(name, "literaturnaya"))
 		return 1;
 	/* "Academy" / "Academy-Bold", but not "AcademyEngraved". */
-	if (fz_strncasecmp(name, "academy", 7) == 0 && (name[7] == 0 || name[7] == '-'))
+	if (name_has_prefix(name, "academy") && (name[7] == 0 || name[7] == '-'))
 		return 1;
 	for (i = 0; name[i]; i++)
-		if (fz_strncasecmp(name + i, "cyr", 3) == 0 || fz_strncasecmp(name + i, "1251", 4) == 0)
+		if (name_has_prefix(name + i, "cyr") || name_has_prefix(name + i, "1251"))
 			return 1;
 
 	if (!doc)

@@ -39,6 +39,102 @@
 #include <unistd.h>
 #endif
 
+#ifdef _WIN32
+
+/* SumatraPDF: UTF-8 to a console goes through WriteConsoleW. The CRT converts
+ * the bytes with the console code page and fails the write on a DBCS one (#6276). */
+
+typedef struct
+{
+	unsigned char pend[FZ_UTFMAX]; /* UTF-8 sequence split across writes */
+	int npend;
+} fz_console_utf8;
+
+static fz_console_utf8 stdout_console, stderr_console;
+
+static HANDLE
+console_handle(FILE *file)
+{
+	DWORD mode;
+	HANDLE h;
+	int fd = _fileno(file);
+
+	if (fd < 0)
+		return NULL;
+	h = (HANDLE)_get_osfhandle(fd);
+	if (h == INVALID_HANDLE_VALUE || !GetConsoleMode(h, &mode))
+		return NULL;
+	return h;
+}
+
+static int
+utf8_seq_len(unsigned char lead)
+{
+	if (lead < 0xC0) return 1;
+	if (lead < 0xE0) return 2;
+	if (lead < 0xF0) return 3;
+	if (lead < 0xF8) return 4;
+	return 1;
+}
+
+static int
+console_write(fz_console_utf8 *con, FILE *file, const unsigned char *data, size_t count)
+{
+	wchar_t wbuf[1024];
+	int wn = 0;
+	DWORD written;
+	size_t i;
+	HANDLE h = console_handle(file);
+
+	if (!h)
+		return 0;
+
+	/* keep the order with what printf() already buffered */
+	fflush(file);
+
+	for (i = 0; i < count; i++)
+	{
+		int rune;
+		unsigned char b = data[i];
+
+		/* a sequence cut short by a non-continuation byte */
+		if (con->npend > 0 && (b & 0xC0) != 0x80)
+		{
+			wbuf[wn++] = 0xFFFD;
+			con->npend = 0;
+		}
+
+		con->pend[con->npend++] = b;
+		if (con->npend < utf8_seq_len(con->pend[0]))
+			continue;
+
+		fz_chartorunen(&rune, (const char *)con->pend, con->npend);
+		con->npend = 0;
+
+		if (rune > 0xFFFF)
+		{
+			rune -= 0x10000;
+			wbuf[wn++] = (wchar_t)(0xD800 + (rune >> 10));
+			wbuf[wn++] = (wchar_t)(0xDC00 + (rune & 0x3FF));
+		}
+		else
+			wbuf[wn++] = (wchar_t)rune;
+
+		/* room for a cut-short marker and a surrogate pair */
+		if (wn > (int)nelem(wbuf) - 3)
+		{
+			WriteConsoleW(h, wbuf, wn, &written, NULL);
+			wn = 0;
+		}
+	}
+
+	if (wn > 0)
+		WriteConsoleW(h, wbuf, wn, &written, NULL);
+	return 1;
+}
+
+#endif
+
 static void
 file_write(fz_context *ctx, void *opaque, const void *buffer, size_t count)
 {
@@ -47,6 +143,13 @@ file_write(fz_context *ctx, void *opaque, const void *buffer, size_t count)
 
 	if (count == 0)
 		return;
+
+#ifdef _WIN32
+	if (file == stdout && console_write(&stdout_console, file, buffer, count))
+		return;
+	if (file == stderr && console_write(&stderr_console, file, buffer, count))
+		return;
+#endif
 
 	if (count == 1)
 	{

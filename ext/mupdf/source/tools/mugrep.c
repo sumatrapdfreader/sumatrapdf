@@ -236,7 +236,13 @@ show_match_snippet(char *file_name, int page_number, fz_stext_position begin, fz
 		(void)show_segment_inc(end.page->first_block, NULL, NULL, end.line, end.ch, &last);
 	}
 	fz_write_string(ctx, out, mark_close);
-	prev_pos->page = end.page;
+	/* SumatraPDF: the search drops a page once it is past it, but the rest of
+	 * this line is only shown at the next match, so keep the page (#6276). */
+	if (prev_pos->page != end.page)
+	{
+		fz_drop_stext_page(ctx, prev_pos->page);
+		prev_pos->page = fz_keep_stext_page(ctx, end.page);
+	}
 	prev_pos->block = end.block;
 	prev_pos->line = end.line;
 	prev_pos->ch = end.ch;
@@ -252,6 +258,7 @@ mugrep_run(char *filename, fz_document *doc, char *pattern, fz_search_options op
 	fz_stext_position prev_pos = { 0 };
 
 	fz_var(search);
+	fz_var(prev_pos);
 
 	fz_try(ctx)
 	{
@@ -319,7 +326,10 @@ mugrep_run(char *filename, fz_document *doc, char *pattern, fz_search_options op
 		}
 	}
 	fz_always(ctx)
+	{
+		fz_drop_stext_page(ctx, prev_pos.page);
 		fz_drop_search(ctx, search);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
