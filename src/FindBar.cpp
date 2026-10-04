@@ -928,8 +928,22 @@ TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
         floating += IsFindWindowVisible(w) ? 1 : 0;
     }
     int firstTextLen = gWindows[0]->findEdit ? CbGetTextLen(gWindows[0]->findEdit) : -1;
-    out.Append(fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d firstTextLen=%d\n", len(gWindows), docs,
-                   gSettings->searchUIFloating ? 1 : 0, compact, floating, firstTextLen));
+    // search state of the first window: highlighted matches, page of the
+    // active hit (0: none) and whether a search is still running
+    MainWindow* first = gWindows[0];
+    int matches = len(first->findMatches);
+    int hitPage = 0;
+    DisplayModel* dm = first->AsFixed();
+    if (dm && dm->textSearch && dm->textSearch->result.len > 0) {
+        hitPage = dm->textSearch->result.pages[0];
+    }
+    bool busy = first->findThread || first->findCountThread || first->findDebouncePending;
+    int page = first->ctrl ? first->ctrl->CurrentPageNo() : 0;
+    out.Append(
+        fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d firstTextLen=%d matches=%d hitPage=%d "
+            "busy=%d page=%d\n",
+            len(gWindows), docs, gSettings->searchUIFloating ? 1 : 0, compact, floating, firstTextLen, matches, hitPage,
+            busy ? 1 : 0, page));
     return finish(0);
 }
 

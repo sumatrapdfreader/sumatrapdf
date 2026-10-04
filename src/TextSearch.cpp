@@ -342,7 +342,11 @@ static bool MatchSearchUnit(Str h, int hLen, int hIdx, int hByteIdx, Str n, int 
 }
 
 static int StrStrFoldCase(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
-    if (len(haystack) == 0 || len(needle) == 0) {
+    // nothing to find in an empty page: reporting a hit made the caller retry forever
+    if (len(haystack) == 0) {
+        return -1;
+    }
+    if (len(needle) == 0) {
         return startOff;
     }
     int byteIdx = Utf8CodepointToByteIndex(haystack, startOff);
