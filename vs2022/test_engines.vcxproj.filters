@@ -57,7 +57,6 @@
     <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
-    <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp">
       <Filter>base</Filter>
@@ -87,6 +86,9 @@
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSearch.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\TextSelection.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\gui\UIModels.cpp">

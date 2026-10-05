@@ -177,6 +177,7 @@ export const sharedFiles = [
   "src/shared/SumatraPDF.exe.manifest",
   "src/shared/TextSearch.cpp",
   "src/shared/TextSearch.h",
+  "src/shared/TextSelection.cpp",
   "src/shared/TextSelection.h",
   "src/shared/Translations.h",
   "src/shared/WebpReader.h",

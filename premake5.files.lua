@@ -979,7 +979,7 @@ function test_engines_files()
     "src/PdfDarkModeNoOp.cpp",
     "src/shared/TextSearch.cpp",
     "src/shared/TextSearch.h",
-    "src/TextSelection.cpp",
+    "src/shared/TextSelection.cpp",
     "src/shared/TextSelection.h",
     "src/WebpReader.cpp",
     "src/shared/gui/UIModels.cpp",

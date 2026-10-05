@@ -1025,9 +1025,6 @@
     <ClCompile Include="..\src\Tests.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\TextSelection.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\TextViewWnd.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1299,6 +1296,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSearch.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\TextSelection.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\gui\UIModels.cpp">
