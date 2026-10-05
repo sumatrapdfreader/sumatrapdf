@@ -3,6 +3,8 @@
 
 bool CouldBeArg(Str s);
 
+#if OS_WIN
 StrNode* ParseCmdLine(WStr cmdLine);
 StrNode* ParseCmdLine(Str cmdLine);
+#endif
 TempStr QuoteCmdLineArgTemp(Str arg);
