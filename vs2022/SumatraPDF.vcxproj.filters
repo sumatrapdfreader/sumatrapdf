@@ -836,9 +836,6 @@
     <ClCompile Include="..\src\InverseSearchDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\JxlReader.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\KeyboardHelp.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1242,6 +1239,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\JxlReader.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PageRenderPolicy.cpp">

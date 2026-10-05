@@ -968,7 +968,7 @@ function test_engines_files()
     "src/ImageReader.cpp",
     "src/shared/GumboHtmlParser.cpp",
     "src/GumboHelpers.cpp",
-    "src/JxlReader.cpp",
+    "src/shared/JxlReader.cpp",
     "src/LitDoc.cpp",
     "src/shared/LitDoc.h",
     "src/MobiDoc.cpp",
