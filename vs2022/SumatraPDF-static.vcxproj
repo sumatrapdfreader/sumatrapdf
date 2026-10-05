@@ -1632,7 +1632,6 @@
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineCreate.cpp" />
-    <ClCompile Include="..\src\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\EngineDvi.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
@@ -2151,6 +2150,7 @@
     <ClCompile Include="..\src\shared\DocController.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
     <ClCompile Include="..\src\shared\EbookFormatter.cpp" />
+    <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />

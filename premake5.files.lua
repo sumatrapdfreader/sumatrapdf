@@ -962,7 +962,7 @@ function test_engines_files()
     "src/EngineBase.h",
     "src/CachedObjects.cpp",
     "src/shared/CachedObjects.h",
-    "src/EngineDjvuDec.cpp",
+    "src/shared/EngineDjvuDec.cpp",
     "src/EngineImages.cpp",
     "src/EngineMupdf.cpp",
     "src/ImageReader.cpp",

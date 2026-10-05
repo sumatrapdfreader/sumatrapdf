@@ -125,6 +125,7 @@ export const sharedFiles = [
   "src/shared/EbookDoc.h",
   "src/shared/EbookFormatter.cpp",
   "src/shared/EbookFormatter.h",
+  "src/shared/EngineDjvuDec.cpp",
   "src/shared/EutlTrust.h",
   "src/shared/FileHistory.h",
   "src/shared/FilterUtil.cpp",

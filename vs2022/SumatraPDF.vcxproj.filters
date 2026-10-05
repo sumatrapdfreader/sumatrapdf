@@ -740,9 +740,6 @@
     <ClCompile Include="..\src\EngineCreate.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EngineDjvuDec.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\EngineDump.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1224,6 +1221,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EbookFormatter.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\EngineDjvuDec.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\FilterUtil.cpp">
