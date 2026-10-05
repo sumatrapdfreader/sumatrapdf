@@ -1,0 +1,71 @@
+%PDF-1.7
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [4 0 R 5 0 R 6 0 R 9 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 7 0 R /ZaDb 10 0 R >> >> /NeedAppearances true >> >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 8 0 R /Resources << /Font << /Helv 7 0 R /ZaDb 10 0 R >> >> /Annots [4 0 R 5 0 R 6 0 R 9 0 R] >>
+endobj
+4 0 obj
+<< /Type /Annot /Subtype /Widget /FT /Tx /T (Name) /V () /DA (/Helv 11 Tf 0 g) /F 4 /Rect [120 695 380 717] /P 3 0 R /MK << /BC [0 0 0] /BG [1 1 1] >> >>
+endobj
+5 0 obj
+<< /Type /Annot /Subtype /Widget /FT /Btn /T (Agree) /V /Off /AS /Off /F 4 /Rect [120 655 138 673] /P 3 0 R /DA (/ZaDb 0 Tf 0 g) /MK << /BC [0 0 0] /BG [1 1 1] /CA (4) >> /AP << /N << /Yes 11 0 R /Off 12 0 R >> >> >>
+endobj
+6 0 obj
+<< /Type /Annot /Subtype /Widget /FT /Ch /Ff 131072 /T (Color) /V (Red) /DA (/Helv 11 Tf 0 g) /F 4 /Opt [(Red) (Green) (Blue)] /Rect [120 615 260 637] /P 3 0 R /MK << /BC [0 0 0] /BG [1 1 1] >> >>
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+8 0 obj
+<< /Length 213 >>
+stream
+BT /Helv 14 Tf 60 740 Td (SumatraPDF form test) Tj ET
+BT /Helv 11 Tf 60 700 Td (Name:) Tj ET
+BT /Helv 11 Tf 60 660 Td (Agree:) Tj ET
+BT /Helv 11 Tf 60 620 Td (Color:) Tj ET
+BT /Helv 11 Tf 60 580 Td (Notes:) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Annot /Subtype /Widget /FT /Tx /Ff 4096 /T (Notes) /V () /DA (/Helv 11 Tf 0 g) /F 4 /Rect [120 520 460 600] /P 3 0 R /MK << /BC [0 0 0] /BG [1 1 1] >> >>
+endobj
+10 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /ZapfDingbats >>
+endobj
+11 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 18 18] /Resources << /Font << /ZaDb 10 0 R >> >> /Length 44 >>
+stream
+q 0 0 1 rg BT /ZaDb 14 Tf 3 3 Td (4) Tj ET Q
+endstream
+endobj
+12 0 obj
+<< /Type /XObject /Subtype /Form /BBox [0 0 18 18] /Resources << >> /Length 0 >>
+stream
+
+endstream
+endobj
+xref
+0 13
+0000000000 65535 f 
+0000000015 00000 n 
+0000000204 00000 n 
+0000000261 00000 n 
+0000000436 00000 n 
+0000000605 00000 n 
+0000000837 00000 n 
+0000001049 00000 n 
+0000001146 00000 n 
+0000001409 00000 n 
+0000001588 00000 n 
+0000001662 00000 n 
+0000001847 00000 n 
+trailer
+<< /Size 13 /Root 1 0 R >>
+startxref
+1962
+%%EOF

@@ -1,0 +1,52 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 5 0 R /Annots [8 0 R 9 0 R] >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+5 0 obj
+<< /Length 93 >>
+stream
+BT /F1 14 Tf 72 700 Td (Go to page two) Tj ET
+BT /F1 14 Tf 72 660 Td (Open example.com) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Length 47 >>
+stream
+BT /F1 14 Tf 72 700 Td (This is page two) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+8 0 obj
+<< /Type /Annot /Subtype /Link /Rect [70 694 200 714] /Border [0 0 0] /Dest [4 0 R /XYZ 0 792 0] >>
+endobj
+9 0 obj
+<< /Type /Annot /Subtype /Link /Rect [70 654 200 674] /Border [0 0 0] /A << /Type /Action /S /URI /URI (https://www.example.com/) >> >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000269 00000 n 
+0000000395 00000 n 
+0000000538 00000 n 
+0000000635 00000 n 
+0000000705 00000 n 
+0000000820 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+971
+%%EOF

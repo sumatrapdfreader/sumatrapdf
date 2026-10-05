@@ -1,0 +1,94 @@
+<!doctype html>
+<!--
+  The page a gpui example is served in. emcc substitutes {{{ SCRIPT }}} with
+  the tag that loads the module; everything else here is ours.
+
+  The standalone page fills the viewport. An embedding page may position the
+  canvas elsewhere; window_wasm.cpp maps pointer coordinates through its
+  bounding box and watches its size.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>gpui</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0a0a0a;
+        /* The frame is drawn into the canvas, so nothing here should ever
+           show a selection, a caret or a rubber band. */
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+        overscroll-behavior: none;
+      }
+      #gpui-canvas {
+        position: fixed;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+        outline: none;
+      }
+      /* Shown until the module has drawn its first frame, then removed. */
+      #gpui-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font:
+          14px/1.6 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        color: #a3a3a3;
+        background: #0a0a0a;
+        pointer-events: none;
+        transition: opacity 0.2s ease-out;
+      }
+      #gpui-loading.gone {
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gpui-canvas" tabindex="0"></canvas>
+    <div id="gpui-loading">loading…</div>
+
+    <script>
+      var Module = {
+        canvas: document.getElementById("gpui-canvas"),
+        print: function (text) {
+          console.log(text);
+        },
+        printErr: function (text) {
+          console.error(text);
+        },
+        onRuntimeInitialized: function () {
+          var el = document.getElementById("gpui-loading");
+          if (!el) {
+            return;
+          }
+          // One frame later, so the first paint is on screen before the
+          // overlay starts fading off it.
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              el.classList.add("gone");
+              setTimeout(function () {
+                el.remove();
+              }, 250);
+            });
+          });
+        },
+      };
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>

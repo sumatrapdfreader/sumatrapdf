@@ -1,4 +1,6 @@
-This is a C++ program for Windows, using mostly win32 windows API functions. It is Windows-only: the macOS and Linux ports (`src/mac/`, `src/linux/`, their GUI backends and their CI) were removed.
+The original SumatraPDF is a Windows-only C++ program using Win32. Its old
+macOS/Linux ports were removed. SumatraPDF ng in `src/ng/` targets macOS,
+Linux and WebAssembly; its Windows build is for testing and comparison.
 
 We don't use STL but our own string / helper / container functions implemented in src\base directory
 
@@ -20,11 +22,13 @@ hand-edit them. To update one, use its `/update-<library>` skill
 
 To build run: `bun cmd/build.ts -dbg` (or `-rel`, `-asan`, and the other modes shown by `bun cmd/build.ts -help`). Called with no options it prints usage and exits; unknown options print an error plus usage and exit unsuccessfully.
 
-Keep `cmd/build.ts` as the single build entry point. Build-mode implementation modules live under `cmd/helper/` and are not invoked directly, except for internal delegation such as the WSL launcher.
+Keep `cmd/build.ts` as the original app's build entry point and `cmd/ng-build.ts`
+as ng's. Build internals live under `cmd/helper/` and are not invoked directly.
 
 This creates ./out/dbg64/SumatraPDF.exe executable. The static build target is SumatraPDF-static and produces ./out/<config>/SumatraPDF-static.exe.
 
-To cross-compile the Windows exe with mingw inside WSL, use `bun cmd/build.ts -wine` (optional `-clean`, `-run`); the unified build command delegates it to `cmd/helper/wsl-build.ts`. It needs a WSL distro named `Ubuntu` with bun in it, plus `sudo apt install g++-mingw-w64-x86-64 unzip` (and `wine wine64` to run).
+MinGW/Wine builds are retired. Use the native ng Linux build, including WSL
+Ubuntu from Windows: `bun cmd/ng-build.ts -linux -dbg`.
 
 Unit tests are compiled into `SumatraPDF.exe` in **debug builds only** and run with `-unit-tests`. To run them with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-32` / `-asan`). It builds the debug exe, runs it with `-unit-tests -for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
 
@@ -79,6 +83,92 @@ Rule 7: Use the body to explain what and why vs. how. Assume the code explains t
 the message must explain the context and reasoning.
 
 - If the prompt indicates that a bug is being fixed, don't write the fix right away. First write the test. Observe it failing. Then write the fix. And observe the test passing
+
+## SumatraPDF ng
+
+- Ng uses GPUI on every platform: menus, tabs, trees, scrollbars, dialogs,
+  notifications, command palette and tooltips. Do not add native toolkit UI.
+- Match the original Windows UI: menu order, toolbar, tabs, TOC/favorites,
+  find bar, dialogs, shortcuts and mouse behavior. Record unavoidable UI
+  differences and GPUI gaps in feature documentation.
+- Preserve document engines, settings format and shortcut syntax. Keep
+  commands aligned with the original where possible; use ng's generators
+  for its differing commands/settings.
+- Keep code recognizable. Prefer `*_win.cpp`, `*_posix.cpp`, `*_wasm.cpp`
+  siblings and `OS_WIN` / `OS_POSIX` / `OS_WASM` gates. Retain Windows-only
+  features on Windows until they can be ported.
+- Both versions share `ext/`. Identical source files, headers, tests and
+  assets live only in the original tree; `cmd/helper/ng-shared.ts` lists them.
+  The build stages them under `out/<platform>/<config>/generated/shared/`
+  so quoted includes select ng's differing headers. Never edit staged files.
+  To diverge a shared file, copy it into `src/ng/`, remove its shared entry
+  and update the target in `cmd/helper/ng-targets.ts`.
+- Ng follows the same coding and commit rules, including **no automatic commits**.
+
+Build with `bun cmd/ng-build.ts -dbg` or `-rel`; the host platform is implied.
+Use `-linux`, `-mac` or `-wasm` to select a platform. Outputs are
+`out/win/<config>`, `out/linux/<config>`, `out/mac/<config>` and
+`out/wasm/<config>`, with `dbg` / `rel` and optional `-clang`, `-asan`,
+`-profile` suffixes. `-clang` has no effect on macOS output naming.
+Use `-clean`, `-all`, `-run` or a target name as needed; `-run` passes
+`-for-testing` to the native app. Helpers use the `ng-` prefix.
+
+Windows needs Visual Studio C++ tools; `-clang` selects clang-cl. Linux needs
+bun, g++/clang++, pkg-config and development packages for X11, Cairo, Pango,
+GDK Pixbuf, GLib and OpenSSL. WSL Ubuntu needs bun in `~/.bun/bin` and:
+
+```sh
+sudo apt install build-essential pkg-config libx11-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev
+```
+
+WSLg needs a working `DISPLAY` to run the GUI. macOS needs bun and Xcode
+command line tools. GPUI compiles as ARC Objective-C++ there, linking Cocoa,
+CoreText, CoreGraphics, IOKit and WebKit; libarchive uses system iconv.
+Dav1d/heicdec build flags follow the host architecture.
+
+Wasm needs Emscripten (`em++`). Windows builds install emsdk in `.work/emsdk`
+on first use; other hosts need an installed SDK. The toolchain also checks
+`$EMSDK`, `~/emsdk`, `C:\emsdk`, `/opt/emsdk` and `/usr/local/emsdk`.
+`-wasm -rel -run` serves the app at `http://localhost:8085/`, with GPUI's web
+shell and `src/ng/gui/WasmShell.js`. Sample documents live in MEMFS `/docs`,
+settings in IndexedDB `/settings`; fonts are embedded. Wasm has no pthreads:
+`StartThread()` runs inline and render loops drain in main-thread slices.
+Console targets use Node and NODERAWFS.
+
+Ng unit tests are the `test_util` target:
+`bun cmd/ng-build.ts -dbg test_util -run -- -for-ai`.
+`test_engines` opens documents and renders pages; `test_mupdf` probes MuPDF;
+`plugin-test` hosts plugin mode. Use `cmd/ng-dbg-control.ts` with
+`-dbg-control <pipe>` for automation and `cmd/ng-dbg.ts` for Windows ASan
+debugging. Format ng C/C++ with `bun cmd/ng-format.ts`; format TypeScript
+with `bun cmd/format.ts -ts`.
+
+Use `cmd/ng-gen-commands.ts` and `cmd/ng-gen-settings.ts` for ng generated
+files. `ng-gen-embedded.ts` generates ignored `src/ng/EmbeddedData*.cpp`;
+`ng-gen-translations.ts` completes the checked-in translation snapshot into
+`.work/ng/translations.txt`. The manual uses the original website checkout
+and `.work/docs` staging; CI skips it when that checkout is absent.
+
+Standard Windows CI builds ng x64 release. Daily Windows CI builds debug
+and release; Linux/macOS daily CI builds ng and runs unit tests. Linux also
+checks rendering/printing and hosts the separate Wasm CI job.
+
+### GPUI integration
+
+For a file needing GPUI and base, include `gui/GpuiBridge.h` **first**, instead
+of `base/Base.h`. It handles Winsock/Windows include order and conflicting
+macros. Our `Str`, `Vec`, `Rect`, `Point`, `Size` remain global; GPUI's are
+qualified with `gp::` (`gpui`) or `gpc::` (`gpui::component`). Never use
+`using namespace gpui` with base. Use `GStrL`, `ToGpui`, `FromGpui` and
+`GpuiDup` for conversions and frame-arena strings.
+
+Check APIs in `ext/gpui/gpui.h`; `bun cmd/ng-update-gpui.ts -examples` keeps
+examples in `out/gpui-dist/`. `gpui.cpp` and `gpui.h` are published amalgams:
+never hand-edit or patch them in the updater. Framework changes belong in
+`../gpui-kit-cpp/src/gpui/`. With explicit commit/push authorization, publish
+that repo's main, run `bun cmd/update-dist.ts` there, then vendor here with
+`bun cmd/ng-update-gpui.ts`. The updater records the dist commit in
+`ext/gpui/VERSION.txt`; `-commit <sha>` selects a revision.
 
 ## C/C++ #include conventions
 

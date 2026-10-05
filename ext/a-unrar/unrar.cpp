@@ -15590,6 +15590,7 @@ void MainHeader::Reset()
   *this={};
 }
 
+#ifdef _WIN_ALL
 DWORD WinNT()
 {
   static int dwPlatformId=-1;
@@ -15691,6 +15692,8 @@ bool IsWindows11OrGreater()
   }
   return IsWin11;
 }
+
+#endif
 
 #if defined(_WIN_ALL) && !defined(SFX_MODULE) && !defined(RARDLL)
 #define ALLOW_LARGE_PAGES
@@ -16509,6 +16512,7 @@ bool IsWildcard(const wchar *Str,size_t CheckSize)
   return false;
 }
 
+#ifdef _WIN_ALL
 MarkOfTheWeb::MarkOfTheWeb()
 {
   ZoneIdValue=-1;
@@ -16608,6 +16612,8 @@ bool MarkOfTheWeb::IsFileStreamMoreSecure(std::string &FileStream)
   int StreamZone=ParseZoneIdStream(FileStream);
   return StreamZone>ZoneIdValue;
 }
+
+#endif
 
 RAROptions::RAROptions()
 {

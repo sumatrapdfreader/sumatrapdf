@@ -1,0 +1,118 @@
+name: linux-daily
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: dev packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libx11-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      # on a Linux host -linux is implied
+      - name: test_util
+        run: bun cmd/ng-build.ts -dbg test_util -run -- -for-ai
+      - name: SumatraPDF
+        run: bun cmd/ng-build.ts -dbg SumatraPDF
+      - name: test_engines renders a page of each format
+        run: |
+          bun cmd/ng-build.ts -dbg test_engines
+          e=./out/linux/dbg/test_engines
+          for f in zlib.3.pdf test.epub test.cbz test.djvu test.png; do
+            "$e" "docs/test/$f" "out/$f.png" 1
+          done
+      - name: print to PDF
+        run: |
+          app=./out/linux/dbg/SumatraPDF
+          e=./out/linux/dbg/test_engines
+          "$app" -for-testing -silent -print-to PDF -print-settings "1,landscape,dpi=72,output=out/posix-print.pdf" docs/test/zlib.3.pdf
+          "$e" out/posix-print.pdf out/posix-print.png 1 | tee out/posix-print.txt
+          grep -q 'pages: 1' out/posix-print.txt
+          grep -q 'page 1: 792 x 612' out/posix-print.txt
+      - name: print through spooler
+        run: |
+          mkdir -p out/fake-bin
+          cat >out/fake-bin/lp <<'EOF'
+          #!/bin/sh
+          printf '%s\n' "$@" >out/lp-args.txt
+          if test "$1" = -d; then
+            test "$2" = "Test Printer" || exit 2
+            dest=out/posix-spooled.pdf
+          else
+            dest=out/posix-default.pdf
+          fi
+          for arg do file=$arg; done
+          cp "$file" "$dest"
+          EOF
+          chmod +x out/fake-bin/lp
+          PATH="$PWD/out/fake-bin:$PATH" ./out/linux/dbg/SumatraPDF -for-testing -silent -print-to "Test Printer" -print-settings "2x,duplexshort,monochrome,collate,fit,center,paper=A4,bin=Tray 1,docname=Test Job" docs/test/zlib.3.pdf
+          grep -qx -- '-n' out/lp-args.txt
+          grep -qx '2' out/lp-args.txt
+          grep -qx 'sides=two-sided-short-edge' out/lp-args.txt
+          grep -qx 'print-color-mode=monochrome' out/lp-args.txt
+          grep -qx 'Collate=True' out/lp-args.txt
+          grep -qx 'fit-to-page' out/lp-args.txt
+          grep -qx 'position=center' out/lp-args.txt
+          grep -qx 'media=A4' out/lp-args.txt
+          grep -qx 'InputSlot=Tray 1' out/lp-args.txt
+          grep -qx 'Test Job' out/lp-args.txt
+          PATH="$PWD/out/fake-bin:$PATH" ./out/linux/dbg/SumatraPDF -for-testing -silent -print-to-default -print-settings "shrink" docs/test/zlib.3.pdf
+          grep -qx 'print-scaling=auto-fit' out/lp-args.txt
+          ./out/linux/dbg/test_engines out/posix-spooled.pdf out/posix-spooled.png 1
+          ./out/linux/dbg/test_engines out/posix-default.pdf out/posix-default.png 1
+      - name: list printers
+        run: |
+          cat >out/fake-bin/lpstat <<'EOF'
+          #!/bin/sh
+          test "$1" = -d && test "$2" = -p || exit 2
+          printf 'system default destination: Test Printer\nprinter Test Printer is idle\n'
+          EOF
+          chmod +x out/fake-bin/lpstat
+          PATH="$PWD/out/fake-bin:$PATH" ./out/linux/dbg/SumatraPDF -for-testing -console -list-printers | tee out/printers.txt
+          grep -q 'printer Test Printer is idle' out/printers.txt
+
+      - name: Release build
+        run: bun cmd/ng-build.ts -rel SumatraPDF
+      - name: Upload ng binaries
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: ng-linux
+          path: |
+            out/linux/dbg/SumatraPDF
+            out/linux/rel/SumatraPDF
+          if-no-files-found: error
+          retention-days: 7
+
+  wasm:
+    # em++ comes from emsdk; setup-emsdk exports EMSDK and puts the tools on
+    # PATH, and the sdk's own node runs the test binary. The build is
+    # host-independent, so the cheapest runner does
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: 6.0.9
+          actions-cache-folder: emsdk-cache
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - name: test_util
+        run: bun cmd/ng-build.ts -wasm -dbg test_util -run -- -for-ai
+      - name: SumatraPDF
+        run: bun cmd/ng-build.ts -wasm -rel SumatraPDF
+
+      - name: Upload wasm app
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: ng-wasm
+          path: |
+            out/wasm/rel/SumatraPDF.*
+          if-no-files-found: error
+          retention-days: 7

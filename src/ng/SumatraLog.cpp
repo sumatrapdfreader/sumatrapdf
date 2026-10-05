@@ -1,0 +1,423 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
+#include "base/Base.h"
+#if OS_WIN
+#include "base/ScopedWin.h"
+#include "base/Win.h"
+#endif
+#include "base/File.h"
+#if !OS_WASM
+#include "base/FileWatcher.h"
+#endif
+#include "SumatraLog.h"
+
+#if OS_WIN
+constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\LOCAL\\ArsLexis-Logger";
+#endif
+
+Str gLogAppName = StrL("SumatraPDF");
+
+Mutex gLogMutex;
+
+// we use a dedicated Arena so we can do logging during crash handling
+// where we want to avoid allocator deadlocks by calling malloc()
+Arena* gLogAllocator = nullptr;
+
+str::Builder* gLogBuf = nullptr;
+bool gLogToConsole = false;
+// we always log if IsDebuggerPresent()
+// this forces logging to debuger always
+bool gLogToDebugger = false;
+// meant to avoid doing stuff during crash reporting
+// will log to debugger (if no need for formatting)
+bool gReducedLogging = false;
+// when main thread exists other threads might still
+// try to log. when true, this stops logging
+bool gDestroyedLogging = false;
+
+// if true, doesn't log if the same text has already been logged
+// reduces logging but also can be confusing i.e. log lines are not showing up
+static bool gSkipDuplicateLines = false;
+
+#if OS_WIN
+bool gLogToPipe = true;
+static HANDLE hLogPipe = INVALID_HANDLE_VALUE;
+static Mutex gPipeMutex;
+#else
+// ng: the logview pipe is a win32 named pipe
+bool gLogToPipe = false;
+#endif
+
+Str gLogFilePath;
+
+// 1 MB - 128 to stay under 1 MB even after appending (an estimate)
+constexpr int kMaxLogBuf = (1024 * 1024) - 128;
+
+#if OS_WIN
+static LARGE_INTEGER lastPipeOpenTryTime = {};
+
+static void maybeOpenLogPipe() {
+    // only re-try every 10 secs to minimize cost because pipe is rarely
+    // opened and logging is frequent
+    if (lastPipeOpenTryTime.QuadPart != 0) {
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
+        LARGE_INTEGER now;
+        QueryPerformanceCounter(&now);
+        double diffSecs =
+            static_cast<double>(now.QuadPart - lastPipeOpenTryTime.QuadPart) / static_cast<double>(freq.QuadPart);
+        if (diffSecs < 10.0f) {
+            return;
+        }
+    }
+    QueryPerformanceCounter(&lastPipeOpenTryTime);
+    hLogPipe = CreateFileW(kPipeName, GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+    // TODO: retry if ERROR_PIPE_BUSY?
+}
+
+static void logToPipe(Str s) {
+    if (!gLogToPipe) {
+        return;
+    }
+    if (len(s) == 0) {
+        return;
+    }
+    size_t n = (size_t)s.len;
+
+    gPipeMutex.Lock();
+
+    DWORD cbWritten = 0;
+    bool didConnect = false;
+    if (!IsValidHandle(hLogPipe)) {
+        maybeOpenLogPipe();
+        if (!IsValidHandle(hLogPipe)) {
+            gPipeMutex.Unlock();
+            return;
+        }
+        didConnect = true;
+    }
+
+    if (didConnect) {
+        // logview accepts logging from anyone, so announce ourselves
+        TempStr initialMsg = fmt("app: %s\n", gLogAppName);
+        WriteFile(hLogPipe, initialMsg.s, (DWORD)initialMsg.len, &cbWritten, nullptr);
+    }
+
+    DWORD cb = (DWORD)n;
+    BOOL ok = WriteFile(hLogPipe, s.s, cb, &cbWritten, nullptr);
+    if (!ok) {
+        CloseHandle(hLogPipe);
+        hLogPipe = INVALID_HANDLE_VALUE;
+    }
+
+    gPipeMutex.Unlock();
+}
+#else
+static bool IsValidHandle(void*) {
+    return false;
+}
+static void* hLogPipe = nullptr;
+
+static void logToPipe(Str) {}
+#endif
+
+void log(Str s) {
+    if (gDestroyedLogging) {
+        return;
+    }
+    if (gReducedLogging) {
+        // in reduced logging mode, we do want to log to at least the debugger
+#if OS_WIN
+        if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
+            OutputDebugStringA(s.s);
+        }
+#else
+        // ng: no debugger output channel on POSIX; stderr is the equivalent
+        if (gLogToDebugger || gReducedLogging) {
+            fwrite(s.s, 1, (size_t)s.len, stderr);
+            fflush(stderr);
+        }
+#endif
+        // if the pipe already connected, do log to it even if disabled
+        // we do want easy logging, just want to reduce doing stuff
+        // that can break crash handling
+        if (gLogToPipe && IsValidHandle(hLogPipe)) {
+            logToPipe(s);
+        }
+        return;
+    }
+
+    ScopedMutex lock(&gLogMutex);
+    if (gDestroyedLogging) {
+        return;
+    }
+
+    bool skipLog = gSkipDuplicateLines && gLogBuf && str::Contains(*gLogBuf, s);
+    if (!skipLog) {
+#if OS_WIN
+        if (gLogToDebugger || IsDebuggerPresent()) {
+            OutputDebugStringA(s.s);
+        }
+#else
+        if (gLogToDebugger) {
+            fwrite(s.s, 1, (size_t)s.len, stderr);
+            fflush(stderr);
+        }
+#endif
+    }
+
+    AtomicIntInc(&gAllowAllocFailure);
+    AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
+
+    if (!gLogBuf) {
+        gLogAllocator = ArenaNew();
+        gLogBuf = new str::Builder(gLogAllocator);
+        gLogBuf->Reserve(32 * 1024);
+    } else {
+        if (len(*gLogBuf) > kMaxLogBuf) {
+            // TODO: use gLogBuf->Clear(), which doesn't free the allocated space
+            gLogBuf->Reset();
+        }
+    }
+
+    size_t n = (size_t)s.len;
+
+    // when skipping, we skip buf (crash reports) and console
+    // but write to file and logview
+    if (!skipLog) {
+        gLogBuf->Append(s);
+    }
+
+    if (!skipLog && gLogToConsole) {
+#if OS_WIN
+        LogConsole(s);
+#else
+        fwrite(s.s, 1, (size_t)s.len, stdout);
+        fflush(stdout);
+#endif
+    }
+
+    if (gLogFilePath) {
+        auto* f = fopen(gLogFilePath.s, "a");
+        if (f != nullptr) {
+            fwrite(s.s, 1, n, f);
+            fflush(f);
+            fclose(f);
+        }
+    }
+    logToPipe(s);
+}
+
+void StartLogToFile(Str path, bool removeIfExists) {
+    ReportIf(len(gLogFilePath) != 0);
+    gLogFilePath = str::Dup(path);
+#if !OS_WASM
+    FileWatcherSetSkipPath(gLogFilePath);
+#endif
+    if (removeIfExists) {
+        file::Delete(path);
+    }
+}
+
+bool WriteCurrentLogToFile(Str path) {
+    Str slice;
+    {
+        ScopedMutex lock(&gLogMutex);
+        if (!gLogBuf) {
+            return false;
+        }
+        Str current = ToStr(*gLogBuf);
+        if (len(current) == 0) {
+            return false;
+        }
+        slice = str::Dup(current);
+    }
+    AutoCall freeSlice((void (*)(Str))str::Free, slice);
+    bool ok = dir::CreateForFile(path);
+    if (!ok) {
+        logf("WriteCurrentLogToFile: dir::CreateForFile('%s') failed\n", path);
+        return false;
+    }
+    ok = file::WriteFile(path, slice);
+    if (!ok) {
+        logf("WriteCurrentLogToFile: file::WriteFile('%s') failed\n", path);
+    }
+    return ok;
+}
+
+void DestroyLogging() {
+    gDestroyedLogging = true;
+    {
+        ScopedMutex lock(&gLogMutex);
+        delete gLogBuf;
+        gLogBuf = nullptr;
+        ArenaDelete(gLogAllocator);
+        gLogAllocator = nullptr;
+        str::FreePtr(&gLogFilePath);
+    }
+#if !OS_WASM
+    FileWatcherSetSkipPath(Str());
+#endif
+}
+
+// ng: gpui calls base::log(); src/gui/GpuiLog.cpp forwards to here, because a
+// file that includes gpui.h can't also include base/Base.h (name clashes)
+void SumatraLogBytes(const char* s, int n) {
+    log(Str((char*)s, n));
+}
+
+// --- parent process chain (startup diagnostics) --------------------------------
+
+#if !OS_WIN
+// ng: needs Toolhelp + NtQueryInformationProcess; POSIX would read /proc
+void LogParentProcessChain() {}
+#else
+
+// Parent PID of process `pid` via Toolhelp snapshot, or 0 on failure.
+static DWORD GetProcessParentPid(DWORD pid) {
+    if (pid == 0) {
+        return 0;
+    }
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (INVALID_HANDLE_VALUE == snap) {
+        return 0;
+    }
+    PROCESSENTRY32W pe{};
+    pe.dwSize = sizeof(pe);
+    if (!Process32FirstW(snap, &pe)) {
+        return 0;
+    }
+    do {
+        if (pe.th32ProcessID == pid) {
+            return pe.th32ParentProcessID;
+        }
+    } while (Process32NextW(snap, &pe));
+    return 0;
+}
+
+static TempStr GetProcessImagePathTemp(DWORD pid) {
+    if (pid == 0) {
+        return {};
+    }
+    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc.IsValid()) {
+        return {};
+    }
+    // Long paths can exceed MAX_PATH; grow if needed.
+    DWORD cap = MAX_PATH;
+    for (int attempt = 0; attempt < 3; attempt++) {
+        WCHAR* buf = AllocArrayTemp<WCHAR>((int)cap);
+        DWORD n = cap;
+        if (QueryFullProcessImageNameW(hProc, 0, buf, &n)) {
+            return ToUtf8Temp(WStr(buf, (int)n));
+        }
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+            return {};
+        }
+        cap *= 2;
+    }
+    return {};
+}
+
+// Process command line via NtQueryInformationProcess ProcessCommandLineInformation
+// (Windows 10+). Returns empty if unavailable or access denied.
+static TempStr GetProcessCommandLineTemp(DWORD pid) {
+    if (pid == 0) {
+        return {};
+    }
+    using NtQueryInformationProcessFn = LONG(NTAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
+    static NtQueryInformationProcessFn ntQip = nullptr;
+    static bool tried = false;
+    if (!tried) {
+        tried = true;
+        HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+        if (ntdll) {
+            ntQip = (NtQueryInformationProcessFn)GetProcAddress(ntdll, "NtQueryInformationProcess");
+        }
+    }
+    if (!ntQip) {
+        return {};
+    }
+
+    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc.IsValid()) {
+        return {};
+    }
+
+    // ProcessCommandLineInformation = 60 (Windows 10+)
+    constexpr ULONG kProcessCommandLineInformation = 60;
+    ULONG retLen = 0;
+    LONG status = ntQip(hProc, kProcessCommandLineInformation, nullptr, 0, &retLen);
+    // STATUS_INFO_LENGTH_MISMATCH (0xC0000004) expected when sizing
+    (void)status;
+    if (retLen == 0 || retLen > 64 * 1024) {
+        return {};
+    }
+    void* buf = malloc(retLen);
+    if (!buf) {
+        return {};
+    }
+    status = ntQip(hProc, kProcessCommandLineInformation, buf, retLen, &retLen);
+    if (status < 0) {
+        free(buf);
+        return {};
+    }
+    // Buffer is a UNICODE_STRING (Length, MaximumLength, Buffer*) with data following.
+    struct {
+        USHORT Length;
+        USHORT MaximumLength;
+        PWSTR Buffer;
+    }* us = (decltype(us))buf;
+    TempStr out{};
+    if (us->Buffer && us->Length >= sizeof(WCHAR)) {
+        int nChars = (int)(us->Length / sizeof(WCHAR));
+        out = ToUtf8Temp(WStr(us->Buffer, nChars));
+    }
+    free(buf);
+    return out;
+}
+
+// Log parent → grandparent → … (path + command line when readable).
+// Walk parent PIDs and log path + command line for each (startup diagnostics).
+void LogParentProcessChain() {
+    log(StrL("Parent process chain:\n"));
+    DWORD pid = GetCurrentProcessId();
+    DWORD seen[16]{};
+    int nSeen = 0;
+    for (int depth = 0; depth < 16; depth++) {
+        DWORD parentPid = GetProcessParentPid(pid);
+        if (parentPid == 0 || parentPid == pid) {
+            if (depth == 0) {
+                log(StrL("  (none / unknown)\n"));
+            }
+            break;
+        }
+        bool cycle = false;
+        for (int i = 0; i < nSeen; i++) {
+            if (seen[i] == parentPid) {
+                cycle = true;
+                break;
+            }
+        }
+        if (cycle) {
+            logf("  [%d] pid=%u (cycle, stop)\n", depth, parentPid);
+            break;
+        }
+        seen[nSeen++] = parentPid;
+
+        TempStr path = GetProcessImagePathTemp(parentPid);
+        TempStr cmd = GetProcessCommandLineTemp(parentPid);
+        if (path && cmd) {
+            logf("  [%d] pid=%u path='%s'\n      cmdline='%s'\n", depth, parentPid, path, cmd);
+        } else if (path) {
+            logf("  [%d] pid=%u path='%s'\n      cmdline=(unavailable)\n", depth, parentPid, path);
+        } else if (cmd) {
+            logf("  [%d] pid=%u path=(unavailable)\n      cmdline='%s'\n", depth, parentPid, cmd);
+        } else {
+            logf("  [%d] pid=%u path=(unavailable) cmdline=(unavailable)\n", depth, parentPid);
+        }
+        pid = parentPid;
+    }
+}
+#endif // OS_WIN

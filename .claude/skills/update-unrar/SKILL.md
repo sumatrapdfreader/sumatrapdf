@@ -47,4 +47,5 @@ description: Regenerate the amalgamated UnRAR copy in ext/a-unrar from upstream 
 
 - rarlab ships tarballs rather than git, so the default repo is a mirror that commits each release tarball verbatim. Its tag numbers do not match the UnRAR version — pick the commit by the tarball it names.
 - `global.cpp` is first in `unrarSources` on purpose: it defines `INCLUDEGLOBAL` before pulling in `rar.hpp`, which is what makes `global.hpp` define `ErrHandler` rather than declare it. `rar.hpp` is inlined once, so whichever chunk pulls it in first decides that.
-- `lowercaseWinIncludes` in `cmd/amalgam.ts` lowercases `<powrprof.h>`, `<sddl.h>` and `<wbemidl.h>` so the mingw cross build works on a case-sensitive filesystem.
+- `isnt.cpp` and `motw.cpp` are guarded by `_WIN_ALL`; ng uses the same amalgamation on Linux, macOS and Wasm.
+- `lowercaseWinIncludes` keeps Windows includes usable on case-sensitive filesystems.

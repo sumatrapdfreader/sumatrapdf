@@ -1,0 +1,1192 @@
+/* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+// ng: the markdown model (the file list, the virtual url mapping, the
+// generated HTML, the background ToC build) is portable and live. orig's
+// win32 browser host is a gpui WebView here (gui/BrowserView.h); see
+// ChmModel.cpp
+
+// ng: FindTabByController() is in the UI layer, which the `app` library this
+// file belongs to does not link. A live model is enough here
+#define NG_HAS_TABS 0
+
+#include "base/Base.h"
+#include "base/Dict.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/UITask.h"
+#include "gui/UIModels.h"
+#include "gui/BrowserView.h"
+
+#include "Settings.h"
+#include "DisplayMode.h"
+#include "DocController.h"
+#include "DocProperties.h"
+#include "EngineBase.h"
+#include "AppSettings.h"
+
+#include "SumatraPDF.h"
+#include "EmbeddedResources.h"
+#include "MarkdownToc.h"
+#include "PagePosition.h"
+#include "MarkdownModel.h"
+
+constexpr const char* kMdVirtualHost = "https://sumatrapdf.markdown/";
+constexpr int kMdVirtualHostLen = sizeof("https://sumatrapdf.markdown/") - 1;
+
+// The url without its ?query / #fragment. Unlike url::GetFullPathTemp() this
+// does not percent-decode: a virtual url stays encoded end to end, so a file
+// named "C#1.md" isn't read as page "C" plus fragment "1.html" (issue #6140).
+static TempStr UrlPathTemp(Str url) {
+    if (len(url) == 0) {
+        return {};
+    }
+    TempStr path = str::DupTemp(url);
+    str::TransCharsInPlace(path, StrL("#?"), StrL("\0\0"));
+    path.len = len(path.s);
+    return path;
+}
+
+static bool IsMarkdownVirtualHostUrl(Str url) {
+    if (len(url) == 0) {
+        return false;
+    }
+    if (str::StartsWith(url, Str(kMdVirtualHost))) {
+        return true;
+    }
+    TempStr plain = UrlPathTemp(url);
+    return plain && str::StartsWith(plain, Str(kMdVirtualHost));
+}
+
+// Virtual-host pages use an https:// scheme but are served in-app via WebView2.
+static bool IsMarkdownExternalUrl(Str url) {
+    if (len(url) == 0 || IsMarkdownVirtualHostUrl(url)) {
+        return false;
+    }
+    return IsExternalUrl(url);
+}
+
+static TempStr NormalizeMarkdownUrlTemp(Str url) {
+    TempStr plainUrl = UrlPathTemp(url);
+    if (len(plainUrl) == 0) {
+        return {};
+    }
+    if (str::StartsWith(plainUrl, Str(kMdVirtualHost))) {
+        return plainUrl;
+    }
+    return str::JoinTemp(Str(kMdVirtualHost), plainUrl);
+}
+
+// Keep the #fragment: UrlPathTemp() strips it for page lookup and state
+// tracking, but the browser needs it to scroll to a heading within the page.
+static TempStr MarkdownBrowserNavigationUrl(Str url) {
+    str::TrimPrefix(url, Str(kMdVirtualHost));
+    return str::DupTemp(url);
+}
+
+// Extensions the embedded browser can display on its own: the pages we render
+// plus the web resources WebView2 renders natively. An extension-less link is a
+// link to another page (VirtualUrlToFileTemp() resolves the name to a .md file).
+static bool IsBrowserViewableExt(Str urlOrPath) {
+    static SeqStrings exts =
+        ".md\0.markdown\0.html\0.htm\0.xhtml\0.txt\0.css\0.js\0.json\0"
+        ".svg\0.png\0.apng\0.jpg\0.jpeg\0.gif\0.bmp\0.webp\0.avif\0.ico\0";
+    TempStr ext = path::GetExtTemp(urlOrPath);
+    return len(ext) == 0 || SeqStrIndexIS(exts, ext) >= 0;
+}
+
+// "...#page=3" -> "page=3", url-decoded
+static TempStr UrlFragmentTemp(Str url) {
+    Str frag = str::SliceFromChar(url, '#');
+    if (len(frag) < 2) {
+        return {};
+    }
+    return url::DecodeTemp(Str(frag.s + 1, frag.len - 1));
+}
+
+static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
+    TempStr normFile = path::NormalizeTemp(filePath);
+    TempStr normBase = path::NormalizeTemp(baseDir);
+    if (len(normBase) == 0 || !str::TrimPrefix(normFile, normBase)) {
+        return path::GetBaseNameTemp(filePath);
+    }
+    Str rel = normFile;
+    while (len(rel) > 0 && (rel.s[0] == '\\' || rel.s[0] == '/')) {
+        rel.s++;
+        rel.len--;
+    }
+    if (len(rel) == 0) {
+        return path::GetBaseNameTemp(filePath);
+    }
+    return str::DupTemp(rel);
+}
+
+static void DestroyOwnedTocTree(TocTree* tree);
+
+struct MarkdownCacheEntry {
+    Str url;
+    Str data;
+};
+
+struct MarkdownTocTraceItem {
+    Str title;
+    Str url;
+    int level = 0;
+    int pageNo = 0;
+};
+
+// State shared with the background TOC builder. Outlives the model: it holds
+// copies of everything the worker needs, and `model` is nulled (under the lock)
+// when the model is destroyed, so a build that finishes too late is harmless.
+struct MarkdownTocBuildTask {
+    Mutex lock;
+    MarkdownModel* model = nullptr;
+    StrVec pages;
+    Str baseDir;
+    bool isHtml = false;
+    TocTree* tocTree = nullptr; // the result, owned until installed
+
+    ~MarkdownTocBuildTask() {
+        str::Free(baseDir);
+        DestroyOwnedTocTree(tocTree);
+    }
+};
+
+// Opens the document a link points at once we're out of the WebView2 callback
+// (see MaybeLaunchLinkedDoc). `model` is nulled when the model is destroyed, so
+// a document closed before the task runs just drops the request.
+struct MarkdownLaunchTask {
+    MarkdownModel* model = nullptr;
+    Str path; // owned
+    Str dest; // owned
+
+    ~MarkdownLaunchTask() {
+        str::Free(path);
+        str::Free(dest);
+    }
+};
+
+static IPageDestination* NewMarkdownNamedDest(Arena* arena, Str url, int pageNo) {
+    if (len(url) == 0) {
+        return nullptr;
+    }
+    IPageDestination* dest = nullptr;
+    if (IsMarkdownExternalUrl(url)) {
+        dest = arena ? New<PageDestinationURL>(arena, url) : new PageDestinationURL(url);
+    } else {
+        auto* pdest = arena ? New<PageDestination>(arena) : new PageDestination();
+        pdest->kind = kindDestinationScrollTo;
+        pdest->name = str::Dup(url);
+        dest = pdest;
+    }
+    dest->pageNo = pageNo;
+    dest->rect = RectF(kDestUseDefault, kDestUseDefault, kDestUseDefault, kDestUseDefault);
+    return dest;
+}
+
+static TocItem* NewMarkdownTocItem(Arena* arena, TocItem* parent, Str title, int pageNo, Str url) {
+    auto* res = AllocTocItem(arena, title, pageNo);
+    res->parent = parent;
+    res->dest = NewMarkdownNamedDest(arena, url, pageNo);
+    return res;
+}
+
+// ToC is built on a worker that can outlive the model, so it has its own arena
+static void DestroyOwnedTocTree(TocTree* tree) {
+    if (!tree) {
+        return;
+    }
+    Arena* a = tree->arena;
+    DestroyTocTree(tree);
+    ArenaDelete(a);
+}
+
+class MarkdownHtmlWindowHandler : public BrowserViewCallback {
+    MarkdownModel* mm;
+
+  public:
+    explicit MarkdownHtmlWindowHandler(MarkdownModel* mm) : mm(mm) {}
+    ~MarkdownHtmlWindowHandler() override = default;
+
+    bool OnBeforeNavigate(Str url, bool newWindow) override { return mm->OnBeforeNavigate(url, newWindow); }
+    void OnDocumentComplete(Str url) override { mm->OnDocumentComplete(url); }
+    void OnLButtonDown() override { mm->OnLButtonDown(); }
+    Str GetDataForUrl(Str url) override { return mm->GetDataForUrl(url); }
+    void DownloadData(Str url, Str data) override { mm->DownloadData(url, data); }
+    void OnFindResult(int gen, int current, int total) override { mm->OnFindResult(gen, current, total); }
+    void OnFindAllResult(Str payload) override { mm->OnFindAllResult(payload); }
+};
+
+MarkdownModel::MarkdownModel(DocControllerCallback* cb) : DocController(cb) {
+    poolAlloc = ArenaNew();
+}
+
+MarkdownModel::~MarkdownModel() {
+    if (tocBuildTask) {
+        // a build may still be running; tell it there's nobody to deliver to
+        ScopedMutex scope(&tocBuildTask->lock);
+        tocBuildTask->model = nullptr;
+        tocBuildTask = nullptr;
+    }
+    if (launchTask) {
+        // a queued open has nobody to ask about the document anymore
+        launchTask->model = nullptr;
+        launchTask = nullptr;
+    }
+    docAccess.Lock();
+    BrowserViewDelete(docView);
+    delete htmlWindowCb;
+    DestroyOwnedTocTree(tocTree);
+    DeleteVecMembers(urlDataCache);
+    docAccess.Unlock();
+    ArenaDelete(poolAlloc);
+    str::Free(fileName);
+    str::Free(currentPageUrl);
+    str::Free(pendingFindTerm);
+}
+
+Str MarkdownModel::GetFilePath() const {
+    return fileName;
+}
+
+Str MarkdownModel::GetDefaultFileExt() const {
+    return isHtml ? StrL(".html") : StrL(".md");
+}
+
+int MarkdownModel::PageCount() const {
+    return len(pages);
+}
+
+TempStr MarkdownModel::GetPropertyTemp(DocProp prop) {
+    if (prop == DocProp::Title) {
+        return path::GetBaseNameTemp(fileName);
+    }
+    return {};
+}
+
+int MarkdownModel::CurrentPageNo() const {
+    return currentPageNo;
+}
+
+// the TOC is also built on a background thread, which has no model to ask, so
+// this takes the two fields it needs instead of being a method
+static TempStr FileToVirtualUrlTemp(Str filePath, Str baseDir, bool isHtml) {
+    if (len(filePath) == 0) {
+        return {};
+    }
+    TempStr rel = RelPathFromBaseTemp(filePath, baseDir);
+    if (len(rel) == 0) {
+        rel = path::GetBaseNameTemp(filePath);
+    }
+    rel = str::ReplaceTemp(rel, StrL("\\"), StrL("/"));
+    // percent-encode the name: a space, '#', '%' or non-ASCII in it must not be
+    // read back as url syntax (issue #6140). '.' stays literal, so the extension
+    // below is still trimmed by length.
+    rel = url::EncodePathTemp(rel);
+    if (isHtml) {
+        // .html files are served raw, so keep their real name/extension
+        return fmt("%s%s", Str(kMdVirtualHost, kMdVirtualHostLen), rel);
+    }
+    Str relStr = rel;
+    if (str::EndsWithI(relStr, StrL(".markdown"))) {
+        relStr.len -= 9;
+    } else if (str::EndsWithI(relStr, StrL(".md"))) {
+        relStr.len -= 3;
+    }
+    return fmt("%s%s.html", Str(kMdVirtualHost, kMdVirtualHostLen), relStr);
+}
+
+TempStr MarkdownModel::FileToVirtualUrlTemp(Str filePath) const {
+    return ::FileToVirtualUrlTemp(filePath, baseDir, isHtml);
+}
+
+TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
+    if (len(url) == 0 || !str::TrimPrefix(url, Str(kMdVirtualHost))) {
+        return {};
+    }
+    Str pathPart = url;
+    Str fragment = str::SliceFromChar(pathPart, '#');
+    if (fragment) {
+        pathPart = Str(pathPart.s, (int)(fragment.s - pathPart.s));
+    }
+    // url path -> file path: decode first, a '/' or '\' can't be in a file name
+    TempStr rel = str::ReplaceTemp(url::DecodeTemp(pathPart), StrL("/"), StrL("\\"));
+    if (isHtml) {
+        // page urls keep their real name; images/links resolve against baseDir too
+        return path::JoinTemp(baseDir, rel);
+    }
+    if (str::EndsWithI(rel, StrL(".html"))) {
+        // a page url made by FileToVirtualUrlTemp(): <name>.html for <name>.md
+        rel.len -= 5;
+    } else {
+        // a file referenced by its real name: an image, a raw link to
+        // another .md file etc.
+        TempStr direct = path::JoinTemp(baseDir, rel);
+        if (pages.Find(direct) >= 0 || file::Exists(direct)) {
+            return direct;
+        }
+        // fall through: possibly an extension-less link to a page
+    }
+    TempStr mdPath = path::JoinTemp(baseDir, Str(str::JoinTemp(rel, StrL(".md"))));
+    if (pages.Find(mdPath) >= 0) {
+        return mdPath;
+    }
+    TempStr mdownPath = path::JoinTemp(baseDir, Str(str::JoinTemp(rel, StrL(".markdown"))));
+    if (pages.Find(mdownPath) >= 0) {
+        return mdownPath;
+    }
+    return mdPath;
+}
+
+bool MarkdownModel::SetParentWindow(MainWindow* win) {
+    // reuse the existing browser when switching back to this tab: creating a
+    // WebView is hundreds of ms, so we only hide it in RemoveParentWindow
+    if (docView) {
+        if (BrowserViewWindow(docView) == win) {
+            BrowserViewSetVisible(docView, true);
+            return true;
+        }
+        // different parent (shouldn't happen for a tab): rebuild
+        BrowserViewDelete(docView);
+        docView = nullptr;
+        delete htmlWindowCb;
+        htmlWindowCb = nullptr;
+    }
+    htmlWindowCb = new MarkdownHtmlWindowHandler(this);
+    docView = BrowserViewCreate(win, htmlWindowCb, Str(kMdVirtualHost));
+    if (!docView) {
+        delete htmlWindowCb;
+        htmlWindowCb = nullptr;
+        return false;
+    }
+    BrowserViewSetVisible(docView, true);
+    if (len(currentPageUrl) > 0) {
+        DisplayPage(currentPageUrl);
+    } else if (len(pages) > 0) {
+        DisplayPage(FileToVirtualUrlTemp(pages[currentPageNo - 1]));
+    }
+    return true;
+}
+
+void MarkdownModel::RemoveParentWindow() {
+    if (!docView) {
+        return;
+    }
+    // keep the browser alive (hidden) so the next SetParentWindow is cheap
+    SaveHtmlScrollPos();
+    restoreHtmlScrollPos = true;
+    BrowserViewSetVisible(docView, false);
+}
+
+void MarkdownModel::DestroyParentWindow() {
+    if (!docView && !htmlWindowCb) {
+        return;
+    }
+    SaveHtmlScrollPos();
+    restoreHtmlScrollPos = true;
+    BrowserViewDelete(docView);
+    docView = nullptr;
+    delete htmlWindowCb;
+    htmlWindowCb = nullptr;
+}
+
+void MarkdownModel::PrintCurrentPage(bool /*showUI*/) const {
+    BrowserViewPrint(docView);
+}
+
+void MarkdownModel::FindInCurrentPage() const {
+    BrowserViewFindInPageUI(docView);
+}
+
+bool MarkdownModel::CanFindInPage() const {
+    return BrowserViewCanFindInPage(docView);
+}
+
+void MarkdownModel::FindStart(Str term, bool matchCase, bool wholeWord, int gen) {
+    BrowserViewFindStart(docView, term, matchCase, wholeWord, gen, -1);
+}
+
+void MarkdownModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) {
+    if (!docView) {
+        return;
+    }
+    StrVec urls;
+    for (Str page : pages) {
+        urls.Append(FileToVirtualUrlTemp(page));
+    }
+    BrowserViewFindAllPages(docView, urls, term, matchCase, wholeWord, gen);
+}
+
+void MarkdownModel::FindGoto(int idx) {
+    BrowserViewFindGoto(docView, idx);
+}
+
+// navigate to pageNo and, once it has loaded, highlight term there and make
+// its idx-th match current (see OnDocumentComplete)
+void MarkdownModel::GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) {
+    str::ReplaceWithCopy(&pendingFindTerm, term);
+    pendingFindMatchCase = matchCase;
+    pendingFindWholeWord = wholeWord;
+    pendingFindIdx = idx;
+    pendingFindGen = gen;
+    hasPendingFind = true;
+    GoToPage(pageNo, false);
+}
+
+void MarkdownModel::FindClear() {
+    BrowserViewFindClear(docView);
+}
+
+void MarkdownModel::OnFindResult(int gen, int current, int total) {
+    cb->FindResultReceived(gen, current, total);
+}
+
+void MarkdownModel::OnFindAllResult(Str payload) {
+    cb->FindAllResultReceived(payload);
+}
+
+void MarkdownModel::SelectAll() const {
+    BrowserViewSelectAll(docView);
+}
+
+void MarkdownModel::CopySelection() const {
+    BrowserViewCopySelection(docView);
+}
+
+// The path a link points at when it's a file the browser view can't show itself
+// (a .pdf, .epub, an archive, ...), or {} when the link stays in the view.
+// Unlike VirtualUrlToFileTemp() this doesn't fall back to page lookups, so a
+// link to a file that doesn't exist still resolves (and reports an error).
+TempStr MarkdownModel::LinkedDocPathTemp(Str url) const {
+    if (len(url) == 0 || IsMarkdownExternalUrl(url)) {
+        return {};
+    }
+    // WebView2 reports an in-document url with the virtual host already stripped
+    // ("sub/doc.pdf"), a TOC destination carries it; normalize to have it
+    TempStr urlPath = NormalizeMarkdownUrlTemp(url);
+    if (len(urlPath) == 0 || !str::TrimPrefix(urlPath, Str(kMdVirtualHost)) || IsBrowserViewableExt(urlPath)) {
+        return {};
+    }
+    TempStr rel = str::ReplaceTemp(url::DecodeTemp(urlPath), StrL("/"), StrL("\\"));
+    return path::NormalizeTemp(path::JoinTemp(baseDir, rel));
+}
+
+// Runs on the UI thread, from the message loop.
+static void MarkdownLaunchDoc(MarkdownLaunchTask* task) {
+    AutoDelete<MarkdownLaunchTask> delTask(task);
+    MarkdownModel* mm = task->model;
+    if (!mm) {
+        return;
+    }
+    mm->launchTask = nullptr;
+    // a model that no longer belongs to a tab is on its way out and its callback
+    // (owned by the window) may be gone already
+    // ng: this file is in the app library, which does not see the tabs; a
+    // live model is enough
+#if NG_HAS_TABS
+    if (!FindTabByController(mm) || !mm->cb) {
+        return;
+    }
+#else
+    if (!mm->cb) {
+        return;
+    }
+#endif
+    // a fragment is the destination to scroll to in the opened document, the
+    // same way LinkHandler::LaunchURL() treats one on a file:// url
+    auto* dest = new PageDestinationFile(task->path, task->dest);
+    mm->cb->GotoLink(dest);
+    delete dest;
+}
+
+// A relative link can point at a document rather than at a page of this one, e.g.
+// [the manual](./manual.pdf). Let the app open it (in a tab for the formats we
+// support, in the shell otherwise) instead of navigating the document webview to
+// it, which would render the raw bytes as HTML (discussion #5924).
+//
+// Deferred to a uitask: opening the document selects a new tab, which tears this
+// model's webview down, and we may be called from inside one of its callbacks.
+bool MarkdownModel::MaybeLaunchLinkedDoc(Str url) {
+    if (!cb) {
+        return false;
+    }
+    TempStr filePath = LinkedDocPathTemp(url);
+    if (len(filePath) == 0) {
+        return false;
+    }
+    if (launchTask) {
+        // an open is already queued (link clicked twice): the first one wins
+        return true;
+    }
+    auto* task = new MarkdownLaunchTask;
+    task->model = this;
+    task->path = str::Dup(filePath);
+    task->dest = str::Dup(UrlFragmentTemp(url));
+    launchTask = task;
+    auto fn = MkFunc0(MarkdownLaunchDoc, task);
+    uitask::Post(fn, "MarkdownLaunchDoc");
+    return true;
+}
+
+bool MarkdownModel::DisplayPage(Str pageUrl) {
+    if (len(pageUrl) == 0) {
+        return false;
+    }
+    pageUrl = str::DupTemp(pageUrl);
+    if (IsMarkdownExternalUrl(pageUrl)) {
+        if (cb) {
+            auto* item = NewMarkdownTocItem(nullptr, nullptr, {}, 1, pageUrl);
+            cb->GotoLink(item->dest);
+            FreeTocItemRec(nullptr, item);
+        }
+        return false;
+    }
+
+    TempStr plainUrl = UrlPathTemp(pageUrl);
+    int pageNo = pages.Find(VirtualUrlToFileTemp(plainUrl)) + 1;
+    if (pageNo < 1) {
+        pageNo = currentPageNo;
+    }
+
+    skipNextBeforeNavigateScrollSave = true;
+    str::ReplaceWithCopy(&currentPageUrl, plainUrl);
+    currentPageNo = pageNo;
+    if (docView) {
+        Str navUrl = MarkdownBrowserNavigationUrl(pageUrl);
+        BrowserViewNavigate(docView, navUrl);
+    }
+    return true;
+}
+
+void MarkdownModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
+    if (!ValidPageNo(pageNo)) {
+        return;
+    }
+    if (pageNo == currentPageNo && len(currentPageUrl) > 0) {
+        DisplayPage(currentPageUrl);
+        return;
+    }
+    TempStr url = FileToVirtualUrlTemp(pages[pageNo - 1]);
+    DisplayPage(url);
+}
+
+void MarkdownModel::ScrollTo(int pageNo, RectF rect, float zoom) {
+    if (IsValidZoom(zoom)) {
+        SetZoomVirtual(zoom, nullptr);
+    }
+    if (rect.x >= 0 || rect.y >= 0) {
+        htmlScrollPos = PointF(rect.x, rect.y);
+        restoreHtmlScrollPos = true;
+        if (ValidPageNo(pageNo)) {
+            SaveHtmlScrollPosForUrl(FileToVirtualUrlTemp(pages[pageNo - 1]), htmlScrollPos);
+        }
+    }
+    GoToPage(pageNo, false);
+}
+
+bool MarkdownModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/) {
+    Str url = PageDestGetName(link);
+    if (MaybeLaunchLinkedDoc(url)) {
+        return true;
+    }
+    if (DisplayPage(url)) {
+        return true;
+    }
+    int pageNo = PageDestGetPageNo(link);
+    GoToPage(pageNo, false);
+    return true;
+}
+
+bool MarkdownModel::CanNavigate(int dir) const {
+    if (dir < 0) {
+        return BrowserViewCanGoBack(docView);
+    }
+    return BrowserViewCanGoForward(docView);
+}
+
+void MarkdownModel::Navigate(int dir) {
+    if (!docView) {
+        return;
+    }
+    if (dir < 0) {
+        for (; dir < 0 && CanNavigate(dir); dir++) {
+            BrowserViewGoBack(docView);
+        }
+    } else {
+        for (; dir > 0 && CanNavigate(dir); dir--) {
+            BrowserViewGoForward(docView);
+        }
+    }
+}
+
+void MarkdownModel::SetDisplayMode(DisplayMode /*mode*/, bool /*keepContinuous*/) {}
+
+DisplayMode MarkdownModel::GetDisplayMode() const {
+    return DisplayMode::SinglePage;
+}
+
+void MarkdownModel::SetInPresentation(bool /*enable*/) {}
+
+void MarkdownModel::SetViewPortSize(Size /*size*/) {}
+
+MarkdownModel* MarkdownModel::AsMarkdown() {
+    return this;
+}
+
+void MarkdownModel::SetZoomVirtual(float zoom, Point* /*fixPt*/) {
+    if (zoom > 0) {
+        zoom = limitValue(zoom, kZoomMin, kZoomMax);
+    }
+    if (zoom <= 0 || !IsValidZoom(zoom)) {
+        zoom = 100.0f;
+    }
+    ZoomTo(zoom);
+    zoomVirtual = zoom;
+    initZoom = zoom;
+}
+
+void MarkdownModel::SaveHtmlScrollPos() {
+    if (!docView) {
+        return;
+    }
+    Point pos = BrowserViewGetScrollPos(docView);
+    if (pos.x < 0 && pos.y < 0) {
+        return;
+    }
+    htmlScrollPos = PointF((float)pos.x, (float)pos.y);
+    if (len(currentPageUrl) > 0) {
+        SaveHtmlScrollPosForUrl(currentPageUrl, htmlScrollPos);
+        return;
+    }
+    SaveHtmlScrollPosForPage(currentPageNo);
+}
+
+void MarkdownModel::SaveHtmlScrollPosForPage(int pageNo) {
+    if (!ValidPageNo(pageNo)) {
+        return;
+    }
+    SaveHtmlScrollPosForUrl(FileToVirtualUrlTemp(pages[pageNo - 1]), htmlScrollPos);
+}
+
+void MarkdownModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
+    if (len(url) == 0 || pos.x < 0 || pos.y < 0) {
+        return;
+    }
+    TempStr plainUrl = UrlPathTemp(url);
+    int idx = htmlScrollUrls.Find(plainUrl);
+    if (idx >= 0) {
+        htmlScrollPositions[idx] = pos;
+        return;
+    }
+    htmlScrollUrls.Append(plainUrl);
+    VecAppend(htmlScrollPositions, pos);
+}
+
+bool MarkdownModel::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
+    if (!pos || !ValidPageNo(pageNo)) {
+        return false;
+    }
+    return GetSavedHtmlScrollPosForUrl(FileToVirtualUrlTemp(pages[pageNo - 1]), pos);
+}
+
+bool MarkdownModel::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
+    if (len(url) == 0 || !pos) {
+        return false;
+    }
+    TempStr plainUrl = UrlPathTemp(url);
+    int idx = htmlScrollUrls.Find(plainUrl);
+    if (idx < 0) {
+        return false;
+    }
+    *pos = htmlScrollPositions[idx];
+    return pos->x >= 0 || pos->y >= 0;
+}
+
+void MarkdownModel::RestoreHtmlScrollPos() {
+    if (!docView || !restoreHtmlScrollPos) {
+        return;
+    }
+    restoreHtmlScrollPos = false;
+    if (htmlScrollPos.x < 0 && htmlScrollPos.y < 0) {
+        return;
+    }
+    int x = (int)htmlScrollPos.x;
+    int y = (int)htmlScrollPos.y;
+    x = std::max(x, 0);
+    y = std::max(y, 0);
+    BrowserViewSetScrollPos(docView, Point(x, y));
+}
+
+void MarkdownModel::ZoomTo(float zoomLevel) const {
+    BrowserViewSetZoomPercent(docView, (int)zoomLevel);
+}
+
+float MarkdownModel::GetZoomVirtual(bool /*absolute*/) const {
+    if (!docView) {
+        return zoomVirtual;
+    }
+    return (float)BrowserViewGetZoomPercent(docView);
+}
+
+float MarkdownModel::GetNextZoomStep(float towardsLevel) const {
+    float currZoom = GetZoomVirtual(true);
+    if (MaybeGetNextZoomByIncrement(&currZoom, towardsLevel)) {
+        int iCurrZoom2 = (int)GetZoomVirtual(true);
+        int iCurrZoom = (int)currZoom;
+        if (iCurrZoom == iCurrZoom2) {
+            currZoom += 1.f;
+        }
+        return currZoom;
+    }
+
+    int nZoomLevels;
+    float* zoomLevels = GetDefaultZoomLevels(&nZoomLevels);
+    int iCurrZoom = (int)currZoom;
+    int iTowardsLevel = (int)towardsLevel;
+    int iNewZoom = iTowardsLevel;
+    if ((float)iCurrZoom < towardsLevel) {
+        for (int i = 0; i < nZoomLevels; i++) {
+            int iZoom = (int)zoomLevels[i];
+            if (iZoom > iCurrZoom) {
+                iNewZoom = iZoom;
+                break;
+            }
+        }
+    } else if ((float)iCurrZoom > towardsLevel) {
+        for (int i = nZoomLevels - 1; i >= 0; i--) {
+            int iZoom = (int)zoomLevels[i];
+            if (iZoom < iCurrZoom) {
+                iNewZoom = iZoom;
+                break;
+            }
+        }
+    }
+    return (float)iNewZoom;
+}
+
+MarkdownCacheEntry* MarkdownModel::FindDataForUrl(Str url) const {
+    TempStr plainUrl = UrlPathTemp(url);
+    for (MarkdownCacheEntry* e : urlDataCache) {
+        if (str::Eq(e->url, plainUrl)) {
+            return e;
+        }
+    }
+    return nullptr;
+}
+
+bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
+    if (skipNextBeforeNavigateScrollSave) {
+        skipNextBeforeNavigateScrollSave = false;
+    } else {
+        SaveHtmlScrollPos();
+    }
+    if (cb) {
+        cb->FocusFrame(false);
+    }
+    // external links go to the OS browser / link handler — never navigate the
+    // document webview off-document (issue #5920)
+    if (IsMarkdownExternalUrl(url)) {
+        if (url && cb) {
+            auto* item = NewMarkdownTocItem(nullptr, nullptr, {}, 1, url);
+            cb->GotoLink(item->dest);
+            FreeTocItemRec(nullptr, item);
+        }
+        return false;
+    }
+    // a link to a document (.pdf, .epub, ...) opens in the app, not in the view
+    if (MaybeLaunchLinkedDoc(url)) {
+        return false;
+    }
+    // new-window request for an in-document URL: navigate in place
+    if (newWindow) {
+        TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
+        if (plainUrl) {
+            DisplayPage(plainUrl);
+        }
+        return false;
+    }
+    return true;
+}
+
+void MarkdownModel::OnDocumentComplete(Str url) {
+    if (len(url) == 0) {
+        return;
+    }
+    TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
+    TempStr filePath = VirtualUrlToFileTemp(plainUrl);
+    int pageNo = pages.Find(filePath) + 1;
+    if (pageNo < 1) {
+        pageNo = currentPageNo;
+    }
+    currentPageNo = pageNo;
+    str::ReplaceWithCopy(&currentPageUrl, plainUrl);
+    // Keep GetFilePath() on the currently shown .md (folder multi-file model).
+    if (ValidPageNo(pageNo)) {
+        str::ReplaceWithCopy(&this->fileName, pages[pageNo - 1]);
+    }
+
+    // a heading fragment is the destination; don't overwrite it with a
+    // previously saved scroll (often 0 from the initial page load)
+    if (UrlFragmentTemp(url)) {
+        restoreHtmlScrollPos = false;
+    } else if (GetSavedHtmlScrollPosForUrl(plainUrl, &htmlScrollPos)) {
+        restoreHtmlScrollPos = true;
+    }
+    ZoomTo(zoomVirtual);
+    RestoreHtmlScrollPos();
+
+    if (cb && pageNo > 0) {
+        cb->PageNoChanged(this, pageNo);
+    }
+
+    // finish a pending "jump to a match on another page": the fresh document
+    // has no find state, so re-run the search and go to the requested match
+    if (hasPendingFind && docView) {
+        BrowserViewFindStart(docView, pendingFindTerm, pendingFindMatchCase, pendingFindWholeWord, pendingFindGen,
+                             pendingFindIdx);
+        hasPendingFind = false;
+        str::FreePtr(&pendingFindTerm);
+    }
+}
+
+Str MarkdownModel::GetDataForUrl(Str url) {
+    ScopedMutex scope(&docAccess);
+    TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
+    MarkdownCacheEntry* e = FindDataForUrl(plainUrl);
+    if (e) {
+        return e->data;
+    }
+
+    Str data;
+    // mermaid runtime from IDR_EMBEDDED_PAK for ```mermaid fences (see MarkdownToHtmlPage)
+    if (str::EndsWithI(plainUrl, StrL("/mermaid.min.js")) || str::EqI(plainUrl, StrL("mermaid.min.js"))) {
+        int n = 0;
+        u8* js = GetEmbeddedFileData(StrL("mermaid.min.js"), &n);
+        if (js && n > 0) {
+            data = str::Dup(poolAlloc, Str((const char*)js, n));
+        }
+        free(js);
+    } else {
+        TempStr filePath = VirtualUrlToFileTemp(plainUrl);
+        // in html mode every resource (the page, images, linked pages) is served raw;
+        // in markdown mode .md/.markdown/.html are rendered to a styled page and other
+        // resources (images) are served raw
+        bool renderMd = !isHtml && filePath &&
+                        (str::EndsWithI(filePath, StrL(".md")) || str::EndsWithI(filePath, StrL(".markdown")) ||
+                         str::EndsWithI(filePath, StrL(".html")));
+        if (renderMd) {
+            Str md = file::ReadFile(filePath);
+            if (md) {
+                data = MarkdownToHtmlPage(md);
+            }
+        } else if (filePath) {
+            data = file::ReadFile(filePath);
+        }
+    }
+
+    if (len(data) == 0) {
+        return {};
+    }
+
+    Str urlDup = str::Dup(poolAlloc, plainUrl);
+    e = new MarkdownCacheEntry{urlDup, str::Dup(poolAlloc, data)};
+    VecAppend(urlDataCache, e);
+    return e->data;
+}
+
+// theme colors are baked into the generated HTML: drop the cached pages and
+// re-render the current one with the new colors (a hidden tab has no docView;
+// it regenerates when re-selected)
+void MarkdownModel::UpdateTheme() {
+    {
+        ScopedMutex scope(&docAccess);
+        DeleteVecMembers(urlDataCache);
+        VecReset(urlDataCache);
+    }
+    if (docView && currentPageUrl) {
+        SaveHtmlScrollPos();
+        restoreHtmlScrollPos = true;
+        DisplayPage(currentPageUrl);
+    }
+}
+
+void MarkdownModel::DownloadData(Str url, Str data) {
+    if (cb) {
+        cb->SaveDownload(url, data);
+    }
+}
+
+void MarkdownModel::OnLButtonDown() {
+    if (cb) {
+        cb->FocusFrame(true);
+    }
+}
+
+// engine-owned; do not delete
+IPageDestination* MarkdownModel::GetNamedDest(Str name) {
+    TempStr url = UrlPathTemp(name);
+    int pageNo = 0;
+    TempStr filePath = VirtualUrlToFileTemp(url);
+    if (filePath) {
+        pageNo = pages.Find(filePath) + 1;
+    }
+    pageNo = std::max(pageNo, 1);
+    return NewMarkdownNamedDest(poolAlloc, url, pageNo);
+}
+
+TocTree* MarkdownModel::GetToc() {
+    return tocTree;
+}
+
+void MarkdownModel::GetDisplayState(FileState* fs) {
+    Str fileNameA = fileName;
+    if (len(fs->filePath) == 0 || !str::EqI(fs->filePath, fileNameA)) {
+        SetFileStatePath(fs, fileNameA);
+    }
+    fs->useDefaultState = !gSettings->rememberStatePerDocument;
+    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
+    ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
+    str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
+    fs->pageCount = PageCount();
+    SaveHtmlScrollPos();
+    fs->scrollPos = htmlScrollPos;
+}
+
+void MarkdownModel::CreateThumbnail(Size /*size*/, const OnBitmapRendered* /*saveThumbnail*/) {}
+
+bool MarkdownModel::IsSupportedFileType(FileType kind) {
+    return kind == FileType::Markdown || kind == FileType::HTML;
+}
+
+bool MarkdownModel::IsHtmlFileType(FileType kind) {
+    return kind == FileType::HTML;
+}
+
+// ng: orig builds this only in debug; here MarkdownBrowserNavigationUrl() has
+// no other caller while the browser host is gated, so keep it in every config
+bool MarkdownModel_UnitTestBrowserNavigationUrl() {
+    Str url = StrL("https://sumatrapdf.markdown/issue-5842.html#target-heading");
+    if (!str::Eq(MarkdownBrowserNavigationUrl(url), StrL("issue-5842.html#target-heading"))) {
+        return false;
+    }
+    Str spacedFrag = StrL("https://sumatrapdf.markdown/dir/Test%20Test.html#heading");
+    if (!str::Eq(MarkdownBrowserNavigationUrl(spacedFrag), StrL("dir/Test%20Test.html#heading"))) {
+        return false;
+    }
+    // the name's own '#' is already %23, so only the real fragment is one
+    Str hashName = StrL("https://sumatrapdf.markdown/C%231.html#heading");
+    return str::Eq(UrlPathTemp(hashName), StrL("https://sumatrapdf.markdown/C%231.html"));
+}
+
+// trace items own their strings: the full TOC is built on a background thread,
+// which must not touch the model's arena (the model can go away under it)
+static void FreeTocTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
+    for (MarkdownTocTraceItem& ti : tocTrace) {
+        str::Free(ti.title);
+        str::Free(ti.url);
+    }
+    VecReset(tocTrace);
+}
+
+static TocTree* BuildTocTreeFromTrace(Arena* arena, Vec<MarkdownTocTraceItem>& tocTrace) {
+    TocItem* root = nullptr;
+    TocItem** nextChild = &root;
+    Vec<TocItem*> levels;
+    bool foundRoot = false;
+    int idCounter = 0;
+    for (MarkdownTocTraceItem& ti : tocTrace) {
+        TocItem* item = NewMarkdownTocItem(arena, nullptr, ti.title, ti.pageNo, ti.url);
+        item->id = ++idCounter;
+        if (ti.level <= len(levels)) {
+            VecRemoveAtN(levels, ti.level, len(levels) - ti.level);
+            VecLast(levels)->AddSiblingAtEnd(item);
+        } else {
+            *nextChild = item;
+            VecAppend(levels, item);
+            foundRoot = true;
+        }
+        nextChild = &item->child;
+    }
+    if (!foundRoot) {
+        return nullptr;
+    }
+    auto* realRoot = AllocTocItem(arena, {}, 0);
+    realRoot->child = root;
+    return AllocTocTree(arena, realRoot);
+}
+
+static void AppendFileTocTraceItem(Vec<MarkdownTocTraceItem>& tocTrace, Str filePath, Str pageUrl, int pageNo) {
+    MarkdownTocTraceItem fileItem;
+    // first-level items show the full file name, extension included
+    fileItem.title = str::Dup(path::GetBaseNameTemp(filePath));
+    fileItem.url = str::Dup(pageUrl);
+    fileItem.level = 1;
+    fileItem.pageNo = pageNo;
+    VecAppend(tocTrace, fileItem);
+}
+
+// The TOC we can build without reading a single file. Parsing every sibling
+// .html file to find its headings takes minutes in a directory with thousands
+// of them (#5918), so the document opens with this and BuildFullToc() replaces
+// it when it's ready.
+static TocTree* BuildFilesOnlyToc(Arena* arena, StrVec& pages, Str baseDir, bool isHtml) {
+    Vec<MarkdownTocTraceItem> tocTrace;
+    for (int i = 0; i < len(pages); i++) {
+        Str filePath = pages[i];
+        AppendFileTocTraceItem(tocTrace, filePath, FileToVirtualUrlTemp(filePath, baseDir, isHtml), i + 1);
+    }
+    TocTree* res = BuildTocTreeFromTrace(arena, tocTrace);
+    FreeTocTrace(tocTrace);
+    return res;
+}
+
+// the real TOC: every file plus the hierarchy of headings inside it
+static TocTree* BuildFullToc(Arena* arena, StrVec& pages, Str baseDir, bool isHtml) {
+    Vec<MarkdownFileToc> fileTocs;
+    ParseMarkdownTocsParallel(pages, isHtml, fileTocs);
+
+    Vec<MarkdownTocTraceItem> tocTrace;
+    for (int i = 0; i < len(fileTocs); i++) {
+        MarkdownFileToc& ft = fileTocs[i];
+        int pageNo = i + 1;
+        TempStr pageUrl = FileToVirtualUrlTemp(ft.filePath, baseDir, isHtml);
+        AppendFileTocTraceItem(tocTrace, ft.filePath, pageUrl, pageNo);
+
+        for (MarkdownHeadingItem& hi : ft.headings) {
+            TempStr destUrl = pageUrl;
+            if (hi.anchor) {
+                destUrl = str::JoinTemp(pageUrl, fmt("#%s", hi.anchor));
+            }
+            MarkdownTocTraceItem hItem;
+            hItem.title = str::Dup(hi.title);
+            hItem.url = str::Dup(destUrl);
+            hItem.level = hi.level + 1;
+            hItem.pageNo = pageNo;
+            VecAppend(tocTrace, hItem);
+        }
+    }
+
+    for (MarkdownFileToc& ft : fileTocs) {
+        str::Free(ft.filePath);
+        for (MarkdownHeadingItem& hi : ft.headings) {
+            str::Free(hi.title);
+            str::Free(hi.anchor);
+        }
+        VecReset(ft.headings);
+    }
+
+    TocTree* res = BuildTocTreeFromTrace(arena, tocTrace);
+    FreeTocTrace(tocTrace);
+    return res;
+}
+
+// Runs on the UI thread when the background build finished. The model clears
+// task->model when it goes away, so a document closed mid-build just drops the
+// result on the floor.
+static void MarkdownTocBuildFinished(MarkdownTocBuildTask* task) {
+    AutoDelete<MarkdownTocBuildTask> delTask(task);
+    ScopedMutex scope(&task->lock);
+    MarkdownModel* mm = task->model;
+    // the task is deleted on every path, so the model must drop its pointer
+    // even when the result is discarded, or ~MarkdownModel touches freed memory
+    if (mm) {
+        mm->tocBuildTask = nullptr;
+    }
+    // a model that no longer belongs to a tab is on its way out and its
+    // callback (owned by the window) may be gone already, so drop the result
+    // ng: this file is in the app library, which does not see the tabs; a
+    // live model is enough
+#if NG_HAS_TABS
+    if (!mm || !FindTabByController(mm)) {
+        return;
+    }
+#else
+    if (!mm) {
+        return;
+    }
+#endif
+    mm->SetToc(task->tocTree);
+    task->tocTree = nullptr;
+}
+
+static void MarkdownTocBuildThread(MarkdownTocBuildTask* task) {
+    Arena* tocArena = ArenaNew();
+    task->tocTree = BuildFullToc(tocArena, task->pages, task->baseDir, task->isHtml);
+    if (!task->tocTree) {
+        ArenaDelete(tocArena);
+    }
+    auto fn = MkFunc0(MarkdownTocBuildFinished, task);
+    uitask::Post(fn, "MarkdownTocBuildFinished");
+}
+
+// take ownership of a newly built TOC and let the UI show it. The old tree is
+// deleted only after the UI dropped its references to it (TocChanged rebuilds
+// the tree view, which holds TocItem pointers).
+void MarkdownModel::SetToc(TocTree* newToc) {
+    if (!newToc) {
+        return;
+    }
+    TocTree* old = tocTree;
+    tocTree = newToc;
+    if (cb) {
+        cb->TocChanged(this);
+    }
+    DestroyOwnedTocTree(old);
+}
+
+bool MarkdownModel::Load(Str fileName) {
+    // a path that doesn't exist would otherwise open as the sibling .md files of
+    // whatever directory it names, with the missing file itself as a 404 page
+    if (!file::Exists(fileName)) {
+        return false;
+    }
+    str::ReplaceWithCopy(&this->fileName, fileName);
+    str::ReplaceWithCopy(&baseDir, path::GetDirTemp(fileName));
+    isHtml = IsHtmlFileType(GuessFileType(fileName, true));
+
+    StrVec mdFiles;
+    CollectMarkdownFiles(baseDir, fileName, isHtml, mdFiles);
+    if (len(mdFiles) == 0) {
+        return false;
+    }
+
+    pages = mdFiles;
+    // show the files right away, then fill in the headings in the background
+    Arena* tocArena = ArenaNew();
+    tocTree = BuildFilesOnlyToc(tocArena, pages, baseDir, isHtml);
+    if (!tocTree) {
+        ArenaDelete(tocArena);
+    }
+
+    auto* task = new MarkdownTocBuildTask;
+    task->model = this;
+    task->pages = pages;
+    task->baseDir = str::Dup(baseDir);
+    task->isHtml = isHtml;
+    tocBuildTask = task;
+    auto fn = MkFunc0(MarkdownTocBuildThread, task);
+    ThreadHandle th = StartThread(fn, StrL("MarkdownTocBuild"));
+    SafeCloseThreadHandle(&th);
+
+    // Prefer path::IsSame: DirIter paths may differ from the open path in
+    // case, separators, or long/short form, so StrVec::Find can miss.
+    int openedIdx = -1;
+    for (int i = 0; i < len(pages); i++) {
+        if (path::IsSame(pages[i], fileName)) {
+            openedIdx = i;
+            break;
+        }
+    }
+    currentPageNo = openedIdx >= 0 ? openedIdx + 1 : 1;
+    currentPageUrl = {};
+    return true;
+}
+
+MarkdownModel* MarkdownModel::Create(Str fileName, DocControllerCallback* cb) {
+    auto* mm = new MarkdownModel(cb);
+    if (!mm->Load(fileName)) {
+        delete mm;
+        return nullptr;
+    }
+    return mm;
+}

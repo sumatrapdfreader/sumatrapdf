@@ -1,0 +1,273 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+// Note: they must be in this numeric order for ::Paint() logic to detect
+// page that couldn't be rendered
+constexpr int kRenderDelayUndefined = INT_MAX - 1;
+constexpr int kRenderDelayFailed = INT_MAX - 2;
+
+constexpr u16 kInvalidTileRes = (u16)-1;
+
+constexpr int kMaxPageRequests = 8;
+// keep this value reasonably low, else we'll run out of
+// GDI resources/memory when caching many larger bitmaps
+// TODO: this should be based on amount of memory taken by rendered pages
+// i.e. one big page can use as much memory as lots of small pages
+constexpr int kMaxBitmapsCached = 128;
+
+// predictive rendering renders up to this many pages ahead, one at a time
+// (chained), so they don't flood the render queue
+constexpr int kMaxPredictiveRequests = 4;
+constexpr int kRenderCacheAllPages = -1;
+
+struct PageInfo;
+struct Pixmap;
+
+namespace gpui {
+struct PaintCtx;
+}
+
+// describes the chain of pages to render predictively after the current page.
+// originPageNo is the visible page that anchors the chain; the chain stops
+// once it's no longer visible.
+struct PredictiveChain {
+    int originPageNo = 0;
+    int nPages = 0;
+    int pages[kMaxPredictiveRequests]{};
+};
+
+/* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
+   A given tile starts at (col / 2^res * page_width, row / 2^res * page_height). */
+struct TilePosition {
+    u16 res = kInvalidTileRes;
+    u16 row = (u16)-1;
+    u16 col = (u16)-1;
+
+    TilePosition() = default;
+    explicit TilePosition(u16 res, u16 row, u16 col) {
+        this->res = res;
+        this->row = row;
+        this->col = col;
+    }
+    bool operator==(const TilePosition& other) const {
+        return res == other.res && row == other.row && col == other.col;
+    }
+};
+
+/* We keep a cache of rendered bitmaps. BitmapCacheEntry keeps data
+   that uniquely identifies rendered page (dm, pageNo, rotation, zoom)
+   and the corresponding rendered bitmap. */
+struct BitmapCacheEntry {
+    DisplayModel* dm = nullptr;
+    int pageNo = 0;
+    int rotation = 0;
+    float zoom = 0.f;
+    TilePosition tile;
+    int cacheIdx = -1; // index within RenderCache.cache
+    // chapter-aware equivalent of pageNo, for RekeyForLayoutChange()
+    Location loc;
+
+    // owned by the BitmapCacheEntry
+    Pixmap* bitmap = nullptr;
+    // ng: the platform image the canvas draws (a gpui RenderImage), built from
+    // `bitmap` the first time the tile is painted and dropped with the entry
+    void* renderImage = nullptr;
+    bool outOfDate = false;
+    int refs = 1;
+    // RenderCache::darkModeEpoch at render time; entries from an older epoch
+    // were rendered/recolored with stale colors and must not be reused
+    u32 darkModeEpoch = 0;
+
+    BitmapCacheEntry(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile, Pixmap* bitmap) {
+        this->dm = dm;
+        this->pageNo = pageNo;
+        this->rotation = rotation;
+        this->zoom = zoom;
+        this->tile = tile;
+        this->bitmap = bitmap;
+    }
+    ~BitmapCacheEntry();
+};
+
+/* Even though this looks a lot like a BitmapCacheEntry, we keep it
+   separate for clarity in the code (PageRenderRequests are reused,
+   while BitmapCacheEntries are ref-counted) */
+struct PageRenderRequest {
+    DisplayModel* dm = nullptr;
+    int pageNo = 0;
+    int rotation = 0;
+    float zoom = 0.f;
+    TilePosition tile;
+    // chapter-aware equivalent of pageNo, for RekeyForLayoutChange()
+    Location loc;
+
+    RectF pageRect; // calculated from TilePosition
+    bool abort = false;
+    AbortCookie* abortCookie = nullptr;
+    u32 darkModeEpoch = 0;
+    bool grayscale = false;
+    u64 timestamp = 0;
+
+    // set by render thread before calling renderFinishedCb
+    Pixmap* bmp = nullptr;
+    int errorCode = 0; // 0 = success
+
+    // Predictive rendering: once this page finishes rendering, the pages in
+    // predictiveRequests are rendered one at a time (chained), each new request
+    // carrying the remaining pages forward. predictiveOriginPageNo is the visible
+    // page that anchors the chain - if it's no longer visible the chain stops.
+    int predictiveOriginPageNo = 0;
+    int nPredictiveRequests = 0;
+    int predictiveRequests[kMaxPredictiveRequests]{};
+
+    // called when rendering finishes (success or failure)
+    // if null, render cache handles caching directly (legacy path)
+    Func1<PageRenderRequest*> renderFinishedCb;
+};
+
+constexpr int kMaxRenderThreads = 32;
+
+extern int gMaxRenderThreads;
+
+// keep a small history of recently finished render requests for the
+// render-info debug window
+constexpr int kFinishedHistorySize = 32;
+
+// snapshot of a finished render request (kept after the request is gone, so it
+// copies the file name instead of holding on to a DisplayModel pointer)
+struct FinishedRequestInfo {
+    int pageNo = 0;
+    float zoom = 0;
+    int rotation = 0;
+    TilePosition tile;
+    u64 timestamp = 0;  // when it was requested
+    u64 finishedAt = 0; // when it finished
+    bool aborted = false;
+    int predictiveOriginPageNo = 0;
+    int nPredictiveRequests = 0;
+    int predictiveRequests[kMaxPredictiveRequests]{};
+    char fileName[128]{};
+};
+
+struct RenderCache {
+    BitmapCacheEntry* cache[kMaxBitmapsCached]{};
+    int cacheCount = 0;
+    // make sure to never ask for requestAccess in a cacheAccess
+    // protected critical section in order to avoid deadlocks
+    RecursiveMutex cacheAccess;
+
+    PageRenderRequest requests[kMaxPageRequests]{};
+    int requestCount = 0;
+
+    // ring buffer of recently finished requests (for the render-info window),
+    // protected by requestAccess
+    FinishedRequestInfo finishedHistory[kFinishedHistorySize]{};
+    int finishedHistoryCount = 0; // number of valid entries (capped at size)
+    int finishedHistoryNext = 0;  // next slot to write
+
+    // per-thread current request tracking (index matches thread index)
+    PageRenderRequest* curReqs[kMaxRenderThreads]{};
+    RecursiveMutex requestAccess;
+    ThreadHandle renderThreads[kMaxRenderThreads]{};
+    // Render threads are spawned lazily: nRenderThreads is the count actually
+    // running so far, maxRenderThreads is the cap. Threads track idleThreads
+    // (incremented when they're about to wait on startRendering); Render()
+    // only spawns a fresh thread when no idle one is available.
+    int nRenderThreads = 0;
+    int maxRenderThreads = 0;
+    int idleThreads = 0;
+
+    Size maxTileSize;
+    // how often ReduceTileSize() had to halve maxTileSize (and drop the whole
+    // cache with it); reported by BusyInfoTemp
+    int nTileSizeReductions = 0;
+    bool isRemoteSession = false;
+
+    Color textColor = 0;
+    Color backgroundColor = 0;
+    Color linkColor = 0;
+    AtomicBool grayscalePageColors = 0;
+    // bumped by UpdateDocumentColors when page render colors / the PDF
+    // document color mode change; renders started under an older epoch are
+    // discarded instead of cached
+    u32 darkModeEpoch = 0;
+
+    /* Interface for page rendering thread */
+    Semaphore startRendering; // signaled once per queued request
+    AtomicBool shouldExit = 0;
+
+    // no threads (wasm): the queue is drained on the main thread instead, see
+    // RenderCache::SchedulePump()
+    struct RenderCachePump* pump = nullptr;
+    bool pumpPosted = false;
+
+    RenderCache();
+    RenderCache(RenderCache const&) = delete;
+    RenderCache& operator=(RenderCache const&) = delete;
+    ~RenderCache();
+
+    void RequestRendering(DisplayModel* dm, int pageNo);
+    void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
+                const Func1<PageRenderRequest*>& callback);
+    void CancelRenderingBlocking(DisplayModel* dm);
+    void AbortRendering(DisplayModel* dm);
+    bool IsRenderingFor(DisplayModel* dm);
+    bool IsBusyFor(DisplayModel* dm);
+    // one line on what the render threads and the cache are doing, for the
+    // -dbg-control render-idle snapshot
+    TempStr BusyInfoTemp(DisplayModel* dm);
+    // whyNot (optional) gets a short reason when the answer is false, e.g.
+    // "p3 miss r0/0,0": a harness that only says "not ready" is unactionable
+    bool VisibleTargetTilesReady(DisplayModel* dm, Str* whyNot = nullptr);
+    bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
+    void FreeForDisplayModel(DisplayModel* dm);
+    void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);
+    void RekeyForLayoutChange(DisplayModel* dm);
+    void Invalidate(DisplayModel* dm, int pageNo, RectF rect);
+    // ng: orig paints the cached tiles with GDI into an HDC; here they go
+    // through the gpui canvas (src/gui/DocCanvas.cpp)
+    int Paint(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue);
+
+    bool ClearCurrentRequest(int threadIdx);
+    bool GetNextRequest(PageRenderRequest* req, int threadIdx);
+    // no-op when there are threads; see the pump comment above
+    void SchedulePump();
+    void Add(PageRenderRequest& req, Pixmap* bmp);
+
+    u16 GetTileRes(DisplayModel* dm, int pageNo) const;
+    u16 GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
+    bool ReduceTileSize();
+
+    bool IsRenderQueueFull() const { return requestCount == kMaxPageRequests; }
+    int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
+    void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true,
+                          const PredictiveChain* chain = nullptr);
+    void RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages);
+    bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
+                const Func1<PageRenderRequest*>& renderFinishedCb, const PredictiveChain* chain = nullptr);
+    void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kRenderCacheAllPages, TilePosition* tile = nullptr);
+    void AbortCurrentRequest(int threadIdx);
+
+    BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom,
+                           TilePosition* tile = nullptr);
+    bool DropCacheEntry(BitmapCacheEntry* entry);
+    bool DropCacheEntryIfNotUsed(BitmapCacheEntry* entry);
+    bool IsCached(BitmapCacheEntry* entry);
+    void FreePage(DisplayModel* dm, int pageNo, TilePosition* tile = nullptr);
+    void FreeNotVisible();
+
+    int PaintTile(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
+                  bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);
+    void LogCacheSize();
+    i64 CacheBytes(int& nEntriesOut);
+
+    void RecordFinishedRequest(PageRenderRequest* req);
+    void SerializeQueueState(str::Builder& s);
+    void UpdateRenderInfo();
+};
+
+void ToggleRenderInfoWindow();
+bool IsRenderInfoWindowVisible();
+
+void ToggleCacheInfoWindow();
+bool IsCacheInfoWindowVisible();

@@ -1,0 +1,72 @@
+// ng: orig's SumatraPDF.rc minus the resources this port doesn't load from the
+// exe (IDR_EMBEDDED_PAK, the print dialog template, the drag cursor and the
+// reloading cue): the version resource, the icons and the manifest.
+
+#include "resource.h"
+#include "Version.h"
+
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION VER_RESOURCE
+ PRODUCTVERSION VER_RESOURCE
+ FILEFLAGSMASK 0x0L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "FileDescription", kAppName
+            VALUE "FileVersion", VER_RESOURCE_STR
+            VALUE "LegalCopyright", kCopyrightStr
+            VALUE "ProductName", kAppName
+            VALUE "ProductVersion", VER_RESOURCE_STR
+            VALUE "CompanyName", kPublisherStr
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SUMATRAPDF          ICON "gfx\\SumatraPDF-smaller.ico"
+IDC_CURSORDRAG          CURSOR "dragcursor.cur"
+// for compat with pre 3.4 registry association for pre-win10
+// have icon as ,1, which is index of this icon. unless we delete
+// those old registry on install, the icon would change
+2                       ICON "gfx\\SumatraPDF-smaller.ico"
+// Document-type icons (resource id = registry DefaultIcon ,-N). See RegisterForOpenWith.
+IDI_DOCTYPE_EPUB        ICON "gfx\\epub-32bit.ico"
+IDI_DOCTYPE_CBX         ICON "gfx\\cbx-32bit.ico"
+IDI_DOCTYPE_CHM         ICON "gfx\\chm-32bit.ico"
+IDI_DOCTYPE_DJVU        ICON "gfx\\djvu-32bit.ico"
+IDI_DOCTYPE_IMG         ICON "gfx\\img-32bit.ico"
+IDI_DOCTYPE_PDF         ICON "gfx\\pdf-32bit.ico"
+IDI_DOCTYPE_MOBI        ICON "gfx\\mobi-32bit.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+
+1                       RT_MANIFEST          "SumatraPDF.exe.manifest"

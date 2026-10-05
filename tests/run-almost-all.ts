@@ -20,7 +20,6 @@ import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type S
 import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
-import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
 import { testit as jpegXlPdf } from "./jpeg-xl-pdf.ts";
 import { testit as buildCli } from "./build-cli.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
@@ -405,7 +404,6 @@ export const tests: NamedTest[] = [
   ["custom-zoom-dialog", customZoomDialog],
   ["annot-color-dropdown", annotColorDropdown],
   ["annot-contents-click-away", annotContentsClickAway],
-  ["lint-mingw-sources", lintMingwSources],
   ["issue-2799", issue2799],
   ["ink-thickness", inkThickness],
   ["ink-annotation-placement", inkAnnotationPlacement],

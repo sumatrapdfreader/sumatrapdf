@@ -1,0 +1,503 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+// Command palette display verbs:
+// - Toggle: immediate on/off or cycle, no dialog
+// - Change: dialog to pick a new app/document preference or mode
+// - Set: dialog to assign an optional per-object value or integration string
+//
+// A removed command keeps its slot, with an empty name, so that the ids of the
+// commands after it don't shift (they are persisted in keyboard shortcuts).
+// prettier-ignore
+const commandsRaw = [
+    "CmdOpenFile", "Open File...",
+    "CmdClose", "Close Document",
+    "CmdCloseCurrentDocument", "Close Current Document",
+    "CmdCloseOtherTabs", "Close Other Tabs",
+    "CmdCloseTabsToTheRight", "Close Tabs To The Right",
+    "CmdCloseTabsToTheLeft", "Close Tabs To The Left",
+    "CmdCloseAllTabs", "Close All Tabs",
+    "CmdSaveAs", "Save File As...",
+    "CmdPrint", "Print Document...",
+    "CmdShowInFolder", "Show File In Folder...",
+    "CmdRenameFile", "Rename File...",
+    "CmdDeleteFile", "Delete File",
+    "CmdExit", "Exit Application",
+    "CmdReloadDocument", "Reload Document",
+    "CmdCreateShortcutToFile", "Create .lnk Shortcut",
+    "CmdSendByEmail", "Send Document By Email...",
+    "CmdProperties", "Document Properties...",
+    "CmdSinglePageView", "Single Page View",
+    "CmdFacingView", "Facing View",
+    "CmdBookView", "Book View",
+    "CmdToggleContinuousView", "Toggle Continuous View",
+    "CmdToggleMangaMode", "Toggle Manga Mode",
+    "CmdRotateLeft", "Rotate Left",
+    "CmdRotateRight", "Rotate Right",
+    "CmdToggleBookmarks", "Toggle Bookmarks",
+    "CmdToggleTableOfContents", "Toggle Table Of Contents",
+    "CmdToggleFullscreen", "Toggle Fullscreen",
+    "CmdPresentationWhiteBackground", "Presentation White Background",
+    "CmdPresentationBlackBackground", "Presentation Black Background",
+    "CmdTogglePresentationMode", "View: Presentation Mode",
+    "CmdToggleToolbar", "Toggle Toolbar",
+    "CmdChangeScrollbar", "Change Scrollbar...",
+    "CmdToggleMenuBar", "Toggle Menu Bar",
+    "CmdCopySelection", "Copy Selection",
+    "CmdTranslateSelectionWithGoogle", "Translate Selection with Google",
+    "CmdTranslateSelectionWithDeepL", "Translate Selection with DeepL",
+    "CmdSearchSelectionWithGoogle", "Search Selection with Google",
+    "CmdSearchSelectionWithBing", "Search Selection with Bing",
+    "CmdSearchSelectionWithWikipedia", "Search Selection with Wikipedia",
+    "CmdSearchSelectionWithGoogleScholar", "Search Selection with Google Scholar",
+    "CmdSelectAll", "Select All",
+    "CmdNewWindow", "New Window",
+    "CmdDuplicateInNewWindow", "Open Current Document In New Window",
+    "CmdDuplicateInNewTab", "Open Current Document In New Tab",
+    "CmdCopyImage", "Copy Image",
+    "CmdCopyLinkTarget", "Copy Link Target",
+    "CmdCopyComment", "Copy Comment",
+    "CmdCopyFilePath", "Copy File Path",
+    "CmdScrollUp", "Scroll Up",
+    "CmdScrollDown", "Scroll Down",
+    "CmdScrollLeft", "Scroll Left",
+    "CmdScrollRight", "Scroll Right",
+    "CmdScrollLeftPage", "Scroll Left By Page",
+    "CmdScrollRightPage", "Scroll Right By Page",
+    "CmdScrollUpPage", "Scroll Up By Page",
+    "CmdScrollDownPage", "Scroll Down By Page",
+    "CmdScrollDownHalfPage", "Scroll Down By Half Page",
+    "CmdScrollUpHalfPage", "Scroll Up By Half Page",
+    "CmdGoToNextPage", "Next Page",
+    "CmdGoToPrevPage", "Previous Page",
+    "CmdGoToFirstPage", "First Page",
+    "CmdGoToLastPage", "Last Page",
+    "CmdGoToPage", "Go to Page...",
+    "CmdFindFirst", "Find...",
+    "CmdFindNext", "Find Next",
+    "CmdFindPrev", "Find Previous",
+    "CmdFindNextSel", "Find Next Selection",
+    "CmdFindPrevSel", "Find Previous Selection",
+    "CmdFindToggleMatchCase", "Find: Toggle Match Case",
+    "CmdSaveAnnotations", "Save Annotations to existing PDF",
+    "CmdSaveAnnotationsNewFile", "Save Annotations to a new PDF...",
+    "CmdDiscardChanges", "Discard Changes",
+    "CmdDeleteAnnotation", "Delete Annotation",
+    "CmdZoomFitPage", "Zoom: Fit Page",
+    "CmdZoomActualSize", "Zoom: Actual Size",
+    "CmdZoomFitWidth", "Zoom: Fit Width",
+    "CmdZoomFitByOrientation", "Zoom: Fit Page or Width by Orientation",
+    "CmdZoom6400", "Zoom: 6400%",
+    "CmdZoom3200", "Zoom: 3200%",
+    "CmdZoom1600", "Zoom: 1600%",
+    "CmdZoom800", "Zoom: 800%",
+    "CmdZoom400", "Zoom: 400%",
+    "CmdZoom200", "Zoom: 200%",
+    "CmdZoom150", "Zoom: 150%",
+    "CmdZoom125", "Zoom: 125%",
+    "CmdZoom100", "Zoom: 100%",
+    "CmdZoom50", "Zoom: 50%",
+    "CmdZoom25", "Zoom: 25%",
+    "CmdZoom12_5", "Zoom: 12.5%",
+    "CmdZoom8_33", "Zoom: 8.33%",
+    "CmdZoomFitContent", "Zoom: Fit Content",
+    "CmdZoomShrinkToFit", "Zoom: Shrink To Fit",
+    "CmdZoomCustom", "Zoom: Custom...",
+    "CmdZoomIn", "Zoom In",
+    "CmdZoomOut", "Zoom Out",
+    "CmdZoomFitWidthAndContinuous", "Zoom: Fit Width And Continuous",
+    "CmdZoomFitPageAndSinglePage", "Zoom: Fit Page and Single Page",
+    "CmdContributeTranslation", "Contribute Translation",
+    "", "removed: CmdOpenWithKnownExternalViewerFirst",
+    "CmdOpenWithExplorer", "Open Directory In Explorer",
+    "CmdOpenWithDirectoryOpus", "Open Directory In Directory Opus",
+    "CmdOpenWithTotalCommander", "Open Directory In Total Commander",
+    "CmdOpenWithDoubleCommander", "Open Directory In Double Commander",
+    "CmdOpenWithAcrobat", "Open in Adobe Acrobat",
+    "CmdOpenWithFoxit", "Open in Foxit Reader",
+    "CmdOpenWithFoxitPhantom", "Open in Foxit PhantomPDF",
+    "CmdOpenWithPdfXchange", "Open in PDF-XChange",
+    "CmdOpenWithXpsViewer", "Open in Microsoft XPS Viewer",
+    "CmdOpenWithHtmlHelp", "Open in Microsoft HTML Help",
+    "CmdOpenWithPdfDjvuBookmarker", "Open With Pdf&Djvu Bookmarker",
+    "", "removed: CmdOpenWithKnownExternalViewerLast",
+    "CmdOpenSelectedDocument", "Open Selected Document",
+    "CmdPinSelectedDocument", "Pin Selected Document",
+    "CmdForgetSelectedDocument", "Remove Selected Document From History",
+    "CmdExpandAll", "Expand All",
+    "CmdCollapseAll", "Collapse All",
+    "CmdSaveEmbeddedFile", "Save Embedded File...",
+    "CmdOpenEmbeddedPDF", "Open Embedded PDF",
+    "CmdSaveAttachment", "Save Attachment...",
+    "CmdOpenAttachment", "Open Attachment",
+    "CmdOptions", "Settings...",
+    "", "removed: CmdAdvancedOptions",
+    "CmdAdvancedSettings", "Advanced Settings...",
+    "CmdChangeLanguage", "Change Language...",
+    "CmdCheckUpdate", "Check For Updates",
+    "CmdInstallPrereleaseUpdate", "Install Pre-release Update",
+    "CmdTogglePdfPreviewLogging", "Toggle PDF Preview Logging",
+    "CmdHelpOpenManual", "Help: Manual",
+    "CmdHelpOpenManualOnWebsite", "Help: Manual On Website",
+    "CmdHelpOpenKeyboardShortcuts", "Help: Keyboard Shortcuts",
+    "CmdToggleKeyboardHelp", "Show Keyboard Shortcuts",
+    "CmdHelpVisitWebsite", "Help: SumatraPDF Website",
+    "CmdHelpAbout", "Help: About SumatraPDF...",
+    "CmdMoveFrameFocus", "Move Frame Focus",
+    "CmdFavoriteAdd", "Add Favorite",
+    "CmdFavoriteDel", "Delete Favorite",
+    "CmdFavoriteToggle", "Toggle Favorites",
+    "CmdToggleLinks", "Toggle Show Links",
+    "CmdToggleShowAnnotations", "Toggle Show Annotations",
+    "CmdShowAnnotations", "Show Annotations",
+    "CmdHideAnnotations", "Hide Annotations",
+    "CmdCreateAnnotText", "Create Text Annotation",
+    "CmdCreateAnnotLink", "Create Link Annotation",
+    "CmdCreateAnnotFreeText", "Create Free Text Annotation",
+    "CmdCreateAnnotLine", "Create Line Annotation",
+    "CmdCreateAnnotSquare", "Create Square Annotation",
+    "CmdCreateAnnotCircle", "Create Circle Annotation",
+    "CmdCreateAnnotPolygon", "Create Polygon Annotation",
+    "CmdCreateAnnotPolyLine", "Create Polyline Annotation",
+    "CmdCreateAnnotHighlight", "Create Highlight Annotation",
+    "CmdCreateAnnotUnderline", "Create Underline Annotation",
+    "CmdCreateAnnotSquiggly", "Create Squiggly Annotation",
+    "CmdCreateAnnotStrikeOut", "Create Strike Out Annotation",
+    "CmdCreateAnnotRedact", "Create Redact Annotation",
+    "CmdCreateAnnotStamp", "Create Stamp Annotation",
+    "CmdCreateAnnotCaret", "Create Caret Annotation",
+    "CmdCreateAnnotInk", "Create Ink Annotation",
+    "CmdCreateAnnotPopup", "Create Popup Annotation",
+    "CmdCreateAnnotFileAttachment", "Create File Attachment Annotation",
+    "CmdInvertColors", "Invert Colors",
+    "CmdTogglePageInfo", "Toggle Page Info",
+    "CmdToggleZoom", "Toggle Zoom",
+    "CmdNavigateBack", "Navigate Back",
+    "CmdNavigateForward", "Navigate Forward",
+    "CmdToggleCursorPosition", "Toggle Cursor Position",
+    "CmdOpenNextFileInFolder", "Open Next File In Folder",
+    "CmdOpenPrevFileInFolder", "Open Previous File In Folder",
+    "CmdCommandPalette", "Command Palette",
+    "CmdShowLog", "Show Logs",
+    "CmdShowErrors", "Show Errors...",
+    "CmdClearHistory", "Clear History",
+    "CmdReopenLastClosedFile", "Reopen Last Closed",
+    "CmdNextTab", "Next Tab",
+    "CmdPrevTab", "Previous Tab",
+    "CmdNextTabSmart", "Smart Next Tab",
+    "CmdPrevTabSmart", "Smart Previous Tab",
+    "CmdMoveTabLeft", "Move Tab Left",
+    "CmdMoveTabRight", "Move Tab Right",
+    "CmdInvokeInverseSearch", "Invoke Inverse Search",
+    "CmdExec", "Execute a program",
+    "CmdViewWithExternalViewer", "View With Custom External Viewer",
+    "CmdSelectionHandler", "Launch a browser or run command with selection",
+    "CmdSetTheme", "Set theme",
+    "CmdToggleInverseSearch", "Toggle Inverse Search",
+    "CmdDebugCorruptMemory", "Debug: Corrupt Memory",
+    "CmdDebugCrashMe", "Debug: Crash Me",
+    "", "removed: CmdDebugDownloadSymbols",
+    "", "removed: CmdDebugTestApp",
+    "CmdDebugShowNotif", "Debug: Show Notification",
+    "CmdDebugStartStressTest", "Debug: Start Stress Test",
+    "CmdDebugTogglePredictiveRender", "Debug: Toggle Predictive Rendering",
+    "CmdDebugToggleRtl", "Debug: Toggle RTL",
+    // removed: CmdToggleHideScrollbar (replaced by CmdChangeScrollbar)
+    "CmdListPrinters", "List Printers...",
+    "CmdToggleWindowsPreviewer", "Toggle Windows Previewer",
+    "CmdToggleWindowsSearchFilter", "Toggle Windows Search Filter",
+    "CmdScreenshot", "Take Screenshot...",
+    "CmdCropImage", "Crop Image...",
+    "CmdResizeImage", "Resize Image...",
+    "CmdSaveImage", "Save Image...",
+    "CmdPasteClipboardImage", "Paste Image From Clipboard",
+    "CmdTabGroupSave", "Save Tab Group...",
+    "CmdTabGroupRestore", "Restore Tab Group...",
+    "CmdChangeBackgroundColor", "Change Background Color...",
+    "CmdChangeEbookSettings", "Change eBook Settings...",
+    "CmdSetTabColor", "Change Tab Color...",
+    "CmdPdfCompress", "Compress PDF...",
+    "CmdPdfDecompress", "Decompress PDF...",
+    "CmdPdfDeletePages", "Delete Pages From PDF...",
+    "CmdPdfExtractPages", "Extract Pages From PDF...",
+    "CmdPdfEncrypt", "Encrypt PDF...",
+    "CmdPdfDecrypt", "Decrypt PDF...",
+    "CmdPdfBake", "Bake PDF File...",
+    "CmdPdfShowInfo", "Show PDF Info...",
+    "CmdDocumentExtractText", "Extract Text From Document...",
+    "CmdDocumentShowOutline", "Show Document Bookmarks...",
+    "CmdSetScreenshotHotkey", "Set Screenshot Hotkey...",
+    "CmdToggleReadAloud", "Toggle Read Aloud",
+    "CmdPauseReadAloud", "Pause Reading",
+    "CmdContinueReadAloud", "Continue Reading",
+    "CmdStopReadAloud", "Stop Reading",
+    "CmdReadAloudFromTopPage", "Start Reading From Top",
+    "CmdReadAloudSelection", "Start Reading Selection",
+    "CmdToggleToolbarShowReadAloud", "Read Aloud: Show In Toolbar",
+    "CmdRemoveDeletedFilesFromHistory", "Remove Deleted Files From History",
+    "CmdCommandPaletteTOC", "Command Palette: Table Of Contents",
+    "CmdDebugToggleRenderInfo", "Debug: Toggle Render Queue Info",
+    "CmdConvertImageToPdf", "Convert Image To PDF...",
+    "CmdExpandToCurrentPage", "Expand TOC to Current Page",
+    "CmdStartAutoScroll", "Start Auto-Scroll",
+    "CmdAIChatWithClaudeCode", "Claude chat...",
+    "CmdAIChatWithGrokBuild", "Grok chat...",
+    "CmdAIChatWithOpenAICodex", "Codex chat...",
+    "CmdTranslateSelectionWithGrokBuild", "Translate Selection with Grok Build...",
+    "CmdTranslateSelectionWithClaudeCode", "Translate Selection with Claude Code...",
+    "CmdTranslateSelectionWithOpenAICodex", "Translate Selection with OpenAI Codex...",
+    "CmdFindToggleMatchWholeWord", "Find: Toggle Match Whole Word",
+    "CmdGoToNextFavorite", "Go to Next Favorite",
+    "CmdGoToPrevFavorite", "Go to Previous Favorite",
+    "CmdCreateAnnotImageFromClipboard", "Create Image Annotation From Clipboard",
+    "CmdSetInverseSearch", "Set Inverse Search Command Line...",
+    "CmdCommandPaletteFavorites", "Command Palette: Favorites",
+    "CmdNavigateFilesInFolder", "Navigate Files in Folder...",
+    "CmdDebugToggleCacheInfo", "Debug: Toggle Cache Info",
+    "CmdToggleEngineeringDrawingEnhance", "Toggle Engineering Drawing Enhancement",
+    "CmdSetDocumentColorsFollowTheme", "Make Document Colors Follow Theme...",
+    "CmdTogglePreservePdfImages", "Toggle Preserve PDF Image Colors in Dark Mode",
+    "CmdToggleLightDarkTheme", "Toggle Light/Dark Theme",
+    "CmdChangeTheme", "Change Theme...",
+    "CmdTranslateSelection", "Translate Selection...",
+    "CmdFavoriteShowInTab", "Show Favorites in Tab",
+    "CmdTocExpandToLevel1", "Bookmarks: Expand to Level 1",
+    "CmdTocExpandToLevel2", "Bookmarks: Expand to Level 2",
+    "CmdTocExpandToLevel3", "Bookmarks: Expand to Level 3",
+    "CmdTocCollapseSameLevel", "Bookmarks: Collapse Same Level",
+    "CmdToggleFavoritesSort", "Sort Favorites By Name",
+    "CmdZoomFitHeight", "Zoom: Fit Height",
+    "CmdDeleteFileAndOpenNext", "Delete File And Open Next",
+    "CmdShowGeneratedHTML", "Show Generated HTML",
+    "CmdDeleteCachedFiles", "Delete Cached Files",
+    "CmdToggleKeyboardLinkFollowing", "Follow Link With Keyboard",
+    "CmdDebugToggleDpiOverride", "Debug: Toggle DPI Override",
+    "CmdToggleImages", "Toggle Show Images",
+    "CmdSelectTextViaKeyboard", "Select Text With Keyboard",
+    "CmdOpenFileWithOSFilePicker", "Open File With Windows File Picker...",
+    "CmdToggleFilePicker", "SumatraPDF File Picker",
+    "CmdToggleBoolSetting", "Toggle Boolean Setting",
+    "CmdFixDefaultApp", "Fix Default App For Extension",
+    "CmdAIChatWithAntiGravity", "Antigravity chat...",
+    "CmdTranslateSelectionWithAntiGravity", "Translate Selection with Antigravity...",
+    "CmdConvertToPDF", "Convert To PDF...",
+    "CmdDebugShowFitContentArea", "Debug: Show Fit Content Area",
+    "CmdExtendSelectionCharLeft", "Extend Selection One Character Left",
+    "CmdExtendSelectionCharRight", "Extend Selection One Character Right",
+    "CmdExtendSelectionWordLeft", "Extend Selection One Word Left",
+    "CmdExtendSelectionWordRight", "Extend Selection One Word Right",
+    "CmdToggleLaserPointer", "Toggle Laser Pointer",
+    "CmdZoomToSelection", "Zoom: To Selection",
+    "CmdToggleHoverPreview", "Toggle Citation Hover Preview",
+    "CmdToggleDisableLinks", "Toggle Disable Links",
+    "CmdSignDocument", "Sign Document...",
+    "CmdInsertImage", "Insert Image...",
+    "CmdToggleHighlightFormFields", "Toggle Highlight Form Fields",
+    "CmdTogglePageBoxes", "Toggle Page Boxes",
+    "CmdConvertPdfToImages", "Convert PDF to Images...",
+    "CmdToggleUniformPageWidth", "Toggle Uniform Page Width",
+    "CmdToggleTransparencyGrid", "Toggle Transparency Grid",
+    "CmdTogglePageGrid", "Toggle Page Grid",
+    "CmdConfigurePageGrid", "Configure Page Grid...",
+    "CmdToggleEditPDF", "Toggle Edit PDF",
+    "CmdApplyRedactions", "Apply Redactions",
+    "CmdUndo", "Undo",
+    "CmdRedo", "Redo",
+    "CmdCutAnnotation", "Cut Annotation",
+    "CmdCopyAnnotation", "Copy Annotation",
+    "CmdPasteAnnotation", "Paste Annotation",
+    "CmdSearchGoogleLens", "Search with Google Lens",
+    "CmdNavigateThumbnail", "Navigate Thumbnails",
+    "CmdShowAnnotationText", "Show Comment",
+    "CmdAnnotationHighlightBrush", "Highlighter",
+    "CmdFindAnnotation", "Find Annotation",
+    "CmdOpenFileNoHistory", "Open File Without History...",
+    "CmdCopySelectionAsImage", "Copy Selection As Image",
+    "CmdSearchGoogleLensPage", "Search Page with Google Lens",
+    "CmdSearchGoogleLensImage", "Search Image with Google Lens",
+    "CmdSaveSelectionAsImage", "Save As Image...",
+    "CmdToggleTrimEmptyMargins", "Toggle Trim Empty Margins",
+    "CmdCopyLocationToClipboard", "Copy Location To Clipboard",
+    "CmdToggleAutomaticallyScroll", "Automatically Scroll",
+    "CmdAutomaticallyScrollFaster", "Automatically Scroll Faster",
+    "CmdAutomaticallyScrollSlower", "Automatically Scroll Slower",
+    "CmdToggleReadingBar", "Reading Bar",
+    "CmdToggleReadingBarInvert", "Reading Bar Invert",
+    "CmdGoToHomePage", "Go To Home Page",
+    "CmdToggleFreePan", "Toggle Free Pan",
+    "CmdNone", "Do nothing",
+    "CmdFileHistory", "Open Recent File",
+    "CmdFavorite", "Go to Favorite",
+    "CmdReadAloudFromCursorPosition", "Start Reading From Cursor Position",
+    "CmdToggleGrayscale", "Toggle Grayscale",
+    "CmdPrintSelection", "Print Selection...",
+    "CmdAutoGenerateTOC", "Generate Table Of Contents",
+    "CmdOpenSettingsFile", "Open Advanced Settings File...",
+    "CmdOpenFileWithSumatraFilePicker", "Open File With SumatraPDF File Picker...",
+    "CmdSelectCurrentPage", "Select Current Page",
+    "CmdZoomFitVisible", "Zoom: Fit Visible",
+    "CmdSignWithImage", "Sign With Image",
+    "CmdInsertTextSnippet", "Insert Text Snippet",
+    "CmdToggleThumbnails", "Toggle Thumbnails",
+    "CmdMergePDF", "Merge PDF...",
+];
+
+// removed slots are dropped: nothing outside the generators should see them
+export const commands: string[] = commandsRaw.filter((_, i) => commandsRaw[i - (i % 2)] !== "");
+
+// Extra command palette texts for a command, so a different wording finds it
+// too. [command name, text]; a command may appear more than once.
+// prettier-ignore
+export const commandAltDescs: [string, string][] = [
+    ["CmdNavigateFilesInFolder", "Browse Files In Folder..."],
+    ["CmdAdvancedSettings", "Advanced Options..."],
+];
+
+function getNames(): string[] {
+  const names: string[] = [];
+  for (let i = 0; i < commandsRaw.length; i += 2) {
+    names.push(commandsRaw[i]);
+  }
+  return names;
+}
+
+function getDescs(): string[] {
+  const descs: string[] = [];
+  for (let i = 0; i < commandsRaw.length; i += 2) {
+    descs.push(commandsRaw[i + 1]);
+  }
+  return descs;
+}
+
+function generateEnum(): string {
+  const names = getNames();
+  const lines: string[] = [];
+
+  lines.push("// clang-format off");
+  lines.push("enum {");
+  lines.push("    // commands are integers sent with WM_COMMAND so start them");
+  lines.push("    // at some number higher than 0");
+  lines.push("    CmdFirst = 200,");
+  lines.push("    CmdSeparator = CmdFirst,");
+  lines.push("");
+
+  let firstCmdId = 201;
+  for (let i = 0; i < names.length; i++) {
+    let cmd = names[i];
+    let id = firstCmdId + i;
+    if (cmd === "") {
+      continue; // removed command, its id stays unused
+    }
+    lines.push(`    ${cmd} = ${id},`);
+  }
+
+  lines.push("");
+  lines.push(`    CmdLast = ${firstCmdId + names.length - 1},`);
+  lines.push("    CmdFirstCustom = CmdLast + 100,");
+  lines.push("");
+  lines.push("    // aliases, at the end to not mess ordering");
+  lines.push("    CmdViewLayoutFirst = CmdSinglePageView,");
+  lines.push("    CmdViewLayoutLast = CmdToggleMangaMode,");
+  lines.push("");
+  lines.push("    CmdZoomFirst = CmdZoomFitPage,");
+  lines.push("    CmdZoomLast = CmdZoomCustom,");
+  lines.push("");
+  lines.push("    CmdCreateAnnotFirst = CmdCreateAnnotText,");
+  lines.push("    CmdCreateAnnotLast = CmdCreateAnnotFileAttachment,");
+  lines.push("    CmdTrimEmptyMargins = CmdToggleTrimEmptyMargins,");
+  lines.push("};");
+  lines.push("// clang-format on");
+
+  return lines.join("\n");
+}
+
+function generateArrays(): string {
+  const names = getNames();
+  const descs = getDescs();
+  const liveNames = names.filter((n) => n !== "");
+  const liveDescs = descs.filter((_, i) => names[i] !== "");
+  const lines: string[] = [];
+
+  lines.push("// clang-format off");
+
+  // gCommandNames: SeqStrings (null-separated, double-null terminated)
+  lines.push("static SeqStrings gCommandNames =");
+  for (const name of liveNames) {
+    lines.push(`    "${name}\\0"`);
+  }
+  lines.push(`    "\\0";`);
+  lines.push("");
+
+  // gCommandIds
+  lines.push("static i32 gCommandIds[] = {");
+  for (const name of liveNames) {
+    lines.push(`    ${name},`);
+  }
+  lines.push("};");
+  lines.push("");
+
+  // gCommandDescriptions
+  lines.push("SeqStrings gCommandDescriptions =");
+  for (const desc of liveDescs) {
+    lines.push(`    "${desc}\\0"`);
+  }
+  lines.push(`    "\\0";`);
+  lines.push("");
+
+  // gCommandAltDescs / gCommandAltDescIds: parallel, like the tables above
+  for (const [name] of commandAltDescs) {
+    if (!liveNames.includes(name)) {
+      console.error(`commandAltDescs: unknown command '${name}'`);
+      process.exit(1);
+    }
+  }
+  lines.push("SeqStrings gCommandAltDescs =");
+  for (const [, desc] of commandAltDescs) {
+    lines.push(`    "${desc}\\0"`);
+  }
+  lines.push(`    "\\0";`);
+  lines.push("");
+  lines.push("i32 gCommandAltDescIds[] = {");
+  for (const [name] of commandAltDescs) {
+    lines.push(`    ${name},`);
+  }
+  lines.push("};");
+  lines.push("// clang-format on");
+
+  return lines.join("\n");
+}
+
+function replaceBetweenMarkers(content: string, startMarker: string, endMarker: string, generated: string): string {
+  const startIdx = content.indexOf(startMarker);
+  const endIdx = content.indexOf(endMarker);
+  if (startIdx < 0 || endIdx < 0) {
+    console.error(`Could not find markers '${startMarker}' and '${endMarker}'`);
+    process.exit(1);
+  }
+  const before = content.substring(0, startIdx + startMarker.length);
+  const after = content.substring(endIdx);
+  return before + "\n" + generated + "\n" + after;
+}
+
+export function main() {
+  const rootDir = join(import.meta.dir, "..");
+  const headerPath = join(rootDir, "src", "ng", "Commands.h");
+  const cppPath = join(rootDir, "src", "ng", "Commands.cpp");
+
+  let headerContent = readFileSync(headerPath, "utf-8");
+  let cppContent = readFileSync(cppPath, "utf-8");
+
+  const enumCode = generateEnum();
+  headerContent = replaceBetweenMarkers(headerContent, "// @gen-start cmd-enum", "// @gen-end cmd-enum", enumCode);
+  writeFileSync(headerPath, headerContent, "utf-8");
+  console.log("Generated enum in src/Commands.h");
+
+  const arraysCode = generateArrays();
+  cppContent = replaceBetweenMarkers(cppContent, "// @gen-start cmd-c", "// @gen-end cmd-c", arraysCode);
+  writeFileSync(cppPath, cppContent, "utf-8");
+  console.log("Generated arrays in src/Commands.cpp");
+}
+
+if (import.meta.main) {
+  main();
+}

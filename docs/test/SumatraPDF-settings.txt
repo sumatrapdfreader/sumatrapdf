@@ -1,0 +1,244 @@
+﻿# For documentation, see https://www.sumatrapdfreader.org/settings/settings3-7.html
+
+DefaultDisplayMode = automatic
+DefaultZoom = fit page
+DisableJavaScript = false
+AllowExternalImages = false
+EnableTeXEnhancements = false
+EscToExit = false
+FullPathInTitle = false
+LazyLoading = false
+MainWindowBackground = #80fff200
+NoHomeTab = false
+HomePageSortByFrequentlyRead = false
+HomePageViewMode = thumbnails
+ReloadModifiedDocuments = true
+RememberOpenedFiles = true
+RememberStatePerDocument = true
+RestoreSession = true
+ReuseInstance = true
+ShowMenubar = true
+ShowMenubarWithTabs = false
+ShowPageNumberInTabs = false
+ShowHomePageReadingProgress = true
+ShowChaptersInEbooks = false
+ShowTips = true
+ShowToolbar = true
+Toolbar = show
+ToolbarPosition = top
+SearchUIFloating = false
+ShowFavorites = false
+SortFavoritesByName = false
+ShowToc = true
+AlwaysShowSidebar = false
+SidebarOnRight = false
+ShowLinks = false
+HighlightFormFields = true
+ClickEdgeToTurnPage = false
+DisableLinks = false
+ExplorerQuickLook = false
+RememberViewOffsetOnPageTurn = false
+MouseWheelTurnsPage = false
+ScrollEdgeTurnsPage = true
+ShowDocumentFocusIndicator = false
+ShowAnnotationNotification = true
+ShowFileNavigateHint = true
+ShowAnnotationAuthorInTooltip = false
+ShowTocPageNumbers = true
+AutoGenerateTOC = false
+ShowStartPage = true
+SidebarDx = 0
+Scrollbars = windows
+ScrollbarInSinglePage = false
+SmoothScroll = true
+ScrollLineAmount = 16
+SaveMemory = 50
+PaddingAfterLastPage = false
+IgnoreDestinationZoom = false
+HighlightLinkDestination = false
+CitationHoverDelay = -1
+ReadAloudSpeed = 1
+ReadingAutoScrollSpeed = 40
+ReadingBar [
+	Background = #66ffe082
+	Invert = false
+	Height = 0
+]
+FastScrollOverScrollbar = false
+PreventSleepInFullscreen = true
+TabWidth = 300
+Theme = Light
+HelpTheme = app
+DocumentColorsFollowTheme = off
+TocDy = 0
+ToolbarShowReadAloud = false
+ToolbarSize = 18
+TreeFontName = automatic
+TreeFontSize = 0
+UIFontSize = 0
+DisableAntiAlias = false
+EngineeringDrawingEnhance = off
+DisableAutoLinks = false
+UseSysColors = false
+UseTabs = true
+SelectionToolbar = true
+TabsMru = false
+CtrlTabSimple = false
+ZoomLevels = 
+ZoomIncrement = 0
+
+FixedPageUI [
+	Grayscale = false
+	TextColor = #000000
+	BackgroundColor = #ffffff
+	SelectionColor = #ffff00
+	WindowMargin = 2 4 2 4
+	PageSpacing = 4 4
+	PageGrid [
+		Width = 72
+		Height = 72
+		Subdivisions = 4
+		OffsetX = 0
+		OffsetY = 0
+		Color = #8080ff
+		Style = dots
+		Units = in
+	]
+]
+
+EBookUI [
+	FontSize = 0
+	LineSpacing = 0
+	LayoutDx = 0
+	LayoutDy = 0
+	IgnoreDocumentCSS = false
+]
+
+ComicBookUI [
+	WindowMargin = 0 0 0 0
+	PageSpacing = 4 4
+	CbxMangaMode = false
+	LimitToWindowWidth = false
+	LimitToWindowHeight = false
+	LandscapeAsSpread = true
+]
+
+ImageUI [
+	DefaultZoom = shrink to fit
+	LimitToWindowWidth = false
+	LimitToWindowHeight = false
+	LandscapeAsSpread = true
+]
+
+ChmUI [
+	UseFixedPageUI = false
+]
+
+MarkdownUI [
+	UseFixedPageUI = false
+]
+
+HtmlUI [
+	UseFixedPageUI = false
+]
+
+ClaudeCode [
+	Model = sonnet
+	Effort = 1
+	SkipPermissions = false
+	BgColor = #ffffff
+]
+
+GrokBuild [
+	Model = grok-4.5
+	Effort = 1
+	AlwaysApprove = false
+	BgColor = #ffffff
+]
+
+CodexBuild [
+	Model = gpt-5.5
+	Sandbox = 1
+	SkipSandbox = false
+	BgColor = #ffffff
+]
+
+AntiGravity [
+	Model = gemini-3.8-flash-medium
+	Effort = 1
+	AutoApprove = true
+	BgColor = #ffffff
+]
+
+AIChatSidebarDx = 0
+
+
+Annotations [
+	HighlightColor = #ffff00
+	UnderlineColor = #8bf05d
+	SquigglyColor = #f199d2
+	StrikeOutColor = #e24745
+	FreeTextOpacity = 100
+	FreeTextSize = 12
+	FreeTextBorderWidth = 1
+	FreeTextAlignment = left
+	PresetColors = #ffff00 #8bf05d #99defa #f199d2 #e24745 #ff0000 #0000ff #000000
+	InkColor = #66ffff00
+	InkColors = #66ffff00 #668bf05d #6699defa #66f199d2 #66e24745
+	InkBorderWidth = 16
+]
+
+ExternalViewers [
+]
+
+ForwardSearch [
+	HighlightOffset = 0
+	HighlightWidth = 15
+	HighlightColor = #6581ff
+	HighlightPermanent = false
+]
+
+PrinterDefaults [
+	PrintScale = shrink
+	Collate = default
+	PrintDpi = 0
+]
+
+Fullscreen [
+	ShowToolbar = false
+	Toolbar = hide
+	ShowMenubar = false
+]
+
+SelectionHandlers [
+]
+
+TextSnippets [
+]
+
+Shortcuts [
+]
+
+Themes [
+]
+
+TabGroups [
+]
+
+CustomScreenDPI = 0
+
+# You're not expected to change those manually
+WindowState = 1
+WindowPos = 0 0 0 0
+SearchUIWindowPos = 0 0 0 0
+HelpWindowPos = 0 0 0 0
+FileStates [
+]
+SessionData [
+]
+TimeOfLastUpdateCheck = 0 0
+OpenCountWeek = 0
+PropWinPos = 0 0
+CheckForUpdates = true
+
+# Settings below are not recognized by the current version

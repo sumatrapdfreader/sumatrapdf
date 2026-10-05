@@ -393,9 +393,7 @@ const unrarSources = [
   "volume.cpp",
 ];
 
-// Upstream spells these Windows headers with capitals, which breaks the mingw
-// cross build on a case-sensitive filesystem. Was a local edit to the vendored
-// tree; now it is applied here.
+// Keep Windows includes usable on case-sensitive filesystems.
 function lowercaseWinIncludes(text: string): string {
   return text.replace(/^#include <(PowrProf|Sddl|Wbemidl)\.h>/gm, (_m, name) => `#include <${name.toLowerCase()}.h>`);
 }
@@ -404,6 +402,8 @@ function lowercaseWinIncludes(text: string): string {
 const unrarSeals: Record<string, string[]> = {
   "rs.cpp": ["Clean"],
 };
+
+const unrarWinSources = new Set(["isnt.cpp", "motw.cpp"]);
 
 function genUnrar(ctx: Ctx): void {
   const root = ctx.checkoutDir;
@@ -422,7 +422,8 @@ function genUnrar(ctx: Ctx): void {
   };
   const chunks: string[] = [];
   for (const name of unrarSources) {
-    const chunk = prepare(join(root, name), rules, lowercaseWinIncludes);
+    let chunk = prepare(join(root, name), rules, lowercaseWinIncludes);
+    if (unrarWinSources.has(name)) chunk = `#ifdef _WIN_ALL\n${chunk}\n#endif\n`;
     chunks.push(unrarSeals[name] ? sealMacros(chunk, unrarSeals[name]) : chunk);
   }
   ctx.files.set("unrar.cpp", joinChunks(chunks));

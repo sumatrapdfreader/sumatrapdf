@@ -6,7 +6,7 @@ import { clearDirPreserveSettings } from "./clean";
 import { ensureNinja, ninjaDir, ninjaToRoot } from "./ninja";
 import { detectVisualStudio2026, runLogged } from "./util";
 
-type BuildMode = "windows" | "all" | "smoke" | "ci" | "daily" | "codeql" | "mingw" | "wine" | "build-no";
+type BuildMode = "windows" | "all" | "smoke" | "ci" | "daily" | "codeql" | "build-no";
 type Config = "debug" | "release" | "profile";
 
 interface BuildOptions {
@@ -17,8 +17,6 @@ interface BuildOptions {
   ninja: boolean;
   msbuild: boolean;
   win32: boolean;
-  run: boolean;
-  runArgs: string[];
   buildNo?: string;
 }
 
@@ -34,13 +32,6 @@ Windows builds:
   -ci                     Build CI/pre-release artifacts
   -daily                  Build daily artifacts
   -codeql                 Build the static release target for CodeQL
-
-MinGW cross-builds (they still produce a Windows exe):
-  -mingw <-dbg|-rel> [-clean]
-                           Direct MinGW cross-build on the current host
-  -wine [-clean] [-run] [-- <SumatraPDF args>]
-                           MinGW build on Linux and optionally run under Wine;
-                           from Windows it runs through WSL Ubuntu
 
 Other:
   -build-no [number|sha1] List recent build numbers or resolve a number or sha1
@@ -90,16 +81,10 @@ function parseArgs(args: string[]): BuildOptions | undefined {
     ninja: false,
     msbuild: false,
     win32: false,
-    run: false,
-    runArgs: [],
   };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg === "--") {
-      opts.runArgs.push(...args.slice(i + 1));
-      break;
-    }
     if (arg === "-dbg") setConfig(opts, "debug");
     else if (arg === "-rel") setConfig(opts, "release");
     else if (arg === "-profile") setConfig(opts, "profile");
@@ -127,12 +112,7 @@ function parseArgs(args: string[]): BuildOptions | undefined {
     else if (arg === "-ci") setMode(opts, "ci");
     else if (arg === "-daily") setMode(opts, "daily");
     else if (arg === "-codeql") setMode(opts, "codeql");
-    else if (arg === "-mingw") setMode(opts, "mingw");
-    else if (arg === "-wine" || arg === "-win") setMode(opts, "wine");
-    else if (arg === "-run") {
-      if (opts.run) throw new CliError("-run can only be specified once");
-      opts.run = true;
-    } else if (arg === "-build-no") {
+    else if (arg === "-build-no") {
       setMode(opts, "build-no");
       const value = args[i + 1];
       if (value && !value.startsWith("-")) {
@@ -158,7 +138,7 @@ function reject(condition: boolean, message: string): void {
 
 function validateOptions(opts: BuildOptions): void {
   const mode = opts.mode!;
-  const fixedModes: BuildMode[] = ["all", "smoke", "ci", "daily", "codeql", "wine", "build-no"];
+  const fixedModes: BuildMode[] = ["all", "smoke", "ci", "daily", "codeql", "build-no"];
   if (fixedModes.includes(mode)) {
     reject(!!opts.config, `${opts.config ? configFlag(opts.config) : ""} is not valid with -${mode}`);
     reject(opts.asan, `-asan is not valid with -${mode}`);
@@ -168,18 +148,11 @@ function validateOptions(opts: BuildOptions): void {
     reject(opts.win32 && (opts.config !== "release" || opts.asan), "-32 requires a non-ASan -rel build");
     reject(opts.asan && opts.config === "profile", "-asan is not supported with -profile");
   }
-  if (mode === "mingw") {
-    reject(!opts.config, "-mingw requires -dbg or -rel");
-    reject(opts.asan, "-asan is not supported with -mingw");
-  }
-  reject(opts.clean && !["windows", "all", "mingw", "wine"].includes(mode), `-clean is not valid with -${mode}`);
+  reject(opts.clean && !["windows", "all"].includes(mode), `-clean is not valid with -${mode}`);
   reject(opts.ninja && opts.msbuild, "-ninja and -msbuild cannot be used together");
   reject(opts.ninja && !["windows", "all", "smoke"].includes(mode), `-ninja is not valid with -${mode}`);
   reject(opts.msbuild && !["windows", "all", "smoke"].includes(mode), `-msbuild is not valid with -${mode}`);
   reject(opts.win32 && mode !== "windows", "-32 is only valid for Windows builds");
-  reject(opts.run && mode !== "wine", "-run is only valid with -wine");
-  reject(opts.runArgs.length > 0 && mode !== "wine", "arguments after -- are only valid with -wine");
-  reject(opts.runArgs.length > 0 && !opts.run, "arguments after -- require -run");
 }
 
 function formatElapsed(ms: number): string {
@@ -374,17 +347,6 @@ async function showBuildNo(query?: string): Promise<void> {
   throw new Error(`unknown commit or build number: ${query}`);
 }
 
-// the wine build runs in WSL Ubuntu when started from Windows
-async function runWslLauncher(args: string[]): Promise<void> {
-  const proc = Bun.spawn(["bun", "cmd/helper/wsl-build.ts", "-win", ...args], {
-    stdout: "inherit",
-    stderr: "inherit",
-    stdin: "inherit",
-  });
-  const code = await proc.exited;
-  if (code !== 0) throw new Error(`WSL wine build failed with exit code ${code}`);
-}
-
 async function runBuild(opts: BuildOptions): Promise<void> {
   const mode = opts.mode!;
   if (["windows", "all", "smoke"].includes(mode)) {
@@ -407,22 +369,6 @@ async function runBuild(opts: BuildOptions): Promise<void> {
   } else if (mode === "codeql") {
     const { buildCodeql } = await import("./helper/codeql-build");
     await buildCodeql();
-  } else if (mode === "mingw") {
-    const { buildMingw } = await import("./helper/mingw-build");
-    await buildMingw({
-      outDir: `out/mingw-${opts.config === "release" ? "rel" : "dbg"}64`,
-      isRelease: opts.config === "release",
-      clean: opts.clean,
-    });
-  } else if (mode === "wine") {
-    if (process.platform === "win32") {
-      const args = [...(opts.clean ? ["-clean"] : []), ...(opts.run ? ["-run"] : [])];
-      if (opts.runArgs.length) args.push("--", ...opts.runArgs);
-      await runWslLauncher(args);
-    } else {
-      const { buildWine } = await import("./helper/wine-build");
-      await buildWine({ clean: opts.clean, run: opts.run, runArgs: opts.runArgs });
-    }
   } else if (mode === "build-no") await showBuildNo(opts.buildNo);
 }
 

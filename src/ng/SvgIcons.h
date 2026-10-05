@@ -1,0 +1,64 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
+extern const char* gIconFileOpen;
+extern const char* gIconPrint;
+extern const char* gIconPagePrev;
+extern const char* gIconPageNext;
+extern const char* gIconLayoutContinuous;
+extern const char* gIconLayoutSinglePage;
+extern const char* gIconZoomOut;
+extern const char* gIconZoomIn;
+extern const char* gIconSearchPrev;
+extern const char* gIconSearchNext;
+extern const char* gIconMatchCase;
+extern const char* gIconSave;
+extern const char* gIconSaveToNewFile;
+extern const char* gIconRotateLeft;
+extern const char* gIconRotateRight;
+extern const char* gIconCopy;
+extern const char* gIconTranslate;
+extern const char* gIconSpeak;
+extern const char* gIconPauseSpeaking;
+extern const char* gIconNavigateBack;
+extern const char* gIconNavigateForward;
+extern const char* gIconUndo;
+extern const char* gIconRedo;
+extern const char* gIconSearch;
+extern const char* gIconFindAnnotation;
+extern const char* gIconCommandPalette;
+extern const char* gIconChevronUp;
+extern const char* gIconChevronDown;
+extern const char* gIconClose;
+extern const char* gIconArrowsDiagonal;
+extern const char* gIconArrowsDiagonalMinimize;
+extern const char* gIconMatchWholeWord;
+extern const char* gIconHomeList;
+extern const char* gIconHomeThumbnails;
+extern const char* gIconPin;
+extern const char* gIconEditAnnotations;
+extern const char* gIconAnnotHighlight;
+extern const char* gIconAnnotHighlightBrush;
+extern const char* gIconAnnotUnderline;
+extern const char* gIconAnnotSquiggly;
+extern const char* gIconAnnotStrikeOut;
+extern const char* gIconAnnotText;
+extern const char* gIconAnnotFreeText;
+extern const char* gIconAnnotLine;
+extern const char* gIconAnnotSquare;
+extern const char* gIconAnnotCircle;
+extern const char* gIconAnnotPolygon;
+extern const char* gIconAnnotPolyLine;
+extern const char* gIconAnnotInk;
+extern const char* gIconAnnotRedact;
+extern const char* gIconApplyRedactions;
+extern const char* gIconAnnotStamp;
+extern const char* gIconAnnotCaret;
+extern const char* gIconAnnotFileAttachment;
+extern const char* gIconTrash;
+extern const char* gIconArrowUp;
+extern const char* gIconHome;
+
+// ng: orig's GetCachedPixmapForSvg / DestroySvgPixmapIconsCache rasterize an
+// icon with mupdf into a Pixmap the win32 controls blit. gpui draws the SVG
+// straight from these strings, so there is no pixmap cache here.

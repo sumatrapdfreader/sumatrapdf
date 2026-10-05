@@ -1,0 +1,80 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+#include "base/Base.h"
+#include "base/Exif.h"
+#include "base/File.h"
+
+#include "Settings.h"
+#include "Flags.h"
+#include "ExifDump.h"
+
+// GUI-subsystem exes lose CRT stdout when spawned with a pipe (issue #5677).
+// ng: the same guard ChmDump.cpp uses; off Windows stdout is always there.
+static void CliWrite(Str s, int n = 0) {
+    if (len(s) == 0) {
+        return;
+    }
+    if (n == 0) {
+        n = s.len;
+    }
+#if OS_WIN
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (h && h != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(h, s.s, (DWORD)n, &written, nullptr);
+        return;
+    }
+#endif
+    fwrite(s.s, 1, (size_t)n, stdout);
+}
+
+static void CliPrint(Str s) {
+    CliWrite(s);
+    CliWrite(StrL("\n"), 1);
+}
+
+// Dump all EXIF metadata for path to stdout (exif-py compatible format).
+// Returns true if any EXIF was found.
+bool DumpExifFile(Str path) {
+    if (len(path) == 0) {
+        return false;
+    }
+    CliPrint(fmt("Opening: %s", path));
+    Str data = file::ReadFile(path);
+    if (len(data) == 0) {
+        CliPrint(StrL("No EXIF information found"));
+        return false;
+    }
+
+    ExifParser parser;
+    bool found = parser.Parse(data);
+    if (!found) {
+        CliPrint(StrL("No EXIF information found"));
+        str::Free(data);
+        return false;
+    }
+
+    if (parser.hasJpegThumbnail) {
+        CliPrint(StrL("File has JPEG thumbnail"));
+    }
+
+    for (Str line : parser.dumpLines) {
+        CliPrint(line);
+    }
+
+    str::Free(data);
+    return true;
+}
+
+void DumpExif(const Flags& flags) {
+    bool any = false;
+    for (int i = 0; i < len(flags.fileNames); i++) {
+        if (DumpExifFile(flags.fileNames[i])) {
+            any = true;
+        }
+    }
+    if (!any && len(flags.fileNames) == 0) {
+        CliPrint(StrL("No file specified for -dump-exif"));
+    }
+}

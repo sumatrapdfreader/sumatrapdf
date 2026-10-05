@@ -1,0 +1,325 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
+#include "base/Base.h"
+
+#if OS_WIN
+#include "base/CmdLineArgs.h"
+#include "base/Pixmap.h"
+#include "base/ScopedWin.h"
+#include "base/Win.h"
+
+// must be last due to assert() over-write
+#include "base/tests/UtAssert.h"
+
+// Round-trip QuoteCmdLineArgTemp through CommandLineToArgvW (ParseCmdLine).
+// The GHSA-xvxg-cwmx-hr7j breakout payload must stay a single argv element.
+static void QuoteCmdLineArgTest() {
+    auto roundTripOne = [](Str input) {
+        TempStr quoted = QuoteCmdLineArgTemp(input);
+        utassert(quoted.s != nullptr);
+        // ParseCmdLine uses CommandLineToArgvW; prefix a dummy argv[0].
+        TempStr cmdLine = fmt("exe %s", quoted);
+        StrNode* args = ParseCmdLine(cmdLine);
+        defer {
+            FreeStrNode(nullptr, args);
+        };
+        utassert(args != nullptr);
+        utassert(str::Eq(args->s, StrL("exe")));
+        if (len(input) == 0) {
+            // `exe ""` → only "exe" after empty-token skip in ParseCmdLine
+            utassert(args->next == nullptr);
+            return;
+        }
+        utassert(args->next != nullptr);
+        utassert(args->next->next == nullptr);
+        utassert(str::Eq(args->next->s, input));
+    };
+
+    roundTripOne(StrL("hello"));
+    roundTripOne(StrL("hello world"));
+    roundTripOne(StrL("say \"hi\""));
+    roundTripOne(StrL("path\\with\\backslashes"));
+    roundTripOne(StrL("trailing\\"));
+    roundTripOne(StrL("trailing\\\\"));
+    // PoC from the advisory: naive " -> \" turns this into a breakout.
+    roundTripOne(StrL("X\\\" --always-approve "));
+    roundTripOne(StrL("some text \\\" --dangerously-skip-permissions "));
+    roundTripOne(StrL("Text: X\\\" --model evil"));
+    roundTripOne(StrL(""));
+    roundTripOne(StrL("a\\\"b\\\"c"));
+    roundTripOne(StrL("ends with quote\""));
+    roundTripOne(StrL("\\"));
+    roundTripOne(StrL("\\\""));
+
+    // Explicit expected encodings for the breakout cases
+    utassert(str::Eq(QuoteCmdLineArgTemp(StrL("X\\\" --always-approve ")), StrL("\"X\\\\\\\" --always-approve \"")));
+    utassert(str::Eq(QuoteCmdLineArgTemp(StrL("trailing\\")), StrL("\"trailing\\\\\"")));
+    utassert(str::Eq(QuoteCmdLineArgTemp(StrL("a b")), StrL("\"a b\"")));
+    utassert(str::Eq(QuoteCmdLineArgTemp(StrL("")), StrL("\"\"")));
+    utassert(QuoteCmdLineArgTemp({}).s == nullptr);
+}
+
+static u8 RecolorLerp(u8 from, u8 to, int t) {
+    int n = (t * ((int)to - from)) + 128;
+    n += n >> 8;
+    return (u8)(from + (n >> 8));
+}
+
+static void FillLinkAaPixels(u8* p, int bpp) {
+    // paper
+    p[0] = 255;
+    p[1] = 255;
+    p[2] = 255;
+    // solid blue URL ink
+    p[bpp] = 220;
+    p[bpp + 1] = 0;
+    p[bpp + 2] = 0;
+    // ~50% coverage (R/G halfway to paper)
+    p[2 * bpp] = 255;
+    p[2 * bpp + 1] = 128;
+    p[2 * bpp + 2] = 128;
+}
+
+static void CheckLinkAaPixels(u8* p, int bpp) {
+    Color bg = MkRgb(0x1e, 0x1e, 0x1e);
+    Color link = MkRgb(0x50, 0xa0, 0xff);
+
+    u8 lr, lg, lb, br, bgc, bb;
+    UnpackColor(link, lr, lg, lb);
+    UnpackColor(bg, br, bgc, bb);
+
+    // paper -> background
+    utassert(p[0] == bb && p[1] == bgc && p[2] == br);
+    // solid ink -> link color
+    utassert(p[bpp] == lb && p[bpp + 1] == lg && p[bpp + 2] == lr);
+    // fringe interpolates toward background, not snapped to link
+    utassert(p[2 * bpp] == RecolorLerp(lb, bb, 128));
+    utassert(p[2 * bpp + 1] == RecolorLerp(lg, bgc, 128));
+    utassert(p[2 * bpp + 2] == RecolorLerp(lr, br, 128));
+}
+
+static void RecolorLinkAaTest() {
+    // blue-on-white AA must not snap to a solid link color (issue #5911)
+    Color text = MkRgb(0xf0, 0xf0, 0xf0);
+    Color bg = MkRgb(0x1e, 0x1e, 0x1e);
+    Color link = MkRgb(0x50, 0xa0, 0xff);
+
+    Pixmap* heap = AllocPixmap(3, 1, PixmapFormat::BGR8);
+    utassert(heap && heap->data);
+    FillLinkAaPixels(heap->data, 3);
+    RecolorPixmap(heap, text, bg, link);
+    CheckLinkAaPixels(heap->data, 3);
+    FreePixmap(heap);
+
+    // live page tiles are DIB-backed (UpdateBitmapColors)
+    Pixmap* dib = AllocPixmapDIB(3, 1);
+    utassert(dib && dib->data && dib->hbmp);
+    FillLinkAaPixels(dib->data, 4);
+    RecolorPixmap(dib, text, bg, link);
+    CheckLinkAaPixels(dib->data, 4);
+    FreePixmap(dib);
+}
+
+// 16x16 red square in the middle, transparent corners (AND mask).
+static HICON MakeMaskedRedIcon() {
+    const int n = 16;
+    Pixmap* color = AllocPixmapDIB(n, n);
+    if (!color || !color->data) {
+        FreePixmap(color);
+        return nullptr;
+    }
+    memset(color->data, 0, (size_t)color->stride * (size_t)n);
+    for (int y = 4; y < 12; y++) {
+        u8* d = color->data + ((size_t)y * color->stride) + (4 * 4);
+        for (int x = 4; x < 12; x++, d += 4) {
+            d[0] = 0;
+            d[1] = 0;
+            d[2] = 255;
+            d[3] = 255;
+        }
+    }
+    // 1-bit mask, MSB is leftmost. White (1) = transparent, black (0) = opaque.
+    u8 maskBits[16 * 2];
+    memset(maskBits, 0xFF, sizeof(maskBits));
+    for (int y = 4; y < 12; y++) {
+        maskBits[y * 2] = 0xF0;
+        maskBits[y * 2 + 1] = 0x0F;
+    }
+    HBITMAP hbmMask = CreateBitmap(n, n, 1, 1, maskBits);
+    if (!hbmMask) {
+        FreePixmap(color);
+        return nullptr;
+    }
+    ICONINFO ii{};
+    ii.fIcon = TRUE;
+    ii.hbmMask = hbmMask;
+    ii.hbmColor = color->hbmp;
+    HICON hicon = CreateIconIndirect(&ii);
+    DeleteObject(hbmMask);
+    FreePixmap(color);
+    return hicon;
+}
+
+static void PixmapFromHICONAlphaTest() {
+    HICON hicon = MakeMaskedRedIcon();
+    utassert(hicon);
+    Pixmap* px = PixmapFromHICON(hicon);
+    DestroyIcon(hicon);
+    utassert(px && px->data && px->hasAlpha);
+    utassert(px->width == 16 && px->height == 16);
+    utassert(px->format == PixmapFormat::BGRA8);
+    const u8* corner = px->data;
+    utassert(corner[3] == 0);
+    const u8* center = px->data + ((size_t)8 * px->stride) + (8 * 4);
+    utassert(center[3] > 128);
+    utassert(center[2] > 128);
+    FreePixmap(px);
+}
+
+static Pixmap* MakePaletteDib(int w, int h) {
+    auto* bmi = (BITMAPINFO*)AllocArrayTemp<u8>(sizeofi(BITMAPINFO) + (255 * sizeofi(RGBQUAD)));
+    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi->bmiHeader.biWidth = w;
+    bmi->bmiHeader.biHeight = -h;
+    bmi->bmiHeader.biPlanes = 1;
+    bmi->bmiHeader.biBitCount = 8;
+    bmi->bmiHeader.biCompression = BI_RGB;
+    bmi->bmiHeader.biClrUsed = 2;
+    bmi->bmiColors[0] = RGBQUAD{0, 0, 255, 0};
+    bmi->bmiColors[1] = RGBQUAD{255, 0, 0, 0};
+    void* bits = nullptr;
+    HBITMAP hbmp = CreateDIBSection(nullptr, bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!hbmp || !bits) {
+        DeleteObject(hbmp);
+        return nullptr;
+    }
+    Pixmap* p = PixmapFromHBITMAP(hbmp, Size(w, h));
+    for (int y = 0; y < h; y++) {
+        u8* d = p->data + ((size_t)y * p->stride);
+        for (int x = 0; x < w; x++) {
+            d[x] = (u8)((x + y) % 2);
+        }
+    }
+    return p;
+}
+
+static void BlitPaletteDibTest() {
+    const int w = 5;
+    const int h = 3;
+    Pixmap* src = MakePaletteDib(w, h);
+    utassert(src && src->data && src->format == PixmapFormat::Native);
+    Pixmap* dst = AllocPixmapDIB(w, h);
+    utassert(dst);
+    memset(dst->data, 0x7f, (size_t)dst->stride * (size_t)h);
+    HDC hdc = CreateCompatibleDC(nullptr);
+    HGDIOBJ old = SelectObject(hdc, dst->hbmp);
+    bool ok = BlitPixmapDibBits(src, hdc, Rect(0, 0, w, h), Rect(0, 0, w, h));
+    GdiFlush();
+    SelectObject(hdc, old);
+    DeleteDC(hdc);
+    utassert(ok);
+    for (int y = 0; y < h; y++) {
+        const u8* d = dst->data + ((size_t)y * dst->stride);
+        for (int x = 0; x < w; x++, d += 4) {
+            bool blue = ((x + y) % 2) == 1;
+            utassert(d[0] == (blue ? 255 : 0));
+            utassert(d[1] == 0);
+            utassert(d[2] == (blue ? 0 : 255));
+        }
+    }
+    FreePixmap(dst);
+    FreePixmap(src);
+}
+
+// PixmapToBgra: palette and 24bpp pixels come back as readable BGRA8,
+// a BGRA8 pixmap is returned as is
+static void PixmapToBgraTest() {
+    const int w = 5;
+    const int h = 3;
+    Pixmap* got = PixmapToBgra(MakePaletteDib(w, h));
+    utassert(got && got->data && got->format == PixmapFormat::BGRA8);
+    utassert(got->width == w && got->height == h);
+    for (int y = 0; y < h; y++) {
+        const u8* d = got->data + ((size_t)y * got->stride);
+        for (int x = 0; x < w; x++, d += 4) {
+            bool blue = ((x + y) % 2) == 1;
+            utassert(d[0] == (blue ? 255 : 0));
+            utassert(d[1] == 0);
+            utassert(d[2] == (blue ? 0 : 255));
+        }
+    }
+    FreePixmap(got);
+
+    Pixmap* bgr = AllocPixmap(w, h, PixmapFormat::BGR8);
+    utassert(bgr);
+    for (int y = 0; y < h; y++) {
+        u8* d = bgr->data + ((size_t)y * bgr->stride);
+        for (int x = 0; x < w; x++, d += 3) {
+            d[0] = 10;
+            d[1] = 20;
+            d[2] = 30;
+        }
+    }
+    got = PixmapToBgra(bgr);
+    utassert(got && got->format == PixmapFormat::BGRA8 && got->stride == w * 4);
+    for (int y = 0; y < h; y++) {
+        const u8* d = got->data + ((size_t)y * got->stride);
+        for (int x = 0; x < w; x++, d += 4) {
+            utassert(d[0] == 10 && d[1] == 20 && d[2] == 30 && d[3] == 255);
+        }
+    }
+    FreePixmap(got);
+
+    Pixmap* bgra = AllocPixmap(w, h);
+    utassert(PixmapToBgra(bgra) == bgra);
+    FreePixmap(bgra);
+    utassert(PixmapToBgra(nullptr) == nullptr);
+}
+
+void WinUtilTest() {
+    ScopedCom comScope;
+
+    QuoteCmdLineArgTest();
+    RecolorLinkAaTest();
+    PixmapFromHICONAlphaTest();
+    BlitPaletteDibTest();
+    PixmapToBgraTest();
+
+    {
+        Str string = StrL("abcde");
+        auto strm = CreateStreamFromData(string);
+        ScopedComPtr<IStream> stream(strm);
+        utassert(stream);
+        Str data = ReadIStream(stream);
+        utassert((u8*)data.s);
+        utassert(string.len == data.len);
+        utassert(data.s[data.len] == 0);
+        utassert(data.s[data.len + 1] == 0);
+        Str s = data;
+        utassert(str::Eq(s, string));
+        str::Free(data);
+    }
+
+    {
+        WStr string = L"abcde";
+        size_t stringSize = string.len * sizeof(WCHAR);
+        auto strm = CreateStreamFromData(Str((char*)string.s, (int)stringSize));
+        ScopedComPtr<IStream> stream(strm);
+        utassert(stream);
+        Str dataTmp = ReadIStream(stream);
+        WStr data = WStr((WCHAR*)(u8*)dataTmp.s, (int)((size_t)dataTmp.len / sizeof(WCHAR)));
+        utassert(data && stringSize == (size_t)dataTmp.len && wstr::Eq(data, string));
+        utassert(dataTmp.s[dataTmp.len] == 0);
+        utassert(dataTmp.s[dataTmp.len + 1] == 0);
+        str::Free(dataTmp);
+    }
+
+    {
+        Rect oneScreen = HwndGetFullscreenRect(nullptr);
+        Rect allScreens = GetVirtualScreenRect();
+        utassert(allScreens.Intersect(oneScreen) == oneScreen);
+    }
+}
+
+#endif // OS_WIN
