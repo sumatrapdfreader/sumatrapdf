@@ -3,7 +3,8 @@ License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
 
-#include "base/AutoWin.h"
+#if OS_WIN
+#include "base/ScopedWin.h"
 #include "base/Win.h"
 #include "base/WinDynCalls.h"
 
@@ -15,7 +16,12 @@ DBGHELP_API_LIST(API_DECLARATION)
 #undef API_DECLARATION
 
 // manual definitions for functions not in API lists
+Sig_GetProcessInformation DynGetProcessInformation = nullptr;
+Sig_SetProcessMitigationPolicy DynSetProcessMitigationPolicy = nullptr;
 Sig_GetDpiForWindow DynGetDpiForWindow = nullptr;
+Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext = nullptr;
+Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext = nullptr;
+Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext = nullptr;
 Sig_SystemParametersInfoForDpi DynSystemParametersInfoForDpi = nullptr;
 Sig_GetSystemMetricsForDpi DynGetSystemMetricsForDpi = nullptr;
 Sig_GetDpiForMonitor DynGetDpiForMonitor = nullptr;
@@ -51,10 +57,18 @@ void InitDynCalls() {
     HMODULE h = SafeLoadLibrary(StrL("kernel32.dll"));
     ReportIf(!h);
     KERNEL32_API_LIST(API_LOAD);
+    DynGetProcessInformation = (Sig_GetProcessInformation)GetProcAddress(h, "GetProcessInformation");
+    DynSetProcessMitigationPolicy = (Sig_SetProcessMitigationPolicy)GetProcAddress(h, "SetProcessMitigationPolicy");
 
     h = SafeLoadLibrary(StrL("user32.dll"));
     ReportIf(!h);
     DynGetDpiForWindow = (Sig_GetDpiForWindow)GetProcAddress(h, "GetDpiForWindow");
+    DynGetThreadDpiAwarenessContext =
+        (Sig_GetThreadDpiAwarenessContext)GetProcAddress(h, "GetThreadDpiAwarenessContext");
+    DynGetAwarenessFromDpiAwarenessContext =
+        (Sig_GetAwarenessFromDpiAwarenessContext)GetProcAddress(h, "GetAwarenessFromDpiAwarenessContext");
+    DynSetThreadDpiAwarenessContext =
+        (Sig_SetThreadDpiAwarenessContext)GetProcAddress(h, "SetThreadDpiAwarenessContext");
     DynSystemParametersInfoForDpi = (Sig_SystemParametersInfoForDpi)GetProcAddress(h, "SystemParametersInfoForDpi");
     DynGetSystemMetricsForDpi = (Sig_GetSystemMetricsForDpi)GetProcAddress(h, "GetSystemMetricsForDpi");
 
@@ -81,3 +95,20 @@ void NoDllHijacking() {
         SafeLoadLibrary(dll);
     }
 }
+
+// https://github.com/videolan/vlc/blob/8663561d3f71595ebf116f17279a495b67cac713/bin/winvlc.c#L84
+// https://msdn.microsoft.com/en-us/library/windows/desktop/hh769088(v=vs.85).aspx
+// Note: dlls we explicitly link to (like version.dll) get loaded before main is called
+// so this only works for explicit LoadLibrary calls or delay loaded libraries
+void PrioritizeSystemDirectoriesForDllLoad() {
+    if (!DynSetProcessMitigationPolicy) {
+        return;
+    }
+    // Only supported since Win 10
+    PROCESS_MITIGATION_IMAGE_LOAD_POLICY m{};
+    m.PreferSystem32Images = 1;
+    DynSetProcessMitigationPolicy(ProcessImageLoadPolicy, &m, sizeof(m));
+    DbgOutLastError();
+}
+
+#endif // OS_WIN

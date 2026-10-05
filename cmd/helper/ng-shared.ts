@@ -140,6 +140,7 @@ export const sharedFiles = [
   "src/base/UITask.h",
   "src/base/Win.cpp",
   "src/base/Win.h",
+  "src/base/WinDynCalls.cpp",
   "src/base/WinDynCalls.h",
   "src/base/WinDynCalls_posix.cpp",
   "src/base/Zip.cpp",
