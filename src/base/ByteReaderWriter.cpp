@@ -13,6 +13,8 @@ BitReader::BitReader(u8* data, int n) : data(data), dataLen(n) {
     bitsCount = n * 8;
 }
 
+BitReader::~BitReader() = default;
+
 u8 BitReader::GetByte(int pos) const {
     if (pos >= dataLen) {
         return 0;
