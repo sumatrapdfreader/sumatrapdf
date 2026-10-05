@@ -36,6 +36,7 @@ import {
 } from "./win-automation.ts";
 
 type Square = { x: number; y: number; dx: number; dy: number };
+type MarkupState = { raw: string; selected: boolean; annotations: number; squares: Square[] };
 
 function makePdf(): string {
   const objs = [
@@ -57,9 +58,7 @@ function parseSquares(raw: string): Square[] {
   return out;
 }
 
-async function markupState(
-  client: ControlClient,
-): Promise<{ raw: string; selected: boolean; annotations: number; squares: Square[] }> {
+async function markupState(client: ControlClient): Promise<MarkupState> {
   const deadline = Date.now() + 5_000;
   let raw = "";
   for (;;) {
@@ -77,6 +76,26 @@ async function markupState(
     }
     if (Date.now() > deadline) {
       throw new Error(`annot-cut-paste: could not read markup state\n${raw}`);
+    }
+    await sleep(50);
+  }
+}
+
+// Selecting shows editing UI and can refit the page. Retry at the new center.
+async function selectSquare(client: ControlClient, canvas: number): Promise<{ state: MarkupState; square: Square }> {
+  const deadline = Date.now() + 5_000;
+  for (;;) {
+    let state = await markupState(client);
+    const square = state.squares[0];
+    if (state.squares.length === 1 && square && square.dx > 0 && square.dy > 0) {
+      await clickAt(canvas, square.x + Math.floor(square.dx / 2), square.y + Math.floor(square.dy / 2), 0);
+      state = await markupState(client);
+      if (state.selected && state.squares.length === 1) {
+        return { state, square: state.squares[0]! };
+      }
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`annot-cut-paste: could not select the square\n${state.raw}`);
     }
     await sleep(50);
   }
@@ -216,17 +235,10 @@ export async function testit(): Promise<void> {
 
     sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
-    let state = await markupState(client);
-    if (state.squares.length !== 1) {
-      throw new Error(`annot-cut-paste: expected one square on the page\n${state.raw}`);
-    }
-    const original = state.squares[0]!;
+    const selected = await selectSquare(client, canvas);
+    let state = selected.state;
+    const original = selected.square;
     const mid = { x: original.x + Math.floor(original.dx / 2), y: original.y + Math.floor(original.dy / 2) };
-    await clickAt(canvas, mid.x, mid.y, 0);
-    state = await markupState(client);
-    if (!state.selected) {
-      throw new Error(`annot-cut-paste: click did not select the square\n${state.raw}`);
-    }
 
     // the context menu offers Cut for the annotation under the cursor, with
     // the shortcuts that reach these commands
