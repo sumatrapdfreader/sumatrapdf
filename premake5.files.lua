@@ -466,6 +466,7 @@ end
 function base_files()
   files_in_dir("src/base", {
     "ApiHook.*",
+    "AppendStore.*",
     "Archive.*",
     "Base.h",
     "Base.cpp",

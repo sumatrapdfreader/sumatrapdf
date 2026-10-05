@@ -1117,6 +1117,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PerfLog.h" />
+    <ClInclude Include="..\src\base\AppendStore.h" />
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\AutoWin.h" />
     <ClInclude Include="..\src\base\Base.h" />
@@ -1159,6 +1160,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\PerfLog.cpp" />
+    <ClCompile Include="..\src\base\AppendStore.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
     <ClCompile Include="..\src\base\Arena.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
