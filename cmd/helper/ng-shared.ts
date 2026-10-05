@@ -86,6 +86,7 @@ export const sharedFiles = [
   "src/base/FoldDiacriticsData.inc",
   "src/base/FrameTimeoutCalculator.h",
   "src/base/Http_posix.cpp",
+  "src/base/JsonParser.cpp",
   "src/base/JsonParser.h",
   "src/base/Launch.h",
   "src/base/Launch_posix.cpp",
