@@ -74,6 +74,7 @@ export const sharedFiles = [
   "src/base/CssParser.cpp",
   "src/base/CssParser.h",
   "src/base/Dict.h",
+  "src/base/FoldDiacriticsData.inc",
   "src/base/FrameTimeoutCalculator.h",
   "src/base/JsonParser.h",
   "src/base/LogNoOp.cpp",
