@@ -2,8 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#if OS_WIN
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
+#endif
 #include "base/tests/UtAssert.h"
 
 static int g_nTotal = 0;
@@ -28,19 +30,25 @@ static void OutputDebugString(Str s) {
     if (str::IsNull(s)) {
         return;
     }
+#if OS_WIN
     OutputDebugStringA(CStrTemp(s));
+#else
+    fprintf(stderr, "%.*s", s.len, s.s);
+#endif
 }
 
 static void OutputDebugString(const char* s) {
     OutputDebugString(Str(s));
 }
 
+#if OS_WIN
 static void PrintStdout(Str s) {
     if (str::IsNull(s)) {
         return;
     }
     printf("%.*s", s.len, s.s);
 }
+#endif
 
 /* This is assert for unit tests that can be used in non-interactive usage.
 Instead of showing a UI to the user, like regular assert(), it simply
@@ -63,18 +71,22 @@ void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
     OutputDebugString("\n");
     if (gForAi) {
         printf("Assertion failed: %.*s\n%.*s@%d\n", exprStr.len, exprStr.s, file.len, file.s, lineNo);
+#if OS_WIN
         str::Builder s;
         if (dbghelp::GetCurrentThreadCallstack(s)) {
             PrintStdout(ToStr(s));
         } else {
             printf("failed to get callstack\n");
         }
+#endif
         fflush(stdout);
         return;
     }
+#if OS_WIN
     if (IsDebuggerPresent()) {
         DebugBreak();
     }
+#endif
 }
 
 int utassert_print_results() {

@@ -2,9 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+
+#if OS_WIN
 #include "base/CmdLineArgs.h"
 #include "base/Pixmap.h"
-#include "base/AutoWin.h"
+#include "base/ScopedWin.h"
 #include "base/Win.h"
 
 // must be last due to assert() over-write
@@ -429,7 +431,7 @@ static void PixmapToBgrTest() {
 }
 
 void WinUtilTest() {
-    AutoCoUninitialize comScope;
+    ScopedCom comScope;
 
     QuoteCmdLineArgTest();
     RecolorLinkAaTest();
@@ -442,7 +444,7 @@ void WinUtilTest() {
     {
         Str string = StrL("abcde");
         auto strm = CreateStreamFromData(string);
-        AutoReleaseComPtr<IStream> stream(strm);
+        ScopedComPtr<IStream> stream(strm);
         utassert(stream);
         Str data = ReadIStream(stream);
         utassert((u8*)data.s);
@@ -458,7 +460,7 @@ void WinUtilTest() {
         WStr string = L"abcde";
         size_t stringSize = string.len * sizeof(WCHAR);
         auto strm = CreateStreamFromData(Str((char*)string.s, (int)stringSize));
-        AutoReleaseComPtr<IStream> stream(strm);
+        ScopedComPtr<IStream> stream(strm);
         utassert(stream);
         Str dataTmp = ReadIStream(stream);
         WStr data = WStr((WCHAR*)(u8*)dataTmp.s, (int)((size_t)dataTmp.len / sizeof(WCHAR)));
@@ -474,3 +476,5 @@ void WinUtilTest() {
         utassert(allScreens.Intersect(oneScreen) == oneScreen);
     }
 }
+
+#endif // OS_WIN

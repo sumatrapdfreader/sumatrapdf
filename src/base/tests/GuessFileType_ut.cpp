@@ -645,6 +645,13 @@ static void extMapTest() {
     utassert(str::Eq(GetExtForFileTypeTemp(FileType::Epub), StrL(".epub")));
     utassert(str::Eq(GetExtForFileTypeTemp(FileType::Fb2), StrL(".fb2")));
     utassert(str::Eq(GetExtForFileTypeTemp(FileType::Fb2z), StrL(".fb2z")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Docx), StrL(".docx")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Xlsx), StrL(".xlsx")));
+    utassert(str::Eq(GetExtForFileTypeTemp(FileType::Pptx), StrL(".pptx")));
+    utassert(IsOfficeFileType(FileType::Docx));
+    utassert(IsOfficeFileType(FileType::Xlsx));
+    utassert(IsOfficeFileType(FileType::Pptx));
+    utassert(!IsOfficeFileType(FileType::Xps));
     utassert(len(GetExtForFileTypeTemp(FileType::Unknown)) == 0);
 }
 

@@ -13,7 +13,7 @@ struct ExpectedValue {
     json::Type type{json::Type::String};
 
     ExpectedValue() = default;
-    ExpectedValue(Str path, Str value, json::Type type = json::Type::String) : path(path), type(type), value(value) {}
+    ExpectedValue(Str path, Str value, json::Type type = json::Type::String) : path(path), value(value), type(type) {}
 };
 
 struct JsonVerifier {
