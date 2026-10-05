@@ -131,6 +131,7 @@ export const sharedFiles = [
   "src/base/TgaReader.h",
   "src/base/Timer.h",
   "src/base/UITask.h",
+  "src/base/Win.cpp",
   "src/base/Win.h",
   "src/base/WinDynCalls.h",
   "src/base/WinDynCalls_posix.cpp",
