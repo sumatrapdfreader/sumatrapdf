@@ -10,7 +10,11 @@
 #include "libarchive/archive_entry.h"
 
 // TODO: set include path to ext/ dir
+#if OS_WIN
 #include "../../ext/a-unrar/dll.hpp"
+#else
+#include <locale.h>
+#endif
 #include "base/Archive.h"
 
 // we pad data read with 3 zeros for convenience. That way returned
@@ -210,11 +214,18 @@ static void SetArchivePassword(struct archive* a, Str password) {
 }
 
 static int ArchiveReadOpenFilename(struct archive* a, Str path) {
-    WCHAR* pathW = CWStrTemp(path);
-    return archive_read_open_filename_w(a, pathW, 10240);
+#if OS_WIN
+    return archive_read_open_filename_w(a, CWStrTemp(path), 10240);
+#else
+    return archive_read_open_filename(a, CStrTemp(path), 10240);
+#endif
 }
 
 static struct archive* NewLibarchiveReader(Str password) {
+#if !OS_WIN
+    static const char* locale = setlocale(LC_CTYPE, "");
+    (void)locale;
+#endif
     struct archive* a = archive_read_new();
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
@@ -483,6 +494,8 @@ Archive* OpenArchiveFromData(Str data) {
     return archive;
 }
 
+#if OS_WIN
+
 struct UnrarData {
     u8* d = nullptr;
     int sz = 0;
@@ -707,3 +720,32 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
     rarFilePath_ = str::Dup(a, rarPath);
     return true;
 }
+
+#else
+
+Str Archive::ReadUnrarEntry(FileInfo*, int, bool* permanent) {
+    *permanent = true;
+    return {};
+}
+
+bool Archive::OpenUnrarFallback(Str, bool, const ArchiveExtractProgressCb&) {
+    return false;
+}
+
+#endif
+
+#if OS_WIN
+FILETIME Archive::FileInfo::GetWinFileTime() const {
+    FILETIME ft = {(DWORD)-1, (DWORD)-1};
+    LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
+    return ft;
+}
+#else
+FILETIME Archive::FileInfo::GetWinFileTime() const {
+    if (fileTime < 0) {
+        return {(DWORD)-1, (DWORD)-1};
+    }
+    u64 ticks = kFileTimeUnixEpoch + (u64)fileTime * kFileTimeTicksPerSec;
+    return FileTimeFromU64(ticks);
+}
+#endif

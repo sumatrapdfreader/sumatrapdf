@@ -65,6 +65,7 @@ export const sharedFiles = [
   "src/Translations.h",
   "src/WebpReader.h",
   "src/base/AppendStore.h",
+  "src/base/Archive.cpp",
   "src/base/Archive.h",
   "src/base/Arena.cpp",
   "src/base/Arena_posix.cpp",
