@@ -890,9 +890,6 @@
     <ClCompile Include="..\src\PageThumbnails.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PdfCad.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\PdfCreator.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1254,6 +1251,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PalmDbReader.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PdfCad.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfDarkModeAnalysis.cpp">

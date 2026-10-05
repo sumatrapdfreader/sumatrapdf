@@ -141,6 +141,7 @@ export const sharedFiles = [
   "src/shared/PageRenderPolicy.h",
   "src/shared/PalmDbReader.cpp",
   "src/shared/PalmDbReader.h",
+  "src/shared/PdfCad.cpp",
   "src/shared/PdfCad.h",
   "src/shared/PdfDarkMode.h",
   "src/shared/PdfDarkModeAnalysis.cpp",

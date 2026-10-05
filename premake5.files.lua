@@ -973,7 +973,7 @@ function test_engines_files()
     "src/shared/LitDoc.h",
     "src/MobiDoc.cpp",
     "src/shared/PalmDbReader.cpp",
-    "src/PdfCad.cpp",
+    "src/shared/PdfCad.cpp",
     "src/shared/PdfCad.h",
     "src/shared/PdfDarkMode.h",
     "src/PdfDarkModeNoOp.cpp",

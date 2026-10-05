@@ -60,7 +60,6 @@
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\LitDoc.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PdfCad.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />
@@ -74,6 +73,9 @@
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PalmDbReader.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PdfCad.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSearch.cpp">

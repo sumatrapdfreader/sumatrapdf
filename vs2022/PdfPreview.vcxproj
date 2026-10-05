@@ -1307,7 +1307,6 @@
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PdfCad.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
@@ -1323,6 +1322,7 @@
     <ClCompile Include="..\src\shared\EbookFormatter.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\shared\PdfCad.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\previewer\PdfPreview.rc" />

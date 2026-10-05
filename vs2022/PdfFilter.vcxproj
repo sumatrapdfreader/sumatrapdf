@@ -1289,7 +1289,6 @@
     <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PdfCad.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
     <ClCompile Include="..\src\SumatraLog.cpp" />
@@ -1327,6 +1326,7 @@
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\shared\PdfCad.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\ifilter\PdfFilter.rc" />
