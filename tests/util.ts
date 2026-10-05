@@ -88,6 +88,10 @@ export function prepareTestEnvironment(): void {
   if (existsSync(sourceDll)) {
     copyFileSync(sourceDll, join(TESTS_TMP_DIR, "libsumatrapdf.dll"));
   }
+  const sourceTool = join(dirname(sourceExe), "sumatrapdf-tool.exe");
+  if (existsSync(sourceTool)) {
+    copyFileSync(sourceTool, join(TESTS_TMP_DIR, "sumatrapdf-tool.exe"));
+  }
   EXE = testExe;
 }
 
