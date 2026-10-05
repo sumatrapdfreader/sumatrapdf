@@ -1717,7 +1717,6 @@
     <ClCompile Include="..\src\RefHoverPopup.cpp" />
     <ClCompile Include="..\src\RefHoverRender.cpp" />
     <ClCompile Include="..\src\RefHoverShow.cpp" />
-    <ClCompile Include="..\src\RefHoverTextDetect.cpp" />
     <ClCompile Include="..\src\RegistryInstaller.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
@@ -2191,6 +2190,7 @@
     <ClCompile Include="..\src\shared\ReaderModel.cpp" />
     <ClCompile Include="..\src\shared\RefHoverInternal.cpp" />
     <ClCompile Include="..\src\shared\RefHoverText.cpp" />
+    <ClCompile Include="..\src\shared\RefHoverTextDetect.cpp" />
     <ClCompile Include="..\src\shared\TextSearch.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
