@@ -80,6 +80,7 @@ export const sharedFiles = [
   "src/base/JsonParser.h",
   "src/base/Launch.h",
   "src/base/Launch_posix.cpp",
+  "src/base/Launch_wasm.cpp",
   "src/base/LogNoOp.cpp",
   "src/base/SettingsUtil.h",
   "src/base/SquareTreeParser.h",
