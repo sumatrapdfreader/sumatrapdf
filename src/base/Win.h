@@ -1,6 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#if OS_WIN
 constexpr UINT DRAGQUERY_NUMFILES = 0xFFFFFFFF;
 
 //--- bool / BOOL
@@ -9,6 +10,10 @@ bool ToBool(BOOL b);
 
 inline BOOL toBOOL(bool b) {
     return b ? TRUE : FALSE;
+}
+
+inline bool fromBOOL(BOOL b) {
+    return b != 0;
 }
 
 inline bool tobool(BOOL b) {
@@ -31,6 +36,7 @@ int HwndMapChildXForRtlParent(HWND parent, int ltrX, int childDx);
 void HwndMoveWindow(HWND hwnd, Rect* r);
 void HwndResizeClientSize(HWND, int, int);
 void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
+void ResizeWindow(HWND, int dx, int dy);
 Rect ChildPosWithinParent(HWND);
 
 //--- HWND: screen / work area / placement
@@ -41,6 +47,7 @@ Size HwndLimitSizeToScreen(HWND hwnd, Size size);
 void HwndEnsureOnScreen(HWND hwnd);
 Rect HwndGetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();
+void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
 void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative);
 void HwndCenterDialog(HWND hDlg, HWND hParent = nullptr);
 
@@ -54,6 +61,7 @@ Point GetCursorPosition();
 Point HwndGetCursorPos(HWND hwnd);
 Point& UnmirrorRtl(HWND hwnd, Point& p);
 bool HwndIsCursorOverWindow(HWND);
+bool HwndIsMouseOverRect(HWND hwnd, const Rect& r);
 
 //--- HWND: focus / visibility / Z-order
 
@@ -65,15 +73,21 @@ bool HwndIsFocused(HWND);
 bool HwndIsOnScreenKeyboard(HWND);
 bool HwndIsVisible(HWND hwnd);
 void HwndSetVisible(HWND hwnd, bool visible);
+void HwndShow(HWND hwnd);
+void HwndHide(HWND hwnd);
+void HwndShowWithoutActivate(HWND);
 void HwndToForeground(HWND hwnd);
 
 //--- HWND: styles / RTL / chrome
 
 bool HwndIsWindowStyleSet(HWND hwnd, DWORD flags);
+bool HwndIsWindowStyleExSet(HWND hwnd, DWORD flags);
 void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable);
 void HwndSetWindowExStyle(HWND hwnd, DWORD flags, bool enable);
 bool HwndIsRtl(HWND hwnd);
 void HwndSetRtl(HWND hwnd, bool isRtl);
+bool HwndHasFrameThickness(HWND hwnd);
+bool HwndHasCaption(HWND hwnd);
 
 //--- HWND: text / font / icon / paint
 
@@ -85,6 +99,7 @@ void HwndSetDlgItemText(HWND, int, Str s);
 void HwndSetFont(HWND, HFONT);
 void HwndSetFontForWindowAndItsChildren(HWND, HFONT);
 void HwndSetTreeFontForDpi(HWND hwndTree, HFONT font, int dpi);
+HICON HwndGetIcon(HWND);
 HICON HwndSetIcon(HWND, HICON);
 void HwndRepaintNow(HWND);
 void HwndScheduleRepaint(HWND hwnd);
@@ -116,14 +131,44 @@ void EditSetPasswordVisible(HWND hwnd, bool);
 
 //--- list box
 
+void LbResetContent(HWND hwnd);
 int LbAddString(HWND hwnd, WStr text);
 int LbAddString(HWND hwnd, Str text);
+int LbInsertString(HWND hwnd, int idx, WStr text);
+int LbInsertString(HWND hwnd, int idx, Str text);
+int LbGetCount(HWND hwnd);
 int LbGetCurrentSelection(HWND hwnd);
 bool LbSetCurrentSelection(HWND hwnd, int idx);
 TempWStr LbGetTextTemp(HWND hwnd, int idx);
+int LbGetItemHeight(HWND hwnd, int idx);
 void LbSetItemHeight(HWND hwnd, int idx, int height);
+Rect LbGetItemRect(HWND hwnd, int idx);
+int LbItemFromPoint(HWND hwnd, Point point, bool* outside);
+int LbGetTopIndex(HWND hwnd);
+bool LbSetTopIndex(HWND hwnd, int idx);
+void LbInitStorage(HWND hwnd, int count);
 
 //--- list view
+
+int LvGetItemCount(HWND hwnd);
+int LvGetNextItem(HWND hwnd, int start, UINT flags);
+void LvSetItemState(HWND hwnd, int i, UINT state, UINT mask);
+UINT LvGetItemState(HWND hwnd, int i, UINT mask);
+void LvEnsureVisible(HWND hwnd, int i, bool partialOk = false);
+HWND LvGetEditControl(HWND hwnd);
+int LvInsertItem(HWND hwnd, const LVITEMW* item);
+bool LvEditLabel(HWND hwnd, int i);
+void LvDeleteItem(HWND hwnd, int i);
+void LvDeleteAllItems(HWND hwnd);
+Rect LvGetItemRect(HWND hwnd, int i, int code);
+Rect LvGetSubItemRect(HWND hwnd, int iItem, int iSub, int code);
+void LvSetColumnWidth(HWND hwnd, int iCol, int cx);
+void LvSetItemText(HWND hwnd, int i, int iSub, WStr text);
+void LvSetItemText(HWND hwnd, int i, int iSub, Str text);
+TempWStr LvGetItemTextTemp(HWND hwnd, int i, int iSub);
+int LvHitTest(HWND hwnd, Point pt, UINT* flagsOut = nullptr);
+DWORD LvSetExtendedStyle(HWND hwnd, DWORD ex);
+int LvInsertColumn(HWND hwnd, int iCol, const LVCOLUMNW* col);
 
 //--- combo box
 // all no-op (or return a zero value) on a null hwnd. gui/win/WinGui.h overloads
@@ -169,6 +214,7 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subt
 //--- dialogs / message boxes
 
 void MessageBoxWarningSimple(HWND hwnd, WStr msg, WStr title = WStr());
+void MessageBoxNYI(HWND hwnd);
 int MsgBox(HWND, Str text, Str caption, UINT flags);
 HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr = nullptr);
 void ShowTextInWindowDialog(Str title, Str text);
@@ -178,6 +224,8 @@ void ShowTextInWindowDialog(Str title, Str text);
 void HdcDrawRect(HDC, const Rect&);
 void HdcFillRect(HDC, const Rect&, HBRUSH);
 void HdcFillRect(HDC hdc, const Rect&, Color);
+void HdcFillRectWithBkColor(HDC hdc, const Rect& rect);
+void HdcDrawLine(HDC, const Rect&);
 int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, WStr s, const Rect& r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font = nullptr);
@@ -189,15 +237,18 @@ void HdcDrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL = false);
 Size HdcGetTextExtentPoint32(HDC hdc, Str str);
 Size HdcGetTextExtentPoint32(HDC hdc, WStr str);
 void HdcPaintCheckerboard(HDC hdc, int x, int y, int w, int h);
+int HdcMeasureStringWidth(HDC hdc, WStr str);
 
 //--- GDI: fonts
 
+int GetSizeOfDefaultGuiFont();
 bool GetNonClientMetricsForDpi(int dpi, NONCLIENTMETRICS* ncm);
 
 //--- GDI: handles / bitmaps / pixmaps
 
 bool DeleteObjectSafe(HGDIOBJ*);
 bool DeleteBrushSafe(HBRUSH*);
+bool DestroyIconSafe(HICON*);
 
 struct RenderedBitmap;
 
@@ -216,9 +267,15 @@ struct RenderedBitmap {
     RenderedBitmap* Clone() const;
     HBITMAP GetBitmap() const;
     bool IsValid();
+    bool Blit(HDC hdc, Rect target);
 };
 
+i64 RenderedBitmapByteSize(RenderedBitmap*);
+
+void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor = 0,
+                        Vec<Rect>* skipRects = nullptr);
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
+bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 
 inline bool IsPrinterDC(HDC hdc) {
     int tech = GetDeviceCaps(hdc, TECHNOLOGY);
@@ -250,11 +307,23 @@ class DeferWinPosHelper {
     DeferWinPosHelper();
     ~DeferWinPosHelper();
     void End();
+    void SetWindowPos(HWND hwnd, Rect rc);
+    void SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+    void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE);
     void MoveWindow(HWND hWnd, Rect r);
-    // A transparent WebView canvas growing into a sibling's old rectangle must
-    // discard those screen bits or the sibling remains visible until composition.
     void MoveWindowNoCopyBits(HWND hWnd, Rect r);
 };
+
+//--- DC state
+
+struct SavedDCState {
+    HWND hwnd;
+    HDC hdc;
+    HFONT oldFont;
+};
+
+SavedDCState SaveDCState(HWND hwnd);
+void RestoreDCState(SavedDCState* state);
 
 //--- clipboard
 
@@ -299,7 +368,6 @@ bool SafeFindClose(HANDLE*);
 //--- OS / process / CPU
 
 bool IsOs64();
-int CpuCoreCount();
 bool IsProcess64();
 bool IsProcess32();
 bool IsArmBuild();
@@ -309,7 +377,11 @@ bool IsProcessAndOsArchSame();
 bool GetOsVersion(OSVERSIONINFOEX& ver);
 TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver);
 TempStr GetWindowsVerTemp();
+double GetProcessRunningTime();
+DWORD GetAccountType();
+DWORD GetOriginalAccountType();
 bool IsProcessRunningElevated();
+TempStr GetParentProcessPath(DWORD* pidOut = nullptr);
 bool CanTalkToProcess(DWORD procId);
 void DisableDataExecution();
 void MaskFpExceptions();
@@ -337,17 +409,17 @@ TempStr CpuFeaturesTemp();
 TempStr GetEnvVariableTemp(Str name);
 TempStr GetLastErrorStrTemp(DWORD& err);
 void LogLastError(DWORD err = 0);
+void DbgOutLastError(DWORD err = 0);
 Str GetLastErrorAsStr(Arena* arena);
 TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 // initialCch is only a starting guess; tests pass a tiny value to force the retry
 TempStr GetTempDirTemp(int initialCch = MAX_PATH);
+Str GetAppLocalDataDirTemp();
 void ChangeCurrDirToDocuments();
 TempStr ResolveLnkTemp(Str path);
 bool CreateShortcut(Str shortcutPath, Str exePath, Str args = Str(), Str description = Str(), int iconIndex = 0);
 IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd = nullptr);
 void AddPathToRecentDocs(Str path);
-void ListDriveRoots(StrVec& out);
-bool ListShellQuickAccess(StrVec& dirsOut, StrVec& filesOut);
 
 //--- process launch / shell
 
@@ -365,7 +437,10 @@ bool LaunchElevated(Str path, Str cmdline);
 bool RedirectIOToConsole();
 bool RedirectIOToExistingConsole();
 void HandleRedirectedConsoleOnShutdown();
+void InitConsoleOutput();
 void LogConsole(Str s);
+void WaitForConsoleClose();
+void SendEnterIfLoggedToConsole();
 bool WasLaunchedByPowershellWithPipeRedirect();
 
 //--- registry
@@ -391,6 +466,8 @@ bool LoggedDeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst = false);
 bool DeleteRegValue(HKEY keySub, Str keyName, Str val);
 bool LoggedDeleteRegValue(HKEY keySub, Str keyName, Str val);
 HRESULT CLSIDFromString(Str lpsz, LPCLSID pclsid);
+void ListDriveRoots(StrVec& out);
+bool ListShellQuickAccess(StrVec& dirsOut, StrVec& filesOut);
 
 //--- COM / streams / DDE / DLL servers
 
@@ -400,6 +477,9 @@ uint GuessTextCodepage(Str data, uint defVal = CP_ACP);
 TempStr NormalizeString(Str str, int /* NORM_FORM */ form);
 void VariantInitBstr(VARIANT& urlVar, WStr s);
 bool DDEExecute(WStr server, WStr topic, WStr command);
+bool RegisterServerDLL(Str dllPath, Str args = Str());
+bool UnRegisterServerDLL(Str dllPath, Str args = Str());
+bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args = Str());
 
 //--- resources / instance / common controls
 
@@ -419,11 +499,18 @@ bool LockDataResource(int resId, LoadedDataResource*, HMODULE mod = nullptr);
 
 TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode);
 HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags = GMEM_MOVEABLE);
+HGLOBAL StrToHGLOBAL(Str s, UINT flags = GMEM_MOVEABLE);
 TempStr AtomToStrTemp(ATOM a);
 
 //--- timing
 
+LARGE_INTEGER TimeNow();
+double TimeDiffSecs(const LARGE_INTEGER& start, const LARGE_INTEGER& end);
+double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end);
+
 //--- misc
 
 TempStr GetDefaultPrinterNameTemp();
-int GetMeasurementSystem();
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+#endif // OS_WIN
