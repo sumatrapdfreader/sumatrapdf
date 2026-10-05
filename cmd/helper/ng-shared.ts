@@ -81,6 +81,7 @@ export const sharedFiles = [
   "src/base/Crypto_posix.cpp",
   "src/base/CssParser.cpp",
   "src/base/CssParser.h",
+  "src/base/DbgHelpDyn.h",
   "src/base/DbgHelpDyn_posix.cpp",
   "src/base/Dict.h",
   "src/base/DirScan_posix.cpp",
