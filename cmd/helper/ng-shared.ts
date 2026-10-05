@@ -118,6 +118,7 @@ export const sharedFiles = [
   "src/base/LzmaSimpleArchive.h",
   "src/base/MacTypesHide.h",
   "src/base/MacTypesShow.h",
+  "src/base/Pixmap.h",
   "src/base/Pixmap_linux.cpp",
   "src/base/Pixmap_mac.cpp",
   "src/base/Pixmap_wasm.cpp",
