@@ -97,6 +97,7 @@ export const sharedFiles = [
   "src/base/Pixmap_wasm.cpp",
   "src/base/SettingsUtil.h",
   "src/base/SquareTreeParser.h",
+  "src/base/WinDynCalls_posix.cpp",
   "src/base/Zip.h",
   "src/base/tests/Crypto_ut.cpp",
   "src/base/tests/CssParser_ut.cpp",
