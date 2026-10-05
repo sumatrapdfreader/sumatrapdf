@@ -67,6 +67,7 @@ export const sharedFiles = [
   "src/base/Arena.cpp",
   "src/base/Base.cpp",
   "src/base/Base.h",
+  "src/base/Base_posix.cpp",
   "src/base/CrashHandler.h",
   "src/base/CssParser.cpp",
   "src/base/CssParser.h",
