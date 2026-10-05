@@ -1932,8 +1932,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendError(req, StrL("TestConvertToImages expects string templatePath, string pages"));
                 break;
             }
+            // optional; 0 means the dialog's default
+            i32 dpi = 0;
+            IntArg(req, 2, dpi);
             int exitCode = 0;
-            Str res = ConvertPagesToImagesResultTemp(templatePath, pagesSpec, &exitCode);
+            Str res = ConvertPagesToImagesResultTemp(templatePath, pagesSpec, dpi, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

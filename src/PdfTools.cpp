@@ -1355,7 +1355,81 @@ void ShowConvertToPdfDialog(MainWindow* win) {
 
 // --- Convert PDF to Images dialog (issue #5991) ---
 
-constexpr float kConvertPdfToImagesDpi = 150.0f;
+constexpr int kConvertPdfToImagesDpi = 150;
+constexpr i64 kMaxSaveSelectionPixels = 100LL * 1000 * 1000;
+constexpr int kMaxSaveSelectionSide = 16384;
+constexpr int kSaveSelectionDefaultDpi = 300;
+constexpr int kMaxImageDpi = 9600;
+
+static const int kImageDpiChoices[] = {72, 96, 150, 300, 600, 1200};
+
+static float SaveSelectionZoom(EngineBase* engine, float dpi) {
+    float fileDpi = engine->GetFileDPI();
+    if (fileDpi <= 0) {
+        fileDpi = 72.0f;
+    }
+    if (dpi < 1) {
+        dpi = (float)kSaveSelectionDefaultDpi;
+    }
+    return dpi / fileDpi;
+}
+
+static bool SaveSelectionSizeOk(int w, int h) {
+    if (w <= 0 || h <= 0) {
+        return false;
+    }
+    if (w > kMaxSaveSelectionSide || h > kMaxSaveSelectionSide) {
+        return false;
+    }
+    i64 pixels = (i64)w * (i64)h;
+    return pixels <= kMaxSaveSelectionPixels;
+}
+
+static bool EstimateSelectionPx(RectF rect, float zoom, int& w, int& h) {
+    w = (int)floorf((rect.dx * zoom) + 0.5f);
+    h = (int)floorf((rect.dy * zoom) + 0.5f);
+    return w > 0 && h > 0;
+}
+
+// editable combo listing kImageDpiChoices; any other DPI can be typed in
+static DropDown* NewDpiCombo(HWND parent, PlatformFont* font, int dpi) {
+    DropDown::CreateArgs args;
+    args.parent = parent;
+    args.font = font;
+    args.isRtl = IsUIRtl();
+    args.isEditable = true;
+    auto* dd = new DropDown();
+    dd->Create(args);
+
+    StrVec items;
+    for (int choice : kImageDpiChoices) {
+        items.Append(fmt("%d", choice));
+    }
+    dd->SetItems(items);
+    dd->SetText(fmt("%d", dpi));
+    dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+    return dd;
+}
+
+// 0 if not a usable DPI
+static int DpiFromComboText(DropDown* dd) {
+    Str s = dd->GetTextTemp();
+    str::TrimWsBoth(s);
+    int dpi = ParseInt(s);
+    if (dpi < 1 || dpi > kMaxImageDpi) {
+        return 0;
+    }
+    return dpi;
+}
+
+// on CBN_SELCHANGE the edit still has the previous text, so read the list
+static int DpiFromComboSel(DropDown* dd) {
+    int idx = CbGetCurrentSelection(dd);
+    if (idx < 0 || idx >= dimofi(kImageDpiChoices)) {
+        return DpiFromComboText(dd);
+    }
+    return kImageDpiChoices[idx];
+}
 
 // PNG / JPEG / BMP, same core formats as the Save Image dialog
 struct ConvertImageFormat {
@@ -1479,9 +1553,26 @@ static bool SavePixmapAsImageFile(Pixmap* px, Str path) {
     return ok;
 }
 
-// render each page at kConvertPdfToImagesDpi and write it to templatePath with
-// <N> replaced by the 1-based page number. Returns how many files were written.
-static int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePath, const Vec<int>& pages,
+static bool PageFitsDpi(EngineBase* engine, int pageNo, int dpi) {
+    float zoom = SaveSelectionZoom(engine, (float)dpi);
+    int w = 0;
+    int h = 0;
+    EstimateSelectionPx(engine->PageMediabox(pageNo), zoom, w, h);
+    return SaveSelectionSizeOk(w, h);
+}
+
+static bool PagesFitDpi(EngineBase* engine, const Vec<int>& pages, int dpi) {
+    for (int pageNo : pages) {
+        if (!PageFitsDpi(engine, pageNo, dpi)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// render each page at dpi and write it to templatePath with <N> replaced by
+// the 1-based page number. Returns how many files were written.
+static int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePath, const Vec<int>& pages, int dpi,
                                 Str* firstPathOwnedOut) {
     if (firstPathOwnedOut) {
         *firstPathOwnedOut = {};
@@ -1494,14 +1585,14 @@ static int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePa
         return 0;
     }
     TempStr templ = EnsurePagePlaceholderTemp(withExt, len(pages) > 1);
-    float fileDpi = engine->GetFileDPI();
-    if (fileDpi <= 0) {
-        fileDpi = 72.0f;
-    }
-    float zoom = kConvertPdfToImagesDpi / fileDpi;
+    float zoom = SaveSelectionZoom(engine, (float)dpi);
     int nOk = 0;
     StrVec pngs;
     for (int pageNo : pages) {
+        if (!PageFitsDpi(engine, pageNo, dpi)) {
+            logf("ConvertPagesToImages: page %d at %d DPI is too large\n", pageNo, dpi);
+            continue;
+        }
         TempStr dest = ReplacePagePlaceholderTemp(templ, pageNo);
         RenderPageArgs args(pageNo, zoom, rotation);
         Pixmap* px = engine->RenderPage(args);
@@ -1509,8 +1600,8 @@ static int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePa
             logf("ConvertPagesToImages: RenderPage failed for page %d\n", pageNo);
             continue;
         }
-        px->xres = kConvertPdfToImagesDpi;
-        px->yres = kConvertPdfToImagesDpi;
+        px->xres = (float)dpi;
+        px->yres = (float)dpi;
         bool ok = SavePixmapAsImageFile(px, dest);
         FreePixmap(px);
         if (!ok) {
@@ -1536,7 +1627,7 @@ static void CollectAllPages(int pageCount, Vec<int>& pages) {
     }
 }
 
-TempStr ConvertPagesToImagesResultTemp(Str templatePath, Str pagesSpec, int* exitCodeOut) {
+TempStr ConvertPagesToImagesResultTemp(Str templatePath, Str pagesSpec, int dpi, int* exitCodeOut) {
     auto finish = [&](int code, TempStr s) -> TempStr {
         if (exitCodeOut) {
             *exitCodeOut = code;
@@ -1565,8 +1656,11 @@ TempStr ConvertPagesToImagesResultTemp(Str templatePath, Str pagesSpec, int* exi
     } else if (!ParseDeletePages(pagesSpec, pageCount, pages)) {
         return finish(1, str::DupTemp(StrL("ERROR bad-pages")));
     }
+    if (dpi < 1) {
+        dpi = kConvertPdfToImagesDpi;
+    }
     Str firstPath;
-    int n = ConvertPagesToImages(engine, dm->GetRotation(), templatePath, pages, &firstPath);
+    int n = ConvertPagesToImages(engine, dm->GetRotation(), templatePath, pages, dpi, &firstPath);
     if (n == 0) {
         str::Free(firstPath);
         return finish(1, str::DupTemp(StrL("ERROR convert-failed")));
@@ -1583,6 +1677,8 @@ struct ConvertPdfToImagesDialog : PdfToolDialog {
     Checkbox* radioCustom = nullptr;
     Edit* pagesEdit = nullptr;
     DropDown* dropFormat = nullptr;
+    DropDown* dropDpi = nullptr;
+    int dpi = kConvertPdfToImagesDpi; // 0 if what's typed is not a DPI
     bool syncingFormat = false;
 
     bool Create(MainWindow* win, WindowTab* tab);
@@ -1591,6 +1687,8 @@ struct ConvertPdfToImagesDialog : PdfToolDialog {
     void UpdateButton();
     void OnPagesModeChanged();
     void OnFormatChanged();
+    void OnDpiPicked();
+    void OnDpiTyped();
     void SetDestExtFromFormat();
     void SyncFormatFromPath(Str path);
     int SelectedFormatIdx() const;
@@ -1659,6 +1757,16 @@ void ConvertPdfToImagesDialog::OnFormatChanged() {
     SetDestExtFromFormat();
 }
 
+void ConvertPdfToImagesDialog::OnDpiPicked() {
+    dpi = DpiFromComboSel(dropDpi);
+    UpdateButton();
+}
+
+void ConvertPdfToImagesDialog::OnDpiTyped() {
+    dpi = DpiFromComboText(dropDpi);
+    UpdateButton();
+}
+
 void ConvertPdfToImagesDialog::OnPagesModeChanged() {
     bool custom = radioCustom && radioCustom->IsChecked();
     if (pagesEdit) {
@@ -1679,7 +1787,7 @@ void ConvertPdfToImagesDialog::UpdateButton() {
         Vec<int> parsed;
         pagesOk = ParseDeletePages(pages, pageCount, parsed);
     }
-    bool valid = destOk && pagesOk;
+    bool valid = destOk && pagesOk && dpi > 0;
     if (valid == actionBtn->HasFlag(vwfEnabled)) {
         return;
     }
@@ -1757,11 +1865,21 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
         }
     }
 
-    logf("ConvertPdfToImages: '%s' -> '%s', %d page(s)\n", srcPath, destPath, len(pages));
+    // the box may have been filled without a change notification
+    dpi = DpiFromComboText(dropDpi);
+    if (dpi < 1) {
+        return;
+    }
+    if (!PagesFitDpi(engine, pages, dpi)) {
+        MessageBoxWarning(hwnd, Tr("Too large for this DPI"), Tr("Convert PDF to Images"));
+        return;
+    }
+
+    logf("ConvertPdfToImages: '%s' -> '%s', %d page(s), %d DPI\n", srcPath, destPath, len(pages), dpi);
 
     HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
     Str firstPath;
-    int nOk = ConvertPagesToImages(engine, dm->GetRotation(), destPath, pages, &firstPath);
+    int nOk = ConvertPagesToImages(engine, dm->GetRotation(), destPath, pages, dpi, &firstPath);
     SetCursor(prev);
 
     if (nOk == 0) {
@@ -1856,6 +1974,15 @@ bool ConvertPdfToImagesDialog::Create(MainWindow* w, WindowTab* tab) {
     pagesEdit->SetIsEnabled(false);
     row->AddChild(pagesEdit, 1);
 
+    HBox* dpiRow = AddRow();
+    dpiRow->gap = font->averageCharWidth;
+    dpiRow->AddChild(NewVirtText({.s = Tr("Resolution (DPI):"), .font = font, .isRtl = IsUIRtl()}));
+
+    dropDpi = NewDpiCombo(hwnd, font, dpi);
+    dropDpi->onSelectionChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnDpiPicked>(this);
+    dropDpi->onTextChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnDpiTyped>(this);
+    dpiRow->AddChild(dropDpi);
+
     AddButtonsRow(Tr("Convert"), Tr("Use <N> for the page number"));
     FinishDialog(destEdit);
 
@@ -1886,40 +2013,6 @@ void ShowConvertPdfToImagesDialog(MainWindow* win) {
 
 // rectangular selection → PNG / JPEG / BMP at a chosen DPI, independent of
 // the current zoom (issue #6127)
-constexpr i64 kMaxSaveSelectionPixels = 100LL * 1000 * 1000;
-constexpr int kMaxSaveSelectionSide = 16384;
-constexpr int kSaveSelectionDefaultDpi = 300;
-
-static const int kSaveSelectionDpiChoices[] = {72, 150, 300, 600, 1200};
-
-static float SaveSelectionZoom(EngineBase* engine, float dpi) {
-    float fileDpi = engine->GetFileDPI();
-    if (fileDpi <= 0) {
-        fileDpi = 72.0f;
-    }
-    if (dpi < 1) {
-        dpi = (float)kSaveSelectionDefaultDpi;
-    }
-    return dpi / fileDpi;
-}
-
-static bool SaveSelectionSizeOk(int w, int h) {
-    if (w <= 0 || h <= 0) {
-        return false;
-    }
-    if (w > kMaxSaveSelectionSide || h > kMaxSaveSelectionSide) {
-        return false;
-    }
-    i64 pixels = (i64)w * (i64)h;
-    return pixels <= kMaxSaveSelectionPixels;
-}
-
-static bool EstimateSelectionPx(RectF rect, float zoom, int& w, int& h) {
-    w = (int)floorf((rect.dx * zoom) + 0.5f);
-    h = (int)floorf((rect.dy * zoom) + 0.5f);
-    return w > 0 && h > 0;
-}
-
 static Kind kNotifSaveSelectionAsImage = "notifSaveSelectionAsImage";
 
 static Pixmap* RenderSelectionPixmap(EngineBase* engine, int rotation, int pageNo, RectF rect, float dpi) {
@@ -2069,18 +2162,19 @@ struct SaveSelectionAsImageDialog : PdfToolDialog {
     DropDown* dropFormat = nullptr;
     DropDown* dropDpi = nullptr;
     VirtText* sizeLabel = nullptr;
+    int dpi = kSaveSelectionDefaultDpi; // 0 if what's typed is not a DPI
     bool syncingFormat = false;
 
     bool Create(MainWindow* win, WindowTab* tab);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
     void OnBrowseDest(VirtMouseEvent* ev = nullptr);
     void OnFormatChanged();
-    void OnDpiChanged();
+    void OnDpiPicked();
+    void OnDpiTyped();
     void SetDestExtFromFormat();
     void SyncFormatFromPath(Str path);
     void UpdateSizeLabel();
     int SelectedFormatIdx() const;
-    int SelectedDpi() const;
 };
 
 int SaveSelectionAsImageDialog::SelectedFormatIdx() const {
@@ -2092,17 +2186,6 @@ int SaveSelectionAsImageDialog::SelectedFormatIdx() const {
         return 0;
     }
     return idx;
-}
-
-int SaveSelectionAsImageDialog::SelectedDpi() const {
-    if (!dropDpi) {
-        return kSaveSelectionDefaultDpi;
-    }
-    int idx = CbGetCurrentSelection(dropDpi);
-    if (idx < 0 || idx >= dimofi(kSaveSelectionDpiChoices)) {
-        return kSaveSelectionDefaultDpi;
-    }
-    return kSaveSelectionDpiChoices[idx];
 }
 
 void SaveSelectionAsImageDialog::SetDestExtFromFormat() {
@@ -2144,11 +2227,16 @@ void SaveSelectionAsImageDialog::UpdateSizeLabel() {
     if (!engine) {
         return;
     }
-    float zoom = SaveSelectionZoom(engine, (float)SelectedDpi());
+    float zoom = SaveSelectionZoom(engine, (float)dpi);
     int w = 0;
     int h = 0;
     EstimateSelectionPx(selRect, zoom, w, h);
-    if (!SaveSelectionSizeOk(w, h)) {
+    if (dpi < 1) {
+        sizeLabel->SetText(StrL(""));
+        if (actionBtn) {
+            actionBtn->SetIsEnabled(false);
+        }
+    } else if (!SaveSelectionSizeOk(w, h)) {
         sizeLabel->SetText(Tr("Too large for this DPI"));
         if (actionBtn) {
             actionBtn->SetIsEnabled(false);
@@ -2170,7 +2258,13 @@ void SaveSelectionAsImageDialog::OnFormatChanged() {
     SetDestExtFromFormat();
 }
 
-void SaveSelectionAsImageDialog::OnDpiChanged() {
+void SaveSelectionAsImageDialog::OnDpiPicked() {
+    dpi = DpiFromComboSel(dropDpi);
+    UpdateSizeLabel();
+}
+
+void SaveSelectionAsImageDialog::OnDpiTyped() {
+    dpi = DpiFromComboText(dropDpi);
     UpdateSizeLabel();
 }
 
@@ -2222,7 +2316,11 @@ void SaveSelectionAsImageDialog::DoIt(VirtMouseEvent*) {
         MessageBoxWarning(hwnd, StrL("Unsupported image format."), Tr("Save Selection As Image"));
         return;
     }
-    int dpi = SelectedDpi();
+    // the box may have been filled without a change notification
+    dpi = DpiFromComboText(dropDpi);
+    if (dpi < 1) {
+        return;
+    }
     Pixmap* px = RenderSelectionPixmap(engine, dm->GetRotation(), pageNo, selRect, (float)dpi);
     if (!px) {
         MessageBoxWarning(hwnd, StrL("Failed to save the selection as an image."), Tr("Save Selection As Image"));
@@ -2309,30 +2407,12 @@ bool SaveSelectionAsImageDialog::Create(MainWindow* w, WindowTab* tab) {
 
     HBox* dpiRow = AddRow();
     dpiRow->gap = font->averageCharWidth;
-    dpiRow->AddChild(NewVirtText({.s = Tr("DPI:"), .font = font, .isRtl = IsUIRtl()}));
+    dpiRow->AddChild(NewVirtText({.s = Tr("Resolution (DPI):"), .font = font, .isRtl = IsUIRtl()}));
 
-    {
-        auto* dd = new DropDown();
-        DropDown::CreateArgs ddargs;
-        ddargs.parent = hwnd;
-        ddargs.font = font;
-        ddargs.isRtl = IsUIRtl();
-        dd->Create(ddargs);
-        StrVec items;
-        int selIdx = 0;
-        for (int i = 0; i < dimofi(kSaveSelectionDpiChoices); i++) {
-            items.Append(fmt("%d", kSaveSelectionDpiChoices[i]));
-            if (kSaveSelectionDpiChoices[i] == kSaveSelectionDefaultDpi) {
-                selIdx = i;
-            }
-        }
-        dd->SetItems(items);
-        CbSetCurrentSelection(dd, selIdx);
-        dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
-        dd->onSelectionChanged = MkMethod0<SaveSelectionAsImageDialog, &SaveSelectionAsImageDialog::OnDpiChanged>(this);
-        dropDpi = dd;
-        dpiRow->AddChild(dropDpi);
-    }
+    dropDpi = NewDpiCombo(hwnd, font, dpi);
+    dropDpi->onSelectionChanged = MkMethod0<SaveSelectionAsImageDialog, &SaveSelectionAsImageDialog::OnDpiPicked>(this);
+    dropDpi->onTextChanged = MkMethod0<SaveSelectionAsImageDialog, &SaveSelectionAsImageDialog::OnDpiTyped>(this);
+    dpiRow->AddChild(dropDpi);
 
     sizeLabel = NewVirtText({.s = StrL(""), .font = font, .isRtl = IsUIRtl()});
     dpiRow->AddChild(sizeLabel, 1);

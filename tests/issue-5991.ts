@@ -43,11 +43,12 @@ function pngSize(buf: Buffer): { w: number; h: number } {
   return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
 }
 
-async function convert(client: ControlClient, template: string, pages: string): Promise<string> {
+async function convert(client: ControlClient, template: string, pages: string, dpi?: number): Promise<string> {
+  const args = dpi === undefined ? [template, pages] : [template, pages, dpi];
   const deadline = Date.now() + 30_000;
   let last = "";
   for (;;) {
-    const res = await client.request(ControlCommand.TestConvertToImages, [template, pages]);
+    const res = await client.request(ControlCommand.TestConvertToImages, args);
     const raw = String(res[1] ?? "").trim();
     last = raw;
     if (res[0] === 0 && raw.startsWith("OK")) {
@@ -113,6 +114,23 @@ export async function testit(): Promise<void> {
         throw new Error("issue-5991: jpeg convert did not write p-1.jpg");
       }
       const jpgBuf = readFileSync(jpg);
+
+      // custom DPI: 612x792 pt at 96 DPI → 816 x 1056
+      const dpiDir = join(dir, "dpi");
+      mkdirSync(dpiDir, { recursive: true });
+      await convert(client, join(dpiDir, "d-<N>.png"), "1", 96);
+      const sd = pngSize(readFileSync(join(dpiDir, "d-1.png")));
+      if (Math.abs(sd.w - 816) > 2 || Math.abs(sd.h - 1056) > 2) {
+        throw new Error(`issue-5991: unexpected size at 96 DPI ${sd.w}x${sd.h} (want ~816x1056)`);
+      }
+
+      // a page too large for the DPI is refused instead of rendered
+      const hugeDir = join(dir, "huge");
+      mkdirSync(hugeDir, { recursive: true });
+      const huge = await client.request(ControlCommand.TestConvertToImages, [join(hugeDir, "h-<N>.png"), "1", 9600]);
+      if (huge[0] === 0 || existsSync(join(hugeDir, "h-1.png"))) {
+        throw new Error(`issue-5991: 9600 DPI was not refused: ${huge[1]}`);
+      }
       if (jpgBuf.length < 2 || jpgBuf[0] !== 0xff || jpgBuf[1] !== 0xd8) {
         throw new Error(`issue-5991: p-1.jpg is not a JPEG (${jpgBuf.length} bytes)`);
       }
