@@ -679,8 +679,6 @@ static int ChmEntityByte(WCHAR c) {
         return (u8)b;
     }
 #else
-    // ng: the same 0x80-0x9F block of CP-1252, as a table. There is no
-    // WideCharToMultiByte off Windows and iconv would need a locale.
     static const u16 cp1252High[32] = {0x20AC, 0,      0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021,
                                        0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0,      0x017D, 0,
                                        0,      0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,

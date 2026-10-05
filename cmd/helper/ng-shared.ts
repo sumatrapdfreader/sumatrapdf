@@ -116,6 +116,7 @@ export const sharedFiles = [
   "src/shared/CachedObjects.h",
   "src/shared/ChapterTable.h",
   "src/shared/ChmDump.h",
+  "src/shared/ChmFile.cpp",
   "src/shared/ChmFile.h",
   "src/shared/DocController.cpp",
   "src/shared/DocProperties.cpp",
