@@ -41,7 +41,7 @@ async function isGithubMyMasterBranch(): Promise<boolean> {
 }
 
 function buildConfigPath(): string {
-  return join("src", "BuildConfig.h");
+  return join("src", "shared", "BuildConfig.h");
 }
 
 function setBuildConfigPreRelease(sha1: string, preRelVer: string): void {

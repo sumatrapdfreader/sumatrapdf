@@ -1116,7 +1116,6 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\PerfLog.h" />
     <ClInclude Include="..\src\base\AppendStore.h" />
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\AutoWin.h" />
@@ -1148,6 +1147,7 @@
     <ClInclude Include="..\src\base\WinDynCalls.h" />
     <ClInclude Include="..\src\base\Zip.h" />
     <ClInclude Include="..\src\gui\Dpi.h" />
+    <ClInclude Include="..\src\shared\PerfLog.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\lzma\C\Bra86.c">
@@ -1192,7 +1192,7 @@
     <ClCompile Include="..\src\gui\Dpi.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\src\PerfLog_x64.asm">
+    <CustomBuild Include="..\src\shared\PerfLog_x64.asm">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">..\bin\nasm.exe -f win64 -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">..\bin\nasm.exe -f win64 -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>

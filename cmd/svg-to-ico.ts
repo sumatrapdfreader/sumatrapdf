@@ -1,4 +1,4 @@
-// Rasterize src/gfx/svg/*.svg to multi-size Windows .ico files under src/gfx/:
+// Rasterize src/gfx/svg/*.svg to Windows .ico files under src/gfx/ or src/shared/gfx/:
 // 256 PNG + 64/48/32/16 BMP (32bpp + AND mask). Optionally zopflipng-compresses
 // the 256 PNG frame.
 //
@@ -11,6 +11,7 @@ import { readFileSync, writeFileSync, readdirSync, mkdtempSync, rmSync, existsSy
 import { join, basename } from "node:path";
 import { tmpdir } from "node:os";
 import { deflateSync, inflateSync } from "node:zlib";
+import { sharedSource } from "./helper/ng-shared";
 
 const ROOT = join(import.meta.dir, "..");
 const RESVG = join(ROOT, "bin", "resvg.exe");
@@ -262,7 +263,7 @@ function main() {
   try {
     for (const name of svgs) {
       const svg = join(SVG_DIR, name);
-      const ico = join(ICO_DIR, name.replace(/\.svg$/i, ".ico"));
+      const ico = join(ROOT, sharedSource("src/gfx/" + name.replace(/\.svg$/i, ".ico")));
       const scratch = join(scratchRoot, name);
       mkdirSync(scratch, { recursive: true });
       svgToIco(svg, ico, scratch);

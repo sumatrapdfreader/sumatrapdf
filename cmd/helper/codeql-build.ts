@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { detectVisualStudio, runLogged } from "../util";
 
 function buildConfigPath(): string {
-  return join("src", "BuildConfig.h");
+  return join("src", "shared", "BuildConfig.h");
 }
 
 async function revertBuildConfig(): Promise<void> {

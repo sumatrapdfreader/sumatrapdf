@@ -339,10 +339,10 @@ const docPropMaps: PropMapTarget[] = [
 
 // parse `enum class DocProp : u8 { None = 0, Title = 1, ... }` -> { Title: 1, ... }
 function parseDocPropValues(rootDir: string): Record<string, number> {
-  const src = readFileSync(join(rootDir, "src", "DocProperties.h"), "utf-8");
+  const src = readFileSync(join(rootDir, "src", "shared", "DocProperties.h"), "utf-8");
   const m = src.match(/enum class DocProp[^{]*\{([^}]*)\}/);
   if (!m) {
-    throw new Error("DocProp enum not found in src/DocProperties.h");
+    throw new Error("DocProp enum not found in src/shared/DocProperties.h");
   }
   const vals: Record<string, number> = {};
   for (const line of m[1].split("\n")) {

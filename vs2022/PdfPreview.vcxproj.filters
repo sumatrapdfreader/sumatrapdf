@@ -10,15 +10,11 @@
     <Filter Include="previewer">
       <UniqueIdentifier>{7EF07E97-EA5A-330E-3399-E4B39F421163}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared">
+      <UniqueIdentifier>{9C5CB11B-88FE-DBF1-71B9-EF455DFA6242}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\AvifReader.h" />
-    <ClInclude Include="..\src\CachedObjects.h" />
-    <ClInclude Include="..\src\ChapterTable.h" />
-    <ClInclude Include="..\src\ChmFile.h" />
-    <ClInclude Include="..\src\DocProperties.h" />
-    <ClInclude Include="..\src\EbookDoc.h" />
-    <ClInclude Include="..\src\EbookFormatter.h" />
     <ClInclude Include="..\src\EmbeddedResources.h" />
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
@@ -26,16 +22,9 @@
     <ClInclude Include="..\src\GumboHtmlParser.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\ImageReader.h" />
-    <ClInclude Include="..\src\JxlReader.h" />
-    <ClInclude Include="..\src\MobiDoc.h" />
-    <ClInclude Include="..\src\PalmDbReader.h" />
-    <ClInclude Include="..\src\PdfCad.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
-    <ClInclude Include="..\src\PdfDarkMode.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
-    <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
-    <ClInclude Include="..\src\WebpReader.h" />
     <ClInclude Include="..\src\base\Archive.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -48,6 +37,48 @@
     <ClInclude Include="..\src\previewer\PdfPreview.h">
       <Filter>previewer</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\AvifReader.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\CachedObjects.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ChapterTable.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ChmFile.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\DocProperties.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\EbookDoc.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\EbookFormatter.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\JxlReader.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\MobiDoc.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\PalmDbReader.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\PdfCad.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\PdfDarkMode.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\SumatraConfig.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\WebpReader.h">
+      <Filter>shared</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\AvifReader.cpp" />
@@ -55,22 +86,18 @@
     <ClCompile Include="..\src\ChapterTable.cpp" />
     <ClCompile Include="..\src\ChmFile.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
-    <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
-    <ClCompile Include="..\src\EbookFormatter.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
-    <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\PdfCad.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
@@ -92,6 +119,18 @@
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp">
       <Filter>previewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\DocProperties.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\EbookFormatter.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\GumboHtmlParser.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PalmDbReader.cpp">
+      <Filter>shared</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

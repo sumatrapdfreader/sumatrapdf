@@ -2,13 +2,13 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 /*
-Template / documentation for src/BuildConfig.h (empty by default).
+Template / documentation for src/shared/BuildConfig.h (empty by default).
 
 With msbuild it's not possible to pass additional #define when building
 the way we did it in nmake builds.
 
 BuildConfig.h exists to allow that. CI and local customization write defines
-into src/BuildConfig.h before invoking msbuild. Include it from Version.h
+into src/shared/BuildConfig.h before invoking msbuild. Include it from Version.h
 (and any translation unit that needs PRE_RELEASE_VER etc. without Version.h).
 
 Defines we recognize:

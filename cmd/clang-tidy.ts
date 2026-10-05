@@ -11,6 +11,7 @@ import { detectVisualStudio } from "./util";
 const includeDirs = [
   "ext/mupdf/include",
   "src",
+  "src/shared",
   "src/base",
   "src/gui",
   "src/gui/win",
@@ -138,6 +139,7 @@ async function main() {
 
   const patterns = [
     "src/*.cpp",
+    "src/shared/**/*.cpp",
     "src/mui/*.cpp",
     "src/base/*.cpp",
     "src/gui/*.cpp",

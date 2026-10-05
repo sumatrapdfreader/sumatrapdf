@@ -508,6 +508,7 @@ export const mupdf: LibDef = {
   includes: [
     "src",
     "src/mupdf",
+    "src/shared/mupdf",
     "ext/mupdf/source/fitz",
     "ext/jxldec",
     "ext/mupdf/include",
@@ -532,7 +533,8 @@ export const mupdf: LibDef = {
   ],
   files: [
     // our additions to mupdf (not patches): see src/mupdf/README.md
-    { dir: "src/mupdf", patterns: ["mupdf_load_system_font.c", "noto_sumatra.c", "pkcs7-windows.c", "load-jxl.cpp"] },
+    { dir: "src/mupdf", patterns: ["mupdf_load_system_font.c", "noto_sumatra.c"] },
+    { dir: "src/shared/mupdf", patterns: ["pkcs7-windows.c", "load-jxl.cpp"] },
     { dir: "ext/mupdf/source/cbz", patterns: ["mucbz.c", "muimg.c"] },
     {
       dir: "ext/mupdf/source/fitz",

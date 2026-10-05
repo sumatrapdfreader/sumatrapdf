@@ -1160,23 +1160,22 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\CachedObjects.h" />
-    <ClInclude Include="..\src\ChapterTable.h" />
-    <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
-    <ClInclude Include="..\src\LitDoc.h" />
-    <ClInclude Include="..\src\PdfCad.h" />
-    <ClInclude Include="..\src\PdfDarkMode.h" />
-    <ClInclude Include="..\src\TextSearch.h" />
-    <ClInclude Include="..\src\TextSelection.h" />
-    <ClInclude Include="..\src\gui\UIModels.h" />
+    <ClInclude Include="..\src\shared\CachedObjects.h" />
+    <ClInclude Include="..\src\shared\ChapterTable.h" />
+    <ClInclude Include="..\src\shared\DocProperties.h" />
+    <ClInclude Include="..\src\shared\LitDoc.h" />
+    <ClInclude Include="..\src\shared\PdfCad.h" />
+    <ClInclude Include="..\src\shared\PdfDarkMode.h" />
+    <ClInclude Include="..\src\shared\TextSearch.h" />
+    <ClInclude Include="..\src\shared\TextSelection.h" />
+    <ClInclude Include="..\src\shared\gui\UIModels.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\AvifReader.cpp" />
     <ClCompile Include="..\src\CachedObjects.cpp" />
     <ClCompile Include="..\src\ChapterTable.cpp" />
-    <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
@@ -1184,19 +1183,20 @@
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
-    <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
     <ClCompile Include="..\src\JxlReader.cpp" />
     <ClCompile Include="..\src\LitDoc.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\PdfCad.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
-    <ClCompile Include="..\src\TextSearch.cpp" />
     <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
-    <ClCompile Include="..\src\gui\UIModels.cpp" />
+    <ClCompile Include="..\src\shared\DocProperties.cpp" />
+    <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
+    <ClCompile Include="..\src\shared\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\shared\TextSearch.cpp" />
+    <ClCompile Include="..\src\shared\gui\UIModels.cpp" />
     <ClCompile Include="..\src\tools\test_engines.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -6,13 +6,18 @@ function files_in_dir(dir, files_in_dir)
   for _, file in ipairs(files_in_dir) do
     -- TODO: don't add "/" if dir ends with it of file starts with it
     local path = dir .. "/" .. file
-    table.insert(paths, path)
     if dir == "src" or dir:sub(1, 4) == "src/" then
       -- Keep each target's file selection when a file moves to shared.
       local shared = "src/shared" .. dir:sub(4) .. "/" .. file
-      for _, shared_path in ipairs(os.matchfiles(shared)) do
+      local shared_paths = os.matchfiles(shared)
+      if #shared_paths == 0 or #os.matchfiles(path) > 0 then
+        table.insert(paths, path)
+      end
+      for _, shared_path in ipairs(shared_paths) do
         table.insert(paths, shared_path)
       end
+    else
+      table.insert(paths, path)
     end
   end
   files(paths)
@@ -625,11 +630,11 @@ function mupdf_files()
   files {
     "src/mupdf/mupdf_load_system_font.c",
     "src/mupdf/noto_sumatra.c",
-    "src/mupdf/noto_sumatra.h",
-    "src/mupdf/pkcs7-windows.c",
-    "src/mupdf/pkcs7-windows.h",
-    "src/mupdf/load-jxl.cpp",
-    "src/mupdf/load-jxl.h",
+    "src/shared/mupdf/noto_sumatra.h",
+    "src/shared/mupdf/pkcs7-windows.c",
+    "src/shared/mupdf/pkcs7-windows.h",
+    "src/shared/mupdf/load-jxl.cpp",
+    "src/shared/mupdf/load-jxl.h",
   }
 
   files_in_dir("ext/mupdf/source/cbz", {
@@ -947,38 +952,38 @@ function test_engines_files()
     "src/base/GuessFileType.cpp",
     "src/AvifReader.cpp",
     "src/ChapterTable.cpp",
-    "src/ChapterTable.h",
-    "src/DocProperties.cpp",
-    "src/DocProperties.h",
+    "src/shared/ChapterTable.h",
+    "src/shared/DocProperties.cpp",
+    "src/shared/DocProperties.h",
     "src/EbookDoc.cpp",
     "src/EmbeddedResources.cpp",
     "src/EngineAll.h",
     "src/EngineBase.cpp",
     "src/EngineBase.h",
     "src/CachedObjects.cpp",
-    "src/CachedObjects.h",
+    "src/shared/CachedObjects.h",
     "src/EngineDjvuDec.cpp",
     "src/EngineImages.cpp",
     "src/EngineMupdf.cpp",
     "src/ImageReader.cpp",
-    "src/GumboHtmlParser.cpp",
+    "src/shared/GumboHtmlParser.cpp",
     "src/GumboHelpers.cpp",
     "src/JxlReader.cpp",
     "src/LitDoc.cpp",
-    "src/LitDoc.h",
+    "src/shared/LitDoc.h",
     "src/MobiDoc.cpp",
-    "src/PalmDbReader.cpp",
+    "src/shared/PalmDbReader.cpp",
     "src/PdfCad.cpp",
-    "src/PdfCad.h",
-    "src/PdfDarkMode.h",
+    "src/shared/PdfCad.h",
+    "src/shared/PdfDarkMode.h",
     "src/PdfDarkModeNoOp.cpp",
-    "src/TextSearch.cpp",
-    "src/TextSearch.h",
+    "src/shared/TextSearch.cpp",
+    "src/shared/TextSearch.h",
     "src/TextSelection.cpp",
-    "src/TextSelection.h",
+    "src/shared/TextSelection.h",
     "src/WebpReader.cpp",
-    "src/gui/UIModels.cpp",
-    "src/gui/UIModels.h",
+    "src/shared/gui/UIModels.cpp",
+    "src/shared/gui/UIModels.h",
     "src/tools/test_engines.cpp",
   }
 end

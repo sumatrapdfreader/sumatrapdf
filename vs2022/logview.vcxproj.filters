@@ -7,6 +7,12 @@
     <Filter Include="gui\win">
       <UniqueIdentifier>{877BE114-F35A-60B0-FC72-EB8668D1C611}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared">
+      <UniqueIdentifier>{9C5CB11B-88FE-DBF1-71B9-EF455DFA6242}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared\gui">
+      <UniqueIdentifier>{10D62118-FC8D-6365-6595-3CC1516CFE55}</UniqueIdentifier>
+    </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
     </Filter>
@@ -30,11 +36,11 @@
     <ClInclude Include="..\src\gui\PlatformText.h">
       <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\UIModels.h">
-      <Filter>gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gui\VirtCtrl.h">
       <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\gui\UIModels.h">
+      <Filter>shared\gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -60,9 +66,6 @@
     <ClCompile Include="..\src\gui\PlatformText.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\UIModels.cpp">
-      <Filter>gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\UiPlatform.cpp">
       <Filter>gui</Filter>
     </ClCompile>
@@ -77,6 +80,9 @@
     </ClCompile>
     <ClCompile Include="..\src\gui\win\WindowBase.cpp">
       <Filter>gui\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\gui\UIModels.cpp">
+      <Filter>shared\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\logview\logview.cpp">
       <Filter>tools\logview</Filter>

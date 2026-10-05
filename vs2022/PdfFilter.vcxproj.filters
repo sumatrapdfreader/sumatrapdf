@@ -7,20 +7,16 @@
     <Filter Include="ifilter">
       <UniqueIdentifier>{74F9F98B-E0D8-7827-E9F0-03FE554FDF88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared">
+      <UniqueIdentifier>{9C5CB11B-88FE-DBF1-71B9-EF455DFA6242}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\ChapterTable.h" />
-    <ClInclude Include="..\src\DocProperties.h" />
-    <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EmbeddedResources.h" />
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\GumboHtmlParser.h" />
-    <ClInclude Include="..\src\MobiDoc.h" />
-    <ClInclude Include="..\src\PalmDbReader.h" />
-    <ClInclude Include="..\src\PdfCad.h" />
-    <ClInclude Include="..\src\PdfDarkMode.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h">
@@ -38,19 +34,37 @@
     <ClInclude Include="..\src\ifilter\TeXFilter.h">
       <Filter>ifilter</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\ChapterTable.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\DocProperties.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\EbookDoc.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\MobiDoc.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\PalmDbReader.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\PdfCad.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\PdfDarkMode.h">
+      <Filter>shared</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChapterTable.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
-    <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
-    <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\PdfCad.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
@@ -69,6 +83,15 @@
     </ClCompile>
     <ClCompile Include="..\src\ifilter\TeXFilter.cpp">
       <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\DocProperties.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\GumboHtmlParser.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PalmDbReader.cpp">
+      <Filter>shared</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -104,13 +104,23 @@ function resolveGlobs(t: Target, sources: string[], exclude: string[], plat: Pla
   for (const pattern of sources) {
     const g = new Glob(pattern);
     const matches = Array.from(g.scanSync({ cwd: root, dot: false })).map((p) => p.replaceAll("\\", "/"));
-    if (pattern.startsWith("src/ng/")) {
-      matches.push(...sharedFiles.filter((p) => g.match(sharedPath(p).replace(/^src\//, "src/ng/"))));
+    if (pattern.startsWith("src/")) {
+      matches.push(
+        ...sharedFiles.filter((p) => {
+          const path = sharedPath(p);
+          return g.match(pattern.startsWith("src/ng/") ? path.replace(/^src\//, "src/ng/") : path);
+        }),
+      );
     }
     if (matches.length === 0) fail(`target ${t.name}: no files match ${pattern}`);
     for (const m of matches.sort()) {
       if (!sourceBuildsOn(m, plat)) continue;
-      if (excluded.some((e) => e.match(m) || e.match(sharedPath(m).replace(/^src\//, "src/ng/")))) continue;
+      if (
+        excluded.some(
+          (e) => e.match(m) || e.match(sharedPath(m)) || e.match(sharedPath(m).replace(/^src\//, "src/ng/")),
+        )
+      )
+        continue;
       if (!out.includes(m)) out.push(m);
     }
   }

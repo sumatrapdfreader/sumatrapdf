@@ -72,6 +72,7 @@ async function main() {
 
   const patterns = [
     "src/*.cpp",
+    "src/shared/**/*.{cpp,c,h}",
     "src/*.h",
     "src/mui/*.cpp",
     "src/mui/*.h",

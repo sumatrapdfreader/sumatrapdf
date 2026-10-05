@@ -1260,18 +1260,11 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\ChapterTable.h" />
-    <ClInclude Include="..\src\DocProperties.h" />
-    <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EmbeddedResources.h" />
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\GumboHtmlParser.h" />
-    <ClInclude Include="..\src\MobiDoc.h" />
-    <ClInclude Include="..\src\PalmDbReader.h" />
-    <ClInclude Include="..\src\PdfCad.h" />
-    <ClInclude Include="..\src\PdfDarkMode.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h" />
@@ -1279,19 +1272,23 @@
     <ClInclude Include="..\src\ifilter\FilterBase.h" />
     <ClInclude Include="..\src\ifilter\PdfFilter.h" />
     <ClInclude Include="..\src\ifilter\TeXFilter.h" />
+    <ClInclude Include="..\src\shared\ChapterTable.h" />
+    <ClInclude Include="..\src\shared\DocProperties.h" />
+    <ClInclude Include="..\src\shared\EbookDoc.h" />
+    <ClInclude Include="..\src\shared\MobiDoc.h" />
+    <ClInclude Include="..\src\shared\PalmDbReader.h" />
+    <ClInclude Include="..\src\shared\PdfCad.h" />
+    <ClInclude Include="..\src\shared\PdfDarkMode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChapterTable.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
-    <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
-    <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\PdfCad.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
@@ -1327,6 +1324,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\shared\DocProperties.cpp" />
+    <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
+    <ClCompile Include="..\src\shared\PalmDbReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\ifilter\PdfFilter.rc" />
