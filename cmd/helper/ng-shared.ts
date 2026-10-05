@@ -195,6 +195,7 @@ export const sharedFiles = [
   "src/shared/mupdf/pkcs7-windows.h",
   "src/shared/tests/AnnotSearch_ut.cpp",
   "src/shared/tests/CachedObjects_ut.cpp",
+  "src/shared/tests/MobiDoc_ut.cpp",
   "src/shared/tests/PageRenderPolicy_ut.cpp",
   "src/shared/tests/PdfDarkModeImageClassifier_ut.cpp",
   "src/shared/tests/PdfDarkModeOklab_ut.cpp",
