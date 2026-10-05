@@ -914,9 +914,6 @@
     <ClCompile Include="..\src\RefHoverCanvas.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\RefHoverDetect.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\RefHoverPopup.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1284,6 +1281,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ReaderModel.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\RefHoverDetect.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverInternal.cpp">
