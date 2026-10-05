@@ -77,6 +77,7 @@ export const sharedFiles = [
   "src/base/CssParser.h",
   "src/base/DbgHelpDyn_posix.cpp",
   "src/base/Dict.h",
+  "src/base/DirScan_posix.cpp",
   "src/base/FoldDiacriticsData.inc",
   "src/base/FrameTimeoutCalculator.h",
   "src/base/JsonParser.h",
