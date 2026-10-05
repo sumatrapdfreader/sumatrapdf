@@ -3,7 +3,9 @@
 
 #include "base/Base.h"
 #include "base/ByteReaderWriter.h"
+#if OS_WIN
 #include "base/Win.h"
+#endif
 
 #include "base/Pixmap.h"
 
@@ -74,6 +76,7 @@ Str PixmapToBmpFormat(const Pixmap* pixmap) {
     return bmpData.TakeStr();
 }
 
+#if OS_WIN
 Pixmap* AllocPixmapDIB(int w, int h) {
     if (w <= 0 || h <= 0) {
         return nullptr;
@@ -204,6 +207,8 @@ Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb) {
 // The alpha in a DIB section is straight, not premultiplied: that is what PNG,
 // CF_DIBV5 and GDI+ all expect of a 32bpp bitmap, and mupdf hands us
 // premultiplied pixels. Undoing it here keeps the invariant in one place.
+#endif
+
 static void UnpremultiplyBgra(u8* d) {
     u32 a = d[3];
     if (a == 0 || a == 255) {
@@ -264,11 +269,16 @@ Pixmap* PixmapToBgra(Pixmap* p) {
     if (p->format == PixmapFormat::BGRA8 && p->data) {
         return p;
     }
+#if OS_WIN
     Pixmap* dib = p->hbmp ? PixmapCopyAs32bppDIB(p) : CopyHeapPixmapAsBgraDib(p);
+#else
+    Pixmap* dib = CopyHeapPixmapAsBgraDib(p);
+#endif
     FreePixmap(p);
     return dib;
 }
 
+#if OS_WIN
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
     if (!px) {
         return nullptr;
@@ -516,12 +526,15 @@ bool BlitPixmap(Pixmap* p, HDC hdc, Rect target) {
     return BlitPixmapRegion(p, hdc, target, Rect(0, 0, p->width, p->height));
 }
 
+#endif
+
 static inline u8 BlendOver(u8 src, u8 dst, u32 srcAlpha, bool premultiplied) {
     u32 inv = 255 - srcAlpha;
     u32 s = premultiplied ? src : (((u32)src * srcAlpha) + 127) / 255;
     return (u8)std::min<u32>(255, s + ((((u32)dst * inv) + 127) / 255));
 }
 
+#if OS_WIN
 static bool IsPaletteDib(HBITMAP hbmp) {
     DIBSECTION ds{};
     return hbmp && GetObject(hbmp, sizeof(ds), &ds) == sizeof(ds) && ds.dsBm.bmBitsPixel <= 8;
@@ -530,11 +543,14 @@ static bool IsPaletteDib(HBITMAP hbmp) {
 // Takes p. Returns an opaque 24bpp BGR8 copy, transparency composited over white:
 // 3/4 the memory of 32bpp, for cached thumbnails. BGR8, and palette DIBs (smaller
 // still), are returned as is; so is p when the copy can't be allocated.
+#endif
+
 Pixmap* PixmapToBgr(Pixmap* p) {
     if (!p || p->format == PixmapFormat::BGR8) {
         return p;
     }
     if (p->format == PixmapFormat::Native || !p->data) {
+#if OS_WIN
         if (IsPaletteDib(p->hbmp)) {
             return p;
         }
@@ -544,6 +560,9 @@ Pixmap* PixmapToBgr(Pixmap* p) {
             return nullptr;
         }
         p = bgra;
+#else
+        return p;
+#endif
     }
 
     Pixmap* res = AllocPixmap(p->width, p->height, PixmapFormat::BGR8);
@@ -584,6 +603,7 @@ Pixmap* PixmapToBgr(Pixmap* p) {
 // costs a BitBlt, which is nothing at icon sizes.
 //
 // Only 1:1 blits are composited; a scaling blit falls back to the opaque path.
+#if OS_WIN
 static bool BlitPixmapRegionComposited(Pixmap* p, HDC hdc, Rect target, Rect source);
 
 bool BlitPixmapAlpha(Pixmap* p, HDC hdc, Rect target) {
@@ -656,6 +676,8 @@ static bool BlitPixmapRegionComposited(Pixmap* p, HDC hdc, Rect target, Rect sou
     return ok;
 }
 
+#endif
+
 static bool SkipRecolorPixel(int x, int y, Vec<Rect>* skipRects) {
     if (skipRects) {
         for (Rect& r : *skipRects) {
@@ -710,6 +732,7 @@ static void RecolorPixels(u8* data, int w, int h, size_t stride, int bpp, Color 
 
 // same, for an HBITMAP: in place for mapped 24/32-bit DIBs, via the palette
 // for 8-bit ones, else through GetDIBits/SetDIBits
+#if OS_WIN
 static void RecolorHbitmap(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
     DIBSECTION info{};
     int ret = GetObject(hbmp, sizeof(info), &info);
@@ -759,6 +782,8 @@ static void RecolorHbitmap(HBITMAP hbmp, Color textColor, Color bgColor, Color l
     DeleteDC(hDC);
 }
 
+#endif
+
 void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
     if (!px) {
         return;
@@ -766,10 +791,12 @@ void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, 
     if ((textColor & 0xffffff) == kColBlack && (bgColor & 0xffffff) == kColWhite && !linkColor && !skipRects) {
         return;
     }
+#if OS_WIN
     if (px->hbmp) {
         RecolorHbitmap(px->hbmp, textColor, bgColor, linkColor, skipRects);
         return;
     }
+#endif
     if (!px->data || px->width <= 0 || px->height <= 0 || px->format == PixmapFormat::RGBA8) {
         return;
     }
@@ -782,6 +809,7 @@ void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, 
 // 32-bpp CF_BITMAP on the clipboard, and converting that to DWORD-padded 24bpp
 // rows does not land on the stride the stamp path uses. 32bpp BI_RGB rows are
 // always width*4, the same as AllocPixmap(BGRA8).
+#if OS_WIN
 static Pixmap* PixmapFromHBITMAPPixels(HBITMAP hbmp) {
     BITMAP bmp{};
     if (!GetObject(hbmp, sizeof(bmp), &bmp) || bmp.bmWidth <= 0 || bmp.bmHeight <= 0) {
@@ -840,3 +868,63 @@ Pixmap* GetClipboardImageAsPixmap() {
     }
     return nullptr;
 }
+#endif
+
+#if !OS_WIN
+Pixmap* PixmapApplyExifOrientation(Pixmap* px, int orientation) {
+    if (!px || !px->data || orientation < 2 || orientation > 8) {
+        return px;
+    }
+    int w = px->width;
+    int h = px->height;
+    bool transposed = orientation >= 5;
+    Pixmap* out = AllocPixmap(transposed ? h : w, transposed ? w : h, px->format, px->premultiplied);
+    if (!out) {
+        return px;
+    }
+    out->xres = px->xres;
+    out->yres = px->yres;
+    out->hasAlpha = px->hasAlpha;
+
+    int bpp = PixmapBytesPerPixel(px->format);
+    for (int sy = 0; sy < h; sy++) {
+        const u8* src = px->data + ((size_t)sy * (size_t)px->stride);
+        for (int sx = 0; sx < w; sx++, src += bpp) {
+            int dx = sx;
+            int dy = sy;
+            switch (orientation) {
+                case 2:
+                    dx = w - 1 - sx;
+                    break;
+                case 3:
+                    dx = w - 1 - sx;
+                    dy = h - 1 - sy;
+                    break;
+                case 4:
+                    dy = h - 1 - sy;
+                    break;
+                case 5:
+                    dx = sy;
+                    dy = sx;
+                    break;
+                case 6:
+                    dx = h - 1 - sy;
+                    dy = sx;
+                    break;
+                case 7:
+                    dx = h - 1 - sy;
+                    dy = w - 1 - sx;
+                    break;
+                case 8:
+                    dx = sy;
+                    dy = w - 1 - sx;
+                    break;
+            }
+            u8* dst = out->data + ((size_t)dy * (size_t)out->stride) + ((size_t)dx * (size_t)bpp);
+            memcpy(dst, src, (size_t)bpp);
+        }
+    }
+    FreePixmap(px);
+    return out;
+}
+#endif
