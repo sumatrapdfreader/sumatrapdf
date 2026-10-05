@@ -103,6 +103,7 @@ export const sharedFiles = [
   "src/base/GuessFileType.h",
   "src/base/HtmlTags.cpp",
   "src/base/HtmlTags.h",
+  "src/base/Http.cpp",
   "src/base/Http.h",
   "src/base/Http_posix.cpp",
   "src/base/JsonParser.cpp",
