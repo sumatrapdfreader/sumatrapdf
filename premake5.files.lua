@@ -1,9 +1,19 @@
 function files_in_dir(dir, files_in_dir)
+  if dir == "src" or dir:sub(1, 4) == "src/" then
+    includedirs { "src/shared" }
+  end
   local paths = {}
   for _, file in ipairs(files_in_dir) do
     -- TODO: don't add "/" if dir ends with it of file starts with it
     local path = dir .. "/" .. file
     table.insert(paths, path)
+    if dir == "src" or dir:sub(1, 4) == "src/" then
+      -- Keep each target's file selection when a file moves to shared.
+      local shared = "src/shared" .. dir:sub(4) .. "/" .. file
+      for _, shared_path in ipairs(os.matchfiles(shared)) do
+        table.insert(paths, shared_path)
+      end
+    end
   end
   files(paths)
 end

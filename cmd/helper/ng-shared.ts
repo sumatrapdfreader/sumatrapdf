@@ -200,11 +200,16 @@ export const sharedFiles = [
   "src/tests/TextSelection_ut.cpp",
 ];
 
+export function sharedPath(path: string): string {
+  return path.replace(/^src\/shared\//, "src/");
+}
+
+const sharedMap = new Map(sharedFiles.map((p) => [sharedPath(p), p]));
 const sharedSet = new Set(sharedFiles);
 
 export function sharedSource(path: string): string {
   const original = path.replace(/^src\/ng\//, "src/");
-  return sharedSet.has(original) ? original : path;
+  return sharedMap.get(original) ?? path;
 }
 
 export function isShared(path: string): boolean {

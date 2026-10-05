@@ -13,7 +13,7 @@ import { basename, dirname, isAbsolute, join, relative } from "node:path";
 import { Glob } from "bun";
 import type { Platform, Toolchain } from "./ng-toolchain";
 import { findTarget, forPlatform, sourceBuildsOn, type Target, type TargetKind } from "./ng-targets";
-import { isShared, sharedFiles, sharedSource } from "./ng-shared";
+import { isShared, sharedFiles, sharedPath, sharedSource } from "./ng-shared";
 
 export type BuildFlags = {
   debug: boolean;
@@ -36,7 +36,7 @@ function sharedDir(dir: string): string {
 // Stage shared files so quoted includes resolve ng headers before original headers.
 export function stageShared(dir: string): void {
   for (const src of sharedFiles) {
-    const dst = join(sharedDir(dir), src);
+    const dst = join(sharedDir(dir), sharedPath(src));
     let data = readFileSync(join(root, src));
     if (/\.(cpp|c|h)$/.test(src)) {
       const text = data
@@ -105,12 +105,12 @@ function resolveGlobs(t: Target, sources: string[], exclude: string[], plat: Pla
     const g = new Glob(pattern);
     const matches = Array.from(g.scanSync({ cwd: root, dot: false })).map((p) => p.replaceAll("\\", "/"));
     if (pattern.startsWith("src/ng/")) {
-      matches.push(...sharedFiles.filter((p) => g.match(p.replace(/^src\//, "src/ng/"))));
+      matches.push(...sharedFiles.filter((p) => g.match(sharedPath(p).replace(/^src\//, "src/ng/"))));
     }
     if (matches.length === 0) fail(`target ${t.name}: no files match ${pattern}`);
     for (const m of matches.sort()) {
       if (!sourceBuildsOn(m, plat)) continue;
-      if (excluded.some((e) => e.match(m) || e.match(m.replace(/^src\//, "src/ng/")))) continue;
+      if (excluded.some((e) => e.match(m) || e.match(sharedPath(m).replace(/^src\//, "src/ng/")))) continue;
       if (!out.includes(m)) out.push(m);
     }
   }
@@ -331,7 +331,8 @@ function perSourceFlags(t: Target, src: string, tc: Toolchain): string[] {
   for (const ps of t.perSource ?? []) {
     if (ps.platforms && !ps.platforms.includes(tc.plat)) continue;
     const glob = new Glob(ps.glob);
-    if (!glob.match(src) && !glob.match(src.replace(/^src\//, "src/ng/"))) continue;
+    const path = sharedPath(src);
+    if (!glob.match(src) && !glob.match(path) && !glob.match(path.replace(/^src\//, "src/ng/"))) continue;
     out.push(...(tc.msvcStyle ? (ps.msvcFlags ?? []) : ps.flags));
   }
   return out;
@@ -547,7 +548,7 @@ async function compileTarget(tc: Toolchain, t0: Target, f: BuildFlags, dir: stri
     mkdirSync(dirname(obj), { recursive: true });
     const cmd = compileCmd(tc, t, f, src, obj);
     if (isShared(src)) {
-      const staged = join(sharedDir(dir), src);
+      const staged = join(sharedDir(dir), sharedPath(src));
       for (let i = 0; i < cmd.length; i++) if (cmd[i] === src) cmd[i] = staged;
     }
     jobs.push({ src, obj, cmd, msvcDeps });
@@ -557,7 +558,12 @@ async function compileTarget(tc: Toolchain, t0: Target, f: BuildFlags, dir: stri
     objs.push(obj);
     if (!flagsChanged && !needsCompile(src, obj, false)) continue;
     mkdirSync(dirname(obj), { recursive: true });
-    jobs.push({ src, obj, cmd: asmCmd(t, isShared(src) ? join(sharedDir(dir), src) : src, obj), msvcDeps: false });
+    jobs.push({
+      src,
+      obj,
+      cmd: asmCmd(t, isShared(src) ? join(sharedDir(dir), sharedPath(src)) : src, obj),
+      msvcDeps: false,
+    });
   }
   if (jobs.length === 0) {
     console.log(`  ${t.name}: up to date`);
