@@ -99,6 +99,20 @@ async function waitForAnnotCount(client: ControlClient, want: number, what: stri
   }
 }
 
+async function waitForDeselection(client: ControlClient): Promise<void> {
+  const deadline = Date.now() + 5_000;
+  for (;;) {
+    const state = await markupState(client);
+    if (!state.selected) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`annot-cut-paste: Escape did not deselect the annotation\n${state.raw}`);
+    }
+    await sleep(50);
+  }
+}
+
 // the page context menu at a client point of the canvas, then dismiss it
 async function contextMenuAt(canvas: number, x: number, y: number): Promise<MenuItem[]> {
   const s = clientToScreen(canvas, x, y);
@@ -131,6 +145,7 @@ function findMenuItem(items: MenuItem[], text: string): MenuItem | null {
 // annotation, so deselect first.
 async function hoverDate(client: ControlClient, frame: number, canvas: number, x: number, y: number): Promise<string> {
   await pressKey(frame, VK_ESCAPE, 0);
+  await waitForDeselection(client);
   const s = clientToScreen(canvas, x, y);
   setCursorPos(s.x, s.y);
   sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(x, y));

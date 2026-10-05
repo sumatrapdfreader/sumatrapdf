@@ -390,13 +390,13 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6276", issue6276],
   ["issue-6269", issue6269],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["toolbar-hover-dropdown", toolbarHoverDropdown],
   ["session-restore-tab-state", sessionRestoreTabState],
   ["exit-edit-pdf-deselects", exitEditPdfDeselects],
-  ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6113", issue6113],
   ["issue-5933", issue5933],
   ["issue-6117", issue6117],
