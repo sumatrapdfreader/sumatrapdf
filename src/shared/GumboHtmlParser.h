@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 extern "C" {
-#include "../ext/a-gumbo/gumbo.h"
+#include "../../ext/a-gumbo/gumbo.h"
 }
 
 bool GumboTagNameIs(const GumboNode* node, Str name);

@@ -1,5 +1,4 @@
 export const sharedFiles = [
-  "src/GumboHtmlParser.h",
   "src/base/AppendStore.cpp",
   "src/base/AppendStore.h",
   "src/base/Archive.cpp",
@@ -133,6 +132,7 @@ export const sharedFiles = [
   "src/shared/FilterUtil.h",
   "src/shared/GoogleLens.h",
   "src/shared/GumboHtmlParser.cpp",
+  "src/shared/GumboHtmlParser.h",
   "src/shared/HangDetector.h",
   "src/shared/JxlReader.h",
   "src/shared/LitDoc.h",

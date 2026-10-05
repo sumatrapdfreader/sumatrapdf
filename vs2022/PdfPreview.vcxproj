@@ -1264,7 +1264,6 @@
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
-    <ClInclude Include="..\src\GumboHtmlParser.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\ImageReader.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
@@ -1281,6 +1280,7 @@
     <ClInclude Include="..\src\shared\DocProperties.h" />
     <ClInclude Include="..\src\shared\EbookDoc.h" />
     <ClInclude Include="..\src\shared\EbookFormatter.h" />
+    <ClInclude Include="..\src\shared\GumboHtmlParser.h" />
     <ClInclude Include="..\src\shared\JxlReader.h" />
     <ClInclude Include="..\src\shared\MobiDoc.h" />
     <ClInclude Include="..\src\shared\PalmDbReader.h" />
