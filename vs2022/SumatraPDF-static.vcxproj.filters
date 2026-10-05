@@ -890,9 +890,6 @@
     <ClCompile Include="..\src\PdfCreator.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PdfDarkModeDevice.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\PdfSign.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1260,6 +1257,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfDarkModeColor.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PdfDarkModeDevice.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfDarkModeEngineCache.cpp">

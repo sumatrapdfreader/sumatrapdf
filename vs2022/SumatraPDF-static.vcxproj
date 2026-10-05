@@ -1689,7 +1689,6 @@
     <ClCompile Include="..\src\PageRenderService.cpp" />
     <ClCompile Include="..\src\PageThumbnails.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
-    <ClCompile Include="..\src\PdfDarkModeDevice.cpp" />
     <ClCompile Include="..\src\PdfSign.cpp" />
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\PdfTools.cpp" />
@@ -2164,6 +2163,7 @@
     <ClCompile Include="..\src\shared\PdfDarkModeAnalysis.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeCache.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeColor.cpp" />
+    <ClCompile Include="..\src\shared\PdfDarkModeDevice.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeEngineCache.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeImageBgBlend.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeImageClassifier.cpp" />

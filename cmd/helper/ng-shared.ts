@@ -147,6 +147,7 @@ export const sharedFiles = [
   "src/shared/PdfDarkModeAnalysis.cpp",
   "src/shared/PdfDarkModeCache.cpp",
   "src/shared/PdfDarkModeColor.cpp",
+  "src/shared/PdfDarkModeDevice.cpp",
   "src/shared/PdfDarkModeEngineCache.cpp",
   "src/shared/PdfDarkModeImageBgBlend.cpp",
   "src/shared/PdfDarkModeImageClassifier.cpp",
