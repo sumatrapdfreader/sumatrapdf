@@ -969,7 +969,7 @@ function test_engines_files()
     "src/shared/GumboHtmlParser.cpp",
     "src/GumboHelpers.cpp",
     "src/shared/JxlReader.cpp",
-    "src/LitDoc.cpp",
+    "src/shared/LitDoc.cpp",
     "src/shared/LitDoc.h",
     "src/shared/MobiDoc.cpp",
     "src/shared/PalmDbReader.cpp",

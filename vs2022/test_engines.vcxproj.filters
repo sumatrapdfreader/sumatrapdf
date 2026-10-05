@@ -57,7 +57,6 @@
     <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
-    <ClCompile Include="..\src\LitDoc.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />
@@ -71,6 +70,9 @@
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\JxlReader.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\LitDoc.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\MobiDoc.cpp">

@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 /*
-Generates the Microsoft LIT tag / attribute code tables in src/LitDoc.cpp
+Generates the Microsoft LIT tag / attribute code tables in src/shared/LitDoc.cpp
 (between the `@gen-start litdoc-maps` / `@gen-end litdoc-maps` markers), used
 to reconstruct HTML and OPF from the tokenized binary form inside .lit files.
 
@@ -379,7 +379,7 @@ out.push("// clang-format on");
 
 const startMarker = "// @gen-start litdoc-maps";
 const endMarker = "// @gen-end litdoc-maps";
-const dst = join(import.meta.dir, "..", "src", "LitDoc.cpp");
+const dst = join(import.meta.dir, "..", "src", "shared", "LitDoc.cpp");
 const content = readFileSync(dst, "utf8");
 const startIdx = content.indexOf(startMarker);
 const endIdx = content.indexOf(endMarker);

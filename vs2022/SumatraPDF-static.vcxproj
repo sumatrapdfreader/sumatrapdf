@@ -1673,7 +1673,6 @@
     <ClCompile Include="..\src\InverseSearchDialog.cpp" />
     <ClCompile Include="..\src\KeyboardHelp.cpp" />
     <ClCompile Include="..\src\LinkFollow.cpp" />
-    <ClCompile Include="..\src\LitDoc.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
     <ClCompile Include="..\src\MarkdownModel.cpp" />
     <ClCompile Include="..\src\MarkdownToc.cpp" />
@@ -2156,6 +2155,7 @@
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />
+    <ClCompile Include="..\src\shared\LitDoc.cpp" />
     <ClCompile Include="..\src\shared\MobiDoc.cpp" />
     <ClCompile Include="..\src\shared\PageRenderPolicy.cpp" />
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />

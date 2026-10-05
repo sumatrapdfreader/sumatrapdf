@@ -135,6 +135,7 @@ export const sharedFiles = [
   "src/shared/HangDetector.h",
   "src/shared/JxlReader.cpp",
   "src/shared/JxlReader.h",
+  "src/shared/LitDoc.cpp",
   "src/shared/LitDoc.h",
   "src/shared/MarkdownToc.h",
   "src/shared/MobiDoc.cpp",
