@@ -72,7 +72,7 @@ typedef struct {
 #define ALIAS(FORGE, NAME, NAME2, SCRIPT, LANG, SUBFONT, ATTR) {#NAME, NAME2, SCRIPT, LANG, SUBFONT, ATTR},
 #define EMPTY(SCRIPT) {NULL, "", SCRIPT, FZ_LANG_UNSET, NO_SUBFONT, REGULAR},
 static const font_entry inbuilt_fonts[] = {
-#include "../../ext/mupdf/source/fitz/font-table.h"
+#include "../../../ext/mupdf/source/fitz/font-table.h"
     {NULL, "", END_OF_DATA, FZ_LANG_UNSET, NO_SUBFONT, REGULAR}};
 #undef FONT
 #undef ALIAS

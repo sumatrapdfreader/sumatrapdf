@@ -1202,10 +1202,10 @@
     <ClCompile Include="..\src\mupdf\mupdf_load_system_font.c">
       <Filter>src\mupdf</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mupdf\noto_sumatra.c">
-      <Filter>src\mupdf</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\shared\mupdf\load-jxl.cpp">
+      <Filter>src\shared\mupdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\mupdf\noto_sumatra.c">
       <Filter>src\shared\mupdf</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\mupdf\pkcs7-windows.c">
