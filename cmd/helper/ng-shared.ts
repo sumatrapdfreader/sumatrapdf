@@ -78,6 +78,7 @@ export const sharedFiles = [
   "src/base/CmdLineArgs.h",
   "src/base/CrashHandler.h",
   "src/base/CrashHandler_posix.cpp",
+  "src/base/Crypto.cpp",
   "src/base/Crypto.h",
   "src/base/Crypto_posix.cpp",
   "src/base/CssParser.cpp",
