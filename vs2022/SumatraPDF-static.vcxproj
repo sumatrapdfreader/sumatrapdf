@@ -1679,7 +1679,6 @@
     <ClCompile Include="..\src\MarkdownToc.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MergePdf.cpp" />
-    <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\NavFilesInFolder.cpp" />
     <ClCompile Include="..\src\Notifications.cpp" />
     <ClCompile Include="..\src\OverlayScrollbar.cpp" />
@@ -2157,6 +2156,7 @@
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />
+    <ClCompile Include="..\src\shared\MobiDoc.cpp" />
     <ClCompile Include="..\src\shared\PageRenderPolicy.cpp" />
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />
     <ClCompile Include="..\src\shared\PdfCad.cpp" />

@@ -971,7 +971,7 @@ function test_engines_files()
     "src/shared/JxlReader.cpp",
     "src/LitDoc.cpp",
     "src/shared/LitDoc.h",
-    "src/MobiDoc.cpp",
+    "src/shared/MobiDoc.cpp",
     "src/shared/PalmDbReader.cpp",
     "src/shared/PdfCad.cpp",
     "src/shared/PdfCad.h",
@@ -1117,7 +1117,7 @@ function search_filter_files()
   })
   files {
     "src/EbookDoc.*",
-    "src/MobiDoc.*",
+    "src/shared/MobiDoc.*",
     "src/PalmDbReader.*",
   }
   filter {}
