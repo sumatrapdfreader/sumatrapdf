@@ -1,8 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#if OS_WIN
 struct RenderedBitmap;
 struct Pixmap;
+
+Gdiplus::RectF RectToRectF(Gdiplus::Rect r);
 
 // set a consistent mode on a Graphics so that measuring and drawing text give
 // the same results everywhere
@@ -27,3 +30,5 @@ CLSID GetGdiPlusEncoderClsid(WStr format);
 // put an image on the clipboard keeping its transparency (PNG + CF_DIBV5
 // when it has any); the caller still owns p
 bool CopyPixmapToClipboard(Pixmap* p, bool appendOnly);
+
+#endif // OS_WIN
