@@ -99,6 +99,7 @@ export const sharedFiles = [
   "src/base/Launch_posix.cpp",
   "src/base/Launch_wasm.cpp",
   "src/base/LogNoOp.cpp",
+  "src/base/LzmaSimpleArchive.h",
   "src/base/MacTypesHide.h",
   "src/base/MacTypesShow.h",
   "src/base/Pixmap_linux.cpp",
