@@ -80,6 +80,7 @@ export const sharedFiles = [
   "src/base/DirScan_posix.cpp",
   "src/base/FileWatcher_linux.cpp",
   "src/base/FileWatcher_mac.cpp",
+  "src/base/FileWatcher_wasm.cpp",
   "src/base/File_posix.cpp",
   "src/base/FoldDiacriticsData.inc",
   "src/base/FrameTimeoutCalculator.h",
