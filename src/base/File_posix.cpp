@@ -286,27 +286,6 @@ TempStr GetSelfExePathTemp() {
 #endif
 }
 
-// Directory containing GetSelfExePathTemp().
-TempStr GetSelfExeDirTemp() {
-    TempStr path = GetSelfExePathTemp();
-    if (len(path) == 0) {
-        return {};
-    }
-    return path::GetDirTemp(path);
-}
-
-TempStr GetPathInExeDirTemp(Str fileName) {
-    TempStr dir = GetSelfExeDirTemp();
-    if (len(dir) == 0) {
-        char cwd[PATH_MAX];
-        if (!getcwd(cwd, sizeof(cwd))) {
-            return fileName;
-        }
-        dir = Str(cwd);
-    }
-    return path::NormalizeTemp(path::JoinTemp(dir, fileName));
-}
-
 namespace file {
 
 FILE* OpenFILE(Str path) {

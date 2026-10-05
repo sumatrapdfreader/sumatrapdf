@@ -3,6 +3,10 @@
 
 #include "base/Base.h"
 #include "base/AutoWin.h"
+#if !OS_WIN
+#include <limits.h>
+#include <unistd.h>
+#endif
 
 #include "base/File.h"
 
@@ -118,11 +122,25 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
 
 TempStr GetSelfExeDirTemp() {
     TempStr path = GetSelfExePathTemp();
+#if !OS_WIN
+    if (len(path) == 0) {
+        return {};
+    }
+#endif
     return path::GetDirTemp(path);
 }
 
 TempStr GetPathInExeDirTemp(Str fileName) {
     TempStr dir = GetSelfExeDirTemp();
+#if !OS_WIN
+    if (len(dir) == 0) {
+        char cwd[PATH_MAX];
+        if (!getcwd(cwd, sizeof(cwd))) {
+            return fileName;
+        }
+        dir = str::DupTemp(Str(cwd));
+    }
+#endif
     TempStr path = path::JoinTemp(dir, fileName);
     path = path::NormalizeTemp(path);
     return path;
@@ -1167,6 +1185,20 @@ bool StartsWithN(Str path, Str s) {
 }
 
 #if !OS_WIN
+int ReadN(Str path, u8* buf, size_t toRead) {
+    FILE* fp = OpenFILE(path);
+    if (!fp) {
+        return -1;
+    }
+    AutoCall closeFile(fclose, fp);
+    ZeroMemory(buf, toRead);
+    size_t nRead = fread((void*)buf, 1, toRead, fp);
+    if (nRead == 0 && ferror(fp)) {
+        return -1;
+    }
+    return (int)nRead;
+}
+
 Str ReadFileWithArena(Str filePath, Arena* a) {
     char* d = nullptr;
     int res;
