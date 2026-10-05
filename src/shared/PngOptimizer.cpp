@@ -15,6 +15,9 @@
 // optimize huge files; typical screenshots are well under this
 constexpr int kMaxPngSizeToOptimize = 16 * 1024 * 1024;
 
+// zopfli's default tries every PNG filter at 15 iterations each; on a
+// 300 dpi page (8.7 Mpx) that is half a minute. Above this many pixels use
+// one filter and one iteration
 constexpr i64 kLargePngPixels = 2 * 1000 * 1000;
 constexpr int kLargePngIterations = 1;
 static ZopfliPNGFilterStrategy gLargePngFilter = kStrategyMinSum;
@@ -63,11 +66,12 @@ static bool HasOptimizedMarker(const u8* d, int n) {
     return memcmp(d + kMarkerOffset, chunk, kMarkerChunkSize) == 0;
 }
 
+// IHDR width * height, 0 if not a PNG
 static i64 PngPixelCount(const u8* d, int n) {
     if (!IsPngWithIhdr(d, n)) {
         return 0;
     }
-    const u8* p = d + 16;
+    const u8* p = d + 16; // signature + IHDR length + type
     u32 w = ((u32)p[0] << 24) | ((u32)p[1] << 16) | ((u32)p[2] << 8) | p[3];
     u32 h = ((u32)p[4] << 24) | ((u32)p[5] << 16) | ((u32)p[6] << 8) | p[7];
     return (i64)w * h;
@@ -283,6 +287,7 @@ static Str OptimizePngBytesOwned(Str png) {
     return res;
 }
 
+// plain lodepng encode, no zopfli. Caller frees
 Str EncodePngFromPixmap(const Pixmap* px) {
     if (!px) {
         return {};
@@ -305,6 +310,7 @@ Str EncodePngFromPixmap(const Pixmap* px) {
     return res;
 }
 
+// encode and recompress with zopfli, for embedding in a PDF. Caller frees
 Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
     Str rawPng = EncodePngFromPixmap(px);
     if (len(rawPng) == 0) {
