@@ -898,6 +898,7 @@ workspace "SumatraPDF"
     }
 
   project "mupdf"
+    cppdialect "C++latest"
     static_intermediate_dirs()
     kind "StaticLib"
     language "C"
@@ -933,7 +934,10 @@ workspace "SumatraPDF"
 
     uses_zlib()
     includedirs {
+      "src",
       "src/mupdf",
+      "ext/mupdf/source/fitz",
+      "ext/jxldec",
       "ext/mupdf/include",
       "ext/mupdf/generated",
       "ext/a-jbig2dec",
@@ -959,7 +963,7 @@ workspace "SumatraPDF"
     -- / SumatraPDF-static pick them up via project references.
     links {
       "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-brotli",
-      "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "a-libarchive", "a-gumbo",
+      "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "a-libarchive", "a-gumbo", "jxldec",
     }
 
     -- mupdf

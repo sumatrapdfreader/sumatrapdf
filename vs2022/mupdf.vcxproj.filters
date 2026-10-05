@@ -411,6 +411,9 @@
     <ClInclude Include="..\ext\mupdf\source\pdf\pdf-imp.h">
       <Filter>ext\mupdf\source\pdf</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\mupdf\load-jxl.h">
+      <Filter>src\mupdf</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\mupdf\noto_sumatra.h">
       <Filter>src\mupdf</Filter>
     </ClInclude>
@@ -1189,6 +1192,9 @@
     </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\xps\xps-zip.c">
       <Filter>ext\mupdf\source\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mupdf\load-jxl.cpp">
+      <Filter>src\mupdf</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mupdf\mupdf_load_system_font.c">
       <Filter>src\mupdf</Filter>

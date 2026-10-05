@@ -21,6 +21,7 @@ import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintMingwSources } from "./lint-mingw-sources.ts";
+import { testit as jpegXlPdf } from "./jpeg-xl-pdf.ts";
 import { testit as buildCli } from "./build-cli.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
 import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
@@ -390,6 +391,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["jpeg-xl-pdf", jpegXlPdf],
   ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6276", issue6276],
   ["issue-6269", issue6269],

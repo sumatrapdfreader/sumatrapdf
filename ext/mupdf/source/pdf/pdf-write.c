@@ -1132,7 +1132,7 @@ static int is_image_filter(pdf_obj *s)
 		s == PDF_NAME(DCTDecode) || s == PDF_NAME(DCT) ||
 		s == PDF_NAME(RunLengthDecode) || s == PDF_NAME(RL) ||
 		s == PDF_NAME(JBIG2Decode) ||
-		s == PDF_NAME(JPXDecode);
+		s == PDF_NAME(JPXDecode) || s == PDF_NAME(JXLDecode);
 }
 
 static int filter_implies_image(fz_context *ctx, pdf_obj *o)
@@ -1152,14 +1152,15 @@ static int filter_implies_image(fz_context *ctx, pdf_obj *o)
 
 static int is_jpx_filter(fz_context *ctx, pdf_obj *o)
 {
-	if (o == PDF_NAME(JPXDecode))
+	if (o == PDF_NAME(JPXDecode) || o == PDF_NAME(JXLDecode))
 		return 1;
 	if (pdf_is_array(ctx, o))
 	{
 		int i, len;
 		len = pdf_array_len(ctx, o);
 		for (i = 0; i < len; i++)
-			if (pdf_array_get(ctx, o, i) == PDF_NAME(JPXDecode))
+			if (pdf_array_get(ctx, o, i) == PDF_NAME(JPXDecode) ||
+			pdf_array_get(ctx, o, i) == PDF_NAME(JXLDecode))
 				return 1;
 	}
 	return 0;

@@ -506,7 +506,10 @@ export const mupdf: LibDef = {
     "CMARK_GFM_STATIC_DEFINE",
   ],
   includes: [
+    "src",
     "src/mupdf",
+    "ext/mupdf/source/fitz",
+    "ext/jxldec",
     "ext/mupdf/include",
     "ext/cmark-gfm/src",
     "ext/cmark-gfm/extensions",
@@ -529,7 +532,7 @@ export const mupdf: LibDef = {
   ],
   files: [
     // our additions to mupdf (not patches): see src/mupdf/README.md
-    { dir: "src/mupdf", patterns: ["mupdf_load_system_font.c", "noto_sumatra.c", "pkcs7-windows.c"] },
+    { dir: "src/mupdf", patterns: ["mupdf_load_system_font.c", "noto_sumatra.c", "pkcs7-windows.c", "load-jxl.cpp"] },
     { dir: "ext/mupdf/source/cbz", patterns: ["mucbz.c", "muimg.c"] },
     {
       dir: "ext/mupdf/source/fitz",

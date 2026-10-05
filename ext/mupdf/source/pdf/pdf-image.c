@@ -23,10 +23,12 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
+#include "load-jxl.h"
+
 #include <string.h>
 
-static fz_image *pdf_load_jpx_as_compressed_image(fz_context *ctx, pdf_document *doc, pdf_obj *dict);
-static fz_image *pdf_load_jpx_as_compressed_image_mask(fz_context *ctx, pdf_document *doc, pdf_obj *dict);
+static fz_image *pdf_load_full_image(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int type);
+static fz_image *pdf_load_full_image_mask(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int type);
 
 static fz_image *
 pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, pdf_obj *dict, fz_stream *cstm, int forcemask)
@@ -50,14 +52,21 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, 
 	int i;
 	fz_compressed_buffer *buffer;
 
-	/* special case for JPEG2000 which ignore the normal colorspace and image parameters */
-	if (pdf_is_jpx_image(ctx, dict))
+	/* JPEG2000 and JPEG XL carry their own image parameters. */
+	int type = FZ_IMAGE_JPX;
+	pdf_obj *filter = pdf_dict_get(ctx, dict, PDF_NAME(Filter));
+	int is_jxl = pdf_name_eq(ctx, filter, PDF_NAME(JXLDecode));
+	for (i = 0; i < pdf_array_len(ctx, filter); i++)
+		is_jxl |= pdf_name_eq(ctx, pdf_array_get(ctx, filter, i), PDF_NAME(JXLDecode));
+	if (is_jxl)
+		type = FZ_IMAGE_JXL;
+	if (is_jxl || pdf_is_jpx_image(ctx, dict))
 	{
 		if (cstm)
-			fz_throw(ctx, FZ_ERROR_SYNTAX, "inline JPXDecode image");
+			fz_throw(ctx, FZ_ERROR_SYNTAX, "inline JPXDecode/JXLDecode image");
 		if (forcemask)
-			return pdf_load_jpx_as_compressed_image_mask(ctx, doc, dict);
-		return pdf_load_jpx_as_compressed_image(ctx, doc, dict);
+			return pdf_load_full_image_mask(ctx, doc, dict, type);
+		return pdf_load_full_image(ctx, doc, dict, type);
 	}
 
 	w = pdf_to_int(ctx, pdf_dict_geta(ctx, dict, PDF_NAME(Width), PDF_NAME(W)));
@@ -247,7 +256,7 @@ pdf_is_jpx_image(fz_context *ctx, pdf_obj *dict)
 }
 
 static fz_image *
-pdf_load_jpx_as_compressed_image_mask(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
+pdf_load_full_image_mask(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int type)
 {
 	fz_buffer *buf = NULL;
 	fz_image *img = NULL;
@@ -259,7 +268,8 @@ pdf_load_jpx_as_compressed_image_mask(fz_context *ctx, pdf_document *doc, pdf_ob
 	buf = pdf_load_image_stream(ctx, doc, pdf_to_num(ctx, dict), &params, NULL, 0);
 	fz_try(ctx)
 	{
-		img = fz_new_jpx_image_from_buffer(ctx, buf, fz_device_gray(ctx));
+		img = type == FZ_IMAGE_JXL ? fz_new_jxl_image(ctx, buf, fz_device_gray(ctx)) :
+			fz_new_jpx_image_from_buffer(ctx, buf, fz_device_gray(ctx));
 	}
 	fz_always(ctx)
 	{
@@ -277,7 +287,7 @@ pdf_load_jpx_as_compressed_image_mask(fz_context *ctx, pdf_document *doc, pdf_ob
 }
 
 static fz_image *
-pdf_load_jpx_as_compressed_image(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
+pdf_load_full_image(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int type)
 {
 	fz_buffer *buf = NULL;
 	fz_image *img = NULL;
@@ -296,7 +306,7 @@ pdf_load_jpx_as_compressed_image(fz_context *ctx, pdf_document *doc, pdf_obj *di
 		if (obj)
 			cs = pdf_load_colorspace(ctx, obj);
 
-		img = fz_new_jpx_image_from_buffer(ctx, buf, cs);
+		img = type == FZ_IMAGE_JXL ? fz_new_jxl_image(ctx, buf, cs) : fz_new_jpx_image_from_buffer(ctx, buf, cs);
 		n = img->colorspace ? img->colorspace->n : 1;
 
 		obj = pdf_dict_geta(ctx, dict, PDF_NAME(Decode), PDF_NAME(D));

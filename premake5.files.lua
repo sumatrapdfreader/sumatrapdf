@@ -615,6 +615,8 @@ function mupdf_files()
     "src/mupdf/noto_sumatra.h",
     "src/mupdf/pkcs7-windows.c",
     "src/mupdf/pkcs7-windows.h",
+    "src/mupdf/load-jxl.cpp",
+    "src/mupdf/load-jxl.h",
   }
 
   files_in_dir("ext/mupdf/source/cbz", {

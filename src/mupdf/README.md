@@ -20,6 +20,9 @@ so the tools we patch inside `ext/mupdf` include them by bare name
   CryptoAPI instead of OpenSSL (patch `0003` makes mupdf's `pdfsign` / `murun`
   call it)
 
+- `load-jxl.cpp` / `load-jxl.h` - JPEG XL metadata and pixel decoding through
+  jxldec for MuPDF images and PDF `/JXLDecode` streams
+
 _Changes_ to mupdf itself still go into `ext/mupdf` in place and get recorded as
 a patch in `ext/patches/` (see its README). Put code here only when it is
 entirely ours: a whole new file that mupdf's build does not know about.

@@ -24,6 +24,7 @@
 
 #include "context-imp.h"
 #include "image-imp.h"
+#include "load-jxl.h"
 #include "pixmap-imp.h"
 
 #include <string.h>
@@ -791,6 +792,7 @@ fz_is_lossy_image(fz_context *ctx, fz_image *image)
 		case FZ_IMAGE_JPEG:
 		case FZ_IMAGE_JPX:
 		case FZ_IMAGE_JXR:
+		case FZ_IMAGE_JXL:
 			return 1;
 		}
 	}
@@ -842,8 +844,12 @@ compressed_image_get_pixmap(fz_context *ctx, fz_image *image_, fz_irect *subarea
 	case FZ_IMAGE_JXR:
 		tile = fz_load_jxr(ctx, image->buffer->buffer->data, image->buffer->buffer->len);
 		break;
+	case FZ_IMAGE_JXL:
 	case FZ_IMAGE_JPX:
-		tile = fz_load_jpx(ctx, image->buffer->buffer->data, image->buffer->buffer->len, image->super.colorspace);
+		if (image->buffer->params.type == FZ_IMAGE_JXL)
+			tile = fz_load_jxl(ctx, image->buffer->buffer->data, image->buffer->buffer->len, image->super.colorspace);
+		else
+			tile = fz_load_jpx(ctx, image->buffer->buffer->data, image->buffer->buffer->len, image->super.colorspace);
 		if (image->super.use_colorkey)
 		{
 			size_t len;
@@ -1436,6 +1442,7 @@ fz_image_type_name(int type)
 	case FZ_IMAGE_PNM: return "pnm";
 	case FZ_IMAGE_TIFF: return "tiff";
 	case FZ_IMAGE_WEBP: return "webp";
+	case FZ_IMAGE_JXL: return "jxl";
 	}
 }
 
@@ -1459,6 +1466,7 @@ fz_lookup_image_type(const char *type)
 	if (!strcmp(type, "pnm")) return FZ_IMAGE_PNM;
 	if (!strcmp(type, "tiff")) return FZ_IMAGE_TIFF;
 	if (!strcmp(type, "webp")) return FZ_IMAGE_WEBP;
+	if (!strcmp(type, "jxl")) return FZ_IMAGE_JXL;
 	return FZ_IMAGE_UNKNOWN;
 }
 
@@ -1499,6 +1507,9 @@ fz_recognize_image_format(fz_context *ctx, unsigned char p[12])
 	if (p[0] == 'R' && p[1] == 'I' && p[2] == 'F' && p[3] == 'F' &&
 		p[8] == 'W' && p[9] == 'E' && p[10] == 'B' && p[11] == 'P')
 		return FZ_IMAGE_WEBP;
+	if ((p[0] == 0xff && p[1] == 0x0a) ||
+		!memcmp(p, "\0\0\0\x0cJXL \r\n\x87\n", 12))
+		return FZ_IMAGE_JXL;
 	return FZ_IMAGE_UNKNOWN;
 }
 
@@ -1559,6 +1570,9 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 	case FZ_IMAGE_JBIG2:
 		fz_load_jbig2_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
 		bpc = 1;
+		break;
+	case FZ_IMAGE_JXL:
+		fz_load_jxl_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
 		break;
 	case FZ_IMAGE_WEBP:
 		fz_load_webp_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);

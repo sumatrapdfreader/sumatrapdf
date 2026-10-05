@@ -200,6 +200,10 @@ build_compression_params(fz_context *ctx, pdf_obj *f, pdf_obj *p, fz_compression
 				params->u.jbig2.globals = pdf_load_jbig2_globals(ctx, g);
 		}
 	}
+	else if (pdf_name_eq(ctx, f, PDF_NAME(JXLDecode)))
+	{
+		params->type = FZ_IMAGE_JXL;
+	}
 	else if (pdf_name_eq(ctx, f, PDF_NAME(JPXDecode)))
 	{
 		params->type = FZ_IMAGE_JPX;
@@ -225,7 +229,8 @@ build_filter(fz_context *ctx, fz_stream *chain, pdf_document *doc, pdf_obj *f, p
 			pdf_name_eq(ctx, f, PDF_NAME(DCTDecode)) ||
 			pdf_name_eq(ctx, f, PDF_NAME(DCT)) ||
 			pdf_name_eq(ctx, f, PDF_NAME(JBIG2Decode)) ||
-			pdf_name_eq(ctx, f, PDF_NAME(JPXDecode))))
+			pdf_name_eq(ctx, f, PDF_NAME(JPXDecode)) ||
+			pdf_name_eq(ctx, f, PDF_NAME(JXLDecode))))
 	{
 		fz_warn(ctx, "Can't open image only stream for non-image purposes");
 		return fz_open_memory(ctx, (unsigned char *)"", 0);
