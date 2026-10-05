@@ -1,6 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#ifndef SUMATRA_AUTO_WIN_H
+#define SUMATRA_AUTO_WIN_H
+
+#if OS_WIN
 class AutoCloseHandle {
     HANDLE handle = nullptr;
 
@@ -272,3 +276,6 @@ class AutoGdiPlusShutdown {
         Gdiplus::GdiplusShutdown(token);
     }
 };
+
+#endif
+#endif
