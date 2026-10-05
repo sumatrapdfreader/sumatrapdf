@@ -1,5 +1,5 @@
 gpui-kit-cpp-dist
-commit 5516f8602e707d68c8e33799200df9f5b3e4182c
+commit 49d5540c4e439bc6d947676a06ff3e43e42cf56e
 date 2026-10-05
-https://github.com/kjk/gpui-kit-cpp-dist/commit/5516f8602e707d68c8e33799200df9f5b3e4182c
-vendored by cmd/update-gpui.ts; do not edit files here by hand
+https://github.com/kjk/gpui-kit-cpp-dist/commit/49d5540c4e439bc6d947676a06ff3e43e42cf56e
+vendored by cmd/ng-update-gpui.ts; do not edit files here by hand

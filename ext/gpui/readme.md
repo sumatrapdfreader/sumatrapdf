@@ -79,6 +79,8 @@ extras/              the ported library crates as standalone amalgams, one
   wry/               the webview, crate lb-wry 0.53.3 (WebView2 on
                      Windows, WKWebView on macOS, stubs elsewhere). Also
                      inside gpui.cpp
+  unicode-linebreak/  Unicode 15.0 line breaks, crate unicode-linebreak
+                     0.1.5. Also inside gpui.cpp
 gpui_shell/           command-line JavaScript application host
 examples/            every example, including story/ and showcase/
 assets/              icons, images and documents the examples load at runtime
@@ -103,10 +105,12 @@ guards, so the same source set builds on all four:
   three. The custom backends already contain their shader bytecode and do not
   require `d3dcompiler.lib` or `D3DCompiler_47.dll`.
 - **Linux** — `g++ -std=c++20` with `pkg-config --cflags --libs x11 cairo pangocairo gdk-pixbuf-2.0`.
-  Add `libcurl` and `-DGPUI_HAVE_CURL=1` for remote images, and
-  `webkit2gtk-4.1` and `-DGPUI_HAVE_WEBKITGTK=1` for the webview.
-- **macOS** — `clang++ -std=c++20 -x objective-c++` with the Cocoa, CoreText and
-  IOKit frameworks. The file is Objective-C++ because the mac half is.
+  Add `libcurl` and `-DGPUI_HAVE_CURL=1` for remote images,
+  `webkit2gtk-4.1` and `-DGPUI_HAVE_WEBKITGTK=1` for the webview, and
+  `alsa` and `-DGPUI_HAVE_ALSA=1` for the speech microphone.
+- **macOS** — `clang++ -std=c++20 -x objective-c++` with the Cocoa, CoreText,
+  IOKit, AudioToolbox, AVFoundation and Speech frameworks. The file is
+  Objective-C++ because the mac half is.
 - **wasm** — `em++ -std=c++20` with `-sALLOW_MEMORY_GROWTH`; the browser half
   draws through Canvas2D and needs no library at all. em++ rather than emcc:
   the link needs the C++ runtime and emcc leaves it out.
@@ -133,12 +137,13 @@ in one translation unit in either order; their private headers sit behind
 the same `GPUI_INCLUDE_PRIVATE_API` gate as above.
 
 `extras/autocorrect/` is the one pair **not** inside `gpui.cpp`: it holds
-declarations plus the linter only, and links *beside* `gpui.cpp`, which
+declarations plus the linter only, and links _beside_ `gpui.cpp`, which
 provides the base implementation — this is exactly how the editor example
 and the tests build.
 
 `extras/taffy/`, `extras/markdown/`, `extras/markdown-mini/`,
-`extras/html5ever/`, `extras/html5ever-mini/` and `extras/wry/` are **also
+`extras/html5ever/`, `extras/html5ever-mini/`, `extras/wry/` and
+`extras/unicode-linebreak/` are **also
 inside `gpui.cpp`**; these copies exist for using
 one library on its own, without gpui. Each therefore carries the base
 implementation (with its platform halves behind `GPUI_OS_*` guards), which
@@ -156,7 +161,7 @@ No other dependencies, no nested build system, no STL containers.
 
 ## This copy
 
-Amalgamated from gpui-kit-cpp [`7904d68b14b271ef7f3b1253084cbabe9e990ef4`](https://github.com/kjk/gpui-kit-cpp/commit/7904d68b14b271ef7f3b1253084cbabe9e990ef4).
+Amalgamated from gpui-kit-cpp [`7793dc718c873b2713ed7494b1880c4fd2995d3f`](https://github.com/kjk/gpui-kit-cpp/commit/7793dc718c873b2713ed7494b1880c4fd2995d3f).
 
-[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/7904d68b14b271ef7f3b1253084cbabe9e990ef4...main)
+[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/7793dc718c873b2713ed7494b1880c4fd2995d3f...main)
 shows every commit this copy is behind by; if that page is empty, it is current.

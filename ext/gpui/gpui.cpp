@@ -9887,6 +9887,9 @@ static void PrepareEl(PaintCtx* ctx, El* e, float inheritFont, Rgba inheritFg) {
         StyleApplyFields(&e->style, states->dragOver, states->dragOverSet);
     }
     StyleOverrideApply(e);
+    if (e->lifecycle && e->lifecycle->prepareStyle) {
+        e->lifecycle->prepareStyle(ctx, e, inheritFg, e->lifecycle->user);
+    }
     if (e->kind == ElKind::Image) {
         ResolveImageReplacement(ctx, e);
     }
@@ -13439,6 +13442,9 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
     }
     if (pushed) {
         ctx->window->imageCacheStack.len--;
+    }
+    if (e->lifecycle && e->lifecycle->afterPaint) {
+        e->lifecycle->afterPaint(ctx, e, e->lifecycle->user);
     }
     ctx->hitMask = previousHitMask;
     ctx->hasHitMask = previousHasHitMask;
@@ -33069,283 +33075,12 @@ void LineWrapperWrapLine(const LineFragment* fragments, int n, float wrapWidth,
     }
 }
 
-enum class LbClass : uint8_t {
-    Alphabetic,
-    Numeric,
-    Space,
-    Ideographic,
-    OpenPunct,
-    ClosePunct,
-    CloseParen,
-    Exclamation,
-    InfixSep,
-    Solidus,
-    Quotation,
-    Hyphen,
-    BreakAfter,
-    NonStarter,
-    Glue,
-    WordJoiner,
-    Inseparable,
-    ZeroWidth,
-    Combining,
-};
-
-static LbClass LbClassOf(uint32_t c) {
-    if (c < 0x80) {
-        if (c >= '0' && c <= '9') {
-            return LbClass::Numeric;
-        }
-        switch (c) {
-            case ' ':
-                return LbClass::Space;
-            case '\t':
-                return LbClass::BreakAfter;
-            case '(':
-            case '[':
-            case '{':
-                return LbClass::OpenPunct;
-            case ')':
-            case ']':
-                return LbClass::CloseParen;
-            case '}':
-                return LbClass::ClosePunct;
-            case '!':
-            case '?':
-                return LbClass::Exclamation;
-            case ',':
-            case '.':
-            case ':':
-            case ';':
-                return LbClass::InfixSep;
-            case '/':
-                return LbClass::Solidus;
-            case '"':
-            case '\'':
-                return LbClass::Quotation;
-            case '-':
-                return LbClass::Hyphen;
-            default:
-                return LbClass::Alphabetic;
-        }
-    }
-
-    if ((c >= 0x0300 && c <= 0x036F) || (c >= 0x0483 && c <= 0x0489) ||
-        (c >= 0x0591 && c <= 0x05BD) || (c >= 0x0610 && c <= 0x061A) ||
-        (c >= 0x064B && c <= 0x065F) || (c >= 0x1AB0 && c <= 0x1AFF) ||
-        (c >= 0x1DC0 && c <= 0x1DFF) || c == 0x200C || c == 0x200D ||
-        (c >= 0x20D0 && c <= 0x20FF) || (c >= 0x302A && c <= 0x302F) ||
-        (c >= 0x3099 && c <= 0x309A) || (c >= 0xFE00 && c <= 0xFE0F) ||
-        (c >= 0xFE20 && c <= 0xFE2F) || (c >= 0x1F3FB && c <= 0x1F3FF) ||
-        (c >= 0xE0020 && c <= 0xE007F) || (c >= 0xE0100 && c <= 0xE01EF)) {
-        return LbClass::Combining;
-    }
-    switch (c) {
-        case 0x00A0:
-        case 0x2007:
-        case 0x2011:
-        case 0x202F:
-            return LbClass::Glue;
-        case 0x2060:
-        case 0xFEFF:
-            return LbClass::WordJoiner;
-        case 0x200B:
-            return LbClass::ZeroWidth;
-        case 0x00AD:
-        case 0x2010:
-        case 0x2012:
-        case 0x2013:
-        case 0x2027:
-            return LbClass::BreakAfter;
-        case 0x00AB:
-        case 0x00BB:
-        case 0x2018:
-        case 0x2019:
-        case 0x201C:
-        case 0x201D:
-            return LbClass::Quotation;
-        case 0x2024:
-        case 0x2025:
-        case 0x2026:
-            return LbClass::Inseparable;
-        case 0x3008:
-        case 0x300A:
-        case 0x300C:
-        case 0x300E:
-        case 0x3010:
-        case 0x3014:
-        case 0x3016:
-        case 0xFF08:
-        case 0xFF3B:
-        case 0xFF5B:
-        case 0xFF62:
-            return LbClass::OpenPunct;
-        case 0x3001:
-        case 0x3002:
-        case 0x3009:
-        case 0x300B:
-        case 0x300D:
-        case 0x300F:
-        case 0x3011:
-        case 0x3015:
-        case 0x3017:
-        case 0xFF09:
-        case 0xFF0C:
-        case 0xFF0E:
-        case 0xFF3D:
-        case 0xFF5D:
-        case 0xFF61:
-        case 0xFF63:
-        case 0xFF64:
-            return LbClass::ClosePunct;
-        case 0xFF01:
-        case 0xFF1F:
-            return LbClass::Exclamation;
-        case 0x3005:
-        case 0x301C:
-        case 0x303B:
-        case 0x309D:
-        case 0x309E:
-        case 0x30A0:
-        case 0x30FB:
-        case 0x30FC:
-        case 0x30FD:
-        case 0x30FE:
-        case 0xFF1A:
-        case 0xFF1B:
-        case 0xFF65:
-        case 0xFF70:
-            return LbClass::NonStarter;
-        default:
-            break;
-    }
-
-    if ((c >= 0x3041 && c <= 0x3049 && (c & 1)) || c == 0x3063 || c == 0x3083 ||
-        c == 0x3085 || c == 0x3087 || c == 0x308E || c == 0x3095 ||
-        c == 0x3096 || (c >= 0x30A1 && c <= 0x30AA && (c & 1)) || c == 0x30C3 ||
-        c == 0x30E3 || c == 0x30E5 || c == 0x30E7 || c == 0x30EE ||
-        c == 0x30F5 || c == 0x30F6) {
-        return LbClass::NonStarter;
-    }
-
-    if ((c >= 0x2E80 && c <= 0xA4CF) || (c >= 0xAC00 && c <= 0xD7A3) ||
-        (c >= 0xF900 && c <= 0xFAFF) || (c >= 0xFE30 && c <= 0xFE4F) ||
-        (c >= 0xFF00 && c <= 0xFFEF) || (c >= 0x1F000 && c <= 0x1FAFF) ||
-        (c >= 0x20000 && c <= 0x3FFFD) || (c >= 0x2600 && c <= 0x27BF)) {
-        return LbClass::Ideographic;
-    }
-    return LbClass::Alphabetic;
-}
-
-static bool LbBreakAllowed(LbClass before, LbClass after, bool spaces) {
-
-    if (after == LbClass::ClosePunct || after == LbClass::CloseParen ||
-        after == LbClass::Exclamation || after == LbClass::InfixSep ||
-        after == LbClass::Solidus) {
-        return false;
-    }
-
-    if (before == LbClass::OpenPunct) {
-        return false;
-    }
-
-    if ((before == LbClass::ClosePunct || before == LbClass::CloseParen) &&
-        after == LbClass::NonStarter) {
-        return false;
-    }
-
-    if (before == LbClass::ZeroWidth || spaces) {
-        return true;
-    }
-
-    if (before == LbClass::WordJoiner || after == LbClass::WordJoiner ||
-        before == LbClass::Glue) {
-        return false;
-    }
-    if (after == LbClass::Glue) {
-        return before == LbClass::BreakAfter || before == LbClass::Hyphen;
-    }
-
-    if (before == LbClass::Quotation || after == LbClass::Quotation) {
-        return false;
-    }
-
-    if (after == LbClass::BreakAfter || after == LbClass::Hyphen ||
-        after == LbClass::NonStarter || after == LbClass::Inseparable) {
-        return false;
-    }
-    bool wordBefore =
-        before == LbClass::Alphabetic || before == LbClass::Numeric;
-    bool wordAfter = after == LbClass::Alphabetic || after == LbClass::Numeric;
-
-    if (wordBefore && wordAfter) {
-        return false;
-    }
-
-    if (after == LbClass::Numeric &&
-        (before == LbClass::InfixSep || before == LbClass::Solidus ||
-         before == LbClass::Hyphen)) {
-        return false;
-    }
-
-    if (before == LbClass::InfixSep && after == LbClass::Alphabetic) {
-        return false;
-    }
-
-    if ((wordBefore && after == LbClass::OpenPunct) ||
-        (before == LbClass::CloseParen && wordAfter)) {
-        return false;
-    }
-
-    return true;
-}
-
 void LineBreakOpportunities(Str text, Vec<int>* out) {
-    int n = len(text);
-    if (n <= 0) {
-        return;
+    auto breaks = unicode_linebreak::LineBreaks(text);
+    unicode_linebreak::LineBreak next;
+    while (breaks.Next(&next)) {
+        VecAppend(*out, next.offset);
     }
-    bool have = false;
-    LbClass before = LbClass::Alphabetic;
-    bool spaces = false;
-    bool afterZwj = false;
-    for (int at = 0; at < n;) {
-        uint32_t c = 0;
-        int bytes = Utf8At(text, at, &c);
-        if (bytes <= 0) {
-            bytes = 1;
-        }
-        LbClass cls = LbClassOf(c);
-        if (cls == LbClass::Combining && have && !spaces) {
-
-            afterZwj = c == 0x200D;
-            at += bytes;
-            continue;
-        }
-        if (cls == LbClass::Combining) {
-
-            cls = LbClass::Alphabetic;
-        }
-        if (cls == LbClass::Space) {
-
-            spaces = true;
-            afterZwj = false;
-            at += bytes;
-            continue;
-        }
-
-        if ((have || spaces) && !afterZwj &&
-            LbBreakAllowed(before, cls, spaces)) {
-            VecAppend(*out, at);
-        }
-        before = cls;
-        have = true;
-        spaces = false;
-        afterZwj = false;
-        at += bytes;
-    }
-
-    VecAppend(*out, n);
 }
 
 void MeasuredWrapBoundaries(Str text, float width, WrappingIndent indentMode,
@@ -34947,6 +34682,178 @@ static int WrapEncodeUtf8(uint32_t c, char* out) {
     return 4;
 }
 
+struct InputWrapNode {
+    InputWrapLine line;
+    InputWrapNode* left = nullptr;
+    InputWrapNode* right = nullptr;
+    int height = 1;
+    int lines = 1;
+    int rows = 1;
+};
+static int WrapHeight(InputWrapNode* n) {
+    return n ? n->height : 0;
+}
+static int WrapLines(InputWrapNode* n) {
+    return n ? n->lines : 0;
+}
+static int WrapRows(InputWrapNode* n) {
+    return n ? n->rows : 0;
+}
+static void WrapSummarize(InputWrapNode* n) {
+    n->height = 1 + std::max(WrapHeight(n->left), WrapHeight(n->right));
+    n->lines = 1 + WrapLines(n->left) + WrapLines(n->right);
+    n->rows = n->line.nRows + WrapRows(n->left) + WrapRows(n->right);
+}
+static InputWrapNode* WrapRotateLeft(InputWrapNode* n) {
+    auto* r = n->right;
+    n->right = r->left;
+    r->left = n;
+    WrapSummarize(n);
+    WrapSummarize(r);
+    return r;
+}
+static InputWrapNode* WrapRotateRight(InputWrapNode* n) {
+    auto* l = n->left;
+    n->left = l->right;
+    l->right = n;
+    WrapSummarize(n);
+    WrapSummarize(l);
+    return l;
+}
+static InputWrapNode* WrapBalance(InputWrapNode* n) {
+    WrapSummarize(n);
+    if (WrapHeight(n->left) > WrapHeight(n->right) + 1) {
+        if (WrapHeight(n->left->right) > WrapHeight(n->left->left))
+            n->left = WrapRotateLeft(n->left);
+        return WrapRotateRight(n);
+    }
+    if (WrapHeight(n->right) > WrapHeight(n->left) + 1) {
+        if (WrapHeight(n->right->left) > WrapHeight(n->right->right))
+            n->right = WrapRotateRight(n->right);
+        return WrapRotateLeft(n);
+    }
+    return n;
+}
+static InputWrapNode* WrapInsert(InputWrapNode* n, int at,
+                                 InputWrapNode* item) {
+    if (!n) return item;
+    int before = WrapLines(n->left);
+    if (at <= before)
+        n->left = WrapInsert(n->left, at, item);
+    else
+        n->right = WrapInsert(n->right, at - before - 1, item);
+    return WrapBalance(n);
+}
+static InputWrapNode* WrapRemove(InputWrapNode* n, int at) {
+    int before = WrapLines(n->left);
+    if (at < before)
+        n->left = WrapRemove(n->left, at);
+    else if (at > before)
+        n->right = WrapRemove(n->right, at - before - 1);
+    else {
+        if (!n->left || !n->right) {
+            auto* child = n->left ? n->left : n->right;
+            Free(nullptr, n->line.starts);
+            delete n;
+            return child;
+        }
+        auto* next = n->right;
+        while (next->left) next = next->left;
+        InputWrapLine old = n->line;
+        n->line = next->line;
+        next->line = old;
+        n->right = WrapRemove(n->right, 0);
+    }
+    return WrapBalance(n);
+}
+static void WrapClear(InputWrapNode* n) {
+    if (!n) return;
+    WrapClear(n->left);
+    WrapClear(n->right);
+    Free(nullptr, n->line.starts);
+    delete n;
+}
+InputWrapTree::~InputWrapTree() {
+    Clear();
+}
+void InputWrapTree::Clear() {
+    WrapClear(root);
+    root = nullptr;
+}
+int InputWrapTree::LineCount() const {
+    return WrapLines(root);
+}
+int InputWrapTree::RowCount() const {
+    return WrapRows(root);
+}
+int InputWrapTree::Height() const {
+    return WrapHeight(root);
+}
+const InputWrapLine* InputWrapTree::Line(int index) const {
+    if (index < 0 || index >= LineCount()) return nullptr;
+    auto* n = root;
+    while (n) {
+        int before = WrapLines(n->left);
+        if (index < before)
+            n = n->left;
+        else if (index == before)
+            return &n->line;
+        else {
+            index -= before + 1;
+            n = n->right;
+        }
+    }
+    return nullptr;
+}
+int InputWrapTree::RowsAbove(int index) const {
+    int rows = 0;
+    auto* n = root;
+    while (n && index > 0) {
+        int before = WrapLines(n->left);
+        if (index <= before)
+            n = n->left;
+        else {
+            rows += WrapRows(n->left) + n->line.nRows;
+            index -= before + 1;
+            n = n->right;
+        }
+    }
+    return rows;
+}
+int InputWrapTree::LineAtRow(int row) const {
+    row = std::max(0, std::min(row, RowCount() - 1));
+    int index = 0;
+    auto* n = root;
+    while (n) {
+        int before = WrapRows(n->left);
+        if (row < before)
+            n = n->left;
+        else if (row < before + n->line.nRows)
+            return index + WrapLines(n->left);
+        else {
+            row -= before + n->line.nRows;
+            index += WrapLines(n->left) + 1;
+            n = n->right;
+        }
+    }
+    return index;
+}
+void InputWrapTree::Insert(int index, const int* starts, int nRows,
+                           float indent) {
+    auto* n = new InputWrapNode();
+    n->line.starts = (int*)Alloc(nullptr, sizeof(int) * nRows);
+    memcpy(n->line.starts, starts, sizeof(int) * nRows);
+    n->line.nRows = nRows;
+    n->line.indent = indent;
+    n->rows = nRows;
+    root = WrapInsert(root, std::max(0, std::min(index, LineCount())), n);
+}
+void InputWrapTree::Remove(int index, int count) {
+    if (index < 0 || index >= LineCount()) return;
+    count = std::min(count, LineCount() - index);
+    while (count-- > 0) root = WrapRemove(root, index);
+}
+
 struct WrapMeasure {
     InputWrapMap* map = nullptr;
     PaintCtx* ctx = nullptr;
@@ -35096,6 +35003,7 @@ static void WrapLineFragments(void* user, Str slice, int base,
 
 static void WrapOneLine(InputState* s, WrapMeasure* wm, int line,
                         Vec<int>* rows, float* indentOut) {
+    s->wrap.wrappedLines++;
     InputWrapMap* m = &s->wrap;
     const Vec<int>& lineStarts = InputLineStarts(s);
     Str text = InputValue(s);
@@ -35167,75 +35075,33 @@ static void WrapMapCaughtUp(InputState* s) {
 
 static void WrapMapRebuild(InputState* s, PaintCtx* ctx) {
     InputWrapMap* m = &s->wrap;
-    VecClear(m->lines);
-    VecClear(m->starts);
+    m->tree.Clear();
     VecClear(m->dirtyLines);
-    m->totalRows = 0;
     WrapMapCaughtUp(s);
-    int nLines = len(InputLineStarts(s));
     WrapMeasure wm;
     wm.map = m;
     wm.ctx = ctx;
     m->spaceWidth = WrapCharWidthOf(&wm, ' ');
-    VecReserve(m->lines, nLines);
     Vec<int> rows;
-    for (int line = 0; line < nLines; line++) {
-        InputWrapLine item;
-        WrapOneLine(s, &wm, line, &rows, &item.indent);
-        item.firstStart = len(m->starts);
-        item.nRows = len(rows);
-        item.rowsAbove = m->totalRows;
-        VecAppendN(m->starts, rows.els, len(rows));
-        m->totalRows += item.nRows;
-        VecAppend(m->lines, item);
+    for (int line = 0; line < len(InputLineStarts(s)); line++) {
+        float indent = 0;
+        WrapOneLine(s, &wm, line, &rows, &indent);
+        m->tree.Insert(line, rows.els, len(rows), indent);
     }
+    m->totalRows = m->tree.RowCount();
 }
 
 static void WrapMapReplaceLines(InputState* s, WrapMeasure* wm, int first,
                                 int oldCount, int newCount) {
     InputWrapMap* m = &s->wrap;
-    int nOld = len(m->lines);
-    int sFrom = first < nOld ? m->lines[first].firstStart : len(m->starts);
-    int sTo = first + oldCount < nOld ? m->lines[first + oldCount].firstStart
-                                      : len(m->starts);
-    Vec<InputWrapLine> items;
-    Vec<int> starts;
+    m->tree.Remove(first, oldCount);
     Vec<int> rows;
-    VecReserve(items, newCount);
     for (int i = 0; i < newCount; i++) {
-        InputWrapLine item;
-        WrapOneLine(s, wm, first + i, &rows, &item.indent);
-        item.nRows = len(rows);
-        VecAppendN(starts, rows.els, len(rows));
-        VecAppend(items, item);
+        float indent = 0;
+        WrapOneLine(s, wm, first + i, &rows, &indent);
+        m->tree.Insert(first + i, rows.els, len(rows), indent);
     }
-    VecRemoveAtN(m->lines, first, oldCount);
-    if (newCount > 0) {
-        if (InputWrapLine* at = VecInsertSpace(m->lines, first, newCount)) {
-            memcpy((void*)at, (const void*)items.els,
-                   sizeof(InputWrapLine) * (size_t)newCount);
-        }
-    }
-    VecRemoveAtN(m->starts, sFrom, sTo - sFrom);
-    if (len(starts) > 0) {
-        if (int* at = VecInsertSpace(m->starts, sFrom, len(starts))) {
-            memcpy(at, starts.els, sizeof(int) * (size_t)len(starts));
-        }
-    }
-
-    int firstStart = sFrom;
-    int above = 0;
-    if (first > 0) {
-        above = m->lines[first - 1].rowsAbove + m->lines[first - 1].nRows;
-    }
-    for (int i = first; i < len(m->lines); i++) {
-        InputWrapLine& item = m->lines[i];
-        item.firstStart = firstStart;
-        item.rowsAbove = above;
-        firstStart += item.nRows;
-        above += item.nRows;
-    }
-    m->totalRows = above;
+    m->totalRows = m->tree.RowCount();
 }
 
 static int WrapLineOfOffset(const Vec<int>& lineStarts, int offset) {
@@ -35266,7 +35132,7 @@ static void WrapMapCatchUp(InputState* s, PaintCtx* ctx) {
     wm.ctx = ctx;
     const Vec<int>& lineStarts = InputLineStarts(s);
     int nNew = len(lineStarts);
-    int nOld = len(m->lines);
+    int nOld = m->tree.LineCount();
     if (edited) {
 
         int first = WrapLineOfOffset(lineStarts, m->editStart);
@@ -35282,7 +35148,7 @@ static void WrapMapCatchUp(InputState* s, PaintCtx* ctx) {
     }
     for (int i = 0; i < len(m->dirtyLines); i++) {
         int line = m->dirtyLines[i];
-        if (line >= 0 && line < len(m->lines)) {
+        if (line >= 0 && line < m->tree.LineCount()) {
             WrapMapReplaceLines(s, &wm, line, 1, 1);
         }
     }
@@ -35335,7 +35201,7 @@ int InputWrapRows(const InputState* s, int line, const int** starts,
                   float* indent) {
     static const int kZero = 0;
     const InputWrapMap* m = WrapMapOf(s, nullptr);
-    if (!m || line < 0 || line >= len(m->lines)) {
+    if (!m || line < 0 || line >= m->tree.LineCount()) {
         if (starts) {
             *starts = &kZero;
         }
@@ -35344,9 +35210,9 @@ int InputWrapRows(const InputState* s, int line, const int** starts,
         }
         return 1;
     }
-    const InputWrapLine& item = m->lines[line];
+    const InputWrapLine& item = *m->tree.Line(line);
     if (starts) {
-        *starts = m->starts.els + item.firstStart;
+        *starts = item.starts;
     }
     if (indent) {
         *indent = item.indent;
@@ -36244,17 +36110,19 @@ struct EditorUnderlay {
 static void RewrapEditorColumn(PaintCtx* ctx, El* e, void* user) {
     EditorUnderlay* u = (EditorUnderlay*)user;
     InputState* s = u ? u->state : nullptr;
-    if (!s || !s->softWrap || e->w <= 0 || e->w == s->wrap.measuredWidth ||
-        LayoutInScratchPass()) {
+    if (!s || !s->softWrap || e->w <= 0 || LayoutInScratchPass()) {
         return;
     }
     s->contentBox = e->Bounds();
     Ctx cx = u->cx;
+    s->wrap.buildingRows = true;
     El* fresh = Textarea::New(&cx, s, u->projected, u->lineNumbers);
+    s->wrap.buildingRows = false;
     if (!fresh || !fresh->first) {
         return;
     }
     float was = e->h;
+    e->prePaint = nullptr;
     e->first = fresh->first;
     e->last = fresh->last;
     e->customPaint = fresh->customPaint;
@@ -36369,6 +36237,20 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
         return col->Child(ph);
     }
 
+    if (state->softWrap && !state->wrap.buildingRows) {
+        auto* underlay = ArenaNew<EditorUnderlay>(a);
+        underlay->state = state;
+        underlay->cx = *cx;
+        underlay->projected = projected;
+        underlay->lineNumbers = lineNumbers;
+        col->customUser = underlay;
+        col->prePaint = &RewrapEditorColumn;
+        float height = state->contentH > 0
+                           ? state->contentH
+                           : (float)InputLinesLen(state) * lineH;
+        return col->Child(Div(a)->H(height));
+    }
+
     int rows = InputLinesLen(state);
 
     state->contentH = (float)rows * lineH;
@@ -36470,24 +36352,30 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
             padBottom = (float)(rows - endRow) * lineH;
         } else {
 
-            float at = 0;
-            int first = -1;
-            int end = rows;
-            for (int i = 0; i < rows; i++) {
-                float h = DisplayLineH(state, i, lineH);
-                if (first < 0 && at + h > top) {
-                    first = i;
+            if (len(state->folds.folded) == 0) {
+                const InputWrapTree& tree = state->wrap.tree;
+                firstRow = tree.LineAtRow((int)(top / lineH));
+                endRow = tree.LineAtRow((int)(bottom / lineH)) + 1;
+            } else {
+                float at = 0;
+                int first = -1;
+                int end = rows;
+                for (int i = 0; i < rows; i++) {
+                    float h = DisplayLineH(state, i, lineH);
+                    if (first < 0 && at + h > top) {
+                        first = i;
+                    }
+                    if (at > bottom) {
+                        end = i;
+                        break;
+                    }
+                    at += h;
                 }
-                if (at > bottom) {
-                    end = i;
-                    break;
-                }
-                at += h;
+                firstRow = first < 0 ? 0 : first;
+                endRow = end < firstRow ? firstRow : end;
             }
-            firstRow = first < 0 ? 0 : first;
-            endRow = end < firstRow ? firstRow : end;
             firstRow = firstRow > kSlack ? firstRow - kSlack : 0;
-            endRow = endRow + kSlack > rows ? rows : endRow + kSlack;
+            endRow = std::min(rows, endRow + kSlack);
             padTop = DisplayRowDocY(state, firstRow, lineH);
             padBottom = DisplayRowDocY(state, rows, lineH) -
                         DisplayRowDocY(state, endRow, lineH);
@@ -36717,7 +36605,7 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
         underlay->lineNumbers = lineNumbers;
         col->customPaint = &PaintEditorUnderlay;
         col->customUser = underlay;
-        if (state->softWrap) {
+        if (state->softWrap && !state->wrap.buildingRows) {
             col->prePaint = &RewrapEditorColumn;
         }
         if (painted) {
@@ -39136,8 +39024,24 @@ static bool InputAutoCloseDeletion(InputState* s, App* app, Selection* out) {
     return false;
 }
 
+struct HighlightChange {
+    InputState* state;
+    explicit HighlightChange(InputState* s) : state(s) {
+        if (state) state->highlightChangeDepth++;
+    }
+    ~HighlightChange() { Finish(); }
+    void Finish() {
+        if (state && --state->highlightChangeDepth == 0 &&
+            state->hasPendingEdit && state->highlighter.update) {
+            InputDriveHighlighter(state, LayoutModeIsFolding(state->mode));
+        }
+        state = nullptr;
+    }
+};
+
 bool InputReplaceTextInRange(InputState* s, App* app, Window* win,
                              const Selection* range, Str newText) {
+    HighlightChange highlightChange(s);
     bool hasIntent = s->undo.hasPendingIntent;
     EditIntent requested = s->undo.pendingIntent;
     s->undo.hasPendingIntent = false;
@@ -39327,6 +39231,7 @@ bool InputReplaceTextInRange(InputState* s, App* app, Window* win,
     if (InputIsMultiLine(s)) {
         InputScrollToOffset(s, InputCursor(s), InputMoveDir::None);
     }
+    highlightChange.Finish();
     base_input_Emit(s, app, win, InputEvent{InputEventKind::Change});
     Notify(app, win);
     return true;
@@ -39368,6 +39273,7 @@ static EditIntent TypingIntent(const Selection* ranges, int n, Str newText) {
 bool InputReplaceTextInRanges(InputState* s, App* app, Window* win,
                               const Selection* ranges, const Str* texts,
                               int n) {
+    HighlightChange highlightChange(s);
     bool hasIntent = s->undo.hasPendingIntent;
     EditIntent requested = s->undo.pendingIntent;
     s->undo.hasPendingIntent = false;
@@ -39491,6 +39397,7 @@ void InputUnmarkText(InputState* s, App* app, Window* win) {
 void InputReplaceAndMarkText(InputState* s, App* app, Window* win,
                              const Selection* range, Str newText,
                              const Selection* sel) {
+    HighlightChange highlightChange(s);
     if (!s || !InputIsEditable(s)) {
         return;
     }
@@ -39659,6 +39566,7 @@ void InputSetValue(InputState* s, Str value) {
 }
 
 void InputDefaultValue(InputState* s, Str value) {
+    HighlightChange highlightChange(s);
 
     TextSet(s, NormalizeInput(GetTempArena(), s, value));
 }
@@ -40903,8 +40811,8 @@ static float DisplayRowDocY(const InputState* s, int row, float lineH) {
         if (!m) {
             return (float)row * lineH;
         }
-        if (row < len(m->lines)) {
-            return (float)m->lines[row].rowsAbove * lineH;
+        if (row < m->tree.LineCount()) {
+            return (float)m->tree.RowsAbove(row) * lineH;
         }
         return (float)m->totalRows * lineH;
     }
@@ -41466,6 +41374,7 @@ static bool TransactionHasTokenDelta(const UndoTransaction* t) {
 }
 
 static void DoUndo(InputState* s, App* app, Window* win) {
+    HighlightChange highlightChange(s);
     UndoSetIgnoring(&s->undo, true);
     const UndoTransaction* t = UndoPopUndo(&s->undo);
     if (t && t->len > 0) {
@@ -41499,6 +41408,7 @@ static void DoUndo(InputState* s, App* app, Window* win) {
 }
 
 static void DoRedo(InputState* s, App* app, Window* win) {
+    HighlightChange highlightChange(s);
     UndoSetIgnoring(&s->undo, true);
     const UndoTransaction* t = UndoPopRedo(&s->undo);
     if (t && t->len > 0) {
@@ -42386,14 +42296,19 @@ static int FirstVisibleOffset(const InputState* s) {
     float lineH = s->lastLineH > 0 ? s->lastLineH : kInputLineH;
     int rows = InputLinesLen(s);
     int row = rows - 1;
-    float at = 0;
-    for (int i = 0; i < rows; i++) {
-        float h = DisplayLineH(s, i, lineH);
-        if (at + h > s->scrollY) {
-            row = i;
-            break;
+    const InputWrapMap* map = WrapMapOf(s, nullptr);
+    if (map && len(s->folds.folded) == 0) {
+        row = map->tree.LineAtRow((int)(s->scrollY / lineH));
+    } else {
+        float at = 0;
+        for (int i = 0; i < rows; i++) {
+            float h = DisplayLineH(s, i, lineH);
+            if (at + h > s->scrollY) {
+                row = i;
+                break;
+            }
+            at += h;
         }
-        at += h;
     }
     row = FoldMapNearestVisibleLine(&s->folds, row);
     return RopeLineStartOffset(text, row);
@@ -42655,23 +42570,29 @@ int InputIndexForPosition(const InputState* s, PaintCtx* ctx, float x, float y,
     int row = FoldMapNearestVisibleLine(&s->folds, rows - 1);
 
     float relY = 0;
-    float at = 0;
-    for (int i = 0; i < rows; i++) {
-        float h = DisplayLineH(s, i, lineH);
-        if (h <= 0) {
-            continue;
-        }
-        if (docY < at + h) {
-            row = i;
-            relY = docY - at;
-            if (relY < 0) {
-                relY = 0;
+    const InputWrapMap* map = WrapMapOf(s, ctx);
+    if (map && len(s->folds.folded) == 0 && lineH > 0) {
+        row = map->tree.LineAtRow((int)(std::max(0.f, docY) / lineH));
+        relY = std::max(0.f, docY - (float)map->tree.RowsAbove(row) * lineH);
+    } else {
+        float at = 0;
+        for (int i = 0; i < rows; i++) {
+            float h = DisplayLineH(s, i, lineH);
+            if (h <= 0) {
+                continue;
             }
-            break;
-        }
-        at += h;
-        if (i == rows - 1) {
-            relY = h - 1;
+            if (docY < at + h) {
+                row = i;
+                relY = docY - at;
+                if (relY < 0) {
+                    relY = 0;
+                }
+                break;
+            }
+            at += h;
+            if (i == rows - 1) {
+                relY = h - 1;
+            }
         }
     }
     Str line = InputSliceLine(s, row);
@@ -57412,6 +57333,7 @@ static void TextViewParseDetach(TextViewParseJob* job);
 static void TextViewBaselineDetach(TextViewState* s);
 
 TextViewState::~TextViewState() {
+    ArenaDelete(parserArena);
     StrFree(text);
     RenderedIndexFree(renderedIndex);
     RangeHighlightFrameFree(rangeHighlights);
@@ -57454,6 +57376,8 @@ void TextViewState::Changed(App* app, Window* window,
     if (!selectionCompatible) {
         selectionRevision++;
         WindowSelectionClear(window);
+        selectAllAnchor = -1;
+        selectAllCursor = -1;
     }
     if (app && self.IsValid()) NotifyEntity(app, self, window);
 }
@@ -57529,6 +57453,16 @@ void TextViewState::SetSelectionFormat(gpui::SelectionFormat value, App* app,
 }
 
 int TextViewState::SelectedText(Window* window, char* out, int cap) const {
+    const WindowSelection* selection = window ? window->sel : nullptr;
+    if (format == TextViewFormat::Markdown && selectionFormat == SelectionFormat::Source &&
+        out && cap > 0 && selection && selectAllAnchor >= 0 &&
+        selection->anchor == selectAllAnchor && selection->cursor == selectAllCursor) {
+        Str selected = Source();
+        int n = std::min(len(selected), cap - 1);
+        if (n > 0) memcpy(out, selected.s, (size_t)n);
+        out[n] = 0;
+        return n;
+    }
     return WindowSelectionTextForEntity(window, self, out, cap,
                                         format == TextViewFormat::Html
                                             ? gpui::SelectionFormat::Plain
@@ -57715,7 +57649,26 @@ SourceRangeSelection TextHitsSourceRange(const PaintCtx* ctx, int selA,
         }
         const SelSourceMap* map = hit.map;
         if (hit.atom) {
-            if (a < hit.docOff + 1 && b > hit.docOff) {
+
+            bool reached = false;
+            for (int direction = -1; direction <= 1; direction += 2) {
+                int at = i + direction;
+                while (at >= 0 && at < len(ctx->texts)) {
+                    const TextHit& adjacent = ctx->texts[at];
+                    if (adjacent.owner != owner || adjacent.scope != scope ||
+                        !hit.src || !adjacent.src ||
+                        adjacent.src->block != hit.src->block) break;
+                    if (!adjacent.atom) {
+                        int end = adjacent.docOff + len(adjacent.text);
+                        reached |= direction < 0
+                                       ? a < end && b >= end
+                                       : a <= adjacent.docOff && b > adjacent.docOff;
+                        break;
+                    }
+                    at += direction;
+                }
+            }
+            if (reached) {
                 selected.Merge(WholeOf(map->segments, map->count));
             }
             continue;
@@ -57749,7 +57702,7 @@ bool TextViewState::SelectedSourceRange(const Window* window, Span* out) const {
     if (selectAllAnchor >= 0 && s->anchor == selectAllAnchor &&
         s->cursor == selectAllCursor) {
         out->start = 0;
-        out->end = len(text);
+        out->end = len(Source());
         return true;
     }
     return TextHitsSourceRange(&window->paint, s->anchor, s->cursor, s->scope,
@@ -61290,7 +61243,29 @@ struct TextViewParseJob {
     App* app = nullptr;
     Arena* arena = nullptr;
     MdNode* doc = nullptr;
+    Arena* parserArena = nullptr;
+    MarkdownExtensions extensions = {};
 };
+
+static MarkdownExtensions CopyParserExtensions(Arena* a,
+                                                const MarkdownExtensions& src) {
+    MarkdownExtensions copy;
+    copy.enableFrontmatter = src.enableFrontmatter;
+    copy.enableMdx = src.enableMdx;
+    copy.parserRevision = src.parserRevision;
+    for (const auto& parser : src.blockParsers) copy.blockParsers.Append(a, parser);
+    for (const auto& parser : src.inlineParsers) copy.inlineParsers.Append(a, parser);
+
+    for (auto renderer : src.blockRenderers) {
+        renderer.name = StrDup(a, renderer.name);
+        copy.blockRenderers.Append(a, renderer);
+    }
+    for (auto renderer : src.inlineRenderers) {
+        renderer.name = StrDup(a, renderer.name);
+        copy.inlineRenderers.Append(a, renderer);
+    }
+    return copy;
+}
 
 static MdNode* TextViewParseSource(Arena* a, Str source, int from, bool html,
                                    const MarkdownExtensions* extensions) {
@@ -61308,12 +61283,10 @@ static void TextViewParseDetach(TextViewParseJob* job) {
 
 static void TextViewParseWork(TextViewParseJob* job) {
     job->arena = ArenaNew();
-
-    MarkdownExtensions flags;
-    flags.enableFrontmatter = job->frontmatter;
-    flags.enableMdx = job->mdx;
     job->doc = TextViewParseSource(job->arena, job->source, job->from,
-                                   job->html, &flags);
+                                   job->html, &job->extensions);
+    ArenaDelete(job->parserArena);
+    job->parserArena = nullptr;
 }
 
 static bool TextViewParseAppend(const TextViewState* s, uint64_t fingerprint,
@@ -61428,6 +61401,10 @@ void TextViewState::StartParse(App* app, Window* window,
     (void)window;
     bool html = format == TextViewFormat::Html;
     if (extensions && !html) {
+        Arena* next = ArenaNew();
+        parserExtensions = CopyParserExtensions(next, *extensions);
+        ArenaDelete(parserArena);
+        parserArena = next;
         parserFingerprint = extensions->ParserFingerprint();
         parserFrontmatter = extensions->enableFrontmatter;
         parserMdx = extensions->enableMdx;
@@ -61448,21 +61425,11 @@ void TextViewState::StartParse(App* app, Window* window,
 
     bool sync = (!append && len(text) <= kMaxSyncFullReplaceBytes) ||
                 !ExecOnMainThread() || now;
-    if (parserPlugins && !html) {
-
-        if (!extensions) {
-            return;
-        }
-        sync = true;
-    }
     if (sync) {
         Arena* arena = ArenaNew();
         Str source = StrDup(text);
-        MarkdownExtensions flags;
-        flags.enableFrontmatter = parserFrontmatter;
-        flags.enableMdx = parserMdx;
         MdNode* doc = TextViewParseSource(arena, source, from, html,
-                                          extensions ? extensions : &flags);
+                                          &parserExtensions);
         TextViewCommit(this, app, arena, doc, source, append, from,
                        updateRevision, fingerprint, kFadeAtFirstFrame);
         if (!append && app && self.IsValid()) {
@@ -61487,6 +61454,8 @@ void TextViewState::StartParse(App* app, Window* window,
     job->mdx = parserMdx;
     job->fingerprint = fingerprint;
     job->revision = updateRevision;
+    job->parserArena = ArenaNew();
+    job->extensions = CopyParserExtensions(job->parserArena, parserExtensions);
     parseFlight = job;
     if (!ExecSpawn(MkFunc0(&TextViewParseWork, job),
                    MkFunc0(&TextViewState::ParseLanded, job))) {
@@ -61497,6 +61466,7 @@ void TextViewState::StartParse(App* app, Window* window,
 }
 
 static void TextViewParseJobDiscard(TextViewParseJob* job) {
+    ArenaDelete(job->parserArena);
     if (job->arena) ArenaDelete(job->arena);
     StrFree(job->source);
     delete job;
@@ -61504,7 +61474,8 @@ static void TextViewParseJobDiscard(TextViewParseJob* job) {
 
 void TextViewState::CommitParsedUpdate(TextViewParseJob* job) {
     TextViewState* s = job->state;
-    if (job->revision < s->fullUpdateRevision ||
+    if (job->fingerprint != (s->format == TextViewFormat::Html ? 0 : s->parserFingerprint) ||
+        job->revision < s->fullUpdateRevision ||
         job->revision <= s->committedRevision) {
         TextViewParseJobDiscard(job);
         return;
@@ -61549,6 +61520,8 @@ TextViewParseJob* TextViewParseNowForTest(TextViewState* s, App* app) {
     job->mdx = s->parserMdx;
     job->fingerprint = fingerprint;
     job->revision = s->updateRevision;
+    job->parserArena = ArenaNew();
+    job->extensions = CopyParserExtensions(job->parserArena, s->parserExtensions);
     TextViewParseWork(job);
     return job;
 }
@@ -61760,89 +61733,65 @@ static uint32_t TextViewScrollKey(Entity<TextViewState> state) {
 
 void TextView::RevealFrame(TextViewState* managed) {
     TextViewReveal& reveal = managed->reveal;
-    if (!reveal.pending) {
-        return;
-    }
-
-    bool laidOut = reveal.line.w > 0 || reveal.line.h > 0;
-    if (laidOut && cx->win) {
-        const ScrollRect* viewport =
-            scrollable
-                ? WindowLastScrollRect(cx->win, (int)TextViewScrollKey(state))
-                : nullptr;
-
-        WinSize winSize = WindowSize(cx->win);
-        Bounds visible = viewport ? viewport->bounds
-                                  : Bounds{0, 0, winSize.dipW, winSize.dipH};
-        const Bounds& view = reveal.view;
-        for (int i = 0; !viewport && view.w > 0 && i < cx->win->prevScrolls.len;
-             i++) {
-            const ScrollRect& scroll = cx->win->prevScrolls[i];
-            Bounds box = scroll.bounds;
-
-            bool around = box.x <= view.x + 0.5f &&
-                          box.x + box.w >= view.x + view.w - 0.5f &&
-                          box.y < view.y + view.h && box.y + box.h > view.y &&
-                          scroll.contentH + 0.5f >= view.h;
-            if (!around) {
-                continue;
-            }
-            float left = std::max(visible.x, box.x);
-            float topEdge = std::max(visible.y, box.y);
-            float right = std::min(visible.x + visible.w, box.x + box.w);
-            float bottomEdge = std::min(visible.y + visible.h, box.y + box.h);
-            visible = {left, topEdge, std::max(right - left, 0.f),
-                       std::max(bottomEdge - topEdge, 0.f)};
-        }
-        float top = visible.y - 0.5f;
-        float bottom = visible.y + visible.h + 0.5f;
-        Bounds line = reveal.line;
-        bool shown = reveal.block
-
-                         ? !(line.y + line.h <= top || line.y >= bottom)
-                         : line.y >= top && line.y + line.h <= bottom;
-        if (shown) {
-            reveal.pending = false;
-        } else {
-            reveal.attempts++;
-            if (viewport) {
-
-                float y = managed->scrollY;
-                if (line.y < visible.y) {
-                    y -= visible.y - line.y;
-                } else if (line.y + line.h > visible.y + visible.h) {
-                    y += line.y + line.h - (visible.y + visible.h);
-                }
-                float maxY = std::max(viewport->contentH - visible.h, 0.f);
-                managed->scrollY = std::min(std::max(y, 0.f), maxY);
-            } else {
-
-                WindowRequestAutoscroll(cx->win, line);
-                if (onReveal.IsValid()) {
-                    TextViewRevealEvent ev;
-                    ev.line = line;
-                    ListenerCall(cx->app, cx->win, onReveal, &ev);
-                }
-            }
-            if (reveal.block) {
-
-                reveal.pending = false;
-            }
-        }
-    }
     if (reveal.pending &&
         (managed->maxLines >= 0 ||
          TimeNow() - reveal.requestedAt > kRevealTimeoutSeconds ||
          reveal.attempts >= kRevealAttempts)) {
         reveal.pending = false;
     }
-    if (!reveal.pending) {
-        return;
-    }
+    if (!reveal.pending) return;
     reveal.line = {};
+    reveal.hasMask = false;
     revealTarget = &reveal;
     revealOut = &reveal.line;
-    WindowRequestAnimationFrame(cx->win);
+}
+
+void TextView::RevealPainted(PaintCtx* ctx, El* element, void* data) {
+    TextView* view = (TextView*)data;
+    TextViewState* managed = view->state.Get(ctx->app);
+    if (!managed) return;
+    const WindowSelection* selection = ctx->window ? ctx->window->sel : nullptr;
+    if (selection && managed->selectAllAnchor >= 0 &&
+        selection->anchor == managed->selectAllAnchor &&
+        selection->cursor == managed->selectAllCursor) {
+        managed->SelectAll(ctx->window, ctx->app);
+    }
+    if (!managed->reveal.pending) return;
+    TextViewReveal& reveal = managed->reveal;
+    Bounds line = reveal.line;
+    if (line.w <= 0 && line.h <= 0) {
+        WindowRequestAnimationFrame(ctx->window);
+        return;
+    }
+
+    WinSize size = WindowSize(ctx->window);
+    Bounds visible = reveal.hasMask ? reveal.mask : ctx->hasHitMask ? ctx->hitMask
+                                    : Bounds{0, 0, size.dipW, size.dipH};
+    bool shown = reveal.block
+                     ? line.y + line.h > visible.y && line.y < visible.y + visible.h
+                     : line.y >= visible.y - 0.5f &&
+                       line.y + line.h <= visible.y + visible.h + 0.5f;
+    if (shown) {
+        reveal.pending = false;
+        return;
+    }
+    reveal.attempts++;
+    if (view->scrollable) {
+        float y = managed->scrollY;
+        if (line.y < visible.y) y -= visible.y - line.y;
+        else y += line.y + line.h - (visible.y + visible.h);
+        managed->scrollY = std::min(std::max(y, 0.f),
+                                    std::max(element->contentH - element->h, 0.f));
+    } else {
+        WindowRequestAutoscroll(ctx->window, line);
+        if (view->onReveal.IsValid()) {
+            TextViewRevealEvent event;
+            event.line = line;
+            ListenerCall(ctx->app, ctx->window, view->onReveal, &event);
+        }
+    }
+    if (reveal.block) reveal.pending = false;
+    WindowRequestAnimationFrame(ctx->window);
 }
 
 static El* RevealReportView(El* element, TextViewState* managed) {
@@ -61861,6 +61810,12 @@ bool TextView::RevealIn(const MdNode* leaf, int* offset) const {
     }
     *offset = revealTarget->offset;
     return true;
+}
+
+static void RevealLineMask(PaintCtx* ctx, El*, void* data) {
+    auto* reveal = (TextViewReveal*)data;
+    reveal->hasMask = ctx->hasHitMask;
+    reveal->mask = ctx->hitMask;
 }
 
 void TextView::RevealMark(El* t, int lo, int offset) {
@@ -61884,6 +61839,9 @@ void TextView::RevealMark(El* t, int lo, int offset) {
         hi++;
     }
     t->RangeOut(at, hi, revealOut);
+    t->lifecycle = ArenaNew<ElLifecycle>(a);
+    t->lifecycle->afterPaint = &RevealLineMask;
+    t->lifecycle->user = (void*)revealTarget;
 
     revealOut = nullptr;
 }
@@ -62095,7 +62053,37 @@ El* TextView::Block(MdNode* n, int depth, bool inList, bool isLast) {
     return nullptr;
 }
 
+void TextView::PrepareInheritedColor(PaintCtx*, El* element,
+                                     Rgba inherited, void* data) {
+    TextView* view = (TextView*)data;
+    Rgba color = (view->outerStyleFields & StyleFieldColor)
+                     ? view->outerStyle.color : inherited;
+    if (!TextRgbaEq(element->style.color, view->textViewStyle.foreground)) {
+        color = element->style.color;
+    }
+    element->lifecycle->prepareStyle = nullptr;
+    view->outerStyle.color = color;
+    view->outerStyleFields |= StyleFieldColor;
+
+    El* resolved = view->IntoEl();
+    element->first = resolved->first;
+    element->last = resolved->last;
+    element->style.color = resolved->style.color;
+    element->style.hasColor = resolved->style.hasColor;
+    element->lifecycle = resolved->lifecycle;
+}
+
 El* TextView::IntoEl() {
+    TextView* inheritedBuilder = nullptr;
+    if (!inheritedColorResolved && !textViewStyleSet &&
+        TextViewDefaults::Global(cx->app).inheritTextColor) {
+        inheritedBuilder = ArenaNew<TextView>(a);
+        *inheritedBuilder = *this;
+
+        inheritedBuilder->cx = ArenaNew<Ctx>(a);
+        *inheritedBuilder->cx = *cx;
+        inheritedBuilder->inheritedColorResolved = true;
+    }
 
     if (!textViewStyleSet) {
         TextViewDefaults defaults = TextViewDefaults::Global(cx->app);
@@ -62157,10 +62145,12 @@ El* TextView::IntoEl() {
             motion = managed->motion;
         }
 
-        if (!managed->textViewStyle.Equals(textViewStyle)) {
-            managed->selectionRevision++;
+        if (!inheritedBuilder) {
+            if (!managed->textViewStyle.Equals(textViewStyle)) {
+                managed->selectionRevision++;
+            }
+            managed->textViewStyle = textViewStyle;
         }
-        managed->textViewStyle = textViewStyle;
     }
 
     BaseTextViewStatePush(cx->app, state.id);
@@ -62172,15 +62162,14 @@ El* TextView::IntoEl() {
         bool stale = !managed->parsed ||
                      managed->parsed->fingerprint != fingerprint ||
                      managed->committedRevision != managed->updateRevision;
-        if (stale && !managed->parseFlight) {
-            if (managed->parsed && managed->parsed
-                                           ->fingerprint != fingerprint) {
+        if (stale) {
+            if (managed->parserFingerprint != fingerprint) {
 
                 managed->fullUpdateRevision = ++managed->updateRevision;
             }
-            managed
-                ->StartParse(cx->app, cx->win, &markdownExtensions, !cx->win);
         }
+
+        managed->StartParse(cx->app, cx->win, &markdownExtensions, !cx->win);
         doc = managed->parsed ? managed->parsed->doc : nullptr;
     } else {
         doc = MdParseCached(cx, a, source, html,
@@ -62220,7 +62209,8 @@ El* TextView::IntoEl() {
     if (textViewStyle.foreground.a) {
         root->Fg(textViewStyle.foreground);
     }
-    El* element = Blocks(root, doc, 0, false);
+
+    El* element = inheritedBuilder ? root : Blocks(root, doc, 0, false);
     BaseTextViewStatePop(cx->app);
 
     if (!scrollable && maxLines >= 0) {
@@ -62256,7 +62246,17 @@ El* TextView::IntoEl() {
             ->OnAction(input::Copy(), onAction)
             ->OnAction(input::SelectAll(), onAction);
     }
-    return RevealReportView(element, managed);
+    element = RevealReportView(element, managed);
+    element->lifecycle = ArenaNew<ElLifecycle>(a);
+    element->lifecycle->afterPaint = &TextView::RevealPainted;
+    element->lifecycle->user = this;
+    if (inheritedBuilder) {
+        inheritedBuilder->state = state;
+        inheritedBuilder->textViewStyle = textViewStyle;
+        element->lifecycle->prepareStyle = &TextView::PrepareInheritedColor;
+        element->lifecycle->user = inheritedBuilder;
+    }
+    return element;
 }
 
 TextView* TextView::New(Ctx* cx, Str source) {
@@ -65043,6 +65043,32 @@ struct VirtualListPaint {
     Window* win = nullptr;
 };
 
+static void VirtualListAfterPaint(PaintCtx* ctx, El* e, void* user) {
+    auto* paint = (VirtualListPaint*)user;
+    const VirtualListOpts& o = paint->opts;
+    if (!o.handle || o.logicalScroll || o.layoutAxis != Axis::Vertical) return;
+    Bounds want;
+    if (!WindowTakeAutoscroll(ctx->window, &want)) return;
+    float top = e->y + o.pad;
+    float height = std::max(e->h - o.pad * 2, 0.f);
+    float contentTop = top - e->scrollY;
+    if (want.x >= e->x + e->w || want.x + want.w <= e->x ||
+        want.y < contentTop - 0.5f ||
+        want.y + want.h > contentTop + e->contentH + 0.5f) {
+
+        WindowRequestAutoscroll(ctx->window, want);
+        return;
+    }
+    float delta = want.y < top || want.h > height ? want.y - top
+                      : std::max(want.y + want.h - (top + height), 0.f);
+    float next = std::min(std::max(e->scrollY + delta, 0.f),
+                          std::max(e->contentH - e->h, 0.f));
+    if (next != o.handle->offset) {
+        o.handle->offset = next;
+        WindowRequestAnimationFrame(ctx->window);
+    }
+}
+
 static El* VirtualListTakeRow(const VirtualListOpts& o, El** rangeRows,
                               int first, int ix, Ctx* cx) {
     if (rangeRows) return rangeRows[ix - first];
@@ -65352,6 +65378,9 @@ El* VirtualList::New(Ctx* cx, Str id, const VirtualListOpts& o) {
     }
     e->prePaint = &VirtualListPrePaint;
     e->customUser = paint;
+    e->lifecycle = ArenaNew<ElLifecycle>(a);
+    e->lifecycle->afterPaint = &VirtualListAfterPaint;
+    e->lifecycle->user = paint;
     return e;
 }
 
@@ -77783,6 +77812,7 @@ struct HlRun {
 struct SynHlJob;
 
 struct SyntaxInputHighlighter {
+    InputState* owner = nullptr;
     SyntaxLang lang = SyntaxLangNone;
     uint64_t version = 0;
     bool valid = false;
@@ -77895,7 +77925,15 @@ static void SynHlUpdate(void* data, const InputEdit* edit, Str text,
 
     (void)edit;
     (void)folding;
+    if (len(text) > kSyncLexMaxBytes) {
+        hl->valid = false;
+        hl->lexDueVersion = hl->owner->docVersion;
+        hl->lexDueAt = TimeNow() + kLexDebounce;
+        return;
+    }
     SynHlLexInto(hl->lang, text, &hl->runs, &hl->folds);
+    hl->valid = true;
+    hl->version = hl->owner->docVersion;
 }
 
 static void SynHlUpdateBatch(void* data, const InputEditWithText* edits, int n,
@@ -78081,6 +78119,7 @@ static SyntaxInputHighlighter* SynHlEnsure(InputState* s, SyntaxLang lang) {
     }
     auto* hl = new SyntaxInputHighlighter();
     hl->lang = lang;
+    hl->owner = s;
     s->highlighter.data = hl;
     s->highlighter.language = &SynHlLanguage;
     s->highlighter.update = &SynHlUpdate;
@@ -93937,7 +93976,7 @@ namespace gpui {
 
 namespace component {
 
-static SpeechError ErrorOf(SpeechErrorKind kind, Str message = {}) {
+static SpeechError ui_speech_ErrorOf(SpeechErrorKind kind, Str message = {}) {
     SpeechError error;
     error.kind = kind;
     int n = len(message);
@@ -93953,23 +93992,23 @@ static SpeechError ErrorOf(SpeechErrorKind kind, Str message = {}) {
 }
 
 SpeechError SpeechError::PermissionDenied() {
-    return ErrorOf(SpeechErrorKind::PermissionDenied);
+    return ui_speech_ErrorOf(SpeechErrorKind::PermissionDenied);
 }
 
 SpeechError SpeechError::NoInputDevice() {
-    return ErrorOf(SpeechErrorKind::NoInputDevice);
+    return ui_speech_ErrorOf(SpeechErrorKind::NoInputDevice);
 }
 
 SpeechError SpeechError::Unsupported() {
-    return ErrorOf(SpeechErrorKind::Unsupported);
+    return ui_speech_ErrorOf(SpeechErrorKind::Unsupported);
 }
 
 SpeechError SpeechError::Input(Str message) {
-    return ErrorOf(SpeechErrorKind::Input, message);
+    return ui_speech_ErrorOf(SpeechErrorKind::Input, message);
 }
 
 SpeechError SpeechError::Recognizer(Str message) {
-    return ErrorOf(SpeechErrorKind::Recognizer, message);
+    return ui_speech_ErrorOf(SpeechErrorKind::Recognizer, message);
 }
 
 Str SpeechError::Display(Arena* a) const {
@@ -94042,6 +94081,303 @@ void SpeechAudioConverter::Convert(const float* input, int n,
     }
     position -= length;
     previous = input[n - 1];
+}
+
+struct MicCapture {
+    Mutex lock;
+
+    Vec<float> queued;
+    char error[160] = {};
+    bool hasError = false;
+
+    bool posted = false;
+
+    AudioInputStream* stream = nullptr;
+    bool stopped = false;
+    SpeechAudioConverter converter = {};
+    AudioSink sink = {};
+    App* app = nullptr;
+    Vec<float> taken;
+    Vec<int16_t> converted;
+};
+
+static void MicDrain(MicCapture* c);
+
+static bool MicWantsPost(MicCapture* c) {
+    if (c->posted) {
+        return false;
+    }
+    c->posted = true;
+    return true;
+}
+
+static void MicSamples(void* user, const float* mono, int frames) {
+    MicCapture* c = (MicCapture*)user;
+    c->lock.Lock();
+    float* dst = VecInsertSpace(c->queued, len(c->queued), frames);
+    if (dst) {
+        memcpy(dst, mono, (size_t)frames * sizeof(float));
+    }
+    bool post = MicWantsPost(c);
+    c->lock.Unlock();
+    if (post) {
+        ExecPost(MkFunc0(&MicDrain, c));
+    }
+}
+
+static void MicError(void* user, Str message) {
+    MicCapture* c = (MicCapture*)user;
+    c->lock.Lock();
+    int n = len(message) < (int)sizeof(c->error) - 1
+                ? len(message)
+                : (int)sizeof(c->error) - 1;
+    memcpy(c->error, message.s, (size_t)n);
+    c->error[n] = 0;
+    c->hasError = true;
+    bool post = MicWantsPost(c);
+    c->lock.Unlock();
+    if (post) {
+        ExecPost(MkFunc0(&MicDrain, c));
+    }
+}
+
+static void MicDrain(MicCapture* c) {
+    if (c->stopped) {
+
+        delete c;
+        return;
+    }
+    char error[160] = {};
+    c->taken.len = 0;
+    c->lock.Lock();
+    int n = len(c->queued);
+    float* dst = n > 0 ? VecInsertSpace(c->taken, 0, n) : nullptr;
+    if (dst) {
+        memcpy(dst, c->queued.els, (size_t)n * sizeof(float));
+    }
+    c->queued.len = 0;
+    bool hasError = c->hasError;
+    if (hasError) {
+        memcpy(error, c->error, sizeof(error));
+        c->hasError = false;
+    }
+    c->posted = false;
+    c->lock.Unlock();
+
+    AudioSink sink = c->sink;
+    App* app = c->app;
+    c->converted.len = 0;
+    c->converter.Convert(c->taken.els, len(c->taken), c->converted);
+    if (len(c->converted) > 0) {
+        sink.Push(c->converted.els, len(c->converted), app);
+    }
+    if (hasError) {
+        sink.Error(SpeechError::Input(Str(error)), app);
+    }
+}
+
+static void MicStop(void* data) {
+    MicCapture* c = (MicCapture*)data;
+
+    SysAudioInputStop(c->stream);
+    c->stream = nullptr;
+    c->lock.Lock();
+    bool pending = c->posted;
+    c->lock.Unlock();
+    c->stopped = true;
+    if (!pending) {
+        delete c;
+    }
+}
+
+static bool MicStart(void*, AudioFormat format, AudioSink sink, App* app,
+                     AudioCapture* out, SpeechError* error) {
+    MicCapture* c = new MicCapture();
+    c->sink = sink;
+    c->app = app;
+    AudioInputCallbacks callbacks;
+    callbacks.user = c;
+    callbacks.samples = &MicSamples;
+    callbacks.error = &MicError;
+    uint32_t sourceRate = 0;
+    AudioInputError failed = AudioInputError::None;
+    char message[160] = {};
+
+    c->stream = SysAudioInputStart(callbacks, &sourceRate, &failed, message,
+                                   (int)sizeof(message));
+    if (!c->stream) {
+        delete c;
+        switch (failed) {
+            case AudioInputError::PermissionDenied:
+                *error = SpeechError::PermissionDenied();
+                break;
+            case AudioInputError::NoInputDevice:
+                *error = SpeechError::NoInputDevice();
+                break;
+            case AudioInputError::Unsupported:
+                *error = SpeechError::Unsupported();
+                break;
+            default:
+                *error = SpeechError::Input(Str(message));
+                break;
+        }
+        return false;
+    }
+    c->converter = SpeechAudioConverter::New(sourceRate, format);
+    out->data = c;
+    out->stop = &MicStop;
+    return true;
+}
+
+bool Microphone::IsSupported() {
+    return SysAudioInputAvailable();
+}
+
+TempStr Microphone::DeviceNameTemp() {
+    char name[256];
+    if (!SysAudioInputDeviceName(name, (int)sizeof(name))) {
+        return {};
+    }
+    return StrDupTemp(Str(name));
+}
+
+AudioInput Microphone::Input() {
+    AudioInput input;
+    input.start = &MicStart;
+    return input;
+}
+
+struct SystemSession {
+    SpeechSink sink = {};
+    App* app = nullptr;
+    SysSpeechSession* session = nullptr;
+};
+
+static void SystemReady(void* user) {
+    SystemSession* s = (SystemSession*)user;
+    s->sink.Ready(s->app);
+}
+
+static void SystemHypothesis(void* user, Str text) {
+    SystemSession* s = (SystemSession*)user;
+    s->sink.Hypothesis(text, s->app);
+}
+
+static void SystemPhrase(void* user, Str text) {
+    SystemSession* s = (SystemSession*)user;
+    s->sink.Phrase(text, s->app);
+}
+
+static void SystemFinish(void* user) {
+    SystemSession* s = (SystemSession*)user;
+    s->sink.Finish(s->app);
+}
+
+static SpeechError SystemErrorOf(SysSpeechError kind, Str message) {
+    switch (kind) {
+        case SysSpeechError::PermissionDenied:
+            return SpeechError::PermissionDenied();
+        case SysSpeechError::NoInputDevice:
+            return SpeechError::NoInputDevice();
+        case SysSpeechError::Unsupported:
+            return SpeechError::Unsupported();
+        case SysSpeechError::Recognizer:
+            break;
+    }
+    return SpeechError::Recognizer(message);
+}
+
+static void SystemError(void* user, SysSpeechError kind, Str message) {
+    SystemSession* s = (SystemSession*)user;
+    s->sink.Error(SystemErrorOf(kind, message), s->app);
+}
+
+static void SystemPushAudio(void* data, const int16_t* samples, int count,
+                            App*) {
+    SysSpeechSessionPushAudio(((SystemSession*)data)->session, samples, count);
+}
+
+static void SystemSessionFinish(void* data, App*) {
+    SysSpeechSessionFinish(((SystemSession*)data)->session);
+}
+
+static void SystemSessionDrop(void* data) {
+    SystemSession* s = (SystemSession*)data;
+    SysSpeechSessionDrop(s->session);
+    delete s;
+}
+
+static SysSpeechRecognizer* SystemPlatform(SystemRecognizer* r) {
+    if (!r->platformMade) {
+        r->platformMade = true;
+        r->platform = SysSpeechRecognizerNew(r->locale);
+    }
+    return r->platform;
+}
+
+static bool SystemIsAvailable(void* data, const App*) {
+    return SysSpeechRecognizerAvailable(
+        SystemPlatform((SystemRecognizer*)data));
+}
+
+static bool SystemStart(void* data, SpeechSink sink, App* app,
+                        RecognitionSession* out, SpeechError* error) {
+    SysSpeechRecognizer* platform = SystemPlatform((SystemRecognizer*)data);
+    if (!platform) {
+        *error = SpeechError::Unsupported();
+        return false;
+    }
+    SystemSession* s = new SystemSession();
+    s->sink = sink;
+    s->app = app;
+    SysSpeechEvents events;
+    events.user = s;
+    events.ready = &SystemReady;
+    events.hypothesis = &SystemHypothesis;
+    events.phrase = &SystemPhrase;
+    events.finish = &SystemFinish;
+    events.error = &SystemError;
+    SysSpeechError kind = SysSpeechError::Unsupported;
+    char message[600] = {};
+    s->session = SysSpeechSessionStart(platform, events, &kind, message,
+                                       (int)sizeof(message));
+    if (!s->session) {
+        delete s;
+        *error = SystemErrorOf(kind, Str(message));
+        return false;
+    }
+    out->data = s;
+    out->pushAudio = &SystemPushAudio;
+    out->finish = &SystemSessionFinish;
+    out->drop = &SystemSessionDrop;
+    return true;
+}
+
+SystemRecognizer::~SystemRecognizer() {
+    SysSpeechRecognizerFree(platform);
+    StrFree(locale);
+}
+
+SystemRecognizer* SystemRecognizer::Locale(Str value) {
+    StrFree(locale);
+    locale = len(value) > 0 ? StrDup(value) : Str{};
+    SysSpeechRecognizerFree(platform);
+    platform = nullptr;
+    platformMade = false;
+    return this;
+}
+
+bool SystemRecognizer::IsSupported() {
+    return SystemPlatform(this) != nullptr;
+}
+
+SpeechRecognizer SystemRecognizer::AsRecognizer() {
+    SpeechRecognizer r;
+    r.data = this;
+
+    r.isAvailable = &SystemIsAvailable;
+    r.start = &SystemStart;
+    return r;
 }
 
 static const float kNoiseFloor = 0.06f;
@@ -94379,6 +94715,10 @@ Entity<SpeechState> SpeechStateNew(App* app) {
     Entity<SpeechState> state = EntityNewState<SpeechState>(app);
     if (SpeechState* s = state.Get(app)) {
         s->self = state;
+
+        if (Microphone::IsSupported()) {
+            s->input = Microphone::Input();
+        }
     }
     return state;
 }
@@ -94390,6 +94730,7 @@ SpeechState::~SpeechState() {
     }
     StrFree(committed);
     StrFree(hypothesis);
+    delete systemRecognizer;
 }
 
 SpeechState* SpeechState::Recognizer(const SpeechRecognizer& value) {
@@ -94412,20 +94753,35 @@ SpeechState* SpeechState::StopTimeout(int ms) {
     return this;
 }
 
-static const SpeechRecognizer* ActiveRecognizer(const SpeechState* s) {
-    return s->recognizer.IsSet() ? &s->recognizer : nullptr;
+static bool ActiveRecognizer(const SpeechState* s, SpeechRecognizer* out) {
+    if (s->recognizer.IsSet()) {
+        *out = s->recognizer;
+        return true;
+    }
+    if (!s->systemFallback) {
+        return false;
+    }
+    if (!s->systemRecognizer) {
+        s->systemRecognizer = new SystemRecognizer();
+    }
+    if (!s->systemRecognizer->IsSupported()) {
+        return false;
+    }
+    *out = s->systemRecognizer->AsRecognizer();
+    return true;
 }
 
 bool SpeechState::HasRecognizer() const {
-    return input.IsSet() && ActiveRecognizer(this) != nullptr;
+    SpeechRecognizer active;
+    return input.IsSet() && ActiveRecognizer(this, &active);
 }
 
 bool SpeechState::IsAvailable(const App* app) const {
-    const SpeechRecognizer* active = ActiveRecognizer(this);
-    if (!input.IsSet() || !active) {
+    SpeechRecognizer active;
+    if (!input.IsSet() || !ActiveRecognizer(this, &active)) {
         return false;
     }
-    return !active->isAvailable || active->isAvailable(active->data, app);
+    return !active.isAvailable || active.isAvailable(active.data, app);
 }
 
 TempStr SpeechState::TranscriptTemp() const {
@@ -94437,11 +94793,12 @@ void SpeechState::Start(Ctx* cx) {
         return;
     }
     SpeechUpdate update(this, cx);
-    const SpeechRecognizer* active = ActiveRecognizer(this);
-    if (!active || !input.IsSet()) {
+    SpeechRecognizer found;
+    if (!ActiveRecognizer(this, &found) || !input.IsSet()) {
         EmitError(this, cx, SpeechError::Unsupported());
         return;
     }
+    const SpeechRecognizer* active = &found;
 
     nextSession++;
     uint32_t id = nextSession;
@@ -105568,6 +105925,98 @@ void HttpFetchDrop(Str url) {
         }
     }
     gFetchLock.Unlock();
+}
+
+}
+
+#line 1 "src/sys/speech_recognizer.cpp"
+
+namespace gpui {
+
+static int SpeechCharAt(Str s, int at, uint32_t* out) {
+    uint8_t b = (uint8_t)s.s[at];
+    int n = b < 0x80 ? 1 : (b >> 5) == 0x6 ? 2 : (b >> 4) == 0xE ? 3 : 4;
+    if (at + n > len(s)) {
+        n = 1;
+    }
+    uint32_t c = b;
+    if (n == 2) {
+        c = b & 0x1F;
+    } else if (n == 3) {
+        c = b & 0x0F;
+    } else if (n == 4) {
+        c = b & 0x07;
+    }
+    for (int i = 1; i < n; i++) {
+        c = (c << 6) | ((uint8_t)s.s[at + i] & 0x3F);
+    }
+    *out = c;
+    return n;
+}
+
+static char AsciiLower(char c) {
+    return c >= 'A' && c <= 'Z' ? (char)(c - 'A' + 'a') : c;
+}
+
+Str SpeechPhraseSeparator(Str tag) {
+    int n = 0;
+    while (n < len(tag) && tag.s[n] != '-') {
+        n++;
+    }
+    static const char* const kUnspaced[] = {"zh", "yue", "ja", "th",
+                                            "lo", "km",  "my"};
+    for (const char* lang : kUnspaced) {
+        int m = (int)strlen(lang);
+        bool same = m == n;
+        for (int i = 0; same && i < n; i++) {
+            same = AsciiLower(tag.s[i]) == lang[i];
+        }
+        if (same) {
+            return StrL("");
+        }
+    }
+    return StrL(" ");
+}
+
+bool SpeechStartsOver(Str utterance, Str text) {
+    int common = 0;
+    int total = 0;
+    bool matching = true;
+    int b = 0;
+    for (int a = 0; a < len(utterance);) {
+        uint32_t ca = 0;
+        a += SpeechCharAt(utterance, a, &ca);
+        total++;
+        if (matching && b < len(text)) {
+            uint32_t cb = 0;
+            b += SpeechCharAt(text, b, &cb);
+            if (ca == cb) {
+                common++;
+                continue;
+            }
+        }
+        matching = false;
+    }
+    return common * 2 < total;
+}
+
+static bool IsWhitespace(uint32_t c) {
+    return c == ' ' || (c >= 0x09 && c <= 0x0D) || c == 0x85 || c == 0xA0 ||
+           c == 0x1680 || (c >= 0x2000 && c <= 0x200A) || c == 0x2028 ||
+           c == 0x2029 || c == 0x202F || c == 0x205F || c == 0x3000;
+}
+
+static bool IsUnspacedScript(uint32_t c) {
+    return (c >= 0x3000 && c <= 0x30FF) || (c >= 0x3400 && c <= 0x4DBF) ||
+           (c >= 0x4E00 && c <= 0x9FFF) || (c >= 0xF900 && c <= 0xFAFF) ||
+           (c >= 0xFF00 && c <= 0xFFEF);
+}
+
+bool SpeechNeedsSpace(uint32_t before, uint32_t after) {
+    bool closing = after == ',' || after == '.' || after == '?' ||
+                   after == '!' || after == ';' || after == ':' || after == ')';
+    return !IsWhitespace(before) && !IsWhitespace(after) && !closing &&
+           !IsUnspacedScript(before) && !IsUnspacedScript(after);
 }
 
 }
@@ -117915,6 +118364,26 @@ bool RequireLeaf(int children, bool styled, Str* error) {
 
 using HandleEntity = EntityState<ScrollHandleState>;
 
+static void BeginFrame(ScrollHandleState* handle, Ctx* cx) {
+    uint64_t frame = cx->win ? cx->win->frameSeq : 0;
+    if (handle->window == cx->win && handle->frame == frame) return;
+    handle->window = cx->win;
+    handle->frame = frame;
+    handle->viewport = nullptr;
+    handle->hasBar = false;
+    handle->hasBarMode = false;
+}
+
+static void ApplyBar(ScrollHandleState* handle) {
+    El* area = handle->viewport;
+    if (!area) return;
+    area->noScrollbarX =
+        !handle->hasBar || handle->barAxis == ScrollbarAxis::Vertical;
+    area->noScrollbarY =
+        !handle->hasBar || handle->barAxis == ScrollbarAxis::Horizontal;
+    if (handle->hasBar && handle->hasBarMode) area->ScrollMode(handle->barMode);
+}
+
 static El* MaterializeScroll(MaterializeRequest* request) {
     const Payload* payload = request->PayloadAs<Payload>();
     if (!payload)
@@ -117945,16 +118414,9 @@ static El* MaterializeScroll(MaterializeRequest* request) {
     if (axis == ScrollbarAxis::Horizontal) area->FlexRow();
     if (scrollsX) area->ScrollX(handle->offsetX)->ScrollMask(Axis::Horizontal);
     if (scrollsY) area->ScrollY(handle->offsetY)->ScrollMask(Axis::Vertical);
-
-    int now = ++handle->renders;
-    bool bar = handle->barAt >= now - 1;
-    ScrollbarAxis barAxis =
-        handle->hasBarAxis ? handle->barAxis : ScrollbarAxis::Both;
-    if (scrollsX && (!bar || barAxis == ScrollbarAxis::Vertical))
-        area->HideScrollbarX();
-    if (scrollsY && (!bar || barAxis == ScrollbarAxis::Horizontal))
-        area->HideScrollbarY();
-    if (bar && handle->hasBarMode) area->ScrollMode(handle->barMode);
+    BeginFrame(handle, cx);
+    handle->viewport = area;
+    ApplyBar(handle);
     if (!request->AppendChildren(area)) return nullptr;
     return request->ApplyStyle(area);
 }
@@ -117978,11 +118440,12 @@ static El* MaterializeScrollbar(MaterializeRequest* request) {
     if (!RequireLeaf(request->ChildrenLen(), styled, &error))
         return request->Fail(error);
 
-    handle->barAt = handle->renders;
-    handle->hasBarAxis = ops.hasAxis;
-    handle->barAxis = ops.axis;
+    BeginFrame(handle, request->cx);
+    handle->hasBar = true;
+    handle->barAxis = ops.hasAxis ? ops.axis : ScrollbarAxis::Both;
     handle->hasBarMode = ops.hasMode;
     handle->barMode = ops.mode;
+    ApplyBar(handle);
 
     return Div(request->cx->a)->Id(payload->id)->Absolute();
 }
@@ -121093,7 +121556,7 @@ struct Relay {
     ShellRuntime* runtime = nullptr;
 
     EntityId view = {};
-    uint64_t frame = 0;
+    RenderSnapshot* snapshot = nullptr;
     const shell::SpecArena* specs = nullptr;
     ShellError* error = nullptr;
     shell::ComponentElementFactory content = {};
@@ -121103,9 +121566,7 @@ struct Relay {
     shell::ComponentCallback onClose = {};
     shell::ComponentCallback onClick = {};
 
-    bool Fresh(Ctx* cx) const {
-        return runtime && specs && cx->win && frame == cx->win->frameSeq;
-    }
+    bool HasDescription(Ctx* cx) const { return runtime && specs && cx->win; }
 
     void Invoke(Ctx* cx, shell::ComponentCallback callback,
                 const char* label) const {
@@ -121113,16 +121574,22 @@ struct Relay {
             callback
                 .InvokeAndReport(runtime, label, nullptr, 0, cx->win, cx->app);
     }
+};
 
-    static void OnNotificationClick(Relay* self, Ctx* cx, const void*) {
-        if (self)
-            self->Invoke(cx, self->onClick,
-                         "Notification.on_click callback failed");
+struct NotificationRelay {
+    Relay relay;
+    ~NotificationRelay() {
+        if (relay.snapshot) relay.snapshot->Release();
     }
-    static void OnNotificationClose(Relay* self, Ctx* cx, const void*) {
-        if (self)
-            self->Invoke(cx, self->onClose,
-                         "Notification.on_close callback failed");
+    static void OnClick(NotificationRelay* self, Ctx* cx, const void*) {
+        self->relay.Invoke(cx, self->relay.onClick,
+                           "Notification.on_click callback failed");
+    }
+    static void OnClose(NotificationRelay* self, Ctx* cx, const void*) {
+        self->relay.Invoke(cx, self->relay.onClose,
+                           "Notification.on_close callback failed");
+        if (self->relay.snapshot) self->relay.snapshot->Release();
+        self->relay = {};
     }
 };
 
@@ -121143,7 +121610,7 @@ static void ReportFactoryError(const Relay* relay, Ctx* cx, Str message) {
 
 struct Layer {
     Surface surface = Surface::Dialog;
-    Entity<Relay> relay = {};
+    Relay relay;
     Arena* arena = nullptr;
     Str title;
     Str description;
@@ -121153,6 +121620,7 @@ struct Layer {
     bool factoryErrorReported = false;
 
     ~Layer() {
+        if (relay.snapshot) relay.snapshot->Release();
         if (arena) ArenaDelete(arena);
     }
 
@@ -121163,13 +121631,15 @@ struct Layer {
     }
 
     El* Content(Ctx* cx) {
-        Relay* live = relay.Get(cx);
+        Relay* live = &relay;
         Arena* a = cx->a;
-        if (!live || !live->Fresh(cx) || !live->content.IsSet()) {
+        if (!live->HasDescription(cx) || !live->content.IsSet()) {
             return Div(a)->Child(TextEl(
-                a, StrDup(a, fmt("Failed to render %s content: the trigger "
-                                 "that opened it is not rendered",
-                                 Str(Name())))));
+                a,
+                StrDup(
+                    a,
+                    fmt("Failed to render %s content: no retained description",
+                        Str(Name())))));
         }
         Ctx view = *cx;
         view.self = live->view;
@@ -121198,9 +121668,10 @@ struct Layer {
         Relay relay;
         const char* closeLabel = nullptr;
     };
-    Close Closing(Ctx* cx) const {
+    Close Closing() const {
         Close close;
-        if (const Relay* r = relay.Get(cx)) close.relay = *r;
+        close.relay = relay;
+        if (close.relay.snapshot) close.relay.snapshot->Retain();
         close.closeLabel = surface == Surface::Dialog
                                ? "Dialog.on_close callback failed"
                            : surface == Surface::AlertDialog
@@ -121211,33 +121682,36 @@ struct Layer {
 
     static void OnOk(Layer* self, Ctx* cx, const ClickEvent*) {
         if (!self) return;
-        Close close = self->Closing(cx);
+        Close close = self->Closing();
         close.relay.Invoke(cx, close.relay.onOk,
                            self->surface == Surface::Dialog
                                ? "Dialog.on_ok callback failed"
                                : "AlertDialog.on_ok callback failed");
         WindowCloseDialog(cx);
         close.relay.Invoke(cx, close.relay.onClose, close.closeLabel);
+        if (close.relay.snapshot) close.relay.snapshot->Release();
     }
     static void OnCancel(Layer* self, Ctx* cx, const ClickEvent*) {
         if (!self) return;
-        Close close = self->Closing(cx);
+        Close close = self->Closing();
         close.relay.Invoke(cx, close.relay.onCancel,
                            self->surface == Surface::Dialog
                                ? "Dialog.on_cancel callback failed"
                                : "AlertDialog.on_cancel callback failed");
         WindowCloseDialog(cx);
         close.relay.Invoke(cx, close.relay.onClose, close.closeLabel);
+        if (close.relay.snapshot) close.relay.snapshot->Release();
     }
 
     static void OnClose(Layer* self, Ctx* cx, const ClickEvent*) {
         if (!self) return;
-        Close close = self->Closing(cx);
+        Close close = self->Closing();
         if (self->surface == Surface::Sheet)
             WindowCloseSheet(cx);
         else
             WindowCloseDialog(cx);
         close.relay.Invoke(cx, close.relay.onClose, close.closeLabel);
+        if (close.relay.snapshot) close.relay.snapshot->Release();
     }
 
     static El* Render(Layer* self, Ctx* cx) {
@@ -121315,7 +121789,11 @@ static Entity<Layer> NewLayer(Ctx* cx, const TriggerClick* click) {
     Layer* layer = handle.Get(cx);
     if (!layer) return handle;
     layer->surface = click->surface;
-    layer->relay = click->relay;
+    if (Relay* relay = click->relay.Get(cx)) {
+        layer->relay = *relay;
+        layer->relay.error = nullptr;
+        if (layer->relay.snapshot) layer->relay.snapshot->Retain();
+    }
     layer->arena = ArenaNew();
     if (click->title.s) layer->title = StrDup(layer->arena, click->title);
     if (click->description.s)
@@ -121345,9 +121823,18 @@ static bool Open(void* user, Window*, App*, Str*, Arena*) {
                 .Autohide(click->autohide);
             if (click->title.s) notification.Title(click->title);
             if (click->description.s) notification.Message(click->description);
+            auto captured = UseKeyedState<NotificationRelay>(
+                cx, click->key, StrL("shell-notification-recipe"));
+            if (NotificationRelay* live = captured.Get(cx)) {
+                Relay next;
+                if (Relay* relay = click->relay.Get(cx)) next = *relay;
+                if (next.snapshot) next.snapshot->Retain();
+                if (live->relay.snapshot) live->relay.snapshot->Release();
+                live->relay = next;
+            }
             notification
-                .OnClick(ListenTo(click->relay, &Relay::OnNotificationClick))
-                .OnClose(ListenTo(click->relay, &Relay::OnNotificationClose));
+                .OnClick(ListenTo(captured, &NotificationRelay::OnClick))
+                .OnClose(ListenTo(captured, &NotificationRelay::OnClose));
             WindowPushNotification(cx, notification);
             break;
         }
@@ -121471,7 +121958,7 @@ static El* component_shell_window_effects_mod_Materialize(MaterializeRequest* re
     if (Relay* relay = click->relay.Get(cx)) {
         relay->runtime = request->runtime;
         relay->view = cx->self;
-        relay->frame = cx->win ? cx->win->frameSeq : 0;
+        relay->snapshot = request->specs->snapshot;
         relay->specs = request->specs;
         relay->error = request->error;
         relay->content = content;
@@ -121483,7 +121970,7 @@ static El* component_shell_window_effects_mod_Materialize(MaterializeRequest* re
         relay->onClose = onClose ? request->ResolveCallback(*onClose)
                                  : shell::ComponentCallback{};
         relay->onClick = onClick ? request->ResolveCallback(*onClick)
-                                 : shell::ComponentCallback{};
+                                 : shell::ComponentCallback{request->onClick};
     }
     component::Button* button =
         component::Button::New(cx, trigger->id)
@@ -129209,7 +129696,7 @@ static void AppendCp(StrBuilder& out, uint32_t cp) {
     out.Append(Str(bytes, n));
 }
 
-static ArenaStr Decode(Arena* a, Str value, bool attribute) {
+static ArenaStr html5ever_html5ever_Decode(Arena* a, Str value, bool attribute) {
     bool needsDecode = false;
     for (int i = 0; i < len(value); i++) {
         if (value.s[i] == '&' || value.s[i] == '\r' || value.s[i] == 0) {
@@ -129386,7 +129873,7 @@ static Attribute* ScanAttrs(Scanner* s, bool* selfClosing) {
                     if (s->source.s[s->at++] == '\n') s->line++;
                 }
                 value =
-                    Decode(s->a, Str(s->source.s + start, s->at - start), true);
+                    html5ever_html5ever_Decode(s->a, Str(s->source.s + start, s->at - start), true);
                 if (s->at < len(s->source)) s->at++;
             } else {
                 while (s->at < len(s->source) && !html5ever_html5ever_IsSpace(s->source.s[s->at]) &&
@@ -129394,7 +129881,7 @@ static Attribute* ScanAttrs(Scanner* s, bool* selfClosing) {
                     s->at++;
                 }
                 value =
-                    Decode(s->a, Str(s->source.s + start, s->at - start), true);
+                    html5ever_html5ever_Decode(s->a, Str(s->source.s + start, s->at - start), true);
             }
         }
         bool duplicate = false;
@@ -129452,7 +129939,7 @@ static void TokenizeRun(Scanner* s) {
                 Token text;
                 text.kind = TokenKind::Character;
                 Str raw(s->source.s + s->at, end - s->at);
-                text.data = s->rcdata ? Decode(s->a, raw, false)
+                text.data = s->rcdata ? html5ever_html5ever_Decode(s->a, raw, false)
                                       : ArenaStrDup(s->a, raw);
                 text.line = s->line;
                 for (int i = s->at; i < end; i++) {
@@ -129479,7 +129966,7 @@ static void TokenizeRun(Scanner* s) {
             Token text;
             text.kind = TokenKind::Character;
             text.data =
-                Decode(s->a, Str(s->source.s + start, s->at - start), false);
+                html5ever_html5ever_Decode(s->a, Str(s->source.s + start, s->at - start), false);
             text.line = s->line;
             html5ever_html5ever_Emit(s, text);
             if (s->paused && *s->paused) return;
@@ -147510,13 +147997,25 @@ ComponentElementFactory MaterializeRequest::TakeSlotFactory(const char* name) {
     slotTaken[at] = true;
     ComponentElementFactory factory;
     factory.id = target;
+    factory.specs = specs;
+    factory.view = cx->self;
+    factory.building = &specs->Node(target)->factoryBuilding;
     factory.set = true;
     return factory;
 }
 
 El* MaterializeRequest::BuildFactory(ComponentElementFactory factory) {
     if (!factory.IsSet()) return nullptr;
-    return ShellMaterializeSpec(cx, runtime, specs, factory.id, error);
+    if (factory.building && *factory.building)
+        return Fail(StrL("component element factory is already building"));
+    if (factory.building) *factory.building = true;
+    Ctx view = *cx;
+    if (factory.view.IsValid()) view.self = factory.view;
+    El* element = ShellMaterializeSpec(&view, runtime,
+                                       factory.specs ? factory.specs : specs,
+                                       factory.id, error);
+    if (factory.building) *factory.building = false;
+    return element;
 }
 
 El* MaterializeRequest::Finish(El* element) {
@@ -158307,13 +158806,29 @@ static JSValue NativeTemplateAbort(JSContext* ctx, JSValueConst, int,
     return JS_UNDEFINED;
 }
 
+static bool PayloadHasCallback(const shell::ComponentArgument* args,
+                               int count) {
+    for (int i = 0; i < count; i++) {
+        if (args[i].kind == shell::ComponentArgumentKind::Callback ||
+            PayloadHasCallback(args[i].items, args[i].count))
+            return true;
+    }
+    return false;
+}
+
 static Str InlineHandler(const shell::SpecArena* recorded,
                          const Vec<shell::Slot>& slots) {
     for (shell::SpecId id = 0; id < (shell::SpecId)recorded->Len(); id++) {
         const shell::SpecNode* node = recorded->Node(id);
         if (!node) continue;
+        if (PayloadHasCallback(node->component.payload.arguments,
+                               node->component.payload.argumentCount))
+            return node->component.text;
         for (int index = 0; index < node->ops.len; index++) {
             const shell::SpecOp& op = node->ops[index];
+            if (PayloadHasCallback(op.payload.arguments, op.payload
+                                                             .argumentCount))
+                return op.name;
             if (op.kind != shell::SpecOpKind::Callback) continue;
             bool filled = false;
             for (int i = 0; i < len(slots) && !filled; i++) {
@@ -158363,13 +158878,6 @@ static JSValue NativeTemplateEnd(JSContext* ctx, JSValueConst, int argc,
             "a template cannot mount a nested view or a dock area: it is "
             "grafted once per call, and GPUI mounts one entity at one place. "
             "Put the entity where the template is called");
-    } else if (recorded->HasRegistered()) {
-
-        failure = JS_ThrowTypeError(
-            ctx,
-            "a template cannot describe a registered component: its recorded "
-            "payload belongs to the description that made it. Build it where "
-            "the template is called");
     } else if (Str method = InlineHandler(recorded, discovery->slots); method) {
         failure = JS_ThrowTypeError(
             ctx,
@@ -158826,6 +159334,9 @@ static bool ComponentPayloadTransaction(
             ok = false;
         } else {
             *payload = build.out;
+            payload->factory = factory;
+            payload->arguments = arguments;
+            payload->argumentCount = count;
         }
     }
     for (int i = 0; ok && i < len(scope.elements); i++) {
@@ -168449,7 +168960,7 @@ void shell::ComponentCallback::InvokeAndReport(
 static JSValue CallInLayout(ShellRuntime* runtime, CallbackEntry* entry,
                             const shell::ComponentDataValue* arguments,
                             int count, Ctx* cx, shell::SpecArena* batch,
-                            bool interactive) {
+                            bool interactive, uint64_t generation = 0) {
     ShellRuntimeImpl* impl = ShellRuntimeAccess::Impl(runtime);
     JSContext* ctx = impl->context;
     shell::SpecArena* outer = impl->scratch;
@@ -168460,8 +168971,12 @@ static JSValue CallInLayout(ShellRuntime* runtime, CallbackEntry* entry,
     shell::ScopeAdopt(entry->registeredIn);
     BeginExecution(impl);
     bool savedToken = impl->callbacks.tokenRender;
+    uint64_t savedGeneration = impl->callbacks.tokenGeneration;
     if (interactive) {
-        impl->callbacks.BeginTokenFrame(ctx, impl->tokenFrame);
+        if (generation)
+            impl->callbacks.tokenGeneration = generation;
+        else
+            impl->callbacks.BeginTokenFrame(ctx, impl->tokenFrame);
         impl->callbacks.tokenRender = true;
     }
     Arena* a = ArenaNew();
@@ -168474,6 +168989,7 @@ static JSValue CallInLayout(ShellRuntime* runtime, CallbackEntry* entry,
     for (int i = 0; i < total; i++) JS_FreeValue(ctx, args[i]);
     ArenaDelete(a);
     impl->callbacks.tokenRender = savedToken;
+    if (generation) impl->callbacks.tokenGeneration = savedGeneration;
     impl->scratch = outer;
     return value;
 }
@@ -168540,9 +169056,10 @@ static El* BuildComponentElement(ShellRuntime* runtime, shell::CallbackId id,
         return nullptr;
     }
 
-    shell::SpecArena* batch = new shell::SpecArena(cx->a);
-    JSValue value =
-        CallInLayout(runtime, entry, arguments, count, cx, batch, interactive);
+    shell::SpecArena* batch = new shell::SpecArena();
+    uint64_t generation = impl->callbacks.nextGeneration++;
+    JSValue value = CallInLayout(runtime, entry, arguments, count, cx, batch,
+                                 interactive, generation);
     El* element = nullptr;
     bool ok = !JS_IsException(value);
     shell::SpecId root = 0;
@@ -168552,6 +169069,8 @@ static El* BuildComponentElement(ShellRuntime* runtime, shell::CallbackId id,
         hasRoot = ok;
     }
     JS_FreeValue(impl->context, value);
+    RenderSnapshot* snapshot =
+        new RenderSnapshot(generation, root, batch, SnapshotLease(runtime));
     if (!ok) {
         failure = TakeException(impl, cx->a);
     } else if (hasRoot) {
@@ -168562,7 +169081,14 @@ static El* BuildComponentElement(ShellRuntime* runtime, shell::CallbackId id,
             ShellErrorClear(&materialized);
         }
     }
-    delete batch;
+    Entity<ScriptView> owner;
+    owner.id = entry->view;
+    if (ScriptView* view = owner.Get(cx)) {
+        VecAppend(view->frameSnapshots, snapshot);
+    } else {
+        snapshot->Release();
+        element = nullptr;
+    }
     if (error) *error = failure;
     return element;
 }
@@ -169234,6 +169760,7 @@ RenderSnapshot::RenderSnapshot(uint64_t generation, shell::SpecId root,
                                shell::SpecArena* arena,
                                SnapshotRuntimeLease runtime)
     : generation(generation), root(root), arena(arena), runtime(runtime) {
+    if (arena) arena->snapshot = this;
     if (runtime.state && runtime.retain) runtime.retain(runtime.state);
 }
 
@@ -169527,13 +170054,6 @@ void SpecArena::Reset() {
     if (ownsArena) arena->Reset();
 }
 
-bool SpecArena::HasRegistered() const {
-    for (int i = 0; i < nodes.len; i++) {
-        if (nodes[i]->component.kind == ComponentKind::Registered) return true;
-    }
-    return false;
-}
-
 Component SpecArena::CopyComponent(const Component& source) {
     Component out = source;
     if (source.policy) {
@@ -169690,6 +170210,38 @@ bool SpecArena::Attach(SpecId parent, SpecId child, SpecError* error) {
     return nodes[(int)parent]->children.Append(arena, child);
 }
 
+static ComponentArgument CopyArgument(Arena* arena,
+                                      const ComponentArgument& from,
+                                      SpecId base) {
+    ComponentArgument out = from;
+    out.string = StrDup(arena, from.string);
+    if (from.kind == ComponentArgumentKind::Element) out.element += base;
+    if (from.count) {
+        auto* items = (ComponentArgument*)Alloc(
+            arena, sizeof(ComponentArgument) * from.count);
+        for (int i = 0; i < from.count; i++)
+            items[i] = CopyArgument(arena, from.items[i], base);
+        out.items = items;
+    }
+    return out;
+}
+
+static ComponentPayload CopyPayload(Arena* arena, const ComponentPayload& from,
+                                    SpecId base) {
+    if (!from.factory) return from;
+    auto* args = (ComponentArgument*)Alloc(
+        arena, sizeof(ComponentArgument) * from.argumentCount);
+    for (int i = 0; i < from.argumentCount; i++)
+        args[i] = CopyArgument(arena, from.arguments[i], base);
+    PayloadBuild build;
+    build.a = arena;
+    if (!from.factory(&build, args, from.argumentCount)) return {};
+    build.out.factory = from.factory;
+    build.out.arguments = args;
+    build.out.argumentCount = from.argumentCount;
+    return build.out;
+}
+
 SpecId SpecArena::Graft(const Template& tmpl) {
     SpecId base = (SpecId)nodes.len;
     const SpecArena* source = tmpl.arena;
@@ -169698,8 +170250,11 @@ SpecId SpecArena::Graft(const Template& tmpl) {
         const SpecNode* from = source->nodes[i];
         SpecNode* node = ArenaNew<SpecNode>(arena);
         node->component = CopyComponent(from->component);
+        node->component
+            .payload = CopyPayload(arena, from->component.payload, base);
         for (const SpecOp& op : from->ops) {
             SpecOp copied = CopyOp(op);
+            copied.payload = CopyPayload(arena, op.payload, base);
             if (copied.kind == SpecOpKind::StateStyle ||
                 copied.kind == SpecOpKind::Slot) {
                 copied.node += base;
@@ -195499,7 +196054,8 @@ ScriptView::~ScriptView() {
         runtime->CleanupComponentAppEffects(self);
         runtime->ReleaseOwnedEntities(self);
     }
-    delete snapshot;
+    for (auto* batch : frameSnapshots) batch->Release();
+    if (snapshot) snapshot->Release();
     ViewObjectRelease(object);
     ViewTypeRelease(type);
     PolicyRelease(policy);
@@ -195526,6 +196082,8 @@ El* ScriptView::Render(ScriptView* self, Ctx* cx) {
         return Div(cx->a)
             ->Child(TextEl(cx->a, StrL("Shell view is not initialized")));
     }
+    for (auto* batch : self->frameSnapshots) batch->Release();
+    VecClear(self->frameSnapshots);
     uint32_t revision = shell::ThemeTokensSync(cx->app);
     if (revision != self->themeRevision) {
         self->themeRevision = revision;
@@ -195545,7 +196103,7 @@ El* ScriptView::Render(ScriptView* self, Ctx* cx) {
                 self->runtime->RecordStructure(self->snapshot->Structure() ==
                                                next->Structure());
             }
-            delete self->snapshot;
+            if (self->snapshot) self->snapshot->Release();
             self->snapshot = next;
             self->dirty = false;
             ShellErrorClear(&self->error);
@@ -195602,7 +196160,7 @@ bool ScriptView::Reload(ScriptView* self, Ctx* cx, Str directory, Str entry,
     self->dirty = true;
     ShellErrorClear(&self->error);
     if (oldObject) self->runtime->ReleaseApplicationState(oldObject);
-    delete oldSnapshot;
+    if (oldSnapshot) oldSnapshot->Release();
     ViewObjectRelease(oldObject);
     ViewTypeRelease(oldType);
     Notify(cx);
@@ -205681,6 +206239,119 @@ bool Cache::IsEmpty() const {
 
 }
 
+#line 1 "src/unicode-linebreak/unicode_linebreak.cpp"
+
+namespace unicode_linebreak {
+
+BreakClass BreakProperty(uint32_t codepoint) {
+    uint32_t dataPos;
+    if (codepoint < 0x10000) {
+        dataPos = kBreakPropTrieIndex[codepoint >> 6] + (codepoint & 63);
+    } else if (codepoint < kBreakPropTrieHighStart) {
+        uint32_t i1 = codepoint >> 14;
+        uint32_t i2 =
+            kBreakPropTrieIndex[i1 + 1024 - 4] + ((codepoint >> 9) & 31);
+        uint32_t i3Block = kBreakPropTrieIndex[i2];
+        uint32_t dataBlock =
+            kBreakPropTrieIndex[i3Block + ((codepoint >> 4) & 31)];
+        dataPos = dataBlock + (codepoint & 15);
+    } else {
+        return BreakClass::Unknown;
+    }
+    return (BreakClass)kBreakPropTrieData[dataPos];
+}
+
+static uint32_t unicode_linebreak_unicode_linebreak_Decode(Str text, int32_t* offset) {
+    int32_t start = *offset;
+    uint8_t first = (uint8_t)text.s[start];
+    *offset = start + 1;
+    if (first < 0x80) {
+        return first;
+    }
+    int count = first >= 0xC2 && first <= 0xDF   ? 2
+                : first >= 0xE0 && first <= 0xEF ? 3
+                : first >= 0xF0 && first <= 0xF4 ? 4
+                                                 : 0;
+    if (!count || count > len(text) - start) {
+        return 0xFFFD;
+    }
+    uint32_t value = first & (0x7F >> count);
+    for (int i = 1; i < count; i++) {
+        uint8_t next = (uint8_t)text.s[start + i];
+        if ((next & 0xC0) != 0x80) {
+            return 0xFFFD;
+        }
+        value = (value << 6) | (next & 63);
+    }
+    if ((count == 3 && value < 0x800) || (count == 4 && value < 0x10000) ||
+        (value >= 0xD800 && value <= 0xDFFF) || value > 0x10FFFF) {
+        return 0xFFFD;
+    }
+    *offset = start + count;
+    return value;
+}
+
+LineBreakIterator LineBreaks(Str text) {
+    LineBreakIterator iterator;
+    iterator.text = text;
+    return iterator;
+}
+
+bool LineBreakIterator::Next(LineBreak* result) {
+    while (!finished) {
+        int32_t at = offset;
+        uint8_t cls;
+        if (at < len(text)) {
+            cls = (uint8_t)BreakProperty(unicode_linebreak_unicode_linebreak_Decode(text, &offset));
+        } else {
+            cls = 43;
+            finished = true;
+        }
+        uint8_t value = kPairTable[state][cls];
+        bool mandatory = (value & 0x40) != 0;
+        bool allowed = (value & 0x80) != 0 && (!afterZwj || mandatory);
+        state = value & 0x3F;
+        afterZwj = cls == (uint8_t)BreakClass::ZeroWidthJoiner;
+        if (allowed) {
+            *result = {at, mandatory ? BreakOpportunity::Mandatory
+                                     : BreakOpportunity::Allowed};
+            return true;
+        }
+    }
+    return false;
+}
+
+SafeSplit SplitAtSafe(Str text) {
+    int32_t at = len(text);
+    BreakClass following = BreakClass::Unknown;
+    bool haveFollowing = false;
+    bool foundPair = false;
+    while (at > 0) {
+        int32_t start = at - 1;
+        while (start > 0 && at - start < 4 &&
+               ((uint8_t)text.s[start] & 0xC0) == 0x80) {
+            start--;
+        }
+        int32_t decodedEnd = start;
+        BreakClass cls = BreakProperty(unicode_linebreak_unicode_linebreak_Decode(text, &decodedEnd));
+        if (decodedEnd != at) {
+            start = at - 1;
+            cls = BreakProperty(0xFFFD);
+        }
+        if (foundPair) {
+            return {Str(text.s, start), Str(text.s + start, len(text) - start)};
+        }
+        foundPair = haveFollowing && (kSafePairs[(uint8_t)cls] &
+                                      (uint64_t(1) << (uint8_t)following)) != 0;
+        following = cls;
+        haveFollowing = true;
+        at = start;
+    }
+    return {Str(text.s, 0), text};
+}
+
+}
+
 #line 1 "src/webview/webview.cpp"
 
 namespace gpui {
@@ -205880,6 +206551,24 @@ El* WebViewEl(Entity<WebView> view, Ctx* cx) {
 #line 1 "src/wry/wry.cpp"
 
 namespace wry {
+
+bool MacCookieMatchesUrl(const Cookie* cookie, Str scheme, Str domain) {
+    if (!cookie || !domain.s || !base::StrEq(cookie->domain, domain))
+        return false;
+    if (!cookie->hasSecure || !cookie->secure) return true;
+    return base::StrEq(scheme, StrL("https")) ||
+           (base::StrEq(scheme, StrL("http")) &&
+            base::StrEq(domain, StrL("localhost")));
+}
+
+Str MacDownloadFileNameTemp(Str suggested, int collision) {
+    if (collision <= 0) return suggested;
+    int dot = base::StrFind(suggested, ".");
+    Str stem = dot < 0 ? suggested : Str(suggested.s, dot);
+    Str extension =
+        dot < 0 ? Str() : Str(suggested.s + dot, len(suggested) - dot);
+    return base::FormatTemp("%s (%d)%s", stem, collision, extension);
+}
 
 void CookieListFree(Vec<Cookie>* cookies) {
     if (!cookies) {
@@ -206098,6 +206787,7 @@ Str SyntheticMouseEventJsTemp(const SyntheticMouseEvent* ev) {
 #endif
 
 #if GPUI_OS_WINDOWS
+#include <audioclient.h>
 #include <commctrl.h>
 #include <d2d1_1.h>
 #include <d2d1_2.h>
@@ -206108,6 +206798,8 @@ Str SyntheticMouseEventJsTemp(const SyntheticMouseEvent* ev) {
 #include <dxgi1_2.h>
 #include <eventtoken.h>
 #include <imm.h>
+#include <mmdeviceapi.h>
+#include <mmreg.h>
 #include <objbase.h>
 #include <objidl.h>
 #include <ole2.h>
@@ -206120,13 +206812,19 @@ Str SyntheticMouseEventJsTemp(const SyntheticMouseEvent* ev) {
 #include <tlhelp32.h>
 #include <uiautomation.h>
 #include <wincodec.h>
+#include <windows.foundation.collections.h>
+#include <windows.foundation.h>
+#include <windows.globalization.h>
 #include <windows.h>
+#include <windows.media.speechrecognition.h>
 #include <winhttp.h>
 #include <winternl.h>
 #endif
 
 #if GPUI_OS_MAC
 #import <AppKit/AppKit.h>
+#import <AudioToolbox/AudioToolbox.h>
+#import <AVFoundation/AVFoundation.h>
 #import <Cocoa/Cocoa.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
@@ -206143,15 +206841,20 @@ Str SyntheticMouseEventJsTemp(const SyntheticMouseEvent* ev) {
 #include <mach/mach_time.h>
 #include <mach/mach.h>
 #import <objc/runtime.h>
+#import <Speech/Speech.h>
 #include <sys/mount.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <unistd.h>
+#import <WebKit/WKDownload.h>
+#import <WebKit/WKDownloadDelegate.h>
 #import <WebKit/WKFrameInfo.h>
+#import <WebKit/WKHTTPCookieStore.h>
 #import <WebKit/WKNavigation.h>
 #import <WebKit/WKNavigationAction.h>
 #import <WebKit/WKNavigationDelegate.h>
+#import <WebKit/WKNavigationResponse.h>
 #import <WebKit/WKOpenPanelParameters.h>
 #import <WebKit/WKPreferences.h>
 #import <WebKit/WKScriptMessage.h>
@@ -228019,6 +228722,700 @@ void InputBindPlatformKeys(const char* ctx) {
 
 #endif
 
+#if GPUI_OS_LINUX
+#line 1 "src/sys/audio_input_linux.cpp"
+
+#if GPUI_HAVE_ALSA
+
+#include <alsa/asoundlib.h>
+#include <pthread.h>
+
+namespace gpui {
+
+struct AudioInputStream {
+    AudioInputCallbacks callbacks = {};
+    snd_pcm_t* pcm = nullptr;
+    pthread_t thread = {};
+    bool threadStarted = false;
+    volatile int stop = 0;
+    unsigned rate = 48000;
+    unsigned channels = 1;
+};
+
+static void* CaptureThread(void* param) {
+    AudioInputStream* s = (AudioInputStream*)param;
+
+    const int kFrames = (int)(s->rate / 100);
+    int16_t* pcm =
+        (int16_t*)malloc((size_t)kFrames * s->channels * sizeof(int16_t));
+    float* mono = (float*)malloc((size_t)kFrames * sizeof(float));
+    while (pcm && mono && !__atomic_load_n(&s->stop, __ATOMIC_RELAXED)) {
+        snd_pcm_sframes_t got =
+            snd_pcm_readi(s->pcm, pcm, (snd_pcm_uframes_t)kFrames);
+        if (got < 0) {
+
+            if (snd_pcm_recover(s->pcm, (int)got, 1) < 0) {
+                if (s->callbacks.error &&
+                    !__atomic_load_n(&s->stop, __ATOMIC_RELAXED)) {
+                    s->callbacks
+                        .error(s->callbacks.user, Str(snd_strerror((int)got)));
+                }
+                break;
+            }
+            continue;
+        }
+        for (snd_pcm_sframes_t f = 0; f < got; f++) {
+            float sum = 0;
+            for (unsigned c = 0; c < s->channels; c++) {
+                sum += (float)pcm[f * s->channels + c] / 32768.f;
+            }
+            mono[f] = sum / (float)s->channels;
+        }
+        if (got > 0) {
+            s->callbacks.samples(s->callbacks.user, mono, (int)got);
+        }
+    }
+    free(pcm);
+    free(mono);
+    return nullptr;
+}
+
+bool SysAudioInputAvailable() {
+    return true;
+}
+
+bool SysAudioInputDeviceName(char* out, int cap) {
+    if (!out || cap <= 0) {
+        return false;
+    }
+    snprintf(out, (size_t)cap, "default");
+    return true;
+}
+
+static void SetMessage(char* message, int cap, const char* text) {
+    if (!message || cap <= 0) {
+        return;
+    }
+    int n = (int)strlen(text);
+    n = n < cap - 1 ? n : cap - 1;
+    memcpy(message, text, (size_t)n);
+    message[n] = 0;
+}
+
+AudioInputStream* SysAudioInputStart(const AudioInputCallbacks& callbacks,
+                                     uint32_t* sampleRate,
+                                     AudioInputError* error, char* message,
+                                     int messageCap) {
+    snd_pcm_t* pcm = nullptr;
+    int rc = snd_pcm_open(&pcm, "default", SND_PCM_STREAM_CAPTURE, 0);
+    if (rc < 0) {
+
+        *error = rc == -EACCES ? AudioInputError::PermissionDenied
+                               : AudioInputError::NoInputDevice;
+        SetMessage(message, messageCap, snd_strerror(rc));
+        return nullptr;
+    }
+
+    unsigned channels = 1;
+    snd_pcm_hw_params_t* params = nullptr;
+    snd_pcm_hw_params_alloca(&params);
+    unsigned rate = 48000;
+    for (;;) {
+        rc = snd_pcm_hw_params_any(pcm, params);
+        if (rc >= 0) {
+            rc = snd_pcm_hw_params_set_access(pcm, params,
+                                              SND_PCM_ACCESS_RW_INTERLEAVED);
+        }
+        if (rc >= 0) {
+            rc = snd_pcm_hw_params_set_format(pcm, params,
+                                              SND_PCM_FORMAT_S16_LE);
+        }
+        if (rc >= 0) {
+            rc = snd_pcm_hw_params_set_channels(pcm, params, channels);
+        }
+        rate = 48000;
+        if (rc >= 0) {
+            rc = snd_pcm_hw_params_set_rate_near(pcm, params, &rate, nullptr);
+        }
+        if (rc >= 0) {
+            rc = snd_pcm_hw_params(pcm, params);
+        }
+        if (rc >= 0 || channels == 2) {
+            break;
+        }
+        channels = 2;
+    }
+    if (rc >= 0) {
+        rc = snd_pcm_prepare(pcm);
+    }
+    if (rc < 0 || rate == 0) {
+        *error = AudioInputError::Failed;
+        SetMessage(message, messageCap, snd_strerror(rc));
+        snd_pcm_close(pcm);
+        return nullptr;
+    }
+    AudioInputStream* s = new AudioInputStream();
+    s->callbacks = callbacks;
+    s->pcm = pcm;
+    s->rate = rate;
+    s->channels = channels;
+    if (pthread_create(&s->thread, nullptr, &CaptureThread, s) != 0) {
+        *error = AudioInputError::Failed;
+        SetMessage(message, messageCap, "cannot start the capture thread");
+        snd_pcm_close(pcm);
+        delete s;
+        return nullptr;
+    }
+    s->threadStarted = true;
+    if (sampleRate) {
+        *sampleRate = rate;
+    }
+    return s;
+}
+
+void SysAudioInputStop(AudioInputStream* s) {
+    if (!s) {
+        return;
+    }
+    __atomic_store_n(&s->stop, 1, __ATOMIC_RELAXED);
+    if (s->threadStarted) {
+
+        snd_pcm_drop(s->pcm);
+        pthread_join(s->thread, nullptr);
+    }
+    snd_pcm_close(s->pcm);
+    delete s;
+}
+
+}
+
+#else
+
+namespace gpui {
+
+bool SysAudioInputAvailable() {
+    return false;
+}
+
+bool SysAudioInputDeviceName(char* out, int cap) {
+    if (out && cap > 0) {
+        out[0] = 0;
+    }
+    return false;
+}
+
+AudioInputStream* SysAudioInputStart(const AudioInputCallbacks&, uint32_t*,
+                                     AudioInputError* error, char* message,
+                                     int messageCap) {
+    if (error) {
+        *error = AudioInputError::Unsupported;
+    }
+    if (message && messageCap > 0) {
+        message[0] = 0;
+    }
+    return nullptr;
+}
+
+void SysAudioInputStop(AudioInputStream*) {}
+
+}
+
+#endif
+
+#endif
+
+#if GPUI_OS_MAC
+#line 1 "src/sys/audio_input_mac.cpp"
+
+namespace gpui {
+
+static const int kQueueBuffers = 3;
+static const Float64 kQueueRate = 48000;
+
+static const UInt32 kQueueFrames = 960;
+
+struct AudioInputStream {
+    AudioInputCallbacks callbacks = {};
+    AudioQueueRef queue = nullptr;
+    AudioQueueBufferRef buffers[kQueueBuffers] = {};
+    volatile int stop = 0;
+};
+
+static void OnQueueInput(void* user, AudioQueueRef queue,
+                         AudioQueueBufferRef buffer, const AudioTimeStamp*,
+                         UInt32, const AudioStreamPacketDescription*) {
+    AudioInputStream* s = (AudioInputStream*)user;
+    if (__atomic_load_n(&s->stop, __ATOMIC_RELAXED)) {
+        return;
+    }
+    int frames = (int)(buffer->mAudioDataByteSize / sizeof(Float32));
+    if (frames > 0) {
+        s->callbacks.samples(s->callbacks.user,
+                             (const float*)buffer->mAudioData, frames);
+    }
+    OSStatus status = AudioQueueEnqueueBuffer(queue, buffer, 0, nullptr);
+    if (status != noErr && s->callbacks.error &&
+        !__atomic_load_n(&s->stop, __ATOMIC_RELAXED)) {
+        s->callbacks
+            .error(s->callbacks.user,
+                   fmt("the audio input queue failed (%d)", (int)status));
+    }
+}
+
+static void SetMessage(char* message, int cap, Str text) {
+    if (!message || cap <= 0) {
+        return;
+    }
+    int n = len(text) < cap - 1 ? len(text) : cap - 1;
+    if (n > 0) {
+        memcpy(message, text.s, (size_t)n);
+    }
+    message[n] = 0;
+}
+
+bool SysAudioInputAvailable() {
+    return true;
+}
+
+bool SysAudioInputDeviceName(char* out, int cap) {
+    if (!out || cap <= 0) {
+        return false;
+    }
+    out[0] = 0;
+    AVCaptureDevice* device =
+        [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
+    if (!device) {
+        return false;
+    }
+    const char* name = [[device localizedName] UTF8String];
+    SetMessage(out, cap, Str(name && name[0] ? name : "Unnamed device"));
+    return true;
+}
+
+AudioInputStream* SysAudioInputStart(const AudioInputCallbacks& callbacks,
+                                     uint32_t* sampleRate,
+                                     AudioInputError* error, char* message,
+                                     int messageCap) {
+    SetMessage(message, messageCap, Str{});
+    AVAuthorizationStatus access =
+        [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
+    if (access == AVAuthorizationStatusDenied ||
+        access == AVAuthorizationStatusRestricted) {
+        *error = AudioInputError::PermissionDenied;
+        return nullptr;
+    }
+
+    AudioStreamBasicDescription format = {};
+    format.mSampleRate = kQueueRate;
+    format.mFormatID = kAudioFormatLinearPCM;
+    format.mFormatFlags = kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked;
+    format.mChannelsPerFrame = 1;
+    format.mBitsPerChannel = 32;
+    format.mBytesPerFrame = sizeof(Float32);
+    format.mBytesPerPacket = sizeof(Float32);
+    format.mFramesPerPacket = 1;
+
+    AudioInputStream* s = new AudioInputStream();
+    s->callbacks = callbacks;
+
+    OSStatus status = AudioQueueNewInput(&format, &OnQueueInput, s, nullptr,
+                                         nullptr, 0, &s->queue);
+    for (int i = 0; status == noErr && i < kQueueBuffers; i++) {
+        status = AudioQueueAllocateBuffer(
+            s->queue, kQueueFrames * sizeof(Float32), &s->buffers[i]);
+        if (status == noErr) {
+            status =
+                AudioQueueEnqueueBuffer(s->queue, s->buffers[i], 0, nullptr);
+        }
+    }
+    if (status == noErr) {
+        status = AudioQueueStart(s->queue, nullptr);
+    }
+    if (status != noErr) {
+
+        *error =
+            s->queue ? AudioInputError::Failed : AudioInputError::NoInputDevice;
+        SetMessage(message, messageCap,
+                   fmt("cannot start the audio input queue (%d)", (int)status));
+        if (s->queue) {
+            AudioQueueDispose(s->queue, true);
+        }
+        delete s;
+        return nullptr;
+    }
+    if (sampleRate) {
+        *sampleRate = (uint32_t)kQueueRate;
+    }
+    return s;
+}
+
+void SysAudioInputStop(AudioInputStream* s) {
+    if (!s) {
+        return;
+    }
+    __atomic_store_n(&s->stop, 1, __ATOMIC_RELAXED);
+
+    AudioQueueStop(s->queue, true);
+    AudioQueueDispose(s->queue, true);
+    delete s;
+}
+
+}
+
+#endif
+
+#if GPUI_OS_WASM
+#line 1 "src/sys/audio_input_wasm.cpp"
+
+namespace gpui {
+
+bool SysAudioInputAvailable() {
+    return false;
+}
+
+bool SysAudioInputDeviceName(char* out, int cap) {
+    if (out && cap > 0) {
+        out[0] = 0;
+    }
+    return false;
+}
+
+AudioInputStream* SysAudioInputStart(const AudioInputCallbacks&, uint32_t*,
+                                     AudioInputError* error, char* message,
+                                     int messageCap) {
+    if (error) {
+        *error = AudioInputError::Unsupported;
+    }
+    if (message && messageCap > 0) {
+        message[0] = 0;
+    }
+    return nullptr;
+}
+
+void SysAudioInputStop(AudioInputStream*) {}
+
+}
+
+#endif
+
+#if GPUI_OS_WINDOWS
+#line 1 "src/sys/audio_input_win.cpp"
+
+namespace gpui {
+
+struct AudioInputStream {
+    AudioInputCallbacks callbacks = {};
+    HANDLE thread = nullptr;
+
+    HANDLE ready = nullptr;
+    HANDLE stop = nullptr;
+    uint32_t sampleRate = 0;
+    AudioInputError error = AudioInputError::None;
+    char message[160] = {};
+};
+
+static void StreamFail(AudioInputStream* s, AudioInputError error, HRESULT hr,
+                       const char* what) {
+    s->error = error;
+    Str text = fmt("%s (0x%08x)", Str(what), (uint32_t)hr);
+    int n = len(text) < (int)sizeof(s->message) - 1
+                ? len(text)
+                : (int)sizeof(s->message) - 1;
+    memcpy(s->message, text.s, (size_t)n);
+    s->message[n] = 0;
+}
+
+static AudioInputError sys_audio_input_win_ErrorOf(HRESULT hr) {
+
+    if (hr == (HRESULT)0x80070490 || hr == AUDCLNT_E_DEVICE_INVALIDATED) {
+        return AudioInputError::NoInputDevice;
+    }
+    if (hr == E_ACCESSDENIED) {
+        return AudioInputError::PermissionDenied;
+    }
+    return AudioInputError::Failed;
+}
+
+enum class SampleKind : uint8_t {
+    F32,
+    I16,
+    I32,
+    Unknown
+};
+
+static SampleKind KindOf(const WAVEFORMATEX* wf) {
+    WORD tag = wf->wFormatTag;
+    if (tag == WAVE_FORMAT_EXTENSIBLE && wf->cbSize >= 22) {
+
+        tag = (WORD)((const WAVEFORMATEXTENSIBLE*)wf)->SubFormat.Data1;
+    }
+    if (tag == WAVE_FORMAT_IEEE_FLOAT && wf->wBitsPerSample == 32) {
+        return SampleKind::F32;
+    }
+    if (tag == WAVE_FORMAT_PCM && wf->wBitsPerSample == 16) {
+        return SampleKind::I16;
+    }
+    if (tag == WAVE_FORMAT_PCM && wf->wBitsPerSample == 32) {
+        return SampleKind::I32;
+    }
+    return SampleKind::Unknown;
+}
+
+static void MixDown(const BYTE* data, UINT32 frames, int channels,
+                    SampleKind kind, bool silent, float* out) {
+    for (UINT32 f = 0; f < frames; f++) {
+        float sum = 0;
+        if (!silent && data) {
+            for (int c = 0; c < channels; c++) {
+                size_t ix = (size_t)f * (size_t)channels + (size_t)c;
+                if (kind == SampleKind::F32) {
+                    sum += ((const float*)data)[ix];
+                } else if (kind == SampleKind::I16) {
+                    sum += (float)((const int16_t*)data)[ix] / 32768.f;
+                } else {
+                    sum += (float)((const int32_t*)data)[ix] / 2147483648.f;
+                }
+            }
+        }
+        out[f] = sum / (float)channels;
+    }
+}
+
+static DWORD WINAPI CaptureThread(LPVOID param) {
+    AudioInputStream* s = (AudioInputStream*)param;
+    HRESULT coInit = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    IMMDeviceEnumerator* enumerator = nullptr;
+    IMMDevice* device = nullptr;
+    IAudioClient* client = nullptr;
+    IAudioCaptureClient* capture = nullptr;
+    WAVEFORMATEX* format = nullptr;
+    HANDLE dataEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+    SampleKind kind = SampleKind::Unknown;
+    int channels = 1;
+    bool started = false;
+
+    HRESULT hr =
+        CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
+                         __uuidof(IMMDeviceEnumerator), (void**)&enumerator);
+    const char* what = "cannot enumerate audio devices";
+    if (SUCCEEDED(hr)) {
+        what = "no default audio input device";
+        hr = enumerator->GetDefaultAudioEndpoint(eCapture, eConsole, &device);
+    }
+    if (SUCCEEDED(hr)) {
+        what = "cannot open the audio input device";
+        hr = device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
+                              (void**)&client);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = client->GetMixFormat(&format);
+    }
+    if (SUCCEEDED(hr)) {
+        kind = KindOf(format);
+        channels = format->nChannels > 0 ? format->nChannels : 1;
+        if (kind == SampleKind::Unknown) {
+            what = "unsupported sample format";
+            hr = E_FAIL;
+        }
+    }
+    if (SUCCEEDED(hr)) {
+        what = "cannot start the audio input device";
+
+        hr = client->Initialize(AUDCLNT_SHAREMODE_SHARED,
+                                AUDCLNT_STREAMFLAGS_EVENTCALLBACK, 2000000, 0,
+                                format, nullptr);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = client->SetEventHandle(dataEvent);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = client
+                 ->GetService(__uuidof(IAudioCaptureClient), (void**)&capture);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = client->Start();
+        started = SUCCEEDED(hr);
+    }
+    if (FAILED(hr)) {
+        StreamFail(s, sys_audio_input_win_ErrorOf(hr), hr, what);
+    } else {
+        s->sampleRate = format->nSamplesPerSec;
+    }
+    SetEvent(s->ready);
+
+    Vec<float> mono;
+    HANDLE waits[2] = {s->stop, dataEvent};
+    while (started) {
+        DWORD woke = WaitForMultipleObjects(2, waits, FALSE, 2000);
+        if (woke == WAIT_OBJECT_0) {
+            break;
+        }
+        if (woke != WAIT_OBJECT_0 + 1 && woke != WAIT_TIMEOUT) {
+            break;
+        }
+        UINT32 packet = 0;
+        hr = capture->GetNextPacketSize(&packet);
+        while (SUCCEEDED(hr) && packet > 0) {
+            BYTE* data = nullptr;
+            UINT32 frames = 0;
+            DWORD flags = 0;
+            hr = capture->GetBuffer(&data, &frames, &flags, nullptr, nullptr);
+            if (FAILED(hr)) {
+                break;
+            }
+            if (frames > 0) {
+                mono.len = 0;
+                float* out = VecInsertSpace(mono, 0, (int)frames);
+                if (out) {
+                    MixDown(data, frames, channels, kind,
+                            (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0, out);
+                    s->callbacks.samples(s->callbacks.user, out, (int)frames);
+                }
+            }
+            capture->ReleaseBuffer(frames);
+            hr = capture->GetNextPacketSize(&packet);
+        }
+        if (FAILED(hr)) {
+            if (s->callbacks.error) {
+                s->callbacks
+                    .error(s->callbacks.user,
+                           hr == AUDCLNT_E_DEVICE_INVALIDATED
+                               ? StrL("the audio input device went away")
+                               : fmt("the audio input device failed (0x%08x)",
+                                     (uint32_t)hr));
+            }
+            break;
+        }
+    }
+
+    if (started) {
+        client->Stop();
+    }
+    if (capture) capture->Release();
+    if (format) CoTaskMemFree(format);
+    if (client) client->Release();
+    if (device) device->Release();
+    if (enumerator) enumerator->Release();
+    if (dataEvent) CloseHandle(dataEvent);
+    if (SUCCEEDED(coInit)) {
+        CoUninitialize();
+    }
+    return 0;
+}
+
+static void StreamFree(AudioInputStream* s) {
+    if (s->thread) CloseHandle(s->thread);
+    if (s->ready) CloseHandle(s->ready);
+    if (s->stop) CloseHandle(s->stop);
+    delete s;
+}
+
+bool SysAudioInputAvailable() {
+    return true;
+}
+
+static const PROPERTYKEY kDeviceFriendlyName = {
+    {0xa45c254e,
+     0xdf1c,
+     0x4efd,
+     {0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0}},
+    14};
+
+bool SysAudioInputDeviceName(char* out, int cap) {
+    if (!out || cap <= 0) {
+        return false;
+    }
+    out[0] = 0;
+
+    HRESULT coInit = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    IMMDeviceEnumerator* enumerator = nullptr;
+    IMMDevice* device = nullptr;
+    IPropertyStore* props = nullptr;
+    HRESULT hr =
+        CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
+                         __uuidof(IMMDeviceEnumerator), (void**)&enumerator);
+    if (SUCCEEDED(hr)) {
+        hr = enumerator->GetDefaultAudioEndpoint(eCapture, eConsole, &device);
+    }
+    bool found = SUCCEEDED(hr);
+    if (found) {
+        PROPVARIANT value;
+        PropVariantInit(&value);
+        if (SUCCEEDED(device->OpenPropertyStore(STGM_READ, &props)) &&
+            SUCCEEDED(props->GetValue(kDeviceFriendlyName, &value)) &&
+            value.vt == VT_LPWSTR && value.pwszVal) {
+            if (WideCharToMultiByte(CP_UTF8, 0, value.pwszVal, -1, out, cap,
+                                    nullptr, nullptr) <= 0) {
+                out[0] = 0;
+            }
+        }
+        PropVariantClear(&value);
+        if (!out[0]) {
+
+            strncpy_s(out, (size_t)cap, "Unnamed device", _TRUNCATE);
+        }
+    }
+    if (props) props->Release();
+    if (device) device->Release();
+    if (enumerator) enumerator->Release();
+    if (SUCCEEDED(coInit)) {
+        CoUninitialize();
+    }
+    return found;
+}
+
+AudioInputStream* SysAudioInputStart(const AudioInputCallbacks& callbacks,
+                                     uint32_t* sampleRate,
+                                     AudioInputError* error, char* message,
+                                     int messageCap) {
+    AudioInputStream* s = new AudioInputStream();
+    s->callbacks = callbacks;
+    s->ready = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    s->stop = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    s->thread = s->ready && s->stop
+                    ? CreateThread(nullptr, 0, &CaptureThread, s, 0, nullptr)
+                    : nullptr;
+    if (!s->thread) {
+        StreamFail(s, AudioInputError::Failed, E_FAIL,
+                   "cannot start the capture thread");
+    } else {
+        WaitForSingleObject(s->ready, INFINITE);
+    }
+    if (s->error != AudioInputError::None) {
+        if (s->thread) {
+            WaitForSingleObject(s->thread, INFINITE);
+        }
+        if (error) {
+            *error = s->error;
+        }
+        if (message && messageCap > 0) {
+            int n = (int)strlen(s->message);
+            n = n < messageCap - 1 ? n : messageCap - 1;
+            memcpy(message, s->message, (size_t)n);
+            message[n] = 0;
+        }
+        StreamFree(s);
+        return nullptr;
+    }
+    if (sampleRate) {
+        *sampleRate = s->sampleRate;
+    }
+    return s;
+}
+
+void SysAudioInputStop(AudioInputStream* s) {
+    if (!s) {
+        return;
+    }
+    SetEvent(s->stop);
+    WaitForSingleObject(s->thread, INFINITE);
+    StreamFree(s);
+}
+
+}
+
+#endif
+
 #if GPUI_OS_LINUX || GPUI_OS_ANDROID
 #line 1 "src/sys/dir_watch_inotify.cpp"
 
@@ -230232,6 +231629,1352 @@ void SysNotifyShutdown() {
     }
     gNotify.onResponse = {};
     gNotify.tag[0] = 0;
+}
+
+}
+
+#endif
+
+#if GPUI_OS_LINUX
+#line 1 "src/sys/speech_recognizer_linux.cpp"
+
+namespace gpui {
+
+SysSpeechRecognizer* SysSpeechRecognizerNew(Str) {
+    return nullptr;
+}
+
+void SysSpeechRecognizerFree(SysSpeechRecognizer*) {}
+
+bool SysSpeechRecognizerAvailable(const SysSpeechRecognizer*) {
+    return false;
+}
+
+SysSpeechSession* SysSpeechSessionStart(SysSpeechRecognizer*,
+                                        const SysSpeechEvents&,
+                                        SysSpeechError* error, char* message,
+                                        int messageCap) {
+    if (error) {
+        *error = SysSpeechError::Unsupported;
+    }
+    if (message && messageCap > 0) {
+        message[0] = 0;
+    }
+    return nullptr;
+}
+
+void SysSpeechSessionPushAudio(SysSpeechSession*, const int16_t*, int) {}
+void SysSpeechSessionFinish(SysSpeechSession*) {}
+void SysSpeechSessionDrop(SysSpeechSession*) {}
+
+}
+
+#endif
+
+#if GPUI_OS_MAC
+#line 1 "src/sys/speech_recognizer_mac.cpp"
+
+namespace gpui {
+struct SysSpeechSession;
+static void SessionRelease(SysSpeechSession* s);
+}
+
+@interface GpuiSpeechSessionRef : NSObject {
+  @public
+    gpui::SysSpeechSession* session;
+}
+@end
+
+@implementation GpuiSpeechSessionRef
+- (void)dealloc {
+    if (session) {
+        gpui::SessionRelease(session);
+    }
+}
+@end
+
+namespace gpui {
+
+static NSString* const kUsageDescriptionKey =
+    @"NSSpeechRecognitionUsageDescription";
+
+static NSString* const kNoSpeechDomain = @"kAFAssistantErrorDomain";
+static const NSInteger kNoSpeechCode = 1110;
+
+struct SysSpeechRecognizer {
+
+    SFSpeechRecognizer* recognizer = nil;
+};
+
+static bool HasUsageDescription() {
+    return [[NSBundle mainBundle]
+               objectForInfoDictionaryKey:kUsageDescriptionKey] != nil;
+}
+
+static bool IsSpeechDenied(SFSpeechRecognizerAuthorizationStatus status) {
+    return status == SFSpeechRecognizerAuthorizationStatusDenied ||
+           status == SFSpeechRecognizerAuthorizationStatusRestricted;
+}
+
+SysSpeechRecognizer* SysSpeechRecognizerNew(Str locale) {
+    SysSpeechRecognizer* r = new SysSpeechRecognizer();
+    if (!HasUsageDescription()) {
+        logf(
+            "speech recognition is unavailable: the application's Info.plist "
+            "has no `NSSpeechRecognitionUsageDescription`, and asking for "
+            "access without it terminates the process\n");
+        return r;
+    }
+    if (len(locale) > 0) {
+        NSString* identifier =
+            [[NSString alloc] initWithBytes:locale.s
+                                     length:(NSUInteger)len(locale)
+                                   encoding:NSUTF8StringEncoding];
+        NSLocale* nsLocale =
+            identifier ? [[NSLocale alloc] initWithLocaleIdentifier:identifier]
+                       : nil;
+        r->recognizer =
+            nsLocale ? [[SFSpeechRecognizer alloc] initWithLocale:nsLocale]
+                     : nil;
+    } else {
+        r->recognizer = [[SFSpeechRecognizer alloc] init];
+    }
+    if (!r->recognizer) {
+        logf(
+            "speech recognition is unavailable: no recognizer for the "
+            "locale\n");
+    }
+    return r;
+}
+
+void SysSpeechRecognizerFree(SysSpeechRecognizer* r) {
+    delete r;
+}
+
+static SFSpeechRecognizer* OnDevice(const SysSpeechRecognizer* r) {
+    SFSpeechRecognizer* recognizer = r ? r->recognizer : nil;
+    if (!recognizer || !recognizer.isAvailable) {
+        return nil;
+    }
+    if (@available(macOS 10.15, *)) {
+        return recognizer.supportsOnDeviceRecognition ? recognizer : nil;
+    }
+    return nil;
+}
+
+bool SysSpeechRecognizerAvailable(const SysSpeechRecognizer* r) {
+    return OnDevice(r) != nil &&
+           !IsSpeechDenied([SFSpeechRecognizer authorizationStatus]);
+}
+
+struct SysSpeechSession {
+
+    volatile int refs = 1;
+    SysSpeechEvents events = {};
+
+    bool dropped = false;
+
+    SFSpeechRecognizer* recognizer = nil;
+    SFSpeechAudioBufferRecognitionRequest* request = nil;
+    AVAudioFormat* format = nil;
+
+    SFSpeechRecognitionTask* task = nil;
+
+    Vec<int16_t> pending;
+    bool finishing = false;
+    bool done = false;
+
+    Str utterance = {};
+    bool hasUtterance = false;
+
+    Str hypothesis = {};
+
+    uint32_t lastCommitted = 0;
+    bool hasLastCommitted = false;
+
+    ~SysSpeechSession() {
+        StrFree(utterance);
+        StrFree(hypothesis);
+    }
+};
+
+static void SessionAddRef(SysSpeechSession* s) {
+    __atomic_add_fetch(&s->refs, 1, __ATOMIC_RELAXED);
+}
+
+static GpuiSpeechSessionRef* SessionRef(SysSpeechSession* s) {
+    GpuiSpeechSessionRef* ref = [[GpuiSpeechSessionRef alloc] init];
+    ref->session = s;
+    SessionAddRef(s);
+    return ref;
+}
+
+void SessionRelease(SysSpeechSession* s) {
+    if (__atomic_sub_fetch(&s->refs, 1, __ATOMIC_ACQ_REL) == 0) {
+        delete s;
+    }
+}
+
+enum class SpeechEventKind : uint8_t {
+    Authorized,
+    Result,
+    Error
+};
+
+struct SpeechEventMessage {
+    SysSpeechSession* session = nullptr;
+    SpeechEventKind kind = SpeechEventKind::Authorized;
+    bool authorized = false;
+
+    Str text = {};
+    bool isFinal = false;
+
+    bool endsUtterance = false;
+
+    Str domain = {};
+    long code = 0;
+};
+
+static Str HeapStr(NSString* s) {
+    const char* utf8 = s ? [s UTF8String] : nullptr;
+    return utf8 ? StrDup(Str(utf8)) : Str{};
+}
+
+static void OnEvent(SpeechEventMessage* m);
+
+static void Post(SpeechEventMessage* m) {
+    SessionAddRef(m->session);
+    ExecPost(MkFunc0(&OnEvent, m));
+}
+
+static uint32_t FirstChar(Str s, int* bytes) {
+    uint8_t b = (uint8_t)s.s[0];
+    int n = b < 0x80 ? 1 : (b >> 5) == 0x6 ? 2 : (b >> 4) == 0xE ? 3 : 4;
+    if (n > len(s)) {
+        n = 1;
+    }
+    uint32_t c = n == 1   ? b
+                 : n == 2 ? (b & 0x1F)
+                 : n == 3 ? (b & 0x0F)
+                          : (b & 0x07);
+    for (int i = 1; i < n; i++) {
+        c = (c << 6) | ((uint8_t)s.s[i] & 0x3F);
+    }
+    *bytes = n;
+    return c;
+}
+
+static uint32_t LastChar(Str s) {
+    int at = len(s) - 1;
+    while (at > 0 && ((uint8_t)s.s[at] & 0xC0) == 0x80) {
+        at--;
+    }
+    int n = 0;
+    return FirstChar(Str(s.s + at, len(s) - at), &n);
+}
+
+static Str JoinedTemp(const SysSpeechSession* s, Str text) {
+    if (s->hasLastCommitted && len(text) > 0) {
+        int n = 0;
+        if (SpeechNeedsSpace(s->lastCommitted, FirstChar(text, &n))) {
+            return fmt(" %s", text);
+        }
+    }
+    return text;
+}
+
+static void CommitPhrase(SysSpeechSession* s, Str text) {
+    if (len(text) == 0) {
+        return;
+    }
+    Str joined = JoinedTemp(s, text);
+    s->lastCommitted = LastChar(joined);
+    s->hasLastCommitted = true;
+    s->events.phrase(s->events.user, joined);
+}
+
+static void AppendAudio(SysSpeechSession* s, const int16_t* samples, int count) {
+    if (count <= 0) {
+        return;
+    }
+    AVAudioPCMBuffer* buffer =
+        [[AVAudioPCMBuffer alloc] initWithPCMFormat:s->format
+                                      frameCapacity:(AVAudioFrameCount)count];
+    if (!buffer || !buffer.int16ChannelData) {
+        return;
+    }
+
+    memcpy(buffer.int16ChannelData[0], samples,
+           (size_t)count * sizeof(int16_t));
+    buffer.frameLength = (AVAudioFrameCount)count;
+    [s->request appendAudioPCMBuffer:buffer];
+}
+
+static void BeginRecognition(SysSpeechSession* s) {
+
+    GpuiSpeechSessionRef* ref = SessionRef(s);
+    s->task = [s->recognizer
+        recognitionTaskWithRequest:s->request
+                     resultHandler:^(SFSpeechRecognitionResult* result,
+                                     NSError* error) {
+                       SysSpeechSession* session = ref->session;
+                       if (result) {
+                           SpeechEventMessage* m = new SpeechEventMessage();
+                           m->session = session;
+                           m->kind = SpeechEventKind::Result;
+                           m->text = HeapStr(result.bestTranscription
+                                                 .formattedString);
+                           m->isFinal = result.isFinal;
+                           if (@available(macOS 11.3, *)) {
+                               m->endsUtterance =
+                                   result.speechRecognitionMetadata != nil;
+                           }
+                           Post(m);
+                       }
+                       if (error) {
+                           SpeechEventMessage* m = new SpeechEventMessage();
+                           m->session = session;
+                           m->kind = SpeechEventKind::Error;
+                           m->domain = HeapStr(error.domain);
+                           m->code = (long)error.code;
+                           m->text = HeapStr(error.localizedDescription);
+                           Post(m);
+                       }
+                     }];
+    if (len(s->pending) > 0) {
+        AppendAudio(s, s->pending.els, len(s->pending));
+        s->pending.len = 0;
+    }
+    if (s->finishing) {
+        [s->request endAudio];
+    }
+    s->events.ready(s->events.user);
+}
+
+static void OnResult(SysSpeechSession* s, Str text, bool isFinal,
+                     bool endsUtterance) {
+    if (s->hasUtterance) {
+        Str utterance = s->utterance;
+        s->utterance = {};
+        s->hasUtterance = false;
+        if (SpeechStartsOver(utterance, text)) {
+            CommitPhrase(s, utterance);
+        }
+        StrFree(utterance);
+        if (s->dropped) {
+            return;
+        }
+    }
+    if (isFinal) {
+        StrFree(s->hypothesis);
+        s->hypothesis = {};
+        CommitPhrase(s, text);
+        s->done = true;
+        if (!s->dropped) {
+            s->events.finish(s->events.user);
+        }
+        return;
+    }
+    if (endsUtterance) {
+        s->utterance = len(text) > 0 ? StrDup(text) : Str{};
+        s->hasUtterance = true;
+    }
+    Str shown = JoinedTemp(s, text);
+    StrFree(s->hypothesis);
+    s->hypothesis = len(text) > 0 ? StrDup(text) : Str{};
+    s->events.hypothesis(s->events.user, shown);
+}
+
+static void OnEvent(SpeechEventMessage* m) {
+    SysSpeechSession* s = m->session;
+    if (!s->dropped && !s->done) {
+        switch (m->kind) {
+            case SpeechEventKind::Authorized:
+                if (m->authorized) {
+                    BeginRecognition(s);
+                } else {
+                    s->done = true;
+                    s->events.error(s->events.user,
+                                    SysSpeechError::PermissionDenied, Str{});
+                }
+                break;
+            case SpeechEventKind::Result:
+                OnResult(s, m->text, m->isFinal, m->endsUtterance);
+                break;
+            case SpeechEventKind::Error: {
+                bool noSpeech =
+                    s->finishing && m->code == kNoSpeechCode &&
+                    StrEq(m->domain, Str([kNoSpeechDomain UTF8String]));
+                s->done = true;
+                if (noSpeech) {
+
+                    Str hypothesis = s->hypothesis;
+                    s->hypothesis = {};
+                    CommitPhrase(s, hypothesis);
+                    StrFree(hypothesis);
+                    if (!s->dropped) {
+                        s->events.finish(s->events.user);
+                    }
+                } else {
+                    s->events.error(
+                        s->events.user, SysSpeechError::Recognizer,
+                        fmt("%s (%s %d)", m->text, m->domain, (int)m->code));
+                }
+                break;
+            }
+        }
+    }
+    StrFree(m->text);
+    StrFree(m->domain);
+    delete m;
+    SessionRelease(s);
+}
+
+SysSpeechSession* SysSpeechSessionStart(SysSpeechRecognizer* r,
+                                        const SysSpeechEvents& events,
+                                        SysSpeechError* error, char* message,
+                                        int messageCap) {
+    if (message && messageCap > 0) {
+        message[0] = 0;
+    }
+    SFSpeechRecognizer* recognizer = OnDevice(r);
+    if (!recognizer) {
+        *error = SysSpeechError::Unsupported;
+        return nullptr;
+    }
+    SFSpeechRecognizerAuthorizationStatus authorization =
+        [SFSpeechRecognizer authorizationStatus];
+    if (IsSpeechDenied(authorization)) {
+        *error = SysSpeechError::PermissionDenied;
+        return nullptr;
+    }
+
+    AVAudioFormat* format =
+        [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16
+                                         sampleRate:16000
+                                           channels:1
+                                        interleaved:NO];
+    if (!format) {
+        *error = SysSpeechError::Recognizer;
+        const char* text = "cannot create the audio format";
+        if (message && messageCap > (int)strlen(text)) {
+            memcpy(message, text, strlen(text) + 1);
+        }
+        return nullptr;
+    }
+    SFSpeechAudioBufferRecognitionRequest* request =
+        [[SFSpeechAudioBufferRecognitionRequest alloc] init];
+    request.shouldReportPartialResults = YES;
+
+    if (@available(macOS 10.15, *)) {
+        request.requiresOnDeviceRecognition = YES;
+    }
+
+    if (@available(macOS 13.0, *)) {
+        request.addsPunctuation = YES;
+    }
+
+    SysSpeechSession* s = new SysSpeechSession();
+    s->events = events;
+    s->recognizer = recognizer;
+    s->request = request;
+    s->format = format;
+    if (authorization == SFSpeechRecognizerAuthorizationStatusAuthorized) {
+
+        SpeechEventMessage* m = new SpeechEventMessage();
+        m->session = s;
+        m->kind = SpeechEventKind::Authorized;
+        m->authorized = true;
+        Post(m);
+    } else {
+
+        GpuiSpeechSessionRef* ref = SessionRef(s);
+        [SFSpeechRecognizer requestAuthorization:^(
+                                SFSpeechRecognizerAuthorizationStatus status) {
+          SpeechEventMessage* m = new SpeechEventMessage();
+          m->session = ref->session;
+          m->kind = SpeechEventKind::Authorized;
+          m->authorized =
+              status == SFSpeechRecognizerAuthorizationStatusAuthorized;
+          Post(m);
+        }];
+    }
+    return s;
+}
+
+void SysSpeechSessionPushAudio(SysSpeechSession* s, const int16_t* samples,
+                               int count) {
+    if (!s || s->done || s->finishing || count <= 0) {
+        return;
+    }
+    if (s->task) {
+        AppendAudio(s, samples, count);
+    } else {
+        int16_t* dst = VecInsertSpace(s->pending, len(s->pending), count);
+        if (dst) {
+            memcpy(dst, samples, (size_t)count * sizeof(int16_t));
+        }
+    }
+}
+
+void SysSpeechSessionFinish(SysSpeechSession* s) {
+    if (!s || s->finishing) {
+        return;
+    }
+    s->finishing = true;
+    if (s->task) {
+        [s->request endAudio];
+    }
+}
+
+void SysSpeechSessionDrop(SysSpeechSession* s) {
+    if (!s) {
+        return;
+    }
+    s->dropped = true;
+    if (s->task) {
+
+        [s->task cancel];
+    }
+    s->task = nil;
+    s->request = nil;
+    s->recognizer = nil;
+    SessionRelease(s);
+}
+
+}
+
+#endif
+
+#if GPUI_OS_WASM
+#line 1 "src/sys/speech_recognizer_wasm.cpp"
+
+namespace gpui {
+
+SysSpeechRecognizer* SysSpeechRecognizerNew(Str) {
+    return nullptr;
+}
+
+void SysSpeechRecognizerFree(SysSpeechRecognizer*) {}
+
+bool SysSpeechRecognizerAvailable(const SysSpeechRecognizer*) {
+    return false;
+}
+
+SysSpeechSession* SysSpeechSessionStart(SysSpeechRecognizer*,
+                                        const SysSpeechEvents&,
+                                        SysSpeechError* error, char* message,
+                                        int messageCap) {
+    if (error) {
+        *error = SysSpeechError::Unsupported;
+    }
+    if (message && messageCap > 0) {
+        message[0] = 0;
+    }
+    return nullptr;
+}
+
+void SysSpeechSessionPushAudio(SysSpeechSession*, const int16_t*, int) {}
+void SysSpeechSessionFinish(SysSpeechSession*) {}
+void SysSpeechSessionDrop(SysSpeechSession*) {}
+
+}
+
+#endif
+
+#if GPUI_OS_WINDOWS
+#line 1 "src/sys/speech_recognizer_win.cpp"
+
+namespace gpui {
+
+using namespace ABI::Windows::Foundation;
+using namespace ABI::Windows::Globalization;
+using namespace ABI::Windows::Media::SpeechRecognition;
+
+static const HRESULT kPrivacyPolicyNotAccepted = (HRESULT)0x80045509;
+
+static const HRESULT kNoCaptureDevices = (HRESULT)0xC00DABE0;
+
+enum : int {
+    kStatusSuccess = 0,
+    kStatusTopicLanguageNotSupported = 1,
+    kStatusAudioQualityFailure = 4,
+    kStatusUserCanceled = 5,
+    kStatusTimeoutExceeded = 7,
+    kStatusNetworkFailure = 9,
+    kStatusMicrophoneUnavailable = 10,
+};
+
+static const int kConfidenceRejected = 3;
+
+struct WinRt {
+    bool tried = false;
+    bool ok = false;
+    HRESULT(WINAPI* getActivationFactory)(HSTRING, REFIID, void**) = nullptr;
+    HRESULT(WINAPI* createString)(PCNZWCH, UINT32, HSTRING*) = nullptr;
+    HRESULT(WINAPI* deleteString)(HSTRING) = nullptr;
+    PCWSTR(WINAPI* getStringRawBuffer)(HSTRING, UINT32*) = nullptr;
+};
+
+static WinRt* WinRtGet() {
+    static WinRt rt;
+    if (rt.tried) {
+        return rt.ok ? &rt : nullptr;
+    }
+    rt.tried = true;
+    HMODULE mod = LoadLibraryW(L"combase.dll");
+    if (!mod) {
+        return nullptr;
+    }
+    rt.getActivationFactory =
+        (decltype(rt.getActivationFactory))(void*)GetProcAddress(
+            mod, "RoGetActivationFactory");
+    rt.createString = (decltype(rt.createString))(void*)GetProcAddress(
+        mod, "WindowsCreateString");
+    rt.deleteString = (decltype(rt.deleteString))(void*)GetProcAddress(
+        mod, "WindowsDeleteString");
+    rt.getStringRawBuffer =
+        (decltype(rt.getStringRawBuffer))(void*)GetProcAddress(
+            mod, "WindowsGetStringRawBuffer");
+    rt.ok = rt.getActivationFactory && rt.createString && rt.deleteString &&
+            rt.getStringRawBuffer;
+    return rt.ok ? &rt : nullptr;
+}
+
+struct HStr {
+    HSTRING h = nullptr;
+
+    explicit HStr(const WCHAR* w) {
+        if (WinRt* rt = WinRtGet()) {
+            rt->createString(w, (UINT32)wcslen(w), &h);
+        }
+    }
+    explicit HStr(Str s) : HStr(ToCWstrTemp(s)) {}
+    ~HStr() {
+        if (h) {
+            WinRtGet()->deleteString(h);
+        }
+    }
+    HStr(const HStr&) = delete;
+    HStr& operator=(const HStr&) = delete;
+};
+
+static Str TakeHString(HSTRING h) {
+    WinRt* rt = WinRtGet();
+    if (!rt || !h) {
+        return {};
+    }
+    UINT32 n = 0;
+    PCWSTR w = rt->getStringRawBuffer(h, &n);
+    Str out = {};
+    if (w && n > 0) {
+        int bytes = WideCharToMultiByte(CP_UTF8, 0, w, (int)n, nullptr, 0,
+                                        nullptr, nullptr);
+        char* buf = bytes > 0 ? (char*)malloc((size_t)bytes + 1) : nullptr;
+        if (buf) {
+            WideCharToMultiByte(CP_UTF8, 0, w, (int)n, buf, bytes, nullptr,
+                                nullptr);
+            buf[bytes] = 0;
+            out = StrDup(Str(buf, bytes));
+            free(buf);
+        }
+    }
+    rt->deleteString(h);
+    return out;
+}
+
+template <typename T>
+static HRESULT ActivationFactory(const WCHAR* runtimeClass, T** out) {
+    *out = nullptr;
+    WinRt* rt = WinRtGet();
+    if (!rt) {
+        return E_NOTIMPL;
+    }
+    HStr name(runtimeClass);
+    if (!name.h) {
+        return E_OUTOFMEMORY;
+    }
+    return rt->getActivationFactory(name.h, __uuidof(T), (void**)out);
+}
+
+static bool AsciiEqIgnoreCase(Str a, Str b) {
+    if (len(a) != len(b)) {
+        return false;
+    }
+    for (int i = 0; i < len(a); i++) {
+        char x = a.s[i], y = b.s[i];
+        x = x >= 'A' && x <= 'Z' ? (char)(x - 'A' + 'a') : x;
+        y = y >= 'A' && y <= 'Z' ? (char)(y - 'A' + 'a') : y;
+        if (x != y) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static Str LanguageTag(ILanguage* language) {
+    HSTRING tag = nullptr;
+    if (!language || FAILED(language->get_LanguageTag(&tag))) {
+        return {};
+    }
+    return TakeHString(tag);
+}
+
+static ILanguage* SupportedLanguage(Str locale) {
+    ISpeechRecognizerStatics* statics = nullptr;
+    if (FAILED(ActivationFactory(
+            RuntimeClass_Windows_Media_SpeechRecognition_SpeechRecognizer,
+            &statics))) {
+        return nullptr;
+    }
+    ILanguage* requested = nullptr;
+    if (len(locale) > 0) {
+        ILanguageStatics* languages = nullptr;
+        ILanguageFactory* factory = nullptr;
+        ActivationFactory(RuntimeClass_Windows_Globalization_Language,
+                          &languages);
+        ActivationFactory(RuntimeClass_Windows_Globalization_Language,
+                          &factory);
+        HStr tag(locale);
+        boolean wellFormed = 0;
+        if (languages && factory && tag.h &&
+            SUCCEEDED(languages->IsWellFormed(tag.h, &wellFormed)) &&
+            wellFormed) {
+            factory->CreateLanguage(tag.h, &requested);
+        }
+        if (languages) languages->Release();
+        if (factory) factory->Release();
+    } else {
+        statics->get_SystemSpeechLanguage(&requested);
+    }
+    Str want = LanguageTag(requested);
+    if (requested) {
+        requested->Release();
+    }
+    ILanguage* found = nullptr;
+    ILanguage* fallback = nullptr;
+    Collections::IVectorView<Language*>* supported = nullptr;
+    if (len(want) > 0 &&
+        SUCCEEDED(statics->get_SupportedTopicLanguages(&supported)) &&
+        supported) {
+        unsigned count = 0;
+        supported->get_Size(&count);
+        for (unsigned i = 0; i < count && !found; i++) {
+            ILanguage* language = nullptr;
+            if (FAILED(supported->GetAt(i, &language)) || !language) {
+                continue;
+            }
+            Str tag = LanguageTag(language);
+
+            bool region = len(tag) > len(want) + 1 && tag.s[len(want)] == '-' &&
+                          AsciiEqIgnoreCase(Str(tag.s, len(want)), want);
+            if (AsciiEqIgnoreCase(tag, want)) {
+                found = language;
+            } else if (!fallback && region) {
+                fallback = language;
+            } else {
+                language->Release();
+            }
+            StrFree(tag);
+        }
+        supported->Release();
+    }
+    StrFree(want);
+    statics->Release();
+    if (found) {
+        if (fallback) fallback->Release();
+        return found;
+    }
+    return fallback;
+}
+
+struct SysSpeechRecognizer {
+
+    ILanguage* language = nullptr;
+    Str separator = {};
+};
+
+SysSpeechRecognizer* SysSpeechRecognizerNew(Str locale) {
+    if (!WinRtGet()) {
+        return nullptr;
+    }
+    SysSpeechRecognizer* r = new SysSpeechRecognizer();
+    r->language = SupportedLanguage(locale);
+    r->separator = StrL(" ");
+    if (r->language) {
+        Str tag = LanguageTag(r->language);
+        r->separator = SpeechPhraseSeparator(tag);
+        StrFree(tag);
+    } else {
+        logf("speech: no dictation language\n");
+    }
+    return r;
+}
+
+void SysSpeechRecognizerFree(SysSpeechRecognizer* r) {
+    if (!r) {
+        return;
+    }
+    if (r->language) {
+        r->language->Release();
+    }
+    delete r;
+}
+
+bool SysSpeechRecognizerAvailable(const SysSpeechRecognizer* r) {
+    return r && r->language != nullptr;
+}
+
+typedef IAsyncOperation<SpeechRecognitionCompilationResult*> CompileOperation;
+
+struct SysSpeechSession {
+
+    volatile LONG refs = 1;
+    SysSpeechEvents events = {};
+
+    bool dropped = false;
+    bool done = false;
+    ISpeechRecognizer* recognizer = nullptr;
+    ISpeechRecognizer2* recognizer2 = nullptr;
+    ISpeechContinuousRecognitionSession* continuous = nullptr;
+    EventRegistrationToken hypothesisToken = {};
+    EventRegistrationToken resultToken = {};
+    EventRegistrationToken completedToken = {};
+    bool hasHypothesisToken = false;
+    bool hasResultToken = false;
+    bool hasCompletedToken = false;
+    CompileOperation* compiling = nullptr;
+    IAsyncAction* starting = nullptr;
+    bool started = false;
+
+    bool finishRequested = false;
+    bool separatorDue = false;
+    Str separator = {};
+};
+
+static void SessionAddRef(SysSpeechSession* s) {
+    InterlockedIncrement(&s->refs);
+}
+
+static void SessionRelease(SysSpeechSession* s) {
+    if (InterlockedDecrement(&s->refs) == 0) {
+        delete s;
+    }
+}
+
+enum class SpeechMessageKind : uint8_t {
+    Compiled,
+    Started,
+    Hypothesis,
+    Result,
+    Completed
+};
+
+struct SpeechMessage {
+    SysSpeechSession* session = nullptr;
+    SpeechMessageKind kind = SpeechMessageKind::Compiled;
+
+    Str text = {};
+    int status = 0;
+};
+
+static void OnMessage(SpeechMessage* m);
+
+static void Post(SysSpeechSession* s, SpeechMessageKind kind, Str text = {},
+                 int status = 0) {
+    SpeechMessage* m = new SpeechMessage();
+    m->session = s;
+    m->kind = kind;
+    m->text = text;
+    m->status = status;
+    SessionAddRef(s);
+    ExecPost(MkFunc0(&OnMessage, m));
+}
+
+#define GPUI_SPEECH_HANDLER(Name, Interface, SenderT, ArgsT)                   \
+    struct Name final : Interface {                                            \
+        volatile LONG refs = 1;                                                \
+        SysSpeechSession* session = nullptr;                                   \
+        explicit Name(SysSpeechSession* s) : session(s) { SessionAddRef(s); }  \
+        HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid,                  \
+                                                 void** out) override {        \
+            if (riid == __uuidof(IUnknown) ||                                  \
+                riid == __uuidof(IAgileObject) ||                              \
+                riid == __uuidof(Interface)) {                                 \
+                *out = static_cast<Interface*>(this);                          \
+                AddRef();                                                      \
+                return S_OK;                                                   \
+            }                                                                  \
+            *out = nullptr;                                                    \
+            return E_NOINTERFACE;                                              \
+        }                                                                      \
+        ULONG STDMETHODCALLTYPE AddRef() override {                            \
+            return (ULONG)InterlockedIncrement(&refs);                         \
+        }                                                                      \
+        ULONG STDMETHODCALLTYPE Release() override {                           \
+            LONG left = InterlockedDecrement(&refs);                           \
+            if (left == 0) {                                                   \
+                SessionRelease(session);                                       \
+                delete this;                                                   \
+            }                                                                  \
+            return (ULONG)left;                                                \
+        }                                                                      \
+        HRESULT STDMETHODCALLTYPE Invoke(SenderT sender, ArgsT args) override; \
+    }
+
+typedef ITypedEventHandler<SpeechRecognizer*,
+                           SpeechRecognitionHypothesisGeneratedEventArgs*>
+    HypothesisHandlerInterface;
+typedef ITypedEventHandler<SpeechContinuousRecognitionSession*,
+                           SpeechContinuousRecognitionResultGeneratedEventArgs*>
+    ResultHandlerInterface;
+typedef ITypedEventHandler<SpeechContinuousRecognitionSession*,
+                           SpeechContinuousRecognitionCompletedEventArgs*>
+    CompletedHandlerInterface;
+typedef IAsyncOperationCompletedHandler<SpeechRecognitionCompilationResult*>
+    CompiledHandlerInterface;
+
+GPUI_SPEECH_HANDLER(HypothesisHandler, HypothesisHandlerInterface,
+                    ISpeechRecognizer*,
+                    ISpeechRecognitionHypothesisGeneratedEventArgs*);
+GPUI_SPEECH_HANDLER(ResultHandler, ResultHandlerInterface,
+                    ISpeechContinuousRecognitionSession*,
+                    ISpeechContinuousRecognitionResultGeneratedEventArgs*);
+GPUI_SPEECH_HANDLER(CompletedHandler, CompletedHandlerInterface,
+                    ISpeechContinuousRecognitionSession*,
+                    ISpeechContinuousRecognitionCompletedEventArgs*);
+GPUI_SPEECH_HANDLER(CompiledHandler, CompiledHandlerInterface,
+                    CompileOperation*, AsyncStatus);
+GPUI_SPEECH_HANDLER(StartedHandler, IAsyncActionCompletedHandler, IAsyncAction*,
+                    AsyncStatus);
+
+HRESULT HypothesisHandler::Invoke(
+    ISpeechRecognizer*, ISpeechRecognitionHypothesisGeneratedEventArgs* args) {
+    ISpeechRecognitionHypothesis* hypothesis = nullptr;
+    if (args && SUCCEEDED(args->get_Hypothesis(&hypothesis)) && hypothesis) {
+        HSTRING text = nullptr;
+        if (SUCCEEDED(hypothesis->get_Text(&text))) {
+            Post(session, SpeechMessageKind::Hypothesis, TakeHString(text));
+        }
+        hypothesis->Release();
+    }
+    return S_OK;
+}
+
+HRESULT ResultHandler::Invoke(
+    ISpeechContinuousRecognitionSession*,
+    ISpeechContinuousRecognitionResultGeneratedEventArgs* args) {
+    ISpeechRecognitionResult* result = nullptr;
+    if (!args || FAILED(args->get_Result(&result)) || !result) {
+        return S_OK;
+    }
+    SpeechRecognitionResultStatus status = {};
+    SpeechRecognitionConfidence confidence = {};
+    HSTRING text = nullptr;
+    if (SUCCEEDED(result->get_Status(&status)) &&
+        (int)status == kStatusSuccess &&
+        SUCCEEDED(result->get_Confidence(&confidence)) &&
+        (int)confidence != kConfidenceRejected &&
+        SUCCEEDED(result->get_Text(&text))) {
+        Str phrase = TakeHString(text);
+        if (len(phrase) > 0) {
+            Post(session, SpeechMessageKind::Result, phrase);
+        }
+    }
+    result->Release();
+    return S_OK;
+}
+
+HRESULT CompletedHandler::Invoke(
+    ISpeechContinuousRecognitionSession*,
+    ISpeechContinuousRecognitionCompletedEventArgs* args) {
+    SpeechRecognitionResultStatus status = {};
+    if (args && SUCCEEDED(args->get_Status(&status))) {
+        Post(session, SpeechMessageKind::Completed, {}, (int)status);
+    }
+    return S_OK;
+}
+
+HRESULT CompiledHandler::Invoke(CompileOperation*, AsyncStatus) {
+    Post(session, SpeechMessageKind::Compiled);
+    return S_OK;
+}
+
+HRESULT StartedHandler::Invoke(IAsyncAction*, AsyncStatus) {
+    Post(session, SpeechMessageKind::Started);
+    return S_OK;
+}
+
+struct CloseHandler final : IAsyncActionCompletedHandler {
+    volatile LONG refs = 1;
+    IClosable* closable = nullptr;
+
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** out) override {
+        if (riid == __uuidof(IUnknown) || riid == __uuidof(IAgileObject) ||
+            riid == __uuidof(IAsyncActionCompletedHandler)) {
+            *out = static_cast<IAsyncActionCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *out = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override {
+        return (ULONG)InterlockedIncrement(&refs);
+    }
+    ULONG STDMETHODCALLTYPE Release() override {
+        LONG left = InterlockedDecrement(&refs);
+        if (left == 0) {
+            if (closable) {
+                closable->Release();
+            }
+            delete this;
+        }
+        return (ULONG)left;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(IAsyncAction*, AsyncStatus) override {
+        if (closable) {
+            closable->Close();
+        }
+        return S_OK;
+    }
+};
+
+static void ErrorOfHresult(HRESULT hr, SysSpeechError* kind, char* message,
+                           int cap) {
+    Str text = {};
+    if (hr == E_ACCESSDENIED) {
+        *kind = SysSpeechError::PermissionDenied;
+    } else if (hr == kNoCaptureDevices) {
+        *kind = SysSpeechError::NoInputDevice;
+    } else if (hr == kPrivacyPolicyNotAccepted) {
+        *kind = SysSpeechError::Recognizer;
+        text = StrL(
+            "Online speech recognition is turned off; turn it on in "
+            "Settings > Privacy & security > Speech");
+    } else {
+        *kind = SysSpeechError::Recognizer;
+        WCHAR wide[256] = {};
+        DWORD n = FormatMessageW(
+            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
+            (DWORD)hr, 0, wide, 255, nullptr);
+        while (n > 0 && (wide[n - 1] == L'\r' || wide[n - 1] == L'\n' ||
+                         wide[n - 1] == L' ')) {
+            wide[--n] = 0;
+        }
+        char utf8[512] = {};
+        if (n > 0) {
+            WideCharToMultiByte(CP_UTF8, 0, wide, (int)n, utf8,
+                                (int)sizeof(utf8) - 1, nullptr, nullptr);
+        }
+        text = utf8[0] ? fmt("%s (0x%08x)", Str(utf8), (uint32_t)hr)
+                       : fmt("HRESULT 0x%08x", (uint32_t)hr);
+    }
+    if (message && cap > 0) {
+        int n = len(text) < cap - 1 ? len(text) : cap - 1;
+        if (n > 0) {
+            memcpy(message, text.s, (size_t)n);
+        }
+        message[n] = 0;
+    }
+}
+
+static void ErrorOfStatus(int status, SysSpeechError* kind, Str* message) {
+    *message = {};
+    switch (status) {
+        case kStatusTopicLanguageNotSupported:
+            *kind = SysSpeechError::Unsupported;
+            return;
+        case kStatusMicrophoneUnavailable:
+            *kind = SysSpeechError::NoInputDevice;
+            return;
+        case kStatusNetworkFailure:
+            *kind = SysSpeechError::Recognizer;
+            *message = StrL("could not reach the online speech service");
+            return;
+        case kStatusAudioQualityFailure:
+            *kind = SysSpeechError::Recognizer;
+            *message = StrL("the audio was too poor to recognize");
+            return;
+        default:
+            *kind = SysSpeechError::Recognizer;
+            *message = fmt("recognition ended with status %d", status);
+            return;
+    }
+}
+
+static void FailHresult(SysSpeechSession* s, HRESULT hr) {
+    SysSpeechError kind = SysSpeechError::Recognizer;
+    char message[600] = {};
+    ErrorOfHresult(hr, &kind, message, (int)sizeof(message));
+    s->done = true;
+    s->events.error(s->events.user, kind, Str(message));
+}
+
+static void FailStatus(SysSpeechSession* s, int status) {
+    SysSpeechError kind = SysSpeechError::Recognizer;
+    Str message;
+    ErrorOfStatus(status, &kind, &message);
+    s->done = true;
+    s->events.error(s->events.user, kind, message);
+}
+
+static void StopDictation(SysSpeechSession* s) {
+    IAsyncAction* stop = nullptr;
+    HRESULT hr = s->continuous->StopAsync(&stop);
+    if (stop) {
+        stop->Release();
+    }
+    if (FAILED(hr)) {
+        logf("speech: stopping dictation failed: 0x%08x\n", (uint32_t)hr);
+    }
+}
+
+static Str JoinedTemp(const SysSpeechSession* s, Str text) {
+    return s->separatorDue ? fmt("%s%s", s->separator, text) : text;
+}
+
+static void OnMessage(SpeechMessage* m) {
+    SysSpeechSession* s = m->session;
+    if (!s->dropped && !s->done) {
+        switch (m->kind) {
+            case SpeechMessageKind::Compiled: {
+                ISpeechRecognitionCompilationResult* result = nullptr;
+                HRESULT hr =
+                    s->compiling ? s->compiling->GetResults(&result) : E_FAIL;
+                SpeechRecognitionResultStatus status = {};
+                if (SUCCEEDED(hr) && result) {
+                    hr = result->get_Status(&status);
+                }
+                if (result) {
+                    result->Release();
+                }
+                if (FAILED(hr)) {
+                    FailHresult(s, hr);
+                    break;
+                }
+                if ((int)status != kStatusSuccess) {
+                    FailStatus(s, (int)status);
+                    break;
+                }
+                hr = s->continuous->StartAsync(&s->starting);
+                if (SUCCEEDED(hr) && s->starting) {
+                    StartedHandler* handler = new StartedHandler(s);
+                    hr = s->starting->put_Completed(handler);
+                    handler->Release();
+                }
+                if (FAILED(hr)) {
+                    FailHresult(s, hr);
+                }
+                break;
+            }
+            case SpeechMessageKind::Started: {
+                HRESULT hr = s->starting ? s->starting->GetResults() : E_FAIL;
+                if (FAILED(hr)) {
+                    FailHresult(s, hr);
+                    break;
+                }
+                s->started = true;
+                s->events.ready(s->events.user);
+
+                if (!s->dropped && s->finishRequested) {
+                    StopDictation(s);
+                }
+                break;
+            }
+            case SpeechMessageKind::Hypothesis:
+                s->events.hypothesis(s->events.user, JoinedTemp(s, m->text));
+                break;
+            case SpeechMessageKind::Result: {
+                Str text = JoinedTemp(s, m->text);
+                s->separatorDue = true;
+                s->events.phrase(s->events.user, text);
+                break;
+            }
+            case SpeechMessageKind::Completed:
+
+                if (m->status == kStatusSuccess ||
+                    m->status == kStatusUserCanceled ||
+                    m->status == kStatusTimeoutExceeded) {
+                    s->done = true;
+                    s->events.finish(s->events.user);
+                } else {
+                    FailStatus(s, m->status);
+                }
+                break;
+        }
+    }
+    StrFree(m->text);
+    delete m;
+    SessionRelease(s);
+}
+
+static void SessionTearDown(SysSpeechSession* s) {
+    if (s->hasHypothesisToken && s->recognizer2) {
+        s->recognizer2->remove_HypothesisGenerated(s->hypothesisToken);
+    }
+    if (s->hasResultToken && s->continuous) {
+        s->continuous->remove_ResultGenerated(s->resultToken);
+    }
+    if (s->hasCompletedToken && s->continuous) {
+        s->continuous->remove_Completed(s->completedToken);
+    }
+    s->hasHypothesisToken = s->hasResultToken = s->hasCompletedToken = false;
+
+    IClosable* closable = nullptr;
+    if (s->recognizer) {
+        s->recognizer->QueryInterface(__uuidof(IClosable), (void**)&closable);
+    }
+    bool closing = false;
+    IAsyncAction* cancel = nullptr;
+    if (closable && s->continuous &&
+        SUCCEEDED(s->continuous->CancelAsync(&cancel)) && cancel) {
+        CloseHandler* handler = new CloseHandler();
+        handler->closable = closable;
+        closable->AddRef();
+        closing = SUCCEEDED(cancel->put_Completed(handler));
+        handler->Release();
+    }
+    if (cancel) {
+        cancel->Release();
+    }
+    if (closable) {
+        if (!closing) {
+            closable->Close();
+        }
+        closable->Release();
+    }
+    if (s->compiling) s->compiling->Release();
+    if (s->starting) s->starting->Release();
+    if (s->continuous) s->continuous->Release();
+    if (s->recognizer2) s->recognizer2->Release();
+    if (s->recognizer) s->recognizer->Release();
+    s->compiling = nullptr;
+    s->starting = nullptr;
+    s->continuous = nullptr;
+    s->recognizer2 = nullptr;
+    s->recognizer = nullptr;
+}
+
+SysSpeechSession* SysSpeechSessionStart(SysSpeechRecognizer* r,
+                                        const SysSpeechEvents& events,
+                                        SysSpeechError* error, char* message,
+                                        int messageCap) {
+    if (message && messageCap > 0) {
+        message[0] = 0;
+    }
+    if (!r || !r->language) {
+        *error = SysSpeechError::Unsupported;
+        return nullptr;
+    }
+    SysSpeechSession* s = new SysSpeechSession();
+    s->events = events;
+    s->separator = r->separator;
+
+    ISpeechRecognizerFactory* factory = nullptr;
+    HRESULT hr = ActivationFactory(
+        RuntimeClass_Windows_Media_SpeechRecognition_SpeechRecognizer,
+        &factory);
+    if (SUCCEEDED(hr)) {
+        hr = factory->Create(r->language, &s->recognizer);
+    }
+    if (factory) {
+        factory->Release();
+    }
+    if (SUCCEEDED(hr)) {
+        hr = s->recognizer->QueryInterface(__uuidof(ISpeechRecognizer2),
+                                           (void**)&s->recognizer2);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = s->recognizer2->get_ContinuousRecognitionSession(&s->continuous);
+    }
+
+    ISpeechRecognitionTopicConstraintFactory* topics = nullptr;
+    ISpeechRecognitionTopicConstraint* topic = nullptr;
+    ISpeechRecognitionConstraint* constraint = nullptr;
+    Collections::IVector<ISpeechRecognitionConstraint*>* constraints = nullptr;
+    if (SUCCEEDED(hr)) {
+        hr = ActivationFactory(
+            RuntimeClass_Windows_Media_SpeechRecognition_SpeechRecognitionTopicConstraint,
+            &topics);
+    }
+    if (SUCCEEDED(hr)) {
+        HStr hint(L"dictation");
+        hr = topics
+                 ->Create(SpeechRecognitionScenario_Dictation, hint.h, &topic);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = topic->QueryInterface(__uuidof(ISpeechRecognitionConstraint),
+                                   (void**)&constraint);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = s->recognizer->get_Constraints(&constraints);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = constraints->Append(constraint);
+    }
+    if (constraints) constraints->Release();
+    if (constraint) constraint->Release();
+    if (topic) topic->Release();
+    if (topics) topics->Release();
+
+    if (SUCCEEDED(hr)) {
+        HypothesisHandler* handler = new HypothesisHandler(s);
+        hr = s->recognizer2
+                 ->add_HypothesisGenerated(handler, &s->hypothesisToken);
+        s->hasHypothesisToken = SUCCEEDED(hr);
+        handler->Release();
+    }
+    if (SUCCEEDED(hr)) {
+        ResultHandler* handler = new ResultHandler(s);
+        hr = s->continuous->add_ResultGenerated(handler, &s->resultToken);
+        s->hasResultToken = SUCCEEDED(hr);
+        handler->Release();
+    }
+    if (SUCCEEDED(hr)) {
+        CompletedHandler* handler = new CompletedHandler(s);
+        hr = s->continuous->add_Completed(handler, &s->completedToken);
+        s->hasCompletedToken = SUCCEEDED(hr);
+        handler->Release();
+    }
+
+    if (SUCCEEDED(hr)) {
+        hr = s->recognizer->CompileConstraintsAsync(&s->compiling);
+    }
+    if (SUCCEEDED(hr)) {
+        CompiledHandler* handler = new CompiledHandler(s);
+        hr = s->compiling->put_Completed(handler);
+        handler->Release();
+    }
+    if (FAILED(hr)) {
+        ErrorOfHresult(hr, error, message, messageCap);
+        s->dropped = true;
+        SessionTearDown(s);
+        SessionRelease(s);
+        return nullptr;
+    }
+    return s;
+}
+
+void SysSpeechSessionPushAudio(SysSpeechSession*, const int16_t*, int) {}
+
+void SysSpeechSessionFinish(SysSpeechSession* s) {
+    if (!s || s->dropped || s->done || s->finishRequested) {
+        return;
+    }
+    s->finishRequested = true;
+    if (s->started) {
+        StopDictation(s);
+    }
+}
+
+void SysSpeechSessionDrop(SysSpeechSession* s) {
+    if (!s) {
+        return;
+    }
+    s->dropped = true;
+    SessionTearDown(s);
+    SessionRelease(s);
 }
 
 }
@@ -236180,10 +238923,17 @@ bool WebViewAvailable() {
 
 @class GpuiWryScriptHandler;
 @class GpuiWryNavigationDelegate;
+@class GpuiWryDownloadDelegate;
 @class GpuiWryUIDelegate;
 @class GpuiWryTitleObserver;
 @class GpuiWrySchemeHandler;
 @class GpuiWryWebView;
+@interface GpuiWryCookieResult : NSObject
+@property(nonatomic, assign) BOOL done;
+@property(nonatomic, strong) NSArray<NSHTTPCookie*>* cookies;
+@end
+@implementation GpuiWryCookieResult
+@end
 
 namespace wry {
 
@@ -236227,6 +238977,10 @@ struct WebView {
         void* ctx, Str url, const NewWindowFeatures* features,
         WebView** createdWebView) = nullptr;
 
+    DownloadStartedHandler downloadStartedHandler = nullptr;
+    DownloadCompletedHandler downloadCompletedHandler = nullptr;
+    DragDropHandler dragDropHandler = nullptr;
+
     Vec<ProtocolCopy> protocols;
 
     Vec<Str> pendingScripts;
@@ -236236,6 +238990,7 @@ struct WebView {
 
     GpuiWryScriptHandler* ipcDelegate = nil;
     GpuiWryNavigationDelegate* navDelegate = nil;
+    GpuiWryDownloadDelegate* downloadDelegate = nil;
     GpuiWryUIDelegate* uiDelegate = nil;
     GpuiWryTitleObserver* titleObserver = nil;
     NSMutableArray* schemeHandlers = nil;
@@ -236289,11 +239044,64 @@ static void HandleSchemeTask(WebView* wv, int index, id<WKURLSchemeTask> task);
 }
 
 @interface GpuiWryWebView : WKWebView
+@property(nonatomic, assign) wry::WebView* wv;
 @property(nonatomic, assign) BOOL childWebView;
 @property(nonatomic, assign) BOOL acceptFirstMouseEnabled;
 @end
 
 @implementation GpuiWryWebView
+
+- (BOOL)emitDrag:(id<NSDraggingInfo>)sender kind:(wry::DragDropKind)kind {
+    wry::WebView* wv = self.wv;
+    if (!wv || !wv->dragDropHandler) return NO;
+    wry::Vec<wry::Str> paths;
+    if (kind == wry::DragDropKind::Enter || kind == wry::DragDropKind::Drop) {
+        NSArray* files = [sender.draggingPasteboard
+            propertyListForType:NSFilenamesPboardType];
+        if ([files isKindOfClass:[NSArray class]]) {
+            for (id file in files) {
+                if ([file isKindOfClass:[NSString class]])
+                    VecAppend(paths, wry::StrDup(wry::FromNSTemp(file)));
+            }
+        }
+    }
+    wry::DragDropEvent event;
+    event.kind = kind;
+    event.paths = paths.els;
+    event.pathCount = len(paths);
+    if (kind != wry::DragDropKind::Leave) {
+
+        NSPoint point =
+            [self convertPoint:sender.draggingLocation fromView:nil];
+        event.x = (int32_t)point.x;
+        event.y = (int32_t)(self.isFlipped ? point.y
+                                           : self.bounds.size.height - point.y);
+    }
+    bool handled = wv->dragDropHandler(wv->ctx, &event);
+    for (int i = 0; i < len(paths); i++) wry::StrFree(paths[i]);
+    return handled ? YES : NO;
+}
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
+    if ([self emitDrag:sender kind:wry::DragDropKind::Enter])
+        return NSDragOperationCopy;
+    return [super draggingEntered:sender];
+}
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
+    if ([self emitDrag:sender kind:wry::DragDropKind::Over])
+        return NSDragOperationCopy;
+    NSDragOperation operation = [super draggingUpdated:sender];
+
+    return operation == NSDragOperationNone ? NSDragOperationCopy : operation;
+}
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
+    if ([self emitDrag:sender kind:wry::DragDropKind::Drop]) return YES;
+    return [super performDragOperation:sender];
+}
+- (void)draggingExited:(id<NSDraggingInfo>)sender {
+    if (![self emitDrag:sender kind:wry::DragDropKind::Leave])
+        [super draggingExited:sender];
+}
+
 - (BOOL)performKeyEquivalent:(NSEvent*)event {
     if (self.childWebView) {
         return NO;
@@ -236410,6 +239218,70 @@ static void HandleSchemeTask(WebView* wv, int index, id<WKURLSchemeTask> task);
 }
 @end
 
+API_AVAILABLE(macos(11.3))
+@interface GpuiWryDownloadDelegate : NSObject <WKDownloadDelegate>
+@property(nonatomic, assign) wry::WebView* wv;
+@property(nonatomic, strong) NSMutableSet* downloads;
+@end
+
+@implementation GpuiWryDownloadDelegate
+- (void)download:(WKDownload*)download
+    decideDestinationUsingResponse:(NSURLResponse*)response
+                 suggestedFilename:(NSString*)filename
+                 completionHandler:(void (^)(NSURL*))handler
+    API_AVAILABLE(macos(11.3)) {
+    (void)response;
+    wry::WebView* wv = self.wv;
+    if (!wv || !wv->downloadStartedHandler) {
+        handler(nil);
+        return;
+    }
+    NSFileManager* files = [NSFileManager defaultManager];
+    NSURL* directory = [[files URLsForDirectory:NSDownloadsDirectory
+                                      inDomains:NSUserDomainMask] firstObject];
+    if (!directory)
+        directory =
+            [NSURL fileURLWithPath:files.currentDirectoryPath isDirectory:YES];
+    NSString* destination =
+        [directory.path stringByAppendingPathComponent:filename];
+    int counter = 1;
+    while ([files fileExistsAtPath:destination]) {
+        destination = [directory.path
+            stringByAppendingPathComponent:wry::ToNS(
+                                               wry::MacDownloadFileNameTemp(
+                                                   wry::FromNSTemp(filename),
+                                                   counter++))];
+    }
+    wry::Str path = wry::FromNSTemp(destination);
+    wry::Str url = wry::FromNSTemp(download.originalRequest.URL.absoluteString);
+    bool allowed = wv->downloadStartedHandler(wv->ctx, url, &path);
+    handler(allowed && self.wv ? [NSURL fileURLWithPath:wry::ToNS(path)] : nil);
+}
+- (void)complete:(WKDownload*)download
+         success:(BOOL)success API_AVAILABLE(macos(11.3)) {
+    [self.downloads removeObject:download];
+    download.delegate = nil;
+    wry::WebView* wv = self.wv;
+    if (wv && wv->downloadCompletedHandler) {
+
+        wv->downloadCompletedHandler(
+            wv->ctx,
+            wry::FromNSTemp(download.originalRequest.URL.absoluteString),
+            nullptr, success);
+    }
+}
+- (void)downloadDidFinish:(WKDownload*)download API_AVAILABLE(macos(11.3)) {
+    [self complete:download success:YES];
+}
+- (void)download:(WKDownload*)download
+    didFailWithError:(NSError*)error
+          resumeData:(NSData*)resumeData API_AVAILABLE(macos(11.3)) {
+    (void)error;
+    (void)resumeData;
+    [self complete:download success:NO];
+}
+@end
+
 @interface GpuiWryNavigationDelegate : NSObject <WKNavigationDelegate>
 @property(nonatomic, assign) wry::WebView* wv;
 @end
@@ -236421,11 +239293,13 @@ static void HandleSchemeTask(WebView* wv, int index, id<WKURLSchemeTask> task);
                         (void (^)(WKNavigationActionPolicy))handler {
     (void)webView;
     wry::WebView* wv = self.wv;
-
-    if ([action respondsToSelector:@selector(shouldPerformDownload)] &&
-        action.shouldPerformDownload) {
-        handler(WKNavigationActionPolicyCancel);
-        return;
+    if (@available(macOS 11.3, *)) {
+        if (action.shouldPerformDownload) {
+            handler(wv && wv->downloadStartedHandler
+                        ? WKNavigationActionPolicyDownload
+                        : WKNavigationActionPolicyCancel);
+            return;
+        }
     }
     if (!wv || !wv->navigationHandler) {
         handler(WKNavigationActionPolicyAllow);
@@ -236436,6 +239310,41 @@ static void HandleSchemeTask(WebView* wv, int index, id<WKURLSchemeTask> task);
         wv->ctx, url ? wry::FromNSTemp(url.absoluteString) : wry::Str());
     handler(allow ? WKNavigationActionPolicyAllow
                   : WKNavigationActionPolicyCancel);
+}
+
+- (void)webView:(WKWebView*)webView
+    decidePolicyForNavigationResponse:(WKNavigationResponse*)response
+                      decisionHandler:
+                          (void (^)(WKNavigationResponsePolicy))handler {
+    (void)webView;
+    if (@available(macOS 11.3, *)) {
+        if (!response.canShowMIMEType && self.wv &&
+            self.wv->downloadStartedHandler) {
+            handler(WKNavigationResponsePolicyDownload);
+            return;
+        }
+    }
+    handler(WKNavigationResponsePolicyAllow);
+}
+- (void)webView:(WKWebView*)webView
+     navigationAction:(WKNavigationAction*)action
+    didBecomeDownload:(WKDownload*)download API_AVAILABLE(macos(11.3)) {
+    (void)webView;
+    (void)action;
+    if (self.wv && self.wv->downloadDelegate) {
+        [self.wv->downloadDelegate.downloads addObject:download];
+        download.delegate = self.wv->downloadDelegate;
+    } else {
+        [download cancel:^(NSData* data) {
+          (void)data;
+        }];
+    }
+}
+- (void)webView:(WKWebView*)webView
+    navigationResponse:(WKNavigationResponse*)response
+     didBecomeDownload:(WKDownload*)download API_AVAILABLE(macos(11.3)) {
+    (void)response;
+    [self webView:webView navigationAction:nil didBecomeDownload:download];
 }
 
 - (void)webView:(WKWebView*)webView
@@ -236897,6 +239806,9 @@ WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
     wv->isChild = asChild;
     wv->visible = attrs->visible;
     wv->ctx = attrs->ctx;
+    wv->downloadStartedHandler = attrs->downloadStartedHandler;
+    wv->downloadCompletedHandler = attrs->downloadCompletedHandler;
+    wv->dragDropHandler = attrs->dragDropHandler;
     wv->ipcHandler = attrs->ipcHandler;
     wv->navigationHandler = attrs->navigationHandler;
     wv->documentTitleChangedHandler = attrs->documentTitleChangedHandler;
@@ -236984,6 +239896,9 @@ WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
 
     GpuiWryWebView* webview =
         [[GpuiWryWebView alloc] initWithFrame:frame configuration:config];
+    webview.wv = wv;
+    if (wv->dragDropHandler)
+        [webview registerForDraggedTypes:@[ NSFilenamesPboardType ]];
     webview.childWebView = asChild ? YES : NO;
     webview.acceptFirstMouseEnabled = attrs->acceptFirstMouse ? YES : NO;
     wv->webview = webview;
@@ -237035,6 +239950,13 @@ WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
                          context:nullptr];
     }
 
+    if (@available(macOS 11.3, *)) {
+        if (wv->downloadStartedHandler || wv->downloadCompletedHandler) {
+            wv->downloadDelegate = [[GpuiWryDownloadDelegate alloc] init];
+            wv->downloadDelegate.wv = wv;
+            wv->downloadDelegate.downloads = [NSMutableSet set];
+        }
+    }
     wv->navDelegate = [[GpuiWryNavigationDelegate alloc] init];
     wv->navDelegate.wv = wv;
     wv->webview.navigationDelegate = wv->navDelegate;
@@ -237106,6 +240028,17 @@ void WebViewFree(WebView* wv) {
         [wv->webview removeFromSuperview];
     }
 
+    ((GpuiWryWebView*)wv->webview).wv = nullptr;
+    if (@available(macOS 11.3, *)) {
+        wv->downloadDelegate.wv = nullptr;
+        for (WKDownload* download in wv->downloadDelegate.downloads) {
+            download.delegate = nil;
+            [download cancel:^(NSData* data) {
+              (void)data;
+            }];
+        }
+        [wv->downloadDelegate.downloads removeAllObjects];
+    }
     wv->ipcDelegate.wv = nullptr;
     wv->navDelegate.wv = nullptr;
     wv->uiDelegate.wv = nullptr;
@@ -237381,22 +240314,160 @@ bool WebViewClearAllBrowsingData(WebView* wv) {
     return true;
 }
 
-bool WebViewCookies(WebView*, Vec<Cookie>* out) {
+static bool WaitForCookies(GpuiWryCookieResult* result) {
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:1.0];
+    while (!result.done && deadline.timeIntervalSinceNow > 0) {
+        [[NSRunLoop mainRunLoop]
+               runMode:NSDefaultRunLoopMode
+            beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.002]];
+    }
+    if (!result.done) logf("wry: timed out waiting for cookies response\n");
+    return result.done;
+}
+
+static Cookie CookieFromWK(NSHTTPCookie* source) {
+    Cookie cookie;
+    cookie.name = StrDup(FromNSTemp(source.name));
+    cookie.value = StrDup(FromNSTemp(source.value));
+    cookie.domain = StrDup(FromNSTemp(source.domain));
+    cookie.path = StrDup(FromNSTemp(source.path));
+    cookie.hasHttpOnly = true;
+    cookie.httpOnly = source.HTTPOnly;
+    cookie.hasSecure = true;
+    cookie.secure = source.secure;
+    cookie.hasSameSite = true;
+    cookie.sameSite = CookieSameSite::None;
+    if (@available(macOS 10.15, *)) {
+        if ([source.sameSitePolicy isEqualToString:NSHTTPCookieSameSiteLax])
+            cookie.sameSite = CookieSameSite::Lax;
+        else if ([source.sameSitePolicy
+                     isEqualToString:NSHTTPCookieSameSiteStrict])
+            cookie.sameSite = CookieSameSite::Strict;
+    }
+    cookie.session = source.expiresDate == nil;
+    cookie.hasExpires = !cookie.session;
+    if (cookie.hasExpires)
+        cookie.expiresUnixSeconds = (int64_t)source.expiresDate
+                                        .timeIntervalSince1970;
+    return cookie;
+}
+
+static NSHTTPCookie* CookieToWK(const Cookie* source) {
+    if (!source) return nil;
+    NSMutableDictionary* properties = [@{
+        NSHTTPCookieName : ToNS(source->name),
+        NSHTTPCookieValue : ToNS(source->value),
+        NSHTTPCookieDomain : ToNS(source->domain),
+        NSHTTPCookiePath : ToNS(source->path)
+    } mutableCopy];
+    if (source->hasMaxAge) {
+        properties[NSHTTPCookieMaximumAge] =
+            ToNS(base::FormatTemp("%lld", (long long)source->maxAgeSeconds));
+        properties[NSHTTPCookieVersion] = @"1";
+    } else if (source->hasExpires) {
+        properties[NSHTTPCookieExpires] = [NSDate
+            dateWithTimeIntervalSince1970:(double)source->expiresUnixSeconds];
+        properties[NSHTTPCookieVersion] = @"0";
+    }
+    if (source->hasSecure)
+        properties[NSHTTPCookieSecure] = source->secure ? @"TRUE" : @"FALSE";
+    if (source->hasHttpOnly)
+        properties[@"HttpOnly"] = source->httpOnly ? @"TRUE" : @"FALSE";
+    if (@available(macOS 10.15, *)) {
+        if (source->hasSameSite && source->sameSite != CookieSameSite::None)
+            properties[NSHTTPCookieSameSitePolicy] =
+                source->sameSite == CookieSameSite::Strict
+                    ? NSHTTPCookieSameSiteStrict
+                    : NSHTTPCookieSameSiteLax;
+    }
+    return [NSHTTPCookie cookieWithProperties:properties];
+}
+
+bool WebViewCookies(WebView* wv, Vec<Cookie>* out) {
+    if (!out) return false;
     CookieListFree(out);
-    return false;
+    if (!wv || !wv->webview) return false;
+    GpuiWryCookieResult* result = [[GpuiWryCookieResult alloc] init];
+    [wv->webview.configuration.websiteDataStore.httpCookieStore
+        getAllCookies:^(NSArray<NSHTTPCookie*>* cookies) {
+          result.cookies = cookies;
+          result.done = YES;
+        }];
+    if (!WaitForCookies(result)) return false;
+    for (NSHTTPCookie* source in result.cookies) {
+        Cookie cookie = CookieFromWK(source);
+        if (!cookie.name.s || !cookie.value.s || !cookie.domain.s ||
+            !cookie.path.s || !VecAppend(*out, cookie)) {
+            StrFree(cookie.name);
+            StrFree(cookie.value);
+            StrFree(cookie.domain);
+            StrFree(cookie.path);
+            CookieListFree(out);
+            return false;
+        }
+    }
+    return true;
 }
 
-bool WebViewCookiesForUrl(WebView*, Str, Vec<Cookie>* out) {
+bool WebViewCookiesForUrl(WebView* wv, Str url, Vec<Cookie>* out) {
+    if (!out) return false;
     CookieListFree(out);
-    return false;
+    NSURL* parsed = [NSURL URLWithString:ToNS(url)];
+    if (!parsed.scheme) return false;
+
+    NSString* host = parsed.host.lowercaseString;
+    if ([host rangeOfString:@":"].location != NSNotFound ||
+        [host rangeOfCharacterFromSet:[[NSCharacterSet
+                                          characterSetWithCharactersInString:
+                                              @"0123456789."] invertedSet]]
+                .location == NSNotFound)
+        host = nil;
+    if (!WebViewCookies(wv, out)) return false;
+
+    Str domain = FromNSTemp(host);
+    Str scheme = FromNSTemp(parsed.scheme.lowercaseString);
+    int kept = 0;
+    for (int i = 0; i < len(*out); i++) {
+        Cookie cookie = (*out)[i];
+        if (MacCookieMatchesUrl(&cookie, scheme, domain))
+            (*out)[kept++] = cookie;
+        else {
+            StrFree(cookie.name);
+            StrFree(cookie.value);
+            StrFree(cookie.domain);
+            StrFree(cookie.path);
+        }
+    }
+    out->len = kept;
+    return true;
 }
 
-bool WebViewSetCookie(WebView*, const Cookie*) {
-    return false;
+static bool ChangeWKCookie(WebView* wv, const Cookie* source, bool remove) {
+    if (!wv || !wv->webview) return false;
+    NSHTTPCookie* cookie = CookieToWK(source);
+    if (!cookie) return false;
+    GpuiWryCookieResult* result = [[GpuiWryCookieResult alloc] init];
+    WKHTTPCookieStore* store = wv->webview.configuration.websiteDataStore
+                                   .httpCookieStore;
+    if (remove)
+        [store deleteCookie:cookie
+            completionHandler:^{
+              result.done = YES;
+            }];
+    else
+        [store setCookie:cookie
+            completionHandler:^{
+              result.done = YES;
+            }];
+    return WaitForCookies(result);
 }
 
-bool WebViewDeleteCookie(WebView*, const Cookie*) {
-    return false;
+bool WebViewSetCookie(WebView* wv, const Cookie* source) {
+    return ChangeWKCookie(wv, source, false);
+}
+
+bool WebViewDeleteCookie(WebView* wv, const Cookie* source) {
+    return ChangeWKCookie(wv, source, true);
 }
 
 static id Inspector(WebView* wv) {

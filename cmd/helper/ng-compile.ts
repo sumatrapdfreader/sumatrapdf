@@ -717,9 +717,19 @@ function wasmPreloadArgs(t: Target, fail: Fail): string[] {
 
 const winNoDefaultLibs = ["msvcrt.lib", "msvcrtd.lib", "ucrt.lib", "ucrtd.lib", "vcruntime.lib", "vcruntimed.lib"];
 
-// what the mac app imports: AVFoundation for speech, AppKit/Cocoa, CoreText,
-// CoreFoundation, ImageIO, IOKit (power sources) and WebKit (the wry webview)
-const macFrameworks = ["AVFoundation", "Cocoa", "CoreText", "CoreGraphics", "ImageIO", "IOKit", "Security", "WebKit"];
+// Frameworks required by the mac app and GPUI's speech and webview backends.
+const macFrameworks = [
+  "AudioToolbox",
+  "AVFoundation",
+  "Cocoa",
+  "CoreText",
+  "CoreGraphics",
+  "ImageIO",
+  "IOKit",
+  "Security",
+  "Speech",
+  "WebKit",
+];
 
 // mac's iconv is GNU libiconv in its own dylib, not in libSystem as on glibc;
 // a-libarchive's charset conversion needs it

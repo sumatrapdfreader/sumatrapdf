@@ -126,5 +126,5 @@ zopfli         1.0.3+     2024-04-11
 
 gpui-kit-cpp-dist main    2026-10-05
   https://github.com/kjk/gpui-kit-cpp-dist
-  commit 5516f8602e707d68c8e33799200df9f5b3e4182c
+  commit 49d5540c4e439bc6d947676a06ff3e43e42cf56e
   vendored into ext/gpui for ng; update with bun cmd/ng-update-gpui.ts
