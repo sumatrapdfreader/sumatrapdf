@@ -9,7 +9,7 @@
 //
 // Run:  bun tests/issue-6276.ts [--no-build]   (or via tests/run-almost-all.ts)
 
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util";
 
@@ -19,12 +19,17 @@ const FILLER_LINES = 1000;
 
 // the test copy of the exe has no sumatrapdf-tool.exe next to it
 function findToolExe(): string | null {
+  const besideExe = join(dirname(EXE), "sumatrapdf-tool.exe");
+  if (existsSync(besideExe)) {
+    return besideExe;
+  }
+
   const candidates = [
-    join(dirname(EXE), "sumatrapdf-tool.exe"),
     join(ROOT, "out", "dbg64", "sumatrapdf-tool.exe"),
     join(ROOT, "out", "rel64", "sumatrapdf-tool.exe"),
-  ];
-  return candidates.find((p) => existsSync(p)) ?? null;
+  ].filter((p) => existsSync(p));
+  candidates.sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
+  return candidates[0] ?? null;
 }
 
 // a match, many pages without one, then another match
