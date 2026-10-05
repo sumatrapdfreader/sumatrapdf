@@ -126,6 +126,7 @@ export const sharedFiles = [
   "src/base/SquareTreeParser.h",
   "src/base/StrQueue.cpp",
   "src/base/StrQueue.h",
+  "src/base/TgaReader.cpp",
   "src/base/TgaReader.h",
   "src/base/Timer.h",
   "src/base/UITask.h",
