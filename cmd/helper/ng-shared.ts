@@ -151,6 +151,7 @@ export const sharedFiles = [
   "src/base/WinDynCalls_posix.cpp",
   "src/base/Zip.cpp",
   "src/base/Zip.h",
+  "src/base/tests/AppendStore_ut.cpp",
   "src/base/tests/Archive_ut.cpp",
   "src/base/tests/Base_ut.cpp",
   "src/base/tests/ByteReaderWriter_ut.cpp",
