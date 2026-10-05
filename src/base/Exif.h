@@ -64,6 +64,14 @@ enum class ExifProp : u16 {
     SensitivityType = 0x8830,
 };
 
+enum class ExifValueKind : u8 {
+    Unknown,
+    Bytes,
+    String,
+    Int,
+    Rational,
+};
+
 struct ExifRational {
     i64 num = 0;
     i64 den = 0;
@@ -78,6 +86,7 @@ struct ExifEntry {
 };
 
 struct ExifParser {
+    Str data;
     Str exifBlob;
     u8* ownedExif = nullptr;
     bool isBE = false;
@@ -89,9 +98,12 @@ struct ExifParser {
     ~ExifParser();
     void Reset();
     bool Parse(Str imageData);
+    bool HasProp(ExifProp prop) const;
+    ExifValueKind GetPropKind(ExifProp prop) const;
     TempStr GetStringProp(ExifProp prop, ExifProp altProp = ExifProp::None) const;
     bool GetIntProp(ExifProp prop, i64* valOut) const;
     bool GetRationalProp(ExifProp prop, ExifRational* valOut) const;
     bool GetFloatProp(ExifProp prop, double* valOut) const;
     TempStr GetFormattedPropTemp(ExifProp prop) const;
+    void GetDumpLines(StrVec& linesOut) const;
 };

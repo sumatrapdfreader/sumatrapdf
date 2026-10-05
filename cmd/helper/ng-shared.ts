@@ -85,6 +85,7 @@ export const sharedFiles = [
   "src/base/DbgHelpDyn_posix.cpp",
   "src/base/Dict.h",
   "src/base/DirScan_posix.cpp",
+  "src/base/Exif.h",
   "src/base/FileWatcher.h",
   "src/base/FileWatcher_linux.cpp",
   "src/base/FileWatcher_mac.cpp",
