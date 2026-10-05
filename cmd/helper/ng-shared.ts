@@ -115,6 +115,7 @@ export const sharedFiles = [
   "src/base/StrQueue.h",
   "src/base/TgaReader.h",
   "src/base/Timer.h",
+  "src/base/UITask.h",
   "src/base/WinDynCalls_posix.cpp",
   "src/base/Zip.h",
   "src/base/tests/Crypto_ut.cpp",

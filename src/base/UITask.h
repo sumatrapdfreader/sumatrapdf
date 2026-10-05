@@ -10,6 +10,8 @@ bool IsMainUIThread();
 
 void DrainQueue();
 
+void SetWakeupFn(void (*fn)());
+
 void Post(const Func0& fn, Kind kind = nullptr);
 void PostOptimized(const Func0& fn, Kind kind = nullptr);
 
