@@ -101,6 +101,7 @@ export const sharedFiles = [
   "src/base/FrameTimeoutCalculator.h",
   "src/base/GdiPlusUtil.cpp",
   "src/base/GdiPlusUtil.h",
+  "src/base/GuessFileType.cpp",
   "src/base/GuessFileType.h",
   "src/base/HtmlTags.cpp",
   "src/base/HtmlTags.h",
