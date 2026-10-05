@@ -3,6 +3,8 @@
 
 #include "base/Base.h"
 
+#if OS_WIN
+
 #include <csignal>
 #include <exception> // set_terminate
 #include <intrin.h>  // _ReturnAddress
@@ -73,7 +75,7 @@ static Str CrashInfoTake() {
 // (tests/control.ts) treat it as "assertion fired", so keep the value in sync
 constexpr UINT kDebugReportTestExitCode = 105;
 
-// Note: intentionally not using AutoFree<> to avoid
+// Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
 static Str gSystemInfo;
 static HANDLE gDumpEvent = nullptr;
@@ -787,3 +789,5 @@ void UninstallCrashHandler() {
     gDumpThreadId = 0;
     AtomicBoolSet(&gCrashHandlerStarted, false);
 }
+
+#endif // OS_WIN
