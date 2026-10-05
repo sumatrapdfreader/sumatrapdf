@@ -79,6 +79,7 @@ export const sharedFiles = [
   "src/base/FrameTimeoutCalculator.h",
   "src/base/JsonParser.h",
   "src/base/Launch.h",
+  "src/base/Launch_posix.cpp",
   "src/base/LogNoOp.cpp",
   "src/base/SettingsUtil.h",
   "src/base/SquareTreeParser.h",
