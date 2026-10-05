@@ -131,9 +131,6 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PerfLog.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\AppendStore.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -223,6 +220,9 @@
     </ClCompile>
     <ClCompile Include="..\src\gui\Dpi.cpp">
       <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PerfLog.cpp">
+      <Filter>src\shared</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1159,7 +1159,6 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\PerfLog.cpp" />
     <ClCompile Include="..\src\base\AppendStore.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
     <ClCompile Include="..\src\base\Arena.cpp" />
@@ -1190,6 +1189,7 @@
     <ClCompile Include="..\src\base\WinDynCalls.cpp" />
     <ClCompile Include="..\src\base\Zip.cpp" />
     <ClCompile Include="..\src\gui\Dpi.cpp" />
+    <ClCompile Include="..\src\shared\PerfLog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\shared\PerfLog_x64.asm">

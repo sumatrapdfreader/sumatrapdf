@@ -4,11 +4,13 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Timer.h"
+#if OS_WIN
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
+#endif
 #include "PerfLog.h"
 
-#if !IS_PERF_LOG
+#if !IS_PERF_LOG || !OS_WIN
 
 void InitPerfLog() {}
 void StartPerfLog() {}
