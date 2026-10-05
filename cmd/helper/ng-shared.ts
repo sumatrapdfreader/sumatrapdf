@@ -103,6 +103,7 @@ export const sharedFiles = [
   "src/base/SettingsUtil.h",
   "src/base/SquareTreeParser.cpp",
   "src/base/SquareTreeParser.h",
+  "src/base/StrQueue.h",
   "src/base/Timer.h",
   "src/base/WinDynCalls_posix.cpp",
   "src/base/Zip.h",
