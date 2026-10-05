@@ -159,6 +159,7 @@ export const sharedFiles = [
   "src/base/tests/Crypto_ut.cpp",
   "src/base/tests/CssParser_ut.cpp",
   "src/base/tests/Dict_ut.cpp",
+  "src/base/tests/FileWatcher_posix_ut.cpp",
   "src/base/tests/File_ut.cpp",
   "src/base/tests/GuessFileType_ut.cpp",
   "src/base/tests/JsonParser_ut.cpp",
