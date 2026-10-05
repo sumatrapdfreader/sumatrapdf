@@ -66,7 +66,6 @@ char MenuAccessKey(Str title);
 // came back in one call. gpui builds the popup from a MenuModel in the frame
 // after the right button went down and reports the pick as an action, so it is
 // two calls: the first remembers the canvas point on the window.
-struct Point;
 MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos);
 void WindowContextMenuCommand(MainWindow* win, int cmdId);
 // commands whose handler needs the point the menu was opened on

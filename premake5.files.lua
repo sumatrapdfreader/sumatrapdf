@@ -12,6 +12,7 @@ function makelzsa_files()
   files_in_dir("src/base", {
     "Base.h",
     "Base.cpp",
+    "Arena.cpp",
     "ByteReaderWriter.*",
     "CmdLineArgs.h",
     "CmdLineArgs.cpp",
@@ -468,6 +469,7 @@ function base_files()
     "Archive.*",
     "Base.h",
     "Base.cpp",
+    "Arena.cpp",
     "ByteReaderWriter.*",
     "CmdLineArgs.h",
     "CmdLineArgs.cpp",
@@ -922,6 +924,7 @@ function efi_files()
     "CrashHandlerNoOp.cpp",
     "src/base/Base.h",
     "src/base/Base.cpp",
+    "src/base/Arena.cpp",
     "src/base/Dict*",
     "src/tools/efi/*.cpp",
     "src/tools/efi/*.h",

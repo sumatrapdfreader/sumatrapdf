@@ -8,9 +8,6 @@ struct WindowTab;
 struct TextSelection;
 struct MenuModel;
 struct ReadAloudPlaybackBar;
-namespace str {
-struct Builder;
-}
 namespace gpui {
 struct Ctx;
 struct El;

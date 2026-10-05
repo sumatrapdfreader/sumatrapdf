@@ -1027,14 +1027,14 @@ void HomeView::OnAboutLink(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*, i
 
 void CopyAboutInfoToClipboard(MainWindow* win) {
     str::Builder info;
-    BuilderReserve(info, 1024);
+    info.Reserve(1024);
     AppendBugReportInfo(info);
     CopyTextToClipboard(win, ToStr(info));
 }
 
 void HomeView::OnCopyInfo(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*) {
     str::Builder info;
-    BuilderReserve(info, 1024);
+    info.Reserve(1024);
     AppendBugReportInfo(info);
     gp::ClipboardSetText(cx->win, ToGpui(ToStr(info)));
     info.Reset();

@@ -1,6 +1,26 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+/* OS_DARWIN - Any Darwin-based OS, including Mac OS X and iPhone OS */
+#ifdef __APPLE__
+#define OS_DARWIN 1
+#else
+#define OS_DARWIN 0
+#endif
+
+/* OS_LINUX - Linux */
+#ifdef __linux__
+#define OS_LINUX 1
+#else
+#define OS_LINUX 0
+#endif
+
+#ifdef _WIN32
+#define OS_WIN 1
+#else
+#define OS_WIN 0
+#endif
+
 // https://learn.microsoft.com/en-us/cpp/preprocessor/predefined-macros
 #if defined(_M_IX86) || defined(__i386__)
 #define IS_INTEL_32 1
@@ -14,8 +34,29 @@
 #define IS_INTEL_64 0
 #define IS_INTEL_32 0
 #define IS_ARM_64 1
+#elif defined(__wasm32__)
+// ng: wasm32 is 32-bit but not x86; only the Windows crash handler branches on
+// the arch, so all three answer 0
+#define IS_INTEL_64 0
+#define IS_INTEL_32 0
+#define IS_ARM_64 0
 #else
 #error "unsupported arch"
+#endif
+
+/* OS_WASM - emscripten; also OS_POSIX, but single-threaded and without
+   most of the file system */
+#ifdef __EMSCRIPTEN__
+#define OS_WASM 1
+#else
+#define OS_WASM 0
+#endif
+
+/* OS_POSIX - Any POSIX-like system */
+#if OS_DARWIN || OS_LINUX || OS_WASM || defined(unix) || defined(__unix) || defined(__unix__)
+#define OS_POSIX 1
+#else
+#define OS_POSIX 0
 #endif
 
 #ifdef _MSC_VER
@@ -42,7 +83,7 @@
 #define COMPILER_MINGW 0
 #endif
 
-// Always 0 or 1 so `#if IS_DEBUG` / `#if IS_ASAN` / `#if IS_PERF_LOG` compile under /W4 /WX (C4668).
+// Always 0 or 1 so `#if IS_DEBUG` / `#if IS_ASAN` compile under /W4 /WX (C4668).
 // The build may pass IS_DEBUG=1 / IS_ASAN=1; otherwise IS_DEBUG follows DEBUG
 // and IS_ASAN follows the compiler (/fsanitize=address, -fsanitize=address).
 #ifndef IS_DEBUG
@@ -83,6 +124,7 @@
 #include <cctype>
 #include <climits>
 #include <cstdarg>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -93,11 +135,24 @@
 #include <new>       // for placement new
 #include <algorithm> // for std::min, std::max
 #include <utility>   // for std::forward
+#if OS_POSIX
+// pthread.h first: glibc mutex structs have a field named __unused
+#include <pthread.h>
+#include <strings.h>
+#endif
+
+// after system headers so we don't rewrite pthread's __unused field.
+// mac's <sys/cdefs.h> already defines it as __attribute__((__unused__)),
+// which works in the same places; redefining it would warn and would break
+// the system headers that use it
+#ifndef __unused
 #define __unused [[maybe_unused]]
+#endif
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#if OS_WIN
 #define NOMINMAX
 #include <winsock2.h> // must include before <windows.h>
 #include <windows.h>
@@ -136,6 +191,68 @@
 #undef min
 #undef max
 
+#else
+using BYTE = uint8_t;
+// rpcndr.h spells it this way on Windows and ported code uses both
+using byte = uint8_t;
+using WORD = uint16_t;
+using DWORD = uint32_t;
+using DWORD64 = uint64_t;
+using UINT = unsigned int;
+using UINT_PTR = uintptr_t;
+using LONG = int32_t;
+using BOOL = int;
+using WCHAR = wchar_t;
+using WPARAM = uintptr_t;
+using LPARAM = intptr_t;
+using LRESULT = intptr_t;
+using LCID = uint32_t;
+
+struct HWND__;
+using HWND = HWND__*;
+struct HDC__;
+using HDC = HDC__*;
+struct HFONT__;
+using HFONT = HFONT__*;
+struct HIMAGELIST__;
+using HIMAGELIST = HIMAGELIST__*;
+struct HTREEITEM__;
+using HTREEITEM = HTREEITEM__*;
+struct HBITMAP__;
+using HBITMAP = HBITMAP__*;
+struct HBRUSH__;
+using HBRUSH = HBRUSH__*;
+using LPWSTR = WCHAR*;
+
+struct EXCEPTION_POINTERS;
+struct MINIDUMP_EXCEPTION_INFORMATION;
+
+// Same 100 ns ticks since 1601 representation as Win32, so settings and
+// metadata stay portable.
+struct FILETIME {
+    DWORD dwLowDateTime;
+    DWORD dwHighDateTime;
+};
+
+void GetSystemTimeAsFileTime(FILETIME* ft);
+
+// ng: the process code page. Always CP_UTF8 off Windows, which is also the
+// only code page the conversions in Base.cpp support there.
+UINT GetACP();
+
+constexpr UINT CP_ACP = 0;
+constexpr UINT CP_UTF8 = 65001;
+constexpr LCID LOCALE_USER_DEFAULT = 0;
+constexpr LCID LOCALE_INVARIANT = 0;
+#define __TEXT(s) L##s
+#define TEXT(s) __TEXT(s)
+constexpr int MAX_PATH = 4096;
+constexpr int URLZONE_INVALID = -1;
+constexpr int URLZONE_INTERNET = 3;
+
+#define ZeroMemory(Destination, Length) memset((Destination), 0, (Length))
+#endif
+
 using i8 = int8_t;
 using u8 = uint8_t;
 using i16 = int16_t;
@@ -146,9 +263,28 @@ using i64 = int64_t;
 using u64 = uint64_t;
 using uint = unsigned int;
 
+constexpr u64 kFileTimeTicksPerSec = 10000000ULL;
+constexpr u64 kFileTimeUnixEpoch = 116444736000000000ULL;
+
+inline u64 FileTimeToU64(const FILETIME& ft) {
+    return ((u64)ft.dwHighDateTime << 32) | (u64)ft.dwLowDateTime;
+}
+
+inline FILETIME FileTimeFromU64(u64 value) {
+    return {(DWORD)value, (DWORD)(value >> 32)};
+}
+
+#if OS_WIN
 using AtomicBool = volatile LONG;
 using AtomicInt = volatile LONG;
+using AtomicRefCount = volatile LONG;
 using AtomicPtr = void* volatile;
+#else
+using AtomicBool = volatile int;
+using AtomicInt = volatile int;
+using AtomicRefCount = volatile int;
+using AtomicPtr = void* volatile;
+#endif
 
 bool AtomicBoolGet(AtomicBool* p);
 void AtomicBoolSet(AtomicBool* p, bool v);
@@ -159,7 +295,17 @@ void AtomicIntSet(AtomicInt* p, int v);
 int AtomicIntAdd(AtomicInt* p, int v);
 int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
+int AtomicRefCountAdd(AtomicRefCount* v);
+int AtomicRefCountDec(AtomicRefCount* v);
+void* AtomicPtrGet(AtomicPtr* p);
+void AtomicPtrSet(AtomicPtr* p, void* v);
 void* AtomicPtrExchange(AtomicPtr* p, void* v);
+
+#if !OS_WIN
+u64 GetTickCount64();
+#endif
+
+i64 UnixTimeMsNow();
 
 struct Arena;
 
@@ -415,6 +561,53 @@ inline bool addOverflows(T val, T n) {
     T res = val + n;
     return val > res;
 }
+
+struct VecStr {
+    int len;
+    int cap;
+    Str* els;
+};
+
+template <typename T>
+inline bool addSafe(T* valInOut, T n) {
+    if (n == 0 || *valInOut == 0) {
+        valInOut = 0;
+        return true;
+    }
+    ReportIf(n < 0);
+    ReportIf(*valInOut < 0);
+    T res = *valInOut + n;
+    if (res < *valInOut) {
+        return false;
+    }
+    *valInOut = res;
+    return true;
+}
+
+template <typename T>
+inline bool mulSafe(T* valInOut, T n) {
+    if (n == 0 || *valInOut == 0) {
+        *valInOut = 0;
+        return true;
+    }
+    ReportIf(n < 0);
+    ReportIf(*valInOut < 0);
+    T res = *valInOut * n;
+    if (res < *valInOut || res < n) {
+        // multiplication overflowed
+        return false;
+    }
+    *valInOut = res;
+    return true;
+}
+
+#define NoOp() ((void)0)
+
+#if COMPILER_MSVC
+#define IS_UNUSED
+#else
+#define IS_UNUSED __attribute__((unused))
+#endif
 
 bool MemEq(const void* s1, const void* s2, int n);
 
@@ -799,6 +992,7 @@ struct SizeG {
     SizeG(T dx, T dy) : dx(dx), dy(dy) {}
 
     bool IsEmpty() const { return dx == 0 || dy == 0; }
+    bool Equals(const SizeG& o) const { return *this == o; }
     bool operator==(const SizeG& o) const { return dx == o.dx && dy == o.dy; }
     bool operator!=(const SizeG& o) const { return !(*this == o); }
 };
@@ -813,10 +1007,12 @@ struct RectG {
     T dy = 0;
 
     RectG() = default;
+#if OS_WIN
     // implicit for Rect, explicit for RectF, as before
     explicit(!std::is_same_v<T, int>) RectG(RECT r)
         : x((T)r.left), y((T)r.top), dx((T)(r.right - r.left)), dy((T)(r.bottom - r.top)) {}
     RectG(Gdiplus::RectF r) : x((T)r.X), y((T)r.Y), dx((T)r.Width), dy((T)r.Height) {} // NOLINT
+#endif
     RectG(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) {}
     RectG(PointG<T> pt, SizeG<T> sz) : x(pt.x), y(pt.y), dx(sz.dx), dy(sz.dy) {}
     RectG(PointG<T> min, PointG<T> max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {}
@@ -869,12 +1065,16 @@ using RectF = RectG<float>;
 
 Point ToPoint(PointF p);
 
+SizeF ToSizeFl(Size s);
+Size ToSize(SizeF s);
+
 RectF ToRectF(const Rect& r);
 Rect ToRect(const RectF& r);
 
 // conversions to and from the Win32 / GDI+ geometry types. Those types only
 // exist on Windows, so the whole group is Windows-only; portable code uses the
 // types above
+#if OS_WIN
 int RectDx(const RECT& r);
 int RectDy(const RECT& r);
 
@@ -891,10 +1091,13 @@ Gdiplus::RectF ToGdipRectF(const Rect& r);
 Gdiplus::Rect ToGdipRect(const RectF& r);
 Gdiplus::RectF ToGdipRectF(const RectF& r);
 
+#endif
+
 int NormalizeRotation(int rotation);
 
 //--- Thread.h ------------------------------------------------------------------
 
+#if OS_WIN
 using ThreadId = DWORD;
 using ThreadHandle = HANDLE;
 
@@ -930,6 +1133,65 @@ struct RecursiveMutex : NonCopyable {
     void Unlock() { LeaveCriticalSection(&lock); }
     bool TryLock() { return TryEnterCriticalSection(&lock); }
 };
+#else
+using ThreadId = u64;
+
+struct ThreadHandlePosix;
+using ThreadHandle = ThreadHandlePosix*;
+
+struct Mutex : NonCopyable {
+    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+    Mutex() = default;
+    ~Mutex() = default;
+
+    void Lock() { pthread_mutex_lock(&lock); }
+    void Unlock() { pthread_mutex_unlock(&lock); }
+    bool TryLock() { return pthread_mutex_trylock(&lock) == 0; }
+};
+
+struct ConditionVariable : NonCopyable {
+    pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
+    ConditionVariable() = default;
+    ~ConditionVariable() { pthread_cond_destroy(&cond); }
+
+    void Wait(Mutex* mutex) { pthread_cond_wait(&cond, &mutex->lock); }
+    void Wake() { pthread_cond_signal(&cond); }
+    void WakeAll() { pthread_cond_broadcast(&cond); }
+};
+
+struct RecursiveMutex : NonCopyable {
+    pthread_mutex_t lock;
+
+    RecursiveMutex() {
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+        pthread_mutex_init(&lock, &attr);
+        pthread_mutexattr_destroy(&attr);
+    }
+    ~RecursiveMutex() { pthread_mutex_destroy(&lock); }
+
+    void Lock() { pthread_mutex_lock(&lock); }
+    void Unlock() { pthread_mutex_unlock(&lock); }
+    bool TryLock() { return pthread_mutex_trylock(&lock) == 0; }
+};
+
+ThreadId GetCurrentThreadId();
+#endif
+
+// ng: counting semaphore. Windows has CreateSemaphore, posix has sem_t (with
+// no timed wait on mac); one portable implementation over Mutex and
+// ConditionVariable is simpler than either. Signal(n) wakes up to n waiters
+struct Semaphore {
+    Mutex mutex;
+    ConditionVariable cond;
+    int count = 0;
+
+    void Signal(int n = 1);
+    void Wait();
+};
 
 struct AutoUnlockMutex : NonCopyable {
     Mutex* mutex;
@@ -945,11 +1207,30 @@ struct AutoUnlockRecursiveMutex : NonCopyable {
     ~AutoUnlockRecursiveMutex() { mutex->Unlock(); }
 };
 
+// 0 = metric (A4), 1 = imperial (Letter). ng: orig declares it in Win.h
+int GetMeasurementSystem();
+
+// physical memory still free and how loaded memory is, 0..100. False when the
+// system does not say; the caller then assumes no pressure.
+bool GetPhysMemoryInfo(u64* availPhysOut, int* loadPercentOut, u64* totalPhysOut = nullptr);
+
 void SetThreadName(Str threadName, ThreadId threadId = 0);
 void SleepInMs(int ms);
 
+// ng: the wasm build has no pthreads (emscripten without -pthread), so
+// StartThread() runs the function inline and returns a handle that joins
+// immediately. Code whose "thread" is an endless loop (RenderCache,
+// PageRenderService) tests this and drains on the main thread instead.
+constexpr bool kHasThreads = OS_WASM == 0;
+
 void RunAsync(const Func0&, Str threadName = {});
 ThreadHandle StartThread(const Func0&, Str threadName = {});
+// ng: number of logical processors (was CpuCoreCount() in the win32-only Win.h)
+int CpuCoreCount();
+// ng: waits up to timeoutMs for the thread to finish, then closes the handle.
+// Returns false on timeout.
+bool JoinThread(ThreadHandle*, int timeoutMs);
+#if OS_WIN
 inline bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
     ThreadHandle h = *hPtr;
     if (!h || h == INVALID_HANDLE_VALUE) {
@@ -960,31 +1241,63 @@ inline bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
     *hPtr = nullptr;
     return !!ok;
 }
+#else
+bool SafeCloseThreadHandle(ThreadHandle*);
+#endif
 
 extern AtomicInt gDangerousThreadCount;
 bool AreDangerousThreadsPending();
 
+using ScopedMutex = AutoUnlockMutex;
+using ScopedRecursiveMutex = AutoUnlockRecursiveMutex;
+
 //--- Arena.h ------------------------------------------------------------------
 
-// Reserve/commit arena: a chain of VirtualAlloc'ed blocks, each with this
-// header at its start. The head block carries the chain and the stats.
+// Reserve/commit arena allocator (implemented in Arena.cpp).
+// Not self-sufficient: include after the part of utils/Base.h that defines
+// u64 and pulls in <windows.h> / <utility>. Base.h includes this header.
+
+// Standalone reserve/commit arena
 // 256 (not 128) to leave room in the header for the allocation stats below
 static const u64 kArenaHeaderSize = 256;
 
+typedef u64 ArenaFlags;
+enum : ArenaFlags {
+    ArenaFlagNoChain = 1ull << 0,
+    ArenaFlagLargePages = 1ull << 1,
+};
+
 struct ArenaParams {
+    ArenaFlags flags = 0;
     u64 reserveSize = 0;
     u64 commitSize = 0;
+    void* optionalBackingBuffer = nullptr;
+    const char* allocationSiteFile = nullptr;
+    int allocationSiteLine = 0;
+    const char* name = nullptr;
+};
+
+struct Arena;
+
+struct ArenaSavepoint {
+    Arena* arena;
+    u64 pos;
 };
 
 struct Arena {
     Arena* prev;    // Previous arena in chain
     Arena* current; // Current arena in chain
+    ArenaFlags flags;
     u64 commitChunkSize;
     u64 reserveChunkSize;
     u64 basePos;
     u64 pos;
     u64 committed;
     u64 reserved;
+    const char* allocationSiteFile;
+    int allocationSiteLine;
+    const char* name;
+    bool usesExternalBuffer;
     Mutex lock;
 
     // allocation statistics, updated after every successful allocation
@@ -996,11 +1309,14 @@ struct Arena {
     u64 peakBytesSinceReset; // largest total size reached since the last Reset()
 
     void* Alloc(int size);
+    void Free(void* ptr);
     void Reset();
     void* Push(u64 size, u64 align = 8, bool zero = true);
     u64 Pos();
     void PopTo(u64 pos);
     void Pop(u64 amt);
+    void* GetAvailableSpace(int* bufSizeOut);
+    void* CommitReserved(void* mem, int size);
 
     Arena() = delete;  // use ArenaNew()
     ~Arena() = delete; // use ArenaDelete()
@@ -1008,9 +1324,16 @@ struct Arena {
 
 static_assert(sizeof(Arena) <= kArenaHeaderSize, "Arena header must fit in reserved header bytes");
 
+extern u64 gArenaDefaultReserveSize;
+extern u64 gArenaDefaultCommitSize;
+extern ArenaFlags gArenaDefaultFlags;
+
 ArenaParams ArenaDefaultParams();
 Arena* ArenaNew(const ArenaParams& params = ArenaDefaultParams());
 void ArenaDelete(Arena* arena);
+
+ArenaSavepoint GetArenaSavepoint(Arena* arena);
+void RestoreArenaSavepoint(ArenaSavepoint temp);
 
 u32 ArenaPtrCompress(Arena* arena, void* ptr);
 void* ArenaPtrUncompress(Arena* arena, u32 compressed);
@@ -1029,16 +1352,16 @@ void DestroyTempArena();
 // RAII scratch scope for an arena (the temp arena unless told otherwise):
 // rewinds it to the entry position on scope exit, so code that allocates
 // scratch in a loop or on a hot path doesn't grow the arena unbounded.
-struct AutoArenaSavepoint : NonCopyable {
-    Arena* arena;
-    u64 pos;
-    AutoArenaSavepoint(Arena* a = GetTempArena()) : arena(a), pos(a ? a->Pos() : 0) { // NOLINT
+struct AutoArenaSavepoint {
+    ArenaSavepoint sp;
+    AutoArenaSavepoint(Arena* a = GetTempArena()) { // NOLINT
+        sp = GetArenaSavepoint(a);
     }
-    ~AutoArenaSavepoint() {
-        if (arena) {
-            arena->PopTo(pos);
-        }
-    }
+    AutoArenaSavepoint(AutoArenaSavepoint& other) = delete;
+    AutoArenaSavepoint(AutoArenaSavepoint&& other) = delete;
+    AutoArenaSavepoint(const AutoArenaSavepoint& other) = delete;
+    AutoArenaSavepoint(const AutoArenaSavepoint&& other) = delete;
+    ~AutoArenaSavepoint() { RestoreArenaSavepoint(sp); }
 };
 
 // Arena for allocations that live for the whole lifetime of the program (i.e.
@@ -1047,6 +1370,26 @@ struct AutoArenaSavepoint : NonCopyable {
 extern Arena* gPermArena;
 Arena* GetPermArena();
 void DestroyPermArena();
+
+template <typename T>
+inline T* PushArrayNoZeroAligned(Arena* arena, u64 count, u64 align) {
+    return (T*)arena->Push(sizeof(T) * count, align, false);
+}
+
+template <typename T>
+inline T* PushArrayAligned(Arena* arena, u64 count, u64 align) {
+    return (T*)arena->Push(sizeof(T) * count, align, true);
+}
+
+template <typename T>
+inline T* PushArrayNoZero(Arena* arena, u64 count) {
+    return PushArrayNoZeroAligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
+}
+
+template <typename T>
+inline T* PushArray(Arena* arena, u64 count) {
+    return PushArrayAligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
+}
 
 void* Alloc(struct Arena* arena, int size);
 void Free(struct Arena* arena, void* mem);
@@ -1564,6 +1907,13 @@ void VecReverse(Vec<T>& v) {
     }
 }
 
+template <typename T, typename E>
+bool VecPush(Arena* arena, T& v, E el) {
+    if (!VecGrow(arena, v, 1)) return false;
+    v.els[v.len++] = el;
+    return true;
+}
+
 //--- Str.h ------------------------------------------------------------------
 
 #define kUtf8Bom "\xEF\xBB\xBF"
@@ -1572,6 +1922,11 @@ void VecReverse(Vec<T>& v) {
 
 // Singly-linked string node; AllocStrNode places the string bytes immediately
 // after the node in one allocation (s.s points into that block).
+using StrArena = u32;
+StrArena StrArenaAlloc(Arena* a, int size);
+StrArena StrArenaDupStr(Arena* a, Str s);
+Str StrArenaToStr(Arena* a, StrArena sa);
+
 struct StrNode {
     StrNode* next = nullptr;
     Str s;
@@ -1639,6 +1994,7 @@ bool StartsWith(Str str, Str prefix);
 bool StartsWithI(Str str, Str prefix);
 bool StartsWithAny(Str s, const char* chars);
 
+int TrimSuffix(Str& s, Str suffix);
 int TrimPrefix(Str& s, Str prefix);
 int TrimPrefixI(Str& s, Str prefix);
 int TrimAny(Str& s, const char* chars);
@@ -1825,6 +2181,7 @@ struct BuilderT : Vec<C> {
     C RemoveAt(int idx, int count = 1);
     C RemoveLast();
     S TakeStr();
+    S TakeWStr() { return TakeStr(); }
     C LastChar() const;
     // Lend a buffer to start in, instead of the first allocation, the way
     // VecUseExternalBuffer() does. Must be empty with no storage yet. Appends
@@ -1835,12 +2192,16 @@ struct BuilderT : Vec<C> {
 
 namespace str {
 using Builder = BuilderT<char>;
+void BuilderUseExternalBuffer(Builder& b, Str buf);
+bool BuilderReserve(Builder& b, int cap);
 bool Contains(const Builder& b, Str sub);
 } // namespace str
 
 namespace wstr {
 using Builder = BuilderT<WCHAR>;
-}
+void BuilderUseExternalBuffer(Builder& b, WStr buf);
+bool BuilderReserve(Builder& b, int cap);
+} // namespace wstr
 
 void SeqStrNumAppend(str::Builder* b, Str s, i64 num);
 void SeqStrNumFinish(str::Builder* b);
@@ -1873,6 +2234,7 @@ TempStr FormatFileSizeTemp(u64 size);
 
 //--- StrUtf8.h ------------------------------------------------------------------
 
+bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 int utf8StrLen(const u8* s);
 int utf8RuneLen(const u8* s);
 
@@ -2163,8 +2525,11 @@ TempStr JoinTemp(StrVec* v, Str sep);
 //--- Strconv.h ------------------------------------------------------------------
 
 namespace strconv {
-
 WStr CodePageToWStr(uint codePage, Str s, Arena* a = nullptr);
+
+WStr Utf8ToWStr(Str s, Arena* a = nullptr);
+Str WStrToUtf8(WStr s, Arena* a = nullptr);
+
 Str WStrToCodePage(uint codePage, WStr s, Arena* a = nullptr);
 TempStr ToMultiByteTemp(Str src, uint codePageSrc, uint codePageDest);
 WStr StrCPToWStr(Str src, uint codePage);
@@ -2173,19 +2538,18 @@ TempStr StrToUtf8Temp(Str src, uint codePage);
 
 TempStr UnknownToUtf8Temp(Str s);
 
+Str WStrToAnsi(WStr src);
+Str Utf8ToAnsi(Str s);
+
 TempWStr AnsiToWStrTemp(Str src);
 Str AnsiToUtf8(Str src);
 TempStr AnsiToUtf8Temp(Str src);
 } // namespace strconv
 
+Str ToUtf8(Arena* arena, WStr wide);
 Str ToUtf8(WStr s, Arena* a = nullptr);
 WStr ToWStr(Str s, Arena* a = nullptr);
 
-//--- Scoped.h ------------------------------------------------------------------
-
-// include Base.h instead of including directly
-
-// auto-free memory for arbitrary malloc()ed memory of type T*
 template <typename T>
 class AutoFree {
   public:
@@ -2208,6 +2572,14 @@ class AutoFree {
         return ptr;
     }
 };
+
+//--- Scoped.h ------------------------------------------------------------------
+
+// include Base.h instead of including directly
+
+// auto-free memory for arbitrary malloc()ed memory of type T*
+template <typename T>
+using ScopedMem = AutoFree<T>;
 
 // deletes an object at the end of the scope
 template <typename T>
@@ -2316,7 +2688,11 @@ AutoCall(Result(__stdcall*)(Arg), Arg) -> AutoCall<Result(__stdcall*)(Arg)>;
 //--- Color.h ------------------------------------------------------------------
 
 // Win32 COLORREF layout (0x00bbggrr); typically no alpha
+#if OS_WIN
 using Color = COLORREF;
+#else
+using Color = uint32_t;
+#endif
 
 // a "unset" state for Color value. technically all colors are valid
 // this one is hopefully not used in practice
@@ -2357,6 +2733,7 @@ constexpr Color MkGray(u8 x) {
 constexpr Color kColWhite = MkRgb(0xff, 0xff, 0xff);
 constexpr Color kColBlack = MkRgb(0, 0, 0);
 constexpr Color kColRed = MkRgb(0xff, 0, 0);
+constexpr Color kColGreen = MkRgb(0, 0xff, 0);
 constexpr Color kColBlue = MkRgb(0, 0, 0xff);
 constexpr Color kColYellow = MkRgb(0xff, 0xff, 0);
 constexpr Color kColGray = MkGray(0xdd);
@@ -2379,6 +2756,7 @@ PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a = 0xff); // 0xff is opaque
 void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
 void SerializePdfColor(PdfColor c, str::Builder& out);
 
+Color AdjustLightness(Color c, float factor);
 Color AdjustLightness2(Color c, float units);
 float GetLightness(Color c);
 bool IsLightColor(Color c);
@@ -2388,7 +2766,11 @@ bool IsNearBlack(Color c);
 DWORD PremultiplyPixel(Color c, u8 alpha);
 
 // GDI+ only exists on Windows; portable code works with Color
+#if OS_WIN
+Gdiplus::Color Unblend(Color c, u8 alpha);
 Gdiplus::Color GdiRgbFromColor(Color c);
+Gdiplus::Color GdiRgbaFromColor(Color c);
+#endif
 
 constexpr Color RgbToColor(Color rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);

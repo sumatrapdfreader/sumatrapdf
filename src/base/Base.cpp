@@ -3,6 +3,11 @@
 
 #include "base/Base.h"
 
+#if !OS_WIN
+#include <errno.h>
+#include <iconv.h>
+#endif
+
 Kind kindNone = "none";
 
 // if > 1 we won't crash when memory allocation fails
@@ -290,6 +295,7 @@ Rect ToRect(const RectF& r) {
 }
 
 // conversions to and from the Win32 / GDI+ geometry types; see Geom.h
+#if OS_WIN
 POINT ToPOINT(const Point& p) {
     return {p.x, p.y};
 }
@@ -331,6 +337,8 @@ Gdiplus::RectF ToGdipRectF(const RectF& r) {
     return {r.x, r.y, r.dx, r.dy};
 }
 
+#endif
+
 int NormalizeRotation(int rotation) {
     while (rotation < 0) {
         rotation += 360;
@@ -347,9 +355,17 @@ int NormalizeRotation(int rotation) {
 
 //--- Thread.cpp ----------------------------------------------------------------
 
+#if OS_WIN
 #include "base/WinDynCalls.h"
+#else
+#include <unistd.h>
+#if OS_LINUX
+#include <sys/syscall.h>
+#endif
+#endif
 
-// Names the thread for debuggers; only Windows 10 1607+ has the API.
+#if OS_WIN
+
 void SetThreadName(Str threadName, ThreadId threadId) {
     if (len(threadName) == 0 || !DynSetThreadDescription) {
         return;
@@ -363,6 +379,46 @@ void SetThreadName(Str threadName, ThreadId threadId) {
         CloseHandle(h);
     }
 }
+
+#else
+
+ThreadId GetCurrentThreadId() {
+#if OS_DARWIN
+    u64 tid = 0;
+    pthread_threadid_np(nullptr, &tid);
+    return tid;
+#elif OS_LINUX
+    return (ThreadId)syscall(SYS_gettid);
+#else
+    return (ThreadId)pthread_self();
+#endif
+}
+
+void SetThreadName(Str threadName, ThreadId threadId) {
+    if (len(threadName) == 0) {
+        return;
+    }
+    if (threadId != 0 && threadId != GetCurrentThreadId()) {
+        return;
+    }
+#if OS_DARWIN
+    char buf[64];
+    size_t n = (size_t)std::min(threadName.len, sizeofi(buf) - 1);
+    memcpy(buf, threadName.s, n);
+    buf[n] = 0;
+    pthread_setname_np(buf);
+#elif OS_LINUX
+    char buf[16];
+    size_t n = (size_t)std::min(threadName.len, sizeofi(buf) - 1);
+    memcpy(buf, threadName.s, n);
+    buf[n] = 0;
+    pthread_setname_np(pthread_self(), buf);
+#endif
+}
+
+#endif
+
+#if OS_WIN
 
 static DWORD WINAPI ThreadFunc0(void* data) {
     auto* fn = (Func0*)data;
@@ -386,16 +442,206 @@ ThreadHandle StartThread(const Func0& fn, Str threadName) {
     return hThread;
 }
 
+#else
+
+struct ThreadHandlePosix {
+    pthread_t thread;
+#if !OS_WASM
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    bool finished = false;
+    bool abandoned = false;
+#endif
+};
+
+struct ThreadFuncData {
+    Func0 fn;
+    Str threadName;
+    ThreadHandlePosix* handle;
+
+    ThreadFuncData(const Func0& fn, Str threadName, ThreadHandlePosix* handle) : fn(fn), handle(handle) {
+        this->threadName = str::Dup(threadName);
+    }
+    ~ThreadFuncData() { str::Free(threadName); }
+};
+
+#if !OS_WASM
+static void DeleteThreadHandle(ThreadHandlePosix* h) {
+    pthread_cond_destroy(&h->cond);
+    pthread_mutex_destroy(&h->mutex);
+    delete h;
+}
+#endif
+
+static void* ThreadFunc0(void* data) {
+    auto* threadData = (ThreadFuncData*)data;
+    ThreadHandlePosix* handle = threadData->handle;
+    if (threadData->threadName) {
+        SetThreadName(threadData->threadName);
+    }
+    threadData->fn.Call();
+    delete threadData;
+    DestroyTempArena();
+#if !OS_WASM
+    pthread_mutex_lock(&handle->mutex);
+    handle->finished = true;
+    pthread_cond_signal(&handle->cond);
+    bool deleteHandle = handle->abandoned;
+    pthread_mutex_unlock(&handle->mutex);
+    if (deleteHandle) {
+        DeleteThreadHandle(handle);
+    }
+#endif
+    return nullptr;
+}
+
+#if OS_WASM
+// see kHasThreads: a "thread" is the function, run inline, and this stands in
+// for its handle so join and close have something non-null to answer about
+static ThreadHandlePosix gInlineThread{};
+#endif
+
+ThreadHandle StartThread(const Func0& fn, Str threadName) {
+#if OS_WASM
+    (void)threadName;
+    fn.Call();
+    return &gInlineThread;
+#else
+    auto hThread = new ThreadHandlePosix();
+    pthread_mutex_init(&hThread->mutex, nullptr);
+    pthread_cond_init(&hThread->cond, nullptr);
+    auto threadData = new ThreadFuncData(fn, threadName, hThread);
+    int err = pthread_create(&hThread->thread, nullptr, ThreadFunc0, threadData);
+    if (err != 0) {
+        DeleteThreadHandle(hThread);
+        delete threadData;
+        return nullptr;
+    }
+    return hThread;
+#endif
+}
+
+bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
+    ThreadHandle h = *hPtr;
+    if (!h) {
+        return false;
+    }
+#if OS_WASM
+    *hPtr = nullptr;
+    return true;
+#else
+    pthread_mutex_lock(&h->mutex);
+    int err = pthread_detach(h->thread);
+    bool deleteHandle = h->finished;
+    h->abandoned = true;
+    pthread_mutex_unlock(&h->mutex);
+    if (deleteHandle) {
+        DeleteThreadHandle(h);
+    }
+    *hPtr = nullptr;
+    return err == 0;
+#endif
+}
+
+#endif
+
 void RunAsync(const Func0& fn, Str threadName) {
     ThreadHandle hThread = StartThread(fn, threadName);
     SafeCloseThreadHandle(&hThread);
+}
+
+void Semaphore::Signal(int n) {
+    ScopedMutex lock(&mutex);
+    count += n;
+    for (int i = 0; i < n; i++) {
+        cond.Wake();
+    }
+}
+
+void Semaphore::Wait() {
+    ScopedMutex lock(&mutex);
+    while (count <= 0) {
+        cond.Wait(&mutex);
+    }
+    count--;
+}
+
+int CpuCoreCount() {
+#if OS_WIN
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    int n = (int)si.dwNumberOfProcessors;
+#else
+    int n = (int)sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+    return n < 1 ? 1 : n;
+}
+
+bool JoinThread(ThreadHandle* hPtr, int timeoutMs) {
+#if OS_WIN
+    ThreadHandle h = *hPtr;
+    if (!h || h == INVALID_HANDLE_VALUE) {
+        *hPtr = nullptr;
+        return false;
+    }
+    DWORD res = WaitForSingleObject(h, (DWORD)timeoutMs);
+    SafeCloseThreadHandle(hPtr);
+    return res == WAIT_OBJECT_0;
+#else
+    ThreadHandle h = *hPtr;
+    if (!h) {
+        return false;
+    }
+#if OS_WASM
+    // it already ran to completion inside StartThread()
+    *hPtr = nullptr;
+    return true;
+#else
+    pthread_mutex_lock(&h->mutex);
+    int err = 0;
+    if (timeoutMs < 0) {
+        while (!h->finished && err == 0) {
+            err = pthread_cond_wait(&h->cond, &h->mutex);
+        }
+    } else {
+        struct timespec deadline;
+        clock_gettime(CLOCK_REALTIME, &deadline);
+        deadline.tv_sec += timeoutMs / 1000;
+        deadline.tv_nsec += (long)(timeoutMs % 1000) * 1000000L;
+        if (deadline.tv_nsec >= 1000000000L) {
+            deadline.tv_sec++;
+            deadline.tv_nsec -= 1000000000L;
+        }
+        while (!h->finished && err == 0) {
+            err = pthread_cond_timedwait(&h->cond, &h->mutex, &deadline);
+        }
+    }
+    bool finished = h->finished;
+    if (!finished) {
+        h->abandoned = true;
+        pthread_detach(h->thread);
+    }
+    pthread_mutex_unlock(&h->mutex);
+    *hPtr = nullptr;
+    if (!finished) {
+        return false;
+    }
+    err = pthread_join(h->thread, nullptr);
+    DeleteThreadHandle(h);
+    return err == 0;
+#endif
+#endif
 }
 
 void SleepInMs(int ms) {
     if (ms <= 0) {
         return;
     }
+#if OS_WIN
     Sleep((DWORD)ms);
+#else
+    usleep((useconds_t)ms * 1000);
+#endif
 }
 
 AtomicInt gDangerousThreadCount = 0;
@@ -407,8 +653,15 @@ bool AreDangerousThreadsPending() {
 
 //--- Arena.cpp ----------------------------------------------------------------
 
-static u64 gArenaDefaultReserveSize = 64ull * 1024ull * 1024ull;
-static u64 gArenaDefaultCommitSize = 64ull * 1024ull;
+#if OS_WASM
+// ng: wasm has no address-space reservation, so a block's reserve is really
+// allocated (see Arena_wasm.cpp). Keep it small and let the arena chain.
+u64 gArenaDefaultReserveSize = 1ull * 1024ull * 1024ull;
+#else
+u64 gArenaDefaultReserveSize = 64ull * 1024ull * 1024ull;
+#endif
+u64 gArenaDefaultCommitSize = 64ull * 1024ull;
+ArenaFlags gArenaDefaultFlags = 0;
 
 static u64 ArenaAlignPow2(u64 value, u64 align) {
     if (align <= 1) {
@@ -418,25 +671,54 @@ static u64 ArenaAlignPow2(u64 value, u64 align) {
     return (value + align - 1) & ~(align - 1);
 }
 
-static u64 ArenaPageSize() {
-    static u64 pageSize = 0;
-    if (pageSize == 0) {
-        SYSTEM_INFO info = {};
-        GetSystemInfo(&info);
-        pageSize = info.dwPageSize;
-    }
-    return pageSize;
+static u64 ArenaMin(u64 a, u64 b) {
+    return (a < b) ? a : b;
 }
 
-static bool ArenaCommit(void* base, u64 size) {
-    if (size == 0) {
-        return true;
-    }
-    return VirtualAlloc(base, (SIZE_T)size, MEM_COMMIT, PAGE_READWRITE) != nullptr;
+static u64 ArenaMax(u64 a, u64 b) {
+    return (a > b) ? a : b;
 }
+
+static u64 ArenaClampTop(u64 value, u64 maxValue) {
+    return (value < maxValue) ? value : maxValue;
+}
+
+static u64 ArenaClampBot(u64 minValue, u64 value) {
+    return (value > minValue) ? value : minValue;
+}
+
+u64 ArenaPageSize();
+u64 ArenaLargePageSize();
+bool ArenaCommit(void* base, u64 size, bool largePages);
+void* ArenaReserve(u64 size);
+void* ArenaReserveAndCommit(u64 size, bool largePages);
+void ArenaReleaseMemory(void* base, u64 size);
 
 static void ArenaRelease(Arena* arena) {
-    VirtualFree(arena, 0, MEM_RELEASE);
+    ArenaReleaseMemory(arena, arena->reserved);
+}
+
+static void* ArenaGetAvailableSpaceLocked(Arena* arena, int* bufSizeOut) {
+    if (!bufSizeOut) {
+        return nullptr;
+    }
+
+    Arena* current = arena ? arena->current : nullptr;
+    if (!current) {
+        *bufSizeOut = 0;
+        return nullptr;
+    }
+
+    u64 pos = ArenaAlignPow2(current->pos, 8);
+    if (pos >= current->committed) {
+        *bufSizeOut = 0;
+        return nullptr;
+    }
+
+    u64 available = current->committed - pos;
+    available = std::min<u64>(available, 0x7fffffff);
+    *bufSizeOut = (int)available;
+    return (char*)current + pos;
 }
 
 static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
@@ -453,20 +735,29 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
 
     u64 sizeToZero = 0;
     if (zero && current->committed > posPre) {
-        sizeToZero = std::min(current->committed, posPost) - posPre;
+        sizeToZero = ArenaMin(current->committed, posPost) - posPre;
     }
 
-    if (current->reserved < posPost) {
+    if (current->reserved < posPost && !(arena->flags & ArenaFlagNoChain)) {
         // from the head, not from `current`: a block made to hold one
         // oversized allocation carries that allocation's size as its chunk
         // size, and it stays `current` afterwards. Taking the next block's
         // size from it would reserve - and, since the two are equal there,
         // commit - the whole of it for the next small push.
-        ArenaParams newParams = {arena->reserveChunkSize, arena->commitChunkSize};
-        if (size + kArenaHeaderSize > newParams.reserveSize) {
-            newParams.reserveSize = ArenaAlignPow2(size + kArenaHeaderSize, std::max(align, ArenaPageSize()));
-            newParams.commitSize = newParams.reserveSize;
+        u64 reserveChunkSize = arena->reserveChunkSize;
+        u64 commitChunkSize = arena->commitChunkSize;
+        if (size + kArenaHeaderSize > reserveChunkSize) {
+            reserveChunkSize = ArenaAlignPow2(size + kArenaHeaderSize, ArenaMax(align, ArenaPageSize()));
+            commitChunkSize = reserveChunkSize;
         }
+
+        ArenaParams newParams = {};
+        newParams.flags = current->flags;
+        newParams.reserveSize = reserveChunkSize;
+        newParams.commitSize = commitChunkSize;
+        newParams.allocationSiteFile = current->allocationSiteFile;
+        newParams.allocationSiteLine = current->allocationSiteLine;
+        newParams.name = current->name;
 
         Arena* newBlock = ArenaNew(newParams);
         if (!newBlock) {
@@ -483,11 +774,15 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
     }
 
     if (current->committed < posPost) {
+        if (current->flags & ArenaFlagLargePages) {
+            return nullptr;
+        }
+
         u64 commitEnd = ArenaAlignPow2(posPost, current->commitChunkSize);
-        u64 commitClamped = std::min(commitEnd, current->reserved);
+        u64 commitClamped = ArenaClampTop(commitEnd, current->reserved);
         u64 commitSize = commitClamped - current->committed;
         void* commitPtr = (char*)current + current->committed;
-        if (!ArenaCommit(commitPtr, commitSize)) {
+        if (!ArenaCommit(commitPtr, commitSize, false)) {
             return nullptr;
         }
         current->committed = commitClamped;
@@ -515,22 +810,57 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
 }
 
 ArenaParams ArenaDefaultParams() {
-    return {gArenaDefaultReserveSize, gArenaDefaultCommitSize};
+    ArenaParams params = {};
+    params.flags = gArenaDefaultFlags;
+    params.reserveSize = gArenaDefaultReserveSize;
+    params.commitSize = gArenaDefaultCommitSize;
+    return params;
 }
 
-Arena* ArenaNew(const ArenaParams& params) {
-    const u64 pageSize = ArenaPageSize();
-    u64 reserveSize = params.reserveSize ? params.reserveSize : gArenaDefaultReserveSize;
-    u64 commitSize = params.commitSize ? params.commitSize : gArenaDefaultCommitSize;
-    reserveSize = ArenaAlignPow2(std::max(reserveSize, kArenaHeaderSize), pageSize);
-    commitSize = std::min(ArenaAlignPow2(std::max(commitSize, kArenaHeaderSize), pageSize), reserveSize);
-
-    void* base = VirtualAlloc(nullptr, (SIZE_T)reserveSize, MEM_RESERVE, PAGE_READWRITE);
-    if (!base) {
-        return nullptr;
+Arena* ArenaNew(const ArenaParams& srcParams) {
+    ArenaParams params = srcParams;
+    if (params.reserveSize == 0) {
+        params.reserveSize = gArenaDefaultReserveSize;
     }
-    if (!ArenaCommit(base, commitSize)) {
-        VirtualFree(base, 0, MEM_RELEASE);
+    if (params.commitSize == 0) {
+        params.commitSize = gArenaDefaultCommitSize;
+    }
+
+    bool useLargePages = (params.flags & ArenaFlagLargePages) != 0;
+    const u64 pageSize = useLargePages ? ArenaLargePageSize() : ArenaPageSize();
+    u64 reserveSize = ArenaAlignPow2(ArenaMax(params.reserveSize, kArenaHeaderSize), pageSize);
+    u64 commitSize = ArenaAlignPow2(ArenaMax(params.commitSize, kArenaHeaderSize), pageSize);
+    commitSize = ArenaClampTop(commitSize, reserveSize);
+
+    void* base = params.optionalBackingBuffer;
+    bool usesExternalBuffer = (base != nullptr);
+    ArenaFlags actualFlags = params.flags;
+
+    if (!usesExternalBuffer) {
+        if (useLargePages) {
+            base = ArenaReserveAndCommit(reserveSize, true);
+            if (base) {
+                commitSize = reserveSize;
+            } else {
+                actualFlags &= ~ArenaFlagLargePages;
+                useLargePages = false;
+                reserveSize = ArenaAlignPow2(reserveSize, ArenaPageSize());
+                commitSize = ArenaAlignPow2(commitSize, ArenaPageSize());
+            }
+        }
+
+        if (!base) {
+            base = ArenaReserve(reserveSize);
+            if (base && !ArenaCommit(base, commitSize, false)) {
+                ArenaReleaseMemory(base, reserveSize);
+                base = nullptr;
+            }
+        }
+    } else {
+        commitSize = reserveSize;
+    }
+
+    if (!base) {
         return nullptr;
     }
 
@@ -538,12 +868,21 @@ Arena* ArenaNew(const ArenaParams& params) {
     Arena* arena = (Arena*)base;
     arena->prev = nullptr;
     arena->current = arena;
-    arena->commitChunkSize = commitSize;
+    arena->flags = actualFlags;
+    arena->commitChunkSize = useLargePages ? reserveSize : commitSize;
     arena->reserveChunkSize = reserveSize;
     arena->basePos = 0;
     arena->pos = kArenaHeaderSize;
     arena->committed = commitSize;
     arena->reserved = reserveSize;
+    arena->allocationSiteFile = params.allocationSiteFile;
+    arena->allocationSiteLine = params.allocationSiteLine;
+    arena->name = params.name;
+    arena->usesExternalBuffer = usesExternalBuffer;
+    arena->nAllocsLifetime = 0;
+    arena->peakBytesLifetime = 0;
+    arena->nAllocsSinceReset = 0;
+    arena->peakBytesSinceReset = 0;
     return arena;
 }
 
@@ -555,7 +894,9 @@ void ArenaDelete(Arena* arena) {
     Arena* node = arena->current;
     while (node) {
         Arena* prev = node->prev;
-        ArenaRelease(node);
+        if (!node->usesExternalBuffer) {
+            ArenaRelease(node);
+        }
         node = prev;
     }
 }
@@ -564,7 +905,7 @@ void* Arena::Push(u64 size, u64 align, bool zero) {
     if (!this) {
         return nullptr;
     }
-    AutoUnlockMutex cs(&lock);
+    ScopedMutex cs(&lock);
     return ArenaPushLocked(this, size, align, zero);
 }
 
@@ -572,27 +913,31 @@ u64 Arena::Pos() {
     if (!this) {
         return 0;
     }
-    AutoUnlockMutex cs(&lock);
+    ScopedMutex cs(&lock);
     return current->basePos + current->pos;
 }
 
 static void ArenaPopToLocked(Arena* arena, u64 pos) {
-    u64 bigPos = std::max(kArenaHeaderSize, pos);
-    Arena* curr = arena->current;
-    while (curr && curr->basePos >= bigPos) {
-        Arena* prev = curr->prev;
-        ArenaRelease(curr);
-        curr = prev;
+    u64 bigPos = ArenaClampBot(kArenaHeaderSize, pos);
+    Arena* current = arena->current;
+    while (current && current->basePos >= bigPos) {
+        Arena* prev = current->prev;
+        if (!current->usesExternalBuffer) {
+            ArenaRelease(current);
+        } else {
+            current->pos = kArenaHeaderSize;
+        }
+        current = prev;
     }
 
-    if (!curr) {
+    if (!current) {
         return;
     }
 
-    arena->current = curr;
-    u64 newPos = bigPos - curr->basePos;
-    ReportIf(newPos > curr->pos);
-    curr->pos = newPos;
+    arena->current = current;
+    u64 newPos = bigPos - current->basePos;
+    ReportIf(newPos > current->pos);
+    current->pos = newPos;
 }
 
 void Arena::PopTo(u64 pos) {
@@ -600,7 +945,7 @@ void Arena::PopTo(u64 pos) {
         return;
     }
 
-    AutoUnlockMutex cs(&lock);
+    ScopedMutex cs(&lock);
     ArenaPopToLocked(this, pos);
 }
 
@@ -608,10 +953,21 @@ void Arena::Pop(u64 amt) {
     if (!this) {
         return;
     }
-    AutoUnlockMutex cs(&lock);
+    ScopedMutex cs(&lock);
     u64 posOld = current->basePos + current->pos;
     u64 posNew = (amt < posOld) ? (posOld - amt) : 0;
     ArenaPopToLocked(this, posNew);
+}
+
+ArenaSavepoint GetArenaSavepoint(Arena* arena) {
+    ArenaSavepoint temp = {arena, arena ? arena->Pos() : 0};
+    return temp;
+}
+
+void RestoreArenaSavepoint(ArenaSavepoint temp) {
+    if (temp.arena) {
+        temp.arena->PopTo(temp.pos);
+    }
 }
 
 // ArenaPtrCompress / ArenaPtrUncompress: store a pointer as a u32 offset from
@@ -644,7 +1000,7 @@ u32 ArenaPtrCompress(Arena* arena, void* ptr) {
     if (!arena || !ptr) {
         return 0;
     }
-    AutoUnlockMutex cs(&arena->lock);
+    ScopedMutex cs(&arena->lock);
     Arena* block = ArenaFindBlockContaining(arena, ptr);
     if (!block) {
         ReportIf(true);
@@ -662,7 +1018,7 @@ void* ArenaPtrUncompress(Arena* arena, u32 compressed) {
     if (!arena || compressed == 0) {
         return nullptr;
     }
-    AutoUnlockMutex cs(&arena->lock);
+    ScopedMutex cs(&arena->lock);
     Arena* block = ArenaFindBlockForOffset(arena, compressed);
     if (!block) {
         ReportIf(true);
@@ -682,10 +1038,50 @@ void Arena::Reset() {
     if (!this) {
         return;
     }
-    AutoUnlockMutex cs(&lock);
+    ScopedMutex cs(&lock);
     ArenaPopToLocked(this, 0);
     nAllocsSinceReset = 0;
     peakBytesSinceReset = 0;
+}
+
+void* Arena::GetAvailableSpace(int* bufSizeOut) {
+    if (!this) {
+        if (bufSizeOut) {
+            *bufSizeOut = 0;
+        }
+        return nullptr;
+    }
+
+    lock.Lock();
+    void* mem = ArenaGetAvailableSpaceLocked(this, bufSizeOut);
+    lock.Unlock();
+    return mem;
+}
+
+void* Arena::CommitReserved(void* mem, int size) {
+    if (size <= 0) {
+        return nullptr;
+    }
+
+    lock.Lock();
+
+    int availSize = 0;
+    void* availMem = ArenaGetAvailableSpaceLocked(this, &availSize);
+    if (mem == availMem && size <= availSize) {
+        void* committed = ArenaPushLocked(this, (u64)size, 8, false);
+        lock.Unlock();
+        return committed;
+    }
+
+    void* dst = ArenaPushLocked(this, (u64)size, 8, false);
+    lock.Unlock();
+    if (!dst) {
+        return nullptr;
+    }
+    if (mem) {
+        memcpy(dst, mem, (size_t)size);
+    }
+    return dst;
 }
 
 // size_t overloads that match the legacy Allocator::* static helper API
@@ -1290,6 +1686,7 @@ int NormalizeWSInPlace(WStr s) {
 // Unicode lowercase for one BMP code unit. ASCII is a fast path; Windows uses
 // CharLowerW, other platforms a Latin/Cyrillic/Greek table then towlower.
 wchar_t WCharToLower(wchar_t c) {
+#if OS_WIN
     if (c < 0x80) {
         if (c >= 'A' && c <= 'Z') {
             return c + ('a' - 'A');
@@ -1297,6 +1694,40 @@ wchar_t WCharToLower(wchar_t c) {
         return c;
     }
     return (wchar_t)(uintptr_t)CharLowerW((LPWSTR)(uintptr_t)c);
+#else
+    if (c >= L'A' && c <= L'Z') {
+        return c + 32;
+    }
+    if (c >= 0x00C0 && c <= 0x00DE && c != 0x00D7) {
+        return c + 32;
+    }
+    // Latin Extended-A: upper/lower alternate, with the parity flipping twice
+    if (c >= 0x0100 && c <= 0x0137) {
+        return (c & 1) ? c : c + 1;
+    }
+    if (c >= 0x0139 && c <= 0x0148) {
+        return (c & 1) ? c + 1 : c;
+    }
+    if (c >= 0x014A && c <= 0x0177) {
+        return (c & 1) ? c : c + 1;
+    }
+    if (c == 0x0178) {
+        return 0x00FF;
+    }
+    if (c >= 0x0179 && c <= 0x017E) {
+        return (c & 1) ? c + 1 : c;
+    }
+    if (c >= 0x0410 && c <= 0x042F) {
+        return c + 32;
+    }
+    if (c == 0x0401) {
+        return 0x0451;
+    }
+    if ((c >= 0x0391 && c <= 0x03A1) || (c >= 0x03A3 && c <= 0x03AB)) {
+        return c + 32;
+    }
+    return (wchar_t)towlower((wint_t)c);
+#endif
 }
 
 // locale-independent lowercase of a codepoint for case-insensitive matching
@@ -1316,27 +1747,95 @@ bool IsCombiningMark(int c) {
 }
 
 // strip diacritics from a codepoint: 'é' -> 'e', 'ł' -> 'l'. Case is preserved
+#if !OS_WIN
+// What FoldStringW(MAP_COMPOSITE) returns on Windows, for the Latin ranges
+// U+00C0..U+024F: the base letter of a canonical decomposition that is a base
+// letter plus a combining mark, 0 when there is none. Generated from the
+// Unicode character database; outside these ranges POSIX folds nothing.
+constexpr int kFoldLatinFirst = 0x00c0;
+static const u16 kFoldLatin[] = {
+    0x0041, 0x0041, 0x0041, 0x0041, 0x0041, 0x0041, 0x0000, 0x0043, // U+00C0
+    0x0045, 0x0045, 0x0045, 0x0045, 0x0049, 0x0049, 0x0049, 0x0049, // U+00C8
+    0x0000, 0x004e, 0x004f, 0x004f, 0x004f, 0x004f, 0x004f, 0x0000, // U+00D0
+    0x0000, 0x0055, 0x0055, 0x0055, 0x0055, 0x0059, 0x0000, 0x0000, // U+00D8
+    0x0061, 0x0061, 0x0061, 0x0061, 0x0061, 0x0061, 0x0000, 0x0063, // U+00E0
+    0x0065, 0x0065, 0x0065, 0x0065, 0x0069, 0x0069, 0x0069, 0x0069, // U+00E8
+    0x0000, 0x006e, 0x006f, 0x006f, 0x006f, 0x006f, 0x006f, 0x0000, // U+00F0
+    0x0000, 0x0075, 0x0075, 0x0075, 0x0075, 0x0079, 0x0000, 0x0079, // U+00F8
+    0x0041, 0x0061, 0x0041, 0x0061, 0x0041, 0x0061, 0x0043, 0x0063, // U+0100
+    0x0043, 0x0063, 0x0043, 0x0063, 0x0043, 0x0063, 0x0044, 0x0064, // U+0108
+    0x0000, 0x0000, 0x0045, 0x0065, 0x0045, 0x0065, 0x0045, 0x0065, // U+0110
+    0x0045, 0x0065, 0x0045, 0x0065, 0x0047, 0x0067, 0x0047, 0x0067, // U+0118
+    0x0047, 0x0067, 0x0047, 0x0067, 0x0048, 0x0068, 0x0000, 0x0000, // U+0120
+    0x0049, 0x0069, 0x0049, 0x0069, 0x0049, 0x0069, 0x0049, 0x0069, // U+0128
+    0x0049, 0x0000, 0x0000, 0x0000, 0x004a, 0x006a, 0x004b, 0x006b, // U+0130
+    0x0000, 0x004c, 0x006c, 0x004c, 0x006c, 0x004c, 0x006c, 0x0000, // U+0138
+    0x0000, 0x0000, 0x0000, 0x004e, 0x006e, 0x004e, 0x006e, 0x004e, // U+0140
+    0x006e, 0x0000, 0x0000, 0x0000, 0x004f, 0x006f, 0x004f, 0x006f, // U+0148
+    0x004f, 0x006f, 0x0000, 0x0000, 0x0052, 0x0072, 0x0052, 0x0072, // U+0150
+    0x0052, 0x0072, 0x0053, 0x0073, 0x0053, 0x0073, 0x0053, 0x0073, // U+0158
+    0x0053, 0x0073, 0x0054, 0x0074, 0x0054, 0x0074, 0x0000, 0x0000, // U+0160
+    0x0055, 0x0075, 0x0055, 0x0075, 0x0055, 0x0075, 0x0055, 0x0075, // U+0168
+    0x0055, 0x0075, 0x0055, 0x0075, 0x0057, 0x0077, 0x0059, 0x0079, // U+0170
+    0x0059, 0x005a, 0x007a, 0x005a, 0x007a, 0x005a, 0x007a, 0x0000, // U+0178
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+0180
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+0188
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+0190
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+0198
+    0x004f, 0x006f, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+01A0
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0055, // U+01A8
+    0x0075, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+01B0
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+01B8
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+01C0
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0041, 0x0061, 0x0049, // U+01C8
+    0x0069, 0x004f, 0x006f, 0x0055, 0x0075, 0x00dc, 0x00fc, 0x00dc, // U+01D0
+    0x00fc, 0x00dc, 0x00fc, 0x00dc, 0x00fc, 0x0000, 0x00c4, 0x00e4, // U+01D8
+    0x0226, 0x0227, 0x00c6, 0x00e6, 0x0000, 0x0000, 0x0047, 0x0067, // U+01E0
+    0x004b, 0x006b, 0x004f, 0x006f, 0x01ea, 0x01eb, 0x01b7, 0x0292, // U+01E8
+    0x006a, 0x0000, 0x0000, 0x0000, 0x0047, 0x0067, 0x0000, 0x0000, // U+01F0
+    0x004e, 0x006e, 0x00c5, 0x00e5, 0x00c6, 0x00e6, 0x00d8, 0x00f8, // U+01F8
+    0x0041, 0x0061, 0x0041, 0x0061, 0x0045, 0x0065, 0x0045, 0x0065, // U+0200
+    0x0049, 0x0069, 0x0049, 0x0069, 0x004f, 0x006f, 0x004f, 0x006f, // U+0208
+    0x0052, 0x0072, 0x0052, 0x0072, 0x0055, 0x0075, 0x0055, 0x0075, // U+0210
+    0x0053, 0x0073, 0x0054, 0x0074, 0x0000, 0x0000, 0x0048, 0x0068, // U+0218
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0041, 0x0061, // U+0220
+    0x0045, 0x0065, 0x00d6, 0x00f6, 0x00d5, 0x00f5, 0x004f, 0x006f, // U+0228
+    0x022e, 0x022f, 0x0059, 0x0079, 0x0000, 0x0000, 0x0000, 0x0000, // U+0230
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+0238
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+0240
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, // U+0248
+};
+#include "base/FoldDiacriticsData.inc"
+#endif
+
 int FoldDiacriticsRune(int c) {
     if (c < 0x80 || c > 0xffff) {
         return c;
     }
 
-    // letters that don't decompose into base + combining mark: ŁłĐđØøĦħı
-    // clang-format off
-static const struct {
-    u16 cp;
-    char ch;
-} kNoDecomp[] = {
-    {0x141, 'L'}, {0x142, 'l'}, {0x110, 'D'}, {0x111, 'd'}, {0xd8, 'O'},
-    {0xf8, 'o'},  {0x126, 'H'}, {0x127, 'h'}, {0x131, 'i'},
-};
-    // clang-format on
-    for (auto& e : kNoDecomp) {
-        if (e.cp == c) {
-            return e.ch;
-        }
+    // letters that don't decompose into base + combining mark
+    switch (c) {
+        case 0x141: // Ł
+            return 'L';
+        case 0x142: // ł
+            return 'l';
+        case 0x110: // Đ
+            return 'D';
+        case 0x111: // đ
+            return 'd';
+        case 0xd8: // Ø
+            return 'O';
+        case 0xf8: // ø
+            return 'o';
+        case 0x126: // Ħ
+            return 'H';
+        case 0x127: // ħ
+            return 'h';
+        case 0x131: // ı
+            return 'i';
     }
 
+#if OS_WIN
     // 'é' -> 'e' + U+0301
     WCHAR w = (WCHAR)c;
     WCHAR decomposed[8];
@@ -1344,12 +1843,39 @@ static const struct {
     if (n > 1 && IsCombiningMark(decomposed[1])) {
         return decomposed[0];
     }
+#else
+    int idx = c - kFoldLatinFirst;
+    if (idx >= 0 && idx < dimofi(kFoldLatin) && kFoldLatin[idx] != 0) {
+        return kFoldLatin[idx];
+    }
+
+    int lo = 0;
+    int hi = dimofi(kFoldDiacritics) / 2;
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        int v = kFoldDiacritics[mid * 2];
+        if (v < c) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    if (lo < dimofi(kFoldDiacritics) / 2 && kFoldDiacritics[lo * 2] == c) {
+        return kFoldDiacritics[lo * 2 + 1];
+    }
+#endif
     return c;
 }
 
 // Locale-independent Unicode lowercase folding for case-insensitive matching.
 static void FoldCaseWInPlace(WStr s) {
+#if OS_WIN
     CharLowerBuffW(s.s, (DWORD)s.len);
+#else
+    for (int i = 0; i < s.len; i++) {
+        s.s[i] = WCharToLower(s.s[i]);
+    }
+#endif
     for (int i = 0; i < s.len; i++) {
         if (s.s[i] == 0x0130) {
             s.s[i] = L'i';
@@ -3232,6 +3758,18 @@ int CompareProgramVersion(Str ver1, Str ver2) {
 // ascii version that doesn't handle UTF-8
 // IsTextRtl is optimized version of checking if a string is rtl
 // we look at max first 40 chars and
+#if !OS_WIN
+static bool IsRtlCodepoint(wchar_t c) {
+    return (c >= 0x0590 && c <= 0x08ff) || (c >= 0xfb1d && c <= 0xfdff) || (c >= 0xfe70 && c <= 0xfeff) ||
+           (c >= 0x10800 && c <= 0x10fff) || (c >= 0x1e800 && c <= 0x1edff);
+}
+
+static bool IsLtrCodepoint(wchar_t c) {
+    return (c >= L'A' && c <= L'Z') || (c >= L'a' && c <= L'z') || (c >= 0x00c0 && c <= 0x02af) ||
+           (c >= 0x0370 && c <= 0x052f) || (c >= 0x1e00 && c <= 0x1fff);
+}
+#endif
+
 bool IsTextRtl(WStr s) {
     if (len(s) == 0) {
         return false;
@@ -3239,6 +3777,7 @@ bool IsTextRtl(WStr s) {
     int n = s.len > 40 ? 40 : s.len;
     int nRtl = 0;
     int nLtr = 0;
+#if OS_WIN
     WORD* charTypes = AllocArrayTemp<WORD>(n + 1);
     if (!GetStringTypeExW(LOCALE_INVARIANT, CT_CTYPE2, s.s, n, charTypes)) {
         return false; // API failure
@@ -3251,6 +3790,16 @@ bool IsTextRtl(WStr s) {
             nRtl++;
         }
     }
+#else
+    for (int i = 0; i < n; i++) {
+        wchar_t c = s.s[i];
+        if (IsRtlCodepoint(c)) {
+            nRtl++;
+        } else if (IsLtrCodepoint(c)) {
+            nLtr++;
+        }
+    }
+#endif
     return nRtl > nLtr;
 }
 
@@ -3596,7 +4145,7 @@ static bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
     return isLegalUTF8(source, n);
 }
 
-static bool isLegalUTF8String(const u8** source, const u8* sourceEnd) {
+bool isLegalUTF8String(const u8** source, const u8* sourceEnd) {
     const u8* s = *source;
     while (s != sourceEnd) {
         int n = utf8RuneLen(s);
@@ -3841,15 +4390,101 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
 
 static wchar_t emptyWideStr[1] = {0};
 
+#if !OS_WIN
+static int Utf8BytesForCodepoint(int c) {
+    if (c < 0x80) {
+        return 1;
+    }
+    if (c < 0x800) {
+        return 2;
+    }
+    if (c < 0x10000) {
+        return 3;
+    }
+    return 4;
+}
+
+static int WStrCodepointAt(WStr s, int& idx) {
+    int c = s.s[idx++];
+    if constexpr (sizeof(WCHAR) == 2) {
+        if (c >= 0xd800 && c <= 0xdbff && idx < s.len) {
+            int lo = s.s[idx];
+            if (lo >= 0xdc00 && lo <= 0xdfff) {
+                idx++;
+                return 0x10000 + ((c - 0xd800) << 10) + (lo - 0xdc00);
+            }
+            return 0xfffd;
+        }
+        if (c >= 0xdc00 && c <= 0xdfff) {
+            return 0xfffd;
+        }
+    }
+    return c;
+}
+#endif
+
+Str ToUtf8(Arena* arena, WStr wide) {
+    if (len(wide) == 0) {
+        return {};
+    }
+#if OS_WIN
+    int n = WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, nullptr, 0, nullptr, nullptr);
+    char* utf8 = (char*)Alloc(arena, n + 1);
+    WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, utf8, n, nullptr, nullptr);
+#else
+    int n = 0;
+    for (int i = 0; i < wide.len;) {
+        int c = WStrCodepointAt(wide, i);
+        n += Utf8BytesForCodepoint(c);
+    }
+    char* utf8 = (char*)Alloc(arena, n + 1);
+    int off = 0;
+    for (int i = 0; i < wide.len;) {
+        int c = WStrCodepointAt(wide, i);
+        str::Utf8Encode(utf8, off, c);
+    }
+#endif
+    utf8[n] = 0;
+    return Str(utf8, n);
+}
+
 Str ToUtf8Temp(WStr wide) {
-    return strconv::WStrToCodePage(CP_UTF8, wide, GetTempArena());
+    return ToUtf8(GetTempArena(), wide);
 }
 
 WStr ToWStrTemp(Str s) {
     if (len(s) == 0) {
         return WStr(&emptyWideStr[0], 0);
     }
-    return strconv::CodePageToWStr(CP_UTF8, s, GetTempArena());
+#if OS_WIN
+    int wideLen = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);
+    wchar_t* wide = (wchar_t*)AllocTemp((int)((wideLen + 1) * sizeof(wchar_t)));
+    MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, wide, wideLen);
+#else
+    int wideLen = 0;
+    for (int byteIdx = 0; byteIdx < s.len;) {
+        int c = Utf8CodepointNext(s, byteIdx);
+        wideLen += c >= 0x10000 && sizeof(WCHAR) == 2 ? 2 : 1;
+    }
+    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t));
+    int dst = 0;
+    for (int byteIdx = 0; byteIdx < s.len;) {
+        int c = Utf8CodepointNext(s, byteIdx);
+        if constexpr (sizeof(WCHAR) == 2) {
+            if (c >= 0x10000) {
+                c -= 0x10000;
+                wide[dst++] = (WCHAR)(0xd800 + (c >> 10));
+                wide[dst++] = (WCHAR)(0xdc00 + (c & 0x3ff));
+            } else {
+                wide[dst++] = (WCHAR)c;
+            }
+        } else {
+            wide[dst++] = (WCHAR)c;
+        }
+    }
+#endif
+    wide[wideLen] = 0;
+    return WStr(wide, wideLen);
 }
 
 // Converts a UTF-8 Str to a NUL-terminated WCHAR* temp. Use when the wide
@@ -4705,11 +5340,16 @@ Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs) {
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
 TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
+#if OS_WIN
     WCHAR thousandSepW[4]{};
     if (!GetLocaleInfoW(locale, LOCALE_STHOUSAND, thousandSepW, dimof(thousandSepW))) {
         str::BufSet(thousandSepW, dimof(thousandSepW), StrL(","));
     }
     TempStr thousandSep = ToUtf8Temp(thousandSepW);
+#else
+    (void)locale;
+    TempStr thousandSep = StrL(",");
+#endif
     TempStr buf = str::FormatTemp("%d", num);
 
     // i64 with thousand seps is well under 48 bytes (e.g. "9,223,372,036,854,775,807").
@@ -4734,6 +5374,7 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
     i64 num = (i64)llround(number * 100);
 
     TempStr tmp = FormatNumWithThousandSepTemp(num / 100, locale);
+#if OS_WIN
     WCHAR decimalW[4] = {};
     if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
         decimalW[0] = '.';
@@ -4745,6 +5386,9 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
         decimal[i++] = (char)c;
     }
 
+#else
+    char decimal[4] = {'.', 0};
+#endif
     // add between one and two decimals after the point
     TempStr buf = str::FormatTemp("%s%s%02d", tmp, Str(decimal), num % 100);
     if (stripTrailingZero && str::EndsWith(buf, StrL("0"))) {
@@ -5630,20 +6274,109 @@ TempStr JoinTemp(StrVec* v, Str sep) {
 
 namespace strconv {
 
-// null in => null out; empty in => allocated empty out
+#if !OS_WIN
+static TempStr CodePageNameTemp(uint codePage) {
+    if (codePage == CP_ACP || codePage == CP_UTF8) {
+        return str::DupTemp(StrL("UTF-8"));
+    }
+    if (codePage == 20127) {
+        return str::DupTemp(StrL("ASCII"));
+    }
+    if (codePage == 1200) {
+        return str::DupTemp(StrL("UTF-16LE"));
+    }
+    if (codePage == 1201) {
+        return str::DupTemp(StrL("UTF-16BE"));
+    }
+    if (codePage >= 28591 && codePage <= 28606) {
+        return fmt("ISO-8859-%u", codePage - 28590);
+    }
+    return fmt("CP%u", codePage);
+}
+
+static TempStr IconvTemp(Str src, uint codePageSrc, uint codePageDest) {
+    TempStr from = CodePageNameTemp(codePageSrc);
+    TempStr to = CodePageNameTemp(codePageDest);
+    iconv_t cd = iconv_open(CStrTemp(to), CStrTemp(from));
+    if (cd == (iconv_t)-1) {
+        return {};
+    }
+    if (src.len > (INT_MAX - 16) / 4) {
+        iconv_close(cd);
+        return {};
+    }
+    int cap = src.len * 4 + 16;
+    char* out = AllocArrayTemp<char>(cap + 1);
+    char* inPtr = src.s;
+    char* outPtr = out;
+    size_t inLeft = (size_t)src.len;
+    size_t outLeft = (size_t)cap;
+    size_t res = iconv(cd, &inPtr, &inLeft, &outPtr, &outLeft);
+    if (res != (size_t)-1) {
+        res = iconv(cd, nullptr, nullptr, &outPtr, &outLeft);
+    }
+    iconv_close(cd);
+    if (res == (size_t)-1 || inLeft != 0) {
+        return {};
+    }
+    *outPtr = 0;
+    return Str(out, (int)(outPtr - out));
+}
+#endif
+
+#if OS_WIN
+static WStr WrapAllocatedWStr(WCHAR* s, int n) {
+    if (!s) {
+        return {};
+    }
+    return WStr(s, n);
+}
+
+static Str WrapAllocatedStr(char* s, int n) {
+    if (!s) {
+        return {};
+    }
+    return Str(s, n);
+}
+#endif
+
 WStr CodePageToWStr(uint codePage, Str s, Arena* a) {
+    if (str::IsNull(s)) return {};
+#if OS_WIN
+    int n = len(s) == 0 ? 0 : MultiByteToWideChar(codePage, 0, s.s, len(s), nullptr, 0);
+    WCHAR* res = AllocArray<WCHAR>(a, n + 1);
+    if (!res) return {};
+    if (n > 0) MultiByteToWideChar(codePage, 0, s.s, len(s), res, n);
+    return WStr(res, n);
+#else
+    TempStr utf8 = IconvTemp(s, codePage, CP_UTF8);
+    return wstr::Dup(a, ToWStrTemp(utf8));
+#endif
+}
+
+WStr Utf8ToWStr(Str s, Arena* a) {
+    // subtle: if s.s is nullptr, we return empty. if empty string => we return empty string
     if (str::IsNull(s)) {
         return {};
     }
-    int cch = len(s) == 0 ? 0 : MultiByteToWideChar(codePage, 0, s.s, s.len, nullptr, 0);
-    WCHAR* res = AllocArray<WCHAR>(a, cch + 1);
+#if OS_WIN
+    if (len(s) == 0) {
+        WCHAR* res = AllocArray<WCHAR>(a, 1);
+        return WrapAllocatedWStr(res, 0);
+    }
+    // ask for the size of buffer needed for converted string
+    int cchNeeded = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);
+    WCHAR* res = AllocArray<WCHAR>(a, cchNeeded + 1);
     if (!res) {
         return {};
     }
-    if (cch > 0) {
-        MultiByteToWideChar(codePage, 0, s.s, s.len, res, cch);
-    }
-    return WStr(res, cch);
+    int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, res, cchNeeded);
+    ReportIf(cchConverted != cchNeeded);
+    return WrapAllocatedWStr(res, cchConverted);
+#else
+    TempWStr res = ToWStrTemp(s);
+    return wstr::Dup(a, res);
+#endif
 }
 
 Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
@@ -5651,24 +6384,90 @@ Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
     if (wstr::IsNull(s)) {
         return {};
     }
-    int cb = len(s) == 0 ? 0 : WideCharToMultiByte(codePage, 0, s.s, s.len, nullptr, 0, nullptr, nullptr);
-    char* res = AllocArray<char>(a, cb + 1);
+#if OS_WIN
+    if (len(s) == 0) {
+        char* res = AllocArray<char>(a, 1);
+        return WrapAllocatedStr(res, 0);
+    }
+    // ask for the size of buffer needed for converted string
+    int cbNeeded = WideCharToMultiByte(codePage, 0, s.s, s.len, nullptr, 0, nullptr, nullptr);
+    if (cbNeeded == 0) {
+        return {};
+    }
+    char* res = AllocArray<char>(a, cbNeeded + 1);
     if (!res) {
         return {};
     }
-    if (cb > 0) {
-        WideCharToMultiByte(codePage, 0, s.s, s.len, res, cb, nullptr, nullptr);
+    int cbConverted = WideCharToMultiByte(codePage, 0, s.s, s.len, res, cbNeeded, nullptr, nullptr);
+    ReportIf(cbConverted != cbNeeded);
+    return WrapAllocatedStr(res, cbConverted);
+#else
+    TempStr utf8 = ToUtf8Temp(s);
+    if (codePage == CP_ACP || codePage == CP_UTF8) {
+        return str::Dup(a, utf8);
     }
-    return Str(res, cb);
+    TempStr encoded = IconvTemp(utf8, CP_UTF8, codePage);
+    return str::Dup(a, encoded);
+#endif
+}
+
+Str WStrToUtf8(WStr s, Arena* a) {
+    return WStrToCodePage(CP_UTF8, s, a);
 }
 
 // caller needs to free() the result
 WStr StrCPToWStr(Str src, uint codePage) {
-    return CodePageToWStr(codePage, src, nullptr);
+    ReportIf(str::IsNull(src));
+    if (str::IsNull(src)) {
+        return {};
+    }
+
+#if OS_WIN
+    int requiredBufSize = MultiByteToWideChar(codePage, 0, src.s, src.len, nullptr, 0);
+    if (0 == requiredBufSize) {
+        return {};
+    }
+    WCHAR* res = AllocArray<WCHAR>(requiredBufSize + 1);
+    if (!res) {
+        return {};
+    }
+    MultiByteToWideChar(codePage, 0, src.s, src.len, res, requiredBufSize);
+    return WrapAllocatedWStr(res, requiredBufSize);
+#else
+    if (codePage == CP_ACP || codePage == CP_UTF8) {
+        TempWStr res = ToWStrTemp(src);
+        return wstr::Dup(nullptr, res);
+    }
+    TempStr utf8 = IconvTemp(src, codePage, CP_UTF8);
+    TempWStr res = ToWStrTemp(utf8);
+    return wstr::Dup(nullptr, res);
+#endif
 }
 
 TempWStr StrCPToWStrTemp(Str src, uint codePage) {
-    return CodePageToWStr(codePage, src, GetTempArena());
+    ReportIf(str::IsNull(src));
+    if (str::IsNull(src)) {
+        return {};
+    }
+
+#if OS_WIN
+    int requiredBufSize = MultiByteToWideChar(codePage, 0, src.s, src.len, nullptr, 0);
+    if (0 == requiredBufSize) {
+        return {};
+    }
+    WCHAR* res = AllocArrayTemp<WCHAR>(requiredBufSize + 1);
+    if (!res) {
+        return {};
+    }
+    MultiByteToWideChar(codePage, 0, src.s, src.len, res, requiredBufSize);
+    return WrapAllocatedWStr(res, requiredBufSize);
+#else
+    if (codePage == CP_ACP || codePage == CP_UTF8) {
+        return ToWStrTemp(src);
+    }
+    TempStr utf8 = IconvTemp(src, codePage, CP_UTF8);
+    return ToWStrTemp(utf8);
+#endif
 }
 
 TempStr ToMultiByteTemp(Str src, uint codePageSrc, uint codePageDest) {
@@ -5748,21 +6547,37 @@ TempWStr AnsiToWStrTemp(Str src) {
 }
 
 TempStr AnsiToUtf8Temp(Str src) {
-    return ToUtf8Temp(AnsiToWStrTemp(src));
+    TempWStr ws = StrCPToWStrTemp(src, CP_ACP);
+    TempStr res = ToUtf8Temp(ws);
+    return res;
 }
 
 Str AnsiToUtf8(Str src) {
-    return ToUtf8(AnsiToWStrTemp(src));
+    TempWStr ws = StrCPToWStrTemp(src, CP_ACP);
+    Str res = ToUtf8(ws);
+    return res;
+}
+
+Str WStrToAnsi(WStr src) {
+    return WStrToCodePage(CP_ACP, src);
+}
+
+Str Utf8ToAnsi(Str s) {
+    TempWStr ws = ToWStrTemp(s);
+    return WStrToAnsi(ws);
 }
 
 } // namespace strconv
 
+// short names because frequently used
+// shorter names
+// TODO: eventually we want to migrate all strconv:: to them
 Str ToUtf8(WStr s, Arena* a) {
-    return strconv::WStrToCodePage(CP_UTF8, s, a);
+    return strconv::WStrToUtf8(s, a);
 }
 
 WStr ToWStr(Str s, Arena* a) {
-    return strconv::CodePageToWStr(CP_UTF8, s, a);
+    return strconv::Utf8ToWStr(s, a);
 }
 
 //--- Color.cpp ----------------------------------------------------------------
@@ -5784,8 +6599,25 @@ void UnpackColor(Color c, u8& r, u8& g, u8& b, u8& a) {
 
 // format: bgr
 void UnpackColor(Color c, u8& r, u8& g, u8& b) {
-    u8 a;
+    r = (u8)(c & 0xff);
+    c = c >> 8;
+    g = (u8)(c & 0xff);
+    c = c >> 8;
+    b = (u8)(c & 0xff);
+}
+
+#if OS_WIN
+// TODO: use AdjustLightness instead to compensate for the alpha?
+Gdiplus::Color Unblend(Color c, u8 alpha) {
+    u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
+    u8 ralpha = (u8)((float)alpha * (float)a / 255.f);
+    float falpha = ((float)alpha * (float)a / 255.f);
+    float tmp = 255.0f / (falpha + 0.5f);
+    u8 R = (u8)floorf((float)std::max(r - (255 - ralpha), 0) * tmp);
+    u8 G = (u8)floorf((float)std::max(g - (255 - ralpha), 0) * tmp);
+    u8 B = (u8)floorf((float)std::max(b - (255 - ralpha), 0) * tmp);
+    return {alpha, R, G, B};
 }
 
 Gdiplus::Color GdiRgbFromColor(Color c) {
@@ -5793,6 +6625,11 @@ Gdiplus::Color GdiRgbFromColor(Color c) {
     UnpackColor(c, r, g, b);
     return {r, g, b};
 }
+
+Gdiplus::Color GdiRgbaFromColor(Color c) {
+    return {c};
+}
+#endif
 
 TempStr SerializeColorTemp(Color c) {
     u8 r, g, b, a;
@@ -5905,7 +6742,7 @@ void UnpackPdfColor(PdfColor c, u8& r, u8& g, u8& b, u8& a) {
     a = (u8)(c & 0xff);
 }
 
-static Color AdjustLightness(Color c, float factor) {
+Color AdjustLightness(Color c, float factor) {
     u8 R, G, B;
     UnpackColor(c, R, G, B);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma
@@ -6054,6 +6891,16 @@ u8 GetAlpha(Color rgb) {
     return (u8)rgb;
 }
 
+#if OS_WIN
+
+int AtomicRefCountAdd(AtomicRefCount* v) {
+    return (int)InterlockedIncrement(v);
+}
+
+int AtomicRefCountDec(AtomicRefCount* v) {
+    return (int)InterlockedDecrement(v);
+}
+
 bool AtomicBoolGet(AtomicBool* p) {
     return InterlockedOr(p, 0) != 0;
 }
@@ -6086,7 +6933,167 @@ int AtomicIntDec(AtomicInt* p) {
     return (int)InterlockedDecrement(p);
 }
 
+void* AtomicPtrGet(AtomicPtr* p) {
+    // comparing nullptr against nullptr never stores, so this is just an
+    // atomic read - there is no InterlockedGetPointer
+    return InterlockedCompareExchangePointer(p, nullptr, nullptr);
+}
+
+void AtomicPtrSet(AtomicPtr* p, void* v) {
+    InterlockedExchangePointer(p, v);
+}
+
 // stores v and returns what was there before
 void* AtomicPtrExchange(AtomicPtr* p, void* v) {
     return InterlockedExchangePointer(p, v);
 }
+
+// milliseconds since the unix epoch (1970-01-01), for timestamps we persist.
+// FILETIME counts 100 ns ticks since 1601-01-01, hence the constant.
+i64 UnixTimeMsNow() {
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    ULARGE_INTEGER value;
+    value.LowPart = ft.dwLowDateTime;
+    value.HighPart = ft.dwHighDateTime;
+    return ((i64)value.QuadPart - (i64)kFileTimeUnixEpoch) / 10000;
+}
+
+bool GetPhysMemoryInfo(u64* availPhysOut, int* loadPercentOut, u64* totalPhysOut) {
+    MEMORYSTATUSEX ms{};
+    ms.dwLength = sizeof(ms);
+    if (!GlobalMemoryStatusEx(&ms)) {
+        return false;
+    }
+    *availPhysOut = ms.ullAvailPhys;
+    *loadPercentOut = (int)ms.dwMemoryLoad;
+    if (totalPhysOut) {
+        *totalPhysOut = ms.ullTotalPhys;
+    }
+    return true;
+}
+
+#endif
+
+void str::BuilderUseExternalBuffer(Builder& b, Str buf) {
+    b.UseExternalBuffer(buf);
+}
+bool str::BuilderReserve(Builder& b, int cap) {
+    return b.Reserve(cap);
+}
+
+void wstr::BuilderUseExternalBuffer(Builder& b, WStr buf) {
+    b.UseExternalBuffer(buf);
+}
+bool wstr::BuilderReserve(Builder& b, int cap) {
+    return b.Reserve(cap);
+}
+
+SizeF ToSizeFl(const Size s) {
+    return {(float)s.dx, (float)s.dy};
+}
+
+Size ToSize(const SizeF s) {
+    int dx = (int)floor(s.dx + 0.5);
+    int dy = (int)floor(s.dy + 0.5);
+    return {dx, dy};
+}
+
+static int StrArenaUlebSize(u32 n) {
+    int i = 1;
+    while (n >= 0x80) {
+        n >>= 7;
+        i++;
+    }
+    return i;
+}
+
+static int StrArenaUlebEncode(u8* dst, u32 n) {
+    int i = 0;
+    for (;;) {
+        u8 b = (u8)(n & 0x7f);
+        n >>= 7;
+        if (n) {
+            b |= 0x80;
+        }
+        dst[i++] = b;
+        if (!n) {
+            return i;
+        }
+    }
+}
+
+static bool StrArenaUlebDecode(const u8*& p, u32* out) {
+    u32 n = 0;
+    int shift = 0;
+    for (;;) {
+        u8 b = *p++;
+        n |= (u32)(b & 0x7f) << shift;
+        if (!(b & 0x80)) {
+            *out = n;
+            return true;
+        }
+        shift += 7;
+        if (shift >= 35) {
+            return false;
+        }
+    }
+}
+
+StrArena StrArenaAlloc(Arena* a, int size) {
+    if (!a || size < 0) {
+        return 0;
+    }
+    int vlen = StrArenaUlebSize((u32)size);
+    int total = vlen + size + 1;
+    u8* mem = (u8*)a->Push((u64)total, 1, false);
+    if (!mem) {
+        return 0;
+    }
+    StrArenaUlebEncode(mem, (u32)size);
+    mem[vlen + size] = 0;
+    return ArenaPtrCompress(a, mem);
+}
+
+StrArena StrArenaDupStr(Arena* a, Str s) {
+    if (!a) {
+        return 0;
+    }
+    int size = s.len;
+    size = std::max(size, 0);
+    StrArena sa = StrArenaAlloc(a, size);
+    if (!sa) {
+        return 0;
+    }
+    if (size > 0 && s.s) {
+        Str out = StrArenaToStr(a, sa);
+        memcpy(out.s, s.s, (size_t)size);
+    }
+    return sa;
+}
+
+Str StrArenaToStr(Arena* a, StrArena sa) {
+    if (!a || !sa) {
+        return {};
+    }
+    u8* mem = (u8*)ArenaPtrUncompress(a, sa);
+    if (!mem) {
+        return {};
+    }
+    const u8* p = mem;
+    u32 size = 0;
+    if (!StrArenaUlebDecode(p, &size)) {
+        return {};
+    }
+    return Str((char*)p, (int)size);
+}
+
+namespace str {
+int TrimSuffix(Str& s, Str suffix) {
+    if (!str::EndsWith(s, suffix)) {
+        return 0;
+    }
+    s.len -= suffix.len;
+    return suffix.len;
+}
+} // namespace str

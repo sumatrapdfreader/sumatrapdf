@@ -4,7 +4,6 @@
 struct MainWindow;
 struct WindowTab;
 struct Annotation;
-struct Point;
 
 enum class CommandVisibility {
     Show,
