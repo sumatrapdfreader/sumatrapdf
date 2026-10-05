@@ -96,6 +96,7 @@ export const sharedFiles = [
   "src/base/FoldDiacriticsData.inc",
   "src/base/FrameTimeoutCalculator.h",
   "src/base/GdiPlusUtil.h",
+  "src/base/GuessFileType.h",
   "src/base/HtmlTags.cpp",
   "src/base/HtmlTags.h",
   "src/base/Http.h",
