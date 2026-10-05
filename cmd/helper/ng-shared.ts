@@ -96,6 +96,7 @@ export const sharedFiles = [
   "src/base/Exif.h",
   "src/base/File.cpp",
   "src/base/File.h",
+  "src/base/FileWatcher.cpp",
   "src/base/FileWatcher.h",
   "src/base/FileWatcher_linux.cpp",
   "src/base/FileWatcher_mac.cpp",

@@ -2,6 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+
+#if OS_WIN
 #include "base/AutoWin.h"
 #include "base/File.h"
 #include "base/Win.h"
@@ -694,3 +696,7 @@ void FileWatcherUnsubscribe(WatchedFile* wf) {
 
     RemoveWatchedFile(wf);
 }
+
+void FileWatcherInit() {}
+
+#endif
