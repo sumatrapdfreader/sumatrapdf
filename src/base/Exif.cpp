@@ -935,6 +935,7 @@ ExifParser::~ExifParser() {
 }
 
 void ExifParser::Reset() {
+    data = {};
     dumpLines.Reset();
     VecReset(entries);
     free(ownedExif);
@@ -947,6 +948,7 @@ void ExifParser::Reset() {
 
 bool ExifParser::Parse(Str imageData) {
     Reset();
+    data = imageData;
     if (!ExtractExifBlob(imageData, exifBlob, &ownedExif)) {
         return false;
     }
@@ -1050,4 +1052,31 @@ TempStr ExifParser::GetFormattedPropTemp(ExifProp prop) const {
         return {};
     }
     return FormatValuesTemp(*this, (IfdGroup)entry->group, entry->tag, entry->type, entry->count, entry->dataOff);
+}
+
+bool ExifParser::HasProp(ExifProp prop) const {
+    return FindEntry(*this, prop) != nullptr;
+}
+
+ExifValueKind ExifParser::GetPropKind(ExifProp prop) const {
+    const ExifEntry* entry = FindEntry(*this, prop);
+    if (!entry) {
+        return ExifValueKind::Unknown;
+    }
+    if (entry->type == TiffAscii || IsXpProp(prop) || IsAsciiUndefinedProp(prop) || prop == ExifProp::UserComment) {
+        return ExifValueKind::String;
+    }
+    if (entry->type == TiffShort || entry->type == TiffLong || entry->type == TiffSShort || entry->type == TiffSLong) {
+        return ExifValueKind::Int;
+    }
+    if (entry->type == TiffRational || entry->type == TiffSRational) {
+        return ExifValueKind::Rational;
+    }
+    return ExifValueKind::Bytes;
+}
+
+void ExifParser::GetDumpLines(StrVec& linesOut) const {
+    for (Str line : dumpLines) {
+        linesOut.Append(line);
+    }
 }

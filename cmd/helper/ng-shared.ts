@@ -90,6 +90,7 @@ export const sharedFiles = [
   "src/base/Dict.h",
   "src/base/DirScan.h",
   "src/base/DirScan_posix.cpp",
+  "src/base/Exif.cpp",
   "src/base/Exif.h",
   "src/base/File.h",
   "src/base/FileWatcher.h",
