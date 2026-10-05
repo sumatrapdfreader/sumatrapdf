@@ -2,6 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+
+#if OS_WIN
 #include "base/Win.h"
 #include "base/Pixmap.h"
 
@@ -266,6 +268,9 @@ Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
         return nullptr;
     }
     auto* bmp = new Gdiplus::Bitmap(px->width, px->height, px->stride, fmt, px->data);
+    if (!bmp) {
+        return nullptr;
+    }
     if (bmp->GetLastStatus() != Gdiplus::Ok) {
         delete bmp;
         return nullptr;
@@ -467,3 +472,5 @@ bool CopyPixmapToClipboard(Pixmap* p, bool appendOnly) {
     }
     return ok;
 }
+
+#endif // OS_WIN
