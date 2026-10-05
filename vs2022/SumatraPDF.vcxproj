@@ -1630,7 +1630,6 @@
     <ClCompile Include="..\src\ChangeScrollbarDialog.cpp" />
     <ClCompile Include="..\src\ChangeThemeDialog.cpp" />
     <ClCompile Include="..\src\ChapterTable.cpp" />
-    <ClCompile Include="..\src\ChmDump.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
     <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
@@ -2160,6 +2159,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
+    <ClCompile Include="..\src\shared\ChmDump.cpp" />
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
     <ClCompile Include="..\src\shared\DocController.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
