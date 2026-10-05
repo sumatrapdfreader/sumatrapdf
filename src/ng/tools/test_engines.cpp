@@ -658,7 +658,7 @@ static bool ListModelToc(Str path) {
 
     // MarkdownModel fills the headings in on a worker and delivers the finished
     // tree through uitask; drain until it arrives (5 s is generous)
-    uitask::Initialize();
+    uitask::Initialize(uitask::Dispatch::Queue);
     MarkdownModel* mm = ctrl->AsMarkdown();
     for (int i = 0; i < 500 && mm && mm->tocBuildTask; i++) {
         uitask::DrainQueue();

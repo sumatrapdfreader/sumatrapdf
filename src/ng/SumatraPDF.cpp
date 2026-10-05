@@ -8448,7 +8448,7 @@ int GpuiMain(int argc, char** argv) {
     NoDllHijacking();
 #endif
     InitPerfLog();
-    uitask::Initialize();
+    uitask::Initialize(uitask::Dispatch::Queue);
 
     gFlags = new Flags();
     ParseCommandLine(*gFlags, argc, argv);

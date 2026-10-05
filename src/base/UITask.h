@@ -3,7 +3,12 @@
 
 namespace uitask {
 
-void Initialize();
+enum class Dispatch {
+    Native,
+    Queue
+};
+
+void Initialize(Dispatch dispatch = Dispatch::Native);
 void Destroy();
 
 bool IsMainUIThread();

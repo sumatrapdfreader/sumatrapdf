@@ -2,27 +2,23 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/AutoWin.h"
+#if OS_WIN
 #include "base/Win.h"
+#endif
 #include "base/Timer.h"
 #include "base/UITask.h"
 
 namespace uitask {
-
-static HWND gTaskDispatchHwnd = nullptr;
-
-// set by Destroy(). From then on gTaskDispatchHwnd is null because the app is
-// shutting down, which is a different situation from it never having been
-// created - see Post()
-static bool gWasDestroyed = false;
-
-static UINT gExecuteTaskMessage = 0;
-
 static ThreadId gMainUIThreadId = 0;
+static bool gInitialized = false;
+static bool gWasDestroyed = false;
+static Dispatch gDispatch = Dispatch::Queue;
+static void (*gWakeupFn)() = nullptr;
+#if OS_WIN
+static HWND gTaskDispatchHwnd = nullptr;
+static UINT gExecuteTaskMessage = 0;
+#endif
 
-// What Post() hands to the dispatcher. Bundling these means one allocation per
-// task instead of one for the Func0 plus smuggling the kind through wparam, and
-// it leaves somewhere to record when the task was queued.
 struct TaskInfo {
     Func0 f;
     Kind kind = nullptr;
@@ -65,11 +61,10 @@ static SeqStrings gSkipLogNames =
     "TaskFindCountProgress\0CopyProgress\0RenderFinished\0FrameUpdateUi\0(no "
     "kind)\0Repaint\0SaveSettings\0ShowSelectedAnnot\0GoToFindMatch\0";
 
-static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (gExecuteTaskMessage != msg) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-    auto* ti = (TaskInfo*)lp;
+static Mutex gQueueMutex;
+static Vec<TaskInfo*>* gQueue = nullptr;
+
+static void ExecuteTask(TaskInfo* ti) {
     Kind kind = ti->kind;
     // how long the task waited between Post() and getting here
     double queuedMs = TimeSinceInMs(ti->queueTime);
@@ -86,57 +81,101 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
         logf("uitask::WndProcTaskDispatch: did execute 0x%p\n", (void*)ti);
     }
     FreeTaskInfo(ti);
+}
+
+#if OS_WIN
+static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (gExecuteTaskMessage != msg) {
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+    auto* ti = (TaskInfo*)lp;
+    ExecuteTask(ti);
     return 0;
 }
-
 constexpr const WCHAR* kUiTaskClassName = L"UITask_Wnd_Class";
+#endif
 
-// Call Initialize() at program startup and Destroy() at the end
-void Initialize() {
+void Initialize(Dispatch dispatch) {
     gMainUIThreadId = GetCurrentThreadId();
     gWasDestroyed = false;
+#if OS_WIN
+    gDispatch = dispatch;
+    if (gDispatch == Dispatch::Native) {
+        ReportIf(gExecuteTaskMessage != 0);
+        gExecuteTaskMessage = RegisterWindowMessageA("UITask_Msg_StdFunction");
+        WNDCLASSEX wcex;
+        FillWndClassEx(wcex, kUiTaskClassName, WndProcTaskDispatch);
+        RegisterClassEx(&wcex);
 
-    ReportIf(gExecuteTaskMessage != 0);
-    gExecuteTaskMessage = RegisterWindowMessageA("UITask_Msg_StdFunction");
-    WNDCLASSEX wcex;
-    FillWndClassEx(wcex, kUiTaskClassName, WndProcTaskDispatch);
-    RegisterClassEx(&wcex);
+        ReportIf(gTaskDispatchHwnd);
+        const auto* cls = kUiTaskClassName;
+        const auto* title = L"UITask Dispatch Window";
+        auto* m = GetModuleHandleW(nullptr);
+        DWORD style = WS_OVERLAPPED;
+        gTaskDispatchHwnd = CreateWindowExW(0, cls, title, style, 0, 0, 0, 0, HWND_MESSAGE, nullptr, m, nullptr);
 
-    ReportIf(gTaskDispatchHwnd);
-    const auto* cls = kUiTaskClassName;
-    const auto* title = L"UITask Dispatch Window";
-    auto* m = GetModuleHandleW(nullptr);
-    DWORD style = WS_OVERLAPPED;
-    gTaskDispatchHwnd = CreateWindowExW(0, cls, title, style, 0, 0, 0, 0, HWND_MESSAGE, nullptr, m, nullptr);
+        gInitialized = gTaskDispatchHwnd != nullptr;
+        return;
+    }
+#else
+    (void)dispatch;
+#endif
+    ReportIf(gQueue);
+    gQueue = new Vec<TaskInfo*>();
+    gInitialized = true;
 }
 
-// call only from the same thread as Initialize() and Destroy()
 void DrainQueue() {
-    ReportIf(!gTaskDispatchHwnd);
-    MSG msg;
-    UINT wmExecTask = gExecuteTaskMessage;
-    while (PeekMessage(&msg, gTaskDispatchHwnd, wmExecTask, wmExecTask, PM_REMOVE)) {
-        DispatchMessage(&msg);
+    if (!gInitialized) return;
+#if OS_WIN
+    if (gDispatch == Dispatch::Native) {
+        MSG msg;
+        UINT wmExecTask = gExecuteTaskMessage;
+        while (PeekMessage(&msg, gTaskDispatchHwnd, wmExecTask, wmExecTask, PM_REMOVE)) {
+            DispatchMessage(&msg);
+        }
+        return;
     }
+#endif
+    Vec<TaskInfo*> toRun;
+    {
+        AutoUnlockMutex lock(&gQueueMutex);
+        VecAppendVec(toRun, *gQueue);
+        VecClear(*gQueue);
+    }
+    for (TaskInfo* ti : toRun) ExecuteTask(ti);
 }
 
 void Destroy() {
     DrainQueue();
-    DestroyWindow(gTaskDispatchHwnd);
-    gTaskDispatchHwnd = nullptr;
+    gInitialized = false;
     gWasDestroyed = true;
+#if OS_WIN
+    if (gDispatch == Dispatch::Native) {
+        DestroyWindow(gTaskDispatchHwnd);
+        gTaskDispatchHwnd = nullptr;
+    }
+#endif
+    Vec<TaskInfo*>* q;
+    {
+        AutoUnlockMutex lock(&gQueueMutex);
+        q = gQueue;
+        gQueue = nullptr;
+    }
+    if (q) {
+        for (TaskInfo* ti : *q) FreeTaskInfo(ti);
+        delete q;
+    }
     delete (TaskInfo*)AtomicPtrExchange(&gTaskInfoCache, nullptr);
+    gWakeupFn = nullptr;
+}
+
+void SetWakeupFn(void (*fn)()) {
+    gWakeupFn = fn;
 }
 
 void Post(const Func0& f, Kind kind) {
-    if (!gTaskDispatchHwnd) {
-        // After Destroy() this is a worker that outlived the UI finishing its
-        // work (the file-existence checker is the usual one). Nothing can run
-        // the task any more, so drop it - quietly, because the process is on
-        // its way out and a debug report here would race the rest of shutdown.
-        // Before Initialize() it is a real bug: PostMessageW() with a null hwnd
-        // posts a *thread* message, which succeeds but is never routed to a
-        // window proc, so the task would silently never run.
+    if (!gInitialized) {
         ReportIf(!gWasDestroyed);
         return;
     }
@@ -144,11 +183,18 @@ void Post(const Func0& f, Kind kind) {
     ti->f = f;
     ti->kind = kind;
     ti->queueTime = TimeGet();
-    if (!PostMessageW(gTaskDispatchHwnd, gExecuteTaskMessage, 0, (LPARAM)ti)) {
-        // nothing will dispatch it, so don't lose the allocation
-        FreeTaskInfo(ti);
+#if OS_WIN
+    if (gDispatch == Dispatch::Native) {
+        if (!PostMessageW(gTaskDispatchHwnd, gExecuteTaskMessage, 0, (LPARAM)ti)) FreeTaskInfo(ti);
+        return;
     }
-} // NOLINT
+#endif
+    {
+        AutoUnlockMutex lock(&gQueueMutex);
+        VecAppend(*gQueue, ti);
+    }
+    if (gWakeupFn) gWakeupFn();
+}
 
 bool IsMainUIThread() {
     return GetCurrentThreadId() == gMainUIThreadId;
@@ -162,6 +208,5 @@ void PostOptimized(const Func0& f, Kind kind) {
         return;
     }
     Post(f, kind);
-} // NOLINT
-
+}
 } // namespace uitask

@@ -63,7 +63,7 @@ void PageRenderService_UnitTests() {
     utassert(freePanLayout.canvasSize.dx >= params.viewPortSize.dx * 2);
     utassert(freePanLayout.canvasSize.dy >= params.viewPortSize.dy * 2);
 
-    uitask::Initialize();
+    uitask::Initialize(uitask::Dispatch::Queue);
     ThreadId mainThread = GetCurrentThreadId();
 
     RenderReadyFlag flag;
