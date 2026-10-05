@@ -93,6 +93,7 @@ export const sharedFiles = [
   "src/base/MacTypesHide.h",
   "src/base/MacTypesShow.h",
   "src/base/Pixmap_linux.cpp",
+  "src/base/Pixmap_mac.cpp",
   "src/base/SettingsUtil.h",
   "src/base/SquareTreeParser.h",
   "src/base/Zip.h",
