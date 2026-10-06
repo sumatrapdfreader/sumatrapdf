@@ -981,7 +981,7 @@ function test_engines_files()
     "src/shared/TextSearch.h",
     "src/shared/TextSelection.cpp",
     "src/shared/TextSelection.h",
-    "src/WebpReader.cpp",
+    "src/shared/WebpReader.cpp",
     "src/shared/gui/UIModels.cpp",
     "src/shared/gui/UIModels.h",
     "src/tools/test_engines.cpp",

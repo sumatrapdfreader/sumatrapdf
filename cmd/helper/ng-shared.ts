@@ -188,6 +188,7 @@ export const sharedFiles = [
   "src/shared/TextSelection.cpp",
   "src/shared/TextSelection.h",
   "src/shared/Translations.h",
+  "src/shared/WebpReader.cpp",
   "src/shared/WebpReader.h",
   "src/shared/dragcursor.cur",
   "src/shared/gfx/SumatraPDF-smaller.ico",

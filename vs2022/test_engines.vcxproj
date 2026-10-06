@@ -1183,7 +1183,6 @@
     <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
-    <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
     <ClCompile Include="..\src\shared\EbookDoc.cpp" />
@@ -1196,6 +1195,7 @@
     <ClCompile Include="..\src\shared\PdfCad.cpp" />
     <ClCompile Include="..\src\shared\TextSearch.cpp" />
     <ClCompile Include="..\src\shared\TextSelection.cpp" />
+    <ClCompile Include="..\src\shared\WebpReader.cpp" />
     <ClCompile Include="..\src\shared\gui\UIModels.cpp" />
     <ClCompile Include="..\src\tools\test_engines.cpp" />
   </ItemGroup>

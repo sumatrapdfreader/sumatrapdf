@@ -1022,9 +1022,6 @@
     <ClCompile Include="..\src\UpdateCheck.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\WebpReader.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\WindowTab.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1296,6 +1293,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSelection.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\WebpReader.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\gui\UIModels.cpp">
