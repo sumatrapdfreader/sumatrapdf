@@ -1083,35 +1083,10 @@ static const ArgSpec argSpecs[] = {
 
 CustomCommand* gFirstCustomCommand = nullptr;
 
-// returns -1 if not found
-static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, Str s) {
-    int idx = SeqStrIndexIS(commands, s);
-    if (idx < 0) {
-        return -1;
-    }
-    // ReportIf only reports, it doesn't stop the release build, so bail for real
-    ReportIf(idx >= dimofi(gCommandIds));
-    if (idx >= dimofi(gCommandIds)) {
-        return -1;
-    }
-    int cmdId = gCommandIds[idx];
-    return cmdId;
-}
-
 // cmdName is "CmdOpenFile" etc.
 // returns -1 if not found
-// Shared "tip" text: a small markup understood by the home page tips and by
-// notifications. Supports:
-//   [text](Cmd...)      a link that runs a command on click
-//   [text](Help/Page)   a link that opens a docs page in the browser
-//   [text](https://..)  a link that opens a url in the browser
-//   (Key/Cmd...)        expanded inline to the command's keyboard shortcut
-//   (Kbd/text)          drawn as a key-cap (same look as keyboard help);
-//                       nests, e.g. (Kbd/(Key/CmdOpenNextFileInFolder))
-//   **text**            bold text
-// note: include Base.h before this
 int GetCommandIdByName(Str cmdName) {
-    int cmdId = GetCommandIdByNameOrDesc(gCommandNames, cmdName);
+    int cmdId = GetCommandIdByIdx(SeqStrIndexIS(gCommandNames, cmdName));
     if (cmdId >= 0) {
         return cmdId;
     }
