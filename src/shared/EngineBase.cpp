@@ -519,11 +519,6 @@ bool TocTree::IsExpanded(TreeItem ti) {
     return tocItem->IsExpanded();
 }
 
-bool TocTree::IsChecked(TreeItem ti) {
-    auto* tocItem = (TocItem*)ti;
-    return !tocItem->isUnchecked;
-}
-
 void TocTree::SetUserData(TreeItem ti, uintptr_t userData) {
     ReportIf(ti < 0);
     TocItem* tocItem = (TocItem*)ti;

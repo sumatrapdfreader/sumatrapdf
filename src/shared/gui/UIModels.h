@@ -60,8 +60,6 @@ struct TreeModel {
     virtual TreeItem ChildAt(TreeItem, int idx) = 0;
     // true if this tree item should be expanded i.e. showing children
     virtual bool IsExpanded(TreeItem) = 0;
-    // when showing checkboxes
-    virtual bool IsChecked(TreeItem) = 0;
     virtual void SetUserData(TreeItem, uintptr_t) = 0;
     virtual uintptr_t GetUserData(TreeItem) = 0;
 };

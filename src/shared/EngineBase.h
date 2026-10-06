@@ -378,8 +378,6 @@ struct TocItem {
     bool isOpenDefault;
     bool isOpenToggled;
 
-    bool isUnchecked;
-
     // page this item points to (-1 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
     int pageNo;
@@ -436,7 +434,6 @@ struct TocTree : TreeModel {
     int ChildCount(TreeItem) override;
     TreeItem ChildAt(TreeItem, int idx) override;
     bool IsExpanded(TreeItem) override;
-    bool IsChecked(TreeItem) override;
 
     void SetUserData(TreeItem, uintptr_t) override;
     uintptr_t GetUserData(TreeItem) override;

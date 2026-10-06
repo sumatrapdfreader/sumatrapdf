@@ -83,10 +83,6 @@ bool FavTreeModel::IsExpanded(TreeItem ti) {
     return fti->isExpanded;
 }
 
-bool FavTreeModel::IsChecked(TreeItem /*ti*/) {
-    return false;
-}
-
 void FavTreeModel::SetUserData(TreeItem ti, uintptr_t userData) {
     ReportIf(ti < 0);
     FavTreeItem* treeItem = (FavTreeItem*)ti;

@@ -69,7 +69,6 @@ struct FavTreeModel : TreeModel {
     int ChildCount(TreeItem ti) override;
     TreeItem ChildAt(TreeItem ti, int idx) override;
     bool IsExpanded(TreeItem ti) override;
-    bool IsChecked(TreeItem ti) override;
     void SetUserData(TreeItem ti, uintptr_t userData) override;
     uintptr_t GetUserData(TreeItem ti) override;
 
@@ -112,10 +111,6 @@ TreeItem FavTreeModel::ChildAt(TreeItem ti, int idx) {
 bool FavTreeModel::IsExpanded(TreeItem ti) {
     auto* fti = (FavTreeItem*)ti;
     return fti->isExpanded;
-}
-
-bool FavTreeModel::IsChecked(TreeItem /*ti*/) {
-    return false;
 }
 
 void FavTreeModel::SetUserData(TreeItem ti, uintptr_t userData) {
