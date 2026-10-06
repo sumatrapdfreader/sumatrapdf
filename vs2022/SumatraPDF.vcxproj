@@ -1659,7 +1659,6 @@
     <ClCompile Include="..\src\ExplorerQuickLook.cpp" />
     <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
-    <ClCompile Include="..\src\FileHistory.cpp" />
     <ClCompile Include="..\src\FileThumbnails.cpp" />
     <ClCompile Include="..\src\FilterHighlightDraw.cpp" />
     <ClCompile Include="..\src\FindBar.cpp" />
@@ -2159,6 +2158,7 @@
     <ClCompile Include="..\src\shared\EbookFormatter.cpp" />
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\shared\ExifDump.cpp" />
+    <ClCompile Include="..\src\shared\FileHistory.cpp" />
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />

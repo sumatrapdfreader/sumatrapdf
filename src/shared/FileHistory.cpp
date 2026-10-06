@@ -8,11 +8,10 @@ License: GPLv3 */
 
 #include "Settings.h"
 #include "AppSettings.h"
-// ng: FileThumbnails / HomePage are the start page (step 9); this is all
-// FileHistory uses of them
+#include "FileHistory.h"
+
 void DeleteThumbnailForFile(Str path);
 void HomePageInvalidateLayoutCache();
-#include "FileHistory.h"
 
 /* Handling of file history list.
 
@@ -123,6 +122,7 @@ FileState* FileHistoryMarkFileLoaded(Str filePath) {
 
 bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
     ReportIf(len(filePath) == 0);
+    // hiding or reordering the entry changes what the home page shows
     HomePageInvalidateLayoutCache();
     FileState* state = FileHistoryFindByPath(filePath);
     if (!state) {

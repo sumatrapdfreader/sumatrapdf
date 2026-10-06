@@ -755,9 +755,6 @@
     <ClCompile Include="..\src\Favorites.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\FileHistory.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\FileThumbnails.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1197,6 +1194,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ExifDump.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\FileHistory.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\FilterUtil.cpp">
