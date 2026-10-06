@@ -175,7 +175,6 @@ struct HtmlFormatter {
     void AutoCloseTags(size_t count);
     void UpdateTagNesting(HtmlToken* t);
     virtual void HandleHtmlTag(HtmlToken* t);
-    void HandleText(HtmlToken* t);
     void HandleText(::Str s);
     // blank convenience methods to override
     virtual void HandleTagImg(HtmlToken* t) {}

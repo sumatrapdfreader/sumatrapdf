@@ -1245,14 +1245,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
     HandleDirAttr(t);
 }
 
-void HtmlFormatter::HandleText(HtmlToken* t) {
-    ReportIf(!t->IsText());
-    HandleText(t->s);
-}
-
-void HtmlFormatter::HandleText(Str s) {
-    Str curr = s;
-
+void HtmlFormatter::HandleText(Str curr) {
     if (preFormatted) {
         // don't collapse whitespace and respect text newlines
         while (curr) {
@@ -1355,7 +1348,8 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
         if (t->IsTag()) {
             HandleHtmlTag(t);
         } else if (!IgnoreText()) {
-            HandleText(t);
+            ReportIf(!t->IsText());
+            HandleText(t->s);
         }
     }
 }
