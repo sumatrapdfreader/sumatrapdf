@@ -17,9 +17,7 @@ static bool PageIsSpread(const Vec<u8>& flags, int pageNo) {
     return flags[i] != 0;
 }
 
-// Facing / book view rows: a landscape page (spreadFlags) occupies the whole
-// two-page row instead of pairing with the next page. Book view still keeps
-// page 1 alone. With no spreads this matches the old 2-column arithmetic.
+// Landscape spreads occupy a full row; book view keeps the first page alone.
 void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const Vec<u8>& spreadFlags) {
     VecReset(out);
     if (pageCount < 1) {
@@ -93,10 +91,7 @@ static SizeF PageSizeAfterRotation(const DocumentLayoutPage* page, int rotation)
     return size;
 }
 
-// Pixel size of a page at `zoom`. Must match GetTileRectDevice / EngineImages
-// Transform().Round() (ceil of the scaled box). The old (int)(size * zoom +
-// 0.499) can be 1px smaller than the tile, so with PageSpacing 0 the canvas
-// background shows as a hairline between comic pages (issue #6018).
+// Match engine/tile rounding so zero page spacing leaves no background hairlines.
 static Size PagePixelSize(SizeF pageSize, float zoom) {
     if (zoom <= 0 || pageSize.dx <= 0 || pageSize.dy <= 0) {
         return {};
@@ -180,21 +175,14 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
         }
     }
 
-    // Fit Page never needs to scroll, so pin the canvas to the window and no
-    // scrollbars appear. Not for Fit Content: clamping leaves it no scroll range,
-    // so limitValue() in GoToPage() would drop the scroll to the content start
-    // and the page would show its top/left margin with the content cut off at
-    // the other end (it looked right only in continuous modes).
+    // Clamp noncontinuous Fit Page to the viewport. Content fit needs margin scroll room.
     if (params.zoomVirtual == kZoomFitPage && !isFitContent && !IsContinuous(params.displayMode)) {
         canvasDy = std::min(canvasDy, viewPort.dy);
         canvasDx = std::min(canvasDx, viewPort.dx);
     }
 
-    // Continuous mode: extra space after the last page so it can be scrolled
-    // up (e.g. last lines to the top of the window when the frame is partly
-    // covered by another app) (issue #411). Need canvas tall enough that
-    // max scroll (canvasDy - viewPort.dy) can place the last page's top at y=0.
-    // Controlled by advanced setting PaddingAfterLastPage (default off).
+    // Allow the last page's top to reach the viewport top in continuous mode.
+    // PaddingAfterLastPage controls this extra scroll room.
     if (params.paddingAfterLastPage && IsContinuous(params.displayMode) && viewPort.dy > 0) {
         int lastPageTop = -1;
         for (int pageNo = layout.pages.len; pageNo >= 1; pageNo--) {
@@ -210,9 +198,7 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
         }
     }
 
-    // Free pan: pad the canvas by half a viewport on every side. Unlike
-    // windowMargin this is scroll room only: fit zooms and where a page lands
-    // when navigated to don't change, the view can just go past the page edges
+    // Free pan adds scroll room, not window margins: fit zooms and navigation stay unchanged.
     if (params.freePan) {
         Size slack = FreePanSlack(viewPort.Size());
         for (DocumentLayoutPage& page : layout.pages) {
@@ -376,11 +362,8 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
     if (params.zoomVirtual == kZoomFitByOrientation) {
         params.zoomVirtual = params.viewPortSize.dx > params.viewPortSize.dy ? kZoomFitWidth : kZoomFitPage;
     }
-    // Fit Content lays out like Fit Page - the layout is built from media boxes
-    // either way, the content fit lives in the per-page zoom - but it must not
-    // take Fit Page's canvas clamp below: it zooms past the page fit and relies
-    // on DisplayModel::GoToPage() scrolling the margins off-screen.
-    // ShrinkToFit never zooms past the page fit, so the clamp is a no-op there.
+    // Content fit uses per-page zoom and must retain scroll room to hide margins.
+    // ShrinkToFit stays within page fit and may use its canvas clamp.
     bool isFitContent = params.zoomVirtual == kZoomFitContent || params.zoomVirtual == kZoomFitVisible;
     if (isFitContent || params.zoomVirtual == kZoomShrinkToFit) {
         params.zoomVirtual = kZoomFitPage;
@@ -451,14 +434,7 @@ int DocumentLayout::CurrentPageNo() const {
         }
     }
     if (ratio <= 0 && pages.len > 0) {
-        // No page overlaps the viewport at all. That is not only "before the
-        // first page / after the last one": when one page is much wider than
-        // the others the canvas is as wide as it and the narrow pages sit
-        // centered in that canvas, so scrolled fully left the viewport misses
-        // every page horizontally. Answering "the last page" there sent a
-        // restored view to the end of the document (issue #1438), so go by the
-        // vertical band the viewport is in, which is what "current page" means
-        // in continuous mode
+        // Horizontal scrolling may miss centered, narrow pages; choose by vertical band.
         mostVisiblePage = PageNoAtViewPortTop();
     }
     return mostVisiblePage;
