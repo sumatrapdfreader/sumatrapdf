@@ -214,26 +214,8 @@ TempStr NormalizeURLTemp(Str url, Str base) {
     return norm;
 }
 
-static inline char decode64(char c) {
-    if ('A' <= c && c <= 'Z') {
-        return (char)(c - 'A');
-    }
-    if ('a' <= c && c <= 'z') {
-        return (char)(c - 'a' + 26);
-    }
-    if ('0' <= c && c <= '9') {
-        return (char)(c - '0' + 52);
-    }
-    if ('+' == c) {
-        return 62;
-    }
-    if ('/' == c) {
-        return 63;
-    }
-    return -1;
-}
-
 static TempStr Base64DecodeTemp(Str data) {
+    static const Str digits = StrL("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
     constexpr int kDigitBits = 6;
     constexpr int kByteBits = 8;
     int sLen = len(data);
@@ -244,7 +226,7 @@ static TempStr Base64DecodeTemp(Str data) {
     u32 value = 0;
     int bits = 0;
     for (; s < end && *s != '='; s++) {
-        char n = decode64(*s);
+        int n = str::IndexOfChar(digits, *s);
         if (-1 == n) {
             if (str::IsWs(*s)) {
                 continue;
