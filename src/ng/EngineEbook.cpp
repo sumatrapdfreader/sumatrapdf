@@ -981,7 +981,7 @@ class EngineEpub : public EngineEbook {
         if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(prop);
+        return GetPropValueTemp(doc->props, prop);
     }
 
     bool HasToc() override;
@@ -1163,7 +1163,7 @@ class EngineFb2 : public EngineEbook {
         if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(prop);
+        return GetPropValueTemp(doc->props, prop);
     }
 
     bool HasToc() override;
@@ -2213,7 +2213,7 @@ class EngineHtml : public EngineEbook {
         if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(prop);
+        return GetPropValueTemp(doc->props, prop);
     }
 
     static EngineBase* CreateFromFile(Str path);

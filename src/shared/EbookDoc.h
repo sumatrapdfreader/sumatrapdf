@@ -49,8 +49,6 @@ struct EpubDoc {
     Str GetImageData(Str fileName, Str pagePath);
     Str GetFileData(Str relPath, Str pagePath);
 
-    TempStr GetPropertyTemp(DocProp prop) const;
-
     bool ParseToc(EbookTocVisitor* visitor);
 
     static EpubDoc* CreateFromFile(Str path);
@@ -81,8 +79,6 @@ struct Fb2Doc {
 
     Str GetImageData(Str fileName) const;
     Str GetCoverImage() const;
-
-    TempStr GetPropertyTemp(DocProp prop) const;
 
     bool ParseToc(EbookTocVisitor* visitor) const;
 
@@ -126,8 +122,6 @@ struct HtmlDoc {
 
     Str GetImageData(Str fileName);
     Str GetFileData(Str relPath);
-
-    TempStr GetPropertyTemp(DocProp prop) const;
 
     static HtmlDoc* CreateFromFile(Str path);
 };

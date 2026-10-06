@@ -606,10 +606,6 @@ Str EpubDoc::GetFileData(Str relPath, Str pagePath) {
     return TakeArchiveData(archive, archive->GetFileId(url));
 }
 
-TempStr EpubDoc::GetPropertyTemp(DocProp prop) const {
-    return GetPropValueTemp(props, prop);
-}
-
 static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     GumboHtmlParser parser(data);
     HtmlToken* tok;
@@ -1060,10 +1056,6 @@ Str Fb2Doc::GetCoverImage() const {
     return GetImageData(coverImage);
 }
 
-TempStr Fb2Doc::GetPropertyTemp(DocProp prop) const {
-    return GetPropValueTemp(props, prop);
-}
-
 bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
     TempStr itemText;
     bool inTitle = false;
@@ -1337,10 +1329,6 @@ Str HtmlDoc::LoadURL(Str url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
     return file::ReadFile(path);
-}
-
-TempStr HtmlDoc::GetPropertyTemp(DocProp prop) const {
-    return GetPropValueTemp(props, prop);
 }
 
 HtmlDoc* HtmlDoc::CreateFromFile(Str path) {
