@@ -773,9 +773,6 @@
     <ClCompile Include="..\src\HomePage.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\HtmlFormatter.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ImageEditHostSumatra.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1191,6 +1188,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\HtmlFormatter.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\JxlReader.cpp">
