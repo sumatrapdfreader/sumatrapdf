@@ -91,35 +91,10 @@ void RefHoverFreeLookupCache(RefHoverState* s) {
     s->lookupCache = nullptr;
 }
 
-// Result of detecting a citation under the cursor.
-struct DetectedCitation {
-    Str surname; // owned UTF-8 (caller frees)
-    int year;
-};
-
 enum class CitationKind {
     AuthorYear,
     Number
 };
-
-static void FreeDetectedCitation(DetectedCitation* c) {
-    str::Free(c->surname);
-    c->surname = {};
-}
-
-// Detect a citation pattern under the cursor on srcPage. On success, returns
-// true and fills *out with a freshly-allocated surname and year. The actual
-// pattern matching is the pure DetectCitationInPageText (RefHoverDetect.cpp).
-static bool DetectCitationAtCursor(EngineBase* engine, int srcPage, Point pagePos, DetectedCitation* out,
-                                   Rect* srcRectOut = nullptr) {
-    out->surname = {};
-    out->year = 0;
-    int textLen = 0;
-    Rect* coords = nullptr;
-    Str textUtf8 = engine->GetTextForPage(srcPage, &textLen, &coords);
-    TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
-    return DetectCitationInPageText(text, coords, textLen, pagePos, &out->surname, &out->year, srcRectOut);
-}
 
 // Walk pages from pageCount → srcPage looking for a bibliography entry that
 // matches the surname + year. Returns true on hit.
@@ -225,13 +200,17 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
         }
     }
 
-    DetectedCitation cite{};
-    if (!DetectCitationAtCursor(engine, srcPage, pagePos, &cite, &srcRect)) {
+    int textLen = 0;
+    Rect* coords = nullptr;
+    TempWStr text = RefHoverPageTextToWStrTemp(engine->GetTextForPage(srcPage, &textLen, &coords));
+    Str surname;
+    int year = 0;
+    if (!DetectCitationInPageText(text, coords, textLen, pagePos, &surname, &year, &srcRect)) {
         return false;
     }
 
-    bool result = LookupOrSearch(s, engine, srcPage, cite.surname, cite.year, CitationKind::AuthorYear, destPageOut,
-                                 destXOut, destYOut);
+    bool result =
+        LookupOrSearch(s, engine, srcPage, surname, year, CitationKind::AuthorYear, destPageOut, destXOut, destYOut);
 
     // Fallback: if surname has multiple space-separated parts and the full
     // form didn't match, try each part as a prefix in descending-length
@@ -241,50 +220,36 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
     //   2. PDF text extraction split a single-word surname by dropping a
     //      glyph ("Bash b" for "Bashab") — the longest fragment ("Bash")
     //      prefix-matches the real surname in the bibliography.
-    if (!result && str::ContainsChar(cite.surname, ' ')) {
-        struct Part {
-            Str s;
-        };
-        Part parts[8];
+    if (!result && str::ContainsChar(surname, ' ')) {
+        constexpr int kMaxParts = 8;
+        Str parts[kMaxParts];
         int nParts = 0;
-        Str p = cite.surname;
-        while (p && nParts < 8) {
-            while (p && *p.s == ' ') {
-                p = Str(p.s + 1, p.len - 1);
-            }
-            if (len(p) == 0) {
-                break;
-            }
-            Str start = p;
-            while (p && *p.s != ' ') {
-                p = Str(p.s + 1, p.len - 1);
-            }
-            int n = (int)(p.s - start.s);
-            if (n >= 2) {
-                parts[nParts].s = Str(start.s, n);
-                nParts++;
+        Str rest = surname;
+        while (len(rest) > 0 && nParts < kMaxParts) {
+            Str part;
+            str::CutChar(rest, ' ', &part, &rest);
+            if (len(part) >= 2) {
+                parts[nParts++] = part;
             }
         }
         // Sort parts by length descending (simple selection sort, n<=8).
         for (int i = 0; i < nParts - 1; i++) {
             for (int j = i + 1; j < nParts; j++) {
-                if (len(parts[j].s) > len(parts[i].s)) {
-                    Part t = parts[i];
-                    parts[i] = parts[j];
-                    parts[j] = t;
+                if (len(parts[j]) > len(parts[i])) {
+                    std::swap(parts[i], parts[j]);
                 }
             }
         }
         for (int i = 0; i < nParts && !result; i++) {
-            result = LookupOrSearch(s, engine, srcPage, parts[i].s, cite.year, CitationKind::AuthorYear, destPageOut,
-                                    destXOut, destYOut);
+            result = LookupOrSearch(s, engine, srcPage, parts[i], year, CitationKind::AuthorYear, destPageOut, destXOut,
+                                    destYOut);
         }
     }
 
     if (result) {
         srcRectOut = RectF{(float)srcRect.x, (float)srcRect.y, (float)srcRect.dx, (float)srcRect.dy};
     }
-    FreeDetectedCitation(&cite);
+    str::Free(surname);
     return result;
 }
 
