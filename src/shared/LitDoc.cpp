@@ -1490,6 +1490,7 @@ Str LitToEpubConvert(Str litData) {
         if (!ok) {
             break;
         }
+        Str data;
         if (item.isSpine) {
             Str raw = lit.GetFile(fmt("/data/%s/content", item.internal));
             if (str::IsNull(raw)) {
@@ -1503,18 +1504,16 @@ Str LitToEpubConvert(Str litData) {
                 logf("LitDoc: failed to reconstruct '%s'\n", item.path);
                 continue;
             }
-            TempStr full = str::JoinTemp(Str(kHtmlDecl), html);
-            ok &= zc.AddFileData(item.path, Str(full));
+            data = str::JoinTemp(Str(kHtmlDecl), html);
             str::Free(html);
-            nAdded++;
         } else {
-            Str data = lit.GetFile(fmt("/data/%s", item.internal));
+            data = lit.GetFile(fmt("/data/%s", item.internal));
             if (str::IsNull(data)) {
                 continue;
             }
-            ok &= zc.AddFileData(item.path, data);
-            nAdded++;
         }
+        ok &= zc.AddFileData(item.path, data);
+        nAdded++;
     }
     if (!ok || nAdded == 0) {
         logf("LitDoc: no files packaged\n");
