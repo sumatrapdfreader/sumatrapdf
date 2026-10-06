@@ -536,7 +536,6 @@ class EngineBase {
     // called (from any thread) whenever LayoutGeneration() actually changes
     void SetOnLayoutChanged(const Func0& fn) { onLayoutChanged = fn; }
     void SetOnChapterLayoutProgress(const Func1<ChapterLayoutProgress*>& fn) { onChapterLayoutProgress = fn; }
-    void SetOnDestroy(const Func1<EngineBase*>& fn) { onDestroy = fn; }
 
     // real page count for a chapter; engines with more than one chapter override this
     virtual int LayOutChapter(int chapter);
@@ -651,7 +650,6 @@ class EngineBase {
     ChapterTable chapters;
     Func0 onLayoutChanged;
     Func1<ChapterLayoutProgress*> onChapterLayoutProgress;
-    Func1<EngineBase*> onDestroy;
     int notifiedGeneration = 0;
     // bumped to drop an in-flight background layout (close, restyle, restart)
     AtomicInt layoutJob = 0;

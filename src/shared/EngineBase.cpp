@@ -886,7 +886,6 @@ TempStr EngineBase::GetErrorsTextTemp() {
 Func1<EngineBase*> gOnEngineDestroyed;
 
 EngineBase::~EngineBase() {
-    onDestroy.Call(this);
     gOnEngineDestroyed.Call(this);
     delete pageTextCache;
     str::Free(defaultExt);
