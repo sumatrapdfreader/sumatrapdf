@@ -1146,8 +1146,8 @@
     <ClInclude Include="..\src\base\Win.h" />
     <ClInclude Include="..\src\base\WinDynCalls.h" />
     <ClInclude Include="..\src\base\Zip.h" />
-    <ClInclude Include="..\src\gui\Dpi.h" />
     <ClInclude Include="..\src\shared\PerfLog.h" />
+    <ClInclude Include="..\src\shared\gui\Dpi.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\lzma\C\Bra86.c">

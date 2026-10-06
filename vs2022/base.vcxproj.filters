@@ -22,6 +22,9 @@
     <Filter Include="src\shared">
       <UniqueIdentifier>{D3351079-BFED-51C6-28F5-2A2214CCECB6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\shared\gui">
+      <UniqueIdentifier>{C772284F-B340-1C55-9CD4-8C7B8841F8B9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\base\AppendStore.h">
@@ -114,11 +117,11 @@
     <ClInclude Include="..\src\base\Zip.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\Dpi.h">
-      <Filter>src\gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\shared\PerfLog.h">
       <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\gui\Dpi.h">
+      <Filter>src\shared\gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
