@@ -58,10 +58,6 @@ ReaderModel::~ReaderModel() {
     engine->Release();
 }
 
-Str ReaderModel::FilePath() const {
-    return engine->FilePath();
-}
-
 int ReaderModel::PageCount() const {
     return engine->PageCount();
 }

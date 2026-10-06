@@ -12,7 +12,6 @@ struct ReaderModel : NonCopyable {
 
     static ReaderModel* Create(Str path, PasswordUI* pwdUI = nullptr);
 
-    Str FilePath() const;
     int PageCount() const;
     RectF PageMediabox(int pageNo) const;
     float FileDPI() const;
