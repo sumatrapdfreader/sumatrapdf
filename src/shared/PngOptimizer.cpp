@@ -97,13 +97,12 @@ static void SetZopfliOpts(CZopfliPNGOptions* opts, const u8* png, int n) {
 static void OptimizePngFile(Str path) {
     auto timeStart = TimeGet();
     Str d = file::ReadFile(path);
+    AutoFree dataOwner(d.s);
     int nOrig = len(d);
     if (nOrig == 0 || nOrig > kMaxPngSizeToOptimize) {
-        str::Free(d);
         return;
     }
     if (HasOptimizedMarker((const u8*)d.s, nOrig)) {
-        str::Free(d);
         logf("OptimizePngFile: '%s' was already optimized by us, skipping\n", path);
         return;
     }
@@ -112,9 +111,8 @@ static void OptimizePngFile(Str path) {
     unsigned char* out = nullptr;
     size_t outSize = 0;
     int err = CZopfliPNGOptimize((const unsigned char*)d.s, (size_t)nOrig, &opts, 0, &out, &outSize);
-    str::Free(d);
+    AutoFree outOwner(out);
     if (err != 0 || !out || outSize == 0) {
-        free(out);
         logf("OptimizePngFile: failed to optimize '%s', error: %d\n", path, err);
         return;
     }
@@ -123,13 +121,12 @@ static void OptimizePngFile(Str path) {
     ReportIf(!canMark); // zopflipng output always starts with signature + IHDR
     size_t outSizeTotal = outSize + (canMark ? kMarkerChunkSize : 0);
     if (outSizeTotal >= (size_t)nOrig) {
-        free(out);
         logf("OptimizePngFile: '%s' is already optimal (%d bytes)\n", path, nOrig);
         return;
     }
     u8* withMarker = (u8*)malloc(outSizeTotal);
+    AutoFree markerOwner(withMarker);
     if (!withMarker) {
-        free(out);
         return;
     }
     if (canMark) {
@@ -139,10 +136,8 @@ static void OptimizePngFile(Str path) {
     } else {
         memcpy(withMarker, out, outSize);
     }
-    free(out);
     TempStr tmpPath = fmt("%s.zopfli-tmp", path);
     bool ok = file::WriteFile(tmpPath, Str((char*)withMarker, (int)outSizeTotal));
-    free(withMarker);
     if (!ok) {
         logf("OptimizePngFile: failed to write '%s'\n", tmpPath);
         return;
@@ -164,60 +159,37 @@ static void OptimizePngFile(Str path) {
          sepSaved, savedPercent, secs);
 }
 
-struct OptimizePngData {
-    Str path;
-};
-
-static void OptimizePngThread(OptimizePngData* d) {
-    OptimizePngFile(d->path);
-    str::Free(d->path);
-    delete d;
-}
-
 // Optimize the PNG file at path on a background thread. Does nothing if path
 // is not a .png file, so it's safe to call unconditionally after saving an
 // image in a user-selected format.
 void OptimizePngFileAsync(Str path) {
-    if (!str::EndsWithI(path, StrL(".png"))) {
-        return;
-    }
-    auto* d = new OptimizePngData();
-    d->path = str::Dup(path);
-    RunAsync(MkFunc0(OptimizePngThread, d), StrL("OptimizePngThread"));
+    StrVec paths;
+    paths.Append(path);
+    OptimizePngFilesAsync(paths);
 }
 
-struct OptimizePngFilesData {
-    StrVec paths;
-};
-
-static void OptimizePngFilesThread(OptimizePngFilesData* d) {
-    int n = len(d->paths);
-    for (int i = 0; i < n; i++) {
-        Str p = d->paths[i];
-        if (str::EndsWithI(p, StrL(".png"))) {
-            OptimizePngFile(p);
-        }
+static void OptimizePngFilesThread(StrVec* paths) {
+    for (Str path : *paths) {
+        OptimizePngFile(path);
     }
-    delete d;
+    delete paths;
 }
 
 // Same as OptimizePngFileAsync for each .png path, one after another on a
 // single background thread so converting many pages does not spawn one
 // zopfli thread per file
 void OptimizePngFilesAsync(const StrVec& paths) {
-    auto* d = new OptimizePngFilesData();
-    int n = len(paths);
-    for (int i = 0; i < n; i++) {
-        Str p = paths[i];
-        if (str::EndsWithI(p, StrL(".png"))) {
-            d->paths.Append(p);
+    auto* toOptimize = new StrVec();
+    for (Str path : paths) {
+        if (str::EndsWithI(path, StrL(".png"))) {
+            toOptimize->Append(path);
         }
     }
-    if (len(d->paths) == 0) {
-        delete d;
+    if (len(*toOptimize) == 0) {
+        delete toOptimize;
         return;
     }
-    RunAsync(MkFunc0(OptimizePngFilesThread, d), StrL("OptimizePngFilesThread"));
+    RunAsync(MkFunc0(OptimizePngFilesThread, toOptimize), StrL("OptimizePngFilesThread"));
 }
 
 // Pack pixmap pixels as tightly packed RGBA8 for lodepng_encode32.
@@ -282,9 +254,7 @@ static Str OptimizePngBytesOwned(Str png) {
         free(out);
         return str::Dup(png);
     }
-    Str res = str::Dup(Str((char*)out, (int)outSize));
-    free(out);
-    return res;
+    return Str((char*)out, (int)outSize);
 }
 
 // plain lodepng encode, no zopfli. Caller frees
@@ -305,9 +275,7 @@ Str EncodePngFromPixmap(const Pixmap* px) {
         logf("EncodePngFromPixmap: lodepng_encode32 failed, err=%u\n", err);
         return {};
     }
-    Str res = str::Dup(Str((char*)pngOut, (int)pngSize));
-    free(pngOut);
-    return res;
+    return Str((char*)pngOut, (int)pngSize);
 }
 
 // encode and recompress with zopfli, for embedding in a PDF. Caller frees
