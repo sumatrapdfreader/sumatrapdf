@@ -12,24 +12,21 @@
 
 // Fetch page text for search. When *abortSearch is set, the caller should stop
 // immediately (search was cancelled while engine locks were contended).
-static Str GetTextForPageForSearch(EngineBase* engine, int pageNo, int* lenOut, const ProgressUpdateCb& progressCb,
-                                   bool* abortSearch) {
+static Str GetSearchPageText(EngineBase* engine, int pageNo, int* lenOut, const ProgressUpdateCb& progressCb,
+                             bool* abortSearch) {
     if (abortSearch) {
         *abortSearch = false;
     }
-    if (!engine->TryGetTextForPage(pageNo, lenOut)) {
-        if (WasCanceled(progressCb)) {
-            if (abortSearch) {
-                *abortSearch = true;
-            }
-            if (lenOut) {
-                *lenOut = 0;
-            }
-            return {};
-        }
+    if (engine->TryGetTextForPage(pageNo, lenOut) || !WasCanceled(progressCb)) {
         return engine->GetTextForPage(pageNo, lenOut);
     }
-    return engine->GetTextForPage(pageNo, lenOut);
+    if (abortSearch) {
+        *abortSearch = true;
+    }
+    if (lenOut) {
+        *lenOut = 0;
+    }
+    return {};
 }
 
 static void SkipWhitespace(Str text, int textLen, int& idx, int& byteIdx) {
@@ -291,11 +288,8 @@ static bool IsLatinS(int c) {
     return c != 0 && FoldCaseForSearch(c) == L's';
 }
 
-// Compare needle `n` against haystack `h` for a single search "unit", case-
-// folded, treating ß as equivalent to "ss". On a match returns true and reports
-// how many codepoints were consumed from each side (1:1 normally, but 1:2 / 2:1 for
-// the ß <-> ss equivalence). Safe to call at a string end (reads at most h[1]
-// / n[1], which is the NUL terminator at worst).
+// Match one folded unit, treating ß and "ss" as equivalent.
+// Advances report codepoints and bytes consumed on each side.
 static bool MatchSearchUnit(Str h, int hLen, int hIdx, int hByteIdx, Str n, int nLen, int nIdx, int nByteIdx, int& hAdv,
                             int& nAdv, int& hByteAdv, int& nByteAdv) {
     hAdv = nAdv = hByteAdv = nByteAdv = 0;
@@ -341,6 +335,26 @@ static bool MatchSearchUnit(Str h, int hLen, int hIdx, int hByteIdx, Str n, int 
     return false;
 }
 
+static bool MatchesFoldedAt(Str text, int textLen, int idx, int byteIdx, Str needle, int needleLen, int limit) {
+    int nIdx = 0;
+    int nByteIdx = 0;
+    while (nIdx < needleLen) {
+        if (idx >= limit) {
+            return false;
+        }
+        int hAdv, nAdv, hByteAdv, nByteAdv;
+        if (!MatchSearchUnit(text, textLen, idx, byteIdx, needle, needleLen, nIdx, nByteIdx, hAdv, nAdv, hByteAdv,
+                             nByteAdv)) {
+            return false;
+        }
+        idx += hAdv;
+        nIdx += nAdv;
+        byteIdx += hByteAdv;
+        nByteIdx += nByteAdv;
+    }
+    return true;
+}
+
 static int StrStrFoldCase(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
     // nothing to find in an empty page: reporting a hit made the caller retry forever
     if (len(haystack) == 0) {
@@ -351,28 +365,7 @@ static int StrStrFoldCase(Str haystack, int haystackLen, int startOff, Str needl
     }
     int byteIdx = Utf8CodepointToByteIndex(haystack, startOff);
     for (int i = startOff; i < haystackLen; i++) {
-        int hIdx = i;
-        int hByteIdx = byteIdx;
-        int nIdx = 0;
-        int nByteIdx = 0;
-        bool isMatch = true;
-        while (nIdx < needleLen) {
-            if (hIdx >= haystackLen) {
-                isMatch = false;
-                break;
-            }
-            int hAdv, nAdv, hByteAdv, nByteAdv;
-            if (!MatchSearchUnit(haystack, haystackLen, hIdx, hByteIdx, needle, needleLen, nIdx, nByteIdx, hAdv, nAdv,
-                                 hByteAdv, nByteAdv)) {
-                isMatch = false;
-                break;
-            }
-            hIdx += hAdv;
-            nIdx += nAdv;
-            hByteIdx += hByteAdv;
-            nByteIdx += nByteAdv;
-        }
-        if (isMatch) {
+        if (MatchesFoldedAt(haystack, haystackLen, i, byteIdx, needle, needleLen, haystackLen)) {
             return i;
         }
         Utf8CodepointNext(haystack, byteIdx);
@@ -412,28 +405,7 @@ static int StrRStrFoldCase(Str text, int textLen, int endOff, Str needle, int ne
     int result = -1;
     int byteIdx = 0;
     for (int i = 0; i < endOff; i++) {
-        int hIdx = i;
-        int hByteIdx = byteIdx;
-        int nIdx = 0;
-        int nByteIdx = 0;
-        bool isMatch = true;
-        while (nIdx < needleLen) {
-            if (hIdx >= endOff) {
-                isMatch = false;
-                break;
-            }
-            int hAdv, nAdv, hByteAdv, nByteAdv;
-            if (!MatchSearchUnit(text, textLen, hIdx, hByteIdx, needle, needleLen, nIdx, nByteIdx, hAdv, nAdv, hByteAdv,
-                                 nByteAdv)) {
-                isMatch = false;
-                break;
-            }
-            hIdx += hAdv;
-            nIdx += nAdv;
-            hByteIdx += hByteAdv;
-            nByteIdx += nByteAdv;
-        }
-        if (isMatch) {
+        if (MatchesFoldedAt(text, textLen, i, byteIdx, needle, needleLen, endOff)) {
             result = i;
         }
         Utf8CodepointNext(text, byteIdx);
@@ -489,25 +461,15 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
             isMatch = matchCh == endCh;
         } else {
             isMatch = FoldCaseForSearch(matchCh) == FoldCaseForSearch(endCh);
-            if (!isMatch) {
-                if (IsSharpS(matchCh) && !atPageEnd && endIdx + 1 < currentPageTextLen && IsLatinS(endCh)) {
-                    int endAfterNextByteIdx = endNextByteIdx;
-                    int nextEndCh = Utf8CodepointNext(currentPageText, endAfterNextByteIdx);
-                    if (IsLatinS(nextEndCh)) {
-                        // ß in the search text matches "ss" in the page
-                        isMatch = true;
-                        extraEndAdv = 1;
-                        endNextByteIdx = endAfterNextByteIdx;
-                    }
-                } else if (matchIdx + 1 < findTextLen && IsLatinS(matchCh) && IsSharpS(endCh)) {
-                    int matchAfterNextByteIdx = matchNextByteIdx;
-                    int nextMatchCh = Utf8CodepointNext(findText, matchAfterNextByteIdx);
-                    if (IsLatinS(nextMatchCh)) {
-                        // "ss" in the search text matches ß in the page
-                        isMatch = true;
-                        extraMatchAdv = 1;
-                        matchNextByteIdx = matchAfterNextByteIdx;
-                    }
+            if (!isMatch && !atPageEnd) {
+                int hAdv, nAdv, hByteAdv, nByteAdv;
+                isMatch = MatchSearchUnit(currentPageText, currentPageTextLen, endIdx, endByteIdx, findText,
+                                          findTextLen, matchIdx, matchByteIdx, hAdv, nAdv, hByteAdv, nByteAdv);
+                if (isMatch) {
+                    extraEndAdv = hAdv - 1;
+                    extraMatchAdv = nAdv - 1;
+                    endNextByteIdx = endByteIdx + hByteAdv;
+                    matchNextByteIdx = matchByteIdx + nByteAdv;
                 }
             }
         }
@@ -549,8 +511,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
                 return notFound;
             }
             bool abortSearch = false;
-            currentPageText =
-                GetTextForPageForSearch(engine, currentPage, &currentPageTextLen, progressCb, &abortSearch);
+            currentPageText = GetSearchPageText(engine, currentPage, &currentPageTextLen, progressCb, &abortSearch);
             if (abortSearch) {
                 return notFound;
             }
@@ -571,8 +532,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
                 // treat page break as whitespace, too
                 ++currentPage;
                 bool abortSearch = false;
-                currentPageText =
-                    GetTextForPageForSearch(engine, currentPage, &currentPageTextLen, progressCb, &abortSearch);
+                currentPageText = GetSearchPageText(engine, currentPage, &currentPageTextLen, progressCb, &abortSearch);
                 if (abortSearch) {
                     return notFound;
                 }
@@ -720,7 +680,7 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
         Reset();
 
         bool abortSearch = false;
-        pageText = GetTextForPageForSearch(engine, pageNo, &pageTextLen, progressCb, &abortSearch);
+        pageText = GetSearchPageText(engine, pageNo, &pageTextLen, progressCb, &abortSearch);
         if (abortSearch) {
             break;
         }
@@ -741,7 +701,7 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
         if (forward) {
             if (findPage != r.page) {
                 findPage = r.page;
-                pageText = GetTextForPageForSearch(engine, findPage, &pageTextLen, progressCb, &abortSearch);
+                pageText = GetSearchPageText(engine, findPage, &pageTextLen, progressCb, &abortSearch);
                 if (abortSearch) {
                     break;
                 }
@@ -776,7 +736,7 @@ TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
     }
     Reset();
     bool abortSearch = false;
-    pageText = GetTextForPageForSearch(engine, pageNo, &pageTextLen, progressCb, &abortSearch);
+    pageText = GetSearchPageText(engine, pageNo, &pageTextLen, progressCb, &abortSearch);
     if (abortSearch) {
         return nullptr;
     }
@@ -794,7 +754,7 @@ TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
     if (forward) {
         if (findPage != r.page) {
             findPage = r.page;
-            pageText = GetTextForPageForSearch(engine, findPage, &pageTextLen, progressCb, &abortSearch);
+            pageText = GetSearchPageText(engine, findPage, &pageTextLen, progressCb, &abortSearch);
             if (abortSearch) {
                 return nullptr;
             }
@@ -821,7 +781,7 @@ TextSel* TextSearch::FindNext() {
             findPage = finalGlyph.page;
             findIndex = finalGlyph.offset;
             bool abortSearch = false;
-            pageText = GetTextForPageForSearch(engine, findPage, &pageTextLen, progressCb, &abortSearch);
+            pageText = GetSearchPageText(engine, findPage, &pageTextLen, progressCb, &abortSearch);
             if (abortSearch) {
                 return nullptr;
             }
