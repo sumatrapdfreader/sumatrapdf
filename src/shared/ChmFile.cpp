@@ -658,11 +658,8 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     if (len(utf8) == 0) {
         return false;
     }
-    int n = ::len(utf8);
-
-    GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, utf8.s, n);
-    if (!output) {
+    GumboDoc doc(utf8, GumboMode::Html);
+    if (!doc.Document()) {
         return false;
     }
 
@@ -671,20 +668,15 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     ChmTocEntityFixer fixer(visitor, codepage);
 
     // Find <body>, then the first <ul> under it (DFS). <body> is optional.
-    const GumboNode* body = GumboFindDescendantByTag(output->document, StrL("body"));
-    const GumboNode* firstUl = GumboFindDescendantByTag(body ? body : output->document, StrL("ul"));
-    bool result;
+    const GumboNode* body = GumboFindDescendantByTag(doc.Document(), StrL("body"));
+    const GumboNode* firstUl = GumboFindDescendantByTag(body ? body : doc.Document(), StrL("ul"));
     if (firstUl) {
         WalkChmTocOrIndex(&fixer, firstUl, isIndex);
-        result = true;
-    } else {
-        bool hadOne = false;
-        WalkBrokenChmTocOrIndex(&fixer, output->document, isIndex, &hadOne);
-        result = hadOne;
+        return true;
     }
-
-    gumbo_destroy_output_iter(&opts, output);
-    return result;
+    bool hadOne = false;
+    WalkBrokenChmTocOrIndex(&fixer, doc.Document(), isIndex, &hadOne);
+    return hadOne;
 }
 
 bool ChmFile::HasToc() const {

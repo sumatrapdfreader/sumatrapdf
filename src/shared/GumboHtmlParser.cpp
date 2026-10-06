@@ -458,16 +458,19 @@ static ptrdiff_t PosOfSource(Str html, Str p) {
     return p.s - html.s;
 }
 
-GumboHtmlParser::GumboHtmlParser(Str s) : html(s) {
-    opts = GumboMakeXmlFragmentOptions();
-    output = gumbo_parse_with_options(&opts, html.s, (size_t)html.len);
-    SetCurrPosOff(0);
+GumboDoc::GumboDoc(Str data, GumboMode mode) {
+    opts = mode == GumboMode::XmlFragment ? GumboMakeXmlFragmentOptions() : GumboMakeOptions();
+    output = gumbo_parse_with_options(&opts, data.s, (size_t)len(data));
 }
 
-GumboHtmlParser::~GumboHtmlParser() {
+GumboDoc::~GumboDoc() {
     if (output) {
         gumbo_destroy_output_iter(&opts, output);
     }
+}
+
+GumboHtmlParser::GumboHtmlParser(Str s) : html(s), doc(s, GumboMode::XmlFragment) {
+    SetCurrPosOff(0);
 }
 
 HtmlToken* GumboHtmlParser::ReadToken() {
@@ -535,8 +538,8 @@ HtmlToken* GumboHtmlParser::ReadToken() {
 void GumboHtmlParser::SetCurrPosOff(ptrdiff_t off) {
     seekOff = std::min<ptrdiff_t>(std::max<ptrdiff_t>(off, 0), len(html));
     VecClear(toVisit);
-    if (output && output->document) {
-        VecAppend(toVisit, {output->document, false});
+    if (doc.Document()) {
+        VecAppend(toVisit, {doc.Document(), false});
     }
 }
 
@@ -609,11 +612,10 @@ bool GumboHtmlParser_UnitTest() {
         return false;
     }
     Str xml = StrL("<opf:metadata q:href='book' id='meta'>text</opf:metadata>");
-    GumboOptions opts = GumboMakeXmlFragmentOptions();
-    GumboOutput* doc = gumbo_parse_with_options(&opts, xml.s, (size_t)len(xml));
-    const GumboNode* node = GumboFindDescendantByTag(doc->document, name, HtmlNameMatch::Local);
-    bool ok = node && !GumboFindDescendantByTag(doc->document, name) &&
-              GumboFindDescendantByTag(doc->document, StrL("opf:metadata")) == node &&
+    GumboDoc doc(xml, GumboMode::XmlFragment);
+    const GumboNode* node = GumboFindDescendantByTag(doc.Document(), name, HtmlNameMatch::Local);
+    bool ok = node && !GumboFindDescendantByTag(doc.Document(), name) &&
+              GumboFindDescendantByTag(doc.Document(), StrL("opf:metadata")) == node &&
               GumboTagNameIs(node, StrL("opf:metadata"), HtmlNameMatch::Local);
     token.node = node;
     ok = ok && !token.GetAttrByName(StrL("href"));
@@ -623,7 +625,6 @@ bool GumboHtmlParser_UnitTest() {
     AttrInfo href = token.GetAttrByName(StrL("href"), HtmlNameMatch::Local);
     AttrInfo id = token.GetAttrByName(StrL("id"));
     ok = ok && href && id && str::Eq(href.val, StrL("book")) && str::Eq(id.val, StrL("meta"));
-    gumbo_destroy_output_iter(&opts, doc);
     return ok;
 }
 #endif

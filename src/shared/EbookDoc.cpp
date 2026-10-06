@@ -294,27 +294,6 @@ static TempStr DecodeDataURITemp(Str url) {
     return str::DupTemp(data);
 }
 
-struct GumboDoc {
-    GumboOptions opts;
-    GumboOutput* output = nullptr;
-
-    GumboDoc(Str data, bool xmlFragment) {
-        opts = xmlFragment ? GumboMakeXmlFragmentOptions() : GumboMakeOptions();
-        if (len(data) == 0) {
-            return;
-        }
-        output = gumbo_parse_with_options(&opts, data.s, (size_t)data.len);
-    }
-
-    ~GumboDoc() {
-        if (output) {
-            gumbo_destroy_output_iter(&opts, output);
-        }
-    }
-
-    const GumboNode* Document() const { return output ? output->document : nullptr; }
-};
-
 /* ********** EPUB ********** */
 
 EpubDoc::EpubDoc(Str fileName) {
@@ -380,7 +359,7 @@ static Archive::FileInfo* GetEpubPackage(Archive* archive, TempStr& contentPath)
     if (!containerFi || !containerFi->data) {
         return nullptr;
     }
-    GumboDoc containerDoc(Str(containerFi->data, containerFi->fileSizeUncompressed), true);
+    GumboDoc containerDoc(Str(containerFi->data, containerFi->fileSizeUncompressed), GumboMode::XmlFragment);
     // The first rootfile is the default rendition.
     const GumboNode* node = GumboFindDescendantByTag(containerDoc.Document(), StrL("rootfile"), HtmlNameMatch::Local);
     contentPath = url::DecodeTemp(GumboAttributeValueTemp(node, "full-path"));
@@ -406,13 +385,13 @@ bool EpubDoc::Load() {
     auto* encryptionFi = archive->GetFileDataByName(StrL("META-INF/encryption.xml"));
     if (encryptionFi && encryptionFi->data) {
         Str encryption = Str((char*)((u8*)encryptionFi->data), encryptionFi->fileSizeUncompressed);
-        GumboDoc encryptionDoc(encryption, true);
+        GumboDoc encryptionDoc(encryption, GumboMode::XmlFragment);
         CollectEncryptedEpubPaths(encryptionDoc.Document(), encList);
     }
 
     Str content = Str((char*)((u8*)contentFi->data), contentFi->fileSizeUncompressed);
     ParseMetadata(content, props);
-    GumboDoc contentDoc(content, true);
+    GumboDoc contentDoc(content, GumboMode::XmlFragment);
     const GumboNode* node = contentDoc.Document();
     if (!node) {
         return false;
@@ -843,7 +822,7 @@ Str EpubCoverImageData(Str path) {
         return {};
     }
     Str content = Str(contentFi->data, contentFi->fileSizeUncompressed);
-    GumboDoc contentDoc(content, true);
+    GumboDoc contentDoc(content, GumboMode::XmlFragment);
 
     TempStr coverId{};
     const GumboNode* node = GumboFindDescendantByTag(contentDoc.Document(), StrL("metadata"), HtmlNameMatch::Local);
@@ -1825,7 +1804,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
         return false;
     }
 
-    GumboDoc doc(ToStr(htmlData), false);
+    GumboDoc doc(ToStr(htmlData), GumboMode::Html);
     Vec<const GumboNode*> toVisit;
     VecAppend(toVisit, doc.Document());
     while (len(toVisit) > 0) {

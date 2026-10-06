@@ -1116,7 +1116,6 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
 
     // there doesn't seem to be a standard for Mobi ToCs, so we try to
     // determine the author's intentions by looking at commonly used tags
-    GumboOptions opts = GumboMakeOptions();
     Str docStr = ToStr(doc);
     int tocLen = len(doc) - docTocIndex;
     Str rest(docStr.s + docTocIndex, tocLen);
@@ -1126,16 +1125,15 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
         tocLen = pb;
     }
     Str tocSlice(docStr.s + docTocIndex, tocLen);
-    GumboOutput* output = gumbo_parse_with_options(&opts, tocSlice.s, (size_t)tocSlice.len);
-    if (!output) {
+    GumboDoc toc(tocSlice, GumboMode::Html);
+    if (!toc.Document()) {
         return false;
     }
 
     MobiTocWalker walker;
     walker.visitor = visitor;
-    walker.Walk(output->document);
+    walker.Walk(toc.Document());
 
-    gumbo_destroy_output_iter(&opts, output);
     return true;
 }
 

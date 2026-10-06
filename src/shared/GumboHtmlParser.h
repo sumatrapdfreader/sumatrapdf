@@ -28,6 +28,23 @@ TempStr GumboTextContentTemp(const GumboNode* node);
 GumboOptions GumboMakeOptions();
 GumboOptions GumboMakeXmlFragmentOptions();
 
+enum class GumboMode {
+    Html,
+    XmlFragment
+};
+
+class GumboDoc {
+    GumboOptions opts;
+    GumboOutput* output = nullptr;
+
+  public:
+    GumboDoc(Str data, GumboMode mode);
+    ~GumboDoc();
+    GumboDoc(const GumboDoc&) = delete;
+    GumboDoc& operator=(const GumboDoc&) = delete;
+    const GumboNode* Document() const { return output ? output->document : nullptr; }
+};
+
 struct AttrInfo {
     Str name;
     Str val;
@@ -75,8 +92,7 @@ class GumboHtmlParser {
     };
 
     Str html;
-    GumboOptions opts{};
-    GumboOutput* output = nullptr;
+    GumboDoc doc;
     Vec<Frame> toVisit;
     ptrdiff_t seekOff = -1;
 
@@ -86,7 +102,6 @@ class GumboHtmlParser {
 
   public:
     explicit GumboHtmlParser(Str s);
-    ~GumboHtmlParser();
 
     void SetCurrPosOff(ptrdiff_t off);
     size_t Len() const { return (size_t)html.len; }
