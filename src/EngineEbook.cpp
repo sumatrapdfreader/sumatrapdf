@@ -1696,19 +1696,13 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    bool needAlt = true;
+    Str img;
     AttrInfo attr = t->GetAttrByName(StrL("src"));
     if (attr) {
         TempStr src = url::DecodeTemp(attr.val);
-        Str img = chmDoc->GetImageData(src, pagePath);
-        needAlt = len(img) == 0 || !EmitImage(img);
+        img = chmDoc->GetImageData(src, pagePath);
     }
-    if (needAlt) {
-        attr = t->GetAttrByName(StrL("alt"));
-        if (attr) {
-            HandleText(str::Dup(textAllocator, attr.val));
-        }
-    }
+    EmitImageOrAlt(t, img);
 }
 
 void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
@@ -1729,18 +1723,7 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
 
 void ChmFormatter::HandleTagLink(HtmlToken* t) {
     ReportIf(!chmDoc);
-    if (t->IsEndTag()) {
-        return;
-    }
-    AttrInfo attr = t->GetAttrByName(StrL("rel"));
-    if (!attr || !attr.ValIs(StrL("stylesheet"))) {
-        return;
-    }
-    attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr.ValIs(StrL("text/css"))) {
-        return;
-    }
-    attr = t->GetAttrByName(StrL("href"));
+    AttrInfo attr = GetStylesheetHref(t);
     if (!attr) {
         return;
     }

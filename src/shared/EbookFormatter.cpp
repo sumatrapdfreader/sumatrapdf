@@ -158,7 +158,7 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
 }
 
-static AttrInfo GetStylesheetHref(HtmlToken* t) {
+AttrInfo GetStylesheetHref(HtmlToken* t) {
     if (t->IsEndTag()) {
         return {};
     }

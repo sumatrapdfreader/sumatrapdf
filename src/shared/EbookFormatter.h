@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+AttrInfo GetStylesheetHref(HtmlToken* t);
+
 /* formatting extensions for Mobi */
 
 struct MobiDoc;
