@@ -670,7 +670,8 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             continue;
         }
         HtmlTag itemTag = tok->tag;
-        TempStr text, href;
+        str::Builder text;
+        TempStr href;
         if (Tag_A == tok->tag) {
             AttrInfo attrInfo = tok->GetAttrByName(StrL("href"));
             if (attrInfo) {
@@ -679,18 +680,13 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
         }
         while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || itemTag != tok->tag)) {
             if (tok->IsText()) {
-                TempStr part = str::DupTemp(tok->s);
-                if (len(text) == 0) {
-                    text = part;
-                } else {
-                    text = str::JoinTemp(text, part);
-                }
+                text.Append(tok->s);
             }
         }
         if (len(text) == 0) {
             continue;
         }
-        TempStr itemText = str::DupTemp(text);
+        TempStr itemText = ToStrTemp(text);
         itemText.len -= str::NormalizeWSInPlace(itemText);
         TempStr itemSrc;
         if (href) {
