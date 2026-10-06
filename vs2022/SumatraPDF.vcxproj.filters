@@ -719,9 +719,6 @@
     <ClCompile Include="..\src\DocumentProperties.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EbookDoc.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\EbookSettingsDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1206,6 +1203,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\DocProperties.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\EbookDoc.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EbookFormatter.cpp">

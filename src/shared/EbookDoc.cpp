@@ -940,8 +940,9 @@ EpubDoc* EpubDoc::CreateFromData(Str data) {
     return doc;
 }
 
-// Return the cover named by EPUB 2 metadata or EPUB 3 cover-image properties.
-// The caller owns the bytes.
+// cover image bytes named by the OPF, either <meta name="cover" content="id">
+// (EPUB 2) or a manifest item with properties="cover-image" (EPUB 3); empty
+// when the book declares none. Owned by the caller.
 Str EpubCoverImageData(Str path) {
     Archive* archive = OpenArchiveFromFile(path, false, gArchiveProgressCb);
     if (!archive) {

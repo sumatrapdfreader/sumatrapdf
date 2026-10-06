@@ -1176,7 +1176,6 @@
     <ClCompile Include="..\src\AvifReader.cpp" />
     <ClCompile Include="..\src\CachedObjects.cpp" />
     <ClCompile Include="..\src\ChapterTable.cpp" />
-    <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
@@ -1187,6 +1186,7 @@
     <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
+    <ClCompile Include="..\src\shared\EbookDoc.cpp" />
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />

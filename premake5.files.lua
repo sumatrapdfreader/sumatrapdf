@@ -955,7 +955,7 @@ function test_engines_files()
     "src/shared/ChapterTable.h",
     "src/shared/DocProperties.cpp",
     "src/shared/DocProperties.h",
-    "src/EbookDoc.cpp",
+    "src/shared/EbookDoc.cpp",
     "src/EmbeddedResources.cpp",
     "src/EngineAll.h",
     "src/EngineBase.cpp",
@@ -1116,7 +1116,7 @@ function search_filter_files()
     "EpubFilter.*",
   })
   files {
-    "src/EbookDoc.*",
+    "src/shared/EbookDoc.*",
     "src/shared/MobiDoc.*",
     "src/PalmDbReader.*",
   }

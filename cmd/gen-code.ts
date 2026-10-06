@@ -14,7 +14,7 @@ const generatedCppFiles = [
   "src/Commands.h",
   "src/Commands.cpp",
   "src/Accelerators.cpp",
-  "src/EbookDoc.cpp",
+  "src/shared/EbookDoc.cpp",
   "src/PdfCreator.cpp",
   "src/EngineMupdf.cpp",
   "src/Settings.h",
@@ -306,7 +306,7 @@ type PropMapTarget = { file: string; tag: string; varName: string; entries: Prop
 
 const docPropMaps: PropMapTarget[] = [
   {
-    file: "src/EbookDoc.cpp",
+    file: "src/shared/EbookDoc.cpp",
     tag: "docprop-epub",
     varName: "epubPropsMap",
     entries: [

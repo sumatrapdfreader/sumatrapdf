@@ -124,6 +124,7 @@ export const sharedFiles = [
   "src/shared/DocProperties.h",
   "src/shared/DocumentLayout.h",
   "src/shared/EbookBase.h",
+  "src/shared/EbookDoc.cpp",
   "src/shared/EbookDoc.h",
   "src/shared/EbookFormatter.cpp",
   "src/shared/EbookFormatter.h",
