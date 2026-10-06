@@ -636,10 +636,7 @@ EngineBase::EngineBase() {
     pageTextCache = new PageTextCache();
 }
 
-// EnsureChapterTable() is called by every non-virtual chapter method below. It
-// lazily Init()s the table on first use, and for a plain (non-chaptered)
-// engine that just sets pageCount directly, keeps chapter 1's count in sync
-// with it so ChapterCount() == 1, LocationFromPageNo(n) == {1, n} always hold.
+// Initialize plain engines lazily and keep their page counts in sync.
 void EngineBase::EnsureChapterTable() {
     if (chapters.ChapterCount() == 0) {
         chapters.Init(1);
@@ -746,14 +743,12 @@ Location EngineBase::PrevLocation(Location loc) {
 }
 
 Location EngineBase::LastLocation() {
-    EnsureChapterTable();
     int c = ChapterCount();
     int n = ChapterPageCount(c);
     return {c, n};
 }
 
 Location EngineBase::ClampLocation(Location loc) {
-    EnsureChapterTable();
     int c = limitValue(loc.chapter, 1, ChapterCount());
     int n = ChapterPageCount(c);
     int p = limitValue(loc.page, 1, n);
@@ -768,7 +763,6 @@ int EngineBase::LayoutGeneration() {
 // print / dump / full-document search / PDF export / stress test: today's open
 // cost, paid only when the caller actually needs every chapter laid out
 void EngineBase::EnsureAllChaptersLaidOut() {
-    EnsureChapterTable();
     int n = ChapterCount();
     for (int c = 1; c <= n; c++) {
         ChapterPageCount(c);
@@ -776,7 +770,6 @@ void EngineBase::EnsureAllChaptersLaidOut() {
 }
 
 int EngineBase::ChaptersLaidOut() {
-    EnsureChapterTable();
     int n = ChapterCount();
     int laid = 0;
     for (int c = 1; c <= n; c++) {
