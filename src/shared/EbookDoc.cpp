@@ -853,23 +853,11 @@ static Str ReadFb2Archive(Fb2Doc* doc, Archive* archive) {
     return data;
 }
 
-static Str loadFromFile(Fb2Doc* doc) {
-    Archive* archive = OpenArchiveFromFile(doc->fileName, /*eagerLoad=*/true, gArchiveProgressCb);
-    return archive ? ReadFb2Archive(doc, archive) : file::ReadFile(doc->fileName);
-}
-
 static bool LooksLikeZipOrRar(Str data) {
     if (len(data) < 4) {
         return false;
     }
     return (data.s[0] == 'P' && data.s[1] == 'K') || str::StartsWith(data, StrL("Rar!"));
-}
-
-static Str loadFromData(Fb2Doc* doc, Str srcData) {
-    // Only try the archive path for data that looks like a container; plain
-    // FictionBook XML must not go through libarchive (issue #1677).
-    Archive* archive = LooksLikeZipOrRar(srcData) ? OpenArchiveFromData(srcData) : nullptr;
-    return archive ? ReadFb2Archive(doc, archive) : str::Dup(srcData);
 }
 
 static TempStr JoinEbookTextTemp(Str text, Str part) {
@@ -882,9 +870,12 @@ bool Fb2Doc::Load(Str srcData) {
 
     Str data;
     if (len(fileName) > 0) {
-        data = loadFromFile(this);
+        Archive* archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
+        data = archive ? ReadFb2Archive(this, archive) : file::ReadFile(fileName);
     } else if (srcData) {
-        data = loadFromData(this, srcData);
+        // Plain FB2 XML must bypass libarchive (#1677).
+        Archive* archive = LooksLikeZipOrRar(srcData) ? OpenArchiveFromData(srcData) : nullptr;
+        data = archive ? ReadFb2Archive(this, archive) : str::Dup(srcData);
     }
     if (len(data) == 0) {
         return false;
