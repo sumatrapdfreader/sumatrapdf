@@ -143,6 +143,7 @@ export const sharedFiles = [
   "src/shared/GumboHtmlParser.cpp",
   "src/shared/GumboHtmlParser.h",
   "src/shared/HangDetector.h",
+  "src/shared/HtmlFormatter.h",
   "src/shared/JxlReader.cpp",
   "src/shared/JxlReader.h",
   "src/shared/LitDoc.cpp",
