@@ -124,20 +124,15 @@ static uint GetCodepageFromPI(Str xmlPI) {
 static bool IsValidUtf8(Str string) {
     for (int i = 0; i < string.len; i++) {
         u8 c = (u8)string.s[i];
-        int skip;
         if (c < 0x80) {
-            skip = 0;
-        } else if (c < 0xC0) { // NOLINT(bugprone-branch-clone): continuation byte, distinct from the >= 0xF5 case
-            return false;
-        } else if (c < 0xE0) {
-            skip = 1;
-        } else if (c < 0xF0) {
-            skip = 2;
-        } else if (c < 0xF5) {
-            skip = 3;
-        } else {
+            continue;
+        }
+
+        if (c < 0xC0 || c >= 0xF5) {
             return false;
         }
+
+        int skip = c < 0xE0 ? 1 : c < 0xF0 ? 2 : 3;
         while (skip-- > 0) {
             i++;
             if (i >= string.len || ((u8)string.s[i] & 0xC0) != 0x80) {
