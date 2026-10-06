@@ -87,7 +87,14 @@ static Str MkMobi(u32 imageFirstRec, u32 hdrLen = kMobiHdrLen, u32 exthFlags = 0
     return Str((char*)d, kFileLen);
 }
 
+#if IS_DEBUG
+bool MobiDoc_UnitTestHeader();
+#endif
+
 void MobiDoc_UnitTests() {
+#if IS_DEBUG
+    utassert(MobiDoc_UnitTestHeader());
+#endif
     {
         AutoDelete<PdbReader> reader(PdbReader::CreateFromData(MkMobi(0)));
         utassert(reader != nullptr);

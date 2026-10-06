@@ -26,8 +26,6 @@ constexpr int kCompressionHuff = 17480;
 constexpr int kCompressionUnsupportedDrm = -1;
 
 constexpr int kEncryptionNone = 0;
-constexpr int kEncryptionOld = 1;
-constexpr int kEncryptionNew = 2;
 
 struct PalmDocHeader {
     u16 compressionType = 0;
@@ -59,59 +57,26 @@ static void DecodePalmDocHeader(const u8* buf, PalmDocHeader* hdr) {
     ReportIf(kPalmDocHeaderLen != d.Offset());
 }
 
-// http://wiki.mobileread.com/wiki/MOBI#MOBI_Header
-// Note: the real length of MobiHeader is in MobiHeader.hdrLen. This is just
-// the size of the struct
-constexpr int kMobiHeaderLen = 232;
-// length up to MobiHeader.exthFlags
 constexpr int kMobiHeaderMinLen = 116;
+constexpr int kMobiImageFirstRecOff = 92;
+constexpr int kMobiDrmEntriesOff = 152;
+constexpr int kMobiDrmHeaderLen = 164;
+constexpr int kMobiExtraFlagsOff = 226;
+constexpr int kMobiExtraFlagsHeaderLen = 228;
+
 struct MobiHeader {
     char id[4];
-    u32 hdrLen; // including 4 id bytes
+    u32 hdrLen;
     u32 type;
     u32 textEncoding;
-    u32 uniqueId;
-    u32 mobiFormatVersion;
-    u32 ortographicIdxRec; // -1 if no ortographics index
-    u32 inflectionIdxRec;
-    u32 namesIdxRec;
-    u32 keysIdxRec;
-    u32 extraIdx0Rec;
-    u32 extraIdx1Rec;
-    u32 extraIdx2Rec;
-    u32 extraIdx3Rec;
-    u32 extraIdx4Rec;
-    u32 extraIdx5Rec;
-    u32 firstNonBookRec;
-    u32 fullNameOffset; // offset in record 0
-    u32 fullNameLen;
-    // Low byte is main language e.g. 09 = English,
-    // next byte is dialect, 08 = British, 04 = US.
-    // Thus US English is 1033, UK English is 2057
-    u32 locale;
-    u32 inputDictLanguage;
-    u32 outputDictLanguage;
     u32 minRequiredMobiFormatVersion;
     u32 imageFirstRec;
     u32 huffmanFirstRec;
     u32 huffmanRecCount;
-    u32 huffmanTableOffset;
-    u32 huffmanTableLen;
-    u32 exthFlags; // bitfield. if bit 6 (0x40) is set => there's an EXTH record
-    char reserved1[32];
-    u32 drmOffset;       // -1 if no drm info
-    u32 drmEntriesCount; // -1 if no drm
-    u32 drmSize;
-    u32 drmFlags;
-    char reserved2[62];
-    // A set of binary flags, some of which indicate extra data at the end of each text block.
-    // This only seems to be valid for Mobipocket format version 5 and 6 (and higher?), when
-    // the header length is 228 (0xE4) or 232 (0xE8).
+    u32 exthFlags;
+    u32 drmEntriesCount = (u32)-1;
     u16 extraDataFlags;
-    i32 indxRec;
 };
-
-static_assert(kMobiHeaderLen == sizeof(MobiHeader), "wrong size of MobiHeader structure");
 
 // Uncompress source data compressed with PalmDoc compression into a buffer.
 // http://wiki.mobileread.com/wiki/PalmDOC#Format
@@ -152,37 +117,13 @@ static bool PalmdocUncompress(const u8* src, int srcLen, str::Builder& dst) {
 }
 
 constexpr int kHuffHeaderLen = 24;
-struct HuffHeader {
-    char id[4]; // "HUFF"
-    u32 hdrLen; // should be 24
-    // offset of 256 4-byte elements of cache data, in big endian
-    u32 cacheOffset; // should be 24 as well
-    // offset of 64 4-byte elements of base table data, in big endian
-    u32 baseTableOffset; // should be 24 + 1024
-    // like cacheOffset except data is in little endian
-    u32 cacheLEOffset; // should be 24 + 1024 + 256
-    // like baseTableOffset except data is in little endian
-    u32 baseTableLEOffset; // should be 24 + 1024 + 256 + 1024
-};
-static_assert(kHuffHeaderLen == sizeof(HuffHeader), "wrong size of HuffHeader structure");
-
 constexpr int kCdicHeaderLen = 16;
-struct CdicHeader {
-    char id[4]; // "CIDC"
-    u32 hdrLen; // should be 16
-    u32 unknown;
-    u32 codeLen;
-};
-
-static_assert(kCdicHeaderLen == sizeof(CdicHeader), "wrong size of CdicHeader structure");
-
 constexpr int kCacheItemCount = 256;
 constexpr int kCacheDataLen = kCacheItemCount * (int)sizeof(u32);
 constexpr int kBaseTableItemCount = 64;
 constexpr int kBaseTableDataLen = kBaseTableItemCount * (int)sizeof(u32);
 
 constexpr int kHuffRecordMinLen = kHuffHeaderLen + kCacheDataLen + kBaseTableDataLen;
-constexpr int kHuffRecordLen = kHuffHeaderLen + (2 * kCacheDataLen) + (2 * kBaseTableDataLen);
 
 constexpr int kCdicsMax = 32;
 
@@ -199,15 +140,11 @@ struct HuffDicDecompressor {
 
     int recursionDepth = 0;
 
-    HuffDicDecompressor();
-
     bool SetHuffData(u8* huffData, int huffDataLen);
     bool AddCdicData(u8* cdicData, u32 cdicDataLen);
     bool Decompress(u8* src, int srcSize, str::Builder& dst);
     bool DecodeOne(u32 code, str::Builder& dst);
 };
-
-HuffDicDecompressor::HuffDicDecompressor() {}
 
 bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
     u16 dict = (u16)(code >> codeLength);
@@ -309,44 +246,22 @@ bool HuffDicDecompressor::Decompress(u8* src, int srcSize, str::Builder& dst) {
     return true;
 }
 
-static void ReadHuffReader(HuffHeader& huffHdr, ByteReader& d) {
-    d.Bytes(huffHdr.id, 4);
-    huffHdr.hdrLen = d.UInt32BE();
-    huffHdr.cacheOffset = d.UInt32BE();
-    huffHdr.baseTableOffset = d.UInt32BE();
-    huffHdr.cacheLEOffset = d.UInt32BE();
-    huffHdr.baseTableLEOffset = d.UInt32BE();
-    ReportIf(d.Offset() != kHuffHeaderLen);
-}
-
 bool HuffDicDecompressor::SetHuffData(u8* huffData, int huffDataLen) {
-    // for now catch cases where we don't have both big endian and little endian
-    // versions of the data
-    // ReportIf(kHuffRecordLen != huffDataLen);
-    // but conservatively assume we only need big endian version
-    if (huffDataLen < kHuffRecordMinLen) {
+    if (huffDataLen < kHuffRecordMinLen || !MemEq(huffData, "HUFF", 4)) {
         return false;
     }
 
     ByteReader d(huffData, huffDataLen);
-    HuffHeader huffHdr;
-    ReadHuffReader(huffHdr, d);
-
-    if (!str::EqN(Str(huffHdr.id, 4), StrL("HUFF"), 4)) {
+    d.Skip(sizeofi(u32));
+    u32 hdrLen = d.UInt32BE();
+    u32 cacheOffset = d.UInt32BE();
+    u32 baseOffset = d.UInt32BE();
+    ReportIf(hdrLen != kHuffHeaderLen);
+    if (hdrLen != kHuffHeaderLen || cacheOffset != kHuffHeaderLen || baseOffset != cacheOffset + kCacheDataLen) {
         return false;
     }
-
-    ReportIf(huffHdr.hdrLen != kHuffHeaderLen);
-    if (huffHdr.hdrLen != kHuffHeaderLen) {
-        return false;
-    }
-    if (huffHdr.cacheOffset != kHuffHeaderLen) {
-        return false;
-    }
-    if (huffHdr.baseTableOffset != huffHdr.cacheOffset + kCacheDataLen) {
-        return false;
-    }
-    // we conservatively use the big-endian version of the data,
+    d.Skip(kHuffHeaderLen - d.Offset());
+    // Only the big-endian tables are needed.
     for (u32& v : cacheTable) {
         v = d.UInt32BE();
     }
@@ -395,61 +310,31 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
 }
 
 static void DecodeMobiDocHeader(const u8* buf, int bufLen, MobiHeader* hdr) {
-    memset(hdr, 0, sizeof(MobiHeader));
-    hdr->drmEntriesCount = (u32)-1;
-
-    int decLen = std::min(bufLen, kMobiHeaderLen);
-    ByteReader d(buf, decLen);
-    d.Bytes(hdr->id, 4);
+    *hdr = {};
+    ByteReader d(buf, bufLen);
+    d.Bytes(hdr->id, sizeofi(hdr->id));
     hdr->hdrLen = d.UInt32BE();
     hdr->type = d.UInt32BE();
     hdr->textEncoding = d.UInt32BE();
-    hdr->uniqueId = d.UInt32BE();
-    hdr->mobiFormatVersion = d.UInt32BE();
-    hdr->ortographicIdxRec = d.UInt32BE();
-    hdr->inflectionIdxRec = d.UInt32BE();
-    hdr->namesIdxRec = d.UInt32BE();
-    hdr->keysIdxRec = d.UInt32BE();
-    hdr->extraIdx0Rec = d.UInt32BE();
-    hdr->extraIdx1Rec = d.UInt32BE();
-    hdr->extraIdx2Rec = d.UInt32BE();
-    hdr->extraIdx3Rec = d.UInt32BE();
-    hdr->extraIdx4Rec = d.UInt32BE();
-    hdr->extraIdx5Rec = d.UInt32BE();
-    hdr->firstNonBookRec = d.UInt32BE();
-    hdr->fullNameOffset = d.UInt32BE();
-    hdr->fullNameLen = d.UInt32BE();
-    hdr->locale = d.UInt32BE();
-    hdr->inputDictLanguage = d.UInt32BE();
-    hdr->outputDictLanguage = d.UInt32BE();
+    d.Skip(kMobiImageFirstRecOff - sizeofi(u32) - d.Offset());
     hdr->minRequiredMobiFormatVersion = d.UInt32BE();
     hdr->imageFirstRec = d.UInt32BE();
     hdr->huffmanFirstRec = d.UInt32BE();
     hdr->huffmanRecCount = d.UInt32BE();
-    hdr->huffmanTableOffset = d.UInt32BE();
-    hdr->huffmanTableLen = d.UInt32BE();
+    d.Skip(2 * sizeofi(u32));
     hdr->exthFlags = d.UInt32BE();
-    ReportIf(kMobiHeaderMinLen != d.Offset());
 
-    if (hdr->hdrLen < kMobiHeaderMinLen + 48) {
+    if (hdr->hdrLen < kMobiDrmHeaderLen) {
         return;
     }
-
-    d.Bytes(hdr->reserved1, 32);
-    hdr->drmOffset = d.UInt32BE();
+    d.Skip(kMobiDrmEntriesOff - d.Offset());
     hdr->drmEntriesCount = d.UInt32BE();
-    hdr->drmSize = d.UInt32BE();
-    hdr->drmFlags = d.UInt32BE();
 
-    if (hdr->hdrLen < 228) { // magic number at which extraDataFlags becomes valid
+    if (hdr->hdrLen < kMobiExtraFlagsHeaderLen) {
         return;
     }
-
-    d.Bytes(hdr->reserved2, 62);
+    d.Skip(kMobiExtraFlagsOff - d.Offset());
     hdr->extraDataFlags = d.UInt16BE();
-    if (hdr->hdrLen >= 232) {
-        hdr->indxRec = (i32)d.UInt32BE();
-    }
 }
 
 static bool IsValidCompression(int comprType) {
@@ -566,7 +451,7 @@ bool MobiDoc::ParseHeader() {
         return false;
     }
 
-    bool hasExtraFlags = (mobiHdr.hdrLen >= 228); // TODO: also only if mobiFormatVersion >= 5?
+    bool hasExtraFlags = (mobiHdr.hdrLen >= kMobiExtraFlagsHeaderLen);
     if (hasExtraFlags) {
         u16 flags = mobiHdr.extraDataFlags;
         multibyte = ((flags & 1) != 0);
@@ -1529,3 +1414,44 @@ Str ExtractPdfFromPrintReplicaData(Str data) {
     delete pdb;
     return pdf;
 }
+
+#if IS_DEBUG
+bool MobiDoc_UnitTestHeader() {
+    constexpr int kDrmBoundary = 164;
+    constexpr int kFlagsBoundary = 228;
+    constexpr int kFullHeaderLen = 232;
+    const int lengths[] = {116, kDrmBoundary - 1, kDrmBoundary, kFlagsBoundary - 1, kFlagsBoundary, kFullHeaderLen};
+    for (int n : lengths) {
+        ByteWriter data;
+        data.d.Append(StrL("MOBI"));
+        data.Write32((u32)n);
+        for (int off = 8; off < kFullHeaderLen; off += 4) {
+            data.Write32((u32)off);
+        }
+        Str bytes = data.AsByteSlice();
+        MobiHeader hdr;
+        DecodeMobiDocHeader((const u8*)bytes.s, len(bytes), &hdr);
+        if (!str::Eq(Str(hdr.id, 4), StrL("MOBI")) || hdr.hdrLen != (u32)n || hdr.type != 8 || hdr.textEncoding != 12 ||
+            hdr.minRequiredMobiFormatVersion != 88 || hdr.imageFirstRec != 92 || hdr.huffmanFirstRec != 96 ||
+            hdr.huffmanRecCount != 100 || hdr.exthFlags != 112 ||
+            hdr.drmEntriesCount != (n >= kDrmBoundary ? 152u : (u32)-1) ||
+            hdr.extraDataFlags != (n >= kFlagsBoundary ? 224 : 0)) {
+            return false;
+        }
+    }
+    ByteWriter data;
+    data.d.Append(StrL("HUFF"));
+    data.Write32(kHuffHeaderLen);
+    data.Write32(kHuffHeaderLen);
+    data.Write32(kHuffHeaderLen + kCacheDataLen);
+    data.Write32(0);
+    data.Write32(0);
+    for (int i = 0; i < kCacheItemCount + kBaseTableItemCount; i++) {
+        data.Write32((u32)i);
+    }
+    Str bytes = data.AsByteSlice();
+    HuffDicDecompressor huff;
+    return huff.SetHuffData((u8*)bytes.s, len(bytes)) && huff.cacheTable[0] == 0 && huff.cacheTable[255] == 255 &&
+           huff.baseTable[0] == 256 && huff.baseTable[63] == 319 && !huff.SetHuffData((u8*)bytes.s, len(bytes) - 1);
+}
+#endif
