@@ -131,7 +131,6 @@ struct DjvuDecPageInfo {
     // upright pixel size at subsample=1 (after intrinsic page rotation)
     int uprightW = 0;
     int uprightH = 0;
-    int intrinsicRotation = 0;
     djvu_page_type pageType = DJVU_PAGE_UNKNOWN;
     Vec<IPageElement*> allElements;
     bool gotElements = false;
@@ -213,7 +212,6 @@ class EngineDjvuDec : public EngineBase {
     Mutex cacheLock;
     Mutex renderSlotsLock;
     int activeRenders = 0;
-    bool pageCacheEnabled = false;
     // 0-based page indices with live djvudec page-local cache, MRU first.
     Vec<int> pageCacheLru;
 
@@ -334,7 +332,6 @@ bool EngineDjvuDec::FinishLoading() {
     // (e.g. multi-GB books) do not retain every page forever.
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/5778
     djvu_ctx_set_cache_per_page(ctx, 1);
-    pageCacheEnabled = true;
     // ask the decoder to emit color output in B,G,R order so it lands in a
     // Windows DIB without a separate RGB->BGR pass (the swap is folded into the
     // decoder's final output copy at no cost).
@@ -358,12 +355,12 @@ bool EngineDjvuDec::FinishLoading() {
                 dpi = 300;
             }
             pi->dpi = dpi;
-            pi->intrinsicRotation = NormalizeRotation(info.rotation);
+            int rotation = NormalizeRotation(info.rotation);
             // djvu_page_render at subsample=1 applies intrinsic rotation, so
             // upright dimensions swap width/height for 90/270
             int upW = info.width;
             int upH = info.height;
-            if (pi->intrinsicRotation == 90 || pi->intrinsicRotation == 270) {
+            if (rotation == 90 || rotation == 270) {
                 std::swap(upW, upH);
             }
             pi->uprightW = upW;
@@ -886,7 +883,7 @@ TocTree* EngineDjvuDec::GetToc() {
 }
 
 void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
-    if (!pageCacheEnabled || !doc || page0 < 0 || page0 >= pageCount) {
+    if (!doc || page0 < 0 || page0 >= pageCount) {
         return;
     }
     // Reorder LRU under cacheLock. Size queries and drops re-enter djvuCacheLock
