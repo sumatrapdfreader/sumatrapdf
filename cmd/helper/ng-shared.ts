@@ -219,6 +219,7 @@ export const sharedFiles = [
   "src/shared/tests/PdfDarkModeImageClassifier_ut.cpp",
   "src/shared/tests/PdfDarkModeOklab_ut.cpp",
   "src/shared/tests/ReadAloudHighlight_ut.cpp",
+  "src/shared/tests/RenderCache_ut.cpp",
   "src/shared/tests/SimpleLog_ut.cpp",
   "src/shared/tests/TextSelection_ut.cpp",
 ];

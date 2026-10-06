@@ -1334,6 +1334,9 @@
     <ClCompile Include="..\src\shared\tests\ReadAloudHighlight_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\tests\RenderCache_ut.cpp">
+      <Filter>src\shared\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\tests\SimpleLog_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
@@ -1356,9 +1359,6 @@
       <Filter>src\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\PdfSync_ut.cpp">
-      <Filter>src\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\tests\RenderCache_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\ShortcutParse_ut.cpp">
