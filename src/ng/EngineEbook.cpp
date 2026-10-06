@@ -1076,8 +1076,8 @@ bool EngineEpub::FinishLoading() {
     }
 
     preferredLayout = PageLayout(PageLayout::Type::Book);
-    preferredLayout.r2lDeclared = doc->HasReadingDirection();
-    if (doc->IsRTL()) {
+    preferredLayout.r2lDeclared = doc->hasReadingDir;
+    if (doc->isRtlDoc) {
         preferredLayout.r2l = true;
     }
 
@@ -1207,7 +1207,7 @@ bool EngineFb2::FinishLoading() {
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
 
-    if (doc->IsZipped()) {
+    if (doc->isZipped) {
         str::ReplaceWithCopy(&defaultExt, StrL(".fb2z"));
     }
 
@@ -1225,7 +1225,7 @@ bool EngineFb2::HasToc() {
     if (tocBuilt) {
         return tocTree != nullptr;
     }
-    return doc && doc->HasToc();
+    return doc && doc->hasToc;
 }
 
 TocTree* EngineFb2::GetToc() {

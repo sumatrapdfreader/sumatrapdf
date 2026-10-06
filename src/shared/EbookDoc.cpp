@@ -609,14 +609,6 @@ TempStr EpubDoc::GetPropertyTemp(DocProp prop) const {
     return GetPropValueTemp(props, prop);
 }
 
-bool EpubDoc::IsRTL() const {
-    return isRtlDoc;
-}
-
-bool EpubDoc::HasReadingDirection() const {
-    return hasReadingDir;
-}
-
 bool EpubDoc::HasToc() const {
     return len(tocPath) > 0;
 }
@@ -1096,14 +1088,6 @@ Str Fb2Doc::GetCoverImage() const {
 
 TempStr Fb2Doc::GetPropertyTemp(DocProp prop) const {
     return GetPropValueTemp(props, prop);
-}
-
-bool Fb2Doc::IsZipped() const {
-    return isZipped;
-}
-
-bool Fb2Doc::HasToc() const {
-    return hasToc;
 }
 
 bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {

@@ -50,8 +50,6 @@ struct EpubDoc {
     Str GetFileData(Str relPath, Str pagePath);
 
     TempStr GetPropertyTemp(DocProp prop) const;
-    bool IsRTL() const;
-    bool HasReadingDirection() const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
@@ -88,9 +86,7 @@ struct Fb2Doc {
     Str GetCoverImage() const;
 
     TempStr GetPropertyTemp(DocProp prop) const;
-    bool IsZipped() const;
 
-    bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;
 
     static Fb2Doc* CreateFromFile(Str path);
