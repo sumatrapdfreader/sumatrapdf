@@ -96,6 +96,8 @@ struct StyleRule {
     static StyleRule Parse(::Str s);
 };
 
+void ParseSizeWithUnit(Str s, float* size, StyleRule::Unit* unit);
+
 struct DrawStyle {
     PlatformFont* font = nullptr;
     AlignAttr align{AlignAttr::NotFound};

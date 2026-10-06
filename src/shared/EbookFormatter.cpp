@@ -40,24 +40,14 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc, MobiCoverIma
     }
 }
 
-// parses size in the form "1em" or "3pt". To interpret ems we need emInPoints
-// to be passed by the caller
 static float ParseSizeAsPixels(Str s, float emInPoints) {
-    float sizeInPoints = 0;
-    if (!str::IsNull(str::Parse(s, "%fem", &sizeInPoints))) {
-        sizeInPoints *= emInPoints;
-    } else if (!str::IsNull(str::Parse(s, "%fin", &sizeInPoints))) {
-        sizeInPoints *= 72;
-    } else if (!str::IsNull(str::Parse(s, "%fpt", &sizeInPoints))) {
-        // no conversion needed
-    } else if (!str::IsNull(str::Parse(s, "%fpx", &sizeInPoints))) {
-        return sizeInPoints;
-    } else {
+    float size = 0;
+    StyleRule::Unit unit;
+    ParseSizeWithUnit(s, &size, &unit);
+    if (unit == StyleRule::inherit) {
         return 0;
     }
-    // TODO: take dpi into account
-    float sizeInPixels = sizeInPoints;
-    return sizeInPixels;
+    return unit == StyleRule::em ? size * emInPoints : size;
 }
 
 void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {

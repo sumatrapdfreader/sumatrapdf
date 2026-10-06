@@ -121,12 +121,13 @@ DrawInstr DrawInstr::PageMarkerAnchor(::Str s, RectF bbox) {
 }
 
 // parses size in the form "1em", "3pt" or "15px"
-static void ParseSizeWithUnit(Str s, float* size, StyleRule::Unit* unit) {
+void ParseSizeWithUnit(Str s, float* size, StyleRule::Unit* unit) {
     if (!str::IsNull(str::Parse(s, "%fem", size))) {
         *unit = StyleRule::em;
     } else if (!str::IsNull(str::Parse(s, "%fin", size))) {
         *unit = StyleRule::pt;
-        *size *= 72; // 1 inch is 72 points
+        constexpr float kPointsPerInch = 72;
+        *size *= kPointsPerInch;
     } else if (!str::IsNull(str::Parse(s, "%fpt", size))) {
         *unit = StyleRule::pt;
     } else if (!str::IsNull(str::Parse(s, "%fpx", size))) {
@@ -142,9 +143,7 @@ StyleRule StyleRule::Parse(CssPullParser* parser) {
     while ((prop = parser->NextProperty()) != nullptr) {
         if (prop->type == Css_Text_Align) {
             rule.textAlign = FindAlignAttr(prop->s);
-        } else if (prop->type == Css_Text_Indent) {
-            ParseSizeWithUnit(prop->s, &rule.textIndent, &rule.textIndentUnit);
-        } else if (prop->type == Css_Padding_Left) {
+        } else if (prop->type == Css_Text_Indent || prop->type == Css_Padding_Left) {
             ParseSizeWithUnit(prop->s, &rule.textIndent, &rule.textIndentUnit);
         }
     }
