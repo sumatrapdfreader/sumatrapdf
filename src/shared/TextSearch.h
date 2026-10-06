@@ -71,6 +71,8 @@ struct TextSearch : public TextSelection {
     Vec<bool> pageAllowed;
 
   private:
+    int FindLastAnchor() const;
+
     enum class PageSearchResult {
         Canceled,
         Empty,

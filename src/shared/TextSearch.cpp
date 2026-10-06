@@ -333,37 +333,24 @@ static bool StartsWithAtByte(Str text, int byteIdx, Str prefix) {
            memcmp(text.s + byteIdx, prefix.s, prefix.len) == 0;
 }
 
-static int FindLastExact(Str text, int textLen, int endOff, Str needle, int needleLen) {
-    if (len(text) == 0 || len(needle) == 0 || endOff <= 0 || endOff > textLen) {
+int TextSearch::FindLastAnchor() const {
+    if (len(pageText) == 0 || len(anchor) == 0 || findIndex <= 0 || findIndex > pageTextLen) {
         return -1;
     }
-    if (needleLen <= 0 || needleLen > endOff) {
+    if (matchCase && (anchorLen <= 0 || anchorLen > findIndex)) {
         return -1;
     }
+    // Folded matches can consume fewer codepoints than the needle (ss / ß).
+    int lastStart = matchCase ? findIndex - anchorLen : findIndex - 1;
     int result = -1;
     int byteIdx = 0;
-    for (int i = 0; i <= endOff - needleLen; i++) {
-        if (StartsWithAtByte(text, byteIdx, needle)) {
+    for (int i = 0; i <= lastStart; i++) {
+        bool matches = matchCase ? StartsWithAtByte(pageText, byteIdx, anchor)
+                                 : MatchesFoldedAt(pageText, pageTextLen, i, byteIdx, anchor, anchorLen, findIndex);
+        if (matches) {
             result = i;
         }
-        Utf8CodepointNext(text, byteIdx);
-    }
-    return result;
-}
-
-static int FindLastFolded(Str text, int textLen, int endOff, Str needle, int needleLen) {
-    if (len(text) == 0 || len(needle) == 0 || endOff <= 0 || endOff > textLen) {
-        return -1;
-    }
-    // ß <-> ss makes the matched length variable, so scan forward within
-    // [start, end) and remember the last start position that matches.
-    int result = -1;
-    int byteIdx = 0;
-    for (int i = 0; i < endOff; i++) {
-        if (MatchesFoldedAt(text, textLen, i, byteIdx, needle, needleLen, endOff)) {
-            result = i;
-        }
-        Utf8CodepointNext(text, byteIdx);
+        Utf8CodepointNext(pageText, byteIdx);
     }
     return result;
 }
@@ -538,10 +525,11 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
             }
             if (len(anchor) == 0) {
                 found = GetNextIndex(pageTextLen, findIndex, forward);
-            } else {
-                auto find = forward ? (matchCase ? FindFirstExact : FindFirstFolded)
-                                    : (matchCase ? FindLastExact : FindLastFolded);
+            } else if (forward) {
+                auto find = matchCase ? FindFirstExact : FindFirstFolded;
                 found = find(pageText, pageTextLen, findIndex, anchor, anchorLen);
+            } else {
+                found = FindLastAnchor();
             }
             if (found < 0) {
                 return false;
