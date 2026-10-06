@@ -208,17 +208,17 @@ int Pdfsync::RebuildIndexIfNeeded() {
     }
 
     Str data = file::ReadFile(syncFilePath);
+    AutoFree freeData(data.s);
     if (len(data) == 0) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
 
     // convert the file data into a list of zero-terminated strings
-    Str blob = data;
-    str::TransCharsInPlace(blob, StrL("\r\n"), StrL("\0\0"));
+    str::TransCharsInPlace(data, StrL("\r\n"), StrL("\0\0"));
 
     // parse preamble (jobname and version marker)
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
-    str::TransCharsInPlace(blob, StrL("*/"), StrL(" \\"));
+    str::TransCharsInPlace(data, StrL("*/"), StrL(" \\"));
     Str rest = data;
     TempStr jobName = strconv::AnsiToUtf8Temp(ReadSyncLine(rest));
     jobName = str::JoinTemp(jobName, StrL(".tex"));
@@ -262,36 +262,29 @@ int Pdfsync::RebuildIndexIfNeeded() {
                     psline.column = 0;
                     VecAppend(lines, psline);
                 }
-                // else dbg("Bad 'l' line in the pdfsync file");
                 break;
 
             case 's':
                 if (!str::IsNull(str::Parse(line, "s %u", &page))) {
                     VecAppend(sheetIndex, len(points));
                 }
-                // else dbg("Bad 's' line in the pdfsync file");
-                // if (0 == page || page > maxPageNo)
-                //     dbg("'s' line with invalid page number in the pdfsync file");
                 break;
 
             case 'p':
-                pspoint.page = page;
                 if (0 == page || page > maxPageNo) {
-                    /* ignore point for invalid page number */;
-                } else if (!str::IsNull(str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) ||
-                           !str::IsNull(str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
+                    break;
+                }
+                pspoint.page = page;
+                if (!str::IsNull(str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) ||
+                    !str::IsNull(str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
                     VecAppend(points, pspoint);
                 }
-                // else dbg("Bad 'p' line in the pdfsync file");
                 break;
 
             case '(': {
                 TempStr filename = strconv::AnsiToUtf8Temp(Str(line.s + 1, line.len - 1));
-                // if the filename contains quotes then remove them
-                // TODO: this should never happen!?
-                Str fn = filename;
-                if (len(fn) > 0 && fn.s[0] == '"' && fn.s[fn.len - 1] == '"') {
-                    filename = str::DupTemp(Str(fn.s + 1, fn.len - 2));
+                if (len(filename) > 0 && filename.s[0] == '"' && filename.s[len(filename) - 1] == '"') {
+                    filename = str::DupTemp(Str(filename.s + 1, len(filename) - 2));
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
                 str::TransCharsInPlace(filename, StrL("*/"), StrL(" \\"));
@@ -314,11 +307,6 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 if (len(filestack) > 1) {
                     fileIndex[VecPop(filestack)].end = len(lines);
                 }
-                // else dbg("Unbalanced ')' line in the pdfsync file");
-                break;
-
-            default:
-                // dbg("Ignoring invalid pdfsync line starting with '%c'", *line);
                 break;
         }
     }
