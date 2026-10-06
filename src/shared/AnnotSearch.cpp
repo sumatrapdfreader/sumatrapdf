@@ -31,7 +31,7 @@ AnnotMatchCond::~AnnotMatchCond() {
 }
 
 AnnotMatchOpts::~AnnotMatchOpts() {
-    ListDelete(conds);
+    Reset();
 }
 
 void AnnotMatchOpts::Reset() {
@@ -164,13 +164,7 @@ bool AnnotMatchesFields(Str author, Str contents, AnnotationType annotType, cons
                 break;
         }
     }
-    if (wantAuthor && !sawAuthor) {
-        return false;
-    }
-    if (wantType && !sawType) {
-        return false;
-    }
-    return true;
+    return (!wantAuthor || sawAuthor) && (!wantType || sawType);
 }
 
 bool AnnotMatches(Annotation* annot, const AnnotMatchOpts& opts) {
