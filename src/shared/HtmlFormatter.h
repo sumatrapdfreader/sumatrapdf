@@ -56,7 +56,7 @@ struct DrawInstr {
 
     DrawInstr() = default;
 
-    explicit DrawInstr(DrawInstrType t, RectF bbox = {}) : type(t), bbox(bbox) {}
+    explicit DrawInstr(DrawInstrType t, RectF bbox = {}, ::Str s = {}) : type(t), str(s), bbox(bbox) {}
     Str GetImage() {
         ReportIf(type != DrawInstrType::Image);
         return Str(str.s, str.len);

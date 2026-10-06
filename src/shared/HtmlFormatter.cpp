@@ -33,9 +33,7 @@ bool ValidReparseIdx(ptrdiff_t idx, GumboHtmlParser* parser) {
 
 // helper constructors for instructions that need additional arguments
 DrawInstr DrawInstr::Text(::Str s, RectF bbox, bool rtl) {
-    DrawInstr di(rtl ? DrawInstrType::RtlString : DrawInstrType::String, bbox);
-    di.str = s;
-    return di;
+    return DrawInstr(rtl ? DrawInstrType::RtlString : DrawInstrType::String, bbox, s);
 }
 
 DrawInstr DrawInstr::SetFont(PlatformFont* font) {
@@ -51,30 +49,19 @@ DrawInstr DrawInstr::FixedSpace(float dx) {
 }
 
 DrawInstr DrawInstr::Image(Str img, RectF bbox) {
-    DrawInstr di(DrawInstrType::Image);
-    di.str = img;
-    di.bbox = bbox;
-    return di;
+    return DrawInstr(DrawInstrType::Image, bbox, img);
 }
 
 DrawInstr DrawInstr::LinkStart(::Str s) {
-    DrawInstr di(DrawInstrType::LinkStart);
-    di.str = s;
-    return di;
+    return DrawInstr(DrawInstrType::LinkStart, {}, s);
 }
 
 DrawInstr DrawInstr::Anchor(::Str s, RectF bbox) {
-    DrawInstr di(DrawInstrType::Anchor);
-    di.str = s;
-    di.bbox = bbox;
-    return di;
+    return DrawInstr(DrawInstrType::Anchor, bbox, s);
 }
 
 DrawInstr DrawInstr::PageMarkerAnchor(::Str s, RectF bbox) {
-    DrawInstr di(DrawInstrType::PageMarkerAnchor);
-    di.str = s;
-    di.bbox = bbox;
-    return di;
+    return DrawInstr(DrawInstrType::PageMarkerAnchor, bbox, s);
 }
 
 // parses size in the form "1em", "3pt" or "15px"
