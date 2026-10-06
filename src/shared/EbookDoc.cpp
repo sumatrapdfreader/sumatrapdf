@@ -355,19 +355,6 @@ struct GumboDoc {
     const GumboNode* Document() const { return output ? output->document : nullptr; }
 };
 
-static const GumboVector* GumboChildrenOf(const GumboNode* node) {
-    if (!node) {
-        return nullptr;
-    }
-    if (node->type == GUMBO_NODE_ELEMENT) {
-        return &node->v.element.children;
-    }
-    if (node->type == GUMBO_NODE_DOCUMENT) {
-        return &node->v.document.children;
-    }
-    return nullptr;
-}
-
 /* ********** EPUB ********** */
 
 EpubDoc::EpubDoc(Str fileName) {

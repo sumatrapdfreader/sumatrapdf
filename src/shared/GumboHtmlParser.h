@@ -10,6 +10,8 @@ enum class HtmlNameMatch {
     Local
 };
 
+const GumboVector* GumboChildrenOf(const GumboNode* node);
+
 bool GumboTagNameIs(const GumboNode* node, Str name, HtmlNameMatch match = HtmlNameMatch::Exact);
 
 const GumboNode* GumboFindChildByTag(const GumboNode* node, Str name);

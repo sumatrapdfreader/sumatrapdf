@@ -1092,11 +1092,9 @@ void MobiTocWalker::Walk(const GumboNode* root) {
         if (!node) {
             continue;
         }
-        const GumboVector* children = nullptr;
+        const GumboVector* children = GumboChildrenOf(node);
         int childLevel = level;
-        if (node->type == GUMBO_NODE_DOCUMENT) {
-            children = &node->v.document.children;
-        } else if (node->type == GUMBO_NODE_ELEMENT) {
+        if (node->type == GUMBO_NODE_ELEMENT) {
             if (GumboTagNameIs(node, StrL("mbp:pagebreak"))) {
                 return;
             }
@@ -1117,7 +1115,6 @@ void MobiTocWalker::Walk(const GumboNode* root) {
             bool isLevel = GumboTagNameIs(node, StrL("blockquote")) || GumboTagNameIs(node, StrL("ul")) ||
                            GumboTagNameIs(node, StrL("ol"));
             childLevel = isLevel ? level + 1 : level;
-            children = &node->v.element.children;
         }
         if (children) {
             // push in reverse so children are visited in document order

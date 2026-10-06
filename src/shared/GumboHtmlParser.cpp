@@ -6,6 +6,19 @@
 
 #include "GumboHtmlParser.h"
 
+const GumboVector* GumboChildrenOf(const GumboNode* node) {
+    if (!node) {
+        return nullptr;
+    }
+    if (node->type == GUMBO_NODE_ELEMENT) {
+        return &node->v.element.children;
+    }
+    if (node->type == GUMBO_NODE_DOCUMENT) {
+        return &node->v.document.children;
+    }
+    return nullptr;
+}
+
 static Str GumboElementTagName(const GumboNode* node) {
     ReportIf(!node || node->type != GUMBO_NODE_ELEMENT);
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
@@ -69,15 +82,10 @@ const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name, HtmlN
         if (!n) {
             continue;
         }
-        const GumboVector* children = nullptr;
-        if (n->type == GUMBO_NODE_ELEMENT) {
-            if (GumboTagNameIs(n, name, match)) {
-                return n;
-            }
-            children = &n->v.element.children;
-        } else if (n->type == GUMBO_NODE_DOCUMENT) {
-            children = &n->v.document.children;
+        if (GumboTagNameIs(n, name, match)) {
+            return n;
         }
+        const GumboVector* children = GumboChildrenOf(n);
         if (children) {
             // push in reverse so children are visited in document order
             for (unsigned int i = children->length; i > 0; i--) {
@@ -453,19 +461,6 @@ static Str StrFromPiece(GumboStringPiece piece) {
     return Str((char*)piece.data, (int)piece.length);
 }
 
-static const GumboVector* ChildrenOf(const GumboNode* node) {
-    if (!node) {
-        return nullptr;
-    }
-    if (node->type == GUMBO_NODE_DOCUMENT) {
-        return &node->v.document.children;
-    }
-    if (node->type == GUMBO_NODE_ELEMENT || node->type == GUMBO_NODE_TEMPLATE) {
-        return &node->v.element.children;
-    }
-    return nullptr;
-}
-
 static bool IsSelfClosingStartTag(Str raw) {
     if (raw.len < 3 || raw.s[0] != '<') {
         return false;
@@ -586,7 +581,8 @@ void GumboHtmlParser::BuildEvents() {
             continue;
         }
 
-        const GumboVector* children = ChildrenOf(node);
+        const GumboVector* children =
+            node->type == GUMBO_NODE_TEMPLATE ? &node->v.element.children : GumboChildrenOf(node);
         if (!children) {
             continue;
         }
