@@ -771,11 +771,7 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     // replace unexpected \0 with spaces
     // https://code.google.com/archive/p/sumatrapdf/issues/2529
     Str docStr = ToStr(doc);
-    u8* s = (u8*)docStr.s;
-    u8* end = s + len(doc);
-    while ((s = (u8*)memchr(s, 0, (size_t)(end - s))) != nullptr) {
-        *s = ' ';
-    }
+    str::TransCharsInPlace(docStr, StrL("\0"), StrL(" "));
     if (textEncoding != CP_UTF8) {
         TempStr docUtf8 = strconv::ToMultiByteTemp(ToStr(doc), textEncoding, CP_UTF8);
         if (docUtf8) {
