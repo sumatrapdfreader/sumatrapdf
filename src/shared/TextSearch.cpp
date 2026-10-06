@@ -434,24 +434,12 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
                 }
             }
         }
-        // NOLINTNEXTLINE(bugprone-branch-clone): each empty branch documents a different normalization
-        if (isMatch) {
-            /* characters are identical */;
-        } else if (str::IsWs((char)matchCh) && lookingAtWs) {
-            /* treat all whitespace as identical and end of page as whitespace.
-               The end of the document is NOT seen as whitespace */
-            ;
-            // TODO: Adobe Reader seems to have a more extensive list of
-            //       normalizations - is there an easier way?
-        } else if (matchCh == L'-' && (0x2010 <= endCh && endCh <= 0x2014)) {
-            /* make HYPHEN-MINUS also match HYPHEN, NON-BREAKING HYPHEN,
-               FIGURE DASH, EN DASH and EM DASH (but not the other way around) */
-            ;
-        } else if (matchCh == L'\'' && (0x2018 <= endCh && endCh <= 0x201b)) {
-            /* make APOSTROPHE also match LEFT/RIGHT SINGLE QUOTATION MARK */;
-        } else if (matchCh == L'"' && (0x201c <= endCh && endCh <= 0x201f)) {
-            /* make QUOTATION MARK also match LEFT/RIGHT DOUBLE QUOTATION MARK */;
-        } else {
+        bool sameWhitespace = str::IsWs((char)matchCh) && lookingAtWs;
+        // ASCII punctuation also matches typographic variants, in this direction only.
+        bool samePunctuation = (matchCh == '-' && 0x2010 <= endCh && endCh <= 0x2014) ||
+                               (matchCh == '\'' && 0x2018 <= endCh && endCh <= 0x201b) ||
+                               (matchCh == '"' && 0x201c <= endCh && endCh <= 0x201f);
+        if (!isMatch && !sameWhitespace && !samePunctuation) {
             return notFound;
         }
         // consume the extra char on whichever side of a ß <-> ss match is longer
