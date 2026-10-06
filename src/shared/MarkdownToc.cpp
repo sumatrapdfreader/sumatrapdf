@@ -425,19 +425,13 @@ static TempStr MarkdownLinkToHtmlTemp(Str url) {
         return {};
     }
 
-    int pathLen = url.len;
-    for (int i = 0; i < url.len; i++) {
-        char c = url.s[i];
-        if (c == '?' || c == '#') {
-            pathLen = i;
-            break;
-        }
-        if (c == ':') {
-            return {};
-        }
+    Str path;
+    str::CutChar(url, '?', &path, nullptr);
+    str::CutChar(path, '#', &path, nullptr);
+    if (str::ContainsChar(path, ':')) {
+        return {};
     }
 
-    Str path(url.s, pathLen);
     int extLen = 0;
     if (str::EndsWithI(path, StrL(".markdown"))) {
         extLen = 9;
@@ -447,8 +441,8 @@ static TempStr MarkdownLinkToHtmlTemp(Str url) {
         return {};
     }
 
-    Str base(url.s, pathLen - extLen);
-    Str suffix(url.s + pathLen, url.len - pathLen);
+    Str base(path.s, len(path) - extLen);
+    Str suffix(url.s + len(path), len(url) - len(path));
     return fmt("%s.html%s", base, suffix);
 }
 
