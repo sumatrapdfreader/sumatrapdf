@@ -1541,7 +1541,7 @@ class EnginePdb : public EngineEbook {
         if (prop == DocProp::FontList) {
             return ExtractFontListTemp();
         }
-        return doc->GetPropertyTemp(prop);
+        return {};
     }
 
     bool HasToc() override;
@@ -1588,7 +1588,7 @@ bool EnginePdb::HasToc() {
     if (tocBuilt) {
         return tocTree != nullptr;
     }
-    return doc && doc->HasToc();
+    return doc && len(doc->tocEntries) > 0;
 }
 
 TocTree* EnginePdb::GetToc() {

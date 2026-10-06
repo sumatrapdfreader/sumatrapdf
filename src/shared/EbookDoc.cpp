@@ -1228,14 +1228,6 @@ bool PalmDoc::Load() {
     return true;
 }
 
-TempStr PalmDoc::GetPropertyTemp(DocProp /*prop*/) const {
-    return {};
-}
-
-bool PalmDoc::HasToc() const {
-    return len(tocEntries) > 0;
-}
-
 bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
     for (int i = 0; i < len(tocEntries); i++) {
         TempStr url = fmt(kPdbTocEntryMark "%d", i + 1);
