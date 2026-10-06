@@ -422,12 +422,7 @@ bool EpubDoc::Load() {
         return false;
     }
 
-    int slashPos = str::LastIndexOfChar(contentPath, '/');
-    if (slashPos >= 0) {
-        contentPath = str::DupTemp(Str(contentPath.s, slashPos + 1));
-    } else {
-        contentPath = {};
-    }
+    contentPath = Str(contentPath.s, str::LastIndexOfChar(contentPath, '/') + 1);
 
     StrVec idList, pathList;
 
@@ -439,44 +434,39 @@ bool EpubDoc::Load() {
             continue;
         }
         TempStr mediaType = GumboAttributeValueTemp(node, "media-type");
-        if (isImageMediaType(mediaType)) {
-            TempStr imgPath = GumboAttributeValueTemp(node, "href");
-            if (len(imgPath) == 0) {
-                continue;
-            }
-            imgPath = url::DecodeTemp(imgPath);
-            imgPath = str::JoinTemp(contentPath, imgPath);
-            if (encList.Contains(imgPath)) {
+        bool image = isImageMediaType(mediaType);
+        if (!image && !isHtmlMediaType(mediaType)) {
+            continue;
+        }
+        TempStr path = GumboAttributeValueTemp(node, "href");
+        if (len(path) == 0) {
+            continue;
+        }
+        path = url::DecodeTemp(path);
+        TempStr fullPath = str::JoinTemp(contentPath, path);
+        if (image) {
+            if (encList.Contains(fullPath)) {
                 continue;
             }
             // load the image lazily
             ImageData data;
-            data.fileName = str::Dup(imgPath);
+            data.fileName = str::Dup(fullPath);
             data.fileId = archive->GetFileId(data.fileName);
             VecAppend(images, data);
-        } else if (isHtmlMediaType(mediaType)) {
-            TempStr htmlPath = GumboAttributeValueTemp(node, "href");
-            if (len(htmlPath) == 0) {
-                continue;
-            }
-            htmlPath = url::DecodeTemp(htmlPath);
-            TempStr htmlId = GumboAttributeValueTemp(node, "id");
-            // EPUB 3 ToC
-            TempStr properties = GumboAttributeValueTemp(node, "properties");
-            if (properties && str::Contains(properties, StrL("nav")) &&
-                str::Eq(mediaType, StrL("application/xhtml+xml"))) {
-                str::Free(tocPath);
-                tocPath = str::Join(contentPath, htmlPath);
-            }
-
-            TempStr fullContentPath = str::JoinTemp(contentPath, htmlPath);
-            if (encList.Contains(fullContentPath)) {
-                continue;
-            }
-            if (htmlPath && htmlId) {
-                idList.Append(htmlId);
-                pathList.Append(htmlPath);
-            }
+            continue;
+        }
+        TempStr htmlId = GumboAttributeValueTemp(node, "id");
+        // EPUB 3 ToC
+        TempStr properties = GumboAttributeValueTemp(node, "properties");
+        if (properties && str::Contains(properties, StrL("nav")) && str::Eq(mediaType, StrL("application/xhtml+xml"))) {
+            str::ReplaceWithCopy(&tocPath, fullPath);
+        }
+        if (encList.Contains(fullPath)) {
+            continue;
+        }
+        if (path && htmlId) {
+            idList.Append(htmlId);
+            pathList.Append(path);
         }
     }
 
