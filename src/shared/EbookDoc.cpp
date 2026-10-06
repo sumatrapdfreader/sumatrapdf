@@ -428,31 +428,31 @@ static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
     }
 }
 
+static Archive::FileInfo* GetEpubPackage(Archive* archive, TempStr& contentPath) {
+    auto* containerFi = archive->GetFileDataByName(StrL("META-INF/container.xml"));
+    if (!containerFi || !containerFi->data) {
+        return nullptr;
+    }
+    GumboDoc containerDoc(Str(containerFi->data, containerFi->fileSizeUncompressed), true);
+    // The first rootfile is the default rendition.
+    const GumboNode* node = GumboFindDescendantByTag(containerDoc.Document(), StrL("rootfile"), HtmlNameMatch::Local);
+    contentPath = url::DecodeTemp(GumboAttributeValueTemp(node, "full-path"));
+    if (len(contentPath) == 0) {
+        return nullptr;
+    }
+    auto* fi = archive->GetFileDataByName(contentPath);
+    return fi && fi->data ? fi : nullptr;
+}
+
 bool EpubDoc::Load() {
     if (!archive) {
         return false;
     }
-    auto* containerFi = archive->GetFileDataByName(StrL("META-INF/container.xml"));
-    if (!containerFi || !containerFi->data) {
+    TempStr contentPath;
+    auto* contentFi = GetEpubPackage(archive, contentPath);
+    if (!contentFi) {
         return false;
     }
-    Str container = Str((char*)((u8*)containerFi->data), containerFi->fileSizeUncompressed);
-    GumboDoc containerDoc(container, true);
-    const GumboNode* node = containerDoc.Document();
-    if (!node) {
-        return false;
-    }
-
-    // only consider the first <rootfile> element (default rendition)
-    node = GumboFindDescendantByTag(node, StrL("rootfile"), HtmlNameMatch::Local);
-    if (!node) {
-        return false;
-    }
-    TempStr contentPath = GumboAttributeValueTemp(node, "full-path");
-    if (len(contentPath) == 0) {
-        return false;
-    }
-    contentPath = url::DecodeTemp(contentPath);
 
     // encrypted files will be ignored (TODO: support decryption)
     StrVec encList;
@@ -463,14 +463,10 @@ bool EpubDoc::Load() {
         CollectEncryptedEpubPaths(encryptionDoc.Document(), encList);
     }
 
-    auto* contentFi = archive->GetFileDataByName(contentPath);
-    if (!contentFi || !contentFi->data) {
-        return false;
-    }
     Str content = Str((char*)((u8*)contentFi->data), contentFi->fileSizeUncompressed);
     ParseMetadata(content, props);
     GumboDoc contentDoc(content, true);
-    node = contentDoc.Document();
+    const GumboNode* node = contentDoc.Document();
     if (!node) {
         return false;
     }
@@ -902,26 +898,18 @@ Str EpubCoverImageData(Str path) {
     if (!archive) {
         return {};
     }
+    AutoDelete delArchive(archive);
     Str res{};
-    auto* containerFi = archive->GetFileDataByName(StrL("META-INF/container.xml"));
-    if (!containerFi || !containerFi->data) {
-        delete archive;
-        return {};
-    }
-    Str container = Str(containerFi->data, containerFi->fileSizeUncompressed);
-    GumboDoc containerDoc(container, true);
-    const GumboNode* node = GumboFindDescendantByTag(containerDoc.Document(), StrL("rootfile"), HtmlNameMatch::Local);
-    TempStr contentPath = url::DecodeTemp(GumboAttributeValueTemp(node, "full-path"));
-    auto* contentFi = len(contentPath) > 0 ? archive->GetFileDataByName(contentPath) : nullptr;
-    if (!contentFi || !contentFi->data) {
-        delete archive;
+    TempStr contentPath;
+    auto* contentFi = GetEpubPackage(archive, contentPath);
+    if (!contentFi) {
         return {};
     }
     Str content = Str(contentFi->data, contentFi->fileSizeUncompressed);
     GumboDoc contentDoc(content, true);
 
     TempStr coverId{};
-    node = GumboFindDescendantByTag(contentDoc.Document(), StrL("metadata"), HtmlNameMatch::Local);
+    const GumboNode* node = GumboFindDescendantByTag(contentDoc.Document(), StrL("metadata"), HtmlNameMatch::Local);
     const GumboVector* children = GumboChildrenOf(node);
     for (unsigned int i = 0; children && i < children->length; i++) {
         node = (const GumboNode*)children->data[i];
@@ -956,7 +944,6 @@ Str EpubCoverImageData(Str path) {
             res = str::Dup(Str(imgFi->data, imgFi->fileSizeUncompressed));
         }
     }
-    delete archive;
     return res;
 }
 
