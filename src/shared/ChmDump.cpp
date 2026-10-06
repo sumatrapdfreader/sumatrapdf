@@ -47,13 +47,6 @@ static Str ChmEntryClass(const chm_entry* e) {
     return StrL("unknown");
 }
 
-static void FormatSha1Hex(const u8 digest[20], char out[41]) {
-    for (int i = 0; i < 20; i++) {
-        snprintf(&out[(size_t)i * 2], 3, "%02x", digest[i]);
-    }
-    out[40] = '\0';
-}
-
 struct ChmObjectReadResult {
     uint64_t bytesRead = 0;
     u8 sha1[20]{};
@@ -72,21 +65,19 @@ static bool ReadChmObject(chm_ctx* ctx, chm_entry* e, ChmObjectReadResult* resul
     }
 
     size_t n = (size_t)e->length;
-    uint8_t* buf = (uint8_t*)malloc(n);
+    AutoFree<uint8_t> buf((uint8_t*)malloc(n));
     if (!buf) {
         return false;
     }
     int64_t got = chm_read_entry(ctx, e, buf);
     if (got != (int64_t)e->length) {
-        free(buf);
         result->bytesRead = got > 0 ? (uint64_t)got : 0;
         result->sha1Valid = false;
         return false;
     }
-    CalcSHA1Digest(Str((char*)buf, (int)n), result->sha1);
+    CalcSHA1Digest(Str((char*)buf.Get(), (int)n), result->sha1);
     result->sha1Valid = true;
     result->bytesRead = (uint64_t)got;
-    free(buf);
     return true;
 }
 
@@ -121,40 +112,31 @@ static void ChmDumpEntry(chm_ctx* h, chm_entry* e, ChmDumpCtx* ctx) {
         }
     }
 
-    char sha1Hex[41]{};
     Str sha1Str = StrL("-");
     if (readResult.sha1Valid) {
-        FormatSha1Hex(readResult.sha1, sha1Hex);
-        sha1Str = Str(sha1Hex, 40);
+        sha1Str = str::MemToHexTemp(Str((char*)readResult.sha1, sizeofi(readResult.sha1)));
     }
 
-    CliPrint(fmt("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", Str(ChmEntryKind(e)),
-                 Str(ChmEntryClass(e)), Str(ChmCompressionName(e->is_compressed)), (unsigned long long)e->length,
+    CliPrint(fmt("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", ChmEntryKind(e),
+                 ChmEntryClass(e), ChmCompressionName(e->is_compressed), (unsigned long long)e->length,
                  (unsigned long long)readResult.bytesRead, sha1Str, Str(unpacked ? "ok" : "failed"), Str(e->path)));
 }
 
 struct ChmDumpTocVisitor : EbookTocVisitor {
-  public:
+    Str section;
     bool any = false;
+
+    explicit ChmDumpTocVisitor(Str section) : section(section) {}
 
     void Visit(Str name, Str url, int level) override {
         any = true;
-        CliPrint(fmt("toc level=%d name=%s url=%s", level, name, url));
-    }
-};
-
-struct ChmDumpIndexVisitor : EbookTocVisitor {
-  public:
-    bool any = false;
-
-    void Visit(Str name, Str url, int level) override {
-        any = true;
-        CliPrint(fmt("index level=%d name=%s url=%s", level, name, url));
+        CliPrint(fmt("%s level=%d name=%s url=%s", section, level, name, url));
     }
 };
 
 static bool DumpChmFileRaw(Str path) {
     Str data = file::ReadFile(path);
+    AutoFree<char> freeData(data.s);
     if (len(data) == 0) {
         CliPrint(StrL("error: couldn't read file"));
         return false;
@@ -162,7 +144,6 @@ static bool DumpChmFileRaw(Str path) {
     chm_ctx* h = chm_ctx_new(nullptr, nullptr, nullptr, nullptr);
     if (!h || !chm_open(h, (const uint8_t*)data.s, (size_t)data.len)) {
         chm_ctx_free(h);
-        str::Free(data);
         CliPrint(StrL("error: couldn't open CHM"));
         return false;
     }
@@ -180,33 +161,30 @@ static bool DumpChmFileRaw(Str path) {
                  Str(ok ? "ok" : "failed")));
 
     chm_ctx_free(h);
-    str::Free(data);
     return ok && ctx.unpackFailures == 0;
 }
 
 static void DumpChmFileMetadata(Str path) {
-    ChmFile* doc = ChmFile::CreateFromFile(path);
+    AutoDelete<ChmFile> doc(ChmFile::CreateFromFile(path));
     if (!doc) {
         CliPrint(StrL("metadata: unavailable"));
         return;
     }
-    CliPrint(fmt("metadata title=%s", Str(len(doc->title) > 0 ? doc->title.s : "")));
-    CliPrint(fmt("metadata creator=%s", Str(len(doc->creator) > 0 ? doc->creator.s : "")));
-    CliPrint(fmt("metadata home=%s", Str(len(doc->homePath) > 0 ? doc->homePath.s : "")));
-    CliPrint(fmt("metadata toc=%s", Str(len(doc->tocPath) > 0 ? doc->tocPath.s : "")));
-    CliPrint(fmt("metadata index=%s", Str(len(doc->indexPath) > 0 ? doc->indexPath.s : "")));
+    CliPrint(fmt("metadata title=%s", doc->title));
+    CliPrint(fmt("metadata creator=%s", doc->creator));
+    CliPrint(fmt("metadata home=%s", doc->homePath));
+    CliPrint(fmt("metadata toc=%s", doc->tocPath));
+    CliPrint(fmt("metadata index=%s", doc->indexPath));
     CliPrint(fmt("metadata codepage=%u", doc->codepage));
 
-    ChmDumpTocVisitor toc;
+    ChmDumpTocVisitor toc(StrL("toc"));
     if (!doc->ParseToc(&toc) || !toc.any) {
         CliPrint(StrL("toc: none"));
     }
-    ChmDumpIndexVisitor index;
+    ChmDumpTocVisitor index(StrL("index"));
     if (!doc->ParseIndex(&index) || !index.any) {
         CliPrint(StrL("index: none"));
     }
-
-    delete doc;
 }
 
 static bool DumpChmFile(Str path) {
