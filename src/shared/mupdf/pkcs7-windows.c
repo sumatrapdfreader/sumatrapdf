@@ -224,6 +224,21 @@ static PCCERT_CONTEXT find_signer_cert(HCERTSTORE hStore, PCMSG_SIGNER_INFO si) 
                                       NULL);
 }
 
+static void close_metadata(HCRYPTMSG hMsg, HCERTSTORE hStore, PCMSG_SIGNER_INFO si, PCCERT_CONTEXT cert) {
+    if (cert) {
+        CertFreeCertificateContext(cert);
+    }
+    if (hStore) {
+        CertCloseStore(hStore, 0);
+    }
+    if (si) {
+        LocalFree(si);
+    }
+    if (hMsg) {
+        CryptMsgClose(hMsg);
+    }
+}
+
 // ---- check_certificate ---------------------------------------------------
 
 static pdf_signature_error windows_check_certificate(fz_context* ctx, pdf_pkcs7_verifier* vf, unsigned char* sig,
@@ -290,18 +305,7 @@ done:
     if (chain) {
         CertFreeCertificateChain(chain);
     }
-    if (cert) {
-        CertFreeCertificateContext(cert);
-    }
-    if (hStore) {
-        CertCloseStore(hStore, 0);
-    }
-    if (si) {
-        LocalFree(si);
-    }
-    if (hMsg) {
-        CryptMsgClose(hMsg);
-    }
+    close_metadata(hMsg, hStore, si, cert);
     return rc;
 }
 
@@ -430,18 +434,7 @@ static pdf_pkcs7_distinguished_name* windows_get_signatory(fz_context* ctx, pdf_
     }
 
 done:
-    if (cert) {
-        CertFreeCertificateContext(cert);
-    }
-    if (hStore) {
-        CertCloseStore(hStore, 0);
-    }
-    if (si) {
-        LocalFree(si);
-    }
-    if (hMsg) {
-        CryptMsgClose(hMsg);
-    }
+    close_metadata(hMsg, hStore, si, cert);
     return dn;
 }
 
@@ -1016,18 +1009,7 @@ static void inspect_timestamp_token(fz_context* ctx, unsigned char* tok, DWORD t
     }
 
 done:
-    if (cert) {
-        CertFreeCertificateContext(cert);
-    }
-    if (hStore) {
-        CertCloseStore(hStore, 0);
-    }
-    if (si) {
-        LocalFree(si);
-    }
-    if (hMsg) {
-        CryptMsgClose(hMsg);
-    }
+    close_metadata(hMsg, hStore, si, cert);
 }
 
 static int cert_has_qc_statement(PCCERT_CONTEXT cert) {
@@ -1236,17 +1218,6 @@ int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, p
     ok = 1;
 
 done:
-    if (cert) {
-        CertFreeCertificateContext(cert);
-    }
-    if (hStore) {
-        CertCloseStore(hStore, 0);
-    }
-    if (si) {
-        LocalFree(si);
-    }
-    if (hMsg) {
-        CryptMsgClose(hMsg);
-    }
+    close_metadata(hMsg, hStore, si, cert);
     return ok;
 }
