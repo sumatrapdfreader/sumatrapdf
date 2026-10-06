@@ -24,51 +24,8 @@
 #endif
 #include "HtmlFormatter.h"
 
-/*
-Given size of a page, we format html into a set of pages. We handle only a small
-subset of html commonly present in ebooks.
-
-Formatting is a delayed affair, divided into 2 stages.
-
-1. We gather elements and their sizes for the current line. When we detect that
-adding another element would overflow current line, we position elements in
-current line (stage 2) and start a new line. When we detect that adding a new
-line would overflow current page, we start a new page.
-
-2. When we position elements in current line, we calculate their x/y positions.
-
-Delaying this calculation until we have all elements of the line is necessary
-to implement e.g. justification. It's also simpler to have formatting logic in
-2 simpler phases than a single, more complicated step. We still need to make sure
-that both stages use the same logic for determining line/page overflow, otherwise
-elements will be drawn outside page bounds. This shouldn't be hard because only
-stage 1 calculates the sizes of elements.
-*/
-
-/*
-TODO: Instead of inserting explicit SetFont, StartLink, etc. instructions
-at the beginning of every page, DrawHtmlPage could always start with
-that page's nextPageStyle.font, etc.
-The information that we need to remember:
-* font name (if different from default font name, nullptr otherwise)
-* font size scale i.e. 1.f means "default font size". This is to allow the user to change
-  default font size and allow us to relayout from arbitrary page
-* font style (bold/italic etc.)
-* a link url if we're carrying over a text for a link (nullptr if no link)
-* text color (when/if we support changing text color)
-* more ?
-
-TODO: HtmlFormatter could be split into DrawInstrBuilder which knows pageDx, pageDy
-and generates DrawInstr and splits them into pages and a better named class that
-does the parsing of the document builds pages by invoking methods on DrawInstrBuilders.
-
-TODO: support <figure> and <figcaption> as e.g in http://ebookarchitects.com/files/BookOfTexas.mobi
-
-TODO: instead of generating list of DrawInstr objects, we could add necessary
-support to mui and use list of Control objects instead (especially if we slim down
-Control objects further to make allocating hundreds of them cheaper or introduce some
-other base element(s) with less functionality and less overhead).
-*/
+// Measure each line's items before positioning them for justification.
+// Flush completed lines into pages as they overflow.
 
 bool ValidReparseIdx(ptrdiff_t idx, GumboHtmlParser* parser) {
     return !((idx < 0) || (idx > (int)parser->Len()));
@@ -1249,20 +1206,12 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         HandleTagFont(t);
     } else if (Tag_A == tag) {
         HandleTagA(t);
-    } else if (Tag_Blockquote == tag) {
-        // TODO: implement me
+    } else if (Tag_Blockquote == tag || Tag_Dd == tag || Tag_Table == tag) {
         HandleTagList(t);
     } else if (Tag_Div == tag) {
-        // TODO: implement me
         HandleTagP(t, true);
     } else if (IsTagH(tag)) {
         HandleTagHx(t);
-    } else if (Tag_Sup == tag) {
-        // TODO: implement me
-    } else if (Tag_Sub == tag) {
-        // TODO: implement me
-    } else if (Tag_Span == tag) {
-        // TODO: implement me
     } else if (Tag_Center == tag) {
         HandleTagP(t, true);
         if (!t->IsEndTag()) {
@@ -1302,12 +1251,6 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         if (t->IsStartTag()) {
             CurrStyle()->align = AlignAttr::Left;
         }
-    } else if (Tag_Dd == tag) {
-        // TODO: separate indentation from list depth
-        HandleTagList(t);
-    } else if (Tag_Table == tag) {
-        // TODO: implement me
-        HandleTagList(t);
     } else if (Tag_Tr == tag) {
         // display tables row-by-row for now
         FlushCurrLine(true);
@@ -1504,9 +1447,7 @@ static void DrawHtmlText(PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstr
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
 #if OS_WIN
-using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
-using Gdiplus::Graphics;
 using Gdiplus::Ok;
 using Gdiplus::Pen;
 using Gdiplus::Status;
@@ -1516,7 +1457,6 @@ using Gdiplus::Win32Error;
 void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
                   float offY, bool showBbox, Color textColor, bool* abortCookie) {
     Pen debugPen(Gdiplus::Color(255, 0, 0), 1);
-    // Pen linePen(Gdiplus::Color(0, 0, 0), 2.f);
     Pen linePen(Gdiplus::Color(0x5F, 0x4B, 0x32), 2.f);
 
     DrawHtmlText(textDraw, drawInstructions, offX, offY, textColor, abortCookie);
