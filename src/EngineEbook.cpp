@@ -1703,31 +1703,31 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
         return;
     }
     bool needAlt = true;
-    AttrInfo* attr = t->GetAttrByName(StrL("src"));
+    AttrInfo attr = t->GetAttrByName(StrL("src"));
     if (attr) {
-        TempStr src = url::DecodeTemp(attr->val);
+        TempStr src = url::DecodeTemp(attr.val);
         Str img = chmDoc->GetImageData(src, pagePath);
         needAlt = len(img) == 0 || !EmitImage(img);
     }
     if (needAlt) {
         attr = t->GetAttrByName(StrL("alt"));
-        if (attr != nullptr) {
-            HandleText(str::Dup(textAllocator, attr->val));
+        if (attr) {
+            HandleText(str::Dup(textAllocator, attr.val));
         }
     }
 }
 
 void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
-    AttrInfo* attr = t->GetAttrByName(StrL("page_path"));
+    AttrInfo attr = t->GetAttrByName(StrL("page_path"));
     if (!attr || pagePath) {
         ForceNewPage();
     }
     if (attr) {
         RectF bbox(0, currY, pageDx, 0);
-        // attr->val is owned by the gumbo parse tree which doesn't outlive
+        // attr.val is owned by the gumbo parse tree which doesn't outlive
         // the formatter, so copy it into textAllocator
-        VecAppend(currPage->instructions, DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
-        str::ReplaceWithCopy(&pagePath, attr->val);
+        VecAppend(currPage->instructions, DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr.val), bbox));
+        str::ReplaceWithCopy(&pagePath, attr.val);
         // reset CSS style rules for the new document
         VecReset(styleRules);
     }
@@ -1738,12 +1738,12 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    AttrInfo* attr = t->GetAttrByName(StrL("rel"));
-    if (!attr || !attr->ValIs(StrL("stylesheet"))) {
+    AttrInfo attr = t->GetAttrByName(StrL("rel"));
+    if (!attr || !attr.ValIs(StrL("stylesheet"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr->ValIs(StrL("text/css"))) {
+    if (attr && !attr.ValIs(StrL("text/css"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("href"));
@@ -1751,7 +1751,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    TempStr src = url::DecodeTemp(attr->val);
+    TempStr src = url::DecodeTemp(attr.val);
     TempStr data = chmDoc->GetFileData(src, pagePath);
     if ((u8*)data.s) {
         ParseStyleSheet(data);

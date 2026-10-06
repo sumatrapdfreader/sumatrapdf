@@ -430,20 +430,20 @@ Str HtmlToken::GetReparsePoint() const {
     return reparsePoint;
 }
 
-AttrInfo* HtmlToken::GetAttrByName(Str attrName, HtmlNameMatch match) {
+// Return views by value so another lookup cannot overwrite earlier attributes.
+AttrInfo HtmlToken::GetAttrByName(Str attrName, HtmlNameMatch match) {
     if (!node || (node->type != GUMBO_NODE_ELEMENT && node->type != GUMBO_NODE_TEMPLATE)) {
-        return nullptr;
+        return {};
     }
     const GumboVector* attrs = &node->v.element.attributes;
     for (unsigned int i = 0; i < attrs->length; i++) {
         const GumboAttribute* attr = (const GumboAttribute*)attrs->data[i];
-        attrInfo.name = Str(attr->name);
-        attrInfo.val = Str(attr->value);
-        if (attrInfo.NameIs(attrName, match)) {
-            return &attrInfo;
+        AttrInfo info{Str(attr->name), Str(attr->value)};
+        if (info.NameIs(attrName, match)) {
+            return info;
         }
     }
-    return nullptr;
+    return {};
 }
 
 static Str StrFromPiece(GumboStringPiece piece) {
@@ -683,7 +683,7 @@ bool GumboHtmlParser_UnitTest() {
         token.NameIs(StrL("opf:metadata"), HtmlNameMatch::Local)) {
         return false;
     }
-    Str xml = StrL("<opf:metadata q:href='book'>text</opf:metadata>");
+    Str xml = StrL("<opf:metadata q:href='book' id='meta'>text</opf:metadata>");
     GumboOptions opts = GumboMakeXmlFragmentOptions();
     GumboOutput* doc = gumbo_parse_with_options(&opts, xml.s, (size_t)len(xml));
     const GumboNode* node = GumboFindDescendantByTag(doc->document, name, HtmlNameMatch::Local);
@@ -692,9 +692,12 @@ bool GumboHtmlParser_UnitTest() {
               GumboTagNameIs(node, StrL("opf:metadata"), HtmlNameMatch::Local);
     token.node = node;
     ok = ok && !token.GetAttrByName(StrL("href"));
-    AttrInfo* attr = token.GetAttrByName(StrL("href"), HtmlNameMatch::Local);
-    ok = ok && attr && str::Eq(attr->val, StrL("book")) && !attr->NameIs(StrL("q:href"), HtmlNameMatch::Local) &&
+    AttrInfo attr = token.GetAttrByName(StrL("href"), HtmlNameMatch::Local);
+    ok = ok && attr && str::Eq(attr.val, StrL("book")) && !attr.NameIs(StrL("q:href"), HtmlNameMatch::Local) &&
          token.GetAttrByName(StrL("Q:HREF"));
+    AttrInfo href = token.GetAttrByName(StrL("href"), HtmlNameMatch::Local);
+    AttrInfo id = token.GetAttrByName(StrL("id"));
+    ok = ok && href && id && str::Eq(href.val, StrL("book")) && str::Eq(id.val, StrL("meta"));
     gumbo_destroy_output_iter(&opts, doc);
     return ok;
 }

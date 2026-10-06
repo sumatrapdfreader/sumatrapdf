@@ -892,7 +892,7 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
         return;
     }
 
-    AttrInfo* attr = t->GetAttrByName(StrL("id"));
+    AttrInfo attr = t->GetAttrByName(StrL("id"));
     if (!attr && !idsOnly && Tag_A == t->tag) {
         attr = t->GetAttrByName(StrL("name"));
     }
@@ -904,17 +904,17 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
     RectF bbox(0, currY, pageDx, 0);
     // append at the start of the line to prevent the anchor
     // from being flushed to the next page (with wrong currY value)
-    // attr->val is owned by the gumbo parse tree which doesn't outlive
+    // attr.val is owned by the gumbo parse tree which doesn't outlive
     // the formatter, so copy it into textAllocator
-    VecAppend(currPage->instructions, DrawInstr::Anchor(str::Dup(textAllocator, attr->val), bbox));
+    VecAppend(currPage->instructions, DrawInstr::Anchor(str::Dup(textAllocator, attr.val), bbox));
 }
 
 void HtmlFormatter::HandleDirAttr(HtmlToken* t) {
     // only apply reading direction changes to block elements (for now)
     if (t->IsStartTag() && !IsInlineTag(t->tag)) {
-        AttrInfo* attr = t->GetAttrByName(StrL("dir"));
+        AttrInfo attr = t->GetAttrByName(StrL("dir"));
         if (attr) {
-            dirRtl = CurrStyle()->dirRtl = attr->ValIs(StrL("RTL"));
+            dirRtl = CurrStyle()->dirRtl = attr.ValIs(StrL("RTL"));
         }
     }
 }
@@ -929,11 +929,11 @@ void HtmlFormatter::HandleTagBr() {
 }
 
 static AlignAttr GetAlignAttr(HtmlToken* t, AlignAttr defVal) {
-    AttrInfo* attr = t->GetAttrByName(StrL("align"));
+    AttrInfo attr = t->GetAttrByName(StrL("align"));
     if (!attr) {
         return defVal;
     }
-    AlignAttr align = FindAlignAttr(attr->val);
+    AlignAttr align = FindAlignAttr(attr.val);
     if (AlignAttr::NotFound == align) {
         return defVal;
     }
@@ -981,10 +981,10 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
         return;
     }
 
-    AttrInfo* attr = t->GetAttrByName(StrL("face"));
+    AttrInfo attr = t->GetAttrByName(StrL("face"));
     Str faceName = CurrFont()->GetName();
     if (attr && !overrideFontName) {
-        TempStr buf = str::DupTemp(attr->val);
+        TempStr buf = str::DupTemp(attr.val);
         // multiple font names can be comma separated
         if (buf && buf.s[0] != ',') {
             str::TransCharsInPlace(buf, StrL(","), StrL("\0"));
@@ -997,9 +997,9 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     if (attr) {
         // the sizes are in the range from 1 (tiny) to 7 (huge)
         int size = 3; // normal size
-        str::Parse(attr->val, "%d", &size);
+        str::Parse(attr.val, "%d", &size);
         // sizes can also be relative to the current size
-        if (len(attr->val) > 0 && ('-' == attr->val.s[0] || '+' == attr->val.s[0])) {
+        if (len(attr.val) > 0 && ('-' == attr.val.s[0] || '+' == attr.val.s[0])) {
             size += 3;
         }
         size = limitValue(size, 1, 7);
@@ -1012,11 +1012,11 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
 
 bool HtmlFormatter::HandleTagA(HtmlToken* t, Str linkAttr, HtmlNameMatch match) {
     if (t->IsStartTag() && !currLinkIdx) {
-        AttrInfo* attr = t->GetAttrByName(linkAttr, match);
+        AttrInfo attr = t->GetAttrByName(linkAttr, match);
         if (attr) {
-            // attr->val is owned by the gumbo parse tree which doesn't
+            // attr.val is owned by the gumbo parse tree which doesn't
             // outlive the formatter, so copy it into textAllocator
-            AppendInstr(DrawInstr::LinkStart(str::Dup(textAllocator, attr->val)));
+            AppendInstr(DrawInstr::LinkStart(str::Dup(textAllocator, attr.val)));
             currLinkIdx = len(currLineInstr);
             return true;
         }
@@ -1112,9 +1112,9 @@ StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
         rule.Merge(*prevRule);
     }
     // TODO: support multiple class names
-    AttrInfo* attr = t->GetAttrByName(StrL("class"));
+    AttrInfo attr = t->GetAttrByName(StrL("class"));
     if (attr) {
-        Str clazz = attr->val;
+        Str clazz = attr.val;
         prevRule = FindStyleRule(kTagAny, clazz);
         if (prevRule) {
             rule.Merge(*prevRule);
@@ -1126,7 +1126,7 @@ StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
     }
     attr = t->GetAttrByName(StrL("style"));
     if (attr) {
-        StyleRule newRule = StyleRule::Parse(attr->val);
+        StyleRule newRule = StyleRule::Parse(attr.val);
         rule.Merge(newRule);
     }
     return rule;
@@ -1158,8 +1158,8 @@ void HtmlFormatter::HandleTagStyle(HtmlToken* t) {
     if (!t->IsStartTag()) {
         return;
     }
-    AttrInfo* attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr->ValIs(StrL("text/css"))) {
+    AttrInfo attr = t->GetAttrByName(StrL("type"));
+    if (attr && !attr.ValIs(StrL("text/css"))) {
         return;
     }
 
@@ -1316,9 +1316,9 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
             li.ordered = (Tag_Ol == tag);
             if (li.ordered) {
                 // honor <ol start="N">
-                AttrInfo* attr = t->GetAttrByName(StrL("start"));
+                AttrInfo attr = t->GetAttrByName(StrL("start"));
                 if (attr) {
-                    li.nextNum = ParseInt(attr->val);
+                    li.nextNum = ParseInt(attr.val);
                 }
             }
             VecAppend(listInfos, li);

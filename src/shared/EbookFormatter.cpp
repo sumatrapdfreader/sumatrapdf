@@ -68,9 +68,9 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {
     // best I can tell, in mobi <p width="1em" height="3pt> means that
     // the first line of the paragrap is indented by 1em and there's
     // 3pt top padding (the same seems to apply for <blockquote>)
-    AttrInfo* attr = t->GetAttrByName(StrL("width"));
+    AttrInfo attr = t->GetAttrByName(StrL("width"));
     if (attr) {
-        float lineIndent = ParseSizeAsPixels(attr->val, CurrFont()->GetSize());
+        float lineIndent = ParseSizeAsPixels(attr.val, CurrFont()->GetSize());
         // there are files with negative width which produces partially invisible
         // text, so don't allow that
         if (lineIndent > 0) {
@@ -81,7 +81,7 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {
     attr = t->GetAttrByName(StrL("height"));
     if (attr) {
         // for use it in FlushCurrLine()
-        currLineTopPadding = ParseSizeAsPixels(attr->val, CurrFont()->GetSize());
+        currLineTopPadding = ParseSizeAsPixels(attr.val, CurrFont()->GetSize());
     }
 }
 
@@ -97,13 +97,13 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
     }
     bool needAlt = true;
     int n = 0;
-    AttrInfo* attr = t->GetAttrByName(StrL("recindex"));
-    if (attr && !str::IsNull(str::Parse(attr->val, "%d", &n))) {
+    AttrInfo attr = t->GetAttrByName(StrL("recindex"));
+    if (attr && !str::IsNull(str::Parse(attr.val, "%d", &n))) {
         // recindex parsed
     } else {
         attr = t->GetAttrByName(StrL("src"));
         if (attr) {
-            n = KindleEmbedToRecIndex(attr->val);
+            n = KindleEmbedToRecIndex(attr.val);
         }
     }
     if (n > 0) {
@@ -112,8 +112,8 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
     }
     if (needAlt) {
         attr = t->GetAttrByName(StrL("alt"));
-        if (attr != nullptr) {
-            HandleText(str::Dup(textAllocator, attr->val));
+        if (attr) {
+            HandleText(str::Dup(textAllocator, attr.val));
         }
     }
 }
@@ -154,31 +154,31 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
         return;
     }
     bool needAlt = true;
-    AttrInfo* attr = t->GetAttrByName(StrL("src"));
+    AttrInfo attr = t->GetAttrByName(StrL("src"));
     if (attr) {
-        TempStr src = url::DecodeTemp(attr->val);
+        TempStr src = url::DecodeTemp(attr.val);
         Str img = epubDoc->GetImageData(src, pagePath);
         needAlt = len(img) == 0 || !EmitImage(img);
     }
     if (needAlt) {
         attr = t->GetAttrByName(StrL("alt"));
-        if (attr != nullptr) {
-            HandleText(str::Dup(textAllocator, attr->val));
+        if (attr) {
+            HandleText(str::Dup(textAllocator, attr.val));
         }
     }
 }
 
 void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
-    AttrInfo* attr = t->GetAttrByName(StrL("page_path"));
+    AttrInfo attr = t->GetAttrByName(StrL("page_path"));
     if (!attr || len(pagePath) > 0) {
         ForceNewPage();
     }
     if (attr) {
         RectF bbox(0, currY, pageDx, 0);
-        // attr->val is owned by the gumbo parse tree which doesn't outlive
+        // attr.val is owned by the gumbo parse tree which doesn't outlive
         // the formatter, so copy it into textAllocator
-        VecAppend(currPage->instructions, DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
-        str::ReplaceWithCopy(&pagePath, attr->val);
+        VecAppend(currPage->instructions, DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr.val), bbox));
+        str::ReplaceWithCopy(&pagePath, attr.val);
         // reset CSS style rules for the new document
         VecReset(styleRules);
     }
@@ -189,12 +189,12 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    AttrInfo* attr = t->GetAttrByName(StrL("rel"));
-    if (!attr || !attr->ValIs(StrL("stylesheet"))) {
+    AttrInfo attr = t->GetAttrByName(StrL("rel"));
+    if (!attr || !attr.ValIs(StrL("stylesheet"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr->ValIs(StrL("text/css"))) {
+    if (attr && !attr.ValIs(StrL("text/css"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("href"));
@@ -202,7 +202,7 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    TempStr src = url::DecodeTemp(attr->val);
+    TempStr src = url::DecodeTemp(attr.val);
     Str data = epubDoc->GetFileData(src, pagePath);
     if (data) {
         ParseStyleSheet(data);
@@ -218,11 +218,11 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     if (!VecContains(tagNesting, Tag_Svg) && Tag_Svg_Image != t->tag) {
         return;
     }
-    AttrInfo* attr = t->GetAttrByName(StrL("href"), HtmlNameMatch::Local);
+    AttrInfo attr = t->GetAttrByName(StrL("href"), HtmlNameMatch::Local);
     if (!attr) {
         return;
     }
-    TempStr src = url::DecodeTemp(attr->val);
+    TempStr src = url::DecodeTemp(attr.val);
     Str img = epubDoc->GetImageData(src, pagePath);
     if (img) {
         EmitImage(img);
@@ -281,9 +281,9 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
         return;
     }
     Str img;
-    AttrInfo* attr = t->GetAttrByName(StrL("href"), HtmlNameMatch::Local);
+    AttrInfo attr = t->GetAttrByName(StrL("href"), HtmlNameMatch::Local);
     if (attr) {
-        TempStr src = url::DecodeTemp(attr->val);
+        TempStr src = url::DecodeTemp(attr.val);
         img = fb2Doc->GetImageData(src);
     }
     if (img) {
@@ -354,16 +354,16 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
         return;
     }
     bool needAlt = true;
-    AttrInfo* attr = t->GetAttrByName(StrL("src"));
+    AttrInfo attr = t->GetAttrByName(StrL("src"));
     if (attr) {
-        TempStr src = url::DecodeTemp(attr->val);
+        TempStr src = url::DecodeTemp(attr.val);
         Str img = htmlDoc->GetImageData(src);
         needAlt = len(img) == 0 || !EmitImage(img);
     }
     if (needAlt) {
         attr = t->GetAttrByName(StrL("alt"));
-        if (attr != nullptr) {
-            HandleText(str::Dup(textAllocator, attr->val));
+        if (attr) {
+            HandleText(str::Dup(textAllocator, attr.val));
         }
     }
 }
@@ -373,12 +373,12 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    AttrInfo* attr = t->GetAttrByName(StrL("rel"));
-    if (!attr || !attr->ValIs(StrL("stylesheet"))) {
+    AttrInfo attr = t->GetAttrByName(StrL("rel"));
+    if (!attr || !attr.ValIs(StrL("stylesheet"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr->ValIs(StrL("text/css"))) {
+    if (attr && !attr.ValIs(StrL("text/css"))) {
         return;
     }
     attr = t->GetAttrByName(StrL("href"));
@@ -386,7 +386,7 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    TempStr src = url::DecodeTemp(attr->val);
+    TempStr src = url::DecodeTemp(attr.val);
     Str data = htmlDoc->GetFileData(src);
     if (data) {
         ParseStyleSheet(data);

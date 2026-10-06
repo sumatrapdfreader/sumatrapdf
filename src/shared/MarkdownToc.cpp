@@ -262,9 +262,9 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
         if (tok->IsStartTag() && IsHtmlHeadingTag(tok->tag)) {
             headingLevel = (int)(tok->tag - Tag_H1) + 1;
             str::FreePtr(&headingId);
-            AttrInfo* id = tok->GetAttrByName(StrL("id"));
-            if (id && len(id->val) > 0) {
-                headingId = str::Dup(id->val);
+            AttrInfo id = tok->GetAttrByName(StrL("id"));
+            if (id && len(id.val) > 0) {
+                headingId = str::Dup(id.val);
             }
             text.Reset();
             continue;

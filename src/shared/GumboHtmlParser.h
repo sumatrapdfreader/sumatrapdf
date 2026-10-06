@@ -30,6 +30,7 @@ struct AttrInfo {
     Str name;
     Str val;
 
+    explicit operator bool() const { return name.s != nullptr; }
     bool NameIs(Str s, HtmlNameMatch match = HtmlNameMatch::Exact) const;
     bool ValIs(Str s) const;
 };
@@ -62,10 +63,7 @@ struct HtmlToken {
     const GumboNode* node = nullptr;
 
     bool NameIs(Str nameToFind, HtmlNameMatch match = HtmlNameMatch::Exact) const;
-    AttrInfo* GetAttrByName(Str name, HtmlNameMatch match = HtmlNameMatch::Exact);
-
-  private:
-    AttrInfo attrInfo;
+    AttrInfo GetAttrByName(Str name, HtmlNameMatch match = HtmlNameMatch::Exact);
 };
 
 class GumboHtmlParser {
