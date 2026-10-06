@@ -475,32 +475,25 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
     return hadOne;
 }
 
-// True for the non-Latin1 single-byte codepages where a ToC label made up
-// entirely of Latin-1 characters is almost certainly mis-encoded (see
-// FixChmTocEntitiesTemp). Excludes 1252 (Latin-1 is correct there) and the
-// multi-byte CJK codepages (single Latin-1 bytes don't reconstruct a DBCS
-// stream).
+// These single-byte codepages need Latin-entity repair; CP-1252 does not.
+// CJK multibyte codepages cannot be reconstructed from these entity bytes.
 static bool ChmTocNeedsEntityRemap(uint cp) {
     return cp == 874 || (cp >= 1250 && cp <= 1258 && cp != 1252);
 }
 
-// Map a codepoint (decoded by gumbo from a mis-authored Latin entity) back to
-// the single source-codepage byte it stands for. Returns -1 if it can't be a
-// single byte (then the label is left untouched).
+// Recover an entity's source byte, or -1 if the codepoint cannot represent one.
 static int ChmEntityByte(WCHAR c) {
     if (c <= 0xFF) {
         return (int)c; // Latin-1: codepoint == byte value
     }
-    // Đ/đ: some HTML Help Workshop versions emit &Dstrok;/&dstrok; (U+0110/0111)
-    // for the Latin-1 bytes 0xD0/0xF0 (Ð/ð)
+    // HTML Help Workshop sometimes encodes bytes 0xD0/0xF0 as &Dstrok;/&dstrok;.
     if (c == 0x0110) {
         return 0xD0;
     }
     if (c == 0x0111) {
         return 0xF0;
     }
-    // CP-1252 places a few chars (€ ‚ ƒ … Š Œ Ž ' ' " " – — Ÿ ...) above U+00FF
-    // at bytes 0x80-0x9F; recover those too
+    // Recover CP-1252's bytes 0x80-0x9F from their Unicode codepoints too.
     static const u16 cp1252High[32] = {0x20AC, 0,      0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021,
                                        0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0,      0x017D, 0,
                                        0,      0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
@@ -513,15 +506,8 @@ static int ChmEntityByte(WCHAR c) {
     return -1;
 }
 
-// `s` is utf8 with HTML entities already decoded by gumbo. Some .hhc ToCs
-// authored by HTML Help Workshop store non-Latin labels as Latin-1 named
-// entities -- e.g. the Cyrillic CP-1251 byte 0xCF ("П") written as &Iuml; (Ï,
-// U+00CF). After decoding we get Latin-1 codepoints whose low byte is the
-// original codepage byte. When the whole label is in the Latin-1 range and the
-// document's codepage isn't Latin (1252), reinterpret those bytes in the
-// codepage. Labels that decoded to real Unicode (codepoints > 0xFF, i.e. raw
-// non-Latin bytes already converted by SmartToUtf8Temp) are left untouched, as
-// are pure-ASCII labels (issue #842).
+// Recover bytes from Latin entities (e.g. CP-1251's 0xCF encoded as &Iuml;).
+// Keep ASCII and labels containing unrecoverable Unicode unchanged.
 static TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
     uint cp = (codepage == CP_ACP) ? GetACP() : codepage;
     if (len(s) == 0 || !ChmTocNeedsEntityRemap(cp)) {
@@ -546,8 +532,7 @@ static TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
     return SmartToUtf8Temp(ToStr(bytes), cp);
 }
 
-// Wraps the caller's visitor to repair Latin-1-entity-encoded ToC labels (see
-// FixChmTocEntitiesTemp) before forwarding them; urls/levels pass through.
+// Repair ToC labels before forwarding them; URLs and levels pass through.
 struct ChmTocEntityFixer : EbookTocVisitor {
     EbookTocVisitor* inner;
     uint codepage;
@@ -565,9 +550,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, ChmItemKind ki
     if (len(htmlData) == 0) {
         return false;
     }
-    // Convert to UTF-8 (handling UTF-8 BOM and the file's codepage) so gumbo's
-    // attribute values come out in a known encoding -- no per-attribute
-    // conversion needed in the visit functions.
+    // Convert once so Gumbo attributes need no separate codepage conversion.
     TempStr utf8 = SmartToUtf8Temp(htmlData, codepage);
     if (len(utf8) == 0) {
         return false;
@@ -577,8 +560,6 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, ChmItemKind ki
         return false;
     }
 
-    // repair Latin-1-entity-encoded labels (e.g. Cyrillic written as &Iuml;...)
-    // for non-Latin codepages, before they reach the caller's visitor (issue #842)
     ChmTocEntityFixer fixer(visitor, codepage);
 
     // Find <body>, then the first <ul> under it (DFS). <body> is optional.
