@@ -304,46 +304,11 @@ static bool PdfDarkModeStatsLookLikePaperTextBox(const PdfDarkModeImageSampleSta
            stats.satRatio < 0.20f;
 }
 
-bool PdfDarkModeImageLooksLikePhoto(fz_context* ctx, fz_image* image) {
-    return PdfDarkModeStatsLookLikePhoto(PdfDarkModeSampleImageStats(ctx, image));
-}
-
 bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, float pageCoverage) {
     return PdfDarkModeStatsLookLikeDarkArtwork(PdfDarkModeSampleImageStats(ctx, image), pageCoverage);
 }
 
-// Stricter pixel gate used by PdfDarkModeShouldPreserveEmbeddedImageRect.
-bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, float pageCoverage, int /*devW*/,
-                                            int /*devH*/) {
-    if (!ctx || !image) {
-        return false;
-    }
-    PdfDarkModeImageSampleStats stats = PdfDarkModeSampleImageStats(ctx, image);
-    if (PdfDarkModeStatsLookLikeFlatLayoutPanel(stats)) {
-        return false;
-    }
-    if (PdfDarkModeStatsLookLikeLayoutBackground(stats)) {
-        return false;
-    }
-    // artwork on a flat light backdrop: recolor so the backdrop follows the page
-    // instead of staying a bright block on it (#6088)
-    if (PdfDarkModeStatsLookLikeLightBackdrop(stats)) {
-        return false;
-    }
-    if (PdfDarkModeStatsLookLikeDarkArtwork(stats, pageCoverage)) {
-        return true;
-    }
-    if (PdfDarkModeStatsLookLikePhoto(stats)) {
-        if (pageCoverage < 0.14f && PdfDarkModeStatsLookLikePaperTextBox(stats)) {
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float pageCoverage, int /*devW*/,
-                                        int /*devH*/) {
+bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float pageCoverage) {
     if (!ctx || !image) {
         return false;
     }
@@ -396,5 +361,5 @@ bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image
     if (!image) {
         return false;
     }
-    return PdfDarkModeImageIsConfirmedArtwork(ctx, image, pageCoverage, devW, devH);
+    return PdfDarkModeImageIsConfirmedArtwork(ctx, image, pageCoverage);
 }

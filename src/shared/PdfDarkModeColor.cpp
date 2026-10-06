@@ -10,7 +10,6 @@ extern "C" {
 #include "Settings.h"
 #include "AppSettings.h"
 #include "Theme.h"
-#include "Translations.h"
 
 #include "PdfDarkMode.h"
 #include "PdfDarkModeInternal.h"
@@ -163,16 +162,6 @@ void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
     if (!str::EqI(gSettings->documentColorsFollowTheme, name)) {
         str::ReplaceWithCopy(&gSettings->documentColorsFollowTheme, name);
     }
-}
-
-const char* DocumentColorsFollowThemeDescription(DocumentColorsFollowTheme mode) {
-    if (mode == DocumentColorsFollowTheme::Smart) {
-        return TrN("Document colors follow theme: Smart (recolor text and background, not images)").s;
-    }
-    if (mode == DocumentColorsFollowTheme::Legacy) {
-        return TrN("Document colors follow theme: Legacy (recolor text, background and images)").s;
-    }
-    return TrN("Document colors follow theme: Off").s;
 }
 
 bool PdfDarkModeUsesObjectLevel() {

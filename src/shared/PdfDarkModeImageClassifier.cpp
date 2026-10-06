@@ -242,11 +242,6 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
     return true;
 }
 
-DarkImageAnalysis PdfDarkModeAnalyzeImage(fz_context* ctx, fz_image* image, float pageCoverage,
-                                          bool pageIsScannedHint) {
-    return PdfDarkModeAnalyzeImageCached(ctx, image, pageCoverage, pageIsScannedHint, nullptr);
-}
-
 DarkImageAnalysis PdfDarkModeAnalyzeImageCached(fz_context* ctx, fz_image* image, float pageCoverage,
                                                 bool pageIsScannedHint, DarkModeEngineCache* engineCache) {
     DarkImageAnalysis result;
@@ -271,8 +266,7 @@ DarkImageAnalysis PdfDarkModeAnalyzeImageCached(fz_context* ctx, fz_image* image
     result.kind =
         PdfDarkModeClassifyImageFeatures(result.features, pageCoverage, pageIsScannedHint, &result.confidence);
     DarkImagePolicy policy = PdfDarkModePolicyForImageKind(result.kind, false);
-    if (policy == DarkImagePolicy::AdaptiveDocument &&
-        PdfDarkModeImageShouldPreserveInLegacy(ctx, image, pageCoverage)) {
+    if (policy == DarkImagePolicy::AdaptiveDocument && PdfDarkModeImageIsConfirmedArtwork(ctx, image, pageCoverage)) {
         result.kind = DarkImageKind::Photo;
         result.confidence = 0.72f;
     }

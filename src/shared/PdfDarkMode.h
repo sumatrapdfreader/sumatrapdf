@@ -147,7 +147,6 @@ DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v);
 void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode);
 void SetDocumentColorsFollowThemePreview(DocumentColorsFollowTheme mode);
 void ClearDocumentColorsFollowThemePreview();
-const char* DocumentColorsFollowThemeDescription(DocumentColorsFollowTheme mode);
 DarkModeOptions PdfDarkModeCurrentOptions();
 u32 PdfDarkModeComputeOptionsHash();
 DarkModePalette PdfDarkModeBuildPalette();
@@ -169,7 +168,6 @@ bool PdfDarkModeShouldBlendLightBackground(const DarkImageAnalysis& analysis);
 void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysis& analysis,
                                const DarkModePalette& palette, float* outR, float* outG, float* outB);
 
-bool PdfDarkModeImageLooksLikePhoto(fz_context* ctx, fz_image* image);
 bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, float pageCoverage);
 bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, float pageCoverage);
 
@@ -180,14 +178,7 @@ RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight)
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH);
 
-bool PdfDarkModeImageShouldPreserveInLegacy(fz_context* ctx, fz_image* image, float pageCoverage = 0.f, int devW = 0,
-                                            int devH = 0);
-
-bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float pageCoverage, int devW, int devH);
-
-// Phase 3: fz_image pixel analysis (page-independent; safe for tile-free classification).
-DarkImageAnalysis PdfDarkModeAnalyzeImage(fz_context* ctx, fz_image* image, float pageCoverage,
-                                          bool pageIsScannedHint = false);
+bool PdfDarkModeImageIsConfirmedArtwork(fz_context* ctx, fz_image* image, float pageCoverage);
 
 DarkImageKind PdfDarkModeClassifyImageFeatures(const DarkImageFeatures& features, float pageCoverage,
                                                bool pageIsScannedHint, float* outConfidence);
