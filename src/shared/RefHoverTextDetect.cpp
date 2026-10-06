@@ -546,7 +546,6 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
             }
             out[b + 1] = v;
         }
-        int chosenS = -1, chosenE = -1;
         int s = 0;
         while (s < cnt) {
             int e = s;
@@ -560,24 +559,17 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
             int runLo = coords[out[s]].x;
             int runHi = coords[out[e]].x + coords[out[e]].dx;
             if (runHi >= refLo && runLo <= refHi) {
-                chosenS = s;
-                chosenE = e;
-                break;
+                int n = e - s + 1;
+                memmove(out, out + s, n * sizeof(*out));
+                *segLo = coords[out[0]].x;
+                *segHi = coords[out[n - 1]].x + coords[out[n - 1]].dx;
+                return n;
             }
             s = e + 1;
         }
-        if (chosenS < 0) {
-            *segLo = 0;
-            *segHi = -1;
-            return 0;
-        }
-        int n = chosenE - chosenS + 1;
-        for (int t = 0; t < n; t++) {
-            out[t] = out[chosenS + t];
-        }
-        *segLo = coords[out[0]].x;
-        *segHi = coords[out[n - 1]].x + coords[out[n - 1]].dx;
-        return n;
+        *segLo = 0;
+        *segHi = -1;
+        return 0;
     };
 
     constexpr int kSegCap = 512;
@@ -678,15 +670,8 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
             val = std::min(val, 99999); // guard against pathological runs
             k++;
         }
-        int end = k - 1;
-        int dist;
-        if (cursorPos < start) {
-            dist = start - cursorPos;
-        } else if (cursorPos > end) {
-            dist = cursorPos - end;
-        } else {
-            dist = 0;
-        }
+        int nearest = std::min(std::max(cursorPos, start), k - 1);
+        int dist = abs(cursorPos - nearest);
         if (val >= 1 && val <= 9999 && dist < bestTokDist) {
             bestTokDist = dist;
             bestNum = val;
