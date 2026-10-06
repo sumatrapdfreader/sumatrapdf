@@ -153,8 +153,10 @@ GumboOptions GumboMakeOptions() {
     return opts;
 }
 
+constexpr int kMaxHtmlEntityRune = 0x10ffff;
+
 static int ValidHtmlEntityRuneOrFallback(int rune) {
-    if (rune <= 0 || rune > 0x10ffff || (rune >= 0xd800 && rune <= 0xdfff)) {
+    if (rune <= 0 || rune > kMaxHtmlEntityRune || (rune >= 0xd800 && rune <= 0xdfff)) {
         return '?';
     }
     return rune;
@@ -174,35 +176,27 @@ static Str ParseHtmlNumericEntity(Str str, int& rune) {
     }
 
     int codepoint = 0;
-    bool any = false;
-    bool overflow = false;
+    int start = off;
     while (off < str.len) {
-        char c = str.s[off];
-        int digit = -1;
-        if (base == 16) {
-            digit = str::HexDigitVal(c);
-        } else if (c >= '0' && c <= '9') {
-            digit = (int)(c - '0');
-        }
+        int digit = str::HexDigitVal(str.s[off]);
         if (digit < 0 || digit >= base) {
             break;
         }
-        any = true;
-        if (codepoint > (0x10ffff - digit) / base) {
-            overflow = true;
-        } else if (!overflow) {
+        if (codepoint < 0 || codepoint > (kMaxHtmlEntityRune - digit) / base) {
+            codepoint = -1;
+        } else {
             codepoint = (codepoint * base) + digit;
         }
         off++;
     }
-    if (!any) {
+    if (off == start) {
         return {};
     }
     if (off < str.len && str.s[off] == ';') {
         off++;
     }
 
-    rune = ValidHtmlEntityRuneOrFallback(overflow ? -1 : codepoint);
+    rune = ValidHtmlEntityRuneOrFallback(codepoint);
     return Str(str.s + off, str.len - off);
 }
 
