@@ -533,9 +533,6 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     if (!pageNo) {
         pageNo = findPage;
     }
-    // According to my analysis of 69912675c766b6325f38036913dcf0505a00be36, when we
-    // get here with pageNo != 0 the findText has already been set so I didn't add
-    // a findText = engine->GetTextForPage(findPage) here.
     findPage = pageNo;
 
     int found = -1;
@@ -618,36 +615,16 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
             continue;
         }
 
-        Reset();
-
-        bool abortSearch = false;
-        pageText = GetSearchPageText(engine, pageNo, &pageTextLen, progressCb, &abortSearch);
-        if (abortSearch) {
+        PageSearchResult found = SearchPage(pageNo);
+        if (found == PageSearchResult::Canceled) {
             break;
         }
-        findIndex = pageTextLen;
-        if (len(pageText) == 0) {
-            pageNo += next;
-            continue;
-        }
-        if (forward) {
-            findIndex = 0;
-        }
-        PageAndOffset r;
-        if (!FindTextInPage(pageNo, &r)) {
-            pagesToSkip[pageNo - 1] = true;
-            pageNo += next;
-            continue;
-        }
-        if (forward) {
-            if (findPage != r.page) {
-                findPage = r.page;
-                pageText = GetSearchPageText(engine, findPage, &pageTextLen, progressCb, &abortSearch);
-                if (abortSearch) {
-                    break;
-                }
+        if (found != PageSearchResult::Found) {
+            if (found == PageSearchResult::NotFound) {
+                pagesToSkip[pageNo - 1] = true;
             }
-            findIndex = r.offset;
+            pageNo += next;
+            continue;
         }
         return true;
     }
@@ -667,42 +644,43 @@ Vec<TextSel>* TextSearch::FindFirst(int page, Str text) {
     return nullptr;
 }
 
-// search only `pageNo` (no wrapping to other pages), mirroring the per-page step
-// inside FindStartingAtPage. Used for page-constrained search (issue #3085)
-// like FindFirst but searches only the given page (issue #3085)
-Vec<TextSel>* TextSearch::FindFirstOnPage(int pageNo, Str text) {
-    SetText(text);
-    if (len(findText) == 0 || pageNo < 1 || pageNo > nPages) {
-        return nullptr;
-    }
+TextSearch::PageSearchResult TextSearch::SearchPage(int pageNo) {
     Reset();
     bool abortSearch = false;
     pageText = GetSearchPageText(engine, pageNo, &pageTextLen, progressCb, &abortSearch);
     if (abortSearch) {
-        return nullptr;
+        return PageSearchResult::Canceled;
     }
     findIndex = pageTextLen;
     if (len(pageText) == 0) {
-        return nullptr;
+        return PageSearchResult::Empty;
     }
     if (forward) {
         findIndex = 0;
     }
     PageAndOffset r;
     if (!FindTextInPage(pageNo, &r)) {
-        return nullptr;
+        return PageSearchResult::NotFound;
     }
     if (forward) {
         if (findPage != r.page) {
             findPage = r.page;
             pageText = GetSearchPageText(engine, findPage, &pageTextLen, progressCb, &abortSearch);
             if (abortSearch) {
-                return nullptr;
+                return PageSearchResult::Canceled;
             }
         }
         findIndex = r.offset;
     }
-    return &result;
+    return PageSearchResult::Found;
+}
+
+Vec<TextSel>* TextSearch::FindFirstOnPage(int pageNo, Str text) {
+    SetText(text);
+    if (len(findText) == 0 || pageNo < 1 || pageNo > nPages) {
+        return nullptr;
+    }
+    return SearchPage(pageNo) == PageSearchResult::Found ? &result : nullptr;
 }
 
 Vec<TextSel>* TextSearch::FindNext() {

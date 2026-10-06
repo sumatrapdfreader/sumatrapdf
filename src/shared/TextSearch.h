@@ -69,4 +69,13 @@ struct TextSearch : public TextSelection {
     Vec<bool> pagesToSkip;
     // empty = all pages. Otherwise pageAllowed[i] is page i+1 (issue #5694).
     Vec<bool> pageAllowed;
+
+  private:
+    enum class PageSearchResult {
+        Canceled,
+        Empty,
+        NotFound,
+        Found
+    };
+    PageSearchResult SearchPage(int pageNo);
 };
