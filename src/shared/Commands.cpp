@@ -5,12 +5,12 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
-// ng: Notifications.h is win32 UI (step 6); this is all Commands.cpp needs
-void MaybeDelayedWarningNotification(Str msg);
 #include "ShortcutParse.h"
 #include "Accelerators.h"
 #include "AppSettings.h"
 #include "Commands.h"
+
+void MaybeDelayedWarningNotification(Str msg);
 
 // @gen-start cmd-c
 // clang-format off
@@ -1061,6 +1061,9 @@ static const ArgSpec argSpecs[] = {
     {CmdTogglePresentationMode, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdToggleBookmarks, kCmdArgState, CommandArg::Type::Bool},        // default
     {CmdToggleTableOfContents, kCmdArgState, CommandArg::Type::Bool},  // default
+#ifndef NO_THUMBNAIL_STATE_ARG
+    {CmdToggleThumbnails, kCmdArgState, CommandArg::Type::Bool}, // default
+#endif
 
     // default string is the setting name, e.g. [CmdToggleBoolSetting Fullscreen.ShowMenubar]
     {CmdToggleBoolSetting, kCmdArgName, CommandArg::Type::String}, // default

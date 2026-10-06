@@ -1147,6 +1147,9 @@ export const targets: Target[] = [
     callcap: true,
     sources: appSources,
     defines: ["LIBARCHIVE_STATIC", "CMARK_GFM_STATIC_DEFINE", "DISABLE_DOCUMENT_RESTRICTIONS"],
+    perSource: [
+      { glob: "src/shared/Commands.cpp", flags: ["-DNO_THUMBNAIL_STATE_ARG"], msvcFlags: ["/DNO_THUMBNAIL_STATE_ARG"] },
+    ],
     // MarkdownToc.cpp renders markdown with cmark-gfm (linked in through mupdf)
     includes: [
       "src/ng",

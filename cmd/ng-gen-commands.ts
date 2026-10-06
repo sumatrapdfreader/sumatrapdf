@@ -482,7 +482,7 @@ function replaceBetweenMarkers(content: string, startMarker: string, endMarker: 
 export function main() {
   const rootDir = join(import.meta.dir, "..");
   const headerPath = join(rootDir, "src", "shared", "Commands.h");
-  const cppPath = join(rootDir, "src", "ng", "Commands.cpp");
+  const cppPath = join(rootDir, "src", "shared", "Commands.cpp");
 
   let headerContent = readFileSync(headerPath, "utf-8");
   let cppContent = readFileSync(cppPath, "utf-8");
@@ -495,7 +495,7 @@ export function main() {
   const arraysCode = generateArrays();
   cppContent = replaceBetweenMarkers(cppContent, "// @gen-start cmd-c", "// @gen-end cmd-c", arraysCode);
   writeFileSync(cppPath, cppContent, "utf-8");
-  console.log("Generated arrays in src/Commands.cpp");
+  console.log("Generated arrays in src/shared/Commands.cpp");
 }
 
 if (import.meta.main) {

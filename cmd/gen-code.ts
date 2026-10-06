@@ -12,7 +12,7 @@ import { clangFormatFiles } from "./util";
 const generatedCppFiles = [
   "src/Flags.cpp",
   "src/shared/Commands.h",
-  "src/Commands.cpp",
+  "src/shared/Commands.cpp",
   "src/Accelerators.cpp",
   "src/shared/EbookDoc.cpp",
   "src/PdfCreator.cpp",

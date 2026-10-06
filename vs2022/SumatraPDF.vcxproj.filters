@@ -695,9 +695,6 @@
     <ClCompile Include="..\src\CommandPalette.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Commands.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\CustomZoomDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1161,6 +1158,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChmFile.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\Commands.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\DisplayMode.cpp">

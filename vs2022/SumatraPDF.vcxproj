@@ -1632,7 +1632,6 @@
     <ClCompile Include="..\src\ChmModel.cpp" />
     <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
-    <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CustomZoomDialog.cpp" />
     <ClCompile Include="..\src\DarkMode.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
@@ -2146,6 +2145,7 @@
     <ClCompile Include="..\src\shared\AvifReader.cpp" />
     <ClCompile Include="..\src\shared\ChmDump.cpp" />
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
+    <ClCompile Include="..\src\shared\Commands.cpp" />
     <ClCompile Include="..\src\shared\DisplayMode.cpp" />
     <ClCompile Include="..\src\shared\DocController.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
