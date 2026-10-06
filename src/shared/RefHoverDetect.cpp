@@ -22,23 +22,6 @@ static bool IsAsciiAlnum(WCHAR c) {
     return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9');
 }
 
-// Locale-independent lowercasing. The process runs in the "C" locale where
-// towlower() only folds ASCII, so accented dictionary words ("sección",
-// "capítulo") would never match all-caps headings ("SECCIÓN 2").
-static WCHAR FoldCaseW(WCHAR c) {
-#if OS_WIN
-    return (WCHAR)(uintptr_t)CharLowerW((LPWSTR)(uintptr_t)c);
-#else
-    if (c >= L'A' && c <= L'Z') {
-        return c + 32;
-    }
-    if (c >= 0x00C0 && c <= 0x00DE && c != 0x00D7) {
-        return c + 32;
-    }
-    return (WCHAR)towlower(c);
-#endif
-}
-
 // Lowercase NFC words used in numbered captions and heading prefixes.
 // clang-format off
 static SeqStrings gCaptionWords =
@@ -87,7 +70,7 @@ static bool MatchWordAt(WStr text, int idx, WStr w, LabelKind kind) {
         return false;
     }
     for (int j = 0; j < n; j++) {
-        WCHAR c = FoldCaseW(text.s[idx + j]);
+        WCHAR c = WCharToLower(text.s[idx + j]);
         if (c != w.s[j]) {
             return false;
         }
