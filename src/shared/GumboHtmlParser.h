@@ -106,7 +106,6 @@ class GumboHtmlParser {
 
     void SetCurrPosOff(ptrdiff_t off);
     size_t Len() const { return (size_t)html.len; }
-    Str Html() const { return html; }
     int PosOf(Str p) const;
 
     HtmlToken* Next();
