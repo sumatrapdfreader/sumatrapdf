@@ -1358,16 +1358,14 @@ bool HtmlDoc::Load() {
             AttrInfo attrName = tok->GetAttrByName(StrL("name"));
             AttrInfo attrValue = tok->GetAttrByName(StrL("content"));
             if (!attrName || !attrValue) {
-                /* ignore this tag */;
-            } else if (attrName.ValIs(StrL("author"))) {
-                TempStr val = ResolveHtmlEntitiesTemp(attrValue.val);
-                AddPropOwned(props, DocProp::Author, val);
-            } else if (attrName.ValIs(StrL("date"))) {
-                TempStr val = ResolveHtmlEntitiesTemp(attrValue.val);
-                AddPropOwned(props, DocProp::CreationDate, val);
-            } else if (attrName.ValIs(StrL("copyright"))) {
-                TempStr val = ResolveHtmlEntitiesTemp(attrValue.val);
-                AddPropOwned(props, DocProp::Copyright, val);
+                continue;
+            }
+            DocProp prop = attrName.ValIs(StrL("author"))      ? DocProp::Author
+                           : attrName.ValIs(StrL("date"))      ? DocProp::CreationDate
+                           : attrName.ValIs(StrL("copyright")) ? DocProp::Copyright
+                                                               : DocProp::None;
+            if (prop != DocProp::None) {
+                AddPropOwned(props, prop, ResolveHtmlEntitiesTemp(attrValue.val));
             }
         }
     }
