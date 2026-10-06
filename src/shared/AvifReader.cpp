@@ -84,16 +84,7 @@ Pixmap* PixmapFromAvifData(Str d) {
         int dy = (int)img->height;
         px = AllocPixmap(dx, dy, PixmapFormat::BGRA8);
         if (px) {
-            int srcStride = img->stride;
-            int dstStride = px->stride;
-            u8* src = img->data;
-            u8* dst = px->data;
-            int rowBytes = dx * 4;
-            for (int y = 0; y < dy; y++) {
-                memcpy(dst, src, (size_t)rowBytes);
-                src += srcStride;
-                dst += dstStride;
-            }
+            CopyPixmapRows(px, img->data, img->stride);
         }
     }
 

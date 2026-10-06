@@ -9,6 +9,13 @@
 
 #include "base/Pixmap.h"
 
+void CopyPixmapRows(Pixmap* dst, const u8* src, int srcStride) {
+    size_t rowBytes = (size_t)dst->width * PixmapBytesPerPixel(dst->format);
+    for (int y = 0; y < dst->height; y++) {
+        memcpy(dst->data + (size_t)y * dst->stride, src + (size_t)y * srcStride, rowBytes);
+    }
+}
+
 static void AppendPixmapPixelBGR(str::Builder& data, const Pixmap* pixmap, int x, int y) {
     const u8* src = pixmap->data + ((size_t)y * pixmap->stride) + ((size_t)x * PixmapBytesPerPixel(pixmap->format));
     if (pixmap->format == PixmapFormat::RGBA8) {

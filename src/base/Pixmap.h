@@ -58,6 +58,7 @@ struct Pixmap {
 #endif
 };
 
+void CopyPixmapRows(Pixmap* dst, const u8* src, int srcStride);
 Str PixmapToBmpFormat(const Pixmap* pixmap);
 Pixmap* GetClipboardImageAsPixmap();
 Pixmap* PixmapToBgr(Pixmap* p);

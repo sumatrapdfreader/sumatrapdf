@@ -38,20 +38,9 @@ Pixmap* PixmapFromData(Str d) {
     jxl_image* img = jxl_decode(ctx, (const u8*)d.s, (size_t)d.len, JXLDEC_FORMAT_RGBA32);
     Pixmap* px = nullptr;
     if (img && img->data && img->width > 0 && img->height > 0) {
-        int w = img->width;
-        int h = img->height;
-        px = AllocPixmap(w, h, PixmapFormat::BGRA8);
+        px = AllocPixmap(img->width, img->height, PixmapFormat::BGRA8);
         if (px) {
-            int srcStride = img->stride;
-            int dstStride = px->stride;
-            int rowBytes = w * 4;
-            u8* src = img->data;
-            u8* dst = px->data;
-            for (int y = 0; y < h; y++) {
-                memcpy(dst, src, (size_t)rowBytes);
-                src += srcStride;
-                dst += dstStride;
-            }
+            CopyPixmapRows(px, img->data, img->stride);
         }
     }
     if (img) {
