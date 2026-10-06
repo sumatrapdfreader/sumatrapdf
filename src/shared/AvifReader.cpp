@@ -51,16 +51,16 @@ Size AvifSizeFromData(Str d) {
     if (!ctx) {
         return res;
     }
+    AutoCall freeCtx(heic_ctx_free, ctx);
     heic_doc* doc = heic_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
+    AutoCall closeDoc(heic_doc_close, doc);
     if (doc) {
         heic_image_info info{};
         if (heic_doc_info(doc, &info) == 0) {
             res.dx = (int)info.width;
             res.dy = (int)info.height;
         }
-        heic_doc_close(doc);
     }
-    heic_ctx_free(ctx);
     return res;
 }
 
@@ -71,11 +71,12 @@ Pixmap* PixmapFromAvifData(Str d) {
     if (!ctx) {
         return nullptr;
     }
+    AutoCall freeCtx(heic_ctx_free, ctx);
     heic_doc* doc = heic_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
     if (!doc) {
-        heic_ctx_free(ctx);
         return nullptr;
     }
+    AutoCall closeDoc(heic_doc_close, doc);
 
     // decode straight to BGRA for PixmapFormat::BGRA8
     heic_image* img = heic_doc_decode(doc, HEIC_FORMAT_BGRA);
@@ -113,8 +114,6 @@ Pixmap* PixmapFromAvifData(Str d) {
         }
     }
 
-    heic_doc_close(doc);
-    heic_ctx_free(ctx);
     return px;
 }
 
@@ -127,33 +126,31 @@ bool AvifExifBlobFromData(Str d, u8** outData, size_t* outSize) {
     if (!ctx) {
         return false;
     }
+    AutoCall freeCtx(heic_ctx_free, ctx);
     heic_doc* doc = heic_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
     if (!doc) {
-        heic_ctx_free(ctx);
         return false;
     }
+    AutoCall closeDoc(heic_doc_close, doc);
 
     // TIFF payload; HEIF 4-byte prefix already stripped by heic_doc_exif.
     // heic allocates with a size header (must free via heic_free); copy out so
     // callers can free() with the ordinary allocator.
     u8* exif = nullptr;
     size_t n = 0;
-    bool ok = heic_doc_exif(doc, &exif, &n) != 0 && exif && n > 0;
-    if (ok) {
-        u8* copy = (u8*)malloc(n);
-        if (copy) {
-            memcpy(copy, exif, n);
-            *outData = copy;
-            *outSize = n;
-        } else {
-            ok = false;
-        }
-        heic_free(ctx, exif);
+    if (heic_doc_exif(doc, &exif, &n) == 0 || !exif || n == 0) {
+        return false;
     }
+    AutoCall freeExif(heic_free, ctx, (void*)exif);
 
-    heic_doc_close(doc);
-    heic_ctx_free(ctx);
-    return ok;
+    u8* copy = (u8*)malloc(n);
+    if (!copy) {
+        return false;
+    }
+    memcpy(copy, exif, n);
+    *outData = copy;
+    *outSize = n;
+    return true;
 }
 #else
 Size AvifSizeFromData(Str) {
