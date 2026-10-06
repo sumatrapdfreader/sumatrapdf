@@ -1066,31 +1066,22 @@ StyleRule* HtmlFormatter::FindStyleRule(HtmlTag tag, Str clazz) {
 
 StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
     StyleRule rule;
-    // get style rules ordered by specificity
-    StyleRule* prevRule = FindStyleRule(Tag_Body, Str());
-    if (prevRule) {
-        rule.Merge(*prevRule);
-    }
-    prevRule = FindStyleRule(kTagAny, Str());
-    if (prevRule) {
-        rule.Merge(*prevRule);
-    }
-    prevRule = FindStyleRule(t->tag, Str());
-    if (prevRule) {
-        rule.Merge(*prevRule);
-    }
+    auto mergeRule = [&](HtmlTag tag, Str clazz) {
+        if (StyleRule* prev = FindStyleRule(tag, clazz)) {
+            rule.Merge(*prev);
+        }
+    };
+
+    // Apply rules in specificity order, ending with the inline style.
+    mergeRule(Tag_Body, {});
+    mergeRule(kTagAny, {});
+    mergeRule(t->tag, {});
+
     // TODO: support multiple class names
     AttrInfo attr = t->GetAttrByName(StrL("class"));
     if (attr) {
-        Str clazz = attr.val;
-        prevRule = FindStyleRule(kTagAny, clazz);
-        if (prevRule) {
-            rule.Merge(*prevRule);
-        }
-        prevRule = FindStyleRule(t->tag, clazz);
-        if (prevRule) {
-            rule.Merge(*prevRule);
-        }
+        mergeRule(kTagAny, attr.val);
+        mergeRule(t->tag, attr.val);
     }
     attr = t->GetAttrByName(StrL("style"));
     if (attr) {
