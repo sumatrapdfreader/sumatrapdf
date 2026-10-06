@@ -37,6 +37,16 @@ static T* LoadEbook(Str path) {
     return nullptr;
 }
 
+static Str TakeArchiveData(Archive* archive, int fileId) {
+    auto* fi = archive->GetFileDataById(fileId);
+    if (!fi || !fi->data) {
+        return {};
+    }
+    Str res = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
+    fi->data = nullptr;
+    return res;
+}
+
 static void SkipXmlPIAttrName(Str s, int& off) {
     while (off < s.len) {
         char c = s.s[off];
@@ -659,69 +669,40 @@ Str EpubDoc::GetHtmlData() const {
 Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
     ScopedMutex scope(&zipAccess);
 
-    if (len(pagePath) == 0) {
-        ReportIf(true);
-        // if we're reparsing, we might not have pagePath, which is needed to
-        // build the exact url so try to find a partial match
-        // TODO: the correct approach would be to extend reparseIdx into a
-        // struct ReparseData, which would include pagePath and all other
-        // styling related state (such as nextPageStyle, listDepth, etc. including
-        // format specific state such as hiddenDepth and titleCount) and store it
-        // in every HtmlPage, but this should work well enough for now
-        for (ImageData& img : images) {
-            if (!str::EndsWithI(img.fileName, fileName)) {
-                continue;
-            }
-            if (len(img.base) == 0) {
-                auto* fi = archive->GetFileDataById(img.fileId);
-                if (fi && fi->data) {
-                    img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
-                    fi->data = nullptr;
-                }
-            }
-            if (len(img.base) > 0) {
-                return img.base;
-            }
-        }
-        return {};
-    }
-
-    TempStr url = NormalizeURLTemp(fileName, pagePath);
-    // some EPUB producers use wrong path separators
-    if (str::ContainsChar(url, '\\')) {
+    bool partial = len(pagePath) == 0;
+    ReportIf(partial);
+    TempStr url;
+    if (!partial) {
+        url = NormalizeURLTemp(fileName, pagePath);
+        // Some EPUB producers use Windows path separators.
         str::TransCharsInPlace(url, StrL("\\"), StrL("/"));
     }
     for (ImageData& img : images) {
-        if (!str::Eq(img.fileName, url)) {
+        bool matches = partial ? str::EndsWithI(img.fileName, fileName) : str::Eq(img.fileName, url);
+        if (!matches) {
             continue;
         }
         if (len(img.base) == 0) {
-            auto* fi = archive->GetFileDataById(img.fileId);
-            if (fi && fi->data) {
-                img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
-                fi->data = nullptr;
-            }
+            img.base = TakeArchiveData(archive, img.fileId);
         }
         if (len(img.base) > 0) {
             return img.base;
         }
     }
-
-    // try to also load images which aren't registered in the manifest
-    ImageData data;
-    data.fileId = archive->GetFileId(url);
-    if (data.fileId >= 0) {
-        auto* fi = archive->GetFileDataById(data.fileId);
-        if (fi && fi->data) {
-            data.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
-            fi->data = nullptr;
-            data.fileName = str::Dup(url);
-            VecAppend(images, data);
-            return VecLast(images).base;
-        }
+    if (partial) {
+        return {};
     }
 
-    return {};
+    // Images need not be registered in the manifest.
+    ImageData data;
+    data.fileId = archive->GetFileId(url);
+    data.base = TakeArchiveData(archive, data.fileId);
+    if (!data.base.s) {
+        return {};
+    }
+    data.fileName = str::Dup(url);
+    VecAppend(images, data);
+    return VecLast(images).base;
 }
 
 Str EpubDoc::GetFileData(Str relPath, Str pagePath) {
@@ -731,15 +712,8 @@ Str EpubDoc::GetFileData(Str relPath, Str pagePath) {
     }
 
     ScopedMutex scope(&zipAccess);
-
     TempStr url = NormalizeURLTemp(relPath, pagePath);
-    auto* fi = archive->GetFileDataByName(url);
-    if (!fi || !fi->data) {
-        return {};
-    }
-    Str res = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
-    fi->data = nullptr;
-    return res;
+    return TakeArchiveData(archive, archive->GetFileId(url));
 }
 
 TempStr EpubDoc::GetPropertyTemp(DocProp prop) const {
@@ -1008,16 +982,6 @@ Fb2Doc::~Fb2Doc() {
     str::Free(fileName);
 }
 
-static Str takeFileData(Archive* archive, int fileId) {
-    auto* fi = archive->GetFileDataById(fileId);
-    if (!fi || !fi->data) {
-        return {};
-    }
-    Str res = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
-    fi->data = nullptr;
-    return res;
-}
-
 static Str ReadFb2Archive(Fb2Doc* doc, Archive* archive) {
     AutoDelete delArchive(archive);
     doc->isZipped = true;
@@ -1026,14 +990,14 @@ static Str ReadFb2Archive(Fb2Doc* doc, Archive* archive) {
         return {};
     }
     if (len(fileInfos) == 1) {
-        return takeFileData(archive, 0);
+        return TakeArchiveData(archive, 0);
     }
 
     // Multi-entry archives contain one FB2 and optional URL shortcuts.
     Str data;
     for (auto* info : fileInfos) {
         if (str::EndsWithI(info->name, StrL(".fb2")) && len(data) == 0) {
-            data = takeFileData(archive, info->fileId);
+            data = TakeArchiveData(archive, info->fileId);
         } else if (!str::EndsWithI(info->name, StrL(".url"))) {
             str::Free(data);
             return {};
