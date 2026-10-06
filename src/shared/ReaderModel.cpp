@@ -51,43 +51,35 @@ ReaderModel* ReaderModel::Create(Str path, PasswordUI* pwdUI) {
         return nullptr;
     }
 
-    auto* model = new ReaderModel();
-    model->engine = engine;
-    return model;
+    return new ReaderModel(engine);
 }
 
 ReaderModel::~ReaderModel() {
-    if (engine) {
-        engine->Release();
-        engine = nullptr;
-    }
+    engine->Release();
 }
 
 Str ReaderModel::FilePath() const {
-    return engine ? engine->FilePath() : Str{};
+    return engine->FilePath();
 }
 
 int ReaderModel::PageCount() const {
-    return engine ? engine->PageCount() : 0;
+    return engine->PageCount();
 }
 
 RectF ReaderModel::PageMediabox(int pageNo) const {
-    if (!engine || pageNo < 1 || pageNo > engine->PageCount()) {
+    if (pageNo < 1 || pageNo > engine->PageCount()) {
         return {};
     }
     return engine->PageMediabox(pageNo);
 }
 
 float ReaderModel::FileDPI() const {
-    if (!engine) {
-        return 96.0f;
-    }
     float dpi = engine->GetFileDPI();
     return dpi > 0 ? dpi : 96.0f;
 }
 
 bool ReaderModel::Layout(const DocumentLayoutParams& params, DocumentLayout* layout) const {
-    if (!engine || !layout) {
+    if (!layout) {
         return false;
     }
     int pageCount = engine->PageCount();
@@ -103,19 +95,8 @@ bool ReaderModel::Layout(const DocumentLayoutParams& params, DocumentLayout* lay
     return true;
 }
 
-Pixmap* ReaderModel::RenderPage(int pageNo, float zoom, int rotation) const {
-    if (!engine || pageNo < 1 || pageNo > engine->PageCount()) {
-        return nullptr;
-    }
-    if (zoom <= 0) {
-        zoom = 1.0f;
-    }
-    RenderPageArgs args(pageNo, zoom, rotation);
-    return engine->RenderPage(args);
-}
-
 Pixmap* ReaderModel::RenderPageForPrint(int pageNo, float zoom, int rotation) const {
-    if (!engine || pageNo < 1 || pageNo > engine->PageCount()) {
+    if (pageNo < 1 || pageNo > engine->PageCount()) {
         return nullptr;
     }
     if (zoom <= 0) {

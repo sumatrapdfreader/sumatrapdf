@@ -7,12 +7,7 @@ class EngineBase;
 struct PasswordUI;
 struct Pixmap;
 
-struct ReaderModel {
-    EngineBase* engine = nullptr;
-
-    ReaderModel() = default;
-    ReaderModel(const ReaderModel&) = delete;
-    ReaderModel& operator=(const ReaderModel&) = delete;
+struct ReaderModel : NonCopyable {
     ~ReaderModel();
 
     static ReaderModel* Create(Str path, PasswordUI* pwdUI = nullptr);
@@ -22,7 +17,10 @@ struct ReaderModel {
     RectF PageMediabox(int pageNo) const;
     float FileDPI() const;
     bool Layout(const DocumentLayoutParams& params, DocumentLayout* layout) const;
-    Pixmap* RenderPage(int pageNo, float zoom, int rotation) const;
     Pixmap* RenderPageForPrint(int pageNo, float zoom, int rotation) const;
     EngineBase* GetEngine() const;
+
+  private:
+    explicit ReaderModel(EngineBase* engine) : engine(engine) {}
+    EngineBase* engine;
 };
