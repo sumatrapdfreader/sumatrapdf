@@ -1425,25 +1425,15 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
         type = argSpecs[i].type;
         break;
     }
-    if (len(rest) == 0) {
-        if (type == CommandArg::Type::Bool) {
-            // name of bool arg followed by nothing is true
-            *argsInOut = {};
-            auto* arg = NewArg(type, argName);
-            arg->boolVal = true;
-            return arg;
-        }
-    } else if (rest.s[0] == ' ') {
-        if (type == CommandArg::Type::Bool) {
-            // name of bool arg followed by nothing is true
-            str::TrimChar(rest, ' ');
-            *argsInOut = rest;
-            auto* arg = NewArg(type, argName);
-            arg->boolVal = true;
-            return arg;
-        }
+    if (len(rest) == 0 || rest.s[0] == ' ') {
         valStart = rest;
         str::TrimChar(valStart, ' ');
+        if (type == CommandArg::Type::Bool) {
+            *argsInOut = len(rest) == 0 ? Str{} : valStart;
+            auto* arg = NewArg(type, argName);
+            arg->boolVal = true;
+            return arg;
+        }
     } else if (rest.len >= 2 && rest.s[0] == ':' && rest.s[1] == ' ') {
         valStart = Str(rest.s + 1, rest.len - 1);
         str::TrimChar(valStart, ' ');
