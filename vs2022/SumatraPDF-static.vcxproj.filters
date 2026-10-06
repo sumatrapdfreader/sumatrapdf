@@ -261,9 +261,6 @@
     <ClInclude Include="..\src\OverlayScrollbar.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PagePosition.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\PageRenderService.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -505,6 +502,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\MobiDoc.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\PagePosition.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\PageRenderPolicy.h">
