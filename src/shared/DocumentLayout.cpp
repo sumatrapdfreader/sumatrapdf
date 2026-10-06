@@ -276,15 +276,13 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
     int nRows = single ? pageCount : len(rows);
     for (int ri = 0; ri < nRows; ri++) {
         FacingRow row = single ? FacingRow{ri + 1, ri + 1, false} : rows[ri];
+        if (!layout.GetPage(row.firstPage)->isShown) {
+            continue;
+        }
         int rowMaxPageDy = 0;
-        bool anyShown = false;
         bool cover = row.firstPage == row.lastPage && IsBookView(params.displayMode) && row.firstPage == 1;
         for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
             DocumentLayoutPage* page = layout.GetPage(pageNo);
-            if (!page->isShown) {
-                continue;
-            }
-            anyShown = true;
             SetPageDisplaySize(page, params.rotation, currPosY);
             rowMaxPageDy = single ? page->pos.dy : std::max(rowMaxPageDy, page->pos.dy);
             if (single || row.isSpread) {
@@ -294,9 +292,6 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
                 ReportIf(col >= 2);
                 columnMaxWidth[col] = std::max(columnMaxWidth[col], page->pos.dx);
             }
-        }
-        if (!anyShown) {
-            continue;
         }
         currPosY += rowMaxPageDy + params.pageSpacing.dy;
     }
@@ -322,13 +317,13 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
 
     for (int ri = 0; ri < nRows; ri++) {
         FacingRow row = single ? FacingRow{ri + 1, ri + 1, false} : rows[ri];
+        if (!layout.GetPage(row.firstPage)->isShown) {
+            continue;
+        }
         bool cover = row.firstPage == row.lastPage && IsBookView(params.displayMode) && row.firstPage == 1;
         int pageOffX = offX + params.windowMargin.left;
         for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
             DocumentLayoutPage* page = layout.GetPage(pageNo);
-            if (!page->isShown) {
-                continue;
-            }
             if (single || row.isSpread || (cover && !IsContinuous(params.displayMode))) {
                 page->pos.x = pageOffX + ((pagesDx - page->pos.dx) / 2);
             } else if (cover) {
