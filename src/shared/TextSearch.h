@@ -13,7 +13,6 @@ struct TextSearch : public TextSelection {
     void SetMatchCase(bool newMatchCase);
     void SetMatchWholeWord(bool wholeWord);
     void SetDirection(Direction direction);
-    void SetPageRange(int first, int last);
     void SetAllowedPages(const Vec<bool>& allowed);
     bool PageAllowed(int pageNo) const;
     int RestrictFirst() const;

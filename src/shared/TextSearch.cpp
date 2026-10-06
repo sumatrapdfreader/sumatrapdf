@@ -203,34 +203,6 @@ void TextSearch::SetAllowedPages(const Vec<bool>& allowed) {
     markAllPagesNonSkip(pagesToSkip);
 }
 
-void TextSearch::SetPageRange(int first, int last) {
-    if (first < 0) {
-        first = 0;
-    }
-    if (last < 0) {
-        last = 0;
-    }
-    if (first == 0 && last == 0) {
-        VecReset(pageAllowed);
-        markAllPagesNonSkip(pagesToSkip);
-        return;
-    }
-    int lo = first > 0 ? first : 1;
-    int hi = last > 0 ? last : nPages;
-    if (lo > hi) {
-        int tmp = lo;
-        lo = hi;
-        hi = tmp;
-    }
-    Vec<bool> allowed;
-    VecResize(allowed, nPages);
-    for (int i = 0; i < nPages; i++) {
-        int page = i + 1;
-        allowed[i] = page >= lo && page <= hi;
-    }
-    SetAllowedPages(allowed);
-}
-
 void TextSearch::SetDirection(TextSearch::Direction direction) {
     bool fwd = TextSearch::Direction::Forward == direction;
     if (fwd == forward) {

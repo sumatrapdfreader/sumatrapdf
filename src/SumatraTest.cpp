@@ -193,15 +193,23 @@ TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, St
     auto* ts = new TextSearch(engine);
     ts->SetDirection(TextSearch::Direction::Forward);
     ts->SetMatchCase(false);
+    Vec<bool> allowed;
     if (spec) {
-        Vec<bool> allowed;
         if (!ParseFindPageRange(spec, engine->PageCount(), allowed)) {
             VecReset(allowed);
         }
-        ts->SetAllowedPages(allowed);
-    } else {
-        ts->SetPageRange(first, last);
+    } else if (first > 0 || last > 0) {
+        int lo = first > 0 ? first : 1;
+        int hi = last > 0 ? last : ts->nPages;
+        if (lo > hi) {
+            std::swap(lo, hi);
+        }
+        VecResize(allowed, ts->nPages);
+        for (int page = 1; page <= ts->nPages; page++) {
+            allowed[page - 1] = page >= lo && page <= hi;
+        }
     }
+    ts->SetAllowedPages(allowed);
     int n = 0;
     Vec<TextSel>* sel = ts->FindFirst(ts->RestrictFirst(), needle);
     while (sel && len(*sel) > 0) {
