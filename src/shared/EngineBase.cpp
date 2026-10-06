@@ -1069,34 +1069,38 @@ static Str ReturnPageText(const PageText& pt, int* lenOut, Rect** coordsOut, Qua
     return text;
 }
 
-// like GetTextForPage but returns false (and empty text) if the engine
-// can't acquire locks without blocking (e.g. render thread is busy)
-bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
+bool EngineBase::ReadPageText(int pageNo, TextReadMode mode, Str& text, int* lenOut, Rect** coordsOut,
+                              QuadF** quadsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
-        ReturnPageText({}, lenOut, coordsOut, quadsOut);
+        text = ReturnPageText({}, lenOut, coordsOut, quadsOut);
         return true;
     }
     Location loc = LocationFromPageNo(pageNo);
     if (!loc.IsValid()) {
-        ReturnPageText({}, lenOut, coordsOut, quadsOut);
+        text = ReturnPageText({}, lenOut, coordsOut, quadsOut);
         return true;
     }
     int count = ChapterPageCount(loc.chapter);
 
-    bool extract = false;
+    bool extract;
     {
         ScopedMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        if (ct->pages[loc.page - 1].state != TextExtractionState::Finished) {
-            extract = true;
+        TextCacheEntry& page = ct->pages[loc.page - 1];
+        // Finished includes textless pages. Pending still allows synchronous extraction.
+        extract = page.state != TextExtractionState::Finished;
+        if (extract && mode == TextReadMode::Blocking) {
+            page.state = TextExtractionState::Pending;
         }
     }
 
     if (extract) {
         PageText extracted;
-        if (!TryExtractPageText(pageNo, &extracted)) {
-            ReturnPageText({}, lenOut, coordsOut, quadsOut);
+        if (mode == TextReadMode::Blocking) {
+            extracted = ExtractPageText(pageNo);
+        } else if (!TryExtractPageText(pageNo, &extracted)) {
+            text = ReturnPageText({}, lenOut, coordsOut, quadsOut);
             return false;
         }
         EnsurePageText(&extracted);
@@ -1108,46 +1112,20 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, Qu
 
     ScopedMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-    ReturnPageText(ct->pages[loc.page - 1].data, lenOut, coordsOut, quadsOut);
+    text = ReturnPageText(ct->pages[loc.page - 1].data, lenOut, coordsOut, quadsOut);
     return true;
 }
 
+// Returns false with empty outputs when extraction would block.
+bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
+    Str text;
+    return ReadPageText(pageNo, TextReadMode::Nonblocking, text, lenOut, coordsOut, quadsOut);
+}
+
 Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
-    ReportIf(pageNo < 1 || pageNo > pageCount);
-    if (pageNo < 1 || pageNo > pageCount) {
-        return ReturnPageText({}, lenOut, coordsOut, quadsOut);
-    }
-    Location loc = LocationFromPageNo(pageNo);
-    if (!loc.IsValid()) {
-        return ReturnPageText({}, lenOut, coordsOut, quadsOut);
-    }
-    int count = ChapterPageCount(loc.chapter);
-
-    bool extract = false;
-    {
-        ScopedMutex scope(&textCacheLock);
-        ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        // Finished covers textless pages too (the page's text can stay empty). Pending
-        // means a background thread was started by RequestTextExtraction but
-        // selection still needs a synchronous extract here.
-        if (ct->pages[loc.page - 1].state != TextExtractionState::Finished) {
-            ct->pages[loc.page - 1].state = TextExtractionState::Pending;
-            extract = true;
-        }
-    }
-
-    if (extract) {
-        PageText extracted = ExtractPageText(pageNo);
-        EnsurePageText(&extracted);
-
-        ScopedMutex scope(&textCacheLock);
-        ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        ct->StoreText(loc.page, extracted);
-    }
-
-    ScopedMutex scope(&textCacheLock);
-    ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-    return ReturnPageText(ct->pages[loc.page - 1].data, lenOut, coordsOut, quadsOut);
+    Str text;
+    ReadPageText(pageNo, TextReadMode::Blocking, text, lenOut, coordsOut, quadsOut);
+    return text;
 }
 
 void EngineBase::InvalidateTextForPage(int pageNo) {

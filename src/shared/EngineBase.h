@@ -699,6 +699,11 @@ class EngineBase {
     Mutex errorsLock;
 
   private:
+    enum class TextReadMode {
+        Blocking,
+        Nonblocking
+    };
+    bool ReadPageText(int pageNo, TextReadMode mode, Str& text, int* lenOut, Rect** coordsOut, QuadF** quadsOut);
     void EnsureChapterTable();
 };
 
