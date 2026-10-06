@@ -18,6 +18,10 @@ bool ShouldSearchNextPage(RectF mediabox, float destY) {
     return mediabox.dy > 0.f && destY >= mediabox.dy * kLatePageStartRatio;
 }
 
+static bool IsGlyphSpace(WCHAR c) {
+    return c == L' ' || c == L'\t' || c == L'\n' || c == L'\r';
+}
+
 static bool IsAsciiAlnum(WCHAR c) {
     return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9');
 }
@@ -202,8 +206,7 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
         int* hist = AllocArrayTemp<int>(maxDy + 1);
         if (hist) {
             for (int i = 0; i < n; i++) {
-                WCHAR c = text.s[i];
-                if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                if (IsGlyphSpace(text.s[i])) {
                     continue;
                 }
                 int d = coords[i].dy;
@@ -232,7 +235,7 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     int outLen = 0;
     for (int i = 0; i < n; i++) {
         WCHAR c = text.s[i];
-        bool isSpace = (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r');
+        bool isSpace = IsGlyphSpace(c);
         bool drop = false;
         if (canStrip && !isSpace && coords[i].dy > hgtThresh) {
             // Sparse-row test: count non-space glyphs sharing this glyph's
@@ -246,8 +249,7 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
             int hi = coords[i].dy;
             int rowGlyphs = 0;
             for (int j = 0; j < n; j++) {
-                WCHAR cj = text.s[j];
-                if (cj == L' ' || cj == L'\t' || cj == L'\n' || cj == L'\r') {
+                if (IsGlyphSpace(text.s[j])) {
                     continue;
                 }
                 if (abs((coords[j].y + coords[j].dy) - bl) > kBaselineTolPt) {
@@ -428,8 +430,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
         int boxBottom = (int)(ty + h);
         int lastTextBottom = boxTop;
         for (int i = 0; i < text.len; i++) {
-            WCHAR c = text.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            if (IsGlyphSpace(text.s[i])) {
                 continue;
             }
             Rect r = coords[i];
@@ -573,8 +574,7 @@ static void LineRunExtent(WStr text, const Rect* coords, int anchorIdx, int* lef
     while (extended) {
         extended = false;
         for (int i = 0; i < text.len; i++) {
-            WCHAR c = text.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            if (IsGlyphSpace(text.s[i])) {
                 continue;
             }
             Rect r = coords[i];
@@ -608,8 +608,7 @@ static int FindColumnRight(WStr text, const Rect* coords, int startX, int top, i
     int n = pageWidth - xLo;
     char* occ = AllocArrayTemp<char>(n);
     for (int i = 0; i < len(text); i++) {
-        WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         Rect r = coords[i];
@@ -646,8 +645,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
     // column's right edge (skipping the gutter itself).
     int nextColLeftX = INT_MAX;
     for (int i = 0; i < text.len; i++) {
-        WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         Rect r = coords[i];
@@ -671,8 +669,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
     constexpr int kMinTopMarginPt = 30;
     int topY = INT_MAX;
     for (int i = 0; i < text.len; i++) {
-        WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         Rect r = coords[i];
@@ -692,8 +689,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
     int topLeftX = INT_MAX;
     int topDy = 12;
     for (int i = 0; i < text.len; i++) {
-        WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         Rect r = coords[i];
@@ -753,8 +749,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
     }
     int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
     for (int i = 0; i < text.len; i++) {
-        WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         Rect r = coords[i];
@@ -807,8 +802,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     int bestDistY = INT_MAX;
     int bestX = INT_MAX;
     for (int i = 0; i < text.len; i++) {
-        WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         Rect r = coords[i];
@@ -890,8 +884,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             }
             if (text.s[i] == L']') {
                 for (int j = i + 1; j < text.len; j++) {
-                    WCHAR cj = text.s[j];
-                    if (cj == L' ' || cj == L'\t' || cj == L'\n' || cj == L'\r') {
+                    if (IsGlyphSpace(text.s[j])) {
                         continue;
                     }
                     if (abs(coords[j].y - firstLineY) <= yTol && coords[j].x > coords[i].x) {
@@ -912,8 +905,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         int bodyIdx = -1;
         int bodyX = INT_MAX;
         for (int i = 0; i < text.len; i++) {
-            WCHAR c = text.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            if (IsGlyphSpace(text.s[i])) {
                 continue;
             }
             Rect r = coords[i];
@@ -942,8 +934,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         constexpr int kColWidthMax = 250;
         int nextTop = INT_MAX;
         for (int i = 0; i < text.len; i++) {
-            WCHAR c = text.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            if (IsGlyphSpace(text.s[i])) {
                 continue;
             }
             Rect r = coords[i];
@@ -1013,8 +1004,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             for (;;) {
                 int nextBottom = -1;
                 for (int i = 0; i < text.len; i++) {
-                    WCHAR c = text.s[i];
-                    if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                    if (IsGlyphSpace(text.s[i])) {
                         continue;
                     }
                     Rect r = coords[i];
@@ -1038,8 +1028,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         }
         int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
         for (int i = 0; i < text.len; i++) {
-            WCHAR c = text.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            if (IsGlyphSpace(text.s[i])) {
                 continue;
             }
             Rect r = coords[i];
@@ -1068,8 +1057,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                     constexpr int kMinBodyLineWidthPt = 30;
                     bool moreBelowInColumn = false;
                     for (int i = 0; i < text.len && !moreBelowInColumn; i++) {
-                        WCHAR c = text.s[i];
-                        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                        if (IsGlyphSpace(text.s[i])) {
                             continue;
                         }
                         Rect r = coords[i];
@@ -1116,7 +1104,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
 
     for (int i = startIdx + 1; i < text.len; i++) {
         WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(c)) {
             continue;
         }
         Rect r = coords[i];
@@ -1213,8 +1201,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     // 3. Compute bounding box of glyphs in [startIdx, endIdx).
     int minX = INT_MAX, minY = INT_MAX, maxX = INT_MIN, maxY = INT_MIN;
     for (int i = startIdx; i < endIdx; i++) {
-        WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         Rect r = coords[i];
@@ -1276,7 +1263,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         int totalChars = 0;
         for (int i = startIdx; i < endIdx; i++) {
             WCHAR c = text.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            if (IsGlyphSpace(c)) {
                 continue;
             }
             totalChars++;
