@@ -9,13 +9,6 @@
 
 constexpr int kDocumentLayoutInvalidPageNo = -1;
 
-static int ColumnsFromDisplayMode(DisplayMode displayMode) {
-    if (!IsSingle(displayMode)) {
-        return 2;
-    }
-    return 1;
-}
-
 static bool PageIsSpread(const Vec<u8>& flags, int pageNo) {
     int i = pageNo - 1;
     if (i < 0 || i >= len(flags)) {
@@ -117,10 +110,9 @@ static float ZoomRealFromVirtualForPage(const DocumentLayout& layout, float zoom
         return zoomVirtual * 0.01f * params.dpiFactor;
     }
 
-    int columns = ColumnsFromDisplayMode(params.displayMode);
+    int nCols = IsSingle(params.displayMode) ? 1 : 2;
     SizeF row = PageSizeAfterRotation(layout.GetPage(pageNo), params.rotation);
-    int nCols = columns;
-    if (columns > 1 && params.landscapeAsSpread && PageIsSpread(params.spreadFlags, pageNo)) {
+    if (nCols > 1 && params.landscapeAsSpread && PageIsSpread(params.spreadFlags, pageNo)) {
         nCols = 1;
     }
     row.dx *= (float)nCols;
@@ -181,10 +173,9 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
 
     if (canvasDy < viewPort.dy) {
         int offY = params.windowMargin.top + ((viewPort.dy - canvasDy) / 2);
-        for (int pageNo = 1; pageNo <= layout.pages.len; pageNo++) {
-            DocumentLayoutPage* page = layout.GetPage(pageNo);
-            if (page->isShown) {
-                page->pos.y += offY;
+        for (DocumentLayoutPage& page : layout.pages) {
+            if (page.isShown) {
+                page.pos.y += offY;
             }
         }
     }
@@ -224,11 +215,9 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
     // when navigated to don't change, the view can just go past the page edges
     if (params.freePan) {
         Size slack = FreePanSlack(viewPort.Size());
-        for (int pageNo = 1; pageNo <= layout.pages.len; pageNo++) {
-            DocumentLayoutPage* page = layout.GetPage(pageNo);
-            if (page->isShown) {
-                page->pos.x += slack.dx;
-                page->pos.y += slack.dy;
+        for (DocumentLayoutPage& page : layout.pages) {
+            if (page.isShown) {
+                page.pos.Offset(slack.dx, slack.dy);
             }
         }
         canvasDx = std::max(canvasDx, viewPort.dx) + (2 * slack.dx);
@@ -243,6 +232,16 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
         viewPort.y = std::max(0, layout.canvasSize.dy - viewPort.dy);
     }
     layout.RecalcVisibleParts();
+}
+
+static int CenterCanvasX(DocumentLayout& layout, int& canvasDx) {
+    if (canvasDx >= layout.viewPort.dx) {
+        return 0;
+    }
+    layout.viewPort.x = 0;
+    int offX = (layout.viewPort.dx - canvasDx) / 2;
+    canvasDx = layout.viewPort.dx;
+    return offX;
 }
 
 static void SetPageDisplaySize(DocumentLayoutPage* page, int rotation, int currPosY) {
@@ -278,8 +277,6 @@ static void RelayoutFacing(DocumentLayout& layout, bool isFitContent) {
 
     for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
         auto& page = layout.pages[pageNo - 1];
-        page.visibleRatio = 0;
-        page.pageOnScreen = {};
         page.pos = {};
         page.isShown = IsContinuous(params.displayMode) || (startFirst <= pageNo && pageNo <= startLast);
     }
@@ -331,12 +328,7 @@ static void RelayoutFacing(DocumentLayout& layout, bool isFitContent) {
     int pagesDx = params.landscapeAsSpread ? std::max(twoColDx, maxSpreadWidth) : twoColDx;
     int canvasDx = params.windowMargin.left + pagesDx + params.windowMargin.right;
 
-    int offX = 0;
-    if (canvasDx < layout.viewPort.dx) {
-        layout.viewPort.x = 0;
-        offX = (layout.viewPort.dx - canvasDx) / 2;
-        canvasDx = layout.viewPort.dx;
-    }
+    int offX = CenterCanvasX(layout, canvasDx);
 
     for (int ri = 0; ri < len(rows); ri++) {
         const FacingRow& row = rows[ri];
@@ -403,8 +395,6 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
 
     for (int pageNo = 1; pageNo <= len(pages); pageNo++) {
         auto& page = pages[pageNo - 1];
-        page.visibleRatio = 0;
-        page.pageOnScreen = {};
         page.pos = {};
         page.isShown = IsContinuous(params.displayMode) || pageNo == params.startPage;
     }
@@ -423,12 +413,7 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
     int canvasDy = currPosY + params.windowMargin.bottom - params.pageSpacing.dy;
     int canvasDx = params.windowMargin.left + maxWidth + params.windowMargin.right;
 
-    int offX = 0;
-    if (canvasDx < viewPort.dx) {
-        viewPort.x = 0;
-        offX = (viewPort.dx - canvasDx) / 2;
-        canvasDx = viewPort.dx;
-    }
+    int offX = CenterCanvasX(*this, canvasDx);
     for (DocumentLayoutPage& page : pages) {
         if (page.isShown) {
             page.pos.x = offX + params.windowMargin.left + ((maxWidth - page.pos.dx) / 2);
@@ -439,17 +424,16 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
 }
 
 void DocumentLayout::RecalcVisibleParts() {
-    for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
-        DocumentLayoutPage* page = GetPage(pageNo);
-        Rect pageRect = page->pos;
+    for (DocumentLayoutPage& page : pages) {
+        Rect pageRect = page.pos;
         Rect visiblePart = pageRect.Intersect(viewPort);
-        page->visibleRatio = 0;
+        page.visibleRatio = 0;
         if (!visiblePart.IsEmpty() && !pageRect.IsEmpty()) {
-            page->visibleRatio =
+            page.visibleRatio =
                 1.0f * (float)visiblePart.dx * (float)visiblePart.dy / ((float)pageRect.dx * (float)pageRect.dy);
         }
-        page->pageOnScreen = pageRect;
-        page->pageOnScreen.Offset(-viewPort.x, -viewPort.y);
+        page.pageOnScreen = pageRect;
+        page.pageOnScreen.Offset(-viewPort.x, -viewPort.y);
     }
 }
 
