@@ -1341,25 +1341,24 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
 static bool LitIsEntityStart(Str s, int pos) {
     // "&#123;", "&#x1f;" or "&name;"
     int i = pos + 1;
-    if (i < len(s) && s.s[i] == '#') {
+    bool numeric = i < len(s) && s.s[i] == '#';
+    if (numeric) {
         i++;
         if (i < len(s) && (s.s[i] == 'x' || s.s[i] == 'X')) {
             i++;
         }
-        int nDigits = 0;
-        while (i < len(s) &&
-               (str::IsDigit(s.s[i]) || (s.s[i] >= 'a' && s.s[i] <= 'f') || (s.s[i] >= 'A' && s.s[i] <= 'F'))) {
-            i++;
-            nDigits++;
+    }
+    int start = i;
+    while (i < len(s)) {
+        char c = s.s[i];
+        bool valid =
+            numeric ? str::HexDigitVal(c) >= 0 : str::IsAlNum(c) || c == '_' || c == ':' || c == '.' || c == '-';
+        if (!valid) {
+            break;
         }
-        return nDigits > 0 && i < len(s) && s.s[i] == ';';
-    }
-    int nChars = 0;
-    while (i < len(s) && (str::IsAlNum(s.s[i]) || s.s[i] == '_' || s.s[i] == ':' || s.s[i] == '.' || s.s[i] == '-')) {
         i++;
-        nChars++;
     }
-    return nChars > 0 && i < len(s) && s.s[i] == ';';
+    return i > start && i < len(s) && s.s[i] == ';';
 }
 
 // literal '&' => &amp;; '<<' / '>>' pairs written for literal angle brackets
