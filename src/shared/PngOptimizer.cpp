@@ -64,16 +64,17 @@ static i64 PngPixelCount(const u8* d, int n) {
     return (i64)UInt32BE(p) * UInt32BE(p + sizeof(u32));
 }
 
-static void SetZopfliOpts(CZopfliPNGOptions* opts, const u8* png, int n) {
-    CZopfliPNGSetDefaults(opts);
-    if (PngPixelCount(png, n) <= kLargePngPixels) {
-        return;
+static int RecompressPng(Str png, unsigned char** out, size_t* outSize) {
+    CZopfliPNGOptions opts;
+    CZopfliPNGSetDefaults(&opts);
+    if (PngPixelCount((const u8*)png.s, len(png)) > kLargePngPixels) {
+        opts.auto_filter_strategy = 0;
+        opts.filter_strategies = &gLargePngFilter;
+        opts.num_filter_strategies = 1;
+        opts.num_iterations = kLargePngIterations;
+        opts.num_iterations_large = kLargePngIterations;
     }
-    opts->auto_filter_strategy = 0;
-    opts->filter_strategies = &gLargePngFilter;
-    opts->num_filter_strategies = 1;
-    opts->num_iterations = kLargePngIterations;
-    opts->num_iterations_large = kLargePngIterations;
+    return CZopfliPNGOptimize((const unsigned char*)png.s, (size_t)len(png), &opts, 0, out, outSize);
 }
 
 // Replace with a smaller, losslessly compressed PNG. An atomic rename keeps
@@ -90,11 +91,9 @@ static void OptimizePngFile(Str path) {
         logf("OptimizePngFile: '%s' was already optimized by us, skipping\n", path);
         return;
     }
-    CZopfliPNGOptions opts;
-    SetZopfliOpts(&opts, (const u8*)d.s, nOrig);
     unsigned char* out = nullptr;
     size_t outSize = 0;
-    int err = CZopfliPNGOptimize((const unsigned char*)d.s, (size_t)nOrig, &opts, 0, &out, &outSize);
+    int err = RecompressPng(d, &out, &outSize);
     AutoFree outOwner(out);
     if (err != 0 || !out || outSize == 0) {
         logf("OptimizePngFile: failed to optimize '%s', error: %d\n", path, err);
@@ -211,11 +210,9 @@ static Str OptimizePngBytesOwned(Str png) {
     if (nOrig > kMaxPngSizeToOptimize) {
         return png;
     }
-    CZopfliPNGOptions opts;
-    SetZopfliOpts(&opts, (const u8*)png.s, nOrig);
     unsigned char* out = nullptr;
     size_t outSize = 0;
-    int err = CZopfliPNGOptimize((const unsigned char*)png.s, (size_t)nOrig, &opts, 0, &out, &outSize);
+    int err = RecompressPng(png, &out, &outSize);
     if (err != 0 || !out || outSize == 0 || outSize >= (size_t)nOrig) {
         free(out);
         return png;
