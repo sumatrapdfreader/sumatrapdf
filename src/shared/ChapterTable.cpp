@@ -5,15 +5,16 @@
 
 #include "ChapterTable.h"
 
-// caller holds mutex. Recomputes the cumulative-pages prefix sum from pageCounts.
-void ChapterTable::RebuildLocked() {
-    int n = len(pageCounts);
-    VecResize(cumPages, n);
-    int total = 0;
-    for (int i = 0; i < n; i++) {
-        total += pageCounts[i];
-        cumPages[i] = total;
+int ChapterTable::CountLocked(int idx) {
+    int before = idx == 0 ? 0 : entries[idx - 1].endPage;
+    return entries[idx].endPage - before;
+}
+
+void ChapterTable::ResetLocked() {
+    for (int i = 0; i < len(entries); i++) {
+        entries[i] = {i + 1, false};
     }
+    AtomicIntInc(&generation);
 }
 
 // nChapters <= 1 still creates one chapter, so callers can always route page
@@ -21,19 +22,13 @@ void ChapterTable::RebuildLocked() {
 void ChapterTable::Init(int nChapters) {
     int n = nChapters < 1 ? 1 : nChapters;
     AutoUnlockMutex scope(&mutex);
-    VecResize(pageCounts, n);
-    VecResize(laidOut, n);
-    for (int i = 0; i < n; i++) {
-        pageCounts[i] = 1;
-        laidOut[i] = false;
-    }
-    RebuildLocked();
-    AtomicIntInc(&generation);
+    VecResize(entries, n);
+    ResetLocked();
 }
 
 void ChapterTable::SetPageCount(int chapter, int n) {
     AutoUnlockMutex scope(&mutex);
-    if (chapter < 1 || chapter > len(pageCounts)) {
+    if (chapter < 1 || chapter > len(entries)) {
         ReportIf(true);
         return;
     }
@@ -42,74 +37,76 @@ void ChapterTable::SetPageCount(int chapter, int n) {
         n = 1;
     }
     int idx = chapter - 1;
-    bool changed = pageCounts[idx] != n;
-    pageCounts[idx] = n;
-    laidOut[idx] = true;
-    if (changed) {
-        RebuildLocked();
-        AtomicIntInc(&generation);
+    int delta = n - CountLocked(idx);
+    entries[idx].laidOut = true;
+    if (delta == 0) {
+        return;
     }
+    for (int i = idx; i < len(entries); i++) {
+        entries[i].endPage += delta;
+    }
+    AtomicIntInc(&generation);
 }
 
 int ChapterTable::ChapterCount() {
     AutoUnlockMutex scope(&mutex);
-    return len(pageCounts);
+    return len(entries);
 }
 
 int ChapterTable::TotalPages() {
     AutoUnlockMutex scope(&mutex);
-    int n = len(cumPages);
-    return n == 0 ? 0 : cumPages[n - 1];
+    int n = len(entries);
+    return n == 0 ? 0 : entries[n - 1].endPage;
 }
 
 int ChapterTable::PageCount(int chapter) {
     AutoUnlockMutex scope(&mutex);
-    if (chapter < 1 || chapter > len(pageCounts)) {
+    if (chapter < 1 || chapter > len(entries)) {
         ReportIf(true);
         return 0;
     }
-    return pageCounts[chapter - 1];
+    return CountLocked(chapter - 1);
 }
 
 bool ChapterTable::IsLaidOut(int chapter) {
     AutoUnlockMutex scope(&mutex);
-    if (chapter < 1 || chapter > len(laidOut)) {
+    if (chapter < 1 || chapter > len(entries)) {
         ReportIf(true);
         return false;
     }
-    return laidOut[chapter - 1];
+    return entries[chapter - 1].laidOut;
 }
 
 Location ChapterTable::LocationFromPageNo(int pageNo) {
     AutoUnlockMutex scope(&mutex);
-    int n = len(cumPages);
-    if (pageNo < 1 || n == 0 || pageNo > cumPages[n - 1]) {
+    int n = len(entries);
+    if (pageNo < 1 || n == 0 || pageNo > entries[n - 1].endPage) {
         return kInvalidLocation;
     }
     // smallest chapter index whose cumulative total reaches pageNo
     int lo = 0, hi = n - 1;
     while (lo < hi) {
         int mid = (lo + hi) / 2;
-        if (cumPages[mid] >= pageNo) {
+        if (entries[mid].endPage >= pageNo) {
             hi = mid;
         } else {
             lo = mid + 1;
         }
     }
-    int before = lo == 0 ? 0 : cumPages[lo - 1];
+    int before = lo == 0 ? 0 : entries[lo - 1].endPage;
     return {lo + 1, pageNo - before};
 }
 
 int ChapterTable::PageNoFromLocation(Location loc) {
     AutoUnlockMutex scope(&mutex);
     int chapter = loc.chapter;
-    if (chapter < 1 || chapter > len(pageCounts)) {
+    if (chapter < 1 || chapter > len(entries)) {
         return 0;
     }
     int idx = chapter - 1;
-    int count = pageCounts[idx];
+    int count = CountLocked(idx);
     int page = ClampI(loc.page, 1, count);
-    int before = idx == 0 ? 0 : cumPages[idx - 1];
+    int before = idx == 0 ? 0 : entries[idx - 1].endPage;
     return before + page;
 }
 
@@ -124,11 +121,5 @@ void ChapterTable::BumpGeneration() {
 
 void ChapterTable::Reset() {
     AutoUnlockMutex scope(&mutex);
-    int n = len(pageCounts);
-    for (int i = 0; i < n; i++) {
-        pageCounts[i] = 1;
-        laidOut[i] = false;
-    }
-    RebuildLocked();
-    AtomicIntInc(&generation);
+    ResetLocked();
 }

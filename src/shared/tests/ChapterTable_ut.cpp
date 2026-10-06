@@ -51,6 +51,33 @@ void ChapterTable_UnitTests() {
         utassert(loc.chapter == 3 && loc.page == 1);
     }
 
+    {
+        ChapterTable t;
+        t.Init(3);
+        t.SetPageCount(1, 4);
+        t.SetPageCount(2, 5);
+        t.SetPageCount(3, 3);
+        int generation = t.Generation();
+        t.SetPageCount(2, 2);
+        utassert(t.Generation() == generation + 1);
+        utassert(t.TotalPages() == 9);
+        utassert(t.PageCount(1) == 4);
+        utassert(t.PageCount(2) == 2);
+        utassert(t.PageCount(3) == 3);
+        utassert(t.PageNoFromLocation({3, 1}) == 7);
+        utassert(t.PageNoFromLocation({3, 3}) == 9);
+        utassert(t.LocationFromPageNo(6) == Location({2, 2}));
+        utassert(t.LocationFromPageNo(7) == Location({3, 1}));
+    }
+
+    {
+        ChapterTable t;
+        t.Reset();
+        utassert(t.ChapterCount() == 0);
+        utassert(t.TotalPages() == 0);
+        utassert(t.Generation() == 1);
+    }
+
     // generation increments only when the count actually changes
     {
         ChapterTable t;

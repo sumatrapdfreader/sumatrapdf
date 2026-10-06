@@ -38,10 +38,13 @@ struct ChapterTable {
 
   private:
     Mutex mutex;
-    Vec<int> pageCounts;
-    Vec<bool> laidOut;
-    Vec<int> cumPages; // cumPages[i] = total pages through chapter i+1, inclusive
+    struct Entry {
+        int endPage;
+        bool laidOut;
+    };
+    Vec<Entry> entries;
     AtomicInt generation = 0;
 
-    void RebuildLocked();
+    int CountLocked(int idx);
+    void ResetLocked();
 };
