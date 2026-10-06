@@ -347,7 +347,7 @@ static Str StripItsProtocol(Str url) {
 static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, int level) {
     ReportIf(!GumboTagNameIs(objNode, StrL("object")));
 
-    TempStr name, local;
+    Str name, local;
     const GumboVector* children = &objNode->v.element.children;
     for (unsigned int i = 0; i < children->length; i++) {
         const GumboNode* child = (const GumboNode*)children->data[i];
@@ -360,9 +360,9 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, 
             continue;
         }
         if (str::EqI(Str(attrName->value), StrL("Name"))) {
-            name = str::DupTemp(Str(attrVal->value));
+            name = Str(attrVal->value);
         } else if (str::EqI(Str(attrName->value), StrL("Local"))) {
-            local = str::DupTemp(StripItsProtocol(Str(attrVal->value)));
+            local = StripItsProtocol(Str(attrVal->value));
         }
     }
     if (len(name) == 0) {
@@ -513,7 +513,8 @@ static void WalkChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* firstUl
 
 // Ignore any <ul><li> structure and visit every <object type="text/sitemap">
 // in document order. Used for ToCs where the list scaffolding is broken.
-static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* root, bool isIndex, bool* hadOneInOut) {
+static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* root, bool isIndex) {
+    bool hadOne = false;
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
     VecAppend(toVisit, root);
@@ -525,7 +526,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
         if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, StrL("object"))) {
             const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
             if (type && str::EqI(Str(type->value), StrL("text/sitemap"))) {
-                *hadOneInOut |= isIndex ? VisitChmIndexItem(visitor, node, 1) : VisitChmTocItem(visitor, node, 1);
+                hadOne |= isIndex ? VisitChmIndexItem(visitor, node, 1) : VisitChmTocItem(visitor, node, 1);
                 continue; // don't recurse into the object's <param> children
             }
         }
@@ -537,7 +538,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
             }
         }
     }
-    return *hadOneInOut;
+    return hadOne;
 }
 
 // True for the non-Latin1 single-byte codepages where a ToC label made up
@@ -674,9 +675,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
         WalkChmTocOrIndex(&fixer, firstUl, isIndex);
         return true;
     }
-    bool hadOne = false;
-    WalkBrokenChmTocOrIndex(&fixer, doc.Document(), isIndex, &hadOne);
-    return hadOne;
+    return WalkBrokenChmTocOrIndex(&fixer, doc.Document(), isIndex);
 }
 
 bool ChmFile::HasToc() const {
