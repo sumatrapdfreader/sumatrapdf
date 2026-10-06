@@ -90,6 +90,11 @@ struct CreatedFontInfo {
     HFONT font = nullptr;
     u16 size = 0;
     u16 flags = 0;
+
+    ~CreatedFontInfo() {
+        str::Free(name);
+        DeleteFont(font);
+    }
 };
 
 static CreatedFontInfo* gFonts = nullptr;
@@ -114,14 +119,7 @@ static HFONT RememberCreatedFont(HFONT font, Str name, int size, u16 flags) {
 }
 
 void DeleteCreatedFonts() {
-    CreatedFontInfo* font = gFonts;
-    while (font) {
-        auto* next = font->next;
-        str::Free(font->name);
-        DeleteFont(font->font);
-        delete font;
-        font = next;
-    }
+    ListDelete(gFonts);
     gFonts = nullptr;
 }
 
