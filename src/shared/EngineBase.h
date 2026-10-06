@@ -458,14 +458,6 @@ void DestroyTocTree(TocTree* tree);
 // every chapter. No-op for a single-chapter document or a null engine
 void EnsureFullLayout(EngineBase* engine);
 
-struct VisitTocTreeData {
-    TocItem* ti = nullptr;
-    TocItem* parent = nullptr; // only for VisitTocTreeWithParent
-    bool stopTraversal = false;
-};
-
-using VisitTocTreeCb = Func1<VisitTocTreeData*>;
-
 // a helper that allows for rendering interruptions in an engine-agnostic way
 class AbortCookie {
   public:

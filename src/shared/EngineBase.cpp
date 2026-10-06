@@ -345,44 +345,6 @@ void EnsureFullLayout(EngineBase* engine) {
     engine->EnsureAllChaptersLaidOut();
 }
 
-// TODO: speed up by removing recursion
-static bool VisitTocTree(TocItem* ti, const VisitTocTreeCb& f) {
-    bool cont;
-    VisitTocTreeData d;
-    while (ti) {
-        d.ti = ti;
-        f.Call(&d);
-        cont = !d.stopTraversal;
-        if (cont && ti->child) {
-            cont = VisitTocTree(ti->child, f);
-        }
-        if (!cont) {
-            return false;
-        }
-        ti = ti->next;
-    }
-    return true;
-}
-
-static bool VisitTocTreeWithParentRecursive(TocItem* ti, TocItem* parent, const VisitTocTreeCb& f) {
-    bool cont;
-    VisitTocTreeData d;
-    while (ti) {
-        d.ti = ti;
-        d.parent = parent;
-        f.Call(&d);
-        cont = !d.stopTraversal;
-        if (cont && ti->child) {
-            cont = VisitTocTreeWithParentRecursive(ti->child, ti, f);
-        }
-        if (!cont) {
-            return false;
-        }
-        ti = ti->next;
-    }
-    return true;
-}
-
 RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectF* pageRect, RenderTarget target,
                                AbortCookie** cookie_out) {
     this->pageNo = pageNo;
