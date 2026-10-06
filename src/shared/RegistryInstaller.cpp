@@ -25,20 +25,22 @@ static SeqStrings gSupportedExts =
     ".jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0" \
     ".jfif\0.webp\0.jxl\0.bmp\0.ico\0.jxr\0.hdp\0.wdp\0";
 
-// Image extensions share icon resource id 7 (img-32bit.ico) — #5274
-static SeqStrings gImageExts =
-    ".tif\0.tiff\0.jp2\0.png\0.jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0" \
-    ".jfif\0.webp\0.jxl\0.bmp\0.ico\0.jxr\0.hdp\0.wdp\0";
+// Resource ids in SumatraPDF.rc; negative icon indices select by id.
+static const int kDefaultFileIcon = 2;
+static const struct {
+    SeqStrings extensions;
+    int resourceId;
+} fileIcons[] = {
+    {".epub\0", 3},
+    {".cbr\0.cbz\0.cbt\0.cb7\0", 4},
+    {".chm\0", 5},
+    {".djvu\0", 6},
+    {".tif\0.tiff\0.jp2\0.png\0.jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0"
+     ".jfif\0.webp\0.jxl\0.bmp\0.ico\0.jxr\0.hdp\0.wdp\0", 7},
+    {".pdf\0", 8},
+    {".mobi\0.azw\0.azw3\0.azw4\0.prc\0", 9},
+};
 // clang-format on
-
-static bool ExtInList(SeqStrings list, Str ext) {
-    for (Str item = SeqStrFirst(list); len(item) > 0; item = SeqStrNext(item)) {
-        if (str::EqI(ext, item)) {
-            return true;
-        }
-    }
-    return false;
-}
 
 // notifies Shell that file associations changed.
 // Invalidates the icon and thumbnail cache.
@@ -214,30 +216,14 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
         ok &= LoggedDeleteRegValue(hkey, progIDKey, {});
         // ok &= LoggedWriteRegStr(hkey, progIDKey, L"AppUserModelID", L"SumatraPDF"); // ???
 
-        // Per https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
-        // ",${n}" => n is 0-based index of the icon
-        // ",-${n}" => n is icon with resource id (see SumatraPDF.rc)
-        // 2=app, 3=epub, 4=cbx, 5=chm, 6=djvu, 7=img, 8=pdf, 9=mobi
-        TempStr iconPath;
-        if (str::EqI(ext, StrL(".epub"))) {
-            iconPath = str::JoinTemp(exePathQuoted, StrL(",-3"));
-        } else if (str::EqI(ext, StrL(".cbr")) || str::EqI(ext, StrL(".cbz")) || str::EqI(ext, StrL(".cbt")) ||
-                   str::EqI(ext, StrL(".cb7"))) {
-            iconPath = str::JoinTemp(exePathQuoted, StrL(",-4"));
-        } else if (str::EqI(ext, StrL(".chm"))) {
-            iconPath = str::JoinTemp(exePathQuoted, StrL(",-5"));
-        } else if (str::EqI(ext, StrL(".djvu"))) {
-            iconPath = str::JoinTemp(exePathQuoted, StrL(",-6"));
-        } else if (ExtInList(gImageExts, ext)) {
-            iconPath = str::JoinTemp(exePathQuoted, StrL(",-7"));
-        } else if (str::EqI(ext, StrL(".pdf"))) {
-            iconPath = str::JoinTemp(exePathQuoted, StrL(",-8"));
-        } else if (str::EqI(ext, StrL(".mobi")) || str::EqI(ext, StrL(".azw")) || str::EqI(ext, StrL(".azw3")) ||
-                   str::EqI(ext, StrL(".azw4")) || str::EqI(ext, StrL(".prc"))) {
-            iconPath = str::JoinTemp(exePathQuoted, StrL(",-9"));
-        } else {
-            iconPath = str::JoinTemp(exePathQuoted, StrL(",-2"));
+        int iconId = kDefaultFileIcon;
+        for (const auto& icon : fileIcons) {
+            if (SeqStrIndexI(icon.extensions, ext) >= 0) {
+                iconId = icon.resourceId;
+                break;
+            }
         }
+        TempStr iconPath = fmt("%s,-%d", exePathQuoted, iconId);
 
         key = str::JoinTemp(progIDKey, StrL("\\Application"));
         ok &= LoggedWriteRegStr(hkey, key, StrL("ApplicationCompany"), StrL("Krzysztof Kowalczyk"));
