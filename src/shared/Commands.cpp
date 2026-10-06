@@ -1482,37 +1482,12 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         return CreateCustomCommand(definition, cmdId, nullptr);
     }
 
-    // some commands share the same arguments, so cannonalize them
+    // Annotation and navigation commands share argument specifications.
     int argCmdId = cmdId;
-    switch (cmdId) {
-        case CmdCreateAnnotText:
-        case CmdCreateAnnotLink:
-        case CmdCreateAnnotFreeText:
-        case CmdCreateAnnotLine:
-        case CmdCreateAnnotSquare:
-        case CmdCreateAnnotCircle:
-        case CmdCreateAnnotPolygon:
-        case CmdCreateAnnotPolyLine:
-        case CmdCreateAnnotHighlight:
-        case CmdCreateAnnotUnderline:
-        case CmdCreateAnnotSquiggly:
-        case CmdCreateAnnotStrikeOut:
-        case CmdCreateAnnotRedact:
-        case CmdCreateAnnotStamp:
-        case CmdCreateAnnotCaret:
-        case CmdCreateAnnotInk:
-        case CmdCreateAnnotPopup:
-        case CmdCreateAnnotFileAttachment: {
-            argCmdId = CmdCreateAnnotText;
-            break;
-        }
-        case CmdScrollUp:
-        case CmdScrollDown:
-        case CmdGoToNextPage:
-        case CmdGoToPrevPage: {
-            argCmdId = CmdScrollUp;
-            break;
-        }
+    if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
+        argCmdId = CmdCreateAnnotText;
+    } else if (cmdId == CmdScrollUp || cmdId == CmdScrollDown || cmdId == CmdGoToNextPage || cmdId == CmdGoToPrevPage) {
+        argCmdId = CmdScrollUp;
     }
 
     int firstArgIdx = 0;
