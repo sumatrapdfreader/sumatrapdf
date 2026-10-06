@@ -355,7 +355,7 @@ bool EngineDjvuDec::FinishLoading() {
     for (int i = 0; i < pageCount; i++) {
         auto* pi = new DjvuDecPageInfo();
         djvu_page_info info{};
-        RectF mbox(0, 0, 8.5f * GetFileDPI(), 11.f * GetFileDPI()); // fallback: letter size
+        RectF mbox(0, 0, 8.5f * fileDPI, 11.f * fileDPI); // fallback: letter size
         if (djvu_doc_page_info(doc, i, &info) == 0) {
             int dpi = info.dpi;
             if (dpi < 25 || dpi > 6000) {
@@ -372,8 +372,8 @@ bool EngineDjvuDec::FinishLoading() {
             }
             pi->uprightW = upW;
             pi->uprightH = upH;
-            float dx = (float)upW * GetFileDPI() / (float)dpi;
-            float dy = (float)upH * GetFileDPI() / (float)dpi;
+            float dx = (float)upW * fileDPI / (float)dpi;
+            float dy = (float)upH * fileDPI / (float)dpi;
             bool isValid = dx > 0 && dx < 1e6f && dy > 0 && dy < 1e6f;
             if (isValid) {
                 mbox = RectF(0, 0, dx, dy);
@@ -717,7 +717,7 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
         }
         return {};
     }
-    float dpiF = GetFileDPI() / (float)pages[pageNo - 1]->dpi;
+    float dpiF = fileDPI / (float)pages[pageNo - 1]->dpi;
     PageText res = DjvuZonesToPageText(z->root, dpiF);
     djvu_text_zones_destroy(ctx, z);
     return res;
@@ -778,7 +778,7 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
     if (!links) {
         return els;
     }
-    float dpiF = GetFileDPI() / (float)pi->dpi;
+    float dpiF = fileDPI / (float)pi->dpi;
     for (int i = 0; i < links->nlinks; i++) {
         djvu_link& l = links->links[i];
         Str url = Str(l.url);

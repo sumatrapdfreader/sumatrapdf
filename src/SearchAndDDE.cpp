@@ -360,7 +360,7 @@ bool NeedsFindUI(MainWindow* win) {
     if (!win->AsFixed()) {
         return false;
     }
-    if (win->AsFixed()->GetEngine()->IsImageCollection()) {
+    if (win->AsFixed()->GetEngine()->isImageCollection) {
         return false;
     }
     return true;
@@ -3077,7 +3077,7 @@ static Str HandleGetMousePosCmd(Str cmd, bool* ack, str::Builder& res) {
     PointF pt = dm->CvtFromScreen(pos);
     // match FormatCursorPositionTemp's "pt" computation exactly
     EngineBase* engine = dm->GetEngine();
-    float dpi = engine->GetFileDPI();
+    float dpi = engine->fileDPI;
     float x = pt.x < 0 ? 0 : pt.x;
     float y = pt.y < 0 ? 0 : pt.y;
     double xPt = (double)x / dpi * 72.0;

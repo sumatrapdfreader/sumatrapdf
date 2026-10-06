@@ -354,7 +354,7 @@ bool NeedsFindUI(MainWindow* win) {
     if (!win->AsFixed()) {
         return false;
     }
-    if (win->AsFixed()->GetEngine()->IsImageCollection()) {
+    if (win->AsFixed()->GetEngine()->isImageCollection) {
         return false;
     }
     return true;

@@ -824,7 +824,7 @@ static bool DrawDocument(MainWindow* win, gp::PaintCtx* ctx, Rect rcArea) {
     }
 
     auto* engine = dm->GetEngine();
-    bool isImage = engine->IsImageCollection();
+    bool isImage = engine->isImageCollection;
     bool isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
     bool isPdf = engine->kind == kindEngineMupdf && str::EqI(engine->defaultExt, StrL(".pdf"));
     Color colDocBg;
@@ -1424,7 +1424,7 @@ constexpr double kWheelPageTurnGapMs = 250;
 
 static bool WheelMayTurnPage(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
-    if (!dm || !dm->GetEngine() || !dm->GetEngine()->IsImageCollection()) {
+    if (!dm || !dm->GetEngine() || !dm->GetEngine()->isImageCollection) {
         return true;
     }
     DocCanvasUI* ui = Ui(win);

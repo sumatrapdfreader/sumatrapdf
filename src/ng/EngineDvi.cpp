@@ -686,9 +686,9 @@ class EngineDvi : public EngineBase {
 
     void CopyStateFromPdfEngine() {
         preferredLayout = pdfEngine->preferredLayout;
-        fileDPI = pdfEngine->GetFileDPI();
+        fileDPI = pdfEngine->fileDPI;
         allowsPrinting = pdfEngine->AllowsPrinting();
-        allowsCopyingText = pdfEngine->AllowsCopyingText();
+        allowsCopyingText = pdfEngine->allowsCopyingText;
         decryptionKey = str::Dup(arena, pdfEngine->decryptionKey);
         pageCount = pdfEngine->PageCount();
         hasPageLabels = pdfEngine->HasPageLabels();

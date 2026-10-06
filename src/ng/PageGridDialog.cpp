@@ -150,7 +150,7 @@ static bool PageGridIsMajor(float v, float origin, float minorPt, int subdiv) {
 // heavier), dotted as a dashed run of short pieces. Skips comics, as orig does.
 void PaintPageGrid(DisplayModel* dm, gpui::PaintCtx* ctx) {
     EngineBase* engine = dm->GetEngine();
-    if (!engine || engine->IsImageCollection()) {
+    if (!engine || engine->isImageCollection) {
         return;
     }
     PageGridDraw g = GetPageGridDraw();

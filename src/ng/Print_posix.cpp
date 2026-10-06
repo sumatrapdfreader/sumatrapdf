@@ -131,7 +131,7 @@ static bool PrintEngineToPdf(EngineBase* engine, Str destPath, const Vec<Selecti
                              int orientation = 0) {
     EnsureFullLayout(engine);
     PdfCreator c;
-    float zoom = dpi / engine->GetFileDPI();
+    float zoom = dpi / engine->fileDPI;
     int nPages = engine->PageCount();
     int nAdded = 0;
     int nToPrint = pages ? len(*pages) : nPages;

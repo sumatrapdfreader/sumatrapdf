@@ -595,7 +595,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
     if (!dm) {
         return {};
     }
-    if (dm->GetEngine()->IsImageCollection()) {
+    if (dm->GetEngine()->isImageCollection) {
         return {};
     }
 
@@ -706,7 +706,7 @@ void CopySelectionToClipboard(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     TempStr selText;
     bool isTextOnlySelectionOut = false;
-    if (!gDisableDocumentRestrictions && (dm && !dm->GetEngine()->AllowsCopyingText())) {
+    if (!gDisableDocumentRestrictions && (dm && !dm->GetEngine()->allowsCopyingText)) {
         ShowTemporaryNotification(win, Tr("Copying text was denied (copying as image only)"), kNotifDefaultTimeOut);
         return;
     }

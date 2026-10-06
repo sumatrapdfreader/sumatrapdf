@@ -759,7 +759,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         if (engine && engine->kind == kindEngineComicBooks) {
             ctx.isCbx = true;
         }
-        if (engine && engine->IsImageCollection()) {
+        if (engine && engine->isImageCollection) {
             ctx.isImageCollection = true;
         }
         ctx.isReflowable = engine && engine->isReflowable;

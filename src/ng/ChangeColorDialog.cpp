@@ -232,7 +232,7 @@ static void ClassifyTab(WindowTab* t) {
     if (!engine) {
         return;
     }
-    gColor.isImage = engine->IsImageCollection();
+    gColor.isImage = engine->isImageCollection;
     gColor.isCbx = engine->kind == kindEngineComicBooks;
     gColor.isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
 }

@@ -584,18 +584,12 @@ class EngineBase {
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
 
-    bool IsImageCollection() const;
-
     // access to various document properties (such as Author, Title, etc.)
     virtual TempStr GetPropertyTemp(DocProp prop) = 0;
 
     virtual void GetProperties(Vec<PropValue>& propsOut);
 
     virtual bool AllowsPrinting() const;
-
-    bool AllowsCopyingText() const;
-
-    float GetFileDPI() const;
 
     // returns a list of all available elements for this page
     // caller must delete the Vec but not the elements inside the vector

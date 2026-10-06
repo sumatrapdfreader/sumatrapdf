@@ -1452,7 +1452,7 @@ int RenderCache::PaintTile(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, i
 
     if (!entry) {
         bool allowOtherZoom = !isRemoteSession;
-        if (allowOtherZoom && dm->GetEngine() && dm->GetEngine()->IsImageCollection()) {
+        if (allowOtherZoom && dm->GetEngine() && dm->GetEngine()->isImageCollection) {
             allowOtherZoom = false;
         }
         if (allowOtherZoom) {

@@ -62,7 +62,7 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
 }
 
 bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine) {
-    if (!engine || engine->IsImageCollection()) {
+    if (!engine || engine->isImageCollection) {
         return false;
     }
     if (engine->kind == kindEngineMupdf || engine->kind == kindEngineDjVu) {

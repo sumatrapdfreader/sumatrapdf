@@ -1974,7 +1974,7 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
     // built; here BuildMenuFromDef fills it, so the point it reads has to be
     // on the window first
     EngineBase* engine = dm->GetEngine();
-    bool isImageDoc = engine && (engine->IsImageCollection() || engine->kind == kindEngineImage ||
+    bool isImageDoc = engine && (engine->isImageCollection || engine->kind == kindEngineImage ||
                                  engine->kind == kindEngineImageDir || engine->kind == kindEngineComicBooks);
     win->contextMenuPt = cursorPos;
     win->contextMenuPtValid = !isImageDoc && ReadAloudCanReadFromCursor(dm, cursorPos);

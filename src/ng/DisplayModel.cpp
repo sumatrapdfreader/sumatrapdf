@@ -710,7 +710,7 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 // book view, a landscape image occupies the whole two-page row instead of
 // pairing with the next page. PDFs keep the rigid 2-column pairing.
 bool DisplayModel::ShouldTreatLandscapeAsSpread() const {
-    if (!engine || !engine->IsImageCollection()) {
+    if (!engine || !engine->isImageCollection) {
         return false;
     }
     if (IsSingle(GetDisplayMode())) {
@@ -916,7 +916,7 @@ void DisplayModel::SetUiDpi(int dpi) {
     uiDpi = dpi;
     WindowMargin m;
     Size sp;
-    if (!engine->IsImageCollection()) {
+    if (!engine->isImageCollection) {
         m = gSettings->fixedPageUI.windowMargin;
         sp = gSettings->fixedPageUI.pageSpacing;
     } else {
@@ -962,7 +962,7 @@ DisplayModel::~DisplayModel() {
 // the page size we assume when we don't know the real one: A4 (Letter in
 // countries using the imperial system), in the document's own units
 static RectF DefaultMediaBox(EngineBase* engine) {
-    float fileDPI = engine->GetFileDPI();
+    float fileDPI = engine->fileDPI;
     if (0 == GetMeasurementSystem()) {
         return {0, 0, (float)(21.0 / 2.54 * fileDPI), (float)(29.7 / 2.54 * fileDPI)};
     }
@@ -1109,7 +1109,7 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
         // would make dpiFactor and therefore zoomReal negative
         screenDPI = 96;
     }
-    dpiFactor = 1.0f * (float)screenDPI / engine->GetFileDPI();
+    dpiFactor = 1.0f * (float)screenDPI / engine->fileDPI;
     // pagesInfo isn't built yet, so ValidPageNo() (which reads pageCount from
     // the snapshot) would always say no; ask the engine directly
     if (newStartPage >= 1 && newStartPage <= engine->PageCount()) {
@@ -1166,7 +1166,7 @@ void DisplayModel::BuildPagesInfo() {
     // measuring a page of a comic book / image directory reads the image off
     // disk, so measure them lazily (only what's visible) instead of measuring
     // every page for a continuous layout, which is very slow on network drives
-    useLazyMediaBoxes = engine->IsImageCollection();
+    useLazyMediaBoxes = engine->isImageCollection;
     estimatedMediaBox = DefaultMediaBox(engine);
 
     bool isCont = IsContinuous(displayMode);
@@ -1275,7 +1275,7 @@ bool DisplayModel::LastBookPageVisible() const {
 static void GetImageLimitToWindowFlags(EngineBase* engine, bool& limitWidth, bool& limitHeight) {
     limitWidth = false;
     limitHeight = false;
-    if (!engine || !engine->IsImageCollection()) {
+    if (!engine || !engine->isImageCollection) {
         return;
     }
     if (engine->kind == kindEngineComicBooks) {
@@ -1303,7 +1303,7 @@ static bool IsVirtualFitZoom(float zoomVirtual) {
 // heights across the row instead (issue #5921), like dedicated comic readers.
 // Returns <= 0 if not applicable / empty page; otherwise per-page zoom for pageNo.
 static float ZoomRealMatchFacingHeights(const DisplayModel* dm, float zoomVirtual, int pageNo) {
-    if (!dm || !dm->GetEngine() || !dm->GetEngine()->IsImageCollection()) {
+    if (!dm || !dm->GetEngine() || !dm->GetEngine()->isImageCollection) {
         return 0;
     }
     DisplayMode mode = dm->GetDisplayMode();
@@ -1572,7 +1572,7 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
     zoomVirtual = newZoomVirtual;
     int nPages = PageCount();
     bool matchFacingHeights =
-        engine && engine->IsImageCollection() && !IsSingle(GetDisplayMode()) && IsVirtualFitZoom(newZoomVirtual);
+        engine && engine->isImageCollection && !IsSingle(GetDisplayMode()) && IsVirtualFitZoom(newZoomVirtual);
 
     if (matchFacingHeights) {
         // per-page zoom so facing comic pages share the same display height
@@ -1698,7 +1698,7 @@ float DisplayModel::ComputeZoomReal(int pageNo) const {
     }
     // facing / book: comics match heights per page (issue #5921); PDFs keep a
     // uniform zoom so both pages in the row share the same scale
-    if (engine && engine->IsImageCollection() && IsVirtualFitZoom(zoomVirtual)) {
+    if (engine && engine->isImageCollection && IsVirtualFitZoom(zoomVirtual)) {
         float zoom = ZoomRealMatchFacingHeights(this, zoomVirtual, pageNo);
         if (zoom > 0) {
             return zoom;

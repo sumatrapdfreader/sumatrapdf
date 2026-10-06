@@ -70,7 +70,7 @@ RectF ReaderModel::PageMediabox(int pageNo) const {
 }
 
 float ReaderModel::FileDPI() const {
-    float dpi = engine->GetFileDPI();
+    float dpi = engine->fileDPI;
     return dpi > 0 ? dpi : 96.0f;
 }
 

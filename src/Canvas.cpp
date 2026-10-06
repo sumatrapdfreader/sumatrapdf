@@ -3480,7 +3480,7 @@ static void PageGridStroke(HDC hdc, DisplayModel* dm, int pageNo, PointF a, Poin
 // Style "dotted" / "solid": H/V lines (major heavier). Skips comics.
 static void PaintPageGrid(DisplayModel* dm, HDC hdc) {
     EngineBase* engine = dm->GetEngine();
-    if (!engine || engine->IsImageCollection()) {
+    if (!engine || engine->isImageCollection) {
         return;
     }
     PageGridDraw g = GetPageGridDraw();
@@ -3846,7 +3846,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     // logf("DrawDocument RenderCache:\n");
 
     auto* engine = dm->GetEngine();
-    bool isImage = engine->IsImageCollection();
+    bool isImage = engine->isImageCollection;
     // draw comic books and single images on a black background
     // (without frame and shadow)
     bool paintOnBlackWithoutShadow = win->presentation || isImage;
@@ -3995,7 +3995,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
 
         Rect bounds = pi->pageOnScreen.Intersect(screen);
         // don't paint the frame background for images
-        if (!dm->GetEngine()->IsImageCollection()) {
+        if (!dm->GetEngine()->isImageCollection) {
             if (ShowTransparencyGrid()) {
                 HdcPaintCheckerboard(hdc, bounds.x, bounds.y, bounds.dx, bounds.dy);
             } else {
@@ -4491,7 +4491,7 @@ constexpr double kWheelPageTurnGapMs = 250;
 
 static bool WheelMayTurnPage(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
-    if (!dm || !dm->GetEngine() || !dm->GetEngine()->IsImageCollection()) {
+    if (!dm || !dm->GetEngine() || !dm->GetEngine()->isImageCollection) {
         return true;
     }
     if (win->wheelPageTurnTime.QuadPart != 0 && TimeSinceInMs(win->wheelPageTurnTime) < kWheelPageTurnGapMs) {

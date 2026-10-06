@@ -756,7 +756,7 @@ void ChangeColorWnd::ClassifyTab(WindowTab* t) {
     if (!engine) {
         return;
     }
-    isImage = engine->IsImageCollection();
+    isImage = engine->isImageCollection;
     isCbx = engine->kind == kindEngineComicBooks;
     isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
 }

@@ -2808,7 +2808,7 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
                 detail = detail ? fmt("%s%s%s", detail, StrL(kPageInfoSep), sizeStr) : sizeStr;
             }
             // fileDPI defaults to 96; only show when the image reports something else
-            float dpi = engine->GetFileDPI();
+            float dpi = engine->fileDPI;
             if (dpi > 0.5f && fabsf(dpi - 96.0f) > 0.5f) {
                 TempStr dpiStr = fmt("%.0f DPI", dpi);
                 detail = detail ? fmt("%s%s%s", detail, StrL(kPageInfoSep), dpiStr) : dpiStr;
@@ -2907,8 +2907,8 @@ enum class MeasurementUnit {
 static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, MeasurementUnit unit) {
     pt.x = std::max(pt.x, 0.0f);
     pt.y = std::max(pt.y, 0.0f);
-    pt.x /= engine->GetFileDPI();
-    pt.y /= engine->GetFileDPI();
+    pt.x /= engine->fileDPI;
+    pt.y /= engine->fileDPI;
 
     // for MeasurementUnit::in
     float factor = 1;

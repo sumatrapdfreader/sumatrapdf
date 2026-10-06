@@ -1378,7 +1378,7 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
         // comics in fit-page: a leftover bitmap at the previous zoom is the
         // wrong size; blitting it stretched then replacing it is a visible jump
         bool allowOtherZoom = !isRemoteSession;
-        if (allowOtherZoom && dm->GetEngine() && dm->GetEngine()->IsImageCollection()) {
+        if (allowOtherZoom && dm->GetEngine() && dm->GetEngine()->isImageCollection) {
             allowOtherZoom = false;
         }
         if (allowOtherZoom) {

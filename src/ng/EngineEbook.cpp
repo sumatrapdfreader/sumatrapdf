@@ -239,8 +239,8 @@ static TocItem* newEbookTocItem(Arena* arena, TocItem* parent, Str title, IPageD
 EngineEbook::EngineEbook() {
     pageCount = 0;
     // "B Format" paperback
-    pageRect = RectF(0, 0, 5.12f * GetFileDPI(), 7.8f * GetFileDPI());
-    pageBorder = 0.4f * GetFileDPI();
+    pageRect = RectF(0, 0, 5.12f * fileDPI, 7.8f * fileDPI);
+    pageBorder = 0.4f * fileDPI;
     preferredLayout = preferredLayout = PageLayout(PageLayout::Type::Single);
     a = ArenaNew();
 }
@@ -1898,7 +1898,7 @@ class EngineChm : public EngineEbook {
   public:
     EngineChm() {
         // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
+        pageRect = RectF(0, 0, 8.27f * fileDPI, 11.693f * fileDPI);
         kind = kindEngineChm;
         str::ReplaceWithCopy(&defaultExt, StrL(".chm"));
     }
@@ -2200,7 +2200,7 @@ class EngineHtml : public EngineEbook {
   public:
     EngineHtml() {
         // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
+        pageRect = RectF(0, 0, 8.27f * fileDPI, 11.693f * fileDPI);
         str::ReplaceWithCopy(&defaultExt, StrL(".html"));
     }
     ~EngineHtml() override { delete doc; }

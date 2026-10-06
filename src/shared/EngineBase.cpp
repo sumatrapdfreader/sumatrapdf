@@ -1128,28 +1128,10 @@ void EngineBase::GetPdfPageBoxes(int /*pageNo*/, Vec<PdfPageBox>& out) {
     VecReset(out);
 }
 
-// the layout type this document's author suggests (if the user doesn't care)
-// whether the content should be displayed as images instead of as document pages
-// (e.g. with a black background and less padding in between and without search UI)
-bool EngineBase::IsImageCollection() const {
-    return isImageCollection;
-}
-
 // TODO: needs a more general interface
 // whether it is allowed to print the current document
 bool EngineBase::AllowsPrinting() const {
     return allowsPrinting;
-}
-
-// whether it is allowed to extract text from the current document
-// (except for searching an accessibility reasons)
-bool EngineBase::AllowsCopyingText() const {
-    return allowsCopyingText;
-}
-
-// the DPI for a file is needed when converting internal measures to physical ones
-float EngineBase::GetFileDPI() const {
-    return fileDPI;
 }
 
 // named dest; engine-owned, do not delete

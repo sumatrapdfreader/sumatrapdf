@@ -352,7 +352,7 @@ bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
     PdfCreator* c = new PdfCreator();
     bool ok = true;
     // render all pages to images
-    float zoom = (float)dpi / engine->GetFileDPI();
+    float zoom = (float)dpi / engine->fileDPI;
     for (int i = 1; ok && i <= engine->PageCount(); i++) {
         RenderPageArgs args(i, zoom, 0, nullptr, RenderTarget::Export);
         Pixmap* bmp = engine->RenderPage(args);
@@ -379,7 +379,7 @@ bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
 // Pages that fail every path are skipped.
 bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine,
                                           ImageDataFallbackFn fallbackToEmbeddable) {
-    if (!engine || !engine->IsImageCollection() || engine->PageCount() <= 0) {
+    if (!engine || !engine->isImageCollection || engine->PageCount() <= 0) {
         return false;
     }
     EnsureFullLayout(engine);
@@ -390,7 +390,7 @@ bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine,
         return false;
     }
 
-    float dpi = engine->GetFileDPI();
+    float dpi = engine->fileDPI;
     if (dpi <= 0) {
         dpi = 96.0f;
     }

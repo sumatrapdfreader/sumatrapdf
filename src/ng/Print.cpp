@@ -712,7 +712,7 @@ static float SanitizePrintZoom(float zoom, float fallback, Str why, Size paperSi
 static float PrintFileDPI(EngineBase& engine, const Print_Advanced_Data& advanced) {
     float fileDPI = IsEngineImages(&engine) ? advanced.dpiOverride : 0;
     if (!(fileDPI > 0) || !isfinite(fileDPI)) {
-        fileDPI = engine.GetFileDPI();
+        fileDPI = engine.fileDPI;
     }
     if (!(fileDPI > 0) || !isfinite(fileDPI)) {
         fileDPI = 96.f;
@@ -996,8 +996,8 @@ static bool PrintToDevice(const PrintData& pd) {
     SetMapMode(hdc, MM_TEXT);
 
     float fileDPI = PrintFileDPI(engine, pd.advData);
-    if (fileDPI != engine.GetFileDPI()) {
-        logf("PrintToDevice: dpi override %g (file says %g)\n", fileDPI, engine.GetFileDPI());
+    if (fileDPI != engine.fileDPI) {
+        logf("PrintToDevice: dpi override %g (file says %g)\n", fileDPI, engine.fileDPI);
     }
     // paper geometry; recomputed per page when printing mixed page sizes (#533)
     Size paperSize;
@@ -2015,7 +2015,7 @@ Exit:
 
 static short GetPaperSize(EngineBase* engine, int pageNo) {
     RectF mediabox = engine->PageMediabox(pageNo);
-    SizeF size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), 0).Size();
+    SizeF size = engine->Transform(mediabox, pageNo, 1.0f / engine->fileDPI, 0).Size();
 
     switch (GetPaperFormatFromSizeApprox(size)) {
         case PaperFormat::A2:
@@ -2056,7 +2056,7 @@ static void SetDevModePaperSizeForPage(DEVMODEW* devMode, EngineBase* engine, in
     // (width <= length), like the standard paper kinds above, so that landscape
     // pages are handled by the auto-rotation logic rather than landscape paper.
     RectF mediabox = engine->PageMediabox(pageNo);
-    SizeF size = engine->Transform(mediabox, pageNo, 254.0f / engine->GetFileDPI(), 0).Size();
+    SizeF size = engine->Transform(mediabox, pageNo, 254.0f / engine->fileDPI, 0).Size();
     float w = size.dx, h = size.dy;
     if (w > h) {
         std::swap(w, h);
@@ -2368,7 +2368,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
 static short DetectPrinterPaperSize(EngineBase* engine, Printer* printer) {
     // get size of first page in tenths of a millimeter in portrait mode
     RectF mediabox = engine->PageMediabox(1);
-    SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
+    SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->fileDPI, 0).Size();
     Size sizeP = NormalizePaperSize(Size((int)size.dx, (int)size.dy));
 
     int n = printer->nPaperSizes;
@@ -2401,7 +2401,7 @@ static bool ValidateDevMode(Printer* printer) {
 static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* printer) {
     // get size of first page in tenths of a millimeter
     RectF mediabox = engine->PageMediabox(1);
-    SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
+    SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->fileDPI, 0).Size();
 
     auto* devMode = printer->devMode;
     size_t devModeSize = devMode->dmSize + devMode->dmDriverExtra;

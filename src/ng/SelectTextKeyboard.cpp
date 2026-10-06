@@ -70,7 +70,7 @@ bool CanSelectTextWithKeyboard(MainWindow* win) {
         return false;
     }
     EngineBase* engine = dm->GetEngine();
-    if (!engine || engine->IsImageCollection()) {
+    if (!engine || engine->isImageCollection) {
         return false;
     }
     Kind k = engine->kind;

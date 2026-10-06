@@ -2154,7 +2154,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (engine) {
-        MenuSetEnabled(win->menu, CmdFindFirst, !engine->IsImageCollection());
+        MenuSetEnabled(win->menu, CmdFindFirst, !engine->isImageCollection);
     }
 
     if (win->IsDocLoaded() && !fileExists) {
@@ -2363,7 +2363,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
 
     win->contextMenuPt = cursorPos;
-    bool isImageDoc = engine && (engine->IsImageCollection() || engine->kind == kindEngineImage ||
+    bool isImageDoc = engine && (engine->isImageCollection || engine->kind == kindEngineImage ||
                                  engine->kind == kindEngineImageDir || engine->kind == kindEngineComicBooks);
     win->contextMenuPtValid = !isImageDoc && ReadAloudCanReadFromCursor(dm, cursorPos);
     HMENU readAloudCtxMenu = GetReadAloudContextSubmenu();

@@ -284,7 +284,7 @@ static TempStr FormatPageSizeUnitTemp(SizeF sizeInches, double unitsPerInch, Str
 // US:     "8.27 x 11.69 in, 21.0 x 29.7 cm, 210 x 297 mm, 595 x 842 pt (A4)"
 static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) {
     RectF mediabox = engine->PageMediabox(pageNo);
-    float fileDpi = engine->GetFileDPI();
+    float fileDpi = engine->fileDPI;
     float zoom = 1.0f / fileDpi;
     SizeF size = engine->Transform(mediabox, pageNo, zoom, rotation).Size();
 
@@ -350,7 +350,7 @@ static TempStr FormatPermissionsTemp(DocController* ctrl) {
     if (!engine->AllowsPrinting()) {
         denials.Append(Tr("printing document"));
     }
-    if (!engine->AllowsCopyingText()) {
+    if (!engine->allowsCopyingText) {
         denials.Append(Tr("copying text"));
     }
 

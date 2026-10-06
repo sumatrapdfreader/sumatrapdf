@@ -246,7 +246,7 @@ constexpr int kMaxImageDpi = 9600;
 static const int kImageDpiChoices[] = {72, 96, 150, 300, 600, 1200};
 
 static float SaveSelectionZoom(EngineBase* engine, float dpi) {
-    float fileDpi = engine->GetFileDPI();
+    float fileDpi = engine->fileDPI;
     if (fileDpi <= 0) {
         fileDpi = 72.0f;
     }
@@ -575,7 +575,7 @@ static TempStr DefaultPdfDestPathTemp(Str srcPath) {
 
 // Same conversion as File → Convert to PDF (issue #4118).
 static bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath) {
-    if (!engine || !engine->IsImageCollection() || len(destPath) == 0) {
+    if (!engine || !engine->isImageCollection || len(destPath) == 0) {
         return false;
     }
 
@@ -1565,7 +1565,7 @@ static void ConvertToPdfDoIt() {
     }
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine || !engine->IsImageCollection()) {
+    if (!engine || !engine->isImageCollection) {
         MessageBoxWarning(win, Tr("Failed to save a file"), Tr("Convert to PDF"));
         return;
     }
@@ -3392,7 +3392,7 @@ void ShowConvertToPdfDialog(MainWindow* win) {
     }
     WindowTab* tab = win->CurrentTab();
     EngineBase* engine = tab->GetEngine();
-    if (!engine || !engine->IsImageCollection()) {
+    if (!engine || !engine->isImageCollection) {
         return;
     }
     if (!engine->AllowsPrinting()) {
