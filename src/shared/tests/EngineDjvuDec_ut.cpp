@@ -29,12 +29,12 @@ static djvu_text_zone MakeZone(djvu_zone_type type, const char* text, djvu_text_
 }
 
 #if IS_DEBUG
-bool EngineDjvuDec_UnitTestRotate();
+bool EngineDjvuDec_UnitTestRender();
 #endif
 
 void EngineDjvuDec_UnitTests() {
 #if IS_DEBUG
-    utassert(EngineDjvuDec_UnitTestRotate());
+    utassert(EngineDjvuDec_UnitTestRender());
 #endif
     // a line of two words: a space after each word, one rect per codepoint
     djvu_text_zone words[2] = {MakeZone(DJVU_ZONE_WORD, "ab", nullptr, 0), MakeZone(DJVU_ZONE_WORD, "cd", nullptr, 0)};

@@ -484,24 +484,14 @@ static u8* RotatePixels(const u8* src, int dx, int dy, int rotation, int& dxOut,
     return out;
 }
 
-// Pick the largest subsample whose decoded bitmap still covers the target pixel
-// size, so final scaling only shrinks (never upscales). The coverage test is
-// ceil(dim/(s+1)) >= target; plain floor division (dim/target) is off by one
-// when target doesn't divide dim. Applies to every page type: the decoder
-// composes color (compound/photo) pages at any subsample, so they no longer
-// have to render at full resolution and downscale here.
+// ceil(size / sample) >= target bounds sample by (size - 1) / (target - 1).
+// A one-pixel target only needs the native dimension cap.
 static int DjvuDecPickSubsample(int uprightW, int uprightH, int targetDx, int targetDy) {
     if (uprightW <= 0 || uprightH <= 0 || targetDx <= 0 || targetDy <= 0) {
         return 1;
     }
-    int subsample = 1;
-    while ((uprightW + subsample) / (subsample + 1) >= targetDx &&
-           (uprightH + subsample) / (subsample + 1) >= targetDy) {
-        subsample++; // ceil(uprightW/(s+1)) >= targetDx && ceil(uprightH/(s+1)) >= targetDy
-    }
-    subsample = std::min(subsample, uprightW);
-    subsample = std::min(subsample, uprightH);
-    return subsample;
+    auto limit = [](int size, int target) { return target > 1 ? (size - 1) / (target - 1) : size; };
+    return std::max(1, std::min(limit(uprightW, targetDx), limit(uprightH, targetDy)));
 }
 
 static inline u8 BilinearByte(float v00, float v10, float v01, float v11, float tx, float ty) {
@@ -963,7 +953,23 @@ EngineBase* CreateEngineDjvuDecFromFile(Str path) {
 }
 
 #if IS_DEBUG
-bool EngineDjvuDec_UnitTestRotate() {
+bool EngineDjvuDec_UnitTestRender() {
+    const int subsamples[][5] = {
+        {INT_MAX, INT_MAX, INT_MAX / 2, INT_MAX / 2, 2},
+        {5, 7, 2, 2, 4},
+        {300, 200, 100, 100, 2},
+        {300, 200, 1, 1, 200},
+        {1, 5, 1, 1, 1},
+        {300, 200, 1, 2, 199},
+        {300, 200, 301, 201, 1},
+        {0, 200, 1, 1, 1},
+    };
+    for (const auto& c : subsamples) {
+        if (DjvuDecPickSubsample(c[0], c[1], c[2], c[3]) != c[4]) {
+            return false;
+        }
+    }
+
     const u8 expected[][6] = {{1, 2, 3, 4, 5, 6}, {4, 1, 5, 2, 6, 3}, {6, 5, 4, 3, 2, 1}, {3, 6, 2, 5, 1, 4}};
     const int channels[] = {kGrayChannels, kBgrChannels};
     for (int comp : channels) {
