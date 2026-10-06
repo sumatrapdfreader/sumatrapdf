@@ -962,16 +962,7 @@ void HtmlFormatter::HandleTagP(HtmlToken* t, bool isDiv) {
             align = GetAlignAttr(t, align);
         }
         if (rule.textIndentUnit != StyleRule::inherit && rule.textIndent > 0) {
-            float factor = CurrFont()->GetSize();
-            if (rule.textIndentUnit != StyleRule::em) {
-                factor = 1;
-#if 0
-                if (rule.textIndentUnit == StyleRule::pt) {
-                    /* TODO: take DPI into account */
-                    factor = 1;
-                }
-#endif
-            }
+            float factor = rule.textIndentUnit == StyleRule::em ? CurrFont()->GetSize() : 1;
             indent = rule.textIndent * factor;
         }
 
