@@ -51,26 +51,6 @@ struct RefLookupCache {
     }
 };
 
-static const CitationCacheEntry* CacheLookup(RefLookupCache* c, Str surname, int year, int srcPage) {
-    if (!c) {
-        return nullptr;
-    }
-    for (int i = 0; i < len(c->entries); i++) {
-        const CitationCacheEntry& e = c->entries[i];
-        if (e.year == year && e.srcPage == srcPage && str::Eq(e.surname, surname)) {
-            return &e;
-        }
-    }
-    return nullptr;
-}
-
-static void CacheInsert(RefLookupCache* c, Str surname, int year, int srcPage, int destPage, float destX, float destY) {
-    if (!c) {
-        return;
-    }
-    VecAppend(c->entries, CitationCacheEntry{str::Dup(surname), year, srcPage, destPage, destX, destY});
-}
-
 // Free the lazy-init plain-text lookup cache held on the hover state.
 void RefHoverFreeLookupCache(RefHoverState* s) {
     if (!s) {
@@ -120,35 +100,34 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, 
     return false;
 }
 
-// Look up `surname` in the cache; on miss, do a fresh document scan and
-// insert the result (positive or negative). Returns true on positive hit.
+// Cache both hits and misses; only successful lookups change the outputs.
 static bool LookupOrSearch(RefHoverState* s, EngineBase* engine, int srcPage, Str surname, int year, CitationKind kind,
                            int& destPageOut, float& destXOut, float& destYOut) {
-    const CitationCacheEntry* hit = CacheLookup(s->lookupCache, surname, year, srcPage);
-    if (hit) {
-        if (hit->destPage > 0) {
-            destPageOut = hit->destPage;
-            destXOut = hit->destX;
-            destYOut = hit->destY;
-            return true;
+    auto& entries = s->lookupCache->entries;
+    const CitationCacheEntry* hit = nullptr;
+    for (const auto& entry : entries) {
+        if (entry.year == year && entry.srcPage == srcPage && str::Eq(entry.surname, surname)) {
+            hit = &entry;
+            break;
         }
+    }
+    if (!hit) {
+        int pageCount = engine->PageCount();
+        if (kind == CitationKind::Number && (pageCount <= 0 || srcPage < 1 || srcPage > pageCount)) {
+            return false;
+        }
+        CitationCacheEntry entry{str::Dup(surname), year, srcPage, -1, 0.f, 0.f};
+        FindReferenceLocation(engine, srcPage, surname, year, kind, &entry.destPage, &entry.destX, &entry.destY);
+        VecAppend(entries, entry);
+        hit = &VecLast(entries);
+    }
+    if (hit->destPage <= 0) {
         return false;
     }
-    int pageCount = engine->PageCount();
-    if (kind == CitationKind::Number && (pageCount <= 0 || srcPage < 1 || srcPage > pageCount)) {
-        return false;
-    }
-    int destPage = -1;
-    float destX = -1.f, destY = -1.f;
-    if (FindReferenceLocation(engine, srcPage, surname, year, kind, &destPage, &destX, &destY)) {
-        CacheInsert(s->lookupCache, surname, year, srcPage, destPage, destX, destY);
-        destPageOut = destPage;
-        destXOut = destX;
-        destYOut = destY;
-        return true;
-    }
-    CacheInsert(s->lookupCache, surname, year, srcPage, -1, 0.f, 0.f);
-    return false;
+    destPageOut = hit->destPage;
+    destXOut = hit->destX;
+    destYOut = hit->destY;
+    return true;
 }
 
 // Resolve numeric or author-year citations, caching hits and misses.
