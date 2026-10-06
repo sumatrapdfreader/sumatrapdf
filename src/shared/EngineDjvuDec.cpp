@@ -242,7 +242,7 @@ constexpr int kDjvuPageCacheMaxPages = 32;
 
 EngineDjvuDec::EngineDjvuDec() {
     kind = kindEngineDjVu;
-    SetDefaultExt(defaultExt, StrL(".djvu"));
+    str::ReplaceWithCopy(&defaultExt, StrL(".djvu"));
     fileDPI = 300.0f;
 }
 

@@ -1385,7 +1385,7 @@ bool EngineImage::LoadSingleFile(Str path) {
     if (len(fileExt) == 0) {
         fileExt = StrL("");
     }
-    SetDefaultExt(defaultExt, fileExt);
+    str::ReplaceWithCopy(&defaultExt, fileExt);
     Size fallbackSize = ImageSizeFromDataPortable(data);
     // Huge scans (e.g. 39137x22279 JPEG ≈ 3.5GB BGRA) must not be fully
     // decoded on open. 3.5.2 kept a GDI+ Bitmap and drew it at window size;
@@ -1415,7 +1415,7 @@ bool EngineImage::LoadFromData(Str data) {
     if (len(fileExt) == 0) {
         return false;
     }
-    SetDefaultExt(defaultExt, path::GetExtTemp(fileExt));
+    str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileExt));
 
     Size fallbackSize = ImageSizeFromDataPortable(data);
     if (!DecodedByFzDecoder(GuessFileTypeFromData(data)) && !ImageDecodedPixmapWouldBeHuge(data)) {
@@ -1984,7 +1984,7 @@ class EngineImageDir : public EngineImages {
     EngineImageDir() {
         fileDPI = 96.0f;
         kind = kindEngineImageDir;
-        SetDefaultExt(defaultExt, StrL(""));
+        str::ReplaceWithCopy(&defaultExt, StrL(""));
         // TODO: is there a better place to expose pageFileNames
         // than through page labels?
         hasPageLabels = true;
@@ -2660,7 +2660,7 @@ bool EngineCbx::FinishLoading() {
     fileDPI = 96.f;
 
     Str ext = GetExtFromArchiveType(cbxArchive);
-    SetDefaultExt(defaultExt, ext);
+    str::ReplaceWithCopy(&defaultExt, ext);
 
     Vec<Archive::FileInfo*> pageFiles;
 

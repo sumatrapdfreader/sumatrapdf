@@ -843,7 +843,7 @@ class EngineEpub : public EngineEbook {
 
 EngineEpub::EngineEpub() {
     kind = kindEngineEpub;
-    SetDefaultExt(defaultExt, StrL(".epub"));
+    str::ReplaceWithCopy(&defaultExt, StrL(".epub"));
 }
 
 EngineEpub::~EngineEpub() {
@@ -981,7 +981,7 @@ class EngineFb2 : public EngineEbook {
   public:
     EngineFb2() {
         kind = kindEngineFb2;
-        SetDefaultExt(defaultExt, StrL(".fb2"));
+        str::ReplaceWithCopy(&defaultExt, StrL(".fb2"));
     }
     ~EngineFb2() override {
         DestroyTocTree(tocTree);
@@ -1047,7 +1047,7 @@ bool EngineFb2::FinishLoading() {
     args.textAllocator = a;
 
     if (doc->IsZipped()) {
-        SetDefaultExt(defaultExt, StrL(".fb2z"));
+        str::ReplaceWithCopy(&defaultExt, StrL(".fb2z"));
     }
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
@@ -1118,7 +1118,7 @@ class EngineMobi : public EngineEbook {
   public:
     EngineMobi() {
         kind = kindEngineMobi;
-        SetDefaultExt(defaultExt, StrL(".mobi"));
+        str::ReplaceWithCopy(&defaultExt, StrL(".mobi"));
     }
     ~EngineMobi() override;
     EngineBase* Clone() override {
@@ -1523,7 +1523,7 @@ class EnginePdb : public EngineEbook {
   public:
     EnginePdb() {
         kind = kindEnginePdb;
-        SetDefaultExt(defaultExt, StrL(".pdb"));
+        str::ReplaceWithCopy(&defaultExt, StrL(".pdb"));
     }
     ~EnginePdb() override {
         DestroyTocTree(tocTree);
@@ -1742,7 +1742,7 @@ class EngineChm : public EngineEbook {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         kind = kindEngineChm;
-        SetDefaultExt(defaultExt, StrL(".chm"));
+        str::ReplaceWithCopy(&defaultExt, StrL(".chm"));
     }
     ~EngineChm() override {
         delete dataCache;
@@ -2043,7 +2043,7 @@ class EngineHtml : public EngineEbook {
     EngineHtml() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        SetDefaultExt(defaultExt, StrL(".html"));
+        str::ReplaceWithCopy(&defaultExt, StrL(".html"));
     }
     ~EngineHtml() override { delete doc; }
     EngineBase* Clone() override {

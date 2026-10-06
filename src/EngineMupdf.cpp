@@ -3775,7 +3775,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     SetFilePath(path);
 
     auto ext = path::GetExtTemp(path);
-    SetDefaultExt(defaultExt, ext);
+    str::ReplaceWithCopy(&defaultExt, ext);
 
     int streamNo = -1;
     TempStr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
@@ -9191,7 +9191,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, P
     }
     TempStr ext = GetExtForFileTypeTemp(kind);
     if (ext) {
-        SetDefaultExt(engine->defaultExt, ext);
+        str::ReplaceWithCopy(&engine->defaultExt, ext);
     }
     return engine;
 }

@@ -53,11 +53,6 @@ extern Kind kindEngineHtml;
 
 bool IsExternalUrl(Str url);
 
-static inline void SetDefaultExt(Str& ext, Str snew) {
-    str::Free(ext);
-    ext = str::Dup(snew);
-}
-
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum class RenderTarget {
     View,
