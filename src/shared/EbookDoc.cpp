@@ -347,6 +347,11 @@ static Archive::FileInfo* GetEpubPackage(Archive* archive, TempStr& contentPath)
     return fi && fi->data ? fi : nullptr;
 }
 
+static EpubReadingDirection EpubSpineDirection(const GumboNode* spine) {
+    TempStr dir = GumboAttributeValueTemp(spine, "page-progression-direction");
+    return {(bool)dir, str::EqI(dir, StrL("rtl"))};
+}
+
 bool EpubDoc::Load() {
     if (!archive) {
         return false;
@@ -440,10 +445,10 @@ bool EpubDoc::Load() {
         tocPath = str::Join(contentPath, s);
         isNcxToc = true;
     }
-    TempStr readingDir = GumboAttributeValueTemp(node, "page-progression-direction");
-    if (readingDir) {
+    EpubReadingDirection readingDir = EpubSpineDirection(node);
+    if (readingDir.declared) {
         hasReadingDir = true;
-        isRtlDoc = str::EqI(readingDir, StrL("rtl"));
+        isRtlDoc = readingDir.rtl;
     }
 
     const GumboNode* spine = node;
@@ -750,15 +755,18 @@ bool EpubDoc::IsSupportedFileType(FileType kind) {
 // Only the spine's page-progression-direction. Loading the whole book to read
 // one attribute would mean parsing every chapter.
 EpubReadingDirection EpubGetReadingDirection(Str path) {
-    EpubReadingDirection res;
-    EpubDoc* doc = EpubDoc::CreateFromFile(path);
-    if (!doc) {
-        return res;
+    AutoDelete archive(OpenArchiveFromFile(path, false, gArchiveProgressCb));
+    if (!archive) {
+        return {};
     }
-    res.declared = doc->HasReadingDirection();
-    res.rtl = doc->IsRTL();
-    delete doc;
-    return res;
+    TempStr contentPath;
+    auto* contentFi = GetEpubPackage(archive, contentPath);
+    if (!contentFi) {
+        return {};
+    }
+    GumboDoc doc(Str(contentFi->data, contentFi->fileSizeUncompressed), GumboMode::XmlFragment);
+    const GumboNode* spine = GumboFindDescendantByTag(doc.Document(), StrL("spine"), HtmlNameMatch::Local);
+    return EpubSpineDirection(spine);
 }
 
 EpubDoc* EpubDoc::CreateFromFile(Str path) {
@@ -1519,6 +1527,33 @@ bool EbookDoc_UnitTestLoading() {
         AutoDelete dataDoc(Fb2Doc::CreateFromData(ToStr(zip)));
         AutoDelete fileDoc(Fb2Doc::CreateFromFile(path));
         if ((dataDoc.o != nullptr) != c.valid || (fileDoc.o != nullptr) != c.valid) {
+            return false;
+        }
+    }
+
+    // Direction lookup needs only the package, even without chapter contents.
+    const struct {
+        Str attr;
+        EpubReadingDirection expected;
+    } directions[] = {
+        {StrL("page-progression-direction='rtl'"), {true, true}},
+        {StrL("page-progression-direction='RTL'"), {true, true}},
+        {StrL("page-progression-direction='ltr'"), {true, false}},
+        {StrL("page-progression-direction='default'"), {true, false}},
+        {StrL("page-progression-direction=''"), {false, false}},
+        {{}, {false, false}},
+    };
+    for (const auto& c : directions) {
+        str::Builder zip;
+        ZipCreator creator(zip);
+        Str container = StrL("<container><rootfiles><rootfile full-path='OEBPS/package.opf'/></rootfiles></container>");
+        if (!creator.AddFileData(StrL("META-INF/container.xml"), container) ||
+            !creator.AddFileData(StrL("OEBPS/package.opf"), fmt("<package><spine %s/></package>", c.attr)) ||
+            !creator.Finish() || !file::WriteFile(path, ToStr(zip))) {
+            return false;
+        }
+        EpubReadingDirection dir = EpubGetReadingDirection(path);
+        if (dir.declared != c.expected.declared || dir.rtl != c.expected.rtl) {
             return false;
         }
     }
