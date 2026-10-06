@@ -1483,13 +1483,6 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         return nullptr;
     }
 
-    // the diagnostics below format definition with printf-style '%s', which
-    // reads its argument as a NUL-terminated C-string and ignores Str::len.
-    // definition is usually a settings string (NUL-terminated), but a
-    // non-terminated substring would over-read and print garbage. Use a
-    // guaranteed NUL-terminated, exactly-len-byte copy for all messages.
-    TempStr defSafe = str::DupTemp(definition);
-
     // the same command can be sent via DDE many times
     // we don't want to create duplicate CustomCommand
     for (auto* cmd = gFirstCustomCommand; cmd; cmd = cmd->next) {
@@ -1504,7 +1497,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {
         MaybeDelayedWarningNotification(
-            fmt("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n", defSafe));
+            fmt("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n", definition));
         return nullptr;
     }
     if (len(parts) == 1) {
@@ -1551,7 +1544,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         if (id == CmdNone) {
             // the command doesn't accept any arguments
             MaybeDelayedWarningNotification(
-                fmt("Error parsing Shortcuts: cmd '%s' doesn't accept arguments\n", defSafe));
+                fmt("Error parsing Shortcuts: cmd '%s' doesn't accept arguments\n", definition));
             return CreateCustomCommand(definition, cmdId, nullptr);
         }
         if (id != argCmdId) {
@@ -1562,7 +1555,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     }
     if (firstArgIdx < 0) {
         // shouldn't happen, we already filtered commands without arguments
-        logf("CreateCommandFromDefinition: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", defSafe,
+        logf("CreateCommandFromDefinition: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", definition,
              cmdId, argCmdId);
         ReportIf(true);
         return nullptr;
@@ -1582,7 +1575,8 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         }
     }
     if (!firstArg) {
-        MaybeDelayedWarningNotification(fmt("Error parsing Shortcuts: failed to parse arguments for '%s'\n", defSafe));
+        MaybeDelayedWarningNotification(
+            fmt("Error parsing Shortcuts: failed to parse arguments for '%s'\n", definition));
         return nullptr;
     }
 
@@ -1591,7 +1585,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         Str s = firstArg->strVal;
         static SeqStrings validModes = ">\0#\0@\0:\0*\0$\0%\0=\0"; // TODO: "@@\0" ?
         if (SeqStrIndex(validModes, s) < 0) {
-            logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", defSafe);
+            logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", definition);
             FreeCommandArgs(firstArg);
             firstArg = nullptr;
         }
@@ -1604,7 +1598,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         if (0 == zoomVal) {
             FreeCommandArgs(firstArg);
             MaybeDelayedWarningNotification(
-                fmt("CreateCommandFromDefinition: failed to parse arguments in '%s'\n", defSafe));
+                fmt("CreateCommandFromDefinition: failed to parse arguments in '%s'\n", definition));
             return nullptr;
         }
         firstArg->type = CommandArg::Type::Float;
@@ -1615,7 +1609,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         Str settingName = firstArg->strVal;
         if (len(settingName) == 0 || !FindSettingsBoolSetting(settingName)) {
             MaybeDelayedWarningNotification(
-                fmt("Error parsing Shortcuts: unknown boolean setting '%s' in '%s'\n", settingName, defSafe));
+                fmt("Error parsing Shortcuts: unknown boolean setting '%s' in '%s'\n", settingName, definition));
             // still create the command so the shortcut is registered; execute
             // will warn again if the name is still wrong
         }
