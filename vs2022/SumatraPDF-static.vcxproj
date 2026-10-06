@@ -1677,7 +1677,6 @@
     <ClCompile Include="..\src\Notifications.cpp" />
     <ClCompile Include="..\src\OverlayScrollbar.cpp" />
     <ClCompile Include="..\src\PageGridDialog.cpp" />
-    <ClCompile Include="..\src\PagePosition.cpp" />
     <ClCompile Include="..\src\PageRenderService.cpp" />
     <ClCompile Include="..\src\PageThumbnails.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
@@ -2151,6 +2150,7 @@
     <ClCompile Include="..\src\shared\LitDoc.cpp" />
     <ClCompile Include="..\src\shared\MarkdownToc.cpp" />
     <ClCompile Include="..\src\shared\MobiDoc.cpp" />
+    <ClCompile Include="..\src\shared\PagePosition.cpp" />
     <ClCompile Include="..\src\shared\PageRenderPolicy.cpp" />
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />
     <ClCompile Include="..\src\shared\PdfCad.cpp" />

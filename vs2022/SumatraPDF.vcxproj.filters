@@ -857,9 +857,6 @@
     <ClCompile Include="..\src\PageGridDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PagePosition.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\PageRenderService.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1224,6 +1221,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\MobiDoc.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PagePosition.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PageRenderPolicy.cpp">
