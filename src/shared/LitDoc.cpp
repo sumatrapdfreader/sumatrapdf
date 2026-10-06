@@ -895,7 +895,7 @@ static bool LitParseManifest(LitFile* lit) {
                 // letters, stray ".." (all seen in the wild per calibre)
                 str::TransCharsInPlace(path, StrL("\\"), StrL("/"));
                 if (len(path) > 2 && path.s[1] == ':' && path.s[2] == '/') {
-                    path = str::DupTemp(Str(path.s + 3, len(path) - 3));
+                    path = Str(path.s + 3, len(path) - 3);
                 }
                 item.path = LitNormPathTemp(path);
                 VecAppend(lit->manifest, item);
@@ -916,13 +916,13 @@ static bool LitParseManifest(LitFile* lit) {
         prefixLen = str::LastIndexOfChar(Str(first.s, prefixLen), '/') + 1;
         if (prefixLen > 0) {
             for (LitManifestItem& it : lit->manifest) {
-                it.path = str::DupTemp(Str(it.path.s + prefixLen, len(it.path) - prefixLen));
+                it.path = Str(it.path.s + prefixLen, len(it.path) - prefixLen);
             }
         }
     }
     for (LitManifestItem& it : lit->manifest) {
         if (len(it.path) == 0) {
-            it.path = str::DupTemp(it.internal);
+            it.path = it.internal;
         }
     }
     return len(lit->manifest) > 0;
