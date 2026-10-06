@@ -84,16 +84,7 @@ static i64 GetSyncFileTimestamp(Str path) {
     return (i64)FileTimeToU64(ft);
 }
 
-// Modification time of whichever of the two files the index can be built from is
-// newer. SyncTex::RebuildIndexIfNeeded() reads either <base>.synctex or, when only the
-// compressed form exists, <base>.synctex.gz -- but Create() stores the .synctex
-// path either way (synctex_parser.c insists on it). Stat'ing only the stored
-// path meant that with a gzipped synctex -- what -synctex=1 produces, the
-// MiKTeX/TeX Live default -- the timestamp was always 0 for a file that never
-// exists, so "has it changed?" was never true and a recompile's new synctex was
-// never picked up: forward search kept answering from the first compile's
-// mapping for the rest of the session (issue #5040). Only a reload of the PDF
-// itself, which builds a new Synchronizer, escaped it.
+// Use the newer .synctex or .synctex.gz timestamp; the scanner always stores .synctex.
 i64 Synchronizer::SyncFileTimestamp() const {
     i64 stamp = GetSyncFileTimestamp(syncFilePath);
     if (str::EndsWithI(syncFilePath, StrL(".synctex"))) {
@@ -120,14 +111,10 @@ bool Synchronizer::NeedsToRebuildIndex() {
         return true;
     }
 
-    // has the synchronization file been changed on disk? != rather than >: a
-    // rewrite can also move the timestamp backwards (a toolchain restoring an
-    // older file, a copy that preserves mtime), and that's a change too
+    // A rewrite can move the timestamp backwards too.
     i64 newstamp = SyncFileTimestamp();
     if (newstamp != syncfileTimestamp) {
-        // latch it: only MarkIndexWasRebuilt() clears the flag and adopts the
-        // new time stamp, so a rebuild that fails is retried on the next query
-        // instead of leaving us with an index that was never built
+        // Retry failed rebuilds until MarkIndexWasRebuilt adopts the new timestamp.
         needsToRebuildIndex = true;
         return true; // the file has changed!
     }
@@ -151,9 +138,6 @@ TempStr Synchronizer::PrependDirTemp(Str filename) const {
     return path::JoinTemp(dir, filename);
 }
 
-// Create a Synchronizer object for a PDF file.
-// It creates either a SyncTex or PdfSync object
-// based on the synchronization file found in the folder containing the PDF file.
 int Synchronizer::Create(Str pdffilename, EngineBase* engine, Synchronizer** sync) {
     if (!sync || !engine) {
         return PDFSYNCERR_INVALID_ARGUMENT;
@@ -356,9 +340,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
     // distance to the closest pdf location (in the range <kPdfsyncEpsilonSquare)
     UINT closest_xydist = UINT_MAX;
     UINT selected_record = UINT_MAX;
-    // If no record is found within a distance^2 of kPdfsyncEpsilonSquare
-    // (selected_record == -1) then we pick up the record that is closest
-    // vertically to the hit-point.
+    // Without a nearby point, use the closest vertical match.
     UINT closest_ydist = UINT_MAX;        // vertical distance between the hit point and the vertically-closest record
     UINT closest_xdist = UINT_MAX;        // horizontal distance between the hit point and the vertically-closest record
     UINT closest_ydist_record = UINT_MAX; // vertically-closest record
@@ -407,16 +389,8 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
     return PDFSYNCERR_SUCCESS;
 }
 
-// Find a record corresponding to the given source file, line number and optionally column number.
-// (at the moment the column parameter is ignored)
-//
-// If there are several *consecutively declared* records for the same line then they are all returned.
-// The list of records is added to the vector 'records'
-//
-// If there is no record for that line, the record corresponding to the nearest line is selected
-// (within a range of kEpsilonLine)
-//
-// The function returns PDFSYNCERR_SUCCESS if a matching record was found.
+// Collect consecutive records for the requested line, or the nearest line within kEpsilonLine.
+// Column is ignored.
 UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int /*col*/, Vec<int>& records) {
     if (len(srcfilename) == 0) {
         return PDFSYNCERR_INVALID_ARGUMENT;
@@ -562,11 +536,7 @@ void DeleteSyncTempFiles() {
     gSyncTempFiles = nullptr;
 }
 
-// Writes data to a temp file named <base>.synctex: synctex_parser insists on
-// that extension, so the .tmp GetTempFileNameW hands out has to be renamed.
-// Only that .tmp name is guaranteed free, and the rename frees it again, so a
-// .synctex left behind by a version that didn't delete them, or by a crash,
-// can already be sitting there - replace it instead of failing the search.
+// SyncTeX requires .synctex. Replace crash leftovers when renaming the unique .tmp file.
 static TempStr WriteTempSyncFile(Str data, Str who) {
     TempStr tempPath = GetTempFilePathTemp(StrL("stx")); // stxabcdef.tmp
     if (len(tempPath) == 0) {
@@ -725,16 +695,7 @@ int SyncTex::RebuildIndexIfNeeded() {
     return MarkIndexWasRebuilt();
 }
 
-// Decides whether `resolvedSrcPath` should be treated as a Unix path rather
-// than a Windows path.
-//
-// True if the sync file lives on WSL AND the resolved path is not itself a
-// WSL UNC path -- i.e. the project was compiled by a Linux/WSL toolchain
-// (which records plain Unix paths).
-//
-// Also true if the resolved path is a WSL mount path (e.g. /mnt/c/...),
-// which happens when the PDF lives on a Windows drive but was compiled from
-// inside WSL
+// Use Unix rules for WSL mount paths, or non-UNC sources when the sync file is on a WSL share.
 static bool IsUnixSourcePath(Str syncFilePath, Str resolvedSrcPath) {
     if (len(syncFilePath) == 0 || len(resolvedSrcPath) == 0) {
         return false;
@@ -775,14 +736,8 @@ int SyncTex::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
 
-    // The name comes verbatim from the .synctex file, which travels with the PDF
-    // and is entirely attacker-controlled. It ends up on the command line of the
-    // configured inverse-search editor (BuildOpenFileCmdTemp), so a name like
-    //   foo.tex" --install-extension evil.vsix --
-    // breaks out of the editor template's quotes and injects arguments
-    // (GHSA-jf4v-rw66-j4w2). None of these characters can occur in a real
-    // Windows path, so a name that has one is not a source file we should act
-    // on. A '*' is legitimate here - SyncTeX encodes spaces as '*'.
+    // Reject source names that can inject editor arguments (GHSA-jf4v-rw66-j4w2).
+    // SyncTeX uses legitimate asterisks to encode spaces.
     if (str::ContainsCharAny(name, StrL("\"<>|\r\n\t"))) {
         logf("SyncTex::DocToSource: rejecting source name with an illegal char: '%s'\n", name);
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;

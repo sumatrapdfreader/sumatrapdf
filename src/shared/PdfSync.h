@@ -24,21 +24,13 @@ struct Synchronizer {
     explicit Synchronizer(Str syncfilepath, Str pdffilename);
     virtual ~Synchronizer();
 
-    // Inverse-search:
-    //  - pageNo: page number in the PDF (starting from 1)
-    //  - pt: user-specified PDF-coordinates.
-    // The result is returned in filename, line, col
-    //  - filename: receives the name of the source file
-    //  - line: receives the line number
-    //  - col: receives the column number
+    // Inverse search: 1-based PDF page and point to source filename, line and column.
     virtual int DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) = 0;
 
-    // Forward-search:
-    // The result is returned in page and rects (list of rectangles to highlight).
+    // Forward search: source position to PDF page and highlight rectangles.
     virtual int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) = 0;
 
-    // true if the index needs to be recomputed (needs to be set to true when a change to the
-    // pdfsync file is detected)
+    // Set on sync-file changes; cleared after a successful rebuild.
     bool needsToRebuildIndex = true;
     // modification time (as FILETIME converted to a number) of sync file when index was last built
     i64 syncfileTimestamp = 0;
