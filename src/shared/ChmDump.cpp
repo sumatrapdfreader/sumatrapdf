@@ -20,10 +20,6 @@ static void CliPrint(Str s) {
     WriteStdout(StrL("\n"));
 }
 
-static Str ChmCompressionName(bool isCompressed) {
-    return isCompressed ? StrL("compressed") : StrL("uncompressed");
-}
-
 static Str ChmEntryKind(const chm_entry* e) {
     if (e->is_dir) {
         return StrL("dir");
@@ -113,9 +109,10 @@ static void ChmDumpEntry(chm_ctx* h, chm_entry* e, ChmDumpCtx* ctx) {
         sha1Str = str::MemToHexTemp(Str((char*)readResult.sha1, sizeofi(readResult.sha1)));
     }
 
+    Str compression = e->is_compressed ? StrL("compressed") : StrL("uncompressed");
     CliPrint(fmt("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", ChmEntryKind(e),
-                 ChmEntryClass(e), ChmCompressionName(e->is_compressed), (unsigned long long)e->length,
-                 (unsigned long long)readResult.bytesRead, sha1Str, Str(unpacked ? "ok" : "failed"), Str(e->path)));
+                 ChmEntryClass(e), compression, (unsigned long long)e->length, (unsigned long long)readResult.bytesRead,
+                 sha1Str, Str(unpacked ? "ok" : "failed"), Str(e->path)));
 }
 
 struct ChmDumpTocVisitor : EbookTocVisitor {
@@ -183,14 +180,6 @@ static void DumpChmFileMetadata(Str path) {
     }
 }
 
-static bool DumpChmFile(Str path) {
-    CliPrint(fmt("chm path=%s", path));
-    bool ok = DumpChmFileRaw(path);
-    DumpChmFileMetadata(path);
-    CliPrint(StrL("end"));
-    return ok;
-}
-
 // Dump CHM metadata, file table, and TOC/index information to stdout.
 // Returns 0 if every requested CHM opened, enumerated, and unpacked successfully.
 int DumpChm(const Flags& flags) {
@@ -201,9 +190,10 @@ int DumpChm(const Flags& flags) {
 
     bool ok = true;
     for (Str path : flags.fileNames) {
-        if (!DumpChmFile(path)) {
-            ok = false;
-        }
+        CliPrint(fmt("chm path=%s", path));
+        ok &= DumpChmFileRaw(path);
+        DumpChmFileMetadata(path);
+        CliPrint(StrL("end"));
     }
     return ok ? 0 : 1;
 }
