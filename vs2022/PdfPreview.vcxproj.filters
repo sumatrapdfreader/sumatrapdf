@@ -21,7 +21,6 @@
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\ImageReader.h" />
-    <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h">
@@ -70,6 +69,9 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\PdfCad.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\PdfCreator.h">
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\PdfDarkMode.h">
