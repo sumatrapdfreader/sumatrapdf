@@ -74,23 +74,6 @@ bool DecodeRgbInto(Str d, DecodeDstAllocFn allocDst, void* user) {
     return dst && jxl_frame_render_into(doc, 0, fmt, dst, stride) == 0;
 }
 
-Size SizeFromData(Str d) {
-    Size size;
-    if (len(d) == 0) {
-        return size;
-    }
-    jxl_ctx* ctx = jxl_ctx_new(nullptr, nullptr, nullptr, nullptr);
-    if (!ctx) {
-        return size;
-    }
-    AutoCall freeCtx(jxl_ctx_free, ctx);
-    int w = 0, h = 0;
-    if (jxl_decode_size(ctx, (const u8*)d.s, (size_t)d.len, &w, &h) == 0) {
-        size = Size(w, h);
-    }
-    return size;
-}
-
 } // namespace jxl
 
 #else
@@ -101,9 +84,6 @@ bool HasSignature(Str) {
 }
 bool DecodeRgbInto(Str, DecodeDstAllocFn, void*) {
     return false;
-}
-Size SizeFromData(Str) {
-    return Size();
 }
 Pixmap* PixmapFromData(Str) {
     return nullptr;
