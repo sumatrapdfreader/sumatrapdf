@@ -14,12 +14,6 @@
 
 namespace jxl {
 
-// jxldec detects both the raw JPEG XL codestream and the ISOBMFF container form
-bool HasSignature(Str d) {
-    jxl_signature sig = jxl_signature_check((const u8*)d.s, (size_t)d.len);
-    return sig == JXLDEC_SIG_CODESTREAM || sig == JXLDEC_SIG_CONTAINER;
-}
-
 Pixmap* PixmapFromData(Str d) {
     // JXL container format starts with a 0 byte
     if (len(d) == 0) {
@@ -79,9 +73,6 @@ bool DecodeRgbInto(Str d, DecodeDstAllocFn allocDst, void* user) {
 #else
 
 namespace jxl {
-bool HasSignature(Str) {
-    return false;
-}
 bool DecodeRgbInto(Str, DecodeDstAllocFn, void*) {
     return false;
 }

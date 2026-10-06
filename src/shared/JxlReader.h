@@ -5,7 +5,6 @@ struct Pixmap;
 
 namespace jxl {
 
-bool HasSignature(Str);
 Pixmap* PixmapFromData(Str);
 bool DecodeRgbInto(Str, DecodeDstAllocFn, void* user);
 
