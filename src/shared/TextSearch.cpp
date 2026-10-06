@@ -310,44 +310,32 @@ static bool MatchesFoldedAt(Str text, int textLen, int idx, int byteIdx, Str nee
     return true;
 }
 
-static int FindFirstFolded(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
-    // nothing to find in an empty page: reporting a hit made the caller retry forever
-    if (len(haystack) == 0) {
-        return -1;
-    }
-    if (len(needle) == 0) {
-        return startOff;
-    }
-    int byteIdx = Utf8CodepointToByteIndex(haystack, startOff);
-    for (int i = startOff; i < haystackLen; i++) {
-        if (MatchesFoldedAt(haystack, haystackLen, i, byteIdx, needle, needleLen, haystackLen)) {
-            return i;
-        }
-        Utf8CodepointNext(haystack, byteIdx);
-    }
-    return -1;
-}
-
 static bool StartsWithAtByte(Str text, int byteIdx, Str prefix) {
     return text && prefix && byteIdx >= 0 && byteIdx + prefix.len <= text.len &&
            memcmp(text.s + byteIdx, prefix.s, prefix.len) == 0;
 }
 
-int TextSearch::FindLastAnchor() const {
-    if (len(pageText) == 0 || len(anchor) == 0 || findIndex <= 0 || findIndex > pageTextLen) {
+int TextSearch::FindAnchor() const {
+    if (len(pageText) == 0 || len(anchor) == 0) {
         return -1;
     }
-    if (matchCase && (anchorLen <= 0 || anchorLen > findIndex)) {
+    if (!forward &&
+        (findIndex <= 0 || findIndex > pageTextLen || (matchCase && (anchorLen <= 0 || anchorLen > findIndex)))) {
         return -1;
     }
+    int end = forward ? pageTextLen : findIndex;
     // Folded matches can consume fewer codepoints than the needle (ss / ß).
-    int lastStart = matchCase ? findIndex - anchorLen : findIndex - 1;
+    int lastStart = matchCase ? end - anchorLen : end - 1;
     int result = -1;
-    int byteIdx = 0;
-    for (int i = 0; i <= lastStart; i++) {
+    int start = forward ? findIndex : 0;
+    int byteIdx = Utf8CodepointToByteIndex(pageText, start);
+    for (int i = start; i <= lastStart; i++) {
         bool matches = matchCase ? StartsWithAtByte(pageText, byteIdx, anchor)
-                                 : MatchesFoldedAt(pageText, pageTextLen, i, byteIdx, anchor, anchorLen, findIndex);
+                                 : MatchesFoldedAt(pageText, pageTextLen, i, byteIdx, anchor, anchorLen, end);
         if (matches) {
+            if (forward) {
+                return i;
+            }
             result = i;
         }
         Utf8CodepointNext(pageText, byteIdx);
@@ -485,20 +473,6 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
     return {currentPage, endIdx};
 }
 
-static int FindFirstExact(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
-    if (len(haystack) == 0 || len(needle) == 0) {
-        return -1;
-    }
-    int byteIdx = Utf8CodepointToByteIndex(haystack, startOff);
-    for (int i = startOff; i <= haystackLen - needleLen; i++) {
-        if (StartsWithAtByte(haystack, byteIdx, needle)) {
-            return i;
-        }
-        Utf8CodepointNext(haystack, byteIdx);
-    }
-    return -1;
-}
-
 static int GetNextIndex(int textLen, int offset, bool forward) {
     int idx = offset + (forward ? 0 : -1);
     if (idx < 0 || idx >= textLen) {
@@ -525,11 +499,8 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
             }
             if (len(anchor) == 0) {
                 found = GetNextIndex(pageTextLen, findIndex, forward);
-            } else if (forward) {
-                auto find = matchCase ? FindFirstExact : FindFirstFolded;
-                found = find(pageText, pageTextLen, findIndex, anchor, anchorLen);
             } else {
-                found = FindLastAnchor();
+                found = FindAnchor();
             }
             if (found < 0) {
                 return false;
