@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 void WriteStdout(Str data);
+void WriteStdoutLn(Str data);
 
 #if OS_WIN
 #define kPathSep "\\"

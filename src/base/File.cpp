@@ -31,6 +31,11 @@ void WriteStdout(Str data) {
     fwrite(data.s, 1, (size_t)len(data), stdout);
 }
 
+void WriteStdoutLn(Str data) {
+    WriteStdout(data);
+    WriteStdout(StrL("\n"));
+}
+
 TempStr MakeUniqueFilePathTemp(Str path) {
     if (!file::Exists(path)) {
         return str::DupTemp(path);

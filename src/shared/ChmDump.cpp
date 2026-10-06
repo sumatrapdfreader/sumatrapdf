@@ -15,11 +15,6 @@
 #include "ChmFile.h"
 #include "ChmDump.h"
 
-static void CliPrint(Str s) {
-    WriteStdout(s);
-    WriteStdout(StrL("\n"));
-}
-
 static Str ChmEntryKind(const chm_entry* e) {
     if (e->is_dir) {
         return StrL("dir");
@@ -110,9 +105,10 @@ static void ChmDumpEntry(chm_ctx* h, chm_entry* e, ChmDumpCtx* ctx) {
     }
 
     Str compression = e->is_compressed ? StrL("compressed") : StrL("uncompressed");
-    CliPrint(fmt("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", ChmEntryKind(e),
-                 ChmEntryClass(e), compression, (unsigned long long)e->length, (unsigned long long)readResult.bytesRead,
-                 sha1Str, Str(unpacked ? "ok" : "failed"), Str(e->path)));
+    WriteStdoutLn(fmt("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", ChmEntryKind(e),
+                      ChmEntryClass(e), compression, (unsigned long long)e->length,
+                      (unsigned long long)readResult.bytesRead, sha1Str, Str(unpacked ? "ok" : "failed"),
+                      Str(e->path)));
 }
 
 struct ChmDumpTocVisitor : EbookTocVisitor {
@@ -123,7 +119,7 @@ struct ChmDumpTocVisitor : EbookTocVisitor {
 
     void Visit(Str name, Str url, int level) override {
         any = true;
-        CliPrint(fmt("%s level=%d name=%s url=%s", section, level, name, url));
+        WriteStdoutLn(fmt("%s level=%d name=%s url=%s", section, level, name, url));
     }
 };
 
@@ -131,13 +127,13 @@ static bool DumpChmFileRaw(Str path) {
     Str data = file::ReadFile(path);
     AutoFree<char> freeData(data.s);
     if (len(data) == 0) {
-        CliPrint(StrL("error: couldn't read file"));
+        WriteStdoutLn(StrL("error: couldn't read file"));
         return false;
     }
     chm_ctx* h = chm_ctx_new(nullptr, nullptr, nullptr, nullptr);
     if (!h || !chm_open(h, (const uint8_t*)data.s, (size_t)data.len)) {
         chm_ctx_free(h);
-        CliPrint(StrL("error: couldn't open CHM"));
+        WriteStdoutLn(StrL("error: couldn't open CHM"));
         return false;
     }
 
@@ -149,9 +145,9 @@ static bool DumpChmFileRaw(Str path) {
         ChmDumpEntry(h, entries[i], &ctx);
     }
     bool ok = nEntries > 0;
-    CliPrint(fmt("summary entries=%d files=%d dirs=%d total-size=%llu unpack-failures=%d enumerate=%s", ctx.entries,
-                 ctx.files, ctx.dirs, (unsigned long long)ctx.totalSize, ctx.unpackFailures,
-                 Str(ok ? "ok" : "failed")));
+    WriteStdoutLn(fmt("summary entries=%d files=%d dirs=%d total-size=%llu unpack-failures=%d enumerate=%s",
+                      ctx.entries, ctx.files, ctx.dirs, (unsigned long long)ctx.totalSize, ctx.unpackFailures,
+                      Str(ok ? "ok" : "failed")));
 
     chm_ctx_free(h);
     return ok && ctx.unpackFailures == 0;
@@ -160,23 +156,23 @@ static bool DumpChmFileRaw(Str path) {
 static void DumpChmFileMetadata(Str path) {
     AutoDelete<ChmFile> doc(ChmFile::CreateFromFile(path));
     if (!doc) {
-        CliPrint(StrL("metadata: unavailable"));
+        WriteStdoutLn(StrL("metadata: unavailable"));
         return;
     }
-    CliPrint(fmt("metadata title=%s", doc->title));
-    CliPrint(fmt("metadata creator=%s", doc->creator));
-    CliPrint(fmt("metadata home=%s", doc->homePath));
-    CliPrint(fmt("metadata toc=%s", doc->tocPath));
-    CliPrint(fmt("metadata index=%s", doc->indexPath));
-    CliPrint(fmt("metadata codepage=%u", doc->codepage));
+    WriteStdoutLn(fmt("metadata title=%s", doc->title));
+    WriteStdoutLn(fmt("metadata creator=%s", doc->creator));
+    WriteStdoutLn(fmt("metadata home=%s", doc->homePath));
+    WriteStdoutLn(fmt("metadata toc=%s", doc->tocPath));
+    WriteStdoutLn(fmt("metadata index=%s", doc->indexPath));
+    WriteStdoutLn(fmt("metadata codepage=%u", doc->codepage));
 
     ChmDumpTocVisitor toc(StrL("toc"));
     if (!doc->ParseToc(&toc) || !toc.any) {
-        CliPrint(StrL("toc: none"));
+        WriteStdoutLn(StrL("toc: none"));
     }
     ChmDumpTocVisitor index(StrL("index"));
     if (!doc->ParseIndex(&index) || !index.any) {
-        CliPrint(StrL("index: none"));
+        WriteStdoutLn(StrL("index: none"));
     }
 }
 
@@ -184,16 +180,16 @@ static void DumpChmFileMetadata(Str path) {
 // Returns 0 if every requested CHM opened, enumerated, and unpacked successfully.
 int DumpChm(const Flags& flags) {
     if (len(flags.fileNames) == 0) {
-        CliPrint(StrL("No file specified for -dump-chm"));
+        WriteStdoutLn(StrL("No file specified for -dump-chm"));
         return 1;
     }
 
     bool ok = true;
     for (Str path : flags.fileNames) {
-        CliPrint(fmt("chm path=%s", path));
+        WriteStdoutLn(fmt("chm path=%s", path));
         ok &= DumpChmFileRaw(path);
         DumpChmFileMetadata(path);
-        CliPrint(StrL("end"));
+        WriteStdoutLn(StrL("end"));
     }
     return ok ? 0 : 1;
 }

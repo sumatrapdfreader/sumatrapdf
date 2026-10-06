@@ -9,36 +9,31 @@
 #include "Flags.h"
 #include "ExifDump.h"
 
-static void CliPrint(Str s) {
-    WriteStdout(s);
-    WriteStdout(StrL("\n"));
-}
-
 // Dump all EXIF metadata for path to stdout (exif-py compatible format).
 static void DumpExifFile(Str path) {
     if (len(path) == 0) {
         return;
     }
-    CliPrint(fmt("Opening: %s", path));
+    WriteStdoutLn(fmt("Opening: %s", path));
     Str data = file::ReadFile(path);
     AutoFree dataOwner(data.s);
     if (len(data) == 0) {
-        CliPrint(StrL("No EXIF information found"));
+        WriteStdoutLn(StrL("No EXIF information found"));
         return;
     }
 
     ExifParser parser;
     if (!parser.Parse(data)) {
-        CliPrint(StrL("No EXIF information found"));
+        WriteStdoutLn(StrL("No EXIF information found"));
         return;
     }
 
     if (parser.hasJpegThumbnail) {
-        CliPrint(StrL("File has JPEG thumbnail"));
+        WriteStdoutLn(StrL("File has JPEG thumbnail"));
     }
 
     for (Str line : parser.dumpLines) {
-        CliPrint(line);
+        WriteStdoutLn(line);
     }
 }
 
@@ -47,6 +42,6 @@ void DumpExif(const Flags& flags) {
         DumpExifFile(path);
     }
     if (len(flags.fileNames) == 0) {
-        CliPrint(StrL("No file specified for -dump-exif"));
+        WriteStdoutLn(StrL("No file specified for -dump-exif"));
     }
 }
