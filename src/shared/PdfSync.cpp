@@ -630,35 +630,29 @@ static TempStr DealPlainSync(TempStr pathSync) {
         return {};
     }
     Str src = file::ReadFile(pathSync);
+    AutoFree freeSrc(src.s);
     if (len(src) == 0) {
         logf("DealPlainSync: '%s' failed\n", pathSync);
         return {};
     }
-    TempStr srcZ = str::DupTemp(src);
 #if OS_WIN
-    bool isUtf8 = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, nullptr, 0) != 0;
+    bool isUtf8 = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src.s, -1, nullptr, 0) != 0;
 #else
-    const u8* scan = (const u8*)srcZ.s;
-    bool isUtf8 = isLegalUTF8String(&scan, scan + len(srcZ));
+    const u8* scan = (const u8*)src.s;
+    bool isUtf8 = isLegalUTF8String(&scan, scan + len(src));
 #endif
     if (isUtf8) {
         logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);
         return pathSync;
     }
     logf("DealPlainSync: '%s' NOT utf-8, decode by local ansi and write utf-8 to temp file\n", pathSync);
-    Str converted = ConvertLocalToUTF8(srcZ);
+    Str converted = ConvertLocalToUTF8(src);
     if (len(converted) == 0) {
         logf("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
         return {};
     }
-    Str dst = converted;
-
-    if (len(dst) == 0) {
-        logf("DealPlainSync: decoded content is empty.\n", pathSync);
-        return {};
-    }
-    TempStr tempPathSync = WriteTempSyncFile(dst, StrL("DealPlainSync"));
-    str::Free(dst);
+    TempStr tempPathSync = WriteTempSyncFile(converted, StrL("DealPlainSync"));
+    str::Free(converted);
     if (len(tempPathSync) == 0) {
         return {};
     }
