@@ -1127,14 +1127,18 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text)
         goto Fallback;
     }
 
-    if (tok->NameIs(StrL("BOOKMARK"))) {
-        // <BOOKMARK NAME="Contents">
+    bool isBookmark = tok->NameIs(StrL("BOOKMARK"));
+    if (isBookmark || tok->NameIs(StrL("LABEL"))) {
         AttrInfo attr = tok->GetAttrByName(StrL("NAME"));
         if (!attr || len(attr.val) == 0) {
             goto Fallback;
         }
-        tocEntries.Append(ResolveHtmlEntitiesTemp(attr.val));
-        builder.Append(fmt("<a name=" kPdbTocEntryMark "%d>", ::len(tocEntries)));
+        if (isBookmark) {
+            tocEntries.Append(ResolveHtmlEntitiesTemp(attr.val));
+            builder.Append(fmt("<a name=" kPdbTocEntryMark "%d>", ::len(tocEntries)));
+        } else {
+            builder.Append(fmt("<a name=\"%s\">", attr.val));
+        }
     } else if (tok->NameIs(StrL("HEADER"))) {
         // <HEADER TEXT="Contents" ALIGN=CENTER STYLE=UNDERLINE>
         int hx = 2;
@@ -1156,13 +1160,6 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text)
     } else if (tok->NameIs(StrL("HRULE"))) {
         // <HRULE STYLE=OUTLINE>
         builder.Append(StrL("<hr>"));
-    } else if (tok->NameIs(StrL("LABEL"))) {
-        // <LABEL NAME="Contents">
-        AttrInfo attr = tok->GetAttrByName(StrL("NAME"));
-        if (!attr || len(attr.val) == 0) {
-            goto Fallback;
-        }
-        builder.Append(fmt("<a name=\"%s\">", attr.val));
     } else if (tok->NameIs(StrL("LINK"))) {
         // <LINK TEXT="Press Me" TAG="Contents" FILE="My Novels">
         AttrInfo attrTag = tok->GetAttrByName(StrL("TAG"));
