@@ -316,7 +316,7 @@ static bool MatchesFoldedAt(Str text, int textLen, int idx, int byteIdx, Str nee
     return true;
 }
 
-static int StrStrFoldCase(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
+static int FindFirstFolded(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
     // nothing to find in an empty page: reporting a hit made the caller retry forever
     if (len(haystack) == 0) {
         return -1;
@@ -339,7 +339,7 @@ static bool StartsWithAtByte(Str text, int byteIdx, Str prefix) {
            memcmp(text.s + byteIdx, prefix.s, prefix.len) == 0;
 }
 
-static int StrRStr(Str text, int textLen, int endOff, Str needle, int needleLen) {
+static int FindLastExact(Str text, int textLen, int endOff, Str needle, int needleLen) {
     if (len(text) == 0 || len(needle) == 0 || endOff <= 0 || endOff > textLen) {
         return -1;
     }
@@ -357,7 +357,7 @@ static int StrRStr(Str text, int textLen, int endOff, Str needle, int needleLen)
     return result;
 }
 
-static int StrRStrFoldCase(Str text, int textLen, int endOff, Str needle, int needleLen) {
+static int FindLastFolded(Str text, int textLen, int endOff, Str needle, int needleLen) {
     if (len(text) == 0 || len(needle) == 0 || endOff <= 0 || endOff > textLen) {
         return -1;
     }
@@ -516,7 +516,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
     return {currentPage, endIdx};
 }
 
-static int StrStr(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
+static int FindFirstExact(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
     if (len(haystack) == 0 || len(needle) == 0) {
         return -1;
     }
@@ -559,18 +559,10 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
             }
             if (len(anchor) == 0) {
                 found = GetNextIndex(pageTextLen, findIndex, forward);
-            } else if (forward) {
-                if (matchCase) {
-                    found = StrStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
-                } else {
-                    found = StrStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
-                }
             } else {
-                if (matchCase) {
-                    found = StrRStr(pageText, pageTextLen, findIndex, anchor, anchorLen);
-                } else {
-                    found = StrRStrFoldCase(pageText, pageTextLen, findIndex, anchor, anchorLen);
-                }
+                auto find = forward ? (matchCase ? FindFirstExact : FindFirstFolded)
+                                    : (matchCase ? FindLastExact : FindLastFolded);
+                found = find(pageText, pageTextLen, findIndex, anchor, anchorLen);
             }
             if (found < 0) {
                 return false;
