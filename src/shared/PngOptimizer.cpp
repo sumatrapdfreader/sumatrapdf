@@ -12,23 +12,16 @@
 
 #include "PngOptimizer.h"
 
-// zopfli is slow (roughly a second or more per MB of PNG) so don't try to
-// optimize huge files; typical screenshots are well under this
+// Skip huge PNGs because zopfli takes roughly a second per MB.
 constexpr int kMaxPngSizeToOptimize = 16 * 1024 * 1024;
 
-// zopfli's default tries every PNG filter at 15 iterations each; on a
-// 300 dpi page (8.7 Mpx) that is half a minute. Above this many pixels use
-// one filter and one iteration
+// Large pages use one filter and iteration to avoid slow default searches.
 constexpr i64 kLargePngPixels = 2 * 1000 * 1000;
 constexpr int kLargePngIterations = 1;
 static ZopfliPNGFilterStrategy gLargePngFilter = kStrategyMinSum;
 
-// After optimizing we insert this tEXt chunk ("Software" keyword + text, the
-// standard PNG way of naming the producing program) directly after IHDR, so
-// that a later OptimizePngFileAsync() on the same file recognizes it as our
-// own output and skips the expensive zopfli run. The chunk is at a fixed
-// offset (IHDR is always first and fixed-size), so detection is a memcmp of
-// the file's first kMarkerOffset + kMarkerChunkSize bytes.
+// A Software tEXt chunk immediately after IHDR marks our output so later
+// optimization skips it. IHDR's fixed size makes the marker offset constant.
 static const char kMarkerPayload[] = "Software\0SumatraPDF zopfli";
 constexpr int kMarkerPayloadLen = sizeofi(kMarkerPayload) - 1;  // sans implicit terminating NUL
 constexpr int kMarkerChunkSize = 4 + 4 + kMarkerPayloadLen + 4; // length + type + payload + crc
@@ -83,11 +76,8 @@ static void SetZopfliOpts(CZopfliPNGOptions* opts, const u8* png, int n) {
     opts->num_iterations_large = kLargePngIterations;
 }
 
-// Losslessly recompress the PNG file at path with zopflipng and replace it if
-// the result is smaller. The new content is written to a temp file which is
-// then atomically swapped in, so anyone reading the file concurrently (e.g.
-// the document we just loaded from it) sees either the old or the new
-// content, never a partial write.
+// Replace with a smaller, losslessly compressed PNG. An atomic rename keeps
+// concurrent readers from seeing a partial write.
 static void OptimizePngFile(Str path) {
     auto timeStart = TimeGet();
     Str d = file::ReadFile(path);
@@ -153,9 +143,7 @@ static void OptimizePngFile(Str path) {
          sepSaved, savedPercent, secs);
 }
 
-// Optimize the PNG file at path on a background thread. Does nothing if path
-// is not a .png file, so it's safe to call unconditionally after saving an
-// image in a user-selected format.
+// Optimize a saved PNG in the background; other file extensions are skipped.
 void OptimizePngFileAsync(Str path) {
     StrVec paths;
     paths.Append(path);
@@ -169,9 +157,7 @@ static void OptimizePngFilesThread(StrVec* paths) {
     delete paths;
 }
 
-// Same as OptimizePngFileAsync for each .png path, one after another on a
-// single background thread so converting many pages does not spawn one
-// zopfli thread per file
+// Use one background thread so exporting many pages does not spawn one per PNG.
 void OptimizePngFilesAsync(const StrVec& paths) {
     auto* toOptimize = new StrVec();
     for (Str path : paths) {
