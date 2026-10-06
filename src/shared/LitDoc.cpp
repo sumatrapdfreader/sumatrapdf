@@ -1339,31 +1339,24 @@ static bool LitIsEntityStart(Str s, int pos) {
 // become &lt; / &gt;
 static Str LitEscapeReserved(Str s) {
     str::Builder out;
-    int i = 0;
-    while (i < len(s)) {
+    for (int i = 0; i < len(s); i++) {
         char c = s.s[i];
-        if (c == '&') {
-            if (LitIsEntityStart(s, i)) {
-                out.AppendChar('&');
-            } else {
-                out.Append(StrL("&amp;"));
-            }
-            i++;
-            continue;
-        }
-        if ((c == '<' || c == '>') && i + 1 < len(s) && s.s[i + 1] == c) {
+        Str replacement;
+        if (c == '&' && !LitIsEntityStart(s, i)) {
+            replacement = StrL("&amp;");
+        } else if ((c == '<' || c == '>') && i + 1 < len(s) && s.s[i + 1] == c) {
             bool commentStart = c == '<' && str::StartsWith(Str(s.s + i + 2, len(s) - i - 2), StrL("!--"));
             bool commentEnd = c == '>' && i >= 2 && s.s[i - 1] == '-' && s.s[i - 2] == '-';
-            if (commentStart || commentEnd) {
-                out.AppendChar(c);
-            } else {
-                out.Append(c == '<' ? StrL("&lt;") : StrL("&gt;"));
+            if (!commentStart && !commentEnd) {
+                replacement = c == '<' ? StrL("&lt;") : StrL("&gt;");
             }
-            i += 2;
-            continue;
+            i++;
         }
-        out.AppendChar(c);
-        i++;
+        if (replacement) {
+            out.Append(replacement);
+        } else {
+            out.AppendChar(c);
+        }
     }
     return out.TakeStr();
 }
