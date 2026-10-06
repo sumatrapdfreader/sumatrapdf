@@ -54,21 +54,13 @@ void DeleteStaleUpdateTemps(Str dir, Str skip, int minAgeSec) {
         if (skip && str::EqI(e->filePath, skip)) {
             continue;
         }
-        Str tail;
-        if (!UpdateTempTail(e->name, tail)) {
+        bool stub = str::EndsWithI(e->name, StrL(".tmp"));
+        // GetTempFileName leaves a 0-byte file. A non-empty one belongs to someone else.
+        if (stub && e->size != 0) {
             continue;
         }
-        bool stub = str::EqI(tail, StrL(".tmp"));
-        if (stub) {
-            // GetTempFileName leaves a 0-byte file. A non-empty one belongs to someone else.
-            if (e->size != 0) {
-                continue;
-            }
-        } else {
-            int age = FileTimeDiffInSecs(now, e->modificationTime);
-            if (age < minAgeSec) {
-                continue;
-            }
+        if (!stub && FileTimeDiffInSecs(now, e->modificationTime) < minAgeSec) {
+            continue;
         }
         doomed.Append(e->filePath);
     }
