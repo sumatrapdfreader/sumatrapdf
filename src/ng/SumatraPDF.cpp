@@ -309,23 +309,6 @@ bool SettingsRememberOpenedFiles() {
     return gSettings->rememberOpenedFiles;
 }
 
-// ng: body copied from orig SumatraPDF.cpp
-bool DocIsSupportedFileType(FileType kind) {
-    if (EpubDoc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    if (Fb2Doc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    if (MobiDoc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    if (PalmDoc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    return false;
-}
-
 // ng: Windows keeps a file type's perceived type in the registry; elsewhere
 // it comes from a short list of extensions
 static TempStr PerceivedTypeTemp(Str path) {
@@ -2430,7 +2413,7 @@ static StrVec gFilesFailedToOpen;
 
 static bool IsOpenableNextPrevFile(Str path) {
     FileType kind = GuessFileTypeFromName(path, true);
-    return IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
+    return IsSupportedFileType(kind, true);
 }
 
 static void RemoveFailedFiles(StrVec& files) {

@@ -8,7 +8,7 @@ static void RegressTestEpubLoading(Str fileName) {
     TempStr filePath = path::JoinTemp(TestFilesDir(), fileName);
     VerifyFileExists(filePath);
     FileType kind = GuessFileType(fileName, true);
-    ReportIf(!EpubDoc::IsSupportedFileType(kind));
+    ReportIf(kind != FileType::Epub);
     EpubDoc* doc = EpubDoc::CreateFromFile(filePath);
     ReportIf(!doc);
     delete doc;
@@ -29,7 +29,7 @@ static void Regress00() {
     TempStr filePath = path::JoinTemp(TestFilesDir(), StrL("epub\\widget-figure-gallery-20120405.epub"));
     VerifyFileExists(filePath);
     FileType kind = GuessFileType(filePath, true);
-    ReportIf(!EpubDoc::IsSupportedFileType(kind));
+    ReportIf(kind != FileType::Epub);
     EpubDoc* doc = EpubDoc::CreateFromFile(filePath);
     ReportIf(!doc);
 

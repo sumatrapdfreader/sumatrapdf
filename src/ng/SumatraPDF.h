@@ -192,7 +192,6 @@ void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 
 enum class FileType : u8;
 // true for the ebook formats EbookDoc handles (epub, fb2, mobi, palmdoc)
-bool DocIsSupportedFileType(FileType);
 
 bool SettingsUseTabs();
 bool SettingsRememberOpenedFiles();

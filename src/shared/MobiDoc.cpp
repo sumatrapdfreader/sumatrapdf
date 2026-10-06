@@ -1107,10 +1107,6 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool MobiDoc::IsSupportedFileType(FileType kind) {
-    return kind == FileType::Mobi;
-}
-
 MobiDoc* MobiDoc::CreateFromFile(Str path) {
     MobiDoc* mb = new MobiDoc(path);
     PdbReader* pdbReader = PdbReader::CreateFromFile(path);

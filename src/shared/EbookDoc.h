@@ -5,7 +5,6 @@ class GumboHtmlParser;
 struct HtmlToken;
 struct PropValue;
 enum class DocProp : u8;
-enum class FileType : u8;
 
 struct ImageData {
     Str base;
@@ -57,8 +56,6 @@ struct EpubDoc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFileType(FileType kind);
-
     static EpubDoc* CreateFromFile(Str path);
     static EpubDoc* CreateFromData(Str data);
 };
@@ -96,8 +93,6 @@ struct Fb2Doc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;
 
-    static bool IsSupportedFileType(FileType kind);
-
     static Fb2Doc* CreateFromFile(Str path);
     static Fb2Doc* CreateFromData(Str data);
 };
@@ -123,7 +118,6 @@ struct PalmDoc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFileType(FileType kind);
     static PalmDoc* CreateFromFile(Str path);
 };
 

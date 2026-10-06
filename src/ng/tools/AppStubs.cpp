@@ -18,10 +18,6 @@
 #include "DisplayMode.h"
 #include "Translations.h"
 #include "EmbeddedResources.h"
-#include "EbookBase.h"
-#include "PalmDbReader.h"
-#include "EbookDoc.h"
-#include "MobiDoc.h"
 #include "SumatraPDF.h"
 
 // EngineMupdf asks the app how the user configured ebook rendering
@@ -56,23 +52,6 @@ bool CanAccessDisk() {
 }
 
 bool AnnotationsAreDisabled() {
-    return false;
-}
-
-// ng: body copied from orig SumatraPDF.cpp
-bool DocIsSupportedFileType(FileType kind) {
-    if (EpubDoc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    if (Fb2Doc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    if (MobiDoc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    if (PalmDoc::IsSupportedFileType(kind)) {
-        return true;
-    }
     return false;
 }
 

@@ -190,13 +190,7 @@ static void BenchFile(Str path, Str pagesSpec) {
 
 static bool IsFileToBench(Str path) {
     FileType kind = GuessFileType(path, true);
-    if (IsSupportedFileType(kind, true)) {
-        return true;
-    }
-    if (DocIsSupportedFileType(kind)) {
-        return true;
-    }
-    return false;
+    return IsSupportedFileType(kind, true);
 }
 
 static void CollectFilesToBench(Str dir, StrVec& files) {
@@ -253,7 +247,7 @@ static bool IsStressTestSupportedFile(Str filePath, Str filter) {
     if (kind == FileType::Unknown) {
         return false;
     }
-    if (IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind) || ChmModel::IsSupportedFileType(kind)) {
+    if (IsSupportedFileType(kind, true) || ChmModel::IsSupportedFileType(kind)) {
         return true;
     }
     if (len(filter) == 0) {
@@ -271,7 +265,7 @@ static bool IsStressTestSupportedFile(Str filePath, Str filter) {
     if (ChmModel::IsSupportedFileType(kindSniffed)) {
         return true;
     }
-    return DocIsSupportedFileType(kindSniffed);
+    return false;
 }
 
 // return t1 - t2 in seconds

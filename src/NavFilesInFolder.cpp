@@ -220,7 +220,7 @@ static void ScheduleFocusNavListBox() {
 // listed dir, and callers already skipped directories.
 static bool CanOpenFile(Str path) {
     FileType kind = GuessFileTypeFromName(path, true);
-    return IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
+    return IsSupportedFileType(kind, true);
 }
 
 // dirs first, then files, each sorted naturally by name.

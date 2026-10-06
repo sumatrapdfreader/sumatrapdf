@@ -748,10 +748,6 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     return ParseNavToc(tocDataStr, pagePath, visitor);
 }
 
-bool EpubDoc::IsSupportedFileType(FileType kind) {
-    return kind == FileType::Epub;
-}
-
 // Only the spine's page-progression-direction. Loading the whole book to read
 // one attribute would mean parsing every chapter.
 EpubReadingDirection EpubGetReadingDirection(Str path) {
@@ -1151,10 +1147,6 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
     return true;
 }
 
-bool Fb2Doc::IsSupportedFileType(FileType kind) {
-    return kind == FileType::Fb2 || kind == FileType::Fb2z;
-}
-
 Fb2Doc* Fb2Doc::CreateFromFile(Str path) {
     return LoadEbook<Fb2Doc>(path);
 }
@@ -1314,10 +1306,6 @@ bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
         visitor->Visit(name, url, 1);
     }
     return true;
-}
-
-bool PalmDoc::IsSupportedFileType(FileType kind) {
-    return kind == FileType::PalmDoc;
 }
 
 PalmDoc* PalmDoc::CreateFromFile(Str path) {

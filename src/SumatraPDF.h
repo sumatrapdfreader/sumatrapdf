@@ -357,7 +357,6 @@ EngineBase* CreatePdfEngineForDialog(Str path, HWND hwnd);
 TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCodeOut = nullptr);
 TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
 TempStr SaveFileAsResultTemp(Str dstPath, int* exitCodeOut);
-bool DocIsSupportedFileType(FileType);
 void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, bool showWin = true);
 void ShowFileInFolder(MainWindow* win, Str path);
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);

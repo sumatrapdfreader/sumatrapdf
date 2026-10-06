@@ -500,22 +500,6 @@ bool SumatraLaunchBrowser(Str url) {
     return LaunchFileShell(url, {}, StrL("open"));
 }
 
-bool DocIsSupportedFileType(FileType kind) {
-    if (EpubDoc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    if (Fb2Doc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    if (MobiDoc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    if (PalmDoc::IsSupportedFileType(kind)) {
-        return true;
-    }
-    return false;
-}
-
 // lets the shell open a file of any supported perceived type
 // in the default application for opening such files
 bool OpenFileExternally(Str path) {
@@ -7143,7 +7127,7 @@ static bool IsAtDocumentBottom(MainWindow* win);
 
 static bool IsOpenableNextPrevFile(Str path) {
     FileType kind = GuessFileTypeFromName(path, true);
-    return IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
+    return IsSupportedFileType(kind, true);
 }
 
 // File history is UI-thread only, so snapshot paths in this dir before the
