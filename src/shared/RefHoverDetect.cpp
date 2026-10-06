@@ -73,11 +73,8 @@ static bool MatchWordAt(WStr text, int idx, WStr w, LabelKind kind) {
     if (requireTrailingDigit && idx + n + 1 >= text.len) {
         return false;
     }
-    for (int j = 0; j < n; j++) {
-        WCHAR c = WCharToLower(text.s[idx + j]);
-        if (c != w.s[j]) {
-            return false;
-        }
+    if (wstr::CmpI(WStr(text.s + idx, n), w) != 0) {
+        return false;
     }
     if (!requireTrailingDigit) {
         // require a trailing word boundary so that e.g. "Sections of ..."
