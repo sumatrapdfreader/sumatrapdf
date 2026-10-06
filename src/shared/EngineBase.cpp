@@ -362,13 +362,6 @@ void TocItem::AddSiblingAtEnd(TocItem* sibling) {
     sibling->parent = item->parent;
 }
 
-void TocItem::AddChild(TocItem* newChild) {
-    TocItem* curr = child;
-    child = newChild;
-    newChild->parent = this;
-    newChild->next = curr;
-}
-
 // returns the destination this ToC item points to or nullptr
 // (the result is owned by the TocItem and MUST NOT be deleted)
 // TODO: rename to GetDestination()

@@ -386,7 +386,6 @@ struct TocItem {
     int currChildNo;
 
     void AddSiblingAtEnd(TocItem* sibling);
-    void AddChild(TocItem* child);
 
     IPageDestination* GetPageDestination() const;
 
