@@ -51,7 +51,6 @@ struct EpubDoc {
     Str GetFileData(Str relPath, Str pagePath);
 
     TempStr GetPropertyTemp(DocProp prop) const;
-    Str GetFileName() const;
     bool IsRTL() const;
     bool HasReadingDirection() const;
 
@@ -92,7 +91,6 @@ struct Fb2Doc {
     Str GetCoverImage() const;
 
     TempStr GetPropertyTemp(DocProp prop) const;
-    Str GetFileName() const;
     bool IsZipped() const;
 
     bool HasToc() const;
@@ -121,7 +119,6 @@ struct PalmDoc {
     Str GetHtmlData() const;
 
     TempStr GetPropertyTemp(DocProp prop) const;
-    Str GetFileName() const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
@@ -151,9 +148,7 @@ struct HtmlDoc {
     Str GetFileData(Str relPath);
 
     TempStr GetPropertyTemp(DocProp prop) const;
-    Str GetFileName() const;
 
-    static bool IsSupportedFileType(FileType kind);
     static HtmlDoc* CreateFromFile(Str path);
 };
 

@@ -604,10 +604,6 @@ TempStr EpubDoc::GetPropertyTemp(DocProp prop) const {
     return GetPropValueTemp(props, prop);
 }
 
-Str EpubDoc::GetFileName() const {
-    return fileName;
-}
-
 bool EpubDoc::IsRTL() const {
     return isRtlDoc;
 }
@@ -1116,10 +1112,6 @@ TempStr Fb2Doc::GetPropertyTemp(DocProp prop) const {
     return GetPropValueTemp(props, prop);
 }
 
-Str Fb2Doc::GetFileName() const {
-    return fileName;
-}
-
 bool Fb2Doc::IsZipped() const {
     return isZipped;
 }
@@ -1326,10 +1318,6 @@ TempStr PalmDoc::GetPropertyTemp(DocProp /*prop*/) const {
     return {};
 }
 
-Str PalmDoc::GetFileName() const {
-    return fileName;
-}
-
 bool PalmDoc::HasToc() const {
     return len(tocEntries) > 0;
 }
@@ -1459,14 +1447,6 @@ Str HtmlDoc::LoadURL(Str url) {
 
 TempStr HtmlDoc::GetPropertyTemp(DocProp prop) const {
     return GetPropValueTemp(props, prop);
-}
-
-Str HtmlDoc::GetFileName() const {
-    return fileName;
-}
-
-bool HtmlDoc::IsSupportedFileType(FileType kind) {
-    return kind == FileType::PalmDoc;
 }
 
 HtmlDoc* HtmlDoc::CreateFromFile(Str path) {
