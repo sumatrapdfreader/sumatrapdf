@@ -98,7 +98,6 @@
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
-    <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\WebpReader.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp">
@@ -144,6 +143,9 @@
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfCad.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SumatraConfig.cpp">
       <Filter>shared</Filter>
     </ClCompile>
   </ItemGroup>

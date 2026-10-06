@@ -1713,7 +1713,6 @@
     <ClCompile Include="..\src\SignDocumentDialog.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />
-    <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraControl.cpp" />
     <ClCompile Include="..\src\SumatraDialogs.cpp" />
     <ClCompile Include="..\src\SumatraLog.cpp" />
@@ -2174,6 +2173,7 @@
     <ClCompile Include="..\src\shared\RefHoverInternal.cpp" />
     <ClCompile Include="..\src\shared\RefHoverText.cpp" />
     <ClCompile Include="..\src\shared\RefHoverTextDetect.cpp" />
+    <ClCompile Include="..\src\shared\SumatraConfig.cpp" />
     <ClCompile Include="..\src\shared\TextSearch.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
