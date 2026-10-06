@@ -486,41 +486,34 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     }
     findPage = pageNo;
 
-    int found = -1;
-    PageAndOffset fg;
     for (;;) {
-        do {
-            if (WasCanceled(progressCb)) {
-                return false;
-            }
-            if (len(anchor) == 0) {
-                found = GetNextIndex(pageTextLen, findIndex, forward);
-            } else {
-                found = FindAnchor();
-            }
-            if (found < 0) {
-                return false;
-            }
-            findIndex = found + (forward ? 1 : 0);
-            fg = MatchEnd(found);
-        } while (fg.page <= 0);
-
-        int offset = found;
-        searchHitStartAt = pageNo;
-        StartAt(pageNo, offset);
-        SelectUpTo(fg.page, fg.offset);
-        findIndex = forward ? fg.offset : offset;
-
-        // try again if the found text is completely outside the page's mediabox
-        if (len(result) != 0) {
-            break;
+        if (WasCanceled(progressCb)) {
+            return false;
         }
-    }
+        int found = len(anchor) == 0 ? GetNextIndex(pageTextLen, findIndex, forward) : FindAnchor();
+        if (found < 0) {
+            return false;
+        }
+        findIndex = found + (forward ? 1 : 0);
+        PageAndOffset fg = MatchEnd(found);
+        if (fg.page <= 0) {
+            continue;
+        }
 
-    if (finalGlyph) {
-        *finalGlyph = fg;
+        searchHitStartAt = pageNo;
+        StartAt(pageNo, found);
+        SelectUpTo(fg.page, fg.offset);
+        findIndex = forward ? fg.offset : found;
+
+        // Retry matches entirely outside the page's mediabox.
+        if (len(result) == 0) {
+            continue;
+        }
+        if (finalGlyph) {
+            *finalGlyph = fg;
+        }
+        return true;
     }
-    return true;
 }
 
 // a chaptered doc may have laid out only the first chapter when this
