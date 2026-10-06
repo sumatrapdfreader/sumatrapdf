@@ -151,15 +151,8 @@ static bool LookupOrSearch(RefHoverState* s, EngineBase* engine, int srcPage, St
     return false;
 }
 
-// Plain-text citation hover: when no link element is under the cursor, try
-// to detect a "(Surname et al., 2020)" / "Surname (2020)" pattern at pagePos
-// on srcPage, find the bibliography entry that matches, and return its
-// location. Returns true on success and fills destPage/destX/destY.
-// Lookups are cached on s.
-// srcRectOut: on success, set to a stable per-occurrence source key (page
-// coords, including horizontal span) so the caller can tell two occurrences
-// of the same citation apart — even on one text line — and reposition the
-// popup instead of treating it as the same hover.
+// Resolve numeric or author-year citations, caching hits and misses.
+// Keep source bounds so separate occurrences get separate hover popups.
 bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Point pagePos, int& destPageOut,
                           float& destXOut, float& destYOut, RectF& srcRectOut) {
     if (!s || !engine || srcPage <= 0) {
@@ -171,27 +164,21 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
         s->lookupCache = new RefLookupCache();
     }
 
-    // Numeric "[N]" citation (IEEE / numbered reference style) — checked first
-    // because the cursor sitting inside brackets is an unambiguous signal.
-    {
-        int textLen = 0;
-        Rect* coords = nullptr;
-        Str textUtf8 = engine->GetTextForPage(srcPage, &textLen, &coords);
-        TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
-        int num = 0;
-        if (DetectNumericCitationInPageText(text, coords, textLen, pagePos, &num, &srcRect)) {
-            // Numeric keys cannot collide with surnames.
-            if (LookupOrSearch(s, engine, srcPage, fmt("[%d]", num), num, CitationKind::Number, destPageOut, destXOut,
-                               destYOut)) {
-                srcRectOut = RectF{(float)srcRect.x, (float)srcRect.y, (float)srcRect.dx, (float)srcRect.dy};
-                return true;
-            }
-        }
-    }
-
     int textLen = 0;
     Rect* coords = nullptr;
     TempWStr text = RefHoverPageTextToWStrTemp(engine->GetTextForPage(srcPage, &textLen, &coords));
+
+    // Try bracketed numbers before ambiguous author-year citations.
+    int num = 0;
+    if (DetectNumericCitationInPageText(text, coords, textLen, pagePos, &num, &srcRect)) {
+        // Numeric keys cannot collide with surnames.
+        if (LookupOrSearch(s, engine, srcPage, fmt("[%d]", num), num, CitationKind::Number, destPageOut, destXOut,
+                           destYOut)) {
+            srcRectOut = ToRectF(srcRect);
+            return true;
+        }
+    }
+
     Str surname;
     int year = 0;
     if (!DetectCitationInPageText(text, coords, textLen, pagePos, &surname, &year, &srcRect)) {
@@ -236,7 +223,7 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
     }
 
     if (result) {
-        srcRectOut = RectF{(float)srcRect.x, (float)srcRect.y, (float)srcRect.dx, (float)srcRect.dy};
+        srcRectOut = ToRectF(srcRect);
     }
     str::Free(surname);
     return result;
