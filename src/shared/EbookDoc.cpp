@@ -186,27 +186,9 @@ TempStr NormalizeURLTemp(Str url, Str base) {
         return str::DupTemp(url);
     }
 
-    Str baseEnd = str::SliceFromCharLast(base, '/');
-    Str hash = str::SliceFromChar(base, '#');
-    int basePathLen;
-    if (url.s[0] == '#') {
-        basePathLen = hash ? (int)(hash.s - base.s) : base.len;
-    } else if (baseEnd && hash && hash.s < baseEnd.s) {
-        // find the last '/' before the '#'
-        basePathLen = 0;
-        for (char* p = hash.s - 1; p >= base.s; p--) {
-            if (*p == '/') {
-                basePathLen = (int)(p - base.s + 1);
-                break;
-            }
-        }
-    } else if (baseEnd) {
-        basePathLen = (int)(baseEnd.s - base.s + 1);
-    } else {
-        basePathLen = 0;
-    }
-    TempStr basePath = basePathLen > 0 ? str::DupTemp(Str(base.s, basePathLen)) : Str{};
-    TempStr norm = str::JoinTemp(basePath, url);
+    str::CutChar(base, '#', &base, nullptr);
+    int basePathLen = url.s[0] == '#' ? len(base) : str::LastIndexOfChar(base, '/') + 1;
+    TempStr norm = str::JoinTemp(Str(base.s, basePathLen), url);
 
     // Collapse /./ and /../. For /../, consume only "/.." so the trailing '/'
     // stays for the next iteration — otherwise consecutive ../../ leaves a
@@ -2004,6 +1986,10 @@ bool EbookDoc_UnitTestNormalizeURL() {
         {StrL("/abs/path"), StrL("OEBPS/html/p.xhtml"), StrL("/abs/path")},
         {StrL("http://example.com/x"), StrL("OEBPS/html/p.xhtml"), StrL("http://example.com/x")},
         {StrL("#frag"), StrL("OEBPS/html/p.xhtml#old"), StrL("OEBPS/html/p.xhtml#frag")},
+        {StrL("cover.jpg"), StrL("OEBPS/p.xhtml#old/path"), StrL("OEBPS/cover.jpg")},
+        {StrL("cover.jpg"), StrL("p.xhtml#old/path"), StrL("cover.jpg")},
+        {StrL("#new"), StrL("OEBPS/p.xhtml#old/path"), StrL("OEBPS/p.xhtml#new")},
+        {StrL("cover.jpg"), StrL("#old/path"), StrL("cover.jpg")},
     };
     for (const auto& c : cases) {
         if (!str::Eq(NormalizeURLTemp(c[0], c[1]), c[2])) {
