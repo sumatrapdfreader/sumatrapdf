@@ -523,17 +523,16 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
             return false;
         }
         u32 type = d.UInt32BE();
-        u32 length = d.UInt32BE();
-        int recLen = (int)length;
+        int recLen = (int)d.UInt32BE();
         if (recLen < 8 || recLen > dataLen - d.Offset() + 8) {
             return false;
         }
-        d.Skip(recLen - 8);
+        Str value((char*)(data + d.Offset()), recLen - 8);
+        d.Skip(len(value));
 
         if (type == kExthCoverOffset) {
-            if (length == 12 && imageFirstRec) {
-                d.Unskip(4);
-                coverImageRec = imageFirstRec + (int)d.UInt32BE();
+            if (len(value) == 4 && imageFirstRec) {
+                coverImageRec = imageFirstRec + (int)UInt32BE((const u8*)value.s);
             }
             continue;
         }
@@ -542,7 +541,6 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
             if (type != entry.type) {
                 continue;
             }
-            Str value((char*)(data + d.Offset() - length + 8), (int)length - 8);
             AddPropOwned(props, entry.prop, value);
             break;
         }
