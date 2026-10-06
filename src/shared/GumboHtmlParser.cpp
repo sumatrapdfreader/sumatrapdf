@@ -246,14 +246,6 @@ bool IsSpaceOnly(Str s) {
     return len(s) == 0;
 }
 
-static void MemAppend(char* buf, int& off, Str src) {
-    if (!buf || len(src) == 0) {
-        return;
-    }
-    memcpy(buf + off, src.s, src.len);
-    off += src.len;
-}
-
 // if "&foo;" was the entity, str points at the char after '&'
 // returns a slice starting after the entity, or empty on failure
 Str ResolveHtmlEntity(Str str, int& rune) {
@@ -271,54 +263,35 @@ Str ResolveHtmlEntity(Str str, int& rune) {
     return {};
 }
 
-// if s doesn't contain html entities, we just return it
-// if it contains html entities, we'll return string allocated
-// with a in which entities are converted to their values
-// Entities are encoded as utf8 in the result.
-// a can be nullptr, in which case we'll allocate with malloc()
-Str ResolveHtmlEntities(Str str, Arena* a) {
-    Str res;
-    size_t resLen = 0;
-    int dstOff = 0;
+// Borrow unchanged text; decoded output belongs to the requested allocator.
+Str ResolveHtmlEntities(Str text, Arena* arena) {
+    Str chunk, rest;
+    if (!str::CutChar(text, '&', &chunk, &rest)) {
+        return text;
+    }
 
-    int off = 0;
-    int chunkStart = 0;
+    str::Builder out(arena);
+    out.Reserve(len(text));
     for (;;) {
-        int next = str::IndexOfChar(Str(str.s + off, len(str) - off), '&');
-        if (next < 0) {
-            if (str::IsNull(res)) {
-                return str;
-            }
-            // copy the remaining string
-            MemAppend(res.s, dstOff, Str(str.s + chunkStart, str.len - chunkStart));
+        out.Append(chunk);
+        int rune = -1;
+        Str end = ResolveHtmlEntity(rest, rune);
+        if (str::IsNull(end)) {
+            out.AppendChar('&');
+        } else {
+            constexpr int kMaxUtf8RuneBytes = 4;
+            char encoded[kMaxUtf8RuneBytes];
+            int n = 0;
+            str::Utf8Encode(encoded, n, rune);
+            out.Append(Str(encoded, n));
+            rest = end;
+        }
+        if (!str::CutChar(rest, '&', &chunk, &rest)) {
+            out.Append(chunk);
             break;
         }
-        off += next;
-        if (str::IsNull(res)) {
-            // allocate memory for the result string
-            // I'm banking that text after resolving entities will
-            // be smaller than the original
-            resLen = (size_t)str.len + 8; // +8 just in case
-            res.s = (char*)Alloc(a, resLen);
-        }
-        MemAppend(res.s, dstOff, Str(str.s + chunkStart, off - chunkStart));
-        // off points at '&'
-        int rune = -1;
-        Str entEnd = ResolveHtmlEntity(Str(str.s + off + 1, str.len - off - 1), rune);
-        if (str::IsNull(entEnd)) {
-            // unknown entity, just copy the '&'
-            MemAppend(res.s, dstOff, Str(str.s + off, 1));
-            off++;
-        } else {
-            str::Utf8Encode(res.s, dstOff, rune);
-            off = (int)(entEnd.s - str.s);
-        }
-        chunkStart = off;
     }
-    res.s[dstOff] = 0;
-    ReportIf(dstOff >= (int)resLen);
-    res.len = dstOff;
-    return res;
+    return arena ? ToStr(out) : out.TakeStr();
 }
 
 // Copy unchanged input too, so both wrappers return owned, NUL-terminated text.
