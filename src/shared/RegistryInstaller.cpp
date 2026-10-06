@@ -2,18 +2,16 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/File.h"
 #if OS_WIN
+#include "base/File.h"
 #include "base/Win.h"
 #include "base/DirScan.h"
-#include "base/ScopedWin.h"
+#include "base/AutoWin.h"
 
 #include "SumatraConfig.h"
 #include "Version.h"
 #include "AppTools.h"
 #include "Installer.h"
-
-#include "SumatraLog.h"
 
 // All registry manipulation needed for installer / uninstaller
 
@@ -583,7 +581,7 @@ static bool IsSumatraDefaultForExt(Str ext) {
     }
     WCHAR* appNameW = CWStrTemp(StrL(kAppName));
 
-    ScopedComPtr<IApplicationAssociationRegistration> aar;
+    AutoReleaseComPtr<IApplicationAssociationRegistration> aar;
     HRESULT hr =
         CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&aar));
     if (SUCCEEDED(hr) && aar) {
@@ -679,7 +677,7 @@ void CollectNonDefaultRegisteredExtensions(StrVec& out) {
 }
 
 // Open the OS UI to pick/set the default app for ext (".pdf" or "pdf").
-void LaunchDefaultAppDialogForExtension(Str extIn) {
+void LaunchDefaultAppDialogForExtension(HWND hwnd, Str extIn) {
     TempStr ext = NormalizeExtTemp(extIn);
     if (len(ext) == 0) {
         return;
@@ -692,7 +690,7 @@ void LaunchDefaultAppDialogForExtension(Str extIn) {
     OPENASINFO info{};
     info.pcszFile = CWStrTemp(sample);
     info.oaifInFlags = OAIF_FORCE_REGISTRATION | OAIF_REGISTER_EXT | OAIF_ALLOW_REGISTRATION;
-    HRESULT hr = SHOpenWithDialog(nullptr, &info);
+    HRESULT hr = SHOpenWithDialog(hwnd, &info);
     if (SUCCEEDED(hr)) {
         return;
     }
@@ -707,7 +705,10 @@ void LaunchDefaultAppDialogForExtension(Str extIn) {
     } else {
         uri = StrL("ms-settings:defaultapps");
     }
-    ShellExecuteW(nullptr, L"open", CWStrTemp(uri), nullptr, nullptr, SW_SHOWNORMAL);
+    ShellExecuteW(hwnd, L"open", CWStrTemp(uri), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
-#endif // OS_WIN
+void LaunchDefaultAppDialogForExtension(Str ext) {
+    LaunchDefaultAppDialogForExtension(nullptr, ext);
+}
+#endif

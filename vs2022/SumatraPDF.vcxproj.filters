@@ -878,9 +878,6 @@
     <ClCompile Include="..\src\RefHoverShow.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\RegistryInstaller.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\RegistryPreview.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1281,6 +1278,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverTextDetect.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\RegistryInstaller.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SumatraConfig.cpp">
