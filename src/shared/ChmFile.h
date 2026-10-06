@@ -9,6 +9,11 @@ enum class FileType : u8;
 struct chm_ctx;
 struct chm_entry;
 
+enum class ChmItemKind {
+    Toc,
+    Index
+};
+
 struct ChmFile {
     chm_ctx* chmCtx = nullptr;
     // entries and their paths are owned by chmCtx (freed by chm_ctx_free)
@@ -26,7 +31,7 @@ struct ChmFile {
 
     void ParseWindowsData();
     bool ParseSystemData();
-    bool ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) const;
+    bool ParseTocOrIndex(EbookTocVisitor* visitor, Str path, ChmItemKind kind) const;
     void FixPathCodepage(Str& path, uint& fileCP);
 
     bool Load(Str path);

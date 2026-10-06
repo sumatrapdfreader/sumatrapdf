@@ -97,10 +97,7 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
 // Strip a UTF-8 BOM if present; otherwise convert from `codepage` to UTF-8
 // (unless already UTF-8). Returns a TempStr owned by the temp allocator.
 TempStr SmartToUtf8Temp(Str s, uint codepage) {
-    if (str::TrimPrefix(s, StrL(kUtf8Bom))) {
-        return str::DupTemp(s);
-    }
-    if (CP_UTF8 == codepage) {
+    if (str::TrimPrefix(s, StrL(kUtf8Bom)) || codepage == CP_UTF8) {
         return str::DupTemp(s);
     }
     return strconv::ToMultiByteTemp(s, codepage, CP_UTF8);
@@ -333,11 +330,6 @@ static Str StripItsProtocol(Str url) {
     return p ? p : url;
 }
 
-enum class ChmItemKind {
-    Toc,
-    Index
-};
-
 static bool VisitChmItem(EbookTocVisitor* visitor, const GumboNode* objNode, ChmItemKind kind, int level) {
     ReportIf(!GumboTagNameIs(objNode, StrL("object")));
 
@@ -393,14 +385,6 @@ static bool VisitChmItem(EbookTocVisitor* visitor, const GumboNode* objNode, Chm
     return true;
 }
 
-// Process a single <ul>'s <li> children as TOC entries at `level`.
-// A nested <ul> holds the children of the preceding <li>, so it's always walked
-// at level + 1. It can appear either inside the <li> (well-formed ToCs) or as a
-// <ul> sibling among the <li>s -- gumbo's HTML5 repair leaves the latter as a
-// bare child of the parent <ul> when the <li> was explicitly closed, which some
-// broken CHM ToCs do. Walking every such <ul> at level + 1 reproduces the
-// nesting the previous, pre-gumbo parser produced (and walks each <ul> once, so
-// no entries are duplicated).
 // One suspended <ul> walk: `i` is the next child of `ul` to process at `level`.
 struct ChmUlFrame {
     const GumboNode* ul;
@@ -408,14 +392,12 @@ struct ChmUlFrame {
     unsigned int i;
 };
 
-static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool isIndex, int level) {
+// Nested and sibling <ul>s belong to the preceding <li>, at level + 1.
+static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, ChmItemKind kind, int level) {
     if (!ulNode) {
         return;
     }
-    // Iterative version of the recursive <ul>/<li> walk: each stack frame holds
-    // a <ul> and how far we've scanned its children, so a pathologically deep
-    // ToC nesting can't overflow the call stack. Order and levels match the
-    // recursive walk exactly (parent frame resumes after its child completes).
+    // Keep traversal on the heap so deeply nested ToCs cannot overflow the stack.
     Vec<ChmUlFrame> stack;
     VecAppend(stack, {ulNode, level, 0});
     while (len(stack) > 0) {
@@ -443,7 +425,7 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
         if (!objNode) {
             continue;
         }
-        bool valid = VisitChmItem(visitor, objNode, isIndex ? ChmItemKind::Index : ChmItemKind::Toc, lvl);
+        bool valid = VisitChmItem(visitor, objNode, kind, lvl);
         if (!valid) {
             continue;
         }
@@ -456,9 +438,9 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
 
 // Process `firstUl` and any consecutive <ul> siblings (some broken ToCs wrap
 // each <li> in its own <ul>, producing a run of sibling <ul>s).
-static void WalkChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* firstUl, bool isIndex) {
+static void WalkChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* firstUl, ChmItemKind kind) {
     if (!firstUl || !firstUl->parent) {
-        WalkChmUl(visitor, firstUl, isIndex, 1);
+        WalkChmUl(visitor, firstUl, kind, 1);
         return;
     }
     const GumboNode* parent = firstUl->parent;
@@ -469,13 +451,13 @@ static void WalkChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* firstUl
         if (sib->type != GUMBO_NODE_ELEMENT || !GumboTagNameIs(sib, StrL("ul"))) {
             break;
         }
-        WalkChmUl(visitor, sib, isIndex, 1);
+        WalkChmUl(visitor, sib, kind, 1);
     }
 }
 
 // Ignore any <ul><li> structure and visit every <object type="text/sitemap">
 // in document order. Used for ToCs where the list scaffolding is broken.
-static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* root, bool isIndex) {
+static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* root, ChmItemKind kind) {
     bool hadOne = false;
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
@@ -488,7 +470,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
         if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, StrL("object"))) {
             const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
             if (type && str::EqI(Str(type->value), StrL("text/sitemap"))) {
-                hadOne |= VisitChmItem(visitor, node, isIndex ? ChmItemKind::Index : ChmItemKind::Toc, 1);
+                hadOne |= VisitChmItem(visitor, node, kind, 1);
                 continue; // don't recurse into the object's <param> children
             }
         }
@@ -579,7 +561,7 @@ struct ChmTocEntityFixer : EbookTocVisitor {
     }
 };
 
-bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) const {
+bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, ChmItemKind kind) const {
     if (len(path) == 0) {
         return false;
     }
@@ -607,10 +589,10 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     const GumboNode* body = GumboFindDescendantByTag(doc.Document(), StrL("body"));
     const GumboNode* firstUl = GumboFindDescendantByTag(body ? body : doc.Document(), StrL("ul"));
     if (firstUl) {
-        WalkChmTocOrIndex(&fixer, firstUl, isIndex);
+        WalkChmTocOrIndex(&fixer, firstUl, kind);
         return true;
     }
-    return WalkBrokenChmTocOrIndex(&fixer, doc.Document(), isIndex);
+    return WalkBrokenChmTocOrIndex(&fixer, doc.Document(), kind);
 }
 
 bool ChmFile::HasToc() const {
@@ -618,7 +600,7 @@ bool ChmFile::HasToc() const {
 }
 
 bool ChmFile::ParseToc(EbookTocVisitor* visitor) const {
-    return ParseTocOrIndex(visitor, tocPath, false);
+    return ParseTocOrIndex(visitor, tocPath, ChmItemKind::Toc);
 }
 
 bool ChmFile::HasIndex() const {
@@ -626,7 +608,7 @@ bool ChmFile::HasIndex() const {
 }
 
 bool ChmFile::ParseIndex(EbookTocVisitor* visitor) const {
-    return ParseTocOrIndex(visitor, indexPath, true);
+    return ParseTocOrIndex(visitor, indexPath, ChmItemKind::Index);
 }
 
 bool ChmFile::IsSupportedFileType(FileType kind) {
