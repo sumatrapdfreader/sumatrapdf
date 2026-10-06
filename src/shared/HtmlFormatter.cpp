@@ -1413,24 +1413,17 @@ void HtmlFormatter::HandleText(Str s) {
         // don't collapse whitespace and respect text newlines
         while (curr) {
             currReparseIdx = htmlParser->PosOf(curr);
-            Str text = curr;
-            Str nl = str::SliceFromChar(curr, '\n');
-            if (nl) {
-                text = Str(curr.s, (int)(nl.s - curr.s));
-                if (len(text) > 0 && text.s[text.len - 1] == '\r') {
-                    text = Str(text.s, text.len - 1);
-                }
-                EmitTextRun(text);
-                int skip = 1;
-                if (nl.s[0] == '\r' && nl.len > 1 && nl.s[1] == '\n') {
-                    skip = 2;
-                }
-                curr = Str(nl.s + skip, (int)(curr.s + curr.len - (nl.s + skip)));
-                HandleTagBr();
-            } else {
-                EmitTextRun(curr);
+            Str text, rest;
+            bool newline = str::CutChar(curr, '\n', &text, &rest);
+            if (newline) {
+                str::TrimSuffix(text, StrL("\r"));
+            }
+            EmitTextRun(text);
+            if (!newline) {
                 break;
             }
+            curr = rest;
+            HandleTagBr();
         }
         return;
     }
