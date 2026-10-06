@@ -465,7 +465,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    TempStr s = strconv::HtmlUtf8ToStrTemp(i.str);
+                    TempStr s = ResolveHtmlEntitiesTemp(i.str);
                     int nCodepoints = Utf8CodepointCount(s);
                     content.Append(s);
                     if (nCodepoints > 0) {
@@ -490,7 +490,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    TempStr s = strconv::HtmlUtf8ToStrTemp(i.str);
+                    TempStr s = ResolveHtmlEntitiesTemp(i.str);
                     int nCodepoints = Utf8CodepointCount(s);
                     content.Append(s);
                     if (nCodepoints > 0) {
@@ -524,7 +524,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
 
 IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
     Str linkStr = link->str;
-    TempStr url = strconv::HtmlUtf8ToStrTemp(linkStr);
+    TempStr url = ResolveHtmlEntitiesTemp(linkStr);
     if (url::IsAbsolute(url)) {
         return NewEbookLink(rect, nullptr, pageNo);
     }
@@ -2115,7 +2115,7 @@ IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
         return nullptr;
     }
 
-    TempStr url = strconv::HtmlUtf8ToStrTemp(link->str);
+    TempStr url = ResolveHtmlEntitiesTemp(link->str);
     if (url::IsAbsolute(url) || '#' == url.s[0]) {
         return EngineEbook::CreatePageLink(link, rect, pageNo);
     }

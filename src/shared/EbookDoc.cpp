@@ -669,7 +669,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
         TempStr itemSrc;
         if (href) {
             TempStr normHref = NormalizeURLTemp(href, pagePath);
-            itemSrc = strconv::HtmlUtf8ToStrTemp(normHref);
+            itemSrc = ResolveHtmlEntitiesTemp(normHref);
         }
         visitor->Visit(itemText, itemSrc, level);
     }
@@ -711,13 +711,13 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
                 break;
             }
             if (tok->IsText()) {
-                itemText = strconv::HtmlUtf8ToStrTemp(tok->s);
+                itemText = ResolveHtmlEntitiesTemp(tok->s);
             }
         } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIs(StrL("content"), HtmlNameMatch::Local)) {
             AttrInfo attrInfo = tok->GetAttrByName(StrL("src"));
             if (attrInfo) {
                 TempStr src = NormalizeURLTemp(attrInfo.val, pagePath);
-                itemSrc = strconv::HtmlUtf8ToStrTemp(src);
+                itemSrc = ResolveHtmlEntitiesTemp(src);
             }
         }
     }
@@ -911,6 +911,11 @@ static Str loadFromData(Fb2Doc* doc, Str srcData) {
     return ReadFb2Archive(doc, archive);
 }
 
+static TempStr JoinEbookTextTemp(Str text, Str part) {
+    part = ResolveHtmlEntitiesTemp(part);
+    return text ? str::JoinTemp(text, StrL(" "), part) : part;
+}
+
 bool Fb2Doc::Load(Str srcData) {
     ReportIf(len(srcData) == 0 && len(fileName) == 0);
 
@@ -977,9 +982,6 @@ bool Fb2Doc::Load(Str srcData) {
             TempStr nickname;
             bool inNamePart = false;
             bool inNickname = false;
-            auto appendTo = [](TempStr cur, TempStr add) -> TempStr {
-                return cur ? str::JoinTemp(cur, StrL(" "), add) : add;
-            };
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
                    !(tok->IsEndTag() && tok->NameIs(StrL("author"), HtmlNameMatch::Local))) {
                 if (tok->IsStartTag() || tok->IsEndTag()) {
@@ -997,9 +999,9 @@ bool Fb2Doc::Load(Str srcData) {
                     continue;
                 }
                 if (inNamePart) {
-                    docAuthor = appendTo(docAuthor, ResolveHtmlEntitiesTemp(tok->s));
+                    docAuthor = JoinEbookTextTemp(docAuthor, tok->s);
                 } else if (inNickname) {
-                    nickname = appendTo(nickname, ResolveHtmlEntitiesTemp(tok->s));
+                    nickname = JoinEbookTextTemp(nickname, tok->s);
                 }
             }
             if (len(docAuthor) == 0) {
@@ -1042,12 +1044,7 @@ bool Fb2Doc::Load(Str srcData) {
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
                    !(tok->IsEndTag() && tok->NameIs(StrL("annotation"), HtmlNameMatch::Local))) {
                 if (tok->IsText()) {
-                    TempStr part = ResolveHtmlEntitiesTemp(tok->s);
-                    if (annotation) {
-                        annotation = str::JoinTemp(annotation, StrL(" "), part);
-                    } else {
-                        annotation = part;
-                    }
+                    annotation = JoinEbookTextTemp(annotation, tok->s);
                 }
             }
             if (annotation) {
@@ -1152,12 +1149,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             }
             inTitle = false;
         } else if (inTitle && tok->IsText()) {
-            TempStr text = strconv::HtmlUtf8ToStrTemp(tok->s);
-            if (len(itemText) == 0) {
-                itemText = text;
-            } else {
-                itemText = str::JoinTemp(itemText, StrL(" "), text);
-            }
+            itemText = JoinEbookTextTemp(itemText, tok->s);
         }
     }
 
@@ -1217,7 +1209,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text)
         if (!attr || len(attr.val) == 0) {
             goto Fallback;
         }
-        tocEntries.Append(strconv::HtmlUtf8ToStrTemp(attr.val));
+        tocEntries.Append(ResolveHtmlEntitiesTemp(attr.val));
         builder.Append(fmt("<a name=" kPdbTocEntryMark "%d>", ::len(tocEntries)));
     } else if (tok->NameIs(StrL("HEADER"))) {
         // <HEADER TEXT="Contents" ALIGN=CENTER STYLE=UNDERLINE>

@@ -118,9 +118,3 @@ Str ResolveHtmlEntity(Str str, int& rune);
 Str ResolveHtmlEntities(Str s, Arena* a);
 Str ResolveHtmlEntities(Str s);
 Str ResolveHtmlEntitiesTemp(Str s);
-
-namespace strconv {
-inline TempStr HtmlUtf8ToStrTemp(Str s) {
-    return ResolveHtmlEntitiesTemp(s);
-}
-} // namespace strconv
