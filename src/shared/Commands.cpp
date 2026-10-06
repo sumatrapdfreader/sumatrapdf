@@ -1183,45 +1183,37 @@ Str GetCommandDescription(int commandId) {
     return {};
 }
 
-// arg names are case insensitive
-static bool IsArgName(Str name, Str argName) {
-    if (str::EqI(name, argName)) {
-        return true;
+// Pack the struct and its owned, NUL-terminated strings into one allocation.
+template <typename T, size_t N>
+static T* AllocCommandData(Str (&strings)[N]) {
+    int cb = sizeofi(T);
+    for (Str s : strings) {
+        cb += std::max(len(s), 0) + 1;
     }
-    if (!str::TrimPrefixI(name, argName)) {
-        return false;
-    }
-    if (len(name) == 0) {
-        return false;
-    }
-    return name.s[0] == '=';
-}
-
-// One allocation: sizeofi(CommandArg) + name + NUL + strVal + NUL.
-// name.s / strVal.s point into the same block (do not free them separately).
-CommandArg* AllocCommandArg(Str name, Str strVal) {
-    int nameN = name.len;
-    nameN = std::max(nameN, 0);
-    int strN = strVal.len;
-    strN = std::max(strN, 0);
-    int cb = sizeofi(CommandArg) + nameN + 1 + strN + 1;
-    auto* arg = (CommandArg*)malloc((size_t)cb);
-    if (!arg) {
+    auto* res = (T*)calloc(1, (size_t)cb);
+    if (!res) {
         return nullptr;
     }
-    memset(arg, 0, (size_t)cb);
-    char* dst = (char*)arg + sizeofi(CommandArg);
-    if (nameN > 0 && name.s) {
-        memcpy(dst, name.s, (size_t)nameN);
+
+    char* dst = (char*)(res + 1);
+    for (Str& s : strings) {
+        int n = std::max(len(s), 0);
+        if (n > 0 && s.s) {
+            memcpy(dst, s.s, (size_t)n);
+        }
+        s = Str(dst, n);
+        dst += n + 1;
     }
-    dst[nameN] = 0;
-    arg->name = Str(dst, nameN);
-    dst += nameN + 1;
-    if (strN > 0 && strVal.s) {
-        memcpy(dst, strVal.s, (size_t)strN);
+    return res;
+}
+
+CommandArg* AllocCommandArg(Str name, Str strVal) {
+    Str strings[] = {name, strVal};
+    auto* arg = AllocCommandData<CommandArg>(strings);
+    if (arg) {
+        arg->name = strings[0];
+        arg->strVal = strings[1];
     }
-    dst[strN] = 0;
-    arg->strVal = Str(dst, strN);
     return arg;
 }
 
@@ -1244,56 +1236,16 @@ void FreeCommandArgs(CommandArg* first) {
     }
 }
 
-__unused static CommandArg* FindArg(CommandArg* first, Str name, CommandArg::Type type) {
-    CommandArg* curr = first;
-    while (curr) {
-        if (IsArgName(curr->name, name)) {
-            if (curr->type == type) {
-                return curr;
-            }
-            logf("FindArgByName: found arg of name '%s' by different type (wanted: %d, is: %d)\n", name, (int)type,
-                 (int)curr->type);
-        }
-        curr = curr->next;
-    }
-    return nullptr;
-}
-
 static int gNextCustomCommandId = (int)CmdFirstCustom;
 
-// One allocation: sizeofi(CustomCommand) + definition + NUL + name + NUL + key + NUL.
-// definition/name/key.s point into the same block (do not free them separately).
 CustomCommand* AllocCustomCommand(Str definition, Str name, Str key) {
-    int defN = definition.len;
-    defN = std::max(defN, 0);
-    int nameN = name.len;
-    nameN = std::max(nameN, 0);
-    int keyN = key.len;
-    keyN = std::max(keyN, 0);
-    int cb = sizeofi(CustomCommand) + defN + 1 + nameN + 1 + keyN + 1;
-    auto* cmd = (CustomCommand*)malloc((size_t)cb);
-    if (!cmd) {
-        return nullptr;
+    Str strings[] = {definition, name, key};
+    auto* cmd = AllocCommandData<CustomCommand>(strings);
+    if (cmd) {
+        cmd->definition = strings[0];
+        cmd->name = strings[1];
+        cmd->key = strings[2];
     }
-    memset(cmd, 0, (size_t)cb);
-    char* dst = (char*)cmd + sizeofi(CustomCommand);
-    if (defN > 0 && definition.s) {
-        memcpy(dst, definition.s, (size_t)defN);
-    }
-    dst[defN] = 0;
-    cmd->definition = Str(dst, defN);
-    dst += defN + 1;
-    if (nameN > 0 && name.s) {
-        memcpy(dst, name.s, (size_t)nameN);
-    }
-    dst[nameN] = 0;
-    cmd->name = Str(dst, nameN);
-    dst += nameN + 1;
-    if (keyN > 0 && key.s) {
-        memcpy(dst, key.s, (size_t)keyN);
-    }
-    dst[keyN] = 0;
-    cmd->key = Str(dst, keyN);
     return cmd;
 }
 
@@ -1328,13 +1280,6 @@ CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* ar
     int id = origCmdId;
     if (args != nullptr) {
         id = gNextCustomCommandId++;
-    } else {
-#if 0
-        auto existingCmd = FindCustomCommand(origCmdId);
-        if (existingCmd) {
-            return existingCmd;
-        }
-#endif
     }
     NormalizeCommandNameAndKey(definition, &name, &key);
     auto* cmd = AllocCustomCommand(definition, name, key);
