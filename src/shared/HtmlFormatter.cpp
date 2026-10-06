@@ -503,42 +503,11 @@ void HtmlFormatter::JustifyCurrLine(AlignAttr align) {
     }
 }
 
-static RectF RectFUnion(RectF& r1, RectF& r2) {
-    if (r2.IsEmpty()) {
-        return r1;
-    }
-    if (r1.IsEmpty()) {
-        return r2;
-    }
-    return r1.Union(r2);
-}
-
-void HtmlFormatter::UpdateLinkBboxes(HtmlPage* page) {
-    Vec<DrawInstr>& a = page->instructions;
-    int n = len(a);
-    for (int i = 0; i < n; i++) {
-        DrawInstr& instr = a[i];
-        if (DrawInstrType::LinkStart != instr.type) {
-            continue;
-        }
-        for (int j = i + 1; j < n; j++) {
-            DrawInstr& linkInstr = a[j];
-            if (DrawInstrType::LinkEnd != linkInstr.type) {
-                continue;
-            }
-            if (IsVisibleDrawInstr(linkInstr)) {
-                instr.bbox = RectFUnion(instr.bbox, linkInstr.bbox);
-            }
-        }
-    }
-}
-
 void HtmlFormatter::ForceNewPage() {
     bool createdNewPage = FlushCurrLine(true);
     if (createdNewPage) {
         return;
     }
-    UpdateLinkBboxes(currPage);
     VecAppend(pagesToSend, currPage);
 
     EmitNewPage();
@@ -572,7 +541,6 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
     if (currY + totalLineDy > pageDy) {
         // current line too big to fit in current page,
         // so need to start another page
-        UpdateLinkBboxes(currPage);
         VecAppend(pagesToSend, currPage);
         // instructions for each page need to be self-contained
         // so we have to carry over some state (like current font)
@@ -1500,7 +1468,6 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
     AutoCloseTags(len(tagNesting));
     FlushCurrLine(true);
 
-    UpdateLinkBboxes(currPage);
     VecAppend(pagesToSend, currPage);
     currPage = nullptr;
     // call ourselves recursively to return accumulated pages

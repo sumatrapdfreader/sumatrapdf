@@ -189,7 +189,6 @@ struct HtmlFormatter {
     void JustifyLineBoth();
     void JustifyCurrLine(AlignAttr align);
     bool FlushCurrLine(bool isParagraphBreak);
-    void UpdateLinkBboxes(HtmlPage* page);
 
     bool EmitImage(Str img);
     void EmitImageOrAlt(HtmlToken* t, Str img);
