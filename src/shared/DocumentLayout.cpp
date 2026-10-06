@@ -491,8 +491,12 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
         if (IsBookView(params.displayMode) && pageNo == 1 && columns - pageInARow > 1) {
             pageInARow++;
         }
-        ReportIf(pageInARow >= dimofi(columnMaxWidth));
-        columnMaxWidth[pageInARow] = std::max(columnMaxWidth[pageInARow], pos.dx);
+        int col = pageInARow;
+        ReportIf(col >= dimofi(columnMaxWidth));
+        if (col >= dimofi(columnMaxWidth)) {
+            col = dimofi(columnMaxWidth) - 1;
+        }
+        columnMaxWidth[col] = std::max(columnMaxWidth[col], pos.dx);
 
         page->pos = pos;
         pageInARow++;

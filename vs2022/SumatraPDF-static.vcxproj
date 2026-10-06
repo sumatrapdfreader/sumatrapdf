@@ -1623,7 +1623,6 @@
     <ClCompile Include="..\src\DarkMode.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
-    <ClCompile Include="..\src\DocumentLayout.cpp" />
     <ClCompile Include="..\src\DocumentProperties.cpp" />
     <ClCompile Include="..\src\EbookSettingsDialog.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
@@ -2139,6 +2138,7 @@
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
     <ClCompile Include="..\src\shared\DocController.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
+    <ClCompile Include="..\src\shared\DocumentLayout.cpp" />
     <ClCompile Include="..\src\shared\EbookDoc.cpp" />
     <ClCompile Include="..\src\shared\EbookFormatter.cpp" />
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
