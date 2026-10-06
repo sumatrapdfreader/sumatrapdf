@@ -1721,11 +1721,10 @@ bool TxtDoc::Load() {
     }
 
     TempStr text;
-    Str raw = fileContent;
-    if (str::EndsWithI(fileName, StrL(".tcr")) && str::StartsWith(raw, StrL(kTcrHeader))) {
-        text = DecompressTcrTextTemp(raw);
+    if (str::EndsWithI(fileName, StrL(".tcr")) && str::StartsWith(fileContent, StrL(kTcrHeader))) {
+        text = DecompressTcrTextTemp(fileContent);
     } else {
-        text = DecodeTextToUtf8Temp(raw);
+        text = DecodeTextToUtf8Temp(fileContent);
     }
     if (len(text) == 0) {
         return false;
@@ -1742,6 +1741,8 @@ bool TxtDoc::Load() {
     for (int i = 0; i < text.len; i++) {
         Str curr = Str(text.s + i, text.len - i);
         char c = text.s[i];
+        char prev = i > 0 ? text.s[i - 1] : ' ';
+        Str end;
         // similar logic to LinkifyText in PdfEngine.cpp
         if (linkEndPos == i) {
             htmlData.Append(StrL("</a>"));
@@ -1749,32 +1750,21 @@ bool TxtDoc::Load() {
         } else if (linkEndPos >= 0) { // NOLINT(bugprone-branch-clone): each empty branch has its own reason
             /* don't check for hyperlinks inside a link */;
         } else if ('@' == c) {
-            Str end = TextFindEmailEnd(htmlData, curr);
-            if (end) {
-                linkEndPos = (int)(end.s - text.s);
-            }
-        } else if (i > 0 && ('/' == text.s[i - 1] || isalnum((u8)text.s[i - 1]))) {
+            end = TextFindEmailEnd(htmlData, curr);
+        } else if ('/' == prev || isalnum((u8)prev)) {
             /* don't check for a link at this position */;
         } else if ('h' == c && !str::IsNull(str::Parse(curr, "http%?s://"))) {
-            Str end = TextFindLinkEnd(htmlData, curr, i > 0 ? text.s[i - 1] : ' ');
-            if (end) {
-                linkEndPos = (int)(end.s - text.s);
-            }
+            end = TextFindLinkEnd(htmlData, curr, prev);
         } else if ('w' == c && str::StartsWith(curr, StrL("www."))) {
-            Str end = TextFindLinkEnd(htmlData, curr, i > 0 ? text.s[i - 1] : ' ', true);
-            if (end) {
-                linkEndPos = (int)(end.s - text.s);
-            }
+            end = TextFindLinkEnd(htmlData, curr, prev, true);
         } else if ('m' == c && str::StartsWith(curr, StrL("mailto:"))) {
-            Str end = TextFindEmailEnd(htmlData, curr);
-            if (end) {
-                linkEndPos = (int)(end.s - text.s);
-            }
-        } else if (isRFC && i > 0 && 'R' == c && !str::IsNull(str::Parse(curr, "RFC %d", &rfc))) {
-            Str end = TextFindRfcEnd(htmlData, curr, text.s[i - 1]);
-            if (end) {
-                linkEndPos = (int)(end.s - text.s);
-            }
+            end = TextFindEmailEnd(htmlData, curr);
+        } else if (isRFC && i > 0 && 'R' == c) {
+            end = TextFindRfcEnd(htmlData, curr, prev);
+        }
+
+        if (end) {
+            linkEndPos = (int)(end.s - text.s);
         }
 
         // RFCs use (among others) form feeds as page separators
