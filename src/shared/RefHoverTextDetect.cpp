@@ -467,9 +467,10 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     // Group by baseline and sort by x; keep the run overlapping [refLo, refHi].
     // Column gutters and scattered watermark baselines split unrelated text.
     constexpr int kColGap = 16;
-    auto buildSegment = [&](int targetBL, int refLo, int refHi, int* out, int cap, int* segLo, int* segHi) -> int {
+    constexpr int kSegCap = 512;
+    auto buildSegment = [&](int targetBL, int refLo, int refHi, int (&out)[kSegCap]) -> int {
         int cnt = 0;
-        for (int i = 0; i < textLen && cnt < cap; i++) {
+        for (int i = 0; i < textLen && cnt < kSegCap; i++) {
             if (abs((coords[i].y + coords[i].dy) - targetBL) <= blTol) {
                 out[cnt++] = i;
             }
@@ -499,24 +500,20 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
             if (runHi >= refLo && runLo <= refHi) {
                 int n = e - s + 1;
                 memmove(out, out + s, n * sizeof(*out));
-                *segLo = coords[out[0]].x;
-                *segHi = coords[out[n - 1]].x + coords[out[n - 1]].dx;
                 return n;
             }
             s = e + 1;
         }
-        *segLo = 0;
-        *segHi = -1;
         return 0;
     };
 
-    constexpr int kSegCap = 512;
     int curSeg[kSegCap];
-    int curLo = 0, curHi = -1;
-    int curN = buildSegment(cursorBL, cursorX, cursorX, curSeg, kSegCap, &curLo, &curHi);
+    int curN = buildSegment(cursorBL, cursorX, cursorX, curSeg);
     if (curN <= 0) {
         return false;
     }
+    int curLo = coords[curSeg[0]].x;
+    int curHi = coords[curSeg[curN - 1]].x + coords[curSeg[curN - 1]].dx;
     // Adjacent lines must overlap the cursor line's x-range to stay in its column.
     int prevBL = INT_MIN, nextBL = INT_MAX;
     for (int i = 0; i < textLen; i++) {
@@ -535,9 +532,8 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     }
     int prevSeg[kSegCap];
     int nextSeg[kSegCap];
-    int pLo, pHi, nLo, nHi;
-    int prevN = (prevBL != INT_MIN) ? buildSegment(prevBL, curLo, curHi, prevSeg, kSegCap, &pLo, &pHi) : 0;
-    int nextN = (nextBL != INT_MAX) ? buildSegment(nextBL, curLo, curHi, nextSeg, kSegCap, &nLo, &nHi) : 0;
+    int prevN = (prevBL != INT_MIN) ? buildSegment(prevBL, curLo, curHi, prevSeg) : 0;
+    int nextN = (nextBL != INT_MAX) ? buildSegment(nextBL, curLo, curHi, nextSeg) : 0;
 
     // Reading order: previous line, cursor line, next line — each sorted by x.
     int m = prevN + curN + nextN;
