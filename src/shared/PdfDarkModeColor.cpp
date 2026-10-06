@@ -16,8 +16,6 @@ extern "C" {
 
 // Hardcoded PDF dark mode defaults (not persisted in settings file).
 static constexpr int kPreservePdfImagesMinSize = 72;
-// Object-level Smart Dark is opt-in until image/color heuristics are ready (Phase 2+).
-static constexpr PdfDarkModeRenderer kPdfDarkModeRenderer = PdfDarkModeRenderer::LegacyBitmapPostProcess;
 
 static bool gPreservePdfImagesInDarkMode = true;
 
@@ -63,18 +61,6 @@ static const char* DocumentColorsFollowThemeToString(DocumentColorsFollowTheme m
     return "off";
 }
 
-static int gShadeForwardCount = 0;
-
-void PdfDarkModeRecordShadeForward() {
-    gShadeForwardCount++;
-}
-
-int PdfDarkModeTakeShadeForwardCount() {
-    int n = gShadeForwardCount;
-    gShadeForwardCount = 0;
-    return n;
-}
-
 // PDF dark mode runtime options (not stored in settings file)
 bool GetPreservePdfImagesInDarkMode() {
     return gPreservePdfImagesInDarkMode;
@@ -86,10 +72,6 @@ void SetPreservePdfImagesInDarkMode(bool preserve) {
 
 int GetPreservePdfImagesMinSize() {
     return kPreservePdfImagesMinSize;
-}
-
-PdfDarkModeRenderer GetPdfDarkModeRenderer() {
-    return kPdfDarkModeRenderer;
 }
 
 bool DocumentColorsFollowThemeEnabled() {
@@ -164,45 +146,8 @@ void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
     }
 }
 
-bool PdfDarkModeUsesObjectLevel() {
-    if (!DarkChromeActive()) {
-        return false;
-    }
-    if (GetDocumentColorsFollowTheme() != DocumentColorsFollowTheme::Smart) {
-        return false;
-    }
-    return GetPdfDarkModeRenderer() == PdfDarkModeRenderer::ObjectLevelDevice;
-}
-
-void PdfDarkModeClearPixmapToThemeBackground(fz_context* /*ctx*/, fz_pixmap* pix, const DarkModePalette& palette) {
-    if (!pix || !pix->samples) {
-        return;
-    }
-    byte rb = (byte)lroundf(palette.bgR * 255.f);
-    byte gb = (byte)lroundf(palette.bgG * 255.f);
-    byte bb = (byte)lroundf(palette.bgB * 255.f);
-    int w = pix->w;
-    int h = pix->h;
-    int n = pix->n;
-    for (int y = 0; y < h; y++) {
-        unsigned char* row = pix->samples + ((size_t)y * pix->stride);
-        for (int x = 0; x < w; x++) {
-            unsigned char* p = row + ((size_t)x * n);
-            p[0] = rb;
-            p[1] = gb;
-            p[2] = bb;
-            if (pix->alpha && n >= 4) {
-                p[3] = 255;
-            }
-        }
-    }
-}
-
 DarkModeOptions PdfDarkModeCurrentOptions() {
     DarkModeOptions opts;
-    if (PdfDarkModeUsesObjectLevel()) {
-        opts.preserveImagePaperSoftening = 0.75f;
-    }
     return opts;
 }
 
@@ -335,10 +280,6 @@ void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePale
 }
 
 void MapRgbToDarkTheme(float r, float g, float b, const DarkModePalette& palette, float* outRgb) {
-    if (PdfDarkModeUsesObjectLevel()) {
-        MapRgbToDarkThemeOklab(r, g, b, palette, outRgb);
-        return;
-    }
     outRgb[0] = palette.textR + (r * palette.diffR);
     outRgb[1] = palette.textG + (g * palette.diffG);
     outRgb[2] = palette.textB + (b * palette.diffB);

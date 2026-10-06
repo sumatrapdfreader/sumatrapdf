@@ -203,7 +203,6 @@ void EngineMupdfSetAnnotAuthorInTooltip(AnnotAuthorVisibility);
 void EngineMupdfToggleCadEnhance(EngineBase* engine);
 bool EngineMupdfCadEnhanceActive(EngineBase* engine);
 void EngineMupdfInvalidateDarkMode(EngineBase* engine);
-bool EngineSupportsSmartDarkMode(EngineBase* engine);
 Str EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 TempStr EngineMupdfGetPdfInfo(Str path);

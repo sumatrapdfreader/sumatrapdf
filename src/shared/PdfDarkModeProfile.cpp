@@ -40,10 +40,6 @@ static DarkModePalette BuildPaletteFromColors(Color textCol, Color bgCol, Color 
     return p;
 }
 
-bool DarkModeProfileUsesObjectLevel(const DarkModeProfile* profile) {
-    return profile && profile->mode == PageColorMode::SmartDark;
-}
-
 bool DarkModeProfileUsesLegacyPostProcess(const DarkModeProfile* profile) {
     if (!profile) {
         return false;
@@ -113,10 +109,7 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
         if (GetDocumentColorsFollowTheme() == DocumentColorsFollowTheme::Legacy) {
             profile->mode = PageColorMode::LegacyInvert;
         } else {
-            // Smart (or Off with pagesDark already handled above): prefer object-level
-            if (EngineSupportsSmartDarkMode(engine) && PdfDarkModeUsesObjectLevel()) {
-                profile->mode = PageColorMode::SmartDark;
-            } else if (profile->preservePdfImages) {
+            if (profile->preservePdfImages) {
                 profile->mode = PageColorMode::PreserveImages;
             } else {
                 profile->mode = PageColorMode::LegacyInvert;

@@ -44,11 +44,6 @@ struct DarkImageAnalysis {
     DarkImageFeatures features{};
 };
 
-enum class PdfDarkModeRenderer {
-    LegacyBitmapPostProcess = 0,
-    ObjectLevelDevice = 1,
-};
-
 enum class DocumentColorsFollowTheme {
     Off = 0,
     Smart = 1,
@@ -59,9 +54,7 @@ enum class DocumentColorsFollowTheme {
 enum class PageColorMode {
     Normal,
     LegacyInvert,
-    SmartDark,
     PreserveImages,
-    ScanDark,
 };
 
 struct DarkModeOptions {
@@ -100,33 +93,10 @@ struct DarkModeProfile {
     u32 hash = 0;
 };
 
-struct ImageOccurrenceInfo {
-    int occurrenceIndex = 0;
-    RectF pageBounds;
-    bool isImageMask = false;
-    float pageCoverage = 0.f;
-    DarkImagePolicy policy = DarkImagePolicy::Preserve;
-    DarkImageAnalysis analysis{};
-};
-
-struct DarkModePageAnalysis {
-    RectF pageBounds;
-    bool isScannedPage = false;
-    Vec<ImageOccurrenceInfo> images;
-    void* processCache = nullptr;
-};
-
-struct DarkModeReplayState {
-    int nextImageOccurrence = 0;
-};
-
 bool GetPreservePdfImagesInDarkMode();
 void SetPreservePdfImagesInDarkMode(bool preserve);
 int GetPreservePdfImagesMinSize();
-PdfDarkModeRenderer GetPdfDarkModeRenderer();
 
-bool PdfDarkModeUsesObjectLevel();
-bool DarkModeProfileUsesObjectLevel(const DarkModeProfile* profile);
 bool DarkModeProfileUsesLegacyPostProcess(const DarkModeProfile* profile);
 void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile);
 u32 PdfDarkModeComputeProfileHash(const DarkModeProfile* profile);
@@ -143,9 +113,6 @@ DarkModeOptions PdfDarkModeCurrentOptions();
 u32 PdfDarkModeComputeOptionsHash();
 DarkModePalette PdfDarkModeBuildPalette();
 
-void PdfDarkModeFreeAnalysis(fz_context* ctx, DarkModePageAnalysis* analysis);
-void PdfDarkModeInvalidatePage(fz_context* ctx, FzPageInfo* pageInfo);
-
 void ApplyAdaptiveDocumentDarkMode(float r, float g, float b, const DarkModePalette& palette, float* outR, float* outG,
                                    float* outB);
 
@@ -156,9 +123,6 @@ void MapRgbToDarkThemeOklab(float r, float g, float b, const DarkModePalette& pa
 float PdfDarkModeOklabDistance(float r1, float g1, float b1, float r2, float g2, float b2);
 
 bool PdfDarkModeShouldBlendLightBackground(const DarkImageAnalysis& analysis);
-
-void PdfDarkModeRemapScanPixel(float r, float g, float b, const DarkImageAnalysis& analysis,
-                               const DarkModePalette& palette, float* outR, float* outG, float* outB);
 
 bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, float pageCoverage);
 bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, float pageCoverage);

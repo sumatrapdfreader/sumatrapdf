@@ -1220,25 +1220,7 @@
     <ClCompile Include="..\src\shared\PdfCad.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\shared\PdfDarkModeAnalysis.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\PdfDarkModeCache.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\shared\PdfDarkModeColor.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\PdfDarkModeDevice.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\PdfDarkModeEngineCache.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\PdfDarkModeImageBgBlend.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\PdfDarkModeImageClassifier.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfDarkModeImageRules.cpp">
@@ -1251,9 +1233,6 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfDarkModeProfile.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\PdfDarkModeScanProcess.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfDate.cpp">

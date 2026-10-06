@@ -5,8 +5,6 @@
 
 struct Annotation;
 enum class AnnotationChange;
-struct DarkModePageAnalysis;
-struct DarkModeEngineCache;
 
 struct FitzPageImageInfo {
     fz_rect rect = fz_unit_rect;
@@ -59,10 +57,6 @@ struct FzPageInfo {
     // is engine-wide, not per-page.
     fz_display_list* displayList = nullptr;
 
-    // smart dark mode (PdfDarkMode*.cpp): cached per-page analysis for the
-    // object-level renderer, freed via PdfDarkModeInvalidatePage
-    DarkModePageAnalysis* darkModeAnalysis = nullptr;
-    u32 darkModeAnalysisHash = 0;
     // dark-mode legacy recolor: cached skip rects (device px, absolute) of
     // images whose colors should be preserved
     bool contentImagesCollected = false;
@@ -71,6 +65,12 @@ struct FzPageInfo {
     int darkLegacySkipRotation = 0;
     float darkLegacyArtworkPageBottom = 0.f;
     Vec<Rect> darkLegacySkipDevAbs;
+
+    void ResetDarkMode() {
+        darkLegacySkipHash = 0;
+        darkLegacyArtworkPageBottom = 0.f;
+        VecClear(darkLegacySkipDevAbs);
+    }
 };
 
 class EngineMupdf : public EngineBase {
@@ -236,7 +236,6 @@ class EngineMupdf : public EngineBase {
     FILETIME fileTimeAtLoad{};
 
     // smart dark mode: engine-level image feature/processed caches
-    DarkModeEngineCache* darkModeEngineCache = nullptr;
 
     // the ebook font (EBookUI.FontName, or this document's own override) that
     // we couldn't load, null if there was none or it loaded: the text silently

@@ -3707,7 +3707,6 @@ EngineMupdf::EngineMupdf() {
     kind = kindEngineMupdf;
     defaultExt = str::Dup(StrL(".pdf"));
     fileDPI = 72.0f;
-    darkModeEngineCache = PdfDarkModeEngineCacheCreate();
 
     fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;
@@ -3743,10 +3742,6 @@ EngineMupdf::~EngineMupdf() {
     pagesLock.Lock();
 
     auto* ctx = _ctx;
-    if (darkModeEngineCache) {
-        PdfDarkModeEngineCacheFree(ctx, darkModeEngineCache);
-        darkModeEngineCache = nullptr;
-    }
     for (Vec<FzPageInfo*>* v : chapterPages) {
         if (!v) {
             continue;
@@ -3770,7 +3765,7 @@ EngineMupdf::~EngineMupdf() {
             if (pi->displayList) {
                 fz_drop_display_list(ctx, pi->displayList);
             }
-            PdfDarkModeInvalidatePage(ctx, pi);
+            pi->ResetDarkMode();
             if (pi->page) {
                 fz_drop_page(ctx, pi->page);
             }
@@ -7378,13 +7373,9 @@ void EngineMupdf::ToggleCadEnhanceOverride() {
 
 // Transparent backdrop: leave unpainted samples at alpha 0 so the canvas
 // checkerboard (CmdToggleTransparencyGrid) shows through (issue #1809).
-static void ClearRenderedPagePixmap(fz_context* ctx, fz_pixmap* pix, const RenderPageArgs& args, bool objectLevelDark) {
+static void ClearRenderedPagePixmap(fz_context* ctx, fz_pixmap* pix, const RenderPageArgs& args) {
     if (args.transparentBackdrop) {
         fz_clear_pixmap(ctx, pix);
-        return;
-    }
-    if (objectLevelDark && args.darkProfile) {
-        PdfDarkModeClearPixmapToThemeBackground(ctx, pix, args.darkProfile->palette);
         return;
     }
     fz_clear_pixmap_with_value(ctx, pix, 0xff);
@@ -7407,8 +7398,8 @@ static bool RenderAborted(fz_cookie* cookie) {
 // An aborted run stops between a clip push and its pop, so the draw device
 // can't be closed ("items left on stack"). Unhook close on it and on the
 // wrappers that forward to it, so dropping them doesn't warn either.
-static void UnhookAbortedDevices(fz_device* drawDev, fz_device* darkDev, fz_device* outer) {
-    fz_device* devs[] = {drawDev, darkDev, outer};
+static void UnhookAbortedDevices(fz_device* drawDev, fz_device* outer) {
+    fz_device* devs[] = {drawDev, outer};
     for (fz_device* d : devs) {
         if (d) {
             d->close_device = nullptr;
@@ -7509,31 +7500,18 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         ScopedMutex rls(&renderLock);
         fz_try(ctx) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            bool objectLevelDark = args.darkProfile && DarkModeProfileUsesObjectLevel(args.darkProfile);
-            ClearRenderedPagePixmap(ctx, pix, args, objectLevelDark);
+            ClearRenderedPagePixmap(ctx, pix, args);
             dev = fz_new_draw_device(ctx, ctm, pix);
             fz_device* drawDev = dev;
-            fz_device* darkDev = nullptr;
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
-            }
-            DarkModeReplayState replayState{};
-            if (objectLevelDark && pdfdoc) {
-                DarkModePageAnalysis* analysis =
-                    PdfDarkModeGetOrBuildAnalysis(ctx, pageInfo, keptList, args.darkProfile->hash, darkModeEngineCache);
-                if (analysis) {
-                    dev = PdfDarkModeWrapDevice(ctx, dev, analysis, &args.darkProfile->palette, &replayState,
-                                                darkModeEngineCache, args.darkProfile->hash,
-                                                args.darkProfile->debugOverlay);
-                    darkDev = dev;
-                }
             }
             if (CadEnhanceActive()) {
                 dev = PdfCadEnhanceWrapDevice(ctx, dev);
             }
             fz_run_display_list(ctx, keptList, dev, fz_identity, pRect, fzcookie);
             if (RenderAborted(fzcookie)) {
-                UnhookAbortedDevices(drawDev, darkDev, dev);
+                UnhookAbortedDevices(drawDev, dev);
             } else {
                 fz_close_device(ctx, dev);
                 if (CadEnhanceActive() && cadRasterDominant) {
@@ -7579,7 +7557,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fz_try(ctx) {
             pdfpage = pdf_page_from_fz_page(ctx, page);
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            ClearRenderedPagePixmap(ctx, pix, args, false);
+            ClearRenderedPagePixmap(ctx, pix, args);
             dev = fz_new_draw_device(ctx, ctm, pix);
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
@@ -7591,7 +7569,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
             }
             if (RenderAborted(fzcookie)) {
-                UnhookAbortedDevices(dev, nullptr, nullptr);
+                UnhookAbortedDevices(dev, nullptr);
             } else {
                 fz_close_device(ctx, dev);
                 if (CadEnhanceActive() && cadRasterDominant) {
@@ -7615,7 +7593,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     } else {
         fz_try(ctx) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            ClearRenderedPagePixmap(ctx, pix, args, false);
+            ClearRenderedPagePixmap(ctx, pix, args);
             dev = fz_new_draw_device(ctx, ctm, pix);
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
@@ -10028,7 +10006,7 @@ static void InvalidateFzPageAfterContentChange(EngineMupdf* e, FzPageInfo* pi) {
         fz_drop_display_list(ctx, pi->displayList);
         pi->displayList = nullptr;
     }
-    PdfDarkModeInvalidatePage(ctx, pi);
+    pi->ResetDarkMode();
     pi->contentImagesCollected = false;
     DropPageImages(ctx, pi);
     DeleteVecMembers(pi->links);
@@ -10590,7 +10568,7 @@ void EngineMupdf::ApplyReflowThemeCss() {
     pageCount = n;
 }
 
-// Drop cached dark-mode analyses and processed images; call when dark-mode
+// Drop cached image-preservation rectangles when dark-mode
 // options (theme, color mode, preserve toggle) change. Reflowable docs also
 // restyle with the current theme CSS.
 void EngineMupdfInvalidateDarkMode(EngineBase* engine) {
@@ -10600,23 +10578,7 @@ void EngineMupdfInvalidateDarkMode(EngineBase* engine) {
     }
     epdf->ApplyReflowThemeCss();
     ScopedRecursiveMutex scope(&epdf->pagesLock);
-    fz_context* ctx = epdf->Ctx();
-    if (epdf->darkModeEngineCache) {
-        PdfDarkModeEngineCacheClear(ctx, epdf->darkModeEngineCache);
-    }
-    ForEachPageInfo(epdf, [ctx](FzPageInfo* pi) { PdfDarkModeInvalidatePage(ctx, pi); });
-}
-
-// PDF documents support the object-level smart dark renderer
-bool EngineSupportsSmartDarkMode(EngineBase* engine) {
-    if (!engine || engine->kind != kindEngineMupdf) {
-        return false;
-    }
-    if (!str::EqI(engine->defaultExt, StrL(".pdf"))) {
-        return false;
-    }
-    EngineMupdf* epdf = AsEngineMupdf(engine);
-    return epdf && epdf->pdfdoc;
+    ForEachPageInfo(epdf, [](FzPageInfo* pi) { pi->ResetDarkMode(); });
 }
 
 // Toggle CAD/engineering-drawing line enhancement for this document
