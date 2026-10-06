@@ -22,6 +22,7 @@ import { beginSharedControlledSession, endSharedControlledSession } from "./win-
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as jpegXlPdf } from "./jpeg-xl-pdf.ts";
 import { testit as buildCli } from "./build-cli.ts";
+import { testit as ngEmbedded } from "./ng-embedded.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
 import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
 import { testit as issue5840 } from "./issue-5840.ts";
@@ -485,6 +486,7 @@ export const tests: NamedTest[] = [
   // --- no Sumatra process -------------------------------------------------
   ["lint-command-ids", lintCommandIds],
   ["build-cli", buildCli],
+  ["ng-embedded", ngEmbedded],
   ["parse-tip-brackets", parseTipBrackets],
   ["combining-mark-first", combiningMarkFirst],
   ["issue-5840", issue5840],

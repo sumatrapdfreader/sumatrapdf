@@ -173,6 +173,7 @@ async function genGroup(g: Group): Promise<number> {
     rows.push(`    {"${e.name}", ${v}, ${gz.length}, ${raw.length}},\n`);
   }
   parts.push(`const EmbeddedBlob ${g.table}[] = {\n`);
+  if (rows.length === 0) rows.push("    {},\n");
   parts.push(...rows);
   parts.push("};\n\n");
   parts.push(`const int ${g.table}Count = ${g.entries.length};\n`);
