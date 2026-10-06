@@ -677,11 +677,6 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
     return true;
 }
 
-// Load and cache data for a given url inside CHM file.
-static TempStr ColorToCssTemp(Color c) {
-    return fmt("#%02x%02x%02x", (int)GetRValue(c), (int)GetGValue(c), (int)GetBValue(c));
-}
-
 // best-effort theming for CHM pages: we don't control their HTML, so inject
 // a <style> block with !important overrides for the page background and text
 // color. Returns null when the effective page colors are the plain default

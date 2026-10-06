@@ -6629,6 +6629,10 @@ TempStr SerializeColorTemp(Color c) {
     return fmt("#%02x%02x%02x", r, g, b);
 }
 
+TempStr ColorToCssTemp(Color c) {
+    return fmt("#%02x%02x%02x", (int)GetRed(c), (int)GetGreen(c), (int)GetBlue(c));
+}
+
 void ParseColor(ParsedColor& parsed, Str txt) {
     if (parsed.wasParsed) {
         return;

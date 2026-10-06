@@ -466,10 +466,6 @@ function scrollToBottom() {
 }
 </script></body></html>)";
 
-static TempStr ColorToCssTemp(Color c) {
-    return fmt("#%02x%02x%02x", (int)GetRValue(c), (int)GetGValue(c), (int)GetBValue(c));
-}
-
 // bgColor is the per-backend BgColor setting; "#ffffff" is its default value
 // and means "follow the theme". An explicitly different color keeps the
 // classic light chat colors on top of that background.

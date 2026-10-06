@@ -45,12 +45,6 @@ bool DocumentColorsFollowThemeEnabled() {
     return GetDocumentColorsFollowTheme() != DocumentColorsFollowTheme::Off;
 }
 
-static TempStr ColorToCssHexTemp(Color c) {
-    u8 r, g, b;
-    UnpackColor(c, r, g, b);
-    return fmt("#%02x%02x%02x", r, g, b);
-}
-
 // User CSS overlay for MuPDF reflowable documents (EPUB, HTML, FB2, MOBI, TXT).
 // Empty when the effective page colors are black-on-white (nothing to override).
 TempStr ReflowDocumentThemeCssTemp() {
@@ -59,9 +53,9 @@ TempStr ReflowDocumentThemeCssTemp() {
     if (bgCol == kColWhite && txtCol == kColBlack) {
         return {};
     }
-    TempStr bg = ColorToCssHexTemp(bgCol);
-    TempStr fg = ColorToCssHexTemp(txtCol);
-    TempStr link = ColorToCssHexTemp(ThemeWindowLinkColor());
+    TempStr bg = ColorToCssTemp(bgCol);
+    TempStr fg = ColorToCssTemp(txtCol);
+    TempStr link = ColorToCssTemp(ThemeWindowLinkColor());
     // * first so html/body's background wins if MuPDF treats later rules as
     // stronger (a trailing * { background: transparent } would leave the
     // pixmap's white clear color showing through). Images are unaffected.

@@ -499,11 +499,6 @@ function scrollToBottom() {
 }
 </script></body></html>)";
 
-// ng: GetRValue() and friends are win32 macros; base has the same three
-static TempStr ColorToCssTemp(Color c) {
-    return fmt("#%02x%02x%02x", (int)GetRed(c), (int)GetGreen(c), (int)GetBlue(c));
-}
-
 // bgColor is the per-backend BgColor setting; "#ffffff" is its default value
 // and means "follow the theme". An explicitly different color keeps the
 // classic light chat colors on top of that background.

@@ -420,10 +420,6 @@ static const char kMermaidBootstrap[] = R"HTML(
 </script>
 )HTML";
 
-static TempStr ColorToCssTemp(Color c) {
-    return fmt("#%02x%02x%02x", (int)GetRed(c), (int)GetGreen(c), (int)GetBlue(c));
-}
-
 // page colors follow the document color mode: ThemePageRenderColors gives
 // black-on-white (or FixedPageUI overrides) when DocumentColorsFollowTheme
 // is off and theme-derived page colors when it's on

@@ -2737,6 +2737,7 @@ void FreeColorText(ParsedColor& parsed);
 bool ParseColor(Color* destColor, Str s);
 Color ParseColor(Str s, Color defCol = 0);
 TempStr SerializeColorTemp(Color);
+TempStr ColorToCssTemp(Color);
 
 PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a = 0xff); // 0xff is opaque
 void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
