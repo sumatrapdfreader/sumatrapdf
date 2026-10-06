@@ -1439,17 +1439,17 @@ void HtmlFormatter::HandleText(Str s) {
     // whitespace or all non-whitespace
     while (curr) {
         currReparseIdx = htmlParser->PosOf(curr);
-        int off = 0;
-        if (SkipWs(curr, off)) {
+        int skipped = str::TrimWs(curr);
+        if (skipped > 0) {
             EmitElasticSpace();
         }
 
-        int textStart = off;
-        currReparseIdx = htmlParser->PosOf(curr) + off;
-        if (SkipNonWs(curr, off)) {
-            EmitTextRun(Str(curr.s + textStart, off - textStart));
+        currReparseIdx += skipped;
+        Str text = curr;
+        text.len = str::TrimNonWs(curr);
+        if (len(text) > 0) {
+            EmitTextRun(text);
         }
-        curr = Str(curr.s + off, curr.len - off);
     }
 }
 

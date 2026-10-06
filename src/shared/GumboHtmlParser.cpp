@@ -157,11 +157,6 @@ GumboOptions GumboMakeXmlFragmentOptions() {
     return opts;
 }
 
-// returns -1 if didn't find
-int HtmlEntityNameToRune(Str name) {
-    return (int)FindHtmlEntityRune(name);
-}
-
 static int HtmlEntityHexDigit(char c) {
     if (c >= '0' && c <= '9') {
         return (int)(c - '0');
@@ -237,7 +232,7 @@ static Str ResolveHtmlNamedEntity(Str str, int& rune) {
         return {};
     }
 
-    rune = HtmlEntityNameToRune(Str(str.s, entLen));
+    rune = (int)FindHtmlEntityRune(Str(str.s, entLen));
     if (-1 == rune) {
         return {};
     }
@@ -248,38 +243,6 @@ static Str ResolveHtmlNamedEntity(Str str, int& rune) {
         endOff++;
     }
     return Str(str.s + endOff, str.len - endOff);
-}
-
-bool SkipUntil(Str s, int& off, char c) {
-    while (off < s.len && s.s[off] != c) {
-        ++off;
-    }
-    return off < s.len;
-}
-
-bool SkipUntil(Str s, int& off, Str term) {
-    for (; off < s.len; off++) {
-        if (off + term.len <= s.len && str::StartsWith(Str(s.s + off, s.len - off), term)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// return true if skipped
-bool SkipWs(Str s, int& off) {
-    Str rest = Str(s.s + off, s.len - off);
-    int n = str::TrimWs(rest);
-    off += n;
-    return n > 0;
-}
-
-// return true if skipped
-bool SkipNonWs(Str s, int& off) {
-    Str rest = Str(s.s + off, s.len - off);
-    int n = str::TrimNonWs(rest);
-    off += n;
-    return n > 0;
 }
 
 static bool IsNameChar(char c) {
@@ -296,9 +259,8 @@ static void SkipName(Str s, int& off) {
 
 // return true if s consists only of whitespace
 bool IsSpaceOnly(Str s) {
-    int off = 0;
-    SkipWs(s, off);
-    return off == s.len;
+    str::TrimWs(s);
+    return len(s) == 0;
 }
 
 static void MemAppend(char* buf, int& off, Str src) {
@@ -339,8 +301,8 @@ Str ResolveHtmlEntities(Str str, Arena* a) {
     int off = 0;
     int chunkStart = 0;
     for (;;) {
-        bool found = SkipUntil(str, off, '&');
-        if (!found) {
+        int next = str::IndexOfChar(Str(str.s + off, len(str) - off), '&');
+        if (next < 0) {
             if (str::IsNull(res)) {
                 return str;
             }
@@ -348,6 +310,7 @@ Str ResolveHtmlEntities(Str str, Arena* a) {
             MemAppend(res.s, dstOff, Str(str.s + chunkStart, str.len - chunkStart));
             break;
         }
+        off += next;
         if (str::IsNull(res)) {
             // allocate memory for the result string
             // I'm banking that text after resolving entities will
@@ -671,6 +634,20 @@ HtmlToken* GumboHtmlParser::Next() {
 
 #if IS_DEBUG
 bool GumboHtmlParser_UnitTest() {
+    const Str entities[][2] = {
+        {{}, {}},
+        {StrL("plain text"), StrL("plain text")},
+        {StrL("&"), StrL("&")},
+        {StrL("&&amp;&amp;"), StrL("&&&")},
+        {StrL("a &lt;b&gt; &unknown; &#x1F600;"), StrL("a <b> &unknown; 😀")},
+        {StrL("&#0; / &#x110000;"), StrL("? / ?")},
+    };
+    for (const auto& c : entities) {
+        if (!str::Eq(ResolveHtmlEntitiesTemp(c[0]), c[1])) {
+            return false;
+        }
+    }
+
     HtmlToken token;
     token.SetTag(HtmlToken::StartTag, StrL("opf:metadata"));
     Str name = StrL("metadata!");

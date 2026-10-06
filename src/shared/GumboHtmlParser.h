@@ -102,13 +102,7 @@ class GumboHtmlParser {
     HtmlToken* Next();
 };
 
-bool SkipWs(Str s, int& off);
-bool SkipNonWs(Str s, int& off);
-bool SkipUntil(Str s, int& off, char c);
-bool SkipUntil(Str s, int& off, Str term);
 bool IsSpaceOnly(Str s);
-
-int HtmlEntityNameToRune(Str name);
 
 Str ResolveHtmlEntity(Str str, int& rune);
 Str ResolveHtmlEntities(Str s, Arena* a);

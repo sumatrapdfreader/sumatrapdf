@@ -47,51 +47,39 @@ static Str TakeArchiveData(Archive* archive, int fileId) {
     return res;
 }
 
-static void SkipXmlPIAttrName(Str s, int& off) {
-    while (off < s.len) {
-        char c = s.s[off];
-        if (str::IsWs(c) || c == '=' || c == '?' || c == '>') {
-            return;
-        }
-        off++;
-    }
-}
-
 static TempStr GetXmlPIAttrTemp(Str xmlPI, Str attrName) {
-    int off = 2; // skip "<?"
-    SkipNonWs(xmlPI, off);
-    while (off < xmlPI.len) {
-        SkipWs(xmlPI, off);
-        if (off >= xmlPI.len || xmlPI.s[off] == '?' || xmlPI.s[off] == '>') {
+    Str rest(xmlPI.s + 2, len(xmlPI) - 2);
+    str::TrimNonWs(rest);
+    while (len(rest) > 0) {
+        str::TrimWs(rest);
+        if (len(rest) == 0 || rest.s[0] == '?' || rest.s[0] == '>') {
             return {};
         }
 
-        int nameStart = off;
-        SkipXmlPIAttrName(xmlPI, off);
-        Str name(xmlPI.s + nameStart, off - nameStart);
-        SkipWs(xmlPI, off);
-        if (off >= xmlPI.len || xmlPI.s[off] != '=') {
+        int n = 0;
+        while (n < len(rest) && !str::IsWs(rest.s[n]) && rest.s[n] != '=' && rest.s[n] != '?' && rest.s[n] != '>') {
+            n++;
+        }
+        Str name(rest.s, n);
+        rest = Str(rest.s + n, len(rest) - n);
+        str::TrimWs(rest);
+        if (!str::TrimPrefix(rest, StrL("="))) {
             continue;
         }
-        off++;
-        SkipWs(xmlPI, off);
-        if (off >= xmlPI.len) {
+        str::TrimWs(rest);
+        if (len(rest) == 0) {
             return {};
         }
 
         Str val;
-        if (xmlPI.s[off] == '"' || xmlPI.s[off] == '\'') {
-            char quote = xmlPI.s[off++];
-            int valStart = off;
-            if (!SkipUntil(xmlPI, off, quote)) {
+        if (rest.s[0] == '"' || rest.s[0] == '\'') {
+            char quote = rest.s[0];
+            rest = Str(rest.s + 1, len(rest) - 1);
+            if (!str::CutChar(rest, quote, &val, &rest)) {
                 return {};
             }
-            val = Str(xmlPI.s + valStart, off - valStart);
-            off++;
         } else {
-            int valStart = off;
-            SkipNonWs(xmlPI, off);
-            val = Str(xmlPI.s + valStart, off - valStart);
+            val = str::NextWord(rest);
         }
         if (str::EqI(name, attrName)) {
             return str::DupTemp(val);
@@ -1941,6 +1929,22 @@ TxtDoc* TxtDoc::CreateFromFile(Str path) {
 
 #if IS_DEBUG
 bool EbookDoc_UnitTestLoading() {
+    const Str declarations[][2] = {
+        {StrL("<?xml encoding=\"UTF-8\"?>"), StrL("UTF-8")},
+        {StrL("<?xml version='1.0' ENCODING = 'windows-1252' ?>"), StrL("windows-1252")},
+        {StrL("<?xml\tencoding=1251 ?>"), StrL("1251")},
+        {StrL("<?xml ignored encoding='UTF-8'?>"), StrL("UTF-8")},
+        {StrL("<?xml encoding=''?>"), {}},
+        {StrL("<?xml encoding='UTF-8?>"), {}},
+        {StrL("<?xml encoding= "), {}},
+        {StrL("<?xml?>"), {}},
+    };
+    for (const auto& c : declarations) {
+        if (!str::Eq(GetXmlPIAttrTemp(c[0], StrL("encoding")), c[1])) {
+            return false;
+        }
+    }
+
     Str xml = StrL("<FictionBook><body><section><p>Shared loading</p></section></body></FictionBook>");
     TempStr path = GetTempFilePathTemp(StrL("ebook-loading-"));
     AutoCall removeFile(file::Delete, path);
