@@ -29,24 +29,19 @@ Pixmap* PixmapFromData(Str d) {
     if (!ctx) {
         return nullptr;
     }
-    // Decode straight to BGRA for PixmapFormat::BGRA8 (no channel swizzle).
+    AutoCall freeCtx(jxl_ctx_free, ctx);
+    // Decode BGRA in sRGB for display; linear light renders too dark (#5919).
     jxl_ctx_set_bgr(ctx, 1);
-    // We blit the pixels to an sRGB display as-is, so ask for sRGB rather than
-    // whatever the file declares. Images encoded in linear light otherwise come
-    // out dark and over-saturated (issue #5919).
     jxl_ctx_set_srgb_output(ctx, 1);
     jxl_image* img = jxl_decode(ctx, (const u8*)d.s, (size_t)d.len, JXLDEC_FORMAT_RGBA32);
-    Pixmap* px = nullptr;
-    if (img && img->data && img->width > 0 && img->height > 0) {
-        px = AllocPixmap(img->width, img->height, PixmapFormat::BGRA8);
-        if (px) {
-            CopyPixmapRows(px, img->data, img->stride);
-        }
+    AutoCall freeImage(jxl_image_destroy, ctx, img);
+    if (!img || !img->data || img->width <= 0 || img->height <= 0) {
+        return nullptr;
     }
-    if (img) {
-        jxl_image_destroy(ctx, img);
+    Pixmap* px = AllocPixmap(img->width, img->height, PixmapFormat::BGRA8);
+    if (px) {
+        CopyPixmapRows(px, img->data, img->stride);
     }
-    jxl_ctx_free(ctx);
     return px;
 }
 
@@ -60,25 +55,23 @@ bool DecodeRgbInto(Str d, DecodeDstAllocFn allocDst, void* user) {
     if (!ctx) {
         return false;
     }
+    AutoCall freeCtx(jxl_ctx_free, ctx);
     jxl_ctx_set_srgb_output(ctx, 1);
-    bool ok = false;
     jxl_doc* doc = jxl_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
+    AutoCall closeDoc(jxl_doc_close, doc);
     jxl_image_info info{};
-    if (doc && jxl_doc_info(doc, &info) == 0) {
-        bool hasAlpha = info.alpha_bits > 0;
-        jxl_format fmt = hasAlpha ? JXLDEC_FORMAT_RGBA32 : JXLDEC_FORMAT_RGB24;
-        jxl_render_info ri{};
-        if (jxl_frame_render_info(doc, 0, fmt, &ri) == 0 && ri.width > 0 && ri.height > 0) {
-            int stride = 0;
-            u8* dst = allocDst(user, ri.width, ri.height, hasAlpha, &stride);
-            ok = dst && jxl_frame_render_into(doc, 0, fmt, dst, stride) == 0;
-        }
+    if (!doc || jxl_doc_info(doc, &info) != 0) {
+        return false;
     }
-    if (doc) {
-        jxl_doc_close(doc);
+    bool hasAlpha = info.alpha_bits > 0;
+    jxl_format fmt = hasAlpha ? JXLDEC_FORMAT_RGBA32 : JXLDEC_FORMAT_RGB24;
+    jxl_render_info ri{};
+    if (jxl_frame_render_info(doc, 0, fmt, &ri) != 0 || ri.width <= 0 || ri.height <= 0) {
+        return false;
     }
-    jxl_ctx_free(ctx);
-    return ok;
+    int stride = 0;
+    u8* dst = allocDst(user, ri.width, ri.height, hasAlpha, &stride);
+    return dst && jxl_frame_render_into(doc, 0, fmt, dst, stride) == 0;
 }
 
 Size SizeFromData(Str d) {
@@ -90,11 +83,11 @@ Size SizeFromData(Str d) {
     if (!ctx) {
         return size;
     }
+    AutoCall freeCtx(jxl_ctx_free, ctx);
     int w = 0, h = 0;
     if (jxl_decode_size(ctx, (const u8*)d.s, (size_t)d.len, &w, &h) == 0) {
         size = Size(w, h);
     }
-    jxl_ctx_free(ctx);
     return size;
 }
 
