@@ -88,6 +88,37 @@ static Str MkMobi(u32 imageFirstRec, u32 hdrLen = kMobiHdrLen, u32 exthFlags = 0
 }
 
 void MobiDoc_UnitTests() {
+    {
+        AutoDelete<PdbReader> reader(PdbReader::CreateFromData(MkMobi(0)));
+        utassert(reader != nullptr);
+        utassert(reader->GetRecordCount() == kNumRecs);
+        utassert(str::Eq(reader->GetDbType(), StrL("BOOKMOBI")));
+        utassert(len(reader->GetRecord(0)) == kRec0Len);
+        utassert(len(reader->GetRecord(1)) == kRec1Len);
+    }
+    const int lastOffsets[] = {kRec0Off, kFileLen};
+    for (int offset : lastOffsets) {
+        Str data = MkMobi(0);
+        BeWriter writer{(u8*)data.s, kPdbHeaderLen + kRecHeaderLen};
+        writer.U32((u32)offset);
+        AutoDelete<PdbReader> reader(PdbReader::CreateFromData(data));
+        utassert(reader != nullptr);
+        utassert(len(reader->GetRecord(0)) == offset - kRec0Off);
+        utassert(len(reader->GetRecord(1)) == kFileLen - offset);
+    }
+    const int badOffsets[] = {kPdbHeaderLen - 1, kFileLen + 1, kRec1Off + 1};
+    for (int offset : badOffsets) {
+        Str data = MkMobi(0);
+        BeWriter writer{(u8*)data.s, kPdbHeaderLen};
+        writer.U32((u32)offset);
+        utassert(PdbReader::CreateFromData(data) == nullptr);
+    }
+    {
+        Str data = MkMobi(0);
+        data.len = kPdbHeaderLen - 1;
+        utassert(PdbReader::CreateFromData(data) == nullptr);
+    }
+
     // an imageFirstRec that doesn't fit an int used to become a negative record
     // index, which PdbReader::GetRecord() then read out of bounds
     {

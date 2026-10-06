@@ -7,113 +7,60 @@
 
 #include "PalmDbReader.h"
 
-// size of PdbHeader
 constexpr int kPdbHeaderLen = 78;
-// size of PdbRecordHeader
 constexpr int kPdbRecordHeaderLen = 8;
-
-// Takes ownership of d
-bool PdbReader::Parse(Str d) {
-    data = (u8*)d.s;
-    dataSize = d.len;
-    return ParseHeader();
-}
+constexpr int kPdbTypeCreatorOff = 60;
+constexpr int kPdbTypeCreatorLen = 8;
 
 PdbReader::~PdbReader() {
     free((void*)data);
 }
 
-static bool DecodePdbHeader(ByteReader& dec, PdbHeader* hdr) {
-    dec.Bytes(hdr->name, 32);
-    // the spec says it should be zero-terminated anyway, but this
-    // comes from untrusted source, so we do our own termination
-    hdr->name[31] = 0;
-    hdr->attributes = dec.UInt16BE();
-    hdr->version = dec.UInt16BE();
-    hdr->createTime = dec.UInt32BE();
-    hdr->modifyTime = dec.UInt32BE();
-    hdr->backupTime = dec.UInt32BE();
-    hdr->modificationNumber = dec.UInt32BE();
-    hdr->appInfoID = dec.UInt32BE();
-    hdr->sortInfoID = dec.UInt32BE();
-    ZeroMemory(hdr->typeCreator, dimof(hdr->typeCreator));
-    dec.Bytes(hdr->typeCreator, 8);
-    hdr->idSeed = dec.UInt32BE();
-    hdr->nextRecordList = dec.UInt32BE();
-    hdr->numRecords = dec.UInt16BE();
-    return dec.IsOk();
-}
-
-bool PdbReader::ParseHeader() {
-    ReportIf(len(recInfos) > 0);
-
+// Record boundaries include the file end, so every record has a next offset.
+bool PdbReader::Parse(Str d) {
+    data = (u8*)d.s;
+    int dataSize = len(d);
     ByteReader dec(data, dataSize);
-    bool ok = DecodePdbHeader(dec, &hdr);
-    if (!ok) {
+    dec.Skip(kPdbHeaderLen - sizeofi(u16));
+    int nRecs = dec.UInt16BE();
+    if (!dec.IsOk() || nRecs == 0) {
         return false;
     }
 
-    if (0 == hdr.numRecords) {
-        return false;
-    }
-
-    int nRecs = hdr.numRecords;
-    int minOffset = kPdbHeaderLen + (nRecs * kPdbRecordHeaderLen);
-    int maxOffset = dataSize;
-
+    int previous = kPdbHeaderLen + nRecs * kPdbRecordHeaderLen;
     for (int i = 0; i < nRecs; i++) {
-        PdbRecordHeader recHdr;
-        recHdr.offset = dec.UInt32BE();
-        recHdr.flags = dec.UInt8();
-        dec.Bytes(recHdr.uniqueID, dimof(recHdr.uniqueID));
-        int off = (int)recHdr.offset;
-        if ((off < minOffset) || (off > maxOffset)) {
+        int off = (int)dec.UInt32BE();
+        dec.Skip(kPdbRecordHeaderLen - sizeofi(u32));
+        if (off < previous || off > dataSize) {
             return false;
         }
-        VecAppend(recInfos, recHdr);
+        VecAppend(recordOffsets, off);
+        previous = off;
     }
     if (!dec.IsOk()) {
         return false;
     }
-
-    // validate offsets
-    for (int i = 0; i < nRecs - 1; i++) {
-        if (recInfos[i].offset > recInfos[i + 1].offset) {
-            return false;
-        }
-    }
-
-    // technically PDB record size should be less than 64K,
-    // but it's not true for mobi files, so we don't validate that
-
+    VecAppend(recordOffsets, dataSize);
     return true;
 }
 
 Str PdbReader::GetDbType() {
-    return Str(hdr.typeCreator, 8);
+    return Str((char*)data + kPdbTypeCreatorOff, kPdbTypeCreatorLen);
 }
 
 int PdbReader::GetRecordCount() {
-    return len(recInfos);
+    return len(recordOffsets) - 1;
 }
 
 // don't free, memory is owned by us
 Str PdbReader::GetRecord(int recNo) {
-    int nRecs = len(recInfos);
+    int nRecs = GetRecordCount();
     ReportIf(recNo < 0 || recNo >= nRecs);
     if (recNo < 0 || recNo >= nRecs) {
         return {};
     }
-    int off = (int)recInfos[recNo].offset;
-    int nextOff = dataSize;
-    if (recNo != nRecs - 1) {
-        nextOff = (int)recInfos[recNo + 1].offset;
-    }
-    if (off > nextOff) {
-        return {};
-    }
-    int size = nextOff - off;
-    return Str((char*)((u8*)data + off), size);
+    int off = recordOffsets[recNo];
+    return Str((char*)data + off, recordOffsets[recNo + 1] - off);
 }
 
 PdbReader* PdbReader::CreateFromData(Str d) {
