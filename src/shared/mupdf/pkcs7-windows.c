@@ -1055,22 +1055,10 @@ done:
 }
 
 static int cert_has_qc_statement(PCCERT_CONTEXT cert) {
-    PCERT_EXTENSION ext;
-    static const unsigned char kQcCompliance[] = {0x04, 0x00, 0x8E, 0x46, 0x01, 0x01};
-    DWORD i;
     if (!cert || !cert->pCertInfo) {
         return 0;
     }
-    ext = CertFindExtension(szOID_QC_STATEMENTS, cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension);
-    if (!ext) {
-        return 0;
-    }
-    for (i = 0; i + sizeof(kQcCompliance) <= ext->Value.cbData; i++) {
-        if (memcmp(ext->Value.pbData + i, kQcCompliance, sizeof(kQcCompliance)) == 0) {
-            return 1;
-        }
-    }
-    return 1;
+    return CertFindExtension(szOID_QC_STATEMENTS, cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension) != NULL;
 }
 
 void pkcs7_windows_sig_info_clear(pkcs7_windows_sig_info* info) {
