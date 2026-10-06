@@ -1008,26 +1008,6 @@ bool MobiDoc::HasToc() {
     return docTocIndex < len(doc);
 }
 
-static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
-    // iterative pre-order DFS so a deeply nested element can't overflow the stack
-    Vec<const GumboNode*> toVisit;
-    VecAppend(toVisit, root);
-    while (len(toVisit) > 0) {
-        const GumboNode* node = VecPop(toVisit);
-        if (!node) {
-            continue;
-        }
-        if (node->type == GUMBO_NODE_TEXT || node->type == GUMBO_NODE_CDATA || node->type == GUMBO_NODE_WHITESPACE) {
-            sb.Append(Str(node->v.text.text));
-            continue;
-        }
-        if (node->type != GUMBO_NODE_ELEMENT) {
-            continue;
-        }
-        GumboPushChildren(toVisit, node);
-    }
-}
-
 struct MobiTocWalkItem {
     const GumboNode* node;
     int level;
@@ -1056,10 +1036,9 @@ static void WalkMobiToc(const GumboNode* root, EbookTocVisitor* visitor) {
                     attr = gumbo_get_attribute(&node->v.element.attributes, "href");
                 }
                 if (attr) {
-                    str::Builder text;
-                    AppendDeepText(node, text);
+                    TempStr text = GumboTextContentTemp(node, GumboTextMode::Descendants);
                     if (len(text) > 0) {
-                        visitor->Visit(ToStr(text), Str(attr->value), level);
+                        visitor->Visit(text, Str(attr->value), level);
                     }
                 }
                 continue; // don't descend into the <a>'s children

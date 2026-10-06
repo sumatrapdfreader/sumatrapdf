@@ -112,24 +112,25 @@ TempStr GumboAttributeValueTemp(const GumboNode* node, const char* name) {
     return str::DupTemp(Str(attr->value));
 }
 
-// Concatenated text content (TEXT/WHITESPACE/CDATA children) of an
-// element. Returns nullptr for non-element nodes or empty content.
-TempStr GumboTextContentTemp(const GumboNode* node) {
+TempStr GumboTextContentTemp(const GumboNode* node, GumboTextMode mode) {
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
         return {};
     }
     str::Builder sb;
-    const GumboVector* children = &node->v.element.children;
-    for (unsigned int i = 0; i < children->length; i++) {
-        const GumboNode* child = (const GumboNode*)children->data[i];
+    Vec<const GumboNode*> toVisit;
+    GumboPushChildren(toVisit, node);
+    while (len(toVisit) > 0) {
+        const GumboNode* child = VecPop(toVisit);
+        if (!child) {
+            continue;
+        }
         if (child->type == GUMBO_NODE_TEXT || child->type == GUMBO_NODE_WHITESPACE || child->type == GUMBO_NODE_CDATA) {
             sb.Append(Str(child->v.text.text));
+        } else if (mode == GumboTextMode::Descendants && child->type == GUMBO_NODE_ELEMENT) {
+            GumboPushChildren(toVisit, child);
         }
     }
-    if (len(sb) == 0) {
-        return {};
-    }
-    return ToStrTemp(sb);
+    return len(sb) > 0 ? ToStrTemp(sb) : TempStr{};
 }
 
 static void* GumboMallocWrapper(void* /*userdata*/, size_t size) {

@@ -21,7 +21,12 @@ const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name, HtmlN
 
 TempStr GumboAttributeValueTemp(const GumboNode* node, const char* name);
 
-TempStr GumboTextContentTemp(const GumboNode* node);
+enum class GumboTextMode {
+    Direct,
+    Descendants
+};
+
+TempStr GumboTextContentTemp(const GumboNode* node, GumboTextMode mode = GumboTextMode::Direct);
 
 // Returns a GumboOptions struct configured with our malloc/free wrappers
 // and otherwise-default values. We avoid the kGumboDefaultOptions data
