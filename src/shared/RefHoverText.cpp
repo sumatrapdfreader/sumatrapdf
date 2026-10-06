@@ -19,10 +19,8 @@ TempWStr RefHoverPageTextToWStrTemp(Str text) {
     WCHAR* dst = AllocArrayTemp<WCHAR>(nCodepoints + 1);
     int byteIdx = 0;
     for (int i = 0; i < nCodepoints; i++) {
-        int n = 0;
-        int rune = Utf8CodepointAtByte(text, byteIdx, &n);
+        int rune = Utf8CodepointNext(text, byteIdx);
         dst[i] = rune > 0xffff ? L'?' : (WCHAR)rune;
-        byteIdx += n > 0 ? n : 1;
     }
     dst[nCodepoints] = 0;
     return WStr(dst, nCodepoints);
