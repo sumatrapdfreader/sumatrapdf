@@ -563,34 +563,14 @@ static TempStr WriteTempSyncFile(Str data, Str who) {
     return tempPathSync;
 }
 
-static TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
-    if (len(pathSync) == 0) {
-        return {};
-    }
-    // use file::ReadFile which uses CreateFileW (handles Unicode)
-    Str data = file::ReadFile(pathSync);
-    if (len(data) == 0) {
-        logf("CopyPlainSyncToTempFile: source file '.synctex' '%s' is empty.\n", pathSync);
-        // return {};
-    }
-    TempStr tempPathSync = WriteTempSyncFile(data, StrL("CopyPlainSyncToTempFile"));
-    str::Free(data);
-    if (len(tempPathSync) == 0) {
-        return {};
-    }
-
-    logf("CopyPlainSyncToTempFile: copied '%s' to '%s'\n", pathSync, tempPathSync);
-    return tempPathSync;
-}
-
-static TempStr DealPlainSync(TempStr pathSync) {
+static TempStr PrepareSyncFile(TempStr pathSync) {
     if (len(pathSync) == 0) {
         return {};
     }
     Str src = file::ReadFile(pathSync);
     AutoFree freeSrc(src.s);
     if (len(src) == 0) {
-        logf("DealPlainSync: '%s' failed\n", pathSync);
+        logf("PrepareSyncFile: '%s' failed\n", pathSync);
         return {};
     }
 #if OS_WIN
@@ -600,21 +580,23 @@ static TempStr DealPlainSync(TempStr pathSync) {
     bool isUtf8 = isLegalUTF8String(&scan, scan + len(src));
 #endif
     if (isUtf8) {
-        logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);
-        return pathSync;
+        logf("PrepareSyncFile: '%s' is utf-8 (created by lualatex)\n", pathSync);
+        // SyncTeX's narrow file API needs an ASCII path.
+        if (!PathHasNonAscii(pathSync)) {
+            return pathSync;
+        }
     }
-    logf("DealPlainSync: '%s' NOT utf-8, decode by local ansi and write utf-8 to temp file\n", pathSync);
-    Str converted = ConvertLocalToUTF8(src);
-    if (len(converted) == 0) {
-        logf("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
+    Str converted = isUtf8 ? Str{} : ConvertLocalToUTF8(src);
+    AutoFree freeConverted(converted.s);
+    if (!isUtf8 && len(converted) == 0) {
+        logf("PrepareSyncFile: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
         return {};
     }
-    TempStr tempPathSync = WriteTempSyncFile(converted, StrL("DealPlainSync"));
-    str::Free(converted);
+    TempStr tempPathSync = WriteTempSyncFile(isUtf8 ? src : converted, StrL("PrepareSyncFile"));
     if (len(tempPathSync) == 0) {
         return {};
     }
-    logf("DealPlainSync: copied '%s' to '%s'\n", pathSync, tempPathSync);
+    logf("PrepareSyncFile: copied '%s' to '%s'\n", pathSync, tempPathSync);
     return tempPathSync;
 }
 
@@ -669,15 +651,13 @@ int SyncTex::RebuildIndexIfNeeded() {
         if (IsGzipFile(pathSync)) {
             // --synctex=NUMBER with NUMBER&2 stores gzip in a .synctex file.
             plainSync = ungzipToTempSync(pathSync);
-        } else if (PathHasNonAscii(pathSync)) {
-            plainSync = CopyPlainSyncToTempFile(pathSync);
         }
     } else if (file::Exists(pathSyncGz)) {
         plainSync = ungzipToTempSync(pathSyncGz);
     } else {
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
-    TempStr readyPath = DealPlainSync(plainSync);
+    TempStr readyPath = PrepareSyncFile(plainSync);
     if (len(readyPath) == 0) {
         logf("SyncTex::RebuildIndexIfNeeded: temp file for origin file '%s' not found\n", pathSync);
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
