@@ -1313,6 +1313,9 @@
     <ClCompile Include="..\src\shared\tests\MobiDoc_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\tests\PagePosition_ut.cpp">
+      <Filter>src\shared\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\tests\PageRenderPolicy_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
@@ -1347,9 +1350,6 @@
       <Filter>src\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\LitDoc_ut.cpp">
-      <Filter>src\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\tests\PagePosition_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\PdfSync_ut.cpp">
