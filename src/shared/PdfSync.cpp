@@ -743,62 +743,31 @@ int SyncTex::RebuildIndexIfNeeded() {
     }
     synctex_scanner_free(scanner);
     scanner = nullptr;
-    TempStr pathBase;   //  abc
-    TempStr pathSync;   //  abc.synctex
-    TempStr pathSyncGz; //  abc.synctex.gz
-    pathSync = str::DupTemp(syncFilePath);
-    pathBase = path::GetPathNoExtTemp(syncFilePath);
-    pathSyncGz = str::JoinTemp(pathBase, StrL(".synctex.gz"));
-
-    i64 fsize;
-    bool path_nonascii = PathHasNonAscii(pathSync);
-
-    TempStr tempsync1;
-    TempStr tempsync2;
-    if (!path_nonascii) {
-        // Only ASCII
-        if (file::Exists(pathSync)) {
-            if (IsGzipFile(pathSync)) {
-                // --synctex=NUMBER with NUMBER&2: gzip data in a .synctex file
-                tempsync1 = ungzipToTempSync(pathSync);
-                tempsync2 = DealPlainSync(tempsync1);
-            } else {
-                tempsync2 = DealPlainSync(pathSync);
-            }
-        } else if (file::Exists(pathSyncGz)) {
-            tempsync1 = ungzipToTempSync(pathSyncGz);
-            tempsync2 = DealPlainSync(tempsync1);
-        } else {
-            return PDFSYNCERR_SYNCFILE_NOTFOUND;
+    TempStr pathSync = syncFilePath;
+    TempStr pathSyncGz = str::JoinTemp(path::GetPathNoExtTemp(pathSync), StrL(".synctex.gz"));
+    TempStr plainSync = pathSync;
+    if (file::Exists(pathSync)) {
+        if (IsGzipFile(pathSync)) {
+            // --synctex=NUMBER with NUMBER&2 stores gzip in a .synctex file.
+            plainSync = ungzipToTempSync(pathSync);
+        } else if (PathHasNonAscii(pathSync)) {
+            plainSync = CopyPlainSyncToTempFile(pathSync);
         }
+    } else if (file::Exists(pathSyncGz)) {
+        plainSync = ungzipToTempSync(pathSyncGz);
     } else {
-        // ANSI in file path
-        if (file::Exists(pathSync)) {
-            if (IsGzipFile(pathSync)) {
-                tempsync1 = ungzipToTempSync(pathSync);
-                tempsync2 = DealPlainSync(tempsync1);
-            } else {
-                tempsync1 = CopyPlainSyncToTempFile(pathSync);
-                tempsync2 = DealPlainSync(tempsync1);
-            }
-        } else if (file::Exists(pathSyncGz)) {
-            tempsync1 = ungzipToTempSync(pathSyncGz);
-            tempsync2 = DealPlainSync(tempsync1);
-        } else {
-            return PDFSYNCERR_SYNCFILE_NOTFOUND;
-        }
+        return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
-    logf("[dbg]: tempsync1: %s\n", tempsync1 ? tempsync1 : StrL("[NULL]"));
-    logf("[dbg]: tempsync2: %s\n", tempsync2 ? tempsync2 : StrL("[NULL]"));
-    if (len(tempsync2) == 0) {
+    TempStr readyPath = DealPlainSync(plainSync);
+    if (len(readyPath) == 0) {
         logf("SyncTex::RebuildIndexIfNeeded: temp file for origin file '%s' not found\n", pathSync);
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
-    fsize = file::GetSize(tempsync2);
+    i64 fsize = file::GetSize(readyPath);
     logf("SyncTex::RebuildIndexIfNeeded: org path: %s\n; final file path: %s, final file size: %lld.\n", pathSync,
-         tempsync2, fsize);
+         readyPath, fsize);
 
-    scanner = synctex_scanner_new_with_output_file(CStrTemp(tempsync2), nullptr, 1);
+    scanner = synctex_scanner_new_with_output_file(CStrTemp(readyPath), nullptr, 1);
     if (scanner) {
         logf("SyncTex::RebuildIndexIfNeeded: file '%s' is ok.\n", pathSync);
     } else {
