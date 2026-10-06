@@ -163,18 +163,15 @@ SeqStrings gLangNames =
     "Welsh (Cymraeg)\0"
     "\0";
 
-// ng: LANGID and the LANG_* constants are win32; only Translations.cpp's
-// DetectUserLang() uses them, and it has a POSIX half that reads $LANG
 #if OS_WIN
-
 // from https://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
 #ifndef LANG_CENTRAL_KURDISH
-constexpr USHORT LANG_CENTRAL_KURDISH = 0x92;
+#define LANG_CENTRAL_KURDISH 0x92
 #endif
 
 #ifndef SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ
-constexpr USHORT SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ = 0x01;
+#define SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ 0x01
 #endif
 
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
@@ -252,8 +249,7 @@ const LANGID gLangIds[kLangsCount] = {_LANGID(LANG_ENGLISH),
                                       _LANGID(LANG_VIETNAMESE),
                                       _LANGID(LANG_WELSH)};
 #undef _LANGID
-
-#endif // OS_WIN
+#endif
 
 bool IsLangRtl(int idx) {
     return (3 == idx) || (31 == idx) || (40 == idx) || (49 == idx);

@@ -192,6 +192,7 @@ export const sharedFiles = [
   "src/shared/TextSearch.h",
   "src/shared/TextSelection.cpp",
   "src/shared/TextSelection.h",
+  "src/shared/TranslationLangs.cpp",
   "src/shared/Translations.h",
   "src/shared/WebpReader.cpp",
   "src/shared/WebpReader.h",

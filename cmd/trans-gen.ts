@@ -139,19 +139,19 @@ const compactCTmpl = `/*
  Generated with .\\doit.bat -trans-regen
 */
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "base/Base.h"
 
 namespace trans {
 
-using SeqStrings = const char*; // str-port: generated packed string table base
+using SeqStrings = const char*;
 
 constexpr int kLangsCount = {{langsCount}};
 
-SeqStrings gLangCodes = {{langcodes}} "\\0"; // str-port: generated packed string table
+SeqStrings gLangCodes = {{langcodes}} "\\0";
 
-SeqStrings gLangNames = {{langnames}} "\\0"; // str-port: generated packed string table
+SeqStrings gLangNames = {{langnames}} "\\0";
 
+#if OS_WIN
 // from https://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
 #ifndef LANG_CENTRAL_KURDISH
@@ -167,6 +167,7 @@ const LANGID gLangIds[kLangsCount] = {
 {{langids}}
 };
 #undef _LANGID
+#endif
 
 bool IsLangRtl(int idx)
 {
@@ -175,7 +176,9 @@ bool IsLangRtl(int idx)
 
 int gLangsCount = kLangsCount;
 
+#if OS_WIN
 const LANGID *GetLangIds() { return &gLangIds[0]; }
+#endif
 
 } // namespace trans
 `;
@@ -226,7 +229,7 @@ function genTranslationInfoCpp() {
   fileContent = fileContent.replace("{{langids}}", langids);
   fileContent = fileContent.replace("{{islangrtl}}", islangrtl);
 
-  const path = join("src", "TranslationLangs.cpp");
+  const path = join("src", "shared", "TranslationLangs.cpp");
   console.log(`fileContent: path: ${path}, file size: ${fileContent.length}`);
   Bun.write(path, fileContent);
 }
