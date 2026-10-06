@@ -197,8 +197,12 @@ static u8* PixmapToRgbaContiguous(const Pixmap* px) {
     if (!px || !px->data || px->width <= 0 || px->height <= 0) {
         return nullptr;
     }
+    if (px->format != PixmapFormat::RGBA8 && px->format != PixmapFormat::BGRA8 && px->format != PixmapFormat::BGR8) {
+        return nullptr;
+    }
     int w = px->width;
     int h = px->height;
+    int bpp = PixmapBytesPerPixel(px->format);
     int n = w * h * 4;
     u8* rgba = (u8*)malloc((size_t)n);
     if (!rgba) {
@@ -209,27 +213,13 @@ static u8* PixmapToRgbaContiguous(const Pixmap* px) {
         u8* dst = rgba + ((ptrdiff_t)y * w * 4);
         if (px->format == PixmapFormat::RGBA8) {
             memcpy(dst, src, (size_t)w * 4);
-        } else if (px->format == PixmapFormat::BGRA8) {
-            for (int x = 0; x < w; x++) {
-                dst[0] = src[2]; // R
-                dst[1] = src[1]; // G
-                dst[2] = src[0]; // B
-                dst[3] = src[3]; // A
-                src += 4;
-                dst += 4;
-            }
-        } else if (px->format == PixmapFormat::BGR8) {
-            for (int x = 0; x < w; x++) {
-                dst[0] = src[2];
-                dst[1] = src[1];
-                dst[2] = src[0];
-                dst[3] = 255;
-                src += 3;
-                dst += 4;
-            }
-        } else {
-            free(rgba);
-            return nullptr;
+            continue;
+        }
+        for (int x = 0; x < w; x++, src += bpp, dst += 4) {
+            dst[0] = src[2];
+            dst[1] = src[1];
+            dst[2] = src[0];
+            dst[3] = bpp == 4 ? src[3] : 255;
         }
     }
     return rgba;
