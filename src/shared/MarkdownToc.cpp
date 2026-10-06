@@ -238,11 +238,9 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
             Str title = ResolveHtmlEntities(raw);
             str::TrimWSInPlace(title, str::TrimOpt::Both);
             if (len(title) > 0) {
-                MarkdownHeadingItem item;
-                item.title = str::Dup(title);
-                item.anchor = len(headingId) > 0 ? str::Dup(headingId) : Str{};
-                item.level = headingLevel;
-                VecAppend(headingsOut, item);
+                VecAppend(headingsOut, {title, headingId, headingLevel});
+                title = {};
+                headingId = {};
             }
             str::Free(title);
             str::Free(raw);
