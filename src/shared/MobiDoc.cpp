@@ -55,6 +55,8 @@ constexpr int kMobiDrmEntriesOff = 152;
 constexpr int kMobiDrmHeaderLen = 164;
 constexpr int kMobiExtraFlagsOff = 226;
 constexpr int kMobiExtraFlagsHeaderLen = 228;
+constexpr int kMobiTrailerMinVersion = 5;
+constexpr u16 kMobiMultibyteFlag = 1;
 
 struct MobiHeader {
     char id[4];
@@ -329,6 +331,14 @@ static void DecodeMobiDocHeader(const u8* buf, int bufLen, MobiHeader* hdr) {
     hdr->extraDataFlags = d.UInt16BE();
 }
 
+static int CountMobiTrailers(u16 flags) {
+    int count = 0;
+    for (flags >>= 1; flags; flags >>= 1) {
+        count += flags & 1;
+    }
+    return count;
+}
+
 static bool IsValidCompression(int comprType) {
     return (kCompressionNone == comprType) || (kCompressionPalm == comprType) || (kCompressionHuff == comprType);
 }
@@ -443,16 +453,10 @@ bool MobiDoc::ParseHeader() {
         return false;
     }
 
-    bool hasExtraFlags = (mobiHdr.hdrLen >= kMobiExtraFlagsHeaderLen);
-    if (hasExtraFlags) {
+    if (mobiHdr.hdrLen >= kMobiExtraFlagsHeaderLen) {
         u16 flags = mobiHdr.extraDataFlags;
-        multibyte = ((flags & 1) != 0);
-        while (flags > 1) {
-            if (0 != (flags & 2)) {
-                trailersCount++;
-            }
-            flags = flags >> 1;
-        }
+        multibyte = ((flags & kMobiMultibyteFlag) != 0);
+        trailersCount += CountMobiTrailers(flags);
     }
 
     if (kCompressionHuff == compressionType) {
@@ -1184,25 +1188,6 @@ MobiDoc* MobiDoc::CreateFromData(Str data) {
     return mb;
 }
 
-// KindleUnpack: extra-data flags are only valid for MOBI header length >= 0xE4
-// and format version >= 5. Print Replica files often have a long header but
-// version 4 and must not have trailers stripped (that would corrupt the PDF).
-static void PrintReplicaTrailerInfo(const MobiHeader& mobi, int& trailersCount, bool& multibyte) {
-    trailersCount = 0;
-    multibyte = false;
-    if (mobi.hdrLen < 228 || mobi.minRequiredMobiFormatVersion < 5) {
-        return;
-    }
-    u16 flags = mobi.extraDataFlags;
-    multibyte = ((flags & 1) != 0);
-    while (flags > 1) {
-        if (0 != (flags & 2)) {
-            trailersCount++;
-        }
-        flags = flags >> 1;
-    }
-}
-
 // First section of the first %MOP table is the PDF (KindleUnpack processPrintReplica).
 static Str ExtractPdfFromMopRaw(Str raw) {
     if (len(raw) < 8) {
@@ -1279,7 +1264,12 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
             if (mobi.type == 8) {
                 isPrintReplica = true;
             }
-            PrintReplicaTrailerInfo(mobi, trailersCount, multibyte);
+            // Print Replica version 4 can have a long header without record trailers.
+            if (mobi.hdrLen >= kMobiExtraFlagsHeaderLen &&
+                mobi.minRequiredMobiFormatVersion >= kMobiTrailerMinVersion) {
+                trailersCount = CountMobiTrailers(mobi.extraDataFlags);
+                multibyte = (mobi.extraDataFlags & kMobiMultibyteFlag) != 0;
+            }
         }
     }
 
@@ -1443,6 +1433,8 @@ bool MobiDoc_UnitTestHeader() {
     Str bytes = data.AsByteSlice();
     HuffDicDecompressor huff;
     return huff.SetHuffData((u8*)bytes.s, len(bytes)) && huff.cacheTable[0] == 0 && huff.cacheTable[255] == 255 &&
-           huff.baseTable[0] == 256 && huff.baseTable[63] == 319 && !huff.SetHuffData((u8*)bytes.s, len(bytes) - 1);
+           huff.baseTable[0] == 256 && huff.baseTable[63] == 319 && !huff.SetHuffData((u8*)bytes.s, len(bytes) - 1) &&
+           CountMobiTrailers(1) == 0 && CountMobiTrailers(6) == 2 && CountMobiTrailers(0x8001) == 1 &&
+           CountMobiTrailers(0xffff) == 15;
 }
 #endif
