@@ -891,15 +891,8 @@ static bool LooksLikeZipOrRar(Str data) {
 static Str loadFromData(Fb2Doc* doc, Str srcData) {
     // Only try the archive path for data that looks like a container; plain
     // FictionBook XML must not go through libarchive (issue #1677).
-    if (!LooksLikeZipOrRar(srcData)) {
-        return str::Dup(srcData);
-    }
-    Archive* archive = OpenArchiveFromData(srcData);
-    if (!archive) {
-        return str::Dup(srcData);
-    }
-
-    return ReadFb2Archive(doc, archive);
+    Archive* archive = LooksLikeZipOrRar(srcData) ? OpenArchiveFromData(srcData) : nullptr;
+    return archive ? ReadFb2Archive(doc, archive) : str::Dup(srcData);
 }
 
 static TempStr JoinEbookTextTemp(Str text, Str part) {
