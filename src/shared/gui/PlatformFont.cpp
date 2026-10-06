@@ -146,20 +146,6 @@ PlatformFont* HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
     return GetPlatformFont(RememberCreatedFont(res, fontName, realSize, flags));
 }
 
-PlatformFont* GetDefaultGuiFontOfSize(int size) {
-    auto* font = FindCreatedFont(Str(), size, 0);
-    if (font) {
-        return GetPlatformFont(font->font);
-    }
-
-    NONCLIENTMETRICS ncm{};
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    ncm.lfMessageFont.lfHeight = -size;
-    HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return GetPlatformFont(RememberCreatedFont(res, Str(), size, 0));
-}
-
 PlatformFont* GetUserGuiFont(Str fontName, int size) {
     return GetUserGuiFontEx(fontName, size, false, false);
 }

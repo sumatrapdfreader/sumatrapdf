@@ -1414,7 +1414,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin, Str filePath) {
         TempStr hints = fmt("(Kbd/%s) %s (Kbd/%s) %s (Kbd/%s) %s", Tr("Enter"), Tr("open in current tab"),
                             Tr("Ctrl + Enter"), Tr("open in new tab"), Tr("Del"), Tr("delete file"));
         // the hints are secondary information, so they get a smaller font
-        PlatformFont* helpFont = GetDefaultGuiFontOfSize(std::max(GetAppFontSize() - 2, 8));
+        PlatformFont* helpFont = GetUserGuiFont({}, std::max(GetAppFontSize() - 2, 8));
         auto* k = new VirtRichText();
         ParseTipInto(k, hints);
         k->font = helpFont;

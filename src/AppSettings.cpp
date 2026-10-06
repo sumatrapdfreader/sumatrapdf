@@ -1124,7 +1124,7 @@ PlatformFont* GetAppBiggerFontForDpi(int dpi) {
     if (fonts->biggerAppFont) {
         return fonts->biggerAppFont;
     }
-    fonts->biggerAppFont = GetDefaultGuiFontOfSize(GetAppBiggerFontSizeForDpi(dpi));
+    fonts->biggerAppFont = GetUserGuiFont({}, GetAppBiggerFontSizeForDpi(dpi));
     return fonts->biggerAppFont;
 }
 

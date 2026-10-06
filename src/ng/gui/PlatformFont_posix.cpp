@@ -78,11 +78,6 @@ PlatformFont* GetDefaultGuiFont(bool bold, bool italic) {
     return GetPlatformFont(StrL("Sans"), 10.0f, style);
 }
 
-PlatformFont* GetDefaultGuiFontOfSize(int size) {
-    float sizePt = (float)size * 72.0f / 96.0f;
-    return GetPlatformFont(StrL("Sans"), sizePt, PlatformFontStyle::Regular);
-}
-
 PlatformFont* GetUserGuiFont(Str fontName, int size) {
     return GetUserGuiFontEx(fontName, size, false, false);
 }
@@ -237,10 +232,6 @@ PlatformFont* GetDefaultGuiFont(bool bold, bool italic) {
     return GetPlatformFont(Str(), 12.0f, FontStyle(bold, italic));
 }
 
-PlatformFont* GetDefaultGuiFontOfSize(int size) {
-    return GetPlatformFont(Str(), (float)size * 72.0f / 96.0f, PlatformFontStyle::Regular);
-}
-
 PlatformFont* GetUserGuiFont(Str fontName, int size) {
     return GetUserGuiFontEx(fontName, size, false, false);
 }
@@ -319,10 +310,6 @@ PlatformFont* GetDefaultGuiFont(bool bold, bool italic) {
         style = style | PlatformFontStyle::Italic;
     }
     return GetPlatformFont(Str(), kDefaultGuiFontSizePt, style);
-}
-
-PlatformFont* GetDefaultGuiFontOfSize(int size) {
-    return GetPlatformFont(Str(), (float)size, PlatformFontStyle::Regular);
 }
 
 PlatformFont* GetUserGuiFont(Str fontName, int size) {
