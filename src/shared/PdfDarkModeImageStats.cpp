@@ -16,7 +16,6 @@ struct ImageStats {
     float highLumRatio = 0.f;
     float borderLightRatio = 0.f;
     float borderUniformity = 0.f;
-    bool valid = false;
 };
 
 struct PixelColor {
@@ -106,6 +105,7 @@ static void SampleImageBorder(fz_context* ctx, fz_pixmap* pix, ImageStats* stats
     stats->borderUniformity = limitValue(1.f - (var / 0.12f), 0.f, 1.f);
 }
 
+// Zeroed stats reject failed images in every classifier.
 static ImageStats SampleImageStats(fz_context* ctx, fz_image* image) {
     ImageStats stats;
     if (!ctx || !image) {
@@ -178,7 +178,6 @@ static ImageStats SampleImageStats(fz_context* ctx, fz_image* image) {
         stats.satRatio = (float)saturated / (float)n;
         stats.highLumRatio = (float)highLum / (float)n;
         SampleImageBorder(ctx, pix, &stats);
-        stats.valid = true;
     }
     fz_always(ctx) {
         if (pix) {
@@ -192,10 +191,6 @@ static ImageStats SampleImageStats(fz_context* ctx, fz_image* image) {
 }
 
 static bool LooksLikePhoto(const ImageStats& stats) {
-    if (!stats.valid) {
-        return false;
-    }
-
     if (stats.highLumRatio > 0.58f && stats.satRatio < 0.18f) {
         return false;
     }
@@ -206,9 +201,6 @@ static bool LooksLikePhoto(const ImageStats& stats) {
 }
 
 static bool LooksLikeLayoutBackground(const ImageStats& stats) {
-    if (!stats.valid) {
-        return false;
-    }
     // Cream/tan/yellow textbook panels and title cards - recolor for uniform dark page.
     return (stats.highLumRatio > 0.44f && stats.lumVar < 0.022f) ||
            (stats.highLumRatio > 0.50f && stats.lumVar < 0.038f && stats.satRatio < 0.22f &&
@@ -256,7 +248,7 @@ RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight)
 }
 
 static bool LooksLikeDarkArtwork(const ImageStats& stats, float pageCoverage) {
-    if (!stats.valid || pageCoverage < 0.035f) {
+    if (pageCoverage < 0.035f) {
         return false;
     }
     return stats.highLumRatio < 0.48f && stats.lumVar >= 0.004f &&
@@ -264,17 +256,11 @@ static bool LooksLikeDarkArtwork(const ImageStats& stats, float pageCoverage) {
 }
 
 static bool LooksLikeLightBackdrop(const ImageStats& stats) {
-    if (!stats.valid) {
-        return false;
-    }
     return stats.borderLightRatio >= kLightBackdropBorderLight &&
            stats.borderUniformity >= kLightBackdropBorderUniformity;
 }
 
 static bool LooksLikePaperTextBox(const ImageStats& stats) {
-    if (!stats.valid) {
-        return false;
-    }
     return stats.highLumRatio > 0.64f && stats.lumVar < 0.014f && stats.significantBuckets <= 12 &&
            stats.satRatio < 0.20f;
 }
@@ -284,9 +270,6 @@ bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, floa
 }
 
 static bool ImageIsArtwork(fz_context* ctx, fz_image* image, float pageCoverage) {
-    if (!ctx || !image) {
-        return false;
-    }
     ImageStats stats = SampleImageStats(ctx, image);
     if (LooksLikeLayoutBackground(stats)) {
         return false;
@@ -328,9 +311,6 @@ bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image
     }
     int minPx = kPreservePdfImagesMinSize;
     if (devW < minPx || devH < minPx) {
-        return false;
-    }
-    if (!image) {
         return false;
     }
     return ImageIsArtwork(ctx, image, pageCoverage);
