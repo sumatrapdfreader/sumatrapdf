@@ -1171,12 +1171,6 @@ void EngineBase::GetProperties(Props& propsOut) {
     }
 }
 
-// checks whether this document has explicit labels for pages (such as
-// roman numerals) instead of the default plain arabic numbering
-bool EngineBase::HasPageLabels() const {
-    return hasPageLabels;
-}
-
 int EngineBase::LogicalPageCount() {
     if (logicalPageCount > 0) {
         return logicalPageCount;
@@ -1193,11 +1187,6 @@ TempStr EngineBase::GetPageLabeTemp(int pageNo) const {
 // reverts GetPageLabel by returning the first page number having the given label
 int EngineBase::GetPageByLabel(Str label) const {
     return ParseInt(label);
-}
-
-// whether this document required a password in order to be loaded
-bool EngineBase::IsPasswordProtected() const {
-    return isPasswordProtected;
 }
 
 // the name of the file this engine handles

@@ -4170,7 +4170,7 @@ bool EngineMupdf_UnitTestPageLabels() {
     if (!engine) {
         return false;
     }
-    bool ok = engine->HasPageLabels() && engine->PageCount() == 5 && engine->LogicalPageCount() == 2;
+    bool ok = engine->hasPageLabels && engine->PageCount() == 5 && engine->LogicalPageCount() == 2;
     ok = ok && str::Eq(engine->GetPageLabeTemp(1), StrL("i"));
     ok = ok && str::Eq(engine->GetPageLabeTemp(2), StrL("ii"));
     ok = ok && str::Eq(engine->GetPageLabeTemp(3), StrL("iii"));

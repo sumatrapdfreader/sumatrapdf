@@ -1356,7 +1356,7 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
         auto* model = win->AsFixed();
         if (model) {
             auto* engine = model->GetEngine();
-            bool withPwd = engine->IsPasswordProtected();
+            bool withPwd = engine->isPasswordProtected;
             Str decrKey = engine->decryptionKey;
             if (withPwd && len(decrKey) == 0) {
                 RemoveThumbnail(ds);

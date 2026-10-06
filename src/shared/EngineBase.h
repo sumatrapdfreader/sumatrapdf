@@ -609,14 +609,11 @@ class EngineBase {
 
     virtual TocTree* GetToc();
 
-    bool HasPageLabels() const;
     int LogicalPageCount();
 
     virtual TempStr GetPageLabeTemp(int pageNo) const;
 
     virtual int GetPageByLabel(Str label) const;
-
-    bool IsPasswordProtected() const;
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times

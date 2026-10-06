@@ -366,7 +366,7 @@ class EnginePs : public EngineBase {
         allowsCopyingText = pdfEngine->allowsCopyingText;
         decryptionKey = str::Dup(arena, pdfEngine->decryptionKey);
         pageCount = pdfEngine->PageCount();
-        hasPageLabels = pdfEngine->HasPageLabels();
+        hasPageLabels = pdfEngine->hasPageLabels;
         logicalPageCount = pdfEngine->LogicalPageCount();
     }
 

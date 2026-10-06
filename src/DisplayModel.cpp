@@ -152,7 +152,7 @@ void DisplayModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbn
 
 // page labels (optional)
 bool DisplayModel::HasPageLabels() const {
-    return engine->HasPageLabels();
+    return engine->hasPageLabels;
 }
 
 TempStr DisplayModel::GetPageLabeTemp(int pageNo) const {
