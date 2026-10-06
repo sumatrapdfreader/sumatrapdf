@@ -84,18 +84,11 @@ void CollectMarkdownFiles(Str baseDir, Str openedFile, bool htmlMode, StrVec& fi
     Sort(&filesOut);
 }
 
-// cmark_gfm_core_extensions_ensure_registered() must run exactly once process-wide;
-// concurrent calls from TOC worker threads race and abort in cmark_register_node_flag.
-static Mutex gCmarkInitLock;
-static bool gCmarkInitialized = false;
-
 static void EnsureCmarkPluginsRegistered() {
-    ScopedMutex scope(&gCmarkInitLock);
-    if (gCmarkInitialized) {
-        return;
-    }
-    cmark_gfm_core_extensions_ensure_registered();
-    gCmarkInitialized = true;
+    [[maybe_unused]] static const bool registered = [] {
+        cmark_gfm_core_extensions_ensure_registered();
+        return true;
+    }();
 }
 
 static cmark_parser* CreateMarkdownParser(Str data) {
