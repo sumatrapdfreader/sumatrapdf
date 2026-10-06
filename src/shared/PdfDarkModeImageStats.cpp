@@ -29,10 +29,9 @@ static constexpr float kLightBackdropBorderLight = 0.95f;
 static constexpr float kLightBackdropBorderUniformity = 0.90f;
 static constexpr int kBorderSamplesPerEdge = 32;
 
-static void SampleImageRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* outR, float* outG, float* outB) {
-    *outR = *outG = *outB = 0.f;
+static PixelColor SampleImageRgb(fz_context* ctx, fz_pixmap* pix, int x, int y) {
     if (!pix || !pix->samples || x < 0 || y < 0 || x >= pix->w || y >= pix->h) {
-        return;
+        return {};
     }
     fz_colorspace* cs = pix->colorspace ? pix->colorspace : fz_device_rgb(ctx);
     fz_colorspace* rgb = fz_device_rgb(ctx);
@@ -46,9 +45,7 @@ static void SampleImageRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float*
         conv[c] = (float)px[c] / 255.f;
     }
     fz_convert_color(ctx, cs, conv, rgb, srcRgb, cs, fz_default_color_params);
-    *outR = srcRgb[0];
-    *outG = srcRgb[1];
-    *outB = srcRgb[2];
+    return {srcRgb[0], srcRgb[1], srcRgb[2]};
 }
 
 // How light the outermost ring of pixels is, and how close it is to a single
@@ -64,7 +61,7 @@ static void SampleImageBorder(fz_context* ctx, fz_pixmap* pix, ImageStats* stats
             return;
         }
         PixelColor& c = samples[n];
-        SampleImageRgb(ctx, pix, x, y, &c.r, &c.g, &c.b);
+        c = SampleImageRgb(ctx, pix, x, y);
         float lum = (0.2126f * c.r) + (0.7152f * c.g) + (0.0722f * c.b);
         if (lum > 0.72f) {
             light++;
@@ -143,17 +140,16 @@ static ImageStats SampleImageStats(fz_context* ctx, fz_image* image) {
         int stepY = pix->h >= 32 ? pix->h / 32 : 1;
         for (int y = 0; y < pix->h; y += stepY) {
             for (int x = 0; x < pix->w; x += stepX) {
-                float r, g, b;
-                SampleImageRgb(ctx, pix, x, y, &r, &g, &b);
-                int ri = (int)lroundf(r * 255.f);
-                int gi = (int)lroundf(g * 255.f);
-                int bi = (int)lroundf(b * 255.f);
+                PixelColor c = SampleImageRgb(ctx, pix, x, y);
+                int ri = (int)lroundf(c.r * 255.f);
+                int gi = (int)lroundf(c.g * 255.f);
+                int bi = (int)lroundf(c.b * 255.f);
                 int bucket = ((ri >> 4) << 8) | ((gi >> 4) << 4) | (bi >> 4);
                 buckets[bucket]++;
 
-                float maxC = std::max({r, g, b});
-                float minC = std::min({r, g, b});
-                float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
+                float maxC = std::max({c.r, c.g, c.b});
+                float minC = std::min({c.r, c.g, c.b});
+                float lum = (0.2126f * c.r) + (0.7152f * c.g) + (0.0722f * c.b);
                 lumSum += lum;
                 lumSqSum += lum * lum;
                 if (maxC - minC > 0.12f) {
