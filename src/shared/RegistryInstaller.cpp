@@ -268,32 +268,6 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
     return ok;
 }
 
-#if 0
-bool ListAsDefaultProgramPreWin10(HKEY hkey) {
-    // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
-    // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be
-    // using OpenWithList but OpenWithProgIds. Also, it doesn't seem to work on my win7 32bit
-    // (HKLM\Software\Classes\.mobi\OpenWithList\SumatraPDF.exe key is present but "Open With"
-    // menu item doesn't even exist for .mobi files
-    // It's not so easy, though, because if we just set it to SumatraPDF,
-    // all GetSupportedExts() will be reported as "PDF Document" by Explorer, so this needs
-    // to be more intelligent. We should probably mimic Windows Media Player scheme i.e.
-    // set OpenWithProgIds to SumatraPDF.AssocFile.Mobi etc. and create apropriate
-    // \SOFTWARE\Classes\CLSID\{GUID}\ProgID etc. entries
-    // Also, if Sumatra is the only program handling those docs, our
-    // PDF icon will be shown (we need icons and properly configure them)
-    bool ok = true;
-
-    TempWStr openWithVal = str::JoinTemp(WStrL(L"\\OpenWithList\\"), kExeName);
-    for (Str extUtf8 = SeqStrFirst(gSupportedExts); len(extUtf8) > 0; extUtf8 = SeqStrNext(extUtf8)) {
-        TempWStr ext = ToWStrTemp(extUtf8);
-        TempWStr name = str::JoinTemp(WStrL(L"Software\\Classes\\"), ext, openWithVal);
-        ok &= CreateRegKey(hkey, name);
-    }
-    return ok;
-}
-#endif
-
 /*
 Structure of registry entries for associating Sumatra with PDF files.
 
