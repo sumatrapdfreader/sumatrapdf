@@ -34,30 +34,16 @@ void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const 
     }
     int page = 1;
     if (bookView) {
-        FacingRow row;
-        row.firstPage = 1;
-        row.lastPage = 1;
-        row.isSpread = PageIsSpread(spreadFlags, 1);
-        VecAppend(out, row);
+        VecAppend(out, {1, 1, PageIsSpread(spreadFlags, 1)});
         page = 2;
     }
     while (page <= pageCount) {
-        FacingRow row;
-        row.firstPage = page;
-        if (PageIsSpread(spreadFlags, page)) {
-            row.lastPage = page;
-            row.isSpread = true;
-            page++;
-        } else if (page + 1 <= pageCount && !PageIsSpread(spreadFlags, page + 1)) {
-            row.lastPage = page + 1;
-            row.isSpread = false;
-            page += 2;
-        } else {
-            row.lastPage = page;
-            row.isSpread = false;
-            page++;
+        FacingRow row{page, page, PageIsSpread(spreadFlags, page)};
+        if (!row.isSpread && page + 1 <= pageCount && !PageIsSpread(spreadFlags, page + 1)) {
+            row.lastPage++;
         }
         VecAppend(out, row);
+        page = row.lastPage + 1;
     }
 }
 
