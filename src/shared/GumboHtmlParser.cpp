@@ -330,23 +330,18 @@ Str ResolveHtmlEntities(Str str, Arena* a) {
     return res;
 }
 
-// convenience function for the above that always allocates
+// Copy unchanged input too, so both wrappers return owned, NUL-terminated text.
+static Str CopyHtmlEntities(Str s, Arena* arena) {
+    Str res = ResolveHtmlEntities(s, arena);
+    return res.s == s.s ? str::Dup(arena, s) : res;
+}
+
 Str ResolveHtmlEntities(Str s) {
-    Str res = ResolveHtmlEntities(s, nullptr);
-    if (res.s == s.s) {
-        // ensure 0-terminated string is returned
-        return str::Dup(s);
-    }
-    return res;
+    return CopyHtmlEntities(s, nullptr);
 }
 
 Str ResolveHtmlEntitiesTemp(Str s) {
-    Str res = ResolveHtmlEntities(s, GetTempArena());
-    if (res.s == s.s) {
-        // ensure 0-terminated string is returned
-        return str::DupTemp(s);
-    }
-    return res;
+    return CopyHtmlEntities(s, GetTempArena());
 }
 
 bool AttrInfo::NameIs(Str s, HtmlNameMatch match) const {
