@@ -837,35 +837,24 @@ Str LitFile::GetSection(int section) {
 
 //--- manifest
 
-// resolve ".." / "." components; a path that escapes the root keeps getting
-// its leading "../" stripped, like calibre does
+// Normalize manifest paths, discarding parents that escape the archive root.
 static TempStr LitNormPathTemp(Str path) {
     StrVec parts;
     Split(&parts, path, StrL("/"), true);
     StrVec out;
-    for (int i = 0; i < len(parts); i++) {
-        Str p = parts.At(i);
-        if (str::Eq(p, StrL("."))) {
+    for (Str p : parts) {
+        if (len(p) == 0 || str::Eq(p, StrL("."))) {
             continue;
         }
-        if (str::Eq(p, StrL("..")) && !out.IsEmpty() && !str::Eq(out.At(len(out) - 1), StrL(".."))) {
-            out.RemoveAt(len(out) - 1);
+        if (str::Eq(p, StrL(".."))) {
+            if (!out.IsEmpty()) {
+                out.RemoveAt(len(out) - 1);
+            }
             continue;
         }
         out.Append(p);
     }
-    int skip = 0;
-    while (skip < len(out) && str::Eq(out.At(skip), StrL(".."))) {
-        skip++;
-    }
-    str::Builder res;
-    for (int i = skip; i < len(out); i++) {
-        if (i > skip) {
-            res.Append(StrL("/"));
-        }
-        res.Append(out.At(i));
-    }
-    return ToStrTemp(res);
+    return out.IsEmpty() ? TempStr{} : JoinTemp(&out, StrL("/"));
 }
 
 constexpr int kLitManifestGroups = 4;
