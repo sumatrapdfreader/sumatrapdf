@@ -89,12 +89,8 @@ static IPageDestination* NewDjvuDecDestination(Arena* arena, Str link, Str comme
     return res;
 }
 
-static IPageDestination* NewDjvuDecDestination(Str link, Str comment) {
-    return NewDjvuDecDestination(nullptr, link, comment);
-}
-
 static IPageElement* NewDjvuDecLink(int pageNo, Rect rect, Str link, Str comment) {
-    auto* dest = NewDjvuDecDestination(link, comment);
+    auto* dest = NewDjvuDecDestination(nullptr, link, comment);
     if (!dest) {
         return nullptr;
     }
