@@ -81,11 +81,3 @@ struct HtmlFileFormatter : HtmlFormatter {
 
     HtmlFileFormatter(HtmlFormatterArgs* args, HtmlDoc* doc) : HtmlFormatter(args), htmlDoc(doc) {}
 };
-
-/* formatting extensions for TXT */
-
-struct TxtFormatter : HtmlFormatter {
-    void HandleTagPagebreak(HtmlToken*) override { ForceNewPage(); }
-
-    explicit TxtFormatter(HtmlFormatterArgs* args) : HtmlFormatter(args) {}
-};
