@@ -506,6 +506,13 @@ bool MobiDoc::ParseHeader() {
 }
 
 bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
+    static const struct {
+        u32 type;
+        DocProp prop;
+    } exthProps[] = {{100, DocProp::Author},     {105, DocProp::Subject},   {106, DocProp::CreationDate},
+                     {108, DocProp::CreatorApp}, {109, DocProp::Copyright}, {503, DocProp::Title}};
+    constexpr u32 kExthCoverOffset = 201;
+
     if (dataLen < 12 || !MemEq(data, "EXTH", 4)) {
         return false;
     }
@@ -530,37 +537,22 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
         }
         d.Skip(recLen - 8);
 
-        DocProp prop = DocProp::None;
-        switch (type) {
-            case 100:
-                prop = DocProp::Author;
-                break;
-            case 105:
-                prop = DocProp::Subject;
-                break;
-            case 106:
-                prop = DocProp::CreationDate;
-                break;
-            case 108:
-                prop = DocProp::CreatorApp;
-                break;
-            case 109:
-                prop = DocProp::Copyright;
-                break;
-            case 201:
-                if (length == 12 && imageFirstRec) {
-                    d.Unskip(4);
-                    coverImageRec = imageFirstRec + (int)d.UInt32BE();
-                }
-                continue;
-            case 503:
-                prop = DocProp::Title;
-                break;
-            default:
-                continue;
+        if (type == kExthCoverOffset) {
+            if (length == 12 && imageFirstRec) {
+                d.Unskip(4);
+                coverImageRec = imageFirstRec + (int)d.UInt32BE();
+            }
+            continue;
         }
-        Str value((char*)(data + d.Offset() - length + 8), (int)length - 8);
-        AddPropOwned(props, prop, value);
+
+        for (const auto& entry : exthProps) {
+            if (type != entry.type) {
+                continue;
+            }
+            Str value((char*)(data + d.Offset() - length + 8), (int)length - 8);
+            AddPropOwned(props, entry.prop, value);
+            break;
+        }
     }
 
     return true;
