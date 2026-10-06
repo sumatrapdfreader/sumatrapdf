@@ -97,47 +97,8 @@ Pixmap* PixmapFromAvifData(Str d) {
     return px;
 }
 
-// Returns TIFF EXIF payload (caller frees *outData). Skips 4-byte HEIF Exif prefix.
-bool AvifExifBlobFromData(Str d, u8** outData, size_t* outSize) {
-    *outData = nullptr;
-    *outSize = 0;
-
-    heic_ctx* ctx = heic_ctx_new(nullptr, nullptr, nullptr, nullptr);
-    if (!ctx) {
-        return false;
-    }
-    AutoCall freeCtx(heic_ctx_free, ctx);
-    heic_doc* doc = heic_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
-    if (!doc) {
-        return false;
-    }
-    AutoCall closeDoc(heic_doc_close, doc);
-
-    // TIFF payload; HEIF 4-byte prefix already stripped by heic_doc_exif.
-    // heic allocates with a size header (must free via heic_free); copy out so
-    // callers can free() with the ordinary allocator.
-    u8* exif = nullptr;
-    size_t n = 0;
-    if (heic_doc_exif(doc, &exif, &n) == 0 || !exif || n == 0) {
-        return false;
-    }
-    AutoCall freeExif(heic_free, ctx, (void*)exif);
-
-    u8* copy = (u8*)malloc(n);
-    if (!copy) {
-        return false;
-    }
-    memcpy(copy, exif, n);
-    *outData = copy;
-    *outSize = n;
-    return true;
-}
 #else
 Pixmap* PixmapFromAvifData(Str) {
     return nullptr;
-}
-// Returns TIFF EXIF payload (caller frees *outData). Skips 4-byte HEIF Exif prefix.
-bool AvifExifBlobFromData(Str, u8**, size_t*) {
-    return false;
 }
 #endif
