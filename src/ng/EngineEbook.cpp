@@ -1792,10 +1792,7 @@ class ChmDataCache {
     ChmDataCache(ChmFile* doc, Str html) : doc(doc), html(html.s) {}
 
     ~ChmDataCache() {
-        for (auto&& img : images) {
-            str::Free(img.base);
-            str::Free(img.fileName);
-        }
+        FreeImages(images);
         str::Free(html);
     }
 

@@ -14,6 +14,8 @@ struct ImageData {
     int fileId{0};
 };
 
+void FreeImages(Vec<ImageData>& images);
+
 TempStr NormalizeURLTemp(Str url, Str base);
 #if IS_DEBUG
 bool EbookDoc_UnitTestNormalizeURL();

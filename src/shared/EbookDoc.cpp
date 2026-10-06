@@ -277,6 +277,14 @@ static TempStr DecodeDataURITemp(Str url) {
     return str::DupTemp(data);
 }
 
+void FreeImages(Vec<ImageData>& images) {
+    for (const ImageData& img : images) {
+        str::Free(img.base);
+        str::Free(img.fileName);
+    }
+    VecReset(images);
+}
+
 /* ********** EPUB ********** */
 
 EpubDoc::EpubDoc(Str fileName) {
@@ -287,10 +295,7 @@ EpubDoc::EpubDoc(Str fileName) {
 EpubDoc::~EpubDoc() {
     zipAccess.Lock();
 
-    for (auto&& img : images) {
-        str::Free(img.base);
-        str::Free(img.fileName);
-    }
+    FreeImages(images);
 
     zipAccess.Unlock();
     delete archive;
@@ -821,10 +826,7 @@ Fb2Doc::Fb2Doc(Str fileName) : fileName(str::Dup(fileName)) {}
 
 Fb2Doc::~Fb2Doc() {
     str::Free(coverImage);
-    for (auto&& img : images) {
-        str::Free(img.base);
-        str::Free(img.fileName);
-    }
+    FreeImages(images);
     FreeProps(props);
     str::Free(fileName);
 }
@@ -1246,10 +1248,7 @@ PalmDoc* PalmDoc::CreateFromFile(Str path) {
 HtmlDoc::HtmlDoc(Str path) : fileName(str::Dup(path)) {}
 
 HtmlDoc::~HtmlDoc() {
-    for (auto&& img : images) {
-        str::Free(img.base);
-        str::Free(img.fileName);
-    }
+    FreeImages(images);
     FreeProps(props);
     str::Free(htmlData);
     str::Free(fileName);
