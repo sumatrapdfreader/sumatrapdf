@@ -9,13 +9,9 @@
 #include "base/GdiPlusUtil.h"
 #endif
 
-#ifndef NO_AVIF
 #include "heic.h"
-#endif
 
 #include "AvifReader.h"
-
-#ifndef NO_AVIF
 
 // Set pixmap xres/yres from EXIF density. DisplayModel uses xres as fileDPI:
 // zoomReal at 100% is screenDPI/fileDPI, so a missing density (default 96)
@@ -96,9 +92,3 @@ Pixmap* PixmapFromAvifData(Str d) {
 
     return px;
 }
-
-#else
-Pixmap* PixmapFromAvifData(Str) {
-    return nullptr;
-}
-#endif
