@@ -30,14 +30,14 @@
     <ClInclude Include="..\src\gui\Layout.h">
       <Filter>gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\PlatformFont.h">
-      <Filter>gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gui\PlatformText.h">
       <Filter>gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\VirtCtrl.h">
       <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\gui\PlatformFont.h">
+      <Filter>shared\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\gui\UIModels.h">
       <Filter>shared\gui</Filter>

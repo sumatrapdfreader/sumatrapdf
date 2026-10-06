@@ -1269,7 +1269,6 @@
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h" />
-    <ClInclude Include="..\src\gui\PlatformFont.h" />
     <ClInclude Include="..\src\gui\PlatformText.h" />
     <ClInclude Include="..\src\previewer\PdfPreview.h" />
     <ClInclude Include="..\src\shared\AvifReader.h" />
@@ -1288,6 +1287,7 @@
     <ClInclude Include="..\src\shared\PdfDarkMode.h" />
     <ClInclude Include="..\src\shared\SumatraConfig.h" />
     <ClInclude Include="..\src\shared\WebpReader.h" />
+    <ClInclude Include="..\src\shared\gui\PlatformFont.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\AvifReader.cpp" />

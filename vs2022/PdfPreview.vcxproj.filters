@@ -13,6 +13,9 @@
     <Filter Include="shared">
       <UniqueIdentifier>{9C5CB11B-88FE-DBF1-71B9-EF455DFA6242}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\gui">
+      <UniqueIdentifier>{10D62118-FC8D-6365-6595-3CC1516CFE55}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\EmbeddedResources.h" />
@@ -25,9 +28,6 @@
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h">
       <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gui\PlatformFont.h">
-      <Filter>gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\PlatformText.h">
       <Filter>gui</Filter>
@@ -82,6 +82,9 @@
     </ClInclude>
     <ClInclude Include="..\src\shared\WebpReader.h">
       <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\gui\PlatformFont.h">
+      <Filter>shared\gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
