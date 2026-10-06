@@ -1320,11 +1320,7 @@ static bool IsEmptyPage(HtmlPage* p) {
     return true;
 }
 
-// Return the next parsed page. Returns nullptr if finished parsing.
-// For simplicity of implementation, we parse xml text node or
-// xml element at a time. This might cause a creation of one
-// or more pages, which we remeber and send to the caller
-// if we detect accumulated pages.
+// Return queued pages, parsing more tokens as needed.
 HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
     AtomicIntInc(&gAllowAllocFailure);
     AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
@@ -1339,15 +1335,19 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
                 return ret;
             }
         }
-        // we can call ourselves recursively to send outstanding
-        // pages after parsing has finished so this is to detect
-        // that case and really end parsing
         if (finishedParsing) {
             return nullptr;
         }
         HtmlToken* t = htmlParser->Next();
         if (!t || t->IsError()) {
-            break;
+            AutoCloseTags(len(tagNesting));
+            FlushCurrLine(true);
+            VecAppend(pagesToSend, currPage);
+            currPage = nullptr;
+            finishedParsing = true;
+            // Discard final empty pages after finishing the parser.
+            skipEmptyPages = true;
+            continue;
         }
 
         currReparseIdx = htmlParser->PosOf(t->GetReparsePoint());
@@ -1358,15 +1358,6 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
             HandleText(t);
         }
     }
-    // force layout of the last line
-    AutoCloseTags(len(tagNesting));
-    FlushCurrLine(true);
-
-    VecAppend(pagesToSend, currPage);
-    currPage = nullptr;
-    // call ourselves recursively to return accumulated pages
-    finishedParsing = true;
-    return Next();
 }
 
 // convenience method to format the whole html
