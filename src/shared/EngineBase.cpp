@@ -24,20 +24,6 @@ Kind kindDestinationDjVu = "destinationDjVu";
 Kind kindDestinationMupdf = "destinationMupdf";
 Kind kindDestinationJsMenu = "jsMenu";
 
-// clang-format off
-static Kind destKinds[] = {
-    kindDestinationNone,
-    kindDestinationScrollTo,
-    kindDestinationLaunchURL,
-    kindDestinationLaunchEmbedded,
-    kindDestinationAttachment,
-    kindDestinationLaunchFile,
-    kindDestinationDjVu,
-    kindDestinationMupdf,
-    kindDestinationJsMenu
-};
-// clang-format on
-
 bool IsExternalUrl(Str url) {
     return str::StartsWithI(url, StrL("http://")) || str::StartsWithI(url, StrL("https://")) ||
            str::StartsWithI(url, StrL("mailto:"));
