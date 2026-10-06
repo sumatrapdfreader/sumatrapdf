@@ -14,25 +14,13 @@ static constexpr int kPreservePdfImagesMinSize = 72;
 
 static bool gPreservePdfImagesInDarkMode = true;
 
+// Accept current names and pre-3.7 DocumentColorMode aliases.
 DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
-    if (len(v) == 0 || str::EqI(v, StrL("off"))) {
-        return DocumentColorsFollowTheme::Off;
-    }
-    if (str::EqI(v, StrL("smart"))) {
+    if (str::EqI(v, StrL("smart")) || str::EqI(v, StrL("auto"))) {
         return DocumentColorsFollowTheme::Smart;
     }
-    if (str::EqI(v, StrL("legacy"))) {
+    if (str::EqI(v, StrL("legacy")) || str::EqI(v, StrL("black"))) {
         return DocumentColorsFollowTheme::Legacy;
-    }
-    // migrate pre-3.7 DocumentColorMode values
-    if (str::EqI(v, StrL("auto"))) {
-        return DocumentColorsFollowTheme::Smart;
-    }
-    if (str::EqI(v, StrL("black"))) {
-        return DocumentColorsFollowTheme::Legacy;
-    }
-    if (str::EqI(v, StrL("none")) || str::EqI(v, StrL("light"))) {
-        return DocumentColorsFollowTheme::Off;
     }
     return DocumentColorsFollowTheme::Off;
 }
