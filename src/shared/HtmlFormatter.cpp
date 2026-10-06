@@ -1293,23 +1293,16 @@ bool HtmlFormatter::IgnoreText() {
     return false;
 }
 
-// empty page is one that consists of only invisible instructions
+// Rule-only pages count as empty.
 static bool IsEmptyPage(HtmlPage* p) {
     if (!p) {
         return false;
     }
     for (DrawInstr& i : p->instructions) {
-        // if a page only consits of lines we consider it empty. It's different
-        // than what Kindle does but I don't see the purpose of showing such
-        // pages to the user
-        if (DrawInstrType::Line == i.type) {
-            continue;
-        }
-        if (IsVisibleDrawInstr(i)) {
+        if (IsTextOrImage(i)) {
             return false;
         }
     }
-    // all instructions were invisible
     return true;
 }
 
