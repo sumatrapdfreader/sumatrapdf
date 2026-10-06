@@ -539,12 +539,6 @@ static bool PathHasNonAscii(Str s) {
     return false;
 }
 
-/**
- * Convert a string encoded in the local character page (system ANSI code page) to UTF-8 encoding.
- *
- * @param localStr  A null-terminated string encoded in the local character page
- * @return          A heap-allocated UTF-8 string (caller must free via str::Free), or empty on failure
- */
 static Str ConvertLocalToUTF8(Str localStr) {
     if (len(localStr) == 0) {
         return {};
@@ -564,19 +558,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, wBuf, wLen) == 0) {
         return {};
     }
-    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, nullptr, 0, nullptr, nullptr);
-    if (utf8Len == 0) {
-        return {};
-    }
-    char* utf8Buf = (char*)malloc(utf8Len);
-    if (!utf8Buf) {
-        return {};
-    }
-    if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf, utf8Len, nullptr, nullptr) == 0) {
-        free(utf8Buf);
-        return {};
-    }
-    return Str(utf8Buf, utf8Len - 1);
+    return strconv::WStrToUtf8(WStr(wBuf, wLen - 1));
 #endif
 }
 
