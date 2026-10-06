@@ -297,23 +297,21 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
     constexpr int kMaxCands = 16;
     Cand cands[kMaxCands];
     int ncands = 0;
-    int curStart = -1;
-    int curLen = 0;
-    for (int i = 0; i <= rawLen; i++) {
-        bool alnum = (i < rawLen) && isAlnum(rawText[i]);
-        if (alnum) {
-            if (curStart < 0) {
-                curStart = i;
-            }
-            curLen++;
-        } else {
-            if (curLen >= 2 && ncands < kMaxCands) {
-                bool flanked = (curStart > 0 && rawText[curStart - 1] == L'(' && i < rawLen && rawText[i] == L')');
-                cands[ncands++] = {curStart, curLen, flanked};
-            }
-            curStart = -1;
-            curLen = 0;
+    for (int i = 0; i < rawLen && ncands < kMaxCands;) {
+        if (!isAlnum(rawText[i])) {
+            i++;
+            continue;
         }
+        int start = i;
+        while (i < rawLen && isAlnum(rawText[i])) {
+            i++;
+        }
+        int count = i - start;
+        if (count < 2) {
+            continue;
+        }
+        bool flanked = start > 0 && rawText[start - 1] == L'(' && i < rawLen && rawText[i] == L')';
+        cands[ncands++] = {start, count, flanked};
     }
     if (ncands == 0) {
         return -1.f;
@@ -323,9 +321,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
             bool swap = (cands[j].flanked && !cands[i].flanked) ||
                         (cands[j].flanked == cands[i].flanked && cands[j].len > cands[i].len);
             if (swap) {
-                Cand t = cands[i];
-                cands[i] = cands[j];
-                cands[j] = t;
+                std::swap(cands[i], cands[j]);
             }
         }
     }
@@ -341,10 +337,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
         int sy = destCoords[idx].y;
         int sx = destCoords[idx].x;
         for (int i = 0; i < destLen; i++) {
-            if (i == idx) {
-                continue;
-            }
-            if (destCoords[i].y != sy) {
+            if (i == idx || destCoords[i].y != sy) {
                 continue;
             }
             WCHAR c = destText.s[i];
@@ -387,26 +380,19 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
             return true;
         };
 
-        int bestX_lineStart = INT_MAX;
-        int bestY_lineStart = -1;
-        int bestX_any = INT_MAX;
-        int bestY_any = -1;
+        Point lineStart{INT_MAX, -1};
+        Point other{INT_MAX, -1};
         for (int i = 0; i < destLen; i++) {
             if (!matchAt(i)) {
                 continue;
             }
             Rect r = destCoords[i];
-            if (isLineStartMatch(i)) {
-                if (r.x < bestX_lineStart) {
-                    bestX_lineStart = r.x;
-                    bestY_lineStart = r.y;
-                }
-            } else if (r.x < bestX_any) {
-                bestX_any = r.x;
-                bestY_any = r.y;
+            Point& best = isLineStartMatch(i) ? lineStart : other;
+            if (r.x < best.x) {
+                best = Point(r.x, r.y);
             }
         }
-        int bestY = (bestY_lineStart >= 0) ? bestY_lineStart : bestY_any;
+        int bestY = lineStart.y >= 0 ? lineStart.y : other.y;
         if (bestY >= 0) {
             return (float)bestY;
         }
