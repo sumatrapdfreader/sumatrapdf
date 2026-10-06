@@ -227,7 +227,14 @@ static Str MkLitNameLenWrap() {
     return s;
 }
 
+#if IS_DEBUG
+bool LitDoc_UnitTestManifest();
+#endif
+
 void LitDoc_UnitTests() {
+#if IS_DEBUG
+    utassert(LitDoc_UnitTestManifest());
+#endif
     LitMustReject(MkLitHdrLenWrap());
     LitMustReject(MkLitPosOverflow());
     LitMustReject(MkLitDirRangeWrap());

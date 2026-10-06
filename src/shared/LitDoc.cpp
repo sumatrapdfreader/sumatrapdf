@@ -12,6 +12,9 @@
    Passport account) is not supported. */
 
 #include "base/Base.h"
+#if IS_DEBUG
+#include "base/ByteReaderWriter.h"
+#endif
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Zip.h"
@@ -414,7 +417,7 @@ static TempStr LitSizedStringTemp(Str d, int* pos, bool zpad) {
     if (zpad && *pos < len(d) && d.s[*pos] == 0) {
         (*pos)++;
     }
-    return str::DupTemp(ToStrTemp(out));
+    return ToStrTemp(out);
 }
 
 //--- the .lit container
@@ -428,8 +431,6 @@ struct LitEntry {
 
 struct LitManifestItem {
     TempStr internal{};
-    TempStr original{};
-    TempStr mime{};
     TempStr path{}; // normalized path, also the path inside the epub
     bool isSpine = false;
 };
@@ -440,7 +441,6 @@ struct LitFile {
     Str d; // the whole file
     int contentOffset = 0;
     u32 entryChunkLen = 0;
-    u32 entryUnknown = 0;
     Vec<LitEntry> entries;
     StrVec sectionNames;
     Str sectionData[kLitMaxSections]; // decoded caches, owned
@@ -504,7 +504,6 @@ static bool LitParseHeader(LitFile* lit) {
                     return false;
                 }
                 lit->entryChunkLen = LitU32(sec, pos + 20);
-                lit->entryUnknown = LitU32(sec, pos + 28);
                 pos += 48;
             } else if (str::Eq(blockTag, StrL("ITSF"))) {
                 if (ver != 4 || LitU32(sec, pos + 20) != 0) {
@@ -911,8 +910,10 @@ static TempStr LitNormPathTemp(Str path) {
         }
         res.Append(out.At(i));
     }
-    return str::DupTemp(ToStrTemp(res));
+    return ToStrTemp(res);
 }
+
+constexpr int kLitManifestGroups = 4;
 
 static bool LitParseManifest(LitFile* lit) {
     Str raw = lit->GetFile(StrL("/manifest"));
@@ -926,7 +927,7 @@ static bool LitParseManifest(LitFile* lit) {
             break;
         }
         pos += slen; // root name, unused
-        for (int state = 0; state < 4; state++) {
+        for (int state = 0; state < kLitManifestGroups; state++) {
             // 0 = spine, 1 = not spine, 2 = css, 3 = images
             int nFiles = (int)LitU32(raw, pos);
             pos += 4;
@@ -940,15 +941,14 @@ static bool LitParseManifest(LitFile* lit) {
                 pos += 4; // offset, unused
                 LitManifestItem item;
                 item.internal = LitSizedStringTemp(raw, &pos, false);
-                item.original = LitSizedStringTemp(raw, &pos, false);
-                item.mime = LitSizedStringTemp(raw, &pos, true);
-                if (len(item.internal) == 0 || len(item.original) == 0) {
+                TempStr path = LitSizedStringTemp(raw, &pos, false);
+                LitSizedStringTemp(raw, &pos, true); // consume unused MIME type
+                if (len(item.internal) == 0 || len(path) == 0) {
                     return len(lit->manifest) > 0;
                 }
                 item.isSpine = (state == 0);
                 // normalize the original path: windows separators, drive
                 // letters, stray ".." (all seen in the wild per calibre)
-                TempStr path = str::DupTemp(item.original);
                 str::TransCharsInPlace(path, StrL("\\"), StrL("/"));
                 if (len(path) > 2 && path.s[1] == ':' && path.s[2] == '/') {
                     path = str::DupTemp(Str(path.s + 3, len(path) - 3));
@@ -958,33 +958,21 @@ static bool LitParseManifest(LitFile* lit) {
             }
         }
     }
-    // strip the path prefix shared by all items
+    // Strip complete directories shared by all items.
     if (len(lit->manifest) > 1) {
-        for (;;) {
-            Str first = lit->manifest[0].path;
-            int slash = -1;
-            for (int i = 0; i < len(first); i++) {
-                if (first.s[i] == '/') {
-                    slash = i;
-                    break;
-                }
+        Str first = lit->manifest[0].path;
+        int prefixLen = len(first);
+        for (const LitManifestItem& it : lit->manifest) {
+            int i = 0;
+            while (i < prefixLen && i < len(it.path) && first.s[i] == it.path.s[i]) {
+                i++;
             }
-            if (slash < 0) {
-                break;
-            }
-            Str prefix(first.s, slash + 1);
-            bool all = true;
+            prefixLen = i;
+        }
+        prefixLen = str::LastIndexOfChar(Str(first.s, prefixLen), '/') + 1;
+        if (prefixLen > 0) {
             for (LitManifestItem& it : lit->manifest) {
-                if (!str::StartsWith(it.path, prefix)) {
-                    all = false;
-                    break;
-                }
-            }
-            if (!all) {
-                break;
-            }
-            for (LitManifestItem& it : lit->manifest) {
-                it.path = str::DupTemp(Str(it.path.s + len(prefix), len(it.path) - len(prefix)));
+                it.path = str::DupTemp(Str(it.path.s + prefixLen, len(it.path) - prefixLen));
             }
         }
     }
@@ -1157,7 +1145,7 @@ static TempStr LitResolveHrefTemp(UnBinaryCtx* ctx, Str href) {
             rel.Append(StrL("../"));
         }
         rel.Append(target);
-        path = str::DupTemp(ToStrTemp(rel));
+        path = ToStrTemp(rel);
     }
     if (len(frag) > 0) {
         path = str::JoinTemp(Str(path), frag);
@@ -1371,7 +1359,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
             case 7: // custom tag name
                 LitAppendUtf8(custom, c);
                 if (--count == 0) {
-                    tagName = str::DupTemp(ToStrTemp(custom));
+                    tagName = ToStrTemp(custom);
                     out.Append(Str(tagName));
                     state = 3;
                 }
@@ -1626,3 +1614,50 @@ EngineBase* CreateEngineLitFromFile(Str path, PasswordUI* pwdUI) {
     }
     return engine;
 }
+
+#if IS_DEBUG
+bool LitDoc_UnitTestManifest() {
+    const Str cases[][4] = {
+        {StrL("same/a.html"), StrL("same/b.html"), StrL("a.html"), StrL("b.html")},
+        {StrL("a/b/a.html"), StrL("a/b/c/b.html"), StrL("a.html"), StrL("c/b.html")},
+        {StrL("abc/a.html"), StrL("abcd/b.html"), StrL("abc/a.html"), StrL("abcd/b.html")},
+        {StrL("C:\\books\\a.html"), StrL("C:\\books\\b.html"), StrL("a.html"), StrL("b.html")},
+        {StrL("dir/a.html"), {}, StrL("dir/a.html"), {}},
+        {StrL("/"), StrL("x/b.html"), StrL("one"), StrL("x/b.html")},
+    };
+    for (const auto& c : cases) {
+        ByteWriterLE raw(256);
+        raw.Write8(1);
+        raw.Write8('x');
+        int count = len(c[1]) > 0 ? 2 : 1;
+        raw.Write32(count);
+        for (int i = 0; i < count; i++) {
+            raw.Write32(0);
+            const Str values[] = {i == 0 ? StrL("one") : StrL("two"), c[i], StrL("text/html")};
+            for (Str value : values) {
+                raw.Write8((u8)len(value));
+                raw.d.Append(value);
+            }
+            raw.Write8(0);
+        }
+        for (int i = 1; i < kLitManifestGroups; i++) {
+            raw.Write32(0);
+        }
+        LitFile lit;
+        lit.d = ToStr(raw.d);
+        LitEntry entry{};
+        entry.name = StrL("/manifest");
+        entry.size = len(lit.d);
+        VecAppend(lit.entries, entry);
+        if (!LitParseManifest(&lit) || len(lit.manifest) != count) {
+            return false;
+        }
+        for (int i = 0; i < count; i++) {
+            if (!str::Eq(lit.manifest[i].path, c[i + 2])) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+#endif
