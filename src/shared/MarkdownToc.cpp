@@ -563,25 +563,9 @@ static bool IsSafeAnchorId(Str id) {
     return true;
 }
 
-static bool ParseSafeAnchorOpen(Str html, Str* idOut) {
+static bool ParseSafeAnchor(Str html, Str suffix, Str* idOut) {
     str::TrimWSInPlace(html, str::TrimOpt::Both);
     Str prefix = StrL("<a id=\"");
-    Str suffix = StrL("\">");
-    if (!str::TrimPrefix(html, prefix) || !str::EndsWith(html, suffix)) {
-        return false;
-    }
-    Str id(html.s, html.len - suffix.len);
-    if (!IsSafeAnchorId(id)) {
-        return false;
-    }
-    *idOut = id;
-    return true;
-}
-
-static bool ParseSafeEmptyAnchor(Str html, Str* idOut) {
-    str::TrimWSInPlace(html, str::TrimOpt::Both);
-    Str prefix = StrL("<a id=\"");
-    Str suffix = StrL("\"></a>");
     if (!str::TrimPrefix(html, prefix) || !str::EndsWith(html, suffix)) {
         return false;
     }
@@ -616,7 +600,7 @@ static void PreserveSafeEmptyAnchors(cmark_node* parent) {
         if (type == CMARK_NODE_HTML_BLOCK || type == CMARK_NODE_HTML_INLINE) {
             Str raw = DupCmarkChunk(&node->as.literal);
             Str id;
-            if (ParseSafeEmptyAnchor(raw, &id)) {
+            if (ParseSafeAnchor(raw, StrL("\"></a>"), &id)) {
                 cmark_node_type customType =
                     type == CMARK_NODE_HTML_BLOCK ? CMARK_NODE_CUSTOM_BLOCK : CMARK_NODE_CUSTOM_INLINE;
                 cmark_node* replacement = NewSafeAnchorNode(customType, id);
@@ -633,7 +617,7 @@ static void PreserveSafeEmptyAnchors(cmark_node* parent) {
 
             Str openId;
             cmark_node* close = next;
-            if (type == CMARK_NODE_HTML_INLINE && ParseSafeAnchorOpen(raw, &openId) && close &&
+            if (type == CMARK_NODE_HTML_INLINE && ParseSafeAnchor(raw, StrL("\">"), &openId) && close &&
                 cmark_node_get_type(close) == CMARK_NODE_HTML_INLINE) {
                 Str closeRaw = DupCmarkChunk(&close->as.literal);
                 str::TrimWSInPlace(closeRaw, str::TrimOpt::Both);
