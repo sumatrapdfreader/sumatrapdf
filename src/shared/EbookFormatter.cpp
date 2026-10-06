@@ -218,7 +218,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     if (!VecContains(tagNesting, Tag_Svg) && Tag_Svg_Image != t->tag) {
         return;
     }
-    AttrInfo* attr = t->GetAttrByNameNS(StrL("href"), StrL("http://www.w3.org/1999/xlink"));
+    AttrInfo* attr = t->GetAttrByName(StrL("href"), HtmlNameMatch::Local);
     if (!attr) {
         return;
     }
@@ -281,7 +281,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
         return;
     }
     Str img;
-    AttrInfo* attr = t->GetAttrByNameNS(StrL("href"), StrL("http://www.w3.org/1999/xlink"));
+    AttrInfo* attr = t->GetAttrByName(StrL("href"), HtmlNameMatch::Local);
     if (attr) {
         TempStr src = url::DecodeTemp(attr->val);
         img = fb2Doc->GetImageData(src);
@@ -327,7 +327,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         HandleTagImg(t);
         HandleAnchorAttr(t);
     } else if (Tag_A == t->tag) {
-        HandleTagA(t, StrL("href"), StrL("http://www.w3.org/1999/xlink"));
+        HandleTagA(t, StrL("href"), HtmlNameMatch::Local);
         HandleAnchorAttr(t, true);
     } else if (Tag_Pagebreak == t->tag) {
         ForceNewPage();

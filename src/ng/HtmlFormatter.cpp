@@ -1018,9 +1018,9 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     SetFont(faceName, CurrFont()->GetStyle(), fontSize);
 }
 
-bool HtmlFormatter::HandleTagA(HtmlToken* t, Str linkAttr, Str attrNS) {
+bool HtmlFormatter::HandleTagA(HtmlToken* t, Str linkAttr, HtmlNameMatch match) {
     if (t->IsStartTag() && !currLinkIdx) {
-        AttrInfo* attr = attrNS ? t->GetAttrByNameNS(linkAttr, attrNS) : t->GetAttrByName(linkAttr);
+        AttrInfo* attr = t->GetAttrByName(linkAttr, match);
         if (attr) {
             // attr->val is owned by the gumbo parse tree which doesn't
             // outlive the formatter, so copy it into textAllocator

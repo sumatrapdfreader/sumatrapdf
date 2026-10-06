@@ -27,33 +27,20 @@ static Str GumboElementTagName(const GumboNode* node) {
     return Str(orig.s + off, end - off);
 }
 
-// True if `node` is an element whose tag name matches `name`
-// (case-insensitive). Handles both standard HTML tags (via
-// gumbo_normalized_tagname) and unknown tags (case-preserved in
-// original_tag) -- the latter covers e.g. PascalCase XML element names
-// like <ComicInfo>'s <Title>, <Year>, ...
-bool GumboTagNameIs(const GumboNode* node, Str name) {
-    if (!node || node->type != GUMBO_NODE_ELEMENT) {
-        return false;
+static bool LocalNameIs(Str s, Str name) {
+    int colon = str::IndexOfChar(s, ':');
+    if (colon >= 0) {
+        s = Str(s.s + colon + 1, len(s) - colon - 1);
     }
-    return str::EqI(GumboElementTagName(node), name);
+    return str::EqNIx(s, len(s), name);
 }
 
-bool GumboTagNameIsNS(const GumboNode* node, Str name, Str /*ns*/) {
-    // Preserve the old parser's compatibility: namespace URI is ignored,
-    // and a prefix in the source tag name is treated as optional.
+bool GumboTagNameIs(const GumboNode* node, Str name, HtmlNameMatch match) {
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
         return false;
     }
     Str tag = GumboElementTagName(node);
-    if (str::EqI(tag, name)) {
-        return true;
-    }
-    Str after;
-    if (!str::CutChar(tag, ':', nullptr, &after)) {
-        return false;
-    }
-    return str::EqI(after, name);
+    return str::EqI(tag, name) || (match == HtmlNameMatch::Local && LocalNameIs(tag, name));
 }
 
 // First direct element child of `node` whose tag matches `name`.
@@ -72,7 +59,7 @@ const GumboNode* GumboFindChildByTag(const GumboNode* node, Str name) {
     return nullptr;
 }
 
-static const GumboNode* GumboFindDescendantByTagImpl(const GumboNode* node, Str name, Str ns, bool matchNS) {
+const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name, HtmlNameMatch match) {
     // iterative pre-order DFS so a deeply nested document can't overflow the
     // stack (gumbo builds the tree iteratively, but recursing over it doesn't)
     Vec<const GumboNode*> toVisit;
@@ -84,8 +71,7 @@ static const GumboNode* GumboFindDescendantByTagImpl(const GumboNode* node, Str 
         }
         const GumboVector* children = nullptr;
         if (n->type == GUMBO_NODE_ELEMENT) {
-            bool matches = matchNS ? GumboTagNameIsNS(n, name, ns) : GumboTagNameIs(n, name);
-            if (matches) {
+            if (GumboTagNameIs(n, name, match)) {
                 return n;
             }
             children = &n->v.element.children;
@@ -100,16 +86,6 @@ static const GumboNode* GumboFindDescendantByTagImpl(const GumboNode* node, Str 
         }
     }
     return nullptr;
-}
-
-// Depth-first search for the first element under `node` with the given
-// tag name. Walks both ELEMENT and DOCUMENT nodes.
-const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name) {
-    return GumboFindDescendantByTagImpl(node, name, {}, false);
-}
-
-const GumboNode* GumboFindDescendantByTagNS(const GumboNode* node, Str name, Str ns) {
-    return GumboFindDescendantByTagImpl(node, name, ns, true);
 }
 
 TempStr GumboAttributeValueTemp(const GumboNode* node, const char* name) {
@@ -410,27 +386,8 @@ Str ResolveHtmlEntitiesTemp(Str s) {
     return res;
 }
 
-bool AttrInfo::NameIs(Str s) const {
-    return str::EqNIx(name, name.len, s);
-}
-
-// return true if nameToCheck is the same as s after skipping namespace preifix
-static bool IsNameWithNS(Str s, Str nameToCheck) {
-    Str name = s;
-    int colonIdx = str::IndexOfChar(s, ':');
-    if (colonIdx >= 0) {
-        int prefixLen = colonIdx + 1;
-        name = Str(s.s + prefixLen, s.len - prefixLen);
-    }
-    return str::EqNIx(name, name.len, nameToCheck);
-}
-
-// for now just ignores any namespace qualifier
-// (i.e. succeeds for "xlink:href" with name="href" and any value of attrNS)
-// TODO: add proper namespace support
-bool AttrInfo::NameIsNS(Str nameToCheck, Str /*ns*/) const {
-    // ReportIf(!ns);
-    return IsNameWithNS(name, nameToCheck);
+bool AttrInfo::NameIs(Str s, HtmlNameMatch match) const {
+    return match == HtmlNameMatch::Local ? LocalNameIs(name, s) : str::EqNIx(name, len(name), s);
 }
 
 bool AttrInfo::ValIs(Str s) const {
@@ -461,15 +418,8 @@ void HtmlToken::SetText(Str slice) {
     node = nullptr;
 }
 
-bool HtmlToken::NameIs(Str nameToFind) const {
-    return str::EqI(name, nameToFind);
-}
-
-// for now just ignores any namespace qualifier
-// (i.e. succeeds for "opf:content" with name="content" and any value of ns)
-bool HtmlToken::NameIsNS(Str nameToCheck, Str /*ns*/) const {
-    // ReportIf(!ns);
-    return IsNameWithNS(name, nameToCheck);
+bool HtmlToken::NameIs(Str nameToFind, HtmlNameMatch match) const {
+    return match == HtmlNameMatch::Local ? LocalNameIs(name, nameToFind) : str::EqI(name, nameToFind);
 }
 
 Str HtmlToken::GetReparsePoint() const {
@@ -480,7 +430,7 @@ Str HtmlToken::GetReparsePoint() const {
     return reparsePoint;
 }
 
-AttrInfo* HtmlToken::GetAttrByName(Str attrName) {
+AttrInfo* HtmlToken::GetAttrByName(Str attrName, HtmlNameMatch match) {
     if (!node || (node->type != GUMBO_NODE_ELEMENT && node->type != GUMBO_NODE_TEMPLATE)) {
         return nullptr;
     }
@@ -489,23 +439,7 @@ AttrInfo* HtmlToken::GetAttrByName(Str attrName) {
         const GumboAttribute* attr = (const GumboAttribute*)attrs->data[i];
         attrInfo.name = Str(attr->name);
         attrInfo.val = Str(attr->value);
-        if (attrInfo.NameIs(attrName)) {
-            return &attrInfo;
-        }
-    }
-    return nullptr;
-}
-
-AttrInfo* HtmlToken::GetAttrByNameNS(Str attrName, Str attrNS) {
-    if (!node || (node->type != GUMBO_NODE_ELEMENT && node->type != GUMBO_NODE_TEMPLATE)) {
-        return nullptr;
-    }
-    const GumboVector* attrs = &node->v.element.attributes;
-    for (unsigned int i = 0; i < attrs->length; i++) {
-        const GumboAttribute* attr = (const GumboAttribute*)attrs->data[i];
-        attrInfo.name = Str(attr->name);
-        attrInfo.val = Str(attr->value);
-        if (attrInfo.NameIsNS(attrName, attrNS)) {
+        if (attrInfo.NameIs(attrName, match)) {
             return &attrInfo;
         }
     }
@@ -745,21 +679,21 @@ bool GumboHtmlParser_UnitTest() {
     token.SetTag(HtmlToken::StartTag, StrL("opf:metadata"));
     Str name = StrL("metadata!");
     name.len--;
-    if (token.NameIs(name) || !token.NameIsNS(name, StrL("ignored")) || !token.NameIs(StrL("OPF:METADATA")) ||
-        token.NameIsNS(StrL("opf:metadata"), StrL("ignored"))) {
+    if (token.NameIs(name) || !token.NameIs(name, HtmlNameMatch::Local) || !token.NameIs(StrL("OPF:METADATA")) ||
+        token.NameIs(StrL("opf:metadata"), HtmlNameMatch::Local)) {
         return false;
     }
     Str xml = StrL("<opf:metadata q:href='book'>text</opf:metadata>");
     GumboOptions opts = GumboMakeXmlFragmentOptions();
     GumboOutput* doc = gumbo_parse_with_options(&opts, xml.s, (size_t)len(xml));
-    const GumboNode* node = GumboFindDescendantByTagNS(doc->document, name, StrL("ignored"));
+    const GumboNode* node = GumboFindDescendantByTag(doc->document, name, HtmlNameMatch::Local);
     bool ok = node && !GumboFindDescendantByTag(doc->document, name) &&
               GumboFindDescendantByTag(doc->document, StrL("opf:metadata")) == node &&
-              GumboTagNameIsNS(node, StrL("opf:metadata"), StrL("ignored"));
+              GumboTagNameIs(node, StrL("opf:metadata"), HtmlNameMatch::Local);
     token.node = node;
     ok = ok && !token.GetAttrByName(StrL("href"));
-    AttrInfo* attr = token.GetAttrByNameNS(StrL("href"), StrL("ignored"));
-    ok = ok && attr && str::Eq(attr->val, StrL("book")) && !attr->NameIsNS(StrL("q:href"), StrL("ignored")) &&
+    AttrInfo* attr = token.GetAttrByName(StrL("href"), HtmlNameMatch::Local);
+    ok = ok && attr && str::Eq(attr->val, StrL("book")) && !attr->NameIs(StrL("q:href"), HtmlNameMatch::Local) &&
          token.GetAttrByName(StrL("Q:HREF"));
     gumbo_destroy_output_iter(&opts, doc);
     return ok;

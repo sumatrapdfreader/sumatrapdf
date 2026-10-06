@@ -35,6 +35,7 @@ To write new regression test:
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
+#include "GumboHtmlParser.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 // For Regress03 (Text Search)

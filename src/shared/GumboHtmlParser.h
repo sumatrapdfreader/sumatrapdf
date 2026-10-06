@@ -5,13 +5,16 @@ extern "C" {
 #include "../../ext/a-gumbo/gumbo.h"
 }
 
-bool GumboTagNameIs(const GumboNode* node, Str name);
-bool GumboTagNameIsNS(const GumboNode* node, Str name, Str ns);
+enum class HtmlNameMatch {
+    Exact,
+    Local
+};
+
+bool GumboTagNameIs(const GumboNode* node, Str name, HtmlNameMatch match = HtmlNameMatch::Exact);
 
 const GumboNode* GumboFindChildByTag(const GumboNode* node, Str name);
 
-const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name);
-const GumboNode* GumboFindDescendantByTagNS(const GumboNode* node, Str name, Str ns);
+const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name, HtmlNameMatch match = HtmlNameMatch::Exact);
 
 TempStr GumboAttributeValueTemp(const GumboNode* node, const char* name);
 
@@ -27,8 +30,7 @@ struct AttrInfo {
     Str name;
     Str val;
 
-    bool NameIs(Str s) const;
-    bool NameIsNS(Str nameToCheck, Str ns) const;
+    bool NameIs(Str s, HtmlNameMatch match = HtmlNameMatch::Exact) const;
     bool ValIs(Str s) const;
 };
 
@@ -59,10 +61,8 @@ struct HtmlToken {
     HtmlTag tag = Tag_NotFound;
     const GumboNode* node = nullptr;
 
-    bool NameIs(Str nameToFind) const;
-    bool NameIsNS(Str nameToCheck, Str ns) const;
-    AttrInfo* GetAttrByName(Str name);
-    AttrInfo* GetAttrByNameNS(Str name, Str attrNS);
+    bool NameIs(Str nameToFind, HtmlNameMatch match = HtmlNameMatch::Exact) const;
+    AttrInfo* GetAttrByName(Str name, HtmlNameMatch match = HtmlNameMatch::Exact);
 
   private:
     AttrInfo attrInfo;

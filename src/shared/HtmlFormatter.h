@@ -163,7 +163,7 @@ struct HtmlFormatter {
     void HandleTagBr();
     void HandleTagP(HtmlToken* t, bool isDiv = false);
     void HandleTagFont(HtmlToken* t);
-    bool HandleTagA(HtmlToken* t, ::Str linkAttr = StrL("href"), ::Str attrNS = ::Str());
+    bool HandleTagA(HtmlToken* t, ::Str linkAttr = StrL("href"), HtmlNameMatch match = HtmlNameMatch::Exact);
     void HandleTagHx(HtmlToken* t);
     void HandleTagList(HtmlToken* t);
     void HandleTagPre(HtmlToken* t);

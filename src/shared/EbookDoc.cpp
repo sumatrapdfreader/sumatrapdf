@@ -370,11 +370,6 @@ static const GumboVector* GumboChildrenOf(const GumboNode* node) {
 
 /* ********** EPUB ********** */
 
-static constexpr Str kEpubContainerNs = StrL("urn:oasis:names:tc:opendocument:xmlns:container");
-static constexpr Str kEpubOpfNs = StrL("http://www.idpf.org/2007/opf");
-static constexpr Str kEpubNcxNs = StrL("http://www.daisy.org/z3986/2005/ncx/");
-static constexpr Str kEpubEncNs = StrL("http://www.w3.org/2001/04/xmlenc#");
-
 EpubDoc::EpubDoc(Str fileName) {
     str::ReplaceWithCopy(&this->fileName, fileName);
     archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
@@ -416,7 +411,7 @@ static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
         if (!node) {
             continue;
         }
-        if (GumboTagNameIsNS(node, StrL("CipherReference"), kEpubEncNs)) {
+        if (GumboTagNameIs(node, StrL("CipherReference"), HtmlNameMatch::Local)) {
             TempStr uri = GumboAttributeValueTemp(node, "URI");
             if (uri) {
                 uri = url::DecodeTemp(uri);
@@ -449,7 +444,7 @@ bool EpubDoc::Load() {
     }
 
     // only consider the first <rootfile> element (default rendition)
-    node = GumboFindDescendantByTagNS(node, StrL("rootfile"), kEpubContainerNs);
+    node = GumboFindDescendantByTag(node, StrL("rootfile"), HtmlNameMatch::Local);
     if (!node) {
         return false;
     }
@@ -479,7 +474,7 @@ bool EpubDoc::Load() {
     if (!node) {
         return false;
     }
-    node = GumboFindDescendantByTagNS(node, StrL("manifest"), kEpubOpfNs);
+    node = GumboFindDescendantByTag(node, StrL("manifest"), HtmlNameMatch::Local);
     if (!node) {
         return false;
     }
@@ -542,7 +537,7 @@ bool EpubDoc::Load() {
         }
     }
 
-    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("spine"), kEpubOpfNs);
+    node = GumboFindDescendantByTag(contentDoc.Document(), StrL("spine"), HtmlNameMatch::Local);
     if (!node) {
         return false;
     }
@@ -566,7 +561,7 @@ bool EpubDoc::Load() {
     const GumboVector* spineChildren = GumboChildrenOf(spine);
     for (unsigned int i = 0; spineChildren && i < spineChildren->length; i++) {
         node = (const GumboNode*)spineChildren->data[i];
-        if (!GumboTagNameIsNS(node, StrL("itemref"), kEpubOpfNs)) {
+        if (!GumboTagNameIs(node, StrL("itemref"), HtmlNameMatch::Local)) {
             continue;
         }
         TempStr idref = GumboAttributeValueTemp(node, "idref");
@@ -629,9 +624,9 @@ static void ParseMetadata(Str content, Props& props) {
     HtmlToken* tok;
 
     while ((tok = pullParser.Next()) != nullptr) {
-        if (tok->IsStartTag() && tok->NameIsNS(StrL("metadata"), kEpubOpfNs)) {
+        if (tok->IsStartTag() && tok->NameIs(StrL("metadata"), HtmlNameMatch::Local)) {
             insideMetadata++;
-        } else if (tok->IsEndTag() && tok->NameIsNS(StrL("metadata"), kEpubOpfNs)) {
+        } else if (tok->IsEndTag() && tok->NameIs(StrL("metadata"), HtmlNameMatch::Local)) {
             insideMetadata--;
         }
         if (!insideMetadata) {
@@ -801,7 +796,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     HtmlToken* tok;
     // skip to the start of the navMap
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
-        if (tok->IsStartTag() && tok->NameIsNS(StrL("navMap"), kEpubNcxNs)) {
+        if (tok->IsStartTag() && tok->NameIs(StrL("navMap"), HtmlNameMatch::Local)) {
             break;
         }
     }
@@ -812,8 +807,8 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     TempStr itemText, itemSrc;
     int level = 0;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
-           (!tok->IsEndTag() || !tok->NameIsNS(StrL("navMap"), kEpubNcxNs))) {
-        if (tok->IsTag() && tok->NameIsNS(StrL("navPoint"), kEpubNcxNs)) {
+           (!tok->IsEndTag() || !tok->NameIs(StrL("navMap"), HtmlNameMatch::Local))) {
+        if (tok->IsTag() && tok->NameIs(StrL("navPoint"), HtmlNameMatch::Local)) {
             if (itemText) {
                 visitor->Visit(itemText, itemSrc, level);
                 itemText = {};
@@ -824,7 +819,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             } else if (tok->IsEndTag() && level > 0) {
                 level--;
             }
-        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("text"), kEpubNcxNs)) {
+        } else if (tok->IsStartTag() && tok->NameIs(StrL("text"), HtmlNameMatch::Local)) {
             tok = parser.Next();
             if (tok == nullptr || tok->IsError()) {
                 break;
@@ -832,7 +827,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             if (tok->IsText()) {
                 itemText = strconv::HtmlUtf8ToStrTemp(tok->s);
             }
-        } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS(StrL("content"), kEpubNcxNs)) {
+        } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIs(StrL("content"), HtmlNameMatch::Local)) {
             AttrInfo* attrInfo = tok->GetAttrByName(StrL("src"));
             if (attrInfo) {
                 TempStr src = NormalizeURLTemp(attrInfo->val, pagePath);
@@ -915,7 +910,7 @@ Str EpubCoverImageData(Str path) {
     }
     Str container = Str(containerFi->data, containerFi->fileSizeUncompressed);
     GumboDoc containerDoc(container, true);
-    const GumboNode* node = GumboFindDescendantByTagNS(containerDoc.Document(), StrL("rootfile"), kEpubContainerNs);
+    const GumboNode* node = GumboFindDescendantByTag(containerDoc.Document(), StrL("rootfile"), HtmlNameMatch::Local);
     TempStr contentPath = url::DecodeTemp(GumboAttributeValueTemp(node, "full-path"));
     auto* contentFi = len(contentPath) > 0 ? archive->GetFileDataByName(contentPath) : nullptr;
     if (!contentFi || !contentFi->data) {
@@ -926,7 +921,7 @@ Str EpubCoverImageData(Str path) {
     GumboDoc contentDoc(content, true);
 
     TempStr coverId{};
-    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("metadata"), kEpubOpfNs);
+    node = GumboFindDescendantByTag(contentDoc.Document(), StrL("metadata"), HtmlNameMatch::Local);
     const GumboVector* children = GumboChildrenOf(node);
     for (unsigned int i = 0; children && i < children->length; i++) {
         node = (const GumboNode*)children->data[i];
@@ -937,7 +932,7 @@ Str EpubCoverImageData(Str path) {
     }
 
     TempStr href{};
-    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("manifest"), kEpubOpfNs);
+    node = GumboFindDescendantByTag(contentDoc.Document(), StrL("manifest"), HtmlNameMatch::Local);
     children = GumboChildrenOf(node);
     for (unsigned int i = 0; children && i < children->length; i++) {
         node = (const GumboNode*)children->data[i];
@@ -966,9 +961,6 @@ Str EpubCoverImageData(Str path) {
 }
 
 /* ********** FictionBook (FB2) ********** */
-
-static constexpr Str kFb2MainNs = StrL("http://www.gribuser.ru/xml/fictionbook/2.0");
-static constexpr Str kFb2XlinkNs = StrL("http://www.w3.org/1999/xlink");
 
 Fb2Doc::Fb2Doc(Str fileName) : fileName(str::Dup(fileName)) {}
 
@@ -1082,11 +1074,11 @@ bool Fb2Doc::Load(Str srcData) {
             hasToc = true;
         } else if (inBody) { // NOLINT(bugprone-branch-clone): skipping body content is its own case
             continue;
-        } else if (inTitleInfo && tok->IsEndTag() && tok->NameIsNS(StrL("title-info"), kFb2MainNs)) {
+        } else if (inTitleInfo && tok->IsEndTag() && tok->NameIs(StrL("title-info"), HtmlNameMatch::Local)) {
             inTitleInfo--;
-        } else if (inDocInfo && tok->IsEndTag() && tok->NameIsNS(StrL("document-info"), kFb2MainNs)) {
+        } else if (inDocInfo && tok->IsEndTag() && tok->NameIs(StrL("document-info"), HtmlNameMatch::Local)) {
             inDocInfo--;
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("book-title"), kFb2MainNs)) {
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIs(StrL("book-title"), HtmlNameMatch::Local)) {
             tok = parser.Next();
             if (tok == nullptr || tok->IsError()) {
                 break;
@@ -1095,7 +1087,8 @@ bool Fb2Doc::Load(Str srcData) {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddPropOwned(props, DocProp::Title, val);
             }
-        } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS(StrL("author"), kFb2MainNs)) {
+        } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() &&
+                   tok->NameIs(StrL("author"), HtmlNameMatch::Local)) {
             // an FB2 <author> is structured: first-name / middle-name / last-name
             // next to home-page / email / id, which are not part of the name.
             // Taking every text node would give "Ivan Petrov https://... ivan@..."
@@ -1108,14 +1101,14 @@ bool Fb2Doc::Load(Str srcData) {
                 return cur ? str::JoinTemp(cur, StrL(" "), add) : add;
             };
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
-                   !(tok->IsEndTag() && tok->NameIsNS(StrL("author"), kFb2MainNs))) {
+                   !(tok->IsEndTag() && tok->NameIs(StrL("author"), HtmlNameMatch::Local))) {
                 if (tok->IsStartTag() || tok->IsEndTag()) {
-                    bool isName = tok->NameIsNS(StrL("first-name"), kFb2MainNs) ||
-                                  tok->NameIsNS(StrL("middle-name"), kFb2MainNs) ||
-                                  tok->NameIsNS(StrL("last-name"), kFb2MainNs);
+                    bool isName = tok->NameIs(StrL("first-name"), HtmlNameMatch::Local) ||
+                                  tok->NameIs(StrL("middle-name"), HtmlNameMatch::Local) ||
+                                  tok->NameIs(StrL("last-name"), HtmlNameMatch::Local);
                     if (isName) {
                         inNamePart = tok->IsStartTag();
-                    } else if (tok->NameIsNS(StrL("nickname"), kFb2MainNs)) {
+                    } else if (tok->NameIs(StrL("nickname"), HtmlNameMatch::Local)) {
                         inNickname = tok->IsStartTag();
                     }
                     continue;
@@ -1145,19 +1138,19 @@ bool Fb2Doc::Load(Str srcData) {
                     }
                 }
             }
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), kFb2MainNs)) {
-            AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), kFb2MainNs);
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIs(StrL("date"), HtmlNameMatch::Local)) {
+            AttrInfo* attr = tok->GetAttrByName(StrL("value"), HtmlNameMatch::Local);
             if (attr) {
                 TempStr val = ResolveHtmlEntitiesTemp(attr->val);
                 AddPropOwned(props, DocProp::CreationDate, val);
             }
-        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), kFb2MainNs)) {
-            AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), kFb2MainNs);
+        } else if (inDocInfo && tok->IsStartTag() && tok->NameIs(StrL("date"), HtmlNameMatch::Local)) {
+            AttrInfo* attr = tok->GetAttrByName(StrL("value"), HtmlNameMatch::Local);
             if (attr) {
                 TempStr val = ResolveHtmlEntitiesTemp(attr->val);
                 AddPropOwned(props, DocProp::ModificationDate, val);
             }
-        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("program-used"), kFb2MainNs)) {
+        } else if (inDocInfo && tok->IsStartTag() && tok->NameIs(StrL("program-used"), HtmlNameMatch::Local)) {
             tok = parser.Next();
             if (tok == nullptr || tok->IsError()) {
                 break;
@@ -1166,23 +1159,23 @@ bool Fb2Doc::Load(Str srcData) {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddPropOwned(props, DocProp::CreatorApp, val);
             }
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("coverpage"), kFb2MainNs)) {
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIs(StrL("coverpage"), HtmlNameMatch::Local)) {
             tok = parser.Next();
             if (tok && tok->IsText()) {
                 tok = parser.Next();
             }
             if (tok && tok->IsEmptyElementEndTag() && Tag_Image == tok->tag) {
-                AttrInfo* attr = tok->GetAttrByNameNS(StrL("href"), kFb2XlinkNs);
+                AttrInfo* attr = tok->GetAttrByName(StrL("href"), HtmlNameMatch::Local);
                 if (attr) {
                     str::ReplaceWithCopy(&coverImage, attr->val);
                 }
             }
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("annotation"), kFb2MainNs)) {
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIs(StrL("annotation"), HtmlNameMatch::Local)) {
             // FB2 annotation is nested markup (often one or more <p>); collect all text for
             // Document Properties (Ctrl+D) as Subject.
             TempStr annotation;
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
-                   !(tok->IsEndTag() && tok->NameIsNS(StrL("annotation"), kFb2MainNs))) {
+                   !(tok->IsEndTag() && tok->NameIs(StrL("annotation"), HtmlNameMatch::Local))) {
                 if (tok->IsText()) {
                     TempStr part = ResolveHtmlEntitiesTemp(tok->s);
                     if (annotation) {
@@ -1200,11 +1193,11 @@ bool Fb2Doc::Load(Str srcData) {
             }
         } else if (inTitleInfo || inDocInfo) {
             continue;
-        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("title-info"), kFb2MainNs)) {
+        } else if (tok->IsStartTag() && tok->NameIs(StrL("title-info"), HtmlNameMatch::Local)) {
             inTitleInfo++;
-        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("document-info"), kFb2MainNs)) {
+        } else if (tok->IsStartTag() && tok->NameIs(StrL("document-info"), HtmlNameMatch::Local)) {
             inDocInfo++;
-        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("binary"), kFb2MainNs)) {
+        } else if (tok->IsStartTag() && tok->NameIs(StrL("binary"), HtmlNameMatch::Local)) {
             ExtractImage(&parser, tok);
         }
     }
@@ -1214,7 +1207,7 @@ bool Fb2Doc::Load(Str srcData) {
 
 void Fb2Doc::ExtractImage(GumboHtmlParser* parser, HtmlToken* tok) {
     TempStr id;
-    AttrInfo* attrInfo = tok->GetAttrByNameNS(StrL("id"), kFb2MainNs);
+    AttrInfo* attrInfo = tok->GetAttrByName(StrL("id"), HtmlNameMatch::Local);
     if (attrInfo) {
         id = url::DecodeTemp(attrInfo->val);
     }
