@@ -27,6 +27,7 @@ constexpr int kMaxPerfLogBytes = 256 * 1024 * 1024;
 constexpr int kMaxPerfLogDepth = 10;
 constexpr int kSymCap = 64 * 1024;
 constexpr int kLineBuf = 1024;
+constexpr Str kHexDigits = StrL("0123456789abcdef");
 
 struct PerfSym {
     const void* addr;
@@ -55,7 +56,7 @@ static int AppendHex(char* d, u64 v) {
     char tmp[16];
     int n = 0;
     do {
-        tmp[n++] = "0123456789abcdef"[v & 15];
+        tmp[n++] = kHexDigits.s[v & 15];
         v >>= 4;
     } while (v);
     for (int i = 0; i < n; i++) {
@@ -227,12 +228,8 @@ static int ReadHexAddr(Str hex, u64& value) {
     int n = 2;
     for (; n < len(hex); n++) {
         char c = hex.s[n];
-        int d;
-        if (c >= '0' && c <= '9') {
-            d = c - '0';
-        } else if (c >= 'a' && c <= 'f') {
-            d = c - 'a' + 10;
-        } else {
+        int d = str::IndexOfChar(kHexDigits, c);
+        if (d < 0) {
             break;
         }
         value = (value << 4) | (u64)d;
