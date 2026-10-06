@@ -188,27 +188,17 @@ int Synchronizer::Create(Str pdffilename, EngineBase* engine, Synchronizer** syn
 
 // PDFSYNC synchronizer
 
-static int SyncLineLen(Str data, int off) {
-    int end = off;
-    int n = data.len;
-    while (end < n && ((u8*)data.s)[end]) {
-        end++;
+// Read one line and skip its NUL terminators, including blank lines.
+static Str ReadSyncLine(Str& rest) {
+    if (len(rest) == 0) {
+        return {};
     }
-    return end - off;
-}
-
-static Str SyncLineAt(Str data, int off) {
-    return Str((char*)((u8*)data.s + off), SyncLineLen(data, off));
-}
-
-// move to the next line in a list of zero-terminated lines
-static int SyncAdvanceLine(Str data, int off) {
-    off += SyncLineLen(data, off);
-    int n = data.len;
-    while (off < n && !((u8*)data.s)[off]) {
-        off++;
+    Str line;
+    str::CutChar(rest, 0, &line, &rest);
+    while (len(rest) > 0 && rest.s[0] == 0) {
+        rest = Str(rest.s + 1, len(rest) - 1);
     }
-    return off < n ? off : -1;
+    return line;
 }
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
@@ -229,14 +219,14 @@ int Pdfsync::RebuildIndexIfNeeded() {
     // parse preamble (jobname and version marker)
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransCharsInPlace(blob, StrL("*/"), StrL(" \\"));
-    TempStr jobName = strconv::AnsiToUtf8Temp(SyncLineAt(data, 0));
+    Str rest = data;
+    TempStr jobName = strconv::AnsiToUtf8Temp(ReadSyncLine(rest));
     jobName = str::JoinTemp(jobName, StrL(".tex"));
     jobName = PrependDirTemp(jobName);
 
-    int lineOff = SyncAdvanceLine(data, 0);
+    Str version = ReadSyncLine(rest);
     UINT versionNumber = 0;
-    if (lineOff < 0 || str::IsNull(str::Parse(SyncLineAt(data, lineOff), "version %u", &versionNumber)) ||
-        versionNumber != 1) {
+    if (str::IsNull(version) || str::IsNull(str::Parse(version, "version %u", &versionNumber)) || versionNumber != 1) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
 
@@ -262,12 +252,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
     // parse data
     int maxPageNo = engine->PageCount();
-    while (true) {
-        lineOff = SyncAdvanceLine(data, lineOff);
-        if (lineOff < 0) {
-            break;
-        }
-        Str line = SyncLineAt(data, lineOff);
+    while (Str line = ReadSyncLine(rest)) {
         switch (line.s[0]) {
             case 'l':
                 psline.file = VecLast(filestack);
