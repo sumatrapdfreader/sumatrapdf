@@ -1002,14 +1002,16 @@ bool Fb2Doc::Load(Str srcData) {
             inTitleInfo--;
         } else if (inDocInfo && tok->IsEndTag() && tok->NameIs(StrL("document-info"), HtmlNameMatch::Local)) {
             inDocInfo--;
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIs(StrL("book-title"), HtmlNameMatch::Local)) {
+        } else if (tok->IsStartTag() && ((inTitleInfo && tok->NameIs(StrL("book-title"), HtmlNameMatch::Local)) ||
+                                         (inDocInfo && tok->NameIs(StrL("program-used"), HtmlNameMatch::Local)))) {
+            DocProp prop = tok->NameIs(StrL("book-title"), HtmlNameMatch::Local) ? DocProp::Title : DocProp::CreatorApp;
             tok = parser.Next();
             if (tok == nullptr || tok->IsError()) {
                 break;
             }
             if (tok->IsText()) {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
-                AddPropOwned(props, DocProp::Title, val);
+                AddPropOwned(props, prop, val);
             }
         } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() &&
                    tok->NameIs(StrL("author"), HtmlNameMatch::Local)) {
@@ -1062,26 +1064,11 @@ bool Fb2Doc::Load(Str srcData) {
                     }
                 }
             }
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIs(StrL("date"), HtmlNameMatch::Local)) {
+        } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIs(StrL("date"), HtmlNameMatch::Local)) {
             AttrInfo attr = tok->GetAttrByName(StrL("value"), HtmlNameMatch::Local);
             if (attr) {
                 TempStr val = ResolveHtmlEntitiesTemp(attr.val);
-                AddPropOwned(props, DocProp::CreationDate, val);
-            }
-        } else if (inDocInfo && tok->IsStartTag() && tok->NameIs(StrL("date"), HtmlNameMatch::Local)) {
-            AttrInfo attr = tok->GetAttrByName(StrL("value"), HtmlNameMatch::Local);
-            if (attr) {
-                TempStr val = ResolveHtmlEntitiesTemp(attr.val);
-                AddPropOwned(props, DocProp::ModificationDate, val);
-            }
-        } else if (inDocInfo && tok->IsStartTag() && tok->NameIs(StrL("program-used"), HtmlNameMatch::Local)) {
-            tok = parser.Next();
-            if (tok == nullptr || tok->IsError()) {
-                break;
-            }
-            if (tok->IsText()) {
-                TempStr val = ResolveHtmlEntitiesTemp(tok->s);
-                AddPropOwned(props, DocProp::CreatorApp, val);
+                AddPropOwned(props, inTitleInfo ? DocProp::CreationDate : DocProp::ModificationDate, val);
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIs(StrL("coverpage"), HtmlNameMatch::Local)) {
             tok = parser.Next();
