@@ -152,7 +152,7 @@ void MobiDoc_UnitTests() {
         MobiDoc* doc = MobiDoc::CreateFromData(MkMobi(0xfffffff0));
         utassert(doc != nullptr);
         utassert(doc->imageFirstRec == 0);
-        utassert(doc->imagesCount == 0);
+        utassert(len(doc->images) == 0);
         delete doc;
     }
 
@@ -161,7 +161,7 @@ void MobiDoc_UnitTests() {
         MobiDoc* doc = MobiDoc::CreateFromData(MkMobi(kNumRecs));
         utassert(doc != nullptr);
         utassert(doc->imageFirstRec == 0);
-        utassert(doc->imagesCount == 0);
+        utassert(len(doc->images) == 0);
         delete doc;
     }
 

@@ -23,7 +23,7 @@ struct MobiDoc {
     int imageFirstRec = 0; // 0 if no images
     int coverImageRec = 0; // 0 if no cover image
 
-    Str* images = nullptr;
+    Vec<Str> images;
 
     HuffDicDecompressor* huffDic = nullptr;
 
@@ -41,8 +41,6 @@ struct MobiDoc {
     void MaybeSynthesizeImagePages();
 
     str::Builder doc;
-
-    int imagesCount = 0;
 
     ~MobiDoc();
 

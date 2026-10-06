@@ -351,7 +351,6 @@ MobiDoc::MobiDoc(Str filePath) {
 MobiDoc::~MobiDoc() {
     FreeProps(props);
     str::Free(fileName);
-    free(images);
     delete huffDic;
     delete pdbReader;
 }
@@ -409,7 +408,7 @@ bool MobiDoc::ParseHeader() {
     docUncompressedSize = (int)palmDocHdr.uncompressedDocSize;
 
     if (kPalmDocHeaderLen == recSize) {
-        // TODO: calculate imageFirstRec / imagesCount
+        // TODO: calculate imageFirstRec
         return PdbDocType::Mobipocket != docType;
     }
     if (kPalmDocHeaderLen + kMobiHeaderMinLen > recSize) {
@@ -439,12 +438,6 @@ bool MobiDoc::ParseHeader() {
     // a negative int and index records before the first one
     if (mobiHdr.imageFirstRec < (u32)pdbReader->GetRecordCount()) {
         imageFirstRec = (int)mobiHdr.imageFirstRec;
-        if (0 == imageFirstRec) {
-            // I don't think this should ever happen but I've seen it
-            imagesCount = 0;
-        } else {
-            imagesCount = pdbReader->GetRecordCount() - imageFirstRec;
-        }
     }
     // compare unsigned: a hdrLen >= 0x80000000 would pass as a negative int
     // and the EXTH header would be read far past the end of the record
@@ -620,12 +613,11 @@ bool MobiDoc::LoadImage(int imageNo) {
 }
 
 void MobiDoc::LoadImages() {
-    if (0 == imagesCount) {
+    if (imageFirstRec == 0 || !VecResize(images, pdbReader->GetRecordCount() - imageFirstRec)) {
         return;
     }
-    images = AllocArray<Str>(imagesCount);
 
-    for (int i = 0; i < imagesCount; i++) {
+    for (int i = 0; i < len(images); i++) {
         if (!LoadImage(i)) {
             return;
         }
@@ -637,7 +629,7 @@ void MobiDoc::LoadImages() {
 // returns nullptr if there is no image (e.g. it's not a format we
 // recognize)
 Str MobiDoc::GetImage(int imgRecIndex) const {
-    if ((imgRecIndex > (int)imagesCount) || (imgRecIndex < 1)) {
+    if ((imgRecIndex > len(images)) || (imgRecIndex < 1)) {
         return {};
     }
     --imgRecIndex;
@@ -652,7 +644,7 @@ Str MobiDoc::GetCoverImage() {
         return {};
     }
     int imageNo = coverImageRec - imageFirstRec;
-    if (imageNo >= imagesCount || len(images[imageNo]) == 0) {
+    if (imageNo >= len(images) || len(images[imageNo]) == 0) {
         return {};
     }
     return images[imageNo];
@@ -797,8 +789,8 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 
 int MobiDoc::CountLoadedImages() const {
     int n = 0;
-    for (int i = 0; i < imagesCount; i++) {
-        if (len(images[i]) > 0) {
+    for (Str image : images) {
+        if (len(image) > 0) {
             n++;
         }
     }
@@ -898,8 +890,8 @@ void MobiDoc::MaybeSynthesizeImagePages() {
     }
 
     int maxImgLen = 0;
-    for (int i = 0; i < imagesCount; i++) {
-        maxImgLen = std::max(maxImgLen, len(images[i]));
+    for (Str image : images) {
+        maxImgLen = std::max(maxImgLen, len(image));
     }
     // Drop HD-media thumbnails (often ~10KB next to 200KB page JPEGs).
     int minKeep = maxImgLen / 8;
@@ -909,7 +901,7 @@ void MobiDoc::MaybeSynthesizeImagePages() {
         coverNo = coverImageRec - imageFirstRec;
     }
     Vec<int> recs;
-    for (int i = 0; i < imagesCount; i++) {
+    for (int i = 0; i < len(images); i++) {
         int imgLen = len(images[i]);
         if (imgLen == 0 || imgLen < minKeep) {
             continue;
