@@ -2065,7 +2065,7 @@ pdf_apply_write_options(fz_context *ctx, pdf_write_options *opts, fz_options *ar
 
 	fz_lookup_option_boolean(ctx, args, "decompress", &opts->do_decompress);
 
-	if (fz_lookup_option_boolean(ctx, args, "compress", &opts->do_compress))
+	if (fz_lookup_option_boolean(ctx, args, "compress", &opts->do_compress) > 0)
 	{}
 	else if (fz_lookup_option_enum(ctx, args, "compress", &opts->do_compress, compressions) < 0)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown compression method in options");

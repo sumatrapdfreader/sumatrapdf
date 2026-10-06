@@ -1,0 +1,20 @@
+pdf write: accept compress=flate and compress=brotli
+
+fz_lookup_option_boolean returns -1 when the value is not a boolean.
+A bare if() treats that as success, so the enum (flate, brotli) is
+never tried and fz_validate_options throws "invalid pdf options".
+The sibling checks for encrypt, garbage and appearance already use > 0.
+---
+diff --git a/source/pdf/pdf-write.c b/source/pdf/pdf-write.c
+index d30362231..1b05d5583 100644
+--- a/source/pdf/pdf-write.c
++++ b/source/pdf/pdf-write.c
+@@ -2065,7 +2065,7 @@ pdf_apply_write_options(fz_context *ctx, pdf_write_options *opts, fz_options *ar
+ 
+ 	fz_lookup_option_boolean(ctx, args, "decompress", &opts->do_decompress);
+ 
+-	if (fz_lookup_option_boolean(ctx, args, "compress", &opts->do_compress))
++	if (fz_lookup_option_boolean(ctx, args, "compress", &opts->do_compress) > 0)
+ 	{}
+ 	else if (fz_lookup_option_enum(ctx, args, "compress", &opts->do_compress, compressions) < 0)
+ 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown compression method in options");

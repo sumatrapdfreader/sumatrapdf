@@ -1,0 +1,28 @@
+pdfmerge: report a bad -O instead of aborting
+
+pdf_parse_write_options throws on an unknown option. merge called it
+outside fz_try, so the uncaught throw wrote through a null pointer
+and uploaded a crash dump.
+---
+diff --git a/source/tools/pdfmerge.c b/source/tools/pdfmerge.c
+index cbc735119..98bf048c0 100644
+--- a/source/tools/pdfmerge.c
++++ b/source/tools/pdfmerge.c
+@@ -344,7 +344,16 @@ int pdfmerge_main(int argc, char **argv)
+ 		exit(1);
+ 	}
+ 
+-	pdf_parse_write_options(ctx, &opts, flags);
++	fz_try(ctx)
++		pdf_parse_write_options(ctx, &opts, flags);
++	fz_catch(ctx)
++	{
++		fz_report_error(ctx);
++		fz_log_error(ctx, "Cannot parse PDF write options.");
++		fz_flush_warnings(ctx);
++		fz_drop_context(ctx);
++		return 1;
++	}
+ 
+ 	fz_try(ctx)
+ 	{
