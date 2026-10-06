@@ -585,7 +585,7 @@ void MarkdownModel::ScrollTo(int pageNo, RectF rect, float zoom) {
 }
 
 bool MarkdownModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/) {
-    Str url = PageDestGetName(link);
+    Str url = link->GetName();
     if (MaybeLaunchLinkedDoc(url)) {
         return true;
     }

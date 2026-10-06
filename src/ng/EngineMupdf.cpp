@@ -223,7 +223,7 @@ struct PageDestinationMupdf : IPageDestination {
         outline = o;
     }
 
-    RectF GetRect2() override {
+    RectF GetRect() override {
         // Prefer URI-resolved coords (page-level /Fit and /XYZ nulls become
         // kDestUseDefault). outline->x/y are often 0 and would scroll to the
         // bottom of the page in PDF space. FitR keeps width/height on destW/H;
@@ -239,7 +239,7 @@ struct PageDestinationMupdf : IPageDestination {
         return rect;
     }
 
-    RectF GetDestPoint2() override {
+    RectF GetDestPoint() override {
         if (hasResolvedCoords) {
             return RectF{destX, destY, 0, 0};
         }
@@ -249,18 +249,18 @@ struct PageDestinationMupdf : IPageDestination {
         return {};
     }
 
-    float GetZoom2() override { return destZoom; }
+    float GetZoom() override { return destZoom; }
 
     ~PageDestinationMupdf() override {
         str::Free(value);
         str::Free(name);
     }
 
-    Str GetValue2() override;
-    Str GetName2() override;
+    Str GetValue() override;
+    Str GetName() override;
 };
 
-Str PageDestinationMupdf::GetValue2() {
+Str PageDestinationMupdf::GetValue() {
     if (value) {
         return value;
     }
@@ -272,7 +272,7 @@ Str PageDestinationMupdf::GetValue2() {
     return value;
 }
 
-Str PageDestinationMupdf::GetName2() {
+Str PageDestinationMupdf::GetName() {
     if (name) {
         return name;
     }
@@ -6240,7 +6240,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
             // a link that goes somewhere in this document has no URL to show,
             // so show the description the PDF gives it, like other viewers do
             auto* dest = (PageDestinationMupdf*)pel->AsLink();
-            if (dest && len(PageDestGetValue(dest)) == 0) {
+            if (dest && len(dest->GetValue()) == 0) {
                 dest->value = PdfLinkContents(ctx, e->pdfdoc, pdfpage, pageNo, link->rect);
             }
             VecAppend(pageInfo->links, pel);

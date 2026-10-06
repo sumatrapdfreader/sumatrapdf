@@ -541,7 +541,7 @@ static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
     if (len(data) == 0) {
         return;
     }
-    Str fileName = pd->GetValue2();
+    Str fileName = pd->GetValue();
     logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName, pd->embedObjNum,
          data.len);
     // PDF (and other types we can open): load from memory into a tab
@@ -675,8 +675,8 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     if (!win->ctrl->ValidPageNo(pageNo)) {
         return;
     }
-    RectF rect = PageDestGetRect(dest);
-    float zoom = PageDestGetZoom(dest);
+    RectF rect = dest->GetRect();
+    float zoom = dest->GetZoom();
     ScrollTo(pageNo, rect, zoom);
 }
 
@@ -893,7 +893,7 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         return;
     }
 
-    Str destName = PageDestGetName(remoteLink);
+    Str destName = remoteLink->GetName();
     if (destName) {
         CleanRemoteDestNameInPlace(destName);
         IPageDestination* dest = targetWin->ctrl->GetNamedDest(destName);

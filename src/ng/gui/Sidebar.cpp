@@ -1166,7 +1166,7 @@ void SidebarView::OnTocRowHover(SidebarView* self, gp::Ctx* cx, const gp::HoverE
     IPageDestination* link = item->GetPageDestination();
     Kind k = link ? link->GetKind() : nullptr;
     if (link && k != kindDestinationScrollTo && k != kindDestinationNone) {
-        Str path = PageDestGetValue(link);
+        Str path = link->GetValue();
         if (len(path) == 0) {
             path = item->title;
         }

@@ -2250,7 +2250,7 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
             if (len(data) == 0) {
                 return;
             }
-            Str fileName = pd->GetValue2();
+            Str fileName = pd->GetValue();
             TempStr dir = path::GetDirTemp(filePath);
             fileName = path::GetBaseNameTemp(fileName);
             TempStr dstPath = path::JoinTemp(dir, fileName);

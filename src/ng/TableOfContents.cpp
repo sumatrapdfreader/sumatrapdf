@@ -61,7 +61,7 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
     if (k == kindDestinationLaunchURL) {
         Str url = ((PageDestinationURL*)dest)->url;
         if (len(url) == 0) {
-            url = PageDestGetValue(dest);
+            url = dest->GetValue();
         }
         return url ? new PageDestinationURL(url) : nullptr;
     }
@@ -97,10 +97,10 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
         auto* copy = new PageDestination();
         copy->kind = k;
         copy->pageNo = pageNo;
-        copy->rect = PageDestGetRect(dest);
-        copy->zoom = PageDestGetZoom(dest);
-        copy->value = str::Dup(PageDestGetValue(dest));
-        copy->name = str::Dup(PageDestGetName(dest));
+        copy->rect = dest->GetRect();
+        copy->zoom = dest->GetZoom();
+        copy->value = str::Dup(dest->GetValue());
+        copy->name = str::Dup(dest->GetName());
         copy->loc = dest->loc;
         return copy;
     }
@@ -110,7 +110,7 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
         pageNo = tocPageNo;
     }
     if (pageNo < 1) {
-        Str val = PageDestGetValue(dest);
+        Str val = dest->GetValue();
         if (val && IsExternalUrl(val)) {
             return new PageDestinationURL(val);
         }
@@ -118,8 +118,8 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
              tocPageNo);
         return nullptr;
     }
-    RectF r = PageDestGetRect(dest);
-    float zoom = PageDestGetZoom(dest);
+    RectF r = dest->GetRect();
+    float zoom = dest->GetZoom();
     if (k == kindDestinationMupdf) {
         // Prefer resolved anchor; outline x/y can be 0 and scroll to the wrong place
         RectF pt = PageDestGetDestPoint(dest);
@@ -128,7 +128,7 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
                 r = RectF{pt.x, pt.y, kDestUseDefault, kDestUseDefault};
             }
         }
-        zoom = dest->GetZoom2();
+        zoom = dest->GetZoom();
     }
     IPageDestination* copy = NewSimpleDest(pageNo, r, zoom);
     copy->loc = dest->loc;
@@ -887,7 +887,7 @@ MenuModel* BuildTocContextMenu(MainWindow* win, TocItem* dti) {
     Kind destKind = dest ? dest->GetKind() : nullptr;
     if (destKind == kindDestinationLaunchEmbedded) {
         // this is name of the file as set inside the PDF file
-        Str fileName = PageDestGetName(dest);
+        Str fileName = dest->GetName();
         if (!str::EndsWithI(fileName, StrL(".pdf"))) {
             MenuRemove(popup, CmdOpenEmbeddedPDF);
         }
@@ -896,7 +896,7 @@ MenuModel* BuildTocContextMenu(MainWindow* win, TocItem* dti) {
         MenuRemove(popup, CmdOpenEmbeddedPDF);
     }
     if (destKind == kindDestinationAttachment) {
-        Str fileName = PageDestGetName(dest);
+        Str fileName = dest->GetName();
         if (!str::EndsWithI(fileName, StrL(".pdf"))) {
             MenuRemove(popup, CmdOpenAttachment);
         }
@@ -989,7 +989,7 @@ static void SaveEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
         return;
     }
     TempStr dir = path::GetDirTemp(tab->filePath);
-    TempStr dstPath = path::JoinTemp(dir, path::GetBaseNameTemp(PageDestGetName(dest)));
+    TempStr dstPath = path::JoinTemp(dir, path::GetBaseNameTemp(dest->GetName()));
     SaveDataToFile(tab->win, dstPath, data);
     str::Free(data);
 }
@@ -1039,10 +1039,10 @@ void TocContextMenuCommand(MainWindow* win, TocItem* dti, int cmd) {
         case CmdSaveAttachment:
             // hack: the attachment number is saved in pageNo, see
             // PdfLoadAttachments and DestFromAttachment
-            SaveAttachment(win->CurrentTab(), PageDestGetName(dest), pageNo);
+            SaveAttachment(win->CurrentTab(), dest->GetName(), pageNo);
             break;
         case CmdOpenAttachment:
-            OpenAttachment(win->CurrentTab(), PageDestGetName(dest), pageNo);
+            OpenAttachment(win->CurrentTab(), dest->GetName(), pageNo);
             break;
         default:
             break;

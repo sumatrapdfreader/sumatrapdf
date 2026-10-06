@@ -67,7 +67,7 @@ struct PageDestinationDjvuDec : IPageDestination {
         str::Free(value);
     }
 
-    Str GetValue2() override {
+    Str GetValue() override {
         if (value) {
             return value;
         }

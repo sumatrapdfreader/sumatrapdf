@@ -276,7 +276,7 @@ TempStr DestResultTemp(Str pdfPath, int destNo) {
             dest = NthDestInToc(toc->root, destNo, counter);
         }
         if (dest) {
-            out.Append(fmt("dest=%d page=%d zoom=%g\n", destNo, PageDestGetPageNo(dest), PageDestGetZoom(dest)));
+            out.Append(fmt("dest=%d page=%d zoom=%g\n", destNo, PageDestGetPageNo(dest), dest->GetZoom()));
         } else {
             out.Append(fmt("dest=%d NODEST\n", destNo));
         }
@@ -1290,8 +1290,8 @@ TempStr DestZoomNavResultTemp(int destNo, int startZoomPerc, int* exitCodeOut) {
     float zoomAfter = dm->GetZoomVirtual();
 
     out.Append(fmt("OK dest=%d destZoom=%g page=%d landed=%d zoomBefore=%g zoomAfter=%g ignore=%d\n", destNo,
-                   dest ? PageDestGetZoom(dest) : 0.f, dest ? PageDestGetPageNo(dest) : 0, dm->CurrentPageNo(),
-                   zoomBefore, zoomAfter, gSettings->ignoreDestinationZoom ? 1 : 0));
+                   dest ? dest->GetZoom() : 0.f, dest ? PageDestGetPageNo(dest) : 0, dm->CurrentPageNo(), zoomBefore,
+                   zoomAfter, gSettings->ignoreDestinationZoom ? 1 : 0));
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
@@ -1334,7 +1334,7 @@ TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeO
             return finish(fmt("NOTREADY no-dest destNo=%d", destNo), 2);
         }
         GoToTocItem(win, item);
-        return finish(fmt("NAVIGATING dest=%d name=%s", destNo, PageDestGetName(item->dest)), 0);
+        return finish(fmt("NAVIGATING dest=%d name=%s", destNo, item->dest->GetName()), 0);
     }
 
     Point pos = mm->docView->GetScrollPos();
@@ -1545,11 +1545,11 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
             continue;
         }
         nLinks++;
-        Str value = PageDestGetValue(dest);
+        Str value = dest->GetValue();
         TempStr valueShown = str::ReplaceTemp(value, StrL("\r\n"), StrL("|"));
         valueShown = str::ReplaceTemp(valueShown, StrL("\n"), StrL("|"));
         RectF src = el->GetRect();
-        RectF destRc = PageDestGetRect(dest);
+        RectF destRc = dest->GetRect();
         out.Append(fmt("kind=%s page=%d src=%g,%g,%g,%g dest=%g,%g,%g,%g value=%s\n", Str(dest->GetKind()),
                        PageDestGetPageNo(dest), src.x, src.y, src.dx, src.dy, destRc.x, destRc.y, destRc.dx, destRc.dy,
                        valueShown));

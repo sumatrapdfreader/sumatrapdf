@@ -72,7 +72,7 @@ void RefHoverOnCanvasMouseMove(RefHoverState*& s, MainWindow* win, DocController
         IPageDestination* dest = el->AsLink();
         int destPage = PageDestGetPageNo(dest);
         RectF destPt = PageDestGetDestPoint(dest);
-        float destZoom = PageDestGetZoom(dest);
+        float destZoom = dest->GetZoom();
         Point screenPt = Point(x, y);
         int srcPage = el->GetPageNo();
         RectF srcRect = el->GetRect();

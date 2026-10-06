@@ -53,13 +53,13 @@ PageDestination::~PageDestination() {
 }
 
 // string value associated with the destination (e.g. a path or a URL)
-Str PageDestination::GetValue2() {
+Str PageDestination::GetValue() {
     return value;
 }
 
 // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
 // (mainly applicable for links of type "LaunchFile" to PDF documents)
-Str PageDestination::GetName2() {
+Str PageDestination::GetName() {
     return name;
 }
 
@@ -259,7 +259,7 @@ PageDestinationJsMenu::~PageDestinationJsMenu() {
 }
 
 // Hover text: one menu line per row, skipping "-" separators.
-Str PageDestinationJsMenu::GetValue2() {
+Str PageDestinationJsMenu::GetValue() {
     if (tooltip) {
         return tooltip;
     }

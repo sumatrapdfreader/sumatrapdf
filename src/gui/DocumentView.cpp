@@ -266,7 +266,7 @@ struct DocumentViewLinkHandler : ILinkHandler {
     }
 
     void ScrollTo(IPageDestination* dest) override {
-        ScrollToDestination(view, PageDestGetPageNo(dest), PageDestGetRect(dest), PageDestGetZoom(dest));
+        ScrollToDestination(view, PageDestGetPageNo(dest), dest->GetRect(), dest->GetZoom());
     }
 
     void ScrollTo(int pageNo, RectF rect, float zoom) override { ScrollToDestination(view, pageNo, rect, zoom); }

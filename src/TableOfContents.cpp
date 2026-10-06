@@ -54,7 +54,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     if (!link) {
         return;
     }
-    Str path = PageDestGetValue(link);
+    Str path = link->GetValue();
     if (len(path) == 0) {
         path = tocItem->title;
     }
@@ -116,7 +116,7 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
     if (k == kindDestinationLaunchURL) {
         Str url = ((PageDestinationURL*)dest)->url;
         if (len(url) == 0) {
-            url = PageDestGetValue(dest);
+            url = dest->GetValue();
         }
         return url ? new PageDestinationURL(url) : nullptr;
     }
@@ -152,10 +152,10 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
         auto* copy = new PageDestination();
         copy->kind = k;
         copy->pageNo = pageNo;
-        copy->rect = PageDestGetRect(dest);
-        copy->zoom = PageDestGetZoom(dest);
-        copy->value = str::Dup(PageDestGetValue(dest));
-        copy->name = str::Dup(PageDestGetName(dest));
+        copy->rect = dest->GetRect();
+        copy->zoom = dest->GetZoom();
+        copy->value = str::Dup(dest->GetValue());
+        copy->name = str::Dup(dest->GetName());
         copy->loc = dest->loc;
         return copy;
     }
@@ -165,7 +165,7 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
         pageNo = tocPageNo;
     }
     if (pageNo < 1) {
-        Str val = PageDestGetValue(dest);
+        Str val = dest->GetValue();
         if (val && IsExternalUrl(val)) {
             return new PageDestinationURL(val);
         }
@@ -173,8 +173,8 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
              tocPageNo);
         return nullptr;
     }
-    RectF r = PageDestGetRect(dest);
-    float zoom = PageDestGetZoom(dest);
+    RectF r = dest->GetRect();
+    float zoom = dest->GetZoom();
     if (k == kindDestinationMupdf) {
         // Prefer resolved anchor; outline x/y can be 0 and scroll to the wrong place
         RectF pt = PageDestGetDestPoint(dest);
@@ -183,7 +183,7 @@ static IPageDestination* SnapshotDestForDeferredNav(IPageDestination* dest, int 
                 r = RectF{pt.x, pt.y, kDestUseDefault, kDestUseDefault};
             }
         }
-        zoom = dest->GetZoom2();
+        zoom = dest->GetZoom();
     }
     IPageDestination* copy = NewSimpleDest(pageNo, r, zoom);
     copy->loc = dest->loc;
@@ -202,8 +202,8 @@ bool TableOfContents_UnitTestSnapshotNamedDest() {
 
     IPageDestination* snapshot = SnapshotDestForDeferredNav(&source, 7);
     bool ok = snapshot && snapshot->GetKind() == kindDestinationScrollTo && PageDestGetPageNo(snapshot) == 1 &&
-              PageDestGetRect(snapshot) == source.rect && PageDestGetZoom(snapshot) == source.zoom &&
-              str::Eq(PageDestGetValue(snapshot), source.value) && str::Eq(PageDestGetName(snapshot), source.name);
+              snapshot->GetRect() == source.rect && snapshot->GetZoom() == source.zoom &&
+              str::Eq(snapshot->GetValue(), source.value) && str::Eq(snapshot->GetName(), source.name);
     delete snapshot;
     return ok;
 }
@@ -1017,7 +1017,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         // with the embedded stream number
         path = embeddedFile->path;
         // this is name of the file as set inside PDF file
-        fileName = PageDestGetName(dest);
+        fileName = dest->GetName();
         bool canOpenEmbedded = str::EndsWithI(fileName, StrL(".pdf"));
         if (!canOpenEmbedded) {
             MenuRemove(popup, CmdOpenEmbeddedPDF);
@@ -1035,7 +1035,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         // with the embedded stream number
         path = attachment->path;
         // this is name of the file as set inside PDF file
-        fileName = PageDestGetName(dest);
+        fileName = dest->GetName();
         // hack: attachmentNo is saved in pageNo see
         // PdfLoadAttachments and DestFromAttachment
         attachmentNo = pageNo;

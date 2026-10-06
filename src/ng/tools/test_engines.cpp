@@ -232,7 +232,7 @@ static bool ListLinks(Str path) {
                 continue;
             }
             RectF rect = element->GetRect();
-            Str value = PageDestGetValue(dest);
+            Str value = dest->GetValue();
             printf("page %d: %.2f %.2f %.2f %.2f -> %.*s\n", pageNo, rect.x, rect.y, rect.dx, rect.dy, len(value),
                    value.s ? value.s : "");
             linkCount++;

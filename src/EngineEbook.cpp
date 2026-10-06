@@ -1425,7 +1425,7 @@ Location EngineMobi::ResolveDest(IPageDestination* dest) {
     if (dest->loc.IsValid()) {
         return dest->loc;
     }
-    Str filePos = dest->loc.chapter >= 1 ? dest->GetName2() : Str{};
+    Str filePos = dest->loc.chapter >= 1 ? dest->GetName() : Str{};
     if (len(filePos) == 0) {
         return EngineBase::ResolveDest(dest);
     }
@@ -1435,7 +1435,7 @@ Location EngineMobi::ResolveDest(IPageDestination* dest) {
     }
     dest->loc = resolved->loc;
     dest->pageNo = resolved->pageNo;
-    dest->rect = resolved->GetRect2();
+    dest->rect = resolved->GetRect();
     return dest->loc;
 }
 

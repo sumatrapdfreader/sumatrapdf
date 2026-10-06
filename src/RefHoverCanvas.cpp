@@ -59,7 +59,7 @@ bool RefHoverScheduleLink(RefHoverState* s, HWND hwndCanvas, DisplayModel* dm, i
     IPageDestination* dest = el->AsLink();
     int destPage = PageDestGetPageNo(dest);
     RectF destPt = PageDestGetDestPoint(dest);
-    float destZoom = PageDestGetZoom(dest);
+    float destZoom = dest->GetZoom();
     Point screenPt = HwndClientToScreen(hwndCanvas, Point(x, y));
     int srcPage = el->GetPageNo();
     RectF srcRect = el->GetRect();

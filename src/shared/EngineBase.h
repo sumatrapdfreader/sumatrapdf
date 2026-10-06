@@ -132,33 +132,25 @@ struct IPageDestination : KindBase {
     virtual ~IPageDestination() = default;
 
     // rectangle of the destination on the above returned page
-    virtual RectF GetRect2() { return rect; }
+    virtual RectF GetRect() { return rect; }
     // optional zoom level on the above returned page
-    virtual float GetZoom2() { return zoom; }
+    virtual float GetZoom() { return zoom; }
     // anchor point (x, y) on the destination page; rect's dx/dy may be 0.
-    // Default falls back to GetRect2 (callers should still tolerate (0,0)).
-    virtual RectF GetDestPoint2() { return GetRect2(); }
+    // Default falls back to GetRect (callers should still tolerate (0,0)).
+    virtual RectF GetDestPoint() { return GetRect(); }
 
     // string value associated with the destination (e.g. a path or a URL)
-    virtual Str GetValue2() { return {}; }
+    virtual Str GetValue() { return {}; }
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    virtual Str GetName2() { return {}; }
+    virtual Str GetName() { return {}; }
 };
-
-static inline Str PageDestGetName(IPageDestination* dest) {
-    return dest->GetName2();
-}
-
-static inline Str PageDestGetValue(IPageDestination* dest) {
-    return dest->GetValue2();
-}
 
 // true when the destination's value is an address worth copying (a URL or a
 // file path). A link inside the document has no address; its value is the
 // description the PDF gives it, which is for showing, not for copying
 static inline bool PageDestHasAddress(IPageDestination* dest) {
-    if (!dest || len(dest->GetValue2()) == 0) {
+    if (!dest || len(dest->GetValue()) == 0) {
         return false;
     }
     Kind k = dest->GetKind();
@@ -172,23 +164,13 @@ static inline int PageDestGetPageNo(IPageDestination* dest) {
     return dest->pageNo;
 }
 
-// rectangle of the destination on the above returned page
-static inline RectF PageDestGetRect(IPageDestination* dest) {
-    return dest->GetRect2();
-}
-
 // anchor point on the destination page (x, y in user-space). Returns {0,0,0,0}
 // when the destination has no specific anchor.
 static inline RectF PageDestGetDestPoint(IPageDestination* dest) {
     if (!dest) {
         return {};
     }
-    return dest->GetDestPoint2();
-}
-
-// optional zoom level on the above returned page
-static inline float PageDestGetZoom(IPageDestination* dest) {
-    return dest->GetZoom2();
+    return dest->GetDestPoint();
 }
 
 struct PageDestinationURL : IPageDestination {
@@ -208,7 +190,7 @@ struct PageDestinationURL : IPageDestination {
         str::Free(displayUrl);
     }
 
-    Str GetValue2() override {
+    Str GetValue() override {
         if (len(url) == 0) {
             return {};
         }
@@ -241,9 +223,9 @@ struct PageDestinationFile : IPageDestination {
         str::Free(dest);
     }
 
-    Str GetValue2() override { return path; }
+    Str GetValue() override { return path; }
 
-    Str GetName2() override { return dest; }
+    Str GetName() override { return dest; }
 };
 
 struct PageDestination : IPageDestination {
@@ -255,8 +237,8 @@ struct PageDestination : IPageDestination {
 
     ~PageDestination() override;
 
-    Str GetValue2() override;
-    Str GetName2() override;
+    Str GetValue() override;
+    Str GetName() override;
 };
 
 bool ParseJsPopUpMenuItems(Str js, StrVec& items);
@@ -270,7 +252,7 @@ struct PageDestinationJsMenu : IPageDestination {
     PageDestinationJsMenu();
     ~PageDestinationJsMenu() override;
 
-    Str GetValue2() override;
+    Str GetValue() override;
 };
 
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, Str value = {});
@@ -349,7 +331,7 @@ struct PageElementDestination : IPageElement {
 
     Str GetValue() override {
         if (dest) {
-            return dest->GetValue2();
+            return dest->GetValue();
         }
         return {};
     }
