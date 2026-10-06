@@ -9,9 +9,6 @@
 
 #include "PdfDarkMode.h"
 
-// Hardcoded PDF dark mode defaults (not persisted in settings file).
-static constexpr int kPreservePdfImagesMinSize = 72;
-
 static bool gPreservePdfImagesInDarkMode = true;
 
 // Accept current names and pre-3.7 DocumentColorMode aliases.
@@ -42,10 +39,6 @@ bool GetPreservePdfImagesInDarkMode() {
 
 void SetPreservePdfImagesInDarkMode(bool preserve) {
     gPreservePdfImagesInDarkMode = preserve;
-}
-
-int GetPreservePdfImagesMinSize() {
-    return kPreservePdfImagesMinSize;
 }
 
 bool DocumentColorsFollowThemeEnabled() {

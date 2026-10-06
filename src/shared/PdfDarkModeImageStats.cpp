@@ -326,7 +326,7 @@ bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image
     if (PdfDarkModePageDominantImageRecolors(ctx, image, pageCoverage)) {
         return false;
     }
-    int minPx = GetPreservePdfImagesMinSize();
+    int minPx = kPreservePdfImagesMinSize;
     if (devW < minPx || devH < minPx) {
         return false;
     }

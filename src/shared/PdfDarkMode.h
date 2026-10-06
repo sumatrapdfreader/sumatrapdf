@@ -32,7 +32,7 @@ struct DarkModeProfile {
 
 bool GetPreservePdfImagesInDarkMode();
 void SetPreservePdfImagesInDarkMode(bool preserve);
-int GetPreservePdfImagesMinSize();
+static constexpr int kPreservePdfImagesMinSize = 72;
 
 bool DarkModeProfileUsesLegacyPostProcess(const DarkModeProfile* profile);
 void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile);

@@ -28,10 +28,6 @@ u32 PdfDarkModeComputeOptionsHash() {
     return 0;
 }
 
-int GetPreservePdfImagesMinSize() {
-    return 72;
-}
-
 // PDF dark mode runtime options (not stored in settings file)
 bool GetPreservePdfImagesInDarkMode() {
     return true;

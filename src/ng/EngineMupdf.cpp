@@ -6787,7 +6787,7 @@ static u32 DarkLegacySkipHash(FzPageInfo* pageInfo, float zoom, int rotation) {
     u32 h = PdfDarkModeComputeOptionsHash();
     h = (h * 31) + (u32)(zoom * 1000.f);
     h = (h * 31) + (u32)rotation;
-    h = (h * 31) + (u32)GetPreservePdfImagesMinSize();
+    h = (h * 31) + (u32)kPreservePdfImagesMinSize;
     h = (h * 31) + (u32)GetPreservePdfImagesInDarkMode();
     h = (h * 31) + (u32)(pageInfo ? len(pageInfo->images) : 0);
     return h;
@@ -6926,7 +6926,7 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
     fz_context* ctx = engine->Ctx();
     fz_page* page = pageInfo->page;
     fz_matrix ctm = engine->viewctm(page, zoom, rotation);
-    int minDx = GetPreservePdfImagesMinSize();
+    int minDx = kPreservePdfImagesMinSize;
     int minDy = minDx;
 
     RectF pageBounds = pageInfo->mediabox;
