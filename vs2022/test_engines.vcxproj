@@ -1174,7 +1174,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\CachedObjects.cpp" />
-    <ClCompile Include="..\src\ChapterTable.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
@@ -1182,6 +1181,7 @@
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
     <ClCompile Include="..\src\shared\AvifReader.cpp" />
+    <ClCompile Include="..\src\shared\ChapterTable.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
     <ClCompile Include="..\src\shared\EbookDoc.cpp" />
     <ClCompile Include="..\src\shared\EmbeddedResources.cpp" />

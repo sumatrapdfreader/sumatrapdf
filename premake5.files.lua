@@ -941,7 +941,7 @@ function test_engines_files()
   files {
     "src/base/GuessFileType.cpp",
     "src/shared/AvifReader.cpp",
-    "src/ChapterTable.cpp",
+    "src/shared/ChapterTable.cpp",
     "src/shared/ChapterTable.h",
     "src/shared/DocProperties.cpp",
     "src/shared/DocProperties.h",

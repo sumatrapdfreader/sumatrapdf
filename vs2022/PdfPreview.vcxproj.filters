@@ -95,7 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\CachedObjects.cpp" />
-    <ClCompile Include="..\src\ChapterTable.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
@@ -119,6 +118,9 @@
       <Filter>previewer</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AvifReader.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\ChapterTable.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChmFile.cpp">

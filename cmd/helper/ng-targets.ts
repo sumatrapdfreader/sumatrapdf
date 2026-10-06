@@ -431,7 +431,7 @@ const enginesSources = [
   "src/PdfDate.cpp",
   "src/ng/AvifReader.cpp",
   "src/ng/CachedObjects.cpp",
-  "src/ng/ChapterTable.cpp",
+  "src/ChapterTable.cpp",
   "src/ng/ChmDump.cpp",
   "src/ng/ChmFile.cpp",
   "src/DocProperties.cpp",
