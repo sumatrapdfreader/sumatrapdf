@@ -431,15 +431,22 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     auto* hwndForNotif = data->hwndForNotif;
     auto* updateInfo = data->updateInfo;
 
-    TempStr installerPath = GetTempFilePathTemp(StrL("sumatra-installer"));
-    // the installer must be named .exe or it won't be able to self-elevate
-    // with "runas"
-    installerPath = str::JoinTemp(installerPath, StrL(".exe"));
+    // sum<hex>.tmp.exe stays after install; the .tmp stub is unused. Sweep leftovers first.
+    constexpr int kStaleUpdateExeSec = 24 * 60 * 60;
+    DeleteStaleUpdateTemps(GetTempDirTemp(), {}, kStaleUpdateExeSec);
+
+    TempStr stub = GetTempFilePathTemp(StrL("sumatra-installer"));
+    // the installer must be named .exe or it won't be able to self-elevate with "runas"
+    TempStr installerPath;
+    if (len(stub) > 0) {
+        file::Delete(stub);
+        installerPath = str::JoinTemp(stub, StrL(".exe"));
+    }
     UpdateProgressData pd;
     pd.hwndForNotif = hwndForNotif;
     auto cb = MkFunc1<UpdateProgressData, HttpProgress*>(UpdateProgressCb, &pd);
     constexpr i64 kMaxUpdateDownloadSize = 256LL * 1024 * 1024;
-    bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, cb, kMaxUpdateDownloadSize);
+    bool ok = len(installerPath) > 0 && HttpGetToFile(updateInfo->dlURL, installerPath, cb, kMaxUpdateDownloadSize);
     logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
     TempStr expectedSigner = GetExecutableSignerTemp(GetSelfExePathTemp());
     TempStr installerSigner = ok ? GetExecutableSignerTemp(installerPath) : TempStr{};
@@ -906,3 +913,55 @@ void UpdateSelfTo(Str dstPath) {
     TempStr args = fmt(R"(-sleep-ms 500 -delete-file "%s")", srcPath);
     CreateProcessHelper(dstPath, args);
 }
+
+#if IS_DEBUG
+#include "base/tests/UtAssert.h"
+
+void UpdateTempFileTests() {
+    utassert(IsUpdateTempFileName(StrL("sum17E3.tmp")));
+    utassert(IsUpdateTempFileName(StrL("sum17E3.tmp.exe")));
+    utassert(IsUpdateTempFileName(StrL("SUM17e3.TMP.EXE")));
+    utassert(!IsUpdateTempFileName(StrL("sum17E3.tmp.exe.bak")));
+    utassert(!IsUpdateTempFileName(StrL("SumatraPDF.exe")));
+    utassert(!IsUpdateTempFileName(StrL("sum.tmp.exe")));
+    utassert(!IsUpdateTempFileName(StrL("sum17E.tmp.exe")));
+    utassert(!IsUpdateTempFileName(StrL("sumatra.tmp.exe")));
+
+    TempStr dir = GetTempFilePathTemp(StrL("upd"));
+    utassert(len(dir) > 0);
+    utassert(file::Delete(dir));
+    utassert(dir::Create(dir));
+    defer {
+        dir::RemoveAll(dir);
+    };
+
+    TempStr stub = path::JoinTemp(dir, StrL("sumABCD.tmp"));
+    TempStr exe = path::JoinTemp(dir, StrL("sumABCD.tmp.exe"));
+    TempStr fresh = path::JoinTemp(dir, StrL("sum1234.tmp.exe"));
+    TempStr keep = path::JoinTemp(dir, StrL("keep.exe"));
+    TempStr other = path::JoinTemp(dir, StrL("sumatra.tmp.exe"));
+    TempStr busy = path::JoinTemp(dir, StrL("sumBEEF.tmp"));
+    utassert(file::WriteFile(stub, StrL("")));
+    utassert(file::WriteFile(exe, StrL("installer")));
+    utassert(file::WriteFile(fresh, StrL("new")));
+    utassert(file::WriteFile(keep, StrL("x")));
+    utassert(file::WriteFile(other, StrL("x")));
+    utassert(file::WriteFile(busy, StrL("busy")));
+
+    DeleteStaleUpdateTemps(dir, exe, 0);
+    utassert(!file::Exists(stub));
+    utassert(file::Exists(exe));
+    utassert(!file::Exists(fresh));
+    utassert(file::Exists(keep));
+    utassert(file::Exists(other));
+    utassert(file::Exists(busy));
+
+    utassert(file::WriteFile(stub, StrL("")));
+    DeleteStaleUpdateTemps(dir, {}, 100000000);
+    utassert(!file::Exists(stub));
+    utassert(file::Exists(exe));
+    utassert(file::Exists(keep));
+    utassert(file::Exists(other));
+    utassert(file::Exists(busy));
+}
+#endif

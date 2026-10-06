@@ -399,6 +399,25 @@ TempStr WindowsToWslMountTemp(Str path) {
     return fmt("/mnt/%c/%s", drive, rest);
 }
 
+// path is dir, or something inside it. Only at a separator, so "C:\foo"
+// does not contain "C:\foobar".
+bool IsInDir(Str path, Str dir) {
+    int n = len(dir);
+    if (n == 0 || len(path) < n) {
+        return false;
+    }
+    if (!str::StartsWithI(path, dir)) {
+        return false;
+    }
+    if (len(path) == n) {
+        return true;
+    }
+    if (IsSep(dir.s[n - 1])) {
+        return true;
+    }
+    return IsSep(path.s[n]);
+}
+
 #if OS_WIN
 
 Type GetType(Str path) {

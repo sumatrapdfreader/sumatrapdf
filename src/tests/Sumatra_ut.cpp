@@ -41,6 +41,7 @@ void CssParser_UnitTests();
 void DictTest();
 void DirRemoveAllTest();
 void FileUtilTest();
+void UpdateTempFileTests();
 void GuessFileTypeTest();
 void JsonTest();
 void RefHoverTest();
@@ -596,6 +597,7 @@ int RunAppUnitTests(bool forAi) {
     DictTest();
     DirRemoveAllTest();
     FileUtilTest();
+    UpdateTempFileTests();
     GuessFileTypeTest();
     JsonTest();
     RefHoverTest();

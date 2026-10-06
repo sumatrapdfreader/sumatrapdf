@@ -434,15 +434,22 @@ static void UpdateProgressCb(UpdateProgressData* data, HttpProgress* progress) {
 static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
 #if OS_WIN
     UpdateInfo* updateInfo = data->updateInfo;
-    TempStr installerPath = GetTempFilePathTemp(StrL("sumatra-installer"));
-    // the installer must be named .exe or it won't be able to self-elevate
-    // with "runas"
-    installerPath = str::JoinTemp(installerPath, StrL(".exe"));
+    // sum<hex>.tmp.exe stays after install; the .tmp stub is unused. Sweep leftovers first.
+    constexpr int kStaleUpdateExeSec = 24 * 60 * 60;
+    DeleteStaleUpdateTemps(GetTempDirTemp(), {}, kStaleUpdateExeSec);
+
+    TempStr stub = GetTempFilePathTemp(StrL("sumatra-installer"));
+    // the installer must be named .exe or it won't be able to self-elevate with "runas"
+    TempStr installerPath;
+    if (len(stub) > 0) {
+        file::Delete(stub);
+        installerPath = str::JoinTemp(stub, StrL(".exe"));
+    }
     UpdateProgressData pd;
     pd.win = data->win;
     auto cb = MkFunc1<UpdateProgressData, HttpProgress*>(UpdateProgressCb, &pd);
     constexpr i64 kMaxUpdateDownloadSize = 256LL * 1024 * 1024;
-    bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, cb, kMaxUpdateDownloadSize);
+    bool ok = len(installerPath) > 0 && HttpGetToFile(updateInfo->dlURL, installerPath, cb, kMaxUpdateDownloadSize);
     logf("DownloadUpdateAsync: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
     TempStr expectedSigner = GetExecutableSignerTemp(GetSelfExePathTemp());
     TempStr installerSigner = ok ? GetExecutableSignerTemp(installerPath) : TempStr{};

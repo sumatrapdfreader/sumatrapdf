@@ -57,6 +57,7 @@ bool IsEphemeralHostFile(Str path);
 bool SupportsChangeNotifications(Str path);
 bool IsAbsolute(Str path);
 bool IsDriveRoot(Str path);
+bool IsInDir(Str path, Str dir);
 
 bool IsWslUnc(Str path);
 bool IsWslMount(Str path);

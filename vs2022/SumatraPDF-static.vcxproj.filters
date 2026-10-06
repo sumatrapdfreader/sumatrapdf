@@ -546,6 +546,9 @@
     <ClInclude Include="..\src\shared\Translations.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\UpdateTemp.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\WebpReader.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1263,6 +1266,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TranslationLangs.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\UpdateTemp.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\WebpReader.cpp">

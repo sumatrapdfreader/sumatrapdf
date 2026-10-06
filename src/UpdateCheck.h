@@ -12,3 +12,7 @@ bool HasPendingPreReleaseUpdate();
 void DownloadAndInstallPendingUpdate(MainWindow* win);
 void StartInstallerAutoUpgrade(Str installerPath);
 void UpdateSelfTo(Str dstPath);
+bool IsUpdateTempFileName(Str name);
+void DeleteStaleUpdateTemps(Str dir, Str skip, int minAgeSec);
+void NoteTempInstallerRelaunch();
+void ScheduleDeleteTempInstaller();

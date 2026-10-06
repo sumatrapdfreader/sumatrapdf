@@ -202,6 +202,8 @@ export const sharedFiles = [
   "src/shared/TextSelection.h",
   "src/shared/TranslationLangs.cpp",
   "src/shared/Translations.h",
+  "src/shared/UpdateTemp.cpp",
+  "src/shared/UpdateTemp.h",
   "src/shared/WebpReader.cpp",
   "src/shared/WebpReader.h",
   "src/shared/dragcursor.cur",

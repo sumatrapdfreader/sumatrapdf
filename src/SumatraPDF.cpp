@@ -18379,6 +18379,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
         // pull in libsumatrapdf.dll which we don't have access to in the installer
+        ScheduleDeleteTempInstaller();
         ::ExitProcess(exitCode);
     }
 
@@ -18389,6 +18390,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
         // pull in libsumatrapdf.dll which we don't have access to in the installer
+        ScheduleDeleteTempInstaller();
         ::ExitProcess(exitCode);
     }
 

@@ -282,28 +282,6 @@ void AskDirScanThreadToQuit(DirScanCtx* ctx) {
     delete ctx;
 }
 
-// Is path dir itself, or something below it? Compared the way the file system
-// compares them, and only at a separator, so "C:\foo" doesn't swallow
-// "C:\foobar".
-static bool IsUnderDir(Str path, Str dir) {
-    if (len(dir) == 0 || path.len < dir.len) {
-        return false;
-    }
-    if (!str::StartsWithI(path, dir)) {
-        return false;
-    }
-    if (path.len == dir.len) {
-        return true;
-    }
-    char last = dir.s[dir.len - 1];
-    if (last == '\\' || last == '/') {
-        // a drive root already ends in a separator
-        return true;
-    }
-    char next = path.s[dir.len];
-    return next == '\\' || next == '/';
-}
-
 // Appends node to a singly linked list kept with a tail pointer.
 static void AppendNode(DirEntriesNode** head, DirEntriesNode** last, DirEntriesNode* node) {
     node->next = nullptr;
@@ -372,7 +350,7 @@ void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
     DirEntriesNode* node = AllocDirEntriesNode(ctx->a, dv, nonRecursive);
 
     // Add to the end of one queue or the other, breadth first within each
-    if (IsUnderDir(dv->fullDir, priorityDir)) {
+    if (path::IsInDir(dv->fullDir, priorityDir)) {
         AppendNode(&w->preferredDirs, &w->preferredDirsLast, node);
     } else {
         AppendNode(&w->dirsToVisit, &w->dirsToVisitLast, node);
@@ -400,7 +378,7 @@ static void RepartitionWorkerQueues(DirScanWorker* w, Str dir) {
     while (nodes) {
         DirEntriesNode* node = nodes;
         nodes = nodes->next;
-        if (IsUnderDir(node->dv->fullDir, dir)) {
+        if (path::IsInDir(node->dv->fullDir, dir)) {
             AppendNode(&w->preferredDirs, &w->preferredDirsLast, node);
         } else {
             AppendNode(&w->dirsToVisit, &w->dirsToVisitLast, node);

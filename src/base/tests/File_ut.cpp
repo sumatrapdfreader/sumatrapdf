@@ -15,6 +15,14 @@ void FileUtilTest() {
     utassert(FileTimeDiffInSecs(oneSecond, epoch) == 1);
     utassert(FileTimeDiffInSecs(epoch, oneSecond) == -1);
 
+    utassert(path::IsInDir(StrL("/tmp/sum17E3.tmp.exe"), StrL("/tmp")));
+    utassert(path::IsInDir(StrL("/tmp"), StrL("/tmp")));
+    utassert(path::IsInDir(StrL("/tmp/a"), StrL("/tmp/")));
+    utassert(!path::IsInDir(StrL("/tmp2/a"), StrL("/tmp")));
+    utassert(!path::IsInDir(StrL("/temporary/a"), StrL("/temp")));
+    utassert(!path::IsInDir(StrL("/tmp"), Str()));
+    utassert(!path::IsInDir(StrL("a"), StrL("/tmp/a")));
+
 #if OS_WIN
     Str path1 = StrL("C:\\Program Files\\SumatraPDF\\SumatraPDF.exe");
 
@@ -34,6 +42,9 @@ void FileUtilTest() {
     utassert(str::Eq(dirName, StrL("\\\\server")));
     dirName = path::GetDirTemp(StrL("file.exe"));
     utassert(str::Eq(dirName, StrL(".")));
+    utassert(path::IsInDir(StrL("C:\\Temp\\sum17E3.tmp.exe"), StrL("C:\\Temp")));
+    utassert(path::IsInDir(StrL("C:\\Temp\\a"), StrL("C:\\Temp\\")));
+    utassert(!path::IsInDir(StrL("C:\\Temporary\\a"), StrL("C:\\Temp")));
     utassert(path::IsDriveRoot(StrL("C:\\")));
     utassert(path::IsDriveRoot(StrL("C:/")));
     utassert(path::IsDriveRoot(StrL("C:\\\\")));

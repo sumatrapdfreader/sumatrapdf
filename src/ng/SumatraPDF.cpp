@@ -8485,6 +8485,7 @@ int GpuiMain(int argc, char** argv) {
     }
     if (gFlags->install || gFlags->fastInstall || gFlags->runInstallNow || gFlags->justExtractFiles) {
         int exitCode = RunInstaller(gFlags);
+        ScheduleDeleteTempInstaller();
         uitask::Destroy();
         return exitCode;
     }

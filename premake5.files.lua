@@ -414,6 +414,7 @@ function sumatrapdf_files()
     "Translations.*",
     "Uninstaller.cpp",
     "UpdateCheck.*",
+    "UpdateTemp.*",
     "BuildConfig.h",
     "Version.h",
     "VirtWnd.*",

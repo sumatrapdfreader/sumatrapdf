@@ -27,6 +27,7 @@
 #include "Translations.h"
 #include "gui/DialogWidgets.h"
 #include "Installer.h"
+#include "UpdateCheck.h"
 
 #include "SumatraLog.h"
 
@@ -422,6 +423,7 @@ static void RestartElevatedForAllUsers(Flags* cli) {
         LogLastError();
     } else {
         logf("LaunchElevated() ok!\n");
+        NoteTempInstallerRelaunch();
     }
 }
 
@@ -527,6 +529,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
          (int)IsProcessRunningElevated(), (int)cli->allUsers, cli->installDir);
     if (needsElevation && !IsProcessRunningElevated()) {
         RestartElevatedForAllUsers(cli);
+        ScheduleDeleteTempInstaller();
         ::ExitProcess(0);
     }
     StartInstallation(wnd);
@@ -597,6 +600,7 @@ static void OnInstallationFinished(InstallerWnd* wnd, Flags* cli) {
 
     if (cli->fastInstall) {
         StartSumatra();
+        ScheduleDeleteTempInstaller();
         ::ExitProcess(0);
     }
 }
@@ -931,6 +935,7 @@ int RunInstaller(Flags* cli) {
             logf("Restarting as elevated: gCli->silent: %d, gCli->fastInstall: %d, gCli->allUsers: %d\n",
                  (int)gCli->silent, (int)gCli->fastInstall, (int)gCli->allUsers);
             RestartElevatedForAllUsers(&gCliNew);
+            ScheduleDeleteTempInstaller();
             ::ExitProcess(0);
         }
     }
