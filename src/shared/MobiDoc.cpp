@@ -29,18 +29,9 @@ constexpr int kEncryptionNone = 0;
 
 struct PalmDocHeader {
     u16 compressionType = 0;
-    u16 reserved1 = 0;
     u32 uncompressedDocSize = 0;
     u16 recordsCount = 0;
-    u16 maxRecSize = 0; // usually (always?) 4096
-    // if it's palmdoc, we have currPos, if mobi, encrType/reserved2
-    union {
-        u32 currPos = 0;
-        struct {
-            u16 encrType;
-            u16 reserved2;
-        } mobi;
-    };
+    u16 encrType = 0;
 };
 constexpr int kPalmDocHeaderLen = 16;
 
@@ -48,11 +39,12 @@ constexpr int kPalmDocHeaderLen = 16;
 static void DecodePalmDocHeader(const u8* buf, PalmDocHeader* hdr) {
     ByteReader d(buf, kPalmDocHeaderLen);
     hdr->compressionType = d.UInt16BE();
-    hdr->reserved1 = d.UInt16BE();
+    d.Skip(sizeofi(u16));
     hdr->uncompressedDocSize = d.UInt32BE();
     hdr->recordsCount = d.UInt16BE();
-    hdr->maxRecSize = d.UInt16BE();
-    hdr->currPos = d.UInt32BE();
+    d.Skip(sizeofi(u16));
+    hdr->encrType = d.UInt16BE();
+    d.Skip(sizeofi(u16));
 
     ReportIf(kPalmDocHeaderLen != d.Offset());
 }
@@ -388,7 +380,7 @@ bool MobiDoc::ParseHeader() {
     if (PdbDocType::Mobipocket == docType) {
         // TODO: this needs to be surfaced to the client so
         // that we can show the right error message
-        if (palmDocHdr.mobi.encrType != kEncryptionNone) {
+        if (palmDocHdr.encrType != kEncryptionNone) {
             logf("encryption is unsupported\n");
             return false;
         }
@@ -1271,8 +1263,7 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
 
     PalmDocHeader palm;
     DecodePalmDocHeader((const u8*)rec0.s, &palm);
-    u16 encrType = ByteReader(rec0).UInt16BE(12);
-    if (encrType != kEncryptionNone) {
+    if (palm.encrType != kEncryptionNone) {
         logf("ExtractPdfFromPrintReplica: encrypted\n");
         return {};
     }

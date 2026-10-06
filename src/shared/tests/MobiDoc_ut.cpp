@@ -126,6 +126,20 @@ void MobiDoc_UnitTests() {
         utassert(PdbReader::CreateFromData(data) == nullptr);
     }
 
+    constexpr int kEncryptionOffset = 12;
+    constexpr u16 kUnencrypted = 0;
+    constexpr u16 kEncrypted = 1;
+    const u16 encryptionFields[][2] = {{kEncrypted, 0}, {kUnencrypted, kEncrypted}};
+    for (const auto& fields : encryptionFields) {
+        Str data = MkMobi(0);
+        AutoFree<char> cleanup(data.s);
+        BeWriter writer{(u8*)data.s, kRec0Off + kEncryptionOffset};
+        writer.U16(fields[0]);
+        writer.U16(fields[1]);
+        AutoDelete<MobiDoc> doc(MobiDoc::CreateFromData(data));
+        utassert((doc.o != nullptr) == (fields[0] == kUnencrypted));
+    }
+
     // an imageFirstRec that doesn't fit an int used to become a negative record
     // index, which PdbReader::GetRecord() then read out of bounds
     {
