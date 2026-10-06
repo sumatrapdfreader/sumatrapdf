@@ -725,9 +725,6 @@
     <ClCompile Include="..\src\EngineCreate.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EngineDump.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\EngineDvi.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1191,6 +1188,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\EngineDump.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ExifDump.cpp">
