@@ -152,16 +152,6 @@ GumboOptions GumboMakeOptions() {
     return opts;
 }
 
-GumboOptions GumboMakeXmlFragmentOptions() {
-    GumboOptions opts = GumboMakeOptions();
-    // Gumbo only honors XML-style self-closing syntax for foreign content.
-    // Parsing XML-ish metadata as an SVG-namespace fragment keeps <item />
-    // and similar EPUB/ComicInfo nodes from swallowing their following siblings.
-    opts.fragment_context = GUMBO_TAG_SVG;
-    opts.fragment_namespace = GUMBO_NAMESPACE_SVG;
-    return opts;
-}
-
 static int ValidHtmlEntityRuneOrFallback(int rune) {
     if (rune <= 0 || rune > 0x10ffff || (rune >= 0xd800 && rune <= 0xdfff)) {
         return '?';
@@ -459,7 +449,12 @@ static ptrdiff_t PosOfSource(Str html, Str p) {
 }
 
 GumboDoc::GumboDoc(Str data, GumboMode mode) {
-    opts = mode == GumboMode::XmlFragment ? GumboMakeXmlFragmentOptions() : GumboMakeOptions();
+    opts = GumboMakeOptions();
+    if (mode == GumboMode::XmlFragment) {
+        // Foreign content honors XML self-closing tags, keeping siblings separate.
+        opts.fragment_context = GUMBO_TAG_SVG;
+        opts.fragment_namespace = GUMBO_NAMESPACE_SVG;
+    }
     output = gumbo_parse_with_options(&opts, data.s, (size_t)len(data));
 }
 

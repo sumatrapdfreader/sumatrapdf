@@ -27,7 +27,6 @@ TempStr GumboTextContentTemp(const GumboNode* node);
 // and otherwise-default values. We avoid the kGumboDefaultOptions data
 // extern because it's awkward to import across the libsumatrapdf.dll boundary.
 GumboOptions GumboMakeOptions();
-GumboOptions GumboMakeXmlFragmentOptions();
 
 enum class GumboMode {
     Html,
