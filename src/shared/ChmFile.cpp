@@ -106,23 +106,18 @@ TempStr SmartToUtf8Temp(Str s, uint codepage) {
     return strconv::ToMultiByteTemp(s, codepage, CP_UTF8);
 }
 
-static Str GetCharZ(Str d, int off) {
-    // off comes from file-controlled unsigned DWORDs narrowed to int, so it can
-    // be negative; reject that along with the upper bound to avoid an OOB read.
-    if (off < 0 || off >= d.len) {
+// Borrow a bounded string; callers copy retained metadata.
+static Str ReadCharZ(Str d, int off) {
+    // File offsets may wrap when narrowed to int.
+    if (off < 0 || off >= len(d)) {
         return {};
     }
-    char* start = d.s + off;
-    size_t remaining = (size_t)(d.len - off);
-    char* end = (char*)memchr(start, '\0', remaining);
-    if (!end) {
+    Str value;
+    Str rest(d.s + off, len(d) - off);
+    if (!str::CutChar(rest, '\0', &value, nullptr) || len(value) == 0) {
         return {};
     }
-    int slen = (int)(end - start);
-    if (slen == 0) {
-        return {};
-    }
-    return str::Dup(Str(start, slen));
+    return value;
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
@@ -150,7 +145,7 @@ void ChmFile::ParseWindowsData() {
         for (const auto& field : chmStrings) {
             Str& value = this->*field.field;
             if (field.windowsOff && str::IsNull(value)) {
-                value = GetCharZ(stringsData, (int)rw.UInt32LE(off + field.windowsOff));
+                value = str::Dup(ReadCharZ(stringsData, (int)rw.UInt32LE(off + field.windowsOff)));
             }
         }
     }
@@ -203,7 +198,7 @@ bool ChmFile::ParseSystemData() {
         for (const auto& field : chmStrings) {
             Str& value = this->*field.field;
             if (type == field.systemId && str::IsNull(value)) {
-                value = GetCharZ(d, off + 4);
+                value = str::Dup(ReadCharZ(d, off + 4));
                 break;
             }
         }
@@ -223,11 +218,7 @@ TempStr ChmFile::ResolveTopicID(unsigned int id) const {
     for (int off = 4; off < ivbLen; off += 8) {
         if (br.UInt32LE(off) == id) {
             TempStr stringsData = GetDataTemp(StrL("/#STRINGS"));
-            Str res = GetCharZ(stringsData, (int)br.UInt32LE(off + 4));
-            if (len(res) == 0) {
-                return {};
-            }
-            return str::DupTemp(res);
+            return ReadCharZ(stringsData, (int)br.UInt32LE(off + 4));
         }
     }
     return {};
