@@ -137,6 +137,23 @@ bool AnnotSearch_UnitTests() {
         utassert(len(words) == 1);
         utassert(str::Eq(words[0], StrL("TODO")));
     }
+    {
+        struct {
+            Str filter;
+            Str value;
+        } cases[] = {{StrL("\t:a\t==\tkjk\t"), StrL("kjk")},
+                     {StrL(":a===kjk"), StrL("=kjk")},
+                     {StrL(":a!=\nkjk"), StrL("\nkjk")}};
+        for (auto& c : cases) {
+            AnnotMatchOpts opts;
+            utassert(ParseAnnotSearch(c.filter, opts));
+            utassert(CondCount(opts) == 1);
+            utassert(str::Eq(CondAt(opts, 0)->s, c.value));
+        }
+        AnnotMatchOpts opts;
+        utassert(ParseAnnotSearch(StrL(":c+:c-"), opts));
+        utassert(CondCount(opts) == 2);
+    }
     // malformed input is rejected rather than silently matching nothing
     TestParseFails(StrL(":a"));
     TestParseFails(StrL(":a="));

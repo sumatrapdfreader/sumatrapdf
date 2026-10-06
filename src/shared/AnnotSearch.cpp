@@ -49,85 +49,44 @@ static void AddCond(AnnotMatchOpts& opts, AnnotMatchCond::Type tp, Str s, Annota
     ListInsertEnd(&opts.conds, c);
 }
 
-static bool IsFilterWs(char c) {
-    return c == ' ' || c == '\t';
-}
+constexpr const char* kFilterWhitespace = " \t";
 
-// the condition name right after ':' is letters only, so ":a=x" splits even
-// without a space
-static int ScanName(Str s, int i) {
-    int start = i;
-    while (i < s.len && str::IsAlNum(s.s[i])) {
-        i++;
+static Str ScanValue(Str& rest) {
+    str::TrimAny(rest, kFilterWhitespace);
+    int n = 0;
+    while (n < len(rest) && rest.s[n] != ' ' && rest.s[n] != '\t') {
+        n++;
     }
-    return i - start;
-}
-
-static void SkipWs(Str s, int& i) {
-    while (i < s.len && IsFilterWs(s.s[i])) {
-        i++;
-    }
-}
-
-// "=", "==" or "!=" ; false if there is no operator here
-static bool ScanOp(Str s, int& i, bool& isNotOut) {
-    SkipWs(s, i);
-    if (i < s.len && s.s[i] == '!') {
-        if (i + 1 >= s.len || s.s[i + 1] != '=') {
-            return false;
-        }
-        isNotOut = true;
-        i += 2;
-        return true;
-    }
-    if (i < s.len && s.s[i] == '=') {
-        isNotOut = false;
-        i++;
-        if (i < s.len && s.s[i] == '=') {
-            i++;
-        }
-        return true;
-    }
-    return false;
-}
-
-static Str ScanValue(Str s, int& i) {
-    SkipWs(s, i);
-    int start = i;
-    while (i < s.len && !IsFilterWs(s.s[i])) {
-        i++;
-    }
-    return Str(s.s + start, i - start);
+    Str value(rest.s, n);
+    rest = Str(rest.s + n, len(rest) - n);
+    return value;
 }
 
 // false if the text is not valid filter syntax; opts is then meaningless and
 // the caller should fall back to matching the whole string as contents
 bool ParseAnnotSearch(Str filter, AnnotMatchOpts& optsOut) {
-    Str s = filter;
-    int i = 0;
-    while (i < s.len) {
-        SkipWs(s, i);
-        if (i >= s.len) {
+    Str rest = filter;
+    while (len(rest) > 0) {
+        str::TrimAny(rest, kFilterWhitespace);
+        if (len(rest) == 0) {
             break;
         }
-        if (s.s[i] != ':') {
-            Str word = ScanValue(s, i);
-            if (len(word) > 0) {
-                AddCond(optsOut, AnnotMatchCond::Type::ContentMatches, word, AnnotationType::Unknown);
-            }
+        if (!str::TrimPrefix(rest, StrL(":"))) {
+            AddCond(optsOut, AnnotMatchCond::Type::ContentMatches, ScanValue(rest), AnnotationType::Unknown);
             continue;
         }
-        i++; // ':'
-        int nameLen = ScanName(s, i);
-        Str name = Str(s.s + i, nameLen);
-        i += nameLen;
+        int nameLen = 0;
+        while (nameLen < len(rest) && str::IsAlNum(rest.s[nameLen])) {
+            nameLen++;
+        }
+        Str name(rest.s, nameLen);
+        rest = Str(rest.s + nameLen, len(rest) - nameLen);
         if (str::EqI(name, StrL("c"))) {
-            // ":c+" / ":c-", no operator and no value
-            if (i >= s.len || (s.s[i] != '+' && s.s[i] != '-')) {
+            if (len(rest) == 0 || (rest.s[0] != '+' && rest.s[0] != '-')) {
                 return false;
             }
-            auto tp = (s.s[i] == '+') ? AnnotMatchCond::Type::HasContent : AnnotMatchCond::Type::NoContent;
-            i++;
+            auto tp = rest.s[0] == '+' ? AnnotMatchCond::Type::HasContent : AnnotMatchCond::Type::NoContent;
+            rest = Str(rest.s + 1, len(rest) - 1);
             AddCond(optsOut, tp, {}, AnnotationType::Unknown);
             continue;
         }
@@ -136,11 +95,15 @@ bool ParseAnnotSearch(Str filter, AnnotMatchOpts& optsOut) {
         if (!isAuthor && !isType) {
             return false;
         }
-        bool isNot = false;
-        if (!ScanOp(s, i, isNot)) {
-            return false;
+        str::TrimAny(rest, kFilterWhitespace);
+        bool isNot = str::TrimPrefix(rest, StrL("!=")) > 0;
+        if (!isNot) {
+            if (!str::TrimPrefix(rest, StrL("="))) {
+                return false;
+            }
+            str::TrimPrefix(rest, StrL("="));
         }
-        Str val = ScanValue(s, i);
+        Str val = ScanValue(rest);
         if (len(val) == 0) {
             return false;
         }
