@@ -5,7 +5,6 @@
 #include <chm.h>
 #include "base/ByteReaderWriter.h"
 #include "base/File.h"
-#include "base/GuessFileType.h"
 
 #include "base/HtmlTags.h"
 #include "GumboHtmlParser.h"
@@ -586,10 +585,6 @@ bool ChmFile::HasIndex() const {
 
 bool ChmFile::ParseIndex(EbookTocVisitor* visitor) const {
     return ParseTocOrIndex(visitor, indexPath, ChmItemKind::Index);
-}
-
-bool ChmFile::IsSupportedFileType(FileType kind) {
-    return kind == FileType::Chm;
 }
 
 ChmFile* ChmFile::CreateFromFile(Str path) {

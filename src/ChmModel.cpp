@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Dict.h"
+#include "base/GuessFileType.h"
 #include "base/UITask.h"
 #include "base/AutoWin.h"
 #include "base/Win.h"
@@ -1068,7 +1069,7 @@ void ChmModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail)
 }
 
 bool ChmModel::IsSupportedFileType(FileType kind) {
-    return ChmFile::IsSupportedFileType(kind);
+    return kind == FileType::Chm;
 }
 
 ChmModel* ChmModel::Create(Str fileName, DocControllerCallback* cb) {
