@@ -743,9 +743,12 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
     bool ok = true;
     int base = 0;
     int idx = 0;
-    while (bytesRemaining > 0 && ofsEntry <= len(resetTable) - 8) {
-        int size = (int)LitU32(resetTable, ofsEntry);
-        if (LitU32(resetTable, ofsEntry + 4) != 0 || size > len(content) || size < base) {
+    // Without a table entry, only one final interval may remain.
+    while (bytesRemaining > 0) {
+        bool hasEntry = ofsEntry <= len(resetTable) - 8;
+        int size = hasEntry ? (int)LitU32(resetTable, ofsEntry) : len(content);
+        if ((!hasEntry && bytesRemaining > interval) || (hasEntry && LitU32(resetTable, ofsEntry + 4) != 0) ||
+            size > len(content) || size < base) {
             ok = false;
             break;
         }
@@ -761,21 +764,8 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
         out.Append(Str((char*)obuf, outThis));
         bytesRemaining -= outThis;
         base = size;
-        ofsEntry += 8;
+        ofsEntry += hasEntry ? 8 : 0;
         idx++;
-    }
-    // last (partial) interval extends to the end of the content. A well-formed
-    // file's remainder is < interval (obuf's size); anything larger means the
-    // reset table ran out early, i.e. the file is malformed
-    if (ok && bytesRemaining > 0 && bytesRemaining <= interval) {
-        if (idx % intervalsPerWindow == 0) {
-            LZXreset(lzx);
-        }
-        int res = LZXdecompress(lzx, (u8*)content.s + base, obuf, len(content) - base, bytesRemaining);
-        if (res == kLzxOk) {
-            out.Append(Str((char*)obuf, bytesRemaining));
-            bytesRemaining = 0;
-        }
     }
     Free(nullptr, obuf);
     LZXteardown(lzx);
