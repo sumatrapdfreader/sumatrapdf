@@ -278,15 +278,24 @@ void HtmlFormatter::RevertStyleChange() {
     }
 }
 
-static bool IsVisibleDrawInstr(DrawInstr& i) {
-    switch (i.type) {
-        case DrawInstrType::String:
-        case DrawInstrType::RtlString:
-        case DrawInstrType::Line:
-        case DrawInstrType::Image:
-            return true;
-        default:
-            return false;
+static bool IsTextOrImage(const DrawInstr& i) {
+    return i.type == DrawInstrType::String || i.type == DrawInstrType::RtlString || i.type == DrawInstrType::Image;
+}
+
+static bool IsVisibleDrawInstr(const DrawInstr& i) {
+    return IsTextOrImage(i) || i.type == DrawInstrType::Line;
+}
+
+static bool IsSpaceDrawInstr(const DrawInstr& i) {
+    return i.type == DrawInstrType::FixedSpace || i.type == DrawInstrType::ElasticSpace;
+}
+
+// Keep font, link and anchor state when discarding an empty line's spaces.
+static void RemoveLineSpaces(Vec<DrawInstr>& instr) {
+    for (int k = len(instr); k > 0; k--) {
+        if (IsSpaceDrawInstr(instr[k - 1])) {
+            VecRemoveAt(instr, k - 1);
+        }
     }
 }
 
@@ -295,14 +304,10 @@ static bool IsVisibleDrawInstr(DrawInstr& i) {
 float HtmlFormatter::CurrLineDx() {
     float dx = NewLineX();
     for (DrawInstr& i : currLineInstr) {
-        if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            dx += i.bbox.dx;
-        } else if (DrawInstrType::Image == i.type) {
+        if (IsTextOrImage(i) || DrawInstrType::FixedSpace == i.type) {
             dx += i.bbox.dx;
         } else if (DrawInstrType::ElasticSpace == i.type) {
             dx += spaceDx;
-        } else if (DrawInstrType::FixedSpace == i.type) {
-            dx += i.bbox.dx;
         }
     }
     return dx;
@@ -343,7 +348,7 @@ void HtmlFormatter::LayoutLeftStartingAt(float offX) {
 
     float x = offX + NewLineX();
     for (DrawInstr& i : currLineInstr) {
-        if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type || DrawInstrType::Image == i.type) {
+        if (IsTextOrImage(i)) {
             i.bbox.x = x;
             x += i.bbox.dx;
             lastInstr = &i;
@@ -384,9 +389,7 @@ void HtmlFormatter::JustifyLineBoth() {
         if (DrawInstrType::ElasticSpace == i.type) {
             ++spaces;
             endsWithSpace = true;
-        } else if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            endsWithSpace = false;
-        } else if (DrawInstrType::Image == i.type) {
+        } else if (IsTextOrImage(i)) {
             endsWithSpace = false;
         }
     }
@@ -405,8 +408,7 @@ void HtmlFormatter::JustifyLineBoth() {
     for (DrawInstr& i : currLineInstr) {
         if (DrawInstrType::ElasticSpace == i.type) {
             offX += extraSpaceDx;
-        } else if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type ||
-                   DrawInstrType::Image == i.type) {
+        } else if (IsTextOrImage(i)) {
             i.bbox.x += offX;
             lastStr = &i;
         }
@@ -477,13 +479,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
     if (IsCurrLineEmpty()) {
         currX = NewLineX();
         currLineTopPadding = 0;
-        // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
-        for (int k = len(currLineInstr); k > 0; k--) {
-            DrawInstr& i = currLineInstr[k - 1];
-            if (DrawInstrType::FixedSpace == i.type || DrawInstrType::ElasticSpace == i.type) {
-                VecRemoveAt(currLineInstr, k - 1);
-            }
-        }
+        RemoveLineSpaces(currLineInstr);
         return false;
     }
     AlignAttr align = CurrStyle()->align;
@@ -541,13 +537,7 @@ void HtmlFormatter::EmitEmptyLine(float lineDy) {
     currY += lineDy;
     if (currY <= pageDy) {
         currX = NewLineX();
-        // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
-        for (int k = len(currLineInstr); k > 0; k--) {
-            DrawInstr& i = currLineInstr[k - 1];
-            if (DrawInstrType::FixedSpace == i.type || DrawInstrType::ElasticSpace == i.type) {
-                VecRemoveAt(currLineInstr, k - 1);
-            }
-        }
+        RemoveLineSpaces(currLineInstr);
         return;
     }
     ForceNewPage();
@@ -676,7 +666,7 @@ static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec
     if (DrawInstrType::Anchor == di.type && len(currLineInstr) > 1) {
         di = currLineInstr[len(currLineInstr) - 2];
     }
-    return (DrawInstrType::ElasticSpace != di.type) && (DrawInstrType::FixedSpace != di.type);
+    return !IsSpaceDrawInstr(di);
 }
 
 void HtmlFormatter::EmitElasticSpace() {
@@ -1485,8 +1475,7 @@ void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawIn
             }
         } else if (DrawInstrType::LinkEnd == i.type) {
             // TODO: set text color back again
-        } else if ((DrawInstrType::ElasticSpace == i.type) || (DrawInstrType::FixedSpace == i.type) ||
-                   (DrawInstrType::SetFont == i.type) || (DrawInstrType::Anchor == i.type) ||
+        } else if (IsSpaceDrawInstr(i) || (DrawInstrType::SetFont == i.type) || (DrawInstrType::Anchor == i.type) ||
                    (DrawInstrType::PageMarkerAnchor == i.type)) {
             // ignore
         } else {
