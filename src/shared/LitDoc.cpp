@@ -713,34 +713,27 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
         return {};
     }
 
+    AutoCall teardown(LZXteardown, lzx);
+
     u32 ofsEntry32 = LitU32(resetTable, 12);
     if (ofsEntry32 > (u32)len(resetTable) - 8) {
-        LZXteardown(lzx);
         return {};
     }
     int ofsEntry = (int)ofsEntry32 + 8;
-    int ucLength = (int)LitU32(resetTable, 16);
     if (LitU32(resetTable, 20) != 0) {
-        LZXteardown(lzx);
         return {};
     }
     int interval = (int)LitU32(resetTable, 32);
-    int bytesRemaining = ucLength;
+    int bytesRemaining = (int)LitU32(resetTable, 16);
     if (interval <= 0) {
-        LZXteardown(lzx);
         return {};
     }
 
-    // the reset table stores a compressed offset at every `interval` (block_size)
-    // uncompressed bytes. The LZX decoder is reset only at window boundaries;
-    // the finer reset-table granularity is for random seeking. Decode one
-    // interval at a time (feeding the exact compressed slice for that interval),
-    // resetting only when a new window begins.
+    // Decode reset-table intervals, resetting LZX only at window boundaries.
     int windowBytes = 1 << windowSize;
     int intervalsPerWindow = (windowBytes >= interval) ? (windowBytes / interval) : 1;
     str::Builder out;
-    u8* obuf = AllocArray<u8>(interval);
-    bool ok = true;
+    AutoFree<u8> obuf(AllocArray<u8>(interval));
     int base = 0;
     int idx = 0;
     // Without a table entry, only one final interval may remain.
@@ -749,7 +742,6 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
         int size = hasEntry ? (int)LitU32(resetTable, ofsEntry) : len(content);
         if ((!hasEntry && bytesRemaining > interval) || (hasEntry && LitU32(resetTable, ofsEntry + 4) != 0) ||
             size > len(content) || size < base) {
-            ok = false;
             break;
         }
         int outThis = std::min(interval, bytesRemaining);
@@ -758,18 +750,15 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
         }
         int res = LZXdecompress(lzx, (u8*)content.s + base, obuf, size - base, outThis);
         if (res != kLzxOk) {
-            ok = false;
             break;
         }
-        out.Append(Str((char*)obuf, outThis));
+        out.Append(Str((char*)obuf.Get(), outThis));
         bytesRemaining -= outThis;
         base = size;
         ofsEntry += hasEntry ? 8 : 0;
         idx++;
     }
-    Free(nullptr, obuf);
-    LZXteardown(lzx);
-    if (!ok || bytesRemaining != 0) {
+    if (bytesRemaining != 0) {
         logf("LitDoc: LZX decompression failed\n");
         return {};
     }
