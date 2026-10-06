@@ -76,6 +76,7 @@ bool MarkdownToc_UnitTestMermaid();
 bool EbookDoc_UnitTestNormalizeURL();
 bool EbookDoc_UnitTestLoading();
 bool GumboHtmlParser_UnitTest();
+bool DisplayMode_UnitTestZoom();
 bool ExternalViewers_UnitTestPDFXChangePaths();
 bool Canvas_UnitTestScrollLineAmount();
 bool EngineMupdf_UnitTestEbookLineSpacingCss();
@@ -631,6 +632,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(EbookDoc_UnitTestNormalizeURL());
     utassert(EbookDoc_UnitTestLoading());
     utassert(GumboHtmlParser_UnitTest());
+    utassert(DisplayMode_UnitTestZoom());
     utassert(ExternalViewers_UnitTestPDFXChangePaths());
     utassert(Canvas_UnitTestScrollLineAmount());
     utassert(EngineMupdf_UnitTestEbookLineSpacingCss());

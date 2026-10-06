@@ -34,30 +34,27 @@ bool IsBookView(DisplayMode mode) {
 // though, so DisplayModel lowers this further to what its canvas can hold
 float kZoomMax = kZoomMaxDefault;
 
+static const struct {
+    float value;
+    Str name;
+} zoomModes[] = {
+    {kZoomFitPage, StrL("fit page")},
+    {kZoomFitWidth, StrL("fit width")},
+    {kZoomFitHeight, StrL("fit height")},
+    {kZoomFitContent, StrL("fit content")},
+    {kZoomFitVisible, StrL("fit visible")},
+    {kZoomShrinkToFit, StrL("shrink to fit")},
+    {kZoomFitByOrientation, StrL("fit by orientation")},
+};
+
 bool IsValidZoom(float zoom) {
-    if ((kZoomMin - 0.01f <= zoom) && (zoom <= kZoomMax + 0.01f)) {
+    if (kZoomMin - 0.01f <= zoom && zoom <= kZoomMax + 0.01f) {
         return true;
     }
-    if (kZoomFitPage == zoom) {
-        return true;
-    }
-    if (kZoomFitWidth == zoom) {
-        return true;
-    }
-    if (kZoomFitHeight == zoom) {
-        return true;
-    }
-    if (kZoomFitContent == zoom) {
-        return true;
-    }
-    if (kZoomFitVisible == zoom) {
-        return true;
-    }
-    if (kZoomShrinkToFit == zoom) {
-        return true;
-    }
-    if (kZoomFitByOrientation == zoom) {
-        return true;
+    for (const auto& mode : zoomModes) {
+        if (zoom == mode.value) {
+            return true;
+        }
     }
     return false;
 }
@@ -136,26 +133,10 @@ DisplayMode DisplayModeFromString(Str s, DisplayMode defVal) {
 }
 
 float ZoomFromString(Str s, float defVal) {
-    if (str::EqIS(s, StrL("fit page"))) {
-        return kZoomFitPage;
-    }
-    if (str::EqIS(s, StrL("fit width"))) {
-        return kZoomFitWidth;
-    }
-    if (str::EqIS(s, StrL("fit height"))) {
-        return kZoomFitHeight;
-    }
-    if (str::EqIS(s, StrL("fit content"))) {
-        return kZoomFitContent;
-    }
-    if (str::EqIS(s, StrL("fit visible"))) {
-        return kZoomFitVisible;
-    }
-    if (str::EqIS(s, StrL("shrink to fit"))) {
-        return kZoomShrinkToFit;
-    }
-    if (str::EqIS(s, StrL("fit by orientation"))) {
-        return kZoomFitByOrientation;
+    for (const auto& mode : zoomModes) {
+        if (str::EqIS(s, mode.name)) {
+            return mode.value;
+        }
     }
     float zoom;
     if (!str::IsNull(str::Parse(s, "%f", &zoom)) && IsValidZoom(zoom)) {
@@ -179,21 +160,34 @@ void ZoomToString(Str* dst, float zoom, FileState* fileState) {
         logf("PageNo: %s\n", fileState->pageNo);
     }
     ReportIf(!IsValidZoom(zoom));
-    if (kZoomFitPage == zoom) {
-        str::ReplaceWithCopy(dst, StrL("fit page"));
-    } else if (kZoomFitWidth == zoom) {
-        str::ReplaceWithCopy(dst, StrL("fit width"));
-    } else if (kZoomFitHeight == zoom) {
-        str::ReplaceWithCopy(dst, StrL("fit height"));
-    } else if (kZoomFitContent == zoom) {
-        str::ReplaceWithCopy(dst, StrL("fit content"));
-    } else if (kZoomFitVisible == zoom) {
-        str::ReplaceWithCopy(dst, StrL("fit visible"));
-    } else if (kZoomShrinkToFit == zoom) {
-        str::ReplaceWithCopy(dst, StrL("shrink to fit"));
-    } else if (kZoomFitByOrientation == zoom) {
-        str::ReplaceWithCopy(dst, StrL("fit by orientation"));
-    } else {
-        str::ReplaceWithCopy(dst, fmt("%g", zoom));
+    for (const auto& mode : zoomModes) {
+        if (zoom == mode.value) {
+            str::ReplaceWithCopy(dst, mode.name);
+            return;
+        }
     }
+    str::ReplaceWithCopy(dst, fmt("%g", zoom));
 }
+
+#if IS_DEBUG
+bool DisplayMode_UnitTestZoom() {
+    const float values[] = {kZoomFitPage,    kZoomFitWidth,    kZoomFitHeight,       kZoomFitContent,
+                            kZoomFitVisible, kZoomShrinkToFit, kZoomFitByOrientation};
+    for (float value : values) {
+        Str name;
+        ZoomToString(&name, value, nullptr);
+        bool ok = IsValidZoom(value) && ZoomFromString(name, kInvalidZoom) == value;
+        str::Free(name);
+        if (!ok) {
+            return false;
+        }
+    }
+    Str numeric;
+    ZoomToString(&numeric, 125, nullptr);
+    bool ok = str::Eq(numeric, StrL("125"));
+    str::Free(numeric);
+    return ok && ZoomFromString(StrL("  FIT HEIGHT  "), 0) == kZoomFitHeight && ZoomFromString(StrL("125"), 0) == 125 &&
+           ZoomFromString(StrL("unknown"), 125) == 125 && ZoomFromString(StrL("0"), 125) == 125 && !IsValidZoom(0) &&
+           !IsValidZoom(kInvalidZoom) && IsValidZoom(kZoomMin) && IsValidZoom(kZoomMax);
+}
+#endif
