@@ -1100,19 +1100,10 @@ RectF EngineBase::PageContentBox(int pageNo, RenderTarget /*target*/) {
 }
 
 const char* PdfPageBoxName(PdfPageBoxKind kind) {
-    switch (kind) {
-        case PdfPageBoxKind::Media:
-            return "media";
-        case PdfPageBoxKind::Crop:
-            return "crop";
-        case PdfPageBoxKind::Bleed:
-            return "bleed";
-        case PdfPageBoxKind::Trim:
-            return "trim";
-        case PdfPageBoxKind::Art:
-            return "art";
-    }
-    return "";
+    // Names follow PdfPageBoxKind order.
+    static constexpr const char* names[] = {"media", "crop", "bleed", "trim", "art"};
+    int idx = (int)kind;
+    return idx < dimofi(names) ? names[idx] : "";
 }
 
 // Non-PDF engines have no page boxes.
