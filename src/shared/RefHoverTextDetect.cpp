@@ -144,18 +144,13 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         if (i == cursorIdx) {
             cursorChunkPos = len(chunk);
         }
-        if (isSpace) {
-            if (!lastWasSpace) {
-                chunk.AppendChar(L' ');
-                VecAppend(chunkGlyphs, -1);
-                lastWasSpace = true;
-            }
-        } else {
-            chunk.AppendChar(c);
-            VecAppend(chunkGlyphs, i);
-            lastWasSpace = false;
-        }
         prevY = r.y;
+        if (isSpace && lastWasSpace) {
+            continue;
+        }
+        chunk.AppendChar(isSpace ? L' ' : c);
+        VecAppend(chunkGlyphs, isSpace ? -1 : i);
+        lastWasSpace = isSpace;
     }
     if (cursorChunkPos < 0) {
         return false;
