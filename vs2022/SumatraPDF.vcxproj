@@ -1430,7 +1430,6 @@
     <ClInclude Include="..\src\DocumentProperties.h" />
     <ClInclude Include="..\src\EmbeddedResources.h" />
     <ClInclude Include="..\src\EngineAll.h" />
-    <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\ExifDump.h" />
     <ClInclude Include="..\src\ExplorerQuickLook.h" />
@@ -1526,6 +1525,7 @@
     <ClInclude Include="..\src\shared\DocumentLayout.h" />
     <ClInclude Include="..\src\shared\EbookDoc.h" />
     <ClInclude Include="..\src\shared\EbookFormatter.h" />
+    <ClInclude Include="..\src\shared\EngineBase.h" />
     <ClInclude Include="..\src\shared\EutlTrust.h" />
     <ClInclude Include="..\src\shared\FileHistory.h" />
     <ClInclude Include="..\src\shared\FilterUtil.h" />

@@ -507,6 +507,7 @@ struct RenderPageArgs {
                    RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr);
 };
 
+// reported from the background chapter-layout thread after each chapter
 struct ChapterLayoutProgress {
     int done = 0;
     int total = 0;
@@ -574,10 +575,14 @@ class EngineBase {
     int LayoutGeneration();
     void EnsureAllChaptersLaidOut();
     int ChaptersLaidOut();
+    // lay out every chapter that isn't yet, off the UI thread. the chapter the
+    // caller already laid out (the one being read) is left as it is
     void StartBackgroundChapterLayout();
     void CancelBackgroundChapterLayout();
     bool LayoutJobCurrent(int id);
     void ReportLayoutProgress(int done, int total, bool finished);
+    void FlushPageCount();
+    // lay out any chapter the background thread only warmed, then notify once
     void PublishWarmedChapters();
     // called (from any thread) whenever LayoutGeneration() actually changes
     void SetOnLayoutChanged(const Func0& fn) { onLayoutChanged = fn; }
@@ -586,6 +591,8 @@ class EngineBase {
 
     // real page count for a chapter; engines with more than one chapter override this
     virtual int LayOutChapter(int chapter);
+    // expensive chapter pagination without publishing a new flat page count.
+    // the background thread uses this; the UI thread publishes via LayOutChapter
     virtual void WarmChapter(int chapter);
     // persisted position that survives re-pagination; default is "chapter:page:chapterPageCount"
     virtual TempStr MakeBookmarkTemp(Location loc);
@@ -707,6 +714,7 @@ class EngineBase {
     Func1<ChapterLayoutProgress*> onChapterLayoutProgress;
     Func1<EngineBase*> onDestroy;
     int notifiedGeneration = 0;
+    // bumped to drop an in-flight background layout (close, restyle, restart)
     AtomicInt layoutJob = 0;
 
     // per-chapter cached text (PageTextCache, defined in EngineBase.cpp)

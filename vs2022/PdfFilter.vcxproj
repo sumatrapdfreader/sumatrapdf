@@ -1262,7 +1262,6 @@
   <ItemGroup>
     <ClInclude Include="..\src\EmbeddedResources.h" />
     <ClInclude Include="..\src\EngineAll.h" />
-    <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
@@ -1274,6 +1273,7 @@
     <ClInclude Include="..\src\shared\ChapterTable.h" />
     <ClInclude Include="..\src\shared\DocProperties.h" />
     <ClInclude Include="..\src\shared\EbookDoc.h" />
+    <ClInclude Include="..\src\shared\EngineBase.h" />
     <ClInclude Include="..\src\shared\GumboHtmlParser.h" />
     <ClInclude Include="..\src\shared\MobiDoc.h" />
     <ClInclude Include="..\src\shared\PalmDbReader.h" />

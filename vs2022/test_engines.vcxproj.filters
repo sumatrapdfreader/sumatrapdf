@@ -16,7 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\EngineAll.h" />
-    <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\shared\CachedObjects.h">
       <Filter>shared</Filter>
     </ClInclude>
@@ -24,6 +23,9 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\DocProperties.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\EngineBase.h">
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\LitDoc.h">

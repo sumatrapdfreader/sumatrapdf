@@ -959,7 +959,7 @@ function test_engines_files()
     "src/EmbeddedResources.cpp",
     "src/EngineAll.h",
     "src/EngineBase.cpp",
-    "src/EngineBase.h",
+    "src/shared/EngineBase.h",
     "src/CachedObjects.cpp",
     "src/shared/CachedObjects.h",
     "src/shared/EngineDjvuDec.cpp",
