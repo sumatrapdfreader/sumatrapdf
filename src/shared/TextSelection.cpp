@@ -606,34 +606,33 @@ void TextSelection::GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, in
     }
 }
 
+// Cross a page boundary, landing at its first or last glyph.
+static bool MoveTextPage(EngineBase* engine, int& page, int& glyph, int dir, int nPages) {
+    if (dir == 0 || (dir > 0 ? page >= nPages : page <= 1)) {
+        return false;
+    }
+    page += dir > 0 ? 1 : -1;
+    glyph = 0;
+    if (dir < 0) {
+        engine->GetTextForPage(page, &glyph);
+    }
+    return true;
+}
+
 // Move free end (page, glyph) by one glyph in reading order. dir +1 / -1.
 static bool MoveFreeEndByGlyph(EngineBase* engine, int& page, int& glyph, int dir) {
     int nPages = engine->PageCount();
     int textLen = 0;
     engine->GetTextForPage(page, &textLen);
-    if (dir > 0) {
-        if (glyph < textLen) {
-            glyph++;
-            return true;
-        }
-        if (page < nPages) {
-            page++;
-            glyph = 0;
-            return true;
-        }
-        return false;
+    if (dir > 0 && glyph < textLen) {
+        glyph++;
+        return true;
     }
-    if (glyph > 0) {
+    if (dir <= 0 && glyph > 0) {
         glyph--;
         return true;
     }
-    if (page > 1) {
-        page--;
-        engine->GetTextForPage(page, &textLen);
-        glyph = textLen;
-        return true;
-    }
-    return false;
+    return MoveTextPage(engine, page, glyph, dir > 0 ? 1 : -1, nPages);
 }
 
 // Move free end (page, glyph) to the previous / next word boundary. dir +1 / -1.
@@ -690,19 +689,7 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
     int textLen = 0;
     Str text = engine->GetTextForPage(page, &textLen, &coords);
     if (textLen <= 0 || !coords) {
-        // empty page: step a page
-        if (dir > 0 && page < nPages) {
-            page++;
-            glyph = 0;
-            return true;
-        }
-        if (dir < 0 && page > 1) {
-            page--;
-            engine->GetTextForPage(page, &textLen);
-            glyph = textLen;
-            return true;
-        }
-        return false;
+        return MoveTextPage(engine, page, glyph, dir, nPages);
     }
 
     // reference point: center of the glyph left of the free end (or first glyph)
@@ -739,18 +726,7 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
         }
     }
     if (targetBandY < 0) {
-        if (forward && page < nPages) {
-            page++;
-            glyph = 0;
-            return true;
-        }
-        if (!forward && page > 1) {
-            page--;
-            engine->GetTextForPage(page, &textLen);
-            glyph = textLen;
-            return true;
-        }
-        return false;
+        return MoveTextPage(engine, page, glyph, dir, nPages);
     }
     for (int i = 0; i < textLen; i++) {
         if (!coords[i].x && !coords[i].dx) {
