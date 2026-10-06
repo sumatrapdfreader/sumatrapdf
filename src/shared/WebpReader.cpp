@@ -6,13 +6,9 @@
 #include "base/GuessFileType.h"
 #include "base/GdiPlusUtil.h"
 
-#ifndef NO_LIBWEBP
 #include <webp/decode.h>
-#endif
 
 #include "WebpReader.h"
-
-#ifndef NO_LIBWEBP
 
 namespace webp {
 
@@ -65,15 +61,3 @@ bool DecodeRgbInto(Str d, DecodeDstAllocFn allocDst, void* user) {
 }
 
 } // namespace webp
-
-#else
-namespace webp {
-Pixmap* PixmapFromData(const Str&) {
-    return nullptr;
-}
-bool DecodeRgbInto(Str, DecodeDstAllocFn, void*) {
-    return false;
-}
-} // namespace webp
-
-#endif
