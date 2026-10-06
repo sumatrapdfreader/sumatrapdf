@@ -530,13 +530,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
                 continue; // don't recurse into the object's <param> children
             }
         }
-        const GumboVector* children = GumboChildrenOf(node);
-        if (children) {
-            // push in reverse so children are visited in document order
-            for (unsigned int i = children->length; i > 0; i--) {
-                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
-            }
-        }
+        GumboPushChildren(toVisit, node);
     }
     return hadOne;
 }

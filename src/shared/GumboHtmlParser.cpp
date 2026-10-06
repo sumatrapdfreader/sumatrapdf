@@ -19,6 +19,17 @@ const GumboVector* GumboChildrenOf(const GumboNode* node) {
     return nullptr;
 }
 
+// Push in reverse so a depth-first stack visits children in document order.
+void GumboPushChildren(Vec<const GumboNode*>& stack, const GumboNode* node) {
+    const GumboVector* children = GumboChildrenOf(node);
+    if (!children) {
+        return;
+    }
+    for (unsigned int i = children->length; i > 0; i--) {
+        VecAppend(stack, (const GumboNode*)children->data[i - 1]);
+    }
+}
+
 static Str GumboElementTagName(const GumboNode* node) {
     ReportIf(!node || node->type != GUMBO_NODE_ELEMENT);
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
@@ -85,13 +96,7 @@ const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name, HtmlN
         if (GumboTagNameIs(n, name, match)) {
             return n;
         }
-        const GumboVector* children = GumboChildrenOf(n);
-        if (children) {
-            // push in reverse so children are visited in document order
-            for (unsigned int i = children->length; i > 0; i--) {
-                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
-            }
-        }
+        GumboPushChildren(toVisit, n);
     }
     return nullptr;
 }

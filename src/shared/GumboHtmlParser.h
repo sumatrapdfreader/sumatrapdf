@@ -11,6 +11,7 @@ enum class HtmlNameMatch {
 };
 
 const GumboVector* GumboChildrenOf(const GumboNode* node);
+void GumboPushChildren(Vec<const GumboNode*>& stack, const GumboNode* node);
 
 bool GumboTagNameIs(const GumboNode* node, Str name, HtmlNameMatch match = HtmlNameMatch::Exact);
 

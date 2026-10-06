@@ -1042,11 +1042,7 @@ static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
         if (node->type != GUMBO_NODE_ELEMENT) {
             continue;
         }
-        const GumboVector* children = &node->v.element.children;
-        // push in reverse so children are visited (and text appended) in document order
-        for (unsigned int i = children->length; i > 0; i--) {
-            VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
-        }
+        GumboPushChildren(toVisit, node);
     }
 }
 

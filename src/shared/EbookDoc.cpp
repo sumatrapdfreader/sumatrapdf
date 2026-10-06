@@ -344,13 +344,7 @@ static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
                 encList.Append(uri);
             }
         }
-        const GumboVector* children = GumboChildrenOf(node);
-        if (!children) {
-            continue;
-        }
-        for (unsigned int i = children->length; i > 0; i--) {
-            VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
-        }
+        GumboPushChildren(toVisit, node);
     }
 }
 
@@ -1808,12 +1802,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
         if (!node) {
             continue;
         }
-        const GumboVector* children = GumboChildrenOf(node);
-        if (children) {
-            for (unsigned int i = children->length; i > 0; i--) {
-                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
-            }
-        }
+        GumboPushChildren(toVisit, node);
         if (!GumboTagNameIs(node, StrL("b"))) {
             continue;
         }
