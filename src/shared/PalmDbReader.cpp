@@ -80,24 +80,18 @@ PdbReader* PdbReader::CreateFromFile(Str path) {
     return CreateFromData(d);
 }
 
-// values for typeCreator
-constexpr const char* kMobiTypeCreator = "BOOKMOBI";
-constexpr const char* kPalmDocTypeCreator = "TEXtREAd";
-constexpr const char* kTealDocTypeCreator = "TEXtTlDc";
-constexpr const char* kPluckerTypeCreator = "DataPlkr";
-
 PdbDocType GetPdbDocType(Str typeCreator) {
-    if (MemEq(typeCreator.s, kMobiTypeCreator, 8)) {
-        return PdbDocType::Mobipocket;
-    }
-    if (MemEq(typeCreator.s, kPalmDocTypeCreator, 8)) {
-        return PdbDocType::PalmDoc;
-    }
-    if (MemEq(typeCreator.s, kTealDocTypeCreator, 8)) {
-        return PdbDocType::TealDoc;
-    }
-    if (MemEq(typeCreator.s, kPluckerTypeCreator, 8)) {
-        return PdbDocType::Plucker;
+    static const struct {
+        const char* signature;
+        PdbDocType type;
+    } types[] = {{"BOOKMOBI", PdbDocType::Mobipocket},
+                 {"TEXtREAd", PdbDocType::PalmDoc},
+                 {"TEXtTlDc", PdbDocType::TealDoc},
+                 {"DataPlkr", PdbDocType::Plucker}};
+    for (const auto& entry : types) {
+        if (MemEq(typeCreator.s, entry.signature, kPdbTypeCreatorLen)) {
+            return entry.type;
+        }
     }
     return PdbDocType::Unknown;
 }
