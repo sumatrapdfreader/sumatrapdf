@@ -39,16 +39,7 @@ static WCHAR FoldCaseW(WCHAR c) {
 #endif
 }
 
-// Caption / heading keyword tables, \0-separated utf8 strings. Each entry
-// is a lowercase word recognised at the start of a "Figure 1.2" /
-// "Tableau 2" style label. Add a language by appending entries; the call
-// sites loop the table so no other code changes.
-//
-// Entries are matched case-insensitively against the input glyph (via
-// CharLowerW, which folds accented letters regardless of the CRT locale)
-// so capitalised or all-caps PDF text matches too. Accented dict words
-// must be stored already-lowercased (NFC) — PDF text extraction produces
-// NFC most of the time.
+// Lowercase NFC words used in numbered captions and heading prefixes.
 // clang-format off
 static SeqStrings gCaptionWords =
     // en
@@ -67,34 +58,27 @@ static SeqStrings gCaptionWords =
     "tableau\0" "algorithme\0";
 // clang-format on
 
-// Heading prefixes recognised at the start of a destination glyph run. Used
-// to disambiguate a section heading / figure caption destination from a
-// description-list bibliography entry. Superset of gCaptionWords — includes
-// "section" / "chapter" / locale equivalents that aren't captions but are
-// heading destinations.
-// clang-format off
-static SeqStrings gHeadingPrefixWords =
-    // en
-    "figure\0" "table\0" "listing\0" "section\0" "chapter\0" "algorithm\0"
-    // de
-    "abbildung\0" "tabelle\0" "abschnitt\0" "kapitel\0" "algorithmus\0"
-    // es / it / pt (shared roots: figura, algoritmo; capítulo is es + pt)
-    "figura\0" "algoritmo\0" "capítulo\0"
-    // es
-    "tabla\0" "sección\0"
-    // it
-    "tabella\0" "sezione\0" "capitolo\0"
-    // pt
-    "tabela\0" "seção\0" "secção\0"
-    // fr
-    "tableau\0" "chapitre\0" "algorithme\0";
-// clang-format on
+// Heading words in addition to the caption vocabulary.
+static SeqStrings gHeadingWords =
+    "section\0"
+    "chapter\0"
+    "abschnitt\0"
+    "kapitel\0"
+    "capítulo\0"
+    "sección\0"
+    "sezione\0"
+    "capitolo\0"
+    "seção\0"
+    "secção\0"
+    "chapitre\0";
 
-// Match `text[idx..]` case-insensitively against the lowercase dictionary
-// word `w`. Returns true on full word match. When requireTrailingDigit is
-// set, also requires optional whitespace then a digit immediately after the
-// word (the "Figure 1.2" trailing-number constraint).
-static bool MatchWordAt(WStr text, int idx, WStr w, bool requireTrailingDigit) {
+enum class LabelKind {
+    Caption,
+    Heading
+};
+
+static bool MatchWordAt(WStr text, int idx, WStr w, LabelKind kind) {
+    bool requireTrailingDigit = kind == LabelKind::Caption;
     int n = w.len;
     if (idx + n > text.len) {
         return false;
@@ -126,20 +110,20 @@ static bool MatchWordAt(WStr text, int idx, WStr w, bool requireTrailingDigit) {
     return k < text.len && text.s[k] >= L'0' && text.s[k] <= L'9';
 }
 
-// True if `text[idx..]` starts a caption label like "Figure 1.2", "Tableau 2".
-// See kCaptionWords for the language list. Requires the previous glyph to be
-// a word boundary and the word to be followed by whitespace and a digit.
-static bool IsCaptionLabelAt(WStr text, int idx) {
-    if (idx > 0 && IsAsciiAlnum(text.s[idx - 1])) {
-        return false;
-    }
-    for (Str word = SeqStrFirst(gCaptionWords); len(word) > 0; word = SeqStrNext(word)) {
-        TempWStr w = ToWStrTemp(word);
-        if (MatchWordAt(text, idx, w, /*requireTrailingDigit=*/true)) {
+static bool MatchesLabelWords(WStr text, int idx, SeqStrings words, LabelKind kind) {
+    for (Str word = SeqStrFirst(words); word; word = SeqStrNext(word)) {
+        if (MatchWordAt(text, idx, ToWStrTemp(word), kind)) {
             return true;
         }
     }
     return false;
+}
+
+static bool IsCaptionLabelAt(WStr text, int idx) {
+    if (idx > 0 && IsAsciiAlnum(text.s[idx - 1])) {
+        return false;
+    }
+    return MatchesLabelWords(text, idx, gCaptionWords, LabelKind::Caption);
 }
 
 // Clip a region to the page mediabox: shifts a negative x/y to 0 (shrinking
@@ -162,31 +146,8 @@ static void ClipToMediabox(RectF& box, RectF mediabox) {
     }
 }
 
-// Snap glyphs to text lines and rewrite each glyph's y/dy to its line's
-// top/height. mupdf returns tight per-glyph ink boxes, so glyphs on one
-// visual line have *different* tops (a period or comma sits well below a
-// capital, an ascender above it). Every line heuristic below treats
-// coords[i].y as the line's position (grouping by y±tol), which a stray
-// low-topped glyph from an adjacent line defeats — e.g. the trailing "."
-// of the previous bibliography entry landing inside the destination band and
-// hijacking the entry-start search. The glyph *baseline* (y + dy) is stable
-// across a line (a digit and a period share it), so cluster by baseline and
-// flatten each line to a uniform top-aligned row — the shape the detectors
-// assume. `out` must have room for glyphCount rects; aliasing `coords` is not
-// allowed.
-// Pure-function region detectors used by RefHover to decide what slice of the
-// destination page to render into the hover popup. Kept engine-independent so
-// the heuristics can be unit-tested with synthetic glyph arrays (see
-// src/base/tests/RefHover_ut.cpp).
-//
-// All three functions take:
-//   text     — per-glyph WCHAR view, one WCHAR per engine text codepoint
-//   coords   — per-glyph Rect array, parallel to `text` (second out-ptr)
-//   textLen  — glyph count
-//   mediabox — page bounds in PDF user space
-//   destX, destY — link's destination coordinates (PDF user space)
-//
-// Returned RectF is in PDF user space, clipped to mediabox.
+// Group glyphs by baseline so punctuation does not split visual lines.
+// out needs glyphCount slots and must not alias coords.
 void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
     if (!coords || !out || glyphCount <= 0) {
         return;
@@ -236,23 +197,8 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
     }
 }
 
-// Drop diagonal draft / "under review" watermark glyphs from a page's *raw*
-// glyph arrays before any box detection. A watermark stamp is set far larger
-// than body text and, being rotated, sits roughly one glyph per baseline —
-// each on a sparse row — whereas a heading or title is a horizontal run of
-// same-baseline glyphs. Removing it up front keeps a 2-column gutter empty and
-// the entry bounds tight, instead of special-casing oversized glyphs in every
-// scan. Run this on the engine's raw coords *before* NormalizeGlyphLines:
-// normalization clusters by baseline (±4pt) and could fold a watermark glyph
-// into a body line, hiding its true height.
-//
-// `outText`/`outCoords` are caller-allocated with room for glyphCount entries;
-// returns the number of glyphs kept (written to the front of the out arrays).
-// Remove diagonal draft / "under review" watermark glyphs (oversized + sitting
-// on sparse baselines) from a page's raw glyph arrays, so 2-column gutter and
-// entry-bound detection see clean text. Run on the engine's raw coords *before*
-// NormalizeGlyphLines. `outText`/`outCoords` need room for glyphCount entries;
-// returns the kept-glyph count, written to the front of the out arrays.
+// Remove oversized glyphs on sparse baselines before NormalizeGlyphLines.
+// Output arrays need glyphCount slots; returns the number kept.
 int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* outCoords) {
     int n = text.len;
     if (n <= 0 || !coords || !outText || !outCoords) {
@@ -346,18 +292,8 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     return outLen;
 }
 
-// Used when the link doesn't resolve to a recognizable bibliography entry —
-// TOC targets, topbar/section links, table or figure captions, image-only
-// PDFs. Returns a region that spans the full page width and goes from the
-// destination Y down to the bottom of the last text glyph on the page —
-// captures table caption / figure caption / section content below the
-// link target without leaving a long blank margin at the popup bottom.
-// Auto-fit in RefHoverOnTimer + the monitor-based popup height cap keep
-// the popup a sensible size; the user can wheel-zoom in if text is too
-// small.
-// Landscape view: full page width strip anchored at destY, extending downward
-// to the last text glyph or a recognised caption block. Fallback when no
-// recognisable entry or equation is found.
+// Full-width strip from destY to the last glyph or caption block.
+// Used when no entry or equation can be identified.
 RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Rect* coords) {
     (void)destX;
     float ty = (destY >= 0.f) ? destY - kAnchorTopMarginPt : 0.f;
@@ -528,15 +464,8 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     return RectF{0.f, ty, mediabox.dx, h};
 }
 
-// Detect a labelled display equation at (destX, destY): a "(N)" or "(N.M)"
-// glyph cluster sitting near the right column edge on or near destY, with
-// no other text further right on that line. Returns the equation's tight
-// bounding box (full page width, ~one eq line tall) when found, empty rect
-// otherwise. Used to avoid the landscape-style 200pt slice that sweeps in
-// the paragraph and the next equation below an equation cross-reference.
-// Equation cross-ref: tight one-line box around a "(N)" or "(N.M)" label
-// sitting at the right column edge near destY. Returns empty rect when no
-// equation label is detected.
+// Tight equation box for a right-aligned '(N)' or '(N.M)' label near destY.
+// Returns empty when no equation label is found.
 RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY) {
     (void)destX;
     RectF empty{};
@@ -893,23 +822,8 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
     return box;
 }
 
-// Find the bounding box of a single bibliography entry on the destination
-// page. Uses per-glyph text+coords from the engine's text cache:
-//   1. Locate the leftmost glyph with y in a small band around destY (entry start).
-//   2. Scan forward; stop at "[N" near the same left margin (next entry) or
-//      a vertical paragraph gap.
-//   3. Return the min/max bounding box of glyphs in [start, end), padded.
-// Bibliography / glossary / abbreviation entry box. Tries bracket-style
-// ("[Foo+09]"), hanging-indent author-year, and single-line description-list
-// layouts. Returns empty when there is no text near the destination so the
-// caller can recover a stale page anchor; other non-list layouts fall back to
-// LandscapeBox.
-//
-// continuationOut, if non-null, is set to a second box when a bracket-style
-// entry runs off the bottom of its 2-column-layout column with no natural
-// close and continues at the top of the next column (e.g. "[63]"-style
-// entries wrapping across a column break); empty when there's no such
-// continuation. Ignored (left untouched) by callers that don't need it.
+// Fit a bibliography, glossary, or abbreviation entry; otherwise use LandscapeBox.
+// continuationOut optionally receives the entry's tail in the next column.
 RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY, RectF* continuationOut) {
     if (continuationOut) {
         *continuationOut = RectF{};
@@ -1601,11 +1515,8 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     // "Figure"/"Table"/"Section". Catches "6.2 Foo", "Figure 2.2: …", etc.
     WCHAR firstC = text.s[startIdx];
     bool digitStart = (firstC >= L'0' && firstC <= L'9');
-    bool labelStart = false;
-    for (Str word = SeqStrFirst(gHeadingPrefixWords); !labelStart && len(word) > 0; word = SeqStrNext(word)) {
-        TempWStr w = ToWStrTemp(word);
-        labelStart = MatchWordAt(text, startIdx, w, /*requireTrailingDigit=*/false);
-    }
+    bool labelStart = MatchesLabelWords(text, startIdx, gCaptionWords, LabelKind::Heading) ||
+                      MatchesLabelWords(text, startIdx, gHeadingWords, LabelKind::Heading);
     if (digitStart || labelStart) {
         return LandscapeBox(mediabox, destX, destY, text, coords);
     }
