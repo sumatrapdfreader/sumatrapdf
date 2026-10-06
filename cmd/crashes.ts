@@ -2,13 +2,24 @@
 //
 //   bun cmd/crashes.ts              list (oldest first); analyze missing
 //   bun cmd/crashes.ts --local      same, against http://127.0.0.1:9321
+//   bun cmd/crashes.ts --list --since-last
+//                                   crashes newer than the last /fix-crashes check
 //   bun cmd/crashes.ts <id>         download dump + pdb + exe, run !analyze
 //
 // Everything is cached under .work/crashes/<id>/ (dump, log.txt, settings.txt,
 // analyze.txt, summary.txt) and .work/crashes/symbols/<build>/ (pdb, exe, or a
 // *-missing.txt for a 404), shared with cmd/analyze-crash.ts, so a second run
 // only fetches the list and serves.
-import { existsSync, mkdirSync, writeFileSync, readFileSync, statSync, unlinkSync, copyFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  unlinkSync,
+  copyFileSync,
+} from "node:fs";
 import { join, resolve, relative } from "node:path";
 import { homedir, cpus } from "node:os";
 import { spawn, spawnSync } from "node:child_process";
@@ -37,13 +48,25 @@ function usage(): void {
   bun cmd/crashes.ts [--local]                 list; download+analyze dumps we don't have yet
   bun cmd/crashes.ts [--local] <id>            download dump, pdb, exe, run cdb (!analyze -v; ~*kb)
   bun cmd/crashes.ts -reanalyze [--local] [id] force cdb again (dump/pdb/exe stay cached)
-  bun cmd/crashes.ts --list [--today]          print the list as CSV and exit (no download, no server)
+  bun cmd/crashes.ts --list [--today] [--since-last] [--since <id-or-day>]
+                                               print the list as CSV and exit (no download, no server)
   bun cmd/crashes.ts --server <url> ...        override server base URL
   --today                                      only crashes from today
+  --since-last                                 crashes after the newest id in .work/crashes/analyzed-*.md and fixed.md
+                                               (no such id yet: today)
+  --since <id or yyyy-mm-dd>                   crashes whose id is greater than that value
 After listing, serves a local page (like sumatrapdfreader.org/crashes/) and opens the browser.`);
 }
 
-type Args = { server: string; id: string; reanalyze: boolean; list: boolean; today: boolean };
+type Args = {
+  server: string;
+  id: string;
+  reanalyze: boolean;
+  list: boolean;
+  today: boolean;
+  since: string;
+  sinceLast: boolean;
+};
 
 function parseArgs(argv: string[]): Args {
   let server = PROD_SERVER;
@@ -51,6 +74,8 @@ function parseArgs(argv: string[]): Args {
   let reanalyze = false;
   let list = false;
   let today = false;
+  let since = "";
+  let sinceLast = false;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--help" || a === "-h") {
@@ -67,6 +92,18 @@ function parseArgs(argv: string[]): Args {
     }
     if (a === "--today" || a === "-today") {
       today = true;
+      continue;
+    }
+    if (a === "--since-last" || a === "-since-last") {
+      sinceLast = true;
+      continue;
+    }
+    if (a === "--since" || a === "-since") {
+      const v = argv[++i];
+      if (!v) {
+        throw new Error("--since needs a day (yyyy-mm-dd) or a crash id");
+      }
+      since = v;
       continue;
     }
     if (a === "-reanalyze" || a === "-re-analyze" || a === "--reanalyze" || a === "--re-analyze") {
@@ -89,7 +126,48 @@ function parseArgs(argv: string[]): Args {
     }
     id = a;
   }
-  return { server, id, reanalyze, list, today };
+  if (sinceLast && since) {
+    throw new Error("use either --since-last or --since");
+  }
+  return { server, id, reanalyze, list, today, since, sinceLast };
+}
+
+// crash ids sort with upload time
+const kCrashIdRe = /\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-[0-9a-f]{4,40}/gi;
+
+function newestCrashIdIn(text: string): string {
+  let max = "";
+  for (const m of text.matchAll(kCrashIdRe)) {
+    const id = m[0].toLowerCase();
+    if (id > max) {
+      max = id;
+    }
+  }
+  return max;
+}
+
+// Newest id already recorded by /fix-crashes. Empty when this tree has no check yet.
+function lastAnalyzedCrashId(): string {
+  if (!existsSync(CACHE_DIR)) {
+    return "";
+  }
+  let max = "";
+  const consider = (p: string) => {
+    if (!existsSync(p)) {
+      return;
+    }
+    const id = newestCrashIdIn(readFileSync(p, "utf8"));
+    if (id > max) {
+      max = id;
+    }
+  };
+  consider(join(CACHE_DIR, "fixed.md"));
+  for (const name of readdirSync(CACHE_DIR)) {
+    if (/^analyzed-\d{4}-\d{2}-\d{2}\.md$/.test(name)) {
+      consider(join(CACHE_DIR, name));
+    }
+  }
+  return max;
 }
 
 // yyyy-mm-dd in local time
@@ -1395,9 +1473,28 @@ async function serveCrashes(rows: DumpRow[]): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const { server, id, reanalyze, list: listOnly, today } = parseArgs(process.argv.slice(2));
+  const parsed = parseArgs(process.argv.slice(2));
+  const { server, id, reanalyze, list: listOnly } = parsed;
+  let { today, since } = parsed;
+  if (parsed.sinceLast) {
+    since = lastAnalyzedCrashId();
+    if (since) {
+      console.error(`listing crashes after ${since}`);
+    } else {
+      console.error("no earlier check recorded; listing today");
+      today = true;
+    }
+  }
   const password = loadMinidumpPassword();
-  let list = parseList(await fetchText(`${server}/app/${APP}/minidumps.txt`, dumpAuth(password)));
+  // ?since= is applied again below: a server that does not know the parameter still returns the full list
+  let url = `${server}/app/${APP}/minidumps.txt`;
+  if (since) {
+    url += `?since=${encodeURIComponent(since)}`;
+  }
+  let list = parseList(await fetchText(url, dumpAuth(password)));
+  if (since) {
+    list = list.filter((r) => r.id > since);
+  }
   if (today) {
     list = list.filter((r) => isFromDay(r, todayStr()));
   }

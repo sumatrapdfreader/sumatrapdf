@@ -1,11 +1,11 @@
 ---
 name: fix-crashes
-description: Download today's SumatraPDF crash minidumps, analyze them with cdb, fix the ones whose cause is clear and commit after each fix. Skips crashes already analyzed today or already covered by an earlier fix. Use when the user runs /fix-crashes.
+description: Download SumatraPDF crash minidumps since the last check, analyze them with cdb, fix the ones whose cause is clear and commit after each fix. Skips crashes already recorded or already covered by an earlier fix. Use when the user runs /fix-crashes.
 ---
 
-# Fix today's crashes
+# Fix crashes since the last check
 
-Batch loop over today's minidumps. For one known crash id use `/fix-crash` instead;
+Batch loop over minidumps uploaded after the last check. For one known crash id use `/fix-crash` instead;
 `.claude/skills/fix-crash/SKILL.md` has the detail on reading `analyze.txt` / `log.txt`
 that this skill assumes.
 
@@ -39,14 +39,18 @@ reach the repo. Create them if missing.
 - <crash-id> — <fixed <sha> | dup of "<fixed.md section>" | no-fix: <reason>> — <one line>
 ```
 
-## 1. List today's crashes
+## 1. List crashes since the last check
 
 ```
-bun cmd/crashes.ts --list --today
+bun cmd/crashes.ts --list --since-last
 ```
 
-Prints `id,version,date,size,ip` and exits (no downloads, no local server). Drop
-ids already in `.work/crashes/analyzed-<today>.md`. If nothing is left, say so and stop.
+Prints `id,version,date,size,ip` and exits (no downloads, no local server). The
+list is every dump whose id is newer than the newest crash id in
+`.work/crashes/analyzed-*.md` and `fixed.md`. Ids sort with upload time. With
+no earlier check recorded, the list is today. Stderr names the watermark.
+Drop an id that is already in an `analyzed-*.md` file. If nothing is left,
+say so and stop.
 
 ## 2. Per crash: analyze
 
@@ -61,7 +65,8 @@ build (`symbols:` line in the summary) the stack is module+offset only: record
 
 Build the signature from `exception` + the first in-repo frame + `bucket`. If it
 matches a `fixed.md` entry, append that id to the entry's `ids:`, write a `dup of`
-line to `analyzed-<today>.md`, and move to the next crash — do not re-diagnose.
+line to `analyzed-<crash-day>.md` (the id's date, not the day you run this),
+and move to the next crash — do not re-diagnose.
 
 ## 3. Per crash: diagnose
 
@@ -101,7 +106,7 @@ Fix <what> (fixes #<n>)      # the (fixes #n) part only when there is an issue
 crash: <crash-id> (<exception> at <func>, <file>:<line>)
 ```
 
-After the commit, update `fixed.md` (status `fixed <sha>`) and `analyzed-<today>.md`,
+After the commit, update `fixed.md` (status `fixed <sha>`) and `analyzed-<crash-day>.md`,
 then go to the next crash. One crash at a time — never batch several fixes into one commit.
 
 ## 5. Report
