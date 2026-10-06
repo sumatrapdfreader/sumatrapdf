@@ -20,15 +20,11 @@
 
 #include "base/File.h"
 
-static char* PathZTemp(Str path) {
-    return CStrTemp(path);
-}
-
 static bool StatPath(Str path, struct stat& st) {
     if (len(path) == 0) {
         return false;
     }
-    return stat(PathZTemp(path), &st) == 0;
+    return stat(CStrTemp(path), &st) == 0;
 }
 
 static FILETIME FileTimeFromTimespec(time_t sec, long nsec) {
@@ -104,7 +100,7 @@ DWORD GetCachedAttributes(Str path) {
 
 TempStr NormalizeTemp(Str path) {
     char resolved[PATH_MAX];
-    if (realpath(PathZTemp(path), resolved)) {
+    if (realpath(CStrTemp(path), resolved)) {
         return str::DupTemp(Str(resolved));
     }
     if (IsAbsolute(path)) {
@@ -148,7 +144,7 @@ static bool StatFileSystem(Str path, struct statfs& fs) {
     }
     TempStr current = path::NormalizeTemp(path);
     for (;;) {
-        if (statfs(PathZTemp(current), &fs) == 0) {
+        if (statfs(CStrTemp(current), &fs) == 0) {
             return true;
         }
         TempStr parent = path::GetDirTemp(current);
@@ -293,17 +289,17 @@ FILE* OpenFILE(Str path) {
     if (len(path) == 0) {
         return nullptr;
     }
-    return fopen(PathZTemp(path), "rb");
+    return fopen(CStrTemp(path), "rb");
 }
 
 FileHandle OpenReadOnly(Str path) {
-    return open(PathZTemp(path), O_RDONLY);
+    return open(CStrTemp(path), O_RDONLY);
 }
 
 // Opens path for reading and writing, creating it when createIfMissing.
 FileHandle OpenReadWrite(Str path, bool createIfMissing) {
     int flags = O_RDWR | (createIfMissing ? O_CREAT : 0);
-    return open(PathZTemp(path), flags, 0666);
+    return open(CStrTemp(path), flags, 0666);
 }
 
 void Close(FileHandle h) {
@@ -408,7 +404,7 @@ i64 GetSize(Str path) {
 // truncated by another process, touching a mapped page raises SIGBUS instead
 // of returning an error, so avoid mapping files on unreliable media.
 bool MemoryMap(Str path, Mapping* res) {
-    int fd = open(PathZTemp(path), O_RDONLY);
+    int fd = open(CStrTemp(path), O_RDONLY);
     if (fd < 0) {
         return false;
     }
@@ -436,33 +432,20 @@ void MemoryUnmap(Mapping* m) {
 }
 
 bool WriteFile(Str path, Str d) {
-    int fd = open(PathZTemp(path), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    int fd = open(CStrTemp(path), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
         return false;
     }
     AutoCall closeFile(close, fd);
 
-    const char* data = d.s;
-    size_t left = (size_t)d.len;
-    while (left > 0) {
-        ssize_t n = write(fd, data, left);
-        if (n < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-            return false;
-        }
-        data += n;
-        left -= (size_t)n;
-    }
-    return true;
+    return WriteAll(fd, d);
 }
 
 bool Delete(Str path) {
     if (len(path) == 0) {
         return false;
     }
-    if (unlink(PathZTemp(path)) == 0) {
+    if (unlink(CStrTemp(path)) == 0) {
         return true;
     }
     return errno == ENOENT;
@@ -477,7 +460,7 @@ bool Copy(Str dst, Str src, bool dontOverwrite) {
 }
 
 bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress) {
-    int srcFd = open(PathZTemp(src), O_RDONLY);
+    int srcFd = open(CStrTemp(src), O_RDONLY);
     if (srcFd < 0) {
         return false;
     }
@@ -487,7 +470,7 @@ bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress
     if (dontOverwrite) {
         flags |= O_EXCL;
     }
-    int dstFd = open(PathZTemp(dst), flags, 0666);
+    int dstFd = open(CStrTemp(dst), flags, 0666);
     if (dstFd < 0) {
         return false;
     }
@@ -546,7 +529,7 @@ bool SetAccessTime(Str path, FILETIME accessTime) {
     timespec ts[2];
     ts[0] = TimespecFromFileTime(accessTime);
     ts[1] = StatModificationTime(st);
-    return utimensat(AT_FDCWD, PathZTemp(path), ts, 0) == 0;
+    return utimensat(AT_FDCWD, CStrTemp(path), ts, 0) == 0;
 }
 
 FILETIME GetModificationTime(Str path) {
@@ -565,7 +548,7 @@ bool SetModificationTime(Str path, FILETIME lastMod) {
     timespec ts[2];
     ts[0] = StatAccessTime(st);
     ts[1] = TimespecFromFileTime(lastMod);
-    return utimensat(AT_FDCWD, PathZTemp(path), ts, 0) == 0;
+    return utimensat(AT_FDCWD, CStrTemp(path), ts, 0) == 0;
 }
 
 DWORD GetAttributes(Str path) {
@@ -577,7 +560,7 @@ DWORD GetAttributes(Str path) {
 }
 
 bool SetAttributes(Str path, DWORD attrs) {
-    return chmod(PathZTemp(path), (mode_t)(attrs & 07777)) == 0;
+    return chmod(CStrTemp(path), (mode_t)(attrs & 07777)) == 0;
 }
 
 int GetZoneIdentifier(Str /*path*/) {
@@ -596,7 +579,7 @@ bool Rename(Str newPath, Str oldPath) {
     if (len(newPath) == 0 || len(oldPath) == 0) {
         return false;
     }
-    return rename(PathZTemp(oldPath), PathZTemp(newPath)) == 0;
+    return rename(CStrTemp(oldPath), CStrTemp(newPath)) == 0;
 }
 
 // rename() already replaces an existing newPath, so this is Rename().
@@ -627,7 +610,7 @@ bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
 
     retryCount = std::max(retryCount, 1);
     for (int i = 0; i < retryCount; i++) {
-        if (rename(PathZTemp(tempPath), PathZTemp(dst)) == 0) {
+        if (rename(CStrTemp(tempPath), CStrTemp(dst)) == 0) {
             return true;
         }
         if (i + 1 < retryCount && retrySleepMs > 0) {
@@ -659,7 +642,7 @@ bool Exists(Str dir) {
 }
 
 bool Create(Str dir) {
-    if (mkdir(PathZTemp(dir), 0777) == 0) {
+    if (mkdir(CStrTemp(dir), 0777) == 0) {
         return true;
     }
     return errno == EEXIST && Exists(dir);
@@ -733,13 +716,13 @@ static bool RemoveDirContentsZ(const char* dir, bool removeDir) {
 }
 
 bool RemoveAll(Str dir) {
-    return RemoveDirContentsZ(PathZTemp(dir), true);
+    return RemoveDirContentsZ(CStrTemp(dir), true);
 }
 
 // Delete everything inside dir but keep dir itself, so code that races with us
 // still finds the directory there (see SaveThumbnail / dir::CreateAll).
 bool Empty(Str dir) {
-    return RemoveDirContentsZ(PathZTemp(dir), false);
+    return RemoveDirContentsZ(CStrTemp(dir), false);
 }
 
 bool HasWriteAccess(Str dir) {
@@ -747,12 +730,12 @@ bool HasWriteAccess(Str dir) {
         return false;
     }
     TempStr path = path::JoinTemp(dir, StrL("__sumatra_write_test__.tmp"));
-    int fd = open(PathZTemp(path), O_WRONLY | O_CREAT | O_EXCL, 0666);
+    int fd = open(CStrTemp(path), O_WRONLY | O_CREAT | O_EXCL, 0666);
     if (fd < 0) {
         return false;
     }
     close(fd);
-    unlink(PathZTemp(path));
+    unlink(CStrTemp(path));
     return true;
 }
 

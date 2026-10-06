@@ -174,11 +174,6 @@
 #if defined(min) || defined(max)
 #error "min or max defined"
 #endif
-// mingw's gdiplus.h includes <math.h> which in C++ pulls in <cmath>/<limits>
-// that use min/max as identifiers; pre-include them before defining macros
-#ifdef __GNUC__
-#include <cmath>
-#endif
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
 // /analyze flags a bogus C6385 (invalid read) inside GdiplusFontCollection.h;
@@ -297,8 +292,6 @@ int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
 int AtomicRefCountAdd(AtomicRefCount* v);
 int AtomicRefCountDec(AtomicRefCount* v);
-void* AtomicPtrGet(AtomicPtr* p);
-void AtomicPtrSet(AtomicPtr* p, void* v);
 void* AtomicPtrExchange(AtomicPtr* p, void* v);
 
 #if !OS_WIN
@@ -600,14 +593,6 @@ inline bool mulSafe(T* valInOut, T n) {
     *valInOut = res;
     return true;
 }
-
-#define NoOp() ((void)0)
-
-#if COMPILER_MSVC
-#define IS_UNUSED
-#else
-#define IS_UNUSED __attribute__((unused))
-#endif
 
 bool MemEq(const void* s1, const void* s2, int n);
 

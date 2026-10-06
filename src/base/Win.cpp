@@ -10,19 +10,10 @@
 #include "base/AutoWin.h"
 
 #include <aclapi.h>
-#include <bitset>
-#if COMPILER_MINGW
-#include <cpuid.h>
-#endif
 #include <float.h> // for _clearfp / _controlfp_s in MaskFpExceptions
 #include <mlang.h>
 #include "base/Pixmap.h"
 #include "base/Win.h"
-
-#ifdef __GNUC__
-// mingw needs explicit UUID declaration for IMultiLanguage2
-__CRT_UUID_DECL(IMultiLanguage2, 0xDCCFC164, 0x2B38, 0x11D2, 0xB7, 0xEC, 0x00, 0xC0, 0x4F, 0x8F, 0x5D, 0x9A)
-#endif
 
 //--- bool / BOOL
 
@@ -1880,39 +1871,27 @@ u32 CpuID() {
     return res;
 #else
     // https://learn.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex?view=msvc-170
-    std::bitset<32> f_1_ECX_;
-    std::bitset<32> f_1_EDX_;
-    std::bitset<32> f_7_EBX_;
+    u32 f_1_ECX_ = 0;
+    u32 f_1_EDX_ = 0;
+    u32 f_7_EBX_ = 0;
 
     u32 res = 0;
     int cpuInfo[4]{};
-#if COMPILER_MINGW
-    __cpuid(0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
-#else
     __cpuid(cpuInfo, 0);
-#endif
     int nIds = cpuInfo[0];
     if (nIds >= 1) {
-#if COMPILER_MINGW
-        __cpuid(1, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
-#else
         __cpuid(cpuInfo, 1);
-#endif
         f_1_ECX_ = cpuInfo[2];
         f_1_EDX_ = cpuInfo[3];
     }
     if (nIds >= 7) {
-#if COMPILER_MINGW
-        __cpuid_count(7, 0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
-#else
         __cpuid(cpuInfo, 7);
-#endif
         f_7_EBX_ = cpuInfo[1];
     }
 
     // {register bits, bit no, flag}
     const struct {
-        const std::bitset<32>& reg;
+        u32 reg;
         int bit;
         u32 flag;
     } kBits[] = {
@@ -1920,7 +1899,7 @@ u32 CpuID() {
         {f_1_ECX_, 19, kCpuSSE41}, {f_1_ECX_, 20, kCpuSSE42}, {f_1_ECX_, 28, kCpuAVX},  {f_7_EBX_, 5, kCpuAVX2},
     };
     for (auto& b : kBits) {
-        if (b.reg[b.bit]) {
+        if (b.reg & (1u << b.bit)) {
             res |= b.flag;
         }
     }
