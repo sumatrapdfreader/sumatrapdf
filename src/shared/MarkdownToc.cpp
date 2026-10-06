@@ -98,7 +98,10 @@ static void EnsureCmarkPluginsRegistered() {
     gCmarkInitialized = true;
 }
 
-static void AttachGfmExtensions(cmark_parser* parser) {
+static cmark_parser* CreateMarkdownParser(Str data) {
+    EnsureCmarkPluginsRegistered();
+    cmark_parser* parser = cmark_parser_new(CMARK_OPT_DEFAULT);
+
     // no "autoheaderid": its slug rules differ from GitHub's, so the ids it
     // makes don't match the "#anchor" links such documents carry.
     // AddHeadingAnchors() emits them instead (#5883).
@@ -109,6 +112,9 @@ static void AttachGfmExtensions(cmark_parser* parser) {
             cmark_parser_attach_syntax_extension(parser, syntax);
         }
     }
+
+    cmark_parser_feed(parser, data.s, (size_t)len(data));
+    return parser;
 }
 
 static const Str kSlugWhitespace = StrL(" \t\n\r");
@@ -165,12 +171,7 @@ static void ParseMarkdownHeadings(Str data, Vec<MarkdownHeadingItem>& headingsOu
         return;
     }
 
-    EnsureCmarkPluginsRegistered();
-
-    int options = CMARK_OPT_DEFAULT;
-    cmark_parser* parser = cmark_parser_new(options);
-    AttachGfmExtensions(parser);
-    cmark_parser_feed(parser, data.s, (size_t)data.len);
+    cmark_parser* parser = CreateMarkdownParser(data);
     cmark_node* doc = cmark_parser_finish(parser);
     cmark_parser_free(parser);
     if (!doc) {
@@ -625,12 +626,7 @@ static char* MarkdownToHtmlBody(Str markdown) {
         return nullptr;
     }
 
-    EnsureCmarkPluginsRegistered();
-
-    int options = CMARK_OPT_DEFAULT;
-    cmark_parser* parser = cmark_parser_new(options);
-    AttachGfmExtensions(parser);
-    cmark_parser_feed(parser, markdown.s, (size_t)markdown.len);
+    cmark_parser* parser = CreateMarkdownParser(markdown);
     cmark_node* doc = cmark_parser_finish(parser);
     if (!doc) {
         cmark_parser_free(parser);
@@ -643,7 +639,7 @@ static char* MarkdownToHtmlBody(Str markdown) {
 
     // Render before cmark_parser_free(); the extensions list is owned by the parser.
     cmark_llist* extensions = cmark_parser_get_syntax_extensions(parser);
-    char* body = cmark_render_html(doc, options, extensions);
+    char* body = cmark_render_html(doc, CMARK_OPT_DEFAULT, extensions);
     cmark_parser_free(parser);
     cmark_node_free(doc);
     return body;
