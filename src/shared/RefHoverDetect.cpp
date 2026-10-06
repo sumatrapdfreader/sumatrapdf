@@ -751,27 +751,6 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
             closedBySibling = true;
         }
     }
-    if (!closedBySibling) {
-        // No sibling closed it within the cap. Still acceptable if the column
-        // has no more text at all past the cap (a short trailing tail that's
-        // simply the last thing in the column); reject if text keeps flowing
-        // past the cap, since that's not a short wrap.
-        for (int i = 0; i < text.len; i++) {
-            WCHAR c = text.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
-                continue;
-            }
-            Rect r = coords[i];
-            if (r.x < nextColLeftX - 20 || r.x > colRightX) {
-                continue;
-            }
-            if (r.y >= capY - topDy) {
-                return RectF{};
-            }
-        }
-    }
-
-    // 6. Bounding box of the continuation block's glyphs.
     int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
     for (int i = 0; i < text.len; i++) {
         WCHAR c = text.s[i];
@@ -781,6 +760,10 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         Rect r = coords[i];
         if (r.x < nextColLeftX - 20 || r.x > colRightX) {
             continue;
+        }
+        // Without a closing sibling, a continuation must end within the cap.
+        if (!closedBySibling && r.y >= capY - topDy) {
+            return RectF{};
         }
         if (r.y < topY - 5 || r.y >= boundaryY) {
             continue;
