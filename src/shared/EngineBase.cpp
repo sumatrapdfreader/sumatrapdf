@@ -116,68 +116,44 @@ static bool ParseJsQuotedString(const char*& p, const char* end, str::Builder& b
             break;
         }
         char e = *p++;
-        switch (e) {
-            case 'n':
-                b.AppendChar('\n');
-                break;
-            case 'r':
-                b.AppendChar('\r');
-                break;
-            case 't':
-                b.AppendChar('\t');
-                break;
-            case 'b':
-                b.AppendChar('\b');
-                break;
-            case 'f':
-                b.AppendChar('\f');
-                break;
-            case 'v':
-                b.AppendChar('\v');
-                break;
-            case '0':
-                b.AppendChar('\0');
-                break;
-            case '\\':
-            case '\'':
-            case '"':
-                b.AppendChar(e);
-                break;
-            case 'x':
-            case 'u': {
-                int digits = e == 'x' ? 2 : 4;
-                if (end - p < digits) {
-                    b.AppendChar(e);
-                    break;
-                }
-                int cp = 0;
-                int i = 0;
-                for (; i < digits; i++) {
-                    int h = str::HexDigitVal(p[i]);
-                    if (h < 0) {
-                        break;
-                    }
-                    cp = (cp << 4) | h;
-                }
-                if (i != digits) {
-                    b.AppendChar(e);
-                    break;
-                }
-                p += digits;
-                if (e == 'x') {
-                    b.AppendChar((char)cp);
-                    break;
-                }
-                char utf8[4];
-                int off = 0;
-                str::Utf8Encode(utf8, off, cp);
-                b.Append(Str(utf8, off));
+        static const Str kEscapeChars = StrL("nrtbfv0");
+        static const Str kEscapeValues = StrL("\n\r\t\b\f\v\0");
+        int escapeIdx = str::IndexOfChar(kEscapeChars, e);
+        if (escapeIdx >= 0) {
+            b.AppendChar(kEscapeValues.s[escapeIdx]);
+            continue;
+        }
+        if (e != 'x' && e != 'u') {
+            b.AppendChar(e);
+            continue;
+        }
+        int digits = e == 'x' ? 2 : 4;
+        if (end - p < digits) {
+            b.AppendChar(e);
+            continue;
+        }
+        int cp = 0;
+        int i = 0;
+        for (; i < digits; i++) {
+            int h = str::HexDigitVal(p[i]);
+            if (h < 0) {
                 break;
             }
-            default:
-                b.AppendChar(e);
-                break;
+            cp = (cp << 4) | h;
         }
+        if (i != digits) {
+            b.AppendChar(e);
+            continue;
+        }
+        p += digits;
+        if (e == 'x') {
+            b.AppendChar((char)cp);
+            continue;
+        }
+        char utf8[4];
+        int off = 0;
+        str::Utf8Encode(utf8, off, cp);
+        b.Append(Str(utf8, off));
     }
     if (p >= end || *p != quote) {
         return false;
