@@ -5,8 +5,7 @@
 
 #include "FilterUtil.h"
 
-// lower-case and strip diacritics: 'Ł' -> 'l', 'é' -> 'e'
-static int FoldRune(int c) {
+int FoldCaseForSearch(int c) {
     return FoldDiacriticsRune(FoldCaseRune(c));
 }
 
@@ -15,7 +14,7 @@ static int NextFoldedRune(Str s, int& byteIdx) {
     while (byteIdx < s.len) {
         int c = Utf8CodepointNext(s, byteIdx);
         if (!IsCombiningMark(c)) {
-            return FoldRune(c);
+            return FoldCaseForSearch(c);
         }
     }
     return 0;

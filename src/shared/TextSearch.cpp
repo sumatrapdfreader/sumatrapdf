@@ -6,6 +6,7 @@
 #include "DocController.h"
 #include "gui/UIModels.h"
 #include "EngineBase.h"
+#include "FilterUtil.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
@@ -226,11 +227,6 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     findIndex = (findPage == endPage ? endGlyph : startGlyph);
     pageText = engine->GetTextForPage(findPage, &pageTextLen);
     forward = true;
-}
-
-// case-insensitive search also ignores diacritics: "lacz" finds "Łącz"
-static int FoldCaseForSearch(int c) {
-    return FoldDiacriticsRune(FoldCaseRune(c));
 }
 
 // German ß (sharp s, U+00DF) is spelled "ss" and the two are often used
