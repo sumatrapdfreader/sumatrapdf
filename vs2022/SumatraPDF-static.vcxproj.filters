@@ -707,9 +707,6 @@
     <ClCompile Include="..\src\DarkMode.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\DisplayMode.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\DisplayModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1176,6 +1173,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChmFile.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\DisplayMode.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\DocController.cpp">
