@@ -556,20 +556,17 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
     return box;
 }
 
-// Horizontal extent of the run of glyphs on the same line (±3pt) as
-// anchorIdx, expanding left / right glyph by glyph but never across a
-// horizontal gap wider than kMaxLineGapPt. In multi-column layouts this
-// keeps the run within one column: gutters are wider than spacing within a
-// line. (Tradeoff: a description-list label separated from its body by more
-// than the threshold isn't reached; the bracket-label search in
-// DetectEntryBox recovers the common "[Foo09]" case.)
-static void LineRunExtent(WStr text, const Rect* coords, int anchorIdx, int* leftIdxOut, int* leftXOut,
-                          int* rightXOut) {
+struct LineRun {
+    int leftIdx;
+    int leftX;
+    int rightX;
+};
+
+// Expand a line run without crossing column gutters.
+static LineRun LineRunExtent(WStr text, const Rect* coords, int anchorIdx) {
     constexpr int kMaxLineGapPt = 20;
     int sy = coords[anchorIdx].y;
-    int leftIdx = anchorIdx;
-    int leftX = coords[anchorIdx].x;
-    int rightX = coords[anchorIdx].x + coords[anchorIdx].dx;
+    LineRun run{anchorIdx, coords[anchorIdx].x, coords[anchorIdx].x + coords[anchorIdx].dx};
     bool extended = true;
     while (extended) {
         extended = false;
@@ -581,20 +578,18 @@ static void LineRunExtent(WStr text, const Rect* coords, int anchorIdx, int* lef
             if (r.y < sy - 3 || r.y > sy + 3) {
                 continue;
             }
-            if (r.x < leftX && r.x + r.dx >= leftX - kMaxLineGapPt) {
-                leftX = r.x;
-                leftIdx = i;
+            if (r.x < run.leftX && r.x + r.dx >= run.leftX - kMaxLineGapPt) {
+                run.leftX = r.x;
+                run.leftIdx = i;
                 extended = true;
             }
-            if (r.x + r.dx > rightX && r.x <= rightX + kMaxLineGapPt) {
-                rightX = r.x + r.dx;
+            if (r.x + r.dx > run.rightX && r.x <= run.rightX + kMaxLineGapPt) {
+                run.rightX = r.x + r.dx;
                 extended = true;
             }
         }
     }
-    *leftIdxOut = leftIdx;
-    *leftXOut = leftX;
-    *rightXOut = rightX;
+    return run;
 }
 
 static constexpr int kColumnGutterPt = 8;
@@ -676,9 +671,8 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         if (r.x < nextColLeftX - 5 || r.y < kMinTopMarginPt) {
             continue;
         }
-        int leftIdx, leftX, rightX;
-        LineRunExtent(text, coords, i, &leftIdx, &leftX, &rightX);
-        if (rightX - leftX > kColWidthMax || leftX < nextColLeftX - 20) {
+        LineRun run = LineRunExtent(text, coords, i);
+        if (run.rightX - run.leftX > kColWidthMax || run.leftX < nextColLeftX - 20) {
             continue;
         }
         topY = std::min(r.y, topY);
@@ -824,15 +818,11 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     }
 
     // Links can point mid-line. Recover its left edge without crossing a column gutter.
-    int lineRunRightX;
-    {
-        int leftIdx = startIdx;
-        int leftX = coords[startIdx].x;
-        LineRunExtent(text, coords, startIdx, &leftIdx, &leftX, &lineRunRightX);
-        // Keep an existing bracket label; walking left could cross a narrow gutter.
-        if (text.s[startIdx] != L'[') {
-            startIdx = leftIdx;
-        }
+    LineRun run = LineRunExtent(text, coords, startIdx);
+    int lineRunRightX = run.rightX;
+    // Keep an existing bracket label; walking left could cross a narrow gutter.
+    if (text.s[startIdx] != L'[') {
+        startIdx = run.leftIdx;
     }
 
     // Recover a bracket label whose baseline differs from the body, within one hanging indent.
@@ -921,10 +911,9 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             }
         }
         if (bodyIdx >= 0) {
-            int bLeftIdx, bLeftX, bRightX;
-            LineRunExtent(text, coords, bodyIdx, &bLeftIdx, &bLeftX, &bRightX);
-            entryBodyLeftX = bLeftX;
-            columnRightX = std::max(bRightX + 40, columnRightX);
+            LineRun bodyRun = LineRunExtent(text, coords, bodyIdx);
+            entryBodyLeftX = bodyRun.leftX;
+            columnRightX = std::max(bodyRun.rightX + 40, columnRightX);
         }
     }
 
@@ -1067,11 +1056,10 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                         if (r.y <= bMaxY) {
                             continue;
                         }
-                        int leftIdx, leftX, rightX;
-                        LineRunExtent(text, coords, i, &leftIdx, &leftX, &rightX);
+                        LineRun footerRun = LineRunExtent(text, coords, i);
                         // Exclude footer lines that span both columns.
-                        bool confinedToColumn = rightX <= columnRightX + 10;
-                        if (rightX - leftX >= kMinBodyLineWidthPt && confinedToColumn) {
+                        bool confinedToColumn = footerRun.rightX <= columnRightX + 10;
+                        if (footerRun.rightX - footerRun.leftX >= kMinBodyLineWidthPt && confinedToColumn) {
                             moreBelowInColumn = true;
                         }
                     }
