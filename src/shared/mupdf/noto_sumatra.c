@@ -178,23 +178,23 @@ const unsigned char* fz_lookup_builtin_font(fz_context* ctx, const char* family,
     return search_by_family(size, family, (is_bold ? BOLD : 0) | (is_italic ? ITALIC : 0));
 }
 
-const unsigned char* fz_lookup_cjk_font(fz_context* ctx, int ordering, int* size, int* subfont) {
-    int lang = FZ_LANG_UNSET;
+static int cjk_language(int ordering) {
     switch (ordering) {
         case FZ_ADOBE_JAPAN:
-            lang = FZ_LANG_ja;
-            break;
+            return FZ_LANG_ja;
         case FZ_ADOBE_KOREA:
-            lang = FZ_LANG_ko;
-            break;
+            return FZ_LANG_ko;
         case FZ_ADOBE_GB:
-            lang = FZ_LANG_zh_Hans;
-            break;
+            return FZ_LANG_zh_Hans;
         case FZ_ADOBE_CNS:
-            lang = FZ_LANG_zh_Hant;
-            break;
+            return FZ_LANG_zh_Hant;
+        default:
+            return FZ_LANG_UNSET;
     }
-    return search_by_script_lang(size, subfont, UCDN_SCRIPT_HAN, lang);
+}
+
+const unsigned char* fz_lookup_cjk_font(fz_context* ctx, int ordering, int* size, int* subfont) {
+    return search_by_script_lang(size, subfont, UCDN_SCRIPT_HAN, cjk_language(ordering));
 }
 
 int fz_lookup_cjk_ordering_by_language(const char* lang) {
@@ -208,19 +208,8 @@ int fz_lookup_cjk_ordering_by_language(const char* lang) {
     return -1;
 }
 
-static int fz_lookup_cjk_language(const char* lang) {
-    if (!strcmp(lang, "zh-Hant")) return FZ_LANG_zh_Hant;
-    if (!strcmp(lang, "zh-TW")) return FZ_LANG_zh_Hant;
-    if (!strcmp(lang, "zh-HK")) return FZ_LANG_zh_Hant;
-    if (!strcmp(lang, "zh-Hans")) return FZ_LANG_zh_Hans;
-    if (!strcmp(lang, "zh-CN")) return FZ_LANG_zh_Hans;
-    if (!strcmp(lang, "ja")) return FZ_LANG_ja;
-    if (!strcmp(lang, "ko")) return FZ_LANG_ko;
-    return FZ_LANG_UNSET;
-}
-
 const unsigned char* fz_lookup_cjk_font_by_language(fz_context* ctx, const char* lang, int* size, int* subfont) {
-    return search_by_script_lang(size, subfont, UCDN_SCRIPT_HAN, fz_lookup_cjk_language(lang));
+    return fz_lookup_cjk_font(ctx, fz_lookup_cjk_ordering_by_language(lang), size, subfont);
 }
 
 const unsigned char* fz_lookup_noto_font(fz_context* ctx, int script, int language, int* size, int* subfont) {
