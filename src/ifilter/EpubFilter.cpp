@@ -74,7 +74,7 @@ static void TrimHtmlTextToken(Str& tokText) {
 static WStr ExtractHtmlText(EpubDoc* doc) {
     log(StrL("ExtractHtmlText()\n"));
 
-    Str d = doc->GetHtmlData();
+    Str d = ToStr(doc->htmlData);
     int dataLen = d.len;
 
     str::Builder text;

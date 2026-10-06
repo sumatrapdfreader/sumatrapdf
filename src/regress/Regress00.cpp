@@ -38,7 +38,7 @@ static void Regress00() {
     if (!args) {
         return;
     }
-    args->htmlStr = doc->GetHtmlData();
+    args->htmlStr = ToStr(doc->htmlData);
     HtmlPage* pages[3];
     HtmlFormatter* formatter = new EpubFormatter(args, doc);
     int page = 0;
@@ -51,7 +51,7 @@ static void Regress00() {
     ReportIf(page != 3);
 
     args = CreateFormatterDefaultArgs(820, 920, textAllocator);
-    args->htmlStr = doc->GetHtmlData();
+    args->htmlStr = ToStr(doc->htmlData);
     args->reparseIdx = pages[2]->reparseIdx;
     formatter = new EpubFormatter(args, doc);
     // if bug is present, this will crash in formatter->Next()

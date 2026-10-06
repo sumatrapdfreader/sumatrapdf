@@ -3759,8 +3759,8 @@ static Str PalmDocToHTML(Str path) {
     if (!doc) {
         return {};
     }
-    // GetHtmlData() is a view into doc, dup before deleting it
-    Str html = str::Dup(doc->GetHtmlData());
+    // Copy the HTML before deleting its owner.
+    Str html = str::Dup(ToStr(doc->htmlData));
     delete doc;
     return html;
 }

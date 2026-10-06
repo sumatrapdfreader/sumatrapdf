@@ -44,8 +44,6 @@ struct EpubDoc {
     explicit EpubDoc(Str fileName);
     ~EpubDoc();
 
-    Str GetHtmlData() const;
-
     Str GetImageData(Str fileName, Str pagePath);
     Str GetFileData(Str relPath, Str pagePath);
 
@@ -80,8 +78,6 @@ struct Fb2Doc {
     explicit Fb2Doc(Str fileName);
     ~Fb2Doc();
 
-    Str GetXmlData() const;
-
     Str GetImageData(Str fileName) const;
     Str GetCoverImage() const;
 
@@ -107,8 +103,6 @@ struct PalmDoc {
     explicit PalmDoc(Str path);
     ~PalmDoc();
 
-    Str GetHtmlData() const;
-
     TempStr GetPropertyTemp(DocProp prop) const;
 
     bool HasToc() const;
@@ -131,8 +125,6 @@ struct HtmlDoc {
 
     explicit HtmlDoc(Str path);
     ~HtmlDoc();
-
-    Str GetHtmlData();
 
     Str GetImageData(Str fileName);
     Str GetFileData(Str relPath);

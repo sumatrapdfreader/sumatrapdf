@@ -551,10 +551,6 @@ static void ParseMetadata(Str content, Props& props) {
     }
 }
 
-Str EpubDoc::GetHtmlData() const {
-    return ToStr(htmlData);
-}
-
 Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
     ScopedMutex scope(&zipAccess);
 
@@ -1059,10 +1055,6 @@ void Fb2Doc::ExtractImage(GumboHtmlParser* parser, HtmlToken* tok) {
     VecAppend(images, data);
 }
 
-Str Fb2Doc::GetXmlData() const {
-    return ToStr(xmlData);
-}
-
 Str Fb2Doc::GetImageData(Str fileName) const {
     for (int i = 0; i < len(images); i++) {
         if (str::Eq(images[i].fileName, fileName)) {
@@ -1089,7 +1081,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
     int titleCount = 0;
     int level = 0;
 
-    auto xmlData2 = GetXmlData();
+    auto xmlData2 = ToStr(xmlData);
     GumboHtmlParser parser(xmlData2);
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
@@ -1249,10 +1241,6 @@ bool PalmDoc::Load() {
     return true;
 }
 
-Str PalmDoc::GetHtmlData() const {
-    return ToStr(htmlData);
-}
-
 TempStr PalmDoc::GetPropertyTemp(DocProp /*prop*/) const {
     return {};
 }
@@ -1333,10 +1321,6 @@ bool HtmlDoc::Load() {
     }
 
     return true;
-}
-
-Str HtmlDoc::GetHtmlData() {
-    return htmlData;
 }
 
 Str HtmlDoc::GetImageData(Str fileName) {

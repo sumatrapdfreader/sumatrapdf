@@ -899,7 +899,7 @@ bool EngineEpub::FinishLoading() {
     }
 
     HtmlFormatterArgs args{};
-    args.htmlStr = doc->GetHtmlData();
+    args.htmlStr = ToStr(doc->htmlData);
     args.pageDx = (float)pageRect.dx - (2 * pageBorder);
     args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
@@ -1039,7 +1039,7 @@ bool EngineFb2::FinishLoading() {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetXmlData();
+    args.htmlStr = ToStr(doc->xmlData);
     args.pageDx = (float)pageRect.dx - (2 * pageBorder);
     args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
@@ -1566,7 +1566,7 @@ bool EnginePdb::Load(Str fileName) {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetHtmlData();
+    args.htmlStr = ToStr(doc->htmlData);
     args.pageDx = (float)pageRect.dx - (2 * pageBorder);
     args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
@@ -2080,7 +2080,7 @@ bool EngineHtml::Load(Str fileName) {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetHtmlData();
+    args.htmlStr = doc->htmlData;
     args.pageDx = (float)pageRect.dx - (2 * pageBorder);
     args.pageDy = (float)pageRect.dy - (2 * pageBorder);
     args.SetFontName(GetDefaultFontName());
