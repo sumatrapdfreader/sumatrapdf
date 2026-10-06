@@ -844,17 +844,17 @@ bool EngineBase::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
     return true;
 }
 
-static Str ReturnCachedPageText(PageText* pt, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
+static Str ReturnPageText(const PageText& pt, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
     if (lenOut) {
-        *lenOut = pt->nCodepoints;
+        *lenOut = pt.nCodepoints;
     }
     if (coordsOut) {
-        *coordsOut = pt->coords;
+        *coordsOut = pt.coords;
     }
     if (quadsOut) {
-        *quadsOut = pt->quads;
+        *quadsOut = pt.quads;
     }
-    Str text = pt->text;
+    Str text = pt.text;
     if (text.s) {
         // str::Builder-backed buffers reserve a NUL slot at .len
         if (text.len >= 0) {
@@ -869,28 +869,12 @@ static Str ReturnCachedPageText(PageText* pt, int* lenOut, Rect** coordsOut, Qua
 bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
-        if (lenOut) {
-            *lenOut = 0;
-        }
-        if (coordsOut) {
-            *coordsOut = nullptr;
-        }
-        if (quadsOut) {
-            *quadsOut = nullptr;
-        }
+        ReturnPageText({}, lenOut, coordsOut, quadsOut);
         return true;
     }
     Location loc = LocationFromPageNo(pageNo);
     if (!loc.IsValid()) {
-        if (lenOut) {
-            *lenOut = 0;
-        }
-        if (coordsOut) {
-            *coordsOut = nullptr;
-        }
-        if (quadsOut) {
-            *quadsOut = nullptr;
-        }
+        ReturnPageText({}, lenOut, coordsOut, quadsOut);
         return true;
     }
     int count = ChapterPageCount(loc.chapter);
@@ -907,15 +891,7 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, Qu
     if (extract) {
         PageText extracted;
         if (!TryExtractPageText(pageNo, &extracted)) {
-            if (lenOut) {
-                *lenOut = 0;
-            }
-            if (coordsOut) {
-                *coordsOut = nullptr;
-            }
-            if (quadsOut) {
-                *quadsOut = nullptr;
-            }
+            ReturnPageText({}, lenOut, coordsOut, quadsOut);
             return false;
         }
         EnsurePageText(&extracted);
@@ -934,37 +910,18 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, Qu
 
     ScopedMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-    PageText* pt = &ct->text[loc.page - 1];
-    ReturnCachedPageText(pt, lenOut, coordsOut, quadsOut);
+    ReturnPageText(ct->text[loc.page - 1], lenOut, coordsOut, quadsOut);
     return true;
 }
 
 Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF** quadsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
-        if (lenOut) {
-            *lenOut = 0;
-        }
-        if (coordsOut) {
-            *coordsOut = nullptr;
-        }
-        if (quadsOut) {
-            *quadsOut = nullptr;
-        }
-        return {};
+        return ReturnPageText({}, lenOut, coordsOut, quadsOut);
     }
     Location loc = LocationFromPageNo(pageNo);
     if (!loc.IsValid()) {
-        if (lenOut) {
-            *lenOut = 0;
-        }
-        if (coordsOut) {
-            *coordsOut = nullptr;
-        }
-        if (quadsOut) {
-            *quadsOut = nullptr;
-        }
-        return {};
+        return ReturnPageText({}, lenOut, coordsOut, quadsOut);
     }
     int count = ChapterPageCount(loc.chapter);
 
@@ -999,8 +956,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF*
 
     ScopedMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-    PageText* pt = &ct->text[loc.page - 1];
-    return ReturnCachedPageText(pt, lenOut, coordsOut, quadsOut);
+    return ReturnPageText(ct->text[loc.page - 1], lenOut, coordsOut, quadsOut);
 }
 
 void EngineBase::InvalidateTextForPage(int pageNo) {
