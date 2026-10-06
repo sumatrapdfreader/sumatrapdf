@@ -66,7 +66,6 @@ struct PropValue {
 };
 
 using Props = Vec<PropValue>;
-int PropsCount(const Props& props);
 int GetPropIdx(const Props& props, DocProp prop);
 Str GetPropValueTemp(const Props& props, DocProp prop);
 void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists = false);

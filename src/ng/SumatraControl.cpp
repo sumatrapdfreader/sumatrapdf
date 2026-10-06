@@ -328,7 +328,7 @@ static TempStr DocumentPropertiesResultTemp(int* exitCodeOut) {
     engine->GetProperties(props);
     str::Builder out;
     out.Append(StrL("OK"));
-    int n = PropsCount(props);
+    int n = len(props);
     for (int i = 0; i < n; i++) {
         TempStr name = PropNameTemp(props[i].prop);
         if (len(name) == 0) {

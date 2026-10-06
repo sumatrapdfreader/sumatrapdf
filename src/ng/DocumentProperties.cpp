@@ -528,7 +528,7 @@ static void AddImageProperties(EngineBase* engine, int pageNo, str::Builder& out
     ReportIf(!IsEngineImages(engine));
     Props imageProps;
     EngineImagesGetImageProperties(engine, pageNo, imageProps);
-    int nImageProps = PropsCount(imageProps);
+    int nImageProps = len(imageProps);
     if (nImageProps == 0) {
         return;
     }
@@ -703,7 +703,7 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
     // clang-format on
 
     // append any remaining properties not already shown
-    int nProps = PropsCount(props);
+    int nProps = len(props);
     for (int i = 0; i < nProps; i++) {
         DocProp prop = props[i].prop;
         Str propVal = props[i].val;

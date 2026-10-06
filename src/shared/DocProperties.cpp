@@ -79,14 +79,8 @@ DocProp gAllProps[] = {
 };
 // clang-format on
 
-int PropsCount(const Props& props) {
-    int n = len(props);
-    ReportIf(n < 0);
-    return n;
-}
-
 int GetPropIdx(const Props& props, DocProp prop) {
-    int n = PropsCount(props);
+    int n = len(props);
     for (int i = 0; i < n; i++) {
         if (props[i].prop == prop) {
             return i;
@@ -138,9 +132,8 @@ void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists) {
 
 // frees values stored by AddPropOwned and empties props
 void FreeProps(Props& props) {
-    int n = PropsCount(props);
-    for (int i = 0; i < n; i++) {
-        str::Free(props[i].val);
+    for (const PropValue& prop : props) {
+        str::Free(prop.val);
     }
     VecReset(props);
 }
