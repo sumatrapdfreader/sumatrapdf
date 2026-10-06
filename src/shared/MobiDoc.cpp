@@ -1044,23 +1044,13 @@ static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
     }
 }
 
-struct MobiTocWalker {
-    EbookTocVisitor* visitor = nullptr;
-
-    void Walk(const GumboNode* root);
-};
-
-// (node, level) pair for the iterative walk below
 struct MobiTocWalkItem {
     const GumboNode* node;
     int level;
 };
 
-// Iterative pre-order walk (was recursive) so a deeply nested ToC region can't
-// overflow the stack. `level` is carried per node instead of being tracked via
-// recursion depth. We stop at the first <mbp:pagebreak> in document order, like
-// the recursive version did.
-void MobiTocWalker::Walk(const GumboNode* root) {
+// Walk iteratively to handle deep TOCs; stop at the first pagebreak.
+static void WalkMobiToc(const GumboNode* root, EbookTocVisitor* visitor) {
     Vec<MobiTocWalkItem> stack;
     VecAppend(stack, {root, 0});
     while (len(stack) > 0) {
@@ -1124,9 +1114,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
         return false;
     }
 
-    MobiTocWalker walker;
-    walker.visitor = visitor;
-    walker.Walk(toc.Document());
+    WalkMobiToc(toc.Document(), visitor);
 
     return true;
 }
