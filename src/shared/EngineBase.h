@@ -387,8 +387,6 @@ struct TocItem {
 
     void AddSiblingAtEnd(TocItem* sibling);
 
-    IPageDestination* GetPageDestination() const;
-
     int ChildCount();
     TocItem* ChildAt(int n);
     bool IsExpanded();

@@ -191,7 +191,7 @@ static GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bo
     }
 
     int pageNo = tocItem->pageNo;
-    IPageDestination* origDest = tocItem->GetPageDestination();
+    IPageDestination* origDest = tocItem->dest;
     if (origDest && pageNo < 1) {
         // chaptered docs: pageNo stays -1 until the target chapter lays out.
         // Resolve now, on the UI thread, so ResolveDest can cache the real
@@ -302,7 +302,7 @@ static void GoToTocTreeItem(MainWindow* win, TocItem* tocItem, bool allowExterna
         return;
     }
     bool validPage = (tocItem->pageNo > 0);
-    bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
+    bool isScroll = IsScrollToLink(tocItem->dest);
     bool hasChapterDest = tocItem->dest && tocItem->dest->loc.chapter >= 1;
     if (validPage || allowExternal || isScroll || hasChapterDest) {
         // delay changing the page until the tree messages have been handled

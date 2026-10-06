@@ -996,7 +996,7 @@ void LinkHandler::GotoNamedDest(Str name) {
             tocItem = FindTocItem(root, fuzName, true);
         }
         if (tocItem) {
-            dest = tocItem->GetPageDestination();
+            dest = tocItem->dest;
             if (dest) {
                 ScrollTo(dest);
                 hasDest = true;

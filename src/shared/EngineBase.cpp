@@ -362,13 +362,6 @@ void TocItem::AddSiblingAtEnd(TocItem* sibling) {
     sibling->parent = item->parent;
 }
 
-// returns the destination this ToC item points to or nullptr
-// (the result is owned by the TocItem and MUST NOT be deleted)
-// TODO: rename to GetDestination()
-IPageDestination* TocItem::GetPageDestination() const {
-    return dest;
-}
-
 int TocItem::ChildCount() {
     int n = 0;
     auto* node = child;

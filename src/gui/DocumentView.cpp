@@ -903,7 +903,7 @@ bool DocumentView::GoToTocItem(int index) {
         return false;
     }
     TocItem* item = viewData->tocItems[index];
-    IPageDestination* dest = item->GetPageDestination();
+    IPageDestination* dest = item->dest;
     if (dest) {
         DocumentViewLinkHandler handler(this);
         viewData->reader->GetEngine()->HandleLink(dest, &handler);

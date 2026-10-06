@@ -1163,7 +1163,7 @@ void SidebarView::OnTocRowHover(SidebarView* self, gp::Ctx* cx, const gp::HoverE
         return;
     }
     TempStr tip;
-    IPageDestination* link = item->GetPageDestination();
+    IPageDestination* link = item->dest;
     Kind k = link ? link->GetKind() : nullptr;
     if (link && k != kindDestinationScrollTo && k != kindDestinationNone) {
         Str path = link->GetValue();
