@@ -333,62 +333,47 @@ img { max-width: 100%%; }
 // fences. mermaid.js looks for <pre class="mermaid"> (or elements with that class).
 // Returns how many blocks were rewritten.
 static int RewriteMermaidCodeBlocks(str::Builder& out, Str body) {
-    if (len(body) == 0) {
-        return 0;
-    }
-    // Match the open tag cmark produces; language name is case-insensitive.
-    Str kOpen = StrL("<pre><code class=\"language-");
-    Str kCloseCodePre = StrL("</code></pre>");
+    const Str kOpen = StrL("<pre><code class=\"language-");
+    const Str kCloseCodePre = StrL("</code></pre>");
+    constexpr int kMaxFenceAttrLen = 64;
 
     int nRewritten = 0;
     Str rest = body;
     while (rest) {
-        int openAt = str::IndexOf(rest, kOpen);
-        if (openAt < 0) {
-            out.Append(rest);
+        Str before, afterOpen;
+        bool found = str::Cut(rest, kOpen, &before, &afterOpen);
+        out.Append(before);
+        if (!found) {
             break;
         }
-        if (openAt > 0) {
-            out.Append(Str(rest.s, openAt));
-        }
-        Str fromOpen = Str(rest.s + openAt, rest.len - openAt);
-        Str afterOpen = Str(fromOpen.s + len(kOpen), fromOpen.len - len(kOpen));
-
-        int gtAt = str::IndexOfChar(afterOpen, '>');
-        if (gtAt < 0 || gtAt > 64) {
-            // malformed / not a fence — copy the open marker and continue
+        Str fromOpen(afterOpen.s - len(kOpen), len(afterOpen) + len(kOpen));
+        Str attrs, content;
+        if (!str::CutChar(afterOpen, '>', &attrs, &content) || len(attrs) > kMaxFenceAttrLen) {
             out.Append(kOpen);
             rest = afterOpen;
             continue;
         }
-        // language ends at " or space before >
+
         int langLen = 0;
-        while (langLen < gtAt) {
-            char c = afterOpen.s[langLen];
-            if (c == '"' || c == ' ') {
-                break;
-            }
+        while (langLen < len(attrs) && attrs.s[langLen] != '"' && attrs.s[langLen] != ' ') {
             langLen++;
         }
-        Str lang(afterOpen.s, langLen);
-        if (!str::EqI(lang, StrL("mermaid"))) {
-            out.Append(Str(fromOpen.s, len(kOpen) + gtAt + 1));
-            rest = Str(afterOpen.s + gtAt + 1, afterOpen.len - gtAt - 1);
+        if (!str::EqI(Str(attrs.s, langLen), StrL("mermaid"))) {
+            out.Append(Str(fromOpen.s, len(kOpen) + len(attrs) + 1));
+            rest = content;
             continue;
         }
 
-        Str content = Str(afterOpen.s + gtAt + 1, afterOpen.len - gtAt - 1);
-        int closeAt = str::IndexOf(content, kCloseCodePre);
-        if (closeAt < 0) {
+        Str block;
+        if (!str::Cut(content, kCloseCodePre, &block, &rest)) {
             out.Append(fromOpen);
             break;
         }
-        // <pre class="mermaid">…</pre>  (content already HTML-escaped by cmark)
+        // cmark has already HTML-escaped the diagram text.
         out.Append(StrL("<pre class=\"mermaid\">"));
-        out.Append(Str(content.s, closeAt));
+        out.Append(block);
         out.Append(StrL("</pre>"));
         nRewritten++;
-        rest = Str(content.s + closeAt + len(kCloseCodePre), content.len - closeAt - len(kCloseCodePre));
     }
     return nRewritten;
 }
