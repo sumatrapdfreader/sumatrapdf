@@ -80,28 +80,9 @@ static bool IsNamePrefix(WStr word) {
     return false;
 }
 
-// Detect a "(Surname et al., 2020)" / "Surname (2020)" citation pattern at
-// pagePos in a page's glyph arrays. On success, returns true and fills
-// *surnameOut with a freshly-allocated UTF-8 surname (caller frees) and
-// *yearOut with the 4-digit year.
-// Pure-function plain-text citation detectors for PDFs without hyperref links.
-// Engine-independent so the heuristics can be unit-tested with synthetic glyph
-// arrays (see src/base/tests/RefHover_ut.cpp).
-//
-// Both functions take page text converted to one WCHAR per engine text
-// codepoint:
-//   text     — per-glyph WCHAR view
-//   coords   — per-glyph Rect array, parallel to `text`
-//   textLen  — glyph count
-bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point pagePos, Str* surnameOut, int* yearOut,
-                              Rect* srcRectOut) {
-    *surnameOut = {};
-    *yearOut = 0;
-    if (len(text) == 0 || textLen <= 0 || !coords) {
-        return false;
-    }
+static constexpr int kCitationMaxDistance = 30;
 
-    // 1. Find the glyph nearest the cursor (within ~30 pt).
+static int FindCursorGlyph(const Rect* coords, int textLen, Point pagePos) {
     int cursorIdx = -1;
     int bestDistSq = INT_MAX;
     for (int i = 0; i < textLen; i++) {
@@ -119,7 +100,24 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
             cursorIdx = i;
         }
     }
-    if (cursorIdx < 0 || bestDistSq > 30 * 30) {
+    return bestDistSq <= kCitationMaxDistance * kCitationMaxDistance ? cursorIdx : -1;
+}
+
+// Detect a "(Surname et al., 2020)" / "Surname (2020)" citation pattern at
+// pagePos in a page's glyph arrays. On success, returns true and fills
+// *surnameOut with a freshly-allocated UTF-8 surname (caller frees) and
+// *yearOut with the 4-digit year.
+// text and coords are parallel views, one WCHAR/Rect per engine codepoint.
+bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point pagePos, Str* surnameOut, int* yearOut,
+                              Rect* srcRectOut) {
+    *surnameOut = {};
+    *yearOut = 0;
+    if (len(text) == 0 || textLen <= 0 || !coords) {
+        return false;
+    }
+
+    int cursorIdx = FindCursorGlyph(coords, textLen, pagePos);
+    if (cursorIdx < 0) {
         return false;
     }
 
@@ -503,25 +501,8 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         return false;
     }
 
-    // 1. Find the glyph nearest the cursor (within ~30 pt).
-    int cursorIdx = -1;
-    int bestDistSq = INT_MAX;
-    for (int i = 0; i < textLen; i++) {
-        Rect r = coords[i];
-        if (r.dx <= 0 && r.dy <= 0) {
-            continue;
-        }
-        int cx = r.x + (r.dx / 2);
-        int cy = r.y + (r.dy / 2);
-        int ddx = cx - pagePos.x;
-        int ddy = cy - pagePos.y;
-        int distSq = (ddx * ddx) + (ddy * ddy);
-        if (distSq < bestDistSq) {
-            bestDistSq = distSq;
-            cursorIdx = i;
-        }
-    }
-    if (cursorIdx < 0 || bestDistSq > 30 * 30) {
+    int cursorIdx = FindCursorGlyph(coords, textLen, pagePos);
+    if (cursorIdx < 0) {
         return false;
     }
 
