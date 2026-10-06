@@ -415,17 +415,9 @@ static void SetYPos(Vec<DrawInstr>& instr, float y) {
     }
 }
 
-void HtmlFormatter::DumpLineDebugInfo() {
-    // TODO: write me
-    // like CurrLineDx() but dumps info about draw instructions to dbg out
-}
-
 // Redistribute extra space in the line equally among the spaces
 void HtmlFormatter::JustifyLineBoth() {
     float extraSpaceDxTotal = pageDx - currX;
-#if IS_DEBUG
-    if (extraSpaceDxTotal < 0.f) DumpLineDebugInfo();
-#endif
     ReportIf(extraSpaceDxTotal < 0.f);
 
     LayoutLeftStartingAt(0.f);
@@ -1488,7 +1480,6 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
         // send out all pages accumulated so far
         while (len(pagesToSend) > 0) {
             HtmlPage* ret = VecPopAt(pagesToSend, 0);
-            pageCount++;
             if (skipEmptyPages && IsEmptyPage(ret)) {
                 delete ret;
             } else {

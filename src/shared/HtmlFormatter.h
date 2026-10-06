@@ -221,8 +221,6 @@ struct HtmlFormatter {
 
     RectF MeasureTextCached(Str s);
 
-    void DumpLineDebugInfo();
-
     // constant during layout process
     float pageDx = 0;
     float pageDy = 0;
@@ -299,9 +297,6 @@ struct HtmlFormatter {
     Vec<HtmlPage*> pagesToSend;
 
     bool finishedParsing = false;
-    // number of pages generated so far, approximate. Only used
-    // for detection of cover image duplicates in mobi formatting
-    int pageCount = 0;
 
   public:
     explicit HtmlFormatter(HtmlFormatterArgs* args);
