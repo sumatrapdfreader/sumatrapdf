@@ -23,7 +23,6 @@ extern "C" {
 #include "gui/UIModels.h"
 #include "EngineBase.h"
 #include "PdfDarkMode.h"
-#include "PdfDarkModeInternal.h"
 #include "EngineAll.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

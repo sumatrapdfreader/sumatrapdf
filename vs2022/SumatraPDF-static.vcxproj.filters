@@ -516,9 +516,6 @@
     <ClInclude Include="..\src\shared\PdfDarkMode.h">
       <Filter>src\shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\shared\PdfDarkModeInternal.h">
-      <Filter>src\shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\shared\PdfDate.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1223,13 +1220,7 @@
     <ClCompile Include="..\src\shared\PdfDarkModeColor.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\shared\PdfDarkModeImageRules.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\shared\PdfDarkModeImageStats.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\PdfDarkModeOklab.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfDarkModeProfile.cpp">
@@ -1302,12 +1293,6 @@
       <Filter>src\shared\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\tests\PageRenderPolicy_ut.cpp">
-      <Filter>src\shared\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\tests\PdfDarkModeImageClassifier_ut.cpp">
-      <Filter>src\shared\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\tests\PdfDarkModeOklab_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\tests\ReadAloudHighlight_ut.cpp">

@@ -590,11 +590,8 @@ function engines_files()
     "PdfCad.*",
     "PdfCreator.*",
     "PdfDarkMode.h",
-    "PdfDarkModeInternal.h",
     "PdfDarkModeColor.cpp",
-    "PdfDarkModeImageRules.cpp",
     "PdfDarkModeImageStats.cpp",
-    "PdfDarkModeOklab.cpp",
     "PdfDarkModeProfile.cpp",
   })
 end

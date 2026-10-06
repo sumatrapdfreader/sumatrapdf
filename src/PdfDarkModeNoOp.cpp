@@ -8,7 +8,6 @@ extern "C" {
 }
 
 #include "PdfDarkMode.h"
-#include "PdfDarkModeInternal.h"
 
 // Stub implementations for binaries that compile EngineMupdf.cpp but not
 // PdfDarkMode*.cpp / Theme.cpp (PdfFilter, PdfPreview, etc.).
@@ -25,17 +24,8 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
     }
 }
 
-u32 PdfDarkModeComputeProfileHash(const DarkModeProfile* profile) {
-    (void)profile;
-    return 0;
-}
-
 u32 PdfDarkModeComputeOptionsHash() {
     return 0;
-}
-
-DarkModePalette PdfDarkModeBuildPalette() {
-    return DarkModePalette{};
 }
 
 int GetPreservePdfImagesMinSize() {

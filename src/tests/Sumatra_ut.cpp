@@ -60,8 +60,7 @@ void PagePosition_UnitTests();
 void PdfSync_UnitTests();
 void CachedObjects_UnitTests();
 void PageRenderPolicy_UnitTests();
-void PdfDarkModeImageClassifier_UnitTests();
-void PdfDarkModeOklab_UnitTests();
+bool PdfDarkModeImageStats_UnitTest();
 void SimpleLogTest();
 
 void CommandPaletteModel_UnitTests();
@@ -612,8 +611,7 @@ int RunAppUnitTests(bool forAi) {
     MobiDoc_UnitTests();
     PagePosition_UnitTests();
     PdfSync_UnitTests();
-    PdfDarkModeImageClassifier_UnitTests();
-    PdfDarkModeOklab_UnitTests();
+    utassert(PdfDarkModeImageStats_UnitTest());
     SumatraPDF_UnitTests();
 
     ParseTip_UnitTests();

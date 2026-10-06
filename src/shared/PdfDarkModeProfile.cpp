@@ -14,32 +14,6 @@
 #include "EngineAll.h"
 #include "PdfDarkMode.h"
 
-static float ColorChannel01(byte v) {
-    return (float)v / 255.f;
-}
-
-static DarkModePalette BuildPaletteFromColors(Color textCol, Color bgCol, Color linkCol) {
-    byte tr, tg, tb, br, bg, bb, lr, lg, lb;
-    UnpackColor(textCol, tr, tg, tb);
-    UnpackColor(bgCol, br, bg, bb);
-    UnpackColor(linkCol, lr, lg, lb);
-
-    DarkModePalette p;
-    p.textR = ColorChannel01(tr);
-    p.textG = ColorChannel01(tg);
-    p.textB = ColorChannel01(tb);
-    p.bgR = ColorChannel01(br);
-    p.bgG = ColorChannel01(bg);
-    p.bgB = ColorChannel01(bb);
-    p.linkR = ColorChannel01(lr);
-    p.linkG = ColorChannel01(lg);
-    p.linkB = ColorChannel01(lb);
-    p.diffR = p.bgR - p.textR;
-    p.diffG = p.bgG - p.textG;
-    p.diffB = p.bgB - p.textB;
-    return p;
-}
-
 bool DarkModeProfileUsesLegacyPostProcess(const DarkModeProfile* profile) {
     if (!profile) {
         return false;
@@ -47,26 +21,14 @@ bool DarkModeProfileUsesLegacyPostProcess(const DarkModeProfile* profile) {
     return profile->mode == PageColorMode::LegacyInvert || profile->mode == PageColorMode::PreserveImages;
 }
 
-u32 PdfDarkModeComputeProfileHash(const DarkModeProfile* profile) {
-    if (!profile) {
-        return 0;
-    }
+static u32 HashDarkModeProfile(const DarkModeProfile& profile) {
     auto mix = [](u32 h, u32 v) -> u32 { return (h * 31) + v; };
     u32 h = 0;
-    h = mix(h, (u32)profile->mode);
-    h = mix(h, (u32)profile->foreground);
-    h = mix(h, (u32)profile->pageBackground);
-    h = mix(h, (u32)profile->linkColor);
-    h = mix(h, (u32)profile->preservePdfImages);
-    h = mix(h, (u32)profile->preservePdfImagesMinSize);
-    h = mix(h, *(u32*)&profile->options.scanImageCoverageThreshold);
-    h = mix(h, *(u32*)&profile->options.minScanDominantCoverage);
-    h = mix(h, *(u32*)&profile->options.maxScanAspectSkew);
-    h = mix(h, (u32)profile->options.maxTextOpsForScanPage);
-    h = mix(h, (u32)profile->options.maxVectorOpsForScanPage);
-    h = mix(h, *(u32*)&profile->options.preserveImagePaperSoftening);
-    h = mix(h, *(u32*)&profile->options.lightFillChromaThreshold);
-    h = mix(h, *(u32*)&profile->options.lightFillLuminanceThreshold);
+    h = mix(h, (u32)profile.mode);
+    h = mix(h, (u32)profile.foreground);
+    h = mix(h, (u32)profile.pageBackground);
+    h = mix(h, (u32)profile.linkColor);
+    h = mix(h, (u32)profile.preservePdfImages);
     return h;
 }
 
@@ -87,37 +49,16 @@ void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile) {
     profile->foreground = textCol;
     profile->pageBackground = bgCol;
     profile->linkColor = pagesDark ? ThemeWindowLinkColor() : 0;
-    profile->strength = 1.f;
     profile->preservePdfImages = GetPreservePdfImagesInDarkMode();
-    profile->preservePdfImagesMinSize = GetPreservePdfImagesMinSize();
-    profile->options = PdfDarkModeCurrentOptions();
-    profile->palette = BuildPaletteFromColors(textCol, bgCol, profile->linkColor);
 
-    if (!pagesDark) {
-        // mode stays Normal: the render cache's default recolor pass still
-        // applies custom (light) page colors from the cache colors
-        profile->hash = PdfDarkModeComputeProfileHash(profile);
-        return;
+    // Reflowable documents get theme colors through CSS; bitmap recoloring would invert their images.
+    if (pagesDark && EngineUsesDocumentColorsFollowTheme(engine) && !EngineUsesReflowThemeCss(engine)) {
+        bool preserve =
+            GetDocumentColorsFollowTheme() != DocumentColorsFollowTheme::Legacy && profile->preservePdfImages;
+        profile->mode = preserve ? PageColorMode::PreserveImages : PageColorMode::LegacyInvert;
     }
 
-    if (EngineUsesReflowThemeCss(engine)) {
-        // EPUB/HTML/FB2/MOBI/TXT go through MuPDF's HTML engine: page colors
-        // are applied as user CSS (images stay as in the file). Bitmap recolor
-        // inverted some of those images (#6050).
-        profile->mode = PageColorMode::Normal;
-    } else if (EngineUsesDocumentColorsFollowTheme(engine)) {
-        if (GetDocumentColorsFollowTheme() == DocumentColorsFollowTheme::Legacy) {
-            profile->mode = PageColorMode::LegacyInvert;
-        } else {
-            if (profile->preservePdfImages) {
-                profile->mode = PageColorMode::PreserveImages;
-            } else {
-                profile->mode = PageColorMode::LegacyInvert;
-            }
-        }
-    }
-
-    profile->hash = PdfDarkModeComputeProfileHash(profile);
+    profile->hash = HashDarkModeProfile(*profile);
 }
 
 bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine) {
