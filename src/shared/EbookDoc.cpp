@@ -783,16 +783,13 @@ EpubDoc* EpubDoc::CreateFromData(Str data) {
     return doc;
 }
 
-// cover image bytes named by the OPF, either <meta name="cover" content="id">
-// (EPUB 2) or a manifest item with properties="cover-image" (EPUB 3); empty
-// when the book declares none. Owned by the caller.
+// Caller-owned cover bytes from EPUB 2 metadata or EPUB 3 cover-image properties.
+// Empty when no cover is declared.
 Str EpubCoverImageData(Str path) {
-    Archive* archive = OpenArchiveFromFile(path, false, gArchiveProgressCb);
+    AutoDelete archive(OpenArchiveFromFile(path, false, gArchiveProgressCb));
     if (!archive) {
         return {};
     }
-    AutoDelete delArchive(archive);
-    Str res{};
     TempStr contentPath;
     auto* contentFi = GetEpubPackage(archive, contentPath);
     if (!contentFi) {
@@ -830,14 +827,12 @@ Str EpubCoverImageData(Str path) {
             break;
         }
     }
-    if (len(href) > 0) {
-        TempStr imgPath = NormalizeURLTemp(url::DecodeTemp(href), contentPath);
-        auto* imgFi = archive->GetFileDataByName(imgPath);
-        if (imgFi && imgFi->data) {
-            res = str::Dup(Str(imgFi->data, imgFi->fileSizeUncompressed));
-        }
+    if (len(href) <= 0) {
+        return {};
     }
-    return res;
+    TempStr imgPath = NormalizeURLTemp(url::DecodeTemp(href), contentPath);
+    auto* imgFi = archive->GetFileDataByName(imgPath);
+    return imgFi && imgFi->data ? str::Dup(Str(imgFi->data, imgFi->fileSizeUncompressed)) : Str{};
 }
 
 /* ********** FictionBook (FB2) ********** */
