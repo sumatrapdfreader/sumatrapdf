@@ -45,7 +45,6 @@ static char* gRaw = nullptr;
 static LONG gRawUsed = 0;
 
 static PerfSym* gSyms = nullptr;
-static int gSymCap = 0;
 static int gSymN = 0;
 
 static thread_local int gInHook = 0;
@@ -78,9 +77,9 @@ static u32 HashPtr(const void* p) {
 }
 
 static PerfSym* FindSymSlot(const void* addr, bool forInsert) {
-    u32 capMask = (u32)gSymCap - 1;
+    u32 capMask = (u32)kSymCap - 1;
     u32 slot = HashPtr(addr) & capMask;
-    for (int n = 0; n < gSymCap; n++) {
+    for (int n = 0; n < kSymCap; n++) {
         PerfSym& e = gSyms[slot];
         if (!e.addr) {
             return forInsert ? &e : nullptr;
@@ -140,8 +139,7 @@ static void EnsurePerfLog() {
     gRawUsed = 0;
     QueryPerformanceFrequency(&gQpcFreq);
     gPerfArena = ArenaNew();
-    gSymCap = kSymCap;
-    gSyms = (PerfSym*)gPerfArena->Push((u64)gSymCap * sizeof(PerfSym), 8, true);
+    gSyms = (PerfSym*)gPerfArena->Push((u64)kSymCap * sizeof(PerfSym), 8, true);
 }
 
 extern "C" void PerfEnterImpl(void* addr) {
@@ -225,6 +223,27 @@ void SetPerfLogPath(Str path) {
     gPerfLogPath = str::Dup(path);
 }
 
+static int ReadHexAddr(Str hex, u64& value) {
+    if (len(hex) < 3 || hex.s[0] != '0' || hex.s[1] != 'x') {
+        return 0;
+    }
+    value = 0;
+    int n = 2;
+    for (; n < len(hex); n++) {
+        char c = hex.s[n];
+        int d;
+        if (c >= '0' && c <= '9') {
+            d = c - '0';
+        } else if (c >= 'a' && c <= 'f') {
+            d = c - 'a' + 10;
+        } else {
+            break;
+        }
+        value = (value << 4) | (u64)d;
+    }
+    return n == 2 ? 0 : n;
+}
+
 static void IndexLogAddrs(Str src) {
     int i = 0;
     while (i + 2 < src.len) {
@@ -232,23 +251,9 @@ static void IndexLogAddrs(Str src) {
             i++;
             continue;
         }
-        int n = 0;
-        u64 v = 0;
-        bool any = false;
-        for (n = 2; i + n < src.len; n++) {
-            char c = src.s[i + n];
-            int d = -1;
-            if (c >= '0' && c <= '9') {
-                d = c - '0';
-            } else if (c >= 'a' && c <= 'f') {
-                d = c - 'a' + 10;
-            } else {
-                break;
-            }
-            v = (v << 4) | (u64)d;
-            any = true;
-        }
-        if (any && gSymN * 2 < gSymCap) {
+        u64 v;
+        int n = ReadHexAddr(Str(src.s + i, len(src) - i), v);
+        if (n > 0 && gSymN * 2 < kSymCap) {
             const void* addr = (const void*)(uintptr_t)v;
             PerfSym* e = FindSymSlot(addr, true);
             if (e && !e->addr) {
@@ -256,7 +261,7 @@ static void IndexLogAddrs(Str src) {
                 gSymN++;
             }
         }
-        i += n > 0 ? n : 1;
+        i += n > 0 ? n : 2;
     }
 }
 
@@ -267,7 +272,7 @@ static void FillSymNames() {
 
     char symBuf[sizeof(SYMBOL_INFO) + 512];
     SYMBOL_INFO* info = (SYMBOL_INFO*)symBuf;
-    for (int i = 0; i < gSymCap; i++) {
+    for (int i = 0; i < kSymCap; i++) {
         PerfSym& e = gSyms[i];
         if (!e.addr) {
             continue;
@@ -284,24 +289,9 @@ static void FillSymNames() {
 }
 
 static const char* NameForHexAddr(Str hex, int* nOut) {
-    if (hex.len < 3 || hex.s[0] != '0' || hex.s[1] != 'x') {
-        return nullptr;
-    }
-    u64 v = 0;
-    int n = 2;
-    for (; n < hex.len; n++) {
-        char c = hex.s[n];
-        int d = -1;
-        if (c >= '0' && c <= '9') {
-            d = c - '0';
-        } else if (c >= 'a' && c <= 'f') {
-            d = c - 'a' + 10;
-        } else {
-            break;
-        }
-        v = (v << 4) | (u64)d;
-    }
-    if (n == 2) {
+    u64 v;
+    int n = ReadHexAddr(hex, v);
+    if (n == 0) {
         return nullptr;
     }
     *nOut = n;
