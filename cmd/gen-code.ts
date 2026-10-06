@@ -11,7 +11,7 @@ import { clangFormatFiles } from "./util";
 // cmd/format.ts run does not dirty the tree (e.g. indented @gen markers).
 const generatedCppFiles = [
   "src/Flags.cpp",
-  "src/Commands.h",
+  "src/shared/Commands.h",
   "src/Commands.cpp",
   "src/Accelerators.cpp",
   "src/shared/EbookDoc.cpp",

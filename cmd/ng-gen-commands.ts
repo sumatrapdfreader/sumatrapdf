@@ -481,7 +481,7 @@ function replaceBetweenMarkers(content: string, startMarker: string, endMarker: 
 
 export function main() {
   const rootDir = join(import.meta.dir, "..");
-  const headerPath = join(rootDir, "src", "ng", "Commands.h");
+  const headerPath = join(rootDir, "src", "shared", "Commands.h");
   const cppPath = join(rootDir, "src", "ng", "Commands.cpp");
 
   let headerContent = readFileSync(headerPath, "utf-8");
@@ -490,7 +490,7 @@ export function main() {
   const enumCode = generateEnum();
   headerContent = replaceBetweenMarkers(headerContent, "// @gen-start cmd-enum", "// @gen-end cmd-enum", enumCode);
   writeFileSync(headerPath, headerContent, "utf-8");
-  console.log("Generated enum in src/Commands.h");
+  console.log("Generated enum in src/shared/Commands.h");
 
   const arraysCode = generateArrays();
   cppContent = replaceBetweenMarkers(cppContent, "// @gen-start cmd-c", "// @gen-end cmd-c", arraysCode);

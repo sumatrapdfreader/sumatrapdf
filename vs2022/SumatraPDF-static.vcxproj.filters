@@ -156,9 +156,6 @@
     <ClInclude Include="..\src\CommandPalette.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Commands.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\DarkMode.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -445,6 +442,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ChmFile.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\Commands.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\DisplayMode.h">
