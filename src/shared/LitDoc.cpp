@@ -801,8 +801,7 @@ Str LitFile::GetSection(int section) {
     Str content = GetFile(fmt("%s/Content", Str(base)));
     Str control = GetFile(fmt("%s/ControlData", Str(base)));
 
-    Str cur = {};       // owned copy of the data as transforms get applied
-    bool owned = false; // content starts as a view into d
+    ScopedMem<char> decoded;
     Str view = content;
     while (len(transform) >= 16) {
         i64 csize64 = ((i64)LitU32(control, 0) + 1) * 4;
@@ -811,11 +810,9 @@ Str LitFile::GetSection(int section) {
         }
         int csize = (int)csize64;
         TempStr guid = LitGuidTemp(transform);
+        Str next;
         if (str::Eq(guid, Str(kDesGuid))) {
             if (drmLevel == 0 || drmLevel == 5) {
-                if (owned) {
-                    str::Free(cur);
-                }
                 return {};
             }
             int n = len(view);
@@ -825,39 +822,28 @@ Str LitFile::GetSection(int section) {
             memcpy(src, view.s, (size_t)n);
             LitDesDecrypt(dec, src, nPadded, bookKey);
             Free(nullptr, src);
-            if (owned) {
-                str::Free(cur);
-            }
-            cur = Str((char*)dec, n);
-            view = cur;
-            owned = true;
+            next = Str((char*)dec, n);
         } else if (str::Eq(guid, Str(kLzxGuid))) {
             Str resetTable = GetFile(fmt("%s/Transform/%s/InstanceData/ResetTable", Str(base), Str(kLzxGuid)));
-            Str dec = LitLzxDecompress(view, control, resetTable);
-            if (owned) {
-                str::Free(cur);
-            }
-            if (str::IsNull(dec)) {
+            next = LitLzxDecompress(view, control, resetTable);
+            if (str::IsNull(next)) {
                 return {};
             }
-            cur = dec;
-            view = cur;
-            owned = true;
         } else {
             logf("LitDoc: unknown transform %s\n", guid);
-            if (owned) {
-                str::Free(cur);
-            }
             return {};
         }
+        decoded.Set(next.s);
+        view = next;
         control = Str(control.s + csize, len(control) - csize);
         transform = Str(transform.s + 16, len(transform) - 16);
     }
-    if (!owned) {
-        cur = str::Dup(view);
+    if (!decoded.Get()) {
+        view = str::Dup(view);
     }
-    sectionData[section] = cur;
-    return cur;
+    sectionData[section] = view;
+    decoded.Take();
+    return view;
 }
 
 //--- manifest
