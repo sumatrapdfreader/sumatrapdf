@@ -793,31 +793,23 @@ int MobiDoc::CountLoadedImages() const {
 
 // KF8 <img src="kindle:embed:XXXX"> uses a base-32 resource id (alphabet 0-9A-V).
 int KindleEmbedToRecIndex(Str src) {
-    Str prefix = StrL("kindle:embed:");
-    if (!str::StartsWithI(src, prefix)) {
+    if (!str::TrimPrefixI(src, StrL("kindle:embed:"))) {
         return 0;
     }
-    const char* p = src.s + len(prefix);
-    const char* end = src.s + len(src);
+    constexpr Str kDigits = StrL("0123456789ABCDEFGHIJKLMNOPQRSTUV");
     int n = 0;
-    bool any = false;
-    while (p < end) {
-        char c = *p;
-        int digit = -1;
-        if (c >= '0' && c <= '9') {
-            digit = c - '0';
-        } else if (c >= 'A' && c <= 'V') {
-            digit = 10 + (c - 'A');
-        } else if (c >= 'a' && c <= 'v') {
-            digit = 10 + (c - 'a');
-        } else {
+    for (int i = 0; i < len(src); i++) {
+        char c = src.s[i];
+        if (c >= 'a' && c <= 'v') {
+            c = c - 'a' + 'A';
+        }
+        int digit = str::IndexOfChar(kDigits, c);
+        if (digit < 0) {
             break;
         }
-        n = (n * 32) + digit;
-        any = true;
-        p++;
+        n = (n * len(kDigits)) + digit;
     }
-    return any ? n : 0;
+    return n;
 }
 
 static void CollectKindleEmbedRecIndexes(Str html, Vec<int>& out) {
