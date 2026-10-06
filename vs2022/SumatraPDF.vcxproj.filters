@@ -1310,6 +1310,9 @@
     <ClCompile Include="..\src\shared\tests\CachedObjects_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\tests\ChapterTable_ut.cpp">
+      <Filter>src\shared\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\tests\EngineDjvuDec_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
@@ -1345,9 +1348,6 @@
     </ClCompile>
     <ClCompile Include="..\src\testcode\TestTab.cpp">
       <Filter>src\testcode</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\tests\ChapterTable_ut.cpp">
-      <Filter>src\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\CommandPalette_ut.cpp">
       <Filter>src\tests</Filter>

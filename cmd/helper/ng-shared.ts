@@ -211,6 +211,7 @@ export const sharedFiles = [
   "src/shared/mupdf/pkcs7-windows.h",
   "src/shared/tests/AnnotSearch_ut.cpp",
   "src/shared/tests/CachedObjects_ut.cpp",
+  "src/shared/tests/ChapterTable_ut.cpp",
   "src/shared/tests/EngineDjvuDec_ut.cpp",
   "src/shared/tests/MobiDoc_ut.cpp",
   "src/shared/tests/PagePosition_ut.cpp",
