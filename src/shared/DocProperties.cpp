@@ -121,13 +121,11 @@ void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists) {
     if (idx >= 0 && !replaceIfExists) {
         return;
     }
-    Str owned = str::Dup(val);
     if (idx < 0) {
-        VecAppend(props, {prop, owned});
+        VecAppend(props, {prop, str::Dup(val)});
         return;
     }
-    str::Free(props[idx].val);
-    props[idx].val = owned;
+    str::ReplaceWithCopy(&props[idx].val, val);
 }
 
 // frees values stored by AddPropOwned and empties props
