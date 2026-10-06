@@ -13,28 +13,6 @@ License: GPLv3 */
 void DeleteThumbnailForFile(Str path);
 void HomePageInvalidateLayoutCache();
 
-/* Handling of file history list.
-
-We keep a mostly infinite list of all (still existing in the file system)
-files that a user has ever opened. For each file we also keep a bunch of
-attributes describing the display state at the time the file was closed.
-
-We persist this list inside preferences file to something looking like this:
-
-FileStates [
-FilePath =  C:\path\to\file.pdf
-DisplayMode = single page
-PageNo =  1
-ZoomVirtual = 123.4567
-Window State = 2
-...
-]
-etc...
-
-We deserialize this info at startup and serialize when the application
-quits.
-*/
-
 // maximum number of files to remember in total
 // (to keep the settings file within reasonable bounds)
 constexpr int kFileHistoryMaxFiles = 1000;
@@ -73,13 +51,13 @@ void FileHistoryClear(bool keepFavorites) {
     }
     HomePageInvalidateLayoutCache();
     Vec<FileState*> keep;
-    for (int i = 0; i < len(*gStates); i++) {
-        if (keepFavorites && len(*(*gStates)[i]->favorites) > 0) {
-            (*gStates)[i]->openCount = 0;
-            VecAppend(keep, (*gStates)[i]);
-        } else {
-            DeleteFileState((*gStates)[i]);
+    for (FileState* fs : *gStates) {
+        if (keepFavorites && len(*fs->favorites) > 0) {
+            fs->openCount = 0;
+            VecAppend(keep, fs);
+            continue;
         }
+        DeleteFileState(fs);
     }
     *gStates = keep;
 }
@@ -155,8 +133,7 @@ bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
     return true;
 }
 
-// sorts the most often used files first
-static int cmpOpenCount(FileState* const* a, FileState* const* b) {
+static int cmpRecentlyOpened(FileState* const* a, FileState* const* b) {
     FileState* dsA = *a;
     FileState* dsB = *b;
     // sort pinned documents before unpinned ones
@@ -167,12 +144,16 @@ static int cmpOpenCount(FileState* const* a, FileState* const* b) {
     if (dsA->isPinned) {
         return str::CmpNatural(path::GetBaseNameTemp(dsA->filePath), path::GetBaseNameTemp(dsB->filePath));
     }
-    // sort often opened documents first
-    if (dsA->openCount != dsB->openCount) {
+    return dsA->index < dsB->index ? -1 : 1;
+}
+
+static int cmpOpenCount(FileState* const* a, FileState* const* b) {
+    FileState* dsA = *a;
+    FileState* dsB = *b;
+    if (!dsA->isPinned && !dsB->isPinned && dsA->openCount != dsB->openCount) {
         return dsB->openCount - dsA->openCount;
     }
-    // use recency as the criterion in case of equal open counts
-    return dsA->index < dsB->index ? -1 : 1;
+    return cmpRecentlyOpened(a, b);
 }
 
 // fills `list` with a shallow copy of the file history list (the states stay
@@ -192,22 +173,6 @@ static void GetSortedStates(Vec<FileState*>& list, VecSortCmp<FileState*>::Fn cm
 // sorted by open count (which has a pre-multiplied recency factor)
 void FileHistoryGetFrequencyOrder(Vec<FileState*>& list) {
     GetSortedStates(list, cmpOpenCount);
-}
-
-// sorts recently opened files first
-static int cmpRecentlyOpened(FileState* const* a, FileState* const* b) {
-    FileState* dsA = *a;
-    FileState* dsB = *b;
-    // sort pinned documents before unpinned ones
-    if (dsA->isPinned != dsB->isPinned) {
-        return dsA->isPinned ? -1 : 1;
-    }
-    // sort pinned documents alphabetically
-    if (dsA->isPinned) {
-        return str::CmpNatural(path::GetBaseNameTemp(dsA->filePath), path::GetBaseNameTemp(dsB->filePath));
-    }
-    // use recency as the criterion in case of equal open counts
-    return dsA->index < dsB->index ? -1 : 1;
 }
 
 void FileHistoryGetRecentlyOpenedOrder(Vec<FileState*>& list) {
@@ -237,19 +202,12 @@ void FileHistoryPurge(bool alwaysUseDefaultState) {
         if (state->isPinned || len(state->decryptionKey) > 0 || len(*state->favorites) > 0) {
             continue;
         }
-        // NOLINTNEXTLINE(bugprone-branch-clone): each branch documents a different reason to forget
-        if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState)) {
-            // forget about missing documents without valuable state
-            VecRemoveAt(*gStates, j - 1);
-        } else if (j > kFileHistoryMaxFiles) {
-            // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
-            VecRemoveAt(*gStates, j - 1);
-        } else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > kFileHistoryMaxRecent) {
-            // forget about files that were hardly used (and without valuable state)
-            VecRemoveAt(*gStates, j - 1);
-        } else {
+        bool missing = state->isMissing && (alwaysUseDefaultState || state->useDefaultState);
+        bool infrequent = alwaysUseDefaultState && state->openCount < minOpenCount && j > kFileHistoryMaxRecent;
+        if (!missing && j <= kFileHistoryMaxFiles && !infrequent) {
             continue;
         }
+        VecRemoveAt(*gStates, j - 1);
         // SaveSettings() purges on every document load / tab close, so this
         // can run while the home page is up and pointing at `state`
         HomePageInvalidateLayoutCache();
@@ -326,9 +284,6 @@ bool DocumentPathExists(Str path) {
 }
 
 struct CheckFilesExistData {
-    CheckFilesExistData() = default;
-    ~CheckFilesExistData() = default;
-
     StrVec toCheck;
     StrVec missing;
 };
