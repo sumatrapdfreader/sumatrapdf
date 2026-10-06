@@ -222,18 +222,6 @@ static Str ResolveHtmlNamedEntity(Str str, int& rune) {
     return Str(str.s + endOff, str.len - endOff);
 }
 
-static bool IsNameChar(char c) {
-    return c == '.' || c == '-' || c == '_' || c == ':' || str::IsDigit(c) || (c >= 'A' && c <= 'Z') ||
-           (c >= 'a' && c <= 'z');
-}
-
-// skip all html tag or attribute characters
-static void SkipName(Str s, int& off) {
-    while (off < s.len && IsNameChar(s.s[off])) {
-        off++;
-    }
-}
-
 // return true if s consists only of whitespace
 bool IsSpaceOnly(Str s) {
     str::TrimWs(s);
@@ -310,16 +298,18 @@ bool AttrInfo::ValIs(Str s) const {
     return str::EqNIx(val, val.len, s);
 }
 
-static Str TagNameFromTagInner(Str s) {
-    int off = 0;
-    SkipName(s, off);
-    return Str(s.s, off);
-}
-
 void HtmlToken::SetTag(TokenType newType, Str tagName) {
     type = newType;
     s = tagName;
-    name = TagNameFromTagInner(tagName);
+    int off = 0;
+    while (off < len(tagName)) {
+        char c = tagName.s[off];
+        if (!str::IsAlNum(c) && c != '.' && c != '-' && c != '_' && c != ':') {
+            break;
+        }
+        off++;
+    }
+    name = Str(tagName.s, off);
     reparsePoint = {};
     tag = FindHtmlTag(name);
     node = nullptr;
