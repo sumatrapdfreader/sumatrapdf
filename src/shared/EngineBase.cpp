@@ -77,6 +77,233 @@ Str PageDestination::GetName2() {
     return name;
 }
 
+static void SkipJsWs(const char*& p, const char* end) {
+    while (p < end && str::IsWs(*p)) {
+        p++;
+    }
+}
+
+static bool IsJsIdentStart(char c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' || c == '$';
+}
+
+static bool IsJsIdentChar(char c) {
+    return IsJsIdentStart(c) || (c >= '0' && c <= '9');
+}
+
+static bool IsJsReservedCallName(Str ident) {
+    return str::Eq(ident, StrL("function")) || str::Eq(ident, StrL("if")) || str::Eq(ident, StrL("for")) ||
+           str::Eq(ident, StrL("while")) || str::Eq(ident, StrL("switch")) || str::Eq(ident, StrL("catch")) ||
+           str::Eq(ident, StrL("with")) || str::Eq(ident, StrL("return")) || str::Eq(ident, StrL("typeof")) ||
+           str::Eq(ident, StrL("void")) || str::Eq(ident, StrL("delete")) || str::Eq(ident, StrL("new")) ||
+           str::Eq(ident, StrL("throw")) || str::Eq(ident, StrL("else")) || str::Eq(ident, StrL("do")) ||
+           str::Eq(ident, StrL("try"));
+}
+
+// Decode one JS '...' or "..." string at p. Advances p past the closing quote.
+static bool ParseJsQuotedString(const char*& p, const char* end, Str* out) {
+    *out = {};
+    if (p >= end || (*p != '"' && *p != '\'')) {
+        return false;
+    }
+    char quote = *p++;
+    str::Builder b;
+    while (p < end && *p != quote) {
+        char c = *p++;
+        if (c != '\\') {
+            b.AppendChar(c);
+            continue;
+        }
+        if (p >= end) {
+            break;
+        }
+        char e = *p++;
+        switch (e) {
+            case 'n':
+                b.AppendChar('\n');
+                break;
+            case 'r':
+                b.AppendChar('\r');
+                break;
+            case 't':
+                b.AppendChar('\t');
+                break;
+            case 'b':
+                b.AppendChar('\b');
+                break;
+            case 'f':
+                b.AppendChar('\f');
+                break;
+            case 'v':
+                b.AppendChar('\v');
+                break;
+            case '0':
+                b.AppendChar('\0');
+                break;
+            case '\\':
+            case '\'':
+            case '"':
+                b.AppendChar(e);
+                break;
+            case 'x': {
+                if (p + 2 > end) {
+                    b.AppendChar(e);
+                    break;
+                }
+                int h1 = str::HexDigitVal(p[0]);
+                int h2 = str::HexDigitVal(p[1]);
+                if (h1 < 0 || h2 < 0) {
+                    b.AppendChar(e);
+                    break;
+                }
+                p += 2;
+                b.AppendChar((char)((h1 << 4) | h2));
+                break;
+            }
+            case 'u': {
+                if (p + 4 > end) {
+                    b.AppendChar(e);
+                    break;
+                }
+                int cp = 0;
+                bool ok = true;
+                for (int i = 0; i < 4; i++) {
+                    int h = str::HexDigitVal(p[i]);
+                    if (h < 0) {
+                        ok = false;
+                        break;
+                    }
+                    cp = (cp << 4) | h;
+                }
+                if (!ok) {
+                    b.AppendChar(e);
+                    break;
+                }
+                p += 4;
+                char utf8[4];
+                int off = 0;
+                str::Utf8Encode(utf8, off, cp);
+                b.Append(Str(utf8, off));
+                break;
+            }
+            default:
+                b.AppendChar(e);
+                break;
+        }
+    }
+    if (p >= end || *p != quote) {
+        return false;
+    }
+    p++;
+    *out = b.TakeStr();
+    return true;
+}
+
+static bool SkipJsNested(const char*& p, const char* end, char open, char close) {
+    if (p >= end || *p != open) {
+        return false;
+    }
+    int depth = 1;
+    p++;
+    while (p < end && depth > 0) {
+        if (*p == '"' || *p == '\'') {
+            Str dummy;
+            if (!ParseJsQuotedString(p, end, &dummy)) {
+                str::Free(dummy);
+                return false;
+            }
+            str::Free(dummy);
+            continue;
+        }
+        if (*p == open) {
+            depth++;
+        } else if (*p == close) {
+            depth--;
+        }
+        p++;
+    }
+    return depth == 0;
+}
+
+// Collect the quoted arguments of app.popUpMenu(...) / app.popUpMenuEx(...).
+bool ParseJsPopUpMenuItems(Str js, StrVec& items) {
+    int idx = str::IndexOf(js, StrL("popUpMenu"));
+    if (idx < 0) {
+        return false;
+    }
+    const char* p = js.s + idx + 9; // strlen("popUpMenu")
+    const char* end = js.s + len(js);
+    if (p + 2 <= end && p[0] == 'E' && p[1] == 'x') {
+        p += 2;
+    }
+    SkipJsWs(p, end);
+    if (p >= end || *p != '(') {
+        return false;
+    }
+    p++;
+    while (p < end) {
+        SkipJsWs(p, end);
+        if (p >= end) {
+            break;
+        }
+        if (*p == ')') {
+            break;
+        }
+        if (*p == ',') {
+            p++;
+            continue;
+        }
+        if (*p == '[') {
+            if (!SkipJsNested(p, end, '[', ']')) {
+                break;
+            }
+            continue;
+        }
+        if (*p == '"' || *p == '\'') {
+            Str item;
+            if (!ParseJsQuotedString(p, end, &item)) {
+                str::Free(item);
+                break;
+            }
+            items.Append(item);
+            str::Free(item);
+            continue;
+        }
+        p++;
+    }
+    return len(items) > 0;
+}
+
+// First identifier that is followed by '(', skipping JS keywords.
+Str ExtractJsCallName(Str js) {
+    if (len(js) == 0) {
+        return {};
+    }
+    const char* p = js.s;
+    const char* end = js.s + len(js);
+    while (p < end) {
+        SkipJsWs(p, end);
+        if (p >= end) {
+            break;
+        }
+        if (!IsJsIdentStart(*p)) {
+            p++;
+            continue;
+        }
+        const char* start = p;
+        p++;
+        while (p < end && IsJsIdentChar(*p)) {
+            p++;
+        }
+        Str ident{start, (int)(p - start)};
+        SkipJsWs(p, end);
+        if (p < end && *p == '(' && !IsJsReservedCallName(ident)) {
+            return ident;
+        }
+    }
+    return {};
+}
+
 PageDestinationJsMenu::PageDestinationJsMenu() {
     kind = kindDestinationJsMenu;
     pageNo = -1;
