@@ -50,14 +50,12 @@ static Str ChmEntryClass(const chm_entry* e) {
 struct ChmObjectReadResult {
     uint64_t bytesRead = 0;
     u8 sha1[20]{};
-    bool sha1Valid = false;
 };
 
 static bool ReadChmObject(chm_ctx* ctx, chm_entry* e, ChmObjectReadResult* result) {
     if (e->length == 0) {
         CalcSHA1Digest({}, result->sha1);
         result->bytesRead = 0;
-        result->sha1Valid = true;
         return true;
     }
     if (e->length > 512ULL * 1024 * 1024) {
@@ -72,11 +70,9 @@ static bool ReadChmObject(chm_ctx* ctx, chm_entry* e, ChmObjectReadResult* resul
     int64_t got = chm_read_entry(ctx, e, buf);
     if (got != (int64_t)e->length) {
         result->bytesRead = got > 0 ? (uint64_t)got : 0;
-        result->sha1Valid = false;
         return false;
     }
     CalcSHA1Digest(Str((char*)buf.Get(), (int)n), result->sha1);
-    result->sha1Valid = true;
     result->bytesRead = (uint64_t)got;
     return true;
 }
@@ -113,7 +109,7 @@ static void ChmDumpEntry(chm_ctx* h, chm_entry* e, ChmDumpCtx* ctx) {
     }
 
     Str sha1Str = StrL("-");
-    if (readResult.sha1Valid) {
+    if (e->is_file && unpacked) {
         sha1Str = str::MemToHexTemp(Str((char*)readResult.sha1, sizeofi(readResult.sha1)));
     }
 
