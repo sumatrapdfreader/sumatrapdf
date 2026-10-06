@@ -370,44 +370,22 @@ static int CountDigits(Str text, int& byteIdx, int maxCount, int (*step)(Str, in
     return count;
 }
 
-// extend backward across comma-separated digit groups (e.g. "1,234,567")
-// returns the new start position if valid grouping found, otherwise returns curStart
-static int ExtendBackAcrossCommaGroups(Str text, int curStart) {
-    int pos = curStart;
+// Extend either boundary across comma-separated digit groups, e.g. "1,234,567".
+static int ExtendAcrossCommaGroups(Str text, int textLen, int pos, int dir) {
+    auto step = dir < 0 ? Utf8CodepointPrev : Utf8CodepointNext;
     int posByte = Utf8CodepointToByteIndex(text, pos);
-    while (pos >= 2) {
+    while (dir < 0 ? pos >= 2 : pos < textLen) {
         int commaByte = posByte;
-        int c = Utf8CodepointPrev(text, commaByte);
-        if (c != ',') {
+        if (step(text, commaByte) != ',') {
             break;
         }
-        int nDigits = CountDigits(text, commaByte, pos - 1, Utf8CodepointPrev);
+        int maxDigits = dir < 0 ? pos - 1 : textLen - pos - 1;
+        int nDigits = CountDigits(text, commaByte, maxDigits, step);
         if (nDigits == 0) {
             break;
         }
-        pos -= nDigits + 1;
+        pos += dir * (nDigits + 1);
         posByte = commaByte;
-    }
-    return pos;
-}
-
-// extend forward across comma-separated digit groups (e.g. ",234,567")
-// returns the new end position
-static int ExtendForwardAcrossCommaGroups(Str text, int textLen, int curEnd) {
-    int pos = curEnd;
-    int posByte = Utf8CodepointToByteIndex(text, pos);
-    while (pos < textLen) {
-        int commaEndByte = posByte;
-        int c = Utf8CodepointNext(text, commaEndByte);
-        if (c != ',') {
-            break;
-        }
-        int nDigits = CountDigits(text, commaEndByte, textLen - pos - 1, Utf8CodepointNext);
-        if (nDigits == 0) {
-            break;
-        }
-        pos += nDigits + 1;
-        posByte = commaEndByte;
     }
     return pos;
 }
@@ -442,7 +420,7 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
         if (nDigits > 0) {
             maybeNumberStart = i - nDigits - 1;
             // continue backward across comma-separated groups
-            maybeNumberStart = ExtendBackAcrossCommaGroups(text, maybeNumberStart);
+            maybeNumberStart = ExtendAcrossCommaGroups(text, textLen, maybeNumberStart, -1);
         } else {
             isAllDigits = false;
         }
@@ -466,7 +444,7 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
     int wordEnd = i;
     if (isAllDigits) {
         // extend forward across comma groups
-        wordEnd = ExtendForwardAcrossCommaGroups(text, textLen, wordEnd);
+        wordEnd = ExtendAcrossCommaGroups(text, textLen, wordEnd, 1);
         // extend forward across decimal point + digits
         int wordEndByte = Utf8CodepointToByteIndex(text, wordEnd);
         int dotEndByte = wordEndByte;
@@ -477,7 +455,7 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
             }
         }
         // extend backward across comma groups
-        wordStart = ExtendBackAcrossCommaGroups(text, wordStart);
+        wordStart = ExtendAcrossCommaGroups(text, textLen, wordStart, -1);
         wordStart = std::min(maybeNumberStart, wordStart);
     }
     *wordStartOut = wordStart;
