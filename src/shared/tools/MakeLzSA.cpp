@@ -73,7 +73,7 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
     Str fileData = file::ReadFile(filePath);
     AutoCall freeFileData(free, (void*)fileData.s);
     if (!(u8*)fileData.s || (size_t)len(fileData) >= UINT32_MAX) {
-        fprintf(stderr, "Failed to read \"%s\" for compression\n", filePath.s);
+        fprintf(stderr, "Failed to read \"%s\" for compression\n", CStrTemp(filePath));
         return false;
     }
     u32 fileDataCrc = crc32(0, (const u8*)fileData.s, (u32)len(fileData));
@@ -127,15 +127,11 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     data.Append(lzsaHeader.AsByteSlice());
 
     for (int i = (int)skipFiles; i < len(files); i++) {
-        TempStr filePath = str::DupTemp(files[i]);
+        Str filePath = files[i];
         Str sep = str::SliceFromCharLast(filePath, ':');
-        TempStr utf8Name;
+        TempStr utf8Name = str::DupTemp(sep ? Str(sep.s + 1) : filePath);
         if (sep) {
-            utf8Name = str::DupTemp(Str(sep.s + 1));
-            *sep.s = '\0';
             filePath.len = (int)(sep.s - filePath.s);
-        } else {
-            utf8Name = str::DupTemp(filePath);
         }
 
         str::TransCharsInPlace(utf8Name, StrL("/"), StrL("\\"));
