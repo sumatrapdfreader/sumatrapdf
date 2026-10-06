@@ -134,37 +134,24 @@ static void AppendSlugChar(str::Builder* out, unsigned int c) {
     // everything else (ascii punctuation) is dropped
 }
 
-// Slug for a heading title, matching cmark-gfm autoheaderid. Pass arena to allocate there.
-Str MarkdownHeadingSlug(Arena* a, Str title) {
+static const Str kSlugWhitespace = StrL(" \t\n\r");
+
+static Str MarkdownHeadingSlug(Str title) {
     str::Builder out;
-    const u8* p = (const u8*)title.s;
-    const u8* e = p + title.len;
-    // GitHub trims the title before slugging, so leading/trailing spaces don't
-    // become hyphens
-    while (p < e && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')) {
-        p++;
+    str::TrimAny(title, kSlugWhitespace.s);
+    while (len(title) > 0 && str::ContainsChar(kSlugWhitespace, title.s[len(title) - 1])) {
+        title.len--;
     }
-    while (e > p && (e[-1] == ' ' || e[-1] == '\t' || e[-1] == '\n' || e[-1] == '\r')) {
-        e--;
-    }
-    while (p < e) {
-        unsigned int c = *p++;
-        if (c >= 0x80) {
-            // non-ascii is kept as-is (GitHub keeps accented letters); copy the
-            // continuation bytes through unchanged
-            out.AppendChar((char)c);
-            while (p < e && (*p & 0xC0) == 0x80) {
-                out.AppendChar((char)*p++);
-            }
-            continue;
+    for (int i = 0; i < len(title); i++) {
+        char c = title.s[i];
+        // Non-ASCII bytes pass through unchanged, including malformed UTF-8.
+        if ((u8)c >= 0x80) {
+            out.AppendChar(c);
+        } else {
+            AppendSlugChar(&out, (u8)c);
         }
-        AppendSlugChar(&out, c);
     }
-    Str res = out.TakeStr();
-    if (a) {
-        return str::Dup(a, res);
-    }
-    return res;
+    return out.TakeStr();
 }
 
 // cmark chunks are length-prefixed; alloc=1 buffers are not always NUL-terminated.
@@ -231,7 +218,7 @@ static void ParseMarkdownHeadings(Str data, Vec<MarkdownHeadingItem>& headingsOu
         }
         MarkdownHeadingItem item;
         item.title = title;
-        item.anchor = MarkdownHeadingSlug(nullptr, title);
+        item.anchor = MarkdownHeadingSlug(title);
         item.level = cmark_node_get_heading_level(node);
         VecAppend(headingsOut, item);
     }
@@ -657,7 +644,7 @@ static void AddHeadingAnchors(cmark_node* doc) {
         if (len(title) == 0) {
             continue;
         }
-        Str slug = MarkdownHeadingSlug(nullptr, title);
+        Str slug = MarkdownHeadingSlug(title);
         if (slug) {
             cmark_node* anchor = NewSafeAnchorNode(CMARK_NODE_CUSTOM_BLOCK, slug);
             if (anchor && !cmark_node_insert_before(node, anchor)) {
@@ -741,9 +728,13 @@ bool MarkdownToc_UnitTestHtmlLinks() {
         {StrL("Hello World! (again)"), StrL("hello-world-again")},
         {StrL("Advanced options / settings"), StrL("advanced-options--settings")},
         {StrL("  padded  "), StrL("padded")},
+        {StrL("\t\r\nPadded\t\r\n"), StrL("padded")},
+        {StrL("\v hello \f"), StrL("-hello-")},
+        {StrL("ÄCAFÉ 😀"), StrL("ÄcafÉ-😀")},
+        {StrL("\xc3X\xa9"), StrL("\xc3x\xa9")},
     };
     for (auto& t : slugs) {
-        Str slug = MarkdownHeadingSlug(nullptr, t.title);
+        Str slug = MarkdownHeadingSlug(t.title);
         bool ok = str::Eq(slug, t.want);
         str::Free(slug);
         if (!ok) {
