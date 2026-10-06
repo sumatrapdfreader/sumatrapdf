@@ -15,24 +15,22 @@ static void CliPrint(Str s) {
 }
 
 // Dump all EXIF metadata for path to stdout (exif-py compatible format).
-// Returns true if any EXIF was found.
-bool DumpExifFile(Str path) {
+static void DumpExifFile(Str path) {
     if (len(path) == 0) {
-        return false;
+        return;
     }
     CliPrint(fmt("Opening: %s", path));
     Str data = file::ReadFile(path);
+    AutoFree dataOwner(data.s);
     if (len(data) == 0) {
         CliPrint(StrL("No EXIF information found"));
-        return false;
+        return;
     }
 
     ExifParser parser;
-    bool found = parser.Parse(data);
-    if (!found) {
+    if (!parser.Parse(data)) {
         CliPrint(StrL("No EXIF information found"));
-        str::Free(data);
-        return false;
+        return;
     }
 
     if (parser.hasJpegThumbnail) {
@@ -42,19 +40,13 @@ bool DumpExifFile(Str path) {
     for (Str line : parser.dumpLines) {
         CliPrint(line);
     }
-
-    str::Free(data);
-    return true;
 }
 
 void DumpExif(const Flags& flags) {
-    bool any = false;
-    for (int i = 0; i < len(flags.fileNames); i++) {
-        if (DumpExifFile(flags.fileNames[i])) {
-            any = true;
-        }
+    for (Str path : flags.fileNames) {
+        DumpExifFile(path);
     }
-    if (!any && len(flags.fileNames) == 0) {
+    if (len(flags.fileNames) == 0) {
         CliPrint(StrL("No file specified for -dump-exif"));
     }
 }

@@ -3,6 +3,4 @@
 
 struct Flags;
 
-bool DumpExifFile(Str path);
-
 void DumpExif(const Flags& flags);
