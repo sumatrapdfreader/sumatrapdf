@@ -81,11 +81,10 @@ static TempStr GetInstallDateTemp() {
 }
 
 // Note: doesn't handle (total) sizes above 4GB
-static DWORD GetDirSize(Str dir, bool recur) {
+static DWORD GetDirSize(Str dir) {
     logf("GetDirSize(%s)\n", dir);
     i64 totalSize = 0;
     DirIter di{dir};
-    di.recurse = recur;
     for (DirIterEntry* de : di) {
         i64 fileSize = GetFileSize(de);
         totalSize += fileSize;
@@ -93,7 +92,6 @@ static DWORD GetDirSize(Str dir, bool recur) {
     return (DWORD)totalSize;
 }
 
-// RegistryInstaller.cpp
 bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d, installDir: '%s')\n", RegKeyNameTemp(hkey),
          (int)allUsers, installDir);
@@ -102,8 +100,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     TempStr installedExePath = path::JoinTemp(installDir, Str(kExeName));
     TempStr installDate = GetInstallDateTemp();
     // uninstaller is the same executable with a different flag
-    Str uninstallerPath = installedExePath;
-    TempStr uninstallCmdLine = fmt("\"%s\" -uninstall", uninstallerPath);
+    TempStr uninstallCmdLine = fmt("\"%s\" -uninstall", installedExePath);
     if (allUsers) {
         uninstallCmdLine = str::JoinTemp(uninstallCmdLine, StrL(" -all-users"));
     }
@@ -114,15 +111,9 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayName"), StrL(kAppName));
     // version format: "1.2"
     ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayVersion"), StrL(CURR_VERSION_STRA));
-    // Windows XP doesn't allow to view the version number at a glance,
-    // so include it in the DisplayName
-    if (!IsWindowsVistaOrGreater()) {
-        TempStr displayName = str::JoinTemp(StrL(kAppName), StrL(" "), StrL(CURR_VERSION_STRA));
-        ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayName"), displayName);
-    }
     // non-recursive because we don't want to count space used for thumbnails
     // which is in installDir for local install
-    DWORD size = GetDirSize(installDir, false) / 1024;
+    DWORD size = GetDirSize(installDir) / 1024;
     // size of installed directory after copying files
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, StrL("EstimatedSize"), size);
     // current date as YYYYMMDD
@@ -175,27 +166,8 @@ static bool RegisterForDefaultPrograms(HKEY hkey, Str installedExePath) {
     return ok;
 }
 
-/*
-ShCtx is either HKCU or HKLM
-
-For each extension, create a progid:
-ShCtx\Software\Classes\SumatraPDF.${ext}
-  Application
-    ApplicationCompany = Krzysztof Kowalczyk
-    ApplicationName = SumatraPDF
-  DefaultIcon
-    (Default) = ${SumatraExePath},${OptIconIndex}
-  shell\open
-    AppUserModelID = ???
-    Icon = ${SumatraExePath}
-  shell\open\command
-    (Default) = "${SumatraExePath}" "%1"
-  shell\print\command
-
-Then in:
-ShCtx\Software\Classes\${ext}\OpenWithProgids
-  SumatraPDF.${ext} = "" (empty REG_SZ value)
-*/
+// Register per-extension ProgIDs and their OpenWithProgids entries.
+// Use the same registry root for both so either per-user or all-users works.
 static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
     TempStr exePathQuoted = str::JoinTemp(StrL("\""), installedExePath, StrL("\""));
     TempStr cmdOpen = str::JoinTemp(exePathQuoted, StrL(" \"%1\""));
@@ -206,7 +178,6 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
     for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
         TempStr progIDName = str::JoinTemp(StrL(kAppName), ext);
         TempStr progIDKey = str::JoinTemp(StrL("Software\\Classes\\"), progIDName);
-        // ok &= CreateRegKey(hkey, progIDKey);
 
         // Don't set the progID's friendly name (its (Default) value). A hardcoded
         // English string like "PDF File" overrides the localized type name that
@@ -214,7 +185,6 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
         // English names in Explorer's "Type" column (issue #3323). Delete any value
         // a previous version wrote so Windows falls back to the localized name.
         ok &= LoggedDeleteRegValue(hkey, progIDKey, {});
-        // ok &= LoggedWriteRegStr(hkey, progIDKey, L"AppUserModelID", L"SumatraPDF"); // ???
 
         int iconId = kDefaultFileIcon;
         for (const auto& icon : fileIcons) {
@@ -254,48 +224,6 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
     return ok;
 }
 
-/*
-Structure of registry entries for associating Sumatra with PDF files.
-
-The following paths exist under both HKEY_LOCAL_MACHINE and HKEY_CURRENT_USER.
-HKCU has precedence over HKLM.
-
-Software\Classes\.pdf default key is name of reg entry describing the app
-  handling opening PDF files. In our case it's SumatraPDF
-Software\Classes\.pdf\OpenWithProgids
-  should contain SumatraPDF so that it's easier for the user to later
-  restore SumatraPDF to become the default app through Windows Explorer,
-  cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
-
-Software\Classes\SumatraPDF\DefaultIcon = $exePath,1
-  1 means the second icon resource within the executable
-Software\Classes\SumatraPDF\shell\open\command = "$exePath" "%1"
-  tells how to call sumatra to open PDF file. %1 is replaced by PDF file path
-
-Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Progid
-  should be SumatraPDF (Foxit takes it over); only needed for HKEY_CURRENT_USER
-  TODO: No other app seems to set this one, and only UserChoice seems to make
-        a difference - is this still required for Windows XP?
-
-Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Application
-  should be SumatraPDF.exe; only needed for HKEY_CURRENT_USER
-  Windows XP seems to use this instead of:
-
-Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice\Progid
-  should be SumatraPDF as well (also only needed for HKEY_CURRENT_USER);
-  this key is used for remembering a user's choice with Explorer's Open With dialog
-  and can't be written to - so we delete it instead!
-
-HKEY_CLASSES_ROOT\.pdf\OpenWithList
-  list of all apps that can be used to open PDF files. We don't touch that.
-
-HKEY_CLASSES_ROOT\.pdf default comes from either HKCU\Software\Classes\.pdf or
-HKLM\Software\Classes\.pdf (HKCU has priority over HKLM)
-
-Note: When making changes below, please also adjust WriteExtendedFileExtensionInfo(),
-UnregisterFromBeingDefaultViewer() and RemoveInstallRegistryKeys() in Installer.cpp.
-*/
-
 #define kRegExplorerPdfExt "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
 #define kRegClassesPdf "Software\\Classes\\.pdf"
 
@@ -308,8 +236,6 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
     logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
     bool ok = true;
     TempStr key;
-
-    // ok &= OldWriteFileAssoc(hkey);
 
     if (IsWindows10OrGreater()) {
         ok &= RegisterForDefaultPrograms(hkey, installedExePath);
