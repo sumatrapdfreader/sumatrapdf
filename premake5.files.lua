@@ -958,7 +958,7 @@ function test_engines_files()
     "src/shared/EbookDoc.cpp",
     "src/EmbeddedResources.cpp",
     "src/EngineAll.h",
-    "src/EngineBase.cpp",
+    "src/shared/EngineBase.cpp",
     "src/shared/EngineBase.h",
     "src/CachedObjects.cpp",
     "src/shared/CachedObjects.h",

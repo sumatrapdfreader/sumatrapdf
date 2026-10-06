@@ -63,7 +63,6 @@
   <ItemGroup>
     <ClCompile Include="..\src\ChapterTable.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
-    <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
@@ -91,6 +90,9 @@
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EbookDoc.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\EngineBase.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp">
