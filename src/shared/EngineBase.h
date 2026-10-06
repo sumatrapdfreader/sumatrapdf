@@ -50,7 +50,6 @@ extern Kind kindEngineMobi;
 extern Kind kindEnginePdb;
 extern Kind kindEngineChm;
 extern Kind kindEngineHtml;
-extern Kind kindEngineTxt;
 
 bool IsExternalUrl(Str url);
 

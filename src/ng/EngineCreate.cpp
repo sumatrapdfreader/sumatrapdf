@@ -350,12 +350,6 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
             return engine;
         }
     }
-#if 0
-    if (kind == FileType::Txt) {
-        engine = CreateEngineTxtFromFile(path);
-        return engine;
-    }
-#endif
 
     if (kind == FileType::Epub) {
         engine = CreateEngineEpubFromFile(path);

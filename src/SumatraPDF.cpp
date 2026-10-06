@@ -2380,8 +2380,7 @@ static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine) {
         (path && IsEngineCbxSupportedFileType(GuessFileTypeFromName(path, true)))) {
         modeStr = gSettings->comicBookUI.defaultDisplayMode;
     } else if (k == kindEngineEpub || k == kindEngineFb2 || k == kindEngineMobi || k == kindEnginePdb ||
-               k == kindEngineHtml || k == kindEngineTxt ||
-               (path && IsEbookFileType(GuessFileTypeFromName(path, true)))) {
+               k == kindEngineHtml || (path && IsEbookFileType(GuessFileTypeFromName(path, true)))) {
         modeStr = gSettings->eBookUI.defaultDisplayMode;
     }
     if (modeStr) {
@@ -6339,8 +6338,6 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
         fileFilter.Append(Tr("FictionBook documents"));
     } else if (type == kindEnginePdb) {
         fileFilter.Append(Tr("PalmDoc documents"));
-    } else if (type == kindEngineTxt) {
-        fileFilter.Append(Tr("Text documents"));
     } else {
         fileFilter.Append(Tr("PDF documents"));
     }
@@ -10722,7 +10719,7 @@ static bool LayoutFollowsEbookSettings(EngineBase* engine) {
     }
     Kind k = engine->kind;
     return k == kindEngineMobi || k == kindEngineFb2 || k == kindEnginePdb || k == kindEngineHtml ||
-           k == kindEngineTxt || k == kindEngineEpub;
+           k == kindEngineEpub;
 }
 
 static void ReloadEbookLayoutDocs() {

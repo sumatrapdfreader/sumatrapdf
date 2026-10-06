@@ -59,7 +59,6 @@ Kind kindEngineMobi = "engineMobi";
 Kind kindEnginePdb = "enginePdb";
 Kind kindEngineChm = "engineChm";
 Kind kindEngineHtml = "engineHtml";
-Kind kindEngineTxt = "engineTxt";
 
 static Str gDefaultFontName;
 static Str gDefaultChmFontName;
@@ -2294,124 +2293,6 @@ EngineBase* EngineHtml::CreateFromFile(Str path) {
 
 EngineBase* CreateEngineHtmlFromFile(Str fileName) {
     return EngineHtml::CreateFromFile(fileName);
-}
-
-/* EngineBase for handling TXT documents */
-
-class EngineTxt : public EngineEbook {
-  public:
-    EngineTxt() {
-        kind = kindEngineTxt;
-        // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        SetDefaultExt(defaultExt, StrL(".txt"));
-    }
-    ~EngineTxt() override {
-        DestroyTocTree(tocTree);
-        delete doc;
-    }
-    EngineBase* Clone() override {
-        Str fileName = FilePath();
-        if (len(fileName) == 0) {
-            return {};
-        }
-        return CreateFromFile(fileName);
-    }
-
-    TempStr GetPropertyTemp(DocProp prop) override {
-        if (prop == DocProp::FontList) {
-            return ExtractFontListTemp();
-        }
-        return doc->GetPropertyTemp(prop);
-    }
-
-    bool HasToc() override;
-    TocTree* GetToc() override;
-
-    static EngineBase* CreateFromFile(Str path);
-
-  protected:
-    TxtDoc* doc = nullptr;
-    TocTree* tocTree = nullptr;
-    bool tocBuilt = false;
-
-    bool Load(Str fileName);
-};
-
-bool EngineTxt::Load(Str fileName) {
-    if (len(fileName) == 0) {
-        return false;
-    }
-
-    SetFilePath(fileName);
-
-    SetDefaultExt(defaultExt, path::GetExtTemp(fileName));
-
-    doc = TxtDoc::CreateFromFile(fileName);
-    if (!doc) {
-        return false;
-    }
-
-    if (doc->IsRFC()) {
-        // RFCs are targeted at letter size pages
-        pageRect = RectF(0, 0, 8.5f * GetFileDPI(), 11.f * GetFileDPI());
-    }
-
-    HtmlFormatterArgs args;
-    args.htmlStr = doc->GetHtmlData();
-    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
-    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-    args.SetFontName(GetDefaultFontName());
-    args.fontSize = GetDefaultFontSize();
-    args.textAllocator = a;
-
-    pages = TxtFormatter(&args).FormatAllPages(false);
-    // must set pageCount before ExtractPageAnchors
-    pageCount = len(*pages);
-    if (!ExtractPageAnchors()) {
-        return false;
-    }
-
-    GetToc();
-    return pageCount > 0;
-}
-
-bool EngineTxt::HasToc() {
-    if (tocBuilt) {
-        return tocTree != nullptr;
-    }
-    return doc && doc->HasToc();
-}
-
-TocTree* EngineTxt::GetToc() {
-    if (tocBuilt) {
-        return tocTree;
-    }
-    tocBuilt = true;
-    EbookTocBuilder builder(this);
-    doc->ParseToc(&builder);
-    auto* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-
-    auto realRoot = AllocTocItem(arena, {}, 0);
-    realRoot->child = root;
-    tocTree = AllocTocTree(arena, realRoot);
-    return tocTree;
-}
-
-EngineBase* EngineTxt::CreateFromFile(Str path) {
-    EngineTxt* engine = new EngineTxt();
-    if (!engine->Load(path)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
-}
-
-EngineBase* CreateEngineTxtFromFile(Str fileName) {
-    return EngineTxt::CreateFromFile(fileName);
 }
 
 void EngineEbookCleanup() {

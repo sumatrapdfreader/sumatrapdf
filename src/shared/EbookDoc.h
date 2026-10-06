@@ -157,31 +157,6 @@ struct HtmlDoc {
     static HtmlDoc* CreateFromFile(Str path);
 };
 
-/* ********** Plain Text (and RFCs and TCR) ********** */
-
-struct TxtDoc {
-    Str fileName;
-    str::Builder htmlData;
-    bool isRFC = false;
-
-    bool Load();
-
-    explicit TxtDoc(Str fileName);
-    ~TxtDoc();
-
-    Str GetHtmlData() const;
-
-    TempStr GetPropertyTemp(DocProp prop) const;
-    Str GetFileName() const;
-
-    bool IsRFC() const;
-    bool HasToc() const;
-    bool ParseToc(EbookTocVisitor* visitor);
-
-    static bool IsSupportedFileType(FileType kind);
-    static TxtDoc* CreateFromFile(Str path);
-};
-
 // The reading direction an EPUB declares on its spine, without building a whole
 // EpubDoc. EPUBs are rendered by EngineMupdf, which doesn't parse it (#1264).
 struct EpubReadingDirection {

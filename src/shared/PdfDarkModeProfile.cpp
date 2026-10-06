@@ -72,8 +72,7 @@ bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine) {
     // FixedPageUI colors the same way as PDF (issue #6030: CHM went white when
     // recolor was narrowed to MuPDF+DjVu).
     return engine->kind == kindEngineChm || engine->kind == kindEngineEpub || engine->kind == kindEngineFb2 ||
-           engine->kind == kindEngineMobi || engine->kind == kindEnginePdb || engine->kind == kindEngineHtml ||
-           engine->kind == kindEngineTxt;
+           engine->kind == kindEngineMobi || engine->kind == kindEnginePdb || engine->kind == kindEngineHtml;
 }
 
 bool EngineUsesReflowThemeCss(EngineBase* engine) {

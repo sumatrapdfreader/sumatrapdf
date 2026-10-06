@@ -27,7 +27,6 @@ Str ExtractPdfFromPrintReplicaData(Str data);
 EngineBase* CreateEnginePdbFromFile(Str fileName);
 EngineBase* CreateEngineChmFromFile(Str fileName);
 EngineBase* CreateEngineHtmlFromFile(Str fileName);
-EngineBase* CreateEngineTxtFromFile(Str fileName);
 
 void SetDefaultEbookFont(Str name, float size);
 void SetDefaultChmFont(Str name);
