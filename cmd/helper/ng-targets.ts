@@ -440,7 +440,6 @@ const enginesSources = [
   "src/ng/EngineBase.cpp",
   "src/ng/EngineCreate.cpp",
   "src/ng/EngineDjvuDec.cpp",
-  "src/ng/EngineDump.cpp",
   "src/ng/EngineDvi.cpp",
   "src/ng/ExifDump.cpp",
   "src/ng/EngineEbook.cpp",

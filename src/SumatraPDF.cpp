@@ -18405,8 +18405,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
 
     // when not a single self-contained exe, a missing sibling libsumatrapdf.dll means
     // we're really the installer; run it (matches pre-single-exe behavior)
-    if (!gSingleExe && ForceRunningAsInstaller() && !flags.dumpExif && !flags.dumpChm && !flags.engineDump &&
-        !flags.unitTests) {
+    if (!gSingleExe && ForceRunningAsInstaller() && !flags.dumpExif && !flags.dumpChm && !flags.unitTests) {
         logf("forcing running as an installer\n");
         exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
@@ -18476,12 +18475,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         return 0;
     }
 #endif
-
-    if (flags.engineDump) {
-        void EngineDump(const Flags& flags);
-        EngineDump(flags);
-        return 0;
-    }
 
     if (flags.dumpExif) {
         gLogToConsole = false;

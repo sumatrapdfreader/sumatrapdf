@@ -8559,12 +8559,6 @@ int GpuiMain(int argc, char** argv) {
     }
     UpdateSettings(*gFlags);
     // the console-only dump modes; orig runs them from WinMain the same way
-    if (gFlags->engineDump) {
-        void EngineDump(const Flags& flags);
-        EngineDump(*gFlags);
-        uitask::Destroy();
-        return 0;
-    }
     if (gFlags->dumpExif) {
         gLogToConsole = false;
         DumpExif(*gFlags);

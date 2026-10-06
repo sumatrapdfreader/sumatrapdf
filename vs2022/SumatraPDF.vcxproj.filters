@@ -1187,9 +1187,6 @@
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\shared\EngineDump.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\shared\ExifDump.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>

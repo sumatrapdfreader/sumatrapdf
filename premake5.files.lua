@@ -327,7 +327,6 @@ function sumatrapdf_files()
     "DocController.*",
     "DocProperties.*",
     "EditAnnotations.*",
-    "EngineDump.cpp",
     "ExifDump.*",
     "ExternalViewers.*",
     "Favorites.*",
