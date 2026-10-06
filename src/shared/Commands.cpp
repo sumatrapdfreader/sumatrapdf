@@ -1117,25 +1117,22 @@ int GetCommandIdByIdx(int idx) {
     return gCommandIds[idx];
 }
 
-Str GetCommandName(int commandId) {
+static Str GetCommandText(SeqStrings texts, int commandId) {
     int idx = 0;
-    for (Str name = SeqStrFirst(gCommandNames); len(name) > 0; name = SeqStrNext(name), idx++) {
+    for (Str text = SeqStrFirst(texts); len(text) > 0; text = SeqStrNext(text), idx++) {
         if (GetCommandIdByIdx(idx) == commandId) {
-            return name;
+            return text;
         }
     }
     return {};
 }
 
+Str GetCommandName(int commandId) {
+    return GetCommandText(gCommandNames, commandId);
+}
+
 Str GetCommandDescription(int commandId) {
-    int idx = 0;
-    for (Str description = SeqStrFirst(gCommandDescriptions); len(description) > 0;
-         description = SeqStrNext(description), idx++) {
-        if (GetCommandIdByIdx(idx) == commandId) {
-            return description;
-        }
-    }
-    return {};
+    return GetCommandText(gCommandDescriptions, commandId);
 }
 
 // Pack the struct and its owned, NUL-terminated strings into one allocation.
