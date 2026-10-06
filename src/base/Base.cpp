@@ -6256,7 +6256,7 @@ TempStr JoinTemp(StrVec* v, Str sep) {
     str::Builder tmp(GetTempArena());
     tmp.Reserve(CalcCapForJoin(v, sep));
     JoinInner(v, sep, tmp);
-    return ToStrTemp(tmp);
+    return ToStr(tmp);
 }
 
 //--- Strconv.cpp ----------------------------------------------------------------
