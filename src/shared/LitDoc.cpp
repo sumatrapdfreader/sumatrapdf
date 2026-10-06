@@ -1133,7 +1133,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
     bool isGoingdown = false;
     bool tagIsAtom = false;
     int tag = 0;
-    TempStr tagName;
+    Str tagName;
     str::Builder custom;
     str::Builder href;
 
@@ -1180,11 +1180,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                     } else {
                         name = LitTagName(ctx, tag);
                     }
-                    if (name) {
-                        tagName = str::DupTemp(Str(name));
-                    } else {
-                        tagName = fmt("x-lit-tag-%d", tag);
-                    }
+                    tagName = name ? Str(name) : fmt("x-lit-tag-%d", tag);
                     out.Append(Str(tagName));
                 } else if (flags & kLitFlagClosing) {
                     if (depth == 0) {
@@ -1298,7 +1294,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
             case 7: // custom tag name
                 LitAppendUtf8(custom, c);
                 if (--count == 0) {
-                    tagName = ToStrTemp(custom);
+                    tagName = ToStr(custom);
                     out.Append(Str(tagName));
                     state = 3;
                 }
@@ -1329,7 +1325,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
             case 11: // href
                 LitAppendUtf8(href, c);
                 if (--count == 0) {
-                    TempStr path = LitResolveHrefTemp(ctx, ToStrTemp(href));
+                    TempStr path = LitResolveHrefTemp(ctx, ToStr(href));
                     out.Append(StrL("\""));
                     out.Append(Str(path));
                     out.Append(StrL("\""));
@@ -1422,7 +1418,7 @@ static Str LitUnBinary(LitFile* lit, Str bin, Str path, bool isHtml, LitAtoms* a
     if (!LitBinaryToText(&ctx, 0)) {
         return {};
     }
-    Str raw = ToStrTemp(ctx.out);
+    Str raw = ToStr(ctx.out);
     str::TrimWs(raw); // strip leading whitespace
     return LitEscapeReserved(raw);
 }
