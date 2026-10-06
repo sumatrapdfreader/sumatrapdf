@@ -228,18 +228,8 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     forward = true;
 }
 
-// German ß (sharp s, U+00DF) is spelled "ss" and the two are often used
-// interchangeably, so for case-insensitive search we treat ß as equivalent to
-// "ss" (issue #933). Fold first so capital ẞ (U+1E9E) and case differences work.
-static bool IsSharpS(int c) {
-    return c != 0 && FoldCaseForSearch(c) == 0x00DF;
-}
-static bool IsLatinS(int c) {
-    return c != 0 && FoldCaseForSearch(c) == L's';
-}
-
-// Match one folded unit, treating ß and "ss" as equivalent.
-// Advances report codepoints and bytes consumed on each side.
+// Match folded characters, including German sharp s (U+00DF) as "ss" (#933).
+// Report codepoints and bytes consumed on each side.
 static bool MatchSearchUnit(Str h, int hLen, int hIdx, int hByteIdx, Str n, int nLen, int nIdx, int nByteIdx, int& hAdv,
                             int& nAdv, int& hByteAdv, int& nByteAdv) {
     hAdv = nAdv = hByteAdv = nByteAdv = 0;
@@ -247,42 +237,30 @@ static bool MatchSearchUnit(Str h, int hLen, int hIdx, int hByteIdx, Str n, int 
         return false;
     }
     int hNextByte = hByteIdx;
-    int hc = Utf8CodepointNext(h, hNextByte);
+    int hc = FoldCaseForSearch(Utf8CodepointNext(h, hNextByte));
     int nNextByte = nByteIdx;
-    int nc = Utf8CodepointNext(n, nNextByte);
-    // ß in the needle matches "ss" in the text
-    if (IsSharpS(nc) && hIdx + 1 < hLen && IsLatinS(hc)) {
-        int hAfterNextByte = hNextByte;
-        int hNextChar = Utf8CodepointNext(h, hAfterNextByte);
-        if (IsLatinS(hNextChar)) {
-            hAdv = 2;
-            nAdv = 1;
-            hByteAdv = hAfterNextByte - hByteIdx;
-            nByteAdv = nNextByte - nByteIdx;
-            return true;
+    int nc = FoldCaseForSearch(Utf8CodepointNext(n, nNextByte));
+    int hCount = 1, nCount = 1;
+    constexpr int kSharpS = 0x00df;
+    if (nc == kSharpS && hc == 's') {
+        if (hIdx + 1 >= hLen || FoldCaseForSearch(Utf8CodepointNext(h, hNextByte)) != 's') {
+            return false;
         }
-    }
-    // "ss" in the needle matches ß in the text
-    if (nIdx + 1 < nLen && IsLatinS(nc) && IsSharpS(hc)) {
-        int nAfterNextByte = nNextByte;
-        int nNextChar = Utf8CodepointNext(n, nAfterNextByte);
-        if (IsLatinS(nNextChar)) {
-            hAdv = 1;
-            nAdv = 2;
-            hByteAdv = hNextByte - hByteIdx;
-            nByteAdv = nAfterNextByte - nByteIdx;
-            return true;
+        hCount = 2;
+    } else if (hc == kSharpS && nc == 's') {
+        if (nIdx + 1 >= nLen || FoldCaseForSearch(Utf8CodepointNext(n, nNextByte)) != 's') {
+            return false;
         }
+        nCount = 2;
+    } else if (hc != nc) {
+        return false;
     }
-    // everything else (including ß~ß and ss~ss) matches one-to-one
-    if (FoldCaseForSearch(hc) == FoldCaseForSearch(nc)) {
-        hAdv = 1;
-        nAdv = 1;
-        hByteAdv = hNextByte - hByteIdx;
-        nByteAdv = nNextByte - nByteIdx;
-        return true;
-    }
-    return false;
+
+    hAdv = hCount;
+    nAdv = nCount;
+    hByteAdv = hNextByte - hByteIdx;
+    nByteAdv = nNextByte - nByteIdx;
+    return true;
 }
 
 static bool MatchesFoldedAt(Str text, int textLen, int idx, int byteIdx, Str needle, int needleLen, int limit) {
