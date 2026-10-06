@@ -129,11 +129,6 @@ bool IPageElement::Is(Kind expectedKind) {
     return kind == expectedKind;
 }
 
-Kind kindTocFzOutline = "tocFzOutline";
-Kind kindTocFzOutlineAttachment = "tocFzOutlineAttachment";
-Kind kindTocFzLink = "tocFzLink";
-Kind kindTocDjvu = "tocDjvu";
-
 // Sanitize a string for display in a single-line tree-view control (e.g. a
 // bookmark/TOC label): drop soft hyphens and turn control chars / line
 // separators into spaces, so they don't render as a stray hyphen or as

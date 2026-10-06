@@ -360,11 +360,6 @@ struct PageElementDestination : IPageElement {
 constexpr int kFontBitItalic = 0;
 constexpr int kFontBitBold = 1;
 
-extern Kind kindTocFzOutline;
-extern Kind kindTocFzLink;
-extern Kind kindTocFzOutlineAttachment;
-extern Kind kindTocDjvu;
-
 // an item in a document's Table of Content
 struct TocItem {
     uintptr_t userData = 0;
