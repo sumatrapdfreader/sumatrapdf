@@ -3286,17 +3286,17 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)
-bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
-    if (!res->len) {
+bool DisplayModel::ShowResultRectToScreen(Vec<TextSel>* res) {
+    if (!len(*res)) {
         return false;
     }
 
     Rect extremes;
-    for (int i = 0; i < res->len; i++) {
-        Rect rc = CvtToScreen(res->pages[i], ToRectF(res->rects[i]));
+    for (const TextSel& part : *res) {
+        Rect rc = CvtToScreen(part.pageNo, ToRectF(part.rect));
         extremes = extremes.Union(rc);
     }
-    return ScrollScreenToRect(res->pages[0], extremes);
+    return ScrollScreenToRect((*res)[0].pageNo, extremes);
 }
 
 bool DisplayModel::ScrollScreenToRect(int pageNo, Rect rec) {

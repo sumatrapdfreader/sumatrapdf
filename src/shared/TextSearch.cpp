@@ -625,7 +625,7 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
         findIndex = forward ? fg.offset : offset;
 
         // try again if the found text is completely outside the page's mediabox
-        if (result.len != 0) {
+        if (len(result) != 0) {
             break;
         }
     }
@@ -717,7 +717,7 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
     return false;
 }
 
-TextSel* TextSearch::FindFirst(int page, Str text) {
+Vec<TextSel>* TextSearch::FindFirst(int page, Str text) {
     SetText(text);
 
     if (FindStartingAtPage(page)) {
@@ -729,7 +729,7 @@ TextSel* TextSearch::FindFirst(int page, Str text) {
 // search only `pageNo` (no wrapping to other pages), mirroring the per-page step
 // inside FindStartingAtPage. Used for page-constrained search (issue #3085)
 // like FindFirst but searches only the given page (issue #3085)
-TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
+Vec<TextSel>* TextSearch::FindFirstOnPage(int pageNo, Str text) {
     SetText(text);
     if (len(findText) == 0 || pageNo < 1 || pageNo > nPages) {
         return nullptr;
@@ -764,7 +764,7 @@ TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
     return &result;
 }
 
-TextSel* TextSearch::FindNext() {
+Vec<TextSel>* TextSearch::FindNext() {
     ReportIf(len(findText) == 0);
     if (len(findText) == 0) {
         return nullptr;

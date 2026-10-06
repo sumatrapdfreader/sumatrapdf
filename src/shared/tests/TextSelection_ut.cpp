@@ -17,25 +17,19 @@ void TextSelection_UnitTests() {
         {66, 115, 12, 10}, {76, 115, 12, 10}, {50, 130, 12, 10}, {60, 130, 12, 10},
         {70, 130, 12, 10}, {56, 145, 12, 10}, {66, 145, 12, 10}, {76, 145, 12, 10},
     };
-    TextSel result;
+    Vec<TextSel> result;
     FillSelectionRects(&result, 1, coords, dimof(coords), 0, 10, {0, 0, 200, 200});
-    utassert(result.len == 4);
-    utassert(result.rects[0] == Rect(50, 100, 32, 10));
-    utassert(result.rects[1] == Rect(56, 115, 32, 10));
-    utassert(result.rects[2] == Rect(50, 130, 32, 10));
-    utassert(result.rects[3] == Rect(56, 145, 10, 10));
-    free(result.pages);
-    free(result.rects);
-    free(result.quads);
+    utassert(len(result) == 4);
+    utassert(result[0].rect == Rect(50, 100, 32, 10));
+    utassert(result[1].rect == Rect(56, 115, 32, 10));
+    utassert(result[2].rect == Rect(50, 130, 32, 10));
+    utassert(result[3].rect == Rect(56, 145, 10, 10));
 
     Rect superscript[] = {{10, 100, 12, 10}, {20, 97, 8, 6}, {28, 100, 12, 10}};
-    result = {};
+    VecClear(result);
     FillSelectionRects(&result, 1, superscript, dimof(superscript), 0, dimof(superscript), {0, 0, 200, 200});
-    utassert(result.len == 1);
-    utassert(result.rects[0] == Rect(10, 97, 30, 13));
-    free(result.pages);
-    free(result.rects);
-    free(result.quads);
+    utassert(len(result) == 1);
+    utassert(result[0].rect == Rect(10, 97, 30, 13));
 
     // 45-degree run: keep per-glyph quads instead of one axis-aligned union
     Rect rotCoords[] = {{10, 10, 20, 20}, {20, 20, 20, 20}};
@@ -43,15 +37,19 @@ void TextSelection_UnitTests() {
         {PointF(10, 20), PointF(24, 10), PointF(20, 30), PointF(34, 20)},
         {PointF(20, 30), PointF(34, 20), PointF(30, 40), PointF(44, 30)},
     };
-    result = {};
+    VecClear(result);
     FillSelectionRects(&result, 1, rotCoords, dimof(rotCoords), 0, dimof(rotCoords), {0, 0, 200, 200}, rotQuads);
-    utassert(result.len == 2);
-    utassert(result.quads);
-    utassert(result.quads[0].ul.x == 10 && result.quads[0].ur.y == 10);
-    utassert(result.quads[1].ul.x == 20 && result.quads[1].lr.x == 44);
-    free(result.pages);
-    free(result.rects);
-    free(result.quads);
+    utassert(len(result) == 2);
+    utassert(!result[0].quad.IsEmpty());
+    utassert(result[0].quad.ul.x == 10 && result[0].quad.ur.y == 10);
+    utassert(result[1].quad.ul.x == 20 && result[1].quad.lr.x == 44);
+
+    FillSelectionRects(&result, 2, coords, dimof(coords), 0, 10, {0, 0, 200, 200});
+    utassert(len(result) == 6 && result[0].pageNo == 1 && result[2].pageNo == 2);
+    utassert(!result[0].quad.IsEmpty() && result[2].quad.IsEmpty());
+    VecClear(result);
+    FillSelectionRects(&result, 3, superscript, dimof(superscript), 0, dimof(superscript), {0, 0, 200, 200});
+    utassert(len(result) == 1 && result[0].pageNo == 3 && result[0].quad.IsEmpty());
 
     // small rotated glyphs: distinct quads, but the rounded int bboxes coincide,
     // so the "all glyphs of a word share one bbox" (DjVu) rule must not apply

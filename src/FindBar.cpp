@@ -934,8 +934,8 @@ TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
     int matches = len(first->findMatches);
     int hitPage = 0;
     DisplayModel* dm = first->AsFixed();
-    if (dm && dm->textSearch && dm->textSearch->result.len > 0) {
-        hitPage = dm->textSearch->result.pages[0];
+    if (dm && dm->textSearch && len(dm->textSearch->result) > 0) {
+        hitPage = dm->textSearch->result[0].pageNo;
     }
     bool busy = first->findThread || first->findCountThread || first->findDebouncePending;
     int page = first->ctrl ? first->ctrl->CurrentPageNo() : 0;

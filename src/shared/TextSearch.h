@@ -19,9 +19,9 @@ struct TextSearch : public TextSelection {
     int RestrictFirst() const;
     int RestrictLast() const;
     void SetLastResult(TextSelection* sel);
-    TextSel* FindFirst(int page, Str text);
-    TextSel* FindFirstOnPage(int pageNo, Str text);
-    TextSel* FindNext();
+    Vec<TextSel>* FindFirst(int page, Str text);
+    Vec<TextSel>* FindFirstOnPage(int pageNo, Str text);
+    Vec<TextSel>* FindNext();
 
     int GetCurrentPageNo() const;
     int GetSearchHitStartPageNo() const;

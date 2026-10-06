@@ -25,7 +25,7 @@ struct SelectionOnPage {
     Rect GetRect(DisplayModel* dm) const;
 
     static Vec<SelectionOnPage>* FromRectangle(DisplayModel* dm, Rect rect);
-    static Vec<SelectionOnPage>* FromTextSelect(TextSel* textSel);
+    static Vec<SelectionOnPage>* FromTextSelect(Vec<TextSel>* textSel);
 };
 
 // default opacity of the selection rectangle when SelectionColor has no alpha

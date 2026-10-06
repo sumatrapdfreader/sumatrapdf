@@ -483,12 +483,12 @@ static void LayoutToolbar(SelectionToolbar* tb) {
 // Ported from dengxibo/sumatrapdf-plus 89e4edfed.
 static bool GetSelectionEndPoint(MainWindow* win, Point& out) {
     DisplayModel* dm = win->AsFixed();
-    if (!dm || !dm->textSelection || dm->textSelection->result.len <= 0) {
+    if (!dm || !dm->textSelection || len(dm->textSelection->result) <= 0) {
         return false;
     }
-    TextSel& result = dm->textSelection->result;
-    int i = result.len - 1;
-    Rect r = dm->CvtToScreen(result.pages[i], ToRectF(result.rects[i]));
+    Vec<TextSel>& result = dm->textSelection->result;
+    int i = len(result) - 1;
+    Rect r = dm->CvtToScreen(result[i].pageNo, ToRectF(result[i].rect));
     if (r.IsEmpty()) {
         return false;
     }
@@ -702,7 +702,7 @@ static void ShowSelectionToolbarNow(MainWindow* win) {
     if (!dm) {
         return;
     }
-    if (dm->textSelection->result.len <= 0) {
+    if (len(dm->textSelection->result) <= 0) {
         return;
     }
     Rect sel;

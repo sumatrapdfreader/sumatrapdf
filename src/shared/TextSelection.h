@@ -1,13 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// TODO: replace with Vec<TextSel>
 struct TextSel {
-    int len = 0;
-    int cap = 0;
-    int* pages = nullptr;
-    Rect* rects = nullptr;
-    QuadF* quads = nullptr;
+    int pageNo = 0;
+    Rect rect;
+    QuadF quad{};
 };
 
 // Unit for keyboard/accessibility selection extension (platform-neutral).
@@ -34,7 +31,6 @@ struct TextSelection {
     EngineBase* engine = nullptr;
 
     explicit TextSelection(EngineBase* engine);
-    ~TextSelection();
 
     bool IsOverGlyph(int pageNo, double x, double y);
     int FindClosestGlyphAt(int pageNo, double x, double y);
@@ -51,7 +47,7 @@ struct TextSelection {
     Str ExtractText(Str lineSep);
     void Reset();
 
-    TextSel result{};
+    Vec<TextSel> result;
 
     void GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const;
 };
@@ -59,6 +55,6 @@ struct TextSelection {
 uint distSq(int x, int y);
 bool isWordChar(int c);
 bool TextPosMoveBy(EngineBase*, int& page, int& glyph, TextSelectUnit unit, int dir);
-void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int textLen, int glyph, int length, Rect mediabox,
-                        QuadF* glyphQuads = nullptr);
+void FillSelectionRects(Vec<TextSel>* result, int pageNo, Rect* coords, int textLen, int glyph, int length,
+                        Rect mediabox, QuadF* glyphQuads = nullptr);
 int FindClosestGlyphIn(EngineBase* engine, int pageNo, Rect* coords, QuadF* quads, int textLen, double x, double y);

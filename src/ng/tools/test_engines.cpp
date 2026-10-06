@@ -278,8 +278,8 @@ static bool SelectAllText(Str path) {
     selection.SelectUpTo(engine->PageCount(), -1);
     Str text = selection.ExtractText(StrL("\n"));
     printf("selected bytes: %d\n", len(text));
-    printf("selection rectangles: %d\n", selection.result.len);
-    bool ok = len(text) > 0 && selection.result.len > 0;
+    printf("selection rectangles: %d\n", len(selection.result));
+    bool ok = len(text) > 0 && len(selection.result) > 0;
     str::Free(text);
     engine->Release();
     return ok;
@@ -294,7 +294,7 @@ static bool FindText(Str path, Str term) {
 
     TextSearch search(engine);
     search.SetDirection(TextSearch::Direction::Forward);
-    TextSel* result = search.FindFirst(1, term);
+    Vec<TextSel>* result = search.FindFirst(1, term);
     int matches = 0;
     while (result) {
         matches++;

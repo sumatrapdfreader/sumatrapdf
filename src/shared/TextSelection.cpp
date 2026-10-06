@@ -26,19 +26,8 @@ static bool isDigit(int c) {
 
 TextSelection::TextSelection(EngineBase* engine) : engine(engine) {}
 
-TextSelection::~TextSelection() {
-    Reset();
-}
-
 void TextSelection::Reset() {
-    result.len = 0;
-    result.cap = 0;
-    free(result.pages);
-    result.pages = nullptr;
-    free(result.rects);
-    result.rects = nullptr;
-    free(result.quads);
-    result.quads = nullptr;
+    VecReset(result);
     wordStartPage = wordStartGlyph = wordEndPage = wordEndGlyph = -1;
 }
 
@@ -164,41 +153,8 @@ static bool IsGlyphOnVisualLine(Rect lineBox, Rect glyphBox) {
     return (bottom - top) * 2 >= glyphBox.dy;
 }
 
-static void TextSelAppend(TextSel* result, int pageNo, Rect bbox, const QuadF* quad) {
-    int currLen = result->len;
-    int left = result->cap - currLen;
-    ReportIf(left < 0);
-    if (left == 0) {
-        int newCap = result->cap * 2;
-        newCap = std::max(newCap, 64);
-        int* newPages = (int*)realloc(result->pages, sizeof(int) * newCap);
-        Rect* newRects = (Rect*)realloc(result->rects, sizeof(Rect) * newCap);
-        ReportIf(!newPages);
-        ReportIf(!newRects);
-        result->pages = newPages;
-        result->rects = newRects;
-        if (result->quads) {
-            QuadF* newQuads = (QuadF*)realloc(result->quads, sizeof(QuadF) * newCap);
-            ReportIf(!newQuads);
-            memset(newQuads + result->cap, 0, sizeof(QuadF) * (newCap - result->cap));
-            result->quads = newQuads;
-        }
-        result->cap = newCap;
-    }
-    if (quad && !result->quads) {
-        result->quads = (QuadF*)calloc(result->cap, sizeof(QuadF));
-        ReportIf(!result->quads);
-    }
-    result->pages[currLen] = pageNo;
-    result->rects[currLen] = bbox;
-    if (result->quads) {
-        result->quads[currLen] = quad ? *quad : QuadF{};
-    }
-    result->len++;
-}
-
-void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int textLen, int glyph, int length, Rect mediabox,
-                        QuadF* glyphQuads) {
+void FillSelectionRects(Vec<TextSel>* result, int pageNo, Rect* coords, int textLen, int glyph, int length,
+                        Rect mediabox, QuadF* glyphQuads) {
     Rect *c = &coords[glyph], *end = c + length;
     while (c < end) {
         // skip line breaks (empty boxes: hard newlines and soft-join spaces)
@@ -221,7 +177,7 @@ void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int textLen, 
                 if (bbox.IsEmpty()) {
                     continue;
                 }
-                TextSelAppend(result, pageNo, bbox, &glyphQuads[ix]);
+                VecAppend(*result, TextSel{pageNo, bbox, glyphQuads[ix]});
             }
             continue;
         }
@@ -246,7 +202,7 @@ void FillSelectionRects(TextSel* result, int pageNo, Rect* coords, int textLen, 
             bbox.dx = c->x - bbox.x;
         }
 
-        TextSelAppend(result, pageNo, bbox, nullptr);
+        VecAppend(*result, TextSel{pageNo, bbox, {}});
     }
 }
 
@@ -378,7 +334,7 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
         endGlyph = textLen + glyphIx + 1;
     }
 
-    result.len = 0;
+    VecClear(result);
     int fromPage = std::min(startPage, endPage), toPage = std::max(startPage, endPage);
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);

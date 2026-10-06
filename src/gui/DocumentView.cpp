@@ -337,17 +337,17 @@ static void OnPaint(DocumentView* view, PlatformCanvasPaintEvent* ev) {
         ev->gfx->DrawRect(target, MkGray(155));
     }
 
-    if (data->textSelection && data->textSelection->result.len > 0) {
+    if (data->textSelection && len(data->textSelection->result) > 0) {
         Vec<Rect> selectionRects;
-        TextSel& selection = data->textSelection->result;
-        for (int i = 0; i < selection.len; i++) {
-            int pageNo = selection.pages[i];
+        Vec<TextSel>& selection = data->textSelection->result;
+        for (int i = 0; i < len(selection); i++) {
+            int pageNo = selection[i].pageNo;
             DocumentLayoutPage* page = data->layout.GetPage(pageNo);
             if (!page || !page->isShown) {
                 continue;
             }
-            if (selection.quads && !selection.quads[i].IsEmpty()) {
-                QuadF q = selection.quads[i];
+            if (!selection[i].quad.IsEmpty()) {
+                QuadF q = selection[i].quad;
                 EngineBase* eng = data->reader->GetEngine();
                 PointF corners[4] = {q.ul, q.ur, q.lr, q.ll};
                 Point pts[4];
@@ -357,7 +357,7 @@ static void OnPaint(DocumentView* view, PlatformCanvasPaintEvent* ev) {
                 }
                 ev->gfx->FillQuads(pts, 1, MkRgb(255, 225, 70), 115);
             } else {
-                RectF transformed = data->reader->GetEngine()->Transform(ToRectF(selection.rects[i]), pageNo,
+                RectF transformed = data->reader->GetEngine()->Transform(ToRectF(selection[i].rect), pageNo,
                                                                          page->zoomReal, data->rotation);
                 Rect screenRect = transformed.Round();
                 screenRect.Offset(page->pageOnScreen.x, page->pageOnScreen.y);
@@ -820,7 +820,7 @@ Pixmap* DocumentView::RenderPageForPrint(int pageNo, float zoom) const {
 
 bool DocumentView::HasTextSelection() const {
     auto* viewData = ViewData((DocumentView*)this);
-    return viewData->textSelection && viewData->textSelection->result.len > 0;
+    return viewData->textSelection && len(viewData->textSelection->result) > 0;
 }
 
 void DocumentView::CopySelection() {
@@ -855,7 +855,7 @@ bool DocumentView::FindText(Str text, bool forward, bool restart) {
     TextSearch* search = viewData->textSearch;
     bool newText = !str::Eq(search->lastText, text);
     search->SetDirection(forward ? TextSearch::Direction::Forward : TextSearch::Direction::Backward);
-    TextSel* result = nullptr;
+    Vec<TextSel>* result = nullptr;
     if (restart || newText || len(search->findText) == 0) {
         result = search->FindFirst(CurrentPageNo(), text);
     } else {

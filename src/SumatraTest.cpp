@@ -161,9 +161,9 @@ TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
         auto* ts = new TextSearch(engine);
         ts->SetDirection(TextSearch::Direction::Forward);
         ts->SetMatchCase(false);
-        TextSel* sel = ts->FindFirst(1, needle);
-        if (sel && sel->len > 0) {
-            out.Append(fmt("FOUND needle=%s page=%d\n", needle, sel->pages[0]));
+        Vec<TextSel>* sel = ts->FindFirst(1, needle);
+        if (sel && len(*sel) > 0) {
+            out.Append(fmt("FOUND needle=%s page=%d\n", needle, (*sel)[0].pageNo));
         } else {
             out.Append(fmt("NOTFOUND needle=%s\n", needle));
         }
@@ -203,9 +203,9 @@ TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, St
         ts->SetPageRange(first, last);
     }
     int n = 0;
-    TextSel* sel = ts->FindFirst(ts->RestrictFirst(), needle);
-    while (sel && sel->len > 0) {
-        out.Append(fmt("page=%d\n", sel->pages[0]));
+    Vec<TextSel>* sel = ts->FindFirst(ts->RestrictFirst(), needle);
+    while (sel && len(*sel) > 0) {
+        out.Append(fmt("page=%d\n", (*sel)[0].pageNo));
         n++;
         sel = ts->FindNext();
     }
@@ -806,7 +806,7 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* st
 // ShowSearchResult(). SetLastResult()->SetText() clears textSearch->result
 // whenever the matched text differs from the typed search text (e.g. a
 // case-insensitive find where "the" matches "The"), so ShowSearchResult() then
-// got an empty result (result->len == 0), tripped a ReportIf, and failed to
+// got an empty result (len(*result) == 0), tripped a ReportIf, and failed to
 // navigate to the match. Operates on the document loaded into the first window.
 // `word` is the (case-different) matched text in the document and `typed` is
 // the lowercase search text the user typed. Since issue #5737 find no longer
@@ -902,7 +902,7 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
     // the current one - and with the find UI closed isn't highlighted at all
     // (issue #5889). SetLastResult()->SetText() drops it exactly when the
     // document text differs from what was typed, which is this test's case.
-    bool hasResult = ts->result.len > 0;
+    bool hasResult = len(ts->result) > 0;
 
     bool matchOk = (curPage == pageNo) && (curStart == startGlyph) && (curEnd == endGlyph) && str::Eq(matched, word);
     bool ok = matchOk && visible && hasResult;
@@ -1206,7 +1206,7 @@ TempStr RenumberSelResultTemp(int layoutChapter, int* exitCodeOut) {
         }
         dm->textSelection->StartAt(p, 0);
         dm->textSelection->SelectUpTo(p, std::min(n, 10));
-        textLenBefore = dm->textSelection->result.len;
+        textLenBefore = len(dm->textSelection->result);
         if (textLenBefore > 0) {
             break;
         }
@@ -1216,13 +1216,13 @@ TempStr RenumberSelResultTemp(int layoutChapter, int* exitCodeOut) {
 
     bool survived = tab->selectionOnPage && len(*tab->selectionOnPage) > 0;
     int pageNo = survived ? (*tab->selectionOnPage)[0].pageNo : -1;
-    bool textSurvived = textLenBefore > 0 && dm->textSelection->result.len == textLenBefore;
+    bool textSurvived = textLenBefore > 0 && len(dm->textSelection->result) == textLenBefore;
     if (survived) {
         out.Append(fmt("OK survived=1 pageNo=%d\n", pageNo));
     } else {
         out.Append(StrL("FAIL survived=0\n"));
     }
-    out.Append(fmt("textSurvived=%d textLen=%d\n", (int)textSurvived, dm->textSelection->result.len));
+    out.Append(fmt("textSurvived=%d textLen=%d\n", (int)textSurvived, len(dm->textSelection->result)));
     if (exitCodeOut) {
         *exitCodeOut = (survived && textSurvived) ? 0 : 1;
     }

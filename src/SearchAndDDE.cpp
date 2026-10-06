@@ -424,7 +424,7 @@ void FindFirst(MainWindow* win) {
     // If focus was in the document (not find bar), copy selected text
     // to find edit only if it's different from current text. Setting the text
     // triggers find-as-you-type via the bar's onTextChanged handler.
-    if (!hadFindFocus && dm->textSelection->result.len > 0) {
+    if (!hadFindFocus && len(dm->textSelection->result) > 0) {
         Str sel = dm->textSelection->ExtractText(StrL(" "));
         TempStr selection = str::DupTemp(sel);
         str::Free(sel);
@@ -749,7 +749,7 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
         return;
     }
     DisplayModel* dm = win->AsFixed();
-    if (!win->CurrentTab()->selectionOnPage || 0 == dm->textSelection->result.len) {
+    if (!win->CurrentTab()->selectionOnPage || 0 == len(dm->textSelection->result)) {
         return;
     }
 
@@ -778,19 +778,19 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
 // goToPage: scroll to the match's page even when it's already shown (a new
 // search). Moving between matches never adds a nav point: the search's start
 // view is already in the history (MarkSearchStart), so Back returns there
-static void ShowSearchResult(MainWindow* win, TextSel* result, bool goToPage) {
-    ReportIf(0 == result->len || !result->pages || !result->rects);
-    if (0 == result->len || !result->pages || !result->rects) {
+static void ShowSearchResult(MainWindow* win, Vec<TextSel>* result, bool goToPage) {
+    ReportIf(0 == len(*result));
+    if (0 == len(*result)) {
         return;
     }
 
     DisplayModel* dm = win->AsFixed();
-    if (goToPage || !dm->PageShown(result->pages[0]) ||
+    if (goToPage || !dm->PageShown((*result)[0].pageNo) ||
         (dm->GetZoomVirtual() == kZoomFitPage || dm->GetZoomVirtual() == kZoomFitContent)) {
         // nor must dwelling on a match turn it into a history entry
         bool suppress = dm->stableNavPoint.suppress;
         dm->stableNavPoint.suppress = true;
-        win->ctrl->GoToPage(result->pages[0], false);
+        win->ctrl->GoToPage((*result)[0].pageNo, false);
         dm->stableNavPoint.suppress = suppress;
     }
 
@@ -907,7 +907,7 @@ struct FindThreadData {
 struct FindEndTaskData {
     MainWindow* win = nullptr;
     FindThreadData* ftd = nullptr;
-    TextSel* textSel = nullptr;
+    Vec<TextSel>* textSel = nullptr;
     bool wasModifiedCanceled = false;
     bool loopedAround = false;
     FindEndTaskData() = default;
@@ -1324,7 +1324,7 @@ static void CountThread(CountThreadData* d) {
         // first; wrap around to cover the rest of the (restricted) range
         int wrapStart = ts.RestrictFirst();
         bool wrapped = false;
-        TextSel* m = ts.FindFirst(d->startPage, d->text);
+        Vec<TextSel>* m = ts.FindFirst(d->startPage, d->text);
         if (!m && d->startPage > wrapStart) {
             // Nothing at or after startPage. The wrap-around below only runs
             // from inside the loop, so without this the loop is never entered
@@ -1573,7 +1573,7 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     ts->Reset();
     ts->StartAt(startPage, startGlyph);
     ts->SelectUpTo(endPage, endGlyph);
-    if (ts->result.len == 0) {
+    if (len(ts->result) == 0) {
         return;
     }
     // navigate to the match while ts->result is still populated. SetLastResult()
@@ -1592,7 +1592,7 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     // plain match - and with the find UI closed it isn't highlighted at all.
     // Only bites when the document text differs from what was typed, which is
     // why it looked intermittent (issue #5889)
-    if (ts->result.len == 0) {
+    if (len(ts->result) == 0) {
         ts->StartAt(startPage, startGlyph);
         ts->SelectUpTo(endPage, endGlyph);
     }
@@ -1674,7 +1674,7 @@ static void FindThread(FindThreadData* ftd) {
     engine->AddRef();
     AutoCall releaseEngine(SafeEngineRelease<EngineBase>, &engine);
 
-    TextSel* rect;
+    Vec<TextSel>* rect;
     textSearch->progressCb = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateSearchProgress, ftd);
     textSearch->SetDirection(ftd->direction);
     if (ftd->wasModified || !ctrl->ValidPageNo(textSearch->GetCurrentPageNo()) ||
@@ -1931,11 +1931,8 @@ static void AppendMatchPageRects(EngineBase* engine, const FindMatch& fm, Vec<Fi
     TextSelection ts(engine);
     ts.StartAt(fm.startPage, fm.startGlyph);
     ts.SelectUpTo(fm.endPage, fm.endGlyph);
-    for (int i = 0; i < ts.result.len; i++) {
-        FindMatchPaintPageRect pr;
-        pr.pageNo = ts.result.pages[i];
-        pr.rect = ts.result.rects[i];
-        VecAppend(out, pr);
+    for (const TextSel& part : ts.result) {
+        VecAppend(out, FindMatchPaintPageRect{part.pageNo, part.rect});
     }
 }
 
@@ -1984,16 +1981,16 @@ static void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int fi
     }
 }
 
-static void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, TextSel* sel, Vec<Rect>& out) {
-    if (!sel || sel->len == 0 || !sel->pages || !sel->rects) {
+static void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, Vec<TextSel>* sel, Vec<Rect>& out) {
+    if (!sel || len(*sel) == 0) {
         return;
     }
-    for (int i = 0; i < sel->len; i++) {
-        int pageNo = sel->pages[i];
+    for (const TextSel& part : *sel) {
+        int pageNo = part.pageNo;
         if (!dm->PageVisible(pageNo)) {
             continue;
         }
-        Rect rc = dm->CvtToScreen(pageNo, ToRectF(sel->rects[i]));
+        Rect rc = dm->CvtToScreen(pageNo, ToRectF(part.rect));
         rc = rc.Intersect(clipRc);
         if (!rc.IsEmpty()) {
             VecAppend(out, rc);
@@ -2002,7 +1999,7 @@ static void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, TextS
 }
 
 static void PaintCurrentFindMatch(MainWindow* win, DisplayModel* dm, TextSearch* ts, Gfx* gfx) {
-    if (!ts || ts->result.len == 0) {
+    if (!ts || len(ts->result) == 0) {
         return;
     }
     ParsedColor* parsedCol = GetPrefsColor(gSettings->fixedPageUI.selectionColor);
@@ -2067,7 +2064,7 @@ void PaintAllFindMatches(MainWindow* win, Gfx* gfx) {
     }
 
     u64 currentKey = 0;
-    if (ts && ts->result.len > 0) {
+    if (ts && len(ts->result) > 0) {
         currentKey = MatchKey(ts->startPage, ts->startGlyph);
     }
 
@@ -2089,7 +2086,7 @@ void PaintAllFindMatches(MainWindow* win, Gfx* gfx) {
     if (len(otherRects) > 0) {
         PaintTransparentRectangles(gfx, win->canvasRc, otherRects, kFindOtherMatchColor, alpha);
     }
-    if (len(currentRects) == 0 && ts && ts->result.len > 0) {
+    if (len(currentRects) == 0 && ts && len(ts->result) > 0) {
         AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
     }
     if (len(currentRects) > 0) {
@@ -2373,12 +2370,12 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
         }
 
         // Scroll to show the overall highlighted zone
-        int pageNo = page;
         Rect overallrc = rects[0];
         for (int i = 1; i < len(rects); i++) {
             overallrc = overallrc.Union(rects[i]);
         }
-        TextSel res = {1, 1, &pageNo, &overallrc};
+        Vec<TextSel> res;
+        VecAppend(res, TextSel{page, overallrc, {}});
         if (!dm->PageVisible(page)) {
             win->ctrl->GoToPage(page, true);
         }
@@ -2619,8 +2616,8 @@ static Str HandleGotoPageWordCmd(HWND hwnd, Str cmd, bool* ack) {
     win->ctrl->GoToPage(page, true);
     if (len(term) > 0) {
         dm->textSearch->SetDirection(TextSearch::Direction::Forward);
-        TextSel* sel = dm->textSearch->FindFirstOnPage(page, term);
-        if (sel && sel->len > 0) {
+        Vec<TextSel>* sel = dm->textSearch->FindFirstOnPage(page, term);
+        if (sel && len(*sel) > 0) {
             ShowSearchResult(win, sel, false);
         } else {
             // term not on this page: stay on the page, select nothing

@@ -435,7 +435,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     if (dm) {
         ctx.isFixedPage = true;
         auto* engine = dm->GetEngine();
-        ctx.hasTextSelection = ctx.hasSelection && dm->textSelection->result.len > 0;
+        ctx.hasTextSelection = ctx.hasSelection && len(dm->textSelection->result) > 0;
         // F11 still edits: the property row is a popup (issue #6111)
         ctx.supportsAnnots = EngineSupportsAnnotations(engine);
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);

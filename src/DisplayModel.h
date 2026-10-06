@@ -227,7 +227,7 @@ struct DisplayModel : DocController {
     PointF CvtFromScreen(Point pt, int pageNo = kInvalidPageNo);
     RectF CvtFromScreen(Rect r, int pageNo = kInvalidPageNo);
 
-    bool ShowResultRectToScreen(TextSel* res);
+    bool ShowResultRectToScreen(Vec<TextSel>* res);
     bool ScrollScreenToRect(int pageNo, Rect rec);
 
     ScrollState GetScrollState();

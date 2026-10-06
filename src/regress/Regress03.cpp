@@ -3,8 +3,8 @@
    https://drive.google.com/file/d/0B2EXZJHDEYllMnkzMUZWWGdueDA/view?usp=sharing
  */
 
-void SearchTestWithDir(Str searchFile, Str searchTerm, const TextSearch::Direction direction, const TextSel* expected,
-                       const int expectedLen) {
+void SearchTestWithDir(Str searchFile, Str searchTerm, const TextSearch::Direction direction,
+                       const Vec<TextSel>* expected, const int expectedLen) {
     EngineBase* engine = CreateEngineFromFile(searchFile, nullptr, true);
     TextSearch* tsrch = new TextSearch(engine);
     tsrch->SetDirection(direction);
@@ -22,24 +22,25 @@ void SearchTestWithDir(Str searchFile, Str searchTerm, const TextSearch::Directi
     }
     for (auto tsel = tsrch->FindFirst(startPage, searchTerm); nullptr != tsel;
          tsel = tsrch->FindNext(), ++findCount, expIndex += expIncr) {
-        if (0 == expected[expIndex].len) {
+        if (0 == len(expected[expIndex])) {
             printf("Found %.*s %i times, not expecting another match\n", searchTerm.len, searchTerm.s, expIndex);
             ReportIf(true);
         }
-        if (expected[expIndex].len != tsel->len) {
+        if (len(expected[expIndex]) != len(*tsel)) {
             printf("Text selection length mismatch for %.*s at occurrence %i: got %i, wanted %i\n", searchTerm.len,
-                   searchTerm.s, findCount, expected[expIndex].len, tsel->len);
+                   searchTerm.s, findCount, len(expected[expIndex]), len(*tsel));
             ReportIf(true);
         }
-        for (int i = 0; i < tsel->len; ++i) {
-            if ((expected[expIndex].pages[i] != tsel->pages[i]) || (expected[expIndex].rects[i] != tsel->rects[i])) {
+        for (int i = 0; i < len(*tsel); ++i) {
+            if ((expected[expIndex][i].pageNo != (*tsel)[i].pageNo) ||
+                (expected[expIndex][i].rect != (*tsel)[i].rect)) {
                 printf(
                     "Text selection page or rectangle mismatch for %.*s, "
                     "expected pg %d rx=%d ry=%d rdx=%d rdy=%d "
                     "got pg %d rx=%d ry=%d rdx=%d rdy=%d\n",
-                    searchTerm.len, searchTerm.s, expected[expIndex].pages[i], expected[expIndex].rects[i].x,
-                    expected[expIndex].rects[i].y, expected[expIndex].rects[i].dx, expected[expIndex].rects[i].dy,
-                    tsel->pages[i], tsel->rects[i].x, tsel->rects[i].y, tsel->rects[i].dx, tsel->rects[i].dy);
+                    searchTerm.len, searchTerm.s, expected[expIndex][i].pageNo, expected[expIndex][i].rect.x,
+                    expected[expIndex][i].rect.y, expected[expIndex][i].rect.dx, expected[expIndex][i].rect.dy,
+                    (*tsel)[i].pageNo, (*tsel)[i].rect.x, (*tsel)[i].rect.y, (*tsel)[i].rect.dx, (*tsel)[i].rect.dy);
                 ReportIf(true);
             }
         }
@@ -62,16 +63,13 @@ void SearchTestWithDir(Str searchFile, Str searchTerm, const TextSearch::Directi
 
 #include "Regress03.h"
 
-const TextSel* BuildTextSelList(RegressSearchInfo& info) {
-    TextSel* result = new TextSel[info.count + 1];
-    result[info.count].len = 0;
-    result[info.count].pages = (int*)nullptr;
-    result[info.count].rects = (Rect*)nullptr;
+const Vec<TextSel>* BuildTextSelList(RegressSearchInfo& info) {
+    Vec<TextSel>* result = new Vec<TextSel>[info.count + 1];
     auto offs = 0;
     for (auto i = 0; i < info.count; ++i) {
-        result[i].len = info.rectCounts[i];
-        result[i].pages = &(info.pages[offs]);
-        result[i].rects = &(info.rects[offs]);
+        for (int j = 0; j < info.rectCounts[i]; j++) {
+            VecAppend(result[i], TextSel{info.pages[offs + j], info.rects[offs + j], {}});
+        }
         offs += info.rectCounts[i];
     }
     return result;
@@ -79,7 +77,7 @@ const TextSel* BuildTextSelList(RegressSearchInfo& info) {
 
 void RegressSearch(Str filePath, RegressSearchInfo& info) {
     TempStr searchTerm = ToUtf8Temp(info.searchPhrase);
-    const TextSel* expected = BuildTextSelList(info);
+    const Vec<TextSel>* expected = BuildTextSelList(info);
     SearchTestWithDir(filePath, searchTerm, TextSearch::Direction::Forward, expected, info.count);
     SearchTestWithDir(filePath, searchTerm, TextSearch::Direction::Backward, expected, info.count);
     delete[] expected;

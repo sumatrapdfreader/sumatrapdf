@@ -26,7 +26,7 @@ struct SelectionOnPage {
     Rect GetRect(DisplayModel* dm) const;
 
     static Vec<SelectionOnPage>* FromRectangle(DisplayModel* dm, Rect rect);
-    static Vec<SelectionOnPage>* FromTextSelect(TextSel* textSel);
+    static Vec<SelectionOnPage>* FromTextSelect(Vec<TextSel>* textSel);
 };
 
 RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections);
