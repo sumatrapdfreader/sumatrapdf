@@ -54,14 +54,7 @@ static void EnsurePageText(PageText* pageText) {
         return;
     }
     // TakeStr()/Vec::Take() can allocate backing storage even for empty pages.
-    str::Free(pageText->text);
-    free((void*)pageText->coords);
-    free((void*)pageText->quads);
-    pageText->text = {};
-    pageText->coords = nullptr;
-    pageText->quads = nullptr;
-    pageText->len = 0;
-    pageText->nCodepoints = 0;
+    FreePageText(pageText);
 }
 
 void FreePageText(PageText* pageText) {
@@ -350,29 +343,6 @@ uintptr_t TocTree::GetUserData(TreeItem ti) {
     ReportIf(ti < 0);
     TocItem* tocItem = (TocItem*)ti;
     return tocItem->userData;
-}
-
-static void ResolveTocPagesRec(EngineBase* engine, TocItem* item) {
-    for (; item; item = item->next) {
-        if (item->pageNo < 1) {
-            IPageDestination* dest = item->GetPageDestination();
-            if (dest && dest->loc.chapter >= 1) {
-                item->loc = engine->ResolveDest(dest);
-                item->pageNo = engine->PageNoFromLocation(item->loc);
-            }
-        }
-        ResolveTocPagesRec(engine, item->child);
-    }
-}
-
-// resolves lazy chaptered TOC destinations (pageNo == -1 until clicked) to
-// real page numbers; for callers that need every item's page up front, after
-// the caller has already laid out every chapter (dump, full-document search)
-void ResolveTocPages(EngineBase* engine, TocTree* toc) {
-    if (!engine || !toc) {
-        return;
-    }
-    ResolveTocPagesRec(engine, toc->root);
 }
 
 void EnsureFullLayout(EngineBase* engine) {
