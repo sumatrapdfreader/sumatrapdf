@@ -239,13 +239,15 @@ static inline char decode64(char c) {
 }
 
 static TempStr Base64DecodeTemp(Str data) {
-    int sLen = data.len;
+    constexpr int kDigitBits = 6;
+    constexpr int kByteBits = 8;
+    int sLen = len(data);
     char* s = data.s;
     char* end = data.s + sLen;
     char* result = AllocArrayTemp<char>(sLen * 3 / 4);
     char* curr = result;
-    char c = 0;
-    int step = 0;
+    u32 value = 0;
+    int bits = 0;
     for (; s < end && *s != '='; s++) {
         char n = decode64(*s);
         if (-1 == n) {
@@ -254,25 +256,14 @@ static TempStr Base64DecodeTemp(Str data) {
             }
             return {};
         }
-        switch (step++ % 4) {
-            case 0:
-                c = n;
-                break;
-            case 1:
-                *curr++ = (char)((c << 2) | (n >> 4));
-                c = (char)(n & 0xF);
-                break;
-            case 2:
-                *curr++ = (char)((c << 4) | (n >> 2));
-                c = (char)(n & 0x3);
-                break;
-            case 3:
-                *curr++ = (char)((c << 6) | (n >> 0));
-                break;
+        value = (value << kDigitBits) | (u32)n;
+        bits += kDigitBits;
+        if (bits >= kByteBits) {
+            bits -= kByteBits;
+            *curr++ = (char)(value >> bits);
         }
     }
-    int size = (int)(curr - result);
-    return Str(result, size);
+    return Str(result, (int)(curr - result));
 }
 
 static inline void AppendChar(str::Builder& htmlData, char c) {
@@ -293,12 +284,11 @@ static inline void AppendChar(str::Builder& htmlData, char c) {
 }
 
 static TempStr DecodeDataURITemp(Str url) {
-    Str comma = str::SliceFromChar(url, ',');
-    if (len(comma) == 0) {
+    Str header, data;
+    if (!str::CutChar(url, ',', &header, &data)) {
         return {};
     }
-    Str data = Str(comma.s + 1, (int)(url.s + url.len - (comma.s + 1)));
-    if ((int)(comma.s - url.s) >= 12 && str::EqN(Str(comma.s - 7, 7), StrL(";base64"), 7)) {
+    if (len(header) >= len(StrL("data:;base64")) && str::EndsWith(header, StrL(";base64"))) {
         return Base64DecodeTemp(data);
     }
     return str::DupTemp(data);
@@ -1911,6 +1901,16 @@ TxtDoc* TxtDoc::CreateFromFile(Str path) {
 
 #if IS_DEBUG
 bool EbookDoc_UnitTestLoading() {
+    const Str encoded[][2] = {
+        {StrL("Zg=="), StrL("f")},          {StrL("Zm8="), StrL("fo")},      {StrL("Z m9v\nYmFy"), StrL("foobar")},
+        {StrL("/wD+"), StrL("\xff\0\xfe")}, {StrL("Zg=ignored"), StrL("f")}, {StrL("Zm!8="), {}},
+    };
+    for (const auto& c : encoded) {
+        if (!str::Eq(Base64DecodeTemp(c[0]), c[1])) {
+            return false;
+        }
+    }
+
     const Str declarations[][2] = {
         {StrL("<?xml encoding=\"UTF-8\"?>"), StrL("UTF-8")},
         {StrL("<?xml version='1.0' ENCODING = 'windows-1252' ?>"), StrL("windows-1252")},
