@@ -599,11 +599,6 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
 
     auto* pi = pages[pageNo - 1];
     int subsample = DjvuDecPickSubsample(pi->uprightW, pi->uprightH, full.dx, full.dy);
-    // The decoder applies the page's intrinsic rotation at every subsample (via
-    // a fast tiled transpose) and djvu_page_render_info already reports the
-    // upright dims, so we only rotate here for an explicit user rotation (rare).
-    int rotateAfter = userRotation;
-
     // Query the output geometry, then render straight into our own buffer (BGR
     // for color, since djvu_ctx_set_bgr is on) -- no intermediate djvu_image and
     // no separate RGB->BGR/copy pass.
@@ -619,33 +614,29 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     if (sdx <= 0 || sdy <= 0 || stride > INT_MAX || pixelCount > INT_MAX) {
         return nullptr;
     }
-    u8* pixels = AllocArray<u8>((int)pixelCount);
+    AutoFree<u8> pixels(AllocArray<u8>((int)pixelCount));
     if (!pixels) {
         return nullptr;
     }
     if (djvu_page_render_into_abortable(doc, pageNo - 1, subsample, pixels, (int)stride, ab) != 0) {
-        free(pixels);
         return nullptr;
     }
     NotePageCacheAfterRender(pageNo - 1);
 
-    u8* rotated = pixels;
+    // The decoder applies intrinsic rotation; only user rotation remains.
     int rdx = sdx, rdy = sdy;
-    if (rotateAfter != 0) {
+    if (userRotation != 0) {
         if (isBitonal) {
-            rotated = RotatePixels<kGrayChannels>(pixels, sdx, sdy, rotateAfter, rdx, rdy);
+            pixels.Set(RotatePixels<kGrayChannels>(pixels, sdx, sdy, userRotation, rdx, rdy));
         } else {
-            rotated = RotatePixels<kBgrChannels>(pixels, sdx, sdy, rotateAfter, rdx, rdy);
+            pixels.Set(RotatePixels<kBgrChannels>(pixels, sdx, sdy, userRotation, rdx, rdy));
         }
-        free(pixels);
-        if (!rotated) {
+        if (!pixels) {
             return {};
         }
     }
 
-    Pixmap* res = ScaleDjvuPixelsToPixmap(rotated, rdx, rdy, comp, screen, full);
-    free(rotated);
-    return res;
+    return ScaleDjvuPixelsToPixmap(pixels, rdx, rdy, comp, screen, full);
 }
 
 Str EngineDjvuDec::GetFileData() {
