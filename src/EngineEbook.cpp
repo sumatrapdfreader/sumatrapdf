@@ -1224,7 +1224,7 @@ bool EngineMobi::LoadFromData(Str data) {
 // stays fast. the open path formats the chapter being read; the rest run
 // on a background thread. a book with no markers is still formatted whole
 bool EngineMobi::FinishLoading() {
-    if (!doc || PdbDocType::Mobipocket != doc->GetDocType()) {
+    if (!doc || PdbDocType::Mobipocket != doc->docType) {
         return false;
     }
 
@@ -1872,7 +1872,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
 
     TempStr GetHtml() {
         // first add the homepage
-        TempStr index = doc->GetHomePath();
+        TempStr index = doc->homePath;
         TempWStr urlW = strconv::StrCPToWStrTemp(index, doc->codepage);
         TempStr url = ToUtf8Temp(urlW);
         Visit({}, url, 0);

@@ -44,7 +44,6 @@ struct ChmFile {
     TempStr ResolveTopicID(unsigned int id) const;
 
     TempStr GetPropertyTemp(DocProp prop) const;
-    TempStr GetHomePath() const;
     void GetAllPaths(StrVec*) const;
 
     bool HasToc() const;

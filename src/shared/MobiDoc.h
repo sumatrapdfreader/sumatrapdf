@@ -50,7 +50,6 @@ struct MobiDoc {
     Str GetCoverImage();
     Str GetImage(int imgRecIndex) const;
     TempStr GetPropertyTemp(DocProp prop);
-    PdbDocType GetDocType() const { return docType; }
 
     bool HasToc();
     bool ParseToc(EbookTocVisitor* visitor);

@@ -308,10 +308,6 @@ TempStr ChmFile::GetPropertyTemp(DocProp prop) const {
     return result;
 }
 
-TempStr ChmFile::GetHomePath() const {
-    return homePath;
-}
-
 void ChmFile::GetAllPaths(StrVec* v) const {
     // equivalent of the old CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL
     for (int i = 0; i < nEntries; i++) {

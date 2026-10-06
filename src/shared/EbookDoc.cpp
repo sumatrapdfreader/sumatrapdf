@@ -1218,7 +1218,7 @@ bool PalmDoc::Load() {
     if (!mobiDoc) {
         return false;
     }
-    auto docType = mobiDoc->GetDocType();
+    auto docType = mobiDoc->docType;
     if (docType != PdbDocType::PalmDoc && docType != PdbDocType::TealDoc && docType != PdbDocType::Plucker) {
         return false;
     }

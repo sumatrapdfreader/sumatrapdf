@@ -541,7 +541,7 @@ bool ChmModel::Load(Str fileName) {
     }
 
     // always make the document's homepage page 1
-    TempStr page = strconv::AnsiToUtf8Temp(doc->GetHomePath());
+    TempStr page = strconv::AnsiToUtf8Temp(doc->homePath);
     pages.Append(page);
 
     // parse the ToC here, since page numbering depends on it
@@ -970,7 +970,7 @@ bool ChmThumbnailTask::OnBeforeNavigate(Str /*url*/, bool newWindow) {
 
 void ChmThumbnailTask::StartCreateThumbnail(HtmlWindow* hw) {
     this->hw = hw;
-    homeUrl = strconv::AnsiToUtf8(doc->GetHomePath());
+    homeUrl = strconv::AnsiToUtf8(doc->homePath);
     Str trimmedHomeUrl = homeUrl;
     if (str::TrimPrefix(trimmedHomeUrl, StrL("/"))) {
         str::ReplaceWithCopy(&homeUrl, trimmedHomeUrl);
