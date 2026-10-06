@@ -955,77 +955,61 @@ TempStr MobiDoc::GetPropertyTemp(DocProp prop) {
 // First <reference type="toc" filepos="N"/>; scan, don't gumbo-parse the book.
 static int FindMobiTocFilepos(Str html) {
     Str kTag = StrL("<reference");
-    int pos = 0;
-    while (pos < len(html)) {
-        Str rest(html.s + pos, len(html) - pos);
+    Str rest = html;
+    while (len(rest) > 0) {
         int idx = str::IndexOfI(rest, kTag);
         if (idx < 0) {
             return -1;
         }
-        int attrsStart = pos + idx + len(kTag);
-        Str after(html.s + attrsStart, len(html) - attrsStart);
-        int gt = str::IndexOfChar(after, '>');
-        if (gt < 0) {
+        int skip = idx + len(kTag);
+        rest = Str(rest.s + skip, len(rest) - skip);
+        Str attrs;
+        if (!str::CutChar(rest, '>', &attrs, &rest)) {
             return -1;
         }
-        Str attrs(html.s + attrsStart, gt);
         bool isToc = false;
         int filepos = -1;
-        int i = 0;
-        while (i < len(attrs)) {
-            while (i < len(attrs) && str::IsWs(attrs.s[i])) {
-                i++;
-            }
-            if (i >= len(attrs) || attrs.s[i] == '/') {
+        while (len(attrs) > 0) {
+            str::TrimWs(attrs);
+            if (len(attrs) == 0 || attrs.s[0] == '/') {
                 break;
             }
-            int nameStart = i;
-            while (i < len(attrs) && !str::IsWs(attrs.s[i]) && attrs.s[i] != '=') {
-                i++;
+            int n = 0;
+            while (n < len(attrs) && !str::IsWs(attrs.s[n]) && attrs.s[n] != '=') {
+                n++;
             }
-            Str name(attrs.s + nameStart, i - nameStart);
-            while (i < len(attrs) && str::IsWs(attrs.s[i])) {
-                i++;
-            }
-            if (i >= len(attrs) || attrs.s[i] != '=') {
+            Str name(attrs.s, n);
+            attrs = Str(attrs.s + n, len(attrs) - n);
+            str::TrimWs(attrs);
+            if (!str::TrimPrefix(attrs, StrL("="))) {
                 continue;
             }
-            i++;
-            while (i < len(attrs) && str::IsWs(attrs.s[i])) {
-                i++;
-            }
-            char quote = 0;
-            if (i < len(attrs) && (attrs.s[i] == '"' || attrs.s[i] == '\'')) {
-                quote = attrs.s[i];
-                i++;
-            }
-            int valStart = i;
-            if (quote) {
-                while (i < len(attrs) && attrs.s[i] != quote) {
-                    i++;
-                }
+            str::TrimWs(attrs);
+            Str val;
+            if (len(attrs) > 0 && (attrs.s[0] == '"' || attrs.s[0] == '\'')) {
+                char quote = attrs.s[0];
+                attrs = Str(attrs.s + 1, len(attrs) - 1);
+                str::CutChar(attrs, quote, &val, &attrs);
             } else {
-                while (i < len(attrs) && !str::IsWs(attrs.s[i]) && attrs.s[i] != '/') {
-                    i++;
+                n = 0;
+                while (n < len(attrs) && !str::IsWs(attrs.s[n]) && attrs.s[n] != '/') {
+                    n++;
                 }
-            }
-            Str val(attrs.s + valStart, i - valStart);
-            if (quote && i < len(attrs) && attrs.s[i] == quote) {
-                i++;
+                val = Str(attrs.s, n);
+                attrs = Str(attrs.s + n, len(attrs) - n);
             }
             if (str::EqI(name, StrL("type")) && str::EqI(val, StrL("toc"))) {
                 isToc = true;
             } else if (str::EqI(name, StrL("filepos"))) {
-                unsigned int n = 0;
-                if (!str::IsNull(str::Parse(val, "%u%$", &n))) {
-                    filepos = (int)n;
+                unsigned int parsed = 0;
+                if (!str::IsNull(str::Parse(val, "%u%$", &parsed))) {
+                    filepos = (int)parsed;
                 }
             }
         }
         if (isToc && filepos >= 0) {
             return filepos;
         }
-        pos = attrsStart + gt + 1;
     }
     return -1;
 }
@@ -1395,6 +1379,24 @@ Str ExtractPdfFromPrintReplicaData(Str data) {
 
 #if IS_DEBUG
 bool MobiDoc_UnitTestHeader() {
+    const struct {
+        Str html;
+        int filepos;
+    } tocCases[] = {
+        {StrL("<reference type='toc' filepos='12'/>"), 12},
+        {StrL("<REFERENCE FILEPOS=21 TYPE=TOC>"), 21},
+        {StrL("<reference ignored type = \"toc\" filepos=3>"), 3},
+        {StrL("<reference type=other filepos=1><reference type=toc filepos=2>"), 2},
+        {StrL("<reference type=toc filepos=1 filepos='9'>"), 9},
+        {StrL("<reference type=toc filepos='7>"), 7},
+        {StrL("<reference type=toc filepos=bad>"), -1},
+        {StrL("<reference type=toc filepos=1"), -1},
+    };
+    for (const auto& c : tocCases) {
+        if (FindMobiTocFilepos(c.html) != c.filepos) {
+            return false;
+        }
+    }
     constexpr int kDrmBoundary = 164;
     constexpr int kFlagsBoundary = 228;
     constexpr int kFullHeaderLen = 232;
