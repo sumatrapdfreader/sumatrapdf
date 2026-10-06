@@ -2548,19 +2548,6 @@ static bool IsJsIdentChar(char c) {
     return IsJsIdentStart(c) || (c >= '0' && c <= '9');
 }
 
-static int JsHexNibble(char c) {
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    }
-    if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
-    }
-    if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    }
-    return -1;
-}
-
 static bool IsJsReservedCallName(Str ident) {
     return str::Eq(ident, StrL("function")) || str::Eq(ident, StrL("if")) || str::Eq(ident, StrL("for")) ||
            str::Eq(ident, StrL("while")) || str::Eq(ident, StrL("switch")) || str::Eq(ident, StrL("catch")) ||
@@ -2620,8 +2607,8 @@ static bool ParseJsQuotedString(const char*& p, const char* end, Str* out) {
                     b.AppendChar(e);
                     break;
                 }
-                int h1 = JsHexNibble(p[0]);
-                int h2 = JsHexNibble(p[1]);
+                int h1 = str::HexDigitVal(p[0]);
+                int h2 = str::HexDigitVal(p[1]);
                 if (h1 < 0 || h2 < 0) {
                     b.AppendChar(e);
                     break;
@@ -2638,7 +2625,7 @@ static bool ParseJsQuotedString(const char*& p, const char* end, Str* out) {
                 int cp = 0;
                 bool ok = true;
                 for (int i = 0; i < 4; i++) {
-                    int h = JsHexNibble(p[i]);
+                    int h = str::HexDigitVal(p[i]);
                     if (h < 0) {
                         ok = false;
                         break;

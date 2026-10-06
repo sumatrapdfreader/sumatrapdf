@@ -2571,11 +2571,7 @@ TempStr MemToHexTemp(Str buf) {
     return Str(ret, dst);
 }
 
-/* Reverse of MemToHexTemp. Convert a 0-terminatd hex-encoded string <s> to
-   binary data pointed by <buf> of max size bufLen.
-   Returns false if size of <s> doesn't match bufLen or is not a valid
-   hex string. */
-static int HexDigitVal(char c) {
+int HexDigitVal(char c) {
     if (c >= '0' && c <= '9') {
         return c - '0';
     }
@@ -2588,6 +2584,10 @@ static int HexDigitVal(char c) {
     return -1;
 }
 
+/* Reverse of MemToHexTemp. Convert a 0-terminatd hex-encoded string <s> to
+   binary data pointed by <buf> of max size bufLen.
+   Returns false if size of <s> doesn't match bufLen or is not a valid
+   hex string. */
 bool HexToMem(Str s, Str buf) {
     int bufLen = buf.len;
     int needed = bufLen * 2;

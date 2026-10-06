@@ -157,19 +157,6 @@ GumboOptions GumboMakeXmlFragmentOptions() {
     return opts;
 }
 
-static int HtmlEntityHexDigit(char c) {
-    if (c >= '0' && c <= '9') {
-        return (int)(c - '0');
-    }
-    if (c >= 'a' && c <= 'f') {
-        return (int)(c - 'a') + 10;
-    }
-    if (c >= 'A' && c <= 'F') {
-        return (int)(c - 'A') + 10;
-    }
-    return -1;
-}
-
 static int ValidHtmlEntityRuneOrFallback(int rune) {
     if (rune <= 0 || rune > 0x10ffff || (rune >= 0xd800 && rune <= 0xdfff)) {
         return '?';
@@ -197,7 +184,7 @@ static Str ParseHtmlNumericEntity(Str str, int& rune) {
         char c = str.s[off];
         int digit = -1;
         if (base == 16) {
-            digit = HtmlEntityHexDigit(c);
+            digit = str::HexDigitVal(c);
         } else if (c >= '0' && c <= '9') {
             digit = (int)(c - '0');
         }

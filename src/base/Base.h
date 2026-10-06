@@ -2031,6 +2031,7 @@ int BufSet(Str dst, Str src);
 int BufAppend(Str dst, Str s);
 
 TempStr MemToHexTemp(Str buf);
+int HexDigitVal(char c);
 bool HexToMem(Str s, Str buf);
 
 int CmpNatural(Str a, Str b);
