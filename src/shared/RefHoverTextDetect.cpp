@@ -625,19 +625,9 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     // Reading order: previous line, cursor line, next line — each sorted by x.
     int m = prevN + curN + nextN;
     int* seq = AllocArrayTemp<int>(m);
-    {
-        int w = 0;
-        for (int t = 0; t < prevN; t++) {
-            seq[w++] = prevSeg[t];
-        }
-        for (int t = 0; t < curN; t++) {
-            seq[w++] = curSeg[t];
-        }
-        for (int t = 0; t < nextN; t++) {
-            seq[w++] = nextSeg[t];
-        }
-    }
-    auto cleanup = [] {}; // seq is temp-arena scratch, nothing to free
+    memcpy(seq, prevSeg, prevN * sizeof(int));
+    memcpy(seq + prevN, curSeg, curN * sizeof(int));
+    memcpy(seq + prevN + curN, nextSeg, nextN * sizeof(int));
     int cursorPos = -1;
     for (int k = 0; k < m; k++) {
         if (seq[k] == cursorIdx) {
@@ -646,7 +636,6 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         }
     }
     if (cursorPos < 0) {
-        cleanup();
         return false;
     }
 
@@ -667,7 +656,6 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         }
     }
     if (openPos < 0) {
-        cleanup();
         return false;
     }
     int closePos = -1;
@@ -682,7 +670,6 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         }
     }
     if (closePos <= openPos + 1) {
-        cleanup();
         return false;
     }
 
@@ -717,7 +704,6 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         }
     }
     if (bestNum <= 0) {
-        cleanup();
         return false;
     }
     if (srcRectOut) {
@@ -736,7 +722,6 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         }
         *srcRectOut = (xMin != INT_MAX) ? Rect{xMin, sMinY, xMax - xMin, sMaxY - sMinY} : Rect{};
     }
-    cleanup();
     *numOut = bestNum;
     return true;
 }
