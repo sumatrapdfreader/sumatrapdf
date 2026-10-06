@@ -205,15 +205,11 @@ static u8* PixmapToRgbaContiguous(const Pixmap* px) {
     return rgba;
 }
 
-// Losslessly recompress PNG bytes with zopfli. Returns owned Str (may be the
-// original duplicated if optimize fails or does not shrink). Caller frees.
+// Consume PNG bytes, keeping the original if recompression fails or does not shrink.
 static Str OptimizePngBytesOwned(Str png) {
     int nOrig = len(png);
-    if (nOrig == 0) {
-        return {};
-    }
     if (nOrig > kMaxPngSizeToOptimize) {
-        return str::Dup(png);
+        return png;
     }
     CZopfliPNGOptions opts;
     SetZopfliOpts(&opts, (const u8*)png.s, nOrig);
@@ -222,8 +218,9 @@ static Str OptimizePngBytesOwned(Str png) {
     int err = CZopfliPNGOptimize((const unsigned char*)png.s, (size_t)nOrig, &opts, 0, &out, &outSize);
     if (err != 0 || !out || outSize == 0 || outSize >= (size_t)nOrig) {
         free(out);
-        return str::Dup(png);
+        return png;
     }
+    str::Free(png);
     return Str((char*)out, (int)outSize);
 }
 
@@ -254,11 +251,11 @@ Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
     if (len(rawPng) == 0) {
         return {};
     }
+    int nOrig = len(rawPng);
     Str optimized = OptimizePngBytesOwned(rawPng);
     if (len(optimized) > 0) {
-        logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, len(rawPng),
+        logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, nOrig,
              len(optimized));
     }
-    str::Free(rawPng);
     return optimized;
 }
