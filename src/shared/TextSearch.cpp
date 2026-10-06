@@ -52,7 +52,6 @@ static void markAllPagesNonSkip(Vec<bool>& pagesToSkip) {
 TextSearch::TextSearch(EngineBase* engine) : TextSelection(engine) {
     nPages = engine->PageCount();
     VecResize(pagesToSkip, nPages);
-    markAllPagesNonSkip(pagesToSkip);
 }
 
 TextSearch::~TextSearch() {
@@ -60,8 +59,8 @@ TextSearch::~TextSearch() {
 }
 
 void TextSearch::Clear() {
-    str::FreePtr(&findText);
-    str::FreePtr(&anchor);
+    findText = {};
+    anchor = {};
     str::FreePtr(&lastText);
     findTextLen = 0;
     anchorLen = 0;
@@ -84,12 +83,8 @@ int TextSearch::GetSearchHitStartPageNo() const {
 }
 
 void TextSearch::SetText(Str text) {
-    // search text starting with a single space enables the 'Match word start'
-    // and search text ending in a single space enables the 'Match word end' option
-    // (that behavior already "kind of" exists without special treatment, but
-    // usually is not quite what a user expects, so let's try to be cleverer)
-    // "match whole word" forces both word-boundary checks on; otherwise they're
-    // driven by a leading / trailing single space in the search text
+    // Single leading/trailing spaces request word boundaries; whole-word mode
+    // requests both. Strip one space from each end for matching.
     this->matchWordStart = matchWholeWord || (text && text.s[0] == ' ' && (text.len < 2 || text.s[1] != ' '));
     this->matchWordEnd = matchWholeWord || (str::EndsWith(text, StrL(" ")) && !str::EndsWith(text, StrL("  ")));
 
@@ -104,12 +99,14 @@ void TextSearch::SetText(Str text) {
     }
 
     this->Clear();
+    // Matching text and anchor borrow the saved query.
     this->lastText = str::Dup(searchText);
-    this->findText = str::Dup(searchText);
+    searchText = this->lastText;
+    this->findText = searchText;
     this->findTextLen = Utf8CodepointCount(this->findText);
 
     // extract anchor string (the first word or the first symbol) for faster searching
-    int searchTextLen = Utf8CodepointCount(searchText);
+    int searchTextLen = findTextLen;
     int firstCharEndByte = 0;
     int firstChar = Utf8CodepointNext(searchText, firstCharEndByte);
     if (searchTextLen > 0 && isnoncjkwordchar(firstChar)) {
@@ -124,24 +121,16 @@ void TextSearch::SetText(Str text) {
             endByte = nextByte;
             end++;
         }
-        anchor = str::Dup(Str(searchText.s, endByte));
+        anchor = Str(searchText.s, endByte);
         anchorLen = end;
     }
-    // Adobe Reader also matches certain hard-to-type Unicode
-    // characters when searching for easy-to-type homoglyphs
-    // cf. https://web.archive.org/web/20140201013717/http://forums.fofou.org:80/sumatrapdf/topic?id=2432337&comments=3
-    // NOLINTNEXTLINE(bugprone-branch-clone): homoglyph case is distinct from the empty-anchor fallback
-    else if (searchTextLen > 0 && (firstChar == '-' || firstChar == '\'' || firstChar == '"')) {
-        anchor = {};
-    } else if (searchTextLen > 0) {
-        anchor = str::Dup(Str(searchText.s, firstCharEndByte));
+    // Homoglyphs need the full matcher, so do not use them as anchors.
+    else if (searchTextLen > 0 && firstChar != '-' && firstChar != '\'' && firstChar != '"') {
+        anchor = Str(searchText.s, firstCharEndByte);
         anchorLen = 1;
-    } else {
-        anchor = {};
     }
 
     if (str::EndsWith(this->findText, StrL(" "))) {
-        this->findText.s[len(this->findText) - 1] = '\0';
         this->findText.len--;
         this->findTextLen--;
     }
