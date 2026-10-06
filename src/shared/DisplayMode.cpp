@@ -86,14 +86,9 @@ bool TryParseDisplayMode(Str s, DisplayMode* modeOut) {
     if (len(s) == 0) {
         return false;
     }
-    // for consistency ("continuous" is used instead in the settings instead for brevity)
-    if (str::EqIS(s, StrL("continuous single page"))) {
-        if (modeOut) {
-            *modeOut = DisplayMode::Continuous;
-        }
-        return true;
-    }
-    int idx = SeqStrIndexIS(displayModeNames, s);
+    // Accept the legacy long name for continuous mode.
+    int idx = str::EqIS(s, StrL("continuous single page")) ? (int)DisplayMode::Continuous
+                                                           : SeqStrIndexIS(displayModeNames, s);
     if (idx < 0) {
         return false;
     }
@@ -126,10 +121,7 @@ bool GetPageAspectView(RectF page, DisplayMode* modeOut, float* zoomOut) {
 
 DisplayMode DisplayModeFromString(Str s, DisplayMode defVal) {
     DisplayMode mode;
-    if (TryParseDisplayMode(s, &mode)) {
-        return mode;
-    }
-    return defVal;
+    return TryParseDisplayMode(s, &mode) ? mode : defVal;
 }
 
 float ZoomFromString(Str s, float defVal) {
