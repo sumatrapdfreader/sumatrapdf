@@ -752,9 +752,6 @@
     <ClCompile Include="..\src\EutlTrust.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ExifDump.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ExplorerQuickLook.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1200,6 +1197,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\ExifDump.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\FilterUtil.cpp">

@@ -1643,7 +1643,6 @@
     </ClCompile>
     <ClCompile Include="..\src\EnginePs.cpp" />
     <ClCompile Include="..\src\EutlTrust.cpp" />
-    <ClCompile Include="..\src\ExifDump.cpp" />
     <ClCompile Include="..\src\ExplorerQuickLook.cpp" />
     <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
@@ -2144,6 +2143,7 @@
     <ClCompile Include="..\src\shared\EbookDoc.cpp" />
     <ClCompile Include="..\src\shared\EbookFormatter.cpp" />
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
+    <ClCompile Include="..\src\shared\ExifDump.cpp" />
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />
