@@ -18,13 +18,9 @@ static EngineeringDrawingEnhanceMode gCadEnhanceMode = EngineeringDrawingEnhance
 
 // Parse the EngineeringDrawingEnhance pref ("off", "auto" or "on").
 void SetEngineeringDrawingEnhanceMode(Str mode) {
-    if (str::EqI(mode, StrL("auto"))) {
-        gCadEnhanceMode = EngineeringDrawingEnhanceMode::Auto;
-    } else if (str::EqI(mode, StrL("on"))) {
-        gCadEnhanceMode = EngineeringDrawingEnhanceMode::On;
-    } else {
-        gCadEnhanceMode = EngineeringDrawingEnhanceMode::Off;
-    }
+    static constexpr SeqStrings names = "off\0auto\0on\0";
+    int idx = SeqStrIndexI(names, mode);
+    gCadEnhanceMode = idx < 0 ? EngineeringDrawingEnhanceMode::Off : (EngineeringDrawingEnhanceMode)idx;
 }
 
 EngineeringDrawingEnhanceMode GetEngineeringDrawingEnhanceMode() {
@@ -32,18 +28,10 @@ EngineeringDrawingEnhanceMode GetEngineeringDrawingEnhanceMode() {
 }
 
 const char* CadEnhanceReasonName(CadEnhanceReason reason) {
-    switch (reason) {
-        case CadEnhanceReason::Pdfe:
-            return "PDF/E";
-        case CadEnhanceReason::Metadata:
-            return "metadata";
-        case CadEnhanceReason::Heuristic:
-            return "heuristic";
-        case CadEnhanceReason::RasterImage:
-            return "raster-image";
-        default:
-            return "none";
-    }
+    // Names follow CadEnhanceReason order.
+    static constexpr const char* names[] = {"none", "PDF/E", "metadata", "heuristic", "raster-image"};
+    u32 idx = (u32)reason;
+    return idx < dimof(names) ? names[idx] : names[(int)CadEnhanceReason::None];
 }
 
 // The manual toggle wins over the global mode, which wins over auto-detection.
