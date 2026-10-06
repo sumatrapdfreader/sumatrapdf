@@ -732,66 +732,26 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
     int bestDist = INT_MAX;
     int targetBandY = -1;
 
-    if (dir > 0) {
-        // next line: lowest y still clearly below this line
-        for (int i = 0; i < textLen; i++) {
-            if (!coords[i].x && !coords[i].dx) {
-                continue;
-            }
-            int cy = coords[i].y + (coords[i].dy / 2);
-            if (cy <= refY + ySlop) {
-                continue;
-            }
-            if (targetBandY < 0 || cy < targetBandY) {
-                targetBandY = cy;
-            }
-        }
-        if (targetBandY < 0) {
-            if (page < nPages) {
-                page++;
-                glyph = 0;
-                return true;
-            }
-            return false;
-        }
-        for (int i = 0; i < textLen; i++) {
-            if (!coords[i].x && !coords[i].dx) {
-                continue;
-            }
-            int cy = coords[i].y + (coords[i].dy / 2);
-            if (std::abs(cy - targetBandY) > ySlop) {
-                continue;
-            }
-            int cx = coords[i].x + (coords[i].dx / 2);
-            int d = std::abs(cx - refX);
-            if (d < bestDist) {
-                bestDist = d;
-                bestIx = i;
-            }
-        }
-        if (bestIx < 0) {
-            return false;
-        }
-        // free end is exclusive past the glyph under the caret column
-        glyph = bestIx + 1;
-        return true;
-    }
-
-    // previous line: highest y still clearly above this line
+    bool forward = dir > 0;
     for (int i = 0; i < textLen; i++) {
         if (!coords[i].x && !coords[i].dx) {
             continue;
         }
         int cy = coords[i].y + (coords[i].dy / 2);
-        if (cy >= refY - ySlop) {
+        if (forward ? cy <= refY + ySlop : cy >= refY - ySlop) {
             continue;
         }
-        if (targetBandY < 0 || cy > targetBandY) {
+        if (targetBandY < 0 || (forward ? cy < targetBandY : cy > targetBandY)) {
             targetBandY = cy;
         }
     }
     if (targetBandY < 0) {
-        if (page > 1) {
+        if (forward && page < nPages) {
+            page++;
+            glyph = 0;
+            return true;
+        }
+        if (!forward && page > 1) {
             page--;
             engine->GetTextForPage(page, &textLen);
             glyph = textLen;
