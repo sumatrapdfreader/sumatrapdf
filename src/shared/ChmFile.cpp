@@ -14,14 +14,21 @@
 #include "EbookBase.h"
 #include "ChmFile.h"
 
+static const struct {
+    Str ChmFile::* field;
+    u16 systemId;
+    u16 windowsOff;
+} chmStrings[] = {
+    {&ChmFile::title, 3, 0x14},    {&ChmFile::tocPath, 0, 0x60}, {&ChmFile::indexPath, 1, 0x64},
+    {&ChmFile::homePath, 2, 0x68}, {&ChmFile::creator, 9, 0},
+};
+
 ChmFile::~ChmFile() {
     // chm_ctx_free also closes the archive and frees the entries + their paths
     chm_ctx_free(chmCtx);
-    str::Free(title);
-    str::Free(tocPath);
-    str::Free(indexPath);
-    str::Free(homePath);
-    str::Free(creator);
+    for (const auto& field : chmStrings) {
+        str::Free(this->*field.field);
+    }
     str::Free(data);
 }
 
@@ -140,21 +147,11 @@ void ChmFile::ParseWindowsData() {
 
     for (int i = 0; i < entries && (i + 1) * entrySize <= windowsLen; i++) {
         int off = 8 + (i * entrySize);
-        if (str::IsNull(title)) {
-            DWORD strOff = rw.UInt32LE(off + 0x14);
-            title = GetCharZ(stringsData, (int)strOff);
-        }
-        if (str::IsNull(tocPath)) {
-            DWORD strOff = rw.UInt32LE(off + 0x60);
-            tocPath = GetCharZ(stringsData, (int)strOff);
-        }
-        if (str::IsNull(indexPath)) {
-            DWORD strOff = rw.UInt32LE(off + 0x64);
-            indexPath = GetCharZ(stringsData, (int)strOff);
-        }
-        if (str::IsNull(homePath)) {
-            DWORD strOff = rw.UInt32LE(off + 0x68);
-            homePath = GetCharZ(stringsData, (int)strOff);
+        for (const auto& field : chmStrings) {
+            Str& value = this->*field.field;
+            if (field.windowsOff && str::IsNull(value)) {
+                value = GetCharZ(stringsData, (int)rw.UInt32LE(off + field.windowsOff));
+            }
         }
     }
 }
@@ -248,43 +245,15 @@ bool ChmFile::ParseSystemData() {
             continue;
         }
         WORD type = r.UInt16LE(off);
-        switch (type) {
-            case 0:
-                if (str::IsNull(tocPath)) {
-                    tocPath = GetCharZ(d, off + 4);
-                }
+        if (type == 4 && !codepage && n >= 4) {
+            codepage = LcidToCodepage(r.UInt32LE(off + 4));
+        }
+        for (const auto& field : chmStrings) {
+            Str& value = this->*field.field;
+            if (type == field.systemId && str::IsNull(value)) {
+                value = GetCharZ(d, off + 4);
                 break;
-            case 1:
-                if (str::IsNull(indexPath)) {
-                    indexPath = GetCharZ(d, off + 4);
-                }
-                break;
-            case 2:
-                if (str::IsNull(homePath)) {
-                    homePath = GetCharZ(d, off + 4);
-                }
-                break;
-            case 3:
-                if (str::IsNull(title)) {
-                    title = GetCharZ(d, off + 4);
-                }
-                break;
-            case 4:
-                if (!codepage && n >= 4) {
-                    codepage = LcidToCodepage(r.UInt32LE(off + 4));
-                }
-                break;
-            case 6:
-                // compiled file - ignore
-                break;
-            case 9:
-                if (str::IsNull(creator)) {
-                    creator = GetCharZ(d, off + 4);
-                }
-                break;
-            case 16:
-                // default font - ignore
-                break;
+            }
         }
     }
 
