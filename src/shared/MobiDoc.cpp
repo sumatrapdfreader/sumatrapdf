@@ -1085,12 +1085,7 @@ static Str ExtractPdfFromMopRaw(Str raw) {
         return {};
     }
     // All per-table section counts come first, then the section index.
-    for (u32 t = 0; t < numTables; t++) {
-        d.UInt32BE();
-    }
-    if (!d.IsOk()) {
-        return {};
-    }
+    d.Skip((int)numTables * sizeofi(u32));
     u32 sectionOffset = d.UInt32BE();
     u32 sectionLength = d.UInt32BE();
     if (!d.IsOk()) {
