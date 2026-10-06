@@ -217,46 +217,20 @@ static void MsSha1Block(MsSha1* s, const u8* p) {
         w[t] = rol32(w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16], 1);
     }
     static const u32 k[4] = {0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6};
+    constexpr int kRoundsPerPhase = 20;
     u32 a = s->h[0], b = s->h[1], c = s->h[2], d = s->h[3], e = s->h[4];
     for (int t = 0; t < 80; t++) {
-        // which mixing function runs at round t; MS swapped a few and rounds
-        // 6 and 42 use (b + c) ^ c, which is not any of the standard three
-        int fi = t / 20; // 0 = choice, 1 = parity, 2 = majority, 3 = parity
-        switch (t) {
-            case 3:
-            case 10:
-            case 15:
-            case 51:
-                fi = 1;
-                break;
-            case 26:
-            case 68:
-                fi = 0;
-                break;
-            case 31:
-                fi = 2;
-                break;
-            case 6:
-            case 42:
-                fi = 4;
-                break;
+        // Microsoft changes the mixing function at specific rounds.
+        int phase = t / kRoundsPerPhase;
+        u32 f = b ^ c ^ d;
+        if (t == 6 || t == 42) {
+            f = (b + c) ^ c;
+        } else if (t == 26 || t == 68 || (phase == 0 && t != 3 && t != 10 && t != 15)) {
+            f = (b & (c ^ d)) ^ d;
+        } else if (t == 31 || (phase == 2 && t != 51)) {
+            f = (b & c) | (b & d) | (c & d);
         }
-        u32 f;
-        switch (fi) {
-            case 0:
-                f = (b & (c ^ d)) ^ d;
-                break;
-            case 2:
-                f = (b & c) | (b & d) | (c & d);
-                break;
-            case 4:
-                f = (b + c) ^ c;
-                break;
-            default:
-                f = b ^ c ^ d;
-                break;
-        }
-        u32 tmp = rol32(a, 5) + f + e + w[t] + k[t / 20];
+        u32 tmp = rol32(a, 5) + f + e + w[t] + k[phase];
         e = d;
         d = c;
         c = rol32(b, 30);
