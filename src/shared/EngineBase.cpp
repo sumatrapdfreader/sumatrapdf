@@ -348,30 +348,44 @@ RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectF* page
     this->cookie_out = cookie_out;
 }
 
-// per-chapter cached text, indexed [chapter - 1][page - 1]. A chapter's
-// vectors are (re)sized to ChapterPageCount(chapter) on first use for that
-// chapter, so a chapter laid out later never re-associates cached text with
-// the wrong page.
+enum class TextExtractionState {
+    NotExtracted,
+    Pending,
+    Finished,
+};
+
+struct TextCacheEntry {
+    PageText data;
+    TextExtractionState state = TextExtractionState::NotExtracted;
+};
+
+// Cache each chapter separately so later layout cannot shift cached pages.
 struct ChapterTextCache {
-    Vec<PageText> text;
-    Vec<TextExtractionState> state;
+    Vec<TextCacheEntry> pages;
+
+    ~ChapterTextCache() {
+        for (TextCacheEntry& page : pages) {
+            FreePageText(&page.data);
+        }
+    }
+
+    // Consume text; a concurrent extraction may have filled this slot.
+    void StoreText(int pageNo, PageText text) {
+        TextCacheEntry& page = pages[pageNo - 1];
+        if (page.state == TextExtractionState::Finished) {
+            FreePageText(&text);
+            return;
+        }
+        FreePageText(&page.data);
+        page.data = text;
+        page.state = TextExtractionState::Finished;
+    }
 };
 
 struct PageTextCache {
     Vec<ChapterTextCache*> chapters; // index = chapter - 1; entries lazily created
 
-    ~PageTextCache() {
-        for (int i = 0; i < len(chapters); i++) {
-            ChapterTextCache* ct = chapters[i];
-            if (!ct) {
-                continue;
-            }
-            for (int j = 0; j < len(ct->text); j++) {
-                FreePageText(&ct->text[j]);
-            }
-            delete ct;
-        }
-    }
+    ~PageTextCache() { DeleteVecMembers(chapters); }
 
     // existing chapter cache, or nullptr if the chapter has never been touched
     ChapterTextCache* Peek(int chapter) {
@@ -396,9 +410,8 @@ struct PageTextCache {
             ct = new ChapterTextCache();
         }
         count = count < 1 ? 1 : count;
-        if (len(ct->text) < count) {
-            VecResize(ct->text, count);
-            VecResize(ct->state, count);
+        if (len(ct->pages) < count) {
+            VecResize(ct->pages, count);
         }
         return ct;
     }
@@ -775,10 +788,10 @@ bool EngineBase::HasTextForPage(int pageNo) {
     }
     ScopedMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Peek(loc.chapter);
-    if (!ct || loc.page > len(ct->text)) {
+    if (!ct || loc.page > len(ct->pages)) {
         return false;
     }
-    return (bool)ct->text[loc.page - 1].text;
+    return (bool)ct->pages[loc.page - 1].data.text;
 }
 
 void EngineBase::RequestTextExtraction(int pageNo) {
@@ -795,15 +808,14 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     {
         ScopedMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        if (!ct || loc.page > len(ct->text)) {
+        if (!ct || loc.page > len(ct->pages)) {
             return;
         }
-        PageText* pt = &ct->text[loc.page - 1];
-        TextExtractionState* state = &ct->state[loc.page - 1];
-        if (pt->text || *state != TextExtractionState::NotExtracted) {
+        TextCacheEntry& page = ct->pages[loc.page - 1];
+        if (page.data.text || page.state != TextExtractionState::NotExtracted) {
             return;
         }
-        *state = TextExtractionState::Pending;
+        page.state = TextExtractionState::Pending;
     }
 
     AddRef();
@@ -821,8 +833,8 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     {
         ScopedMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        if (ct && loc.page <= len(ct->text) && len(ct->text[loc.page - 1].text) == 0) {
-            ct->state[loc.page - 1] = TextExtractionState::NotExtracted;
+        if (ct && loc.page <= len(ct->pages) && len(ct->pages[loc.page - 1].data.text) == 0) {
+            ct->pages[loc.page - 1].state = TextExtractionState::NotExtracted;
         }
     }
     AtomicIntDec(&gDangerousThreadCount);
@@ -883,7 +895,7 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, Qu
     {
         ScopedMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        if (ct->state[loc.page - 1] != TextExtractionState::Finished) {
+        if (ct->pages[loc.page - 1].state != TextExtractionState::Finished) {
             extract = true;
         }
     }
@@ -898,19 +910,12 @@ bool EngineBase::TryGetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, Qu
 
         ScopedMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        PageText* pt = &ct->text[loc.page - 1];
-        if (ct->state[loc.page - 1] != TextExtractionState::Finished) {
-            FreePageText(pt);
-            *pt = extracted;
-            extracted = PageText();
-            ct->state[loc.page - 1] = TextExtractionState::Finished;
-        }
-        FreePageText(&extracted);
+        ct->StoreText(loc.page, extracted);
     }
 
     ScopedMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-    ReturnPageText(ct->text[loc.page - 1], lenOut, coordsOut, quadsOut);
+    ReturnPageText(ct->pages[loc.page - 1].data, lenOut, coordsOut, quadsOut);
     return true;
 }
 
@@ -932,8 +937,8 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF*
         // Finished covers textless pages too (the page's text can stay empty). Pending
         // means a background thread was started by RequestTextExtraction but
         // selection still needs a synchronous extract here.
-        if (ct->state[loc.page - 1] != TextExtractionState::Finished) {
-            ct->state[loc.page - 1] = TextExtractionState::Pending;
+        if (ct->pages[loc.page - 1].state != TextExtractionState::Finished) {
+            ct->pages[loc.page - 1].state = TextExtractionState::Pending;
             extract = true;
         }
     }
@@ -944,19 +949,12 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut, QuadF*
 
         ScopedMutex scope(&textCacheLock);
         ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        PageText* pt = &ct->text[loc.page - 1];
-        if (ct->state[loc.page - 1] != TextExtractionState::Finished) {
-            FreePageText(pt);
-            *pt = extracted;
-            extracted = PageText();
-            ct->state[loc.page - 1] = TextExtractionState::Finished;
-        }
-        FreePageText(&extracted);
+        ct->StoreText(loc.page, extracted);
     }
 
     ScopedMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-    return ReturnPageText(ct->text[loc.page - 1], lenOut, coordsOut, quadsOut);
+    return ReturnPageText(ct->pages[loc.page - 1].data, lenOut, coordsOut, quadsOut);
 }
 
 void EngineBase::InvalidateTextForPage(int pageNo) {
@@ -969,11 +967,11 @@ void EngineBase::InvalidateTextForPage(int pageNo) {
     }
     ScopedMutex scope(&textCacheLock);
     ChapterTextCache* ct = pageTextCache->Peek(loc.chapter);
-    if (!ct || loc.page > len(ct->text)) {
+    if (!ct || loc.page > len(ct->pages)) {
         return;
     }
-    FreePageText(&ct->text[loc.page - 1]);
-    ct->state[loc.page - 1] = TextExtractionState::NotExtracted;
+    FreePageText(&ct->pages[loc.page - 1].data);
+    ct->pages[loc.page - 1].state = TextExtractionState::NotExtracted;
 }
 
 // number of pages the loaded document contains. Comes from the chapter table

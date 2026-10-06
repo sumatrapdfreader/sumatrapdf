@@ -110,12 +110,6 @@ extern Kind kindDestinationDjVu;
 extern Kind kindDestinationMupdf;
 extern Kind kindDestinationJsMenu;
 
-enum class TextExtractionState {
-    NotExtracted,
-    Pending,
-    Finished,
-};
-
 // text is a UTF-8 byte string, coords has one entry per Unicode codepoint
 struct PageText {
     Str text;
