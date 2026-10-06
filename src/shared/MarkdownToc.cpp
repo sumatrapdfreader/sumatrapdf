@@ -111,31 +111,9 @@ static void AttachGfmExtensions(cmark_parser* parser) {
     }
 }
 
-// GitHub's slugger (github-slugger), which is what generated docs link against:
-// lowercase, drop anything that isn't a letter / digit / '_' / '-', and turn
-// each whitespace run character into its own '-'. Notably '_' survives and
-// separators are NOT collapsed, so "## adc_intr_ctl . TRANS_EN" is
-// "#adc_intr_ctl--trans_en" (issue #5883). cmark-gfm's autoheaderid extension
-// uses different rules (maps '_' and punctuation to '-', then collapses runs),
-// so we don't use it -- MarkdownAddHeadingAnchors() emits the ids from here,
-// keeping the ToC anchors and the html ids one implementation.
-static void AppendSlugChar(str::Builder* out, unsigned int c) {
-    if (c >= 'A' && c <= 'Z') {
-        c += 'a' - 'A';
-    }
-    if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-') {
-        out->AppendChar((char)c);
-        return;
-    }
-    if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
-        out->AppendChar('-');
-        return;
-    }
-    // everything else (ascii punctuation) is dropped
-}
-
 static const Str kSlugWhitespace = StrL(" \t\n\r");
 
+// Share GitHub-style slugs between TOC links and heading anchors.
 static Str MarkdownHeadingSlug(Str title) {
     str::Builder out;
     str::TrimAny(title, kSlugWhitespace.s);
@@ -143,12 +121,14 @@ static Str MarkdownHeadingSlug(Str title) {
         title.len--;
     }
     for (int i = 0; i < len(title); i++) {
-        char c = title.s[i];
-        // Non-ASCII bytes pass through unchanged, including malformed UTF-8.
-        if ((u8)c >= 0x80) {
-            out.AppendChar(c);
-        } else {
-            AppendSlugChar(&out, (u8)c);
+        u8 c = (u8)title.s[i];
+        if (c >= 'A' && c <= 'Z') {
+            c += 'a' - 'A';
+        }
+        if (c >= 0x80 || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-') {
+            out.AppendChar((char)c);
+        } else if (str::ContainsChar(kSlugWhitespace, (char)c)) {
+            out.AppendChar('-');
         }
     }
     return out.TakeStr();
