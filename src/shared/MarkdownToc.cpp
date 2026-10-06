@@ -222,10 +222,9 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
         if (tok->IsText()) {
             text.Append(tok->s);
         } else if (tok->IsEndTag() && IsHeadingTag(tok->tag)) {
-            Str raw = text.TakeStr();
             // heap (not Temp) entity resolution: this runs on TOC worker threads
             // whose thread-local temp arena would leak on thread exit
-            Str title = ResolveHtmlEntities(raw);
+            Str title = ResolveHtmlEntities(ToStr(text));
             str::TrimWSInPlace(title, str::TrimOpt::Both);
             if (len(title) > 0) {
                 VecAppend(headingsOut, {title, headingId, headingLevel});
@@ -233,7 +232,6 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
                 headingId = {};
             }
             str::Free(title);
-            str::Free(raw);
             headingLevel = 0;
             str::FreePtr(&headingId);
         }
