@@ -1527,28 +1527,17 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         }
     }
 
-    // find arguments for this cmdId
-    int firstArgIdx = -1;
-    for (int i = 0;; i++) {
-        int id = argSpecs[i].cmdId;
+    int firstArgIdx = 0;
+    for (;; firstArgIdx++) {
+        int id = argSpecs[firstArgIdx].cmdId;
         if (id == CmdNone) {
-            // the command doesn't accept any arguments
             MaybeDelayedWarningNotification(
                 fmt("Error parsing Shortcuts: cmd '%s' doesn't accept arguments\n", definition));
             return CreateCustomCommand(definition, cmdId, nullptr);
         }
-        if (id != argCmdId) {
-            continue;
+        if (id == argCmdId) {
+            break;
         }
-        firstArgIdx = i;
-        break;
-    }
-    if (firstArgIdx < 0) {
-        // shouldn't happen, we already filtered commands without arguments
-        logf("CreateCommandFromDefinition: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", definition,
-             cmdId, argCmdId);
-        ReportIf(true);
-        return nullptr;
     }
 
     Str currArg = str::DupTemp(parts[1]);
