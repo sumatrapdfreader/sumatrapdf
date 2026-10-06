@@ -1603,7 +1603,6 @@
     <ClCompile Include="..\src\Annotation.cpp" />
     <ClCompile Include="..\src\AppSettings.cpp" />
     <ClCompile Include="..\src\AppTools.cpp" />
-    <ClCompile Include="..\src\AvifReader.cpp" />
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -2128,6 +2127,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
+    <ClCompile Include="..\src\shared\AvifReader.cpp" />
     <ClCompile Include="..\src\shared\ChmDump.cpp" />
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
     <ClCompile Include="..\src\shared\DisplayMode.cpp" />

@@ -659,9 +659,6 @@
     <ClCompile Include="..\src\AppTools.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\AvifReader.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\BasePch.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1152,6 +1149,9 @@
       <Filter>src\regress</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AnnotSearch.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AvifReader.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChmDump.cpp">

@@ -1173,7 +1173,6 @@
     <ClInclude Include="..\src\shared\gui\UIModels.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\AvifReader.cpp" />
     <ClCompile Include="..\src\CachedObjects.cpp" />
     <ClCompile Include="..\src\ChapterTable.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
@@ -1183,6 +1182,7 @@
     <ClCompile Include="..\src\ImageReader.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
+    <ClCompile Include="..\src\shared\AvifReader.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
     <ClCompile Include="..\src\shared\EbookDoc.cpp" />
     <ClCompile Include="..\src\shared\EngineBase.cpp" />

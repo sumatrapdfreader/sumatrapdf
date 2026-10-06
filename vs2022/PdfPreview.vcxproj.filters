@@ -92,7 +92,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\AvifReader.cpp" />
     <ClCompile Include="..\src\CachedObjects.cpp" />
     <ClCompile Include="..\src\ChapterTable.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
@@ -117,6 +116,9 @@
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp">
       <Filter>previewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AvifReader.cpp">
+      <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChmFile.cpp">
       <Filter>shared</Filter>
