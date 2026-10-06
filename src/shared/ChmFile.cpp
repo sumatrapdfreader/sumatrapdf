@@ -325,17 +325,6 @@ void ChmFile::GetAllPaths(StrVec* v) const {
     }
 }
 
-/* The html looks like:
-<li>
-  <object type="text/sitemap">
-    <param name="Name" value="Main Page">
-    <param name="Local" value="0789729717_main.html">
-    <param name="ImageNumber" value="12">
-  </object>
-  <ul> ... children ... </ul>
-<li>
-  ... siblings ...
-*/
 // Strip the "ITS protocol" prefix from a CHM URL, e.g.
 // "mk:@MSITStore:foo.chm::/index.html" -> "index.html".
 static Str StripItsProtocol(Str url) {
@@ -344,9 +333,16 @@ static Str StripItsProtocol(Str url) {
     return p ? p : url;
 }
 
-static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, int level) {
+enum class ChmItemKind {
+    Toc,
+    Index
+};
+
+static bool VisitChmItem(EbookTocVisitor* visitor, const GumboNode* objNode, ChmItemKind kind, int level) {
     ReportIf(!GumboTagNameIs(objNode, StrL("object")));
 
+    StrVec references;
+    Str keyword;
     Str name, local;
     const GumboVector* children = &objNode->v.element.children;
     for (unsigned int i = 0; i < children->length; i++) {
@@ -359,61 +355,28 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, 
         if (!attrName || !attrVal) {
             continue;
         }
-        if (str::EqI(Str(attrName->value), StrL("Name"))) {
-            name = Str(attrVal->value);
-        } else if (str::EqI(Str(attrName->value), StrL("Local"))) {
-            local = StripItsProtocol(Str(attrVal->value));
-        }
-    }
-    if (len(name) == 0) {
-        return false;
-    }
-    visitor->Visit(name, local, level);
-    return true;
-}
-
-/* The html looks like:
-<li>
-  <object type="text/sitemap">
-    <param name="Keyword" value="- operator">
-    <param name="Name" value="Subtraction Operator (-)">
-    <param name="Local" value="html/vsoprsubtract.htm">
-    <param name="Name" value="Subtraction Operator (-)">
-    <param name="Local" value="html/js56jsoprsubtract.htm">
-  </object>
-  <ul> ... optional children ... </ul>
-<li>
-  ... siblings ...
-*/
-static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode, int level) {
-    ReportIf(!GumboTagNameIs(objNode, StrL("object")));
-
-    StrVec references;
-    Str keyword;
-    Str name;
-    const GumboVector* children = &objNode->v.element.children;
-    for (unsigned int i = 0; i < children->length; i++) {
-        const GumboNode* child = (const GumboNode*)children->data[i];
-        if (!GumboTagNameIs(child, StrL("param"))) {
-            continue;
-        }
-        const GumboAttribute* attrName = gumbo_get_attribute(&child->v.element.attributes, "name");
-        const GumboAttribute* attrVal = gumbo_get_attribute(&child->v.element.attributes, "value");
-        if (!attrName || !attrVal) {
-            continue;
-        }
-        if (str::EqI(Str(attrName->value), StrL("Keyword"))) {
+        if (kind == ChmItemKind::Index && str::EqI(Str(attrName->value), StrL("Keyword"))) {
             keyword = Str(attrVal->value);
         } else if (str::EqI(Str(attrName->value), StrL("Name"))) {
             name = Str(attrVal->value);
-            // some CHM documents seem to use a lonely Name instead of Keyword
+            // Some indexes use Name without Keyword.
             if (len(keyword) == 0) {
                 keyword = name;
             }
-        } else if (str::EqI(Str(attrName->value), StrL("Local")) && name) {
-            references.Append(name);
-            references.Append(StripItsProtocol(Str(attrVal->value)));
+        } else if (str::EqI(Str(attrName->value), StrL("Local"))) {
+            local = StripItsProtocol(Str(attrVal->value));
+            if (kind == ChmItemKind::Index && name) {
+                references.Append(name);
+                references.Append(local);
+            }
         }
+    }
+    if (kind == ChmItemKind::Toc) {
+        if (len(name) == 0) {
+            return false;
+        }
+        visitor->Visit(name, local, level);
+        return true;
     }
     if (len(keyword) == 0) {
         return false;
@@ -424,8 +387,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
         return true;
     }
     visitor->Visit(keyword, {}, level);
-    int n = len(references);
-    for (int i = 0; i < n; i += 2) {
+    for (int i = 0; i < len(references); i += 2) {
         visitor->Visit(references[i], references[i + 1], level + 1);
     }
     return true;
@@ -481,7 +443,7 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
         if (!objNode) {
             continue;
         }
-        bool valid = isIndex ? VisitChmIndexItem(visitor, objNode, lvl) : VisitChmTocItem(visitor, objNode, lvl);
+        bool valid = VisitChmItem(visitor, objNode, isIndex ? ChmItemKind::Index : ChmItemKind::Toc, lvl);
         if (!valid) {
             continue;
         }
@@ -526,7 +488,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
         if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, StrL("object"))) {
             const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
             if (type && str::EqI(Str(type->value), StrL("text/sitemap"))) {
-                hadOne |= isIndex ? VisitChmIndexItem(visitor, node, 1) : VisitChmTocItem(visitor, node, 1);
+                hadOne |= VisitChmItem(visitor, node, isIndex ? ChmItemKind::Index : ChmItemKind::Toc, 1);
                 continue; // don't recurse into the object's <param> children
             }
         }
