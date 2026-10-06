@@ -1151,16 +1151,10 @@ TocTree* EngineBase::GetToc() {
     return nullptr;
 }
 
-// default implementation that just sets wanted keys
-// keys are names of properties the caller wants. If given, we append those
-// proerties in this order and potentially add more
-// if keys are empty, we put them in order we want
+// Append nonempty properties in standard order, preserving existing values.
 void EngineBase::GetProperties(Props& propsOut) {
-    for (int i = 0;; i++) {
+    for (int i = 0; gAllProps[i] != DocProp::None; i++) {
         DocProp prop = gAllProps[i];
-        if (prop == DocProp::None) {
-            break;
-        }
         // font list is loaded asynchronously in ShowProperties()
         if (prop == DocProp::FontList) {
             continue;
