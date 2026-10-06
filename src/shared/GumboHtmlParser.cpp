@@ -490,7 +490,7 @@ static ptrdiff_t PosOfSource(Str html, Str p) {
 GumboHtmlParser::GumboHtmlParser(Str s) : html(s) {
     opts = GumboMakeXmlFragmentOptions();
     output = gumbo_parse_with_options(&opts, html.s, (size_t)html.len);
-    BuildEvents();
+    SetCurrPosOff(0);
 }
 
 GumboHtmlParser::~GumboHtmlParser() {
@@ -499,18 +499,7 @@ GumboHtmlParser::~GumboHtmlParser() {
     }
 }
 
-void GumboHtmlParser::BuildEvents() {
-    if (!output || !output->document) {
-        return;
-    }
-
-    struct Frame {
-        const GumboNode* node;
-        bool emitEnd;
-    };
-
-    Vec<Frame> toVisit;
-    VecAppend(toVisit, {output->document, false});
+HtmlToken* GumboHtmlParser::ReadToken() {
     while (len(toVisit) > 0) {
         Frame frame = VecPop(toVisit);
         const GumboNode* node = frame.node;
@@ -519,29 +508,26 @@ void GumboHtmlParser::BuildEvents() {
         }
 
         if (frame.emitEnd) {
-            Str rawEnd = StrFromPiece(node->v.element.original_end_tag);
-            if (len(rawEnd) > 0) {
-                Str inner = EndTagInner(rawEnd);
-                VecAppend(events, {HtmlToken::EndTag, node, inner, TagNameFromTagInner(inner), rawEnd,
-                                   PosOfSource(html, rawEnd)});
+            Str raw = StrFromPiece(node->v.element.original_end_tag);
+            if (len(raw) == 0) {
+                continue;
             }
-            continue;
+            currToken.SetTag(HtmlToken::EndTag, EndTagInner(raw));
+            currToken.reparsePoint = raw;
+            currToken.node = node;
+            return &currToken;
         }
 
-        if (node->type == GUMBO_NODE_TEXT || node->type == GUMBO_NODE_WHITESPACE) {
+        if (node->type == GUMBO_NODE_TEXT || node->type == GUMBO_NODE_WHITESPACE || node->type == GUMBO_NODE_CDATA) {
             Str text = StrFromPiece(node->v.text.original_text);
-            if (len(text) == 0) {
+            if (node->type == GUMBO_NODE_CDATA) {
+                text = CDataText(text, node);
+            } else if (len(text) == 0) {
                 text = Str(node->v.text.text);
             }
-            VecAppend(events, {HtmlToken::Text, node, text, {}, text, PosOfSource(html, text)});
-            continue;
-        }
-
-        if (node->type == GUMBO_NODE_CDATA) {
-            Str raw = StrFromPiece(node->v.text.original_text);
-            Str text = CDataText(raw, node);
-            VecAppend(events, {HtmlToken::Text, node, text, {}, text, PosOfSource(html, text)});
-            continue;
+            currToken.SetText(text);
+            currToken.node = node;
+            return &currToken;
         }
 
         const GumboVector* children =
@@ -550,73 +536,36 @@ void GumboHtmlParser::BuildEvents() {
             continue;
         }
 
+        Str raw;
         if (node->type == GUMBO_NODE_ELEMENT || node->type == GUMBO_NODE_TEMPLATE) {
-            Str rawStart = StrFromPiece(node->v.element.original_tag);
-            if (len(rawStart) == 0) {
-                for (unsigned int i = children->length; i > 0; i--) {
-                    VecAppend(toVisit, {(const GumboNode*)children->data[i - 1], false});
-                }
-                continue;
+            raw = StrFromPiece(node->v.element.original_tag);
+        }
+        bool selfClosing = IsSelfClosingStartTag(raw);
+        if (!selfClosing) {
+            if (len(raw) > 0 && len(StrFromPiece(node->v.element.original_end_tag)) > 0) {
+                VecAppend(toVisit, {node, true});
             }
-
-            bool selfClosing = IsSelfClosingStartTag(rawStart);
-            Str inner = StartTagInner(rawStart, selfClosing);
-            HtmlToken::TokenType type = selfClosing ? HtmlToken::EmptyElementTag : HtmlToken::StartTag;
-            VecAppend(events, {type, node, inner, TagNameFromTagInner(inner), rawStart, PosOfSource(html, rawStart)});
-
-            if (!selfClosing) {
-                if (len(StrFromPiece(node->v.element.original_end_tag)) > 0) {
-                    VecAppend(toVisit, {node, true});
-                }
-                for (unsigned int i = children->length; i > 0; i--) {
-                    VecAppend(toVisit, {(const GumboNode*)children->data[i - 1], false});
-                }
+            for (unsigned int i = children->length; i > 0; i--) {
+                VecAppend(toVisit, {(const GumboNode*)children->data[i - 1], false});
             }
+        }
+        if (len(raw) == 0) {
             continue;
         }
-
-        for (unsigned int i = children->length; i > 0; i--) {
-            VecAppend(toVisit, {(const GumboNode*)children->data[i - 1], false});
-        }
+        auto type = selfClosing ? HtmlToken::EmptyElementTag : HtmlToken::StartTag;
+        currToken.SetTag(type, StartTagInner(raw, selfClosing));
+        currToken.reparsePoint = raw;
+        currToken.node = node;
+        return &currToken;
     }
-}
-
-HtmlToken* GumboHtmlParser::TokenFromEvent(Event& ev) {
-    currToken.type = ev.type;
-    currToken.s = ev.s;
-    currToken.name = ev.name;
-    currToken.reparsePoint = ev.reparsePoint;
-    currToken.tag = FindHtmlTag(ev.name);
-    currToken.node = ev.node;
-
-    if (ev.type == HtmlToken::Text && textStartOff >= 0) {
-        ptrdiff_t delta = textStartOff - ev.off;
-        if (delta > 0 && delta < currToken.s.len) {
-            currToken.s = Str(currToken.s.s + delta, currToken.s.len - (int)delta);
-            currToken.reparsePoint = currToken.s;
-        }
-        textStartOff = -1;
-    }
-    return &currToken;
+    return nullptr;
 }
 
 void GumboHtmlParser::SetCurrPosOff(ptrdiff_t off) {
-    off = std::max<ptrdiff_t>(off, 0);
-    off = std::min<ptrdiff_t>(off, html.len);
-
-    textStartOff = -1;
-    eventIdx = (size_t)len(events);
-    for (int i = 0; i < len(events); i++) {
-        Event& ev = events[i];
-        if (ev.type == HtmlToken::Text && off >= ev.off && off < ev.off + ev.s.len) {
-            eventIdx = (size_t)i;
-            textStartOff = off;
-            return;
-        }
-        if (ev.off >= off) {
-            eventIdx = (size_t)i;
-            return;
-        }
+    seekOff = std::min<ptrdiff_t>(std::max<ptrdiff_t>(off, 0), len(html));
+    VecClear(toVisit);
+    if (output && output->document) {
+        VecAppend(toVisit, {output->document, false});
     }
 }
 
@@ -625,15 +574,47 @@ int GumboHtmlParser::PosOf(Str p) const {
 }
 
 HtmlToken* GumboHtmlParser::Next() {
-    if (eventIdx >= (size_t)len(events)) {
-        return nullptr;
+    while (HtmlToken* token = ReadToken()) {
+        if (seekOff < 0) {
+            return token;
+        }
+        ptrdiff_t off = PosOfSource(html, token->reparsePoint);
+        if (token->IsText() && seekOff >= off && seekOff < off + len(token->s)) {
+            int delta = (int)(seekOff - off);
+            token->s = Str(token->s.s + delta, len(token->s) - delta);
+            token->reparsePoint = token->s;
+        } else if (off < seekOff) {
+            continue;
+        }
+        seekOff = -1;
+        return token;
     }
-    Event& ev = events[(int)eventIdx++];
-    return TokenFromEvent(ev);
+    return nullptr;
 }
 
 #if IS_DEBUG
 bool GumboHtmlParser_UnitTest() {
+    {
+        GumboHtmlParser parser(StrL("<div>abc<br/>b<span>c</span>d</div>"));
+        str::Builder stream;
+        while (HtmlToken* t = parser.Next()) {
+            Str kind = t->IsText()                 ? StrL("text")
+                       : t->IsEndTag()             ? StrL("end")
+                       : t->IsEmptyElementEndTag() ? StrL("empty")
+                                                   : StrL("start");
+            stream.Append(fmt("%s:%s;", kind, t->s));
+        }
+        if (!str::Eq(ToStr(stream),
+                     StrL("start:div;text:abc;empty:br;text:b;start:span;text:c;end:span;text:d;end:div;"))) {
+            return false;
+        }
+        parser.SetCurrPosOff(6);
+        HtmlToken* resumed = parser.Next();
+        if (!resumed || !resumed->IsText() || !str::Eq(resumed->s, StrL("bc"))) {
+            return false;
+        }
+    }
+
     const Str entities[][2] = {
         {{}, {}},
         {StrL("plain text"), StrL("plain text")},

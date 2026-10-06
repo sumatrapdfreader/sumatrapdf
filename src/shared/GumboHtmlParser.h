@@ -69,26 +69,20 @@ struct HtmlToken {
 };
 
 class GumboHtmlParser {
-    struct Event {
-        HtmlToken::TokenType type = HtmlToken::Error;
-        const GumboNode* node = nullptr;
-        Str s;
-        Str name;
-        Str reparsePoint;
-        ptrdiff_t off = 0;
+    struct Frame {
+        const GumboNode* node;
+        bool emitEnd;
     };
 
     Str html;
     GumboOptions opts{};
     GumboOutput* output = nullptr;
-    Vec<Event> events;
-    size_t eventIdx = 0;
-    ptrdiff_t textStartOff = -1;
+    Vec<Frame> toVisit;
+    ptrdiff_t seekOff = -1;
 
     HtmlToken currToken{};
 
-    void BuildEvents();
-    HtmlToken* TokenFromEvent(Event& ev);
+    HtmlToken* ReadToken();
 
   public:
     explicit GumboHtmlParser(Str s);
