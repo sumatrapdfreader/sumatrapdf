@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+void WriteStdout(Str data);
+
 #if OS_WIN
 #define kPathSep "\\"
 constexpr char kPathSepChar = '\\';

@@ -15,27 +15,9 @@
 #include "ChmFile.h"
 #include "ChmDump.h"
 
-static void CliWrite(Str s, int n = 0) {
-    if (len(s) == 0) {
-        return;
-    }
-    if (n == 0) {
-        n = s.len;
-    }
-#if OS_WIN
-    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (h && h != INVALID_HANDLE_VALUE) {
-        DWORD written = 0;
-        WriteFile(h, s.s, (DWORD)n, &written, nullptr);
-        return;
-    }
-#endif
-    fwrite(s.s, 1, (size_t)n, stdout);
-}
-
 static void CliPrint(Str s) {
-    CliWrite(s);
-    CliWrite(StrL("\n"), 1);
+    WriteStdout(s);
+    WriteStdout(StrL("\n"));
 }
 
 static Str ChmCompressionName(bool isCompressed) {

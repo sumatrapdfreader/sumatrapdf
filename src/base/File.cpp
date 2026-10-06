@@ -15,6 +15,22 @@
 // 3 is for absolute worst case of WCHAR* where last char was partially written
 constexpr int kZeroPaddingCount = 3;
 
+// GUI-subsystem exes can lack CRT stdout even when launched with a pipe.
+void WriteStdout(Str data) {
+    if (len(data) == 0) {
+        return;
+    }
+#if OS_WIN
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (h && h != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(h, data.s, (DWORD)len(data), &written, nullptr);
+        return;
+    }
+#endif
+    fwrite(data.s, 1, (size_t)len(data), stdout);
+}
+
 TempStr MakeUniqueFilePathTemp(Str path) {
     if (!file::Exists(path)) {
         return str::DupTemp(path);
