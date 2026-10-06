@@ -1257,20 +1257,15 @@ static CommandArg* CopyCommandArgs(CommandArg* first) {
     return res;
 }
 
-// A copy of cmd (same original command, same arguments) under a fresh, unique
-// command id. Two settings entries can resolve to the same command and yet have
-// to stay distinguishable (their own name, key, toolbar button); they can't
-// share a CustomCommand, and they can't share an id either because the toolbar
-// identifies buttons by command id (#5869). name / key come from the caller's
-// settings entry (not copied from cmd).
+// Each settings entry needs its own toolbar ID, name and shortcut.
+// Copy arguments so entries can be freed independently.
 CustomCommand* CloneCustomCommand(CustomCommand* cmd, Str name, Str key) {
-    NormalizeCommandNameAndKey(cmd->definition, &name, &key);
-    auto* res = AllocCustomCommand(cmd->definition, name, key);
-    res->id = gNextCustomCommandId++;
-    res->origId = cmd->origId;
-    res->firstArg = CopyCommandArgs(cmd->firstArg);
-    res->next = gFirstCustomCommand;
-    gFirstCustomCommand = res;
+    auto* args = CopyCommandArgs(cmd->firstArg);
+    auto* res = CreateCustomCommand(cmd->definition, cmd->origId, args, name, key);
+    // Argumentless clones still need distinct toolbar IDs.
+    if (!args) {
+        res->id = gNextCustomCommandId++;
+    }
     return res;
 }
 
