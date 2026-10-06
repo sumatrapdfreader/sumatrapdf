@@ -1378,26 +1378,15 @@ static Str LitEscapeReserved(Str s) {
             i++;
             continue;
         }
-        if (c == '<' && i + 1 < len(s) && s.s[i + 1] == '<') {
-            // "<<" => &lt; except "<<!--" which stays a comment opener
-            if (i + 4 < len(s) && str::Eq(Str(s.s + i + 2, 3), StrL("!--"))) {
-                out.AppendChar('<');
-                i += 2;
+        if ((c == '<' || c == '>') && i + 1 < len(s) && s.s[i + 1] == c) {
+            bool commentStart = c == '<' && str::StartsWith(Str(s.s + i + 2, len(s) - i - 2), StrL("!--"));
+            bool commentEnd = c == '>' && i >= 2 && s.s[i - 1] == '-' && s.s[i - 2] == '-';
+            if (commentStart || commentEnd) {
+                out.AppendChar(c);
             } else {
-                out.Append(StrL("&lt;"));
-                i += 2;
+                out.Append(c == '<' ? StrL("&lt;") : StrL("&gt;"));
             }
-            continue;
-        }
-        if (c == '>' && i + 1 < len(s) && s.s[i + 1] == '>') {
-            // "-->>" keeps one '>' for the comment closer
-            if (i >= 2 && s.s[i - 1] == '-' && s.s[i - 2] == '-') {
-                out.AppendChar('>');
-                i += 2;
-            } else {
-                out.Append(StrL("&gt;"));
-                i += 2;
-            }
+            i += 2;
             continue;
         }
         out.AppendChar(c);
