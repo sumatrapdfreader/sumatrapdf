@@ -1221,14 +1221,8 @@ bool EngineBase::HandleLink(IPageDestination* /*dest*/, ILinkHandler* /*linkHand
 }
 
 bool SaveFileOrData(Str srcFilePath, Str data, Str dstFilePath) {
-    if (srcFilePath) {
-        bool ok = file::Copy(dstFilePath, srcFilePath, false);
-        if (ok) {
-            return true;
-        }
+    if (srcFilePath && file::Copy(dstFilePath, srcFilePath, false)) {
+        return true;
     }
-    if (len(data) == 0) {
-        return false;
-    }
-    return file::WriteFile(dstFilePath, data);
+    return len(data) != 0 && file::WriteFile(dstFilePath, data);
 }
