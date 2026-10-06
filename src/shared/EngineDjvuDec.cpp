@@ -444,67 +444,30 @@ RectF EngineDjvuDec::Transform(const RectF& rect, int pageNo, float zoom, int ro
     return RectF::FromXY(TL, BR);
 }
 
-// rotate a top-down gray8 buffer clockwise by rotation (0/90/180/270)
-static u8* RotateGray8(const u8* src, int dx, int dy, int rotation, int& dxOut, int& dyOut) {
-    rotation = NormalizeRotation(rotation);
-    if (rotation == 0) {
-        dxOut = dx;
-        dyOut = dy;
-        u8* out = AllocArray<u8>(dx * dy);
-        if (out) {
-            memcpy(out, src, (size_t)dx * dy);
-        }
-        return out;
-    }
-    int ndx = (rotation == 180) ? dx : dy;
-    int ndy = (rotation == 180) ? dy : dx;
-    u8* out = AllocArray<u8>(ndx * ndy);
-    if (!out) {
-        return nullptr;
-    }
-    for (int y = 0; y < dy; y++) {
-        for (int x = 0; x < dx; x++) {
-            u8 v = src[((size_t)y * dx) + x];
-            int nx = 0, ny = 0;
-            if (rotation == 90) {
-                nx = dy - 1 - y;
-                ny = x;
-            } else if (rotation == 180) {
-                nx = dx - 1 - x;
-                ny = dy - 1 - y;
-            } else { // 270
-                nx = y;
-                ny = dx - 1 - x;
-            }
-            out[((size_t)ny * ndx) + nx] = v;
-        }
-    }
-    dxOut = ndx;
-    dyOut = ndy;
-    return out;
-}
+constexpr int kGrayChannels = 1;
+constexpr int kBgrChannels = 3;
 
-// rotate a top-down 24bpp BGR buffer clockwise by rotation (0/90/180/270)
-static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, int& dyOut) {
+// Rotate a top-down buffer clockwise, keeping each pixel's channels together.
+template <int channels>
+static u8* RotatePixels(const u8* src, int dx, int dy, int rotation, int& dxOut, int& dyOut) {
     rotation = NormalizeRotation(rotation);
     if (rotation == 0) {
         dxOut = dx;
         dyOut = dy;
-        u8* out = AllocArray<u8>(dx * dy * 3);
+        u8* out = AllocArray<u8>(dx * dy * channels);
         if (out) {
-            memcpy(out, src, (size_t)dx * dy * 3);
+            memcpy(out, src, (size_t)dx * dy * channels);
         }
         return out;
     }
     int ndx = (rotation == 180) ? dx : dy;
     int ndy = (rotation == 180) ? dy : dx;
-    u8* out = AllocArray<u8>(ndx * ndy * 3);
+    u8* out = AllocArray<u8>(ndx * ndy * channels);
     if (!out) {
         return nullptr;
     }
     for (int y = 0; y < dy; y++) {
         for (int x = 0; x < dx; x++) {
-            const u8* s = src + ((((size_t)y * dx) + x) * 3);
             int nx = 0, ny = 0;
             if (rotation == 90) {
                 nx = dy - 1 - y;
@@ -516,10 +479,8 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
                 nx = y;
                 ny = dx - 1 - x;
             }
-            u8* d = out + ((((size_t)ny * ndx) + nx) * 3);
-            d[0] = s[0];
-            d[1] = s[1];
-            d[2] = s[2];
+            const u8* pixel = src + (((size_t)y * dx + x) * channels);
+            memcpy(out + (((size_t)ny * ndx + nx) * channels), pixel, channels);
         }
     }
     dxOut = ndx;
@@ -693,9 +654,9 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     int rdx = sdx, rdy = sdy;
     if (rotateAfter != 0) {
         if (isBitonal) {
-            rotated = RotateGray8(pixels, sdx, sdy, rotateAfter, rdx, rdy);
+            rotated = RotatePixels<kGrayChannels>(pixels, sdx, sdy, rotateAfter, rdx, rdy);
         } else {
-            rotated = RotateBgr(pixels, sdx, sdy, rotateAfter, rdx, rdy);
+            rotated = RotatePixels<kBgrChannels>(pixels, sdx, sdy, rotateAfter, rdx, rdy);
         }
         free(pixels);
         if (!rotated) {
@@ -1031,3 +992,34 @@ EngineBase* CreateEngineDjvuDecFromFile(Str path) {
     SafeEngineRelease(&engine);
     return nullptr;
 }
+
+#if IS_DEBUG
+bool EngineDjvuDec_UnitTestRotate() {
+    const u8 expected[][6] = {{1, 2, 3, 4, 5, 6}, {4, 1, 5, 2, 6, 3}, {6, 5, 4, 3, 2, 1}, {3, 6, 2, 5, 1, 4}};
+    const int channels[] = {kGrayChannels, kBgrChannels};
+    for (int comp : channels) {
+        u8 src[18];
+        for (int i = 0; i < 6; i++) {
+            for (int c = 0; c < comp; c++) {
+                src[i * comp + c] = (u8)(i + 1 + c * 10);
+            }
+        }
+        for (int r = 0; r < 4; r++) {
+            int dx = 0, dy = 0;
+            AutoFree<u8> out(comp == 1 ? RotatePixels<kGrayChannels>(src, 3, 2, r * 90, dx, dy)
+                                       : RotatePixels<kBgrChannels>(src, 3, 2, r * 90, dx, dy));
+            if (!out || dx != (r % 2 == 0 ? 3 : 2) || dy != (r % 2 == 0 ? 2 : 3)) {
+                return false;
+            }
+            for (int i = 0; i < 6; i++) {
+                for (int c = 0; c < comp; c++) {
+                    if (out.Get()[i * comp + c] != expected[r][i] + c * 10) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+#endif
