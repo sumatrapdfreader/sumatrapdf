@@ -65,13 +65,11 @@ struct TreeModel {
 };
 
 struct TreeItemVisitorData {
-    TreeModel* model = nullptr;
     TreeItem item = 0;
     bool stopTraversal = false;
 };
 
-// function called for every item in the TreeModel
-// return false to stop iteration
+// Set stopTraversal to stop visiting items.
 using TreeItemVisitor = Func1<TreeItemVisitorData*>;
 
 bool VisitTreeModelItems(TreeModel*, const TreeItemVisitor& visitor);
