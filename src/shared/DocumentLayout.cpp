@@ -237,17 +237,18 @@ static void SetPageDisplaySize(DocumentLayoutPage* page, int rotation, int currP
     page->pos.y = currPosY;
 }
 
-static void RelayoutFacing(DocumentLayout& layout, bool isFitContent) {
+static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
     const DocumentLayoutParams& params = layout.params;
     const int pageCount = layout.pages.len;
+    bool single = IsSingle(params.displayMode);
     Vec<FacingRow> rows;
-    if (!params.landscapeAsSpread && !IsContinuous(params.displayMode)) {
+    if (!single && !params.landscapeAsSpread && !IsContinuous(params.displayMode)) {
         int last = std::min(params.startPage + 1, pageCount);
         if (IsBookView(params.displayMode) && params.startPage == 1) {
             last = 1;
         }
         VecAppend(rows, {params.startPage, last, false});
-    } else {
+    } else if (!single) {
         Vec<u8> noSpreads;
         CollectFacingRows(rows, pageCount, IsBookView(params.displayMode),
                           params.landscapeAsSpread ? params.spreadFlags : noSpreads);
@@ -271,9 +272,10 @@ static void RelayoutFacing(DocumentLayout& layout, bool isFitContent) {
     CalcZoomReal(layout, params.zoomVirtual);
 
     int columnMaxWidth[2] = {0, 0};
-    int maxSpreadWidth = 0;
-    for (int ri = 0; ri < len(rows); ri++) {
-        const FacingRow& row = rows[ri];
+    int maxFullRowWidth = 0;
+    int nRows = single ? pageCount : len(rows);
+    for (int ri = 0; ri < nRows; ri++) {
+        FacingRow row = single ? FacingRow{ri + 1, ri + 1, false} : rows[ri];
         int rowMaxPageDy = 0;
         bool anyShown = false;
         bool cover = row.firstPage == row.lastPage && IsBookView(params.displayMode) && row.firstPage == 1;
@@ -285,9 +287,9 @@ static void RelayoutFacing(DocumentLayout& layout, bool isFitContent) {
             }
             anyShown = true;
             SetPageDisplaySize(page, params.rotation, currPosY);
-            rowMaxPageDy = std::max(rowMaxPageDy, page->pos.dy);
-            if (row.isSpread) {
-                maxSpreadWidth = std::max(maxSpreadWidth, page->pos.dx);
+            rowMaxPageDy = single ? page->pos.dy : std::max(rowMaxPageDy, page->pos.dy);
+            if (single || row.isSpread) {
+                maxFullRowWidth = std::max(maxFullRowWidth, page->pos.dx);
             } else {
                 ReportIf(col >= 2);
                 columnMaxWidth[col] = std::max(columnMaxWidth[col], page->pos.dx);
@@ -311,13 +313,16 @@ static void RelayoutFacing(DocumentLayout& layout, bool isFitContent) {
     }
 
     int twoColDx = columnMaxWidth[0] + params.pageSpacing.dx + columnMaxWidth[1];
-    int pagesDx = params.landscapeAsSpread ? std::max(twoColDx, maxSpreadWidth) : twoColDx;
+    int pagesDx = single ? maxFullRowWidth : twoColDx;
+    if (params.landscapeAsSpread) {
+        pagesDx = std::max(pagesDx, maxFullRowWidth);
+    }
     int canvasDx = params.windowMargin.left + pagesDx + params.windowMargin.right;
 
     int offX = CenterCanvasX(layout, canvasDx);
 
-    for (int ri = 0; ri < len(rows); ri++) {
-        const FacingRow& row = rows[ri];
+    for (int ri = 0; ri < nRows; ri++) {
+        FacingRow row = single ? FacingRow{ri + 1, ri + 1, false} : rows[ri];
         bool cover = row.firstPage == row.lastPage && IsBookView(params.displayMode) && row.firstPage == 1;
         int pageOffX = offX + params.windowMargin.left;
         int col = 0;
@@ -327,7 +332,7 @@ static void RelayoutFacing(DocumentLayout& layout, bool isFitContent) {
             if (!page->isShown) {
                 continue;
             }
-            if (row.isSpread || (cover && !IsContinuous(params.displayMode))) {
+            if (single || row.isSpread || (cover && !IsContinuous(params.displayMode))) {
                 page->pos.x = pageOffX + ((pagesDx - page->pos.dx) / 2);
             } else if (cover) {
                 page->pos.x = pageOffX + columnMaxWidth[0] + params.pageSpacing.dx;
@@ -336,11 +341,13 @@ static void RelayoutFacing(DocumentLayout& layout, bool isFitContent) {
             } else {
                 page->pos.x = x;
             }
-            if (params.displayR2L) {
+            if (!single && params.displayR2L) {
                 page->pos.x = canvasDx - page->pos.x - page->pos.dx;
             }
-            x += columnMaxWidth[col] + params.pageSpacing.dx;
-            col++;
+            if (pageNo < row.lastPage) {
+                x += columnMaxWidth[col] + params.pageSpacing.dx;
+                col++;
+            }
         }
     }
 
@@ -371,39 +378,7 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
 
     viewPort = Rect(params.viewPortOffset, params.viewPortSize);
 
-    if (!IsSingle(params.displayMode)) {
-        RelayoutFacing(*this, isFitContent);
-        return;
-    }
-
-    for (int pageNo = 1; pageNo <= len(pages); pageNo++) {
-        auto& page = pages[pageNo - 1];
-        page.pos = {};
-        page.isShown = IsContinuous(params.displayMode) || pageNo == params.startPage;
-    }
-
-    CalcZoomReal(*this, params.zoomVirtual);
-    int currPosY = params.windowMargin.top;
-    int maxWidth = 0;
-    for (DocumentLayoutPage& page : pages) {
-        if (!page.isShown) {
-            continue;
-        }
-        SetPageDisplaySize(&page, params.rotation, currPosY);
-        maxWidth = std::max(maxWidth, page.pos.dx);
-        currPosY += page.pos.dy + params.pageSpacing.dy;
-    }
-    int canvasDy = currPosY + params.windowMargin.bottom - params.pageSpacing.dy;
-    int canvasDx = params.windowMargin.left + maxWidth + params.windowMargin.right;
-
-    int offX = CenterCanvasX(*this, canvasDx);
-    for (DocumentLayoutPage& page : pages) {
-        if (page.isShown) {
-            page.pos.x = offX + params.windowMargin.left + ((maxWidth - page.pos.dx) / 2);
-        }
-    }
-
-    FinishRelayout(*this, canvasDx, canvasDy, isFitContent);
+    RelayoutRows(*this, isFitContent);
 }
 
 void DocumentLayout::RecalcVisibleParts() {
