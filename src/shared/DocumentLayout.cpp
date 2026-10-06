@@ -162,38 +162,27 @@ static float ZoomRealFromVirtualForPage(const DocumentLayout& layout, float zoom
 }
 
 static void CalcZoomReal(DocumentLayout& layout, float zoomVirtual) {
-    const int pageCount = layout.pages.len;
-    if (layout.params.usePageZooms) {
-        float minZoom = (float)HUGE_VAL;
-        for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
-            DocumentLayoutPage* page = layout.GetPage(pageNo);
-            if (!page->isShown) {
-                continue;
-            }
-            minZoom = std::min(minZoom, page->zoomReal);
+    bool fitZoom = zoomVirtual == kZoomFitWidth || zoomVirtual == kZoomFitHeight || zoomVirtual == kZoomFitPage;
+    if (!layout.params.usePageZooms && !fitZoom) {
+        layout.zoomReal = zoomVirtual * 0.01f * layout.params.dpiFactor;
+        for (DocumentLayoutPage& page : layout.pages) {
+            page.zoomReal = layout.zoomReal;
         }
-        layout.zoomReal = minZoom == (float)HUGE_VAL ? 1 : minZoom;
         return;
     }
 
-    if (zoomVirtual == kZoomFitWidth || zoomVirtual == kZoomFitHeight || zoomVirtual == kZoomFitPage) {
-        float minZoom = (float)HUGE_VAL;
-        for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
-            DocumentLayoutPage* page = layout.GetPage(pageNo);
-            if (!page->isShown) {
-                continue;
-            }
-            float zoom = ZoomRealFromVirtualForPage(layout, zoomVirtual, pageNo);
-            page->zoomReal = zoom;
-            minZoom = std::min(minZoom, zoom);
+    float minZoom = (float)HUGE_VAL;
+    for (int pageNo = 1; pageNo <= len(layout.pages); pageNo++) {
+        DocumentLayoutPage* page = layout.GetPage(pageNo);
+        if (!page->isShown) {
+            continue;
         }
-        layout.zoomReal = minZoom == (float)HUGE_VAL ? 1 : minZoom;
-    } else {
-        layout.zoomReal = zoomVirtual * 0.01f * layout.params.dpiFactor;
-        for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
-            layout.GetPage(pageNo)->zoomReal = layout.zoomReal;
+        if (!layout.params.usePageZooms) {
+            page->zoomReal = ZoomRealFromVirtualForPage(layout, zoomVirtual, pageNo);
         }
+        minZoom = std::min(minZoom, page->zoomReal);
     }
+    layout.zoomReal = minZoom == (float)HUGE_VAL ? 1 : minZoom;
 }
 
 Size FreePanSlack(Size viewPort) {
@@ -480,13 +469,8 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
             continue;
         }
 
-        SizeF pageSize = PageSizeAfterRotation(page, params.rotation);
-        Rect pos;
-        Size px = PagePixelSize(pageSize, page->zoomReal);
-        pos.dx = px.dx;
-        pos.dy = px.dy;
-        rowMaxPageDy = std::max(rowMaxPageDy, pos.dy);
-        pos.y = currPosY;
+        SetPageDisplaySize(page, params.rotation, currPosY);
+        rowMaxPageDy = std::max(rowMaxPageDy, page->pos.dy);
 
         if (IsBookView(params.displayMode) && pageNo == 1 && columns - pageInARow > 1) {
             pageInARow++;
@@ -496,9 +480,8 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
         if (col >= dimofi(columnMaxWidth)) {
             col = dimofi(columnMaxWidth) - 1;
         }
-        columnMaxWidth[col] = std::max(columnMaxWidth[col], pos.dx);
+        columnMaxWidth[col] = std::max(columnMaxWidth[col], page->pos.dx);
 
-        page->pos = pos;
         pageInARow++;
         ReportIf(pageInARow > columns);
         if (pageInARow == columns) {
