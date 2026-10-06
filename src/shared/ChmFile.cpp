@@ -358,22 +358,17 @@ static bool VisitChmItem(EbookTocVisitor* visitor, const GumboNode* objNode, Chm
             }
         }
     }
-    if (kind == ChmItemKind::Toc) {
-        if (len(name) == 0) {
-            return false;
-        }
-        visitor->Visit(name, local, level);
-        return true;
-    }
-    if (len(keyword) == 0) {
+    Str label = kind == ChmItemKind::Toc ? name : keyword;
+    if (len(label) == 0) {
         return false;
     }
 
-    if (len(references) == 2) {
-        visitor->Visit(keyword, references[1], level);
+    if (kind == ChmItemKind::Toc || len(references) == 2) {
+        Str target = kind == ChmItemKind::Toc ? local : references[1];
+        visitor->Visit(label, target, level);
         return true;
     }
-    visitor->Visit(keyword, {}, level);
+    visitor->Visit(label, {}, level);
     for (int i = 0; i < len(references); i += 2) {
         visitor->Visit(references[i], references[i + 1], level + 1);
     }
