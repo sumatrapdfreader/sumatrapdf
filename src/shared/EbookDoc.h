@@ -18,6 +18,7 @@ struct ImageData {
 TempStr NormalizeURLTemp(Str url, Str base);
 #if IS_DEBUG
 bool EbookDoc_UnitTestNormalizeURL();
+bool EbookDoc_UnitTestLoading();
 #endif
 
 /* ********** EPUB ********** */

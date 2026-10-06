@@ -6,6 +6,9 @@
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/HtmlTags.h"
+#if IS_DEBUG
+#include "base/Zip.h"
+#endif
 #if OS_WIN
 #include "base/Win.h"
 #endif
@@ -23,6 +26,16 @@ static uint GuessTextCodepage(Str, uint defVal) {
     return defVal;
 }
 #endif
+
+template <typename T>
+static T* LoadEbook(Str path) {
+    auto* doc = new T(path);
+    if (doc && doc->Load()) {
+        return doc;
+    }
+    delete doc;
+    return nullptr;
+}
 
 static void SkipXmlPIAttrName(Str s, int& off) {
     while (off < s.len) {
@@ -347,18 +360,10 @@ static const GumboVector* GumboChildrenOf(const GumboNode* node) {
 
 /* ********** EPUB ********** */
 
-static Str EPUB_CONTAINER_NS() {
-    return StrL("urn:oasis:names:tc:opendocument:xmlns:container");
-}
-static Str EPUB_OPF_NS() {
-    return StrL("http://www.idpf.org/2007/opf");
-}
-static Str EPUB_NCX_NS() {
-    return StrL("http://www.daisy.org/z3986/2005/ncx/");
-}
-static Str EPUB_ENC_NS() {
-    return StrL("http://www.w3.org/2001/04/xmlenc#");
-}
+static constexpr Str kEpubContainerNs = StrL("urn:oasis:names:tc:opendocument:xmlns:container");
+static constexpr Str kEpubOpfNs = StrL("http://www.idpf.org/2007/opf");
+static constexpr Str kEpubNcxNs = StrL("http://www.daisy.org/z3986/2005/ncx/");
+static constexpr Str kEpubEncNs = StrL("http://www.w3.org/2001/04/xmlenc#");
 
 EpubDoc::EpubDoc(Str fileName) {
     str::ReplaceWithCopy(&this->fileName, fileName);
@@ -380,30 +385,15 @@ EpubDoc::~EpubDoc() {
     str::Free(fileName);
 }
 
-// TODO: switch to seqstring
 static bool isHtmlMediaType(Str mediatype) {
-    if (str::Eq(mediatype, StrL("application/xhtml+xml"))) {
-        return true;
-    }
-    if (str::Eq(mediatype, StrL("application/html+xml"))) {
-        return true;
-    }
-    if (str::Eq(mediatype, StrL("application/x-dtbncx+xml"))) {
-        return true;
-    }
-    if (str::Eq(mediatype, StrL("text/html"))) {
-        return true;
-    }
-    if (str::Eq(mediatype, StrL("text/xml"))) {
-        return true;
-    }
-    return false;
+    static SeqStrings types =
+        "application/xhtml+xml\0application/html+xml\0application/x-dtbncx+xml\0text/html\0text/xml\0";
+    return SeqStrIndex(types, mediatype) >= 0;
 }
 
-// TODO: switch to seqstring
 static bool isImageMediaType(Str mediatype) {
-    return str::Eq(mediatype, StrL("image/png")) || str::Eq(mediatype, StrL("image/jpeg")) ||
-           str::Eq(mediatype, StrL("image/gif"));
+    static SeqStrings types = "image/png\0image/jpeg\0image/gif\0";
+    return SeqStrIndex(types, mediatype) >= 0;
 }
 
 static void ParseMetadata(Str content, Props& props);
@@ -416,7 +406,7 @@ static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
         if (!node) {
             continue;
         }
-        if (GumboTagNameIsNS(node, StrL("CipherReference"), EPUB_ENC_NS())) {
+        if (GumboTagNameIsNS(node, StrL("CipherReference"), kEpubEncNs)) {
             TempStr uri = GumboAttributeValueTemp(node, "URI");
             if (uri) {
                 uri = url::DecodeTemp(uri);
@@ -449,7 +439,7 @@ bool EpubDoc::Load() {
     }
 
     // only consider the first <rootfile> element (default rendition)
-    node = GumboFindDescendantByTagNS(node, StrL("rootfile"), EPUB_CONTAINER_NS());
+    node = GumboFindDescendantByTagNS(node, StrL("rootfile"), kEpubContainerNs);
     if (!node) {
         return false;
     }
@@ -479,7 +469,7 @@ bool EpubDoc::Load() {
     if (!node) {
         return false;
     }
-    node = GumboFindDescendantByTagNS(node, StrL("manifest"), EPUB_OPF_NS());
+    node = GumboFindDescendantByTagNS(node, StrL("manifest"), kEpubOpfNs);
     if (!node) {
         return false;
     }
@@ -542,7 +532,7 @@ bool EpubDoc::Load() {
         }
     }
 
-    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("spine"), EPUB_OPF_NS());
+    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("spine"), kEpubOpfNs);
     if (!node) {
         return false;
     }
@@ -566,7 +556,7 @@ bool EpubDoc::Load() {
     const GumboVector* spineChildren = GumboChildrenOf(spine);
     for (unsigned int i = 0; spineChildren && i < spineChildren->length; i++) {
         node = (const GumboNode*)spineChildren->data[i];
-        if (!GumboTagNameIsNS(node, StrL("itemref"), EPUB_OPF_NS())) {
+        if (!GumboTagNameIsNS(node, StrL("itemref"), kEpubOpfNs)) {
             continue;
         }
         TempStr idref = GumboAttributeValueTemp(node, "idref");
@@ -629,9 +619,9 @@ static void ParseMetadata(Str content, Props& props) {
     HtmlToken* tok;
 
     while ((tok = pullParser.Next()) != nullptr) {
-        if (tok->IsStartTag() && tok->NameIsNS(StrL("metadata"), EPUB_OPF_NS())) {
+        if (tok->IsStartTag() && tok->NameIsNS(StrL("metadata"), kEpubOpfNs)) {
             insideMetadata++;
-        } else if (tok->IsEndTag() && tok->NameIsNS(StrL("metadata"), EPUB_OPF_NS())) {
+        } else if (tok->IsEndTag() && tok->NameIsNS(StrL("metadata"), kEpubOpfNs)) {
             insideMetadata--;
         }
         if (!insideMetadata) {
@@ -837,7 +827,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     HtmlToken* tok;
     // skip to the start of the navMap
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
-        if (tok->IsStartTag() && tok->NameIsNS(StrL("navMap"), EPUB_NCX_NS())) {
+        if (tok->IsStartTag() && tok->NameIsNS(StrL("navMap"), kEpubNcxNs)) {
             break;
         }
     }
@@ -848,8 +838,8 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     TempStr itemText, itemSrc;
     int level = 0;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
-           (!tok->IsEndTag() || !tok->NameIsNS(StrL("navMap"), EPUB_NCX_NS()))) {
-        if (tok->IsTag() && tok->NameIsNS(StrL("navPoint"), EPUB_NCX_NS())) {
+           (!tok->IsEndTag() || !tok->NameIsNS(StrL("navMap"), kEpubNcxNs))) {
+        if (tok->IsTag() && tok->NameIsNS(StrL("navPoint"), kEpubNcxNs)) {
             if (itemText) {
                 visitor->Visit(itemText, itemSrc, level);
                 itemText = {};
@@ -860,7 +850,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             } else if (tok->IsEndTag() && level > 0) {
                 level--;
             }
-        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("text"), EPUB_NCX_NS())) {
+        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("text"), kEpubNcxNs)) {
             tok = parser.Next();
             if (tok == nullptr || tok->IsError()) {
                 break;
@@ -868,7 +858,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             if (tok->IsText()) {
                 itemText = strconv::HtmlUtf8ToStrTemp(tok->s);
             }
-        } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS(StrL("content"), EPUB_NCX_NS())) {
+        } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS(StrL("content"), kEpubNcxNs)) {
             AttrInfo* attrInfo = tok->GetAttrByName(StrL("src"));
             if (attrInfo) {
                 TempStr src = NormalizeURLTemp(attrInfo->val, pagePath);
@@ -922,12 +912,7 @@ EpubReadingDirection EpubGetReadingDirection(Str path) {
 }
 
 EpubDoc* EpubDoc::CreateFromFile(Str path) {
-    EpubDoc* doc = new EpubDoc(path);
-    if (!doc || !doc->Load()) {
-        delete doc;
-        return {};
-    }
-    return doc;
+    return LoadEbook<EpubDoc>(path);
 }
 
 EpubDoc* EpubDoc::CreateFromData(Str data) {
@@ -956,7 +941,7 @@ Str EpubCoverImageData(Str path) {
     }
     Str container = Str(containerFi->data, containerFi->fileSizeUncompressed);
     GumboDoc containerDoc(container, true);
-    const GumboNode* node = GumboFindDescendantByTagNS(containerDoc.Document(), StrL("rootfile"), EPUB_CONTAINER_NS());
+    const GumboNode* node = GumboFindDescendantByTagNS(containerDoc.Document(), StrL("rootfile"), kEpubContainerNs);
     TempStr contentPath = url::DecodeTemp(GumboAttributeValueTemp(node, "full-path"));
     auto* contentFi = len(contentPath) > 0 ? archive->GetFileDataByName(contentPath) : nullptr;
     if (!contentFi || !contentFi->data) {
@@ -967,7 +952,7 @@ Str EpubCoverImageData(Str path) {
     GumboDoc contentDoc(content, true);
 
     TempStr coverId{};
-    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("metadata"), EPUB_OPF_NS());
+    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("metadata"), kEpubOpfNs);
     const GumboVector* children = GumboChildrenOf(node);
     for (unsigned int i = 0; children && i < children->length; i++) {
         node = (const GumboNode*)children->data[i];
@@ -978,7 +963,7 @@ Str EpubCoverImageData(Str path) {
     }
 
     TempStr href{};
-    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("manifest"), EPUB_OPF_NS());
+    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("manifest"), kEpubOpfNs);
     children = GumboChildrenOf(node);
     for (unsigned int i = 0; children && i < children->length; i++) {
         node = (const GumboNode*)children->data[i];
@@ -1008,12 +993,8 @@ Str EpubCoverImageData(Str path) {
 
 /* ********** FictionBook (FB2) ********** */
 
-static Str FB2_MAIN_NS() {
-    return StrL("http://www.gribuser.ru/xml/fictionbook/2.0");
-}
-static Str FB2_XLINK_NS() {
-    return StrL("http://www.w3.org/1999/xlink");
-}
+static constexpr Str kFb2MainNs = StrL("http://www.gribuser.ru/xml/fictionbook/2.0");
+static constexpr Str kFb2XlinkNs = StrL("http://www.w3.org/1999/xlink");
 
 Fb2Doc::Fb2Doc(Str fileName) : fileName(str::Dup(fileName)) {}
 
@@ -1037,42 +1018,33 @@ static Str takeFileData(Archive* archive, int fileId) {
     return res;
 }
 
-static Str loadFromFile(Fb2Doc* doc) {
-    Archive* archive = OpenArchiveFromFile(doc->fileName, /*eagerLoad=*/true, gArchiveProgressCb);
-    if (!archive) {
-        return file::ReadFile(doc->fileName);
-    }
-
+static Str ReadFb2Archive(Fb2Doc* doc, Archive* archive) {
     AutoDelete delArchive(archive);
-
-    // we have archive with more than 1 file
     doc->isZipped = true;
     const auto& fileInfos = archive->GetFileInfos();
-    int nFiles = len(fileInfos);
-
-    if (nFiles == 0) {
+    if (len(fileInfos) == 0) {
         return {};
     }
-
-    if (nFiles == 1) {
+    if (len(fileInfos) == 1) {
         return takeFileData(archive, 0);
     }
 
+    // Multi-entry archives contain one FB2 and optional URL shortcuts.
     Str data;
-    // if the ZIP file contains more than one file, we try to be rather
-    // restrictive in what we accept in order not to accidentally accept
-    // too many archives which only contain FB2 files among others:
-    // the file must contain a single .fb2 file and may only contain
-    // .url files in addition (TODO: anything else?)
-    for (auto&& fileInfo : fileInfos) {
-        auto path = fileInfo->name;
-        if (str::EndsWithI(path, StrL(".fb2")) && len(data) == 0) {
-            data = takeFileData(archive, fileInfo->fileId);
-        } else if (!str::EndsWithI(path, StrL(".url"))) {
+    for (auto* info : fileInfos) {
+        if (str::EndsWithI(info->name, StrL(".fb2")) && len(data) == 0) {
+            data = takeFileData(archive, info->fileId);
+        } else if (!str::EndsWithI(info->name, StrL(".url"))) {
+            str::Free(data);
             return {};
         }
     }
     return data;
+}
+
+static Str loadFromFile(Fb2Doc* doc) {
+    Archive* archive = OpenArchiveFromFile(doc->fileName, /*eagerLoad=*/true, gArchiveProgressCb);
+    return archive ? ReadFb2Archive(doc, archive) : file::ReadFile(doc->fileName);
 }
 
 static bool LooksLikeZipOrRar(Str data) {
@@ -1100,28 +1072,7 @@ static Str loadFromData(Fb2Doc* doc, Str srcData) {
         return str::Dup(srcData);
     }
 
-    AutoDelete delArchive(archive);
-    doc->isZipped = true;
-    const auto& fileInfos = archive->GetFileInfos();
-    int nFiles = len(fileInfos);
-    if (nFiles == 0) {
-        return {};
-    }
-    if (nFiles == 1) {
-        return takeFileData(archive, 0);
-    }
-
-    Str data;
-    for (auto&& fileInfo : fileInfos) {
-        auto path = fileInfo->name;
-        if (str::EndsWithI(path, StrL(".fb2")) && len(data) == 0) {
-            data = takeFileData(archive, fileInfo->fileId);
-        } else if (!str::EndsWithI(path, StrL(".url"))) {
-            str::Free(data);
-            return {};
-        }
-    }
-    return data;
+    return ReadFb2Archive(doc, archive);
 }
 
 bool Fb2Doc::Load(Str srcData) {
@@ -1167,11 +1118,11 @@ bool Fb2Doc::Load(Str srcData) {
             hasToc = true;
         } else if (inBody) { // NOLINT(bugprone-branch-clone): skipping body content is its own case
             continue;
-        } else if (inTitleInfo && tok->IsEndTag() && tok->NameIsNS(StrL("title-info"), FB2_MAIN_NS())) {
+        } else if (inTitleInfo && tok->IsEndTag() && tok->NameIsNS(StrL("title-info"), kFb2MainNs)) {
             inTitleInfo--;
-        } else if (inDocInfo && tok->IsEndTag() && tok->NameIsNS(StrL("document-info"), FB2_MAIN_NS())) {
+        } else if (inDocInfo && tok->IsEndTag() && tok->NameIsNS(StrL("document-info"), kFb2MainNs)) {
             inDocInfo--;
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("book-title"), FB2_MAIN_NS())) {
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("book-title"), kFb2MainNs)) {
             tok = parser.Next();
             if (tok == nullptr || tok->IsError()) {
                 break;
@@ -1180,7 +1131,7 @@ bool Fb2Doc::Load(Str srcData) {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddPropOwned(props, DocProp::Title, val);
             }
-        } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS(StrL("author"), FB2_MAIN_NS())) {
+        } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS(StrL("author"), kFb2MainNs)) {
             // an FB2 <author> is structured: first-name / middle-name / last-name
             // next to home-page / email / id, which are not part of the name.
             // Taking every text node would give "Ivan Petrov https://... ivan@..."
@@ -1193,14 +1144,14 @@ bool Fb2Doc::Load(Str srcData) {
                 return cur ? str::JoinTemp(cur, StrL(" "), add) : add;
             };
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
-                   !(tok->IsEndTag() && tok->NameIsNS(StrL("author"), FB2_MAIN_NS()))) {
+                   !(tok->IsEndTag() && tok->NameIsNS(StrL("author"), kFb2MainNs))) {
                 if (tok->IsStartTag() || tok->IsEndTag()) {
-                    bool isName = tok->NameIsNS(StrL("first-name"), FB2_MAIN_NS()) ||
-                                  tok->NameIsNS(StrL("middle-name"), FB2_MAIN_NS()) ||
-                                  tok->NameIsNS(StrL("last-name"), FB2_MAIN_NS());
+                    bool isName = tok->NameIsNS(StrL("first-name"), kFb2MainNs) ||
+                                  tok->NameIsNS(StrL("middle-name"), kFb2MainNs) ||
+                                  tok->NameIsNS(StrL("last-name"), kFb2MainNs);
                     if (isName) {
                         inNamePart = tok->IsStartTag();
-                    } else if (tok->NameIsNS(StrL("nickname"), FB2_MAIN_NS())) {
+                    } else if (tok->NameIsNS(StrL("nickname"), kFb2MainNs)) {
                         inNickname = tok->IsStartTag();
                     }
                     continue;
@@ -1230,19 +1181,19 @@ bool Fb2Doc::Load(Str srcData) {
                     }
                 }
             }
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), FB2_MAIN_NS())) {
-            AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), FB2_MAIN_NS());
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), kFb2MainNs)) {
+            AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), kFb2MainNs);
             if (attr) {
                 TempStr val = ResolveHtmlEntitiesTemp(attr->val);
                 AddPropOwned(props, DocProp::CreationDate, val);
             }
-        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), FB2_MAIN_NS())) {
-            AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), FB2_MAIN_NS());
+        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), kFb2MainNs)) {
+            AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), kFb2MainNs);
             if (attr) {
                 TempStr val = ResolveHtmlEntitiesTemp(attr->val);
                 AddPropOwned(props, DocProp::ModificationDate, val);
             }
-        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("program-used"), FB2_MAIN_NS())) {
+        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("program-used"), kFb2MainNs)) {
             tok = parser.Next();
             if (tok == nullptr || tok->IsError()) {
                 break;
@@ -1251,23 +1202,23 @@ bool Fb2Doc::Load(Str srcData) {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddPropOwned(props, DocProp::CreatorApp, val);
             }
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("coverpage"), FB2_MAIN_NS())) {
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("coverpage"), kFb2MainNs)) {
             tok = parser.Next();
             if (tok && tok->IsText()) {
                 tok = parser.Next();
             }
             if (tok && tok->IsEmptyElementEndTag() && Tag_Image == tok->tag) {
-                AttrInfo* attr = tok->GetAttrByNameNS(StrL("href"), FB2_XLINK_NS());
+                AttrInfo* attr = tok->GetAttrByNameNS(StrL("href"), kFb2XlinkNs);
                 if (attr) {
                     str::ReplaceWithCopy(&coverImage, attr->val);
                 }
             }
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("annotation"), FB2_MAIN_NS())) {
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("annotation"), kFb2MainNs)) {
             // FB2 annotation is nested markup (often one or more <p>); collect all text for
             // Document Properties (Ctrl+D) as Subject.
             TempStr annotation;
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
-                   !(tok->IsEndTag() && tok->NameIsNS(StrL("annotation"), FB2_MAIN_NS()))) {
+                   !(tok->IsEndTag() && tok->NameIsNS(StrL("annotation"), kFb2MainNs))) {
                 if (tok->IsText()) {
                     TempStr part = ResolveHtmlEntitiesTemp(tok->s);
                     if (annotation) {
@@ -1285,11 +1236,11 @@ bool Fb2Doc::Load(Str srcData) {
             }
         } else if (inTitleInfo || inDocInfo) {
             continue;
-        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("title-info"), FB2_MAIN_NS())) {
+        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("title-info"), kFb2MainNs)) {
             inTitleInfo++;
-        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("document-info"), FB2_MAIN_NS())) {
+        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("document-info"), kFb2MainNs)) {
             inDocInfo++;
-        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("binary"), FB2_MAIN_NS())) {
+        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("binary"), kFb2MainNs)) {
             ExtractImage(&parser, tok);
         }
     }
@@ -1299,7 +1250,7 @@ bool Fb2Doc::Load(Str srcData) {
 
 void Fb2Doc::ExtractImage(GumboHtmlParser* parser, HtmlToken* tok) {
     TempStr id;
-    AttrInfo* attrInfo = tok->GetAttrByNameNS(StrL("id"), FB2_MAIN_NS());
+    AttrInfo* attrInfo = tok->GetAttrByNameNS(StrL("id"), kFb2MainNs);
     if (attrInfo) {
         id = url::DecodeTemp(attrInfo->val);
     }
@@ -1401,12 +1352,7 @@ bool Fb2Doc::IsSupportedFileType(FileType kind) {
 }
 
 Fb2Doc* Fb2Doc::CreateFromFile(Str path) {
-    Fb2Doc* doc = new Fb2Doc(path);
-    if (!doc || !doc->Load()) {
-        delete doc;
-        return {};
-    }
-    return doc;
+    return LoadEbook<Fb2Doc>(path);
 }
 
 Fb2Doc* Fb2Doc::CreateFromData(Str data) {
@@ -1582,12 +1528,7 @@ bool PalmDoc::IsSupportedFileType(FileType kind) {
 }
 
 PalmDoc* PalmDoc::CreateFromFile(Str path) {
-    PalmDoc* doc = new PalmDoc(path);
-    if (!doc || !doc->Load()) {
-        delete doc;
-        return {};
-    }
-    return doc;
+    return LoadEbook<PalmDoc>(path);
 }
 
 /* ********** Plain HTML ********** */
@@ -1709,12 +1650,7 @@ bool HtmlDoc::IsSupportedFileType(FileType kind) {
 }
 
 HtmlDoc* HtmlDoc::CreateFromFile(Str path) {
-    HtmlDoc* doc = new HtmlDoc(path);
-    if (!doc || !doc->Load()) {
-        delete doc;
-        return {};
-    }
-    return doc;
+    return LoadEbook<HtmlDoc>(path);
 }
 
 /* ********** Plain Text (and RFCs and TCR) ********** */
@@ -2069,60 +2005,75 @@ bool TxtDoc::IsSupportedFileType(FileType kind) {
 }
 
 TxtDoc* TxtDoc::CreateFromFile(Str path) {
-    TxtDoc* doc = new TxtDoc(path);
-    if (!doc || !doc->Load()) {
-        delete doc;
-        return {};
-    }
-    return doc;
+    return LoadEbook<TxtDoc>(path);
 }
 
 #if IS_DEBUG
+bool EbookDoc_UnitTestLoading() {
+    Str xml = StrL("<FictionBook><body><section><p>Shared loading</p></section></body></FictionBook>");
+    TempStr path = GetTempFilePathTemp(StrL("ebook-loading-"));
+    AutoCall removeFile(file::Delete, path);
+    AutoDelete plain(Fb2Doc::CreateFromData(xml));
+    if (!plain || !file::WriteFile(path, xml)) {
+        return false;
+    }
+    AutoDelete plainFile(Fb2Doc::CreateFromFile(path));
+    if (!plainFile) {
+        return false;
+    }
+
+    const struct {
+        SeqStrings names;
+        bool valid;
+    } cases[] = {
+        {"book.fb2\0", true},
+        {"book.txt\0", true},
+        {"book.fb2\0info.url\0", true},
+        {"info.url\0book.fb2\0", true},
+        {"book.fb2\0other.fb2\0", false},
+        {"book.fb2\0other.txt\0", false},
+        {"other.txt\0info.url\0", false},
+    };
+    for (const auto& c : cases) {
+        str::Builder zip;
+        ZipCreator creator(zip);
+        for (Str name = SeqStrFirst(c.names); name; name = SeqStrNext(name)) {
+            if (!creator.AddFileData(name, xml)) {
+                return false;
+            }
+        }
+        if (!creator.Finish() || !file::WriteFile(path, ToStr(zip))) {
+            return false;
+        }
+        AutoDelete dataDoc(Fb2Doc::CreateFromData(ToStr(zip)));
+        AutoDelete fileDoc(Fb2Doc::CreateFromFile(path));
+        if ((dataDoc.o != nullptr) != c.valid || (fileDoc.o != nullptr) != c.valid) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // issue #5846: consecutive ../../ must fully resolve
 bool EbookDoc_UnitTestNormalizeURL() {
-    auto eq = [](Str url, Str base, Str expected) -> bool { return str::Eq(NormalizeURLTemp(url, base), expected); };
-    auto eql = [&](const char* url, const char* base, const char* expected) -> bool {
-        return eq(Str(url), Str(base), Str(expected));
+    const Str cases[][3] = {
+        {StrL("../../cover.jpg"), StrL("OEBPS/html/titlepage.xhtml"), StrL("cover.jpg")},
+        {StrL("../../root.jpg"), StrL("OEBPS/html/page.xhtml"), StrL("root.jpg")},
+        {StrL("../../img/c.jpg"), StrL("a/b/p.xhtml"), StrL("img/c.jpg")},
+        {StrL("../../../c.jpg"), StrL("a/b/x/p.xhtml"), StrL("c.jpg")},
+        {StrL("../ok.jpg"), StrL("OEBPS/html/page.xhtml"), StrL("OEBPS/ok.jpg")},
+        {StrL("../Images/x.jpg"), StrL("OEBPS/Text/y.xhtml"), StrL("OEBPS/Images/x.jpg")},
+        {StrL("text/../cover.jpg"), StrL("page.xhtml"), StrL("cover.jpg")},
+        {StrL("./y"), StrL("x/z"), StrL("x/y")},
+        {StrL("../../b"), StrL("a/c.xhtml"), StrL("b")},
+        {StrL("/abs/path"), StrL("OEBPS/html/p.xhtml"), StrL("/abs/path")},
+        {StrL("http://example.com/x"), StrL("OEBPS/html/p.xhtml"), StrL("http://example.com/x")},
+        {StrL("#frag"), StrL("OEBPS/html/p.xhtml#old"), StrL("OEBPS/html/p.xhtml#frag")},
     };
-    // consecutive parent segments from OEBPS/html/ (EPUB cover layout)
-    if (!eql("../../cover.jpg", "OEBPS/html/titlepage.xhtml", "cover.jpg")) {
-        return false;
-    }
-    if (!eql("../../root.jpg", "OEBPS/html/page.xhtml", "root.jpg")) {
-        return false;
-    }
-    if (!eql("../../img/c.jpg", "a/b/p.xhtml", "img/c.jpg")) {
-        return false;
-    }
-    if (!eql("../../../c.jpg", "a/b/x/p.xhtml", "c.jpg")) {
-        return false;
-    }
-    // single ../ still works
-    if (!eql("../ok.jpg", "OEBPS/html/page.xhtml", "OEBPS/ok.jpg")) {
-        return false;
-    }
-    if (!eql("../Images/x.jpg", "OEBPS/Text/y.xhtml", "OEBPS/Images/x.jpg")) {
-        return false;
-    }
-    if (!eql("text/../cover.jpg", "page.xhtml", "cover.jpg")) {
-        return false;
-    }
-    // ./ collapse and over-pop
-    if (!eql("./y", "x/z", "x/y")) {
-        return false;
-    }
-    if (!eql("../../b", "a/c.xhtml", "b")) {
-        return false;
-    }
-    // absolute / scheme URLs left alone
-    if (!eql("/abs/path", "OEBPS/html/p.xhtml", "/abs/path")) {
-        return false;
-    }
-    if (!eql("http://example.com/x", "OEBPS/html/p.xhtml", "http://example.com/x")) {
-        return false;
-    }
-    if (!eql("#frag", "OEBPS/html/p.xhtml#old", "OEBPS/html/p.xhtml#frag")) {
-        return false;
+    for (const auto& c : cases) {
+        if (!str::Eq(NormalizeURLTemp(c[0], c[1]), c[2])) {
+            return false;
+        }
     }
     return true;
 }

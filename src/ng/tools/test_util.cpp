@@ -56,6 +56,7 @@ extern bool MarkdownToc_UnitTestHtmlLinks();
 extern bool MarkdownToc_UnitTestHtmlHeadings();
 extern bool MarkdownToc_UnitTestMermaid();
 #if IS_DEBUG
+extern bool EbookDoc_UnitTestLoading();
 extern bool Accelerators_UnitTestFolderNavIsSafe();
 extern bool NavFiles_UnitTestHidden();
 #if !OS_WIN
@@ -186,6 +187,7 @@ int main(int argc, char** argv) {
     utassert(MarkdownToc_UnitTestMermaid());
 #if IS_DEBUG
     utassert(Accelerators_UnitTestFolderNavIsSafe());
+    utassert(EbookDoc_UnitTestLoading());
     utassert(NavFiles_UnitTestHidden());
 #if !OS_WIN
     utassert(MeasurementSystem_UnitTests());
