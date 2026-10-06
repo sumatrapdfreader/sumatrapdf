@@ -550,40 +550,15 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
 }
 
 constexpr u32 kEofRec = 0xe98e0d0a;
-constexpr int kFlisRec = 0x464c4953; // 'FLIS'
-constexpr int kFcisRec = 0x46434953; // 'FCIS
-constexpr int kFdstRec = 0x46445354; // 'FDST'
-constexpr int kDatpRec = 0x44415450; // 'DATP'
-constexpr int kSrcsRec = 0x53524353; // 'SRCS'
-constexpr int kVideRec = 0x56494445; // 'VIDE'
-constexpr int kRescRec = 0x52455343; // 'RESC'
 
 static bool IsEofRecord(Str d) {
     return (4 == d.len) && (kEofRec == UInt32BE((u8*)d.s));
 }
 
 static bool KnownNonImageRec(Str d) {
-    if (d.len < 4) {
-        return false;
-    }
-    u32 sig = UInt32BE((u8*)d.s);
-
-    switch (sig) {
-        case kFlisRec:
-        case kFcisRec:
-        case kFdstRec:
-        case kDatpRec:
-        case kSrcsRec:
-        case kVideRec:
-        case kRescRec:
-            return true;
-    }
-    return false;
-}
-
-static bool KnownImageFormat(Str d) {
-    FileType kind = GuessFileTypeFromData(d);
-    return kind != FileType::Unknown;
+    constexpr SeqStrings tags = "FLIS\0FCIS\0FDST\0DATP\0SRCS\0VIDE\0RESC\0";
+    constexpr int kTagLen = 4;
+    return len(d) >= kTagLen && SeqStrIndex(tags, Str(d.s, kTagLen)) >= 0;
 }
 
 // return false if we should stop loading images (because we
@@ -601,7 +576,7 @@ bool MobiDoc::LoadImage(int imageNo) {
     if (KnownNonImageRec(rec)) {
         return true;
     }
-    if (!KnownImageFormat(rec)) {
+    if (GuessFileTypeFromData(rec) == FileType::Unknown) {
         u32 sig = UInt32BE((u8*)rec.s);
         logf("MobiDoc::LoadImage: unknown record type 0x%08X\n", sig);
         return true;
