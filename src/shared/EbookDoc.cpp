@@ -1208,9 +1208,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text)
         if (!attr) {
             goto Fallback;
         }
-        builder.Append(fmt("<h%d>", hx));
-        builder.Append(attr.val);
-        builder.Append(fmt("</h%d>", hx));
+        builder.Append(fmt("<h%d>%s</h%d>", hx, attr.val, hx));
     } else if (tok->NameIs(StrL("HRULE"))) {
         // <HRULE STYLE=OUTLINE>
         builder.Append(StrL("<hr>"));
@@ -1220,9 +1218,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text)
         if (!attr || len(attr.val) == 0) {
             goto Fallback;
         }
-        builder.Append(StrL("<a name=\""));
-        builder.Append(attr.val);
-        builder.Append(StrL("\">"));
+        builder.Append(fmt("<a name=\"%s\">", attr.val));
     } else if (tok->NameIs(StrL("LINK"))) {
         // <LINK TEXT="Press Me" TAG="Contents" FILE="My Novels">
         AttrInfo attrTag = tok->GetAttrByName(StrL("TAG"));
@@ -1232,11 +1228,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text)
         }
         // Skip links to other files.
         if (!tok->GetAttrByName(StrL("FILE"))) {
-            builder.Append(StrL("<a href=\"#"));
-            builder.Append(attrTag.val);
-            builder.Append(StrL("\">"));
-            builder.Append(attrText.val);
-            builder.Append(StrL("</a>"));
+            builder.Append(fmt("<a href=\"#%s\">%s</a>", attrTag.val, attrText.val));
         }
     } else if (!tok->NameIs(StrL("TEALPAINT"))) {
         goto Fallback;
