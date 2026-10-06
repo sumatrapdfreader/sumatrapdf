@@ -70,16 +70,12 @@ int FindClosestGlyphIn(EngineBase* engine, int pageNo, Rect* coords, QuadF* quad
             cy = coord.y + (coord.dy / 2);
         }
         uint dist = distSq((int)x - cx, (int)y - cy);
-        if (dist < maxDist) {
+        // Prefer containing glyphs, then the nearest center.
+        if (dist < maxDist || (!overGlyph && inside)) {
             result = i;
             maxDist = dist;
         }
-        // prefer glyphs the cursor is actually over
-        if (!overGlyph && inside) {
-            overGlyph = true;
-            result = i;
-            maxDist = dist;
-        }
+        overGlyph = overGlyph || inside;
     }
 
     if (-1 == result) {
@@ -135,12 +131,12 @@ int FindClosestGlyphIn(EngineBase* engine, int pageNo, Rect* coords, QuadF* quad
     return result;
 }
 
-static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
+int TextSelection::FindClosestGlyphAt(int pageNo, double x, double y) {
     Rect* coords;
     QuadF* quads = nullptr;
     int textLen = 0;
-    ts->engine->GetTextForPage(pageNo, &textLen, &coords, &quads);
-    return FindClosestGlyphIn(ts->engine, pageNo, coords, quads, textLen, x, y);
+    engine->GetTextForPage(pageNo, &textLen, &coords, &quads);
+    return FindClosestGlyphIn(engine, pageNo, coords, quads, textLen, x, y);
 }
 
 // Dehyphenation removes both the trailing hyphen and the line-separator glyph,
@@ -277,7 +273,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
         return false;
     }
 
-    int glyphIx = FindClosestGlyph(this, pageNo, x, y);
+    int glyphIx = FindClosestGlyphAt(pageNo, x, y);
     PointF ptf((float)x, (float)y);
     Point pt = ToPoint(ptf);
     auto contains = [&](int i) -> bool {
@@ -286,7 +282,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
         }
         return GlyphContains(coords[i], quads, i, ptf, pt);
     };
-    // when over the right half of a glyph, FindClosestGlyph returns the
+    // when over the right half of a glyph, FindClosestGlyphAt returns the
     // index of the next glyph, in which case glyphIx must be decremented
     if (glyphIx == textLen || !contains(glyphIx)) {
         glyphIx--;
@@ -295,12 +291,6 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
         return false;
     }
     return contains(glyphIx);
-}
-
-// index of the glyph closest to (x, y) on pageNo, without mutating the
-// selection (unlike StartAt, which stores it in startGlyph)
-int TextSelection::FindClosestGlyphAt(int pageNo, double x, double y) {
-    return FindClosestGlyph(this, pageNo, x, y);
 }
 
 void TextSelection::StartAt(int pageNo, int glyphIx) {
@@ -314,11 +304,11 @@ void TextSelection::StartAt(int pageNo, int glyphIx) {
 }
 
 void TextSelection::StartAt(int pageNo, double x, double y) {
-    StartAt(pageNo, FindClosestGlyph(this, pageNo, x, y));
+    StartAt(pageNo, FindClosestGlyphAt(pageNo, x, y));
 }
 
 void TextSelection::SelectUpTo(int pageNo, double x, double y) {
-    SelectUpTo(pageNo, FindClosestGlyph(this, pageNo, x, y));
+    SelectUpTo(pageNo, FindClosestGlyphAt(pageNo, x, y));
 }
 
 void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
@@ -387,7 +377,7 @@ static int ExtendAcrossCommaGroups(Str text, int textLen, int pos, int dir) {
 }
 
 void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordStartOut, int* wordEndOut) {
-    int i = FindClosestGlyph(this, pageNo, x, y);
+    int i = FindClosestGlyphAt(pageNo, x, y);
     int textLen = 0;
     Str text = engine->GetTextForPage(pageNo, &textLen);
 
@@ -472,7 +462,7 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
 
 // select the whole line of text at (x, y) (triple-click; issue #694)
 void TextSelection::SelectLineAt(int pageNo, double x, double y) {
-    int i = FindClosestGlyph(this, pageNo, x, y);
+    int i = FindClosestGlyphAt(pageNo, x, y);
     if (i < 0) {
         return;
     }
