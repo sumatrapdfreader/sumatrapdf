@@ -127,17 +127,11 @@ u32 PdfDarkModeComputeOptionsHash() {
 }
 
 bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBounds) {
-    if (imgRect.IsEmpty() || pageBounds.IsEmpty()) {
-        return false;
-    }
     float w = imgRect.dx;
     float h = imgRect.dy;
-    if (w <= 0.f || h <= 0.f) {
-        return false;
-    }
     float pageW = pageBounds.dx;
     float pageH = pageBounds.dy;
-    if (pageW <= 0.f || pageH <= 0.f) {
+    if (w <= 0.f || h <= 0.f || pageW <= 0.f || pageH <= 0.f) {
         return false;
     }
 
@@ -147,16 +141,6 @@ bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBo
     float maxDim = w > h ? w : h;
     float aspect = minDim / maxDim;
 
-    // Tall narrow or wide shallow strips (spiral margins, side shadows).
-    if (aspect < 0.22f) {
-        return true;
-    }
-    // Edge-aligned column/row spanning a substantial part of the page.
-    if (wFrac < 0.20f && hFrac > 0.30f) {
-        return true;
-    }
-    if (hFrac < 0.20f && wFrac > 0.30f) {
-        return true;
-    }
-    return false;
+    // Narrow strips or thin columns/rows spanning a substantial part of the page.
+    return aspect < 0.22f || (wFrac < 0.20f && hFrac > 0.30f) || (hFrac < 0.20f && wFrac > 0.30f);
 }
