@@ -17,16 +17,6 @@
 
 namespace lzsa {
 
-struct ISzCrtAlloc : ISzAlloc {
-    static void* _Alloc(__unused void* p, size_t size) { return malloc(size); }
-    static void _Free(__unused void* p, void* ptr) { free(ptr); }
-
-    ISzCrtAlloc() {
-        this->Alloc = _Alloc;
-        this->Free = _Free;
-    }
-};
-
 constexpr int kLzmaMagicId = 0x41537a4c;
 constexpr int kLzmaHeaderSize = 1 + LZMA_PROPS_SIZE;
 
@@ -37,7 +27,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
     size_t lzma_size = (size_t)-1;
 
     if (*compressedSize >= kLzmaHeaderSize) {
-        ISzCrtAlloc lzmaAlloc;
+        ISzAlloc lzmaAlloc{[](void*, size_t size) { return malloc(size); }, [](void*, void* ptr) { free(ptr); }};
         CLzmaEncProps props;
         LzmaEncProps_Init(&props);
 
