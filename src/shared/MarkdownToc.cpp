@@ -30,7 +30,7 @@ static bool IsCollectedExt(Str path, bool htmlMode) {
     return htmlMode ? IsHtmlExt(path) : IsMarkdownExt(path);
 }
 
-static void CollectMdInDir(Str dir, bool htmlMode, StrVec& out) {
+static void CollectMdInDir(Str dir, bool htmlMode, int depth, StrVec& out) {
     DirIter di(dir);
     di.includeFiles = true;
     di.includeDirs = false;
@@ -40,6 +40,17 @@ static void CollectMdInDir(Str dir, bool htmlMode, StrVec& out) {
             continue;
         }
         out.Append(de->filePath);
+    }
+    if (depth == 0) {
+        return;
+    }
+
+    di.includeFiles = false;
+    di.includeDirs = true;
+    for (DirIterEntry* de : di) {
+        if (IsDirectory(de)) {
+            CollectMdInDir(de->filePath, htmlMode, depth - 1, out);
+        }
     }
 }
 
@@ -54,29 +65,8 @@ void CollectMarkdownFiles(Str baseDir, Str openedFile, bool htmlMode, StrVec& fi
         return;
     }
 
-    CollectMdInDir(baseDir, htmlMode, filesOut);
-
-    DirIter di(baseDir);
-    di.includeFiles = false;
-    di.includeDirs = true;
-    di.recurse = false;
-    for (DirIterEntry* de : di) {
-        if (!IsDirectory(de)) {
-            continue;
-        }
-        CollectMdInDir(de->filePath, htmlMode, filesOut);
-
-        DirIter di2(de->filePath);
-        di2.includeFiles = false;
-        di2.includeDirs = true;
-        di2.recurse = false;
-        for (DirIterEntry* de2 : di2) {
-            if (!IsDirectory(de2)) {
-                continue;
-            }
-            CollectMdInDir(de2->filePath, htmlMode, filesOut);
-        }
-    }
+    constexpr int kMaxTocDirDepth = 2;
+    CollectMdInDir(baseDir, htmlMode, kMaxTocDirDepth, filesOut);
 
     if (openedFile) {
         bool found = false;
