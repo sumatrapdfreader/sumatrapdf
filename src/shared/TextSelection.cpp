@@ -647,9 +647,6 @@ static bool MoveFreeEndByWord(EngineBase* engine, int& page, int& glyph, int dir
         return MoveFreeEndByGlyph(engine, page, glyph, dir);
     }
     auto charAt = [&](int ix) -> int {
-        if (ix < 0 || ix >= textLen) {
-            return 0;
-        }
         int byteIdx = Utf8CodepointToByteIndex(text, ix);
         int next = byteIdx;
         return Utf8CodepointNext(text, next);
@@ -664,14 +661,10 @@ static bool MoveFreeEndByWord(EngineBase* engine, int& page, int& glyph, int dir
     }
     // the character we are moving toward decides whether we're still in a word
     while (glyph > 0 && glyph < textLen && !isWordChar(charAt(dir < 0 ? glyph - 1 : glyph))) {
-        if (!MoveFreeEndByGlyph(engine, page, glyph, dir) || page != fromPage) {
-            break;
-        }
+        glyph += dir;
     }
     while (glyph > 0 && glyph < textLen && isWordChar(charAt(dir < 0 ? glyph - 1 : glyph))) {
-        if (!MoveFreeEndByGlyph(engine, page, glyph, dir) || page != fromPage) {
-            break;
-        }
+        glyph += dir;
     }
     return true;
 }
