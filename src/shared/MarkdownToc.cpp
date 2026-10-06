@@ -626,11 +626,6 @@ Str MarkdownToHtmlPage(Str markdown) {
         return {};
     }
 
-    str::Builder rewritten;
-    int nMermaid = RewriteMermaidCodeBlocks(rewritten, Str(body));
-    cmark_mem* mem = cmark_get_default_mem_allocator();
-    mem->free(body);
-
     str::Builder html;
     html.Append(
         StrL("<!DOCTYPE html><html><head><meta charset=\"utf-8\">"
@@ -638,7 +633,10 @@ Str MarkdownToHtmlPage(Str markdown) {
              "<style>"));
     html.Append(Str(MarkdownPageCssTemp()));
     html.Append(StrL("</style></head><body>"));
-    html.Append(ToStr(rewritten));
+    int nMermaid = RewriteMermaidCodeBlocks(html, Str(body));
+    cmark_mem* mem = cmark_get_default_mem_allocator();
+    mem->free(body);
+
     // Mermaid diagrams need JS (WebView2). Fixed-page MuPDF path has no scripts.
     if (nMermaid > 0) {
         html.Append(Str(kMermaidBootstrap, (int)(sizeof(kMermaidBootstrap) - 1)));
