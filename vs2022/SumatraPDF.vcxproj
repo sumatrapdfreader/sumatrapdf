@@ -2085,7 +2085,6 @@
     <ClCompile Include="..\src\gui\GuiColors.cpp" />
     <ClCompile Include="..\src\gui\Layout.cpp" />
     <ClCompile Include="..\src\gui\PasswordDialog.cpp" />
-    <ClCompile Include="..\src\gui\PlatformFont.cpp" />
     <ClCompile Include="..\src\gui\PlatformText.cpp" />
     <ClCompile Include="..\src\gui\UiPlatform.cpp" />
     <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
@@ -2199,6 +2198,7 @@
     <ClCompile Include="..\src\shared\TextSelection.cpp" />
     <ClCompile Include="..\src\shared\TranslationLangs.cpp" />
     <ClCompile Include="..\src\shared\WebpReader.cpp" />
+    <ClCompile Include="..\src\shared\gui\PlatformFont.cpp" />
     <ClCompile Include="..\src\shared\gui\UIModels.cpp" />
     <ClCompile Include="..\src\shared\tests\AnnotSearch_ut.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

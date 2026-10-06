@@ -106,9 +106,6 @@
     <ClCompile Include="..\src\base\Archive.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\PlatformFont.cpp">
-      <Filter>gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\PlatformText.cpp">
       <Filter>gui</Filter>
     </ClCompile>
@@ -156,6 +153,9 @@
     </ClCompile>
     <ClCompile Include="..\src\shared\WebpReader.cpp">
       <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\gui\PlatformFont.cpp">
+      <Filter>shared\gui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

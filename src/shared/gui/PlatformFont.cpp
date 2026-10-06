@@ -39,10 +39,7 @@ bool PlatformFont::SameAs(Str otherName, float otherSizePt, PlatformFontStyle ot
 }
 
 static PlatformFont* GetPlatformFontInternal(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId) {
-    gPlatformFontsMutex.Lock();
-    defer {
-        gPlatformFontsMutex.Unlock();
-    };
+    ScopedMutex lock(&gPlatformFontsMutex);
 
     for (PlatformFont* font = gPlatformFonts.next; font; font = font->next) {
         if (nativeId ? font->nativeId == nativeId : font->nativeId == 0 && font->SameAs(name, sizePt, style)) {
@@ -88,8 +85,6 @@ PlatformFont* GetPlatformFontForNative(Str name, float sizePt, PlatformFontStyle
 using Gdiplus::Font;
 using Gdiplus::Ok;
 using Gdiplus::Status;
-
-PlatformFont* GetPlatformFontForNative(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId);
 
 // the Graphics used for font metrics doesn't draw anything, so its bitmap can
 // be tiny

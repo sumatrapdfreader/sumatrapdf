@@ -211,6 +211,7 @@ export const sharedFiles = [
   "src/shared/gfx/pdf-32bit.ico",
   "src/shared/gui/Dpi.cpp",
   "src/shared/gui/Dpi.h",
+  "src/shared/gui/PlatformFont.cpp",
   "src/shared/gui/PlatformFont.h",
   "src/shared/gui/UIModels.cpp",
   "src/shared/gui/UIModels.h",
