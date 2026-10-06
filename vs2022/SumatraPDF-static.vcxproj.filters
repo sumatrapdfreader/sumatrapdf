@@ -839,9 +839,6 @@
     <ClCompile Include="..\src\MarkdownModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\MarkdownToc.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Menu.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1224,6 +1221,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\LitDoc.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\MarkdownToc.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\MobiDoc.cpp">

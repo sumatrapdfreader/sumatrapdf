@@ -140,6 +140,7 @@ export const sharedFiles = [
   "src/shared/JxlReader.h",
   "src/shared/LitDoc.cpp",
   "src/shared/LitDoc.h",
+  "src/shared/MarkdownToc.cpp",
   "src/shared/MarkdownToc.h",
   "src/shared/MobiDoc.cpp",
   "src/shared/MobiDoc.h",

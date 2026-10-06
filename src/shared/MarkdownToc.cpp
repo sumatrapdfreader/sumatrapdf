@@ -390,7 +390,6 @@ void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc
         auto fn = MkFunc0(MdTocParseWorker, &ctx);
         VecAppend(threads, StartThread(fn, StrL("MdTocParse")));
     }
-    // ng: portable join (orig: WaitForSingleObject + SafeCloseThreadHandle)
     for (ThreadHandle& h : threads) {
         JoinThread(&h, -1);
     }
@@ -505,7 +504,6 @@ static const char kMermaidBootstrap[] = R"HTML(
 </script>
 )HTML";
 
-// ng: GetRValue() and friends are win32 macros; base has the same three
 static TempStr ColorToCssTemp(Color c) {
     return fmt("#%02x%02x%02x", (int)GetRed(c), (int)GetGreen(c), (int)GetBlue(c));
 }
@@ -855,8 +853,6 @@ bool MarkdownToc_UnitTestHtmlLinks() {
     mem->free(body);
     return linksOk && anchorsOk;
 }
-
-void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut);
 
 bool MarkdownToc_UnitTestHtmlHeadings() {
     Str html = StrL(
