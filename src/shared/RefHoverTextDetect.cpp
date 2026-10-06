@@ -344,22 +344,11 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         return false;
     }
 
-    // Build surname string (author names are short).
-    WCHAR surnameScratch[128]{};
-    wstr::Builder surnameW;
-    wstr::BuilderUseExternalBuffer(surnameW, WStr(surnameScratch, dimofi(surnameScratch)));
-    for (int j = surnameStart; j < surnameEnd; j++) {
-        surnameW.AppendChar(s.s[j]);
+    WStr surname(s.s + surnameStart, surnameEnd - surnameStart);
+    while (len(surname) > 0 && wstr::ContainsChar(WStrL(L" .,"), surname.s[len(surname) - 1])) {
+        surname.len--;
     }
-    while (len(surnameW) > 0) {
-        WCHAR last = surnameW.LastChar();
-        if (last == L' ' || last == L'.' || last == L',') {
-            surnameW.RemoveLast();
-        } else {
-            break;
-        }
-    }
-    if (len(surnameW) < 2) {
+    if (len(surname) < 2) {
         return false;
     }
 
@@ -369,7 +358,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         // reposition the popup instead of sharing a line-only y/dy key.
         *srcRectOut = CitationSpanBounds(coords, textLen, chunkGlyphs, surnameStart, bestYearPos + 4);
     }
-    *surnameOut = ToUtf8(ToWStr(surnameW));
+    *surnameOut = ToUtf8(surname);
     *yearOut = year;
     return true;
 }
