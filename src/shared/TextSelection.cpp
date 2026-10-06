@@ -335,12 +335,8 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
     }
 
     VecClear(result);
-    int fromPage = std::min(startPage, endPage), toPage = std::max(startPage, endPage);
-    int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
-    int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
-    if (fromPage == toPage && fromGlyph > toGlyph) {
-        std::swap(fromGlyph, toGlyph);
-    }
+    int fromPage, fromGlyph, toPage, toGlyph;
+    GetGlyphRange(&fromPage, &fromGlyph, &toPage, &toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
         int textLen = 0;
