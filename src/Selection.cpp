@@ -670,10 +670,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
 
     isTextOnlySelectionOut = len(dm->textSelection->result) > 0;
     if (isTextOnlySelectionOut) {
-        Str s = dm->textSelection->ExtractText(lineSep);
-        TempStr res = str::DupTemp(s);
-        str::Free(s);
-        return res;
+        return dm->textSelection->ExtractTextTemp(lineSep);
     }
     StrVec selections;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {

@@ -828,11 +828,10 @@ void DocumentView::CopySelection() {
     if (!HasTextSelection()) {
         return;
     }
-    Str text = viewData->textSelection->ExtractText(StrL("\n"));
+    TempStr text = viewData->textSelection->ExtractTextTemp(StrL("\n"));
     if (text) {
         onCopyText.Call(text);
     }
-    str::Free(text);
 }
 
 void DocumentView::SelectAll() {

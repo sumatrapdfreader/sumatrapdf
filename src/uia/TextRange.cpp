@@ -599,11 +599,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
     selection.StartAt(startPage, startGlyph);
     selection.SelectUpTo(endPage, endGlyph);
 
-    Str selected_text = selection.ExtractText(StrL("\r\n"));
+    TempStr selected_text = selection.ExtractTextTemp(StrL("\r\n"));
 
     // -1 and [0, inf) are allowed
     if (maxLength < -1) {
-        str::Free(selected_text);
         return E_INVALIDARG;
     }
     if (maxLength != -1 && Utf8CodepointCount(selected_text) > maxLength) {
@@ -613,7 +612,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
     }
     TempWStr selectedTextW = ToWStrTemp(selected_text);
     *text = SysAllocString(selectedTextW.s);
-    str::Free(selected_text);
+
     return *text ? S_OK : E_OUTOFMEMORY;
 }
 

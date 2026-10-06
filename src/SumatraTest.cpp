@@ -963,13 +963,6 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
     return false;
 }
 
-static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
-    Str s = ts.ExtractText(StrL(" "));
-    TempStr res = str::DupTemp(s);
-    str::Free(s);
-    return res;
-}
-
 // Headless triple-click line-selection test (issue #5712). Loads the pdf, clicks
 // the middle of <clickWord>, runs the same TextSelection steps as a double-click
 // followed by a triple-click (without the mouse-up trim), and checks the result.
@@ -1008,14 +1001,14 @@ TempStr TripleClickLineSelectResultTemp(Str pdfPath, Str clickWord, Str expected
     TextSelection ts(engine);
     ts.SelectWordAt(pageNo, x, y);
     ts.SelectLineAt(pageNo, x, y);
-    TempStr selected = ExtractSelectionTextTemp(ts);
+    TempStr selected = ts.ExtractTextTemp(StrL(" "));
 
     // simulate the old mouse-up bug: re-selecting to the click point trims the line
     TextSelection trimmed(engine);
     trimmed.SelectWordAt(pageNo, x, y);
     trimmed.SelectLineAt(pageNo, x, y);
     trimmed.SelectUpTo(pageNo, x, y);
-    TempStr trimmedText = ExtractSelectionTextTemp(trimmed);
+    TempStr trimmedText = trimmed.ExtractTextTemp(StrL(" "));
     if (str::Eq(trimmedText, expectedLine)) {
         out.Append(fmt("ERROR trim-check-failed trimmed=%s\n", trimmedText));
         SafeEngineRelease(&engine);

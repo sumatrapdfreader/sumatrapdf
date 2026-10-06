@@ -425,9 +425,7 @@ void FindFirst(MainWindow* win) {
     // to find edit only if it's different from current text. Setting the text
     // triggers find-as-you-type via the bar's onTextChanged handler.
     if (!hadFindFocus && len(dm->textSelection->result) > 0) {
-        Str sel = dm->textSelection->ExtractText(StrL(" "));
-        TempStr selection = str::DupTemp(sel);
-        str::Free(sel);
+        TempStr selection = dm->textSelection->ExtractTextTemp(StrL(" "));
         selection.len -= str::NormalizeWSInPlace(selection);
         if (len(selection) > 0) {
             TempStr current = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};
@@ -753,9 +751,7 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
         return;
     }
 
-    Str sel = dm->textSelection->ExtractText(StrL(" "));
-    TempStr selection = str::DupTemp(sel);
-    str::Free(sel);
+    TempStr selection = dm->textSelection->ExtractTextTemp(StrL(" "));
     selection.len -= str::NormalizeWSInPlace(selection);
     if (len(selection) == 0) {
         return;

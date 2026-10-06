@@ -276,11 +276,11 @@ static bool SelectAllText(Str path) {
     TextSelection selection(engine);
     selection.StartAt(1, 0);
     selection.SelectUpTo(engine->PageCount(), -1);
-    Str text = selection.ExtractText(StrL("\n"));
+    TempStr text = selection.ExtractTextTemp(StrL("\n"));
     printf("selected bytes: %d\n", len(text));
     printf("selection rectangles: %d\n", len(selection.result));
     bool ok = len(text) > 0 && len(selection.result) > 0;
-    str::Free(text);
+
     engine->Release();
     return ok;
 }

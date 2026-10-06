@@ -44,7 +44,7 @@ struct TextSelection {
     void SelectWordsUpTo(int pageNo, double x, double y);
     bool ExtendBy(TextSelectUnit unit, int delta);
     void CopySelection(TextSelection* orig);
-    Str ExtractText(Str lineSep);
+    TempStr ExtractTextTemp(Str lineSep);
     void Reset();
 
     Vec<TextSel> result;
