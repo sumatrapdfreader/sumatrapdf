@@ -51,15 +51,11 @@ static thread_local int gInHook = 0;
 static thread_local int gPerfDepth = 0;
 static thread_local LARGE_INTEGER gStartStack[kMaxPerfDepth];
 
-static char HexDigit(u32 v) {
-    return "0123456789abcdef"[v & 15];
-}
-
 static int AppendHex(char* d, u64 v) {
     char tmp[16];
     int n = 0;
     do {
-        tmp[n++] = HexDigit((u32)v);
+        tmp[n++] = "0123456789abcdef"[v & 15];
         v >>= 4;
     } while (v);
     for (int i = 0; i < n; i++) {
