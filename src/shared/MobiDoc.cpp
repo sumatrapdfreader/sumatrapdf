@@ -1090,17 +1090,13 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
         return false;
     }
 
-    // there doesn't seem to be a standard for Mobi ToCs, so we try to
-    // determine the author's intentions by looking at commonly used tags
     Str docStr = ToStr(doc);
-    int tocLen = len(doc) - docTocIndex;
-    Str rest(docStr.s + docTocIndex, tocLen);
-    // walker stops at the first pagebreak; don't gumbo-parse the rest of the book
-    int pb = str::IndexOfI(rest, StrL("<mbp:pagebreak"));
+    Str tocSlice(docStr.s + docTocIndex, len(docStr) - docTocIndex);
+    // Stop at the first pagebreak rather than parsing the rest of the book.
+    int pb = str::IndexOfI(tocSlice, StrL("<mbp:pagebreak"));
     if (pb >= 0) {
-        tocLen = pb;
+        tocSlice.len = pb;
     }
-    Str tocSlice(docStr.s + docTocIndex, tocLen);
     GumboDoc toc(tocSlice, GumboMode::Html);
     if (!toc.Document()) {
         return false;
