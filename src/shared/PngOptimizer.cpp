@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/ByteReaderWriter.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
 #include "base/Timer.h"
@@ -42,12 +43,7 @@ static void BuildMarkerChunk(u8* buf) {
     buf[3] = (u8)n;
     memcpy(buf + 4, "tEXt", 4);
     memcpy(buf + 8, kMarkerPayload, kMarkerPayloadLen);
-    u32 crc = lodepng_crc32(buf + 4, 4 + kMarkerPayloadLen);
-    u8* p = buf + 8 + kMarkerPayloadLen;
-    p[0] = (u8)(crc >> 24);
-    p[1] = (u8)(crc >> 16);
-    p[2] = (u8)(crc >> 8);
-    p[3] = (u8)crc;
+    lodepng_chunk_generate_crc(buf);
 }
 
 // true if d starts with a PNG signature followed by an IHDR chunk
@@ -72,9 +68,7 @@ static i64 PngPixelCount(const u8* d, int n) {
         return 0;
     }
     const u8* p = d + 16; // signature + IHDR length + type
-    u32 w = ((u32)p[0] << 24) | ((u32)p[1] << 16) | ((u32)p[2] << 8) | p[3];
-    u32 h = ((u32)p[4] << 24) | ((u32)p[5] << 16) | ((u32)p[6] << 8) | p[7];
-    return (i64)w * h;
+    return (i64)UInt32BE(p) * UInt32BE(p + sizeof(u32));
 }
 
 static void SetZopfliOpts(CZopfliPNGOptions* opts, const u8* png, int n) {
