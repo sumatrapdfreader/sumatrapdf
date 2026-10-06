@@ -1265,13 +1265,12 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text)
 }
 
 bool PalmDoc::Load() {
-    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(fileName);
+    AutoDelete mobiDoc(MobiDoc::CreateFromFile(fileName));
     if (!mobiDoc) {
         return false;
     }
     auto docType = mobiDoc->GetDocType();
     if (docType != PdbDocType::PalmDoc && docType != PdbDocType::TealDoc && docType != PdbDocType::Plucker) {
-        delete mobiDoc;
         return false;
     }
 
@@ -1298,7 +1297,6 @@ bool PalmDoc::Load() {
         }
     }
 
-    delete mobiDoc;
     return true;
 }
 
