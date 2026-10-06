@@ -85,7 +85,7 @@ function addResources(text: string, path: string): string {
       // while a backslash before the config name is an escape (out\rel64
       // reads as out<CR>el64). "\.." and "/rel64" are both left alone.
       let deps = "";
-      let flags = "";
+      let flags = "/I../../src/shared";
       let pack = "";
       if (project === "SumatraPDF") {
         const stamp = `../../out/${config}/obj/SumatraPDF/SumatraPDF.prebuild`;
@@ -94,15 +94,15 @@ function addResources(text: string, path: string): string {
         const bin = bins.map((name) => `../../out/${config}/${name}`);
         pack = packArchiveEdge(text, project, archive, stamp, bin, packRules);
         deps = ` | ${archive}`;
-        flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out/${config}/embedded.lzsa`;
+        flags += ` /D EMBEDDED_PAK=.\\..\\..\\out/${config}/embedded.lzsa`;
       } else if (project === "SumatraPDF-static") {
         const stamp = `../../out/${config}/obj-s/SumatraPDF-static/SumatraPDF-static.prebuild`;
         const archive = `../../out/${config}/embedded-static.lzsa`;
         pack = packArchiveEdge(text, project, archive, stamp, [], packRules);
         deps = ` | ${archive}`;
-        flags = `\n  resflags = /D EMBEDDED_PAK=.\\..\\..\\out/${config}/embedded-static.lzsa`;
+        flags += ` /D EMBEDDED_PAK=.\\..\\..\\out/${config}/embedded-static.lzsa`;
       }
-      return `${pack}build ${resource}: rc_msc-v145 ${source}${deps}${flags}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
+      return `${pack}build ${resource}: rc_msc-v145 ${source}${deps}\n  resflags = ${flags}\nbuild ${output}${implicitOutputs ?? ""}: link_msc-v145 ${resource} ${inputs}`;
     });
   }
   return text;
