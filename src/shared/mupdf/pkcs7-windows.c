@@ -363,22 +363,14 @@ static pdf_signature_error windows_check_digest(fz_context* ctx, pdf_pkcs7_verif
 
 // ---- get_signatory -------------------------------------------------------
 
-// Copy a named attribute from the cert Subject into an fz-owned UTF-8
-// C string. Returns NULL when the attribute is empty or missing.
-//
-// We go via CertGetNameStringW (not ...A) because the ANSI variant
-// returns bytes in the active system code page -- e.g. a Portuguese
-// "Joao da Silva" signer with 'ã' / 'á' comes back as single-byte
-// 0xE3 / 0xE1, which then renders as mojibake once the rest of the
-// SumatraPDF UI treats it as UTF-8. Convert UTF-16 -> UTF-8 here so
-// callers get well-formed UTF-8 regardless of the signer's locale.
-static char* get_name_string(fz_context* ctx, PCCERT_CONTEXT cert, LPCSTR oid) {
-    DWORD n = CertGetNameStringW(cert, CERT_NAME_ATTR_TYPE, 0, (void*)oid, NULL, 0);
+// Return fz-owned UTF-8; the ANSI API would use the system code page.
+static char* get_cert_name(fz_context* ctx, PCCERT_CONTEXT cert, DWORD type, DWORD flags, LPCSTR oid) {
+    DWORD n = CertGetNameStringW(cert, type, flags, (void*)oid, NULL, 0);
     if (n <= 1) {
         return NULL;
     }
     WCHAR* wbuf = fz_malloc(ctx, n * sizeof(WCHAR));
-    CertGetNameStringW(cert, CERT_NAME_ATTR_TYPE, 0, (void*)oid, wbuf, n);
+    CertGetNameStringW(cert, type, flags, (void*)oid, wbuf, n);
     int u8len = WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, NULL, 0, NULL, NULL);
     if (u8len <= 1) {
         fz_free(ctx, wbuf);
@@ -388,6 +380,10 @@ static char* get_name_string(fz_context* ctx, PCCERT_CONTEXT cert, LPCSTR oid) {
     WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, u8len, NULL, NULL);
     fz_free(ctx, wbuf);
     return buf;
+}
+
+static char* get_name_string(fz_context* ctx, PCCERT_CONTEXT cert, LPCSTR oid) {
+    return get_cert_name(ctx, cert, CERT_NAME_ATTR_TYPE, 0, oid);
 }
 
 static pdf_pkcs7_distinguished_name* windows_get_signatory(fz_context* ctx, pdf_pkcs7_verifier* vf, unsigned char* sig,
@@ -1002,26 +998,6 @@ static void parse_tstinfo(fz_context* ctx, const unsigned char* p, size_t n, pkc
     }
 }
 
-static char* cert_issuer_display(fz_context* ctx, PCCERT_CONTEXT cert) {
-    DWORD n = CertGetNameStringW(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, CERT_NAME_ISSUER_FLAG, NULL, NULL, 0);
-    WCHAR* wbuf;
-    int u8len;
-    char* out;
-    if (n <= 1) {
-        return NULL;
-    }
-    wbuf = fz_malloc(ctx, n * sizeof(WCHAR));
-    CertGetNameStringW(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, CERT_NAME_ISSUER_FLAG, NULL, wbuf, n);
-    u8len = WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, NULL, 0, NULL, NULL);
-    out = NULL;
-    if (u8len > 1) {
-        out = fz_malloc(ctx, (size_t)u8len);
-        WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, out, u8len, NULL, NULL);
-    }
-    fz_free(ctx, wbuf);
-    return out;
-}
-
 static void inspect_timestamp_token(fz_context* ctx, unsigned char* tok, DWORD tok_len, pkcs7_windows_ts_info* ts) {
     HCRYPTMSG hMsg = NULL;
     HCERTSTORE hStore = NULL;
@@ -1044,7 +1020,7 @@ static void inspect_timestamp_token(fz_context* ctx, unsigned char* tok, DWORD t
     }
     if (cert) {
         ts->signer_cn = get_name_string(ctx, cert, szOID_COMMON_NAME);
-        ts->issuer_cn = cert_issuer_display(ctx, cert);
+        ts->issuer_cn = get_cert_name(ctx, cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, CERT_NAME_ISSUER_FLAG, NULL);
         ts->not_after_unix = filetime_to_unix(&cert->pCertInfo->NotAfter);
         ts->cert_der_len = (int)cert->cbCertEncoded;
         ts->cert_der = dup_bytes(ctx, cert->pbCertEncoded, ts->cert_der_len);
@@ -1242,7 +1218,7 @@ int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, p
     }
     if (cert) {
         info->signer_cn = get_name_string(ctx, cert, szOID_COMMON_NAME);
-        info->issuer_cn = cert_issuer_display(ctx, cert);
+        info->issuer_cn = get_cert_name(ctx, cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, CERT_NAME_ISSUER_FLAG, NULL);
         info->not_after_unix = filetime_to_unix(&cert->pCertInfo->NotAfter);
         info->cert_der_len = (int)cert->cbCertEncoded;
         info->cert_der = dup_bytes(ctx, cert->pbCertEncoded, info->cert_der_len);
