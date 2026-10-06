@@ -172,11 +172,12 @@ static bool SkipJsNested(const char*& p, const char* end, char open, char close)
 
 // Collect the quoted arguments of app.popUpMenu(...) / app.popUpMenuEx(...).
 bool ParseJsPopUpMenuItems(Str js, StrVec& items) {
-    int idx = str::IndexOf(js, StrL("popUpMenu"));
+    const Str menuCall = StrL("popUpMenu");
+    int idx = str::IndexOf(js, menuCall);
     if (idx < 0) {
         return false;
     }
-    const char* p = js.s + idx + 9; // strlen("popUpMenu")
+    const char* p = js.s + idx + len(menuCall);
     const char* end = js.s + len(js);
     if (p + 2 <= end && p[0] == 'E' && p[1] == 'x') {
         p += 2;
@@ -188,15 +189,8 @@ bool ParseJsPopUpMenuItems(Str js, StrVec& items) {
     p++;
     while (p < end) {
         SkipJsWs(p, end);
-        if (p >= end) {
+        if (p >= end || *p == ')') {
             break;
-        }
-        if (*p == ')') {
-            break;
-        }
-        if (*p == ',') {
-            p++;
-            continue;
         }
         if (*p == '[') {
             if (!SkipJsNested(p, end, '[', ']')) {
