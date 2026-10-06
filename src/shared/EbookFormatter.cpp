@@ -75,11 +75,8 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {
     }
 }
 
-// mobi format has image tags in the form:
-// <img recindex="0000n" alt=""/>
-// where recindex is the record number of pdb record
-// that holds the image (within image record array, not a
-// global record). KF8 uses src="kindle:embed:XXXX" instead.
+// MOBI recindex refers to the PDB image-record array, not the whole file.
+// KF8 uses src="kindle:embed:XXXX" instead.
 void MobiFormatter::HandleTagImg(HtmlToken* t) {
     // we allow formatting raw html which can't require doc
     if (!doc) {
@@ -87,9 +84,7 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
     }
     int n = 0;
     AttrInfo attr = t->GetAttrByName(StrL("recindex"));
-    if (attr && !str::IsNull(str::Parse(attr.val, "%d", &n))) {
-        // recindex parsed
-    } else {
+    if (!attr || str::IsNull(str::Parse(attr.val, "%d", &n))) {
         attr = t->GetAttrByName(StrL("src"));
         if (attr) {
             n = KindleEmbedToRecIndex(attr.val);
