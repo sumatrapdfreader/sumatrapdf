@@ -17,6 +17,7 @@
 
 #include "Settings.h"
 #include "Annotation.h"
+#include "PdfDate.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
@@ -277,26 +278,11 @@ static TempStr PopupAuthorTemp(Annotation* annot) {
     return str::DupTemp(author);
 }
 
-// local time, like other apps show comment timestamps
-static TempStr PopupDateTemp(Annotation* annot) {
-    time_t secs = ModificationDate(annot);
-    if (secs == 0) {
-        return {};
-    }
-    struct tm tm;
-    if (localtime_s(&tm, &secs) != 0) {
-        return {};
-    }
-    char buf[64];
-    size_t n = strftime(buf, sizeof buf, "%Y-%m-%d %H:%M", &tm);
-    return str::DupTemp(Str(buf, (int)n));
-}
-
 // the header's ideal width fits author and date without eliding
 static AnnotPopupHeader* MakePopupHeader(AnnotTextPopup* popup, Annotation* annot) {
     auto* h = new AnnotPopupHeader();
     h->author = str::Dup(PopupAuthorTemp(annot));
-    h->date = str::Dup(PopupDateTemp(annot));
+    h->date = str::Dup(FormatPdfDateLocalTimeTemp(ModificationDate(annot)));
     h->authorFont = GetBoldPlatformFont(popup->font);
     h->dateFont = popup->font;
     int dx = PlatformFontMeasureText(h->authorFont, h->author).dx;

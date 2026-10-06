@@ -519,6 +519,9 @@
     <ClInclude Include="..\src\shared\PdfDarkModeInternal.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\PdfDate.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\PdfSync.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1254,6 +1257,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfDarkModeScanProcess.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PdfDate.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfSync.cpp">

@@ -428,6 +428,7 @@ const enginesSources = [
   "src/ng/gui/PlatformText.cpp",
   "src/ng/Annotation.cpp",
   "src/AnnotSearch.cpp",
+  "src/PdfDate.cpp",
   "src/ng/AvifReader.cpp",
   "src/ng/CachedObjects.cpp",
   "src/ng/ChapterTable.cpp",

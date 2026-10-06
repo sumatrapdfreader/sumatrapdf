@@ -22,6 +22,7 @@
 #include "AppSettings.h"
 #include "DisplayMode.h"
 #include "Annotation.h"
+#include "PdfDate.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
@@ -2657,18 +2658,6 @@ static TempStr GetKnownColorNameTemp(PdfColor c) {
     return {};
 }
 
-static void AppendPdfDate(str::Builder& s, time_t secs) {
-    struct tm tm;
-#if OS_WIN
-    gmtime_s(&tm, &secs);
-#else
-    gmtime_r(&secs, &tm);
-#endif
-    char buf[100];
-    strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", &tm);
-    s.Append(Str(buf));
-}
-
 static TempStr FontDescriptionTemp(Str family, int style) {
     str::Builder s;
     s.Append(FontFamilyLabel(family));
@@ -2811,11 +2800,7 @@ static void CollectAnnotationHoverRows(Annotation* annot, AnnotationHoverRows& r
     }
 
     rows.Add(StrL("author"), Tr("Author:"), ShortAnnotationHoverValueTemp(Author(annot)));
-    str::Builder date;
-    if (ModificationDate(annot) != 0) {
-        AppendPdfDate(date, ModificationDate(annot));
-    }
-    rows.Add(StrL("date"), Tr("Date:"), ToStrTemp(date));
+    rows.Add(StrL("date"), Tr("Date:"), FormatPdfDateLocalTimeTemp(ModificationDate(annot)));
     int popupId = PopupId(annot);
     if (popupId >= 0) {
         rows.Add(StrL("popup"), Tr("Popup:"), fmt("%d 0 R", popupId));

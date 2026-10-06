@@ -16,6 +16,7 @@
 #include "AppSettings.h"
 #include "DisplayMode.h"
 #include "Annotation.h"
+#include "PdfDate.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
@@ -84,22 +85,6 @@ static Color PopupRuleColor() {
     return AdjustLightness2(PopupText(), units);
 }
 
-static TempStr AnnotDateTemp(Annotation* annot) {
-    time_t secs = ModificationDate(annot);
-    if (secs == 0) {
-        return {};
-    }
-    struct tm tm;
-#if OS_WIN
-    gmtime_s(&tm, &secs);
-#else
-    gmtime_r(&secs, &tm);
-#endif
-    char buf[100];
-    strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", &tm);
-    return str::DupTemp(Str(buf));
-}
-
 bool IsAnnotationTextPopupShown(MainWindow* win) {
     AnnotTextPopup* p = win ? win->annotTextPopup : nullptr;
     return p && p->annot != nullptr;
@@ -154,7 +139,7 @@ bool ShowAnnotationTextPopup(MainWindow* win, Annotation* annot) {
         author = AnnotationReadableNameTemp(Type(annot));
     }
     str::ReplaceWithCopy(&p->author, author);
-    str::ReplaceWithCopy(&p->date, AnnotDateTemp(annot));
+    str::ReplaceWithCopy(&p->date, FormatPdfDateLocalTimeTemp(ModificationDate(annot)));
     str::ReplaceWithCopy(&p->text, Contents(annot));
     AppShellInvalidate(win);
     return true;

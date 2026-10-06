@@ -27,6 +27,7 @@ extern "C" {
 
 #include "Settings.h"
 #include "Annotation.h"
+#include "PdfDate.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
@@ -2878,14 +2879,6 @@ static TempStr GetKnownColorNameTemp(PdfColor c) {
     return {};
 }
 
-static void AppendPdfDate(str::Builder& s, time_t secs) {
-    struct tm tm;
-    gmtime_s(&tm, &secs);
-    char buf[100];
-    strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", &tm);
-    s.Append(Str(buf));
-}
-
 // Drop non-owning Annotation* held by UI (selection, drag, hover, form edit).
 // Call before DeleteAnnotation frees the wrapper, or when the engine is about
 // to die and raw Annotation* must not be used again.
@@ -3179,11 +3172,7 @@ static void CollectAnnotationHoverRows(Annotation* annot, AnnotationHoverRows& r
     }
 
     rows.Add(StrL("author"), Tr("Author:"), ShortAnnotationHoverValueTemp(Author(annot)));
-    str::Builder date;
-    if (ModificationDate(annot) != 0) {
-        AppendPdfDate(date, ModificationDate(annot));
-    }
-    rows.Add(StrL("date"), Tr("Date:"), ToStr(date));
+    rows.Add(StrL("date"), Tr("Date:"), FormatPdfDateLocalTimeTemp(ModificationDate(annot)));
     int popupId = PopupId(annot);
     if (popupId >= 0) {
         rows.Add(StrL("popup"), Tr("Popup:"), fmt("%d 0 R", popupId));
