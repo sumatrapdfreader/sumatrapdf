@@ -101,13 +101,11 @@ static bool IsJsReservedCallName(Str ident) {
 }
 
 // Decode one JS '...' or "..." string at p. Advances p past the closing quote.
-static bool ParseJsQuotedString(const char*& p, const char* end, Str* out) {
-    *out = {};
+static bool ParseJsQuotedString(const char*& p, const char* end, str::Builder& b) {
     if (p >= end || (*p != '"' && *p != '\'')) {
         return false;
     }
     char quote = *p++;
-    str::Builder b;
     while (p < end && *p != quote) {
         char c = *p++;
         if (c != '\\') {
@@ -145,41 +143,31 @@ static bool ParseJsQuotedString(const char*& p, const char* end, Str* out) {
             case '"':
                 b.AppendChar(e);
                 break;
-            case 'x': {
-                if (p + 2 > end) {
-                    b.AppendChar(e);
-                    break;
-                }
-                int h1 = str::HexDigitVal(p[0]);
-                int h2 = str::HexDigitVal(p[1]);
-                if (h1 < 0 || h2 < 0) {
-                    b.AppendChar(e);
-                    break;
-                }
-                p += 2;
-                b.AppendChar((char)((h1 << 4) | h2));
-                break;
-            }
+            case 'x':
             case 'u': {
-                if (p + 4 > end) {
+                int digits = e == 'x' ? 2 : 4;
+                if (end - p < digits) {
                     b.AppendChar(e);
                     break;
                 }
                 int cp = 0;
-                bool ok = true;
-                for (int i = 0; i < 4; i++) {
+                int i = 0;
+                for (; i < digits; i++) {
                     int h = str::HexDigitVal(p[i]);
                     if (h < 0) {
-                        ok = false;
                         break;
                     }
                     cp = (cp << 4) | h;
                 }
-                if (!ok) {
+                if (i != digits) {
                     b.AppendChar(e);
                     break;
                 }
-                p += 4;
+                p += digits;
+                if (e == 'x') {
+                    b.AppendChar((char)cp);
+                    break;
+                }
                 char utf8[4];
                 int off = 0;
                 str::Utf8Encode(utf8, off, cp);
@@ -195,7 +183,6 @@ static bool ParseJsQuotedString(const char*& p, const char* end, Str* out) {
         return false;
     }
     p++;
-    *out = b.TakeStr();
     return true;
 }
 
@@ -207,12 +194,10 @@ static bool SkipJsNested(const char*& p, const char* end, char open, char close)
     p++;
     while (p < end && depth > 0) {
         if (*p == '"' || *p == '\'') {
-            Str dummy;
-            if (!ParseJsQuotedString(p, end, &dummy)) {
-                str::Free(dummy);
+            str::Builder ignored;
+            if (!ParseJsQuotedString(p, end, ignored)) {
                 return false;
             }
-            str::Free(dummy);
             continue;
         }
         if (*p == open) {
@@ -260,13 +245,11 @@ bool ParseJsPopUpMenuItems(Str js, StrVec& items) {
             continue;
         }
         if (*p == '"' || *p == '\'') {
-            Str item;
-            if (!ParseJsQuotedString(p, end, &item)) {
-                str::Free(item);
+            str::Builder item;
+            if (!ParseJsQuotedString(p, end, item)) {
                 break;
             }
-            items.Append(item);
-            str::Free(item);
+            items.Append(ToStr(item));
             continue;
         }
         p++;
