@@ -45,9 +45,6 @@ bool IsExternalUrl(Str url) {
 
 static void EnsurePageText(PageText* pageText) {
     if (pageText->text) {
-        if (pageText->len == 0) {
-            pageText->len = pageText->text.len;
-        }
         if (pageText->nCodepoints == 0) {
             pageText->nCodepoints = Utf8CodepointCount(pageText->text);
         }
@@ -61,11 +58,7 @@ void FreePageText(PageText* pageText) {
     str::Free(pageText->text);
     free((void*)pageText->coords);
     free((void*)pageText->quads);
-    pageText->text = {};
-    pageText->coords = nullptr;
-    pageText->quads = nullptr;
-    pageText->len = 0;
-    pageText->nCodepoints = 0;
+    *pageText = {};
 }
 
 PageDestination::~PageDestination() {
@@ -863,7 +856,6 @@ static Str ReturnCachedPageText(PageText* pt, int* lenOut, Rect** coordsOut, Qua
     }
     Str text = pt->text;
     if (text.s) {
-        text.len = pt->len;
         // str::Builder-backed buffers reserve a NUL slot at .len
         if (text.len >= 0) {
             text.s[text.len] = 0;

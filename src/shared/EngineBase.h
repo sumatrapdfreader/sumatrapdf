@@ -121,7 +121,6 @@ struct PageText {
     Str text;
     Rect* coords = nullptr;
     QuadF* quads = nullptr; // glyph corners; null when the engine only has AABBs
-    int len = 0;            // number of bytes in text, not including the terminating null
     int nCodepoints = 0;    // number of Unicode codepoints and bounding boxes in coords
 };
 

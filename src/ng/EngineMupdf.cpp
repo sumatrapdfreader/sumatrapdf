@@ -8053,7 +8053,6 @@ static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
     PageText res;
     res.text = FzTextPageToUtf8(stext, &res.coords, &res.quads);
     fz_drop_stext_page(ctx, stext);
-    res.len = res.text.len;
     res.nCodepoints = Utf8CodepointCount(res.text);
     return res;
 }

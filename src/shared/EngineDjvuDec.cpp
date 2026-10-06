@@ -760,7 +760,6 @@ PageText DjvuZonesToPageText(djvu_text_zone* root, float dpiF) {
         Utf8CodepointNext(text, byteIdx);
     }
     PageText res;
-    res.len = len(text);
     res.nCodepoints = len(coords);
     res.text = sb.TakeStr();
     res.coords = VecTake(coords);

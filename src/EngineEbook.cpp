@@ -517,7 +517,6 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     ReportIf(len(coords) != nCodepoints);
 
     PageText res;
-    res.len = len(content);
     res.nCodepoints = nCodepoints;
     res.text = content.TakeStr();
     res.coords = VecTake(coords);
