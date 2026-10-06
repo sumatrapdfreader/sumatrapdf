@@ -42,7 +42,7 @@ static Str TakeArchiveData(Archive* archive, int fileId) {
     if (!fi || !fi->data) {
         return {};
     }
-    Str res = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
+    Str res(fi->data, fi->fileSizeUncompressed);
     fi->data = nullptr;
     return res;
 }
@@ -366,12 +366,12 @@ bool EpubDoc::Load() {
     StrVec encList;
     auto* encryptionFi = archive->GetFileDataByName(StrL("META-INF/encryption.xml"));
     if (encryptionFi && encryptionFi->data) {
-        Str encryption = Str((char*)((u8*)encryptionFi->data), encryptionFi->fileSizeUncompressed);
+        Str encryption(encryptionFi->data, encryptionFi->fileSizeUncompressed);
         GumboDoc encryptionDoc(encryption, GumboMode::XmlFragment);
         CollectEncryptedEpubPaths(encryptionDoc.Document(), encList);
     }
 
-    Str content = Str((char*)((u8*)contentFi->data), contentFi->fileSizeUncompressed);
+    Str content(contentFi->data, contentFi->fileSizeUncompressed);
     ParseMetadata(content, props);
     GumboDoc contentDoc(content, GumboMode::XmlFragment);
     const GumboNode* node = contentDoc.Document();
@@ -472,7 +472,7 @@ bool EpubDoc::Load() {
         if (!htmlFi || !htmlFi->data) {
             continue;
         }
-        Str html = Str((char*)((u8*)htmlFi->data), htmlFi->fileSizeUncompressed);
+        Str html(htmlFi->data, htmlFi->fileSizeUncompressed);
         TempStr decoded = DecodeTextToUtf8Temp(html, true);
         if (len(decoded) == 0) {
             continue;
@@ -929,9 +929,7 @@ bool Fb2Doc::Load(Str srcData) {
         return false;
     }
 
-    Str data2 = Str((char*)((u8*)tmp.s), tmp.len);
-
-    GumboHtmlParser parser(data2);
+    GumboHtmlParser parser(tmp);
     HtmlToken* tok;
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     Str bodyStart;
@@ -1096,8 +1094,7 @@ void Fb2Doc::ExtractImage(GumboHtmlParser* parser, HtmlToken* tok) {
 }
 
 Str Fb2Doc::GetXmlData() const {
-    Str s = ToStr(xmlData);
-    return Str((char*)((u8*)s.s), (int)((size_t)len(xmlData)));
+    return ToStr(xmlData);
 }
 
 Str Fb2Doc::GetImageData(Str fileName) const {
@@ -1367,8 +1364,7 @@ bool HtmlDoc::Load() {
         if (len(decoded) == 0) {
             return false;
         }
-        Str dup = str::Dup(decoded);
-        htmlData = Str((char*)((u8*)dup.s), dup.len);
+        htmlData = str::Dup(decoded);
         str::Free(data);
     }
 
