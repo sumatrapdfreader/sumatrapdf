@@ -48,6 +48,8 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0045-console-utf8-via-writeconsolew` | UTF-8 to a Windows console through `WriteConsoleW`; the CRT failed the write on a DBCS code page (#6276) |
 | `0046-grep-keep-page-of-pending-line` | `grep` read a text page the search had already dropped (#6276) |
 | `0047-jpeg-xl-pdf` | JPEG XL images and PDF `/JXLDecode` via jxldec (`src/mupdf/load-jxl.cpp`) |
+| `0048-pdf-compress-enum` | `compress=flate` and `compress=brotli` reach the enum; a non-boolean used to be taken as success |
+| `0049-merge-catch-bad-write-options` | `merge -O` reports an unknown option instead of aborting with no `fz_try` |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

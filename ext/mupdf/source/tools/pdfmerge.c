@@ -344,7 +344,16 @@ int pdfmerge_main(int argc, char **argv)
 		exit(1);
 	}
 
-	pdf_parse_write_options(ctx, &opts, flags);
+	fz_try(ctx)
+		pdf_parse_write_options(ctx, &opts, flags);
+	fz_catch(ctx)
+	{
+		fz_report_error(ctx);
+		fz_log_error(ctx, "Cannot parse PDF write options.");
+		fz_flush_warnings(ctx);
+		fz_drop_context(ctx);
+		return 1;
+	}
 
 	fz_try(ctx)
 	{
