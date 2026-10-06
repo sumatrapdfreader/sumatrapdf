@@ -188,10 +188,9 @@ static Str DupCmarkChunk(cmark_chunk* chunk) {
 static void AppendHeadingText(cmark_node* node, str::Builder* out) {
     cmark_node_type type = cmark_node_get_type(node);
     if (type == CMARK_NODE_TEXT || type == CMARK_NODE_CODE) {
-        Str s = DupCmarkChunk(&node->as.literal);
-        if (s) {
-            out->Append(s);
-            str::Free(s);
+        cmark_chunk& literal = node->as.literal;
+        if (literal.data && literal.len > 0) {
+            out->Append(Str((char*)literal.data, (int)literal.len));
         }
         return;
     }
@@ -205,11 +204,7 @@ static Str ExtractHeadingTitle(cmark_node* heading) {
     for (cmark_node* child = cmark_node_first_child(heading); child; child = cmark_node_next(child)) {
         AppendHeadingText(child, &out);
     }
-    Str title = out.TakeStr();
-    if (len(title) == 0) {
-        return {};
-    }
-    return str::Dup(title);
+    return out.TakeStr();
 }
 
 static void ParseMarkdownHeadings(Str filePath, MarkdownFileToc* toc) {
@@ -350,13 +345,6 @@ static void MdTocParseWorker(MdTocParseCtx* ctx) {
     }
 }
 
-static void InitMarkdownFileToc(MarkdownFileToc* ft) {
-    ft->filePath = {};
-    ft->relPath = {};
-    // MarkdownFileToc contains a nested Vec; Reset() from a zeroed slot is safe.
-    VecReset(ft->headings);
-}
-
 // Parse headings from all files in parallel (up to CpuCoreCount() - 2 threads).
 void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc>& tocsOut) {
     int n = len(files);
@@ -364,13 +352,8 @@ void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc
     if (n == 0) {
         return;
     }
-    // Allocate all slots before initializing nested Vec members. AppendBlanks would
-    // memmove MarkdownFileToc values and leave headings.els pointing at stale addrs.
     if (!VecResize(tocsOut, n)) {
         return;
-    }
-    for (int i = 0; i < n; i++) {
-        InitMarkdownFileToc(&tocsOut[i]);
     }
 
     EnsureCmarkPluginsRegistered();
