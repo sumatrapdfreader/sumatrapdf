@@ -176,6 +176,7 @@ export const sharedFiles = [
   "src/shared/PdfDarkModeOklab.cpp",
   "src/shared/PdfDarkModeProfile.cpp",
   "src/shared/PdfDarkModeScanProcess.cpp",
+  "src/shared/PdfSync.cpp",
   "src/shared/PdfSync.h",
   "src/shared/PerfLog.cpp",
   "src/shared/PerfLog.h",

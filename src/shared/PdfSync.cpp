@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include <errno.h>
 #include <synctex_parser.h>
 #include "base/Win.h"
 #include "base/File.h"
@@ -80,10 +81,7 @@ struct SyncTex : Synchronizer {
 
 static i64 GetSyncFileTimestamp(Str path) {
     FILETIME ft = file::GetModificationTime(path);
-    ULARGE_INTEGER uli;
-    uli.LowPart = ft.dwLowDateTime;
-    uli.HighPart = ft.dwHighDateTime;
-    return (i64)uli.QuadPart;
+    return (i64)FileTimeToU64(ft);
 }
 
 // Modification time of whichever of the two files the index can be built from is
@@ -566,6 +564,9 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (len(localStr) == 0) {
         return {};
     }
+#if !OS_WIN
+    return str::Dup(localStr);
+#else
     UINT acp = GetACP();
     int wLen = MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, nullptr, 0);
     if (wLen == 0) {
@@ -591,6 +592,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
         return {};
     }
     return Str(utf8Buf, utf8Len - 1);
+#endif
 }
 
 // The temp files WriteTempSyncFile() wrote. A synctex scanner reads its file
@@ -666,8 +668,13 @@ static TempStr DealPlainSync(TempStr pathSync) {
         return {};
     }
     TempStr srcZ = str::DupTemp(src);
-    int wlen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, nullptr, 0);
-    if (wlen != 0) {
+#if OS_WIN
+    bool isUtf8 = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, nullptr, 0) != 0;
+#else
+    const u8* scan = (const u8*)srcZ.s;
+    bool isUtf8 = isLegalUTF8String(&scan, scan + len(srcZ));
+#endif
+    if (isUtf8) {
         logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);
         return pathSync;
     }

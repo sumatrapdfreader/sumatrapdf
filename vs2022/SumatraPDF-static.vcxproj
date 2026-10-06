@@ -1676,7 +1676,6 @@
     <ClCompile Include="..\src\PageThumbnails.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\PdfSign.cpp" />
-    <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\PdfTools.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\PrintWin11.cpp" />
@@ -2164,6 +2163,7 @@
     <ClCompile Include="..\src\shared\PdfDarkModeOklab.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeProfile.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeScanProcess.cpp" />
+    <ClCompile Include="..\src\shared\PdfSync.cpp" />
     <ClCompile Include="..\src\shared\PngOptimizer.cpp" />
     <ClCompile Include="..\src\shared\ReaderModel.cpp" />
     <ClCompile Include="..\src\shared\RefHoverDetect.cpp" />
