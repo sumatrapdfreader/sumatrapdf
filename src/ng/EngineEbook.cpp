@@ -1089,7 +1089,7 @@ bool EngineEpub::HasToc() {
     if (tocBuilt) {
         return tocTree != nullptr;
     }
-    return doc && doc->HasToc();
+    return doc && len(doc->tocPath) > 0;
 }
 
 TocTree* EngineEpub::GetToc() {
@@ -2129,7 +2129,7 @@ bool EngineChm::HasToc() {
     if (tocBuilt) {
         return tocTree != nullptr;
     }
-    return doc && (doc->HasToc() || doc->HasIndex());
+    return doc && (len(doc->tocPath) > 0 || len(doc->indexPath) > 0);
 }
 
 TocTree* EngineChm::GetToc() {
@@ -2139,7 +2139,7 @@ TocTree* EngineChm::GetToc() {
     tocBuilt = true;
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    if (doc->HasIndex()) {
+    if (len(doc->indexPath) > 0) {
         // TODO: ToC code doesn't work too well for displaying an index,
         //       so this should really become a tree of its own (which
         //       doesn't rely on entries being in the same order as pages)

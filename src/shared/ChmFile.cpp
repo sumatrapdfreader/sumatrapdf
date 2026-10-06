@@ -571,16 +571,8 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, ChmItemKind ki
     return WalkBrokenChmTocOrIndex(&fixer, doc.Document(), kind);
 }
 
-bool ChmFile::HasToc() const {
-    return len(tocPath) > 0;
-}
-
 bool ChmFile::ParseToc(EbookTocVisitor* visitor) const {
     return ParseTocOrIndex(visitor, tocPath, ChmItemKind::Toc);
-}
-
-bool ChmFile::HasIndex() const {
-    return len(indexPath) > 0;
 }
 
 bool ChmFile::ParseIndex(EbookTocVisitor* visitor) const {

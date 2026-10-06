@@ -605,10 +605,6 @@ TempStr EpubDoc::GetPropertyTemp(DocProp prop) const {
     return GetPropValueTemp(props, prop);
 }
 
-bool EpubDoc::HasToc() const {
-    return len(tocPath) > 0;
-}
-
 static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     GumboHtmlParser parser(data);
     HtmlToken* tok;

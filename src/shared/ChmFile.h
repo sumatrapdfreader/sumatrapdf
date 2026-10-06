@@ -45,9 +45,7 @@ struct ChmFile {
     TempStr GetPropertyTemp(DocProp prop) const;
     void GetAllPaths(StrVec*) const;
 
-    bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;
-    bool HasIndex() const;
     bool ParseIndex(EbookTocVisitor* visitor) const;
 
     static ChmFile* CreateFromFile(Str path);

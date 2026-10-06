@@ -393,7 +393,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
         StrVec allPaths;
         doc->GetAllPaths(&allPaths);
         out.Append(fmt("chmfile_paths=%d\n", len(allPaths)));
-        if (doc->HasToc()) {
+        if (len(doc->tocPath) > 0) {
             out.Append(StrL("chmfile_toc=YES\n"));
         }
         delete doc;

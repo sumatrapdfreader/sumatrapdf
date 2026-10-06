@@ -49,7 +49,6 @@ struct EpubDoc {
 
     TempStr GetPropertyTemp(DocProp prop) const;
 
-    bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static EpubDoc* CreateFromFile(Str path);
