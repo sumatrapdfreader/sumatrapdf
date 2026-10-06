@@ -213,9 +213,6 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
     str::Builder text;
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr) {
-        if (tok->IsError()) {
-            break;
-        }
         if (tok->IsStartTag() && IsHeadingTag(tok->tag)) {
             headingLevel = (int)(tok->tag - Tag_H1) + 1;
             str::FreePtr(&headingId);

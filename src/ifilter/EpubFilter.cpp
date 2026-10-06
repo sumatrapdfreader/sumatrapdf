@@ -82,7 +82,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
     GumboHtmlParser p(d);
     HtmlToken* t;
     Vec<HtmlTag> tagNesting;
-    while ((t = p.Next()) != nullptr && !t->IsError()) {
+    while ((t = p.Next()) != nullptr) {
         if (t->IsText() && !VecContains(tagNesting, Tag_Head) && !VecContains(tagNesting, Tag_Script) &&
             !VecContains(tagNesting, Tag_Style)) {
             // trim whitespace (TODO: also normalize within text?)

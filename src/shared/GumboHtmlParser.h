@@ -64,8 +64,7 @@ struct HtmlToken {
         StartTag,
         EndTag,
         EmptyElementTag,
-        Text,
-        Error
+        Text
     };
 
     bool IsStartTag() const { return type == StartTag; }
@@ -73,13 +72,11 @@ struct HtmlToken {
     bool IsEmptyElementEndTag() const { return type == EmptyElementTag; }
     bool IsTag() const { return IsStartTag() || IsEndTag() || IsEmptyElementEndTag(); }
     bool IsText() const { return type == Text; }
-    bool IsError() const { return type == Error; }
 
-    Str GetReparsePoint() const;
     void SetTag(TokenType newType, Str name);
     void SetText(Str slice);
 
-    TokenType type = Error;
+    TokenType type = Text;
     Str s;
     Str name;
     Str reparsePoint;

@@ -1043,7 +1043,7 @@ void HtmlFormatter::HandleTagStyle(HtmlToken* t) {
     }
 
     Str start = Str(t->s.s + t->s.len + 1, 0);
-    while (t && !t->IsError() && (!t->IsEndTag() || t->tag != Tag_Style)) {
+    while (t && (!t->IsEndTag() || t->tag != Tag_Style)) {
         t = htmlParser->Next();
     }
     if (!t || !t->IsEndTag() || Tag_Style != t->tag) {
@@ -1332,7 +1332,7 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
             return nullptr;
         }
         HtmlToken* t = htmlParser->Next();
-        if (!t || t->IsError()) {
+        if (!t) {
             AutoCloseTags(len(tagNesting));
             FlushCurrLine(true);
             VecAppend(pagesToSend, currPage);
@@ -1343,7 +1343,7 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
             continue;
         }
 
-        currReparseIdx = htmlParser->PosOf(t->GetReparsePoint());
+        currReparseIdx = htmlParser->PosOf(t->reparsePoint);
         ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
         if (t->IsTag()) {
             HandleHtmlTag(t);

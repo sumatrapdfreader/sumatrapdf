@@ -586,7 +586,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     GumboHtmlParser parser(data);
     HtmlToken* tok;
     // skip to the start of the <nav epub:type="toc">
-    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
+    while ((tok = parser.Next()) != nullptr) {
         if (tok->IsStartTag() && Tag_Nav == tok->tag) {
             AttrInfo attr = tok->GetAttrByName(StrL("epub:type"));
             if (attr && attr.ValIs(StrL("toc"))) {
@@ -594,12 +594,12 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             }
         }
     }
-    if (!tok || tok->IsError()) {
+    if (!tok) {
         return false;
     }
 
     int level = 0;
-    while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || Tag_Nav != tok->tag)) {
+    while ((tok = parser.Next()) != nullptr && (!tok->IsEndTag() || Tag_Nav != tok->tag)) {
         if (tok->IsStartTag() && Tag_Ol == tok->tag) {
             level++;
         } else if (tok->IsEndTag() && Tag_Ol == tok->tag && level > 0) {
@@ -617,7 +617,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
                 href = str::DupTemp(attrInfo.val);
             }
         }
-        while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || itemTag != tok->tag)) {
+        while ((tok = parser.Next()) != nullptr && (!tok->IsEndTag() || itemTag != tok->tag)) {
             if (tok->IsText()) {
                 text.Append(tok->s);
             }
@@ -642,18 +642,18 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     GumboHtmlParser parser(data);
     HtmlToken* tok;
     // skip to the start of the navMap
-    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
+    while ((tok = parser.Next()) != nullptr) {
         if (tok->IsStartTag() && tok->NameIs(StrL("navMap"), HtmlNameMatch::Local)) {
             break;
         }
     }
-    if (!tok || tok->IsError()) {
+    if (!tok) {
         return false;
     }
 
     TempStr itemText, itemSrc;
     int level = 0;
-    while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
+    while ((tok = parser.Next()) != nullptr &&
            (!tok->IsEndTag() || !tok->NameIs(StrL("navMap"), HtmlNameMatch::Local))) {
         if (tok->IsTag() && tok->NameIs(StrL("navPoint"), HtmlNameMatch::Local)) {
             if (itemText) {
@@ -668,7 +668,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             }
         } else if (tok->IsStartTag() && tok->NameIs(StrL("text"), HtmlNameMatch::Local)) {
             tok = parser.Next();
-            if (tok == nullptr || tok->IsError()) {
+            if (tok == nullptr) {
                 break;
             }
             if (tok->IsText()) {
@@ -865,7 +865,7 @@ bool Fb2Doc::Load(Str srcData) {
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     Str bodyStart;
     TempStr titleAuthors; // every <author> in <title-info>, joined
-    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
+    while ((tok = parser.Next()) != nullptr) {
         if (!inTitleInfo && !inDocInfo && tok->IsStartTag() && Tag_Body == tok->tag) {
             if (!inBody++) {
                 bodyStart = tok->s;
@@ -891,7 +891,7 @@ bool Fb2Doc::Load(Str srcData) {
                                          (inDocInfo && tok->NameIs(StrL("program-used"), HtmlNameMatch::Local)))) {
             DocProp prop = tok->NameIs(StrL("book-title"), HtmlNameMatch::Local) ? DocProp::Title : DocProp::CreatorApp;
             tok = parser.Next();
-            if (tok == nullptr || tok->IsError()) {
+            if (tok == nullptr) {
                 break;
             }
             if (tok->IsText()) {
@@ -908,7 +908,7 @@ bool Fb2Doc::Load(Str srcData) {
             TempStr nickname;
             bool inNamePart = false;
             bool inNickname = false;
-            while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
+            while ((tok = parser.Next()) != nullptr &&
                    !(tok->IsEndTag() && tok->NameIs(StrL("author"), HtmlNameMatch::Local))) {
                 if (tok->IsStartTag() || tok->IsEndTag()) {
                     bool isName = tok->NameIs(StrL("first-name"), HtmlNameMatch::Local) ||
@@ -967,7 +967,7 @@ bool Fb2Doc::Load(Str srcData) {
             // FB2 annotation is nested markup (often one or more <p>); collect all text for
             // Document Properties (Ctrl+D) as Subject.
             TempStr annotation;
-            while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
+            while ((tok = parser.Next()) != nullptr &&
                    !(tok->IsEndTag() && tok->NameIs(StrL("annotation"), HtmlNameMatch::Local))) {
                 if (tok->IsText()) {
                     annotation = JoinEbookTextTemp(annotation, tok->s);
@@ -1041,7 +1041,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
     auto xmlData2 = ToStr(xmlData);
     GumboHtmlParser parser(xmlData2);
     HtmlToken* tok;
-    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
+    while ((tok = parser.Next()) != nullptr) {
         if (tok->IsStartTag() && Tag_Section == tok->tag) {
             level++;
         } else if (tok->IsEndTag() && Tag_Section == tok->tag && level > 0) {
@@ -1239,8 +1239,7 @@ bool HtmlDoc::Load() {
 
     GumboHtmlParser parser(htmlData);
     HtmlToken* tok;
-    while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
-           (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {
+    while ((tok = parser.Next()) != nullptr && (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {
         if (tok->IsStartTag() && Tag_Title == tok->tag) {
             tok = parser.Next();
             if (tok && tok->IsText()) {

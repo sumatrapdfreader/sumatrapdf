@@ -371,14 +371,6 @@ bool HtmlToken::NameIs(Str nameToFind, HtmlNameMatch match) const {
     return match == HtmlNameMatch::Local ? LocalNameIs(name, nameToFind) : str::EqI(name, nameToFind);
 }
 
-Str HtmlToken::GetReparsePoint() const {
-    if (IsError()) {
-        ReportIf(true); // don't call us on error tokens
-        return {};
-    }
-    return reparsePoint;
-}
-
 // Return views by value so another lookup cannot overwrite earlier attributes.
 AttrInfo HtmlToken::GetAttrByName(Str attrName, HtmlNameMatch match) {
     if (!node || (node->type != GUMBO_NODE_ELEMENT && node->type != GUMBO_NODE_TEMPLATE)) {
