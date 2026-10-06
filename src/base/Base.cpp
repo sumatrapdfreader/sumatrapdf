@@ -3107,16 +3107,6 @@ static int SeqStrNumEntryEndOff(SeqStrNum strs, int off) {
     return next + (int)(p - (const u8*)(strs + next)) + 1;
 }
 
-static void SeqStrNumEntryParts(SeqStrNum strs, int off, Str* strOut, i64* numOut) {
-    if (strOut) {
-        *strOut = SeqStrNumAt(strs, off);
-    }
-    const u8* p = (const u8*)(strs + off + len(strs + off) + 1);
-    if (numOut) {
-        VarIntDecode(p, numOut);
-    }
-}
-
 void SeqStrNumAppend(str::Builder* b, Str s, i64 num) {
     b->Append(s);
     b->AppendChar('\0');
@@ -3129,11 +3119,17 @@ void SeqStrNumFinish(str::Builder* b) {
     b->AppendChar('\0');
 }
 
-TempStr SeqStrNumAt(SeqStrNum strs, int off) {
+TempStr SeqStrNumAt(SeqStrNum strs, int off, i64* numOut) {
     if (!strs || off < 0 || !strs[off]) {
         return {};
     }
-    return Str(strs + off);
+
+    Str s(strs + off);
+    if (numOut) {
+        const u8* p = (const u8*)(s.s + len(s) + 1);
+        VarIntDecode(p, numOut);
+    }
+    return s;
 }
 
 bool SeqStrNumAdvance(SeqStrNum strs, int& off, int* idxInOut) {
@@ -3163,7 +3159,7 @@ static int SeqStrNumIndexBy(SeqStrNum strs, Str toFind, i64* numOut, bool (*eq)(
     for (int idx = 0; strs && strs[off]; idx++) {
         if (eq(SeqStrNumAt(strs, off), toFind)) {
             if (numOut) {
-                SeqStrNumEntryParts(strs, off, nullptr, numOut);
+                SeqStrNumAt(strs, off, numOut);
             }
             return idx;
         }
@@ -3191,21 +3187,14 @@ TempStr SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
         }
         idx--;
     }
-    if (!strs || !strs[off]) {
-        return {};
-    }
-    if (numOut) {
-        SeqStrNumEntryParts(strs, off, nullptr, numOut);
-    }
-    return SeqStrNumAt(strs, off);
+    return SeqStrNumAt(strs, off, numOut);
 }
 
 TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
     int off = 0;
     while (strs && strs[off]) {
         i64 n = 0;
-        Str s;
-        SeqStrNumEntryParts(strs, off, &s, &n);
+        Str s = SeqStrNumAt(strs, off, &n);
         if (n == num) {
             return s;
         }

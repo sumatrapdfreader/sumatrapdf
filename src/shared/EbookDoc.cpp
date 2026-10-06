@@ -531,7 +531,8 @@ static void ParseMetadata(Str content, Props& props) {
         }
 
         int off = 0;
-        while (Str epubName = SeqStrNumAt(epubPropsMap, off)) {
+        i64 propNo = 0;
+        while (Str epubName = SeqStrNumAt(epubPropsMap, off, &propNo)) {
             // TODO: implement proper namespace support
             if (!IsTokPropName(tok, epubName)) {
                 if (!SeqStrNumAdvance(epubPropsMap, off)) {
@@ -541,8 +542,6 @@ static void ParseMetadata(Str content, Props& props) {
             }
             tok = pullParser.Next();
             if (tok && tok->IsText()) {
-                i64 propNo = 0;
-                SeqStrNumIndex(epubPropsMap, epubName, &propNo);
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddPropOwned(props, (DocProp)propNo, val);
             }

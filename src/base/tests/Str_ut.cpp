@@ -124,6 +124,9 @@ static void StrSeqNumTest() {
     SeqStrNumAdvance(seq, off, &idx);
     utassert(idx == 1);
     utassert(str::Eq(SeqStrNumAt(seq, off), StrL("bar")));
+    num = 0;
+    s = SeqStrNumAt(seq, off, &num);
+    utassert(str::Eq(s, StrL("bar")) && num == -3);
 }
 
 static void StrSeqTest() {

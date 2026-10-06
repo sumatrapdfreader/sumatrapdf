@@ -2127,7 +2127,7 @@ TempStr MimeTypeFromExtTemp(Str ext, Str imgExt = {});
 //   gLangCodes.
 using SeqStrNum = const char*;
 
-TempStr SeqStrNumAt(SeqStrNum strs, int off);
+TempStr SeqStrNumAt(SeqStrNum strs, int off, i64* numOut = nullptr);
 bool SeqStrNumAdvance(SeqStrNum strs, int& off, int* idxInOut = nullptr);
 int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut);
 int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut);
