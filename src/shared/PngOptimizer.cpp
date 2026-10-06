@@ -226,9 +226,6 @@ static Str OptimizePngBytesOwned(Str png) {
 
 // plain lodepng encode, no zopfli. Caller frees
 Str EncodePngFromPixmap(const Pixmap* px) {
-    if (!px) {
-        return {};
-    }
     u8* rgba = PixmapToRgbaContiguous(px);
     if (!rgba) {
         return {};
@@ -253,9 +250,6 @@ Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
     }
     int nOrig = len(rawPng);
     Str optimized = OptimizePngBytesOwned(rawPng);
-    if (len(optimized) > 0) {
-        logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, nOrig,
-             len(optimized));
-    }
+    logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, nOrig, len(optimized));
     return optimized;
 }
