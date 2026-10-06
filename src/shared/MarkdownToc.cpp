@@ -154,21 +154,16 @@ static Str MarkdownHeadingSlug(Str title) {
     return out.TakeStr();
 }
 
-// cmark chunks are length-prefixed; alloc=1 buffers are not always NUL-terminated.
-static Str DupCmarkChunk(cmark_chunk* chunk) {
-    if (!chunk || !chunk->data || chunk->len <= 0) {
-        return {};
-    }
-    return str::Dup(Str((char*)chunk->data, (int)chunk->len));
+// cmark literals are length-prefixed and need not be NUL-terminated.
+static Str CmarkLiteral(cmark_node* node) {
+    cmark_chunk& chunk = node->as.literal;
+    return chunk.data && chunk.len > 0 ? Str((char*)chunk.data, (int)chunk.len) : Str{};
 }
 
 static void AppendHeadingText(cmark_node* node, str::Builder* out) {
     cmark_node_type type = cmark_node_get_type(node);
     if (type == CMARK_NODE_TEXT || type == CMARK_NODE_CODE) {
-        cmark_chunk& literal = node->as.literal;
-        if (literal.data && literal.len > 0) {
-            out->Append(Str((char*)literal.data, (int)literal.len));
-        }
+        out->Append(CmarkLiteral(node));
         return;
     }
     for (cmark_node* child = cmark_node_first_child(node); child; child = cmark_node_next(child)) {
@@ -551,7 +546,7 @@ static bool IsSafeAnchorId(Str id) {
 }
 
 static bool ParseSafeAnchor(Str html, Str suffix, Str* idOut) {
-    str::TrimWSInPlace(html, str::TrimOpt::Both);
+    str::TrimWsBoth(html);
     Str prefix = StrL("<a id=\"");
     if (!str::TrimPrefix(html, prefix) || !str::EndsWith(html, suffix)) {
         return false;
@@ -584,47 +579,40 @@ static void PreserveSafeEmptyAnchors(cmark_node* parent) {
     for (cmark_node* node = cmark_node_first_child(parent); node;) {
         cmark_node* next = cmark_node_next(node);
         cmark_node_type type = cmark_node_get_type(node);
-        if (type == CMARK_NODE_HTML_BLOCK || type == CMARK_NODE_HTML_INLINE) {
-            Str raw = DupCmarkChunk(&node->as.literal);
-            Str id;
-            if (ParseSafeAnchor(raw, StrL("\"></a>"), &id)) {
-                cmark_node_type customType =
-                    type == CMARK_NODE_HTML_BLOCK ? CMARK_NODE_CUSTOM_BLOCK : CMARK_NODE_CUSTOM_INLINE;
-                cmark_node* replacement = NewSafeAnchorNode(customType, id);
-                if (replacement && cmark_node_insert_before(node, replacement)) {
-                    cmark_node_unlink(node);
-                    cmark_node_free(node);
-                } else if (replacement) {
-                    cmark_node_free(replacement);
-                }
-                str::Free(raw);
-                node = next;
-                continue;
-            }
-
-            Str openId;
-            cmark_node* close = next;
-            if (type == CMARK_NODE_HTML_INLINE && ParseSafeAnchor(raw, StrL("\">"), &openId) && close &&
-                cmark_node_get_type(close) == CMARK_NODE_HTML_INLINE) {
-                Str closeRaw = DupCmarkChunk(&close->as.literal);
-                str::TrimWSInPlace(closeRaw, str::TrimOpt::Both);
-                if (str::Eq(closeRaw, StrL("</a>"))) {
-                    next = cmark_node_next(close);
-                    cmark_node* replacement = NewSafeAnchorNode(CMARK_NODE_CUSTOM_INLINE, openId);
-                    if (replacement && cmark_node_insert_before(node, replacement)) {
-                        cmark_node_unlink(node);
-                        cmark_node_free(node);
-                        cmark_node_unlink(close);
-                        cmark_node_free(close);
-                    } else if (replacement) {
-                        cmark_node_free(replacement);
-                    }
-                }
-                str::Free(closeRaw);
-            }
-            str::Free(raw);
-        } else {
+        if (type != CMARK_NODE_HTML_BLOCK && type != CMARK_NODE_HTML_INLINE) {
             PreserveSafeEmptyAnchors(node);
+            node = next;
+            continue;
+        }
+
+        Str raw = CmarkLiteral(node);
+        Str id;
+        cmark_node* close = nullptr;
+        bool matched = ParseSafeAnchor(raw, StrL("\"></a>"), &id);
+        if (!matched && type == CMARK_NODE_HTML_INLINE && ParseSafeAnchor(raw, StrL("\">"), &id) && next &&
+            cmark_node_get_type(next) == CMARK_NODE_HTML_INLINE) {
+            Str closeRaw = CmarkLiteral(next);
+            str::TrimWsBoth(closeRaw);
+            if (str::Eq(closeRaw, StrL("</a>"))) {
+                close = next;
+                next = cmark_node_next(close);
+                matched = true;
+            }
+        }
+        if (matched) {
+            cmark_node_type customType =
+                type == CMARK_NODE_HTML_BLOCK ? CMARK_NODE_CUSTOM_BLOCK : CMARK_NODE_CUSTOM_INLINE;
+            cmark_node* replacement = NewSafeAnchorNode(customType, id);
+            if (replacement && cmark_node_insert_before(node, replacement)) {
+                cmark_node_unlink(node);
+                cmark_node_free(node);
+                if (close) {
+                    cmark_node_unlink(close);
+                    cmark_node_free(close);
+                }
+            } else if (replacement) {
+                cmark_node_free(replacement);
+            }
         }
         node = next;
     }
