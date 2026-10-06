@@ -13,28 +13,19 @@
 // GetTempFileName keeps only the first 3 letters of the prefix, so
 // "sumatra-installer" is created as sum<4 hex>.tmp. The download is that
 // path plus ".exe". The stub is unused. The exe is the installer.
-static bool IsHex4(Str s) {
-    if (len(s) != 4) {
+static bool UpdateTempTail(Str name, Str& tail) {
+    constexpr Str kPrefix = StrL("sum");
+    constexpr int kHexLen = 4;
+    int tailOff = len(kPrefix) + kHexLen;
+    if (len(name) < tailOff + LenL(".tmp") || !str::StartsWithI(name, kPrefix)) {
         return false;
     }
-    for (int i = 0; i < 4; i++) {
-        char c = s.s[i];
-        bool hex = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
-        if (!hex) {
+    for (int i = len(kPrefix); i < tailOff; i++) {
+        if (str::HexDigitVal(name.s[i]) < 0) {
             return false;
         }
     }
-    return true;
-}
-
-static bool UpdateTempTail(Str name, Str& tail) {
-    if (len(name) < 11 || !str::StartsWithI(name, StrL("sum"))) {
-        return false;
-    }
-    if (!IsHex4(Str(name.s + 3, 4))) {
-        return false;
-    }
-    tail = Str(name.s + 7, len(name) - 7);
+    tail = Str(name.s + tailOff, len(name) - tailOff);
     return true;
 }
 
