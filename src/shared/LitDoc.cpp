@@ -12,9 +12,7 @@
    Passport account) is not supported. */
 
 #include "base/Base.h"
-#if IS_DEBUG
 #include "base/ByteReaderWriter.h"
-#endif
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Zip.h"
@@ -311,19 +309,11 @@ static void MsSha1Final(MsSha1* s, u8 digest[20]) {
 //--- little-endian readers with bounds checking
 
 static u32 LitU16(Str d, int off) {
-    if (off < 0 || (i64)off + 2 > len(d)) {
-        return 0;
-    }
-    const u8* p = (const u8*)d.s + off;
-    return (u32)p[0] | ((u32)p[1] << 8);
+    return ByteReader(d).UInt16LE(off);
 }
 
 static u32 LitU32(Str d, int off) {
-    if (off < 0 || (i64)off + 4 > len(d)) {
-        return 0;
-    }
-    const u8* p = (const u8*)d.s + off;
-    return (u32)p[0] | ((u32)p[1] << 8) | ((u32)p[2] << 16) | ((u32)p[3] << 24);
+    return ByteReader(d).UInt32LE(off);
 }
 
 static i64 LitU64(Str d, int off) {
