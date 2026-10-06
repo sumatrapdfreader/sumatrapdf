@@ -1530,22 +1530,16 @@ void DrawHtmlPage(cairo_t* cairo, PlatformTextRender* textDraw, Vec<DrawInstr>* 
     for (DrawInstr& i : *drawInstructions) {
         RectF bbox = i.bbox;
         bbox.Offset(offX, offY);
-        if (DrawInstrType::Line == i.type) {
-            float y = floorf(bbox.y + (bbox.dy / 2.f) + 0.5f);
-            CairoSetColor(cairo, MkRgb(0x5f, 0x4b, 0x32));
-            cairo_set_line_width(cairo, 2);
+        if (DrawInstrType::Line == i.type || DrawInstrType::LinkStart == i.type) {
+            bool rule = DrawInstrType::Line == i.type;
+            float y = floorf(bbox.y + (rule ? bbox.dy / 2.f : bbox.dy) + 0.5f);
+            CairoSetColor(cairo, rule ? MkRgb(0x5f, 0x4b, 0x32) : textColor);
+            cairo_set_line_width(cairo, rule ? 2 : 1);
             cairo_move_to(cairo, bbox.x, y);
             cairo_line_to(cairo, bbox.x + bbox.dx, y);
             cairo_stroke(cairo);
         } else if (DrawInstrType::Image == i.type) {
             CairoDrawImage(cairo, i.GetImage(), bbox);
-        } else if (DrawInstrType::LinkStart == i.type) {
-            float y = floorf(bbox.y + bbox.dy + 0.5f);
-            CairoSetColor(cairo, textColor);
-            cairo_set_line_width(cairo, 1);
-            cairo_move_to(cairo, bbox.x, y);
-            cairo_line_to(cairo, bbox.x + bbox.dx, y);
-            cairo_stroke(cairo);
         } else if ((DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) && showBbox) {
             CairoSetColor(cairo, kColRed);
             cairo_set_line_width(cairo, 1);
@@ -1602,22 +1596,16 @@ void DrawHtmlPage(CGContextRef context, PlatformTextRender* textDraw, Vec<DrawIn
     for (DrawInstr& i : *drawInstructions) {
         RectF bbox = i.bbox;
         bbox.Offset(offX, offY);
-        if (DrawInstrType::Line == i.type) {
-            float y = floorf(bbox.y + (bbox.dy / 2.f) + 0.5f);
-            CoreGraphicsSetColor(context, MkRgb(0x5f, 0x4b, 0x32));
-            CGContextSetLineWidth(context, 2);
+        if (DrawInstrType::Line == i.type || DrawInstrType::LinkStart == i.type) {
+            bool rule = DrawInstrType::Line == i.type;
+            float y = floorf(bbox.y + (rule ? bbox.dy / 2.f : bbox.dy) + 0.5f);
+            CoreGraphicsSetColor(context, rule ? MkRgb(0x5f, 0x4b, 0x32) : textColor);
+            CGContextSetLineWidth(context, rule ? 2 : 1);
             CGContextMoveToPoint(context, bbox.x, y);
             CGContextAddLineToPoint(context, bbox.x + bbox.dx, y);
             CGContextStrokePath(context);
         } else if (DrawInstrType::Image == i.type) {
             CoreGraphicsDrawImage(context, i.GetImage(), bbox);
-        } else if (DrawInstrType::LinkStart == i.type) {
-            float y = floorf(bbox.y + bbox.dy + 0.5f);
-            CoreGraphicsSetColor(context, textColor);
-            CGContextSetLineWidth(context, 1);
-            CGContextMoveToPoint(context, bbox.x, y);
-            CGContextAddLineToPoint(context, bbox.x + bbox.dx, y);
-            CGContextStrokePath(context);
         } else if ((DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) && showBbox) {
             CoreGraphicsSetColor(context, kColRed);
             CGContextSetLineWidth(context, 1);
