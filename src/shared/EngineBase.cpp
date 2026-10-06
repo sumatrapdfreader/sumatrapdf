@@ -78,12 +78,10 @@ static bool IsJsIdentChar(char c) {
 }
 
 static bool IsJsReservedCallName(Str ident) {
-    return str::Eq(ident, StrL("function")) || str::Eq(ident, StrL("if")) || str::Eq(ident, StrL("for")) ||
-           str::Eq(ident, StrL("while")) || str::Eq(ident, StrL("switch")) || str::Eq(ident, StrL("catch")) ||
-           str::Eq(ident, StrL("with")) || str::Eq(ident, StrL("return")) || str::Eq(ident, StrL("typeof")) ||
-           str::Eq(ident, StrL("void")) || str::Eq(ident, StrL("delete")) || str::Eq(ident, StrL("new")) ||
-           str::Eq(ident, StrL("throw")) || str::Eq(ident, StrL("else")) || str::Eq(ident, StrL("do")) ||
-           str::Eq(ident, StrL("try"));
+    static constexpr SeqStrings keywords =
+        "function\0if\0for\0while\0switch\0catch\0with\0return\0"
+        "typeof\0void\0delete\0new\0throw\0else\0do\0try\0";
+    return SeqStrIndex(keywords, ident) >= 0;
 }
 
 // Decode one JS '...' or "..." string at p. Advances p past the closing quote.
