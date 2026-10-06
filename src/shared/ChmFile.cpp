@@ -503,19 +503,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
 // multi-byte CJK codepages (single Latin-1 bytes don't reconstruct a DBCS
 // stream).
 static bool ChmTocNeedsEntityRemap(uint cp) {
-    switch (cp) {
-        case 874:  // Thai
-        case 1250: // Central European
-        case 1251: // Cyrillic
-        case 1253: // Greek
-        case 1254: // Turkish
-        case 1255: // Hebrew
-        case 1256: // Arabic
-        case 1257: // Baltic
-        case 1258: // Vietnamese
-            return true;
-    }
-    return false;
+    return cp == 874 || (cp >= 1250 && cp <= 1258 && cp != 1252);
 }
 
 // Map a codepoint (decoded by gumbo from a mis-authored Latin entity) back to
@@ -535,14 +523,6 @@ static int ChmEntityByte(WCHAR c) {
     }
     // CP-1252 places a few chars (€ ‚ ƒ … Š Œ Ž ' ' " " – — Ÿ ...) above U+00FF
     // at bytes 0x80-0x9F; recover those too
-#if OS_WIN
-    char b = 0;
-    BOOL defUsed = FALSE;
-    int n = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, &c, 1, &b, 1, nullptr, &defUsed);
-    if (n == 1 && !defUsed) {
-        return (u8)b;
-    }
-#else
     static const u16 cp1252High[32] = {0x20AC, 0,      0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021,
                                        0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0,      0x017D, 0,
                                        0,      0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
@@ -552,7 +532,6 @@ static int ChmEntityByte(WCHAR c) {
             return 0x80 + i;
         }
     }
-#endif
     return -1;
 }
 
