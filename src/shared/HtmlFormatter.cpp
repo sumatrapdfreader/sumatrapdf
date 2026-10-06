@@ -1533,6 +1533,30 @@ Vec<HtmlPage*>* HtmlFormatter::FormatAllPages(bool skipEmptyPages) {
     return pages;
 }
 
+#if OS_WIN || OS_LINUX || OS_DARWIN
+// Draw text in one lock before shapes; GDI's GetHDC/ReleaseHDC is expensive.
+static void DrawHtmlText(PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
+                         Color textColor, bool* abortCookie) {
+    textDraw->SetTextColor(textColor);
+    textDraw->Lock();
+    for (DrawInstr& i : *drawInstructions) {
+        RectF bbox = i.bbox;
+        bbox.Offset(offX, offY);
+        if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
+            TempStr buf = str::DupTemp(i.str);
+            RemoveSoftHyphensInPlace(buf);
+            textDraw->Draw(buf, bbox, DrawInstrType::RtlString == i.type);
+        } else if (DrawInstrType::SetFont == i.type) {
+            textDraw->SetFont(i.font);
+        }
+        if (abortCookie && *abortCookie) {
+            break;
+        }
+    }
+    textDraw->Unlock();
+}
+#endif
+
 // TODO: draw link in the appropriate format (blue text, underlined, should show hand cursor when
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
@@ -1553,33 +1577,7 @@ void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawIn
     // Pen linePen(Gdiplus::Color(0, 0, 0), 2.f);
     Pen linePen(Gdiplus::Color(0x5F, 0x4B, 0x32), 2.f);
 
-    // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
-    // draw, so first draw text and then paint everything else
-    textDraw->SetTextColor(textColor);
-#if 0
-    auto t = TimeGet();
-#endif
-    textDraw->Lock();
-    for (DrawInstr& i : *drawInstructions) {
-        RectF bbox = i.bbox;
-        bbox.x += offX;
-        bbox.y += offY;
-        if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            TempStr buf = str::DupTemp(i.str);
-            RemoveSoftHyphensInPlace(buf);
-            textDraw->Draw(buf, bbox, DrawInstrType::RtlString == i.type);
-        } else if (DrawInstrType::SetFont == i.type) {
-            textDraw->SetFont(i.font);
-        }
-        if (abortCookie && *abortCookie) {
-            break;
-        }
-    }
-    textDraw->Unlock();
-#if 0
-        double dur = TimeSinceInMs(t);
-        logf("DrawHtmlPage: textDraw %.2f ms\n", dur);
-#endif
+    DrawHtmlText(textDraw, drawInstructions, offX, offY, textColor, abortCookie);
 
     Status status;
     for (DrawInstr& i : *drawInstructions) {
@@ -1636,8 +1634,8 @@ void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawIn
 }
 #endif
 
-#if OS_LINUX
-static Pixmap* PixmapForCairo(Pixmap* src) {
+#if OS_LINUX || OS_DARWIN
+static Pixmap* PixmapForHtml(Pixmap* src) {
     if (!src || !src->data || src->format == PixmapFormat::Native) {
         return nullptr;
     }
@@ -1663,10 +1661,12 @@ static Pixmap* PixmapForCairo(Pixmap* src) {
             d += 4;
         }
     }
-    dst->hasAlpha = src->hasAlpha;
     return dst;
 }
 
+#endif
+
+#if OS_LINUX
 static void CairoSetColor(cairo_t* cairo, Color col) {
     u8 r = 0;
     u8 g = 0;
@@ -1677,7 +1677,7 @@ static void CairoSetColor(cairo_t* cairo, Color col) {
 
 static void CairoDrawImage(cairo_t* cairo, Str data, RectF bbox) {
     Pixmap* decoded = PixmapFromData(data);
-    Pixmap* pixmap = PixmapForCairo(decoded);
+    Pixmap* pixmap = PixmapForHtml(decoded);
     FreePixmap(decoded);
     if (!pixmap) {
         return;
@@ -1699,23 +1699,7 @@ static void CairoDrawImage(cairo_t* cairo, Str data, RectF bbox) {
 
 void DrawHtmlPage(cairo_t* cairo, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
                   float offY, bool showBbox, Color textColor, bool* abortCookie) {
-    textDraw->SetTextColor(textColor);
-    textDraw->Lock();
-    for (DrawInstr& i : *drawInstructions) {
-        RectF bbox = i.bbox;
-        bbox.Offset(offX, offY);
-        if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            TempStr buf = str::DupTemp(i.str);
-            RemoveSoftHyphensInPlace(buf);
-            textDraw->Draw(buf, bbox, DrawInstrType::RtlString == i.type);
-        } else if (DrawInstrType::SetFont == i.type) {
-            textDraw->SetFont(i.font);
-        }
-        if (abortCookie && *abortCookie) {
-            break;
-        }
-    }
-    textDraw->Unlock();
+    DrawHtmlText(textDraw, drawInstructions, offX, offY, textColor, abortCookie);
 
     for (DrawInstr& i : *drawInstructions) {
         RectF bbox = i.bbox;
@@ -1750,35 +1734,6 @@ void DrawHtmlPage(cairo_t* cairo, PlatformTextRender* textDraw, Vec<DrawInstr>* 
 #endif
 
 #if OS_DARWIN
-static Pixmap* PixmapForCoreGraphics(Pixmap* src) {
-    if (!src || !src->data || src->format == PixmapFormat::Native) {
-        return nullptr;
-    }
-    Pixmap* dst = AllocPixmap(src->width, src->height, PixmapFormat::BGRA8, true);
-    if (!dst) {
-        return nullptr;
-    }
-    int bpp = PixmapBytesPerPixel(src->format);
-    bool rgba = src->format == PixmapFormat::RGBA8;
-    for (int y = 0; y < src->height; y++) {
-        const u8* s = src->data + (size_t)y * src->stride;
-        u8* d = dst->data + (size_t)y * dst->stride;
-        for (int x = 0; x < src->width; x++) {
-            u32 a = bpp == 4 ? s[3] : 255;
-            u8 r = rgba ? s[0] : s[2];
-            u8 g = s[1];
-            u8 b = rgba ? s[2] : s[0];
-            d[0] = src->premultiplied ? b : (u8)(((u32)b * a + 127) / 255);
-            d[1] = src->premultiplied ? g : (u8)(((u32)g * a + 127) / 255);
-            d[2] = src->premultiplied ? r : (u8)(((u32)r * a + 127) / 255);
-            d[3] = (u8)a;
-            s += bpp;
-            d += 4;
-        }
-    }
-    return dst;
-}
-
 static void CoreGraphicsSetColor(CGContextRef context, Color color) {
     u8 r = 0;
     u8 g = 0;
@@ -1789,7 +1744,7 @@ static void CoreGraphicsSetColor(CGContextRef context, Color color) {
 
 static void CoreGraphicsDrawImage(CGContextRef context, Str data, RectF bbox) {
     Pixmap* decoded = PixmapFromData(data);
-    Pixmap* pixmap = PixmapForCoreGraphics(decoded);
+    Pixmap* pixmap = PixmapForHtml(decoded);
     FreePixmap(decoded);
     if (!pixmap) {
         return;
@@ -1816,23 +1771,7 @@ static void CoreGraphicsDrawImage(CGContextRef context, Str data, RectF bbox) {
 
 void DrawHtmlPage(CGContextRef context, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
                   float offY, bool showBbox, Color textColor, bool* abortCookie) {
-    textDraw->SetTextColor(textColor);
-    textDraw->Lock();
-    for (DrawInstr& i : *drawInstructions) {
-        RectF bbox = i.bbox;
-        bbox.Offset(offX, offY);
-        if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            TempStr buf = str::DupTemp(i.str);
-            RemoveSoftHyphensInPlace(buf);
-            textDraw->Draw(buf, bbox, DrawInstrType::RtlString == i.type);
-        } else if (DrawInstrType::SetFont == i.type) {
-            textDraw->SetFont(i.font);
-        }
-        if (abortCookie && *abortCookie) {
-            break;
-        }
-    }
-    textDraw->Unlock();
+    DrawHtmlText(textDraw, drawInstructions, offX, offY, textColor, abortCookie);
 
     for (DrawInstr& i : *drawInstructions) {
         RectF bbox = i.bbox;
