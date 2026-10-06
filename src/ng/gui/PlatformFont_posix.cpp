@@ -10,7 +10,6 @@
 #include "gui/PlatformFont.h"
 
 #if OS_LINUX
-#include <fontconfig/fontconfig.h>
 #include <pango/pangocairo.h>
 
 static PangoFontDescription* NativeFont(PlatformFont* font) {
@@ -34,19 +33,6 @@ bool PlatformFontCreateNative(PlatformFont* font) {
     }
     font->nativeFont = desc;
     return true;
-}
-
-void PlatformFontDestroyNative(PlatformFont* font) {
-    PangoFontDescription* desc = NativeFont(font);
-    if (desc) {
-        pango_font_description_free(desc);
-        font->nativeFont = nullptr;
-    }
-}
-
-void PlatformFontShutdownNative() {
-    pango_cairo_font_map_set_default(nullptr);
-    FcFini();
 }
 
 static PangoLayout* NewLayout(PlatformFont* font, Str s) {
@@ -185,16 +171,6 @@ bool PlatformFontCreateNative(PlatformFont* font) {
     return true;
 }
 
-void PlatformFontDestroyNative(PlatformFont* font) {
-    CTFontRef native = NativeFont(font);
-    if (native) {
-        CFRelease(native);
-        font->nativeFont = nullptr;
-    }
-}
-
-void PlatformFontShutdownNative() {}
-
 static CFAttributedStringRef NewAttributedString(PlatformFont* font, Str s) {
     CFStringRef text = NewCfString(s);
     if (!text) {
@@ -315,12 +291,6 @@ bool PlatformFontCreateNative(PlatformFont* f) {
     f->nativeFont = nullptr;
     return true;
 }
-
-void PlatformFontDestroyNative(PlatformFont* f) {
-    f->nativeFont = nullptr;
-}
-
-void PlatformFontShutdownNative() {}
 
 Size PlatformFontMeasureText(PlatformFont* font, Str s, int maxDx) {
     if (len(s) == 0) {

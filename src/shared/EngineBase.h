@@ -415,7 +415,6 @@ struct TocItem {
     TocItem* currChild;
     int currChildNo;
 
-    void AddSibling(TocItem* sibling);
     void AddSiblingAtEnd(TocItem* sibling);
     void AddChild(TocItem* child);
 
@@ -567,7 +566,6 @@ class EngineBase {
     int PageNoFromLocation(Location loc);
     Location NextLocation(Location loc);
     Location PrevLocation(Location loc);
-    Location FirstLocation();
     Location LastLocation();
     Location ClampLocation(Location loc);
     int LayoutGeneration();
@@ -625,7 +623,6 @@ class EngineBase {
     virtual bool TryExtractPageText(int pageNo, PageText* out);
 
     bool HasTextForPage(int pageNo);
-    TextExtractionState GetTextExtractionState(int pageNo);
     void RequestTextExtraction(int pageNo);
     Str GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr, QuadF** quadsOut = nullptr);
     bool TryGetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr, QuadF** quadsOut = nullptr);

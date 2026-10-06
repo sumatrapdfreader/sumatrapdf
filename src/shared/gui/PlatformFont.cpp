@@ -67,16 +67,6 @@ PlatformFont* GetPlatformFont(Str name, float sizePt, PlatformFontStyle style) {
     return GetPlatformFontInternal(name, sizePt, style, 0);
 }
 
-void PlatformFontShutdown() {
-    gPlatformFontsMutex.Lock();
-    for (PlatformFont* font = gPlatformFonts.next; font; font = font->next) {
-        PlatformFontDestroyNative(font);
-    }
-    gPlatformFonts.next = nullptr;
-    gPlatformFontsMutex.Unlock();
-    PlatformFontShutdownNative();
-}
-
 #if OS_WIN
 PlatformFont* GetPlatformFontForNative(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId) {
     return GetPlatformFontInternal(name, sizePt, style, nativeId);
@@ -312,18 +302,6 @@ bool PlatformFontCreateNative(PlatformFont* f) {
     f->gdiFont = font;
     return true;
 }
-
-void PlatformFontDestroyNative(PlatformFont* font) {
-    delete font->gdiFont;
-    font->gdiFont = nullptr;
-    // adopted UI HFONTs (nativeId) are owned by the creator, not us
-    if (font->hfont && font->nativeId == 0) {
-        DeleteFont(font->hfont);
-        font->hfont = nullptr;
-    }
-}
-
-void PlatformFontShutdownNative() {}
 
 HFONT PlatformFont::GetHFont() {
     if (hfont) {

@@ -1131,26 +1131,6 @@ int GetCommandIdByName(Str cmdName) {
     return -1;
 }
 
-// returns -1 if not found
-int GetCommandIdByDesc(Str cmdDesc) {
-    int cmdId = GetCommandIdByNameOrDesc(gCommandDescriptions, cmdDesc);
-    if (cmdId >= 0) {
-        return cmdId;
-    }
-    int altIdx = SeqStrIndexIS(gCommandAltDescs, cmdDesc);
-    if (altIdx >= 0) {
-        return gCommandAltDescIds[altIdx];
-    }
-    auto* curr = gFirstCustomCommand;
-    while (curr) {
-        if (curr->name && str::EqI(cmdDesc, curr->name)) {
-            return curr->id;
-        }
-        curr = curr->next;
-    }
-    return -1;
-}
-
 // gCommandIds is parallel to gCommandNames / gCommandDescriptions. Removed
 // commands keep their id but are dropped from those tables, so the id of the
 // n-th description is gCommandIds[n], not CmdFirst + 1 + n.

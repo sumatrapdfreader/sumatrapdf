@@ -193,13 +193,6 @@ void FreeTocItemRec(Arena* arena, TocItem* item) {
     Free(arena, item);
 }
 
-void TocItem::AddSibling(TocItem* sibling) {
-    TocItem* currNext = next;
-    next = sibling;
-    sibling->next = currNext;
-    sibling->parent = parent;
-}
-
 void TocItem::AddSiblingAtEnd(TocItem* sibling) {
     TocItem* item = this;
     while (item->next) {
@@ -584,11 +577,6 @@ Location EngineBase::PrevLocation(Location loc) {
     return loc;
 }
 
-Location EngineBase::FirstLocation() {
-    EnsureChapterTable();
-    return {1, 1};
-}
-
 Location EngineBase::LastLocation() {
     EnsureChapterTable();
     int c = ChapterCount();
@@ -836,23 +824,6 @@ bool EngineBase::HasTextForPage(int pageNo) {
         return false;
     }
     return (bool)ct->text[loc.page - 1].text;
-}
-
-TextExtractionState EngineBase::GetTextExtractionState(int pageNo) {
-    ReportIf(pageNo < 1 || pageNo > pageCount);
-    if (pageNo < 1 || pageNo > pageCount) {
-        return TextExtractionState::Finished;
-    }
-    Location loc = LocationFromPageNo(pageNo);
-    if (!loc.IsValid()) {
-        return TextExtractionState::NotExtracted;
-    }
-    ScopedMutex scope(&textCacheLock);
-    ChapterTextCache* ct = pageTextCache->Peek(loc.chapter);
-    if (!ct || loc.page > len(ct->state)) {
-        return TextExtractionState::NotExtracted;
-    }
-    return ct->state[loc.page - 1];
 }
 
 void EngineBase::RequestTextExtraction(int pageNo) {

@@ -428,7 +428,6 @@ extern SeqStrings gCommandAltDescs;
 extern i32 gCommandAltDescIds[];
 
 int GetCommandIdByName(Str);
-int GetCommandIdByDesc(Str);
 int GetCommandIdByIdx(int idx);
 Str GetCommandName(int commandId);
 Str GetCommandDescription(int commandId);
