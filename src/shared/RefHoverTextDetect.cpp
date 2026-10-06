@@ -187,33 +187,29 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         return y;
     };
 
+    constexpr int kYearAheadChars = 60;
+    constexpr int kYearNearbyChars = 80;
     int bestYearPos = -1;
-    // First pass: nearest year strictly after the cursor.
-    for (int i = cursorChunkPos; i + 4 <= slen && i - cursorChunkPos <= 60; i++) {
-        if (isYearAt(i) > 0) {
+    int bestDist = INT_MAX;
+    for (int i = 0; i + 4 <= slen; i++) {
+        if (isYearAt(i) <= 0) {
+            continue;
+        }
+        int dist = abs(i - cursorChunkPos);
+        // A nearby following year wins over any preceding year.
+        if (i >= cursorChunkPos && dist <= kYearAheadChars) {
             bestYearPos = i;
             break;
         }
-    }
-    // Fallback: nearest year regardless of side.
-    if (bestYearPos < 0) {
-        int bestDist = INT_MAX;
-        for (int i = 0; i + 4 <= slen; i++) {
-            if (isYearAt(i) <= 0) {
-                continue;
-            }
-            int dist = abs(i - cursorChunkPos);
-            if (dist < bestDist) {
-                bestDist = dist;
-                bestYearPos = i;
-            }
-        }
-        if (bestYearPos < 0 || abs(bestYearPos - cursorChunkPos) > 80) {
-            return false;
+        if (dist < bestDist) {
+            bestDist = dist;
+            bestYearPos = i;
         }
     }
-    int year = ((s.s[bestYearPos] - L'0') * 1000) + ((s.s[bestYearPos + 1] - L'0') * 100) +
-               ((s.s[bestYearPos + 2] - L'0') * 10) + (s.s[bestYearPos + 3] - L'0');
+    if (bestYearPos < 0 || abs(bestYearPos - cursorChunkPos) > kYearNearbyChars) {
+        return false;
+    }
+    int year = isYearAt(bestYearPos);
 
     // Walk back from the year through punctuation to find the surname.
     int p = bestYearPos - 1;
