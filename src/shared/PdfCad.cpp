@@ -531,11 +531,6 @@ CadDetectResult DetectCadPdf(fz_context* ctx, pdf_document* doc) {
 }
 
 // Darken CAD-export grays without changing text geometry.
-typedef struct {
-    fz_device super;
-    fz_device* inner;
-} pdf_cad_enhance_device;
-
 static bool CadIsNeutralGray(float r, float g, float b, float* outLum) {
     float maxC = std::max({r, g, b});
     float minC = std::min({r, g, b});
@@ -613,45 +608,27 @@ static void CadMapColor(fz_context* ctx, fz_colorspace* cs, const float* color, 
                 &mapped[2]);
 }
 
-static void cad_forward_close(fz_context* ctx, fz_device* dev) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    // not inner->close_device(): only fz_close_device marks it closed, else
-    // dropping it warns "dropping unclosed device"
-    fz_close_device(ctx, d->inner);
-}
-
-static void cad_forward_drop(fz_context* ctx, fz_device* dev) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    if (d->inner) {
-        fz_drop_device(ctx, d->inner);
-        d->inner = nullptr;
-    }
-}
-
 static void cad_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path, const fz_stroke_state* stroke,
                             fz_matrix ctm, fz_colorspace* colorspace, const float* color, float alpha,
                             fz_color_params color_params) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
     float mapped[FZ_MAX_COLORS] = {};
     CadMapColor(ctx, colorspace, color, color_params, ctm, mapped);
-    fz_stroke_path(ctx, d->inner, path, stroke, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
+    fz_stroke_path(ctx, dev->passthrough, path, stroke, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
 }
 
 static void cad_fill_text(fz_context* ctx, fz_device* dev, const fz_text* text, fz_matrix ctm,
                           fz_colorspace* colorspace, const float* color, float alpha, fz_color_params color_params) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
     float mapped[FZ_MAX_COLORS] = {};
     CadMapColor(ctx, colorspace, color, color_params, ctm, mapped);
-    fz_fill_text(ctx, d->inner, text, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
+    fz_fill_text(ctx, dev->passthrough, text, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
 }
 
 static void cad_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text, const fz_stroke_state* stroke,
                             fz_matrix ctm, fz_colorspace* colorspace, const float* color, float alpha,
                             fz_color_params color_params) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
     float mapped[FZ_MAX_COLORS] = {};
     CadMapColor(ctx, colorspace, color, color_params, ctm, mapped);
-    fz_stroke_text(ctx, d->inner, text, stroke, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
+    fz_stroke_text(ctx, dev->passthrough, text, stroke, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
 }
 
 // device pixels: below this on its shorter side, a filled path is a line an
@@ -673,184 +650,26 @@ static bool CadFillIsLineLike(fz_context* ctx, const fz_path* path, fz_matrix ct
 
 static void cad_fill_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd, fz_matrix ctm,
                           fz_colorspace* colorspace, const float* color, float alpha, fz_color_params color_params) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
     if (!CadFillIsLineLike(ctx, path, ctm)) {
-        fz_fill_path(ctx, d->inner, path, even_odd, ctm, colorspace, color, alpha, color_params);
+        fz_fill_path(ctx, dev->passthrough, path, even_odd, ctm, colorspace, color, alpha, color_params);
         return;
     }
     float mapped[FZ_MAX_COLORS] = {};
     CadMapColor(ctx, colorspace, color, color_params, ctm, mapped);
-    fz_fill_path(ctx, d->inner, path, even_odd, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
-}
-
-static void cad_fill_shade(fz_context* ctx, fz_device* dev, fz_shade* shd, fz_matrix ctm, float alpha,
-                           fz_color_params color_params) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_fill_shade(ctx, d->inner, shd, ctm, alpha, color_params);
-}
-
-static void cad_fill_image(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm, float alpha,
-                           fz_color_params color_params) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_fill_image(ctx, d->inner, image, ctm, alpha, color_params);
-}
-
-static void cad_fill_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
-                                fz_colorspace* colorspace, const float* color, float alpha,
-                                fz_color_params color_params) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_fill_image_mask(ctx, d->inner, image, ctm, colorspace, color, alpha, color_params);
-}
-
-static void cad_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd, fz_matrix ctm,
-                          fz_rect scissor) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_clip_path(ctx, d->inner, path, even_odd, ctm, scissor);
-}
-
-static void cad_clip_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path, const fz_stroke_state* stroke,
-                                 fz_matrix ctm, fz_rect scissor) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_clip_stroke_path(ctx, d->inner, path, stroke, ctm, scissor);
-}
-
-static void cad_clip_text(fz_context* ctx, fz_device* dev, const fz_text* text, fz_matrix ctm, fz_rect scissor) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_clip_text(ctx, d->inner, text, ctm, scissor);
-}
-
-static void cad_clip_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text, const fz_stroke_state* stroke,
-                                 fz_matrix ctm, fz_rect scissor) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_clip_stroke_text(ctx, d->inner, text, stroke, ctm, scissor);
-}
-
-static void cad_clip_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm, fz_rect scissor) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_clip_image_mask(ctx, d->inner, image, ctm, scissor);
-}
-
-static void cad_pop_clip(fz_context* ctx, fz_device* dev) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_pop_clip(ctx, d->inner);
-}
-
-static void cad_begin_mask(fz_context* ctx, fz_device* dev, fz_rect area, int luminosity, fz_colorspace* colorspace,
-                           const float* bc, fz_color_params color_params) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_begin_mask(ctx, d->inner, area, luminosity, colorspace, bc, color_params);
-}
-
-static void cad_end_mask(fz_context* ctx, fz_device* dev, fz_function* fn) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_end_mask_tr(ctx, d->inner, fn);
-}
-
-static void cad_begin_group(fz_context* ctx, fz_device* dev, fz_rect area, fz_colorspace* cs, int isolated,
-                            int knockout, int blendmode, float alpha) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_begin_group(ctx, d->inner, area, cs, isolated, knockout, blendmode, alpha);
-}
-
-static void cad_end_group(fz_context* ctx, fz_device* dev) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_end_group(ctx, d->inner);
-}
-
-static int cad_begin_tile(fz_context* ctx, fz_device* dev, fz_rect area, fz_rect view, float xstep, float ystep,
-                          fz_matrix ctm, int id, int doc_id) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    return fz_begin_tile_tid(ctx, d->inner, area, view, xstep, ystep, ctm, id, doc_id);
-}
-
-static void cad_end_tile(fz_context* ctx, fz_device* dev) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_end_tile(ctx, d->inner);
-}
-
-static void cad_render_flags(fz_context* ctx, fz_device* dev, int set, int clear) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_render_flags(ctx, d->inner, set, clear);
-}
-
-static void cad_set_default_colorspaces(fz_context* ctx, fz_device* dev, fz_default_colorspaces* default_cs) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_set_default_colorspaces(ctx, d->inner, default_cs);
-}
-
-static void cad_begin_layer(fz_context* ctx, fz_device* dev, const char* layer_name) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_begin_layer(ctx, d->inner, layer_name);
-}
-
-static void cad_end_layer(fz_context* ctx, fz_device* dev) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_end_layer(ctx, d->inner);
-}
-
-static void cad_begin_structure(fz_context* ctx, fz_device* dev, fz_structure standard, const char* raw, int idx) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_begin_structure(ctx, d->inner, standard, raw, idx);
-}
-
-static void cad_end_structure(fz_context* ctx, fz_device* dev) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_end_structure(ctx, d->inner);
-}
-
-static void cad_begin_metatext(fz_context* ctx, fz_device* dev, fz_metatext meta, const char* text) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_begin_metatext(ctx, d->inner, meta, text);
-}
-
-static void cad_end_metatext(fz_context* ctx, fz_device* dev) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_end_metatext(ctx, d->inner);
-}
-
-static void cad_ignore_text(fz_context* ctx, fz_device* dev, const fz_text* text, fz_matrix ctm) {
-    pdf_cad_enhance_device* d = (pdf_cad_enhance_device*)dev;
-    fz_ignore_text(ctx, d->inner, text, ctm);
+    fz_fill_path(ctx, dev->passthrough, path, even_odd, ctm, fz_device_rgb(ctx), mapped, alpha, color_params);
 }
 
 // Wrap <inner> in the CAD-enhancing pass-through device. Takes ownership of
 // <inner>: dropping the wrapper drops it.
 fz_device* PdfCadEnhanceWrapDevice(fz_context* ctx, fz_device* inner) {
-    pdf_cad_enhance_device* d = fz_new_derived_device(ctx, pdf_cad_enhance_device);
-    d->inner = inner;
+    fz_device* dev = fz_new_passthrough_device_of_size(ctx, inner, sizeof(fz_device));
+    fz_drop_device(ctx, inner);
 
-    d->super.close_device = cad_forward_close;
-    d->super.drop_device = cad_forward_drop;
-    d->super.fill_path = cad_fill_path;
-    d->super.stroke_path = cad_stroke_path;
-    d->super.fill_text = cad_fill_text;
-    d->super.stroke_text = cad_stroke_text;
-    d->super.fill_shade = cad_fill_shade;
-    d->super.fill_image = cad_fill_image;
-    d->super.fill_image_mask = cad_fill_image_mask;
-    d->super.clip_path = cad_clip_path;
-    d->super.clip_stroke_path = cad_clip_stroke_path;
-    d->super.clip_text = cad_clip_text;
-    d->super.clip_stroke_text = cad_clip_stroke_text;
-    d->super.clip_image_mask = cad_clip_image_mask;
-    d->super.pop_clip = cad_pop_clip;
-    d->super.begin_mask = cad_begin_mask;
-    d->super.end_mask = cad_end_mask;
-    d->super.begin_group = cad_begin_group;
-    d->super.end_group = cad_end_group;
-    d->super.begin_tile = cad_begin_tile;
-    d->super.end_tile = cad_end_tile;
-    d->super.render_flags = cad_render_flags;
-    d->super.set_default_colorspaces = cad_set_default_colorspaces;
-    d->super.begin_layer = cad_begin_layer;
-    d->super.end_layer = cad_end_layer;
-    d->super.begin_structure = cad_begin_structure;
-    d->super.end_structure = cad_end_structure;
-    d->super.begin_metatext = cad_begin_metatext;
-    d->super.end_metatext = cad_end_metatext;
-    d->super.ignore_text = cad_ignore_text;
-
-    return &d->super;
+    dev->fill_path = cad_fill_path;
+    dev->stroke_path = cad_stroke_path;
+    dev->fill_text = cad_fill_text;
+    dev->stroke_text = cad_stroke_text;
+    return dev;
 }
 
 static unsigned char CadClampByte(float v) {

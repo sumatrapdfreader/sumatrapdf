@@ -187,6 +187,7 @@ EXPORTS
 	fz_get_pixmap_from_image
 
 	fz_new_device_of_size
+	fz_new_passthrough_device_of_size
 
 	fz_load_outline
 	fz_new_outline_iterator
