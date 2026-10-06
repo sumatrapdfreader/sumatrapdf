@@ -279,7 +279,6 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
         int rowMaxPageDy = 0;
         bool anyShown = false;
         bool cover = row.firstPage == row.lastPage && IsBookView(params.displayMode) && row.firstPage == 1;
-        int col = cover ? 1 : 0;
         for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
             DocumentLayoutPage* page = layout.GetPage(pageNo);
             if (!page->isShown) {
@@ -291,9 +290,9 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
             if (single || row.isSpread) {
                 maxFullRowWidth = std::max(maxFullRowWidth, page->pos.dx);
             } else {
+                int col = pageNo - row.firstPage + (cover ? 1 : 0);
                 ReportIf(col >= 2);
                 columnMaxWidth[col] = std::max(columnMaxWidth[col], page->pos.dx);
-                col++;
             }
         }
         if (!anyShown) {
@@ -325,8 +324,6 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
         FacingRow row = single ? FacingRow{ri + 1, ri + 1, false} : rows[ri];
         bool cover = row.firstPage == row.lastPage && IsBookView(params.displayMode) && row.firstPage == 1;
         int pageOffX = offX + params.windowMargin.left;
-        int col = 0;
-        int x = pageOffX;
         for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
             DocumentLayoutPage* page = layout.GetPage(pageNo);
             if (!page->isShown) {
@@ -336,17 +333,13 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
                 page->pos.x = pageOffX + ((pagesDx - page->pos.dx) / 2);
             } else if (cover) {
                 page->pos.x = pageOffX + columnMaxWidth[0] + params.pageSpacing.dx;
-            } else if (col == 0) {
-                page->pos.x = x + columnMaxWidth[0] - page->pos.dx;
+            } else if (pageNo == row.firstPage) {
+                page->pos.x = pageOffX + columnMaxWidth[0] - page->pos.dx;
             } else {
-                page->pos.x = x;
+                page->pos.x = pageOffX + (columnMaxWidth[0] + params.pageSpacing.dx);
             }
             if (!single && params.displayR2L) {
                 page->pos.x = canvasDx - page->pos.x - page->pos.dx;
-            }
-            if (pageNo < row.lastPage) {
-                x += columnMaxWidth[col] + params.pageSpacing.dx;
-                col++;
             }
         }
     }
