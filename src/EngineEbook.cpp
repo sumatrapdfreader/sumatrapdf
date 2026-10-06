@@ -906,7 +906,6 @@ bool EngineEpub::FinishLoading() {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = GetTextRenderMethod();
 
     pages = EpubFormatter(&args, doc).FormatAllPages(false);
 
@@ -1047,7 +1046,6 @@ bool EngineFb2::FinishLoading() {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = GetTextRenderMethod();
 
     if (doc->IsZipped()) {
         SetDefaultExt(defaultExt, StrL(".fb2z"));
@@ -1244,7 +1242,6 @@ bool EngineMobi::FinishLoading() {
         args.SetFontName(GetDefaultFontName());
         args.fontSize = GetDefaultFontSize();
         args.textAllocator = a;
-        args.textRenderMethod = GetTextRenderMethod();
 
         VecResize(chapterPages, 1);
         chapterPages[0] = MobiFormatter(&args, doc).FormatAllPages();
@@ -1296,7 +1293,6 @@ int EngineMobi::LayOutChapter(int chapter) {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = GetTextRenderMethod();
 
     // only chapter 1 may show the book's cover image
     MobiCoverImage coverImage = chapter == 1 ? MobiCoverImage::Show : MobiCoverImage::Skip;
@@ -1577,7 +1573,6 @@ bool EnginePdb::Load(Str fileName) {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = GetTextRenderMethod();
 
     pages = HtmlFormatter(&args).FormatAllPages();
     // must set pageCount before ExtractPageAnchors
@@ -1962,7 +1957,6 @@ bool EngineChm::Load(Str fileName) {
     args.overrideFontName = len(gDefaultChmFontName) > 0;
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = GetTextRenderMethod();
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors
@@ -2110,7 +2104,6 @@ bool EngineHtml::Load(Str fileName) {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = GetTextRenderMethod();
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors
@@ -2230,7 +2223,6 @@ bool EngineTxt::Load(Str fileName) {
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = a;
-    args.textRenderMethod = GetTextRenderMethod();
 
     pages = TxtFormatter(&args).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors

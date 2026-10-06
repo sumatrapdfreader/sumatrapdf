@@ -172,7 +172,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     htmlParser->SetCurrPosOff(currReparseIdx);
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
-    textMeasure = CreatePlatformTextRender(args->textRenderMethod);
+    textMeasure = CreatePlatformTextRender(PlatformTextMeasureMethod::Gdi);
     defaultFontName = str::Dup(ToUtf8Temp(args->GetFontName()));
     defaultFontSize = args->fontSize;
     overrideFontName = args->overrideFontName;
@@ -1806,17 +1806,6 @@ void DrawHtmlPage(CGContextRef context, PlatformTextRender* textDraw, Vec<DrawIn
 }
 #endif
 
-static PlatformTextMeasureMethod gTextRenderMethod = PlatformTextMeasureMethod::Gdi;
-// static TextRenderMethod gTextRenderMethod = TextRenderMethodGdiplus;
-
-PlatformTextMeasureMethod GetTextRenderMethod() {
-    return gTextRenderMethod;
-}
-
-void SetTextRenderMethod(PlatformTextMeasureMethod method) {
-    gTextRenderMethod = method;
-}
-
 HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Arena* textAllocator) {
     HtmlFormatterArgs* args = new HtmlFormatterArgs();
     args->SetFontName(L"Georgia");
@@ -1824,6 +1813,5 @@ HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Arena* textAllocat
     args->pageDx = (float)dx;
     args->pageDy = (float)dy;
     args->textAllocator = textAllocator;
-    args->textRenderMethod = GetTextRenderMethod();
     return args;
 }

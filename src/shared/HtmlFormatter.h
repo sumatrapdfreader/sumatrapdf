@@ -146,8 +146,6 @@ struct HtmlFormatterArgs {
        formatter) are copied into this allocator. */
     Arena* textAllocator = nullptr;
 
-    PlatformTextMeasureMethod textRenderMethod = PlatformTextMeasureMethod::Gdiplus;
-
     Str htmlStr;
 
     // we start parsing from htmlStr + reparseIdx
@@ -328,6 +326,4 @@ void DrawHtmlPage(struct CGContext* context, PlatformTextRender* textDraw, Vec<D
                   float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr);
 #endif
 
-PlatformTextMeasureMethod GetTextRenderMethod();
-void SetTextRenderMethod(PlatformTextMeasureMethod method);
 HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Arena* textAllocator = nullptr);
