@@ -65,12 +65,12 @@ bool CadEnhanceEnabledForEngine(const CadDetectResult& detect, CadEnhanceOverrid
     return detect.enable;
 }
 
-static bool ContainsAnyI(Str haystack, const char* const* needles, int count) {
+static bool ContainsAnyI(Str haystack, SeqStrings needles) {
     if (len(haystack) == 0) {
         return false;
     }
-    for (int i = 0; i < count; i++) {
-        if (str::ContainsI(haystack, Str(needles[i]))) {
+    for (Str needle = SeqStrFirst(needles); needle; needle = SeqStrNext(needle)) {
+        if (str::ContainsI(haystack, needle)) {
             return true;
         }
     }
@@ -78,23 +78,18 @@ static bool ContainsAnyI(Str haystack, const char* const* needles, int count) {
 }
 
 // Creator/Producer values of CAD authoring tools and CAD-to-PDF converters.
-static const char* kMetadataStrong[] = {
-    "autocad",    "dwg to pdf", "dwg trueview", "revit",    "microstation", "solidworks", "catia",
-    " creo",      " nx ",       "zwcad",        "gstarcad", "浩辰",         "中望",       "bluebeam",
-    "pdffactory", "tekla",      "sketchup",     "archicad", "vectorworks",  "bentley",
-};
+static constexpr SeqStrings kMetadataStrong =
+    "autocad\0dwg to pdf\0dwg trueview\0revit\0microstation\0solidworks\0catia\0 creo\0 nx \0zwcad\0"
+    "gstarcad\0浩辰\0中望\0bluebeam\0pdffactory\0tekla\0sketchup\0archicad\0vectorworks\0bentley\0";
 
-static const char* kMetadataWeak[] = {
-    "cad",       "dwg",        "plot",           "engineering", "layout", "draft", "mechanical",
-    "architect", "screenshot", "screen capture", "snipaste",    "截图",   "wps",
-};
+static constexpr SeqStrings kMetadataWeak =
+    "cad\0dwg\0plot\0engineering\0layout\0draft\0mechanical\0architect\0screenshot\0screen capture\0"
+    "snipaste\0截图\0wps\0";
 
 // Producers that never emit CAD drawings; any match disables detection.
-static const char* kMetadataBlacklist[] = {
-    "microsoft word", "libreoffice", "openoffice", "indesign", "itext",     "pdflatex", "xelatex",
-    "lualatex",       "latex",       " prince",    "chrome",   "skia/pdf",  "mozilla",  "calibre",
-    "epub",           "powerpoint",  "excel",      "onenote",  "doctotext",
-};
+static constexpr SeqStrings kMetadataBlacklist =
+    "microsoft word\0libreoffice\0openoffice\0indesign\0itext\0pdflatex\0xelatex\0lualatex\0latex\0"
+    " prince\0chrome\0skia/pdf\0mozilla\0calibre\0epub\0powerpoint\0excel\0onenote\0doctotext\0";
 
 // PDF/E is the ISO profile for engineering documents; its marker alone is proof.
 static bool HasPdfEMarker(fz_context* ctx, pdf_document* doc) {
@@ -146,14 +141,14 @@ static void ScoreMetadataField(Str field, CadMetadataScore* acc) {
     if (len(field) == 0) {
         return;
     }
-    if (ContainsAnyI(field, kMetadataBlacklist, dimof(kMetadataBlacklist))) {
+    if (ContainsAnyI(field, kMetadataBlacklist)) {
         acc->blacklisted = true;
         return;
     }
-    if (ContainsAnyI(field, kMetadataStrong, dimof(kMetadataStrong))) {
+    if (ContainsAnyI(field, kMetadataStrong)) {
         acc->strong = true;
         acc->score += 40;
-    } else if (ContainsAnyI(field, kMetadataWeak, dimof(kMetadataWeak))) {
+    } else if (ContainsAnyI(field, kMetadataWeak)) {
         acc->score += 15;
     }
 }
