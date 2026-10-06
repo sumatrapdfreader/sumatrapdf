@@ -16,33 +16,6 @@ static constexpr int kMaxImageSamples = 1000;
 static constexpr int kGridBlocks = 10;
 static constexpr int kColorBuckets = 4096;
 
-static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* outR, float* outG, float* outB,
-                            float* outA) {
-    *outR = *outG = *outB = 0.f;
-    *outA = 1.f;
-    if (!pix || !pix->samples || x < 0 || y < 0 || x >= pix->w || y >= pix->h) {
-        return;
-    }
-    fz_colorspace* cs = pix->colorspace ? pix->colorspace : fz_device_rgb(ctx);
-    fz_colorspace* rgb = fz_device_rgb(ctx);
-    int n = pix->n;
-    int stride = (int)pix->stride;
-    unsigned char* px = pix->samples + ((size_t)y * stride) + ((size_t)x * n);
-    float conv[FZ_MAX_COLORS] = {};
-    float srcRgb[FZ_MAX_COLORS] = {};
-    int components = fz_colorspace_n(ctx, cs);
-    for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
-        conv[c] = (float)px[c] / 255.f;
-    }
-    fz_convert_color(ctx, cs, conv, rgb, srcRgb, cs, fz_default_color_params);
-    *outR = srcRgb[0];
-    *outG = srcRgb[1];
-    *outB = srcRgb[2];
-    if (pix->alpha && n > components) {
-        *outA = (float)px[components] / 255.f;
-    }
-}
-
 static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float pageCoverage,
                                        DarkImageFeatures* outFeatures, PixelColor* outBackground) {
     if (!ctx || !image || !outFeatures) {
@@ -98,8 +71,8 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
                 for (int y = y0; y < y1 && n < kMaxImageSamples; y += stepY) {
                     for (int x = x0; x < x1 && n < kMaxImageSamples; x += stepX) {
                         float r, g, b, a;
-                        SamplePixmapRgb(ctx, pix, x, y, &r, &g, &b, &a);
-                        if (a < 0.08f) {
+                        PdfDarkModeSampleRgb(ctx, pix, x, y, &r, &g, &b, &a);
+                        if (a < kImageMinAlpha) {
                             transparent++;
                             n++;
                             continue;
@@ -167,69 +140,8 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
         outFeatures->textureScore = blockVarSum / (float)(kGridBlocks * kGridBlocks);
         outFeatures->flatAreaRatio = (float)flatBlocks / (float)(kGridBlocks * kGridBlocks);
 
-        // Border sampling (4 edges, up to 64 px each).
-        float borderLum[256] = {};
-        float borderR[256] = {};
-        float borderG[256] = {};
-        float borderB[256] = {};
-        int borderN = 0;
-        int borderLight = 0;
-        auto sample_edge = [&](int x, int y) {
-            if (borderN >= 256) {
-                return;
-            }
-            float r, g, b, a;
-            SamplePixmapRgb(ctx, pix, x, y, &r, &g, &b, &a);
-            if (a < 0.08f) {
-                return;
-            }
-            float lum = (0.2126f * r) + (0.7152f * g) + (0.0722f * b);
-            borderLum[borderN] = lum;
-            borderR[borderN] = r;
-            borderG[borderN] = g;
-            borderB[borderN] = b;
-            if (lum > 0.72f) {
-                borderLight++;
-            }
-            borderN++;
-        };
-        int edgeStep = pix->w >= 32 ? pix->w / 32 : 1;
-        for (int x = 0; x < pix->w; x += edgeStep) {
-            sample_edge(x, 0);
-            sample_edge(x, pix->h - 1);
-        }
-        edgeStep = pix->h >= 32 ? pix->h / 32 : 1;
-        for (int y = 0; y < pix->h; y += edgeStep) {
-            sample_edge(0, y);
-            sample_edge(pix->w - 1, y);
-        }
-        if (borderN > 0) {
-            outFeatures->borderLightRatio = (float)borderLight / (float)borderN;
-            float br = 0.f, bg = 0.f, bb = 0.f;
-            for (int i = 0; i < borderN; i++) {
-                br += borderR[i];
-                bg += borderG[i];
-                bb += borderB[i];
-            }
-            br /= (float)borderN;
-            bg /= (float)borderN;
-            bb /= (float)borderN;
-            if (outBackground) {
-                outBackground->r = br;
-                outBackground->g = bg;
-                outBackground->b = bb;
-            }
-            float borderVar = 0.f;
-            for (int i = 0; i < borderN; i++) {
-                float dr = borderR[i] - br;
-                float dg = borderG[i] - bg;
-                float db = borderB[i] - bb;
-                borderVar += (dr * dr) + (dg * dg) + (db * db);
-            }
-            borderVar /= (float)borderN;
-            outFeatures->borderUniformity = 1.f - (borderVar / 0.12f);
-            outFeatures->borderUniformity = limitValue(outFeatures->borderUniformity, 0.f, 1.f);
-        }
+        PdfDarkModeSampleBorder(ctx, pix, kImageBorderSamples, kImageMinAlpha, &outFeatures->borderLightRatio,
+                                &outFeatures->borderUniformity, outBackground);
     }
     fz_always(ctx) {
         if (pix) {

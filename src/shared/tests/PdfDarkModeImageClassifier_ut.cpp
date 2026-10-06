@@ -3,7 +3,12 @@
 
 #include "base/Base.h"
 
+extern "C" {
+#include <mupdf/fitz.h>
+}
+
 #include "PdfDarkMode.h"
+#include "PdfDarkModeInternal.h"
 
 #include "base/tests/UtAssert.h"
 
@@ -60,7 +65,35 @@ static DarkImageFeatures BrightFilmStillFeatures() {
     return f;
 }
 
+static void TestImageBorder() {
+    fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
+    fz_pixmap* pix = fz_new_pixmap(ctx, fz_device_rgb(ctx), 40, 40, nullptr, 1);
+    fz_clear_pixmap_with_value(ctx, pix, 255);
+    memset(pix->samples + 39 * pix->stride, 0, 40 * pix->n);
+
+    float light, uniformity;
+    PixelColor background;
+    PdfDarkModeSampleBorder(ctx, pix, 128, 0.f, &light, &uniformity, &background);
+    utassert(light == 88.f / 128.f);
+    utassert(uniformity == 0.f);
+    utassert(background.r == light && background.g == light && background.b == light);
+
+    PdfDarkModeSampleBorder(ctx, pix, kImageBorderSamples, 0.f, &light, &uniformity);
+    utassert(light == 118.f / 160.f);
+    PdfDarkModeSampleBorder(ctx, pix, kImageBorderSamples, kImageMinAlpha, &light, &uniformity, &background);
+    utassert(light == 1.f && uniformity == 1.f);
+    utassert(background.r == 1.f && background.g == 1.f && background.b == 1.f);
+
+    fz_clear_pixmap(ctx, pix);
+    PdfDarkModeSampleBorder(ctx, pix, kImageBorderSamples, kImageMinAlpha, &light, &uniformity);
+    utassert(light == 0.f && uniformity == 0.f);
+
+    fz_drop_pixmap(ctx, pix);
+    fz_drop_context(ctx);
+}
+
 void PdfDarkModeImageClassifier_UnitTests() {
+    TestImageBorder();
     float confidence = 0.f;
 
     DarkImageKind kind = PdfDarkModeClassifyImageFeatures(PhotoLikeFeatures(), 0.22f, false, &confidence);

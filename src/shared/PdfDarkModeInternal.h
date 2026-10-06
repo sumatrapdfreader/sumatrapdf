@@ -5,6 +5,14 @@
 
 struct DarkModeEngineCache;
 
+static constexpr int kImageBorderSamples = 256;
+static constexpr float kImageMinAlpha = 0.08f;
+
+void PdfDarkModeSampleRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* r, float* g, float* b,
+                          float* alpha = nullptr);
+void PdfDarkModeSampleBorder(fz_context* ctx, fz_pixmap* pix, int maxSamples, float minAlpha, float* lightRatio,
+                             float* uniformity, PixelColor* background = nullptr);
+
 DarkModeEngineCache* PdfDarkModeEngineCacheCreate();
 void PdfDarkModeEngineCacheFree(fz_context* ctx, DarkModeEngineCache* cache);
 void PdfDarkModeEngineCacheClear(fz_context* ctx, DarkModeEngineCache* cache);

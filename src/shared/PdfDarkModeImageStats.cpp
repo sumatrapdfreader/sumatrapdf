@@ -8,6 +8,7 @@ extern "C" {
 }
 
 #include "PdfDarkMode.h"
+#include "PdfDarkModeInternal.h"
 
 struct PdfDarkModeImageSampleStats {
     int significantBuckets = 0;
@@ -25,9 +26,13 @@ static constexpr float kLightBackdropBorderLight = 0.95f;
 static constexpr float kLightBackdropBorderUniformity = 0.90f;
 static constexpr int kBorderSamplesPerEdge = 32;
 
-static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* outR, float* outG, float* outB) {
+void PdfDarkModeSampleRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float* outR, float* outG, float* outB,
+                          float* outA) {
+    *outR = *outG = *outB = 0.f;
+    if (outA) {
+        *outA = 1.f;
+    }
     if (!pix || !pix->samples || x < 0 || y < 0 || x >= pix->w || y >= pix->h) {
-        *outR = *outG = *outB = 0.f;
         return;
     }
     fz_colorspace* cs = pix->colorspace ? pix->colorspace : fz_device_rgb(ctx);
@@ -45,24 +50,33 @@ static void SamplePixmapRgb(fz_context* ctx, fz_pixmap* pix, int x, int y, float
     *outR = srcRgb[0];
     *outG = srcRgb[1];
     *outB = srcRgb[2];
+    if (outA && pix->alpha && n > components) {
+        *outA = (float)px[components] / 255.f;
+    }
 }
 
 // How light the outermost ring of pixels is, and how close it is to a single
 // color. borderUniformity is 1 for a perfectly flat border and drops to 0 as
 // the mean squared RGB distance from the border's average color reaches 0.12.
-static void SampleBorderStats(fz_context* ctx, fz_pixmap* pix, PdfDarkModeImageSampleStats* stats) {
-    float r[kBorderSamplesPerEdge * 4] = {};
-    float g[kBorderSamplesPerEdge * 4] = {};
-    float b[kBorderSamplesPerEdge * 4] = {};
+void PdfDarkModeSampleBorder(fz_context* ctx, fz_pixmap* pix, int maxSamples, float minAlpha, float* lightRatio,
+                             float* uniformity, PixelColor* background) {
+    PixelColor samples[kImageBorderSamples] = {};
+    maxSamples = std::min(maxSamples, kImageBorderSamples);
+    *lightRatio = *uniformity = 0.f;
     int n = 0;
     int light = 0;
 
     auto sampleAt = [&](int x, int y) {
-        if (n >= kBorderSamplesPerEdge * 4) {
+        if (n >= maxSamples) {
             return;
         }
-        SamplePixmapRgb(ctx, pix, x, y, &r[n], &g[n], &b[n]);
-        float lum = (0.2126f * r[n]) + (0.7152f * g[n]) + (0.0722f * b[n]);
+        PixelColor& c = samples[n];
+        float alpha;
+        PdfDarkModeSampleRgb(ctx, pix, x, y, &c.r, &c.g, &c.b, &alpha);
+        if (alpha < minAlpha) {
+            return;
+        }
+        float lum = (0.2126f * c.r) + (0.7152f * c.g) + (0.0722f * c.b);
         if (lum > 0.72f) {
             light++;
         }
@@ -85,25 +99,28 @@ static void SampleBorderStats(fz_context* ctx, fz_pixmap* pix, PdfDarkModeImageS
 
     float mr = 0.f, mg = 0.f, mb = 0.f;
     for (int i = 0; i < n; i++) {
-        mr += r[i];
-        mg += g[i];
-        mb += b[i];
+        mr += samples[i].r;
+        mg += samples[i].g;
+        mb += samples[i].b;
     }
     mr /= (float)n;
     mg /= (float)n;
     mb /= (float)n;
+    if (background) {
+        *background = {mr, mg, mb};
+    }
 
     float var = 0.f;
     for (int i = 0; i < n; i++) {
-        float dr = r[i] - mr;
-        float dg = g[i] - mg;
-        float db = b[i] - mb;
+        float dr = samples[i].r - mr;
+        float dg = samples[i].g - mg;
+        float db = samples[i].b - mb;
         var += (dr * dr) + (dg * dg) + (db * db);
     }
     var /= (float)n;
 
-    stats->borderLightRatio = (float)light / (float)n;
-    stats->borderUniformity = limitValue(1.f - (var / 0.12f), 0.f, 1.f);
+    *lightRatio = (float)light / (float)n;
+    *uniformity = limitValue(1.f - (var / 0.12f), 0.f, 1.f);
 }
 
 static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, fz_image* image) {
@@ -141,7 +158,7 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
         for (int y = 0; y < pix->h; y += stepY) {
             for (int x = 0; x < pix->w; x += stepX) {
                 float r, g, b;
-                SamplePixmapRgb(ctx, pix, x, y, &r, &g, &b);
+                PdfDarkModeSampleRgb(ctx, pix, x, y, &r, &g, &b);
                 int ri = (int)lroundf(r * 255.f);
                 int gi = (int)lroundf(g * 255.f);
                 int bi = (int)lroundf(b * 255.f);
@@ -178,7 +195,8 @@ static PdfDarkModeImageSampleStats PdfDarkModeSampleImageStats(fz_context* ctx, 
         stats.lumVar = (lumSqSum / (float)n) - (lumMean * lumMean);
         stats.satRatio = (float)saturated / (float)n;
         stats.highLumRatio = (float)highLum / (float)n;
-        SampleBorderStats(ctx, pix, &stats);
+        PdfDarkModeSampleBorder(ctx, pix, kBorderSamplesPerEdge * 4, 0.f, &stats.borderLightRatio,
+                                &stats.borderUniformity);
         stats.valid = true;
     }
     fz_always(ctx) {
