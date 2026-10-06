@@ -86,6 +86,7 @@ enum class AlignAttr {
 HtmlTag FindHtmlTag(Str name);
 bool IsTagSelfClosing(HtmlTag tag);
 bool IsInlineTag(HtmlTag tag);
+bool IsHeadingTag(HtmlTag tag);
 AlignAttr FindAlignAttr(Str name);
 u32 FindHtmlEntityRune(Str name);
 

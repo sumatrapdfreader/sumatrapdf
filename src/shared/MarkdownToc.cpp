@@ -221,10 +221,6 @@ static void ParseMarkdownHeadings(Str data, Vec<MarkdownHeadingItem>& headingsOu
     cmark_node_free(doc);
 }
 
-static bool IsHtmlHeadingTag(HtmlTag tag) {
-    return tag >= Tag_H1 && tag <= Tag_H6;
-}
-
 // Extract <h1>..<h6> headings from HTML source, using each heading's id=""
 // attribute (when present) as the in-page anchor. headingsOut items are heap-owned.
 void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
@@ -241,7 +237,7 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
         if (tok->IsError()) {
             break;
         }
-        if (tok->IsStartTag() && IsHtmlHeadingTag(tok->tag)) {
+        if (tok->IsStartTag() && IsHeadingTag(tok->tag)) {
             headingLevel = (int)(tok->tag - Tag_H1) + 1;
             str::FreePtr(&headingId);
             AttrInfo id = tok->GetAttrByName(StrL("id"));
@@ -256,7 +252,7 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
         }
         if (tok->IsText()) {
             text.Append(tok->s);
-        } else if (tok->IsEndTag() && IsHtmlHeadingTag(tok->tag)) {
+        } else if (tok->IsEndTag() && IsHeadingTag(tok->tag)) {
             Str raw = text.TakeStr();
             // heap (not Temp) entity resolution: this runs on TOC worker threads
             // whose thread-local temp arena would leak on thread exit

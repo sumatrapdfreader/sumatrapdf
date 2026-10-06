@@ -953,20 +953,6 @@ bool HtmlFormatter::HandleTagA(HtmlToken* t, Str linkAttr, HtmlNameMatch match) 
     return false;
 }
 
-inline bool IsTagH(HtmlTag tag) {
-    switch (tag) {
-        case Tag_H1:
-        case Tag_H2:
-        case Tag_H3:
-        case Tag_H4:
-        case Tag_H5:
-        case Tag_H6:
-            return true;
-        default:
-            return false;
-    }
-}
-
 void HtmlFormatter::HandleTagHx(HtmlToken* t) {
     if (t->IsEndTag()) {
         FlushCurrLine(true);
@@ -1105,17 +1091,14 @@ static bool AutoCloseOnOpen(HtmlTag curr, HtmlTag prev) {
         return false;
     }
 
+    if (IsHeadingTag(prev)) {
+        return IsHeadingTag(curr);
+    }
+
     switch (prev) {
         case Tag_Dd:
         case Tag_Dt:
             return Tag_Dd == curr || Tag_Dt == curr;
-        case Tag_H1:
-        case Tag_H2:
-        case Tag_H3:
-        case Tag_H4:
-        case Tag_H5:
-        case Tag_H6:
-            return IsTagH(curr);
         case Tag_Lh:
         case Tag_Li:
             return Tag_Lh == curr || Tag_Li == curr;
@@ -1210,7 +1193,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         HandleTagList(t);
     } else if (Tag_Div == tag) {
         HandleTagP(t, true);
-    } else if (IsTagH(tag)) {
+    } else if (IsHeadingTag(tag)) {
         HandleTagHx(t);
     } else if (Tag_Center == tag) {
         HandleTagP(t, true);

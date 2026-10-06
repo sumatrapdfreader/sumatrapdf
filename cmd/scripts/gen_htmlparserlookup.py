@@ -81,6 +81,7 @@ Header = """\
 HtmlTag FindHtmlTag(Str name);
 bool IsTagSelfClosing(HtmlTag tag);
 bool IsInlineTag(HtmlTag tag);
+bool IsHeadingTag(HtmlTag tag);
 AlignAttr FindAlignAttr(Str name);
 u32 FindHtmlEntityRune(Str name);
 
@@ -125,6 +126,10 @@ static const u8 gTagFlags[Tag_NotFound] = {%(tag_flags)s};
 
 bool IsTagSelfClosing(HtmlTag tag) {
     return tag < Tag_NotFound && (gTagFlags[tag] & kSelfClosing) != 0;
+}
+
+bool IsHeadingTag(HtmlTag tag) {
+    return tag >= Tag_H1 && tag <= Tag_H6;
 }
 
 bool IsInlineTag(HtmlTag tag) {

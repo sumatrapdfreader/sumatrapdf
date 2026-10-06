@@ -57,6 +57,10 @@ bool IsTagSelfClosing(HtmlTag tag) {
     return tag < Tag_NotFound && (gTagFlags[tag] & kSelfClosing) != 0;
 }
 
+bool IsHeadingTag(HtmlTag tag) {
+    return tag >= Tag_H1 && tag <= Tag_H6;
+}
+
 bool IsInlineTag(HtmlTag tag) {
     return tag < Tag_NotFound && (gTagFlags[tag] & kInline) != 0;
 }
