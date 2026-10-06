@@ -1192,8 +1192,8 @@
     <ClCompile Include="..\src\base\StrQueue.cpp" />
     <ClCompile Include="..\src\base\Win.cpp" />
     <ClCompile Include="..\src\base\WinDynCalls.cpp" />
-    <ClCompile Include="..\src\gui\Dpi.cpp" />
     <ClCompile Include="..\src\shared\CrashHandlerNoOp.cpp" />
+    <ClCompile Include="..\src\shared\gui\Dpi.cpp" />
     <ClCompile Include="..\src\tools\MakeLzSA.cpp" />
   </ItemGroup>
   <ItemGroup>

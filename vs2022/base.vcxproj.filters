@@ -16,9 +16,6 @@
     <Filter Include="src\base">
       <UniqueIdentifier>{F7972DCF-E364-88DA-0C7E-7682F8A9BD68}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\gui">
-      <UniqueIdentifier>{210530A9-8DE4-AE44-96FC-391B025B15A6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\shared">
       <UniqueIdentifier>{D3351079-BFED-51C6-28F5-2A2214CCECB6}</UniqueIdentifier>
     </Filter>
@@ -221,11 +218,11 @@
     <ClCompile Include="..\src\base\Zip.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\Dpi.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\shared\PerfLog.cpp">
       <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\gui\Dpi.cpp">
+      <Filter>src\shared\gui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

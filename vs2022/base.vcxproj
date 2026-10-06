@@ -1188,8 +1188,8 @@
     <ClCompile Include="..\src\base\Win.cpp" />
     <ClCompile Include="..\src\base\WinDynCalls.cpp" />
     <ClCompile Include="..\src\base\Zip.cpp" />
-    <ClCompile Include="..\src\gui\Dpi.cpp" />
     <ClCompile Include="..\src\shared\PerfLog.cpp" />
+    <ClCompile Include="..\src\shared\gui\Dpi.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\shared\PerfLog_x64.asm">
