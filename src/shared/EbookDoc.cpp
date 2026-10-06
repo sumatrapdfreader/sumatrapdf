@@ -1197,8 +1197,8 @@ PalmDoc::~PalmDoc() {
 #define kPdbTocEntryMark "ToC!Entry!"
 
 // http://wiki.mobileread.com/wiki/TealDoc
-static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, int n, uint /*codePage*/) {
-    if (n < 9) {
+static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text) {
+    if (len(text) < 9) {
     Fallback:
         builder.Append(StrL("&lt;"));
         return text;
@@ -1208,7 +1208,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         !str::StartsWithI(text, StrL("<LINK")) && !str::StartsWithI(text, StrL("<TEALPAINT"))) {
         goto Fallback;
     }
-    GumboHtmlParser parser(Str(text.s, n));
+    GumboHtmlParser parser(text);
     HtmlToken* tok = parser.Next();
     if (!tok || !tok->IsStartTag()) {
         goto Fallback;
@@ -1217,12 +1217,11 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
     if (tok->NameIs(StrL("BOOKMARK"))) {
         // <BOOKMARK NAME="Contents">
         AttrInfo attr = tok->GetAttrByName(StrL("NAME"));
-        if (attr && attr.val) {
-            TempStr s = strconv::HtmlUtf8ToStrTemp(attr.val);
-            tocEntries.Append(s);
-            builder.Append(fmt("<a name=" kPdbTocEntryMark "%d>", ::len(tocEntries)));
-            return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
+        if (!attr || len(attr.val) == 0) {
+            goto Fallback;
         }
+        tocEntries.Append(strconv::HtmlUtf8ToStrTemp(attr.val));
+        builder.Append(fmt("<a name=" kPdbTocEntryMark "%d>", ::len(tocEntries)));
     } else if (tok->NameIs(StrL("HEADER"))) {
         // <HEADER TEXT="Contents" ALIGN=CENTER STYLE=UNDERLINE>
         int hx = 2;
@@ -1237,47 +1236,43 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
             }
         }
         attr = tok->GetAttrByName(StrL("TEXT"));
-        if (attr) {
-            builder.Append(fmt("<h%d>", hx));
-            builder.Append(attr.val);
-            builder.Append(fmt("</h%d>", hx));
-            return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
+        if (!attr) {
+            goto Fallback;
         }
+        builder.Append(fmt("<h%d>", hx));
+        builder.Append(attr.val);
+        builder.Append(fmt("</h%d>", hx));
     } else if (tok->NameIs(StrL("HRULE"))) {
         // <HRULE STYLE=OUTLINE>
         builder.Append(StrL("<hr>"));
-        return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
     } else if (tok->NameIs(StrL("LABEL"))) {
         // <LABEL NAME="Contents">
         AttrInfo attr = tok->GetAttrByName(StrL("NAME"));
-        if (attr && attr.val) {
-            builder.Append(StrL("<a name=\""));
-            builder.Append(attr.val);
-            builder.Append(StrL("\">"));
-            return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
+        if (!attr || len(attr.val) == 0) {
+            goto Fallback;
         }
+        builder.Append(StrL("<a name=\""));
+        builder.Append(attr.val);
+        builder.Append(StrL("\">"));
     } else if (tok->NameIs(StrL("LINK"))) {
         // <LINK TEXT="Press Me" TAG="Contents" FILE="My Novels">
         AttrInfo attrTag = tok->GetAttrByName(StrL("TAG"));
         AttrInfo attrText = tok->GetAttrByName(StrL("TEXT"));
-        if (attrTag && attrText) {
-            if (tok->GetAttrByName(StrL("FILE"))) {
-                // skip links to other files
-                return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
-            }
+        if (!attrTag || !attrText) {
+            goto Fallback;
+        }
+        // Skip links to other files.
+        if (!tok->GetAttrByName(StrL("FILE"))) {
             builder.Append(StrL("<a href=\"#"));
             builder.Append(attrTag.val);
             builder.Append(StrL("\">"));
             builder.Append(attrText.val);
             builder.Append(StrL("</a>"));
-            return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
-    } else if (tok->NameIs(StrL("TEALPAINT"))) {
-        // <TEALPAINT SRC="Pictures" INDEX=0 LINK=SUPERMAP SUPERIMAGE=1 SUPERW=640 SUPERH=480>
-        // support removed in r7047
-        return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
+    } else if (!tok->NameIs(StrL("TEALPAINT"))) {
+        goto Fallback;
     }
-    goto Fallback;
+    return Str(tok->s.s + len(tok->s), (int)(text.s + len(text) - (tok->s.s + len(tok->s))));
 }
 
 bool PalmDoc::Load() {
@@ -1303,7 +1298,7 @@ bool PalmDoc::Load() {
         if ('&' == c) {
             htmlData.Append(StrL("&amp;"));
         } else if ('<' == c) {
-            Str after = HandleTealDocTag(htmlData, tocEntries, Str(rest.s + i, rest.len - i), rest.len - i, codePage);
+            Str after = HandleTealDocTag(htmlData, tocEntries, Str(rest.s + i, rest.len - i));
             if (after) {
                 i += (int)(after.s - (rest.s + i)) - 1;
             }
