@@ -166,13 +166,6 @@ static void TreeViewToggle(TreeView* tree, HTREEITEM hItem, bool recursive) {
     }
 }
 
-static void SetTreeItemState(uint uState, TreeItemState& state) {
-    state.isExpanded = bit::IsMaskSet(uState, TVIS_EXPANDED);
-    state.isSelected = bit::IsMaskSet(uState, TVIS_SELECTED);
-    uint n = (uState >> 12) - 1;
-    state.isChecked = n != 0;
-}
-
 static bool HandleKey(TreeView* tree, WPARAM wp) {
     HWND hwnd = tree->hwnd;
     // consistently expand/collapse whole (sub)trees
@@ -251,8 +244,8 @@ void TreeView::WndProc(ControlBase::WndProcEvent* ev) {
 }
 
 bool TreeView::IsExpanded(TreeItem ti) {
-    auto state = GetItemState(ti);
-    return state.isExpanded;
+    TVITEMW* item = GetTVITEM(this, ti);
+    return item && bit::IsMaskSet(item->state, TVIS_EXPANDED);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-treeview_getitemrect
@@ -509,20 +502,6 @@ bool TreeView::GetState(TreeItem item) {
     ReportIf(!hi);
     auto res = TreeView_GetCheckState(hwnd, hi);
     return res != 0;
-}
-
-TreeItemState TreeView::GetItemState(TreeItem ti) {
-    TreeItemState res;
-
-    TVITEMW* it = GetTVITEM(this, ti);
-    if (!it) {
-        // could be missing if filtered
-        return res;
-    }
-    SetTreeItemState(it->state, res);
-    res.nChildren = it->cChildren;
-
-    return res;
 }
 
 // if context menu invoked via keyboard, get selected item

@@ -35,8 +35,6 @@ struct ListBoxModel {
     virtual Str Item(int) = 0;
 };
 
-using DropDownModel = ListBoxModel;
-
 struct ListBoxModelStrings : ListBoxModel {
     StrVec strings;
 
@@ -44,8 +42,6 @@ struct ListBoxModelStrings : ListBoxModel {
     int ItemsCount() override;
     Str Item(int) override;
 };
-
-using DropDownModelStrings = ListBoxModelStrings;
 
 // TreeItem represents an item in a TreeView control
 typedef uintptr_t TreeItem;
@@ -81,10 +77,3 @@ struct TreeItemVisitorData {
 using TreeItemVisitor = Func1<TreeItemVisitorData*>;
 
 bool VisitTreeModelItems(TreeModel*, const TreeItemVisitor& visitor);
-
-struct TreeItemState {
-    bool isSelected = false;
-    bool isExpanded = false;
-    bool isChecked = false;
-    int nChildren = 0;
-};

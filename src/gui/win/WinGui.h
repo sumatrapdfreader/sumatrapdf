@@ -892,7 +892,6 @@ struct DropDown : ControlBase {
 
     using SelectionChangedHandler = Func0;
 
-    // TODO: use DropDownModel
     StrVec items;
     Vec<Color> itemColors; // parallel to items when colorSwatches
     bool colorSwatches = false;
@@ -1061,7 +1060,6 @@ struct TreeView : ControlBase {
     void SetTreeModel(TreeModel* tm);
     void SetState(TreeItem item, bool enable);
     bool GetState(TreeItem item);
-    TreeItemState GetItemState(TreeItem ti);
 
     bool fullRowSelect = false;
     Size idealSize;
