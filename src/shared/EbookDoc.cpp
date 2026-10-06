@@ -870,14 +870,7 @@ static bool LooksLikeZipOrRar(Str data) {
     if (len(data) < 4) {
         return false;
     }
-    // PK\x03\x04 (zip) or Rar!
-    if (data.s[0] == 'P' && data.s[1] == 'K') {
-        return true;
-    }
-    if (str::StartsWith(data, StrL("Rar!"))) {
-        return true;
-    }
-    return false;
+    return (data.s[0] == 'P' && data.s[1] == 'K') || str::StartsWith(data, StrL("Rar!"));
 }
 
 static Str loadFromData(Fb2Doc* doc, Str srcData) {
