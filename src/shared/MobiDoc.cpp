@@ -1289,23 +1289,13 @@ Str ExtractPdfFromPrintReplicaFile(Str path) {
     if (!FileMightBePrintReplica(path)) {
         return {};
     }
-    PdbReader* pdb = PdbReader::CreateFromFile(path);
-    if (!pdb) {
-        return {};
-    }
-    Str pdf = ExtractPdfFromPrintReplica(pdb);
-    delete pdb;
-    return pdf;
+    AutoDelete pdb(PdbReader::CreateFromFile(path));
+    return ExtractPdfFromPrintReplica(pdb);
 }
 
 Str ExtractPdfFromPrintReplicaData(Str data) {
-    PdbReader* pdb = PdbReader::CreateFromData(str::Dup(data));
-    if (!pdb) {
-        return {};
-    }
-    Str pdf = ExtractPdfFromPrintReplica(pdb);
-    delete pdb;
-    return pdf;
+    AutoDelete pdb(PdbReader::CreateFromData(str::Dup(data)));
+    return ExtractPdfFromPrintReplica(pdb);
 }
 
 #if IS_DEBUG
