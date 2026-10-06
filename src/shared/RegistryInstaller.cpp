@@ -389,12 +389,8 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     ShellNotifyAssociationsChanged();
 }
 
-// re-register our "Open With" file association handlers (under OpenWithProgids
-// and the corresponding ProgID entries) if this is an installed (non-portable)
-// copy of SumatraPDF. We do this at startup to counter other apps (e.g. Microsoft
-// Edge) that might remove us from the "Open with" context menu for .pdf etc. files.
-// We only touch HKCU (always writable by the current user) and optionally HKLM
-// (for all-users installs; fails gracefully without admin rights).
+// Restore missing Open With entries that other apps may remove.
+// Only installed copies register; machine entries require an all-users install.
 void ReRegisterFileAssociations() {
     if (!IsOurExeInstalled()) {
         return;
@@ -405,24 +401,20 @@ void ReRegisterFileAssociations() {
     }
 
     bool didRegister = false;
-    if (!HasAllOurOpenWithEntries(HKEY_CURRENT_USER)) {
-        RegisterForOpenWith(HKEY_CURRENT_USER, exePath);
+    const HKEY roots[] = {HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
+    for (HKEY hkey : roots) {
+        if (hkey == HKEY_LOCAL_MACHINE &&
+            !HasRegistryValue(hkey, GetRegPathUninstTemp(StrL(kAppName)), StrL("InstallLocation"))) {
+            continue;
+        }
+        if (HasAllOurOpenWithEntries(hkey)) {
+            continue;
+        }
+        RegisterForOpenWith(hkey, exePath);
         if (IsWindows10OrGreater()) {
-            RegisterForDefaultPrograms(HKEY_CURRENT_USER, exePath);
+            RegisterForDefaultPrograms(hkey, exePath);
         }
         didRegister = true;
-    }
-
-    // for all-users installs, also try to restore the HKLM entries (best effort)
-    TempStr regPathUninst = GetRegPathUninstTemp(StrL(kAppName));
-    if (HasRegistryValue(HKEY_LOCAL_MACHINE, regPathUninst, StrL("InstallLocation"))) {
-        if (!HasAllOurOpenWithEntries(HKEY_LOCAL_MACHINE)) {
-            RegisterForOpenWith(HKEY_LOCAL_MACHINE, exePath);
-            if (IsWindows10OrGreater()) {
-                RegisterForDefaultPrograms(HKEY_LOCAL_MACHINE, exePath);
-            }
-            didRegister = true;
-        }
     }
 
     if (didRegister) {
