@@ -1013,7 +1013,7 @@ struct UnBinaryCtx {
     int pos = 0;
     str::Builder out;
     LitFile* lit = nullptr;
-    TempStr dir{}; // directory of the file being reconstructed
+    Str dir; // directory of the file being reconstructed
     bool isHtml = true;
     LitAtoms* atoms = nullptr;
 };
@@ -1066,13 +1066,11 @@ static TempStr LitResolveHrefTemp(UnBinaryCtx* ctx, Str href) {
         href = Str(href.s + 1, len(href) - 1);
     }
     Str doc = href;
-    Str frag = {};
-    for (int i = 0; i < len(href); i++) {
-        if (href.s[i] == '#') {
-            doc = Str(href.s, i);
-            frag = Str(href.s + i, len(href) - i); // includes '#'
-            break;
-        }
+    Str frag;
+    int hash = str::IndexOfChar(href, '#');
+    if (hash >= 0) {
+        doc = Str(href.s, hash);
+        frag = Str(href.s + hash, len(href) - hash);
     }
     TempStr path = str::DupTemp(doc);
     LitManifestItem* item = ctx->lit ? LitFindManifest(ctx->lit, doc) : nullptr;
@@ -1080,20 +1078,17 @@ static TempStr LitResolveHrefTemp(UnBinaryCtx* ctx, Str href) {
         // make relative to ctx->dir
         Str target = item->path;
         Str base = ctx->dir;
-        // strip common leading directories
-        for (;;) {
-            int slash = -1;
-            for (int i = 0; i < std::min(len(target), len(base)); i++) {
-                if (target.s[i] != base.s[i]) {
-                    break;
-                }
-                if (target.s[i] == '/') {
-                    slash = i;
-                }
-            }
-            if (slash < 0) {
+        // Strip the common directory prefix.
+        int slash = -1;
+        for (int i = 0; i < std::min(len(target), len(base)); i++) {
+            if (target.s[i] != base.s[i]) {
                 break;
             }
+            if (target.s[i] == '/') {
+                slash = i;
+            }
+        }
+        if (slash >= 0) {
             target = Str(target.s + slash + 1, len(target) - slash - 1);
             base = Str(base.s + slash + 1, len(base) - slash - 1);
         }
@@ -1444,14 +1439,8 @@ static Str LitUnBinary(LitFile* lit, Str bin, Str path, bool isHtml, LitAtoms* a
     ctx.lit = lit;
     ctx.isHtml = isHtml;
     ctx.atoms = atoms;
-    TempStr dir = str::DupTemp(path);
-    int lastSlash = -1;
-    for (int i = 0; i < len(dir); i++) {
-        if (dir.s[i] == '/') {
-            lastSlash = i;
-        }
-    }
-    ctx.dir = lastSlash >= 0 ? str::DupTemp(Str(dir.s, lastSlash)) : str::DupTemp(Str(""));
+    int lastSlash = str::LastIndexOfChar(path, '/');
+    ctx.dir = lastSlash >= 0 ? Str(path.s, lastSlash) : StrL("");
     if (!LitBinaryToText(&ctx, 0)) {
         return {};
     }
