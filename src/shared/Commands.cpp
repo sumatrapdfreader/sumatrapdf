@@ -1368,23 +1368,16 @@ static CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
     // first is default value
     Str rest = *argsInOut;
     str::TrimChar(rest, ' ');
-    Str valEnd = str::SliceFromChar(rest, ' ');
     Str argName = argSpecs[defaultArgIdx].name;
     CommandArg::Type type = argSpecs[defaultArgIdx].type;
-    if (type == CommandArg::Type::String) {
-        // for strings we eat it all to avoid the need for proper quoting
-        // creates a problem: all named args must be before default string arg
-        valEnd = {};
+    Str val = rest;
+    Str after;
+    // A positional string consumes the rest, including spaces.
+    if (type != CommandArg::Type::String) {
+        str::CutChar(rest, ' ', &val, &after);
     }
-    TempStr val = {};
-    if (len(valEnd) == 0) {
-        val = str::DupTemp(rest);
-        *argsInOut = {};
-    } else {
-        val = str::DupTemp(Str(rest.s, (int)(valEnd.s - rest.s)));
-        *argsInOut = valEnd;
-        str::TrimChar(*argsInOut, ' ');
-    }
+    str::TrimChar(after, ' ');
+    *argsInOut = after;
 
     if (type == CommandArg::Type::Bool) {
         // a default (positional) bool, e.g. [CmdToggleFullscreen on] (issue #5067)
@@ -1461,16 +1454,9 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
         // <args> doesn't start with any of the available commands for this command
         return nullptr;
     }
-    Str valEnd = str::SliceFromChar(valStart, ' ');
-    TempStr val = {};
+    Str val = valStart;
     Str afterVal;
-    if (len(valEnd) == 0) {
-        val = str::DupTemp(valStart);
-        afterVal = {};
-    } else {
-        val = str::DupTemp(Str(valStart.s, (int)(valEnd.s - valStart.s)));
-        afterVal = Str(valEnd.s + 1, valEnd.len - 1);
-    }
+    str::CutChar(valStart, ' ', &val, &afterVal);
     if (type == CommandArg::Type::Bool) {
         auto bv = ParseBool(val);
         if (bv < 0) {
