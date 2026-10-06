@@ -805,12 +805,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     if (continuationOut) {
         *continuationOut = RectF{};
     }
-    // Sparse-text dest page (image-only or near-image-only — e.g. a
-    // children's PDF overview with character thumbnails plus a single
-    // heading). Fitting to the heading line gives a thin sliver and hides
-    // the actual content. Show the whole page so the user sees what they
-    // would navigate to; the auto-fit in RefHoverOnTimer scales the bitmap
-    // to popup limits.
+    // Show the whole page when sparse text would hide its images.
     constexpr int kSparsePageTextLen = 50;
     if (len(text) == 0 || text.len < kSparsePageTextLen || !coords) {
         return RectF{0.f, 0.f, mediabox.dx, mediabox.dy};
@@ -821,20 +816,10 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
 
     int dY = (int)destY;
     int dX = (int)destX;
-    // Constrain to the destination's column — for 2-column layouts this
-    // prevents the search from latching onto same-Y body text in another
-    // column. We allow a small left tolerance so a "[1]" whose [ starts
-    // a few pt left of destX still matches.
+    // Allow labels slightly left of destX while excluding columns further left.
     int columnLeft = (destX >= 0.f) ? dX - 15 : INT_MIN;
 
-    // 1. Find the start glyph: the non-whitespace glyph on the line nearest
-    //    destY (within [destY-5, destY+30]) and at-or-right-of columnLeft,
-    //    tie-broken by leftmost x. Selecting by nearness to destY (rather than
-    //    the globally-topmost line in the window) keeps the start on the
-    //    destination's own entry: in a 2-column reference list, a neighbouring
-    //    column's line a few pt above destY would otherwise win the topmost
-    //    pick (columnLeft only bounds the left side, so the other column's
-    //    larger x still passes) and the popup would render the wrong column.
+    // Pick the line nearest destY, then its leftmost glyph; a higher line may belong to another column.
     int startIdx = -1;
     int bestDistY = INT_MAX;
     int bestX = INT_MAX;
@@ -861,39 +846,19 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         return {};
     }
 
-    // PDF link destX is unreliable: poorly-authored links carry the source
-    // page's body-text X, not the destination-page entry-start X. That lands
-    // startIdx mid-line on hanging-indent description-list bibs, dropping
-    // the leading "[KOS06]" / "Philippe Kruchten" portion from the popup.
-    // Walk to the leftmost glyph of the line run containing startIdx so the
-    // entry bounds always include the line's left edge. The gap-bounded run
-    // keeps the walk within the destination's column in 2-column layouts —
-    // the gutter is wider than spacing within a line — instead of latching
-    // onto same-y text of another column. Also remember the run's right
-    // edge: it estimates the column's right edge for the box passes below.
+    // Links can point mid-line. Recover its left edge without crossing a column gutter.
     int lineRunRightX;
     {
         int leftIdx = startIdx;
         int leftX = coords[startIdx].x;
         LineRunExtent(text, coords, startIdx, &leftIdx, &leftX, &lineRunRightX);
-        // Only adopt the walked-left line start when startIdx didn't already
-        // land on the entry's "[" label. The left walk exists for unreliable
-        // PDF-link destX that lands mid-line; when startIdx is already the
-        // bracket label, walking left can cross a narrow column gutter into a
-        // neighbouring column whose row text reaches close to the gutter,
-        // dragging the box into the wrong column.
+        // Keep an existing bracket label; walking left could cross a narrow gutter.
         if (text.s[startIdx] != L'[') {
             startIdx = leftIdx;
         }
     }
 
-    // Tight-y walk above can miss a "[VB25]"-style label that sits on a
-    // slightly different baseline than its body line 1 (description-list
-    // layouts where label and body use different fonts/sizes). If the
-    // current leftmost still isn't a "[", search for one within roughly a
-    // line height of destY at a smaller x — that's the bracket label of
-    // the entry the link points at. Don't look further left than a hanging
-    // indent (in 2-column layouts another column's "[" is much further).
+    // Recover a bracket label whose baseline differs from the body, within one hanging indent.
     if (text.s[startIdx] != L'[') {
         constexpr int kMaxHangingIndentPt = 60;
         int sy = coords[startIdx].y;
@@ -921,14 +886,9 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         }
     }
 
-    // Right edge of the entry's column. Provisional value from the first
-    // line's run; replaced below (once the entry's vertical extent is known) by
-    // a gutter-aware scan of the page's column structure.
+    // Estimate the column edge from the line run until the gutter scan below.
     int columnRightX = lineRunRightX + 40;
-    // Left x of the entry body when it sits past a labelsep gap from the label
-    // (hanging-indent "[TA05]  body"); -1 when label and body share one run.
-    // The column scan starts here so it doesn't mistake the labelsep gap for a
-    // gutter and clip the body.
+    // Start the column scan past the label gap so it is not mistaken for a gutter.
     int entryBodyLeftX = -1;
 
     int firstLineLeftX = coords[startIdx].x;
@@ -938,11 +898,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         firstLineDy = 12;
     }
 
-    // For a bracket label ("[N]" / "[Foo+09]"), the body starts just after the
-    // closing "]". The gap between label and body (labelsep) is internal to the
-    // entry but looks like a column gutter to the column scan below; start that
-    // scan at the body so the labelsep isn't mistaken for a gutter (which would
-    // clip the body to the label width).
+    // A bracket entry's body starts after "]"; its label gap is not a column gutter.
     if (text.s[startIdx] == L'[') {
         int yTol = firstLineDy > 6 ? firstLineDy : 8;
         for (int i = startIdx + 1; i < text.len; i++) {
@@ -965,24 +921,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         }
     }
 
-    // Hanging-indent bracket entry: biblatex sizes the label column for the
-    // widest label, so a narrow label ("[TA05]") is separated from its body
-    // by a labelsep gap wider than LineRunExtent's within-line gap threshold.
-    // The label-anchored run above then stops at the label, collapsing
-    // lineRunRightX (and columnRightX) to the label width — that clips the
-    // body horizontally and lets the box latch onto neighbouring labels.
-    // Bridge the single labelsep gap: find the first glyph on the first line
-    // right of the label run and extend a fresh run from there. The body run
-    // is dense and stops at a real column gutter, so this stays 2-column-safe;
-    // the bridge itself is capped at kMaxLabelSepPt, well under a gutter, so
-    // it can't jump into an adjacent column.
-    //
-    // Only bridge when the first-line run is label-sized. When the label and
-    // body share one line with no labelsep gap (e.g. "[2] M. Anvaari, …"),
-    // LineRunExtent already spans the whole line and lineRunRightX sits at the
-    // column's right edge — bridging from there would reach across a narrow
-    // gutter (which can be < kMaxLabelSepPt) into the next column, blowing the
-    // box width into the neighbouring entry.
+    // Bridge the label gap only for a short label run; a full line could bridge into the next column.
     constexpr int kMaxLabelWidthPt = 70;
     if (text.s[startIdx] == L'[' && (lineRunRightX - firstLineLeftX) < kMaxLabelWidthPt) {
         constexpr int kMaxLabelSepPt = 50;
@@ -1014,10 +953,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         }
     }
 
-    // Entry line pitch (top-to-top of the first two lines): a stable measure of
-    // inter-line spacing, unlike the tall "[" label glyph (firstLineDy). The
-    // scan is bounded to roughly one column width right of the entry left so a
-    // neighbouring column's line isn't mistaken for the next line.
+    // Measure line pitch within the column; tall bracket glyphs overestimate spacing.
     int linePitch = firstLineDy > 0 ? firstLineDy : 12;
     {
         constexpr int kColWidthMax = 250;
@@ -1050,18 +986,10 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         columnRightX = right;
     }
 
-    // Bracket-style entry ("[ZM12]", "[1]", …): build the bounding box from
-    // a y-range whose upper bound is the next "[" at firstLineLeftX. The
-    // iterative scan below depends on text-array order, but some PDFs draw
-    // labels and body in non-monotonic order — that made rule (a) terminate
-    // on a *later* entry's "[" appearing early in the text array, before our
-    // entry's body lines 2+. The y-range approach is order-independent.
+    // Bracket entries use the next label's y-coordinate because PDF text order can interleave entries.
     if (text.s[startIdx] == L'[') {
         int entryYBoundary = (int)mediabox.dy;
-        // Set when a sibling "[" was actually found below this entry — as
-        // opposed to entryYBoundary falling back to the page/cap bound because
-        // this is the column's last entry (see foundSibling use below, which
-        // feeds the column-wrap continuation search).
+        // A final entry without a sibling may continue in the next column.
         bool foundSibling = false;
         for (int i = 0; i < text.len; i++) {
             if (i == startIdx) {
@@ -1071,20 +999,11 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                 continue;
             }
             Rect r = coords[i];
-            // Accept "[" up to 30pt right of firstLineLeftX: some layouts
-            // prefix entries with a page number or section index (e.g. a
-            // "2" left of "[VB25]"), so the label "[" isn't exactly at
-            // firstLineLeftX. Body-text "[…]" sits at indentX (≥ ~60pt
-            // right of firstLineLeftX) so it's still excluded.
+            // Allow a small prefix before the sibling label, excluding indented body-text brackets.
             if (r.x < firstLineLeftX - 5 || r.x > firstLineLeftX + 30) {
                 continue;
             }
-            // Half a line height below the first line's top is enough to be on a
-            // *lower* line: the next entry's "[" sits a full line-pitch down.
-            // Using the whole "[" glyph height fails when that height equals the
-            // inter-line pitch (tall bracket glyph) — the next entry then lands
-            // exactly at firstLineY+firstLineDy and is wrongly treated as the
-            // same line, so the box swallows the following entry.
+            // Half a glyph height distinguishes the next line even when a tall bracket spans the line pitch.
             if (r.y <= firstLineY + (firstLineDy / 2)) {
                 continue;
             }
@@ -1098,23 +1017,11 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         constexpr int kMaxBracketEntryPt = 250;
         int capY = firstLineY + kMaxBracketEntryPt;
         entryYBoundary = std::min(capY, entryYBoundary);
-        // Pull the boundary up by ~half a line height so the next entry's
-        // first line — whose glyph tops can round to within 1–2 pt of the
-        // "[" we picked — is reliably excluded.
+        // Exclude the next entry's glyphs even when their tops differ slightly from its bracket.
         entryYBoundary -= 6;
-        // Trailing-gap trim: a last-on-page entry has no sibling "[" below to
-        // bound it, so entryYBoundary runs to the kMaxBracketEntryPt cap and
-        // the box would swallow the page footer / page number (or a long
-        // blank margin). Walk the entry's lines down from the first line and
-        // stop at the first vertical gap wider than ~1.5 line heights — that
-        // gap separates the entry from the footer. Inter-entry leading in a
-        // dense bibliography is far smaller, so a real next entry (bounded by
-        // its "[" above) is never trimmed: blockBottom keeps growing past
-        // entryYBoundary and the trim is a no-op.
+        // Stop at a paragraph gap so the final entry excludes the footer.
         {
-            // Size the gap from the entry's line pitch (computed above), not
-            // the tall "[" glyph height, so the trim doesn't over-reach across
-            // a thin gap into a following block (e.g. a footnote past a rule).
+            // Use line pitch; bracket height can exceed line spacing.
             int lineH = linePitch;
             int gapThresh = lineH * 3 / 2;
             gapThresh = std::max(gapThresh, 12);
@@ -1172,25 +1079,9 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                       (float)(bMaxX - bMinX) + (2.f * kEntryPadPt), (float)(bMaxY - bMinY) + (2.f * kEntryPadPt)};
             ClipToMediabox(box, mediabox);
             if (box.dx >= 50.f && box.dy >= 20.f) {
-                // No sibling "[" closed this entry, and — checked below — no
-                // more text at all follows in this column: this looks like the
-                // entry ran off the end of the column's content rather than
-                // ending naturally (a real paragraph gap with more text after
-                // it, which the trailing-gap trim above already accounts for).
-                // Distance to the physical page bottom isn't a reliable signal
-                // here: a column's last entry commonly sits well above the
-                // page's bottom margin. Check whether it continues at the top
-                // of the next column instead ("[63]"-style bibliography
-                // entries wrapping across a 2-column page break).
+                // Without a sibling or further body text, look for continuation in the next column.
                 if (continuationOut && !foundSibling) {
-                    // A page footer / page number often sits within the same
-                    // x-range as the column, below the entry — that shouldn't
-                    // block the wrap search. Distance alone doesn't separate it
-                    // from a real continuation line (review-manuscript PDFs can
-                    // have the footer just a line or two below the last
-                    // entry), so instead measure each candidate line's full
-                    // width: a page number is a short isolated token, while a
-                    // real paragraph continuation line is (near-)column-width.
+                    // Short footer tokens do not count as following body text.
                     constexpr int kMinBodyLineWidthPt = 30;
                     bool moreBelowInColumn = false;
                     for (int i = 0; i < text.len && !moreBelowInColumn; i++) {
@@ -1207,10 +1098,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                         }
                         int leftIdx, leftX, rightX;
                         LineRunExtent(text, coords, i, &leftIdx, &leftX, &rightX);
-                        // Confined to this column: a full-page-width footer
-                        // credit line (journal name / affiliation, common
-                        // below both columns) bridges clean across the gutter
-                        // and would otherwise read as "real" wide body text.
+                        // Exclude footer lines that span both columns.
                         bool confinedToColumn = rightX <= columnRightX + 10;
                         if (rightX - leftX >= kMinBodyLineWidthPt && confinedToColumn) {
                             moreBelowInColumn = true;
@@ -1228,11 +1116,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
 
     // 2. Scan forward to find the end of the entry.
     int endIdx = text.len;
-    // Treat a glyph as "still on the current line" if its top y is above the
-    // line's current max-bottom (with a small overlap tolerance). This is
-    // robust to Word-style extraction quirks where glyphs on the same line
-    // have varying y values (uppercase vs lowercase top, accent marks,
-    // descenders) and may even be emitted in non-reading order.
+    // Track overlapping glyph bounds rather than identical tops; fonts and extraction order vary.
     int currentLineY = firstLineY;
     int currentLineMaxBottom = firstLineY + firstLineDy;
     int prevBottom = firstLineY + firstLineDy;
@@ -1244,11 +1128,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     int prevLineLeftX = INT_MAX;
     // X of the entry's continuation lines (captured from line 2). -1 = unknown.
     int indentX = -1;
-    // Set when we observe another sibling entry start at firstLineLeftX with
-    // no continuation indent in between — strong "this is a description list"
-    // signal (e.g. "JVM Java Virtual Machine. 19, 36" / "LLM Large Language
-    // Model. 45" abbreviation lists) that survives even when the current
-    // entry is a single line.
+    // An aligned sibling with no hanging indent identifies a description list, even for single-line entries.
     bool descListSibling = false;
 
     for (int i = startIdx + 1; i < text.len; i++) {
@@ -1268,20 +1148,13 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             continue;
         }
 
-        // Only "major" glyphs (~letter-height) drive newline tracking.
-        // Commas, periods, apostrophes, and other punctuation have small dy
-        // and their r.y sits near the baseline, which can land at or past
-        // currentLineMaxBottom and spuriously fire newline — corrupting the
-        // measured line spacing.
+        // Small punctuation must not trigger a new line or distort its spacing.
         bool isMajorGlyph = (r.dy * 2 >= firstLineDy);
         bool isNewLine = isMajorGlyph && (r.y > currentLineMaxBottom - 2);
         if (isNewLine) {
             prevLineLeftX = currentLineLeftX;
             currentLineLeftX = r.x;
-            // Promote currentLineMaxBottom (the line we're leaving) to
-            // prevBottom *before* rule (c) checks, so the gap is measured
-            // against the immediately-previous line — not the line two
-            // transitions ago.
+            // Rule (c) must measure the gap from the immediately preceding line.
             prevBottom = currentLineMaxBottom;
         } else if (r.x < currentLineLeftX) {
             currentLineLeftX = r.x;
@@ -1295,20 +1168,14 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             indentX = r.x;
         }
 
-        // (a) "[" at the entry's first-line X = next entry marker. Works for
-        // both numeric "[123]" and alphanumeric "[Foo+09]" / "[Bib05]" styles
-        // — body-text "[…]" can't trigger this because body sits at indentX,
-        // not firstLineLeftX.
+        // (a) An aligned bracket starts the next entry; body-text brackets are indented.
         if (c == L'[' && atFirstLineLeftX) {
             descListSibling = true;
             endIdx = i;
             break;
         }
 
-        // (b) Indent change: a new line back at the entry's first-line X
-        // after a continuation line at a different X. Catches author-year
-        // hanging-indent bibliographies where there's no [N] marker — this
-        // is the primary signal for the *next* entry's start.
+        // (b) Returning from a hanging indent to the first-line x starts the next author-year entry.
         if (isNewLine && atFirstLineLeftX && pastFirstLine && prevLineLeftX != INT_MAX &&
             (prevLineLeftX < firstLineLeftX - 5 || prevLineLeftX > firstLineLeftX + 5)) {
             descListSibling = true;
@@ -1316,13 +1183,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             break;
         }
 
-        // (c) Vertical paragraph break (no-indent style fallback). When the
-        // glyph that triggered the gap is back at firstLineLeftX, the gap
-        // is a blank line between description-list siblings (typical
-        // abbreviation lists where each entry is separated by extra
-        // vertical space) — treat as a sibling entry boundary. The
-        // major-glyph newline tracking above keeps normal line spacing from
-        // false-firing this rule, so it is safe to evaluate from line 1.
+        // (c) A paragraph gap ends the entry; an aligned next line identifies a sibling.
         if (r.y > prevBottom + (lineHeight * 5 / 4)) {
             if (atFirstLineLeftX) {
                 descListSibling = true;
@@ -1331,20 +1192,13 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             break;
         }
 
-        // (d) Single-line-entry case: a new line back at firstLineLeftX before
-        // we discovered a continuation indent. The previous "entry" was one
-        // line. Common pattern: stacked numbered footnotes "¹url\n²url\n³url"
-        // or abbreviation lists ("JVM Java Virtual Machine. 19, 36").
+        // (d) An aligned new line without a continuation indent identifies single-line siblings.
         if (isNewLine && pastFirstLine && atFirstLineLeftX && indentX < 0 && prevLineLeftX != INT_MAX) {
             descListSibling = true;
             endIdx = i;
             break;
         }
-        // (e) Line-count cap for author-year entries with no hanging indent —
-        // common in Word-generated PDFs where continuation lines also start at
-        // firstLineLeftX, so rule (d) would already have ended the entry. This
-        // is a last-resort bound: most author-year bib entries fit in 5-6
-        // lines, so cap at 6 to avoid bleeding into the following entry.
+        // (e) Cap entries without a hanging indent at six lines to avoid swallowing the next entry.
         WCHAR entryFirstC = text.s[startIdx];
         bool markedEntry = (entryFirstC == L'[' || entryFirstC == L'(' || (entryFirstC >= L'0' && entryFirstC <= L'9'));
         if (!markedEntry && isNewLine && indentX < 0) {
@@ -1365,9 +1219,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             currentLineY = r.y;
             currentLineMaxBottom = r.y + r.dy;
         } else {
-            // Only update line extents from major glyphs — punctuation
-            // baselines would otherwise inflate max-bottom and shrink
-            // currentLineY artificially.
+            // Only major glyphs update line bounds; punctuation would inflate the baseline.
             if (isMajorGlyph) {
                 currentLineY = std::min(r.y, currentLineY);
                 currentLineMaxBottom = std::max(r.y + r.dy, currentLineMaxBottom);
@@ -1405,12 +1257,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     if (box.dx < 50.f || box.dy < 20.f) {
         return LandscapeBox(mediabox, destX, destY, text, coords);
     }
-    // "Figure N.M" / "Table N.M" / "Listing N.M" / "Algorithm N.M" caption
-    // anywhere below the detected box: the destination is a figure / table
-    // / listing body. Override all other heuristics so the popup uses the
-    // landscape view (caption included). Catches code/console listings
-    // where each line happens to start with "[TAG]" — those would otherwise
-    // be misclassified as description-list bibliography entries.
+    // A caption below the box identifies a figure or listing, even if its text resembles bracket entries.
     {
         int boxBottomY = (int)(box.y + box.dy);
         for (int i = 0; i < text.len; i++) {
@@ -1418,9 +1265,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                 continue;
             }
             if (IsCaptionLabelAt(text, i)) {
-                // Let LandscapeBox handle the caption-extension — it has a
-                // tighter, line-count-capped walk that doesn't sweep into
-                // following body paragraphs.
+                // LandscapeBox extends to the caption without swallowing following paragraphs.
                 return LandscapeBox(mediabox, destX, destY, text, coords);
             }
         }
@@ -1430,18 +1275,11 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     if (text.s[startIdx] == L'[') {
         return box;
     }
-    // Tabular layout: continuation X far right of firstLineLeftX is a
-    // column gap, not a hanging indent. Detection terminated at the first
-    // data row; show the landscape view so the user sees the full table.
+    // A wide continuation offset is a table column gap, not a hanging indent.
     if (indentX > 0 && (indentX - firstLineLeftX) > 80) {
         return LandscapeBox(mediabox, destX, destY, text, coords);
     }
-    // Section heading or caption-style label. Body paragraph below the
-    // heading has first-line indent, so detection captures heading + body
-    // line 1 and `indentX` lands in the same range as a hanging-indent bib.
-    // Use the entry's first character / first word to disambiguate: real
-    // bibliographies rarely start with a digit or with a label word like
-    // "Figure"/"Table"/"Section". Catches "6.2 Foo", "Figure 2.2: …", etc.
+    // Numbers and heading labels distinguish sections or captions from author-year entries.
     WCHAR firstC = text.s[startIdx];
     bool digitStart = (firstC >= L'0' && firstC <= L'9');
     bool labelStart = MatchesLabelWords(text, startIdx, gCaptionWords, LabelKind::Heading) ||
@@ -1449,11 +1287,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     if (digitStart || labelStart) {
         return LandscapeBox(mediabox, destX, destY, text, coords);
     }
-    // Code-listing detector: a high density of braces / semicolons / parens
-    // within the detected box means the destination is most likely a code
-    // listing presented as a figure. Bibliography prose almost never has
-    // these characters at this density. Show the landscape view so the
-    // popup also includes the figure caption below the code.
+    // Dense code punctuation identifies a listing; include its caption in the landscape view.
     {
         int codeChars = 0;
         int totalChars = 0;
@@ -1471,10 +1305,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             return LandscapeBox(mediabox, destX, destY, text, coords);
         }
     }
-    // Description-list / glossary / footnote-style entry: rule (a) or (d)
-    // fired, meaning we saw a *sibling* entry start at firstLineLeftX. That
-    // is a strong "this is a list of entries" signal even when the current
-    // entry is a single line (abbreviations: "JVM Java Virtual Machine.").
+    // Keep the fitted box when an aligned sibling identifies a list or footnote entry.
     if (descListSibling) {
         return box;
     }
