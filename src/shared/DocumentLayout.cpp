@@ -266,11 +266,21 @@ static void SetPageDisplaySize(DocumentLayoutPage* page, int rotation, int currP
     page->pos.y = currPosY;
 }
 
-static void RelayoutFacingWithSpreads(DocumentLayout& layout, bool isFitContent) {
+static void RelayoutFacing(DocumentLayout& layout, bool isFitContent) {
     const DocumentLayoutParams& params = layout.params;
     const int pageCount = layout.pages.len;
     Vec<FacingRow> rows;
-    CollectFacingRows(rows, pageCount, IsBookView(params.displayMode), params.spreadFlags);
+    if (!params.landscapeAsSpread && !IsContinuous(params.displayMode)) {
+        int last = std::min(params.startPage + 1, pageCount);
+        if (IsBookView(params.displayMode) && params.startPage == 1) {
+            last = 1;
+        }
+        VecAppend(rows, {params.startPage, last, false});
+    } else {
+        Vec<u8> noSpreads;
+        CollectFacingRows(rows, pageCount, IsBookView(params.displayMode),
+                          params.landscapeAsSpread ? params.spreadFlags : noSpreads);
+    }
 
     int startFirst = params.startPage;
     int startLast = params.startPage;
@@ -341,7 +351,7 @@ static void RelayoutFacingWithSpreads(DocumentLayout& layout, bool isFitContent)
     }
 
     int twoColDx = columnMaxWidth[0] + params.pageSpacing.dx + columnMaxWidth[1];
-    int pagesDx = std::max(twoColDx, maxSpreadWidth);
+    int pagesDx = params.landscapeAsSpread ? std::max(twoColDx, maxSpreadWidth) : twoColDx;
     int canvasDx = params.windowMargin.left + pagesDx + params.windowMargin.right;
 
     int offX = 0;
@@ -438,74 +448,32 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
 
     viewPort = Rect(params.viewPortOffset, params.viewPortSize);
 
-    int columns = ColumnsFromDisplayMode(params.displayMode);
-    if (columns == 2 && params.landscapeAsSpread) {
-        RelayoutFacingWithSpreads(*this, isFitContent);
+    if (!IsSingle(params.displayMode)) {
+        RelayoutFacing(*this, isFitContent);
         return;
     }
 
-    int firstShown = params.startPage;
-    if (IsBookView(params.displayMode) && firstShown == 1 && columns > 1) {
-        firstShown--;
-    }
-
-    for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
+    for (int pageNo = 1; pageNo <= len(pages); pageNo++) {
         auto& page = pages[pageNo - 1];
         page.visibleRatio = 0;
         page.pageOnScreen = {};
         page.pos = {};
-        page.isShown = IsContinuous(params.displayMode) || (firstShown <= pageNo && pageNo < firstShown + columns);
+        page.isShown = IsContinuous(params.displayMode) || pageNo == params.startPage;
     }
 
-    int currPosY = params.windowMargin.top;
     CalcZoomReal(*this, params.zoomVirtual);
-
-    int columnMaxWidth[2] = {0, 0};
-    int pageInARow = 0;
-    int rowMaxPageDy = 0;
-    for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
-        DocumentLayoutPage* page = GetPage(pageNo);
-        if (!page->isShown) {
+    int currPosY = params.windowMargin.top;
+    int maxWidth = 0;
+    for (DocumentLayoutPage& page : pages) {
+        if (!page.isShown) {
             continue;
         }
-
-        SetPageDisplaySize(page, params.rotation, currPosY);
-        rowMaxPageDy = std::max(rowMaxPageDy, page->pos.dy);
-
-        if (IsBookView(params.displayMode) && pageNo == 1 && columns - pageInARow > 1) {
-            pageInARow++;
-        }
-        int col = pageInARow;
-        ReportIf(col >= dimofi(columnMaxWidth));
-        if (col >= dimofi(columnMaxWidth)) {
-            col = dimofi(columnMaxWidth) - 1;
-        }
-        columnMaxWidth[col] = std::max(columnMaxWidth[col], page->pos.dx);
-
-        pageInARow++;
-        ReportIf(pageInARow > columns);
-        if (pageInARow == columns) {
-            currPosY += rowMaxPageDy + params.pageSpacing.dy;
-            rowMaxPageDy = 0;
-            pageInARow = 0;
-        }
-    }
-
-    if (pageInARow != 0) {
-        currPosY += rowMaxPageDy + params.pageSpacing.dy;
+        SetPageDisplaySize(&page, params.rotation, currPosY);
+        maxWidth = std::max(maxWidth, page.pos.dx);
+        currPosY += page.pos.dy + params.pageSpacing.dy;
     }
     int canvasDy = currPosY + params.windowMargin.bottom - params.pageSpacing.dy;
-
-    if (columns == 2 && pages.len == 1) {
-        if (IsBookView(params.displayMode)) {
-            columnMaxWidth[0] = columnMaxWidth[1];
-        } else {
-            columnMaxWidth[1] = columnMaxWidth[0];
-        }
-    }
-
-    int canvasDx = params.windowMargin.left + columnMaxWidth[0] +
-                   (columns == 2 ? params.pageSpacing.dx + columnMaxWidth[1] : 0) + params.windowMargin.right;
+    int canvasDx = params.windowMargin.left + maxWidth + params.windowMargin.right;
 
     int offX = 0;
     if (canvasDx < viewPort.dx) {
@@ -513,39 +481,9 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
         offX = (viewPort.dx - canvasDx) / 2;
         canvasDx = viewPort.dx;
     }
-
-    pageInARow = 0;
-    int pageOffX = offX + params.windowMargin.left;
-    for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
-        DocumentLayoutPage* page = GetPage(pageNo);
-        if (!page->isShown) {
-            continue;
-        }
-
-        if (IsBookView(params.displayMode) && pageNo == 1) {
-            pageOffX += columnMaxWidth[pageInARow] + params.pageSpacing.dx;
-            pageInARow++;
-        }
-        if (columns == 1) {
-            page->pos.x = pageOffX + ((columnMaxWidth[0] - page->pos.dx) / 2);
-        } else if (pageInARow == 0) {
-            page->pos.x = pageOffX + columnMaxWidth[0] - page->pos.dx;
-        } else {
-            page->pos.x = pageOffX;
-        }
-        if (IsBookView(params.displayMode) && pageNo == 1 && !IsContinuous(params.displayMode)) {
-            page->pos.x = offX + params.windowMargin.left +
-                          ((columnMaxWidth[0] + params.pageSpacing.dx + columnMaxWidth[1] - page->pos.dx) / 2);
-        }
-        if (params.displayR2L && columns > 1) {
-            page->pos.x = canvasDx - page->pos.x - page->pos.dx;
-        }
-
-        pageOffX += columnMaxWidth[pageInARow] + params.pageSpacing.dx;
-        pageInARow++;
-        if (pageInARow == columns) {
-            pageOffX = offX + params.windowMargin.left;
-            pageInARow = 0;
+    for (DocumentLayoutPage& page : pages) {
+        if (page.isShown) {
+            page.pos.x = offX + params.windowMargin.left + ((maxWidth - page.pos.dx) / 2);
         }
     }
 
