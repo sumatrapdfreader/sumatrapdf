@@ -438,38 +438,22 @@ static bool IsSelfClosingStartTag(Str raw) {
     return raw.s[off] == '/';
 }
 
-static Str StartTagInner(Str raw, bool selfClosing) {
-    if (raw.len < 2 || raw.s[0] != '<') {
+static Str TagInner(Str raw, HtmlToken::TokenType type) {
+    Str prefix = type == HtmlToken::EndTag ? StrL("</") : StrL("<");
+    if (len(raw) <= len(prefix) || !str::TrimPrefix(raw, prefix)) {
         return {};
     }
-    int start = 1;
-    int end = raw.len;
-    if (end > start && raw.s[end - 1] == '>') {
-        end--;
-    }
-    if (selfClosing) {
-        int slash = end - 1;
-        while (slash >= start && str::IsWs(raw.s[slash])) {
+    str::TrimSuffix(raw, StrL(">"));
+    if (type == HtmlToken::EmptyElementTag) {
+        int slash = len(raw) - 1;
+        while (slash >= 0 && str::IsWs(raw.s[slash])) {
             slash--;
         }
-        if (slash >= start && raw.s[slash] == '/') {
-            end = slash;
+        if (slash >= 0 && raw.s[slash] == '/') {
+            raw.len = slash;
         }
     }
-    end = std::max(end, start);
-    return Str(raw.s + start, end - start);
-}
-
-static Str EndTagInner(Str raw) {
-    if (raw.len < 3 || raw.s[0] != '<' || raw.s[1] != '/') {
-        return {};
-    }
-    int start = 2;
-    int end = raw.len;
-    if (end > start && raw.s[end - 1] == '>') {
-        end--;
-    }
-    return Str(raw.s + start, end - start);
+    return raw;
 }
 
 static Str CDataText(Str raw, const GumboNode* node) {
@@ -512,7 +496,7 @@ HtmlToken* GumboHtmlParser::ReadToken() {
             if (len(raw) == 0) {
                 continue;
             }
-            currToken.SetTag(HtmlToken::EndTag, EndTagInner(raw));
+            currToken.SetTag(HtmlToken::EndTag, TagInner(raw, HtmlToken::EndTag));
             currToken.reparsePoint = raw;
             currToken.node = node;
             return &currToken;
@@ -553,7 +537,7 @@ HtmlToken* GumboHtmlParser::ReadToken() {
             continue;
         }
         auto type = selfClosing ? HtmlToken::EmptyElementTag : HtmlToken::StartTag;
-        currToken.SetTag(type, StartTagInner(raw, selfClosing));
+        currToken.SetTag(type, TagInner(raw, type));
         currToken.reparsePoint = raw;
         currToken.node = node;
         return &currToken;
