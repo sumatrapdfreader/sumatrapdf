@@ -16,7 +16,7 @@ void FileHistoryRemove(FileState* fs);
 FileState* FileHistoryGet(int index);
 FileState* FileHistoryFindByPath(Str filePath);
 FileState* FileHistoryMarkFileLoaded(Str filePath);
-bool FileHistoryMarkFileInexistent(Str filePath, bool hide = false);
+void FileHistoryDemote(Str filePath, bool hide = false);
 void FileHistoryGetFrequencyOrder(Vec<FileState*>& list);
 void FileHistoryGetRecentlyOpenedOrder(Vec<FileState*>& list);
 void FileHistoryPurge(bool alwaysUseDefaultState = false);

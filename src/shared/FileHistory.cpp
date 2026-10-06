@@ -98,7 +98,7 @@ FileState* FileHistoryMarkFileLoaded(Str filePath) {
     return fs;
 }
 
-bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
+void FileHistoryDemote(Str filePath, bool hide) {
     ReportIf(len(filePath) == 0);
     // hiding or reordering the entry changes what the home page shows
     HomePageInvalidateLayoutCache();
@@ -108,20 +108,12 @@ bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
         state = NewFileState(filePath);
         VecAppend(*gStates, state);
     }
-    // move the file history entry to the end of the list
-    // of recently opened documents (if it exists at all),
-    // so that the user could still try opening it again
-    // and so that we don't completely forget the settings,
-    // should the file reappear later on
+    // Demote failed entries without discarding their saved settings.
     int newIdx = hide ? INT_MAX : kFileHistoryMaxRecent - 1;
     int idx = VecFind(*gStates, state);
     if (idx < newIdx && state != VecLast(*gStates)) {
         VecRemove(*gStates, state);
-        if (len(*gStates) <= newIdx) {
-            VecAppend(*gStates, state);
-        } else {
-            VecInsertAt(*gStates, newIdx, state);
-        }
+        VecInsertAt(*gStates, std::min(newIdx, len(*gStates)), state);
     }
     // also delete the thumbnail and move the link towards the
     // back in the Frequently Read list
@@ -130,7 +122,6 @@ bool FileHistoryMarkFileInexistent(Str filePath, bool hide) {
     state->openCount >>= 2;
     state->isMissing = hide;
     logf("MarkFileInexistent: '%s', isMissing: %d\n", filePath, (int)hide);
-    return true;
 }
 
 static int cmpRecentlyOpened(FileState* const* a, FileState* const* b) {
@@ -290,7 +281,7 @@ struct CheckFilesExistData {
 
 static void HideMissingFiles(CheckFilesExistData* d) {
     for (Str path : d->missing) {
-        FileHistoryMarkFileInexistent(path, true);
+        FileHistoryDemote(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
     MaybeRedrawHomePage();

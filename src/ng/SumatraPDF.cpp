@@ -946,7 +946,7 @@ void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
     TempStr path = str::DupTemp(fs->filePath);
     if (len(*fs->favorites) > 0) {
         // only hide documents with favorites
-        FileHistoryMarkFileInexistent(fs->filePath, true);
+        FileHistoryDemote(fs->filePath, true);
     } else {
         HomePageThumbnailChanged(fs);
         FileHistoryRemove(fs);

@@ -3829,9 +3829,7 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
     // display the notification ASAP (serializing settings can introduce a notable delay)
     win->RedrawAll(true);
 
-    if (!FileHistoryMarkFileInexistent(path)) {
-        return;
-    }
+    FileHistoryDemote(path);
     // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
     if (!noSavePrefs) {
         ScheduleSaveSettings();
@@ -16026,7 +16024,7 @@ static void SetTabState(WindowTab* tab, TabState* state) {
 
 static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state, bool deferTabUpdate) {
     logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath);
-    FileHistoryMarkFileInexistent(state->filePath, true);
+    FileHistoryDemote(state->filePath, true);
     WindowTab* tab = new WindowTab(win);
     tab->SetFilePath(state->filePath);
     tab->tabState = state;

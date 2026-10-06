@@ -294,7 +294,7 @@ void SetTabState(WindowTab* tab, TabState* state) {
 
 static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
     logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath);
-    FileHistoryMarkFileInexistent(state->filePath, true);
+    FileHistoryDemote(state->filePath, true);
     WindowTab* tab = new WindowTab(win);
     tab->SetFilePath(state->filePath);
     tab->tabState = state;
