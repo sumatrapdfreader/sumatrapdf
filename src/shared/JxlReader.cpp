@@ -4,13 +4,9 @@
 #include "base/Base.h"
 #include "base/Pixmap.h"
 
-#ifndef NO_LIBJXL
 #include "jxl.h"
-#endif
 
 #include "JxlReader.h"
-
-#ifndef NO_LIBJXL
 
 namespace jxl {
 
@@ -69,16 +65,3 @@ bool DecodeRgbInto(Str d, DecodeDstAllocFn allocDst, void* user) {
 }
 
 } // namespace jxl
-
-#else
-
-namespace jxl {
-bool DecodeRgbInto(Str, DecodeDstAllocFn, void*) {
-    return false;
-}
-Pixmap* PixmapFromData(Str) {
-    return nullptr;
-}
-} // namespace jxl
-
-#endif
