@@ -24,42 +24,40 @@
 
 // ---- envelope parsing helpers --------------------------------------------
 
-// Return the exact length of the outer ASN.1 SEQUENCE at `data`, so callers
-// can strip trailing zero padding from a PDF /Contents signature placeholder
-// before feeding it to CryptMsg (CryptoAPI rejects the envelope with
-// CRYPT_E_MSG_ERROR if bytes follow the top-level SEQUENCE).
-//
-// Returns 0 if the header is malformed or uses BER indefinite-length
-// encoding (0x80); in that case the caller should feed the full buffer.
-static size_t asn1_outer_seq_len(const unsigned char* data, size_t max_len) {
-    if (max_len < 2 || data[0] != 0x30) {
-        return 0;
+static int asn1_read_len(const unsigned char* p, size_t n, size_t max_bytes, size_t* hdr, size_t* body) {
+    if (n < 2) {
+        return -1;
     }
-    unsigned char b = data[1];
-    size_t hdr;
-    size_t content;
-    if (b < 0x80) {
-        hdr = 2;
-        content = b;
-    } else if (b == 0x80) {
-        // indefinite length; don't try to find the 00 00 terminator
-        return 0;
+    if (p[1] < 0x80) {
+        *hdr = 2;
+        *body = p[1];
+    } else if (p[1] == 0x80) {
+        return -1;
     } else {
-        size_t n = b & 0x7F;
-        if (n == 0 || n > sizeof(size_t) || max_len < 2 + n) {
-            return 0;
+        size_t ln = p[1] & 0x7F;
+        size_t i;
+        if (ln == 0 || ln > max_bytes || n < 2 + ln) {
+            return -1;
         }
-        content = 0;
-        for (size_t i = 0; i < n; i++) {
-            content = (content << 8) | data[2 + i];
+        *body = 0;
+        for (i = 0; i < ln; i++) {
+            *body = (*body << 8) | p[2 + i];
         }
-        hdr = 2 + n;
+        *hdr = 2 + ln;
     }
-    size_t total = hdr + content;
-    if (total > max_len) {
+    if (*hdr + *body > n) {
+        return -1;
+    }
+    return 0;
+}
+
+// Strip PDF signature padding only when the outer SEQUENCE has a definite length.
+static size_t asn1_outer_seq_len(const unsigned char* data, size_t max_len) {
+    size_t hdr, body;
+    if (max_len < 2 || data[0] != 0x30 || asn1_read_len(data, max_len, sizeof(size_t), &hdr, &body) != 0) {
         return 0;
     }
-    return total;
+    return hdr + body;
 }
 
 // Trim a /Contents-style signature buffer down to its outer ASN.1
@@ -903,30 +901,8 @@ static unsigned char* dup_bytes(fz_context* ctx, const unsigned char* p, int n) 
 }
 
 static int asn1_len(const unsigned char* p, size_t n, size_t* hdr, size_t* body) {
-    if (n < 2) {
-        return -1;
-    }
-    if (p[1] < 0x80) {
-        *hdr = 2;
-        *body = p[1];
-    } else if (p[1] == 0x80) {
-        return -1;
-    } else {
-        size_t ln = p[1] & 0x7F;
-        size_t i;
-        if (ln == 0 || ln > 4 || n < 2 + ln) {
-            return -1;
-        }
-        *body = 0;
-        for (i = 0; i < ln; i++) {
-            *body = (*body << 8) | p[2 + i];
-        }
-        *hdr = 2 + ln;
-    }
-    if (*hdr + *body > n) {
-        return -1;
-    }
-    return 0;
+    const size_t max_bytes = 4;
+    return asn1_read_len(p, n, max_bytes, hdr, body);
 }
 
 static int asn1_skip(const unsigned char** p, size_t* n) {
