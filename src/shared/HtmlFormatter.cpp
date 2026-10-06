@@ -657,6 +657,16 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
     return imageY != -1;
 }
 
+void HtmlFormatter::EmitImageOrAlt(HtmlToken* t, Str img) {
+    if (len(img) > 0 && EmitImage(img)) {
+        return;
+    }
+    AttrInfo alt = t->GetAttrByName(StrL("alt"));
+    if (alt) {
+        HandleText(str::Dup(textAllocator, alt.val));
+    }
+}
+
 bool HtmlFormatter::EmitImage(Str img) {
     ReportIf(len(img) == 0);
     Pixmap* pixmap = PixmapFromData(img);

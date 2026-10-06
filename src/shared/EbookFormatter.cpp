@@ -95,7 +95,6 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
     if (!doc) {
         return;
     }
-    bool needAlt = true;
     int n = 0;
     AttrInfo attr = t->GetAttrByName(StrL("recindex"));
     if (attr && !str::IsNull(str::Parse(attr.val, "%d", &n))) {
@@ -106,16 +105,7 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
             n = KindleEmbedToRecIndex(attr.val);
         }
     }
-    if (n > 0) {
-        Str img = doc->GetImage(n);
-        needAlt = len(img) == 0 || !EmitImage(img);
-    }
-    if (needAlt) {
-        attr = t->GetAttrByName(StrL("alt"));
-        if (attr) {
-            HandleText(str::Dup(textAllocator, attr.val));
-        }
-    }
+    EmitImageOrAlt(t, n > 0 ? doc->GetImage(n) : Str{});
 }
 
 void MobiFormatter::HandleHtmlTag(HtmlToken* t) {
@@ -153,19 +143,13 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    bool needAlt = true;
+    Str img;
     AttrInfo attr = t->GetAttrByName(StrL("src"));
     if (attr) {
         TempStr src = url::DecodeTemp(attr.val);
-        Str img = epubDoc->GetImageData(src, pagePath);
-        needAlt = len(img) == 0 || !EmitImage(img);
+        img = epubDoc->GetImageData(src, pagePath);
     }
-    if (needAlt) {
-        attr = t->GetAttrByName(StrL("alt"));
-        if (attr) {
-            HandleText(str::Dup(textAllocator, attr.val));
-        }
-    }
+    EmitImageOrAlt(t, img);
 }
 
 void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
@@ -184,20 +168,24 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
 }
 
-void EpubFormatter::HandleTagLink(HtmlToken* t) {
-    ReportIf(!epubDoc);
+static AttrInfo GetStylesheetHref(HtmlToken* t) {
     if (t->IsEndTag()) {
-        return;
+        return {};
     }
     AttrInfo attr = t->GetAttrByName(StrL("rel"));
     if (!attr || !attr.ValIs(StrL("stylesheet"))) {
-        return;
+        return {};
     }
     attr = t->GetAttrByName(StrL("type"));
     if (attr && !attr.ValIs(StrL("text/css"))) {
-        return;
+        return {};
     }
-    attr = t->GetAttrByName(StrL("href"));
+    return t->GetAttrByName(StrL("href"));
+}
+
+void EpubFormatter::HandleTagLink(HtmlToken* t) {
+    ReportIf(!epubDoc);
+    AttrInfo attr = GetStylesheetHref(t);
     if (!attr) {
         return;
     }
@@ -353,35 +341,18 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    bool needAlt = true;
+    Str img;
     AttrInfo attr = t->GetAttrByName(StrL("src"));
     if (attr) {
         TempStr src = url::DecodeTemp(attr.val);
-        Str img = htmlDoc->GetImageData(src);
-        needAlt = len(img) == 0 || !EmitImage(img);
+        img = htmlDoc->GetImageData(src);
     }
-    if (needAlt) {
-        attr = t->GetAttrByName(StrL("alt"));
-        if (attr) {
-            HandleText(str::Dup(textAllocator, attr.val));
-        }
-    }
+    EmitImageOrAlt(t, img);
 }
 
 void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
     ReportIf(!htmlDoc);
-    if (t->IsEndTag()) {
-        return;
-    }
-    AttrInfo attr = t->GetAttrByName(StrL("rel"));
-    if (!attr || !attr.ValIs(StrL("stylesheet"))) {
-        return;
-    }
-    attr = t->GetAttrByName(StrL("type"));
-    if (attr && !attr.ValIs(StrL("text/css"))) {
-        return;
-    }
-    attr = t->GetAttrByName(StrL("href"));
+    AttrInfo attr = GetStylesheetHref(t);
     if (!attr) {
         return;
     }

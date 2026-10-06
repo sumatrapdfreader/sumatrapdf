@@ -192,6 +192,7 @@ struct HtmlFormatter {
     void UpdateLinkBboxes(HtmlPage* page);
 
     bool EmitImage(Str img);
+    void EmitImageOrAlt(HtmlToken* t, Str img);
     void EmitHr();
     void EmitTextRun(::Str s);
     void EmitTextMarker(::Str s);
