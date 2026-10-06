@@ -1,10 +1,7 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Pure-function plain-text citation detectors used by RefHoverText for PDFs
-// without hyperref links. Split out of RefHoverDetect so the heuristics can be
-// unit-tested with synthetic glyph arrays (see src/base/tests/RefHover_ut.cpp)
-// without pulling in the engine, HWND, or rendering layers.
+// Plain-text citation detection for PDFs without link annotations.
 
 #include "base/Base.h"
 #include "RefHover.h"
@@ -103,10 +100,7 @@ static int FindCursorGlyph(const Rect* coords, int textLen, Point pagePos) {
     return bestDistSq <= kCitationMaxDistance * kCitationMaxDistance ? cursorIdx : -1;
 }
 
-// Detect a "(Surname et al., 2020)" / "Surname (2020)" citation pattern at
-// pagePos in a page's glyph arrays. On success, returns true and fills
-// *surnameOut with a freshly-allocated UTF-8 surname (caller frees) and
-// *yearOut with the 4-digit year.
+// Detect an author/year citation at pagePos; the caller frees surnameOut.
 // text and coords are parallel views, one WCHAR/Rect per engine codepoint.
 bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point pagePos, Str* surnameOut, int* yearOut,
                               Rect* srcRectOut) {
@@ -121,9 +115,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         return false;
     }
 
-    // 2. Build a 3-line text band around the cursor's line. Replace
-    // line-break transitions with spaces so the regex-ish matcher sees
-    // wrapped citations as a single span.
+    // A three-line band includes wrapped citations near the cursor.
     int cursorY = coords[cursorIdx].y;
     int lineH = coords[cursorIdx].dy + 4;
     if (lineH < 12) {
@@ -132,12 +124,8 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     int yMin = cursorY - lineH - 2;
     int yMax = cursorY + (lineH * 2) + 2;
 
-    // Word-generated PDFs frequently emit kerning-driven inter-glyph spaces
-    // ("et  al .", "Geneti c  Al gorith ms"), which break naive pattern
-    // matching. Collapse runs of whitespace to a single space so downstream
-    // checks (the "et al." literal, walk-back stop conditions) work against
-    // normalized text. Line breaks also become a single space.
-    // 3-line band of page text; most citations fit in a few hundred WCHARs.
+    // Collapse whitespace and line breaks so extraction artifacts such as
+    // "et  al ." still match.
     WCHAR chunkScratch[512]{};
     wstr::Builder chunk;
     wstr::BuilderUseExternalBuffer(chunk, WStr(chunkScratch, dimofi(chunkScratch)));
@@ -176,10 +164,8 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     WStr s = ToWStr(chunk);
     int slen = s.len;
 
-    // 3. Find a 4-digit year near the cursor. Prefer a year that comes
-    // *after* the cursor (within 60 chars) — for "(Bashab et al., 2023; Gu
-    // et al., 2025)" with cursor on "Gu", the year after Gu (2025) is the
-    // intended one even though 2023 is closer in raw chunk distance.
+    // Prefer a year after the cursor, so hovering "Gu" in
+    // "(Bashab, 2023; Gu, 2025)" chooses 2025 despite the closer 2023.
     auto isYearAt = [&](int i) -> int {
         if (i + 4 > slen) {
             return -1;
@@ -229,7 +215,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     int year = ((s.s[bestYearPos] - L'0') * 1000) + ((s.s[bestYearPos + 1] - L'0') * 100) +
                ((s.s[bestYearPos + 2] - L'0') * 10) + (s.s[bestYearPos + 3] - L'0');
 
-    // 4. Walk back from the year through punctuation to find the surname.
+    // Walk back from the year through punctuation to find the surname.
     int p = bestYearPos - 1;
     // Skip spaces and citation punctuation: ", " " ( ", " "
     while (p >= 0 && (s.s[p] == L' ' || s.s[p] == L'\t' || s.s[p] == L',' || s.s[p] == L'(' || s.s[p] == L'\n' ||
@@ -237,9 +223,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         p--;
     }
 
-    // Optionally skip "et al" / "et al." / "et l" (extraction dropped 'a')
-    // and space-before-period variants. The trailing period and the 'a' of
-    // "al" may both be absent.
+    // Skip "et al" with optional spaces, period and an extraction-dropped 'a'.
     {
         int q = p;
         if (q >= 0 && s.s[q] == L'.') {
@@ -268,9 +252,8 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         }
     }
 
-    // 5. Walk back through name-part characters, accepting lowercase prefix
-    // particles AND additional capitalized words (multi-word surnames like
-    // "Oude Vrielink", "van der Berg", "El Mansouri").
+    // Include lowercase prefixes and capitalized words in multi-word surnames,
+    // e.g. "van der Berg" or "Oude Vrielink".
     int surnameEnd = p + 1; // exclusive
     while (p >= 0) {
         WCHAR c = s.s[p];
@@ -296,12 +279,8 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
             bool isUpper = iswupper(firstChar);
             // Stop on connectors like "and", "&", or non-name words.
             if (isLower && !IsNamePrefix(WStr(s.s + wordStart, wordLen))) {
-                // Extraction artifact tolerance: a single 1-2 char lowercase
-                // token between two capitalized words is likely a mangled
-                // glyph from the real surname ("Oude" → "O d", "Vrielink"
-                // → "Vri li k"). Peek further back; if another capitalized
-                // word sits within ~6 chars, treat the short token as
-                // continuation.
+                // Keep short lowercase fragments between capitalized words:
+                // extraction can split "Oude Vrielink" into "O d Vri li k".
                 bool peekCap = false;
                 if (wordLen <= 2) {
                     int peek = wordStart - 1;
@@ -353,9 +332,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     }
 
     if (srcRectOut) {
-        // stable per-occurrence key: horizontal span of the matched citation
-        // (surname through year), so two same-reference markers on one line
-        // reposition the popup instead of sharing a line-only y/dy key.
+        // The citation's horizontal span distinguishes occurrences on one line.
         *srcRectOut = CitationSpanBounds(coords, textLen, chunkGlyphs, surnameStart, bestYearPos + 4);
     }
     *surnameOut = ToUtf8(surname);
@@ -363,14 +340,8 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     return true;
 }
 
-// Search a page's glyph arrays for a line whose first word(s) match
-// `surnameW` and where `year` appears within the next ~5 lines (the entry).
-// Returns true on hit and fills xOut/yOut with the entry's anchor (top-left
-// of the surname's first glyph).
-// Search a page's glyph arrays for a bibliography entry whose line starts
-// with (or contains, near the line start) `surnameW` and whose entry text
-// contains `year`. Returns true on hit and fills xOut/yOut with the entry's
-// anchor (top-left of the matching line's first glyph).
+// Find a bibliography entry with surnameW near its line start and year nearby.
+// Return the matching line's first glyph position in xOut/yOut.
 bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surnameW, int year, float* xOut,
                            float* yOut) {
     if (len(text) == 0 || textLen <= 0 || !coords || len(surnameW) == 0) {
@@ -412,13 +383,8 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
         }
         prevY = coords[i].y;
 
-        // Consider line-start glyphs at (or near) the page's leftmost X —
-        // the typical bibliography hanging-indent layout. Try matching the
-        // surname both as a strict line-start prefix AND within the first
-        // ~30 chars of the line (covers fragmented extraction where the
-        // detected fragment is only part of a multi-word real surname like
-        // "Vri" → "Oude Vrielink"; the line starts with "Oude" but "Vri"
-        // appears a few chars in).
+        // Match at the column's left edge or within the first 30 characters,
+        // allowing a detected fragment such as "Vri" in "Oude Vrielink".
         if (i != currentLineFirstIdx) {
             continue;
         }
@@ -477,12 +443,8 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
 
 // === Numeric "[N]" citation detection ===
 
-// Detect a numeric "[N]" citation marker (IEEE / numbered reference style) at
-// pagePos (page coordinates). Handles lists / ranges ("[1, 2]", "[3-5]") by
-// picking the number token nearest the cursor. On success returns true and
-// fills *numOut with the reference number.
-// srcRectOut (optional): see DetectCitationInPageText — stable per-occurrence
-// "[N]" bracket span set on success.
+// Pick the nearest number in a citation list/range, e.g. "[1, 2]" or "[3-5]".
+// On success, set numOut and the optional bracket-span srcRectOut.
 bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen, Point pagePos, int* numOut,
                                      Rect* srcRectOut) {
     *numOut = 0;
@@ -495,22 +457,13 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         return false;
     }
 
+    // Reconstruct local reading order for wrapped lists: glyph stream order
+    // can place "43]" far from the preceding "[42,".
     int lineTol = coords[cursorIdx].dy + 4;
     if (lineTol < 12) {
         lineTol = 14;
     }
-    // A numeric citation list may wrap across a line break ("[8, 17,\n18]"), so
-    // the "[ ... ]" walk must span a couple of lines. It can't walk by array
-    // index, though: some PDFs emit a wrapped number far from its '[' in the
-    // glyph stream (observed: the glyph before "43]" sat 196pt above, not at
-    // the "[42," one line up). So reconstruct *local reading order* — gather
-    // glyphs in a vertical band around the cursor and order them
-    // top-to-bottom / left-to-right — then walk that. "[42," (end of one line)
-    // then sits immediately before "43]" (start of the next), while the
-    // out-of-order stream neighbour falls outside the band.
-    // Digits, separators, and dash forms used in page ranges. Beyond the ASCII
-    // hyphen, accept the Unicode figure/en/em dash and minus sign, since
-    // typeset ranges ("9–14") use an en-dash, not '-'.
+    // Accept typographic dashes and minus signs in ranges such as "9–14".
     auto isListChar = [](WCHAR c) {
         return iswdigit(c) || c == L' ' || c == L'\t' || c == L',' || c == L'-' || c == L'\x2012' || c == L'\x2013' ||
                c == L'\x2014' || c == L'\x2212';
@@ -520,14 +473,8 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     int cursorBL = coords[cursorIdx].y + coords[cursorIdx].dy;
     int cursorX = coords[cursorIdx].x;
 
-    // Build one text line's column-limited segment: glyph indices whose baseline
-    // (y+dy, stable across a line) is within blTol of targetBL, sorted
-    // left-to-right, then restricted to the contiguous x-run (splits at gaps
-    // wider than a column gutter) that overlaps [refLo, refHi]. This keeps the
-    // neighbouring column — and the diagonal watermark, whose glyphs sit on
-    // their own scattered baselines — out of the segment. A whole-Y-band
-    // reconstruction can't: it merges both columns into one logical line and
-    // buries a wrapped citation's "[" behind the other column's text.
+    // Group by baseline and sort by x; keep the run overlapping [refLo, refHi].
+    // Column gutters and scattered watermark baselines split unrelated text.
     constexpr int kColGap = 16;
     auto buildSegment = [&](int targetBL, int refLo, int refHi, int* out, int cap, int* segLo, int* segHi) -> int {
         int cnt = 0;
@@ -579,9 +526,7 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     if (curN <= 0) {
         return false;
     }
-    // Nearest text line above / below in the same column (a glyph overlapping
-    // the cursor line's x-range), so a wrapped citation's other half is
-    // reachable without pulling in the neighbouring column.
+    // Adjacent lines must overlap the cursor line's x-range to stay in its column.
     int prevBL = INT_MIN, nextBL = INT_MAX;
     for (int i = 0; i < textLen; i++) {
         int gx = coords[i].x;
@@ -620,7 +565,7 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         return false;
     }
 
-    // 2. Walk the reconstructed order left to '[' and right to ']', through
+    // Walk the reconstructed order left to '[' and right to ']', through
     // citation-list chars only (a letter ends the walk, bounding it).
     int openPos = -1;
     for (int k = cursorPos; k >= 0; k--) {
@@ -654,7 +599,7 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         return false;
     }
 
-    // 3. Pick the number token nearest the cursor inside the brackets.
+    // Pick the number token nearest the cursor inside the brackets.
     int bestNum = 0;
     int bestTokDist = INT_MAX;
     int k = openPos + 1;
@@ -700,22 +645,15 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     return true;
 }
 
-// Search a page's glyph arrays for a bibliography entry whose line starts with
-// "[num]" at the page's leftmost text column. Returns true on hit and fills
-// xOut/yOut with the entry's anchor (top-left of the "[" glyph).
+// Find a "[num]" bibliography entry at a column's left edge.
+// Return its opening bracket position in xOut/yOut.
 bool FindNumericReferenceInPageText(WStr text, const Rect* coords, int textLen, int num, float* xOut, float* yOut) {
     if (len(text) == 0 || textLen <= 0 || !coords || num <= 0) {
         return false;
     }
 
-    // An entry "[N]" starts at a column's left edge: there is clear horizontal
-    // space immediately to its left (the page margin, or the gutter of a
-    // 2-column list). Detecting this gap is order-independent and works for any
-    // column, unlike a single global-leftmost-X test (which makes a 2-column
-    // list's right column unreachable) or a reading-order "new line" test
-    // (which misses a column whose glyph stream starts at a smaller y than the
-    // previous column's tail). kGap is wider than inter-word spacing but
-    // narrower than a column gutter / hanging indent.
+    // Clear space left of "[N]" identifies entries in any column, regardless
+    // of glyph stream order. kGap exceeds word spacing but fits column gutters.
     constexpr int kGap = 12;
     for (int i = 0; i < textLen; i++) {
         if (text.s[i] != L'[') {
