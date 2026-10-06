@@ -597,6 +597,43 @@ static void LineRunExtent(WStr text, const Rect* coords, int anchorIdx, int* lef
     *rightXOut = rightX;
 }
 
+static constexpr int kColumnGutterPt = 8;
+
+// Stop at the first gutter empty across the selected band of text lines.
+static int FindColumnRight(WStr text, const Rect* coords, int startX, int top, int bottom, int pageWidth) {
+    int xLo = std::max(startX - 5, 0);
+    if (pageWidth <= xLo + 2) {
+        return INT_MIN;
+    }
+    int n = pageWidth - xLo;
+    char* occ = AllocArrayTemp<char>(n);
+    for (int i = 0; i < len(text); i++) {
+        WCHAR c = text.s[i];
+        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.y < top || r.y > bottom) {
+            continue;
+        }
+        int a = std::max(r.x - xLo, 0);
+        int b = std::min(r.x + r.dx - xLo, n);
+        for (int x = a; x < b; x++) {
+            occ[x] = 1;
+        }
+    }
+    int right = startX;
+    for (int x = startX; x < pageWidth; x++) {
+        int idx = x - xLo;
+        if (idx >= 0 && idx < n && occ[idx]) {
+            right = x + 1;
+        } else if (x - right >= kColumnGutterPt) {
+            break;
+        }
+    }
+    return right;
+}
+
 // A bracket-style bibliography entry ("[63]") that runs to the bottom of its
 // 2-column-layout column with no sibling "[" and no blank-line gap closing it
 // may simply continue at the top of the next column (the column break falls
@@ -605,8 +642,6 @@ static void LineRunExtent(WStr text, const Rect* coords, int anchorIdx, int* lef
 // begin with a "[" label (which would mean it's the next real entry, not a
 // continuation). Returns an empty RectF when no such continuation is found.
 static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF mediabox, int oldColumnRightX) {
-    constexpr int kGutterW = 8;
-
     // 1. Left edge of the next column: leftmost glyph right of the old
     // column's right edge (skipping the gutter itself).
     int nextColLeftX = INT_MAX;
@@ -616,7 +651,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
             continue;
         }
         Rect r = coords[i];
-        if (r.x > oldColumnRightX + kGutterW && r.x < nextColLeftX) {
+        if (r.x > oldColumnRightX + kColumnGutterPt && r.x < nextColLeftX) {
             nextColLeftX = r.x;
         }
     }
@@ -683,51 +718,10 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         }
     }
 
-    // 4. Right edge of the new column (gutter-bounded, mirrors the primary
-    // column-right scan in DetectEntryBox).
     int colRightX = nextColLeftX + 250;
-    {
-        int bandTop = topY - 2;
-        int bandBot = topY + (6 * topDy);
-        int xLo = nextColLeftX - 5;
-        xLo = std::max(xLo, 0);
-        int xHi = (int)mediabox.dx;
-        if (xHi > xLo + 2) {
-            int n = xHi - xLo;
-            char* occ = AllocArrayTemp<char>(n);
-            for (int i = 0; i < text.len; i++) {
-                WCHAR c = text.s[i];
-                if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
-                    continue;
-                }
-                Rect r = coords[i];
-                if (r.y < bandTop || r.y > bandBot) {
-                    continue;
-                }
-                int a = r.x - xLo;
-                int b = r.x + r.dx - xLo;
-                if (b <= 0 || a >= n) {
-                    continue;
-                }
-                a = std::max(a, 0);
-                b = std::min(b, n);
-                for (int x = a; x < b; x++) {
-                    occ[x] = 1;
-                }
-            }
-            int lastOcc = nextColLeftX;
-            for (int x = nextColLeftX; x < xHi; x++) {
-                int idx = x - xLo;
-                if (idx >= 0 && idx < n && occ[idx]) {
-                    lastOcc = x + 1;
-                } else if (x - lastOcc >= kGutterW) {
-                    break;
-                }
-            }
-            if (lastOcc > nextColLeftX) {
-                colRightX = lastOcc;
-            }
-        }
+    int right = FindColumnRight(text, coords, nextColLeftX, topY - 2, topY + (6 * topDy), (int)mediabox.dx);
+    if (right > nextColLeftX) {
+        colRightX = right;
     }
 
     // 5. End of the continuation block. A real wrapped tail is short (finishes
@@ -1049,59 +1043,11 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         }
     }
 
-    // Gutter-bounded right edge of the entry's column, from the page's column
-    // structure. Scan rightward from the body (after any label), marking
-    // x-occupancy across a small band of lines around the entry, and stop at
-    // the first vertical strip empty on every row (a real column gutter). A
-    // long single line (URL) keeps its column occupied; a 2-column gutter is
-    // empty across rows so the box never crosses into the next column. Computed
-    // before the entry's vertical bounds so the trim/box below stay in-column.
-    // The band is kept near the entry (not the whole page) so a centered page
-    // number sitting in the gutter band lower down can't bridge the columns.
-    {
-        constexpr int kGutterW = 8;
-        int bandTop = firstLineY - (2 * linePitch);
-        int bandBot = firstLineY + (6 * linePitch);
-        int scanStartX = (entryBodyLeftX >= 0) ? entryBodyLeftX : firstLineLeftX;
-        int xLo = scanStartX - 5;
-        xLo = std::max(xLo, 0);
-        int xHi = (int)mediabox.dx;
-        if (xHi > xLo + 2) {
-            int n = xHi - xLo;
-            char* occ = AllocArrayTemp<char>(n);
-            for (int i = 0; i < text.len; i++) {
-                WCHAR c = text.s[i];
-                if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
-                    continue;
-                }
-                Rect r = coords[i];
-                if (r.y < bandTop || r.y > bandBot) {
-                    continue;
-                }
-                int a = r.x - xLo;
-                int b = r.x + r.dx - xLo;
-                if (b <= 0 || a >= n) {
-                    continue;
-                }
-                a = std::max(a, 0);
-                b = std::min(b, n);
-                for (int x = a; x < b; x++) {
-                    occ[x] = 1;
-                }
-            }
-            int lastOcc = scanStartX;
-            for (int x = scanStartX; x < xHi; x++) {
-                int idx = x - xLo;
-                if (idx >= 0 && idx < n && occ[idx]) {
-                    lastOcc = x + 1;
-                } else if (x - lastOcc >= kGutterW) {
-                    break;
-                }
-            }
-            if (lastOcc > firstLineLeftX) {
-                columnRightX = lastOcc;
-            }
-        }
+    int scanStartX = entryBodyLeftX >= 0 ? entryBodyLeftX : firstLineLeftX;
+    int right = FindColumnRight(text, coords, scanStartX, firstLineY - (2 * linePitch), firstLineY + (6 * linePitch),
+                                (int)mediabox.dx);
+    if (right > firstLineLeftX) {
+        columnRightX = right;
     }
 
     // Bracket-style entry ("[ZM12]", "[1]", …): build the bounding box from
