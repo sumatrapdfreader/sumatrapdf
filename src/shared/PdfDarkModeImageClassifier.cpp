@@ -16,13 +16,12 @@ static constexpr int kMaxImageSamples = 1000;
 static constexpr int kGridBlocks = 10;
 static constexpr int kColorBuckets = 4096;
 
-static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float pageCoverage,
-                                       DarkImageFeatures* outFeatures, PixelColor* outBackground) {
+static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, DarkImageFeatures* outFeatures,
+                                       PixelColor* outBackground) {
     if (!ctx || !image || !outFeatures) {
         return false;
     }
     *outFeatures = DarkImageFeatures{};
-    outFeatures->pageCoverage = pageCoverage;
 
     fz_pixmap* pix = nullptr;
     fz_var(pix);
@@ -43,10 +42,8 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
 
         int buckets[kColorBuckets] = {};
         int n = 0;
-        int transparent = 0;
         int highLum = 0;
         int saturated = 0;
-        int chromatic = 0;
         float lumSum = 0.f;
         float lumSqSum = 0.f;
 
@@ -73,7 +70,6 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
                         float r, g, b, a;
                         PdfDarkModeSampleRgb(ctx, pix, x, y, &r, &g, &b, &a);
                         if (a < kImageMinAlpha) {
-                            transparent++;
                             n++;
                             continue;
                         }
@@ -89,9 +85,6 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
                         lumSqSum += lum * lum;
                         if (maxC - minC > 0.12f) {
                             saturated++;
-                        }
-                        if (maxC - minC > 0.06f) {
-                            chromatic++;
                         }
                         if (lum > 0.72f) {
                             highLum++;
@@ -119,11 +112,8 @@ static bool PdfDarkModeExtractFeatures(fz_context* ctx, fz_image* image, float p
         float lumMean = lumSum / (float)n;
         outFeatures->luminanceVariance = (lumSqSum / (float)n) - (lumMean * lumMean);
         outFeatures->colorBucketRatio = (float)significantBuckets / (float)kColorBuckets;
-        outFeatures->transparentRatio = (float)transparent / (float)n;
         outFeatures->highLuminanceRatio = (float)highLum / (float)n;
         outFeatures->saturatedPixelRatio = (float)saturated / (float)n;
-        outFeatures->chromaticPixelRatio = (float)chromatic / (float)n;
-        outFeatures->isColorful = significantBuckets >= 14 || outFeatures->saturatedPixelRatio >= 0.16f;
 
         float blockVarSum = 0.f;
         int flatBlocks = 0;
@@ -166,7 +156,7 @@ DarkImageAnalysis PdfDarkModeAnalyzeImageCached(fz_context* ctx, fz_image* image
         haveFeatures = true;
     }
     if (!haveFeatures) {
-        if (!PdfDarkModeExtractFeatures(ctx, image, pageCoverage, &result.features, &result.estimatedBackground)) {
+        if (!PdfDarkModeExtractFeatures(ctx, image, &result.features, &result.estimatedBackground)) {
             result.kind = DarkImageKind::Unknown;
             result.confidence = 0.f;
             return result;

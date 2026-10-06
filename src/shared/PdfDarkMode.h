@@ -27,18 +27,14 @@ struct PixelColor {
 };
 
 struct DarkImageFeatures {
-    bool isColorful = false;
     float colorBucketRatio = 0.f;
-    float transparentRatio = 0.f;
     float highLuminanceRatio = 0.f;
     float saturatedPixelRatio = 0.f;
-    float chromaticPixelRatio = 0.f;
     float borderUniformity = 0.f;
     float borderLightRatio = 0.f;
     float flatAreaRatio = 0.f;
     float textureScore = 0.f;
     float luminanceVariance = 0.f;
-    float pageCoverage = 0.f;
 };
 
 struct DarkImageAnalysis {
@@ -108,19 +104,15 @@ struct ImageOccurrenceInfo {
     int occurrenceIndex = 0;
     RectF pageBounds;
     bool isImageMask = false;
-    bool hasAlpha = false;
     float pageCoverage = 0.f;
-    bool looksLikePhoto = true;
     DarkImagePolicy policy = DarkImagePolicy::Preserve;
     DarkImageAnalysis analysis{};
 };
 
 struct DarkModePageAnalysis {
-    int pageNumber = 0;
     RectF pageBounds;
     bool isScannedPage = false;
     Vec<ImageOccurrenceInfo> images;
-    u32 optionsHash = 0;
     void* processCache = nullptr;
 };
 

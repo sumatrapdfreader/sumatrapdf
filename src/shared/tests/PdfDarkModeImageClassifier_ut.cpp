@@ -14,7 +14,6 @@ extern "C" {
 
 static DarkImageFeatures PhotoLikeFeatures() {
     DarkImageFeatures f;
-    f.isColorful = true;
     f.colorBucketRatio = 0.04f;
     f.highLuminanceRatio = 0.28f;
     f.saturatedPixelRatio = 0.18f;
@@ -27,7 +26,6 @@ static DarkImageFeatures PhotoLikeFeatures() {
 
 static DarkImageFeatures LightBackgroundArtFeatures() {
     DarkImageFeatures f;
-    f.isColorful = false;
     f.colorBucketRatio = 0.015f;
     f.highLuminanceRatio = 0.58f;
     f.saturatedPixelRatio = 0.04f;
@@ -40,7 +38,6 @@ static DarkImageFeatures LightBackgroundArtFeatures() {
 
 static DarkImageFeatures IconFeatures() {
     DarkImageFeatures f;
-    f.isColorful = false;
     f.colorBucketRatio = 0.008f;
     f.highLuminanceRatio = 0.68f;
     f.saturatedPixelRatio = 0.02f;
@@ -53,11 +50,9 @@ static DarkImageFeatures IconFeatures() {
 
 static DarkImageFeatures BrightFilmStillFeatures() {
     DarkImageFeatures f;
-    f.isColorful = true;
     f.colorBucketRatio = 22.f / 4096.f;
     f.highLuminanceRatio = 0.62f;
     f.saturatedPixelRatio = 0.22f;
-    f.chromaticPixelRatio = 0.28f;
     f.luminanceVariance = 0.021f;
     f.borderLightRatio = 0.72f;
     f.borderUniformity = 0.75f;
