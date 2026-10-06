@@ -207,11 +207,8 @@ static Str ExtractHeadingTitle(cmark_node* heading) {
     return out.TakeStr();
 }
 
-static void ParseMarkdownHeadings(Str filePath, MarkdownFileToc* toc) {
-    toc->filePath = str::Dup(filePath);
-    VecReset(toc->headings);
-
-    Str data = file::ReadFile(filePath);
+static void ParseMarkdownHeadings(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
+    VecReset(headingsOut);
     if (len(data) == 0) {
         return;
     }
@@ -246,7 +243,7 @@ static void ParseMarkdownHeadings(Str filePath, MarkdownFileToc* toc) {
         item.title = title;
         item.anchor = MarkdownHeadingSlug(nullptr, title);
         item.level = cmark_node_get_heading_level(node);
-        VecAppend(toc->headings, item);
+        VecAppend(headingsOut, item);
     }
     cmark_iter_free(iter);
     cmark_node_free(doc);
@@ -309,18 +306,6 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
     str::FreePtr(&headingId);
 }
 
-// Build a sibling-file TOC from an HTML file's headings.
-static void ParseHtmlHeadings(Str filePath, MarkdownFileToc* toc) {
-    toc->filePath = str::Dup(filePath);
-    VecReset(toc->headings);
-    Str data = file::ReadFile(filePath);
-    if (len(data) == 0) {
-        return;
-    }
-    ParseHtmlHeadingsData(data, toc->headings);
-    str::Free(data);
-}
-
 struct MdTocParseCtx {
     StrVec* files = nullptr;
     Vec<MarkdownFileToc>* tocs = nullptr;
@@ -337,10 +322,13 @@ static void MdTocParseWorker(MdTocParseCtx* ctx) {
         }
         Str path = ctx->files->At(i);
         MarkdownFileToc* toc = &(*ctx->tocs)[i];
+        toc->filePath = str::Dup(path);
+        Str data = file::ReadFile(path);
+        AutoFree dataOwner(data.s);
         if (ctx->htmlMode) {
-            ParseHtmlHeadings(path, toc);
+            ParseHtmlHeadingsData(data, toc->headings);
         } else {
-            ParseMarkdownHeadings(path, toc);
+            ParseMarkdownHeadings(data, toc->headings);
         }
     }
 }
