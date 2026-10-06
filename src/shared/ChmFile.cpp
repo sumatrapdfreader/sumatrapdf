@@ -160,67 +160,19 @@ constexpr int kCpChmDefault = 1252;
 
 static uint LcidToCodepage(DWORD lcid) {
     // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
-    // flat array of (lcid, codepage) pairs
-    static const u16 lcidToCodepage[] = {
-        1025,
-        1256, //
-        2052,
-        936, //
-        1028,
-        950, //
-        1029,
-        1250, //
-        1032,
-        1253, //
-        1037,
-        1255, //
-        1038,
-        1250, //
-        1041,
-        932, //
-        1042,
-        949, //
-        1045,
-        1250, //
-        1049,
-        1251, //
-        1051,
-        1250, //
-        1060,
-        1250, //
-        1055,
-        1254, //
-        1026,
-        1251, //
-        4,
-        936, //
-        // more Cyrillic (1251) locales: Ukrainian, Belarusian, Serbian (Cyrillic),
-        // Macedonian, Kazakh, Kyrgyz, Tatar, Mongolian, Azeri (Cyrillic)
-        1058,
-        1251, //
-        1059,
-        1251, //
-        3098,
-        1251, //
-        2074,
-        1251, //
-        1071,
-        1251, //
-        1087,
-        1251, //
-        1088,
-        1251, //
-        1092,
-        1251, //
-        1104,
-        1251, //
-        2092,
-        1251, //
+    static const struct {
+        u16 lcid;
+        u16 codepage;
+    } lcidToCodepage[] = {
+        {1025, 1256}, {2052, 936},  {1028, 950},  {1029, 1250}, {1032, 1253}, {1037, 1255}, {1038, 1250},
+        {1041, 932},  {1042, 949},  {1045, 1250}, {1049, 1251}, {1051, 1250}, {1060, 1250}, {1055, 1254},
+        {1026, 1251}, {4, 936},     {1058, 1251}, {1059, 1251}, {3098, 1251}, {2074, 1251}, {1071, 1251},
+        {1087, 1251}, {1088, 1251}, {1092, 1251}, {1104, 1251}, {2092, 1251},
     };
 
-    for (int i = 0; i < dimof(lcidToCodepage); i += 2) {
-        if (lcid == lcidToCodepage[i]) {
-            return lcidToCodepage[i + 1];
+    for (const auto& entry : lcidToCodepage) {
+        if (lcid == entry.lcid) {
+            return entry.codepage;
         }
     }
 
