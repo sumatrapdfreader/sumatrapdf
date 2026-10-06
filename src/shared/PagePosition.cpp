@@ -48,10 +48,7 @@ TempStr StoredPagePosForPageTemp(DocController* ctrl, int pageNo) {
 }
 
 TempStr StoredPagePosFromCtrlTemp(DocController* ctrl) {
-    if (!ctrl) {
-        return FormatStoredPagePosTemp(1);
-    }
-    return StoredPagePosForPageTemp(ctrl, ctrl->CurrentPageNo());
+    return StoredPagePosForPageTemp(ctrl, ctrl ? ctrl->CurrentPageNo() : 1);
 }
 
 // leading "chapter:page" from an engine bookmark ("chapter:page:pagesInChapter
@@ -133,15 +130,10 @@ bool MigrateFileStatePagePos(DocController* ctrl, FileState* fs) {
     if (!ctrl || !ctrl->HasChapters() || !fs) {
         return false;
     }
-    bool changed = false;
-    if (MigrateStoredPagePos(ctrl, &fs->pageNo)) {
-        changed = true;
-    }
+    bool changed = MigrateStoredPagePos(ctrl, &fs->pageNo);
     if (fs->favorites) {
         for (Favorite* fav : *fs->favorites) {
-            if (MigrateStoredPagePos(ctrl, &fav->pageNo)) {
-                changed = true;
-            }
+            changed |= MigrateStoredPagePos(ctrl, &fav->pageNo);
         }
     }
     return changed;
@@ -175,6 +167,5 @@ TempStr FormatFileStateProgressTemp(const FileState* fs) {
     if (fs->pageCount <= 0) {
         return {};
     }
-    int curr = pos.pageNo < 1 ? 1 : pos.pageNo;
-    return fmt("%d/%d", curr, fs->pageCount);
+    return fmt("%d/%d", pos.pageNo, fs->pageCount);
 }
