@@ -43,6 +43,12 @@ struct CitationCacheEntry {
 
 struct RefLookupCache {
     Vec<CitationCacheEntry> entries;
+
+    ~RefLookupCache() {
+        for (const auto& entry : entries) {
+            str::Free(entry.surname);
+        }
+    }
 };
 
 static const CitationCacheEntry* CacheLookup(RefLookupCache* c, Str surname, int year, int srcPage) {
@@ -62,24 +68,7 @@ static void CacheInsert(RefLookupCache* c, Str surname, int year, int srcPage, i
     if (!c) {
         return;
     }
-    CitationCacheEntry e;
-    e.surname = str::Dup(surname);
-    e.year = year;
-    e.srcPage = srcPage;
-    e.destPage = destPage;
-    e.destX = destX;
-    e.destY = destY;
-    VecAppend(c->entries, e);
-}
-
-static void CacheFree(RefLookupCache* c) {
-    if (!c) {
-        return;
-    }
-    for (int i = 0; i < len(c->entries); i++) {
-        str::Free(c->entries[i].surname);
-    }
-    delete c;
+    VecAppend(c->entries, CitationCacheEntry{str::Dup(surname), year, srcPage, destPage, destX, destY});
 }
 
 // Free the lazy-init plain-text lookup cache held on the hover state.
@@ -87,7 +76,7 @@ void RefHoverFreeLookupCache(RefHoverState* s) {
     if (!s) {
         return;
     }
-    CacheFree(s->lookupCache);
+    delete s->lookupCache;
     s->lookupCache = nullptr;
 }
 
