@@ -518,28 +518,12 @@ CadDetectResult DetectCadPdf(fz_context* ctx, pdf_document* doc) {
     res.score = heuristicScore + metadataScore;
     res.rasterDominant = rasterDominant;
     res.hairlineVector = hairlineVector;
-    // Long multi-page books are never raster CAD screenshots (those are short
-    // exports). Clear the flag so PdfCadEnhancePixmap does not gray-blend.
-    if (rasterDominant && pageCount > 30) {
-        res.rasterDominant = false;
-        rasterDominant = false;
-    }
-    if (rasterDominant && res.score >= 45 && pageCount <= 30) {
+    if (rasterDominant && res.score >= 45) {
         res.enable = true;
         res.reason = CadEnhanceReason::RasterImage;
         return res;
     }
-    if (hairlineVector && res.score >= 45) {
-        res.enable = true;
-        res.reason = CadEnhanceReason::Heuristic;
-        return res;
-    }
-    if (!strongMetadata && metadataScore > 0 && res.score >= 45) {
-        res.enable = true;
-        res.reason = CadEnhanceReason::Heuristic;
-        return res;
-    }
-    if (res.score >= 60) {
+    if (res.score >= 60 || (res.score >= 45 && (hairlineVector || metadataScore > 0))) {
         res.enable = true;
         res.reason = CadEnhanceReason::Heuristic;
     }
