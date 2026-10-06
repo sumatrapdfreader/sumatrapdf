@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="shared">
+      <UniqueIdentifier>{9C5CB11B-88FE-DBF1-71B9-EF455DFA6242}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\EmbeddedResources.h" />
+    <ClInclude Include="..\src\SumatraLog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\EmbeddedResources.cpp" />
+    <ClCompile Include="..\src\SumatraLog.cpp" />
+    <ClCompile Include="..\src\shared\CrashHandlerNoOp.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\sumatrapdf-tool.cpp" />
+  </ItemGroup>
+</Project>

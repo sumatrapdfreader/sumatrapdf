@@ -58,7 +58,7 @@ function makelzsa_files()
   })
 
   files {
-    "src/CrashHandlerNoOp.cpp",
+    "src/shared/CrashHandlerNoOp.cpp",
     "src/tools/MakeLzSA.cpp",
   }
 end

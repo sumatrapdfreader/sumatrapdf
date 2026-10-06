@@ -22,6 +22,9 @@
     <Filter Include="src\gui">
       <UniqueIdentifier>{210530A9-8DE4-AE44-96FC-391B025B15A6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\shared">
+      <UniqueIdentifier>{D3351079-BFED-51C6-28F5-2A2214CCECB6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\tools">
       <UniqueIdentifier>{8DED2DB6-F957-E22C-4296-93D2AE3FC081}</UniqueIdentifier>
     </Filter>
@@ -83,9 +86,6 @@
     <ClCompile Include="..\ext\lzma\C\LzmaEnc.c">
       <Filter>ext\lzma\C</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CrashHandlerNoOp.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\Arena.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -124,6 +124,9 @@
     </ClCompile>
     <ClCompile Include="..\src\gui\Dpi.cpp">
       <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\CrashHandlerNoOp.cpp">
+      <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\MakeLzSA.cpp">
       <Filter>src\tools</Filter>

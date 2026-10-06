@@ -60,7 +60,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChapterTable.cpp" />
-    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
@@ -82,6 +81,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ifilter\TeXFilter.cpp">
       <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\CrashHandlerNoOp.cpp">
+      <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\DocProperties.cpp">
       <Filter>shared</Filter>

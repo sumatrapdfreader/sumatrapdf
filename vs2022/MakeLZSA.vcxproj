@@ -1180,7 +1180,6 @@
     <ClCompile Include="..\ext\lzma\C\LzFind.c" />
     <ClCompile Include="..\ext\lzma\C\LzmaDec.c" />
     <ClCompile Include="..\ext\lzma\C\LzmaEnc.c" />
-    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\base\Arena.cpp" />
     <ClCompile Include="..\src\base\Base.cpp" />
     <ClCompile Include="..\src\base\ByteReaderWriter.cpp" />
@@ -1194,6 +1193,7 @@
     <ClCompile Include="..\src\base\Win.cpp" />
     <ClCompile Include="..\src\base\WinDynCalls.cpp" />
     <ClCompile Include="..\src\gui\Dpi.cpp" />
+    <ClCompile Include="..\src\shared\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\tools\MakeLzSA.cpp" />
   </ItemGroup>
   <ItemGroup>
