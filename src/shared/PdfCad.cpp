@@ -564,13 +564,7 @@ static void CadBlendRgb(float r, float g, float b, float mr, float mg, float mb,
 // Map typical CAD export grays toward Acrobat-like darker strokes (not pure black).
 static void CadAcrobatGrayRgb(float r, float g, float b, float* outR, float* outG, float* outB) {
     float lum;
-    if (!CadIsNeutralGray(r, g, b, &lum)) {
-        *outR = r;
-        *outG = g;
-        *outB = b;
-        return;
-    }
-    if (lum <= 0.50f) {
+    if (!CadIsNeutralGray(r, g, b, &lum) || lum <= 0.50f) {
         *outR = r;
         *outG = g;
         *outB = b;
@@ -579,12 +573,6 @@ static void CadAcrobatGrayRgb(float r, float g, float b, float* outR, float* out
     float t = (lum - 0.50f) / 0.32f;
     t = std::min(t, 1.f);
     float targetLum = 0.15f + (t * 0.21f);
-    if (targetLum >= lum || lum < 0.0001f) {
-        *outR = r;
-        *outG = g;
-        *outB = b;
-        return;
-    }
     float scale = targetLum / lum;
     *outR = r * scale;
     *outG = g * scale;
