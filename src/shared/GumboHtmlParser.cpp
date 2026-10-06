@@ -738,3 +738,30 @@ HtmlToken* GumboHtmlParser::Next() {
     Event& ev = events[(int)eventIdx++];
     return TokenFromEvent(ev);
 }
+
+#if IS_DEBUG
+bool GumboHtmlParser_UnitTest() {
+    HtmlToken token;
+    token.SetTag(HtmlToken::StartTag, StrL("opf:metadata"));
+    Str name = StrL("metadata!");
+    name.len--;
+    if (token.NameIs(name) || !token.NameIsNS(name, StrL("ignored")) || !token.NameIs(StrL("OPF:METADATA")) ||
+        token.NameIsNS(StrL("opf:metadata"), StrL("ignored"))) {
+        return false;
+    }
+    Str xml = StrL("<opf:metadata q:href='book'>text</opf:metadata>");
+    GumboOptions opts = GumboMakeXmlFragmentOptions();
+    GumboOutput* doc = gumbo_parse_with_options(&opts, xml.s, (size_t)len(xml));
+    const GumboNode* node = GumboFindDescendantByTagNS(doc->document, name, StrL("ignored"));
+    bool ok = node && !GumboFindDescendantByTag(doc->document, name) &&
+              GumboFindDescendantByTag(doc->document, StrL("opf:metadata")) == node &&
+              GumboTagNameIsNS(node, StrL("opf:metadata"), StrL("ignored"));
+    token.node = node;
+    ok = ok && !token.GetAttrByName(StrL("href"));
+    AttrInfo* attr = token.GetAttrByNameNS(StrL("href"), StrL("ignored"));
+    ok = ok && attr && str::Eq(attr->val, StrL("book")) && !attr->NameIsNS(StrL("q:href"), StrL("ignored")) &&
+         token.GetAttrByName(StrL("Q:HREF"));
+    gumbo_destroy_output_iter(&opts, doc);
+    return ok;
+}
+#endif
