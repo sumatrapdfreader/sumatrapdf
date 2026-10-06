@@ -327,7 +327,7 @@ static Str RewriteLogTemp() {
         dst.AppendChar(src.s[i]);
         i++;
     }
-    return str::Dup(gPerfArena, ToStr(dst));
+    return ToStr(dst);
 }
 
 void SavePerfLog() {
