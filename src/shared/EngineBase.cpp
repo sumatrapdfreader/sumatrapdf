@@ -355,13 +355,7 @@ void TocItem::AddSiblingAtEnd(TocItem* sibling) {
 }
 
 int TocItem::ChildCount() {
-    int n = 0;
-    auto* node = child;
-    while (node) {
-        n++;
-        node = node->next;
-    }
-    return n;
+    return ListLen(child);
 }
 
 TocItem* TocItem::ChildAt(int n) {
