@@ -159,9 +159,7 @@ static void AppendHeadingText(cmark_node* node, str::Builder* out) {
 
 static Str ExtractHeadingTitle(cmark_node* heading) {
     str::Builder out;
-    for (cmark_node* child = cmark_node_first_child(heading); child; child = cmark_node_next(child)) {
-        AppendHeadingText(child, &out);
-    }
+    AppendHeadingText(heading, &out);
     return out.TakeStr();
 }
 
