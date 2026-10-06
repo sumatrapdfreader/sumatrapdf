@@ -43,4 +43,3 @@ tests/tmp/
 /mcps/tasks/tools
 /bin/resvg.exe
 /scratch.txt
-src/ng/EmbeddedData*.cpp

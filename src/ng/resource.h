@@ -2,10 +2,10 @@
 // Used by SumatraPDF.rc
 //
 // ng: orig's resource.h minus what this port doesn't load from the exe: the
-// LzSA pak (IDR_EMBEDDED_PAK; see EmbeddedResources.h), the print dialog
-// template (Print.cpp builds the DLGTEMPLATE in memory) and the reloading
+// print dialog template (Print.cpp builds the DLGTEMPLATE in memory) and the reloading
 // cue (gpui draws it).
 #define IDI_SUMATRAPDF 1
+#define IDR_EMBEDDED_PAK 1
 #define IDC_CURSORDRAG 132
 
 // Document-type icons (resource id = registry DefaultIcon ,-N).

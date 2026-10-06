@@ -14,6 +14,7 @@ import { Glob } from "bun";
 import type { Platform, Toolchain } from "./ng-toolchain";
 import { findTarget, forPlatform, sourceBuildsOn, type Target, type TargetKind } from "./ng-targets";
 import { isShared, sharedFiles, sharedPath, sharedSource } from "./ng-shared";
+import { embedLzsa } from "./embedded";
 
 export type BuildFlags = {
   debug: boolean;
@@ -892,6 +893,9 @@ export async function buildTarget(tc: Toolchain, t: Target, f: BuildFlags, fail:
   }
   const objs = await compileTarget(tc, t, f, dir, fail);
   if (t.kind === "staticlib") return archive(tc, t, dir, objs, fail);
+  if (t.embedded || depsOf(t, fail).some((d) => d.embedded)) {
+    objs.push(await embedLzsa(tc, join(dir, "embedded.lzsa"), dir));
+  }
   if (t.rc && tc.plat === "win") objs.push(await compileRc(tc, t, f, dir, fail));
   return link(tc, t, f, dir, objs, libs, fail);
 }

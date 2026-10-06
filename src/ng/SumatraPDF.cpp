@@ -658,8 +658,8 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
 
 // --- the in-app manual -------------------------------------------------------
 // orig packs docs/md/** plus the client-side renderer into IDR_EMBEDDED_PAK and
-// serves them to a WebView2 from a virtual host; here they are embedded blobs
-// named "manual/<file>" (cmd/gen-docs.ts + cmd/gen-embedded.ts) and the host is
+// serves them to a WebView2 from a virtual host; here they are archive entries
+// named "<file>" (cmd/gen-docs.ts) and the host is
 // the SimpleBrowserWindow's. Falls back to the website in the user's browser.
 
 constexpr const char* kManualDefaultDocURI = "/SumatraPDF-documentation";
@@ -681,7 +681,7 @@ static Str ManualFileData(Str name) {
         }
     }
     int size = 0;
-    u8* data = GetEmbeddedFileData(fmt("manual/%s", name), &size);
+    u8* data = GetEmbeddedFileData(name, &size);
     auto* f = AllocStruct<ManualFile>();
     f->name = str::Dup(name);
     f->data = Str((char*)data, size);

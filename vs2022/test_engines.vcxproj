@@ -1175,7 +1175,6 @@
   <ItemGroup>
     <ClCompile Include="..\src\CachedObjects.cpp" />
     <ClCompile Include="..\src\ChapterTable.cpp" />
-    <ClCompile Include="..\src\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
@@ -1185,6 +1184,7 @@
     <ClCompile Include="..\src\shared\AvifReader.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
     <ClCompile Include="..\src\shared\EbookDoc.cpp" />
+    <ClCompile Include="..\src\shared\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\shared\EngineBase.cpp" />
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />

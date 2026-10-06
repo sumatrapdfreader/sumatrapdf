@@ -59,7 +59,7 @@ function makelzsa_files()
 
   files {
     "src/shared/CrashHandlerNoOp.cpp",
-    "src/tools/MakeLzSA.cpp",
+    "src/shared/tools/MakeLzSA.cpp",
   }
 end
 
@@ -956,7 +956,7 @@ function test_engines_files()
     "src/shared/DocProperties.cpp",
     "src/shared/DocProperties.h",
     "src/shared/EbookDoc.cpp",
-    "src/EmbeddedResources.cpp",
+    "src/shared/EmbeddedResources.cpp",
     "src/EngineAll.h",
     "src/shared/EngineBase.cpp",
     "src/shared/EngineBase.h",

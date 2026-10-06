@@ -135,6 +135,8 @@ export const sharedFiles = [
   "src/shared/EbookDoc.h",
   "src/shared/EbookFormatter.cpp",
   "src/shared/EbookFormatter.h",
+  "src/shared/EmbeddedResources.cpp",
+  "src/shared/EmbeddedResources.h",
   "src/shared/EngineBase.cpp",
   "src/shared/EngineBase.h",
   "src/shared/EngineDjvuDec.cpp",
@@ -243,6 +245,7 @@ export const sharedFiles = [
   "src/shared/tests/RenderCache_ut.cpp",
   "src/shared/tests/SimpleLog_ut.cpp",
   "src/shared/tests/TextSelection_ut.cpp",
+  "src/shared/tools/MakeLzSA.cpp",
 ];
 
 export function sharedPath(path: string): string {

@@ -1,5 +1,5 @@
 // ng: orig's SumatraPDF.rc minus the resources this port doesn't load from the
-// exe (IDR_EMBEDDED_PAK, the print dialog template, the drag cursor and the
+// exe (the print dialog template, the drag cursor and the
 // reloading cue): the version resource, the icons and the manifest.
 
 #include "resource.h"

@@ -1,76 +1,88 @@
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
+import { embedLzsa, fontPatterns, packEmbedded } from "../cmd/helper/embedded";
 import { findToolchain, hostPlatform } from "../cmd/helper/ng-toolchain";
-import { ROOT } from "./util.ts";
+import { root as ROOT } from "../cmd/helper/ng-compile";
+import { extractStringsToTranslate } from "../cmd/trans-dl";
 
 export async function testit(): Promise<void> {
   const fail = (message: string): never => {
     throw new Error(message);
   };
   const tc = findToolchain(ROOT, hostPlatform(), false, fail);
+  const strings = extractStringsToTranslate();
+  if (!strings.includes("Failed to save image")) fail("ng translation strings were not collected");
+  const run = (args: string[]) => {
+    const proc = Bun.spawnSync(args, { cwd: ROOT, env: { ...process.env, ...tc.env } });
+    if (proc.exitCode !== 0) fail(`${args[0]} failed:\n${proc.stdout}\n${proc.stderr}`);
+  };
+  run([process.execPath, join(ROOT, "cmd/ng-build.ts"), "-rel", "test_embedded"]);
+  const dir = join(ROOT, "out", tc.plat, "rel");
+  const packer = join(dir, tc.msvcStyle ? "MakeLZSA.exe" : "MakeLZSA");
+  const probe = join(dir, tc.msvcStyle ? "test_embedded.exe" : "test_embedded");
+  run([probe, join(dir, "embedded.lzsa"), join(dir, "embedded")]);
+
   const workDir = resolve(ROOT, ".work");
-  mkdirSync(workDir, { recursive: true });
   const fixture = mkdtempSync(join(workDir, "ng-embedded-test-"));
   const put = (path: string, text: string) => {
     const dst = join(fixture, path);
     mkdirSync(dirname(dst), { recursive: true });
     writeFileSync(dst, text);
   };
-  const run = (args: string[]) => {
-    const proc = Bun.spawnSync(args, { cwd: fixture, env: { ...process.env, ...tc.env } });
-    if (proc.exitCode !== 0) fail(`${args[0]} failed:\n${proc.stdout}\n${proc.stderr}`);
+  const names = (archive: string): string[] => {
+    const data = readFileSync(archive);
+    const lzsaMagic = 0x41537a4c;
+    const archiveHeaderSize = 8;
+    const fileCountOffset = 4;
+    const entryMetadataSize = 24;
+    if (data.readUInt32LE() !== lzsaMagic) fail("invalid LzSA magic");
+    const out: string[] = [];
+    let offset = archiveHeaderSize;
+    for (let i = 0; i < data.readUInt32LE(fileCountOffset); i++) {
+      const size = data.readUInt32LE(offset);
+      out.push(data.subarray(offset + entryMetadataSize, offset + size - 1).toString());
+      offset += size;
+    }
+    return out;
   };
-
   try {
-    const generator = readFileSync(join(ROOT, "cmd/ng-gen-embedded.ts"), "utf8");
-    put("cmd/ng-gen-embedded.ts", generator);
-    put(
-      "cmd/ng-gen-docs.ts",
-      'import { resolve } from "node:path";\n' +
-        'export const manualOutDir = resolve(import.meta.dir, "../.work/docs");\n' +
-        "export async function genDocs() { return true; }\n",
-    );
-    put(
-      "cmd/ng-gen-translations.ts",
-      'import { resolve } from "node:path";\n' +
-        'export const translationsOutPath = resolve(import.meta.dir, "../.work/translations.txt");\n' +
-        "export function genTranslations() {}\n",
-    );
-    put(".work/translations.txt", "test");
-    put("ext/marked.min.js", "test");
-    put("ext/mermaid.min.js", "test");
-    for (const match of generator.matchAll(/"([^"\n]+\.(?:cff|otf|ttf))"/g)) {
-      const name = match[1]!;
-      const forge = ["urw", "sil", "noto", "droid"].find((dir) =>
-        existsSync(join(ROOT, "ext/mupdf/resources/fonts", dir, name)),
-      );
-      if (!forge) fail(`font not found: ${name}`);
-      put(`ext/mupdf/resources/fonts/${forge}/${name}`, "test");
+    for (const name of ["marked.min.js", "mermaid.min.js"]) put(`ext/${name}`, "test");
+    for (const [forge, patterns] of fontPatterns) {
+      for (const pattern of patterns)
+        put(`ext/mupdf/resources/fonts/${forge}/${pattern.replace("*", "Regular")}`, "font");
     }
-    put("src/ng/base/Base.h", "using u8 = unsigned char;\nstruct Str;\n");
-    copyFileSync(join(ROOT, "src/ng/EmbeddedResources.h"), join(fixture, "src/ng/EmbeddedResources.h"));
+    const output = join(fixture, "out");
+    let archive = await packEmbedded(tc, packer, output, fixture);
+    if (statSync(join(fixture, ".work/translations.txt")).size !== 0) fail("missing translations did not become empty");
+    if (names(archive).some((name) => name.endsWith(".md"))) fail("missing manual was packed");
+    run([packer, archive]);
+    await embedLzsa(tc, archive, output);
 
-    for (const count of [0, 1]) {
-      if (count === 1) put(".work/docs/index.md", "test");
-      run([process.execPath, join(fixture, "cmd/ng-gen-embedded.ts")]);
-      put(
-        "probe.cpp",
-        '#include "base/Base.h"\n#include "EmbeddedResources.h"\n' +
-          `int main() { return gEmbeddedManualCount == ${count} ? 0 : 1; }\n`,
-      );
-      const exe = join(fixture, tc.msvcStyle ? "probe.exe" : "probe");
-      const sources = ["src/ng/EmbeddedDataManual.cpp", "probe.cpp"];
-      const flags = tc.msvcStyle
-        ? ["/nologo", "/std:c++20", "/W4", "/WX", "/EHsc", "/Isrc/ng", `/Fe${exe}`]
-        : ["-std=c++20", "-pedantic-errors", "-Wall", "-Werror", "-Isrc/ng", "-o", exe];
-      run([tc.cxx, ...flags, ...sources]);
-      run([exe]);
-    }
+    put(".work/docs/nested/index.md", "manual");
+    put(".work/translations.txt", ":test\nde:Test\n");
+    archive = await packEmbedded(tc, packer, output, fixture);
+    if (!names(archive).includes("nested\\index.md")) fail("manual was not packed at the archive root");
+    run([packer, archive]);
+    const before = statSync(archive).mtimeMs;
+    await packEmbedded(tc, packer, output, fixture);
+    if (statSync(archive).mtimeMs !== before) fail("unchanged archive was rewritten");
+
+    rmSync(join(fixture, ".work/docs/nested/index.md"));
+    await packEmbedded(tc, packer, output, fixture);
+    if (names(archive).includes("nested\\index.md")) fail("removed manual file remains in the archive");
+    const translationPath = join(fixture, ".work/translations.txt");
+    const timestamp = statSync(translationPath);
+    put(".work/translations.txt", ":changed\n");
+    utimesSync(translationPath, timestamp.atime, timestamp.mtime);
+    const old = readFileSync(archive);
+    await packEmbedded(tc, packer, output, fixture);
+    if (old.equals(readFileSync(archive))) fail("changed translations did not update the archive");
+    if (!existsSync(join(output, "embedded", "translations.txt"))) fail("translations were not staged");
   } finally {
     if (!resolve(fixture).startsWith(workDir + sep)) fail(`invalid fixture path: ${fixture}`);
     rmSync(fixture, { recursive: true, force: true });
   }
-  console.log("PASS: ng embedded manual with and without docs");
+  console.log("PASS: shared LzSA packing and extraction");
 }
 
 if (import.meta.main) {

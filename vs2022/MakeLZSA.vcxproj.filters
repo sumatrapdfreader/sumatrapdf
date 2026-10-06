@@ -25,8 +25,8 @@
     <Filter Include="src\shared\gui">
       <UniqueIdentifier>{C772284F-B340-1C55-9CD4-8C7B8841F8B9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tools">
-      <UniqueIdentifier>{8DED2DB6-F957-E22C-4296-93D2AE3FC081}</UniqueIdentifier>
+    <Filter Include="src\shared\tools">
+      <UniqueIdentifier>{B35CF8BB-9F55-170E-C887-FC92B4DFF619}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -128,8 +128,8 @@
     <ClCompile Include="..\src\shared\gui\Dpi.cpp">
       <Filter>src\shared\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\tools\MakeLzSA.cpp">
-      <Filter>src\tools</Filter>
+    <ClCompile Include="..\src\shared\tools\MakeLzSA.cpp">
+      <Filter>src\shared\tools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

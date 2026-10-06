@@ -1194,7 +1194,7 @@
     <ClCompile Include="..\src\base\WinDynCalls.cpp" />
     <ClCompile Include="..\src\shared\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\shared\gui\Dpi.cpp" />
-    <ClCompile Include="..\src\tools\MakeLzSA.cpp" />
+    <ClCompile Include="..\src\shared\tools\MakeLzSA.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\ext\a-zlib\LICENSE" />

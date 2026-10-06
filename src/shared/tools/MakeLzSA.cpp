@@ -5,15 +5,15 @@
 // Such archives use LZMA compression with an x86 bytecode filter which produces
 // best results for installer payloads. See ../makefile.msvc for a use case.
 
-#define __STDC_LIMIT_MACROS
 #include "base/Base.h"
-#include <LzmaEnc.h>
-#include <Bra.h>
-#include <zlib.h> // for crc32
 #include "base/ByteReaderWriter.h"
 #include "base/File.h"
 #include "base/DirScan.h"
 #include "base/LzmaSimpleArchive.h"
+
+#include <LzmaEnc.h>
+#include <Bra.h>
+#include <zlib.h> // for crc32
 
 namespace lzsa {
 
@@ -55,7 +55,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
         SizeT propsSize = LZMA_PROPS_SIZE;
         SRes res =
             LzmaEncode((Byte*)compressed + kLzmaHeaderSize, &outSize, bcj_enc ? bcj_enc : (const Byte*)uncompressed,
-                       uncompressedSize, &props, (Byte*)compressed + 1, &propsSize, TRUE /* add EOS marker */, nullptr,
+                       uncompressedSize, &props, (Byte*)compressed + 1, &propsSize, true /* add EOS marker */, nullptr,
                        &lzmaAlloc, &lzmaAlloc);
         if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE) lzma_size = outSize + kLzmaHeaderSize;
     }
@@ -73,51 +73,38 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
 
 static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath, Str inArchiveName,
                         lzma::FileInfo* fi = nullptr) {
-    size_t nameLen = (size_t)inArchiveName.len;
+    size_t nameLen = (size_t)len(inArchiveName);
     ReportIf(nameLen > UINT32_MAX - 25);
     u32 headerSize = 25 + (u32)nameLen;
     FILETIME ft = file::GetModificationTime(filePath);
 
     constexpr int kBufSize = 24;
 
-    if (fi && FileTimeEq(ft, fi->ftModified)) {
-    ReusePrevious:
-        ByteWriterLE meta(kBufSize);
-        meta.Write32(headerSize);
-        meta.Write32(fi->compressedSize);
-        meta.Write32(fi->uncompressedSize);
-        meta.Write32(fi->uncompressedCrc32);
-        meta.Write32(ft.dwLowDateTime);
-        meta.Write32(ft.dwHighDateTime);
-        ReportIf(meta.Size() != kBufSize);
-        data.Append(meta.AsByteSlice());
-        data.Append(inArchiveName);
-        data.AppendChar('\0');
-        return content.Append(Str((char*)fi->compressedData, (int)fi->compressedSize));
-    }
-
     Str fileData = file::ReadFile(filePath);
-    if (!(u8*)fileData.s || (size_t)fileData.len >= UINT32_MAX) {
+    AutoCall freeFileData(free, (void*)fileData.s);
+    if (!(u8*)fileData.s || (size_t)len(fileData) >= UINT32_MAX) {
         fprintf(stderr, "Failed to read \"%s\" for compression\n", filePath.s);
         return false;
     }
-    u32 fileDataCrc = crc32(0, (const u8*)fileData.s, (u32)fileData.len);
-    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == (size_t)fileData.len) goto ReusePrevious;
-
-    size_t compressedSize = (size_t)fileData.len + 1;
-    char* compressed = (char*)malloc(compressedSize);
-    AutoCall freeCompressed(free, (void*)compressed);
-    if (!compressed) {
-        return false;
-    }
-    if (!Compress((const char*)fileData.s, (size_t)fileData.len, compressed, &compressedSize)) {
-        return false;
+    u32 fileDataCrc = crc32(0, (const u8*)fileData.s, (u32)len(fileData));
+    size_t compressedSize = (size_t)len(fileData) + 1;
+    AutoFree<char> buffer;
+    const char* compressed = nullptr;
+    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == (size_t)len(fileData)) {
+        compressedSize = fi->compressedSize;
+        compressed = (const char*)fi->compressedData;
+    } else {
+        buffer.Set((char*)malloc(compressedSize));
+        if (!buffer || !Compress(fileData.s, (size_t)len(fileData), buffer, &compressedSize)) {
+            return false;
+        }
+        compressed = buffer;
     }
 
     ByteWriterLE meta(kBufSize);
     meta.Write32(headerSize);
     meta.Write32((u32)compressedSize);
-    meta.Write32((u32)fileData.len);
+    meta.Write32((u32)len(fileData));
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
@@ -125,7 +112,7 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
     data.Append(meta.AsByteSlice());
     data.Append(inArchiveName);
     data.AppendChar('\0');
-    return content.Append(Str(compressed, (int)compressedSize));
+    return content.Append(Str((char*)compressed, (int)compressedSize));
 }
 
 // creates an archive from files (starting at index skipFiles);
@@ -223,6 +210,7 @@ bool CreateArchiveFromDir(Str archivePath, Str dir, StrVec& extraFiles) {
         return errorStep;                       \
     }
 
+#if OS_WIN
 static void MyParseCmdLine(WStr cmdLine, StrVec& args) {
     int nArgs = 0;
     WCHAR** argsArr = CommandLineToArgvW(cmdLine.s, &nArgs);
@@ -232,6 +220,7 @@ static void MyParseCmdLine(WStr cmdLine, StrVec& args) {
     }
     LocalFree((void*)argsArr);
 }
+#endif
 
 int mainVerify(Str archivePath) {
     int errorStep = 1;
@@ -266,7 +255,7 @@ int printUsage(Str exeName) {
 }
 
 int main(__unused int argc, __unused char** argv) {
-#if IS_DEBUG
+#if OS_WIN && IS_DEBUG
     // report memory leaks on stderr
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
     _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
@@ -274,7 +263,13 @@ int main(__unused int argc, __unused char** argv) {
 #endif
 
     StrVec args;
+#if OS_WIN
     MyParseCmdLine(GetCommandLine(), args);
+#else
+    for (int i = 0; i < argc; i++) {
+        args.Append(Str(argv[i]));
+    }
+#endif
     int errorStep = 1;
 
     auto exeName = path::GetBaseNameTemp(args[0]);

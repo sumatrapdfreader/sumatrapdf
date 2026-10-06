@@ -17,6 +17,7 @@ import { emsdkRoots, findToolchain, hostPlatform, type Platform } from "./helper
 import {
   buildTarget,
   cleanOutDir,
+  depsOf,
   mergeEnv,
   outDir,
   outDirName,
@@ -26,7 +27,8 @@ import {
 } from "./helper/ng-compile";
 import { defaultTarget, findTarget, targetsFor } from "./helper/ng-targets";
 import { runBuildInWsl } from "./helper/ng-wsl";
-import { genEmbedded } from "./ng-gen-embedded";
+import { genDocsForBuild } from "./gen-docs";
+import { packEmbedded } from "./helper/embedded";
 
 const usage = `Usage: bun cmd/ng-build.ts <-dbg|-rel> [options] [target...] [-- <run args>]
 
@@ -226,8 +228,6 @@ async function main(): Promise<void> {
   if (plat !== hostPlatform() && plat !== "wasm") {
     fail(`-${plat} needs a ${plat} host (this is ${hostPlatform()})`);
   }
-  // orig's prebuild packs IDR_EMBEDDED_PAK before the .rc compiles; ours writes
-  // the byte arrays before a glob can pick them up
   const names = opts.all
     ? targetsFor(plat).map((t) => t.name)
     : opts.targets.length > 0
@@ -237,12 +237,20 @@ async function main(): Promise<void> {
   for (const t of targets) {
     if (t.platforms && !t.platforms.includes(plat)) fail(`target ${t.name} does not support ${plat}`);
   }
-  await genEmbedded();
-
   const tc = findToolchain(root, plat, flags.clang, fail);
   console.log(`${tc.label} -> out/${outDirName(plat, flags)} (${cpus().length} jobs)`);
   if (flags.clean) cleanOutDir(plat, flags);
   stageShared(outDir(plat, flags));
+
+  if (targets.some((t) => t.embedded || depsOf(t, fail).some((d) => d.embedded))) {
+    await genDocsForBuild();
+    const host = hostPlatform();
+    const packFlags: BuildFlags = { debug: false, asan: false, clang: false, clean: false, verbose: flags.verbose };
+    const packTc = findToolchain(root, host, false, fail);
+    stageShared(outDir(host, packFlags));
+    const packer = await buildTarget(packTc, findTarget("MakeLZSA")!, packFlags, fail);
+    await packEmbedded(packTc, packer, outDir(plat, flags));
+  }
 
   const started = performance.now();
   let last = "";

@@ -1,16 +1,14 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Single LzSA resource (IDR_EMBEDDED_PAK, see resource.h) holds translations.txt,
-// marked.min.js, mermaid.min.js, fonts\* (mupdf's built-in fonts), in-app manual
-// files and the installer payload.
+// The LzSA archive holds translations, scripts, fonts, manual files and installer payloads.
 
 namespace lzma {
 struct SimpleArchive;
 }
 
+Str GetEmbeddedLzsa();
 bool EnsureEmbeddedArchiveLoaded();
 lzma::SimpleArchive* GetEmbeddedArchive();
-// malloc'd, free with free(); null-terminated after size bytes. outSize optional.
 u8* GetEmbeddedFileData(Str name, int* outSize = nullptr);
 void InstallEmbeddedFontLoader();

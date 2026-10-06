@@ -36,7 +36,7 @@ import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 
 import { join, extname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { commands } from "./gen-commands";
+import { commands, commandAltDescs } from "./gen-commands";
 
 // strings that should not be sent for translation
 // (e.g. command names whose display text is set dynamically)
@@ -131,17 +131,25 @@ function extractTranslations(s: string): string[] {
   for (const match of s.matchAll(translationPattern)) {
     res.push(match[1]);
   }
+  for (const match of s.matchAll(/\bHostTr\((?:StrL\()?"(.*?)"\)/g)) {
+    res.push(match[1]);
+  }
   return res;
 }
 
 function getFilesToProcess(): string[] {
   const res: string[] = [];
-  const entries = readdirSync("src", { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.isFile() && extname(entry.name).toLowerCase() === ".cpp") {
-      res.push(join("src", entry.name));
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(path);
+      } else if (entry.isFile() && extname(entry.name).toLowerCase() === ".cpp") {
+        res.push(path);
+      }
     }
-  }
+  };
+  walk("src");
   return res;
 }
 
@@ -160,28 +168,33 @@ function extractStringsFromCFilesNoPaths(): string[] {
 
 // home page tips: one per line of the sumatraTips raw string, translated at
 // runtime with Tr(line). Their markup ([text](link), (Kbd/...)) must survive
-const tipsSrcPath = join("src", "HomePage.cpp");
 const tipsPattern = /static Str sumatraTips = StrL\(R"tips\(([\s\S]*?)\)tips"\);/;
 
 function extractTips(): string[] {
-  const m = tipsPattern.exec(readFileSync(tipsSrcPath, "utf-8"));
-  if (!m) {
-    throw new Error(`sumatraTips not found in ${tipsSrcPath}`);
+  const tips: string[] = [];
+  for (const dir of ["src", "src/shared", "src/ng"]) {
+    const path = join(dir, "HomePage.cpp");
+    if (!existsSync(path)) continue;
+    const m = tipsPattern.exec(readFileSync(path, "utf-8"));
+    if (!m) throw new Error(`sumatraTips not found in ${path}`);
+    tips.push(
+      ...m[1]
+        .split("\n")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0),
+    );
   }
-  const tips = m[1]
-    .split("\n")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
   console.log(`${tips.length} tips`);
   return tips;
 }
 
-function extractStringsToTranslate(): string[] {
+export function extractStringsToTranslate(): string[] {
   const strs = extractStringsFromCFilesNoPaths();
   strs.push(...extractTips());
   for (let i = 1; i < commands.length; i += 2) {
     strs.push(commands[i]);
   }
+  strs.push(...commandAltDescs.map(([, desc]) => desc));
   const unique = [...new Set(strs)];
   for (const bl of translationBlacklist) {
     if (!unique.includes(bl)) {
@@ -1467,4 +1480,4 @@ async function main() {
   writeTranslationsForBinary(pt, dl.sha1);
 }
 
-await main();
+if (import.meta.main) await main();

@@ -2,21 +2,32 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#if OS_WIN
 #include "base/Win.h"
 #include "base/File.h"
+#endif
 #include "base/LzmaSimpleArchive.h"
 
 #include "mupdf/noto_sumatra.h"
 
+#if OS_WIN
 #include "resource.h"
+#endif
 #include "EmbeddedResources.h"
 
+#if OS_WIN
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 static LoadedDataResource gEmbeddedData{};
+#else
+extern "C" const u8 gEmbeddedLzsa[];
+extern "C" const u8 gEmbeddedLzsaEnd[];
+#endif
+
 static lzma::SimpleArchive gEmbeddedArchive{};
 static bool gEmbeddedTried = false;
 
+#if OS_WIN
 // PdfPreview.dll, PdfFilter.dll and sumatrapdf-tool.exe carry no archive of
 // their own: they read the one in SumatraPDF.exe installed next to them.
 static HMODULE GetArchiveModule() {
@@ -28,23 +39,33 @@ static HMODULE GetArchiveModule() {
     WStr wpath = ToWStrTemp(path);
     return LoadLibraryExW(wpath.s, nullptr, LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE);
 }
+#endif
+
+// Returns a read-only view valid for the lifetime of the executable.
+Str GetEmbeddedLzsa() {
+#if OS_WIN
+    if (!gEmbeddedData.data && !LockDataResource(IDR_EMBEDDED_PAK, &gEmbeddedData, GetArchiveModule())) {
+        return {};
+    }
+    return Str((char*)gEmbeddedData.data, gEmbeddedData.dataSize);
+#else
+    return Str((char*)gEmbeddedLzsa, (int)((uintptr_t)gEmbeddedLzsaEnd - (uintptr_t)gEmbeddedLzsa));
+#endif
+}
 
 bool EnsureEmbeddedArchiveLoaded() {
     if (gEmbeddedTried) {
         return gEmbeddedArchive.filesCount > 0;
     }
     gEmbeddedTried = true;
-    if (!LockDataResource(IDR_EMBEDDED_PAK, &gEmbeddedData, GetArchiveModule())) {
-        logf("EnsureEmbeddedArchiveLoaded: LockDataResource(IDR_EMBEDDED_PAK) failed\n");
-        return false;
-    }
-    if (!lzma::ParseSimpleArchive(gEmbeddedData.data, gEmbeddedData.dataSize, &gEmbeddedArchive)) {
-        logf("EnsureEmbeddedArchiveLoaded: ParseSimpleArchive failed (size=%d)\n", gEmbeddedData.dataSize);
+    Str data = GetEmbeddedLzsa();
+    if (!lzma::ParseSimpleArchive((const u8*)data.s, len(data), &gEmbeddedArchive)) {
+        logf("EnsureEmbeddedArchiveLoaded: ParseSimpleArchive failed (size=%d)\n", len(data));
         gEmbeddedArchive.filesCount = 0;
         return false;
     }
     logf("EnsureEmbeddedArchiveLoaded: %d files in IDR_EMBEDDED_PAK (%d bytes)\n", gEmbeddedArchive.filesCount,
-         gEmbeddedData.dataSize);
+         len(data));
     return gEmbeddedArchive.filesCount > 0;
 }
 
@@ -55,12 +76,17 @@ lzma::SimpleArchive* GetEmbeddedArchive() {
     return &gEmbeddedArchive;
 }
 
+// Returns malloc'd, NUL-terminated data; the caller frees it.
 u8* GetEmbeddedFileData(Str name, int* outSize) {
     if (outSize) {
         *outSize = 0;
     }
     if (len(name) == 0 || !EnsureEmbeddedArchiveLoaded()) {
         return nullptr;
+    }
+    if (str::Contains(name, StrL("/"))) {
+        name = str::DupTemp(name);
+        str::TransCharsInPlace(name, StrL("/"), StrL("\\"));
     }
     int idx = lzma::GetIdxFromName(&gEmbeddedArchive, name);
     if (idx < 0) {
