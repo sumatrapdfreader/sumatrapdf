@@ -1179,12 +1179,10 @@ void InsertArg(CommandArg** firstPtr, CommandArg* arg) {
 }
 
 void FreeCommandArgs(CommandArg* first) {
-    CommandArg* next;
-    CommandArg* curr = first;
-    while (curr) {
-        next = curr->next;
-        free(curr);
-        curr = next;
+    while (first) {
+        CommandArg* next = first->next;
+        free(first);
+        first = next;
     }
 }
 
@@ -1277,34 +1275,27 @@ CustomCommand* CloneCustomCommand(CustomCommand* cmd, Str name, Str key) {
 }
 
 CustomCommand* FindCustomCommand(int cmdId) {
-    auto* cmd = gFirstCustomCommand;
-    while (cmd) {
+    for (auto* cmd = gFirstCustomCommand; cmd; cmd = cmd->next) {
         if (cmd->id == cmdId) {
             return cmd;
         }
-        cmd = cmd->next;
     }
     return nullptr;
 }
 
 void FreeCustomCommands() {
-    CustomCommand* next;
-    CustomCommand* curr = gFirstCustomCommand;
-    while (curr) {
-        next = curr->next;
-        FreeCustomCommand(curr);
-        curr = next;
+    while (gFirstCustomCommand) {
+        auto* cmd = gFirstCustomCommand;
+        gFirstCustomCommand = cmd->next;
+        FreeCustomCommand(cmd);
     }
-    gFirstCustomCommand = nullptr;
 }
 
 void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
-    CustomCommand* curr = gFirstCustomCommand;
-    while (curr) {
-        if (curr->origId == origId) {
-            VecAppend(commands, curr);
+    for (auto* cmd = gFirstCustomCommand; cmd; cmd = cmd->next) {
+        if (cmd->origId == origId) {
+            VecAppend(commands, cmd);
         }
-        curr = curr->next;
     }
     // reverse so that they are returned in the order they were inserted
     VecReverse(commands);
@@ -1598,12 +1589,10 @@ CommandArg* GetCommandArg(CustomCommand* cmd, Str name) {
     if (!cmd) {
         return nullptr;
     }
-    CommandArg* curr = cmd->firstArg;
-    while (curr) {
-        if (str::EqI(curr->name, name)) {
-            return curr;
+    for (CommandArg* arg = cmd->firstArg; arg; arg = arg->next) {
+        if (str::EqI(arg->name, name)) {
+            return arg;
         }
-        curr = curr->next;
     }
     return nullptr;
 }
