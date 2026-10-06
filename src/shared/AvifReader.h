@@ -3,6 +3,5 @@
 
 struct Pixmap;
 
-Size AvifSizeFromData(Str);
 Pixmap* PixmapFromAvifData(Str);
 bool AvifExifBlobFromData(Str d, u8** outData, size_t* outSize);

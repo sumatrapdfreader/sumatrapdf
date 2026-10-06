@@ -44,26 +44,6 @@ static void ApplyExifDensity(Pixmap* px, const ExifParser& parser) {
     }
 }
 
-Size AvifSizeFromData(Str d) {
-    Size res;
-
-    heic_ctx* ctx = heic_ctx_new(nullptr, nullptr, nullptr, nullptr);
-    if (!ctx) {
-        return res;
-    }
-    AutoCall freeCtx(heic_ctx_free, ctx);
-    heic_doc* doc = heic_doc_open(ctx, (const u8*)d.s, (size_t)d.len);
-    AutoCall closeDoc(heic_doc_close, doc);
-    if (doc) {
-        heic_image_info info{};
-        if (heic_doc_info(doc, &info) == 0) {
-            res.dx = (int)info.width;
-            res.dy = (int)info.height;
-        }
-    }
-    return res;
-}
-
 Pixmap* PixmapFromAvifData(Str d) {
     Pixmap* px = nullptr;
 
@@ -153,9 +133,6 @@ bool AvifExifBlobFromData(Str d, u8** outData, size_t* outSize) {
     return true;
 }
 #else
-Size AvifSizeFromData(Str) {
-    return {};
-}
 Pixmap* PixmapFromAvifData(Str) {
     return nullptr;
 }
