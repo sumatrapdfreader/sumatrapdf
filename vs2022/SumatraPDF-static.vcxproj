@@ -1401,7 +1401,6 @@
     <ClInclude Include="..\src\DarkMode.h" />
     <ClInclude Include="..\src\FindBar.h" />
     <ClInclude Include="..\src\FindWindow.h" />
-    <ClInclude Include="..\src\HomePage.h" />
     <ClInclude Include="..\src\ImageSaveCropResize.h" />
     <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\MainWindow.h" />
@@ -1491,6 +1490,7 @@
     <ClInclude Include="..\src\shared\GoogleLens.h" />
     <ClInclude Include="..\src\shared\GumboHtmlParser.h" />
     <ClInclude Include="..\src\shared\HangDetector.h" />
+    <ClInclude Include="..\src\shared\HomePage.h" />
     <ClInclude Include="..\src\shared\HtmlFormatter.h" />
     <ClInclude Include="..\src\shared\ImageReader.h" />
     <ClInclude Include="..\src\shared\JxlReader.h" />

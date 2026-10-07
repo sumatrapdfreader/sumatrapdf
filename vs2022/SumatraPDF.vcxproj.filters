@@ -135,9 +135,6 @@
     <ClInclude Include="..\src\FindWindow.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\HomePage.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ImageSaveCropResize.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -403,6 +400,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\HangDetector.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\HomePage.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\HtmlFormatter.h">
