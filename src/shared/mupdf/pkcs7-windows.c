@@ -1,8 +1,7 @@
 // Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
 // License: Simplified BSD (see COPYING.BSD)
 //
-// Verify-only pkcs7 backend built on Windows CryptoAPI. Mirrors the
-// pdf_pkcs7_verifier vtable defined in mupdf/pdf/form.h.
+// PKCS#7 signing and verification with Windows CryptoAPI.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
