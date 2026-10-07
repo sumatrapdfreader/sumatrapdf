@@ -22,7 +22,6 @@
 #include "Translations.h"
 #ifdef SUMATRA_NG
 #include "SumatraDialogs.h"
-#include "gui/AppShell.h"
 #include "gui/WasmBridge.h"
 #endif
 #include "ExternalViewers.h"
@@ -869,11 +868,7 @@ bool SendAsEmailAttachment(WindowTab* tab) {
         return false;
     }
 #if OS_WIN
-#ifdef SUMATRA_NG
-    return SendAsEmailAttachmentWithMapi(AppShellNativeHwnd(tab->win), tab->filePath);
-#else
-    return SendAsEmailAttachmentWithMapi(tab->win->hwndFrame, tab->filePath);
-#endif
+    return SendAsEmailAttachmentWithMapi(MainWindowHwnd(tab->win), tab->filePath);
 #else
 #if OS_LINUX
     if (SendAsEmailAttachmentWithXdg(tab->filePath)) {

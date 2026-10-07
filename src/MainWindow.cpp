@@ -1228,6 +1228,10 @@ bool IsMainWindowValidAndNotClosing(MainWindow* win) {
     return IsMainWindowValid(win) && !win->isBeingClosed;
 }
 
+HWND MainWindowHwnd(MainWindow* win) {
+    return win ? win->hwndFrame : nullptr;
+}
+
 MainWindow* FindMainWindowByHwnd(HWND hwnd) {
     if (!::IsWindow(hwnd)) {
         return nullptr;

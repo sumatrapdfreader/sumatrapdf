@@ -547,6 +547,10 @@ struct MainWindow {
 bool HasOpenedDocuments(MainWindow*);
 MainWindow* FindMainWindowByTab(WindowTab*);
 MainWindow* FindMainWindowByGpuiWindow(gpui::Window*);
+#if OS_WIN
+HWND MainWindowHwnd(MainWindow*);
+MainWindow* FindMainWindowByHwnd(HWND);
+#endif
 WindowTab* FindTabByFilePath(Str path, MainWindow* limitWin = nullptr);
 bool IsMainWindowValid(MainWindow*);
 bool IsMainWindowValidAndNotClosing(MainWindow*);

@@ -868,6 +868,16 @@ bool IsMainWindowValidAndNotClosing(MainWindow* win) {
     return IsMainWindowValid(win) && !win->isBeingClosed;
 }
 
+#if OS_WIN
+HWND MainWindowHwnd(MainWindow* win) {
+    return AppShellNativeHwnd(win);
+}
+
+MainWindow* FindMainWindowByHwnd(HWND hwnd) {
+    return AppShellWindowFromHwnd(hwnd);
+}
+#endif
+
 // ng: orig's FindMainWindowByHwnd; the gpui window is what identifies a window
 MainWindow* FindMainWindowByGpuiWindow(gpui::Window* gw) {
     if (!gw) {

@@ -87,11 +87,7 @@ static HHOOK gQuickLookHook = nullptr;
 static HANDLE gQuickLookAgentMutex = nullptr;
 
 void ApplyExplorerQuickLookChrome(MainWindow* win) {
-#ifdef SUMATRA_NG
-    HWND hwnd = win ? AppShellNativeHwnd(win) : nullptr;
-#else
-    HWND hwnd = win ? win->hwndFrame : nullptr;
-#endif
+    HWND hwnd = MainWindowHwnd(win);
     if (!hwnd) {
         return;
     }
@@ -145,14 +141,13 @@ void ShowExplorerQuickLook(Str path) {
         }
 #ifdef SUMATRA_NG
         LoadDocument(existing, norm, LoadPrefs::DontSave, LoadReuse::CurrentTab);
-        SetForegroundWindow(AppShellNativeHwnd(existing));
 #else
         LoadArgs args(norm, existing);
         args.forceReuse = true;
         args.noSavePrefs = true;
         LoadDocument(&args);
-        SetForegroundWindow(existing->hwndFrame);
 #endif
+        SetForegroundWindow(MainWindowHwnd(existing));
         return;
     }
 
@@ -177,11 +172,7 @@ void ShowExplorerQuickLook(Str path) {
         return;
     }
     ApplyExplorerQuickLookChrome(win);
-#ifdef SUMATRA_NG
-    HWND hwnd = AppShellNativeHwnd(win);
-#else
-    HWND hwnd = win->hwndFrame;
-#endif
+    HWND hwnd = MainWindowHwnd(win);
     if (hwnd) {
         ShowWindow(hwnd, SW_SHOW);
         SetForegroundWindow(hwnd);
@@ -328,12 +319,10 @@ static bool ExplorerForegroundAllowsPreview() {
     if (!top) {
         return false;
     }
-#ifndef SUMATRA_NG
     MainWindow* ours = FindMainWindowByHwnd(GetForegroundWindow());
     if (ours) {
         return false;
     }
-#endif
     GUITHREADINFO gi{};
     gi.cbSize = sizeof(gi);
     DWORD tid = GetWindowThreadProcessId(top, nullptr);
@@ -473,14 +462,12 @@ static LRESULT CALLBACK QuickLookKeyboardProc(int nCode, WPARAM wp, LPARAM lp) {
         if (ks->vkCode == VK_SPACE && !(ks->flags & LLKHF_INJECTED)) {
             if (!(GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_MENU) & 0x8000) &&
                 !(GetKeyState(VK_SHIFT) & 0x8000)) {
-#ifndef SUMATRA_NG
                 HWND fg = GetForegroundWindow();
                 MainWindow* ours = FindMainWindowByHwnd(fg);
                 if (ours && ours->isQuickLook) {
                     // Space is handled by the preview window itself.
                     return CallNextHookEx(gQuickLookHook, nCode, wp, lp);
                 }
-#endif
                 if (gQuickLookAgentHwnd && ShouldStealSpace()) {
                     PostMessageW(gQuickLookAgentHwnd, kMsgQuickLookSpace, 0, 0);
                     return 1;

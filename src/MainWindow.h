@@ -780,7 +780,10 @@ void CreateMovePatternLazy(MainWindow*);
 void ClearMouseState(MainWindow*);
 bool IsRightDragging(MainWindow*);
 MainWindow* FindMainWindowByTab(WindowTab*);
+#if OS_WIN
+HWND MainWindowHwnd(MainWindow*);
 MainWindow* FindMainWindowByHwnd(HWND);
+#endif
 bool IsMainWindowValid(MainWindow*);
 bool IsMainWindowValidAndNotClosing(MainWindow*);
 bool IsWindowTabValid(WindowTab*);

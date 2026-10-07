@@ -114,9 +114,6 @@ PaperFormat GetPaperFormatFromSizeApprox(SizeF size) {
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "PrintWin11.h"
-#if defined(SUMATRA_NG)
-#include "gui/AppShell.h"
-#endif
 
 #include "SumatraLog.h"
 
@@ -1796,7 +1793,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
     // the Windows 11 dialog runs the whole job itself; -print-to and friends
     // need the synchronous classic path
     if (!waitForCompletion && !selectionByDefault && !PrinterUIWantsClassic()) {
-        bool usedWin11Dialog = TryPrintCurrentFileWin11(win, AppShellNativeHwnd(win), defaultScaleAdv);
+        bool usedWin11Dialog = TryPrintCurrentFileWin11(win, MainWindowHwnd(win), defaultScaleAdv);
         logf("PrintCurrentFile: Windows 11 dialog=%d\n", (int)usedWin11Dialog);
         if (usedWin11Dialog) {
             return;
@@ -1805,7 +1802,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
 
     PRINTDLGEXW pdex{};
     pdex.lStructSize = sizeof(PRINTDLGEXW);
-    pdex.hwndOwner = AppShellNativeHwnd(win);
+    pdex.hwndOwner = MainWindowHwnd(win);
     pdex.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
     if (!win->CurrentTab()->selectionOnPage) {
         pdex.Flags |= PD_NOSELECTION;
