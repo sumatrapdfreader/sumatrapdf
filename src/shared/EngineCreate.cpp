@@ -293,23 +293,17 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     // markdown has no native SumatraPDF engine; always use mupdf (cmark-gfm),
     // regardless of gEnableEpubWithPdfEngine.
     if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown || IsOfficeFileType(kind)) {
-        engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
-        return engine;
+        return CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
-        engine = CreateEngineDjvuDecFromFile(path);
-        return engine;
+        return CreateEngineDjvuDecFromFile(path);
     }
     if (IsEngineImageSupportedFileType(kind)) {
-        engine = CreateEngineImageFromFile(path);
-        return engine;
+        return CreateEngineImageFromFile(path);
     }
     if (kind == FileType::Directory) {
         // Image-dir engine only; a -folder-open-* flag could expose pdfs/other formats in toc.
-        if (!engine) {
-            engine = CreateEngineImageDirFromFile(path);
-        }
-        return engine;
+        return CreateEngineImageDirFromFile(path);
     }
 
     if (IsEngineCbxSupportedFileType(kind)) {
@@ -323,23 +317,19 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
             return engine;
         }
         TempStr realPath = MaybeCopyCbxToLocalCache(path);
-        engine = CreateEngineCbxFromFile(path, pwdUI, contentHintKind, realPath);
-        return engine;
+        return CreateEngineCbxFromFile(path, pwdUI, contentHintKind, realPath);
     }
     if (IsEnginePsSupportedFileType(kind)) {
-        engine = CreateEnginePsFromFile(path);
-        return engine;
+        return CreateEnginePsFromFile(path);
     }
     if (IsEngineDviSupportedFileType(kind)) {
-        engine = CreateEngineDviFromFile(path);
-        return engine;
+        return CreateEngineDviFromFile(path);
     }
     if (kind == FileType::Lit) {
         return CreateEngineLitFromFile(path, pwdUI);
     }
     if (enableChmEngine && (kind == FileType::Chm)) {
-        engine = CreateEngineChmFromFile(path);
-        return engine;
+        return CreateEngineChmFromFile(path);
     }
     if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
         engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
@@ -352,12 +342,10 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     }
 
     if (kind == FileType::Epub) {
-        engine = CreateEngineEpubFromFile(path);
-        return engine;
+        return CreateEngineEpubFromFile(path);
     }
     if (kind == FileType::Fb2 || kind == FileType::Fb2z) {
-        engine = CreateEngineFb2FromFile(path);
-        return engine;
+        return CreateEngineFb2FromFile(path);
     }
     if (kind == FileType::Mobi) {
         // AZW4 / Kindle Print Replica is a PDF inside a MOBI wrapper.
@@ -370,16 +358,13 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
                 return engine;
             }
         }
-        engine = CreateEngineMobiFromFile(path);
-        return engine;
+        return CreateEngineMobiFromFile(path);
     }
     if (kind == FileType::PalmDoc) {
-        engine = CreateEnginePdbFromFile(path);
-        return engine;
+        return CreateEnginePdbFromFile(path);
     }
     if (kind == FileType::HTML) {
-        engine = CreateEngineHtmlFromFile(path);
-        return engine;
+        return CreateEngineHtmlFromFile(path);
     }
     return nullptr;
 }
