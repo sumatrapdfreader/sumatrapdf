@@ -66,19 +66,16 @@ DrawInstr DrawInstr::PageMarkerAnchor(::Str s, RectF bbox) {
 
 // parses size in the form "1em", "3pt" or "15px"
 void ParseSizeWithUnit(Str s, float* size, StyleRule::Unit* unit) {
-    if (!str::IsNull(str::Parse(s, "%fem", size))) {
-        *unit = StyleRule::em;
-    } else if (!str::IsNull(str::Parse(s, "%fin", size))) {
-        *unit = StyleRule::pt;
+    Str suffix = str::Parse(s, "%f", size);
+    if (str::StartsWith(suffix, StrL("in"))) {
         constexpr float kPointsPerInch = 72;
         *size *= kPointsPerInch;
-    } else if (!str::IsNull(str::Parse(s, "%fpt", size))) {
-        *unit = StyleRule::pt;
-    } else if (!str::IsNull(str::Parse(s, "%fpx", size))) {
-        *unit = StyleRule::px;
-    } else {
-        *unit = StyleRule::inherit;
+        suffix = StrL("pt");
     }
+    *unit = str::StartsWith(suffix, StrL("em"))   ? StyleRule::em
+            : str::StartsWith(suffix, StrL("pt")) ? StyleRule::pt
+            : str::StartsWith(suffix, StrL("px")) ? StyleRule::px
+                                                  : StyleRule::inherit;
 }
 
 StyleRule StyleRule::Parse(CssPullParser* parser) {
