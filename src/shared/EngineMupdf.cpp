@@ -107,12 +107,7 @@ void EngineMupdfSetAllowExternalImages(bool allow) {
     gAllowExternalImages = allow;
 }
 
-#if defined(SUMATRA_NG)
-// build a TOC from numbered headings when a document has no outline
-#else
-// build a TOC from numbered headings when a document has no outline; set
-// from gSettings->autoGenerateTOC. CmdAutoGenerateTOC builds one regardless
-#endif
+// Build a TOC from numbered headings when a document has no outline.
 static bool gAutoHeadingToc = false;
 void EngineMupdfSetAutoHeadingToc(bool enable) {
     gAutoHeadingToc = enable;
@@ -2157,11 +2152,7 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Location loc, Vec<
         image = block->u.i.image;
         if (image->colorspace != nullptr) {
             // no colorspace = stencil mask painted with the fill color, not a
-#if defined(SUMATRA_NG)
             // picture (#1480). FzFindImageAtIdx must skip the same blocks.
-#else
-            // picture (#1480). FzFindImageAtIdx must skip the same blocks
-#endif
             FitzPageImageInfo* img = new FitzPageImageInfo{block->bbox, block->u.i.transform};
             img->image = fz_keep_image(ctx, image);
             auto* pel = new PageElementImage();
@@ -2189,12 +2180,8 @@ static fz_stext_page* FzLoadImageTextPage(fz_context* ctx, FzPageInfo* pageInfo)
     return stext;
 }
 
-#if defined(SUMATRA_NG)
-// ctmOut receives the matrix the image is drawn with when requested.
-#else
 // ctmOut, when given, receives the matrix the image is drawn with (unit
 // square to page space, mupdf's flip already applied)
-#endif
 static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx, fz_matrix* ctmOut = nullptr) {
     fz_stext_page* stext = FzLoadImageTextPage(ctx, pageInfo);
     if (!stext) {
@@ -2209,11 +2196,7 @@ static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx
         }
         fz_image* image = block->u.i.image;
         if (image->colorspace != nullptr) {
-#if defined(SUMATRA_NG)
             // Same skip as FzFindImagePositions, so imageID stays aligned.
-#else
-            // same skip as FzFindImagePositions, so imageID stays aligned
-#endif
             if (idx == 0) {
                 image = fz_keep_image(ctx, image);
                 if (ctmOut) {
@@ -2527,11 +2510,7 @@ static fz_link* MakePushButtonWidgetLinks(fz_context* ctx, pdf_document* doc, pd
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
-#if defined(SUMATRA_NG)
             // pdf_bound_annot() can throw after uri was allocated.
-#else
-            // pdf_bound_annot() can throw after uri was allocated
-#endif
             fz_free(ctx, uri);
             uri = nullptr;
         }
@@ -5185,11 +5164,7 @@ static bool RectNear(RectF a, RectF b) {
     return delta(a.x, b.x) < 1.f && delta(a.y, b.y) < 1.f && delta(a.dx, b.dx) < 1.f && delta(a.dy, b.dy) < 1.f;
 }
 
-#if defined(SUMATRA_NG)
 // Caller holds pagesLock. Fixed-layout viewports are larger than the A5
-#else
-// caller holds pagesLock. Fixed-layout viewports are larger than the A5
-#endif
 // placeholder; matching chapters share one box, a different size is per page.
 // True when a display model that cached the old size must rebuild.
 static bool ApplyChapterMediabox(EngineMupdf* e, int chapter, RectF measured) {
@@ -5236,11 +5211,7 @@ static bool ApplyChapterMediabox(EngineMupdf* e, int chapter, RectF measured) {
         }
     }
 
-#if defined(SUMATRA_NG)
     // This is the book's page size until some chapter measures otherwise.
-#else
-    // this is the book's page size until some chapter measures otherwise
-#endif
     RectF old = e->reflowMediabox;
     e->reflowMediabox = measured;
     for (int i = 0; i < nCh; i++) {
@@ -5284,13 +5255,8 @@ int EngineMupdf::LayOutChapter(int chapter) {
     if (chapters.IsLaidOut(chapter)) {
         return chapters.PageCount(chapter);
     }
-#if defined(SUMATRA_NG)
     // Captured before the count. ApplyReflowThemeCss resets under pagesLock,
     // so a count started against the previous layout is dropped below.
-#else
-    // captured before the count. ApplyReflowThemeCss resets under pagesLock,
-    // so a count started against the previous layout is dropped below
-#endif
     int gen = chapters.Generation();
 
     auto* ctx = Ctx();
@@ -5309,11 +5275,7 @@ int EngineMupdf::LayOutChapter(int chapter) {
         fz_try(ctx) {
             n = fz_count_chapter_pages(ctx, _doc, chapter - 1);
             if (n >= 1) {
-#if defined(SUMATRA_NG)
                 // Every page of one HTML chapter shares html->page_w/h.
-#else
-                // every page of one HTML chapter shares html->page_w/h
-#endif
                 page = fz_load_chapter_page(ctx, _doc, chapter - 1, 0);
                 bound = fz_bound_page(ctx, page);
             }
@@ -7888,11 +7850,7 @@ Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
     if (!image) {
         return {};
     }
-#if defined(SUMATRA_NG)
     // A transformed image must be saved from its reoriented bitmap.
-#else
-    // a flipped / rotated image is saved from the reoriented bitmap instead
-#endif
     if (imgCtm.a <= 0 || imgCtm.d <= 0 || imgCtm.b != 0 || imgCtm.c != 0) {
         return {};
     }
@@ -7949,20 +7907,14 @@ fz_matrix EngineMupdf::viewctm(fz_page* page, float zoom, int rotation) const {
     return FzCreateViewCtm(bounds, zoom, rotation);
 }
 
-#if !defined(SUMATRA_NG)
 // True for the flips and 90-degree rotations a cm matrix can apply to an
 // image; anything else (skew, arbitrary angle) is left in stored orientation.
-#endif
 static bool FzIsOrthogonal(fz_matrix m) {
     bool axisAligned = m.b == 0 && m.c == 0 && m.a != 0 && m.d != 0;
     bool rotated = m.a == 0 && m.d == 0 && m.b != 0 && m.c != 0;
     return axisAligned || rotated;
 }
 
-#if defined(SUMATRA_NG)
-// Turn the pixmap the way its orthogonal page matrix draws it. Samples are
-// copied without resampling; nullptr means it is already upright or skewed.
-#else
 // Returns the pixmap turned the way ctm draws it on the page (#6214), or
 // nullptr when it's already upright. Samples are copied, not resampled.
 //
@@ -7971,7 +7923,6 @@ static bool FzIsOrthogonal(fz_matrix m) {
 //   |A   B|   =>    |C   D|    (v-flip)       |B D|  (90 deg ccw)
 //   |C   D|         |A   B|                   |A C|
 //   +-----+         +-----+                   +---+
-#endif
 static fz_pixmap* FzOrientPixmap(fz_context* ctx, fz_pixmap* src, fz_matrix ctm) {
     if (!FzIsOrthogonal(ctm)) {
         return nullptr;
@@ -7991,16 +7942,9 @@ static fz_pixmap* FzOrientPixmap(fz_context* ctx, fz_pixmap* src, fz_matrix ctm)
     for (int sy = 0; sy < h; sy++) {
         const u8* sp = src->samples + ((size_t)sy * src->stride);
         for (int sx = 0; sx < w; sx++) {
-#if defined(SUMATRA_NG)
-            int dx;
-            int dy;
-#else
             int dx, dy;
-#endif
             if (rotated) {
-#if !defined(SUMATRA_NG)
                 // unit (u, v) lands at (c*v + e, b*u + f): x follows the row, y the column
-#endif
                 dx = ctm.c > 0 ? sy : h - 1 - sy;
                 dy = ctm.b > 0 ? sx : w - 1 - sx;
             } else {
@@ -10201,11 +10145,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
 
     auto* ctx = e->Ctx();
     bool any = false;
-#if defined(SUMATRA_NG)
     // MuPDF journals each page separately; applying is one undo step.
-#else
-    // MuPDF journals each page on its own; applying is one undo step
-#endif
     ScopedEngineOperation op(engine, "Apply redactions");
 #if defined(SUMATRA_NG)
     ScopedRecursiveMutex pagesScope(&e->pagesLock);
