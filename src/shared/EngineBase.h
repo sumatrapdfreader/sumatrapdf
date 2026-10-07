@@ -12,8 +12,6 @@ struct PageTextCache;
 enum class DocProp : u8;
 class EngineBase;
 
-// Location (chapter-aware page addressing) and ChapterTable live in
-// ChapterTable.h; pulled in here so every EngineBase.h consumer sees them.
 #include "ChapterTable.h"
 
 struct ILinkHandler {
@@ -258,7 +256,6 @@ struct IPageElement {
 
     virtual ~IPageElement() = default;
 
-    // the type of this page element
     bool Is(Kind expectedKind);
 
     Kind GetKind() { return kind; }
@@ -397,8 +394,6 @@ struct TocTree : TreeModel {
 TocTree* AllocTocTree(Arena* arena, TocItem* root);
 void DestroyTocTree(TocTree* tree);
 
-// print / dump / full-document search / PDF export / stress test: lay out
-// every chapter. No-op for a single-chapter document or a null engine
 void EnsureFullLayout(EngineBase* engine);
 
 // a helper that allows for rendering interruptions in an engine-agnostic way
@@ -506,8 +501,6 @@ class EngineBase {
     int LayoutGeneration();
     void EnsureAllChaptersLaidOut();
     int ChaptersLaidOut();
-    // lay out every chapter that isn't yet, off the UI thread. the chapter the
-    // caller already laid out (the one being read) is left as it is
     void StartBackgroundChapterLayout();
     void CancelBackgroundChapterLayout();
     bool LayoutJobCurrent(int id);
@@ -519,15 +512,10 @@ class EngineBase {
     void SetOnLayoutChanged(const Func0& fn) { onLayoutChanged = fn; }
     void SetOnChapterLayoutProgress(const Func1<ChapterLayoutProgress*>& fn) { onChapterLayoutProgress = fn; }
 
-    // real page count for a chapter; engines with more than one chapter override this
     virtual int LayOutChapter(int chapter);
-    // expensive chapter pagination without publishing a new flat page count.
-    // the background thread uses this; the UI thread publishes via LayOutChapter
     virtual void WarmChapter(int chapter);
-    // persisted position that survives re-pagination; default is "chapter:page:chapterPageCount"
     virtual TempStr MakeBookmarkTemp(Location loc);
     virtual Location LookupBookmark(Str s);
-    // resolves dest->loc (or dest->pageNo) to a Location, caching it on dest
     virtual Location ResolveDest(IPageDestination* dest);
 
     // the box containing the visible page content (usually RectF(0, 0, pageWidth, pageHeight))
@@ -580,7 +568,6 @@ class EngineBase {
     // returns the element at a given point or nullptr if there's none
     virtual IPageElement* GetElementAtPos(int pageNo, PointF pt) = 0;
 
-    // engine-owned; do not delete
     virtual IPageDestination* GetNamedDest(Str name);
 
     // 1-based page from safe PDF /OpenAction GoTo, or 0 (issue #1631)
@@ -619,8 +606,6 @@ class EngineBase {
   protected:
     virtual ~EngineBase();
 
-    // engines with chapters call this after chapters.SetPageCount() to keep
-    // the flat pageCount total in sync
     void SetPageCountFromChapters();
 
     ChapterTable chapters;
