@@ -162,9 +162,6 @@
     <ClInclude Include="..\src\DisplayModel.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\DocController.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\DocumentProperties.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -436,6 +433,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\DisplayMode.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\DocController.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\DocProperties.h">

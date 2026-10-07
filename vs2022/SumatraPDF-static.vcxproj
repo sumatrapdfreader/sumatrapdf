@@ -1410,7 +1410,6 @@
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\DarkMode.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
-    <ClInclude Include="..\src\DocController.h" />
     <ClInclude Include="..\src\DocumentProperties.h" />
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
@@ -1502,6 +1501,7 @@
     <ClInclude Include="..\src\shared\ChmFile.h" />
     <ClInclude Include="..\src\shared\Commands.h" />
     <ClInclude Include="..\src\shared\DisplayMode.h" />
+    <ClInclude Include="..\src\shared\DocController.h" />
     <ClInclude Include="..\src\shared\DocProperties.h" />
     <ClInclude Include="..\src\shared\DocumentLayout.h" />
     <ClInclude Include="..\src\shared\EbookDoc.h" />

@@ -127,6 +127,7 @@ export const sharedFiles = [
   "src/shared/DisplayMode.cpp",
   "src/shared/DisplayMode.h",
   "src/shared/DocController.cpp",
+  "src/shared/DocController.h",
   "src/shared/DocProperties.cpp",
   "src/shared/DocProperties.h",
   "src/shared/DocumentLayout.cpp",
