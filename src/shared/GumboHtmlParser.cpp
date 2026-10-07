@@ -130,13 +130,12 @@ static void GumboFreeWrapper(void* /*userdata*/, void* ptr) {
     free(ptr);
 }
 
+// Avoid importing Gumbo's default options across the DLL boundary.
 GumboOptions GumboMakeOptions() {
     GumboOptions opts{};
     opts.allocator = GumboMallocWrapper;
     opts.deallocator = GumboFreeWrapper;
-    opts.userdata = nullptr;
     opts.tab_stop = 8;
-    opts.stop_on_first_error = false;
     opts.max_errors = -1;
     opts.fragment_context = GUMBO_TAG_LAST;
     opts.fragment_namespace = GUMBO_NAMESPACE_HTML;

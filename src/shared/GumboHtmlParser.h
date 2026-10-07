@@ -28,9 +28,6 @@ enum class GumboTextMode {
 
 TempStr GumboTextContentTemp(const GumboNode* node, GumboTextMode mode = GumboTextMode::Direct);
 
-// Returns a GumboOptions struct configured with our malloc/free wrappers
-// and otherwise-default values. We avoid the kGumboDefaultOptions data
-// extern because it's awkward to import across the libsumatrapdf.dll boundary.
 GumboOptions GumboMakeOptions();
 
 enum class GumboMode {
