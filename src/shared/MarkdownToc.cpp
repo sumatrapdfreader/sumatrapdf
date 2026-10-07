@@ -265,9 +265,7 @@ void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc
     ctx.htmlMode = htmlMode;
     AtomicIntSet(&ctx.nextIdx, 0);
 
-    int numThreads = CpuCoreCount() - 2;
-    numThreads = std::max(numThreads, 1);
-    numThreads = std::min(numThreads, n);
+    int numThreads = ClampI(CpuCoreCount() - 2, 1, n);
 
     Vec<ThreadHandle> threads;
     for (int t = 0; t < numThreads; t++) {
