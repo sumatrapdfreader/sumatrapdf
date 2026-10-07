@@ -306,9 +306,6 @@
     <ClInclude Include="..\src\Toolbar.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UpdateCheck.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Version.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -529,6 +526,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\Translations.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\UpdateCheck.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\UpdateTemp.h">

@@ -18324,7 +18324,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     if (flags.updateSelfTo) {
         logf(" flags.updateSelfTo: '%s'\n", flags.updateSelfTo);
         RedirectIOToExistingConsole();
-        UpdateSelfTo(flags.updateSelfTo);
+        UpdateSelfTo(flags.updateSelfTo, flags.sleepMs);
         if (flags.exitWhenDone) {
             fastExit = !gIsDebugBuild;
             goto Exit;

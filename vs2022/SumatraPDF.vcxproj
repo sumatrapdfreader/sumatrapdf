@@ -1473,7 +1473,6 @@
     <ClInclude Include="..\src\TableOfContents.h" />
     <ClInclude Include="..\src\Tabs.h" />
     <ClInclude Include="..\src\Toolbar.h" />
-    <ClInclude Include="..\src\UpdateCheck.h" />
     <ClInclude Include="..\src\Version.h" />
     <ClInclude Include="..\src\WindowTab.h" />
     <ClInclude Include="..\src\base\Archive.h" />
@@ -1548,6 +1547,7 @@
     <ClInclude Include="..\src\shared\TextSelection.h" />
     <ClInclude Include="..\src\shared\Theme.h" />
     <ClInclude Include="..\src\shared\Translations.h" />
+    <ClInclude Include="..\src\shared\UpdateCheck.h" />
     <ClInclude Include="..\src\shared\UpdateTemp.h" />
     <ClInclude Include="..\src\shared\WebpReader.h" />
     <ClInclude Include="..\src\shared\gui\PlatformFont.h" />

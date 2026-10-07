@@ -888,18 +888,17 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
 // the assumption is that this is a portable version downloaded to temp directory
 // we should copy ourselves over the existing file, launch ourselves and
 // tell our new copy to delete ourselves
-void UpdateSelfTo(Str dstPath) {
+void UpdateSelfTo(Str dstPath, int sleepMs) {
     ReportIf(len(dstPath) == 0);
     if (!file::Exists(dstPath)) {
         logf("UpdateSelfTo: failed because destination doesn't exist\n");
         return;
     }
 
-    auto sleepMs = gCli->sleepMs;
     logf("UpdateSelfTo: '%s', sleep for %d ms\n", dstPath, sleepMs);
     // sleeping for a bit to make sure that the program that launched us
     // had time to exit so that we can overwrite it
-    ::Sleep(gCli->sleepMs);
+    ::Sleep(sleepMs);
 
     // OverwriteAtomicRetry(dst, src): copy this process (new build) onto dstPath
     TempStr srcPath = GetSelfExePathTemp();
