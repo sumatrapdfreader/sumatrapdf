@@ -1450,6 +1450,7 @@ export const targets: Target[] = [
       "src/ng/base/CrashHandler.cpp",
       "src/ng/base/CrashHandler_posix.cpp",
     ],
+    perSource: [{ glob: "src/ng/LinkFollow.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] }],
     includes: ["src/ng", "ext/gpui", "ext/mupdf/include"],
     // the app icon, the document-type icons, the version resource and the
     // compatibility manifest (Windows only; other platforms ignore it)

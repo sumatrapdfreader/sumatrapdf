@@ -1,16 +1,21 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: orig's LinkFollow.cpp, unchanged except for what was win32: the badge is
-// drawn through the canvas helpers instead of Gfx, the recompute timer is a
-// countdown the shell's tick drives, and the key arguments are ints rather
-// than WPARAM.
-
+#if defined(SUMATRA_NG)
 #include "gui/GpuiBridge.h"
 #include "VirtKeys.h"
-
+#else
+#include "base/Base.h"
+#endif
 #include "gui/Dpi.h"
+
 #include "gui/UIModels.h"
+#if !defined(SUMATRA_NG)
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/Gfx.h"
+#include "gui/PlatformFont.h"
+#endif
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -20,20 +25,26 @@
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
-#include "Commands.h"
-#include "ShortcutParse.h"
-#include "Accelerators.h"
-#include "Translations.h"
-#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
+#if defined(SUMATRA_NG)
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
+#else
+#include "Canvas.h"
+#endif
+#include "Commands.h"
+#include "ShortcutParse.h"
+#include "Accelerators.h"
 #include "Selection.h"
+#include "Notifications.h"
+#include "Translations.h"
 #include "LinkFollow.h"
 
+#if defined(SUMATRA_NG)
 #include "SumatraLog.h"
+#endif
 
 Kind kNotifLinkFollow = "notifLinkFollow";
 
@@ -46,8 +57,9 @@ Kind kNotifLinkFollow = "notifLinkFollow";
 // of multi-letter hints first.
 static constexpr char kLinkHintChars[] = "SADFJKLEWCMPGH";
 
-// orig recomputes 300 ms after scrolling stops
+#if defined(SUMATRA_NG)
 constexpr int kLinkFollowRecomputeDelayInMs = 300;
+#endif
 
 struct LinkHint {
     char s[kMaxKeyboardLinkHintLength + 1]{};
@@ -227,7 +239,12 @@ bool StopKeyboardLinkFollowing(MainWindow* win) {
     win->linkFollowActive = false;
     VecReset(win->linkFollowTargets);
     win->linkFollowInputLen = 0;
+#if defined(SUMATRA_NG)
     AppShellInvalidate(win);
+#else
+    KillTimer(win->hwndCanvas, kLinkFollowTimerID);
+    ScheduleRepaint(win, 0);
+#endif
     return true;
 }
 
@@ -244,21 +261,29 @@ void ToggleKeyboardLinkFollowing(MainWindow* win) {
         // nothing to follow: don't leave the user in a mode with no feedback
         win->linkFollowActive = false;
         NotificationCreateArgs args;
+#if defined(SUMATRA_NG)
         args.win = win;
+#else
+        args.hwndParent = win->hwndCanvas;
+#endif
         args.msg = Tr("No links on this page");
         args.timeoutMs = 2000;
         args.groupId = kNotifLinkFollow;
         ShowNotification(args);
         return;
     }
+#if defined(SUMATRA_NG)
     AppShellInvalidate(win);
+#else
+    ScheduleRepaint(win, 0);
+#endif
 }
 
 // Recomputing on every scroll step would re-enumerate every visible page's
 // elements at wheel/animation rate, so coalesce into one recompute 300ms after
 // scrolling stops. The badges stay glued to their links meanwhile because they
 // are stored in page coordinates.
-// ng: orig arms a win32 timer; here the shell's tick counts the delay down.
+#if defined(SUMATRA_NG)
 static int gRecomputePendingMs = -1;
 
 void KeyboardLinkFollowingViewportChanged(MainWindow* win, int elapsedMs) {
@@ -281,6 +306,14 @@ void KeyboardLinkFollowingViewportChanged(MainWindow* win, int elapsedMs) {
     KeyboardLinkFollowingRecompute(win);
     AppShellInvalidate(win);
 }
+#else
+void KeyboardLinkFollowingViewportChanged(MainWindow* win) {
+    if (!KeyboardLinkFollowingActive(win) || !win->hwndCanvas) {
+        return;
+    }
+    SetTimer(win->hwndCanvas, kLinkFollowTimerID, kLinkFollowRecomputeDelayInMs, nullptr);
+}
+#endif
 
 // mirrors what a left click on a link does in OnMouseLeftButtonUp
 static void FollowKeyboardLinkTarget(MainWindow* win, const KeyboardLinkTarget& target) {
@@ -326,7 +359,11 @@ bool KeyboardLinkFollowingOnChar(MainWindow* win, int key) {
             StopKeyboardLinkFollowing(win);
         } else {
             win->linkFollowInputLen--;
+#if defined(SUMATRA_NG)
             AppShellInvalidate(win);
+#else
+            ScheduleRepaint(win, 0);
+#endif
         }
         return true;
     }
@@ -364,7 +401,11 @@ bool KeyboardLinkFollowingOnChar(MainWindow* win, int key) {
         return true;
     }
     if (exactMatch < 0) {
+#if defined(SUMATRA_NG)
         AppShellInvalidate(win);
+#else
+        ScheduleRepaint(win, 0);
+#endif
         return true;
     }
 
@@ -376,9 +417,9 @@ bool KeyboardLinkFollowingOnChar(MainWindow* win, int key) {
     return true;
 }
 
-// State dump for the scripted tests: whether the mode is on, which page we're
-// on, and the labeled links with their screen rects. action "stop" leaves the
-// mode; "char" types chars as hint input.
+// State dump for -dbg-control tests (tests/issue-2629.ts): whether the mode is
+// on, which page we're on, and the labeled links with their screen rects.
+// action "stop" leaves the mode; "char" types chars as hint input.
 TempStr KeyboardLinkFollowResultTemp(Str action, Str chars, int* exitCodeOut) {
     str::Builder out;
     if (len(gWindows) == 0) {
@@ -400,6 +441,8 @@ TempStr KeyboardLinkFollowResultTemp(Str action, Str chars, int* exitCodeOut) {
     }
     DisplayModel* dm = win->AsFixed();
     int currPage = win->ctrl ? win->ctrl->CurrentPageNo() : 0;
+    // the keyboard shortcut can't be exercised from a test (posted key messages
+    // don't carry modifier state), so report what it is bound to
     TempStr accel = AppendAccelKeyToMenuStringTemp({}, CmdToggleKeyboardLinkFollowing);
     if (accel.len > 1 && accel.s[0] == '\t') {
         accel = TempStr(accel.s + 1, accel.len - 1);
@@ -420,6 +463,8 @@ TempStr KeyboardLinkFollowResultTemp(Str action, Str chars, int* exitCodeOut) {
 constexpr Color kLinkFollowHighlightCol = MkRgb(0xff, 0xf1, 0x00);
 constexpr Color kLinkFollowBadgeBgCol = MkRgb(0xd3, 0x2f, 0x2f);
 constexpr Color kLinkFollowBadgeTextCol = kColWhite;
+
+#if defined(SUMATRA_NG)
 constexpr float kLinkFollowBadgeFontSize = 11;
 
 static void PaintLinkBadge(gp::PaintCtx* ctx, const Rect& linkRect, Str label) {
@@ -427,8 +472,6 @@ static void PaintLinkBadge(gp::PaintCtx* ctx, const Rect& linkRect, Str label) {
     int padX = textSize.dy / 3;
     int dx = textSize.dx + (2 * padX);
     int dy = textSize.dy;
-    // sit at the link's top-left corner, pulled slightly outside it so the badge
-    // doesn't cover the link text itself
     int x = linkRect.x - (dx / 3);
     int y = linkRect.y - (dy / 3);
     if (x < 0) {
@@ -458,21 +501,77 @@ void PaintKeyboardLinkTargets(MainWindow* win, gp::PaintCtx* ctx) {
 
     Vec<Rect> screenRects;
     for (int i = 0; i < n; i++) {
-        const KeyboardLinkTarget& t = win->linkFollowTargets[i];
-        if (!HintStartsWith(t, win->linkFollowInput, win->linkFollowInputLen)) {
+        const KeyboardLinkTarget& target = win->linkFollowTargets[i];
+        if (!HintStartsWith(target, win->linkFollowInput, win->linkFollowInputLen)) {
             continue;
         }
-        VecAppend(screenRects, dm->CvtToScreen(t.pageNo, t.rect));
+        VecAppend(screenRects, dm->CvtToScreen(target.pageNo, target.rect));
     }
     Rect canvas(Point(), dm->GetViewPort().Size());
     PaintTransparentRectangles(ctx, canvas, screenRects, kLinkFollowHighlightCol, 90, 2, false);
 
     int rectIdx = 0;
     for (int i = 0; i < n; i++) {
+        const KeyboardLinkTarget& target = win->linkFollowTargets[i];
+        if (!HintStartsWith(target, win->linkFollowInput, win->linkFollowInputLen)) {
+            continue;
+        }
+        PaintLinkBadge(ctx, screenRects[rectIdx++], Str(target.hint, target.hintLen));
+    }
+}
+#else
+static void PaintLinkBadge(Gfx* gfx, PlatformFont* font, const Rect& linkRect, Str label) {
+    Size textSize = gfx->MeasureText(label, font);
+    int padX = textSize.dy / 3;
+    int dx = textSize.dx + (2 * padX);
+    int dy = textSize.dy;
+    // sit at the link's top-left corner, pulled slightly outside it so the badge
+    // doesn't cover the link text itself
+    int x = linkRect.x - (dx / 3);
+    int y = linkRect.y - (dy / 3);
+    if (x < 0) {
+        x = linkRect.x;
+    }
+    if (y < 0) {
+        y = linkRect.y;
+    }
+
+    Rect badge{x, y, dx, dy};
+    gfx->FillRects(&badge, 1, kLinkFollowBadgeBgCol, 235);
+    gfx->DrawTextAt(label, {x + padX, y}, gfxTextSingleLine | gfxTextNoClip, font, kLinkFollowBadgeTextCol);
+}
+
+void PaintKeyboardLinkTargets(MainWindow* win, Gfx* gfx) {
+    if (!KeyboardLinkFollowingActive(win)) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    int n = len(win->linkFollowTargets);
+    if (n == 0) {
+        return;
+    }
+
+    Vec<Rect> screenRects;
+    for (int i = 0; i < n; i++) {
         const KeyboardLinkTarget& t = win->linkFollowTargets[i];
         if (!HintStartsWith(t, win->linkFollowInput, win->linkFollowInputLen)) {
             continue;
         }
-        PaintLinkBadge(ctx, screenRects[rectIdx++], Str(t.hint, t.hintLen));
+        VecAppend(screenRects, dm->CvtToScreen(t.pageNo, t.rect));
+    }
+    PaintTransparentRectangles(gfx, win->canvasRc, screenRects, kLinkFollowHighlightCol, 90, 2, false);
+
+    PlatformFont* font = GetBoldPlatformFont(GetUserGuiFont(StrL("Segoe UI"), DpiScale(11)));
+    int rectIdx = 0;
+    for (int i = 0; i < n; i++) {
+        const KeyboardLinkTarget& t = win->linkFollowTargets[i];
+        if (!HintStartsWith(t, win->linkFollowInput, win->linkFollowInputLen)) {
+            continue;
+        }
+        PaintLinkBadge(gfx, font, screenRects[rectIdx++], Str(t.hint, t.hintLen));
     }
 }
+#endif

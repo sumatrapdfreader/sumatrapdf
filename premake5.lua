@@ -352,6 +352,8 @@ function setup_base_pch()
     enablepch "Off"
   filter { "files:**.c" }
     enablepch "Off"
+  filter { "files:src/shared/LinkFollow.cpp" }
+    enablepch "Off"
   filter {}
 end
 

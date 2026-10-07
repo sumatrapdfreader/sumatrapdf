@@ -734,9 +734,6 @@
     <ClCompile Include="..\src\KeyboardHelp.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\LinkFollow.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\MainWindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1158,6 +1155,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\JxlReader.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\LinkFollow.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\LitDoc.cpp">

@@ -1652,7 +1652,6 @@
     <ClCompile Include="..\src\InstallerCommon.cpp" />
     <ClCompile Include="..\src\InverseSearchDialog.cpp" />
     <ClCompile Include="..\src\KeyboardHelp.cpp" />
-    <ClCompile Include="..\src\LinkFollow.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MergePdf.cpp" />
@@ -2145,6 +2144,9 @@
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />
+    <ClCompile Include="..\src\shared\LinkFollow.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\shared\LitDoc.cpp" />
     <ClCompile Include="..\src\shared\MarkdownModel.cpp" />
     <ClCompile Include="..\src\shared\MarkdownToc.cpp" />
