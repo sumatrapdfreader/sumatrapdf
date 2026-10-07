@@ -33,7 +33,7 @@ void DocumentLayout_UnitTests() {
     DocumentLayout layout;
     layout.Reset(engine->PageCount());
     for (int page = 1; page <= engine->PageCount(); page++) {
-        layout.SetPageMediaBox(page, engine->PageMediabox(page));
+        layout.GetPage(page)->mediaBox = engine->PageMediabox(page);
     }
     layout.Relayout(params);
     utassert(len(layout.pages) == 2);

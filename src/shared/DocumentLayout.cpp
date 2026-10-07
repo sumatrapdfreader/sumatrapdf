@@ -56,13 +56,6 @@ bool DocumentLayout::ValidPageNo(int pageNo) const {
     return pageNo >= 1 && pageNo <= pages.len;
 }
 
-void DocumentLayout::SetPageMediaBox(int pageNo, RectF mediaBox) {
-    if (!ValidPageNo(pageNo)) {
-        return;
-    }
-    pages[pageNo - 1].mediaBox = mediaBox;
-}
-
 DocumentLayoutPage* DocumentLayout::GetPage(int pageNo) {
     if (!ValidPageNo(pageNo)) {
         return nullptr;
