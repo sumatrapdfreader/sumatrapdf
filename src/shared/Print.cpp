@@ -1688,23 +1688,28 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem
 enum {
     MAXPAGERANGES = 10
 };
-#if defined(SUMATRA_NG)
-// we remember some printer settings per process. ng: file-static because the
-// "abort the running job?" prompt splits the function in two (see below)
+// Remember printer settings for this process.
 static ScopedMem<DEVMODE> defaultDevMode;
 static PrintScaleAdv defaultScaleAdv = PrintScaleAdv::Shrink;
 static bool hasDefaults = false;
 
 static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool selectionByDefault);
 
+static void PrintWarning(MainWindow* win, Str msg, Str title) {
+#if defined(SUMATRA_NG)
+    MessageBoxWarning(win, msg, title);
+#else
+    MessageBoxWarning(MainWindowHwnd(win), msg, title);
+#endif
+}
+
+#if defined(SUMATRA_NG)
 struct PrintAbortPrompt {
     MainWindow* win;
     bool waitForCompletion;
     bool selectionByDefault;
 };
 
-// ng: orig's MsgBox() blocks and returns the answer. Ours is a gpui dialog that
-// answers through a callback, so everything after the prompt is a continuation.
 static void OnPrintAbortAnswer(PrintAbortPrompt* d, int res) {
     MainWindow* win = d->win;
     bool waitForCompletion = d->waitForCompletion;
@@ -1715,23 +1720,28 @@ static void OnPrintAbortAnswer(PrintAbortPrompt* d, int res) {
     }
     PrintCurrentFileCont(win, waitForCompletion, selectionByDefault);
 }
+#endif
 
 void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
-    if (!HasPermission(Perm::PrinterAccess)) {
-        return;
-    }
-    if (!win->IsDocLoaded()) {
+    if (!HasPermission(Perm::PrinterAccess) || !win->IsDocLoaded()) {
         return;
     }
     if (!win->printThread) {
         PrintCurrentFileCont(win, waitForCompletion, selectionByDefault);
         return;
     }
-    uint type = MbIconWarning | MbYesNo;
+
     Str title = Tr("Printing in progress.");
     Str msg = Tr("Printing is still in progress. Abort and start over?");
+#if defined(SUMATRA_NG)
     auto* d = new PrintAbortPrompt{win, waitForCompletion, selectionByDefault};
-    MsgBox(win, msg, title, type, MkFunc1<PrintAbortPrompt, int>(OnPrintAbortAnswer, d));
+    MsgBox(win, msg, title, MbIconWarning | MbYesNo, MkFunc1<PrintAbortPrompt, int>(OnPrintAbortAnswer, d));
+#else
+    uint type = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
+    if (MsgBox(MainWindowHwnd(win), msg, title, type) != IDNO) {
+        PrintCurrentFileCont(win, waitForCompletion, selectionByDefault);
+    }
+#endif
 }
 
 static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
@@ -1819,318 +1829,12 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
 
     Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
     advanced.dpiOverride = gSettings->printerDefaults.printDpi;
-    ScopedMem<DLGTEMPLATE> dlgTemplate; // the page's in-memory template, freed on the way out
+#if defined(SUMATRA_NG)
+    ScopedMem<DLGTEMPLATE> dlgTemplate;
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
-    pdex.lphPropertyPages = &hPsp;
-    pdex.nPropertyPages = 1;
-
-    PrintData* pd = nullptr;
-    DEVMODE* devMode = nullptr;
-    // restore remembered settings
-    if (defaultDevMode) {
-        DEVMODE* p = defaultDevMode.Get();
-        pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
-    }
-
-    // Always hand PrintDlgEx a DEVMODE: seed one from the default printer when
-    // there's no remembered one. This also seeds the Collate checkbox from the
-    // PrinterDefaults.Collate setting (issue #1558). Crucially, starting from a
-    // null hDevMode/hDevNames makes PrintDlgEx GlobalLock a null handle
-    // internally, which crashes under ASan's GlobalLock interceptor.
-    if (!pdex.hDevMode) {
-        TempStr defName = GetDefaultPrinterNameTemp();
-        Printer* seed = defName ? NewPrinter(defName) : nullptr;
-        if (seed && seed->devMode) {
-            auto* p = seed->devMode;
-            pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
-        }
-        delete seed;
-    }
-
-    SetDevModeCopies(pdex.hDevMode, 1);
-    int collatePref = CollateDefaultPref();
-    if (collatePref >= 0) {
-        SetDevModeCollate(pdex.hDevMode, collatePref);
-    }
-
-    // pair the hDevMode with a matching hDevNames so the two are consistent and
-    // PrintDlgEx never GlobalLocks a null handle (see the ASan note above)
-    if (pdex.hDevMode && !pdex.hDevNames) {
-        auto* dmp = (DEVMODE*)GlobalLock(pdex.hDevMode);
-        if (dmp) {
-            pdex.hDevNames = GlobalMemDevNames(dmp->dmDeviceName);
-            GlobalUnlock(pdex.hDevMode);
-        }
-    }
-
-    logf("PrintCurrentFile: PrintDlgEx start flags=0x%x pages=%d hDevMode=%p hDevNames=%p collate=%d\n", pdex.Flags,
-         nPages, pdex.hDevMode, pdex.hDevNames, collatePref);
-    HRESULT res = PrintDlgExW(&pdex);
-    logf("PrintCurrentFile: PrintDlgEx result=0x%08x action=%u flags=0x%x ranges=%u hDevMode=%p hDevNames=%p\n",
-         (uint)res, pdex.dwResultAction, pdex.Flags, pdex.nPageRanges, pdex.hDevMode, pdex.hDevNames);
-
-    // PrintDlgExW pumps messages, so the window may have been closed/destroyed while the dialog was open
-    if (!IsMainWindowValidAndNotClosing(win)) {
-        logf("PrintCurrentFile: window closed during PrintDlgEx\n");
-        free(ppr);
-        GlobalFree(pdex.hDevMode);
-        GlobalFree(pdex.hDevNames);
-        return;
-    }
-
-    if (res != S_OK) {
-        logf("PrintCurrentFile: PrintDlgEx failed, CommDlgExtendedError=0x%x\n", (uint)CommDlgExtendedError());
-        MessageBoxWarning(win, Tr("Couldn't initialize printer"), Tr("Printing problem."));
-    }
-    auto action = pdex.dwResultAction;
-    if (action != PD_RESULT_PRINT) {
-        // it's cancel or apply so silently ignore as it's not an error
-        logf("PrintCurrentFile: PrintDlgEx ended without print, action=%u\n", action);
-        goto Exit;
-    }
-
-    // re-validate after modal dialog - tab/document may have changed while dialog was open
-    dm = win->AsFixed();
-    if (!dm) {
-        goto Exit;
-    }
-    engine = dm->GetEngine();
-    if (!engine) {
-        goto Exit;
-    }
-    pinnedEngine = engine;
-    pinnedEngine->AddRef();
-    rotation = dm->GetRotation();
-    // no-op if already laid out above; covers a doc swapped in while the dialog was open
-    EnsureFullLayout(dm);
-    nPages = dm->PageCount();
-
-    if (!pdex.hDevNames) {
-        logf("PrintCurrentFile: PrintDlgEx returned no hDevNames\n");
-        MessageBoxWarning(win, Tr("Couldn't get printer name"), Tr("Printing problem."));
-        goto Exit;
-    }
-
-    {
-        DEVNAMES* devNames = (DEVNAMES*)GlobalLock(pdex.hDevNames);
-        if (devNames) {
-            // printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
-            WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset;
-            TempStr name = ToUtf8Temp(printerName);
-            logf("PrintCurrentFile: selected printer='%s'\n", name);
-            printer = NewPrinter(name);
-            // printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
-            GlobalUnlock(pdex.hDevNames);
-        }
-    }
-
-    if (!printer) {
-        logf("PrintCurrentFile: couldn't create selected printer\n");
-        MessageBoxWarning(win, Tr("Couldn't initialize printer"), Tr("Printing problem."));
-        goto Exit;
-    }
-
-    devMode = (DEVMODEW*)GlobalLock(pdex.hDevMode);
-    if (!devMode) {
-        logf("PrintCurrentFile: GlobalLock(hDevMode) failed, err=%u\n", GetLastError());
-    }
-
-    if (pdex.dwResultAction == PD_RESULT_PRINT || pdex.dwResultAction == PD_RESULT_APPLY) {
-        // remember settings for this process
-        if (devMode) {
-            defaultDevMode.Set((DEVMODEW*)MemDup(nullptr, devMode, (size_t)(devMode->dmSize + devMode->dmDriverExtra)));
-        }
-        defaultScaleAdv = advanced.scale;
-    }
-
-    if (devMode && advanced.paperSourceByPageSize) {
-        // let the printer pick the input tray whose paper matches the document's
-        // page size, independent of the page-scaling option (issue #349). Applied
-        // after the settings are remembered above so it doesn't stick to the next
-        // print job in this session.
-        devMode->dmDefaultSource = DMBIN_FORMSOURCE;
-        devMode->dmFields |= DM_DEFAULTSOURCE;
-    }
-
-    if (devMode) {
-        auto* dmCopy = (DEVMODEW*)MemDup(nullptr, devMode, (size_t)(devMode->dmSize + devMode->dmDriverExtra));
-        printer->SetDevMode(dmCopy);
-        GlobalUnlock(pdex.hDevMode);
-    }
-
-    if (pdex.dwResultAction != PD_RESULT_PRINT) {
-        goto Exit;
-    }
-
-    if (pdex.Flags & PD_CURRENTPAGE) {
-        PRINTPAGERANGE pr;
-        if (pdex.nPageRanges == 1 && pdex.lpPageRanges[0].nFromPage == pdex.lpPageRanges[0].nToPage) {
-            // Unified Print Dialog (which doesn't have a "Current page" option)
-            // sets PD_CURRENTPAGE when the custom range contains one page (2 or 2-2)
-            // with nFromPage and nToPage equal to the chosen page.
-            // PD_PAGENUMS isn't set in that case.
-            pr = pdex.lpPageRanges[0];
-        } else {
-            pr = {(DWORD)dm->CurrentPageNo(), (DWORD)dm->CurrentPageNo()};
-        }
-        VecAppend(ranges, pr);
-    } else if (win->CurrentTab()->selectionOnPage && (pdex.Flags & PD_SELECTION)) {
-        printSelection = true;
-    } else if (!(pdex.Flags & PD_PAGENUMS)) {
-        PRINTPAGERANGE pr = {1, (DWORD)nPages};
-        VecAppend(ranges, pr);
-    } else {
-        ReportIf(pdex.nPageRanges <= 0);
-        for (DWORD i = 0; i < pdex.nPageRanges; i++) {
-            VecAppend(ranges, pdex.lpPageRanges[i]);
-        }
-    }
-
-    // re-validate engine - it may have been invalidated while message boxes were shown
-    dm = win->AsFixed();
-    if (!dm) {
-        goto Exit;
-    }
-    engine = dm->GetEngine();
-    if (!engine) {
-        goto Exit;
-    }
-
-    sel = printSelection ? win->CurrentTab()->selectionOnPage : nullptr;
-    pd = new PrintData(pinnedEngine, printer, ranges, advanced, rotation, sel);
-    SafeEngineRelease(&pinnedEngine);
-
-    if (pd->failedEngineClone) {
-        logf("PrintCurrentFile: failed to create engine for printing\n");
-        delete pd;
-        goto Exit;
-    }
-    if (!waitForCompletion) {
-        PrintToDeviceOnThread(win, pd);
-    } else {
-        PrintToDevice(*pd);
-        delete pd;
-    }
-
-Exit:
-    SafeEngineRelease(&pinnedEngine);
-    free(ppr);
-    GlobalFree(pdex.hDevNames);
-    GlobalFree(pdex.hDevMode);
-}
 #else
-void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
-    // we remember some printer settings per process
-    static AutoFree<DEVMODE> defaultDevMode;
-    static PrintScaleAdv defaultScaleAdv = PrintScaleAdv::Shrink;
-    static bool hasDefaults = false;
-
-    Printer* printer = nullptr;
-
-    if (!hasDefaults) {
-        hasDefaults = true;
-        if (str::EqI(gSettings->printerDefaults.printScale, StrL("fit"))) {
-            defaultScaleAdv = PrintScaleAdv::Fit;
-        } else if (str::EqI(gSettings->printerDefaults.printScale, StrL("stretch"))) {
-            defaultScaleAdv = PrintScaleAdv::Stretch;
-        } else if (str::EqI(gSettings->printerDefaults.printScale, StrL("none"))) {
-            defaultScaleAdv = PrintScaleAdv::None;
-        }
-    }
-
-    bool printSelection = false;
-    Vec<PRINTPAGERANGE> ranges;
-    Vec<SelectionOnPage>* sel;
-
-    if (!HasPermission(Perm::PrinterAccess)) {
-        return;
-    }
-    if (!win->IsDocLoaded()) {
-        return;
-    }
-
-    if (win->AsChm()) {
-        win->AsChm()->PrintCurrentPage(true);
-        return;
-    }
-    if (win->AsMarkdown()) {
-        win->AsMarkdown()->PrintCurrentPage(true);
-        return;
-    }
-    DisplayModel* dm = win->AsFixed();
-    ReportIf(!dm);
-    if (!dm) {
-        return;
-    }
-    auto* engine = dm->GetEngine();
-    EngineBase* pinnedEngine = nullptr;
-    ReportIf(!engine);
-    if (!engine) {
-        return;
-    }
-    int rotation;
-    // the print dialog needs the real total up front; no progress UI here
-    EnsureFullLayout(dm);
-    int nPages = dm->PageCount();
-    logf("PrintCurrentFile: start wait=%d file='%s' pages=%d selection=%d\n", (int)waitForCompletion,
-         engine->FilePath(), nPages, (int)(win->CurrentTab()->selectionOnPage != nullptr));
-
-#ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (!engine->AllowsPrinting()) {
-        return;
-    }
-#endif
-
-    if (win->printThread) {
-        uint type = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
-        Str title = Tr("Printing in progress.");
-        Str msg = Tr("Printing is still in progress. Abort and start over?");
-        int res = MsgBox(win->hwndFrame, msg, title, type);
-        if (res == IDNO) {
-            return;
-        }
-    }
-    AbortPrinting(win);
-
-    // the Windows 11 dialog runs the whole job itself; -print-to and friends
-    // need the synchronous classic path
-    // the Windows 11 dialog can't print a selection (TryPrintCurrentFileWin11
-    // declines when there is one), so a selection request goes straight to the
-    // classic dialog
-    if (!waitForCompletion && !selectionByDefault && !PrinterUIWantsClassic()) {
-        bool usedWin11Dialog = TryPrintCurrentFileWin11(win, win->hwndFrame, defaultScaleAdv);
-        logf("PrintCurrentFile: Windows 11 dialog=%d\n", (int)usedWin11Dialog);
-        if (usedWin11Dialog) {
-            return;
-        }
-    }
-
-    PRINTDLGEXW pdex{};
-    pdex.lStructSize = sizeof(PRINTDLGEXW);
-    pdex.hwndOwner = win->hwndFrame;
-    pdex.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
-    if (!win->CurrentTab()->selectionOnPage) {
-        pdex.Flags |= PD_NOSELECTION;
-    } else if (selectionByDefault) {
-        // "Print Selection..." from the selection context menu: start on the
-        // Selection radio button instead of All (#6222)
-        pdex.Flags |= PD_SELECTION;
-    }
-    pdex.nCopies = 1;
-    /* by default print all pages */
-    pdex.nPageRanges = 1;
-    pdex.nMaxPageRanges = MAXPAGERANGES;
-    PRINTPAGERANGE* ppr = AllocArray<PRINTPAGERANGE>(MAXPAGERANGES);
-    pdex.lpPageRanges = ppr;
-    ppr->nFromPage = 1;
-    ppr->nToPage = nPages;
-    pdex.nMinPage = 1;
-    pdex.nMaxPage = nPages;
-    pdex.nStartPage = START_PAGE_GENERAL;
-
-    Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
-    advanced.dpiOverride = gSettings->printerDefaults.printDpi;
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced);
+#endif
     pdex.lphPropertyPages = &hPsp;
     pdex.nPropertyPages = 1;
 
@@ -2190,7 +1894,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByD
 
     if (res != S_OK) {
         logf("PrintCurrentFile: PrintDlgEx failed, CommDlgExtendedError=0x%x\n", (uint)CommDlgExtendedError());
-        MessageBoxWarning(win->hwndFrame, Tr("Couldn't initialize printer"), Tr("Printing problem."));
+        PrintWarning(win, Tr("Couldn't initialize printer"), Tr("Printing problem."));
     }
     auto action = pdex.dwResultAction;
     if (action != PD_RESULT_PRINT) {
@@ -2217,7 +1921,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByD
 
     if (!pdex.hDevNames) {
         logf("PrintCurrentFile: PrintDlgEx returned no hDevNames\n");
-        MessageBoxWarning(win->hwndFrame, Tr("Couldn't get printer name"), Tr("Printing problem."));
+        PrintWarning(win, Tr("Couldn't get printer name"), Tr("Printing problem."));
         goto Exit;
     }
 
@@ -2236,7 +1940,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByD
 
     if (!printer) {
         logf("PrintCurrentFile: couldn't create selected printer\n");
-        MessageBoxWarning(win->hwndFrame, Tr("Couldn't initialize printer"), Tr("Printing problem."));
+        PrintWarning(win, Tr("Couldn't initialize printer"), Tr("Printing problem."));
         goto Exit;
     }
 
@@ -2328,7 +2032,6 @@ Exit:
     GlobalFree(pdex.hDevNames);
     GlobalFree(pdex.hDevMode);
 }
-#endif
 
 static short GetPaperSize(EngineBase* engine, int pageNo) {
     RectF mediabox = engine->PageMediabox(pageNo);
