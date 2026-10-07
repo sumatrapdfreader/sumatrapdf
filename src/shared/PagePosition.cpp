@@ -11,15 +11,10 @@
 
 // "12" -> pageNo 12; "bm:3:5:20" -> bookmark "3:5:20"; anything else -> pageNo 1
 StoredPagePos ParseStoredPagePos(Str s) {
-    StoredPagePos pos;
-    Str rest = s;
-    if (str::TrimPrefix(rest, kBookmarkPrefix)) {
-        pos.bookmark = rest;
-        return pos;
+    if (str::TrimPrefix(s, kBookmarkPrefix)) {
+        return {1, s};
     }
-    int n = ParseInt(s);
-    pos.pageNo = n < 1 ? 1 : n;
-    return pos;
+    return {std::max(ParseInt(s), 1), {}};
 }
 
 TempStr FormatStoredPagePosTemp(int pageNo) {
