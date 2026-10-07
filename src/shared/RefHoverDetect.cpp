@@ -223,7 +223,6 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     for (int i = 0; i < n; i++) {
         WCHAR c = text.s[i];
         bool isSpace = IsGlyphSpace(c);
-        bool drop = false;
         if (canStrip && !isSpace && coords[i].dy > hgtThresh) {
             // Sparse-row test: count non-space glyphs sharing this glyph's
             // baseline (y+dy, stable across a visual line) AND of comparable
@@ -251,11 +250,8 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
                 }
             }
             if (rowGlyphs < kMinRowGlyphs) {
-                drop = true;
+                continue;
             }
-        }
-        if (drop) {
-            continue;
         }
         outText[outLen] = c;
         outCoords[outLen] = coords[i];
