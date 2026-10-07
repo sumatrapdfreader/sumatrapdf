@@ -157,13 +157,7 @@ bool TextSearch::PageAllowed(int pageNo) const {
     if (pageNo < 1 || pageNo > nPages) {
         return false;
     }
-    if (len(pageAllowed) == 0) {
-        return true;
-    }
-    if (pageNo > len(pageAllowed)) {
-        return false;
-    }
-    return pageAllowed[pageNo - 1];
+    return len(pageAllowed) == 0 || (pageNo <= len(pageAllowed) && pageAllowed[pageNo - 1]);
 }
 
 int TextSearch::RestrictPage(Direction direction) const {
