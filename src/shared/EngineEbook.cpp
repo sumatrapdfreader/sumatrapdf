@@ -123,6 +123,7 @@ class EbookAbortCookie : public AbortCookie {
 };
 
 struct EbookTocBuilder;
+using CreateEbookEngine = EngineBase* (*)(Str);
 
 class EngineEbook : public EngineBase {
   public:
@@ -189,6 +190,7 @@ class EngineEbook : public EngineBase {
 #endif
     bool ExtractPageAnchors();
     TocTree* FinishToc(EbookTocBuilder& builder);
+    EngineBase* CloneFromSource(CreateEbookEngine fromFile, CreateEbookEngine fromData = nullptr);
     TempStr ExtractFontListTemp();
     void ExtractFontListFromPage(Location loc, Vec<PlatformFont*>& seenFonts, StrVec& fonts);
 
@@ -954,6 +956,14 @@ TocTree* EngineEbook::FinishToc(EbookTocBuilder& builder) {
     return tocTree;
 }
 
+EngineBase* EngineEbook::CloneFromSource(CreateEbookEngine fromFile, CreateEbookEngine fromData) {
+    if (sourceData && fromData) {
+        return fromData(sourceData);
+    }
+    Str path = FilePath();
+    return path ? fromFile(path) : nullptr;
+}
+
 template <typename T>
 static EngineBase* CreateLoadedEngine(Str source, bool (T::*load)(Str)) {
     T* engine = new T();
@@ -1003,23 +1013,7 @@ EngineEpub::~EngineEpub() {
 }
 
 EngineBase* EngineEpub::Clone() {
-    if (sourceData) {
-        auto res = CreateFromData(sourceData);
-        if (!res) {
-            log(StrL("EngineEpub::Clone() failed: CreateFromData() failed\n"));
-        }
-        return res;
-    }
-    Str path = FilePath();
-    if (path) {
-        auto res = CreateFromFile(path);
-        if (!res) {
-            logf("EngineEpub::Clone() failed: CreateFromFile('%s') failed\n", path);
-        }
-        return res;
-    }
-    logf("EngineEpub::Clone() failed: no stream or file path\n");
-    return nullptr;
+    return CloneFromSource(CreateFromFile, CreateFromData);
 }
 
 bool EngineEpub::Load(Str fileName) {
@@ -1120,16 +1114,7 @@ class EngineFb2 : public EngineEbook {
         str::ReplaceWithCopy(&defaultExt, StrL(".fb2"));
     }
     ~EngineFb2() override { delete doc; }
-    EngineBase* Clone() override {
-        Str fileName = FilePath();
-        if (fileName) {
-            return CreateFromFile(fileName);
-        }
-        if (sourceData) {
-            return CreateFromData(sourceData);
-        }
-        return {};
-    }
+    EngineBase* Clone() override { return CloneFromSource(CreateFromFile, CreateFromData); }
 
     TempStr GetPropertyTemp(DocProp prop) override {
         if (prop == DocProp::FontList) {
@@ -1235,16 +1220,7 @@ class EngineMobi : public EngineEbook {
         str::ReplaceWithCopy(&defaultExt, StrL(".mobi"));
     }
     ~EngineMobi() override;
-    EngineBase* Clone() override {
-        Str fileName = FilePath();
-        if (fileName) {
-            return CreateFromFile(fileName);
-        }
-        if (sourceData) {
-            return CreateFromData(sourceData);
-        }
-        return {};
-    }
+    EngineBase* Clone() override { return CloneFromSource(CreateFromFile, CreateFromData); }
 
     TempStr GetPropertyTemp(DocProp prop) override {
         if (prop == DocProp::FontList) {
@@ -1617,13 +1593,7 @@ class EnginePdb : public EngineEbook {
         str::ReplaceWithCopy(&defaultExt, StrL(".pdb"));
     }
     ~EnginePdb() override { delete doc; }
-    EngineBase* Clone() override {
-        Str fileName = FilePath();
-        if (len(fileName) == 0) {
-            return {};
-        }
-        return CreateFromFile(fileName);
-    }
+    EngineBase* Clone() override { return CloneFromSource(CreateFromFile); }
 
     TempStr GetPropertyTemp(DocProp prop) override {
         if (prop == DocProp::FontList) {
@@ -1819,13 +1789,7 @@ class EngineChm : public EngineEbook {
         delete dataCache;
         delete doc;
     }
-    EngineBase* Clone() override {
-        Str fileName = FilePath();
-        if (len(fileName) == 0) {
-            return {};
-        }
-        return CreateFromFile(fileName);
-    }
+    EngineBase* Clone() override { return CloneFromSource(CreateFromFile); }
 
     TempStr GetPropertyTemp(DocProp prop) override {
         if (prop == DocProp::FontList) {
@@ -2102,13 +2066,7 @@ class EngineHtml : public EngineEbook {
         str::ReplaceWithCopy(&defaultExt, StrL(".html"));
     }
     ~EngineHtml() override { delete doc; }
-    EngineBase* Clone() override {
-        Str fileName = FilePath();
-        if (len(fileName) == 0) {
-            return {};
-        }
-        return CreateFromFile(fileName);
-    }
+    EngineBase* Clone() override { return CloneFromSource(CreateFromFile); }
 
     TempStr GetPropertyTemp(DocProp prop) override {
         if (prop == DocProp::FontList) {
