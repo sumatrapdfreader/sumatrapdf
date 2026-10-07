@@ -1249,13 +1249,21 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                     state = 3;
                 }
                 break;
-            case 6: // custom tag name length
+            case 6:  // custom tag name length
+            case 8:  // custom attr name length
+            case 10: // href length
                 count = c - 1;
                 if (count <= 0 || count > len(bin) - ctx->pos) {
                     return false;
                 }
-                custom.Reset();
-                state = 7;
+                if (state == 6) {
+                    custom.Reset();
+                } else if (state == 8) {
+                    out.Append(StrL(" "));
+                } else {
+                    href.Reset();
+                }
+                state++; // each length state precedes its content state
                 break;
             case 7: // custom tag name
                 LitAppendUtf8(custom, c);
@@ -1265,28 +1273,12 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                     state = 3;
                 }
                 break;
-            case 8: // custom attr name length
-                count = c - 1;
-                if (count <= 0 || count > len(bin) - ctx->pos) {
-                    return false;
-                }
-                out.Append(StrL(" "));
-                state = 9;
-                break;
             case 9: // custom attr name
                 LitEmitChar(out, c);
                 if (--count == 0) {
                     out.Append(StrL("="));
                     state = 4;
                 }
-                break;
-            case 10: // href length
-                count = c - 1;
-                if (count <= 0 || count > len(bin) - ctx->pos) {
-                    return false;
-                }
-                href.Reset();
-                state = 11;
                 break;
             case 11: // href
                 LitAppendUtf8(href, c);
