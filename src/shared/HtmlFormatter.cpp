@@ -231,17 +231,11 @@ void HtmlFormatter::SetFontBasedOn(PlatformFont* font, PlatformFontStyle fs, flo
     SetFont(fontName, fs, fontSize);
 }
 
-bool ValidStyleForChangeFontStyle(PlatformFontStyle fs) {
-    return (PlatformFontStyle::Bold == fs) || (PlatformFontStyle::Italic == fs) ||
-           (PlatformFontStyle::Underline == fs) || (PlatformFontStyle::Strikeout == fs);
-}
-
 // change the current font by adding (if addStyle is true) or removing
 // a given font style from current font style
 // TODO: it doesn't corrctly support the case where a style is wrongly nested
 // like "<b>fo<i>oo</b>bar</i>" - "bar" should be italic but will be bold
 void HtmlFormatter::ChangeFontStyle(PlatformFontStyle fs, bool addStyle) {
-    ReportIf(!ValidStyleForChangeFontStyle(fs));
     if (addStyle) {
         SetFontBasedOn(CurrFont(), fs | CurrFont()->GetStyle());
     } else {
