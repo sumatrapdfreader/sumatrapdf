@@ -2,7 +2,9 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#ifdef SUMATRA_NG
 #include "VirtKeys.h"
+#endif
 
 #include "Settings.h"
 #include "DocController.h"
@@ -14,7 +16,9 @@
 #include "WindowTab.h"
 #include "Toolbar.h"
 #include "AppSettings.h"
+#ifdef SUMATRA_NG
 #include "gui/AppShell.h"
+#endif
 #include "ExplorerQuickLook.h"
 
 MainWindow* FindExplorerQuickLookWindow() {
@@ -26,8 +30,7 @@ MainWindow* FindExplorerQuickLookWindow() {
     return nullptr;
 }
 
-// Space / Esc close the preview window, Left / Right step through the folder.
-// orig answers these in FrameOnKeydown / FrameOnChar
+#ifdef SUMATRA_NG
 bool ExplorerQuickLookOnKeyDown(MainWindow* win, int key, bool hasModifiers) {
     if (!win || !win->isQuickLook) {
         return false;
@@ -54,6 +57,7 @@ bool ExplorerQuickLookOnKeyDown(MainWindow* win, int key, bool hasModifiers) {
     }
     return false;
 }
+#endif
 
 #if OS_WIN
 
@@ -83,7 +87,11 @@ static HHOOK gQuickLookHook = nullptr;
 static HANDLE gQuickLookAgentMutex = nullptr;
 
 void ApplyExplorerQuickLookChrome(MainWindow* win) {
+#ifdef SUMATRA_NG
     HWND hwnd = win ? AppShellNativeHwnd(win) : nullptr;
+#else
+    HWND hwnd = win ? win->hwndFrame : nullptr;
+#endif
     if (!hwnd) {
         return;
     }
@@ -102,8 +110,13 @@ void ApplyExplorerQuickLookChrome(MainWindow* win) {
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     ShowOrHideToolbar(win);
     SetSidebarVisibility(win, false, false);
+#ifdef SUMATRA_NG
     win->isMenuBarVisible = false;
     AppShellInvalidate(win);
+#else
+    win->tabsVisible = false;
+    ScheduleUiUpdate(win);
+#endif
 }
 
 static bool PathIsSupportedPreview(Str path) {
@@ -130,22 +143,45 @@ void ShowExplorerQuickLook(Str path) {
             CloseWindow(existing, true, false);
             return;
         }
+#ifdef SUMATRA_NG
         LoadDocument(existing, norm, LoadPrefs::DontSave, LoadReuse::CurrentTab);
         SetForegroundWindow(AppShellNativeHwnd(existing));
+#else
+        LoadArgs args(norm, existing);
+        args.forceReuse = true;
+        args.noSavePrefs = true;
+        LoadDocument(&args);
+        SetForegroundWindow(existing->hwndFrame);
+#endif
         return;
     }
 
+#ifdef SUMATRA_NG
     MainWindow* win = CreateAndShowMainWindow();
+#else
+    MainWindow* win = CreateAndShowMainWindow(nullptr, false);
+#endif
     if (!win) {
         return;
     }
     win->isQuickLook = true;
+#ifdef SUMATRA_NG
     LoadDocument(win, norm, LoadPrefs::DontSave, LoadReuse::CurrentTab);
+#else
+    LoadArgs args(norm, win);
+    args.showWin = false;
+    args.noSavePrefs = true;
+    LoadDocument(&args);
+#endif
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     ApplyExplorerQuickLookChrome(win);
+#ifdef SUMATRA_NG
     HWND hwnd = AppShellNativeHwnd(win);
+#else
+    HWND hwnd = win->hwndFrame;
+#endif
     if (hwnd) {
         ShowWindow(hwnd, SW_SHOW);
         SetForegroundWindow(hwnd);
@@ -189,8 +225,7 @@ bool HandleExplorerQuickLookCopyData(COPYDATASTRUCT* cds) {
     return true;
 }
 
-// ng: orig finds the frame by its own window class; our windows use gpui's
-// shared class name, so a candidate also has to run our executable
+#ifdef SUMATRA_NG
 static bool HwndIsOurProcess(HWND hwnd) {
     DWORD pid = 0;
     GetWindowThreadProcessId(hwnd, &pid);
@@ -208,8 +243,10 @@ static bool HwndIsOurProcess(HWND hwnd) {
     }
     return path::IsSame(ToUtf8Temp(WStr(buf)), GetSelfExePathTemp());
 }
+#endif
 
 static HWND FindExistingFrameHwnd() {
+#ifdef SUMATRA_NG
     HWND hwnd = nullptr;
     for (;;) {
         hwnd = FindWindowExW(HWND_DESKTOP, hwnd, L"GpuiSystemMonitor", nullptr);
@@ -220,6 +257,9 @@ static HWND FindExistingFrameHwnd() {
             return hwnd;
         }
     }
+#else
+    return FindWindowW(kFrameClassName, nullptr);
+#endif
 }
 
 static void LaunchQuickLookProcess(Str path) {
@@ -288,6 +328,12 @@ static bool ExplorerForegroundAllowsPreview() {
     if (!top) {
         return false;
     }
+#ifndef SUMATRA_NG
+    MainWindow* ours = FindMainWindowByHwnd(GetForegroundWindow());
+    if (ours) {
+        return false;
+    }
+#endif
     GUITHREADINFO gi{};
     gi.cbSize = sizeof(gi);
     DWORD tid = GetWindowThreadProcessId(top, nullptr);
@@ -427,6 +473,14 @@ static LRESULT CALLBACK QuickLookKeyboardProc(int nCode, WPARAM wp, LPARAM lp) {
         if (ks->vkCode == VK_SPACE && !(ks->flags & LLKHF_INJECTED)) {
             if (!(GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_MENU) & 0x8000) &&
                 !(GetKeyState(VK_SHIFT) & 0x8000)) {
+#ifndef SUMATRA_NG
+                HWND fg = GetForegroundWindow();
+                MainWindow* ours = FindMainWindowByHwnd(fg);
+                if (ours && ours->isQuickLook) {
+                    // Space is handled by the preview window itself.
+                    return CallNextHookEx(gQuickLookHook, nCode, wp, lp);
+                }
+#endif
                 if (gQuickLookAgentHwnd && ShouldStealSpace()) {
                     PostMessageW(gQuickLookAgentHwnd, kMsgQuickLookSpace, 0, 0);
                     return 1;
@@ -521,13 +575,15 @@ static void EnsureQuickLookAgentProcess() {
 }
 
 void ExplorerQuickLookApplyFromSettings() {
-    // ng: orig also skips this for the installer and the agent process; the
-    // agent never gets here (GpuiMain runs its loop before the settings load)
     if (gForTesting || gPluginMode) {
         return;
     }
+#ifndef SUMATRA_NG
+    if (gCli && (gCli->install || gCli->uninstall || gCli->quickLookAgent || gCli->forTesting)) {
+        return;
+    }
+#endif
     bool on = gSettings && gSettings->explorerQuickLook;
-    logf("ExplorerQuickLookApplyFromSettings: %d\n", (int)on);
     if (on) {
         WriteQuickLookRunKey();
         EnsureQuickLookAgentProcess();
@@ -581,7 +637,6 @@ bool RunExplorerQuickLookAgentLoop() {
         SafeCloseHandle(&gQuickLookAgentMutex);
         return false;
     }
-    log(StrL("RunExplorerQuickLookAgentLoop: agent running\n"));
     MSG msg;
     while (GetMessageW(&msg, nullptr, 0, 0)) {
         TranslateMessage(&msg);
