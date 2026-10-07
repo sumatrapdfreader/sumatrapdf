@@ -73,15 +73,12 @@ static u32 HashPtr(const void* p) {
     return (u32)x;
 }
 
-static PerfSym* FindSymSlot(const void* addr, bool forInsert) {
+static PerfSym* FindSymSlot(const void* addr) {
     u32 capMask = (u32)kSymCap - 1;
     u32 slot = HashPtr(addr) & capMask;
     for (int n = 0; n < kSymCap; n++) {
         PerfSym& e = gSyms[slot];
-        if (!e.addr) {
-            return forInsert ? &e : nullptr;
-        }
-        if (e.addr == addr) {
+        if (!e.addr || e.addr == addr) {
             return &e;
         }
         slot = (slot + 1) & capMask;
@@ -245,7 +242,7 @@ static void IndexLogAddrs(Str src) {
         int n = ReadHexAddr(Str(src.s + i, len(src) - i), v);
         if (n > 0 && gSymN * 2 < kSymCap) {
             const void* addr = (const void*)(uintptr_t)v;
-            PerfSym* e = FindSymSlot(addr, true);
+            PerfSym* e = FindSymSlot(addr);
             if (e && !e->addr) {
                 e->addr = addr;
                 gSymN++;
@@ -298,7 +295,7 @@ static Str RewriteLogTemp() {
         if (i + 2 < src.len && src.s[i] == '0' && src.s[i + 1] == 'x') {
             u64 addr;
             int n = ReadHexAddr(Str(src.s + i, len(src) - i), addr);
-            PerfSym* sym = n > 0 ? FindSymSlot((const void*)(uintptr_t)addr, false) : nullptr;
+            PerfSym* sym = n > 0 ? FindSymSlot((const void*)(uintptr_t)addr) : nullptr;
             if (sym && sym->name) {
                 dst.Append(Str(sym->name));
                 i += n;
