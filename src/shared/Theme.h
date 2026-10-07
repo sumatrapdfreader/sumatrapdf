@@ -57,10 +57,6 @@ void SetInvertPageColors(bool);
 struct VirtButton;
 struct PlatformFont;
 
-// The buttons are virtual controls, so they take their look from the gui/ color
-// defaults, which SumatraUpdateTheme() fills in from the theme: a filled box
-// with a border, brighter on hover. `isDefault` is a shade stronger, like a
-// native default button. Nothing has to re-style them after a theme change
 VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont*, bool isDefault);
 
 extern int gFirstSetThemeCmdId;
