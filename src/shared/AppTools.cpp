@@ -7,6 +7,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/Crypto.h"
+#include "base/Launch.h"
 
 #include "gui/UIModels.h"
 
@@ -14,6 +15,10 @@
 #include "Translations.h"
 #include "Version.h"
 #include "AppTools.h"
+
+// Registry, CSIDL, resources and Toolhelp are Windows-only. AppTools_posix.cpp
+// supplies the portable app-data helpers.
+#if OS_WIN
 
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
@@ -454,6 +459,16 @@ Rect GetDefaultWindowPos() {
     return r;
 }
 
+void SaveCallstackLogs() {
+    Str s = dbghelp::GetCallstacks();
+    if (len(s) == 0) {
+        return;
+    }
+    TempStr filePath = GetPathInAppDataDirTemp(StrL("callstacks.txt"));
+    file::WriteFile(filePath, s);
+    str::Free(s);
+}
+
 // cache because calculating sha1 of the whole executable
 // might be relatively expensive
 // sha1 is 20 bytes => 40 hex chars + null terminator
@@ -500,6 +515,10 @@ TempStr GetWebViewDataDirTemp() {
     return path::JoinTemp(dir, fmt("webview-%d", (int)GetCurrentProcessId()));
 }
 
+#endif // OS_WIN
+
+// Portable helpers shared with AppTools_posix.cpp.
+
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 TempStr FormatFileSizeShortTransTemp(i64 size) {
@@ -534,6 +553,8 @@ bool LaunchFileIfExists(Str path) {
     LaunchFileShell(path, {}, StrL("open"));
     return true;
 }
+
+#if OS_WIN
 
 // Updates the drive letter for a path that could have been on a removable drive,
 // if that same path can be found on a different removable drive
@@ -591,3 +612,13 @@ bool IsUntrustedFile(Str filePath, Str fileURL) {
 
     return false;
 }
+
+TempStr GetTempDirPathTemp() {
+    return GetTempDirTemp();
+}
+
+int CurrentProcessId() {
+    return (int)GetCurrentProcessId();
+}
+
+#endif // OS_WIN
