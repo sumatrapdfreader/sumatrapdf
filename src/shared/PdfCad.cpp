@@ -200,9 +200,12 @@ static bool CadIsGrayRgb(float r, float g, float b) {
     return lum >= 0.38f && lum <= 0.88f;
 }
 
-static void cad_analysis_note_stroke(CadPageStats* stats, const fz_stroke_state* stroke, float r, float g, float b) {
+static void CadNoteStroke(fz_context* ctx, CadPageStats* stats, const fz_stroke_state* stroke,
+                          fz_colorspace* colorspace, const float* color, fz_color_params colorParams) {
+    float rgb[FZ_MAX_COLORS] = {};
+    fz_convert_color(ctx, colorspace, color, fz_device_rgb(ctx), rgb, colorspace, colorParams);
     stats->strokes++;
-    if (CadIsGrayRgb(r, g, b)) {
+    if (CadIsGrayRgb(rgb[0], rgb[1], rgb[2])) {
         stats->grayStrokes++;
     }
     if (stroke && stroke->linewidth <= 0.25f) {
@@ -214,10 +217,7 @@ static void cad_analysis_stroke_path(fz_context* ctx, fz_device* dev, const fz_p
                                      const fz_stroke_state* stroke, fz_matrix /*ctm*/, fz_colorspace* colorspace,
                                      const float* color, float /*alpha*/, fz_color_params color_params) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
-    float rgb[FZ_MAX_COLORS] = {};
-    fz_colorspace* ds = fz_device_rgb(ctx);
-    fz_convert_color(ctx, colorspace, color, ds, rgb, colorspace, color_params);
-    cad_analysis_note_stroke(d->stats, stroke, rgb[0], rgb[1], rgb[2]);
+    CadNoteStroke(ctx, d->stats, stroke, colorspace, color, color_params);
 }
 
 static void cad_analysis_fill_path(fz_context* /*ctx*/, fz_device* dev, const fz_path* /*path*/, int /*even_odd*/,
@@ -232,10 +232,7 @@ static void cad_analysis_fill_text(fz_context* ctx, fz_device* dev, const fz_tex
                                    fz_color_params color_params) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     d->stats->textOps++;
-    float rgb[FZ_MAX_COLORS] = {};
-    fz_colorspace* ds = fz_device_rgb(ctx);
-    fz_convert_color(ctx, colorspace, color, ds, rgb, colorspace, color_params);
-    cad_analysis_note_stroke(d->stats, nullptr, rgb[0], rgb[1], rgb[2]);
+    CadNoteStroke(ctx, d->stats, nullptr, colorspace, color, color_params);
 }
 
 static void cad_analysis_stroke_text(fz_context* ctx, fz_device* dev, const fz_text* text,
