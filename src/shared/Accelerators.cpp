@@ -2,15 +2,15 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#if !OS_WIN
 #include "VirtKeys.h"
+#endif
 #include "Settings.h"
 #include "Commands.h"
 #include "ShortcutParse.h"
 #include "Translations.h"
 #include "Accelerators.h"
 
-// ng: orig uses the win32 accelerator flag macros (FVIRTKEY etc.); these have
-// the same values and don't need <windows.h>
 constexpr u8 kVirt = KeyShortcut::kVirtKey;
 constexpr u8 kShift = KeyShortcut::kShiftKey;
 constexpr u8 kCtrl = KeyShortcut::kCtrlKey;
@@ -183,6 +183,9 @@ static Accel* gAccels = nullptr;
 static int gAccelsCount = 0;
 static AccelStroke* gAccelStrokes = nullptr;
 static int gAccelStrokesCount = 0;
+#if OS_WIN
+static HACCEL gAccelTables[3]{};
+#endif
 
 // Custom Shortcuts clone a unique command id, so the accelerator is stored
 // under that id. Treat it as the original command when looking up bindings.
@@ -513,6 +516,40 @@ static void BuildAcceleratorStrokes() {
     }
 }
 
+#if OS_WIN
+static ACCEL ToWinAccel(const Accel& a) {
+    ACCEL res{};
+    res.fVirt = a.sc.Mods();
+    res.key = a.sc.vk;
+    res.cmd = (WORD)a.cmd;
+    return res;
+}
+
+static void BuildWinAcceleratorTables() {
+    ACCEL* all = AllocArrayTemp<ACCEL>(gAccelsCount);
+    ACCEL* edit = AllocArrayTemp<ACCEL>(gAccelsCount);
+    ACCEL* tree = AllocArrayTemp<ACCEL>(gAccelsCount);
+    int nEdit = 0;
+    int nTree = 0;
+
+    for (int i = 0; i < gAccelsCount; i++) {
+        const Accel& a = gAccels[i];
+        all[i] = ToWinAccel(a);
+        if (IsSafeAccel(a)) {
+            edit[nEdit++] = all[i];
+        }
+        if (IsSafeTreeAccel(a)) {
+            tree[nTree++] = all[i];
+        }
+    }
+
+    gAccelTables[0] = CreateAcceleratorTableW(all, gAccelsCount);
+    gAccelTables[1] = CreateAcceleratorTableW(edit, nEdit);
+    gAccelTables[2] = CreateAcceleratorTableW(tree, nTree);
+    ReportIf(!gAccelTables[0] || !gAccelTables[1] || !gAccelTables[2]);
+}
+#endif
+
 void CreateSumatraAcceleratorTable() {
     gShortcutLangCode = CurrentLangCode;
     ReportIf(gAccels);
@@ -535,10 +572,15 @@ void CreateSumatraAcceleratorTable() {
 
     gAccels = b.accels;
     gAccelsCount = b.nAccels;
-    BuildAcceleratorStrokes();
 }
 
 void FreeAcceleratorTables() {
+#if OS_WIN
+    for (HACCEL& table : gAccelTables) {
+        DestroyAcceleratorTable(table);
+        table = nullptr;
+    }
+#endif
     for (int i = 0; i < gAccelStrokesCount; i++) {
         str::FreePtr(&gAccelStrokes[i].stroke);
     }
@@ -562,9 +604,24 @@ const AccelStroke* GetAcceleratorStrokes(int& nOut) {
     if (!gAccels) {
         CreateSumatraAcceleratorTable();
     }
+    if (!gAccelStrokes) {
+        BuildAcceleratorStrokes();
+    }
     nOut = gAccelStrokesCount;
     return gAccelStrokes;
 }
+
+#if OS_WIN
+HACCEL* GetAcceleratorTables() {
+    if (!gAccels) {
+        CreateSumatraAcceleratorTable();
+    }
+    if (!gAccelTables[0]) {
+        BuildWinAcceleratorTables();
+    }
+    return gAccelTables;
+}
+#endif
 
 #if IS_DEBUG
 // Folder browsing has to keep working when focus is inside the document (the

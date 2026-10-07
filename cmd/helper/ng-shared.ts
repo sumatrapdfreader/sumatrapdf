@@ -114,6 +114,7 @@ export const sharedFiles = [
   "src/shared/AIClaudeCode.cpp",
   "src/shared/AICodexBuild.cpp",
   "src/shared/AIGrokBuild.cpp",
+  "src/shared/Accelerators.cpp",
   "src/shared/Accelerators.h",
   "src/shared/AnnotPlacement.h",
   "src/shared/AnnotFilterToolbar.h",

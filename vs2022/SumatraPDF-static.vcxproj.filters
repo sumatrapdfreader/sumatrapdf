@@ -605,9 +605,6 @@
     <ClCompile Include="..\src\AIChatPanel.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Accelerators.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\AddFavoriteDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1014,6 +1011,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIGrokBuild.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\Accelerators.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AnnotSearch.cpp">
