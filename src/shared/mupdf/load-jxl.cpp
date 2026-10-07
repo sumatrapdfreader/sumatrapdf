@@ -78,9 +78,7 @@ static fz_pixmap* ReadJxl(fz_context* ctx, const unsigned char* data, size_t siz
         }
     }
     fz_always(ctx) {
-        if (doc) {
-            jxl_doc_close(doc);
-        }
+        jxl_doc_close(doc);
         jxl_ctx_free(decoder);
     }
     fz_catch(ctx) {
