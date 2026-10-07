@@ -9352,37 +9352,9 @@ int EngineMupdf::GetPageByLabel(Str label) const {
 }
 
 bool IsEngineMupdfSupportedFileType(FileType kind) {
-    if (kind == FileType::PDF) {
-        return true;
-    }
-    if (kind == FileType::Epub) {
-        return true;
-    }
-    if (kind == FileType::Markdown) {
-        return true;
-    }
-    if (kind == FileType::Fb2) {
-        return true;
-    }
-    if (kind == FileType::Fb2z) {
-        return true;
-    }
-    if (kind == FileType::HTML) {
-        return true;
-    }
-    if (kind == FileType::Svg) {
-        return true;
-    }
-    if (kind == FileType::Xps || IsOfficeFileType(kind)) {
-        return true;
-    }
-    if (kind == FileType::Txt) {
-        return true;
-    }
-    if (kind == FileType::PalmDoc) {
-        return true;
-    }
-    return false;
+    return kind == FileType::PDF || kind == FileType::Epub || kind == FileType::Markdown || kind == FileType::Fb2 ||
+           kind == FileType::Fb2z || kind == FileType::HTML || kind == FileType::Svg || kind == FileType::Xps ||
+           kind == FileType::Txt || kind == FileType::PalmDoc || IsOfficeFileType(kind);
 }
 
 EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, PasswordUI* pwdUI) {
