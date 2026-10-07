@@ -1005,46 +1005,40 @@ static TempStr LitResolveHrefTemp(UnBinaryCtx* ctx, Str href) {
         doc = Str(href.s, hash);
         frag = Str(href.s + hash, len(href) - hash);
     }
-    TempStr path = str::DupTemp(doc);
     LitManifestItem* item = ctx->lit ? LitFindManifest(ctx->lit, doc) : nullptr;
-    if (item) {
-        // make relative to ctx->dir
-        Str target = item->path;
-        Str base = ctx->dir;
-        // Strip the common directory prefix.
-        int slash = -1;
-        for (int i = 0; i < std::min(len(target), len(base)); i++) {
-            if (target.s[i] != base.s[i]) {
-                break;
-            }
-            if (target.s[i] == '/') {
-                slash = i;
-            }
+    if (!item) {
+        return len(frag) > 0 ? str::JoinTemp(doc, frag) : str::DupTemp(doc);
+    }
+
+    // make relative to ctx->dir
+    Str target = item->path;
+    Str base = ctx->dir;
+    // Strip the common directory prefix.
+    int slash = -1;
+    for (int i = 0; i < std::min(len(target), len(base)); i++) {
+        if (target.s[i] != base.s[i]) {
+            break;
         }
-        if (slash >= 0) {
-            target = Str(target.s + slash + 1, len(target) - slash - 1);
-            base = Str(base.s + slash + 1, len(base) - slash - 1);
+        if (target.s[i] == '/') {
+            slash = i;
         }
-        int nUp = 0;
-        for (int i = 0; i < len(base); i++) {
-            if (base.s[i] == '/') {
-                nUp++;
-            }
-        }
-        if (len(base) > 0) {
-            nUp++; // base is a dir path without trailing slash
-        }
-        str::Builder rel;
-        for (int i = 0; i < nUp; i++) {
+    }
+    if (slash >= 0) {
+        target = Str(target.s + slash + 1, len(target) - slash - 1);
+        base = Str(base.s + slash + 1, len(base) - slash - 1);
+    }
+    str::Builder rel;
+    for (int i = 0; i < len(base); i++) {
+        if (base.s[i] == '/') {
             rel.Append(StrL("../"));
         }
-        rel.Append(target);
-        path = ToStrTemp(rel);
     }
-    if (len(frag) > 0) {
-        path = str::JoinTemp(Str(path), frag);
+    if (len(base) > 0) {
+        rel.Append(StrL("../")); // base is a dir path without trailing slash
     }
-    return path;
+    rel.Append(target);
+    rel.Append(frag);
+    return ToStrTemp(rel);
 }
 
 // emit one output character: ASCII verbatim, everything else as a numeric
