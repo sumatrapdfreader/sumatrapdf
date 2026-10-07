@@ -91,10 +91,7 @@ int GetPropIdx(const Props& props, DocProp prop) {
 
 Str GetPropValueTemp(const Props& props, DocProp prop) {
     int idx = GetPropIdx(props, prop);
-    if (idx < 0) {
-        return {};
-    }
-    return props[idx].val;
+    return idx < 0 ? Str{} : props[idx].val;
 }
 
 void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists) {
@@ -147,9 +144,5 @@ TempStr PropNameTemp(DocProp prop) {
 }
 
 DocProp PropFromName(Str name) {
-    int idx = SeqStrIndex(gPropNames, name);
-    if (idx < 0) {
-        return DocProp::None;
-    }
-    return (DocProp)(idx + 1);
+    return (DocProp)(SeqStrIndex(gPropNames, name) + 1);
 }
