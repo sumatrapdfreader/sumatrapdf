@@ -739,31 +739,23 @@ void HtmlFormatter::EmitTextRun(Str s) {
         // get len That Fits the remaining space in the line (pass the width we
         // just measured so it isn't measured again)
         int lenThatFits = textMeasure->StringLenForWidth(buf, pageDx - currX, bbox.dx);
-        // try to prevent a break in the middle of a word
-        if (lenThatFits > 0) {
-            if (!CanBreakWordOnChar(Utf8CodepointContaining(buf, lenThatFits))) {
-                int lenTmp;
-                for (lenTmp = lenThatFits; lenTmp > 0; lenTmp--) {
-                    if (CanBreakWordOnChar(Utf8CodepointContaining(buf, lenTmp - 1))) {
-                        break;
-                    }
-                }
-                if (lenTmp == 0) {
-                    // make a new line if the word need to show in another line
-                    if (currX != NewLineX()) {
-                        FlushCurrLine(false);
-                        continue;
-                    }
-                    // split the word (or CJK sentence) if it is too long to show in one line
-                } else {
-                    // renew lenThatFits
-                    lenThatFits = lenTmp;
-                }
-            }
-        } else {
-            // make a new line when current line is fullfilled
+        if (lenThatFits <= 0) {
             FlushCurrLine(false);
             continue;
+        }
+
+        // Move an unbroken word to a new line; split it only when the line is empty.
+        if (!CanBreakWordOnChar(Utf8CodepointContaining(buf, lenThatFits))) {
+            int wordEnd = lenThatFits;
+            while (wordEnd > 0 && !CanBreakWordOnChar(Utf8CodepointContaining(buf, wordEnd - 1))) {
+                wordEnd--;
+            }
+            if (wordEnd > 0) {
+                lenThatFits = wordEnd;
+            } else if (currX != NewLineX()) {
+                FlushCurrLine(false);
+                continue;
+            }
         }
 
         // never cut a utf-8 sequence in half (this used to be the utf-16
