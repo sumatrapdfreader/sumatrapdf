@@ -132,9 +132,6 @@
     <ClInclude Include="..\src\Favorites.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\FilterHighlightDraw.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\FindBar.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -388,6 +385,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\FileThumbnails.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\FilterHighlightDraw.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\FilterUtil.h">

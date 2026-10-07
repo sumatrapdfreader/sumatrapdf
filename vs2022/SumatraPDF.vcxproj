@@ -1415,7 +1415,6 @@
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\DarkMode.h" />
     <ClInclude Include="..\src\Favorites.h" />
-    <ClInclude Include="..\src\FilterHighlightDraw.h" />
     <ClInclude Include="..\src\FindBar.h" />
     <ClInclude Include="..\src\FindWindow.h" />
     <ClInclude Include="..\src\HomePage.h" />
@@ -1501,6 +1500,7 @@
     <ClInclude Include="..\src\shared\ExternalViewers.h" />
     <ClInclude Include="..\src\shared\FileHistory.h" />
     <ClInclude Include="..\src\shared\FileThumbnails.h" />
+    <ClInclude Include="..\src\shared\FilterHighlightDraw.h" />
     <ClInclude Include="..\src\shared\FilterUtil.h" />
     <ClInclude Include="..\src\shared\Flags.h" />
     <ClInclude Include="..\src\shared\FormFields.h" />

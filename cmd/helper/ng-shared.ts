@@ -182,6 +182,7 @@ export const sharedFiles = [
   "src/shared/FilterUtil.h",
   "src/shared/Flags.cpp",
   "src/shared/Flags.h",
+  "src/shared/FilterHighlightDraw.h",
   "src/shared/FormFields.h",
   "src/shared/GlobalHotkeys.h",
   "src/shared/KeyboardHelp.h",
