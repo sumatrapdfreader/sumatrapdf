@@ -402,16 +402,13 @@ int DocumentLayout::CurrentPageNo() const {
 // the page whose vertical band contains the top of the viewport (the last page
 // when the viewport is past the end); ignores horizontal position
 int DocumentLayout::PageNoAtViewPortTop() const {
-    if (pages.len <= 0) {
-        return 1;
-    }
-    for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
-        const DocumentLayoutPage* page = GetPage(pageNo);
-        if (page && viewPort.y < page->pos.y + page->pos.dy) {
+    for (int pageNo = 1; pageNo <= len(pages); pageNo++) {
+        const auto& page = pages[pageNo - 1];
+        if (viewPort.y < page.pos.y + page.pos.dy) {
             return pageNo;
         }
     }
-    return pages.len;
+    return std::max(1, len(pages));
 }
 
 int DocumentLayout::FirstVisiblePageNo() const {
