@@ -8,7 +8,27 @@
 
 #include "base/Base.h"
 
+#if !OS_WIN
+#include "VirtKeys.h"
+#endif
 #include "ShortcutParse.h"
+
+constexpr u8 kVirt = KeyShortcut::kVirtKey;
+constexpr u8 kShift = KeyShortcut::kShiftKey;
+constexpr u8 kCtrl = KeyShortcut::kCtrlKey;
+constexpr u8 kAlt = KeyShortcut::kAltKey;
+
+u8 KeyShortcut::Mods() const {
+    u8 res = isVirt ? kVirt : 0;
+    res |= shift ? kShift : 0;
+    res |= ctrl ? kCtrl : 0;
+    res |= alt ? kAlt : 0;
+    return res;
+}
+
+bool KeyShortcut::SameKey(const KeyShortcut& o) const {
+    return vk == o.vk && Mods() == o.Mods();
+}
 
 // Which language key names are printed in. Null means English.
 Str (*gShortcutLangCode)() = nullptr;
@@ -186,7 +206,7 @@ static bool skipVirtKey(Str& s, Str key) {
 }
 
 // used in menu shortcuts
-static TempStr getVirtTemp(BYTE key, bool isEng) {
+static TempStr getVirtTemp(u8 key, bool isEng) {
     // over-rides for non-english languages
     if (!isEng) {
         switch (key) {
@@ -201,7 +221,7 @@ static TempStr getVirtTemp(BYTE key, bool isEng) {
 
 // US layout: Shift + these keys is the glyph people type (Shift+/ is "?").
 static const struct {
-    BYTE vk;
+    u8 vk;
     char unshifted;
     char shifted;
 } kPunctKeys[] = {
@@ -210,7 +230,7 @@ static const struct {
     {VK_OEM_1, ';', ':'}, {VK_OEM_7, '\'', '"'},    {VK_OEM_3, '`', '~'},
 };
 
-static BYTE PunctVk(char unshifted) {
+static u8 PunctVk(char unshifted) {
     for (auto& p : kPunctKeys) {
         if (unshifted == p.unshifted) {
             return p.vk;
@@ -219,13 +239,13 @@ static BYTE PunctVk(char unshifted) {
     return 0;
 }
 
-// Parses a string like Ctrl+Shift+A into ACCEL structure
+// Parses a string like Ctrl+Shift+A into a KeyShortcut
 // We accept variants: "Ctrl+A", "Ctrl-A", "Ctrl + A"
-static bool ParseShortcut(Str shortcut, ACCEL& accel) {
+static bool ParseShortcut(Str shortcut, KeyShortcut& sc) {
     TempStr shortcutZ = str::DupTemp(shortcut);
     Str cursor = shortcutZ;
 
-    BYTE fVirt = 0;
+    u8 fVirt = 0;
 
 again:
     str::TrimWs(cursor);
@@ -233,38 +253,38 @@ again:
     if (skipVirtKey(cursor, StrL("altgr")) || skipVirtKey(cursor, StrL("ralt")) ||
         skipVirtKey(cursor, StrL("rightalt"))) {
         // Windows reports Right Alt / AltGr as Ctrl+Alt
-        fVirt |= (FCONTROL | FALT | FVIRTKEY);
+        fVirt |= (kCtrl | kAlt | kVirt);
         goto again;
     }
     if (skipVirtKey(cursor, StrL("alt"))) {
-        fVirt |= (FALT | FVIRTKEY);
+        fVirt |= (kAlt | kVirt);
         goto again;
     }
     if (skipVirtKey(cursor, StrL("shift"))) {
-        fVirt |= (FSHIFT | FVIRTKEY);
+        fVirt |= (kShift | kVirt);
         goto again;
     }
     if (skipVirtKey(cursor, StrL("ctrl"))) {
-        fVirt |= (FCONTROL | FVIRTKEY);
+        fVirt |= (kCtrl | kVirt);
         goto again;
     }
     if (skipVirtKey(cursor, StrL("global"))) {
         goto again;
     }
-    accel.fVirt = fVirt;
 
     // when user puts e.g. "~" it's actually "`" but with SHIFT
     static Str shiftKeys = Str("`~,<.>/?;:'\"-_=+[{]}\\|");
     char buf[2] = {};
     Str toFind = cursor;
     bool usedShiftKeyMap = false;
+    u16 key = 0;
     if (cursor.len == 1) {
         int idx = str::IndexOfChar(shiftKeys, *cursor.s);
         if ((idx >= 0) && (idx % 2 == 1)) {
             buf[0] = shiftKeys.s[idx - 1];
             toFind = Str(buf, 1);
-            accel.key = (WORD)(unsigned char)buf[0];
-            accel.fVirt |= (FSHIFT | FVIRTKEY);
+            key = (u16)(unsigned char)buf[0];
+            fVirt |= (kShift | kVirt);
             usedShiftKeyMap = true;
         }
     }
@@ -273,15 +293,15 @@ again:
     i64 vk = 0;
     int idx = SeqStrNumIndexIS(gVirtKeysNum, toFind, &vk);
     if (idx >= 0) {
-        accel.key = (BYTE)vk;
-        accel.fVirt |= FVIRTKEY;
+        sc = KeyShortcut(fVirt | kVirt, (u8)vk);
         return true;
     }
     if (usedShiftKeyMap) {
-        BYTE punctVk = PunctVk(buf[0]);
+        u8 punctVk = PunctVk(buf[0]);
         if (punctVk) {
-            accel.key = punctVk;
+            key = punctVk;
         }
+        sc = KeyShortcut(fVirt, key);
         return true;
     }
 
@@ -297,13 +317,14 @@ again:
         if (len(ws) != 1) {
             return false;
         }
+#if OS_WIN
         WCHAR wc = *ws.s;
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/4490
         // handle cyrrilic / hebrew keyboards where shortcut character
         // is unicode and needs to be translated to virtual char
         HKL kl = GetKeyboardLayout(0);
-        SHORT key = VkKeyScanExW(wc, kl);
-        if (key == -1) {
+        SHORT vkAndShift = VkKeyScanExW(wc, kl);
+        if (vkAndShift == -1) {
             logf("can't map char 0x%x\n", (int)wc);
             return false;
         }
@@ -312,22 +333,26 @@ again:
         // 1 Either SHIFT key is pressed.
         // 2 Either CTRL key is pressed.
         // 4 Either ALT key is pressed.
-        BYTE shiftState = HIBYTE(key);
-        BYTE k = LOBYTE(key);
-        // logf("mapped char 0x%x as %d (0x%x), shift state: %d\n", (int)wc, (int)k, (int)k, (int)shiftState);
-        key = (SHORT)k;
+        BYTE shiftState = HIBYTE(vkAndShift);
+        key = (u16)LOBYTE(vkAndShift);
         if (shiftState & 0x1) {
-            accel.fVirt |= (FSHIFT | FVIRTKEY);
+            fVirt |= (kShift | kVirt);
         }
         if (shiftState & 0x2) {
-            accel.fVirt |= (FCONTROL | FVIRTKEY);
+            fVirt |= (kCtrl | kVirt);
         }
         if (shiftState & 0x4) {
-            accel.fVirt |= (FALT | FVIRTKEY);
+            fVirt |= (kAlt | kVirt);
         }
-        accel.fVirt |= FVIRTKEY;
-        accel.key = (WORD)key;
+        sc = KeyShortcut(fVirt | kVirt, key);
         return true;
+#else
+        // ng: POSIX gap. Mapping a unicode character to a virtual key needs
+        // the active keyboard layout (win32 VkKeyScanExW); gpui doesn't
+        // expose one yet, so non-ASCII shortcut characters don't bind.
+        logf("can't map char 0x%x (no keyboard layout)\n", (int)*ws.s);
+        return false;
+#endif
     }
     if (len(s) == 0) {
         return false;
@@ -338,18 +363,17 @@ again:
     static Str shift09 = StrL(")!@#$%^&*(");
     idx = str::IndexOfChar(shift09, c);
     if (idx >= 0) {
-        accel.key = (WORD)('0' + idx);
-        accel.fVirt |= (FSHIFT | FVIRTKEY);
+        sc = KeyShortcut(fVirt | kShift | kVirt, (u16)('0' + idx));
         return true;
     }
-    if (accel.fVirt == 0) {
+    if (fVirt == 0) {
         // in 3.6 we marked our shortcuts as virtual so we need to mark user provided
         // virtual as well
         if (c >= 'a' && c <= 'z') {
-            accel.fVirt = FVIRTKEY;
+            fVirt = kVirt;
             c -= ('a' - 'A');
         } else if (c >= 'A' && c <= 'Z') {
-            accel.fVirt = (FVIRTKEY | FSHIFT);
+            fVirt = (kVirt | kShift);
         }
     } else {
         // if we have ctrl/alt/shift, convert 'a' - 'z' into 'A' - 'Z'
@@ -357,15 +381,14 @@ again:
             c -= ('a' - 'A');
         }
     }
-    accel.key = (WORD)(unsigned char)c;
+    sc = KeyShortcut(fVirt, (u16)(unsigned char)c);
     return true;
 }
 
 // true if shortcut names a key we can bind
 bool IsValidShortcutString(Str shortcut) {
-    ACCEL accel = {};
-    accel.cmd = (WORD)-1; // for debugging
-    return ParseShortcut(shortcut, accel);
+    KeyShortcut sc;
+    return ParseShortcut(shortcut, sc);
 }
 
 int TrimGlobalPrefix(Str& shortcut) {
@@ -389,14 +412,14 @@ bool IsGlobalShortcut(Str shortcut) {
     return TrimGlobalPrefix(shortcut);
 }
 
-// Fills accel with the key and modifiers shortcut names. Returns false if it
-// doesn't name a key; accel.cmd is left alone, the caller owns that.
-bool ParseShortcutString(Str shortcut, ACCEL& accel) {
-    return ParseShortcut(shortcut, accel);
+// Fills sc with the key and modifiers shortcut names. Returns false if it
+// doesn't name a key.
+bool ParseShortcutString(Str shortcut, KeyShortcut& sc) {
+    return ParseShortcut(shortcut, sc);
 }
 
 // only a VK_OEM code: VK_RIGHT is 0x27, same as '\''
-static char ShiftedPunctGlyph(BYTE key) {
+static char ShiftedPunctGlyph(u8 key) {
     for (auto& p : kPunctKeys) {
         if (key == p.vk) {
             return p.shifted;
@@ -405,8 +428,8 @@ static char ShiftedPunctGlyph(BYTE key) {
     return 0;
 }
 
-// Appends " \tCtrl + O" to a menu string, for the key a is bound to.
-TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
+// Appends " \tCtrl + O" to a menu string, for the key sc is bound to.
+TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const KeyShortcut& sc) {
     Str lang = gShortcutLangCode ? gShortcutLangCode() : Str();
     bool isEng = len(lang) == 0 || str::Eq(lang, StrL("en"));
     bool isGerman = str::Eq(lang, StrL("de"));
@@ -415,29 +438,28 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     // "\tCtrl + Shift + Alt + F24" / localized variants fit in ~64 bytes.
     char strScratch[64]{};
     str::Builder str;
-    str.UseExternalBuffer(Str(strScratch, sizeofi(strScratch)));
+    str::BuilderUseExternalBuffer(str, Str(strScratch, sizeofi(strScratch)));
     str.Append(StrL("\t")); // marks start of an accelerator in menu item
-    BYTE virt = a.fVirt;
-    BYTE key = (BYTE)a.key;
-    bool isVirt = virt & FVIRTKEY;
-    char shiftedPunct = (virt & FSHIFT) ? ShiftedPunctGlyph(key) : 0;
-    if ((virt & FALT) && (virt & FCONTROL)) {
+    u8 key = (u8)sc.vk;
+    bool isVirt = sc.isVirt;
+    char shiftedPunct = sc.shift ? ShiftedPunctGlyph(key) : 0;
+    if (sc.alt && sc.ctrl) {
         // same bits as AltGr on Windows; keep the name the user would type
         str.Append(StrL("AltGr + "));
-    } else if (virt & FALT) {
+    } else if (sc.alt) {
         Str s = StrL("Alt + ");
         if (isGerman) {
             s = StrL("Größe + ");
         }
         str.Append(s);
-    } else if (virt & FCONTROL) {
+    } else if (sc.ctrl) {
         Str s = StrL("Ctrl + ");
         if (isGerman) {
             s = StrL("Strg + ");
         }
         str.Append(s);
     }
-    if ((virt & FSHIFT) && !shiftedPunct) {
+    if (sc.shift && !shiftedPunct) {
         Str s = StrL("Shift + ");
         if (isGerman) {
             s = StrL("Umschalt + ");
@@ -451,8 +473,8 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
 
     if (isVirt) {
         if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
-            WCHAR c = (WCHAR)key - VK_NUMPAD0 + '0';
-            str.AppendChar((char)c);
+            char c = (char)(key - VK_NUMPAD0 + '0');
+            str.AppendChar(c);
             goto Exit;
         }
         if (key >= VK_F1 && key <= VK_F24) {
@@ -479,10 +501,143 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
         goto Exit;
     }
 
-    logf("Unknown key: 0x%x, virt: 0x%x\n", key, virt);
+    logf("Unknown key: 0x%x, virt: 0x%x\n", key, sc.Mods());
     ReportIf(true);
     return menuStr;
 Exit:
     TempStr res = str::JoinTemp(menuStr, ToStr(str));
     return res;
 }
+
+// ng: gpui names its keys itself (gpui::KeyChordParse). Everything here is a
+// win32 virtual key code, so this is the translation table between the two.
+static Str GpuiKeyName(u16 vk) {
+    switch (vk) {
+        case VK_BACK:
+            return StrL("backspace");
+        case VK_TAB:
+            return StrL("tab");
+        case VK_RETURN:
+            return StrL("enter");
+        case VK_ESCAPE:
+            return StrL("escape");
+        case VK_SPACE:
+            return StrL("space");
+        case VK_PRIOR:
+            return StrL("pageup");
+        case VK_NEXT:
+            return StrL("pagedown");
+        case VK_END:
+            return StrL("end");
+        case VK_HOME:
+            return StrL("home");
+        case VK_LEFT:
+            return StrL("left");
+        case VK_UP:
+            return StrL("up");
+        case VK_RIGHT:
+            return StrL("right");
+        case VK_DOWN:
+            return StrL("down");
+        case VK_INSERT:
+            return StrL("insert");
+        case VK_DELETE:
+            return StrL("delete");
+        case VK_APPS:
+            return StrL("menu");
+        case VK_ADD:
+            return StrL("add");
+        case VK_SUBTRACT:
+            return StrL("subtract");
+        case VK_MULTIPLY:
+            return StrL("multiply");
+        case VK_DIVIDE:
+            return StrL("divide");
+        case VK_DECIMAL:
+            return StrL("decimal");
+        case VK_SEPARATOR:
+            return StrL("separator");
+        case VK_OEM_1:
+            return StrL(";");
+        case VK_OEM_PLUS:
+            return StrL("=");
+        case VK_OEM_COMMA:
+            return StrL(",");
+        case VK_OEM_MINUS:
+            return StrL("-");
+        case VK_OEM_PERIOD:
+            return StrL(".");
+        case VK_OEM_2:
+            return StrL("/");
+        case VK_OEM_3:
+            return StrL("`");
+        case VK_OEM_4:
+            return StrL("[");
+        case VK_OEM_5:
+            return StrL("\\");
+        case VK_OEM_6:
+            return StrL("]");
+        case VK_OEM_7:
+            return StrL("'");
+    }
+    if (vk >= VK_F1 && vk <= VK_F24) {
+        return fmt("f%d", vk - VK_F1 + 1);
+    }
+    if (vk >= VK_NUMPAD0 && vk <= VK_NUMPAD9) {
+        return fmt("numpad%d", vk - VK_NUMPAD0);
+    }
+    if (vk >= '0' && vk <= '9') {
+        return fmt("%c", (char)vk);
+    }
+    if (vk >= 'A' && vk <= 'Z') {
+        return fmt("%c", (char)(vk + ('a' - 'A')));
+    }
+    return {};
+}
+
+// A gpui KeyBinding stroke, e.g. "ctrl-shift-f5". Empty when gpui has no name
+// for the key, so the caller can skip the binding.
+TempStr ShortcutToGpuiStroke(const KeyShortcut& sc) {
+    Str key;
+    if (sc.isVirt) {
+        key = GpuiKeyName(sc.vk);
+    } else if (sc.vk >= ' ' && sc.vk < 127) {
+        // not a virtual key: vk is the character to match
+        char c = (char)sc.vk;
+        if (c >= 'A' && c <= 'Z') {
+            c += ('a' - 'A');
+        }
+        key = fmt("%c", c);
+    }
+    if (len(key) == 0) {
+        return {};
+    }
+    TempStr res = str::DupTemp(StrL(""));
+    if (sc.ctrl) {
+        res = str::JoinTemp(res, StrL("ctrl-"));
+    }
+    if (sc.alt) {
+        res = str::JoinTemp(res, StrL("alt-"));
+    }
+    if (sc.shift) {
+        res = str::JoinTemp(res, StrL("shift-"));
+    }
+    return str::JoinTemp(res, key);
+}
+
+#if OS_WIN
+bool ParseShortcutString(Str shortcut, ACCEL& accel) {
+    KeyShortcut sc;
+    if (!ParseShortcutString(shortcut, sc)) {
+        return false;
+    }
+    accel.fVirt = sc.Mods();
+    accel.key = sc.vk;
+    return true;
+}
+
+TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& accel) {
+    KeyShortcut sc(accel.fVirt, accel.key);
+    return AppendAccelKeyToMenuStringTemp(menuStr, sc);
+}
+#endif

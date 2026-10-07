@@ -1675,7 +1675,6 @@
     <ClCompile Include="..\src\SelectionTranslate.cpp" />
     <ClCompile Include="..\src\Settings.cpp" />
     <ClCompile Include="..\src\SettingsDialog.cpp" />
-    <ClCompile Include="..\src\ShortcutParse.cpp" />
     <ClCompile Include="..\src\SidebarPanel.cpp" />
     <ClCompile Include="..\src\SignDocumentDialog.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
@@ -2174,6 +2173,7 @@
     <ClCompile Include="..\src\shared\SelectionHandlers.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\shared\ShortcutParse.cpp" />
     <ClCompile Include="..\src\shared\StressTesting.cpp" />
     <ClCompile Include="..\src\shared\SumatraConfig.cpp" />
     <ClCompile Include="..\src\shared\SumatraLog.cpp" />

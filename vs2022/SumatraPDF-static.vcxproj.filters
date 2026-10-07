@@ -800,9 +800,6 @@
     <ClCompile Include="..\src\SettingsDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ShortcutParse.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SidebarPanel.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1218,6 +1215,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SelectionHandlers.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\ShortcutParse.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\StressTesting.cpp">
