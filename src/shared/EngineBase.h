@@ -123,7 +123,6 @@ struct IPageDestination : KindBase {
     // chapter-aware equivalent of pageNo; invalid until resolved
     Location loc;
 
-    IPageDestination() = default;
     virtual ~IPageDestination() = default;
 
     // rectangle of the destination on the above returned page
@@ -172,8 +171,6 @@ struct PageDestinationURL : IPageDestination {
     Str url;
     Str displayUrl;
 
-    PageDestinationURL() = delete;
-
     PageDestinationURL(Str u) {
         ReportIf(len(u) == 0);
         kind = kindDestinationLaunchURL;
@@ -204,8 +201,6 @@ struct PageDestinationFile : IPageDestination {
     // also opens remote files in a new window.
     bool openInNewWindow = false;
 
-    PageDestinationFile() = delete;
-
     PageDestinationFile(Str u, Str dest) {
         ReportIf(len(u) == 0);
         kind = kindDestinationLaunchFile;
@@ -227,8 +222,6 @@ struct PageDestination : IPageDestination {
     Str value;
     Str name;
     int embedObjNum = 0; // PDF object number for embedded file attachment annotations
-
-    PageDestination() = default;
 
     ~PageDestination() override;
 
