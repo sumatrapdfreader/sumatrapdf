@@ -34,7 +34,6 @@ struct MobiDoc {
     bool ParseHeader();
     bool LoadDocRecordIntoBuffer(int recNo, str::Builder& strOut);
     void LoadImages();
-    bool LoadImage(int imageNo);
     bool LoadForPdbReader(PdbReader* pdbReader);
     bool DecodeExthHeader(const u8* data, int dataLen);
     int CountLoadedImages() const;

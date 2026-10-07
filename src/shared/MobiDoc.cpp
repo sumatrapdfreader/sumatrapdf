@@ -559,39 +559,25 @@ static bool KnownNonImageRec(Str d) {
     return len(d) >= kTagLen && SeqStrIndex(tags, Str(d.s, kTagLen)) >= 0;
 }
 
-// return false if we should stop loading images (because we
-// encountered eof record or ran out of memory)
-bool MobiDoc::LoadImage(int imageNo) {
-    int imageRec = imageFirstRec + imageNo;
-
-    auto rec = pdbReader->GetRecord(imageRec);
-    if (len(rec) < 4) {
-        return false;
-    }
-    if (IsEofRecord(rec)) {
-        return false;
-    }
-    if (KnownNonImageRec(rec)) {
-        return true;
-    }
-    if (GuessFileTypeFromData(rec) == FileType::Unknown) {
-        u32 sig = UInt32BE((u8*)rec.s);
-        logf("MobiDoc::LoadImage: unknown record type 0x%08X\n", sig);
-        return true;
-    }
-    images[imageNo] = rec;
-    return true;
-}
-
 void MobiDoc::LoadImages() {
     if (imageFirstRec == 0 || !VecResize(images, pdbReader->GetRecordCount() - imageFirstRec)) {
         return;
     }
 
     for (int i = 0; i < len(images); i++) {
-        if (!LoadImage(i)) {
+        Str rec = pdbReader->GetRecord(imageFirstRec + i);
+        if (len(rec) < 4 || IsEofRecord(rec)) {
             return;
         }
+        if (KnownNonImageRec(rec)) {
+            continue;
+        }
+        if (GuessFileTypeFromData(rec) == FileType::Unknown) {
+            u32 sig = UInt32BE((u8*)rec.s);
+            logf("MobiDoc::LoadImage: unknown record type 0x%08X\n", sig);
+            continue;
+        }
+        images[i] = rec;
     }
 }
 
