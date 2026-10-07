@@ -241,6 +241,7 @@ export const sharedFiles = [
   "src/shared/ReadingAutoScroll.h",
   "src/shared/SelectionHandlers.h",
   "src/shared/SelectionTranslate.h",
+  "src/shared/SelectionToolbar.h",
   "src/shared/ShortcutParse.h",
   "src/shared/StressTesting.h",
   "src/shared/SumatraConfig.cpp",
