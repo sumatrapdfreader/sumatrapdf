@@ -27,10 +27,7 @@ Location DocController::ResolveDest(IPageDestination* dest) {
     if (!dest) {
         return kInvalidLocation;
     }
-    if (dest->loc.IsValid()) {
-        return dest->loc;
-    }
-    return LocFromPageNo(dest->pageNo);
+    return dest->loc.IsValid() ? dest->loc : LocFromPageNo(dest->pageNo);
 }
 
 // default: no chapters, no engine bookmark
@@ -44,7 +41,5 @@ Location DocController::LookupBookmark(__unused Str s) {
 
 // default: single-chapter, clamp page into [1, PageCount()]
 Location DocController::ClampLocation(Location loc) {
-    int n = PageCount();
-    int p = limitValue(loc.page, 1, n);
-    return {1, p};
+    return {1, limitValue(loc.page, 1, PageCount())};
 }
