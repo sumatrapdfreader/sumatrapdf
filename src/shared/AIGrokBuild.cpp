@@ -355,14 +355,7 @@ struct GrokBuildProvider : AIChatProvider {
         } else {
             AIChatAppendModelUnique(models, StrL("grok-4.5"));
         }
-        Str extra = gSettings->grokBuild.models;
-        if (len(extra) > 0) {
-            StrVec parts;
-            Split(&parts, extra, StrL(","), true);
-            for (int i = 0; i < len(parts); i++) {
-                AIChatAppendModelUnique(models, parts[i]);
-            }
-        }
+        AIChatAppendModels(models, gSettings->grokBuild.models);
     }
 
     Str GetModel() override { return gSettings->grokBuild.model; }

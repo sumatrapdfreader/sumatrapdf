@@ -274,14 +274,7 @@ struct ClaudeCodeProvider : AIChatProvider {
         AIChatAppendModelUnique(models, StrL("sonnet[1m]"));
         AIChatAppendModelUnique(models, StrL("opus[1m]"));
         AIChatAppendModelUnique(models, StrL("opusplan"));
-        Str extra = gSettings->claudeCode.models;
-        if (len(extra) > 0) {
-            StrVec parts;
-            Split(&parts, extra, StrL(","), true);
-            for (int i = 0; i < len(parts); i++) {
-                AIChatAppendModelUnique(models, parts[i]);
-            }
-        }
+        AIChatAppendModels(models, gSettings->claudeCode.models);
     }
 
     Str GetModel() override { return gSettings->claudeCode.model; }

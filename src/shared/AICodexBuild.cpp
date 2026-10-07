@@ -497,14 +497,7 @@ struct CodexBuildProvider : AIChatProvider {
             AIChatAppendModelUnique(models, StrL("gpt-5.4"));
             AIChatAppendModelUnique(models, StrL("o3"));
         }
-        Str extra = gSettings->codexBuild.models;
-        if (len(extra) > 0) {
-            StrVec parts;
-            Split(&parts, extra, StrL(","), true);
-            for (int i = 0; i < len(parts); i++) {
-                AIChatAppendModelUnique(models, parts[i]);
-            }
-        }
+        AIChatAppendModels(models, gSettings->codexBuild.models);
     }
 
     Str GetModel() override { return gSettings->codexBuild.model; }

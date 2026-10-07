@@ -174,6 +174,13 @@ gpui::El* AIChatNotInstalledDialogBuild(MainWindow* win, gpui::Ctx* cx);
 TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, Str searchExeName, Str searchNameNoExt = {});
 
 void AIChatAppendModelUnique(StrVec& models, Str model);
+inline void AIChatAppendModels(StrVec& models, Str values) {
+    StrVec parts;
+    Split(&parts, values, StrL(","), true);
+    for (Str model : parts) {
+        AIChatAppendModelUnique(models, model);
+    }
+}
 int AIChatFindModelInList(const StrVec& models, Str model);
 Str AIChatResolveModel(const StrVec& models, Str model, Str defaultModel);
 TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay);
