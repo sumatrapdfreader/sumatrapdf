@@ -1011,11 +1011,7 @@ Color ThemeWindowDarkerTextColor() {
 }
 
 Color ThemeWindowControlBackgroundColor() {
-    if (gUseHighContrast) {
-        return SysWindowBgColor();
-    }
-    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
-    return col;
+    return ThemeControlBackgroundColor();
 }
 
 Color ThemeActiveTabBackgroundColor() {
