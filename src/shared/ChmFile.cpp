@@ -408,8 +408,7 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, ChmItem
         if (!objNode) {
             continue;
         }
-        bool valid = VisitChmItem(visitor, objNode, kind, lvl);
-        if (!valid) {
+        if (!VisitChmItem(visitor, objNode, kind, lvl)) {
             continue;
         }
         const GumboNode* nested = GumboFindChildByTag(li, StrL("ul"));
@@ -431,7 +430,7 @@ static void WalkChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* firstUl
         (parent->type == GUMBO_NODE_ELEMENT) ? &parent->v.element.children : &parent->v.document.children;
     for (size_t s = firstUl->index_within_parent; s < siblings->length; s++) {
         const GumboNode* sib = (const GumboNode*)siblings->data[s];
-        if (sib->type != GUMBO_NODE_ELEMENT || !GumboTagNameIs(sib, StrL("ul"))) {
+        if (!GumboTagNameIs(sib, StrL("ul"))) {
             break;
         }
         WalkChmUl(visitor, sib, kind);
@@ -450,7 +449,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
         if (!node) {
             continue;
         }
-        if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, StrL("object"))) {
+        if (GumboTagNameIs(node, StrL("object"))) {
             const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
             if (type && str::EqI(Str(type->value), StrL("text/sitemap"))) {
                 hadOne |= VisitChmItem(visitor, node, kind, 1);
