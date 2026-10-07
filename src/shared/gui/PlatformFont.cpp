@@ -12,8 +12,7 @@
 
 #include "gui/PlatformFont.h"
 
-// root node of the intrusive list of interned fonts; only its `next` is used
-static PlatformFont gPlatformFonts;
+static PlatformFont* gPlatformFonts = nullptr;
 // fonts are asked for from background threads (ebook formatting), so the list
 // needs a lock. It is not re-entrant, so nothing called while holding it may
 // ask for a font
@@ -35,7 +34,7 @@ bool PlatformFont::SameAs(Str otherName, float otherSizePt, PlatformFontStyle ot
 static PlatformFont* GetPlatformFontInternal(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId) {
     ScopedMutex lock(&gPlatformFontsMutex);
 
-    for (PlatformFont* font = gPlatformFonts.next; font; font = font->next) {
+    for (PlatformFont* font = gPlatformFonts; font; font = font->next) {
         if (nativeId ? font->nativeId == nativeId : font->nativeId == 0 && font->SameAs(name, sizePt, style)) {
             return font;
         }
@@ -50,10 +49,10 @@ static PlatformFont* GetPlatformFontInternal(Str name, float sizePt, PlatformFon
     if (!PlatformFontCreateNative(font)) {
         // no font could be created: hand out the last one that worked, like
         // the gdiplus font cache used to
-        return gPlatformFonts.next;
+        return gPlatformFonts;
     }
     font->averageCharWidth = CalculateAverageCharWidth(font);
-    ListInsertFront(&gPlatformFonts.next, font);
+    ListInsertFront(&gPlatformFonts, font);
     return font;
 }
 
