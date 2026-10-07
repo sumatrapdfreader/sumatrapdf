@@ -127,14 +127,6 @@ static Pixmap* PixmapForImageElement(EngineBase* engine, IPageElement* imageElem
 #endif
 }
 
-static Pixmap* RenderLensSelection(DisplayModel* dm, const Vec<SelectionOnPage>& selections) {
-#ifdef SUMATRA_NG
-    return RenderSelectionsAsPixmap(dm, selections);
-#else
-    return PixmapFromRenderedBitmap(RenderSelectionsAsRenderedBitmap(dm, selections));
-#endif
-}
-
 static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement* imageElement, int pageNo) {
     if (!tab || !tab->win || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
@@ -160,7 +152,7 @@ static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement*
                    (src == GoogleLensSrc::Auto && !bitmap && dm->GetEngine()->kind != kindEngineImage &&
                     tab->selectionOnPage && len(*tab->selectionOnPage) > 0);
     if (!bitmap && wantSel && tab->selectionOnPage && len(*tab->selectionOnPage) > 0) {
-        bitmap = RenderLensSelection(dm, *tab->selectionOnPage);
+        bitmap = RenderSelectionsAsPixmap(dm, *tab->selectionOnPage);
     }
 
     bool wantPage =

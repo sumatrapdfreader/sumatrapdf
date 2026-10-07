@@ -29,6 +29,7 @@ struct SelectionOnPage {
     static Vec<SelectionOnPage>* FromTextSelect(Vec<TextSel>* textSel);
 };
 
+Pixmap* RenderSelectionsAsPixmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections);
 RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections);
 
 // default opacity of the selection rectangle when SelectionColor has no alpha

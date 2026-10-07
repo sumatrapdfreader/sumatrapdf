@@ -690,15 +690,16 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
     return s;
 }
 
-RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections) {
+Pixmap* RenderSelectionsAsPixmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections) {
     if (!dm || len(selections) == 0) {
         return nullptr;
     }
 
-    constexpr i64 kMaxPixels = 24LL * 1000 * 1000;
+    constexpr i64 kMaxPixels = 24 * 1000 * 1000;
     Vec<Pixmap*> pixmaps;
     i64 totalHeight = 0;
     int maxWidth = 0;
+    bool tooBig = false;
 
     for (const SelectionOnPage& selection : selections) {
         if (!dm->ValidPageNo(selection.pageNo)) {
@@ -707,31 +708,29 @@ RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<Sel
         float zoom = dm->GetZoomReal(selection.pageNo);
         RectF rect = selection.rect;
         RenderPageArgs args(selection.pageNo, zoom, dm->GetRotation(), &rect, RenderTarget::Export);
-        Pixmap* dib = PixmapToBgra(dm->GetEngine()->RenderPage(args));
-        if (!dib) {
+        Pixmap* pixmap = PixmapToBgra(dm->GetEngine()->RenderPage(args));
+        if (!pixmap) {
             continue;
         }
-        i64 pixels = (i64)dib->width * dib->height;
+        i64 pixels = (i64)pixmap->width * pixmap->height;
         if (pixels <= 0 || pixels > kMaxPixels || totalHeight > kMaxPixels - pixels) {
-            FreePixmap(dib);
-            for (Pixmap* p : pixmaps) {
-                FreePixmap(p);
-            }
-            return nullptr;
+            FreePixmap(pixmap);
+            tooBig = true;
+            break;
         }
-        VecAppend(pixmaps, dib);
-        totalHeight += dib->height;
-        maxWidth = std::max(maxWidth, dib->width);
+        VecAppend(pixmaps, pixmap);
+        totalHeight += pixmap->height;
+        maxWidth = std::max(maxWidth, pixmap->width);
     }
 
-    if (len(pixmaps) == 0 || totalHeight > INT_MAX) {
+    if (tooBig || len(pixmaps) == 0 || totalHeight > INT_MAX) {
         for (Pixmap* p : pixmaps) {
             FreePixmap(p);
         }
         return nullptr;
     }
     if (len(pixmaps) == 1) {
-        return RenderedBitmapFromPixmap(pixmaps[0]);
+        return pixmaps[0];
     }
 
     Pixmap* combined = AllocPixmapDIB(maxWidth, (int)totalHeight);
@@ -755,7 +754,11 @@ RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<Sel
         y += pixmap->height;
         FreePixmap(pixmap);
     }
-    return RenderedBitmapFromPixmap(combined);
+    return combined;
+}
+
+RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections) {
+    return RenderedBitmapFromPixmap(RenderSelectionsAsPixmap(dm, selections));
 }
 
 static bool CopySelectionImageToOpenClipboard(WindowTab* tab, bool appendOnly) {
