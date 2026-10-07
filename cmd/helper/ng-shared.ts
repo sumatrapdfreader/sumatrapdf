@@ -112,6 +112,7 @@ export const sharedFiles = [
   "src/shared/AnnotSearch.h",
   "src/shared/Annotation.h",
   "src/shared/AppSettings.h",
+  "src/shared/AppTools.h",
   "src/shared/AvifReader.cpp",
   "src/shared/AvifReader.h",
   "src/shared/BuildConfig.h",

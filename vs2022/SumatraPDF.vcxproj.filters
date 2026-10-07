@@ -138,9 +138,6 @@
     <ClInclude Include="..\src\AnnotTextPopup.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\AppTools.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -400,6 +397,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\AppSettings.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\AppTools.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\AvifReader.h">

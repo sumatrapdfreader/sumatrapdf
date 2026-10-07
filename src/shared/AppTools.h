@@ -34,12 +34,15 @@ void DeleteAppTools();
 void SetAppDataDir(Str dir);
 TempStr GetAppDataDirTemp();
 TempStr GetPathInAppDataDirTemp(Str fileName);
+TempStr GetTempDirPathTemp();
+int CurrentProcessId();
 
 void DetectTextEditors(Vec<TextEditor*>&);
 void CollectInverseSearchCommands(StrVec& out, Str cmdLine);
 
 void EnsureAreaVisibility(Rect& rect);
 Rect GetDefaultWindowPos();
+void SaveCallstackLogs();
 
 Str Sha1OfAppExe();
 TempStr GetWebViewDataDirTemp();
