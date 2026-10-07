@@ -22,14 +22,10 @@ DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v) {
     return DocumentColorsFollowTheme::Off;
 }
 
-static const char* DocumentColorsFollowThemeToString(DocumentColorsFollowTheme mode) {
-    if (mode == DocumentColorsFollowTheme::Smart) {
-        return "smart";
-    }
-    if (mode == DocumentColorsFollowTheme::Legacy) {
-        return "legacy";
-    }
-    return "off";
+static Str DocumentColorModeName(DocumentColorsFollowTheme mode) {
+    return mode == DocumentColorsFollowTheme::Smart    ? StrL("smart")
+           : mode == DocumentColorsFollowTheme::Legacy ? StrL("legacy")
+                                                       : StrL("off");
 }
 
 // PDF dark mode runtime options (not stored in settings file)
@@ -98,7 +94,7 @@ void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
     if (!gSettings) {
         return;
     }
-    Str name(DocumentColorsFollowThemeToString(mode));
+    Str name = DocumentColorModeName(mode);
     if (!str::EqI(gSettings->documentColorsFollowTheme, name)) {
         str::ReplaceWithCopy(&gSettings->documentColorsFollowTheme, name);
     }
