@@ -1660,7 +1660,6 @@
     <ClCompile Include="..\src\RefHover.cpp" />
     <ClCompile Include="..\src\RefHoverCanvas.cpp" />
     <ClCompile Include="..\src\RefHoverPopup.cpp" />
-    <ClCompile Include="..\src\RefHoverRender.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
     <ClCompile Include="..\src\RenderCache.cpp" />
@@ -2163,6 +2162,7 @@
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverDetect.cpp" />
     <ClCompile Include="..\src\shared\RefHoverInternal.cpp" />
+    <ClCompile Include="..\src\shared\RefHoverRender.cpp" />
     <ClCompile Include="..\src\shared\RefHoverShow.cpp" />
     <ClCompile Include="..\src\shared\RefHoverText.cpp" />
     <ClCompile Include="..\src\shared\RefHoverTextDetect.cpp" />

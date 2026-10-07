@@ -1458,6 +1458,7 @@ export const targets: Target[] = [
       { glob: "src/ng/LinkFollow.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/Print.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/ReadingBar.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
+      { glob: "src/ng/RefHoverRender.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/SelectionHandlers.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/SelectTextKeyboard.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/StressTesting.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
