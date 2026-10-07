@@ -1565,24 +1565,15 @@ CommandArg* GetCommandArg(CustomCommand* cmd, Str name) {
 
 int GetCommandIntArg(CustomCommand* cmd, Str name, int defValue) {
     auto* arg = GetCommandArg(cmd, name);
-    if (arg) {
-        return arg->intVal;
-    }
-    return defValue;
+    return arg ? arg->intVal : defValue;
 }
 
 bool GetCommandBoolArg(CustomCommand* cmd, Str name, bool defValue) {
     auto* arg = GetCommandArg(cmd, name);
-    if (arg) {
-        return arg->boolVal;
-    }
-    return defValue;
+    return arg ? arg->boolVal : defValue;
 }
 
 Str GetCommandStringArg(CustomCommand* cmd, Str name, Str defValue) {
     auto* arg = GetCommandArg(cmd, name);
-    if (arg) {
-        return arg->strVal;
-    }
-    return defValue;
+    return arg ? arg->strVal : defValue;
 }
