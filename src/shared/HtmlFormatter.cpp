@@ -1388,6 +1388,7 @@ void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawIn
                   float offY, bool showBbox, Color textColor, bool* abortCookie) {
     Pen debugPen(Gdiplus::Color(255, 0, 0), 1);
     Pen linePen(Gdiplus::Color(0x5F, 0x4B, 0x32), 2.f);
+    Pen linkPen(textColor);
 
     DrawHtmlText(textDraw, drawInstructions, offX, offY, textColor, abortCookie);
 
@@ -1396,16 +1397,16 @@ void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawIn
         RectF bbox = i.bbox;
         bbox.x += offX;
         bbox.y += offY;
-        if (DrawInstrType::Line == i.type) {
-            // hr is a line drawn in the middle of bounding box
-            float y = floorf(bbox.y + (bbox.dy / 2.f) + 0.5f);
+        if (DrawInstrType::Line == i.type || DrawInstrType::LinkStart == i.type) {
+            bool rule = DrawInstrType::Line == i.type;
+            float y = floorf(bbox.y + (rule ? bbox.dy / 2.f : bbox.dy) + 0.5f);
             Gdiplus::PointF p1(bbox.x, y);
             Gdiplus::PointF p2(bbox.x + bbox.dx, y);
-            if (showBbox) {
+            if (rule && showBbox) {
                 status = g->DrawRectangle(&debugPen, ToGdipRectF(bbox));
                 ReportIf(status != Ok);
             }
-            status = g->DrawLine(&linePen, p1, p2);
+            status = g->DrawLine(rule ? &linePen : &linkPen, p1, p2);
             ReportIf(status != Ok);
         } else if (DrawInstrType::Image == i.type) {
             // TODO: cache the bitmap somewhere (?)
@@ -1417,14 +1418,6 @@ void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawIn
                 ReportIf(status != Ok && status != Win32Error);
             }
             delete bmp;
-        } else if (DrawInstrType::LinkStart == i.type) {
-            // TODO: set text color to blue
-            float y = floorf(bbox.y + bbox.dy + 0.5f);
-            Gdiplus::PointF p1(bbox.x, y);
-            Gdiplus::PointF p2(bbox.x + bbox.dx, y);
-            Pen linkPen(textColor);
-            status = g->DrawLine(&linkPen, p1, p2);
-            ReportIf(status != Ok);
         } else if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
             if (showBbox) {
                 status = g->DrawRectangle(&debugPen, ToGdipRectF(bbox));
