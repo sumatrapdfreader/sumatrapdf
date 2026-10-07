@@ -157,22 +157,6 @@ PdfCreator::~PdfCreator() {
     fz_drop_context_windows(ctx);
 }
 
-__unused static pdf_obj* add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, Str name,
-                                       fz_image* image) {
-    pdf_obj *subres, *ref;
-
-    subres = pdf_dict_get(ctx, resources, PDF_NAME(XObject));
-    if (!subres) {
-        subres = pdf_new_dict(ctx, doc, 10);
-        pdf_dict_put_drop(ctx, resources, PDF_NAME(XObject), subres);
-    }
-
-    ref = pdf_add_image(ctx, doc, image);
-    pdf_dict_puts(ctx, subres, name.s, ref);
-    pdf_drop_obj(ctx, ref);
-    return ref;
-}
-
 // based on create_page in pdfcreate.c
 bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) const {
     ReportIf(!ctx || !doc);
