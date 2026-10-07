@@ -27,10 +27,10 @@ static uint GuessTextCodepage(Str, uint defVal) {
 }
 #endif
 
-template <typename T>
-static T* LoadEbook(Str path) {
+template <typename T, typename... Args>
+static T* LoadEbook(Str path, Args... args) {
     auto* doc = new T(path);
-    if (doc && doc->Load()) {
+    if (doc && doc->Load(args...)) {
         return doc;
     }
     delete doc;
@@ -1057,12 +1057,7 @@ Fb2Doc* Fb2Doc::CreateFromFile(Str path) {
 }
 
 Fb2Doc* Fb2Doc::CreateFromData(Str data) {
-    Fb2Doc* doc = new Fb2Doc(Str());
-    if (!doc || !doc->Load(data)) {
-        delete doc;
-        return {};
-    }
-    return doc;
+    return LoadEbook<Fb2Doc>({}, data);
 }
 
 /* ********** PalmDOC (and TealDoc) ********** */
