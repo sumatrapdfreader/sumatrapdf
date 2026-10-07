@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 // Antigravity CLI provider for the AI chat sidebar (see AIChatPanel.cpp)
-// ng: orig's file, with AIChatHomeDirTemp() in place of CSIDL_PROFILE
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"

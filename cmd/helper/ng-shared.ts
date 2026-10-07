@@ -108,6 +108,7 @@ export const sharedFiles = [
   "src/base/tests/UtAssert.h",
   "src/base/tests/Vec_ut.cpp",
   "src/base/tests/Win_ut.cpp",
+  "src/shared/AIAntiGravity.cpp",
   "src/shared/AIClaudeCode.cpp",
   "src/shared/AIGrokBuild.cpp",
   "src/shared/AnnotSearch.cpp",

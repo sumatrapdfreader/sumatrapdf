@@ -1598,7 +1598,6 @@
     <ClCompile Include="..\ext\webview2\WebView2Loader.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\AIAntiGravity.cpp" />
     <ClCompile Include="..\src\AIChatCommon.cpp" />
     <ClCompile Include="..\src\AIChatPanel.cpp" />
     <ClCompile Include="..\src\AICodexBuild.cpp" />
@@ -2126,6 +2125,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\shared\AIAntiGravity.cpp" />
     <ClCompile Include="..\src\shared\AIClaudeCode.cpp" />
     <ClCompile Include="..\src\shared\AIGrokBuild.cpp" />
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
