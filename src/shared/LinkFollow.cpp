@@ -130,14 +130,7 @@ bool CanFollowLinksWithKeyboard(MainWindow* win) {
         return false;
     }
     EngineBase* engine = dm->GetEngine();
-    if (!engine || engine->isImageCollection) {
-        return false;
-    }
-    Kind k = engine->kind;
-    if (k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks) {
-        return false;
-    }
-    return true;
+    return engine && !engine->isImageCollection;
 }
 
 bool KeyboardLinkFollowingActive(MainWindow* win) {
