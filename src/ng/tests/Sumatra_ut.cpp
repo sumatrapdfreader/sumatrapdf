@@ -83,6 +83,39 @@ static void AIChatProcessTest() {
 }
 #endif
 
+#if OS_DARWIN
+// Body text in a markdown file is CSS sans-serif, which loads a system face.
+static void OpenMarkdownWithSystemFonts(fz_context* ctx) {
+    TempStr bare = GetTempFilePathTemp(StrL("sumd"));
+    utassert(bare.s);
+    TempStr mdPath = fmt("%s.md", bare);
+    utassert(file::WriteFile(mdPath, StrL("# Hello\n\nplain **bold** and `code`.\n")));
+
+    fz_document* doc = nullptr;
+    int nPages = 0;
+    int failed = 0;
+    fz_var(doc);
+    fz_var(nPages);
+    fz_var(failed);
+    fz_try(ctx) {
+        fz_register_document_handlers(ctx);
+        doc = fz_open_document(ctx, CStrTemp(mdPath));
+        fz_layout_document(ctx, doc, 450, 600, 12);
+        nPages = fz_count_pages(ctx, doc);
+    }
+    fz_always(ctx) {
+        fz_drop_document(ctx, doc);
+    }
+    fz_catch(ctx) {
+        failed = 1;
+    }
+    file::Delete(mdPath);
+    file::Delete(bare);
+    utassert(!failed);
+    utassert(nPages > 0);
+}
+#endif
+
 #if OS_LINUX || OS_DARWIN
 static void PlatformSystemFontTest() {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
@@ -90,12 +123,25 @@ static void PlatformSystemFontTest() {
 #if OS_LINUX
     install_load_linux_font_funcs(ctx);
     fz_font* font = fz_load_system_font(ctx, "sans-serif", 0, 0, 0);
+    utassert(font);
+    fz_drop_font(ctx, font);
 #else
     install_load_mac_font_funcs(ctx);
     fz_font* font = fz_load_system_font(ctx, "Helvetica", 0, 0, 0);
-#endif
+    utassert(font);
+    utassert(fz_encode_character(ctx, font, 'A') > 0);
+    fz_drop_font(ctx, font);
+    font = fz_load_system_font(ctx, "sans-serif", 1, 1, 0);
     utassert(font);
     fz_drop_font(ctx, font);
+    font = fz_load_system_font(ctx, "serif", 0, 1, 0);
+    utassert(font);
+    fz_drop_font(ctx, font);
+    font = fz_load_system_font(ctx, "monospace", 1, 0, 0);
+    utassert(font);
+    fz_drop_font(ctx, font);
+    OpenMarkdownWithSystemFonts(ctx);
+#endif
     font = fz_load_system_font(ctx, "SumatraMissingFont-7FA26D", 0, 0, 1);
     utassert(!font);
     fz_drop_context(ctx);
