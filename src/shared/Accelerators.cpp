@@ -333,35 +333,15 @@ static bool isSafeOutsideEditAccel(const Accel& a) {
     if (!isChord) {
         return false;
     }
-    switch (a.cmd) {
-        case CmdOpenNextFileInFolder:
-        case CmdOpenPrevFileInFolder:
-        case CmdNavigateFilesInFolder:
-            return true;
-    }
-    return false;
+    return a.cmd == CmdOpenNextFileInFolder || a.cmd == CmdOpenPrevFileInFolder || a.cmd == CmdNavigateFilesInFolder;
 }
 
 // keys the tree uses to move / activate; those stay with the control even
 // when a command is bound to them. Ctrl/Alt chords are still accelerators.
 // PageUp / PageDown are not here: they scroll the document (issue #1841)
 static bool isTreeNavKey(u16 k) {
-    switch (k) {
-        case VK_LEFT:
-        case VK_RIGHT:
-        case VK_UP:
-        case VK_DOWN:
-        case VK_HOME:
-        case VK_END:
-        case VK_SPACE:
-        case VK_RETURN:
-        case VK_TAB:
-        case VK_ADD:
-        case VK_SUBTRACT:
-        case VK_MULTIPLY:
-            return true;
-    }
-    return false;
+    return k == VK_LEFT || k == VK_RIGHT || k == VK_UP || k == VK_DOWN || k == VK_HOME || k == VK_END ||
+           k == VK_SPACE || k == VK_RETURN || k == VK_TAB || k == VK_ADD || k == VK_SUBTRACT || k == VK_MULTIPLY;
 }
 
 // tree: letter shortcuts (and everything else) run the command; only the
@@ -373,9 +353,6 @@ bool IsSafeTreeAccel(const Accel& a) {
     return !isTreeNavKey(a.sc.vk);
 }
 
-// Command bound to vk + modifiers among the "safe" accelerators (those allowed
-// while a custom control has focus). 0 if none. Lets custom controls (e.g. the
-// WebView2-hosted CHM) forward app shortcuts they'd otherwise swallow.
 // Command bound to a key+modifiers among the accelerators that are "safe" to
 // process while a custom control (edit / tree / WebView2-hosted CHM) has focus.
 // Returns the command id, or 0 if none. Used to forward app shortcuts that a
