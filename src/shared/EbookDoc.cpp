@@ -1116,12 +1116,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text)
         AttrInfo attr = tok->GetAttrByName(StrL("FONT"));
         if (attr && attr.val) {
             char font = attr.val.s[0];
-            hx = 3;
-            if (font == '0') {
-                hx = 5;
-            } else if (font == '2') {
-                hx = 1;
-            }
+            hx = font == '0' ? 5 : font == '2' ? 1 : 3;
         }
         attr = tok->GetAttrByName(StrL("TEXT"));
         if (!attr) {
