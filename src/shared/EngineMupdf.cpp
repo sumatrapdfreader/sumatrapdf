@@ -10392,11 +10392,7 @@ bool EngineMupdfIsPdf(EngineBase* engine) {
 }
 
 bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
-    EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf) {
-        return false;
-    }
-    return (epdf->pdfdoc != nullptr);
+    return EngineMupdfIsPdf(engine);
 }
 
 // Restyle a reflowable document with the current theme page colors and drop
