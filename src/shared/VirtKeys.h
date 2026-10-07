@@ -1,9 +1,8 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: win32 virtual key codes, so shortcut parsing and the accelerator table
-// keep orig's key numbering on every platform. On Windows they come from
-// <windows.h>, which base/Base.h already pulled in.
+// Win32 virtual key codes keep shortcut numbering consistent on every platform.
+// Windows gets these from <windows.h>, included by base/Base.h.
 // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
 #if !OS_WIN
