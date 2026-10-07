@@ -31,10 +31,6 @@ void GumboPushChildren(Vec<const GumboNode*>& stack, const GumboNode* node) {
 }
 
 static Str GumboElementTagName(const GumboNode* node) {
-    ReportIf(!node || node->type != GUMBO_NODE_ELEMENT);
-    if (!node || node->type != GUMBO_NODE_ELEMENT) {
-        return {};
-    }
     if (node->v.element.tag != GUMBO_TAG_UNKNOWN) {
         return Str(gumbo_normalized_tagname(node->v.element.tag));
     }
@@ -90,9 +86,6 @@ const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name, HtmlN
     VecAppend(toVisit, node);
     while (len(toVisit) > 0) {
         const GumboNode* n = VecPop(toVisit);
-        if (!n) {
-            continue;
-        }
         if (GumboTagNameIs(n, name, match)) {
             return n;
         }
@@ -106,10 +99,7 @@ TempStr GumboAttributeValueTemp(const GumboNode* node, const char* name) {
         return {};
     }
     const GumboAttribute* attr = gumbo_get_attribute(&node->v.element.attributes, name);
-    if (!attr) {
-        return {};
-    }
-    return str::DupTemp(Str(attr->value));
+    return attr ? str::DupTemp(Str(attr->value)) : TempStr{};
 }
 
 TempStr GumboTextContentTemp(const GumboNode* node, GumboTextMode mode) {
