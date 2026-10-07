@@ -1398,7 +1398,6 @@
     <ClInclude Include="..\src\AnnotEditToolbar.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\DarkMode.h" />
-    <ClInclude Include="..\src\FindBar.h" />
     <ClInclude Include="..\src\FindWindow.h" />
     <ClInclude Include="..\src\ImageSaveCropResize.h" />
     <ClInclude Include="..\src\Installer.h" />
@@ -1482,6 +1481,7 @@
     <ClInclude Include="..\src\shared\FileThumbnails.h" />
     <ClInclude Include="..\src\shared\FilterHighlightDraw.h" />
     <ClInclude Include="..\src\shared\FilterUtil.h" />
+    <ClInclude Include="..\src\shared\FindBar.h" />
     <ClInclude Include="..\src\shared\Flags.h" />
     <ClInclude Include="..\src\shared\FormFields.h" />
     <ClInclude Include="..\src\shared\GlobalHotkeys.h" />

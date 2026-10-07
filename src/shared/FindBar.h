@@ -10,9 +10,12 @@
 namespace gpui {
 struct Ctx;
 struct El;
+struct InputState;
 } // namespace gpui
 
 struct MainWindow;
+struct FindBarWnd;
+struct PlatformFont;
 // the gpui view entity of this bar; defined in FindBar.cpp because this header
 // is included by files that don't have gpui.h
 struct FindBarUI;
@@ -64,3 +67,17 @@ void FindEditSetText(MainWindow* win, Str s);
 bool FindEditIsModified(MainWindow* win);
 void FindEditSetModified(MainWindow* win, bool modified);
 bool IsFindEditFocused(MainWindow* win);
+
+#if OS_WIN
+FindBarWnd* CreateFindBar(MainWindow* win);
+void RecreateFindBar(MainWindow* win);
+void FindBarUpdateDpi(MainWindow* win);
+int FindBarFontHeight(MainWindow* win);
+int FindBarWindowHeight(MainWindow* win);
+int FindStatusDx(PlatformFont* font, int totalHits, bool capped);
+void StartPickedFindTerm(MainWindow* win, Str term);
+void FindBarSetMatchCaseChecked(MainWindow* win, bool checked);
+void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked);
+void FindBarSyncHistory(MainWindow* win);
+TempStr FindUiStateResultTemp(Str action, int* exitCodeOut = nullptr);
+#endif

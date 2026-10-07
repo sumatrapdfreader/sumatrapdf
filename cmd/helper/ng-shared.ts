@@ -187,6 +187,7 @@ export const sharedFiles = [
   "src/shared/FileThumbnails.h",
   "src/shared/FilterUtil.cpp",
   "src/shared/FilterUtil.h",
+  "src/shared/FindBar.h",
   "src/shared/Flags.cpp",
   "src/shared/Flags.h",
   "src/shared/FilterHighlightDraw.h",
