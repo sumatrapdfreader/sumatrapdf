@@ -1,10 +1,7 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Pure-function popup-region detectors used by RefHover. Kept in a separate
-// translation unit so the heuristics can be unit-tested with synthetic glyph
-// arrays (see src/base/tests/RefHover_ut.cpp) without pulling in the engine,
-// HWND, or rendering layers.
+// Popup-region heuristics tested with synthetic glyphs in RefHover_ut.cpp.
 
 #include "base/Base.h"
 #include "RefHover.h"
@@ -110,9 +107,7 @@ static bool IsCaptionLabelAt(WStr text, int idx) {
     return MatchesLabelWords(text, idx, gCaptionWords, LabelKind::Caption);
 }
 
-// Clip a region to the page mediabox: shifts a negative x/y to 0 (shrinking
-// the box by the same amount) and trims any overhang past the right/bottom
-// edge. Used everywhere a detected region must be passed to RenderPage.
+// Clip detected regions to the page before rendering.
 static void ClipToMediabox(RectF& box, RectF mediabox) {
     if (box.x < 0.f) {
         box.dx += box.x;
@@ -186,9 +181,7 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     if (n <= 0 || !coords || !outText || !outCoords) {
         return 0;
     }
-    // Typical body glyph height = the most common dy (the watermark, a heading,
-    // and any super/subscripts are all minorities). Histogram over non-space
-    // glyph heights and take the mode.
+    // Use the modal non-space glyph height to exclude headings and watermarks.
     constexpr int kMaxHistogramGlyphHeight = 4096;
     int maxDy = 0;
     for (int i = 0; i < n; i++) {
@@ -219,8 +212,7 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
         }
     }
 
-    // Only strip when there's a stable body height to compare against, and only
-    // glyphs clearly taller than it (1.5x) — well above tall "[" labels / caps.
+    // Use a generous height threshold to retain tall labels and capitals.
     constexpr int kMinBodyDy = 4;
     bool canStrip = modeDy >= kMinBodyDy;
     int hgtThresh = modeDy + (modeDy / 2); // 1.5 * modeDy
@@ -278,11 +270,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     (void)destX;
     float ty = (destY >= 0.f) ? destY - kAnchorTopMarginPt : 0.f;
     ty = std::max(ty, 0.f);
-    // When destY anchors at a "Figure N.M" / "Abbildung N.M" / "Table N.M"
-    // caption line, the figure / table *body* sits above the caption — but
-    // ty currently starts at the caption. Extend upward so the popup
-    // includes the figure body, not just the caption + the paragraph
-    // following it.
+    // Include the figure above a caption destination.
     bool destAtCaption = false;
     if (len(text) > 0 && coords && destY > 0.f) {
         int dY = (int)destY;
@@ -308,26 +296,15 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
         h = mediabox.dy;
         ty = 0.f;
     }
-    // Cap to a focused region size so the popup is wide and short rather
-    // than narrow and tall. Captions get a taller cap so the figure body
-    // above and the caption text below both fit.
+    // Captions need a taller region to include the figure and its text.
     constexpr float kMaxLandscapePt = 200.f;
     constexpr float kMaxLandscapeCaptionPt = 360.f;
     float maxLandscape = destAtCaption ? kMaxLandscapeCaptionPt : kMaxLandscapePt;
     h = std::min(h, maxLandscape);
-    // Caption extension: if a "Figure N.M" / "Table N.M" / "Listing N.M" /
-    // "Algorithm N.M" caption appears within ~250pt below the capped region
-    // bottom (typical figure body height), extend the region downward to
-    // include the full caption block. Necessary for image-only figures
-    // where the figure body has no extractable text at destY — the caller
-    // falls to LandscapeBox without ever running the caption-aware
-    // DetectEntryBox path.
+    // Image-only figures reach this fallback without text at destY.
+    // Include a caption below the region.
     if (len(text) > 0 && coords) {
-        // Search to end of page so tall figures with captions far below the
-        // initial 200pt cap still match. The topmost (smallest y) "Figure
-        // N.M" below the cap wins — PDFs draw text in arbitrary order, so
-        // the first label in glyph-array order can be a caption much
-        // further down the page.
+        // Choose the topmost caption below the cap; glyph order may differ from reading order.
         int searchTop = (int)(ty + h);
         int searchBot = (int)mediabox.dy;
         int capStartIdx = -1;
@@ -348,24 +325,13 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
             if (capLineH < 10) {
                 capLineH = 12;
             }
-            // Page right text margin: max right-X across all text glyphs on
-            // the page. A line reaching within ~30pt of pageRightX is at the
-            // column edge (justified body, or a hyphenated caption line).
+            // Use the page text margin to identify lines that fill the column.
             int pageRightX = 0;
             for (int j = 0; j < text.len; j++) {
                 int rx = coords[j].x + coords[j].dx;
                 pageRightX = std::max(rx, pageRightX);
             }
-            // Walk subsequent lines below capStartY. Stop when we hit a
-            // paragraph break (vertical gap above inter-line leading) or
-            // a body-shape line. Two signals to detect body:
-            //   1) gap > ~70% of capLineH (parskip / float-separator) =
-            //      new paragraph.
-            //   2) a "short" caption line seen earlier and the current line
-            //      fills the column (raggedright-then-justified transition).
-            // Either signal alone catches a common case; together they cover
-            // hyphenated multi-line German captions (e.g. "...Bo-/gner...")
-            // where every caption line happens to reach the right margin.
+            // A paragraph gap or a transition from short to full-width lines ends the caption.
             int captionEndY = capStartY + capLineH;
             int prevLineBottom = capStartY + capLineH - 1;
             bool seenShortLine = false;
@@ -417,9 +383,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
             h = std::max(extendedH, h);
         }
     }
-    // Trim trailing blank margin: find the bottom of the last text glyph
-    // inside the candidate region and end the region just below it so the
-    // popup doesn't render an empty trailing margin.
+    // Trim blank space below the last glyph.
     if (len(text) > 0 && coords) {
         int boxTop = (int)ty;
         int boxBottom = (int)(ty + h);
@@ -453,8 +417,7 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
     }
     int dY = (int)destY;
 
-    // Scan glyphs in a band around destY. Find a ')' whose right edge is the
-    // rightmost in its line, preceded by digits and an opening '('.
+    // Find a right-aligned numeric label near destY.
     int bestLabelY = -1;
     int bestLabelDy = 0;
     int bestDist = INT_MAX;
@@ -542,9 +505,7 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
     if (bestLabelDy <= 0) {
         bestLabelDy = 12;
     }
-    // Region: one eq line — labeled row + small vertical padding. Multi-row
-    // align environments are rare in cross-refs; a tight box is the right
-    // default and the user can wheel-scroll if context is needed.
+    // Fit the labeled equation row; scrolling reveals surrounding context.
     float pad = (float)bestLabelDy + 6.f;
     RectF box{0.f, (float)bestLabelY - pad, mediabox.dx, (float)bestLabelDy + (2.f * pad)};
     ClipToMediabox(box, mediabox);
@@ -623,16 +584,10 @@ static int FindColumnRight(WStr text, const Rect* coords, int startX, int top, i
     return right;
 }
 
-// A bracket-style bibliography entry ("[63]") that runs to the bottom of its
-// 2-column-layout column with no sibling "[" and no blank-line gap closing it
-// may simply continue at the top of the next column (the column break falls
-// mid-entry). Look for that continuation: a block of body text starting at
-// the top of the column right of `oldColumnRightX` that does *not* itself
-// begin with a "[" label (which would mean it's the next real entry, not a
-// continuation). Returns an empty RectF when no such continuation is found.
+// Find an unlabeled bibliography tail at the top of the next column.
+// Return empty when the entry does not continue there.
 static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF mediabox, int oldColumnRightX) {
-    // 1. Left edge of the next column: leftmost glyph right of the old
-    // column's right edge (skipping the gutter itself).
+    // Find the next column past the gutter.
     int nextColLeftX = INT_MAX;
     for (int i = 0; i < text.len; i++) {
         if (IsGlyphSpace(text.s[i])) {
@@ -647,14 +602,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         return RectF{};
     }
 
-    // 2. Topmost line in the next column, and its leftmost X (candidate
-    // continuation start). Skip lines that bridge across the whole page width
-    // (a running header/title above both columns), and skip anything sitting
-    // in the page's top margin — a running header (page number, journal
-    // title) commonly renders as several short, column-confined fragments
-    // rather than one wide line, so the page-width check alone doesn't catch
-    // it. Real column body content essentially never starts this close to
-    // the physical page edge.
+    // Exclude running headers, including short fragments near the page top.
     constexpr int kColWidthMax = 280;
     constexpr int kMinTopMarginPt = 30;
     int topY = INT_MAX;
@@ -691,8 +639,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         }
     }
 
-    // 3. Reject: the top line is itself a new entry's "[" label, not a
-    // continuation of the previous one.
+    // A bracket label starts a new entry.
     for (int i = 0; i < text.len; i++) {
         if (text.s[i] != L'[') {
             continue;
@@ -709,13 +656,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         colRightX = right;
     }
 
-    // 5. End of the continuation block. A real wrapped tail is short (finishes
-    // a sentence + a citation line or two), so cap the search tight — much
-    // tighter than a full entry's height cap in the primary scan above.
-    // Content that isn't closed by a sibling "[" (the following real entry)
-    // within that short cap is something else entirely (e.g. running body
-    // text that happens to share the column, ending in an unrelated "["
-    // many lines down) — reject rather than grab an arbitrary slice of it.
+    // Cap short wrapped tails to avoid capturing unrelated body text.
     constexpr int kMaxContinuationPt = 60;
     int capY = topY + kMaxContinuationPt;
     int boundaryY = capY;
@@ -1068,7 +1009,6 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         // Fall through to the iterative-scan logic on degenerate result.
     }
 
-    // 2. Scan forward to find the end of the entry.
     int endIdx = text.len;
     // Track overlapping glyph bounds rather than identical tops; fonts and extraction order vary.
     int currentLineY = firstLineY;
@@ -1076,8 +1016,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     int prevBottom = firstLineY + firstLineDy;
     int lineHeight = firstLineDy;
 
-    // Track leftmost X on the current line vs the previous line so we can
-    // detect indent changes (the most reliable signal for author-year bibs).
+    // Indent changes distinguish author-year entries.
     int currentLineLeftX = firstLineLeftX;
     int prevLineLeftX = INT_MAX;
     // X of the entry's continuation lines (captured from line 2). -1 = unknown.
@@ -1108,7 +1047,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         if (isNewLine) {
             prevLineLeftX = currentLineLeftX;
             currentLineLeftX = r.x;
-            // Rule (c) must measure the gap from the immediately preceding line.
+            // Measure gaps from the immediately preceding line.
             prevBottom = currentLineMaxBottom;
         } else if (r.x < currentLineLeftX) {
             currentLineLeftX = r.x;
@@ -1163,7 +1102,6 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         }
     }
 
-    // 3. Compute bounding box of glyphs in [startIdx, endIdx).
     int minX = INT_MAX, minY = INT_MAX, maxX = INT_MIN, maxY = INT_MIN;
     for (int i = startIdx; i < endIdx; i++) {
         if (IsGlyphSpace(text.s[i])) {
@@ -1205,8 +1143,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             }
         }
     }
-    // Description-list bibliography ("[Smith2020]", "[1]", …) — unambiguous,
-    // keep the fitted box.
+    // Bracket labels identify bibliography entries.
     if (text.s[startIdx] == L'[') {
         return box;
     }
@@ -1244,12 +1181,10 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     if (descListSibling) {
         return box;
     }
-    // Single-line entry with no continuation indent and no sibling entry
-    // detected — caption / heading / in-text cross-ref destination.
+    // Isolated single lines may be captions, headings or in-text destinations.
     if (box.dy < 30.f && indentX < 0) {
         return LandscapeBox(mediabox, destX, destY, text, coords);
     }
-    // Default: looks like a multi-line author-year bibliography entry,
-    // keep the fitted box.
+    // Keep the fitted author-year entry.
     return box;
 }
