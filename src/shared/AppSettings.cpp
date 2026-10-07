@@ -410,11 +410,7 @@ static void CreateZoomCommands() {
     if (n > 0) {
         // ZoomLevels replaces the built-in levels, for the buttons too
         Vec<int>* cmdIds = new Vec<int>();
-#if defined(SUMATRA_NG)
         VecReserve(*cmdIds, n);
-#else
-        VecGrow(*cmdIds, n);
-#endif
         prefs->zoomLevelsCmdIds = cmdIds;
         for (int i = 0; i < n; i++) {
             float zoomLevel = (*prefs->zoomLevels)[i];
