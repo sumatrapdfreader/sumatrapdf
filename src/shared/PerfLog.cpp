@@ -92,9 +92,6 @@ static PerfSym* FindSymSlot(const void* addr, bool forInsert) {
 static int FormatLine(char* d, int depth, DWORD tid, const void* addr, bool isExit, u64 us) {
     int n = 0;
     int indent = depth * 2;
-    if (indent > 200) {
-        indent = 200;
-    }
     for (int i = 0; i < indent; i++) {
         d[n++] = ' ';
     }
