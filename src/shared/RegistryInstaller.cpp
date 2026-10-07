@@ -303,12 +303,9 @@ static bool DeleteEmptyRegKey(HKEY root, Str keyName) {
     }
 
     DWORD subkeys, values;
-    bool isEmpty = false;
     status = RegQueryInfoKeyW(hkey, nullptr, nullptr, nullptr, &subkeys, nullptr, nullptr, &values, nullptr, nullptr,
                               nullptr, nullptr);
-    if (status == ERROR_SUCCESS) {
-        isEmpty = 0 == subkeys && 0 == values;
-    }
+    bool isEmpty = status == ERROR_SUCCESS && subkeys == 0 && values == 0;
     RegCloseKey(hkey);
     if (isEmpty) {
         LoggedDeleteRegKey(root, keyName);
