@@ -2068,11 +2068,7 @@ static void BuildElementsInfo(FzPageInfo* pageInfo) {
 
     int total = len(pageInfo->images) + len(pageInfo->links) + len(pageInfo->autoLinks) + len(pageInfo->comments);
     VecClear(els);
-#if defined(SUMATRA_NG)
     VecReserve(els, total);
-#else
-    VecGrow(els, total);
-#endif
 
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
@@ -4202,11 +4198,7 @@ static TempStr AssemblePdfTemp(const char* const* objs, int nObjs) {
     str::Builder b;
     b.Append(StrL("%PDF-1.4\n"));
     Vec<int> offs;
-#if defined(SUMATRA_NG)
     VecReserve(offs, nObjs);
-#else
-    VecGrow(offs, nObjs);
-#endif
     for (int i = 0; i < nObjs; i++) {
         VecAppend(offs, len(b));
         b.Append(fmt("%d 0 obj\n%s\nendobj\n", i + 1, Str(objs[i])));
