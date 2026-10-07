@@ -660,8 +660,8 @@ constexpr Color kCaretBarCol = MkRgb(0x19, 0x76, 0xd2);
 constexpr Color kCaretBandCol = kColWhite;
 constexpr u8 kCaretBandAlpha = 90;
 
-#if defined(SUMATRA_NG)
-void PaintKeyboardTextCaret(MainWindow* win, gp::PaintCtx* ctx) {
+template <typename GetClip, typename PaintBand, typename PaintBar>
+static void PaintTextCaret(MainWindow* win, GetClip getClip, PaintBand paintBand, PaintBar paintBar) {
     if (!SelectTextWithKeyboardActive(win)) {
         return;
     }
@@ -671,45 +671,38 @@ void PaintKeyboardTextCaret(MainWindow* win, gp::PaintCtx* ctx) {
     }
     DisplayModel* dm = win->AsFixed();
     bool selecting = win->textSelectModeVisual || (dm && dm->textSelection && len(dm->textSelection->result) > 0);
-    Rect clipRc(Point(), dm->GetViewPort().Size());
+    Rect clipRc = getClip(dm);
     if (!selecting) {
         Rect band{clipRc.x, glyph.y, clipRc.dx, glyph.dy};
         Rect vis = clipRc.Intersect(band);
         if (!vis.IsEmpty()) {
             Vec<Rect> rects;
             VecAppend(rects, vis);
-            PaintTransparentRectangles(ctx, clipRc, rects, kCaretBandCol, kCaretBandAlpha, 1, false);
+            paintBand(clipRc, rects);
         }
     }
     if (!win->textSelectCaretVisible || clipRc.Intersect(bar).IsEmpty()) {
         return;
     }
-    CanvasFillRects(ctx, &bar, 1, kCaretBarCol, 255, 0);
+    paintBar(bar);
+}
+
+#if defined(SUMATRA_NG)
+void PaintKeyboardTextCaret(MainWindow* win, gp::PaintCtx* ctx) {
+    auto getClip = [](DisplayModel* dm) { return Rect(Point(), dm->GetViewPort().Size()); };
+    auto paintBand = [ctx](Rect clip, Vec<Rect>& rects) {
+        PaintTransparentRectangles(ctx, clip, rects, kCaretBandCol, kCaretBandAlpha, 1, false);
+    };
+    auto paintBar = [ctx](Rect bar) { CanvasFillRects(ctx, &bar, 1, kCaretBarCol, 255, 0); };
+    PaintTextCaret(win, getClip, paintBand, paintBar);
 }
 #else
 void PaintKeyboardTextCaret(MainWindow* win, Gfx* gfx) {
-    if (!SelectTextWithKeyboardActive(win)) {
-        return;
-    }
-    Rect bar, glyph;
-    if (!CaretScreenRects(win, bar, glyph)) {
-        return;
-    }
-    DisplayModel* dm = win->AsFixed();
-    bool selecting = win->textSelectModeVisual || (dm && dm->textSelection && len(dm->textSelection->result) > 0);
-    if (!selecting) {
-        // full-width band across the caret's line (its height, whole canvas width)
-        Rect band{win->canvasRc.x, glyph.y, win->canvasRc.dx, glyph.dy};
-        Rect vis = win->canvasRc.Intersect(band);
-        if (!vis.IsEmpty()) {
-            Vec<Rect> rects;
-            VecAppend(rects, vis);
-            PaintTransparentRectangles(gfx, win->canvasRc, rects, kCaretBandCol, kCaretBandAlpha, 1, false);
-        }
-    }
-    if (!win->textSelectCaretVisible || win->canvasRc.Intersect(bar).IsEmpty()) {
-        return;
-    }
-    gfx->FillRect(bar, kCaretBarCol);
+    auto getClip = [win](DisplayModel*) { return win->canvasRc; };
+    auto paintBand = [gfx](Rect clip, Vec<Rect>& rects) {
+        PaintTransparentRectangles(gfx, clip, rects, kCaretBandCol, kCaretBandAlpha, 1, false);
+    };
+    auto paintBar = [gfx](Rect bar) { gfx->FillRect(bar, kCaretBarCol); };
+    PaintTextCaret(win, getClip, paintBand, paintBar);
 }
 #endif
