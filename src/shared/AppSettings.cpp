@@ -71,22 +71,10 @@
 #endif
 #include "AppSettings.h"
 #if defined(SUMATRA_NG)
-
-// ng: everything left in AppSettings that drives the UI - the session
-// snapshot, the open windows, the UI fonts, QuickLook - needs
-// MainWindow / WindowTab / PlatformFont, i.e. the gpui shell (step 6). Those
-// blocks are behind this, together with their includes above.
-#define NG_HAS_UI 0
-
-#if !NG_HAS_UI
-// what the ungated code still calls; all of it arrives in step 6
 void HomePageInvalidateLayoutCache();
 int CmdIdFromVirtualZoom(float virtualZoom); // Menu.h
-// SumatraPDF.cpp: the MainWindow half of ApplySettingsToOpenWindows() and of
-// ReloadSettings()
 void ApplySettingsToWindowsUi();
 void ReloadSettingsUpdateWindows(bool showToolbarBefore);
-#endif
 #endif
 
 // workaround for OnMenuExit
@@ -134,7 +122,7 @@ static bool ApplyReadAloudVoiceFromSettings() {
 }
 #endif
 
-#if !defined(SUMATRA_NG) || NG_HAS_UI
+#if !defined(SUMATRA_NG)
 // SumatraPDF.cpp
 extern void RememberDefaultWindowPosition(MainWindow* win);
 #endif
@@ -220,7 +208,7 @@ static bool MigrateLegacyFileTime(FILETIME* ft) {
     return true;
 }
 
-#if !defined(SUMATRA_NG) || NG_HAS_UI
+#if !defined(SUMATRA_NG)
 // UI fonts are cached per DPI so windows on monitors with different scale
 // factors get correctly sized fonts. User-set sizes (UIFontSize, TreeFontSize)
 // are pixel sizes and used as-is at every DPI.
@@ -460,7 +448,7 @@ void ApplySettingsToOpenWindows() {
         setMinMax(gSettings->saveMemory, 0, 100);
         gSaveMemory = gSettings->saveMemory;
     }
-#if !defined(SUMATRA_NG) || NG_HAS_UI
+#if !defined(SUMATRA_NG)
     for (MainWindow* win : gWindows) {
         // WindowMargin / PageSpacing are copied into DisplayModel at SetUiDpi;
         // pick up the reloaded prefs before the relayout below (issue #6018)
@@ -982,7 +970,7 @@ bool LoadSettings() {
         SetDefaultChmFont(EbookFontNameFromSetting(gprefs->chmUI.fontName));
     }
 
-#if !defined(SUMATRA_NG) || NG_HAS_UI
+#if !defined(SUMATRA_NG)
     ResetCachedFonts();
 #endif
 
@@ -1080,7 +1068,7 @@ static void ReloadSettings(bool force = false) {
     // FileState* in the cache and chrome die with CleanUpSettings()
     // (crash 8c34d7eda). LoadSettings() rebuilds both; do not destroy after.
     HomePageInvalidateLayoutCache();
-#if !defined(SUMATRA_NG) || NG_HAS_UI
+#if !defined(SUMATRA_NG)
     for (MainWindow* win : gWindows) {
         if (win->IsCurrentTabAbout()) {
             win->DeleteToolTip();
@@ -1099,7 +1087,7 @@ static void ReloadSettings(bool force = false) {
         SetCurrentLanguageAndRefreshUI(gSettings->uiLanguage);
     }
 
-#if !defined(SUMATRA_NG) || NG_HAS_UI
+#if !defined(SUMATRA_NG)
     for (MainWindow* win : gWindows) {
         if (gSettings->showToolbar != showToolbar) {
             ShowOrHideToolbar(win);
@@ -1173,7 +1161,7 @@ void UnregisterSettingsForFileChanges() {
 
 constexpr int kMinFontSize = 9;
 
-#if !defined(SUMATRA_NG) || NG_HAS_UI
+#if !defined(SUMATRA_NG)
 // metrics for an explicit DPI (system dpi when GetNonClientMetricsForDpi fails)
 static void GetNonClientMetricsForDpiValue(int dpi, NONCLIENTMETRICS* ncm) {
     if (dpi <= 0) {
@@ -1664,7 +1652,7 @@ bool SetSettingsValueFromStr(Str path, Str value) {
     if (!FindSettingInStruct(&gSettingsInfo, (u8*)gSettings, {}, path, &type, &p)) {
         return false;
     }
-#if !defined(SUMATRA_NG) || NG_HAS_UI
+#if !defined(SUMATRA_NG)
     // snapshot the settings that need an explicit apply (tabs, menu bar, ...)
     // before we overwrite them, so we can act on what actually changed
     SettingsApplyState before = GetSettingsApplyState();
@@ -1691,9 +1679,6 @@ bool SetSettingsValueFromStr(Str path, Str value) {
             str::ReplaceWithCopy((Str*)p, value);
             break;
         default:
-#if defined(SUMATRA_NG) && NG_HAS_UI
-            str::Free(before.ebookLayout);
-#endif
             return false;
     }
     UpdateParsedSettingTwin(path, value);
@@ -1701,7 +1686,7 @@ bool SetSettingsValueFromStr(Str path, Str value) {
     // reload so everything derived from settings (theme, fonts, parsed colors,
     // custom commands, accelerators ...) is re-computed and applied
     ForceReloadSettings();
-#if !defined(SUMATRA_NG) || NG_HAS_UI
+#if !defined(SUMATRA_NG)
     ApplyChangedSettingsAndRelayout(before);
 #endif
     return true;
