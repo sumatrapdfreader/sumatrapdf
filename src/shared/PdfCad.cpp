@@ -146,24 +146,14 @@ static void ScoreMetadataField(Str field, CadMetadataScore* acc) {
     }
 }
 
-static void ScoreMetadataInfoKey(fz_context* ctx, pdf_obj* info, const char* key, CadMetadataScore* acc) {
-    if (!info) {
-        return;
-    }
-    pdf_obj* val = pdf_dict_gets(ctx, info, key);
-    if (pdf_is_string(ctx, val)) {
-        ScoreMetadataField(Str(pdf_to_text_string(ctx, val)), acc);
-    }
-}
-
 // Score Creator/Producer and the XMP metadata stream against the keyword lists.
 // A blacklist hit returns a large negative score that disables detection.
 static int ScoreMetadata(fz_context* ctx, pdf_document* doc, bool* strongMatchOut) {
     CadMetadataScore acc;
     pdf_obj* trailer = pdf_trailer(ctx, doc);
     pdf_obj* info = pdf_dict_get(ctx, trailer, PDF_NAME(Info));
-    ScoreMetadataInfoKey(ctx, info, "Creator", &acc);
-    ScoreMetadataInfoKey(ctx, info, "Producer", &acc);
+    ScoreMetadataField(Str(pdf_dict_get_text_string(ctx, info, PDF_NAME(Creator))), &acc);
+    ScoreMetadataField(Str(pdf_dict_get_text_string(ctx, info, PDF_NAME(Producer))), &acc);
 
     pdf_obj* root = pdf_dict_get(ctx, trailer, PDF_NAME(Root));
     pdf_obj* meta = pdf_dict_get(ctx, root, PDF_NAME(Metadata));
