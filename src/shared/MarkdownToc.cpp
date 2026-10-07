@@ -190,17 +190,14 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
     }
     GumboHtmlParser parser(data);
     int headingLevel = 0;
-    Str headingId; // heap-owned; a view into a reused attr slot isn't safe to keep
+    Str headingId;
     str::Builder text;
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr) {
         if (tok->IsStartTag() && IsHeadingTag(tok->tag)) {
             headingLevel = (int)(tok->tag - Tag_H1) + 1;
-            str::FreePtr(&headingId);
             AttrInfo id = tok->GetAttrByName(StrL("id"));
-            if (id && len(id.val) > 0) {
-                headingId = str::Dup(id.val);
-            }
+            headingId = len(id.val) > 0 ? id.val : Str{};
             text.Reset();
             continue;
         }
@@ -215,16 +212,13 @@ void ParseHtmlHeadingsData(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
             Str title = ResolveHtmlEntities(ToStr(text));
             str::TrimWSInPlace(title, str::TrimOpt::Both);
             if (len(title) > 0) {
-                VecAppend(headingsOut, {title, headingId, headingLevel});
-                title = {};
-                headingId = {};
+                VecAppend(headingsOut, {title, str::Dup(headingId), headingLevel});
+            } else {
+                str::Free(title);
             }
-            str::Free(title);
             headingLevel = 0;
-            str::FreePtr(&headingId);
         }
     }
-    str::FreePtr(&headingId);
 }
 
 struct MdTocParseCtx {
