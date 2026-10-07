@@ -1,6 +1,10 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+namespace gpui {
+struct PaintCtx;
+}
+
 struct MainWindow;
 struct DisplayModel;
 struct AnnotCreateArgs;
@@ -28,16 +32,21 @@ bool FinishInkAnnotationPlacement(MainWindow*);
 bool CloseAnnotationPlacementHint(MainWindow*);
 
 bool AnnotationPlacementOnLeftDown(MainWindow*, Point, WPARAM);
+bool AnnotationPlacementOnLeftDown(MainWindow*, Point, bool isShift, bool isCtrl);
 bool AnnotationPlacementOnLeftUp(MainWindow*, Point, WPARAM);
+bool AnnotationPlacementOnLeftUp(MainWindow*, Point, bool isShift);
 bool AnnotationPlacementOnLeftDblClk(MainWindow*, Point);
 bool AnnotationPlacementOnRightDown(MainWindow*);
 bool AnnotationPlacementOnMouseMove(MainWindow*, Point, WPARAM);
+bool AnnotationPlacementOnMouseMove(MainWindow*, Point, bool isShift, bool lButtonDown);
 bool AnnotationPlacementOnSetCursor(MainWindow*);
 bool AnnotationPlacementOnKeyDown(MainWindow*, WPARAM);
+bool AnnotationPlacementOnKeyDown(MainWindow*, int vkey);
 bool AnnotationPlacementEraseAt(MainWindow*, Point);
 void AnnotationPlacementOnSelectionStop(MainWindow*);
 
 void PaintAnnotationPlacement(MainWindow*, HDC, DisplayModel*);
+void PaintAnnotationPlacement(MainWindow*, gpui::PaintCtx*, DisplayModel*);
 bool AnnotationPlacementFillCreate(MainWindow*, AnnotationType, Point&, int&, PointF&, PointF&, AnnotCreateArgs&);
 SizeF FreeTextPlacementPageSize(const AnnotCreateArgs&);
 
