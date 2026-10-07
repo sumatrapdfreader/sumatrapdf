@@ -44,8 +44,6 @@ static void AddCond(AnnotMatchOpts& opts, AnnotMatchCond::Type tp, Str s, Annota
     c->tp = tp;
     c->annotType = annotType;
     c->s = str::Dup(s);
-    // conditions are ANDed, so order does not matter; append anyway so the
-    // list reads the way the user typed it
     ListInsertEnd(&opts.conds, c);
 }
 

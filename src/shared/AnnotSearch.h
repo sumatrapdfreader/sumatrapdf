@@ -4,8 +4,7 @@
 struct Annotation;
 struct StrVec;
 
-// One condition from the annotation filter box. Intrusive list: `next` is the
-// first member so the List* helpers in base/Base.h can walk it.
+// One condition from the annotation filter box.
 struct AnnotMatchCond {
     AnnotMatchCond* next = nullptr;
 
