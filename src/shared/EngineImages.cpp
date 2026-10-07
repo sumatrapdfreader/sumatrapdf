@@ -249,6 +249,7 @@ struct FzDecodeDst {
 static u8* AllocFzDecodeDst(void* user, int dx, int dy, bool hasAlpha, int* stride) {
     auto* d = (FzDecodeDst*)user;
     fz_context* ctx = d->ctx;
+    // must not throw: we're called from inside the decoder
     fz_try(ctx) {
         d->pix = fz_new_pixmap(ctx, fz_device_rgb(ctx), dx, dy, nullptr, hasAlpha ? 1 : 0);
     }
@@ -260,27 +261,32 @@ static u8* AllocFzDecodeDst(void* user, int dx, int dy, bool hasAlpha, int* stri
     return d->pix->samples;
 }
 
+// fz_pixmap with alpha must be premultiplied; decoders give straight alpha
 static void PremultiplyRgba(fz_pixmap* pix) {
     for (int y = 0; y < pix->h; y++) {
-        u8* p = pix->samples + (size_t)y * pix->stride;
+        u8* p = pix->samples + ((size_t)y * pix->stride);
         for (int x = 0; x < pix->w; x++, p += 4) {
             int a = p[3];
             if (a == 255) {
                 continue;
             }
-            p[0] = (u8)((p[0] * a + 127) / 255);
-            p[1] = (u8)((p[1] * a + 127) / 255);
-            p[2] = (u8)((p[2] * a + 127) / 255);
+            p[0] = (u8)(((p[0] * a) + 127) / 255);
+            p[1] = (u8)(((p[1] * a) + 127) / 255);
+            p[2] = (u8)(((p[2] * a) + 127) / 255);
         }
     }
 }
 
 typedef bool (*DecodeRgbIntoFn)(Str, DecodeDstAllocFn, void*);
 
+// LoadFzImageForPage decodes these itself, so EngineImage mustn't also decode
+// them on open (#6245)
 static bool DecodedByFzDecoder(FileType kind) {
     return FileType::Jxl == kind || FileType::Webp == kind;
 }
 
+// For formats mupdf can't decode (JPEG XL, WebP): decode into an fz_pixmap so
+// the page takes the same render/scale path as JPEG/PNG pages.
 static fz_image* FzImageFromDecoder(fz_context* ctx, Str data, DecodeRgbIntoFn decode) {
     FzDecodeDst dst;
     dst.ctx = ctx;
@@ -313,14 +319,14 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
     if (len(data) == 0) {
         return nullptr;
     }
-    // Use dedicated decoders for formats MuPDF cannot decode itself:
-    //   JXL      -> jxldec, wrapped in an fz_image
-    //   WebP     → libwebp (bench_image: faster than WIC)
+    // Prefer PixmapFromData / LoadPixmapForPage over mupdf for formats where a
+    // dedicated path is faster and we do not need mupdf's scaled JPEG decode:
     //   HEIC/AVIF→ Debug: heicdec then WIC; Release: WIC then heicdec
     FileType kind = GuessFileTypeFromData(data);
     if (FileType::Heic == kind || FileType::Avif == kind || FileType::Ico == kind) {
         return nullptr;
     }
+    // nullptr (e.g. EXIF-rotated WebP) falls back to PixmapFromData
     if (FileType::Jxl == kind) {
         return FzImageFromDecoder(ctx, data, jxl::DecodeRgbInto);
     }
@@ -636,16 +642,21 @@ static void GetPixmapPixelBgraKeepAlpha(const Pixmap* pixmap, int x, int y, u8* 
     bgra[3] = pixmap->format == PixmapFormat::BGR8 ? 255 : src[3];
 }
 
-// MuPDF may answer a subarea request with a cached full decode or an area
-// enlarged to its subsampling grid. Map that decoded area to the requested tile.
+// mupdf may answer a subarea request with a different area: its cached full
+// decode, or the subarea grown to the subsampling grid. The returned ctm maps
+// the pixmap into the full page at reqW x reqH, so scale it into screen space
+// and cut out the tile (discussion #6229). Returns nullptr if the tile isn't
+// covered.
 static fz_pixmap* ScaleDecodedToTile(fz_context* ctx, fz_pixmap* decoded, fz_matrix ctm, int reqW, int reqH,
                                      Rect mediaScreen, Rect screen) {
     float kx = (float)mediaScreen.dx / (float)reqW;
     float ky = (float)mediaScreen.dy / (float)reqH;
-    int x0 = (int)floorf(ctm.e * kx + 0.5f);
-    int y0 = (int)floorf(ctm.f * ky + 0.5f);
-    int x1 = (int)floorf((ctm.e + ctm.a) * kx + 0.5f);
-    int y1 = (int)floorf((ctm.f + ctm.d) * ky + 0.5f);
+    // whole pixels: a fractional dest makes fz_scale_pixmap add alpha and
+    // feather the edges, which shows as seams between tiles
+    int x0 = (int)floorf((ctm.e * kx) + 0.5f);
+    int y0 = (int)floorf((ctm.f * ky) + 0.5f);
+    int x1 = (int)floorf(((ctm.e + ctm.a) * kx) + 0.5f);
+    int y1 = (int)floorf(((ctm.f + ctm.d) * ky) + 0.5f);
     fz_irect tile;
     tile.x0 = screen.x - mediaScreen.x;
     tile.y0 = screen.y - mediaScreen.y;
@@ -700,6 +711,9 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
             pageRc.dy = -pageRc.dy;
         }
     }
+    // A tile's pageRect is its screen pixel box mapped back to page space: round to
+    // nearest to get that box back. Rounding the snapped pageRc outward came out 1px
+    // bigger than the tile at many zooms, which missed the mupdf path (#6245).
     Rect screen = pageRect ? ToRect(Transform(*pageRect, pageNo, zoom, rotation))
                            : Transform(pageRc, pageNo, zoom, rotation).Round();
     if (screen.IsEmpty()) {
@@ -769,6 +783,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
             fz_report_error(ctx);
         }
         if (subPtr && !scaled) {
+            // decoded area doesn't cover the tile; use the Pixmap path below
             fz_drop_pixmap(ctx, decoded);
             decoded = nullptr;
         }
@@ -872,6 +887,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
             }
         }
     }
+
 #endif
 
     // Fallback: nearest-neighbor (rotation, non-Windows, or GDI+ failure).
@@ -2427,7 +2443,7 @@ class EngineCbx : public EngineImages {
                                       Str realPath = {});
     static EngineBase* CreateFromData(Str data);
 
-    // The ToC comes from ComicInfo.xml instead of file or folder names.
+    // tocTree comes from ComicInfo.xml, not synthesized from file / folder names
     bool tocFromComicInfo = false;
 
   protected:
@@ -2742,7 +2758,7 @@ bool EngineCbx::FinishLoading() {
         auto* pi = new ImagePageInfo();
         VecAppend(pageInfos, pi);
     }
-    files = std::move(pageFiles);
+    files = pageFiles;
     pageCount = nFiles;
 
     TocItem* tocBuildRoot = nullptr;
@@ -3057,7 +3073,8 @@ EngineBase* CreateEngineCbxFromData(Str data) {
     return EngineCbx::CreateFromData(data);
 }
 
-// Only explicit ComicInfo.xml bookmarks are useful enough to open by default.
+// Comic archive bookmarks are synthesized from file / folder names unless they
+// come from ComicInfo.xml; only those are worth showing the sidebar for (#6244).
 bool EngineCbxHasComicInfoToc(EngineBase* engine) {
     if (!IsOfKind(engine, kindEngineComicBooks)) {
         return false;
