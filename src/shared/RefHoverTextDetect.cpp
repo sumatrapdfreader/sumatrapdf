@@ -294,25 +294,11 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         }
     }
     int surnameStart = p + 1;
-    if (surnameEnd <= surnameStart) {
-        return false;
-    }
-
-    // Sanity: must start with an uppercase letter and be at least 2 chars.
-    while (surnameStart < surnameEnd && (s.s[surnameStart] == L' ' || s.s[surnameStart] == L'.')) {
-        surnameStart++;
-    }
     if (surnameEnd - surnameStart < 2 || !iswupper(s.s[surnameStart])) {
         return false;
     }
 
     WStr surname(s.s + surnameStart, surnameEnd - surnameStart);
-    while (len(surname) > 0 && wstr::ContainsChar(WStrL(L" .,"), surname.s[len(surname) - 1])) {
-        surname.len--;
-    }
-    if (len(surname) < 2) {
-        return false;
-    }
 
     if (srcRectOut) {
         // The citation's horizontal span distinguishes occurrences on one line.
