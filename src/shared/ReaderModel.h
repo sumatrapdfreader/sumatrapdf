@@ -5,7 +5,6 @@ struct DocumentLayout;
 struct DocumentLayoutParams;
 class EngineBase;
 struct PasswordUI;
-struct Pixmap;
 
 struct ReaderModel : NonCopyable {
     ~ReaderModel();
@@ -13,10 +12,7 @@ struct ReaderModel : NonCopyable {
     static ReaderModel* Create(Str path, PasswordUI* pwdUI = nullptr);
 
     int PageCount() const;
-    RectF PageMediabox(int pageNo) const;
-    float FileDPI() const;
     bool Layout(const DocumentLayoutParams& params, DocumentLayout* layout) const;
-    Pixmap* RenderPageForPrint(int pageNo, float zoom, int rotation) const;
     EngineBase* GetEngine() const;
 
   private:

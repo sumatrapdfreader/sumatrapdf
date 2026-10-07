@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/GuessFileType.h"
-#include "base/Pixmap.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -62,18 +61,6 @@ int ReaderModel::PageCount() const {
     return engine->PageCount();
 }
 
-RectF ReaderModel::PageMediabox(int pageNo) const {
-    if (pageNo < 1 || pageNo > engine->PageCount()) {
-        return {};
-    }
-    return engine->PageMediabox(pageNo);
-}
-
-float ReaderModel::FileDPI() const {
-    float dpi = engine->fileDPI;
-    return dpi > 0 ? dpi : 96.0f;
-}
-
 bool ReaderModel::Layout(const DocumentLayoutParams& params, DocumentLayout* layout) const {
     if (!layout) {
         return false;
@@ -89,17 +76,6 @@ bool ReaderModel::Layout(const DocumentLayoutParams& params, DocumentLayout* lay
     }
     layout->Relayout(params);
     return true;
-}
-
-Pixmap* ReaderModel::RenderPageForPrint(int pageNo, float zoom, int rotation) const {
-    if (pageNo < 1 || pageNo > engine->PageCount()) {
-        return nullptr;
-    }
-    if (zoom <= 0) {
-        zoom = 1.0f;
-    }
-    RenderPageArgs args(pageNo, zoom, rotation, nullptr, RenderTarget::Print);
-    return engine->RenderPage(args);
 }
 
 EngineBase* ReaderModel::GetEngine() const {
