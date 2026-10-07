@@ -261,7 +261,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
         return false;
     }
 
-    int glyphIx = FindClosestGlyphAt(pageNo, x, y);
+    int glyphIx = FindClosestGlyphIn(engine, pageNo, coords, quads, textLen, x, y);
     PointF ptf((float)x, (float)y);
     Point pt = ToPoint(ptf);
     auto contains = [&](int i) -> bool {
@@ -270,7 +270,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
         }
         return GlyphContains(coords[i], quads, i, ptf, pt);
     };
-    // when over the right half of a glyph, FindClosestGlyphAt returns the
+    // when over the right half of a glyph, FindClosestGlyphIn returns the
     // index of the next glyph, in which case glyphIx must be decremented
     return contains(glyphIx) || contains(glyphIx - 1);
 }
