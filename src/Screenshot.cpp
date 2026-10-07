@@ -44,7 +44,7 @@ static bool IsAppFrame(HWND hwnd) {
     return false;
 }
 
-static TempStr GetScreenshotSaveDirTemp() {
+TempStr GetScreenshotSaveDirTemp() {
     TempStr dataDir = GetAppDataDirTemp();
     return path::JoinTemp(dataDir, StrL("Screenshots"));
 }
