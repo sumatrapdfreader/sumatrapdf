@@ -15,30 +15,24 @@
 
 // All registry manipulation needed for installer / uninstaller
 
-// list of supported file extensions for which SumatraPDF.exe will
-// be registered as a candidate for the Open With dialog's suggestions
+// Extensions registered for Open With and their icon resource IDs.
+// Negative icon indices select resources by ID in SumatraPDF.rc.
+constexpr int kDefaultFileIcon = 2;
 // clang-format off
-static SeqStrings gSupportedExts = 
-    ".pdf\0.xps\0.oxps\0.cbz\0.cbr\0.cb7\0.cbt\0" \
-    ".djvu\0.chm\0.mobi\0.epub\0.md\0.markdown\0.svg\0.azw\0.azw3\0.azw4\0" \
-    ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
-    ".jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0" \
-    ".jfif\0.webp\0.jxl\0.bmp\0.ico\0.jxr\0.hdp\0.wdp\0";
-
-// Resource ids in SumatraPDF.rc; negative icon indices select by id.
-static const int kDefaultFileIcon = 2;
 static const struct {
-    SeqStrings extensions;
-    int resourceId;
-} fileIcons[] = {
-    {".epub\0", 3},
-    {".cbr\0.cbz\0.cbt\0.cb7\0", 4},
-    {".chm\0", 5},
-    {".djvu\0", 6},
-    {".tif\0.tiff\0.jp2\0.png\0.jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0"
-     ".jfif\0.webp\0.jxl\0.bmp\0.ico\0.jxr\0.hdp\0.wdp\0", 7},
-    {".pdf\0", 8},
-    {".mobi\0.azw\0.azw3\0.azw4\0.prc\0", 9},
+    Str ext;
+    int iconId;
+} gSupportedExts[] = {
+    {StrL(".pdf"), 8}, {StrL(".xps"), kDefaultFileIcon}, {StrL(".oxps"), kDefaultFileIcon},
+    {StrL(".cbz"), 4}, {StrL(".cbr"), 4}, {StrL(".cb7"), 4}, {StrL(".cbt"), 4},
+    {StrL(".djvu"), 6}, {StrL(".chm"), 5}, {StrL(".mobi"), 9}, {StrL(".epub"), 3},
+    {StrL(".md"), kDefaultFileIcon}, {StrL(".markdown"), kDefaultFileIcon}, {StrL(".svg"), kDefaultFileIcon}, {StrL(".azw"), 9},
+    {StrL(".azw3"), 9}, {StrL(".azw4"), 9}, {StrL(".fb2"), kDefaultFileIcon}, {StrL(".fb2z"), kDefaultFileIcon},
+    {StrL(".prc"), 9}, {StrL(".tif"), 7}, {StrL(".tiff"), 7}, {StrL(".jp2"), 7},
+    {StrL(".png"), 7}, {StrL(".jpg"), 7}, {StrL(".jpeg"), 7}, {StrL(".tga"), 7},
+    {StrL(".gif"), 7}, {StrL(".avif"), 7}, {StrL(".heic"), 7}, {StrL(".heif"), 7},
+    {StrL(".jfif"), 7}, {StrL(".webp"), 7}, {StrL(".jxl"), 7}, {StrL(".bmp"), 7},
+    {StrL(".ico"), 7}, {StrL(".jxr"), 7}, {StrL(".hdp"), 7}, {StrL(".wdp"), 7},
 };
 // clang-format on
 
@@ -66,7 +60,8 @@ static bool HasOurOpenWithEntry(HKEY hkey, Str ext) {
 }
 
 static bool HasAllOurOpenWithEntries(HKEY hkey) {
-    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
+    for (const auto& type : gSupportedExts) {
+        Str ext = type.ext;
         if (!HasOurOpenWithEntry(hkey, ext)) {
             return false;
         }
@@ -154,7 +149,8 @@ static bool RegisterForDefaultPrograms(HKEY hkey, Str installedExePath) {
     // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
     TempStr keyAssoc = str::JoinTemp(appCapabilityPath, StrL("\\FileAssociations"));
 
-    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
+    for (const auto& type : gSupportedExts) {
+        Str ext = type.ext;
         // must match the per-extension ProgID created by RegisterForOpenWith
         // (e.g. "SumatraPDF.pdf"); Default Apps UI hides the app if the
         // FileAssociations ProgID can't be resolved under HKCR
@@ -175,7 +171,8 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
     TempStr cmdPrintTo = str::JoinTemp(exePathQuoted, StrL(" -print-to \"%2\" \"%1\""));
     TempStr key;
     bool ok = true;
-    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
+    for (const auto& type : gSupportedExts) {
+        Str ext = type.ext;
         TempStr progIDName = str::JoinTemp(StrL(kAppName), ext);
         TempStr progIDKey = str::JoinTemp(StrL("Software\\Classes\\"), progIDName);
 
@@ -186,14 +183,7 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
         // a previous version wrote so Windows falls back to the localized name.
         ok &= LoggedDeleteRegValue(hkey, progIDKey, {});
 
-        int iconId = kDefaultFileIcon;
-        for (const auto& icon : fileIcons) {
-            if (SeqStrIndexI(icon.extensions, ext) >= 0) {
-                iconId = icon.resourceId;
-                break;
-            }
-        }
-        TempStr iconPath = fmt("%s,-%d", exePathQuoted, iconId);
+        TempStr iconPath = fmt("%s,-%d", exePathQuoted, type.iconId);
 
         key = str::JoinTemp(progIDKey, StrL("\\Application"));
         ok &= LoggedWriteRegStr(hkey, key, StrL("ApplicationCompany"), StrL("Krzysztof Kowalczyk"));
@@ -334,7 +324,8 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
 
     // those are registry keys written before 3.4
     TempStr openWithVal = str::JoinTemp(StrL("\\OpenWithList\\"), Str(kExeName));
-    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
+    for (const auto& type : gSupportedExts) {
+        Str ext = type.ext;
         TempStr keyname = str::JoinTemp(StrL("Software\\Classes\\"), ext, StrL("\\OpenWithProgids"));
         LoggedDeleteRegValue(hkey, keyname, StrL(kAppName));
         DeleteEmptyRegKey(hkey, keyname);
@@ -351,7 +342,8 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     }
 
     // those were introduced in 3.4
-    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
+    for (const auto& type : gSupportedExts) {
+        Str ext = type.ext;
         TempStr progIDName = str::JoinTemp(StrL(kAppName), ext);
         TempStr key = str::JoinTemp(StrL("Software\\Classes\\"), progIDName);
 
@@ -506,7 +498,8 @@ static TempStr GetProgIdExePathTemp(Str progId) {
 }
 
 void LogNonDefaultRegisteredExtensions() {
-    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
+    for (const auto& type : gSupportedExts) {
+        Str ext = type.ext;
         TempStr progId = ReadDefaultProgIdTemp(ext);
         if (len(progId) > 0 && !IsOurProgId(progId, ext)) {
             TempStr app = GetProgIdExePathTemp(progId);
@@ -522,7 +515,8 @@ void CollectNonDefaultRegisteredExtensions(StrVec& out) {
     if (!IsOurExeInstalled()) {
         return;
     }
-    for (Str ext = SeqStrFirst(gSupportedExts); len(ext) > 0; ext = SeqStrNext(ext)) {
+    for (const auto& type : gSupportedExts) {
+        Str ext = type.ext;
         if (HaveRegisteredOpenWithForExt(ext) && !IsSumatraDefaultForExt(ext)) {
             // only list types with an explicit UserChoice that isn't us — otherwise
             // every registered format (e.g. .tga) would show after a fresh install
