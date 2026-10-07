@@ -26,7 +26,7 @@
 
 // clang-format off
 
-static uintptr_t gNoDocWhitelist[] = {
+static const i32 gNoDocWhitelist[] = {
     CmdOpenFile,
     CmdOpenFileNoHistory,
     CmdOpenFileWithOSFilePicker,
@@ -114,7 +114,7 @@ uintptr_t disableIfNoSelection[] = {
 
 // annotations created from a text selection; a rectangular selection has no
 // text to mark up. checked after !supportsAnnots already hid them for non-PDF
-static uintptr_t createAnnotFromSelection[] = {
+static const i32 createAnnotFromSelection[] = {
     CmdCreateAnnotHighlight,
     CmdCreateAnnotSquiggly,
     CmdCreateAnnotStrikeOut,
@@ -122,7 +122,7 @@ static uintptr_t createAnnotFromSelection[] = {
     0,
 };
 
-static uintptr_t removeIfNoInternetPerms[] = {
+static const i32 removeIfNoInternetPerms[] = {
     CmdCheckUpdate,
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithDeepL,
@@ -140,13 +140,13 @@ static uintptr_t removeIfNoInternetPerms[] = {
     0,
 };
 
-static uintptr_t removeIfNoFullscreenPerms[] = {
+static const i32 removeIfNoFullscreenPerms[] = {
     CmdTogglePresentationMode,
     CmdToggleFullscreen,
     0,
 };
 
-static uintptr_t removeIfNoPrefsPerms[] = {
+static const i32 removeIfNoPrefsPerms[] = {
     CmdOptions,
     CmdSetInverseSearch,
     CmdAdvancedSettings,
@@ -163,7 +163,7 @@ static uintptr_t removeIfNoPrefsPerms[] = {
     0,
 };
 
-static uintptr_t removeIfNoCopyPerms[] = {
+static const i32 removeIfNoCopyPerms[] = {
     CmdTranslateSelection,
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithDeepL,
@@ -188,7 +188,7 @@ static uintptr_t removeIfNoCopyPerms[] = {
     0,
 };
 
-static uintptr_t removeIfNoDiskAccessPerm[] = {
+static const i32 removeIfNoDiskAccessPerm[] = {
     CmdNewWindow,
     CmdOpenFile,
     CmdOpenFileNoHistory,
@@ -227,7 +227,7 @@ static uintptr_t removeIfNoDiskAccessPerm[] = {
     0,
 };
 
-static uintptr_t removeIfAnnotsNotSupported[] = {
+static const i32 removeIfAnnotsNotSupported[] = {
     CmdSaveAnnotations,
     CmdSaveAnnotationsNewFile,
     CmdDiscardChanges,
@@ -255,7 +255,7 @@ static uintptr_t removeIfAnnotsNotSupported[] = {
     0,
 };
 
-static uintptr_t removeIfChm[] = {
+static const i32 removeIfChm[] = {
     CmdSinglePageView,
     CmdFacingView,
     CmdBookView,
@@ -281,7 +281,7 @@ static uintptr_t removeIfChm[] = {
     0,
 };
 
-static i32 gBlacklistCommandsFromPalette[] = {
+static const i32 gBlacklistCommandsFromPalette[] = {
     CmdNone,
     CmdCommandPalette,
     CmdCommandPaletteTOC,
@@ -314,7 +314,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     0,
 };
 
-static i32 gCommandsDebugOnly[] = {
+static const i32 gCommandsDebugOnly[] = {
     CmdDebugCorruptMemory,
     CmdDebugCrashMe,
     CmdDebugShowNotif,
@@ -325,21 +325,12 @@ static i32 gCommandsDebugOnly[] = {
 
 // clang-format on
 
-static bool CmdIdInList(int cmdId, uintptr_t* ids) {
+template <typename T>
+static bool CmdIdInList(int cmdId, const T* ids) {
     for (int i = 0; ids[i]; i++) {
         if ((int)ids[i] == cmdId) {
             return true;
         }
-    }
-    return false;
-}
-
-static bool CmdIdInI32List(int cmdId, i32* ids) {
-    while (*ids) {
-        if (cmdId == *ids) {
-            return true;
-        }
-        ids++;
     }
     return false;
 }
@@ -409,12 +400,12 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (surface == CommandSurface::Palette) {
-        if (CmdIdInI32List(cmdId, gCommandsDebugOnly)) {
+        if (CmdIdInList(cmdId, gCommandsDebugOnly)) {
             if (!gIsDebugBuild) {
                 return CommandVisibility::Hide;
             }
         }
-        if (CmdIdInI32List(cmdId, gBlacklistCommandsFromPalette)) {
+        if (CmdIdInList(cmdId, gBlacklistCommandsFromPalette)) {
             return CommandVisibility::Hide;
         }
         // context menu keeps the page element under the cursor; palette dispatch
