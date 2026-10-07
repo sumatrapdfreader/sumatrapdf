@@ -386,7 +386,7 @@ void SetCurrentLanguageAndRefreshUI(Str langCode) {
 // everything that shows a theme color. ng: orig also recreates its win32
 // controls (brushes, find bar, toolbar, annotation bars); here every element is
 // built from the theme on the next frame, so an invalidation is enough. The
-// gpui Theme itself was installed by Theme.cpp's UpdateGuiColorsFromTheme().
+// The gpui theme is already installed before this runs.
 void UpdateAfterThemeChange() {
     // ng: LoadSettings() picks the theme before GpuiMain makes the render cache
     if (!gRenderCache) {

@@ -236,6 +236,7 @@ export const sharedFiles = [
   "src/shared/TextSelection.cpp",
   "src/shared/TextSelection.h",
   "src/shared/Theme.h",
+  "src/shared/Theme.cpp",
   "src/shared/TranslationLangs.cpp",
   "src/shared/Translations.cpp",
   "src/shared/Translations.h",

@@ -16,12 +16,6 @@ License: GPLv3 */
 
 #include "Theme.h"
 
-// ng: the model half of orig's Theme.cpp: theme parsing and the Theme*Color()
-// accessors. What it drops is win32 UI: NewThemedButton (a VirtButton),
-// UpdateGuiColorsFromTheme (fills in gui/GuiColors defaults for the win32
-// controls) and the DarkMode* calls into darkmodelib, which this port doesn't
-// use. gpui gets the colors through a ThemeSet in step 12.
-
 // The installer and uninstaller never load settings, so CreateThemeCommands()
 // doesn't run and there is no current theme - every Theme*Color() accessor
 // dereferences gCurrentTheme and would crash. They still create buttons and
@@ -485,9 +479,9 @@ static Str themesTxt = StrL(R"(Themes [
 )");
 
 extern void UpdateAfterThemeChange();
-// ng: src/gui/GpuiTheme.cpp; a no-op in the console tools (AppStubs.cpp)
-extern void ThemeInstallInGpui();
-static void UpdateGuiColorsFromTheme();
+extern void ThemeStartPlatformColors();
+extern void ThemeApplyPlatformColors();
+extern void ThemeFinishPlatformColors();
 
 int gFirstSetThemeCmdId;
 int gLastSetThemeCmdId;
@@ -642,12 +636,14 @@ void SetThemeByIndex(int themeIdx) {
     RecalcUseHighContrast(); // it depends on which theme is current
     str::ReplaceWithCopy(&gSettings->theme, gCurrentTheme->name);
     RememberLastLightDarkTheme();
+    ThemeStartPlatformColors();
     // always, not only when the theme changed: the same theme can resolve to
     // different colors (the System theme, high contrast, a settings edit)
-    UpdateGuiColorsFromTheme();
+    ThemeApplyPlatformColors();
     if (themeChanged) {
         UpdateAfterThemeChange();
     }
+    ThemeFinishPlatformColors();
 };
 
 // Map removed / renamed themes so existing settings keep working.
@@ -787,21 +783,17 @@ Str ToggleLightDarkThemeTargetName() {
 // whole of the app -> gui coupling: the controls never ask us for a color, they
 // paint in the defaults, and an individual control that wants something else
 // (the toolbar's palette, a notification's) overrides its own slots.
-static void UpdateGuiColorsFromTheme() {
+static void UpdatePlatformColors() {
     if (!HasCurrentTheme()) {
-        // the installer and uninstaller: gpui keeps its own defaults
         return;
     }
-    // ng: orig spreads the theme over gui/GuiColors, the color defaults of its
-    // win32 virtual controls. The gpui components read one gp::Theme, which
-    // src/gui/GpuiTheme.cpp fills from the same accessors and installs.
-    ThemeInstallInGpui();
+    ThemeApplyPlatformColors();
 }
 
 // The app's theme, or the system palette it follows, changed: push our colors
 // into gui/'s defaults, then rebuild and repaint everything that shows them.
 void SumatraUpdateTheme() {
-    UpdateGuiColorsFromTheme();
+    UpdatePlatformColors();
     UpdateAfterThemeChange();
 }
 
@@ -826,7 +818,9 @@ void UpdateThemeAfterHighContrastChange() {
         return;
     }
     logf("UpdateThemeAfterHighContrastChange: using high contrast colors: %d\n", (int)gUseHighContrast);
+    ThemeStartPlatformColors();
     SumatraUpdateTheme();
+    ThemeFinishPlatformColors();
 }
 
 // call after loading settings
@@ -846,7 +840,7 @@ void SetCurrentThemeFromSettings() {
         gThemeLight->controlBackgroundColor.col = bgParsed->col;
     }
     // SetTheme() above ran before we adjusted the Light theme, so re-push
-    UpdateGuiColorsFromTheme();
+    UpdatePlatformColors();
 }
 
 #define GetThemeCol(name, def) GetParsedColor(name, def)

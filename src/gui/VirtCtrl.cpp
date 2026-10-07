@@ -16,9 +16,18 @@
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
 #include "gui/VirtHost.h"
+#include "Theme.h"
 #include "gui/VirtCtrl.h"
 
 //--- VirtCtrl
+
+VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool isDefault) {
+    DpiSetFromHwnd(hwndForDpi);
+    auto* b = new VirtButton(text, font);
+    b->SetIsDefault(isDefault);
+    b->textPadding = DpiScaledInsets(5, 12);
+    return b;
+}
 
 static Kind kindVirtCtrl = "virtCtrl";
 

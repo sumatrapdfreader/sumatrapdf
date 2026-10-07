@@ -1713,7 +1713,6 @@
     <ClCompile Include="..\src\Tester.cpp" />
     <ClCompile Include="..\src\Tests.cpp" />
     <ClCompile Include="..\src\TextViewWnd.cpp" />
-    <ClCompile Include="..\src\Theme.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
     <ClCompile Include="..\src\Uninstaller.cpp" />
     <ClCompile Include="..\src\UpdateCheck.cpp" />
@@ -2163,6 +2162,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSelection.cpp" />
+    <ClCompile Include="..\src\shared\Theme.cpp" />
     <ClCompile Include="..\src\shared\TranslationLangs.cpp" />
     <ClCompile Include="..\src\shared\Translations.cpp" />
     <ClCompile Include="..\src\shared\UpdateTemp.cpp" />

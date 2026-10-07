@@ -149,8 +149,9 @@ void HomePageThumbnailChanged(FileState*) {}
 // Theme.cpp asks the UI to repaint; AppSettings owns the UI fonts (step 6/12)
 void UpdateAfterThemeChange() {}
 
-// gui/GpuiTheme.cpp: the console tools have no gpui app (step 12b)
-void ThemeInstallInGpui() {}
+void ThemeStartPlatformColors() {}
+void ThemeApplyPlatformColors() {}
+void ThemeFinishPlatformColors() {}
 
 bool IsMenuFontSizeDefault() {
     return true;
