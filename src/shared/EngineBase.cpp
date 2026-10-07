@@ -1141,6 +1141,35 @@ PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bo
     return rect.TL();
 }
 
+PointF TransformPagePoint(PointF pt, SizeF page, float zoom, int rotation, TransformDir dir) {
+    ReportIf(zoom <= 0);
+    if (zoom <= 0) {
+        return pt;
+    }
+    if (dir == TransformDir::ToPage) {
+        page.dx *= zoom;
+        page.dy *= zoom;
+        if (rotation % 180 != 0) {
+            std::swap(page.dx, page.dy);
+        }
+        rotation = -rotation;
+        zoom = 1.0f / zoom;
+    }
+
+    rotation = NormalizeRotation(rotation);
+    PointF res = pt;
+    if (rotation == 90) {
+        res = PointF(page.dy - pt.y, pt.x);
+    } else if (rotation == 180) {
+        res = PointF(page.dx - pt.x, page.dy - pt.y);
+    } else if (rotation == 270) {
+        res = PointF(pt.y, page.dx - pt.x);
+    }
+    res.x *= zoom;
+    res.y *= zoom;
+    return res;
+}
+
 // returns false if didn't perform action (temporary until we move
 // all code there)
 bool EngineBase::HandleLink(IPageDestination* /*dest*/, ILinkHandler* /*linkHandler*/) {

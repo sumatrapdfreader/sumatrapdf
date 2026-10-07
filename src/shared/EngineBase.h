@@ -441,6 +441,12 @@ struct ChapterLayoutProgress {
     bool finished = false;
 };
 
+enum class TransformDir {
+    ToScreen,
+    ToPage
+};
+PointF TransformPagePoint(PointF pt, SizeF page, float zoom, int rotation, TransformDir dir);
+
 class EngineBase {
   public:
     Kind kind = nullptr;

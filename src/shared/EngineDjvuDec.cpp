@@ -390,32 +390,12 @@ bool EngineDjvuDec::BenchLoadPage(int /*pageNo*/) {
 }
 
 PointF EngineDjvuDec::TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
-    ReportIf(zoom <= 0);
+    TransformDir dir = inverse ? TransformDir::ToPage : TransformDir::ToScreen;
     if (zoom <= 0) {
-        return pt;
+        return TransformPagePoint(pt, {}, zoom, rotation, dir);
     }
     SizeF page = PageMediabox(pageNo).Size();
-    if (inverse) {
-        page.dx *= zoom;
-        page.dy *= zoom;
-        if (rotation % 180 != 0) {
-            std::swap(page.dx, page.dy);
-        }
-        rotation = -rotation;
-        zoom = 1.0f / zoom;
-    }
-    rotation = NormalizeRotation(rotation);
-    PointF res = pt; // rotation == 0
-    if (90 == rotation) {
-        res = PointF(page.dy - pt.y, pt.x);
-    } else if (180 == rotation) {
-        res = PointF(page.dx - pt.x, page.dy - pt.y);
-    } else if (270 == rotation) {
-        res = PointF(pt.y, page.dx - pt.x);
-    }
-    res.x *= zoom;
-    res.y *= zoom;
-    return res;
+    return TransformPagePoint(pt, page, zoom, rotation, dir);
 }
 
 RectF EngineDjvuDec::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
