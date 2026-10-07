@@ -1428,7 +1428,6 @@
     <ClInclude Include="..\src\OverlayScrollbar.h" />
     <ClInclude Include="..\src\PageThumbnails.h" />
     <ClInclude Include="..\src\PdfTools.h" />
-    <ClInclude Include="..\src\PngOptimizer.h" />
     <ClInclude Include="..\src\ReadAloud.h" />
     <ClInclude Include="..\src\ReadingAutoScroll.h" />
     <ClInclude Include="..\src\ReadingBar.h" />
@@ -1519,6 +1518,7 @@
     <ClInclude Include="..\src\shared\PdfDarkMode.h" />
     <ClInclude Include="..\src\shared\PdfDate.h" />
     <ClInclude Include="..\src\shared\PdfSync.h" />
+    <ClInclude Include="..\src\shared\PngOptimizer.h" />
     <ClInclude Include="..\src\shared\Print.h" />
     <ClInclude Include="..\src\shared\PrintWin11.h" />
     <ClInclude Include="..\src\shared\ProgressUpdateUI.h" />
