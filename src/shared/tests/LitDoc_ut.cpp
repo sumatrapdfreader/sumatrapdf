@@ -51,6 +51,13 @@ struct LeWriter {
         }
         U8(tmp[0]);
     }
+    void Entry(Str name, u32 section, u32 offset, u32 size) {
+        EncInt(len(name));
+        Bytes(name.s, len(name));
+        EncInt(section);
+        EncInt(offset);
+        EncInt(size);
+    }
 };
 
 static void PutU32(u8* d, int off, u32 v) {
@@ -115,6 +122,35 @@ static Str MkLitDirRangeWrap() {
     return s;
 }
 
+static void WriteLitDirectory(LeWriter& w, int dirOff, int chunkSize, int freeSpace, u32 contentOff) {
+    constexpr int kHdrLen = 40;
+    constexpr int kNPieces = 5;
+    constexpr int kChunkHeaderLen = 48;
+    constexpr int kDirectoryHeaderLen = 32;
+    w.off = kHdrLen + 16;
+    w.U64(dirOff);
+    w.U64(kDirectoryHeaderLen + chunkSize);
+
+    w.off = kHdrLen + (kNPieces * 16);
+    w.U32(0);
+    w.U32(8);
+    w.Bytes("ITSF", 4);
+    w.U32(4);
+    w.Zeros(8);
+    w.U32(contentOff);
+    w.U32(0);
+
+    w.off = dirOff;
+    w.Bytes("IFCM", 4);
+    w.U32(0);
+    w.U32(chunkSize);
+    w.Zeros(12);
+    w.U32(1);
+    w.Bytes("AOLL", 4);
+    w.U32(freeSpace);
+    w.off = dirOff + kDirectoryHeaderLen + kChunkHeaderLen;
+}
+
 // ITSF contentOffset = 0x80000000 used to narrow to a negative int
 static Str MkLitContentOffsetNeg() {
     constexpr int kHdrLen = 40;
@@ -128,33 +164,8 @@ static Str MkLitContentOffsetNeg() {
     Str s = MkLitBuf(kFileLen, kHdrLen, kNPieces, kSecHdrLen);
     u8* d = (u8*)s.s;
     LeWriter w{d, kFileLen};
-    w.off = kHdrLen + 16;
-    w.U64(kDirOff);
-    w.U64(kDirLen);
-
-    w.off = kHdrLen + (kNPieces * 16);
-    w.U32(0);
-    w.U32(8);
-    w.Bytes("ITSF", 4);
-    w.U32(4);
-    w.Zeros(8);
-    w.U32(0x80000000);
-    w.U32(0);
-
-    w.off = kDirOff;
-    w.Bytes("IFCM", 4);
-    w.U32(0);
-    w.U32(kChunkSize);
-    w.Zeros(12);
-    w.U32(1); // nChunks
-    w.Bytes("AOLL", 4);
-    w.U32(54); // freeSpace: dataEnd = 128-54-2 = 72
-    w.off = kDirOff + 32 + 48;
-    w.EncInt(20);
-    w.Bytes("::DataSpace/NameList", 20);
-    w.EncInt(0);
-    w.EncInt(0);
-    w.EncInt(4);
+    WriteLitDirectory(w, kDirOff, kChunkSize, 54, 0x80000000);
+    w.Entry(StrL("::DataSpace/NameList"), 0, 0, 4);
     d[kDirOff + kDirLen - 2] = 1; // nEntries
     return s;
 }
@@ -173,43 +184,10 @@ static Str MkLitSectionOffsetWrap() {
     Str s = MkLitBuf(kFileLen, kHdrLen, kNPieces, kSecHdrLen);
     u8* d = (u8*)s.s;
     LeWriter w{d, kFileLen};
-    w.off = kHdrLen + 16;
-    w.U64(kDirOff);
-    w.U64(kDirLen);
-
-    w.off = kHdrLen + (kNPieces * 16);
-    w.U32(0);
-    w.U32(8);
-    w.Bytes("ITSF", 4);
-    w.U32(4);
-    w.Zeros(8);
-    w.U32(kContentOff);
-    w.U32(0);
-
-    w.off = kDirOff;
-    w.Bytes("IFCM", 4);
-    w.U32(0);
-    w.U32(kChunkSize);
-    w.Zeros(12);
-    w.U32(1);
-    w.Bytes("AOLL", 4);
-    w.U32(132); // freeSpace: dataEnd = 256-132-2 = 122
-    w.off = kDirOff + 32 + 48;
-    w.EncInt(20);
-    w.Bytes("::DataSpace/NameList", 20);
-    w.EncInt(0);
-    w.EncInt(0);
-    w.EncInt(16);
-    w.EncInt(29);
-    w.Bytes("::DataSpace/Storage/X/Content", 29);
-    w.EncInt(0);
-    w.EncInt(32);
-    w.EncInt(4);
-    w.EncInt(9);
-    w.Bytes("/manifest", 9);
-    w.EncInt(1);
-    w.EncInt(0x7fffffff);
-    w.EncInt(2);
+    WriteLitDirectory(w, kDirOff, kChunkSize, 132, kContentOff);
+    w.Entry(StrL("::DataSpace/NameList"), 0, 0, 16);
+    w.Entry(StrL("::DataSpace/Storage/X/Content"), 0, 32, 4);
+    w.Entry(StrL("/manifest"), 1, 0x7fffffff, 2);
     d[kDirOff + kDirLen - 2] = 3;
 
     // NameList: 2 sections "A" and "X"
