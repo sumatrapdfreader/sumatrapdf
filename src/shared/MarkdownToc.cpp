@@ -466,17 +466,17 @@ static bool ParseSafeAnchor(Str html, Str suffix, Str* idOut) {
     return true;
 }
 
-static cmark_node* NewSafeAnchorNode(cmark_node_type type, Str id) {
+static bool InsertSafeAnchorBefore(cmark_node* target, cmark_node_type type, Str id) {
     cmark_node* node = cmark_node_new(type);
     if (!node) {
-        return nullptr;
+        return false;
     }
     TempStr html = fmt("<a id=\"%s\"></a>", id);
-    if (!cmark_node_set_on_enter(node, CStrTemp(html))) {
+    if (!cmark_node_set_on_enter(node, CStrTemp(html)) || !cmark_node_insert_before(target, node)) {
         cmark_node_free(node);
-        return nullptr;
+        return false;
     }
-    return node;
+    return true;
 }
 
 // cmark's safe renderer drops all raw HTML. Preserve empty anchors with a
@@ -509,27 +509,21 @@ static void PreserveSafeEmptyAnchors(cmark_node* parent) {
         if (matched) {
             cmark_node_type customType =
                 type == CMARK_NODE_HTML_BLOCK ? CMARK_NODE_CUSTOM_BLOCK : CMARK_NODE_CUSTOM_INLINE;
-            cmark_node* replacement = NewSafeAnchorNode(customType, id);
-            if (replacement && cmark_node_insert_before(node, replacement)) {
+            if (InsertSafeAnchorBefore(node, customType, id)) {
                 cmark_node_unlink(node);
                 cmark_node_free(node);
                 if (close) {
                     cmark_node_unlink(close);
                     cmark_node_free(close);
                 }
-            } else if (replacement) {
-                cmark_node_free(replacement);
             }
         }
         node = next;
     }
 }
 
-// Give every heading an "<a id="slug"></a>" so in-document links like
-// "[INTR_STATE](#intr_state)" have something to jump to (#5883). Uses the same
-// MarkdownHeadingSlug() as the ToC, so the two can't disagree, and the same
-// validated-anchor node as PreserveSafeEmptyAnchors() so cmark's safe renderer
-// keeps it.
+// Give headings anchors with the TOC's slugs so links like "#intr_state"
+// reach their headings through cmark's safe renderer (#5883).
 static void AddHeadingAnchors(cmark_node* doc) {
     for (cmark_node* node = cmark_node_first_child(doc); node; node = cmark_node_next(node)) {
         if (cmark_node_get_type(node) != CMARK_NODE_HEADING) {
@@ -541,10 +535,7 @@ static void AddHeadingAnchors(cmark_node* doc) {
         }
         Str slug = MarkdownHeadingSlug(title);
         if (slug) {
-            cmark_node* anchor = NewSafeAnchorNode(CMARK_NODE_CUSTOM_BLOCK, slug);
-            if (anchor && !cmark_node_insert_before(node, anchor)) {
-                cmark_node_free(anchor);
-            }
+            InsertSafeAnchorBefore(node, CMARK_NODE_CUSTOM_BLOCK, slug);
         }
         str::Free(slug);
         str::Free(title);
