@@ -708,8 +708,8 @@ int GetWidgetMaxLen(Annotation* annot) {
     return maxLen;
 }
 
-// set a text field's value (runs validation); returns true if accepted.
-bool SetWidgetTextValue(Annotation* annot, Str value) {
+template <typename SetValue>
+static bool SetWidgetValue(Annotation* annot, Str value, Str operation, SetValue setValue) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return false;
     }
@@ -724,19 +724,27 @@ bool SetWidgetTextValue(Annotation* annot, Str value) {
         auto* ctx = e->BaseCtx();
         ScopedRecursiveMutex cs(&e->docLock);
         fz_try(ctx) {
-            ok = pdf_set_text_field_value(ctx, a, len(valueZ) == 0 ? "" : valueZ.s) != 0;
+            ok = setValue(ctx, a, len(valueZ) == 0 ? "" : valueZ.s);
             pdf_update_annot(ctx, a);
             UpdateFormFieldPage(ctx, a); // refresh JS-calculated fields
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
-            logf("SetWidgetTextValue(): mupdf calls failed\n");
+            logf("%s(): mupdf calls failed\n", operation);
         }
     }
     if (ok) {
         MarkNotificationAsModified(e, annot);
     }
     return ok;
+}
+
+// set a text field's value (runs validation); returns true if accepted.
+bool SetWidgetTextValue(Annotation* annot, Str value) {
+    auto setValue = [](fz_context* ctx, pdf_annot* a, const char* s) {
+        return pdf_set_text_field_value(ctx, a, s) != 0;
+    };
+    return SetWidgetValue(annot, value, StrL("SetWidgetTextValue"), setValue);
 }
 
 // options of a combobox/listbox field (display strings), appended to `out`.
@@ -766,34 +774,11 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
 
 // set a choice field's value to one of its options; returns true if applied.
 bool SetWidgetChoiceValue(Annotation* annot, Str value) {
-    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
-        return false;
-    }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    bool ok = false;
-    TempStr valueZ = str::DupTemp(value);
-    {
-        // BaseCtx(), not a Ctx() clone: regenerating the appearance runs the
-        // field's format/calculate JS, which mupdf executes (and rethrows
-        // errors) on _ctx -- the fz_try must be on that same context.
-        auto* ctx = e->BaseCtx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            pdf_set_choice_field_value(ctx, a, len(valueZ) == 0 ? "" : valueZ.s);
-            pdf_update_annot(ctx, a);
-            UpdateFormFieldPage(ctx, a); // refresh JS-calculated fields
-            ok = true;
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-            logf("SetWidgetChoiceValue(): mupdf calls failed\n");
-        }
-    }
-    if (ok) {
-        MarkNotificationAsModified(e, annot);
-    }
-    return ok;
+    auto setValue = [](fz_context* ctx, pdf_annot* a, const char* s) {
+        pdf_set_choice_field_value(ctx, a, s);
+        return true;
+    };
+    return SetWidgetValue(annot, value, StrL("SetWidgetChoiceValue"), setValue);
 }
 
 Str Contents(Annotation* annot) {
