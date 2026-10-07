@@ -483,6 +483,17 @@ enum class TextExtractionState {
 struct TextCacheEntry {
     PageText data;
     TextExtractionState state = TextExtractionState::NotExtracted;
+
+    // Consume text; a concurrent extraction may have filled this slot.
+    void StoreText(PageText text) {
+        if (state == TextExtractionState::Finished) {
+            FreePageText(&text);
+            return;
+        }
+        FreePageText(&data);
+        data = text;
+        state = TextExtractionState::Finished;
+    }
 };
 
 // Cache each chapter separately so later layout cannot shift cached pages.
@@ -493,18 +504,6 @@ struct ChapterTextCache {
         for (TextCacheEntry& page : pages) {
             FreePageText(&page.data);
         }
-    }
-
-    // Consume text; a concurrent extraction may have filled this slot.
-    void StoreText(int pageNo, PageText text) {
-        TextCacheEntry& page = pages[pageNo - 1];
-        if (page.state == TextExtractionState::Finished) {
-            FreePageText(&text);
-            return;
-        }
-        FreePageText(&page.data);
-        page.data = text;
-        page.state = TextExtractionState::Finished;
     }
 };
 
@@ -522,16 +521,15 @@ struct PageTextCache {
         return ct && loc.page <= len(ct->pages) ? &ct->pages[loc.page - 1] : nullptr;
     }
 
-    // creates the chapter's cache if needed and grows it to at least count
-    // entries; nullptr for an out-of-range chapter
-    ChapterTextCache* Ensure(int chapter, int count) {
-        if (chapter < 1) {
+    // Create or grow the chapter cache, then return the requested page entry.
+    TextCacheEntry* Ensure(Location loc, int count) {
+        if (!loc.IsValid()) {
             return nullptr;
         }
-        if (chapter > len(chapters)) {
-            VecResize(chapters, chapter);
+        if (loc.chapter > len(chapters)) {
+            VecResize(chapters, loc.chapter);
         }
-        ChapterTextCache*& ct = chapters[chapter - 1];
+        ChapterTextCache*& ct = chapters[loc.chapter - 1];
         if (!ct) {
             ct = new ChapterTextCache();
         }
@@ -539,7 +537,7 @@ struct PageTextCache {
         if (len(ct->pages) < count) {
             VecResize(ct->pages, count);
         }
-        return ct;
+        return Peek(loc);
     }
 };
 
@@ -922,15 +920,11 @@ void EngineBase::RequestTextExtraction(int pageNo) {
 
     {
         ScopedMutex scope(&textCacheLock);
-        ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        if (!ct || loc.page > len(ct->pages)) {
+        TextCacheEntry* page = pageTextCache->Ensure(loc, count);
+        if (!page || page->data.text || page->state != TextExtractionState::NotExtracted) {
             return;
         }
-        TextCacheEntry& page = ct->pages[loc.page - 1];
-        if (page.data.text || page.state != TextExtractionState::NotExtracted) {
-            return;
-        }
-        page.state = TextExtractionState::Pending;
+        page->state = TextExtractionState::Pending;
     }
 
     AddRef();
@@ -947,9 +941,9 @@ void EngineBase::RequestTextExtraction(int pageNo) {
 
     {
         ScopedMutex scope(&textCacheLock);
-        ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        if (ct && loc.page <= len(ct->pages) && len(ct->pages[loc.page - 1].data.text) == 0) {
-            ct->pages[loc.page - 1].state = TextExtractionState::NotExtracted;
+        TextCacheEntry* page = pageTextCache->Ensure(loc, count);
+        if (page && len(page->data.text) == 0) {
+            page->state = TextExtractionState::NotExtracted;
         }
     }
     AtomicIntDec(&gDangerousThreadCount);
@@ -1008,12 +1002,11 @@ bool EngineBase::ReadPageText(int pageNo, TextReadMode mode, Str& text, int* len
     bool extract;
     {
         ScopedMutex scope(&textCacheLock);
-        ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        TextCacheEntry& page = ct->pages[loc.page - 1];
+        TextCacheEntry* page = pageTextCache->Ensure(loc, count);
         // Finished includes textless pages. Pending still allows synchronous extraction.
-        extract = page.state != TextExtractionState::Finished;
+        extract = page->state != TextExtractionState::Finished;
         if (extract && mode == TextReadMode::Blocking) {
-            page.state = TextExtractionState::Pending;
+            page->state = TextExtractionState::Pending;
         }
     }
 
@@ -1028,13 +1021,12 @@ bool EngineBase::ReadPageText(int pageNo, TextReadMode mode, Str& text, int* len
         EnsurePageText(&extracted);
 
         ScopedMutex scope(&textCacheLock);
-        ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-        ct->StoreText(loc.page, extracted);
+        pageTextCache->Ensure(loc, count)->StoreText(extracted);
     }
 
     ScopedMutex scope(&textCacheLock);
-    ChapterTextCache* ct = pageTextCache->Ensure(loc.chapter, count);
-    text = ReturnPageText(ct->pages[loc.page - 1].data, lenOut, coordsOut, quadsOut);
+    TextCacheEntry* page = pageTextCache->Ensure(loc, count);
+    text = ReturnPageText(page->data, lenOut, coordsOut, quadsOut);
     return true;
 }
 
