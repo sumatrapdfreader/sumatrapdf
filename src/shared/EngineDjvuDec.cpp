@@ -243,12 +243,8 @@ EngineDjvuDec::EngineDjvuDec() {
 EngineDjvuDec::~EngineDjvuDec() {
     DestroyTocTree(tocTree);
     DeleteVecMembers(pages);
-    if (doc) {
-        djvu_doc_close(doc);
-    }
-    if (ctx) {
-        djvu_ctx_free(ctx);
-    }
+    djvu_doc_close(doc);
+    djvu_ctx_free(ctx);
     file::MemoryUnmap(&fileMap);
     str::Free(fileData);
 }
