@@ -559,9 +559,13 @@ Pixmap* PixmapFromDataFz(Str d) {
     // WebP with an ICCP chunk: mupdf applies the profile. Plain WebP stays on
     // the faster libwebp path in ImageReader_win / webp::PixmapFromData.
     bool webpIcc = FindWebpChunk(d, "ICCP", icc);
+#if defined(SUMATRA_NG)
     FileType kind = GuessFileTypeFromData(d);
     bool useFz = kind == FileType::Tiff || kind == FileType::Gif;
     if (jpegOrJp2 || webpIcc || useFz) {
+#else
+    if (jpegOrJp2 || webpIcc) {
+#endif
         result = PixmapFromImageData(ctx, data, n);
     }
 
