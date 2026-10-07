@@ -1181,12 +1181,7 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/, bool forceR
     bool isCtrl = IsCtrlPressed();
 #endif
 
-#if defined(SUMATRA_NG)
-    // Ctrl+drag (or forceRect) is a rectangular selection, not a text one
-#else
-    // Ctrl+drag (or forceRect, used when placing a new signature) is a
-    // rectangular selection, not a text one
-#endif
+    // Ctrl+drag or forceRect starts a rectangular selection.
     if (!forceRect && (!isCtrl || isShift)) {
         DisplayModel* dm = win->AsFixed();
         int pageNo = dm->GetPageNoByPoint(Point(x, y));
