@@ -12,7 +12,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\base\Archive.h">
       <Filter>base</Filter>
@@ -45,6 +44,9 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\EngineBase.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\EngineMupdf.h">
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\GumboHtmlParser.h">
