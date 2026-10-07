@@ -214,6 +214,7 @@ export const sharedFiles = [
   "src/shared/UpdateCheck.h",
   "src/shared/UpdateTemp.cpp",
   "src/shared/UpdateTemp.h",
+  "src/shared/Version.h",
   "src/shared/WebpReader.cpp",
   "src/shared/WebpReader.h",
   "src/shared/dragcursor.cur",

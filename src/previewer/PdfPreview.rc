@@ -1,5 +1,5 @@
 #include <windows.h>
-#include "../Version.h"
+#include "../shared/Version.h"
 
 VS_VERSION_INFO    VERSIONINFO     MOVEABLE IMPURE LOADONCALL DISCARDABLE
   FILEVERSION    VER_RESOURCE
