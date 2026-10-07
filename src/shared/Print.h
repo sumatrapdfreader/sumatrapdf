@@ -84,5 +84,6 @@ enum class PrintResult {
 
 PrintResult PrintFile(Str fileName, Str printerName = {}, bool displayErrors = true, Str settings = {});
 PrintResult PrintFile2(EngineBase* engine, Str printerName = {}, bool displayErrors = true, Str settings = {});
+// selectionByDefault: open the dialog with "Selection" chosen (needs a rectangular selection)
 void PrintCurrentFile(MainWindow* win, bool waitForCompletion = false, bool selectionByDefault = false);
 void AbortPrinting(MainWindow* win);

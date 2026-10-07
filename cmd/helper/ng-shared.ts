@@ -183,6 +183,7 @@ export const sharedFiles = [
   "src/shared/PdfDate.cpp",
   "src/shared/PdfDate.h",
   "src/shared/PdfSync.h",
+  "src/shared/Print.h",
   "src/shared/PerfLog.cpp",
   "src/shared/PerfLog.h",
   "src/shared/PerfLog_x64.asm",

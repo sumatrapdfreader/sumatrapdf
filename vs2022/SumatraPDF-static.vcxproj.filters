@@ -234,9 +234,6 @@
     <ClInclude Include="..\src\PngOptimizer.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Print.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ReadAloud.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -505,6 +502,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\PdfSync.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\Print.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\PrintWin11.h">
