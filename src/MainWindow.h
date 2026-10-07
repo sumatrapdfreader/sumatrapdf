@@ -748,6 +748,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     void UpdateCanvasSize();
     Size GetViewPortSize() const;
+    void RedrawCanvas() const;
     void RedrawAll(bool update = false) const;
     void RedrawAllIncludingNonClient() const;
 

@@ -670,6 +670,10 @@ Size MainWindow::GetViewPortSize() const {
     return Size{canvasRc.dx, canvasRc.dy};
 }
 
+void MainWindow::RedrawCanvas() const {
+    AppShellInvalidate(const_cast<MainWindow*>(this));
+}
+
 void MainWindow::RedrawAll(bool) const {
     AppShellInvalidate(const_cast<MainWindow*>(this));
 }

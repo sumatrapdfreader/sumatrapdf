@@ -537,6 +537,7 @@ struct MainWindow {
     StressTest* stressTest = nullptr;
 
     Size GetViewPortSize() const;
+    void RedrawCanvas() const;
     void RedrawAll(bool update = false) const;
     void Focus() const;
     void ToggleZoom() const;

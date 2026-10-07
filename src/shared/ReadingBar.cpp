@@ -106,22 +106,12 @@ static void SetHeightPx(int px, bool save) {
     }
 }
 
-// ng: orig's HwndClientRect(win->hwndCanvas). The viewport is what the canvas
-// paints and what ToDoc() maps the mouse into, so the band lives in it.
 static Rect CanvasRect(MainWindow* win) {
-#if defined(SUMATRA_NG)
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
-    if (!dm) {
+    if (!win) {
         return {};
     }
-    Size vp = dm->GetViewPort().Size();
+    Size vp = win->GetViewPortSize();
     return Rect{0, 0, vp.dx, vp.dy};
-#else
-    if (!win || !win->hwndCanvas) {
-        return {};
-    }
-    return HwndClientRect(win->hwndCanvas);
-#endif
 }
 
 static Rect BandRect(MainWindow* win) {
@@ -213,15 +203,9 @@ static ReadingBarHit HitTest(MainWindow* win, Point pt) {
 }
 
 static void InvalidateCanvas(MainWindow* win) {
-#if defined(SUMATRA_NG)
     if (win) {
-        AppShellInvalidate(win);
+        win->RedrawCanvas();
     }
-#else
-    if (win && win->hwndCanvas) {
-        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
-    }
-#endif
 }
 
 static Color BandFill(u8& alphaOut) {

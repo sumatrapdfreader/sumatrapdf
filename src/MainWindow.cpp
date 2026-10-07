@@ -417,6 +417,10 @@ Size MainWindow::GetViewPortSize() const {
     return size;
 }
 
+void MainWindow::RedrawCanvas() const {
+    HwndInvalidate(hwndCanvas);
+}
+
 static BOOL CALLBACK RedrawHwndCallback(HWND hwnd, LPARAM lp) {
     bool update = (bool)lp;
     HwndInvalidate(hwnd, true);
