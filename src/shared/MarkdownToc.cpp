@@ -32,24 +32,12 @@ static bool IsCollectedExt(Str path, bool htmlMode) {
 
 static void CollectMdInDir(Str dir, bool htmlMode, int depth, StrVec& out) {
     DirIter di(dir);
-    di.includeFiles = true;
-    di.includeDirs = false;
-    di.recurse = false;
-    for (DirIterEntry* de : di) {
-        if (!IsRegularFile(de) || !IsCollectedExt(de->name, htmlMode)) {
-            continue;
-        }
-        out.Append(de->filePath);
-    }
-    if (depth == 0) {
-        return;
-    }
-
-    di.includeFiles = false;
-    di.includeDirs = true;
+    di.includeDirs = depth != 0;
     for (DirIterEntry* de : di) {
         if (IsDirectory(de)) {
             CollectMdInDir(de->filePath, htmlMode, depth - 1, out);
+        } else if (IsRegularFile(de) && IsCollectedExt(de->name, htmlMode)) {
+            out.Append(de->filePath);
         }
     }
 }
