@@ -296,9 +296,6 @@ static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
     VecAppend(toVisit, root);
     while (len(toVisit) > 0) {
         const GumboNode* node = VecPop(toVisit);
-        if (!node) {
-            continue;
-        }
         if (GumboTagNameIs(node, StrL("CipherReference"), HtmlNameMatch::Local)) {
             TempStr uri = GumboAttributeValueTemp(node, "URI");
             if (uri) {
@@ -353,11 +350,7 @@ bool EpubDoc::Load() {
     Str content(contentFi->data, contentFi->fileSizeUncompressed);
     ParseMetadata(content, props);
     GumboDoc contentDoc(content, GumboMode::XmlFragment);
-    const GumboNode* node = contentDoc.Document();
-    if (!node) {
-        return false;
-    }
-    node = GumboFindDescendantByTag(node, StrL("manifest"), HtmlNameMatch::Local);
+    const GumboNode* node = GumboFindDescendantByTag(contentDoc.Document(), StrL("manifest"), HtmlNameMatch::Local);
     if (!node) {
         return false;
     }
@@ -366,8 +359,7 @@ bool EpubDoc::Load() {
 
     StrVec idList, pathList;
 
-    const GumboNode* manifest = node;
-    const GumboVector* manifestChildren = GumboChildrenOf(manifest);
+    const GumboVector* manifestChildren = GumboChildrenOf(node);
     for (unsigned int i = 0; manifestChildren && i < manifestChildren->length; i++) {
         node = (const GumboNode*)manifestChildren->data[i];
         if (!node || node->type != GUMBO_NODE_ELEMENT) {
@@ -430,8 +422,7 @@ bool EpubDoc::Load() {
         isRtlDoc = readingDir.rtl;
     }
 
-    const GumboNode* spine = node;
-    const GumboVector* spineChildren = GumboChildrenOf(spine);
+    const GumboVector* spineChildren = GumboChildrenOf(node);
     for (unsigned int i = 0; spineChildren && i < spineChildren->length; i++) {
         node = (const GumboNode*)spineChildren->data[i];
         if (!GumboTagNameIs(node, StrL("itemref"), HtmlNameMatch::Local)) {
