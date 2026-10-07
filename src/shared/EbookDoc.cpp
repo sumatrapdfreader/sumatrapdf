@@ -47,7 +47,7 @@ static Str TakeArchiveData(Archive* archive, int fileId) {
     return res;
 }
 
-static TempStr GetXmlPIAttrTemp(Str xmlPI, Str attrName) {
+static Str GetXmlPIAttr(Str xmlPI, Str attrName) {
     Str rest(xmlPI.s + 2, len(xmlPI) - 2);
     str::TrimNonWs(rest);
     while (len(rest) > 0) {
@@ -82,7 +82,7 @@ static TempStr GetXmlPIAttrTemp(Str xmlPI, Str attrName) {
             val = str::NextWord(rest);
         }
         if (str::EqI(name, attrName)) {
-            return str::DupTemp(val);
+            return val;
         }
     }
     return {};
@@ -98,10 +98,7 @@ static uint GetCodepageFromPI(Str xmlPI) {
     if (xmlPIEnd < 0) {
         return CP_ACP;
     }
-    TempStr encoding = GetXmlPIAttrTemp(Str(xmlPI.s, xmlPIEnd + 2), StrL("encoding"));
-    if (len(encoding) == 0) {
-        return CP_ACP;
-    }
+    Str encoding = GetXmlPIAttr(Str(xmlPI.s, xmlPIEnd + 2), StrL("encoding"));
 
     struct {
         Str namePart;
@@ -1314,7 +1311,7 @@ bool EbookDoc_UnitTestLoading() {
         {StrL("<?xml?>"), {}},
     };
     for (const auto& c : declarations) {
-        if (!str::Eq(GetXmlPIAttrTemp(c[0], StrL("encoding")), c[1])) {
+        if (!str::Eq(GetXmlPIAttr(c[0], StrL("encoding")), c[1])) {
             return false;
         }
     }
