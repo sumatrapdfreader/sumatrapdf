@@ -1261,7 +1261,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\EngineMupdf.h" />
-    <ClInclude Include="..\src\ImageReader.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h" />
@@ -1279,6 +1278,7 @@
     <ClInclude Include="..\src\shared\EngineBase.h" />
     <ClInclude Include="..\src\shared\GumboHtmlParser.h" />
     <ClInclude Include="..\src\shared\HtmlFormatter.h" />
+    <ClInclude Include="..\src\shared\ImageReader.h" />
     <ClInclude Include="..\src\shared\JxlReader.h" />
     <ClInclude Include="..\src\shared\MobiDoc.h" />
     <ClInclude Include="..\src\shared\PalmDbReader.h" />

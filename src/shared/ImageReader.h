@@ -21,7 +21,6 @@ Pixmap* PixmapFromDataFz(Str);
 
 Pixmap* PixmapFromData(Str);
 
-// Returns owned bytes, or empty on failure.
 Str EncodeTiffFromPixmap(const Pixmap* px);
 Str EncodeGifFromPixmap(const Pixmap* px);
 

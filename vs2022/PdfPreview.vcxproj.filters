@@ -19,7 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\EngineMupdf.h" />
-    <ClInclude Include="..\src\ImageReader.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
     <ClInclude Include="..\src\base\Archive.h">
@@ -65,6 +64,9 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\HtmlFormatter.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ImageReader.h">
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\JxlReader.h">

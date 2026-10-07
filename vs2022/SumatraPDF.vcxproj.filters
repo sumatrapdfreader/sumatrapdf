@@ -192,9 +192,6 @@
     <ClInclude Include="..\src\HomePage.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ImageReader.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ImageSaveCropResize.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -475,6 +472,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\HtmlFormatter.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ImageReader.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\JxlReader.h">

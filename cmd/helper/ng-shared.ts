@@ -159,6 +159,7 @@ export const sharedFiles = [
   "src/shared/HangDetector.h",
   "src/shared/HtmlFormatter.cpp",
   "src/shared/HtmlFormatter.h",
+  "src/shared/ImageReader.h",
   "src/shared/JxlReader.cpp",
   "src/shared/JxlReader.h",
   "src/shared/LitDoc.cpp",
