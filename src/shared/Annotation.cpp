@@ -1565,40 +1565,34 @@ static void WriteFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str family, i
     pdf_set_annot_rich_defaults(ctx, a, CStrTemp(ToStrTemp(ds)));
 }
 
-Str FreeTextFontFamily(Annotation* annot) {
+struct FreeTextFont {
+    Str family;
+    int style = 0;
+};
+
+static FreeTextFont ReadFreeTextFont(Annotation* annot) {
+    FreeTextFont font;
     if (!AnnotationIsLive(annot) || Type(annot) != AnnotationType::FreeText) {
-        return {};
+        return font;
     }
     EngineMupdf* e = annot->engine;
     auto* ctx = e->Ctx();
     ScopedRecursiveMutex cs(&e->docLock);
-    Str family;
-    int style = 0;
     fz_try(ctx) {
-        ReadFreeTextFontLocked(ctx, annot->pdfannot, family, style);
+        ReadFreeTextFontLocked(ctx, annot->pdfannot, font.family, font.style);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    return family;
+    return font;
+}
+
+Str FreeTextFontFamily(Annotation* annot) {
+    return ReadFreeTextFont(annot).family;
 }
 
 int FreeTextFontStyle(Annotation* annot) {
-    if (!AnnotationIsLive(annot) || Type(annot) != AnnotationType::FreeText) {
-        return 0;
-    }
-    EngineMupdf* e = annot->engine;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-    Str family;
-    int style = 0;
-    fz_try(ctx) {
-        ReadFreeTextFontLocked(ctx, annot->pdfannot, family, style);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
-    return style;
+    return ReadFreeTextFont(annot).style;
 }
 
 void SetFreeTextFont(Annotation* annot, Str family, int style) {
