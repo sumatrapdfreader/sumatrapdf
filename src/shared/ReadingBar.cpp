@@ -231,11 +231,8 @@ static bool InvertOn() {
     return gSettings && gSettings->readingBar.invert;
 }
 
-#if defined(SUMATRA_NG)
-void ReadingBarPaint(MainWindow* win, gp::PaintCtx* ctx) {
-    if (!win || !ctx) {
-        return;
-    }
+template <typename Fill, typename Outline, typename Line>
+static void PaintBar(MainWindow* win, Fill fill, Outline outline, Line line) {
     Rect band = BandRect(win);
     if (band.IsEmpty()) {
         return;
@@ -245,17 +242,16 @@ void ReadingBarPaint(MainWindow* win, gp::PaintCtx* ctx) {
         Rect above{0, 0, canvas.dx, band.y};
         Rect below{0, band.Bottom(), canvas.dx, canvas.dy - band.Bottom()};
         if (!above.IsEmpty()) {
-            CanvasFillRects(ctx, &above, 1, kColBlack, kMaskAlpha, 0);
+            fill(above, kColBlack, kMaskAlpha);
         }
         if (!below.IsEmpty()) {
-            CanvasFillRects(ctx, &below, 1, kColBlack, kMaskAlpha, 0);
+            fill(below, kColBlack, kMaskAlpha);
         }
-        // orig's Gfx::DrawRect: a 1px outline, no fill
-        CanvasFillRects(ctx, &band, 1, kColWhite, 0, 1);
+        outline(band, kColWhite);
     } else {
         u8 alpha = kDefaultAlpha;
-        Color fill = BandFill(alpha);
-        CanvasFillRects(ctx, &band, 1, fill, alpha, 0);
+        Color fillCol = BandFill(alpha);
+        fill(band, fillCol, alpha);
     }
 
     if (!win->readingBarHover && win->readingBarDrag == ReadingBarDrag::None) {
@@ -271,50 +267,29 @@ void ReadingBarPaint(MainWindow* win, gp::PaintCtx* ctx) {
     Point c{close.Right() - m - 1, close.y + m};
     Point d{close.x + m, close.Bottom() - m - 1};
     Color xcol = InvertOn() ? kColWhite : kColBlack;
-    CanvasDrawLine(ctx, a, b, xcol, 1.5f);
-    CanvasDrawLine(ctx, c, d, xcol, 1.5f);
+    line(a, b, xcol);
+    line(c, d, xcol);
+}
+
+#if defined(SUMATRA_NG)
+void ReadingBarPaint(MainWindow* win, gp::PaintCtx* ctx) {
+    if (!win || !ctx) {
+        return;
+    }
+    auto fill = [ctx](const Rect& rect, Color col, u8 alpha) { CanvasFillRects(ctx, &rect, 1, col, alpha, 0); };
+    auto outline = [ctx](const Rect& rect, Color col) { CanvasFillRects(ctx, &rect, 1, col, 0, 1); };
+    auto line = [ctx](Point a, Point b, Color col) { CanvasDrawLine(ctx, a, b, col, 1.5f); };
+    PaintBar(win, fill, outline, line);
 }
 #else
 void ReadingBarPaint(MainWindow* win, Gfx* gfx) {
     if (!win || !gfx) {
         return;
     }
-    Rect band = BandRect(win);
-    if (band.IsEmpty()) {
-        return;
-    }
-    Rect canvas = CanvasRect(win);
-    if (InvertOn()) {
-        Rect above{0, 0, canvas.dx, band.y};
-        Rect below{0, band.Bottom(), canvas.dx, canvas.dy - band.Bottom()};
-        if (!above.IsEmpty()) {
-            gfx->FillRects(&above, 1, kColBlack, kMaskAlpha);
-        }
-        if (!below.IsEmpty()) {
-            gfx->FillRects(&below, 1, kColBlack, kMaskAlpha);
-        }
-        gfx->DrawRect(band, kColWhite);
-    } else {
-        u8 alpha = kDefaultAlpha;
-        Color fill = BandFill(alpha);
-        gfx->FillRects(&band, 1, fill, alpha);
-    }
-
-    if (!win->readingBarHover && win->readingBarDrag == ReadingBarDrag::None) {
-        return;
-    }
-    Rect close = CloseRect(band);
-    if (close.IsEmpty()) {
-        return;
-    }
-    int m = DpiScale(3);
-    Point a{close.x + m, close.y + m};
-    Point b{close.Right() - m - 1, close.Bottom() - m - 1};
-    Point c{close.Right() - m - 1, close.y + m};
-    Point d{close.x + m, close.Bottom() - m - 1};
-    Color xcol = InvertOn() ? kColWhite : kColBlack;
-    gfx->DrawLineAA(a, b, xcol, 1.5f);
-    gfx->DrawLineAA(c, d, xcol, 1.5f);
+    auto fill = [gfx](const Rect& rect, Color col, u8 alpha) { gfx->FillRects(&rect, 1, col, alpha); };
+    auto outline = [gfx](const Rect& rect, Color col) { gfx->DrawRect(rect, col); };
+    auto line = [gfx](Point a, Point b, Color col) { gfx->DrawLineAA(a, b, col, 1.5f); };
+    PaintBar(win, fill, outline, line);
 }
 #endif
 
