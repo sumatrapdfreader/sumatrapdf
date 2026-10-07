@@ -38,7 +38,6 @@ struct ListBoxModel {
 struct ListBoxModelStrings : ListBoxModel {
     StrVec strings;
 
-    ~ListBoxModelStrings() override = default;
     int ItemsCount() override;
     Str Item(int) override;
 };
