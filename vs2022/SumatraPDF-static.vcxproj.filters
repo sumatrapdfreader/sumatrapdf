@@ -123,9 +123,6 @@
     <ClInclude Include="..\src\AnnotEditToolbar.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\AnnotFilterToolbar.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -301,6 +298,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\AIChatPanel.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\AnnotFilterToolbar.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\AnnotPlacement.h">
