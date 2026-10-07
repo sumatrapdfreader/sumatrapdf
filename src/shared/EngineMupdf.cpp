@@ -3910,40 +3910,26 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     TempStr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
 
     FileType kind = GuessFileTypeFromName(path);
+    auto loadHtml = [&](Str data) {
+        if (len(data) == 0) {
+            return false;
+        }
+        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)data.s, (size_t)data.len);
+        fz_stream* file = fz_open_buffer(ctx, buf);
+        fz_drop_buffer(ctx, buf);
+        str::Free(data);
+        TempStr nameHint = str::JoinTemp(path, StrL(".html"));
+        return LoadFromStream(file, nameHint, pwdUI) && FinishLoading();
+    };
+
     // show .txt, .xml and other text files as plain text
     // using html engine
     if (kind == FileType::Txt) {
-        // synthesize a .html file from text file
-        Str d = TxtFileToHTML(path);
-        if (len(d) == 0) {
-            return false;
-        }
-        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.s, (size_t)d.len);
-        fz_stream* file = fz_open_buffer(ctx, buf);
-        fz_drop_buffer(ctx, buf);
-        str::Free(d);
-        TempStr nameHint = str::JoinTemp(path, StrL(".html"));
-        if (!LoadFromStream(file, nameHint, pwdUI)) {
-            return false;
-        }
-        return FinishLoading();
+        return loadHtml(TxtFileToHTML(path));
     }
 
     if (str::EqI(ext, StrL(".pdb"))) {
-        // synthesize a .html file from pdb file
-        Str d = PalmDocToHTML(path);
-        if (len(d) == 0) {
-            return false;
-        }
-        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.s, d.len);
-        fz_stream* file = fz_open_buffer(ctx, buf);
-        fz_drop_buffer(ctx, buf);
-        str::Free(d);
-        TempStr nameHint = str::JoinTemp(path, StrL(".html"));
-        if (!LoadFromStream(file, nameHint, pwdUI)) {
-            return false;
-        }
-        return FinishLoading();
+        return loadHtml(PalmDocToHTML(path));
     }
 
     auto timeStart = TimeGet();
