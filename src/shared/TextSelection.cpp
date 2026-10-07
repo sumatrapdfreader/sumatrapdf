@@ -631,13 +631,7 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
     }
 
     // reference point: center of the glyph left of the free end (or first glyph)
-    int refIx = glyph;
-    if (refIx > 0) {
-        refIx--;
-    }
-    if (refIx >= textLen) {
-        refIx = textLen - 1;
-    }
+    int refIx = ClampI(glyph, 1, textLen) - 1;
     while (refIx > 0 && !coords[refIx].x && !coords[refIx].dx && !IsLineBreakAt(text, coords, refIx, textLen)) {
         refIx--;
     }
