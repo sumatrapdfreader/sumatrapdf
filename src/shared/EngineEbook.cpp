@@ -189,6 +189,8 @@ class EngineEbook : public EngineBase {
     void GetTransform(Matrix& m, float zoom, int rotation);
 #endif
     bool ExtractPageAnchors();
+    void InitFormatterArgs(HtmlFormatterArgs& args, Str html, WStr fontName);
+    bool SetFormattedPages(Vec<HtmlPage*>* formatted);
     TocTree* FinishToc(EbookTocBuilder& builder);
     EngineBase* CloneFromSource(CreateEbookEngine fromFile, CreateEbookEngine fromData = nullptr);
     TempStr ExtractFontListTemp();
@@ -266,6 +268,21 @@ EngineEbook::~EngineEbook() {
     DestroyTocTree(tocTree);
     str::Free(sourceData);
     ArenaDelete(a);
+}
+
+void EngineEbook::InitFormatterArgs(HtmlFormatterArgs& args, Str html, WStr fontName) {
+    args.htmlStr = html;
+    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
+    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
+    args.SetFontName(fontName);
+    args.fontSize = GetDefaultFontSize();
+    args.textAllocator = a;
+}
+
+bool EngineEbook::SetFormattedPages(Vec<HtmlPage*>* formatted) {
+    pages = formatted;
+    pageCount = len(*pages);
+    return ExtractPageAnchors();
 }
 
 RectF EngineEbook::PageMediabox(int) {
@@ -1045,19 +1062,9 @@ bool EngineEpub::FinishLoading() {
         return false;
     }
 
-    HtmlFormatterArgs args{};
-    args.htmlStr = ToStr(doc->htmlData);
-    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
-    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-    args.SetFontName(GetDefaultFontName());
-    args.fontSize = GetDefaultFontSize();
-    args.textAllocator = a;
-
-    pages = EpubFormatter(&args, doc).FormatAllPages(false);
-
-    // must set pageCount before ExtractPageAnchors
-    pageCount = len(*pages);
-    if (!ExtractPageAnchors()) {
+    HtmlFormatterArgs args;
+    InitFormatterArgs(args, ToStr(doc->htmlData), GetDefaultFontName());
+    if (!SetFormattedPages(EpubFormatter(&args, doc).FormatAllPages(false))) {
         return false;
     }
 
@@ -1155,21 +1162,13 @@ bool EngineFb2::FinishLoading() {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = ToStr(doc->xmlData);
-    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
-    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-    args.SetFontName(GetDefaultFontName());
-    args.fontSize = GetDefaultFontSize();
-    args.textAllocator = a;
+    InitFormatterArgs(args, ToStr(doc->xmlData), GetDefaultFontName());
 
     if (doc->isZipped) {
         str::ReplaceWithCopy(&defaultExt, StrL(".fb2z"));
     }
 
-    pages = Fb2Formatter(&args, doc).FormatAllPages(false);
-    // must set pageCount before ExtractPageAnchors
-    pageCount = len(*pages);
-    if (!ExtractPageAnchors()) {
+    if (!SetFormattedPages(Fb2Formatter(&args, doc).FormatAllPages(false))) {
         return false;
     }
     GetToc();
@@ -1321,12 +1320,7 @@ bool EngineMobi::FinishLoading() {
         VecReset(chapterStart);
 
         HtmlFormatterArgs args;
-        args.htmlStr = html;
-        args.pageDx = (float)pageRect.dx - (2 * pageBorder);
-        args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-        args.SetFontName(GetDefaultFontName());
-        args.fontSize = GetDefaultFontSize();
-        args.textAllocator = a;
+        InitFormatterArgs(args, html, GetDefaultFontName());
 
         VecResize(chapterPages, 1);
         chapterPages[0] = MobiFormatter(&args, doc).FormatAllPages();
@@ -1370,12 +1364,7 @@ int EngineMobi::LayOutChapter(int chapter) {
     int end = (chapter < len(chapterStart)) ? chapterStart[chapter] : len(html);
 
     HtmlFormatterArgs args;
-    args.htmlStr = Str(html.s + start, end - start);
-    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
-    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-    args.SetFontName(GetDefaultFontName());
-    args.fontSize = GetDefaultFontSize();
-    args.textAllocator = a;
+    InitFormatterArgs(args, Str(html.s + start, end - start), GetDefaultFontName());
 
     // only chapter 1 may show the book's cover image
     MobiCoverImage coverImage = chapter == 1 ? MobiCoverImage::Show : MobiCoverImage::Skip;
@@ -1622,17 +1611,8 @@ bool EnginePdb::Load(Str fileName) {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = ToStr(doc->htmlData);
-    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
-    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-    args.SetFontName(GetDefaultFontName());
-    args.fontSize = GetDefaultFontSize();
-    args.textAllocator = a;
-
-    pages = HtmlFormatter(&args).FormatAllPages();
-    // must set pageCount before ExtractPageAnchors
-    pageCount = len(*pages);
-    if (!ExtractPageAnchors()) {
+    InitFormatterArgs(args, ToStr(doc->htmlData), GetDefaultFontName());
+    if (!SetFormattedPages(HtmlFormatter(&args).FormatAllPages())) {
         return false;
     }
 
@@ -1964,18 +1944,9 @@ bool EngineChm::Load(Str fileName) {
     dataCache = new ChmDataCache(doc, html);
 
     HtmlFormatterArgs args;
-    args.htmlStr = dataCache->GetHtmlData();
-    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
-    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-    args.SetFontName(GetDefaultChmFontName());
+    InitFormatterArgs(args, dataCache->GetHtmlData(), GetDefaultChmFontName());
     args.overrideFontName = len(gDefaultChmFontName) > 0;
-    args.fontSize = GetDefaultFontSize();
-    args.textAllocator = a;
-
-    pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
-    // must set pageCount before ExtractPageAnchors
-    pageCount = len(*pages);
-    if (!ExtractPageAnchors()) {
+    if (!SetFormattedPages(ChmFormatter(&args, dataCache).FormatAllPages(false))) {
         return false;
     }
 
@@ -2094,17 +2065,8 @@ bool EngineHtml::Load(Str fileName) {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->htmlData;
-    args.pageDx = (float)pageRect.dx - (2 * pageBorder);
-    args.pageDy = (float)pageRect.dy - (2 * pageBorder);
-    args.SetFontName(GetDefaultFontName());
-    args.fontSize = GetDefaultFontSize();
-    args.textAllocator = a;
-
-    pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
-    // must set pageCount before ExtractPageAnchors
-    pageCount = len(*pages);
-    if (!ExtractPageAnchors()) {
+    InitFormatterArgs(args, doc->htmlData, GetDefaultFontName());
+    if (!SetFormattedPages(HtmlFileFormatter(&args, doc).FormatAllPages(false))) {
         return false;
     }
 
