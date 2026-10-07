@@ -226,6 +226,7 @@ export const sharedFiles = [
   "src/shared/tests/AnnotSearch_ut.cpp",
   "src/shared/tests/CachedObjects_ut.cpp",
   "src/shared/tests/ChapterTable_ut.cpp",
+  "src/shared/tests/CommandPalette_ut.cpp",
   "src/shared/tests/EngineDjvuDec_ut.cpp",
   "src/shared/tests/LitDoc_ut.cpp",
   "src/shared/tests/MobiDoc_ut.cpp",

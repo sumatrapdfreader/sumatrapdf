@@ -67,7 +67,39 @@ int CommandPaletteModel::ItemCommandId(int index) const {
     return entry ? entry->commandId : 0;
 }
 
+// the prefixes docs/md/Command-Palette.md documents, and what they select
+static void PalettePrefixes_UnitTests() {
+    struct {
+        const char* query;
+        PaletteMode mode;
+        const char* rest;
+    } cases[] = {
+        {"", PaletteMode::Commands, ""},
+        {"zoom", PaletteMode::Commands, "zoom"},
+        {">zoom", PaletteMode::Commands, "zoom"},
+        {"#doc", PaletteMode::FileHistory, "doc"},
+        {"@tab", PaletteMode::Tabs, "tab"},
+        {":all", PaletteMode::Everything, "all"},
+        {"%chapter", PaletteMode::Toc, "chapter"},
+        {"$fav", PaletteMode::Favorites, "fav"},
+        {"*annot", PaletteMode::Annotations, "annot"},
+        {"=ZoomIncrement = 25", PaletteMode::Settings, "ZoomIncrement = 25"},
+        {"&", PaletteMode::Thumbnails, ""},
+    };
+    for (auto& c : cases) {
+        Str rest;
+        PaletteMode mode = PaletteModeFromQuery(Str(c.query), &rest);
+        utassert(mode == c.mode);
+        utassert(str::Eq(rest, Str(c.rest)));
+    }
+    // the prefix is only a prefix: a '#' inside the query is part of the text
+    Str rest;
+    utassert(PaletteModeFromQuery(StrL("a#b"), &rest) == PaletteMode::Commands);
+    utassert(str::Eq(rest, StrL("a#b")));
+}
+
 void CommandPaletteModel_UnitTests() {
+    PalettePrefixes_UnitTests();
     const int commands[] = {CmdOpenFile, CmdRotateLeft, CmdRotateRight, CmdZoomFitWidth};
     CommandPaletteModel model;
     model.SetCommands(commands, dimofi(commands));
