@@ -20,7 +20,6 @@ struct ChmModel : BrowserDocController {
     void GoToPage(int pageNo, bool addNavPoint) override;
 
     TocTree* GetToc() override;
-    bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
     IPageDestination* GetNamedDest(Str name) override;
 

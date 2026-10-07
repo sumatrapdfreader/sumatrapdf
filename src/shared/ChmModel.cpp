@@ -188,21 +188,6 @@ bool ChmModel::DisplayPage(Str pageUrl) {
     return true;
 }
 
-bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/) {
-    Kind k = link->GetKind();
-    if (k != kindDestinationScrollTo) {
-        logf("ChmModel::HandleLink: unsupported kind '%s'\n", Str(k));
-        ReportIf(link->GetKind() != kindDestinationScrollTo);
-    }
-    Str url = link->GetName();
-    if (DisplayPage(url)) {
-        return true;
-    }
-    int pageNo = PageDestGetPageNo(link);
-    GoToPage(pageNo, false);
-    return true;
-}
-
 // view settings
 // for quick type determination and type-safe casting
 ChmModel* ChmModel::AsChm() {

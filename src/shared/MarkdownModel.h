@@ -20,7 +20,6 @@ struct MarkdownModel : BrowserDocController {
     void GoToPage(int pageNo, bool addNavPoint) override;
 
     TocTree* GetToc() override;
-    bool HandleLink(IPageDestination*, ILinkHandler*) override;
     IPageDestination* GetNamedDest(Str name) override;
 
     void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
@@ -67,5 +66,5 @@ struct MarkdownModel : BrowserDocController {
     TempStr FileToVirtualUrlTemp(Str filePath) const;
     TempStr VirtualUrlToFileTemp(Str url) const;
     TempStr LinkedDocPathTemp(Str url) const;
-    bool MaybeLaunchLinkedDoc(Str url);
+    bool OpenLinkedDocument(Str url) override;
 };

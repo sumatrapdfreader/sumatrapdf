@@ -105,6 +105,21 @@ void BrowserDocController::ScrollTo(int pageNo, RectF rect, float zoom) {
     GoToPage(pageNo, false);
 }
 
+bool BrowserDocController::HandleLink(IPageDestination* link, ILinkHandler*) {
+    Kind kind = link->GetKind();
+    if (kind != kindDestinationScrollTo) {
+        logf("BrowserDocController::HandleLink: unsupported kind '%s'\n", Str(kind));
+        ReportIf(kind != kindDestinationScrollTo);
+    }
+
+    Str url = link->GetName();
+    if (OpenLinkedDocument(url) || DisplayPage(url)) {
+        return true;
+    }
+    GoToPage(PageDestGetPageNo(link), false);
+    return true;
+}
+
 void BrowserDocController::SetZoomVirtual(float zoom, Point*) {
     if (zoom > 0) {
         zoom = limitValue(zoom, kZoomMin, kZoomMax);

@@ -143,8 +143,8 @@ struct MarkdownTocBuildTask {
     }
 };
 
-// Opens the document a link points at once we're out of the WebView2 callback
-// (see MaybeLaunchLinkedDoc). `model` is nulled when the model is destroyed, so
+// Opens the document a link points at once we're out of the WebView2 callback.
+// `model` is nulled when the model is destroyed, so
 // a document closed before the task runs just drops the request.
 struct MarkdownLaunchTask {
     MarkdownModel* model = nullptr;
@@ -375,7 +375,7 @@ static void MarkdownLaunchDoc(MarkdownLaunchTask* task) {
 //
 // Deferred to a uitask: opening the document selects a new tab, which tears this
 // model's webview down, and we may be called from inside one of its callbacks.
-bool MarkdownModel::MaybeLaunchLinkedDoc(Str url) {
+bool MarkdownModel::OpenLinkedDocument(Str url) {
     if (!cb) {
         return false;
     }
@@ -439,19 +439,6 @@ void MarkdownModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
     DisplayPage(url);
 }
 
-bool MarkdownModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/) {
-    Str url = link->GetName();
-    if (MaybeLaunchLinkedDoc(url)) {
-        return true;
-    }
-    if (DisplayPage(url)) {
-        return true;
-    }
-    int pageNo = PageDestGetPageNo(link);
-    GoToPage(pageNo, false);
-    return true;
-}
-
 MarkdownModel* MarkdownModel::AsMarkdown() {
     return this;
 }
@@ -502,7 +489,7 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
         return false;
     }
     // a link to a document (.pdf, .epub, ...) opens in the app, not in the view
-    if (MaybeLaunchLinkedDoc(url)) {
+    if (OpenLinkedDocument(url)) {
         return false;
     }
     // new-window request for an in-document URL: navigate in place

@@ -192,6 +192,7 @@ struct BrowserDocController : DocController {
     void SetViewPortSize(Size size) override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
     void GetDisplayState(FileState* fs) override;
+    bool HandleLink(IPageDestination* link, ILinkHandler* linkHandler) override;
 
     bool CanFindInPage() const override;
     void FindStart(Str term, bool matchCase, bool wholeWord, int gen) override;
@@ -242,6 +243,7 @@ struct BrowserDocController : DocController {
   private:
     virtual BrowserViewCallback* CreateBrowserCallback() = 0;
     virtual Str BrowserVirtualHost() const { return {}; }
+    virtual bool OpenLinkedDocument(Str) { return false; }
     virtual bool DisplayPage(Str pageUrl) = 0;
     virtual TempStr NormalizeScrollUrlTemp(Str url) const = 0;
     virtual TempStr ScrollUrlForPageTemp(int pageNo) const = 0;
