@@ -201,9 +201,6 @@
     <ClInclude Include="..\src\ReadingAutoScroll.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ReadingBar.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\RefHover.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -496,6 +493,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ProgressUpdateUI.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ReadingBar.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\SelectionHandlers.h">

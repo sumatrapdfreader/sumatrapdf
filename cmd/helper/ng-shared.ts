@@ -228,6 +228,7 @@ export const sharedFiles = [
   "src/shared/RefHoverText.cpp",
   "src/shared/RefHoverTextDetect.cpp",
   "src/shared/RegistryInstaller.cpp",
+  "src/shared/ReadingBar.h",
   "src/shared/SelectionHandlers.h",
   "src/shared/SumatraConfig.cpp",
   "src/shared/SumatraConfig.h",
