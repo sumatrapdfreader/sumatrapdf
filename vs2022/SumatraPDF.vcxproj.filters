@@ -165,9 +165,6 @@
     <ClInclude Include="..\src\EngineMupdf.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ExifDump.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ExplorerQuickLook.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -457,6 +454,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\EutlTrust.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ExifDump.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\FileHistory.h">
