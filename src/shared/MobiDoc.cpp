@@ -166,19 +166,17 @@ bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
             return false;
         }
         recursionDepth++;
-        if (!Decompress(p, symLen, dst)) {
-            recursionDepth--;
-            return false;
-        }
+        bool ok = Decompress(p, symLen, dst);
         recursionDepth--;
-    } else {
-        symLen &= 0x7fff;
-        if (symLen > 127) {
-            logf("symLen too big\n");
-            return false;
-        }
-        dst.Append(Str((char*)p, (int)symLen));
+        return ok;
     }
+
+    symLen &= 0x7fff;
+    if (symLen > 127) {
+        logf("symLen too big\n");
+        return false;
+    }
+    dst.Append(Str((char*)p, (int)symLen));
     return true;
 }
 
