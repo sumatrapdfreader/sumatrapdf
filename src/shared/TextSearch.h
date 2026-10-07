@@ -72,6 +72,7 @@ struct TextSearch : public TextSelection {
 
   private:
     int FindAnchor() const;
+    int RestrictPage(Direction direction) const;
 
     enum class PageSearchResult {
         Canceled,

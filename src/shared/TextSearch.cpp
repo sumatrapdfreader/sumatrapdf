@@ -166,31 +166,24 @@ bool TextSearch::PageAllowed(int pageNo) const {
     return pageAllowed[pageNo - 1];
 }
 
-int TextSearch::RestrictFirst() const {
-    if (len(pageAllowed) == 0) {
-        return 1;
-    }
+int TextSearch::RestrictPage(Direction direction) const {
+    bool first = direction == Direction::Forward;
     int n = std::min(len(pageAllowed), nPages);
     for (int i = 0; i < n; i++) {
-        if (pageAllowed[i]) {
-            return i + 1;
+        int idx = first ? i : n - i - 1;
+        if (pageAllowed[idx]) {
+            return idx + 1;
         }
     }
-    return 1;
+    return first ? 1 : nPages;
+}
+
+int TextSearch::RestrictFirst() const {
+    return RestrictPage(Direction::Forward);
 }
 
 int TextSearch::RestrictLast() const {
-    if (len(pageAllowed) == 0) {
-        return nPages;
-    }
-    int last = 0;
-    int n = std::min(len(pageAllowed), nPages);
-    for (int i = 0; i < n; i++) {
-        if (pageAllowed[i]) {
-            last = i + 1;
-        }
-    }
-    return last > 0 ? last : nPages;
+    return RestrictPage(Direction::Backward);
 }
 
 void TextSearch::SetAllowedPages(const Vec<bool>& allowed) {
