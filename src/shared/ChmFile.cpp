@@ -225,21 +225,15 @@ void ChmFile::FixPathCodepage(Str& path, uint& fileCP) {
         return;
     }
 
-    TempStr utf8Path = SmartToUtf8Temp(path, codepage);
-    if (HasData(utf8Path)) {
+    const uint codepages[] = {codepage, fileCP};
+    int n = codepage == fileCP ? 1 : dimofi(codepages);
+    for (int i = 0; i < n; i++) {
+        TempStr utf8Path = SmartToUtf8Temp(path, codepages[i]);
+        if (!HasData(utf8Path)) {
+            continue;
+        }
         str::ReplaceWithCopy(&path, utf8Path);
-        fileCP = codepage;
-        return;
-    }
-
-    if (fileCP == codepage) {
-        return;
-    }
-
-    utf8Path = SmartToUtf8Temp(path, fileCP);
-    if (HasData(utf8Path)) {
-        str::ReplaceWithCopy(&path, utf8Path);
-        codepage = fileCP;
+        codepage = fileCP = codepages[i];
         return;
     }
 }
