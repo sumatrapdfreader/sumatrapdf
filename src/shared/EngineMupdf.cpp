@@ -4712,15 +4712,9 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
 
     auto* ctx = e->Ctx();
     if (e->isReflowable && e->HasChapters()) {
-#if defined(SUMATRA_NG)
         // Don't fz_load_chapter_page here: that lays out chapter 1, and the
         // chapter the user is reopening may be a different one. Placeholder
         // until LayOutChapter(); a viewport can make the real page larger.
-#else
-        // don't fz_load_chapter_page here: that lays out chapter 1, and the
-        // chapter the user is reopening may be a different one. placeholder
-        // until LayOutChapter(); a viewport can make the real page larger
-#endif
         float dx = e->ebookLayoutW > 1 ? e->ebookLayoutW : 612;
         float dy = e->ebookLayoutH > 1 ? e->ebookLayoutH : 792;
         RectF mediabox(0, 0, dx, dy);
@@ -4875,10 +4869,7 @@ bool EngineMupdf::FinishLoading() {
     fz_var(pageCount);
     bool lazyChapters = nCh > 1;
     if (lazyChapters) {
-#if !defined(SUMATRA_NG)
-        // placeholders only. the open path lays out the chapter being read;
-        // the rest are counted on a background thread
-#endif
+        // Initialize placeholders; page layout is deferred.
         chapters.Init(nCh);
         SetPageCountFromChapters();
         logf("EngineMupdf::FinishLoading: %d chapters, layout deferred\n", nCh);
@@ -7810,9 +7801,6 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     fz_var(bmp);
 
     fz_try(ctx) {
-#if defined(SUMATRA_NG)
-        // TODO(port): not sure if should provide subarea, w and h
-#endif
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
         // Match `extract -r`: normalize embedded images to RGB before creating
         // a Windows bitmap for copy/save operations.
