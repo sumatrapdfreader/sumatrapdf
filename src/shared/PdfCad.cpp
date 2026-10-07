@@ -690,13 +690,12 @@ CadMinLineWidthScope::CadMinLineWidthScope(fz_context* ctxIn, float zoom, bool a
         return;
     }
     ctx = ctxIn;
-    active = true;
     saved = fz_graphics_min_line_width(ctx);
     fz_set_graphics_min_line_width(ctx, CadMinLineWidthForZoom(zoom, hairlineDoc));
 }
 
 CadMinLineWidthScope::~CadMinLineWidthScope() {
-    if (active && ctx) {
+    if (ctx) {
         fz_set_graphics_min_line_width(ctx, saved);
     }
 }

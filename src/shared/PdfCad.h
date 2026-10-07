@@ -52,7 +52,6 @@ struct CadMinLineWidthScope {
   private:
     fz_context* ctx = nullptr;
     float saved = 0;
-    bool active = false;
 };
 
 fz_device* PdfCadEnhanceWrapDevice(fz_context* ctx, fz_device* inner);
