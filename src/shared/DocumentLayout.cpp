@@ -211,12 +211,8 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
     }
 
     layout.canvasSize = Size(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));
-    if (viewPort.x > layout.canvasSize.dx - viewPort.dx) {
-        viewPort.x = std::max(0, layout.canvasSize.dx - viewPort.dx);
-    }
-    if (viewPort.y > layout.canvasSize.dy - viewPort.dy) {
-        viewPort.y = std::max(0, layout.canvasSize.dy - viewPort.dy);
-    }
+    viewPort.x = std::min(viewPort.x, layout.canvasSize.dx - viewPort.dx);
+    viewPort.y = std::min(viewPort.y, layout.canvasSize.dy - viewPort.dy);
     layout.RecalcVisibleParts();
 }
 
