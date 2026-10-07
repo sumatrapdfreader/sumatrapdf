@@ -247,7 +247,7 @@ EngineEbook::EngineEbook() {
     // "B Format" paperback
     pageRect = RectF(0, 0, 5.12f * fileDPI, 7.8f * fileDPI);
     pageBorder = 0.4f * fileDPI;
-    preferredLayout = preferredLayout = PageLayout(PageLayout::Type::Single);
+    preferredLayout = PageLayout(PageLayout::Type::Single);
     a = ArenaNew();
 }
 
