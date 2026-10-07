@@ -10385,13 +10385,8 @@ bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
 
 // Restyle a reflowable document with the current theme page colors and drop
 // cached page display lists so the next render uses the new HTML. A chaptered
-#if defined(SUMATRA_NG)
-// doc re-lays-out lazily (chapter 1 only, like at open); a single-chapter doc
-// resizes its page-info vector to match the new count.
-#else
-// doc lays chapter 1 out again and counts the rest in the background; a
+// doc lays chapter 1 out again and defers the rest; a
 // single-chapter doc resizes its page-info vector to match the new count.
-#endif
 void EngineMupdf::ApplyReflowThemeCss() {
     if (!isReflowable || !_doc || ebookLayoutW <= 0 || ebookLayoutH <= 0) {
         return;
