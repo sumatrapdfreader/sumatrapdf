@@ -2,8 +2,93 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+
+#include "Print.h"
+
+// ng: the paper-format table is outside the OS_WIN guard: the properties
+// window asks for it on every platform, printing only on Windows
+
+struct PaperSizeDesc {
+    float minDx, maxDx;
+    float minDy, maxDy;
+    PaperFormat paperFormat;
+};
+
+// clang-format off
+static PaperSizeDesc gPaperSizes[] = {
+    // common ISO 216 formats (metric)
+    {
+        16.53f, 16.55f,
+        23.38f, 23.40f,
+        PaperFormat::A2,
+    },
+    {
+        11.68f, 11.70f,
+        16.53f, 16.55f,
+        PaperFormat::A3,
+    },
+    {
+        8.26f, 8.28f,
+        11.68f, 11.70f,
+        PaperFormat::A4,
+    },
+    {
+        5.82f, 5.85f,
+        8.26f, 8.28f,
+        PaperFormat::A5,
+    },
+    {
+        4.08f, 4.10f,
+        5.82f, 5.85f,
+        PaperFormat::A6,
+    },
+    // common US/ANSI formats (imperial)
+    {
+        8.49f, 8.51f,
+        10.99f, 11.01f,
+        PaperFormat::Letter,
+    },
+    {
+        8.49f, 8.51f,
+        13.99f, 14.01f,
+        PaperFormat::Legal,
+    },
+    {
+        10.99f, 11.01f,
+        16.99f, 17.01f,
+        PaperFormat::Tabloid,
+    },
+    {
+        5.49f, 5.51f,
+        8.49f, 8.51f,
+        PaperFormat::Statement,
+    }
+};
+// clang-format on
+
+static bool fInRange(float x, float min, float max) {
+    return x >= min && x <= max;
+}
+
+PaperFormat GetPaperFormatFromSizeApprox(SizeF size) {
+    float dx = size.dx;
+    float dy = size.dy;
+    if (dx > dy) {
+        std::swap(dx, dy);
+    }
+    for (const PaperSizeDesc& desc : gPaperSizes) {
+        bool ok = fInRange(dx, desc.minDx, desc.maxDx) && fInRange(dy, desc.minDy, desc.maxDy);
+        if (ok) {
+            return desc.paperFormat;
+        }
+    }
+    return PaperFormat::Other;
+}
+
+#if OS_WIN
+
 #include "base/Pixmap.h"
-#include "base/AutoWin.h"
+#include "base/ScopedWin.h"
 #include "base/File.h"
 #include "base/UITask.h"
 #include "base/Win.h"
@@ -29,9 +114,13 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "PrintWin11.h"
-#include "Print.h"
+#if defined(SUMATRA_NG)
+#include "gui/AppShell.h"
+#endif
 
-class AbortCookieManager : NonCopyable {
+#include "SumatraLog.h"
+
+class AbortCookieManager {
     Mutex cookieAccess;
     bool isAborted = false;
 
@@ -42,7 +131,7 @@ class AbortCookieManager : NonCopyable {
     ~AbortCookieManager() { Clear(); }
 
     void Abort() {
-        AutoUnlockMutex scope(&cookieAccess);
+        ScopedMutex scope(&cookieAccess);
         isAborted = true;
         if (cookie) {
             cookie->Abort();
@@ -50,14 +139,14 @@ class AbortCookieManager : NonCopyable {
     }
 
     bool IsAborted() {
-        AutoUnlockMutex scope(&cookieAccess);
+        ScopedMutex scope(&cookieAccess);
         return isAborted;
     }
 
     void Clear() {
         AbortCookie* toDelete = nullptr;
         {
-            AutoUnlockMutex scope(&cookieAccess);
+            ScopedMutex scope(&cookieAccess);
             toDelete = cookie;
             cookie = nullptr;
         }
@@ -564,12 +653,19 @@ static Size NormalizePaperSize(Size s) {
     return {s.dy, s.dx};
 }
 
+// ng: orig shows a win32 MessageBox with no owner. Our MessageBoxWarning() is
+// a gpui dialog that needs a live window and a running frame loop, which the
+// command-line print path has neither of, so this is a raw message box.
 static void MessageBoxWarningCond(bool show, Str msg, Str title) {
     logf("%s: %s\n", title, msg);
     if (!show) {
         return;
     }
+#if defined(SUMATRA_NG)
+    MessageBoxWarningSimple(nullptr, ToWStrTemp(msg), ToWStrTemp(title));
+#else
     MessageBoxWarning(nullptr, msg, title);
+#endif
 }
 
 static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
@@ -617,17 +713,10 @@ static float SanitizePrintZoom(float zoom, float fallback, Str why, Size paperSi
     return 1.f;
 }
 
-// the document's resolution the print scaling is based on: for images (a
-// scan, an image folder, a comic book) a user override (-print-settings "dpi=",
-// PrinterDefaults.PrintDpi) beats the file's, which is often missing or wrong
-// (#6223). Documents with real page sizes (PDF, XPS, ...) ignore the override:
-// their "file DPI" is the unit of their coordinate system, not a resolution.
-// Anything unusable falls back to 96
+// An image resolution override controls 1:1 printing for scans, image folders
+// and comic books. Document formats with physical page units ignore it.
 static float PrintFileDPI(EngineBase& engine, const Print_Advanced_Data& advanced) {
-    float fileDPI = 0;
-    if (IsEngineImages(&engine)) {
-        fileDPI = advanced.dpiOverride;
-    }
+    float fileDPI = IsEngineImages(&engine) ? advanced.dpiOverride : 0;
     if (!(fileDPI > 0) || !isfinite(fileDPI)) {
         fileDPI = engine.fileDPI;
     }
@@ -775,10 +864,10 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
         if (abortCookie) {
             abortCookie->Clear();
         }
-        // BlitPixmap() draws a heap-backed pixmap through SetDIBitsToDevice /
-        // StretchDIBits, so only a missing pixel buffer is a failure. Requiring
-        // a DIB section (hbmp) threw away every band the image engine rendered
-        // -- it returns heap pixmaps -- and printed a blank page (issue #6150).
+        // BlitPixmap() draws a heap-backed pixmap through StretchDIBits, so only
+        // a missing pixel buffer is a failure. Requiring a DIB section (hbmp)
+        // threw away every band the image engine rendered -- it returns heap
+        // pixmaps -- and printed a blank page (issue #6150).
         if (!bmp || !bmp->data) {
             FreePixmap(bmp);
             // couldn't allocate even a band: try thinner bands before giving up,
@@ -829,7 +918,9 @@ static bool PrintToDevice(const PrintData& pd) {
     EnsureFullLayout(pd.engine);
 
     pd.engine->AddRef();
-    AutoRelease releaseEngine(pd.engine);
+    defer {
+        pd.engine->Release();
+    };
 
     DOCINFOW di{};
     di.cbSize = sizeof(DOCINFO);
@@ -1138,7 +1229,11 @@ class PrintThreadData {
         this->win = win;
         this->data = data;
         NotificationCreateArgs args;
+#if defined(SUMATRA_NG)
+        args.win = win;
+#else
         args.hwndParent = win->hwndCanvas;
+#endif
         args.timeoutMs = 0;
         auto fn = MkMethod1<PrintThreadData, NotificationClosedEvent*, &PrintThreadData::OnNotifClosed>(this);
         args.onClosed = fn;
@@ -1342,9 +1437,595 @@ static void SetDevModeCopies(HGLOBAL hDevMode, short copies) {
     }
 }
 
+#if defined(SUMATRA_NG)
+// ng: the ids of orig's resource.h; CheckRadioButton() needs each radio group
+// to stay contiguous
+enum {
+    IDC_SECTION_PRINT_RANGE = 1050,
+    IDC_PRINT_RANGE_ALL = 1051,
+    IDC_PRINT_RANGE_EVEN = 1052,
+    IDC_PRINT_RANGE_ODD = 1053,
+    IDC_SECTION_PRINT_SCALE = 1060,
+    IDC_PRINT_SCALE_SHRINK = 1061,
+    IDC_PRINT_SCALE_FIT = 1062,
+    IDC_PRINT_SCALE_NONE = 1063,
+    IDC_PRINT_SCALE_STRETCH = 1064,
+    IDC_PRINT_CENTER_HORIZONTALLY = 1065,
+    IDC_PRINT_PAPER_SOURCE_BY_SIZE = 1066,
+    IDC_PRINT_PER_PAGE_PAPER_SIZE = 1067,
+    IDC_PRINT_ROTATE_LABEL = 1068,
+    IDC_PRINT_ROTATE = 1069,
+};
+
+#ifndef ID_APPLY_NOW
+constexpr int ID_APPLY_NOW = 0x3021;
+#endif
+
+// the predefined window class atoms a DLGITEMTEMPLATE can name
+enum {
+    kAtomButton = 0x0080,
+    kAtomStatic = 0x0082,
+    kAtomComboBox = 0x0085,
+};
+
+// ng: orig loads IDD_PROPSHEET_PRINT_ADVANCED from its .rc. This port has no
+// resource compiler, so the DLGTEMPLATE is built in memory: same controls, same
+// ids, same dialog units as orig's resource. It also replaces orig's
+// GetRtLDlgTemplate() hack: for an RTL UI the extended style is simply set here.
+struct PrintAdvancedTemplate {
+    u8 buf[1024];
+    int pos = 0;
+    int nItems = 0;
+
+    void Align() {
+        while (pos & 3) {
+            Write(nullptr, 1);
+        }
+    }
+
+    void Write(const void* data, int n) {
+        ReportIf(pos + n > dimofi(buf));
+        if (pos + n > dimofi(buf)) {
+            return;
+        }
+        if (data) {
+            memcpy(buf + pos, data, (size_t)n);
+        }
+        pos += n;
+    }
+
+    void U16(int v) {
+        u16 v16 = (u16)v;
+        Write(&v16, 2);
+    }
+
+    void U32(u32 v) { Write(&v, 4); }
+
+    void Sz(const WCHAR* s) {
+        int n = s ? (int)wcslen(s) : 0;
+        Write(s, (n + 1) * 2);
+    }
+
+    void Item(u32 style, int x, int y, int cx, int cy, int id, int atom) {
+        Align();
+        U32(style | WS_CHILD | WS_VISIBLE);
+        U32(0);
+        U16(x);
+        U16(y);
+        U16(cx);
+        U16(cy);
+        U16(id);
+        U16(0xFFFF);
+        U16(atom);
+        U16(0); // the text is set in WM_INITDIALOG, as orig does
+        U16(0); // no creation data
+        nItems++;
+    }
+};
+
+static DLGTEMPLATE* BuildPrintAdvancedTemplate() {
+    PrintAdvancedTemplate t;
+    u32 style = DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU;
+    t.U32(style);
+    t.U32(IsUIRtl() ? (WS_EX_LAYOUTRTL | WS_EX_RTLREADING) : 0);
+    int cditPos = t.pos;
+    t.U16(0); // patched with nItems below
+    t.U16(0);
+    t.U16(0);
+    t.U16(292);
+    t.U16(194);
+    t.U16(0); // no menu
+    t.U16(0); // default dialog class
+    t.Sz(L"Advanced");
+    t.U16(8); // DS_SETFONT: point size and typeface
+    t.Sz(L"MS Shell Dlg");
+
+    u32 radio = BS_AUTORADIOBUTTON | WS_TABSTOP;
+    u32 check = BS_AUTOCHECKBOX | WS_TABSTOP;
+    t.Item(BS_GROUPBOX, 7, 7, 278, 52, IDC_SECTION_PRINT_RANGE, kAtomButton);
+    t.Item(radio | WS_GROUP, 14, 18, 264, 9, IDC_PRINT_RANGE_ALL, kAtomButton);
+    t.Item(radio, 14, 31, 264, 9, IDC_PRINT_RANGE_EVEN, kAtomButton);
+    t.Item(radio, 14, 44, 264, 9, IDC_PRINT_RANGE_ODD, kAtomButton);
+    t.Item(BS_GROUPBOX, 7, 62, 278, 65, IDC_SECTION_PRINT_SCALE, kAtomButton);
+    t.Item(radio | WS_GROUP, 14, 74, 264, 9, IDC_PRINT_SCALE_SHRINK, kAtomButton);
+    t.Item(radio, 14, 87, 264, 9, IDC_PRINT_SCALE_FIT, kAtomButton);
+    t.Item(radio, 14, 100, 264, 9, IDC_PRINT_SCALE_NONE, kAtomButton);
+    t.Item(radio, 14, 113, 264, 9, IDC_PRINT_SCALE_STRETCH, kAtomButton);
+    t.Item(check | WS_GROUP, 7, 133, 278, 10, IDC_PRINT_CENTER_HORIZONTALLY, kAtomButton);
+    t.Item(check, 7, 146, 278, 10, IDC_PRINT_PAPER_SOURCE_BY_SIZE, kAtomButton);
+    t.Item(check, 7, 159, 278, 10, IDC_PRINT_PER_PAGE_PAPER_SIZE, kAtomButton);
+    t.Item(SS_LEFT, 7, 175, 72, 9, IDC_PRINT_ROTATE_LABEL, kAtomStatic);
+    t.Item(CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 82, 173, 90, 60, IDC_PRINT_ROTATE, kAtomComboBox);
+
+    u16 cdit = (u16)t.nItems;
+    memcpy(t.buf + cditPos, &cdit, sizeof(cdit));
+    return (DLGTEMPLATE*)MemDup(nullptr, t.buf, (size_t)t.pos);
+}
+
+static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+    Print_Advanced_Data* data;
+
+    switch (msg) {
+        //[ ACCESSKEY_GROUP Advanced Print Tab
+        case WM_INITDIALOG:
+            data = (Print_Advanced_Data*)((PROPSHEETPAGE*)lp)->lParam;
+            SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
+            HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_RANGE, Tr("Print range"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_ALL, Tr("&All selected pages"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_EVEN, Tr("&Even pages only"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_ODD, Tr("&Odd pages only"));
+            HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_SCALE, Tr("Page scaling"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_SHRINK, Tr("&Shrink pages to printable area"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_FIT, Tr("&Fit pages to printable area"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_STRETCH, Tr("S&tretch pages to fill paper"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_NONE, Tr("A&ctual size (1:1)"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_CENTER_HORIZONTALLY, Tr("Center page hori&zontally on the paper"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE, Tr("Choose &paper source by document page size"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE,
+                               Tr("Print each page at its &document page size (mixed sizes)"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_ROTATE_LABEL, Tr("&Rotate printout:"));
+            {
+                HWND hwndCb = GetDlgItem(hDlg, IDC_PRINT_ROTATE);
+                CbAddString(hwndCb, Tr("None"));
+                CbAddString(hwndCb, StrL("90°"));
+                CbAddString(hwndCb, StrL("180°"));
+                CbAddString(hwndCb, StrL("270°"));
+                int rotIdx = (data->extraRotation / 90) % 4;
+                CbSetCurrentSelection(hwndCb, rotIdx);
+            }
+
+            {
+                int rangeId = IDC_PRINT_RANGE_ALL;
+                if (data->range == PrintRangeAdv::Even) {
+                    rangeId = IDC_PRINT_RANGE_EVEN;
+                } else if (data->range == PrintRangeAdv::Odd) {
+                    rangeId = IDC_PRINT_RANGE_ODD;
+                }
+                CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD, rangeId);
+            }
+            {
+                int scaleId = IDC_PRINT_SCALE_NONE;
+                if (data->scale == PrintScaleAdv::Fit) {
+                    scaleId = IDC_PRINT_SCALE_FIT;
+                } else if (data->scale == PrintScaleAdv::Stretch) {
+                    scaleId = IDC_PRINT_SCALE_STRETCH;
+                } else if (data->scale == PrintScaleAdv::Shrink) {
+                    scaleId = IDC_PRINT_SCALE_SHRINK;
+                }
+                CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_STRETCH, scaleId);
+            }
+
+            CheckDlgButton(hDlg, IDC_PRINT_CENTER_HORIZONTALLY, data->centerHorizontally ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE,
+                           data->paperSourceByPageSize ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE, data->perPagePaperSize ? BST_CHECKED : BST_UNCHECKED);
+
+            return FALSE;
+            //] ACCESSKEY_GROUP Advanced Print Tab
+
+        case WM_NOTIFY:
+            if (((LPNMHDR)lp)->code == PSN_APPLY) {
+                data = (Print_Advanced_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+                if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_EVEN)) {
+                    data->range = PrintRangeAdv::Even;
+                } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_ODD)) {
+                    data->range = PrintRangeAdv::Odd;
+                } else {
+                    data->range = PrintRangeAdv::All;
+                }
+                if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_FIT)) {
+                    data->scale = PrintScaleAdv::Fit;
+                } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_STRETCH)) {
+                    data->scale = PrintScaleAdv::Stretch;
+                } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_SHRINK)) {
+                    data->scale = PrintScaleAdv::Shrink;
+                } else {
+                    data->scale = PrintScaleAdv::None;
+                }
+                data->centerHorizontally = IsDlgButtonChecked(hDlg, IDC_PRINT_CENTER_HORIZONTALLY) != 0;
+                data->paperSourceByPageSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE) != 0;
+                data->perPagePaperSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE) != 0;
+                int rotIdx = (int)SendDlgItemMessage(hDlg, IDC_PRINT_ROTATE, CB_GETCURSEL, 0, 0);
+                data->extraRotation = rotIdx > 0 ? rotIdx * 90 : 0;
+                return TRUE;
+            }
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wp)) {
+                case IDC_PRINT_RANGE_ALL:
+                case IDC_PRINT_RANGE_EVEN:
+                case IDC_PRINT_RANGE_ODD:
+                case IDC_PRINT_SCALE_SHRINK:
+                case IDC_PRINT_SCALE_FIT:
+                case IDC_PRINT_SCALE_STRETCH:
+                case IDC_PRINT_SCALE_NONE:
+                case IDC_PRINT_CENTER_HORIZONTALLY:
+                case IDC_PRINT_PAPER_SOURCE_BY_SIZE:
+                case IDC_PRINT_PER_PAGE_PAPER_SIZE: {
+                    HWND hApplyButton = GetDlgItem(GetParent(hDlg), ID_APPLY_NOW);
+                    EnableWindow(hApplyButton, TRUE);
+                } break;
+                case IDC_PRINT_ROTATE:
+                    if (HIWORD(wp) == CBN_SELCHANGE) {
+                        EnableWindow(GetDlgItem(GetParent(hDlg), ID_APPLY_NOW), TRUE);
+                    }
+                    break;
+            }
+    }
+    return FALSE;
+}
+
+HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate) {
+    PROPSHEETPAGE psp{};
+
+    dlgTemplate.Set(BuildPrintAdvancedTemplate());
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_USETITLE | PSP_PREMATURE | PSP_DLGINDIRECT;
+    psp.pResource = dlgTemplate.Get();
+    psp.pfnDlgProc = Sheet_Print_Advanced_Proc;
+    psp.lParam = (LPARAM)data;
+    auto s = Tr("Advanced");
+    psp.pszTitle = CWStrTemp(s);
+
+    return CreatePropertySheetPage(&psp);
+}
+#endif
+
 enum {
     MAXPAGERANGES = 10
 };
+#if defined(SUMATRA_NG)
+// we remember some printer settings per process. ng: file-static because the
+// "abort the running job?" prompt splits the function in two (see below)
+static ScopedMem<DEVMODE> defaultDevMode;
+static PrintScaleAdv defaultScaleAdv = PrintScaleAdv::Shrink;
+static bool hasDefaults = false;
+
+static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool selectionByDefault);
+
+struct PrintAbortPrompt {
+    MainWindow* win;
+    bool waitForCompletion;
+    bool selectionByDefault;
+};
+
+// ng: orig's MsgBox() blocks and returns the answer. Ours is a gpui dialog that
+// answers through a callback, so everything after the prompt is a continuation.
+static void OnPrintAbortAnswer(PrintAbortPrompt* d, int res) {
+    MainWindow* win = d->win;
+    bool waitForCompletion = d->waitForCompletion;
+    bool selectionByDefault = d->selectionByDefault;
+    delete d;
+    if (res != MbRetYes || !IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    PrintCurrentFileCont(win, waitForCompletion, selectionByDefault);
+}
+
+void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
+    if (!HasPermission(Perm::PrinterAccess)) {
+        return;
+    }
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    if (!win->printThread) {
+        PrintCurrentFileCont(win, waitForCompletion, selectionByDefault);
+        return;
+    }
+    uint type = MbIconWarning | MbYesNo;
+    Str title = Tr("Printing in progress.");
+    Str msg = Tr("Printing is still in progress. Abort and start over?");
+    auto* d = new PrintAbortPrompt{win, waitForCompletion, selectionByDefault};
+    MsgBox(win, msg, title, type, MkFunc1<PrintAbortPrompt, int>(OnPrintAbortAnswer, d));
+}
+
+static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
+    Printer* printer = nullptr;
+
+    if (!hasDefaults) {
+        hasDefaults = true;
+        if (str::EqI(gSettings->printerDefaults.printScale, StrL("fit"))) {
+            defaultScaleAdv = PrintScaleAdv::Fit;
+        } else if (str::EqI(gSettings->printerDefaults.printScale, StrL("stretch"))) {
+            defaultScaleAdv = PrintScaleAdv::Stretch;
+        } else if (str::EqI(gSettings->printerDefaults.printScale, StrL("none"))) {
+            defaultScaleAdv = PrintScaleAdv::None;
+        }
+    }
+
+    bool printSelection = false;
+    Vec<PRINTPAGERANGE> ranges;
+    Vec<SelectionOnPage>* sel;
+
+    if (win->AsChm()) {
+        win->AsChm()->PrintCurrentPage(true);
+        return;
+    }
+    if (win->AsMarkdown()) {
+        win->AsMarkdown()->PrintCurrentPage(true);
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    ReportIf(!dm);
+    if (!dm) {
+        return;
+    }
+    auto* engine = dm->GetEngine();
+    EngineBase* pinnedEngine = nullptr;
+    ReportIf(!engine);
+    if (!engine) {
+        return;
+    }
+    int rotation;
+    // the print dialog needs the real total up front; no progress UI here
+    EnsureFullLayout(dm);
+    int nPages = dm->PageCount();
+    logf("PrintCurrentFile: start wait=%d file='%s' pages=%d selection=%d\n", (int)waitForCompletion,
+         engine->FilePath(), nPages, (int)(win->CurrentTab()->selectionOnPage != nullptr));
+
+#ifndef DISABLE_DOCUMENT_RESTRICTIONS
+    if (!engine->AllowsPrinting()) {
+        return;
+    }
+#endif
+
+    AbortPrinting(win);
+
+    // the Windows 11 dialog runs the whole job itself; -print-to and friends
+    // need the synchronous classic path
+    if (!waitForCompletion && !selectionByDefault && !PrinterUIWantsClassic()) {
+        bool usedWin11Dialog = TryPrintCurrentFileWin11(win, AppShellNativeHwnd(win), defaultScaleAdv);
+        logf("PrintCurrentFile: Windows 11 dialog=%d\n", (int)usedWin11Dialog);
+        if (usedWin11Dialog) {
+            return;
+        }
+    }
+
+    PRINTDLGEXW pdex{};
+    pdex.lStructSize = sizeof(PRINTDLGEXW);
+    pdex.hwndOwner = AppShellNativeHwnd(win);
+    pdex.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
+    if (!win->CurrentTab()->selectionOnPage) {
+        pdex.Flags |= PD_NOSELECTION;
+    } else if (selectionByDefault) {
+        pdex.Flags |= PD_SELECTION;
+    }
+    pdex.nCopies = 1;
+    /* by default print all pages */
+    pdex.nPageRanges = 1;
+    pdex.nMaxPageRanges = MAXPAGERANGES;
+    PRINTPAGERANGE* ppr = AllocArray<PRINTPAGERANGE>(MAXPAGERANGES);
+    pdex.lpPageRanges = ppr;
+    ppr->nFromPage = 1;
+    ppr->nToPage = nPages;
+    pdex.nMinPage = 1;
+    pdex.nMaxPage = nPages;
+    pdex.nStartPage = START_PAGE_GENERAL;
+
+    Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
+    advanced.dpiOverride = gSettings->printerDefaults.printDpi;
+    ScopedMem<DLGTEMPLATE> dlgTemplate; // the page's in-memory template, freed on the way out
+    HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
+    pdex.lphPropertyPages = &hPsp;
+    pdex.nPropertyPages = 1;
+
+    PrintData* pd = nullptr;
+    DEVMODE* devMode = nullptr;
+    // restore remembered settings
+    if (defaultDevMode) {
+        DEVMODE* p = defaultDevMode.Get();
+        pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
+    }
+
+    // Always hand PrintDlgEx a DEVMODE: seed one from the default printer when
+    // there's no remembered one. This also seeds the Collate checkbox from the
+    // PrinterDefaults.Collate setting (issue #1558). Crucially, starting from a
+    // null hDevMode/hDevNames makes PrintDlgEx GlobalLock a null handle
+    // internally, which crashes under ASan's GlobalLock interceptor.
+    if (!pdex.hDevMode) {
+        TempStr defName = GetDefaultPrinterNameTemp();
+        Printer* seed = defName ? NewPrinter(defName) : nullptr;
+        if (seed && seed->devMode) {
+            auto* p = seed->devMode;
+            pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
+        }
+        delete seed;
+    }
+
+    SetDevModeCopies(pdex.hDevMode, 1);
+    int collatePref = CollateDefaultPref();
+    if (collatePref >= 0) {
+        SetDevModeCollate(pdex.hDevMode, collatePref);
+    }
+
+    // pair the hDevMode with a matching hDevNames so the two are consistent and
+    // PrintDlgEx never GlobalLocks a null handle (see the ASan note above)
+    if (pdex.hDevMode && !pdex.hDevNames) {
+        auto* dmp = (DEVMODE*)GlobalLock(pdex.hDevMode);
+        if (dmp) {
+            pdex.hDevNames = GlobalMemDevNames(dmp->dmDeviceName);
+            GlobalUnlock(pdex.hDevMode);
+        }
+    }
+
+    logf("PrintCurrentFile: PrintDlgEx start flags=0x%x pages=%d hDevMode=%p hDevNames=%p collate=%d\n", pdex.Flags,
+         nPages, pdex.hDevMode, pdex.hDevNames, collatePref);
+    HRESULT res = PrintDlgExW(&pdex);
+    logf("PrintCurrentFile: PrintDlgEx result=0x%08x action=%u flags=0x%x ranges=%u hDevMode=%p hDevNames=%p\n",
+         (uint)res, pdex.dwResultAction, pdex.Flags, pdex.nPageRanges, pdex.hDevMode, pdex.hDevNames);
+
+    // PrintDlgExW pumps messages, so the window may have been closed/destroyed while the dialog was open
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        logf("PrintCurrentFile: window closed during PrintDlgEx\n");
+        free(ppr);
+        GlobalFree(pdex.hDevMode);
+        GlobalFree(pdex.hDevNames);
+        return;
+    }
+
+    if (res != S_OK) {
+        logf("PrintCurrentFile: PrintDlgEx failed, CommDlgExtendedError=0x%x\n", (uint)CommDlgExtendedError());
+        MessageBoxWarning(win, Tr("Couldn't initialize printer"), Tr("Printing problem."));
+    }
+    auto action = pdex.dwResultAction;
+    if (action != PD_RESULT_PRINT) {
+        // it's cancel or apply so silently ignore as it's not an error
+        logf("PrintCurrentFile: PrintDlgEx ended without print, action=%u\n", action);
+        goto Exit;
+    }
+
+    // re-validate after modal dialog - tab/document may have changed while dialog was open
+    dm = win->AsFixed();
+    if (!dm) {
+        goto Exit;
+    }
+    engine = dm->GetEngine();
+    if (!engine) {
+        goto Exit;
+    }
+    pinnedEngine = engine;
+    pinnedEngine->AddRef();
+    rotation = dm->GetRotation();
+    // no-op if already laid out above; covers a doc swapped in while the dialog was open
+    EnsureFullLayout(dm);
+    nPages = dm->PageCount();
+
+    if (!pdex.hDevNames) {
+        logf("PrintCurrentFile: PrintDlgEx returned no hDevNames\n");
+        MessageBoxWarning(win, Tr("Couldn't get printer name"), Tr("Printing problem."));
+        goto Exit;
+    }
+
+    {
+        DEVNAMES* devNames = (DEVNAMES*)GlobalLock(pdex.hDevNames);
+        if (devNames) {
+            // printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
+            WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset;
+            TempStr name = ToUtf8Temp(printerName);
+            logf("PrintCurrentFile: selected printer='%s'\n", name);
+            printer = NewPrinter(name);
+            // printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
+            GlobalUnlock(pdex.hDevNames);
+        }
+    }
+
+    if (!printer) {
+        logf("PrintCurrentFile: couldn't create selected printer\n");
+        MessageBoxWarning(win, Tr("Couldn't initialize printer"), Tr("Printing problem."));
+        goto Exit;
+    }
+
+    devMode = (DEVMODEW*)GlobalLock(pdex.hDevMode);
+    if (!devMode) {
+        logf("PrintCurrentFile: GlobalLock(hDevMode) failed, err=%u\n", GetLastError());
+    }
+
+    if (pdex.dwResultAction == PD_RESULT_PRINT || pdex.dwResultAction == PD_RESULT_APPLY) {
+        // remember settings for this process
+        if (devMode) {
+            defaultDevMode.Set((DEVMODEW*)MemDup(nullptr, devMode, (size_t)(devMode->dmSize + devMode->dmDriverExtra)));
+        }
+        defaultScaleAdv = advanced.scale;
+    }
+
+    if (devMode && advanced.paperSourceByPageSize) {
+        // let the printer pick the input tray whose paper matches the document's
+        // page size, independent of the page-scaling option (issue #349). Applied
+        // after the settings are remembered above so it doesn't stick to the next
+        // print job in this session.
+        devMode->dmDefaultSource = DMBIN_FORMSOURCE;
+        devMode->dmFields |= DM_DEFAULTSOURCE;
+    }
+
+    if (devMode) {
+        auto* dmCopy = (DEVMODEW*)MemDup(nullptr, devMode, (size_t)(devMode->dmSize + devMode->dmDriverExtra));
+        printer->SetDevMode(dmCopy);
+        GlobalUnlock(pdex.hDevMode);
+    }
+
+    if (pdex.dwResultAction != PD_RESULT_PRINT) {
+        goto Exit;
+    }
+
+    if (pdex.Flags & PD_CURRENTPAGE) {
+        PRINTPAGERANGE pr;
+        if (pdex.nPageRanges == 1 && pdex.lpPageRanges[0].nFromPage == pdex.lpPageRanges[0].nToPage) {
+            // Unified Print Dialog (which doesn't have a "Current page" option)
+            // sets PD_CURRENTPAGE when the custom range contains one page (2 or 2-2)
+            // with nFromPage and nToPage equal to the chosen page.
+            // PD_PAGENUMS isn't set in that case.
+            pr = pdex.lpPageRanges[0];
+        } else {
+            pr = {(DWORD)dm->CurrentPageNo(), (DWORD)dm->CurrentPageNo()};
+        }
+        VecAppend(ranges, pr);
+    } else if (win->CurrentTab()->selectionOnPage && (pdex.Flags & PD_SELECTION)) {
+        printSelection = true;
+    } else if (!(pdex.Flags & PD_PAGENUMS)) {
+        PRINTPAGERANGE pr = {1, (DWORD)nPages};
+        VecAppend(ranges, pr);
+    } else {
+        ReportIf(pdex.nPageRanges <= 0);
+        for (DWORD i = 0; i < pdex.nPageRanges; i++) {
+            VecAppend(ranges, pdex.lpPageRanges[i]);
+        }
+    }
+
+    // re-validate engine - it may have been invalidated while message boxes were shown
+    dm = win->AsFixed();
+    if (!dm) {
+        goto Exit;
+    }
+    engine = dm->GetEngine();
+    if (!engine) {
+        goto Exit;
+    }
+
+    sel = printSelection ? win->CurrentTab()->selectionOnPage : nullptr;
+    pd = new PrintData(pinnedEngine, printer, ranges, advanced, rotation, sel);
+    SafeEngineRelease(&pinnedEngine);
+
+    if (pd->failedEngineClone) {
+        logf("PrintCurrentFile: failed to create engine for printing\n");
+        delete pd;
+        goto Exit;
+    }
+    if (!waitForCompletion) {
+        PrintToDeviceOnThread(win, pd);
+    } else {
+        PrintToDevice(*pd);
+        delete pd;
+    }
+
+Exit:
+    SafeEngineRelease(&pinnedEngine);
+    free(ppr);
+    GlobalFree(pdex.hDevNames);
+    GlobalFree(pdex.hDevMode);
+}
+#else
 void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
     // we remember some printer settings per process
     static AutoFree<DEVMODE> defaultDevMode;
@@ -1654,83 +2335,7 @@ Exit:
     GlobalFree(pdex.hDevNames);
     GlobalFree(pdex.hDevMode);
 }
-
-struct PaperSizeDesc {
-    float minDx, maxDx;
-    float minDy, maxDy;
-    PaperFormat paperFormat;
-};
-
-// clang-format off
-static PaperSizeDesc gPaperSizes[] = {
-    // common ISO 216 formats (metric)
-    {
-        16.53f, 16.55f,
-        23.38f, 23.40f,
-        PaperFormat::A2,
-    },
-    {
-        11.68f, 11.70f,
-        16.53f, 16.55f,
-        PaperFormat::A3,
-    },
-    {
-        8.26f, 8.28f,
-        11.68f, 11.70f,
-        PaperFormat::A4,
-    },
-    {
-        5.82f, 5.85f,
-        8.26f, 8.28f,
-        PaperFormat::A5,
-    },
-    {
-        4.08f, 4.10f,
-        5.82f, 5.85f,
-        PaperFormat::A6,
-    },
-    // common US/ANSI formats (imperial)
-    {
-        8.49f, 8.51f,
-        10.99f, 11.01f,
-        PaperFormat::Letter,
-    },
-    {
-        8.49f, 8.51f,
-        13.99f, 14.01f,
-        PaperFormat::Legal,
-    },
-    {
-        10.99f, 11.01f,
-        16.99f, 17.01f,
-        PaperFormat::Tabloid,
-    },
-    {
-        5.49f, 5.51f,
-        8.49f, 8.51f,
-        PaperFormat::Statement,
-    }
-};
-// clang-format on
-
-static bool fInRange(float x, float min, float max) {
-    return x >= min && x <= max;
-}
-
-PaperFormat GetPaperFormatFromSizeApprox(SizeF size) {
-    float dx = size.dx;
-    float dy = size.dy;
-    if (dx > dy) {
-        std::swap(dx, dy);
-    }
-    for (const PaperSizeDesc& desc : gPaperSizes) {
-        bool ok = fInRange(dx, desc.minDx, desc.maxDx) && fInRange(dy, desc.minDy, desc.maxDy);
-        if (ok) {
-            return desc.paperFormat;
-        }
-    }
-    return PaperFormat::Other;
-}
+#endif
 
 static short GetPaperSize(EngineBase* engine, int pageNo) {
     RectF mediabox = engine->PageMediabox(pageNo);
@@ -2010,7 +2615,6 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
                 }
             }
         } else if (str::TrimPrefixI(s, StrL("dpi="))) {
-            // the resolution to assume for the document, see Print_Advanced_Data::dpiOverride
             float dpi = 0;
             if (!str::IsNull(str::Parse(s, "%f%$", &dpi)) && dpi > 0) {
                 advanced.dpiOverride = dpi;
@@ -2241,3 +2845,5 @@ PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str set
     logf("PrintFile: finished ok\n");
     return res;
 }
+
+#endif

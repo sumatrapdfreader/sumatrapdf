@@ -1641,7 +1641,6 @@
     <ClCompile Include="..\src\PageGridDialog.cpp" />
     <ClCompile Include="..\src\PageThumbnails.cpp" />
     <ClCompile Include="..\src\PdfTools.cpp" />
-    <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\ReadAloud.cpp" />
     <ClCompile Include="..\src\ReadingAutoScroll.cpp" />
     <ClCompile Include="..\src\RefHover.cpp" />
@@ -2139,6 +2138,7 @@
     <ClCompile Include="..\src\shared\PdfSign.cpp" />
     <ClCompile Include="..\src\shared\PdfSync.cpp" />
     <ClCompile Include="..\src\shared\PngOptimizer.cpp" />
+    <ClCompile Include="..\src\shared\Print.cpp" />
     <ClCompile Include="..\src\shared\PrintWin11.cpp" />
     <ClCompile Include="..\src\shared\ReadingBar.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
