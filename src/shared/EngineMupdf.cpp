@@ -5041,15 +5041,13 @@ bool EngineMupdf::FinishLoading() {
     return true;
 }
 
-#if !defined(SUMATRA_NG)
-// Paginate one chapter inside MuPDF without touching our chapter table.
-// The background thread does this; the UI thread's LayOutChapter publishes.
+// Paginate one chapter without publishing new flat page numbers.
 void EngineMupdf::WarmChapter(int chapter) {
     if (chapters.IsLaidOut(chapter) || chapter < 1) {
         return;
     }
     auto* ctx = Ctx();
-    AutoUnlockRecursiveMutex docScope(&docLock);
+    ScopedRecursiveMutex scope(&docLock);
     fz_try(ctx) {
         fz_count_chapter_pages(ctx, _doc, chapter - 1);
     }
@@ -5058,7 +5056,6 @@ void EngineMupdf::WarmChapter(int chapter) {
     }
 }
 
-#endif
 static bool RectNear(RectF a, RectF b) {
     auto delta = [](float x, float y) {
         float d = x - y;
@@ -5134,23 +5131,6 @@ static bool ApplyChapterMediabox(EngineMupdf* e, int chapter, RectF measured) {
     return !RectNear(old, measured);
 }
 
-#if defined(SUMATRA_NG)
-// Paginate one chapter without publishing new flat page numbers.
-void EngineMupdf::WarmChapter(int chapter) {
-    if (chapters.IsLaidOut(chapter) || chapter < 1) {
-        return;
-    }
-    auto* ctx = Ctx();
-    ScopedRecursiveMutex scope(&docLock);
-    fz_try(ctx) {
-        fz_count_chapter_pages(ctx, _doc, chapter - 1);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
-}
-
-#endif
 // Lays out one EPUB chapter on demand; single-chapter docs are laid out at
 // FinishLoading. IsLaidOut() makes repeat/racing calls and a post-reset
 // re-layout idempotent, trusting the freshly counted page total each time.
