@@ -274,8 +274,7 @@ bool AttrInfo::ValIs(Str s) const {
 }
 
 void HtmlToken::SetTag(TokenType newType, Str tagName) {
-    type = newType;
-    s = tagName;
+    *this = {.type = newType, .s = tagName};
     int off = 0;
     while (off < len(tagName)) {
         char c = tagName.s[off];
@@ -285,18 +284,11 @@ void HtmlToken::SetTag(TokenType newType, Str tagName) {
         off++;
     }
     name = Str(tagName.s, off);
-    reparsePoint = {};
     tag = FindHtmlTag(name);
-    node = nullptr;
 }
 
 void HtmlToken::SetText(Str slice) {
-    type = Text;
-    s = slice;
-    name = {};
-    reparsePoint = slice;
-    tag = Tag_NotFound;
-    node = nullptr;
+    *this = {.s = slice, .reparsePoint = slice};
 }
 
 bool HtmlToken::NameIs(Str nameToFind, HtmlNameMatch match) const {
