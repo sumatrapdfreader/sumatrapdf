@@ -22,15 +22,11 @@ struct CommandPaletteModel {
 
     void SetCommands(const int* commandIds, int count);
     void Filter(Str query);
-    int Count() const;
-    Str ItemText(int index) const;
     int ItemCommandId(int index) const;
 };
 
 void CommandPaletteModel::SetCommands(const int* commandIds, int count) {
     commands.Reset();
-    filtered.Reset();
-    filterWords.Reset();
     for (int i = 0; i < count; i++) {
         int commandId = commandIds[i];
         Str description = GetCommandDescription(commandId);
@@ -52,14 +48,6 @@ void CommandPaletteModel::Filter(Str query) {
             filtered.AppendFrom(&commands, i);
         }
     }
-}
-
-int CommandPaletteModel::Count() const {
-    return len(filtered);
-}
-
-Str CommandPaletteModel::ItemText(int index) const {
-    return index >= 0 && index < len(filtered) ? filtered[index] : Str{};
 }
 
 int CommandPaletteModel::ItemCommandId(int index) const {
@@ -103,19 +91,19 @@ void CommandPaletteModel_UnitTests() {
     const int commands[] = {CmdOpenFile, CmdRotateLeft, CmdRotateRight, CmdZoomFitWidth};
     CommandPaletteModel model;
     model.SetCommands(commands, dimofi(commands));
-    utassert(model.Count() == dimofi(commands));
+    utassert(len(model.filtered) == dimofi(commands));
     utassert(model.ItemCommandId(0) == CmdOpenFile);
 
     model.Filter(StrL("rotate right"));
-    utassert(model.Count() == 1);
+    utassert(len(model.filtered) == 1);
     utassert(model.ItemCommandId(0) == CmdRotateRight);
 
     model.Filter(StrL("FIT width"));
-    utassert(model.Count() == 1);
+    utassert(len(model.filtered) == 1);
     utassert(model.ItemCommandId(0) == CmdZoomFitWidth);
 
     model.Filter(StrL("missing"));
-    utassert(model.Count() == 0);
+    utassert(len(model.filtered) == 0);
 
     // ignore diacritics
     StrVec words;
