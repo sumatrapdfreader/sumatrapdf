@@ -2033,32 +2033,32 @@ Exit:
     GlobalFree(pdex.hDevMode);
 }
 
+static const struct {
+    PaperFormat format;
+    Str name;
+    short id;
+} kStandardPapers[] = {
+    {PaperFormat::Letter, StrL("letter"), DMPAPER_LETTER},
+    {PaperFormat::Legal, StrL("legal"), DMPAPER_LEGAL},
+    {PaperFormat::Tabloid, StrL("tabloid"), DMPAPER_TABLOID},
+    {PaperFormat::Statement, StrL("statement"), DMPAPER_STATEMENT},
+    {PaperFormat::A2, StrL("A2"), DMPAPER_A2},
+    {PaperFormat::A3, StrL("A3"), DMPAPER_A3},
+    {PaperFormat::A4, StrL("A4"), DMPAPER_A4},
+    {PaperFormat::A5, StrL("A5"), DMPAPER_A5},
+    {PaperFormat::A6, StrL("A6"), DMPAPER_A6},
+};
+
 static short GetPaperSize(EngineBase* engine, int pageNo) {
     RectF mediabox = engine->PageMediabox(pageNo);
     SizeF size = engine->Transform(mediabox, pageNo, 1.0f / engine->fileDPI, 0).Size();
-
-    switch (GetPaperFormatFromSizeApprox(size)) {
-        case PaperFormat::A2:
-            return DMPAPER_A2;
-        case PaperFormat::A3:
-            return DMPAPER_A3;
-        case PaperFormat::A4:
-            return DMPAPER_A4;
-        case PaperFormat::A5:
-            return DMPAPER_A5;
-        case PaperFormat::A6:
-            return DMPAPER_A6;
-        case PaperFormat::Letter:
-            return DMPAPER_LETTER;
-        case PaperFormat::Legal:
-            return DMPAPER_LEGAL;
-        case PaperFormat::Tabloid:
-            return DMPAPER_TABLOID;
-        case PaperFormat::Statement:
-            return DMPAPER_STATEMENT;
-        default:
-            return 0;
+    PaperFormat format = GetPaperFormatFromSizeApprox(size);
+    for (const auto& paper : kStandardPapers) {
+        if (paper.format == format) {
+            return paper.id;
+        }
     }
+    return 0;
 }
 
 // set the DEVMODE paper size to match a specific page, for mixed page size
@@ -2088,32 +2088,10 @@ static void SetDevModePaperSizeForPage(DEVMODEW* devMode, EngineBase* engine, in
 }
 
 static short GetStandardPaperByName(Str paperName) {
-    if (str::EqI(paperName, StrL("letter"))) {
-        return DMPAPER_LETTER;
-    }
-    if (str::EqI(paperName, StrL("legal"))) {
-        return DMPAPER_LEGAL;
-    }
-    if (str::EqI(paperName, StrL("tabloid"))) {
-        return DMPAPER_TABLOID;
-    }
-    if (str::EqI(paperName, StrL("statement"))) {
-        return DMPAPER_STATEMENT;
-    }
-    if (str::EqI(paperName, StrL("A2"))) {
-        return DMPAPER_A2;
-    }
-    if (str::EqI(paperName, StrL("A3"))) {
-        return DMPAPER_A3;
-    }
-    if (str::EqI(paperName, StrL("A4"))) {
-        return DMPAPER_A4;
-    }
-    if (str::EqI(paperName, StrL("A5"))) {
-        return DMPAPER_A5;
-    }
-    if (str::EqI(paperName, StrL("A6"))) {
-        return DMPAPER_A6;
+    for (const auto& paper : kStandardPapers) {
+        if (str::EqI(paperName, paper.name)) {
+            return paper.id;
+        }
     }
     return 0;
 }
