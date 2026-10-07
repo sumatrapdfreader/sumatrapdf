@@ -12,11 +12,16 @@
 #include "base/Win.h"
 #endif
 #include "gui/Dpi.h"
+#if !defined(SUMATRA_NG)
+#include "gui/PlatformFont.h"
+#endif
 #include "base/Timer.h"
 
 #include "gui/UIModels.h"
 
+#if defined(SUMATRA_NG)
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
+#endif
 #include "Settings.h"
 #include "Commands.h"
 #include "DisplayMode.h"
@@ -28,19 +33,44 @@
 #include "SumatraConfig.h"
 #include "FileHistory.h"
 #include "SumatraPDF.h"
+#if !defined(SUMATRA_NG)
+#include "WindowTab.h"
+#include "MainWindow.h"
+#include "DisplayModel.h"
+#endif
 #include "AppTools.h"
+#if !defined(SUMATRA_NG)
+#include "Favorites.h"
+#include "Menu.h"
+#include "HomePage.h"
+#include "Toolbar.h"
+#endif
 #include "Translations.h"
+#if defined(SUMATRA_NG)
 #include "ShortcutParse.h"
+#endif
 #include "Accelerators.h"
 #include "Theme.h"
 #include "PdfDarkMode.h"
+#if defined(SUMATRA_NG)
 #include "CachedObjects.h"
 #include "PagePosition.h"
 #include "GlobalHotkeys.h"
 #include "ExplorerQuickLook.h"
+#endif
 #include "ReadAloud.h"
+#if defined(SUMATRA_NG)
 #include "gui/WasmBridge.h"
+#else
+#include "Notifications.h"
+#include "ExplorerQuickLook.h"
+#include "Tabs.h"
+#include "GlobalHotkeys.h"
+#include "PagePosition.h"
+#include "CachedObjects.h"
+#endif
 #include "AppSettings.h"
+#if defined(SUMATRA_NG)
 
 // ng: everything left in AppSettings that drives the UI - the session
 // snapshot, the open windows, the UI fonts, QuickLook - needs
@@ -56,6 +86,7 @@ int CmdIdFromVirtualZoom(float virtualZoom); // Menu.h
 // ReloadSettings()
 void ApplySettingsToWindowsUi();
 void ReloadSettingsUpdateWindows(bool showToolbarBefore);
+#endif
 #endif
 
 // workaround for OnMenuExit
@@ -78,7 +109,32 @@ static void RememberLastSavedPrefs(Str s) {
     str::ReplaceWithCopy(&gLastSavedPrefs, s);
 }
 
-#if NG_HAS_UI
+#if !defined(SUMATRA_NG)
+static bool ApplyReadAloudVoiceFromSettings() {
+    if (!gSettings) {
+        return false;
+    }
+
+    float speed = gSettings->readAloudSpeed;
+    TtsSetSpeed(speed > 0 ? speed : 1.0f);
+
+    Str voiceId = gSettings->readAloudVoiceId;
+    if (len(voiceId) == 0) {
+        TtsSetVoiceById(StrL(""));
+        return false;
+    }
+
+    if (!TtsSetVoiceById(voiceId)) {
+        logf("ApplyReadAloudVoiceFromSettings: voice '%s' not available, using system default\n", voiceId);
+        str::ReplaceWithCopy(&gSettings->readAloudVoiceId, Str{});
+        TtsSetVoiceById(StrL(""));
+        return true;
+    }
+    return false;
+}
+#endif
+
+#if !defined(SUMATRA_NG) || NG_HAS_UI
 // SumatraPDF.cpp
 extern void RememberDefaultWindowPosition(MainWindow* win);
 #endif
@@ -152,6 +208,7 @@ static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
     return false;
 }
 
+#if defined(SUMATRA_NG)
 // ng: builds before the portable FILETIME fix stored Unix nanoseconds in this
 // field. Convert realistic post-2001 values once so Windows can read them too.
 static bool MigrateLegacyFileTime(FILETIME* ft) {
@@ -163,8 +220,9 @@ static bool MigrateLegacyFileTime(FILETIME* ft) {
     *ft = FileTimeFromU64(kFileTimeUnixEpoch + value / 100);
     return true;
 }
+#endif
 
-#if NG_HAS_UI // ng: UI fonts need PlatformFont
+#if !defined(SUMATRA_NG) || NG_HAS_UI
 // UI fonts are cached per DPI so windows on monitors with different scale
 // factors get correctly sized fonts. User-set sizes (UIFontSize, TreeFontSize)
 // are pixel sizes and used as-is at every DPI.
@@ -198,7 +256,6 @@ static void ResetCachedFonts() {
     // old fonts stay valid for windows that still hold them.
     VecReset(gUiFontsAtDpi);
 }
-
 #endif
 
 // number of weeks past since 2011-01-01
@@ -215,7 +272,6 @@ static int GetWeekCount() {
     return (int)(currTime.dwHighDateTime - origTime.dwHighDateTime) / 1408;
     // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
 #else
-    // ng: same thing from time_t. 1293840000 is 2011-01-01 in unix seconds
     constexpr i64 kSecs20110101 = 1293840000;
     constexpr i64 kSecsPerWeek = 60 * 60 * 24 * 7;
     i64 now = (i64)time(nullptr);
@@ -295,12 +351,19 @@ static void CreateSelectionHandlerCommands() {
     }
 }
 
+#if defined(SUMATRA_NG)
 // creates one command per configured text snippet
+#else
+// a command per TextSnippets entry, for the context menu, the palette and its Key
+#endif
 static void CreateTextSnippetCommands() {
     for (TextSnippet* ts : *gSettings->textSnippets) {
         if (!ts || str::IsEmptyOrWhiteSpace(ts->name) || str::IsEmptyOrWhiteSpace(ts->text)) {
             continue;
         }
+#if !defined(SUMATRA_NG)
+        // settings values are single-line: \n in Text is a line break
+#endif
         TempStr text = str::ReplaceTemp(ts->text, StrL("\\n"), StrL("\n"));
         CommandArg* args = NewStringArg(kCmdArgText, text);
         CreateCustomCommand(StrL(""), CmdInsertTextSnippet, args, ts->name, ts->key);
@@ -349,7 +412,11 @@ static void CreateZoomCommands() {
     if (n > 0) {
         // ZoomLevels replaces the built-in levels, for the buttons too
         Vec<int>* cmdIds = new Vec<int>();
+#if defined(SUMATRA_NG)
         VecReserve(*cmdIds, n);
+#else
+        VecGrow(*cmdIds, n);
+#endif
         prefs->zoomLevelsCmdIds = cmdIds;
         for (int i = 0; i < n; i++) {
             float zoomLevel = (*prefs->zoomLevels)[i];
@@ -399,7 +466,7 @@ void ApplySettingsToOpenWindows() {
         setMinMax(gSettings->saveMemory, 0, 100);
         gSaveMemory = gSettings->saveMemory;
     }
-#if NG_HAS_UI // ng: rebuilding menus / toolbars needs MainWindow (step 6)
+#if !defined(SUMATRA_NG) || NG_HAS_UI
     for (MainWindow* win : gWindows) {
         // WindowMargin / PageSpacing are copied into DisplayModel at SetUiDpi;
         // pick up the reloaded prefs before the relayout below (issue #6018)
@@ -409,7 +476,7 @@ void ApplySettingsToOpenWindows() {
         }
         // LoadSettings re-creates custom commands (themes, external viewers,
         // selection handlers, shortcuts) with fresh command ids. Menus still
-        // hold the old ids unless rebuilt - without this, e.g. "Set theme '...'"
+        // hold the old ids unless rebuilt - without this, e.g. "Set theme ..."
         // does nothing until restart (issue #5822).
         RebuildMenuBarForWindow(win);
         ReCreateToolbar(win);
@@ -443,17 +510,188 @@ static void UpdateCrashHandlerSettings() {
     str::Free(d);
 }
 
+#if !defined(SUMATRA_NG)
+TabState* CloneTabState(const TabState* src) {
+    TabState* dst = (TabState*)AllocStruct<TabState>();
+    str::ReplaceWithCopy(&dst->filePath, src->filePath);
+    str::ReplaceWithCopy(&dst->displayMode, src->displayMode);
+    str::ReplaceWithCopy(&dst->pageNo, src->pageNo);
+    str::ReplaceWithCopy(&dst->zoom, src->zoom);
+    dst->rotation = src->rotation;
+    dst->scrollPos = src->scrollPos;
+    dst->showToc = src->showToc;
+    str::ReplaceWithCopy(&dst->sidebarView, src->sidebarView);
+    dst->tocState = new Vec<int>(*src->tocState);
+    return dst;
+}
+
+static SessionData* CloneSessionData(const SessionData* src) {
+    SessionData* dst = NewSessionData();
+    dst->tabIndex = src->tabIndex;
+    dst->windowState = src->windowState;
+    dst->windowPos = src->windowPos;
+    dst->sidebarDx = src->sidebarDx;
+    for (TabState* ts : *src->tabStates) {
+        VecAppend(*dst->tabStates, CloneTabState(ts));
+    }
+    return dst;
+}
+
+#endif
 // session snapshot loaded at startup. Also the source of state for re-saving
 // not-yet-loaded (lazy) tabs, kept mirroring the live session by
 // SyncInitialSessionData() so it never carries closed-window entries.
 Vec<SessionData*>* gInitialSessionData = nullptr;
 
+#if defined(SUMATRA_NG)
 // ng: orig's SaveSettings() calls UpdateTabFileDisplayStateForTab() for every
 // tab, then RememberSessionState() + SyncInitialSessionData(). All three need
 // MainWindow / WindowTab, which live in the SumatraPDF target because `app`
 // also links into the console tools, so the shell installs them here.
 // src/SessionState.cpp has orig's code.
 void (*gRememberSessionStateFn)() = nullptr;
+#else
+// find the saved state for a lazy tab by file path. Because gInitialSessionData
+// is kept in sync with the live session, this never matches a closed window;
+// per-tab disambiguation (e.g. same file in two windows) comes from the more
+// reliable tab->tabState, which RememberSessionState prefers.
+static TabState* FindSessionTabState(Str fp) {
+    if (!gInitialSessionData) {
+        return nullptr;
+    }
+    for (SessionData* psd : *gInitialSessionData) {
+        for (TabState* pts : *psd->tabStates) {
+            if (str::Eq(pts->filePath, fp)) {
+                return pts;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// lazy tabs borrow tab->tabState from gInitialSessionData. After we replace that
+// snapshot, repoint those pointers so the next SaveSettings() does not clone freed
+// TabState objects
+static void RefreshLazyTabStatePointers() {
+    int sdIdx = 0;
+    for (MainWindow* win : gWindows) {
+        bool hasFileTab = false;
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->filePath) {
+                hasFileTab = true;
+                break;
+            }
+        }
+        if (!hasFileTab) {
+            continue;
+        }
+        SessionData* sd = nullptr;
+        if (gInitialSessionData && sdIdx < len(*gInitialSessionData)) {
+            sd = (*gInitialSessionData)[sdIdx++];
+        }
+        int tsIdx = 0;
+        for (WindowTab* tab : win->Tabs()) {
+            if (len(tab->filePath) == 0) {
+                continue;
+            }
+            TabState* ts = nullptr;
+            if (sd && tsIdx < len(*sd->tabStates)) {
+                ts = (*sd->tabStates)[tsIdx];
+            }
+            tsIdx++;
+            if (!tab->ctrl && tab->tabState) {
+                // null when the new snapshot has nothing to borrow: the old one
+                // was just freed and must not be left dangling
+                tab->tabState = ts;
+            }
+        }
+    }
+}
+
+// keep gInitialSessionData mirroring the just-saved live session, so re-saving
+// not-yet-loaded tabs never feeds stale state from a closed window back into the
+// saved session (fixes #5668). Call after RememberSessionState().
+static void SyncInitialSessionData() {
+    if (!gInitialSessionData) {
+        return;
+    }
+    FreeSessionDataVec(gInitialSessionData);
+    for (SessionData* sd : *gSettings->sessionData) {
+        VecAppend(*gInitialSessionData, CloneSessionData(sd));
+    }
+    RefreshLazyTabStatePointers();
+}
+
+static void RememberSessionState() {
+    Vec<SessionData*>* sessionState = gSettings->sessionData;
+    FreeSessionDataVec(sessionState);
+
+    if (!SettingsRememberOpenedFiles()) {
+        return;
+    }
+
+    for (auto* win : gWindows) {
+        if (win->isQuickLook) {
+            continue;
+        }
+        SessionData* windowState = NewSessionData();
+        for (WindowTab* tab : win->Tabs()) {
+            if (len(tab->filePath) == 0) {
+                // home page tab
+                continue;
+            }
+            Str fp = tab->filePath;
+            if (!tab->ctrl) {
+                // file not loaded into a tab (lazy loading, or a placeholder for
+                // a missing file). Prefer the tab's own remembered state -- it's
+                // authoritative and disambiguates the same file open in multiple
+                // windows -- and only fall back to the (in-sync) startup snapshot.
+                TabState* src = tab->tabState;
+                if (!src) {
+                    src = FindSessionTabState(fp);
+                }
+                if (src) {
+                    VecAppend(*windowState->tabStates, CloneTabState(src));
+                }
+                continue;
+            }
+            FileState* fs = NewFileState(fp);
+            tab->ctrl->GetDisplayState(fs);
+            fs->showToc = tab->showToc;
+            str::ReplaceWithCopy(&fs->sidebarView, SidebarViewToStr(tab->sidebarView));
+            *fs->tocState = tab->tocState;
+            TabState* ts = NewTabState(fs);
+            VecAppend(*windowState->tabStates, ts);
+            DeleteFileState(fs);
+        }
+        if (len(*windowState->tabStates) == 0) {
+            FreeSessionData(windowState);
+            continue;
+        }
+        // 1-based index among document tabs only (home / about tab is omitted
+        // from TabStates above). Using the UI tab index would mis-restore when
+        // the home tab was closed at save time but recreated on the next start.
+        int docOrdinal = 0;
+        int selectedDocOrdinal = 1;
+        WindowTab* cur = win->CurrentTab();
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+                continue;
+            }
+            docOrdinal++;
+            if (tab == cur) {
+                selectedDocOrdinal = docOrdinal;
+            }
+        }
+        windowState->tabIndex = selectedDocOrdinal;
+        RememberDefaultWindowPosition(win);
+        windowState->windowState = gSettings->windowState;
+        windowState->windowPos = gSettings->windowPos;
+        windowState->sidebarDx = gSettings->sidebarDx;
+        VecAppend(*sessionState, windowState);
+    }
+}
+#endif
 
 // called whenever global preferences change or a file is
 // added or removed from the file history (in order to keep
@@ -478,10 +716,25 @@ static bool SaveSettings() {
         return false;
     }
     logf("SaveSettings\n");
+#if defined(SUMATRA_NG)
     // update display states for all tabs, then snapshot the session
     if (gRememberSessionStateFn) {
         gRememberSessionStateFn();
+#else
+    // update display states for all tabs
+    // we snapshot the list because SaveSettings() can be called re-entrantly
+    // (e.g. from LoadDocumentFinish while other documents are still loading/closing)
+    for (MainWindow* win : gWindows) {
+        Vec<WindowTab*> tabs = win->Tabs();
+        for (WindowTab* tab : tabs) {
+            UpdateTabFileDisplayStateForTab(tab);
+        }
+#endif
     }
+#if !defined(SUMATRA_NG)
+    RememberSessionState();
+    SyncInitialSessionData();
+#endif
 
     // remove entries which should (no longer) be remembered
     FileHistoryPurge(!gSettings->rememberStatePerDocument);
@@ -522,10 +775,12 @@ static bool SaveSettings() {
     if (ok) {
         RememberLastSavedPrefs(prefs);
         gSettings->lastPrefUpdate = file::GetModificationTime(path);
+#if defined(SUMATRA_NG)
 #if OS_WASM
         // the settings directory is a MEMFS mount of IndexedDB; a write only
         // outlives the tab once it is synced back
         WasmPersistSettings();
+#endif
 #endif
     }
     WatchedFileSetIgnore(gWatchedSettingsFile, false);
@@ -569,21 +824,33 @@ bool LoadSettings() {
 
     Settings* gprefs = nullptr;
     TempStr settingsPath = GetSettingsPathTemp();
+#if defined(SUMATRA_NG)
     bool settingsMigrated = false;
+#else
+    bool migratedDocumentColorsFollowTheme = false;
+#endif
     {
         Str prefsData = file::ReadFile(settingsPath);
 
         gSettings = NewSettings(prefsData);
         ReportIf(!gSettings);
         gprefs = gSettings;
+#if defined(SUMATRA_NG)
         settingsMigrated = MigrateDocumentColorsFollowThemeSetting(prefsData);
         settingsMigrated |= MigrateLegacyFileTime(&gSettings->timeOfLastUpdateCheck);
+#else
+        migratedDocumentColorsFollowTheme = MigrateDocumentColorsFollowThemeSetting(prefsData);
+#endif
         RememberLastSavedPrefs(prefsData);
         str::Free(prefsData);
     }
     if (MigrateRenamedThemeNames()) {
         // the file still named a theme we dropped; save so it stops doing that
+#if defined(SUMATRA_NG)
         settingsMigrated = true;
+#else
+        migratedDocumentColorsFollowTheme = true;
+#endif
     }
 
     // takes effect for PDFs loaded after this (startup, and on settings reload)
@@ -733,7 +1000,7 @@ bool LoadSettings() {
         SetDefaultChmFont(EbookFontNameFromSetting(gprefs->chmUI.fontName));
     }
 
-#if NG_HAS_UI
+#if !defined(SUMATRA_NG) || NG_HAS_UI
     ResetCachedFonts();
 #endif
 
@@ -755,7 +1022,11 @@ bool LoadSettings() {
     ApplySettingsToOpenWindows();
     bool readAloudVoiceCleared = ApplyReadAloudVoiceFromSettings();
 
+#if defined(SUMATRA_NG)
     bool needsSave = !file::Exists(settingsPath) || readAloudVoiceCleared || settingsMigrated;
+#else
+    bool needsSave = !file::Exists(settingsPath) || readAloudVoiceCleared || migratedDocumentColorsFollowTheme;
+#endif
     if (needsSave) {
         SaveSettings();
     }
@@ -768,7 +1039,23 @@ bool LoadSettings() {
 
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
+#if !defined(SUMATRA_NG)
+// a reload that waits for document load threads to finish
+static bool gReloadDeferred = false;
+static bool gReloadDeferredForce = false;
+
+#endif
 static void ReloadSettings(bool force = false) {
+#if !defined(SUMATRA_NG)
+    // load threads read gSettings and file history; freeing them under a
+    // running load crashed LoadDocumentAsync
+    if (AreLoadThreadsActive()) {
+        gReloadDeferred = true;
+        gReloadDeferredForce |= force;
+        return;
+    }
+
+#endif
     TempStr settingsPath = GetSettingsPathTemp();
     if (!file::Exists(settingsPath)) {
         return;
@@ -815,7 +1102,7 @@ static void ReloadSettings(bool force = false) {
     // FileState* in the cache and chrome die with CleanUpSettings()
     // (crash 8c34d7eda). LoadSettings() rebuilds both; do not destroy after.
     HomePageInvalidateLayoutCache();
-#if NG_HAS_UI
+#if !defined(SUMATRA_NG) || NG_HAS_UI
     for (MainWindow* win : gWindows) {
         if (win->IsCurrentTabAbout()) {
             win->DeleteToolTip();
@@ -834,7 +1121,7 @@ static void ReloadSettings(bool force = false) {
         SetCurrentLanguageAndRefreshUI(gSettings->uiLanguage);
     }
 
-#if NG_HAS_UI
+#if !defined(SUMATRA_NG) || NG_HAS_UI
     for (MainWindow* win : gWindows) {
         if (gSettings->showToolbar != showToolbar) {
             ShowOrHideToolbar(win);
@@ -853,7 +1140,9 @@ static void ReloadSettings(bool force = false) {
 
     UpdateDocumentColors();
     UpdateFixedPageScrollbarsVisibility();
+#if defined(SUMATRA_NG)
     ReRegisterGlobalHotkeys();
+#endif
 }
 
 void CleanUpSettings() {
@@ -866,6 +1155,18 @@ void ForceReloadSettings() {
     FlushScheduledSaveSettings();
     ReloadSettings(true);
 }
+
+#if !defined(SUMATRA_NG)
+void ReloadDeferredSettings() {
+    if (!gReloadDeferred || AreLoadThreadsActive()) {
+        return;
+    }
+    bool force = gReloadDeferredForce;
+    gReloadDeferred = false;
+    gReloadDeferredForce = false;
+    ReloadSettings(force);
+}
+#endif
 
 static void ReloadSettingsFromWatcher() {
     ReloadSettings(false);
@@ -894,7 +1195,7 @@ void UnregisterSettingsForFileChanges() {
 
 constexpr int kMinFontSize = 9;
 
-#if NG_HAS_UI // ng: UI fonts need PlatformFont
+#if !defined(SUMATRA_NG) || NG_HAS_UI
 // metrics for an explicit DPI (system dpi when GetNonClientMetricsForDpi fails)
 static void GetNonClientMetricsForDpiValue(int dpi, NONCLIENTMETRICS* ncm) {
     if (dpi <= 0) {
@@ -1044,7 +1345,6 @@ bool IsAppFontSizeDefault() {
     auto fntSize = gSettings->uIFontSize;
     return fntSize < kMinFontSize;
 }
-
 #endif
 
 TempStr ZoomLevelStr(float zoom) {
@@ -1415,7 +1715,7 @@ bool SetSettingsValueFromStr(Str path, Str value) {
     if (!FindSettingInStruct(&gSettingsInfo, (u8*)gSettings, {}, path, &type, &p)) {
         return false;
     }
-#if NG_HAS_UI
+#if !defined(SUMATRA_NG) || NG_HAS_UI
     // snapshot the settings that need an explicit apply (tabs, menu bar, ...)
     // before we overwrite them, so we can act on what actually changed
     SettingsApplyState before = GetSettingsApplyState();
@@ -1442,7 +1742,7 @@ bool SetSettingsValueFromStr(Str path, Str value) {
             str::ReplaceWithCopy((Str*)p, value);
             break;
         default:
-#if NG_HAS_UI
+#if defined(SUMATRA_NG) && NG_HAS_UI
             str::Free(before.ebookLayout);
 #endif
             return false;
@@ -1452,7 +1752,7 @@ bool SetSettingsValueFromStr(Str path, Str value) {
     // reload so everything derived from settings (theme, fonts, parsed colors,
     // custom commands, accelerators ...) is re-computed and applied
     ForceReloadSettings();
-#if NG_HAS_UI
+#if !defined(SUMATRA_NG) || NG_HAS_UI
     ApplyChangedSettingsAndRelayout(before);
 #endif
     return true;
