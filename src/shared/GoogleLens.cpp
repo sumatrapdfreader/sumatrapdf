@@ -3,44 +3,46 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/GdiPlusUtil.h"
-#include "base/Pixmap.h"
-#include "base/AutoWin.h"
-#include "base/UITask.h"
 #include "base/Win.h"
+#include "base/Launch.h"
+#include "base/Pixmap.h"
 
 #include "gui/UIModels.h"
-#include "gui/Layout.h"
-#include "gui/win/WinGui.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "base/GuessFileType.h"
+#include "EngineAll.h"
 #include "AppSettings.h"
-#include "ChmModel.h"
-#include "MarkdownModel.h"
+#include "AppTools.h"
 #include "DisplayModel.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Notifications.h"
+#include "PngOptimizer.h"
 #include "Selection.h"
 #include "Translations.h"
 #include "WindowTab.h"
 #include "GoogleLens.h"
 
-constexpr i64 kMaxGoogleLensPngBytes = 32LL * 1024 * 1024;
+constexpr int kMaxGoogleLensPngBytes = 32 * 1024 * 1024;
 
 static void GoogleLensNotify(WindowTab* tab, Str message) {
     if (!tab || !tab->win) {
         return;
     }
     NotificationCreateArgs args;
+#ifdef SUMATRA_NG
+    args.win = tab->win;
+#else
     args.hwndParent = tab->win->hwndCanvas;
+#endif
     args.tab = tab;
     args.warning = true;
-    args.timeoutMs = 5000;
+    args.timeoutMs = kNotif5SecsTimeOut;
     args.msg = message;
     ShowNotification(args);
 }
@@ -83,14 +85,14 @@ static bool WriteGoogleLensPage(WindowTab* tab, const u8* png, size_t pngSize) {
              "form.enctype='multipart/form-data';form.action='https://lens.google.com/v3/upload?ep=cntpubb&re=df&s=4';"
              "form.appendChild(i);document.body.appendChild(form);form.submit();</script>\n"));
 
-    TempStr path = GetTempFilePathTemp(StrL("SumatraPDF-Lens"));
-    if (len(path) == 0) {
+    TempStr dir = GetTempDirPathTemp();
+    if (len(dir) == 0) {
         GoogleLensNotify(tab, Tr("Could not create a temporary file for Google Lens."));
         return false;
     }
-    TempStr htmlPath = str::JoinTemp(path, StrL(".html"));
-    if (!file::Rename(htmlPath, path) || !file::WriteFile(htmlPath, ToStr(html))) {
-        file::Delete(path);
+    TempStr name = fmt("SumatraPDF-Lens-%d.html", CurrentProcessId());
+    TempStr htmlPath = path::JoinTemp(dir, name);
+    if (!file::WriteFile(htmlPath, ToStr(html))) {
         file::Delete(htmlPath);
         GoogleLensNotify(tab, Tr("Could not create a temporary file for Google Lens."));
         return false;
@@ -103,41 +105,39 @@ static bool WriteGoogleLensPage(WindowTab* tab, const u8* png, size_t pngSize) {
     return true;
 }
 
-static bool EncodePng(RenderedBitmap* bitmap, Vec<u8>& out) {
-    Gdiplus::Bitmap image(bitmap->GetBitmap(), nullptr);
-    CLSID pngClsid = GetGdiPlusEncoderClsid(WStrL(L"image/png"));
-    IStream* stream = nullptr;
-    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
-        return false;
-    }
-    bool ok = image.Save(stream, &pngClsid, nullptr) == Gdiplus::Ok;
-    STATSTG stat{};
-    HGLOBAL global = nullptr;
-    if (ok && (FAILED(stream->Stat(&stat, STATFLAG_NONAME)) || stat.cbSize.QuadPart <= 0 ||
-               stat.cbSize.QuadPart > kMaxGoogleLensPngBytes || FAILED(GetHGlobalFromStream(stream, &global)))) {
-        ok = false;
-    }
-    if (ok) {
-        size_t size = (size_t)stat.cbSize.QuadPart;
-        void* data = GlobalLock(global);
-        if (!data) {
-            ok = false;
-        } else {
-            VecReset(out);
-            VecAppendN(out, (u8*)data, (int)size);
-            GlobalUnlock(global);
-        }
-    }
-    stream->Release();
-    return ok;
-}
-
 enum class GoogleLensSrc {
     Auto,
     Selection,
     Page,
     Image
 };
+
+static Pixmap* PixmapForImageElement(EngineBase* engine, IPageElement* imageElement) {
+    RenderedBitmap* bmp = engine->GetImageForPageElement(imageElement);
+    if (!bmp) {
+        return nullptr;
+    }
+#if OS_WIN
+    Pixmap* px = PixmapFromRenderedBitmap(bmp);
+    if (px && px->format == PixmapFormat::Native) {
+        Pixmap* copy = PixmapCopyAs32bppDIB(px);
+        FreePixmap(px);
+        px = copy;
+    }
+    return px;
+#else
+    // ng: a RenderedBitmap is win32-only, so bmp is always null here
+    return nullptr;
+#endif
+}
+
+static Pixmap* RenderLensSelection(DisplayModel* dm, const Vec<SelectionOnPage>& selections) {
+#ifdef SUMATRA_NG
+    return RenderSelectionsAsPixmap(dm, selections);
+#else
+    return PixmapFromRenderedBitmap(RenderSelectionsAsRenderedBitmap(dm, selections));
+#endif
+}
 
 static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement* imageElement, int pageNo) {
     if (!tab || !tab->win || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
@@ -149,11 +149,11 @@ static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement*
         return;
     }
 
-    RenderedBitmap* bitmap = nullptr;
+    Pixmap* bitmap = nullptr;
     bool isImage = imageElement && imageElement->Is(kindPageElementImage);
     if (src == GoogleLensSrc::Image || (src == GoogleLensSrc::Auto && isImage)) {
         if (isImage) {
-            bitmap = dm->GetEngine()->GetImageForPageElement(imageElement);
+            bitmap = PixmapForImageElement(dm->GetEngine(), imageElement);
         } else if (src == GoogleLensSrc::Image && dm->GetEngine()->kind != kindEngineImage) {
             GoogleLensNotify(tab, Tr("No image under the cursor."));
             return;
@@ -164,7 +164,7 @@ static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement*
                    (src == GoogleLensSrc::Auto && !bitmap && dm->GetEngine()->kind != kindEngineImage &&
                     tab->selectionOnPage && len(*tab->selectionOnPage) > 0);
     if (!bitmap && wantSel && tab->selectionOnPage && len(*tab->selectionOnPage) > 0) {
-        bitmap = RenderSelectionsAsRenderedBitmap(dm, *tab->selectionOnPage);
+        bitmap = RenderLensSelection(dm, *tab->selectionOnPage);
     }
 
     bool wantPage =
@@ -177,7 +177,18 @@ static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement*
             float zoom = dm->GetZoomReal(pageNo);
             RectF pageRect = dm->GetEngine()->PageMediabox(pageNo);
             RenderPageArgs args(pageNo, zoom, dm->GetRotation(), &pageRect, RenderTarget::Export);
-            bitmap = RenderedBitmapFromPixmap(dm->GetEngine()->RenderPage(args));
+            bitmap = dm->GetEngine()->RenderPage(args);
+            if (bitmap && bitmap->format != PixmapFormat::BGRA8) {
+#if OS_WIN
+                Pixmap* converted = PixmapCopyAs32bppDIB(bitmap);
+                FreePixmap(bitmap);
+                bitmap = converted;
+#else
+                // ng: a Native (palette DIB) pixmap can only be read through GDI
+                FreePixmap(bitmap);
+                bitmap = nullptr;
+#endif
+            }
         }
     }
     if (!bitmap) {
@@ -185,14 +196,15 @@ static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement*
         return;
     }
 
-    Vec<u8> png;
-    bool ok = EncodePng(bitmap, png);
-    delete bitmap;
-    if (!ok) {
+    Str png = EncodePngFromPixmap(bitmap);
+    FreePixmap(bitmap);
+    if (len(png) == 0 || len(png) > kMaxGoogleLensPngBytes) {
+        str::Free(png);
         GoogleLensNotify(tab, Tr("Could not encode the page for Google Lens."));
         return;
     }
-    WriteGoogleLensPage(tab, png.els, len(png));
+    WriteGoogleLensPage(tab, (const u8*)png.s, (size_t)len(png));
+    str::Free(png);
 }
 
 void SearchWithGoogleLens(WindowTab* tab, IPageElement* imageElement, int pageNo) {

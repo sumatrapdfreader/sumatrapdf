@@ -192,6 +192,7 @@ export const sharedFiles = [
   "src/shared/KeyboardHelp.h",
   "src/shared/LinkFollow.cpp",
   "src/shared/LinkFollow.h",
+  "src/shared/GoogleLens.cpp",
   "src/shared/GoogleLens.h",
   "src/shared/GumboHtmlParser.cpp",
   "src/shared/GumboHtmlParser.h",

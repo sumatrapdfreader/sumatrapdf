@@ -1624,7 +1624,6 @@
     <ClCompile Include="..\src\GetPasswordDialog.cpp" />
     <ClCompile Include="..\src\GlobalHotkeys.cpp" />
     <ClCompile Include="..\src\GoToPageDialog.cpp" />
-    <ClCompile Include="..\src\GoogleLens.cpp" />
     <ClCompile Include="..\src\HomePage.cpp" />
     <ClCompile Include="..\src\ImageEditHostSumatra.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
@@ -2120,6 +2119,7 @@
     <ClCompile Include="..\src\shared\FileHistory.cpp" />
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
     <ClCompile Include="..\src\shared\Flags.cpp" />
+    <ClCompile Include="..\src\shared\GoogleLens.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\HangDetector.cpp" />
     <ClCompile Include="..\src\shared\HtmlFormatter.cpp" />
