@@ -675,15 +675,11 @@ void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool raste
 }
 
 static float CadMinLineWidthForZoom(float zoom, bool hairlineDoc) {
-    float z = zoom;
-    z = std::max(z, 0.20f);
+    float z = std::max(zoom, 0.20f);
     // Device pixels. Hairline CAD needs a modest floor; avoid double-boosting with stroke rewrites.
     float minLw = hairlineDoc ? (0.50f + (0.55f / z)) : (0.14f + (0.38f / z));
     float maxLw = hairlineDoc ? 1.25f : 0.62f;
-    float minFloor = hairlineDoc ? 0.50f : 0.14f;
-    minLw = std::min(minLw, maxLw);
-    minLw = std::max(minLw, minFloor);
-    return minLw;
+    return std::min(minLw, maxLw);
 }
 
 // RAII: raise the context's minimum rendered line width for the duration of a
