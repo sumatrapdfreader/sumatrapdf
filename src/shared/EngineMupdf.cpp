@@ -3398,11 +3398,7 @@ static void DeInitializeEngineMupdf() {
     auto n = AtomicIntDec(&gEngineCount);
     if (n > 0) return;
     ReportIf(n < 0);
-#if defined(SUMATRA_NG)
     ScopedMutex cs(&gPerThreadContextsCs);
-#else
-    AutoUnlockMutex cs(&gPerThreadContextsCs);
-#endif
     VecReset(gPerThreadContexts);
 #if !defined(SUMATRA_NG)
 }
@@ -3417,11 +3413,7 @@ int EngineMupdfCount() {
 static fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
     ThreadId threadID = GetCurrentThreadId();
     {
-#if defined(SUMATRA_NG)
         ScopedMutex cs(&gPerThreadContextsCs);
-#else
-        AutoUnlockMutex cs(&gPerThreadContextsCs);
-#endif
         for (auto& el : gPerThreadContexts) {
             if (el.engine == engine && el.threadID == threadID) {
                 return el.ctx;
@@ -3438,11 +3430,7 @@ static fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* c
         return ctx;
     }
     {
-#if defined(SUMATRA_NG)
         ScopedMutex cs(&gPerThreadContextsCs);
-#else
-        AutoUnlockMutex cs(&gPerThreadContextsCs);
-#endif
         ContextThreadID el{engine, newCtx, threadID};
         VecAppend(gPerThreadContexts, el);
     }
@@ -3453,11 +3441,7 @@ static void ReleasePerThreadContext(EngineMupdf* engine) {
     ThreadId threadID = GetCurrentThreadId();
     fz_context* ctxToDrop = nullptr;
     {
-#if defined(SUMATRA_NG)
         ScopedMutex cs(&gPerThreadContextsCs);
-#else
-        AutoUnlockMutex cs(&gPerThreadContextsCs);
-#endif
         auto n = len(gPerThreadContexts);
         for (int i = 0; i < n; i++) {
             auto& el = gPerThreadContexts[i];
@@ -3477,11 +3461,7 @@ static void ReleasePerThreadContext(EngineMupdf* engine) {
 static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
     Vec<fz_context*> ctxsToDrop;
     {
-#if defined(SUMATRA_NG)
         ScopedMutex cs(&gPerThreadContextsCs);
-#else
-        AutoUnlockMutex cs(&gPerThreadContextsCs);
-#endif
         for (int i = len(gPerThreadContexts) - 1; i >= 0; i--) {
             auto& el = gPerThreadContexts[i];
             if (el.engine == engine) {
@@ -3625,11 +3605,7 @@ EngineMupdf::~EngineMupdf() {
 
 // caller holds (or doesn't need) pagesLock; RecursiveMutex makes re-entry safe
 FzPageInfo* EngineMupdf::PageInfoByLoc(Location loc) {
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&pagesLock);
-#else
-    AutoUnlockRecursiveMutex scope(&pagesLock);
-#endif
     if (loc.chapter < 1 || loc.chapter > len(chapterPages)) {
         return nullptr;
     }
@@ -3676,11 +3652,7 @@ EngineBase* EngineMupdf::Clone() {
     bool hasCryptKey = false;
     PasswordCloner* pwdUI = nullptr;
     {
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex scope(&docLock);
-#else
-        AutoUnlockRecursiveMutex scope(&docLock);
-#endif
         auto* ctx = Ctx();
         if (pdfdoc) {
             u8* key = pdf_crypt_key(ctx, pdfdoc->crypt);
@@ -3724,11 +3696,7 @@ EngineBase* EngineMupdf::Clone() {
     delete pwdUI;
 
     {
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex scope(&docLock);
-#else
-        AutoUnlockRecursiveMutex scope(&docLock);
-#endif
         clone->disableAntiAlias = disableAntiAlias;
         clone->disableAutoLinks = disableAutoLinks;
         clone->cadDetectDone = cadDetectDone;
@@ -4598,11 +4566,7 @@ bool GetPdfViewerPrintPrefs(EngineBase* engineBase, PdfViewerPrintPrefs& prefs) 
     }
     pdf_document* pdfdoc = engine->pdfdoc;
 
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex cs(&engine->docLock);
-#else
-    AutoUnlockRecursiveMutex cs(&engine->docLock);
-#endif
 
     pdf_obj* vprefs = nullptr;
     fz_var(vprefs);
@@ -4669,11 +4633,7 @@ static bool IsLinearizedFile(EngineMupdf* e) {
     }
     auto* ctx = e->Ctx();
 
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&e->docLock);
-#endif
     int isLinear = 0;
     fz_try(ctx) {
         isLinear = pdf_doc_was_linearized(ctx, e->pdfdoc);
@@ -4788,11 +4748,7 @@ static void InitChapterPagesLazy(EngineMupdf* e, int nCh, int n1) {
 }
 
 static void FinishNonPDFLoading(EngineMupdf* e) {
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&e->docLock);
-#endif
 
     auto* ctx = e->Ctx();
     if (e->isReflowable && e->HasChapters()) {
@@ -5009,11 +4965,7 @@ bool EngineMupdf::FinishLoading() {
         return true;
     }
 
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&docLock);
-#endif
 
     LoadPdfPageMediaboxes(this);
 
@@ -5263,11 +5215,7 @@ int EngineMupdf::LayOutChapter(int chapter) {
     int n = 1;
     fz_rect bound = fz_empty_rect;
     {
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex docScope(&docLock);
-#else
-        AutoUnlockRecursiveMutex docScope(&docLock);
-#endif
         fz_page* page = nullptr;
         fz_var(n);
         fz_var(page);
@@ -5296,11 +5244,7 @@ int EngineMupdf::LayOutChapter(int chapter) {
 
     bool staleBox = false;
     {
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex pagesScope(&pagesLock);
-#else
-        AutoUnlockRecursiveMutex pagesScope(&pagesLock);
-#endif
         if (chapters.Generation() != gen) {
             return chapters.PageCount(chapter);
         }
@@ -5691,15 +5635,9 @@ static TocItem* GenerateTocFromHeadings(EngineMupdf* e, int& idCounter) {
         // Take locks per page so a render thread can run between pages. Holding
         // them for the whole document blocked the first page while every page
         // was extracted (annot-stress-99.pdf).
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex csPages(&e->pagesLock);
         ScopedMutex csRender(&e->renderLock);
         ScopedRecursiveMutex csDoc(&e->docLock);
-#else
-        AutoUnlockRecursiveMutex csPages(&e->pagesLock);
-        AutoUnlockMutex csRender(&e->renderLock);
-        AutoUnlockRecursiveMutex csDoc(&e->docLock);
-#endif
         fz_try(ctx) {
             page = fz_load_page(ctx, e->_doc, i);
             stext = fz_new_stext_page_from_page(ctx, page, &opts);
@@ -5730,11 +5668,7 @@ static TocTree* ReplaceTocWithHeadings(EngineMupdf* e, TocItem* headings, int id
     if (!e || !headings) {
         return nullptr;
     }
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex cs(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex cs(&e->docLock);
-#endif
     TocTree* old = e->tocTree;
     e->tocTree = nullptr;
     TocItem* root = headings;
@@ -5813,11 +5747,7 @@ void EngineMupdf::StartHeadingTocIfNeeded() {
         return;
     }
     {
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex cs(&docLock);
-#else
-        AutoUnlockRecursiveMutex cs(&docLock);
-#endif
         if (headingTocStarted) {
             return;
         }
@@ -5856,11 +5786,7 @@ TocTree* EngineMupdf::GetToc() {
 TocTree* EngineMupdf::BuildToc() {
     int idCounter = 0;
 
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex cs(&docLock);
-#else
-    AutoUnlockRecursiveMutex cs(&docLock);
-#endif
     if (tocTree) {
         return tocTree;
     }
@@ -5895,11 +5821,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     }
     auto* ctx = Ctx();
     IPageDestination* pageDest = nullptr;
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope2(&docLock);
-#else
-    AutoUnlockRecursiveMutex scope2(&docLock);
-#endif
     TempStr uri = str::JoinTemp(StrL("#nameddest="), name);
     float zoom = 0;
     RectF r;
@@ -5945,11 +5867,7 @@ int EngineMupdf::GetOpenActionPageNo() {
         return 0;
     }
     auto* ctx = Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&docLock);
-#endif
 
     int pageNo = 0;
     fz_var(pageNo);
@@ -5993,13 +5911,8 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
         return nullptr;
     }
 
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope1(&pagesLock);
     ScopedRecursiveMutex scope2(&docLock);
-#else
-    AutoUnlockRecursiveMutex scope1(&pagesLock);
-    AutoUnlockRecursiveMutex scope2(&docLock);
-#endif
 
     int nameLen = len(name);
     pdf_obj* dest = nullptr;
@@ -6049,11 +5962,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
 
 // return a page but only if is fully loaded
 FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&pagesLock);
-#else
-    AutoUnlockRecursiveMutex scope(&pagesLock);
-#endif
     ReportIf(pageNo < 1 || pageNo > pageCount);
     FzPageInfo* pageInfo = PageInfoByPageNo(pageNo);
     if (!pageInfo || !pageInfo->page || !pageInfo->fullyLoaded) {
@@ -6319,11 +6228,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
     // rewrites when an annotation is edited. Without this, editing one while
     // the annotation-loading or heading-TOC thread walks the pages is a
     // use-after-free (and trips mupdf's local_xref_nesting assert).
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex docScope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
 
     ReportIf(!loc.IsValid());
     if (!loc.IsValid()) {
@@ -6507,18 +6412,10 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
 
 FzPageInfo* EngineMupdf::GetFzPageInfo(Location loc, bool loadQuick, fz_cookie* cookie) {
     // TODO: minimize time spent under pagesLock when fully loading
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&pagesLock);
-#else
-    AutoUnlockRecursiveMutex scope(&pagesLock);
-#endif
     // page-running operations on this specific page run under per-page lock.
     // pagesLock (held above) serializes concurrent fz_load_page on _doc.
-#if defined(SUMATRA_NG)
     ScopedMutex ctxScope(&renderLock);
-#else
-    AutoUnlockMutex ctxScope(&renderLock);
-#endif
     return GetFzPageInfoLocked(this, loc, loadQuick, cookie);
 }
 
@@ -6538,11 +6435,7 @@ RectF EngineMupdf::PageMediabox(int pageNo) {
         if (pageNo < 1 || pageNo > pageCount) {
             return reflowMediabox;
         }
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex scope(&pagesLock);
-#else
-        AutoUnlockRecursiveMutex scope(&pagesLock);
-#endif
         FzPageInfo* pi = PageInfoByPageNo(pageNo);
         return pi && !pi->mediabox.IsEmpty() ? pi->mediabox : reflowMediabox;
     }
@@ -6578,11 +6471,7 @@ void EngineMupdf::GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) {
         return;
     }
     fz_context* ctx = Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&docLock);
-#endif
     pdf_page* page = nullptr;
     fz_try(ctx) {
         page = pdf_page_from_fz_page(ctx, pi->page);
@@ -6947,13 +6836,8 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget /*target*/) {
         // Hold per-page lock briefly: page bounds + (re-)acquire cached display list.
         // docLock as well - see the comment in RenderPage: building the list runs
         // the page's annotations, which a concurrent annotation edit can free.
-#if defined(SUMATRA_NG)
         ScopedMutex scope(&renderLock);
         ScopedRecursiveMutex docScope(&docLock);
-#else
-        AutoUnlockMutex scope(&renderLock);
-        AutoUnlockRecursiveMutex docScope(&docLock);
-#endif
         pagerect = fz_bound_page(ctx, pageInfo->page);
         keptList = GetOrBuildPageDisplayList(pageInfo, ctx);
     }
@@ -7257,20 +7141,11 @@ void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation
     // render threads render tiles of the same document at once; without this,
     // two of them ran fz_run_page on one fz_document concurrently and corrupted
     // the shared content-stream filter state (crash in next_endstream/memcpy).
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex pagesScope(&pagesLock);
     ScopedMutex renderScope(&renderLock);
-#else
-    AutoUnlockRecursiveMutex pagesScope(&pagesLock);
-    AutoUnlockMutex renderScope(&renderLock);
-#endif
     // docLock as well: running a page reads its annotations, which a concurrent
     // annotation edit on the UI thread frees
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex docScope(&docLock);
-#else
-    AutoUnlockRecursiveMutex docScope(&docLock);
-#endif
 
     FzPageInfo* pageInfo = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), false, nullptr);
     if (!pageInfo || !pageInfo->page) {
@@ -7452,13 +7327,8 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         // an annotation edit on the UI thread (pdf_create_annot / pdf_update_annot,
         // which hold docLock) frees the pdf objects we'd be reading -- crash in
         // pdf_annot_flags on a freed annot dict.
-#if defined(SUMATRA_NG)
         ScopedMutex cs(&renderLock);
         ScopedRecursiveMutex docScope(&docLock);
-#else
-        AutoUnlockMutex cs(&renderLock);
-        AutoUnlockRecursiveMutex docScope(&docLock);
-#endif
 
         page = pageInfo->page;
         if (!page) {
@@ -7497,11 +7367,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         // the hood, and mupdf's image store races on concurrent decode of the
         // same image -- crashes seen in template_image_compose_opt with use-
         // after-free. Hold renderLock to serialize.
-#if defined(SUMATRA_NG)
         ScopedMutex rls(&renderLock);
-#else
-        AutoUnlockMutex rls(&renderLock);
-#endif
         fz_try(ctx) {
             pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
             ClearRenderedPagePixmap(ctx, pix, args);
@@ -7545,11 +7411,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     // Fallback: Print or hideAnnotations (each needs different content/usage,
     // not what the cached display list captured), or display-list construction
     // failed. Run the page directly under per-page lock.
-#if defined(SUMATRA_NG)
     ScopedMutex cs(&renderLock);
-#else
-    AutoUnlockMutex cs(&renderLock);
-#endif
 
     page = pageInfo->page;
     if (!page) {
@@ -7686,11 +7548,7 @@ Location EngineMupdf::ResolveDest(IPageDestination* dest) {
     bool ok = false;
     fz_var(ok);
     {
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex scope(&docLock);
-#else
-        AutoUnlockRecursiveMutex scope(&docLock);
-#endif
         fz_try(ctx) {
             ldest = fz_resolve_link_dest(ctx, _doc, CStrTemp(uri));
             ok = true;
@@ -7840,11 +7698,7 @@ Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
         return {};
     }
     auto* ctx = Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&docLock);
-#endif
     fz_matrix imgCtm = fz_identity;
     fz_image* image = FzFindImageAtIdx(ctx, pageInfo, pel->imageID, &imgCtm);
     if (!image) {
@@ -7984,11 +7838,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         return nullptr;
     }
 
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&docLock);
-#endif
 
     fz_matrix imgCtm = fz_identity;
     fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx, &imgCtm);
@@ -8068,11 +7918,7 @@ static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
     // callers hold pagesLock + renderLock; docLock is needed too because this
     // runs the whole page, annotations included, and text extraction happens on
     // a background thread while the UI thread can be editing those annotations
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex docScope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
     fz_stext_page* stext = nullptr;
     fz_var(stext);
     fz_stext_options opts = NewTextPageOptions();
@@ -8093,13 +7939,8 @@ static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
 }
 
 PageText EngineMupdf::ExtractPageText(int pageNo) {
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex pagesScope(&pagesLock);
     ScopedMutex renderScope(&renderLock);
-#else
-    AutoUnlockRecursiveMutex pagesScope(&pagesLock);
-    AutoUnlockMutex renderScope(&renderLock);
-#endif
     FzPageInfo* pageInfo = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), true, nullptr);
     if (!pageInfo) {
         return {};
@@ -8181,13 +8022,8 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     // between pages so the UI thread can interleave
     int nPages = PageCount();
     for (int i = 0; i < nPages; i++) {
-#if defined(SUMATRA_NG)
         ScopedMutex renderScope(&renderLock);
         ScopedRecursiveMutex perPageScope(&docLock);
-#else
-        AutoUnlockMutex renderScope(&renderLock);
-        AutoUnlockRecursiveMutex perPageScope(&docLock);
-#endif
         fz_try(ctx) {
             pdf_obj* pageObj = pdf_lookup_page_obj(ctx, pdfdoc, i);
             pdf_obj* resources = pdf_dict_gets(ctx, pageObj, "Resources");
@@ -8219,13 +8055,8 @@ TempStr EngineMupdf::ExtractFontListTemp() {
 
     // font dicts are also read by the renderer when loading fonts, so
     // serialize with renders here as well
-#if defined(SUMATRA_NG)
     ScopedMutex renderScope(&renderLock);
     ScopedRecursiveMutex scope(&docLock);
-#else
-    AutoUnlockMutex renderScope(&renderLock);
-    AutoUnlockRecursiveMutex scope(&docLock);
-#endif
 
     str::Builder info;
     StrVec fonts;
@@ -8354,11 +8185,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
     }
 
     auto* ctx = Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex ctxScope(&docLock);
-#else
-    AutoUnlockRecursiveMutex ctxScope(&docLock);
-#endif
 
     Str key = SeqStrNumStrByNumber(mupdfPropsMap, (i64)prop);
     if (key) {
@@ -8807,11 +8634,7 @@ PdfSigCert* EngineMupdfGetSignatureCerts(EngineBase* engine) {
         return nullptr;
     }
     fz_context* ctx = e->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&e->docLock);
-#endif
     Vec<pdf_obj*> fields;
     fz_try(ctx) {
         CollectSignatureFields(ctx, e->pdfdoc, fields);
@@ -9038,11 +8861,7 @@ void EngineMupdf::GetProperties(Props& propsOut) {
     EngineBase::GetProperties(propsOut);
 
     auto* ctx = Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex ctxScope(&docLock);
-#else
-    AutoUnlockRecursiveMutex ctxScope(&docLock);
-#endif
 
     TempStr val = LookupMetadataTemp(ctx, _doc, StrL("info:Keywords"));
     if (len(val) == 0 && pdfInfo) {
@@ -9098,11 +8917,7 @@ Str EngineMupdf::GetFileData() {
     }
 
     Str res;
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&docLock);
-#endif
 
     fz_var(res);
     fz_try(ctx) {
@@ -9194,15 +9009,9 @@ static bool FileUnchangedSinceLoad(EngineMupdf* e, Str path) {
 // page-reading path takes, in the same order, so no thread is mid-read.
 static bool SwapDocFileToMemory(EngineMupdf* e, fz_buffer* bytes) {
     auto* ctx = e->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex pagesScope(&e->pagesLock);
     ScopedMutex renderScope(&e->renderLock);
     ScopedRecursiveMutex docScope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex pagesScope(&e->pagesLock);
-    AutoUnlockMutex renderScope(&e->renderLock);
-    AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
     pdf_document* doc = e->pdfdoc;
     if (!doc || e->fileBytes || (i64)bytes->len != doc->file_size) {
         return false;
@@ -9541,11 +9350,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
         UseFileBytes(epdf, data);
         str::Free(data);
     }
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&epdf->docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&epdf->docLock);
-#endif
 
     pdf_write_options save_opts{};
     save_opts = pdf_default_write_options2;
@@ -9603,11 +9408,7 @@ bool EngineMupdfSaveCopy(EngineBase* engine, Str path) {
         return false;
     }
     auto* ctx = epdf->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&epdf->docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&epdf->docLock);
-#endif
     pdf_write_options save_opts{};
     save_opts = pdf_default_write_options2;
     save_opts.do_incremental = 0;
@@ -9664,11 +9465,7 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
         int res = HasClipOptimizationsLocked(this, pageNo);
         pagesLock.Unlock();
         if (res >= 0) {
-#if defined(SUMATRA_NG)
             ScopedMutex scope(&clipOptLock);
-#else
-            AutoUnlockMutex scope(&clipOptLock);
-#endif
             if (len(clipOptKnown) < pageNo) {
                 int prevLen = len(clipOptKnown);
                 VecResize(clipOptKnown, pageNo);
@@ -9681,11 +9478,7 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
         }
     }
     // a page never seen loaded answers "no", same as before it's loaded
-#if defined(SUMATRA_NG)
     ScopedMutex scope(&clipOptLock);
-#else
-    AutoUnlockMutex scope(&clipOptLock);
-#endif
     return pageNo <= len(clipOptKnown) && clipOptKnown[pageNo - 1] == 2;
 }
 
@@ -9825,11 +9618,7 @@ void EngineMupdfGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& annot
     if (!e || !e->pdfdoc) {
         return;
     }
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&e->pagesLock);
-#else
-    AutoUnlockRecursiveMutex scope(&e->pagesLock);
-#endif
     AppendLoadedAnnotations(e, annotsOut);
 }
 
@@ -9902,11 +9691,7 @@ static void PostAnnotLoadProgress(EngineMupdf* e) {
 
 static int CountLoadedAnnots(EngineMupdf* e) {
     int n = 0;
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&e->pagesLock);
-#else
-    AutoUnlockRecursiveMutex scope(&e->pagesLock);
-#endif
     ForEachPageInfo(e, [&n](FzPageInfo* pi) {
         if (pi && pi->annotsLoaded) {
             n += len(pi->annotations);
@@ -9921,11 +9706,7 @@ static int LoadAnnotsForPageNo(EngineMupdf* e, int pageNo) {
     }
     int before = 0;
     {
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex scope(&e->pagesLock);
-#else
-        AutoUnlockRecursiveMutex scope(&e->pagesLock);
-#endif
         FzPageInfo* pi = e->PageInfoByPageNo(pageNo);
         if (pi && pi->annotsLoaded) {
             return 0;
@@ -10032,11 +9813,7 @@ void EngineMupdfStartLoadAllAnnotations(EngineBase* engine, const Vec<int>& firs
     bool allLoaded = true;
     {
         // PDF is always single-chapter (annotations are PDF-only)
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex scope(&e->pagesLock);
-#else
-        AutoUnlockRecursiveMutex scope(&e->pagesLock);
-#endif
         for (FzPageInfo* pi : *e->chapterPages[0]) {
             if (!pi || !pi->annotsLoaded) {
                 allLoaded = false;
@@ -10147,13 +9924,8 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
     bool any = false;
     // MuPDF journals each page separately; applying is one undo step.
     ScopedEngineOperation op(engine, "Apply redactions");
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex pagesScope(&e->pagesLock);
     ScopedMutex renderScope(&e->renderLock);
-#else
-    AutoUnlockRecursiveMutex pagesScope(&e->pagesLock);
-    AutoUnlockMutex renderScope(&e->renderLock);
-#endif
 
     for (int pageNo = 1; pageNo <= e->pageCount; pageNo++) {
         FzPageInfo* pi = GetFzPageInfoLocked(e, e->LocationFromPageNo(pageNo), true, nullptr);
@@ -10176,11 +9948,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
         int did = 0;
         bool failed = false;
         {
-#if defined(SUMATRA_NG)
             ScopedRecursiveMutex docScope(&e->docLock);
-#else
-            AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
             fz_try(ctx) {
                 pdf_page* page = pdf_page_from_fz_page(ctx, pi->page);
                 if (page) {
@@ -10200,11 +9968,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
         Vec<pdf_annot*> live;
         bool listedLive = false;
         {
-#if defined(SUMATRA_NG)
             ScopedRecursiveMutex docScope(&e->docLock);
-#else
-            AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
             fz_try(ctx) {
                 pdf_page* page = pdf_page_from_fz_page(ctx, pi->page);
                 for (pdf_annot* a = page ? pdf_first_annot(ctx, page) : nullptr; a; a = pdf_next_annot(ctx, a)) {
@@ -10231,11 +9995,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
         }
 
         {
-#if defined(SUMATRA_NG)
             ScopedRecursiveMutex docScope(&e->docLock);
-#else
-            AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
             RebuildCommentsFromAnnotations(ctx, pi);
         }
         InvalidateFzPageAfterContentChange(e, pi);
@@ -10264,11 +10024,7 @@ int EngineMupdfUndoPos(EngineMupdf* e, int* stepsOut) {
         return -1;
     }
     auto* ctx = e->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex docScope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
     int steps = 0;
     int pos = -1;
     fz_try(ctx) {
@@ -10301,11 +10057,7 @@ void EngineMupdfBeginOperation(EngineBase* engine, const char* name) {
         return;
     }
     auto* ctx = e->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex docScope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
     fz_try(ctx) {
         pdf_begin_operation(ctx, e->pdfdoc, name);
         e->journalNesting++;
@@ -10321,11 +10073,7 @@ void EngineMupdfEndOperation(EngineBase* engine) {
         return;
     }
     auto* ctx = e->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex docScope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
     fz_try(ctx) {
         pdf_end_operation(ctx, e->pdfdoc);
         e->journalNesting--;
@@ -10370,11 +10118,7 @@ static void RefreshWrapperBounds(EngineMupdf* e, Annotation* w) {
         return;
     }
     fz_context* ctx = e->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex docScope(&e->docLock);
-#else
-    AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
     fz_rect bounds = {};
     fz_try(ctx) {
         bounds = pdf_bound_annot(ctx, w->pdfannot);
@@ -10418,13 +10162,8 @@ static void ResyncWrapperList(EngineMupdf* e, int pageNo, Vec<Annotation*>& wrap
 // every cached rendering of the page.
 static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut) {
     auto* ctx = e->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex pagesScope(&e->pagesLock);
     ScopedMutex renderScope(&e->renderLock);
-#else
-    AutoUnlockRecursiveMutex pagesScope(&e->pagesLock);
-    AutoUnlockMutex renderScope(&e->renderLock);
-#endif
     ForEachPageInfo(e, [&](FzPageInfo* pi) {
         if (!pi || !pi->page) {
             return;
@@ -10433,11 +10172,7 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
             Vec<pdf_annot*> liveAnnots;
             Vec<pdf_annot*> liveWidgets;
             {
-#if defined(SUMATRA_NG)
                 ScopedRecursiveMutex docScope(&e->docLock);
-#else
-                AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
                 bool ok = false;
                 fz_var(ok);
                 fz_try(ctx) {
@@ -10460,11 +10195,7 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
             ResyncWrapperList(e, pi->pageNo, pi->annotations, liveAnnots, removedOut);
             ResyncWrapperList(e, pi->pageNo, pi->widgets, liveWidgets, removedOut);
             {
-#if defined(SUMATRA_NG)
                 ScopedRecursiveMutex docScope(&e->docLock);
-#else
-                AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
                 RebuildCommentsFromAnnotations(ctx, pi);
             }
         }
@@ -10586,11 +10317,7 @@ static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>&
     auto* ctx = e->Ctx();
     bool ok = false;
     {
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex docScope(&e->docLock);
-#else
-        AutoUnlockRecursiveMutex docScope(&e->docLock);
-#endif
         fz_try(ctx) {
             if (redo) {
                 pdf_redo(ctx, e->pdfdoc);
@@ -10759,15 +10486,9 @@ void EngineMupdf::ApplyReflowThemeCss() {
     }
     const char* cssZ = fullCss ? CStrTemp(fullCss) : "";
 
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex pagesScope(&pagesLock);
     ScopedMutex renderScope(&renderLock);
     ScopedRecursiveMutex docScope(&docLock);
-#else
-    AutoUnlockRecursiveMutex pagesScope(&pagesLock);
-    AutoUnlockMutex renderScope(&renderLock);
-    AutoUnlockRecursiveMutex docScope(&docLock);
-#endif
 
     fz_context* ctx = Ctx();
     if (!ctx) {
@@ -10857,11 +10578,7 @@ void EngineMupdfInvalidateDarkMode(EngineBase* engine) {
         return;
     }
     epdf->ApplyReflowThemeCss();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&epdf->pagesLock);
-#else
-    AutoUnlockRecursiveMutex scope(&epdf->pagesLock);
-#endif
     ForEachPageInfo(epdf, [](FzPageInfo* pi) { pi->ResetDarkMode(); });
 }
 
@@ -10888,13 +10605,8 @@ void EngineMupdfToggleCadEnhance(EngineBase* engine) {
     }
     if (!epdf->cadDetectDone) {
         // lock order: renderLock before docLock (see EngineMupdf.h)
-#if defined(SUMATRA_NG)
         ScopedMutex render(&epdf->renderLock);
         ScopedRecursiveMutex doc(&epdf->docLock);
-#else
-        AutoUnlockMutex render(&epdf->renderLock);
-        AutoUnlockRecursiveMutex doc(&epdf->docLock);
-#endif
         epdf->RunCadDetection();
     }
     epdf->ToggleCadEnhanceOverride();
@@ -10916,11 +10628,7 @@ Str EngineMupdfLoadAnnotAttachment(EngineBase* engine, int objNum) {
     if (!epdf->pdfdoc) {
         return {};
     }
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&epdf->docLock);
-#else
-    AutoUnlockRecursiveMutex scope(&epdf->docLock);
-#endif
     return PdfLoadAnnotationAttachment(epdf->Ctx(), epdf->pdfdoc, objNum);
 }
 
@@ -10937,11 +10645,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
         return nullptr;
     }
 
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex cs(&epdf->docLock);
-#else
-    AutoUnlockRecursiveMutex cs(&epdf->docLock);
-#endif
     Vec<Annotation*> els;
     for (auto& annot : pi->annotations) {
         auto& atp = annot->type;
@@ -10989,11 +10693,7 @@ Annotation* EngineMupdfGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos
     if (!pi) {
         return nullptr;
     }
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex cs(&epdf->docLock);
-#else
-    AutoUnlockRecursiveMutex cs(&epdf->docLock);
-#endif
     Annotation* best = nullptr;
     float bestArea = 0;
     for (auto& w : pi->widgets) {
@@ -11032,11 +10732,7 @@ Annotation* EngineMupdfGetAdjacentWidget(EngineBase* engine, Annotation* cur, bo
     // read type/flags via mupdf directly (this file is also compiled into
     // PdfPreview/PdfFilter, which don't link Annotation.cpp's GetWidget*)
     auto* ctx = epdf->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex cs(&epdf->docLock);
-#else
-    AutoUnlockRecursiveMutex cs(&epdf->docLock);
-#endif
     for (int step = 1; step <= n; step++) {
         int j = forward ? (idx + step) % n : (idx - step + n) % n;
         Annotation* w = ws[j];
@@ -11102,11 +10798,7 @@ void EngineMupdfGetFormFieldHighlightRects(EngineBase* engine, int pageNo, Annot
         return;
     }
     auto* ctx = epdf->Ctx();
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex cs(&epdf->docLock);
-#else
-    AutoUnlockRecursiveMutex cs(&epdf->docLock);
-#endif
     for (Annotation* w : pi->widgets) {
         if (!w || w == skip || !w->pdfannot || w->bounds.IsEmpty()) {
             continue;
@@ -11174,11 +10866,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     // to annotations inside mupdf but we don't want loose the identity
     // so on add /remove we update the list manually
     // on change we assume Annotation* lives inside EngineMupdf
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex scope(&e->pagesLock);
-#else
-    AutoUnlockRecursiveMutex scope(&e->pagesLock);
-#endif
     FzPageInfo* pageInfo = e->PageInfoByPageNo(pageNo);
 
     if (change == AnnotationChange::Remove) {
@@ -11205,11 +10893,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     }
     {
         auto* ctx = e->Ctx();
-#if defined(SUMATRA_NG)
         ScopedRecursiveMutex ctxScope(&e->docLock);
-#else
-        AutoUnlockRecursiveMutex ctxScope(&e->docLock);
-#endif
         RebuildCommentsFromAnnotations(ctx, pageInfo);
     }
     pageInfo->elementsNeedRebuilding = true;
@@ -11218,11 +10902,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     // render rebuilds with the new state.
     {
         auto* ctx = e->Ctx();
-#if defined(SUMATRA_NG)
         ScopedMutex rl(&e->renderLock);
-#else
-        AutoUnlockMutex rl(&e->renderLock);
-#endif
         if (pageInfo->displayList) {
             fz_drop_display_list(ctx, pageInfo->displayList);
             pageInfo->displayList = nullptr;
@@ -11264,11 +10944,7 @@ RectF PdfAnnotBounds(fz_context* ctx, pdf_annot* a) {
 Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
     ReportIf(pageNo < 1);
     ReportIf(!engine->pdfdoc);
-#if defined(SUMATRA_NG)
     ScopedRecursiveMutex cs(&engine->docLock);
-#else
-    AutoUnlockRecursiveMutex cs(&engine->docLock);
-#endif
 
     AnnotationType typ = AnnotationType::Unknown;
     RectF bounds;
