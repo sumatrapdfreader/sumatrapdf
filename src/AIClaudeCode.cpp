@@ -1,17 +1,16 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 // Claude Code provider for the AI chat sidebar (see AIChatPanel.cpp)
+// ng: orig's file, with GetSpecialFolderTemp(CSIDL_PROFILE) behind
+// AIChatHomeDirTemp() so it also compiles off Windows
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
 #include "base/DirScan.h"
 #include "base/File.h"
-#include "base/Win.h"
 
 #include "gui/UIModels.h"
-#include "gui/Layout.h"
-#include "gui/win/WinGui.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -19,6 +18,8 @@
 
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
+
+#include "SumatraLog.h"
 
 static bool gClaudeExecutableSearched = false;
 static Str gClaudeExecutablePath;
@@ -30,13 +31,17 @@ static TempStr FindClaudeExecutableTemp() {
     gClaudeExecutableSearched = true;
 
     StrVec candidates;
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (userProfile) {
+    TempStr userProfile = AIChatHomeDirTemp();
+    if (len(userProfile) > 0) {
+#if OS_WIN
         candidates.Append(fmt("%s\\.local\\bin\\claude.exe", userProfile));
         candidates.Append(fmt("%s\\AppData\\Local\\Programs\\claude-code\\claude.exe", userProfile));
         candidates.Append(fmt("%s\\AppData\\Roaming\\npm\\claude.cmd", userProfile));
+#else
+        candidates.Append(path::JoinTemp(userProfile, StrL(".local/bin/claude")));
+#endif
     }
-    gClaudeExecutablePath = str::Dup(AIChatFindExecutableTemp(candidates, WStr(L"claude.exe"), WStr(L"claude")));
+    gClaudeExecutablePath = str::Dup(AIChatFindExecutableTemp(candidates, StrL("claude.exe"), StrL("claude")));
     return gClaudeExecutablePath;
 }
 
@@ -111,8 +116,7 @@ static Str GetSessionDescription(Str sessionPath) {
     if (len(data) == 0) {
         return str::Dup(StrL("(empty)"));
     }
-    Str content = data;
-    Str rest = content;
+    Str rest = data;
     Str result;
     Str line;
 
@@ -131,7 +135,7 @@ static Str GetSessionDescription(Str sessionPath) {
 
 // Scan ~/.claude/projects/<encoded-dir>/ for .jsonl session files
 static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
+    TempStr userProfile = AIChatHomeDirTemp();
     if (len(userProfile) == 0) {
         return;
     }
@@ -171,7 +175,7 @@ static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
 
 // Load conversation history from a session's JSONL file
 static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
+    TempStr userProfile = AIChatHomeDirTemp();
     if (len(userProfile) == 0) {
         return;
     }
@@ -187,8 +191,7 @@ static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         return;
     }
 
-    Str content = data;
-    Str rest = content;
+    Str rest = data;
     Str lineRaw;
 
     while (str::NextLine(rest, lineRaw, rest)) {
@@ -246,7 +249,6 @@ struct ClaudeCodeProvider : AIChatProvider {
         name = StrL("Claude Code");
         exeName = StrL("claude");
         virtualHost = StrL("https://sumatrapdf.claude/");
-        virtualHostW = L"https://sumatrapdf.claude/";
         webViewDataDirPrefix = StrL("ClaudeWebView");
         docUri = StrL("/AI-Chat-with-document#claude-code");
         defaultModel = StrL("opus");
@@ -349,7 +351,7 @@ struct ClaudeCodeProvider : AIChatProvider {
                 desc.Append(fmt(" (%s)", fp));
             } else if (cmd) {
                 if (len(cmd) > 60) {
-                    desc.Append(fmt(" $ %.60s...", cmd));
+                    desc.Append(fmt(" $ %s...", ShortenStringUtf8Temp(cmd, 60)));
                 } else {
                     desc.Append(fmt(" $ %s", cmd));
                 }

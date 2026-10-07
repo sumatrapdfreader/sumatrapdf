@@ -85,7 +85,6 @@ struct AIChatProvider {
     Str name;    // "Claude Code", used in user-visible messages
     Str exeName; // "claude", used in error messages
     Str virtualHost;
-    const WCHAR* virtualHostW = nullptr;
     Str webViewDataDirPrefix;         // e.g. "ClaudeWebView"
     Str docUri;                       // documentation anchor for the not-installed dialog
     Str defaultModel;                 // fallback when the saved model isn't in the list
@@ -134,6 +133,7 @@ TempStr AIChatJsEscapeTemp(Str s);
 TempStr AIChatJsonStrTemp(Str json, Str key);
 
 MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame);
+TempStr AIChatHomeDirTemp();
 
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions);
 void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions);
@@ -155,7 +155,7 @@ TempStr AIChatTestResultTemp(int backend, Str filePath, Str message, int* exitCo
 TempStr AIChatTestReplayResultTemp(Str userMsg, Str response, int* exitCode);
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args);
 
-TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchExeName, WStr searchNameNoExt = nullptr);
+TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, Str searchExeName, Str searchNameNoExt = {});
 
 void AIChatAppendModelUnique(StrVec& models, Str model);
 int AIChatFindModelInList(const StrVec& models, Str model);

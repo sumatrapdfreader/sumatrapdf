@@ -1,17 +1,19 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 // Grok Build provider for the AI chat sidebar (see AIChatPanel.cpp)
+// ng: orig's file; `grok models` is queried on Windows only (it peeks a win32
+// pipe), everything else compiles everywhere
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
 #include "base/DirScan.h"
 #include "base/File.h"
+#if OS_WIN
 #include "base/Win.h"
+#endif
 
 #include "gui/UIModels.h"
-#include "gui/Layout.h"
-#include "gui/win/WinGui.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -19,6 +21,8 @@
 
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
+
+#include "SumatraLog.h"
 
 static bool gGrokExecutableSearched = false;
 static Str gGrokExecutablePath;
@@ -30,12 +34,17 @@ static TempStr FindGrokExecutableTemp() {
     gGrokExecutableSearched = true;
 
     StrVec candidates;
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (userProfile) {
+    TempStr userProfile = AIChatHomeDirTemp();
+    if (len(userProfile) > 0) {
+#if OS_WIN
         candidates.Append(fmt("%s\\.grok\\bin\\grok.exe", userProfile));
         candidates.Append(fmt("%s\\.local\\bin\\grok.exe", userProfile));
+#else
+        candidates.Append(path::JoinTemp(userProfile, StrL(".grok/bin/grok")));
+        candidates.Append(path::JoinTemp(userProfile, StrL(".local/bin/grok")));
+#endif
     }
-    gGrokExecutablePath = str::Dup(AIChatFindExecutableTemp(candidates, WStr(L"grok.exe"), WStr(L"grok")));
+    gGrokExecutablePath = str::Dup(AIChatFindExecutableTemp(candidates, StrL("grok.exe"), StrL("grok")));
     return gGrokExecutablePath;
 }
 
@@ -127,7 +136,7 @@ static bool IsGrokSessionDirName(Str name) {
 }
 
 static TempStr GrokSessionsProjectDirTemp(Str dir) {
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
+    TempStr userProfile = AIChatHomeDirTemp();
     if (len(userProfile) == 0) {
         return {};
     }
@@ -149,8 +158,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     if (len(data) == 0) {
         return str::Dup(StrL("(no description)"));
     }
-    Str content = data;
-    Str rest = content;
+    Str rest = data;
     Str result;
     Str line;
 
@@ -283,8 +291,7 @@ static void LoadGrokSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         return;
     }
 
-    Str content = data;
-    Str rest = content;
+    Str rest = data;
     Str lineRaw;
 
     while (str::NextLine(rest, lineRaw, rest)) {
@@ -316,7 +323,6 @@ struct GrokBuildProvider : AIChatProvider {
         name = StrL("Grok Build");
         exeName = StrL("grok");
         virtualHost = StrL("https://sumatrapdf.grok/");
-        virtualHostW = L"https://sumatrapdf.grok/";
         webViewDataDirPrefix = StrL("GrokWebView");
         docUri = StrL("/AI-Chat-with-document#grok-build");
         defaultModel = StrL("grok-4.5");

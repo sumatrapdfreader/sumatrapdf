@@ -1,18 +1,20 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 // OpenAI Codex provider for the AI chat sidebar (see AIChatPanel.cpp)
+// ng: orig's file; the `codex app-server` model query drives two win32 pipes,
+// so it is compiled on Windows only
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
 #include "base/DirScan.h"
 #include "base/File.h"
 #include "base/JsonParser.h"
+#if OS_WIN
 #include "base/Win.h"
+#endif
 
 #include "gui/UIModels.h"
-#include "gui/Layout.h"
-#include "gui/win/WinGui.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -20,6 +22,8 @@
 
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
+
+#include "SumatraLog.h"
 
 static bool gCodexExecutableSearched = false;
 static Str gCodexExecutablePath;
@@ -31,12 +35,17 @@ static TempStr FindCodexExecutableTemp() {
     gCodexExecutableSearched = true;
 
     StrVec candidates;
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (userProfile) {
+    TempStr userProfile = AIChatHomeDirTemp();
+    if (len(userProfile) > 0) {
+#if OS_WIN
         candidates.Append(fmt("%s\\.codex\\bin\\codex.exe", userProfile));
         candidates.Append(fmt("%s\\.local\\bin\\codex.exe", userProfile));
+#else
+        candidates.Append(path::JoinTemp(userProfile, StrL(".codex/bin/codex")));
+        candidates.Append(path::JoinTemp(userProfile, StrL(".local/bin/codex")));
+#endif
     }
-    gCodexExecutablePath = str::Dup(AIChatFindExecutableTemp(candidates, WStr(L"codex.exe"), WStr(L"codex")));
+    gCodexExecutablePath = str::Dup(AIChatFindExecutableTemp(candidates, StrL("codex.exe"), StrL("codex")));
     return gCodexExecutablePath;
 }
 
@@ -80,6 +89,7 @@ static bool ParseCodexModelsResponse(Str output, StrVec& models) {
     return false;
 }
 
+#if OS_WIN
 // Ask the authenticated Codex CLI for the same model catalog used by its picker.
 // The app-server API is experimental, so every failure leaves the built-in list in use.
 static bool QueryCodexModels(Str exePath, StrVec& models) {
@@ -141,7 +151,7 @@ static bool QueryCodexModels(Str exePath, StrVec& models) {
     }
 
     str::Builder output;
-    ULONGLONG deadline = GetTickCount64() + 3000;
+    u64 deadline = GetTickCount64() + 3000;
     while (GetTickCount64() < deadline && output.len < 1024 * 1024) {
         DWORD available = 0;
         if (!PeekNamedPipe(hStdoutRead, nullptr, 0, nullptr, &available, nullptr)) {
@@ -167,7 +177,7 @@ static bool QueryCodexModels(Str exePath, StrVec& models) {
         if (WaitForSingleObject(pi.hProcess, 10) != WAIT_TIMEOUT) {
             break;
         }
-        Sleep(10);
+        SleepInMs(10);
     }
     closeHandle(hStdinWrite);
     if (WaitForSingleObject(pi.hProcess, 0) == WAIT_TIMEOUT) {
@@ -177,11 +187,16 @@ static bool QueryCodexModels(Str exePath, StrVec& models) {
     closeHandle(hStdoutRead);
     return false;
 }
+#else
+static bool QueryCodexModels(Str, StrVec&) {
+    return false;
+}
+#endif
 
 // --- Session history ---
 
 static TempStr CodexSessionsRootTemp() {
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
+    TempStr userProfile = AIChatHomeDirTemp();
     if (len(userProfile) == 0) {
         return {};
     }
@@ -218,8 +233,8 @@ static TempStr ExtractCodexPromptFromHistoryLineTemp(Str line, Str sessionId) {
 }
 
 static Str GetCodexSessionDescription(Str sessionId) {
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    TempStr historyPath = userProfile ? fmt("%s\\.codex\\history.jsonl", userProfile) : TempStr();
+    TempStr userProfile = AIChatHomeDirTemp();
+    TempStr historyPath = len(userProfile) > 0 ? fmt("%s\\.codex\\history.jsonl", userProfile) : TempStr();
     if (len(historyPath) == 0) {
         return str::Dup(StrL("(no description)"));
     }
@@ -227,8 +242,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
     if (len(data) == 0) {
         return str::Dup(StrL("(no description)"));
     }
-    Str content = data;
-    Str rest = content;
+    Str rest = data;
     Str result;
     Str line;
 
@@ -416,8 +430,7 @@ static void LoadCodexSessionHistory(MainWindow* win, Str sessionId, Str /*dir*/)
         return;
     }
 
-    Str content = data;
-    Str rest = content;
+    Str rest = data;
     Str lineRaw;
 
     while (str::NextLine(rest, lineRaw, rest)) {
@@ -450,7 +463,6 @@ struct CodexBuildProvider : AIChatProvider {
         name = StrL("OpenAI Codex");
         exeName = StrL("codex");
         virtualHost = StrL("https://sumatrapdf.codex/");
-        virtualHostW = L"https://sumatrapdf.codex/";
         webViewDataDirPrefix = StrL("CodexWebView");
         docUri = StrL("/AI-Chat-with-document#openai-codex");
         defaultModel = StrL("gpt-5.5");

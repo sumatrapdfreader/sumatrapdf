@@ -1,17 +1,15 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 // Antigravity CLI provider for the AI chat sidebar (see AIChatPanel.cpp)
+// ng: orig's file, with AIChatHomeDirTemp() in place of CSIDL_PROFILE
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
 #include "base/DirScan.h"
 #include "base/File.h"
-#include "base/Win.h"
 
 #include "gui/UIModels.h"
-#include "gui/Layout.h"
-#include "gui/win/WinGui.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -19,6 +17,8 @@
 
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
+
+#include "SumatraLog.h"
 
 static bool gAntiGravityExecutableSearched = false;
 static Str gAntiGravityExecutablePath;
@@ -30,8 +30,9 @@ static TempStr FindAntiGravityExecutableTemp() {
     gAntiGravityExecutableSearched = true;
 
     StrVec candidates;
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    if (userProfile) {
+    TempStr userProfile = AIChatHomeDirTemp();
+    if (len(userProfile) > 0) {
+#if OS_WIN
         candidates.Append(fmt("%s\\AppData\\Local\\agy\\bin\\agy.exe", userProfile));
         candidates.Append(fmt("%s\\AppData\\Local\\agy\\bin\\antigravity.exe", userProfile));
         candidates.Append(fmt("%s\\AppData\\Roaming\\Antigravity\\bin\\agy.exe", userProfile));
@@ -44,14 +45,20 @@ static TempStr FindAntiGravityExecutableTemp() {
         candidates.Append(fmt("%s\\AppData\\Local\\Programs\\agy\\agy.exe", userProfile));
         candidates.Append(fmt("%s\\AppData\\Roaming\\npm\\antigravity.cmd", userProfile));
         candidates.Append(fmt("%s\\AppData\\Roaming\\npm\\agy.cmd", userProfile));
+#else
+        candidates.Append(path::JoinTemp(userProfile, StrL(".gemini/antigravity-cli/bin/antigravity")));
+        candidates.Append(path::JoinTemp(userProfile, StrL(".gemini/antigravity-cli/bin/agy")));
+        candidates.Append(path::JoinTemp(userProfile, StrL(".local/bin/antigravity")));
+        candidates.Append(path::JoinTemp(userProfile, StrL(".local/bin/agy")));
+#endif
     }
-    TempStr res = AIChatFindExecutableTemp(candidates, WStr(L"antigravity.exe"), WStr(L"antigravity"));
+    TempStr res = AIChatFindExecutableTemp(candidates, StrL("antigravity.exe"), StrL("antigravity"));
     if (res) {
         logf("FindAntiGravityExecutableTemp: found %s\n", res);
         gAntiGravityExecutablePath = str::Dup(res);
         return gAntiGravityExecutablePath;
     }
-    res = AIChatFindExecutableTemp(candidates, WStr(L"agy.exe"), WStr(L"agy"));
+    res = AIChatFindExecutableTemp(candidates, StrL("agy.exe"), StrL("agy"));
     if (res) {
         logf("FindAntiGravityExecutableTemp: found agy %s\n", res);
     } else {
@@ -157,8 +164,7 @@ static Str GetSessionDescription(Str sessionPath) {
     if (len(data) == 0) {
         return str::Dup(StrL("(empty)"));
     }
-    Str content = data;
-    Str rest = content;
+    Str rest = data;
     Str result;
     Str line;
 
@@ -215,7 +221,7 @@ static void CollectAntiGravitySessionsFromDir(Str projectDir, Str dir, Vec<AICha
 }
 
 static void CollectAntiGravitySessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
+    TempStr userProfile = AIChatHomeDirTemp();
     if (len(userProfile) == 0) {
         return;
     }
@@ -237,7 +243,7 @@ static void CollectAntiGravitySessions(Str dir, Vec<AIChatSessionInfo>& sessions
 }
 
 static void LoadAntiGravitySessionHistory(MainWindow* win, Str sessionId, Str dir) {
-    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
+    TempStr userProfile = AIChatHomeDirTemp();
     if (len(userProfile) == 0) {
         return;
     }
@@ -259,8 +265,7 @@ static void LoadAntiGravitySessionHistory(MainWindow* win, Str sessionId, Str di
         return;
     }
 
-    Str content = data;
-    Str rest = content;
+    Str rest = data;
     Str lineRaw;
 
     while (str::NextLine(rest, lineRaw, rest)) {
@@ -314,7 +319,6 @@ struct AntiGravityProvider : AIChatProvider {
         name = StrL("Antigravity");
         exeName = StrL("antigravity");
         virtualHost = StrL("https://sumatrapdf.antigravity/");
-        virtualHostW = L"https://sumatrapdf.antigravity/";
         webViewDataDirPrefix = StrL("AntiGravityWebView");
         docUri = StrL("/AI-Chat-with-document#antigravity");
         defaultModel = Str(kAntiGravityDefaultModel);

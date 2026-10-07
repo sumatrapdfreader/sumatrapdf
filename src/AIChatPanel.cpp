@@ -1146,7 +1146,7 @@ static void EnsureWebViewReady(MainWindow* win) {
         return;
     }
     wstr::Free(webView->resourceUriPrefix);
-    webView->resourceUriPrefix = wstr::Dup(p->virtualHostW);
+    webView->resourceUriPrefix = wstr::Dup(ToWStrTemp(p->virtualHost));
     // serve both the chat page and marked.min.js from the virtual host
     free(gAIChatWebResources.marked);
     gAIChatWebResources.marked = markedData;

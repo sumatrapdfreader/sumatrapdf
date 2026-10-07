@@ -127,6 +127,10 @@ MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame) {
     return nullptr;
 }
 
+TempStr AIChatHomeDirTemp() {
+    return GetSpecialFolderTemp(CSIDL_PROFILE);
+}
+
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions) {
     for (int i = 0; i < len(sessions); i++) {
         str::Free(sessions[i].sessionId);
@@ -273,7 +277,7 @@ void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
     TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
-TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchExeName, WStr searchNameNoExt) {
+TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, Str searchExeName, Str searchNameNoExt) {
 #ifdef _MSC_VER
     for (int i = 0; i < len(fullPathCandidates); i++) {
         if (file::Exists(fullPathCandidates[i])) {
@@ -283,10 +287,10 @@ TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchEx
         }
     }
     WCHAR pathW[MAX_PATH];
-    if (searchExeName && SearchPathW(nullptr, searchExeName.s, nullptr, MAX_PATH, pathW, nullptr) > 0) {
+    if (searchExeName && SearchPathW(nullptr, CWStrTemp(searchExeName), nullptr, MAX_PATH, pathW, nullptr) > 0) {
         return ToUtf8Temp(pathW);
     }
-    if (searchNameNoExt && SearchPathW(nullptr, searchNameNoExt.s, L".exe", MAX_PATH, pathW, nullptr) > 0) {
+    if (searchNameNoExt && SearchPathW(nullptr, CWStrTemp(searchNameNoExt), L".exe", MAX_PATH, pathW, nullptr) > 0) {
         return ToUtf8Temp(pathW);
     }
 #endif
