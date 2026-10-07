@@ -400,10 +400,7 @@ void DestroyTocTree(TocTree* tree) {
     }
 }
 
-TocTree::TocTree(TocItem* root, Arena* arena) {
-    this->root = root;
-    this->arena = arena;
-}
+TocTree::TocTree(TocItem* root, Arena* arena) : root(root), arena(arena) {}
 
 // arena items are not heap-freed; dests still run their destructor
 TocTree::~TocTree() {
@@ -459,14 +456,8 @@ void EnsureFullLayout(EngineBase* engine) {
 }
 
 RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectF* pageRect, RenderTarget target,
-                               AbortCookie** cookie_out) {
-    this->pageNo = pageNo;
-    this->zoom = zoom;
-    this->rotation = rotation;
-    this->pageRect = pageRect;
-    this->target = target;
-    this->cookie_out = cookie_out;
-}
+                               AbortCookie** cookie_out)
+    : pageNo(pageNo), zoom(zoom), rotation(rotation), pageRect(pageRect), target(target), cookie_out(cookie_out) {}
 
 enum class TextExtractionState {
     NotExtracted,
