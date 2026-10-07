@@ -78,9 +78,6 @@ static void SampleImageBorder(fz_context* ctx, fz_pixmap* pix, ImageStats* stats
         sampleAt(0, y);
         sampleAt(pix->w - 1, y);
     }
-    if (n <= 0) {
-        return;
-    }
 
     float mr = 0.f, mg = 0.f, mb = 0.f;
     for (int i = 0; i < n; i++) {
@@ -160,9 +157,6 @@ static ImageStats SampleImageStats(fz_context* ctx, fz_image* image) {
                 }
                 n++;
             }
-        }
-        if (n <= 0) {
-            fz_throw(ctx, FZ_ERROR_GENERIC, "no image samples");
         }
 
         int significantBuckets = 0;
