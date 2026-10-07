@@ -921,38 +921,30 @@ struct LitAtoms {
 // /data/{internal}/atom: custom tag / attribute names referenced by FLAG_ATOM
 static void LitParseAtoms(LitFile* lit, Str internal, LitAtoms* atoms) {
     Str data = lit->GetFile(fmt("/data/%s/atom", internal));
-    if (len(data) < 4) {
-        return;
-    }
-    int n = (int)LitU32(data, 0);
-    int pos = 4;
-    for (int i = 0; i < n; i++) {
-        if (pos + 1 > len(data)) {
+    const struct {
+        StrVec* names;
+        int sizeBytes;
+    } lists[] = {{&atoms->tags, sizeofi(u8)}, {&atoms->attrs, sizeofi(u32)}};
+
+    int pos = 0;
+    for (const auto& list : lists) {
+        if (pos + sizeofi(u32) > len(data)) {
             return;
         }
-        int size = (u8)data.s[pos++];
-        if (size == 0 || size > len(data) - pos) {
-            return;
+        int n = (int)LitU32(data, pos);
+        pos += sizeofi(u32);
+        for (int i = 0; i < n; i++) {
+            if (pos + list.sizeBytes > len(data)) {
+                return;
+            }
+            int size = list.sizeBytes == sizeofi(u8) ? (u8)data.s[pos] : (int)LitU32(data, pos);
+            pos += list.sizeBytes;
+            if (size <= 0 || size > len(data) - pos) {
+                return;
+            }
+            list.names->Append(Str(data.s + pos, size));
+            pos += size;
         }
-        atoms->tags.Append(Str(data.s + pos, size));
-        pos += size;
-    }
-    if (pos + 4 > len(data)) {
-        return;
-    }
-    n = (int)LitU32(data, pos);
-    pos += 4;
-    for (int i = 0; i < n; i++) {
-        if (pos + 4 > len(data)) {
-            return;
-        }
-        int size = (int)LitU32(data, pos);
-        pos += 4;
-        if (size <= 0 || size > len(data) - pos) {
-            return;
-        }
-        atoms->attrs.Append(Str(data.s + pos, size));
-        pos += size;
     }
 }
 
