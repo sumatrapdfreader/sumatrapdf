@@ -1607,7 +1607,6 @@
     <ClCompile Include="..\src\AnnotFilterToolbar.cpp" />
     <ClCompile Include="..\src\AnnotPlacement.cpp" />
     <ClCompile Include="..\src\AnnotTextPopup.cpp" />
-    <ClCompile Include="..\src\Annotation.cpp" />
     <ClCompile Include="..\src\AppSettings.cpp" />
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -2127,6 +2126,7 @@
     <ClCompile Include="..\src\shared\AICodexBuild.cpp" />
     <ClCompile Include="..\src\shared\AIGrokBuild.cpp" />
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
+    <ClCompile Include="..\src\shared\Annotation.cpp" />
     <ClCompile Include="..\src\shared\AppTools.cpp" />
     <ClCompile Include="..\src\shared\AvifReader.cpp" />
     <ClCompile Include="..\src\shared\CachedObjects.cpp" />

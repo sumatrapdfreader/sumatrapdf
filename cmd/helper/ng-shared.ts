@@ -114,6 +114,7 @@ export const sharedFiles = [
   "src/shared/AIGrokBuild.cpp",
   "src/shared/AnnotSearch.cpp",
   "src/shared/AnnotSearch.h",
+  "src/shared/Annotation.cpp",
   "src/shared/Annotation.h",
   "src/shared/AppSettings.h",
   "src/shared/AppTools.cpp",

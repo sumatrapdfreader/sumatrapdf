@@ -457,9 +457,7 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
         if (!quads) {
             return;
         }
-        defer {
-            free(quads);
-        };
+        AutoFree<fz_quad> freeQuads(quads);
         for (int i = 0; i < n; i++) {
             RectF rect = rects[i];
             fz_rect r = ToFzRect(rect);
@@ -595,8 +593,9 @@ bool ToggleFormButton(Annotation* annot) {
                 bool noToggleOff = (flags & PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF) != 0;
                 Str onName = Str(pdf_to_name(ctx, pdf_button_field_on_state(ctx, kid)));
                 char* val = CStrTemp((isOn && !noToggleOff) ? StrL("Off") : onName);
-                // pdf_set_field_value does not start a journal operation, and
-                // journalled documents reject writes made outside one.
+                // unlike pdf_toggle_widget, pdf_set_field_value doesn't open a
+                // journal operation itself, and the journalled doc throws on
+                // a write outside one
                 pdf_begin_operation(ctx, e->pdfdoc, "Toggle radio button");
                 fz_try(ctx) {
                     pdf_set_field_value(ctx, e->pdfdoc, grp, val, 0);
@@ -1937,11 +1936,7 @@ static float PointSegmentDistSq(PointF p, PointF a, PointF b) {
     float t = 0.f;
     if (lengthSq > 0.f) {
         t = (((p.x - a.x) * dx) + ((p.y - a.y) * dy)) / lengthSq;
-        if (t < 0.f) {
-            t = 0.f;
-        } else if (t > 1.f) {
-            t = 1.f;
-        }
+        t = ClampF(t, 0.f, 1.f);
     }
     float px = a.x + (t * dx);
     float py = a.y + (t * dy);
@@ -2008,7 +2003,7 @@ InkEraseResult EraseAnnotationInk(Annotation* annot, PointF pt, float radius) {
     }
 
     Vec<fz_point> pts;
-    VecReserve(pts, len(points));
+    VecGrow(pts, len(points));
     for (PointF p : points) {
         VecAppend(pts, {p.x, p.y});
     }
@@ -2500,6 +2495,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     fz_rethrow(ctx);
                 }
             }
+            // e.g. [CmdCreateAnnotPolyLine borderwidth=2] (#6208)
             if (args->borderWidth >= 0 && AnnotationSupportsBorder(typ)) {
                 pdf_set_annot_border_width(ctx, annot, (float)args->borderWidth);
             }
@@ -2695,7 +2691,7 @@ static Pixmap* PixmapFromRgbFzPixmap(fz_context* ctx, fz_pixmap* src) {
     int alphaOff = use->alpha ? n - 1 : -1;
     for (int y = 0; y < use->h; y++) {
         const u8* s = use->samples + (y * use->stride);
-        u8* d = p->data + (y * p->stride);
+        u8* d = p->data + ((ptrdiff_t)y * p->stride);
         for (int x = 0; x < use->w; x++) {
             d[0] = s[0];
             d[1] = s[1];
