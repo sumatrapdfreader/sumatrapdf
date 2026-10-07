@@ -272,13 +272,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     };
     // when over the right half of a glyph, FindClosestGlyphAt returns the
     // index of the next glyph, in which case glyphIx must be decremented
-    if (glyphIx == textLen || !contains(glyphIx)) {
-        glyphIx--;
-    }
-    if (-1 == glyphIx) {
-        return false;
-    }
-    return contains(glyphIx);
+    return contains(glyphIx) || contains(glyphIx - 1);
 }
 
 void TextSelection::StartAt(int pageNo, int glyphIx) {
