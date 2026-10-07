@@ -608,9 +608,6 @@
     <ClCompile Include="..\src\AIChatPanel.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\AIClaudeCode.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\AICodexBuild.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1105,6 +1102,9 @@
     </ClCompile>
     <ClCompile Include="..\src\regress\Regress.cpp">
       <Filter>src\regress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AIClaudeCode.cpp">
+      <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AnnotSearch.cpp">
       <Filter>src\shared</Filter>

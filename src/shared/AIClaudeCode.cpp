@@ -2,8 +2,6 @@
    License: GPLv3 */
 
 // Claude Code provider for the AI chat sidebar (see AIChatPanel.cpp)
-// ng: orig's file, with GetSpecialFolderTemp(CSIDL_PROFILE) behind
-// AIChatHomeDirTemp() so it also compiles off Windows
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
