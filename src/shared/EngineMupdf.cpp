@@ -5282,24 +5282,17 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     return dest;
 }
 
-#if defined(SUMATRA_NG)
 static bool IsAlnumW(WCHAR c) {
 #if OS_WIN
     return IsCharAlphaNumericW(c) != 0;
 #else
-    // ng: no IsCharAlphaNumericW off Windows
     return iswalnum((wint_t)c) != 0;
 #endif
 }
 
-#endif
 static bool HasAlnumW(const WStr& ws) {
     for (int i = 0; i < ws.len; i++) {
-#if defined(SUMATRA_NG)
         if (IsAlnumW(ws.s[i])) {
-#else
-        if (IsCharAlphaNumericW(ws.s[i])) {
-#endif
             return true;
         }
     }
