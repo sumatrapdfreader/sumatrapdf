@@ -628,6 +628,7 @@ class EngineBase {
         Nonblocking
     };
     bool ReadPageText(int pageNo, TextReadMode mode, Str& text, int* lenOut, Rect** coordsOut, QuadF** quadsOut);
+    Location TextLocation(int pageNo);
     void EnsureChapterTable();
 };
 

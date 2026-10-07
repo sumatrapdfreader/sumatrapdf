@@ -879,15 +879,19 @@ static void ExtractTextThread(TextExtractionThreadData* data) {
     AtomicIntDec(&gDangerousThreadCount);
 }
 
+Location EngineBase::TextLocation(int pageNo) {
+    ReportIf(pageNo < 1 || pageNo > pageCount);
+    if (pageNo < 1 || pageNo > pageCount) {
+        return kInvalidLocation;
+    }
+    return LocationFromPageNo(pageNo);
+}
+
 // cached per-page text. First call on a page extracts text and caches it,
 // subsequent calls return the cached copy. The returned pointers are owned
 // by EngineBase and remain valid for the lifetime of the engine.
 bool EngineBase::HasTextForPage(int pageNo) {
-    ReportIf(pageNo < 1 || pageNo > pageCount);
-    if (pageNo < 1 || pageNo > pageCount) {
-        return false;
-    }
-    Location loc = LocationFromPageNo(pageNo);
+    Location loc = TextLocation(pageNo);
     if (!loc.IsValid()) {
         return false;
     }
@@ -897,11 +901,7 @@ bool EngineBase::HasTextForPage(int pageNo) {
 }
 
 void EngineBase::RequestTextExtraction(int pageNo) {
-    ReportIf(pageNo < 1 || pageNo > pageCount);
-    if (pageNo < 1 || pageNo > pageCount) {
-        return;
-    }
-    Location loc = LocationFromPageNo(pageNo);
+    Location loc = TextLocation(pageNo);
     if (!loc.IsValid()) {
         return;
     }
@@ -976,12 +976,7 @@ static Str ReturnPageText(const PageText& pt, int* lenOut, Rect** coordsOut, Qua
 
 bool EngineBase::ReadPageText(int pageNo, TextReadMode mode, Str& text, int* lenOut, Rect** coordsOut,
                               QuadF** quadsOut) {
-    ReportIf(pageNo < 1 || pageNo > pageCount);
-    if (pageNo < 1 || pageNo > pageCount) {
-        text = ReturnPageText({}, lenOut, coordsOut, quadsOut);
-        return true;
-    }
-    Location loc = LocationFromPageNo(pageNo);
+    Location loc = TextLocation(pageNo);
     if (!loc.IsValid()) {
         text = ReturnPageText({}, lenOut, coordsOut, quadsOut);
         return true;
