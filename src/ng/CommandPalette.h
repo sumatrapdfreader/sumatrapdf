@@ -9,33 +9,6 @@ struct El;
 struct MainWindow;
 struct WindowTab;
 
-constexpr const char* kPalettePrefixCommands = ">";
-constexpr const char* kPalettePrefixFileHistory = "#";
-constexpr const char* kPalettePrefixTabs = "@";
-constexpr const char* kPalettePrefixEverything = ":";
-constexpr const char* kPalettePrefixTOC = "%";
-constexpr const char* kPalettePrefixFavorites = "$";
-constexpr const char* kPalettePrefixAnnotations = "*";
-constexpr const char* kPalettePrefixBoolSettings = "=";
-constexpr const char* kPalettePrefixThumbnails = "&";
-
-// which of the seven lists a query selects; the prefix is what picks it
-enum class PaletteMode {
-    Commands,
-    Tabs,
-    FileHistory,
-    Everything,
-    Toc,
-    Favorites,
-    Annotations,
-    Settings,
-    Thumbnails,
-};
-
-// ng: orig decides this inline in FilterStringsForQuery(); it is a function of
-// its own here so `test_util` can pin the prefixes without a window
-PaletteMode PaletteModeFromQuery(Str query, Str* restOut = nullptr);
-
 // smartTabAdvance != 0 opens the tab list in orig's "smart tab" mode: the
 // selection starts that many steps away from the current tab and releasing
 // Ctrl commits it

@@ -7,6 +7,7 @@
 
 #include "base/Base.h"
 
+#include "Commands.h"
 #include "CommandPalette.h"
 #include "gui/TabSwitcher.h"
 

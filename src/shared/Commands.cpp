@@ -907,3 +907,31 @@ Str GetCommandStringArg(CustomCommand* cmd, Str name, Str defValue) {
     auto* arg = GetCommandArg(cmd, name);
     return arg ? arg->strVal : defValue;
 }
+
+PaletteMode PaletteModeFromQuery(Str query, Str* restOut) {
+    Str rest = query;
+    PaletteMode mode = PaletteMode::Commands;
+    if (str::TrimPrefix(rest, Str(kPalettePrefixEverything))) {
+        mode = PaletteMode::Everything;
+    } else if (str::TrimPrefix(rest, Str(kPalettePrefixTabs))) {
+        mode = PaletteMode::Tabs;
+    } else if (str::TrimPrefix(rest, Str(kPalettePrefixFileHistory))) {
+        mode = PaletteMode::FileHistory;
+    } else if (str::TrimPrefix(rest, Str(kPalettePrefixTOC))) {
+        mode = PaletteMode::Toc;
+    } else if (str::TrimPrefix(rest, Str(kPalettePrefixFavorites))) {
+        mode = PaletteMode::Favorites;
+    } else if (str::TrimPrefix(rest, Str(kPalettePrefixAnnotations))) {
+        mode = PaletteMode::Annotations;
+    } else if (str::TrimPrefix(rest, Str(kPalettePrefixBoolSettings))) {
+        mode = PaletteMode::Settings;
+    } else if (str::TrimPrefix(rest, Str(kPalettePrefixThumbnails))) {
+        mode = PaletteMode::Thumbnails;
+    } else {
+        str::TrimPrefix(rest, Str(kPalettePrefixCommands));
+    }
+    if (restOut) {
+        *restOut = rest;
+    }
+    return mode;
+}

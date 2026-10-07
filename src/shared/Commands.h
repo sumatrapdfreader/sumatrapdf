@@ -494,3 +494,27 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 
 // page of the favorite to go to, as stored in settings (a page number or `bm:<bookmark>`)
 #define kCmdArgPage StrL("page")
+
+constexpr const char* kPalettePrefixCommands = ">";
+constexpr const char* kPalettePrefixFileHistory = "#";
+constexpr const char* kPalettePrefixTabs = "@";
+constexpr const char* kPalettePrefixEverything = ":";
+constexpr const char* kPalettePrefixTOC = "%";
+constexpr const char* kPalettePrefixFavorites = "$";
+constexpr const char* kPalettePrefixAnnotations = "*";
+constexpr const char* kPalettePrefixBoolSettings = "=";
+constexpr const char* kPalettePrefixThumbnails = "&";
+
+enum class PaletteMode {
+    Commands,
+    Tabs,
+    FileHistory,
+    Everything,
+    Toc,
+    Favorites,
+    Annotations,
+    Settings,
+    Thumbnails,
+};
+
+PaletteMode PaletteModeFromQuery(Str query, Str* restOut = nullptr);

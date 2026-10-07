@@ -2359,28 +2359,17 @@ void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
         filter = StrL("");
     }
 
-    bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false,
-         searchSettings = false, searchAnnotations = false;
-    if (str::TrimPrefix(filter, Str(kPalettePrefixEverything))) {
-        searchTabs = searchHistory = searchCommands = true;
-    } else if (str::TrimPrefix(filter, Str(kPalettePrefixTabs))) {
-        searchTabs = true;
-    } else if (str::TrimPrefix(filter, Str(kPalettePrefixFileHistory))) {
-        searchHistory = true;
-    } else if (str::TrimPrefix(filter, Str(kPalettePrefixTOC))) {
-        searchToc = true;
-    } else if (str::TrimPrefix(filter, Str(kPalettePrefixFavorites))) {
-        searchFavorites = true;
-    } else if (str::TrimPrefix(filter, Str(kPalettePrefixAnnotations))) {
-        searchAnnotations = true;
-    } else if (str::TrimPrefix(filter, Str(kPalettePrefixBoolSettings))) {
-        searchSettings = true;
-    } else if (str::TrimPrefix(filter, Str(kPalettePrefixThumbnails))) {
+    PaletteMode mode = PaletteModeFromQuery(filter, &filter);
+    if (mode == PaletteMode::Thumbnails) {
         return;
-    } else {
-        str::TrimPrefix(filter, Str(kPalettePrefixCommands));
-        searchCommands = true;
     }
+    bool searchTabs = mode == PaletteMode::Tabs || mode == PaletteMode::Everything;
+    bool searchHistory = mode == PaletteMode::FileHistory || mode == PaletteMode::Everything;
+    bool searchCommands = mode == PaletteMode::Commands || mode == PaletteMode::Everything;
+    bool searchToc = mode == PaletteMode::Toc;
+    bool searchFavorites = mode == PaletteMode::Favorites;
+    bool searchAnnotations = mode == PaletteMode::Annotations;
+    bool searchSettings = mode == PaletteMode::Settings;
 
     filterWords.Reset();
     if (searchSettings) {

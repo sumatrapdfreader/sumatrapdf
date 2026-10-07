@@ -478,7 +478,6 @@ const appSources = [
   "src/ng/AppTools_posix.cpp",
   "src/ng/ChmModel.cpp",
   "src/ng/CommandAvailability.cpp",
-  "src/ng/CommandPaletteMode.cpp",
   "src/ng/Commands.cpp",
   "src/ng/DisplayMode.cpp",
   "src/ng/DisplayModel.cpp",
