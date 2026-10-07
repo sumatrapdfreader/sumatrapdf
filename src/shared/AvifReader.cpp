@@ -65,9 +65,7 @@ Pixmap* PixmapFromAvifData(Str d) {
         }
     }
 
-    if (img) {
-        heic_image_destroy(ctx, img);
-    }
+    heic_image_destroy(ctx, img);
 
     // EXIF density + orientation. heicdec returns decoded pixels without
     // applying density (defaults to 96 dpi); WIC/GDI+ honor EXIF resolution,
