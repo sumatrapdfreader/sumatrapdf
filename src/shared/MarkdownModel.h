@@ -32,10 +32,6 @@ struct MarkdownModel : BrowserDocController {
     // a subset of IsSupportedFileType: .html/.htm rendered raw in the browser view
     static bool IsHtmlFileType(FileType);
 
-    bool SetParentWindow(MainWindow* win, HWND hwndParent);
-    void RemoveParentWindow();
-    void DestroyParentWindow();
-
     void FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) override;
 
     bool OnBeforeNavigate(Str url, bool newWindow);
@@ -48,7 +44,6 @@ struct MarkdownModel : BrowserDocController {
     // true when displaying .html/.htm files: they are served to the browser raw
     // instead of being rendered from markdown, and the sibling TOC scans .html
     bool isHtml = false;
-    BrowserViewCallback* htmlWindowCb = nullptr;
     TocTree* tocTree = nullptr;
     // set while the full TOC (file headings included) is built in the background
     MarkdownTocBuildTask* tocBuildTask = nullptr;
@@ -60,12 +55,14 @@ struct MarkdownModel : BrowserDocController {
 
     bool Load(Str fileName);
     void SetToc(TocTree*);
-    bool DisplayPage(Str pageUrl);
+    bool DisplayPage(Str pageUrl) override;
 
     MarkdownCacheEntry* FindDataForUrl(Str url) const;
 
     TempStr NormalizeScrollUrlTemp(Str url) const override;
     TempStr ScrollUrlForPageTemp(int pageNo) const override;
+    BrowserViewCallback* CreateBrowserCallback() override;
+    Str BrowserVirtualHost() const override;
 
     TempStr FileToVirtualUrlTemp(Str filePath) const;
     TempStr VirtualUrlToFileTemp(Str url) const;

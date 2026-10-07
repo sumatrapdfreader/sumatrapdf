@@ -226,7 +226,7 @@ MarkdownModel::~MarkdownModel() {
     }
     docAccess.Lock();
     BrowserViewDelete(docView);
-    delete htmlWindowCb;
+    delete browserCb;
     DestroyOwnedTocTree(tocTree);
     DeleteVecMembers(urlDataCache);
     docAccess.Unlock();
@@ -317,58 +317,6 @@ TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
         return mdownPath;
     }
     return mdPath;
-}
-
-bool MarkdownModel::SetParentWindow(MainWindow* win, HWND hwndParent) {
-    // reuse the existing browser when switching back to this tab: creating a
-    // WebView is hundreds of ms, so we only hide it in RemoveParentWindow
-    if (docView) {
-        if (BrowserViewWindow(docView) == win) {
-            BrowserViewSetVisible(docView, true);
-            return true;
-        }
-        // different parent (shouldn't happen for a tab): rebuild
-        BrowserViewDelete(docView);
-        docView = nullptr;
-        delete htmlWindowCb;
-        htmlWindowCb = nullptr;
-    }
-    htmlWindowCb = new MarkdownHtmlWindowHandler(this);
-    docView = BrowserViewCreate(win, hwndParent, htmlWindowCb, Str(kMdVirtualHost));
-    if (!docView) {
-        delete htmlWindowCb;
-        htmlWindowCb = nullptr;
-        return false;
-    }
-    BrowserViewSetVisible(docView, true);
-    if (len(currentPageUrl) > 0) {
-        DisplayPage(currentPageUrl);
-    } else if (len(pages) > 0) {
-        DisplayPage(FileToVirtualUrlTemp(pages[currentPageNo - 1]));
-    }
-    return true;
-}
-
-void MarkdownModel::RemoveParentWindow() {
-    if (!docView) {
-        return;
-    }
-    // keep the browser alive (hidden) so the next SetParentWindow is cheap
-    SaveHtmlScrollPos();
-    restoreHtmlScrollPos = true;
-    BrowserViewSetVisible(docView, false);
-}
-
-void MarkdownModel::DestroyParentWindow() {
-    if (!docView && !htmlWindowCb) {
-        return;
-    }
-    SaveHtmlScrollPos();
-    restoreHtmlScrollPos = true;
-    BrowserViewDelete(docView);
-    docView = nullptr;
-    delete htmlWindowCb;
-    htmlWindowCb = nullptr;
 }
 
 void MarkdownModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) {
@@ -506,6 +454,14 @@ bool MarkdownModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandl
 
 MarkdownModel* MarkdownModel::AsMarkdown() {
     return this;
+}
+
+BrowserViewCallback* MarkdownModel::CreateBrowserCallback() {
+    return new MarkdownHtmlWindowHandler(this);
+}
+
+Str MarkdownModel::BrowserVirtualHost() const {
+    return Str(kMdVirtualHost);
 }
 
 TempStr MarkdownModel::NormalizeScrollUrlTemp(Str url) const {

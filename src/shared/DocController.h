@@ -14,6 +14,7 @@ struct MainWindow;
 struct FileState;
 struct RenderedBitmap;
 struct BrowserView;
+struct BrowserViewCallback;
 // chapter-aware page location; full definition in ChapterTable.h
 struct Location;
 enum class DisplayMode;
@@ -208,6 +209,9 @@ struct BrowserDocController : DocController {
     void OnFindAllResult(Str payload);
     void DownloadData(Str url, Str data);
     void OnLButtonDown();
+    bool SetParentWindow(MainWindow* win, HWND hwndParent);
+    void RemoveParentWindow();
+    void DestroyParentWindow();
 
     void SaveHtmlScrollPos();
     void SaveHtmlScrollPosForPage(int pageNo);
@@ -220,6 +224,7 @@ struct BrowserDocController : DocController {
     int currentPageNo = 1;
     Str currentPageUrl;
     BrowserView* docView = nullptr;
+    BrowserViewCallback* browserCb = nullptr;
     float initZoom;
     float zoomVirtual = 100.0f;
     PointF htmlScrollPos = PointF(-1, -1);
@@ -235,6 +240,9 @@ struct BrowserDocController : DocController {
     Vec<PointF> htmlScrollPositions;
 
   private:
+    virtual BrowserViewCallback* CreateBrowserCallback() = 0;
+    virtual Str BrowserVirtualHost() const { return {}; }
+    virtual bool DisplayPage(Str pageUrl) = 0;
     virtual TempStr NormalizeScrollUrlTemp(Str url) const = 0;
     virtual TempStr ScrollUrlForPageTemp(int pageNo) const = 0;
     mutable bool sendingBrowserMsg = false;

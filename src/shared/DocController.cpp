@@ -237,6 +237,55 @@ void BrowserDocController::OnLButtonDown() {
     }
 }
 
+bool BrowserDocController::SetParentWindow(MainWindow* win, HWND hwndParent) {
+    if (docView) {
+        if (BrowserViewWindow(docView) == win) {
+            BrowserViewSetVisible(docView, true);
+            return true;
+        }
+        BrowserViewDelete(docView);
+        docView = nullptr;
+        delete browserCb;
+        browserCb = nullptr;
+    }
+
+    browserCb = CreateBrowserCallback();
+    docView = BrowserViewCreate(win, hwndParent, browserCb, BrowserVirtualHost());
+    if (!docView) {
+        delete browserCb;
+        browserCb = nullptr;
+        return false;
+    }
+    BrowserViewSetVisible(docView, true);
+    if (len(currentPageUrl) > 0) {
+        DisplayPage(currentPageUrl);
+    } else if (len(pages) > 0) {
+        DisplayPage(ScrollUrlForPageTemp(currentPageNo));
+    }
+    return true;
+}
+
+void BrowserDocController::RemoveParentWindow() {
+    if (!docView) {
+        return;
+    }
+    SaveHtmlScrollPos();
+    restoreHtmlScrollPos = true;
+    BrowserViewSetVisible(docView, false);
+}
+
+void BrowserDocController::DestroyParentWindow() {
+    if (!docView && !browserCb) {
+        return;
+    }
+    SaveHtmlScrollPos();
+    restoreHtmlScrollPos = true;
+    BrowserViewDelete(docView);
+    docView = nullptr;
+    delete browserCb;
+    browserCb = nullptr;
+}
+
 void BrowserDocController::SaveHtmlScrollPos() {
     if (!docView) {
         return;

@@ -30,10 +30,6 @@ struct ChmModel : BrowserDocController {
 
     static ChmModel* Create(Str fileName, DocControllerCallback* cb = nullptr);
 
-    bool SetParentWindow(MainWindow* win, HWND hwndParent);
-    void RemoveParentWindow();
-    void DestroyParentWindow();
-
     void FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) override;
 
     bool OnBeforeNavigate(Str url, bool newWindow);
@@ -49,18 +45,17 @@ struct ChmModel : BrowserDocController {
     Mutex docAccess;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
 
-    BrowserViewCallback* browserCb = nullptr;
-
     Vec<ChmCacheEntry*> urlDataCache;
     // arena for strings that aren't freed until this ChmModel is deleted
     // (e.g. for titles and URLs for ChmTocItem and ChmCacheEntry)
     Arena* poolAlloc = nullptr;
 
     bool Load(Str fileName);
-    bool DisplayPage(Str pageUrl);
+    bool DisplayPage(Str pageUrl) override;
 
     ChmCacheEntry* FindDataForUrl(Str url) const;
 
     TempStr NormalizeScrollUrlTemp(Str url) const override;
     TempStr ScrollUrlForPageTemp(int pageNo) const override;
+    BrowserViewCallback* CreateBrowserCallback() override;
 };

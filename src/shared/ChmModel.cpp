@@ -119,57 +119,6 @@ void ChmModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
 }
 
 // the following is specific to ChmModel
-bool ChmModel::SetParentWindow(MainWindow* win, HWND hwndParent) {
-    // reuse the existing browser when switching back to this tab: creating a
-    // WebView is expensive, so we only hide it in RemoveParentWindow
-    if (docView) {
-        if (BrowserViewWindow(docView) == win) {
-            BrowserViewSetVisible(docView, true);
-            return true;
-        }
-        BrowserViewDelete(docView);
-        docView = nullptr;
-        delete browserCb;
-        browserCb = nullptr;
-    }
-    browserCb = new BrowserViewHandler(this);
-    docView = BrowserViewCreate(win, hwndParent, browserCb, {});
-    if (!docView) {
-        delete browserCb;
-        browserCb = nullptr;
-        return false;
-    }
-    BrowserViewSetVisible(docView, true);
-    if (len(currentPageUrl) > 0) {
-        DisplayPage(currentPageUrl);
-    } else if (len(pages) > 0) {
-        DisplayPage(pages[currentPageNo - 1]);
-    }
-    return true;
-}
-
-void ChmModel::RemoveParentWindow() {
-    if (!docView) {
-        return;
-    }
-    // remember where we were so it can be restored when the view is shown again
-    SaveHtmlScrollPos();
-    restoreHtmlScrollPos = true;
-    BrowserViewSetVisible(docView, false);
-}
-
-void ChmModel::DestroyParentWindow() {
-    if (!docView && !browserCb) {
-        return;
-    }
-    SaveHtmlScrollPos();
-    restoreHtmlScrollPos = true;
-    BrowserViewDelete(docView);
-    docView = nullptr;
-    delete browserCb;
-    browserCb = nullptr;
-}
-
 void ChmModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) {
     if (!docView) {
         return;
@@ -258,6 +207,10 @@ bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/)
 // for quick type determination and type-safe casting
 ChmModel* ChmModel::AsChm() {
     return this;
+}
+
+BrowserViewCallback* ChmModel::CreateBrowserCallback() {
+    return new BrowserViewHandler(this);
 }
 
 TempStr ChmModel::NormalizeScrollUrlTemp(Str url) const {
