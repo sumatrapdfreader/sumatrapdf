@@ -384,6 +384,14 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     return nullptr;
 }
 
+static void ApplyEngineSettings(EngineBase* engine) {
+    if (!engine || !gSettings) {
+        return;
+    }
+    engine->disableAntiAlias = gSettings->disableAntiAlias;
+    engine->disableAutoLinks = gSettings->disableAutoLinks;
+}
+
 EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngine) {
     ReportIf(len(path) == 0);
 
@@ -398,8 +406,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
                 str::Free(extracted);
                 if (engine) {
                     engine->SetFilePath(path);
-                    engine->disableAntiAlias = gSettings->disableAntiAlias;
-                    engine->disableAutoLinks = gSettings->disableAutoLinks;
+                    ApplyEngineSettings(engine);
                     return engine;
                 }
             } else {
@@ -423,12 +430,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
 
     EngineBase* engine = CreateEngineForKind(kind, contentHint, path, pwdUI, enableChmEngine);
     if (engine) {
-        // gSettings can be null in early/headless code paths (e.g. the
-        // -extract-text test harness runs before LoadSettings)
-        if (gSettings) {
-            engine->disableAntiAlias = gSettings->disableAntiAlias;
-            engine->disableAutoLinks = gSettings->disableAutoLinks;
-        }
+        ApplyEngineSettings(engine);
         return engine;
     }
 
@@ -441,10 +443,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
     if (kind != contentHint && !sameCbx) {
         engine = CreateEngineForKind(contentHint, contentHint, path, pwdUI, enableChmEngine);
     }
-    if (engine) {
-        engine->disableAntiAlias = gSettings->disableAntiAlias;
-        engine->disableAutoLinks = gSettings->disableAutoLinks;
-    }
+    ApplyEngineSettings(engine);
     return engine;
 }
 
@@ -488,14 +487,6 @@ static EngineBase* CreateEngineForKindFromData(FileType kind, Str data, Str name
         return CreateEngineMobiFromData(data);
     }
     return nullptr;
-}
-
-static void ApplyEngineSettings(EngineBase* engine) {
-    if (!engine || !gSettings) {
-        return;
-    }
-    engine->disableAntiAlias = gSettings->disableAntiAlias;
-    engine->disableAutoLinks = gSettings->disableAutoLinks;
 }
 
 EngineBase* CreateEngineFromData(Str data, Str nameHint, PasswordUI* pwdUI) {
