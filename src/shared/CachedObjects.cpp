@@ -129,7 +129,7 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
     u64 freed = 0;
 
     // Pass 0: other tabs. Pass 1: current tab. Aggressive: both, everything CanFree.
-    int nPasses = 2;
+    int nPasses = aggressive ? 1 : 2;
     for (int pass = 0; pass < nPasses && freed < wantBytes; pass++) {
         Vec<CachedObject> snap;
         {
@@ -146,8 +146,6 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
                 if (pass == 1 && otherTab) {
                     continue;
                 }
-            } else if (pass == 1) {
-                break;
             }
             if (!ObjectCanFree(currTab, &o, skipId)) {
                 continue;
