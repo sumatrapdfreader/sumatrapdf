@@ -15,7 +15,7 @@ void ShowPdfDecompressDialog(MainWindow* win);
 void ShowPdfDeletePageDialog(MainWindow* win);
 void ShowPdfExtractPagesDialog(MainWindow* win);
 void ShowMergePdfDialog(MainWindow* win);
-TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut = nullptr);
+TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut);
 void ShowPdfEncryptDialog(MainWindow* win);
 void ShowPdfDecryptDialog(MainWindow* win);
 // comic books / image folders / single images → multi-page PDF (issue #4118)

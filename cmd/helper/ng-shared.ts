@@ -232,6 +232,7 @@ export const sharedFiles = [
   "src/shared/PdfDate.cpp",
   "src/shared/PdfDate.h",
   "src/shared/PdfSync.h",
+  "src/shared/PdfTools.h",
   "src/shared/Print.cpp",
   "src/shared/Print.h",
   "src/shared/PerfLog.cpp",

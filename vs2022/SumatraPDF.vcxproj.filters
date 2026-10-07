@@ -159,9 +159,6 @@
     <ClInclude Include="..\src\PageThumbnails.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\PdfTools.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ReadAloud.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -451,6 +448,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\PdfSync.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\PdfTools.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\PngOptimizer.h">
