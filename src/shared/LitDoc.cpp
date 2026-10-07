@@ -290,10 +290,6 @@ static u32 LitU32(Str d, int off) {
     return ByteReader(d).UInt32LE(off);
 }
 
-static i64 LitU64(Str d, int off) {
-    return (i64)LitU32(d, off) | ((i64)LitU32(d, off + 4) << 32);
-}
-
 // 7-bit groups, high bit set = continue; big-endian group order. Values too
 // large for an int saturate at INT_MAX (the root "/" entry stores junk that
 // overflows; its value is never used, but the bytes must be consumed)
@@ -486,8 +482,8 @@ static bool LitParseHeader(LitFile* lit) {
     }
 
     // header piece 1 is the directory
-    i64 dirOff64 = LitU64(d, hdrLen + 16);
-    i64 dirLen64 = LitU64(d, hdrLen + 16 + 8);
+    i64 dirOff64 = (i64)ByteReader(d).UInt64LE(hdrLen + 16);
+    i64 dirLen64 = (i64)ByteReader(d).UInt64LE(hdrLen + 16 + 8);
     if (dirOff64 <= 0 || dirLen64 <= 32 || dirOff64 > len(d) || dirLen64 > len(d) - dirOff64) {
         return false;
     }
