@@ -10,7 +10,7 @@ struct MainWindow;
 struct WindowTab;
 
 enum class TranslateEngine {
-    Default = 0, // engine remembered in settings (TranslateEngine), Google if none
+    Default = 0,
     Google,
     DeepL,
     Grok,
@@ -21,9 +21,7 @@ enum class TranslateEngine {
 
 void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engine);
 bool IsSelectionTranslateDialogVisible();
-// Enter in the dialog: orig's default button
 bool SelectionTranslateOnEnter();
 void CloseSelectionTranslateDialog();
 gpui::El* SelectionTranslateDialogBuild(MainWindow* win, gpui::Ctx* cx);
-
 TempStr SelectionTranslateResultTemp(int backend, Str srcLang, Str dstLang, Str text, int* exitCode);

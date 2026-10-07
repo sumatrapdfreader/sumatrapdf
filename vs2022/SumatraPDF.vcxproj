@@ -1442,7 +1442,6 @@
     <ClInclude Include="..\src\SelectTextKeyboard.h" />
     <ClInclude Include="..\src\Selection.h" />
     <ClInclude Include="..\src\SelectionToolbar.h" />
-    <ClInclude Include="..\src\SelectionTranslate.h" />
     <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\ShortcutParse.h" />
     <ClInclude Include="..\src\SidebarPanel.h" />
@@ -1536,6 +1535,7 @@
     <ClInclude Include="..\src\shared\ProgressUpdateUI.h" />
     <ClInclude Include="..\src\shared\ReadingBar.h" />
     <ClInclude Include="..\src\shared\SelectionHandlers.h" />
+    <ClInclude Include="..\src\shared\SelectionTranslate.h" />
     <ClInclude Include="..\src\shared\StressTesting.h" />
     <ClInclude Include="..\src\shared\SumatraControl.h" />
     <ClInclude Include="..\src\shared\SumatraLog.h" />

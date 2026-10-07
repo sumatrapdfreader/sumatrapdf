@@ -213,9 +213,6 @@
     <ClInclude Include="..\src\SelectionToolbar.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SelectionTranslate.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Settings.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -493,6 +490,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\SelectionHandlers.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\SelectionTranslate.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\StressTesting.h">

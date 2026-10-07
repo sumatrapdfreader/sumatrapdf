@@ -236,6 +236,7 @@ export const sharedFiles = [
   "src/shared/RegistryInstaller.cpp",
   "src/shared/ReadingBar.h",
   "src/shared/SelectionHandlers.h",
+  "src/shared/SelectionTranslate.h",
   "src/shared/StressTesting.h",
   "src/shared/SumatraConfig.cpp",
   "src/shared/SumatraConfig.h",
