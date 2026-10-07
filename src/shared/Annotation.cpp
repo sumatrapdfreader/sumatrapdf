@@ -2044,64 +2044,55 @@ static TempStr GetAnnotationTextIconTemp() {
     return SeqStrByIndex(gAnnotationTextIcons, idx);
 }
 
-static AnnotationType supportsInteriorColor[] = {
-    AnnotationType::Circle,  AnnotationType::Line,   AnnotationType::PolyLine,
-    AnnotationType::Polygon, AnnotationType::Square,
+enum AnnotationCapability : u8 {
+    AnnotMove = 1 << 0,
+    AnnotCopy = 1 << 1,
+    AnnotResize = 1 << 2,
+    AnnotInteriorColor = 1 << 3,
+    AnnotBorder = 1 << 4,
+    AnnotColor = 1 << 5,
+    AnnotOpacity = 1 << 6,
 };
 
-// The annotations whose position is theirs to change. /Rect is required on
-// every annotation, but for some it is derived from other geometry; this is
-// mupdf's rect_subtypes in pdf-annot.c (what pdf_annot_has_rect() answers yes
-// to, and what pdf_set_annot_rect() accepts) plus Line (endpoints),
-// Polygon/PolyLine (Vertices) and Ink (InkList), whose geometry SetRect()
-// translates by hand.
-static AnnotationType moveableAnnotations[] = {
-    AnnotationType::Text,           AnnotationType::FreeText,  AnnotationType::Square, AnnotationType::Circle,
-    AnnotationType::Redact,         AnnotationType::Stamp,     AnnotationType::Caret,  AnnotationType::Popup,
-    AnnotationType::FileAttachment, AnnotationType::Sound,     AnnotationType::Movie,  AnnotationType::Widget,
-    AnnotationType::ThreeD,         AnnotationType::RichMedia, AnnotationType::Line,   AnnotationType::Polygon,
-    AnnotationType::PolyLine,       AnnotationType::Ink,
+static const u8 kAnnotationCapabilities[] = {
+    AnnotMove | AnnotCopy | AnnotColor | AnnotOpacity,                                                  // Text
+    0,                                                                                                  // Link
+    AnnotMove | AnnotCopy | AnnotResize | AnnotBorder | AnnotColor | AnnotOpacity,                      // FreeText
+    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // Line
+    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // Square
+    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // Circle
+    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // Polygon
+    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // PolyLine
+    AnnotColor | AnnotOpacity,                                                                          // Highlight
+    AnnotColor | AnnotOpacity,                                                                          // Underline
+    AnnotColor | AnnotOpacity,                                                                          // Squiggly
+    AnnotColor | AnnotOpacity,                                                                          // StrikeOut
+    AnnotMove | AnnotCopy | AnnotResize | AnnotOpacity,                                                 // Redact
+    AnnotMove | AnnotCopy | AnnotResize | AnnotColor | AnnotOpacity,                                    // Stamp
+    AnnotMove | AnnotCopy | AnnotColor | AnnotOpacity,                                                  // Caret
+    AnnotMove | AnnotCopy | AnnotBorder | AnnotColor | AnnotOpacity,                                    // Ink
+    AnnotMove | AnnotResize,                                                                            // Popup
+    AnnotMove | AnnotColor | AnnotOpacity, // FileAttachment
+    AnnotMove | AnnotColor,                // Sound
+    AnnotMove | AnnotResize,               // Movie
+    AnnotMove | AnnotResize,               // RichMedia
+    AnnotMove | AnnotResize,               // Widget
+    0,                                     // Screen
+    0,                                     // PrinterMark
+    0,                                     // TrapNet
+    0,                                     // Watermark
+    AnnotMove | AnnotResize,               // ThreeD
+    0,                                     // Projection
 };
+static_assert(dimof(kAnnotationCapabilities) == (int)AnnotationType::Last + 1);
 
-static AnnotationType supportsBorder[] = {
-    AnnotationType::FreeText, AnnotationType::Ink,     AnnotationType::Line,     AnnotationType::Square,
-    AnnotationType::Circle,   AnnotationType::Polygon, AnnotationType::PolyLine,
-};
-
-// /CA is a markup-annotation property, and only a markup annotation's
-// appearance stream is generated with it (pdf_write_opacity). Mirrors mupdf's
-// markup_subtypes minus the ones we can't create or edit.
-static AnnotationType supportsOpacity[] = {
-    AnnotationType::Text,      AnnotationType::FreeText, AnnotationType::Line,      AnnotationType::Square,
-    AnnotationType::Circle,    AnnotationType::Polygon,  AnnotationType::PolyLine,  AnnotationType::Highlight,
-    AnnotationType::Underline, AnnotationType::Squiggly, AnnotationType::StrikeOut, AnnotationType::Redact,
-    AnnotationType::Stamp,     AnnotationType::Caret,    AnnotationType::Ink,       AnnotationType::FileAttachment,
-};
-
-static AnnotationType supportsColor[] = {
-    AnnotationType::Stamp,     AnnotationType::Text,      AnnotationType::FileAttachment,
-    AnnotationType::Sound,     AnnotationType::Caret,     AnnotationType::FreeText,
-    AnnotationType::Ink,       AnnotationType::Line,      AnnotationType::Square,
-    AnnotationType::Circle,    AnnotationType::Polygon,   AnnotationType::PolyLine,
-    AnnotationType::Highlight, AnnotationType::Underline, AnnotationType::StrikeOut,
-    AnnotationType::Squiggly,
-};
-
-static bool IsAnnotationInList(AnnotationType tp, AnnotationType* allowed, int nAllowed) {
-    if (!allowed) {
-        return true;
-    }
-    for (int i = 0; i < nAllowed; i++) {
-        AnnotationType tp2 = allowed[i];
-        if (tp2 == tp) {
-            return true;
-        }
-    }
-    return false;
+static bool HasAnnotationCapability(AnnotationType tp, AnnotationCapability capability) {
+    int idx = (int)tp;
+    return idx >= 0 && idx < dimof(kAnnotationCapabilities) && (kAnnotationCapabilities[idx] & capability) != 0;
 }
 
 bool AnnotationCanBeMoved(AnnotationType tp) {
-    return IsAnnotationInList(tp, moveableAnnotations, dimofi(moveableAnnotations));
+    return HasAnnotationCapability(tp, AnnotMove);
 }
 
 // Paste puts the copy wherever the mouse is, so copying only makes sense for
@@ -2112,52 +2103,27 @@ bool AnnotationCanBeMoved(AnnotationType tp) {
 // can't recreate from a snapshot, and FileAttachment, whose embedded file
 // stream we don't copy (the paste would be a paperclip with no file).
 bool AnnotationCanBeCopied(AnnotationType tp) {
-    switch (tp) {
-        case AnnotationType::Text:
-        case AnnotationType::FreeText:
-        case AnnotationType::Line:
-        case AnnotationType::Square:
-        case AnnotationType::Circle:
-        case AnnotationType::Polygon:
-        case AnnotationType::PolyLine:
-        case AnnotationType::Redact:
-        case AnnotationType::Stamp:
-        case AnnotationType::Caret:
-        case AnnotationType::Ink:
-            return true;
-        default:
-            return false;
-    }
+    return HasAnnotationCapability(tp, AnnotCopy);
 }
 
 bool AnnotationCanBeResized(AnnotationType tp) {
-    // MuPDF regenerates these as fixed-size icon/caret appearances. Offering
-    // resize handles only shifts the appearance within the requested rect.
-    if (tp == AnnotationType::Text || tp == AnnotationType::Caret || tp == AnnotationType::FileAttachment ||
-        tp == AnnotationType::Sound) {
-        return false;
-    }
-    if (tp == AnnotationType::Ink) {
-        // geometry is an ink path; stretch-to-rect is not implemented
-        return false;
-    }
-    return AnnotationCanBeMoved(tp);
+    return HasAnnotationCapability(tp, AnnotResize);
 }
 
 bool AnnotationSupportsInteriorColor(AnnotationType tp) {
-    return IsAnnotationInList(tp, supportsInteriorColor, dimofi(supportsInteriorColor));
+    return HasAnnotationCapability(tp, AnnotInteriorColor);
 }
 
 bool AnnotationSupportsBorder(AnnotationType tp) {
-    return IsAnnotationInList(tp, supportsBorder, dimofi(supportsBorder));
+    return HasAnnotationCapability(tp, AnnotBorder);
 }
 
 bool AnnotationSupportsColor(AnnotationType tp) {
-    return IsAnnotationInList(tp, supportsColor, dimofi(supportsColor));
+    return HasAnnotationCapability(tp, AnnotColor);
 }
 
 bool AnnotationSupportsOpacity(AnnotationType tp) {
-    return IsAnnotationInList(tp, supportsOpacity, dimofi(supportsOpacity));
+    return HasAnnotationCapability(tp, AnnotOpacity);
 }
 
 Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF pos, AnnotCreateArgs* args) {
