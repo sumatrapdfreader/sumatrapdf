@@ -508,8 +508,7 @@ void InsertArg(CommandArg** firstPtr, CommandArg* arg) {
     if (!arg) {
         return;
     }
-    arg->next = *firstPtr;
-    *firstPtr = arg;
+    ListInsertFront(firstPtr, arg);
 }
 
 void FreeCommandArgs(CommandArg* first) {
@@ -832,15 +831,12 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     currArg = str::DupTemp(currArg);
 
     CommandArg* firstArg = nullptr;
-    CommandArg* arg;
-    for (; currArg;) {
-        arg = TryParseNamedArg(firstArgIdx, &currArg);
+    while (currArg) {
+        CommandArg* arg = TryParseNamedArg(firstArgIdx, &currArg);
         if (!arg) {
             arg = TryParseDefaultArg(firstArgIdx, &currArg);
         }
-        if (arg) {
-            InsertArg(&firstArg, arg);
-        }
+        InsertArg(&firstArg, arg);
     }
     if (!firstArg) {
         MaybeDelayedWarningNotification(
