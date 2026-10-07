@@ -1493,12 +1493,10 @@
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\CrashHandler.h" />
     <ClInclude Include="..\src\base\tests\UtAssert.h" />
-    <ClInclude Include="..\src\gui\DocumentView.h" />
     <ClInclude Include="..\src\gui\Gfx.h" />
     <ClInclude Include="..\src\gui\GuiColors.h" />
     <ClInclude Include="..\src\gui\Layout.h" />
     <ClInclude Include="..\src\gui\PasswordDialog.h" />
-    <ClInclude Include="..\src\gui\PlatformCanvas.h" />
     <ClInclude Include="..\src\gui\PlatformText.h" />
     <ClInclude Include="..\src\gui\PlatformWindow.h" />
     <ClInclude Include="..\src\gui\VirtCtrl.h" />

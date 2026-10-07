@@ -366,9 +366,6 @@
     <ClInclude Include="..\src\base\tests\UtAssert.h">
       <Filter>src\base\tests</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\DocumentView.h">
-      <Filter>src\gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gui\Gfx.h">
       <Filter>src\gui</Filter>
     </ClInclude>
@@ -379,9 +376,6 @@
       <Filter>src\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\PasswordDialog.h">
-      <Filter>src\gui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\gui\PlatformCanvas.h">
       <Filter>src\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\PlatformText.h">
