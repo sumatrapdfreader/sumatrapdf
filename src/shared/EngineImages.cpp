@@ -1626,47 +1626,29 @@ static void AddParsedExifProperties(Str data, const ExifParser& parser, Props& p
     }
 
     if (GetExifInt(parser, ExifProp::LightSource, intVal)) {
-        Str lightStr;
-        switch (intVal) {
-            case 0:
-                lightStr = StrL("Unknown");
+        struct LightSourceName {
+            i64 value;
+            Str name;
+        };
+        static const LightSourceName names[] = {
+            {1, StrL("Daylight")},
+            {2, StrL("Fluorescent")},
+            {3, StrL("Tungsten")},
+            {4, StrL("Flash")},
+            {9, StrL("Fine weather")},
+            {10, StrL("Cloudy weather")},
+            {11, StrL("Shade")},
+            {17, StrL("Standard light A")},
+            {18, StrL("Standard light B")},
+            {19, StrL("Standard light C")},
+            {255, StrL("Other")},
+        };
+        Str lightStr = StrL("Unknown");
+        for (const auto& entry : names) {
+            if (entry.value == intVal) {
+                lightStr = entry.name;
                 break;
-            case 1:
-                lightStr = StrL("Daylight");
-                break;
-            case 2:
-                lightStr = StrL("Fluorescent");
-                break;
-            case 3:
-                lightStr = StrL("Tungsten");
-                break;
-            case 4:
-                lightStr = StrL("Flash");
-                break;
-            case 9:
-                lightStr = StrL("Fine weather");
-                break;
-            case 10:
-                lightStr = StrL("Cloudy weather");
-                break;
-            case 11:
-                lightStr = StrL("Shade");
-                break;
-            case 17:
-                lightStr = StrL("Standard light A");
-                break;
-            case 18:
-                lightStr = StrL("Standard light B");
-                break;
-            case 19:
-                lightStr = StrL("Standard light C");
-                break;
-            case 255:
-                lightStr = StrL("Other");
-                break;
-            default:
-                lightStr = StrL("Unknown");
-                break;
+            }
         }
         AddProp(propsOut, DocProp::LightSource, lightStr);
     }
