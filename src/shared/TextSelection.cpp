@@ -448,6 +448,23 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     SelectUpTo(pageNo, wordEnd);
 }
 
+// Empty-box newlines end lines; empty-box spaces remain selectable (#5712).
+static int FindLineBoundary(Str text, Rect* coords, int pos, int textLen, int dir) {
+    auto step = dir < 0 ? Utf8CodepointPrev : Utf8CodepointNext;
+    int byteIdx = Utf8CodepointToByteIndex(text, pos);
+    while (dir < 0 ? pos > 0 : pos < textLen) {
+        int nextByte = byteIdx;
+        int c = step(text, nextByte);
+        int glyph = dir < 0 ? pos - 1 : pos;
+        if (c == '\n' && !coords[glyph].x && !coords[glyph].dx) {
+            break;
+        }
+        pos += dir;
+        byteIdx = nextByte;
+    }
+    return pos;
+}
+
 // select the whole line of text at (x, y) (triple-click; issue #694)
 void TextSelection::SelectLineAt(int pageNo, double x, double y) {
     int i = FindClosestGlyphAt(pageNo, x, y);
@@ -457,32 +474,8 @@ void TextSelection::SelectLineAt(int pageNo, double x, double y) {
     Rect* coords;
     int textLen = 0;
     Str text = engine->GetTextForPage(pageNo, &textLen, &coords);
-    // line breaks are newline glyphs with zero-size coords. Some whitespace (e.g.
-    // spaces with FZ_STEXT_ACCURATE_BBOXES) can also have empty boxes and must not
-    // be treated as line ends (issue #5712).
-    int lineStart = i;
-    int lineStartByte = Utf8CodepointToByteIndex(text, lineStart);
-    while (lineStart > 0) {
-        int prevByte = lineStartByte;
-        int c = Utf8CodepointPrev(text, prevByte);
-        int prevGlyph = lineStart - 1;
-        if (c == '\n' && !coords[prevGlyph].x && !coords[prevGlyph].dx) {
-            break;
-        }
-        lineStart--;
-        lineStartByte = prevByte;
-    }
-    int lineEnd = i;
-    int lineEndByte = Utf8CodepointToByteIndex(text, lineEnd);
-    while (lineEnd < textLen) {
-        int nextByte = lineEndByte;
-        int c = Utf8CodepointNext(text, nextByte);
-        if (c == '\n' && !coords[lineEnd].x && !coords[lineEnd].dx) {
-            break;
-        }
-        lineEnd++;
-        lineEndByte = nextByte;
-    }
+    int lineStart = FindLineBoundary(text, coords, i, textLen, -1);
+    int lineEnd = FindLineBoundary(text, coords, i, textLen, 1);
     StartAt(pageNo, lineStart);
     SelectUpTo(pageNo, lineEnd);
 }
