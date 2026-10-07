@@ -1160,10 +1160,10 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\shared\CachedObjects.h" />
     <ClInclude Include="..\src\shared\ChapterTable.h" />
     <ClInclude Include="..\src\shared\DocProperties.h" />
+    <ClInclude Include="..\src\shared\EngineAll.h" />
     <ClInclude Include="..\src\shared\EngineBase.h" />
     <ClInclude Include="..\src\shared\LitDoc.h" />
     <ClInclude Include="..\src\shared\PdfCad.h" />

@@ -1260,7 +1260,6 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\ImageReader.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
@@ -1276,6 +1275,7 @@
     <ClInclude Include="..\src\shared\EbookDoc.h" />
     <ClInclude Include="..\src\shared\EbookFormatter.h" />
     <ClInclude Include="..\src\shared\EmbeddedResources.h" />
+    <ClInclude Include="..\src\shared\EngineAll.h" />
     <ClInclude Include="..\src\shared\EngineBase.h" />
     <ClInclude Include="..\src\shared\GumboHtmlParser.h" />
     <ClInclude Include="..\src\shared\HtmlFormatter.h" />

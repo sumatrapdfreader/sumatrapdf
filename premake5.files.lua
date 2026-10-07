@@ -943,7 +943,7 @@ function test_engines_files()
     "src/shared/DocProperties.h",
     "src/shared/EbookDoc.cpp",
     "src/shared/EmbeddedResources.cpp",
-    "src/EngineAll.h",
+    "src/shared/EngineAll.h",
     "src/shared/EngineBase.cpp",
     "src/shared/EngineBase.h",
     "src/CachedObjects.cpp",

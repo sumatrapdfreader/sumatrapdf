@@ -109,6 +109,7 @@ void EngineMupdfGetLoadedAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineMupdfTryGetLoadedAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineMupdfAnnotsLoadDone(EngineBase*);
 void EngineMupdfStartLoadAllAnnotations(EngineBase*, const Vec<int>& firstPages, const Func0& onProgress);
+void EngineMupdfLoadAnnotsForPage(EngineBase*, int pageNo);
 void EngineMupdfCancelLoadAllAnnotations(EngineBase*);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfHasRedactMarks(EngineBase*);
@@ -175,6 +176,8 @@ void EngineMupdfGetUnsignedSignatureFields(EngineBase*, StrVec& names, Vec<int>&
 bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut);
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);
+
+#if OS_WIN
 void SetEutlLookupFn(bool (*fn)(const u8* der, int derLen));
 struct PdfSigCert {
     PdfSigCert* next = nullptr;
@@ -184,6 +187,7 @@ struct PdfSigCert {
 };
 PdfSigCert* EngineMupdfGetSignatureCerts(EngineBase*);
 void FreePdfSigCerts(PdfSigCert*);
+#endif
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, float padding, Annotation*);
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 void EngineMupdfGetPageWidgets(EngineBase*, int pageNo, Vec<Annotation*>& out);

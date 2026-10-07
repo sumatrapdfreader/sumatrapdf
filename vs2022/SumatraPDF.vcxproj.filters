@@ -162,9 +162,6 @@
     <ClInclude Include="..\src\DocumentProperties.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\EngineAll.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\EngineMupdf.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -451,6 +448,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\EmbeddedResources.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\EngineAll.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\EngineBase.h">

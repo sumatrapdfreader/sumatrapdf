@@ -12,7 +12,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\SumatraLog.h" />
@@ -41,6 +40,9 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\EmbeddedResources.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\EngineAll.h">
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\EngineBase.h">

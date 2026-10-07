@@ -140,6 +140,7 @@ export const sharedFiles = [
   "src/shared/EbookFormatter.h",
   "src/shared/EmbeddedResources.cpp",
   "src/shared/EmbeddedResources.h",
+  "src/shared/EngineAll.h",
   "src/shared/EngineBase.cpp",
   "src/shared/EngineBase.h",
   "src/shared/EngineDjvuDec.cpp",
