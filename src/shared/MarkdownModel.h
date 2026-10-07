@@ -5,7 +5,6 @@ struct BrowserView;
 enum class FileType : u8;
 struct BrowserViewCallback;
 struct MainWindow;
-struct MarkdownCacheEntry;
 struct MarkdownLaunchTask;
 struct MarkdownTocBuildTask;
 
@@ -36,7 +35,6 @@ struct MarkdownModel : BrowserDocController {
     bool OnBeforeNavigate(Str url, bool newWindow);
     void OnDocumentComplete(Str url);
     Str GetDataForUrl(Str url);
-    void UpdateTheme();
 
     Str fileName;
     Str baseDir;
@@ -48,15 +46,11 @@ struct MarkdownModel : BrowserDocController {
     MarkdownTocBuildTask* tocBuildTask = nullptr;
     // set while opening a document a link points at is queued on the UI thread
     MarkdownLaunchTask* launchTask = nullptr;
-    Mutex docAccess;
-    Vec<MarkdownCacheEntry*> urlDataCache;
     Arena* poolAlloc = nullptr;
 
     bool Load(Str fileName);
     void SetToc(TocTree*);
     bool DisplayPage(Str pageUrl) override;
-
-    MarkdownCacheEntry* FindDataForUrl(Str url) const;
 
     TempStr NormalizeScrollUrlTemp(Str url) const override;
     TempStr ScrollUrlForPageTemp(int pageNo) const override;

@@ -50,14 +50,10 @@ ChmModel::ChmModel(DocControllerCallback* cb) : BrowserDocController(cb) {
 }
 
 ChmModel::~ChmModel() {
-    docAccess.Lock();
-    BrowserViewDelete(docView);
-    delete browserCb;
+    CloseBrowser();
     delete doc;
     delete tocTrace;
     DestroyTocTree(tocTree);
-    DeleteVecMembers(urlDataCache);
-    docAccess.Unlock();
     ArenaDelete(poolAlloc);
     str::Free(fileName);
 }
@@ -249,30 +245,6 @@ bool ChmModel::Load(Str fileName) {
     return len(pages) > 0;
 }
 
-struct ChmCacheEntry {
-    // owned by ChmModel::poolAllocator
-    Str url;
-    Str data;
-
-    explicit ChmCacheEntry(Str url);
-    ~ChmCacheEntry() { str::Free(data); };
-};
-
-ChmCacheEntry::ChmCacheEntry(Str url) {
-    this->url = url;
-}
-
-ChmCacheEntry* ChmModel::FindDataForUrl(Str url) const {
-    int n = len(urlDataCache);
-    for (int i = 0; i < n; i++) {
-        ChmCacheEntry* e = urlDataCache[i];
-        if (str::Eq(url, e->url)) {
-            return e;
-        }
-    }
-    return nullptr;
-}
-
 // Called after html document has been loaded.
 // Sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
@@ -423,34 +395,15 @@ static Str ChmThemeApplyToData(Str raw) {
 Str ChmModel::GetDataForUrl(Str url) {
     ScopedMutex scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
-    ChmCacheEntry* e = FindDataForUrl(plainUrl);
-    if (!e) {
-        Str raw = doc->GetDataTemp(plainUrl);
-        if (len(raw) == 0) {
-            return {};
-        }
-        Str s = str::Dup(poolAlloc, plainUrl);
-        e = new ChmCacheEntry(s);
-        e->data = ChmThemeApplyToData(raw);
-        VecAppend(urlDataCache, e);
+    Str data = GetCachedData(plainUrl);
+    if (data) {
+        return data;
     }
-    return e->data;
-}
-
-// theme colors are baked into the served HTML: drop the cached pages and
-// reload the current one with the new colors (a hidden tab has no docView and
-// regenerates when re-selected)
-void ChmModel::UpdateTheme() {
-    {
-        ScopedMutex scope(&docAccess);
-        DeleteVecMembers(urlDataCache);
-        VecReset(urlDataCache);
+    Str raw = doc->GetDataTemp(plainUrl);
+    if (len(raw) == 0) {
+        return {};
     }
-    if (docView && len(currentPageUrl) > 0) {
-        SaveHtmlScrollPos();
-        restoreHtmlScrollPos = true;
-        DisplayPage(currentPageUrl);
-    }
+    return CacheData(plainUrl, ChmThemeApplyToData(raw));
 }
 
 // named destinations are either in-document URLs or Alias topic IDs.

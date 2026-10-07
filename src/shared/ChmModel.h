@@ -5,7 +5,6 @@ struct ChmFile;
 enum class FileType : u8;
 struct BrowserView;
 struct BrowserViewCallback;
-struct ChmCacheEntry;
 struct MainWindow;
 
 struct ChmModel : BrowserDocController {
@@ -33,25 +32,19 @@ struct ChmModel : BrowserDocController {
     bool OnBeforeNavigate(Str url, bool newWindow);
     void OnDocumentComplete(Str url);
     Str GetDataForUrl(Str url);
-    void UpdateTheme();
 
     static bool IsSupportedFileType(FileType);
 
     Str fileName;
     ChmFile* doc = nullptr;
     TocTree* tocTree = nullptr;
-    Mutex docAccess;
     Vec<BrowserTocTraceItem>* tocTrace = nullptr;
-
-    Vec<ChmCacheEntry*> urlDataCache;
     // arena for strings that aren't freed until this ChmModel is deleted
-    // (e.g. for titles and URLs for ChmTocItem and ChmCacheEntry)
+    // (e.g. TOC titles and URLs)
     Arena* poolAlloc = nullptr;
 
     bool Load(Str fileName);
     bool DisplayPage(Str pageUrl) override;
-
-    ChmCacheEntry* FindDataForUrl(Str url) const;
 
     TempStr NormalizeScrollUrlTemp(Str url) const override;
     TempStr ScrollUrlForPageTemp(int pageNo) const override;

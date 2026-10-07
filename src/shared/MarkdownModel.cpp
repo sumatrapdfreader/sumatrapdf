@@ -114,11 +114,6 @@ static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
 
 static void DestroyOwnedTocTree(TocTree* tree);
 
-struct MarkdownCacheEntry {
-    Str url;
-    Str data;
-};
-
 // State shared with the background TOC builder. Outlives the model: it holds
 // copies of everything the worker needs, and `model` is nulled (under the lock)
 // when the model is destroyed, so a build that finishes too late is harmless.
@@ -197,12 +192,8 @@ MarkdownModel::~MarkdownModel() {
         launchTask->model = nullptr;
         launchTask = nullptr;
     }
-    docAccess.Lock();
-    BrowserViewDelete(docView);
-    delete browserCb;
+    CloseBrowser();
     DestroyOwnedTocTree(tocTree);
-    DeleteVecMembers(urlDataCache);
-    docAccess.Unlock();
     ArenaDelete(poolAlloc);
     str::Free(fileName);
 }
@@ -432,16 +423,6 @@ TempStr MarkdownModel::ScrollUrlForPageTemp(int pageNo) const {
     return FileToVirtualUrlTemp(pages[pageNo - 1]);
 }
 
-MarkdownCacheEntry* MarkdownModel::FindDataForUrl(Str url) const {
-    TempStr plainUrl = UrlPathTemp(url);
-    for (MarkdownCacheEntry* e : urlDataCache) {
-        if (str::Eq(e->url, plainUrl)) {
-            return e;
-        }
-    }
-    return nullptr;
-}
-
 bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
     if (skipNextBeforeNavigateScrollSave) {
         skipNextBeforeNavigateScrollSave = false;
@@ -515,9 +496,9 @@ void MarkdownModel::OnDocumentComplete(Str url) {
 Str MarkdownModel::GetDataForUrl(Str url) {
     ScopedMutex scope(&docAccess);
     TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
-    MarkdownCacheEntry* e = FindDataForUrl(plainUrl);
-    if (e) {
-        return e->data;
+    Str cached = GetCachedData(plainUrl);
+    if (cached) {
+        return cached;
     }
 
     Str data;
@@ -526,7 +507,7 @@ Str MarkdownModel::GetDataForUrl(Str url) {
         int n = 0;
         u8* js = GetEmbeddedFileData(StrL("mermaid.min.js"), &n);
         if (js && n > 0) {
-            data = str::Dup(poolAlloc, Str((const char*)js, n));
+            data = str::Dup(Str((const char*)js, n));
         }
         free(js);
     } else {
@@ -542,35 +523,17 @@ Str MarkdownModel::GetDataForUrl(Str url) {
             if (md) {
                 data = MarkdownToHtmlPage(md);
             }
+            str::Free(md);
         } else if (filePath) {
             data = file::ReadFile(filePath);
         }
     }
 
     if (len(data) == 0) {
+        str::Free(data);
         return {};
     }
-
-    Str urlDup = str::Dup(poolAlloc, plainUrl);
-    e = new MarkdownCacheEntry{urlDup, str::Dup(poolAlloc, data)};
-    VecAppend(urlDataCache, e);
-    return e->data;
-}
-
-// theme colors are baked into the generated HTML: drop the cached pages and
-// re-render the current one with the new colors (a hidden tab has no docView;
-// it regenerates when re-selected)
-void MarkdownModel::UpdateTheme() {
-    {
-        ScopedMutex scope(&docAccess);
-        DeleteVecMembers(urlDataCache);
-        VecReset(urlDataCache);
-    }
-    if (docView && currentPageUrl) {
-        SaveHtmlScrollPos();
-        restoreHtmlScrollPos = true;
-        DisplayPage(currentPageUrl);
-    }
+    return CacheData(plainUrl, data);
 }
 
 // engine-owned; do not delete

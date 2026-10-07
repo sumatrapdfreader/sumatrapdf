@@ -104,7 +104,18 @@ Location DocController::ClampLocation(Location loc) {
 
 BrowserDocController::BrowserDocController(DocControllerCallback* cb) : DocController(cb), initZoom(kInvalidZoom) {}
 
+struct BrowserDocController::CacheEntry {
+    Str url;
+    Str data;
+
+    ~CacheEntry() {
+        str::Free(url);
+        str::Free(data);
+    }
+};
+
 BrowserDocController::~BrowserDocController() {
+    ClearDataCache();
     str::Free(currentPageUrl);
     str::Free(pendingFindTerm);
 }
@@ -352,6 +363,49 @@ void BrowserDocController::DestroyParentWindow() {
     docView = nullptr;
     delete browserCb;
     browserCb = nullptr;
+}
+
+void BrowserDocController::CloseBrowser() {
+    docAccess.Lock();
+    BrowserViewDelete(docView);
+    docView = nullptr;
+    delete browserCb;
+    browserCb = nullptr;
+    ClearDataCache();
+    docAccess.Unlock();
+}
+
+Str BrowserDocController::GetCachedData(Str url) const {
+    for (CacheEntry* entry : dataCache) {
+        if (str::Eq(entry->url, url)) {
+            return entry->data;
+        }
+    }
+    return {};
+}
+
+Str BrowserDocController::CacheData(Str url, Str data) {
+    CacheEntry* entry = new CacheEntry{str::Dup(url), data};
+    VecAppend(dataCache, entry);
+    return entry->data;
+}
+
+void BrowserDocController::ClearDataCache() {
+    DeleteVecMembers(dataCache);
+    VecReset(dataCache);
+}
+
+void BrowserDocController::UpdateTheme() {
+    {
+        ScopedMutex scope(&docAccess);
+        ClearDataCache();
+    }
+    if (!docView || len(currentPageUrl) == 0) {
+        return;
+    }
+    SaveHtmlScrollPos();
+    restoreHtmlScrollPos = true;
+    DisplayPage(currentPageUrl);
 }
 
 void BrowserDocController::SaveHtmlScrollPos() {

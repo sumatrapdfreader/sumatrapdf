@@ -230,6 +230,8 @@ struct BrowserDocController : DocController {
     bool SetParentWindow(MainWindow* win, HWND hwndParent);
     void RemoveParentWindow();
     void DestroyParentWindow();
+    void CloseBrowser();
+    void UpdateTheme();
 
     void SaveHtmlScrollPos();
     void SaveHtmlScrollPosForPage(int pageNo);
@@ -237,6 +239,8 @@ struct BrowserDocController : DocController {
     bool GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const;
     bool GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const;
     void RestoreHtmlScrollPos();
+    Str GetCachedData(Str url) const;
+    Str CacheData(Str url, Str data);
 
     StrVec pages;
     int currentPageNo = 1;
@@ -256,14 +260,20 @@ struct BrowserDocController : DocController {
     bool hasPendingFind = false;
     StrVec htmlScrollUrls;
     Vec<PointF> htmlScrollPositions;
+    Mutex docAccess;
 
   private:
+    struct CacheEntry;
+
+    void ClearDataCache();
+
     virtual BrowserViewCallback* CreateBrowserCallback() = 0;
     virtual Str BrowserVirtualHost() const { return {}; }
     virtual bool OpenLinkedDocument(Str) { return false; }
     virtual bool DisplayPage(Str pageUrl) = 0;
     virtual TempStr NormalizeScrollUrlTemp(Str url) const = 0;
     virtual TempStr ScrollUrlForPageTemp(int pageNo) const = 0;
+    Vec<CacheEntry*> dataCache;
     mutable bool sendingBrowserMsg = false;
 };
 
