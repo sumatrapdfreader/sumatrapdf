@@ -379,15 +379,7 @@ TocItem* TocItem::ChildAt(int n) {
 }
 
 bool TocItem::IsExpanded() {
-    // leaf items cannot be expanded
-    if (child == nullptr) {
-        return false;
-    }
-    // item is expanded when:
-    // - expanded by default, not toggled (true, false)
-    // - not expanded by default, toggled (false, true)
-    // which boils down to:
-    return isOpenDefault != isOpenToggled;
+    return child && (isOpenDefault != isOpenToggled);
 }
 
 bool TocItem::PageNumbersMatch() const {
