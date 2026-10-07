@@ -8983,11 +8983,7 @@ static bool FileUnchangedSinceLoad(EngineMupdf* e, Str path) {
         return false;
     }
     FILETIME t = file::GetModificationTime(path);
-#if defined(SUMATRA_NG)
     return FileTimeEq(t, e->fileTimeAtLoad);
-#else
-    return CompareFileTime(&t, &e->fileTimeAtLoad) == 0;
-#endif
 }
 
 // Point the document at the whole file in memory. Takes the locks every
