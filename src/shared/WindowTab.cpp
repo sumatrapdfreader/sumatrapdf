@@ -259,23 +259,15 @@ void WindowTab::MoveDocBy(int dx, int dy) const {
 // the zoom ToggleZoom() would switch to. Split out so the command palette can
 // name it without repeating (and drifting from) the cycle
 float WindowTab::NextToggleZoom() const {
+    static const float levels[] = {kZoomFitPage,    kZoomFitWidth,   kZoomFitHeight,
+                                   kZoomFitContent, kZoomFitVisible, kZoomShrinkToFit};
     float currZoom = ctrl ? ctrl->GetZoomVirtual() : kInvalidZoom;
-    if (kZoomFitPage == currZoom) {
-        return kZoomFitWidth;
+    for (int i = 0; i < dimof(levels); i++) {
+        if (currZoom == levels[i]) {
+            return levels[(i + 1) % dimof(levels)];
+        }
     }
-    if (kZoomFitWidth == currZoom) {
-        return kZoomFitHeight;
-    }
-    if (kZoomFitHeight == currZoom) {
-        return kZoomFitContent;
-    }
-    if (kZoomFitContent == currZoom) {
-        return kZoomFitVisible;
-    }
-    if (kZoomFitVisible == currZoom) {
-        return kZoomShrinkToFit;
-    }
-    return kZoomFitPage;
+    return levels[0];
 }
 
 void WindowTab::ToggleZoom() const {
