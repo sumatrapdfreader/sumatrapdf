@@ -2219,7 +2219,6 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
         if (!node) {
             continue;
         }
-        const GumboVector* children = nullptr;
         if (node->type == GUMBO_NODE_ELEMENT) {
             if (GumboTagNameIs(node, StrL("Title"))) {
                 TempStr v = GumboTextContentTemp(node);
@@ -2252,16 +2251,8 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
                     cip->AddBookmark(ParseInt(Str(imageAttr->value)), Str(bookmarkAttr->value));
                 }
             }
-            children = &node->v.element.children;
-        } else if (node->type == GUMBO_NODE_DOCUMENT) {
-            children = &node->v.document.children;
         }
-        if (children) {
-            // push in reverse so children are visited in document order
-            for (unsigned int i = children->length; i > 0; i--) {
-                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
-            }
-        }
+        GumboPushChildren(toVisit, node);
     }
 }
 
