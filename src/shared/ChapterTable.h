@@ -7,8 +7,7 @@ struct Location {
     int page = 0;
 
     bool IsValid() const { return chapter >= 1 && page >= 1; }
-    bool operator==(const Location& o) const { return chapter == o.chapter && page == o.page; }
-    bool operator!=(const Location& o) const { return !(*this == o); }
+    bool operator==(const Location& o) const = default;
 };
 
 // single-chapter docs

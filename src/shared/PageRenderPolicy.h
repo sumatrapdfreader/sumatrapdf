@@ -12,7 +12,7 @@ struct PageRenderKey {
     float zoom = 0;
     int rotation = 0;
 
-    bool operator==(const PageRenderKey& other) const;
+    bool operator==(const PageRenderKey& other) const = default;
 };
 
 struct PageRenderPolicyRequest {

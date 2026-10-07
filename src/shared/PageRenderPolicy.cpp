@@ -5,10 +5,6 @@
 
 #include "PageRenderPolicy.h"
 
-bool PageRenderKey::operator==(const PageRenderKey& other) const {
-    return pageNo == other.pageNo && zoom == other.zoom && rotation == other.rotation;
-}
-
 // Keep at most one queued request per page and generation. A newer viewport
 // request replaces obsolete render parameters and can raise its priority.
 void PageRenderPolicyUpsert(Vec<PageRenderPolicyRequest>& requests, const PageRenderPolicyRequest& request) {
