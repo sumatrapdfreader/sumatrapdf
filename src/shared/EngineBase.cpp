@@ -964,14 +964,11 @@ static Str ReturnPageText(const PageText& pt, int* lenOut, Rect** coordsOut, Qua
     if (quadsOut) {
         *quadsOut = pt.quads;
     }
-    Str text = pt.text;
-    if (text.s) {
-        // str::Builder-backed buffers reserve a NUL slot at .len
-        if (text.len >= 0) {
-            text.s[text.len] = 0;
-        }
+    // str::Builder-backed buffers reserve a NUL slot at .len
+    if (pt.text.s && len(pt.text) >= 0) {
+        pt.text.s[len(pt.text)] = 0;
     }
-    return text;
+    return pt.text;
 }
 
 bool EngineBase::ReadPageText(int pageNo, TextReadMode mode, Str& text, int* lenOut, Rect** coordsOut,
