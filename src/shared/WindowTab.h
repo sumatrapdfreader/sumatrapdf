@@ -12,19 +12,29 @@ struct TocTree;
 struct TabState;
 struct Annotation;
 struct WatchedFile;
+#if !defined(SUMATRA_NG)
+struct LoadArgs;
+#endif
 struct ReadAloudHighlightMap;
 
-// ng: orig's WindowTab, minus the state of features this port has not reached:
-// the PDF info / outline debug windows (step 13). They come back with the
-// feature that uses them.
-
-// per-tab state of one AI chat provider (see AIChatPanel.cpp)
-// ng: orig's `HANDLE process` is a void*, so the header stays portable
-struct AIChatTabState {
-    Str sessionId;
-    str::Builder chatLog;
-    void* process = nullptr;
+#if defined(SUMATRA_NG)
+enum class SidebarContent {
+    Bookmarks,
+    Thumbnails,
+    Favorites,
 };
+#else
+// what a sidebar panel shows
+enum class SidebarView {
+    Bookmarks,
+    Thumbnails,
+    Favorites,
+};
+constexpr int kSidebarViewCount = 3;
+
+SidebarView SidebarViewFromStr(Str s, SidebarView def);
+Str SidebarViewToStr(SidebarView);
+#endif
 
 struct AutoScroll {
     bool on = false;
@@ -40,10 +50,11 @@ struct ReadingBarTab {
     float yFrac = 0.40f;
 };
 
-enum class SidebarContent {
-    Bookmarks,
-    Thumbnails,
-    Favorites,
+// per-tab state of one AI chat provider (see AIChatPanel.cpp)
+struct AIChatTabState {
+    Str sessionId;
+    str::Builder chatLog;
+    void* process = nullptr;
 };
 
 /* Data related to a single document loaded into a tab/window */
@@ -65,36 +76,48 @@ struct WindowTab {
     MainWindow* win = nullptr;
     DocController* ctrl = nullptr;
     u64 loadStartedAt = 0;
+#if !defined(SUMATRA_NG)
+    // network-drive copy progress while loading (-1 = not in copy phase)
+    i64 loadCopyBytesCopied = -1;
+    i64 loadCopyBytesTotal = 0;
+    LoadArgs* pendingLoadArgs = nullptr;
+#endif
+    // FileWatcher token for unsubscribing
+    WatchedFile* watcher = nullptr;
     // list of rectangles of the last rectangular, text or image selection
     // (split by page, in user coordinates)
     Vec<SelectionOnPage>* selectionOnPage = nullptr;
     TocTree* currToc = nullptr;   // not owned by us
     TabState* tabState = nullptr; // when lazy loading
     Annotation* selectedAnnotation = nullptr;
-    ReadAloudHighlightMap* readAloudHighlight = nullptr;
-    // reload-on-change (ReloadModifiedDocuments); orig's WindowTab::watcher
-    WatchedFile* watcher = nullptr;
-    // the watcher fired: reload when the tab is shown, after the file went
-    // quiet (orig's reloadOnFocus + the kAutoReloadTimerID timer)
-    bool reloadOnFocus = false;
-    // skip the next watcher event (we wrote the file ourselves)
-    bool ignoreNextAutoReload = false;
+#if !defined(SUMATRA_NG)
+    HWND hwndPDFInfo = nullptr;
+    HWND hwndPDFOutline = nullptr;
+#endif
+    // file size / mtime seen at the previous kAutoReloadTimerID tick, and when
+    // the pending auto-reload was first scheduled. Used to wait out a writer
+    // that is still producing the file (see kAutoReloadTimerID in Canvas.cpp)
     i64 autoReloadSize = -1;
     u64 autoReloadStartMs = 0;
     FILETIME autoReloadModTime{};
+#if defined(SUMATRA_NG)
     int autoReloadLeftMs = 0;
+#endif
+    ReadAloudHighlightMap* readAloudHighlight = nullptr;
     Str filePath;
     Str displayName;
     // why the load failed, shown under the error message (owned; empty if we
-    // couldn't tell)
+    // couldn't tell). See FileLoadErrorReasonTemp()
     Str loadErrorReason;
-    // a command-line search waiting for this tab's document to load
     Str pendingFindText;
-    // text of the window title when the tab is selected
+    // text of win->hwndFrame when the tab is selected
     Str frameTitle;
     // an array of ids for ToC items that have been expanded/collapsed by user
     Vec<int> tocState;
     Str readAloudText;
+    // per-provider AI chat state, indexed by AIChatBackend
+    // (0 = Claude, 1 = Grok, 2 = Codex, 3 = AntiGravity)
+    AIChatTabState aiChat[4];
     Type type = Type::None;
     LoadState loadState = LoadState::None;
     // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons
@@ -105,10 +128,13 @@ struct WindowTab {
     // per-document tab color from FileState; kColorUnset = use default
     Color tabColor = kColorUnset;
 
+    // which AI chat sidebar is open for this tab
+    // (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex, 3 = AntiGravity)
+    int aiChatPanelOpen = -1;
     int readAloudResumePos = -1;
     // utf8 offset in the highlight map where readAloudText[0] maps to
     int readAloudHighlightBase = 0;
-    // current chunk within readAloudText
+    // current chunk within readAloudText (for WinRT-sized TTS segments)
     int readAloudChunkStart = 0;
     int readAloudChunkEnd = 0;
     // next chunk submitted to TtsQueueUtf8; 0 if none
@@ -121,35 +147,43 @@ struct WindowTab {
     };
     // how the current read-aloud session was started (for the playback bar label)
     int readAloudScope = 0;
-
     // canvas dimensions when the document was last visible
     Rect canvasRc;
 
     // state of the table of contents
     bool showToc = false;
     bool showTocPresentation = false;
+#if defined(SUMATRA_NG)
     SidebarContent sidebarContent = SidebarContent::Bookmarks;
+#else
+    // what the sidebar's top panel shows (showToc: whether it does)
+    SidebarView sidebarView = SidebarView::Bookmarks;
+#endif
+    // whether to auto-reload the document when the tab is selected
+    bool reloadOnFocus = false;
     // opened via CmdOpenFileNoHistory: do not write File History / Windows Recent
     bool skipHistory = false;
-    bool hideAnnotations = false;
-    // the "unsaved annotations" prompt was already shown while closing
+
+    // TODO: terrible hack
     bool askedToSaveAnnotations = false;
     bool didScrollToSelectedAnnotation = false; // only automatically scroll once
     bool pendingShowSelectedAnnotation = false;
+    bool hideAnnotations = false;
     // true if per-document background is explicitly set to checkered pattern
     bool bgColorCheckered = false;
-    // a page of this document has been painted at least once; until then the
-    // canvas uses the theme background so a light page doesn't flash
+    // a page of this tab has been painted from the render cache at least
+    // once. Until then page placeholders paint in the theme background color
+    // instead of the (possibly white) page color, so e.g. restoring a session
+    // into a maximized window doesn't flash white in dark themes while the
+    // first render is in flight
     bool everPaintedPage = false;
+    // Skip the next file-watcher auto-reload (e.g. after we save annotations
+    // and already call ReloadDocument ourselves). Consumed by kAutoReloadTimerID.
+    bool ignoreNextAutoReload = false;
     // follow the spoken word while reading; disabled when the user scrolls away
     bool readAloudAutoScroll = false;
     AutoScroll autoScroll;
     ReadingBarTab readingBar;
-
-    // per-provider AI chat state, indexed by AIChatBackend
-    AIChatTabState aiChat[4];
-    // AIChatBackend value of the panel open for this tab; -1 = none
-    int aiChatPanelOpen = -1;
 
     explicit WindowTab(MainWindow* win);
     WindowTab(const WindowTab&) = delete;
@@ -173,9 +207,13 @@ struct WindowTab {
 
     Str GetTabTitle() const;
     bool IsDocLoaded() const;
+    void MoveDocBy(int dx, int dy) const;
     float NextToggleZoom() const;
     void ToggleZoom() const;
-    void MoveDocBy(int dx, int dy) const;
 };
+
+#if !defined(SUMATRA_NG)
+bool SaveDataToFile(HWND hwndParent, Str fileName, Str data);
+#endif
 
 bool IsPdfDoc(WindowTab* tab);

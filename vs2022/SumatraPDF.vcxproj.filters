@@ -186,9 +186,6 @@
     <ClInclude Include="..\src\Toolbar.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\WindowTab.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\Archive.h">
       <Filter>src\base</Filter>
     </ClInclude>
@@ -532,6 +529,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\WebpReader.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\WindowTab.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\gui\PlatformFont.h">

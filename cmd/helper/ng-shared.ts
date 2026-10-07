@@ -302,6 +302,7 @@ export const sharedFiles = [
   "src/shared/WebpReader.cpp",
   "src/shared/WebpReader.h",
   "src/shared/WindowTab.cpp",
+  "src/shared/WindowTab.h",
   "src/shared/dragcursor.cur",
   "src/shared/gfx/SumatraPDF-smaller.ico",
   "src/shared/gfx/cbx-32bit.ico",
