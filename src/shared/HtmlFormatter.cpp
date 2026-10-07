@@ -1028,16 +1028,16 @@ void HtmlFormatter::HandleTagStyle(HtmlToken* t) {
         return;
     }
 
-    Str start = Str(t->s.s + t->s.len + 1, 0);
-    while (t && (!t->IsEndTag() || t->tag != Tag_Style)) {
+    const char* start = t->s.s + len(t->s) + 1;
+    do {
         t = htmlParser->Next();
-    }
-    if (!t || !t->IsEndTag() || Tag_Style != t->tag) {
+    } while (t && (!t->IsEndTag() || t->tag != Tag_Style));
+    if (!t) {
         return;
     }
-    Str end = Str(t->s.s - 2, 0);
-    ReportIf(start.s > end.s);
-    ParseStyleSheet(Str(start.s, (int)(end.s - start.s)));
+    const char* end = t->s.s - 2;
+    ReportIf(start > end);
+    ParseStyleSheet(Str(start, (int)(end - start)));
     UpdateTagNesting(t);
 }
 
