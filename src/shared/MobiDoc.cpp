@@ -456,14 +456,12 @@ bool MobiDoc::ParseHeader() {
             return false;
         }
         rec = pdbReader->GetRecord((int)mobiHdr.huffmanFirstRec);
-        int huffRecSize = rec.len;
-        u8* recData = (u8*)rec.s;
-        if (!recData) {
+        if (!rec.s) {
             return false;
         }
         ReportIf(nullptr != huffDic);
         huffDic = new HuffDicDecompressor();
-        if (!huffDic->SetHuffData(recData, huffRecSize)) {
+        if (!huffDic->SetHuffData((u8*)rec.s, len(rec))) {
             return false;
         }
         if (mobiHdr.huffmanRecCount < 1 || mobiHdr.huffmanRecCount > (u32)kCdicsMax + 1) {
@@ -473,15 +471,7 @@ bool MobiDoc::ParseHeader() {
         int cdicsCount = (int)mobiHdr.huffmanRecCount - 1;
         for (int i = 0; i < cdicsCount; i++) {
             rec = pdbReader->GetRecord((int)mobiHdr.huffmanFirstRec + 1 + i);
-            recData = (u8*)rec.s;
-            huffRecSize = rec.len;
-            if (!recData) {
-                return false;
-            }
-            if (huffRecSize > (u32)-1) {
-                return false;
-            }
-            if (!huffDic->AddCdicData(recData, (u32)huffRecSize)) {
+            if (!huffDic->AddCdicData((u8*)rec.s, (u32)len(rec))) {
                 return false;
             }
         }
