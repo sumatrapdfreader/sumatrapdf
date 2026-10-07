@@ -946,9 +946,6 @@ struct UnBinaryCtx {
 };
 
 static const char* LitTagName(UnBinaryCtx* ctx, int tag) {
-    if (tag < 0) {
-        return nullptr;
-    }
     // the tag tables are SeqStrings indexed by tag code; a code with no tag
     // is stored as the "\x01" sentinel (empty isn't representable mid-list)
     Str name = SeqStrByIndex(ctx->isHtml ? gLitHtmlTags : gLitOpfTags, tag);
@@ -1114,12 +1111,11 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                     tagIsAtom = false;
                     const char* name = nullptr;
                     if (flags & kLitFlagAtom) {
-                        if (ctx->atoms && tag >= 1 && tag <= len(ctx->atoms->tags)) {
-                            name = ctx->atoms->tags.At(tag - 1).s;
-                            tagIsAtom = true;
-                        } else {
+                        if (!ctx->atoms || tag < 1 || tag > len(ctx->atoms->tags)) {
                             return false;
                         }
+                        name = ctx->atoms->tags.At(tag - 1).s;
+                        tagIsAtom = true;
                     } else {
                         name = LitTagName(ctx, tag);
                     }
