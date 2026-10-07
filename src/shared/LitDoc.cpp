@@ -351,9 +351,7 @@ static void LitAppendUtf8(str::Builder& out, int c) {
     if (n == kMaxRuneBytes) {
         buf[0] = (char)(0xF0 | (c >> 18));
     }
-    for (int i = 0; i < n; i++) {
-        out.AppendChar(buf[i]);
-    }
+    out.Append(Str(buf, n));
 }
 
 // length-prefixed utf8 string: first utf8 char is the length in characters
