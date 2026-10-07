@@ -60,9 +60,6 @@
     <ClCompile Include="..\src\gui\Layout.cpp">
       <Filter>gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\PlatformText.cpp">
-      <Filter>gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\UiPlatform.cpp">
       <Filter>gui</Filter>
     </ClCompile>
@@ -79,6 +76,9 @@
       <Filter>gui\win</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\gui\PlatformFont.cpp">
+      <Filter>shared\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\gui\PlatformText.cpp">
       <Filter>shared\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\gui\UIModels.cpp">

@@ -1296,7 +1296,6 @@
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
-    <ClCompile Include="..\src\gui\PlatformText.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
     <ClCompile Include="..\src\shared\AvifReader.cpp" />
@@ -1323,6 +1322,7 @@
     <ClCompile Include="..\src\shared\SumatraLog.cpp" />
     <ClCompile Include="..\src\shared\WebpReader.cpp" />
     <ClCompile Include="..\src\shared\gui\PlatformFont.cpp" />
+    <ClCompile Include="..\src\shared\gui\PlatformText.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\previewer\PdfPreview.rc" />

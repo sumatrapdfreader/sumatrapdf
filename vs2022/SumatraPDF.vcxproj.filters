@@ -950,9 +950,6 @@
     <ClCompile Include="..\src\gui\PasswordDialog.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\PlatformText.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\UiPlatform.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
@@ -1254,6 +1251,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\gui\PlatformFont.cpp">
+      <Filter>src\shared\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\gui\PlatformText.cpp">
       <Filter>src\shared\gui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\gui\UIModels.cpp">

@@ -295,6 +295,7 @@ export const sharedFiles = [
   "src/shared/gui/Dpi.h",
   "src/shared/gui/PlatformFont.cpp",
   "src/shared/gui/PlatformFont.h",
+  "src/shared/gui/PlatformText.cpp",
   "src/shared/gui/PlatformText.h",
   "src/shared/gui/UIModels.cpp",
   "src/shared/gui/UIModels.h",
