@@ -954,6 +954,16 @@ TocTree* EngineEbook::FinishToc(EbookTocBuilder& builder) {
     return tocTree;
 }
 
+template <typename T>
+static EngineBase* CreateLoadedEngine(Str source, bool (T::*load)(Str)) {
+    T* engine = new T();
+    if ((engine->*load)(source)) {
+        return engine;
+    }
+    SafeEngineRelease(&engine);
+    return nullptr;
+}
+
 /* EngineBase for handling EPUB documents */
 
 class EngineEpub : public EngineEbook {
@@ -1085,21 +1095,11 @@ TocTree* EngineEpub::GetToc() {
 }
 
 EngineBase* EngineEpub::CreateFromFile(Str path) {
-    EngineEpub* engine = new EngineEpub();
-    if (!engine->Load(path)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateLoadedEngine(path, &EngineEpub::Load);
 }
 
 EngineBase* EngineEpub::CreateFromData(Str data) {
-    EngineEpub* engine = new EngineEpub();
-    if (!engine->LoadFromData(data)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateLoadedEngine(data, &EngineEpub::LoadFromData);
 }
 
 /* EngineEbook.cpp */
@@ -1209,21 +1209,11 @@ TocTree* EngineFb2::GetToc() {
 }
 
 EngineBase* EngineFb2::CreateFromFile(Str path) {
-    EngineFb2* engine = new EngineFb2();
-    if (!engine->Load(path)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateLoadedEngine(path, &EngineFb2::Load);
 }
 
 EngineBase* EngineFb2::CreateFromData(Str data) {
-    EngineFb2* engine = new EngineFb2();
-    if (!engine->LoadFromData(data)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateLoadedEngine(data, &EngineFb2::LoadFromData);
 }
 
 EngineBase* CreateEngineFb2FromFile(Str fileName) {
@@ -1603,21 +1593,11 @@ TocTree* EngineMobi::GetToc() {
 }
 
 EngineBase* EngineMobi::CreateFromFile(Str path) {
-    EngineMobi* engine = new EngineMobi();
-    if (!engine->Load(path)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateLoadedEngine(path, &EngineMobi::Load);
 }
 
 EngineBase* EngineMobi::CreateFromData(Str data) {
-    EngineMobi* engine = new EngineMobi();
-    if (!engine->LoadFromData(data)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateLoadedEngine(data, &EngineMobi::LoadFromData);
 }
 
 EngineBase* CreateEngineMobiFromFile(Str fileName) {
@@ -1708,12 +1688,7 @@ TocTree* EnginePdb::GetToc() {
 }
 
 EngineBase* EnginePdb::CreateFromFile(Str path) {
-    EnginePdb* engine = new EnginePdb();
-    if (!engine->Load(path)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateLoadedEngine(path, &EnginePdb::Load);
 }
 
 EngineBase* CreateEnginePdbFromFile(Str fileName) {
@@ -2109,12 +2084,7 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
 }
 
 EngineBase* EngineChm::CreateFromFile(Str path) {
-    EngineChm* engine = new EngineChm();
-    if (!engine->Load(path)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateLoadedEngine(path, &EngineChm::Load);
 }
 
 EngineBase* CreateEngineChmFromFile(Str fileName) {
@@ -2211,12 +2181,7 @@ IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
 }
 
 EngineBase* EngineHtml::CreateFromFile(Str path) {
-    EngineHtml* engine = new EngineHtml();
-    if (!engine->Load(path)) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateLoadedEngine(path, &EngineHtml::Load);
 }
 
 EngineBase* CreateEngineHtmlFromFile(Str fileName) {
