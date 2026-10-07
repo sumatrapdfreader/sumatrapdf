@@ -2897,8 +2897,7 @@ static FileType cbxTypes[] = {
 };
 
 bool IsEngineCbxSupportedFileType(FileType kind) {
-    int n = dimof(cbxTypes);
-    return FileTypeIndexOf(cbxTypes, n, kind) >= 0;
+    return FileTypeIndexOf(cbxTypes, dimof(cbxTypes), kind) >= 0;
 }
 
 EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, FileType hintType, Str realPath) {
@@ -2939,16 +2938,10 @@ EngineBase* CreateEngineCbxFromData(Str data) {
 // Comic archive bookmarks are synthesized from file / folder names unless they
 // come from ComicInfo.xml; only those are worth showing the sidebar for (#6244).
 bool EngineCbxHasComicInfoToc(EngineBase* engine) {
-    if (!IsOfKind(engine, kindEngineComicBooks)) {
-        return false;
-    }
-    return ((EngineCbx*)engine)->tocFromComicInfo;
+    return IsOfKind(engine, kindEngineComicBooks) && ((EngineCbx*)engine)->tocFromComicInfo;
 }
 
 bool IsEngineImages(EngineBase* engine) {
-    if (!engine) {
-        return false;
-    }
     return IsOfKind(engine, kindEngineImage) || IsOfKind(engine, kindEngineImageDir) ||
            IsOfKind(engine, kindEngineComicBooks);
 }
