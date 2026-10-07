@@ -227,15 +227,15 @@ int Pdfsync::RebuildIndexIfNeeded() {
     int maxPageNo = engine->PageCount();
     while (Str line = ReadSyncLine(rest)) {
         switch (line.s[0]) {
-            case 'l':
+            case 'l': {
                 psline.file = VecLast(filestack);
-                if (!str::IsNull(str::Parse(line, "l %u %u %u", &psline.record, &psline.line, &psline.column))) {
-                    VecAppend(lines, psline);
-                } else if (!str::IsNull(str::Parse(line, "l %u %u", &psline.record, &psline.line))) {
-                    psline.column = 0;
+                psline.column = 0;
+                Str column = str::Parse(line, "l %u %u", &psline.record, &psline.line);
+                if (!str::IsNull(column)) {
+                    str::Parse(column, " %u", &psline.column);
                     VecAppend(lines, psline);
                 }
-                break;
+            } break;
 
             case 's':
                 if (!str::IsNull(str::Parse(line, "s %u", &page))) {
@@ -248,8 +248,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                     break;
                 }
                 pspoint.page = page;
-                if (!str::IsNull(str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) ||
-                    !str::IsNull(str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
+                if (!str::IsNull(str::Parse(line, "p%?* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
                     VecAppend(points, pspoint);
                 }
                 break;
