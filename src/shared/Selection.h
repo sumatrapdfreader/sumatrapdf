@@ -1,13 +1,23 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#if defined(SUMATRA_NG)
 namespace gpui {
 struct PaintCtx;
 }
+#else
+constexpr int kSelectSmoothScrollTimerID = 2;
+constexpr int kSelectSmoothScrollDelayInMs = 20;
+constexpr int kSelectSmoothScrollSlowDownFactor = 10;
 
+struct Gfx;
+#endif
 struct WindowTab;
 struct DisplayModel;
 struct Pixmap;
+#if !defined(SUMATRA_NG)
+struct RenderedBitmap;
+#endif
 
 /* Represents selected area on given page */
 struct SelectionOnPage {
@@ -28,33 +38,65 @@ struct SelectionOnPage {
     static Vec<SelectionOnPage>* FromTextSelect(Vec<TextSel>* textSel);
 };
 
+#if !defined(SUMATRA_NG)
+Pixmap* RenderSelectionsAsPixmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections);
+RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections);
+#endif
+
 // default opacity of the selection rectangle when SelectionColor has no alpha
 constexpr u8 kSelectionDefaultAlpha = 0x5f;
 
 void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel = false);
 void RemapSelOnRenumber(MainWindow* win, DisplayModel* dm);
 void RemapTextSelection(DisplayModel* dm);
+#if defined(SUMATRA_NG)
 void PaintTransparentRectangles(gpui::PaintCtx* ctx, Rect screenRc, Vec<Rect>& rects, Color selectionColor,
+#else
+void PaintTransparentRectangles(Gfx* gfx, Rect screenRc, Vec<Rect>& rects, Color selectionColor,
+#endif
                                 u8 alpha = kSelectionDefaultAlpha, int pad = 2, bool drawBorder = false);
+#if defined(SUMATRA_NG)
 void PaintSelection(MainWindow* win, gpui::PaintCtx* ctx);
+#else
+void PaintSelection(MainWindow* win, Gfx* gfx);
+#endif
 void UpdateTextSelection(MainWindow* win, bool select = true);
 void CopySelectionToClipboard(MainWindow* win);
+#if !defined(SUMATRA_NG)
+void CopySelectionAsImageToClipboard(MainWindow* win);
+#endif
 void OnSelectAll(MainWindow* win, bool textOnly = false);
 void OnSelectCurrentPage(MainWindow* win);
 bool NeedsSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
 void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y);
+#if defined(SUMATRA_NG)
 void OnSelectionStart(MainWindow* win, int x, int y, bool forceRect = false);
+#else
+void OnSelectionStart(MainWindow* win, int x, int y, WPARAM key, bool forceRect = false);
+#endif
 void OnSelectionStop(MainWindow* win, int x, int y, bool aborted);
 TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelectionOut);
-// ng: orig's RenderSelectionsAsRenderedBitmap returns a win32 RenderedBitmap;
-// here the same pixels come back as a Pixmap. Caller frees with FreePixmap().
+#if defined(SUMATRA_NG)
 Pixmap* RenderSelectionsAsPixmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections);
+#endif
+
+#if !defined(SUMATRA_NG)
+// Touch text selection handles (issue #538). Rects are in canvas coordinates.
+// Returns false when there is no text selection to put handles on.
+bool GetTouchSelHandleRects(MainWindow* win, Rect& startOut, Rect& endOut);
+TouchSelHandle HitTestTouchSelHandle(MainWindow* win, int x, int y);
+void HideTouchSelHandles(MainWindow* win);
+#endif
 
 bool IsRectangularSelection(MainWindow* win);
 Rect GetRectangularSelectionScreenRect(MainWindow* win);
 bool GetSelectionScreenRect(WindowTab* tab, Rect& out);
 TempStr FormatSelectionPositionTemp(WindowTab* tab);
 SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int x, int y);
+#if defined(SUMATRA_NG)
 int CursorIdForSelectionEdge(SelectionDragEdge edge);
+#else
+LPWSTR CursorIdForSelectionEdge(SelectionDragEdge edge);
+#endif
 bool StartRectangularSelectionEdit(MainWindow* win, int x, int y, SelectionDragEdge edge);
 void UpdateRectangularSelectionEdit(MainWindow* win, int x, int y);

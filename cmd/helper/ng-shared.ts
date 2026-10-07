@@ -262,6 +262,7 @@ export const sharedFiles = [
   "src/shared/ReadingBar.h",
   "src/shared/RenderCache.h",
   "src/shared/ReadingAutoScroll.h",
+  "src/shared/Selection.h",
   "src/shared/SelectionHandlers.cpp",
   "src/shared/SelectionHandlers.h",
   "src/shared/SelectionTranslate.h",

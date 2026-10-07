@@ -165,9 +165,6 @@
     <ClInclude Include="..\src\SearchAndDDE.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Selection.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Settings.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -475,6 +472,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\SelectTextKeyboard.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\Selection.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\SelectionHandlers.h">
