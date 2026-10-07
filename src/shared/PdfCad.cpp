@@ -79,6 +79,30 @@ static constexpr SeqStrings kMetadataBlacklist =
     "microsoft word\0libreoffice\0openoffice\0indesign\0itext\0pdflatex\0xelatex\0lualatex\0latex\0"
     " prince\0chrome\0skia/pdf\0mozilla\0calibre\0epub\0powerpoint\0excel\0onenote\0doctotext\0";
 
+// Consume XMP while its stream buffer is alive; unreadable metadata is ignored.
+template <typename Fn>
+static void WithXmpData(fz_context* ctx, pdf_obj* meta, Fn consume) {
+    if (!meta) {
+        return;
+    }
+    fz_buffer* buf = nullptr;
+    fz_var(buf);
+    fz_try(ctx) {
+        buf = pdf_load_stream(ctx, meta);
+        unsigned char* data = nullptr;
+        size_t size = fz_buffer_storage(ctx, buf, &data);
+        if (data && size > 0) {
+            consume(Str((const char*)data, (int)size));
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+}
+
 // PDF/E is the ISO profile for engineering documents; its marker alone is proof.
 static bool HasPdfEMarker(fz_context* ctx, pdf_document* doc) {
     pdf_obj* trailer = pdf_trailer(ctx, doc);
@@ -92,30 +116,11 @@ static bool HasPdfEMarker(fz_context* ctx, pdf_document* doc) {
 
     pdf_obj* root = pdf_dict_get(ctx, trailer, PDF_NAME(Root));
     pdf_obj* meta = pdf_dict_get(ctx, root, PDF_NAME(Metadata));
-    if (!meta) {
-        return false;
-    }
-
-    fz_buffer* buf = nullptr;
     bool found = false;
-    fz_var(buf);
-    fz_var(found);
-    fz_try(ctx) {
-        buf = pdf_load_stream(ctx, meta);
-        unsigned char* data = nullptr;
-        size_t len = fz_buffer_storage(ctx, buf, &data);
-        if (data && len > 0) {
-            Str xmp((const char*)data, (int)len);
-            found = str::Contains(xmp, StrL("pdfe:ISO_PDFEVersion")) || str::Contains(xmp, StrL("PDF/E-1")) ||
-                    str::Contains(xmp, StrL("PDF/E-2"));
-        }
-    }
-    fz_always(ctx) {
-        fz_drop_buffer(ctx, buf);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
+    WithXmpData(ctx, meta, [&](Str xmp) {
+        found = str::Contains(xmp, StrL("pdfe:ISO_PDFEVersion")) || str::Contains(xmp, StrL("PDF/E-1")) ||
+                str::Contains(xmp, StrL("PDF/E-2"));
+    });
     return found;
 }
 
@@ -162,23 +167,8 @@ static int ScoreMetadata(fz_context* ctx, pdf_document* doc, bool* strongMatchOu
 
     pdf_obj* root = pdf_dict_get(ctx, trailer, PDF_NAME(Root));
     pdf_obj* meta = pdf_dict_get(ctx, root, PDF_NAME(Metadata));
-    if (meta && !acc.blacklisted) {
-        fz_buffer* buf = nullptr;
-        fz_var(buf);
-        fz_try(ctx) {
-            buf = pdf_load_stream(ctx, meta);
-            unsigned char* data = nullptr;
-            size_t len = fz_buffer_storage(ctx, buf, &data);
-            if (data && len > 0) {
-                ScoreMetadataField(Str((const char*)data, (int)len), &acc);
-            }
-        }
-        fz_always(ctx) {
-            fz_drop_buffer(ctx, buf);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-        }
+    if (!acc.blacklisted) {
+        WithXmpData(ctx, meta, [&](Str xmp) { ScoreMetadataField(xmp, &acc); });
     }
 
     *strongMatchOut = acc.strong;
