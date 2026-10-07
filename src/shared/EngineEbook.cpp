@@ -193,6 +193,8 @@ class EngineEbook : public EngineBase {
     void InitFormatterArgs(HtmlFormatterArgs& args, Str html, WStr fontName);
     bool SetFormattedPages(Vec<HtmlPage*>* formatted);
     TocTree* FinishToc(EbookTocBuilder& builder);
+    template <typename T>
+    TocTree* BuildToc(T* doc);
     EngineBase* CloneFromSource(CreateEbookEngine fromFile, CreateEbookEngine fromData = nullptr);
     TempStr ExtractFontListTemp();
     virtual TempStr GetBookPropTemp(DocProp prop) = 0;
@@ -934,6 +936,17 @@ TocTree* EngineEbook::FinishToc(EbookTocBuilder& builder) {
     return tocTree;
 }
 
+template <typename T>
+TocTree* EngineEbook::BuildToc(T* doc) {
+    if (tocBuilt) {
+        return tocTree;
+    }
+    tocBuilt = true;
+    EbookTocBuilder builder(this);
+    doc->ParseToc(&builder);
+    return FinishToc(builder);
+}
+
 EngineBase* EngineEbook::CloneFromSource(CreateEbookEngine fromFile, CreateEbookEngine fromData) {
     if (sourceData && fromData) {
         return fromData(sourceData);
@@ -1049,13 +1062,7 @@ bool EngineEpub::HasToc() {
 }
 
 TocTree* EngineEpub::GetToc() {
-    if (tocBuilt) {
-        return tocTree;
-    }
-    tocBuilt = true;
-    EbookTocBuilder builder(this);
-    doc->ParseToc(&builder);
-    return FinishToc(builder);
+    return BuildToc(doc);
 }
 
 EngineBase* EngineEpub::CreateFromFile(Str path) {
@@ -1141,13 +1148,7 @@ bool EngineFb2::HasToc() {
 }
 
 TocTree* EngineFb2::GetToc() {
-    if (tocBuilt) {
-        return tocTree;
-    }
-    tocBuilt = true;
-    EbookTocBuilder builder(this);
-    doc->ParseToc(&builder);
-    return FinishToc(builder);
+    return BuildToc(doc);
 }
 
 EngineBase* EngineFb2::CreateFromFile(Str path) {
@@ -1501,13 +1502,7 @@ bool EngineMobi::HasToc() {
 }
 
 TocTree* EngineMobi::GetToc() {
-    if (tocBuilt) {
-        return tocTree;
-    }
-    tocBuilt = true;
-    EbookTocBuilder builder(this);
-    doc->ParseToc(&builder);
-    return FinishToc(builder);
+    return BuildToc(doc);
 }
 
 EngineBase* EngineMobi::CreateFromFile(Str path) {
@@ -1576,13 +1571,7 @@ bool EnginePdb::HasToc() {
 }
 
 TocTree* EnginePdb::GetToc() {
-    if (tocBuilt) {
-        return tocTree;
-    }
-    tocBuilt = true;
-    EbookTocBuilder builder(this);
-    doc->ParseToc(&builder);
-    return FinishToc(builder);
+    return BuildToc(doc);
 }
 
 EngineBase* EnginePdb::CreateFromFile(Str path) {
